@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+ï»¿import React, { useState, useEffect, useCallback } from "react";
 import ReactDOM from "react-dom";
 import { auth, db, storage, firebaseConfig } from "./firebase";
 import { initializeApp, deleteApp } from "firebase/app";
@@ -27,9 +27,9 @@ function EmailCampaignsTab({ T, db, notify, adminUser, leads, leadsTotal, fetchL
   const TEMPLATES = [
     { id: "followup", label: "Follow-up", subject: "Following up on your interest in {community}", body: "Dear {name},\n\nI wanted to follow up on your interest in {community}.\n\nBest regards,\nThe Address Holding Team" },
     { id: "golden_visa", label: "Golden Visa", subject: "You may qualify for a UAE Golden Visa", body: "Dear {name},\n\nBased on your interest in {community}, you may qualify for a UAE Golden Visa.\n\nBest regards,\nThe Address Holding Team" },
-    { id: "market_update", label: "Market Update", subject: "Dubai Property Market Update — {community}", body: "Dear {name},\n\nThe Dubai property market continues to show strong growth in {community}.\n\nBest regards,\nThe Address Holding Team" },
-    { id: "new_launch", label: "New Launch", subject: "Exclusive New Launch — {community}", body: "Dear {name},\n\nWe have an exciting new project launch in {community}.\n\nBest regards,\nThe Address Holding Team" },
-    { id: "reengagement", label: "Re-engagement", subject: "We miss you — special offer inside", body: "Dear {name},\n\nIt\'s been a while since we connected regarding your property search in {community}.\n\nBest regards,\nThe Address Holding Team" },
+    { id: "market_update", label: "Market Update", subject: "Dubai Property Market Update ï¿½ {community}", body: "Dear {name},\n\nThe Dubai property market continues to show strong growth in {community}.\n\nBest regards,\nThe Address Holding Team" },
+    { id: "new_launch", label: "New Launch", subject: "Exclusive New Launch ï¿½ {community}", body: "Dear {name},\n\nWe have an exciting new project launch in {community}.\n\nBest regards,\nThe Address Holding Team" },
+    { id: "reengagement", label: "Re-engagement", subject: "We miss you ï¿½ special offer inside", body: "Dear {name},\n\nIt\'s been a while since we connected regarding your property search in {community}.\n\nBest regards,\nThe Address Holding Team" },
   ];
 
   React.useEffect(() => {
@@ -82,11 +82,11 @@ function EmailCampaignsTab({ T, db, notify, adminUser, leads, leadsTotal, fetchL
           const html = `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:24px">
             <div style="border-bottom:2px solid #D4A843;padding-bottom:12px;margin-bottom:20px">
               <h2 style="color:#D4A843;margin:0;font-size:20px">DXB Analytics</h2>
-              <p style="color:#64748B;margin:4px 0 0;font-size:12px">The Address Holding · Dubai</p>
+              <p style="color:#64748B;margin:4px 0 0;font-size:12px">The Address Holding ï¿½ Dubai</p>
             </div>
             <div style="color:#1E293B;font-size:14px;line-height:1.7;white-space:pre-wrap">${bodyText}</div>
             <div style="border-top:1px solid #E2E8F0;margin-top:24px;padding-top:16px;color:#94A3B8;font-size:11px">
-              DXB Analytics · The Address Holding · Dubai, UAE<br/>
+              DXB Analytics ï¿½ The Address Holding ï¿½ Dubai, UAE<br/>
               <a href="mailto:info@theaddressholding.ae" style="color:#D4A843">info@theaddressholding.ae</a>
             </div>
           </div>`;
@@ -98,7 +98,7 @@ function EmailCampaignsTab({ T, db, notify, adminUser, leads, leadsTotal, fetchL
       await new Promise(r => setTimeout(r, 200));
     }
     try { await setDoc(doc(db, "campaigns", campaignId), { ...campaignDoc, sent, failed, status: "completed", completedAt: new Date().toISOString() }, { merge: true }); } catch(e) {}
-    setSending(false); notify(`? Campaign sent — ${sent} delivered, ${failed} failed`);
+    setSending(false); notify(`? Campaign sent ï¿½ ${sent} delivered, ${failed} failed`);
     setShowCreate(false); setForm({ name:"", subject:"", body:"", targetFilter:"all", targetCommunity:"", targetStatus:"", template:"custom" });
     try { const snap = await getDocs(query(collection(db, "campaigns"), orderBy("createdAt", "desc"), limit(50))); const list = []; snap.forEach(d => list.push({ id: d.id, ...d.data() })); setCampaigns(list); } catch(e) {}
   };
@@ -108,7 +108,7 @@ function EmailCampaignsTab({ T, db, notify, adminUser, leads, leadsTotal, fetchL
       <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:24, flexWrap:"wrap", gap:12 }}>
         <div>
           <h2 style={{ fontFamily:"'Fraunces',serif", fontSize:26, fontWeight:800, color:"#FFFFFF", margin:0 }}>Email Campaigns</h2>
-          <p style={{ fontSize:13, color:T.textMuted, margin:"4px 0 0" }}>{(leads||[]).filter(l=>l.email).length.toLocaleString()} leads with emails · {(leadsTotal||0).toLocaleString()} total</p>
+          <p style={{ fontSize:13, color:T.textMuted, margin:"4px 0 0" }}>{(leads||[]).filter(l=>l.email).length.toLocaleString()} leads with emails ï¿½ {(leadsTotal||0).toLocaleString()} total</p>
         </div>
         <button type="button" onClick={() => setShowCreate(true)} style={{ padding:"10px 20px", borderRadius:10, border:"none", background:`linear-gradient(135deg, ${T.gold}, #B8912F)`, color:T.bg, fontSize:13, fontWeight:700, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>+ New Campaign</button>
       </div>
@@ -138,7 +138,7 @@ function EmailCampaignsTab({ T, db, notify, adminUser, leads, leadsTotal, fetchL
                 <td style={{ padding:"12px 16px", fontSize:12, color:T.textSecondary }}>{c.targetFilter==="community"?c.targetCommunity:c.targetFilter==="status"?c.targetStatus:"All leads"}</td>
                 <td style={{ padding:"12px 16px" }}><span style={{ fontSize:13, fontWeight:700, color:T.green }}>{(c.sent||0).toLocaleString()}</span></td>
                 <td style={{ padding:"12px 16px" }}><span style={{ fontSize:11, padding:"3px 8px", borderRadius:5, fontWeight:700, background:c.status==="completed"?"rgba(16,185,129,0.1)":"rgba(59,130,246,0.1)", color:c.status==="completed"?T.green:T.blue }}>{c.status==="completed"?"? Sent":"? Sending"}</span></td>
-                <td style={{ padding:"12px 16px", fontSize:11, color:T.textMuted }}>{c.createdAt?new Date(c.createdAt).toLocaleDateString("en-AE",{day:"2-digit",month:"short"}):"—"}</td>
+                <td style={{ padding:"12px 16px", fontSize:11, color:T.textMuted }}>{c.createdAt?new Date(c.createdAt).toLocaleDateString("en-AE",{day:"2-digit",month:"short"}):"ï¿½"}</td>
               </tr>
             ))}</tbody>
           </table>
@@ -149,7 +149,7 @@ function EmailCampaignsTab({ T, db, notify, adminUser, leads, leadsTotal, fetchL
           <div style={{ background:T.surface, border:"1px solid rgba(212,168,67,0.3)", borderRadius:16, width:"100%", maxWidth:620, maxHeight:"92vh", overflowY:"auto", padding:28 }} onClick={e=>e.stopPropagation()}>
             <div style={{ display:"flex", justifyContent:"space-between", marginBottom:20 }}>
               <h3 style={{ fontFamily:"'Fraunces',serif", fontSize:20, fontWeight:700, color:T.gold }}>New Campaign</h3>
-              {!sending && <button type="button" onClick={()=>setShowCreate(false)} style={{ background:"none", border:"none", color:T.textMuted, cursor:"pointer", fontSize:22 }}>×</button>}
+              {!sending && <button type="button" onClick={()=>setShowCreate(false)} style={{ background:"none", border:"none", color:T.textMuted, cursor:"pointer", fontSize:22 }}>ï¿½</button>}
             </div>
             <div style={{ marginBottom:14 }}><label style={{ fontSize:10, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:1, display:"block", marginBottom:6 }}>Campaign Name *</label><input type="text" placeholder="e.g. Arabian Ranches Follow-up" value={form.name} onChange={e=>setForm(p=>({...p,name:e.target.value}))} style={inputStyle} /></div>
             <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:14, marginBottom:14 }}>
@@ -172,7 +172,7 @@ function EmailCampaignsTab({ T, db, notify, adminUser, leads, leadsTotal, fetchL
       {selectedCampaign && (
         <div style={{ position:"fixed", inset:0, background:"rgba(4,9,15,0.85)", zIndex:9000, display:"flex", alignItems:"center", justifyContent:"center" }} onClick={()=>setSelectedCampaign(null)}>
           <div style={{ background:T.surface, border:`1px solid ${T.border}`, borderRadius:16, width:"95%", maxWidth:440, padding:24 }} onClick={e=>e.stopPropagation()}>
-            <div style={{ display:"flex", justifyContent:"space-between", marginBottom:16 }}><h3 style={{ fontFamily:"'Fraunces',serif", fontSize:17, fontWeight:700, color:T.gold }}>{selectedCampaign.name}</h3><button type="button" onClick={()=>setSelectedCampaign(null)} style={{ background:"none", border:"none", color:T.textMuted, cursor:"pointer", fontSize:20 }}>×</button></div>
+            <div style={{ display:"flex", justifyContent:"space-between", marginBottom:16 }}><h3 style={{ fontFamily:"'Fraunces',serif", fontSize:17, fontWeight:700, color:T.gold }}>{selectedCampaign.name}</h3><button type="button" onClick={()=>setSelectedCampaign(null)} style={{ background:"none", border:"none", color:T.textMuted, cursor:"pointer", fontSize:20 }}>ï¿½</button></div>
             <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
               {[["Sent",(selectedCampaign.sent||0).toLocaleString(),T.green],["Failed",selectedCampaign.failed||0,T.red],["Target",selectedCampaign.targetFilter==="community"?selectedCampaign.targetCommunity:"All",T.blue],["Template",selectedCampaign.template||"custom",T.gold]].map(([l,v,c],i)=>(
                 <div key={i} style={{ padding:"10px 12px", background:T.surfaceAlt, borderRadius:8 }}><div style={{ fontSize:10, color:T.textMuted, textTransform:"uppercase", marginBottom:3 }}>{l}</div><div style={{ fontSize:15, fontWeight:700, color:c }}>{v}</div></div>
@@ -186,7 +186,7 @@ function EmailCampaignsTab({ T, db, notify, adminUser, leads, leadsTotal, fetchL
 }
 
 /* ---------------------------------------------------------------
-   DXB ANALYTICS — ADMIN PANEL
+   DXB ANALYTICS ï¿½ ADMIN PANEL
    Matching dashboard design DNA: sidebar nav, KPI cards, sections
    --------------------------------------------------------------- */
 
@@ -196,11 +196,11 @@ const sendResend = async (to, subject, bodyText) => {
   const html = `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:24px">
     <div style="border-bottom:2px solid #D4A843;padding-bottom:12px;margin-bottom:20px">
       <h2 style="color:#D4A843;margin:0;font-size:18px">DXB Analytics</h2>
-      <p style="color:#64748B;margin:4px 0 0;font-size:11px">The Address Holding · Dubai, UAE</p>
+      <p style="color:#64748B;margin:4px 0 0;font-size:11px">The Address Holding ï¿½ Dubai, UAE</p>
     </div>
     <div style="color:#1E293B;font-size:14px;line-height:1.7;white-space:pre-wrap">${bodyText}</div>
     <div style="border-top:1px solid #E2E8F0;margin-top:24px;padding-top:12px;color:#94A3B8;font-size:11px">
-      DXB Analytics · <a href="mailto:info@theaddressholding.ae" style="color:#D4A843">info@theaddressholding.ae</a>
+      DXB Analytics ï¿½ <a href="mailto:info@theaddressholding.ae" style="color:#D4A843">info@theaddressholding.ae</a>
     </div>
   </div>`;
   const res = await fetch("https://api.resend.com/emails", {
@@ -453,7 +453,7 @@ const Chart = ({ title, sub, children }) => (
   </div>
 );
 
-/* --- HELP TIP — inline ? icon with hover tooltip --- */
+/* --- HELP TIP ï¿½ inline ? icon with hover tooltip --- */
 const HelpTip = ({ text }) => {
   const [show, setShow] = React.useState(false);
   return (
@@ -470,7 +470,7 @@ const HelpTip = ({ text }) => {
   );
 };
 
-/* --- TAB HELP — collapsible how-to banner --- */
+/* --- TAB HELP ï¿½ collapsible how-to banner --- */
 const TabHelp = ({ items }) => {
   const [open, setOpen] = React.useState(false);
   return (
@@ -501,7 +501,7 @@ const TabHelp = ({ items }) => {
 };
 
 /* -------------------------------------------------------------------
-   SUPPORT TAB COMPONENT — TAB 14
+   SUPPORT TAB COMPONENT ï¿½ TAB 14
    Ticket system, conversation threads, SLA tracking, response templates
    Collections: supportTickets, ticketPresence
    Benchmark: Intercom + Zendesk + Freshdesk
@@ -509,7 +509,7 @@ const TabHelp = ({ items }) => {
    PHASE 1B: Collision Detection, Attachments, @Mentions
    PHASE 2: Merge Tickets, Link Related, Custom Fields
 ------------------------------------------------------------------- */
-// Pre-computed constants — outside components to prevent re-render on keystroke
+// Pre-computed constants ï¿½ outside components to prevent re-render on keystroke
 const PHONE_CODES_LIST = [["+93","???? Afghanistan"],["+355","???? Albania"],["+213","???? Algeria"],["+244","???? Angola"],["+54","???? Argentina"],["+374","???? Armenia"],["+61","???? Australia"],["+43","???? Austria"],["+994","???? Azerbaijan"],["+1","???? Bahamas"],["+973","???? Bahrain"],["+880","???? Bangladesh"],["+1","???? Barbados"],["+375","???? Belarus"],["+32","???? Belgium"],["+501","???? Belize"],["+229","???? Benin"],["+975","???? Bhutan"],["+591","???? Bolivia"],["+387","???? Bosnia"],["+267","???? Botswana"],["+55","???? Brazil"],["+673","???? Brunei"],["+359","???? Bulgaria"],["+226","???? Burkina Faso"],["+257","???? Burundi"],["+238","???? Cape Verde"],["+855","???? Cambodia"],["+237","???? Cameroon"],["+1","???? Canada"],["+235","???? Chad"],["+56","???? Chile"],["+86","???? China"],["+57","???? Colombia"],["+242","???? Congo"],["+506","???? Costa Rica"],["+385","???? Croatia"],["+53","???? Cuba"],["+357","???? Cyprus"],["+420","???? Czech Republic"],["+45","???? Denmark"],["+253","???? Djibouti"],["+1","???? Dominican Republic"],["+593","???? Ecuador"],["+20","???? Egypt"],["+503","???? El Salvador"],["+291","???? Eritrea"],["+372","???? Estonia"],["+251","???? Ethiopia"],["+679","???? Fiji"],["+358","???? Finland"],["+33","???? France"],["+241","???? Gabon"],["+220","???? Gambia"],["+995","???? Georgia"],["+49","???? Germany"],["+233","???? Ghana"],["+30","???? Greece"],["+502","???? Guatemala"],["+224","???? Guinea"],["+592","???? Guyana"],["+509","???? Haiti"],["+504","???? Honduras"],["+36","???? Hungary"],["+354","???? Iceland"],["+91","???? India"],["+62","???? Indonesia"],["+98","???? Iran"],["+964","???? Iraq"],["+353","???? Ireland"],["+972","???? Israel"],["+39","???? Italy"],["+1","???? Jamaica"],["+81","???? Japan"],["+962","???? Jordan"],["+7","???? Kazakhstan"],["+254","???? Kenya"],["+82","???? Korea South"],["+965","???? Kuwait"],["+996","???? Kyrgyzstan"],["+856","???? Laos"],["+371","???? Latvia"],["+961","???? Lebanon"],["+231","???? Liberia"],["+218","???? Libya"],["+370","???? Lithuania"],["+352","???? Luxembourg"],["+261","???? Madagascar"],["+265","???? Malawi"],["+60","???? Malaysia"],["+960","???? Maldives"],["+223","???? Mali"],["+356","???? Malta"],["+222","???? Mauritania"],["+230","???? Mauritius"],["+52","???? Mexico"],["+373","???? Moldova"],["+976","???? Mongolia"],["+382","???? Montenegro"],["+212","???? Morocco"],["+258","???? Mozambique"],["+264","???? Namibia"],["+977","???? Nepal"],["+31","???? Netherlands"],["+64","???? New Zealand"],["+505","???? Nicaragua"],["+227","???? Niger"],["+234","???? Nigeria"],["+47","???? Norway"],["+968","???? Oman"],["+92","???? Pakistan"],["+970","???? Palestine"],["+507","???? Panama"],["+595","???? Paraguay"],["+51","???? Peru"],["+63","???? Philippines"],["+48","???? Poland"],["+351","???? Portugal"],["+974","???? Qatar"],["+40","???? Romania"],["+7","???? Russia"],["+250","???? Rwanda"],["+966","???? Saudi Arabia"],["+221","???? Senegal"],["+381","???? Serbia"],["+65","???? Singapore"],["+421","???? Slovakia"],["+386","???? Slovenia"],["+252","???? Somalia"],["+27","???? South Africa"],["+211","???? South Sudan"],["+34","???? Spain"],["+94","???? Sri Lanka"],["+249","???? Sudan"],["+597","???? Suriname"],["+46","???? Sweden"],["+41","???? Switzerland"],["+963","???? Syria"],["+886","???? Taiwan"],["+992","???? Tajikistan"],["+255","???? Tanzania"],["+66","???? Thailand"],["+228","???? Togo"],["+1","???? Trinidad"],["+216","???? Tunisia"],["+90","???? Turkey"],["+993","???? Turkmenistan"],["+256","???? Uganda"],["+380","???? Ukraine"],["+971","???? UAE"],["+44","???? United Kingdom"],["+1","???? United States"],["+598","???? Uruguay"],["+998","???? Uzbekistan"],["+58","???? Venezuela"],["+84","???? Vietnam"],["+967","???? Yemen"],["+260","???? Zambia"],["+263","???? Zimbabwe"]].sort((a,b)=>a[1].localeCompare(b[1]));
 const COUNTRY_LIST = ["???? Afghanistan","???? Albania","???? Algeria","???? Angola","???? Argentina","???? Armenia","???? Australia","???? Austria","???? Azerbaijan","???? Bahrain","???? Bangladesh","???? Belarus","???? Belgium","???? Bolivia","???? Bosnia","???? Brazil","???? Brunei","???? Bulgaria","???? Cambodia","???? Cameroon","???? Canada","???? Chile","???? China","???? Colombia","???? Croatia","???? Cuba","???? Cyprus","???? Czech Republic","???? Denmark","???? Egypt","???? Ethiopia","???? Finland","???? France","???? Georgia","???? Germany","???? Ghana","???? Greece","???? Hungary","???? Iceland","???? India","???? Indonesia","???? Iran","???? Iraq","???? Ireland","???? Israel","???? Italy","???? Japan","???? Jordan","???? Kazakhstan","???? Kenya","???? Korea South","???? Kuwait","???? Kyrgyzstan","???? Latvia","???? Lebanon","???? Libya","???? Lithuania","???? Malaysia","???? Maldives","???? Malta","???? Mexico","???? Moldova","???? Mongolia","???? Morocco","???? Mozambique","???? Nepal","???? Netherlands","???? New Zealand","???? Nigeria","???? Norway","???? Oman","???? Pakistan","???? Palestine","???? Panama","???? Peru","???? Philippines","???? Poland","???? Portugal","???? Qatar","???? Romania","???? Russia","???? Rwanda","???? Saudi Arabia","???? Senegal","???? Serbia","???? Singapore","???? Slovakia","???? Slovenia","???? Somalia","???? South Africa","???? South Sudan","???? Spain","???? Sri Lanka","???? Sudan","???? Sweden","???? Switzerland","???? Syria","???? Taiwan","???? Tajikistan","???? Tanzania","???? Thailand","???? Tunisia","???? Turkey","???? Turkmenistan","???? Uganda","???? Ukraine","???? UAE","???? United Kingdom","???? United States","???? Uruguay","???? Uzbekistan","???? Venezuela","???? Vietnam","???? Yemen","???? Zambia","???? Zimbabwe","?? Other"].sort();
 
@@ -622,7 +622,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
     enabled: true,
     autoAccept: false,
     maxConcurrent: 3,
-    welcomeMessage: "Hi! • How can we help you today?",
+    welcomeMessage: "Hi! ï¿½ How can we help you today?",
     offlineMessage: "We're currently offline. Leave a message and we'll get back to you!",
     widgetColor: "#D4A843",
     widgetPosition: "right"
@@ -713,9 +713,9 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
     { id: "bug", label: "Bug Report", color: T.red, icon: "??" },
     { id: "data", label: "Data Question", color: T.orange, icon: "??" },
     { id: "feature", label: "Feature Request", color: T.purple, icon: "?" },
-    { id: "billing", label: "Billing Query", color: T.green, icon: "•" },
-    { id: "account", label: "Account Issue", color: T.blue, icon: "•" },
-    { id: "other", label: "Other", color: T.textMuted, icon: "•" },
+    { id: "billing", label: "Billing Query", color: T.green, icon: "ï¿½" },
+    { id: "account", label: "Account Issue", color: T.blue, icon: "ï¿½" },
+    { id: "other", label: "Other", color: T.textMuted, icon: "ï¿½" },
   ];
 
   const statuses = {
@@ -1673,7 +1673,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
   const insertTemplate = (text) => { setTicketReply(text); setShowTemplates(false); };
   const insertNoteTemplate = (text) => { setInternalNote(text); };
   const timeAgo = (date) => {
-    if (!date) return "—";
+    if (!date) return "ï¿½";
     const seconds = Math.floor((now.getTime() - new Date(date).getTime()) / 1000);
     if (seconds < 60) return "Just now";
     const minutes = Math.floor(seconds / 60);
@@ -1877,12 +1877,12 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
 
   // Phase 8B: Webhook Functions
   const webhookEvents = [
-    { id: "ticket_created", label: "Ticket Created", icon: "•" },
+    { id: "ticket_created", label: "Ticket Created", icon: "ï¿½" },
     { id: "ticket_resolved", label: "Ticket Resolved", icon: "" },
-    { id: "ticket_assigned", label: "Ticket Assigned", icon: "•" },
-    { id: "sla_breach", label: "SLA Breached", icon: "¦" },
+    { id: "ticket_assigned", label: "Ticket Assigned", icon: "ï¿½" },
+    { id: "sla_breach", label: "SLA Breached", icon: "ï¿½" },
     { id: "reply_sent", label: "Reply Sent", icon: "??" },
-    { id: "priority_changed", label: "Priority Changed", icon: "•" },
+    { id: "priority_changed", label: "Priority Changed", icon: "ï¿½" },
   ];
 
   const saveWebhook = async () => {
@@ -2738,8 +2738,8 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
   // Phase 5B: KB Categories
   const kbCategories = [
     { id: "getting-started", label: "Getting Started", icon: "??" },
-    { id: "billing", label: "Billing & Payments", icon: "•" },
-    { id: "technical", label: "Technical Issues", icon: "•" },
+    { id: "billing", label: "Billing & Payments", icon: "ï¿½" },
+    { id: "technical", label: "Technical Issues", icon: "ï¿½" },
     { id: "features", label: "Features & Usage", icon: "?" },
     { id: "account", label: "Account & Security", icon: "??" },
   ];
@@ -2937,10 +2937,10 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
     };
     
     // Determine sentiment
-    if (scores.urgent >= 3) return { sentiment: "urgent", emoji: "•", color: T.red, label: "Urgent", pulse: true };
-    if (scores.frustrated >= 3) return { sentiment: "frustrated", emoji: "•", color: T.red, label: "Frustrated" };
-    if (scores.concerned >= 2) return { sentiment: "concerned", emoji: "•", color: T.orange, label: "Concerned" };
-    if (scores.positive >= 2) return { sentiment: "positive", emoji: "•", color: T.green, label: "Positive" };
+    if (scores.urgent >= 3) return { sentiment: "urgent", emoji: "ï¿½", color: T.red, label: "Urgent", pulse: true };
+    if (scores.frustrated >= 3) return { sentiment: "frustrated", emoji: "ï¿½", color: T.red, label: "Frustrated" };
+    if (scores.concerned >= 2) return { sentiment: "concerned", emoji: "ï¿½", color: T.orange, label: "Concerned" };
+    if (scores.positive >= 2) return { sentiment: "positive", emoji: "ï¿½", color: T.green, label: "Positive" };
     
     return { sentiment: "neutral", emoji: "??", color: T.textMuted, label: "Neutral" };
   };
@@ -3236,7 +3236,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
         <button type="button" onClick={() => { setTicketsLoading(true); setTimeout(() => setTicketsLoading(false), 500); notify("Tickets refreshed"); }} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, padding: "14px 16px", background: T.goldGlow, border: "none", borderRight: `1px solid ${T.border}`, color: T.gold, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600, flexShrink: 0 }}>{I.refresh}</button>
         {[
           { label: "Open Tickets", value: openTickets.length, color: openTickets.length > 0 ? T.orange : T.green },
-          { label: "Avg Response", value: avgResponseHrs !== null ? `${avgResponseHrs}h` : "—", color: avgResponseHrs !== null && avgResponseHrs > 24 ? T.red : T.green },
+          { label: "Avg Response", value: avgResponseHrs !== null ? `${avgResponseHrs}h` : "ï¿½", color: avgResponseHrs !== null && avgResponseHrs > 24 ? T.red : T.green },
           { label: "Resolved Today", value: resolvedToday, color: T.green },
           { label: "SLA Breached", value: slaBreached.length, color: slaBreached.length > 0 ? T.red : T.green },
           { label: "Unassigned", value: unassignedCount, color: unassignedCount > 0 ? T.orange : T.green },
@@ -3267,7 +3267,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
             { id: "whatsapp", label: `?? WhatsApp${whatsappConversations.filter(c => c.status === "active").length > 0 ? ` (${whatsappConversations.filter(c => c.status === "active").length})` : ""}` },
             { id: "analytics", label: "?? Analytics" },
             { id: "kb", label: "?? KB & Tools" },
-            { id: "timetrack", label: `¦? Time${activeTimer ? " •" : ""}` },
+            { id: "timetrack", label: `ï¿½? Time${activeTimer ? " ï¿½" : ""}` },
             { id: "auditlog", label: "?? Audit" },
             { id: "settings", label: " Settings" },
           ].map(t => (
@@ -3304,20 +3304,20 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
           <select value={ticketPriorityFilter} onChange={e => setTicketPriorityFilter(e.target.value)}
             style={{ padding: "8px 10px", borderRadius: 8, border: `1px solid ${T.border}`, background: T.surfaceAlt, color: T.white, fontSize: 11, fontFamily: "'Outfit',sans-serif", cursor: "pointer" }}>
             <option value="all">All Priorities</option>
-            <option value="urgent">• Urgent</option>
-            <option value="high">• High</option>
+            <option value="urgent">ï¿½ Urgent</option>
+            <option value="high">ï¿½ High</option>
             <option value="normal"> Normal</option>
           </select>
           <select value={tagFilter} onChange={e => setTagFilter(e.target.value)}
             style={{ padding: "8px 10px", borderRadius: 8, border: `1px solid ${tagFilter !== "all" ? T.teal : T.border}`, background: T.surfaceAlt, color: tagFilter !== "all" ? T.teal : T.white, fontSize: 11, fontFamily: "'Outfit',sans-serif", cursor: "pointer" }}>
             <option value="all">All Tags</option>
-            {availableTags.map(t => <option key={t.id} value={t.id}>• {t.label}</option>)}
+            {availableTags.map(t => <option key={t.id} value={t.id}>ï¿½ {t.label}</option>)}
           </select>
           <select value={assignmentFilter} onChange={e => setAssignmentFilter(e.target.value)}
             style={{ padding: "8px 10px", borderRadius: 8, border: `1px solid ${assignmentFilter !== "all" ? T.purple : T.border}`, background: T.surfaceAlt, color: assignmentFilter !== "all" ? T.purple : T.white, fontSize: 11, fontFamily: "'Outfit',sans-serif", cursor: "pointer" }}>
             <option value="all">All Agents</option>
-            <option value="unassigned">• Unassigned</option>
-            {assignableAgents.filter(a => a.id !== "unassigned").map(a => <option key={a.id} value={a.id}>• {a.name}</option>)}
+            <option value="unassigned">ï¿½ Unassigned</option>
+            {assignableAgents.filter(a => a.id !== "unassigned").map(a => <option key={a.id} value={a.id}>ï¿½ {a.name}</option>)}
           </select>
           {/* Custom Field Filter */}
           {customFields.length > 0 && (
@@ -3344,7 +3344,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
           <button type="button" onClick={() => setShowSlaModal(true)}
             style={{ padding: "8px 10px", borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.textMuted, fontSize: 11, cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}
             title="SLA Settings">
-            ¦?
+            ï¿½?
           </button>
           <button type="button" onClick={() => setShowWorkflowModal(true)}
             style={{ padding: "8px 10px", borderRadius: 8, border: `1px solid ${workflowTriggers.filter(w => w.enabled).length > 0 ? T.purple : T.border}`, background: workflowTriggers.filter(w => w.enabled).length > 0 ? `${T.purple}15` : "transparent", color: workflowTriggers.filter(w => w.enabled).length > 0 ? T.purple : T.textMuted, fontSize: 11, cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}
@@ -3390,7 +3390,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
               <div style={{ fontSize: 10, color: T.textMuted, fontWeight: 600, textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>Avg Resolution</div>
               <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
                 <span style={{ fontSize: 32, fontWeight: 900, color: analytics.avgResolutionHrs && analytics.avgResolutionHrs > slaSettings.defaultHours ? T.red : T.green, fontFamily: "'Fraunces',serif" }}>
-                  {analytics.avgResolutionHrs ? `${analytics.avgResolutionHrs}h` : "—"}
+                  {analytics.avgResolutionHrs ? `${analytics.avgResolutionHrs}h` : "ï¿½"}
                 </span>
               </div>
               <div style={{ fontSize: 10, color: T.textMuted }}>SLA target: {slaSettings.defaultHours}h</div>
@@ -3486,7 +3486,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16 }}>
             {/* Priority Breakdown */}
             <div style={{ padding: 20, background: T.surface, borderRadius: 14, border: `1px solid ${T.border}` }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 16 }}>• By Priority</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 16 }}>ï¿½ By Priority</div>
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 {analytics.priorityBreakdown.map(p => (
                   <div key={p.id}>
@@ -3522,7 +3522,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
 
             {/* Resolution Time Buckets */}
             <div style={{ padding: 20, background: T.surface, borderRadius: 14, border: `1px solid ${T.border}` }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 16 }}>¦? Resolution Time</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 16 }}>ï¿½? Resolution Time</div>
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 {analytics.resolutionBuckets.map((b, idx) => (
                   <div key={idx}>
@@ -3542,7 +3542,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
           {/* Agent Performance Table */}
           <div style={{ padding: 20, background: T.surface, borderRadius: 14, border: `1px solid ${T.border}` }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: T.white }}>• Agent Performance</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: T.white }}>ï¿½ Agent Performance</div>
               <div style={{ fontSize: 10, color: T.textMuted }}>Last {analyticsRange === "7d" ? "7 days" : analyticsRange === "30d" ? "30 days" : "90 days"}</div>
             </div>
             {analytics.agentPerformance.length === 0 ? (
@@ -3570,7 +3570,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                           <div>
                             <div style={{ fontWeight: 600, color: T.white }}>{agent.name}</div>
                             {idx === 0 && analytics.agentPerformance.length > 1 && (
-                              <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: `${T.gold}20`, color: T.gold }}>• Top Performer</span>
+                              <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: `${T.gold}20`, color: T.gold }}>ï¿½ Top Performer</span>
                             )}
                           </div>
                         </td>
@@ -3585,7 +3585,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                           </div>
                         </td>
                         <td style={{ textAlign: "center", padding: "12px", color: agent.avgResolution && agent.avgResolution > slaSettings.defaultHours ? T.red : T.textSecondary }}>
-                          {agent.avgResolution ? `${agent.avgResolution}h` : "—"}
+                          {agent.avgResolution ? `${agent.avgResolution}h` : "ï¿½"}
                         </td>
                         <td style={{ textAlign: "center", padding: "12px" }}>
                           <span style={{ padding: "4px 10px", borderRadius: 6, background: agent.slaPercent >= 85 ? `${T.green}20` : agent.slaPercent >= 70 ? `${T.orange}20` : `${T.red}20`, color: agent.slaPercent >= 85 ? T.green : agent.slaPercent >= 70 ? T.orange : T.red, fontWeight: 700, fontSize: 11 }}>
@@ -3675,7 +3675,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
 
           {/* CSAT Section Header */}
           <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 8 }}>
-            <div style={{ fontSize: 16, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>• Customer Satisfaction</div>
+            <div style={{ fontSize: 16, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>ï¿½ Customer Satisfaction</div>
             <div style={{ flex: 1, height: 1, background: T.border }} />
           </div>
 
@@ -3685,7 +3685,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
               <div style={{ fontSize: 10, color: T.textMuted, fontWeight: 600, textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>Avg CSAT Score</div>
               <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
                 <span style={{ fontSize: 32, fontWeight: 900, color: analytics.avgCsat && analytics.avgCsat >= 4 ? T.green : analytics.avgCsat && analytics.avgCsat >= 3 ? T.orange : T.red, fontFamily: "'Fraunces',serif" }}>
-                  {analytics.avgCsat ? `${analytics.avgCsat}` : "—"}
+                  {analytics.avgCsat ? `${analytics.avgCsat}` : "ï¿½"}
                 </span>
                 {analytics.csatChange !== 0 && (
                   <span style={{ fontSize: 12, fontWeight: 600, color: analytics.csatChange > 0 ? T.green : T.red }}>
@@ -3785,7 +3785,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
           {/* Agent CSAT Scores */}
           <div style={{ padding: 20, background: T.surface, borderRadius: 14, border: `1px solid ${T.border}` }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: T.white }}>• Agent CSAT Scores</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: T.white }}>ï¿½ Agent CSAT Scores</div>
               <div style={{ fontSize: 10, color: T.textMuted }}>Based on customer feedback</div>
             </div>
             {analytics.agentCsat.length === 0 ? (
@@ -3863,7 +3863,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                     </div>
                     <p style={{ margin: 0, fontSize: 12, color: T.textSecondary, lineHeight: 1.5 }}>"{feedback.comment}"</p>
                     <div style={{ marginTop: 8, fontSize: 10, color: T.textMuted }}>
-                      Agent: <span style={{ color: T.purple }}>{feedback.agentName || "—"}</span>
+                      Agent: <span style={{ color: T.purple }}>{feedback.agentName || "ï¿½"}</span>
                     </div>
                   </div>
                 ))}
@@ -3889,7 +3889,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
               <button type="button" onClick={() => setShowWidgetPreview(true)}
                 style={{ padding: "8px 14px", borderRadius: 6, border: `1px solid ${T.teal}40`, background: `${T.teal}10`, color: T.teal, fontSize: 11, fontWeight: 600, cursor: "pointer" }}>
-                • Widget Preview
+                ï¿½ Widget Preview
               </button>
               <button type="button" onClick={() => setShowChatSettings(true)}
                 style={{ padding: "8px 14px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.surfaceAlt, color: T.textSecondary, fontSize: 11, fontWeight: 600, cursor: "pointer" }}>
@@ -3904,8 +3904,8 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
               { label: "Active Chats", value: liveChats.filter(c => c.status === "active").length, color: T.green, icon: "??" },
               { label: "In Queue", value: chatQueue.length, color: chatQueue.length > 0 ? T.orange : T.textMuted, icon: "" },
               { label: "Handled Today", value: liveChats.filter(c => c.status === "ended").length, color: T.teal, icon: "?" },
-              { label: "Avg Wait", value: chatQueue.length > 0 ? `${Math.round(chatQueue.reduce((a, c) => a + (Date.now() - new Date(c.queuedAt).getTime()) / 1000, 0) / chatQueue.length / 60)}m` : "—", color: T.textSecondary, icon: "¦?" },
-              { label: "Avg Duration", value: liveChats.filter(c => c.duration).length > 0 ? `${Math.round(liveChats.filter(c => c.duration).reduce((a, c) => a + c.duration, 0) / liveChats.filter(c => c.duration).length / 60)}m` : "—", color: T.textSecondary, icon: "??" },
+              { label: "Avg Wait", value: chatQueue.length > 0 ? `${Math.round(chatQueue.reduce((a, c) => a + (Date.now() - new Date(c.queuedAt).getTime()) / 1000, 0) / chatQueue.length / 60)}m` : "ï¿½", color: T.textSecondary, icon: "ï¿½?" },
+              { label: "Avg Duration", value: liveChats.filter(c => c.duration).length > 0 ? `${Math.round(liveChats.filter(c => c.duration).reduce((a, c) => a + c.duration, 0) / liveChats.filter(c => c.duration).length / 60)}m` : "ï¿½", color: T.textSecondary, icon: "??" },
             ].map((stat, i) => (
               <div key={i} style={{ padding: 16, background: T.surface, borderRadius: 10, border: `1px solid ${T.border}`, textAlign: "center" }}>
                 <div style={{ fontSize: 20, marginBottom: 4 }}>{stat.icon}</div>
@@ -4043,7 +4043,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                       </div>
                       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                         <div style={{ fontSize: 12, color: T.textMuted, fontFamily: "'Fraunces',serif" }}>
-                          • {durMins}:{durSecs.toString().padStart(2, "0")}
+                          ï¿½ {durMins}:{durSecs.toString().padStart(2, "0")}
                         </div>
                         <button type="button" onClick={() => setActiveChatId(null)}
                           style={{ padding: "4px 8px", borderRadius: 4, border: `1px solid ${T.border}`, background: "transparent", color: T.textMuted, fontSize: 10, cursor: "pointer" }}>
@@ -4141,7 +4141,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
               <div style={{ padding: 16, background: T.surface, borderRadius: 12, border: `1px solid ${T.border}` }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <span style={{ fontSize: 14, fontWeight: 700, color: T.white }}>• Active Chats</span>
+                    <span style={{ fontSize: 14, fontWeight: 700, color: T.white }}>ï¿½ Active Chats</span>
                     {liveChats.filter(c => c.status === "active").length > 0 && (
                       <span style={{ padding: "2px 8px", borderRadius: 10, background: `${T.green}20`, color: T.green, fontSize: 11, fontWeight: 600 }}>{liveChats.filter(c => c.status === "active").length} live</span>
                     )}
@@ -4209,7 +4209,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                               <span style={{ fontSize: 10, color: T.textMuted }}>{chat.messages?.length || 0} msgs</span>
                               {chat.convertedToTicket && <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: `${T.teal}20`, color: T.teal }}>? Ticket</span>}
                             </div>
-                            <span style={{ fontSize: 10, color: T.textMuted }}>{chat.duration ? `${Math.floor(chat.duration / 60)}m ${chat.duration % 60}s` : "—"}</span>
+                            <span style={{ fontSize: 10, color: T.textMuted }}>{chat.duration ? `${Math.floor(chat.duration / 60)}m ${chat.duration % 60}s` : "ï¿½"}</span>
                           </div>
                         </div>
                       ))}
@@ -4252,7 +4252,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
               <button type="button" onClick={() => setShowWhatsappTemplates(true)}
                 style={{ padding: "8px 14px", borderRadius: 6, border: `1px solid #25D36640`, background: "#25D36610", color: "#25D366", fontSize: 11, fontWeight: 600, cursor: "pointer" }}>
-                • Message Templates
+                ï¿½ Message Templates
               </button>
             </div>
           </div>
@@ -4263,8 +4263,8 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
               { label: "Active", value: whatsappConversations.filter(c => c.status === "active").length, color: "#25D366", icon: "??" },
               { label: "Unread", value: whatsappConversations.filter(c => !c.responded && c.status === "active").length, color: T.orange, icon: "??" },
               { label: "Today", value: whatsappConversations.filter(c => new Date(c.createdAt) > new Date(Date.now() - 86400000)).length, color: T.teal, icon: "??" },
-              { label: "Converted", value: whatsappConversations.filter(c => c.convertedToTicket).length, color: T.purple, icon: "•" },
-              { label: "Avg Response", value: "~5m", color: T.textSecondary, icon: "¦?" },
+              { label: "Converted", value: whatsappConversations.filter(c => c.convertedToTicket).length, color: T.purple, icon: "ï¿½" },
+              { label: "Avg Response", value: "~5m", color: T.textSecondary, icon: "ï¿½?" },
             ].map((stat, i) => (
               <div key={i} style={{ padding: 16, background: T.surface, borderRadius: 10, border: `1px solid ${T.border}`, textAlign: "center" }}>
                 <div style={{ fontSize: 20, marginBottom: 4 }}>{stat.icon}</div>
@@ -4323,7 +4323,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                           <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: `${T.gold}20`, color: T.gold, textTransform: "uppercase" }}>{conv.customerTier || "free"}</span>
                           {windowRemaining > 0 ? (
-                            <span style={{ fontSize: 9, color: windowRemaining < 4 ? T.orange : T.textMuted }}>¦? {Math.round(windowRemaining)}h window</span>
+                            <span style={{ fontSize: 9, color: windowRemaining < 4 ? T.orange : T.textMuted }}>ï¿½? {Math.round(windowRemaining)}h window</span>
                           ) : (
                             <span style={{ fontSize: 9, color: T.red }}>?? Window expired</span>
                           )}
@@ -4423,7 +4423,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                         } catch (e) { notify("Error: " + e.message); }
                       }}
                         style={{ padding: "6px 10px", borderRadius: 5, border: `1px solid ${T.teal}40`, background: `${T.teal}10`, color: T.teal, fontSize: 10, fontWeight: 600, cursor: "pointer" }}>
-                        • Convert to Ticket
+                        ï¿½ Convert to Ticket
                       </button>
                     </div>
                   </div>
@@ -4459,7 +4459,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                     <div style={{ display: "flex", gap: 10 }}>
                       <button type="button" onClick={() => setShowWhatsappTemplates(true)}
                         style={{ padding: "10px 14px", borderRadius: 8, border: `1px solid #25D36640`, background: "#25D36610", color: "#25D366", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
-                        • Templates
+                        ï¿½ Templates
                       </button>
                       <input value={whatsappMessage} onChange={e => setWhatsappMessage(e.target.value)}
                         onKeyDown={e => {
@@ -4527,16 +4527,16 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
           {(() => {
             const kbCategories = [
               { id: "getting-started", label: "Getting Started", icon: "??" },
-              { id: "billing", label: "Billing & Payments", icon: "•" },
-              { id: "technical", label: "Technical Issues", icon: "•" },
+              { id: "billing", label: "Billing & Payments", icon: "ï¿½" },
+              { id: "technical", label: "Technical Issues", icon: "ï¿½" },
               { id: "features", label: "Features & How-To", icon: "" },
-              { id: "account", label: "Account Management", icon: "•" },
+              { id: "account", label: "Account Management", icon: "ï¿½" },
             ];
             
             const qrCategories = [
               { id: "general", label: "General", icon: "??" },
-              { id: "technical", label: "Technical", icon: "•" },
-              { id: "billing", label: "Billing", icon: "•" },
+              { id: "technical", label: "Technical", icon: "ï¿½" },
+              { id: "billing", label: "Billing", icon: "ï¿½" },
             ];
             
             const filteredArticles = kbArticles.filter(a => {
@@ -4591,7 +4591,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                         <span style={{ fontSize: 10, padding: "3px 8px", borderRadius: 4, background: `${T.teal}20`, color: T.teal }}>
                           {kbCategories.find(c => c.id === viewingArticle.category)?.icon} {kbCategories.find(c => c.id === viewingArticle.category)?.label}
                         </span>
-                        <span style={{ fontSize: 10, color: T.textMuted }}>• {viewingArticle.views || 0} views</span>
+                        <span style={{ fontSize: 10, color: T.textMuted }}>ï¿½ {viewingArticle.views || 0} views</span>
                         <span style={{ fontSize: 10, color: T.textMuted }}>?? {viewingArticle.helpful || 0} helpful</span>
                       </div>
                       <div style={{ fontSize: 13, color: T.textSecondary, lineHeight: 1.8, whiteSpace: "pre-wrap" }}>{viewingArticle.content}</div>
@@ -4648,7 +4648,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                                     onMouseLeave={e => e.currentTarget.style.borderColor = T.border}>
                                     <div style={{ fontSize: 13, fontWeight: 500, color: T.white, marginBottom: 4 }}>{article.title}</div>
                                     <div style={{ display: "flex", gap: 12, fontSize: 10, color: T.textMuted }}>
-                                      <span>• {article.views || 0}</span>
+                                      <span>ï¿½ {article.views || 0}</span>
                                       <span>?? {article.helpful || 0}</span>
                                     </div>
                                   </div>
@@ -4819,7 +4819,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
           {/* Agent Time Breakdown */}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: 20 }}>
             <div style={{ background: T.surface, borderRadius: 12, border: `1px solid ${T.border}`, padding: 16 }}>
-              <div style={{ fontSize: 12, fontWeight: 700, color: T.white, marginBottom: 16 }}>• Agent Breakdown</div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: T.white, marginBottom: 16 }}>ï¿½ Agent Breakdown</div>
               {getAgentTimeStats().length === 0 ? (
                 <div style={{ padding: 20, textAlign: "center", color: T.textMuted, fontSize: 12 }}>No time logged yet</div>
               ) : (
@@ -4846,7 +4846,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
             {/* Recent Time Entries */}
             <div style={{ background: T.surface, borderRadius: 12, border: `1px solid ${T.border}`, overflow: "hidden" }}>
               <div style={{ padding: 16, borderBottom: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <div style={{ fontSize: 12, fontWeight: 700, color: T.white }}>• Recent Time Entries</div>
+                <div style={{ fontSize: 12, fontWeight: 700, color: T.white }}>ï¿½ Recent Time Entries</div>
                 <div style={{ fontSize: 10, color: T.textMuted }}>{timeEntries.length} total</div>
               </div>
               <div style={{ maxHeight: 350, overflowY: "auto" }}>
@@ -4862,7 +4862,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                           {ticket?.subject || entry.ticketId}
                         </div>
                         <div style={{ fontSize: 10, color: T.textMuted, marginTop: 2 }}>
-                          {entry.agentName} • {entry.notes} • {timeAgo(entry.createdAt)}
+                          {entry.agentName} ï¿½ {entry.notes} ï¿½ {timeAgo(entry.createdAt)}
                         </div>
                       </div>
                       <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
@@ -4873,7 +4873,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                 })}
                 {timeEntries.length === 0 && (
                   <div style={{ padding: 40, textAlign: "center", color: T.textMuted }}>
-                    <div style={{ fontSize: 24, marginBottom: 8 }}>¦?</div>
+                    <div style={{ fontSize: 24, marginBottom: 8 }}>ï¿½?</div>
                     <div style={{ fontSize: 12 }}>No time entries yet</div>
                   </div>
                 )}
@@ -4962,14 +4962,14 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                     {/* Action Icon */}
                     <div style={{ width: 32, height: 32, borderRadius: 8, background: `${getAuditActionColor(log.action)}20`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                       <span style={{ fontSize: 12 }}>
-                        {log.action === "created" ? "•" :
+                        {log.action === "created" ? "ï¿½" :
                          log.action === "status_change" ? "??" :
-                         log.action === "assigned" ? "•" :
+                         log.action === "assigned" ? "ï¿½" :
                          log.action === "reply_sent" ? "??" :
                          log.action === "note_added" ? "??" :
-                         log.action === "tag_added" ? "•" :
-                         log.action === "tag_removed" ? "•" :
-                         log.action === "time_logged" ? "¦?" :
+                         log.action === "tag_added" ? "ï¿½" :
+                         log.action === "tag_removed" ? "ï¿½" :
+                         log.action === "time_logged" ? "ï¿½?" :
                          log.action === "escalated" ? "??" :
                          log.action === "merged" ? "??" : "??"}
                       </span>
@@ -5044,7 +5044,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
             </button>
             <button type="button" onClick={exportTimeEntries}
               style={{ padding: "10px 16px", borderRadius: 8, border: `1px solid ${T.gold}`, background: "transparent", color: T.gold, fontSize: 12, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
-              ¦? Export Time
+              ï¿½? Export Time
             </button>
             <button type="button" onClick={exportAuditLogs}
               style={{ padding: "10px 16px", borderRadius: 8, border: `1px solid ${T.purple}`, background: "transparent", color: T.purple, fontSize: 12, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
@@ -5095,7 +5095,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                         </button>
                         <button type="button" onClick={() => deleteWebhook(webhook.id)}
                           style={{ padding: "4px 8px", borderRadius: 4, border: `1px solid ${T.red}30`, background: "transparent", color: T.red, fontSize: 9, cursor: "pointer" }}>
-                          ×
+                          ï¿½
                         </button>
                       </div>
                     </div>
@@ -5143,7 +5143,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                         </button>
                         <button type="button" onClick={() => deletePermission(perm.id)}
                           style={{ padding: "4px 8px", borderRadius: 4, border: `1px solid ${T.red}30`, background: "transparent", color: T.red, fontSize: 9, cursor: "pointer" }}>
-                          ×
+                          ï¿½
                         </button>
                       </div>
                     );
@@ -5170,7 +5170,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                     <div style={{ width: 8, height: 8, borderRadius: "50%", background: log.status === "success" ? T.green : T.red }} />
                     <div style={{ flex: 1 }}>
                       <div style={{ fontSize: 11, color: T.white }}>{log.webhookName}</div>
-                      <div style={{ fontSize: 10, color: T.textMuted }}>{log.event} • {log.statusCode}</div>
+                      <div style={{ fontSize: 10, color: T.textMuted }}>{log.event} ï¿½ {log.statusCode}</div>
                     </div>
                     <span style={{ fontSize: 9, padding: "2px 8px", borderRadius: 4, background: log.status === "success" ? `${T.green}20` : `${T.red}20`, color: log.status === "success" ? T.green : T.red }}>
                       {log.status}
@@ -5229,7 +5229,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                       <span style={{ fontSize: 13, fontWeight: 600, color: T.white, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{ticket.subject}</span>
                       {sentiment.sentiment !== "neutral" && <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: `${sentiment.color}20`, color: sentiment.color, fontWeight: 600 }}>{sentiment.emoji}</span>}
                       {ticket.channel && ticket.channel !== "email" && <span style={{ fontSize: 8, padding: "2px 6px", borderRadius: 4, background: ticket.channel === "chat" ? `${T.green}20` : ticket.channel === "whatsapp" ? "#25D36620" : `${T.purple}20`, color: ticket.channel === "chat" ? T.green : ticket.channel === "whatsapp" ? "#25D366" : T.purple, fontWeight: 600 }}>{ticket.channel === "chat" ? "?? CHAT" : ticket.channel === "whatsapp" ? "?? WA" : "?? CALL"}</span>}
-                      {slaInfo.status === "breached" && <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: `${T.red}20`, color: T.red, fontWeight: 600 }}>¦ SLA {slaInfo.percent}%</span>}
+                      {slaInfo.status === "breached" && <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: `${T.red}20`, color: T.red, fontWeight: 600 }}>ï¿½ SLA {slaInfo.percent}%</span>}
                       {slaInfo.status === "warning" && <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: `${T.orange}20`, color: T.orange, fontWeight: 600 }}>?? {slaInfo.percent}%</span>}
                       {ticket.autoAssignedBy && <span style={{ fontSize: 8, padding: "2px 6px", borderRadius: 4, background: `${T.green}20`, color: T.green, fontWeight: 600 }}>?? Auto</span>}
                       {ticket.autoEscalated && <span style={{ fontSize: 8, padding: "2px 6px", borderRadius: 4, background: `${T.red}20`, color: T.red, fontWeight: 600 }}>? Escalated</span>}
@@ -5243,15 +5243,15 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                     </div>
                     <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 11, color: T.textMuted }}>
                       <span>{ticket.userName || ticket.userEmail}</span>
-                      <span>·</span>
+                      <span>ï¿½</span>
                       <span style={{ padding: "2px 6px", borderRadius: 4, background: `${cat.color}20`, color: cat.color, fontSize: 10 }}>{cat.icon} {cat.label}</span>
-                      <span>·</span>
+                      <span>ï¿½</span>
                       <span>{timeAgo(ticket.createdAt)}</span>
-                      {ticket.assignedTo && <><span>·</span><span style={{ color: T.purple }}>• {ticket.assignedToName || "Assigned"}</span></>}
+                      {ticket.assignedTo && <><span>ï¿½</span><span style={{ color: T.purple }}>ï¿½ {ticket.assignedToName || "Assigned"}</span></>}
                       {/* SLA Progress Bar */}
                       {slaInfo.status !== "resolved" && (
                         <>
-                          <span>·</span>
+                          <span>ï¿½</span>
                           <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
                             <div style={{ width: 40, height: 4, background: T.border, borderRadius: 2, overflow: "hidden" }}>
                               <div style={{ width: `${Math.min(slaInfo.percent, 100)}%`, height: "100%", background: slaInfo.color, borderRadius: 2 }} />
@@ -5289,7 +5289,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                   ))}
                 </div>
                 <span style={{ fontSize: 11, color: T.purple, fontWeight: 500 }}>
-                  • {viewingAdmins.map(a => a.name).join(", ")} {viewingAdmins.length === 1 ? "is" : "are"} also viewing this ticket
+                  ï¿½ {viewingAdmins.map(a => a.name).join(", ")} {viewingAdmins.length === 1 ? "is" : "are"} also viewing this ticket
                 </span>
               </div>
             )}
@@ -5300,7 +5300,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                 <div style={{ flex: 1 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6, flexWrap: "wrap" }}>
                     <span style={{ fontSize: 10, padding: "3px 8px", borderRadius: 4, background: `${(categories.find(c => c.id === ticketDrawer.category) || categories[5]).color}20`, color: (categories.find(c => c.id === ticketDrawer.category) || categories[5]).color }}>{(categories.find(c => c.id === ticketDrawer.category) || categories[5]).icon} {(categories.find(c => c.id === ticketDrawer.category) || categories[5]).label}</span>
-                    {isSlaBreached(ticketDrawer) && <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: `${T.red}20`, color: T.red, fontWeight: 600 }}>¦ SLA Breached</span>}
+                    {isSlaBreached(ticketDrawer) && <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: `${T.red}20`, color: T.red, fontWeight: 600 }}>ï¿½ SLA Breached</span>}
                     {/* Sentiment Badge */}
                     {(() => {
                       const sentiment = analyzeSentiment(ticketDrawer);
@@ -5318,7 +5318,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                     style={{ padding: "6px 10px", borderRadius: 6, border: `1px solid ${showAiPanel ? T.teal : T.border}`, background: showAiPanel ? `${T.teal}15` : "transparent", color: showAiPanel ? T.teal : T.textMuted, fontSize: 10, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}>
                     ?? AI
                   </button>
-                  <button type="button" onClick={() => setTicketDrawer(null)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 24, lineHeight: 1 }}>×</button>
+                  <button type="button" onClick={() => setTicketDrawer(null)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 24, lineHeight: 1 }}>ï¿½</button>
                 </div>
               </div>
               
@@ -5339,8 +5339,8 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                 </select>
                 <select value={ticketDrawer.assignedTo || "unassigned"} onChange={e => { const agent = assignableAgents.find(a => a.id === e.target.value); assignTicket(ticketDrawer.id, e.target.value, agent?.name || ""); }}
                   style={{ padding: "6px 12px", borderRadius: 6, border: `1px solid ${ticketDrawer.assignedTo ? T.purple : T.border}40`, background: ticketDrawer.assignedTo ? `${T.purple}20` : T.surfaceAlt, color: ticketDrawer.assignedTo ? T.purple : T.textMuted, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
-                  <option value="unassigned">• Unassigned</option>
-                  {assignableAgents.filter(a => a.id !== "unassigned").map(a => <option key={a.id} value={a.id}>• {a.name}</option>)}
+                  <option value="unassigned">ï¿½ Unassigned</option>
+                  {assignableAgents.filter(a => a.id !== "unassigned").map(a => <option key={a.id} value={a.id}>ï¿½ {a.name}</option>)}
                 </select>
               </div>
 
@@ -5352,7 +5352,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                   return tag ? (
                     <span key={tagId} style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 10, padding: "3px 8px", borderRadius: 4, background: `${tag.color}20`, color: tag.color, fontWeight: 600 }}>
                       {tag.label}
-                      <button type="button" onClick={() => removeTag(ticketDrawer.id, tagId)} style={{ background: "none", border: "none", color: tag.color, cursor: "pointer", fontSize: 12, lineHeight: 1, padding: 0 }}>×</button>
+                      <button type="button" onClick={() => removeTag(ticketDrawer.id, tagId)} style={{ background: "none", border: "none", color: tag.color, cursor: "pointer", fontSize: 12, lineHeight: 1, padding: 0 }}>ï¿½</button>
                     </span>
                   ) : null;
                 })}
@@ -5367,7 +5367,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
               <div style={{ marginTop: 12, display: "flex", gap: 8, flexWrap: "wrap" }}>
                 <button type="button" onClick={() => setShowMergeModal(true)}
                   style={{ padding: "5px 10px", borderRadius: 5, border: `1px solid ${T.border}`, background: "transparent", color: T.textMuted, fontSize: 10, fontWeight: 500, cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}>
-                  • Merge Ticket
+                  ï¿½ Merge Ticket
                 </button>
                 <button type="button" onClick={() => setShowLinkModal(true)}
                   style={{ padding: "5px 10px", borderRadius: 5, border: `1px solid ${T.border}`, background: "transparent", color: T.textMuted, fontSize: 10, fontWeight: 500, cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}>
@@ -5404,7 +5404,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                         {link.type !== "merged" && (
                           <button type="button" onClick={() => unlinkTicket(link.id)}
                             style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 12, padding: 2 }}>
-                            ×
+                            ï¿½
                           </button>
                         )}
                       </div>
@@ -5417,7 +5417,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
               <div style={{ marginTop: 12, padding: "10px 12px", background: `${T.gold}08`, borderRadius: 8, border: `1px solid ${T.gold}20` }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
                   <div style={{ fontSize: 10, fontWeight: 600, color: T.gold, display: "flex", alignItems: "center", gap: 4 }}>
-                    ¦? Time Tracking
+                    ï¿½? Time Tracking
                   </div>
                   <div style={{ fontSize: 11, fontWeight: 700, color: T.white }}>
                     Total: {getTicketTimeTotal(ticketDrawer.id)}m
@@ -5449,7 +5449,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                           <span style={{ fontSize: 11, fontWeight: 600, color: entry.billable ? T.green : T.textMuted }}>{entry.duration}m</span>
                           <span style={{ fontSize: 10, color: T.textSecondary }}>{entry.agentName}</span>
-                          {entry.notes && <span style={{ fontSize: 9, color: T.textMuted }}>• {entry.notes.slice(0, 20)}</span>}
+                          {entry.notes && <span style={{ fontSize: 9, color: T.textMuted }}>ï¿½ {entry.notes.slice(0, 20)}</span>}
                         </div>
                         <span style={{ fontSize: 9, color: T.textMuted }}>{timeAgo(entry.createdAt)}</span>
                       </div>
@@ -5531,7 +5531,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                 <div style={{ padding: "12px 24px", background: `${T.gold}08`, borderBottom: `1px solid ${T.gold}20` }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                      <span style={{ fontSize: 11, fontWeight: 600, color: T.gold }}>• Customer Satisfaction</span>
+                      <span style={{ fontSize: 11, fontWeight: 600, color: T.gold }}>ï¿½ Customer Satisfaction</span>
                       {ticketCsat ? (
                         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                           <span style={{ fontSize: 14, color: ticketCsat.rating >= 4 ? T.green : ticketCsat.rating >= 3 ? T.orange : T.red }}>
@@ -5607,7 +5607,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                               {aiPriority.recommended}
                             </div>
                             <div style={{ fontSize: 10, color: T.textMuted }}>
-                              {aiPriority.reasons.slice(0, 2).join(" • ")}
+                              {aiPriority.reasons.slice(0, 2).join(" ï¿½ ")}
                             </div>
                           </div>
                           {needsChange && aiPriority.recommended !== "normal" && (
@@ -5635,7 +5635,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                         <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
                           {ticketSummary.keyPoints.map((point, i) => (
                             <div key={i} style={{ fontSize: 11, color: T.textSecondary, display: "flex", alignItems: "flex-start", gap: 6 }}>
-                              <span style={{ color: T.teal }}>•</span> {point}
+                              <span style={{ color: T.teal }}>ï¿½</span> {point}
                             </div>
                           ))}
                         </div>
@@ -5753,7 +5753,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                       </div>
                       <div style={{ fontSize: 10, color: T.textMuted, marginTop: 4, display: "flex", alignItems: "center", gap: 6 }}>
                         <span>{msg.from === "admin" ? (msg.by || "Admin") : ticketDrawer.userName}</span>
-                        <span>·</span>
+                        <span>ï¿½</span>
                         <span>{timeAgo(msg.at)}</span>
                       </div>
                     </div>
@@ -5791,9 +5791,9 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                         )}
                         <div style={{ fontSize: 10, color: T.textMuted, marginTop: 6, display: "flex", alignItems: "center", gap: 6 }}>
                           <span>{note.by}</span>
-                          <span>·</span>
+                          <span>ï¿½</span>
                           <span>{timeAgo(note.at)}</span>
-                          {note.mentions?.length > 0 && <><span>·</span><span style={{ color: T.teal }}>@{note.mentions.join(", @")}</span></>}
+                          {note.mentions?.length > 0 && <><span>ï¿½</span><span style={{ color: T.teal }}>@{note.mentions.join(", @")}</span></>}
                         </div>
                       </div>
                     ))}
@@ -5834,7 +5834,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                       <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 8 }}>
                         <button type="button" onClick={() => setShowTemplates(!showTemplates)}
                           style={{ fontSize: 10, color: T.teal, background: "none", border: "none", cursor: "pointer", textDecoration: "underline" }}>
-                          {showTemplates ? "Hide Templates" : "• Quick Templates"}
+                          {showTemplates ? "Hide Templates" : "ï¿½ Quick Templates"}
                         </button>
                         <button type="button" onClick={() => { if (suggestedReplies.length === 0) generateSmartReplies(ticketDrawer); }}
                           style={{ fontSize: 10, color: T.purple, background: "none", border: "none", cursor: "pointer", textDecoration: suggestedReplies.length > 0 ? "none" : "underline", display: "flex", alignItems: "center", gap: 4 }}>
@@ -6039,8 +6039,8 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
         <div style={{ position: "fixed", inset: 0, zIndex: 9000, background: "rgba(4,9,15,0.9)", display: "flex", alignItems: "center", justifyContent: "center" }} onClick={() => setShowMergeModal(false)}>
           <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.gold}30`, padding: 24, width: "100%", maxWidth: 480, maxHeight: "80vh", overflow: "auto" }} onClick={e => e.stopPropagation()}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-              <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>• Merge Ticket</h3>
-              <button type="button" onClick={() => setShowMergeModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>×</button>
+              <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>ï¿½ Merge Ticket</h3>
+              <button type="button" onClick={() => setShowMergeModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>ï¿½</button>
             </div>
             
             <div style={{ padding: 12, background: `${T.orange}15`, borderRadius: 8, marginBottom: 16 }}>
@@ -6054,7 +6054,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
               <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 6 }}>Current Ticket:</div>
               <div style={{ padding: 12, background: T.surfaceAlt, borderRadius: 8, border: `1px solid ${T.border}` }}>
                 <div style={{ fontSize: 13, fontWeight: 600, color: T.white, marginBottom: 4 }}>{ticketDrawer.subject}</div>
-                <div style={{ fontSize: 11, color: T.textMuted }}>{ticketDrawer.userEmail} • {(ticketDrawer.messages || []).length} messages</div>
+                <div style={{ fontSize: 11, color: T.textMuted }}>{ticketDrawer.userEmail} ï¿½ {(ticketDrawer.messages || []).length} messages</div>
               </div>
             </div>
             
@@ -6081,7 +6081,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
               </button>
               <button type="button" onClick={mergeTickets} disabled={!mergeTargetId || merging}
                 style={{ flex: 1, padding: "12px 16px", borderRadius: 8, border: "none", background: !mergeTargetId || merging ? T.border : T.orange, color: T.bg, fontSize: 13, fontWeight: 700, cursor: !mergeTargetId || merging ? "not-allowed" : "pointer" }}>
-                {merging ? "Merging..." : "• Merge Tickets"}
+                {merging ? "Merging..." : "ï¿½ Merge Tickets"}
               </button>
             </div>
           </div>
@@ -6094,7 +6094,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
           <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.gold}30`, padding: 24, width: "100%", maxWidth: 480, maxHeight: "80vh", overflow: "auto" }} onClick={e => e.stopPropagation()}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
               <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>?? Link Related Ticket</h3>
-              <button type="button" onClick={() => setShowLinkModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>×</button>
+              <button type="button" onClick={() => setShowLinkModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>ï¿½</button>
             </div>
             
             <div style={{ padding: 12, background: `${T.teal}15`, borderRadius: 8, marginBottom: 16 }}>
@@ -6141,7 +6141,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
           <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.gold}30`, padding: 24, width: "100%", maxWidth: 560, maxHeight: "85vh", overflow: "auto" }} onClick={e => e.stopPropagation()}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
               <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}> Manage Custom Fields</h3>
-              <button type="button" onClick={() => setShowFieldsModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>×</button>
+              <button type="button" onClick={() => setShowFieldsModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>ï¿½</button>
             </div>
             
             <div style={{ padding: 12, background: `${T.cyan}15`, borderRadius: 8, marginBottom: 20 }}>
@@ -6217,7 +6217,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                     <div key={field.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 14px", background: T.surfaceAlt, borderRadius: 8, border: `1px solid ${T.border}` }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                         <span style={{ fontSize: 18 }}>
-                          {field.type === "dropdown" ? "??" : field.type === "date" ? "??" : field.type === "number" ? "??" : field.type === "checkbox" ? "??" : "•"}
+                          {field.type === "dropdown" ? "??" : field.type === "date" ? "??" : field.type === "number" ? "??" : field.type === "checkbox" ? "??" : "ï¿½"}
                         </span>
                         <div>
                           <div style={{ fontSize: 13, fontWeight: 600, color: T.white, display: "flex", alignItems: "center", gap: 6 }}>
@@ -6226,7 +6226,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                           </div>
                           <div style={{ fontSize: 10, color: T.textMuted }}>
                             {field.type.charAt(0).toUpperCase() + field.type.slice(1)}
-                            {field.type === "dropdown" && field.options?.length > 0 && ` • ${field.options.length} options`}
+                            {field.type === "dropdown" && field.options?.length > 0 && ` ï¿½ ${field.options.length} options`}
                           </div>
                         </div>
                       </div>
@@ -6255,12 +6255,12 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
           <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.gold}30`, padding: 24, width: "100%", maxWidth: 600, maxHeight: "85vh", overflow: "auto" }} onClick={e => e.stopPropagation()}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
               <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>?? Auto-Assign Rules</h3>
-              <button type="button" onClick={() => setShowAutoAssignModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>×</button>
+              <button type="button" onClick={() => setShowAutoAssignModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>ï¿½</button>
             </div>
             
             <div style={{ padding: 12, background: `${T.green}15`, borderRadius: 8, marginBottom: 20 }}>
               <div style={{ fontSize: 12, color: T.textSecondary, lineHeight: 1.5 }}>
-                Create rules to automatically assign tickets based on category, priority, user tier, or keywords. Rules are applied in order — first match wins.
+                Create rules to automatically assign tickets based on category, priority, user tier, or keywords. Rules are applied in order ï¿½ first match wins.
               </div>
             </div>
             
@@ -6300,7 +6300,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                   <select value={newRuleForm.assignTo} onChange={e => setNewRuleForm(prev => ({ ...prev, assignTo: e.target.value }))}
                     style={{ width: "100%", padding: "10px 12px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.bg, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif" }}>
                     <option value="">Select agent...</option>
-                    {assignableAgents.filter(a => a.id !== "unassigned").map(a => <option key={a.id} value={a.id}>• {a.name}</option>)}
+                    {assignableAgents.filter(a => a.id !== "unassigned").map(a => <option key={a.id} value={a.id}>ï¿½ {a.name}</option>)}
                   </select>
                 </div>
                 <div style={{ gridColumn: "span 2", display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 8 }}>
@@ -6400,8 +6400,8 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
         <div style={{ position: "fixed", inset: 0, zIndex: 9000, background: "rgba(4,9,15,0.9)", display: "flex", alignItems: "center", justifyContent: "center" }} onClick={() => setShowSlaModal(false)}>
           <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.gold}30`, padding: 24, width: "100%", maxWidth: 500, maxHeight: "85vh", overflow: "auto" }} onClick={e => e.stopPropagation()}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-              <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>¦? SLA Settings</h3>
-              <button type="button" onClick={() => setShowSlaModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>×</button>
+              <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>ï¿½? SLA Settings</h3>
+              <button type="button" onClick={() => setShowSlaModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>ï¿½</button>
             </div>
             
             <div style={{ padding: 12, background: `${T.orange}15`, borderRadius: 8, marginBottom: 20 }}>
@@ -6445,7 +6445,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                       }}
                         style={{ width: "100%", padding: "10px 12px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.bg, color: T.white, fontSize: 12, fontFamily: "'Outfit',sans-serif" }}>
                         <option value="">Select manager...</option>
-                        {assignableAgents.filter(a => a.id !== "unassigned").map(a => <option key={a.id} value={a.id}>• {a.name}</option>)}
+                        {assignableAgents.filter(a => a.id !== "unassigned").map(a => <option key={a.id} value={a.id}>ï¿½ {a.name}</option>)}
                       </select>
                     </div>
                     
@@ -6501,7 +6501,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
           <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.gold}30`, padding: 24, width: "100%", maxWidth: 650, maxHeight: "90vh", overflow: "auto" }} onClick={e => e.stopPropagation()}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
               <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>? Workflow Triggers</h3>
-              <button type="button" onClick={() => setShowWorkflowModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>×</button>
+              <button type="button" onClick={() => setShowWorkflowModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>ï¿½</button>
             </div>
             
             <div style={{ padding: 12, background: `${T.purple}15`, borderRadius: 8, marginBottom: 20 }}>
@@ -6596,7 +6596,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                       {newWorkflowForm.actions.length > 1 && (
                         <button type="button" onClick={() => removeWorkflowAction(idx)}
                           style={{ padding: "6px 10px", borderRadius: 4, border: `1px solid ${T.red}40`, background: `${T.red}10`, color: T.red, fontSize: 12, cursor: "pointer" }}>
-                          ×
+                          ï¿½
                         </button>
                       )}
                     </div>
@@ -6668,7 +6668,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                       <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                         {(wf.actions || []).map((action, aIdx) => (
                           <span key={aIdx} style={{ fontSize: 10, padding: "4px 8px", borderRadius: 4, background: `${T.purple}20`, color: T.purple }}>
-                            {actionOptions.find(a => a.id === action.type)?.label || action.type}: {action.value || "—"}
+                            {actionOptions.find(a => a.id === action.type)?.label || action.type}: {action.value || "ï¿½"}
                           </span>
                         ))}
                       </div>
@@ -6686,8 +6686,8 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
         <div style={{ position: "fixed", inset: 0, zIndex: 9100, background: "rgba(4,9,15,0.9)", display: "flex", alignItems: "center", justifyContent: "center" }} onClick={() => setShowCsatModal(false)}>
           <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.gold}30`, padding: 24, width: "100%", maxWidth: 420 }} onClick={e => e.stopPropagation()}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-              <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>• Add CSAT Rating</h3>
-              <button type="button" onClick={() => setShowCsatModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>×</button>
+              <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>ï¿½ Add CSAT Rating</h3>
+              <button type="button" onClick={() => setShowCsatModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>ï¿½</button>
             </div>
             
             <div style={{ padding: 12, background: `${T.gold}10`, borderRadius: 8, marginBottom: 20 }}>
@@ -6768,7 +6768,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
               <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>
                 {editingArticle ? "?? Edit Article" : "?? New Article"}
               </h3>
-              <button type="button" onClick={() => setShowKbModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>×</button>
+              <button type="button" onClick={() => setShowKbModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>ï¿½</button>
             </div>
             
             <div style={{ marginBottom: 16 }}>
@@ -6784,10 +6784,10 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                 <select value={articleForm.category} onChange={e => setArticleForm(prev => ({ ...prev, category: e.target.value }))}
                   style={{ width: "100%", padding: "12px 14px", borderRadius: 8, border: `1px solid ${T.border}`, background: T.bg, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif" }}>
                   <option value="getting-started">?? Getting Started</option>
-                  <option value="billing">• Billing & Payments</option>
-                  <option value="technical">• Technical Issues</option>
+                  <option value="billing">ï¿½ Billing & Payments</option>
+                  <option value="technical">ï¿½ Technical Issues</option>
                   <option value="features"> Features & How-To</option>
-                  <option value="account">• Account Management</option>
+                  <option value="account">ï¿½ Account Management</option>
                 </select>
               </div>
               <div>
@@ -6863,7 +6863,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
               <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>
                 {editingQuickResponse ? "?? Edit Quick Response" : "? New Quick Response"}
               </h3>
-              <button type="button" onClick={() => setShowQuickResponseModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>×</button>
+              <button type="button" onClick={() => setShowQuickResponseModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>ï¿½</button>
             </div>
             
             <div style={{ padding: 12, background: `${T.purple}10`, borderRadius: 8, marginBottom: 16 }}>
@@ -6892,8 +6892,8 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
               <select value={quickResponseForm.category} onChange={e => setQuickResponseForm(prev => ({ ...prev, category: e.target.value }))}
                 style={{ width: "100%", padding: "12px 14px", borderRadius: 8, border: `1px solid ${T.border}`, background: T.bg, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif" }}>
                 <option value="general">?? General</option>
-                <option value="technical">• Technical</option>
-                <option value="billing">• Billing</option>
+                <option value="technical">ï¿½ Technical</option>
+                <option value="billing">ï¿½ Billing</option>
               </select>
             </div>
             
@@ -6960,7 +6960,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
               <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>
                  Live Chat Settings
               </h3>
-              <button type="button" onClick={() => setShowChatSettings(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>×</button>
+              <button type="button" onClick={() => setShowChatSettings(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>ï¿½</button>
             </div>
             
             <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
@@ -7048,9 +7048,9 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
           <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.gold}30`, padding: 24, width: "100%", maxWidth: 400 }} onClick={e => e.stopPropagation()}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
               <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>
-                • Widget Preview
+                ï¿½ Widget Preview
               </h3>
-              <button type="button" onClick={() => setShowWidgetPreview(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>×</button>
+              <button type="button" onClick={() => setShowWidgetPreview(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>ï¿½</button>
             </div>
             
             <div style={{ background: "#f5f5f5", borderRadius: 12, padding: 20, display: "flex", justifyContent: chatSettings.widgetPosition === "right" ? "flex-end" : "flex-start" }}>
@@ -7064,7 +7064,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                       <div style={{ fontWeight: 700, fontSize: 14 }}>DXB Analytics</div>
                       <div style={{ fontSize: 11, opacity: 0.9, display: "flex", alignItems: "center", gap: 4 }}>
                         <span style={{ width: 6, height: 6, borderRadius: "50%", background: agentOnline ? "#4ADE80" : "#EF4444" }} />
-                        {agentOnline ? "Online • ~2 min" : "Offline"}
+                        {agentOnline ? "Online ï¿½ ~2 min" : "Offline"}
                       </div>
                     </div>
                   </div>
@@ -7114,7 +7114,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                   <div style={{ fontSize: 11, color: T.textMuted }}>Pre-approved templates for out-of-window messaging</div>
                 </div>
               </div>
-              <button type="button" onClick={() => setShowWhatsappTemplates(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>×</button>
+              <button type="button" onClick={() => setShowWhatsappTemplates(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>ï¿½</button>
             </div>
             
             <div style={{ padding: 12, background: `${T.teal}10`, borderRadius: 8, marginBottom: 16, display: "flex", alignItems: "flex-start", gap: 10 }}>
@@ -7161,7 +7161,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
             </div>
             
             <div style={{ marginTop: 20, padding: 12, background: T.surfaceAlt, borderRadius: 8 }}>
-              <div style={{ fontSize: 11, fontWeight: 600, color: T.textMuted, marginBottom: 6 }}>• Create Custom Template</div>
+              <div style={{ fontSize: 11, fontWeight: 600, color: T.textMuted, marginBottom: 6 }}>ï¿½ Create Custom Template</div>
               <div style={{ fontSize: 10, color: T.textMuted, lineHeight: 1.5 }}>
                 Custom templates must be submitted to Meta for approval. This process typically takes 24-48 hours.
               </div>
@@ -7178,8 +7178,8 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 10000 }}>
           <div style={{ width: 440, background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, overflow: "hidden" }}>
             <div style={{ padding: "16px 20px", borderBottom: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <div style={{ fontSize: 14, fontWeight: 700, color: T.white }}>¦? Add Manual Time Entry</div>
-              <button type="button" onClick={() => setShowTimeEntryModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>×</button>
+              <div style={{ fontSize: 14, fontWeight: 700, color: T.white }}>ï¿½? Add Manual Time Entry</div>
+              <button type="button" onClick={() => setShowTimeEntryModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>ï¿½</button>
             </div>
             
             <div style={{ padding: 20 }}>
@@ -7243,7 +7243,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
           <div style={{ width: 500, background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, overflow: "hidden" }}>
             <div style={{ padding: "16px 20px", borderBottom: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <div style={{ fontSize: 14, fontWeight: 700, color: T.white }}>?? {editingWebhook ? "Edit Webhook" : "Add Webhook"}</div>
-              <button type="button" onClick={() => setShowWebhookModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>×</button>
+              <button type="button" onClick={() => setShowWebhookModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>ï¿½</button>
             </div>
             
             <div style={{ padding: 20 }}>
@@ -7312,7 +7312,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
           <div style={{ width: 460, background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, overflow: "hidden" }}>
             <div style={{ padding: "16px 20px", borderBottom: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <div style={{ fontSize: 14, fontWeight: 700, color: T.white }}>?? Export Tickets</div>
-              <button type="button" onClick={() => setShowExportModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>×</button>
+              <button type="button" onClick={() => setShowExportModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>ï¿½</button>
             </div>
             
             <div style={{ padding: 20 }}>
@@ -7365,7 +7365,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                   </label>
                   <label style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }}>
                     <input type="checkbox" checked={exportConfig.includeTime} onChange={e => setExportConfig(prev => ({ ...prev, includeTime: e.target.checked }))} style={{ width: 16, height: 16, accentColor: T.gold }} />
-                    <span style={{ fontSize: 12, color: T.textSecondary }}>¦? Time Entries</span>
+                    <span style={{ fontSize: 12, color: T.textSecondary }}>ï¿½? Time Entries</span>
                   </label>
                 </div>
               </div>
@@ -7391,7 +7391,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
           <div style={{ width: 420, background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, overflow: "hidden" }}>
             <div style={{ padding: "16px 20px", borderBottom: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <div style={{ fontSize: 14, fontWeight: 700, color: T.white }}>?? {editingPermission ? "Edit Permission" : "Add Permission"}</div>
-              <button type="button" onClick={() => setShowPermissionsModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>×</button>
+              <button type="button" onClick={() => setShowPermissionsModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>ï¿½</button>
             </div>
             
             <div style={{ padding: 20 }}>
@@ -7443,7 +7443,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
 }
 /* --- NOTIFICATIONS TAB COMPONENT --- */
 /* ----------------------------------------
-   TAB 12: NOTIFICATIONS — PRO LEVEL
+   TAB 12: NOTIFICATIONS ï¿½ PRO LEVEL
    Broadcast, Schedule, Email, Analytics
 ---------------------------------------- */
 function NotificationsTab({ T, notify, adminUser, I, users, db }) {
@@ -7587,7 +7587,7 @@ function NotificationsTab({ T, notify, adminUser, I, users, db }) {
     setNotifForm({ title: n.title, message: n.message, icon: n.icon || "??", type: n.type || "info", link: n.link || "" });
     setTargetType("user"); setTargetUserId(n.userId);
     setNotifSubTab("compose");
-    notify("Loaded for resend — adjust and hit Send");
+    notify("Loaded for resend ï¿½ adjust and hit Send");
   };
 
   const cancelScheduled = async (id) => {
@@ -7841,7 +7841,7 @@ function NotificationsTab({ T, notify, adminUser, I, users, db }) {
                 <div style={{ fontSize: 13, color: lastResult.success ? green : red, fontWeight: 700 }}>
                   {lastResult.success
                     ? lastResult.scheduled
-                      ? `? Scheduled for ${new Date(lastResult.scheduledFor).toLocaleString("en-AE")} — ${lastResult.sent} users`
+                      ? `? Scheduled for ${new Date(lastResult.scheduledFor).toLocaleString("en-AE")} ï¿½ ${lastResult.sent} users`
                       : `? Sent to ${lastResult.sent}/${lastResult.total} users in ${(lastResult.durationMs / 1000).toFixed(1)}s`
                     : `? Failed: ${lastResult.error}`}
                 </div>
@@ -7863,7 +7863,7 @@ function NotificationsTab({ T, notify, adminUser, I, users, db }) {
                     <div style={{ fontSize: 14, fontWeight: 700, color: white, marginBottom: 4 }}>{notifForm.title || "Notification Title"}</div>
                     <div style={{ fontSize: 12, color: textSec, lineHeight: 1.5 }}>{notifForm.message || "Your notification message will appear here..."}</div>
                     {notifForm.link && <div style={{ marginTop: 8, fontSize: 11, color: blue }}>?? {notifForm.link}</div>}
-                    <div style={{ marginTop: 10, fontSize: 10, color: textMuted }}>Just now · {notifForm.type}</div>
+                    <div style={{ marginTop: 10, fontSize: 10, color: textMuted }}>Just now ï¿½ {notifForm.type}</div>
                   </div>
                 </div>
               </div>
@@ -7942,7 +7942,7 @@ function NotificationsTab({ T, notify, adminUser, I, users, db }) {
                   style={{ width: "100%", padding: "10px 12px", background: surfAlt, border: `1px solid ${border}`, borderRadius: 8, color: white, fontSize: 12, resize: "vertical", lineHeight: 1.6, boxSizing: "border-box" }} />
               </div>
               <div style={{ padding: "10px 14px", background: `${orange}15`, borderRadius: 8, border: `1px solid ${orange}40`, marginBottom: 14 }}>
-                <div style={{ fontSize: 10, color: orange, fontWeight: 600 }}>?? Note: Using EmailJS — max ~200 emails/month on free plan. Upgrade at emailjs.com for higher volume.</div>
+                <div style={{ fontSize: 10, color: orange, fontWeight: 600 }}>?? Note: Using EmailJS ï¿½ max ~200 emails/month on free plan. Upgrade at emailjs.com for higher volume.</div>
               </div>
               <button type="button" onClick={sendEmail} disabled={emailSending}
                 style={{ width: "100%", padding: "14px", background: emailSending ? surfAlt : `linear-gradient(135deg,${blue},${purple})`, border: "none", borderRadius: 10, color: white, fontSize: 14, fontWeight: 700, cursor: emailSending ? "not-allowed" : "pointer" }}>
@@ -7968,7 +7968,7 @@ function NotificationsTab({ T, notify, adminUser, I, users, db }) {
                 {emailForm.body || "Your email body will appear here..."}
               </div>
               <div style={{ marginTop: 24, paddingTop: 16, borderTop: "1px solid #eee", fontSize: 10, color: "#999", textAlign: "center" }}>
-                DXB Analytics · Dubai, UAE · dxbanalytics.com<br />
+                DXB Analytics ï¿½ Dubai, UAE ï¿½ dxbanalytics.com<br />
                 <span style={{ color: "#D4A843" }}>Unsubscribe</span>
               </div>
             </div>
@@ -8006,7 +8006,7 @@ function NotificationsTab({ T, notify, adminUser, I, users, db }) {
                     <div style={{ fontSize: 13, fontWeight: 600, color: white }}>{n.title}</div>
                     <div style={{ fontSize: 11, color: textMuted }}>{n.message?.slice(0, 60)}{n.message?.length > 60 ? "..." : ""}</div>
                     <div style={{ fontSize: 10, color: orange, marginTop: 4, fontWeight: 600 }}>
-                      ? Scheduled: {new Date(n.scheduledFor).toLocaleString("en-AE")} · To: {n.userName || n.targetType}
+                      ? Scheduled: {new Date(n.scheduledFor).toLocaleString("en-AE")} ï¿½ To: {n.userName || n.targetType}
                     </div>
                   </div>
                   <button type="button" onClick={() => cancelScheduled(n.id)}
@@ -8116,7 +8116,7 @@ function NotificationsTab({ T, notify, adminUser, I, users, db }) {
                     <div style={{ fontSize: 13, fontWeight: 600, color: white, marginBottom: 2 }}>{n.title}</div>
                     <div style={{ fontSize: 11, color: textMuted }}>{n.message?.slice(0, 60)}{n.message?.length > 60 ? "..." : ""}</div>
                     <div style={{ fontSize: 10, color: textMuted, marginTop: 4 }}>
-                      To: {n.userName || n.userId || "All"} · {n.createdAt ? new Date(n.createdAt).toLocaleString("en-AE") : ""}
+                      To: {n.userName || n.userId || "All"} ï¿½ {n.createdAt ? new Date(n.createdAt).toLocaleString("en-AE") : ""}
                     </div>
                   </div>
                   <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6 }}>
@@ -8164,7 +8164,7 @@ function NotificationsTab({ T, notify, adminUser, I, users, db }) {
 
 
 /* -------------------------------------------------------------------
-   TAB 11: EMAIL DIGEST COMPONENT — PRO LEVEL
+   TAB 11: EMAIL DIGEST COMPONENT ï¿½ PRO LEVEL
    Schedule, preview, send, track. EmailJS bulk send.
 ------------------------------------------------------------------- */
 function DigestTab({ users, db, notify, adminUser, T, I }) {
@@ -8203,8 +8203,8 @@ function DigestTab({ users, db, notify, adminUser, T, I }) {
   const sectionMeta = {
     market_pulse: { label: "Market Pulse", desc: "Revenue, profit, backlog from Emaar", icon: "??", color: T.gold },
     top_yields: { label: "Top 5 Yields", desc: "Highest rental yield projects", icon: "??", color: T.green },
-    handovers: { label: "Upcoming Handovers", desc: "Projects handing over in 6 months", icon: "•", color: T.teal },
-    golden_visa: { label: "Golden Visa Projects", desc: "2M+ AED eligible properties", icon: "•", color: "#F59E0B" },
+    handovers: { label: "Upcoming Handovers", desc: "Projects handing over in 6 months", icon: "ï¿½", color: T.teal },
+    golden_visa: { label: "Golden Visa Projects", desc: "2M+ AED eligible properties", icon: "ï¿½", color: "#F59E0B" },
     new_launches: { label: "New Launches", desc: "Recently announced projects", icon: "??", color: T.purple },
     price_changes: { label: "Price Movements", desc: "Notable price changes this week", icon: "??", color: T.blue },
     cta: { label: "Call to Action", desc: "Link back to dashboard", icon: "??", color: T.gold },
@@ -8318,8 +8318,8 @@ function DigestTab({ users, db, notify, adminUser, T, I }) {
         await emailjs.send("service_da7nshv", "template_gl1xqhy", {
           user_email: u.email,
           to_name: name,
-          subject: "Dubai RE market moved this week — your data is waiting",
-          message: `Hi ${name},\n\nWe noticed you haven't logged in to DXB Analytics in a while.\n\nHere's what happened in Dubai real estate this week:\n• Dubai off-plan market up 44% YoY in Creek Harbour\n• EIBOR holding at 3.47% — mortgage rates stable\n• 3 new project launches this month\n\nYour dashboard is waiting with the latest data.\n\nhttps://dxbanalytics.com\n\n— DXB Analytics Team\n\nUnsubscribe: mailto:mianwaleed689@gmail.com?subject=Unsubscribe`,
+          subject: "Dubai RE market moved this week ï¿½ your data is waiting",
+          message: `Hi ${name},\n\nWe noticed you haven't logged in to DXB Analytics in a while.\n\nHere's what happened in Dubai real estate this week:\nï¿½ Dubai off-plan market up 44% YoY in Creek Harbour\nï¿½ EIBOR holding at 3.47% ï¿½ mortgage rates stable\nï¿½ 3 new project launches this month\n\nYour dashboard is waiting with the latest data.\n\nhttps://dxbanalytics.com\n\nï¿½ DXB Analytics Team\n\nUnsubscribe: mailto:mianwaleed689@gmail.com?subject=Unsubscribe`,
           project_name: "DXB Analytics",
         }, "USkwUhp0csGCVDkdQ");
         sent++;
@@ -8486,7 +8486,7 @@ function DigestTab({ users, db, notify, adminUser, T, I }) {
               <div style={{ padding: "14px 18px", borderRadius: 10, background: lastResult.success ? "rgba(16,185,129,0.08)" : "rgba(239,68,68,0.08)", border: `1px solid ${lastResult.success ? "rgba(16,185,129,0.2)" : "rgba(239,68,68,0.2)"}` }}>
                 <div style={{ fontSize: 13, color: lastResult.success ? T.green : T.red, fontWeight: 700 }}>
                   {lastResult.success ? `? Sent to ${lastResult.sent}/${lastResult.total} users` : ` Error: ${lastResult.error}`}
-                  {lastResult.failed > 0 && <span style={{ color: T.orange }}> · {lastResult.failed} failed</span>}
+                  {lastResult.failed > 0 && <span style={{ color: T.orange }}> ï¿½ {lastResult.failed} failed</span>}
                 </div>
               </div>
             )}
@@ -8552,14 +8552,14 @@ function DigestTab({ users, db, notify, adminUser, T, I }) {
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: 13, fontWeight: 600, color: T.white, marginBottom: 2 }}>
                       Sent to <span style={{ color: T.gold }}>{log.sent}</span> of {log.total} users
-                      {log.failed > 0 && <span style={{ color: T.orange }}> · {log.failed} failed</span>}
+                      {log.failed > 0 && <span style={{ color: T.orange }}> ï¿½ {log.failed} failed</span>}
                     </div>
                     <div style={{ fontSize: 11, color: T.textMuted }}>
-                      {log.sentAt ? new Date(log.sentAt).toLocaleString("en-AE", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "—"} · by {log.sentBy || "admin"} · Segment: {log.segment || "all"}
+                      {log.sentAt ? new Date(log.sentAt).toLocaleString("en-AE", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "ï¿½"} ï¿½ by {log.sentBy || "admin"} ï¿½ Segment: {log.segment || "all"}
                     </div>
                   </div>
                   <div style={{ textAlign: "right" }}>
-                    <div style={{ fontSize: 10, color: T.textMuted }}>{log.durationMs ? `${(log.durationMs / 1000).toFixed(1)}s` : "—"}</div>
+                    <div style={{ fontSize: 10, color: T.textMuted }}>{log.durationMs ? `${(log.durationMs / 1000).toFixed(1)}s` : "ï¿½"}</div>
                   </div>
                 </div>
               ))}
@@ -8760,10 +8760,10 @@ function EiborRatesPanel({ db, T, I, notify }) {
       <div className="fade-up" style={{ display: "flex", alignItems: "center", gap: 0, borderRadius: 14, background: T.surface, border: `1px solid ${T.border}`, overflow: "hidden" }}>
         <button type="button" onClick={fetchEibor} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, padding: "14px 16px", background: "rgba(212,168,67,0.06)", border: "none", borderRight: `1px solid ${T.border}`, color: T.gold, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600, flexShrink: 0 }}>{I?.refresh || "\u21BB"}</button>
         {[
-          { label: "1M EIBOR", value: eiborCurrent?.["1m"] ? `${parseFloat(eiborCurrent["1m"]).toFixed(3)}%` : "—", color: T.blue },
-          { label: "3M EIBOR", value: eiborCurrent?.["3m"] ? `${parseFloat(eiborCurrent["3m"]).toFixed(3)}%` : "—", color: T.gold, primary: true },
-          { label: "6M EIBOR", value: eiborCurrent?.["6m"] ? `${parseFloat(eiborCurrent["6m"]).toFixed(3)}%` : "—", color: T.teal },
-          { label: "1Y EIBOR", value: eiborCurrent?.["1y"] ? `${parseFloat(eiborCurrent["1y"]).toFixed(3)}%` : "—", color: T.purple },
+          { label: "1M EIBOR", value: eiborCurrent?.["1m"] ? `${parseFloat(eiborCurrent["1m"]).toFixed(3)}%` : "ï¿½", color: T.blue },
+          { label: "3M EIBOR", value: eiborCurrent?.["3m"] ? `${parseFloat(eiborCurrent["3m"]).toFixed(3)}%` : "ï¿½", color: T.gold, primary: true },
+          { label: "6M EIBOR", value: eiborCurrent?.["6m"] ? `${parseFloat(eiborCurrent["6m"]).toFixed(3)}%` : "ï¿½", color: T.teal },
+          { label: "1Y EIBOR", value: eiborCurrent?.["1y"] ? `${parseFloat(eiborCurrent["1y"]).toFixed(3)}%` : "ï¿½", color: T.purple },
         ].map((item, i) => (
           <div key={i} style={{ display: "flex", flexDirection: "column", padding: "10px 20px", borderRight: `1px solid ${T.border}`, flexShrink: 0, background: item.primary ? "rgba(212,168,67,0.04)" : "transparent" }}>
             <span style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1 }}>{item.label}</span>
@@ -8830,7 +8830,7 @@ function EiborRatesPanel({ db, T, I, notify }) {
         <div className="fade-up" style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 14, padding: "20px 24px" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
             <div>
-              <div style={{ fontSize: 11, color: T.green, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1 }}>Live Rates — {eiborCurrent.asOf}</div>
+              <div style={{ fontSize: 11, color: T.green, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1 }}>Live Rates ï¿½ {eiborCurrent.asOf}</div>
               <div style={{ fontSize: 10, color: T.textMuted }}>Source: {eiborCurrent.source || "UAE Central Bank"}</div>
             </div>
             <a href="https://www.centralbank.ae/en/forex-eibor/eibor-rates/" target="_blank" rel="noopener noreferrer" style={{ fontSize: 11, color: T.gold, textDecoration: "none" }}>View Source \u2197</a>
@@ -8867,7 +8867,7 @@ function EiborRatesPanel({ db, T, I, notify }) {
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
             <div>
               <div style={{ fontFamily: "'Fraunces',serif", fontSize: 16, fontWeight: 700, color: T.white }}>Rate History</div>
-              <div style={{ fontSize: 11, color: T.textMuted }}>All 4 tenors over time — color coded</div>
+              <div style={{ fontSize: 11, color: T.textMuted }}>All 4 tenors over time ï¿½ color coded</div>
             </div>
             <div style={{ display: "flex", gap: 12 }}>
               {[{ label: "1M", color: T.blue }, { label: "3M", color: T.gold }, { label: "6M", color: T.teal }, { label: "1Y", color: T.purple }].map(l => (
@@ -9054,17 +9054,17 @@ function EiborRatesPanel({ db, T, I, notify }) {
                   const change = h.previousRates ? parseFloat(h["3m"]) - parseFloat(h.previousRates["3m"]) : null;
                   return (
                     <tr key={h.id} style={{ borderBottom: `1px solid ${T.border}` }}>
-                      <td style={{ padding: "10px 14px", color: T.textSecondary }}>{h.asOf || (h.updatedAt ? new Date(h.updatedAt).toLocaleDateString("en-AE", { day: "numeric", month: "short" }) : "—")}</td>
-                      <td style={{ padding: "10px 14px", color: T.blue }}>{h["1m"] ? `${parseFloat(h["1m"]).toFixed(3)}%` : "—"}</td>
-                      <td style={{ padding: "10px 14px", color: T.gold, fontWeight: 600 }}>{h["3m"] ? `${parseFloat(h["3m"]).toFixed(3)}%` : "—"}</td>
-                      <td style={{ padding: "10px 14px", color: T.teal }}>{h["6m"] ? `${parseFloat(h["6m"]).toFixed(3)}%` : "—"}</td>
-                      <td style={{ padding: "10px 14px", color: T.purple }}>{h["1y"] ? `${parseFloat(h["1y"]).toFixed(3)}%` : "—"}</td>
+                      <td style={{ padding: "10px 14px", color: T.textSecondary }}>{h.asOf || (h.updatedAt ? new Date(h.updatedAt).toLocaleDateString("en-AE", { day: "numeric", month: "short" }) : "ï¿½")}</td>
+                      <td style={{ padding: "10px 14px", color: T.blue }}>{h["1m"] ? `${parseFloat(h["1m"]).toFixed(3)}%` : "ï¿½"}</td>
+                      <td style={{ padding: "10px 14px", color: T.gold, fontWeight: 600 }}>{h["3m"] ? `${parseFloat(h["3m"]).toFixed(3)}%` : "ï¿½"}</td>
+                      <td style={{ padding: "10px 14px", color: T.teal }}>{h["6m"] ? `${parseFloat(h["6m"]).toFixed(3)}%` : "ï¿½"}</td>
+                      <td style={{ padding: "10px 14px", color: T.purple }}>{h["1y"] ? `${parseFloat(h["1y"]).toFixed(3)}%` : "ï¿½"}</td>
                       <td style={{ padding: "10px 14px" }}>
                         {change !== null ? (
                           <span style={{ color: change > 0 ? T.red : change < 0 ? T.green : T.textMuted, fontWeight: 600 }}>
                             {change > 0 ? "+" : ""}{change.toFixed(3)}%
                           </span>
-                        ) : "—"}
+                        ) : "ï¿½"}
                       </td>
                       <td style={{ padding: "10px 14px", color: T.textMuted }}>{h.updatedBy || "admin"}</td>
                     </tr>
@@ -9082,11 +9082,11 @@ function EiborRatesPanel({ db, T, I, notify }) {
 
 
 /* ------------------------------------------------------
-   USERS TAB COMPONENT — Professional SaaS User Management
+   USERS TAB COMPONENT ï¿½ Professional SaaS User Management
    Full rebuild: all 36 audit issues resolved
 ------------------------------------------------------ */
 
-/* --- PROFILE DRAWER (top-level component — stable reference, portal to root) --- */
+/* --- PROFILE DRAWER (top-level component ï¿½ stable reference, portal to root) --- */
 const EditIcon = () => (
   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
@@ -9115,7 +9115,7 @@ const ProfileDrawerComponent = ({
     const health = getHealth(u);
     const days  = trialDaysLeft(u);
 
-    // Clean SVG icons — no emojis
+    // Clean SVG icons ï¿½ no emojis
     const IconUser     = () => <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>;
     const IconTier     = () => <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>;
     const IconActivity = () => <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>;
@@ -9162,7 +9162,7 @@ const ProfileDrawerComponent = ({
                   </div>
                   <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
                     <span style={{ fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 20, background: badge.bg, color: badge.color, border: `1px solid ${badge.color}30` }}>
-                      {badge.label}{badge.price ? ` · ${badge.price}` : ""}
+                      {badge.label}{badge.price ? ` ï¿½ ${badge.price}` : ""}
                     </span>
                     <span style={{ fontSize: 11, fontWeight: 600, padding: "3px 10px", borderRadius: 20, background: `${health.dot}14`, color: health.dot, border: `1px solid ${health.dot}28`, display: "flex", alignItems: "center", gap: 4 }}>
                       <span style={{ width: 6, height: 6, borderRadius: "50%", background: health.dot, flexShrink: 0 }} />{health.label}
@@ -9181,13 +9181,13 @@ const ProfileDrawerComponent = ({
             </div>
           </div>
 
-          {/* -- Stats bar — big value, tiny label -- */}
+          {/* -- Stats bar ï¿½ big value, tiny label -- */}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", borderBottom: `1px solid ${T.border}`, background: T.surface }}>
             {[
               { label: "Plan",        value: getUserLTV(u),    color: u.tier === "pro" || u.tier === "enterprise" ? T.green : T.textSecondary },
-              { label: "Trial",       value: days !== null ? `${days}d left` : u.tier === "pro" ? "Active" : "—", color: days !== null && days <= 3 ? T.red : days !== null ? T.gold : T.textSecondary },
+              { label: "Trial",       value: days !== null ? `${days}d left` : u.tier === "pro" ? "Active" : "ï¿½", color: days !== null && days <= 3 ? T.red : days !== null ? T.gold : T.textSecondary },
               { label: "Last Active", value: lastActiveLabel(u), color: lastActiveColor(u) },
-              { label: "Joined",      value: (() => { try { return new Date(u.createdAt).toLocaleDateString("en", { month: "short", day: "numeric" }); } catch { return "—"; } })(), color: T.white },
+              { label: "Joined",      value: (() => { try { return new Date(u.createdAt).toLocaleDateString("en", { month: "short", day: "numeric" }); } catch { return "ï¿½"; } })(), color: T.white },
             ].map((s, i) => (
               <div key={i} style={{ padding: "14px 8px", textAlign: "center", borderRight: i < 3 ? `1px solid ${T.border}` : "none" }}>
                 <div style={{ fontSize: 15, fontWeight: 800, color: s.color, fontFamily: "'Fraunces',serif", lineHeight: 1, letterSpacing: -0.3 }}>{s.value}</div>
@@ -9196,7 +9196,7 @@ const ProfileDrawerComponent = ({
             ))}
           </div>
 
-          {/* -- Tab nav — pill style, active has solid background -- */}
+          {/* -- Tab nav ï¿½ pill style, active has solid background -- */}
           <div style={{ display: "flex", background: T.bg, borderBottom: `1px solid ${T.border}`, padding: "6px 8px", gap: 3 }}>
             {TABS.map(({ key, label, Icon }) => (
               <button key={key} type="button" onClick={() => setDrawerTab(key)}
@@ -9216,15 +9216,15 @@ const ProfileDrawerComponent = ({
                 <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.2, marginBottom: 12 }}>Account Details</div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 1, borderRadius: 10, overflow: "hidden", border: `1px solid ${T.border}`, marginBottom: 20 }}>
                   {[
-                    ["UID",           u.uid || "—",    "uid"],
-                    ["Phone",         u.phone || "—",  null],
-                    ["Country",       u.country || "—", null],
+                    ["UID",           u.uid || "ï¿½",    "uid"],
+                    ["Phone",         u.phone || "ï¿½",  null],
+                    ["Country",       u.country || "ï¿½", null],
                     ["Sign-in",       u.provider || "email", null],
                     ["Email Verified", u.emailVerified ? "Verified" : "Not verified", null, u.emailVerified ? T.green : T.red],
                     ["Last Login",    u.lastLoginAt ? new Date(u.lastLoginAt).toLocaleString("en-AE", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : "Never", null],
-                    ["Signed Up",     (() => { try { return new Date(u.createdAt).toLocaleDateString("en", { day: "numeric", month: "long", year: "numeric" }); } catch { return "—"; } })(), null],
+                    ["Signed Up",     (() => { try { return new Date(u.createdAt).toLocaleDateString("en", { day: "numeric", month: "long", year: "numeric" }); } catch { return "ï¿½"; } })(), null],
                     ["Created By",    u.createdByAdmin ? `Admin (${u.createdByAdmin})` : "Self-signup", null],
-                    ["Trial End",     u.trialEnd ? new Date(u.trialEnd).toLocaleDateString("en", { day: "numeric", month: "short", year: "numeric" }) : "—", null],
+                    ["Trial End",     u.trialEnd ? new Date(u.trialEnd).toLocaleDateString("en", { day: "numeric", month: "short", year: "numeric" }) : "ï¿½", null],
                   ].map(([label, value, copyKey, valColor], idx, arr) => (
                     <div key={label} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "11px 16px", background: "transparent", borderBottom: idx < arr.length - 1 ? `1px solid ${T.border}` : "none", transition: "background 0.1s", cursor: "default" }}
                       onMouseEnter={e => e.currentTarget.style.background = T.surfaceAlt}
@@ -9283,7 +9283,7 @@ const ProfileDrawerComponent = ({
 
                 <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.2, marginBottom: 12 }}>Job Role</div>
                 <select value={u.role || "user"} onChange={e => handleJobRoleChange(u.uid, e.target.value)} style={{ ...inputStyle, cursor: "pointer", marginBottom: 16 }}>
-                  <option value="user">— No role assigned —</option>
+                  <option value="user">ï¿½ No role assigned ï¿½</option>
                   {JOB_ROLES.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
                 </select>
 
@@ -9374,7 +9374,7 @@ const ProfileDrawerComponent = ({
                                   {actionLabel(l.action)}
                                 </div>
                                 <div style={{ fontSize: 10, color: T.textMuted, whiteSpace: "nowrap", flexShrink: 0 }}>
-                                  {(() => { try { return new Date(l.changedAt).toLocaleDateString("en-AE", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }); } catch { return "—"; } })()}
+                                  {(() => { try { return new Date(l.changedAt).toLocaleDateString("en-AE", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }); } catch { return "ï¿½"; } })()}
                                 </div>
                               </div>
                               {/* from ? to */}
@@ -9404,7 +9404,7 @@ const ProfileDrawerComponent = ({
                     </div>
                   )}
 
-                  {/* Login history below audit log — kept as secondary info */}
+                  {/* Login history below audit log ï¿½ kept as secondary info */}
                   {(u.loginHistory || []).length > 0 && (
                     <div style={{ marginTop: 20 }}>
                       <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.2, marginBottom: 10 }}>Login History</div>
@@ -9418,9 +9418,9 @@ const ProfileDrawerComponent = ({
                                   : <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
                                 }
                               </div>
-                              <span style={{ fontSize: 11, color: T.textSecondary }}>{h.browser || "Browser"} · {h.device || "Desktop"}</span>
+                              <span style={{ fontSize: 11, color: T.textSecondary }}>{h.browser || "Browser"} ï¿½ {h.device || "Desktop"}</span>
                             </div>
-                            <span style={{ fontSize: 10, color: T.textMuted }}>{(() => { try { return new Date(h.time).toLocaleDateString("en-AE", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }); } catch { return "—"; } })()}</span>
+                            <span style={{ fontSize: 10, color: T.textMuted }}>{(() => { try { return new Date(h.time).toLocaleDateString("en-AE", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }); } catch { return "ï¿½"; } })()}</span>
                           </div>
                         ))}
                       </div>
@@ -9539,7 +9539,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
   const [bulkEmailProgress,  setBulkEmailProgress]   = useState(0);
 
   const PAGE_SIZE    = 25;
-  const AT_RISK_DAYS = 3; // FIX #6 — single source of truth
+  const AT_RISK_DAYS = 3; // FIX #6 ï¿½ single source of truth
   const now          = new Date();
 
   /* --- REFS for keyboard nav --- */
@@ -9662,7 +9662,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
     return h < 24 ? T.green : h < 72 ? T.gold : T.textMuted;
   };
 
-  /* --- STATS — FIX #2, #6 --- */
+  /* --- STATS ï¿½ FIX #2, #6 --- */
   const total       = users.length;
   const paid        = users.filter(u => u.tier === "pro" || u.tier === "enterprise").length; // FIX #2
   const trial       = users.filter(u => u.tier === "pro_trial" && u.trialEnd && new Date(u.trialEnd) > now).length;
@@ -9674,7 +9674,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
   const suspended   = users.filter(u => u.suspended).length;
   const activeToday = users.filter(u => u.lastLoginAt && (now - new Date(u.lastLoginAt)) < 86400000).length;
 
-  /* --- FILTERING + SORTING — FIX #1, #3, #27 --- */
+  /* --- FILTERING + SORTING ï¿½ FIX #1, #3, #27 --- */
   const allFiltered = users
     .filter(u => {
       const q = userSearch.toLowerCase();
@@ -9725,7 +9725,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
 
   const activeFilterCount = [filterCountry, filterRole, sortField !== "newest" ? "sort" : ""].filter(Boolean).length; // FIX #32
 
-  /* --- TRIAL EXPIRY EMAILS — FIX #6 consistent threshold --- */
+  /* --- TRIAL EXPIRY EMAILS ï¿½ FIX #6 consistent threshold --- */
   const sendTrialExpiryEmails = async () => {
     setSendingTrialEmails(true);
     let sent = 0;
@@ -9736,7 +9736,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
           user_email:   u.email,
           user_name:    u.name || u.email,
           project_name: "DXB Analytics Platform",
-          change_type:  days === 0 ? "¦ Your Trial Has Expired" : `? Trial Expiring in ${days} Day${days !== 1 ? "s" : ""}`,
+          change_type:  days === 0 ? "ï¿½ Your Trial Has Expired" : `? Trial Expiring in ${days} Day${days !== 1 ? "s" : ""}`,
           new_value:    days === 0
             ? "Your 7-day trial has ended. Upgrade now to keep full access."
             : `Only ${days} day${days !== 1 ? "s" : ""} left on your free trial. Upgrade before you lose access.`,
@@ -9794,7 +9794,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
       }, "USkwUhp0csGCVDkdQ");
       notify(`Email sent to ${sendEmailUser.email}`);
       setSendEmailUser(null); setEmailSubject(""); setEmailBody("");
-    } catch(e) { notify("Error: Email failed — check EmailJS config"); }
+    } catch(e) { notify("Error: Email failed ï¿½ check EmailJS config"); }
     setEmailSending(false);
   };
 
@@ -9867,7 +9867,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
   const exportFiltered = () => {
     const headers = "Name,Email,Tier,Role,Trial Status,Tags,Country,Last Active,Signed Up\n";
     const rows = allFiltered.map(u =>
-      `"${u.name || ""}","${u.email || ""}","${u.tier || "free"}","${u.role || ""}","${u.trialEnd ? (new Date(u.trialEnd) > now ? "Active" : "Expired") : "—"}","${(u.tags || []).join("; ")}","${u.country || ""}","${u.lastLoginAt || ""}","${u.createdAt || ""}"`
+      `"${u.name || ""}","${u.email || ""}","${u.tier || "free"}","${u.role || ""}","${u.trialEnd ? (new Date(u.trialEnd) > now ? "Active" : "Expired") : "ï¿½"}","${(u.tags || []).join("; ")}","${u.country || ""}","${u.lastLoginAt || ""}","${u.createdAt || ""}"`
     ).join("\n");
     const blob = new Blob([headers + rows], { type: "text/csv" });
     const a = document.createElement("a"); a.href = URL.createObjectURL(blob);
@@ -9964,7 +9964,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
   const ExtendConfirmModal = () => confirmExtend && (
     <Modal onClose={() => setConfirmExtend(null)} maxWidth={400}>
       <div style={{ textAlign: "center", padding: "8px 0 16px" }}>
-        <div style={{ fontSize: 40, marginBottom: 12 }}>¦</div>
+        <div style={{ fontSize: 40, marginBottom: 12 }}>ï¿½</div>
         <div style={{ fontFamily: "'Fraunces',serif", fontSize: 20, fontWeight: 700, color: T.green, marginBottom: 8 }}>Extend Trial?</div>
         <div style={{ fontSize: 13, color: T.textSecondary, marginBottom: 6 }}>
           Add <strong style={{ color: T.white }}>{confirmExtend.days} days</strong> to <strong style={{ color: T.white }}>{confirmExtend.user.name || confirmExtend.user.email}</strong>'s trial
@@ -9980,7 +9980,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
 
   const EmailModal = () => sendEmailUser && (
     <Modal onClose={() => setSendEmailUser(null)}>
-      <ModalHeader title="Send Email" sub={`To: ${sendEmailUser.name || sendEmailUser.email} · ${sendEmailUser.email}`} onClose={() => setSendEmailUser(null)} />
+      <ModalHeader title="Send Email" sub={`To: ${sendEmailUser.name || sendEmailUser.email} ï¿½ ${sendEmailUser.email}`} onClose={() => setSendEmailUser(null)} />
       <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
         <Field label="Subject"><input type="text" placeholder="Email subject..." value={emailSubject} onChange={e => setEmailSubject(e.target.value)} style={inputStyle} onFocus={focusIn} onBlur={focusOut} /></Field>
         <Field label="Message"><textarea placeholder="Write your message..." value={emailBody} onChange={e => setEmailBody(e.target.value)} rows={5} style={{ ...inputStyle, resize: "vertical" }} onFocus={focusIn} onBlur={focusOut} /></Field>
@@ -9994,7 +9994,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
 
   const NoteModal = () => noteUser && (
     <Modal onClose={() => setNoteUser(null)} maxWidth={440}>
-      <ModalHeader title={`Note — ${noteUser.name || noteUser.email}`} onClose={() => setNoteUser(null)} />
+      <ModalHeader title={`Note ï¿½ ${noteUser.name || noteUser.email}`} onClose={() => setNoteUser(null)} />
       <textarea placeholder="Add internal admin notes..." value={noteText} onChange={e => setNoteText(e.target.value)} rows={5} style={{ ...inputStyle, resize: "vertical", marginBottom: 16 }} onFocus={focusIn} onBlur={focusOut} />
       <div style={{ display: "flex", gap: 10 }}>
         <BtnGhost onClick={() => setNoteUser(null)} style={{ flex: 1 }}>Cancel</BtnGhost>
@@ -10005,7 +10005,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
 
   const TagsModal = () => tagUser && (
     <Modal onClose={() => setTagUser(null)} maxWidth={400}>
-      <ModalHeader title={`Tags — ${tagUser.name || tagUser.email}`} onClose={() => setTagUser(null)} />
+      <ModalHeader title={`Tags ï¿½ ${tagUser.name || tagUser.email}`} onClose={() => setTagUser(null)} />
       <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 20 }}>
         {TAGS_OPTIONS.map(tag => {
           const active = (tagUser.tags || []).includes(tag.value);
@@ -10028,7 +10028,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
   /* FIX #14: Add User ? Invite User (client SDK limitation explained) */
   const NotifUserModal = () => notifUser && (
     <Modal onClose={() => setNotifUser(null)} maxWidth={440}>
-      <ModalHeader title={`Notify — ${notifUser.name || notifUser.email}`} sub="Appears instantly in their notification bell" onClose={() => setNotifUser(null)} />
+      <ModalHeader title={`Notify ï¿½ ${notifUser.name || notifUser.email}`} sub="Appears instantly in their notification bell" onClose={() => setNotifUser(null)} />
       <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
         <div>
           <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, display: "block", marginBottom: 8 }}>Icon</label>
@@ -10059,11 +10059,11 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
   );
 
   /* ----------------------------------------------
-     PROFILE DRAWER — rebuilt for professional SaaS quality
+     PROFILE DRAWER ï¿½ rebuilt for professional SaaS quality
   ---------------------------------------------- */
 
     /* ----------------------------------------------
-     LOADING SKELETON — FIX #30
+     LOADING SKELETON ï¿½ FIX #30
   ---------------------------------------------- */
   const SkeletonRow = () => (
     <div style={{ display: "grid", gridTemplateColumns: "36px 28px minmax(160px,2fr) minmax(150px,1.5fr) 100px 110px 75px 75px 140px", gap: 6, padding: "12px 16px", borderBottom: `1px solid ${T.border}`, alignItems: "center" }}>
@@ -10152,7 +10152,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
         <div>
           <h2 style={{ fontFamily: "'Fraunces',serif", fontSize: 26, fontWeight: 800, color: T.white, margin: 0 }}>User Management</h2>
           <p style={{ fontSize: 13, color: T.textMuted, margin: "4px 0 0" }}>
-            {total} registered · Live Firestore · {allFiltered.length} shown · <span style={{ color: T.green }}>{activeToday} active today</span>
+            {total} registered ï¿½ Live Firestore ï¿½ {allFiltered.length} shown ï¿½ <span style={{ color: T.green }}>{activeToday} active today</span>
           </p>
         </div>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
@@ -10165,7 +10165,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
             </button>
             {atRiskCount > 0 && (
               <div style={{ position: "absolute", top: "calc(100% + 6px)", right: 0, background: T.surface, border: `1px solid ${T.red}30`, borderRadius: 8, padding: "8px 12px", fontSize: 11, color: T.textMuted, whiteSpace: "nowrap", zIndex: 50, pointerEvents: "none", boxShadow: "0 8px 24px rgba(0,0,0,0.4)", opacity: 0, transition: "opacity 0.2s" }} className="risk-tooltip">
-                Will email: {atRisk.map(u => u.name || u.email).join(", ")} · {AT_RISK_DAYS} days left
+                Will email: {atRisk.map(u => u.name || u.email).join(", ")} ï¿½ {AT_RISK_DAYS} days left
               </div>
             )}
           </div>
@@ -10175,7 +10175,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
         </div>
       </div>
 
-      {/* -- KPI CARDS — FIX #1, #2, #18 -- */}
+      {/* -- KPI CARDS ï¿½ FIX #1, #2, #18 -- */}
       <div className="users-kpi-grid" style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 10, marginBottom: 16 }}>
         {[
           { label: "Total",        value: total,          color: T.white,     sub: "All accounts",    border: T.border,         filter: "All",      tip: "Show all users" },
@@ -10199,7 +10199,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
         ))}
       </div>
 
-      {/* -- CONVERSION FUNNEL — FIX #16 (removed duplicate MRR), #26 -- */}
+      {/* -- CONVERSION FUNNEL ï¿½ FIX #16 (removed duplicate MRR), #26 -- */}
       <div style={{ background: T.surfaceAlt, borderRadius: 14, padding: "16px 20px", border: `1px solid ${T.border}`, marginBottom: 18 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
           <div style={{ fontSize: 11, color: T.textMuted, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1 }}>Conversion Funnel</div>
@@ -10244,11 +10244,11 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
             style={{ padding: "5px 12px", borderRadius: 20, border: `1px solid ${T.red}30`, background: "transparent", color: T.red, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}> Clear</button>
         )}
         <div style={{ marginLeft: "auto", fontSize: 10, color: T.textMuted, fontStyle: "italic" }}>
-          ?? J/K · Enter=open · E=edit · N=new
+          ?? J/K ï¿½ Enter=open ï¿½ E=edit ï¿½ N=new
         </div>
       </div>
 
-      {/* -- SEARCH + FILTERS — FIX #32 (active sort badge) -- */}
+      {/* -- SEARCH + FILTERS ï¿½ FIX #32 (active sort badge) -- */}
       <div style={{ display: "flex", gap: 10, marginBottom: 12, flexWrap: "wrap", alignItems: "center" }}>
         <div style={{ position: "relative", flex: "1 1 280px", maxWidth: 360 }}>
           <span style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: T.textMuted }}>{I.search}</span>
@@ -10265,11 +10265,11 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
         </div>
         <button type="button" onClick={() => setShowFilters(p => !p)}
           style={{ padding: "7px 12px", borderRadius: 8, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif", border: `1px solid ${(showFilters || activeFilterCount > 0) ? T.teal : T.border}`, background: (showFilters || activeFilterCount > 0) ? "rgba(6,182,212,0.08)" : "transparent", color: (showFilters || activeFilterCount > 0) ? T.teal : T.textMuted }}>
-          Filters {activeFilterCount > 0 ? `• ${activeFilterCount}` : ""}
+          Filters {activeFilterCount > 0 ? `ï¿½ ${activeFilterCount}` : ""}
         </button>
       </div>
 
-      {/* Advanced filters — FIX #27 (role filter), FIX #32 (sort badge) */}
+      {/* Advanced filters ï¿½ FIX #27 (role filter), FIX #32 (sort badge) */}
       {showFilters && (
         <div style={{ background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 12, padding: "14px 16px", marginBottom: 14, display: "flex", gap: 14, flexWrap: "wrap", alignItems: "flex-end" }}>
           <div>
@@ -10291,7 +10291,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
               <select value={sortField} onChange={e => { setSortField(e.target.value); setPage(1); }} style={{ ...inputStyle, cursor: "pointer", maxWidth: 180 }}>
                 <option value="newest">Newest First</option>
                 <option value="oldest">Oldest First</option>
-                <option value="name">Name A–Z</option>
+                <option value="name">Name Aï¿½Z</option>
                 <option value="tier">Tier</option>
                 <option value="trial">Trial Days Left</option>
                 <option value="lastActive">Last Active</option>
@@ -10303,13 +10303,13 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
         </div>
       )}
 
-      {/* -- BULK ACTIONS — FIX #7: billing tiers only -- */}
+      {/* -- BULK ACTIONS ï¿½ FIX #7: billing tiers only -- */}
       {bulkSel.length > 0 && (
         <div style={{ background: "rgba(212,168,67,0.06)", border: "1px solid rgba(212,168,67,0.25)", borderRadius: 10, padding: "10px 16px", marginBottom: 12, display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
           <span style={{ fontSize: 12, fontWeight: 700, color: T.gold }}>? {bulkSel.length} users selected</span>
           <select value={bulkTier} onChange={e => setBulkTier(e.target.value)} style={{ padding: "6px 10px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 7, color: T.textPrimary, fontSize: 12, fontFamily: "'Outfit',sans-serif", cursor: "pointer", outline: "none" }}>
             <option value="">Change access tier to...</option>
-            {BILLING_TIERS.map(r => <option key={r.value} value={r.value}>{r.label}{r.price ? ` · ${r.price}` : ""}</option>)}
+            {BILLING_TIERS.map(r => <option key={r.value} value={r.value}>{r.label}{r.price ? ` ï¿½ ${r.price}` : ""}</option>)}
           </select>
           <button type="button" onClick={handleBulkAction} disabled={!bulkTier} style={{ padding: "6px 14px", borderRadius: 7, border: "none", background: T.gold, color: T.bg, fontSize: 12, fontWeight: 700, cursor: bulkTier ? "pointer" : "not-allowed", fontFamily: "'Outfit',sans-serif", opacity: bulkTier ? 1 : 0.5 }}>Apply</button>
           <button type="button" onClick={() => {
@@ -10402,7 +10402,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
 
         {/* FIX #30: skeleton on initial load, FIX #24: context-aware empty state */}
         {users.length === 0 && !userSearch && tierFilter === "All" ? (
-          // Initial load — data hasn't arrived from Firestore yet
+          // Initial load ï¿½ data hasn't arrived from Firestore yet
           <div>
             {[...Array(5)].map((_, i) => <SkeletonRow key={i} />)}
           </div>
@@ -10464,8 +10464,8 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
                     <span style={{ width: 5, height: 5, borderRadius: "50%", background: health.dot, display: "inline-block", flexShrink: 0 }} />
                     <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                       {health.label}
-                      {jobRole && <span style={{ marginLeft: 5, color: jobRole.color, fontWeight: 700 }}>· {jobRole.label}</span>}
-                      {(u.tags || []).length > 0 && <span style={{ marginLeft: 5, color: "#8B5CF6" }}>· {(u.tags || []).map(t => TAGS_OPTIONS.find(x => x.value === t)?.label).filter(Boolean).join(", ")}</span>}
+                      {jobRole && <span style={{ marginLeft: 5, color: jobRole.color, fontWeight: 700 }}>ï¿½ {jobRole.label}</span>}
+                      {(u.tags || []).length > 0 && <span style={{ marginLeft: 5, color: "#8B5CF6" }}>ï¿½ {(u.tags || []).map(t => TAGS_OPTIONS.find(x => x.value === t)?.label).filter(Boolean).join(", ")}</span>}
                     </span>
                   </div>
                 </div>
@@ -10479,7 +10479,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
                   onClick={e => { const rect = e.currentTarget.getBoundingClientRect(); setInlineTierUser({ user: u, x: rect.left, y: rect.bottom + 4 }); }}
                   title="Click to change tier"
                   style={{ fontSize: 10, fontWeight: 700, padding: "4px 9px", borderRadius: 7, background: badge.bg, color: badge.color, border: `1px solid ${badge.color}25`, cursor: "pointer", fontFamily: "'Outfit',sans-serif", whiteSpace: "nowrap", display: "flex", alignItems: "center", gap: 3 }}>
-                  {badge.label}{badge.price ? ` · ${badge.price}` : ""}
+                  {badge.label}{badge.price ? ` ï¿½ ${badge.price}` : ""}
                   <span style={{ opacity: 0.6, fontSize: 9 }}></span>
                 </button>
               </div>
@@ -10495,13 +10495,13 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
                   </div>
                 ) : u.tier === "pro" ? <span style={{ fontSize: 10, color: T.green, fontWeight: 600 }}>Active ?</span>
                   : u.tier === "enterprise" ? <span style={{ fontSize: 10, color: T.teal, fontWeight: 600 }}>Enterprise ?</span>
-                  : <span style={{ fontSize: 11, color: T.textMuted }}>—</span>}
+                  : <span style={{ fontSize: 11, color: T.textMuted }}>ï¿½</span>}
               </div>
 
               <div><div style={{ fontSize: 10, fontWeight: 700, color: lastActiveColor(u) }}>{lastActiveLabel(u)}</div></div>
 
               <div>
-                <div style={{ fontSize: 11, color: T.textSecondary }}>{(() => { try { return new Date(u.createdAt).toLocaleDateString("en", { day: "numeric", month: "short" }); } catch { return "—"; } })()}</div>
+                <div style={{ fontSize: 11, color: T.textSecondary }}>{(() => { try { return new Date(u.createdAt).toLocaleDateString("en", { day: "numeric", month: "short" }); } catch { return "ï¿½"; } })()}</div>
                 <div style={{ fontSize: 10, color: T.textMuted, marginTop: 1 }}>{timeSince(u.createdAt)}</div>
               </div>
 
@@ -10522,7 +10522,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
         })}
       </div>
 
-      {/* -- MOBILE CARD VIEW — FIX #22: Edit, Tags, Suspend added -- */}
+      {/* -- MOBILE CARD VIEW ï¿½ FIX #22: Edit, Tags, Suspend added -- */}
       <div className="users-table-mobile" style={{ flexDirection: "column", gap: 10 }}>
         {pagedUsers.length === 0 ? (
           <div style={{ textAlign: "center", padding: "40px 20px", background: T.surface, borderRadius: 16, border: `1px solid ${T.border}` }}>
@@ -10550,7 +10550,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 12 }}>
                 {[
                   { label: "Status", value: health.label, color: health.dot },
-                  { label: "Trial",  value: days !== null ? (days > 0 ? `${days}d left` : "Expired") : (u.tier === "pro" ? "Active" : "—"), color: days !== null ? (days <= AT_RISK_DAYS ? T.red : T.gold) : T.green },
+                  { label: "Trial",  value: days !== null ? (days > 0 ? `${days}d left` : "Expired") : (u.tier === "pro" ? "Active" : "ï¿½"), color: days !== null ? (days <= AT_RISK_DAYS ? T.red : T.gold) : T.green },
                   { label: "Active", value: lastActiveLabel(u), color: lastActiveColor(u) },
                 ].map(s => (
                   <div key={s.label} style={{ background: T.surfaceAlt, borderRadius: 8, padding: "8px 10px" }}>
@@ -10573,18 +10573,18 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
         })}
       </div>
 
-      {/* -- PAGINATION — FIX #4 -- */}
+      {/* -- PAGINATION ï¿½ FIX #4 -- */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 14, padding: "0 2px", flexWrap: "wrap", gap: 10 }}>
         {/* FIX #4: handle 0 results gracefully */}
         <span style={{ fontSize: 11, color: T.textMuted }}>
           {allFiltered.length === 0
             ? "No users shown"
-            : <>Showing <strong style={{ color: T.white }}>{(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, allFiltered.length)}</strong> of <strong style={{ color: T.white }}>{allFiltered.length}</strong> users</>
+            : <>Showing <strong style={{ color: T.white }}>{(page - 1) * PAGE_SIZE + 1}ï¿½{Math.min(page * PAGE_SIZE, allFiltered.length)}</strong> of <strong style={{ color: T.white }}>{allFiltered.length}</strong> users</>
           }
-          {tierFilter !== "All" && <span style={{ color: T.gold }}> · {tierFilter}</span>}
+          {tierFilter !== "All" && <span style={{ color: T.gold }}> ï¿½ {tierFilter}</span>}
         </span>
         <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-          <button type="button" onClick={() => setPage(1)} disabled={page === 1} style={{ padding: "5px 10px", borderRadius: 7, border: `1px solid ${T.border}`, background: "transparent", color: page === 1 ? T.textMuted : T.textSecondary, cursor: page === 1 ? "not-allowed" : "pointer", fontSize: 11, fontFamily: "'Outfit',sans-serif" }}>½</button>
+          <button type="button" onClick={() => setPage(1)} disabled={page === 1} style={{ padding: "5px 10px", borderRadius: 7, border: `1px solid ${T.border}`, background: "transparent", color: page === 1 ? T.textMuted : T.textSecondary, cursor: page === 1 ? "not-allowed" : "pointer", fontSize: 11, fontFamily: "'Outfit',sans-serif" }}>ï¿½</button>
           <button type="button" onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} style={{ padding: "5px 10px", borderRadius: 7, border: `1px solid ${T.border}`, background: "transparent", color: page === 1 ? T.textMuted : T.textSecondary, cursor: page === 1 ? "not-allowed" : "pointer", fontSize: 11, fontFamily: "'Outfit',sans-serif" }}> Prev</button>
           {Array.from({ length: Math.min(5, totalPages) }, (_, idx) => {
             const p = totalPages <= 5 ? idx + 1 : Math.max(1, Math.min(page - 2, totalPages - 4)) + idx;
@@ -10596,12 +10596,12 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
             );
           })}
           <button type="button" onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages} style={{ padding: "5px 10px", borderRadius: 7, border: `1px solid ${T.border}`, background: "transparent", color: page === totalPages ? T.textMuted : T.textSecondary, cursor: page === totalPages ? "not-allowed" : "pointer", fontSize: 11, fontFamily: "'Outfit',sans-serif" }}>Next </button>
-          <button type="button" onClick={() => setPage(totalPages)} disabled={page === totalPages} style={{ padding: "5px 10px", borderRadius: 7, border: `1px solid ${T.border}`, background: "transparent", color: page === totalPages ? T.textMuted : T.textSecondary, cursor: page === totalPages ? "not-allowed" : "pointer", fontSize: 11, fontFamily: "'Outfit',sans-serif" }}>»</button>
+          <button type="button" onClick={() => setPage(totalPages)} disabled={page === totalPages} style={{ padding: "5px 10px", borderRadius: 7, border: `1px solid ${T.border}`, background: "transparent", color: page === totalPages ? T.textMuted : T.textSecondary, cursor: page === totalPages ? "not-allowed" : "pointer", fontSize: 11, fontFamily: "'Outfit',sans-serif" }}>ï¿½</button>
           <span style={{ fontSize: 11, color: T.textMuted, marginLeft: 4 }}>Page {page} of {totalPages}</span>
         </div>
-        {/* FIX #16: MRR only shown once — here at bottom */}
+        {/* FIX #16: MRR only shown once ï¿½ here at bottom */}
         <span style={{ fontSize: 11, color: T.textMuted }}>
-          MRR <span style={{ color: T.gold, fontWeight: 700 }}>AED {mrr}</span> · Conv <span style={{ color: T.green, fontWeight: 700 }}>{convRate}%</span>
+          MRR <span style={{ color: T.gold, fontWeight: 700 }}>AED {mrr}</span> ï¿½ Conv <span style={{ color: T.green, fontWeight: 700 }}>{convRate}%</span>
         </span>
       </div>
     </div>
@@ -10680,7 +10680,7 @@ function DataCalendar({ T, now }) {
     { id: "emaar_q2_2026",  event: "Emaar Q2 2026 Results",  due: "2026-07-15", note: "emaar.com ? Investor Relations",     icon: "[=]", priority: "high"     },
     { id: "market_q2_2026", event: "Dubai Market Report Q2", due: "2026-07-30", note: "DLD Open Data + DXBinteract",         icon: "", priority: "medium"   },
     { id: "emaar_q3_2026",  event: "Emaar Q3 2026 Results",  due: "2026-10-15", note: "emaar.com ? Investor Relations",     icon: "[=]", priority: "high"     },
-    { id: "emaar_fy_2026",  event: "Emaar FY 2026 Results",  due: "2027-02-15", note: "Annual results — biggest of the year", icon: "", priority: "critical" },
+    { id: "emaar_fy_2026",  event: "Emaar FY 2026 Results",  due: "2027-02-15", note: "Annual results ï¿½ biggest of the year", icon: "", priority: "critical" },
   ];
 
   useEffect(() => {
@@ -10957,7 +10957,7 @@ function AuditLogTable({ auditLog, users, emaarProjects, fetchAuditLog, setTab, 
 
 
   const timeAgo = ts => {
-    if (!ts) return "—";
+    if (!ts) return "ï¿½";
     const diff = Date.now() - new Date(ts).getTime();
     const mins = Math.floor(diff/60000), hrs = Math.floor(diff/3600000), days = Math.floor(diff/86400000);
     if (mins < 1) return "just now";
@@ -10992,7 +10992,7 @@ function AuditLogTable({ auditLog, users, emaarProjects, fetchAuditLog, setTab, 
         <div>
           <div style={{ fontSize: 14, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>Audit Log</div>
           <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>
-            {filteredLog.length} of {auditLog.length} events · Complete admin action history
+            {filteredLog.length} of {auditLog.length} events ï¿½ Complete admin action history
           </div>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -11139,7 +11139,7 @@ function AuditLogTable({ auditLog, users, emaarProjects, fetchAuditLog, setTab, 
                     {logs.slice(0, 5).map((log, i) => (
                       <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "4px 0", fontSize: 10, color: T.textMuted }}>
                         <span>{log.changedBy || "Unknown"}</span>
-                        <span>{log.changedAt ? new Date(log.changedAt).toLocaleDateString("en-AE", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }) : "—"}</span>
+                        <span>{log.changedAt ? new Date(log.changedAt).toLocaleDateString("en-AE", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }) : "ï¿½"}</span>
                       </div>
                     ))}
                     {logs.length > 5 && <div style={{ fontSize: 10, color: T.textMuted, textAlign: "center", padding: "4px 0" }}>+ {logs.length - 5} more</div>}
@@ -11195,8 +11195,8 @@ function AuditLogTable({ auditLog, users, emaarProjects, fetchAuditLog, setTab, 
                         {meta.label}
                       </span>
                       <span style={{ fontSize: 10, color: T.textMuted }}>{timeAgo(log.changedAt)}</span>
-                      <span style={{ fontSize: 9, color: T.textMuted }}>·</span>
-                      <span style={{ fontSize: 10, color: T.textMuted }}>{log.changedAt ? new Date(log.changedAt).toLocaleString("en-AE",{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"}) : "—"}</span>
+                      <span style={{ fontSize: 9, color: T.textMuted }}>ï¿½</span>
+                      <span style={{ fontSize: 10, color: T.textMuted }}>{log.changedAt ? new Date(log.changedAt).toLocaleString("en-AE",{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"}) : "ï¿½"}</span>
                       <span style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 6 }}>
                         {log.ip && log.ip !== "unknown" && (
                           <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 7px", borderRadius: 5, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", color: T.textMuted, fontFamily: "'Courier New', monospace" }}>
@@ -11226,11 +11226,11 @@ function AuditLogTable({ auditLog, users, emaarProjects, fetchAuditLog, setTab, 
                           )}
                           <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 4 }}>
                             <span style={{ fontSize: 11, fontWeight: 700, padding: "3px 9px", borderRadius: 6, background: `${tierColor[log.from]||"#94A3B8"}18`, color: tierColor[log.from]||"#94A3B8", border: `1px solid ${tierColor[log.from]||"#94A3B8"}35` }}>
-                              {tierLabel[log.from]||log.from||"—"}
+                              {tierLabel[log.from]||log.from||"ï¿½"}
                             </span>
                             <span style={{ fontSize: 12, color: T.textMuted, fontWeight: 700 }}>?</span>
                             <span style={{ fontSize: 11, fontWeight: 700, padding: "3px 9px", borderRadius: 6, background: `${tierColor[log.to]||"#94A3B8"}18`, color: tierColor[log.to]||"#94A3B8", border: `1px solid ${tierColor[log.to]||"#94A3B8"}35` }}>
-                              {tierLabel[log.to]||log.to||"—"}
+                              {tierLabel[log.to]||log.to||"ï¿½"}
                             </span>
                             {isClickable && (
                               <span style={{ fontSize: 10, color: T.gold, fontWeight: 600, marginLeft: 4 }}>View profile ?</span>
@@ -11281,9 +11281,9 @@ function AuditLogTable({ auditLog, users, emaarProjects, fetchAuditLog, setTab, 
                                 {shown.map(([k,v]) => (
                                   <div key={k} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, background: "rgba(255,255,255,0.04)", padding: "4px 10px", borderRadius: 7, border: `1px solid ${T.border}` }}>
                                     <span style={{ color: T.textMuted, fontWeight: 700, fontSize: 10, textTransform: "uppercase" }}>{k}:</span>
-                                    <span style={{ color: "#F87171", textDecoration: "line-through", fontSize: 10 }}>{String(v.old||"—").slice(0,20)}</span>
+                                    <span style={{ color: "#F87171", textDecoration: "line-through", fontSize: 10 }}>{String(v.old||"ï¿½").slice(0,20)}</span>
                                     <span style={{ color: T.textMuted, fontSize: 10 }}>?</span>
-                                    <span style={{ color: "#4ADE80", fontSize: 10, fontWeight: 600 }}>{String(v.new||"—").slice(0,20)}</span>
+                                    <span style={{ color: "#4ADE80", fontSize: 10, fontWeight: 600 }}>{String(v.new||"ï¿½").slice(0,20)}</span>
                                   </div>
                                 ))}
                                 {entries.length > 4 && <span style={{ fontSize: 10, color: T.textMuted, padding: "4px 8px" }}>+{entries.length - 4} more fields</span>}
@@ -11301,7 +11301,7 @@ function AuditLogTable({ auditLog, users, emaarProjects, fetchAuditLog, setTab, 
                           <div style={{ display: "flex", flexWrap: "wrap", gap: 5, marginTop: 5 }}>
                             {Object.entries(log.diff).slice(0,3).map(([k,v]) => (
                               <span key={k} style={{ fontSize: 10, background: "rgba(255,255,255,0.04)", padding: "3px 8px", borderRadius: 5, color: T.textMuted }}>
-                                {k}: <span style={{ color: "#F87171", textDecoration: "line-through" }}>{String(v.old||"—").slice(0,12)}</span> ? <span style={{ color: "#4ADE80" }}>{String(v.new||"—").slice(0,12)}</span>
+                                {k}: <span style={{ color: "#F87171", textDecoration: "line-through" }}>{String(v.old||"ï¿½").slice(0,12)}</span> ? <span style={{ color: "#4ADE80" }}>{String(v.new||"ï¿½").slice(0,12)}</span>
                               </span>
                             ))}
                           </div>
@@ -11379,7 +11379,7 @@ function FinancialsEditor({ db, T, notify, adminUser, Section }) {
   if (!finRows) return <div style={{ padding: 40, textAlign: "center", color: T.textMuted }}>Loading financials...</div>;
 
   return (
-    <Section title="Financials Editor" sub="Update Emaar financial data — changes go live on dashboard immediately">
+    <Section title="Financials Editor" sub="Update Emaar financial data ï¿½ changes go live on dashboard immediately">
       <div style={{ padding: "12px 16px", borderRadius: 10, background: "rgba(212,168,67,0.06)", border: `1px solid ${T.border}`, marginBottom: 20, fontSize: 12, color: T.textSecondary, lineHeight: 1.6 }}>
         ?? Edit figures below when Emaar releases new quarterly or annual results. All values in AED Billions unless noted.
       </div>
@@ -11426,7 +11426,7 @@ function RiskEditor({ db, T, notify, adminUser, Section }) {
   const defaultRiskFactors = [
     { factor: "Market Risk", score: 6, trend: "stable", desc: "Dubai RE market cyclicality and price correction risk", weight: 15 },
     { factor: "Regulatory Risk", score: 8, trend: "improving", desc: "RERA oversight, DLD regulations, freehold laws", weight: 10 },
-    { factor: "Liquidity Risk", score: 5, trend: "stable", desc: "Ability to exit — time to sell, buyer depth", weight: 15 },
+    { factor: "Liquidity Risk", score: 5, trend: "stable", desc: "Ability to exit ï¿½ time to sell, buyer depth", weight: 15 },
     { factor: "Construction Risk", score: 7, trend: "stable", desc: "Developer delivery record, construction delays", weight: 15 },
     { factor: "Interest Rate Risk", score: 5, trend: "improving", desc: "EIBOR sensitivity, mortgage affordability impact", weight: 10 },
     { factor: "Currency Risk", score: 8, trend: "stable", desc: "AED-USD peg stability, forex exposure for expats", weight: 10 },
@@ -11554,7 +11554,7 @@ function MarketEditor({ db, T, notify, adminUser, Section }) {
   if (!mktRows) return <div style={{ padding: 40, textAlign: "center", color: T.textMuted }}>Loading...</div>;
 
   return (
-    <Section title="Market Data Editor" sub="Update market stats shown on the Market tab — saves to Firestore">
+    <Section title="Market Data Editor" sub="Update market stats shown on the Market tab ï¿½ saves to Firestore">
       <div style={{ padding: "12px 16px", borderRadius: 10, background: "rgba(59,130,246,0.05)", border: "1px solid rgba(59,130,246,0.15)", marginBottom: 20, fontSize: 12, color: T.textSecondary, lineHeight: 1.6 }}>
         ?? Update these figures when new DLD, REIDIN, or Knight Frank reports are released.
       </div>
@@ -11576,7 +11576,7 @@ function MarketEditor({ db, T, notify, adminUser, Section }) {
                 style={{ width: "100%", padding: "7px 10px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 6, color: T.textPrimary, fontSize: 12, fontFamily: "'Outfit',sans-serif", outline: "none" }} />
             ))}
             <button type="button" onClick={() => setMktRows(prev => prev.filter((_, j) => j !== i))}
-              style={{ width: 32, height: 32, borderRadius: 6, border: "1px solid rgba(239,68,68,0.3)", background: "rgba(239,68,68,0.08)", color: T.red, cursor: "pointer", fontSize: 14, display: "flex", alignItems: "center", justifyContent: "center" }}>×</button>
+              style={{ width: 32, height: 32, borderRadius: 6, border: "1px solid rgba(239,68,68,0.3)", background: "rgba(239,68,68,0.08)", color: T.red, cursor: "pointer", fontSize: 14, display: "flex", alignItems: "center", justifyContent: "center" }}>ï¿½</button>
           </div>
         ))}
       </div>
@@ -11646,42 +11646,42 @@ function LaunchRadar({ db, T, notify }) {
     return [
       // -- EMAAR --
       { projectName: "Vida Residences Hillside", developer: "Emaar Properties", developerId: "emaar", community: "Dubai Hills Estate", district: "DHE", priceFrom: 1800000, beds: "1-3", type: "Apartments", handover: "Q2 2029", payment: "80/20", construction: 15, branded: true, brand: "Vida Hotels", tier: "Premium", source: "Bayut.com", sourceUrl: "https://www.bayut.com/new-projects/dubai/dubai-hills-estate/", verifiedUrl: "https://properties.emaar.com" },
-      { projectName: "Hillsedge", developer: "Emaar Properties", developerId: "emaar", community: "Dubai Hills Estate", district: "DHE", priceFrom: 1840000, beds: "1-3", type: "Apartments", handover: "Q1 2029", payment: "80/20", construction: 10, branded: false, brand: "—", tier: "Premium", source: "Bayut.com", sourceUrl: "https://www.bayut.com/new-projects/dubai/dubai-hills-estate/", verifiedUrl: "https://properties.emaar.com" },
+      { projectName: "Hillsedge", developer: "Emaar Properties", developerId: "emaar", community: "Dubai Hills Estate", district: "DHE", priceFrom: 1840000, beds: "1-3", type: "Apartments", handover: "Q1 2029", payment: "80/20", construction: 10, branded: false, brand: "ï¿½", tier: "Premium", source: "Bayut.com", sourceUrl: "https://www.bayut.com/new-projects/dubai/dubai-hills-estate/", verifiedUrl: "https://properties.emaar.com" },
       { projectName: "Address Villas Hillcrest", developer: "Emaar Properties", developerId: "emaar", community: "Dubai Hills Estate", district: "DHE", priceFrom: 21700000, beds: "4-6", type: "Villas", handover: "Q2 2026", payment: "80/20", construction: 85, branded: true, brand: "Address Hotels", tier: "Ultra-Luxury", source: "Bayut.com", sourceUrl: "https://www.bayut.com/new-projects/dubai/dubai-hills-estate/", verifiedUrl: "https://properties.emaar.com" },
-      { projectName: "Raya", developer: "Emaar Properties", developerId: "emaar", community: "Arabian Ranches III", district: "AR3", priceFrom: 1950000, beds: "3-4", type: "Townhouses", handover: "Q2 2026", payment: "80/20", construction: 90, branded: false, brand: "—", tier: "Mid-Premium", source: "Bayut.com", sourceUrl: "https://www.bayut.com/new-projects/dubai/arabian-ranches-3/", verifiedUrl: "https://properties.emaar.com" },
-      { projectName: "Farm Gardens", developer: "Emaar Properties", developerId: "emaar", community: "The Valley", district: "VAL", priceFrom: 5100000, beds: "4-5", type: "Villas", handover: "Q3 2026", payment: "80/20", construction: 75, branded: false, brand: "—", tier: "Premium", source: "Bayut.com", sourceUrl: "https://www.bayut.com/new-projects/dubai/the-valley-by-emaar/", verifiedUrl: "https://properties.emaar.com" },
+      { projectName: "Raya", developer: "Emaar Properties", developerId: "emaar", community: "Arabian Ranches III", district: "AR3", priceFrom: 1950000, beds: "3-4", type: "Townhouses", handover: "Q2 2026", payment: "80/20", construction: 90, branded: false, brand: "ï¿½", tier: "Mid-Premium", source: "Bayut.com", sourceUrl: "https://www.bayut.com/new-projects/dubai/arabian-ranches-3/", verifiedUrl: "https://properties.emaar.com" },
+      { projectName: "Farm Gardens", developer: "Emaar Properties", developerId: "emaar", community: "The Valley", district: "VAL", priceFrom: 5100000, beds: "4-5", type: "Villas", handover: "Q3 2026", payment: "80/20", construction: 75, branded: false, brand: "ï¿½", tier: "Premium", source: "Bayut.com", sourceUrl: "https://www.bayut.com/new-projects/dubai/the-valley-by-emaar/", verifiedUrl: "https://properties.emaar.com" },
       { projectName: "Palace Beach Residence", developer: "Emaar Properties", developerId: "emaar", community: "Emaar Beachfront", district: "EBF", priceFrom: 2970000, beds: "1-4", type: "Apartments", handover: "Q4 2026", payment: "80/20", construction: 80, branded: true, brand: "Palace Hotels", tier: "Premium", source: "Bayut.com", sourceUrl: "https://www.bayut.com/new-projects/dubai/dubai-harbour/emaar-beachfront/", verifiedUrl: "https://properties.emaar.com" },
       { projectName: "Beachgate by Address", developer: "Emaar Properties", developerId: "emaar", community: "Emaar Beachfront", district: "EBF", priceFrom: 2700000, beds: "1-4", type: "Apts & TH", handover: "Q4 2026", payment: "80/20", construction: 80, branded: true, brand: "Address Hotels", tier: "Premium", source: "Bayut.com", sourceUrl: "https://www.bayut.com/new-projects/dubai/dubai-harbour/emaar-beachfront/", verifiedUrl: "https://properties.emaar.com" },
-      { projectName: "Golf Meadows", developer: "Emaar Properties", developerId: "emaar", community: "Dubai South", district: "DS", priceFrom: 1100000, beds: "1-3", type: "Apts & TH", handover: "Q3 2029", payment: "80/20", construction: 5, branded: false, brand: "—", tier: "Mid-Market", source: "Bayut.com", sourceUrl: "https://www.bayut.com/new-projects/dubai/dubai-south/emaar-south/", verifiedUrl: "https://properties.emaar.com" },
+      { projectName: "Golf Meadows", developer: "Emaar Properties", developerId: "emaar", community: "Dubai South", district: "DS", priceFrom: 1100000, beds: "1-3", type: "Apts & TH", handover: "Q3 2029", payment: "80/20", construction: 5, branded: false, brand: "ï¿½", tier: "Mid-Market", source: "Bayut.com", sourceUrl: "https://www.bayut.com/new-projects/dubai/dubai-south/emaar-south/", verifiedUrl: "https://properties.emaar.com" },
       // -- DAMAC --
-      { projectName: "ELO 3", developer: "DAMAC Properties", developerId: "damac", community: "DAMAC Hills 2", district: "DH2", priceFrom: 580000, beds: "1-2", type: "Apartments", handover: "Q2 2027", payment: "70/30", construction: 25, branded: false, brand: "—", tier: "Mid-Market", source: "Bayut.com", sourceUrl: "https://www.bayut.com/new-projects/developers/damac-properties/", verifiedUrl: "https://www.damacproperties.com" },
-      { projectName: "Utopia", developer: "DAMAC Properties", developerId: "damac", community: "DAMAC Hills", district: "DAH", priceFrom: 18100000, beds: "5-7", type: "Villas", handover: "Q4 2026", payment: "60/40", construction: 70, branded: false, brand: "—", tier: "Ultra-Luxury", source: "Bayut.com", sourceUrl: "https://www.bayut.com/new-projects/dubai/damac-hills/", verifiedUrl: "https://www.damacproperties.com" },
+      { projectName: "ELO 3", developer: "DAMAC Properties", developerId: "damac", community: "DAMAC Hills 2", district: "DH2", priceFrom: 580000, beds: "1-2", type: "Apartments", handover: "Q2 2027", payment: "70/30", construction: 25, branded: false, brand: "ï¿½", tier: "Mid-Market", source: "Bayut.com", sourceUrl: "https://www.bayut.com/new-projects/developers/damac-properties/", verifiedUrl: "https://www.damacproperties.com" },
+      { projectName: "Utopia", developer: "DAMAC Properties", developerId: "damac", community: "DAMAC Hills", district: "DAH", priceFrom: 18100000, beds: "5-7", type: "Villas", handover: "Q4 2026", payment: "60/40", construction: 70, branded: false, brand: "ï¿½", tier: "Ultra-Luxury", source: "Bayut.com", sourceUrl: "https://www.bayut.com/new-projects/dubai/damac-hills/", verifiedUrl: "https://www.damacproperties.com" },
       { projectName: "Safa One", developer: "DAMAC Properties", developerId: "damac", community: "Business Bay", district: "BB", priceFrom: 1620000, beds: "Studio-3", type: "Apartments", handover: "Q1 2026", payment: "90/10", construction: 97, branded: true, brand: "de GRISOGONO", tier: "Ultra-Luxury", source: "Bayut.com", sourceUrl: "https://www.bayut.com/new-projects/developers/damac-properties/", verifiedUrl: "https://www.damacproperties.com" },
-      { projectName: "Chic Tower", developer: "DAMAC Properties", developerId: "damac", community: "Business Bay", district: "BB", priceFrom: 823000, beds: "Studio-2", type: "Apartments", handover: "Q2 2026", payment: "80/20", construction: 85, branded: false, brand: "—", tier: "Mid-Market", source: "Bayut.com", sourceUrl: "https://www.bayut.com/new-projects/developers/damac-properties/", verifiedUrl: "https://www.damacproperties.com" },
+      { projectName: "Chic Tower", developer: "DAMAC Properties", developerId: "damac", community: "Business Bay", district: "BB", priceFrom: 823000, beds: "Studio-2", type: "Apartments", handover: "Q2 2026", payment: "80/20", construction: 85, branded: false, brand: "ï¿½", tier: "Mid-Market", source: "Bayut.com", sourceUrl: "https://www.bayut.com/new-projects/developers/damac-properties/", verifiedUrl: "https://www.damacproperties.com" },
       { projectName: "DAMAC Bay by Cavalli", developer: "DAMAC Properties", developerId: "damac", community: "Dubai Harbour", district: "DH", priceFrom: 2900000, beds: "1-4", type: "Apartments", handover: "Q3 2027", payment: "60/40", construction: 35, branded: true, brand: "Roberto Cavalli", tier: "Ultra-Luxury", source: "Bayut.com", sourceUrl: "https://www.bayut.com/new-projects/developers/damac-properties/", verifiedUrl: "https://www.damacproperties.com" },
       // -- SOBHA --
-      { projectName: "Sobha One Towers", developer: "Sobha Realty", developerId: "sobha", community: "Sobha Hartland", district: "SH", priceFrom: 1100000, beds: "1-3", type: "Apartments", handover: "Q4 2026", payment: "60/40", construction: 75, branded: false, brand: "—", tier: "Premium", source: "Bayut.com", sourceUrl: "https://www.bayut.com/new-projects/dubai/sobha-hartland/", verifiedUrl: "https://www.sobharealty.com" },
-      { projectName: "Sobha Elwood", developer: "Sobha Realty", developerId: "sobha", community: "Dubailand", district: "DL", priceFrom: 1600000, beds: "3-5", type: "Villas", handover: "Q4 2027", payment: "60/40", construction: 20, branded: false, brand: "—", tier: "Premium", source: "sobharealty.com", sourceUrl: "https://www.sobharealty.com", verifiedUrl: "https://www.sobharealty.com" },
-      { projectName: "Sobha Estates Villas", developer: "Sobha Realty", developerId: "sobha", community: "Sobha Hartland 2", district: "SH2", priceFrom: 22000000, beds: "5-6", type: "Villas", handover: "Q4 2026", payment: "60/40", construction: 70, branded: false, brand: "—", tier: "Ultra-Luxury", source: "Bayut.com", sourceUrl: "https://www.bayut.com/new-projects/dubai/sobha-hartland/", verifiedUrl: "https://www.sobharealty.com" },
+      { projectName: "Sobha One Towers", developer: "Sobha Realty", developerId: "sobha", community: "Sobha Hartland", district: "SH", priceFrom: 1100000, beds: "1-3", type: "Apartments", handover: "Q4 2026", payment: "60/40", construction: 75, branded: false, brand: "ï¿½", tier: "Premium", source: "Bayut.com", sourceUrl: "https://www.bayut.com/new-projects/dubai/sobha-hartland/", verifiedUrl: "https://www.sobharealty.com" },
+      { projectName: "Sobha Elwood", developer: "Sobha Realty", developerId: "sobha", community: "Dubailand", district: "DL", priceFrom: 1600000, beds: "3-5", type: "Villas", handover: "Q4 2027", payment: "60/40", construction: 20, branded: false, brand: "ï¿½", tier: "Premium", source: "sobharealty.com", sourceUrl: "https://www.sobharealty.com", verifiedUrl: "https://www.sobharealty.com" },
+      { projectName: "Sobha Estates Villas", developer: "Sobha Realty", developerId: "sobha", community: "Sobha Hartland 2", district: "SH2", priceFrom: 22000000, beds: "5-6", type: "Villas", handover: "Q4 2026", payment: "60/40", construction: 70, branded: false, brand: "ï¿½", tier: "Ultra-Luxury", source: "Bayut.com", sourceUrl: "https://www.bayut.com/new-projects/dubai/sobha-hartland/", verifiedUrl: "https://www.sobharealty.com" },
       // -- NAKHEEL --
-      { projectName: "Palm Jebel Ali Villas Phase 2", developer: "Nakheel", developerId: "nakheel", community: "Palm Jebel Ali", district: "PJA", priceFrom: 8500000, beds: "4-7", type: "Villas", handover: "Q4 2027", payment: "80/20", construction: 30, branded: false, brand: "—", tier: "Ultra-Luxury", source: "nakheel.com", sourceUrl: "https://www.nakheel.com", verifiedUrl: "https://www.nakheel.com" },
+      { projectName: "Palm Jebel Ali Villas Phase 2", developer: "Nakheel", developerId: "nakheel", community: "Palm Jebel Ali", district: "PJA", priceFrom: 8500000, beds: "4-7", type: "Villas", handover: "Q4 2027", payment: "80/20", construction: 30, branded: false, brand: "ï¿½", tier: "Ultra-Luxury", source: "nakheel.com", sourceUrl: "https://www.nakheel.com", verifiedUrl: "https://www.nakheel.com" },
       // -- BINGHATTI --
       { projectName: "Mercedes-Benz Places", developer: "Binghatti Developers", developerId: "binghatti", community: "Downtown Dubai", district: "DT", priceFrom: 8800000, beds: "1-4", type: "Apartments", handover: "Q4 2026", payment: "70/30", construction: 70, branded: true, brand: "Mercedes-Benz", tier: "Ultra-Luxury", source: "Bayut.com", sourceUrl: "https://www.bayut.com/new-projects/developers/binghatti-developers/", verifiedUrl: "https://binghatti.com" },
       { projectName: "Burj Binghatti Jacob & Co", developer: "Binghatti Developers", developerId: "binghatti", community: "Business Bay", district: "BB", priceFrom: 8200000, beds: "1-4", type: "Apartments", handover: "Q2 2026", payment: "80/20", construction: 90, branded: true, brand: "Jacob & Co", tier: "Ultra-Luxury", source: "Bayut.com", sourceUrl: "https://www.bayut.com/new-projects/developers/binghatti-developers/", verifiedUrl: "https://binghatti.com" },
-      { projectName: "One by Binghatti", developer: "Binghatti Developers", developerId: "binghatti", community: "Business Bay", district: "BB", priceFrom: 1700000, beds: "1-3", type: "Apartments", handover: "Q4 2026", payment: "70/30", construction: 60, branded: false, brand: "—", tier: "Mid-Premium", source: "Bayut.com", sourceUrl: "https://www.bayut.com/new-projects/developers/binghatti-developers/", verifiedUrl: "https://binghatti.com" },
-      { projectName: "Binghatti Elite", developer: "Binghatti Developers", developerId: "binghatti", community: "Dubai Production City", district: "IMPZ", priceFrom: 600000, beds: "Studio-2", type: "Apartments", handover: "Q2 2026", payment: "70/30", construction: 85, branded: false, brand: "—", tier: "Mid-Market", source: "Bayut.com", sourceUrl: "https://www.bayut.com/new-projects/developers/binghatti-developers/", verifiedUrl: "https://binghatti.com" },
+      { projectName: "One by Binghatti", developer: "Binghatti Developers", developerId: "binghatti", community: "Business Bay", district: "BB", priceFrom: 1700000, beds: "1-3", type: "Apartments", handover: "Q4 2026", payment: "70/30", construction: 60, branded: false, brand: "ï¿½", tier: "Mid-Premium", source: "Bayut.com", sourceUrl: "https://www.bayut.com/new-projects/developers/binghatti-developers/", verifiedUrl: "https://binghatti.com" },
+      { projectName: "Binghatti Elite", developer: "Binghatti Developers", developerId: "binghatti", community: "Dubai Production City", district: "IMPZ", priceFrom: 600000, beds: "Studio-2", type: "Apartments", handover: "Q2 2026", payment: "70/30", construction: 85, branded: false, brand: "ï¿½", tier: "Mid-Market", source: "Bayut.com", sourceUrl: "https://www.bayut.com/new-projects/developers/binghatti-developers/", verifiedUrl: "https://binghatti.com" },
       // -- ELLINGTON --
-      { projectName: "Ocean House", developer: "Ellington Properties", developerId: "ellington", community: "Palm Jumeirah", district: "PJ", priceFrom: 8370000, beds: "2-4", type: "Apartments", handover: "Q2 2026", payment: "70/30", construction: 85, branded: false, brand: "—", tier: "Ultra-Luxury", source: "Bayut.com", sourceUrl: "https://www.bayut.com/new-projects/developers/ellington-properties/", verifiedUrl: "https://ellingtonproperties.com" },
-      { projectName: "Art Bay West", developer: "Ellington Properties", developerId: "ellington", community: "Al Jaddaf", district: "JAD", priceFrom: 1980000, beds: "1-4", type: "Apartments", handover: "Q3 2026", payment: "70/30", construction: 60, branded: false, brand: "—", tier: "Premium", source: "Bayut.com", sourceUrl: "https://www.bayut.com/new-projects/developers/ellington-properties/", verifiedUrl: "https://ellingtonproperties.com" },
-      { projectName: "Highgrove by Ellington", developer: "Ellington Properties", developerId: "ellington", community: "Mohammed Bin Rashid City", district: "MBR", priceFrom: 1700000, beds: "1-4", type: "Apts & Villas", handover: "Q4 2027", payment: "70/30", construction: 20, branded: false, brand: "—", tier: "Premium", source: "Bayut.com", sourceUrl: "https://www.bayut.com/new-projects/developers/ellington-properties/", verifiedUrl: "https://ellingtonproperties.com" },
-      { projectName: "Hillmont Residences", developer: "Ellington Properties", developerId: "ellington", community: "Jumeirah Village Circle", district: "JVC", priceFrom: 1330000, beds: "1-3", type: "Apartments", handover: "Q4 2026", payment: "70/30", construction: 60, branded: false, brand: "—", tier: "Mid-Premium", source: "Bayut.com", sourceUrl: "https://www.bayut.com/new-projects/developers/ellington-properties/", verifiedUrl: "https://ellingtonproperties.com" },
+      { projectName: "Ocean House", developer: "Ellington Properties", developerId: "ellington", community: "Palm Jumeirah", district: "PJ", priceFrom: 8370000, beds: "2-4", type: "Apartments", handover: "Q2 2026", payment: "70/30", construction: 85, branded: false, brand: "ï¿½", tier: "Ultra-Luxury", source: "Bayut.com", sourceUrl: "https://www.bayut.com/new-projects/developers/ellington-properties/", verifiedUrl: "https://ellingtonproperties.com" },
+      { projectName: "Art Bay West", developer: "Ellington Properties", developerId: "ellington", community: "Al Jaddaf", district: "JAD", priceFrom: 1980000, beds: "1-4", type: "Apartments", handover: "Q3 2026", payment: "70/30", construction: 60, branded: false, brand: "ï¿½", tier: "Premium", source: "Bayut.com", sourceUrl: "https://www.bayut.com/new-projects/developers/ellington-properties/", verifiedUrl: "https://ellingtonproperties.com" },
+      { projectName: "Highgrove by Ellington", developer: "Ellington Properties", developerId: "ellington", community: "Mohammed Bin Rashid City", district: "MBR", priceFrom: 1700000, beds: "1-4", type: "Apts & Villas", handover: "Q4 2027", payment: "70/30", construction: 20, branded: false, brand: "ï¿½", tier: "Premium", source: "Bayut.com", sourceUrl: "https://www.bayut.com/new-projects/developers/ellington-properties/", verifiedUrl: "https://ellingtonproperties.com" },
+      { projectName: "Hillmont Residences", developer: "Ellington Properties", developerId: "ellington", community: "Jumeirah Village Circle", district: "JVC", priceFrom: 1330000, beds: "1-3", type: "Apartments", handover: "Q4 2026", payment: "70/30", construction: 60, branded: false, brand: "ï¿½", tier: "Mid-Premium", source: "Bayut.com", sourceUrl: "https://www.bayut.com/new-projects/developers/ellington-properties/", verifiedUrl: "https://ellingtonproperties.com" },
       // -- AZIZI --
-      { projectName: "Azizi Venice", developer: "Azizi Developments", developerId: "azizi", community: "Dubai South", district: "DS", priceFrom: 480000, beds: "Studio-3", type: "Apartments", handover: "Q1 2026", payment: "50/50", construction: 98, branded: false, brand: "—", tier: "Mid-Market", source: "Bayut.com", sourceUrl: "https://www.bayut.com/new-projects/dubai/dubai-south/", verifiedUrl: "https://www.azizidevelopments.com" },
+      { projectName: "Azizi Venice", developer: "Azizi Developments", developerId: "azizi", community: "Dubai South", district: "DS", priceFrom: 480000, beds: "Studio-3", type: "Apartments", handover: "Q1 2026", payment: "50/50", construction: 98, branded: false, brand: "ï¿½", tier: "Mid-Market", source: "Bayut.com", sourceUrl: "https://www.bayut.com/new-projects/dubai/dubai-south/", verifiedUrl: "https://www.azizidevelopments.com" },
       // -- DANUBE --
-      { projectName: "Oceanz by Danube", developer: "Danube Properties", developerId: "danube", community: "Dubai Maritime City", district: "DMC", priceFrom: 1100000, beds: "Studio-3", type: "Apartments", handover: "Q1 2027", payment: "64/36", construction: 50, branded: false, brand: "—", tier: "Mid-Premium", source: "Bayut.com", sourceUrl: "https://www.bayut.com/new-projects/uae/", verifiedUrl: "https://www.danubeproperties.ae" },
+      { projectName: "Oceanz by Danube", developer: "Danube Properties", developerId: "danube", community: "Dubai Maritime City", district: "DMC", priceFrom: 1100000, beds: "Studio-3", type: "Apartments", handover: "Q1 2027", payment: "64/36", construction: 50, branded: false, brand: "ï¿½", tier: "Mid-Premium", source: "Bayut.com", sourceUrl: "https://www.bayut.com/new-projects/uae/", verifiedUrl: "https://www.danubeproperties.ae" },
       // -- ALDAR --
-      { projectName: "Saadiyat Lagoons", developer: "Aldar Properties", developerId: "aldar", community: "Saadiyat Island", district: "SAD", priceFrom: 6400000, beds: "4-6", type: "Villas", handover: "Q2 2026", payment: "40/60", construction: 85, branded: false, brand: "—", tier: "Ultra-Luxury", source: "Bayut.com", sourceUrl: "https://www.bayut.com/new-projects/uae/", verifiedUrl: "https://www.aldar.com" },
-      { projectName: "Athlon by Aldar", developer: "Aldar Properties", developerId: "aldar", community: "Dubailand", district: "DL", priceFrom: 2800000, beds: "3-5", type: "Villas", handover: "Q3 2028", payment: "60/40", construction: 20, branded: false, brand: "—", tier: "Premium", source: "Bayut.com", sourceUrl: "https://www.bayut.com/new-projects/uae/", verifiedUrl: "https://www.aldar.com" },
+      { projectName: "Saadiyat Lagoons", developer: "Aldar Properties", developerId: "aldar", community: "Saadiyat Island", district: "SAD", priceFrom: 6400000, beds: "4-6", type: "Villas", handover: "Q2 2026", payment: "40/60", construction: 85, branded: false, brand: "ï¿½", tier: "Ultra-Luxury", source: "Bayut.com", sourceUrl: "https://www.bayut.com/new-projects/uae/", verifiedUrl: "https://www.aldar.com" },
+      { projectName: "Athlon by Aldar", developer: "Aldar Properties", developerId: "aldar", community: "Dubailand", district: "DL", priceFrom: 2800000, beds: "3-5", type: "Villas", handover: "Q3 2028", payment: "60/40", construction: 20, branded: false, brand: "ï¿½", tier: "Premium", source: "Bayut.com", sourceUrl: "https://www.bayut.com/new-projects/uae/", verifiedUrl: "https://www.aldar.com" },
       // -- TARAF --
       { projectName: "Karl Lagerfeld Villas", developer: "Taraf", developerId: "taraf", community: "Meydan", district: "MYD", priceFrom: 15000000, beds: "5-7", type: "Villas", handover: "Q2 2027", payment: "60/40", construction: 25, branded: true, brand: "Karl Lagerfeld", tier: "Ultra-Luxury", source: "Bayut.com", sourceUrl: "https://www.bayut.com/new-projects/dubai/", verifiedUrl: "" },
     ];
@@ -11704,7 +11704,7 @@ function LaunchRadar({ db, T, notify }) {
 
       const stats = { bayut: data.breakdown?.bayut || 0, pf: data.breakdown?.propertyfinder || 0, dld: data.breakdown?.dubaiPulse || 0 };
       setScanStats(stats);
-      addLog(`Bayut: ${stats.bayut} · PropertyFinder: ${stats.pf} · DLD: ${stats.dld}`, "success");
+      addLog(`Bayut: ${stats.bayut} ï¿½ PropertyFinder: ${stats.pf} ï¿½ DLD: ${stats.dld}`, "success");
       if (data.errors?.length) data.errors.forEach(e => addLog(e, "warn"));
 
       const known = getKnownLaunches();
@@ -11717,10 +11717,10 @@ function LaunchRadar({ db, T, notify }) {
       });
       setLaunches(deduped);
       setLastScan(new Date().toLocaleString("en-AE"));
-      addLog(`Done — ${deduped.length} total (${data.projects.length} live + ${known.length} database)`, "success");
+      addLog(`Done ï¿½ ${deduped.length} total (${data.projects.length} live + ${known.length} database)`, "success");
       notify(`Launch Radar: ${deduped.length} projects`);
     } catch (err) {
-      addLog(`Live scan failed: ${err.message} — loading verified database`, "warn");
+      addLog(`Live scan failed: ${err.message} ï¿½ loading verified database`, "warn");
       const known = getKnownLaunches();
       setLaunches(known);
       setLastScan(new Date().toLocaleString("en-AE"));
@@ -11743,7 +11743,7 @@ function LaunchRadar({ db, T, notify }) {
       beds: project.beds || "1-3", priceFrom: project.priceFrom || 0,
       handover: project.handover || "Q4 2027", payment: project.payment || "60/40",
       status: "Under Construction", construction: project.construction || 5,
-      branded: project.branded || false, brand: project.brand || "—",
+      branded: project.branded || false, brand: project.brand || "ï¿½",
       tier: project.tier || "Mid-Market", sourceUrl: project.sourceUrl || "",
       verifiedUrl: project.verifiedUrl || "",
     });
@@ -11785,7 +11785,7 @@ function LaunchRadar({ db, T, notify }) {
   };
 
   const TIERS = ["All", "Ultra-Luxury", "Premium", "Mid-Premium", "Mid-Market"];
-  const devOptions = ["All", ...new Set(launches.map(l => l.developer).filter(Boolean).filter(d => d !== "—"))];
+  const devOptions = ["All", ...new Set(launches.map(l => l.developer).filter(Boolean).filter(d => d !== "ï¿½"))];
   const filtered = launches.filter(p => {
     if (devFilter !== "All" && p.developer !== devFilter) return false;
     if (tierFilter !== "All" && p.tier !== tierFilter) return false;
@@ -11801,10 +11801,10 @@ function LaunchRadar({ db, T, notify }) {
       {/* -- TOP STATS BAR ------------------------------------------- */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr auto", gap: 1, background: T.border, borderRadius: 12, overflow: "hidden", marginBottom: 20, border: `1px solid ${T.border}` }}>
         {[
-          { label: "Total Projects", value: launches.length || "—", sub: "in radar" },
-          { label: "Live Sources", value: scanStats ? `${(scanStats.bayut||0)+(scanStats.pf||0)+(scanStats.dld||0)}` : "3", sub: "Bayut · PF · DLD" },
+          { label: "Total Projects", value: launches.length || "ï¿½", sub: "in radar" },
+          { label: "Live Sources", value: scanStats ? `${(scanStats.bayut||0)+(scanStats.pf||0)+(scanStats.dld||0)}` : "3", sub: "Bayut ï¿½ PF ï¿½ DLD" },
           { label: "Added to Platform", value: saved.length || 0, sub: "this session" },
-          { label: "Last Scan", value: lastScan ? lastScan.split(",")[1]?.trim() || "—" : "—", sub: lastScan ? lastScan.split(",")[0] : "Never" },
+          { label: "Last Scan", value: lastScan ? lastScan.split(",")[1]?.trim() || "ï¿½" : "ï¿½", sub: lastScan ? lastScan.split(",")[0] : "Never" },
         ].map((stat, i) => (
           <div key={i} style={{ padding: "16px 20px", background: T.surface }}>
             <div style={{ fontSize: 10, color: T.textMuted, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 6 }}>{stat.label}</div>
@@ -11816,7 +11816,7 @@ function LaunchRadar({ db, T, notify }) {
           <button type="button" onClick={runScan} disabled={scanning}
             style={{ padding: "10px 22px", background: scanning ? T.surfaceAlt : `linear-gradient(135deg, ${T.gold} 0%, #B8912F 100%)`, border: "none", borderRadius: 8, color: scanning ? T.textMuted : "#0A0E1A", fontWeight: 700, fontSize: 13, cursor: scanning ? "not-allowed" : "pointer", fontFamily: "'Outfit',sans-serif", whiteSpace: "nowrap", display: "flex", alignItems: "center", gap: 8, transition: "all 0.2s" }}>
             {scanning ? (
-              <><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ animation: "spin 1s linear infinite" }}><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>Scanning…</>
+              <><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ animation: "spin 1s linear infinite" }}><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>Scanningï¿½</>
             ) : (
               <><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>Scan Now</>
             )}
@@ -11920,15 +11920,15 @@ function LaunchRadar({ db, T, notify }) {
                     </div>
                     {/* Price */}
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
-                      <span style={{ fontSize: 11, fontWeight: 700, color: T.gold }}>{p.priceFrom > 0 ? `${(p.priceFrom/1e6).toFixed(1)}M` : "—"}</span>
+                      <span style={{ fontSize: 11, fontWeight: 700, color: T.gold }}>{p.priceFrom > 0 ? `${(p.priceFrom/1e6).toFixed(1)}M` : "ï¿½"}</span>
                     </div>
                     {/* Handover */}
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
-                      <span style={{ fontSize: 10, color: T.teal, fontWeight: 600 }}>{p.handover || "—"}</span>
+                      <span style={{ fontSize: 10, color: T.teal, fontWeight: 600 }}>{p.handover || "ï¿½"}</span>
                     </div>
                     {/* Payment */}
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
-                      <span style={{ fontSize: 10, color: T.textMuted }}>{p.payment || "—"}</span>
+                      <span style={{ fontSize: 10, color: T.textMuted }}>{p.payment || "ï¿½"}</span>
                     </div>
                     {/* Construction */}
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 4 }}>
@@ -11951,7 +11951,7 @@ function LaunchRadar({ db, T, notify }) {
                       ) : (
                         <button type="button" onClick={() => openAddModal(p)} disabled={!!isAdding}
                           style={{ height: 28, padding: "0 10px", borderRadius: 6, border: "none", background: isAdding ? T.surfaceAlt : T.green, color: isAdding ? T.textMuted : "#fff", fontWeight: 700, fontSize: 11, cursor: isAdding ? "not-allowed" : "pointer", fontFamily: "'Outfit',sans-serif", whiteSpace: "nowrap" }}>
-                          {isAdding ? "…" : "+ Add"}
+                          {isAdding ? "ï¿½" : "+ Add"}
                         </button>
                       )}
                     </div>
@@ -11964,15 +11964,15 @@ function LaunchRadar({ db, T, notify }) {
                         {[
                           { label: "Full Developer", value: p.developer },
                           { label: "Community", value: p.community },
-                          { label: "District Code", value: p.district || "—" },
+                          { label: "District Code", value: p.district || "ï¿½" },
                           { label: "Unit Types", value: p.type },
-                          { label: "Bedrooms", value: p.beds || "—" },
-                          { label: "Starting Price", value: p.priceFrom > 0 ? `AED ${p.priceFrom.toLocaleString()}` : "—" },
-                          { label: "Handover", value: p.handover || "—" },
-                          { label: "Payment Plan", value: p.payment || "—" },
+                          { label: "Bedrooms", value: p.beds || "ï¿½" },
+                          { label: "Starting Price", value: p.priceFrom > 0 ? `AED ${p.priceFrom.toLocaleString()}` : "ï¿½" },
+                          { label: "Handover", value: p.handover || "ï¿½" },
+                          { label: "Payment Plan", value: p.payment || "ï¿½" },
                           { label: "Construction", value: `${p.construction || 0}%` },
-                          { label: "Branded", value: p.branded ? `Yes — ${p.brand}` : "No" },
-                          { label: "Tier", value: p.tier || "—" },
+                          { label: "Branded", value: p.branded ? `Yes ï¿½ ${p.brand}` : "No" },
+                          { label: "Tier", value: p.tier || "ï¿½" },
                           { label: "Source", value: p.source },
                         ].map((item, idx) => (
                           <div key={idx} style={{ padding: "8px 10px", background: T.surface, borderRadius: 8, border: `1px solid ${T.border}` }}>
@@ -12060,7 +12060,7 @@ function LaunchRadar({ db, T, notify }) {
                 )}
               </div>
 
-              {/* Developer — most critical */}
+              {/* Developer ï¿½ most critical */}
               <div>
                 <label style={{ fontSize: 11, fontWeight: 700, color: T.textSecondary, display: "block", marginBottom: 6, textTransform: "uppercase", letterSpacing: 0.5 }}>Developer *</label>
                 <select value={modalForm.developerId}
@@ -12104,9 +12104,9 @@ function LaunchRadar({ db, T, notify }) {
               <div style={{ padding: "12px 14px", background: "rgba(16,185,129,0.05)", border: "1px solid rgba(16,185,129,0.2)", borderRadius: 8 }}>
                 <div style={{ fontSize: 11, fontWeight: 700, color: T.green, marginBottom: 6 }}>Where it will appear</div>
                 <div style={{ fontSize: 11, color: T.textMuted, lineHeight: 1.7 }}>
-                  • <strong style={{ color: T.white }}>Projects tab</strong> when user selects <strong style={{ color: T.gold }}>{ALL_DEVELOPERS.find(d => d.id === modalForm.developerId)?.name}</strong><br/>
-                  • <strong style={{ color: T.white }}>Map tab</strong> — auto-plotted on Dubai map<br/>
-                  • <strong style={{ color: T.white }}>Launch Calendar</strong> — listed under {ALL_DEVELOPERS.find(d => d.id === modalForm.developerId)?.name}
+                  ï¿½ <strong style={{ color: T.white }}>Projects tab</strong> when user selects <strong style={{ color: T.gold }}>{ALL_DEVELOPERS.find(d => d.id === modalForm.developerId)?.name}</strong><br/>
+                  ï¿½ <strong style={{ color: T.white }}>Map tab</strong> ï¿½ auto-plotted on Dubai map<br/>
+                  ï¿½ <strong style={{ color: T.white }}>Launch Calendar</strong> ï¿½ listed under {ALL_DEVELOPERS.find(d => d.id === modalForm.developerId)?.name}
                 </div>
               </div>
             </div>
@@ -12203,7 +12203,7 @@ function LiveDataSync({ db, T, notify }) {
         }
       }
     } catch (err) {
-      log(`Vercel API not deployed — using benchmarks (${err.message.slice(0, 50)})`, "warn");
+      log(`Vercel API not deployed ï¿½ using benchmarks (${err.message.slice(0, 50)})`, "warn");
     }
 
     // Fill remaining with benchmarks
@@ -12228,9 +12228,9 @@ function LiveDataSync({ db, T, notify }) {
       : Object.entries(dubaiRestData).map(([n, d]) => ({ community: n, avgPpsf: d.avgPpsf, avgPrice: 0, listings: 0, source: d.source }));
     setResults(displayResults);
     setLastSync(new Date().toLocaleString("en-AE"));
-    log(`Done — ${synced.length + bCount} communities updated`, "success");
+    log(`Done ï¿½ ${synced.length + bCount} communities updated`, "success");
     if (!liveApiWorked) log("Deploy api/sync-market-data.js to Vercel for live prices", "info");
-    notify(`Sync complete — ${synced.length + bCount} communities ${liveApiWorked ? "(LIVE)" : "(benchmarks)"}`);
+    notify(`Sync complete ï¿½ ${synced.length + bCount} communities ${liveApiWorked ? "(LIVE)" : "(benchmarks)"}`);
     setSyncing(false);
   };
 
@@ -12241,7 +12241,7 @@ function LiveDataSync({ db, T, notify }) {
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr auto", gap: 1, background: T.border, borderRadius: 12, overflow: "hidden", marginBottom: 20, border: `1px solid ${T.border}` }}>
         {[
           { label: "Communities", value: 49, sub: "Dubai + Abu Dhabi" },
-          { label: "Live Prices", value: liveCount || "—", sub: "from Bayut (API)" },
+          { label: "Live Prices", value: liveCount || "ï¿½", sub: "from Bayut (API)" },
           { label: "Benchmarks", value: benchmarkCount || (liveCount === 0 ? 49 : 49 - liveCount), sub: "Q1 2026 fallback" },
         ].map((s, i) => (
           <div key={i} style={{ padding: "16px 20px", background: T.surface }}>
@@ -12254,7 +12254,7 @@ function LiveDataSync({ db, T, notify }) {
           <button type="button" onClick={runSync} disabled={syncing}
             style={{ padding: "10px 22px", background: syncing ? T.surfaceAlt : `linear-gradient(135deg, ${T.gold}, #B8912F)`, border: "none", borderRadius: 8, color: syncing ? T.textMuted : "#0A0E1A", fontWeight: 700, fontSize: 13, cursor: syncing ? "not-allowed" : "pointer", fontFamily: "'Outfit',sans-serif", whiteSpace: "nowrap", display: "flex", alignItems: "center", gap: 8 }}>
             {syncing ? (
-              <><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ animation: "spin 1s linear infinite" }}><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>Syncing…</>
+              <><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ animation: "spin 1s linear infinite" }}><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>Syncingï¿½</>
             ) : (
               <><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>Sync Now</>
             )}
@@ -12301,8 +12301,8 @@ function LiveDataSync({ db, T, notify }) {
               <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr 0.8fr 0.8fr 0.5fr 1fr", padding: "10px 20px", borderBottom: i < results.length - 1 ? `1px solid ${T.border}` : "none", background: i % 2 === 0 ? "transparent" : `${T.surfaceAlt}40`, alignItems: "center" }}>
                 <span style={{ fontSize: 12, fontWeight: 600, color: T.white }}>{r.community}</span>
                 <span style={{ fontSize: 13, fontWeight: 800, color: T.gold, fontFamily: "'Fraunces',serif" }}>AED {r.avgPpsf?.toLocaleString()}</span>
-                <span style={{ fontSize: 11, color: T.textSecondary }}>{r.avgPrice > 0 ? `AED ${(r.avgPrice/1e6).toFixed(1)}M` : "—"}</span>
-                <span style={{ fontSize: 11, color: T.textMuted }}>{r.listings || "—"}</span>
+                <span style={{ fontSize: 11, color: T.textSecondary }}>{r.avgPrice > 0 ? `AED ${(r.avgPrice/1e6).toFixed(1)}M` : "ï¿½"}</span>
+                <span style={{ fontSize: 11, color: T.textMuted }}>{r.listings || "ï¿½"}</span>
                 <span style={{ fontSize: 10, color: r.source?.includes("live") ? T.green : T.textMuted }}>{r.source}</span>
               </div>
             ))}
@@ -12388,7 +12388,7 @@ function DeveloperManager({ db, T, notify, adminUser, Section }) {
   const pendingDev = devs.filter(d => !d.active);
 
   return (
-    <Section title="Developer Manager" sub="Manage all developers on the platform — activate to show in dashboard">
+    <Section title="Developer Manager" sub="Manage all developers on the platform ï¿½ activate to show in dashboard">
       <div style={{ padding: "12px 16px", borderRadius: 10, background: "rgba(212,168,67,0.06)", border: `1px solid ${T.border}`, marginBottom: 20, fontSize: 12, color: T.textSecondary, lineHeight: 1.6 }}>
         ?? Set a developer to <strong style={{ color: T.green }}>Active</strong> to show it in the dashboard developer selector. Projects with that developer's ID will automatically appear. The platform supports 228+ developers.
       </div>
@@ -12429,7 +12429,7 @@ function DeveloperManager({ db, T, notify, adminUser, Section }) {
                   <div>
                     <div style={{ fontSize: 14, fontWeight: 700, color: T.white }}>{dev.name}</div>
                     <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>
-                      {dev.listed ? `${dev.exchange}: ${dev.ticker}` : "Private"} · {dev.totalProjects || 0} projects · Phase {dev.phase || 1}
+                      {dev.listed ? `${dev.exchange}: ${dev.ticker}` : "Private"} ï¿½ {dev.totalProjects || 0} projects ï¿½ Phase {dev.phase || 1}
                     </div>
                   </div>
                   <button type="button" onClick={() => { setEditingDev(dev.docId); setForm({}); }}
@@ -12450,7 +12450,7 @@ function DeveloperManager({ db, T, notify, adminUser, Section }) {
               <div key={dev.docId} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 16px", background: T.surfaceAlt, borderRadius: 10, border: `1px solid ${T.border}` }}>
                 <div>
                   <span style={{ fontSize: 13, fontWeight: 600, color: T.textSecondary }}>{dev.name}</span>
-                  <span style={{ marginLeft: 8, fontSize: 10, color: T.textMuted }}>Phase {dev.phase || 2} · {dev.totalProjects || 0} projects</span>
+                  <span style={{ marginLeft: 8, fontSize: 10, color: T.textMuted }}>Phase {dev.phase || 2} ï¿½ {dev.totalProjects || 0} projects</span>
                 </div>
                 <button type="button" onClick={() => saveDev(dev.docId, { ...dev, active: true })} disabled={saving === dev.docId}
                   style={{ padding: "6px 14px", borderRadius: 8, border: "1px solid rgba(16,185,129,0.4)", background: "rgba(16,185,129,0.08)", color: T.green, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
@@ -12871,7 +12871,7 @@ export default function AdminPanel() {
           const snap = await getDoc(doc(db, "users", u.uid));
           if (snap.exists() && snap.data().role === "admin") {
             setIsAdmin(true);
-            // Log admin login (best-effort — audit infra may not be ready yet)
+            // Log admin login (best-effort ï¿½ audit infra may not be ready yet)
             logAudit(db, { action: "admin_login", uid: u.uid }).catch(() => {});
           }
           else setIsAdmin(false);
@@ -12892,7 +12892,7 @@ export default function AdminPanel() {
     } catch (e) { console.error("Fetch users:", e); }
   }, []);
 
-  // Real-time listener — auto-updates table when any user doc changes
+  // Real-time listener ï¿½ auto-updates table when any user doc changes
   useEffect(() => {
     if (!isAdmin) return;
     let unsub;
@@ -12972,7 +12972,7 @@ export default function AdminPanel() {
         snap.forEach(d => { projMap[d.id] = plainify(d.data()); });
         setLiveProjects(projMap);
       }));
-      // Firestore projects collection — live sync (radar adds, DAMAC, Aldar etc)
+      // Firestore projects collection ï¿½ live sync (radar adds, DAMAC, Aldar etc)
       unsubs.push(onSnapshot(collection(db, "projects"), (snap) => {
         const fsList = [];
         snap.forEach(d => fsList.push({ id: d.id, ...plainify(d.data()) }));
@@ -13076,13 +13076,13 @@ export default function AdminPanel() {
       setLeadsLoading(false);
 
       // -- Step 3: Background fetch remaining in batches of 500 --
-      // No re-renders until each batch completes — keeps UI smooth
+      // No re-renders until each batch completes ï¿½ keeps UI smooth
       let all = [...firstBatch];
       let lastDoc = snap1.empty ? null : snap1.docs[snap1.docs.length - 1];
 
       const loadNext = async () => {
         if (!lastDoc) {
-          // All done — sort and update UI once
+          // All done ï¿½ sort and update UI once
           all.sort((a,b) => new Date(b.createdAt||0) - new Date(a.createdAt||0));
           setLeads([...all]);
           // Cache if under 4MB
@@ -13141,7 +13141,7 @@ export default function AdminPanel() {
     }
   }, []);
 
-  // Real-time listener — activity feed updates instantly on tier changes
+  // Real-time listener ï¿½ activity feed updates instantly on tier changes
   useEffect(() => {
     if (!isAdmin) return;
     let unsub;
@@ -13165,7 +13165,7 @@ export default function AdminPanel() {
           if (keysDoc.exists()) setApiKeys(keysDoc.data().keys || []);
         } catch {}
       } catch (e) {
-        // index not ready — fall back to polling every 10s
+        // index not ready ï¿½ fall back to polling every 10s
         fetchAuditLog();
         const interval = setInterval(fetchAuditLog, 10000);
         unsub = () => clearInterval(interval);
@@ -13365,11 +13365,11 @@ export default function AdminPanel() {
 
   /* --- USER STATS --- */
   /* ----------------------------------------------
-     DATA FOUNDATION — Single source of truth
+     DATA FOUNDATION ï¿½ Single source of truth
      All calculations derived here once, used everywhere
   ---------------------------------------------- */
 
-  // Single now reference — all time comparisons use this exact moment
+  // Single now reference ï¿½ all time comparisons use this exact moment
   const now = new Date();
   const todayStr = now.toDateString();
   const msPerDay = 86400000;
@@ -13392,17 +13392,17 @@ export default function AdminPanel() {
     activeThisWeek: users.filter(u => u.lastLoginAt && (now - new Date(u.lastLoginAt)) < msPerWeek).length,
   };
   stats.paid        = stats.pro + stats.enterprise;
-  stats.freeOnly    = stats.free;   // pure free — never trialled
+  stats.freeOnly    = stats.free;   // pure free ï¿½ never trialled
   stats.atRisk      = users.filter(u => { try { const d = trialDaysLeft(u); return d !== null && d <= 3 && d >= 0; } catch { return false; } }).length;
   stats.atRiskUsers = users.filter(u => { try { const d = trialDaysLeft(u); return d !== null && d <= 3 && d >= 0; } catch { return false; } });
 
-  // -- REVENUE — single calculation, used everywhere --
+  // -- REVENUE ï¿½ single calculation, used everywhere --
   const mrr  = (stats.pro * 99) + (stats.enterprise * 499);
   const arr  = mrr * 12;
   const arpu = stats.paid > 0 ? Math.round(mrr / stats.paid) : 0;       // per paying user
   const arpuAll = stats.total > 0 ? Math.round(mrr / stats.total) : 0;  // per all users
 
-  // -- TRIAL CONVERSION — correct formula --
+  // -- TRIAL CONVERSION ï¿½ correct formula --
   // denominator = everyone who ever started a trial (active + converted + expired)
   const everTrialled = stats.proTrial + stats.pro + stats.expired;
   const trialConversion = everTrialled > 0 ? Math.round((stats.pro / everTrialled) * 100) : 0;
@@ -13424,7 +13424,7 @@ export default function AdminPanel() {
   })();
 
   const weekTrend = (current, previous) => {
-    if (previous === 0 && current === 0) return { pct: 0, dir: "flat", label: "—" };
+    if (previous === 0 && current === 0) return { pct: 0, dir: "flat", label: "ï¿½" };
     if (previous === 0) return { pct: 100, dir: "up", label: `+${current} new` };
     const pct = Math.round(((current - previous) / previous) * 100);
     return { pct: Math.abs(pct), dir: pct > 0 ? "up" : pct < 0 ? "down" : "flat", label: pct > 0 ? `?${Math.abs(pct)}%` : pct < 0 ? `?${Math.abs(pct)}%` : "=" };
@@ -13432,7 +13432,7 @@ export default function AdminPanel() {
   const usersTrend  = weekTrend(stats.thisWeek, usersLastWeekTotal);
   const mrrTrend    = weekTrend(paidLastWeek.thisWeek, paidLastWeek.lastWeek);
 
-  // -- CHURN — derived from auditLog --
+  // -- CHURN ï¿½ derived from auditLog --
   // A churn event = tier_change where from is pro/enterprise and to is free/pro_trial
   const churnEvents = auditLog.filter(l =>
     l.action === "tier_change" &&
@@ -13454,7 +13454,7 @@ export default function AdminPanel() {
   }).reduce((sum, u) => sum + (u.tier === "enterprise" ? 499 : 99), 0);
   const netMRR = newMRRThisMonth - churnedMRR;
 
-  // -- PLATFORM HEALTH SCORE (0–100) --
+  // -- PLATFORM HEALTH SCORE (0ï¿½100) --
   // Based on: conversion rate, at-risk %, active rate, churn
   const healthScore = (() => {
     let score = 100;
@@ -13478,7 +13478,7 @@ export default function AdminPanel() {
   const newLeadsToday = leads.filter(l => { try { return new Date(l.createdAt).toDateString() === todayStr; } catch { return false; } }).length;
   const newLeadsThisWeek = leads.filter(l => { try { return (now - new Date(l.createdAt)) < msPerWeek; } catch { return false; } }).length;
 
-  // -- SIGNUP TIMELINE — 14 days with last-week comparison --
+  // -- SIGNUP TIMELINE ï¿½ 14 days with last-week comparison --
   const signupTimeline = (() => {
     const days = [];
     for (let i = 13; i >= 0; i--) {
@@ -13517,7 +13517,7 @@ export default function AdminPanel() {
     { label: "Net MRR",        value: mrr },
   ];
 
-  // -- CUMULATIVE GROWTH — used by Analytics tab --
+  // -- CUMULATIVE GROWTH ï¿½ used by Analytics tab --
   const cumulativeData = (() => {
     const sorted = [...users].sort((a, b) => new Date(a.createdAt || 0) - new Date(b.createdAt || 0));
     return sorted.map((u, i) => {
@@ -13526,7 +13526,7 @@ export default function AdminPanel() {
     });
   })();
 
-  // -- REVENUE PROJECTION — kept for Revenue tab, clearly labelled as estimate --
+  // -- REVENUE PROJECTION ï¿½ kept for Revenue tab, clearly labelled as estimate --
   const projectedMRR = mrr + Math.round(stats.proTrial * 99 * (trialConversion / 100 || 0.3));
   const revenueProjection = [
     { month: "Now",   revenue: mrr },
@@ -14005,7 +14005,7 @@ export default function AdminPanel() {
         rolledBackTo: version.savedAt,
         changedBy: adminUser?.email || "admin"
       });
-      notify("Rolled back successfully — changes are live");
+      notify("Rolled back successfully ï¿½ changes are live");
       setViewingVersions(null);
       fetchLiveData();
       fetchProjectVersions(projectId);
@@ -14024,15 +14024,15 @@ export default function AdminPanel() {
     if (data.unitsAvail && data.unitsTotal && Number(data.unitsAvail) > Number(data.unitsTotal)) errors.push("Available units (" + data.unitsAvail + ") cannot exceed total units (" + data.unitsTotal + ")");
     if (data.construction !== undefined && data.construction !== "" && (Number(data.construction) < 0 || Number(data.construction) > 100)) errors.push("Construction % must be between 0 and 100");
     if (data.ratingOverride !== undefined && data.ratingOverride !== "" && (Number(data.ratingOverride) < 0 || Number(data.ratingOverride) > 10)) errors.push("Rating override must be between 0 and 10");
-    // Duplicate name check — warn only (not block) for new projects
+    // Duplicate name check ï¿½ warn only (not block) for new projects
     return errors;
   };
 
   // -- FREE AUTO-ENRICHMENT ----------------------------------------------
   // Runs after any project is saved. Uses only free APIs:
-  // • Nominatim (OpenStreetMap) — free geocoding, no API key needed
-  // • Internal math — distance calculations
-  // • Community yield averages — from existing data
+  // ï¿½ Nominatim (OpenStreetMap) ï¿½ free geocoding, no API key needed
+  // ï¿½ Internal math ï¿½ distance calculations
+  // ï¿½ Community yield averages ï¿½ from existing data
   const autoEnrichProject = async (projectId, projectData) => {
     const enriched = {};
 
@@ -14053,7 +14053,7 @@ export default function AdminPanel() {
       return Math.round(R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)) * 10) / 10;
     };
 
-    // 1. Auto-geocode if no coordinates — use Nominatim (free, no key)
+    // 1. Auto-geocode if no coordinates ï¿½ use Nominatim (free, no key)
     if (!projectData.lat || !projectData.lng) {
       try {
         const community = projectData.community || projectData.name || "";
@@ -14079,7 +14079,7 @@ export default function AdminPanel() {
       if (!projectData.distMall)     enriched.distMall     = haversine(lat, lng, landmarks.mall.lat,     landmarks.mall.lng);
     }
 
-    // 3. Auto-estimate yield if missing — based on community averages
+    // 3. Auto-estimate yield if missing ï¿½ based on community averages
     if (!projectData.grossYield) {
       const communityYieldMap = {
         "Dubai Hills Estate": 5.8, "Dubai Creek Harbour": 6.4, "Emaar Beachfront": 6.8,
@@ -14149,7 +14149,7 @@ export default function AdminPanel() {
       try {
         const oldDoc = liveProjects[projectId] || {};
         const diff = {};
-        Object.keys(clean).forEach(k => { if (k !== "updatedAt" && k !== "updatedBy" && clean[k] !== oldDoc[k]) diff[k] = { old: oldDoc[k] ?? "—", new: clean[k] }; });
+        Object.keys(clean).forEach(k => { if (k !== "updatedAt" && k !== "updatedBy" && clean[k] !== oldDoc[k]) diff[k] = { old: oldDoc[k] ?? "ï¿½", new: clean[k] }; });
         await logAudit(db, { action: "project_update", projectId, changes: clean, diff });
         // Save full version snapshot for rollback
         const p = emaarProjects.find(x => String(x.id) === String(projectId));
@@ -14284,7 +14284,7 @@ export default function AdminPanel() {
   };
 
   const resetProjectData = async (projectId) => {
-    if (!window.confirm(`? RESET PROJECT DATA: ${projectId}\n\nThis will:\n• Remove all live Firestore overrides for this project\n• Dashboard will revert to default data.js values\n• Any custom prices, units, or details you edited will be lost\n\nContinue?`)) return;
+    if (!window.confirm(`? RESET PROJECT DATA: ${projectId}\n\nThis will:\nï¿½ Remove all live Firestore overrides for this project\nï¿½ Dashboard will revert to default data.js values\nï¿½ Any custom prices, units, or details you edited will be lost\n\nContinue?`)) return;
     try {
       await deleteDoc(doc(db, "projectData", projectId));
       notify("Reset to defaults");
@@ -14293,7 +14293,7 @@ export default function AdminPanel() {
   };
 
   const resetCommunityROI = async (key) => {
-    if (!window.confirm(`? RESET COMMUNITY ROI: ${key}\n\nThis will:\n• Remove all live yield/ROI overrides for this community\n• Dashboard will show default values from data.js\n• Any custom gross/net yield or rental data will be lost\n\nContinue?`)) return;
+    if (!window.confirm(`? RESET COMMUNITY ROI: ${key}\n\nThis will:\nï¿½ Remove all live yield/ROI overrides for this community\nï¿½ Dashboard will show default values from data.js\nï¿½ Any custom gross/net yield or rental data will be lost\n\nContinue?`)) return;
     try {
       await deleteDoc(doc(db, "communityROI", key));
       notify("Reset to defaults");
@@ -14478,7 +14478,7 @@ export default function AdminPanel() {
         emailVerified: false,
       });
       await logAudit(db, { action: "user_created", uid: cred.user.uid, userName: addUserForm.name.trim(), userEmail: addUserForm.email.trim(), tier: addUserForm.tier || "free" });
-      notify(`User "${addUserForm.name}" created — admin session preserved`);
+      notify(`User "${addUserForm.name}" created ï¿½ admin session preserved`);
       setShowAddUser(false);
       setAddUserForm({ name: "", email: "", password: "", phone: "", country: "", tier: "free", role: "user", notes: "" });
       fetchUsers();
@@ -14502,12 +14502,12 @@ export default function AdminPanel() {
     setDataSaving(true);
     try {
       const newId = "custom_" + Date.now();
-      // Write to BOTH collections — projectData for dashboard, projects for reference
+      // Write to BOTH collections ï¿½ projectData for dashboard, projects for reference
       const projectDoc = { ...form, id: newId, createdAt: new Date().toISOString(), createdBy: adminUser?.email, updatedAt: new Date().toISOString(), updatedBy: adminUser?.email, isCustom: true };
       await setDoc(doc(db, "projectData", String(newId)), projectDoc);
       await setDoc(doc(db, "projects", String(newId)), projectDoc);
       await logAudit(db, { action: "project_create", projectId: newId, changes: form });
-      notify("Project added — live on dashboard! Auto-enriching coordinates & yields...");
+      notify("Project added ï¿½ live on dashboard! Auto-enriching coordinates & yields...");
       setEditingProject(null);
       setProjectForm({});
       fetchLiveData();
@@ -14758,7 +14758,7 @@ export default function AdminPanel() {
 
   const exportCSV = () => {
     const headers = "Name,Email,Tier,Trial Status,Signed Up\n";
-    const rows = users.map(u => `${u.name || ""},${u.email || ""},${u.tier || "free"},${u.trialEnd ? (new Date(u.trialEnd) > now ? "Active" : "Expired") : "—"},${u.createdAt || ""}`).join("\n");
+    const rows = users.map(u => `${u.name || ""},${u.email || ""},${u.tier || "free"},${u.trialEnd ? (new Date(u.trialEnd) > now ? "Active" : "Expired") : "ï¿½"},${u.createdAt || ""}`).join("\n");
     const blob = new Blob([headers + rows], { type: "text/csv" });
     const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `dxb-users-${now.toISOString().slice(0, 10)}.csv`; a.click();
     notify("CSV exported");
@@ -14781,7 +14781,7 @@ export default function AdminPanel() {
               <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.2, marginBottom: 4 }}>{title}</div>
               {subtitle && <div style={{ fontSize: 12, color: T.textSecondary }}>{subtitle}</div>}
             </div>
-            <button type="button" onClick={() => setKpiDrill(null)} style={{ background: "none", border: `1px solid ${T.border}`, borderRadius: 8, width: 28, height: 28, cursor: "pointer", color: T.textMuted, fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center" }}>×</button>
+            <button type="button" onClick={() => setKpiDrill(null)} style={{ background: "none", border: `1px solid ${T.border}`, borderRadius: 8, width: 28, height: 28, cursor: "pointer", color: T.textMuted, fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center" }}>ï¿½</button>
           </div>
           {/* Metric items */}
           {items && items.map((item, i) => (
@@ -14839,7 +14839,7 @@ export default function AdminPanel() {
     try {
       const ms = now - new Date(d); const m = Math.floor(ms / 60000); const h = Math.floor(ms / 3600000); const dy = Math.floor(ms / 86400000);
       if (m < 1) return "Just now"; if (m < 60) return `${m}m ago`; if (h < 24) return `${h}h ago`; return `${dy}d ago`;
-    } catch { return "—"; }
+    } catch { return "ï¿½"; }
   };
 
   const trialDaysLeft = (u) => {
@@ -14918,7 +14918,7 @@ export default function AdminPanel() {
           <div style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 20, padding: 28, width: "100%", maxWidth: 500, maxHeight: "90vh", overflowY: "auto", animation: "slideUp 0.2s ease-out" }} onClick={e => e.stopPropagation()}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 22 }}>
               <div>
-                <div style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 700, color: T.gold }}>{`Cohort: ${cohortDrilldown.cohortLabel} · Week ${cohortDrilldown.weekNum}`}</div>
+                <div style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 700, color: T.gold }}>{`Cohort: ${cohortDrilldown.cohortLabel} ï¿½ Week ${cohortDrilldown.weekNum}`}</div>
                 <div style={{ fontSize: 12, color: T.textMuted, marginTop: 3 }}>{`${cohortDrilldown.users.length} users retained`}</div>
               </div>
               <button type="button" onClick={() => setCohortDrilldown(null)} style={{ width: 32, height: 32, borderRadius: 8, border: `1px solid ${T.border}`, background: T.surfaceAlt, color: T.textMuted, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 }}></button>
@@ -15015,7 +15015,7 @@ export default function AdminPanel() {
             </button>
             <div>
               <h1 style={{ fontSize: 16, fontWeight: 700, color: T.white }}>{i18t("sidebar", "adminConsole")}</h1>
-              <p style={{ fontSize: 10, color: T.textMuted, letterSpacing: 1 }}>{new Date().toLocaleDateString("en-AE", { weekday: "short", day: "numeric", month: "short", year: "numeric" })} · {stats.total} users</p>
+              <p style={{ fontSize: 10, color: T.textMuted, letterSpacing: 1 }}>{new Date().toLocaleDateString("en-AE", { weekday: "short", day: "numeric", month: "short", year: "numeric" })} ï¿½ {stats.total} users</p>
             </div>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -15068,7 +15068,7 @@ export default function AdminPanel() {
           {tab === "overview" && (
             <>
 
-              {/* -- OVERVIEW TOPBAR — health + alerts + actions in one row -- */}
+              {/* -- OVERVIEW TOPBAR ï¿½ health + alerts + actions in one row -- */}
               {(() => {
                 const urgentAlerts = [
                   stats.atRisk > 0 && { key: "atrisk", color: T.red, icon: "", label: `${stats.atRisk} at risk`, action: () => {
@@ -15087,14 +15087,14 @@ export default function AdminPanel() {
                 return (
                   <div className="fade-up" style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 16px", borderRadius: 14, background: T.surface, border: `1px solid ${T.border}`, marginBottom: 18, flexWrap: "wrap" }}>
 
-                    {/* Health indicator — left */}
+                    {/* Health indicator ï¿½ left */}
                     <div style={{ display: "flex", alignItems: "center", gap: 8, paddingRight: 14, borderRight: `1px solid ${T.border}`, flexShrink: 0 }}>
                       <div style={{ width: 8, height: 8, borderRadius: "50%", background: healthColor, boxShadow: `0 0 6px ${healthColor}` }} />
                       <span style={{ fontSize: 12, fontWeight: 700, color: healthColor }}>{healthLabel}</span>
-                      <span style={{ fontSize: 11, color: T.textMuted }}>· Score {healthScore}</span>
+                      <span style={{ fontSize: 11, color: T.textMuted }}>ï¿½ Score {healthScore}</span>
                     </div>
 
-                    {/* Alert chips — center, only shown if issues exist */}
+                    {/* Alert chips ï¿½ center, only shown if issues exist */}
                     <div style={{ display: "flex", alignItems: "center", gap: 6, flex: 1, flexWrap: "wrap" }}>
                       {urgentAlerts.length === 0 ? (
                         <span style={{ fontSize: 11, color: T.textMuted }}>No urgent items</span>
@@ -15125,7 +15125,7 @@ export default function AdminPanel() {
                   </div>
                 );
               })()}
-              {/* -- STEP 3 — KPI CARDS WITH TRENDS -- */}
+              {/* -- STEP 3 ï¿½ KPI CARDS WITH TRENDS -- */}
               <div style={{ marginBottom: 20 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
                   <div style={{ borderLeft: `3px solid ${T.gold}`, paddingLeft: 14 }}>
@@ -15135,14 +15135,14 @@ export default function AdminPanel() {
                 </div>
                 <div className="kpi-grid-overview" style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 10 }}>
 
-                  {/* 1 — MRR */}
+                  {/* 1 ï¿½ MRR */}
                   <div className="kpi-card fade-up" style={{ animationDelay: "0.00s", cursor: "pointer" }} onClick={() => setKpiDrill({
                     title: "MRR Breakdown", color: T.green,
-                    subtitle: `Monthly Recurring Revenue · ARR: AED ${arr.toLocaleString()}`,
+                    subtitle: `Monthly Recurring Revenue ï¿½ ARR: AED ${arr.toLocaleString()}`,
                     items: [
                       { label: "Total MRR", value: `AED ${mrr.toLocaleString()}`, color: T.green },
-                      { label: "Enterprise (AED 499/mo)", value: `${stats.enterprise} users · AED ${(stats.enterprise * 499).toLocaleString()}`, note: "AED 499 × users" },
-                      { label: "Pro (AED 99/mo)", value: `${stats.pro} users · AED ${(stats.pro * 99).toLocaleString()}`, note: "AED 99 × users" },
+                      { label: "Enterprise (AED 499/mo)", value: `${stats.enterprise} users ï¿½ AED ${(stats.enterprise * 499).toLocaleString()}`, note: "AED 499 ï¿½ users" },
+                      { label: "Pro (AED 99/mo)", value: `${stats.pro} users ï¿½ AED ${(stats.pro * 99).toLocaleString()}`, note: "AED 99 ï¿½ users" },
                       { label: "Annual Run Rate (ARR)", value: `AED ${arr.toLocaleString()}`, color: T.green },
                       { label: "New MRR this month", value: `+AED ${newMRRThisMonth.toLocaleString()}`, color: T.green },
                       { label: "Churned MRR this month", value: `-AED ${churnedMRR.toLocaleString()}`, color: churnedMRR > 0 ? T.red : T.textMuted },
@@ -15156,16 +15156,16 @@ export default function AdminPanel() {
                     <div style={{ fontSize: 10, color: T.textMuted, marginTop: 6 }}>ARR: AED {arr.toLocaleString()}</div>
                     <div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 5 }}>
                       <span style={{ fontSize: 10, fontWeight: 700, color: mrrTrend.dir === "up" ? T.green : mrrTrend.dir === "down" ? T.red : T.textMuted }}>
-                        {mrrTrend.dir === "up" ? "?" : mrrTrend.dir === "down" ? "?" : "—"} {mrrTrend.label}
+                        {mrrTrend.dir === "up" ? "?" : mrrTrend.dir === "down" ? "?" : "ï¿½"} {mrrTrend.label}
                       </span>
                       <span style={{ fontSize: 9, color: T.textMuted }}>vs last week</span>
                     </div>
                   </div>
 
-                  {/* 2 — Total Users */}
+                  {/* 2 ï¿½ Total Users */}
                   <div className="kpi-card fade-up" style={{ animationDelay: "0.04s", cursor: "pointer" }} onClick={() => setKpiDrill({
                     title: "Total Users Breakdown", color: T.gold,
-                    subtitle: `${stats.total} registered accounts · ${stats.today} joined today`,
+                    subtitle: `${stats.total} registered accounts ï¿½ ${stats.today} joined today`,
                     items: [
                       { label: "Total Registered", value: stats.total, color: T.gold },
                       { label: "Joined Today", value: stats.today, color: stats.today > 0 ? T.green : T.textMuted },
@@ -15183,22 +15183,22 @@ export default function AdminPanel() {
                     <div style={{ fontSize: 10, color: T.textMuted, marginTop: 6 }}>+{stats.today} today</div>
                     <div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 5 }}>
                       <span style={{ fontSize: 10, fontWeight: 700, color: usersTrend.dir === "up" ? T.green : usersTrend.dir === "down" ? T.red : T.textMuted }}>
-                        {usersTrend.dir === "up" ? "?" : usersTrend.dir === "down" ? "?" : "—"} {usersTrend.label}
+                        {usersTrend.dir === "up" ? "?" : usersTrend.dir === "down" ? "?" : "ï¿½"} {usersTrend.label}
                       </span>
                       <span style={{ fontSize: 9, color: T.textMuted }}>vs last week</span>
                     </div>
                     <div style={{ fontSize: 9, color: T.gold, marginTop: 4, opacity: 0.7 }}>click to view ?</div>
                   </div>
 
-                  {/* 3 — Paid Users */}
+                  {/* 3 ï¿½ Paid Users */}
                   <div className="kpi-card fade-up" style={{ animationDelay: "0.08s", cursor: "pointer" }} onClick={() => setKpiDrill({
                     title: "Paid Users Breakdown", color: T.teal,
-                    subtitle: `${stats.paid} paying accounts · AED ${mrr.toLocaleString()} MRR`,
+                    subtitle: `${stats.paid} paying accounts ï¿½ AED ${mrr.toLocaleString()} MRR`,
                     items: [
                       { label: "Total Paid", value: stats.paid, color: T.teal },
                       { label: "Pro (AED 99/mo)", value: stats.pro, note: `AED ${(stats.pro * 99).toLocaleString()} MRR` },
                       { label: "Enterprise (AED 499/mo)", value: stats.enterprise, note: `AED ${(stats.enterprise * 499).toLocaleString()} MRR`, color: T.gold },
-                      { label: "Conversion Rate", value: `${stats.total > 0 ? Math.round((stats.paid / stats.total) * 100) : 0}%`, note: "Paid ÷ Total Users" },
+                      { label: "Conversion Rate", value: `${stats.total > 0 ? Math.round((stats.paid / stats.total) * 100) : 0}%`, note: "Paid ï¿½ Total Users" },
                       { label: "Trial ? Paid Rate", value: `${trialConversion}%`, note: "Of all who ever trialled" },
                       { label: "ARPU (paying users)", value: `AED ${arpu}`, color: T.teal },
                     ],
@@ -15210,7 +15210,7 @@ export default function AdminPanel() {
                     <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: T.teal, opacity: 0.7, borderRadius: "16px 16px 0 0" }} />
                     <div style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, letterSpacing: 1.2, textTransform: "uppercase", marginBottom: 8 }}>Paid Users</div>
                     <div style={{ fontFamily: "'Fraunces',serif", fontSize: 22, fontWeight: 900, color: T.teal, lineHeight: 1 }}>{stats.paid}</div>
-                    <div style={{ fontSize: 10, color: T.textMuted, marginTop: 6 }}>{stats.pro} Pro · {stats.enterprise} Ent</div>
+                    <div style={{ fontSize: 10, color: T.textMuted, marginTop: 6 }}>{stats.pro} Pro ï¿½ {stats.enterprise} Ent</div>
                     <div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 5 }}>
                       <span style={{ fontSize: 10, fontWeight: 700, color: T.teal }}>{stats.total > 0 ? Math.round((stats.paid / stats.total) * 100) : 0}%</span>
                       <span style={{ fontSize: 9, color: T.textMuted }}>conversion rate</span>
@@ -15218,7 +15218,7 @@ export default function AdminPanel() {
                     <div style={{ fontSize: 9, color: T.teal, marginTop: 4, opacity: 0.7 }}>click to view ?</div>
                   </div>
 
-                  {/* 4 — Active Trials */}
+                  {/* 4 ï¿½ Active Trials */}
                   <div className="kpi-card fade-up" style={{ animationDelay: "0.12s", cursor: "pointer" }} onClick={() => setKpiDrill({
                     title: "Active Trials Breakdown", color: T.gold,
                     subtitle: `${stats.proTrial} users on 7-day Pro Trial`,
@@ -15228,7 +15228,7 @@ export default function AdminPanel() {
                       { label: "Expiring in 7 days", value: users.filter(u => u.tier === "pro_trial" && u.trialEnd && trialDaysLeft(u) >= 0 && trialDaysLeft(u) <= 7).length, color: T.gold },
                       { label: "Expired (not converted)", value: stats.expired, color: stats.expired > 0 ? T.red : T.textMuted },
                       { label: "Trial ? Paid conversion", value: `${trialConversion}%`, note: `${stats.pro} converted of ${everTrialled} ever trialled` },
-                      { label: "Avg days left (active)", value: (() => { const active = users.filter(u => u.tier === "pro_trial"); if (!active.length) return "—"; const avg = active.reduce((s, u) => s + Math.max(0, trialDaysLeft(u)), 0) / active.length; return `${Math.round(avg)} days`; })() },
+                      { label: "Avg days left (active)", value: (() => { const active = users.filter(u => u.tier === "pro_trial"); if (!active.length) return "ï¿½"; const avg = active.reduce((s, u) => s + Math.max(0, trialDaysLeft(u)), 0) / active.length; return `${Math.round(avg)} days`; })() },
                     ],
                     actions: [
                       { label: `Email All ${stats.atRisk} At-Risk`, color: T.red, fn: () => { stats.atRiskUsers.forEach(u => { const days = trialDaysLeft(u); sendResend(u.email, `Your DXB Analytics trial expires in ${days} day${days !== 1 ? "s" : ""}`, `Hi ${u.name || "there"},\n\nYour Pro trial expires in ${days} day${days !== 1 ? "s" : ""}. Upgrade now to keep full access.\n\nBest regards,\nDXB Analytics Team`).catch(() => {}); }); notify(`Sent ${stats.atRisk} at-risk emails`); } },
@@ -15245,7 +15245,7 @@ export default function AdminPanel() {
                     <div style={{ fontSize: 9, color: T.gold, marginTop: 4, opacity: 0.7 }}>click to view ?</div>
                   </div>
 
-                  {/* 5 — Trial Conversion */}
+                  {/* 5 ï¿½ Trial Conversion */}
                   <div className="kpi-card fade-up" style={{ animationDelay: "0.16s", cursor: "pointer" }} onClick={() => setKpiDrill({
                     title: "Trial ? Paid Conversion", color: "#3B82F6",
                     subtitle: "How effectively trials convert to paying users",
@@ -15270,17 +15270,17 @@ export default function AdminPanel() {
                     </div>
                   </div>
 
-                  {/* 6 — ARPU */}
+                  {/* 6 ï¿½ ARPU */}
                   <div className="kpi-card fade-up" style={{ animationDelay: "0.20s", cursor: "pointer" }} onClick={() => setKpiDrill({
                     title: "ARPU Breakdown", color: "#8B5CF6",
                     subtitle: "Average Revenue Per User",
                     items: [
                       { label: "ARPU (paying users)", value: `AED ${arpu}`, color: "#8B5CF6" },
-                      { label: "ARPU (all users)", value: `AED ${arpuAll}`, note: "MRR ÷ total users" },
+                      { label: "ARPU (all users)", value: `AED ${arpuAll}`, note: "MRR ï¿½ total users" },
                       { label: "Enterprise ARPU", value: "AED 499", note: "Per enterprise user/mo" },
                       { label: "Pro ARPU", value: "AED 99", note: "Per pro user/mo" },
-                      { label: "LTV estimate (12mo)", value: `AED ${(arpu * 12).toLocaleString()}`, note: "ARPU × 12 months", color: "#8B5CF6" },
-                      { label: "To reach AED 10K MRR", value: (() => { if (arpu === 0) return "—"; const needed = Math.ceil((10000 - mrr) / arpu); return needed > 0 ? `${needed} more paid users` : "Already exceeded"; })(), note: "At current ARPU" },
+                      { label: "LTV estimate (12mo)", value: `AED ${(arpu * 12).toLocaleString()}`, note: "ARPU ï¿½ 12 months", color: "#8B5CF6" },
+                      { label: "To reach AED 10K MRR", value: (() => { if (arpu === 0) return "ï¿½"; const needed = Math.ceil((10000 - mrr) / arpu); return needed > 0 ? `${needed} more paid users` : "Already exceeded"; })(), note: "At current ARPU" },
                     ],
                   })}>
                     <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: "#8B5CF6", opacity: 0.7, borderRadius: "16px 16px 0 0" }} />
@@ -15290,17 +15290,17 @@ export default function AdminPanel() {
                     <div style={{ fontSize: 10, color: T.textMuted, marginTop: 4 }}>AED {arpuAll} all users</div>
                   </div>
 
-                  {/* 7 — Active Today */}
+                  {/* 7 ï¿½ Active Today */}
                   <div className="kpi-card fade-up" style={{ animationDelay: "0.24s", cursor: "pointer" }} onClick={() => setKpiDrill({
                     title: "User Activity", color: T.teal,
                     subtitle: "Login and engagement metrics",
                     items: [
                       { label: "Active Today", value: stats.activeToday, color: T.teal },
                       { label: "Active This Week", value: stats.activeThisWeek },
-                      { label: "Daily Active Rate", value: `${stats.total > 0 ? Math.round((stats.activeToday / stats.total) * 100) : 0}%`, note: "Today ÷ total users" },
-                      { label: "Weekly Active Rate", value: `${stats.total > 0 ? Math.round((stats.activeThisWeek / stats.total) * 100) : 0}%`, note: "7-day ÷ total users" },
+                      { label: "Daily Active Rate", value: `${stats.total > 0 ? Math.round((stats.activeToday / stats.total) * 100) : 0}%`, note: "Today ï¿½ total users" },
+                      { label: "Weekly Active Rate", value: `${stats.total > 0 ? Math.round((stats.activeThisWeek / stats.total) * 100) : 0}%`, note: "7-day ï¿½ total users" },
                       { label: "Never Logged In", value: users.filter(u => !u.lastLoginAt).length, color: users.filter(u => !u.lastLoginAt).length > 0 ? "#F59E0B" : T.textMuted, note: "Registered but never signed in" },
-                      { label: "Industry DAU/MAU Benchmark", value: "~15–20%", color: T.textMuted, note: "Healthy SaaS range" },
+                      { label: "Industry DAU/MAU Benchmark", value: "~15ï¿½20%", color: T.textMuted, note: "Healthy SaaS range" },
                     ],
                     actions: [{ label: "View Active Users", color: T.teal, fn: () => setTab("users") }]
                   })}>
@@ -15315,18 +15315,18 @@ export default function AdminPanel() {
                 </div>
               </div>
 
-              {/* -- STEP 4 — THREE CHARTS -- */}
+              {/* -- STEP 4 ï¿½ THREE CHARTS -- */}
               <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 10, marginTop: 8 }}>Growth & Distribution</div>
 
               {/* Row 1: Signup Timeline (wide) + Tier Donut (narrow) */}
               <div className="charts-row-overview" style={{ display: "grid", gridTemplateColumns: "1fr 320px", gap: 14, marginBottom: 14 }}>
 
-                {/* Chart 1 — Signup Timeline with last-week comparison */}
+                {/* Chart 1 ï¿½ Signup Timeline with last-week comparison */}
                 <div className="chart-box fade-up" style={{ padding: 20 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 14, flexWrap: "wrap", gap: 8 }}>
                     <div>
                       <div style={{ fontSize: 13, fontWeight: 700, color: T.white }}>Signup Timeline</div>
-                      <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>14 days · vs prior week</div>
+                      <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>14 days ï¿½ vs prior week</div>
                     </div>
                     <div style={{ display: "flex", alignItems: "center", gap: 16, fontSize: 11 }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
@@ -15354,7 +15354,7 @@ export default function AdminPanel() {
                   </ResponsiveContainer>
                 </div>
 
-                {/* Chart 2 — Tier Donut with total in centre, clickable slices */}
+                {/* Chart 2 ï¿½ Tier Donut with total in centre, clickable slices */}
                 <div className="chart-box fade-up" style={{ padding: 20 }}>
                   <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 4 }}>Tier Distribution</div>
                   <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 10 }}>Click a slice to filter users</div>
@@ -15396,13 +15396,13 @@ export default function AdminPanel() {
                 </div>
               </div>
 
-              {/* -- STEP 5 — CROSS-PLATFORM ACTIVITY FEED -- */}
+              {/* -- STEP 5 ï¿½ CROSS-PLATFORM ACTIVITY FEED -- */}
               <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 10, marginTop: 8 }}>Live Activity</div>
               <div className="chart-box fade-up" style={{ padding: 0, overflow: "hidden", marginBottom: 14 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 20px", borderBottom: `1px solid ${T.border}` }}>
                   <div>
                     <div style={{ fontSize: 13, fontWeight: 700, color: T.white }}>Activity Feed</div>
-                    <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>Signups · tier changes · leads · verifications</div>
+                    <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>Signups ï¿½ tier changes ï¿½ leads ï¿½ verifications</div>
                   </div>
                   <div style={{ fontSize: 10, color: T.textMuted }}>{activityFeed.length} recent events</div>
                 </div>
@@ -15460,7 +15460,7 @@ export default function AdminPanel() {
               <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 10, marginTop: 8 }}>User Intelligence</div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 14, marginBottom: 24 }} className="charts-row-overview">
 
-                {/* Needs Attention — trial users expiring */}
+                {/* Needs Attention ï¿½ trial users expiring */}
                 <div className="chart-box fade-up" style={{ padding: 0, overflow: "hidden" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 18px", borderBottom: `1px solid ${T.border}` }}>
                     <div>
@@ -15512,7 +15512,7 @@ export default function AdminPanel() {
                   })()}
                 </div>
 
-                {/* Free users — conversion opportunity */}
+                {/* Free users ï¿½ conversion opportunity */}
                 <div className="chart-box fade-up" style={{ padding: 0, overflow: "hidden", animationDelay: "0.05s" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 18px", borderBottom: `1px solid ${T.border}` }}>
                     <div>
@@ -15545,13 +15545,13 @@ export default function AdminPanel() {
                           </div>
                           <div style={{ flex: 1, minWidth: 0 }}>
                             <div style={{ fontSize: 12, fontWeight: 600, color: T.white, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{u.name || u.email?.split("@")[0]}</div>
-                            <div style={{ fontSize: 10, color: T.textMuted }}>{daysSinceJoin}d on free · {u.country || "no country"}</div>
+                            <div style={{ fontSize: 10, color: T.textMuted }}>{daysSinceJoin}d on free ï¿½ {u.country || "no country"}</div>
                           </div>
                           {isWarm && (
                             <button type="button"
                               onClick={e => {
                                 e.stopPropagation();
-                                sendResend(u.email, "Start Your Free DXB Analytics Pro Trial", `Hi ${u.name || "there"},\n\nTry all Pro features free for 7 days — no credit card needed.\n\nLog in now to activate your trial.\n\nBest regards,\nDXB Analytics Team`).then(() => notify(`Email sent to ${u.name || u.email}`)).catch(() => notify("Email failed"));
+                                sendResend(u.email, "Start Your Free DXB Analytics Pro Trial", `Hi ${u.name || "there"},\n\nTry all Pro features free for 7 days ï¿½ no credit card needed.\n\nLog in now to activate your trial.\n\nBest regards,\nDXB Analytics Team`).then(() => notify(`Email sent to ${u.name || u.email}`)).catch(() => notify("Email failed"));
                               }}
                               style={{ fontSize: 10, fontWeight: 700, color: T.teal, background: `${T.teal}10`, border: `1px solid ${T.teal}30`, borderRadius: 6, padding: "4px 8px", cursor: "pointer", fontFamily: "'Outfit',sans-serif", flexShrink: 0 }}>
                               Invite
@@ -15581,7 +15581,7 @@ export default function AdminPanel() {
                     if (sorted.length === 0) return (
                       <div style={{ textAlign: "center", padding: "24px 0" }}>
                         <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 4 }}>No country data yet</div>
-                        <div style={{ fontSize: 10, color: T.textMuted }}>Country is collected on email signup — Google sign-ins may not have it</div>
+                        <div style={{ fontSize: 10, color: T.textMuted }}>Country is collected on email signup ï¿½ Google sign-ins may not have it</div>
                       </div>
                     );
                     return (
@@ -15611,7 +15611,7 @@ export default function AdminPanel() {
                 </div>
               </div>
 
-              {/* -- STEP 7 — CHURN & RETENTION PANEL -- */}
+              {/* -- STEP 7 ï¿½ CHURN & RETENTION PANEL -- */}
               <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 10, marginTop: 8 }}>Churn & Retention</div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16, marginBottom: 24 }} className="charts-row-overview">
 
@@ -15701,7 +15701,7 @@ export default function AdminPanel() {
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 18, flexWrap: "wrap", gap: 8 }}>
                   <div>
                     <div style={{ fontSize: 13, fontWeight: 700, color: T.white }}>ARPU & MRR Over Time</div>
-                    <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>Derived from user tier history · Updates as users join and upgrade</div>
+                    <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>Derived from user tier history ï¿½ Updates as users join and upgrade</div>
                   </div>
                   <div style={{ display: "flex", gap: 16 }}>
                     {[["MRR", T.green], ["ARPU", "#8B5CF6"], ["Paid Users", T.teal]].map(([name, color]) => (
@@ -15739,7 +15739,7 @@ export default function AdminPanel() {
                       if (userChanges.length > 0) {
                         tierAtMonth = userChanges[0].newTier;
                       } else {
-                        // No changes recorded — use current tier if they existed
+                        // No changes recorded ï¿½ use current tier if they existed
                         // If it's the current month use current tier, otherwise assume they started as pro_trial
                         tierAtMonth = m === 0 ? u.tier : "pro_trial";
                       }
@@ -15763,7 +15763,7 @@ export default function AdminPanel() {
 
                   if (!hasData) return (
                     <div style={{ textAlign: "center", padding: "40px 0", color: T.textMuted, fontSize: 12 }}>
-                      No revenue data yet — will populate as users upgrade to paid plans
+                      No revenue data yet ï¿½ will populate as users upgrade to paid plans
                     </div>
                   );
 
@@ -15834,7 +15834,7 @@ export default function AdminPanel() {
                         {[
                           { label: "Current MRR", value: `AED ${mrr.toLocaleString()}`, color: T.green },
                           { label: "Current ARPU", value: `AED ${arpu}`, color: "#8B5CF6" },
-                          { label: "MRR Growth", value: (() => { const prev = monthData[monthData.length - 2]?.mrr || 0; if (!prev) return "—"; const g = Math.round(((mrr - prev) / prev) * 100); return `${g >= 0 ? "+" : ""}${g}%`; })(), color: (() => { const prev = monthData[monthData.length - 2]?.mrr || 0; if (!prev) return T.textMuted; return mrr >= prev ? T.green : T.red; })() },
+                          { label: "MRR Growth", value: (() => { const prev = monthData[monthData.length - 2]?.mrr || 0; if (!prev) return "ï¿½"; const g = Math.round(((mrr - prev) / prev) * 100); return `${g >= 0 ? "+" : ""}${g}%`; })(), color: (() => { const prev = monthData[monthData.length - 2]?.mrr || 0; if (!prev) return T.textMuted; return mrr >= prev ? T.green : T.red; })() },
                           { label: "Projected ARR", value: `AED ${arr.toLocaleString()}`, color: T.gold },
                         ].map((s, i) => (
                           <div key={i} style={{ textAlign: "center" }}>
@@ -15892,10 +15892,10 @@ export default function AdminPanel() {
                   </div>
                 </div>
 
-                {/* Expired — never converted */}
+                {/* Expired ï¿½ never converted */}
                 <div className="chart-box fade-up" style={{ padding: 20, animationDelay: "0.05s" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-                    <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.2 }}>Expired — Not Converted</div>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.2 }}>Expired ï¿½ Not Converted</div>
                     <span style={{ fontSize: 10, color: stats.expired > 0 ? T.red : T.green, fontWeight: 700, background: stats.expired > 0 ? "rgba(239,68,68,0.1)" : "rgba(16,185,129,0.1)", padding: "2px 8px", borderRadius: 20 }}>{stats.expired} total</span>
                   </div>
                   {(() => {
@@ -15927,7 +15927,7 @@ export default function AdminPanel() {
                             <button type="button"
                               onClick={e => {
                                 e.stopPropagation();
-                                sendResend(u.email, "We miss you — special offer inside", `Hi ${u.name || "there"},\n\nYour trial ended but we'd love to have you back.\n\nContact us at info@theaddressholding.ae for a special rate.\n\nBest regards,\nDXB Analytics Team`).then(() => notify(`Win-back email sent to ${u.name || u.email}`)).catch(() => notify("Email failed"));
+                                sendResend(u.email, "We miss you ï¿½ special offer inside", `Hi ${u.name || "there"},\n\nYour trial ended but we'd love to have you back.\n\nContact us at info@theaddressholding.ae for a special rate.\n\nBest regards,\nDXB Analytics Team`).then(() => notify(`Win-back email sent to ${u.name || u.email}`)).catch(() => notify("Email failed"));
                               }}
                               style={{ fontSize: 10, fontWeight: 700, color: T.red, background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 6, padding: "4px 8px", cursor: "pointer", fontFamily: "'Outfit',sans-serif", flexShrink: 0 }}>
                               Win-back
@@ -16015,8 +16015,8 @@ export default function AdminPanel() {
                       <div className="chart-box fade-up" style={{ marginBottom: 24, padding: "16px 20px 12px" }}>
                         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
                           <div>
-                            <div style={{ fontSize: 13, fontWeight: 700, color: T.white }}>Activity — Last 30 Days</div>
-                            <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>{auditLog.length} total events · {last30.filter(d => d.count > 0).length} active days</div>
+                            <div style={{ fontSize: 13, fontWeight: 700, color: T.white }}>Activity ï¿½ Last 30 Days</div>
+                            <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>{auditLog.length} total events ï¿½ {last30.filter(d => d.count > 0).length} active days</div>
                           </div>
                           <div style={{ fontSize: 10, color: T.textMuted }}>
                             Peak: <span style={{ color: T.gold, fontWeight: 700 }}>{max30} events/day</span>
@@ -16109,7 +16109,7 @@ export default function AdminPanel() {
                               style={{ width: "100%", padding: "7px 0", borderRadius: 8, border: `1px solid ${auditWebhookSaved ? T.green : T.border}`, background: auditWebhookSaved ? `${T.green}15` : "transparent", color: auditWebhookSaved ? T.green : T.textSecondary, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
                               {auditWebhookSaved ? "? Webhook Active" : "Save Webhook"}
                             </button>
-                            <div style={{ marginTop: 8, fontSize: 10, color: T.textMuted }}>Compatible: Splunk HEC · Datadog · Azure Event Hub · custom endpoints</div>
+                            <div style={{ marginTop: 8, fontSize: 10, color: T.textMuted }}>Compatible: Splunk HEC ï¿½ Datadog ï¿½ Azure Event Hub ï¿½ custom endpoints</div>
                           </div>
 
                           {/* Alert Threshold */}
@@ -16154,7 +16154,7 @@ export default function AdminPanel() {
                           {/* API Key Generator */}
                           <div style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.gold}30`, padding: "18px 20px" }}>
                             <div style={{ fontSize: 12, fontWeight: 700, color: T.gold, marginBottom: 4 }}> Generate API Key</div>
-                            <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 12 }}>Keys authenticate external systems. Each key is hashed — shown once only.</div>
+                            <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 12 }}>Keys authenticate external systems. Each key is hashed ï¿½ shown once only.</div>
 
                             <input value={apiKeyLabel} onChange={e => setApiKeyLabel(e.target.value)}
                               placeholder="Label e.g. Splunk Integration"
@@ -16187,7 +16187,7 @@ export default function AdminPanel() {
 
                             {newApiKey && (
                               <div style={{ marginTop: 12, padding: "12px 14px", borderRadius: 10, background: `${T.green}08`, border: `1px solid ${T.green}30` }}>
-                                <div style={{ fontSize: 10, fontWeight: 700, color: T.green, marginBottom: 6 }}>? Copy now — not shown again</div>
+                                <div style={{ fontSize: 10, fontWeight: 700, color: T.green, marginBottom: 6 }}>? Copy now ï¿½ not shown again</div>
                                 <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
                                   <div style={{ flex: 1, fontSize: 9, fontFamily: "'Courier New', monospace", color: T.white, wordBreak: "break-all", lineHeight: 1.4, background: T.surfaceAlt, padding: "6px 8px", borderRadius: 6 }}>{newApiKey}</div>
                                   <button type="button" onClick={() => { navigator.clipboard.writeText(newApiKey); setApiKeyCopied(true); setTimeout(() => setApiKeyCopied(false), 2000); }}
@@ -16207,7 +16207,7 @@ export default function AdminPanel() {
                                     <div style={{ width: 6, height: 6, borderRadius: "50%", background: T.green, flexShrink: 0 }} />
                                     <div style={{ flex: 1 }}>
                                       <div style={{ fontSize: 11, fontWeight: 600, color: T.white }}>{k.label}</div>
-                                      <div style={{ fontSize: 9, color: T.textMuted }}>{k.createdAt?.slice(0,10)} · {k.useCount || 0} uses</div>
+                                      <div style={{ fontSize: 9, color: T.textMuted }}>{k.createdAt?.slice(0,10)} ï¿½ {k.useCount || 0} uses</div>
                                     </div>
                                     <button type="button" onClick={async () => {
                                       const updated = apiKeys.map(key => key.hash === k.hash ? { ...key, active: false, revokedAt: new Date().toISOString() } : key);
@@ -16228,7 +16228,7 @@ export default function AdminPanel() {
                           <div style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, padding: "18px 20px", display: "flex", flexDirection: "column", gap: 10 }}>
                             <div style={{ fontSize: 12, fontWeight: 700, color: T.white, marginBottom: 2 }}> API Reference</div>
                             {[
-                              { method: "GET", path: "/health", auth: false, desc: "Health check — no auth required" },
+                              { method: "GET", path: "/health", auth: false, desc: "Health check ï¿½ no auth required" },
                               { method: "GET", path: "/logs", auth: true, desc: "Fetch events. Params: from, to, action, actor, ip, limit, offset, format=csv" },
                               { method: "GET", path: "/stats", auth: true, desc: "Summary counts by action, today, this week, IP tracked, unique actors" },
                               { method: "POST", path: "/apikey", auth: true, desc: "Generate a new API key. Body: { label, revokeHash }" },
@@ -16322,9 +16322,9 @@ export default function AdminPanel() {
                 // -- TRIAL PIPELINE BUCKETS --
                 const pipeline = (() => {
                   const buckets = [
-                    { label: "1–2 days", color: T.red,     min: 0, max: 2,   users: [] },
-                    { label: "3–5 days", color: "#F59E0B", min: 3, max: 5,   users: [] },
-                    { label: "6–7 days", color: T.gold,    min: 6, max: 7,   users: [] },
+                    { label: "1ï¿½2 days", color: T.red,     min: 0, max: 2,   users: [] },
+                    { label: "3ï¿½5 days", color: "#F59E0B", min: 3, max: 5,   users: [] },
+                    { label: "6ï¿½7 days", color: T.gold,    min: 6, max: 7,   users: [] },
                     { label: "8+ days",  color: T.teal,    min: 8, max: 999, users: [] },
                   ];
                   users.filter(u => u.tier === "pro_trial").forEach(u => {
@@ -16354,7 +16354,7 @@ export default function AdminPanel() {
 
                 return (
                   <>
-                    {/* -- SECTION 1 — REVENUE HEALTH TOPBAR -- */}
+                    {/* -- SECTION 1 ï¿½ REVENUE HEALTH TOPBAR -- */}
                     <div className="fade-up" style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 18px", borderRadius: 14, background: T.surface, border: `1px solid ${T.border}`, marginBottom: 20, flexWrap: "wrap" }}>
                       <button type="button" onClick={() => { fetchUsers(); fetchAuditLog(); window._revenuePaymentsLoaded = false; notify("Revenue refreshed"); }} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, padding: "6px 12px", borderRadius: 8, border: `1px solid ${T.gold}`, background: T.goldGlow, color: T.gold, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600, marginRight: 8 }}>{I.refresh}</button>
                       <div style={{ display: "flex", alignItems: "center", gap: 8, paddingRight: 14, borderRight: `1px solid ${T.border}`, flexShrink: 0 }}>
@@ -16386,13 +16386,13 @@ export default function AdminPanel() {
                       )}
                     </div>
 
-                    {/* -- SECTION 2 — MRR MOVEMENT + BREAKDOWN + LTV -- */}
+                    {/* -- SECTION 2 ï¿½ MRR MOVEMENT + BREAKDOWN + LTV -- */}
                     <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 10 }}>Revenue Breakdown</div>
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 14, marginBottom: 20 }} className="charts-row-overview">
 
                       {/* MRR Movement */}
                       <div className="chart-box fade-up" style={{ padding: 20 }}>
-                        <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.2, marginBottom: 16 }}>MRR Movement — This Month</div>
+                        <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.2, marginBottom: 16 }}>MRR Movement ï¿½ This Month</div>
                         {[
                           { label: "Starting MRR",  value: mrr - netMRR,       color: T.textSecondary },
                           { label: "New MRR",        value: newMRRThisMonth,    color: T.green,  arrow: "?" },
@@ -16429,7 +16429,7 @@ export default function AdminPanel() {
                                 </div>
                                 <div style={{ textAlign: "right" }}>
                                   <div style={{ fontSize: 13, fontWeight: 800, color: row.color, fontFamily: "'Fraunces',serif" }}>AED {row.revenue.toLocaleString()}</div>
-                                  <div style={{ fontSize: 10, color: T.textMuted }}>{row.count} users · {pct}%</div>
+                                  <div style={{ fontSize: 10, color: T.textMuted }}>{row.count} users ï¿½ {pct}%</div>
                                 </div>
                               </div>
                               <div style={{ height: 6, background: T.surfaceAlt, borderRadius: 3, overflow: "hidden" }}>
@@ -16467,19 +16467,19 @@ export default function AdminPanel() {
                         ))}
                         {churnRate === 0 && (
                           <div style={{ marginTop: 12, padding: "8px 10px", borderRadius: 8, background: `${T.gold}08`, border: `1px solid ${T.gold}20`, fontSize: 10, color: T.textMuted }}>
-                            No churn data yet — LTV shown as 24-month estimate. Will update as users churn.
+                            No churn data yet ï¿½ LTV shown as 24-month estimate. Will update as users churn.
                           </div>
                         )}
                       </div>
                     </div>
 
-                    {/* -- SECTION 3 — MRR HISTORY + FORECAST -- */}
+                    {/* -- SECTION 3 ï¿½ MRR HISTORY + FORECAST -- */}
                     <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 10 }}>MRR History & Forecast</div>
                     <div className="chart-box fade-up" style={{ padding: 20, marginBottom: 20 }}>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16, flexWrap: "wrap", gap: 8 }}>
                         <div>
-                          <div style={{ fontSize: 13, fontWeight: 700, color: T.white }}>MRR — 6 Months Actual + 3 Month Forecast</div>
-                          <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>Derived from user tier history · Forecast based on current growth rate</div>
+                          <div style={{ fontSize: 13, fontWeight: 700, color: T.white }}>MRR ï¿½ 6 Months Actual + 3 Month Forecast</div>
+                          <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>Derived from user tier history ï¿½ Forecast based on current growth rate</div>
                         </div>
                         <div style={{ display: "flex", gap: 14 }}>
                           {[["Actual MRR", T.green], ["Projected", T.gold]].map(([name, color]) => (
@@ -16511,7 +16511,7 @@ export default function AdminPanel() {
                       </ResponsiveContainer>
                     </div>
 
-                    {/* -- SECTION 4 — TRIAL PIPELINE + CONVERSION FUNNEL -- */}
+                    {/* -- SECTION 4 ï¿½ TRIAL PIPELINE + CONVERSION FUNNEL -- */}
                     <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 10 }}>Trial Pipeline</div>
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginBottom: 20 }} className="charts-row-overview">
 
@@ -16533,7 +16533,7 @@ export default function AdminPanel() {
                             <div style={{ flex: 1 }}>
                               <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
                                 <span style={{ fontSize: 12, color: T.textSecondary }}>{bucket.label}</span>
-                                <span style={{ fontSize: 12, fontWeight: 700, color: bucket.color }}>{bucket.count} users · AED {bucket.value.toLocaleString()}</span>
+                                <span style={{ fontSize: 12, fontWeight: 700, color: bucket.color }}>{bucket.count} users ï¿½ AED {bucket.value.toLocaleString()}</span>
                               </div>
                               <div style={{ height: 3, background: T.surfaceAlt, borderRadius: 2, overflow: "hidden" }}>
                                 <div style={{ width: stats.proTrial > 0 ? `${(bucket.count / stats.proTrial) * 100}%` : "0%", height: "100%", background: bucket.color, borderRadius: 2, transition: "width 0.6s ease" }} />
@@ -16599,13 +16599,13 @@ export default function AdminPanel() {
                       </div>
                     </div>
 
-                    {/* -- SECTION 5 — PAYING USERS TABLE -- */}
+                    {/* -- SECTION 5 ï¿½ PAYING USERS TABLE -- */}
                     <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 10 }}>Paying Customers</div>
                     <div className="chart-box fade-up" style={{ padding: 0, overflow: "hidden", marginBottom: 20 }}>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 20px", borderBottom: `1px solid ${T.border}` }}>
                         <div>
                           <div style={{ fontSize: 13, fontWeight: 700, color: T.white }}>Revenue per Customer</div>
-                          <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>{payingUsers.length} paying users · AED {mrr.toLocaleString()} total MRR</div>
+                          <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>{payingUsers.length} paying users ï¿½ AED {mrr.toLocaleString()} total MRR</div>
                         </div>
                         <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
                           <button type="button" onClick={() => {
@@ -16681,14 +16681,14 @@ export default function AdminPanel() {
                       )}
                     </div>
 
-                    {/* -- SECTION 6 — REVENUE MILESTONES -- */}
+                    {/* -- SECTION 6 ï¿½ REVENUE MILESTONES -- */}
                     <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 10 }}>Revenue Milestones</div>
                     <div className="chart-box fade-up" style={{ padding: 20, marginBottom: 20 }}>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 18, flexWrap: "wrap", gap: 8 }}>
                         <div>
                           <div style={{ fontSize: 13, fontWeight: 700, color: T.white }}>MRR Milestones</div>
                           <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>
-                            {nextMilestone ? `Next: ${nextMilestone.label} — ${nextMilestone.usersNeeded} more paying user${nextMilestone.usersNeeded !== 1 ? "s" : ""} needed` : "All milestones reached "}
+                            {nextMilestone ? `Next: ${nextMilestone.label} ï¿½ ${nextMilestone.usersNeeded} more paying user${nextMilestone.usersNeeded !== 1 ? "s" : ""} needed` : "All milestones reached "}
                           </div>
                         </div>
                         <div style={{ fontFamily: "'Fraunces',serif", fontSize: 16, fontWeight: 800, color: T.green }}>
@@ -16720,15 +16720,15 @@ export default function AdminPanel() {
                     <div style={{ display: "flex", alignItems: "center", gap: 14, margin: "10px 0 20px" }}>
                       <div style={{ flex: 1, height: 1, background: T.border }} />
                       <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 16px", borderRadius: 20, background: `${T.gold}10`, border: `1px solid ${T.gold}30` }}>
-                        <span style={{ fontSize: 10, fontWeight: 700, color: T.gold, letterSpacing: 1.5, textTransform: "uppercase" }}>Paddle Payments — Stage 2</span>
+                        <span style={{ fontSize: 10, fontWeight: 700, color: T.gold, letterSpacing: 1.5, textTransform: "uppercase" }}>Paddle Payments ï¿½ Stage 2</span>
                         <span style={{ fontSize: 9, padding: "2px 8px", borderRadius: 6, background: `${T.gold}20`, color: T.gold, fontWeight: 700 }}>LIVE WHEN CONNECTED</span>
                       </div>
                       <div style={{ flex: 1, height: 1, background: T.border }} />
                     </div>
 
-                    {/* -- SECTION 7 — PAYMENT EVENTS LOG -- */}
+                    {/* -- SECTION 7 ï¿½ PAYMENT EVENTS LOG -- */}
                     {(() => {
-                      // Read from payments collection — empty until Paddle webhook is live
+                      // Read from payments collection ï¿½ empty until Paddle webhook is live
                       const payments = (window._revenuePayments || []);
                       const hasPaddle = payments.length > 0;
                       return (
@@ -16751,7 +16751,7 @@ export default function AdminPanel() {
                               <div style={{ fontSize: 36, marginBottom: 12 }}></div>
                               <div style={{ fontSize: 14, fontWeight: 600, color: T.textSecondary, marginBottom: 6 }}>Waiting for Paddle Connection</div>
                               <div style={{ fontSize: 12, color: T.textMuted, maxWidth: 360, margin: "0 auto", lineHeight: 1.6 }}>
-                                Once your Paddle webhook is connected and writing to Firestore, every payment event will appear here in real time — success, failed, refunded, and chargeback.
+                                Once your Paddle webhook is connected and writing to Firestore, every payment event will appear here in real time ï¿½ success, failed, refunded, and chargeback.
                               </div>
                               <div style={{ marginTop: 20, display: "inline-flex", alignItems: "center", gap: 8, padding: "8px 16px", borderRadius: 10, background: `${T.gold}08`, border: `1px solid ${T.gold}20` }}>
                                 <span style={{ width: 6, height: 6, borderRadius: "50%", background: T.gold, opacity: 0.5 }} />
@@ -16790,7 +16790,7 @@ export default function AdminPanel() {
                       );
                     })()}
 
-                    {/* -- SECTION 8 — FAILED PAYMENTS -- */}
+                    {/* -- SECTION 8 ï¿½ FAILED PAYMENTS -- */}
                     {(() => {
                       const failedPayments = []; // Will read from payments where type === "payment_failed"
                       const hasFailed = failedPayments.length > 0;
@@ -16841,7 +16841,7 @@ export default function AdminPanel() {
                               <div key={i} style={{ marginBottom: 12 }}>
                                 <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
                                   <span style={{ fontSize: 12, color: T.textSecondary }}>{r.reason}</span>
-                                  <span style={{ fontSize: 11, fontWeight: 700, color: r.pct > 0 ? r.color : T.textMuted }}>{r.pct > 0 ? `${r.pct}%` : "—"}</span>
+                                  <span style={{ fontSize: 11, fontWeight: 700, color: r.pct > 0 ? r.color : T.textMuted }}>{r.pct > 0 ? `${r.pct}%` : "ï¿½"}</span>
                                 </div>
                                 <div style={{ height: 3, background: T.surfaceAlt, borderRadius: 2, overflow: "hidden" }}>
                                   <div style={{ width: `${r.pct}%`, height: "100%", background: r.color, borderRadius: 2 }} />
@@ -16856,7 +16856,7 @@ export default function AdminPanel() {
                       );
                     })()}
 
-                    {/* -- SECTION 9 — REAL REVENUE BY MONTH (PADDLE) -- */}
+                    {/* -- SECTION 9 ï¿½ REAL REVENUE BY MONTH (PADDLE) -- */}
                     {(() => {
                       const paddleRevenue = []; // Will read from payments collection grouped by month
                       const hasPaddleRevenue = paddleRevenue.length > 0;
@@ -16866,7 +16866,7 @@ export default function AdminPanel() {
                             <div>
                               <div style={{ fontSize: 13, fontWeight: 700, color: T.white }}>Real Revenue by Month</div>
                               <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>
-                                {hasPaddleRevenue ? "Actual amounts charged via Paddle — not estimates" : "Stage 1 shows calculated MRR · This will show real Paddle amounts"}
+                                {hasPaddleRevenue ? "Actual amounts charged via Paddle ï¿½ not estimates" : "Stage 1 shows calculated MRR ï¿½ This will show real Paddle amounts"}
                               </div>
                             </div>
                             <div style={{ fontSize: 10, padding: "4px 10px", borderRadius: 8, background: hasPaddleRevenue ? `${T.green}15` : `${T.gold}10`, border: `1px solid ${hasPaddleRevenue ? T.green : T.gold}30`, color: hasPaddleRevenue ? T.green : T.gold, fontWeight: 700 }}>
@@ -16876,7 +16876,7 @@ export default function AdminPanel() {
                           {!hasPaddleRevenue ? (
                             <div style={{ padding: "32px 0", textAlign: "center" }}>
                               <div style={{ fontSize: 11, color: T.textMuted, maxWidth: 420, margin: "0 auto", lineHeight: 1.7 }}>
-                                This chart will show real money received via Paddle — including partial months, refunds, and actual AED amounts. Until Paddle is connected, use the MRR History chart above (Stage 1) which calculates revenue from user tiers.
+                                This chart will show real money received via Paddle ï¿½ including partial months, refunds, and actual AED amounts. Until Paddle is connected, use the MRR History chart above (Stage 1) which calculates revenue from user tiers.
                               </div>
                               <div style={{ marginTop: 20, display: "flex", justifyContent: "center", gap: 8, flexWrap: "wrap" }}>
                                 {["Connect Paddle Webhook", "?", "Firebase Cloud Function", "?", "payments collection", "?", "Chart fills automatically"].map((s, i) => (
@@ -16900,10 +16900,10 @@ export default function AdminPanel() {
                       );
                     })()}
 
-                    {/* -- SECTION 10 — NRR + WATERFALL + LTV:CAC (ChartMogul-level) -- */}
+                    {/* -- SECTION 10 ï¿½ NRR + WATERFALL + LTV:CAC (ChartMogul-level) -- */}
                     {(() => {
                       // -- NRR Calculation --
-                      // NRR = (Starting MRR + Expansion - Contraction - Churn) / Starting MRR × 100
+                      // NRR = (Starting MRR + Expansion - Contraction - Churn) / Starting MRR ï¿½ 100
                       const startMRR = mrr - netMRR;
                       const nrr = startMRR > 0 ? Math.round(((mrr) / startMRR) * 100) : 100;
                       const nrrColor = nrr >= 100 ? T.green : nrr >= 85 ? T.gold : T.red;
@@ -16990,7 +16990,7 @@ export default function AdminPanel() {
                                 {ltvcacRatio ? `${ltvcacRatio}:1` : "N/A"}
                               </div>
                               <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 12 }}>
-                                {estimatedCAC === 0 ? "No paid marketing yet — organic" : `CAC payback: ${cacPaybackMonths} months`}
+                                {estimatedCAC === 0 ? "No paid marketing yet ï¿½ organic" : `CAC payback: ${cacPaybackMonths} months`}
                               </div>
                               <div style={{ fontSize: 10, color: T.textMuted, lineHeight: 1.7 }}>
                                 <div>Blended LTV: AED {blendedLTV.toLocaleString()}</div>
@@ -17017,7 +17017,7 @@ export default function AdminPanel() {
 
                           {/* MRR Waterfall Chart */}
                           <div className="chart-box fade-up" style={{ padding: 20, marginBottom: 0 }}>
-                            <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 16 }}>MRR Waterfall — This Month</div>
+                            <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 16 }}>MRR Waterfall ï¿½ This Month</div>
                             <div style={{ display: "flex", gap: 8, alignItems: "flex-end", height: 120 }}>
                               {waterfallData.map((item, i) => {
                                 const barH = maxWaterfall > 0 ? Math.max(4, Math.round((Math.abs(item.value) / maxWaterfall) * 100)) : 4;
@@ -17037,7 +17037,7 @@ export default function AdminPanel() {
                             <div style={{ marginTop: 16, padding: "12px 16px", borderRadius: 8, background: T.surfaceAlt, border: `1px solid ${T.border}`, fontSize: 11, color: T.textMuted, lineHeight: 1.7 }}>
                               <span style={{ color: T.white, fontWeight: 600 }}>Interpretation: </span>
                               {netMRR >= 0
-                                ? `Revenue grew by AED ${Math.abs(netMRR).toLocaleString()} this month. ${churnedMRR > 0 ? `Lost AED ${churnedMRR.toLocaleString()} from ${churnThisMonth.length} churn${churnThisMonth.length > 1 ? "s" : ""}.` : "Zero churn this month — excellent."}`
+                                ? `Revenue grew by AED ${Math.abs(netMRR).toLocaleString()} this month. ${churnedMRR > 0 ? `Lost AED ${churnedMRR.toLocaleString()} from ${churnThisMonth.length} churn${churnThisMonth.length > 1 ? "s" : ""}.` : "Zero churn this month ï¿½ excellent."}`
                                 : `Revenue declined by AED ${Math.abs(netMRR).toLocaleString()} this month. Churn exceeded new business by AED ${Math.abs(netMRR).toLocaleString()}.`}
                               {" "}Benchmark: healthy SaaS targets NRR 100%+ and monthly churn below 3%.
                             </div>
@@ -17046,7 +17046,7 @@ export default function AdminPanel() {
                       );
                     })()}
 
-                    {/* -- SECTION 11 — COHORT RETENTION HEATMAP (ChartMogul-level) -- */}
+                    {/* -- SECTION 11 ï¿½ COHORT RETENTION HEATMAP (ChartMogul-level) -- */}
                     {(() => {
                       // Build cohort retention from real user data
                       // Each cohort = users who signed up in that month
@@ -17089,7 +17089,7 @@ export default function AdminPanel() {
                           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
                             <div>
                               <div style={{ fontSize: 13, fontWeight: 700, color: T.white }}>Cohort Retention Heatmap</div>
-                              <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>Monthly cohorts — % of users still active each month after signup</div>
+                              <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>Monthly cohorts ï¿½ % of users still active each month after signup</div>
                             </div>
                             <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
                               {[["80%+", "rgba(16,185,129,0.7)"], ["60%+", "rgba(16,185,129,0.4)"], ["40%+", "rgba(212,168,67,0.5)"], ["20%+", "rgba(212,168,67,0.25)"], ["<20%", "rgba(239,68,68,0.2)"]].map(([label, color]) => (
@@ -17125,7 +17125,7 @@ export default function AdminPanel() {
                                           <div style={{ width: "100%", minWidth: 52, height: 32, borderRadius: 6, background: pct !== null ? getRetColor(pct) : T.surfaceAlt, display: "flex", alignItems: "center", justifyContent: "center", cursor: pct !== null ? "pointer" : "default" }}
                                             onClick={() => pct !== null && setCohortDrilldown({ cohortLabel: cohort.label, weekNum: mi, users: users.filter(u => { const d2 = new Date(now.getFullYear(), now.getMonth() - (5-ci), 1); const end2 = new Date(d2.getFullYear(), d2.getMonth()+1, 0, 23, 59, 59); return new Date(u.createdAt||0) >= d2 && new Date(u.createdAt||0) <= end2; }) })}>
                                             <span style={{ fontSize: 11, fontWeight: 700, color: pct !== null ? T.white : T.border }}>
-                                              {pct !== null ? pct + "%" : "—"}
+                                              {pct !== null ? pct + "%" : "ï¿½"}
                                             </span>
                                           </div>
                                         </td>
@@ -17166,7 +17166,7 @@ export default function AdminPanel() {
                       </div>
                       <div style={{ display: "flex", gap: 8 }}>
                         <button type="button" onClick={downloadImportTemplate} style={{ fontSize: 11, padding: "8px 14px", borderRadius: 8, border: `1px solid ${T.teal}40`, background: `${T.teal}10`, color: T.teal, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>Download Template</button>
-                        <button type="button" onClick={() => importProgress.status !== "importing" && resetImport()} disabled={importProgress.status === "importing"} style={{ fontSize: 16, width: 32, height: 32, borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.textMuted, cursor: importProgress.status === "importing" ? "not-allowed" : "pointer" }}>×</button>
+                        <button type="button" onClick={() => importProgress.status !== "importing" && resetImport()} disabled={importProgress.status === "importing"} style={{ fontSize: 16, width: 32, height: 32, borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.textMuted, cursor: importProgress.status === "importing" ? "not-allowed" : "pointer" }}>ï¿½</button>
                       </div>
                     </div>
                     
@@ -17200,7 +17200,7 @@ export default function AdminPanel() {
                               </div>
                               <div>
                                 <div style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{importFile.name}</div>
-                                <div style={{ fontSize: 11, color: T.textMuted }}>{importRows.length} rows · {importHeaders.length} columns</div>
+                                <div style={{ fontSize: 11, color: T.textMuted }}>{importRows.length} rows ï¿½ {importHeaders.length} columns</div>
                               </div>
                             </div>
                             <button type="button" onClick={() => { setImportFile(null); setImportHeaders([]); setImportRows([]); setImportMapping({}); setImportErrors([]); }} style={{ fontSize: 11, padding: "6px 12px", borderRadius: 6, border: `1px solid ${T.border}`, background: "transparent", color: T.textMuted, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>Change File</button>
@@ -17221,7 +17221,7 @@ export default function AdminPanel() {
                               <div style={{ fontSize: 10, color: T.textMuted, fontWeight: 600, textTransform: "uppercase" }}>Invalid</div>
                             </div>
                             <div style={{ padding: "12px 16px", background: "rgba(212,168,67,0.06)", borderRadius: 10, border: "1px solid rgba(212,168,67,0.2)" }}>
-                              <div style={{ fontSize: 20, fontWeight: 800, color: T.gold, fontFamily: "'Fraunces',serif" }}>{importProgress.status === "done" ? importStats.imported : "—"}</div>
+                              <div style={{ fontSize: 20, fontWeight: 800, color: T.gold, fontFamily: "'Fraunces',serif" }}>{importProgress.status === "done" ? importStats.imported : "ï¿½"}</div>
                               <div style={{ fontSize: 10, color: T.textMuted, fontWeight: 600, textTransform: "uppercase" }}>Imported</div>
                             </div>
                           </div>
@@ -17239,7 +17239,7 @@ export default function AdminPanel() {
                                   <span style={{ color: T.textMuted }}>?</span>
                                   <select value={importMapping[idx] || ""} onChange={e => setImportMapping(prev => ({ ...prev, [idx]: e.target.value || undefined }))}
                                     style={{ flex: 1, padding: "6px 8px", background: T.bg, border: `1px solid ${importMapping[idx] ? "rgba(16,185,129,0.3)" : T.border}`, borderRadius: 6, color: importMapping[idx] ? T.green : T.textMuted, fontSize: 11, fontFamily: "'Outfit',sans-serif", cursor: "pointer" }}>
-                                    <option value="">— Skip —</option>
+                                    <option value="">ï¿½ Skip ï¿½</option>
                                     {IMPORT_FIELDS.map(f => (
                                       <option key={f.key} value={f.key}>{f.label}{f.required ? " *" : ""}</option>
                                     ))}
@@ -17271,7 +17271,7 @@ export default function AdminPanel() {
                                       <tr key={rowIdx} style={{ background: hasError ? "rgba(239,68,68,0.04)" : "transparent" }}>
                                         <td style={{ padding: "8px 12px", color: T.textMuted, borderBottom: `1px solid ${T.border}` }}>{row._rowNum}</td>
                                         {importHeaders.slice(0, 6).map((h, colIdx) => (
-                                          <td key={colIdx} style={{ padding: "8px 12px", color: T.textSecondary, borderBottom: `1px solid ${T.border}`, maxWidth: 120, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{row[h] || "—"}</td>
+                                          <td key={colIdx} style={{ padding: "8px 12px", color: T.textSecondary, borderBottom: `1px solid ${T.border}`, maxWidth: 120, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{row[h] || "ï¿½"}</td>
                                         ))}
                                         {importHeaders.length > 6 && <td style={{ padding: "8px 12px", textAlign: "center", color: T.textMuted, borderBottom: `1px solid ${T.border}` }}>...</td>}
                                       </tr>
@@ -17293,7 +17293,7 @@ export default function AdminPanel() {
                                 {importErrors.slice(0, 10).map((err, idx) => (
                                   <div key={idx} style={{ padding: "8px 0", borderBottom: idx < importErrors.length - 1 ? `1px solid ${T.border}` : "none" }}>
                                     <div style={{ fontSize: 11, fontWeight: 600, color: T.white, marginBottom: 4 }}>Row {err.rowNum}: {err.data?.name || err.data?.id || "Unknown"}</div>
-                                    <div style={{ fontSize: 10, color: T.red }}>{err.errors.join(" · ")}</div>
+                                    <div style={{ fontSize: 10, color: T.red }}>{err.errors.join(" ï¿½ ")}</div>
                                   </div>
                                 ))}
                                 {importErrors.length > 10 && <div style={{ fontSize: 11, color: T.textMuted, paddingTop: 8 }}>...and {importErrors.length - 10} more errors</div>}
@@ -17339,7 +17339,7 @@ export default function AdminPanel() {
                     {/* Footer */}
                     <div style={{ padding: "16px 24px", borderTop: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between", alignItems: "center", background: T.surfaceAlt }}>
                       <div style={{ fontSize: 11, color: T.textMuted }}>
-                        {importProgress.status === "done" ? "Import finished — data is now live" : importFile ? `${importStats.valid} rows ready to import` : "Upload a CSV file to begin"}
+                        {importProgress.status === "done" ? "Import finished ï¿½ data is now live" : importFile ? `${importStats.valid} rows ready to import` : "Upload a CSV file to begin"}
                       </div>
                       <div style={{ display: "flex", gap: 10 }}>
                         <button type="button" onClick={resetImport} disabled={importProgress.status === "importing"} style={{ fontSize: 12, padding: "10px 20px", borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.textSecondary, cursor: importProgress.status === "importing" ? "not-allowed" : "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>
@@ -17440,7 +17440,7 @@ export default function AdminPanel() {
               </div>
 
 
-              {/* Sub-tab navigation — two groups */}
+              {/* Sub-tab navigation ï¿½ two groups */}
               <div style={{ marginBottom: 24 }}>
                 {/* Group 1: Data tabs */}
                 <div style={{ display: "flex", gap: 2, marginBottom: 2, flexWrap: "wrap" }}>
@@ -17488,7 +17488,7 @@ export default function AdminPanel() {
 
               {/* --- PROJECTS EDITOR --- */}
               {dataSubTab === "projects" && (
-                <Section title="Project Data Manager" sub="Edit prices, PPSF, status — changes go live instantly" action={
+                <Section title="Project Data Manager" sub="Edit prices, PPSF, status ï¿½ changes go live instantly" action={
                 <div style={{ display: "flex", gap: 8 }}>
                     <button type="button" onClick={exportProjectsExcel} style={{display:"flex",alignItems:"center",gap:5,fontSize:11,padding:"7px 14px",borderRadius:8,border:"1px solid rgba(100,116,139,0.3)",background:"transparent",color:T.textSecondary,cursor:"pointer",fontFamily:"'Outfit',sans-serif",fontWeight:600}}>Export</button>
                     <button type="button" onClick={() => setShowDataImport(true)} style={{display:"flex",alignItems:"center",gap:5,fontSize:11,padding:"7px 14px",borderRadius:8,border:"1px solid rgba(20,184,166,0.4)",background:"rgba(20,184,166,0.08)",color:T.teal,cursor:"pointer",fontFamily:"'Outfit',sans-serif",fontWeight:600}}>
@@ -17503,13 +17503,13 @@ export default function AdminPanel() {
                       let removed = 0;
                       for (const d of snap.docs) {
                         const data = d.data();
-                        // Remove ALL radar-added Emaar projects — Emaar has full curated data
+                        // Remove ALL radar-added Emaar projects ï¿½ Emaar has full curated data
                         if (data.addedViaRadar && (data.developerId === "emaar" || (data.developer||"").toLowerCase().includes("emaar"))) {
                           await deleteDoc(doc(db, "projects", d.id));
                           removed++;
                         }
                       }
-                      notify(`Removed ${removed} Emaar radar projects — Emaar uses curated data only`);
+                      notify(`Removed ${removed} Emaar radar projects ï¿½ Emaar uses curated data only`);
                       fetchLiveData();
                     }} style={{display:"flex",alignItems:"center",gap:5,fontSize:11,padding:"7px 14px",borderRadius:8,border:"1px solid rgba(239,68,68,0.3)",background:"rgba(239,68,68,0.06)",color:"#EF4444",cursor:"pointer",fontFamily:"'Outfit',sans-serif",fontWeight:600}}>
                       ?? Remove Radar Duplicates
@@ -17524,7 +17524,7 @@ export default function AdminPanel() {
                     const currentQ = Math.ceil((now.getMonth() + 1) / 3);
 
                     const parseHandover = (h) => {
-                      if (!h || h === "—" || h === "Delivered") return null;
+                      if (!h || h === "ï¿½" || h === "Delivered") return null;
                       const m = h.match(/Q(\d)\s+(\d{4})/);
                       if (!m) return null;
                       return { q: parseInt(m[1]), y: parseInt(m[2]) };
@@ -17564,15 +17564,15 @@ export default function AdminPanel() {
                         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
                           <span style={{ fontSize: 14 }}>??</span>
                           <span style={{ fontSize: 13, fontWeight: 700, color: T.gold }}>Project Lifecycle Monitor</span>
-                          <span style={{ fontSize: 10, color: T.textMuted, marginLeft: "auto" }}>Auto-detected · Q{currentQ} {currentYear}</span>
+                          <span style={{ fontSize: 10, color: T.textMuted, marginLeft: "auto" }}>Auto-detected ï¿½ Q{currentQ} {currentYear}</span>
                         </div>
 
                         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 10, marginBottom: overdue.length + dueThisQ.length + construction100.length > 0 ? 14 : 0 }}>
                           {[
-                            { label: "?? Overdue — needs status update", items: overdue, color: T.red, action: "Mark as Delivered" },
+                            { label: "?? Overdue ï¿½ needs status update", items: overdue, color: T.red, action: "Mark as Delivered" },
                             { label: "?? Due this quarter", items: dueThisQ, color: T.gold, action: "Confirm handover date" },
                             { label: "?? Due next quarter", items: dueNextQ, color: T.teal, action: "Prepare handover" },
-                            { label: "??? Construction 100% — not marked done", items: construction100, color: "#8B5CF6", action: "Update status" },
+                            { label: "??? Construction 100% ï¿½ not marked done", items: construction100, color: "#8B5CF6", action: "Update status" },
                           ].filter(g => g.items.length > 0).map((group, gi) => (
                             <div key={gi} style={{ background: T.surfaceAlt, borderRadius: 10, padding: "10px 12px", border: `1px solid ${group.color}30` }}>
                               <div style={{ fontSize: 11, color: group.color, fontWeight: 700, marginBottom: 6 }}>{group.label}</div>
@@ -17690,7 +17690,7 @@ export default function AdminPanel() {
                           }}
                           onMouseEnter={e => { e.currentTarget.style.color = T.red; e.currentTarget.style.background = `${T.red}10`; }}
                           onMouseLeave={e => { e.currentTarget.style.color = T.textMuted; e.currentTarget.style.background = "transparent"; }}>
-                          ×
+                          ï¿½
                         </button>
                       </div>
                     ))}
@@ -17836,7 +17836,7 @@ export default function AdminPanel() {
                         <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
                           <input type="number" value={priceMin} onChange={e => { setPriceMin(e.target.value); setActiveFilterViewId(null); }} placeholder="Min"
                             style={{ flex: 1, padding: "7px 10px", background: T.bg, border: `1px solid ${priceMin ? T.teal : T.border}`, borderRadius: 6, color: T.white, fontSize: 11, fontFamily: "'Outfit',sans-serif", outline: "none" }} />
-                          <span style={{ color: T.textMuted, fontSize: 11 }}>—</span>
+                          <span style={{ color: T.textMuted, fontSize: 11 }}>ï¿½</span>
                           <input type="number" value={priceMax} onChange={e => { setPriceMax(e.target.value); setActiveFilterViewId(null); }} placeholder="Max"
                             style={{ flex: 1, padding: "7px 10px", background: T.bg, border: `1px solid ${priceMax ? T.teal : T.border}`, borderRadius: 6, color: T.white, fontSize: 11, fontFamily: "'Outfit',sans-serif", outline: "none" }} />
                         </div>
@@ -17848,7 +17848,7 @@ export default function AdminPanel() {
                         <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
                           <input type="number" value={ppsfMin} onChange={e => { setPpsfMin(e.target.value); setActiveFilterViewId(null); }} placeholder="Min"
                             style={{ flex: 1, padding: "7px 10px", background: T.bg, border: `1px solid ${ppsfMin ? T.teal : T.border}`, borderRadius: 6, color: T.white, fontSize: 11, fontFamily: "'Outfit',sans-serif", outline: "none" }} />
-                          <span style={{ color: T.textMuted, fontSize: 11 }}>—</span>
+                          <span style={{ color: T.textMuted, fontSize: 11 }}>ï¿½</span>
                           <input type="number" value={ppsfMax} onChange={e => { setPpsfMax(e.target.value); setActiveFilterViewId(null); }} placeholder="Max"
                             style={{ flex: 1, padding: "7px 10px", background: T.bg, border: `1px solid ${ppsfMax ? T.teal : T.border}`, borderRadius: 6, color: T.white, fontSize: 11, fontFamily: "'Outfit',sans-serif", outline: "none" }} />
                         </div>
@@ -17932,16 +17932,16 @@ export default function AdminPanel() {
                           style={{ width: "100%", padding: "10px 14px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif", marginBottom: 16, outline: "none", boxSizing: "border-box" }} />
                         <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 16, padding: 12, background: T.surfaceAlt, borderRadius: 8 }}>
                           <div style={{ marginBottom: 4 }}>Current filters:</div>
-                          {projectCommunityFilter !== "All" && <div>• Community: {projectCommunityFilter}</div>}
-                          {projectStatusFilter !== "All" && <div>• Status: {projectStatusFilter}</div>}
-                          {projectTierFilter !== "All" && <div>• Tier: {projectTierFilter}</div>}
-                          {priceMin && <div>• Price min: AED {Number(priceMin).toLocaleString()}</div>}
-                          {priceMax && <div>• Price max: AED {Number(priceMax).toLocaleString()}</div>}
-                          {ppsfMin && <div>• PPSF min: {ppsfMin}</div>}
-                          {ppsfMax && <div>• PPSF max: {ppsfMax}</div>}
-                          {dataSourceFilter !== "all" && <div>• Source: {dataSourceFilter}</div>}
-                          {modifiedDateFilter !== "all" && <div>• Modified: {modifiedDateFilter}</div>}
-                          {hasImageFilter !== "all" && <div>• Has image: {hasImageFilter}</div>}
+                          {projectCommunityFilter !== "All" && <div>ï¿½ Community: {projectCommunityFilter}</div>}
+                          {projectStatusFilter !== "All" && <div>ï¿½ Status: {projectStatusFilter}</div>}
+                          {projectTierFilter !== "All" && <div>ï¿½ Tier: {projectTierFilter}</div>}
+                          {priceMin && <div>ï¿½ Price min: AED {Number(priceMin).toLocaleString()}</div>}
+                          {priceMax && <div>ï¿½ Price max: AED {Number(priceMax).toLocaleString()}</div>}
+                          {ppsfMin && <div>ï¿½ PPSF min: {ppsfMin}</div>}
+                          {ppsfMax && <div>ï¿½ PPSF max: {ppsfMax}</div>}
+                          {dataSourceFilter !== "all" && <div>ï¿½ Source: {dataSourceFilter}</div>}
+                          {modifiedDateFilter !== "all" && <div>ï¿½ Modified: {modifiedDateFilter}</div>}
+                          {hasImageFilter !== "all" && <div>ï¿½ Has image: {hasImageFilter}</div>}
                         </div>
                         <div style={{ display: "flex", gap: 10 }}>
                           <button type="button" onClick={() => setShowSaveFilterModal(false)}
@@ -18145,7 +18145,7 @@ export default function AdminPanel() {
                               <div>
                                 <div style={{ fontSize: 12, fontWeight: 700, color: T.white }}>Data Intelligence</div>
                                 <div style={{ fontSize: 10, color: T.teal, fontWeight: 600 }}>
-                                  {intel.recentChanges.length} changes this week · {intel.duplicates.length} potential duplicates
+                                  {intel.recentChanges.length} changes this week ï¿½ {intel.duplicates.length} potential duplicates
                                 </div>
                               </div>
                             </div>
@@ -18323,7 +18323,7 @@ export default function AdminPanel() {
                               <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 700, color: T.orange, margin: 0 }}>Potential Duplicates</h3>
                               <p style={{ fontSize: 12, color: T.textMuted, margin: "4px 0 0" }}>{duplicates.length} potential duplicate pairs found</p>
                             </div>
-                            <button type="button" onClick={() => setShowDuplicatesModal(false)} style={{ background: "transparent", border: "none", color: T.textMuted, fontSize: 20, cursor: "pointer", padding: "4px 10px" }}>×</button>
+                            <button type="button" onClick={() => setShowDuplicatesModal(false)} style={{ background: "transparent", border: "none", color: T.textMuted, fontSize: 20, cursor: "pointer", padding: "4px 10px" }}>ï¿½</button>
                           </div>
                           <div style={{ padding: 20 }}>
                             {duplicates.length === 0 ? (
@@ -18442,7 +18442,7 @@ export default function AdminPanel() {
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
                           <div>
                             <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 700, color: T.green, margin: 0 }}>+ Add New Project</h3>
-                            <p style={{ fontSize: 11, color: T.textMuted, margin: "4px 0 0" }}>Fill in all relevant fields — everything here appears on the dashboard and project detail page.</p>
+                            <p style={{ fontSize: 11, color: T.textMuted, margin: "4px 0 0" }}>Fill in all relevant fields ï¿½ everything here appears on the dashboard and project detail page.</p>
                           </div>
                           <button type="button" onClick={() => setEditingProject(null)} style={{ fontSize: 11, padding: "6px 14px", borderRadius: 8, border: "1px solid rgba(100,116,139,0.3)", background: "transparent", color: T.textSecondary, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>Cancel</button>
                         </div>
@@ -18458,7 +18458,7 @@ export default function AdminPanel() {
                               { key: "type", label: "Type", placeholder: "", type: "select", options: ["", "Apartments", "Apts & TH", "Apts & Villas", "Apts & PH", "Townhouses", "Villas", "Branded Res."] },
                               { key: "status", label: "Status", placeholder: "", type: "select", options: ["", "Off-Plan", "Under Construction", "Completed", "Selling", "Upcoming", "Sold Out", "Ready"] },
                               { key: "tier", label: "Tier", placeholder: "", type: "select", options: ["", "Affordable", "Mid-Market", "Mid-Premium", "Premium", "Luxury", "Ultra-Luxury", "Luxury Branded", "Ultra-Lux Branded"] },
-                              { key: "brand", label: "Brand", placeholder: "", type: "select", options: ["", "—", "Address", "Vida", "Palace", "Bristol"] },
+                              { key: "brand", label: "Brand", placeholder: "", type: "select", options: ["", "ï¿½", "Address", "Vida", "Palace", "Bristol"] },
                               { key: "availability", label: "Availability", placeholder: "", type: "select", options: ["", "Available", "Limited Units", "Sold Out", "Coming Soon"] },
                               { key: "tagline", label: "Project Tagline", placeholder: "e.g. Golf-Side Family Living", type: "text" },
                             ].map(f => (
@@ -18467,7 +18467,7 @@ export default function AdminPanel() {
                                 {f.type === "select" ? (
                                   <select value={projectForm[f.key] || ""} onChange={e => setProjectForm(prev => ({ ...prev, [f.key]: e.target.value }))}
                                     style={{ width: "100%", padding: "10px 12px", background: T.bg, border: "1px solid rgba(212,168,67,0.12)", borderRadius: 8, color: T.textPrimary, fontSize: 13, fontFamily: "'Outfit',sans-serif" }}>
-                                    {f.options.map(o => <option key={o} value={o}>{o || "— Select —"}</option>)}
+                                    {f.options.map(o => <option key={o} value={o}>{o || "ï¿½ Select ï¿½"}</option>)}
                                   </select>
                                 ) : (
                                   <input type="text" placeholder={f.placeholder} value={projectForm[f.key] || ""} onChange={e => setProjectForm(prev => ({ ...prev, [f.key]: e.target.value }))}
@@ -18621,7 +18621,7 @@ export default function AdminPanel() {
                               <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>Data Source</label>
                               <select value={projectForm.dataSource || ""} onChange={e => setProjectForm(prev => ({ ...prev, dataSource: e.target.value }))}
                                 style={{ width: "100%", padding: "10px 12px", background: T.bg, border: "1px solid rgba(212,168,67,0.12)", borderRadius: 8, color: T.textPrimary, fontSize: 13, fontFamily: "'Outfit',sans-serif" }}>
-                                {["", "Emaar IR Report", "DLD Portal", "DXBinteract", "Manual Entry", "Agent Verified", "Market Research"].map(o => <option key={o} value={o}>{o || "— Select —"}</option>)}
+                                {["", "Emaar IR Report", "DLD Portal", "DXBinteract", "Manual Entry", "Agent Verified", "Market Research"].map(o => <option key={o} value={o}>{o || "ï¿½ Select ï¿½"}</option>)}
                               </select>
                             </div>
                             <div>
@@ -18663,7 +18663,7 @@ export default function AdminPanel() {
                       { key: "handover", label: "Handover", type: "text", placeholder: "e.g. Q4 2027", tip: "Expected handover/completion date. Shown on the project detail page with countdown." },
                       { key: "type", label: "Type", type: "select", options: ["Apartments", "Apts & TH", "Apts & Villas", "Apts & PH", "Townhouses", "Villas", "Branded Res."], tip: "Property type used for filtering on the dashboard and yield calculations." },
                       { key: "beds", label: "Bedrooms", type: "text", placeholder: "e.g. 1-3 BR", tip: "Available bedroom configurations, e.g. '1-3 BR' or 'Studio-4 BR'." },
-                      { key: "paymentPlan", label: "Payment Plan", type: "text", placeholder: "e.g. 80/20", tip: "Payment split — affects investment score rating on project cards." },
+                      { key: "paymentPlan", label: "Payment Plan", type: "text", placeholder: "e.g. 80/20", tip: "Payment split ï¿½ affects investment score rating on project cards." },
                       { key: "construction", label: "Construction %", type: "number", placeholder: "e.g. 75", tip: "Construction progress percentage (0-100). Shown as a progress bar on the project card and detail page." },
                       { key: "tier", label: "Tier", type: "select", options: ["Affordable", "Mid-Market", "Mid-Premium", "Premium", "Luxury", "Ultra-Luxury", "Luxury Branded", "Ultra-Lux Branded"], tip: "Price/quality tier badge shown on project cards and in the tier filter on the dashboard." },
                       { key: "emaarUrl", label: "PropertyFinder / Source URL", type: "text", placeholder: "e.g. https://www.propertyfinder.ae/...", tip: "Official listing URL shown as the SOURCE button on the project detail page." },
@@ -18678,7 +18678,7 @@ export default function AdminPanel() {
                       { key: "name", label: "Project Name", type: "text", placeholder: "e.g. The Golf Residence", tip: "Display name of the project shown everywhere on the dashboard." },
                       { key: "community", label: "Community", type: "text", placeholder: "e.g. Dubai Hills Estate", tip: "Master community name. Must match exactly for ROI data to link correctly." },
                       { key: "district", label: "District Code", type: "text", placeholder: "e.g. DHE", tip: "Short district code used for filtering (DHE, DCH, EBF, ES, GPC, TV, RYM, TO, BB, TH)." },
-                      { key: "brand", label: "Brand Name", type: "select", options: ["—", "Address", "Vida", "Palace", "Bristol"], tip: "Branded hotel/lifestyle brand. Shows as a gold badge on the project detail page." },
+                      { key: "brand", label: "Brand Name", type: "select", options: ["ï¿½", "Address", "Vida", "Palace", "Bristol"], tip: "Branded hotel/lifestyle brand. Shows as a gold badge on the project detail page." },
                       { key: "ratingOverride", label: "Rating Override (/10)", type: "number", placeholder: "Leave blank = auto-calculated", tip: "Override the auto-calculated investment score. Set 0-10. Leave blank to use the automatic score based on yield, PPSF, handover, and payment plan." },
                     ];
                     return (
@@ -18686,7 +18686,7 @@ export default function AdminPanel() {
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
                           <div>
                             <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 700, color: T.white }}>{merged.name || p.name}</h3>
-                            <span style={{ fontSize: 12, color: T.textMuted }}>{p.community} · ID: {p.id}</span>
+                            <span style={{ fontSize: 12, color: T.textMuted }}>{p.community} ï¿½ ID: {p.id}</span>
                             {hasOverride && <span style={{ marginLeft: 8, fontSize: 10, padding: "2px 8px", borderRadius: 6, background: "rgba(16,185,129,0.12)", color: T.green, fontWeight: 600 }}>LIVE DATA</span>}
                           </div>
                           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
@@ -18699,8 +18699,8 @@ export default function AdminPanel() {
                         {hasOverride && (merged.updatedBy || merged.updatedAt) && (
                           <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 14px", borderRadius: 8, background: "rgba(212,168,67,0.05)", border: "1px solid rgba(212,168,67,0.1)", marginBottom: 16, fontSize: 11, flexWrap: "wrap" }}>
                             <span style={{ color: T.textMuted }}>Last saved by</span>
-                            <span style={{ color: T.gold, fontWeight: 700 }}>{merged.updatedBy || "—"}</span>
-                            {merged.updatedAt && <><span style={{ color: T.textMuted }}>·</span><span style={{ color: T.textSecondary }}>{new Date(merged.updatedAt).toLocaleString("en-AE", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}</span></>}
+                            <span style={{ color: T.gold, fontWeight: 700 }}>{merged.updatedBy || "ï¿½"}</span>
+                            {merged.updatedAt && <><span style={{ color: T.textMuted }}>ï¿½</span><span style={{ color: T.textSecondary }}>{new Date(merged.updatedAt).toLocaleString("en-AE", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}</span></>}
                             {merged.rolledBackFrom && <span style={{ color: T.teal, fontSize: 10, fontWeight: 700 }}>[Rolled back from {new Date(merged.rolledBackFrom).toLocaleString("en-AE", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}]</span>}
                           </div>
                         )}
@@ -18714,7 +18714,7 @@ export default function AdminPanel() {
                                 return f.type === "select" ? (
                                   <select value={projectForm[f.key] ?? merged[f.key] ?? ""} onChange={e => { setProjectForm(prev => ({ ...prev, [f.key]: e.target.value })); setValidationErrors(prev => ({ ...prev, [f.key]: null })); }}
                                     style={{ width: "100%", padding: "10px 12px", background: T.bg, border: `1px solid ${borderColor}`, borderRadius: 8, color: T.textPrimary, fontSize: 13, fontFamily: "'Outfit',sans-serif" }}>
-                                    <option value="">—</option>
+                                    <option value="">ï¿½</option>
                                     {f.options.map(o => <option key={o} value={o}>{o}</option>)}
                                   </select>
                                 ) : (
@@ -18724,7 +18724,7 @@ export default function AdminPanel() {
                               })()}
                               {validationErrors[f.key] && <div style={{ fontSize: 10, color: "#EF4444", marginTop: 3 }}>{validationErrors[f.key]}</div>}
                               {hasOverride && liveProjects[p.id]?.[f.key] !== undefined && (
-                                <div style={{ fontSize: 9, color: T.green, marginTop: 2 }}>Live: {liveProjects[p.id][f.key]} · Default: {p[f.key] ?? "—"}</div>
+                                <div style={{ fontSize: 9, color: T.green, marginTop: 2 }}>Live: {liveProjects[p.id][f.key]} ï¿½ Default: {p[f.key] ?? "ï¿½"}</div>
                               )}
                             </div>
                           ))}
@@ -18920,7 +18920,7 @@ export default function AdminPanel() {
                                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={T.purple} strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
                                   <span style={{ fontSize: 12, fontWeight: 700, color: T.purple }}>Linked Records</span>
-                                  <span style={{ fontSize: 10, color: T.textMuted }}>· {communityName}</span>
+                                  <span style={{ fontSize: 10, color: T.textMuted }}>ï¿½ {communityName}</span>
                                 </div>
                                 <button type="button" onClick={() => { setDataSubTab("communities"); setEditingCommunity(communityName); setEditingProject(null); }}
                                   style={{ fontSize: 10, padding: "5px 12px", borderRadius: 6, border: `1px solid ${T.purple}40`, background: "transparent", color: T.purple, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>
@@ -18935,15 +18935,15 @@ export default function AdminPanel() {
                                   <div style={{ fontSize: 9, color: T.textMuted }}>Projects</div>
                                 </div>
                                 <div style={{ padding: 10, background: T.surface, borderRadius: 8, textAlign: "center" }}>
-                                  <div style={{ fontSize: 14, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>{avgPrice > 0 ? `${(avgPrice/1e6).toFixed(1)}M` : "—"}</div>
+                                  <div style={{ fontSize: 14, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>{avgPrice > 0 ? `${(avgPrice/1e6).toFixed(1)}M` : "ï¿½"}</div>
                                   <div style={{ fontSize: 9, color: T.textMuted }}>Avg Price</div>
                                 </div>
                                 <div style={{ padding: 10, background: T.surface, borderRadius: 8, textAlign: "center" }}>
-                                  <div style={{ fontSize: 14, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>{avgPpsf > 0 ? avgPpsf.toLocaleString() : "—"}</div>
+                                  <div style={{ fontSize: 14, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>{avgPpsf > 0 ? avgPpsf.toLocaleString() : "ï¿½"}</div>
                                   <div style={{ fontSize: 9, color: T.textMuted }}>Avg PPSF</div>
                                 </div>
                                 <div style={{ padding: 10, background: T.surface, borderRadius: 8, textAlign: "center" }}>
-                                  <div style={{ fontSize: 14, fontWeight: 700, color: communityROI.yield ? T.green : T.textMuted, fontFamily: "'Fraunces',serif" }}>{communityROI.yield ? `${communityROI.yield}%` : "—"}</div>
+                                  <div style={{ fontSize: 14, fontWeight: 700, color: communityROI.yield ? T.green : T.textMuted, fontFamily: "'Fraunces',serif" }}>{communityROI.yield ? `${communityROI.yield}%` : "ï¿½"}</div>
                                   <div style={{ fontSize: 9, color: T.textMuted }}>Yield</div>
                                 </div>
                               </div>
@@ -19002,7 +19002,7 @@ export default function AdminPanel() {
 
                         <button type="button" disabled={dataSaving} onClick={() => saveProjectData(p.id, projectForm)}
                           style={{ marginTop: 20, width: "100%", padding: "12px", borderRadius: 10, border: "none", background: `linear-gradient(135deg, ${T.gold}, ${T.goldDim})`, color: T.bg, fontSize: 14, fontWeight: 700, cursor: dataSaving ? "wait" : "pointer", fontFamily: "'Outfit',sans-serif", opacity: dataSaving ? 0.6 : 1 }}>
-                          {dataSaving ? "Saving..." : "Save to Firestore — Goes Live Instantly"}
+                          {dataSaving ? "Saving..." : "Save to Firestore ï¿½ Goes Live Instantly"}
                         </button>
                       </div>
                     );
@@ -19019,7 +19019,7 @@ export default function AdminPanel() {
                           <div style={{ padding: "20px 24px", borderBottom: "1px solid rgba(212,168,67,0.15)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                             <div>
                               <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 700, color: T.gold, margin: 0 }}>Version History</h3>
-                              <p style={{ fontSize: 12, color: T.textMuted, margin: "4px 0 0" }}>{p.name} · Every save is captured. Click Rollback to restore any version.</p>
+                              <p style={{ fontSize: 12, color: T.textMuted, margin: "4px 0 0" }}>{p.name} ï¿½ Every save is captured. Click Rollback to restore any version.</p>
                             </div>
                             <button type="button" onClick={() => setViewingVersions(null)} style={{ background: "transparent", border: "none", color: T.textMuted, fontSize: 20, cursor: "pointer", padding: "4px 10px" }}>x</button>
                           </div>
@@ -19040,9 +19040,9 @@ export default function AdminPanel() {
                                     <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
                                       {i === 0 && <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 8px", borderRadius: 5, background: "rgba(16,185,129,0.15)", color: "#10B981" }}>CURRENT</span>}
                                       <span style={{ fontSize: 13, fontWeight: 700, color: T.white }}>{new Date(v.savedAt).toLocaleString("en-AE", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}</span>
-                                      <span style={{ fontSize: 11, color: T.textMuted }}>·</span>
+                                      <span style={{ fontSize: 11, color: T.textMuted }}>ï¿½</span>
                                       <span style={{ fontSize: 11, color: T.gold }}>{v.savedBy || "admin"}</span>
-                                      <span style={{ fontSize: 10, color: T.textMuted }}>· {v.fieldsChanged || 0} field{v.fieldsChanged !== 1 ? "s" : ""} changed</span>
+                                      <span style={{ fontSize: 10, color: T.textMuted }}>ï¿½ {v.fieldsChanged || 0} field{v.fieldsChanged !== 1 ? "s" : ""} changed</span>
                                     </div>
                                   </div>
                                   {i !== 0 && (
@@ -19057,15 +19057,15 @@ export default function AdminPanel() {
                                     {Object.entries(v.diff).map(([field, change]) => (
                                       <div key={field} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", padding: "5px 10px", borderRadius: 8 }}>
                                         <span style={{ color: T.textMuted, fontWeight: 700, fontSize: 10, textTransform: "uppercase" }}>{field}</span>
-                                        <span style={{ color: "#F87171", fontSize: 11, textDecoration: "line-through" }}>{String(change.old || "—").slice(0, 22)}</span>
+                                        <span style={{ color: "#F87171", fontSize: 11, textDecoration: "line-through" }}>{String(change.old || "ï¿½").slice(0, 22)}</span>
                                         <span style={{ color: T.textMuted, fontSize: 10 }}>?</span>
-                                        <span style={{ color: "#4ADE80", fontSize: 11 }}>{String(change.new || "—").slice(0, 22)}</span>
+                                        <span style={{ color: "#4ADE80", fontSize: 11 }}>{String(change.new || "ï¿½").slice(0, 22)}</span>
                                       </div>
                                     ))}
                                   </div>
                                 )}
                                 {(!v.diff || Object.keys(v.diff).length === 0) && (
-                                  <div style={{ fontSize: 11, color: T.textMuted, fontStyle: "italic" }}>Initial save — full snapshot stored</div>
+                                  <div style={{ fontSize: 11, color: T.textMuted, fontStyle: "italic" }}>Initial save ï¿½ full snapshot stored</div>
                                 )}
                               </div>
                             ))}
@@ -19075,7 +19075,7 @@ export default function AdminPanel() {
                     );
                   })()}
 
-                  {/* -- Bulk Edit Bar — only visible when rows are checked -- */}
+                  {/* -- Bulk Edit Bar ï¿½ only visible when rows are checked -- */}
                   {bulkSelected.length > 0 && (
                     <div className="fade-up" style={{ marginBottom: 12, borderRadius: 10, background: "#0C1B2E", border: `2px solid ${T.gold}`, overflow: "hidden" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 16px 8px", borderBottom: "1px solid rgba(212,168,67,0.2)" }}>
@@ -19089,7 +19089,7 @@ export default function AdminPanel() {
                           <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, marginBottom: 4, textTransform: "uppercase", letterSpacing: 0.5 }}>Status</div>
                           <select value={bulkForm.status || ""} onChange={e => setBulkForm(prev => ({ ...prev, status: e.target.value }))}
                             style={{ width: "100%", padding: "7px 10px", background: bulkForm.status ? `${T.gold}15` : T.surface, border: `1px solid ${bulkForm.status ? T.gold : T.border}`, borderRadius: 8, color: bulkForm.status ? T.gold : T.textMuted, fontSize: 12, fontFamily: "'Outfit',sans-serif", cursor: "pointer" }}>
-                            <option value="">— unchanged —</option>
+                            <option value="">ï¿½ unchanged ï¿½</option>
                             {["Under Construction","Off-Plan","Completed","Selling","Upcoming","Sold Out","Ready"].map(o => <option key={o} value={o}>{o}</option>)}
                           </select>
                         </div>
@@ -19097,7 +19097,7 @@ export default function AdminPanel() {
                           <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, marginBottom: 4, textTransform: "uppercase", letterSpacing: 0.5 }}>Tier</div>
                           <select value={bulkForm.tier || ""} onChange={e => setBulkForm(prev => ({ ...prev, tier: e.target.value }))}
                             style={{ width: "100%", padding: "7px 10px", background: bulkForm.tier ? `${T.gold}15` : T.surface, border: `1px solid ${bulkForm.tier ? T.gold : T.border}`, borderRadius: 8, color: bulkForm.tier ? T.gold : T.textMuted, fontSize: 12, fontFamily: "'Outfit',sans-serif", cursor: "pointer" }}>
-                            <option value="">— unchanged —</option>
+                            <option value="">ï¿½ unchanged ï¿½</option>
                             {["Affordable","Mid-Market","Mid-Premium","Premium","Luxury","Ultra-Luxury","Luxury Branded","Ultra-Lux Branded"].map(o => <option key={o} value={o}>{o}</option>)}
                           </select>
                         </div>
@@ -19105,7 +19105,7 @@ export default function AdminPanel() {
                           <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, marginBottom: 4, textTransform: "uppercase", letterSpacing: 0.5 }}>Availability</div>
                           <select value={bulkForm.availability || ""} onChange={e => setBulkForm(prev => ({ ...prev, availability: e.target.value }))}
                             style={{ width: "100%", padding: "7px 10px", background: bulkForm.availability ? `${T.gold}15` : T.surface, border: `1px solid ${bulkForm.availability ? T.gold : T.border}`, borderRadius: 8, color: bulkForm.availability ? T.gold : T.textMuted, fontSize: 12, fontFamily: "'Outfit',sans-serif", cursor: "pointer" }}>
-                            <option value="">— unchanged —</option>
+                            <option value="">ï¿½ unchanged ï¿½</option>
                             {["Available","Sold Out","Limited Units","Coming Soon"].map(o => <option key={o} value={o}>{o}</option>)}
                           </select>
                         </div>
@@ -19161,7 +19161,7 @@ export default function AdminPanel() {
                         { label: "", key: null, always: true },
                       ].filter(h => h.always || visibleColumns[h.col]);
                       
-                      // Deduplicate by id — safety net in case data.js has duplicates
+                      // Deduplicate by id ï¿½ safety net in case data.js has duplicates
                       const _seen = new Set();
                       const baseEmaar = emaarProjects.filter(p => { if (_seen.has(String(p.id))) return false; _seen.add(String(p.id)); return true; });
                       // Add Firestore projects that aren't already in emaarProjects (e.g. Aldar, DAMAC imports)
@@ -19273,7 +19273,7 @@ export default function AdminPanel() {
                                       {radarProjects.length} project{radarProjects.length > 1 ? "s" : ""} added via Launch Radar
                                     </span>
                                     <div style={{ fontSize: 10, color: T.textMuted, marginTop: 2 }}>
-                                      {radarProjects.map(p => p.name || p.projectName).join(" · ")}
+                                      {radarProjects.map(p => p.name || p.projectName).join(" ï¿½ ")}
                                     </div>
                                   </div>
                                 </div>
@@ -19297,7 +19297,7 @@ export default function AdminPanel() {
                               <div>
                                 Showing <strong style={{ color: T.gold }}>{filtered.length}</strong> of {allProjects.length} projects
                                 {activeFilterCount > 0 && <span style={{ marginLeft: 8, padding: "2px 8px", borderRadius: 10, background: `${T.teal}20`, color: T.teal, fontSize: 10, fontWeight: 600 }}>{activeFilterCount} filter{activeFilterCount > 1 ? "s" : ""}</span>}
-                                {bulkSelected.length > 0 && <span style={{ marginLeft: 12, color: T.gold }}>· {bulkSelected.length} selected</span>}
+                                {bulkSelected.length > 0 && <span style={{ marginLeft: 12, color: T.gold }}>ï¿½ {bulkSelected.length} selected</span>}
                               </div>
                               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                                 {filtered.length > 0 && (
@@ -19313,7 +19313,7 @@ export default function AdminPanel() {
                             </div>
                             {filtered.length === 0 && (
                               <div style={{ padding: "40px 20px", textAlign: "center" }}>
-                                <div style={{ fontSize: 32, marginBottom: 12, opacity: 0.5 }}>•</div>
+                                <div style={{ fontSize: 32, marginBottom: 12, opacity: 0.5 }}>ï¿½</div>
                                 <div style={{ fontSize: 14, fontWeight: 600, color: T.white, marginBottom: 4 }}>No projects match your filters</div>
                                 <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 16 }}>Try adjusting your filter criteria</div>
                                 <button type="button" onClick={() => { 
@@ -19341,12 +19341,12 @@ export default function AdminPanel() {
                                onClick={e => e.stopPropagation()} style={{ cursor: "pointer", accentColor: T.gold }} />
                             <div>
                               <div style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{p.name}</div>
-                              <div style={{ fontSize: 10, color: T.textMuted }}>{merged.type || "—"}{visibleColumns.beds ? "" : ` · ${merged.beds || "—"}`}</div>
+                              <div style={{ fontSize: 10, color: T.textMuted }}>{merged.type || "ï¿½"}{visibleColumns.beds ? "" : ` ï¿½ ${merged.beds || "ï¿½"}`}</div>
                             </div>
                             {visibleColumns.community && <span style={{ fontSize: 11, color: T.textSecondary }}>{p.community}</span>}
                             {visibleColumns.price && <span style={{ fontSize: 12, fontWeight: 700, color: T.gold }}>{merged.price ? `AED ${(merged.price / 1e6).toFixed(2)}M` : "TBA"}</span>}
-                            {visibleColumns.ppsf && <span style={{ fontSize: 12, color: T.textPrimary }}>{merged.ppsf ? merged.ppsf.toLocaleString() : "—"}</span>}
-                            {visibleColumns.status && <span style={{ fontSize: 10, fontWeight: 600, padding: "3px 8px", borderRadius: 6, background: merged.status === "Selling" ? "rgba(16,185,129,0.12)" : merged.status === "Upcoming" ? "rgba(212,168,67,0.12)" : "rgba(148,163,184,0.1)", color: merged.status === "Selling" ? T.green : merged.status === "Upcoming" ? T.gold : T.textMuted }}>{merged.status || "—"}</span>}
+                            {visibleColumns.ppsf && <span style={{ fontSize: 12, color: T.textPrimary }}>{merged.ppsf ? merged.ppsf.toLocaleString() : "ï¿½"}</span>}
+                            {visibleColumns.status && <span style={{ fontSize: 10, fontWeight: 600, padding: "3px 8px", borderRadius: 6, background: merged.status === "Selling" ? "rgba(16,185,129,0.12)" : merged.status === "Upcoming" ? "rgba(212,168,67,0.12)" : "rgba(148,163,184,0.1)", color: merged.status === "Selling" ? T.green : merged.status === "Upcoming" ? T.gold : T.textMuted }}>{merged.status || "ï¿½"}</span>}
                             {visibleColumns.quality && (
                               <div style={{ display: "flex", alignItems: "center", gap: 4 }} title={`Missing: ${pQuality.missing.join(", ") || "None"}`}>
                                 <div style={{ 
@@ -19359,9 +19359,9 @@ export default function AdminPanel() {
                                 </div>
                               </div>
                             )}
-                            {visibleColumns.tier && <span style={{ fontSize: 10, color: T.textSecondary }}>{merged.tier || "—"}</span>}
-                            {visibleColumns.handover && <span style={{ fontSize: 10, color: T.textSecondary }}>{merged.handover || "—"}</span>}
-                            {visibleColumns.beds && <span style={{ fontSize: 10, color: T.textSecondary }}>{merged.beds || "—"}</span>}
+                            {visibleColumns.tier && <span style={{ fontSize: 10, color: T.textSecondary }}>{merged.tier || "ï¿½"}</span>}
+                            {visibleColumns.handover && <span style={{ fontSize: 10, color: T.textSecondary }}>{merged.handover || "ï¿½"}</span>}
+                            {visibleColumns.beds && <span style={{ fontSize: 10, color: T.textSecondary }}>{merged.beds || "ï¿½"}</span>}
                             {visibleColumns.source && <span style={{ fontSize: 10, color: hasOverride ? T.green : T.textMuted, fontWeight: hasOverride ? 600 : 400 }}>{hasOverride ? " Live" : " Default"}</span>}
                             <span style={{ fontSize: 11, color: T.gold, fontWeight: 600 }}>Edit ?</span>
                           </div>
@@ -19422,7 +19422,7 @@ export default function AdminPanel() {
                   <div style={{ position: "fixed", top: 60, left: 240, right: 0, bottom: 0, display: "flex", zIndex: 50, background: "#04090F" }}>
 
                     {/* ------------------------------
-                        LEFT NAV — Community List
+                        LEFT NAV ï¿½ Community List
                     ------------------------------ */}
                     <div style={{ width: 280, flexShrink: 0, background: "#060D1A", borderRight: "1px solid rgba(212,168,67,0.1)", display: "flex", flexDirection: "column", height: "100%", overflowY: "auto" }}>
 
@@ -19435,7 +19435,7 @@ export default function AdminPanel() {
                       {/* Nav Header */}
                       <div style={{ padding: "18px 20px 14px", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
                         <div style={{ fontSize: 10, fontWeight: 700, color: "#D4A843", letterSpacing: 2, textTransform: "uppercase", marginBottom: 4 }}>Communities</div>
-                        <div style={{ fontSize: 12, color: "#64748B" }}>{communities.length} areas · {Object.keys(liveCommunityROI).length + Object.keys(liveCommunityIntel).length} live overrides</div>
+                        <div style={{ fontSize: 12, color: "#64748B" }}>{communities.length} areas ï¿½ {Object.keys(liveCommunityROI).length + Object.keys(liveCommunityIntel).length} live overrides</div>
                       </div>
 
                       {/* Community List */}
@@ -19464,7 +19464,7 @@ export default function AdminPanel() {
                                   : <span style={{ fontSize: 8, fontWeight: 600, padding: "2px 6px", borderRadius: 4, background: "rgba(100,116,139,0.1)", color: "#475569", flexShrink: 0, marginLeft: 6 }}>DEFAULT</span>}
                               </div>
                               <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-                                <span style={{ fontSize: 13, fontWeight: 700, color: isActive ? "#D4A843" : "#94A3B8" }}>{avgYield ? avgYield.toFixed(1) + "%" : intel.avgYield || "—"}</span>
+                                <span style={{ fontSize: 13, fontWeight: 700, color: isActive ? "#D4A843" : "#94A3B8" }}>{avgYield ? avgYield.toFixed(1) + "%" : intel.avgYield || "ï¿½"}</span>
                                 {roi.goldenVisa && <span style={{ fontSize: 8, padding: "2px 6px", borderRadius: 3, background: "rgba(212,168,67,0.1)", color: "#D4A843", fontWeight: 700 }}>VISA</span>}
                                 <span style={{ fontSize: 10, color: roi.riskLevel === "Low" ? "#10B981" : roi.riskLevel === "Medium" ? "#F59E0B" : "#64748B" }}>{roi.riskLevel || ""}</span>
                               </div>
@@ -19481,7 +19481,7 @@ export default function AdminPanel() {
                     </div>
 
                     {/* ------------------------------
-                        RIGHT — Combined Editor
+                        RIGHT ï¿½ Combined Editor
                     ------------------------------ */}
                     <div style={{ flex: 1, minWidth: 0, overflowY: "auto", height: "100%", scrollbarWidth: "thin" }}>
 
@@ -19493,7 +19493,7 @@ export default function AdminPanel() {
                           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                             <span style={{ width: 8, height: 8, borderRadius: "50%", background: hasAnyOverride ? "#10B981" : "#475569", boxShadow: hasAnyOverride ? "0 0 8px #10B981" : "none" }} />
                             <span style={{ fontSize: 12, color: hasAnyOverride ? "#10B981" : "#64748B" }}>
-                              {hasAnyOverride ? "Live — dashboard shows your custom data" : "Default — showing data.js values"}
+                              {hasAnyOverride ? "Live ï¿½ dashboard shows your custom data" : "Default ï¿½ showing data.js values"}
                             </span>
                           </div>
                         </div>
@@ -19679,7 +19679,7 @@ export default function AdminPanel() {
                                   <button type="button" onClick={() => {
                                     const arr = (communityIntelForm.keyAmenities ?? intelMerged.keyAmenities ?? []).filter((_, i) => i !== idx);
                                     setCommunityIntelForm(prev => ({ ...prev, keyAmenities: arr }));
-                                  }} style={{ padding: "4px 8px", background: "rgba(239,68,68,0.1)", border: "none", borderRadius: 4, color: "#EF4444", cursor: "pointer", fontSize: 14 }}>×</button>
+                                  }} style={{ padding: "4px 8px", background: "rgba(239,68,68,0.1)", border: "none", borderRadius: 4, color: "#EF4444", cursor: "pointer", fontSize: 14 }}>ï¿½</button>
                                 </div>
                               ))}
                             </div>
@@ -19713,7 +19713,7 @@ export default function AdminPanel() {
                                   <button type="button" onClick={() => {
                                     const arr = (communityIntelForm.distances ?? intelMerged.distances ?? []).filter((_, i) => i !== idx);
                                     setCommunityIntelForm(prev => ({ ...prev, distances: arr }));
-                                  }} style={{ padding: "4px 8px", background: "rgba(239,68,68,0.1)", border: "none", borderRadius: 4, color: "#EF4444", cursor: "pointer", fontSize: 14 }}>×</button>
+                                  }} style={{ padding: "4px 8px", background: "rgba(239,68,68,0.1)", border: "none", borderRadius: 4, color: "#EF4444", cursor: "pointer", fontSize: 14 }}>ï¿½</button>
                                 </div>
                               ))}
                             </div>
@@ -19772,11 +19772,11 @@ export default function AdminPanel() {
                                   <div style={{ fontSize: 9, color: T.textMuted }}>Total Projects</div>
                                 </div>
                                 <div style={{ padding: 12, background: T.surface, borderRadius: 8, textAlign: "center" }}>
-                                  <div style={{ fontSize: 15, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>{avgPrice > 0 ? `${(avgPrice/1e6).toFixed(1)}M` : "—"}</div>
+                                  <div style={{ fontSize: 15, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>{avgPrice > 0 ? `${(avgPrice/1e6).toFixed(1)}M` : "ï¿½"}</div>
                                   <div style={{ fontSize: 9, color: T.textMuted }}>Avg Price</div>
                                 </div>
                                 <div style={{ padding: 12, background: T.surface, borderRadius: 8, textAlign: "center" }}>
-                                  <div style={{ fontSize: 15, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>{avgPpsf > 0 ? avgPpsf.toLocaleString() : "—"}</div>
+                                  <div style={{ fontSize: 15, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>{avgPpsf > 0 ? avgPpsf.toLocaleString() : "ï¿½"}</div>
                                   <div style={{ fontSize: 9, color: T.textMuted }}>Avg PPSF</div>
                                 </div>
                                 <div style={{ padding: 12, background: T.surface, borderRadius: 8, textAlign: "center" }}>
@@ -19905,7 +19905,7 @@ export default function AdminPanel() {
                       <div className="chart-box fade-up" style={{ padding: 24, marginBottom: 20, border: `1px solid ${T.gold}30` }}>
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
                           <div>
-                            <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 700, color: T.white }}>{y.unit} — {y.community}</h3>
+                            <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 700, color: T.white }}>{y.unit} ï¿½ {y.community}</h3>
                             {hasOverride && <span style={{ fontSize: 10, padding: "2px 8px", borderRadius: 6, background: "rgba(16,185,129,0.12)", color: T.green, fontWeight: 600 }}>LIVE DATA</span>}
                           </div>
                           <button type="button" onClick={() => setEditingYield(null)} style={{ fontSize: 11, padding: "6px 14px", borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.textSecondary, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>Cancel</button>
@@ -19960,7 +19960,7 @@ export default function AdminPanel() {
                             <span style={{ fontSize: 12, fontWeight: 700, color: T.green }}>{merged.gross}%</span>
                             <span style={{ fontSize: 12, color: T.teal }}>{merged.net}%</span>
                             <span style={{ fontSize: 10, color: merged.demand === "Very High" ? T.gold : T.textSecondary }}>{merged.demand}</span>
-                            <span style={{ fontSize: 10, color: hasOverride ? T.green : T.textMuted, fontWeight: hasOverride ? 600 : 400 }}>{hasOverride ? "" : "—"}</span>
+                            <span style={{ fontSize: 10, color: hasOverride ? T.green : T.textMuted, fontWeight: hasOverride ? 600 : 400 }}>{hasOverride ? "" : "ï¿½"}</span>
                           </div>
                         );
                       })}
@@ -20035,8 +20035,8 @@ export default function AdminPanel() {
                     <TabHelp items={[
                       { icon: "[v]", title: "What is this?", desc: "An audit trail of every price change per project. Automatically records when you save a new price in the Projects tab." },
                       { icon: "[?]", title: "Select a Project", desc: "Choose any of the 48 projects from the dropdown. The chart and table will load its full price history." },
-                      { icon: "[n]", title: "Manual Entry", desc: "Add historical price points manually — useful for logging past prices before the system was set up." },
-                      { icon: "[x]", title: "Delete Entry", desc: "Click the × button on any row to remove that price entry. A confirmation will appear first." },
+                      { icon: "[n]", title: "Manual Entry", desc: "Add historical price points manually ï¿½ useful for logging past prices before the system was set up." },
+                      { icon: "[x]", title: "Delete Entry", desc: "Click the ï¿½ button on any row to remove that price entry. A confirmation will appear first." },
                       { icon: "[^]", title: "Chart", desc: "Gold line chart shows price trend over time. Needs at least 2 data points to appear." },
                     ]} />
 
@@ -20046,7 +20046,7 @@ export default function AdminPanel() {
                         <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, display: "block", marginBottom: 6 }}>Select Project</label>
                         <select value={phSelId} onChange={e => { setPhSelId(e.target.value); if (e.target.value) loadHistory(e.target.value); }}
                           style={{ ...inputSt, cursor: "pointer" }}>
-                          <option value="">— Choose a project —</option>
+                          <option value="">ï¿½ Choose a project ï¿½</option>
                           {[...emaarProjects].sort((a,b) => (a.name||"").localeCompare(b.name||"")).map(p => (
                             <option key={p.id} value={p.id}>{p.name} ({p.community})</option>
                           ))}
@@ -20103,8 +20103,8 @@ export default function AdminPanel() {
                         {/* SVG CHART */}
                         {history.length >= 2 ? (
                           <div className="chart-box fade-up" style={{ padding: "16px 20px 12px", marginBottom: 20 }}>
-                            <div style={{ fontSize: 12, fontWeight: 700, color: T.white, marginBottom: 4 }}>{selectedProject?.name} — Price Timeline</div>
-                            <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 14 }}>{history.length} data points · AED values</div>
+                            <div style={{ fontSize: 12, fontWeight: 700, color: T.white, marginBottom: 4 }}>{selectedProject?.name} ï¿½ Price Timeline</div>
+                            <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 14 }}>{history.length} data points ï¿½ AED values</div>
                             <svg viewBox={`0 0 ${chartW} ${chartH}`} style={{ width: "100%", height: chartH, overflow: "visible" }}>
                               {/* Grid lines */}
                               {[0, 0.25, 0.5, 0.75, 1].map((t, i) => {
@@ -20146,7 +20146,7 @@ export default function AdminPanel() {
                           </div>
                         ) : history.length === 1 ? (
                           <div style={{ padding: "16px 20px", background: T.surfaceAlt, borderRadius: 12, border: `1px solid ${T.border}`, marginBottom: 20, fontSize: 12, color: T.textMuted }}>
-                            Only 1 data point — chart requires at least 2 entries. Add more price records below.
+                            Only 1 data point ï¿½ chart requires at least 2 entries. Add more price records below.
                           </div>
                         ) : (
                           <div style={{ padding: "24px", textAlign: "center", background: T.surfaceAlt, borderRadius: 12, border: `1px solid ${T.border}`, marginBottom: 20 }}>
@@ -20175,14 +20175,14 @@ export default function AdminPanel() {
                                 <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr 1fr 40px", gap: 8, padding: "11px 20px", borderBottom: i < arr.length - 1 ? `1px solid ${T.border}` : "none", background: i % 2 === 0 ? "transparent" : T.surfaceAlt, alignItems: "center" }}>
                                   <span style={{ fontSize: 12, color: T.textSecondary }}>{new Date(h.recordedAt).toLocaleDateString("en-AE", { day: "numeric", month: "short", year: "numeric" })}</span>
                                   <span style={{ fontSize: 12, fontWeight: 700, color: T.gold }}>AED {h.price.toLocaleString()}</span>
-                                  <span style={{ fontSize: 12, color: T.textSecondary }}>{h.ppsf ? h.ppsf.toLocaleString() : "—"}</span>
+                                  <span style={{ fontSize: 12, color: T.textSecondary }}>{h.ppsf ? h.ppsf.toLocaleString() : "ï¿½"}</span>
                                   <span style={{ fontSize: 11, fontWeight: 700, color: changePct === null ? T.textMuted : changePct >= 0 ? T.green : T.red }}>
-                                    {changePct === null ? "—" : `${changePct >= 0 ? "+" : ""}${changePct}%`}
+                                    {changePct === null ? "ï¿½" : `${changePct >= 0 ? "+" : ""}${changePct}%`}
                                   </span>
-                                  <span style={{ fontSize: 11, color: T.textMuted }}>{h.recordedBy || "—"}{h.manual ? " (manual)" : ""}</span>
+                                  <span style={{ fontSize: 11, color: T.textMuted }}>{h.recordedBy || "ï¿½"}{h.manual ? " (manual)" : ""}</span>
                                   <button type="button" onClick={() => deletePriceHistoryEntry(h.id, phSelId)}
                                     style={{ width: 28, height: 28, borderRadius: 6, border: "1px solid rgba(239,68,68,0.3)", background: "rgba(239,68,68,0.06)", color: T.red, cursor: "pointer", fontSize: 13, display: "flex", alignItems: "center", justifyContent: "center", padding: 0 }}>
-                                    ×
+                                    ï¿½
                                   </button>
                                 </div>
                               );
@@ -20260,7 +20260,7 @@ export default function AdminPanel() {
              LEADS TAB
              --------------------------------------- */}
           {tab === "leads" && (() => {
-            /* --- LEADS CRM — WORLD CLASS (Session 1) --- */
+            /* --- LEADS CRM ï¿½ WORLD CLASS (Session 1) --- */
             const now = new Date();
             const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
             const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
@@ -20432,10 +20432,10 @@ export default function AdminPanel() {
             };
 
             // -- Add lead --------------------------------------------------
-            // cleanProject — removes nan/null/NaN junk from project field
+            // cleanProject ï¿½ removes nan/null/NaN junk from project field
             const cleanProject = (p) => (!p || p === "nan" || p === "NaN" || p === "null" || p === "None") ? "" : p.trim();
 
-            // normalizePhone — smart E.164 normalizer for UAE + 194 countries
+            // normalizePhone ï¿½ smart E.164 normalizer for UAE + 194 countries
             const normalizePhone = (raw) => {
               if (!raw || typeof raw !== "string") return "";
               let p = raw.toString().trim().replace(/[\s\-\.\(\)\/\\]/g, "");
@@ -20494,7 +20494,7 @@ export default function AdminPanel() {
                 if (newStatus === "Contacted" && !lead?.respondedAt) update.respondedAt = new Date().toISOString();
                 if (newStatus === "Lost" && reason) update.lossReason = reason;
                 if (newStatus === "Converted") update.convertedAt = new Date().toISOString();
-                const activity = [...(lead?.activity || []), { type: "status_change", by: adminUser?.email || "admin", at: new Date().toISOString(), note: `Status changed to ${newStatus}${reason ? ` — ${reason}` : ""}` }];
+                const activity = [...(lead?.activity || []), { type: "status_change", by: adminUser?.email || "admin", at: new Date().toISOString(), note: `Status changed to ${newStatus}${reason ? ` ï¿½ ${reason}` : ""}` }];
                 update.activity = activity;
                 await setDoc(doc(db, "leads", leadId), update, { merge: true });
                 await logAudit(db, { action: "lead_status_change", leadId, to: newStatus });
@@ -20675,8 +20675,8 @@ export default function AdminPanel() {
                 </div>
 
                 {/* -----------------------------------------------------------
-                    SESSION 2 — FULL PIPELINE ANALYTICS DASHBOARD
-                    Funnel · Source · Lost Reasons · Score · Nationality · Trend
+                    SESSION 2 ï¿½ FULL PIPELINE ANALYTICS DASHBOARD
+                    Funnel ï¿½ Source ï¿½ Lost Reasons ï¿½ Score ï¿½ Nationality ï¿½ Trend
                 ----------------------------------------------------------- */}
                 {leadAnalyticsView && (() => {
                   // -- Pre-compute everything once --------------------------
@@ -20711,11 +20711,11 @@ export default function AdminPanel() {
 
                   // Lead score distribution (0-20 Cold, 21-40 Cool, 41-60 Warm, 61-80 Hot, 81-100 ??)
                   const scoreBuckets = [
-                    { label: "Cold\n0–20",  range: [0,20],  color: T.red,      count: 0 },
-                    { label: "Cool\n21–40", range: [21,40], color: T.orange,   count: 0 },
-                    { label: "Warm\n41–60", range: [41,60], color: T.gold,     count: 0 },
-                    { label: "Hot\n61–80",  range: [61,80], color: "#10B981",  count: 0 },
-                    { label: "??\n81–100",  range: [81,100],color: "#6EE7B7",  count: 0 },
+                    { label: "Cold\n0ï¿½20",  range: [0,20],  color: T.red,      count: 0 },
+                    { label: "Cool\n21ï¿½40", range: [21,40], color: T.orange,   count: 0 },
+                    { label: "Warm\n41ï¿½60", range: [41,60], color: T.gold,     count: 0 },
+                    { label: "Hot\n61ï¿½80",  range: [61,80], color: "#10B981",  count: 0 },
+                    { label: "??\n81ï¿½100",  range: [81,100],color: "#6EE7B7",  count: 0 },
                   ];
                   leads.forEach(l => {
                     const s = scoreLead(l);
@@ -20801,7 +20801,7 @@ export default function AdminPanel() {
                       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
                         <div>
                           <div style={{ fontFamily: "'Fraunces',serif", fontSize: 22, fontWeight: 800, color: T.white }}>Pipeline Analytics</div>
-                          <div style={{ fontSize: 12, color: T.textMuted, marginTop: 2 }}>{leads.length.toLocaleString()} leads · live data</div>
+                          <div style={{ fontSize: 12, color: T.textMuted, marginTop: 2 }}>{leads.length.toLocaleString()} leads ï¿½ live data</div>
                         </div>
                         <div style={{ display: "flex", gap: 10 }}>
                           <div style={{ padding: "8px 16px", borderRadius: 8, background: `${T.green}12`, border: `1px solid ${T.green}30`, fontSize: 11, fontWeight: 700, color: T.green }}>{winRate}% Win Rate</div>
@@ -20813,10 +20813,10 @@ export default function AdminPanel() {
                       <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: 12, marginBottom: 16 }}>
                         {[
                           { label: "Win Rate",       value: `${winRate}%`,                                                                            sub: `${stats.converted} of ${stats.converted + stats.lost} closed`,   color: T.green  },
-                          { label: "Days to Close",  value: avgDaysToClose !== null ? `${avgDaysToClose}d` : "—",                                     sub: "Lead ? Converted avg",                                           color: T.blue   },
+                          { label: "Days to Close",  value: avgDaysToClose !== null ? `${avgDaysToClose}d` : "ï¿½",                                     sub: "Lead ? Converted avg",                                           color: T.blue   },
                           { label: "Hot Leads",      value: stats.hot,                                                                                sub: "Score 70+ ready to close",                                       color: T.red    },
                           { label: "Pipeline Value", value: `AED ${(totalPipelineVal/1e6).toFixed(1)}M`,                                             sub: "Total budget across all leads",                                  color: T.gold   },
-                          { label: "Avg Response",   value: avgResponseHrs !== null ? `${avgResponseHrs}h` : "—",                                    sub: "First contact speed",                                            color: T.orange },
+                          { label: "Avg Response",   value: avgResponseHrs !== null ? `${avgResponseHrs}h` : "ï¿½",                                    sub: "First contact speed",                                            color: T.orange },
                           { label: "This Week",      value: stats.thisWeek,                                                                           sub: "New leads (7 days)",                                             color: T.teal   },
                         ].map((k, i) => (
                           <div key={i} style={{ padding: "16px 14px", background: T.surface, borderRadius: 12, border: `1px solid ${T.border}`, position: "relative", overflow: "hidden" }}>
@@ -20872,7 +20872,7 @@ export default function AdminPanel() {
 
                         {/* WEEKLY TREND */}
                         <div style={S.card}>
-                          <div style={S.label}>Leads Incoming — Last 12 Weeks</div>
+                          <div style={S.label}>Leads Incoming ï¿½ Last 12 Weeks</div>
                           <div style={{ display: "flex", alignItems: "flex-end", gap: 4, height: 120 }}>
                             {weeklyData.map((w, i) => {
                               const barH = weeklyMax > 0 ? Math.max(4, (w.count / weeklyMax) * 108) : 4;
@@ -20948,7 +20948,7 @@ export default function AdminPanel() {
                                   <div key={reason}>
                                     <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 3 }}>
                                       <span style={{ fontSize: 11, color: T.textSecondary, maxWidth: "70%", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{reason}</span>
-                                      <span style={{ fontSize: 10, color: T.textMuted }}>{count} · {pct}%</span>
+                                      <span style={{ fontSize: 10, color: T.textMuted }}>{count} ï¿½ {pct}%</span>
                                     </div>
                                     <div style={{ height: 5, background: T.surfaceAlt, borderRadius: 3, overflow: "hidden" }}>
                                       <div style={{ height: "100%", width: `${pct}%`, background: col, borderRadius: 3, transition: "width 0.5s" }} />
@@ -20960,7 +20960,7 @@ export default function AdminPanel() {
                           )}
                           {lostReasons.length > 0 && (
                             <div style={{ marginTop: 14, paddingTop: 12, borderTop: `1px solid ${T.border}`, fontSize: 10, color: T.textMuted }}>
-                              Tip: Top lost reason is <span style={{ color: T.red, fontWeight: 700 }}>"{lostReasons[0]?.[0]}"</span> — address this in your pitch.
+                              Tip: Top lost reason is <span style={{ color: T.red, fontWeight: 700 }}>"{lostReasons[0]?.[0]}"</span> ï¿½ address this in your pitch.
                             </div>
                           )}
                         </div>
@@ -21077,7 +21077,7 @@ export default function AdminPanel() {
                                     <div style={{ width: 20, height: 20, borderRadius: 6, background: `${T.gold}20`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 800, color: T.gold, flexShrink: 0 }}>{i + 1}</div>
                                     <div style={{ flex: 1, minWidth: 0 }}>
                                       <div style={{ fontSize: 12, fontWeight: 600, color: T.white, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{project}</div>
-                                      <div style={{ fontSize: 10, color: T.textMuted }}>{data.total} leads · {data.hot} hot ??</div>
+                                      <div style={{ fontSize: 10, color: T.textMuted }}>{data.total} leads ï¿½ {data.hot} hot ??</div>
                                     </div>
                                     <div style={{ textAlign: "right", flexShrink: 0 }}>
                                       <div style={{ fontSize: 13, fontWeight: 800, color: col, fontFamily: "'Fraunces',serif" }}>{wr}%</div>
@@ -21126,7 +21126,7 @@ export default function AdminPanel() {
                         {/* HOT LEADS READY TO CLOSE */}
                         <div style={S.card}>
                           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-                            <div style={S.label}>?? Hot Leads — Ready to Close</div>
+                            <div style={S.label}>?? Hot Leads ï¿½ Ready to Close</div>
                             <div style={{ fontSize: 11, fontWeight: 700, color: T.red }}>{stats.hot} total</div>
                           </div>
                           {stats.hot === 0 ? (
@@ -21147,7 +21147,7 @@ export default function AdminPanel() {
                                       <div style={{ width: 32, height: 32, borderRadius: 8, background: `${scoreCol}20`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 900, color: scoreCol, flexShrink: 0 }}>{score}</div>
                                       <div style={{ flex: 1, minWidth: 0 }}>
                                         <div style={{ fontSize: 12, fontWeight: 600, color: T.white, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{lead.name || "Unnamed"}</div>
-                                        <div style={{ fontSize: 10, color: T.textMuted, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{lead.project || lead.community || "No project"} · {lead.nationality || "—"}</div>
+                                        <div style={{ fontSize: 10, color: T.textMuted, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{lead.project || lead.community || "No project"} ï¿½ {lead.nationality || "ï¿½"}</div>
                                       </div>
                                       <div style={{ textAlign: "right", flexShrink: 0 }}>
                                         <div style={{ fontSize: 10, fontWeight: 700, color: lead.status === "Qualified" ? "#8B5CF6" : T.gold }}>{lead.status || "New"}</div>
@@ -21187,7 +21187,7 @@ export default function AdminPanel() {
 
                 {/* FILTERS */}
                 {(() => {
-                  // Use ALL leads for dropdowns — not filtered — so options are always complete
+                  // Use ALL leads for dropdowns ï¿½ not filtered ï¿½ so options are always complete
                   const communities = [...new Set(leads.map(l => l.community).filter(Boolean).filter(c => c !== "nan" && c !== "NaN" && c.trim()))].sort();
                   const nationalities = [...new Set(leads.map(l => l.nationality).filter(Boolean).filter(n => n.trim() && n !== "none" && n !== "Unknown" && n !== "nan" && n !== "null" && n !== "-"))].sort();
                   const developers = [...new Set(leads.map(l => l.developer).filter(Boolean))].sort();
@@ -21251,7 +21251,7 @@ export default function AdminPanel() {
                           ? <span style={{ fontSize: 11, color: T.gold, fontWeight: 700 }}>? Loading all leads...</span>
                           : <span style={{ fontSize: 11, color: T.textMuted }}>
                               {filtered.length !== leads.length
-                                ? <><strong style={{ color: T.gold }}>{filtered.length.toLocaleString()}</strong> matched · {leads.length.toLocaleString()} total</>
+                                ? <><strong style={{ color: T.gold }}>{filtered.length.toLocaleString()}</strong> matched ï¿½ {leads.length.toLocaleString()} total</>
                                 : <><strong style={{ color: T.white }}>{leads.length.toLocaleString()}</strong> leads</>}
                             </span>}
                       </div>
@@ -21505,10 +21505,10 @@ export default function AdminPanel() {
                         {totalLeadPages > 1 && (
                           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 20px", borderTop: `1px solid ${T.border}`, flexWrap: "wrap", gap: 10 }}>
                             <span style={{ fontSize: 11, color: T.textMuted }}>
-                              Showing <strong style={{ color: T.white }}>{((leadPage-1)*LEADS_PER_PAGE+1).toLocaleString()}–{Math.min(leadPage*LEADS_PER_PAGE, filtered.length).toLocaleString()}</strong> of <strong style={{ color: T.gold }}>{filtered.length.toLocaleString()}</strong> leads
+                              Showing <strong style={{ color: T.white }}>{((leadPage-1)*LEADS_PER_PAGE+1).toLocaleString()}ï¿½{Math.min(leadPage*LEADS_PER_PAGE, filtered.length).toLocaleString()}</strong> of <strong style={{ color: T.gold }}>{filtered.length.toLocaleString()}</strong> leads
                             </span>
                             <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-                              <button type="button" onClick={() => setLeadPage(1)} disabled={leadPage===1} style={{ padding: "5px 10px", borderRadius: 7, border: `1px solid ${T.border}`, background: "transparent", color: leadPage===1?T.textMuted:T.textSecondary, cursor: leadPage===1?"not-allowed":"pointer", fontSize: 11 }}>«</button>
+                              <button type="button" onClick={() => setLeadPage(1)} disabled={leadPage===1} style={{ padding: "5px 10px", borderRadius: 7, border: `1px solid ${T.border}`, background: "transparent", color: leadPage===1?T.textMuted:T.textSecondary, cursor: leadPage===1?"not-allowed":"pointer", fontSize: 11 }}>ï¿½</button>
                               <button type="button" onClick={() => setLeadPage(p=>Math.max(1,p-1))} disabled={leadPage===1} style={{ padding: "5px 10px", borderRadius: 7, border: `1px solid ${T.border}`, background: "transparent", color: leadPage===1?T.textMuted:T.textSecondary, cursor: leadPage===1?"not-allowed":"pointer", fontSize: 11 }}>?</button>
                               {Array.from({length: Math.min(5, totalLeadPages)}, (_,i) => {
                                 let p;
@@ -21519,7 +21519,7 @@ export default function AdminPanel() {
                                 return <button key={p} type="button" onClick={() => setLeadPage(p)} style={{ width:32, height:30, borderRadius:7, border:`1px solid ${p===leadPage?T.gold:T.border}`, background:p===leadPage?"rgba(212,168,67,0.15)":"transparent", color:p===leadPage?T.gold:T.textSecondary, cursor:"pointer", fontSize:11, fontWeight:p===leadPage?700:400 }}>{p}</button>;
                               })}
                               <button type="button" onClick={() => setLeadPage(p=>Math.min(totalLeadPages,p+1))} disabled={leadPage===totalLeadPages} style={{ padding: "5px 10px", borderRadius: 7, border: `1px solid ${T.border}`, background: "transparent", color: leadPage===totalLeadPages?T.textMuted:T.textSecondary, cursor: leadPage===totalLeadPages?"not-allowed":"pointer", fontSize: 11 }}>?</button>
-                              <button type="button" onClick={() => setLeadPage(totalLeadPages)} disabled={leadPage===totalLeadPages} style={{ padding: "5px 10px", borderRadius: 7, border: `1px solid ${T.border}`, background: "transparent", color: leadPage===totalLeadPages?T.textMuted:T.textSecondary, cursor: leadPage===totalLeadPages?"not-allowed":"pointer", fontSize: 11 }}>»</button>
+                              <button type="button" onClick={() => setLeadPage(totalLeadPages)} disabled={leadPage===totalLeadPages} style={{ padding: "5px 10px", borderRadius: 7, border: `1px solid ${T.border}`, background: "transparent", color: leadPage===totalLeadPages?T.textMuted:T.textSecondary, cursor: leadPage===totalLeadPages?"not-allowed":"pointer", fontSize: 11 }}>ï¿½</button>
                             </div>
                           </div>
                         )}
@@ -21535,9 +21535,9 @@ export default function AdminPanel() {
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
                         <div>
                           <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 700, color: T.green, margin: 0 }}>?? Email Leads</h3>
-                          <p style={{ fontSize: 12, color: T.textMuted, margin: "4px 0 0" }}>{leadBulkEmailTargets.length} leads with emails selected · Use {"{name}"}, {"{community}"}, {"{project}"}</p>
+                          <p style={{ fontSize: 12, color: T.textMuted, margin: "4px 0 0" }}>{leadBulkEmailTargets.length} leads with emails selected ï¿½ Use {"{name}"}, {"{community}"}, {"{project}"}</p>
                         </div>
-                        {!leadBulkEmailSending && <button type="button" onClick={() => setShowLeadBulkEmail(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 22 }}>×</button>}
+                        {!leadBulkEmailSending && <button type="button" onClick={() => setShowLeadBulkEmail(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 22 }}>ï¿½</button>}
                       </div>
                       <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 14 }}>
                         {[
@@ -21608,7 +21608,7 @@ export default function AdminPanel() {
                     <div style={{ background: T.surface, border: `1px solid ${T.gold}40`, borderRadius: 16, width: "95%", maxWidth: 540, padding: 28, maxHeight: "85vh", overflowY: "auto" }} onClick={e => e.stopPropagation()}>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
                         <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 700, color: T.gold }}>+ Add New User</h3>
-                        <button type="button" onClick={() => setShowAddUser(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 22 }}>×</button>
+                        <button type="button" onClick={() => setShowAddUser(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 22 }}>ï¿½</button>
                       </div>
                       <div style={{ background: "rgba(59,130,246,0.06)", border: "1px solid rgba(59,130,246,0.2)", borderRadius: 10, padding: "10px 14px", marginBottom: 16, fontSize: 12, color: "#93C5FD" }}>
                         <strong>Note:</strong> The new user will receive a verification email. You will remain logged in as admin.
@@ -21644,14 +21644,14 @@ export default function AdminPanel() {
                           <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>Access Tier</label>
                           <select value={addUserForm.tier || "free"} onChange={e => setAddUserForm(p => ({ ...p, tier: e.target.value }))}
                             style={{ width: "100%", padding: "10px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif" }}>
-                            {BILLING_TIERS.map(r => <option key={r.value} value={r.value}>{r.label}{r.price ? ` · ${r.price}` : ""}</option>)}
+                            {BILLING_TIERS.map(r => <option key={r.value} value={r.value}>{r.label}{r.price ? ` ï¿½ ${r.price}` : ""}</option>)}
                           </select>
                         </div>
                         <div>
                           <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>Job Role</label>
                           <select value={addUserForm.role || "user"} onChange={e => setAddUserForm(p => ({ ...p, role: e.target.value }))}
                             style={{ width: "100%", padding: "10px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif" }}>
-                            <option value="user">— No role —</option>
+                            <option value="user">ï¿½ No role ï¿½</option>
                             {JOB_ROLES.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
                           </select>
                         </div>
@@ -21695,7 +21695,7 @@ export default function AdminPanel() {
                     <div style={{ background: T.surface, border: `1px solid ${T.gold}40`, borderRadius: 16, width: "95%", maxWidth: 540, padding: 28, maxHeight: "85vh", overflowY: "auto" }} onClick={e => e.stopPropagation()}>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
                         <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 700, color: T.gold }}>Edit User</h3>
-                        <button type="button" onClick={() => setEditingUser(null)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 22 }}>×</button>
+                        <button type="button" onClick={() => setEditingUser(null)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 22 }}>ï¿½</button>
                       </div>
                       <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 16 }}>{editingUser.email}</div>
                       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
@@ -21721,14 +21721,14 @@ export default function AdminPanel() {
                           <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>Access Tier</label>
                           <select value={editUserForm.tier || "free"} onChange={e => setEditUserForm(p => ({ ...p, tier: e.target.value }))}
                             style={{ width: "100%", padding: "10px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif" }}>
-                            {BILLING_TIERS.map(r => <option key={r.value} value={r.value}>{r.label}{r.price ? ` · ${r.price}` : ""}</option>)}
+                            {BILLING_TIERS.map(r => <option key={r.value} value={r.value}>{r.label}{r.price ? ` ï¿½ ${r.price}` : ""}</option>)}
                           </select>
                         </div>
                         <div>
                           <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>Job Role</label>
                           <select value={editUserForm.role || "user"} onChange={e => setEditUserForm(p => ({ ...p, role: e.target.value }))}
                             style={{ width: "100%", padding: "10px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif" }}>
-                            <option value="user">— No role —</option>
+                            <option value="user">ï¿½ No role ï¿½</option>
                             {JOB_ROLES.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
                           </select>
                         </div>
@@ -21984,7 +21984,7 @@ export default function AdminPanel() {
                                   <div style={{ fontSize: 10, color: T.textMuted, marginBottom: 6 }}>Same email or phone exists in other leads:</div>
                                   {dupes.slice(0, 3).map((d, i) => (
                                     <div key={i} style={{ fontSize: 10, color: T.textSecondary, marginBottom: 2 }}>
-                                      • {d.name || d.email} — {d.status || "New"} — {d.project || "No project"} — Created {d.createdAt ? new Date(d.createdAt).toLocaleDateString("en-AE", { day: "2-digit", month: "short" }) : "—"}
+                                      ï¿½ {d.name || d.email} ï¿½ {d.status || "New"} ï¿½ {d.project || "No project"} ï¿½ Created {d.createdAt ? new Date(d.createdAt).toLocaleDateString("en-AE", { day: "2-digit", month: "short" }) : "ï¿½"}
                                     </div>
                                   ))}
                                 </div>
@@ -22002,7 +22002,7 @@ export default function AdminPanel() {
                               return (
                                 <div style={{ marginBottom: 12, padding: "10px 14px", borderRadius: 8, background: "rgba(59,130,246,0.06)", border: "1px solid rgba(59,130,246,0.2)" }}>
                                   <div style={{ fontSize: 11, fontWeight: 700, color: T.blue, marginBottom: 4 }}>?? Complete This Lead</div>
-                                  <div style={{ fontSize: 10, color: T.textMuted }}>Missing: {missing.join(", ")} — filling these increases the lead score.</div>
+                                  <div style={{ fontSize: 10, color: T.textMuted }}>Missing: {missing.join(", ")} ï¿½ filling these increases the lead score.</div>
                                 </div>
                               );
                             })()}
@@ -22169,7 +22169,7 @@ export default function AdminPanel() {
                   { label: "Pending", value: vPending.length, color: T.orange },
                   { label: "Approved Today", value: approvedToday, color: T.green },
                   { label: "Rejected Today", value: rejectedToday, color: T.red },
-                  { label: "Avg Review", value: avgReviewHrs !== null ? `${avgReviewHrs}h` : "—", color: T.teal },
+                  { label: "Avg Review", value: avgReviewHrs !== null ? `${avgReviewHrs}h` : "ï¿½", color: T.teal },
                   { label: "Total", value: verifications.length, color: T.textSecondary },
                 ].map((item, i) => (
                   <div key={i} style={{ display: "flex", flexDirection: "column", padding: "10px 20px", borderRight: `1px solid ${T.border}`, flexShrink: 0 }}>
@@ -22306,8 +22306,8 @@ export default function AdminPanel() {
                                   </div>
                                   <div>
                                     <div style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{v.name || "No name"}</div>
-                                    <div style={{ fontSize: 10, color: T.textMuted }}>{v.email || "—"}</div>
-                                    {userCtx && <div style={{ fontSize: 9, color: T.teal }}>{userCtx.tier} · joined {userCtx.createdAt ? new Date(userCtx.createdAt).toLocaleDateString("en-AE", { month: "short", year: "numeric" }) : "—"}</div>}
+                                    <div style={{ fontSize: 10, color: T.textMuted }}>{v.email || "ï¿½"}</div>
+                                    {userCtx && <div style={{ fontSize: 9, color: T.teal }}>{userCtx.tier} ï¿½ joined {userCtx.createdAt ? new Date(userCtx.createdAt).toLocaleDateString("en-AE", { month: "short", year: "numeric" }) : "ï¿½"}</div>}
                                   </div>
                                 </div>
                               </td>
@@ -22321,7 +22321,7 @@ export default function AdminPanel() {
                                 </span>
                               </td>
                               <td style={{ padding: "12px 14px", fontSize: 11, color: T.textSecondary }}>
-                                {v.submittedAt ? new Date(v.submittedAt).toLocaleDateString("en-AE", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : "—"}
+                                {v.submittedAt ? new Date(v.submittedAt).toLocaleDateString("en-AE", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : "ï¿½"}
                               </td>
                               <td style={{ padding: "12px 14px" }}>
                                 {v.status === "pending" ? (
@@ -22329,7 +22329,7 @@ export default function AdminPanel() {
                                     {waitHrs}h {urgent && <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: "rgba(239,68,68,0.15)", color: T.red, marginLeft: 4 }}>URGENT</span>}
                                   </span>
                                 ) : (
-                                  <span style={{ fontSize: 10, color: T.textMuted }}>{v.reviewedAt ? `Reviewed ${new Date(v.reviewedAt).toLocaleDateString("en-AE", { day: "numeric", month: "short" })}` : "—"}</span>
+                                  <span style={{ fontSize: 10, color: T.textMuted }}>{v.reviewedAt ? `Reviewed ${new Date(v.reviewedAt).toLocaleDateString("en-AE", { day: "numeric", month: "short" })}` : "ï¿½"}</span>
                                 )}
                               </td>
                               <td style={{ padding: "12px 14px" }} onClick={e => e.stopPropagation()}>
@@ -22378,9 +22378,9 @@ export default function AdminPanel() {
                           <div style={{ fontSize: 10, fontWeight: 700, color: T.teal, letterSpacing: 1, textTransform: "uppercase", marginBottom: 8 }}>User Context</div>
                           <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
                             <div><span style={{ fontSize: 10, color: T.textMuted }}>Tier: </span><span style={{ fontSize: 11, color: T.white, fontWeight: 600 }}>{userCtx.tier}</span></div>
-                            <div><span style={{ fontSize: 10, color: T.textMuted }}>Joined: </span><span style={{ fontSize: 11, color: T.white }}>{userCtx.createdAt ? new Date(userCtx.createdAt).toLocaleDateString("en-AE") : "—"}</span></div>
-                            <div><span style={{ fontSize: 10, color: T.textMuted }}>Last Active: </span><span style={{ fontSize: 11, color: T.white }}>{userCtx.lastLoginAt ? new Date(userCtx.lastLoginAt).toLocaleDateString("en-AE") : "—"}</span></div>
-                            <div><span style={{ fontSize: 10, color: T.textMuted }}>Country: </span><span style={{ fontSize: 11, color: T.white }}>{userCtx.country || "—"}</span></div>
+                            <div><span style={{ fontSize: 10, color: T.textMuted }}>Joined: </span><span style={{ fontSize: 11, color: T.white }}>{userCtx.createdAt ? new Date(userCtx.createdAt).toLocaleDateString("en-AE") : "ï¿½"}</span></div>
+                            <div><span style={{ fontSize: 10, color: T.textMuted }}>Last Active: </span><span style={{ fontSize: 11, color: T.white }}>{userCtx.lastLoginAt ? new Date(userCtx.lastLoginAt).toLocaleDateString("en-AE") : "ï¿½"}</span></div>
+                            <div><span style={{ fontSize: 10, color: T.textMuted }}>Country: </span><span style={{ fontSize: 11, color: T.white }}>{userCtx.country || "ï¿½"}</span></div>
                           </div>
                         </div>
                       );
@@ -22393,12 +22393,12 @@ export default function AdminPanel() {
                         <div style={{ fontSize: 10, fontWeight: 700, color: T.gold, letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>Personal Information</div>
                         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
                           {[
-                            { label: "Full Name", value: reviewingUser.name || "—" },
-                            { label: "Email", value: reviewingUser.email || "—" },
-                            { label: "Phone", value: reviewingUser.phone || "—" },
-                            { label: "Nationality", value: reviewingUser.nationality || "—" },
-                            { label: "Date of Birth", value: reviewingUser.dob || "—" },
-                            { label: "Address", value: reviewingUser.address || "—" },
+                            { label: "Full Name", value: reviewingUser.name || "ï¿½" },
+                            { label: "Email", value: reviewingUser.email || "ï¿½" },
+                            { label: "Phone", value: reviewingUser.phone || "ï¿½" },
+                            { label: "Nationality", value: reviewingUser.nationality || "ï¿½" },
+                            { label: "Date of Birth", value: reviewingUser.dob || "ï¿½" },
+                            { label: "Address", value: reviewingUser.address || "ï¿½" },
                           ].map((item, i) => (
                             <div key={i} style={{ padding: "8px 12px", borderRadius: 8, background: T.surfaceAlt }}>
                               <div style={{ fontSize: 9, fontWeight: 600, color: T.textMuted, textTransform: "uppercase", marginBottom: 2 }}>{item.label}</div>
@@ -22448,7 +22448,7 @@ export default function AdminPanel() {
 
                       {/* Timestamps */}
                       <div style={{ display: "flex", gap: 16, fontSize: 10, color: T.textMuted, marginBottom: 20 }}>
-                        <span>Submitted: {reviewingUser.submittedAt ? new Date(reviewingUser.submittedAt).toLocaleString("en-AE") : "—"}</span>
+                        <span>Submitted: {reviewingUser.submittedAt ? new Date(reviewingUser.submittedAt).toLocaleString("en-AE") : "ï¿½"}</span>
                         <span>UID: {reviewingUser.uid?.slice(0, 12)}...</span>
                       </div>
 
@@ -22488,7 +22488,7 @@ export default function AdminPanel() {
 
           {tab === "analytics" && (() => {
             /* -------------------------------------------------------------------
-               TAB 10: ANALYTICS — PRO LEVEL
+               TAB 10: ANALYTICS ï¿½ PRO LEVEL
                Mixpanel + Amplitude + ChartMogul + Baremetrics
                Date range filtering, MRR charts, cohort drill-downs, export
             ------------------------------------------------------------------- */
@@ -22575,7 +22575,7 @@ export default function AdminPanel() {
               return weeks;
             })();
 
-            // FIXED: Cohort Retention Heatmap — proper calculation
+            // FIXED: Cohort Retention Heatmap ï¿½ proper calculation
             const cohortHeatmap = (() => {
               const cohorts = [];
               const cohortCount = analyticsRange === "7d" ? 2 : analyticsRange === "30d" ? 5 : 8;
@@ -22895,9 +22895,9 @@ export default function AdminPanel() {
                     <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 10 }}>Device Type</div>
                     <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                       {[
-                        { name: "Desktop", value: deviceBreakdown.desktop, icon: "•", color: T.blue },
+                        { name: "Desktop", value: deviceBreakdown.desktop, icon: "ï¿½", color: T.blue },
                         { name: "Mobile", value: deviceBreakdown.mobile, icon: "??", color: T.teal },
-                        { name: "Tablet", value: deviceBreakdown.tablet, icon: "•", color: T.purple },
+                        { name: "Tablet", value: deviceBreakdown.tablet, icon: "ï¿½", color: T.purple },
                       ].map(d => (
                         <div key={d.name}>
                           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
@@ -23168,7 +23168,7 @@ export default function AdminPanel() {
                     {item.delta !== undefined && (
                       <div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 6 }}>
                         <span style={{ fontSize: 10, color: item.delta > 0 ? T.green : item.delta < 0 ? T.red : T.textMuted }}>
-                          {item.delta > 0 ? "?" : item.delta < 0 ? "?" : "—"} {Math.abs(item.delta)}
+                          {item.delta > 0 ? "?" : item.delta < 0 ? "?" : "ï¿½"} {Math.abs(item.delta)}
                         </span>
                         <span style={{ fontSize: 9, color: T.textMuted }}>vs prev</span>
                       </div>
@@ -25099,7 +25099,7 @@ export default function AdminPanel() {
                   </div>
                 </Chart>
 
-                <Chart title="User Growth by Tier" sub={`Last ${weekCount} weeks · color by tier`}>
+                <Chart title="User Growth by Tier" sub={`Last ${weekCount} weeks ï¿½ color by tier`}>
                   <ResponsiveContainer width="100%" height={220}>
                     <BarChart data={weeklySignups} barGap={2}>
                       <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
@@ -25140,7 +25140,7 @@ export default function AdminPanel() {
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
                   <div>
                     <div style={{ fontFamily: "'Fraunces',serif", fontSize: 16, fontWeight: 700, color: T.white }}>Cohort Retention Heatmap</div>
-                    <div style={{ fontSize: 11, color: T.textMuted }}>Click any cell to see users · % still active by week since signup</div>
+                    <div style={{ fontSize: 11, color: T.textMuted }}>Click any cell to see users ï¿½ % still active by week since signup</div>
                   </div>
                   <div style={{ display: "flex", gap: 8, alignItems: "center", fontSize: 10 }}>
                     <span style={{ color: T.red }}>0%</span>
@@ -25174,7 +25174,7 @@ export default function AdminPanel() {
                             <td style={{ padding: "6px 10px", textAlign: "center", color: T.white, fontWeight: 700, borderBottom: `1px solid ${T.border}` }}>{cohort.total}</td>
                             {Array.from({ length: weekCount }, (_, wi) => {
                               const weekData = cohort.weeks.find(w => w.week === wi);
-                              if (!weekData) return <td key={wi} style={{ padding: "4px", borderBottom: `1px solid ${T.border}` }}><div style={{ padding: "6px 8px", textAlign: "center", color: T.textMuted }}>—</div></td>;
+                              if (!weekData) return <td key={wi} style={{ padding: "4px", borderBottom: `1px solid ${T.border}` }}><div style={{ padding: "6px 8px", textAlign: "center", color: T.textMuted }}>ï¿½</div></td>;
                               const pct = weekData.pct;
                               const bgColor = pct >= 70 ? T.green : pct >= 40 ? T.gold : pct >= 20 ? T.orange : pct > 0 ? T.red : T.textMuted;
                               return (
@@ -25205,7 +25205,7 @@ export default function AdminPanel() {
 
               {/* --- ROW 3: Geographic + Tier Movement + Churn --- */}
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16, marginBottom: 20 }}>
-                <Chart title="Signups by Country" sub={`Top 10 · ${analyticsRange}`}>
+                <Chart title="Signups by Country" sub={`Top 10 ï¿½ ${analyticsRange}`}>
                   {geoData.length === 0 ? (
                     <div style={{ padding: 40, textAlign: "center", color: T.textMuted }}>No data</div>
                   ) : (
@@ -25224,7 +25224,7 @@ export default function AdminPanel() {
                   )}
                 </Chart>
 
-                <Chart title="Tier Movement" sub="Upgrades ? · Downgrades ?">
+                <Chart title="Tier Movement" sub="Upgrades ? ï¿½ Downgrades ?">
                   <div style={{ padding: "10px 0" }}>
                     {[
                       { label: "Free ? Trial", value: tierMovement.freeToTrial, color: T.blue, icon: "?", good: true },
@@ -25310,7 +25310,7 @@ export default function AdminPanel() {
                           <div style={{ flex: 1, minWidth: 0 }}>
                             <div style={{ fontSize: 10, fontWeight: 600, color: T.white, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{u.name || u.email?.split("@")[0]}</div>
                           </div>
-                          <div style={{ fontSize: 9, color: T.textMuted }}>{u.lastLoginAt ? timeSince(new Date(u.lastLoginAt)) : "—"}</div>
+                          <div style={{ fontSize: 9, color: T.textMuted }}>{u.lastLoginAt ? timeSince(new Date(u.lastLoginAt)) : "ï¿½"}</div>
                         </div>
                         );
                       })}
@@ -25476,9 +25476,9 @@ export default function AdminPanel() {
                             <div>
                               <span style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{c.userEmail || c.userId || "Anonymous"}</span>
                               <span style={{ marginLeft: 8, fontSize: 10, padding: "2px 8px", borderRadius: 6, background: "rgba(239,68,68,0.12)", color: T.red, fontWeight: 700 }}>{reasonMap[c.reason]?.reason || c.reason || "Unknown"}</span>
-                              <span style={{ marginLeft: 6, fontSize: 10, color: T.textMuted }}>was {c.previousTier || "—"}</span>
+                              <span style={{ marginLeft: 6, fontSize: 10, color: T.textMuted }}>was {c.previousTier || "ï¿½"}</span>
                             </div>
-                            <span style={{ fontSize: 11, color: T.textMuted }}>{c.cancelledAt ? new Date(c.cancelledAt).toLocaleDateString("en-AE") : "—"}</span>
+                            <span style={{ fontSize: 11, color: T.textMuted }}>{c.cancelledAt ? new Date(c.cancelledAt).toLocaleDateString("en-AE") : "ï¿½"}</span>
                           </div>
                           {c.feedback && <div style={{ fontSize: 12, color: T.textSecondary, fontStyle: "italic" }}>"{c.feedback}"</div>}
                         </div>
@@ -25511,7 +25511,7 @@ export default function AdminPanel() {
 
           {tab === "tabcontrol" && (() => {
             /* -------------------------------------------------------------------
-               TAB 9: TAB CONTROL — PRO LEVEL
+               TAB 9: TAB CONTROL ï¿½ PRO LEVEL
                LaunchDarkly + Statsig + Flagsmith inspired feature flags
                Search, badges, descriptions, usage stats, bulk actions
             ------------------------------------------------------------------- */
@@ -25649,7 +25649,7 @@ export default function AdminPanel() {
                 {/* Preview Sidebar */}
                 {previewTier && (
                   <div className="fade-up" style={{ background: T.surfaceAlt, borderRadius: 14, border: `1px solid ${TIER_COLORS[previewTier]}30`, padding: "16px 20px" }}>
-                    <div style={{ fontSize: 10, fontWeight: 700, color: TIER_COLORS[previewTier], textTransform: "uppercase", letterSpacing: 1, marginBottom: 12 }}>Sidebar — {TIER_LABELS[previewTier]}</div>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: TIER_COLORS[previewTier], textTransform: "uppercase", letterSpacing: 1, marginBottom: 12 }}>Sidebar ï¿½ {TIER_LABELS[previewTier]}</div>
                     <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                       {ALL_TABS.map(tabObj => {
                         const setting = getTabSetting(tabObj.id);
@@ -25698,7 +25698,7 @@ export default function AdminPanel() {
                   
                   {filteredTabs.length === 0 ? (
                     <div style={{ padding: "40px 20px", textAlign: "center" }}>
-                      <div style={{ fontSize: 32, marginBottom: 8 }}>•</div>
+                      <div style={{ fontSize: 32, marginBottom: 8 }}>ï¿½</div>
                       <div style={{ fontSize: 13, color: T.textMuted }}>No tabs match "{tabSearch}"</div>
                       <button type="button" onClick={() => setTabSearch("")} style={{ marginTop: 12, padding: "6px 14px", borderRadius: 8, fontSize: 11, background: T.goldGlow, border: `1px solid ${T.gold}`, color: T.gold, cursor: "pointer" }}>Clear</button>
                     </div>
@@ -25734,7 +25734,7 @@ export default function AdminPanel() {
                                   </div>
                                   <div style={{ textAlign: "center", minWidth: 50 }}><div style={{ fontSize: 12, fontWeight: 700, color: usage > 0 ? T.teal : T.textMuted }}>{usage}</div><div style={{ fontSize: 8, color: T.textMuted }}>views</div></div>
                                   <div style={{ minWidth: 70 }}><span style={{ fontSize: 9, fontWeight: 700, padding: "3px 8px", borderRadius: 5, background: `${TIER_COLORS[minTier]}15`, color: TIER_COLORS[minTier] }}>{TIER_LABELS[minTier].toUpperCase()}</span></div>
-                                  <div style={{ fontSize: 9, color: T.textMuted, minWidth: 70, textAlign: "right" }}>{lastMod ? timeSince(new Date(lastMod)) : "—"}</div>
+                                  <div style={{ fontSize: 9, color: T.textMuted, minWidth: 70, textAlign: "right" }}>{lastMod ? timeSince(new Date(lastMod)) : "ï¿½"}</div>
                                   <div onClick={e => e.stopPropagation()}><button type="button" onClick={() => updateTabSetting(tabObj.id, "visible", !isVisible)} style={{ width: 36, height: 20, borderRadius: 10, background: isVisible ? T.green : "rgba(255,255,255,0.08)", border: "none", cursor: "pointer", position: "relative" }}><div style={{ position: "absolute", top: 3, left: isVisible ? 19 : 3, width: 14, height: 14, borderRadius: "50%", background: T.white, transition: "left 0.2s" }} /></button></div>
                                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={isSelected ? T.gold : T.textMuted} strokeWidth="2" style={{ transform: isSelected ? "rotate(90deg)" : "none", transition: "transform 0.2s" }}><path d="m9 18 6-6-6-6"/></svg>
                                 </div>
