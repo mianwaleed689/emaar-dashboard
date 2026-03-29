@@ -25831,6 +25831,12 @@ export default function AdminPanel() {
 
 
           {tab === "eibor" && <EiborRatesPanel db={db} T={T} I={I} notify={notify} />}
+          {tab === "data_health" && <AdminDataHealth db={db} />}
+          {tab === "referral" && <ReferralTab db={db} T={T} notify={notify} users={users} adminUser={adminUser} />}
+          {tab === "billing" && <BillingTab db={db} T={T} notify={notify} users={users} adminUser={adminUser} />}
+          {tab === "forecasting" && <ForecastingTab db={db} T={T} notify={notify} users={users} />}
+          {tab === "pricing_plans" && <PricingPlansTab db={db} T={T} notify={notify} />}
+          {tab === "market_intelligence" && <MarketIntelligenceTab db={db} T={T} notify={notify} users={users} />}
 
         </div>
       </main>
