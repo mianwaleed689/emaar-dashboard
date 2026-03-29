@@ -241,7 +241,7 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
               {[
                 { n: "208+",  l: "Projects Tracked" },
                 { n: "23",   l: "Pro Tools" },
-                { n: "AED 761B", l: "Market Tracked" },
+                { n: "AED 919B", l: "Market Tracked" },
                 { n: "20",   l: "Languages" },
               ].map((s, i) => (
                 <div key={i}>
@@ -432,7 +432,7 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
         <div className="ticker-track">
           {[...Array(2)].map((_, r) => (
             <React.Fragment key={r}>
-              {["AED 761B Dubai Market 2025", "208 Active Emaar Projects", "6 Years Financial Data", "Live DLD Transaction Data", "9-Factor Risk Assessment", "EIBOR-Based Mortgage Calculator", "20 Languages Including Arabic", "DLD · Knight Frank · ValuStrat · Bayut"].map((item, i) => (
+              {["AED 919B Dubai Market 2025", "208 Active Emaar Projects", "6 Years Financial Data", "Live DLD Transaction Data", "9-Factor Risk Assessment", "EIBOR-Based Mortgage Calculator", "20 Languages Including Arabic", "DLD · Knight Frank · ValuStrat · Bayut"].map((item, i) => (
                 <span key={`${r}-${i}`} style={{ fontSize: 12, color: T.textMuted, display: "inline-flex", alignItems: "center", gap: 12, flexShrink: 0 }}>
                   <span style={{ width: 4, height: 4, borderRadius: "50%", background: T.gold, opacity: .6 }} />{item}
                 </span>
