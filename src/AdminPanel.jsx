@@ -1,3 +1,4 @@
+import AdminDataHealth from "./AdminDataHealth";
 import React, { useState, useEffect, useCallback } from "react";
 import ReactDOM from "react-dom";
 import { auth, db, storage, firebaseConfig } from "./firebase";
