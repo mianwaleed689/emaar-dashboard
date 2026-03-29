@@ -760,7 +760,8 @@ const LoginScreen = ({ onLogin, onBack, defaultMode = "login" }) => {
       }
       onLogin(u.email);
     } catch (err) {
-      setError("Google sign-in failed. Please try again.");
+      console.error("Google auth error:", err.code, err.message);
+      setError("Google sign-in failed: " + (err.code || err.message));
     }
     setGoogleLoading(false);
   };
