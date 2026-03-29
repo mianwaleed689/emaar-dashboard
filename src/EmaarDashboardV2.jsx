@@ -930,7 +930,7 @@ const LoginScreen = ({ onLogin, onBack, defaultMode = "login" }) => {
         </div>
 
         <p style={{ textAlign: "center", color: T.textMuted, fontSize: 11, marginTop: 20 }}>
-          ?? Secured by Firebase - SSL Encrypted - GDPR Compliant
+          Secured by Firebase - SSL Encrypted - GDPR Compliant
         </p>
       </div>
     </div>
