@@ -154,8 +154,8 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
     { q: "Is there a free trial?", a: "Yes — every new account gets a 7-day Pro trial automatically. No credit card needed. You get full access to all 23 tools and all 208+ projects." },
     { q: "What data sources do you use?", a: "Dubai Land Department (DLD), official developer annual reports, DXBinteract, BetterHomes, Bayut, Engel & Völkers, ValuStrat, and Knight Frank. Every data point shows its source." },
     { q: "How often is data updated?", a: "Financial data is updated within 24 hours of official developer releases. Project prices and handover dates are manually verified monthly. EIBOR rates update daily." },
-    { q: "Which developers are currently covered?", a: "Phase 1 (live now) covers 48 active projects across 11 Dubai communities from Dubai's largest developer. DAMAC, Sobha, Nakheel, Binghatti, and more are coming in Q3 2026." },
-    { q: "What's included in the Enterprise plan?", a: "Everything in Pro plus multi-user team accounts, PDF report generation (Q3 2026), API data access (Q3 2026), custom branded reports, and a dedicated account manager. Contact us to discuss your team's needs." },
+    { q: "Which developers are currently covered?", a: "DXB Analytics currently covers 208 Emaar projects plus DAMAC, Sobha, Nakheel, Meraas, Binghatti, and Aldar — 7 major developers live now across 13 Dubai communities." },
+    { q: "What's included in the Enterprise plan?", a: "Everything in Pro plus multi-user team accounts, PDF report generation, API data access (coming soon), custom branded reports, and a dedicated account manager. Contact us to discuss your team's needs." },
     { q: "Can I cancel anytime?", a: "Yes. No contracts, no cancellation fees. Cancel from your account settings and keep access until your billing period ends." },
     { q: "Is the data accurate?", a: "All data is sourced from official reports and cross-referenced. We display the source for every data point so you can verify independently. This is professional intelligence — always verify before transacting." },
     { q: "Do you have an Arabic version?", a: "Yes — the platform supports Arabic and 19 other languages including Urdu, Hindi, Chinese, and Russian. Switch language from the top navigation bar." },
@@ -700,7 +700,7 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
                 </div>
               ))}
               <a href="mailto:hello@dxbanalytics.com?subject=DXB%20Analytics%20Enterprise" className="cta-outline" style={{ width: "100%", justifyContent: "center", padding: "12px 0", marginTop: 20, display: "flex", textDecoration: "none" }}>Contact Us ?</a>
-              <p style={{ fontSize: 10, color: T.textMuted, marginTop: 10, textAlign: "center" }}>? Launching Q3 2026</p>
+              <p style={{ fontSize: 10, color: T.textMuted, marginTop: 10, textAlign: "center" }}>? Coming Soon</p>
             </div>
           </div>
         </div>
