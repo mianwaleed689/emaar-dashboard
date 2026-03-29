@@ -27,7 +27,7 @@ function AuthGuard({ children }) {
       try {
         const snap = await getDoc(doc(db, "users", firebaseUser.uid));
         const data = snap.exists() ? snap.data() : {};
-        setStatus(data.role === "admin" ? "allowed" : "denied");
+        setStatus(data.role === "admin" || data.role === "superAdmin" || data.superAdmin === true ? "allowed" : "denied");
       } catch {
         setStatus("denied");
       }
