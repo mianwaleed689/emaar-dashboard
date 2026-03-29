@@ -15,7 +15,7 @@
  *   CRON_SECRET              → dxb-cron-2026
  */
 
-const CRON_SECRET = process.env.CRON_SECRET || "dxb-cron-2026";
+const CRON_SECRET = process.env.CRON_SECRET || process.env.CRON_SECRET;
 const FIREBASE_PROJECT_ID = process.env.FIREBASE_PROJECT_ID;
 const FIREBASE_API_KEY = process.env.FIREBASE_API_KEY;
 const EMAILJS_SERVICE_ID = process.env.EMAILJS_SERVICE_ID || "service_da7nshv";
