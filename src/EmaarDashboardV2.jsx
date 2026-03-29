@@ -1702,11 +1702,11 @@ const ReferralWidget = ({ user, T, db }) => {
 const DataBadge = ({ source, date, type = "dld" }) => {
   const cfg = {
     dld:     { label: "DLD Verified",     color: "#10B981", icon: "~" },
-    reidin:  { label: "REIDIN Index",     color: "#3B82F6", icon: "~"??" },
-    emaar:   { label: "Emaar IR",         color: "#D4A843", icon: "~"??" },
-    live:    { label: "Live - Firestore", color: "#10B981", icon: "~"??" },
-    ai:      { label: "AI Estimate",      color: "#8B5CF6", icon: "~"??" },
-    manual:  { label: "Admin Verified",   color: "#F59E0B", icon: "~"??" },
+    reidin:  { label: "REIDIN Index",     color: "#3B82F6", icon: "~" },
+    emaar:   { label: "Emaar IR",         color: "#D4A843", icon: "~" },
+    live:    { label: "Live - Firestore", color: "#10B981", icon: "~" },
+    ai:      { label: "AI Estimate",      color: "#8B5CF6", icon: "~" },
+    manual:  { label: "Admin Verified",   color: "#F59E0B", icon: "~" },
   };
   const c = cfg[type] || cfg.dld;
   return (
@@ -3369,12 +3369,12 @@ export default function EmaarDashboardV2() {
                 </div>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
                   {[
-                    { label: "Total Transactions", value: mktTxns,   change: mktYoY,   color: T.green,  icon: "~"??" },
-                    { label: "Market Value",        value: mktValue,  change: "+30.6%", color: T.gold,   icon: "~"??" },
-                    { label: "Avg Price/sqft",      value: mktPpsf,   change: "+19.8%", color: T.teal,   icon: "~"??" },
-                    { label: "Off-Plan Share",       value: mktOffPlan,change: "Dominant",color: T.blue,  icon: "~"??" },
-                    { label: "New Investors",        value: marketGlobal?.newInvestors || "110,000+", change: marketGlobal?.newInvestorsYoy || "+55%", color: T.purple, icon: "~"??" },
-                    { label: "Nationalities",        value: marketGlobal?.buyerNationalities || "175+", change: "Global demand", color: T.orange, icon: "~"??" },
+                    { label: "Total Transactions", value: mktTxns,   change: mktYoY,   color: T.green,  icon: "~" },
+                    { label: "Market Value",        value: mktValue,  change: "+30.6%", color: T.gold,   icon: "~" },
+                    { label: "Avg Price/sqft",      value: mktPpsf,   change: "+19.8%", color: T.teal,   icon: "~" },
+                    { label: "Off-Plan Share",       value: mktOffPlan,change: "Dominant",color: T.blue,  icon: "~" },
+                    { label: "New Investors",        value: marketGlobal?.newInvestors || "110,000+", change: marketGlobal?.newInvestorsYoy || "+55%", color: T.purple, icon: "~" },
+                    { label: "Nationalities",        value: marketGlobal?.buyerNationalities || "175+", change: "Global demand", color: T.orange, icon: "~" },
                   ].map((item, i) => (
                     <div key={i} style={{ padding: "10px 12px", background: T.surfaceAlt, borderRadius: 10, border: `1px solid ${T.border}` }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
@@ -4763,10 +4763,10 @@ export default function EmaarDashboardV2() {
                     <div style={{ fontFamily: "'Fraunces',serif", fontSize: 14, fontWeight: 700, color: T.white, marginBottom: 14 }}>Recommendations to Improve Score</div>
                     <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                       {[
-                        communityCount < 3 && { text: `Add properties in ${communityCount === 1 ? "2 more communities" : "1 more community"} - currently concentrated in ${Object.keys(byCommunity).join(", ")}`, color: T.orange, icon: "~"??" },
-                        typeCount < 2 && { text: "Add a different property type - mix apartments with townhouses or villas for lower correlation risk", color: T.gold, icon: "~"??" },
-                        handoverCount < 2 && { text: "Spread handover years across multiple years to reduce delivery risk concentration", color: T.blue, icon: "~"??" },
-                        holdings.length < 3 && { text: `Add ${3 - holdings.length} more holding${3 - holdings.length > 1 ? "s" : ""} to improve portfolio volume score`, color: T.teal, icon: "~"??" },
+                        communityCount < 3 && { text: `Add properties in ${communityCount === 1 ? "2 more communities" : "1 more community"} - currently concentrated in ${Object.keys(byCommunity).join(", ")}`, color: T.orange, icon: "~" },
+                        typeCount < 2 && { text: "Add a different property type - mix apartments with townhouses or villas for lower correlation risk", color: T.gold, icon: "~" },
+                        handoverCount < 2 && { text: "Spread handover years across multiple years to reduce delivery risk concentration", color: T.blue, icon: "~" },
+                        holdings.length < 3 && { text: `Add ${3 - holdings.length} more holding${3 - holdings.length > 1 ? "s" : ""} to improve portfolio volume score`, color: T.teal, icon: "~" },
                         totalScore >= 70 && { text: "Portfolio is well diversified - maintain current allocation and rebalance at handover milestones", color: T.green, icon: "~" },
                       ].filter(Boolean).map((rec, i) => (
                         <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "10px 14px", borderRadius: 8, background: `${rec.color}08`, border: `1px solid ${rec.color}20` }}>
@@ -5936,11 +5936,11 @@ export default function EmaarDashboardV2() {
               </div>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 12 }}>
                 {[
-                  { type: "Studio", gross: 7.8, net: 6.1, avgRent: 52000, avgPrice: 670000, color: T.green, icon: "~"??" },
-                  { type: "1 Bedroom", gross: 7.1, net: 5.5, avgRent: 78000, avgPrice: 1100000, color: T.teal, icon: "~"???" },
-                  { type: "2 Bedroom", gross: 6.4, net: 4.9, avgRent: 112000, avgPrice: 1750000, color: T.gold, icon: "~"???" },
-                  { type: "3 Bedroom", gross: 5.8, net: 4.4, avgRent: 155000, avgPrice: 2670000, color: T.blue, icon: "~"???" },
-                  { type: "Villa / TH", gross: 5.0, net: 3.8, avgRent: 210000, avgPrice: 4200000, color: T.purple, icon: "~"??" },
+                  { type: "Studio", gross: 7.8, net: 6.1, avgRent: 52000, avgPrice: 670000, color: T.green, icon: "~" },
+                  { type: "1 Bedroom", gross: 7.1, net: 5.5, avgRent: 78000, avgPrice: 1100000, color: T.teal, icon: "~" },
+                  { type: "2 Bedroom", gross: 6.4, net: 4.9, avgRent: 112000, avgPrice: 1750000, color: T.gold, icon: "~" },
+                  { type: "3 Bedroom", gross: 5.8, net: 4.4, avgRent: 155000, avgPrice: 2670000, color: T.blue, icon: "~" },
+                  { type: "Villa / TH", gross: 5.0, net: 3.8, avgRent: 210000, avgPrice: 4200000, color: T.purple, icon: "~" },
                 ].map((u, i) => (
                   <div key={i} style={{ padding: "16px", background: T.surfaceAlt, borderRadius: 12, border: `1px solid ${T.border}`, textAlign: "center" }}>
                     <div style={{ fontSize: 24, marginBottom: 8 }}>{u.icon}</div>
@@ -6343,10 +6343,10 @@ export default function EmaarDashboardV2() {
                           <div style={{ fontSize: 11, color: T.textMuted, marginTop: 6 }}>Based on {salary.toLocaleString()} salary - {affordRate}% rate - CBUAE 50% DBR rule</div>
                         </div>
                         {[
-                          { label: "Max Monthly Payment", value: fmt(Math.max(maxMonthlyPayment, 0)), color: T.gold, icon: "~"??" },
-                          { label: "Max Loan Amount", value: fmtM(Math.max(maxLoan, 0)), color: T.teal, icon: "~"??" },
-                          { label: "Down Payment Needed", value: fmtM(downNeeded), color: T.blue, icon: "~"??" },
-                          { label: "Total Cash Required", value: fmtM(totalCash), color: T.purple, icon: "~"??" },
+                          { label: "Max Monthly Payment", value: fmt(Math.max(maxMonthlyPayment, 0)), color: T.gold, icon: "~" },
+                          { label: "Max Loan Amount", value: fmtM(Math.max(maxLoan, 0)), color: T.teal, icon: "~" },
+                          { label: "Down Payment Needed", value: fmtM(downNeeded), color: T.blue, icon: "~" },
+                          { label: "Total Cash Required", value: fmtM(totalCash), color: T.purple, icon: "~" },
                         ].map((item, i) => (
                           <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 16px", borderRadius: 10, background: T.surface, border: `1px solid ${T.border}` }}>
                             <span style={{ fontSize: 20 }}>{item.icon}</span>
@@ -6926,12 +6926,12 @@ export default function EmaarDashboardV2() {
               const nearProjects = activeProjects.filter(p => { const pr = p.price || 0; return pr >= 1500000 && pr < THRESHOLD; }).sort((a, b) => (a.price || 0) - (b.price || 0));
 
               const benefits = [
-                { icon: "~"??", title: "10-Year Residency", desc: "Live, work and study in UAE. Renewable indefinitely." },
-                { icon: "~"???????????", title: "Sponsor Your Family", desc: "Spouse, children of any age, and parents included." },
+                { icon: "~", title: "10-Year Residency", desc: "Live, work and study in UAE. Renewable indefinitely." },
+                { icon: "~"????????", title: "Sponsor Your Family", desc: "Spouse, children of any age, and parents included." },
                 { icon: "~", title: "No Sponsor Needed", desc: "Full independence - no employer or local sponsor required." },
-                { icon: "~"??", title: "UAE Bank Accounts", desc: "Open accounts, get credit cards, build UAE credit history." },
-                { icon: "~"??", title: "Travel Freely", desc: "Re-enter UAE after 6+ months abroad without visa reset." },
-                { icon: "~"??", title: "0% Income Tax", desc: "No personal income tax on rental income or capital gains." },
+                { icon: "~", title: "UAE Bank Accounts", desc: "Open accounts, get credit cards, build UAE credit history." },
+                { icon: "~", title: "Travel Freely", desc: "Re-enter UAE after 6+ months abroad without visa reset." },
+                { icon: "~", title: "0% Income Tax", desc: "No personal income tax on rental income or capital gains." },
               ];
 
               return (
@@ -7503,31 +7503,31 @@ export default function EmaarDashboardV2() {
 
               // 1. Yield (0-20pts)
               const yScore = c.yield >= 8 ? 20 : c.yield >= 7 ? 16 : c.yield >= 6 ? 12 : c.yield >= 5 ? 8 : 5;
-              pts += yScore; factors.push({ label: "Yield", score: yScore, max: 20, val: c.yield + "%", icon: "~"??" });
+              pts += yScore; factors.push({ label: "Yield", score: yScore, max: 20, val: c.yield + "%", icon: "~" });
 
               // 2. Supply Risk - inverted (low risk = high score) (0-15pts)
               const sScore = c.supplyRisk <= 4 ? 15 : c.supplyRisk <= 6 ? 10 : c.supplyRisk <= 8 ? 5 : 2;
-              pts += sScore; factors.push({ label: "Supply Risk", score: sScore, max: 15, val: c.supplyRisk <= 4 ? "Low" : c.supplyRisk <= 6 ? "Medium" : "High", icon: "~"??" });
+              pts += sScore; factors.push({ label: "Supply Risk", score: sScore, max: 15, val: c.supplyRisk <= 4 ? "Low" : c.supplyRisk <= 6 ? "Medium" : "High", icon: "~" });
 
               // 3. Price Momentum (0-15pts)
               const mScore = c.momentum >= 9 ? 15 : c.momentum >= 7 ? 10 : c.momentum >= 5 ? 6 : 3;
-              pts += mScore; factors.push({ label: "Momentum", score: mScore, max: 15, val: c.momentum + "/10", icon: "~"??" });
+              pts += mScore; factors.push({ label: "Momentum", score: mScore, max: 15, val: c.momentum + "/10", icon: "~" });
 
               // 4. Demand (0-15pts)
               const dScore = c.demand >= 9 ? 15 : c.demand >= 7 ? 10 : c.demand >= 5 ? 6 : 3;
-              pts += dScore; factors.push({ label: "Demand", score: dScore, max: 15, val: c.demand + "/10", icon: "~"??" });
+              pts += dScore; factors.push({ label: "Demand", score: dScore, max: 15, val: c.demand + "/10", icon: "~" });
 
               // 5. Golden Visa eligible (0-10pts)
               const gScore = c.goldenVisa ? 10 : 3;
-              pts += gScore; factors.push({ label: "Golden Visa", score: gScore, max: 10, val: c.goldenVisa ? "Eligible" : "Below 2M", icon: "~"??" });
+              pts += gScore; factors.push({ label: "Golden Visa", score: gScore, max: 10, val: c.goldenVisa ? "Eligible" : "Below 2M", icon: "~" });
 
               // 6. STR Potential (0-15pts)
               const strScore = c.strPotential >= 9 ? 15 : c.strPotential >= 7 ? 10 : c.strPotential >= 5 ? 6 : 3;
-              pts += strScore; factors.push({ label: "STR Potential", score: strScore, max: 15, val: c.strPotential + "/10", icon: "~"??" });
+              pts += strScore; factors.push({ label: "STR Potential", score: strScore, max: 15, val: c.strPotential + "/10", icon: "~" });
 
               // 7. Developer Quality (0-10pts)
               const devScore = c.devQuality >= 9 ? 10 : c.devQuality >= 7 ? 7 : 4;
-              pts += devScore; factors.push({ label: "Dev Quality", score: devScore, max: 10, val: c.devQuality + "/10", icon: "~"???" });
+              pts += devScore; factors.push({ label: "Dev Quality", score: devScore, max: 10, val: c.devQuality + "/10", icon: "~" });
 
               const total = Math.round(pts);
               const pct = Math.round(pts / 100 * 10) / 10; // out of 10
@@ -7662,13 +7662,13 @@ export default function EmaarDashboardV2() {
                 <Section title="Scoring Methodology" sub="How Investment Scores are calculated">
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 12, marginTop: 16 }}>
                     {[
-                      { icon: "~"??", label: "Gross Yield", weight: "20pts", desc: "Higher yield = higher score. 8%+ = full marks. Based on DLD/REIDIN data." },
-                      { icon: "~"??", label: "Supply Risk", weight: "15pts", desc: "Inverted - low pipeline risk scores highest. Based on REIDIN supply data." },
-                      { icon: "~"??", label: "Price Momentum", weight: "15pts", desc: "YoY price growth trajectory. Based on Property Monitor DPI." },
-                      { icon: "~"??", label: "Demand Score", weight: "15pts", desc: "Transaction volume + search interest + rental absorption rate." },
-                      { icon: "~"??", label: "Golden Visa", weight: "10pts", desc: "Properties = AED 2M qualify for 10yr UAE Golden Visa - drives demand." },
-                      { icon: "~"??", label: "STR Potential", weight: "15pts", desc: "Short-term rental income potential based on Airbnb/Booking.com data." },
-                      { icon: "~"???", label: "Developer Quality", weight: "10pts", desc: "Delivery track record, S&P rating, escrow compliance, and backlog health." },
+                      { icon: "~", label: "Gross Yield", weight: "20pts", desc: "Higher yield = higher score. 8%+ = full marks. Based on DLD/REIDIN data." },
+                      { icon: "~", label: "Supply Risk", weight: "15pts", desc: "Inverted - low pipeline risk scores highest. Based on REIDIN supply data." },
+                      { icon: "~", label: "Price Momentum", weight: "15pts", desc: "YoY price growth trajectory. Based on Property Monitor DPI." },
+                      { icon: "~", label: "Demand Score", weight: "15pts", desc: "Transaction volume + search interest + rental absorption rate." },
+                      { icon: "~", label: "Golden Visa", weight: "10pts", desc: "Properties = AED 2M qualify for 10yr UAE Golden Visa - drives demand." },
+                      { icon: "~", label: "STR Potential", weight: "15pts", desc: "Short-term rental income potential based on Airbnb/Booking.com data." },
+                      { icon: "~", label: "Developer Quality", weight: "10pts", desc: "Delivery track record, S&P rating, escrow compliance, and backlog health." },
                     ].map((m, i) => (
                       <div key={i} style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 12, padding: 16 }}>
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
@@ -7895,9 +7895,9 @@ export default function EmaarDashboardV2() {
                 <Section title="Market Cycle Analysis" sub="Dubai's 3 major cycles since 2008 - what history tells us">
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 14, marginTop: 16 }}>
                     {[
-                      { cycle: "Cycle 1: 2008-2012", icon: "~"??", color: T.red, title: "Crash & Recovery", stats: [{ l: "Peak (2008)", v: "AED 1,420/sqft" }, { l: "Trough (2010)", v: "AED 780/sqft" }, { l: "Drawdown", v: "-45%" }, { l: "Recovery", v: "3 years" }], insight: "GFC triggered Dubai's worst crash - overleveraged developers, stalled projects, and Nakheel's $16B debt restructuring. Recovery driven by fundamentals: no income tax, growing expat population, infrastructure completion." },
-                      { cycle: "Cycle 2: 2012-2020", icon: "~"??", color: T.gold, title: "Boom, Cooldown, Stability", stats: [{ l: "Peak (2014)", v: "AED 1,250/sqft" }, { l: "Trough (2020)", v: "AED 880/sqft" }, { l: "Drawdown", v: "-30%" }, { l: "Duration", v: "8 years" }], insight: "Government cooling measures (4% DLD, LTV caps) softened the boom. Gradual 25% correction until COVID. More orderly than 2008 - regulated market with escrow laws protecting off-plan buyers." },
-                      { cycle: "Cycle 3: 2020-Present", icon: "~"??", color: T.green, title: "The Great Bull Run", stats: [{ l: "Trough (2020)", v: "AED 880/sqft" }, { l: `Current (${marketGlobal?.period || "2025"})`, v: mktPpsf || "AED 1,689/sqft" }, { l: "Gain", v: "+92%" }, { l: "Duration", v: "5+ years" }], insight: "Longest bull run in Dubai history. Driven by: Golden Visa expansion, millionaire migration, limited new supply in premium zones, post-COVID safe haven demand, and AED-USD peg stability." },
+                      { cycle: "Cycle 1: 2008-2012", icon: "~", color: T.red, title: "Crash & Recovery", stats: [{ l: "Peak (2008)", v: "AED 1,420/sqft" }, { l: "Trough (2010)", v: "AED 780/sqft" }, { l: "Drawdown", v: "-45%" }, { l: "Recovery", v: "3 years" }], insight: "GFC triggered Dubai's worst crash - overleveraged developers, stalled projects, and Nakheel's $16B debt restructuring. Recovery driven by fundamentals: no income tax, growing expat population, infrastructure completion." },
+                      { cycle: "Cycle 2: 2012-2020", icon: "~", color: T.gold, title: "Boom, Cooldown, Stability", stats: [{ l: "Peak (2014)", v: "AED 1,250/sqft" }, { l: "Trough (2020)", v: "AED 880/sqft" }, { l: "Drawdown", v: "-30%" }, { l: "Duration", v: "8 years" }], insight: "Government cooling measures (4% DLD, LTV caps) softened the boom. Gradual 25% correction until COVID. More orderly than 2008 - regulated market with escrow laws protecting off-plan buyers." },
+                      { cycle: "Cycle 3: 2020-Present", icon: "~", color: T.green, title: "The Great Bull Run", stats: [{ l: "Trough (2020)", v: "AED 880/sqft" }, { l: `Current (${marketGlobal?.period || "2025"})`, v: mktPpsf || "AED 1,689/sqft" }, { l: "Gain", v: "+92%" }, { l: "Duration", v: "5+ years" }], insight: "Longest bull run in Dubai history. Driven by: Golden Visa expansion, millionaire migration, limited new supply in premium zones, post-COVID safe haven demand, and AED-USD peg stability." },
                     ].map((cy, i) => (
                       <div key={i} style={{ background: T.card, border: `1px solid ${cy.color}33`, borderRadius: 14, padding: 20 }}>
                         <div style={{ fontSize: 22, marginBottom: 8 }}>{cy.icon}</div>
@@ -8974,11 +8974,11 @@ _Powered by DXB Analytics - Dubai Real Estate Intelligence_`)}`} target="_blank"
       {/* -- MOBILE BOTTOM NAV BAR -- */}
       <nav style={{ display: "none" }} className="mobile-bottom-nav" aria-label="Quick navigation">
         {[
-          { key: "Overview", icon: "~"??", label: "Overview" },
-          { key: "Projects", icon: "~"???", label: "Projects" },
-          { key: "Yields", icon: "~"??", label: "Yields" },
-          { key: "Portfolio", icon: "~"??", label: "Portfolio" },
-          { key: "Market", icon: "~"??", label: "Market" },
+          { key: "Overview", icon: "~", label: "Overview" },
+          { key: "Projects", icon: "~", label: "Projects" },
+          { key: "Yields", icon: "~", label: "Yields" },
+          { key: "Portfolio", icon: "~", label: "Portfolio" },
+          { key: "Market", icon: "~", label: "Market" },
         ].map(item => (
           <button key={item.key} type="button" onClick={() => { setTab(item.key); setSidebarOpen(false); }}
             style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 3, background: "none", border: "none", cursor: "pointer", padding: "6px 0", color: tab === item.key ? T.gold : T.textMuted, fontFamily: "'Outfit',sans-serif", transition: "color 0.2s" }}>
@@ -9281,13 +9281,13 @@ _Powered by DXB Analytics - Dubai Real Estate Intelligence_`)}`} target="_blank"
       {showOnboarding && (() => {
         const steps = [
           {
-            icon: "~"??",
+            icon: "~",
             title: `Welcome to DXB Analytics, ${userName || "Investor"}!`,
             body: "You now have access to Dubai's most comprehensive real estate intelligence platform. Let us show you around in 30 seconds.",
             cta: "Let's Go ??"
           },
           {
-            icon: "~"???",
+            icon: "~",
             title: "Browse 208+ Emaar Projects",
             body: "Go to the Projects tab to explore every active development. Filter by community, tier, handover year, or price range. Click any card for full details, documents, and ROI analysis.",
             cta: "Next ?"
@@ -9299,13 +9299,13 @@ _Powered by DXB Analytics - Dubai Real Estate Intelligence_`)}`} target="_blank"
             cta: "Next ?"
           },
           {
-            icon: "~"??",
+            icon: "~",
             title: "Yields, ROI & Mortgage",
             body: "Use the Yields tab for rental returns by community. The Mortgage tab calculates your monthly payment + all UAE transaction costs instantly.",
             cta: "Next ?"
           },
           {
-            icon: "~"??",
+            icon: "~",
             title: "You're All Set!",
             body: userTier === "free" ? "You're on the Free plan. Upgrade to Pro for compare mode, full project details, PDF reports, and portfolio tracking - from AED 99/month." : "You have full Pro access. Explore everything - compare projects, track your portfolio, and download reports.",
             cta: userTier === "free" ? "Explore Free Features" : "Start Exploring"
