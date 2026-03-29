@@ -1667,7 +1667,7 @@ const ReferralWidget = ({ user, T, db }) => {
     <div style={{ marginTop: 20, background: "linear-gradient(135deg, rgba(212,168,67,0.06), rgba(212,168,67,0.02))", border: `1px solid ${T.gold}33`, borderRadius: 16, padding: "18px 22px" }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
         <div>
-          <div style={{ fontFamily: "'Fraunces',serif", fontSize: 15, fontWeight: 700, color: T.gold, marginBottom: 2 }}>?? Refer a friend - get 1 month free</div>
+          <div style={{ fontFamily: "'Fraunces',serif", fontSize: 15, fontWeight: 700, color: T.gold, marginBottom: 2 }}>🎁 Refer a friend - get 1 month free</div>
           <div style={{ fontSize: 12, color: T.textMuted }}>Share your link. When they upgrade to Pro, you get a free month.</div>
         </div>
         <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
@@ -1814,7 +1814,7 @@ function EiborAdminPanel({ db, T }) {
     <div style={{ display: "flex", flexDirection: "column", gap: 16, marginTop: 8 }}>
       {eiborCurrent && (
         <div style={{ background: "rgba(16,185,129,0.06)", border: "1px solid rgba(16,185,129,0.2)", borderRadius: 12, padding: "14px 18px" }}>
-          <div style={{ fontSize: 11, color: "#10B981", fontWeight: 700, marginBottom: 8 }}>?? Currently Live - {eiborCurrent.asOf || "-"}</div>
+          <div style={{ fontSize: 11, color: "#10B981", fontWeight: 700, marginBottom: 8 }}>🟢 Currently Live - {eiborCurrent.asOf || "-"}</div>
           <div style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
             {[["1M", eiborCurrent["1m"]], ["3M", eiborCurrent["3m"]], ["6M", eiborCurrent["6m"]], ["1Y", eiborCurrent["1y"]]].map(([l, v]) => (
               <div key={l}><span style={{ fontSize: 10, color: T.textMuted }}>{l}: </span><span style={{ fontSize: 13, fontWeight: 700, color: T.white }}>{v ? parseFloat(v).toFixed(3) : "-"}%</span></div>
@@ -2515,7 +2515,7 @@ export default function EmaarDashboardV2() {
                     await emailjs.send("service_da7nshv", "template_gl1xqhy", {
                       user_email: firebaseUser.email, user_name: data.name || firebaseUser.email.split("@")[0],
                       project_name: "DXB Analytics Platform",
-                      change_type: "?? Your Pro Trial Has Expired",
+                      change_type: "Your Pro Trial Has Expired",
                       new_value: "Your 7-day trial has ended. Upgrade now to keep full access to 208+ projects, yield data, ROI tools and more.",
                       old_value: "Pro Trial", updated_at: new Date().toLocaleDateString("en-AE"),
                     }, "USkwUhp0csGCVDkdQ");
@@ -2760,8 +2760,8 @@ export default function EmaarDashboardV2() {
 
   // KYC SUBMIT FUNCTION
   const submitKYC = async () => {
-    if (!kycForm.name.trim()) { notify("?? Full name required"); return; }
-    if (!kycForm.phone.trim()) { notify("?? Phone number required"); return; }
+    if (!kycForm.name.trim()) { notify("Full name required"); return; }
+    if (!kycForm.phone.trim()) { notify("Phone number required"); return; }
     if (!auth.currentUser) return;
     setKycSubmitting(true);
     try {
@@ -3209,7 +3209,7 @@ export default function EmaarDashboardV2() {
               // Format helpers
               const fmtB = (v) => `AED ${v}B`;
               const freshnessBadge = emaarLive ? (
-                <span style={{ fontSize: 9, padding: "2px 8px", borderRadius: 10, background: "rgba(16,185,129,0.12)", color: "#10B981", fontWeight: 700, border: "1px solid rgba(16,185,129,0.2)" }}>?? LIVE</span>
+                <span style={{ fontSize: 9, padding: "2px 8px", borderRadius: 10, background: "rgba(16,185,129,0.12)", color: "#10B981", fontWeight: 700, border: "1px solid rgba(16,185,129,0.2)" }}>● LIVE</span>
               ) : (
                 <span style={{ fontSize: 9, padding: "2px 8px", borderRadius: 10, background: "rgba(212,168,67,0.1)", color: "#D4A843", fontWeight: 700, border: "1px solid rgba(212,168,67,0.2)" }}>STATIC</span>
               );
@@ -3459,7 +3459,7 @@ export default function EmaarDashboardV2() {
                   <span style={{ fontSize: 14 }}>??</span>
                   <span style={{ fontSize: 11, fontWeight: 700, color: T.gold, letterSpacing: 1, textTransform: "uppercase" }}>Dubai RE Market Headlines</span>
                   {isLive
-                    ? <span style={{ fontSize: 9, padding: "2px 8px", borderRadius: 10, background: "rgba(16,185,129,0.1)", color: T.green, border: "1px solid rgba(16,185,129,0.2)" }}>?? LIVE</span>
+                    ? <span style={{ fontSize: 9, padding: "2px 8px", borderRadius: 10, background: "rgba(16,185,129,0.1)", color: T.green, border: "1px solid rgba(16,185,129,0.2)" }}>● LIVE</span>
                     : <span style={{ fontSize: 9, padding: "2px 8px", borderRadius: 10, background: "rgba(212,168,67,0.1)", color: T.gold, border: "1px solid rgba(212,168,67,0.2)" }}>STATIC</span>
                   }
                 </div>
@@ -3627,7 +3627,7 @@ export default function EmaarDashboardV2() {
               {/* Freshness badge */}
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
                 {emaarLive ? (
-                  <span style={{ fontSize: 9, padding: "2px 8px", borderRadius: 10, background: "rgba(16,185,129,0.12)", color: "#10B981", fontWeight: 700, border: "1px solid rgba(16,185,129,0.2)" }}>?? LIVE - Firestore</span>
+                  <span style={{ fontSize: 9, padding: "2px 8px", borderRadius: 10, background: "rgba(16,185,129,0.12)", color: "#10B981", fontWeight: 700, border: "1px solid rgba(16,185,129,0.2)" }}>● LIVE - Firestore</span>
                 ) : (
                   <span style={{ fontSize: 9, padding: "2px 8px", borderRadius: 10, background: "rgba(212,168,67,0.1)", color: "#D4A843", fontWeight: 700, border: "1px solid rgba(212,168,67,0.2)" }}>STATIC - data.js</span>
                 )}
@@ -6392,7 +6392,7 @@ export default function EmaarDashboardV2() {
               { name: "Downtown Hills", community: "Dubai Hills Estate", date: "Q2 2027", status: "pipeline", expectedPrice: 3100000, developer: "Emaar", type: "Apartment", beds: "2-4 BR", paymentPlan: "TBD", goldenVisa: true, notes: "Premium mid-rise adjacent to DHE Mall. High occupancy expected." },
             ];
             const statusColors = { launched: "#10B981", upcoming: T.gold, rumoured: "#8B5CF6", pipeline: T.textMuted };
-            const statusLabels = { launched: "Launched", upcoming: "Upcoming", rumoured: "Rumoured", pipeline: "?? Pipeline" };
+            const statusLabels = { launched: "Launched", upcoming: "Upcoming", rumoured: "Rumoured", pipeline: "Pipeline" };
             const groups = ["launched", "upcoming", "rumoured", "pipeline"];
             return (
               <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
