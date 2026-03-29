@@ -2021,6 +2021,7 @@ export default function EmaarDashboardV2() {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      setFirebaseUser(firebaseUser);
       if (firebaseUser) {
         setIsLoggedIn(true);
         setUser(firebaseUser.email || "");
