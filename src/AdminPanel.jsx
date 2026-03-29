@@ -126,7 +126,7 @@ function EmailCampaignsTab({ T, db, notify, adminUser, leads, leadsTotal, fetchL
         </div>
         {campaigns.length === 0 ? (
           <div style={{ textAlign:"center", padding:"60px 20px" }}>
-            <div style={{ fontSize:40, marginBottom:12 }}>??</div>
+            <div style={{ fontSize:40, marginBottom:12 }}>×</div>
             <div style={{ fontSize:15, fontWeight:700, color:T.white, marginBottom:6 }}>No campaigns yet</div>
           </div>
         ) : (
@@ -710,8 +710,8 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
 
   // Categories and statuses
   const categories = [
-    { id: "bug", label: "Bug Report", color: T.red, icon: "??" },
-    { id: "data", label: "Data Question", color: T.orange, icon: "??" },
+    { id: "bug", label: "Bug Report", color: T.red, icon: "●" },
+    { id: "data", label: "Data Question", color: T.orange, icon: "●" },
     { id: "feature", label: "Feature Request", color: T.purple, icon: "?" },
     { id: "billing", label: "Billing Query", color: T.green, icon: "�" },
     { id: "account", label: "Account Issue", color: T.blue, icon: "�" },
@@ -1881,7 +1881,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
     { id: "ticket_resolved", label: "Ticket Resolved", icon: "" },
     { id: "ticket_assigned", label: "Ticket Assigned", icon: "�" },
     { id: "sla_breach", label: "SLA Breached", icon: "�" },
-    { id: "reply_sent", label: "Reply Sent", icon: "??" },
+    { id: "reply_sent", label: "Reply Sent", icon: "●" },
     { id: "priority_changed", label: "Priority Changed", icon: "�" },
   ];
 
@@ -2737,11 +2737,11 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
 
   // Phase 5B: KB Categories
   const kbCategories = [
-    { id: "getting-started", label: "Getting Started", icon: "??" },
+    { id: "getting-started", label: "Getting Started", icon: "●" },
     { id: "billing", label: "Billing & Payments", icon: "�" },
     { id: "technical", label: "Technical Issues", icon: "�" },
     { id: "features", label: "Features & Usage", icon: "?" },
-    { id: "account", label: "Account & Security", icon: "??" },
+    { id: "account", label: "Account & Security", icon: "●" },
   ];
 
   const qrCategories = [
@@ -2908,7 +2908,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
 
   // Phase 6A: Sentiment Analysis (rule-based)
   const analyzeSentiment = (ticket) => {
-    if (!ticket) return { sentiment: "neutral", emoji: "??", color: T.textMuted, label: "Neutral" };
+    if (!ticket) return { sentiment: "neutral", emoji: "●", color: T.textMuted, label: "Neutral" };
     
     const allText = [
       ticket.subject || "",
@@ -2942,7 +2942,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
     if (scores.concerned >= 2) return { sentiment: "concerned", emoji: "�", color: T.orange, label: "Concerned" };
     if (scores.positive >= 2) return { sentiment: "positive", emoji: "�", color: T.green, label: "Positive" };
     
-    return { sentiment: "neutral", emoji: "??", color: T.textMuted, label: "Neutral" };
+    return { sentiment: "neutral", emoji: "●", color: T.textMuted, label: "Neutral" };
   };
 
   // Phase 6A: AI Priority Recommendation
@@ -3652,7 +3652,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
                           <span style={{ fontSize: 11, color: T.textSecondary, display: "flex", alignItems: "center", gap: 6 }}>
                             {agent.name}
-                            {isOverloaded && <span style={{ fontSize: 9, padding: "1px 4px", borderRadius: 3, background: `${T.red}20`, color: T.red }}>??</span>}
+                            {isOverloaded && <span style={{ fontSize: 9, padding: "1px 4px", borderRadius: 3, background: `${T.red}20`, color: T.red }}>×</span>}
                           </span>
                           <span style={{ fontSize: 11, fontWeight: 600, color: isOverloaded ? T.red : agent.id === "unassigned" ? T.orange : T.white }}>{agent.count}</span>
                         </div>
@@ -3901,11 +3901,11 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
           {/* Chat Stats */}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 12 }}>
             {[
-              { label: "Active Chats", value: liveChats.filter(c => c.status === "active").length, color: T.green, icon: "??" },
+              { label: "Active Chats", value: liveChats.filter(c => c.status === "active").length, color: T.green, icon: "●" },
               { label: "In Queue", value: chatQueue.length, color: chatQueue.length > 0 ? T.orange : T.textMuted, icon: "" },
               { label: "Handled Today", value: liveChats.filter(c => c.status === "ended").length, color: T.teal, icon: "?" },
               { label: "Avg Wait", value: chatQueue.length > 0 ? `${Math.round(chatQueue.reduce((a, c) => a + (Date.now() - new Date(c.queuedAt).getTime()) / 1000, 0) / chatQueue.length / 60)}m` : "�", color: T.textSecondary, icon: "�?" },
-              { label: "Avg Duration", value: liveChats.filter(c => c.duration).length > 0 ? `${Math.round(liveChats.filter(c => c.duration).reduce((a, c) => a + c.duration, 0) / liveChats.filter(c => c.duration).length / 60)}m` : "�", color: T.textSecondary, icon: "??" },
+              { label: "Avg Duration", value: liveChats.filter(c => c.duration).length > 0 ? `${Math.round(liveChats.filter(c => c.duration).reduce((a, c) => a + c.duration, 0) / liveChats.filter(c => c.duration).length / 60)}m` : "�", color: T.textSecondary, icon: "●" },
             ].map((stat, i) => (
               <div key={i} style={{ padding: 16, background: T.surface, borderRadius: 10, border: `1px solid ${T.border}`, textAlign: "center" }}>
                 <div style={{ fontSize: 20, marginBottom: 4 }}>{stat.icon}</div>
@@ -3941,7 +3941,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
               
               {chatQueue.length === 0 ? (
                 <div style={{ padding: 30, textAlign: "center", color: T.textMuted }}>
-                  <div style={{ fontSize: 28, marginBottom: 8 }}>??</div>
+                  <div style={{ fontSize: 28, marginBottom: 8 }}>×</div>
                   <div style={{ fontSize: 12 }}>No visitors waiting</div>
                 </div>
               ) : (
@@ -4150,7 +4150,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                 
                 {liveChats.filter(c => c.status === "active").length === 0 ? (
                   <div style={{ padding: 30, textAlign: "center", color: T.textMuted }}>
-                    <div style={{ fontSize: 28, marginBottom: 8 }}>??</div>
+                    <div style={{ fontSize: 28, marginBottom: 8 }}>×</div>
                     <div style={{ fontSize: 12 }}>No active chats</div>
                     <div style={{ fontSize: 11, color: T.textMuted, marginTop: 4 }}>Accept a visitor from the queue to start</div>
                   </div>
@@ -4240,7 +4240,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
             <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <div style={{ width: 36, height: 36, borderRadius: "50%", background: "#25D366", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <span style={{ fontSize: 18 }}>??</span>
+                  <span style={{ fontSize: 18 }}>×</span>
                 </div>
                 <div>
                   <div style={{ fontSize: 14, fontWeight: 700, color: T.white }}>WhatsApp Business</div>
@@ -4260,9 +4260,9 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
           {/* WhatsApp Stats */}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 12 }}>
             {[
-              { label: "Active", value: whatsappConversations.filter(c => c.status === "active").length, color: "#25D366", icon: "??" },
-              { label: "Unread", value: whatsappConversations.filter(c => !c.responded && c.status === "active").length, color: T.orange, icon: "??" },
-              { label: "Today", value: whatsappConversations.filter(c => new Date(c.createdAt) > new Date(Date.now() - 86400000)).length, color: T.teal, icon: "??" },
+              { label: "Active", value: whatsappConversations.filter(c => c.status === "active").length, color: "#25D366", icon: "●" },
+              { label: "Unread", value: whatsappConversations.filter(c => !c.responded && c.status === "active").length, color: T.orange, icon: "●" },
+              { label: "Today", value: whatsappConversations.filter(c => new Date(c.createdAt) > new Date(Date.now() - 86400000)).length, color: T.teal, icon: "●" },
               { label: "Converted", value: whatsappConversations.filter(c => c.convertedToTicket).length, color: T.purple, icon: "�" },
               { label: "Avg Response", value: "~5m", color: T.textSecondary, icon: "�?" },
             ].map((stat, i) => (
@@ -4288,7 +4288,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
               
               {whatsappConversations.length === 0 ? (
                 <div style={{ padding: 30, textAlign: "center", color: T.textMuted }}>
-                  <div style={{ fontSize: 28, marginBottom: 8 }}>??</div>
+                  <div style={{ fontSize: 28, marginBottom: 8 }}>×</div>
                   <div style={{ fontSize: 12 }}>No WhatsApp conversations</div>
                   <div style={{ fontSize: 11, color: T.textMuted, marginTop: 4 }}>Messages will appear here when customers contact you</div>
                 </div>
@@ -4439,7 +4439,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                           <span style={{ fontSize: 9, color: "#667781" }}>
                             {new Date(msg.at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                           </span>
-                          {msg.from === "agent" && <span style={{ fontSize: 9, color: "#53BDEB" }}>??</span>}
+                          {msg.from === "agent" && <span style={{ fontSize: 9, color: "#53BDEB" }}>×</span>}
                         </div>
                       </div>
                     ))}
@@ -4449,7 +4449,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                   <div style={{ padding: 12, borderTop: `1px solid ${T.border}`, background: T.surface }}>
                     {!canSendFreeform && (
                       <div style={{ padding: 10, background: `${T.orange}10`, borderRadius: 8, marginBottom: 10, display: "flex", alignItems: "center", gap: 8 }}>
-                        <span style={{ fontSize: 16 }}>??</span>
+                        <span style={{ fontSize: 16 }}>×</span>
                         <div>
                           <div style={{ fontSize: 11, fontWeight: 600, color: T.orange }}>24-hour window expired</div>
                           <div style={{ fontSize: 10, color: T.textMuted }}>You can only send pre-approved template messages. Click "Templates" below.</div>
@@ -4526,7 +4526,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
           {/* KB Categories */}
           {(() => {
             const kbCategories = [
-              { id: "getting-started", label: "Getting Started", icon: "??" },
+              { id: "getting-started", label: "Getting Started", icon: "●" },
               { id: "billing", label: "Billing & Payments", icon: "�" },
               { id: "technical", label: "Technical Issues", icon: "�" },
               { id: "features", label: "Features & How-To", icon: "" },
@@ -4534,7 +4534,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
             ];
             
             const qrCategories = [
-              { id: "general", label: "General", icon: "??" },
+              { id: "general", label: "General", icon: "●" },
               { id: "technical", label: "Technical", icon: "�" },
               { id: "billing", label: "Billing", icon: "�" },
             ];
@@ -4626,7 +4626,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                     <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                       {articlesByCategory.length === 0 ? (
                         <div style={{ padding: 30, textAlign: "center", color: T.textMuted }}>
-                          <div style={{ fontSize: 24, marginBottom: 8 }}>??</div>
+                          <div style={{ fontSize: 24, marginBottom: 8 }}>×</div>
                           <div style={{ fontSize: 12 }}>No articles found. Create your first article!</div>
                         </div>
                       ) : (
@@ -4683,7 +4683,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                   
                   {quickResponses.length === 0 ? (
                     <div style={{ padding: 30, textAlign: "center", color: T.textMuted }}>
-                      <div style={{ fontSize: 24, marginBottom: 8 }}>?</div>
+                      <div style={{ fontSize: 24, marginBottom: 8 }}>●</div>
                       <div style={{ fontSize: 12 }}>No quick responses yet. Create your first template!</div>
                     </div>
                   ) : (
@@ -4963,15 +4963,15 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                     <div style={{ width: 32, height: 32, borderRadius: 8, background: `${getAuditActionColor(log.action)}20`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                       <span style={{ fontSize: 12 }}>
                         {log.action === "created" ? "�" :
-                         log.action === "status_change" ? "??" :
+                         log.action === "status_change" ? "●" :
                          log.action === "assigned" ? "�" :
-                         log.action === "reply_sent" ? "??" :
-                         log.action === "note_added" ? "??" :
+                         log.action === "reply_sent" ? "●" :
+                         log.action === "note_added" ? "●" :
                          log.action === "tag_added" ? "�" :
                          log.action === "tag_removed" ? "�" :
                          log.action === "time_logged" ? "�?" :
-                         log.action === "escalated" ? "??" :
-                         log.action === "merged" ? "??" : "??"}
+                         log.action === "escalated" ? "●" :
+                         log.action === "merged" ? "●" : "●"}
                       </span>
                     </div>
                     
@@ -5025,7 +5025,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
               })}
               {ticketAuditLogs.length === 0 && (
                 <div style={{ padding: 60, textAlign: "center", color: T.textMuted }}>
-                  <div style={{ fontSize: 32, marginBottom: 12 }}>??</div>
+                  <div style={{ fontSize: 32, marginBottom: 12 }}>×</div>
                   <div style={{ fontSize: 14, fontWeight: 600, color: T.textSecondary }}>No audit logs yet</div>
                   <div style={{ fontSize: 12 }}>Actions will be logged as you work on tickets</div>
                 </div>
@@ -5068,7 +5068,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
               <div style={{ maxHeight: 280, overflowY: "auto" }}>
                 {webhooks.length === 0 ? (
                   <div style={{ padding: 40, textAlign: "center", color: T.textMuted }}>
-                    <div style={{ fontSize: 24, marginBottom: 8 }}>??</div>
+                    <div style={{ fontSize: 24, marginBottom: 8 }}>×</div>
                     <div style={{ fontSize: 12 }}>No webhooks configured</div>
                   </div>
                 ) : (
@@ -5119,7 +5119,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
               <div style={{ maxHeight: 280, overflowY: "auto" }}>
                 {agentPermissions.length === 0 ? (
                   <div style={{ padding: 40, textAlign: "center", color: T.textMuted }}>
-                    <div style={{ fontSize: 24, marginBottom: 8 }}>??</div>
+                    <div style={{ fontSize: 24, marginBottom: 8 }}>×</div>
                     <div style={{ fontSize: 12 }}>No permissions configured</div>
                   </div>
                 ) : (
@@ -5204,7 +5204,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
           </div>
         ) : filteredTickets.length === 0 ? (
           <div style={{ padding: 60, textAlign: "center", color: T.textMuted }}>
-            <div style={{ fontSize: 32, marginBottom: 12 }}>??</div>
+            <div style={{ fontSize: 32, marginBottom: 12 }}>×</div>
             <div style={{ fontSize: 14, fontWeight: 600, color: T.textSecondary }}>No tickets found</div>
             <div style={{ fontSize: 12 }}>{supportSubTab === "open" ? "All caught up!" : "Try adjusting your filters"}</div>
           </div>
@@ -5741,7 +5741,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                               </a>
                             ) : (
                               <a href={msg.attachment.url} target="_blank" rel="noopener noreferrer" style={{ display: "flex", alignItems: "center", gap: 8, color: msg.from === "admin" ? T.bg : T.teal, textDecoration: "none" }}>
-                                <span style={{ fontSize: 20 }}>??</span>
+                                <span style={{ fontSize: 20 }}>×</span>
                                 <div>
                                   <div style={{ fontSize: 12, fontWeight: 600 }}>{msg.attachment.name}</div>
                                   <div style={{ fontSize: 10, opacity: 0.7 }}>{(msg.attachment.size / 1024).toFixed(1)} KB</div>
@@ -5780,7 +5780,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                               </a>
                             ) : (
                               <a href={note.attachment.url} target="_blank" rel="noopener noreferrer" style={{ display: "flex", alignItems: "center", gap: 8, color: T.teal, textDecoration: "none" }}>
-                                <span style={{ fontSize: 18 }}>??</span>
+                                <span style={{ fontSize: 18 }}>×</span>
                                 <div>
                                   <div style={{ fontSize: 11, fontWeight: 600 }}>{note.attachment.name}</div>
                                   <div style={{ fontSize: 9, color: T.textMuted }}>{(note.attachment.size / 1024).toFixed(1)} KB</div>
@@ -6217,7 +6217,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                     <div key={field.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 14px", background: T.surfaceAlt, borderRadius: 8, border: `1px solid ${T.border}` }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                         <span style={{ fontSize: 18 }}>
-                          {field.type === "dropdown" ? "??" : field.type === "date" ? "??" : field.type === "number" ? "??" : field.type === "checkbox" ? "??" : "�"}
+                          {field.type === "dropdown" ? "●" : field.type === "date" ? "●" : field.type === "number" ? "●" : field.type === "checkbox" ? "●" : "�"}
                         </span>
                         <div>
                           <div style={{ fontSize: 13, fontWeight: 600, color: T.white, display: "flex", alignItems: "center", gap: 6 }}>
@@ -7059,7 +7059,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                 {/* Chat Header */}
                 <div style={{ background: chatSettings.widgetColor, borderRadius: "12px 12px 0 0", padding: 16, color: T.white }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                    <div style={{ width: 40, height: 40, borderRadius: "50%", background: "rgba(255,255,255,0.2)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>??</div>
+                    <div style={{ width: 40, height: 40, borderRadius: "50%", background: "rgba(255,255,255,0.2)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>×</div>
                     <div>
                       <div style={{ fontWeight: 700, fontSize: 14 }}>DXB Analytics</div>
                       <div style={{ fontSize: 11, opacity: 0.9, display: "flex", alignItems: "center", gap: 4 }}>
@@ -7106,7 +7106,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
           <div style={{ background: T.surface, borderRadius: 16, border: `1px solid #25D36630`, padding: 24, width: "100%", maxWidth: 550, maxHeight: "90vh", overflow: "auto" }} onClick={e => e.stopPropagation()}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <span style={{ fontSize: 24 }}>??</span>
+                <span style={{ fontSize: 24 }}>×</span>
                 <div>
                   <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>
                     WhatsApp Message Templates
@@ -7118,7 +7118,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
             </div>
             
             <div style={{ padding: 12, background: `${T.teal}10`, borderRadius: 8, marginBottom: 16, display: "flex", alignItems: "flex-start", gap: 10 }}>
-              <span style={{ fontSize: 16 }}>??</span>
+              <span style={{ fontSize: 16 }}>×</span>
               <div style={{ fontSize: 11, color: T.textSecondary, lineHeight: 1.5 }}>
                 These templates are pre-approved by Meta for WhatsApp Business API. Use <code style={{ background: T.surface, padding: "1px 4px", borderRadius: 3 }}>{"{{name}}"}</code> for customer's name.
                 {activeWhatsappId && " Click a template to send it to the current conversation."}
@@ -7448,7 +7448,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
 ---------------------------------------- */
 function NotificationsTab({ T, notify, adminUser, I, users, db }) {
   const [notifSubTab, setNotifSubTab] = React.useState("compose");
-  const [notifForm, setNotifForm] = React.useState({ title: "", message: "", icon: "??", type: "info", link: "" });
+  const [notifForm, setNotifForm] = React.useState({ title: "", message: "", icon: "●", type: "info", link: "" });
   const [notifSending, setNotifSending] = React.useState(false);
   const [sentNotifs, setSentNotifs] = React.useState([]);
   const [templates, setTemplates] = React.useState([]);
@@ -7472,7 +7472,7 @@ function NotificationsTab({ T, notify, adminUser, I, users, db }) {
   const [emailTargetTier, setEmailTargetTier] = React.useState("pro");
   const [scheduledNotifs, setScheduledNotifs] = React.useState([]);
 
-  const ICONS = ["??", "??", "??", "??", "??", "??", "??", "??", "?", "??", "??", "??"];
+  const ICONS = ["●", "●", "●", "●", "●", "●", "●", "●", "?", "●", "●", "●"];
   const TYPES = [
     { id: "info",    label: "Info",    color: T.blue   || "#3B82F6" },
     { id: "success", label: "Success", color: T.green  || "#10B981" },
@@ -7539,7 +7539,7 @@ function NotificationsTab({ T, notify, adminUser, I, users, db }) {
       }
       setLastResult({ success: true, sent, failed, total: targetUsers.length, durationMs: Date.now() - startTime, scheduled: !!scheduledFor, scheduledFor });
       notify(scheduledFor ? `Scheduled for ${new Date(scheduledFor).toLocaleString("en-AE")}` : `Sent to ${sent} users!`);
-      setNotifForm({ title: "", message: "", icon: "??", type: "info", link: "" });
+      setNotifForm({ title: "", message: "", icon: "●", type: "info", link: "" });
       setScheduleEnabled(false); setScheduleDate("");
       fetchNotifications();
     } catch (e) {
@@ -7565,7 +7565,7 @@ function NotificationsTab({ T, notify, adminUser, I, users, db }) {
   };
 
   const loadTemplate = (t) => {
-    setNotifForm({ title: t.title || "", message: t.message || "", icon: t.icon || "??", type: t.type || "info", link: t.link || "" });
+    setNotifForm({ title: t.title || "", message: t.message || "", icon: t.icon || "●", type: t.type || "info", link: t.link || "" });
     setNotifSubTab("compose");
     notify(`Loaded: ${t.name}`);
   };
@@ -7584,7 +7584,7 @@ function NotificationsTab({ T, notify, adminUser, I, users, db }) {
   };
 
   const resendNotification = async (n) => {
-    setNotifForm({ title: n.title, message: n.message, icon: n.icon || "??", type: n.type || "info", link: n.link || "" });
+    setNotifForm({ title: n.title, message: n.message, icon: n.icon || "●", type: n.type || "info", link: n.link || "" });
     setTargetType("user"); setTargetUserId(n.userId);
     setNotifSubTab("compose");
     notify("Loaded for resend � adjust and hit Send");
@@ -7658,11 +7658,11 @@ function NotificationsTab({ T, notify, adminUser, I, users, db }) {
   const typeColor = (type) => TYPES.find(t => t.id === type)?.color || blue;
 
   const SUBTABS = [
-    { id: "compose",   label: "Compose",                icon: "??" },
-    { id: "email",     label: "Email Blast",            icon: "??" },
+    { id: "compose",   label: "Compose",                icon: "●" },
+    { id: "email",     label: "Email Blast",            icon: "●" },
     { id: "scheduled", label: `Scheduled (${stats.scheduled})`, icon: "?" },
-    { id: "templates", label: `Templates (${templates.length})`, icon: "??" },
-    { id: "history",   label: `History (${sentNotifs.length})`,  icon: "??" },
+    { id: "templates", label: `Templates (${templates.length})`, icon: "●" },
+    { id: "history",   label: `History (${sentNotifs.length})`,  icon: "●" },
   ];
 
   return (
@@ -7881,7 +7881,7 @@ function NotificationsTab({ T, notify, adminUser, I, users, db }) {
                       style={{ padding: "10px 14px", borderRadius: 8, border: `1px solid ${border}`, background: surfAlt, color: white, fontSize: 12, cursor: "pointer", display: "flex", alignItems: "center", gap: 10, textAlign: "left" }}
                       onMouseEnter={e => e.currentTarget.style.borderColor = gold}
                       onMouseLeave={e => e.currentTarget.style.borderColor = border}>
-                      <span style={{ fontSize: 18 }}>{t.icon || "??"}</span>
+                      <span style={{ fontSize: 18 }}>{t.icon || "●"}</span>
                       <div>
                         <div style={{ fontSize: 12, fontWeight: 600, color: white }}>{t.name}</div>
                         <div style={{ fontSize: 10, color: textMuted }}>{t.title}</div>
@@ -7991,7 +7991,7 @@ function NotificationsTab({ T, notify, adminUser, I, users, db }) {
           </div>
           {scheduledNotifs.length === 0 ? (
             <div style={{ padding: 60, textAlign: "center", color: textMuted }}>
-              <div style={{ fontSize: 40, marginBottom: 12 }}>?</div>
+              <div style={{ fontSize: 40, marginBottom: 12 }}>●</div>
               <div style={{ fontSize: 14, fontWeight: 600, color: textSec }}>No scheduled notifications</div>
               <div style={{ fontSize: 12, marginTop: 6 }}>Use the Compose tab with Schedule Send enabled</div>
             </div>
@@ -8000,7 +8000,7 @@ function NotificationsTab({ T, notify, adminUser, I, users, db }) {
               {scheduledNotifs.map(n => (
                 <div key={n.id} style={{ padding: "16px 20px", borderBottom: `1px solid ${border}`, display: "flex", alignItems: "center", gap: 14 }}>
                   <div style={{ width: 40, height: 40, borderRadius: 10, background: `${typeColor(n.type)}22`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, flexShrink: 0 }}>
-                    {n.icon || "??"}
+                    {n.icon || "●"}
                   </div>
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: 13, fontWeight: 600, color: white }}>{n.title}</div>
@@ -8028,14 +8028,14 @@ function NotificationsTab({ T, notify, adminUser, I, users, db }) {
               <div style={{ fontSize: 14, fontWeight: 700, color: white }}>Notification Templates</div>
               <div style={{ fontSize: 11, color: textMuted }}>{templates.length} templates saved</div>
             </div>
-            <button type="button" onClick={() => { setNotifForm({ title: "", message: "", icon: "??", type: "info", link: "" }); setNotifSubTab("compose"); setShowTemplateModal(true); }}
+            <button type="button" onClick={() => { setNotifForm({ title: "", message: "", icon: "●", type: "info", link: "" }); setNotifSubTab("compose"); setShowTemplateModal(true); }}
               style={{ padding: "8px 16px", borderRadius: 8, border: "none", background: gold, color: bg, fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
               + New Template
             </button>
           </div>
           {templates.length === 0 ? (
             <div style={{ padding: 60, textAlign: "center", color: textMuted }}>
-              <div style={{ fontSize: 40, marginBottom: 12 }}>??</div>
+              <div style={{ fontSize: 40, marginBottom: 12 }}>×</div>
               <div style={{ fontSize: 14, fontWeight: 600, color: textSec }}>No templates yet</div>
               <div style={{ fontSize: 12 }}>Compose a notification then save it as a template</div>
             </div>
@@ -8045,7 +8045,7 @@ function NotificationsTab({ T, notify, adminUser, I, users, db }) {
                 <div key={t.id} style={{ background: surfAlt, borderRadius: 12, border: `1px solid ${border}`, padding: 16 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                      <span style={{ fontSize: 24 }}>{t.icon || "??"}</span>
+                      <span style={{ fontSize: 24 }}>{t.icon || "●"}</span>
                       <div>
                         <div style={{ fontSize: 14, fontWeight: 700, color: white }}>{t.name}</div>
                         <div style={{ fontSize: 10, color: textMuted }}>{t.type || "info"}</div>
@@ -8096,7 +8096,7 @@ function NotificationsTab({ T, notify, adminUser, I, users, db }) {
           </div>
           {filteredHistory.length === 0 ? (
             <div style={{ padding: 60, textAlign: "center", color: textMuted }}>
-              <div style={{ fontSize: 40, marginBottom: 12 }}>??</div>
+              <div style={{ fontSize: 40, marginBottom: 12 }}>×</div>
               <div style={{ fontSize: 14, fontWeight: 600, color: textSec }}>No notifications found</div>
             </div>
           ) : (
@@ -8110,7 +8110,7 @@ function NotificationsTab({ T, notify, adminUser, I, users, db }) {
                     else setSelectedNotifs(p => p.filter(id => id !== n.id));
                   }} style={{ cursor: "pointer" }} />
                   <div style={{ width: 36, height: 36, borderRadius: 8, background: `${typeColor(n.type)}22`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, flexShrink: 0 }}>
-                    {n.icon || "??"}
+                    {n.icon || "●"}
                   </div>
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: 13, fontWeight: 600, color: white, marginBottom: 2 }}>{n.title}</div>
@@ -8201,13 +8201,13 @@ function DigestTab({ users, db, notify, adminUser, T, I }) {
   })();
 
   const sectionMeta = {
-    market_pulse: { label: "Market Pulse", desc: "Revenue, profit, backlog from Emaar", icon: "??", color: T.gold },
-    top_yields: { label: "Top 5 Yields", desc: "Highest rental yield projects", icon: "??", color: T.green },
+    market_pulse: { label: "Market Pulse", desc: "Revenue, profit, backlog from Emaar", icon: "●", color: T.gold },
+    top_yields: { label: "Top 5 Yields", desc: "Highest rental yield projects", icon: "●", color: T.green },
     handovers: { label: "Upcoming Handovers", desc: "Projects handing over in 6 months", icon: "�", color: T.teal },
     golden_visa: { label: "Golden Visa Projects", desc: "2M+ AED eligible properties", icon: "�", color: "#F59E0B" },
-    new_launches: { label: "New Launches", desc: "Recently announced projects", icon: "??", color: T.purple },
-    price_changes: { label: "Price Movements", desc: "Notable price changes this week", icon: "??", color: T.blue },
-    cta: { label: "Call to Action", desc: "Link back to dashboard", icon: "??", color: T.gold },
+    new_launches: { label: "New Launches", desc: "Recently announced projects", icon: "●", color: T.purple },
+    price_changes: { label: "Price Movements", desc: "Notable price changes this week", icon: "●", color: T.blue },
+    cta: { label: "Call to Action", desc: "Link back to dashboard", icon: "●", color: T.gold },
   };
 
   useEffect(() => {
@@ -8361,7 +8361,7 @@ function DigestTab({ users, db, notify, adminUser, T, I }) {
       <div style={{ display: "flex", gap: 8 }}>
         {[
           { id: "compose", label: "Compose & Send", icon: "" },
-          { id: "history", label: `History (${digestLog.length})`, icon: "??" },
+          { id: "history", label: `History (${digestLog.length})`, icon: "●" },
           { id: "settings", label: "Settings", icon: "" },
         ].map(t => (
           <button key={t.id} type="button" onClick={() => setDigestSubTab(t.id)}
@@ -8440,7 +8440,7 @@ function DigestTab({ users, db, notify, adminUser, T, I }) {
                   <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, marginBottom: 8 }}>SECTIONS INCLUDED</div>
                   <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                     {digestTemplate.sections.map((sec, i) => {
-                      const meta = sectionMeta[sec] || { label: sec, icon: "??", color: T.textMuted };
+                      const meta = sectionMeta[sec] || { label: sec, icon: "●", color: T.textMuted };
                       return (
                         <div key={sec} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 12px", background: T.surfaceAlt, borderRadius: 8, border: `1px solid ${T.border}` }}>
                           <span style={{ fontSize: 14 }}>{meta.icon}</span>
@@ -8506,7 +8506,7 @@ function DigestTab({ users, db, notify, adminUser, T, I }) {
                   <div style={{ fontSize: 13, color: T.textSecondary, lineHeight: 1.6 }}>{digestTemplate.intro}</div>
                 </div>
                 {digestTemplate.sections.map((sec, i) => {
-                  const meta = sectionMeta[sec] || { label: sec, icon: "??", color: T.textMuted };
+                  const meta = sectionMeta[sec] || { label: sec, icon: "●", color: T.textMuted };
                   return (
                     <div key={sec} style={{ padding: "12px 0", borderBottom: i < digestTemplate.sections.length - 1 ? `1px solid ${T.border}` : "none" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
@@ -8538,7 +8538,7 @@ function DigestTab({ users, db, notify, adminUser, T, I }) {
           </div>
           {digestLog.length === 0 ? (
             <div style={{ padding: 60, textAlign: "center", color: T.textMuted }}>
-              <div style={{ fontSize: 32, marginBottom: 12 }}>??</div>
+              <div style={{ fontSize: 32, marginBottom: 12 }}>×</div>
               <div style={{ fontSize: 14, fontWeight: 600, color: T.textSecondary }}>No digests sent yet</div>
               <div style={{ fontSize: 12 }}>Go to Compose tab to send your first digest</div>
             </div>
@@ -8817,7 +8817,7 @@ function EiborRatesPanel({ db, T, I, notify }) {
       {/* --- RATE ALERT --- */}
       {rateAlert && (
         <div className="fade-up" style={{ padding: "14px 20px", borderRadius: 12, background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.25)", display: "flex", alignItems: "center", gap: 12 }}>
-          <span style={{ fontSize: 18 }}>?</span>
+          <span style={{ fontSize: 18 }}>●</span>
           <div>
             <div style={{ fontSize: 13, fontWeight: 700, color: T.red }}>Significant Rate Change Detected</div>
             <div style={{ fontSize: 11, color: T.textMuted }}>3M EIBOR changed by more than 0.25% from the previous update. Consider notifying users.</div>
@@ -9381,7 +9381,7 @@ const ProfileDrawerComponent = ({
                               {(l.from || l.to) && (
                                 <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>
                                   {l.from && <span style={{ color: T.red }}>{l.from}</span>}
-                                  {l.from && l.to && <span style={{ margin: "0 5px", color: T.textMuted }}>?</span>}
+                                  {l.from && l.to && <span style={{ margin: "0 5px", color: T.textMuted }}>›</span>}
                                   {l.to && <span style={{ color: T.green }}>{l.to}</span>}
                                 </div>
                               )}
@@ -10867,7 +10867,7 @@ function AuditLogTable({ auditLog, users, emaarProjects, fetchAuditLog, setTab, 
     role_change:       { label: "Role Changed",      color: T.red,      icon: "" },
     admin_login:       { label: "Admin Login",       color: T.green,    icon: "" },
     admin_logout:      { label: "Admin Logout",      color: T.textMuted,icon: "" },
-    user_created:      { label: "User Created",      color: T.teal,     icon: "??" },
+    user_created:      { label: "User Created",      color: T.teal,     icon: "●" },
     user_deleted:      { label: "User Deleted",      color: T.red,      icon: "" },
     user_suspended:    { label: "User Suspended",    color: T.orange,   icon: "" },
     user_unsuspended:  { label: "User Unsuspended",  color: T.green,    icon: "?" },
@@ -11827,8 +11827,8 @@ function LaunchRadar({ db, T, notify }) {
       {/* -- SOURCE STATUS BAR --------------------------------------- */}
       <div style={{ display: "flex", gap: 8, marginBottom: 20, flexWrap: "wrap" }}>
         {[
-          { label: "Bayut.com", count: scanStats?.bayut, icon: "??", color: T.gold, desc: "Live listings API" },
-          { label: "PropertyFinder.ae", count: scanStats?.pf, icon: "??", color: T.blue, desc: "New projects API" },
+          { label: "Bayut.com", count: scanStats?.bayut, icon: "●", color: T.gold, desc: "Live listings API" },
+          { label: "PropertyFinder.ae", count: scanStats?.pf, icon: "●", color: T.blue, desc: "New projects API" },
           { label: "Dubai Pulse / DLD", count: scanStats?.dld, icon: "???", color: T.green, desc: "Registered transactions" },
           { label: "Verified Database", count: getKnownLaunches().length, icon: "?", color: T.teal, desc: "30 researched projects" },
         ].map((src, i) => (
@@ -12047,7 +12047,7 @@ function LaunchRadar({ db, T, notify }) {
 
               {/* Source info */}
               <div style={{ padding: "10px 14px", background: T.surfaceAlt, borderRadius: 8, border: `1px solid ${T.border}`, display: "flex", gap: 10, alignItems: "center" }}>
-                <span style={{ fontSize: 18 }}>??</span>
+                <span style={{ fontSize: 18 }}>×</span>
                 <div>
                   <div style={{ fontSize: 11, fontWeight: 700, color: T.white }}>{selectedProject.source}</div>
                   <div style={{ fontSize: 10, color: T.textMuted }}>{selectedProject.sourceUrl}</div>
@@ -12265,9 +12265,9 @@ function LiveDataSync({ db, T, notify }) {
       {/* -- DATA SOURCES ------------------------------------------- */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 10, marginBottom: 20 }}>
         {[
-          { icon: "??", label: "Bayut.com", sub: "Live PPSF per community", status: liveCount > 0 ? "live" : "pending", note: "via Vercel API" },
+          { icon: "●", label: "Bayut.com", sub: "Live PPSF per community", status: liveCount > 0 ? "live" : "pending", note: "via Vercel API" },
           { icon: "???", label: "Dubai Pulse / DLD", sub: "Official transaction data", status: "available", note: "Free CSV" },
-          { icon: "??", label: "Q1 2026 Benchmarks", sub: "DXBInteract + ValuStrat", status: "active", note: "Always available" },
+          { icon: "●", label: "Q1 2026 Benchmarks", sub: "DXBInteract + ValuStrat", status: "active", note: "Always available" },
           { icon: "?", label: "Vercel API Route", sub: "api/sync-market-data.js", status: "deploy", note: "Enables live Bayut" },
         ].map((src, i) => {
           const statusColors = { live: T.green, available: T.teal, active: T.gold, pending: T.textMuted, deploy: "#8B5CF6" };
@@ -17470,7 +17470,7 @@ export default function AdminPanel() {
                   <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
                     {[
                       { id: "livedata",    label: "Live Data",     dot: "?", dotColor: "#EF4444" },
-                      { id: "launchradar", label: "Launch Radar",  dot: "??", dotColor: T.gold },
+                      { id: "launchradar", label: "Launch Radar",  dot: "●", dotColor: T.gold },
                     ].map(st => {
                       const active = dataSubTab === st.id;
                       return (
@@ -17562,7 +17562,7 @@ export default function AdminPanel() {
                     return (
                       <div style={{ background: "rgba(212,168,67,0.05)", border: `1px solid rgba(212,168,67,0.2)`, borderRadius: 12, padding: "14px 16px", marginBottom: 20 }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
-                          <span style={{ fontSize: 14 }}>??</span>
+                          <span style={{ fontSize: 14 }}>×</span>
                           <span style={{ fontSize: 13, fontWeight: 700, color: T.gold }}>Project Lifecycle Monitor</span>
                           <span style={{ fontSize: 10, color: T.textMuted, marginLeft: "auto" }}>Auto-detected � Q{currentQ} {currentYear}</span>
                         </div>
@@ -18328,7 +18328,7 @@ export default function AdminPanel() {
                           <div style={{ padding: 20 }}>
                             {duplicates.length === 0 ? (
                               <div style={{ textAlign: "center", padding: 40 }}>
-                                <div style={{ fontSize: 40, marginBottom: 12 }}>?</div>
+                                <div style={{ fontSize: 40, marginBottom: 12 }}>●</div>
                                 <div style={{ fontSize: 14, color: T.green, fontWeight: 600 }}>No duplicates detected</div>
                                 <div style={{ fontSize: 12, color: T.textMuted, marginTop: 4 }}>Your data is clean!</div>
                               </div>
@@ -19267,7 +19267,7 @@ export default function AdminPanel() {
                             {radarProjects.length > 0 && (
                               <div style={{ margin: "0 0 0 0", padding: "12px 20px", background: `${T.gold}08`, borderBottom: `1px solid ${T.gold}30`, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
                                 <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                                  <span style={{ fontSize: 14 }}>??</span>
+                                  <span style={{ fontSize: 14 }}>×</span>
                                   <div>
                                     <span style={{ fontSize: 12, fontWeight: 700, color: T.gold }}>
                                       {radarProjects.length} project{radarProjects.length > 1 ? "s" : ""} added via Launch Radar
@@ -19848,7 +19848,7 @@ export default function AdminPanel() {
                               
                               {totalProjects === 0 && (
                                 <div style={{ textAlign: "center", padding: 20, color: T.textMuted }}>
-                                  <div style={{ fontSize: 24, marginBottom: 8 }}>??</div>
+                                  <div style={{ fontSize: 24, marginBottom: 8 }}>×</div>
                                   <div style={{ fontSize: 12 }}>No projects in this community yet</div>
                                 </div>
                               )}
@@ -21798,7 +21798,7 @@ export default function AdminPanel() {
                         {/* Duplicate email warning */}
                         {addLeadForm.email && leads.some(l => l.email && l.email.toLowerCase() === addLeadForm.email.toLowerCase()) && (
                           <div style={{ gridColumn: "1/-1", padding: "10px 14px", borderRadius: 8, background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.3)", display: "flex", alignItems: "center", gap: 8 }}>
-                            <span style={{ fontSize: 14 }}>??</span>
+                            <span style={{ fontSize: 14 }}>×</span>
                             <div>
                               <div style={{ fontSize: 11, fontWeight: 700, color: "#F59E0B" }}>Duplicate Email Detected</div>
                               <div style={{ fontSize: 10, color: T.textMuted }}>A lead with this email already exists. Check for duplicates before saving.</div>
@@ -22896,7 +22896,7 @@ export default function AdminPanel() {
                     <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                       {[
                         { name: "Desktop", value: deviceBreakdown.desktop, icon: "�", color: T.blue },
-                        { name: "Mobile", value: deviceBreakdown.mobile, icon: "??", color: T.teal },
+                        { name: "Mobile", value: deviceBreakdown.mobile, icon: "●", color: T.teal },
                         { name: "Tablet", value: deviceBreakdown.tablet, icon: "�", color: T.purple },
                       ].map(d => (
                         <div key={d.name}>
@@ -25151,7 +25151,7 @@ export default function AdminPanel() {
                 
                 {cohortHeatmap.every(c => c.total === 0) ? (
                   <div style={{ padding: "40px 20px", textAlign: "center" }}>
-                    <div style={{ fontSize: 32, marginBottom: 12 }}>??</div>
+                    <div style={{ fontSize: 32, marginBottom: 12 }}>×</div>
                     <div style={{ fontSize: 14, color: T.textMuted, marginBottom: 8 }}>Not enough data for cohort analysis</div>
                     <div style={{ fontSize: 12, color: T.textMuted }}>Cohorts will populate as users sign up over multiple weeks</div>
                   </div>
