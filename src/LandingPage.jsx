@@ -80,6 +80,11 @@ const css = `
 export default function LandingPage({ onLoginClick, onSignUpClick }) {
   const { t: tr, lang, setLang, LANGUAGES } = useI18n();
   const [scrollY, setScrollY] = useState(0);
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("auth") === "login" && onLoginClick) onLoginClick();
+    if (params.get("auth") === "signup" && onSignUpClick) onSignUpClick();
+  }, []);
   const [openFaq, setOpenFaq] = useState(null);
   const [billingAnnual, setBillingAnnual] = useState(false);
   const [activeRole, setActiveRole] = useState("agent");

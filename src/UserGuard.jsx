@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import { onAuthStateChanged } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
 import { auth, db } from "./firebase";
@@ -13,6 +13,7 @@ const Spinner = () => (
 
 export default function UserGuard({ children }) {
   const [status, setStatus] = useState("loading");
+  const location = useLocation();
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (firebaseUser) => {
@@ -36,6 +37,6 @@ export default function UserGuard({ children }) {
   }, []);
 
   if (status === "loading") return <Spinner />;
-  if (status === "denied") return <Navigate to="/?auth=login" replace />;
+  if (status === "denied") return <Navigate to={`/?auth=login&next=${location.pathname}`} replace />;
   return children;
 }
