@@ -1701,7 +1701,7 @@ const ReferralWidget = ({ user, T, db }) => {
 /* --- DATA BADGE - verified data stamp --- */
 const DataBadge = ({ source, date, type = "dld" }) => {
   const cfg = {
-    dld:     { label: "DLD Verified",     color: "#10B981", icon: "~"?" },
+    dld:     { label: "DLD Verified",     color: "#10B981", icon: "~" },
     reidin:  { label: "REIDIN Index",     color: "#3B82F6", icon: "~"??" },
     emaar:   { label: "Emaar IR",         color: "#D4A843", icon: "~"??" },
     live:    { label: "Live - Firestore", color: "#10B981", icon: "~"??" },
@@ -4767,7 +4767,7 @@ export default function EmaarDashboardV2() {
                         typeCount < 2 && { text: "Add a different property type - mix apartments with townhouses or villas for lower correlation risk", color: T.gold, icon: "~"??" },
                         handoverCount < 2 && { text: "Spread handover years across multiple years to reduce delivery risk concentration", color: T.blue, icon: "~"??" },
                         holdings.length < 3 && { text: `Add ${3 - holdings.length} more holding${3 - holdings.length > 1 ? "s" : ""} to improve portfolio volume score`, color: T.teal, icon: "~"??" },
-                        totalScore >= 70 && { text: "Portfolio is well diversified - maintain current allocation and rebalance at handover milestones", color: T.green, icon: "~"?" },
+                        totalScore >= 70 && { text: "Portfolio is well diversified - maintain current allocation and rebalance at handover milestones", color: T.green, icon: "~" },
                       ].filter(Boolean).map((rec, i) => (
                         <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "10px 14px", borderRadius: 8, background: `${rec.color}08`, border: `1px solid ${rec.color}20` }}>
                           <span style={{ fontSize: 14, flexShrink: 0 }}>{rec.icon}</span>
@@ -6928,7 +6928,7 @@ export default function EmaarDashboardV2() {
               const benefits = [
                 { icon: "~"??", title: "10-Year Residency", desc: "Live, work and study in UAE. Renewable indefinitely." },
                 { icon: "~"???????????", title: "Sponsor Your Family", desc: "Spouse, children of any age, and parents included." },
-                { icon: "~"?", title: "No Sponsor Needed", desc: "Full independence - no employer or local sponsor required." },
+                { icon: "~", title: "No Sponsor Needed", desc: "Full independence - no employer or local sponsor required." },
                 { icon: "~"??", title: "UAE Bank Accounts", desc: "Open accounts, get credit cards, build UAE credit history." },
                 { icon: "~"??", title: "Travel Freely", desc: "Re-enter UAE after 6+ months abroad without visa reset." },
                 { icon: "~"??", title: "0% Income Tax", desc: "No personal income tax on rental income or capital gains." },
@@ -9293,7 +9293,7 @@ _Powered by DXB Analytics - Dubai Real Estate Intelligence_`)}`} target="_blank"
             cta: "Next ?"
           },
           {
-            icon: "~"?",
+            icon: "~",
             title: "Build Your Watchlist",
             body: "See the ? star button on every project card? Click it to save projects you're interested in. Your watchlist syncs across devices.",
             cta: "Next ?"
