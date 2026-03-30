@@ -2665,7 +2665,7 @@ export default function EmaarDashboardV2() {
               </div>
             </div>
 
-          </>}}}
+          </>}
 
           {/* ─── DEVELOPERS TAB ─── */}
           {tab === "Developers" && (() => {
