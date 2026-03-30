@@ -194,6 +194,7 @@ const TABS = [
   { key: "Flip", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg> },
   { key: "Investment Score", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> },
   { key: "Price History", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg> },
+  { key: "Admin", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="4"/><path d="M12 14c-6 0-8 2-8 4v1h16v-1c0-2-2-4-8-4z"/><path d="M18 3l1.5 1.5L18 6M20 4.5H16"/></svg>, adminOnly: true },
 ];
 
 /* ─── STYLES ─── */
@@ -2489,6 +2490,7 @@ export default function EmaarDashboardV2() {
           <div style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, letterSpacing: 1.5, textTransform: "uppercase", padding: "0 16px 8px", flexShrink: 0 }}>Emaar Properties</div>
           <div role="tablist" aria-label="Dashboard sections" style={{ display: "contents" }}>
           {TABS.filter(t => {
+            if (t.adminOnly && !adminMode) return false;
             const s = tabSettings[t.key];
             if (s && s.visible === false) return false;
             return true;
@@ -7328,6 +7330,157 @@ export default function EmaarDashboardV2() {
                   { label: "Cavendish Maxwell Market Reports" },
                 ]} />
               </>
+            );
+          })()}
+
+          {/* ─── ADMIN TAB ─────────────────────────────────────────────────── */}
+          {tab === "Admin" && adminMode && (() => {
+            const [seedLoading, setSeedLoading] = React.useState(false);
+            const [seedProgress, setSeedProgress] = React.useState(0);
+            const [seedDone, setSeedDone] = React.useState(false);
+            const [editProject, setEditProject] = React.useState(null);
+            const [editForm, setEditForm] = React.useState({});
+            const [savingEdit, setSavingEdit] = React.useState(false);
+
+            const handleSeed = async () => {
+              if (!window.confirm(`Seed all ${allProjects.length} projects to Firestore? This is safe to run multiple times.`)) return;
+              setSeedLoading(true); setSeedProgress(0); setSeedDone(false);
+              try {
+                await seedAllProjectsToFirestore((count) => setSeedProgress(count));
+                setSeedDone(true);
+              } catch(e) { notify("Seed failed: " + e.message); }
+              setSeedLoading(false);
+            };
+
+            const handleEditSave = async () => {
+              if (!editProject) return;
+              setSavingEdit(true);
+              await updateProject(editProject.id, editForm);
+              setSavingEdit(false);
+              setEditProject(null);
+            };
+
+            return (
+              <div style={{ padding: "24px 0" }}>
+                <Section title="Admin Panel" sub={`Logged in as ${userEmail} · adminMode active · ${allProjects.length} total projects`}>
+
+                  {/* ── PLATFORM STATS ── */}
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: 12, marginBottom: 24 }}>
+                    {[
+                      { label: "Total Projects", value: allProjects.length, color: T.gold },
+                      { label: "Live in Firestore", value: extraProjects.filter(p => p.fromFirestore).length, color: T.teal },
+                      { label: "Active Users", value: adminUsers.length, color: T.blue },
+                      { label: "Developers", value: 7, color: "#8B5CF6" },
+                      { label: "Communities", value: allCommunities.length, color: T.green },
+                    ].map((s, i) => (
+                      <div key={i} className="chart-box" style={{ padding: 16, textAlign: "center" }}>
+                        <div style={{ fontSize: 28, fontWeight: 700, color: s.color, fontFamily: "'Fraunces', serif" }}>{s.value}</div>
+                        <div style={{ fontSize: 11, color: T.textMuted, marginTop: 4 }}>{s.label}</div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* ── FIRESTORE SEEDER ── */}
+                  <div className="chart-box" style={{ padding: 20, marginBottom: 16 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+                      <div>
+                        <div style={{ fontSize: 15, fontWeight: 700, color: T.white }}>Firestore Project Seeder</div>
+                        <div style={{ fontSize: 12, color: T.textMuted, marginTop: 2 }}>Push all {allProjects.length} projects from data_master to Firestore. Safe to run multiple times — uses merge.</div>
+                      </div>
+                      <button type="button" onClick={handleSeed} disabled={seedLoading}
+                        style={{ padding: "10px 24px", background: seedDone ? T.teal : `linear-gradient(135deg, ${T.gold}, #B8912F)`, color: T.bg, border: "none", borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: seedLoading ? "not-allowed" : "pointer", fontFamily: "'Outfit', sans-serif", minWidth: 140 }}>
+                        {seedLoading ? `Seeding... ${seedProgress}` : seedDone ? "✓ Seeded!" : `Seed ${allProjects.length} Projects`}
+                      </button>
+                    </div>
+                    {seedLoading && (
+                      <div style={{ background: T.surfaceAlt, borderRadius: 6, overflow: "hidden", height: 6 }}>
+                        <div style={{ height: "100%", background: T.gold, width: `${Math.min(100, (seedProgress / allProjects.length) * 100)}%`, transition: "width 0.3s" }} />
+                      </div>
+                    )}
+                    {seedDone && <div style={{ fontSize: 12, color: T.teal, marginTop: 8 }}>✓ All {allProjects.length} projects seeded. Firestore is now the live source for all project data.</div>}
+                  </div>
+
+                  {/* ── LIVE PROJECT EDITOR ── */}
+                  <div className="chart-box" style={{ padding: 20, marginBottom: 16 }}>
+                    <div style={{ fontSize: 15, fontWeight: 700, color: T.white, marginBottom: 12 }}>Live Project Editor</div>
+                    <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 16 }}>Click any project to edit price, status, handover, or notes. Changes go live instantly for all users.</div>
+                    <div style={{ maxHeight: 400, overflowY: "auto" }}>
+                      {activeProjects.slice(0, 30).map(p => (
+                        <div key={p.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 12px", borderRadius: 8, marginBottom: 6, background: T.surfaceAlt, cursor: "pointer", border: `1px solid ${editProject?.id === p.id ? T.gold : "transparent"}`, transition: "all 0.15s" }}
+                          onClick={() => { setEditProject(p); setEditForm({ name: p.name, status: p.status || "", handover: p.handover || "", price: p.price || "", notes: p.notes || "" }); }}>
+                          <div>
+                            <div style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{p.name}</div>
+                            <div style={{ fontSize: 11, color: T.textMuted }}>{p.community} · {p.status}</div>
+                          </div>
+                          <div style={{ fontSize: 11, color: T.gold }}>{p.handover || "—"}</div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Edit form */}
+                    {editProject && (
+                      <div style={{ marginTop: 16, padding: 16, background: T.bg, borderRadius: 10, border: `1px solid ${T.gold}` }}>
+                        <div style={{ fontSize: 14, fontWeight: 700, color: T.gold, marginBottom: 12 }}>Editing: {editProject.name}</div>
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 12 }}>
+                          {[
+                            { label: "Status", key: "status" },
+                            { label: "Handover", key: "handover" },
+                            { label: "Price (AED)", key: "price" },
+                            { label: "Notes", key: "notes" },
+                          ].map(f => (
+                            <div key={f.key}>
+                              <div style={{ fontSize: 10, color: T.textMuted, marginBottom: 4, textTransform: "uppercase", letterSpacing: 1 }}>{f.label}</div>
+                              <input value={editForm[f.key] || ""} onChange={e => setEditForm(prev => ({ ...prev, [f.key]: e.target.value }))}
+                                style={{ width: "100%", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 6, padding: "7px 10px", color: T.white, fontSize: 12, fontFamily: "'Outfit', sans-serif" }} />
+                            </div>
+                          ))}
+                        </div>
+                        <div style={{ display: "flex", gap: 8 }}>
+                          <button type="button" onClick={handleEditSave} disabled={savingEdit}
+                            style={{ padding: "8px 20px", background: T.gold, color: T.bg, border: "none", borderRadius: 6, fontWeight: 700, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>
+                            {savingEdit ? "Saving..." : "Save Live"}
+                          </button>
+                          <button type="button" onClick={() => setEditProject(null)}
+                            style={{ padding: "8px 16px", background: T.surfaceAlt, color: T.textMuted, border: `1px solid ${T.border}`, borderRadius: 6, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* ── USER MANAGEMENT ── */}
+                  <div className="chart-box" style={{ padding: 20 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+                      <div style={{ fontSize: 15, fontWeight: 700, color: T.white }}>User Management</div>
+                      <button type="button" onClick={fetchAdminUsers}
+                        style={{ padding: "7px 16px", background: T.surfaceAlt, color: T.gold, border: `1px solid ${T.gold}33`, borderRadius: 6, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>
+                        Refresh Users
+                      </button>
+                    </div>
+                    {adminLoading && <div style={{ color: T.textMuted, fontSize: 12 }}>Loading users...</div>}
+                    {adminError && <div style={{ color: T.red, fontSize: 12 }}>{adminError}</div>}
+                    <div style={{ maxHeight: 400, overflowY: "auto" }}>
+                      {adminUsers.map((u, i) => (
+                        <div key={u.uid || i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 12px", borderRadius: 8, marginBottom: 6, background: T.surfaceAlt }}>
+                          <div>
+                            <div style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{u.name || u.email || u.uid}</div>
+                            <div style={{ fontSize: 11, color: T.textMuted }}>{u.email} · Joined {u.createdAt ? new Date(u.createdAt).toLocaleDateString("en-AE") : "—"}</div>
+                          </div>
+                          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                            <span style={{ fontSize: 11, padding: "3px 10px", borderRadius: 20, background: u.tier === "pro" ? "rgba(20,184,166,0.15)" : "rgba(100,116,139,0.15)", color: u.tier === "pro" ? T.teal : T.textMuted, fontWeight: 600 }}>
+                              {u.tier || "free"}
+                            </span>
+                            {u.suspended && <span style={{ fontSize: 10, color: T.red }}>SUSPENDED</span>}
+                          </div>
+                        </div>
+                      ))}
+                      {!adminLoading && adminUsers.length === 0 && <div style={{ color: T.textMuted, fontSize: 12, textAlign: "center", padding: 20 }}>Click "Refresh Users" to load</div>}
+                    </div>
+                  </div>
+
+                </Section>
+              </div>
             );
           })()}
 
