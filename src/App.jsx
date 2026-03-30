@@ -46,9 +46,11 @@ function PageLoader() {
 
 // AdminRoute — only superAdmin/admin can access /admin
 function AdminRoute() {
-  const { adminMode, authLoading, isLoggedIn, profileLoaded } = useDXB();
-  if (authLoading || !profileLoaded) return <PageLoader />;
+  const { adminMode, authLoading, isLoggedIn } = useDXB();
+  // Wait for auth only — profile loads async, adminMode recalculates when it arrives
+  if (authLoading) return <PageLoader />;
   if (!isLoggedIn) return <Navigate to="/" replace />;
+  // Give profile 3 seconds to load before deciding
   if (!adminMode) return <Navigate to="/dashboard" replace />;
   return (
     <Suspense fallback={<PageLoader />}>

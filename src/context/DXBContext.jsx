@@ -84,6 +84,7 @@ export function DXBProvider({ children }) {
   const [userEmail, setUserEmail]         = useState("");
   const [userTier, setUserTier]           = useState("free");
   const [userRole, setUserRole]           = useState("user");
+  const [profileLoaded, setProfileLoaded] = useState(false);
   const [authLoading, setAuthLoading]     = useState(true);
   const [isSuspended, setIsSuspended]     = useState(false);
   const [isVerified, setIsVerified]       = useState(false);
@@ -259,11 +260,14 @@ export function DXBProvider({ children }) {
       setFirebaseUser(fbUser);
       setIsLoggedIn(true);
       setUserEmail(fbUser.email || "");
-      setAuthLoading(false);
+      // Keep authLoading=true until profile is loaded from Firestore
 
       // Read user profile from Firestore
       const profileUnsub = onSnapshot(doc(db, "users", fbUser.uid), (snap) => {
-        if (!snap.exists()) return;
+        if (!snap.exists()) {
+          setAuthLoading(false); // no profile doc — allow through as free user
+          return;
+        }
         const data = snap.data();
         setUserName(data.name || fbUser.displayName || "");
         setUserTier(data.tier || "free");
@@ -272,6 +276,8 @@ export function DXBProvider({ children }) {
         setIsVerified(data.kycStatus === "approved");
         setVerifiedLevel(data.verifiedLevel || null);
         setKycStatus(data.kycStatus || null);
+        setProfileLoaded(true);
+        setAuthLoading(false); // now safe — role is known
 
         // Trial days left
         if (data.tier === "pro_trial" && data.trialEnd) {
@@ -593,7 +599,7 @@ export function DXBProvider({ children }) {
     // ── Auth
     isLoggedIn, firebaseUser, userName, userEmail,
     userTier, userRole, adminMode,
-    authLoading, isSuspended, isVerified, verifiedLevel,
+    authLoading, profileLoaded, isSuspended, isVerified, verifiedLevel,
     kycStatus, trialDaysLeft,
 
     // ── App state
