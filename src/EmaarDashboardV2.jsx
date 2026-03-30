@@ -3062,21 +3062,30 @@ export default function EmaarDashboardV2() {
                       <div style={{ fontSize: 11, marginTop: 4 }}>Projects added via Admin → Data Manager will appear here.</div>
                     </div>
                   ) : (
-                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px,1fr))", gap: 12 }}>
+                    <div className="kpi-grid" style={{ display: "grid", gap: 12 }}>
                       {devProjects.slice(0, 48).map((p, i) => (
-                        <div key={p.id || i} onClick={() => setSelectedProject(p)}
-                          style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, padding: "16px 18px", cursor: "pointer", transition: "all 0.2s", position: "relative", overflow: "hidden" }}
-                          onMouseEnter={e => { e.currentTarget.style.borderColor = dev.color; e.currentTarget.style.transform = "translateY(-2px)"; }}
-                          onMouseLeave={e => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.transform = "translateY(0)"; }}>
-                          <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: dev.color }} />
-                          {p.imageUrl && <img src={p.imageUrl} alt={p.name} style={{ width: "100%", height: 120, objectFit: "cover", borderRadius: 8, marginBottom: 10 }} onError={e => e.target.style.display="none"} />}
-                          <div style={{ fontFamily: "'Fraunces',serif", fontSize: 14, fontWeight: 800, color: T.white, marginBottom: 4 }}>{p.name}</div>
-                          <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 8 }}>{p.community} · {p.type}</div>
-                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                            <div style={{ fontSize: 13, fontWeight: 700, color: dev.color }}>{p.price ? `AED ${(p.price/1e6).toFixed(1)}M` : "TBD"}</div>
-                            <span style={{ fontSize: 9, padding: "2px 7px", borderRadius: 5, background: p.status === "Delivered" ? "rgba(16,185,129,0.1)" : "rgba(59,130,246,0.1)", color: p.status === "Delivered" ? T.green : T.blue, fontWeight: 700 }}>{p.status || "Off-Plan"}</span>
+                        <div key={p.id || i} className="chart-box" style={{ padding: 0, overflow: "hidden", cursor: "pointer" }} onClick={() => setSelectedProject(p)}>
+                          {p.imageUrl && (
+                            <div style={{ width: "100%", height: 140, overflow: "hidden", borderBottom: `1px solid ${T.border}` }}>
+                              <img src={p.imageUrl} alt={p.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} onError={e => { e.target.parentElement.style.display = "none"; }} />
+                            </div>
+                          )}
+                          <div style={{ padding: 16 }}>
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
+                              <div style={{ flex: 1 }}>
+                                <div style={{ fontFamily: "'Fraunces', serif", fontSize: 15, fontWeight: 700, color: T.gold, marginBottom: 2 }}>{p.name}</div>
+                                <div style={{ fontSize: 11, color: T.textSecondary }}>{p.community}</div>
+                              </div>
+                              <span style={{ fontSize: 9, padding: "3px 8px", borderRadius: 6, background: p.status === "Completed" ? "rgba(16,185,129,0.2)" : p.status === "Under Construction" ? "rgba(16,185,129,0.12)" : "rgba(59,130,246,0.12)", color: p.status === "Completed" ? T.green : p.status === "Under Construction" ? T.green : T.blue, fontWeight: 600 }}>{p.status || "Off-Plan"}</span>
+                            </div>
+                            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                              <div><span style={{ fontSize: 9, color: T.textMuted, display: "block" }}>FROM</span><span style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{p.price ? `AED ${(p.price/1000000).toFixed(1)}M` : "TBD"}</span></div>
+                              <div><span style={{ fontSize: 9, color: T.textMuted, display: "block" }}>HANDOVER</span><span style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{p.handover || "—"}</span></div>
+                              <div><span style={{ fontSize: 9, color: T.textMuted, display: "block" }}>PRICE/SQFT</span><span style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{p.ppsf ? `AED ${p.ppsf.toLocaleString()}` : "TBD"}</span></div>
+                              <div><span style={{ fontSize: 9, color: T.textMuted, display: "block" }}>TYPE</span><span style={{ fontSize: 12, color: T.textSecondary }}>{p.type}{p.beds ? ` · ${p.beds} BR` : ""}</span></div>
+                            </div>
+                            <button type="button" onClick={e => { e.stopPropagation(); setSelectedProject(p); }} style={{ marginTop: 10, width: "100%", padding: "7px 0", background: "linear-gradient(135deg, rgba(212,168,67,0.15), rgba(212,168,67,0.08))", border: "1px solid rgba(212,168,67,0.3)", borderRadius: 8, color: T.gold, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>Full Details</button>
                           </div>
-                          {p.handover && <div style={{ fontSize: 10, color: T.textMuted, marginTop: 4 }}>Handover: {p.handover}</div>}
                         </div>
                       ))}
                     </div>
