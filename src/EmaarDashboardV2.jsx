@@ -1873,16 +1873,18 @@ export default function EmaarDashboardV2() {
 
   // ONBOARDING - show for new users on first login
   useEffect(() => {
-    if (isLoggedIn && userName !== undefined) {
-      const key = `dxb_onboarded_${user}`;
+    if (isLoggedIn && firebaseUser?.uid) {
+      const key = `dxb_onboarded_${firebaseUser.uid}`;
       if (!localStorage.getItem(key)) {
         setTimeout(() => setShowOnboarding(true), 1000);
       }
     }
-  }, [isLoggedIn]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [isLoggedIn, firebaseUser?.uid]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const completeOnboarding = () => {
-    localStorage.setItem(`dxb_onboarded_${user}`, "1");
+    if (firebaseUser?.uid) {
+      localStorage.setItem(`dxb_onboarded_${firebaseUser.uid}`, "1");
+    }
     setShowOnboarding(false);
   };
 
@@ -2171,7 +2173,7 @@ export default function EmaarDashboardV2() {
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: 12, fontWeight: 600, color: T.white, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{userName || user.split("@")[0]}</div>
               <div style={{ fontSize: 10, color: userTier === "pro_trial" ? T.gold : userTier === "admin" || userTier === "pro" || userTier === "enterprise" ? T.green : T.textMuted }}>
-                {userTier === "admin" ? "Admin" : userTier === "pro_trial" ? "Pro Trial" : userTier === "pro" ? "Pro Plan" : userTier === "enterprise" ? "Enterprise" : "Free Plan"}
+                {adminMode ? "Super Admin" : userTier === "pro_trial" ? "Pro Trial" : userTier === "pro" ? "Pro Plan" : userTier === "enterprise" ? "Enterprise" : "Free Plan"}
               </div>
             </div>
             <button type="button" onClick={() => { setShowProfile(true); setProfileEdit({ name: userName || "" }); }} style={{ background: "none", border: `1px solid ${T.border}`, cursor: "pointer", color: T.gold, padding: "3px 8px", borderRadius: 6, fontSize: 10, fontWeight: 600, fontFamily: "'Outfit', sans-serif" }}>Profile</button>
@@ -8018,7 +8020,7 @@ export default function EmaarDashboardV2() {
             <div style={{ marginBottom: 20, padding: 16, borderRadius: 12, background: T.surfaceAlt, border: `1px solid ${T.border}` }}>
               <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 12 }}>Subscription</div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
-                <div><div style={{ fontSize: 10, color: T.textMuted }}>Plan</div><div style={{ fontSize: 14, fontWeight: 700, color: T.gold, fontFamily: "'Fraunces', serif" }}>{userTier === "admin" ? "Admin" : userTier === "pro" ? "Pro" : userTier === "pro_trial" ? "Pro Trial" : userTier === "enterprise" ? "Enterprise" : "Free"}</div></div>
+                <div><div style={{ fontSize: 10, color: T.textMuted }}>Plan</div><div style={{ fontSize: 14, fontWeight: 700, color: T.gold, fontFamily: "'Fraunces', serif" }}>{adminMode ? "Super Admin" : userTier === "pro" ? "Pro" : userTier === "pro_trial" ? "Pro Trial" : userTier === "enterprise" ? "Enterprise" : "Free"}</div></div>
                 <div><div style={{ fontSize: 10, color: T.textMuted }}>Status</div><div style={{ fontSize: 14, fontWeight: 700, color: userTier === "free" ? T.blue : T.green }}>{userTier === "free" ? "Limited" : "Active"}</div></div>
                 <div><div style={{ fontSize: 10, color: T.textMuted }}>Access</div><div style={{ fontSize: 14, fontWeight: 700, color: T.white }}>{userTier === "free" ? "5 projects" : "All 48"}</div></div>
               </div>
