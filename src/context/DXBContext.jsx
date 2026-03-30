@@ -151,6 +151,15 @@ export function DXBProvider({ children }) {
   // Platform settings
   const [tabSettings, setTabSettings]             = useState({});
   const [emaarStockPrice, setEmaarStockPrice]     = useState(null);
+  const [platformStats, setPlatformStats]         = useState({
+    developerCount: 7,
+    projectCount: 345,
+    communityCount: 40,
+    dataPointsDaily: 50000,
+    agentCount: 0,
+    brokerageCount: 0,
+    lastUpdated: null,
+  });
 
   // ── USER DATA ───────────────────────────────────────────────────────────────
   const [myPortfolio, setMyPortfolio]   = useState([]);
@@ -395,6 +404,13 @@ export function DXBProvider({ children }) {
       if (snap.exists()) setTabSettings(snap.data());
     }));
 
+    // adminSettings/platformStats — live platform stats (developers, projects, communities count)
+    unsubs.push(onSnapshot(doc(db, "adminSettings", "platformStats"), (snap) => {
+      if (snap.exists()) {
+        setPlatformStats(prev => ({ ...prev, ...snap.data() }));
+      }
+    }));
+
     // developers collection — live developer registry
     unsubs.push(onSnapshot(collection(db, "developers"), (snap) => {
       if (!snap.size) return;
@@ -599,6 +615,7 @@ export function DXBProvider({ children }) {
     liveServiceCharges, liveCompetitors, liveMortgageRates,
     liveNeighbourhoods, liveFinancials, liveRisk,
     tabSettings, emaarStockPrice,
+    platformStats,
     liveDevelopers,
 
     // ── Computed from live + static

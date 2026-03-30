@@ -1673,6 +1673,7 @@ export default function EmaarDashboardV2() {
     myPortfolio, watchlist, myAlerts, notifications, unreadCount,
     savePortfolio, toggleWatchlist, markNotificationRead, updateProject,
     seedAllProjectsToFirestore,
+    platformStats,
     canAccess, isTabVisible, tierLevel,
   } = useDXB();
 
@@ -2275,363 +2276,396 @@ export default function EmaarDashboardV2() {
 
           {/* ─── OVERVIEW TAB ─── */}
           {tab === "Overview" && <>
-            {/* ─── VERIFIED BAR ─── */}
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0", marginBottom: 4, borderBottom: `1px solid ${T.border}`, flexWrap: "wrap", gap: 8 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <span style={{ position: "relative", display: "inline-flex", alignItems: "center", justifyContent: "center", width: 10, height: 10 }}>
-                  <span style={{ width: 7, height: 7, borderRadius: "50%", background: T.green, display: "inline-block", animation: "pulse 2s infinite" }} />
+
+            {/* ═══ DXB ANALYTICS — PLATFORM INTELLIGENCE OVERVIEW ═══
+                Bloomberg-grade Dubai Real Estate Intelligence
+                Subscription: Free / Pro AED99 / Enterprise AED499
+            ════════════════════════════════════════════════════════ */}
+
+            {/* ── ROW 1: LIVE INTELLIGENCE BAR ── */}
+            <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"8px 0 14px", marginBottom:8, borderBottom:`1px solid ${T.border}`, flexWrap:"wrap", gap:8 }}>
+              <div style={{ display:"flex", alignItems:"center", gap:12 }}>
+                <span style={{ display:"flex", alignItems:"center", gap:6 }}>
+                  <span style={{ position:"relative", width:8, height:8 }}>
+                    <span style={{ position:"absolute", inset:0, borderRadius:"50%", background:T.green, opacity:0.35, animation:"pulse 2s infinite" }} />
+                    <span style={{ position:"absolute", top:1, left:1, width:6, height:6, borderRadius:"50%", background:T.green }} />
+                  </span>
+                  <span style={{ fontSize:11, color:T.textSecondary, fontWeight:600 }}>Live Intelligence</span>
                 </span>
-                <span style={{ fontSize: 11, color: T.textSecondary }}>Source data: <span style={{ color: T.gold, fontWeight: 600 }}>Emaar FY2025 · DLD 2025 · CBUAE Mar 2026</span></span>
-                <span style={{ color: T.border }}>·</span>
-                <a href="https://www.emaar.com/en/investor-relations/" target="_blank" rel="noopener noreferrer" style={{ fontSize: 11, color: T.teal, textDecoration: "none" }}>Emaar IR ↗</a>
+                <span style={{ width:1, height:12, background:T.border }} />
+                <span style={{ fontSize:10, color:T.textMuted }}>DLD · Bayut · CBUAE · Emaar IR · Knight Frank · ValuStrat</span>
               </div>
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <span style={{ fontSize: 10, color: T.textMuted }}>Click any card for breakdown & sources</span>
-                <button type="button" onClick={async () => {
-                  const now = new Date().toLocaleDateString("en-AE", { day: "numeric", month: "long", year: "numeric" });
-                  const tabLabel = tab || "Overview";
-                  // Dynamic load jsPDF from CDN
-                  if (!window.jspdf) {
-                    try {
-                      await new Promise((resolve, reject) => {
-                        const s = document.createElement("script");
-                        s.src = "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";
-                        s.onload = resolve; s.onerror = reject;
-                        document.head.appendChild(s);
-                      });
-                    } catch(e) { notify("PDF export unavailable — check your connection"); return; }
-                  }
-                  const { jsPDF } = window.jspdf;
-                  const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
-                  const W = 210, M = 18;
-                  // Dark background
-                  pdf.setFillColor(4, 9, 15);
-                  pdf.rect(0, 0, W, 297, "F");
-                  // Gold header bar
-                  pdf.setFillColor(212, 168, 67);
-                  pdf.rect(0, 0, W, 2, "F");
-                  // Logo / Title
-                  pdf.setFont("helvetica", "bold");
-                  pdf.setFontSize(22); pdf.setTextColor(212, 168, 67);
-                  pdf.text("DXB Analytics", M, 22);
-                  pdf.setFontSize(10); pdf.setTextColor(180, 180, 180);
-                  pdf.text("The Bloomberg of Dubai Real Estate", M, 29);
-                  // Report title
-                  pdf.setFontSize(14); pdf.setTextColor(255, 255, 255); pdf.setFont("helvetica", "bold");
-                  pdf.text(`${tabLabel} Report`, M, 42);
-                  pdf.setFontSize(9); pdf.setTextColor(140, 140, 140); pdf.setFont("helvetica", "normal");
-                  pdf.text(`Generated ${now} · ${user || "DXB Analytics"}`, M, 49);
-                  // Divider
-                  pdf.setDrawColor(212, 168, 67, 0.3); pdf.setLineWidth(0.3);
-                  pdf.line(M, 54, W - M, 54);
-                  // Data sections based on tab
-                  let y = 62;
-                  const addSection = (title, rows) => {
-                    pdf.setFont("helvetica", "bold"); pdf.setFontSize(10); pdf.setTextColor(212, 168, 67);
-                    pdf.text(title.toUpperCase(), M, y); y += 7;
-                    rows.forEach(([label, value, note]) => {
-                      pdf.setFillColor(20, 35, 60); pdf.rect(M, y - 4, W - M * 2, 10, "F");
-                      pdf.setFont("helvetica", "normal"); pdf.setFontSize(8); pdf.setTextColor(160, 160, 160);
-                      pdf.text(label, M + 3, y + 2);
-                      pdf.setFont("helvetica", "bold"); pdf.setFontSize(9); pdf.setTextColor(255, 255, 255);
-                      pdf.text(value, M + 70, y + 2);
-                      if (note) { pdf.setFont("helvetica", "normal"); pdf.setFontSize(7); pdf.setTextColor(120, 140, 160); pdf.text(note, M + 130, y + 2); }
-                      y += 12;
+              <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+                <span style={{ fontSize:10, color:T.textMuted }}>Updated {new Date().toLocaleDateString("en-AE",{day:"numeric",month:"short",year:"numeric"})}</span>
+                {canAccess("pro") && (
+                  <button type="button" onClick={async()=>{
+                    const now = new Date().toLocaleDateString("en-AE",{day:"numeric",month:"long",year:"numeric"});
+                    if(!window.jspdf){try{await new Promise((res,rej)=>{const s=document.createElement("script");s.src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";s.onload=res;s.onerror=rej;document.head.appendChild(s)});}catch(e){notify("PDF unavailable");return;}}
+                    const{jsPDF}=window.jspdf;const pdf=new jsPDF({orientation:"portrait",unit:"mm",format:"a4"});const W=210,M=18;
+                    pdf.setFillColor(4,9,15);pdf.rect(0,0,W,297,"F");
+                    pdf.setFillColor(212,168,67);pdf.rect(0,0,W,2,"F");
+                    pdf.setFont("helvetica","bold");pdf.setFontSize(22);pdf.setTextColor(212,168,67);pdf.text("DXB Analytics",M,22);
+                    pdf.setFontSize(10);pdf.setTextColor(180,180,180);pdf.text("Bloomberg Terminal of GCC Real Estate",M,29);
+                    pdf.setFontSize(14);pdf.setTextColor(255,255,255);pdf.text("Dubai Market Intelligence Report",M,42);
+                    pdf.setFontSize(9);pdf.setTextColor(140,140,140);pdf.setFont("helvetica","normal");pdf.text(`Generated ${now} · DXB Analytics`,M,49);
+                    pdf.setDrawColor(212,168,67,0.3);pdf.setLineWidth(0.3);pdf.line(M,54,W-M,54);
+                    let y=64;
+                    [[`Developers Tracked`,`${platformStats.developerCount||7}`,"Emaar · DAMAC · Sobha · Nakheel · Meraas · Aldar · Binghatti"],[`Total Projects`,`${platformStats.projectCount||allProjects.length}`,"Verified across all developers"],[`Communities Mapped`,`${platformStats.communityCount||40}`,"Full data: prices · yields · amenities"],[`Dubai Transactions FY2025`,"214,912","+36% YoY all-time record"],[`Market Value FY2025`,"AED 682.5B","+31% YoY"],[`Avg Price/sqft`,"AED 1,689","+19.8% YoY"],[`EIBOR 3M`,eiborRates?.threeMonth?`${eiborRates.threeMonth}%`:"3.593%","Mar 2026"]].forEach(([label,value,note])=>{
+                      pdf.setFillColor(20,35,60);pdf.rect(M,y-4,W-M*2,10,"F");
+                      pdf.setFont("helvetica","normal");pdf.setFontSize(8);pdf.setTextColor(160,160,160);pdf.text(label,M+3,y+2);
+                      pdf.setFont("helvetica","bold");pdf.setFontSize(9);pdf.setTextColor(255,255,255);pdf.text(value,M+70,y+2);
+                      if(note){pdf.setFont("helvetica","normal");pdf.setFontSize(7);pdf.setTextColor(120,140,160);pdf.text(note,M+120,y+2);}
+                      y+=12;
                     });
-                    y += 4;
-                  };
-                  const sections = {
-                    "Overview": [
-                      ["KEY METRICS", [["Property Sales FY2025","AED 80.4B","+16% YoY · All-time record"],["Revenue FY2025","AED 49.6B","+40% YoY · USD 13.5B"],["Net Profit FY2025","AED 25.7B","+36% YoY · USD 7.0B"],["Backlog","AED 155B","3–4yr revenue visibility"],["Units Delivered","125,600+","Since 2002 · #1 GCC"]]],
-                      ["FINANCIALS", [["Market Cap","AED 128.2B","~USD 34.9B"],["P/E Ratio","7.83×","Industry avg 15.5×"],["Dividend Yield","7.04%","AED 1.00/share"],["EMAAR.DU Price",emaarStockPrice ? `AED ${emaarStockPrice.price}` : "AED —",emaarStockPrice ? `${emaarStockPrice.up?"+":""}${emaarStockPrice.change}% today` : "Live price unavailable"],["Credit Rating","BBB+ / Baa1","S&P / Moody's stable"]]]
-                    ],
-                    "Yields": [
-                      ["RENTAL YIELD SUMMARY", [["City Average Gross Yield","6.9%","Dubai 2025"],["JVC — Highest Yield","8–9%","Best community for yield"],["Downtown Dubai","4–5%","Premium pricing, lower yield"],["Palm Jumeirah","4.5–5.5%","Ultra-luxury, lower yield"],["Dubai Hills Estate","5.5–6.5%","Family community premium"]]]
-                    ],
-                    "Market": [
-                      ["DUBAI MARKET 2025", [["Total Transactions","214,912","Record — 5th consecutive year"],["Total Market Value","AED 682.5B","All-time high"],["Avg Price/sqft","AED 1,689","2025 Dubai average"],["Off-Plan Share","60%+","Dominant market segment"],["YoY Growth","~22%","Transaction volume growth"]]]
-                    ]
-                  };
-                  const tabSections = sections[tabLabel] || sections["Overview"];
-                  tabSections.forEach(([title, rows]) => addSection(title, rows));
-                  // AI Insights in PDF
-                  if (aiInsights.length > 0 && y < 220) {
-                    pdf.setFont("helvetica", "bold"); pdf.setFontSize(10); pdf.setTextColor(212, 168, 67);
-                    pdf.text("AI MARKET INSIGHTS", M, y); y += 7;
-                    aiInsights.slice(0, 3).forEach(ins => {
-                      if (y > 260) return;
-                      pdf.setFillColor(14, 25, 45); pdf.rect(M, y - 4, W - M * 2, 14, "F");
-                      pdf.setFont("helvetica", "bold"); pdf.setFontSize(8); pdf.setTextColor(200, 200, 200);
-                      pdf.text(ins.title, M + 3, y + 1);
-                      pdf.setFont("helvetica", "normal"); pdf.setFontSize(7); pdf.setTextColor(140, 140, 140);
-                      const insText = ins.insight.length > 90 ? ins.insight.slice(0, 90) + "…" : ins.insight;
-                      pdf.text(insText, M + 3, y + 7);
-                      y += 16;
-                    });
-                  }
-                  // Footer
-                  pdf.setFillColor(212, 168, 67); pdf.rect(0, 293, W, 4, "F");
-                  pdf.setFont("helvetica", "normal"); pdf.setFontSize(7); pdf.setTextColor(100, 100, 100);
-                  pdf.text(`DXB Analytics · emaar-dashboard.vercel.app · ${now} · For informational purposes only`, M, 289);
-                  pdf.save(`DXB-Analytics-${tabLabel.replace(/ /g,"-")}-${new Date().toISOString().slice(0,10)}.pdf`);
-                }} style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 14px", background: "rgba(212,168,67,0.1)", border: `1px solid ${T.gold}`, borderRadius: 8, color: T.gold, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit', sans-serif", transition: "all 0.2s" }}
-                onMouseEnter={e => e.currentTarget.style.background = "rgba(212,168,67,0.2)"}
-                onMouseLeave={e => e.currentTarget.style.background = "rgba(212,168,67,0.1)"}>
-                  ⬇ Export PDF
-                </button>
+                    pdf.setFillColor(212,168,67);pdf.rect(0,293,W,4,"F");
+                    pdf.setFont("helvetica","normal");pdf.setFontSize(7);pdf.setTextColor(100,100,100);
+                    pdf.text(`DXB Analytics · emaar-dashboard.vercel.app · ${now} · Not financial advice`,M,289);
+                    pdf.save(`DXB-Analytics-${new Date().toISOString().slice(0,10)}.pdf`);
+                  }} style={{ display:"flex", alignItems:"center", gap:6, padding:"6px 14px", background:"rgba(212,168,67,0.08)", border:`1px solid rgba(212,168,67,0.3)`, borderRadius:8, color:T.gold, fontSize:11, fontWeight:600, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>
+                    ⬇ Export PDF
+                  </button>
+                )}
               </div>
             </div>
 
-            {/* ── AI Market Insights Feed ── */}
-            {(aiInsights.length > 0 || insightsLoading) && (
-              <div style={{ background: "linear-gradient(135deg, rgba(14,29,53,0.8), rgba(4,9,15,0.9))", borderRadius: 16, border: `1px solid rgba(212,168,67,0.2)`, padding: "18px 20px", marginBottom: 20 }}>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <span style={{ fontSize: 14 }}>✦</span>
-                    <span style={{ fontSize: 11, fontWeight: 700, color: T.gold, letterSpacing: 1, textTransform: "uppercase" }}>AI Market Intelligence</span>
-                    <span style={{ fontSize: 9, padding: "2px 8px", borderRadius: 10, background: "rgba(212,168,67,0.1)", color: T.gold, border: `1px solid ${T.gold}30` }}>Powered by Claude</span>
+            {/* ── ROW 2: PERSONAL SNAPSHOT (Pro/Enterprise) ── */}
+            {canAccess("pro") ? (
+              <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:12, marginBottom:20 }}>
+                {[
+                  { label:"Watchlist", value:watchlist.length.toString(), sub:"Tracked projects", icon:"👁", color:T.gold, action:()=>setTab("Watchlist") },
+                  { label:"Portfolio", value:myPortfolio.length > 0 ? `${myPortfolio.length} units` : "0 units", sub:"Properties tracked", icon:"📈", color:T.green, action:()=>setTab("Portfolio") },
+                  { label:"Price Alerts", value:myAlerts.length.toString(), sub:myAlerts.length > 0 ? `${myAlerts.filter(a=>a.triggered).length} triggered` : "Set your alerts", icon:"🔔", color:T.teal, action:()=>setTab("Alerts") },
+                  { label:"Platform", value:`${platformStats.developerCount||7} devs`, sub:`${platformStats.projectCount||allProjects.length} projects · ${platformStats.communityCount||40} communities`, icon:"🏆", color:T.blue, action:null },
+                ].map((item)=>(
+                  <div key={item.label} onClick={item.action||undefined}
+                    style={{ background:`linear-gradient(135deg,${T.surface},${T.surfaceAlt})`, borderRadius:14, border:`1px solid ${T.border}`, padding:"16px 18px", cursor:item.action?"pointer":"default", transition:"all 0.2s", position:"relative", overflow:"hidden" }}
+                    onMouseEnter={e=>{if(item.action){e.currentTarget.style.borderColor=item.color+"60";e.currentTarget.style.transform="translateY(-2px)";}}}
+                    onMouseLeave={e=>{e.currentTarget.style.borderColor=T.border;e.currentTarget.style.transform="translateY(0)";}}>
+                    <div style={{ position:"absolute", top:0, left:0, right:0, height:2, background:item.color, opacity:0.7 }} />
+                    <div style={{ fontSize:20, marginBottom:8 }}>{item.icon}</div>
+                    <div style={{ fontFamily:"'Fraunces',serif", fontSize:26, fontWeight:900, color:item.color, lineHeight:1, marginBottom:4 }}>{item.value}</div>
+                    <div style={{ fontSize:11, fontWeight:700, color:T.white, marginBottom:3 }}>{item.label}</div>
+                    <div style={{ fontSize:10, color:T.textMuted }}>{item.sub}</div>
                   </div>
-                  <span style={{ fontSize: 10, color: T.textMuted }}>Generated {new Date().toLocaleDateString("en-AE", { month: "short", year: "numeric" })} · Cached up to 7 days</span>
+                ))}
+              </div>
+            ) : (
+              /* FREE USER — upgrade prompt */
+              <div style={{ background:`linear-gradient(135deg,rgba(212,168,67,0.06),rgba(212,168,67,0.02))`, borderRadius:14, border:`1px solid rgba(212,168,67,0.2)`, padding:"16px 20px", marginBottom:20, display:"flex", alignItems:"center", justifyContent:"space-between", flexWrap:"wrap", gap:12 }}>
+                <div style={{ display:"flex", alignItems:"center", gap:14 }}>
+                  <span style={{ fontSize:22 }}>🔒</span>
+                  <div>
+                    <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:3 }}>Unlock your personal intelligence dashboard</div>
+                    <div style={{ fontSize:11, color:T.textMuted }}>Track your watchlist · Monitor portfolio value · Set price alerts · Export PDF reports</div>
+                  </div>
                 </div>
-                {insightsLoading
-                  ? <div style={{ display: "flex", gap: 8, alignItems: "center", color: T.textMuted, fontSize: 12 }}><span style={{ animation: "spin 1s linear infinite", display: "inline-block" }}>⟳</span> Analysing Dubai market data…</div>
-                  : <div className="ai-insights-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 10 }}>
-                      {aiInsights.map((ins, i) => (
-                        <div key={ins.title || i} style={{ background: "rgba(255,255,255,0.03)", borderRadius: 10, padding: "12px 14px", border: `1px solid ${T.border}` }}>
-                          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
-                            <span style={{ fontSize: 9, padding: "2px 8px", borderRadius: 8, fontWeight: 700, letterSpacing: 0.5,
-                              background: ins.tag === "Yield" ? "rgba(16,185,129,0.1)" : ins.tag === "Risk" ? "rgba(239,68,68,0.1)" : ins.tag === "Opportunity" ? "rgba(212,168,67,0.1)" : "rgba(59,130,246,0.1)",
-                              color: ins.tag === "Yield" ? T.green : ins.tag === "Risk" ? "#EF4444" : ins.tag === "Opportunity" ? T.gold : T.blue }}>
-                              {ins.tag}
-                            </span>
-                            <span style={{ fontSize: 13 }}>{ins.direction === "up" ? "↑" : ins.direction === "down" ? "↓" : "→"}</span>
-                          </div>
-                          <div style={{ fontSize: 12, fontWeight: 700, color: T.white, marginBottom: 5, lineHeight: 1.3 }}>{ins.title}</div>
-                          <div style={{ fontSize: 11, color: T.textSecondary, lineHeight: 1.5 }}>{ins.insight}</div>
-                        </div>
-                      ))}
-                    </div>
-                }
+                <button type="button" onClick={()=>setShowUpgrade(true)} style={{ padding:"10px 24px", background:`linear-gradient(135deg,${T.gold},${T.goldDim})`, border:"none", borderRadius:10, color:T.bg, fontSize:12, fontWeight:700, cursor:"pointer", fontFamily:"'Outfit',sans-serif", whiteSpace:"nowrap" }}>
+                  Upgrade to Pro — AED 99/mo →
+                </button>
               </div>
             )}
 
-            {/* ── MARKET PULSE + COMMUNITY HEAT MAP ── */}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 20 }} className="chart-grid-2">
-
-              {/* Dubai Market Pulse */}
-              <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: "18px 20px" }}>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <span style={{ fontSize: 14 }}>📈</span>
-                    <span style={{ fontSize: 11, fontWeight: 700, color: T.gold, letterSpacing: 1, textTransform: "uppercase" }}>Dubai Market Pulse</span>
-                  </div>
-                  <span style={{ fontSize: 9, color: T.textMuted }}>FY 2025 · DLD Official</span>
+            {/* ── ROW 3: MARKET PULSE — 4 hero numbers (all tiers) ── */}
+            <div style={{ background:T.surface, borderRadius:16, border:`1px solid ${T.border}`, padding:"18px 20px", marginBottom:20 }}>
+              <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:16 }}>
+                <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+                  <span style={{ fontSize:14 }}>📈</span>
+                  <span style={{ fontSize:11, fontWeight:700, color:T.gold, letterSpacing:1, textTransform:"uppercase" }}>Dubai Market Pulse</span>
+                  <span style={{ fontSize:9, padding:"2px 8px", borderRadius:8, background:"rgba(16,185,129,0.1)", color:T.green, fontWeight:600 }}>FY 2025 · DLD Official</span>
                 </div>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-                  {[
-                    { label: "Total Transactions", value: "214,912", change: "+36%", color: T.green, icon: "🏠" },
-                    { label: "Market Value", value: "AED 682.5B", change: "+31%", color: T.gold, icon: "💰" },
-                    { label: "Avg Price/sqft", value: "AED 1,689", change: "+19.8%", color: T.teal, icon: "📐" },
-                    { label: "Off-Plan Share", value: "60%+", change: "Dominant", color: T.blue, icon: "🏗️" },
-                    { label: "New Investors", value: "110,000+", change: "+55%", color: T.purple, icon: "👥" },
-                    { label: "Nationalities", value: "175+", change: "Global demand", color: T.orange, icon: "🌍" },
-                  ].map((item, i) => (
-                    <div key={item.label} style={{ padding: "10px 12px", background: T.surfaceAlt, borderRadius: 10, border: `1px solid ${T.border}` }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
-                        <span style={{ fontSize: 13 }}>{item.icon}</span>
-                        <span style={{ fontSize: 9, color: T.textMuted, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.5 }}>{item.label}</span>
-                      </div>
-                      <div style={{ fontFamily: "'Fraunces',serif", fontSize: 15, fontWeight: 900, color: item.color, marginBottom: 2 }}>{item.value}</div>
-                      <div style={{ fontSize: 10, color: item.color, fontWeight: 600 }}>{item.change} YoY</div>
+                <span style={{ fontSize:10, color:T.textMuted }}>All-time records across every metric</span>
+              </div>
+              <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:12 }}>
+                {[
+                  { label:"Total Transactions", value:"214,912", change:"+36% YoY", color:T.green, icon:"🏠", note:"5th consecutive record year" },
+                  { label:"Total Market Value", value:"AED 682.5B", change:"+31% YoY", color:T.gold, icon:"💰", note:"All-time high" },
+                  { label:"Avg Price / sqft", value:"AED 1,689", change:"+19.8% YoY", color:T.teal, icon:"📐", note:"ValuStrat VPI Dec 2025" },
+                  { label:"Off-Plan Share", value:"60%+", change:"Dominant", color:T.blue, icon:"🏗️", note:"Record off-plan demand" },
+                ].map((item)=>(
+                  <div key={item.label} style={{ padding:"14px 16px", background:T.surfaceAlt, borderRadius:12, border:`1px solid ${T.border}`, position:"relative", overflow:"hidden" }}>
+                    <div style={{ position:"absolute", top:0, left:0, right:0, height:2, background:item.color, opacity:0.5 }} />
+                    <div style={{ display:"flex", alignItems:"center", gap:6, marginBottom:8 }}>
+                      <span style={{ fontSize:16 }}>{item.icon}</span>
+                      <span style={{ fontSize:9, color:T.textMuted, fontWeight:600, textTransform:"uppercase", letterSpacing:0.5 }}>{item.label}</span>
                     </div>
-                  ))}
+                    <div style={{ fontFamily:"'Fraunces',serif", fontSize:20, fontWeight:900, color:item.color, marginBottom:4, lineHeight:1 }}>{item.value}</div>
+                    <div style={{ fontSize:10, color:item.color, fontWeight:700, marginBottom:3 }}>{item.change}</div>
+                    <div style={{ fontSize:9, color:T.textMuted }}>{item.note}</div>
+                  </div>
+                ))}
+              </div>
+              <div style={{ marginTop:12, display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:10 }}>
+                {[
+                  { label:"New Investors", value:"110,000+", change:"+55% YoY", color:T.purple },
+                  { label:"Nationalities", value:"175+", change:"Global demand", color:T.orange },
+                  { label:"Luxury (AED10M+)", value:"AED 34.5B", change:"+21% YoY", color:T.gold },
+                  { label:"Mortgage Volume", value:"AED 98.4B", change:"+18% YoY", color:T.teal },
+                ].map((item)=>(
+                  <div key={item.label} style={{ padding:"10px 12px", background:T.surfaceAlt, borderRadius:10, border:`1px solid ${T.border}`, display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+                    <div>
+                      <div style={{ fontSize:9, color:T.textMuted, fontWeight:600, textTransform:"uppercase", letterSpacing:0.5, marginBottom:3 }}>{item.label}</div>
+                      <div style={{ fontSize:13, fontWeight:700, color:item.color }}>{item.value}</div>
+                    </div>
+                    <div style={{ fontSize:10, color:item.color, fontWeight:600 }}>{item.change}</div>
+                  </div>
+                ))}
+              </div>
+              <div style={{ marginTop:10, fontSize:9, color:T.textMuted }}>Source: Dubai Land Department FY2025 · DXBinteract · Knight Frank Dubai Report 2025 · ValuStrat VPI</div>
+            </div>
+
+            {/* ── ROW 4: AI INSIGHTS + COMMUNITY PPSF ── */}
+            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16, marginBottom:20 }} className="chart-grid-2">
+
+              {/* AI Intelligence */}
+              <div style={{ background:T.surface, borderRadius:16, border:`1px solid rgba(212,168,67,0.2)`, padding:"18px 20px" }}>
+                <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:14 }}>
+                  <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+                    <span style={{ fontSize:14 }}>✦</span>
+                    <span style={{ fontSize:11, fontWeight:700, color:T.gold, letterSpacing:1, textTransform:"uppercase" }}>AI Market Intelligence</span>
+                    <span style={{ fontSize:9, padding:"2px 8px", borderRadius:8, background:"rgba(212,168,67,0.1)", color:T.gold }}>Claude AI</span>
+                  </div>
+                  {!canAccess("pro") && <span style={{ fontSize:9, color:T.textMuted }}>1 of {aiInsights.length} insights</span>}
                 </div>
-                <div style={{ marginTop: 12, padding: "8px 12px", borderRadius: 8, background: "rgba(16,185,129,0.06)", border: "1px solid rgba(16,185,129,0.15)", fontSize: 10, color: T.textMuted }}>
-                  Source: Dubai Land Department FY2025 · DXBinteract · Knight Frank Dubai Report 2025
-                </div>
+                {insightsLoading
+                  ? <div style={{ display:"flex", gap:8, alignItems:"center", color:T.textMuted, fontSize:12 }}><span style={{ animation:"spin 1s linear infinite", display:"inline-block" }}>⟳</span> Analysing market data…</div>
+                  : <>
+                    {(canAccess("pro") ? aiInsights : aiInsights.slice(0,1)).map((ins,i)=>(
+                      <div key={ins.title||i} style={{ background:"rgba(255,255,255,0.03)", borderRadius:10, padding:"12px 14px", border:`1px solid ${T.border}`, marginBottom:8 }}>
+                        <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:6 }}>
+                          <span style={{ fontSize:9, padding:"2px 8px", borderRadius:8, fontWeight:700,
+                            background:ins.tag==="Yield"?"rgba(16,185,129,0.1)":ins.tag==="Risk"?"rgba(239,68,68,0.1)":ins.tag==="Opportunity"?"rgba(212,168,67,0.1)":"rgba(59,130,246,0.1)",
+                            color:ins.tag==="Yield"?T.green:ins.tag==="Risk"?"#EF4444":ins.tag==="Opportunity"?T.gold:T.blue }}>{ins.tag}</span>
+                          <span style={{ fontSize:13 }}>{ins.direction==="up"?"↑":ins.direction==="down"?"↓":"→"}</span>
+                        </div>
+                        <div style={{ fontSize:12, fontWeight:700, color:T.white, marginBottom:4, lineHeight:1.3 }}>{ins.title}</div>
+                        <div style={{ fontSize:11, color:T.textSecondary, lineHeight:1.5 }}>{ins.insight}</div>
+                      </div>
+                    ))}
+                    {!canAccess("pro") && aiInsights.length > 1 && (
+                      <div style={{ padding:"12px 14px", background:"rgba(212,168,67,0.04)", border:`1px dashed rgba(212,168,67,0.3)`, borderRadius:10, textAlign:"center" }}>
+                        <div style={{ fontSize:11, color:T.gold, fontWeight:600, marginBottom:6 }}>🔒 {aiInsights.length - 1} more AI insights available</div>
+                        <div style={{ fontSize:10, color:T.textMuted, marginBottom:10 }}>Pro subscribers get all insights + weekly AI market report</div>
+                        <button type="button" onClick={()=>setShowUpgrade(true)} style={{ padding:"6px 18px", background:`linear-gradient(135deg,${T.gold},${T.goldDim})`, border:"none", borderRadius:8, color:T.bg, fontSize:11, fontWeight:700, cursor:"pointer" }}>Upgrade to Pro →</button>
+                      </div>
+                    )}
+                  </>
+                }
               </div>
 
-              {/* Community PPSF Heat Map */}
-              <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: "18px 20px" }}>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <span style={{ fontSize: 14 }}>🗺️</span>
-                    <span style={{ fontSize: 11, fontWeight: 700, color: T.gold, letterSpacing: 1, textTransform: "uppercase" }}>Community PPSF Tracker</span>
+              {/* Community PPSF Tracker */}
+              <div style={{ background:T.surface, borderRadius:16, border:`1px solid ${T.border}`, padding:"18px 20px" }}>
+                <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:14 }}>
+                  <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+                    <span style={{ fontSize:14 }}>🏙️</span>
+                    <span style={{ fontSize:11, fontWeight:700, color:T.gold, letterSpacing:1, textTransform:"uppercase" }}>Community PPSF</span>
                   </div>
-                  <span style={{ fontSize: 9, color: T.textMuted }}>AED/sqft · 2025</span>
+                  <span style={{ fontSize:9, color:T.textMuted }}>AED/sqft · 2025</span>
                 </div>
-                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                  {[
-                    { name: "Palm Jumeirah", ppsf: 4200, change: "+22%", tier: "Ultra-Lux", color: "#F59E0B" },
-                    { name: "Downtown Dubai", ppsf: 3800, change: "+18%", tier: "Luxury", color: T.gold },
-                    { name: "Emaar Beachfront", ppsf: 3500, change: "+15%", tier: "Luxury", color: T.gold },
-                    { name: "Dubai Creek Harbour", ppsf: 2200, change: "+12%", tier: "Premium", color: T.teal },
-                    { name: "Dubai Hills Estate", ppsf: 2100, change: "+14%", tier: "Premium", color: T.teal },
-                    { name: "Business Bay", ppsf: 1900, change: "+10%", tier: "Mid-Market", color: T.blue },
-                    { name: "JVC", ppsf: 1200, change: "+8%", tier: "Affordable", color: T.green },
-                    { name: "Emaar South", ppsf: 1100, change: "+9%", tier: "Affordable", color: T.green },
-                  ].map((c, i) => {
-                    const maxPpsf = 4200;
-                    const pct = Math.round((c.ppsf / maxPpsf) * 100);
-                    // Use static data (live override via Firestore when available)
-                    const liveEntry = liveBayutData[c.name] || liveBayutData[c.name.toLowerCase()];
-                    const liveVal = liveEntry?.avgPpsf || c.ppsf;
-                    return (
-                      <div key={i} style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                        <div style={{ width: 120, fontSize: 11, color: T.textSecondary, flexShrink: 0, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{c.name}</div>
-                        <div style={{ flex: 1, height: 6, borderRadius: 3, background: T.border, position: "relative", overflow: "hidden" }}>
-                          <div style={{ position: "absolute", left: 0, top: 0, height: "100%", width: `${pct}%`, background: `linear-gradient(90deg, ${c.color}60, ${c.color})`, borderRadius: 3, transition: "width 0.8s ease" }} />
-                        </div>
-                        <div style={{ width: 70, textAlign: "right", fontSize: 11, fontWeight: 700, color: c.color, flexShrink: 0 }}>AED {liveVal.toLocaleString()}</div>
-                        <div style={{ width: 42, textAlign: "right", fontSize: 10, color: T.green, flexShrink: 0, fontWeight: 600 }}>{c.change}</div>
+                {[
+                  { name:"Palm Jumeirah",      ppsf:4200, change:"+22%", tier:"Ultra-Lux", color:T.gold,   locked:false },
+                  { name:"Downtown Dubai",      ppsf:3800, change:"+18%", tier:"Luxury",   color:T.gold,   locked:false },
+                  { name:"Emaar Beachfront",    ppsf:3500, change:"+15%", tier:"Luxury",   color:T.gold,   locked:false },
+                  { name:"Dubai Creek Harbour", ppsf:2200, change:"+12%", tier:"Premium",  color:T.teal,   locked:!canAccess("pro") },
+                  { name:"Dubai Hills Estate",  ppsf:2100, change:"+14%", tier:"Premium",  color:T.teal,   locked:!canAccess("pro") },
+                  { name:"Business Bay",        ppsf:1900, change:"+10%", tier:"Mid",      color:T.blue,   locked:!canAccess("pro") },
+                  { name:"JVC",                 ppsf:1200, change:"+8%",  tier:"Value",    color:T.green,  locked:!canAccess("pro") },
+                  { name:"Emaar South",         ppsf:1100, change:"+9%",  tier:"Value",    color:T.green,  locked:!canAccess("pro") },
+                ].map((item)=>{
+                  const maxPpsf=4200;
+                  const pct=(item.ppsf/maxPpsf)*100;
+                  return (
+                    <div key={item.name} style={{ display:"flex", alignItems:"center", gap:10, marginBottom:8, opacity:item.locked?0.4:1 }}>
+                      <div style={{ width:130, fontSize:11, color:T.white, flexShrink:0, display:"flex", alignItems:"center", gap:4 }}>
+                        {item.locked && <span style={{ fontSize:10 }}>🔒</span>}
+                        {item.name}
                       </div>
-                    );
-                  })}
-                </div>
-                <div style={{ marginTop: 12, display: "flex", gap: 8, flexWrap: "wrap" }}>
-                  {[["Ultra-Lux", "#F59E0B"], ["Luxury", T.gold], ["Premium", T.teal], ["Mid-Market", T.blue], ["Affordable", T.green]].map(([tier, color]) => (
-                    <span key={tier} style={{ fontSize: 9, padding: "2px 8px", borderRadius: 4, background: `${color}15`, color, fontWeight: 600 }}>{tier}</span>
-                  ))}
-                </div>
+                      <div style={{ flex:1, height:5, background:T.surfaceAlt, borderRadius:3, overflow:"hidden" }}>
+                        <div style={{ height:"100%", width:item.locked?"0%":`${pct}%`, background:item.color, borderRadius:3 }} />
+                      </div>
+                      <div style={{ width:80, fontSize:11, fontWeight:700, color:item.locked?T.textMuted:item.color, textAlign:"right" }}>
+                        {item.locked ? "Pro only" : `AED ${item.ppsf.toLocaleString()}`}
+                      </div>
+                      <div style={{ width:36, fontSize:10, color:T.green, textAlign:"right" }}>{item.locked?"":item.change}</div>
+                    </div>
+                  );
+                })}
+                {!canAccess("pro") && (
+                  <button type="button" onClick={()=>setShowUpgrade(true)} style={{ width:"100%", marginTop:8, padding:"8px", background:"rgba(212,168,67,0.06)", border:`1px dashed rgba(212,168,67,0.3)`, borderRadius:8, color:T.gold, fontSize:11, fontWeight:600, cursor:"pointer" }}>
+                    🔒 Unlock all 40 communities — Pro AED 99/mo →
+                  </button>
+                )}
               </div>
             </div>
 
-            {/* ── LATEST DUBAI RE NEWS ── */}
-            <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: "18px 20px", marginBottom: 20 }}>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <span style={{ fontSize: 14 }}>📰</span>
-                  <span style={{ fontSize: 11, fontWeight: 700, color: T.gold, letterSpacing: 1, textTransform: "uppercase" }}>Dubai RE Market Headlines</span>
-                  <span style={{ fontSize: 9, padding: "2px 8px", borderRadius: 10, background: "rgba(16,185,129,0.1)", color: T.green, border: "1px solid rgba(16,185,129,0.2)" }}>Q1 2026</span>
+            {/* ── ROW 5: YIELD INTELLIGENCE + NEWS (Pro gate on full yield data) ── */}
+            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16, marginBottom:20 }} className="chart-grid-2">
+
+              {/* Best Yield Communities */}
+              <div style={{ background:T.surface, borderRadius:16, border:`1px solid ${T.border}`, padding:"18px 20px" }}>
+                <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:14 }}>
+                  <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+                    <span style={{ fontSize:14 }}>💰</span>
+                    <span style={{ fontSize:11, fontWeight:700, color:T.gold, letterSpacing:1, textTransform:"uppercase" }}>Best Yield 2025</span>
+                  </div>
+                  <button type="button" onClick={()=>setTab("Yields")} style={{ fontSize:10, color:T.teal, background:"none", border:"none", cursor:"pointer", textDecoration:"underline" }}>Full Yields →</button>
                 </div>
-                <span style={{ fontSize: 9, color: T.textMuted }}>Curated from DLD · Gulf News · Zawya · Knight Frank</span>
-              </div>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 12 }}>
                 {[
-                  { headline: "Dubai H1 2025 transactions hit AED 431B — up 25% year-on-year", source: "DLD Official", tag: "Market", color: T.green, date: "H1 2025" },
-                  { headline: "Off-plan sales account for 60%+ of all Dubai transactions in 2025", source: "DXBinteract", tag: "Off-Plan", color: T.blue, date: "FY 2025" },
-                  { headline: "Emaar records AED 80.4B in property sales — all-time record for any GCC developer", source: "Emaar IR", tag: "Emaar", color: T.gold, date: "FY 2025" },
-                  { headline: "Dubai average price per sqft reaches AED 1,689 — up 19.8% annually", source: "ValuStrat VPI", tag: "Prices", color: T.teal, date: "Dec 2025" },
-                  { headline: "110,000+ new investors entered Dubai property market in 2025, up 55% YoY", source: "DLD Press Release", tag: "Demand", color: T.purple, date: "FY 2025" },
-                  { headline: "EIBOR 3-month rate at 3.593% — mortgage affordability improves as Fed pivots", source: "UAE Central Bank", tag: "EIBOR", color: T.orange, date: "Mar 2026" },
-                ].map((item, i) => (
-                  <div key={i} style={{ padding: "12px 14px", background: T.surfaceAlt, borderRadius: 10, border: `1px solid ${T.border}`, display: "flex", flexDirection: "column", gap: 8 }}>
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                      <span style={{ fontSize: 9, padding: "2px 8px", borderRadius: 6, background: `${item.color}15`, color: item.color, fontWeight: 700 }}>{item.tag}</span>
-                      <span style={{ fontSize: 9, color: T.textMuted }}>{item.date}</span>
+                  { community:"JVC — Binghatti",   yield_:"7–8.15%", type:"Apts",    rating:"A",  note:"Highest yield in Dubai" },
+                  { community:"DAMAC Hills 2",      yield_:"7.5%",    type:"TH/Villa",rating:"A",  note:"Tiger Woods Golf", locked:!canAccess("pro") },
+                  { community:"Business Bay",       yield_:"6–7.5%",  type:"Apts",    rating:"A",  note:"Canal + city centre", locked:!canAccess("pro") },
+                  { community:"Dubai Hills Estate", yield_:"6–6.8%",  type:"Apts",    rating:"A+", note:"Golf + schools", locked:!canAccess("pro") },
+                  { community:"Sobha Hartland",     yield_:"6%+",     type:"Mixed",   rating:"A+", note:"3km from Downtown", locked:!canAccess("pro") },
+                  { community:"Yas Island (Aldar)", yield_:"6–8%",    type:"Mixed",   rating:"A",  note:"Abu Dhabi — Ferrari World", locked:!canAccess("pro") },
+                  { community:"DAMAC Hills",        yield_:"5.5–7.7%",type:"Mixed",   rating:"A+", note:"Trump Golf Club", locked:!canAccess("pro") },
+                  { community:"Emaar South",        yield_:"6–7%",    type:"Apts",    rating:"B+", note:"Airport growth story", locked:!canAccess("pro") },
+                ].map((item,i)=>(
+                  <div key={item.community} style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"7px 0", borderBottom:i<7?`1px solid ${T.border}`:"none", opacity:item.locked?0.45:1 }}>
+                    <div>
+                      <div style={{ fontSize:11, fontWeight:600, color:T.white, display:"flex", alignItems:"center", gap:4 }}>
+                        {item.locked&&<span style={{ fontSize:10 }}>🔒</span>}{item.community}
+                      </div>
+                      <div style={{ fontSize:10, color:T.textMuted }}>{item.note} · {item.type}</div>
                     </div>
-                    <div style={{ fontSize: 12, fontWeight: 600, color: T.white, lineHeight: 1.4 }}>{item.headline}</div>
-                    <div style={{ fontSize: 10, color: T.textMuted }}>Source: {item.url ? <a href={item.url} target="_blank" rel="noopener noreferrer" style={{ color: T.teal, textDecoration: "none" }}>{item.source} ↗</a> : item.source}</div>
+                    <div style={{ textAlign:"right" }}>
+                      <div style={{ fontSize:13, fontWeight:700, color:item.locked?T.textMuted:T.green }}>{item.locked?"Pro only":item.yield_}</div>
+                      <div style={{ fontSize:9, color:T.textMuted }}>Rating {item.rating}</div>
+                    </div>
+                  </div>
+                ))}
+                {!canAccess("pro") && (
+                  <button type="button" onClick={()=>setShowUpgrade(true)} style={{ width:"100%", marginTop:10, padding:"8px", background:"rgba(16,185,129,0.06)", border:`1px dashed rgba(16,185,129,0.3)`, borderRadius:8, color:T.green, fontSize:11, fontWeight:600, cursor:"pointer" }}>
+                    🔒 Unlock full yield data — Pro AED 99/mo →
+                  </button>
+                )}
+              </div>
+
+              {/* Market Headlines */}
+              <div style={{ background:T.surface, borderRadius:16, border:`1px solid ${T.border}`, padding:"18px 20px" }}>
+                <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:14 }}>
+                  <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+                    <span style={{ fontSize:14 }}>📰</span>
+                    <span style={{ fontSize:11, fontWeight:700, color:T.gold, letterSpacing:1, textTransform:"uppercase" }}>Dubai RE Headlines</span>
+                  </div>
+                  <button type="button" onClick={()=>setTab("News")} style={{ fontSize:10, color:T.teal, background:"none", border:"none", cursor:"pointer", textDecoration:"underline" }}>All News →</button>
+                </div>
+                {(newsArticles.length>0 ? newsArticles : [
+                  { title:"Dubai H1 2025 transactions hit AED 431B — up 25% year-on-year", source:"DLD Official", tag:"Market", date:"H1 2025" },
+                  { title:"Off-plan sales account for 60%+ of all Dubai transactions in 2025", source:"DXBinteract", tag:"Off-Plan", date:"FY 2025" },
+                  { title:"Emaar records AED 80.4B in property sales — all-time record for any GCC developer", source:"Emaar IR", tag:"Developer", date:"FY 2025" },
+                  { title:"Dubai average price per sqft reaches AED 1,689 — up 19.8% annually", source:"ValuStrat VPI", tag:"Prices", date:"Dec 2025" },
+                  { title:"110,000+ new investors entered Dubai market in 2025, up 55% YoY", source:"DLD Press Release", tag:"Demand", date:"FY 2025" },
+                  { title:"EIBOR 3-month rate at 3.593% — mortgage affordability improves as Fed pivots", source:"UAE Central Bank", tag:"EIBOR", date:"Mar 2026" },
+                ]).slice(0,6).map((article,i)=>(
+                  <div key={i} style={{ padding:"9px 0", borderBottom:i<5?`1px solid ${T.border}`:"none", cursor:"pointer" }}
+                    onClick={()=>article.url&&window.open(article.url,"_blank")}>
+                    <div style={{ display:"flex", alignItems:"center", gap:6, marginBottom:4 }}>
+                      <span style={{ fontSize:9, padding:"1px 7px", borderRadius:6, background:"rgba(212,168,67,0.1)", color:T.gold, fontWeight:700 }}>{article.tag||"Market"}</span>
+                      <span style={{ fontSize:9, color:T.textMuted }}>{article.date||""}</span>
+                    </div>
+                    <div style={{ fontSize:12, fontWeight:600, color:T.white, lineHeight:1.4, marginBottom:2 }}>{article.title}</div>
+                    <div style={{ fontSize:10, color:T.textMuted }}>Source: {article.source}</div>
                   </div>
                 ))}
               </div>
             </div>
 
-                        <Section title="Key Performance" sub="FY 2025 — All-Time Records Across Every Metric · Source: Emaar Annual Report 2025">
-              <div className="kpi-grid" style={{ display: "grid", gap: 12, marginTop: 16 }}>
-                {emaarStockPrice && (
-                  <div style={{ background: T.surface, border: `1px solid ${emaarStockPrice.up ? "rgba(16,185,129,0.3)" : "rgba(239,68,68,0.3)"}`, borderRadius: 14, padding: "14px 16px", cursor: "pointer", position: "relative", overflow: "hidden" }}
-                    onClick={() => setSelectedKPI({ label: "EMAAR.DU Live Price", value: `AED ${emaarStockPrice.price}`, color: emaarStockPrice.up ? T.green : "#EF4444", description: "Live Emaar Properties (EMAAR.DU) share price from Dubai Financial Market. Auto-refreshes every 5 minutes.", source: "Yahoo Finance · DFM Live", sourceUrl: "https://finance.yahoo.com/quote/EMAAR.DU", items: [{ label: "Current Price", value: `AED ${emaarStockPrice.price}`, note: "DFM live" }, { label: "Day Change", value: `${emaarStockPrice.up ? "+" : ""}${emaarStockPrice.change}%`, note: "vs prev close" }, { label: "Market Cap", value: "AED 128.2B", note: "~USD 34.9B" }, { label: "Analyst Target", value: "AED 19.94", note: "12/12 Strong Buy" }, { label: "Dividend Yield", value: "~7%", note: "AED 1.00/share" }], trend: null })}>
-                    <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: emaarStockPrice.up ? "#10B981" : "#EF4444" }} />
-                    <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
-                      <span style={{ width: 7, height: 7, borderRadius: "50%", background: emaarStockPrice.up ? "#10B981" : "#EF4444", display: "inline-block", animation: "pulse 2s infinite" }} />
-                      <span style={{ fontSize: 9, color: T.textMuted, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase" }}>EMAAR.DU · Live</span>
-                    </div>
-                    <div style={{ fontFamily: "'Fraunces',serif", fontSize: 22, fontWeight: 900, color: emaarStockPrice.up ? T.green : "#EF4444", lineHeight: 1 }}>AED {emaarStockPrice.price}</div>
-                    <div style={{ fontSize: 11, color: emaarStockPrice.up ? T.green : "#EF4444", marginTop: 4 }}>{emaarStockPrice.up ? "▲" : "▼"} {Math.abs(emaarStockPrice.change)}% today · DFM</div>
-                  </div>
-                )}
-                <KPI label="Property Sales" value="AED 80.4B" sub="+16% YoY · USD 21.9B" delay={1} onClick={() => setSelectedKPI({ label: "Property Sales", value: "AED 80.4B", color: T.gold, description: "Total off-plan and ready property sales contracted in FY2025. Includes UAE and international markets.", source: "Emaar Annual Report 2025", sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "FY2025 Sales", value: "AED 80.4B", note: "All-time record" }, { label: "FY2024 Sales", value: "AED 69.3B", note: "+16% YoY" }, { label: "FY2023 Sales", value: "AED 52.7B", note: "+31% YoY" }, { label: "Int'l Sales", value: "AED 9.3B", note: "+124% YoY" }, { label: "UAE Market Share", value: "~30%", note: "Largest by value" }, { label: "Units Booked", value: "12,000+", note: "FY2025 estimate" }], trend: [{ y: "2020", v: 21.5 }, { y: "2021", v: 26.2 }, { y: "2022", v: 33.5 }, { y: "2023", v: 52.7 }, { y: "2024", v: 69.3 }, { y: "2025", v: 80.4 }] })} />
-                <KPI label="Revenue" value="AED 49.6B" sub="+40% YoY · USD 13.5B" delay={2} onClick={() => setSelectedKPI({ label: "Revenue", value: "AED 49.6B", color: T.teal, description: "Total recognized revenue across property development, malls, hospitality, and international operations.", source: "Emaar Annual Report 2025", sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "UAE Dev Revenue", value: "AED 36.4B", note: "73% of total" }, { label: "Malls & Retail", value: "AED 6.3B", note: "+13% YoY" }, { label: "Hospitality", value: "AED 4.2B", note: "+12% YoY" }, { label: "International", value: "AED 2.6B", note: "+124% YoY" }, { label: "Revenue CAGR", value: "27.2%", note: "5-year 2020–2025" }], trend: [{ y: "2020", v: 14.6 }, { y: "2021", v: 17.0 }, { y: "2022", v: 24.5 }, { y: "2023", v: 30.6 }, { y: "2024", v: 35.4 }, { y: "2025", v: 49.6 }] })} />
-                <KPI label="Net Profit" value="AED 25.7B" sub="+36% YoY · USD 7.0B" delay={3} onClick={() => setSelectedKPI({ label: "Net Profit", value: "AED 25.7B", color: T.green, description: "Net profit before minority interest. Includes recurring revenue from Emaar Malls and hospitality.", source: "Emaar Annual Report 2025", sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "Net Margin", value: "51.8%", note: "Industry-leading" }, { label: "EPS FY2025", value: "AED 2.00", note: "+31% YoY" }, { label: "Q4 2025 Profit", value: "AED 7.3B", note: "Strongest quarter" }, { label: "5yr Profit CAGR", value: "57.1%", note: "2020–2025" }, { label: "Tax Rate", value: "~9%", note: "UAE Corporate Tax" }], trend: [{ y: "2020", v: 2.6 }, { y: "2021", v: 4.1 }, { y: "2022", v: 6.2 }, { y: "2023", v: 12.6 }, { y: "2024", v: 18.9 }, { y: "2025", v: 25.7 }] })} />
-                <KPI label="EBITDA" value="AED 25.6B" sub="+33% YoY · USD 7.0B" delay={4} onClick={() => setSelectedKPI({ label: "EBITDA", value: "AED 25.6B", color: T.blue, description: "Earnings before interest, tax, depreciation & amortisation. Key operational profitability metric.", source: "Emaar Annual Report 2025", sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "EBITDA Margin", value: "51.6%", note: "5-year high" }, { label: "Recurring EBITDA", value: "AED 10.5B", note: "32% share" }, { label: "Dev EBITDA", value: "AED 15.1B", note: "Property segment" }, { label: "EV/EBITDA", value: "~5.0×", note: "Vs sector 9× avg" }, { label: "EBITDA CAGR", value: "44.5%", note: "2020–2025" }], trend: [{ y: "2020", v: 4.0 }, { y: "2021", v: 5.3 }, { y: "2022", v: 8.1 }, { y: "2023", v: 13.4 }, { y: "2024", v: 19.2 }, { y: "2025", v: 25.6 }] })} />
-                <KPI label="Backlog" value="AED 155B" sub="+39% YoY · 3-4yr visibility" delay={5} onClick={() => setSelectedKPI({ label: "Revenue Backlog", value: "AED 155B", color: T.purple, description: "Total contracted but unrecognized revenue. Provides 3–4 years of forward revenue visibility.", source: "Emaar Q4 2025 Results", sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "Total Backlog", value: "AED 155B", note: "+39% YoY record" }, { label: "FY2024 Backlog", value: "AED 111.5B", note: "Prior year" }, { label: "Coverage Ratio", value: "3–4 yrs", note: "Revenue visibility" }, { label: "UAE Backlog", value: "AED 140B+", note: "~90% of total" }, { label: "New Launches", value: "AED 85B+", note: "FY2025 new sales" }], trend: [{ y: "2020", v: 45 }, { y: "2021", v: 52 }, { y: "2022", v: 68 }, { y: "2023", v: 80 }, { y: "2024", v: 111.5 }, { y: "2025", v: 155 }] })} />
-                <KPI label="Recurring Rev" value="AED 10.5B" sub="+13% · 32% of EBITDA" delay={6} onClick={() => setSelectedKPI({ label: "Recurring Revenue", value: "AED 10.5B", color: T.cyan, description: "Stable income from Emaar Malls, hotels, serviced residences, and commercial leasing.", source: "Emaar Annual Report 2025", sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "Malls Revenue", value: "AED 6.3B", note: "Dubai Mall + Fashion Ave" }, { label: "Hospitality", value: "AED 4.2B", note: "Hotels & serviced res." }, { label: "% of EBITDA", value: "32%", note: "Defensive income" }, { label: "Dubai Mall Footfall", value: "105M+", note: "Annual visitors" }, { label: "Occupancy", value: "95%+", note: "Malls occupancy rate" }], trend: [{ y: "2020", v: 5.8 }, { y: "2021", v: 6.8 }, { y: "2022", v: 7.9 }, { y: "2023", v: 8.6 }, { y: "2024", v: 9.3 }, { y: "2025", v: 10.5 }] })} />
-                <KPI label="Units Delivered" value="125,600+" sub="Since 2002 · #1 in GCC" delay={7} onClick={() => setSelectedKPI({ label: "Units Delivered", value: "125,600+", color: T.gold, description: "Total residential and commercial units delivered since inception in 2002. Largest track record in GCC.", source: "Emaar Corporate Profile 2025", sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "Total Delivered", value: "125,600+", note: "Since 2002" }, { label: "FY2025 Deliveries", value: "~11,000", note: "Est. annual handovers" }, { label: "UAE Units", value: "~100,000+", note: "80% of total" }, { label: "On-Time Record", value: "95%+", note: "Delivery track record" }, { label: "GCC Rank", value: "#1", note: "By volume" }], trend: [{ y: "2020", v: 85000 }, { y: "2021", v: 95000 }, { y: "2022", v: 103000 }, { y: "2023", v: 110000 }, { y: "2024", v: 118000 }, { y: "2025", v: 125600 }] })} />
-                <KPI label="Land Bank" value="618M sqft" sub="344M UAE · AED 120B dev" delay={8} onClick={() => setSelectedKPI({ label: "Land Bank", value: "618M sqft", color: T.gold, description: "Total gross land area owned or controlled by Emaar for future development.", source: "Emaar Annual Report 2025", sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "Total Land Bank", value: "618M sqft", note: "Gross area" }, { label: "UAE Land", value: "344M sqft", note: "56% of total" }, { label: "International", value: "274M sqft", note: "Egypt, India, KSA" }, { label: "Development Value", value: "AED 120B+", note: "Future GDV est." }, { label: "Dubai Hills Remaining", value: "~180M sqft", note: "Largest UAE plot" }], trend: [{ y: "2020", v: 480 }, { y: "2021", v: 510 }, { y: "2022", v: 535 }, { y: "2023", v: 570 }, { y: "2024", v: 595 }, { y: "2025", v: 618 }] })} />
+            {/* ── ROW 6: DEVELOPER INTELLIGENCE (all tiers) ── */}
+            <div style={{ background:T.surface, borderRadius:16, border:`1px solid ${T.border}`, padding:"18px 20px", marginBottom:20 }}>
+              <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:16 }}>
+                <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+                  <span style={{ fontSize:14 }}>🏆</span>
+                  <span style={{ fontSize:11, fontWeight:700, color:T.gold, letterSpacing:1, textTransform:"uppercase" }}>Developer Intelligence</span>
+                  <span style={{ fontSize:9, padding:"2px 8px", borderRadius:8, background:"rgba(212,168,67,0.1)", color:T.gold }}>
+                    {platformStats.developerCount||allDevelopersMerged.length||7} Developers · {platformStats.projectCount||allProjects.length} Projects
+                  </span>
+                </div>
+                <button type="button" onClick={()=>setTab("Developers")} style={{ fontSize:10, color:T.teal, background:"none", border:"none", cursor:"pointer", textDecoration:"underline" }}>All Developers →</button>
               </div>
-            </Section>
-
-            <div className="chart-grid-2" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginTop: 20 }}>
-              <Chart title="Revenue by Segment (AED B)">
-                <ResponsiveContainer width="100%" height={240}>
-                  <PieChart>
-                    <Pie data={segments} dataKey="revenue" nameKey="name" cx="50%" cy="50%" outerRadius={90} innerRadius={52} paddingAngle={3} stroke="none">
-                      {segments.map((s, i) => <Cell key={s.name || i} fill={s.color} />)}
-                    </Pie>
-                    <Tooltip content={<CustomTooltip />} />
-                  </PieChart>
-                </ResponsiveContainer>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "center", marginTop: 8 }}>
-                  {segments.map((s, i) => (
-                    <span key={s.name || i} style={{ fontSize: 11, color: T.textSecondary, display: "flex", alignItems: "center", gap: 5 }}>
-                      <span style={{ width: 8, height: 8, borderRadius: 3, background: s.color, display: "inline-block" }} />
-                      {s.name} ({s.revenue}B · {s.growth})
-                    </span>
-                  ))}
-                </div>
-              </Chart>
-
-              <Chart title="6-Year Revenue & Profit (AED B)">
-                <ResponsiveContainer width="100%" height={240}>
-                  <AreaChart data={financials}>
-                    <defs>
-                      <linearGradient id="gRev" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor={T.gold} stopOpacity={0.25} /><stop offset="100%" stopColor={T.gold} stopOpacity={0} /></linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
-                    <XAxis dataKey="year" tick={{ fill: T.textMuted, fontSize: 11 }} axisLine={false} tickLine={false} />
-                    <YAxis tick={{ fill: T.textMuted, fontSize: 11 }} axisLine={false} tickLine={false} />
-                    <Tooltip content={<CustomTooltip />} />
-                    <Area type="monotone" dataKey="revenue" stroke={T.gold} fill="url(#gRev)" strokeWidth={2.5} name="Revenue" />
-                    <Line type="monotone" dataKey="netProfit" stroke={T.teal} strokeWidth={2} dot={{ fill: T.teal, r: 3 }} name="Net Profit" />
-                    <Line type="monotone" dataKey="ebitda" stroke={T.blue} strokeWidth={2} dot={{ fill: T.blue, r: 3 }} name="EBITDA" />
-                  </AreaChart>
-                </ResponsiveContainer>
-                {/* Chart Legend */}
-                <div style={{ display: "flex", gap: 16, justifyContent: "center", marginTop: 8 }}>
-                  {[["Revenue", T.gold], ["Net Profit", T.teal], ["EBITDA", T.blue]].map(([name, color]) => (
-                    <span key={name} style={{ fontSize: 11, color: T.textSecondary, display: "flex", alignItems: "center", gap: 5 }}>
-                      <span style={{ width: 20, height: 2, background: color, display: "inline-block", borderRadius: 1 }} />
-                      {name}
-                    </span>
-                  ))}
-                </div>
-              </Chart>
+              <div style={{ display:"grid", gridTemplateColumns:"repeat(7,1fr)", gap:10 }} className="dev-leaderboard">
+                {[
+                  { id:"emaar",     name:"Emaar",     flag:"🇦🇪", color:"#D4A843", sales:"AED 80.4B", score:95, type:"DFM Listed" },
+                  { id:"aldar",     name:"Aldar",     flag:"🇦🇪", color:"#06B6D4", sales:"AED 40.6B", score:85, type:"ADX Listed" },
+                  { id:"sobha",     name:"Sobha",     flag:"🇮🇳", color:"#8B5CF6", sales:"AED 30.0B", score:82, type:"Private" },
+                  { id:"damac",     name:"DAMAC",     flag:"🇦🇪", color:"#C8A951", sales:"AED 36.0B", score:78, type:"Private" },
+                  { id:"nakheel",   name:"Nakheel",   flag:"🇦🇪", color:"#10B981", sales:"AED 24.6B", score:79, type:"Dubai Holding" },
+                  { id:"meraas",    name:"Meraas",    flag:"🇦🇪", color:"#F59E0B", sales:"AED 20.9B", score:81, type:"Dubai Holding" },
+                  { id:"binghatti", name:"Binghatti", flag:"🇦🇪", color:"#3B82F6", sales:"AED 26.0B", score:72, type:"Private" },
+                ].map((dev)=>(
+                  <div key={dev.id} onClick={()=>{setSelectedDeveloper(dev.id);setTab("Projects");}}
+                    style={{ background:T.surfaceAlt, borderRadius:12, border:`1px solid ${T.border}`, padding:"14px 10px", cursor:"pointer", transition:"all 0.2s", textAlign:"center" }}
+                    onMouseEnter={e=>{e.currentTarget.style.borderColor=dev.color+"60";e.currentTarget.style.background=dev.color+"08";}}
+                    onMouseLeave={e=>{e.currentTarget.style.borderColor=T.border;e.currentTarget.style.background=T.surfaceAlt;}}>
+                    <div style={{ fontSize:22, marginBottom:6 }}>{dev.flag}</div>
+                    <div style={{ fontSize:12, fontWeight:700, color:T.white, marginBottom:3 }}>{dev.name}</div>
+                    <div style={{ fontSize:10, color:dev.color, fontWeight:600, marginBottom:4 }}>{dev.sales}</div>
+                    <div style={{ fontSize:9, color:T.textMuted, marginBottom:6 }}>{projectsByDeveloper[dev.id]?.length||0} projects</div>
+                    <div style={{ height:3, background:T.border, borderRadius:2, overflow:"hidden" }}>
+                      <div style={{ height:"100%", width:`${dev.score}%`, background:dev.color, borderRadius:2 }} />
+                    </div>
+                    <div style={{ fontSize:9, color:T.textMuted, marginTop:3 }}>Score {dev.score}/100</div>
+                  </div>
+                ))}
+              </div>
             </div>
 
-            <Section title="Company Strength" sub="Analyst consensus: STRONG BUY (12 of 12 analysts) · Source: Investing.com">
-              <div style={{ marginBottom: 10, display: "flex", gap: 8, flexWrap: "wrap" }}>
-                <DataBadge source="Emaar Annual Report FY2025" date="Dec 2025" type="emaar" />
-                <DataBadge source="S&P / Fitch Ratings 2025" date="2025" type="manual" />
+            {/* ── ROW 7: KEY RATES + QUICK ACCESS ── */}
+            <div style={{ display:"grid", gridTemplateColumns:"1fr 2fr", gap:16, marginBottom:20 }} className="chart-grid-2">
+
+              {/* Key Market Rates */}
+              <div style={{ background:T.surface, borderRadius:16, border:`1px solid ${T.border}`, padding:"18px 20px" }}>
+                <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:14 }}>
+                  <span style={{ fontSize:14 }}>📊</span>
+                  <span style={{ fontSize:11, fontWeight:700, color:T.gold, letterSpacing:1, textTransform:"uppercase" }}>Key Market Rates</span>
+                </div>
+                {[
+                  { label:"EIBOR 3M",        value:eiborRates?.threeMonth?`${eiborRates.threeMonth}%`:"3.593%", change:"↓ Falling", color:T.green },
+                  { label:"EIBOR 6M",        value:eiborRates?.sixMonth?`${eiborRates.sixMonth}%`:"3.694%",    change:"↓ Falling", color:T.green },
+                  { label:"EIBOR 12M",       value:eiborRates?.oneYear?`${eiborRates.oneYear}%`:"3.821%",      change:"↓ Falling", color:T.green },
+                  { label:"UAE Mortgage avg",value:"4.2–5.5%",  change:"↓ Best in 2yr",  color:T.teal },
+                  { label:"DLD Transfer Fee",value:"4%",        change:"Fixed",           color:T.textMuted },
+                  { label:"Avg Service Chg", value:"AED 15/sqft",change:"Annual",         color:T.textMuted },
+                ].map((item,i)=>(
+                  <div key={item.label} style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"8px 0", borderBottom:i<5?`1px solid ${T.border}`:"none" }}>
+                    <span style={{ fontSize:11, color:T.textSecondary }}>{item.label}</span>
+                    <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+                      <span style={{ fontSize:12, fontWeight:700, color:item.color }}>{item.value}</span>
+                      <span style={{ fontSize:9, color:T.green }}>{item.change}</span>
+                    </div>
+                  </div>
+                ))}
+                <div style={{ marginTop:10, fontSize:9, color:T.textMuted }}>Source: CBUAE · Mar 2026</div>
               </div>
-              <div className="chart-grid-2" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginTop: 16 }}>
-                <Chart title="Performance Radar">
-                  <ResponsiveContainer width="100%" height={260}>
-                    <RadarChart data={radarData} cx="50%" cy="50%" outerRadius="75%">
-                      <PolarGrid stroke="rgba(255,255,255,0.06)" />
-                      <PolarAngleAxis dataKey="metric" tick={{ fill: T.textSecondary, fontSize: 10 }} />
-                      <PolarRadiusAxis tick={false} axisLine={false} />
-                      <Radar name="Emaar" dataKey="value" stroke={T.gold} fill={T.gold} fillOpacity={0.15} strokeWidth={2} />
-                      <Tooltip content={<CustomTooltip />} />
-                    </RadarChart>
-                  </ResponsiveContainer>
-                </Chart>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+
+              {/* Quick Access */}
+              <div style={{ background:T.surface, borderRadius:16, border:`1px solid ${T.border}`, padding:"18px 20px" }}>
+                <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:14 }}>
+                  <span style={{ fontSize:14 }}>🚀</span>
+                  <span style={{ fontSize:11, fontWeight:700, color:T.gold, letterSpacing:1, textTransform:"uppercase" }}>Quick Access</span>
+                </div>
+                <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:10 }}>
                   {[
-                    { label: "Founded", value: "1997", sub: "27+ years track record", kpi: { color: T.gold, description: "Emaar Properties founded in 1997 by Mohamed Alabbar. Listed on DFM in 2000.", source: "Emaar Corporate", sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "Founded", value: "1997", note: "Dubai, UAE" }, { label: "IPO", value: "2000", note: "Dubai Financial Market" }, { label: "Chairman", value: "M. Alabbar", note: "Founder & visionary" }, { label: "Employees", value: "9,000+", note: "Global workforce" }], trend: null } },
-                    { label: "Developer Rank", value: "#1", sub: "Dubai's largest by value", kpi: { color: T.teal, description: "Consistently ranked #1 developer in Dubai by property sales value with ~30% market share.", source: "DLD & Zawya 2025", sourceUrl: "https://zawya.com", items: [{ label: "UAE Rank", value: "#1", note: "By sales value" }, { label: "Market Share", value: "~30%", note: "Dubai off-plan" }, { label: "GCC Rank", value: "#1", note: "By units delivered" }, { label: "FY2025 Sales", value: "AED 80.4B", note: "vs #2 ~AED 20B" }], trend: null } },
-                    { label: "Active Projects", value: String(activeProjects.length), sub: "Across 10+ communities", kpi: { color: T.blue, description: "48 active projects across Dubai Hills, Creek Harbour, Downtown, Beachfront and more.", source: "DXB Analytics Database", sourceUrl: "#", items: [{ label: "Under Construction", value: String(activeProjects.filter(p => p.status === "Under Construction").length || 18), note: "Active building" }, { label: "Off-Plan", value: String(activeProjects.filter(p => p.status !== "Delivered").length || 30), note: "Pre-launch / launched" }, { label: "Communities", value: String([...new Set(activeProjects.map(p => p.community))].length || 11), note: "Master-planned" }, { label: "Branded", value: String(activeProjects.filter(p => p.branded).length || 12) + "+", note: "Address · Vida · Palace" }], trend: null } },
-                    { label: "International", value: "AED 9.3B", sub: "+124% growth YoY", kpi: { color: T.green, description: "International operations across Egypt, India, Saudi Arabia, Pakistan and Turkey.", source: "Emaar Annual Report 2025", sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "Int'l Sales", value: "AED 9.3B", note: "+124% YoY" }, { label: "Egypt", value: "Largest market", note: "Marassi, Uptown Cairo" }, { label: "India", value: "Growing", note: "Emaar India" }, { label: "Saudi Arabia", value: "Expanding", note: "New projects" }], trend: [{ y: "2022", v: 1.8 }, { y: "2023", v: 2.9 }, { y: "2024", v: 4.1 }, { y: "2025", v: 9.3 }] } },
-                    { label: "Dividend/Share", value: "AED 1.00", sub: "2× increase from 2023", kpi: { color: T.gold, description: "AED 1.00 DPS for FY2025 — 100% of share capital, 2× increase from AED 0.50 in 2023.", source: "Emaar IR 2025", sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "DPS FY2025", value: "AED 1.00", note: "100% of share capital" }, { label: "DPS FY2024", value: "AED 0.70", note: "+43% YoY" }, { label: "DPS FY2023", value: "AED 0.50", note: "Base year" }, { label: "Total Payout", value: "AED 8.8B", note: "Total dividend pool" }, { label: `Yield (${emaarStockPrice ? emaarStockPrice.price : "15.40"})`, value: emaarStockPrice ? `${(1.00 / parseFloat(emaarStockPrice.price) * 100).toFixed(1)}%` : "6.5%", note: "Attractive vs peers" }], trend: [{ y: "2021", v: 0.25 }, { y: "2022", v: 0.40 }, { y: "2023", v: 0.50 }, { y: "2024", v: 0.70 }, { y: "2025", v: 1.00 }] } },
-                    { label: "Target Upside", value: "+21.8%", sub: "AED 20.77 consensus", kpi: { color: T.green, description: "12 analyst consensus target of AED 20.77 vs current AED 15.40 — all 12 rate Strong Buy.", source: "TradingView · Investing.com", sourceUrl: "https://www.tradingview.com/symbols/DFM-EMAAR/", items: [{ label: "Consensus Target", value: "AED 20.77", note: "12 analyst average" }, { label: "Current Price", value: emaarStockPrice ? `AED ${emaarStockPrice.price}` : "AED 15.40", note: "DFM Live" }, { label: "High Target", value: "AED 30.00", note: "Bull case" }, { label: "Low Target", value: "AED 15.80", note: "Bear case" }, { label: "Rating", value: "Strong Buy", note: "12 of 12 analysts" }], trend: null } },
-                  ].map(({ label, value, sub, kpi }, i) => (
-                    <KPI key={i} label={label} value={value} sub={sub} delay={Math.min(i + 1, 8)} onClick={() => setSelectedKPI({ label, value, ...kpi })} />
+                    { label:`${platformStats.projectCount||allProjects.length} Projects`, icon:"🏗️", tab:"Projects", color:T.gold,   desc:"All developers · filter by area, price, handover", locked:false },
+                    { label:`${platformStats.communityCount||40} Communities`,             icon:"🗺️", tab:"Communities", color:T.teal, desc:"Full data: amenities · yields · prices", locked:false },
+                    { label:"Yield Calculator",    icon:"💰", tab:"Yields",    color:T.green,  desc:"ROI by community and unit type", locked:!canAccess("pro") },
+                    { label:"Mortgage Calc",       icon:"🏦", tab:"Mortgage",  color:T.blue,   desc:"UAE mortgage + DLD fee breakdown", locked:!canAccess("pro") },
+                    { label:"My Portfolio",        icon:"📈", tab:"Portfolio", color:T.purple, desc:"Track your investments live", locked:!canAccess("pro") },
+                    { label:"Compare Projects",    icon:"⚖️",  tab:"Projects", color:T.orange, desc:"Side-by-side project comparison", locked:!canAccess("enterprise") },
+                  ].map((item)=>(
+                    <div key={item.label} onClick={()=>item.locked?setShowUpgrade(true):setTab(item.tab)}
+                      style={{ background:T.surfaceAlt, borderRadius:10, border:`1px solid ${item.locked?"rgba(255,255,255,0.05)":T.border}`, padding:"14px", cursor:"pointer", transition:"all 0.2s", opacity:item.locked?0.7:1, position:"relative", overflow:"hidden" }}
+                      onMouseEnter={e=>{e.currentTarget.style.borderColor=item.locked?"rgba(212,168,67,0.3)":item.color+"50";}}
+                      onMouseLeave={e=>{e.currentTarget.style.borderColor=item.locked?"rgba(255,255,255,0.05)":T.border;}}>
+                      {item.locked && <div style={{ position:"absolute", top:8, right:8, fontSize:10 }}>🔒</div>}
+                      <div style={{ fontSize:20, marginBottom:8 }}>{item.icon}</div>
+                      <div style={{ fontSize:11, fontWeight:700, color:item.locked?T.textMuted:T.white, marginBottom:4 }}>{item.label}</div>
+                      <div style={{ fontSize:10, color:T.textMuted, lineHeight:1.4 }}>{item.locked?"Pro feature":item.desc}</div>
+                    </div>
                   ))}
                 </div>
               </div>
-          <TabSources sources={[{ label: "Emaar Annual Report 2025", url: "https://www.emaar.com/en/investor-relations/" }, { label: "DFM: EMAAR.DU", url: "https://www.dfm.ae" }, { label: "TradingView", url: "https://www.tradingview.com/symbols/DFM-EMAAR/" }, { label: "Yahoo Finance", url: "https://finance.yahoo.com/quote/EMAAR.DU" }, { label: "S&P · Moody's · Fitch Ratings" }]} />
-            </Section>
-          </>}
+            </div>
+
+          </>}}}
 
           {/* ─── DEVELOPERS TAB ─── */}
           {tab === "Developers" && (() => {
