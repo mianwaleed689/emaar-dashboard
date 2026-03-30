@@ -1648,8 +1648,9 @@ function EiborAdminPanel({ db, T }) {
 
 
 // ─── ADMIN TAB PANEL — extracted to avoid hooks-in-IIFE error ───────────────
-function AdminTabPanel({ allProjects, activeProjects, activeCommunities, currentDeveloper,
+function AdminTabPanel({ allProjects, activeProjects, activeCommunities, allCommunities, currentDeveloper,
   userEmail, adminUsers, adminLoading, adminError, fetchAdminUsers,
+  extraProjects, adminMode,
   seedAllProjectsToFirestore, updateProject, notify, T, Section }) {
   const [seedLoading, setSeedLoading] = React.useState(false);
   const [seedProgress, setSeedProgress] = React.useState(0);
@@ -2788,7 +2789,7 @@ export default function EmaarDashboardV2() {
             // FIXED: Data now sourced from data_master.js allDevelopers[]
             // Sales, project counts and scores are accurate as of March 2026
             const DEVS = [
-              { id: "emaar",     name: "Emaar Properties",  flag: "🇦🇪", color: "#D4A843", type: "Listed · DFM",   sales: "AED 80.4B",  projects: emaarActiveProjects.length,          score: 95 },
+              { id: "emaar",     name: "Emaar Properties",  flag: "🇦🇪", color: "#D4A843", type: "Listed · DFM",   sales: "AED 80.4B",  projects: projectsByDeveloper["emaar"]?.length || 0,          score: 95 },
               { id: "damac",     name: "DAMAC Properties",  flag: "🇦🇪", color: "#C8A951", type: "Private",        sales: "AED 36.0B",  projects: damacActiveProjects.length,          score: 78 },
               { id: "sobha",     name: "Sobha Realty",      flag: "🇮🇳", color: "#8B5CF6", type: "Private",        sales: "AED 30.0B",  projects: sobhaActiveProjects.length,          score: 82 },
               { id: "nakheel",   name: "Nakheel",           flag: "🇦🇪", color: "#10B981", type: "Dubai Holding",  sales: "AED 24.6B",  projects: nakheelActiveProjects.length,        score: 79 },
@@ -7120,12 +7121,15 @@ export default function EmaarDashboardV2() {
               allProjects={allProjects}
               activeProjects={activeProjects}
               activeCommunities={activeCommunities}
+              allCommunities={allCommunities}
               currentDeveloper={currentDeveloper}
               userEmail={userEmail}
               adminUsers={adminUsers}
               adminLoading={adminLoading}
               adminError={adminError}
               fetchAdminUsers={fetchAdminUsers}
+              extraProjects={extraProjects}
+              adminMode={adminMode}
               seedAllProjectsToFirestore={seedAllProjectsToFirestore}
               updateProject={updateProject}
               notify={notify}
