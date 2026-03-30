@@ -11,6 +11,10 @@ import { collection, getDocs, doc, getDoc, setDoc, updateDoc, deleteDoc, onSnaps
 import { T, emaarProjects, emaarFinancials, emaarCommunities, emaarYields, topDevelopers, emaarRisks, dubaiMarket, dubaiSalesHistory, roiPhases, emaarSegments, radarData, megaProjects, communityIntel, communityROI } from "./data";
 import damacData from "./data_damac";
 import nakheelData from "./data_nakheel";
+import sobhaData from "./data_sobha";
+import meraasData from "./data_meraas";
+import aldarData from "./data_aldar";
+import binghattiData from "./data_binghatti";
 import LandingPage from "./LandingPage";
 import RoiCalculator from "./RoiCalculator";
 
@@ -1858,14 +1862,20 @@ export default function EmaarDashboardV2() {
   // Developer-specific project lists from data files
   const damacActiveProjects = (damacData.projects || []).map(p => ({ ...p, developer: "DAMAC", developerId: "damac" }));
   const nakheelActiveProjects = (nakheelData.projects || []).map(p => ({ ...p, developer: "Nakheel", developerId: "nakheel" }));
+  const sobhaActiveProjects = (sobhaData?.projects || sobhaData?.sobhaProjects || []).map(p => ({ ...p, developer: "Sobha Realty", developerId: "sobha" }));
+  const meraasActiveProjects = (meraasData?.projects || meraasData?.meraasProjects || []).map(p => ({ ...p, developer: "Meraas", developerId: "meraas" }));
+  const aldarActiveProjects = (aldarData?.projects || aldarData?.aldarProjects || []).map(p => ({ ...p, developer: "Aldar Properties", developerId: "aldar" }));
+  const binghattiActiveProjects = (binghattiData?.projects || binghattiData?.binghattiProjects || []).map(p => ({ ...p, developer: "Binghatti", developerId: "binghatti" }));
   const otherDevProjects = extraProjects.filter(p => p.developerId && p.developerId !== "emaar");
   // Active projects based on selected developer
   const activeProjects = selectedDeveloper === "emaar" ? emaarActiveProjects
-    : selectedDeveloper === "damac" ? damacActiveProjects
-    : selectedDeveloper === "nakheel" ? nakheelActiveProjects
-    : otherDevProjects.filter(p => p.developerId === selectedDeveloper).length > 0
-      ? otherDevProjects.filter(p => p.developerId === selectedDeveloper)
-      : emaarActiveProjects; // fallback to emaar if no projects found
+    : selectedDeveloper === "damac" ? (damacActiveProjects.length > 0 ? damacActiveProjects : otherDevProjects.filter(p => p.developerId === "damac"))
+    : selectedDeveloper === "nakheel" ? (nakheelActiveProjects.length > 0 ? nakheelActiveProjects : otherDevProjects.filter(p => p.developerId === "nakheel"))
+    : selectedDeveloper === "sobha" ? (sobhaActiveProjects.length > 0 ? sobhaActiveProjects : otherDevProjects.filter(p => p.developerId === "sobha"))
+    : selectedDeveloper === "meraas" ? (meraasActiveProjects.length > 0 ? meraasActiveProjects : otherDevProjects.filter(p => p.developerId === "meraas"))
+    : selectedDeveloper === "aldar" ? (aldarActiveProjects.length > 0 ? aldarActiveProjects : otherDevProjects.filter(p => p.developerId === "aldar"))
+    : selectedDeveloper === "binghatti" ? (binghattiActiveProjects.length > 0 ? binghattiActiveProjects : otherDevProjects.filter(p => p.developerId === "binghatti"))
+    : emaarActiveProjects;
 
   // Normalize units from either Object ({studio:{total,sold}}) or Array ([{type,available,total}]) format
   const getUnitEntries = (units) => {
