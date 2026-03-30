@@ -2177,18 +2177,7 @@ export default function EmaarDashboardV2() {
 
   // Portfolio now live via user onSnapshot listener
 
-  // Watchlist now live via user onSnapshot listener
-
-  const toggleWatchlist = async (project) => {
-    if (!isLoggedIn) { setShowLogin("login"); return; }
-    const isWatched = watchlist.find(p => p.id === project.id);
-    const updated = isWatched ? watchlist.filter(p => p.id !== project.id) : [...watchlist, { id: project.id, name: project.name, community: project.community, price: project.price, addedAt: new Date().toISOString() }];
-    setWatchlist(updated);
-    if (auth.currentUser) {
-      try { await setDoc(doc(db, "watchlists", auth.currentUser.uid), { projects: updated, updatedAt: new Date().toISOString() }); } catch (e) { notify("Could not save watchlist — check connection"); setWatchlist(watchlist); }
-    }
-    notify(isWatched ? `Removed ${project.name} from watchlist` : `⭐ ${project.name} added to watchlist`);
-  };
+  // Watchlist now live via DXBContext (toggleWatchlist from context)
 
   // Price alerts now live via user onSnapshot listener
 
@@ -2271,12 +2260,7 @@ export default function EmaarDashboardV2() {
     setShowOnboarding(false);
   };
 
-  const savePortfolio = async (holdings) => {
-    setMyPortfolio(holdings);
-    if (auth.currentUser) {
-      try { await setDoc(doc(db, "portfolios", auth.currentUser.uid), { holdings, updatedAt: new Date().toISOString() }); } catch (e) { console.log("Portfolio save error:", e); }
-    }
-  };
+  // savePortfolio now in DXBContext
 
   const addToPortfolio = () => {
     if (!showAddPortfolio || !portfolioForm.investedAmount) return;
