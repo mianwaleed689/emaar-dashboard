@@ -191,6 +191,8 @@ const css = `
   .delay-7 { animation-delay: 0.35s; }
   .delay-8 { animation-delay: 0.4s; }
 
+  .kpi-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
+
   .kpi-card {
     background: linear-gradient(135deg, ${T.card} 0%, ${T.surfaceAlt} 100%);
     border: 1px solid ${T.border};
