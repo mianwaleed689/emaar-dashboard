@@ -1781,13 +1781,6 @@ export default function EmaarDashboardV2() {
 
   // Load projects from Firestore (runs for ALL users — guests and logged-in)
   const [projectsLoading, setProjectsLoading] = useState(true);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-
-  const globalRefresh = () => {
-    setIsRefreshing(true);
-    try { sessionStorage.setItem("dxb_active_tab", tab); } catch(e) {}
-    setTimeout(() => { window.location.reload(); }, 300);
-  };
 
   useEffect(() => {
     const loadProjects = async () => {
@@ -1899,71 +1892,6 @@ export default function EmaarDashboardV2() {
 
   // Other developers: use allProjects[] from data_master (single clean source)
   // Merge with any Firestore-added projects for that developer
-  const getDevProjects = (devId, devName) => {
-    const staticProjects = getProjectsByDeveloper(devId);
-    const fsProjects = extraProjects.filter(p => p.developerId === devId);
-    const staticNames = new Set(staticProjects.map(p => (p.name || "").toLowerCase().trim()));
-    const newFsProjects = fsProjects.filter(p => !staticNames.has((p.name || "").toLowerCase().trim()));
-    return [
-      ...staticProjects.map(p => ({ ...p, developer: devName, developerId: devId })),
-      ...newFsProjects.map(p => ({ ...p, developer: devName, developerId: devId })),
-    ];
-  };
-
-  const damacActiveProjects    = getDevProjects("damac",     "DAMAC Properties");
-  const nakheelActiveProjects  = getDevProjects("nakheel",   "Nakheel");
-  const sobhaActiveProjects    = getDevProjects("sobha",     "Sobha Realty");
-  const meraasActiveProjects   = getDevProjects("meraas",    "Meraas");
-  const aldarActiveProjects    = getDevProjects("aldar",     "Aldar Properties");
-  const binghattiActiveProjects= getDevProjects("binghatti", "Binghatti");
-
-  // Active projects based on selected developer — clean single lookup
-  const activeProjectsMap = {
-    emaar:     emaarActiveProjects,
-    damac:     damacActiveProjects,
-    nakheel:   nakheelActiveProjects,
-    sobha:     sobhaActiveProjects,
-    meraas:    meraasActiveProjects,
-    aldar:     aldarActiveProjects,
-    binghatti: binghattiActiveProjects,
-  };
-  const activeProjects = activeProjectsMap[selectedDeveloper] || emaarActiveProjects;
-
-  // Current developer meta (for dynamic headings, colors etc)
-  const currentDeveloper = developerById[selectedDeveloper] || developerById["emaar"];
-
-  // ── ACTIVE COMMUNITIES — filtered to current developer ────────────────────
-  // Pulls from allCommunities (data_master) + live PPSF from Firestore liveMarketData
-  const activeCommunities = allCommunities
-    .filter(c => c.developer === selectedDeveloper || c.developer === "shared")
-    .map(c => {
-      // Wire live PPSF from Firestore liveMarketData/latest (written by cron-sync-market.js)
-      const livePpsf = liveMarketData?.communities?.[c.id]?.ppsf || null;
-      // Wire live yields from Firestore communityData/{district} (written by cron-yields.js)
-      const liveYield = liveCommunityROI?.[c.name]?.grossYield?.apt1
-        || liveCommunityROI?.[c.name]?.grossYield?.apt2
-        || null;
-      return {
-        ...c,
-        ppsf:     livePpsf  || c.avgPpsf,
-        avgYield: liveYield || c.avgYield,
-        isLive:   !!(livePpsf),
-        distCode: c.id,
-      };
-    });
-
-  // For the Neighbourhoods tab chart — uses current developer's communities
-  const activeCommunityProjects = activeCommunities.map(c => ({
-    name:     c.id,
-    full:     c.name,
-    projects: activeProjects.filter(p =>
-      (p.district || getDistrictCode(p.community)) === c.id || p.community === c.name
-    ).length || c.projectCount || 0,
-    yield:    c.avgYield ? `${c.avgYield}%` : "—",
-    ppsf:     c.ppsf ? c.ppsf.toLocaleString() : "—",
-    isLive:   c.isLive,
-  })).filter(c => c.projects > 0);
-
   // Normalize units from either Object ({studio:{total,sold}}) or Array ([{type,available,total}]) format
   const getUnitEntries = (units) => {
     if (!units) return [];
@@ -1972,7 +1900,6 @@ export default function EmaarDashboardV2() {
     }
     return Object.entries(units).filter(([, d]) => d && d.total > 0);
   };
-
 
   const toggleCompare = (p) => {
     setCompareList(prev => {
