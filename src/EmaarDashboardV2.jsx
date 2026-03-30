@@ -1980,19 +1980,6 @@ export default function EmaarDashboardV2() {
   // Tab settings now live via master onSnapshot listener
 
   // Portfolio now live via user onSnapshot listener
-            const newHistory = [historyEntry, ...prevHistory].slice(0, 10);
-            await setDoc(doc(db, "users", firebaseUser.uid), {
-              lastLoginAt: new Date().toISOString(),
-              emailVerified: firebaseUser.emailVerified,
-              provider: firebaseUser.providerData?.[0]?.providerId || "email",
-              loginHistory: newHistory,
-            }, { merge: true });
-          } catch(e) {}
-  }, []);
-
-  // Tab settings now live via master onSnapshot listener
-
-  // Portfolio now live via user onSnapshot listener
 
   // Watchlist now live via DXBContext (toggleWatchlist from context)
 
