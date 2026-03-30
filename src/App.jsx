@@ -19,6 +19,10 @@ const AdminPanel        = React.lazy(() => import("./AdminPanel"));
 const Terms             = React.lazy(() => import("./Terms"));
 const Privacy           = React.lazy(() => import("./Privacy"));
 
+// Preload Dashboard and Admin immediately — eliminates flash when switching
+const _preloadDashboard = import("./EmaarDashboardV2");
+const _preloadAdmin     = import("./AdminPanel");
+
 // Full-screen loading fallback — original DXB Analytics logo
 function PageLoader() {
   return (
@@ -53,7 +57,7 @@ function AdminRoute() {
   // Give profile 3 seconds to load before deciding
   if (!adminMode) return <Navigate to="/dashboard" replace />;
   return (
-    <Suspense fallback={<PageLoader />}>
+    <Suspense fallback={null}>
       <AdminPanel />
     </Suspense>
   );
