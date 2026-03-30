@@ -2639,12 +2639,14 @@ export default function EmaarDashboardV2() {
                   const tabLabel = tab || "Overview";
                   // Dynamic load jsPDF from CDN
                   if (!window.jspdf) {
-                    await new Promise((resolve, reject) => {
-                      const s = document.createElement("script");
-                      s.src = "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";
-                      s.onload = resolve; s.onerror = reject;
-                      document.head.appendChild(s);
-                    });
+                    try {
+                      await new Promise((resolve, reject) => {
+                        const s = document.createElement("script");
+                        s.src = "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";
+                        s.onload = resolve; s.onerror = reject;
+                        document.head.appendChild(s);
+                      });
+                    } catch(e) { notify("PDF export unavailable — check your connection"); return; }
                   }
                   const { jsPDF } = window.jspdf;
                   const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
@@ -2736,13 +2738,13 @@ export default function EmaarDashboardV2() {
                     <span style={{ fontSize: 11, fontWeight: 700, color: T.gold, letterSpacing: 1, textTransform: "uppercase" }}>AI Market Intelligence</span>
                     <span style={{ fontSize: 9, padding: "2px 8px", borderRadius: 10, background: "rgba(212,168,67,0.1)", color: T.gold, border: `1px solid ${T.gold}30` }}>Powered by Claude</span>
                   </div>
-                  <span style={{ fontSize: 10, color: T.textMuted }}>Updated {new Date().toLocaleDateString("en-AE", { month: "short", year: "numeric" })}</span>
+                  <span style={{ fontSize: 10, color: T.textMuted }}>Generated {new Date().toLocaleDateString("en-AE", { month: "short", year: "numeric" })} · Cached up to 7 days</span>
                 </div>
                 {insightsLoading
                   ? <div style={{ display: "flex", gap: 8, alignItems: "center", color: T.textMuted, fontSize: 12 }}><span style={{ animation: "spin 1s linear infinite", display: "inline-block" }}>⟳</span> Analysing Dubai market data…</div>
                   : <div className="ai-insights-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 10 }}>
                       {aiInsights.map((ins, i) => (
-                        <div key={i} style={{ background: "rgba(255,255,255,0.03)", borderRadius: 10, padding: "12px 14px", border: `1px solid ${T.border}` }}>
+                        <div key={ins.title || i} style={{ background: "rgba(255,255,255,0.03)", borderRadius: 10, padding: "12px 14px", border: `1px solid ${T.border}` }}>
                           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
                             <span style={{ fontSize: 9, padding: "2px 8px", borderRadius: 8, fontWeight: 700, letterSpacing: 0.5,
                               background: ins.tag === "Yield" ? "rgba(16,185,129,0.1)" : ins.tag === "Risk" ? "rgba(239,68,68,0.1)" : ins.tag === "Opportunity" ? "rgba(212,168,67,0.1)" : "rgba(59,130,246,0.1)",
@@ -2781,7 +2783,7 @@ export default function EmaarDashboardV2() {
                     { label: "New Investors", value: "110,000+", change: "+55%", color: T.purple, icon: "👥" },
                     { label: "Nationalities", value: "175+", change: "Global demand", color: T.orange, icon: "🌍" },
                   ].map((item, i) => (
-                    <div key={i} style={{ padding: "10px 12px", background: T.surfaceAlt, borderRadius: 10, border: `1px solid ${T.border}` }}>
+                    <div key={item.label} style={{ padding: "10px 12px", background: T.surfaceAlt, borderRadius: 10, border: `1px solid ${T.border}` }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
                         <span style={{ fontSize: 13 }}>{item.icon}</span>
                         <span style={{ fontSize: 9, color: T.textMuted, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.5 }}>{item.label}</span>
@@ -2875,7 +2877,7 @@ export default function EmaarDashboardV2() {
                         <Section title="Key Performance" sub="FY 2025 — All-Time Records Across Every Metric · Source: Emaar Annual Report 2025">
               <div className="kpi-grid" style={{ display: "grid", gap: 12, marginTop: 16 }}>
                 {emaarStockPrice && (
-                  <div style={{ background: T.surface, border: `1px solid ${emaarStockPrice.up ? "rgba(16,185,129,0.3)" : "rgba(239,68,68,0.3)"}`, borderRadius: 14, padding: "14px 16px", cursor: "default", position: "relative", overflow: "hidden" }}
+                  <div style={{ background: T.surface, border: `1px solid ${emaarStockPrice.up ? "rgba(16,185,129,0.3)" : "rgba(239,68,68,0.3)"}`, borderRadius: 14, padding: "14px 16px", cursor: "pointer", position: "relative", overflow: "hidden" }}
                     onClick={() => setSelectedKPI({ label: "EMAAR.DU Live Price", value: `AED ${emaarStockPrice.price}`, color: emaarStockPrice.up ? T.green : "#EF4444", description: "Live Emaar Properties (EMAAR.DU) share price from Dubai Financial Market. Auto-refreshes every 5 minutes.", source: "Yahoo Finance · DFM Live", sourceUrl: "https://finance.yahoo.com/quote/EMAAR.DU", items: [{ label: "Current Price", value: `AED ${emaarStockPrice.price}`, note: "DFM live" }, { label: "Day Change", value: `${emaarStockPrice.up ? "+" : ""}${emaarStockPrice.change}%`, note: "vs prev close" }, { label: "Market Cap", value: "AED 128.2B", note: "~USD 34.9B" }, { label: "Analyst Target", value: "AED 19.94", note: "12/12 Strong Buy" }, { label: "Dividend Yield", value: "~7%", note: "AED 1.00/share" }], trend: null })}>
                     <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: emaarStockPrice.up ? "#10B981" : "#EF4444" }} />
                     <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
@@ -2902,7 +2904,7 @@ export default function EmaarDashboardV2() {
                 <ResponsiveContainer width="100%" height={240}>
                   <PieChart>
                     <Pie data={segments} dataKey="revenue" nameKey="name" cx="50%" cy="50%" outerRadius={90} innerRadius={52} paddingAngle={3} stroke="none">
-                      {segments.map((s, i) => <Cell key={i} fill={s.color} />)}
+                      {segments.map((s, i) => <Cell key={s.name || i} fill={s.color} />)}
                     </Pie>
                     <Tooltip content={<CustomTooltip />} />
                   </PieChart>
