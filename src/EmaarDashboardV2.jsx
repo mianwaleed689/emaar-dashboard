@@ -1826,6 +1826,7 @@ export default function EmaarDashboardV2() {
     activeCommunities, allDevelopersMerged, allCommunityCoords,
     myPortfolio, watchlist, myAlerts, notifications, unreadCount,
     savePortfolio, toggleWatchlist, markNotificationRead, updateProject,
+    seedAllProjectsToFirestore,
     canAccess, isTabVisible, tierLevel,
   } = useDXB();
 
