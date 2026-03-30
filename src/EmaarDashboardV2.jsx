@@ -2988,179 +2988,61 @@ export default function EmaarDashboardV2() {
           {/* ─── DEVELOPERS TAB ─── */}
           {tab === "Developers" && (() => {
             const DEVS = [
-              { id: "emaar",    name: "Emaar Properties",    color: "#D4A843", flag: "🇦🇪", type: "Listed · DFM",    score: 95, sales: "AED 80.4B", projects: emaarProjects.length, founded: 1997 },
-              { id: "damac",    name: "DAMAC Properties",    color: "#3B82F6", flag: "🇦🇪", type: "Private",         score: 72, sales: "~AED 32B",  projects: damacData.projects?.length || 23, founded: 2002 },
-              { id: "nakheel",  name: "Nakheel",             color: "#10B981", flag: "🇦🇪", type: "State-Owned",    score: 79, sales: "AED 13B+",  projects: nakheelData.projects?.length || 18, founded: 1990 },
-              { id: "sobha",    name: "Sobha Realty",        color: "#F59E0B", flag: "🇮🇳", type: "Private",         score: 68, sales: "AED 13B",   projects: 14, founded: 1976 },
-              { id: "meraas",   name: "Meraas",              color: "#06B6D4", flag: "🇦🇪", type: "State-Owned",    score: 82, sales: "AED 10B+",  projects: 20, founded: 2007 },
-              { id: "aldar",    name: "Aldar Properties",    color: "#8B5CF6", flag: "🇦🇪", type: "Listed · ADX",   score: 76, sales: "AED 8B",    projects: 31, founded: 2004 },
-              { id: "binghatti",name: "Binghatti",           color: "#EF4444", flag: "🇦🇪", type: "Private",         score: 64, sales: "AED 6B+",  projects: 28, founded: 2008 },
+              { id: "emaar",     name: "Emaar Properties",  flag: "🇦🇪", color: "#D4A843", type: "Listed · DFM",   sales: "AED 80.4B", projects: 48,  score: 95 },
+              { id: "damac",     name: "DAMAC Properties",  flag: "🇦🇪", color: "#3B82F6", type: "Private",        sales: "~AED 32B",  projects: 23,  score: 72 },
+              { id: "nakheel",   name: "Nakheel",           flag: "🇦🇪", color: "#10B981", type: "State-Owned",   sales: "AED 13B+",  projects: 18,  score: 79 },
+              { id: "sobha",     name: "Sobha Realty",      flag: "🇮🇳", color: "#F59E0B", type: "Private",        sales: "AED 13B",   projects: 14,  score: 68 },
+              { id: "meraas",    name: "Meraas",            flag: "🇦🇪", color: "#06B6D4", type: "State-Owned",   sales: "AED 10B+",  projects: 20,  score: 82 },
+              { id: "aldar",     name: "Aldar Properties",  flag: "🇦🇪", color: "#8B5CF6", type: "Listed · ADX",  sales: "AED 8B",    projects: 31,  score: 76 },
+              { id: "binghatti", name: "Binghatti",         flag: "🇦🇪", color: "#EF4444", type: "Private",        sales: "AED 6B+",   projects: 28,  score: 64 },
             ];
-            const dev = DEVS.find(d => d.id === selectedDeveloper) || DEVS[0];
-            const devProjects = selectedDeveloper === "emaar" ? emaarProjects
-              : selectedDeveloper === "damac" ? (damacData.projects || [])
-              : selectedDeveloper === "nakheel" ? (nakheelData.projects || [])
-              : activeProjects.filter(p => (p.developer || "").toLowerCase().includes(selectedDeveloper));
-            const devFinancials = selectedDeveloper === "damac" ? damacData.financialHistory
-              : selectedDeveloper === "nakheel" ? nakheelData.financialHistory
-              : emaarFinancials;
             return (
-              <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-                {/* Developer Switcher */}
-                <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                <div style={{ fontFamily: "'Fraunces',serif", fontSize: 22, fontWeight: 900, color: T.white }}>Developer Intelligence</div>
+                <div style={{ fontSize: 12, color: T.textMuted }}>Select a developer to explore their full project portfolio</div>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px,1fr))", gap: 12, marginTop: 8 }}>
                   {DEVS.map(d => (
-                    <button key={d.id} type="button" onClick={() => setSelectedDeveloper(d.id)}
-                      style={{ padding: "8px 16px", borderRadius: 10, border: `1px solid ${selectedDeveloper === d.id ? d.color : T.border}`, background: selectedDeveloper === d.id ? `${d.color}18` : T.surfaceAlt, color: selectedDeveloper === d.id ? d.color : T.textMuted, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif", display: "flex", alignItems: "center", gap: 6 }}>
-                      <span>{d.flag}</span>{d.name}
-                    </button>
-                  ))}
-                </div>
-
-                {/* Developer Header */}
-                <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${dev.color}40`, padding: "24px 28px", position: "relative", overflow: "hidden" }}>
-                  <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 3, background: `linear-gradient(90deg, ${dev.color}, ${dev.color}60)` }} />
-                  <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: 16 }}>
-                    <div>
-                      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
-                        <span style={{ fontSize: 28 }}>{dev.flag}</span>
-                        <div style={{ fontFamily: "'Fraunces',serif", fontSize: 24, fontWeight: 900, color: dev.color }}>{dev.name}</div>
-                        <span style={{ fontSize: 10, padding: "3px 10px", borderRadius: 6, background: `${dev.color}18`, color: dev.color, fontWeight: 700 }}>{dev.type}</span>
-                      </div>
-                      <div style={{ fontSize: 12, color: T.textMuted }}>Founded {dev.founded} · FY2025 Sales: <span style={{ color: dev.color, fontWeight: 700 }}>{dev.sales}</span></div>
-                    </div>
-                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
-                      <div style={{ width: 64, height: 64, borderRadius: 14, background: `${dev.color}18`, border: `2px solid ${dev.color}50`, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
-                        <div style={{ fontFamily: "'Fraunces',serif", fontSize: 22, fontWeight: 900, color: dev.color, lineHeight: 1 }}>{dev.score}</div>
-                        <div style={{ fontSize: 8, color: dev.color, fontWeight: 700 }}>HEALTH</div>
-                      </div>
-                    </div>
-                  </div>
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(140px,1fr))", gap: 10, marginTop: 20 }}>
-                    {[
-                      { l: "FY2025 Sales", v: dev.sales, c: dev.color },
-                      { l: "Active Projects", v: dev.projects, c: T.white },
-                      { l: "Health Score", v: dev.score + "/100", c: dev.score >= 80 ? T.green : dev.score >= 65 ? T.gold : "#F59E0B" },
-                      { l: "Founded", v: dev.founded, c: T.textSecondary },
-                    ].map(k => (
-                      <div key={k.l} style={{ background: T.surfaceAlt, borderRadius: 10, padding: "10px 12px", border: `1px solid ${T.border}` }}>
-                        <div style={{ fontSize: 9, color: T.textMuted, textTransform: "uppercase", marginBottom: 4 }}>{k.l}</div>
-                        <div style={{ fontSize: 14, fontWeight: 700, color: k.c, fontFamily: "'Fraunces',serif" }}>{k.v}</div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Projects Grid */}
-                <div>
-                  <div style={{ fontFamily: "'Fraunces',serif", fontSize: 16, fontWeight: 800, color: T.white, marginBottom: 14 }}>
-                    Projects ({devProjects.length})
-                  </div>
-                  {devProjects.length === 0 ? (
-                    <div style={{ padding: "40px 20px", textAlign: "center", color: T.textMuted, background: T.surface, borderRadius: 14, border: `1px solid ${T.border}` }}>
-                      <div style={{ fontSize: 32, marginBottom: 8 }}>🏗️</div>
-                      <div>No projects loaded for this developer yet.</div>
-                      <div style={{ fontSize: 11, marginTop: 4 }}>Projects added via Admin → Data Manager will appear here.</div>
-                    </div>
-                  ) : (
-                    <div className="kpi-grid" style={{ display: "grid", gap: 12 }}>
-                      {devProjects.slice(0, 48).map((p, i) => (
-                        <div key={p.id || i} className="chart-box" style={{ padding: 0, overflow: "hidden", cursor: "pointer" }} onClick={() => setSelectedProject(p)}>
-                          {p.imageUrl && (
-                            <div style={{ width: "100%", height: 140, overflow: "hidden", borderBottom: `1px solid ${T.border}` }}>
-                              <img src={p.imageUrl} alt={p.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} onError={e => { e.target.parentElement.style.display = "none"; }} />
-                            </div>
-                          )}
-                          <div style={{ padding: 16 }}>
-                            {/* Header */}
-                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
-                              <div style={{ flex: 1 }}>
-                                <div style={{ fontFamily: "'Fraunces', serif", fontSize: 15, fontWeight: 700, color: T.gold, marginBottom: 2 }}>{p.name}</div>
-                                <div style={{ fontSize: 11, color: T.textSecondary }}>{p.community}</div>
-                              </div>
-                              <div style={{ display: "flex", gap: 4, flexWrap: "wrap", justifyContent: "flex-end" }}>
-                                {p.branded && <span style={{ fontSize: 9, padding: "3px 7px", borderRadius: 5, background: "rgba(212,168,67,0.15)", color: T.gold, fontWeight: 700 }}>{p.brand}</span>}
-                                <span style={{ fontSize: 9, padding: "3px 7px", borderRadius: 5, background: p.status === "Under Construction" ? "rgba(16,185,129,0.12)" : p.status === "Completed" ? "rgba(16,185,129,0.2)" : "rgba(59,130,246,0.12)", color: p.status === "Under Construction" || p.status === "Completed" ? T.green : T.blue, fontWeight: 700 }}>{p.status === "Under Construction" ? "Building" : p.status || "Off-Plan"}</span>
-                              </div>
-                            </div>
-                            {/* Construction Bar */}
-                            <div style={{ marginBottom: 12 }}>
-                              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
-                                <span style={{ fontSize: 10, color: T.textMuted }}>Construction</span>
-                                <span style={{ fontSize: 10, fontWeight: 700, color: p.construction >= 70 ? T.green : p.construction >= 30 ? T.gold : T.blue }}>{p.construction || 0}%</span>
-                              </div>
-                              <div style={{ height: 5, borderRadius: 3, background: T.surfaceAlt, overflow: "hidden" }}>
-                                <div style={{ height: "100%", width: `${p.construction || 0}%`, borderRadius: 3, background: p.construction >= 70 ? T.green : p.construction >= 30 ? T.gold : T.blue, transition: "width 0.5s ease" }} />
-                              </div>
-                            </div>
-                            {/* Details Grid */}
-                            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 10 }}>
-                              <div><span style={{ fontSize: 9, color: T.textMuted, display: "block", fontWeight: 600, letterSpacing: 0.5 }}>FROM</span><span style={{ fontSize: 14, fontWeight: 700, color: T.white }}>{p.price ? `AED ${(p.price/1000000).toFixed(1)}M` : "TBD"}</span></div>
-                              <div><span style={{ fontSize: 9, color: T.textMuted, display: "block", fontWeight: 600, letterSpacing: 0.5 }}>HANDOVER</span><span style={{ fontSize: 14, fontWeight: 700, color: T.white }}>{p.handover || "—"}</span></div>
-                              <div><span style={{ fontSize: 9, color: T.textMuted, display: "block", fontWeight: 600, letterSpacing: 0.5 }}>PRICE/SQFT</span><span style={{ fontSize: 14, fontWeight: 700, color: T.white }}>{p.ppsf ? `AED ${p.ppsf.toLocaleString()}` : "TBD"}</span></div>
-                              <div><span style={{ fontSize: 9, color: T.textMuted, display: "block", fontWeight: 600, letterSpacing: 0.5 }}>SIZE</span><span style={{ fontSize: 14, fontWeight: 700, color: T.white }}>{p.sizeFrom && p.sizeTo ? `${p.sizeFrom.toLocaleString()} - ${p.sizeTo.toLocaleString()} sqft` : "—"}</span></div>
-                              <div><span style={{ fontSize: 9, color: T.textMuted, display: "block", fontWeight: 600, letterSpacing: 0.5 }}>TYPE</span><span style={{ fontSize: 13, color: T.textSecondary }}>{p.type}{p.beds ? ` · ${p.beds} BR` : ""}</span></div>
-                              <div><span style={{ fontSize: 9, color: T.textMuted, display: "block", fontWeight: 600, letterSpacing: 0.5 }}>PAYMENT</span><span style={{ fontSize: 13, color: T.textSecondary }}>{p.payment || "—"}</span></div>
-                            </div>
-                            {/* Unit Availability */}
-                            {p.units && (
-                              <div style={{ marginBottom: 10 }}>
-                                <div style={{ fontSize: 9, color: T.textMuted, fontWeight: 600, letterSpacing: 0.5, marginBottom: 6 }}>UNIT AVAILABILITY</div>
-                                <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-                                  {getUnitEntries(p.units).map(([type, d]) => {
-                                    const avail = d.total - d.sold;
-                                    return (
-                                      <span key={type} style={{ padding: "3px 8px", borderRadius: 6, background: T.surfaceAlt, fontSize: 10, fontWeight: 700, color: avail > 0 ? T.white : T.textMuted }}>
-                                        <span style={{ color: T.gold }}>{type}</span> {avail > 0 ? `${avail} left` : "Sold out"}
-                                      </span>
-                                    );
-                                  })}
-                                </div>
-                              </div>
-                            )}
-                            {/* Tier Badge */}
-                            {p.tier && <div style={{ marginBottom: 10 }}><span style={{ fontSize: 10, padding: "3px 10px", borderRadius: 6, background: T.surfaceAlt, color: T.textSecondary, fontWeight: 600 }}>{p.tier}</span></div>}
-                            {/* Action Buttons */}
-                            <div style={{ display: "flex", gap: 6 }} onClick={e => e.stopPropagation()}>
-                              <button type="button" onClick={() => { const msg = encodeURIComponent(`${p.name} | ${p.community} | AED ${p.price ? (p.price/1e6).toFixed(2)+"M" : "TBD"} | Handover: ${p.handover}`); window.open(`https://wa.me/971542410599?text=${msg}`, "_blank"); }} style={{ flex: 1, padding: "9px 0", background: "#25D366", border: "none", borderRadius: 8, color: "#fff", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>WhatsApp</button>
-                              <button type="button" onClick={() => { window.location.href = `mailto:?subject=${encodeURIComponent(p.name)}&body=${encodeURIComponent(p.name + " | " + p.community + " | AED " + (p.price ? (p.price/1e6).toFixed(2)+"M" : "TBD"))}`; }} style={{ flex: 1, padding: "9px 0", background: T.gold, border: "none", borderRadius: 8, color: T.bg, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>Email</button>
-                              {p.emaarUrl && <a href={p.emaarUrl} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{ padding: "9px 12px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.teal, fontSize: 13, display: "flex", alignItems: "center", justifyContent: "center", textDecoration: "none" }}>↗</a>}
-                            </div>
+                    <div key={d.id}
+                      onClick={() => { setSelectedDeveloper(d.id); handleTabChange("Projects"); }}
+                      style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: "20px 24px", cursor: "pointer", transition: "all 0.2s", position: "relative", overflow: "hidden" }}
+                      onMouseEnter={e => { e.currentTarget.style.borderColor = d.color; e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = `0 8px 24px ${d.color}20`; }}
+                      onMouseLeave={e => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "none"; }}>
+                      <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 3, background: `linear-gradient(90deg, ${d.color}, ${d.color}60)` }} />
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                          <span style={{ fontSize: 24 }}>{d.flag}</span>
+                          <div>
+                            <div style={{ fontFamily: "'Fraunces',serif", fontSize: 16, fontWeight: 800, color: T.white }}>{d.name}</div>
+                            <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>{d.type}</div>
                           </div>
                         </div>
-                      ))}
+                        <div style={{ textAlign: "center", width: 52, height: 52, borderRadius: 12, background: `${d.color}18`, border: `2px solid ${d.color}50`, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+                          <div style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 900, color: d.color, lineHeight: 1 }}>{d.score}</div>
+                          <div style={{ fontSize: 8, color: d.color, fontWeight: 700 }}>HEALTH</div>
+                        </div>
+                      </div>
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 14 }}>
+                        <div style={{ background: T.surfaceAlt, borderRadius: 8, padding: "8px 12px" }}>
+                          <div style={{ fontSize: 9, color: T.textMuted, fontWeight: 600, letterSpacing: 0.5, marginBottom: 3 }}>FY2025 SALES</div>
+                          <div style={{ fontSize: 13, fontWeight: 700, color: d.color }}>{d.sales}</div>
+                        </div>
+                        <div style={{ background: T.surfaceAlt, borderRadius: 8, padding: "8px 12px" }}>
+                          <div style={{ fontSize: 9, color: T.textMuted, fontWeight: 600, letterSpacing: 0.5, marginBottom: 3 }}>PROJECTS</div>
+                          <div style={{ fontSize: 13, fontWeight: 700, color: T.white }}>{d.projects}</div>
+                        </div>
+                      </div>
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                        <span style={{ fontSize: 11, color: T.textMuted }}>Click to explore projects →</span>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={d.color} strokeWidth="2.5" strokeLinecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+                      </div>
                     </div>
-                  )}
+                  ))}
                 </div>
-
-                {/* Financial History Chart */}
-                {devFinancials && devFinancials.length > 0 && (
-                  <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: "20px 24px" }}>
-                    <div style={{ fontFamily: "'Fraunces',serif", fontSize: 16, fontWeight: 800, color: T.white, marginBottom: 16 }}>Financial History (AED B)</div>
-                    <ResponsiveContainer width="100%" height={240}>
-                      <AreaChart data={devFinancials}>
-                        <defs>
-                          <linearGradient id="devGrad" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%" stopColor={dev.color} stopOpacity={0.25} />
-                            <stop offset="100%" stopColor={dev.color} stopOpacity={0} />
-                          </linearGradient>
-                        </defs>
-                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
-                        <XAxis dataKey="year" tick={{ fill: T.textMuted, fontSize: 11 }} axisLine={false} tickLine={false} />
-                        <YAxis tick={{ fill: T.textMuted, fontSize: 11 }} axisLine={false} tickLine={false} />
-                        <Tooltip content={<CustomTooltip />} />
-                        <Area type="monotone" dataKey="propertySales" stroke={dev.color} fill="url(#devGrad)" strokeWidth={2.5} name="Property Sales" />
-                        <Line type="monotone" dataKey="netProfit" stroke={T.green} strokeWidth={2} dot={{ fill: T.green, r: 3 }} name="Net Profit" />
-                      </AreaChart>
-                    </ResponsiveContainer>
-                  </div>
-                )}
-
-                <TabSources sources={[{ label: "DLD FY2025", url: "https://dubailand.gov.ae" }, { label: "DXBinteract", url: "https://dxbinteract.com" }, { label: "Developer Annual Reports 2025" }, { label: "Gulf News · Zawya · Knight Frank" }]} />
               </div>
             );
           })()}
 
-          {/* ─── FINANCIALS TAB ─── */}
+                    {/* ─── FINANCIALS TAB ─── */}
           {tab === "Financials" && <>
             <Section title="Financial Performance" sub="6-year trend · 2020–2025 · All figures in AED Billions">
               <div className="kpi-grid" style={{ display: "grid", gap: 12, marginTop: 16 }}>
