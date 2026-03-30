@@ -1646,6 +1646,159 @@ function EiborAdminPanel({ db, T }) {
   );
 }
 
+
+// ─── ADMIN TAB PANEL — extracted to avoid hooks-in-IIFE error ───────────────
+function AdminTabPanel({ allProjects, activeProjects, activeCommunities, currentDeveloper,
+  userEmail, adminUsers, adminLoading, adminError, fetchAdminUsers,
+  seedAllProjectsToFirestore, updateProject, notify, T, Section }) {
+  const [seedLoading, setSeedLoading] = React.useState(false);
+  const [seedProgress, setSeedProgress] = React.useState(0);
+  const [seedDone, setSeedDone] = React.useState(false);
+  const [editProject, setEditProject] = React.useState(null);
+  const [editForm, setEditForm] = React.useState({});
+  const [savingEdit, setSavingEdit] = React.useState(false);
+        const handleSeed = async () => {
+          if (!window.confirm(`Seed all ${allProjects.length} projects to Firestore? This is safe to run multiple times.`)) return;
+          setSeedLoading(true); setSeedProgress(0); setSeedDone(false);
+          try {
+            await seedAllProjectsToFirestore((count) => setSeedProgress(count));
+            setSeedDone(true);
+          } catch(e) { notify("Seed failed: " + e.message); }
+          setSeedLoading(false);
+        };
+
+        const handleEditSave = async () => {
+          if (!editProject) return;
+          setSavingEdit(true);
+          await updateProject(editProject.id, editForm);
+          setSavingEdit(false);
+          setEditProject(null);
+        };
+
+        return (
+          <div style={{ padding: "24px 0" }}>
+            <Section title="Admin Panel" sub={`Logged in as ${userEmail} · adminMode active · ${allProjects.length} total projects`}>
+
+              {/* ── PLATFORM STATS ── */}
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: 12, marginBottom: 24 }}>
+                {[
+                  { label: "Total Projects", value: allProjects.length, color: T.gold },
+                  { label: "Live in Firestore", value: extraProjects.filter(p => p.fromFirestore).length, color: T.teal },
+                  { label: "Active Users", value: adminUsers.length, color: T.blue },
+                  { label: "Developers", value: 7, color: "#8B5CF6" },
+                  { label: "Communities", value: allCommunities.length, color: T.green },
+                ].map((s, i) => (
+                  <div key={i} className="chart-box" style={{ padding: 16, textAlign: "center" }}>
+                    <div style={{ fontSize: 28, fontWeight: 700, color: s.color, fontFamily: "'Fraunces', serif" }}>{s.value}</div>
+                    <div style={{ fontSize: 11, color: T.textMuted, marginTop: 4 }}>{s.label}</div>
+                  </div>
+                ))}
+              </div>
+
+              {/* ── FIRESTORE SEEDER ── */}
+              <div className="chart-box" style={{ padding: 20, marginBottom: 16 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+                  <div>
+                    <div style={{ fontSize: 15, fontWeight: 700, color: T.white }}>Firestore Project Seeder</div>
+                    <div style={{ fontSize: 12, color: T.textMuted, marginTop: 2 }}>Push all {allProjects.length} projects from data_master to Firestore. Safe to run multiple times — uses merge.</div>
+                  </div>
+                  <button type="button" onClick={handleSeed} disabled={seedLoading}
+                    style={{ padding: "10px 24px", background: seedDone ? T.teal : `linear-gradient(135deg, ${T.gold}, #B8912F)`, color: T.bg, border: "none", borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: seedLoading ? "not-allowed" : "pointer", fontFamily: "'Outfit', sans-serif", minWidth: 140 }}>
+                    {seedLoading ? `Seeding... ${seedProgress}` : seedDone ? "✓ Seeded!" : `Seed ${allProjects.length} Projects`}
+                  </button>
+                </div>
+                {seedLoading && (
+                  <div style={{ background: T.surfaceAlt, borderRadius: 6, overflow: "hidden", height: 6 }}>
+                    <div style={{ height: "100%", background: T.gold, width: `${Math.min(100, (seedProgress / allProjects.length) * 100)}%`, transition: "width 0.3s" }} />
+                  </div>
+                )}
+                {seedDone && <div style={{ fontSize: 12, color: T.teal, marginTop: 8 }}>✓ All {allProjects.length} projects seeded. Firestore is now the live source for all project data.</div>}
+              </div>
+
+              {/* ── LIVE PROJECT EDITOR ── */}
+              <div className="chart-box" style={{ padding: 20, marginBottom: 16 }}>
+                <div style={{ fontSize: 15, fontWeight: 700, color: T.white, marginBottom: 12 }}>Live Project Editor</div>
+                <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 16 }}>Click any project to edit price, status, handover, or notes. Changes go live instantly for all users.</div>
+                <div style={{ maxHeight: 400, overflowY: "auto" }}>
+                  {activeProjects.slice(0, 30).map(p => (
+                    <div key={p.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 12px", borderRadius: 8, marginBottom: 6, background: T.surfaceAlt, cursor: "pointer", border: `1px solid ${editProject?.id === p.id ? T.gold : "transparent"}`, transition: "all 0.15s" }}
+                      onClick={() => { setEditProject(p); setEditForm({ name: p.name, status: p.status || "", handover: p.handover || "", price: p.price || "", notes: p.notes || "" }); }}>
+                      <div>
+                        <div style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{p.name}</div>
+                        <div style={{ fontSize: 11, color: T.textMuted }}>{p.community} · {p.status}</div>
+                      </div>
+                      <div style={{ fontSize: 11, color: T.gold }}>{p.handover || "—"}</div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Edit form */}
+                {editProject && (
+                  <div style={{ marginTop: 16, padding: 16, background: T.bg, borderRadius: 10, border: `1px solid ${T.gold}` }}>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: T.gold, marginBottom: 12 }}>Editing: {editProject.name}</div>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 12 }}>
+                      {[
+                        { label: "Status", key: "status" },
+                        { label: "Handover", key: "handover" },
+                        { label: "Price (AED)", key: "price" },
+                        { label: "Notes", key: "notes" },
+                      ].map(f => (
+                        <div key={f.key}>
+                          <div style={{ fontSize: 10, color: T.textMuted, marginBottom: 4, textTransform: "uppercase", letterSpacing: 1 }}>{f.label}</div>
+                          <input value={editForm[f.key] || ""} onChange={e => setEditForm(prev => ({ ...prev, [f.key]: e.target.value }))}
+                            style={{ width: "100%", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 6, padding: "7px 10px", color: T.white, fontSize: 12, fontFamily: "'Outfit', sans-serif" }} />
+                        </div>
+                      ))}
+                    </div>
+                    <div style={{ display: "flex", gap: 8 }}>
+                      <button type="button" onClick={handleEditSave} disabled={savingEdit}
+                        style={{ padding: "8px 20px", background: T.gold, color: T.bg, border: "none", borderRadius: 6, fontWeight: 700, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>
+                        {savingEdit ? "Saving..." : "Save Live"}
+                      </button>
+                      <button type="button" onClick={() => setEditProject(null)}
+                        style={{ padding: "8px 16px", background: T.surfaceAlt, color: T.textMuted, border: `1px solid ${T.border}`, borderRadius: 6, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* ── USER MANAGEMENT ── */}
+              <div className="chart-box" style={{ padding: 20 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+                  <div style={{ fontSize: 15, fontWeight: 700, color: T.white }}>User Management</div>
+                  <button type="button" onClick={fetchAdminUsers}
+                    style={{ padding: "7px 16px", background: T.surfaceAlt, color: T.gold, border: `1px solid ${T.gold}33`, borderRadius: 6, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>
+                    Refresh Users
+                  </button>
+                </div>
+                {adminLoading && <div style={{ color: T.textMuted, fontSize: 12 }}>Loading users...</div>}
+                {adminError && <div style={{ color: T.red, fontSize: 12 }}>{adminError}</div>}
+                <div style={{ maxHeight: 400, overflowY: "auto" }}>
+                  {adminUsers.map((u, i) => (
+                    <div key={u.uid || i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 12px", borderRadius: 8, marginBottom: 6, background: T.surfaceAlt }}>
+                      <div>
+                        <div style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{u.name || u.email || u.uid}</div>
+                        <div style={{ fontSize: 11, color: T.textMuted }}>{u.email} · Joined {u.createdAt ? new Date(u.createdAt).toLocaleDateString("en-AE") : "—"}</div>
+                      </div>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <span style={{ fontSize: 11, padding: "3px 10px", borderRadius: 20, background: u.tier === "pro" ? "rgba(20,184,166,0.15)" : "rgba(100,116,139,0.15)", color: u.tier === "pro" ? T.teal : T.textMuted, fontWeight: 600 }}>
+                          {u.tier || "free"}
+                        </span>
+                        {u.suspended && <span style={{ fontSize: 10, color: T.red }}>SUSPENDED</span>}
+                      </div>
+                    </div>
+                  ))}
+                  {!adminLoading && adminUsers.length === 0 && <div style={{ color: T.textMuted, fontSize: 12, textAlign: "center", padding: 20 }}>Click "Refresh Users" to load</div>}
+                </div>
+              </div>
+
+            </Section>
+          </div>
+        );
+}
+
 export default function EmaarDashboardV2() {
   // ── Pull shared state from DXBContext ─────────────────────────────────────
   // All Firestore listeners, auth, user data, live projects live in DXBContext.
@@ -1786,34 +1939,47 @@ export default function EmaarDashboardV2() {
 
   // Listen to Firebase auth state + fetch user profile
 
-  // ── MASTER LIVE LISTENERS — all Firestore real-time subscriptions ──────────
-  // USER-SCOPED LIVE LISTENERS — now handled by DXBContext
-  // portfolio, watchlist, priceAlerts all come from context via useDXB()
+  // ── AUTH — fully handled by DXBContext ───────────────────────────────────
+  // isLoggedIn, firebaseUser, userName, userTier, userRole, adminMode
+  // all come from useDXB() above — no local auth listener needed
 
+  // Sync local user state from context
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      setFirebaseUser(firebaseUser);
-      if (firebaseUser) {
-        setIsLoggedIn(true);
-        setUser(firebaseUser.email || "");
-        // Fetch user profile from Firestore
-        try {
-          // Track last login timestamp + history (last 10 logins)
-          try {
-            const historyEntry = {
-              time: new Date().toISOString(),
-              device: navigator.userAgent.includes("Mobile") ? "Mobile" : "Desktop",
-              browser: (() => {
-                const ua = navigator.userAgent;
-                if (ua.includes("Chrome") && !ua.includes("Edg")) return "Chrome";
-                if (ua.includes("Firefox")) return "Firefox";
-                if (ua.includes("Safari") && !ua.includes("Chrome")) return "Safari";
-                if (ua.includes("Edg")) return "Edge";
-                return "Browser";
-              })(),
-            };
-            const existing = await getDoc(doc(db, "users", firebaseUser.uid));
-            const prevHistory = existing.exists() ? (existing.data().loginHistory || []) : [];
+    if (firebaseUser) {
+      setUser(firebaseUser.email || "");
+      // Track login history (write only — read handled by DXBContext)
+      try {
+        const historyEntry = {
+          time: new Date().toISOString(),
+          device: navigator.userAgent.includes("Mobile") ? "Mobile" : "Desktop",
+          browser: (() => {
+            const ua = navigator.userAgent;
+            if (ua.includes("Chrome") && !ua.includes("Edg")) return "Chrome";
+            if (ua.includes("Firefox")) return "Firefox";
+            if (ua.includes("Safari") && !ua.includes("Chrome")) return "Safari";
+            if (ua.includes("Edg")) return "Edge";
+            return "Browser";
+          })(),
+        };
+        getDoc(doc(db, "users", firebaseUser.uid)).then(existing => {
+          const prevHistory = existing.exists() ? (existing.data().loginHistory || []) : [];
+          const newHistory = [historyEntry, ...prevHistory].slice(0, 10);
+          setDoc(doc(db, "users", firebaseUser.uid), {
+            lastLoginAt: new Date().toISOString(),
+            emailVerified: firebaseUser.emailVerified,
+            provider: firebaseUser.providerData?.[0]?.providerId || "email",
+            loginHistory: newHistory,
+          }, { merge: true }).catch(() => {});
+        }).catch(() => {});
+      } catch(e) {}
+    } else {
+      setUser("");
+    }
+  }, [firebaseUser]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Tab settings now live via master onSnapshot listener
+
+  // Portfolio now live via user onSnapshot listener
             const newHistory = [historyEntry, ...prevHistory].slice(0, 10);
             await setDoc(doc(db, "users", firebaseUser.uid), {
               lastLoginAt: new Date().toISOString(),
@@ -1822,87 +1988,6 @@ export default function EmaarDashboardV2() {
               loginHistory: newHistory,
             }, { merge: true });
           } catch(e) {}
-          const userDoc = await getDoc(doc(db, "users", firebaseUser.uid));
-          if (userDoc.exists()) {
-            const data = userDoc.data();
-            setUserName(data.name || "");
-            let tier = data.tier || "free";
-            // Check if trial has expired
-            if (tier === "pro_trial" && data.trialEnd) {
-              const trialEnd = new Date(data.trialEnd);
-              const now = new Date();
-              const daysLeft = Math.ceil((trialEnd - now) / (1000 * 60 * 60 * 24));
-              if (daysLeft <= 0) {
-                tier = "free";
-                setTrialDaysLeft(0);
-                await setDoc(doc(db, "users", firebaseUser.uid), { tier: "free" }, { merge: true });
-                // Send trial expired email (once only)
-                if (!data.emailSent_trialExpired) {
-                  try {
-                    await emailjs.send(import.meta.env.VITE_EMAILJS_SERVICE_ID, import.meta.env.VITE_EMAILJS_TEMPLATE_ID, {
-                      user_email: firebaseUser.email, user_name: data.name || firebaseUser.email.split("@")[0],
-                      project_name: "DXB Analytics Platform",
-                      change_type: "⏰ Your Pro Trial Has Expired",
-                      new_value: "Your 7-day trial has ended. Upgrade now to keep full access to 48+ projects, yield data, ROI tools and more.",
-                      old_value: "Pro Trial", updated_at: new Date().toLocaleDateString("en-AE"),
-                    }, import.meta.env.VITE_EMAILJS_PUBLIC_KEY);
-                    await setDoc(doc(db, "users", firebaseUser.uid), { emailSent_trialExpired: true }, { merge: true });
-                  } catch(e) {}
-                }
-              } else {
-                setTrialDaysLeft(daysLeft);
-                // Send 3-day warning email (once only)
-                if (daysLeft <= 3 && !data.emailSent_trial3d) {
-                  try {
-                    await emailjs.send(import.meta.env.VITE_EMAILJS_SERVICE_ID, import.meta.env.VITE_EMAILJS_TEMPLATE_ID, {
-                      user_email: firebaseUser.email, user_name: data.name || firebaseUser.email.split("@")[0],
-                      project_name: "DXB Analytics Platform",
-                      change_type: `⚠️ Your Trial Expires in ${daysLeft} Day${daysLeft !== 1 ? "s" : ""}`,
-                      new_value: `Only ${daysLeft} day${daysLeft !== 1 ? "s" : ""} left on your Pro trial. Don't lose access — upgrade now to keep all features.`,
-                      old_value: "Pro Trial Active", updated_at: new Date().toLocaleDateString("en-AE"),
-                    }, import.meta.env.VITE_EMAILJS_PUBLIC_KEY);
-                    await setDoc(doc(db, "users", firebaseUser.uid), { emailSent_trial3d: true }, { merge: true });
-                  } catch(e) {}
-                }
-                // Send 1-day urgent warning (once only)
-                if (daysLeft <= 1 && !data.emailSent_trial1d) {
-                  try {
-                    await emailjs.send(import.meta.env.VITE_EMAILJS_SERVICE_ID, import.meta.env.VITE_EMAILJS_TEMPLATE_ID, {
-                      user_email: firebaseUser.email, user_name: data.name || firebaseUser.email.split("@")[0],
-                      project_name: "DXB Analytics Platform",
-                      change_type: "🚨 Last Day of Your Pro Trial!",
-                      new_value: "Today is your last day. After midnight your account moves to Free and you lose access to 48 projects, community yields, ROI data and PDF reports.",
-                      old_value: "Pro Trial — Final Day", updated_at: new Date().toLocaleDateString("en-AE"),
-                    }, import.meta.env.VITE_EMAILJS_PUBLIC_KEY);
-                    await setDoc(doc(db, "users", firebaseUser.uid), { emailSent_trial1d: true }, { merge: true });
-                  } catch(e) {}
-                }
-              }
-            }
-            // Admin override — by role field OR by owner email
-            if (data.role === "admin" || firebaseUser.email === "mianwaleed689@gmail.com") tier = "admin";
-            setUserTier(tier);
-            setIsSuspended(!!data.suspended);
-            setIsVerified(!!data.verified);
-            setVerifiedLevel(data.verifiedLevel || null);
-            setKycStatus(data.kycStatus || null);
-          } else {
-            // Existing user without profile (e.g. your admin account) — treat as admin/pro
-            setUserTier("admin");
-            setUserName("");
-          }
-        } catch (err) {
-          setUserTier("pro"); // fallback for existing users
-        }
-      } else {
-        setIsLoggedIn(false);
-        setUser("");
-        setUserTier("free");
-        setTrialDaysLeft(0);
-      }
-      setAuthLoading(false);
-    });
-    return () => unsubscribe();
   }, []);
 
   // Tab settings now live via master onSnapshot listener
@@ -2055,7 +2140,7 @@ export default function EmaarDashboardV2() {
         status: "pending", submittedAt: new Date().toISOString(),
       });
       await setDoc(doc(db, "users", auth.currentUser.uid), { kycStatus: "pending" }, { merge: true });
-      setKycStatus("pending");
+
       notify("✅ Verification submitted! Admin will review within 24h.");
       setShowKYC(false);
     } catch(e) { notify("❌ " + e.message); }
@@ -7040,155 +7125,26 @@ export default function EmaarDashboardV2() {
           })()}
 
           {/* ─── ADMIN TAB ─────────────────────────────────────────────────── */}
-          {tab === "Admin" && adminMode && (() => {
-            const [seedLoading, setSeedLoading] = React.useState(false);
-            const [seedProgress, setSeedProgress] = React.useState(0);
-            const [seedDone, setSeedDone] = React.useState(false);
-            const [editProject, setEditProject] = React.useState(null);
-            const [editForm, setEditForm] = React.useState({});
-            const [savingEdit, setSavingEdit] = React.useState(false);
 
-            const handleSeed = async () => {
-              if (!window.confirm(`Seed all ${allProjects.length} projects to Firestore? This is safe to run multiple times.`)) return;
-              setSeedLoading(true); setSeedProgress(0); setSeedDone(false);
-              try {
-                await seedAllProjectsToFirestore((count) => setSeedProgress(count));
-                setSeedDone(true);
-              } catch(e) { notify("Seed failed: " + e.message); }
-              setSeedLoading(false);
-            };
-
-            const handleEditSave = async () => {
-              if (!editProject) return;
-              setSavingEdit(true);
-              await updateProject(editProject.id, editForm);
-              setSavingEdit(false);
-              setEditProject(null);
-            };
-
-            return (
-              <div style={{ padding: "24px 0" }}>
-                <Section title="Admin Panel" sub={`Logged in as ${userEmail} · adminMode active · ${allProjects.length} total projects`}>
-
-                  {/* ── PLATFORM STATS ── */}
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: 12, marginBottom: 24 }}>
-                    {[
-                      { label: "Total Projects", value: allProjects.length, color: T.gold },
-                      { label: "Live in Firestore", value: extraProjects.filter(p => p.fromFirestore).length, color: T.teal },
-                      { label: "Active Users", value: adminUsers.length, color: T.blue },
-                      { label: "Developers", value: 7, color: "#8B5CF6" },
-                      { label: "Communities", value: allCommunities.length, color: T.green },
-                    ].map((s, i) => (
-                      <div key={i} className="chart-box" style={{ padding: 16, textAlign: "center" }}>
-                        <div style={{ fontSize: 28, fontWeight: 700, color: s.color, fontFamily: "'Fraunces', serif" }}>{s.value}</div>
-                        <div style={{ fontSize: 11, color: T.textMuted, marginTop: 4 }}>{s.label}</div>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* ── FIRESTORE SEEDER ── */}
-                  <div className="chart-box" style={{ padding: 20, marginBottom: 16 }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-                      <div>
-                        <div style={{ fontSize: 15, fontWeight: 700, color: T.white }}>Firestore Project Seeder</div>
-                        <div style={{ fontSize: 12, color: T.textMuted, marginTop: 2 }}>Push all {allProjects.length} projects from data_master to Firestore. Safe to run multiple times — uses merge.</div>
-                      </div>
-                      <button type="button" onClick={handleSeed} disabled={seedLoading}
-                        style={{ padding: "10px 24px", background: seedDone ? T.teal : `linear-gradient(135deg, ${T.gold}, #B8912F)`, color: T.bg, border: "none", borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: seedLoading ? "not-allowed" : "pointer", fontFamily: "'Outfit', sans-serif", minWidth: 140 }}>
-                        {seedLoading ? `Seeding... ${seedProgress}` : seedDone ? "✓ Seeded!" : `Seed ${allProjects.length} Projects`}
-                      </button>
-                    </div>
-                    {seedLoading && (
-                      <div style={{ background: T.surfaceAlt, borderRadius: 6, overflow: "hidden", height: 6 }}>
-                        <div style={{ height: "100%", background: T.gold, width: `${Math.min(100, (seedProgress / allProjects.length) * 100)}%`, transition: "width 0.3s" }} />
-                      </div>
-                    )}
-                    {seedDone && <div style={{ fontSize: 12, color: T.teal, marginTop: 8 }}>✓ All {allProjects.length} projects seeded. Firestore is now the live source for all project data.</div>}
-                  </div>
-
-                  {/* ── LIVE PROJECT EDITOR ── */}
-                  <div className="chart-box" style={{ padding: 20, marginBottom: 16 }}>
-                    <div style={{ fontSize: 15, fontWeight: 700, color: T.white, marginBottom: 12 }}>Live Project Editor</div>
-                    <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 16 }}>Click any project to edit price, status, handover, or notes. Changes go live instantly for all users.</div>
-                    <div style={{ maxHeight: 400, overflowY: "auto" }}>
-                      {activeProjects.slice(0, 30).map(p => (
-                        <div key={p.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 12px", borderRadius: 8, marginBottom: 6, background: T.surfaceAlt, cursor: "pointer", border: `1px solid ${editProject?.id === p.id ? T.gold : "transparent"}`, transition: "all 0.15s" }}
-                          onClick={() => { setEditProject(p); setEditForm({ name: p.name, status: p.status || "", handover: p.handover || "", price: p.price || "", notes: p.notes || "" }); }}>
-                          <div>
-                            <div style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{p.name}</div>
-                            <div style={{ fontSize: 11, color: T.textMuted }}>{p.community} · {p.status}</div>
-                          </div>
-                          <div style={{ fontSize: 11, color: T.gold }}>{p.handover || "—"}</div>
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* Edit form */}
-                    {editProject && (
-                      <div style={{ marginTop: 16, padding: 16, background: T.bg, borderRadius: 10, border: `1px solid ${T.gold}` }}>
-                        <div style={{ fontSize: 14, fontWeight: 700, color: T.gold, marginBottom: 12 }}>Editing: {editProject.name}</div>
-                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 12 }}>
-                          {[
-                            { label: "Status", key: "status" },
-                            { label: "Handover", key: "handover" },
-                            { label: "Price (AED)", key: "price" },
-                            { label: "Notes", key: "notes" },
-                          ].map(f => (
-                            <div key={f.key}>
-                              <div style={{ fontSize: 10, color: T.textMuted, marginBottom: 4, textTransform: "uppercase", letterSpacing: 1 }}>{f.label}</div>
-                              <input value={editForm[f.key] || ""} onChange={e => setEditForm(prev => ({ ...prev, [f.key]: e.target.value }))}
-                                style={{ width: "100%", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 6, padding: "7px 10px", color: T.white, fontSize: 12, fontFamily: "'Outfit', sans-serif" }} />
-                            </div>
-                          ))}
-                        </div>
-                        <div style={{ display: "flex", gap: 8 }}>
-                          <button type="button" onClick={handleEditSave} disabled={savingEdit}
-                            style={{ padding: "8px 20px", background: T.gold, color: T.bg, border: "none", borderRadius: 6, fontWeight: 700, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>
-                            {savingEdit ? "Saving..." : "Save Live"}
-                          </button>
-                          <button type="button" onClick={() => setEditProject(null)}
-                            style={{ padding: "8px 16px", background: T.surfaceAlt, color: T.textMuted, border: `1px solid ${T.border}`, borderRadius: 6, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>
-                            Cancel
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* ── USER MANAGEMENT ── */}
-                  <div className="chart-box" style={{ padding: 20 }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-                      <div style={{ fontSize: 15, fontWeight: 700, color: T.white }}>User Management</div>
-                      <button type="button" onClick={fetchAdminUsers}
-                        style={{ padding: "7px 16px", background: T.surfaceAlt, color: T.gold, border: `1px solid ${T.gold}33`, borderRadius: 6, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>
-                        Refresh Users
-                      </button>
-                    </div>
-                    {adminLoading && <div style={{ color: T.textMuted, fontSize: 12 }}>Loading users...</div>}
-                    {adminError && <div style={{ color: T.red, fontSize: 12 }}>{adminError}</div>}
-                    <div style={{ maxHeight: 400, overflowY: "auto" }}>
-                      {adminUsers.map((u, i) => (
-                        <div key={u.uid || i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 12px", borderRadius: 8, marginBottom: 6, background: T.surfaceAlt }}>
-                          <div>
-                            <div style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{u.name || u.email || u.uid}</div>
-                            <div style={{ fontSize: 11, color: T.textMuted }}>{u.email} · Joined {u.createdAt ? new Date(u.createdAt).toLocaleDateString("en-AE") : "—"}</div>
-                          </div>
-                          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                            <span style={{ fontSize: 11, padding: "3px 10px", borderRadius: 20, background: u.tier === "pro" ? "rgba(20,184,166,0.15)" : "rgba(100,116,139,0.15)", color: u.tier === "pro" ? T.teal : T.textMuted, fontWeight: 600 }}>
-                              {u.tier || "free"}
-                            </span>
-                            {u.suspended && <span style={{ fontSize: 10, color: T.red }}>SUSPENDED</span>}
-                          </div>
-                        </div>
-                      ))}
-                      {!adminLoading && adminUsers.length === 0 && <div style={{ color: T.textMuted, fontSize: 12, textAlign: "center", padding: 20 }}>Click "Refresh Users" to load</div>}
-                    </div>
-                  </div>
-
-                </Section>
-              </div>
-            );
-          })()}
+          {/* ─── ADMIN TAB ─────────────────────────────────────────────────── */}
+          {tab === "Admin" && adminMode && (
+            <AdminTabPanel
+              allProjects={allProjects}
+              activeProjects={activeProjects}
+              activeCommunities={activeCommunities}
+              currentDeveloper={currentDeveloper}
+              userEmail={userEmail}
+              adminUsers={adminUsers}
+              adminLoading={adminLoading}
+              adminError={adminError}
+              fetchAdminUsers={fetchAdminUsers}
+              seedAllProjectsToFirestore={seedAllProjectsToFirestore}
+              updateProject={updateProject}
+              notify={notify}
+              T={T}
+              Section={Section}
+            />
+          )}
 
         </div>
 
@@ -8244,7 +8200,7 @@ export default function EmaarDashboardV2() {
                 <div><label style={{ fontSize: 10, color: T.textMuted, fontWeight: 600, display: "block", marginBottom: 4 }}>DISPLAY NAME</label><input type="text" value={profileEdit.name} onChange={e => setProfileEdit({...profileEdit, name: e.target.value})} placeholder="Your name" style={{ width: "100%", padding: "10px 12px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit', sans-serif", outline: "none" }} /></div>
                 <div><label style={{ fontSize: 10, color: T.textMuted, fontWeight: 600, display: "block", marginBottom: 4 }}>EMAIL</label><input type="email" value={user} disabled style={{ width: "100%", padding: "10px 12px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, fontSize: 13, fontFamily: "'Outfit', sans-serif", outline: "none", opacity: 0.6 }} /></div>
               </div>
-              <button type="button" onClick={async () => { if (auth.currentUser && profileEdit.name.trim()) { try { await setDoc(doc(db, "users", auth.currentUser.uid), { name: profileEdit.name.trim() }, { merge: true }); setUserName(profileEdit.name.trim()); setToast("\u2705 Profile updated!"); setTimeout(() => setToast(""), 3000); } catch(e) { setToast("\u274C Update failed"); setTimeout(() => setToast(""), 3000); } } }} style={{ marginTop: 10, padding: "8px 20px", background: T.gold, color: T.bg, border: "none", borderRadius: 8, fontWeight: 700, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>Save Changes</button>
+              <button type="button" onClick={async () => { if (auth.currentUser && profileEdit.name.trim()) { try { await setDoc(doc(db, "users", auth.currentUser.uid), { name: profileEdit.name.trim() }, { merge: true }); setToast("\u2705 Profile updated!"); setTimeout(() => setToast(""), 3000); } catch(e) { setToast("\u274C Update failed"); setTimeout(() => setToast(""), 3000); } } }} style={{ marginTop: 10, padding: "8px 20px", background: T.gold, color: T.bg, border: "none", borderRadius: 8, fontWeight: 700, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>Save Changes</button>
             </div>
             <div style={{ marginBottom: 20, padding: 16, borderRadius: 12, background: T.surfaceAlt, border: `1px solid ${T.border}` }}>
               <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 12 }}>Subscription</div>
