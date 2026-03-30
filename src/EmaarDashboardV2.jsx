@@ -2446,7 +2446,7 @@ export default function EmaarDashboardV2() {
         position: "fixed", top: 0, left: 0, bottom: 0, width: 240,
         background: T.surface, borderRight: `1px solid ${T.border}`,
         display: "flex", flexDirection: "column", zIndex: 100,
-        transition: "transform 0.3s ease",
+        transition: "transform 0.3s ease", overflow: "hidden",
       }}>
         {/* Logo */}
         <div style={{ padding: "24px 20px 20px", borderBottom: `1px solid ${T.border}` }}>
