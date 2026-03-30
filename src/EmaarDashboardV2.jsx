@@ -14,6 +14,7 @@ import { collection, getDocs, doc, getDoc, setDoc, updateDoc, deleteDoc, onSnaps
 // and exports allProjects[], allDevelopers[], allCommunities[], helpers
 // Iron Rule: Never import directly from data_*.js in this file
 import { useDXB } from "./context/DXBContext";
+import AdminPanel from "./AdminPanel";
 import {
   T,
   // Emaar data (from data.js via data_master)
@@ -1646,12 +1647,7 @@ function EiborAdminPanel({ db, T }) {
   );
 }
 
-
-// ─── ADMIN TAB PANEL — extracted to avoid hooks-in-IIFE error ───────────────
-function AdminTabPanel({ allProjects, activeProjects, activeCommunities, allCommunities, currentDeveloper,
-  userEmail, adminUsers, adminLoading, adminError, fetchAdminUsers,
-  extraProjects, adminMode,
-  seedAllProjectsToFirestore, updateProject, notify, T, Section }) {
+) {
   const [seedLoading, setSeedLoading] = React.useState(false);
   const [seedProgress, setSeedProgress] = React.useState(0);
   const [seedDone, setSeedDone] = React.useState(false);
@@ -7117,25 +7113,7 @@ export default function EmaarDashboardV2() {
 
           {/* ─── ADMIN TAB ─────────────────────────────────────────────────── */}
           {tab === "Admin" && adminMode && (
-            <AdminTabPanel
-              allProjects={allProjects}
-              activeProjects={activeProjects}
-              activeCommunities={activeCommunities}
-              allCommunities={allCommunities}
-              currentDeveloper={currentDeveloper}
-              userEmail={userEmail}
-              adminUsers={adminUsers}
-              adminLoading={adminLoading}
-              adminError={adminError}
-              fetchAdminUsers={fetchAdminUsers}
-              extraProjects={extraProjects}
-              adminMode={adminMode}
-              seedAllProjectsToFirestore={seedAllProjectsToFirestore}
-              updateProject={updateProject}
-              notify={notify}
-              T={T}
-              Section={Section}
-            />
+            <AdminPanel />
           )}
 
         </div>
