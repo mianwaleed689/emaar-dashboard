@@ -82,10 +82,10 @@ export function DXBProvider({ children }) {
   const [firebaseUser, setFirebaseUser]   = useState(null);
   const [userName, setUserName]           = useState("");
   const [userEmail, setUserEmail]         = useState("");
-  const [userTier, setUserTier]           = useState("free");
-  const [userRole, setUserRole]           = useState("user");
-  const [profileLoaded, setProfileLoaded] = useState(false);
-  const [authLoading, setAuthLoading]     = useState(true);
+  const [userTier, setUserTier]           = useState(() => sessionStorage.getItem("dxb_tier") || "free");
+  const [userRole, setUserRole]           = useState(() => sessionStorage.getItem("dxb_role") || "user");
+  const [profileLoaded, setProfileLoaded] = useState(() => !!sessionStorage.getItem("dxb_role"));
+  const [authLoading, setAuthLoading]     = useState(() => !sessionStorage.getItem("dxb_role"));
   const [isSuspended, setIsSuspended]     = useState(false);
   const [isVerified, setIsVerified]       = useState(false);
   const [verifiedLevel, setVerifiedLevel] = useState(null);
@@ -251,6 +251,8 @@ export function DXBProvider({ children }) {
         setUserTier("free");
         setUserRole("user");
         setAuthLoading(false);
+        sessionStorage.removeItem("dxb_role");
+        sessionStorage.removeItem("dxb_tier");
         // Clean up user listeners
         userUnsubsRef.current.forEach(u => u());
         userUnsubsRef.current = [];
@@ -278,6 +280,9 @@ export function DXBProvider({ children }) {
         setKycStatus(data.kycStatus || null);
         setProfileLoaded(true);
         setAuthLoading(false); // now safe — role is known
+        // Cache for instant subsequent loads
+        sessionStorage.setItem("dxb_role", data.role || (data.tier === "admin" || data.tier === "enterprise" || data.superAdmin ? "superAdmin" : "user"));
+        sessionStorage.setItem("dxb_tier", data.tier || "free");
 
         // Trial days left
         if (data.tier === "pro_trial" && data.trialEnd) {
