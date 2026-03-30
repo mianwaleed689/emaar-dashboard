@@ -9,6 +9,8 @@ import { signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthState
 import { collection, getDocs, doc, getDoc, setDoc, updateDoc, deleteDoc, onSnapshot } from "firebase/firestore";
 
 import { T, emaarProjects, emaarFinancials, emaarCommunities, emaarYields, topDevelopers, emaarRisks, dubaiMarket, dubaiSalesHistory, roiPhases, emaarSegments, radarData, megaProjects, communityIntel, communityROI } from "./data";
+import damacData from "./data_damac";
+import nakheelData from "./data_nakheel";
 import LandingPage from "./LandingPage";
 import RoiCalculator from "./RoiCalculator";
 
@@ -159,6 +161,7 @@ const TABS = [
   { key: "Flip", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg> },
   { key: "Investment Score", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> },
   { key: "Price History", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg> },
+  { key: "Developers", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> },
 ];
 
 /* ─── STYLES ─── */
@@ -2981,6 +2984,132 @@ export default function EmaarDashboardV2() {
           <TabSources sources={[{ label: "Emaar Annual Report 2025", url: "https://www.emaar.com/en/investor-relations/" }, { label: "DFM: EMAAR.DU", url: "https://www.dfm.ae" }, { label: "TradingView", url: "https://www.tradingview.com/symbols/DFM-EMAAR/" }, { label: "Yahoo Finance", url: "https://finance.yahoo.com/quote/EMAAR.DU" }, { label: "S&P · Moody's · Fitch Ratings" }]} />
             </Section>
           </>}
+
+          {/* ─── DEVELOPERS TAB ─── */}
+          {tab === "Developers" && (() => {
+            const DEVS = [
+              { id: "emaar",    name: "Emaar Properties",    color: "#D4A843", flag: "🇦🇪", type: "Listed · DFM",    score: 95, sales: "AED 80.4B", projects: emaarProjects.length, founded: 1997 },
+              { id: "damac",    name: "DAMAC Properties",    color: "#3B82F6", flag: "🇦🇪", type: "Private",         score: 72, sales: "~AED 32B",  projects: damacData.projects?.length || 23, founded: 2002 },
+              { id: "nakheel",  name: "Nakheel",             color: "#10B981", flag: "🇦🇪", type: "State-Owned",    score: 79, sales: "AED 13B+",  projects: nakheelData.projects?.length || 18, founded: 1990 },
+              { id: "sobha",    name: "Sobha Realty",        color: "#F59E0B", flag: "🇮🇳", type: "Private",         score: 68, sales: "AED 13B",   projects: 14, founded: 1976 },
+              { id: "meraas",   name: "Meraas",              color: "#06B6D4", flag: "🇦🇪", type: "State-Owned",    score: 82, sales: "AED 10B+",  projects: 20, founded: 2007 },
+              { id: "aldar",    name: "Aldar Properties",    color: "#8B5CF6", flag: "🇦🇪", type: "Listed · ADX",   score: 76, sales: "AED 8B",    projects: 31, founded: 2004 },
+              { id: "binghatti",name: "Binghatti",           color: "#EF4444", flag: "🇦🇪", type: "Private",         score: 64, sales: "AED 6B+",  projects: 28, founded: 2008 },
+            ];
+            const dev = DEVS.find(d => d.id === selectedDeveloper) || DEVS[0];
+            const devProjects = selectedDeveloper === "emaar" ? emaarProjects
+              : selectedDeveloper === "damac" ? (damacData.projects || [])
+              : selectedDeveloper === "nakheel" ? (nakheelData.projects || [])
+              : activeProjects.filter(p => (p.developer || "").toLowerCase().includes(selectedDeveloper));
+            const devFinancials = selectedDeveloper === "damac" ? damacData.financialHistory
+              : selectedDeveloper === "nakheel" ? nakheelData.financialHistory
+              : emaarFinancials;
+            return (
+              <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+                {/* Developer Switcher */}
+                <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                  {DEVS.map(d => (
+                    <button key={d.id} type="button" onClick={() => setSelectedDeveloper(d.id)}
+                      style={{ padding: "8px 16px", borderRadius: 10, border: `1px solid ${selectedDeveloper === d.id ? d.color : T.border}`, background: selectedDeveloper === d.id ? `${d.color}18` : T.surfaceAlt, color: selectedDeveloper === d.id ? d.color : T.textMuted, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif", display: "flex", alignItems: "center", gap: 6 }}>
+                      <span>{d.flag}</span>{d.name}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Developer Header */}
+                <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${dev.color}40`, padding: "24px 28px", position: "relative", overflow: "hidden" }}>
+                  <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 3, background: `linear-gradient(90deg, ${dev.color}, ${dev.color}60)` }} />
+                  <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: 16 }}>
+                    <div>
+                      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
+                        <span style={{ fontSize: 28 }}>{dev.flag}</span>
+                        <div style={{ fontFamily: "'Fraunces',serif", fontSize: 24, fontWeight: 900, color: dev.color }}>{dev.name}</div>
+                        <span style={{ fontSize: 10, padding: "3px 10px", borderRadius: 6, background: `${dev.color}18`, color: dev.color, fontWeight: 700 }}>{dev.type}</span>
+                      </div>
+                      <div style={{ fontSize: 12, color: T.textMuted }}>Founded {dev.founded} · FY2025 Sales: <span style={{ color: dev.color, fontWeight: 700 }}>{dev.sales}</span></div>
+                    </div>
+                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
+                      <div style={{ width: 64, height: 64, borderRadius: 14, background: `${dev.color}18`, border: `2px solid ${dev.color}50`, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+                        <div style={{ fontFamily: "'Fraunces',serif", fontSize: 22, fontWeight: 900, color: dev.color, lineHeight: 1 }}>{dev.score}</div>
+                        <div style={{ fontSize: 8, color: dev.color, fontWeight: 700 }}>HEALTH</div>
+                      </div>
+                    </div>
+                  </div>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(140px,1fr))", gap: 10, marginTop: 20 }}>
+                    {[
+                      { l: "FY2025 Sales", v: dev.sales, c: dev.color },
+                      { l: "Active Projects", v: dev.projects, c: T.white },
+                      { l: "Health Score", v: dev.score + "/100", c: dev.score >= 80 ? T.green : dev.score >= 65 ? T.gold : "#F59E0B" },
+                      { l: "Founded", v: dev.founded, c: T.textSecondary },
+                    ].map(k => (
+                      <div key={k.l} style={{ background: T.surfaceAlt, borderRadius: 10, padding: "10px 12px", border: `1px solid ${T.border}` }}>
+                        <div style={{ fontSize: 9, color: T.textMuted, textTransform: "uppercase", marginBottom: 4 }}>{k.l}</div>
+                        <div style={{ fontSize: 14, fontWeight: 700, color: k.c, fontFamily: "'Fraunces',serif" }}>{k.v}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Projects Grid */}
+                <div>
+                  <div style={{ fontFamily: "'Fraunces',serif", fontSize: 16, fontWeight: 800, color: T.white, marginBottom: 14 }}>
+                    Projects ({devProjects.length})
+                  </div>
+                  {devProjects.length === 0 ? (
+                    <div style={{ padding: "40px 20px", textAlign: "center", color: T.textMuted, background: T.surface, borderRadius: 14, border: `1px solid ${T.border}` }}>
+                      <div style={{ fontSize: 32, marginBottom: 8 }}>🏗️</div>
+                      <div>No projects loaded for this developer yet.</div>
+                      <div style={{ fontSize: 11, marginTop: 4 }}>Projects added via Admin → Data Manager will appear here.</div>
+                    </div>
+                  ) : (
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px,1fr))", gap: 12 }}>
+                      {devProjects.slice(0, 48).map((p, i) => (
+                        <div key={p.id || i} onClick={() => setSelectedProject(p)}
+                          style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, padding: "16px 18px", cursor: "pointer", transition: "all 0.2s", position: "relative", overflow: "hidden" }}
+                          onMouseEnter={e => { e.currentTarget.style.borderColor = dev.color; e.currentTarget.style.transform = "translateY(-2px)"; }}
+                          onMouseLeave={e => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.transform = "translateY(0)"; }}>
+                          <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: dev.color }} />
+                          {p.imageUrl && <img src={p.imageUrl} alt={p.name} style={{ width: "100%", height: 120, objectFit: "cover", borderRadius: 8, marginBottom: 10 }} onError={e => e.target.style.display="none"} />}
+                          <div style={{ fontFamily: "'Fraunces',serif", fontSize: 14, fontWeight: 800, color: T.white, marginBottom: 4 }}>{p.name}</div>
+                          <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 8 }}>{p.community} · {p.type}</div>
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                            <div style={{ fontSize: 13, fontWeight: 700, color: dev.color }}>{p.price ? `AED ${(p.price/1e6).toFixed(1)}M` : "TBD"}</div>
+                            <span style={{ fontSize: 9, padding: "2px 7px", borderRadius: 5, background: p.status === "Delivered" ? "rgba(16,185,129,0.1)" : "rgba(59,130,246,0.1)", color: p.status === "Delivered" ? T.green : T.blue, fontWeight: 700 }}>{p.status || "Off-Plan"}</span>
+                          </div>
+                          {p.handover && <div style={{ fontSize: 10, color: T.textMuted, marginTop: 4 }}>Handover: {p.handover}</div>}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Financial History Chart */}
+                {devFinancials && devFinancials.length > 0 && (
+                  <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: "20px 24px" }}>
+                    <div style={{ fontFamily: "'Fraunces',serif", fontSize: 16, fontWeight: 800, color: T.white, marginBottom: 16 }}>Financial History (AED B)</div>
+                    <ResponsiveContainer width="100%" height={240}>
+                      <AreaChart data={devFinancials}>
+                        <defs>
+                          <linearGradient id="devGrad" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor={dev.color} stopOpacity={0.25} />
+                            <stop offset="100%" stopColor={dev.color} stopOpacity={0} />
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
+                        <XAxis dataKey="year" tick={{ fill: T.textMuted, fontSize: 11 }} axisLine={false} tickLine={false} />
+                        <YAxis tick={{ fill: T.textMuted, fontSize: 11 }} axisLine={false} tickLine={false} />
+                        <Tooltip content={<CustomTooltip />} />
+                        <Area type="monotone" dataKey="propertySales" stroke={dev.color} fill="url(#devGrad)" strokeWidth={2.5} name="Property Sales" />
+                        <Line type="monotone" dataKey="netProfit" stroke={T.green} strokeWidth={2} dot={{ fill: T.green, r: 3 }} name="Net Profit" />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </div>
+                )}
+
+                <TabSources sources={[{ label: "DLD FY2025", url: "https://dubailand.gov.ae" }, { label: "DXBinteract", url: "https://dxbinteract.com" }, { label: "Developer Annual Reports 2025" }, { label: "Gulf News · Zawya · Knight Frank" }]} />
+              </div>
+            );
+          })()}
 
           {/* ─── FINANCIALS TAB ─── */}
           {tab === "Financials" && <>
