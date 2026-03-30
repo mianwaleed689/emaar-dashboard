@@ -3071,20 +3071,60 @@ export default function EmaarDashboardV2() {
                             </div>
                           )}
                           <div style={{ padding: 16 }}>
-                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
+                            {/* Header */}
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
                               <div style={{ flex: 1 }}>
                                 <div style={{ fontFamily: "'Fraunces', serif", fontSize: 15, fontWeight: 700, color: T.gold, marginBottom: 2 }}>{p.name}</div>
                                 <div style={{ fontSize: 11, color: T.textSecondary }}>{p.community}</div>
                               </div>
-                              <span style={{ fontSize: 9, padding: "3px 8px", borderRadius: 6, background: p.status === "Completed" ? "rgba(16,185,129,0.2)" : p.status === "Under Construction" ? "rgba(16,185,129,0.12)" : "rgba(59,130,246,0.12)", color: p.status === "Completed" ? T.green : p.status === "Under Construction" ? T.green : T.blue, fontWeight: 600 }}>{p.status || "Off-Plan"}</span>
+                              <div style={{ display: "flex", gap: 4, flexWrap: "wrap", justifyContent: "flex-end" }}>
+                                {p.branded && <span style={{ fontSize: 9, padding: "3px 7px", borderRadius: 5, background: "rgba(212,168,67,0.15)", color: T.gold, fontWeight: 700 }}>{p.brand}</span>}
+                                <span style={{ fontSize: 9, padding: "3px 7px", borderRadius: 5, background: p.status === "Under Construction" ? "rgba(16,185,129,0.12)" : p.status === "Completed" ? "rgba(16,185,129,0.2)" : "rgba(59,130,246,0.12)", color: p.status === "Under Construction" || p.status === "Completed" ? T.green : T.blue, fontWeight: 700 }}>{p.status === "Under Construction" ? "Building" : p.status || "Off-Plan"}</span>
+                              </div>
                             </div>
-                            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-                              <div><span style={{ fontSize: 9, color: T.textMuted, display: "block" }}>FROM</span><span style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{p.price ? `AED ${(p.price/1000000).toFixed(1)}M` : "TBD"}</span></div>
-                              <div><span style={{ fontSize: 9, color: T.textMuted, display: "block" }}>HANDOVER</span><span style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{p.handover || "—"}</span></div>
-                              <div><span style={{ fontSize: 9, color: T.textMuted, display: "block" }}>PRICE/SQFT</span><span style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{p.ppsf ? `AED ${p.ppsf.toLocaleString()}` : "TBD"}</span></div>
-                              <div><span style={{ fontSize: 9, color: T.textMuted, display: "block" }}>TYPE</span><span style={{ fontSize: 12, color: T.textSecondary }}>{p.type}{p.beds ? ` · ${p.beds} BR` : ""}</span></div>
+                            {/* Construction Bar */}
+                            <div style={{ marginBottom: 12 }}>
+                              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
+                                <span style={{ fontSize: 10, color: T.textMuted }}>Construction</span>
+                                <span style={{ fontSize: 10, fontWeight: 700, color: p.construction >= 70 ? T.green : p.construction >= 30 ? T.gold : T.blue }}>{p.construction || 0}%</span>
+                              </div>
+                              <div style={{ height: 5, borderRadius: 3, background: T.surfaceAlt, overflow: "hidden" }}>
+                                <div style={{ height: "100%", width: `${p.construction || 0}%`, borderRadius: 3, background: p.construction >= 70 ? T.green : p.construction >= 30 ? T.gold : T.blue, transition: "width 0.5s ease" }} />
+                              </div>
                             </div>
-                            <button type="button" onClick={e => { e.stopPropagation(); setSelectedProject(p); }} style={{ marginTop: 10, width: "100%", padding: "7px 0", background: "linear-gradient(135deg, rgba(212,168,67,0.15), rgba(212,168,67,0.08))", border: "1px solid rgba(212,168,67,0.3)", borderRadius: 8, color: T.gold, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>Full Details</button>
+                            {/* Details Grid */}
+                            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 10 }}>
+                              <div><span style={{ fontSize: 9, color: T.textMuted, display: "block", fontWeight: 600, letterSpacing: 0.5 }}>FROM</span><span style={{ fontSize: 14, fontWeight: 700, color: T.white }}>{p.price ? `AED ${(p.price/1000000).toFixed(1)}M` : "TBD"}</span></div>
+                              <div><span style={{ fontSize: 9, color: T.textMuted, display: "block", fontWeight: 600, letterSpacing: 0.5 }}>HANDOVER</span><span style={{ fontSize: 14, fontWeight: 700, color: T.white }}>{p.handover || "—"}</span></div>
+                              <div><span style={{ fontSize: 9, color: T.textMuted, display: "block", fontWeight: 600, letterSpacing: 0.5 }}>PRICE/SQFT</span><span style={{ fontSize: 14, fontWeight: 700, color: T.white }}>{p.ppsf ? `AED ${p.ppsf.toLocaleString()}` : "TBD"}</span></div>
+                              <div><span style={{ fontSize: 9, color: T.textMuted, display: "block", fontWeight: 600, letterSpacing: 0.5 }}>SIZE</span><span style={{ fontSize: 14, fontWeight: 700, color: T.white }}>{p.sizeFrom && p.sizeTo ? `${p.sizeFrom.toLocaleString()} - ${p.sizeTo.toLocaleString()} sqft` : "—"}</span></div>
+                              <div><span style={{ fontSize: 9, color: T.textMuted, display: "block", fontWeight: 600, letterSpacing: 0.5 }}>TYPE</span><span style={{ fontSize: 13, color: T.textSecondary }}>{p.type}{p.beds ? ` · ${p.beds} BR` : ""}</span></div>
+                              <div><span style={{ fontSize: 9, color: T.textMuted, display: "block", fontWeight: 600, letterSpacing: 0.5 }}>PAYMENT</span><span style={{ fontSize: 13, color: T.textSecondary }}>{p.payment || "—"}</span></div>
+                            </div>
+                            {/* Unit Availability */}
+                            {p.units && (
+                              <div style={{ marginBottom: 10 }}>
+                                <div style={{ fontSize: 9, color: T.textMuted, fontWeight: 600, letterSpacing: 0.5, marginBottom: 6 }}>UNIT AVAILABILITY</div>
+                                <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                                  {getUnitEntries(p.units).map(([type, d]) => {
+                                    const avail = d.total - d.sold;
+                                    return (
+                                      <span key={type} style={{ padding: "3px 8px", borderRadius: 6, background: T.surfaceAlt, fontSize: 10, fontWeight: 700, color: avail > 0 ? T.white : T.textMuted }}>
+                                        <span style={{ color: T.gold }}>{type}</span> {avail > 0 ? `${avail} left` : "Sold out"}
+                                      </span>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            )}
+                            {/* Tier Badge */}
+                            {p.tier && <div style={{ marginBottom: 10 }}><span style={{ fontSize: 10, padding: "3px 10px", borderRadius: 6, background: T.surfaceAlt, color: T.textSecondary, fontWeight: 600 }}>{p.tier}</span></div>}
+                            {/* Action Buttons */}
+                            <div style={{ display: "flex", gap: 6 }} onClick={e => e.stopPropagation()}>
+                              <button type="button" onClick={() => { const msg = encodeURIComponent(`${p.name} | ${p.community} | AED ${p.price ? (p.price/1e6).toFixed(2)+"M" : "TBD"} | Handover: ${p.handover}`); window.open(`https://wa.me/971542410599?text=${msg}`, "_blank"); }} style={{ flex: 1, padding: "9px 0", background: "#25D366", border: "none", borderRadius: 8, color: "#fff", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>WhatsApp</button>
+                              <button type="button" onClick={() => { window.location.href = `mailto:?subject=${encodeURIComponent(p.name)}&body=${encodeURIComponent(p.name + " | " + p.community + " | AED " + (p.price ? (p.price/1e6).toFixed(2)+"M" : "TBD"))}`; }} style={{ flex: 1, padding: "9px 0", background: T.gold, border: "none", borderRadius: 8, color: T.bg, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>Email</button>
+                              {p.emaarUrl && <a href={p.emaarUrl} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{ padding: "9px 12px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.teal, fontSize: 13, display: "flex", alignItems: "center", justifyContent: "center", textDecoration: "none" }}>↗</a>}
+                            </div>
                           </div>
                         </div>
                       ))}
