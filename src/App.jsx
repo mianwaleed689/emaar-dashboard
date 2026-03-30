@@ -31,10 +31,18 @@ function PageLoader() {
       justifyContent: "center", background: "#04090F",
     }}>
       <div style={{ textAlign: "center" }}>
-        <div style={{ fontSize: 13, color: "#D4A843", letterSpacing: 2, marginBottom: 12 }}>
-          DXB ANALYTICS
+        <div style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", marginBottom: 16 }}>
+          <svg width="48" height="48" viewBox="0 0 40 40">
+            <rect x="2" y="2" width="36" height="36" rx="8" fill="none" stroke="#D4A843" strokeWidth="2" />
+            <path d="M12 28V12h10l-6 8h8l-12 8z" fill="#D4A843" />
+          </svg>
         </div>
-        <div style={{ fontSize: 11, color: "#64748B" }}>Loading...</div>
+        <div style={{ fontFamily: "serif", fontSize: 22, fontWeight: 900, color: "#D4A843", letterSpacing: -0.5, marginBottom: 4 }}>
+          DXB Analytics
+        </div>
+        <div style={{ fontSize: 11, color: "#64748B", letterSpacing: 2, textTransform: "uppercase" }}>
+          Dubai Real Estate Intelligence
+        </div>
       </div>
     </div>
   );
