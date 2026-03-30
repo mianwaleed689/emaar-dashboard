@@ -1782,7 +1782,13 @@ export default function EmaarDashboardV2() {
   const [gvSelectedProj, setGvSelectedProj] = useState(null);
 
   // Load projects from Firestore (runs for ALL users — guests and logged-in)
+  // projectsLoading — resolves when DXBContext has loaded activeProjects
   const [projectsLoading, setProjectsLoading] = useState(true);
+  useEffect(() => {
+    if (activeProjects && activeProjects.length > 0) {
+      setProjectsLoading(false);
+    }
+  }, [activeProjects]);
 
   // Listen to Firebase auth state + fetch user profile
 
