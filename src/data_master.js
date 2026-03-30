@@ -48,12 +48,10 @@ import { sobhaCommunities }       from "./data_sobha";
 import { nakheelCommunities }     from "./data_nakheel";
 import { aldarCommunities }       from "./data_aldar";
 import { binghattiCommunities }   from "./data_binghatti";
-import { meeraasC as meerasCommunities } from "./data_meraas"; // note: meeraasC = meraas communities
+import { meraasC as meerasCommunities } from "./data_meraas"; // meraasC = meraas communities (fixed from meeraasC typo)
 
 // ── Import developer live stats ───────────────────────────────────────────────
-import {
-  emaarIdentity, emaarLive,
-}                                 from "./data_emaar_complete";
+// NOTE: Emaar has no identity/live object in data_emaar_complete.js — identity comes from data.js topDevelopers
 import { damacIdentity,    damacLive }    from "./data_damac";
 import { sobhaIdentity,    sobhaLive }    from "./data_sobha";
 import { nakheelIdentity,  nakheelLive }  from "./data_nakheel";

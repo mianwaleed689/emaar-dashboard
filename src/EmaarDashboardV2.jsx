@@ -27,7 +27,7 @@ import {
   damacIdentity, damacLive, damacProjects, damacCommunities, damacFinancials, damacFinancialHistory, damacYields, damacRisks, damacSegments, damacRadar, damacMegaProjects, damacBranded,
   sobhaIdentity, sobhaLive, sobhaProjects, sobhaCommunities, sobhaFinancialHistory, sobhaYields, sobhaRisks, sobhaSegments, sobhaRadar, sobhaMegaProjects,
   nakheelIdentity, nakheelLive, nakheelProjects, nakheelCommunities, nakheelFinancialHistory, nakheelYields, nakheelRisks, nakheelSegments, nakheelRadar, nakheelMegaProjects,
-  meraasIdentity, meraasLive, meraasProjects, meraasB as meeraasB, meraasC as meeraasC, meraasFinancialHistory, meraasYields, meraasRisks, meraasSegments, meraasRadar, meraasM as meeraasM,
+  meraasIdentity, meraasLive, meraasProjects, meraasB, meraasC, meraasFinancialHistory, meraasYields, meraasRisks, meraasSegments, meraasRadar, meraasM,
   aldarIdentity, aldarLive, aldarProjects, aldarCommunities, aldarFinancialHistory, aldarYields, aldarRisks, aldarSegments, aldarRadar, aldarMegaProjects,
   binghattiIdentity, binghattiLive, binghattiProjects, binghattiCommunities, binghattiFinancialHistory, binghattiYields, binghattiRisks, binghattiSegments, binghattiRadar, binghattiMegaProjects,
 } from "./data_master";
@@ -36,7 +36,7 @@ import {
 const damacData    = { identity: damacIdentity,    live: damacLive,    projects: damacProjects,    communities: damacCommunities,    financials: damacFinancials,    financialHistory: damacFinancialHistory,    yields: damacYields,    risks: damacRisks,    segments: damacSegments,    radar: damacRadar,    megaProjects: damacMegaProjects,    branded: damacBranded };
 const nakheelData  = { identity: nakheelIdentity,  live: nakheelLive,  projects: nakheelProjects,  communities: nakheelCommunities,  financialHistory: nakheelFinancialHistory,  yields: nakheelYields,  risks: nakheelRisks,  segments: nakheelSegments,  radar: nakheelRadar,  megaProjects: nakheelMegaProjects };
 const sobhaData    = { identity: sobhaIdentity,    live: sobhaLive,    projects: sobhaProjects,    communities: sobhaCommunities,    financialHistory: sobhaFinancialHistory,    yields: sobhaYields,    risks: sobhaRisks,    segments: sobhaSegments,    radar: sobhaRadar,    megaProjects: sobhaMegaProjects };
-const meraasData   = { identity: meraasIdentity,   live: meraasLive,   projects: meraasProjects,   communities: meeraasC,            financialHistory: meraasFinancialHistory,   yields: meraasYields,   risks: meraasRisks,   segments: meraasSegments,   radar: meraasRadar,   megaProjects: meeraasM,  branded: meeraasB };
+const meraasData   = { identity: meraasIdentity,   live: meraasLive,   projects: meraasProjects,   communities: meraasC,             financialHistory: meraasFinancialHistory,   yields: meraasYields,   risks: meraasRisks,   segments: meraasSegments,   radar: meraasRadar,   megaProjects: meraasM,   branded: meraasB };
 const aldarData    = { identity: aldarIdentity,    live: aldarLive,    projects: aldarProjects,    communities: aldarCommunities,    financialHistory: aldarFinancialHistory,    yields: aldarYields,    risks: aldarRisks,    segments: aldarSegments,    radar: aldarRadar,    megaProjects: aldarMegaProjects };
 const binghattiData= { identity: binghattiIdentity,live: binghattiLive,projects: binghattiProjects,communities: binghattiCommunities,financialHistory: binghattiFinancialHistory,yields: binghattiYields,risks: binghattiRisks,segments: binghattiSegments,radar: binghattiRadar,megaProjects: binghattiMegaProjects };
 import LandingPage from "./LandingPage";
