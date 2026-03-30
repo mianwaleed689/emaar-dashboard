@@ -2,7 +2,7 @@
 
 
 import React, { useState, useEffect, useRef } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import emailjs from "@emailjs/browser";
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area, ComposedChart, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ReferenceLine, Legend } from "recharts";
 import { auth, db } from "./firebase";
@@ -1677,6 +1677,8 @@ export default function EmaarDashboardV2() {
     canAccess, isTabVisible, tierLevel,
   } = useDXB();
 
+  const navigate = useNavigate();
+
   // ── Local UI state only (not shared with Admin Panel) ────────────────────
   const [user, setUser] = useState("");
   const [showLogin, setShowLogin] = useState(false);
@@ -2147,7 +2149,7 @@ export default function EmaarDashboardV2() {
           {adminMode && (
             <>
               <div style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, letterSpacing: 1.5, textTransform: "uppercase", padding: "16px 16px 8px", marginTop: 8, borderTop: `1px solid ${T.border}` }}>Admin</div>
-              <button type="button" className="sidebar-btn" onClick={() => window.location.href = "/admin"} style={{ background: "linear-gradient(135deg, rgba(212,168,67,0.15), rgba(212,168,67,0.05))", border: "1px solid rgba(212,168,67,0.3)" }}>
+              <button type="button" className="sidebar-btn" onClick={() => navigate("/admin")} style={{ background: "linear-gradient(135deg, rgba(212,168,67,0.15), rgba(212,168,67,0.05))", border: "1px solid rgba(212,168,67,0.3)" }}>
                 {Icons.admin}
                 Admin Console ↗
               </button>
