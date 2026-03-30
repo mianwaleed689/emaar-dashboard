@@ -258,7 +258,7 @@ export function DXBProvider({ children }) {
         const data = snap.data();
         setUserName(data.name || fbUser.displayName || "");
         setUserTier(data.tier || "free");
-        setUserRole(data.role || "user");
+        setUserRole(data.role || (data.tier === "admin" ? "admin" : "user"));
         setIsSuspended(data.suspended === true);
         setIsVerified(data.kycStatus === "approved");
         setVerifiedLevel(data.verifiedLevel || null);
