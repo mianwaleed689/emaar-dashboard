@@ -91,8 +91,8 @@ export function DXBProvider({ children }) {
   const [kycStatus, setKycStatus]         = useState(null);
   const [trialDaysLeft, setTrialDaysLeft] = useState(0);
 
-  // Admin mode — when true every component can show edit UI
-  const adminMode = userRole === "admin";
+  // Admin mode — superAdmin, admin, or enterprise tier all get full access
+  const adminMode = userRole === "admin" || userRole === "superAdmin" || userTier === "enterprise";
 
   // ── APP UI STATE ────────────────────────────────────────────────────────────
   const [tab, setTabRaw] = useState(() => {
@@ -258,7 +258,7 @@ export function DXBProvider({ children }) {
         const data = snap.data();
         setUserName(data.name || fbUser.displayName || "");
         setUserTier(data.tier || "free");
-        setUserRole(data.role || (data.tier === "admin" ? "admin" : "user"));
+        setUserRole(data.role || (data.tier === "admin" || data.tier === "enterprise" || data.superAdmin ? "superAdmin" : "user"));
         setIsSuspended(data.suspended === true);
         setIsVerified(data.kycStatus === "approved");
         setVerifiedLevel(data.verifiedLevel || null);
