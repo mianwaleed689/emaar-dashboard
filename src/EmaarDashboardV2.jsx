@@ -2122,7 +2122,6 @@ export default function EmaarDashboardV2() {
             setUserName("");
           }
         } catch (err) {
-          console.log("Could not fetch user profile:", err);
           setUserTier("pro"); // fallback for existing users
         }
       } else {
@@ -2148,7 +2147,7 @@ export default function EmaarDashboardV2() {
     const updated = isWatched ? watchlist.filter(p => p.id !== project.id) : [...watchlist, { id: project.id, name: project.name, community: project.community, price: project.price, addedAt: new Date().toISOString() }];
     setWatchlist(updated);
     if (auth.currentUser) {
-      try { await setDoc(doc(db, "watchlists", auth.currentUser.uid), { projects: updated, updatedAt: new Date().toISOString() }); } catch (e) {}
+      try { await setDoc(doc(db, "watchlists", auth.currentUser.uid), { projects: updated, updatedAt: new Date().toISOString() }); } catch (e) { notify("Could not save watchlist — check connection"); setWatchlist(watchlist); }
     }
     notify(isWatched ? `Removed ${project.name} from watchlist` : `⭐ ${project.name} added to watchlist`);
   };
@@ -2408,7 +2407,8 @@ export default function EmaarDashboardV2() {
   };
 
   const handleTabChange = (key) => {
-    sessionStorage.removeItem("dxb_active_tab");
+    try { sessionStorage.setItem("dxb_active_tab", key); } catch(e) {}
+    if (key !== "Projects") setCompareList([]);
     setTab(key);
     setSidebarOpen(false);
     if (key === "Admin" && userTier === "admin") fetchAdminUsers();
@@ -3158,7 +3158,7 @@ export default function EmaarDashboardV2() {
               <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
                 <div style={{ position: 'relative', flex: '1 1 250px', maxWidth: 350 }}>
                   <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: T.textMuted }}>{Icons.search}</span>
-                  <input value={projectSearch} onChange={e => setProjectSearch(e.target.value)} placeholder='Search projects or community...' style={{ width: '100%', padding: '10px 12px 10px 36px', background: T.surface, border: '1px solid '+T.border, borderRadius: 10, color: T.textPrimary, fontSize: 13, fontFamily: 'Outfit, sans-serif', outline: 'none' }} />
+                  <input value={projectSearch} onChange={e => { setProjectSearch(e.target.value); setProjectPage(1); }} placeholder='Search projects or community...' style={{ width: '100%', padding: '10px 12px 10px 36px', background: T.surface, border: '1px solid '+T.border, borderRadius: 10, color: T.textPrimary, fontSize: 13, fontFamily: 'Outfit, sans-serif', outline: 'none' }} />
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: '1 1 200px', background: T.surface, border: '1px solid '+T.border, borderRadius: 10, padding: '8px 14px' }}>
                   <span style={{ fontSize: 11, color: T.textMuted, whiteSpace: 'nowrap' }}>Max Price</span>
@@ -4384,10 +4384,8 @@ export default function EmaarDashboardV2() {
                         }
                       });
                       const data = await res.json();
-                      console.log("Bayut API raw response:", JSON.stringify(data).slice(0, 500));
                       // Handle both hits array and direct results
                       const rawListings = data?.hits || data?.properties || data?.results || data?.data || [];
-                      console.log("Raw listings count:", rawListings.length, "Keys:", Object.keys(data));
                       const listings = rawListings.slice(0, 6).map(h => ({
                         id: h.externalID || h.id || Math.random(),
                         price: h.price,
@@ -7707,7 +7705,7 @@ export default function EmaarDashboardV2() {
                   </div>
                   {selectedProject_.videoUrl && (
                     <div style={{ marginTop: 12, borderRadius: 10, overflow: "hidden", border: `1px solid ${T.border}` }}>
-                      <video controls style={{ width: "100%", maxHeight: 240, background: "#000", display: "block" }}>
+                      <video controls style={{ width: "100%", maxHeight: 240, background: "#000", display: "block" }} onError={e => { e.target.style.display="none"; e.target.nextSibling.style.display="flex"; }}>
                         <source src={selectedProject_.videoUrl} />
                       </video>
                     </div>
@@ -8099,7 +8097,7 @@ export default function EmaarDashboardV2() {
                   <input type="number" value={alertForm.value} onChange={e => setAlertForm(f => ({...f, value: e.target.value}))} style={{ width: "100%", padding: "9px 12px", background: T.surface, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 12, fontFamily: "'Outfit',sans-serif", boxSizing: "border-box" }} placeholder="e.g. 8.5" />
                 </div>
               </div>
-              <button type="button" disabled={alertSaving} onClick={async () => {
+              <button type="button" disabled={alertSaving || !alertForm.value || isNaN(parseFloat(alertForm.value))} onClick={async () => {
                 if (!alertForm.value) return;
                 setAlertSaving(true);
                 const newAlert = { ...alertForm, id: Date.now(), createdAt: new Date().toISOString(), active: true };
