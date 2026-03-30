@@ -1850,13 +1850,22 @@ export default function EmaarDashboardV2() {
   // For Emaar: base 48 + any radar-added projects NOT already in the 48 (new launches)
   // For other developers: only Firestore projects matching that developer
   const emaarBaseNames = new Set(emaarProjects.map(p => (p.name || "").toLowerCase().trim()));
-  const activeProjects = [
-    // Always include all 48 curated Emaar projects with any live overrides
+  // All Emaar projects with live overrides
+  const emaarActiveProjects = [
     ...emaarProjects.map(p => { const ov = liveProjects[String(p.id)] || liveProjects["project_"+p.id]; return ov ? { ...p, ...ov } : p; }),
-    // Include ALL extra projects from Firestore (radar + other developers)
-    // Skip any that duplicate the 48 Emaar base projects by name
-    ...extraProjects.filter(p => !emaarBaseNames.has((p.name || "").toLowerCase().trim()))
+    ...extraProjects.filter(p => !emaarBaseNames.has((p.name || "").toLowerCase().trim()) && (!p.developerId || p.developerId === "emaar"))
   ];
+  // Developer-specific project lists from data files
+  const damacActiveProjects = (damacData.projects || []).map(p => ({ ...p, developer: "DAMAC", developerId: "damac" }));
+  const nakheelActiveProjects = (nakheelData.projects || []).map(p => ({ ...p, developer: "Nakheel", developerId: "nakheel" }));
+  const otherDevProjects = extraProjects.filter(p => p.developerId && p.developerId !== "emaar");
+  // Active projects based on selected developer
+  const activeProjects = selectedDeveloper === "emaar" ? emaarActiveProjects
+    : selectedDeveloper === "damac" ? damacActiveProjects
+    : selectedDeveloper === "nakheel" ? nakheelActiveProjects
+    : otherDevProjects.filter(p => p.developerId === selectedDeveloper).length > 0
+      ? otherDevProjects.filter(p => p.developerId === selectedDeveloper)
+      : emaarActiveProjects; // fallback to emaar if no projects found
 
   // Normalize units from either Object ({studio:{total,sold}}) or Array ([{type,available,total}]) format
   const getUnitEntries = (units) => {
@@ -3209,7 +3218,7 @@ export default function EmaarDashboardV2() {
 
           {/* ─── PROJECTS TAB (48 Projects from Excel) ─── */}
           {tab === "Projects" && <>
-            <Section title={`${activeProjects.length} Active Projects`} sub="Complete Emaar off-plan portfolio · 2026–2030 · Search & filter">
+            <Section title={`${activeProjects.length} Active Projects`} sub={`${selectedDeveloper === "emaar" ? "Emaar Properties" : selectedDeveloper === "damac" ? "DAMAC Properties" : selectedDeveloper === "nakheel" ? "Nakheel" : selectedDeveloper === "sobha" ? "Sobha Realty" : selectedDeveloper === "meraas" ? "Meraas" : selectedDeveloper === "aldar" ? "Aldar Properties" : "Binghatti"} · 2026–2030 · Search & filter`}>
               <div className="kpi-grid" style={{ display: "grid", gap: 12, marginTop: 16 }}>
                 <KPI label="Total Projects" value={activeProjects.length} sub="18 under construction · 30 off-plan" delay={1} onClick={() => setSelectedKPI({ label: "Total Projects", value: "48", color: T.gold, description: "48 active Emaar projects across UAE.", source: "DXB Analytics", sourceUrl: "#", items: [{ label: "Under Construction", value: "18", note: "Active building" }, { label: "Off-Plan", value: "30", note: "Pre-launch" }, { label: "Communities", value: "11", note: "Master-planned" }, { label: "Branded", value: "10", note: "Address, Vida, Palace" }], trend: null })} />
                 <KPI label="Communities" value="11" sub="DHE · DCH · EBF · GPC + 7 more" delay={2} />
