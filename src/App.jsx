@@ -14,6 +14,7 @@ import { DXBProvider, useDXB } from "./context/DXBContext";
 // Lazy-load heavy pages for faster initial paint
 const EmaarDashboardV2 = React.lazy(() => import("./EmaarDashboardV2"));
 const LandingPage       = React.lazy(() => import("./LandingPage"));
+const AdminPanel        = React.lazy(() => import("./AdminPanel"));
 const Terms             = React.lazy(() => import("./Terms"));
 const Privacy           = React.lazy(() => import("./Privacy"));
 
@@ -63,10 +64,11 @@ function App() {
         <Suspense fallback={<PageLoader />}>
           <Routes>
             <Route path="/"          element={<HomeRoute />} />
-            <Route path="/dashboard" element={<EmaarDashboardV2 />} />
-            <Route path="/terms"     element={<Terms />} />
-            <Route path="/privacy"   element={<Privacy />} />
-            <Route path="*"          element={<Navigate to="/" replace />} />
+              <Route path="/dashboard" element={<EmaarDashboardV2 />} />
+              <Route path="/admin"     element={<AdminPanel />} />
+              <Route path="/terms"     element={<Terms />} />
+              <Route path="/privacy"   element={<Privacy />} />
+              <Route path="*"          element={<Navigate to="/" replace />} />
           </Routes>
         </Suspense>
       </DXBProvider>
