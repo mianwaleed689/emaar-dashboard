@@ -44,7 +44,18 @@ function PageLoader() {
   );
 }
 
-// HomeRoute — logged-in users go to dashboard, guests see landing
+// AdminRoute — only superAdmin/admin can access /admin
+function AdminRoute() {
+  const { adminMode, authLoading, isLoggedIn } = useDXB();
+  if (authLoading) return <PageLoader />;
+  if (!isLoggedIn) return <Navigate to="/" replace />;
+  if (!adminMode) return <Navigate to="/dashboard" replace />;
+  return (
+    <Suspense fallback={<PageLoader />}>
+      <AdminPanel />
+    </Suspense>
+  );
+}
 function HomeRoute() {
   const { isLoggedIn, authLoading } = useDXB();
   if (authLoading) return <PageLoader />;
@@ -66,11 +77,11 @@ function App() {
         <Suspense fallback={<PageLoader />}>
           <Routes>
             <Route path="/"          element={<HomeRoute />} />
-              <Route path="/dashboard" element={<EmaarDashboardV2 />} />
-              <Route path="/admin"     element={<AdminPanel />} />
-              <Route path="/terms"     element={<Terms />} />
-              <Route path="/privacy"   element={<Privacy />} />
-              <Route path="*"          element={<Navigate to="/" replace />} />
+            <Route path="/dashboard" element={<EmaarDashboardV2 />} />
+            <Route path="/admin"     element={<AdminRoute />} />
+            <Route path="/terms"     element={<Terms />} />
+            <Route path="/privacy"   element={<Privacy />} />
+            <Route path="*"          element={<Navigate to="/" replace />} />
           </Routes>
         </Suspense>
       </DXBProvider>
