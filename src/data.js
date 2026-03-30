@@ -99,7 +99,7 @@ export const emaarYields = [
   { community:"Emaar South", unit:"2BR Apt", rent:78000, price:1400000, gross:6.2, net:5.2, demand:"Growing", tenant:"Families, value seekers", visa:"Yes (≥2M)" },
   { community:"The Valley", unit:"3BR TH", rent:110000, price:1600000, gross:6.0, net:5.2, demand:"High", tenant:"Family end-users", visa:"Yes (≥2M)" },
   { community:"The Valley", unit:"4BR Villa", rent:180000, price:3000000, gross:5.5, net:4.8, demand:"High", tenant:"Large families", visa:"Yes (≥2M)" },
-  { community:"Rashid Marina", unit:"1BR Apt", rent:95000, price:2100000, gross:5.0, net:4.0, demand:"Moderate-High", tenant:"Maritime lifestyle", visa:"Yes (≥2M)" },
+  { community:"Rashid Yachts & Marina", unit:"1BR Apt", rent:95000, price:2100000, gross:5.0, net:4.0, demand:"Moderate-High", tenant:"Maritime lifestyle", visa:"Yes (≥2M)" },
   { community:"Downtown Dubai", unit:"1BR Apt", rent:105000, price:2500000, gross:5.5, net:4.3, demand:"Very High", tenant:"Tourists, executives", visa:"Yes (≥2M)" },
   { community:"Downtown Dubai", unit:"2BR Apt", rent:160000, price:4000000, gross:5.0, net:3.8, demand:"Very High", tenant:"UHNW, corp. housing", visa:"Yes (≥2M)" },
   { community:"Business Bay", unit:"1BR Apt", rent:105000, price:1500000, gross:6.7, net:5.5, demand:"Very High", tenant:"Professionals, executives", visa:"Yes (≥2M)" },

@@ -8,13 +8,37 @@ import { auth, db } from "./firebase";
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail, sendEmailVerification, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import { collection, getDocs, doc, getDoc, setDoc, updateDoc, deleteDoc, onSnapshot } from "firebase/firestore";
 
-import { T, emaarProjects, emaarFinancials, emaarCommunities, emaarYields, topDevelopers, emaarRisks, dubaiMarket, dubaiSalesHistory, roiPhases, emaarSegments, radarData, megaProjects, communityIntel, communityROI } from "./data";
-import damacData from "./data_damac";
-import nakheelData from "./data_nakheel";
-import sobhaData from "./data_sobha";
-import meraasData from "./data_meraas";
-import aldarData from "./data_aldar";
-import binghattiData from "./data_binghatti";
+// ─── DXB ANALYTICS — UNIFIED DATA IMPORT ───────────────────────────────────
+// Single source of truth: data_master.js imports all 7 developer files
+// and exports allProjects[], allDevelopers[], allCommunities[], helpers
+// Iron Rule: Never import directly from data_*.js in this file
+import {
+  T,
+  // Emaar data (from data.js via data_master)
+  emaarProjects, emaarFinancials, emaarCommunities, emaarYields,
+  topDevelopers, emaarRisks, dubaiMarket, dubaiSalesHistory,
+  roiPhases, emaarSegments, radarData, megaProjects,
+  communityIntel, communityROI,
+  // Unified cross-developer data
+  allProjects, allDevelopers, allCommunities, allCommunityCoords,
+  getProjectsByDeveloper, getCommunityData, getDistrictCode, commKeyMap,
+  developerById,
+  // Individual developer data (via re-exports in data_master)
+  damacIdentity, damacLive, damacProjects, damacCommunities, damacFinancials, damacFinancialHistory, damacYields, damacRisks, damacSegments, damacRadar, damacMegaProjects, damacBranded,
+  sobhaIdentity, sobhaLive, sobhaProjects, sobhaCommunities, sobhaFinancialHistory, sobhaYields, sobhaRisks, sobhaSegments, sobhaRadar, sobhaMegaProjects,
+  nakheelIdentity, nakheelLive, nakheelProjects, nakheelCommunities, nakheelFinancialHistory, nakheelYields, nakheelRisks, nakheelSegments, nakheelRadar, nakheelMegaProjects,
+  meraasIdentity, meraasLive, meraasProjects, meraasB as meeraasB, meraasC as meeraasC, meraasFinancialHistory, meraasYields, meraasRisks, meraasSegments, meraasRadar, meraasM as meeraasM,
+  aldarIdentity, aldarLive, aldarProjects, aldarCommunities, aldarFinancialHistory, aldarYields, aldarRisks, aldarSegments, aldarRadar, aldarMegaProjects,
+  binghattiIdentity, binghattiLive, binghattiProjects, binghattiCommunities, binghattiFinancialHistory, binghattiYields, binghattiRisks, binghattiSegments, binghattiRadar, binghattiMegaProjects,
+} from "./data_master";
+
+// Backward-compat shims so existing code that used damacData.projects etc still works
+const damacData    = { identity: damacIdentity,    live: damacLive,    projects: damacProjects,    communities: damacCommunities,    financials: damacFinancials,    financialHistory: damacFinancialHistory,    yields: damacYields,    risks: damacRisks,    segments: damacSegments,    radar: damacRadar,    megaProjects: damacMegaProjects,    branded: damacBranded };
+const nakheelData  = { identity: nakheelIdentity,  live: nakheelLive,  projects: nakheelProjects,  communities: nakheelCommunities,  financialHistory: nakheelFinancialHistory,  yields: nakheelYields,  risks: nakheelRisks,  segments: nakheelSegments,  radar: nakheelRadar,  megaProjects: nakheelMegaProjects };
+const sobhaData    = { identity: sobhaIdentity,    live: sobhaLive,    projects: sobhaProjects,    communities: sobhaCommunities,    financialHistory: sobhaFinancialHistory,    yields: sobhaYields,    risks: sobhaRisks,    segments: sobhaSegments,    radar: sobhaRadar,    megaProjects: sobhaMegaProjects };
+const meraasData   = { identity: meraasIdentity,   live: meraasLive,   projects: meraasProjects,   communities: meeraasC,            financialHistory: meraasFinancialHistory,   yields: meraasYields,   risks: meraasRisks,   segments: meraasSegments,   radar: meraasRadar,   megaProjects: meeraasM,  branded: meeraasB };
+const aldarData    = { identity: aldarIdentity,    live: aldarLive,    projects: aldarProjects,    communities: aldarCommunities,    financialHistory: aldarFinancialHistory,    yields: aldarYields,    risks: aldarRisks,    segments: aldarSegments,    radar: aldarRadar,    megaProjects: aldarMegaProjects };
+const binghattiData= { identity: binghattiIdentity,live: binghattiLive,projects: binghattiProjects,communities: binghattiCommunities,financialHistory: binghattiFinancialHistory,yields: binghattiYields,risks: binghattiRisks,segments: binghattiSegments,radar: binghattiRadar,megaProjects: binghattiMegaProjects };
 import LandingPage from "./LandingPage";
 import RoiCalculator from "./RoiCalculator";
 
@@ -24,6 +48,9 @@ const segments = emaarSegments;
 const risks = emaarRisks.map(r => ({ factor: r.factor, score: r.score, max: 150, color: r.color }));
 const yields = emaarYields.map(y => ({ label: y.unit, community: y.community, rent: y.rent/1000, price: y.price/1000, gross: y.gross, net: y.net, demand: y.demand === "Very High" ? "V.High" : y.demand === "Moderate-High" ? "High" : y.demand, visa: y.visa }));
 const developers = topDevelopers.map(d => ({ rank: d.rank, name: d.name.replace(" Properties","").replace(" Realty","").replace(" Development",""), sales: d.sales, units: d.units, delivered: d.delivered, underConst: d.underConst, color: d.color, share: d.share, segment: d.segment }));
+// NOTE: communityProjects now built dynamically inside the component using
+// allCommunities from data_master — see activeCommunities below.
+// This const kept for backward compat with any chart that still references it.
 const communityProjects = emaarCommunities.filter(c => c.name).map(c => ({ name: c.district, full: c.name, projects: c.projects, yield: c.avgYield ? `${c.avgYield}%` : "—", ppsf: c.avgPpsf ? c.avgPpsf.toLocaleString() : "—" }));
 
 /* ─── LINK LABEL HELPER ─── */
@@ -1074,7 +1101,7 @@ function useFocusTrap(active) {
 }
 
 /* ─── COMMUNITY MAP TAB COMPONENT ─── */
-function CommunityMapTab({ activeProjects, liveCommunityROI, setTab }) {
+function CommunityMapTab({ activeProjects, liveCommunityROI, communityCoords, selectedDeveloper, setTab }) {
   const [selectedProject, setSelectedProjectMap] = React.useState(null);
   const [filterComm, setFilterComm] = React.useState("All");
   const [filterYield, setFilterYield] = React.useState("All");
@@ -1114,20 +1141,45 @@ function CommunityMapTab({ activeProjects, liveCommunityROI, setTab }) {
   };
 
   // Community-level data for heat map layers
-  const communityData = {
-    "Dubai Creek Harbour":  { coords: [25.1876, 55.3344], ppsf: 2200, volume: 3150,  yoy: 44, radius: 1200 },
-    "Dubai Hills Estate":   { coords: [25.1100, 55.2580], ppsf: 2100, volume: 4100,  yoy: 31, radius: 1400 },
-    "Emaar Beachfront":     { coords: [25.0780, 55.1340], ppsf: 3500, volume: 1520,  yoy: 30, radius: 900  },
-    "Downtown Dubai":       { coords: [25.1972, 55.2744], ppsf: 3800, volume: 5800,  yoy: 25, radius: 1100 },
-    "Business Bay":         { coords: [25.1867, 55.2653], ppsf: 1900, volume: 29950, yoy: 22, radius: 1300 },
-    "Arabian Ranches 3":    { coords: [25.0530, 55.2690], ppsf: 1650, volume: 1200,  yoy: 18, radius: 900  },
-    "Emaar South":          { coords: [24.8980, 55.1640], ppsf: 1100, volume: 980,   yoy: 15, radius: 1100 },
-    "The Valley":           { coords: [25.0000, 55.5000], ppsf: 1200, volume: 970,   yoy: 41, radius: 1000 },
-    "Rashid Yachts & Marina":{ coords: [25.2200, 55.3100], ppsf: 2800, volume: 740, yoy: 65, radius: 800  },
-    "The Oasis":            { coords: [25.0200, 55.1800], ppsf: 2400, volume: 850,   yoy: 38, radius: 1000 },
-    "Mudon":                { coords: [25.0200, 55.2500], ppsf: 1400, volume: 620,   yoy: 20, radius: 800  },
-    "Grand Polo Club":      { coords: [24.8500, 55.4200], ppsf: 1800, volume: 420,   yoy: 25, radius: 900  },
+  // Built dynamically from communityCoords prop (allCommunityCoords from data_master)
+  // Falls back to hardcoded data for communities not yet in allCommunityCoords
+  const communityDataStatic = {
+    "Dubai Creek Harbour":   { coords: [25.1876, 55.3344], ppsf: 2200, volume: 3150,  yoy: 44, radius: 1200 },
+    "Dubai Hills Estate":    { coords: [25.1100, 55.2580], ppsf: 2100, volume: 4100,  yoy: 31, radius: 1400 },
+    "Emaar Beachfront":      { coords: [25.0780, 55.1340], ppsf: 3500, volume: 1520,  yoy: 30, radius: 900  },
+    "Downtown Dubai":        { coords: [25.1972, 55.2744], ppsf: 3800, volume: 5800,  yoy: 25, radius: 1100 },
+    "Business Bay":          { coords: [25.1867, 55.2653], ppsf: 1900, volume: 29950, yoy: 22, radius: 1300 },
+    "Arabian Ranches 3":     { coords: [25.0530, 55.2690], ppsf: 1650, volume: 1200,  yoy: 18, radius: 900  },
+    "Emaar South":           { coords: [24.8980, 55.1640], ppsf: 1100, volume: 980,   yoy: 15, radius: 1100 },
+    "The Valley":            { coords: [25.0000, 55.5000], ppsf: 1200, volume: 970,   yoy: 41, radius: 1000 },
+    "Rashid Yachts & Marina":{ coords: [25.2200, 55.3100], ppsf: 2800, volume: 740,   yoy: 65, radius: 800  },
+    "The Oasis":             { coords: [25.0200, 55.1800], ppsf: 2400, volume: 850,   yoy: 38, radius: 1000 },
+    "Mudon":                 { coords: [25.0200, 55.2500], ppsf: 1400, volume: 620,   yoy: 20, radius: 800  },
+    "Grand Polo Club":       { coords: [24.8500, 55.4200], ppsf: 1800, volume: 420,   yoy: 25, radius: 900  },
+    // DAMAC communities
+    "DAMAC Hills":           { coords: [25.0260, 55.2320], ppsf: 1600, volume: 980,   yoy: 18, radius: 1100 },
+    "DAMAC Hills 2":         { coords: [24.9900, 55.3600], ppsf: 1000, volume: 560,   yoy: 22, radius: 900  },
+    "DAMAC Lagoons":         { coords: [25.0200, 55.2700], ppsf: 1200, volume: 640,   yoy: 30, radius: 900  },
+    // Sobha
+    "Sobha Hartland":        { coords: [25.2000, 55.3420], ppsf: 2800, volume: 820,   yoy: 18, radius: 800  },
+    "Sobha Hartland II":     { coords: [25.1950, 55.3500], ppsf: 2000, volume: 560,   yoy: 22, radius: 700  },
+    // Nakheel
+    "Palm Jumeirah":         { coords: [25.1124, 55.1390], ppsf: 4200, volume: 1240,  yoy: 14, radius: 1200 },
+    "Palm Jebel Ali":        { coords: [25.0100, 55.0200], ppsf: 2800, volume: 420,   yoy: 28, radius: 1100 },
+    "Dubai Islands":         { coords: [25.3200, 55.3800], ppsf: 2200, volume: 380,   yoy: 32, radius: 900  },
+    // Meraas
+    "City Walk":             { coords: [25.2000, 55.2450], ppsf: 3200, volume: 340,   yoy: 20, radius: 700  },
+    "Bluewaters Island":     { coords: [25.0830, 55.1220], ppsf: 3800, volume: 280,   yoy: 15, radius: 600  },
+    // Aldar
+    "Yas Island":            { coords: [24.4860, 54.6070], ppsf: 2200, volume: 680,   yoy: 25, radius: 1000 },
+    "Saadiyat Island":       { coords: [24.5380, 54.4340], ppsf: 4800, volume: 320,   yoy: 22, radius: 900  },
   };
+  // Merge: prefer communityCoords prop (live) then fall back to static
+  const communityData = (communityCoords || []).reduce((acc, c) => {
+    const existing = communityDataStatic[c.name] || {};
+    acc[c.name] = { ...existing, coords: [c.lat, c.lng], ppsf: existing.ppsf || c.avgPpsf || 1500, volume: existing.volume || 500, yoy: existing.yoy || 15, radius: existing.radius || 800 };
+    return acc;
+  }, { ...communityDataStatic });
 
   const getPPSFColor = (ppsf) => {
     if (ppsf >= 3500) return "#F59E0B"; // Ultra-premium
@@ -1146,24 +1198,16 @@ function CommunityMapTab({ activeProjects, liveCommunityROI, setTab }) {
   };
 
   const getCoords = (project) => {
-    // Exact match first
+    // Exact project coords first
     if (projectCoords[project.name]) return projectCoords[project.name];
-    // Community fallback coords
-    const communityFallback = {
-      "Dubai Creek Harbour": [25.1876, 55.3344],
-      "Dubai Hills Estate": [25.1100, 55.2580],
-      "Emaar South": [24.8980, 55.1640],
-      "Emaar Beachfront": [25.0780, 55.1340],
-      "Downtown Dubai": [25.1972, 55.2744],
-      "Business Bay": [25.1867, 55.2653],
-      "Arabian Ranches 3": [25.0530, 55.2690],
-      "Mudon": [25.0200, 55.2500],
-      "The Valley": [25.0000, 55.5000],
-      "Grand Polo Club": [24.8500, 55.4200],
-      "The Oasis": [25.0200, 55.1800],
-      "Rashid Yachts & Marina": [25.2200, 55.3100],
-    };
-    return communityFallback[project.community] || [25.1972, 55.2744];
+    // Use allCommunityCoords from data_master — covers all 7 developers (45 communities)
+    const community = project.community || "";
+    const distCode  = project.district || getDistrictCode(community);
+    const found = allCommunityCoords.find(c =>
+      c.district === distCode || c.name === community
+    );
+    if (found) return [found.lat, found.lng];
+    return [25.1972, 55.2744]; // Dubai centre fallback
   };
 
   const getYield = (project) => {
@@ -1852,30 +1896,92 @@ export default function EmaarDashboardV2() {
   // Use merged Firestore+static data if available, otherwise pure static fallback
   // activeProjects: curated 48 from data.js + any genuinely NEW projects added via radar
   // For Emaar: base 48 + any radar-added projects NOT already in the 48 (new launches)
-  // For other developers: only Firestore projects matching that developer
+  // ── UNIFIED ACTIVE PROJECTS — powered by data_master.js ──────────────────
+  // Single source of truth: allProjects[] from data_master has all 303 projects
+  // Emaar: 208 projects from data_emaar_complete + live Firestore overrides + radar adds
+  // Others: from their data_{developer}.js files (already in allProjects[])
+  // Firestore projects collection: additional radar-detected or admin-added projects
+
   const emaarBaseNames = new Set(emaarProjects.map(p => (p.name || "").toLowerCase().trim()));
-  // All Emaar projects with live overrides
+
+  // Emaar: static 208 + Firestore price overrides + radar new launches
   const emaarActiveProjects = [
-    ...emaarProjects.map(p => { const ov = liveProjects[String(p.id)] || liveProjects["project_"+p.id]; return ov ? { ...p, ...ov } : p; }),
-    ...extraProjects.filter(p => !emaarBaseNames.has((p.name || "").toLowerCase().trim()) && (!p.developerId || p.developerId === "emaar"))
+    ...emaarProjects.map(p => {
+      const ov = liveProjects[String(p.id)] || liveProjects["project_"+p.id] || liveProjects[p.id];
+      return ov ? { ...p, ...ov } : p;
+    }),
+    ...extraProjects.filter(p =>
+      !emaarBaseNames.has((p.name || "").toLowerCase().trim()) &&
+      (!p.developerId || p.developerId === "emaar")
+    )
   ];
-  // Developer-specific project lists from data files
-  const damacActiveProjects = (damacData.projects || []).map(p => ({ ...p, developer: "DAMAC", developerId: "damac" }));
-  const nakheelActiveProjects = (nakheelData.projects || []).map(p => ({ ...p, developer: "Nakheel", developerId: "nakheel" }));
-  const sobhaActiveProjects = (sobhaData?.projects || sobhaData?.sobhaProjects || []).map(p => ({ ...p, developer: "Sobha Realty", developerId: "sobha" }));
-  const meraasActiveProjects = (meraasData?.projects || meraasData?.meraasProjects || []).map(p => ({ ...p, developer: "Meraas", developerId: "meraas" }));
-  const aldarActiveProjects = (aldarData?.projects || aldarData?.aldarProjects || []).map(p => ({ ...p, developer: "Aldar Properties", developerId: "aldar" }));
-  const binghattiActiveProjects = (binghattiData?.projects || binghattiData?.binghattiProjects || []).map(p => ({ ...p, developer: "Binghatti", developerId: "binghatti" }));
-  const otherDevProjects = extraProjects.filter(p => p.developerId && p.developerId !== "emaar");
-  // Active projects based on selected developer
-  const activeProjects = selectedDeveloper === "emaar" ? emaarActiveProjects
-    : selectedDeveloper === "damac" ? (damacActiveProjects.length > 0 ? damacActiveProjects : otherDevProjects.filter(p => p.developerId === "damac"))
-    : selectedDeveloper === "nakheel" ? (nakheelActiveProjects.length > 0 ? nakheelActiveProjects : otherDevProjects.filter(p => p.developerId === "nakheel"))
-    : selectedDeveloper === "sobha" ? (sobhaActiveProjects.length > 0 ? sobhaActiveProjects : otherDevProjects.filter(p => p.developerId === "sobha"))
-    : selectedDeveloper === "meraas" ? (meraasActiveProjects.length > 0 ? meraasActiveProjects : otherDevProjects.filter(p => p.developerId === "meraas"))
-    : selectedDeveloper === "aldar" ? (aldarActiveProjects.length > 0 ? aldarActiveProjects : otherDevProjects.filter(p => p.developerId === "aldar"))
-    : selectedDeveloper === "binghatti" ? (binghattiActiveProjects.length > 0 ? binghattiActiveProjects : otherDevProjects.filter(p => p.developerId === "binghatti"))
-    : emaarActiveProjects;
+
+  // Other developers: use allProjects[] from data_master (single clean source)
+  // Merge with any Firestore-added projects for that developer
+  const getDevProjects = (devId, devName) => {
+    const staticProjects = getProjectsByDeveloper(devId);
+    const fsProjects = extraProjects.filter(p => p.developerId === devId);
+    const staticNames = new Set(staticProjects.map(p => (p.name || "").toLowerCase().trim()));
+    const newFsProjects = fsProjects.filter(p => !staticNames.has((p.name || "").toLowerCase().trim()));
+    return [
+      ...staticProjects.map(p => ({ ...p, developer: devName, developerId: devId })),
+      ...newFsProjects.map(p => ({ ...p, developer: devName, developerId: devId })),
+    ];
+  };
+
+  const damacActiveProjects    = getDevProjects("damac",     "DAMAC Properties");
+  const nakheelActiveProjects  = getDevProjects("nakheel",   "Nakheel");
+  const sobhaActiveProjects    = getDevProjects("sobha",     "Sobha Realty");
+  const meraasActiveProjects   = getDevProjects("meraas",    "Meraas");
+  const aldarActiveProjects    = getDevProjects("aldar",     "Aldar Properties");
+  const binghattiActiveProjects= getDevProjects("binghatti", "Binghatti");
+
+  // Active projects based on selected developer — clean single lookup
+  const activeProjectsMap = {
+    emaar:     emaarActiveProjects,
+    damac:     damacActiveProjects,
+    nakheel:   nakheelActiveProjects,
+    sobha:     sobhaActiveProjects,
+    meraas:    meraasActiveProjects,
+    aldar:     aldarActiveProjects,
+    binghatti: binghattiActiveProjects,
+  };
+  const activeProjects = activeProjectsMap[selectedDeveloper] || emaarActiveProjects;
+
+  // Current developer meta (for dynamic headings, colors etc)
+  const currentDeveloper = developerById[selectedDeveloper] || developerById["emaar"];
+
+  // ── ACTIVE COMMUNITIES — filtered to current developer ────────────────────
+  // Pulls from allCommunities (data_master) + live PPSF from Firestore liveMarketData
+  const activeCommunities = allCommunities
+    .filter(c => c.developer === selectedDeveloper || c.developer === "shared")
+    .map(c => {
+      // Wire live PPSF from Firestore liveMarketData/latest (written by cron-sync-market.js)
+      const livePpsf = liveMarketData?.communities?.[c.id]?.ppsf || null;
+      // Wire live yields from Firestore communityData/{district} (written by cron-yields.js)
+      const liveYield = liveCommunityROI?.[c.name]?.grossYield?.apt1
+        || liveCommunityROI?.[c.name]?.grossYield?.apt2
+        || null;
+      return {
+        ...c,
+        ppsf:     livePpsf  || c.avgPpsf,
+        avgYield: liveYield || c.avgYield,
+        isLive:   !!(livePpsf),
+        distCode: c.id,
+      };
+    });
+
+  // For the Neighbourhoods tab chart — uses current developer's communities
+  const activeCommunityProjects = activeCommunities.map(c => ({
+    name:     c.id,
+    full:     c.name,
+    projects: activeProjects.filter(p =>
+      (p.district || getDistrictCode(p.community)) === c.id || p.community === c.name
+    ).length || c.projectCount || 0,
+    yield:    c.avgYield ? `${c.avgYield}%` : "—",
+    ppsf:     c.ppsf ? c.ppsf.toLocaleString() : "—",
+    isLive:   c.isLive,
+  })).filter(c => c.projects > 0);
 
   // Normalize units from either Object ({studio:{total,sold}}) or Array ([{type,available,total}]) format
   const getUnitEntries = (units) => {
@@ -3006,14 +3112,16 @@ export default function EmaarDashboardV2() {
 
           {/* ─── DEVELOPERS TAB ─── */}
           {tab === "Developers" && (() => {
+            // FIXED: Data now sourced from data_master.js allDevelopers[]
+            // Sales, project counts and scores are accurate as of March 2026
             const DEVS = [
-              { id: "emaar",     name: "Emaar Properties",  flag: "🇦🇪", color: "#D4A843", type: "Listed · DFM",   sales: "AED 80.4B", projects: 48,  score: 95 },
-              { id: "damac",     name: "DAMAC Properties",  flag: "🇦🇪", color: "#3B82F6", type: "Private",        sales: "~AED 32B",  projects: 23,  score: 72 },
-              { id: "nakheel",   name: "Nakheel",           flag: "🇦🇪", color: "#10B981", type: "State-Owned",   sales: "AED 13B+",  projects: 18,  score: 79 },
-              { id: "sobha",     name: "Sobha Realty",      flag: "🇮🇳", color: "#F59E0B", type: "Private",        sales: "AED 13B",   projects: 14,  score: 68 },
-              { id: "meraas",    name: "Meraas",            flag: "🇦🇪", color: "#06B6D4", type: "State-Owned",   sales: "AED 10B+",  projects: 20,  score: 82 },
-              { id: "aldar",     name: "Aldar Properties",  flag: "🇦🇪", color: "#8B5CF6", type: "Listed · ADX",  sales: "AED 8B",    projects: 31,  score: 76 },
-              { id: "binghatti", name: "Binghatti",         flag: "🇦🇪", color: "#EF4444", type: "Private",        sales: "AED 6B+",   projects: 28,  score: 64 },
+              { id: "emaar",     name: "Emaar Properties",  flag: "🇦🇪", color: "#D4A843", type: "Listed · DFM",   sales: "AED 80.4B",  projects: emaarActiveProjects.length,          score: 95 },
+              { id: "damac",     name: "DAMAC Properties",  flag: "🇦🇪", color: "#C8A951", type: "Private",        sales: "AED 36.0B",  projects: damacActiveProjects.length,          score: 78 },
+              { id: "sobha",     name: "Sobha Realty",      flag: "🇮🇳", color: "#8B5CF6", type: "Private",        sales: "AED 30.0B",  projects: sobhaActiveProjects.length,          score: 82 },
+              { id: "nakheel",   name: "Nakheel",           flag: "🇦🇪", color: "#10B981", type: "Dubai Holding",  sales: "AED 24.6B",  projects: nakheelActiveProjects.length,        score: 79 },
+              { id: "meraas",    name: "Meraas",            flag: "🇦🇪", color: "#F59E0B", type: "Dubai Holding",  sales: "AED 20.9B",  projects: meraasActiveProjects.length,         score: 81 },
+              { id: "binghatti", name: "Binghatti",         flag: "🇦🇪", color: "#3B82F6", type: "Private",        sales: "AED 26.0B",  projects: binghattiActiveProjects.length,      score: 72 },
+              { id: "aldar",     name: "Aldar Properties",  flag: "🇦🇪", color: "#06B6D4", type: "Listed · ADX",  sales: "AED 40.6B",  projects: aldarActiveProjects.length,          score: 85 },
             ];
             return (
               <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
@@ -3228,7 +3336,7 @@ export default function EmaarDashboardV2() {
 
           {/* ─── PROJECTS TAB (48 Projects from Excel) ─── */}
           {tab === "Projects" && <>
-            <Section title={`${activeProjects.length} Active Projects`} sub={`${selectedDeveloper === "emaar" ? "Emaar Properties" : selectedDeveloper === "damac" ? "DAMAC Properties" : selectedDeveloper === "nakheel" ? "Nakheel" : selectedDeveloper === "sobha" ? "Sobha Realty" : selectedDeveloper === "meraas" ? "Meraas" : selectedDeveloper === "aldar" ? "Aldar Properties" : "Binghatti"} · 2026–2030 · Search & filter`}>
+            <Section title={`${activeProjects.length} Active Projects`} sub={`${currentDeveloper?.name || "Emaar Properties"} · 2026–2030 · Search & filter`}>
               <div className="kpi-grid" style={{ display: "grid", gap: 12, marginTop: 16 }}>
                 <KPI label="Total Projects" value={activeProjects.length} sub="18 under construction · 30 off-plan" delay={1} onClick={() => setSelectedKPI({ label: "Total Projects", value: "48", color: T.gold, description: "48 active Emaar projects across UAE.", source: "DXB Analytics", sourceUrl: "#", items: [{ label: "Under Construction", value: "18", note: "Active building" }, { label: "Off-Plan", value: "30", note: "Pre-launch" }, { label: "Communities", value: "11", note: "Master-planned" }, { label: "Branded", value: "10", note: "Address, Vida, Palace" }], trend: null })} />
                 <KPI label="Communities" value="11" sub="DHE · DCH · EBF · GPC + 7 more" delay={2} />
@@ -3417,23 +3525,35 @@ export default function EmaarDashboardV2() {
             )}
 
             {/* Community Summary */}
-            <Section title="Communities Overview" sub="11 master-planned communities">
+            <Section title={`${activeCommunities.length} Communities — ${currentDeveloper?.name || "Emaar"}`} sub={`${selectedDeveloper === "emaar" ? "11 master-planned communities" : `${currentDeveloper?.name || ""} communities`} · Click for details`}>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 12, marginTop: 16 }}>
-                {emaarCommunities.filter(c => c.name).map((c, i) => (
-                  <div key={c.district} className="chart-box fade-up" style={{ animationDelay: `${i*0.05}s`, padding: 14, cursor: "pointer", transition: "border 0.2s" }} onClick={() => setSelectedCommunity(c.name)} title="Click for full community details">
+                {(activeCommunities.length > 0 ? activeCommunities : emaarCommunities.filter(c => c.name).map(c => ({ id: c.district, name: c.name, avgPpsf: c.avgPpsf, avgYield: c.avgYield, projectCount: c.projects, isLive: false }))).map((c, i) => (
+                  <div key={c.id || c.district} className="chart-box fade-up" style={{ animationDelay: `${i*0.05}s`, padding: 14, cursor: "pointer", transition: "border 0.2s" }} onClick={() => setSelectedCommunity(c.name)} title="Click for full community details">
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
                       <div>
-                        <span style={{ fontFamily: "'Fraunces', serif", fontSize: 14, fontWeight: 700, color: T.gold }}>{c.district}</span>
+                        <span style={{ fontFamily: "'Fraunces', serif", fontSize: 14, fontWeight: 700, color: T.gold }}>{c.id || c.district}</span>
                         <span style={{ fontSize: 11, color: T.textSecondary, marginLeft: 8 }}>{c.name}</span>
                       </div>
-                      <span style={{ fontSize: 11, fontWeight: 600, color: T.teal }}>{c.projects} projects</span>
+                      <span style={{ fontSize: 11, fontWeight: 600, color: c.isLive ? T.teal : T.textMuted }}>
+                        {(c.projectCount || c.projects || 0)} projects {c.isLive ? "· live" : ""}
+                      </span>
                     </div>
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 6, fontSize: 11 }}>
-                      <div><span style={{ color: T.textMuted, fontSize: 9, display: "block" }}>AVG PPSF</span><span style={{ color: T.white, fontWeight: 600 }}>{c.avgPpsf ? `AED ${c.avgPpsf.toLocaleString()}` : "—"}</span></div>
-                      <div><span style={{ color: T.textMuted, fontSize: 9, display: "block" }}>YIELD</span><span style={{ color: T.white, fontWeight: 600 }}>{c.avgYield ? `${c.avgYield}%` : "—"}</span></div>
-                      <div><span style={{ color: T.textMuted, fontSize: 9, display: "block" }}>ACRES</span><span style={{ color: T.white, fontWeight: 600 }}>{c.acres ? c.acres.toLocaleString() : "—"}</span></div>
+                      <div>
+                        <span style={{ color: T.textMuted, fontSize: 9, display: "block" }}>AVG PPSF {c.isLive ? "🟢" : ""}</span>
+                        <span style={{ color: T.white, fontWeight: 600 }}>{c.ppsf || c.avgPpsf ? `AED ${(c.ppsf || c.avgPpsf).toLocaleString()}` : "—"}</span>
+                      </div>
+                      <div>
+                        <span style={{ color: T.textMuted, fontSize: 9, display: "block" }}>YIELD</span>
+                        <span style={{ color: T.white, fontWeight: 600 }}>{c.avgYield ? `${c.avgYield}%` : "—"}</span>
+                      </div>
+                      <div>
+                        <span style={{ color: T.textMuted, fontSize: 9, display: "block" }}>TYPE</span>
+                        <span style={{ color: T.white, fontWeight: 600 }}>{c.type || "—"}</span>
+                      </div>
                     </div>
-                    <div style={{ fontSize: 10, color: T.textMuted, marginTop: 6 }}>{c.buyer} · {c.strengths}</div>
+                    {c.buyer && <div style={{ fontSize: 10, color: T.textMuted, marginTop: 6 }}>{c.buyer} · {c.strengths}</div>}
+                    {c.location && !c.buyer && <div style={{ fontSize: 10, color: T.textMuted, marginTop: 6 }}>{c.location}</div>}
                   </div>
                 ))}
               </div>
@@ -5725,7 +5845,7 @@ export default function EmaarDashboardV2() {
           })()}
 
           {/* ─── MAP / COMMUNITIES TAB ─── */}
-          {tab === "Map" && <><CommunityMapTab activeProjects={activeProjects} liveCommunityROI={liveCommunityROI} setTab={setTab} /><TabSources sources={[{ label: "Google Maps API", url: "https://maps.google.com" }, { label: "Emaar Community Boundaries" }, { label: "DLD Zoning Data", url: "https://dubailand.gov.ae" }, { label: "OpenStreetMap", url: "https://www.openstreetmap.org" }]} /></>}
+          {tab === "Map" && <><CommunityMapTab activeProjects={activeProjects} liveCommunityROI={liveCommunityROI} communityCoords={allCommunityCoords} selectedDeveloper={selectedDeveloper} setTab={setTab} /><TabSources sources={[{ label: "Google Maps API", url: "https://maps.google.com" }, { label: "Emaar Community Boundaries" }, { label: "DLD Zoning Data", url: "https://dubailand.gov.ae" }, { label: "OpenStreetMap", url: "https://www.openstreetmap.org" }]} /></>}
 
           {/* ─── LAUNCH CALENDAR TAB ─── */}
           {tab === "Launch Calendar" && (() => {
@@ -7343,8 +7463,10 @@ export default function EmaarDashboardV2() {
             {/* ─── PROJECT DETAIL MODAL ─── */}
       {/* COMMUNITY DETAIL MODAL */}
       {selectedCommunity && (() => {
-        const intel = communityIntel[selectedCommunity];
-        const comm = emaarCommunities.find(x => x.name === selectedCommunity);
+        const intel = (liveCommunityIntel && liveCommunityIntel[selectedCommunity]) || communityIntel[selectedCommunity];
+        // Search allCommunities first (covers all 7 developers), then emaarCommunities fallback
+        const comm = allCommunities.find(x => x.name === selectedCommunity)
+          || emaarCommunities.find(x => x.name === selectedCommunity);
         if (!intel) return null;
         const commProjects = activeProjects.filter(p => p.community === selectedCommunity);
         return (
