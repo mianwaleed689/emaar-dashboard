@@ -126,4 +126,4 @@ export const meraasM = [
   { name:"Dubai Harbour",               scale:"AED 15B+ GDV", units:"Mixed",          sqft:"Largest marina MENA",        timeline:"2019–2026",    status:"Under Construction", record:"1,100 yacht berths — largest MENA marina" },
 ];
 
-export default { identity:meraasIdentity, live:meraasLive, financialHistory:meraasFinancialHistory, communities:meeraasC, projects:meraasProjects, risks:meraasRisks, segments:meraasSegments, radar:meraasRadar, megaProjects:meeraasM, yields:meraasYields, branded:meeraasB };
+export default { identity:meraasIdentity, live:meraasLive, financialHistory:meraasFinancialHistory, communities:meraasC, projects:meraasProjects, risks:meraasRisks, segments:meraasSegments, radar:meraasRadar, megaProjects:meraasM, yields:meraasYields, branded:meraasB };
