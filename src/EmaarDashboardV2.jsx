@@ -2595,7 +2595,7 @@ export default function EmaarDashboardV2() {
                     style={{ background:T.surfaceAlt, borderRadius:12, border:`1px solid ${T.border}`, padding:"14px 10px", cursor:"pointer", transition:"all 0.2s", textAlign:"center" }}
                     onMouseEnter={e=>{e.currentTarget.style.borderColor=dev.color+"60";e.currentTarget.style.background=dev.color+"08";}}
                     onMouseLeave={e=>{e.currentTarget.style.borderColor=T.border;e.currentTarget.style.background=T.surfaceAlt;}}>
-                    <div style={{ fontSize:22, marginBottom:6 }}>{dev.flag}</div>
+                    <div style={{ fontSize:9, fontWeight:700, color:T.white, background:"rgba(255,255,255,0.08)", borderRadius:6, padding:"2px 6px", marginBottom:6, letterSpacing:1 }}>{dev.id==="sobha"?"🇮🇳 IND":"🇦🇪 UAE"}</div>
                     <div style={{ fontSize:12, fontWeight:700, color:T.white, marginBottom:3 }}>{dev.name}</div>
                     <div style={{ fontSize:10, color:dev.color, fontWeight:600, marginBottom:4 }}>{dev.sales}</div>
                     <div style={{ fontSize:9, color:T.textMuted, marginBottom:6 }}>{projectsByDeveloper[dev.id]?.length||0} projects</div>
