@@ -1783,281 +1783,11 @@ export default function EmaarDashboardV2() {
   // Load projects from Firestore (runs for ALL users — guests and logged-in)
   const [projectsLoading, setProjectsLoading] = useState(true);
 
-  useEffect(() => {
-    const loadProjects = async () => {
-      setProjectsLoading(true);
-      try {
-        // Initial projectData load for first paint — onSnapshot takes over immediately
-        const pdSnap = await getDocs(collection(db, "projectData"));
-        const overrides = {};
-        pdSnap.forEach(d => { overrides[d.id.replace("project_", "")] = d.data(); });
-        setLiveProjects(overrides);
-        // projects, yieldData, communityROI, communityIntel all handled by live onSnapshot listeners
-
-        // yieldData now live via onSnapshot
-        // communityROI now live via onSnapshot
-
-        // communityIntel now live via onSnapshot
-
-        // tabData now live via onSnapshot master listener
-      } catch (e) { console.log("Firestore not available, using static data"); }
-      setProjectsLoading(false);
-    };
-    // ── Live EMAAR stock price via Yahoo Finance (free, no key) ──
-    const fetchEmaarStock = async () => {
-      try {
-        const res = await fetch("https://query1.finance.yahoo.com/v8/finance/chart/EMAAR.DU?interval=1d&range=1d");
-        const data = await res.json();
-        const price = data?.chart?.result?.[0]?.meta?.regularMarketPrice;
-        const prev  = data?.chart?.result?.[0]?.meta?.chartPreviousClose;
-        if (price && prev) {
-          const chg = ((price - prev) / prev * 100).toFixed(2);
-          setEmaarStockPrice({ price: price.toFixed(2), change: chg, up: price >= prev });
-        }
-      } catch(e) { /* silent */ }
-    };
-    fetchEmaarStock();
-    const stockInterval = setInterval(fetchEmaarStock, 300000);
-    loadProjects(); // Load for everyone — no isLoggedIn gate
-
-    // priceAlerts now live via user onSnapshot listener
-
-    // ── AI Insights — generated fresh if not in cache (cache read now via onSnapshot) ──
-    (async () => {
-      try {
-        const oneWeekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
-        if (aiInsights?.length > 0) return; // already loaded by onSnapshot
-        {
-          // Generate fresh insights via Claude API
-          setInsightsLoading(true);
-          const res = await fetch("https://api.anthropic.com/v1/messages", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              model: "claude-sonnet-4-20250514",
-              max_tokens: 1000,
-              messages: [{ role: "user", content: `You are a Dubai real estate analyst. Generate exactly 5 sharp, data-driven market insights for Dubai property investors right now (${new Date().toLocaleDateString("en-AE", { month: "long", year: "numeric" })}). Use these verified 2025 facts: Dubai total market AED 682.5B, 214,912 transactions, Emaar FY2025 sales AED 80.4B (+16% YoY), avg yield city 6.9%, JVC yields 8-9%, EIBOR 3.47%, Downtown avg AED 2,800/sqft, DLD transfer fee 4%, off-plan 60%+ of market. Return ONLY a JSON array of 5 objects, no markdown, no preamble: [{"title":"...","insight":"...","tag":"Yield|Price|Risk|Macro|Opportunity","direction":"up|down|neutral"}]` }]
-            })
-          });
-          const apiData = await res.json();
-          const text = apiData.content?.[0]?.text || "[]";
-          const parsed = JSON.parse(text.replace(/```json|```/g, "").trim());
-          setAiInsights(parsed);
-          // Cache for a week
-          try { await setDoc(doc(db, "aiInsights", "latest"), { insights: parsed, generatedAt: Date.now() }); } catch(e) {}
-          setInsightsLoading(false);
-        }
-      } catch(e) { setInsightsLoading(false); }
-    })();
-
-    // ── Load Paddle.js for billing ──
-    if (!window.Paddle) {
-      const script = document.createElement("script");
-      script.src = "https://cdn.paddle.com/paddle/v2/paddle.js";
-      script.onload = () => {
-        // ── PASTE YOUR PADDLE CLIENT TOKEN BELOW ──
-        // Get it from paddle.com → Developer → Authentication → Client-side token
-        const PADDLE_CLIENT_TOKEN = "live_4393f28d4ec943ebe056835651f";
-        if (!PADDLE_CLIENT_TOKEN.includes("PASTE")) {
-          window.Paddle.Initialize({ token: PADDLE_CLIENT_TOKEN });
-        }
-      };
-      document.head.appendChild(script);
-    }
-
-    return () => clearInterval(stockInterval);
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Use merged Firestore+static data if available, otherwise pure static fallback
-  // activeProjects: curated 48 from data.js + any genuinely NEW projects added via radar
-  // For Emaar: base 48 + any radar-added projects NOT already in the 48 (new launches)
-  // ── UNIFIED ACTIVE PROJECTS — powered by data_master.js ──────────────────
-  // Single source of truth: allProjects[] from data_master has all 303 projects
-  // Emaar: 208 projects from data_emaar_complete + live Firestore overrides + radar adds
-  // Others: from their data_{developer}.js files (already in allProjects[])
-  // Firestore projects collection: additional radar-detected or admin-added projects
-
-  const emaarBaseNames = new Set(emaarProjects.map(p => (p.name || "").toLowerCase().trim()));
-
-  // Emaar: static 208 + Firestore price overrides + radar new launches
-  const emaarActiveProjects = [
-    ...emaarProjects.map(p => {
-      const ov = liveProjects[String(p.id)] || liveProjects["project_"+p.id] || liveProjects[p.id];
-      return ov ? { ...p, ...ov } : p;
-    }),
-    ...extraProjects.filter(p =>
-      !emaarBaseNames.has((p.name || "").toLowerCase().trim()) &&
-      (!p.developerId || p.developerId === "emaar")
-    )
-  ];
-
-  // Other developers: use allProjects[] from data_master (single clean source)
-  // Merge with any Firestore-added projects for that developer
-  // Normalize units from either Object ({studio:{total,sold}}) or Array ([{type,available,total}]) format
-  const getUnitEntries = (units) => {
-    if (!units) return [];
-    if (Array.isArray(units)) {
-      return units.filter(u => u && (u.total || 0) > 0).map(u => [u.type || "Unit", { total: u.total || 0, sold: (u.total || 0) - (u.available || 0) }]);
-    }
-    return Object.entries(units).filter(([, d]) => d && d.total > 0);
-  };
-
-  const toggleCompare = (p) => {
-    setCompareList(prev => {
-      const exists = prev.find(x => x.id === p.id);
-      if (exists) {
-        notify("Removed " + p.name + " from comparison");
-        return prev.filter(x => x.id !== p.id);
-      }
-      if (prev.length >= 3) {
-        notify("\u26A0\uFE0F Max 3 projects for comparison");
-        return prev;
-      }
-      notify("\u2705 Added " + p.name + " to comparison");
-      return [...prev, p];
-    });
-  };
-
   // Listen to Firebase auth state + fetch user profile
 
   // ── MASTER LIVE LISTENERS — all Firestore real-time subscriptions ──────────
-  useEffect(() => {
-    const unsubs = [];
-
-    // projectData overrides (prices, PPSF, images edited in Admin)
-    unsubs.push(onSnapshot(collection(db, "projectData"), (snap) => {
-      const overrides = {};
-      snap.forEach(d => { overrides[d.id.replace("project_", "")] = d.data(); });
-      setLiveProjects(overrides);
-    }));
-
-    // projects collection (radar adds, DAMAC, Aldar etc)
-    const baseIds = new Set(emaarProjects.map(p => String(p.id)));
-    const baseNames = new Set(emaarProjects.map(p => (p.name || "").toLowerCase().trim()).filter(Boolean));
-    unsubs.push(onSnapshot(collection(db, "projects"), (snap) => {
-      const fsProjects = [];
-      snap.forEach(d => {
-        const data = { ...d.data(), id: d.id, fromFirestore: true };
-        if (data.developerId === "emaar" && baseIds.has(String(data.id?.toString().replace("emaar_", "")))) return;
-        if (data.developerId === "emaar" && baseNames.has((data.name || "").toLowerCase().trim())) return;
-        if (!baseIds.has(String(data.id))) fsProjects.push(data);
-      });
-      setExtraProjects(prev => {
-        const overridesOnly = prev.filter(p => !p.fromFirestore);
-        const seen = new Set(overridesOnly.map(p => String(p.id)));
-        return [...overridesOnly, ...fsProjects.filter(p => !seen.has(String(p.id)))];
-      });
-    }));
-
-    // communityROI
-    unsubs.push(onSnapshot(collection(db, "communityROI"), (snap) => {
-      if (!snap.size) return;
-      const map = {};
-      snap.forEach(d => { map[d.id] = { ...communityROI[d.id], ...d.data() }; });
-      setLiveCommunityROI(map);
-    }));
-
-    // communityIntel
-    unsubs.push(onSnapshot(collection(db, "communityIntel"), (snap) => {
-      if (!snap.size) return;
-      const map = {};
-      snap.forEach(d => { map[d.id] = { ...communityIntel[d.id], ...d.data() }; });
-      setLiveCommunityIntel(map);
-    }));
-
-    // yieldData
-    unsubs.push(onSnapshot(collection(db, "yieldData"), (snap) => {
-      if (!snap.size) return;
-      const yieldOverrides = {};
-      snap.forEach(d => { yieldOverrides[d.id] = d.data(); });
-      const merged = emaarYields.map(y => {
-        const ov = yieldOverrides[`${y.community}_${y.unit}`];
-        return ov ? { ...y, ...ov } : y;
-      }).map(y => ({ label: y.unit, community: y.community, rent: (y.rent||0)/1000, price: (y.price||0)/1000, gross: y.gross, net: y.net, demand: y.demand === "Very High" ? "V.High" : y.demand === "Moderate-High" ? "High" : y.demand, visa: y.visa }));
-      setLiveYields(merged);
-    }));
-
-    // tabData/yieldData
-    unsubs.push(onSnapshot(doc(db, "tabData", "yieldData"), (snap) => {
-      if (!snap.exists() || !snap.data().rows?.length) return;
-      const mapped = snap.data().rows.map(r => ({
-        label: "Apt", community: r.community,
-        rent: parseFloat(r.avgRent || 0) / 1000, price: 0,
-        gross: parseFloat(r.grossYield || 0), net: parseFloat(r.netYield || 0),
-        demand: r.trend === "rising" ? "V.High" : "High", visa: false
-      }));
-      setLiveYields(mapped);
-    }));
-
-    // liveMarketData/latest (written by cron every 6h)
-    unsubs.push(onSnapshot(doc(db, "liveMarketData", "latest"), (snap) => {
-      if (!snap.exists()) return;
-      const latest = snap.data();
-      const bayutMap = {};
-      Object.values(latest.communities || {}).forEach(c => { bayutMap[c.community] = c; bayutMap[c.district] = c; });
-      setLiveBayutData(bayutMap);
-      setLastDataSync(latest.syncedAt ? new Date(latest.syncedAt) : null);
-    }));
-
-    // tabData collections (all dashboard tab content)
-    const tabKeys = [
-      { key: "developerHealth",    setter: setLiveDevHealth },
-      { key: "dldVolumes",         setter: setLiveDLDVolumes },
-      { key: "strLtrData",         setter: setLiveSTRData },
-      { key: "serviceCharges",     setter: setLiveServiceCharges },
-      { key: "competitorData",     setter: setLiveCompetitors },
-      { key: "mortgageRates",      setter: setLiveMortgageRates },
-      { key: "neighbourhoodScores",setter: setLiveNeighbourhoods },
-      { key: "marketData",         setter: setLiveMarketData },
-      { key: "financials",         setter: setLiveFinancials },
-      { key: "riskFactors",        setter: setLiveRisk },
-    ];
-    tabKeys.forEach(({ key, setter }) => {
-      unsubs.push(onSnapshot(doc(db, "tabData", key), (snap) => {
-        if (snap.exists() && snap.data().rows?.length > 0) setter(snap.data().rows);
-      }));
-    });
-
-    // platformSettings/tabs (which tabs are on/off)
-    unsubs.push(onSnapshot(doc(db, "platformSettings", "tabs"), (snap) => {
-      if (snap.exists()) setTabSettings(snap.data());
-    }));
-
-    // developers list
-    unsubs.push(onSnapshot(collection(db, "developers"), (snap) => {
-      if (!snap.size) return;
-      const devs = [];
-      snap.forEach(d => devs.push({ id: d.id, ...d.data() }));
-      devs.sort((a, b) => (a.phase || 1) - (b.phase || 1));
-      setAllDevelopers(devs);
-    }));
-
-    // aiInsights/latest
-    unsubs.push(onSnapshot(doc(db, "aiInsights", "latest"), (snap) => {
-      if (!snap.exists()) return;
-      const data = snap.data();
-      const oneWeekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
-      if (data.insights && data.generatedAt > oneWeekAgo) setAiInsights(data.insights);
-    }));
-
-    return () => unsubs.forEach(u => { try { u(); } catch {} });
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // USER-SCOPED LIVE LISTENERS — portfolio, watchlist, price alerts
-  useEffect(() => {
-    if (!isLoggedIn || !auth.currentUser) return;
-    const unsubs = [];
-    unsubs.push(onSnapshot(doc(db, "portfolios", auth.currentUser.uid), (snap) => {
-      if (snap.exists()) setMyPortfolio(snap.data().holdings || []);
-    }));
-    unsubs.push(onSnapshot(doc(db, "watchlists", auth.currentUser.uid), (snap) => {
-      if (snap.exists()) setWatchlist(snap.data().projects || []);
-    }));
-    unsubs.push(onSnapshot(doc(db, "priceAlerts", auth.currentUser.uid), (snap) => {
-      if (snap.exists()) setMyAlerts(snap.data().alerts || []);
-    }));
-    return () => unsubs.forEach(u => { try { u(); } catch {} });
-  }, [isLoggedIn]); // eslint-disable-line react-hooks/exhaustive-deps
+  // USER-SCOPED LIVE LISTENERS — now handled by DXBContext
+  // portfolio, watchlist, priceAlerts all come from context via useDXB()
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
@@ -2180,10 +1910,8 @@ export default function EmaarDashboardV2() {
 
   // Watchlist now live via DXBContext (toggleWatchlist from context)
 
-  // Price alerts now live via user onSnapshot listener
-
+  // Price alerts — write directly to Firestore, DXBContext onSnapshot updates myAlerts
   const saveAlerts = async (alerts) => {
-    setMyAlerts(alerts);
     if (auth.currentUser) {
       try { await setDoc(doc(db, "priceAlerts", auth.currentUser.uid), { alerts, updatedAt: new Date().toISOString() }); } catch(e) {}
     }
@@ -2221,30 +1949,7 @@ export default function EmaarDashboardV2() {
     }
   }, [myAlerts, activeProjects]);
 
-  // NOTIFICATIONS — live listener so admin messages appear instantly
-  useEffect(() => {
-    if (!isLoggedIn || !auth.currentUser) return;
-    const uid = auth.currentUser.uid;
-    const unsub = onSnapshot(collection(db, "notifications"), (snap) => {
-      const userNotifs = [];
-      snap.forEach(d => {
-        const data = d.data();
-        if (data.userId === uid || data.userId === "all") {
-          userNotifs.push({ id: d.id, ...data });
-        }
-      });
-      userNotifs.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
-      setNotifications(userNotifs.slice(0, 20));
-      setUnreadCount(userNotifs.filter(n => !n.read).length);
-    });
-    return () => unsub();
-  }, [isLoggedIn]);
-
-  const markNotifRead = async (id) => {
-    setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
-    setUnreadCount(prev => Math.max(0, prev - 1));
-    try { await setDoc(doc(db, "notifications", id), { read: true }, { merge: true }); } catch (e) {}
-  };
+  // NOTIFICATIONS — handled by DXBContext (notifications, unreadCount, markNotificationRead)
 
   // ONBOARDING - show for new users on first login
   useEffect(() => {
@@ -8363,7 +8068,6 @@ export default function EmaarDashboardV2() {
                 setAlertSaving(true);
                 const newAlert = { ...alertForm, id: Date.now(), createdAt: new Date().toISOString(), active: true };
                 const updated = [...myAlerts, newAlert];
-                setMyAlerts(updated);
                 try { await setDoc(doc(db, "priceAlerts", user), { alerts: updated, updatedAt: new Date().toISOString() }); } catch(e) {}
                 setAlertSaving(false);
               }} style={{ width: "100%", padding: "10px 0", background: alertSaving ? T.surfaceAlt : `linear-gradient(135deg, ${T.gold}, #B8912F)`, color: alertSaving ? T.textMuted : T.bg, border: "none", borderRadius: 10, fontWeight: 700, fontSize: 13, cursor: alertSaving ? "default" : "pointer", fontFamily: "'Outfit',sans-serif", transition: "all 0.2s" }}>
@@ -8383,7 +8087,6 @@ export default function EmaarDashboardV2() {
                 <span style={{ fontSize: 9, padding: "3px 8px", borderRadius: 6, background: a.active ? "rgba(16,185,129,0.1)" : "rgba(239,68,68,0.1)", color: a.active ? T.green : "#EF4444", fontWeight: 700 }}>{a.active ? "ACTIVE" : "PAUSED"}</span>
                 <button type="button" onClick={async () => {
                   const updated = myAlerts.filter((_, j) => j !== i);
-                  setMyAlerts(updated);
                   try { await setDoc(doc(db, "priceAlerts", user), { alerts: updated, updatedAt: new Date().toISOString() }); } catch(e) {}
                 }} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 16, padding: "4px 6px", borderRadius: 6, transition: "color 0.2s" }} onMouseEnter={e => e.currentTarget.style.color = "#EF4444"} onMouseLeave={e => e.currentTarget.style.color = T.textMuted}>✕</button>
               </div>
@@ -8730,7 +8433,7 @@ export default function EmaarDashboardV2() {
                 <div style={{ fontSize: 11 }}>Set alerts on project cards 🔕 to get notified of price changes.</div>
               </div>
             ) : notifications.map((n, i) => (
-              <div key={n.id} onClick={() => markNotifRead(n.id)} style={{ padding: "14px 20px", borderBottom: `1px solid ${T.border}`, cursor: "pointer", background: n.read ? "transparent" : "rgba(212,168,67,0.04)", transition: "background 0.2s" }}
+              <div key={n.id} onClick={() => markNotificationRead(n.id)} style={{ padding: "14px 20px", borderBottom: `1px solid ${T.border}`, cursor: "pointer", background: n.read ? "transparent" : "rgba(212,168,67,0.04)", transition: "background 0.2s" }}
                 onMouseEnter={e => e.currentTarget.style.background = T.surfaceAlt}
                 onMouseLeave={e => e.currentTarget.style.background = n.read ? "transparent" : "rgba(212,168,67,0.04)"}>
                 <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
