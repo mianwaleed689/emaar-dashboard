@@ -12,6 +12,7 @@ import { collection, getDocs, doc, getDoc, setDoc, updateDoc, deleteDoc, onSnaps
 // Single source of truth: data_master.js imports all 7 developer files
 // and exports allProjects[], allDevelopers[], allCommunities[], helpers
 // Iron Rule: Never import directly from data_*.js in this file
+import { useDXB } from "./context/DXBContext";
 import {
   T,
   // Emaar data (from data.js via data_master)
@@ -1644,33 +1645,50 @@ function EiborAdminPanel({ db, T }) {
 }
 
 export default function EmaarDashboardV2() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  // ── Pull shared state from DXBContext ─────────────────────────────────────
+  // All Firestore listeners, auth, user data, live projects live in DXBContext.
+  // This component only holds LOCAL UI state (modals, forms, filters).
+  const {
+    isLoggedIn, firebaseUser, userName, userTier, userRole, adminMode,
+    authLoading, isSuspended, isVerified, verifiedLevel, kycStatus, trialDaysLeft,
+    tab, setTab,
+    selectedDeveloper, setSelectedDeveloper,
+    selectedProject, setSelectedProject,
+    selectedCommunity, setSelectedCommunity,
+    sidebarOpen, setSidebarOpen,
+    toast, notify,
+    isRefreshing, globalRefresh,
+    time,
+    liveProjects, extraProjects,
+    liveMarketData, liveCommunityROI, liveCommunityIntel,
+    liveYields, eiborRates,
+    newsArticles, aiInsights,
+    liveDevHealth, liveDLDVolumes, liveSTRData,
+    liveServiceCharges, liveCompetitors, liveMortgageRates,
+    liveNeighbourhoods, liveFinancials, liveRisk,
+    tabSettings, emaarStockPrice,
+    activeProjects, projectsByDeveloper, currentDeveloper,
+    activeCommunities, allDevelopersMerged, allCommunityCoords,
+    myPortfolio, watchlist, myAlerts, notifications, unreadCount,
+    savePortfolio, toggleWatchlist, markNotificationRead, updateProject,
+    canAccess, isTabVisible, tierLevel,
+  } = useDXB();
+
+  // ── Local UI state only (not shared with Admin Panel) ────────────────────
   const [user, setUser] = useState("");
-  const [userName, setUserName] = useState("");
-  const [userTier, setUserTier] = useState("free");
-  const [firebaseUser, setFirebaseUser] = useState(null);
-  const [trialDaysLeft, setTrialDaysLeft] = useState(0);
   const [showLogin, setShowLogin] = useState(false);
   const [showUpgrade, setShowUpgrade] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const [profileEdit, setProfileEdit] = useState({ name: "" });
   const [showCheckout, setShowCheckout] = useState(null);
   const [checkoutStep, setCheckoutStep] = useState(1);
-  const [myPortfolio, setMyPortfolio] = useState([]);
   const [showAddPortfolio, setShowAddPortfolio] = useState(null);
   const [portfolioForm, setPortfolioForm] = useState({ units: 1, investedAmount: "", purchaseDate: "", unitType: "1BR", notes: "" });
   const [editHoldingIdx, setEditHoldingIdx] = React.useState(null);
 
-  // Watchlist
-  const [watchlist, setWatchlist] = useState([]);
+  // Local UI state (not in context — component-owned)
   const [showWatchlist, setShowWatchlist] = useState(false);
-
-  // Notifications
-  const [notifications, setNotifications] = useState([]);
   const [showNotifications, setShowNotifications] = useState(false);
-  const [unreadCount, setUnreadCount] = useState(0);
-
-  // Price Alerts (old per-project alert modal — kept for project cards)
   const [showSetAlert, setShowSetAlert] = React.useState(null);
   const [selectedNbhd, setSelectedNbhd] = React.useState(null);
   const [scSort, setScSort] = React.useState("avg");
@@ -1679,15 +1697,13 @@ export default function EmaarDashboardV2() {
   const [dldCommunity, setDldCommunity] = React.useState("All");
   const [dldDeveloper, setDldDeveloper] = React.useState("All");
   const [dldType, setDldType] = React.useState("All");
-  const [dldTxType, setDldTxType] = React.useState("All"); // All | Off-Plan | Ready
+  const [dldTxType, setDldTxType] = React.useState("All");
   const [avmCommunity, setAvmCommunity] = React.useState("Dubai Hills Estate");
   const [avmType, setAvmType] = React.useState("Apartment");
   const [avmBeds, setAvmBeds] = React.useState("1BR");
   const [avmSize, setAvmSize] = React.useState(750);
   const [avmYear, setAvmYear] = React.useState(2023);
   const [roiMode, setRoiMode] = React.useState("summary");
-
-  // Onboarding
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [onboardingStep, setOnboardingStep] = useState(0);
 
@@ -1696,14 +1712,13 @@ export default function EmaarDashboardV2() {
     window.addEventListener("dxb-checkout", handler);
     return () => window.removeEventListener("dxb-checkout", handler);
   }, []);
-  const [toast, setToast] = useState("");
-  const notify = (msg) => { setToast(msg); setTimeout(() => setToast(""), 3000); };
+
   const [adminUsers, setAdminUsers] = useState([]);
   const [adminLoading, setAdminLoading] = useState(false);
   const [adminError, setAdminError] = useState("");
   const fetchAdminUsersRef = useRef(null);
 
-  // Tier access helper
+  // Tier access helper (also available via canAccess() from context)
   const isPro = userTier === "admin" || userTier === "pro" || userTier === "pro_trial" || userTier === "enterprise";
 
   // Upgrade overlay for locked content
@@ -1715,7 +1730,6 @@ export default function EmaarDashboardV2() {
     </div>
   );
 
-  // Blur wrapper for free users
   // eslint-disable-next-line no-unused-vars
   const BlurGate = ({ children, locked, message, compact }) => (
     <div style={{ position: "relative" }}>
@@ -1725,64 +1739,31 @@ export default function EmaarDashboardV2() {
       {locked && <UpgradeOverlay message={message} compact={compact} />}
     </div>
   );
-  const [tab, setTab] = useState(() => { try { const urlTab = new URLSearchParams(window.location.search).get("tab"); return urlTab || sessionStorage.getItem("dxb_active_tab") || "Overview"; } catch(e) { return "Overview"; } });
+
   const [selectedKPI, setSelectedKPI] = useState(null);
-  const [breadcrumb, setBreadcrumb] = useState([]); // [{label, action}]
+  const [breadcrumb, setBreadcrumb] = useState([]);
   const [projectPage, setProjectPage] = useState(1);
   const PROJECTS_PER_PAGE = 12;
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [time, setTime] = useState(new Date());
-  const [authLoading, setAuthLoading] = useState(true);
-  const [isSuspended, setIsSuspended] = useState(false);
-  const [isVerified, setIsVerified] = useState(false);
-  const [verifiedLevel, setVerifiedLevel] = useState(null);
   const [showKYC, setShowKYC] = useState(false);
   const [kycForm, setKycForm] = useState({ name: "", phone: "", nationality: "", dob: "", address: "", level: "basic" });
   const [kycSubmitting, setKycSubmitting] = useState(false);
-  const [kycStatus, setKycStatus] = useState(null);
 
-  // Set page title
   useEffect(() => { document.title = "DXB Analytics"; }, []);
+
   const [projectSearch, setProjectSearch] = useState("");
   const [projectFilter, setProjectFilter] = useState("All");
   const [projectTier, setProjectTier] = useState("All");
   const [projectHandover, setProjectHandover] = useState("All");
   const [projectPriceMax, setProjectPriceMax] = useState(20);
-  const [liveProjects, setLiveProjects] = useState({});
-  const [extraProjects, setExtraProjects] = useState([]);
-  const [liveYields, setLiveYields] = useState([]);
-  // ── Price Alerts ──
   const [showAlerts, setShowAlerts] = useState(false);
-  const [myAlerts, setMyAlerts] = useState([]);
   const [alertForm, setAlertForm] = useState({ community: "Dubai Hills Estate", metric: "grossYield", condition: "above", value: "8" });
   const [alertSaving, setAlertSaving] = useState(false);
-  // ── AI Insights ──
-  const [aiInsights, setAiInsights] = useState([]);
   const [insightsLoading, setInsightsLoading] = useState(false);
-  const [liveDevHealth, setLiveDevHealth] = useState([]);
-  const [liveDLDVolumes, setLiveDLDVolumes] = useState([]);
-  const [liveSTRData, setLiveSTRData] = useState([]);
-  const [liveServiceCharges, setLiveServiceCharges] = useState([]);
-  const [liveCompetitors, setLiveCompetitors] = useState([]);
-  const [liveMortgageRates, setLiveMortgageRates] = useState([]);
-  const [liveNeighbourhoods, setLiveNeighbourhoods] = useState([]);
-  const [liveMarketData, setLiveMarketData] = useState([]);
-  const [liveFinancials, setLiveFinancials] = useState([]);
-  const [liveRisk, setLiveRisk] = useState([]);
   const [liveBayutData, setLiveBayutData] = useState({});
   const [lastDataSync, setLastDataSync] = useState(null);
-  const [allDevelopers, setAllDevelopers] = useState([]);
-  const [selectedDeveloper, setSelectedDeveloper] = useState("emaar");
-  const [emaarStockPrice, setEmaarStockPrice] = useState(null);
-  const [tabSettings, setTabSettings] = useState({});
-  const [liveCommunityROI, setLiveCommunityROI] = useState({});
-  const [liveCommunityIntel, setLiveCommunityIntel] = useState({});
-  const [selectedProject, setSelectedProject] = useState(null);
-  const [selectedCommunity, setSelectedCommunity] = useState(null);
   const [expandedMega, setExpandedMega] = useState(null);
   const [compareList, setCompareList] = useState([]);
   const [showCompare, setShowCompare] = useState(false);
-  // Flip Calculator state (lifted up to prevent reset on re-render)
   const [investScoreFilter, setInvestScoreFilter] = useState("All");
   const [investExpandedComm, setInvestExpandedComm] = useState(null);
   const [flipProjId, setFlipProjId] = useState("");
