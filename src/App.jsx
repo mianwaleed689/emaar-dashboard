@@ -46,8 +46,8 @@ function PageLoader() {
 
 // AdminRoute — only superAdmin/admin can access /admin
 function AdminRoute() {
-  const { adminMode, authLoading, isLoggedIn } = useDXB();
-  if (authLoading) return <PageLoader />;
+  const { adminMode, authLoading, isLoggedIn, profileLoaded } = useDXB();
+  if (authLoading || !profileLoaded) return <PageLoader />;
   if (!isLoggedIn) return <Navigate to="/" replace />;
   if (!adminMode) return <Navigate to="/dashboard" replace />;
   return (
