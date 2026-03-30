@@ -10,6 +10,7 @@
 import React, { Suspense } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { DXBProvider, useDXB } from "./context/DXBContext";
+import { I18nProvider } from "./i18n";
 
 // Lazy-load heavy pages for faster initial paint
 const EmaarDashboardV2 = React.lazy(() => import("./EmaarDashboardV2"));
@@ -60,6 +61,7 @@ function App() {
   return (
     <BrowserRouter>
       {/* DXBProvider wraps everything — one data load for the whole app */}
+      <I18nProvider>
       <DXBProvider>
         <Suspense fallback={<PageLoader />}>
           <Routes>
@@ -72,6 +74,7 @@ function App() {
           </Routes>
         </Suspense>
       </DXBProvider>
+      </I18nProvider>
     </BrowserRouter>
   );
 }
