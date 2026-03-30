@@ -1911,10 +1911,7 @@ export default function EmaarDashboardV2() {
   };
 
 
-  useEffect(() => {
-    const t = setInterval(() => setTime(new Date()), 60000);
-    return () => clearInterval(t);
-  }, []);
+  // time comes from DXBContext — no local clock needed
 
   // FIX #28: Close modals on Escape key
   useEffect(() => {
@@ -2636,12 +2633,12 @@ export default function EmaarDashboardV2() {
             // Sales, project counts and scores are accurate as of March 2026
             const DEVS = [
               { id: "emaar",     name: "Emaar Properties",  flag: "🇦🇪", color: "#D4A843", type: "Listed · DFM",   sales: "AED 80.4B",  projects: projectsByDeveloper["emaar"]?.length || 0,          score: 95 },
-              { id: "damac",     name: "DAMAC Properties",  flag: "🇦🇪", color: "#C8A951", type: "Private",        sales: "AED 36.0B",  projects: damacActiveProjects.length,          score: 78 },
-              { id: "sobha",     name: "Sobha Realty",      flag: "🇮🇳", color: "#8B5CF6", type: "Private",        sales: "AED 30.0B",  projects: sobhaActiveProjects.length,          score: 82 },
-              { id: "nakheel",   name: "Nakheel",           flag: "🇦🇪", color: "#10B981", type: "Dubai Holding",  sales: "AED 24.6B",  projects: nakheelActiveProjects.length,        score: 79 },
-              { id: "meraas",    name: "Meraas",            flag: "🇦🇪", color: "#F59E0B", type: "Dubai Holding",  sales: "AED 20.9B",  projects: meraasActiveProjects.length,         score: 81 },
-              { id: "binghatti", name: "Binghatti",         flag: "🇦🇪", color: "#3B82F6", type: "Private",        sales: "AED 26.0B",  projects: binghattiActiveProjects.length,      score: 72 },
-              { id: "aldar",     name: "Aldar Properties",  flag: "🇦🇪", color: "#06B6D4", type: "Listed · ADX",  sales: "AED 40.6B",  projects: aldarActiveProjects.length,          score: 85 },
+              { id: "damac",     name: "DAMAC Properties",  flag: "🇦🇪", color: "#C8A951", type: "Private",        sales: "AED 36.0B",  projects: projectsByDeveloper["damac"]?.length || 0,          score: 78 },
+              { id: "sobha",     name: "Sobha Realty",      flag: "🇮🇳", color: "#8B5CF6", type: "Private",        sales: "AED 30.0B",  projects: projectsByDeveloper["sobha"]?.length || 0,          score: 82 },
+              { id: "nakheel",   name: "Nakheel",           flag: "🇦🇪", color: "#10B981", type: "Dubai Holding",  sales: "AED 24.6B",  projects: projectsByDeveloper["nakheel"]?.length || 0,        score: 79 },
+              { id: "meraas",    name: "Meraas",            flag: "🇦🇪", color: "#F59E0B", type: "Dubai Holding",  sales: "AED 20.9B",  projects: projectsByDeveloper["meraas"]?.length || 0,         score: 81 },
+              { id: "binghatti", name: "Binghatti",         flag: "🇦🇪", color: "#3B82F6", type: "Private",        sales: "AED 26.0B",  projects: projectsByDeveloper["binghatti"]?.length || 0,      score: 72 },
+              { id: "aldar",     name: "Aldar Properties",  flag: "🇦🇪", color: "#06B6D4", type: "Listed · ADX",  sales: "AED 40.6B",  projects: projectsByDeveloper["aldar"]?.length || 0,          score: 85 },
             ];
             return (
               <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
