@@ -1804,7 +1804,7 @@ export default function EmaarDashboardV2() {
   // All Firestore listeners, auth, user data, live projects live in DXBContext.
   // This component only holds LOCAL UI state (modals, forms, filters).
   const {
-    isLoggedIn, firebaseUser, userName, userTier, userRole, adminMode,
+    isLoggedIn, firebaseUser, userName, userEmail, userTier, userRole, adminMode,
     authLoading, isSuspended, isVerified, verifiedLevel, kycStatus, trialDaysLeft,
     tab, setTab,
     selectedDeveloper, setSelectedDeveloper,
