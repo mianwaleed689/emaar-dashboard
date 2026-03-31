@@ -6,6 +6,7 @@
 export const aldarCommunities = [
   {
     id: "yas-island",
+    emirate: "Abu Dhabi",
     name: "Yas Island",
     developer: "aldar",
     districtCode: "YI",
@@ -79,6 +80,7 @@ export const aldarCommunities = [
 
   {
     id: "saadiyat-island",
+    emirate: "Abu Dhabi",
     name: "Saadiyat Island",
     developer: "aldar",
     districtCode: "SI",
@@ -153,6 +155,7 @@ export const aldarCommunities = [
 
   {
     id: "al-reem-island",
+    emirate: "Abu Dhabi",
     name: "Al Reem Island",
     developer: "aldar",
     districtCode: "RI",
@@ -215,6 +218,7 @@ export const aldarCommunities = [
 
   {
     id: "haven-dubai",
+    emirate: "Dubai",
     name: "Haven by Aldar",
     developer: "aldar",
     districtCode: "HAV",

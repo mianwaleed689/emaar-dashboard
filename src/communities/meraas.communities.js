@@ -6,8 +6,14 @@
 export const meraasCommunitites = [
   {
     id: "city-walk",
+    emirate: "Dubai",
     name: "City Walk",
     developer: "meraas",
+    parentGroup: "Dubai Holding",
+    parentGroup: "Dubai Holding",
+    parentGroup: "Dubai Holding",
+    parentGroup: "Dubai Holding",
+    parentGroup: "Dubai Holding",
     districtCode: "CW",
     overview: "City Walk is Meraas's flagship urban lifestyle community in the heart of Dubai, located between Sheikh Zayed Road and Jumeirah Beach. A walkable open-air destination combining luxury apartments, high-end retail (300+ brands), fine dining, cinemas, art galleries and Central Park, it redefines urban living in Dubai for sophisticated residents and investors.",
     type: "Urban Lifestyle Community — Walkable",
@@ -79,10 +85,11 @@ export const meraasCommunitites = [
 
   {
     id: "bluewaters-island",
+    emirate: "Dubai",
     name: "Bluewaters Island",
     developer: "meraas",
     districtCode: "BW",
-    overview: "Bluewaters Island is Meraas's iconic AED 6-billion man-made island located 400 meters off JBR, accessible via a 265-meter pedestrian bridge. Home to Ain Dubai (world's largest observation wheel), 200+ F&B outlets, Banyan Tree Dubai resort and Bluewaters Residences, it is one of Dubai's most unique luxury lifestyle destinations with limited supply.",
+    overview: "Bluewaters Island is Meraas's iconic AED 6-billion man-made island located approximately 800 metres off JBR, accessible via a 265-meter pedestrian bridge. Home to Ain Dubai (world's largest observation wheel), 200+ F&B outlets, Banyan Tree Dubai resort and Bluewaters Residences, it is one of Dubai's most unique luxury lifestyle destinations with limited supply.",
     type: "Luxury Island Lifestyle — Waterfront",
     status: "Established (completed 2018)",
     launched: 2013,
@@ -143,6 +150,7 @@ export const meraasCommunitites = [
 
   {
     id: "port-de-la-mer",
+    emirate: "Dubai",
     name: "Port de La Mer",
     developer: "meraas",
     districtCode: "PM",
@@ -205,6 +213,7 @@ export const meraasCommunitites = [
 
   {
     id: "madinat-jumeirah-living",
+    emirate: "Dubai",
     name: "Madinat Jumeirah Living",
     developer: "meraas",
     districtCode: "MJL",
@@ -272,6 +281,7 @@ export const meraasCommunitites = [
 
   {
     id: "jumeira-bay",
+    emirate: "Dubai",
     name: "Jumeira Bay Island",
     developer: "meraas",
     districtCode: "JB",
@@ -280,7 +290,7 @@ export const meraasCommunitites = [
     status: "Active (mostly sold out)",
     launched: 2014,
     location: {
-      area: "Private island off Jumeirah coast",
+      area: "Private island, approximately 800m off Jumeirah coast",
       address: "Jumeira Bay Island, Jumeirah, Dubai",
       landmark: "Bulgari Resort Dubai",
       coordinates: { lat: 25.2200, lng: 55.2350 },

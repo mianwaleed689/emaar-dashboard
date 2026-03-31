@@ -6,6 +6,7 @@
 export const binghattiCommunities = [
   {
     id: "binghatti-business-bay",
+    emirate: "Dubai",
     name: "Business Bay (Binghatti)",
     developer: "binghatti",
     districtCode: "BBB",
@@ -81,6 +82,7 @@ export const binghattiCommunities = [
 
   {
     id: "binghatti-jvc",
+    emirate: "Dubai",
     name: "JVC (Binghatti)",
     developer: "binghatti",
     districtCode: "BJVC",

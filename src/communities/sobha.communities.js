@@ -6,6 +6,7 @@
 export const sobhaCommunities = [
   {
     id: "sobha-hartland",
+    emirate: "Dubai",
     name: "Sobha Hartland",
     developer: "sobha",
     districtCode: "SH",
@@ -80,6 +81,7 @@ export const sobhaCommunities = [
 
   {
     id: "sobha-hartland-2",
+    emirate: "Dubai",
     name: "Sobha Hartland 2",
     developer: "sobha",
     districtCode: "SH2",
@@ -137,6 +139,7 @@ export const sobhaCommunities = [
 
   {
     id: "sobha-seahaven",
+    emirate: "Dubai",
     name: "Sobha Seahaven",
     developer: "sobha",
     districtCode: "SS",
@@ -195,6 +198,7 @@ export const sobhaCommunities = [
 
   {
     id: "sobha-one",
+    emirate: "Dubai",
     name: "Sobha One",
     developer: "sobha",
     districtCode: "SO",

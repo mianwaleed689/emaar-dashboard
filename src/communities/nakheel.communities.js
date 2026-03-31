@@ -6,8 +6,13 @@
 export const nakheelCommunities = [
   {
     id: "palm-jumeirah",
+    emirate: "Dubai",
     name: "Palm Jumeirah",
     developer: "nakheel",
+    parentGroup: "Dubai Holding",
+    parentGroup: "Dubai Holding",
+    parentGroup: "Dubai Holding",
+    parentGroup: "Dubai Holding",
     districtCode: "PJ",
     overview: "Palm Jumeirah is the world's most famous man-made island, developed by Nakheel from 2001. Shaped like a palm tree with a trunk, 16 fronds and a crescent, it adds 78km to Dubai's coastline and spans 5.72 sqkm. Home to luxury villas, branded apartments, iconic hotels and world-class retail, it remains Dubai's most prestigious ultra-luxury address.",
     type: "Iconic Man-Made Island — Ultra-Luxury Freehold",
@@ -88,6 +93,7 @@ export const nakheelCommunities = [
 
   {
     id: "palm-jebel-ali",
+    emirate: "Dubai",
     name: "Palm Jebel Ali",
     developer: "nakheel",
     districtCode: "PJA",
@@ -146,6 +152,7 @@ export const nakheelCommunities = [
 
   {
     id: "dubai-islands",
+    emirate: "Dubai",
     name: "Dubai Islands",
     developer: "nakheel",
     districtCode: "DII",
@@ -203,6 +210,7 @@ export const nakheelCommunities = [
 
   {
     id: "jumeirah-village-circle",
+    emirate: "Dubai",
     name: "Jumeirah Village Circle (JVC)",
     developer: "nakheel",
     districtCode: "JVC",

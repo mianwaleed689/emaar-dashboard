@@ -8,10 +8,13 @@ export const emaarCommunities = [
 
   {
     id: "dubai-hills-estate",
+    emirate: "Dubai",
     name: "Dubai Hills Estate",
     developer: "emaar",
+    codev: "meraas",
+    codevNote: "Joint venture: Emaar Properties × Meraas Holding",
     districtCode: "DHE",
-    overview: "Dubai Hills Estate is Emaar's flagship 2,700-acre master-planned community in MBR City, developed as a joint venture with Meraas Holding. Known as 'The Green Heart of Dubai', it features an 18-hole championship golf course, Dubai Hills Mall, 28 sub-communities and 22,000+ residences across apartments, townhouses and villas.",
+    overview: "Dubai Hills Estate is a joint venture between Emaar Properties and Meraas Holding — Emaar's flagship 2,700-acre master-planned community in MBR City, developed as a joint venture with Meraas Holding. Known as 'The Green Heart of Dubai', it features an 18-hole championship golf course, Dubai Hills Mall, 28 sub-communities and 22,000+ residences across apartments, townhouses and villas.",
     type: "Master Community — Golf, Mixed Use",
     status: "Established",
     launched: 2014,
@@ -89,6 +92,7 @@ export const emaarCommunities = [
 
   {
     id: "dubai-creek-harbour",
+    emirate: "Dubai",
     name: "Dubai Creek Harbour",
     developer: "emaar",
     districtCode: "DCH",
@@ -166,6 +170,7 @@ export const emaarCommunities = [
 
   {
     id: "emaar-beachfront",
+    emirate: "Dubai",
     name: "Emaar Beachfront",
     developer: "emaar",
     districtCode: "EBF",
@@ -234,6 +239,7 @@ export const emaarCommunities = [
 
   {
     id: "emaar-south",
+    emirate: "Dubai",
     name: "Emaar South",
     developer: "emaar",
     districtCode: "ES",
@@ -301,6 +307,7 @@ export const emaarCommunities = [
 
   {
     id: "the-valley",
+    emirate: "Dubai",
     name: "The Valley",
     developer: "emaar",
     districtCode: "TV",
@@ -368,6 +375,7 @@ export const emaarCommunities = [
 
   {
     id: "grand-polo-club",
+    emirate: "Dubai",
     name: "Grand Polo Club & Resort",
     developer: "emaar",
     districtCode: "GPC",
@@ -436,6 +444,7 @@ export const emaarCommunities = [
 
   {
     id: "rashid-yachts-marina",
+    emirate: "Dubai",
     name: "Rashid Yachts & Marina",
     developer: "emaar",
     districtCode: "RYM",
@@ -503,6 +512,7 @@ export const emaarCommunities = [
 
   {
     id: "the-oasis",
+    emirate: "Dubai",
     name: "The Oasis",
     developer: "emaar",
     districtCode: "TO",
@@ -566,6 +576,7 @@ export const emaarCommunities = [
 
   {
     id: "the-heights-cw",
+    emirate: "Dubai",
     name: "The Heights Country Club & Wellness",
     developer: "emaar",
     districtCode: "TH",
@@ -625,6 +636,7 @@ export const emaarCommunities = [
 
   {
     id: "expo-living",
+    emirate: "Dubai",
     name: "Expo Living",
     developer: "emaar",
     districtCode: "EL",
@@ -687,6 +699,7 @@ export const emaarCommunities = [
 
   {
     id: "downtown-dubai",
+    emirate: "Dubai",
     name: "Downtown Dubai",
     developer: "emaar",
     districtCode: "DT",
@@ -756,6 +769,7 @@ export const emaarCommunities = [
 
   {
     id: "business-bay",
+    emirate: "Dubai",
     name: "Business Bay",
     developer: "emaar",
     districtCode: "BB",
@@ -823,6 +837,7 @@ export const emaarCommunities = [
 
   {
     id: "arabian-ranches",
+    emirate: "Dubai",
     name: "Arabian Ranches",
     developer: "emaar",
     districtCode: "AR3",
