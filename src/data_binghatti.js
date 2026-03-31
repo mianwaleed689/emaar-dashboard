@@ -1,4 +1,4 @@
-/* ─── DXB ANALYTICS — BINGHATTI DATA ────────────────────────────────────────
+﻿/* ─── DXB ANALYTICS — BINGHATTI DATA ────────────────────────────────────────
    S28: Binghatti Full Intelligence Module
    Sources: Binghatti Official · Gulf News · Arabian Business · Zawya · The National
    Last verified: March 2026 — FY2025 AUDITED RESULTS
@@ -117,8 +117,8 @@ export const binghattiRadar = [
 export const binghattiYields = [
   { community:"JVC",          unit:"Apartments",  gross:8.2, net:6.2, avgRent:49200,  avgPrice:600000,  demand:"Very High" },
   { community:"Business Bay", unit:"Apartments",  gross:7.2, net:5.4, avgRent:64800,  avgPrice:900000,  demand:"Very High" },
-  { community:"Downtown",     unit:"Apartments",  gross:5.8, net:4.4, avgRent:261000, avgPrice:4500000, demand:"High" },
-  { community:"Dubai Sci Pk", unit:"Apartments",  gross:7.8, net:5.9, avgRent:54600,  avgPrice:700000,  demand:"High" },
+  { community:"Downtown Dubai",     unit:"Apartments",  gross:5.8, net:4.4, avgRent:261000, avgPrice:4500000, demand:"High" },
+  { community:"Dubai Science Park", unit:"Apartments",  gross:7.8, net:5.9, avgRent:54600,  avgPrice:700000,  demand:"High" },
 ];
 
 export const binghattiMegaProjects = [

@@ -1,4 +1,4 @@
-/* ─── DXB ANALYTICS — DAMAC PROPERTIES DATA ─────────────────────────────────
+﻿/* ─── DXB ANALYTICS — DAMAC PROPERTIES DATA ─────────────────────────────────
    S22–S24: DAMAC Full Intelligence Module
    Sources: DLD Official · DAMAC IR · Bayut · Property Finder · Gulf News ·
             Zawya · Knight Frank · ValuStrat · DXBinteract · Wikipedia
@@ -280,7 +280,7 @@ export const damacProjects = [
     unitBreakdown:[{type:"4BR Villa",sqftFrom:3200,sqftTo:4500,priceFrom:2500000},{type:"5BR Villa",sqftFrom:5000,sqftTo:6500,priceFrom:3906000},{type:"6BR Villa",sqftFrom:7000,sqftTo:9000,priceFrom:5468000}] },
   { id: "damac-22", developerId: "damac", name: "Lagoon Views 14",        community: "DAMAC Lagoons",       district: "Dubailand",      type: "Apartments",  beds: "1–2BR",  status: "Under Construction", handover: "Q1 2028", price: 1300000,  sizeFrom: 650,  sizeTo: 1200,   ppsf: 2000, payment: "60/40",  construction: 20, branded: false, brand: "—",             tier: "Mid-Premium",   source: "Bayut",          confidence: "VERIFIED",
     unitBreakdown:[{type:"4BR Villa",sqftFrom:3000,sqftTo:4500,priceFrom:2100000},{type:"5BR Villa",sqftFrom:5000,sqftTo:6500,priceFrom:3500000},{type:"6BR Villa",sqftFrom:7000,sqftTo:9000,priceFrom:4900000}] },
-  { id: "damac-23", developerId: "damac", name: "DAMAC Hills Baghdad",    community: "Baghdad",             district: "Iraq",           type: "Master Community",beds:"3–6BR",status: "Off Plan",           handover: "TBC",     price: 1500000,  sizeFrom: 2000, sizeTo: 8000,   ppsf: 750,  payment: "TBC",    construction: 0,  branded: false, brand: "—",             tier: "Premium",       source: "DAMAC Official", confidence: "VERIFIED",
+  { id: "damac-23", developerId: "damac", name: "DAMAC Hills Baghdad",    community: "DAMAC Hills",             district: "Iraq",           type: "Master Community",beds:"3–6BR",status: "Off Plan",           handover: "TBC",     price: 1500000,  sizeFrom: 2000, sizeTo: 8000,   ppsf: 750,  payment: "TBC",    construction: 0,  branded: false, brand: "—",             tier: "Premium",       source: "DAMAC Official", confidence: "VERIFIED",
     unitBreakdown:[{type:"4BR Villa",sqftFrom:3500,sqftTo:5000,priceFrom:2800000},{type:"5BR Villa",sqftFrom:5500,sqftTo:7500,priceFrom:4400000},{type:"6BR Villa",sqftFrom:8000,sqftTo:11000,priceFrom:6400000}] },
 ];
 

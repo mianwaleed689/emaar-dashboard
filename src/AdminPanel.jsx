@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
+﻿import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import ReactDOM from "react-dom";
 import { auth, db, storage, firebaseConfig } from "./firebase";
 import { initializeApp, deleteApp } from "firebase/app";
@@ -11951,6 +11951,7 @@ function LaunchRadar({ db, T, notify }) {
                         <div style={{ width: `${p.construction || 0}%`, height: "100%", background: p.construction >= 80 ? T.green : p.construction >= 40 ? T.gold : T.blue, borderRadius: 2 }} />
                       </div>
                       <span style={{ fontSize: 10, color: T.textMuted }}>{p.construction || 0}%</span>
+                    {p.constructionUpdatedAt && <div style={{ fontSize: 9, color: T.textMuted, textAlign: 'center' }}>Updated {new Date(p.constructionUpdatedAt).toLocaleDateString('en-AE')}</div>}
                     </div>
                     {/* Actions */}
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 6 }} onClick={e => e.stopPropagation()}>
@@ -14193,6 +14194,7 @@ export default function AdminPanel() {
       });
       clean.updatedAt = new Date().toISOString();
       clean.updatedBy = adminUser?.email || "admin";
+      if (clean.construction !== undefined) clean.constructionUpdatedAt = new Date().toISOString();
       await setDoc(doc(db, "projectData", String(projectId)), clean, { merge: true });
       try {
         const oldDoc = liveProjects[projectId] || {};

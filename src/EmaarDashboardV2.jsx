@@ -1,4 +1,4 @@
-// DXB Analytics — EmaarDashboardV2 — v2.7 — WhatsApp + Inquiry + Official links + single-page modal — Full 8-section audit: PF+Bayut verified, official links, DLD portals, unit sizes
+﻿// DXB Analytics — EmaarDashboardV2 — v2.7 — WhatsApp + Inquiry + Official links + single-page modal — Full 8-section audit: PF+Bayut verified, official links, DLD portals, unit sizes
 // Data sources: Airbtics, AirROI, Bayut FY2025, Roya Jan 2026, DLD RERA Mollak,
 // Knight Frank Q3 2025, Gulf News Jan 2026, ADREC 2025, Aldar IR, DAMAC Official
 
@@ -3122,8 +3122,8 @@ export default function EmaarDashboardV2() {
                       <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
                       Full Details
                     </button>
-                    <button type="button" onClick={(e) => { e.stopPropagation(); toggleWatchlist(p); }} style={{ padding: "8px 10px", background: watchlist.find(w => w.id === p.id) ? "rgba(212,168,67,0.15)" : T.surfaceAlt, border: `1px solid ${watchlist.find(w => w.id === p.id) ? T.gold : T.border}`, borderRadius: 8, color: watchlist.find(w => w.id === p.id) ? T.gold : T.textMuted, fontSize: 14, cursor: "pointer" }} title={watchlist.find(w => w.id === p.id) ? "Remove from watchlist" : "Add to watchlist"}>
-                      {watchlist.find(w => w.id === p.id) ? "★" : "☆"}
+                    <button type="button" onClick={(e) => { e.stopPropagation(); toggleWatchlist(p); }} style={{ padding: "8px 10px", background: watchlist.find(w => String(w.id || w) === String(p.id)) ? "rgba(212,168,67,0.15)" : T.surfaceAlt, border: `1px solid ${watchlist.find(w => String(w.id || w) === String(p.id)) ? T.gold : T.border}`, borderRadius: 8, color: watchlist.find(w => String(w.id || w) === String(p.id)) ? T.gold : T.textMuted, fontSize: 14, cursor: "pointer" }} title={watchlist.find(w => String(w.id || w) === String(p.id)) ? "Remove from watchlist" : "Add to watchlist"}>
+                      {watchlist.find(w => String(w.id || w) === String(p.id)) ? "★" : "☆"}
                     </button>
                     <button type="button" onClick={(e) => { e.stopPropagation(); isPro ? toggleCompare(p) : setShowUpgrade(true); }} style={{ padding: "8px 10px", background: !isPro ? "rgba(212,168,67,0.05)" : compareList.find(x=>x.id===p.id) ? T.goldGlow : T.surfaceAlt, border: `1px solid ${!isPro ? T.border : compareList.find(x=>x.id===p.id) ? T.gold : T.border}`, borderRadius: 8, color: !isPro ? T.textMuted : compareList.find(x=>x.id===p.id) ? T.gold : T.textMuted, fontSize: 11, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>
                       {!isPro ? "🔒" : compareList.find(x=>x.id===p.id) ? "✓" : "⊕"}
@@ -3184,7 +3184,7 @@ export default function EmaarDashboardV2() {
             {/* Mega Projects */}
             <Section title="Mega Projects Pipeline" sub="Strategic developments 2026-2035 · AED 800B+ combined value · Global benchmarks & DLD price data · Click any project for deep analysis">
               <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 12, marginTop: 16 }}>
-                {megaProjects.map((m, i) => {
+                {megaProjects.filter(m => !m.developer || m.developer.toLowerCase().includes(selectedDeveloper) || (selectedDeveloper === 'emaar' && (m.developer.toLowerCase().includes('emaar')))).map((m, i) => {
                   const isOpen = expandedMega === m.name;
                   const mStatus = m.status || "Planned";
                   return (
@@ -3379,6 +3379,7 @@ export default function EmaarDashboardV2() {
                               <div style={{ height: "100%", width: `${p.construction || 0}%`, borderRadius: 3, background: T.gold, transition: "width 0.5s" }} />
                             </div>
                             <span style={{ fontSize: 10, color: T.textMuted, flexShrink: 0, minWidth: 32 }}>{p.construction || 0}%</span>
+                            {p.constructionUpdatedAt && <div style={{ fontSize: 9, color: T.textMuted }}>Updated {new Date(p.constructionUpdatedAt).toLocaleDateString('en-AE')}</div>}
                           </div>
                         </div>
                       ))}
@@ -8764,8 +8765,9 @@ export default function EmaarDashboardV2() {
                 </div>
               ) : (
                 <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                  {watchlist.map((w, i) => {
-                    const liveP = activeProjects.find(p => p.id === w.id);
+                  {watchlist.map((wItem, i) => {
+                    const w = typeof wItem === 'string' ? (allProjects.find(p => String(p.id) === String(wItem)) || { id: wItem }) : wItem;
+                    const liveP = activeProjects.find(p => String(p.id) === String(w.id || wItem));
                     const currentPrice = liveP?.price || w.price;
                     const priceChanged = liveP && w.price && liveP.price !== w.price;
                     return (

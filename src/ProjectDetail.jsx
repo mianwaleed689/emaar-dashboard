@@ -1,4 +1,4 @@
-/* eslint-disable */
+﻿/* eslint-disable */
 /* ─── DXB ANALYTICS — PROJECT DETAIL PAGE (S31 Redesign) ──────────────────────
    Tabbed layout · Send to Client · Dark theme · Gold buttons
    ─────────────────────────────────────────────────────────────────────────── */
@@ -560,7 +560,7 @@ export default function ProjectDetail() {
             WhatsApp
           </button>
           <div style={{ flex:1 }} />
-          {project.emaarUrl && (
+          {project.emaarUrl && isPro && (
             <a href={project.emaarUrl} target="_blank" rel="noopener noreferrer" style={{ display:"inline-flex", alignItems:"center", gap:7, padding:"10px 18px", background:"#D4A843", color:"#04090F", border:"2px solid #D4A843", borderRadius:9, fontSize:13, fontWeight:700, cursor:"pointer", whiteSpace:"nowrap", fontFamily:"'Outfit',sans-serif", textDecoration:"none", lineHeight:1 }}>
               View on {getLinkDomain(project.emaarUrl)} ↗
             </a>
