@@ -40,7 +40,7 @@ export const meraasLive = {
   source:"DLD · Meraas Official · Dubai Holding · Wikipedia", updatedAt:"2026-03-27",
 };
 
-export const meraasB = [
+export const meeraasB = [
   { brand:"Bvlgari",     project:"Bvlgari Residences Jumeirah Bay", location:"Jumeira Bay Island", tier:"Ultra-Luxury", priceFrom:63000000 },
   { brand:"Nikki Beach", project:"Nikki Beach Residences",          location:"Pearl Jumeirah",     tier:"Ultra-Luxury", priceFrom:5000000  },
   { brand:"Caesars",     project:"Caesars Bluewaters Dubai",        location:"Bluewaters Island",  tier:"Ultra-Luxury", priceFrom:3000000  },
@@ -48,7 +48,7 @@ export const meraasB = [
 ];
 
 // NOTE: Nad Al Sheba Gardens removed — that is a NAKHEEL development, not Meraas.
-export const meraasC = [
+export const meeraasC = [
   { id:"city-walk",      name:"City Walk",               type:"Urban Lifestyle",     avgPpsf:3200, avgGrossYield:5.8, priceRange:{apts:"AED 1.8M–15M"},   highlights:["Green Planet","The Box Park","Central Park","50+ F&B outlets","Walkable urban design"] },
   { id:"bluewaters",     name:"Bluewaters Island",       type:"Island Destination",  avgPpsf:3800, avgGrossYield:5.5, priceRange:{apts:"AED 2.85M–25M"},  highlights:["Ain Dubai (250m observation wheel)","Caesars Palace Hotel","Private beach","Marina promenade"] },
   { id:"la-mer",         name:"La Mer",                  type:"Beachfront",          avgPpsf:2800, avgGrossYield:5.2, priceRange:{villas:"AED 15M–80M+"}, highlights:["2.5km beach","130+ retail/F&B","Hawa Hawa park","Ripe Market"] },
@@ -120,10 +120,10 @@ export const meraasYields = [
   { community:"Dubai Harbour",     unit:"Apartments", gross:6.0, net:4.5, avgRent:120000, avgPrice:2000000, demand:"Very High" },
 ];
 
-export const meraasM = [
+export const meeraasM = [
   { name:"Bvlgari Residences & Resort", scale:"AED 8B+ GDV", units:"228 villas+apts", sqft:"Jumeira Bay private island", timeline:"2018–2027", status:"Partially Delivered", record:"Most expensive address Dubai AED 63M+/unit" },
   { name:"Bluewaters Island",           scale:"AED 12B+ GDV", units:"736",            sqft:"Island",                     timeline:"2017–ongoing", status:"Established", record:"Ain Dubai — world's largest observation wheel 250m" },
   { name:"Dubai Harbour",               scale:"AED 15B+ GDV", units:"Mixed",          sqft:"Largest marina MENA",        timeline:"2019–2026",    status:"Under Construction", record:"1,100 yacht berths — largest MENA marina" },
 ];
 
-export default { identity:meraasIdentity, live:meraasLive, financialHistory:meraasFinancialHistory, communities:meraasC, projects:meraasProjects, risks:meraasRisks, segments:meraasSegments, radar:meraasRadar, megaProjects:meraasM, yields:meraasYields, branded:meraasB };
+export default { identity:meraasIdentity, live:meraasLive, financialHistory:meraasFinancialHistory, communities:meeraasC, projects:meraasProjects, risks:meraasRisks, segments:meraasSegments, radar:meraasRadar, megaProjects:meeraasM, yields:meraasYields, branded:meeraasB };
