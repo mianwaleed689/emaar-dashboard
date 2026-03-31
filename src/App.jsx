@@ -14,7 +14,6 @@ import { I18nProvider } from "./i18n";
 
 // Lazy-load heavy pages for faster initial paint
 const EmaarDashboardV2 = React.lazy(() => import("./EmaarDashboardV2"));
-const LandingPage       = React.lazy(() => import("./LandingPage"));
 const AdminPanel        = React.lazy(() => import("./AdminPanel"));
 const Terms             = React.lazy(() => import("./Terms"));
 const Privacy           = React.lazy(() => import("./Privacy"));
