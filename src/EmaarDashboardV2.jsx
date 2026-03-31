@@ -1,4 +1,4 @@
-// DXB Analytics — EmaarDashboardV2 — v2.2 — Full deep research audit March 2026
+// DXB Analytics — EmaarDashboardV2 — v2.3 — Full 10-point audit: 7 new filters, multi-dev fixes
 // Data sources: Airbtics, AirROI, Bayut FY2025, Roya Jan 2026, DLD RERA Mollak,
 // Knight Frank Q3 2025, Gulf News Jan 2026, ADREC 2025, Aldar IR, DAMAC Official
 
@@ -1762,6 +1762,10 @@ export default function EmaarDashboardV2() {
   const [projectTier, setProjectTier] = useState("All");
   const [projectHandover, setProjectHandover] = useState("All");
   const [projectPriceMax, setProjectPriceMax] = useState(20);
+  const [projectTypeFilter, setProjectTypeFilter] = useState('All');
+  const [projectUnitFilter, setProjectUnitFilter] = useState('All');
+  const [projectPaymentFilter, setProjectPaymentFilter] = useState('All');
+  const [projectStatusFilter, setProjectStatusFilter] = useState('All');
   const [showAlerts, setShowAlerts] = useState(false);
   const [alertForm, setAlertForm] = useState({ community: "Dubai Hills Estate", metric: "grossYield", condition: "above", value: "8" });
   const [alertSaving, setAlertSaving] = useState(false);
@@ -2220,7 +2224,7 @@ export default function EmaarDashboardV2() {
             {sidebarOpen ? Icons.close : Icons.menu}
           </button>
           <div>
-            <h1 style={{ fontSize: 16, fontWeight: 700, color: T.white }}>{currentDeveloper?.name || "Emaar Properties"} <span style={{ color: T.textMuted, fontWeight: 400, fontSize: 13 }}>{currentDeveloper?.type || "PJSC"}</span></h1>
+            <h1 style={{ fontSize: 16, fontWeight: 700, color: T.white }}>{currentDeveloper?.name || "DXB Analytics"} <span style={{ color: T.textMuted, fontWeight: 400, fontSize: 13 }}>{currentDeveloper?.type || "PJSC"}</span></h1>
           </div>
         </div>
         <div className="header-badges" style={{ display: "flex", gap: 8, alignItems: "center" }}>
@@ -2897,7 +2901,7 @@ export default function EmaarDashboardV2() {
 
           {/* ─── PROJECTS TAB (48 Projects from Excel) ─── */}
           {tab === "Projects" && <>
-            <Section title={`${activeProjects.length} Active Projects`} sub={`${currentDeveloper?.name || "Emaar Properties"} · 2026–2030 · Search & filter`}>
+            <Section title={`${activeProjects.length} Active Projects`} sub={`${currentDeveloper?.name || "All Developers"} · 2026–2030 · Search & filter`}>
               <div className="kpi-grid" style={{ display: "grid", gap: 12, marginTop: 16 }}>
                 {(() => {
                   const underConst = activeProjects.filter(p => p.status === "Under Construction").length;
@@ -2928,8 +2932,8 @@ export default function EmaarDashboardV2() {
                   <input type='range' min={1} max={20} step={0.5} value={projectPriceMax} onChange={e => setProjectPriceMax(Number(e.target.value))} style={{ flex: 1, accentColor: T.gold, cursor: 'pointer' }} />
                   <span style={{ fontSize: 12, fontWeight: 700, color: T.gold, whiteSpace: 'nowrap', minWidth: 60 }}>{projectPriceMax >= 20 ? 'Any' : 'AED '+projectPriceMax+'M'}</span>
                 </div>
-                {(projectSearch || projectFilter !== 'All' || projectTier !== 'All' || projectHandover !== 'All' || projectPriceMax < 20) && (
-                  <button type='button' onClick={() => { setProjectSearch(''); setProjectFilter('All'); setProjectTier('All'); setProjectHandover('All'); setProjectPriceMax(20); }} style={{ padding: '8px 14px', borderRadius: 8, border: '1px solid rgba(239,68,68,0.3)', background: 'rgba(239,68,68,0.08)', color: T.red, fontSize: 12, cursor: 'pointer' }}>Clear Filters</button>
+                {(projectSearch || projectFilter !== 'All' || projectTier !== 'All' || projectHandover !== 'All' || projectPriceMax < 20 || projectTypeFilter !== 'All' || projectUnitFilter !== 'All' || projectPaymentFilter !== 'All' || projectStatusFilter !== 'All') && (
+                  <button type='button' onClick={() => { setProjectSearch(''); setProjectFilter('All'); setProjectTier('All'); setProjectHandover('All'); setProjectPriceMax(20); setProjectTypeFilter('All'); setProjectUnitFilter('All'); setProjectPaymentFilter('All'); setProjectStatusFilter('All'); }} style={{ padding: '8px 14px', borderRadius: 8, border: '1px solid rgba(239,68,68,0.3)', background: 'rgba(239,68,68,0.08)', color: T.red, fontSize: 12, cursor: 'pointer' }}>Clear Filters</button>
                 )}
               </div>
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
@@ -2946,8 +2950,32 @@ export default function EmaarDashboardV2() {
               </div>
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
                 <span style={{ fontSize: 10, color: T.textMuted, letterSpacing: 1, textTransform: 'uppercase' }}>Handover</span>
-                {['All','2026','2027','2028','2029','2030+'].map(y => (
+                {['All','2025','2026','2027','2028','2029','2030+'].map(y => (
                   <button type='button' key={y} onClick={() => setProjectHandover(y)} style={{ padding: '6px 12px', borderRadius: 8, border: '1px solid '+(projectHandover===y ? T.purple : T.border), background: projectHandover===y ? 'rgba(139,92,246,0.1)' : 'transparent', color: projectHandover===y ? T.purple : T.textSecondary, fontSize: 11, fontWeight: projectHandover===y ? 600 : 400, cursor: 'pointer', transition: 'all 0.2s' }}>{y}</button>
+                ))}
+              </div>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+                <span style={{ fontSize: 10, color: T.textMuted, letterSpacing: 1, textTransform: 'uppercase' }}>Type</span>
+                {['All','Apartment','Villa','Townhouse','Penthouse','Mixed-Use','Master Dev'].map(t => (
+                  <button type='button' key={t} onClick={() => setProjectTypeFilter(t)} style={{ padding: '6px 12px', borderRadius: 8, border: '1px solid '+(projectTypeFilter===t ? T.teal : T.border), background: projectTypeFilter===t ? 'rgba(0,191,165,0.1)' : 'transparent', color: projectTypeFilter===t ? T.teal : T.textSecondary, fontSize: 11, fontWeight: projectTypeFilter===t ? 600 : 400, cursor: 'pointer', transition: 'all 0.2s' }}>{t}</button>
+                ))}
+              </div>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+                <span style={{ fontSize: 10, color: T.textMuted, letterSpacing: 1, textTransform: 'uppercase' }}>Units</span>
+                {['All','Studio','1BR','2BR','3BR','4BR+','Villa','Penthouse'].map(u => (
+                  <button type='button' key={u} onClick={() => setProjectUnitFilter(u)} style={{ padding: '6px 12px', borderRadius: 8, border: '1px solid '+(projectUnitFilter===u ? '#F59E0B' : T.border), background: projectUnitFilter===u ? 'rgba(245,158,11,0.1)' : 'transparent', color: projectUnitFilter===u ? '#F59E0B' : T.textSecondary, fontSize: 11, fontWeight: projectUnitFilter===u ? 600 : 400, cursor: 'pointer', transition: 'all 0.2s' }}>{u}</button>
+                ))}
+              </div>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+                <span style={{ fontSize: 10, color: T.textMuted, letterSpacing: 1, textTransform: 'uppercase' }}>Payment</span>
+                {['All','10/90','20/80','30/70','40/60','50/50','60/40','70/30','80/20','Post-HO'].map(pp => (
+                  <button type='button' key={pp} onClick={() => setProjectPaymentFilter(pp)} style={{ padding: '6px 12px', borderRadius: 8, border: '1px solid '+(projectPaymentFilter===pp ? T.green : T.border), background: projectPaymentFilter===pp ? 'rgba(16,185,129,0.1)' : 'transparent', color: projectPaymentFilter===pp ? T.green : T.textSecondary, fontSize: 11, fontWeight: projectPaymentFilter===pp ? 600 : 400, cursor: 'pointer', transition: 'all 0.2s' }}>{pp}</button>
+                ))}
+              </div>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+                <span style={{ fontSize: 10, color: T.textMuted, letterSpacing: 1, textTransform: 'uppercase' }}>Status</span>
+                {['All','Off Plan','Under Construction','Delivered','Ready'].map(s => (
+                  <button type='button' key={s} onClick={() => setProjectStatusFilter(s)} style={{ padding: '6px 12px', borderRadius: 8, border: '1px solid '+(projectStatusFilter===s ? T.red : T.border), background: projectStatusFilter===s ? 'rgba(239,68,68,0.1)' : 'transparent', color: projectStatusFilter===s ? T.red : T.textSecondary, fontSize: 11, fontWeight: projectStatusFilter===s ? 600 : 400, cursor: 'pointer', transition: 'all 0.2s' }}>{s}</button>
                 ))}
               </div>
             </div>
@@ -2957,12 +2985,16 @@ export default function EmaarDashboardV2() {
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 12, marginTop: 16 }}>
               {activeProjects
                 .filter(p => {
-                  const matchSearch = !projectSearch || p.name.toLowerCase().includes(projectSearch.toLowerCase()) || p.community.toLowerCase().includes(projectSearch.toLowerCase());
+                  const matchSearch = !projectSearch || p.name.toLowerCase().includes(projectSearch.toLowerCase()) || (p.community||"").toLowerCase().includes(projectSearch.toLowerCase()) || (p.developer||"").toLowerCase().includes(projectSearch.toLowerCase());
                   const matchFilter = projectFilter === "All" || p.district === projectFilter || (projectFilter === "Branded" && p.branded);
                   const matchTier = projectTier === "All" || p.tier === projectTier;
                   const matchHandover = projectHandover === "All" || (projectHandover === "2030+" ? parseInt(p.handover) >= 2030 : p.handover?.includes(projectHandover));
                   const matchPrice = projectPriceMax >= 20 || !p.price || p.price <= projectPriceMax * 1e6;
-                  return matchSearch && matchFilter && matchTier && matchHandover && matchPrice;
+                  const matchType = !projectTypeFilter || projectTypeFilter === "All" || (p.type||"").toLowerCase().includes(projectTypeFilter.toLowerCase()) || (projectTypeFilter === "Villa" && (p.type||"").toLowerCase().includes("villa")) || (projectTypeFilter === "Apartment" && (p.type||"").toLowerCase().includes("apt")) || (projectTypeFilter === "Townhouse" && (p.type||"").toLowerCase().includes("town")) || (projectTypeFilter === "Penthouse" && (p.type||"").toLowerCase().includes("pent")) || (projectTypeFilter === "Mixed-Use" && (p.type||"").toLowerCase().includes("mix")) || (projectTypeFilter === "Master Dev" && (p.type||"").toLowerCase().includes("master"));
+                  const matchUnit = !projectUnitFilter || projectUnitFilter === "All" || (p.beds||"").includes(projectUnitFilter) || (projectUnitFilter === "Studio" && (p.beds||"").toLowerCase().includes("studio")) || (projectUnitFilter === "Villa" && (p.type||"").toLowerCase().includes("villa")) || (projectUnitFilter === "Penthouse" && (p.type||"").toLowerCase().includes("pent"));
+                  const matchPayment = !projectPaymentFilter || projectPaymentFilter === "All" || (p.payment||"").includes(projectPaymentFilter) || (projectPaymentFilter === "Post-HO" && (p.payment||"").toLowerCase().includes("post"));
+                  const matchStatus = !projectStatusFilter || projectStatusFilter === "All" || (p.status||"").toLowerCase().includes(projectStatusFilter.toLowerCase());
+                  return matchSearch && matchFilter && matchTier && matchHandover && matchPrice && matchType && matchUnit && matchPayment && matchStatus;
                 })
                 .map((p, i) => {
                   const isLocked = !isPro && i >= 5;
@@ -3001,9 +3033,12 @@ export default function EmaarDashboardV2() {
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
                     <div style={{ flex: 1 }}>
                       <div style={{ fontFamily: "'Fraunces', serif", fontSize: 15, fontWeight: 700, color: T.gold, marginBottom: 2 }}>{p.name}</div>
-                      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
                         <span style={{ fontSize: 11, color: T.textSecondary }}>{p.community}</span>
-                        {p.emaarUrl && <a href={p.emaarUrl} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{ fontSize: 9, color: T.gold, textDecoration: "none", padding: "1px 5px", border: "1px solid rgba(212,168,67,0.3)", borderRadius: 4, fontWeight: 600, letterSpacing: 0.3, flexShrink: 0 }} title="Official listing on Emaar.com">{getLinkLabel(p.emaarUrl)}</a>}
+                        {p.developer && p.developer !== currentDeveloper?.name && (
+                          <span style={{ fontSize: 9, padding: "1px 6px", borderRadius: 4, background: "rgba(212,168,67,0.1)", border: "1px solid rgba(212,168,67,0.2)", color: T.gold, fontWeight: 700 }}>{p.developerId?.toUpperCase() || p.developer}</span>
+                        )}
+                        {p.emaarUrl && <a href={p.emaarUrl} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{ fontSize: 9, color: T.teal, textDecoration: "none", padding: "1px 5px", border: "1px solid rgba(0,191,165,0.3)", borderRadius: 4, fontWeight: 600, letterSpacing: 0.3, flexShrink: 0 }} title={`Official listing — ${currentDeveloper?.name || p.developer || "Developer"}`}>Official ↗</a>}
                       </div>
                     </div>
                     <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4 }}>
