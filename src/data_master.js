@@ -48,11 +48,9 @@ import { sobhaCommunities }       from "./data_sobha";
 import { nakheelCommunities }     from "./data_nakheel";
 import { aldarCommunities }       from "./data_aldar";
 import { binghattiCommunities }   from "./data_binghatti";
-import { meeraasC as meerasCommunities } from "./data_meraas"; // note: meeraasC = meraas communities
 
 // ── Import developer live stats ───────────────────────────────────────────────
 import {
-  emaarIdentity, emaarLive,
 }                                 from "./data_emaar_complete";
 import { damacIdentity,    damacLive }    from "./data_damac";
 import { sobhaIdentity,    sobhaLive }    from "./data_sobha";
