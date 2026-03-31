@@ -119,7 +119,6 @@ export const emaarProjectsComplete = [
     unitBreakdown:[{type:"1BR",sqftFrom:640,sqftTo:820,priceFrom:1350000},{type:"2BR",sqftFrom:1080,sqftTo:1380,priceFrom:2278000},{type:"3BR",sqftFrom:1600,sqftTo:1850,priceFrom:3375000}] },
   { id:"emaar-ch-16", developerId:"emaar", name:"Grove at Creek Beach",       community:"Dubai Creek Harbour", type:"Apartments",  beds:"1-3BR", status:"Under Construction", handover:"Q1 2027", price:1350000,  sizeFrom:640,  sizeTo:1850,  ppsf:2109, payment:"80/20",      construction:72, branded:false, brand:"—",         tier:"Mid-Premium",
     unitBreakdown:[{type:"1BR",sqftFrom:640,sqftTo:820,priceFrom:1350000},{type:"2BR",sqftFrom:1080,sqftTo:1380,priceFrom:2278000},{type:"3BR",sqftFrom:1600,sqftTo:1850,priceFrom:3375000}] },
-    unitBreakdown:[{type:"1BR",sqftFrom:700,sqftTo:900,priceFrom:1600000},{type:"2BR",sqftFrom:1200,sqftTo:1500,priceFrom:2743000},{type:"3BR",sqftFrom:1800,sqftTo:2200,priceFrom:4114000}] },
   { id:"emaar-ch-18", developerId:"emaar", name:"Creek Horizon",              community:"Dubai Creek Harbour", type:"Apartments",  beds:"1-3BR", status:"Ready",              handover:"Delivered", price:1250000, sizeFrom:650,  sizeTo:1850,  ppsf:1923, payment:"Ready",      construction:100, branded:false, brand:"—",        tier:"Mid-Premium",
     unitBreakdown:[{type:"1BR",sqftFrom:650,sqftTo:820,priceFrom:1250000},{type:"2BR",sqftFrom:1080,sqftTo:1380,priceFrom:2077000},{type:"3BR",sqftFrom:1600,sqftTo:1850,priceFrom:3076000}] },
   { id:"emaar-ch-19", developerId:"emaar", name:"17 Icon Bay",                community:"Dubai Creek Harbour", type:"Apartments",  beds:"1-4BR", status:"Ready",              handover:"Delivered", price:1400000, sizeFrom:700,  sizeTo:3100,  ppsf:2000, payment:"Ready",      construction:100, branded:false, brand:"—",        tier:"Premium",
@@ -142,14 +141,8 @@ export const emaarProjectsComplete = [
     unitBreakdown:[{type:"1BR",sqftFrom:700,sqftTo:900,priceFrom:1500000},{type:"2BR",sqftFrom:1200,sqftTo:1500,priceFrom:2571000},{type:"3BR",sqftFrom:1800,sqftTo:2200,priceFrom:3857000},{type:"4BR",sqftFrom:2400,sqftTo:2800,priceFrom:5142000}] },
   { id:"emaar-ch-28", developerId:"emaar", name:"Harbour Gate",               community:"Dubai Creek Harbour", type:"Apartments",  beds:"1-3BR", status:"Ready",              handover:"Delivered", price:1200000, sizeFrom:640,  sizeTo:1800,  ppsf:1875, payment:"Ready",      construction:100, branded:false, brand:"—",        tier:"Mid-Premium",
     unitBreakdown:[{type:"1BR",sqftFrom:640,sqftTo:820,priceFrom:1200000},{type:"2BR",sqftFrom:1070,sqftTo:1370,priceFrom:2000000},{type:"3BR",sqftFrom:1600,sqftTo:1800,priceFrom:3000000}] },
-    unitBreakdown:[{type:"1BR",sqftFrom:700,sqftTo:900,priceFrom:1650000},{type:"2BR",sqftFrom:1200,sqftTo:1500,priceFrom:2828000},{type:"3BR",sqftFrom:1800,sqftTo:2200,priceFrom:4242000},{type:"4BR",sqftFrom:2500,sqftTo:3000,priceFrom:5892000}] },
-    unitBreakdown:[{type:"1BR",sqftFrom:650,sqftTo:820,priceFrom:1400000},{type:"2BR",sqftFrom:1080,sqftTo:1380,priceFrom:2323000},{type:"3BR",sqftFrom:1600,sqftTo:1850,priceFrom:3446000}] },
-    unitBreakdown:[{type:"1BR",sqftFrom:700,sqftTo:900,priceFrom:1700000},{type:"2BR",sqftFrom:1200,sqftTo:1500,priceFrom:2914000},{type:"3BR",sqftFrom:1800,sqftTo:2200,priceFrom:4371000}] },
-    unitBreakdown:[{type:"1BR",sqftFrom:650,sqftTo:820,priceFrom:1350000},{type:"2BR",sqftFrom:1080,sqftTo:1380,priceFrom:2246000},{type:"3BR",sqftFrom:1600,sqftTo:1900,priceFrom:3323000}] },
-    unitBreakdown:[{type:"1BR",sqftFrom:650,sqftTo:820,priceFrom:1250000},{type:"2BR",sqftFrom:1080,sqftTo:1380,priceFrom:2077000},{type:"3BR",sqftFrom:1600,sqftTo:1850,priceFrom:3076000}] },
   { id:"emaar-ch-34", developerId:"emaar", name:"The Grand",                  community:"Dubai Creek Harbour", type:"Apartments",  beds:"1-4BR", status:"Ready",              handover:"Delivered", price:2500000, sizeFrom:800,  sizeTo:4000,  ppsf:3125, payment:"Ready",      construction:100, branded:false, brand:"—",        tier:"Premium",
     unitBreakdown:[{type:"1BR",sqftFrom:800,sqftTo:1000,priceFrom:2500000},{type:"2BR",sqftFrom:1400,sqftTo:1700,priceFrom:4375000},{type:"3BR",sqftFrom:2100,sqftTo:2700,priceFrom:6562000},{type:"4BR",sqftFrom:3200,sqftTo:4000,priceFrom:10000000}] },
-    unitBreakdown:[{type:"1BR",sqftFrom:650,sqftTo:820,priceFrom:1450000},{type:"2BR",sqftFrom:1080,sqftTo:1380,priceFrom:2400000},{type:"3BR",sqftFrom:1600,sqftTo:1900,priceFrom:3600000}] },
 
 // ═══════════════════════════════════════════════════════════════════════════
 // THE VALLEY — 30 projects
@@ -167,7 +160,6 @@ export const emaarProjectsComplete = [
     unitBreakdown:[{type:"3BR TH",sqftFrom:2000,sqftTo:2500,priceFrom:2200000},{type:"4BR TH",sqftFrom:2700,sqftTo:3200,priceFrom:2970000}] },
   { id:"emaar-tv-06", developerId:"emaar", name:"Virella 2",                  community:"The Valley",  type:"Townhouses",  beds:"3-4BR", status:"Off-Plan",           handover:"Q4 2029", price:2300000,  sizeFrom:2000, sizeTo:3200,  ppsf:1150, payment:"80/20",      construction:0,  branded:false, brand:"—",         tier:"Mid-Premium",
     unitBreakdown:[{type:"3BR TH",sqftFrom:2000,sqftTo:2500,priceFrom:2300000},{type:"4BR TH",sqftFrom:2700,sqftTo:3200,priceFrom:3105000}] },
-    unitBreakdown:[{type:"3BR TH",sqftFrom:1900,sqftTo:2300,priceFrom:1900000},{type:"4BR TH",sqftFrom:2400,sqftTo:2900,priceFrom:2420000}] },
   { id:"emaar-tv-08", developerId:"emaar", name:"Orania",                     community:"The Valley",  type:"Townhouses",  beds:"3-4BR", status:"Under Construction", handover:"Q1 2027", price:1850000,  sizeFrom:1850, sizeTo:2800,  ppsf:1000, payment:"80/20",      construction:55, branded:false, brand:"—",         tier:"Mid-Premium",
     unitBreakdown:[{type:"3BR TH",sqftFrom:1850,sqftTo:2300,priceFrom:1850000},{type:"4BR TH",sqftFrom:2400,sqftTo:2800,priceFrom:2430000}] },
   { id:"emaar-tv-09", developerId:"emaar", name:"Nara",                       community:"The Valley",  type:"Townhouses",  beds:"3-4BR", status:"Under Construction", handover:"Q4 2026", price:1700000,  sizeFrom:1800, sizeTo:2700,  ppsf:944,  payment:"80/20",      construction:75, branded:false, brand:"—",         tier:"Mid-Premium",
@@ -176,14 +168,12 @@ export const emaarProjectsComplete = [
     unitBreakdown:[{type:"3BR TH",sqftFrom:1700,sqftTo:2100,priceFrom:1500000},{type:"4BR TH",sqftFrom:2200,sqftTo:2600,priceFrom:1941000}] },
   { id:"emaar-tv-11", developerId:"emaar", name:"Natura",                     community:"The Valley",  type:"Townhouses",  beds:"3-4BR", status:"Ready",              handover:"Delivered", price:1600000, sizeFrom:1750, sizeTo:2650,  ppsf:914,  payment:"Ready",      construction:100, branded:false, brand:"—",        tier:"Mid-Market",
     unitBreakdown:[{type:"3BR TH",sqftFrom:1750,sqftTo:2150,priceFrom:1600000},{type:"4BR TH",sqftFrom:2250,sqftTo:2650,priceFrom:2057000}] },
-    unitBreakdown:[{type:"4BR Villa",sqftFrom:3200,sqftTo:4000,priceFrom:3500000},{type:"5BR Villa",sqftFrom:4200,sqftTo:5500,priceFrom:4594000}] },
   { id:"emaar-tv-13", developerId:"emaar", name:"Farm Gardens",               community:"The Valley",  type:"Villas",      beds:"3-5BR", status:"Under Construction", handover:"Q2 2026", price:2500000,  sizeFrom:2500, sizeTo:5000,  ppsf:1000, payment:"80/20",      construction:92, branded:false, brand:"—",         tier:"Premium",
     unitBreakdown:[{type:"3BR Villa",sqftFrom:2500,sqftTo:3200,priceFrom:2500000},{type:"4BR Villa",sqftFrom:3500,sqftTo:4200,priceFrom:3500000},{type:"5BR Villa",sqftFrom:4500,sqftTo:5000,priceFrom:4500000}] },
   { id:"emaar-tv-14", developerId:"emaar", name:"The Daisy",                  community:"The Valley",  type:"Townhouses",  beds:"3-4BR", status:"Ready",              handover:"Delivered", price:1550000, sizeFrom:1750, sizeTo:2600,  ppsf:886,  payment:"Ready",      construction:100, branded:false, brand:"—",        tier:"Mid-Market",
     unitBreakdown:[{type:"3BR TH",sqftFrom:1750,sqftTo:2150,priceFrom:1550000},{type:"4BR TH",sqftFrom:2200,sqftTo:2600,priceFrom:1984000}] },
   { id:"emaar-tv-15", developerId:"emaar", name:"Eden",                       community:"The Valley",  type:"Townhouses",  beds:"3-4BR", status:"Ready",              handover:"Delivered", price:1450000, sizeFrom:1700, sizeTo:2500,  ppsf:853,  payment:"Ready",      construction:100, branded:false, brand:"—",        tier:"Mid-Market",
     unitBreakdown:[{type:"3BR TH",sqftFrom:1700,sqftTo:2100,priceFrom:1450000},{type:"4BR TH",sqftFrom:2200,sqftTo:2500,priceFrom:1882000}] },
-    unitBreakdown:[{type:"3BR TH",sqftFrom:1900,sqftTo:2350,priceFrom:2000000},{type:"4BR TH",sqftFrom:2450,sqftTo:2900,priceFrom:2579000}] },
   { id:"emaar-tv-17", developerId:"emaar", name:"Velora",                     community:"The Valley",  type:"Townhouses",  beds:"3-4BR", status:"Off-Plan",           handover:"Q2 2028", price:1950000,  sizeFrom:1850, sizeTo:2800,  ppsf:1054, payment:"80/20",      construction:5,  branded:false, brand:"—",         tier:"Mid-Premium",
     unitBreakdown:[{type:"3BR TH",sqftFrom:1850,sqftTo:2300,priceFrom:1950000},{type:"4BR TH",sqftFrom:2400,sqftTo:2800,priceFrom:2529000}] },
   { id:"emaar-tv-18", developerId:"emaar", name:"Maha Townhouses",            community:"The Valley",  type:"Townhouses",  beds:"3-4BR", status:"Under Construction", handover:"Q1 2026", price:1750000,  sizeFrom:1800, sizeTo:2700,  ppsf:972,  payment:"80/20",      construction:95, branded:false, brand:"—",         tier:"Mid-Premium",
@@ -206,9 +196,6 @@ export const emaarProjectsComplete = [
     unitBreakdown:[{type:"3BR TH",sqftFrom:1850,sqftTo:2300,priceFrom:1900000},{type:"4BR TH",sqftFrom:2400,sqftTo:2800,priceFrom:2470000}] },
   { id:"emaar-tv-27", developerId:"emaar", name:"Farm Gardens 3",             community:"The Valley",  type:"Villas",      beds:"4-5BR", status:"Off-Plan",           handover:"Q2 2029", price:4500000,  sizeFrom:4000, sizeTo:6500,  ppsf:1125, payment:"80/20",      construction:0,  branded:false, brand:"—",         tier:"Premium",
     unitBreakdown:[{type:"4BR Villa",sqftFrom:4000,sqftTo:5000,priceFrom:4500000},{type:"5BR Villa",sqftFrom:5500,sqftTo:6500,priceFrom:6187000}] },
-    unitBreakdown:[{type:"3BR TH",sqftFrom:2000,sqftTo:2500,priceFrom:2100000},{type:"4BR TH",sqftFrom:2600,sqftTo:3000,priceFrom:2730000}] },
-    unitBreakdown:[{type:"3BR TH",sqftFrom:1900,sqftTo:2350,priceFrom:2000000},{type:"4BR TH",sqftFrom:2450,sqftTo:2900,priceFrom:2578000}] },
-    unitBreakdown:[{type:"3BR TH",sqftFrom:2000,sqftTo:2500,priceFrom:2200000},{type:"4BR TH",sqftFrom:2600,sqftTo:3100,priceFrom:2860000}] },
 
 // ═══════════════════════════════════════════════════════════════════════════
 // MINA RASHID (Rashid Yachts & Marina) — 22 projects
@@ -254,8 +241,6 @@ export const emaarProjectsComplete = [
     unitBreakdown:[{type:"1BR",sqftFrom:680,sqftTo:880,priceFrom:1700000},{type:"2BR",sqftFrom:1150,sqftTo:1450,priceFrom:2875000},{type:"3BR",sqftFrom:1750,sqftTo:2200,priceFrom:4375000}] },
   { id:"emaar-mr-20", developerId:"emaar", name:"Sunset Bay",                 community:"Mina Rashid", type:"Apartments",  beds:"1-3BR", status:"Ready",              handover:"Delivered", price:1600000, sizeFrom:670,  sizeTo:2100,  ppsf:2388, payment:"Ready",      construction:100, branded:false, brand:"—",        tier:"Premium",
     unitBreakdown:[{type:"1BR",sqftFrom:670,sqftTo:870,priceFrom:1600000},{type:"2BR",sqftFrom:1130,sqftTo:1430,priceFrom:2700000},{type:"3BR",sqftFrom:1700,sqftTo:2100,priceFrom:4050000}] },
-    unitBreakdown:[{type:"1BR",sqftFrom:850,sqftTo:1050,priceFrom:4000000},{type:"2BR",sqftFrom:1500,sqftTo:1900,priceFrom:7058000},{type:"3BR",sqftFrom:2400,sqftTo:3000,priceFrom:11294000},{type:"4BR PH",sqftFrom:4500,sqftTo:6000,priceFrom:21176000}] },
-    unitBreakdown:[{type:"1BR",sqftFrom:700,sqftTo:900,priceFrom:1950000},{type:"2BR",sqftFrom:1200,sqftTo:1500,priceFrom:3342000},{type:"3BR",sqftFrom:1800,sqftTo:2300,priceFrom:5014000}] },
 
 // ═══════════════════════════════════════════════════════════════════════════
 // EMAAR SOUTH / DUBAI SOUTH — 24 projects
@@ -285,14 +270,10 @@ export const emaarProjectsComplete = [
     unitBreakdown:[{type:"1BR",sqftFrom:630,sqftTo:830,priceFrom:950000},{type:"2BR",sqftFrom:1100,sqftTo:1400,priceFrom:1685000},{type:"3BR",sqftFrom:1550,sqftTo:1900,priceFrom:2374000}] },
   { id:"emaar-es-12", developerId:"emaar", name:"Terra Gardens",              community:"Emaar South", type:"Apartments",  beds:"1-3BR", status:"Off-Plan",           handover:"Q4 2029", price:2270000,  sizeFrom:700,  sizeTo:2100,  ppsf:3243, payment:"10/70/20",  construction:0,  branded:false, brand:"—",         tier:"Premium",
     unitBreakdown:[{type:"1BR",sqftFrom:700,sqftTo:900,priceFrom:2270000},{type:"2BR",sqftFrom:1200,sqftTo:1500,priceFrom:3891000},{type:"3BR",sqftFrom:1800,sqftTo:2100,priceFrom:5843000}] },
-    unitBreakdown:[{type:"1BR",sqftFrom:630,sqftTo:830,priceFrom:1000000},{type:"2BR",sqftFrom:1100,sqftTo:1400,priceFrom:1746000},{type:"3BR",sqftFrom:1550,sqftTo:1900,priceFrom:2460000}] },
-    unitBreakdown:[{type:"1BR",sqftFrom:630,sqftTo:830,priceFrom:1000000},{type:"2BR",sqftFrom:1100,sqftTo:1400,priceFrom:1746000},{type:"3BR",sqftFrom:1550,sqftTo:1900,priceFrom:2460000}] },
-    unitBreakdown:[{type:"1BR",sqftFrom:630,sqftTo:830,priceFrom:1000000},{type:"2BR",sqftFrom:1100,sqftTo:1400,priceFrom:1746000},{type:"3BR",sqftFrom:1550,sqftTo:1900,priceFrom:2460000}] },
   { id:"emaar-es-16", developerId:"emaar", name:"Golf Point",                 community:"Emaar South", type:"Apartments",  beds:"1-3BR", status:"Under Construction", handover:"Q4 2026", price:820000,   sizeFrom:600,  sizeTo:1800,  ppsf:1367, payment:"80/20",      construction:75, branded:false, brand:"—",         tier:"Mid-Market",
     unitBreakdown:[{type:"1BR",sqftFrom:600,sqftTo:800,priceFrom:820000},{type:"2BR",sqftFrom:1100,sqftTo:1350,priceFrom:1502000},{type:"3BR",sqftFrom:1500,sqftTo:1800,priceFrom:2050000}] },
   { id:"emaar-es-17", developerId:"emaar", name:"Golf Links",                 community:"Emaar South", type:"Apartments",  beds:"1-3BR", status:"Under Construction", handover:"Q4 2026", price:830000,   sizeFrom:600,  sizeTo:1800,  ppsf:1383, payment:"80/20",      construction:72, branded:false, brand:"—",         tier:"Mid-Market",
     unitBreakdown:[{type:"1BR",sqftFrom:600,sqftTo:800,priceFrom:830000},{type:"2BR",sqftFrom:1100,sqftTo:1350,priceFrom:1521000},{type:"3BR",sqftFrom:1500,sqftTo:1800,priceFrom:2075000}] },
-    unitBreakdown:[{type:"4BR Villa",sqftFrom:3000,sqftTo:3800,priceFrom:3200000},{type:"5BR Villa",sqftFrom:4000,sqftTo:5000,priceFrom:4266000}] },
   { id:"emaar-es-19", developerId:"emaar", name:"Golf Acres",                 community:"Emaar South", type:"Apartments",  beds:"1-3BR", status:"Ready",              handover:"Delivered", price:750000,  sizeFrom:580,  sizeTo:1700,  ppsf:1293, payment:"Ready",      construction:100, branded:false, brand:"—",        tier:"Mid-Market",
     unitBreakdown:[{type:"1BR",sqftFrom:580,sqftTo:750,priceFrom:750000},{type:"2BR",sqftFrom:1050,sqftTo:1300,priceFrom:1358000},{type:"3BR",sqftFrom:1450,sqftTo:1700,priceFrom:1876000}] },
   { id:"emaar-es-20", developerId:"emaar", name:"Greenview",                  community:"Emaar South", type:"Townhouses",  beds:"3-4BR", status:"Ready",              handover:"Delivered", price:1600000, sizeFrom:1600, sizeTo:2400,  ppsf:1000, payment:"Ready",      construction:100, branded:false, brand:"—",        tier:"Mid-Market",
@@ -303,7 +284,6 @@ export const emaarProjectsComplete = [
     unitBreakdown:[{type:"3BR Villa",sqftFrom:1900,sqftTo:2400,priceFrom:2000000},{type:"4BR Villa",sqftFrom:2500,sqftTo:3000,priceFrom:2631000}] },
   { id:"emaar-es-23", developerId:"emaar", name:"Expo Golf Villas",           community:"Emaar South", type:"Villas",      beds:"3-4BR", status:"Ready",              handover:"Delivered", price:2100000, sizeFrom:2000, sizeTo:3200,  ppsf:1050, payment:"Ready",      construction:100, branded:false, brand:"—",        tier:"Mid-Premium",
     unitBreakdown:[{type:"3BR Villa",sqftFrom:2000,sqftTo:2500,priceFrom:2100000},{type:"4BR Villa",sqftFrom:2600,sqftTo:3200,priceFrom:2730000}] },
-    unitBreakdown:[{type:"1BR",sqftFrom:560,sqftTo:720,priceFrom:700000},{type:"2BR",sqftFrom:1000,sqftTo:1280,priceFrom:1250000},{type:"3BR",sqftFrom:1400,sqftTo:1600,priceFrom:1750000}] },
 
 // ═══════════════════════════════════════════════════════════════════════════
 // ARABIAN RANCHES 3 — 15 projects
@@ -346,7 +326,6 @@ export const emaarProjectsComplete = [
 
   { id:"emaar-gp-01", developerId:"emaar", name:"Selvara at Grand Polo Club & Resort",         community:"Grand Polo Club & Resort", type:"Apartments", beds:"1-4BR", status:"Off-Plan", handover:"Q2 2029", price:1800000,  sizeFrom:700,  sizeTo:3200,  ppsf:2571, payment:"80/20",      construction:0,  branded:false, brand:"—",         tier:"Premium",
     unitBreakdown:[{type:"1BR",sqftFrom:700,sqftTo:900,priceFrom:1800000},{type:"2BR",sqftFrom:1200,sqftTo:1500,priceFrom:3085000},{type:"3BR",sqftFrom:1900,sqftTo:2400,priceFrom:4628000},{type:"4BR",sqftFrom:2600,sqftTo:3200,priceFrom:6342000}] },
-    unitBreakdown:[{type:"1BR",sqftFrom:700,sqftTo:900,priceFrom:1850000},{type:"2BR",sqftFrom:1200,sqftTo:1500,priceFrom:3171000},{type:"3BR",sqftFrom:1900,sqftTo:2400,priceFrom:4757000},{type:"4BR",sqftFrom:2600,sqftTo:3200,priceFrom:6514000}] },
   { id:"emaar-gp-03", developerId:"emaar", name:"Selvara 3 at Grand Polo Club & Resort",       community:"Grand Polo Club & Resort", type:"Apartments", beds:"1-4BR", status:"Off-Plan", handover:"Q1 2029", price:1900000,  sizeFrom:700,  sizeTo:3200,  ppsf:2714, payment:"80/20",      construction:5,  branded:false, brand:"—",         tier:"Premium",
     unitBreakdown:[{type:"1BR",sqftFrom:700,sqftTo:900,priceFrom:1900000},{type:"2BR",sqftFrom:1200,sqftTo:1500,priceFrom:3257000},{type:"3BR",sqftFrom:1900,sqftTo:2400,priceFrom:4885000},{type:"4BR",sqftFrom:2600,sqftTo:3200,priceFrom:6685000}] },
   { id:"emaar-gp-04", developerId:"emaar", name:"Selvara 4 at Grand Polo Club & Resort",       community:"Grand Polo Club & Resort", type:"Apartments", beds:"1-4BR", status:"Off-Plan", handover:"Q2 2029", price:1900000,  sizeFrom:700,  sizeTo:3200,  ppsf:2714, payment:"80/20",      construction:0,  branded:false, brand:"—",         tier:"Premium",
@@ -357,11 +336,6 @@ export const emaarProjectsComplete = [
     unitBreakdown:[{type:"4BR Villa",sqftFrom:4500,sqftTo:5500,priceFrom:7500000},{type:"5BR Villa",sqftFrom:6000,sqftTo:7500,priceFrom:10000000},{type:"6BR Villa",sqftFrom:8000,sqftTo:10000,priceFrom:13333000}] },
   { id:"emaar-gp-07", developerId:"emaar", name:"Equestra at Grand Polo Club & Resort",        community:"Grand Polo Club & Resort", type:"Villas",     beds:"4-6BR", status:"Off-Plan", handover:"Q3 2029", price:8000000,  sizeFrom:5000, sizeTo:11000, ppsf:1600, payment:"80/20",      construction:0,  branded:false, brand:"—",         tier:"Ultra-Luxury",
     unitBreakdown:[{type:"4BR Villa",sqftFrom:5000,sqftTo:6000,priceFrom:8000000},{type:"5BR Villa",sqftFrom:6500,sqftTo:8000,priceFrom:10400000},{type:"6BR Villa",sqftFrom:8500,sqftTo:11000,priceFrom:13600000}] },
-    unitBreakdown:[{type:"1BR",sqftFrom:680,sqftTo:880,priceFrom:1700000},{type:"2BR",sqftFrom:1150,sqftTo:1450,priceFrom:2876000},{type:"3BR",sqftFrom:1750,sqftTo:2100,priceFrom:4375000}] },
-    unitBreakdown:[{type:"4BR Villa",sqftFrom:5500,sqftTo:6500,priceFrom:9000000},{type:"5BR Villa",sqftFrom:7000,sqftTo:9000,priceFrom:11454000},{type:"6BR Villa",sqftFrom:9500,sqftTo:12000,priceFrom:15545000}] },
-    unitBreakdown:[{type:"1BR",sqftFrom:680,sqftTo:880,priceFrom:1750000},{type:"2BR",sqftFrom:1150,sqftTo:1450,priceFrom:2961000},{type:"3BR",sqftFrom:1750,sqftTo:2100,priceFrom:4500000}] },
-    unitBreakdown:[{type:"3BR Villa",sqftFrom:3500,sqftTo:4500,priceFrom:5500000},{type:"4BR Villa",sqftFrom:5000,sqftTo:6000,priceFrom:7857000},{type:"5BR Villa",sqftFrom:6500,sqftTo:7000,priceFrom:10571000}] },
-    unitBreakdown:[{type:"1BR",sqftFrom:680,sqftTo:880,priceFrom:1800000},{type:"2BR",sqftFrom:1150,sqftTo:1450,priceFrom:3044000},{type:"3BR",sqftFrom:1750,sqftTo:2100,priceFrom:4627000}] },
 
 // ═══════════════════════════════════════════════════════════════════════════
 // DUBAI HARBOUR / EMAAR BEACHFRONT — 11 projects
