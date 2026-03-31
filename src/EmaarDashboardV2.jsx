@@ -1758,14 +1758,16 @@ export default function EmaarDashboardV2() {
   useEffect(() => { document.title = "DXB Analytics"; }, []);
 
   const [projectSearch, setProjectSearch] = useState("");
-  const [showInquiry, setShowInquiry] = useState(false);
-  const [inquiryProject, setInquiryProject] = useState(null);
-  const [inquiryName, setInquiryName] = useState("");
-  const [inquiryPhone, setInquiryPhone] = useState("");
-  const [inquiryEmail, setInquiryEmail] = useState("");
-  const [inquiryMessage, setInquiryMessage] = useState("");
-  const [inquirySending, setInquirySending] = useState(false);
-  const [inquirySent, setInquirySent] = useState(false);
+  // ── BROKER → CLIENT SHARE FLOW ──────────────────────────────────
+  const [showShareClient, setShowShareClient]   = useState(false);
+  const [shareProject, setShareProject]         = useState(null);
+  const [clientName, setClientName]             = useState("");
+  const [clientPhone, setClientPhone]           = useState("");
+  const [clientEmail, setClientEmail]           = useState("");
+  const [clientNotes, setClientNotes]           = useState("");
+  const [shareSending, setShareSending]         = useState(false);
+  const [shareSent, setShareSent]               = useState(false);
+  const [shareAction, setShareAction]           = useState("both"); // "save" | "whatsapp" | "both"
   const [projectFilter, setProjectFilter] = useState("All");
   const [projectTier, setProjectTier] = useState("All");
   const [projectHandover, setProjectHandover] = useState("All");
@@ -7901,11 +7903,16 @@ export default function EmaarDashboardV2() {
                     WhatsApp Share
                   </button>
 
-                  {/* Inquiry Button */}
-                  <button type="button" onClick={() => { setInquiryProject(selectedProject_); setShowInquiry(true); setInquirySent(false); setInquiryName(""); setInquiryPhone(""); setInquiryEmail(""); setInquiryMessage(""); }}
-                    style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "12px 0", background: "rgba(0,191,165,0.12)", border: "1px solid rgba(0,191,165,0.35)", borderRadius: 12, color: T.teal, fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-                    Inquire Now
+                  {/* Share with Client Button — Broker CRM Flow */}
+                  <button type="button" onClick={() => {
+                    setShareProject(selectedProject_);
+                    setShowShareClient(true);
+                    setShareSent(false);
+                    setClientName(""); setClientPhone(""); setClientEmail(""); setClientNotes("");
+                    setShareAction("both");
+                  }} style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "12px 0", background: "rgba(0,191,165,0.12)", border: "1px solid rgba(0,191,165,0.35)", borderRadius: 12, color: T.teal, fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+                    Share with Client
                   </button>
                 </div>
 
@@ -8799,70 +8806,164 @@ export default function EmaarDashboardV2() {
         );
       })()}
 
-      {/* ══════ INQUIRY MODAL ══════ */}
-      {showInquiry && inquiryProject && (
-        <div style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.9)", zIndex: 3000, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(8px)" }} onClick={() => setShowInquiry(false)}>
-          <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, width: "95%", maxWidth: 480, padding: 28, position: "relative" }} onClick={e => e.stopPropagation()}>
-            <button type="button" onClick={() => setShowInquiry(false)} style={{ position: "absolute", top: 14, right: 14, background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 30, height: 30, cursor: "pointer", fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
-            <div style={{ marginBottom: 20 }}>
-              <div style={{ fontSize: 11, color: T.teal, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4 }}>Project Inquiry</div>
-              <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: 20, fontWeight: 900, color: T.gold, margin: 0 }}>{inquiryProject.name}</h2>
-              <p style={{ color: T.textSecondary, fontSize: 12, marginTop: 4 }}>{inquiryProject.community} · AED {inquiryProject.price ? (inquiryProject.price/1e6).toFixed(1)+"M" : "TBD"} · {inquiryProject.handover || "TBD"}</p>
+      {/* ══════════════════════════════════════════════════════
+          BROKER → CLIENT SHARE MODAL
+          Broker saves client lead + sends branded WhatsApp
+          NO developer links ever shown to client
+          ══════════════════════════════════════════════════════ */}
+      {showShareClient && shareProject && (
+        <div style={{ position:"fixed", inset:0, background:"rgba(4,9,15,0.92)", zIndex:3000, display:"flex", alignItems:"center", justifyContent:"center", backdropFilter:"blur(8px)" }}
+          onClick={() => setShowShareClient(false)}>
+          <div style={{ background:T.surface, borderRadius:16, border:`1px solid ${T.border}`, width:"95%", maxWidth:520, padding:28, position:"relative" }}
+            onClick={e => e.stopPropagation()}>
+
+            {/* Close */}
+            <button type="button" onClick={() => setShowShareClient(false)}
+              style={{ position:"absolute", top:14, right:14, background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:8, color:T.textMuted, width:30, height:30, cursor:"pointer", fontSize:16, display:"flex", alignItems:"center", justifyContent:"center" }}>✕</button>
+
+            {/* Header */}
+            <div style={{ marginBottom:20 }}>
+              <div style={{ fontSize:10, color:T.teal, fontWeight:700, letterSpacing:1, textTransform:"uppercase", marginBottom:4 }}>Share with Client</div>
+              <h2 style={{ fontFamily:"'Fraunces', serif", fontSize:20, fontWeight:900, color:T.gold, margin:0 }}>{shareProject.name}</h2>
+              <p style={{ color:T.textSecondary, fontSize:12, marginTop:4 }}>{shareProject.community} · AED {shareProject.price ? (shareProject.price/1e6).toFixed(1)+"M" : "TBD"} · {shareProject.handover || "TBD"}</p>
+              <div style={{ marginTop:8, padding:"8px 12px", background:"rgba(239,68,68,0.08)", border:"1px solid rgba(239,68,68,0.2)", borderRadius:8, fontSize:10, color:"#EF4444" }}>
+                🔒 No developer links will be shared with the client — your relationship is protected
+              </div>
             </div>
-            {inquirySent ? (
-              <div style={{ textAlign: "center", padding: "20px 0" }}>
-                <div style={{ fontSize: 40, marginBottom: 12 }}>✅</div>
-                <h3 style={{ color: T.green, fontSize: 18, fontWeight: 700, marginBottom: 8 }}>Inquiry Sent!</h3>
-                <p style={{ color: T.textSecondary, fontSize: 13 }}>Our team will contact you within 24 hours.</p>
-                <button type="button" onClick={() => setShowInquiry(false)} style={{ marginTop: 16, padding: "10px 24px", background: T.gold, color: T.bg, border: "none", borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>Done</button>
+
+            {shareSent ? (
+              /* ── Success ── */
+              <div style={{ textAlign:"center", padding:"24px 0" }}>
+                <div style={{ fontSize:44, marginBottom:12 }}>✅</div>
+                <h3 style={{ color:T.green, fontSize:18, fontWeight:700, marginBottom:8 }}>Lead Saved!</h3>
+                <p style={{ color:T.textSecondary, fontSize:13, marginBottom:16 }}>
+                  {clientName} has been added to your pipeline for {shareProject.name}.
+                </p>
+                {shareAction !== "save" && (
+                  <button type="button" onClick={() => {
+                    const msg = [
+                      "🏢 *" + shareProject.name + "*",
+                      "📍 " + shareProject.community + ", Dubai",
+                      "💰 From AED " + (shareProject.price ? (shareProject.price/1e6).toFixed(1)+"M" : "TBD"),
+                      "🛏️ " + (shareProject.beds || "Multiple unit types"),
+                      "📐 " + (shareProject.sizeFrom && shareProject.sizeTo ? shareProject.sizeFrom.toLocaleString()+"–"+shareProject.sizeTo.toLocaleString()+" sqft" : "Various sizes"),
+                      "📋 Payment: " + (shareProject.payment || "Flexible plans available"),
+                      "📅 Handover: " + (shareProject.handover || "TBD"),
+                      "📊 Status: " + (shareProject.status || "Off-Plan"),
+                      shareProject.construction > 0 ? "🏗️ Construction: " + shareProject.construction + "% complete" : "",
+                      "",
+                      "Hi " + clientName + ", I wanted to share this project with you. Let me know if you'd like more details or to arrange a viewing.",
+                      "",
+                      "📞 Contact me: " + (userName || "Your Agent"),
+                      "_Shared via DXB Analytics_"
+                    ].filter(Boolean).join("%0A");
+                    window.open("https://wa.me/" + (clientPhone.replace(/[^0-9]/g,"")) + "?text=" + msg, "_blank");
+                  }} style={{ padding:"12px 28px", background:"rgba(37,211,102,0.15)", border:"1px solid rgba(37,211,102,0.4)", borderRadius:10, color:"#25D366", fontSize:14, fontWeight:700, cursor:"pointer", fontFamily:"'Outfit', sans-serif" }}>
+                    Send WhatsApp Now →
+                  </button>
+                )}
+                <button type="button" onClick={() => setShowShareClient(false)}
+                  style={{ display:"block", margin:"12px auto 0", padding:"10px 24px", background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:10, color:T.textMuted, fontSize:13, cursor:"pointer", fontFamily:"'Outfit', sans-serif" }}>
+                  Done
+                </button>
               </div>
             ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+              /* ── Form ── */
+              <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
+
+                {/* Client details */}
+                <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
                   <div>
-                    <label style={{ fontSize: 10, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.5, display: "block", marginBottom: 5 }}>Full Name *</label>
-                    <input value={inquiryName} onChange={e => setInquiryName(e.target.value)} placeholder="Your name" style={{ width: "100%", padding: "10px 12px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textPrimary, fontSize: 13, fontFamily: "'Outfit', sans-serif", outline: "none", boxSizing: "border-box" }} />
+                    <label style={{ fontSize:10, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.5, display:"block", marginBottom:5 }}>Client Name *</label>
+                    <input value={clientName} onChange={e => setClientName(e.target.value)}
+                      placeholder="Client full name"
+                      style={{ width:"100%", padding:"10px 12px", background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:8, color:T.textPrimary, fontSize:13, fontFamily:"'Outfit', sans-serif", outline:"none", boxSizing:"border-box" }} />
                   </div>
                   <div>
-                    <label style={{ fontSize: 10, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.5, display: "block", marginBottom: 5 }}>Phone *</label>
-                    <input value={inquiryPhone} onChange={e => setInquiryPhone(e.target.value)} placeholder="+971 50 000 0000" style={{ width: "100%", padding: "10px 12px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textPrimary, fontSize: 13, fontFamily: "'Outfit', sans-serif", outline: "none", boxSizing: "border-box" }} />
+                    <label style={{ fontSize:10, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.5, display:"block", marginBottom:5 }}>Client Phone *</label>
+                    <input value={clientPhone} onChange={e => setClientPhone(e.target.value)}
+                      placeholder="+971 50 000 0000"
+                      style={{ width:"100%", padding:"10px 12px", background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:8, color:T.textPrimary, fontSize:13, fontFamily:"'Outfit', sans-serif", outline:"none", boxSizing:"border-box" }} />
                   </div>
                 </div>
                 <div>
-                  <label style={{ fontSize: 10, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.5, display: "block", marginBottom: 5 }}>Email *</label>
-                  <input value={inquiryEmail} onChange={e => setInquiryEmail(e.target.value)} placeholder="your@email.com" type="email" style={{ width: "100%", padding: "10px 12px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textPrimary, fontSize: 13, fontFamily: "'Outfit', sans-serif", outline: "none", boxSizing: "border-box" }} />
+                  <label style={{ fontSize:10, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.5, display:"block", marginBottom:5 }}>Client Email</label>
+                  <input value={clientEmail} onChange={e => setClientEmail(e.target.value)}
+                    placeholder="client@email.com" type="email"
+                    style={{ width:"100%", padding:"10px 12px", background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:8, color:T.textPrimary, fontSize:13, fontFamily:"'Outfit', sans-serif", outline:"none", boxSizing:"border-box" }} />
                 </div>
                 <div>
-                  <label style={{ fontSize: 10, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.5, display: "block", marginBottom: 5 }}>Message</label>
-                  <textarea value={inquiryMessage} onChange={e => setInquiryMessage(e.target.value)} placeholder={`I'm interested in ${inquiryProject.name}. Please send me more details...`} rows={3} style={{ width: "100%", padding: "10px 12px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textPrimary, fontSize: 13, fontFamily: "'Outfit', sans-serif", outline: "none", resize: "vertical", boxSizing: "border-box" }} />
+                  <label style={{ fontSize:10, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.5, display:"block", marginBottom:5 }}>Notes (private — not shared with client)</label>
+                  <textarea value={clientNotes} onChange={e => setClientNotes(e.target.value)}
+                    placeholder="Budget, requirements, follow-up date..."
+                    rows={2}
+                    style={{ width:"100%", padding:"10px 12px", background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:8, color:T.textPrimary, fontSize:13, fontFamily:"'Outfit', sans-serif", outline:"none", resize:"none", boxSizing:"border-box" }} />
                 </div>
-                <button type="button" disabled={inquirySending || !inquiryName || !inquiryPhone || !inquiryEmail}
+
+                {/* Action selector */}
+                <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8 }}>
+                  {[
+                    { key:"both",     label:"💾 Save + WhatsApp",  desc:"Save lead & open WhatsApp" },
+                    { key:"save",     label:"💾 Save Only",         desc:"Save to pipeline only"     },
+                  ].map(opt => (
+                    <button type="button" key={opt.key} onClick={() => setShareAction(opt.key)}
+                      style={{ padding:"10px 12px", borderRadius:10, border:`1px solid ${shareAction===opt.key ? T.teal : T.border}`, background:shareAction===opt.key ? "rgba(0,191,165,0.1)" : "transparent", color:shareAction===opt.key ? T.teal : T.textSecondary, fontSize:11, fontWeight:shareAction===opt.key ? 700 : 400, cursor:"pointer", fontFamily:"'Outfit', sans-serif", textAlign:"left" }}>
+                      <div style={{ fontWeight:700 }}>{opt.label}</div>
+                      <div style={{ fontSize:9, opacity:0.7, marginTop:2 }}>{opt.desc}</div>
+                    </button>
+                  ))}
+                </div>
+
+                {/* Submit */}
+                <button type="button"
+                  disabled={shareSending || !clientName || !clientPhone}
                   onClick={async () => {
-                    if (!inquiryName || !inquiryPhone || !inquiryEmail) return;
-                    setInquirySending(true);
+                    if (!clientName || !clientPhone) return;
+                    setShareSending(true);
                     try {
-                      await setDoc(doc(db, "inquiries", `${Date.now()}_${inquiryProject.id}`), {
-                        projectId: inquiryProject.id, projectName: inquiryProject.name, community: inquiryProject.community,
-                        developer: inquiryProject.developer || currentDeveloper?.name || "—", price: inquiryProject.price || 0,
-                        name: inquiryName, phone: inquiryPhone, email: inquiryEmail,
-                        message: inquiryMessage || `Inquiry for ${inquiryProject.name}`,
-                        source: "DXB Analytics — Project Modal", submittedAt: new Date().toISOString(), status: "new",
+                      // Save lead to broker's pipeline in Firestore
+                      await setDoc(doc(db, "brokerLeads", `${Date.now()}_${shareProject.id}`), {
+                        // Broker identity
+                        brokerId:       userEmail || "unknown",
+                        brokerName:     userName  || "Agent",
+                        // Client details
+                        clientName,
+                        clientPhone,
+                        clientEmail:    clientEmail || "",
+                        brokerNotes:    clientNotes || "",
+                        // Project details
+                        projectId:      shareProject.id,
+                        projectName:    shareProject.name,
+                        community:      shareProject.community,
+                        developer:      shareProject.developer || currentDeveloper?.name || "—",
+                        price:          shareProject.price || 0,
+                        handover:       shareProject.handover || "—",
+                        payment:        shareProject.payment || "—",
+                        // Meta
+                        source:         "DXB Analytics — Share with Client",
+                        status:         "new",
+                        createdAt:      new Date().toISOString(),
                       });
-                      setInquirySent(true);
-                    } catch(err) { alert("Could not save inquiry. Please contact us via WhatsApp."); }
-                    setInquirySending(false);
+                      setShareSent(true);
+                      // If "both" — WhatsApp opens after success screen button click
+                      // If "save" — just show success
+                    } catch(err) {
+                      alert("Could not save lead. Check connection and try again.");
+                    }
+                    setShareSending(false);
                   }}
-                  style={{ padding: "13px 0", background: (!inquiryName || !inquiryPhone || !inquiryEmail) ? "rgba(0,191,165,0.2)" : "rgba(0,191,165,0.15)", border: "1px solid rgba(0,191,165,0.5)", borderRadius: 12, color: T.teal, fontSize: 14, fontWeight: 700, cursor: (!inquiryName || !inquiryPhone || !inquiryEmail) ? "not-allowed" : "pointer", fontFamily: "'Outfit', sans-serif" }}>
-                  {inquirySending ? "Sending..." : "Submit Inquiry →"}
+                  style={{ padding:"13px 0", background:(!clientName||!clientPhone) ? "rgba(0,191,165,0.2)" : "rgba(0,191,165,0.15)", border:"1px solid rgba(0,191,165,0.5)", borderRadius:12, color:T.teal, fontSize:14, fontWeight:700, cursor:(!clientName||!clientPhone) ? "not-allowed" : "pointer", fontFamily:"'Outfit', sans-serif" }}>
+                  {shareSending ? "Saving..." : shareAction==="both" ? "Save Lead & Open WhatsApp →" : "Save Lead →"}
                 </button>
-                <p style={{ fontSize: 10, color: T.textMuted, textAlign: "center", margin: 0 }}>Saved privately. We will contact you within 24 hours.</p>
+
+                <p style={{ fontSize:10, color:T.textMuted, textAlign:"center", margin:0 }}>
+                  Lead saved privately to your pipeline. Client never sees developer links.
+                </p>
               </div>
             )}
           </div>
         </div>
-      )}
-
-      {/* Upgrade Modal */}
+      )}/* Upgrade Modal */}
       <UpgradeModal show={showUpgrade} onClose={() => setShowUpgrade(false)} />
     </div>
   );
