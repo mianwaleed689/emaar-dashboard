@@ -1,4 +1,4 @@
-/**
+﻿/**
  * DXB ANALYTICS — App.jsx
  *
  * DXBProvider wraps the entire app — Dashboard, Admin, Landing all share
@@ -74,6 +74,16 @@ function HomeRoute() {
     );
 }
 
+function DashboardRoute() {
+  const { authLoading } = useDXB();
+  if (authLoading) return <PageLoader />;
+  return (
+    <Suspense fallback={<PageLoader />}>
+      <EmaarDashboardV2 />
+    </Suspense>
+  );
+}
+
 function App() {
   return (
     <BrowserRouter>
@@ -83,7 +93,7 @@ function App() {
         <Suspense fallback={<PageLoader />}>
           <Routes>
             <Route path="/"          element={<HomeRoute />} />
-            <Route path="/dashboard" element={<EmaarDashboardV2 />} />
+            <Route path="/dashboard" element={<DashboardRoute />} />
             <Route path="/admin"     element={<AdminRoute />} />
             <Route path="/terms"     element={<Terms />} />
             <Route path="/privacy"   element={<Privacy />} />
