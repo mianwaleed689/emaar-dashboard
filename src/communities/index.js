@@ -1,7 +1,8 @@
 /**
  * DXB ANALYTICS — UNIFIED COMMUNITIES INDEX
- * 38 communities across 7 developers
- * Audit verified: March 2026
+ * 46 communities across 7 developers
+ * Deep Audit verified: March 31, 2026
+ * Sources: Property Finder UAE, Bayut, Official Developer IRs
  *
  * FIXES APPLIED:
  * FIX 1: DAMAC Bay removed — DAMAC Riverside + DAMAC Sun City added
@@ -16,6 +17,8 @@
 import { emaarCommunities }     from "./emaar.communities";
 import { damacCommunities }     from "./damac.communities";
 import { sobhaCommunities }     from "./sobha.communities";
+// Note: sobhaCommunities now includes Sobha Hartland, Sobha Hartland 2, 
+//       Sobha Seahaven, Sobha One, Sobha Elwood (Dubai), Sobha Siniya Island (UAQ)
 import { nakheelCommunities }   from "./nakheel.communities";
 import { meraasCommunitites }   from "./meraas.communities";
 import { aldarCommunities }     from "./aldar.communities";

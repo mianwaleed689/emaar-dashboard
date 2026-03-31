@@ -22,6 +22,18 @@
 
 // ── Re-export T theme ────────────────────────────────────────────────────────
 export { T } from "./theme";
+
+// ── Government Portal Links ───────────────────────────────────────────────────
+export const GOVT_PORTALS = {
+  dldDubai:         "https://dubailand.gov.ae",
+  oqoodRegistry:    "https://oqood.dubailand.gov.ae",
+  reraServiceCharge:"https://dubailand.gov.ae/en/eservices/service-charge-index",
+  dldTransactions:  "https://transactions.dubailand.gov.ae",
+  adrecAbuDhabi:    "https://www.adrec.ae",
+  dtcmHolidayHomes: "https://dtcm.gov.ae/en/services/holiday-homes",
+  bayutNewProjects:  "https://www.bayut.com/new-projects/uae/",
+  propertyFinder:   "https://www.propertyfinder.ae/en/new-projects",
+};
 import { T } from "./theme";
 
 // ── Import all developer identity + live stats ───────────────────────────────
@@ -74,6 +86,7 @@ export * from "./data";
 export const allDevelopers = [
   {
     id:           "emaar",
+    officialUrl:  "https://properties.emaar.com/en/",
     name:         "Emaar Properties",
     tier:         "T1",
     color:        T.gold,
@@ -83,13 +96,14 @@ export const allDevelopers = [
     salesFY2025:  80.4,   // AED Billion
     rank:         1,
     projectCount: 208,
-    communities:  ["Dubai Hills Estate","Dubai Creek Harbour","Emaar Beachfront","Emaar South","The Valley","Grand Polo Club","Rashid Yachts & Marina","The Oasis","Business Bay","The Heights CW","Expo Living","Downtown Dubai","Dubai Marina","Arabian Ranches 3"],
+    communities:  ["Dubai Hills Estate","Dubai Creek Harbour","Emaar Beachfront","Emaar South","The Valley","Grand Polo Club & Resort","Rashid Yachts & Marina","The Oasis","Business Bay","The Heights CW","Expo Living","Downtown Dubai","Dubai Marina","Arabian Ranches 3"],
     primaryMarket:"Dubai",
     hasLiveData:  true,
     dataFile:     "data_emaar_complete",
   },
   {
     id:           "damac",
+    officialUrl:  "https://www.damacgroup.com/properties",
     name:         "DAMAC Properties",
     tier:         "T1",
     color:        "#C8A951",
@@ -99,13 +113,14 @@ export const allDevelopers = [
     salesFY2025:  36.0,
     rank:         4,
     projectCount: 23,
-    communities:  ["DAMAC Hills","DAMAC Hills 2","DAMAC Lagoons","DAMAC Islands","DAMAC Riverside","DAMAC Sun City","Business Bay","Dubai Harbour","Dubai Maritime City"],
+    communities:  ["DAMAC Hills","DAMAC Hills 2","DAMAC Lagoons","DAMAC Islands","DAMAC Riverside","DAMAC Sun City" /* Limited verification — monitor official launch */,"Business Bay","Dubai Harbour","Dubai Maritime City"],
     primaryMarket:"Dubai",
     hasLiveData:  true,
     dataFile:     "data_damac",
   },
   {
     id:           "sobha",
+    officialUrl:  "https://sobharealty.com/properties",
     name:         "Sobha Realty",
     tier:         "T1",
     color:        T.purple,
@@ -122,6 +137,7 @@ export const allDevelopers = [
   },
   {
     id:           "nakheel",
+    officialUrl:  "https://www.nakheel.com/en/new-launches",
     name:         "Nakheel",
     tier:         "T1",
     color:        T.green,
@@ -138,6 +154,7 @@ export const allDevelopers = [
   },
   {
     id:           "meraas",
+    officialUrl:  "https://www.meraas.com/en/residential",
     name:         "Meraas",
     tier:         "T1",
     color:        T.orange,
@@ -154,6 +171,7 @@ export const allDevelopers = [
   },
   {
     id:           "aldar",
+    officialUrl:  "https://www.aldar.com/en/residential",
     name:         "Aldar Properties",
     tier:         "T1",
     color:        "#06B6D4",
@@ -170,6 +188,7 @@ export const allDevelopers = [
   },
   {
     id:           "binghatti",
+    officialUrl:  "https://binghatti.ae",
     name:         "Binghatti",
     tier:         "T2",
     color:        T.blue,
@@ -223,10 +242,10 @@ export const commKeyMap = {
   "Emaar Beachfront":         "EBF",
   "Emaar South":              "ES",
   "The Valley":               "TV",
-  "Grand Polo Club":          "GPC",
+  "Grand Polo Club & Resort":          "GPC",
   "Grand Polo Club & Resort": "GPC",   // alias
   "Rashid Yachts & Marina":   "RYM",
-  "Rashid Marina":            "RYM",   // legacy alias — use canonical above
+  "Rashid Yachts & Marina":            "RYM",   // legacy alias — use canonical above
   "The Oasis":                "TO",
   "Business Bay":             "BB",
   "The Heights CW":           "TH",
@@ -244,7 +263,7 @@ export const commKeyMap = {
   "DAMAC Islands":            "DI2",
   "DAMAC Islands 2":          "DI2",
   "DAMAC Riverside":          "DRP",
-  "DAMAC Sun City":           "DSC",
+  "DAMAC Sun City" /* Limited verification — monitor official launch */:           "DSC",
   "Dubai Maritime City":      "DMC",
   "Dubai Harbour":            "DHR",
   // Sobha
@@ -285,6 +304,16 @@ export const commKeyMap = {
   "Dubai Silicon Oasis":      "SO",    // alias
   "MBR City":                 "MBR",
   "Mohammed Bin Rashid City": "MBR",   // alias
+  // Sobha new communities
+  "Sobha Elwood":             "SE",
+  "Sobha Siniya Island":      "SSI",
+  "Siniya Island":            "SSI",   // alias
+  // Aldar new communities
+  "Fahid Island":             "FI",
+  // Meraas new communities
+  "Dubai Design District":    "D3",
+  "d3":                       "D3",    // alias
+  "Design District":          "D3",    // alias
 };
 
 // Helper: get district code from community name (case-insensitive)
@@ -314,6 +343,18 @@ export function getProjectsByCommunity(communityName) {
     p.community === Object.keys(commKeyMap).find(k => commKeyMap[k] === districtCode) ||
     (districtCode && p.district === districtCode)
   );
+}
+
+// Validate project belongs to correct developer for its community
+export function validateProjectMapping(project) {
+  const distCode = getDistrictCode(project.community);
+  const community = allCommunities.find(c => c.id === distCode);
+  if (!community) return { valid: false, reason: "Community not found: " + project.community };
+  if (community.developer === "shared") return { valid: true };
+  if (community.developer !== project.developerId) {
+    return { valid: false, reason: "Developer mismatch: project=" + project.developerId + " community=" + community.developer };
+  }
+  return { valid: true };
 }
 
 // Get developer object by id
@@ -348,7 +389,7 @@ export function toFirestoreProject(project) {
     source:       project.source || "DXB Analytics",
     confidence:   project.confidence || "VERIFIED",
     unitBreakdown:project.unitBreakdown || [],
-    emaarUrl:     project.emaarUrl || null,
+    officialUrl:  project.officialUrl || project.emaarUrl || null,
     addedViaRadar:false,
     fromFirestore:false,
     seededAt:     new Date().toISOString(),
@@ -370,7 +411,7 @@ export const allCommunityCoords = [
   { district:"ES",   name:"Emaar South",              lat:24.9650, lng:55.1520, color:T.purple,  developer:"emaar",    projects:24, type:"Golf & Airport" },
   { district:"EL",   name:"Expo Living",              lat:24.9700, lng:55.1380, color:T.teal,    developer:"emaar",    projects:2,  type:"Expo Legacy" },
   { district:"TV",   name:"The Valley",               lat:25.0250, lng:55.3150, color:T.orange,  developer:"emaar",    projects:30, type:"Suburban Villas" },
-  { district:"GPC",  name:"Grand Polo Club",          lat:24.9800, lng:55.1750, color:T.red,     developer:"emaar",    projects:12, type:"Polo Lifestyle" },
+  { district:"GPC",  name:"Grand Polo Club & Resort",          lat:24.9800, lng:55.1750, color:T.red,     developer:"emaar",    projects:12, type:"Polo Lifestyle" },
   { district:"RYM",  name:"Rashid Yachts & Marina",   lat:25.2650, lng:55.2850, color:T.cyan,    developer:"emaar",    projects:22, type:"Marina Heritage" },
   { district:"TO",   name:"The Oasis",                lat:25.0100, lng:55.1900, color:T.teal,    developer:"emaar",    projects:11, type:"Ultra-Luxury Villas" },
   { district:"BB",   name:"Business Bay",             lat:25.1850, lng:55.2650, color:T.orange,  developer:"shared",   projects:8,  type:"CBD" },
@@ -383,7 +424,7 @@ export const allCommunityCoords = [
   { district:"DH2",  name:"DAMAC Hills 2",            lat:24.9900, lng:55.3600, color:"#C8A951", developer:"damac",    projects:4,  type:"Family Community" },
   { district:"DLG",  name:"DAMAC Lagoons",            lat:25.0200, lng:55.2700, color:"#C8A951", developer:"damac",    projects:4,  type:"Lagoon Community" },
   { district:"DI2",  name:"DAMAC Islands",            lat:25.0380, lng:55.3200, color:"#C8A951", developer:"damac",    projects:2,  type:"Island Living" },
-  { district:"DSC",  name:"DAMAC Sun City",         lat:25.0250, lng:55.3100, color:"#C8A951", developer:"damac",    projects:1,  type:"Wellness Townhouses" },
+  { district:"DSC",  name:"DAMAC Sun City" /* Limited verification — monitor official launch */,         lat:25.0250, lng:55.3100, color:"#C8A951", developer:"damac",    projects:1,  type:"Wellness Townhouses" },
   { district:"DRP",  name:"DAMAC Riverside",          lat:25.0050, lng:55.2150, color:"#C8A951", developer:"damac",    projects:2,  type:"Riverside" },
   { district:"DMC",  name:"Dubai Maritime City",      lat:25.2350, lng:55.2650, color:"#C8A951", developer:"damac",    projects:2,  type:"Maritime" },
   { district:"DHR",  name:"Dubai Harbour",            lat:25.0990, lng:55.1340, color:"#C8A951", developer:"shared",   projects:5,  type:"Marina Hub" },
@@ -417,6 +458,11 @@ export const allCommunityCoords = [
   // ── BINGHATTI ──────────────────────────────────────────────────────────────
   { district:"SO",   name:"Silicon Oasis",            lat:25.1180, lng:55.3780, color:T.blue,    developer:"binghatti", projects:2, type:"Tech Community" },
   { district:"MBR",  name:"MBR City",                 lat:25.1900, lng:55.3200, color:T.blue,    developer:"binghatti", projects:2, type:"Mixed-Use" },
+  // ── NEW COMMUNITIES ────────────────────────────────────────────────────────
+  { district:"SE",   name:"Sobha Elwood",             lat:25.0620, lng:55.3800, color:T.purple,  developer:"sobha",     projects:2, type:"Luxury Villa Community" },
+  { district:"SSI",  name:"Sobha Siniya Island",      lat:25.5697, lng:55.5672, color:T.purple,  developer:"sobha",     projects:3, type:"Island Beachfront (UAQ)" },
+  { district:"FI",   name:"Fahid Island",             lat:24.4200, lng:54.4000, color:"#06B6D4", developer:"aldar",     projects:2, type:"Coastal Wellness Island" },
+  { district:"D3",   name:"Dubai Design District",    lat:25.1862, lng:55.2530, color:T.orange,  developer:"meraas",    projects:2, type:"Creative Hub Residential" },
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -431,7 +477,7 @@ export const allCommunities = [
   { id:"EBF",  name:"Emaar Beachfront",         developer:"emaar",    avgPpsf:4250, avgYield:5.6, district:"EBF", projectCount:11, location:"Dubai Harbour", type:"Beachfront Island" },
   { id:"ES",   name:"Emaar South",              developer:"emaar",    avgPpsf:1400, avgYield:6.2, district:"ES",  projectCount:24, location:"Dubai South",   type:"Golf & Airport" },
   { id:"TV",   name:"The Valley",               developer:"emaar",    avgPpsf:1200, avgYield:6.0, district:"TV",  projectCount:30, location:"Dubailand",     type:"Suburban Villas" },
-  { id:"GPC",  name:"Grand Polo Club",          developer:"emaar",    avgPpsf:1770, avgYield:5.5, district:"GPC", projectCount:12, location:"DIP 2",         type:"Polo Lifestyle" },
+  { id:"GPC",  name:"Grand Polo Club & Resort",          developer:"emaar",    avgPpsf:1770, avgYield:5.5, district:"GPC", projectCount:12, location:"DIP 2",         type:"Polo Lifestyle" },
   { id:"RYM",  name:"Rashid Yachts & Marina",   developer:"emaar",    avgPpsf:3000, avgYield:5.0, district:"RYM", projectCount:22, location:"Bur Dubai",     type:"Marina Heritage" },
   { id:"TO",   name:"The Oasis",                developer:"emaar",    avgPpsf:1921, avgYield:3.5, district:"TO",  projectCount:11, location:"Dubailand",     type:"Ultra-Luxury Villas" },
   { id:"BB",   name:"Business Bay",             developer:"shared",   avgPpsf:2200, avgYield:6.7, district:"BB",  projectCount:8,  location:"CBD",           type:"Mixed" },
@@ -445,7 +491,7 @@ export const allCommunities = [
   { id:"DH2",  name:"DAMAC Hills 2",            developer:"damac",    avgPpsf:1000, avgYield:6.5, district:"DH2", projectCount:4,  location:"Dubailand",     type:"Family Community" },
   { id:"DLG",  name:"DAMAC Lagoons",            developer:"damac",    avgPpsf:1200, avgYield:5.5, district:"DLG", projectCount:4,  location:"Dubailand",     type:"Lagoon Villas" },
   { id:"DI2",  name:"DAMAC Islands",            developer:"damac",    avgPpsf:803,  avgYield:5.0, district:"DI2", projectCount:2,  location:"Dubailand",     type:"Island Villas" },
-  { id:"DSC",  name:"DAMAC Sun City",        developer:"damac",    avgPpsf:1100, avgYield:5.5, district:"DSC", projectCount:1,  location:"Dubailand",     type:"Wellness Townhouses" },
+  { id:"DSC",  name:"DAMAC Sun City" /* Limited verification — monitor official launch */,        developer:"damac",    avgPpsf:1100, avgYield:5.5, district:"DSC", projectCount:1,  location:"Dubailand",     type:"Wellness Townhouses" },
   { id:"DHR",  name:"Dubai Harbour",            developer:"shared",   avgPpsf:3500, avgYield:6.0, district:"DHR", projectCount:5,  location:"JBR Area",      type:"Marina Hub" },
   { id:"DMC",  name:"Dubai Maritime City",      developer:"damac",    avgPpsf:2200, avgYield:5.5, district:"DMC", projectCount:2,  location:"Bur Dubai",     type:"Maritime" },
   // ── SOBHA ──────────────────────────────────────────────────────────────────
@@ -453,6 +499,8 @@ export const allCommunities = [
   { id:"SH2",  name:"Sobha Hartland II",        developer:"sobha",    avgPpsf:2000, avgYield:6.0, district:"SH2", projectCount:4,  location:"MBR City",      type:"New Phase" },
   { id:"SR",   name:"Sobha Reserve",            developer:"sobha",    avgPpsf:1250, avgYield:5.5, district:"SR",  projectCount:2,  location:"Dubailand",     type:"Ultra Luxury" },
   { id:"JLT",  name:"JLT",                      developer:"sobha",    avgPpsf:1300, avgYield:7.5, district:"JLT", projectCount:1,  location:"New Dubai",     type:"Urban Towers" },
+  { id:"SE",   name:"Sobha Elwood",             developer:"sobha",    avgPpsf:1850, avgYield:5.2, district:"SE",  projectCount:2,  location:"Dubailand/Al Ain Rd", type:"Luxury Villa Community", emirate:"Dubai" },
+  { id:"SSI",  name:"Sobha Siniya Island",      developer:"sobha",    avgPpsf:1800, avgYield:6.0, district:"SSI", projectCount:3,  location:"Siniya Island, UAQ",  type:"Island Beachfront", emirate:"UAQ" },
   // ── NAKHEEL ────────────────────────────────────────────────────────────────
   { id:"PJ",   name:"Palm Jumeirah",            developer:"nakheel",  avgPpsf:4200, avgYield:5.2, district:"PJ",  projectCount:4,  location:"Palm",          type:"Iconic Island" },
   { id:"PJA",  name:"Palm Jebel Ali",           developer:"nakheel",  avgPpsf:2800, avgYield:4.5, district:"PJA", projectCount:3,  location:"Jebel Ali",     type:"New Mega Island" },
@@ -465,11 +513,13 @@ export const allCommunities = [
   { id:"PLM",  name:"Port de La Mer",           developer:"meraas",   avgPpsf:2600, avgYield:6.2, district:"PLM", projectCount:2,  location:"Jumeirah",      type:"Marina" },
   { id:"MJL",  name:"Madinat Jumeirah Living",  developer:"meraas",   avgPpsf:2400, avgYield:6.0, district:"MJL", projectCount:2,  location:"Jumeirah",      type:"Family Luxury" },
   { id:"TA",   name:"The Acres",                developer:"meraas",   avgPpsf:1800, avgYield:5.5, district:"TA",  projectCount:2,  location:"Dubailand",     type:"Eco Villas" },
+  { id:"D3",   name:"Dubai Design District",     developer:"meraas",   avgPpsf:2800, avgYield:6.5, district:"D3",  projectCount:2,  location:"Al Quoz Canal",     type:"Creative Hub Residential" },
   // ── ALDAR ──────────────────────────────────────────────────────────────────
   { id:"YI",   name:"Yas Island",               developer:"aldar",    avgPpsf:2200, avgYield:6.2, district:"YI",  projectCount:4,  location:"Abu Dhabi",     type:"Entertainment" },
   { id:"SAI",  name:"Saadiyat Island",          developer:"aldar",    avgPpsf:4800, avgYield:4.8, district:"SAI", projectCount:3,  location:"Abu Dhabi",     type:"Cultural Luxury" },
   { id:"RI",   name:"Reem Island",              developer:"aldar",    avgPpsf:1800, avgYield:7.0, district:"RI",  projectCount:2,  location:"Abu Dhabi",     type:"Urban" },
   { id:"ATH",  name:"Athlon",                   developer:"aldar",    avgPpsf:1900, avgYield:6.8, district:"ATH", projectCount:2,  location:"Dubailand",     type:"Active Lifestyle" },
+  { id:"FI",   name:"Fahid Island",              developer:"aldar",    avgPpsf:2800, avgYield:5.5, district:"FI",  projectCount:2,  location:"Abu Dhabi Coast",   type:"Coastal Wellness Island", emirate:"Abu Dhabi" },
   // ── BINGHATTI ──────────────────────────────────────────────────────────────
   { id:"SO",   name:"Silicon Oasis",            developer:"binghatti",avgPpsf:850,  avgYield:8.5, district:"SO",  projectCount:2,  location:"Tech Hub",      type:"Affordable" },
   { id:"MBR",  name:"MBR City",                 developer:"binghatti",avgPpsf:2600, avgYield:6.0, district:"MBR", projectCount:2,  location:"Nad Al Sheba",  type:"Mixed-Use" },
