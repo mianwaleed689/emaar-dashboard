@@ -1,3 +1,13 @@
+
+// ── OFFICIAL LINKS ────────────────────────────────────────────────────
+export const damacOfficialLinks = {
+  developerWebsite: "https://www.damacproperties.com/en/",
+  communitiesPage: "https://www.damacproperties.com/en/communities/",
+  projectsPage: "https://www.damacproperties.com/en/properties/" ,
+  dlrPortal: "https://dubailand.gov.ae/en/eservices/real-estate-services/",
+  oqood: "https://oqood.dubailand.gov.ae/",
+};
+
 /**
  * DXB ANALYTICS — DAMAC COMMUNITIES
  * 5 communities | Research: March 2026

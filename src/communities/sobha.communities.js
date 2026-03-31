@@ -1,3 +1,13 @@
+
+// ── OFFICIAL LINKS ────────────────────────────────────────────────────
+export const sobhaOfficialLinks = {
+  developerWebsite: "https://sobharealty.com/",
+  communitiesPage: "https://sobharealty.com/communities/",
+  projectsPage: "https://sobharealty.com/properties/" ,
+  dlrPortal: "https://dubailand.gov.ae/en/eservices/real-estate-services/",
+  oqood: "https://oqood.dubailand.gov.ae/",
+};
+
 /**
  * DXB ANALYTICS — SOBHA COMMUNITIES
  * 4 communities | Research: March 2026

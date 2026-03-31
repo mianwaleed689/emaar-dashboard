@@ -1,3 +1,13 @@
+
+// ── OFFICIAL LINKS ────────────────────────────────────────────────────
+export const meraasOfficialLinks = {
+  developerWebsite: "https://meraas.com/en/",
+  communitiesPage: "https://meraas.com/en/en/communities/",
+  projectsPage: "https://meraas.com/en/properties/" ,
+  dlrPortal: "https://dubailand.gov.ae/en/eservices/real-estate-services/",
+  oqood: "https://oqood.dubailand.gov.ae/",
+};
+
 /**
  * DXB ANALYTICS — MERAAS COMMUNITIES
  * 5 communities | Research: March 2026
