@@ -8,7 +8,7 @@ import { Link, useNavigate } from "react-router-dom";
 import emailjs from "@emailjs/browser";
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area, ComposedChart, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ReferenceLine, Legend } from "recharts";
 import { auth, db } from "./firebase";
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail, sendEmailVerification, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail, sendEmailVerification, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult } from "firebase/auth";
 import { collection, getDocs, doc, getDoc, setDoc, updateDoc, deleteDoc, onSnapshot } from "firebase/firestore";
 
 // ─── DXB ANALYTICS — UNIFIED DATA IMPORT ───────────────────────────────────
@@ -568,6 +568,19 @@ const CustomTooltip = ({ active, payload, label }) => {
 
 /* ─── LOGIN SCREEN ─── */
 const googleProvider = new GoogleAuthProvider();
+// Handle redirect result on page load (for Vercel COOP compatibility)
+getRedirectResult(auth).then(result => {
+  if (result?.user) {
+    const u = result.user;
+    getDoc(doc(db, "users", u.uid)).then(snap => {
+      if (!snap.exists()) {
+        const now = new Date();
+        const trialEnd = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+        setDoc(doc(db, "users", u.uid), { name: u.displayName || u.email.split("@")[0], email: u.email, tier: "pro_trial", createdAt: now.toISOString(), trialStart: now.toISOString(), trialEnd: trialEnd.toISOString(), role: "user", provider: "google" });
+      }
+    });
+  }
+}).catch(() => {});
 
 const PasswordStrength = ({ password }) => {
   const score = [/.{8,}/, /[0-9]/, /[A-Z]/, /[^A-Za-z0-9]/].filter(r => r.test(password)).length;
@@ -612,6 +625,8 @@ const LoginScreen = ({ onLogin, onBack, defaultMode = "login" }) => {
 
   const handleGoogleSignIn = async () => {
     setGoogleLoading(true); setError("");
+    // Use redirect instead of popup to avoid COOP issues on Vercel
+    try { await signInWithRedirect(auth, googleProvider); return; } catch {}
     try {
       const result = await signInWithPopup(auth, googleProvider);
       const u = result.user;
