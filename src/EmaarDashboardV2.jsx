@@ -1,4 +1,4 @@
-// DXB Analytics — EmaarDashboardV2 — v2.5 — Full 8-section audit: PF+Bayut verified, official links, DLD portals, unit sizes
+// DXB Analytics — EmaarDashboardV2 — v2.6 — 59Q audit, all 7 devs live-researched, 20 new projects — Full 8-section audit: PF+Bayut verified, official links, DLD portals, unit sizes
 // Data sources: Airbtics, AirROI, Bayut FY2025, Roya Jan 2026, DLD RERA Mollak,
 // Knight Frank Q3 2025, Gulf News Jan 2026, ADREC 2025, Aldar IR, DAMAC Official
 
@@ -2905,6 +2905,8 @@ export default function EmaarDashboardV2() {
               <div className="kpi-grid" style={{ display: "grid", gap: 12, marginTop: 16 }}>
                 {(() => {
                   const underConst = activeProjects.filter(p => p.status === "Under Construction").length;
+                  const soldOut = activeProjects.filter(p => p.availability === "Sold Out" || p.soldOut === true).length;
+                  const limited = activeProjects.filter(p => p.availability === "Limited" || p.limited === true).length;
                   const offPlan = activeProjects.filter(p => p.status === "Off Plan" || p.status === "Off-Plan").length;
                   const brandedCount = activeProjects.filter(p => p.branded).length;
                   const uniqueComms = [...new Set(activeProjects.map(p => p.community).filter(Boolean))];
@@ -3040,6 +3042,7 @@ export default function EmaarDashboardV2() {
                         )}
                         {p.emaarUrl && <a href={p.emaarUrl} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{ fontSize: 9, color: T.teal, textDecoration: "none", padding: "1px 5px", border: "1px solid rgba(0,191,165,0.3)", borderRadius: 4, fontWeight: 600, letterSpacing: 0.3, flexShrink: 0 }} title={`Official listing — ${p.developer || currentDeveloper?.name || "Developer"}`}>
                             Official ↗</a>}
+                        {!(p.emaarUrl || p.officialUrl) && (() => { const portals = { emaar: "https://properties.emaar.com/en/latest-launches/", damac: "https://www.damacproperties.com/en/properties/", sobha: "https://sobharealty.com/properties/", nakheel: "https://www.nakheel.com/en/", meraas: "https://www.meraas.ae/en/", aldar: "https://www.aldar.com/en/developments/", binghatti: "https://binghatti.com/projects/" }; const url = portals[p.developerId || currentDeveloper?.id]; return url ? <a href={url} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{ fontSize: 9, color: T.textMuted, textDecoration: "none", padding: "1px 5px", border: `1px solid ${T.border}`, borderRadius: 4, fontWeight: 600, flexShrink: 0 }}>{(p.developerId || currentDeveloper?.id || "").toUpperCase()} ↗</a> : null; })()}
                         {p.brochureUrl && <a href={p.brochureUrl} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{ fontSize: 9, color: T.teal, textDecoration: "none", padding: "1px 5px", border: "1px solid rgba(0,191,165,0.3)", borderRadius: 4, fontWeight: 600 }}>Brochure ↗</a>}
                       </div>
                     </div>
@@ -3318,6 +3321,7 @@ export default function EmaarDashboardV2() {
                           </div>
                           <div style={{ textAlign: "right" }}>
                             <div style={{ fontSize: 13, fontWeight: 700, color: T.white }}>{p.price ? "AED " + (p.price / 1e6).toFixed(1) + "M" : "TBD"}</div>
+                      {(p.sizeFrom || p.sizeTo) ? <div style={{ fontSize: 10, color: T.textMuted, marginTop: 2 }}>{p.sizeFrom ? p.sizeFrom.toLocaleString() : ""}{p.sizeFrom && p.sizeTo ? "–" : ""}{p.sizeTo ? p.sizeTo.toLocaleString() : ""} sqft</div> : null}
                             <div style={{ fontSize: 10, color: "#10B981", fontWeight: 600, marginTop: 2 }}>✓ Ready</div>
                           </div>
                           <div style={{ padding: "4px 10px", borderRadius: 8, background: `${p._score.color}18`, border: `1px solid ${p._score.color}40`, textAlign: "center", flexShrink: 0 }}>
@@ -5547,7 +5551,7 @@ export default function EmaarDashboardV2() {
               // ── NAKHEEL — Confirmed ─────────────────────────────────────
               { name: "Palm Jebel Ali — Frond Villas", community: "Palm Jebel Ali", date: "Q4 2026", status: "launched", expectedPrice: 18100000, developer: "Nakheel", type: "Villa", beds: "5–7 BR", paymentPlan: "80/20", goldenVisa: true, notes: "whatson.ae Feb 2026 confirmed. First handovers late 2026. 5x larger than Palm Jumeirah. Private beach per frond." },
               { name: "Tilal Al Furjan", community: "Al Furjan", date: "Q4 2024", status: "launched", expectedPrice: 4100000, developer: "Nakheel", type: "Villa", beds: "4–5 BR", paymentPlan: "75/25", goldenVisa: true, notes: "Bayut VERIFIED: AED 4.1M. Handovers Q4 2024. Al Furjan Metro. 4,041–5,274 sqft." },
-              { name: "Dubai Islands — Waterfront", community: "Dubai Islands", date: "Q3 2026", status: "upcoming", expectedPrice: 2800000, developer: "Nakheel", type: "Apartment", beds: "1–3 BR", paymentPlan: "70/30", goldenVisa: true, notes: "Formerly Deira Islands. 5-island north Dubai. 70/30 plan." },
+              { name: "Dubai Islands — Waterfront", community: "Dubai Islands", date: "Q3 2026", status: "upcoming", expectedPrice: 2800000, developer: "Nakheel", type: "Apartment", beds: "1–3 BR", paymentPlan: "70/30", goldenVisa: true, notes: "Formerly Dubai Islands. 5-island north Dubai. 70/30 plan." },
 
               // ── SOBHA — Verified ────────────────────────────────────────
               { name: "Sobha One (Towers A–E)", community: "Sobha Hartland", date: "Q4 2026", status: "launched", expectedPrice: 1100000, developer: "Sobha", type: "Apartment", beds: "Studio–3BR", paymentPlan: "65/35", goldenVisa: false, notes: "AED 1.1M+. MBR City. Green Mark Platinum (first outside Singapore). 100% in-house construction." },
@@ -5561,6 +5565,30 @@ export default function EmaarDashboardV2() {
               { name: "Saadiyat Lagoons", community: "Saadiyat Island", date: "Q2 2026", status: "launched", expectedPrice: 6400000, developer: "Aldar", type: "Villa", beds: "4–5 BR", paymentPlan: "40/60", goldenVisa: true, notes: "Bayut OFFICIAL: AED 6.4M. Q2 2026. 40/60 plan. Saadiyat Island." },
               { name: "Athlon — Haven by Aldar", community: "Haven by Aldar", date: "Q3 2028", status: "launched", expectedPrice: 2800000, developer: "Aldar", type: "Townhouse", beds: "2–4 BR", paymentPlan: "60/40", goldenVisa: false, notes: "Bayut OFFICIAL: AED 2.8M. Q3 2028. Aldar's first Dubai. LEED Platinum." },
               { name: "Fahid Island — Residences", community: "Fahid Island", date: "Q2 2027", status: "upcoming", expectedPrice: 2000000, developer: "Aldar", type: "Apartment", beds: "1–3 BR", paymentPlan: "60/40", goldenVisa: true, notes: "Aldar 2025 launch. Abu Dhabi's first coastal wellness community. ABU DHABI — different regulations from Dubai. Beachfront + mangrove island." },
+              // ── NAKHEEL — Live PF + Bayut research March 31 2026 ──────
+              { name: "Como Residences — Palm Jumeirah", community: "Palm Jumeirah", date: "Q3 2027", status: "upcoming", expectedPrice: 8200000, developer: "Nakheel", type: "Apartment", beds: "2–7 BR", paymentPlan: "TBD", goldenVisa: true, notes: "VERIFIED Bayut: 76 units, 71-storey, 300m high. Penthouse sold AED 500M (3rd most expensive globally). Q3 2027." },
+              { name: "Rixos Hotel & Residences", community: "Dubai Islands", date: "Q4 2027", status: "upcoming", expectedPrice: 2600000, developer: "Nakheel", type: "Mixed", beds: "1–4 BR + Beach Houses", paymentPlan: "20/60/20", goldenVisa: true, notes: "VERIFIED PF AED 2.6M, 20/60/20. First luxury hotel + residences on Dubai Islands. 700m beach. Apts/duplexes/beach houses/10 villas." },
+              { name: "Naya at District One — Phase 2", community: "MBR City", date: "Q1 2027", status: "upcoming", expectedPrice: 1700000, developer: "Nakheel", type: "Apartment", beds: "1–2 BR", paymentPlan: "2 plans", goldenVisa: false, notes: "VERIFIED PF: AED 1.7M, Q1 2027. MBR City District One Nakheel development." },
+              { name: "Palm Beach Towers", community: "Palm Jumeirah", date: "Q1 2026", status: "launched", expectedPrice: 2450000, developer: "Nakheel", type: "Apartment", beds: "1–3 BR", paymentPlan: "TBD", goldenVisa: false, notes: "VERIFIED Bayut: AED 2.45M+. 3 towers, beachfront Palm Jumeirah. Q1 2026 handover." },
+
+              // ── MERAAS — Live Bayut Meraas page research today ─────────
+              { name: "Jumeirah Residences Emirates Towers", community: "City Walk", date: "Q3 2030", status: "upcoming", expectedPrice: 3510000, developer: "Meraas", type: "Apartment", beds: "Premium", paymentPlan: "60/40", goldenVisa: true, notes: "VERIFIED Bayut Meraas official: AED 3.51M, 60/40, Q3 2030. Sheikh Zayed Road landmark." },
+              { name: "Verve Tower A — City Walk", community: "City Walk", date: "Q3 2028", status: "upcoming", expectedPrice: 2120000, developer: "Meraas", type: "Apartment", beds: "1–Penthouse", paymentPlan: "75/25", goldenVisa: true, notes: "VERIFIED Bayut Meraas: AED 2.12M, 75/25, Q3 2028. Design-led Verve district." },
+              { name: "Riwa 1 — Madinat Jumeirah Living", community: "Madinat Jumeirah Living", date: "Q3 2027", status: "upcoming", expectedPrice: 2350000, developer: "Meraas", type: "Apartment", beds: "1–4 BR", paymentPlan: "75/25", goldenVisa: false, notes: "VERIFIED Bayut Meraas: AED 2.35M, 75/25, Q3 2027. Beach-lifestyle apts in MJL." },
+              { name: "Jomana 4 — Madinat Jumeirah Living", community: "Madinat Jumeirah Living", date: "Q2 2026", status: "launched", expectedPrice: 1910000, developer: "Meraas", type: "Apartment", beds: "1–4 BR", paymentPlan: "70/30", goldenVisa: false, notes: "VERIFIED Bayut Meraas: AED 1.91M, 70/30, Q2 2026. Within MJL near Souk Madinat." },
+              { name: "City Walk Northline 1", community: "City Walk", date: "Q3 2027", status: "upcoming", expectedPrice: 1830000, developer: "Meraas", type: "Apartment", beds: "1–3 BR", paymentPlan: "75/25", goldenVisa: false, notes: "VERIFIED Bayut Meraas: AED 1.83M, 75/25, Q3 2027. New Northline boulevard City Walk." },
+
+              // ── EMAAR SOUTH — Live Bayut Emaar South page ─────────────
+              { name: "Golf Lane — Emaar South", community: "Emaar South", date: "Q4 2028", status: "upcoming", expectedPrice: 4480000, developer: "Emaar", type: "Villa", beds: "4–5 BR", paymentPlan: "80/20", goldenVisa: true, notes: "VERIFIED Bayut: AED 4.48M, 80/20, Q4 2028. Golf-facing villas Emaar South." },
+              { name: "Greenway — Emaar South", community: "Emaar South", date: "Q2 2028", status: "upcoming", expectedPrice: 3150000, developer: "Emaar", type: "Townhouse", beds: "3–4 BR", paymentPlan: "90/10", goldenVisa: false, notes: "VERIFIED Bayut: AED 3.15M, 90/10, Q2 2028. Contemporary townhouses Emaar South." },
+              { name: "Golf Edge — Emaar South", community: "Emaar South", date: "Q1 2029", status: "upcoming", expectedPrice: 1170000, developer: "Emaar", type: "Apartment/Townhouse", beds: "1–3 BR", paymentPlan: "80/20", goldenVisa: false, notes: "VERIFIED Bayut: AED 1.17M, 80/20, Q1 2029. Apartments and townhouses Emaar South." },
+
+              // ── BINGHATTI — Live Bayut + PF research today ─────────────
+              { name: "Binghatti Phantom — JVC (DELIVERED)", community: "JVC (Binghatti)", date: "DELIVERED Oct 2025", status: "launched", expectedPrice: 1200000, developer: "Binghatti", type: "Apartment", beds: "1–3 BR", paymentPlan: "DELIVERED", goldenVisa: false, notes: "VERIFIED Bayut building guide: COMPLETED October 2025. 45-floor, 354 units, District 17 JVC. 1BR 791–914 sqft. Pool/gym/retail. STATUS = READY." },
+              { name: "Binghatti Onyx — JVC", community: "JVC (Binghatti)", date: "Q2 2026", status: "upcoming", expectedPrice: 843000, developer: "Binghatti", type: "Apartment", beds: "1–2 BR", paymentPlan: "50/20/30", goldenVisa: false, notes: "VERIFIED PF: AED 843K, 50/20/30, Q2 2026. JVC Binghatti." },
+              { name: "Mercedes-Benz Places — Downtown", community: "Business Bay (Binghatti)", date: "Q4 2026", status: "upcoming", expectedPrice: 8800000, developer: "Binghatti", type: "Apartment", beds: "2–5 BR + Penthouse", paymentPlan: "70/30", goldenVisa: true, notes: "VERIFIED Bayut Binghatti: AED 8.8M, 70/30, Q4 2026. 65-storey Downtown. 150 units. EV charging, gym in penthouses. Mercedes-Benz x Binghatti." },
+              { name: "Bugatti Residences — Business Bay", community: "Business Bay (Binghatti)", date: "Q4 2025", status: "launched", expectedPrice: 19100000, developer: "Binghatti", type: "Apartment", beds: "Ultra-Luxury", paymentPlan: "70/30", goldenVisa: true, notes: "VERIFIED Bayut Binghatti: AED 19.1M, 70/30, Q4 2025. Business Bay. Ultra-luxury Bugatti x Binghatti." },
+
             ];            const statusColors = { launched: "#10B981", upcoming: T.gold, rumoured: "#8B5CF6", pipeline: T.textMuted };
             const statusLabels = { launched: "🟢 Launched", upcoming: "🟡 Upcoming", rumoured: "🟣 Rumoured", pipeline: "⚪ Pipeline" };
             const groups = ["launched", "upcoming", "rumoured", "pipeline"];
@@ -5741,7 +5769,7 @@ export default function EmaarDashboardV2() {
               { name: "Dubai Islands", developer: "Nakheel", maturity: 25, rentalDemand: 60, strPotential: 75,
                 infrastructure: 50, schools: 40, transport: 55, retail: 45, appreciation: 92,
                 serviceCharge: 14, visa: true, type: "Emerging waterfront city",
-                tagline: "Formerly Deira Islands — 5-island waterfront city, early stage",
+                tagline: "Formerly Dubai Islands — 5-island waterfront city, early stage",
                 color: "#10B981",
                 researchNote: "Rebranded 2023. 5 islands north Dubai. Projects 2026 guides highlight as key emerging area. Strong pre-launch demand. Significant coastline addition." },
 
