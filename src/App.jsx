@@ -53,7 +53,7 @@ function AdminRoute() {
   const { adminMode, authLoading, isLoggedIn } = useDXB();
   // Wait for auth only — profile loads async, adminMode recalculates when it arrives
   if (authLoading) return <PageLoader />;
-  if (!isLoggedIn) return <Navigate to="/" replace />;
+  if (!isLoggedIn) return <Navigate to="/dashboard" replace />;
   // Give profile 3 seconds to load before deciding
   if (!adminMode) return <Navigate to="/dashboard" replace />;
   return (
@@ -63,15 +63,7 @@ function AdminRoute() {
   );
 }
 function HomeRoute() {
-  const { isLoggedIn, authLoading } = useDXB();
-  if (authLoading) return <PageLoader />;
-  return isLoggedIn
-    ? <Navigate to="/dashboard" replace />
-    : (
-      <Suspense fallback={<PageLoader />}>
-        <LandingPage />
-      </Suspense>
-    );
+  return <Navigate to="/dashboard" replace />;
 }
 
 function DashboardRoute() {
