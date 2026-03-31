@@ -1,4 +1,4 @@
-﻿/**
+/**
  * DXB ANALYTICS — MASTER DATA FILE
  * src/data_master.js
  *
@@ -42,6 +42,8 @@ export * from "./data_damac";
 export * from "./data_sobha";
 export * from "./data_nakheel";
 export * from "./data_meraas";
+// Aliases for meraas typo fix (data_meraas.js uses 'meeraas' with double-e)
+export { meeraasB as meraasB, meeraasC as meraasC, meeraasM as meraasM } from "./data_meraas";
 export * from "./data_aldar";
 export * from "./data_binghatti";
 
@@ -254,19 +256,6 @@ export const commKeyMap = {
   "Downtown":                 "DT",    // alias — always resolve to Downtown Dubai
   "Dubai Marina":             "DM",
   "Arabian Ranches 3":        "AR3",
-  "Arabian Ranches":          "AR1",
-  "Emirates Living":          "EML",
-  "Address Residences Zabeel":"ZAB",
-  "Mina Rashid":              "RYM",
-  "Rashid Yachts & Marina":   "RYM",
-  "Downtown":                 "DT",
-  "Downtown Dubai":           "DT",
-  "Dubai Sci Pk":             "SO",
-  "Dubai Science Park":       "SO",
-  "Motor City":               "MC",
-  "Dubai Motor City":         "MC",
-  "JLT":                      "JLT",
-  "Jumeirah Lake Towers":     "JLT",
   "Zabeel":                   "ZB",
   "Expo City":                "EL",    // Expo City = same as Expo Living district
   // DAMAC
@@ -512,9 +501,6 @@ export const allCommunities = [
   { id:"DT",   name:"Downtown Dubai",           developer:"emaar",    avgPpsf:3200, avgYield:5.0, district:"DT",  projectCount:5,  location:"Downtown",      type:"Iconic CBD" },
   { id:"DM",   name:"Dubai Marina",             developer:"emaar",    avgPpsf:2400, avgYield:6.0, district:"DM",  projectCount:2,  location:"Marina",        type:"Waterfront" },
   { id:"AR3",  name:"Arabian Ranches 3",        developer:"emaar",    avgPpsf:2000, avgYield:5.0, district:"AR3", projectCount:15, location:"Dubailand",     type:"Family Villas" },
-  { id:"AR1",  name:"Arabian Ranches",            developer:"emaar",    avgPpsf:1800, avgYield:5.0, district:"AR1", projectCount:3,  location:"Dubailand",     type:"Family Villas" },
-  { id:"EML",  name:"Emirates Living",            developer:"emaar",    avgPpsf:1600, avgYield:5.5, district:"EML", projectCount:2,  location:"New Dubai",     type:"Villa Community" },
-  { id:"ZAB",  name:"Address Residences Zabeel",  developer:"emaar",    avgPpsf:3500, avgYield:4.8, district:"ZAB", projectCount:1,  location:"Zabeel",        type:"Luxury Branded" },
   // ── DAMAC ──────────────────────────────────────────────────────────────────
   { id:"DH",   name:"DAMAC Hills",              developer:"damac",    avgPpsf:1600, avgYield:5.8, district:"DH",  projectCount:5,  location:"Dubailand",     type:"Golf Community" },
   { id:"DH2",  name:"DAMAC Hills 2",            developer:"damac",    avgPpsf:1000, avgYield:6.5, district:"DH2", projectCount:4,  location:"Dubailand",     type:"Family Community" },
