@@ -3050,9 +3050,40 @@ export default function EmaarDashboardV2() {
                         {p.developer && p.developer !== currentDeveloper?.name && (
                           <span style={{ fontSize: 9, padding: "1px 6px", borderRadius: 4, background: "rgba(212,168,67,0.1)", border: "1px solid rgba(212,168,67,0.2)", color: T.gold, fontWeight: 700 }}>{p.developerId?.toUpperCase() || p.developer}</span>
                         )}
-                        {p.emaarUrl && <a href={p.emaarUrl} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{ fontSize: 9, color: T.teal, textDecoration: "none", padding: "1px 5px", border: "1px solid rgba(0,191,165,0.3)", borderRadius: 4, fontWeight: 600, letterSpacing: 0.3, flexShrink: 0 }} title={`Official listing — ${p.developer || currentDeveloper?.name || "Developer"}`}>
-                            Official ↗</a>}
-                        {!(p.emaarUrl || p.officialUrl) && (() => { const portals = { emaar: "https://properties.emaar.com/en/latest-launches/", damac: "https://www.damacproperties.com/en/properties/", sobha: "https://sobharealty.com/properties/", nakheel: "https://www.nakheel.com/en/", meraas: "https://www.meraas.ae/en/", aldar: "https://www.aldar.com/en/developments/", binghatti: "https://binghatti.com/projects/" }; const url = portals[p.developerId || currentDeveloper?.id]; return url ? <a href={url} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{ fontSize: 9, color: T.textMuted, textDecoration: "none", padding: "1px 5px", border: `1px solid ${T.border}`, borderRadius: 4, fontWeight: 600, flexShrink: 0 }}>{(p.developerId || currentDeveloper?.id || "").toUpperCase()} ↗</a> : null; })()}
+                        {(() => {
+                          // Priority: project-specific URL → emaarUrl → developer portal
+                          const devPortals = {
+                            emaar:     "https://properties.emaar.com/en/latest-launches/",
+                            damac:     "https://www.damacproperties.com/en/properties/",
+                            sobha:     "https://sobharealty.com/properties/",
+                            nakheel:   "https://www.nakheel.com/en/new-launches",
+                            meraas:    "https://meraas.com/en",
+                            aldar:     "https://www.aldar.com/en/developments/",
+                            binghatti: "https://binghatti.com/projects/",
+                          };
+                          const url = p.officialUrl || p.emaarUrl || devPortals[p.developerId || currentDeveloper?.id];
+                          if (!url) return null;
+                          const isSpecific = !!(p.officialUrl || p.emaarUrl);
+                          return (
+                            <a
+                              href={url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              onClick={e => e.stopPropagation()}
+                              title={isSpecific ? `View on ${(p.developer || currentDeveloper?.name || "developer")} official site` : `${(p.developerId || currentDeveloper?.id || "").toUpperCase()} portal`}
+                              style={{
+                                fontSize: 9, fontWeight: 700, flexShrink: 0,
+                                textDecoration: "none", letterSpacing: 0.3,
+                                padding: "2px 7px", borderRadius: 4,
+                                color: isSpecific ? T.teal : T.textMuted,
+                                border: isSpecific ? "1px solid rgba(0,191,165,0.4)" : `1px solid ${T.border}`,
+                                background: isSpecific ? "rgba(0,191,165,0.06)" : "transparent",
+                              }}
+                            >
+                              {isSpecific ? "Official ↗" : `${(p.developerId || currentDeveloper?.id || "").toUpperCase()} ↗`}
+                            </a>
+                          );
+                        })()}
                         {p.brochureUrl && <a href={p.brochureUrl} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{ fontSize: 9, color: T.teal, textDecoration: "none", padding: "1px 5px", border: "1px solid rgba(0,191,165,0.3)", borderRadius: 4, fontWeight: 600 }}>Brochure ↗</a>}
                       </div>
                     </div>
@@ -3122,6 +3153,19 @@ export default function EmaarDashboardV2() {
                       <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
                       Full Details
                     </button>
+                    {(() => {
+                      const devPortals = { emaar:"https://properties.emaar.com/en/latest-launches/", damac:"https://www.damacproperties.com/en/properties/", sobha:"https://sobharealty.com/properties/", nakheel:"https://www.nakheel.com/en/new-launches", meraas:"https://meraas.com/en", aldar:"https://www.aldar.com/en/developments/", binghatti:"https://binghatti.com/projects/" };
+                      const url = p.officialUrl || p.emaarUrl || devPortals[p.developerId || currentDeveloper?.id];
+                      if (!url) return null;
+                      const isSpecific = !!(p.officialUrl || p.emaarUrl);
+                      return (
+                        <a href={url} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()}
+                          title={isSpecific ? "View official project page" : "Developer portal"}
+                          style={{ padding: "8px 10px", background: isSpecific ? "rgba(0,191,165,0.08)" : T.surfaceAlt, border: `1px solid ${isSpecific ? "rgba(0,191,165,0.4)" : T.border}`, borderRadius: 8, color: isSpecific ? T.teal : T.textMuted, fontSize: 11, fontWeight: 700, cursor: "pointer", textDecoration: "none", display: "flex", alignItems: "center", justifyContent: "center", whiteSpace: "nowrap", fontFamily: "'Outfit', sans-serif" }}>
+                          🔗
+                        </a>
+                      );
+                    })()}
                     <button type="button" onClick={(e) => { e.stopPropagation(); toggleWatchlist(p); }} style={{ padding: "8px 10px", background: watchlist.find(w => w.id === p.id) ? "rgba(212,168,67,0.15)" : T.surfaceAlt, border: `1px solid ${watchlist.find(w => w.id === p.id) ? T.gold : T.border}`, borderRadius: 8, color: watchlist.find(w => w.id === p.id) ? T.gold : T.textMuted, fontSize: 14, cursor: "pointer" }} title={watchlist.find(w => w.id === p.id) ? "Remove from watchlist" : "Add to watchlist"}>
                       {watchlist.find(w => w.id === p.id) ? "★" : "☆"}
                     </button>
@@ -7603,7 +7647,18 @@ export default function EmaarDashboardV2() {
                 <div>
                   <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
                     <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: 22, fontWeight: 900, color: T.gold, margin: 0 }}>{selectedProject_.name}</h2>
-                    {(() => { const devPortals = { emaar:"https://properties.emaar.com/en/latest-launches/", damac:"https://www.damacproperties.com/en/properties/", sobha:"https://sobharealty.com/properties/", nakheel:"https://www.nakheel.com/en/new-launches", meraas:"https://meraas.com/en", aldar:"https://www.aldar.com/en/developments/", binghatti:"https://binghatti.com/projects/" }; const u = selectedProject_.officialUrl || selectedProject_.emaarUrl || devPortals[selectedProject_.developerId] || devPortals[currentDeveloper?.id]; return u ? <a href={u} target="_blank" rel="noopener noreferrer" style={{ fontSize: 10, color: T.gold, textDecoration: "none", padding: "3px 8px", border: "1px solid rgba(212,168,67,0.4)", borderRadius: 6, fontWeight: 700, background: "rgba(212,168,67,0.08)", whiteSpace: "nowrap" }}>OFFICIAL ↗</a> : null; })()}
+                    {(() => {
+                      const devPortals = { emaar:"https://properties.emaar.com/en/latest-launches/", damac:"https://www.damacproperties.com/en/properties/", sobha:"https://sobharealty.com/properties/", nakheel:"https://www.nakheel.com/en/new-launches", meraas:"https://meraas.com/en", aldar:"https://www.aldar.com/en/developments/", binghatti:"https://binghatti.com/projects/" };
+                      const url = selectedProject_.officialUrl || selectedProject_.emaarUrl || devPortals[selectedProject_.developerId];
+                      const isSpecific = !!(selectedProject_.officialUrl || selectedProject_.emaarUrl);
+                      return url ? (
+                        <a href={url} target="_blank" rel="noopener noreferrer"
+                          style={{ fontSize: 10, color: T.teal, textDecoration: "none", padding: "3px 8px", border: "1px solid rgba(0,191,165,0.4)", borderRadius: 6, fontWeight: 700, background: "rgba(0,191,165,0.06)" }}
+                          title={isSpecific ? "View official project page" : "Developer portal"}>
+                          {isSpecific ? "Official Site ↗" : `${(selectedProject_.developerId||"").toUpperCase()} Portal ↗`}
+                        </a>
+                      ) : null;
+                    })()}
                     <Link to={`/project/${selectedProject_.id}`} style={{ fontSize: 10, color: T.teal, textDecoration: "none", padding: "3px 8px", border: "1px solid rgba(0,191,165,0.4)", borderRadius: 6, fontWeight: 700, background: "rgba(0,191,165,0.08)", whiteSpace: "nowrap" }} title="Open full page">FULL PAGE ↗</Link>
                   </div>
                   <p style={{ color: T.textSecondary, fontSize: 13, marginTop: 4 }}>{selectedProject_.community} · {selectedProject_.district} · {selectedProject_.type}</p>
