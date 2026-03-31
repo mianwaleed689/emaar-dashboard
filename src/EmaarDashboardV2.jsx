@@ -643,7 +643,7 @@ const LoginScreen = ({ onLogin, onBack, defaultMode = "login" }) => {
       }
       onLogin(u.email);
     } catch (err) {
-      if (err.code !== "auth/popup-closed-by-user") setError("Google sign-in failed. Please try again.");
+      if (err.code !== "auth/popup-closed-by-user") setError("Google sign-in failed: " + (err.code || err.message || "unknown error"));
     }
     setGoogleLoading(false);
   };
