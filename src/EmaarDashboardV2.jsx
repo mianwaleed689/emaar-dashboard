@@ -1,4 +1,4 @@
-// DXB Analytics — EmaarDashboardV2 — v2.6 — 59Q audit, all 7 devs live-researched, 20 new projects — Full 8-section audit: PF+Bayut verified, official links, DLD portals, unit sizes
+// DXB Analytics — EmaarDashboardV2 — v2.7 — WhatsApp + Inquiry + Official links + single-page modal — Full 8-section audit: PF+Bayut verified, official links, DLD portals, unit sizes
 // Data sources: Airbtics, AirROI, Bayut FY2025, Roya Jan 2026, DLD RERA Mollak,
 // Knight Frank Q3 2025, Gulf News Jan 2026, ADREC 2025, Aldar IR, DAMAC Official
 
@@ -1758,6 +1758,14 @@ export default function EmaarDashboardV2() {
   useEffect(() => { document.title = "DXB Analytics"; }, []);
 
   const [projectSearch, setProjectSearch] = useState("");
+  const [showInquiry, setShowInquiry] = useState(false);
+  const [inquiryProject, setInquiryProject] = useState(null);
+  const [inquiryName, setInquiryName] = useState("");
+  const [inquiryPhone, setInquiryPhone] = useState("");
+  const [inquiryEmail, setInquiryEmail] = useState("");
+  const [inquiryMessage, setInquiryMessage] = useState("");
+  const [inquirySending, setInquirySending] = useState(false);
+  const [inquirySent, setInquirySent] = useState(false);
   const [projectFilter, setProjectFilter] = useState("All");
   const [projectTier, setProjectTier] = useState("All");
   const [projectHandover, setProjectHandover] = useState("All");
@@ -7575,7 +7583,7 @@ export default function EmaarDashboardV2() {
                 <div>
                   <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
                     <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: 22, fontWeight: 900, color: T.gold, margin: 0 }}>{selectedProject_.name}</h2>
-                    {(selectedProject_.officialUrl || selectedProject_.emaarUrl) && <a href={selectedProject_.officialUrl || selectedProject_.emaarUrl} target="_blank" rel="noopener noreferrer" style={{ fontSize: 10, color: T.gold, textDecoration: "none", padding: "3px 8px", border: "1px solid rgba(212,168,67,0.4)", borderRadius: 6, fontWeight: 700, background: "rgba(212,168,67,0.08)", whiteSpace: "nowrap" }} title={`Official listing on ${getLinkDomain(selectedProject_.emaarUrl)}`}>SOURCE ↗</a>}
+                    {(() => { const devPortals = { emaar:"https://properties.emaar.com/en/latest-launches/", damac:"https://www.damacproperties.com/en/properties/", sobha:"https://sobharealty.com/properties/", nakheel:"https://www.nakheel.com/en/new-launches", meraas:"https://meraas.com/en", aldar:"https://www.aldar.com/en/developments/", binghatti:"https://binghatti.com/projects/" }; const u = selectedProject_.officialUrl || selectedProject_.emaarUrl || devPortals[selectedProject_.developerId] || devPortals[currentDeveloper?.id]; return u ? <a href={u} target="_blank" rel="noopener noreferrer" style={{ fontSize: 10, color: T.gold, textDecoration: "none", padding: "3px 8px", border: "1px solid rgba(212,168,67,0.4)", borderRadius: 6, fontWeight: 700, background: "rgba(212,168,67,0.08)", whiteSpace: "nowrap" }}>OFFICIAL ↗</a> : null; })()}
                     <Link to={`/project/${selectedProject_.id}`} style={{ fontSize: 10, color: T.teal, textDecoration: "none", padding: "3px 8px", border: "1px solid rgba(0,191,165,0.4)", borderRadius: 6, fontWeight: 700, background: "rgba(0,191,165,0.08)", whiteSpace: "nowrap" }} title="Open full page">FULL PAGE ↗</Link>
                   </div>
                   <p style={{ color: T.textSecondary, fontSize: 13, marginTop: 4 }}>{selectedProject_.community} · {selectedProject_.district} · {selectedProject_.type}</p>
@@ -7865,33 +7873,72 @@ export default function EmaarDashboardV2() {
                 </div>
               )}
 
-              {/* Project Tools */}
-              <div style={{ display: "flex", gap: 8 }}>
-                <a href={`/project/${selectedProject_.id}`}
-                  style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "13px 0", background: "linear-gradient(135deg, rgba(212,168,67,0.18), rgba(212,168,67,0.08))", border: "1px solid rgba(212,168,67,0.4)", borderRadius: 12, color: T.gold, fontSize: 13, fontWeight: 700, textDecoration: "none", fontFamily: "'Outfit', sans-serif", letterSpacing: 0.2 }}
-                  onMouseEnter={e => { e.currentTarget.style.background = "linear-gradient(135deg, rgba(212,168,67,0.28), rgba(212,168,67,0.15))"; e.currentTarget.style.boxShadow = "0 4px 20px rgba(212,168,67,0.2)"; }}
-                  onMouseLeave={e => { e.currentTarget.style.background = "linear-gradient(135deg, rgba(212,168,67,0.18), rgba(212,168,67,0.08))"; e.currentTarget.style.boxShadow = "none"; }}>
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-                  View Full Report
-                </a>
-                <button type="button" onClick={() => { const p = selectedProject_; const txt = `${p.name} | ${p.community} | AED ${p.price ? (p.price/1000000).toFixed(2)+"M" : "TBD"} | ${p.ppsf ? p.ppsf.toLocaleString()+" PPSF" : ""} | Handover: ${p.handover} | Payment: ${p.payment} | Status: ${p.status}`; navigator.clipboard?.writeText(txt).then(() => alert("✅ Project data copied to clipboard")).catch(() => alert(txt)); }}
-                  style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "13px 16px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 12, color: T.textSecondary, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}
-                  title="Copy project data">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-                  Copy
-                </button>
+              {/* ═══ ACTION BAR — WhatsApp + Inquiry + PDF + Official ═══ */}
+              <div style={{ marginTop: 8, display: "flex", flexDirection: "column", gap: 8 }}>
+
+                {/* Row 1: WhatsApp + Inquiry */}
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                  {/* WhatsApp Share */}
+                  <button type="button" onClick={() => {
+                    const p = selectedProject_;
+                    const devPortals = { emaar:"https://properties.emaar.com/en/latest-launches/", damac:"https://www.damacproperties.com/en/properties/", sobha:"https://sobharealty.com/properties/", nakheel:"https://www.nakheel.com/en/new-launches", meraas:"https://meraas.com/en", aldar:"https://www.aldar.com/en/developments/", binghatti:"https://binghatti.com/projects/" };
+                    const officialUrl = p.officialUrl || p.emaarUrl || devPortals[p.developerId] || "";
+                    const msg = `🏢 *${p.name}*
+📍 ${p.community}, Dubai
+💰 Starting AED ${p.price ? (p.price/1e6).toFixed(1)+"M" : "TBD"}
+🛏️ ${p.beds || "Various BR"}
+📋 Payment: ${p.payment || "TBD"}
+📅 Handover: ${p.handover || "TBD"}
+📊 Status: ${p.status || "Off-Plan"}
+${officialUrl ? "
+🔗 Official: "+officialUrl : ""}
+
+_Via DXB Analytics — Dubai Real Estate Intelligence_`;
+                    window.open("https://wa.me/?text=" + encodeURIComponent(msg), "_blank");
+                  }} style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "12px 0", background: "rgba(37,211,102,0.12)", border: "1px solid rgba(37,211,102,0.35)", borderRadius: 12, color: "#25D366", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                    WhatsApp Share
+                  </button>
+
+                  {/* Inquiry Button */}
+                  <button type="button" onClick={() => { setInquiryProject(selectedProject_); setShowInquiry(true); setInquirySent(false); setInquiryName(""); setInquiryPhone(""); setInquiryEmail(""); setInquiryMessage(""); }}
+                    style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "12px 0", background: "rgba(0,191,165,0.12)", border: "1px solid rgba(0,191,165,0.35)", borderRadius: 12, color: T.teal, fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                    Inquire Now
+                  </button>
+                </div>
+
+                {/* Row 2: Official Developer Link */}
+                {(() => {
+                  const devPortals = { emaar:"https://properties.emaar.com/en/latest-launches/", damac:"https://www.damacproperties.com/en/properties/", sobha:"https://sobharealty.com/properties/", nakheel:"https://www.nakheel.com/en/new-launches", meraas:"https://meraas.com/en", aldar:"https://www.aldar.com/en/developments/", binghatti:"https://binghatti.com/projects/" };
+                  const devNames = { emaar:"Emaar Properties", damac:"DAMAC Properties", sobha:"Sobha Realty", nakheel:"Nakheel", meraas:"Meraas", aldar:"Aldar Properties", binghatti:"Binghatti" };
+                  const url = selectedProject_.officialUrl || selectedProject_.emaarUrl || devPortals[selectedProject_.developerId] || devPortals[currentDeveloper?.id];
+                  const devName = devNames[selectedProject_.developerId] || currentDeveloper?.name || "Developer";
+                  return url ? (
+                    <a href={url} target="_blank" rel="noopener noreferrer"
+                      style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "12px 0", background: "rgba(212,168,67,0.08)", border: "1px solid rgba(212,168,67,0.35)", borderRadius: 12, color: T.gold, fontSize: 13, fontWeight: 700, textDecoration: "none", fontFamily: "'Outfit', sans-serif" }}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                      View Official Listing on {devName} ↗
+                    </a>
+                  ) : null;
+                })()}
+
+                {/* Row 3: Copy + Full Report */}
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                  <button type="button" onClick={() => { const p = selectedProject_; const txt = `${p.name} | ${p.community} | AED ${p.price ? (p.price/1e6).toFixed(2)+"M" : "TBD"} | Handover: ${p.handover} | Payment: ${p.payment} | Status: ${p.status}`; navigator.clipboard?.writeText(txt).then(() => alert("✅ Copied!")).catch(() => {}); }}
+                    style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "10px 0", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 12, color: T.textSecondary, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                    Copy Data
+                  </button>
+                  <a href={`/project/${selectedProject_.id}`}
+                    style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "10px 0", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 12, color: T.textSecondary, fontSize: 12, fontWeight: 600, textDecoration: "none", fontFamily: "'Outfit', sans-serif" }}>
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                    Full Report
+                  </a>
+                </div>
               </div>
 
-              {/* ─── SOURCE LINK: Official Emaar listing ─── */}
-              {selectedProject_.emaarUrl && (
-                <a href={selectedProject_.emaarUrl} target="_blank" rel="noopener noreferrer"
-                  style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, width: "100%", marginTop: 8, padding: "13px 0", background: "linear-gradient(135deg, rgba(212,168,67,0.12), rgba(212,168,67,0.06))", border: "1px solid rgba(212,168,67,0.4)", borderRadius: 12, color: T.gold, fontSize: 13, fontWeight: 700, textDecoration: "none", fontFamily: "'Outfit', sans-serif", letterSpacing: 0.2 }}
-                  onMouseEnter={e => { e.currentTarget.style.background = "linear-gradient(135deg, rgba(212,168,67,0.22), rgba(212,168,67,0.12))"; e.currentTarget.style.boxShadow = "0 4px 20px rgba(212,168,67,0.15)"; }}
-                  onMouseLeave={e => { e.currentTarget.style.background = "linear-gradient(135deg, rgba(212,168,67,0.12), rgba(212,168,67,0.06))"; e.currentTarget.style.boxShadow = "none"; }}>
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={T.gold} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-                  <span>View Official Listing on <strong>{getLinkDomain(selectedProject_.emaarUrl)}</strong> ↗</span>
-                </a>
-              )}
+              {/* Official link moved to action bar above */}
 
               {/* ─── PDF REPORT BUTTON ─── */}
               <button type="button" onClick={() => {
@@ -8750,6 +8797,69 @@ export default function EmaarDashboardV2() {
           </div>
         );
       })()}
+
+      {/* ══════ INQUIRY MODAL ══════ */}
+      {showInquiry && inquiryProject && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.9)", zIndex: 3000, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(8px)" }} onClick={() => setShowInquiry(false)}>
+          <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, width: "95%", maxWidth: 480, padding: 28, position: "relative" }} onClick={e => e.stopPropagation()}>
+            <button type="button" onClick={() => setShowInquiry(false)} style={{ position: "absolute", top: 14, right: 14, background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 30, height: 30, cursor: "pointer", fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
+            <div style={{ marginBottom: 20 }}>
+              <div style={{ fontSize: 11, color: T.teal, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4 }}>Project Inquiry</div>
+              <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: 20, fontWeight: 900, color: T.gold, margin: 0 }}>{inquiryProject.name}</h2>
+              <p style={{ color: T.textSecondary, fontSize: 12, marginTop: 4 }}>{inquiryProject.community} · AED {inquiryProject.price ? (inquiryProject.price/1e6).toFixed(1)+"M" : "TBD"} · {inquiryProject.handover || "TBD"}</p>
+            </div>
+            {inquirySent ? (
+              <div style={{ textAlign: "center", padding: "20px 0" }}>
+                <div style={{ fontSize: 40, marginBottom: 12 }}>✅</div>
+                <h3 style={{ color: T.green, fontSize: 18, fontWeight: 700, marginBottom: 8 }}>Inquiry Sent!</h3>
+                <p style={{ color: T.textSecondary, fontSize: 13 }}>Our team will contact you within 24 hours.</p>
+                <button type="button" onClick={() => setShowInquiry(false)} style={{ marginTop: 16, padding: "10px 24px", background: T.gold, color: T.bg, border: "none", borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>Done</button>
+              </div>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                  <div>
+                    <label style={{ fontSize: 10, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.5, display: "block", marginBottom: 5 }}>Full Name *</label>
+                    <input value={inquiryName} onChange={e => setInquiryName(e.target.value)} placeholder="Your name" style={{ width: "100%", padding: "10px 12px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textPrimary, fontSize: 13, fontFamily: "'Outfit', sans-serif", outline: "none", boxSizing: "border-box" }} />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: 10, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.5, display: "block", marginBottom: 5 }}>Phone *</label>
+                    <input value={inquiryPhone} onChange={e => setInquiryPhone(e.target.value)} placeholder="+971 50 000 0000" style={{ width: "100%", padding: "10px 12px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textPrimary, fontSize: 13, fontFamily: "'Outfit', sans-serif", outline: "none", boxSizing: "border-box" }} />
+                  </div>
+                </div>
+                <div>
+                  <label style={{ fontSize: 10, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.5, display: "block", marginBottom: 5 }}>Email *</label>
+                  <input value={inquiryEmail} onChange={e => setInquiryEmail(e.target.value)} placeholder="your@email.com" type="email" style={{ width: "100%", padding: "10px 12px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textPrimary, fontSize: 13, fontFamily: "'Outfit', sans-serif", outline: "none", boxSizing: "border-box" }} />
+                </div>
+                <div>
+                  <label style={{ fontSize: 10, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.5, display: "block", marginBottom: 5 }}>Message</label>
+                  <textarea value={inquiryMessage} onChange={e => setInquiryMessage(e.target.value)} placeholder={`I'm interested in ${inquiryProject.name}. Please send me more details...`} rows={3} style={{ width: "100%", padding: "10px 12px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textPrimary, fontSize: 13, fontFamily: "'Outfit', sans-serif", outline: "none", resize: "vertical", boxSizing: "border-box" }} />
+                </div>
+                <button type="button" disabled={inquirySending || !inquiryName || !inquiryPhone || !inquiryEmail}
+                  onClick={async () => {
+                    if (!inquiryName || !inquiryPhone || !inquiryEmail) return;
+                    setInquirySending(true);
+                    try {
+                      await setDoc(doc(db, "inquiries", `${Date.now()}_${inquiryProject.id}`), {
+                        projectId: inquiryProject.id, projectName: inquiryProject.name, community: inquiryProject.community,
+                        developer: inquiryProject.developer || currentDeveloper?.name || "—", price: inquiryProject.price || 0,
+                        name: inquiryName, phone: inquiryPhone, email: inquiryEmail,
+                        message: inquiryMessage || `Inquiry for ${inquiryProject.name}`,
+                        source: "DXB Analytics — Project Modal", submittedAt: new Date().toISOString(), status: "new",
+                      });
+                      setInquirySent(true);
+                    } catch(err) { alert("Could not save inquiry. Please contact us via WhatsApp."); }
+                    setInquirySending(false);
+                  }}
+                  style={{ padding: "13px 0", background: (!inquiryName || !inquiryPhone || !inquiryEmail) ? "rgba(0,191,165,0.2)" : "rgba(0,191,165,0.15)", border: "1px solid rgba(0,191,165,0.5)", borderRadius: 12, color: T.teal, fontSize: 14, fontWeight: 700, cursor: (!inquiryName || !inquiryPhone || !inquiryEmail) ? "not-allowed" : "pointer", fontFamily: "'Outfit', sans-serif" }}>
+                  {inquirySending ? "Sending..." : "Submit Inquiry →"}
+                </button>
+                <p style={{ fontSize: 10, color: T.textMuted, textAlign: "center", margin: 0 }}>Saved privately. We will contact you within 24 hours.</p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Upgrade Modal */}
       <UpgradeModal show={showUpgrade} onClose={() => setShowUpgrade(false)} />
