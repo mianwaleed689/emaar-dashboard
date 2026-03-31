@@ -1,20 +1,5 @@
 ﻿{
-  "routes": [
-    {
-      "src": "^/assets/(.*)",
-      "headers": {
-        "Cross-Origin-Opener-Policy": "same-origin-allow-popups",
-        "Cross-Origin-Embedder-Policy": "unsafe-none"
-      },
-      "dest": "/assets/$1"
-    },
-    {
-      "src": "^/(.*)",
-      "headers": {
-        "Cross-Origin-Opener-Policy": "same-origin-allow-popups",
-        "Cross-Origin-Embedder-Policy": "unsafe-none"
-      },
-      "dest": "/index.html"
-    }
-  ]
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "framework": "vite"
 }
