@@ -8963,7 +8963,9 @@ export default function EmaarDashboardV2() {
             )}
           </div>
         </div>
-      )}/* Upgrade Modal */}
+      )}
+
+      {/* Upgrade Modal */}
       <UpgradeModal show={showUpgrade} onClose={() => setShowUpgrade(false)} />
     </div>
   );
