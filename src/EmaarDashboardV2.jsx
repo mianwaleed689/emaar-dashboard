@@ -7965,8 +7965,7 @@ export default function EmaarDashboardV2() {
                       "-------------------------------------------",
                       "This communication is intended solely for the named recipient. All information is subject to availability and market conditions. Please conduct independent due diligence before making any investment decision."
                     ].filter(Boolean);
-                    window.open("mailto:?subject=" + subject + "&body=" + encodeURIComponent(bodyLines.join("
-")), "_blank");
+                    window.open("mailto:?subject=" + subject + "&body=" + encodeURIComponent(bodyLines.join("\n")), "_blank");
                   }} style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "12px 0", background: "rgba(59,130,246,0.12)", border: "1px solid rgba(59,130,246,0.35)", borderRadius: 12, color: T.blue, fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
                     Email Inquiry
