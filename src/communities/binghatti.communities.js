@@ -7,6 +7,8 @@ export const binghattiCommunities = [
   {
     id: "binghatti-business-bay",
     emirate: "Dubai",
+    communityType: "portfolio",
+    portfolioNote: "Binghatti builds individual towers in city districts — not a master community developer. These are project clusters by area.",
     name: "Business Bay (Binghatti)",
     developer: "binghatti",
     districtCode: "BBB",
@@ -83,6 +85,8 @@ export const binghattiCommunities = [
   {
     id: "binghatti-jvc",
     emirate: "Dubai",
+    communityType: "portfolio",
+    portfolioNote: "Binghatti builds individual towers in JVC — not a master community. 20+ completed towers in JVC district.",
     name: "JVC (Binghatti)",
     developer: "binghatti",
     districtCode: "BJVC",
