@@ -1,4 +1,6 @@
-// DXB Analytics — EmaarDashboardV2 — v2.1 — DXBContext unified state
+// DXB Analytics — EmaarDashboardV2 — v2.2 — Full deep research audit March 2026
+// Data sources: Airbtics, AirROI, Bayut FY2025, Roya Jan 2026, DLD RERA Mollak,
+// Knight Frank Q3 2025, Gulf News Jan 2026, ADREC 2025, Aldar IR, DAMAC Official
 
 
 import React, { useState, useEffect, useRef } from "react";
