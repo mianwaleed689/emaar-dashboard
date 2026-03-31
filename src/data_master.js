@@ -48,10 +48,12 @@ import { sobhaCommunities }       from "./data_sobha";
 import { nakheelCommunities }     from "./data_nakheel";
 import { aldarCommunities }       from "./data_aldar";
 import { binghattiCommunities }   from "./data_binghatti";
-import { meraasC as meerasCommunities } from "./data_meraas"; // meraasC = meraas communities (fixed from meeraasC typo)
+import { meeraasC as meerasCommunities } from "./data_meraas"; // note: meeraasC = meraas communities
 
 // ── Import developer live stats ───────────────────────────────────────────────
-// NOTE: Emaar has no identity/live object in data_emaar_complete.js — identity comes from data.js topDevelopers
+import {
+  emaarIdentity, emaarLive,
+}                                 from "./data_emaar_complete";
 import { damacIdentity,    damacLive }    from "./data_damac";
 import { sobhaIdentity,    sobhaLive }    from "./data_sobha";
 import { nakheelIdentity,  nakheelLive }  from "./data_nakheel";
@@ -99,7 +101,7 @@ export const allDevelopers = [
     salesFY2025:  36.0,
     rank:         4,
     projectCount: 23,
-    communities:  ["DAMAC Hills","DAMAC Hills 2","DAMAC Lagoons","DAMAC Islands","DAMAC Riverside","Business Bay","Dubai Harbour","Dubai Maritime City"],
+    communities:  ["DAMAC Hills","DAMAC Hills 2","DAMAC Lagoons","DAMAC Islands","DAMAC Riverside","DAMAC Sun City","Business Bay","Dubai Harbour","Dubai Maritime City"],
     primaryMarket:"Dubai",
     hasLiveData:  true,
     dataFile:     "data_damac",
@@ -161,7 +163,7 @@ export const allDevelopers = [
     listed:       true,
     ticker:       "ALDAR.AE",
     salesFY2025:  40.6,
-    rank:         2,   // #2 UAE by sales value FY2025
+    rank:         2,   // #2 UAE by sales value FY2025 — AED 40.6B confirmed
     projectCount: 10,
     communities:  ["Yas Island","Saadiyat Island","Reem Island","Al Maryah Island","Fahid Island","Athlon"],
     primaryMarket:"Abu Dhabi + Dubai",
@@ -178,7 +180,7 @@ export const allDevelopers = [
     ticker:       null,
     sukukListed:  "Nasdaq Dubai + LSE (bonds only)",
     salesFY2025:  26.0,
-    rank:         3,   // #3 Dubai by sales value, #1 by units
+    rank:         3,   // #3 Dubai by sales value est. AED 26B, #1 by unit count
     projectCount: 10,
     communities:  ["Business Bay","Downtown Dubai","JVC","Silicon Oasis","Palm Jumeirah","MBR City"],
     primaryMarket:"Dubai",
@@ -244,6 +246,7 @@ export const commKeyMap = {
   "DAMAC Islands":            "DI2",
   "DAMAC Islands 2":          "DI2",
   "DAMAC Riverside":          "DRP",
+  "DAMAC Sun City":           "DSC",
   "Dubai Maritime City":      "DMC",
   "Dubai Harbour":            "DHR",
   // Sobha
@@ -382,6 +385,7 @@ export const allCommunityCoords = [
   { district:"DH2",  name:"DAMAC Hills 2",            lat:24.9900, lng:55.3600, color:"#C8A951", developer:"damac",    projects:4,  type:"Family Community" },
   { district:"DLG",  name:"DAMAC Lagoons",            lat:25.0200, lng:55.2700, color:"#C8A951", developer:"damac",    projects:4,  type:"Lagoon Community" },
   { district:"DI2",  name:"DAMAC Islands",            lat:25.0380, lng:55.3200, color:"#C8A951", developer:"damac",    projects:2,  type:"Island Living" },
+  { district:"DSC",  name:"DAMAC Sun City",         lat:25.0250, lng:55.3100, color:"#C8A951", developer:"damac",    projects:1,  type:"Wellness Townhouses" },
   { district:"DRP",  name:"DAMAC Riverside",          lat:25.0050, lng:55.2150, color:"#C8A951", developer:"damac",    projects:2,  type:"Riverside" },
   { district:"DMC",  name:"Dubai Maritime City",      lat:25.2350, lng:55.2650, color:"#C8A951", developer:"damac",    projects:2,  type:"Maritime" },
   { district:"DHR",  name:"Dubai Harbour",            lat:25.0990, lng:55.1340, color:"#C8A951", developer:"shared",   projects:5,  type:"Marina Hub" },
@@ -443,6 +447,7 @@ export const allCommunities = [
   { id:"DH2",  name:"DAMAC Hills 2",            developer:"damac",    avgPpsf:1000, avgYield:6.5, district:"DH2", projectCount:4,  location:"Dubailand",     type:"Family Community" },
   { id:"DLG",  name:"DAMAC Lagoons",            developer:"damac",    avgPpsf:1200, avgYield:5.5, district:"DLG", projectCount:4,  location:"Dubailand",     type:"Lagoon Villas" },
   { id:"DI2",  name:"DAMAC Islands",            developer:"damac",    avgPpsf:803,  avgYield:5.0, district:"DI2", projectCount:2,  location:"Dubailand",     type:"Island Villas" },
+  { id:"DSC",  name:"DAMAC Sun City",        developer:"damac",    avgPpsf:1100, avgYield:5.5, district:"DSC", projectCount:1,  location:"Dubailand",     type:"Wellness Townhouses" },
   { id:"DHR",  name:"Dubai Harbour",            developer:"shared",   avgPpsf:3500, avgYield:6.0, district:"DHR", projectCount:5,  location:"JBR Area",      type:"Marina Hub" },
   { id:"DMC",  name:"Dubai Maritime City",      developer:"damac",    avgPpsf:2200, avgYield:5.5, district:"DMC", projectCount:2,  location:"Bur Dubai",     type:"Maritime" },
   // ── SOBHA ──────────────────────────────────────────────────────────────────
