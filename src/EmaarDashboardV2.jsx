@@ -9211,21 +9211,25 @@ export default function EmaarDashboardV2() {
                 </div>
               ) : (
                 <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                  {watchlist.map((w, i) => {
-                    const liveP = activeProjects.find(p => p.id === w.id);
-                    const currentPrice = liveP?.price || w.price;
-                    const priceChanged = liveP && w.price && liveP.price !== w.price;
+                  {watchlist.map((wEntry, i) => {
+                    // watchlist stores ID strings — resolve to full project object
+                    const wId = typeof wEntry === 'string' ? wEntry : wEntry.id;
+                    const w = activeProjects.find(p => String(p.id) === String(wId)) || (typeof wEntry === 'object' ? wEntry : null);
+                    if (!w) return null; // skip if project not found
+                    const liveP = w;
+                    const currentPrice = w.price;
+                    const priceChanged = false;
                     return (
-                      <div key={w.id} style={{ background: T.card, borderRadius: 12, border: `1px solid ${T.border}`, padding: "14px 16px", display: "flex", alignItems: "center", gap: 14, cursor: "pointer", transition: "all 0.2s" }}
+                      <div key={wId} style={{ background: T.card, borderRadius: 12, border: `1px solid ${T.border}`, padding: "14px 16px", display: "flex", alignItems: "center", gap: 14, cursor: "pointer", transition: "all 0.2s" }}
                         onMouseEnter={e => e.currentTarget.style.borderColor = T.gold}
                         onMouseLeave={e => e.currentTarget.style.borderColor = T.border}
-                        onClick={() => { setSelectedProject(liveP || w); setShowWatchlist(false); }}>
+                        onClick={() => { setSelectedProject(w); setShowWatchlist(false); }}>
                         {liveP?.imageUrl && <img src={liveP.imageUrl} alt="" style={{ width: 56, height: 56, borderRadius: 8, objectFit: "cover", flexShrink: 0 }} onError={e => e.target.style.display="none"} />}
                         <div style={{ flex: 1 }}>
                           <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 3 }}>{w.name}</div>
                           <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                             <span style={{ fontSize: 11, color: T.textMuted }}>{w.community}</span>
-                            {liveP?.emaarUrl && <a href={liveP.emaarUrl} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{ fontSize: 9, color: T.gold, textDecoration: "none", padding: "1px 5px", border: "1px solid rgba(212,168,67,0.35)", borderRadius: 4, fontWeight: 700 }}>{getLinkLabel(liveP?.emaarUrl)}</a>}
+                            {(w?.officialUrl || w?.emaarUrl) && <a href={w.officialUrl || w.emaarUrl} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{ fontSize: 9, color: T.gold, textDecoration: "none", padding: "1px 5px", border: "1px solid rgba(212,168,67,0.35)", borderRadius: 4, fontWeight: 700 }}>{getLinkLabel(liveP?.emaarUrl)}</a>}
                           </div>
                           {priceChanged && <div style={{ fontSize: 10, color: liveP.price > w.price ? T.red : T.green, marginTop: 4, fontWeight: 600 }}>{liveP.price > w.price ? "↑" : "↓"} Price changed since you saved this</div>}
                         </div>
