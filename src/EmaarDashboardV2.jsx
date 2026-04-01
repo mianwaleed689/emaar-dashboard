@@ -16,6 +16,7 @@ import { collection, getDocs, doc, getDoc, setDoc, updateDoc, deleteDoc, onSnaps
 // and exports allProjects[], allDevelopers[], allCommunities[], helpers
 // Iron Rule: Never import directly from data_*.js in this file
 import { useDXB } from "./context/DXBContext";
+import { allDevelopers as dldAllDevelopers } from "./data_developers";
 import {
   T,
   // Emaar data (from data.js via data_master)
@@ -2935,58 +2936,169 @@ export default function EmaarDashboardV2() {
 
           {/* ─── DEVELOPERS TAB ─── */}
           {tab === "Developers" && (() => {
-            // FIXED: Data now sourced from data_master.js allDevelopers[]
-            // Sales, project counts and scores are accurate as of March 2026
-            const DEVS = [
-              { id: "emaar",     name: "Emaar Properties",  flag: "🇦🇪", color: "#D4A843", type: "Listed · DFM",   sales: "AED 80.4B",  projects: projectsByDeveloper["emaar"]?.length || 0,          score: 95 },
-              { id: "damac",     name: "DAMAC Properties",  flag: "🇦🇪", color: "#C8A951", type: "Private",        sales: "AED 36.0B",  projects: projectsByDeveloper["damac"]?.length || 0,          score: 78 },
-              { id: "sobha",     name: "Sobha Realty",      flag: "🇮🇳", color: "#8B5CF6", type: "Private",        sales: "AED 30.0B",  projects: projectsByDeveloper["sobha"]?.length || 0,          score: 82 },
-              { id: "nakheel",   name: "Nakheel",           flag: "🇦🇪", color: "#10B981", type: "Dubai Holding",  sales: "AED 24.6B",  projects: projectsByDeveloper["nakheel"]?.length || 0,        score: 79 },
-              { id: "meraas",    name: "Meraas",            flag: "🇦🇪", color: "#F59E0B", type: "Dubai Holding",  sales: "AED 20.9B",  projects: projectsByDeveloper["meraas"]?.length || 0,         score: 81 },
-              { id: "binghatti", name: "Binghatti",         flag: "🇦🇪", color: "#3B82F6", type: "Private",        sales: "AED 26.0B",  projects: projectsByDeveloper["binghatti"]?.length || 0,      score: 72 },
-              { id: "aldar",     name: "Aldar Properties",  flag: "🇦🇪", color: "#06B6D4", type: "Listed · ADX",  sales: "AED 40.6B",  projects: projectsByDeveloper["aldar"]?.length || 0,          score: 85 },
-            ];
+            // ALL DUBAI DEVELOPERS — powered by DLD Q1 2026 transaction data
+            const [devSearch, setDevSearch] = React.useState("");
+            const [devSort, setDevSort] = React.useState("transactions"); // transactions | price | projects
+
+            // Import from data_developers.js
+            const DLD_DEVS = typeof dldAllDevelopers !== "undefined" ? dldAllDevelopers : [];
+
+            const filtered = DLD_DEVS
+              .filter(d => !devSearch || d.name.toLowerCase().includes(devSearch.toLowerCase()))
+              .sort((a, b) => {
+                if (devSort === "transactions") return (b.dld?.transactions || 0) - (a.dld?.transactions || 0);
+                if (devSort === "price")        return (b.dld?.avgPrice || 0) - (a.dld?.avgPrice || 0);
+                if (devSort === "projects")     return (b.dld?.projects || 0) - (a.dld?.projects || 0);
+                return 0;
+              });
+
+            const totalTxn    = DLD_DEVS.reduce((s, d) => s + (d.dld?.transactions || 0), 0);
+            const totalProj   = DLD_DEVS.reduce((s, d) => s + (d.dld?.projects || 0), 0);
+            const totalDevs   = DLD_DEVS.length;
+
             return (
               <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-                <div style={{ fontFamily: "'Fraunces',serif", fontSize: 22, fontWeight: 900, color: T.white }}>Developer Intelligence</div>
-                <div style={{ fontSize: 12, color: T.textMuted }}>Select a developer to explore their full project portfolio</div>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px,1fr))", gap: 12, marginTop: 8 }}>
-                  {DEVS.map(d => (
-                    <div key={d.id}
-                      onClick={() => { setSelectedDeveloper(d.id); handleTabChange("Projects"); }}
-                      style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: "20px 24px", cursor: "pointer", transition: "all 0.2s", position: "relative", overflow: "hidden" }}
-                      onMouseEnter={e => { e.currentTarget.style.borderColor = d.color; e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = `0 8px 24px ${d.color}20`; }}
-                      onMouseLeave={e => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "none"; }}>
-                      <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 3, background: `linear-gradient(90deg, ${d.color}, ${d.color}60)` }} />
-                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                          <span style={{ fontSize: 24 }}>{d.flag}</span>
-                          <div>
-                            <div style={{ fontFamily: "'Fraunces',serif", fontSize: 16, fontWeight: 800, color: T.white }}>{d.name}</div>
-                            <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>{d.type}</div>
-                          </div>
-                        </div>
-                        <div style={{ textAlign: "center", width: 52, height: 52, borderRadius: 12, background: `${d.color}18`, border: `2px solid ${d.color}50`, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
-                          <div style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 900, color: d.color, lineHeight: 1 }}>{d.score}</div>
-                          <div style={{ fontSize: 8, color: d.color, fontWeight: 700 }}>HEALTH</div>
-                        </div>
-                      </div>
-                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 14 }}>
-                        <div style={{ background: T.surfaceAlt, borderRadius: 8, padding: "8px 12px" }}>
-                          <div style={{ fontSize: 9, color: T.textMuted, fontWeight: 600, letterSpacing: 0.5, marginBottom: 3 }}>FY2025 SALES</div>
-                          <div style={{ fontSize: 13, fontWeight: 700, color: d.color }}>{d.sales}</div>
-                        </div>
-                        <div style={{ background: T.surfaceAlt, borderRadius: 8, padding: "8px 12px" }}>
-                          <div style={{ fontSize: 9, color: T.textMuted, fontWeight: 600, letterSpacing: 0.5, marginBottom: 3 }}>PROJECTS</div>
-                          <div style={{ fontSize: 13, fontWeight: 700, color: T.white }}>{d.projects}</div>
-                        </div>
-                      </div>
-                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                        <span style={{ fontSize: 11, color: T.textMuted }}>Click to explore projects →</span>
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={d.color} strokeWidth="2.5" strokeLinecap="round"><polyline points="9 18 15 12 9 6"/></svg>
-                      </div>
+
+                {/* Header */}
+                <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
+                  <div>
+                    <div style={{ fontFamily: "'Fraunces',serif", fontSize: 22, fontWeight: 900, color: T.white }}>All Dubai Developers</div>
+                    <div style={{ fontSize: 12, color: T.textMuted, marginTop: 4 }}>
+                      {totalDevs} developers · {totalProj.toLocaleString()} projects · {totalTxn.toLocaleString()} DLD verified transactions · Q1 2026
+                    </div>
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 10, color: T.green, background: "rgba(16,185,129,0.08)", padding: "6px 12px", borderRadius: 8, border: "1px solid rgba(16,185,129,0.2)" }}>
+                    <span>✓</span><span>DLD Verified Data</span>
+                  </div>
+                </div>
+
+                {/* Market summary */}
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px,1fr))", gap: 10 }}>
+                  {[
+                    { label: "Developers", value: totalDevs, sub: "Active Q1 2026" },
+                    { label: "Projects", value: totalProj.toLocaleString(), sub: "With DLD data" },
+                    { label: "Transactions", value: totalTxn.toLocaleString(), sub: "Q1 2026" },
+                    { label: "Market Leader", value: "Emaar", sub: `${DLD_DEVS.find(d=>d.id==='emaar')?.dld?.transactions?.toLocaleString() || 0} txn` },
+                  ].map(k => (
+                    <div key={k.label} style={{ background: T.surface, borderRadius: 10, border: `1px solid ${T.border}`, padding: "12px 14px" }}>
+                      <div style={{ fontSize: 9, color: T.textMuted, fontWeight: 700, letterSpacing: 0.8, marginBottom: 4 }}>{k.label.toUpperCase()}</div>
+                      <div style={{ fontSize: 18, fontWeight: 800, color: T.white, fontFamily: "'Fraunces',serif" }}>{k.value}</div>
+                      <div style={{ fontSize: 10, color: T.textMuted, marginTop: 2 }}>{k.sub}</div>
                     </div>
                   ))}
+                </div>
+
+                {/* Search + Sort */}
+                <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                  <input
+                    type="text"
+                    placeholder="Search developer..."
+                    value={devSearch}
+                    onChange={e => setDevSearch(e.target.value)}
+                    style={{ flex: 1, minWidth: 200, padding: "9px 14px", background: T.surface, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, outline: "none", fontFamily: "'Outfit',sans-serif" }}
+                  />
+                  <div style={{ display: "flex", gap: 6 }}>
+                    {[["transactions","By Volume"],["price","By Price"],["projects","By Projects"]].map(([val, label]) => (
+                      <button key={val} type="button" onClick={() => setDevSort(val)}
+                        style={{ padding: "8px 14px", borderRadius: 8, border: `1px solid ${devSort===val ? T.gold : T.border}`, background: devSort===val ? "rgba(212,168,67,0.1)" : T.surface, color: devSort===val ? T.gold : T.textMuted, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Developer Cards Grid */}
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px,1fr))", gap: 12 }}>
+                  {filtered.map(d => {
+                    const txn   = d.dld?.transactions || 0;
+                    const proj  = d.dld?.projects || 0;
+                    const price = d.dld?.avgPrice || 0;
+                    const ppsf  = d.dld?.avgPpsf || 0;
+                    const op    = d.dld?.offplanPct || 0;
+                    const color = d.color || T.gold;
+                    return (
+                      <div key={d.id}
+                        style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: "18px 20px", cursor: "pointer", transition: "all 0.2s", position: "relative", overflow: "hidden" }}
+                        onMouseEnter={e => { e.currentTarget.style.borderColor = color; e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = `0 8px 24px ${color}20`; }}
+                        onMouseLeave={e => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "none"; }}>
+
+                        {/* Top color bar */}
+                        <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 3, background: `linear-gradient(90deg, ${color}, ${color}40)` }} />
+
+                        {/* Header */}
+                        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 14 }}>
+                          <div>
+                            <div style={{ fontFamily: "'Fraunces',serif", fontSize: 15, fontWeight: 800, color: T.white, lineHeight: 1.3 }}>{d.name}</div>
+                            <div style={{ fontSize: 10, color: T.textMuted, marginTop: 3 }}>{txn.toLocaleString()} transactions · Q1 2026</div>
+                          </div>
+                          <div style={{ padding: "4px 8px", borderRadius: 6, background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.2)", fontSize: 9, color: T.green, fontWeight: 700, whiteSpace: "nowrap" }}>
+                            DLD ✓
+                          </div>
+                        </div>
+
+                        {/* Stats grid */}
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 14 }}>
+                          <div style={{ background: T.surfaceAlt, borderRadius: 8, padding: "8px 10px" }}>
+                            <div style={{ fontSize: 8, color: T.textMuted, fontWeight: 700, letterSpacing: 0.5, marginBottom: 3 }}>AVG PRICE</div>
+                            <div style={{ fontSize: 12, fontWeight: 700, color: color }}>
+                              {price >= 1000000 ? `AED ${(price/1000000).toFixed(1)}M` : price > 0 ? `AED ${(price/1000).toFixed(0)}K` : "—"}
+                            </div>
+                          </div>
+                          <div style={{ background: T.surfaceAlt, borderRadius: 8, padding: "8px 10px" }}>
+                            <div style={{ fontSize: 8, color: T.textMuted, fontWeight: 700, letterSpacing: 0.5, marginBottom: 3 }}>PPSF</div>
+                            <div style={{ fontSize: 12, fontWeight: 700, color: T.white }}>
+                              {ppsf > 0 ? `AED ${ppsf.toLocaleString()}` : "—"}
+                            </div>
+                          </div>
+                          <div style={{ background: T.surfaceAlt, borderRadius: 8, padding: "8px 10px" }}>
+                            <div style={{ fontSize: 8, color: T.textMuted, fontWeight: 700, letterSpacing: 0.5, marginBottom: 3 }}>PROJECTS</div>
+                            <div style={{ fontSize: 12, fontWeight: 700, color: T.white }}>{proj}</div>
+                          </div>
+                        </div>
+
+                        {/* Off-plan bar */}
+                        <div style={{ marginBottom: 14 }}>
+                          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
+                            <span style={{ fontSize: 9, color: T.textMuted }}>Off-Plan</span>
+                            <span style={{ fontSize: 9, color: T.textMuted }}>{op}%</span>
+                          </div>
+                          <div style={{ height: 4, borderRadius: 2, background: T.surfaceAlt, overflow: "hidden" }}>
+                            <div style={{ height: "100%", width: `${op}%`, background: color, borderRadius: 2, transition: "width 0.5s" }} />
+                          </div>
+                        </div>
+
+                        {/* Areas */}
+                        {d.areas && d.areas.length > 0 && (
+                          <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginBottom: 12 }}>
+                            {d.areas.slice(0,4).map(a => (
+                              <span key={a} style={{ fontSize: 9, padding: "2px 7px", borderRadius: 10, background: `${color}12`, color: color, border: `1px solid ${color}25` }}>{a}</span>
+                            ))}
+                            {d.areas.length > 4 && <span style={{ fontSize: 9, color: T.textMuted }}>+{d.areas.length-4} more</span>}
+                          </div>
+                        )}
+
+                        {/* Footer */}
+                        <div style={{ display: "flex", gap: 8 }}>
+                          <a href={d.officialUrl} target="_blank" rel="noopener noreferrer"
+                            onClick={e => e.stopPropagation()}
+                            style={{ flex: 1, padding: "7px 0", background: `${color}12`, border: `1px solid ${color}30`, borderRadius: 8, color: color, fontSize: 11, fontWeight: 700, textAlign: "center", textDecoration: "none", display: "block", fontFamily: "'Outfit',sans-serif" }}>
+                            Official Site ↗
+                          </a>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {filtered.length === 0 && (
+                  <div style={{ textAlign: "center", padding: "48px 20px", color: T.textMuted }}>
+                    <div style={{ fontSize: 32, marginBottom: 12 }}>🔍</div>
+                    <div>No developers found for "{devSearch}"</div>
+                  </div>
+                )}
+
+                <div style={{ fontSize: 10, color: T.textMuted, textAlign: "center", padding: "8px 0" }}>
+                  Data source: Dubai Land Department (DLD) · Q1 2026 · All prices are DLD-recorded transaction averages
                 </div>
               </div>
             );
