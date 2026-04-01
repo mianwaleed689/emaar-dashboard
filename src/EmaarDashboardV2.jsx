@@ -2968,6 +2968,10 @@ export default function EmaarDashboardV2() {
                   <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 10, color: T.green, background: "rgba(16,185,129,0.08)", padding: "6px 12px", borderRadius: 8, border: "1px solid rgba(16,185,129,0.2)" }}>
                     <span>✓</span><span>DLD Verified Data</span>
                   </div>
+                  <button type="button" onClick={() => { setSelectedDeveloper("all"); handleTabChange("Projects"); }}
+                    style={{ padding: "8px 16px", background: "rgba(212,168,67,0.1)", border: `1px solid ${T.gold}`, borderRadius: 8, color: T.gold, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                    View All Projects →
+                  </button>
                 </div>
 
                 {/* Market summary */}
@@ -3017,6 +3021,7 @@ export default function EmaarDashboardV2() {
                     return (
                       <div key={d.id}
                         style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: "18px 20px", cursor: "pointer", transition: "all 0.2s", position: "relative", overflow: "hidden" }}
+                        onClick={() => { setSelectedDeveloper(d.id); handleTabChange("Projects"); }}
                         onMouseEnter={e => { e.currentTarget.style.borderColor = color; e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = `0 8px 24px ${color}20`; }}
                         onMouseLeave={e => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "none"; }}>
 

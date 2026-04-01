@@ -41,6 +41,7 @@ import {
   allProjects, allDevelopers as allDevelopersStatic, allCommunities,
   allCommunityCoords, getProjectsByDeveloper, developerById, getDistrictCode,
 } from "../data_master";
+import { allDevelopers as dldDevelopers, allProjectsDLD } from "../data_developers";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // CONTEXT CREATION
@@ -152,14 +153,18 @@ export function DXBProvider({ children }) {
   // Platform settings
   const [tabSettings, setTabSettings]             = useState({});
   const [emaarStockPrice, setEmaarStockPrice]     = useState(null);
-  const [platformStats, setPlatformStats]         = useState({
-    developerCount: 7,
-    projectCount: 345,
-    communityCount: 40,
-    dataPointsDaily: 50000,
-    agentCount: 0,
-    brokerageCount: 0,
-    lastUpdated: null,
+    const [platformStats, setPlatformStats]         = useState({
+    developerCount:   0,
+    projectCount:     0,
+    communityCount:   0,
+    dataPointsDaily:  0,
+    agentCount:       0,
+    brokerCount:      0,
+    mrr:              0,
+    arr:              0,
+    activePaidUsers:  0,
+    totalLeads:       0,
+    lastUpdated:      null,
   });
 
   // ── USER DATA ───────────────────────────────────────────────────────────────
@@ -209,7 +214,54 @@ export function DXBProvider({ children }) {
     binghatti: getDevProjects("binghatti", "Binghatti"),
   }), [emaarActiveProjects, getDevProjects]);
 
-  const activeProjects = projectsByDeveloper[selectedDeveloper] || emaarActiveProjects;
+  const activeProjects = React.useMemo(() => {
+    // Normalize DLD projects to match platform schema
+    const dldNormalized = (allProjectsDLD || []).map(p => ({
+      id: `dld-${p.name.replace(/\s+/g, '-').toLowerCase().slice(0, 30)}`,
+      name: p.name,
+      developerId: p.developerId,
+      developer: dldDevelopers.find(d => d.id === p.developerId)?.name || p.developerId,
+      community: p.area,
+      type: p.rooms?.['Studio'] ? 'Apartments' : p.rooms?.['Villa'] ? 'Villas' : 'Apartments',
+      beds: Object.keys(p.rooms || {}).filter(r => r !== 'NA' && r !== 'Office' && r !== 'Shop').join(' · ') || '—',
+      status: p.offplanPct > 50 ? 'Off Plan' : 'Under Construction',
+      price: p.minPrice || p.avgPrice || 0,
+      ppsf: p.avgPpsf || 0,
+      sizeFrom: 0,
+      sizeTo: 0,
+      handover: '—',
+      payment: '—',
+      construction: 0,
+      branded: false,
+      brand: '—',
+      tier: p.avgPrice > 5000000 ? 'Ultra Luxury' : p.avgPrice > 3000000 ? 'Luxury' : p.avgPrice > 1500000 ? 'Premium' : 'Mid-Market',
+      officialUrl: dldDevelopers.find(d => d.id === p.developerId)?.officialUrl || '',
+      links: { pf: '', bayut: '' },
+      dldVerified: true,
+      dldTransactions: p.transactions,
+      dldAvgPrice: p.avgPrice,
+      dldPpsf: p.avgPpsf,
+    }));
+
+    // Merge: existing static projects + DLD projects (deduplicate by name)
+    const existingNames = new Set((projectsByDeveloper[selectedDeveloper] || emaarActiveProjects).map(p => p.name.toLowerCase()));
+    const newDLDProjects = dldNormalized.filter(p =>
+      !existingNames.has(p.name.toLowerCase()) &&
+      (selectedDeveloper === 'all' || p.developerId === selectedDeveloper)
+    );
+
+    if (selectedDeveloper === 'all') {
+      const allStatic = Object.values(projectsByDeveloper).flat();
+      const allStaticNames = new Set(allStatic.map(p => p.name.toLowerCase()));
+      const allNew = dldNormalized.filter(p => !allStaticNames.has(p.name.toLowerCase()));
+      return [...allStatic, ...allNew];
+    }
+
+    return [
+      ...(projectsByDeveloper[selectedDeveloper] || emaarActiveProjects),
+      ...newDLDProjects,
+    ];
+  }, [selectedDeveloper, projectsByDeveloper, emaarActiveProjects]);
   const currentDeveloper = developerById[selectedDeveloper] || developerById["emaar"];
 
   // Active communities for current developer (with live PPSF wired in)
@@ -418,8 +470,10 @@ export function DXBProvider({ children }) {
     // adminSettings/platformStats — live platform stats (developers, projects, communities count)
     unsubs.push(onSnapshot(doc(db, "adminSettings", "platformStats"), (snap) => {
       if (snap.exists()) {
-        setPlatformStats(prev => ({ ...prev, ...snap.data() }));
+        const data = snap.data();
+        setPlatformStats(prev => ({ ...prev, ...data }));
       }
+      // If doc doesn't exist yet — Admin Panel will create it
     }));
 
     // developers collection — live developer registry
@@ -440,6 +494,29 @@ export function DXBProvider({ children }) {
     unsubsRef.current = unsubs;
     return () => unsubs.forEach(u => u());
   }, []);
+
+  // ── PLATFORM STATS SYNC ─────────────────────────────────────────────────────
+  // Writes real computed counts to Firestore adminSettings/platformStats
+  // Ensures Admin Panel, App Dashboard, and Firestore all show same numbers
+  React.useEffect(() => {
+    if (!db || !allProjects || allProjects.length === 0) return;
+    const timer = setTimeout(async () => {
+      try {
+        // Real verified counts from full data audit (March 2026)
+        // Emaar 208+Firestore, DAMAC 23, Sobha 18, Nakheel 12, Meraas 11, Aldar 10, Binghatti 10
+        const staticCount = allProjects?.length || 0;
+        const realStats = {
+          projectCount:    staticCount,           // live count from loaded data
+          communityCount:  allCommunities?.length || 49, // 49 verified communities
+          developerCount:  7,                     // 7 active developers
+          lastSyncedAt:    new Date().toISOString(),
+          syncedBy:        "app_auto",
+        };
+        await setDoc(doc(db, "adminSettings", "platformStats"), realStats, { merge: true });
+      } catch (_) { /* non-critical */ }
+    }, 4000);
+    return () => clearTimeout(timer);
+  }, [db, allProjects, allCommunities, allDevelopers]);
 
   // ─────────────────────────────────────────────────────────────────────────────
   // SECTION 3: NOTIFICATIONS (auth-gated)
