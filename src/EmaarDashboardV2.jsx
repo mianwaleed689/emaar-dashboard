@@ -1785,6 +1785,26 @@ export default function EmaarDashboardV2() {
   const [expandedMega, setExpandedMega] = useState(null);
   const [compareList, setCompareList] = useState([]);
   const [showCompare, setShowCompare] = useState(false);
+
+  // ── COMPARE TOGGLE ────────────────────────────────────────────────────────
+  const toggleCompare = (project) => {
+    setCompareList(prev => {
+      const exists = prev.find(x => x.id === project.id);
+      if (exists) {
+        // Remove from list
+        return prev.filter(x => x.id !== project.id);
+      }
+      if (prev.length >= 3) {
+        // Max 3 projects — show modal with existing selection
+        setShowCompare(true);
+        return prev;
+      }
+      const updated = [...prev, project];
+      // Auto-open modal when 2+ selected
+      if (updated.length >= 2) setShowCompare(true);
+      return updated;
+    });
+  };
   const [investScoreFilter, setInvestScoreFilter] = useState("All");
   const [investExpandedComm, setInvestExpandedComm] = useState(null);
   const [flipProjId, setFlipProjId] = useState("");
@@ -3182,8 +3202,8 @@ export default function EmaarDashboardV2() {
                         </a>
                       );
                     })()}
-                    <button type="button" onClick={(e) => { e.stopPropagation(); toggleWatchlist(p); }} style={{ padding: "8px 10px", background: watchlist.find(w => w.id === p.id) ? "rgba(212,168,67,0.15)" : T.surfaceAlt, border: `1px solid ${watchlist.find(w => w.id === p.id) ? T.gold : T.border}`, borderRadius: 8, color: watchlist.find(w => w.id === p.id) ? T.gold : T.textMuted, fontSize: 14, cursor: "pointer" }} title={watchlist.find(w => w.id === p.id) ? "Remove from watchlist" : "Add to watchlist"}>
-                      {watchlist.find(w => w.id === p.id) ? "★" : "☆"}
+                    <button type="button" onClick={(e) => { e.stopPropagation(); toggleWatchlist(p); }} style={{ padding: "8px 10px", background: watchlist.includes(String(p.id)) ? "rgba(212,168,67,0.15)" : T.surfaceAlt, border: `1px solid ${watchlist.includes(String(p.id)) ? T.gold : T.border}`, borderRadius: 8, color: watchlist.includes(String(p.id)) ? T.gold : T.textMuted, fontSize: 14, cursor: "pointer" }} title={watchlist.find(w => w.id === p.id) ? "Remove from watchlist" : "Add to watchlist"}>
+                      {watchlist.includes(String(p.id)) ? "★" : "☆"}
                     </button>
                     <button type="button" onClick={(e) => { e.stopPropagation(); isPro ? toggleCompare(p) : setShowUpgrade(true); }} style={{ padding: "8px 10px", background: !isPro ? "rgba(212,168,67,0.05)" : compareList.find(x=>x.id===p.id) ? T.goldGlow : T.surfaceAlt, border: `1px solid ${!isPro ? T.border : compareList.find(x=>x.id===p.id) ? T.gold : T.border}`, borderRadius: 8, color: !isPro ? T.textMuted : compareList.find(x=>x.id===p.id) ? T.gold : T.textMuted, fontSize: 11, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>
                       {!isPro ? "🔒" : compareList.find(x=>x.id===p.id) ? "✓" : "⊕"}
@@ -8499,6 +8519,29 @@ const UNIT_PRICING = {
         );
       })()}
 
+      {/* ─── FLOATING COMPARE BAR ─── */}
+      {compareList.length > 0 && !showCompare && (
+        <div style={{ position:"fixed", bottom:24, left:"50%", transform:"translateX(-50%)", zIndex:1000, display:"flex", alignItems:"center", gap:10, background:T.surface, border:`1px solid ${T.gold}`, borderRadius:50, padding:"10px 20px", boxShadow:"0 8px 32px rgba(0,0,0,0.5)" }}>
+          <span style={{ fontSize:11, color:T.textMuted }}>
+            {compareList.length === 1 ? "Select 1 more to compare" : `${compareList.length} projects selected`}
+          </span>
+          {compareList.map(p => (
+            <div key={p.id} style={{ display:"flex", alignItems:"center", gap:4, background:T.surfaceAlt, borderRadius:20, padding:"4px 10px" }}>
+              <span style={{ fontSize:11, fontWeight:700, color:T.gold }}>{p.name.split(" ").slice(0,2).join(" ")}</span>
+              <button type="button" onClick={() => toggleCompare(p)} style={{ background:"none", border:"none", color:T.textMuted, cursor:"pointer", fontSize:12, padding:0, lineHeight:1 }}>✕</button>
+            </div>
+          ))}
+          {compareList.length >= 2 && (
+            <button type="button" onClick={() => setShowCompare(true)}
+              style={{ background:"linear-gradient(135deg,rgba(212,168,67,0.3),rgba(212,168,67,0.15))", border:`1px solid ${T.gold}`, borderRadius:20, padding:"6px 14px", color:T.gold, fontSize:11, fontWeight:700, cursor:"pointer", fontFamily:"'Outfit',sans-serif", whiteSpace:"nowrap" }}>
+              ⚖️ Compare
+            </button>
+          )}
+          <button type="button" onClick={() => { setCompareList([]); setShowCompare(false); }}
+            style={{ background:"none", border:"none", color:T.textMuted, cursor:"pointer", fontSize:14, padding:0 }}>✕</button>
+        </div>
+      )}
+
       {/* ─── COMPARE MODAL ─── */}
       {showCompare && compareList.length >= 2 && (
         <div role="dialog" aria-modal="true" aria-label="Project comparison" style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.9)", zIndex: 3000, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(8px)" }} onClick={() => setShowCompare(false)}>
@@ -8550,8 +8593,41 @@ const UNIT_PRICING = {
               </table>
             </div>
 
+            {/* ── Share Comparison via WhatsApp ── */}
+            <div style={{ display:"flex", gap:10, marginTop:20 }}>
+              <button type="button"
+                onClick={() => {
+                  const lines = compareList.map(p =>
+                    `*${p.name}* (${p.community})\n` +
+                    `  Price: AED ${p.price ? (p.price/1e6).toFixed(1)+'M' : 'TBD'} | ` +
+                    `Handover: ${p.handover || '—'} | ` +
+                    `${p.construction}% complete`
+                  ).join('\n\n');
+                  const msg = `*Project Comparison — DXB Analytics*\n\n${lines}\n\n_Prepared by The Address Holding_`;
+                  window.open('https://wa.me/?text=' + encodeURIComponent(msg), '_blank');
+                }}
+                style={{ flex:1, padding:"11px 0", background:"linear-gradient(135deg,rgba(37,211,102,0.2),rgba(37,211,102,0.1))", border:"1px solid rgba(37,211,102,0.4)", borderRadius:10, color:"#25D366", fontSize:12, fontWeight:700, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>
+                📤 Share via WhatsApp
+              </button>
+              <button type="button"
+                onClick={() => {
+                  const lines = compareList.map(p =>
+                    `${p.name} (${p.community}) — AED ${p.price ? (p.price/1e6).toFixed(1)+'M' : 'TBD'} | Handover: ${p.handover || '—'}`
+                  ).join('%0A');
+                  window.open(`mailto:?subject=Project Comparison&body=Project Comparison:%0A%0A${lines}%0A%0APrepared by The Address Holding`, '_blank');
+                }}
+                style={{ padding:"11px 16px", background:"rgba(212,168,67,0.1)", border:"1px solid rgba(212,168,67,0.3)", borderRadius:10, color:T.gold, fontSize:12, fontWeight:700, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>
+                ✉️ Email
+              </button>
+              <button type="button"
+                onClick={() => { setCompareList([]); setShowCompare(false); }}
+                style={{ padding:"11px 16px", background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:10, color:T.textMuted, fontSize:12, fontWeight:700, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>
+                🗑 Clear
+              </button>
+            </div>
+
             {/* View Full Report for all compared projects */}
-            <div style={{ display: "flex", gap: 10, marginTop: 20 }}>
+            <div style={{ display: "flex", gap: 10, marginTop: 10 }}>
               {compareList.map(p => (
                 <a key={p.id} href={`/project/${p.id}`}
                   style={{ flex: 1, padding: "10px 0", background: "linear-gradient(135deg, rgba(212,168,67,0.15), rgba(212,168,67,0.07))", border: "1px solid rgba(212,168,67,0.3)", borderRadius: 10, color: T.gold, fontSize: 12, fontWeight: 700, textAlign: "center", textDecoration: "none" }}>
