@@ -1929,7 +1929,8 @@ export default function EmaarDashboardV2() {
   const [selectedNbhd, setSelectedNbhd] = React.useState(null);
   const [scSort, setScSort] = React.useState("avg");
   const [strCommunity, setStrCommunity] = React.useState("All");
-  const [devSort, setDevSort] = React.useState("revenue");
+  const [devSort, setDevSort] = React.useState("transactions");
+  const [devSearch, setDevSearch] = React.useState("");
   const [dldCommunity, setDldCommunity] = React.useState("All");
   const [dldDeveloper, setDldDeveloper] = React.useState("All");
   const [dldType, setDldType] = React.useState("All");
@@ -2937,9 +2938,6 @@ export default function EmaarDashboardV2() {
           {/* ─── DEVELOPERS TAB ─── */}
           {tab === "Developers" && (() => {
             // ALL DUBAI DEVELOPERS — powered by DLD Q1 2026 transaction data
-            const [devSearch, setDevSearch] = React.useState("");
-            const [devSort, setDevSort] = React.useState("transactions"); // transactions | price | projects
-
             // Import from data_developers.js
             const DLD_DEVS = typeof dldAllDevelopers !== "undefined" ? dldAllDevelopers : [];
 
