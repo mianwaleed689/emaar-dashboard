@@ -7911,6 +7911,37 @@ export default function EmaarDashboardV2() {
                     })()}
                     <Link to={`/project/${selectedProject_.id}`} style={{ fontSize: 10, color: T.teal, textDecoration: "none", padding: "3px 8px", border: "1px solid rgba(0,191,165,0.4)", borderRadius: 6, fontWeight: 700, background: "rgba(0,191,165,0.08)", whiteSpace: "nowrap" }} title="Open full page">FULL PAGE ↗</Link>
                   </div>
+
+                  {/* ─── MULTI-PLATFORM LINKS ─── */}
+                  {selectedProject_.links && (
+                    <div style={{ display:"flex", flexWrap:"wrap", gap:6, marginTop:8 }}>
+                      {selectedProject_.links.pf && (
+                        <a href={selectedProject_.links.pf} target="_blank" rel="noopener noreferrer"
+                          style={{ display:"flex", alignItems:"center", gap:4, padding:"4px 10px", borderRadius:6,
+                            background:"rgba(255,90,31,0.1)", border:"1px solid rgba(255,90,31,0.3)",
+                            fontSize:10, color:"#FF5A1F", textDecoration:"none", fontWeight:600 }}>
+                          🏠 PropertyFinder
+                        </a>
+                      )}
+                      {selectedProject_.links.bayut && (
+                        <a href={selectedProject_.links.bayut} target="_blank" rel="noopener noreferrer"
+                          style={{ display:"flex", alignItems:"center", gap:4, padding:"4px 10px", borderRadius:6,
+                            background:"rgba(172,45,30,0.1)", border:"1px solid rgba(172,45,30,0.3)",
+                            fontSize:10, color:"#AC2D1E", textDecoration:"none", fontWeight:600 }}>
+                          🏡 Bayut
+                        </a>
+                      )}
+                      {selectedProject_.links.dubizzle && (
+                        <a href={selectedProject_.links.dubizzle} target="_blank" rel="noopener noreferrer"
+                          style={{ display:"flex", alignItems:"center", gap:4, padding:"4px 10px", borderRadius:6,
+                            background:"rgba(0,163,224,0.1)", border:"1px solid rgba(0,163,224,0.3)",
+                            fontSize:10, color:"#00A3E0", textDecoration:"none", fontWeight:600 }}>
+                          🔍 Dubizzle
+                        </a>
+                      )}
+                    </div>
+                  )}
+
                   <p style={{ color: T.textSecondary, fontSize: 13, marginTop: 4 }}>{selectedProject_.community} · {selectedProject_.district} · {selectedProject_.type}</p>
                   {(selectedProject_.tagline || (ci && ci.tagline)) && <p style={{ color: T.teal, fontSize: 11, marginTop: 2, fontStyle: "italic" }}>{selectedProject_.tagline || ci.tagline}</p>}
                 </div>
