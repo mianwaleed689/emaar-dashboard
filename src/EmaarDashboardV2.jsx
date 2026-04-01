@@ -1647,6 +1647,233 @@ function EiborAdminPanel({ db, T }) {
   );
 }
 
+// ─── UNIT PRICING TABLE — module-level constant (Q1 2026 verified) ─────────────────────────────────
+// Sources: Property Finder, Bayut, developer official sites, broker research
+const UNIT_PRICING = {
+  // ── EMAAR ─────────────────────────────────────────────────────
+  "Dubai Hills Estate":        { ppsf:2381, yield:5.4, src:"Bayut/HSProperty Q1 2026", units: [
+    {t:"1BR",         sf:"650–950",    from:1210000,  to:2300000,  yield:5.4},
+    {t:"2BR",         sf:"1,100–1,500",from:2100000,  to:3500000,  yield:5.4},
+    {t:"3BR",         sf:"1,600–2,200",from:3200000,  to:5500000,  yield:5.4},
+    {t:"3BR TH",      sf:"2,200–2,800",from:3500000,  to:5200000,  yield:5.2},
+    {t:"4BR Villa",   sf:"5,000–8,000",from:9800000,  to:18000000, yield:4.5},
+    {t:"5BR Villa",   sf:"7,000–10,500",from:13700000,to:25000000, yield:4.5},
+  ]},
+  "Dubai Creek Harbour":       { ppsf:2500, yield:6.5, src:"ExcelProperties/creek-harbour-dubai.com Q1 2026", units: [
+    {t:"1BR",         sf:"700–950",    from:1440000,  to:2700000,  yield:6.5},
+    {t:"2BR",         sf:"1,200–1,600",from:2670000,  to:4500000,  yield:6.5},
+    {t:"3BR",         sf:"1,800–2,400",from:4170000,  to:7500000,  yield:6.2},
+    {t:"3BR TH",      sf:"2,000–2,600",from:3500000,  to:5500000,  yield:6.0},
+  ]},
+  "Emaar Beachfront":          { ppsf:3800, yield:5.5, src:"Property Finder 2025/2026", units: [
+    {t:"1BR",         sf:"700–950",    from:2800000,  to:4200000,  yield:5.5},
+    {t:"2BR",         sf:"1,200–1,600",from:4800000,  to:7000000,  yield:5.5},
+    {t:"3BR",         sf:"1,800–2,400",from:7000000,  to:11000000, yield:5.2},
+  ]},
+  "The Valley":                { ppsf:1200, yield:6.2, src:"Provident/Bayut 2025/2026", units: [
+    {t:"3BR TH",      sf:"2,000–2,500",from:1700000,  to:2500000,  yield:6.5},
+    {t:"4BR TH",      sf:"2,400–3,000",from:2200000,  to:3800000,  yield:6.2},
+    {t:"4BR Villa",   sf:"3,500–5,000",from:3500000,  to:5500000,  yield:6.0},
+    {t:"5BR Villa",   sf:"5,000–7,000",from:5000000,  to:8000000,  yield:5.8},
+  ]},
+  "Emaar South":               { ppsf:1350, yield:7.2, src:"Investindxb/Provident 2025", units: [
+    {t:"1BR",         sf:"620–830",    from:800000,   to:1300000,  yield:7.5},
+    {t:"2BR",         sf:"1,000–1,400",from:1300000,  to:2100000,  yield:7.2},
+    {t:"3BR",         sf:"1,400–1,900",from:1900000,  to:3000000,  yield:7.0},
+    {t:"3BR TH",      sf:"2,200–2,800",from:2500000,  to:4000000,  yield:6.8},
+  ]},
+  "Grand Polo Club & Resort":  { ppsf:1900, yield:10.0, src:"OPR.ae/GrandClubResortDubai 2025", units: [
+    {t:"3BR TH",      sf:"2,173–2,479",from:3500000,  to:5000000,  yield:10.0},
+    {t:"4BR Villa",   sf:"3,600–3,900",from:6200000,  to:7800000,  yield:9.5},
+    {t:"5BR Villa",   sf:"5,000–7,000",from:9900000,  to:15000000, yield:9.0},
+    {t:"5BR Equestrian",sf:"7,000–10,000",from:19900000,to:35000000,yield:8.0},
+  ]},
+  "Downtown Dubai":            { ppsf:3200, yield:5.0, src:"Property Finder 2026", units: [
+    {t:"1BR",         sf:"700–950",    from:2000000,  to:3500000,  yield:5.2},
+    {t:"2BR",         sf:"1,200–1,600",from:3500000,  to:6000000,  yield:5.0},
+    {t:"3BR",         sf:"1,800–2,500",from:5500000,  to:10000000, yield:4.8},
+  ]},
+  "Rashid Yachts & Marina":    { ppsf:2800, yield:6.0, src:"Emaar official/Bayut 2025", units: [
+    {t:"1BR",         sf:"700–950",    from:2000000,  to:3000000,  yield:6.2},
+    {t:"2BR",         sf:"1,200–1,600",from:3300000,  to:5000000,  yield:6.0},
+    {t:"3BR",         sf:"1,800–2,400",from:5000000,  to:8000000,  yield:5.8},
+    {t:"4BR",         sf:"2,500–3,500",from:8000000,  to:14000000, yield:5.5},
+  ]},
+  "The Oasis":                 { ppsf:3500, yield:5.5, src:"Emaar official 2025", units: [
+    {t:"4BR Villa",   sf:"5,500–7,000",from:11000000, to:16000000, yield:5.8},
+    {t:"5BR Villa",   sf:"7,000–9,000",from:16000000, to:25000000, yield:5.5},
+    {t:"6BR Mansion", sf:"9,000–14,000",from:25000000,to:45000000, yield:5.0},
+  ]},
+  "The Heights CW":            { ppsf:2500, yield:6.0, src:"Emaar official 2025", units: [
+    {t:"3BR TH",      sf:"2,500–3,200",from:5000000,  to:7500000,  yield:6.2},
+    {t:"4BR Villa",   sf:"4,000–5,500",from:7000000,  to:12000000, yield:6.0},
+    {t:"5BR Villa",   sf:"5,500–7,500",from:10000000, to:18000000, yield:5.8},
+  ]},
+  "Arabian Ranches":           { ppsf:1800, yield:5.5, src:"Property Finder 2026", units: [
+    {t:"3BR TH",      sf:"1,800–2,400",from:2800000,  to:4500000,  yield:5.8},
+    {t:"4BR Villa",   sf:"3,000–4,500",from:4500000,  to:8000000,  yield:5.5},
+    {t:"5BR Villa",   sf:"4,500–6,500",from:7000000,  to:13000000, yield:5.2},
+  ]},
+  "Arabian Ranches 3":         { ppsf:1500, yield:6.0, src:"Property Finder 2025", units: [
+    {t:"3BR TH",      sf:"1,800–2,400",from:2200000,  to:3500000,  yield:6.2},
+    {t:"4BR TH",      sf:"2,400–3,000",from:3000000,  to:4800000,  yield:6.0},
+    {t:"4BR Villa",   sf:"3,000–4,000",from:4000000,  to:7000000,  yield:5.8},
+  ]},
+  "Mina Rashid":               { ppsf:2200, yield:6.5, src:"Property Finder 2025/2026", units: [
+    {t:"1BR",         sf:"650–900",    from:1600000,  to:2500000,  yield:6.8},
+    {t:"2BR",         sf:"1,100–1,500",from:2700000,  to:4200000,  yield:6.5},
+    {t:"3BR",         sf:"1,600–2,200",from:4000000,  to:7000000,  yield:6.2},
+  ]},
+  "Business Bay":              { ppsf:2000, yield:7.0, src:"Property Finder 2026", units: [
+    {t:"1BR",         sf:"650–900",    from:1400000,  to:2500000,  yield:7.2},
+    {t:"2BR",         sf:"1,100–1,500",from:2400000,  to:4200000,  yield:7.0},
+    {t:"3BR",         sf:"1,800–2,500",from:4000000,  to:7500000,  yield:6.8},
+  ]},
+  "Expo Living":               { ppsf:1400, yield:7.5, src:"Emaar official 2025", units: [
+    {t:"1BR",         sf:"620–820",    from:850000,   to:1400000,  yield:7.8},
+    {t:"2BR",         sf:"1,050–1,350",from:1350000,  to:2200000,  yield:7.5},
+    {t:"3BR",         sf:"1,500–2,000",from:2000000,  to:3500000,  yield:7.2},
+  ]},
+  // ── DAMAC ─────────────────────────────────────────────────────
+  "DAMAC Hills":               { ppsf:1600, yield:6.5, src:"Luxfolio/Property Finder 2025", units: [
+    {t:"1BR",         sf:"600–900",    from:900000,   to:1500000,  yield:6.8},
+    {t:"2BR",         sf:"1,000–1,400",from:1400000,  to:2300000,  yield:6.5},
+    {t:"3BR",         sf:"1,400–2,000",from:2000000,  to:3500000,  yield:6.2},
+    {t:"4BR Villa",   sf:"3,000–4,500",from:4500000,  to:8000000,  yield:5.8},
+    {t:"5BR Villa",   sf:"4,500–6,500",from:7000000,  to:13000000, yield:5.5},
+  ]},
+  "DAMAC Hills 2":             { ppsf:900, yield:7.0, src:"APIL Properties/Bayut 2025", units: [
+    {t:"1BR",         sf:"600–850",    from:600000,   to:1100000,  yield:7.5},
+    {t:"2BR",         sf:"1,000–1,400",from:900000,   to:1600000,  yield:7.2},
+    {t:"3BR TH",      sf:"1,700–2,200",from:1400000,  to:2000000,  yield:7.0},
+    {t:"4BR TH",      sf:"2,200–2,800",from:1830000,  to:2500000,  yield:6.8},
+    {t:"5BR Villa",   sf:"3,500–5,000",from:5000000,  to:7000000,  yield:6.0},
+  ]},
+  "DAMAC Islands 2":           { ppsf:1400, yield:7.0, src:"DAMAC official 2025", units: [
+    {t:"4BR TH",      sf:"2,200–2,800",from:2800000,  to:4200000,  yield:7.2},
+    {t:"5BR Villa",   sf:"3,500–5,000",from:4500000,  to:7500000,  yield:7.0},
+    {t:"6BR Mansion", sf:"6,000–9,000",from:8000000,  to:15000000, yield:6.5},
+  ]},
+  "DAMAC Lagoons":             { ppsf:1200, yield:7.5, src:"DAMAC official 2025", units: [
+    {t:"4BR TH",      sf:"2,000–2,600",from:2200000,  to:3500000,  yield:7.8},
+    {t:"5BR Villa",   sf:"3,000–4,500",from:3500000,  to:6000000,  yield:7.5},
+    {t:"6BR Villa",   sf:"4,500–6,500",from:5500000,  to:10000000, yield:7.0},
+  ]},
+  // ── SOBHA ─────────────────────────────────────────────────────
+  "Sobha Hartland":            { ppsf:2100, yield:6.5, src:"Bayut/Property Finder 2025", units: [
+    {t:"1BR",         sf:"550–800",    from:983000,   to:1820000,  yield:6.8},
+    {t:"2BR",         sf:"900–1,300",  from:1600000,  to:2800000,  yield:6.5},
+    {t:"3BR",         sf:"1,400–2,000",from:2600000,  to:4500000,  yield:6.2},
+    {t:"4BR Villa",   sf:"4,000–6,000",from:8050000,  to:15000000, yield:5.8},
+  ]},
+  "Sobha Elwood":              { ppsf:1400, yield:6.0, src:"Sobha Realty official 2025", units: [
+    {t:"3BR Villa",   sf:"2,800–3,500",from:3500000,  to:5000000,  yield:6.2},
+    {t:"4BR Villa",   sf:"3,500–4,500",from:4500000,  to:7000000,  yield:6.0},
+    {t:"5BR Villa",   sf:"4,500–6,000",from:6500000,  to:10000000, yield:5.8},
+  ]},
+  "Siniya Island":             { ppsf:1800, yield:7.0, src:"Sobha Realty official 2025", units: [
+    {t:"1BR",         sf:"600–850",    from:1000000,  to:1800000,  yield:7.2},
+    {t:"2BR",         sf:"1,000–1,400",from:1700000,  to:3000000,  yield:7.0},
+    {t:"3BR",         sf:"1,500–2,000",from:2800000,  to:5000000,  yield:6.8},
+  ]},
+  // ── NAKHEEL ───────────────────────────────────────────────────
+  "Palm Jumeirah":             { ppsf:4500, yield:4.5, src:"Property Finder/Investindxb 2025", units: [
+    {t:"1BR",         sf:"800–1,100",  from:3000000,  to:5500000,  yield:4.8},
+    {t:"2BR",         sf:"1,300–1,800",from:5000000,  to:9000000,  yield:4.5},
+    {t:"3BR",         sf:"2,000–2,800",from:8000000,  to:15000000, yield:4.2},
+    {t:"4BR Duplex",  sf:"3,000–5,000",from:12000000, to:25000000, yield:4.0},
+  ]},
+  "District One":              { ppsf:2800, yield:5.5, src:"Property Finder 2025", units: [
+    {t:"1BR",         sf:"700–950",    from:1900000,  to:3000000,  yield:5.8},
+    {t:"2BR",         sf:"1,200–1,700",from:3200000,  to:5000000,  yield:5.5},
+    {t:"3BR",         sf:"1,800–2,500",from:5000000,  to:8000000,  yield:5.2},
+    {t:"4BR Villa",   sf:"5,000–8,000",from:12000000, to:22000000, yield:5.0},
+  ]},
+  "Dubai Islands":             { ppsf:3200, yield:6.0, src:"Nakheel official 2025", units: [
+    {t:"1BR",         sf:"700–950",    from:2200000,  to:3500000,  yield:6.2},
+    {t:"2BR",         sf:"1,200–1,700",from:3500000,  to:6000000,  yield:6.0},
+    {t:"3BR",         sf:"1,800–2,500",from:6000000,  to:10000000, yield:5.8},
+  ]},
+  "Palm Jebel Ali":            { ppsf:3500, yield:5.0, src:"Nakheel official 2025", units: [
+    {t:"4BR Villa",   sf:"5,000–7,000",from:15000000, to:25000000, yield:5.2},
+    {t:"5BR Villa",   sf:"7,000–10,000",from:22000000,to:38000000, yield:5.0},
+    {t:"6BR Mansion", sf:"10,000–15,000",from:35000000,to:60000000,yield:4.8},
+  ]},
+  "Al Furjan":                 { ppsf:1200, yield:7.5, src:"Property Finder 2025", units: [
+    {t:"3BR TH",      sf:"1,800–2,400",from:1800000,  to:3000000,  yield:7.8},
+    {t:"4BR TH",      sf:"2,400–3,200",from:2500000,  to:4200000,  yield:7.5},
+    {t:"4BR Villa",   sf:"3,200–4,500",from:3500000,  to:6500000,  yield:7.0},
+  ]},
+  // ── MERAAS ────────────────────────────────────────────────────
+  "City Walk":                 { ppsf:3200, yield:5.8, src:"Property Finder 2025", units: [
+    {t:"1BR",         sf:"700–950",    from:2100000,  to:3500000,  yield:6.0},
+    {t:"2BR",         sf:"1,200–1,700",from:3500000,  to:6000000,  yield:5.8},
+    {t:"3BR",         sf:"1,800–2,500",from:6000000,  to:10000000, yield:5.5},
+  ]},
+  "Bluewaters Island":         { ppsf:3800, yield:5.5, src:"Newwayint/Meraas 2025", units: [
+    {t:"1BR",         sf:"800–1,100",  from:2600000,  to:4500000,  yield:5.8},
+    {t:"2BR",         sf:"1,300–1,800",from:3350000,  to:6500000,  yield:5.5},
+    {t:"3BR",         sf:"2,000–2,800",from:6350000,  to:11000000, yield:5.2},
+    {t:"4BR",         sf:"3,000–4,000",from:10000000, to:18000000, yield:5.0},
+  ]},
+  "Madinat Jumeirah Living":   { ppsf:2400, yield:6.0, src:"Property Finder/Meraas 2025", units: [
+    {t:"1BR",         sf:"700–950",    from:1500000,  to:2500000,  yield:6.2},
+    {t:"2BR",         sf:"1,200–1,700",from:2500000,  to:4500000,  yield:6.0},
+    {t:"3BR",         sf:"1,800–2,400",from:4000000,  to:7000000,  yield:5.8},
+  ]},
+  "Port de La Mer":            { ppsf:2600, yield:6.2, src:"Property Finder 2025", units: [
+    {t:"1BR",         sf:"700–1,000",  from:1800000,  to:3000000,  yield:6.5},
+    {t:"2BR",         sf:"1,200–1,700",from:3000000,  to:5500000,  yield:6.2},
+    {t:"3BR",         sf:"1,800–2,500",from:5000000,  to:9000000,  yield:5.8},
+  ]},
+  "The Acres":                 { ppsf:1600, yield:5.5, src:"Meraas official 2025", units: [
+    {t:"3BR Villa",   sf:"3,000–4,000",from:4500000,  to:7000000,  yield:5.8},
+    {t:"4BR Villa",   sf:"4,000–5,500",from:6500000,  to:10000000, yield:5.5},
+    {t:"5BR Villa",   sf:"5,500–7,500",from:9000000,  to:15000000, yield:5.2},
+  ]},
+  "Jumeirah Bay Island":       { ppsf:6000, yield:4.0, src:"Property Finder 2025", units: [
+    {t:"2BR",         sf:"1,500–2,200",from:8000000,  to:15000000, yield:4.2},
+    {t:"3BR",         sf:"2,200–3,500",from:13000000, to:25000000, yield:4.0},
+    {t:"Penthouse",   sf:"5,000–10,000",from:30000000,to:80000000, yield:3.5},
+  ]},
+  // ── ALDAR ─────────────────────────────────────────────────────
+  "Saadiyat Island":           { ppsf:2800, yield:5.5, src:"Property Finder AD/Valorisimo 2026", units: [
+    {t:"1BR",         sf:"700–1,000",  from:1800000,  to:3500000,  yield:5.8},
+    {t:"2BR",         sf:"1,200–1,700",from:3000000,  to:6000000,  yield:5.5},
+    {t:"3BR",         sf:"1,800–2,500",from:5000000,  to:10000000, yield:5.2},
+    {t:"4BR Villa",   sf:"3,500–5,500",from:8000000,  to:18000000, yield:5.0},
+  ]},
+  "Yas Island":                { ppsf:1800, yield:7.5, src:"Valorisimo/Colliers Q2 2025", units: [
+    {t:"1BR",         sf:"600–900",    from:950000,   to:1800000,  yield:7.8},
+    {t:"2BR",         sf:"1,000–1,500",from:1600000,  to:3000000,  yield:7.5},
+    {t:"3BR",         sf:"1,500–2,200",from:2500000,  to:5000000,  yield:7.2},
+    {t:"4BR Villa",   sf:"3,000–5,000",from:4500000,  to:9000000,  yield:7.0},
+  ]},
+  "Al Reem Island":            { ppsf:1400, yield:6.5, src:"Valorisimo/Bayut 2026", units: [
+    {t:"1BR",         sf:"600–900",    from:800000,   to:1500000,  yield:6.8},
+    {t:"2BR",         sf:"1,000–1,500",from:1300000,  to:2500000,  yield:6.5},
+    {t:"3BR",         sf:"1,500–2,200",from:2000000,  to:4000000,  yield:6.2},
+  ]},
+  "Haven by Aldar":            { ppsf:1600, yield:7.0, src:"Aldar official 2025", units: [
+    {t:"3BR TH",      sf:"1,800–2,400",from:2500000,  to:4000000,  yield:7.2},
+    {t:"4BR Villa",   sf:"3,000–4,500",from:4000000,  to:7000000,  yield:7.0},
+    {t:"5BR Villa",   sf:"4,500–6,000",from:6000000,  to:11000000, yield:6.8},
+  ]},
+  // ── BINGHATTI ─────────────────────────────────────────────────
+  "Jumeirah Village Circle":   { ppsf:1500, yield:7.4, src:"Driven Properties/Property Finder 2025", units: [
+    {t:"Studio",      sf:"350–600",    from:450000,   to:800000,   yield:8.5},
+    {t:"1BR",         sf:"600–900",    from:700000,   to:1300000,  yield:7.4},
+    {t:"2BR",         sf:"1,000–1,400",from:1100000,  to:2000000,  yield:6.7},
+    {t:"3BR",         sf:"1,400–1,900",from:1500000,  to:2800000,  yield:6.5},
+  ]},
+  "JVC":                       { ppsf:1500, yield:7.4, src:"Driven Properties/Property Finder 2025", units: [
+    {t:"Studio",      sf:"350–600",    from:450000,   to:800000,   yield:8.5},
+    {t:"1BR",         sf:"600–900",    from:700000,   to:1300000,  yield:7.4},
+    {t:"2BR",         sf:"1,000–1,400",from:1100000,  to:2000000,  yield:6.7},
+    {t:"3BR",         sf:"1,400–1,900",from:1500000,  to:2800000,  yield:6.5},
+  ]},
+};
+
 export default function EmaarDashboardV2() {
   // ── Pull shared state from DXBContext ─────────────────────────────────────
   // All Firestore listeners, auth, user data, live projects live in DXBContext.
@@ -7664,232 +7891,6 @@ export default function EmaarDashboardV2() {
         const selectedProject_ = _sp;
         const ci = { ...(communityIntel[selectedProject_.community] || {}), ...(liveCommunityIntel[selectedProject_.community] || {}) };
         
-// ─── VERIFIED UNIT PRICING TABLE (Q1 2026) ─────────────────────────────────
-// Sources: Property Finder, Bayut, developer official sites, broker research
-const UNIT_PRICING = {
-  // ── EMAAR ─────────────────────────────────────────────────────
-  "Dubai Hills Estate":        { ppsf:2381, yield:5.4, src:"Bayut/HSProperty Q1 2026", units: [
-    {t:"1BR",         sf:"650–950",    from:1210000,  to:2300000,  yield:5.4},
-    {t:"2BR",         sf:"1,100–1,500",from:2100000,  to:3500000,  yield:5.4},
-    {t:"3BR",         sf:"1,600–2,200",from:3200000,  to:5500000,  yield:5.4},
-    {t:"3BR TH",      sf:"2,200–2,800",from:3500000,  to:5200000,  yield:5.2},
-    {t:"4BR Villa",   sf:"5,000–8,000",from:9800000,  to:18000000, yield:4.5},
-    {t:"5BR Villa",   sf:"7,000–10,500",from:13700000,to:25000000, yield:4.5},
-  ]},
-  "Dubai Creek Harbour":       { ppsf:2500, yield:6.5, src:"ExcelProperties/creek-harbour-dubai.com Q1 2026", units: [
-    {t:"1BR",         sf:"700–950",    from:1440000,  to:2700000,  yield:6.5},
-    {t:"2BR",         sf:"1,200–1,600",from:2670000,  to:4500000,  yield:6.5},
-    {t:"3BR",         sf:"1,800–2,400",from:4170000,  to:7500000,  yield:6.2},
-    {t:"3BR TH",      sf:"2,000–2,600",from:3500000,  to:5500000,  yield:6.0},
-  ]},
-  "Emaar Beachfront":          { ppsf:3800, yield:5.5, src:"Property Finder 2025/2026", units: [
-    {t:"1BR",         sf:"700–950",    from:2800000,  to:4200000,  yield:5.5},
-    {t:"2BR",         sf:"1,200–1,600",from:4800000,  to:7000000,  yield:5.5},
-    {t:"3BR",         sf:"1,800–2,400",from:7000000,  to:11000000, yield:5.2},
-  ]},
-  "The Valley":                { ppsf:1200, yield:6.2, src:"Provident/Bayut 2025/2026", units: [
-    {t:"3BR TH",      sf:"2,000–2,500",from:1700000,  to:2500000,  yield:6.5},
-    {t:"4BR TH",      sf:"2,400–3,000",from:2200000,  to:3800000,  yield:6.2},
-    {t:"4BR Villa",   sf:"3,500–5,000",from:3500000,  to:5500000,  yield:6.0},
-    {t:"5BR Villa",   sf:"5,000–7,000",from:5000000,  to:8000000,  yield:5.8},
-  ]},
-  "Emaar South":               { ppsf:1350, yield:7.2, src:"Investindxb/Provident 2025", units: [
-    {t:"1BR",         sf:"620–830",    from:800000,   to:1300000,  yield:7.5},
-    {t:"2BR",         sf:"1,000–1,400",from:1300000,  to:2100000,  yield:7.2},
-    {t:"3BR",         sf:"1,400–1,900",from:1900000,  to:3000000,  yield:7.0},
-    {t:"3BR TH",      sf:"2,200–2,800",from:2500000,  to:4000000,  yield:6.8},
-  ]},
-  "Grand Polo Club & Resort":  { ppsf:1900, yield:10.0, src:"OPR.ae/GrandClubResortDubai 2025", units: [
-    {t:"3BR TH",      sf:"2,173–2,479",from:3500000,  to:5000000,  yield:10.0},
-    {t:"4BR Villa",   sf:"3,600–3,900",from:6200000,  to:7800000,  yield:9.5},
-    {t:"5BR Villa",   sf:"5,000–7,000",from:9900000,  to:15000000, yield:9.0},
-    {t:"5BR Equestrian",sf:"7,000–10,000",from:19900000,to:35000000,yield:8.0},
-  ]},
-  "Downtown Dubai":            { ppsf:3200, yield:5.0, src:"Property Finder 2026", units: [
-    {t:"1BR",         sf:"700–950",    from:2000000,  to:3500000,  yield:5.2},
-    {t:"2BR",         sf:"1,200–1,600",from:3500000,  to:6000000,  yield:5.0},
-    {t:"3BR",         sf:"1,800–2,500",from:5500000,  to:10000000, yield:4.8},
-  ]},
-  "Rashid Yachts & Marina":    { ppsf:2800, yield:6.0, src:"Emaar official/Bayut 2025", units: [
-    {t:"1BR",         sf:"700–950",    from:2000000,  to:3000000,  yield:6.2},
-    {t:"2BR",         sf:"1,200–1,600",from:3300000,  to:5000000,  yield:6.0},
-    {t:"3BR",         sf:"1,800–2,400",from:5000000,  to:8000000,  yield:5.8},
-    {t:"4BR",         sf:"2,500–3,500",from:8000000,  to:14000000, yield:5.5},
-  ]},
-  "The Oasis":                 { ppsf:3500, yield:5.5, src:"Emaar official 2025", units: [
-    {t:"4BR Villa",   sf:"5,500–7,000",from:11000000, to:16000000, yield:5.8},
-    {t:"5BR Villa",   sf:"7,000–9,000",from:16000000, to:25000000, yield:5.5},
-    {t:"6BR Mansion", sf:"9,000–14,000",from:25000000,to:45000000, yield:5.0},
-  ]},
-  "The Heights CW":            { ppsf:2500, yield:6.0, src:"Emaar official 2025", units: [
-    {t:"3BR TH",      sf:"2,500–3,200",from:5000000,  to:7500000,  yield:6.2},
-    {t:"4BR Villa",   sf:"4,000–5,500",from:7000000,  to:12000000, yield:6.0},
-    {t:"5BR Villa",   sf:"5,500–7,500",from:10000000, to:18000000, yield:5.8},
-  ]},
-  "Arabian Ranches":           { ppsf:1800, yield:5.5, src:"Property Finder 2026", units: [
-    {t:"3BR TH",      sf:"1,800–2,400",from:2800000,  to:4500000,  yield:5.8},
-    {t:"4BR Villa",   sf:"3,000–4,500",from:4500000,  to:8000000,  yield:5.5},
-    {t:"5BR Villa",   sf:"4,500–6,500",from:7000000,  to:13000000, yield:5.2},
-  ]},
-  "Arabian Ranches 3":         { ppsf:1500, yield:6.0, src:"Property Finder 2025", units: [
-    {t:"3BR TH",      sf:"1,800–2,400",from:2200000,  to:3500000,  yield:6.2},
-    {t:"4BR TH",      sf:"2,400–3,000",from:3000000,  to:4800000,  yield:6.0},
-    {t:"4BR Villa",   sf:"3,000–4,000",from:4000000,  to:7000000,  yield:5.8},
-  ]},
-  "Mina Rashid":               { ppsf:2200, yield:6.5, src:"Property Finder 2025/2026", units: [
-    {t:"1BR",         sf:"650–900",    from:1600000,  to:2500000,  yield:6.8},
-    {t:"2BR",         sf:"1,100–1,500",from:2700000,  to:4200000,  yield:6.5},
-    {t:"3BR",         sf:"1,600–2,200",from:4000000,  to:7000000,  yield:6.2},
-  ]},
-  "Business Bay":              { ppsf:2000, yield:7.0, src:"Property Finder 2026", units: [
-    {t:"1BR",         sf:"650–900",    from:1400000,  to:2500000,  yield:7.2},
-    {t:"2BR",         sf:"1,100–1,500",from:2400000,  to:4200000,  yield:7.0},
-    {t:"3BR",         sf:"1,800–2,500",from:4000000,  to:7500000,  yield:6.8},
-  ]},
-  "Expo Living":               { ppsf:1400, yield:7.5, src:"Emaar official 2025", units: [
-    {t:"1BR",         sf:"620–820",    from:850000,   to:1400000,  yield:7.8},
-    {t:"2BR",         sf:"1,050–1,350",from:1350000,  to:2200000,  yield:7.5},
-    {t:"3BR",         sf:"1,500–2,000",from:2000000,  to:3500000,  yield:7.2},
-  ]},
-  // ── DAMAC ─────────────────────────────────────────────────────
-  "DAMAC Hills":               { ppsf:1600, yield:6.5, src:"Luxfolio/Property Finder 2025", units: [
-    {t:"1BR",         sf:"600–900",    from:900000,   to:1500000,  yield:6.8},
-    {t:"2BR",         sf:"1,000–1,400",from:1400000,  to:2300000,  yield:6.5},
-    {t:"3BR",         sf:"1,400–2,000",from:2000000,  to:3500000,  yield:6.2},
-    {t:"4BR Villa",   sf:"3,000–4,500",from:4500000,  to:8000000,  yield:5.8},
-    {t:"5BR Villa",   sf:"4,500–6,500",from:7000000,  to:13000000, yield:5.5},
-  ]},
-  "DAMAC Hills 2":             { ppsf:900, yield:7.0, src:"APIL Properties/Bayut 2025", units: [
-    {t:"1BR",         sf:"600–850",    from:600000,   to:1100000,  yield:7.5},
-    {t:"2BR",         sf:"1,000–1,400",from:900000,   to:1600000,  yield:7.2},
-    {t:"3BR TH",      sf:"1,700–2,200",from:1400000,  to:2000000,  yield:7.0},
-    {t:"4BR TH",      sf:"2,200–2,800",from:1830000,  to:2500000,  yield:6.8},
-    {t:"5BR Villa",   sf:"3,500–5,000",from:5000000,  to:7000000,  yield:6.0},
-  ]},
-  "DAMAC Islands 2":           { ppsf:1400, yield:7.0, src:"DAMAC official 2025", units: [
-    {t:"4BR TH",      sf:"2,200–2,800",from:2800000,  to:4200000,  yield:7.2},
-    {t:"5BR Villa",   sf:"3,500–5,000",from:4500000,  to:7500000,  yield:7.0},
-    {t:"6BR Mansion", sf:"6,000–9,000",from:8000000,  to:15000000, yield:6.5},
-  ]},
-  "DAMAC Lagoons":             { ppsf:1200, yield:7.5, src:"DAMAC official 2025", units: [
-    {t:"4BR TH",      sf:"2,000–2,600",from:2200000,  to:3500000,  yield:7.8},
-    {t:"5BR Villa",   sf:"3,000–4,500",from:3500000,  to:6000000,  yield:7.5},
-    {t:"6BR Villa",   sf:"4,500–6,500",from:5500000,  to:10000000, yield:7.0},
-  ]},
-  // ── SOBHA ─────────────────────────────────────────────────────
-  "Sobha Hartland":            { ppsf:2100, yield:6.5, src:"Bayut/Property Finder 2025", units: [
-    {t:"1BR",         sf:"550–800",    from:983000,   to:1820000,  yield:6.8},
-    {t:"2BR",         sf:"900–1,300",  from:1600000,  to:2800000,  yield:6.5},
-    {t:"3BR",         sf:"1,400–2,000",from:2600000,  to:4500000,  yield:6.2},
-    {t:"4BR Villa",   sf:"4,000–6,000",from:8050000,  to:15000000, yield:5.8},
-  ]},
-  "Sobha Elwood":              { ppsf:1400, yield:6.0, src:"Sobha Realty official 2025", units: [
-    {t:"3BR Villa",   sf:"2,800–3,500",from:3500000,  to:5000000,  yield:6.2},
-    {t:"4BR Villa",   sf:"3,500–4,500",from:4500000,  to:7000000,  yield:6.0},
-    {t:"5BR Villa",   sf:"4,500–6,000",from:6500000,  to:10000000, yield:5.8},
-  ]},
-  "Siniya Island":             { ppsf:1800, yield:7.0, src:"Sobha Realty official 2025", units: [
-    {t:"1BR",         sf:"600–850",    from:1000000,  to:1800000,  yield:7.2},
-    {t:"2BR",         sf:"1,000–1,400",from:1700000,  to:3000000,  yield:7.0},
-    {t:"3BR",         sf:"1,500–2,000",from:2800000,  to:5000000,  yield:6.8},
-  ]},
-  // ── NAKHEEL ───────────────────────────────────────────────────
-  "Palm Jumeirah":             { ppsf:4500, yield:4.5, src:"Property Finder/Investindxb 2025", units: [
-    {t:"1BR",         sf:"800–1,100",  from:3000000,  to:5500000,  yield:4.8},
-    {t:"2BR",         sf:"1,300–1,800",from:5000000,  to:9000000,  yield:4.5},
-    {t:"3BR",         sf:"2,000–2,800",from:8000000,  to:15000000, yield:4.2},
-    {t:"4BR Duplex",  sf:"3,000–5,000",from:12000000, to:25000000, yield:4.0},
-  ]},
-  "District One":              { ppsf:2800, yield:5.5, src:"Property Finder 2025", units: [
-    {t:"1BR",         sf:"700–950",    from:1900000,  to:3000000,  yield:5.8},
-    {t:"2BR",         sf:"1,200–1,700",from:3200000,  to:5000000,  yield:5.5},
-    {t:"3BR",         sf:"1,800–2,500",from:5000000,  to:8000000,  yield:5.2},
-    {t:"4BR Villa",   sf:"5,000–8,000",from:12000000, to:22000000, yield:5.0},
-  ]},
-  "Dubai Islands":             { ppsf:3200, yield:6.0, src:"Nakheel official 2025", units: [
-    {t:"1BR",         sf:"700–950",    from:2200000,  to:3500000,  yield:6.2},
-    {t:"2BR",         sf:"1,200–1,700",from:3500000,  to:6000000,  yield:6.0},
-    {t:"3BR",         sf:"1,800–2,500",from:6000000,  to:10000000, yield:5.8},
-  ]},
-  "Palm Jebel Ali":            { ppsf:3500, yield:5.0, src:"Nakheel official 2025", units: [
-    {t:"4BR Villa",   sf:"5,000–7,000",from:15000000, to:25000000, yield:5.2},
-    {t:"5BR Villa",   sf:"7,000–10,000",from:22000000,to:38000000, yield:5.0},
-    {t:"6BR Mansion", sf:"10,000–15,000",from:35000000,to:60000000,yield:4.8},
-  ]},
-  "Al Furjan":                 { ppsf:1200, yield:7.5, src:"Property Finder 2025", units: [
-    {t:"3BR TH",      sf:"1,800–2,400",from:1800000,  to:3000000,  yield:7.8},
-    {t:"4BR TH",      sf:"2,400–3,200",from:2500000,  to:4200000,  yield:7.5},
-    {t:"4BR Villa",   sf:"3,200–4,500",from:3500000,  to:6500000,  yield:7.0},
-  ]},
-  // ── MERAAS ────────────────────────────────────────────────────
-  "City Walk":                 { ppsf:3200, yield:5.8, src:"Property Finder 2025", units: [
-    {t:"1BR",         sf:"700–950",    from:2100000,  to:3500000,  yield:6.0},
-    {t:"2BR",         sf:"1,200–1,700",from:3500000,  to:6000000,  yield:5.8},
-    {t:"3BR",         sf:"1,800–2,500",from:6000000,  to:10000000, yield:5.5},
-  ]},
-  "Bluewaters Island":         { ppsf:3800, yield:5.5, src:"Newwayint/Meraas 2025", units: [
-    {t:"1BR",         sf:"800–1,100",  from:2600000,  to:4500000,  yield:5.8},
-    {t:"2BR",         sf:"1,300–1,800",from:3350000,  to:6500000,  yield:5.5},
-    {t:"3BR",         sf:"2,000–2,800",from:6350000,  to:11000000, yield:5.2},
-    {t:"4BR",         sf:"3,000–4,000",from:10000000, to:18000000, yield:5.0},
-  ]},
-  "Madinat Jumeirah Living":   { ppsf:2400, yield:6.0, src:"Property Finder/Meraas 2025", units: [
-    {t:"1BR",         sf:"700–950",    from:1500000,  to:2500000,  yield:6.2},
-    {t:"2BR",         sf:"1,200–1,700",from:2500000,  to:4500000,  yield:6.0},
-    {t:"3BR",         sf:"1,800–2,400",from:4000000,  to:7000000,  yield:5.8},
-  ]},
-  "Port de La Mer":            { ppsf:2600, yield:6.2, src:"Property Finder 2025", units: [
-    {t:"1BR",         sf:"700–1,000",  from:1800000,  to:3000000,  yield:6.5},
-    {t:"2BR",         sf:"1,200–1,700",from:3000000,  to:5500000,  yield:6.2},
-    {t:"3BR",         sf:"1,800–2,500",from:5000000,  to:9000000,  yield:5.8},
-  ]},
-  "The Acres":                 { ppsf:1600, yield:5.5, src:"Meraas official 2025", units: [
-    {t:"3BR Villa",   sf:"3,000–4,000",from:4500000,  to:7000000,  yield:5.8},
-    {t:"4BR Villa",   sf:"4,000–5,500",from:6500000,  to:10000000, yield:5.5},
-    {t:"5BR Villa",   sf:"5,500–7,500",from:9000000,  to:15000000, yield:5.2},
-  ]},
-  "Jumeirah Bay Island":       { ppsf:6000, yield:4.0, src:"Property Finder 2025", units: [
-    {t:"2BR",         sf:"1,500–2,200",from:8000000,  to:15000000, yield:4.2},
-    {t:"3BR",         sf:"2,200–3,500",from:13000000, to:25000000, yield:4.0},
-    {t:"Penthouse",   sf:"5,000–10,000",from:30000000,to:80000000, yield:3.5},
-  ]},
-  // ── ALDAR ─────────────────────────────────────────────────────
-  "Saadiyat Island":           { ppsf:2800, yield:5.5, src:"Property Finder AD/Valorisimo 2026", units: [
-    {t:"1BR",         sf:"700–1,000",  from:1800000,  to:3500000,  yield:5.8},
-    {t:"2BR",         sf:"1,200–1,700",from:3000000,  to:6000000,  yield:5.5},
-    {t:"3BR",         sf:"1,800–2,500",from:5000000,  to:10000000, yield:5.2},
-    {t:"4BR Villa",   sf:"3,500–5,500",from:8000000,  to:18000000, yield:5.0},
-  ]},
-  "Yas Island":                { ppsf:1800, yield:7.5, src:"Valorisimo/Colliers Q2 2025", units: [
-    {t:"1BR",         sf:"600–900",    from:950000,   to:1800000,  yield:7.8},
-    {t:"2BR",         sf:"1,000–1,500",from:1600000,  to:3000000,  yield:7.5},
-    {t:"3BR",         sf:"1,500–2,200",from:2500000,  to:5000000,  yield:7.2},
-    {t:"4BR Villa",   sf:"3,000–5,000",from:4500000,  to:9000000,  yield:7.0},
-  ]},
-  "Al Reem Island":            { ppsf:1400, yield:6.5, src:"Valorisimo/Bayut 2026", units: [
-    {t:"1BR",         sf:"600–900",    from:800000,   to:1500000,  yield:6.8},
-    {t:"2BR",         sf:"1,000–1,500",from:1300000,  to:2500000,  yield:6.5},
-    {t:"3BR",         sf:"1,500–2,200",from:2000000,  to:4000000,  yield:6.2},
-  ]},
-  "Haven by Aldar":            { ppsf:1600, yield:7.0, src:"Aldar official 2025", units: [
-    {t:"3BR TH",      sf:"1,800–2,400",from:2500000,  to:4000000,  yield:7.2},
-    {t:"4BR Villa",   sf:"3,000–4,500",from:4000000,  to:7000000,  yield:7.0},
-    {t:"5BR Villa",   sf:"4,500–6,000",from:6000000,  to:11000000, yield:6.8},
-  ]},
-  // ── BINGHATTI ─────────────────────────────────────────────────
-  "Jumeirah Village Circle":   { ppsf:1500, yield:7.4, src:"Driven Properties/Property Finder 2025", units: [
-    {t:"Studio",      sf:"350–600",    from:450000,   to:800000,   yield:8.5},
-    {t:"1BR",         sf:"600–900",    from:700000,   to:1300000,  yield:7.4},
-    {t:"2BR",         sf:"1,000–1,400",from:1100000,  to:2000000,  yield:6.7},
-    {t:"3BR",         sf:"1,400–1,900",from:1500000,  to:2800000,  yield:6.5},
-  ]},
-  "JVC":                       { ppsf:1500, yield:7.4, src:"Driven Properties/Property Finder 2025", units: [
-    {t:"Studio",      sf:"350–600",    from:450000,   to:800000,   yield:8.5},
-    {t:"1BR",         sf:"600–900",    from:700000,   to:1300000,  yield:7.4},
-    {t:"2BR",         sf:"1,000–1,400",from:1100000,  to:2000000,  yield:6.7},
-    {t:"3BR",         sf:"1,400–1,900",from:1500000,  to:2800000,  yield:6.5},
-  ]},
-};
 
               const ciExists = !!(ci.famousFor || ci.tagline);
         return (
