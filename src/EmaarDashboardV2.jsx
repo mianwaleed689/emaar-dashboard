@@ -1440,9 +1440,9 @@ function CommunityMapTab({ activeProjects, liveCommunityROI, communityCoords, se
               {selectedProject.imageUrl && <img src={selectedProject.imageUrl} alt="" style={{ width: "100%", height: 120, objectFit: "cover", borderRadius: 8, marginBottom: 12 }} onError={e => e.target.style.display="none"} />}
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 12 }}>
                 {[
-                  ["Price", selectedProject.price ? "AED " + (selectedProject.price/1e6).toFixed(2) + "M" : "TBC", T.gold],
+                  ["Price (est.)*", selectedProject.price ? "AED " + (selectedProject.price/1e6).toFixed(2) + "M" : "TBC", T.gold],
                   ["Yield", getYield(selectedProject).toFixed(1) + "%", getPinColor(selectedProject)],
-                  ["Handover", selectedProject.handover || "TBC", T.teal],
+                  ["Handover (est.)", selectedProject.handover || "TBC", T.teal],
                   ["Type", selectedProject.type || "Residential", T.textPrimary],
                 ].map(([l, v, c]) => (
                   <div key={l} style={{ background: T.card, borderRadius: 8, padding: "10px 12px" }}>
@@ -1451,6 +1451,7 @@ function CommunityMapTab({ activeProjects, liveCommunityROI, communityCoords, se
                   </div>
                 ))}
               </div>
+              <div style={{ fontSize: 9, color: T.textMuted, fontStyle: "italic", marginBottom: 8, padding: "4px 6px", background: "rgba(255,255,255,0.03)", borderRadius: 5 }}>* Indicative only. Verify with developer before advising clients.</div>
               <button type="button" onClick={() => setTab("Projects")} style={{ width: "100%", padding: "9px 0", background: "linear-gradient(135deg," + T.gold + ",#B8912F)", color: T.bg, border: "none", borderRadius: 8, fontWeight: 700, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>View Full Details →</button>
             </div>
           ) : (
@@ -3361,9 +3362,9 @@ export default function EmaarDashboardV2() {
                   </div>
                   {/* Details Grid */}
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-                    <div><span style={{ fontSize: 9, color: T.textMuted, display: "block" }}>FROM</span><span style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{p.price ? `AED ${(p.price/1000000).toFixed(1)}M` : "TBD"}</span></div>
+                    <div><span style={{ fontSize: 9, color: T.textMuted, display: "block" }}>FROM (EST.)*</span><span style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{p.price ? `AED ${(p.price/1000000).toFixed(1)}M` : "TBD"}</span></div>
                     <div>
-                      <span style={{ fontSize: 9, color: T.textMuted, display: "block" }}>HANDOVER</span>
+                      <span style={{ fontSize: 9, color: T.textMuted, display: "block" }}>HANDOVER (EST.)</span>
                       <span style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{p.handover}</span>
                       {(() => { const cd = getHandoverCountdown(p.handover); return cd ? (
                         <span style={{ display: "inline-block", marginTop: 2, fontSize: 9, fontWeight: 700, color: cd.passed ? "#10B981" : cd.color, background: cd.passed ? "rgba(16,185,129,0.1)" : cd.urgent ? "rgba(239,68,68,0.12)" : "rgba(212,168,67,0.08)", padding: "1px 5px", borderRadius: 4 }}>
@@ -3371,10 +3372,14 @@ export default function EmaarDashboardV2() {
                         </span>
                       ) : null; })()}
                     </div>
-                    <div><span style={{ fontSize: 9, color: T.textMuted, display: "block" }}>PRICE/SQFT</span><span style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{p.ppsf ? `AED ${p.ppsf.toLocaleString()}` : "TBD"}</span></div>
+                    <div><span style={{ fontSize: 9, color: T.textMuted, display: "block" }}>PRICE/SQFT (EST.)*</span><span style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{p.ppsf ? `AED ${p.ppsf.toLocaleString()}` : "TBD"}</span></div>
                     <div><span style={{ fontSize: 9, color: T.textMuted, display: "block" }}>SIZE</span><span style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{p.sizeFrom?.toLocaleString()} - {p.sizeTo?.toLocaleString()} sqft</span></div>
                     <div><span style={{ fontSize: 9, color: T.textMuted, display: "block" }}>TYPE</span><span style={{ fontSize: 12, color: T.textSecondary }}>{p.type} · {p.beds} BR</span></div>
                     <div><span style={{ fontSize: 9, color: T.textMuted, display: "block" }}>PAYMENT</span><span style={{ fontSize: 12, color: T.textSecondary }}>{p.payment}</span></div>
+                  </div>
+                  {/* Indicative disclaimer */}
+                  <div style={{ marginTop: 8, padding: "5px 8px", borderRadius: 6, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
+                    <span style={{ fontSize: 9, color: T.textMuted, fontStyle: "italic" }}>* Prices & dates are indicative. Verify directly with developer before advising clients.</span>
                   </div>
                   {/* Unit Inventory */}
                   {p.units && <div style={{ marginTop: 10, paddingTop: 10, borderTop: `1px solid ${T.border}` }}>
