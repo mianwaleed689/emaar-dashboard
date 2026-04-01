@@ -578,7 +578,7 @@ export const allProjectsDLD = [
     rooms: {"4 B/R": {"count": 178, "avgPrice": 2862429, "minPrice": 2541600}, "5 B/R": {"count": 113, "avgPrice": 4653679, "minPrice": 3469000}},
   },
   {
-    name: 'WINDSOR HOUSE ',
+    name: 'WINDSOR HOUSE',
     developerId: 'other',
     area: 'Madinat Al Mataar',
     transactions: 281,
@@ -698,7 +698,7 @@ export const allProjectsDLD = [
     rooms: {"1 B/R": {"count": 156, "avgPrice": 2591281, "minPrice": 2299000}, "3 B/R": {"count": 6, "avgPrice": 7562764, "minPrice": 7521500}, "2 B/R": {"count": 73, "avgPrice": 4438061, "minPrice": 3723000}},
   },
   {
-    name: 'DAMAC ISLANDS 2 - BARBADOS 2 ',
+    name: 'DAMAC ISLANDS 2 - BARBADOS 2',
     developerId: 'damac',
     area: 'Al Yelayiss 1',
     transactions: 234,
@@ -842,7 +842,7 @@ export const allProjectsDLD = [
     rooms: {"1 B/R": {"count": 107, "avgPrice": 989680, "minPrice": 863380}, "3 B/R": {"count": 3, "avgPrice": 2510000, "minPrice": 2474000}, "2 B/R": {"count": 38, "avgPrice": 1507571, "minPrice": 1351000}},
   },
   {
-    name: 'Maybach Ultimate Luxury ',
+    name: 'Maybach Ultimate Luxury',
     developerId: 'binghatti',
     area: 'BUSINESS PARK',
     transactions: 145,
@@ -986,7 +986,7 @@ export const allProjectsDLD = [
     rooms: {"1 B/R": {"count": 55, "avgPrice": 2193891, "minPrice": 1926311}, "2 B/R": {"count": 66, "avgPrice": 3070839, "minPrice": 2887950}, "3 B/R": {"count": 12, "avgPrice": 4736305, "minPrice": 4174888}},
   },
   {
-    name: 'Cybele By Wadan ',
+    name: 'Cybele By Wadan',
     developerId: 'wadan',
     area: 'DUBAI LAND RESIDENCE COMPLEX',
     transactions: 132,
@@ -1190,7 +1190,7 @@ export const allProjectsDLD = [
     rooms: {"Studio": {"count": 64, "avgPrice": 762566, "minPrice": 686935}, "1 B/R": {"count": 36, "avgPrice": 1268009, "minPrice": 1104334}, "2 B/R": {"count": 5, "avgPrice": 1708412, "minPrice": 1641382}, "3 B/R": {"count": 10, "avgPrice": 2134908, "minPrice": 2047445}},
   },
   {
-    name: 'Grand Polo - Equiterra ',
+    name: 'Grand Polo - Equiterra',
     developerId: 'emaar',
     area: 'Dubai Investment Park Second',
     transactions: 114,
@@ -1226,7 +1226,7 @@ export const allProjectsDLD = [
     rooms: {"1 B/R": {"count": 43, "avgPrice": 1066188, "minPrice": 845481}, "Studio": {"count": 52, "avgPrice": 688279, "minPrice": 547252}, "3 B/R": {"count": 4, "avgPrice": 2056572, "minPrice": 1949348}, "2 B/R": {"count": 12, "avgPrice": 1570180, "minPrice": 1439117}},
   },
   {
-    name: 'Sobha Central ',
+    name: 'Sobha Central',
     developerId: 'sobha',
     area: 'Jabal Ali First',
     transactions: 108,
@@ -1286,7 +1286,7 @@ export const allProjectsDLD = [
     rooms: {"1 B/R": {"count": 64, "avgPrice": 2421812, "minPrice": 2040000}, "2 B/R": {"count": 31, "avgPrice": 4722710, "minPrice": 4155000}, "3 B/R": {"count": 9, "avgPrice": 7865778, "minPrice": 7749000}},
   },
   {
-    name: 'VERDE BY VISION ',
+    name: 'VERDE BY VISION',
     developerId: 'other',
     area: 'DUBAI SPORTS CITY',
     transactions: 103,
@@ -1538,7 +1538,7 @@ export const allProjectsDLD = [
     rooms: {"1 B/R": {"count": 77, "avgPrice": 2690017, "minPrice": 2316000}, "2 B/R": {"count": 6, "avgPrice": 5128705, "minPrice": 4593000}, "3 B/R": {"count": 2, "avgPrice": 5612000, "minPrice": 5596000}},
   },
   {
-    name: 'Arisha Terraces ',
+    name: 'Arisha Terraces',
     developerId: 'emaar',
     area: 'DUBAI STUDIO CITY',
     transactions: 85,
@@ -1778,7 +1778,7 @@ export const allProjectsDLD = [
     rooms: {"NA": {"count": 78, "avgPrice": 11430600, "minPrice": 8748000}},
   },
   {
-    name: 'Sakura Gardens ',
+    name: 'Sakura Gardens',
     developerId: 'other',
     area: 'FALCON CITY OF WONDERS',
     transactions: 77,
@@ -2150,7 +2150,7 @@ export const allProjectsDLD = [
     rooms: {"1 B/R": {"count": 41, "avgPrice": 2626201, "minPrice": 2200000}, "2 B/R": {"count": 15, "avgPrice": 4130571, "minPrice": 3735075}, "3 B/R": {"count": 6, "avgPrice": 4262998, "minPrice": 3770325}},
   },
   {
-    name: 'Hayat 4 ',
+    name: 'Hayat 4',
     developerId: 'other',
     area: 'Madinat Al Mataar',
     transactions: 61,
@@ -2234,7 +2234,7 @@ export const allProjectsDLD = [
     rooms: {"Studio": {"count": 42, "avgPrice": 1026634, "minPrice": 790593}, "1 B/R": {"count": 16, "avgPrice": 1645148, "minPrice": 1396253}},
   },
   {
-    name: 'Reportage Village 1 ',
+    name: 'Reportage Village 1',
     developerId: 'reportage',
     area: 'Wadi Al Safa 7',
     transactions: 58,
@@ -2282,7 +2282,7 @@ export const allProjectsDLD = [
     rooms: {"3 B/R": {"count": 18, "avgPrice": 1886945, "minPrice": 1808600}, "Studio": {"count": 16, "avgPrice": 615509, "minPrice": 581300}, "1 B/R": {"count": 17, "avgPrice": 952524, "minPrice": 852300}, "2 B/R": {"count": 5, "avgPrice": 1519782, "minPrice": 1484200}},
   },
   {
-    name: 'Bayz 102 By Danube ',
+    name: 'Bayz 102 By Danube',
     developerId: 'danube',
     area: 'BUSINESS BAY',
     transactions: 55,
@@ -2306,7 +2306,7 @@ export const allProjectsDLD = [
     rooms: {"2 B/R": {"count": 21, "avgPrice": 2296382, "minPrice": 2136550}, "1 B/R": {"count": 34, "avgPrice": 1119958, "minPrice": 1049545}},
   },
   {
-    name: 'NEEM AT PARK FIVE ',
+    name: 'NEEM AT PARK FIVE',
     developerId: 'other',
     area: 'DUBAI PRODUCTION CITY',
     transactions: 55,
@@ -2354,7 +2354,7 @@ export const allProjectsDLD = [
     rooms: {"Studio": {"count": 26, "avgPrice": 691962, "minPrice": 575000}, "1 B/R": {"count": 24, "avgPrice": 1035329, "minPrice": 780000}, "2 B/R": {"count": 4, "avgPrice": 1400000, "minPrice": 1360000}, "NA": {"count": 1, "avgPrice": 3500000, "minPrice": 3500000}},
   },
   {
-    name: 'DAMAC RIVERSIDE VIEWS - CAPRI 1 ',
+    name: 'DAMAC RIVERSIDE VIEWS - CAPRI 1',
     developerId: 'damac',
     area: 'Dubai Investment Park Second',
     transactions: 52,
@@ -2390,7 +2390,7 @@ export const allProjectsDLD = [
     rooms: {"Studio": {"count": 24, "avgPrice": 745867, "minPrice": 599884}, "1 B/R": {"count": 17, "avgPrice": 1151754, "minPrice": 1003406}, "2 B/R": {"count": 11, "avgPrice": 1515144, "minPrice": 1307200}},
   },
   {
-    name: 'HOLLAND GARDENS ',
+    name: 'HOLLAND GARDENS',
     developerId: 'other',
     area: 'Al Yelayiss 2',
     transactions: 52,
@@ -2618,7 +2618,7 @@ export const allProjectsDLD = [
     rooms: {"2 B/R": {"count": 32, "avgPrice": 1703205, "minPrice": 1615652}, "1 B/R": {"count": 11, "avgPrice": 1130237, "minPrice": 1088414}, "3 B/R": {"count": 4, "avgPrice": 2393967, "minPrice": 2367234}},
   },
   {
-    name: 'Binghatti Haven ',
+    name: 'Binghatti Haven',
     developerId: 'binghatti',
     area: 'DUBAI SPORTS CITY',
     transactions: 47,
@@ -2942,7 +2942,7 @@ export const allProjectsDLD = [
     rooms: {"1 B/R": {"count": 31, "avgPrice": 1044985, "minPrice": 746550}, "2 B/R": {"count": 8, "avgPrice": 1846375, "minPrice": 1620000}, "Studio": {"count": 2, "avgPrice": 747450, "minPrice": 742500}, "3 B/R": {"count": 1, "avgPrice": 2800000, "minPrice": 2800000}},
   },
   {
-    name: 'CAPRIA EAST ',
+    name: 'CAPRIA EAST',
     developerId: 'damac',
     area: 'Wadi Al Safa 4',
     transactions: 42,
@@ -3002,7 +3002,7 @@ export const allProjectsDLD = [
     rooms: {"2 B/R": {"count": 14, "avgPrice": 3292467, "minPrice": 3064888}, "1 B/R": {"count": 16, "avgPrice": 1648013, "minPrice": 1603888}, "3 B/R": {"count": 11, "avgPrice": 4480488, "minPrice": 3561492}},
   },
   {
-    name: 'THE VYNE RESIDENCES ',
+    name: 'THE VYNE RESIDENCES',
     developerId: 'other',
     area: 'JUMEIRAH VILLAGE TRIANGLE',
     transactions: 41,
@@ -3086,7 +3086,7 @@ export const allProjectsDLD = [
     rooms: {"Office": {"count": 30, "avgPrice": 5895774, "minPrice": 850000}, "1 B/R": {"count": 8, "avgPrice": 1920328, "minPrice": 1525000}, "Studio": {"count": 3, "avgPrice": 1076667, "minPrice": 1030000}},
   },
   {
-    name: 'Binghatti Hills ',
+    name: 'Binghatti Hills',
     developerId: 'binghatti',
     area: 'DUBAI SCIENCE PARK',
     transactions: 40,
@@ -3242,7 +3242,7 @@ export const allProjectsDLD = [
     rooms: {"1 B/R": {"count": 15, "avgPrice": 1032401, "minPrice": 727356}, "Studio": {"count": 22, "avgPrice": 601503, "minPrice": 481451}, "2 B/R": {"count": 1, "avgPrice": 1987620, "minPrice": 1987620}},
   },
   {
-    name: 'Beverly Park ',
+    name: 'Beverly Park',
     developerId: 'other',
     area: 'DUBAI LAND RESIDENCE COMPLEX',
     transactions: 38,
@@ -3302,7 +3302,7 @@ export const allProjectsDLD = [
     rooms: {"1 B/R": {"count": 30, "avgPrice": 1224721, "minPrice": 1115188}, "2 B/R": {"count": 7, "avgPrice": 1746045, "minPrice": 1596188}},
   },
   {
-    name: 'DAMAC HILLS - CARSON ',
+    name: 'DAMAC HILLS - CARSON',
     developerId: 'damac',
     area: 'DAMAC HILLS',
     transactions: 37,
@@ -3314,7 +3314,7 @@ export const allProjectsDLD = [
     rooms: {"Studio": {"count": 26, "avgPrice": 569598, "minPrice": 486553}, "1 B/R": {"count": 9, "avgPrice": 987778, "minPrice": 820000}, "2 B/R": {"count": 2, "avgPrice": 1712500, "minPrice": 1700000}},
   },
   {
-    name: 'One by Binghatti ',
+    name: 'One by Binghatti',
     developerId: 'binghatti',
     area: 'BUSINESS BAY',
     transactions: 36,
@@ -3350,7 +3350,7 @@ export const allProjectsDLD = [
     rooms: {"1 B/R": {"count": 6, "avgPrice": 4370167, "minPrice": 4185000}, "3 B/R": {"count": 20, "avgPrice": 12443100, "minPrice": 10444000}, "2 B/R": {"count": 10, "avgPrice": 6626400, "minPrice": 5666000}},
   },
   {
-    name: 'Diamondz By Danube ',
+    name: 'Diamondz By Danube',
     developerId: 'danube',
     area: 'JUMEIRAH LAKES TOWERS',
     transactions: 36,
@@ -3446,7 +3446,7 @@ export const allProjectsDLD = [
     rooms: {"Studio": {"count": 28, "avgPrice": 665848, "minPrice": 500000}, "1 B/R": {"count": 7, "avgPrice": 1233928, "minPrice": 1137499}},
   },
   {
-    name: 'Azizi Milan Heights ',
+    name: 'Azizi Milan Heights',
     developerId: 'azizi',
     area: 'CITY OF ARABIA',
     transactions: 35,
@@ -3482,7 +3482,7 @@ export const allProjectsDLD = [
     rooms: {"1 B/R": {"count": 17, "avgPrice": 913880, "minPrice": 725000}, "Studio": {"count": 12, "avgPrice": 642250, "minPrice": 525000}, "2 B/R": {"count": 6, "avgPrice": 1374167, "minPrice": 1320000}},
   },
   {
-    name: 'Bluewaters Residences ',
+    name: 'Bluewaters Residences',
     developerId: 'meraas',
     area: 'BLUEWATERS',
     transactions: 35,
@@ -3494,7 +3494,7 @@ export const allProjectsDLD = [
     rooms: {"3 B/R": {"count": 10, "avgPrice": 13085000, "minPrice": 9000000}, "2 B/R": {"count": 14, "avgPrice": 8461935, "minPrice": 4267093}, "1 B/R": {"count": 9, "avgPrice": 5550556, "minPrice": 4400000}, "5 B/R": {"count": 1, "avgPrice": 90000000, "minPrice": 90000000}, "4 B/R": {"count": 1, "avgPrice": 19450000, "minPrice": 19450000}},
   },
   {
-    name: 'Ocean Bay by Samana Developers ',
+    name: 'Ocean Bay by Samana Developers',
     developerId: 'samana',
     area: 'Palm Deira',
     transactions: 34,
@@ -3506,7 +3506,7 @@ export const allProjectsDLD = [
     rooms: {"2 B/R": {"count": 11, "avgPrice": 3128580, "minPrice": 2701866}, "1 B/R": {"count": 16, "avgPrice": 2000385, "minPrice": 1770382}, "3 B/R": {"count": 5, "avgPrice": 3664277, "minPrice": 3389668}, "4 B/R": {"count": 2, "avgPrice": 4896000, "minPrice": 4547200}},
   },
   {
-    name: 'azizi venice 13 ',
+    name: 'azizi venice 13',
     developerId: 'azizi',
     area: 'Madinat Al Mataar',
     transactions: 34,
@@ -3722,7 +3722,7 @@ export const allProjectsDLD = [
     rooms: {"2 B/R": {"count": 11, "avgPrice": 2889231, "minPrice": 2691568}, "1 B/R": {"count": 14, "avgPrice": 1972405, "minPrice": 1544324}, "Studio": {"count": 6, "avgPrice": 1179894, "minPrice": 870608}, "NA": {"count": 1, "avgPrice": 5421833, "minPrice": 5421833}},
   },
   {
-    name: 'MAHA TOWNHOUSES ',
+    name: 'MAHA TOWNHOUSES',
     developerId: 'other',
     area: 'Al Yelayiss 2',
     transactions: 32,
@@ -3782,7 +3782,7 @@ export const allProjectsDLD = [
     rooms: {"1 B/R": {"count": 6, "avgPrice": 1396575, "minPrice": 1200000}, "2 B/R": {"count": 5, "avgPrice": 2014490, "minPrice": 1850000}, "Studio": {"count": 20, "avgPrice": 763355, "minPrice": 655000}},
   },
   {
-    name: 'Discovery Dunes ',
+    name: 'Discovery Dunes',
     developerId: 'other',
     area: 'Madinat Al Mataar',
     transactions: 31,
@@ -3914,7 +3914,7 @@ export const allProjectsDLD = [
     rooms: {"Studio": {"count": 6, "avgPrice": 831572, "minPrice": 694022}, "1 B/R": {"count": 18, "avgPrice": 1481642, "minPrice": 1250000}, "3 B/R": {"count": 3, "avgPrice": 2500000, "minPrice": 2200000}, "2 B/R": {"count": 3, "avgPrice": 1866667, "minPrice": 1700000}},
   },
   {
-    name: 'DAMAC HILLS (2) - VIRIDIS ',
+    name: 'DAMAC HILLS (2) - VIRIDIS',
     developerId: 'damac',
     area: 'Madinat Hind 4',
     transactions: 30,
@@ -3986,7 +3986,7 @@ export const allProjectsDLD = [
     rooms: {"2 B/R": {"count": 22, "avgPrice": 2472431, "minPrice": 2087530}, "Studio": {"count": 3, "avgPrice": 1251180, "minPrice": 1048588}, "1 B/R": {"count": 4, "avgPrice": 1807817, "minPrice": 1709545}},
   },
   {
-    name: 'Gate Eleven Residences ',
+    name: 'Gate Eleven Residences',
     developerId: 'other',
     area: 'Wadi Al Safa 3',
     transactions: 29,
@@ -4010,7 +4010,7 @@ export const allProjectsDLD = [
     rooms: {"3 B/R": {"count": 16, "avgPrice": 2754081, "minPrice": 2541900}, "2 B/R": {"count": 11, "avgPrice": 2182350, "minPrice": 1910000}, "1 B/R": {"count": 2, "avgPrice": 1201450, "minPrice": 1180815}},
   },
   {
-    name: 'Barari Palace ',
+    name: 'Barari Palace',
     developerId: 'other',
     area: 'MAJAN',
     transactions: 29,
@@ -4106,7 +4106,7 @@ export const allProjectsDLD = [
     rooms: {"Studio": {"count": 18, "avgPrice": 521486, "minPrice": 458100}, "2 B/R": {"count": 1, "avgPrice": 1243060, "minPrice": 1243060}, "1 B/R": {"count": 9, "avgPrice": 904058, "minPrice": 770000}},
   },
   {
-    name: 'burj capital ',
+    name: 'burj capital',
     developerId: 'other',
     area: 'BUSINESS BAY',
     transactions: 28,
@@ -4166,7 +4166,7 @@ export const allProjectsDLD = [
     rooms: {"Studio": {"count": 13, "avgPrice": 445385, "minPrice": 350000}, "Shop": {"count": 1, "avgPrice": 1312500, "minPrice": 1312500}, "2 B/R": {"count": 12, "avgPrice": 960417, "minPrice": 890000}, "1 B/R": {"count": 2, "avgPrice": 795000, "minPrice": 730000}},
   },
   {
-    name: 'AYKON CITY ',
+    name: 'AYKON CITY',
     developerId: 'other',
     area: 'BUSINESS BAY',
     transactions: 28,
@@ -4442,7 +4442,7 @@ export const allProjectsDLD = [
     rooms: {"Studio": {"count": 18, "avgPrice": 997500, "minPrice": 425000}, "2 B/R": {"count": 3, "avgPrice": 2583333, "minPrice": 2500000}, "1 B/R": {"count": 5, "avgPrice": 1823356, "minPrice": 1700000}},
   },
   {
-    name: 'The Grand ',
+    name: 'The Grand',
     developerId: 'other',
     area: 'DUBAI CREEK HARBOUR',
     transactions: 26,
@@ -4598,7 +4598,7 @@ export const allProjectsDLD = [
     rooms: {"2 B/R": {"count": 9, "avgPrice": 1832695, "minPrice": 1288647}, "1 B/R": {"count": 4, "avgPrice": 1167500, "minPrice": 1100000}, "3 B/R": {"count": 9, "avgPrice": 2297574, "minPrice": 1959000}, "4 B/R": {"count": 3, "avgPrice": 3061081, "minPrice": 2969532}},
   },
   {
-    name: 'CREEK RISE ',
+    name: 'CREEK RISE',
     developerId: 'emaar',
     area: 'DUBAI CREEK HARBOUR',
     transactions: 25,
@@ -4610,7 +4610,7 @@ export const allProjectsDLD = [
     rooms: {"2 B/R": {"count": 11, "avgPrice": 2403717, "minPrice": 1540888}, "1 B/R": {"count": 8, "avgPrice": 1634375, "minPrice": 375000}, "3 B/R": {"count": 6, "avgPrice": 3200000, "minPrice": 3200000}},
   },
   {
-    name: 'The Pulse Beachfront 3 ',
+    name: 'The Pulse Beachfront 3',
     developerId: 'other',
     area: 'Madinat Al Mataar',
     transactions: 25,
@@ -4658,7 +4658,7 @@ export const allProjectsDLD = [
     rooms: {"": {"count": 25, "avgPrice": 3260602, "minPrice": 2773230}},
   },
   {
-    name: 'Meriden Beach by Green Horizon ',
+    name: 'Meriden Beach by Green Horizon',
     developerId: 'other',
     area: 'Palm Deira',
     transactions: 24,
@@ -4670,7 +4670,7 @@ export const allProjectsDLD = [
     rooms: {"2 B/R": {"count": 17, "avgPrice": 2556391, "minPrice": 2265000}, "1 B/R": {"count": 6, "avgPrice": 1869673, "minPrice": 1589900}, "3 B/R": {"count": 1, "avgPrice": 3484500, "minPrice": 3484500}},
   },
   {
-    name: 'PARKWAY BY PRESTIGE ONE ',
+    name: 'PARKWAY BY PRESTIGE ONE',
     developerId: 'other',
     area: 'HORIZON',
     transactions: 24,
@@ -4802,7 +4802,7 @@ export const allProjectsDLD = [
     rooms: {"1 B/R": {"count": 13, "avgPrice": 691923, "minPrice": 590000}, "2 B/R": {"count": 5, "avgPrice": 946000, "minPrice": 710000}, "Studio": {"count": 5, "avgPrice": 502600, "minPrice": 478000}, "3 B/R": {"count": 1, "avgPrice": 1650000, "minPrice": 1650000}},
   },
   {
-    name: 'TERHAB HOTEL & TOWERS AT JUMEIRAH VILLAGE TRIANGLE ',
+    name: 'TERHAB HOTEL & TOWERS AT JUMEIRAH VILLAGE TRIANGLE',
     developerId: 'other',
     area: 'JUMEIRAH VILLAGE TRIANGLE',
     transactions: 24,
@@ -4862,7 +4862,7 @@ export const allProjectsDLD = [
     rooms: {"1 B/R": {"count": 15, "avgPrice": 1062555, "minPrice": 945888}, "Studio": {"count": 8, "avgPrice": 558013, "minPrice": 544888}},
   },
   {
-    name: ' 999 Residences by Reef Luxury Development',
+    name: '999 Residences by Reef Luxury Development',
     developerId: 'other',
     area: 'AL FURJAN',
     transactions: 23,
@@ -4886,7 +4886,7 @@ export const allProjectsDLD = [
     rooms: {"Studio": {"count": 16, "avgPrice": 594216, "minPrice": 480000}, "1 B/R": {"count": 6, "avgPrice": 1107108, "minPrice": 850000}, "2 B/R": {"count": 1, "avgPrice": 2126400, "minPrice": 2126400}},
   },
   {
-    name: 'Takaya ',
+    name: 'Takaya',
     developerId: 'other',
     area: 'MOTOR CITY',
     transactions: 23,
@@ -4970,7 +4970,7 @@ export const allProjectsDLD = [
     rooms: {"1 B/R": {"count": 8, "avgPrice": 1881118, "minPrice": 434217}, "2 B/R": {"count": 5, "avgPrice": 3610000, "minPrice": 3296500}, "Studio": {"count": 10, "avgPrice": 1568450, "minPrice": 1548500}},
   },
   {
-    name: 'The central downtown ',
+    name: 'The central downtown',
     developerId: 'other',
     area: 'ARJAN',
     transactions: 23,
@@ -5018,7 +5018,7 @@ export const allProjectsDLD = [
     rooms: {"2 B/R": {"count": 7, "avgPrice": 1692314, "minPrice": 1622400}, "1 B/R": {"count": 16, "avgPrice": 1035940, "minPrice": 959040}},
   },
   {
-    name: 'CLOUD Tower ',
+    name: 'CLOUD Tower',
     developerId: 'other',
     area: 'JUMEIRAH VILLAGE TRIANGLE',
     transactions: 23,
@@ -5042,7 +5042,7 @@ export const allProjectsDLD = [
     rooms: {"1 B/R": {"count": 14, "avgPrice": 1079098, "minPrice": 961183}, "2 B/R": {"count": 3, "avgPrice": 1622512, "minPrice": 1577747}, "Studio": {"count": 5, "avgPrice": 710816, "minPrice": 699545}},
   },
   {
-    name: 'BLISS TOWER ',
+    name: 'BLISS TOWER',
     developerId: 'emaar',
     area: 'DUBAI LAND RESIDENCE COMPLEX',
     transactions: 22,
@@ -5222,7 +5222,7 @@ export const allProjectsDLD = [
     rooms: {"4 B/R": {"count": 9, "avgPrice": 3628889, "minPrice": 3350000}, "3 B/R": {"count": 13, "avgPrice": 2880154, "minPrice": 2550000}},
   },
   {
-    name: 'SOL BAY ',
+    name: 'SOL BAY',
     developerId: 'other',
     area: 'BUSINESS BAY',
     transactions: 22,
@@ -5234,7 +5234,7 @@ export const allProjectsDLD = [
     rooms: {"Office": {"count": 3, "avgPrice": 4777332, "minPrice": 3425296}, "Studio": {"count": 4, "avgPrice": 1208990, "minPrice": 1139050}, "1 B/R": {"count": 15, "avgPrice": 1955733, "minPrice": 1900000}},
   },
   {
-    name: 'Verdana Residence 4 ',
+    name: 'Verdana Residence 4',
     developerId: 'other',
     area: 'Dubai Investment Park First',
     transactions: 22,
@@ -5306,7 +5306,7 @@ export const allProjectsDLD = [
     rooms: {"2 B/R": {"count": 15, "avgPrice": 1699383, "minPrice": 1517888}, "1 B/R": {"count": 5, "avgPrice": 1221120, "minPrice": 1072888}, "3 B/R": {"count": 1, "avgPrice": 2998888, "minPrice": 2998888}},
   },
   {
-    name: 'THE BOULEVARD BY PRESTIGE ONE ',
+    name: 'THE BOULEVARD BY PRESTIGE ONE',
     developerId: 'other',
     area: 'DUBAI LAND RESIDENCE COMPLEX',
     transactions: 21,
@@ -5330,7 +5330,7 @@ export const allProjectsDLD = [
     rooms: {"4 B/R": {"count": 18, "avgPrice": 2792366, "minPrice": 2662000}, "5 B/R": {"count": 3, "avgPrice": 4570333, "minPrice": 4406000}},
   },
   {
-    name: 'Provenza Residences ',
+    name: 'Provenza Residences',
     developerId: 'other',
     area: 'JUMEIRAH VILLAGE CIRCLE',
     transactions: 21,
@@ -5438,7 +5438,7 @@ export const allProjectsDLD = [
     rooms: {"2 B/R": {"count": 15, "avgPrice": 1996269, "minPrice": 1595524}, "3 B/R": {"count": 3, "avgPrice": 2814257, "minPrice": 2468002}, "1 B/R": {"count": 2, "avgPrice": 1358598, "minPrice": 1351968}},
   },
   {
-    name: 'Binghatti Circle ',
+    name: 'Binghatti Circle',
     developerId: 'binghatti',
     area: 'JUMEIRAH VILLAGE CIRCLE',
     transactions: 20,
@@ -5486,7 +5486,7 @@ export const allProjectsDLD = [
     rooms: {"1 B/R": {"count": 11, "avgPrice": 2221499, "minPrice": 1982426}, "2 B/R": {"count": 9, "avgPrice": 3052673, "minPrice": 2649522}},
   },
   {
-    name: 'Arian By Azizi ',
+    name: 'Arian By Azizi',
     developerId: 'azizi',
     area: 'DOWN TOWN JABAL ALI',
     transactions: 20,
@@ -5546,7 +5546,7 @@ export const allProjectsDLD = [
     rooms: {"1 B/R": {"count": 18, "avgPrice": 1000847, "minPrice": 913706}, "Studio": {"count": 2, "avgPrice": 708742, "minPrice": 695777}},
   },
   {
-    name: 'Empire Estates ',
+    name: 'Empire Estates',
     developerId: 'other',
     area: 'ARJAN',
     transactions: 20,
@@ -5582,7 +5582,7 @@ export const allProjectsDLD = [
     rooms: {"Studio": {"count": 19, "avgPrice": 555460, "minPrice": 517010}, "1 B/R": {"count": 1, "avgPrice": 910000, "minPrice": 910000}},
   },
   {
-    name: 'PORT DE LA MER - LE SOLEIL ',
+    name: 'PORT DE LA MER - LE SOLEIL',
     developerId: 'other',
     area: 'Jumeirah First',
     transactions: 20,
@@ -5762,7 +5762,7 @@ export const allProjectsDLD = [
     rooms: {"Studio": {"count": 9, "avgPrice": 467667, "minPrice": 430000}, "1 B/R": {"count": 9, "avgPrice": 626831, "minPrice": 343480}, "3 B/R": {"count": 2, "avgPrice": 1937500, "minPrice": 1875000}},
   },
   {
-    name: ' The Wilds 3 ',
+    name: 'The Wilds 3',
     developerId: 'aldar',
     area: 'Wadi Al Safa 3',
     transactions: 20,
@@ -5906,7 +5906,7 @@ export const allProjectsDLD = [
     rooms: {"2 B/R": {"count": 11, "avgPrice": 11300794, "minPrice": 10793860}, "3 B/R": {"count": 8, "avgPrice": 16691818, "minPrice": 15334062}},
   },
   {
-    name: 'Taormina Village 1 ',
+    name: 'Taormina Village 1',
     developerId: 'other',
     area: 'Wadi Al Safa 3',
     transactions: 19,
@@ -5990,7 +5990,7 @@ export const allProjectsDLD = [
     rooms: {"3 B/R": {"count": 6, "avgPrice": 3050833, "minPrice": 2900000}, "2 B/R": {"count": 5, "avgPrice": 1854841, "minPrice": 106207}, "1 B/R": {"count": 8, "avgPrice": 1252002, "minPrice": 112017}},
   },
   {
-    name: 'Al Jazi - Madinat Jumeriah Living ',
+    name: 'Al Jazi - Madinat Jumeriah Living',
     developerId: 'other',
     area: 'Um Suqaim Third',
     transactions: 19,
@@ -6086,7 +6086,7 @@ export const allProjectsDLD = [
     rooms: {"2 B/R": {"count": 13, "avgPrice": 1145000, "minPrice": 1000000}, "Studio": {"count": 3, "avgPrice": 527000, "minPrice": 525000}, "3 B/R": {"count": 3, "avgPrice": 1735000, "minPrice": 1660000}},
   },
   {
-    name: 'DAMAC HILLS (2) - PACIFICA ',
+    name: 'DAMAC HILLS (2) - PACIFICA',
     developerId: 'damac',
     area: 'Madinat Hind 4',
     transactions: 19,
@@ -6182,7 +6182,7 @@ export const allProjectsDLD = [
     rooms: {"2 B/R": {"count": 2, "avgPrice": 1482500, "minPrice": 1475000}, "Studio": {"count": 2, "avgPrice": 670000, "minPrice": 670000}, "1 B/R": {"count": 14, "avgPrice": 1008428, "minPrice": 891800}},
   },
   {
-    name: 'THE FIFTH TOWER ',
+    name: 'THE FIFTH TOWER',
     developerId: 'other',
     area: 'JUMEIRAH VILLAGE CIRCLE',
     transactions: 18,
@@ -6254,7 +6254,7 @@ export const allProjectsDLD = [
     rooms: {"2 B/R": {"count": 6, "avgPrice": 2228833, "minPrice": 2129000}, "1 B/R": {"count": 12, "avgPrice": 1342741, "minPrice": 1213929}},
   },
   {
-    name: ' CHELSEA RESIDENCES BY DAMAC',
+    name: 'CHELSEA RESIDENCES BY DAMAC',
     developerId: 'damac',
     area: 'DUBAI MARITIME CITY',
     transactions: 18,
@@ -6314,7 +6314,7 @@ export const allProjectsDLD = [
     rooms: {"1 B/R": {"count": 14, "avgPrice": 1406600, "minPrice": 1132397}, "2 B/R": {"count": 3, "avgPrice": 2861667, "minPrice": 2385000}, "NA": {"count": 1, "avgPrice": 20988000, "minPrice": 20988000}},
   },
   {
-    name: 'AL JAWHARA TOWER ',
+    name: 'AL JAWHARA TOWER',
     developerId: 'other',
     area: 'JUMEIRAH VILLAGE TRIANGLE',
     transactions: 18,
@@ -6338,7 +6338,7 @@ export const allProjectsDLD = [
     rooms: {"1 B/R": {"count": 4, "avgPrice": 831250, "minPrice": 815000}, "Studio": {"count": 10, "avgPrice": 539500, "minPrice": 440000}, "2 B/R": {"count": 4, "avgPrice": 1037500, "minPrice": 600000}},
   },
   {
-    name: 'DAMAC HILLS (2) - JANUSIA ',
+    name: 'DAMAC HILLS (2) - JANUSIA',
     developerId: 'damac',
     area: 'Madinat Hind 4',
     transactions: 18,
@@ -6458,7 +6458,7 @@ export const allProjectsDLD = [
     rooms: {"": {"count": 18, "avgPrice": 7862301, "minPrice": 3272500}},
   },
   {
-    name: 'The Wilds 1 ',
+    name: 'The Wilds 1',
     developerId: 'aldar',
     area: 'Wadi Al Safa 3',
     transactions: 18,
@@ -6590,7 +6590,7 @@ export const allProjectsDLD = [
     rooms: {"2 B/R": {"count": 5, "avgPrice": 1892131, "minPrice": 1750000}, "1 B/R": {"count": 12, "avgPrice": 1215727, "minPrice": 977219}},
   },
   {
-    name: 'AB CAVALIER ',
+    name: 'AB CAVALIER',
     developerId: 'other',
     area: 'JUMEIRAH VILLAGE CIRCLE',
     transactions: 17,
@@ -6782,7 +6782,7 @@ export const allProjectsDLD = [
     rooms: {"Studio": {"count": 13, "avgPrice": 518679, "minPrice": 418830}, "1 B/R": {"count": 1, "avgPrice": 940000, "minPrice": 940000}, "2 B/R": {"count": 3, "avgPrice": 1263333, "minPrice": 1140000}},
   },
   {
-    name: 'Lime Gardens ',
+    name: 'Lime Gardens',
     developerId: 'emaar',
     area: 'DUBAI HILLS',
     transactions: 17,
@@ -6794,7 +6794,7 @@ export const allProjectsDLD = [
     rooms: {"2 B/R": {"count": 6, "avgPrice": 2880833, "minPrice": 2730000}, "3 B/R": {"count": 3, "avgPrice": 3900000, "minPrice": 3850000}, "1 B/R": {"count": 8, "avgPrice": 1806250, "minPrice": 1500000}},
   },
   {
-    name: '1 Residences ',
+    name: '1 Residences',
     developerId: 'other',
     area: 'Al Kifaf',
     transactions: 17,
@@ -6830,7 +6830,7 @@ export const allProjectsDLD = [
     rooms: {"1 B/R": {"count": 4, "avgPrice": 1061250, "minPrice": 1010000}, "NA": {"count": 12, "avgPrice": 1921090, "minPrice": 1000000}, "Studio": {"count": 1, "avgPrice": 690000, "minPrice": 690000}},
   },
   {
-    name: 'The Wilds 2 ',
+    name: 'The Wilds 2',
     developerId: 'aldar',
     area: 'Wadi Al Safa 3',
     transactions: 17,
@@ -6890,7 +6890,7 @@ export const allProjectsDLD = [
     rooms: {"2 B/R": {"count": 5, "avgPrice": 2790000, "minPrice": 1100000}, "3 B/R": {"count": 5, "avgPrice": 5060000, "minPrice": 4900000}, "1 B/R": {"count": 5, "avgPrice": 1799000, "minPrice": 1740000}, "4 B/R": {"count": 1, "avgPrice": 6500000, "minPrice": 6500000}},
   },
   {
-    name: 'AZIZI ZAIN ',
+    name: 'AZIZI ZAIN',
     developerId: 'azizi',
     area: 'AL FURJAN',
     transactions: 16,
@@ -6962,7 +6962,7 @@ export const allProjectsDLD = [
     rooms: {"1 B/R": {"count": 10, "avgPrice": 1005717, "minPrice": 890212}, "Studio": {"count": 6, "avgPrice": 689179, "minPrice": 640000}},
   },
   {
-    name: 'SPARKLZ by Danube ',
+    name: 'SPARKLZ by Danube',
     developerId: 'danube',
     area: 'AL FURJAN',
     transactions: 16,
@@ -7046,7 +7046,7 @@ export const allProjectsDLD = [
     rooms: {"Studio": {"count": 5, "avgPrice": 743000, "minPrice": 680000}, "1 B/R": {"count": 10, "avgPrice": 1191200, "minPrice": 1000000}, "NA": {"count": 1, "avgPrice": 800000, "minPrice": 800000}},
   },
   {
-    name: 'Imperial  Avenue',
+    name: 'Imperial Avenue',
     developerId: 'other',
     area: 'BURJ KHALIFA',
     transactions: 16,
@@ -7070,7 +7070,7 @@ export const allProjectsDLD = [
     rooms: {"2 B/R": {"count": 8, "avgPrice": 1310000, "minPrice": 1220000}, "1 B/R": {"count": 6, "avgPrice": 890000, "minPrice": 830000}, "3 B/R": {"count": 2, "avgPrice": 2200000, "minPrice": 2000000}},
   },
   {
-    name: 'DAMAC HILLS (2) - VARDON ',
+    name: 'DAMAC HILLS (2) - VARDON',
     developerId: 'damac',
     area: 'Madinat Hind 4',
     transactions: 16,
@@ -7094,7 +7094,7 @@ export const allProjectsDLD = [
     rooms: {"1 B/R": {"count": 11, "avgPrice": 989952, "minPrice": 885844}, "2 B/R": {"count": 5, "avgPrice": 1494313, "minPrice": 1346562}},
   },
   {
-    name: 'Harbour Gate ',
+    name: 'Harbour Gate',
     developerId: 'emaar',
     area: 'DUBAI CREEK HARBOUR',
     transactions: 16,
@@ -7274,7 +7274,7 @@ export const allProjectsDLD = [
     rooms: {"": {"count": 16, "avgPrice": 3118553, "minPrice": 900000}},
   },
   {
-    name: 'Wellington Ocean Walk ',
+    name: 'Wellington Ocean Walk',
     developerId: 'ellington',
     area: 'Palm Deira',
     transactions: 15,
@@ -7286,7 +7286,7 @@ export const allProjectsDLD = [
     rooms: {"3 B/R": {"count": 1, "avgPrice": 3092693, "minPrice": 3092693}, "1 B/R": {"count": 11, "avgPrice": 2145617, "minPrice": 1719433}, "2 B/R": {"count": 3, "avgPrice": 3475240, "minPrice": 3311241}},
   },
   {
-    name: 'Bluewaters Bay ',
+    name: 'Bluewaters Bay',
     developerId: 'meraas',
     area: 'Marsa Dubai',
     transactions: 15,
@@ -7370,7 +7370,7 @@ export const allProjectsDLD = [
     rooms: {"2 B/R": {"count": 9, "avgPrice": 2013110, "minPrice": 1850000}, "1 B/R": {"count": 4, "avgPrice": 1603749, "minPrice": 1500999}, "NA": {"count": 2, "avgPrice": 3314750, "minPrice": 2789999}},
   },
   {
-    name: 'THE MAYFAIR ',
+    name: 'THE MAYFAIR',
     developerId: 'other',
     area: 'Al Yelayiss 2',
     transactions: 15,
@@ -7454,7 +7454,7 @@ export const allProjectsDLD = [
     rooms: {"2 B/R": {"count": 4, "avgPrice": 3141194, "minPrice": 2346237}, "NA": {"count": 3, "avgPrice": 5727237, "minPrice": 2493144}, "1 B/R": {"count": 8, "avgPrice": 1716282, "minPrice": 1613714}},
   },
   {
-    name: 'DIVINE ELEMENTS ',
+    name: 'DIVINE ELEMENTS',
     developerId: 'other',
     area: 'DUBAI SOUTH',
     transactions: 15,
@@ -7598,7 +7598,7 @@ export const allProjectsDLD = [
     rooms: {"1 B/R": {"count": 11, "avgPrice": 731387, "minPrice": 561257}, "Studio": {"count": 4, "avgPrice": 568750, "minPrice": 535000}},
   },
   {
-    name: 'Island Park I ',
+    name: 'Island Park I',
     developerId: 'emaar',
     area: 'DUBAI CREEK HARBOUR',
     transactions: 15,
@@ -8114,7 +8114,7 @@ export const allProjectsDLD = [
     rooms: {"1 B/R": {"count": 6, "avgPrice": 1223190, "minPrice": 1067622}, "NA": {"count": 2, "avgPrice": 4515302, "minPrice": 4328346}, "2 B/R": {"count": 6, "avgPrice": 1627155, "minPrice": 1449323}},
   },
   {
-    name: 'Nad Al Sheba Gardens Phase 2 ',
+    name: 'Nad Al Sheba Gardens Phase 2',
     developerId: 'nakheel',
     area: 'Nad Al Shiba First',
     transactions: 14,
@@ -8138,7 +8138,7 @@ export const allProjectsDLD = [
     rooms: {"Studio": {"count": 11, "avgPrice": 535727, "minPrice": 450000}, "2 B/R": {"count": 1, "avgPrice": 1100000, "minPrice": 1100000}, "NA": {"count": 1, "avgPrice": 1200000, "minPrice": 1200000}, "1 B/R": {"count": 1, "avgPrice": 888000, "minPrice": 888000}},
   },
   {
-    name: 'DAMAC HILLS (2) - AQUILEGIA ',
+    name: 'DAMAC HILLS (2) - AQUILEGIA',
     developerId: 'damac',
     area: 'Madinat Hind 4',
     transactions: 14,
@@ -8270,7 +8270,7 @@ export const allProjectsDLD = [
     rooms: {"": {"count": 14, "avgPrice": 8373149, "minPrice": 927080}},
   },
   {
-    name: 'Azurline Residences by MAAS Developers ',
+    name: 'Azurline Residences by MAAS Developers',
     developerId: 'other',
     area: 'JUMEIRAH VILLAGE CIRCLE',
     transactions: 13,
@@ -8450,7 +8450,7 @@ export const allProjectsDLD = [
     rooms: {"2 B/R": {"count": 4, "avgPrice": 2798146, "minPrice": 209694}, "1 B/R": {"count": 7, "avgPrice": 2420238, "minPrice": 2104888}, "3 B/R": {"count": 2, "avgPrice": 2393698, "minPrice": 266394}},
   },
   {
-    name: 'The Community Motor City ',
+    name: 'The Community Motor City',
     developerId: 'other',
     area: 'MOTOR CITY',
     transactions: 13,
@@ -8546,7 +8546,7 @@ export const allProjectsDLD = [
     rooms: {"1 B/R": {"count": 8, "avgPrice": 1997879, "minPrice": 1702915}, "3 B/R": {"count": 4, "avgPrice": 3186980, "minPrice": 2850000}, "4 B/R": {"count": 1, "avgPrice": 5475199, "minPrice": 5475199}},
   },
   {
-    name: 'Emerge Residences ',
+    name: 'Emerge Residences',
     developerId: 'other',
     area: 'Nad Al Shiba First',
     transactions: 13,
@@ -8606,7 +8606,7 @@ export const allProjectsDLD = [
     rooms: {"1 B/R": {"count": 3, "avgPrice": 1036880, "minPrice": 1032757}, "Studio": {"count": 4, "avgPrice": 659538, "minPrice": 635960}, "3 B/R": {"count": 6, "avgPrice": 1475333, "minPrice": 1435514}},
   },
   {
-    name: 'Avion Residence ',
+    name: 'Avion Residence',
     developerId: 'other',
     area: 'DUBAI SOUTH',
     transactions: 13,
@@ -8690,7 +8690,7 @@ export const allProjectsDLD = [
     rooms: {"Studio": {"count": 7, "avgPrice": 863966, "minPrice": 149762}, "1 B/R": {"count": 5, "avgPrice": 1511000, "minPrice": 1300000}, "NA": {"count": 1, "avgPrice": 925000, "minPrice": 925000}},
   },
   {
-    name: 'THE SQUARE ',
+    name: 'THE SQUARE',
     developerId: 'other',
     area: 'JUMEIRAH VILLAGE CIRCLE',
     transactions: 13,
@@ -8954,7 +8954,7 @@ export const allProjectsDLD = [
     rooms: {"": {"count": 13, "avgPrice": 17731462, "minPrice": 12600000}},
   },
   {
-    name: 'Elitz 3 By Danube ',
+    name: 'Elitz 3 By Danube',
     developerId: 'danube',
     area: 'JUMEIRAH VILLAGE CIRCLE',
     transactions: 12,
@@ -9002,7 +9002,7 @@ export const allProjectsDLD = [
     rooms: {"1 B/R": {"count": 4, "avgPrice": 898073, "minPrice": 874019}, "Studio": {"count": 5, "avgPrice": 668460, "minPrice": 532203}, "2 B/R": {"count": 3, "avgPrice": 1375610, "minPrice": 1273664}},
   },
   {
-    name: 'DAMAC RIVERSIDE VIEWS - MARINE 1 ',
+    name: 'DAMAC RIVERSIDE VIEWS - MARINE 1',
     developerId: 'damac',
     area: 'Dubai Investment Park Second',
     transactions: 12,
@@ -9086,7 +9086,7 @@ export const allProjectsDLD = [
     rooms: {"3 B/R": {"count": 4, "avgPrice": 27831750, "minPrice": 21086000}, "5 B/R": {"count": 2, "avgPrice": 66219500, "minPrice": 47797000}, "2 B/R": {"count": 2, "avgPrice": 14530500, "minPrice": 14390000}, "4 B/R": {"count": 4, "avgPrice": 33026750, "minPrice": 31126000}},
   },
   {
-    name: '10 OXFORD by IMAN ',
+    name: '10 OXFORD by IMAN',
     developerId: 'iman',
     area: 'JUMEIRAH VILLAGE CIRCLE',
     transactions: 12,
@@ -9302,7 +9302,7 @@ export const allProjectsDLD = [
     rooms: {"Office": {"count": 11, "avgPrice": 2860000, "minPrice": 1920000}, "Shop": {"count": 1, "avgPrice": 3528620, "minPrice": 3528620}},
   },
   {
-    name: 'The Paragon By IGO ',
+    name: 'The Paragon By IGO',
     developerId: 'other',
     area: 'BUSINESS BAY',
     transactions: 12,
@@ -9338,7 +9338,7 @@ export const allProjectsDLD = [
     rooms: {"3 B/R": {"count": 5, "avgPrice": 5050000, "minPrice": 4850000}, "4 B/R": {"count": 7, "avgPrice": 5785714, "minPrice": 5500000}},
   },
   {
-    name: 'Lawnz Residence by Danube ',
+    name: 'Lawnz Residence by Danube',
     developerId: 'danube',
     area: 'INTERNATIONAL CITY PH 1',
     transactions: 12,
@@ -9434,7 +9434,7 @@ export const allProjectsDLD = [
     rooms: {"1 B/R": {"count": 7, "avgPrice": 1278571, "minPrice": 1150000}, "3 B/R": {"count": 2, "avgPrice": 1875000, "minPrice": 1850000}, "2 B/R": {"count": 3, "avgPrice": 1941667, "minPrice": 1800000}},
   },
   {
-    name: 'DAMAC HILLS (2) - CENTAURY ',
+    name: 'DAMAC HILLS (2) - CENTAURY',
     developerId: 'damac',
     area: 'Madinat Hind 4',
     transactions: 12,
@@ -9566,7 +9566,7 @@ export const allProjectsDLD = [
     rooms: {"1 B/R": {"count": 7, "avgPrice": 1217857, "minPrice": 1010000}, "3 B/R": {"count": 2, "avgPrice": 2503286, "minPrice": 2410000}, "Studio": {"count": 3, "avgPrice": 603333, "minPrice": 545000}},
   },
   {
-    name: 'AZIZI VISTA ',
+    name: 'AZIZI VISTA',
     developerId: 'azizi',
     area: 'DUBAI STUDIO CITY',
     transactions: 12,
@@ -9938,7 +9938,7 @@ export const allProjectsDLD = [
     rooms: {"1 B/R": {"count": 7, "avgPrice": 1953063, "minPrice": 1854637}, "Studio": {"count": 4, "avgPrice": 1408494, "minPrice": 1365421}},
   },
   {
-    name: 'Grove ',
+    name: 'Grove',
     developerId: 'other',
     area: 'TOWN SQUARE',
     transactions: 11,
@@ -9974,7 +9974,7 @@ export const allProjectsDLD = [
     rooms: {"1 B/R": {"count": 3, "avgPrice": 1618077, "minPrice": 1529527}, "2 B/R": {"count": 6, "avgPrice": 2137205, "minPrice": 1988793}, "3 B/R": {"count": 2, "avgPrice": 2296138, "minPrice": 2113466}},
   },
   {
-    name: 'Azizi Central ',
+    name: 'Azizi Central',
     developerId: 'azizi',
     area: 'AL FURJAN',
     transactions: 11,
@@ -10082,7 +10082,7 @@ export const allProjectsDLD = [
     rooms: {"1 B/R": {"count": 9, "avgPrice": 1048333, "minPrice": 910000}, "2 B/R": {"count": 2, "avgPrice": 1762500, "minPrice": 1725000}},
   },
   {
-    name: 'DAMAC HILLS (2) - VICTORIA ',
+    name: 'DAMAC HILLS (2) - VICTORIA',
     developerId: 'damac',
     area: 'Madinat Hind 4',
     transactions: 11,
@@ -10202,7 +10202,7 @@ export const allProjectsDLD = [
     rooms: {"2 B/R": {"count": 4, "avgPrice": 2919075, "minPrice": 2600000}, "1 B/R": {"count": 4, "avgPrice": 1801250, "minPrice": 1700000}, "3 B/R": {"count": 3, "avgPrice": 4206667, "minPrice": 3750000}},
   },
   {
-    name: 'DAMAC HILLS (2) - ALBIZIA ',
+    name: 'DAMAC HILLS (2) - ALBIZIA',
     developerId: 'damac',
     area: 'Madinat Hind 4',
     transactions: 11,
@@ -10346,7 +10346,7 @@ export const allProjectsDLD = [
     rooms: {"1 B/R": {"count": 8, "avgPrice": 2297500, "minPrice": 2060000}, "2 B/R": {"count": 3, "avgPrice": 4334167, "minPrice": 3800000}},
   },
   {
-    name: 'MAPLE 2 ',
+    name: 'MAPLE 2',
     developerId: 'other',
     area: 'DUBAI HILLS',
     transactions: 11,
@@ -10814,7 +10814,7 @@ export const allProjectsDLD = [
     rooms: {"1 B/R": {"count": 4, "avgPrice": 3465625, "minPrice": 2303000}, "Studio": {"count": 5, "avgPrice": 1476460, "minPrice": 1321200}, "2 B/R": {"count": 1, "avgPrice": 5670000, "minPrice": 5670000}},
   },
   {
-    name: ' DAMAC RIVERSIDE VIEWS - MARINE 4',
+    name: 'DAMAC RIVERSIDE VIEWS - MARINE 4',
     developerId: 'damac',
     area: 'Dubai Investment Park Second',
     transactions: 10,
@@ -10922,7 +10922,7 @@ export const allProjectsDLD = [
     rooms: {"1 B/R": {"count": 7, "avgPrice": 1227509, "minPrice": 966365}, "Studio": {"count": 2, "avgPrice": 808378, "minPrice": 804837}, "2 B/R": {"count": 1, "avgPrice": 1650000, "minPrice": 1650000}},
   },
   {
-    name: '1WOOD RESIDENCE ',
+    name: '1WOOD RESIDENCE',
     developerId: 'other',
     area: 'JUMEIRAH VILLAGE CIRCLE',
     transactions: 10,
@@ -11126,7 +11126,7 @@ export const allProjectsDLD = [
     rooms: {"Studio": {"count": 7, "avgPrice": 717143, "minPrice": 650000}, "1 B/R": {"count": 2, "avgPrice": 1178000, "minPrice": 1056000}, "2 B/R": {"count": 1, "avgPrice": 1891000, "minPrice": 1891000}},
   },
   {
-    name: 'MUDON PHASE 3 _  NEIGHBOURHOOD I- ARABELLA',
+    name: 'MUDON PHASE 3 _ NEIGHBOURHOOD I- ARABELLA',
     developerId: 'other',
     area: 'MUDON',
     transactions: 10,
@@ -11162,7 +11162,7 @@ export const allProjectsDLD = [
     rooms: {"1 B/R": {"count": 1, "avgPrice": 2005500, "minPrice": 2005500}, "2 B/R": {"count": 8, "avgPrice": 2998750, "minPrice": 2750000}, "3 B/R": {"count": 1, "avgPrice": 3850000, "minPrice": 3850000}},
   },
   {
-    name: 'GEMZ by Danube ',
+    name: 'GEMZ by Danube',
     developerId: 'danube',
     area: 'AL FURJAN',
     transactions: 10,
@@ -11198,7 +11198,7 @@ export const allProjectsDLD = [
     rooms: {"1 B/R": {"count": 6, "avgPrice": 1141667, "minPrice": 1100000}, "2 B/R": {"count": 4, "avgPrice": 1357500, "minPrice": 1200000}},
   },
   {
-    name: 'DAMAC HILLS (2) - BASSWOOD ',
+    name: 'DAMAC HILLS (2) - BASSWOOD',
     developerId: 'damac',
     area: 'Madinat Hind 4',
     transactions: 10,
@@ -11426,7 +11426,7 @@ export const allProjectsDLD = [
     rooms: {"1 B/R": {"count": 4, "avgPrice": 1660000, "minPrice": 1490000}, "2 B/R": {"count": 3, "avgPrice": 2383333, "minPrice": 2300000}, "3 B/R": {"count": 3, "avgPrice": 3253333, "minPrice": 3230000}},
   },
   {
-    name: 'The One at Jumeirah Village Triangle ',
+    name: 'The One at Jumeirah Village Triangle',
     developerId: 'other',
     area: 'JUMEIRAH VILLAGE TRIANGLE',
     transactions: 10,
@@ -11450,7 +11450,7 @@ export const allProjectsDLD = [
     rooms: {"Office": {"count": 10, "avgPrice": 4471671, "minPrice": 1936494}},
   },
   {
-    name: 'Jadeel -Madinat Jumeirah Living ',
+    name: 'Jadeel -Madinat Jumeirah Living',
     developerId: 'meraas',
     area: 'Um Suqaim Third',
     transactions: 10,
@@ -11786,7 +11786,7 @@ export const allProjectsDLD = [
     rooms: {"Studio": {"count": 8, "avgPrice": 1045543, "minPrice": 858817}, "1 B/R": {"count": 1, "avgPrice": 1974264, "minPrice": 1974264}},
   },
   {
-    name: 'Oceanz 2 By Danube ',
+    name: 'Oceanz 2 By Danube',
     developerId: 'danube',
     area: 'DUBAI MARITIME CITY',
     transactions: 9,
@@ -12026,7 +12026,7 @@ export const allProjectsDLD = [
     rooms: {"1 B/R": {"count": 5, "avgPrice": 749428, "minPrice": 687140}, "2 B/R": {"count": 4, "avgPrice": 1124750, "minPrice": 1025000}},
   },
   {
-    name: ' DAMAC HILLS (2)  - SANCTNARY',
+    name: 'DAMAC HILLS (2) - SANCTNARY',
     developerId: 'damac',
     area: 'Madinat Hind 4',
     transactions: 9,
@@ -12050,7 +12050,7 @@ export const allProjectsDLD = [
     rooms: {"Studio": {"count": 4, "avgPrice": 652500, "minPrice": 630000}, "1 B/R": {"count": 3, "avgPrice": 975000, "minPrice": 865000}, "NA": {"count": 1, "avgPrice": 3100000, "minPrice": 3100000}, "2 B/R": {"count": 1, "avgPrice": 1435000, "minPrice": 1435000}},
   },
   {
-    name: 'Madinat Jumeriah Living - Phase 2 ',
+    name: 'Madinat Jumeriah Living - Phase 2',
     developerId: 'other',
     area: 'JUMEIRAH LIVING',
     transactions: 9,
@@ -12062,7 +12062,7 @@ export const allProjectsDLD = [
     rooms: {"1 B/R": {"count": 4, "avgPrice": 2131250, "minPrice": 2100000}, "2 B/R": {"count": 2, "avgPrice": 4425000, "minPrice": 4250000}, "4 B/R": {"count": 2, "avgPrice": 10924250, "minPrice": 9100000}, "3 B/R": {"count": 1, "avgPrice": 6150000, "minPrice": 6150000}},
   },
   {
-    name: 'Park Heights I ',
+    name: 'Park Heights I',
     developerId: 'other',
     area: 'DUBAI HILLS',
     transactions: 9,
@@ -12122,7 +12122,7 @@ export const allProjectsDLD = [
     rooms: {"1 B/R": {"count": 8, "avgPrice": 1128691, "minPrice": 930000}, "3 B/R": {"count": 1, "avgPrice": 2000000, "minPrice": 2000000}},
   },
   {
-    name: 'Island Park II ',
+    name: 'Island Park II',
     developerId: 'emaar',
     area: 'DUBAI CREEK HARBOUR',
     transactions: 9,
@@ -12254,7 +12254,7 @@ export const allProjectsDLD = [
     rooms: {"1 B/R": {"count": 5, "avgPrice": 717700, "minPrice": 525000}, "Studio": {"count": 4, "avgPrice": 521000, "minPrice": 480000}},
   },
   {
-    name: 'DAMAC HILLS (2) - ZINNIA ',
+    name: 'DAMAC HILLS (2) - ZINNIA',
     developerId: 'damac',
     area: 'Madinat Hind 4',
     transactions: 9,
@@ -12278,7 +12278,7 @@ export const allProjectsDLD = [
     rooms: {"1 B/R": {"count": 4, "avgPrice": 1430000, "minPrice": 1025000}, "Studio": {"count": 4, "avgPrice": 773250, "minPrice": 650000}, "PENTHOUSE": {"count": 1, "avgPrice": 1550000, "minPrice": 1550000}},
   },
   {
-    name: 'ELLINGTON HOUSE ',
+    name: 'ELLINGTON HOUSE',
     developerId: 'ellington',
     area: 'DUBAI HILLS',
     transactions: 9,
@@ -12398,7 +12398,7 @@ export const allProjectsDLD = [
     rooms: {"2 B/R": {"count": 3, "avgPrice": 3376667, "minPrice": 3200000}, "3 B/R": {"count": 6, "avgPrice": 5673333, "minPrice": 4990000}},
   },
   {
-    name: 'DAMAC HILLS (2) - ASTER ',
+    name: 'DAMAC HILLS (2) - ASTER',
     developerId: 'damac',
     area: 'Madinat Hind 4',
     transactions: 9,
@@ -12410,7 +12410,7 @@ export const allProjectsDLD = [
     rooms: {"": {"count": 9, "avgPrice": 2205556, "minPrice": 1800000}},
   },
   {
-    name: 'DAMAC HILLS (2) - AVENCIA-2 ',
+    name: 'DAMAC HILLS (2) - AVENCIA-2',
     developerId: 'damac',
     area: 'Madinat Hind 4',
     transactions: 9,
@@ -12710,7 +12710,7 @@ export const allProjectsDLD = [
     rooms: {"1 B/R": {"count": 5, "avgPrice": 1164000, "minPrice": 1050000}, "2 B/R": {"count": 3, "avgPrice": 1864167, "minPrice": 1800000}},
   },
   {
-    name: 'Azizi Ruby ',
+    name: 'Azizi Ruby',
     developerId: 'azizi',
     area: 'JUMEIRAH VILLAGE CIRCLE',
     transactions: 8,
@@ -12974,7 +12974,7 @@ export const allProjectsDLD = [
     rooms: {"2 B/R": {"count": 4, "avgPrice": 3228500, "minPrice": 3070000}, "1 B/R": {"count": 4, "avgPrice": 1945530, "minPrice": 1706180}},
   },
   {
-    name: 'AZIZI VENICE 9 ',
+    name: 'AZIZI VENICE 9',
     developerId: 'azizi',
     area: 'Madinat Al Mataar',
     transactions: 8,
@@ -13118,7 +13118,7 @@ export const allProjectsDLD = [
     rooms: {"Studio": {"count": 7, "avgPrice": 646629, "minPrice": 569521}, "1 B/R": {"count": 1, "avgPrice": 916759, "minPrice": 916759}},
   },
   {
-    name: 'Burj Binghatti Jacob & Co. Residences ',
+    name: 'Burj Binghatti Jacob & Co. Residences',
     developerId: 'binghatti',
     area: 'BUSINESS BAY',
     transactions: 8,
@@ -13190,7 +13190,7 @@ export const allProjectsDLD = [
     rooms: {"1 B/R": {"count": 5, "avgPrice": 3263000, "minPrice": 2700000}, "Studio": {"count": 3, "avgPrice": 2607938, "minPrice": 2520000}},
   },
   {
-    name: 'THE WATERCREST BY ELLINGTON ',
+    name: 'THE WATERCREST BY ELLINGTON',
     developerId: 'emaar',
     area: 'Wadi Al Safa 3',
     transactions: 8,
@@ -13214,7 +13214,7 @@ export const allProjectsDLD = [
     rooms: {"2 B/R": {"count": 2, "avgPrice": 2316720, "minPrice": 2195200}, "1 B/R": {"count": 6, "avgPrice": 1471963, "minPrice": 1281550}},
   },
   {
-    name: 'Azizi Farishta Residence ',
+    name: 'Azizi Farishta Residence',
     developerId: 'azizi',
     area: 'AL FURJAN',
     transactions: 8,
@@ -13286,7 +13286,7 @@ export const allProjectsDLD = [
     rooms: {"1 B/R": {"count": 6, "avgPrice": 1147500, "minPrice": 1055000}, "2 B/R": {"count": 2, "avgPrice": 2175000, "minPrice": 1800000}},
   },
   {
-    name: 'JUMEIRAH LIVING MARINA GATE ',
+    name: 'JUMEIRAH LIVING MARINA GATE',
     developerId: 'other',
     area: 'Marsa Dubai',
     transactions: 8,
@@ -13478,7 +13478,7 @@ export const allProjectsDLD = [
     rooms: {"Studio": {"count": 7, "avgPrice": 648295, "minPrice": 528063}, "NA": {"count": 1, "avgPrice": 1750000, "minPrice": 1750000}},
   },
   {
-    name: 'DAMAC HILLS (2) - MIMOSA ',
+    name: 'DAMAC HILLS (2) - MIMOSA',
     developerId: 'damac',
     area: 'Madinat Hind 4',
     transactions: 8,
@@ -13538,7 +13538,7 @@ export const allProjectsDLD = [
     rooms: {"1 B/R": {"count": 4, "avgPrice": 1406250, "minPrice": 700000}, "2 B/R": {"count": 4, "avgPrice": 3262500, "minPrice": 2600000}},
   },
   {
-    name: 'DAMAC HILLS (2) - AMARGO ',
+    name: 'DAMAC HILLS (2) - AMARGO',
     developerId: 'damac',
     area: 'Madinat Hind 4',
     transactions: 8,
@@ -13634,7 +13634,7 @@ export const allProjectsDLD = [
     rooms: {"Studio": {"count": 8, "avgPrice": 441681, "minPrice": 400000}},
   },
   {
-    name: 'Joya Blanca Residences ',
+    name: 'Joya Blanca Residences',
     developerId: 'other',
     area: 'ARJAN',
     transactions: 8,
@@ -14030,7 +14030,7 @@ export const allProjectsDLD = [
     rooms: {"2 B/R": {"count": 5, "avgPrice": 1582688, "minPrice": 1514888}, "3 B/R": {"count": 2, "avgPrice": 2188388, "minPrice": 2150888}},
   },
   {
-    name: 'Society House Downtown Dubai ',
+    name: 'Society House Downtown Dubai',
     developerId: 'other',
     area: 'BURJ KHALIFA',
     transactions: 7,
@@ -14102,7 +14102,7 @@ export const allProjectsDLD = [
     rooms: {"2 B/R": {"count": 1, "avgPrice": 1815140, "minPrice": 1815140}, "1 B/R": {"count": 3, "avgPrice": 1451830, "minPrice": 1399440}, "Studio": {"count": 3, "avgPrice": 819520, "minPrice": 707560}},
   },
   {
-    name: '48 PARKSIDE ',
+    name: '48 PARKSIDE',
     developerId: 'other',
     area: 'ARJAN',
     transactions: 7,
@@ -14210,7 +14210,7 @@ export const allProjectsDLD = [
     rooms: {"1 B/R": {"count": 4, "avgPrice": 967431, "minPrice": 842724}, "2 B/R": {"count": 1, "avgPrice": 1754500, "minPrice": 1754500}, "Studio": {"count": 2, "avgPrice": 604800, "minPrice": 604800}},
   },
   {
-    name: 'South Bay 5 Premium ',
+    name: 'South Bay 5 Premium',
     developerId: 'other',
     area: 'Madinat Al Mataar',
     transactions: 7,
@@ -14246,7 +14246,7 @@ export const allProjectsDLD = [
     rooms: {"2 B/R": {"count": 5, "avgPrice": 1432110, "minPrice": 1345888}, "1 B/R": {"count": 2, "avgPrice": 875444, "minPrice": 810888}},
   },
   {
-    name: 'Sportz By Danube ',
+    name: 'Sportz By Danube',
     developerId: 'danube',
     area: 'DUBAI SPORTS CITY',
     transactions: 7,
@@ -14342,7 +14342,7 @@ export const allProjectsDLD = [
     rooms: {"2 B/R": {"count": 3, "avgPrice": 2583865, "minPrice": 2163075}, "1 B/R": {"count": 2, "avgPrice": 1860736, "minPrice": 1686473}, "3 B/R": {"count": 2, "avgPrice": 4615754, "minPrice": 2231508}},
   },
   {
-    name: 'Knightsbridge Park 2 ',
+    name: 'Knightsbridge Park 2',
     developerId: 'other',
     area: 'Wadi Al Safa 3',
     transactions: 7,
@@ -14438,7 +14438,7 @@ export const allProjectsDLD = [
     rooms: {"3 B/R": {"count": 5, "avgPrice": 5751470, "minPrice": 5200000}, "5 B/R": {"count": 1, "avgPrice": 28130000, "minPrice": 28130000}, "2 B/R": {"count": 1, "avgPrice": 4716000, "minPrice": 4716000}},
   },
   {
-    name: 'Elitz By Danube ',
+    name: 'Elitz By Danube',
     developerId: 'danube',
     area: 'JUMEIRAH VILLAGE CIRCLE',
     transactions: 7,
@@ -14582,8 +14582,7 @@ export const allProjectsDLD = [
     rooms: {"1 B/R": {"count": 3, "avgPrice": 1038333, "minPrice": 975000}, "2 B/R": {"count": 4, "avgPrice": 1602500, "minPrice": 1530000}},
   },
   {
-    name: 'THE ANWA BY OMNIYAT
-',
+    name: 'THE ANWA BY OMNIYAT',
     developerId: 'omniyat',
     area: 'DUBAI MARITIME CITY',
     transactions: 7,
@@ -14619,7 +14618,7 @@ export const allProjectsDLD = [
     rooms: {"4 B/R": {"count": 3, "avgPrice": 3500000, "minPrice": 3300000}, "3 B/R": {"count": 4, "avgPrice": 2522500, "minPrice": 2250000}},
   },
   {
-    name: 'Millennium Binghatti Residences Business Bay ',
+    name: 'Millennium Binghatti Residences Business Bay',
     developerId: 'binghatti',
     area: 'BUSINESS BAY',
     transactions: 7,
@@ -14919,7 +14918,7 @@ export const allProjectsDLD = [
     rooms: {"2 B/R": {"count": 3, "avgPrice": 3210000, "minPrice": 2730000}, "3 B/R": {"count": 1, "avgPrice": 5800000, "minPrice": 5800000}, "1 B/R": {"count": 2, "avgPrice": 1825000, "minPrice": 1750000}, "4 B/R": {"count": 1, "avgPrice": 9000000, "minPrice": 9000000}},
   },
   {
-    name: 'Serena - Casa Viva ',
+    name: 'Serena - Casa Viva',
     developerId: 'other',
     area: 'SERENA',
     transactions: 7,
@@ -15123,7 +15122,7 @@ export const allProjectsDLD = [
     rooms: {"5 B/R": {"count": 2, "avgPrice": 5675000, "minPrice": 5450000}, "4 B/R": {"count": 3, "avgPrice": 4391667, "minPrice": 4150000}, "3 B/R": {"count": 1, "avgPrice": 3730000, "minPrice": 3730000}, "": {"count": 1, "avgPrice": 3800000, "minPrice": 3800000}},
   },
   {
-    name: 'Celadon ',
+    name: 'Celadon',
     developerId: 'other',
     area: 'CITY WALK',
     transactions: 7,
@@ -15219,7 +15218,7 @@ export const allProjectsDLD = [
     rooms: {"Studio": {"count": 2, "avgPrice": 402500, "minPrice": 395000}, "2 B/R": {"count": 2, "avgPrice": 755000, "minPrice": 700000}, "1 B/R": {"count": 3, "avgPrice": 553333, "minPrice": 520000}},
   },
   {
-    name: 'Capital Horizon Terraces ',
+    name: 'Capital Horizon Terraces',
     developerId: 'other',
     area: 'Palm Deira',
     transactions: 6,
@@ -15303,7 +15302,7 @@ export const allProjectsDLD = [
     rooms: {"1 B/R": {"count": 3, "avgPrice": 910640, "minPrice": 695928}, "2 B/R": {"count": 3, "avgPrice": 1179927, "minPrice": 1000000}},
   },
   {
-    name: 'WASL BY AZIZI ',
+    name: 'WASL BY AZIZI',
     developerId: 'azizi',
     area: 'Palm Deira',
     transactions: 6,
@@ -15375,7 +15374,7 @@ export const allProjectsDLD = [
     rooms: {"Studio": {"count": 4, "avgPrice": 731264, "minPrice": 685236}, "1 B/R": {"count": 2, "avgPrice": 1267805, "minPrice": 1245378}},
   },
   {
-    name: 'Bianca ',
+    name: 'Bianca',
     developerId: 'other',
     area: 'Wadi Al Safa 2',
     transactions: 6,
@@ -15531,7 +15530,7 @@ export const allProjectsDLD = [
     rooms: {"2 B/R": {"count": 1, "avgPrice": 4600000, "minPrice": 4600000}, "3 B/R": {"count": 5, "avgPrice": 7144323, "minPrice": 5837236}},
   },
   {
-    name: 'Nad Al Sheba Gardens Phase 3 ',
+    name: 'Nad Al Sheba Gardens Phase 3',
     developerId: 'nakheel',
     area: 'Nad Al Shiba First',
     transactions: 6,
@@ -15567,7 +15566,7 @@ export const allProjectsDLD = [
     rooms: {"2 B/R": {"count": 5, "avgPrice": 1183945, "minPrice": 1048339}, "Studio": {"count": 1, "avgPrice": 540122, "minPrice": 540122}},
   },
   {
-    name: 'Franck muller Vanguard ',
+    name: 'Franck muller Vanguard',
     developerId: 'other',
     area: 'TECOM SITE D',
     transactions: 6,
@@ -15939,7 +15938,7 @@ export const allProjectsDLD = [
     rooms: {"1 B/R": {"count": 4, "avgPrice": 813750, "minPrice": 795000}, "Studio": {"count": 2, "avgPrice": 470000, "minPrice": 450000}},
   },
   {
-    name: 'WILTON PARK RESIDENCES ',
+    name: 'WILTON PARK RESIDENCES',
     developerId: 'other',
     area: 'SOBHA HEARTLAND',
     transactions: 6,
@@ -15951,7 +15950,7 @@ export const allProjectsDLD = [
     rooms: {"1 B/R": {"count": 3, "avgPrice": 1708333, "minPrice": 1585000}, "Studio": {"count": 2, "avgPrice": 1015000, "minPrice": 950000}, "2 B/R": {"count": 1, "avgPrice": 2627901, "minPrice": 2627901}},
   },
   {
-    name: 'DAMAC HILLS (2) - TRIXIS ',
+    name: 'DAMAC HILLS (2) - TRIXIS',
     developerId: 'damac',
     area: 'Madinat Hind 4',
     transactions: 6,
@@ -16011,7 +16010,7 @@ export const allProjectsDLD = [
     rooms: {"1 B/R": {"count": 2, "avgPrice": 1325000, "minPrice": 1310000}, "Studio": {"count": 4, "avgPrice": 812500, "minPrice": 770000}},
   },
   {
-    name: 'STONEHENGE RESIDENCES ',
+    name: 'STONEHENGE RESIDENCES',
     developerId: 'other',
     area: 'JUMEIRAH VILLAGE CIRCLE',
     transactions: 6,
@@ -16071,7 +16070,7 @@ export const allProjectsDLD = [
     rooms: {"2 B/R": {"count": 3, "avgPrice": 1600000, "minPrice": 1200000}, "1 B/R": {"count": 2, "avgPrice": 1037500, "minPrice": 1025000}, "3 B/R": {"count": 1, "avgPrice": 1965000, "minPrice": 1965000}},
   },
   {
-    name: 'Catch Residences By IGO ',
+    name: 'Catch Residences By IGO',
     developerId: 'other',
     area: 'JUMEIRAH VILLAGE CIRCLE',
     transactions: 6,
@@ -16251,7 +16250,7 @@ export const allProjectsDLD = [
     rooms: {"Studio": {"count": 4, "avgPrice": 718443, "minPrice": 660000}, "1 B/R": {"count": 2, "avgPrice": 1185030, "minPrice": 861420}},
   },
   {
-    name: 'Golf Views ',
+    name: 'Golf Views',
     developerId: 'other',
     area: 'EMAAR SOUTH',
     transactions: 6,
@@ -16359,7 +16358,7 @@ export const allProjectsDLD = [
     rooms: {"2 B/R": {"count": 4, "avgPrice": 1345000, "minPrice": 1250000}, "1 B/R": {"count": 2, "avgPrice": 959944, "minPrice": 910000}},
   },
   {
-    name: 'VERA TOWER ',
+    name: 'VERA TOWER',
     developerId: 'other',
     area: 'BUSINESS BAY',
     transactions: 6,
@@ -16455,7 +16454,7 @@ export const allProjectsDLD = [
     rooms: {"1 B/R": {"count": 4, "avgPrice": 1688750, "minPrice": 1375000}, "2 B/R": {"count": 1, "avgPrice": 3500000, "minPrice": 3500000}, "Studio": {"count": 1, "avgPrice": 1125000, "minPrice": 1125000}},
   },
   {
-    name: 'DAMAC HILLS (2) - SYCAMORE ',
+    name: 'DAMAC HILLS (2) - SYCAMORE',
     developerId: 'damac',
     area: 'Madinat Hind 4',
     transactions: 6,
@@ -16659,7 +16658,7 @@ export const allProjectsDLD = [
     rooms: {"2 B/R": {"count": 3, "avgPrice": 2216667, "minPrice": 2000000}, "Shop": {"count": 2, "avgPrice": 5400210, "minPrice": 5300419}, "3 B/R": {"count": 1, "avgPrice": 4420000, "minPrice": 4420000}},
   },
   {
-    name: 'THE ONE HOTEL ',
+    name: 'THE ONE HOTEL',
     developerId: 'other',
     area: 'BUSINESS BAY',
     transactions: 6,
@@ -16671,7 +16670,7 @@ export const allProjectsDLD = [
     rooms: {"Studio": {"count": 6, "avgPrice": 1439275, "minPrice": 990000}},
   },
   {
-    name: 'DAMAC HILLS (2) - NAVITAS ',
+    name: 'DAMAC HILLS (2) - NAVITAS',
     developerId: 'damac',
     area: 'Madinat Hind 4',
     transactions: 6,
@@ -16875,7 +16874,7 @@ export const allProjectsDLD = [
     rooms: {"1 B/R": {"count": 3, "avgPrice": 4285574, "minPrice": 3426422}, "2 B/R": {"count": 1, "avgPrice": 6597672, "minPrice": 6597672}, "3 B/R": {"count": 1, "avgPrice": 8503978, "minPrice": 8503978}},
   },
   {
-    name: 'Samana IVY Gardens ',
+    name: 'Samana IVY Gardens',
     developerId: 'samana',
     area: 'DUBAI LAND RESIDENCE COMPLEX',
     transactions: 5,
@@ -16887,7 +16886,7 @@ export const allProjectsDLD = [
     rooms: {"1 B/R": {"count": 4, "avgPrice": 939979, "minPrice": 750000}, "Studio": {"count": 1, "avgPrice": 522000, "minPrice": 522000}},
   },
   {
-    name: 'Aura Central ',
+    name: 'Aura Central',
     developerId: 'other',
     area: 'ARJAN',
     transactions: 5,
@@ -16923,7 +16922,7 @@ export const allProjectsDLD = [
     rooms: {"1 B/R": {"count": 2, "avgPrice": 1548288, "minPrice": 1503108}, "2 B/R": {"count": 3, "avgPrice": 3137605, "minPrice": 2700000}},
   },
   {
-    name: 'ADEBA AZIZI ',
+    name: 'ADEBA AZIZI',
     developerId: 'azizi',
     area: 'DUBAI HEALTHCARE CITY - PHASE 2',
     transactions: 5,
@@ -16995,7 +16994,7 @@ export const allProjectsDLD = [
     rooms: {"4 B/R": {"count": 2, "avgPrice": 3250000, "minPrice": 3100000}, "3 B/R": {"count": 3, "avgPrice": 2485000, "minPrice": 2300000}},
   },
   {
-    name: 'Castleton ',
+    name: 'Castleton',
     developerId: 'other',
     area: 'CITY WALK',
     transactions: 5,
@@ -17151,7 +17150,7 @@ export const allProjectsDLD = [
     rooms: {"Studio": {"count": 1, "avgPrice": 630000, "minPrice": 630000}, "1 B/R": {"count": 3, "avgPrice": 946667, "minPrice": 900000}, "2 B/R": {"count": 1, "avgPrice": 1325000, "minPrice": 1325000}},
   },
   {
-    name: 'Zyra Vista Residences ',
+    name: 'Zyra Vista Residences',
     developerId: 'other',
     area: 'Warsan Fourth',
     transactions: 5,
@@ -17211,7 +17210,7 @@ export const allProjectsDLD = [
     rooms: {"1 B/R": {"count": 1, "avgPrice": 1164960, "minPrice": 1164960}, "Studio": {"count": 2, "avgPrice": 604775, "minPrice": 568000}, "2 B/R": {"count": 2, "avgPrice": 1147083, "minPrice": 1110057}},
   },
   {
-    name: 'Mars Residences ',
+    name: 'Mars Residences',
     developerId: 'other',
     area: 'DUBAI SPORTS CITY',
     transactions: 5,
@@ -17643,7 +17642,7 @@ export const allProjectsDLD = [
     rooms: {"1 B/R": {"count": 2, "avgPrice": 1286104, "minPrice": 1274507}, "2 B/R": {"count": 1, "avgPrice": 1913893, "minPrice": 1913893}, "Studio": {"count": 2, "avgPrice": 788484, "minPrice": 753921}},
   },
   {
-    name: 'Cotier House 2 By Imtiaz ',
+    name: 'Cotier House 2 By Imtiaz',
     developerId: 'imtiaz',
     area: 'Palm Deira',
     transactions: 5,
@@ -17667,7 +17666,7 @@ export const allProjectsDLD = [
     rooms: {"1 B/R": {"count": 2, "avgPrice": 1269111, "minPrice": 1218222}, "NA": {"count": 1, "avgPrice": 491155, "minPrice": 491155}, "2 B/R": {"count": 2, "avgPrice": 2305611, "minPrice": 2111222}},
   },
   {
-    name: 'BAHWAN TOWER ',
+    name: 'BAHWAN TOWER',
     developerId: 'other',
     area: 'BURJ KHALIFA',
     transactions: 5,
@@ -17715,7 +17714,7 @@ export const allProjectsDLD = [
     rooms: {"1 B/R": {"count": 3, "avgPrice": 1050000, "minPrice": 1000000}, "2 B/R": {"count": 1, "avgPrice": 1400000, "minPrice": 1400000}, "3 B/R": {"count": 1, "avgPrice": 3320000, "minPrice": 3320000}},
   },
   {
-    name: 'EQUITI RESIDENCE ',
+    name: 'EQUITI RESIDENCE',
     developerId: 'other',
     area: 'AL FURJAN',
     transactions: 5,
@@ -17727,7 +17726,7 @@ export const allProjectsDLD = [
     rooms: {"3 B/R": {"count": 1, "avgPrice": 2450000, "minPrice": 2450000}, "2 B/R": {"count": 3, "avgPrice": 1175000, "minPrice": 950000}, "1 B/R": {"count": 1, "avgPrice": 1000000, "minPrice": 1000000}},
   },
   {
-    name: 'CAPITAL BAY  A',
+    name: 'CAPITAL BAY A',
     developerId: 'other',
     area: 'BUSINESS BAY',
     transactions: 5,
@@ -17787,7 +17786,7 @@ export const allProjectsDLD = [
     rooms: {"2 B/R": {"count": 3, "avgPrice": 2533333, "minPrice": 2500000}, "1 B/R": {"count": 1, "avgPrice": 1600000, "minPrice": 1600000}, "3 B/R": {"count": 1, "avgPrice": 3800000, "minPrice": 3800000}},
   },
   {
-    name: 'Villanova Amaranta ',
+    name: 'Villanova Amaranta',
     developerId: 'other',
     area: 'VILLANOVA',
     transactions: 5,
@@ -17919,7 +17918,7 @@ export const allProjectsDLD = [
     rooms: {"Studio": {"count": 3, "avgPrice": 676667, "minPrice": 630000}, "NA": {"count": 1, "avgPrice": 2349920, "minPrice": 2349920}, "1 B/R": {"count": 1, "avgPrice": 1075000, "minPrice": 1075000}},
   },
   {
-    name: 'DAMAC HILLS - ROCHESTER ',
+    name: 'DAMAC HILLS - ROCHESTER',
     developerId: 'damac',
     area: 'DAMAC HILLS',
     transactions: 5,
@@ -18063,7 +18062,7 @@ export const allProjectsDLD = [
     rooms: {"3 B/R": {"count": 3, "avgPrice": 7900000, "minPrice": 7500000}, "1 B/R": {"count": 1, "avgPrice": 2494000, "minPrice": 2494000}, "2 B/R": {"count": 1, "avgPrice": 4600000, "minPrice": 4600000}},
   },
   {
-    name: 'Binghatti Gate ',
+    name: 'Binghatti Gate',
     developerId: 'binghatti',
     area: 'JUMEIRAH VILLAGE CIRCLE',
     transactions: 5,
@@ -18303,7 +18302,7 @@ export const allProjectsDLD = [
     rooms: {"1 B/R": {"count": 3, "avgPrice": 2175000, "minPrice": 2075000}, "3 B/R": {"count": 2, "avgPrice": 1000000, "minPrice": 1000000}},
   },
   {
-    name: 'DAMAC HILLS - GOLF HORIZON ',
+    name: 'DAMAC HILLS - GOLF HORIZON',
     developerId: 'damac',
     area: 'DAMAC HILLS',
     transactions: 5,
@@ -18387,7 +18386,7 @@ export const allProjectsDLD = [
     rooms: {"2 B/R": {"count": 4, "avgPrice": 1178750, "minPrice": 1130000}, "1 B/R": {"count": 1, "avgPrice": 930000, "minPrice": 930000}},
   },
   {
-    name: 'Sobha Hartland One Park Avenue ',
+    name: 'Sobha Hartland One Park Avenue',
     developerId: 'sobha',
     area: 'SOBHA HEARTLAND',
     transactions: 5,
@@ -18423,7 +18422,7 @@ export const allProjectsDLD = [
     rooms: {"Studio": {"count": 2, "avgPrice": 1150000, "minPrice": 1150000}, "2 B/R": {"count": 2, "avgPrice": 3150000, "minPrice": 2700000}, "1 B/R": {"count": 1, "avgPrice": 2100000, "minPrice": 2100000}},
   },
   {
-    name: ' QASR SABAH I , II ,III ',
+    name: 'QASR SABAH I , II ,III',
     developerId: 'other',
     area: 'DUBAI PRODUCTION CITY',
     transactions: 5,
@@ -18639,7 +18638,7 @@ export const allProjectsDLD = [
     rooms: {"": {"count": 5, "avgPrice": 2566000, "minPrice": 1810000}},
   },
   {
-    name: 'DAMAC HILLS - ROCKWOOD ',
+    name: 'DAMAC HILLS - ROCKWOOD',
     developerId: 'damac',
     area: 'DAMAC HILLS',
     transactions: 5,
@@ -18711,7 +18710,7 @@ export const allProjectsDLD = [
     rooms: {"Office": {"count": 5, "avgPrice": 1991135, "minPrice": 1400000}},
   },
   {
-    name: 'Emerald Vision Tower ',
+    name: 'Emerald Vision Tower',
     developerId: 'other',
     area: 'JUMEIRAH VILLAGE TRIANGLE',
     transactions: 5,
@@ -18795,7 +18794,7 @@ export const allProjectsDLD = [
     rooms: {"2 B/R": {"count": 1, "avgPrice": 2150000, "minPrice": 2150000}, "1 B/R": {"count": 4, "avgPrice": 1417500, "minPrice": 1250000}},
   },
   {
-    name: 'Nadine Residences ',
+    name: 'Nadine Residences',
     developerId: 'other',
     area: 'AL FURJAN',
     transactions: 5,
@@ -18915,7 +18914,7 @@ export const allProjectsDLD = [
     rooms: {"": {"count": 5, "avgPrice": 2850000, "minPrice": 2825000}},
   },
   {
-    name: 'La Vie ',
+    name: 'La Vie',
     developerId: 'other',
     area: 'JUMEIRAH BEACH RESIDENCE',
     transactions: 5,
@@ -18999,7 +18998,7 @@ export const allProjectsDLD = [
     rooms: {"": {"count": 5, "avgPrice": 14936322, "minPrice": 9530675}},
   },
   {
-    name: 'The Acres 3 & Estates ',
+    name: 'The Acres 3 & Estates',
     developerId: 'meraas',
     area: 'Wadi Al Safa 7',
     transactions: 5,
@@ -19059,7 +19058,7 @@ export const allProjectsDLD = [
     rooms: {"2 B/R": {"count": 5, "avgPrice": 1222000, "minPrice": 1000000}},
   },
   {
-    name: 'AXIS  RESIDENCES 1',
+    name: 'AXIS RESIDENCES 1',
     developerId: 'other',
     area: 'SILICON OASIS',
     transactions: 5,
@@ -19167,7 +19166,7 @@ export const allProjectsDLD = [
     rooms: {"2 B/R": {"count": 4, "avgPrice": 1835245, "minPrice": 1766940}},
   },
   {
-    name: 'Celia gardens ',
+    name: 'Celia gardens',
     developerId: 'other',
     area: 'NAD AL SHEBA GARDENS',
     transactions: 4,
@@ -19251,7 +19250,7 @@ export const allProjectsDLD = [
     rooms: {"2 B/R": {"count": 4, "avgPrice": 1985850, "minPrice": 1880650}},
   },
   {
-    name: 'Ellison ',
+    name: 'Ellison',
     developerId: 'other',
     area: 'Al Yelayiss 2',
     transactions: 4,
@@ -19407,7 +19406,7 @@ export const allProjectsDLD = [
     rooms: {"2 B/R": {"count": 1, "avgPrice": 2105719, "minPrice": 2105719}, "1 B/R": {"count": 3, "avgPrice": 1122361, "minPrice": 1086445}},
   },
   {
-    name: 'One.B Tower ',
+    name: 'One.B Tower',
     developerId: 'other',
     area: 'Business Bay',
     transactions: 4,
@@ -19443,7 +19442,7 @@ export const allProjectsDLD = [
     rooms: {"1 B/R": {"count": 2, "avgPrice": 879500, "minPrice": 844000}, "Studio": {"count": 1, "avgPrice": 650000, "minPrice": 650000}, "NA": {"count": 1, "avgPrice": 4329450, "minPrice": 4329450}},
   },
   {
-    name: 'Beach Walk Grand By Imtiaz ',
+    name: 'Beach Walk Grand By Imtiaz',
     developerId: 'imtiaz',
     area: 'PALM DEIRA',
     transactions: 4,
@@ -19551,7 +19550,7 @@ export const allProjectsDLD = [
     rooms: {"Studio": {"count": 2, "avgPrice": 663000, "minPrice": 601000}, "1 B/R": {"count": 1, "avgPrice": 1122000, "minPrice": 1122000}, "3 B/R": {"count": 1, "avgPrice": 2141000, "minPrice": 2141000}},
   },
   {
-    name: 'Oceanz 1 By Danube ',
+    name: 'Oceanz 1 By Danube',
     developerId: 'danube',
     area: 'DUBAI MARITIME CITY',
     transactions: 4,
@@ -19647,7 +19646,7 @@ export const allProjectsDLD = [
     rooms: {"1 B/R": {"count": 4, "avgPrice": 1495744, "minPrice": 1460000}},
   },
   {
-    name: 'PELaGOS By IGO ',
+    name: 'PELaGOS By IGO',
     developerId: 'other',
     area: 'DUBAI MARINA',
     transactions: 4,
@@ -19791,7 +19790,7 @@ export const allProjectsDLD = [
     rooms: {"1 B/R": {"count": 1, "avgPrice": 1999999, "minPrice": 1999999}, "Studio": {"count": 3, "avgPrice": 1082500, "minPrice": 860000}},
   },
   {
-    name: 'Viewz 1 By Danube ',
+    name: 'Viewz 1 By Danube',
     developerId: 'danube',
     area: 'JUMEIRAH LAKES TOWERS',
     transactions: 4,
@@ -19815,7 +19814,7 @@ export const allProjectsDLD = [
     rooms: {"Studio": {"count": 1, "avgPrice": 1175000, "minPrice": 1175000}, "2 B/R": {"count": 2, "avgPrice": 2400000, "minPrice": 2350000}, "1 B/R": {"count": 1, "avgPrice": 1700000, "minPrice": 1700000}},
   },
   {
-    name: 'Cove Edition Residence 4 By Imtiaz ',
+    name: 'Cove Edition Residence 4 By Imtiaz',
     developerId: 'imtiaz',
     area: 'DUBAI LAND RESIDENCE COMPLEX',
     transactions: 4,
@@ -19899,7 +19898,7 @@ export const allProjectsDLD = [
     rooms: {"4 B/R": {"count": 3, "avgPrice": 4433333, "minPrice": 3600000}, "": {"count": 1, "avgPrice": 11500000, "minPrice": 11500000}},
   },
   {
-    name: 'Rome 3 by SD ',
+    name: 'Rome 3 by SD',
     developerId: 'other',
     area: 'Wadi Al Safa 3',
     transactions: 4,
@@ -20163,7 +20162,7 @@ export const allProjectsDLD = [
     rooms: {"Studio": {"count": 3, "avgPrice": 598333, "minPrice": 550000}, "2 B/R": {"count": 1, "avgPrice": 1650000, "minPrice": 1650000}},
   },
   {
-    name: 'DAMAC HILLS (2) - NAVITAS (A & B) ',
+    name: 'DAMAC HILLS (2) - NAVITAS (A & B)',
     developerId: 'damac',
     area: 'Madinat Hind 4',
     transactions: 4,
@@ -20331,7 +20330,7 @@ export const allProjectsDLD = [
     rooms: {"4 B/R": {"count": 1, "avgPrice": 3350000, "minPrice": 3350000}, "3 B/R": {"count": 3, "avgPrice": 2896667, "minPrice": 2870000}},
   },
   {
-    name: 'CONCEPT 7 RESIDENCES ',
+    name: 'CONCEPT 7 RESIDENCES',
     developerId: 'other',
     area: 'JUMEIRAH VILLAGE CIRCLE',
     transactions: 4,
@@ -20919,7 +20918,7 @@ export const allProjectsDLD = [
     rooms: {"1 B/R": {"count": 3, "avgPrice": 1135000, "minPrice": 930000}, "2 B/R": {"count": 1, "avgPrice": 2100000, "minPrice": 2100000}},
   },
   {
-    name: 'DAMAC HILLS -  TOPANGA',
+    name: 'DAMAC HILLS - TOPANGA',
     developerId: 'damac',
     area: 'DAMAC HILLS',
     transactions: 4,
@@ -21027,7 +21026,7 @@ export const allProjectsDLD = [
     rooms: {"3 B/R": {"count": 2, "avgPrice": 17550000, "minPrice": 17200000}, "4 B/R": {"count": 2, "avgPrice": 19726511, "minPrice": 16953022}},
   },
   {
-    name: 'AZIZI RIVIERA 63 ',
+    name: 'AZIZI RIVIERA 63',
     developerId: 'azizi',
     area: 'MEYDAN ONE',
     transactions: 4,
@@ -21099,7 +21098,7 @@ export const allProjectsDLD = [
     rooms: {"2 B/R": {"count": 2, "avgPrice": 1375000, "minPrice": 1150000}, "NA": {"count": 2, "avgPrice": 1262547, "minPrice": 1167153}},
   },
   {
-    name: 'BERKELEY PLACE ',
+    name: 'BERKELEY PLACE',
     developerId: 'other',
     area: 'SOBHA HEARTLAND',
     transactions: 4,
@@ -21255,7 +21254,7 @@ export const allProjectsDLD = [
     rooms: {"1 B/R": {"count": 2, "avgPrice": 2050000, "minPrice": 1675000}, "2 B/R": {"count": 1, "avgPrice": 2630000, "minPrice": 2630000}, "3 B/R": {"count": 1, "avgPrice": 5500000, "minPrice": 5500000}},
   },
   {
-    name: 'Binghatti Gateway ',
+    name: 'Binghatti Gateway',
     developerId: 'binghatti',
     area: 'DUBAI HEALTHCARE CITY - PHASE 2',
     transactions: 4,
@@ -21279,7 +21278,7 @@ export const allProjectsDLD = [
     rooms: {"2 B/R": {"count": 4, "avgPrice": 1725000, "minPrice": 1550000}},
   },
   {
-    name: 'Binghatti Crescent ',
+    name: 'Binghatti Crescent',
     developerId: 'binghatti',
     area: 'JUMEIRAH VILLAGE CIRCLE',
     transactions: 4,
@@ -21291,7 +21290,7 @@ export const allProjectsDLD = [
     rooms: {"2 B/R": {"count": 2, "avgPrice": 1470000, "minPrice": 1440000}, "1 B/R": {"count": 2, "avgPrice": 942500, "minPrice": 935000}},
   },
   {
-    name: 'THE REGENT ',
+    name: 'THE REGENT',
     developerId: 'other',
     area: 'Al Yelayiss 2',
     transactions: 4,
@@ -21375,7 +21374,7 @@ export const allProjectsDLD = [
     rooms: {"Studio": {"count": 1, "avgPrice": 640000, "minPrice": 640000}, "2 B/R": {"count": 2, "avgPrice": 1650000, "minPrice": 1650000}, "1 B/R": {"count": 1, "avgPrice": 1350000, "minPrice": 1350000}},
   },
   {
-    name: 'Mohammed Bin Rashid Al Maktoum City , District One Phase III  , Residences 5',
+    name: 'Mohammed Bin Rashid Al Maktoum City , District One Phase III , Residences 5',
     developerId: 'other',
     area: 'MBR DISTRICT 1',
     transactions: 4,
@@ -21423,7 +21422,7 @@ export const allProjectsDLD = [
     rooms: {"1 B/R": {"count": 3, "avgPrice": 775000, "minPrice": 690000}, "2 B/R": {"count": 1, "avgPrice": 930000, "minPrice": 930000}},
   },
   {
-    name: 'BLVD CRESCENT ',
+    name: 'BLVD CRESCENT',
     developerId: 'other',
     area: 'BURJ KHALIFA',
     transactions: 4,
@@ -21471,7 +21470,7 @@ export const allProjectsDLD = [
     rooms: {"": {"count": 4, "avgPrice": 2825000, "minPrice": 2530000}},
   },
   {
-    name: 'Jebel Ali Village ',
+    name: 'Jebel Ali Village',
     developerId: 'nakheel',
     area: 'Jabal Ali First',
     transactions: 4,
@@ -21687,7 +21686,7 @@ export const allProjectsDLD = [
     rooms: {"2 B/R": {"count": 3, "avgPrice": 1568591, "minPrice": 1347840}},
   },
   {
-    name: 'CLAYDON HOUSE BY ELLINGTON ',
+    name: 'CLAYDON HOUSE BY ELLINGTON',
     developerId: 'ellington',
     area: 'HORIZON',
     transactions: 3,
@@ -21819,7 +21818,7 @@ export const allProjectsDLD = [
     rooms: {"3 B/R": {"count": 1, "avgPrice": 2994880, "minPrice": 2994880}, "1 B/R": {"count": 2, "avgPrice": 1525000, "minPrice": 1500000}},
   },
   {
-    name: 'AZIZI JEWEL ',
+    name: 'AZIZI JEWEL',
     developerId: 'azizi',
     area: 'AL FURJAN',
     transactions: 3,
@@ -21867,7 +21866,7 @@ export const allProjectsDLD = [
     rooms: {"1 B/R": {"count": 2, "avgPrice": 805444, "minPrice": 785000}, "2 B/R": {"count": 1, "avgPrice": 1328000, "minPrice": 1328000}},
   },
   {
-    name: 'Coastal Haven by Prestige Harbour Real Estate Development ',
+    name: 'Coastal Haven by Prestige Harbour Real Estate Development',
     developerId: 'other',
     area: 'PALM DEIRA',
     transactions: 3,
@@ -21963,7 +21962,7 @@ export const allProjectsDLD = [
     rooms: {"3 B/R": {"count": 2, "avgPrice": 2856388, "minPrice": 2738888}, "2 B/R": {"count": 1, "avgPrice": 2128888, "minPrice": 2128888}},
   },
   {
-    name: 'Floarea  Grande',
+    name: 'Floarea Grande',
     developerId: 'other',
     area: 'ARJAN',
     transactions: 3,
@@ -22203,7 +22202,7 @@ export const allProjectsDLD = [
     rooms: {"Studio": {"count": 1, "avgPrice": 600000, "minPrice": 600000}, "1 B/R": {"count": 2, "avgPrice": 847500, "minPrice": 845000}},
   },
   {
-    name: 'THE PORTMAN ',
+    name: 'THE PORTMAN',
     developerId: 'other',
     area: 'JUMEIRAH VILLAGE CIRCLE',
     transactions: 3,
@@ -22347,7 +22346,7 @@ export const allProjectsDLD = [
     rooms: {"3 B/R": {"count": 3, "avgPrice": 26426333, "minPrice": 24831000}},
   },
   {
-    name: 'WINNER TOWER ',
+    name: 'WINNER TOWER',
     developerId: 'other',
     area: 'JUMEIRAH VILLAGE TRIANGLE',
     transactions: 3,
@@ -22563,7 +22562,7 @@ export const allProjectsDLD = [
     rooms: {"2 B/R": {"count": 2, "avgPrice": 4725000, "minPrice": 4550000}, "3 B/R": {"count": 1, "avgPrice": 7350000, "minPrice": 7350000}},
   },
   {
-    name: 'Mohammed Bin Rashid Al Maktoum City , District One Phase III  , Residences 15',
+    name: 'Mohammed Bin Rashid Al Maktoum City , District One Phase III , Residences 15',
     developerId: 'other',
     area: 'MBR DISTRICT 1',
     transactions: 3,
@@ -22575,7 +22574,7 @@ export const allProjectsDLD = [
     rooms: {"1 B/R": {"count": 2, "avgPrice": 1585000, "minPrice": 1550000}, "2 B/R": {"count": 1, "avgPrice": 3200000, "minPrice": 3200000}},
   },
   {
-    name: 'Mohammed Bin Rashid Al Maktoum City District One  B Extension Villas',
+    name: 'Mohammed Bin Rashid Al Maktoum City District One B Extension Villas',
     developerId: 'other',
     area: 'Al Merkadh',
     transactions: 3,
@@ -22599,7 +22598,7 @@ export const allProjectsDLD = [
     rooms: {"Office": {"count": 3, "avgPrice": 1946667, "minPrice": 1700000}},
   },
   {
-    name: 'Azizi  Riviera 34  ',
+    name: 'Azizi Riviera 34',
     developerId: 'azizi',
     area: 'MEYDAN ONE',
     transactions: 3,
@@ -22707,7 +22706,7 @@ export const allProjectsDLD = [
     rooms: {"2 B/R": {"count": 2, "avgPrice": 2800000, "minPrice": 2800000}, "1 B/R": {"count": 1, "avgPrice": 3278991, "minPrice": 3278991}},
   },
   {
-    name: 'AMARANTA 2 ',
+    name: 'AMARANTA 2',
     developerId: 'other',
     area: 'VILLANOVA',
     transactions: 3,
@@ -22827,7 +22826,7 @@ export const allProjectsDLD = [
     rooms: {"1 B/R": {"count": 2, "avgPrice": 3435000, "minPrice": 3350000}, "2 B/R": {"count": 1, "avgPrice": 5850000, "minPrice": 5850000}},
   },
   {
-    name: 'EMIRATES GARDEN II - MAPLE ',
+    name: 'EMIRATES GARDEN II - MAPLE',
     developerId: 'other',
     area: 'JUMEIRAH VILLAGE CIRCLE',
     transactions: 3,
@@ -22971,7 +22970,7 @@ export const allProjectsDLD = [
     rooms: {"": {"count": 3, "avgPrice": 5425000, "minPrice": 4375000}},
   },
   {
-    name: 'Mohammed Bin Rashid Al Maktoum City , District One Phase III  , Residences 13',
+    name: 'Mohammed Bin Rashid Al Maktoum City , District One Phase III , Residences 13',
     developerId: 'other',
     area: 'MBR DISTRICT 1',
     transactions: 3,
@@ -23127,7 +23126,7 @@ export const allProjectsDLD = [
     rooms: {"Office": {"count": 3, "avgPrice": 1726667, "minPrice": 1300000}},
   },
   {
-    name: 'OLIVE POINT ',
+    name: 'OLIVE POINT',
     developerId: 'other',
     area: 'JUMEIRAH GOLF',
     transactions: 3,
@@ -23259,7 +23258,7 @@ export const allProjectsDLD = [
     rooms: {"2 B/R": {"count": 1, "avgPrice": 1035000, "minPrice": 1035000}, "1 B/R": {"count": 2, "avgPrice": 595000, "minPrice": 550000}},
   },
   {
-    name: ' Qline (Qpoint phase II) R010',
+    name: 'Qline (Qpoint phase II) R010',
     developerId: 'other',
     area: 'LIWAN',
     transactions: 3,
@@ -23799,7 +23798,7 @@ export const allProjectsDLD = [
     rooms: {"NA": {"count": 3, "avgPrice": 6829533, "minPrice": 3397350}},
   },
   {
-    name: 'DAMAC HILLS (2) - COURSETIA ',
+    name: 'DAMAC HILLS (2) - COURSETIA',
     developerId: 'damac',
     area: 'Madinat Hind 4',
     transactions: 3,
@@ -23979,7 +23978,7 @@ export const allProjectsDLD = [
     rooms: {"2 B/R": {"count": 3, "avgPrice": 1568333, "minPrice": 1550000}},
   },
   {
-    name: 'DAMAC HILLS (2) - MULBERRY ',
+    name: 'DAMAC HILLS (2) - MULBERRY',
     developerId: 'damac',
     area: 'Madinat Hind 4',
     transactions: 3,
@@ -23991,7 +23990,7 @@ export const allProjectsDLD = [
     rooms: {"": {"count": 3, "avgPrice": 1766667, "minPrice": 1700000}},
   },
   {
-    name: 'ROXANA RESIDENCE ',
+    name: 'ROXANA RESIDENCE',
     developerId: 'other',
     area: 'JUMEIRAH VILLAGE CIRCLE',
     transactions: 3,
@@ -24075,7 +24074,7 @@ export const allProjectsDLD = [
     rooms: {"2 B/R": {"count": 2, "avgPrice": 915000, "minPrice": 905000}, "Studio": {"count": 1, "avgPrice": 509000, "minPrice": 509000}},
   },
   {
-    name: 'No.17, No.18a,No.18b and No.19 Citywalk Residential ',
+    name: 'No.17, No.18a,No.18b and No.19 Citywalk Residential',
     developerId: 'other',
     area: 'CITY WALK',
     transactions: 3,
@@ -24327,7 +24326,7 @@ export const allProjectsDLD = [
     rooms: {"2 B/R": {"count": 1, "avgPrice": 1405000, "minPrice": 1405000}, "Studio": {"count": 1, "avgPrice": 600000, "minPrice": 600000}, "1 B/R": {"count": 1, "avgPrice": 1200000, "minPrice": 1200000}},
   },
   {
-    name: 'Azizi Riviera 59 ',
+    name: 'Azizi Riviera 59',
     developerId: 'azizi',
     area: 'MEYDAN ONE',
     transactions: 3,
@@ -24435,7 +24434,7 @@ export const allProjectsDLD = [
     rooms: {"1 B/R": {"count": 3, "avgPrice": 616667, "minPrice": 610000}},
   },
   {
-    name: 'Verdana Residence 2 ',
+    name: 'Verdana Residence 2',
     developerId: 'other',
     area: 'Dubai Investment Park First',
     transactions: 3,
