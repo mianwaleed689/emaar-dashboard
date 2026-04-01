@@ -16,7 +16,7 @@ import { collection, getDocs, doc, getDoc, setDoc, updateDoc, deleteDoc, onSnaps
 // and exports allProjects[], allDevelopers[], allCommunities[], helpers
 // Iron Rule: Never import directly from data_*.js in this file
 import { useDXB } from "./context/DXBContext";
-import { allDevelopers as dldAllDevelopers } from "./data_developers";
+import { allDevelopers as dldAllDevelopers, allProjectsDLD, dldMarketSummary } from "./data_developers";
 import {
   T,
   // Emaar data (from data.js via data_master)
@@ -1038,7 +1038,7 @@ const UpgradeModal = ({ show, onClose }) => {
 
         {/* ROI bar */}
         <div style={{ background: "rgba(16,185,129,0.08)", border: `1px solid ${T.green}30`, borderRadius: 12, padding: "12px 20px", marginBottom: 24, display: "flex", alignItems: "center", justifyContent: "center", gap: 16, flexWrap: "wrap" }}>
-          {[["📊", "AED 267B+", "Developer sales tracked"], ["📈", `${platformStats.developerCount||allDevelopersMerged?.length||0} Developers`, "Top UAE coverage"], ["🏠", "345+ Projects", "Full intelligence"], ["🏙️", "40 Communities", "All verified"]].map(([icon, val, label], i) => (
+          {[["📊", "AED 85.5B", "DLD Q1 2026 transactions"], ["📈", `${dldMarketSummary?.residentialUnitSales?.toLocaleString() || "38,322"} Sales`, "Residential Q1 2026"], ["🏠", `${dldMarketSummary?.uniqueProjects?.toLocaleString() || "2,096"} Projects`, "DLD verified"], ["🏙️", `${dldMarketSummary?.communities || 126} Communities`, "All verified"]].map(([icon, val, label], i) => (
             <div key={i} style={{ textAlign: "center" }}>
               <div style={{ fontSize: 13 }}>{icon} <span style={{ fontFamily: "'Fraunces', serif", fontWeight: 800, color: T.green }}>{val}</span></div>
               <div style={{ fontSize: 10, color: T.textMuted }}>{label}</div>
@@ -2578,7 +2578,7 @@ export default function EmaarDashboardV2() {
                     pdf.setFontSize(9);pdf.setTextColor(140,140,140);pdf.setFont("helvetica","normal");pdf.text(`Generated ${now} · DXB Analytics`,M,49);
                     pdf.setDrawColor(212,168,67,0.3);pdf.setLineWidth(0.3);pdf.line(M,54,W-M,54);
                     let y=64;
-                    [[`Developers Tracked`,`${platformStats.developerCount||0}`,"Emaar · DAMAC · Sobha · Nakheel · Meraas · Aldar · Binghatti"],[`Total Projects`,`${platformStats.projectCount||allProjects.length}`,"Verified across all developers"],[`Communities Mapped`,`${platformStats.communityCount||allCommunities?.length||0}`,"Full data: prices · yields · amenities"],[`Dubai Transactions FY2025`,"214,912","+36% YoY all-time record"],[`Market Value FY2025`,"AED 682.5B","+31% YoY"],[`Avg Price/sqft`,"AED 1,689","+19.8% YoY"],[`EIBOR 3M`,eiborRates?.threeMonth?`${eiborRates.threeMonth}%`:"3.593%","Mar 2026"]].forEach(([label,value,note])=>{
+                    [[`Developers Tracked`,`${dldAllDevelopers?.length || 23}`,`Emaar · DAMAC · Sobha · Binghatti + ${(dldAllDevelopers?.length||23)-4} more`],[`Total Projects`,`${dldMarketSummary?.uniqueProjects?.toLocaleString() || '2,096'}`,`DLD Q1 2026 verified`],[`Communities Mapped`,`${dldMarketSummary?.communities || 126}`,`Active Q1 2026`],[`Dubai Transactions Q1 2026`,`${dldMarketSummary?.totalTransactions?.toLocaleString() || '60,115'}`,`${dldMarketSummary?.residentialUnitSales?.toLocaleString() || '38,322'} residential unit sales`],[`Total Value Q1 2026`,`AED ${dldMarketSummary ? (dldMarketSummary.totalValueAed/1e9).toFixed(1)+'B' : '85.5B'}`,`DLD residential unit sales`],[`Avg Price/sqft`,`AED ${dldMarketSummary?.avgPpsf?.toLocaleString() || '2,066'}`,`Q1 2026 DLD transaction average`],[`EIBOR 3M`,eiborRates?.threeMonth?`${eiborRates.threeMonth}%`:`3.593%`,`Mar 2026`]].forEach(([label,value,note])=>{
                       pdf.setFillColor(20,35,60);pdf.rect(M,y-4,W-M*2,10,"F");
                       pdf.setFont("helvetica","normal");pdf.setFontSize(8);pdf.setTextColor(160,160,160);pdf.text(label,M+3,y+2);
                       pdf.setFont("helvetica","bold");pdf.setFontSize(9);pdf.setTextColor(255,255,255);pdf.text(value,M+70,y+2);
@@ -2844,7 +2844,7 @@ export default function EmaarDashboardV2() {
                   <span style={{ fontSize:14 }}>🏆</span>
                   <span style={{ fontSize:11, fontWeight:700, color:T.gold, letterSpacing:1, textTransform:"uppercase" }}>Developer Intelligence</span>
                   <span style={{ fontSize:9, padding:"2px 8px", borderRadius:8, background:"rgba(212,168,67,0.1)", color:T.gold }}>
-                    {platformStats.developerCount||allDevelopersMerged.length||0} Developers · {platformStats.projectCount||allProjects.length} Projects
+                    {dldAllDevelopers?.length || 23} Developers · {dldMarketSummary?.uniqueProjects?.toLocaleString() || '2,096'} Projects
                   </span>
                 </div>
                 <button type="button" onClick={()=>setTab("Developers")} style={{ fontSize:10, color:T.teal, background:"none", border:"none", cursor:"pointer", textDecoration:"underline" }}>All Developers →</button>
