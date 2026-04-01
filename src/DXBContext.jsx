@@ -1,5 +1,5 @@
 /**
- * DXB ANALYTICS — UNIFIED CONTEXT
+ * DXB ANALYTICS â€” UNIFIED CONTEXT
  * src/context/DXBContext.jsx
  *
  * THE SINGLE SOURCE OF TRUTH for the entire platform.
@@ -19,7 +19,7 @@
  *            All shared state lives here. Local UI state (modal open/close,
  *            form values) stays in the component that owns it.
  *
- * Iron Rule: NEVER run npx vercel --prod — use git push only
+ * Iron Rule: NEVER run npx vercel --prod â€” use git push only
  */
 
 import React, {
@@ -41,10 +41,11 @@ import {
   allProjects, allDevelopers as allDevelopersStatic, allCommunities,
   allCommunityCoords, getProjectsByDeveloper, developerById, getDistrictCode,
 } from "../data_master";
+import { allDevelopers as dldDevelopers, allProjectsDLD } from "../data_developers";
 
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // CONTEXT CREATION
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const DXBContext = createContext(null);
 
@@ -54,9 +55,9 @@ export function useDXB() {
   return ctx;
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// HELPER — audit log writer
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// HELPER â€” audit log writer
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 async function writeAuditLog(action, details = {}, userEmail = "unknown") {
   try {
@@ -71,13 +72,13 @@ async function writeAuditLog(action, details = {}, userEmail = "unknown") {
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // PROVIDER
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export function DXBProvider({ children }) {
 
-  // ── AUTH STATE ──────────────────────────────────────────────────────────────
+  // â”€â”€ AUTH STATE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const [isLoggedIn, setIsLoggedIn]       = useState(false);
   const [firebaseUser, setFirebaseUser]   = useState(null);
   const [userName, setUserName]           = useState("");
@@ -92,10 +93,10 @@ export function DXBProvider({ children }) {
   const [kycStatus, setKycStatus]         = useState(null);
   const [trialDaysLeft, setTrialDaysLeft] = useState(0);
 
-  // Admin mode — superAdmin, admin, or enterprise tier all get full access
+  // Admin mode â€” superAdmin, admin, or enterprise tier all get full access
   const adminMode = userRole === "admin" || userRole === "superAdmin" || userTier === "enterprise";
 
-  // ── APP UI STATE ────────────────────────────────────────────────────────────
+  // â”€â”€ APP UI STATE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const [tab, setTabRaw] = useState(() => {
     try {
       return new URLSearchParams(window.location.search).get("tab")
@@ -121,7 +122,7 @@ export function DXBProvider({ children }) {
     setTimeout(() => setToast(""), duration);
   }, []);
 
-  // ── LIVE FIRESTORE DATA ─────────────────────────────────────────────────────
+  // â”€â”€ LIVE FIRESTORE DATA â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   // Projects
   const [liveProjects, setLiveProjects]   = useState({}); // price overrides from projectData
   const [extraProjects, setExtraProjects] = useState([]); // radar + non-emaar from projects/
@@ -166,14 +167,14 @@ export function DXBProvider({ children }) {
     lastUpdated:      null,
   });
 
-  // ── USER DATA ───────────────────────────────────────────────────────────────
+  // â”€â”€ USER DATA â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const [myPortfolio, setMyPortfolio]   = useState([]);
   const [watchlist, setWatchlist]       = useState([]);
   const [myAlerts, setMyAlerts]         = useState([]);
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount]   = useState(0);
 
-  // ── COMPUTED: ACTIVE PROJECTS ───────────────────────────────────────────────
+  // â”€â”€ COMPUTED: ACTIVE PROJECTS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   // Emaar: static (from data_master) + Firestore price overrides + radar new launches
   const emaarBaseNames = React.useMemo(
     () => new Set(emaarProjects.map(p => (p.name || "").toLowerCase().trim())),
@@ -211,9 +212,71 @@ export function DXBProvider({ children }) {
     meraas:    getDevProjects("meraas",    "Meraas"),
     aldar:     getDevProjects("aldar",     "Aldar Properties"),
     binghatti: getDevProjects("binghatti", "Binghatti"),
+    // Session 1
+    azizi:     getDevProjects("azizi",     "Azizi Developments"),
+    danube:    getDevProjects("danube",    "Danube Properties"),
+    samana:    getDevProjects("samana",    "Samana Developers"),
+    // Session 2
+    beyond:    getDevProjects("beyond",    "Beyond Developments"),
+    imtiaz:    getDevProjects("imtiaz",    "Imtiaz Developments"),
+    ellington: getDevProjects("ellington", "Ellington Properties"),
+    iman:      getDevProjects("iman",      "Iman Developers"),
+    reportage: getDevProjects("reportage", "Reportage Properties"),
+    wadan:     getDevProjects("wadan",     "Wadan Developments"),
+    wasl:      getDevProjects("wasl",      "Wasl Properties"),
+    mag:       getDevProjects("mag",       "MAG Group"),
+    vincitore: getDevProjects("vincitore", "Vincitore"),
+    nshama:    getDevProjects("nshama",    "Nshama"),
   }), [emaarActiveProjects, getDevProjects]);
 
-  const activeProjects = projectsByDeveloper[selectedDeveloper] || emaarActiveProjects;
+  const activeProjects = React.useMemo(() => {
+    // Normalize DLD projects to match platform schema
+    const dldNormalized = (allProjectsDLD || []).map(p => ({
+      id: `dld-${p.name.replace(/\s+/g, '-').toLowerCase().slice(0, 30)}`,
+      name: p.name,
+      developerId: p.developerId,
+      developer: dldDevelopers.find(d => d.id === p.developerId)?.name || p.developerId,
+      community: p.area,
+      type: p.rooms?.['Studio'] ? 'Apartments' : p.rooms?.['Villa'] ? 'Villas' : 'Apartments',
+      beds: Object.keys(p.rooms || {}).filter(r => r !== 'NA' && r !== 'Office' && r !== 'Shop').join(' Â· ') || 'â€”',
+      status: p.offplanPct > 50 ? 'Off Plan' : 'Under Construction',
+      price: p.minPrice || p.avgPrice || 0,
+      ppsf: p.avgPpsf || 0,
+      sizeFrom: 0,
+      sizeTo: 0,
+      handover: 'â€”',
+      payment: 'â€”',
+      construction: 0,
+      branded: false,
+      brand: 'â€”',
+      tier: p.avgPrice > 5000000 ? 'Ultra Luxury' : p.avgPrice > 3000000 ? 'Luxury' : p.avgPrice > 1500000 ? 'Premium' : 'Mid-Market',
+      officialUrl: dldDevelopers.find(d => d.id === p.developerId)?.officialUrl || '',
+      links: { pf: '', bayut: '' },
+      dldVerified: true,
+      dldTransactions: p.transactions,
+      dldAvgPrice: p.avgPrice,
+      dldPpsf: p.avgPpsf,
+    }));
+
+    // Merge: existing static projects + DLD projects (deduplicate by name)
+    const existingNames = new Set((projectsByDeveloper[selectedDeveloper] || []).map(p => p.name.toLowerCase()));
+    const newDLDProjects = dldNormalized.filter(p =>
+      !existingNames.has(p.name.toLowerCase()) &&
+      (selectedDeveloper === 'all' || p.developerId === selectedDeveloper)
+    );
+
+    if (selectedDeveloper === 'all') {
+      const allStatic = Object.values(projectsByDeveloper).flat();
+      const allStaticNames = new Set(allStatic.map(p => p.name.toLowerCase()));
+      const allNew = dldNormalized.filter(p => !allStaticNames.has(p.name.toLowerCase()));
+      return [...allStatic, ...allNew];
+    }
+
+    return [
+      ...(projectsByDeveloper[selectedDeveloper] || []),
+      ...newDLDProjects,
+    ];
+  }, [selectedDeveloper, projectsByDeveloper, emaarActiveProjects]);
   const currentDeveloper = developerById[selectedDeveloper] || developerById["emaar"];
 
   // Active communities for current developer (with live PPSF wired in)
@@ -236,14 +299,14 @@ export function DXBProvider({ children }) {
     return allDevelopersStatic.map(d => liveMap[d.id] ? { ...d, ...liveMap[d.id] } : d);
   }, [liveDevelopers]);
 
-  // ── REFS ─────────────────────────────────────────────────────────────────────
+  // â”€â”€ REFS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const unsubsRef = useRef([]);
   const userUnsubsRef = useRef([]);
   const stockIntervalRef = useRef(null);
 
-  // ─────────────────────────────────────────────────────────────────────────────
+  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   // SECTION 1: AUTH LISTENER
-  // ─────────────────────────────────────────────────────────────────────────────
+  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (fbUser) => {
@@ -271,7 +334,7 @@ export function DXBProvider({ children }) {
       // Read user profile from Firestore
       const profileUnsub = onSnapshot(doc(db, "users", fbUser.uid), (snap) => {
         if (!snap.exists()) {
-          setAuthLoading(false); // no profile doc — allow through as free user
+          setAuthLoading(false); // no profile doc â€” allow through as free user
           return;
         }
         const data = snap.data();
@@ -283,7 +346,7 @@ export function DXBProvider({ children }) {
         setVerifiedLevel(data.verifiedLevel || null);
         setKycStatus(data.kycStatus || null);
         setProfileLoaded(true);
-        setAuthLoading(false); // now safe — role is known
+        setAuthLoading(false); // now safe â€” role is known
         // Cache for instant subsequent loads
         sessionStorage.setItem("dxb_role", data.role || (data.tier === "admin" || data.tier === "enterprise" || data.superAdmin ? "superAdmin" : "user"));
         sessionStorage.setItem("dxb_tier", data.tier || "free");
@@ -319,22 +382,22 @@ export function DXBProvider({ children }) {
     };
   }, []);
 
-  // ─────────────────────────────────────────────────────────────────────────────
+  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   // SECTION 2: GLOBAL FIRESTORE LISTENERS
-  // These run always (public data) — no auth required to read
-  // ─────────────────────────────────────────────────────────────────────────────
+  // These run always (public data) â€” no auth required to read
+  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   useEffect(() => {
     const unsubs = [];
 
-    // projectData — admin price overrides
+    // projectData â€” admin price overrides
     unsubs.push(onSnapshot(collection(db, "projectData"), (snap) => {
       const overrides = {};
       snap.forEach(d => { overrides[d.id.replace("project_", "")] = d.data(); });
       setLiveProjects(overrides);
     }));
 
-    // projects — radar + non-emaar projects
+    // projects â€” radar + non-emaar projects
     const baseIds = new Set(emaarProjects.map(p => String(p.id)));
     const baseNames = new Set(emaarProjects.map(p => (p.name || "").toLowerCase().trim()).filter(Boolean));
     unsubs.push(onSnapshot(collection(db, "projects"), (snap) => {
@@ -380,12 +443,12 @@ export function DXBProvider({ children }) {
       setLiveYields(merged);
     }));
 
-    // liveMarketData/latest — PPSF for 49 communities (cron writes every 6h)
+    // liveMarketData/latest â€” PPSF for 49 communities (cron writes every 6h)
     unsubs.push(onSnapshot(doc(db, "liveMarketData", "latest"), (snap) => {
       if (snap.exists()) setLiveMarketData(snap.data());
     }));
 
-    // marketData/eibor — EIBOR rates (cron writes daily)
+    // marketData/eibor â€” EIBOR rates (cron writes daily)
     unsubs.push(onSnapshot(doc(db, "marketData", "eibor"), (snap) => {
       if (snap.exists()) setEiborRates(snap.data());
     }));
@@ -395,7 +458,7 @@ export function DXBProvider({ children }) {
       if (snap.exists() && snap.data().rows?.length > 0) setNewsArticles(snap.data().rows);
     }));
 
-    // tabData/* — all cron-populated tab data
+    // tabData/* â€” all cron-populated tab data
     const TAB_DATA_KEYS = [
       { key: "developerHealth",     setter: setLiveDevHealth },
       { key: "dldVolumes",          setter: setLiveDLDVolumes },
@@ -414,21 +477,21 @@ export function DXBProvider({ children }) {
       }));
     });
 
-    // platformSettings/tabs — feature gating per tier
+    // platformSettings/tabs â€” feature gating per tier
     unsubs.push(onSnapshot(doc(db, "platformSettings", "tabs"), (snap) => {
       if (snap.exists()) setTabSettings(snap.data());
     }));
 
-    // adminSettings/platformStats — live platform stats (developers, projects, communities count)
+    // adminSettings/platformStats â€” live platform stats (developers, projects, communities count)
     unsubs.push(onSnapshot(doc(db, "adminSettings", "platformStats"), (snap) => {
       if (snap.exists()) {
         const data = snap.data();
         setPlatformStats(prev => ({ ...prev, ...data }));
       }
-      // If doc doesn't exist yet — Admin Panel will create it
+      // If doc doesn't exist yet â€” Admin Panel will create it
     }));
 
-    // developers collection — live developer registry
+    // developers collection â€” live developer registry
     unsubs.push(onSnapshot(collection(db, "developers"), (snap) => {
       if (!snap.size) return;
       const devs = [];
@@ -436,7 +499,7 @@ export function DXBProvider({ children }) {
       setLiveDevelopers(devs);
     }));
 
-    // aiInsights/latest — cached Claude insights
+    // aiInsights/latest â€” cached Claude insights
     unsubs.push(onSnapshot(doc(db, "aiInsights", "latest"), (snap) => {
       if (snap.exists() && snap.data().insights?.length > 0) {
         setAiInsights(snap.data().insights);
@@ -447,7 +510,7 @@ export function DXBProvider({ children }) {
     return () => unsubs.forEach(u => u());
   }, []);
 
-  // ── PLATFORM STATS SYNC ─────────────────────────────────────────────────────
+  // â”€â”€ PLATFORM STATS SYNC â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   // Writes real computed counts to Firestore adminSettings/platformStats
   // Ensures Admin Panel, App Dashboard, and Firestore all show same numbers
   React.useEffect(() => {
@@ -468,11 +531,11 @@ export function DXBProvider({ children }) {
       } catch (_) { /* non-critical */ }
     }, 4000);
     return () => clearTimeout(timer);
-  }, [db, allProjects, allCommunities, allDevelopers]);
+  }, [db, allProjects, allCommunities, allDevelopersStatic]);
 
-  // ─────────────────────────────────────────────────────────────────────────────
+  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   // SECTION 3: NOTIFICATIONS (auth-gated)
-  // ─────────────────────────────────────────────────────────────────────────────
+  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   useEffect(() => {
     if (!isLoggedIn) return;
@@ -486,9 +549,9 @@ export function DXBProvider({ children }) {
     return () => unsub();
   }, [isLoggedIn]);
 
-  // ─────────────────────────────────────────────────────────────────────────────
+  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   // SECTION 4: STOCK PRICE TICKER
-  // ─────────────────────────────────────────────────────────────────────────────
+  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   useEffect(() => {
     const fetchStock = async () => {
@@ -519,10 +582,10 @@ export function DXBProvider({ children }) {
     return () => clearInterval(interval);
   }, []);
 
-  // ─────────────────────────────────────────────────────────────────────────────
+  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   // SECTION 5: WRITE HELPERS
-  // Used by both Dashboard and Admin Panel — DRY, audited, consistent
-  // ─────────────────────────────────────────────────────────────────────────────
+  // Used by both Dashboard and Admin Panel â€” DRY, audited, consistent
+  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   // Save user portfolio
   const savePortfolio = useCallback(async (holdings) => {
@@ -532,7 +595,7 @@ export function DXBProvider({ children }) {
       await setDoc(doc(db, "portfolios", firebaseUser.uid), {
         holdings, updatedAt: new Date().toISOString()
       });
-    } catch (e) { notify("Could not save portfolio — check connection"); }
+    } catch (e) { notify("Could not save portfolio â€” check connection"); }
   }, [firebaseUser, notify]);
 
   // Toggle watchlist
@@ -565,7 +628,7 @@ export function DXBProvider({ children }) {
     } catch (e) { notify("Update failed: " + e.message); }
   }, [adminMode, userEmail, notify]);
 
-  // Seed all projects to Firestore (admin only — one-time operation)
+  // Seed all projects to Firestore (admin only â€” one-time operation)
   const seedAllProjectsToFirestore = useCallback(async (onProgress) => {
     if (!adminMode) return;
     const batch = writeBatch(db);
@@ -604,9 +667,9 @@ export function DXBProvider({ children }) {
     notify("Data refreshed");
   }, [notify]);
 
-  // ─────────────────────────────────────────────────────────────────────────────
+  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   // SECTION 6: TIER GATE
-  // ─────────────────────────────────────────────────────────────────────────────
+  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   const TIER_ORDER = { free: 0, pro_trial: 1, pro: 2, enterprise: 3, admin: 4 };
   const tierLevel = TIER_ORDER[adminMode ? "admin" : userTier] ?? 0;
@@ -625,18 +688,18 @@ export function DXBProvider({ children }) {
     return true;
   }, [adminMode, tabSettings, canAccess]);
 
-  // ─────────────────────────────────────────────────────────────────────────────
-  // CONTEXT VALUE — everything the app needs
-  // ─────────────────────────────────────────────────────────────────────────────
+  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // CONTEXT VALUE â€” everything the app needs
+  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   const value = {
-    // ── Auth
+    // â”€â”€ Auth
     isLoggedIn, firebaseUser, userName, userEmail,
     userTier, userRole, adminMode,
     authLoading, profileLoaded, isSuspended, isVerified, verifiedLevel,
     kycStatus, trialDaysLeft,
 
-    // ── App state
+    // â”€â”€ App state
     tab, setTab,
     selectedDeveloper, setSelectedDeveloper,
     selectedProject, setSelectedProject,
@@ -646,7 +709,7 @@ export function DXBProvider({ children }) {
     isRefreshing, globalRefresh,
     time,
 
-    // ── Live Firestore data (public)
+    // â”€â”€ Live Firestore data (public)
     liveProjects, extraProjects,
     liveMarketData, liveCommunityROI, liveCommunityIntel,
     liveYields, eiborRates,
@@ -658,7 +721,7 @@ export function DXBProvider({ children }) {
     platformStats,
     liveDevelopers,
 
-    // ── Computed from live + static
+    // â”€â”€ Computed from live + static
     activeProjects,
     projectsByDeveloper,
     currentDeveloper,
@@ -666,19 +729,19 @@ export function DXBProvider({ children }) {
     allDevelopersMerged,
     allCommunityCoords,
 
-    // ── Static data (seed layer)
+    // â”€â”€ Static data (seed layer)
     emaarProjects, emaarFinancials, emaarCommunities, emaarYields,
     topDevelopers, emaarRisks, dubaiMarket, communityIntel, communityROI,
 
-    // ── User data
+    // â”€â”€ User data
     myPortfolio, watchlist, myAlerts, notifications, unreadCount,
 
-    // ── Write helpers
+    // â”€â”€ Write helpers
     savePortfolio, toggleWatchlist,
     markNotificationRead, updateProject,
     seedAllProjectsToFirestore,
 
-    // ── Tier / access
+    // â”€â”€ Tier / access
     canAccess, isTabVisible, tierLevel,
   };
 
