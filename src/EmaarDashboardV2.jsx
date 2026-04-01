@@ -3394,22 +3394,7 @@ export default function EmaarDashboardV2() {
                   <div style={{ marginTop: 8, padding: "4px 8px", borderRadius: 6, background: T.surfaceAlt, display: "inline-block" }}>
                     <span style={{ fontSize: 10, color: T.textMuted }}>{p.tier}</span>
                   </div>
-                  {/* Unit Type Price Preview */}
-                  {UNIT_PRICING[p.community] && (
-                    <div style={{ marginTop:8, display:"flex", gap:4, flexWrap:"wrap" }}>
-                      {UNIT_PRICING[p.community].units.slice(0,3).map((u, i) => (
-                        <div key={i} style={{ fontSize:9, padding:"2px 6px", borderRadius:4, background:"rgba(0,191,165,0.08)", border:"1px solid rgba(0,191,165,0.2)", color:T.teal, whiteSpace:"nowrap" }}>
-                          <span style={{ fontWeight:700 }}>{u.t}</span>
-                          <span style={{ color:T.textMuted, marginLeft:3 }}>from AED {(u.from/1000000).toFixed(1)}M</span>
-                        </div>
-                      ))}
-                      {UNIT_PRICING[p.community].units.length > 3 && (
-                        <div style={{ fontSize:9, padding:"2px 6px", borderRadius:4, background:T.surfaceAlt, color:T.textMuted, border:`1px solid ${T.border}` }}>
-                          +{UNIT_PRICING[p.community].units.length - 3} more
-                        </div>
-                      )}
-                    </div>
-                  )}
+
                   {/* Action Buttons */}
                   <div style={{ display: "flex", gap: 6, marginTop: 10 }} onClick={e => e.stopPropagation()}>
                     <button type="button" onClick={(e) => { e.stopPropagation(); setSelectedProject(p); }} style={{ flex: 1, padding: "8px 0", background: "linear-gradient(135deg, rgba(212,168,67,0.15), rgba(212,168,67,0.08))", border: "1px solid rgba(212,168,67,0.3)", borderRadius: 8, color: T.gold, fontSize: 11, fontWeight: 700, textAlign: "center", textDecoration: "none", display: "flex", alignItems: "center", justifyContent: "center", gap: 4, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>
@@ -7973,55 +7958,85 @@ export default function EmaarDashboardV2() {
                 ))}
               </div>
 
-              {/* ─── PRICING BY UNIT TYPE (Point 6) ─── */}
+              {/* ─── PRICING BY UNIT TYPE — Project-Specific ─── */}
               {(() => {
-                const pricing = UNIT_PRICING[selectedProject_.community];
-                if (!pricing || !pricing.units || pricing.units.length === 0) return null;
-                return (
-                  <div style={{ marginBottom: 16 }}>
-                    <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:8 }}>
-                      <h3 style={{ fontSize:11, fontWeight:600, color:T.gold, letterSpacing:1, textTransform:"uppercase", margin:0 }}>
-                        💰 Pricing by Unit Type
-                      </h3>
-                      <span style={{ fontSize:9, color:T.textMuted }}>Q1 2026 · Source: Property Finder / Bayut</span>
-                    </div>
-                    <div style={{ borderRadius:10, overflow:"hidden", border:`1px solid ${T.border}` }}>
-                      <table style={{ width:"100%", borderCollapse:"collapse", fontSize:11 }}>
-                        <thead>
-                          <tr style={{ background:T.surfaceAlt }}>
-                            <th style={{ padding:"7px 10px", textAlign:"left",   color:T.gold, fontWeight:600, fontSize:10 }}>Unit Type</th>
-                            <th style={{ padding:"7px 10px", textAlign:"center", color:T.gold, fontWeight:600, fontSize:10 }}>Size (sqft)</th>
-                            <th style={{ padding:"7px 10px", textAlign:"center", color:T.gold, fontWeight:600, fontSize:10 }}>Price From</th>
-                            <th style={{ padding:"7px 10px", textAlign:"center", color:T.gold, fontWeight:600, fontSize:10 }}>Price To</th>
-                            <th style={{ padding:"7px 10px", textAlign:"center", color:T.gold, fontWeight:600, fontSize:10 }}>Yield</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {pricing.units.map((u, i) => (
-                            <tr key={i} style={{ borderTop:`1px solid ${T.border}`, background: i%2===0 ? "transparent" : "rgba(255,255,255,0.02)" }}>
-                              <td style={{ padding:"8px 10px", color:T.white, fontWeight:700 }}>{u.t}</td>
-                              <td style={{ padding:"8px 10px", textAlign:"center", color:T.textSecondary }}>{u.sf}</td>
-                              <td style={{ padding:"8px 10px", textAlign:"center", color:T.teal, fontWeight:700 }}>AED {(u.from/1000000).toFixed(1)}M</td>
-                              <td style={{ padding:"8px 10px", textAlign:"center", color:T.textPrimary }}>AED {(u.to/1000000).toFixed(1)}M</td>
-                              <td style={{ padding:"8px 10px", textAlign:"center" }}>
-                                <span style={{ padding:"2px 7px", borderRadius:4, fontSize:10, fontWeight:700, background:"rgba(16,185,129,0.15)", color:T.green }}>
-                                  {u.yield}%
-                                </span>
-                              </td>
+                const sp = selectedProject_;
+                // Use unitBreakdown if available (project-specific from data files)
+                if (sp.unitBreakdown && sp.unitBreakdown.length > 0) {
+                  return (
+                    <div style={{ marginBottom:16 }}>
+                      <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:8 }}>
+                        <h3 style={{ fontSize:11, fontWeight:600, color:T.gold, letterSpacing:1, textTransform:"uppercase", margin:0 }}>💰 Pricing by Unit Type</h3>
+                        <span style={{ fontSize:9, color:T.textMuted }}>Official developer pricing</span>
+                      </div>
+                      <div style={{ borderRadius:10, overflow:"hidden", border:`1px solid ${T.border}` }}>
+                        <table style={{ width:"100%", borderCollapse:"collapse", fontSize:11 }}>
+                          <thead>
+                            <tr style={{ background:T.surfaceAlt }}>
+                              <th style={{ padding:"7px 10px", textAlign:"left",   color:T.gold, fontWeight:600, fontSize:10 }}>Unit Type</th>
+                              <th style={{ padding:"7px 10px", textAlign:"center", color:T.gold, fontWeight:600, fontSize:10 }}>Size (sqft)</th>
+                              <th style={{ padding:"7px 10px", textAlign:"center", color:T.gold, fontWeight:600, fontSize:10 }}>Price From</th>
+                              <th style={{ padding:"7px 10px", textAlign:"center", color:T.gold, fontWeight:600, fontSize:10 }}>Price To</th>
                             </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                      <div style={{ padding:"6px 10px", background:T.surfaceAlt, borderTop:`1px solid ${T.border}`, display:"flex", justifyContent:"space-between" }}>
-                        <span style={{ fontSize:9, color:T.textMuted }}>Avg. price/sqft: AED {pricing.ppsf.toLocaleString()}</span>
-                        <span style={{ fontSize:9, color:T.textMuted }}>Prices for {selectedProject_.community} community — may vary by project & floor</span>
+                          </thead>
+                          <tbody>
+                            {sp.unitBreakdown.map((u, i) => (
+                              <tr key={i} style={{ borderTop:`1px solid ${T.border}`, background: i%2===0 ? "transparent" : "rgba(255,255,255,0.02)" }}>
+                                <td style={{ padding:"8px 10px", color:T.white, fontWeight:700 }}>{u.type}</td>
+                                <td style={{ padding:"8px 10px", textAlign:"center", color:T.textSecondary }}>{u.sqftFrom?.toLocaleString()} – {u.sqftTo?.toLocaleString()}</td>
+                                <td style={{ padding:"8px 10px", textAlign:"center", color:T.teal, fontWeight:700 }}>AED {(u.priceFrom/1e6).toFixed(1)}M</td>
+                                <td style={{ padding:"8px 10px", textAlign:"center", color:T.textPrimary }}>{u.priceTo ? `AED ${(u.priceTo/1e6).toFixed(1)}M` : "—"}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                        {sp.ppsf && (
+                          <div style={{ padding:"6px 10px", background:T.surfaceAlt, borderTop:`1px solid ${T.border}` }}>
+                            <span style={{ fontSize:9, color:T.textMuted }}>Price/sqft: AED {sp.ppsf.toLocaleString()} · {sp.name} official pricing</span>
+                          </div>
+                        )}
                       </div>
                     </div>
-                  </div>
-                );
+                  );
+                }
+                // Fallback: show single price row from project data
+                if (sp.price && sp.sizeFrom) {
+                  return (
+                    <div style={{ marginBottom:16 }}>
+                      <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:8 }}>
+                        <h3 style={{ fontSize:11, fontWeight:600, color:T.gold, letterSpacing:1, textTransform:"uppercase", margin:0 }}>💰 Project Pricing</h3>
+                        <a href={sp.officialUrl || sp.emaarUrl || "#"} target="_blank" rel="noopener noreferrer" style={{ fontSize:9, color:T.teal, textDecoration:"none" }}>View on developer site ↗</a>
+                      </div>
+                      <div style={{ borderRadius:10, overflow:"hidden", border:`1px solid ${T.border}` }}>
+                        <table style={{ width:"100%", borderCollapse:"collapse", fontSize:11 }}>
+                          <thead>
+                            <tr style={{ background:T.surfaceAlt }}>
+                              <th style={{ padding:"7px 10px", textAlign:"left",   color:T.gold, fontWeight:600, fontSize:10 }}>Unit Type</th>
+                              <th style={{ padding:"7px 10px", textAlign:"center", color:T.gold, fontWeight:600, fontSize:10 }}>Size (sqft)</th>
+                              <th style={{ padding:"7px 10px", textAlign:"center", color:T.gold, fontWeight:600, fontSize:10 }}>Starting Price</th>
+                              <th style={{ padding:"7px 10px", textAlign:"center", color:T.gold, fontWeight:600, fontSize:10 }}>Price/sqft</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <tr>
+                              <td style={{ padding:"8px 10px", color:T.white, fontWeight:700 }}>{sp.beds || "—"}</td>
+                              <td style={{ padding:"8px 10px", textAlign:"center", color:T.textSecondary }}>{sp.sizeFrom?.toLocaleString()} – {sp.sizeTo?.toLocaleString()}</td>
+                              <td style={{ padding:"8px 10px", textAlign:"center", color:T.teal, fontWeight:700 }}>AED {(sp.price/1e6).toFixed(1)}M</td>
+                              <td style={{ padding:"8px 10px", textAlign:"center", color:T.textPrimary }}>{sp.ppsf ? `AED ${sp.ppsf.toLocaleString()}` : "—"}</td>
+                            </tr>
+                          </tbody>
+                        </table>
+                        <div style={{ padding:"6px 10px", background:T.surfaceAlt, borderTop:`1px solid ${T.border}` }}>
+                          <span style={{ fontSize:9, color:T.textMuted }}>Starting price for {sp.name} · Full pricing on developer site</span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                }
+                return null;
               })()}
 
-              {/* Unit Inventory */}
+                            {/* Unit Inventory */}
               {selectedProject_.units && (
                 <div style={{ marginBottom: 16 }}>
                   <h3 style={{ fontSize: 11, fontWeight: 600, color: T.goldLight, letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>Unit Inventory & Availability</h3>
