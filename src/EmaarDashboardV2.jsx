@@ -7931,14 +7931,7 @@ export default function EmaarDashboardV2() {
                           🏡 Bayut
                         </a>
                       )}
-                      {selectedProject_.links.dubizzle && (
-                        <a href={selectedProject_.links.dubizzle} target="_blank" rel="noopener noreferrer"
-                          style={{ display:"flex", alignItems:"center", gap:4, padding:"4px 10px", borderRadius:6,
-                            background:"rgba(0,163,224,0.1)", border:"1px solid rgba(0,163,224,0.3)",
-                            fontSize:10, color:"#00A3E0", textDecoration:"none", fontWeight:600 }}>
-                          🔍 Dubizzle
-                        </a>
-                      )}
+
                     </div>
                   )}
 
