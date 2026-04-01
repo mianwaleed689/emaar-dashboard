@@ -25,7 +25,7 @@ import {
   roiPhases, emaarSegments, radarData, megaProjects,
   communityIntel, communityROI,
   // Unified cross-developer data
-  allProjects, allDevelopers, allCommunities, allCommunityCoords,
+  allProjects, allDevelopers as staticDevelopers, allCommunities, allCommunityCoords,
   getProjectsByDeveloper, getCommunityData, getDistrictCode, commKeyMap,
   developerById,
   // Individual developer data (via re-exports in data_master)

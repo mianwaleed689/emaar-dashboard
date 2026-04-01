@@ -516,7 +516,7 @@ export function DXBProvider({ children }) {
       } catch (_) { /* non-critical */ }
     }, 4000);
     return () => clearTimeout(timer);
-  }, [db, allProjects, allCommunities, allDevelopers]);
+  }, [db, allProjects, allCommunities, allDevelopersStatic]);
 
   // ─────────────────────────────────────────────────────────────────────────────
   // SECTION 3: NOTIFICATIONS (auth-gated)
