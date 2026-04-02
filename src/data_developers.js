@@ -81,7 +81,7 @@ export const allDevelopers = [
   {
     id: 'azizi',
     name: 'Azizi Developments',
-    officialUrl: 'https://azizidevelopments.com',
+    officialUrl: 'https://www.azizidevelopments.com',
     color: '#16A085',
     dld: {
       transactions: 1150,
@@ -135,7 +135,7 @@ export const allDevelopers = [
   {
     id: 'samana',
     name: 'Samana Developers',
-    officialUrl: 'https://samana.ae',
+    officialUrl: 'https://www.samanadevelopers.com',
     color: '#2980B9',
     dld: {
       transactions: 1020,
@@ -189,7 +189,7 @@ export const allDevelopers = [
   {
     id: 'meraas',
     name: 'Meraas',
-    officialUrl: 'https://meraas.com',
+    officialUrl: 'https://www.meraas.com',
     color: '#2C3E50',
     dld: {
       transactions: 386,
@@ -207,7 +207,7 @@ export const allDevelopers = [
   {
     id: 'ellington',
     name: 'Ellington Properties',
-    officialUrl: 'https://ellington.ae',
+    officialUrl: 'https://ellingtonproperties.ae',
     color: '#8E44AD',
     dld: {
       transactions: 356,
@@ -333,7 +333,7 @@ export const allDevelopers = [
   {
     id: 'mag',
     name: 'Mag Group',
-    officialUrl: 'https://magpd.ae',
+    officialUrl: 'https://mag.global',
     color: '#2C3E50',
     dld: {
       transactions: 80,
@@ -405,7 +405,7 @@ export const allDevelopers = [
   {
     id: 'reportage',
     name: 'Reportage Properties',
-    officialUrl: 'https://reportageproperties.com',
+    officialUrl: 'https://reportageuae.com',
     color: '#95A5A6',
     dld: {
       transactions: 14,

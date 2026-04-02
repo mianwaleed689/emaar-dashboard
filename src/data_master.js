@@ -127,7 +127,7 @@ export const allDevelopers = [
   },
   {
     id:           "damac",
-    officialUrl:  "https://www.damacgroup.com/properties",
+    officialUrl:  "https://www.damacproperties.com",
     name:         "DAMAC Properties",
     tier:         "T1",
     color:        "#C8A951",
@@ -144,7 +144,7 @@ export const allDevelopers = [
   },
   {
     id:           "sobha",
-    officialUrl:  "https://sobharealty.com/properties",
+    officialUrl:  "https://sobharealty.com",
     name:         "Sobha Realty",
     tier:         "T1",
     color:        T.purple,
@@ -161,7 +161,7 @@ export const allDevelopers = [
   },
   {
     id:           "nakheel",
-    officialUrl:  "https://www.nakheel.com/en/new-launches",
+    officialUrl:  "https://www.nakheel.com",
     name:         "Nakheel",
     tier:         "T1",
     color:        T.green,
@@ -178,7 +178,7 @@ export const allDevelopers = [
   },
   {
     id:           "meraas",
-    officialUrl:  "https://www.meraas.com/en/residential",
+    officialUrl:  "https://www.meraas.com/residential",
     name:         "Meraas",
     tier:         "T1",
     color:        T.orange,
@@ -195,7 +195,7 @@ export const allDevelopers = [
   },
   {
     id:           "aldar",
-    officialUrl:  "https://www.aldar.com/en/residential",
+    officialUrl:  "https://www.aldar.com",
     name:         "Aldar Properties",
     tier:         "T1",
     color:        "#06B6D4",
@@ -212,7 +212,7 @@ export const allDevelopers = [
   },
   {
     id:           "binghatti",
-    officialUrl:  "https://binghatti.ae",
+    officialUrl:  "https://binghatti.com",
     name:         "Binghatti",
     tier:         "T2",
     color:        T.blue,
