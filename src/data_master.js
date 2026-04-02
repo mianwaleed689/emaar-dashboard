@@ -602,7 +602,7 @@ export const allCommunities = [
 ];
 
 // Quick lookup: district code → community object
-export const communityByDistrict = Object.fromEntries((
+export const communityByDistrict = Object.fromEntries(
   (allCommunities||[]).filter(c => c && c.id).map(c => [c.id, c])
 );
 
