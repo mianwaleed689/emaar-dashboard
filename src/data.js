@@ -1,4 +1,4 @@
-/* ─── DXB ANALYTICS — MASTER DATA FILE ─── */
+﻿/* ─── DXB ANALYTICS — MASTER DATA FILE ─── */
 /* Source: Emaar THE BEAST Excel + DLD + DXBinteract + Yahoo Finance */
 
 // S16: T theme lives in src/theme.js — single source of truth
@@ -9,7 +9,7 @@ import { T } from "./theme";
 export { T } from "./theme";
 
 /* ─── 48 EMAAR PROJECTS (from Excel) ─── */
-export const emaarProjects = [
+export const emaarProjectsLegacy = [
   { id:1, name:"The Golf Residence", community:"Dubai Hills Estate", district:"DHE", type:"Apartments", beds:"1-3", status:"Under Construction", handover:"Q2 2026", price:1750000, sizeFrom:750, sizeTo:2200, ppsf:2333, payment:"20/30/50", construction:80, branded:false, brand:"—", tier:"Mid-Premium" , emaarUrl:"https://www.propertyfinder.ae/en/new-projects/emaar-properties/the-golf-residence" },
   { id:2, name:"Hills Park", community:"Dubai Hills Estate", district:"DHE", type:"Apartments", beds:"1-3", status:"Under Construction", handover:"Q2 2026", price:1210000, sizeFrom:650, sizeTo:1800, ppsf:1862, payment:"80/20", construction:75, branded:false, brand:"—", tier:"Mid-Market" , emaarUrl:"https://www.propertyfinder.ae/en/new-projects/emaar-properties/hills-park" },
   { id:3, name:"Golf Grand", community:"Dubai Hills Estate", district:"DHE", type:"Apartments", beds:"1-3", status:"Under Construction", handover:"Q1 2027", price:1529388, sizeFrom:700, sizeTo:2100, ppsf:2185, payment:"10/80/10", construction:96, branded:false, brand:"—", tier:"Mid-Premium" , emaarUrl:"https://www.propertyfinder.ae/en/new-projects/emaar-properties/golf-grand" },
