@@ -275,10 +275,7 @@ export function DXBProvider({ children }) {
       return [...allStatic, ...allNew];
     }
 
-    return [
-      ...(projectsByDeveloper[selectedDeveloper] || []),
-      // DLD projects excluded from project cards - used for stats only
-    ];
+    return (projectsByDeveloper[selectedDeveloper] || []).filter(p => !p.dldVerified);
   }, [selectedDeveloper, projectsByDeveloper, emaarActiveProjects]);
   const currentDeveloper = developerById[selectedDeveloper] || developerById["emaar"];
 
