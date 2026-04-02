@@ -2942,6 +2942,7 @@ export default function EmaarDashboardV2() {
             const dldMap   = Object.fromEntries(DLD_DEVS.map(d => [d.id, d]));
 
             // Merge: start with allDevelopersMerged (20 devs), augment with DLD stats
+            const platformIds = new Set((allDevelopersMerged||[]).map(d=>d.id));
             const MERGED_DEVS = (allDevelopersMerged || []).map(d => {
               const dld = dldMap[d.id] || {};
               return {
