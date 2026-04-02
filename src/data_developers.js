@@ -45,7 +45,7 @@ export const allDevelopers = [
   {
     id: 'binghatti',
     name: 'Binghatti',
-    officialUrl: 'https://www.binghatti.com',
+    officialUrl: 'https://binghatti.com',
     color: '#F39C12',
     dld: {
       transactions: 2285,
@@ -243,7 +243,7 @@ export const allDevelopers = [
   {
     id: 'wadan',
     name: 'Wadan Properties',
-    officialUrl: 'https://wadanproperties.com',
+    officialUrl: 'https://www.wadan.ae',
     color: '#4A235A',
     dld: {
       transactions: 220,
@@ -369,7 +369,7 @@ export const allDevelopers = [
   {
     id: 'pantheon',
     name: 'Pantheon Development',
-    officialUrl: 'https://pantheondubai.com',
+    officialUrl: 'https://pantheondevelopment.ae',
     color: '#D35400',
     dld: {
       transactions: 71,
@@ -423,7 +423,7 @@ export const allDevelopers = [
   {
     id: 'select',
     name: 'Select Group',
-    officialUrl: 'https://selectgroupme.com',
+    officialUrl: 'https://www.select-group.ae',
     color: '#7F8C8D',
     dld: {
       transactions: 6,

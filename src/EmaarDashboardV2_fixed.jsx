@@ -2386,7 +2386,7 @@ export default function EmaarDashboardV2() {
 
         {/* Navigation */}
         <nav role="navigation" aria-label="Main navigation" style={{ flex: 1, padding: "16px 12px", display: "flex", flexDirection: "column", gap: 3, overflowY: "auto", overflowX: "hidden", minHeight: 0 }}>
-          <div style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, letterSpacing: 1.5, textTransform: "uppercase", padding: "0 16px 8px", flexShrink: 0 }}>Emaar Properties</div>
+          <div style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, letterSpacing: 1.5, textTransform: "uppercase", padding: "0 16px 8px", flexShrink: 0 }}>{currentDeveloper?.name || "DXB Analytics"}</div>
           <div role="tablist" aria-label="Dashboard sections" style={{ display: "contents" }}>
           {TABS.filter(t => {
             const s = tabSettings[t.key];
@@ -3327,51 +3327,35 @@ export default function EmaarDashboardV2() {
                   <button type='button' onClick={() => { setProjectSearch(''); setProjectFilter('All'); setProjectTier('All'); setProjectHandover('All'); setProjectPriceMax(20); setProjectTypeFilter('All'); setProjectUnitFilter('All'); setProjectPaymentFilter('All'); setProjectStatusFilter('All'); }} style={{ padding: '8px 14px', borderRadius: 8, border: '1px solid rgba(239,68,68,0.3)', background: 'rgba(239,68,68,0.08)', color: T.red, fontSize: 12, cursor: 'pointer' }}>Clear Filters</button>
                 )}
               </div>
-              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-                <span style={{ fontSize: 10, color: T.textMuted, letterSpacing: 1, textTransform: 'uppercase' }}>Area</span>
-                {['All', ...([...new Set(activeProjects.map(p => p.district || (p.community ? (activeCommunities.find(c=>c.name===p.community)?.id || p.community.split(" ").map(w=>w[0]).join("").slice(0,3)) : null)).filter(Boolean))].slice(0,10)), 'Branded'].map(f => (
-                  <button type='button' key={f} onClick={() => setProjectFilter(f)} style={{ padding: '6px 12px', borderRadius: 8, border: '1px solid '+(projectFilter===f ? T.gold : T.border), background: projectFilter===f ? T.goldGlow : 'transparent', color: projectFilter===f ? T.gold : T.textSecondary, fontSize: 11, fontWeight: projectFilter===f ? 600 : 400, cursor: 'pointer', transition: 'all 0.2s' }}>{f}</button>
+              {/* Filter Row 1: Search-linked quick filters */}
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center', padding: '10px 14px', background: T.surface, borderRadius: 10, border: '1px solid ' + T.border }}>
+                <span style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, letterSpacing: 1.2, textTransform: 'uppercase', marginRight: 4, whiteSpace: 'nowrap' }}>Community</span>
+                {['All', ...[...new Set(activeProjects.map(p => p.community).filter(Boolean))].slice(0,7)].map(f => (
+                  <button type='button' key={f} onClick={() => setProjectFilter(f)} style={{ padding: '4px 10px', borderRadius: 20, border: '1px solid '+(projectFilter===f ? T.gold : T.border), background: projectFilter===f ? 'rgba(212,168,67,0.12)' : 'transparent', color: projectFilter===f ? T.gold : T.textSecondary, fontSize: 11, fontWeight: projectFilter===f ? 600 : 400, cursor: 'pointer', whiteSpace: 'nowrap' }}>{f}</button>
+                ))}
+                <span style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, letterSpacing: 1.2, textTransform: 'uppercase', marginLeft: 8, marginRight: 4, whiteSpace: 'nowrap' }}>Status</span>
+                {['All','Off Plan','Under Construction','Ready'].map(s => (
+                  <button type='button' key={s} onClick={() => setProjectStatusFilter(s)} style={{ padding: '4px 10px', borderRadius: 20, border: '1px solid '+(projectStatusFilter===s ? T.green : T.border), background: projectStatusFilter===s ? 'rgba(16,185,129,0.1)' : 'transparent', color: projectStatusFilter===s ? T.green : T.textSecondary, fontSize: 11, fontWeight: projectStatusFilter===s ? 600 : 400, cursor: 'pointer', whiteSpace: 'nowrap' }}>{s}</button>
                 ))}
               </div>
-              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-                <span style={{ fontSize: 10, color: T.textMuted, letterSpacing: 1, textTransform: 'uppercase' }}>Tier</span>
-                {['All','Affordable','Mid-Market','Mid-Premium','Premium','Luxury','Ultra-Luxury','Luxury Branded','Ultra-Lux Branded'].map(t => (
-                  <button type='button' key={t} onClick={() => setProjectTier(t)} style={{ padding: '6px 12px', borderRadius: 8, border: '1px solid '+(projectTier===t ? T.teal : T.border), background: projectTier===t ? 'rgba(0,191,165,0.1)' : 'transparent', color: projectTier===t ? T.teal : T.textSecondary, fontSize: 11, fontWeight: projectTier===t ? 600 : 400, cursor: 'pointer', transition: 'all 0.2s' }}>{t}</button>
-                ))}
-              </div>
-              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-                <span style={{ fontSize: 10, color: T.textMuted, letterSpacing: 1, textTransform: 'uppercase' }}>Handover</span>
+              {/* Filter Row 2: Handover + Type + Price */}
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center', padding: '10px 14px', background: T.surface, borderRadius: 10, border: '1px solid ' + T.border }}>
+                <span style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, letterSpacing: 1.2, textTransform: 'uppercase', marginRight: 4, whiteSpace: 'nowrap' }}>Handover</span>
                 {['All','2025','2026','2027','2028','2029','2030+'].map(y => (
-                  <button type='button' key={y} onClick={() => setProjectHandover(y)} style={{ padding: '6px 12px', borderRadius: 8, border: '1px solid '+(projectHandover===y ? T.purple : T.border), background: projectHandover===y ? 'rgba(139,92,246,0.1)' : 'transparent', color: projectHandover===y ? T.purple : T.textSecondary, fontSize: 11, fontWeight: projectHandover===y ? 600 : 400, cursor: 'pointer', transition: 'all 0.2s' }}>{y}</button>
+                  <button type='button' key={y} onClick={() => setProjectHandover(y)} style={{ padding: '4px 10px', borderRadius: 20, border: '1px solid '+(projectHandover===y ? T.purple : T.border), background: projectHandover===y ? 'rgba(139,92,246,0.1)' : 'transparent', color: projectHandover===y ? T.purple : T.textSecondary, fontSize: 11, fontWeight: projectHandover===y ? 600 : 400, cursor: 'pointer', whiteSpace: 'nowrap' }}>{y}</button>
                 ))}
-              </div>
-              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-                <span style={{ fontSize: 10, color: T.textMuted, letterSpacing: 1, textTransform: 'uppercase' }}>Type</span>
-                {['All','Apartment','Villa','Townhouse','Penthouse','Mixed-Use','Master Dev'].map(t => (
-                  <button type='button' key={t} onClick={() => setProjectTypeFilter(t)} style={{ padding: '6px 12px', borderRadius: 8, border: '1px solid '+(projectTypeFilter===t ? T.teal : T.border), background: projectTypeFilter===t ? 'rgba(0,191,165,0.1)' : 'transparent', color: projectTypeFilter===t ? T.teal : T.textSecondary, fontSize: 11, fontWeight: projectTypeFilter===t ? 600 : 400, cursor: 'pointer', transition: 'all 0.2s' }}>{t}</button>
+                <span style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, letterSpacing: 1.2, textTransform: 'uppercase', marginLeft: 8, marginRight: 4, whiteSpace: 'nowrap' }}>Type</span>
+                {['All','Apartment','Villa','Townhouse','Penthouse'].map(t => (
+                  <button type='button' key={t} onClick={() => setProjectTypeFilter(t)} style={{ padding: '4px 10px', borderRadius: 20, border: '1px solid '+(projectTypeFilter===t ? T.teal : T.border), background: projectTypeFilter===t ? 'rgba(0,191,165,0.1)' : 'transparent', color: projectTypeFilter===t ? T.teal : T.textSecondary, fontSize: 11, fontWeight: projectTypeFilter===t ? 600 : 400, cursor: 'pointer', whiteSpace: 'nowrap' }}>{t}</button>
                 ))}
-              </div>
-              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-                <span style={{ fontSize: 10, color: T.textMuted, letterSpacing: 1, textTransform: 'uppercase' }}>Units</span>
-                {['All','Studio','1BR','2BR','3BR','4BR+','Villa','Penthouse'].map(u => (
-                  <button type='button' key={u} onClick={() => setProjectUnitFilter(u)} style={{ padding: '6px 12px', borderRadius: 8, border: '1px solid '+(projectUnitFilter===u ? '#F59E0B' : T.border), background: projectUnitFilter===u ? 'rgba(245,158,11,0.1)' : 'transparent', color: projectUnitFilter===u ? '#F59E0B' : T.textSecondary, fontSize: 11, fontWeight: projectUnitFilter===u ? 600 : 400, cursor: 'pointer', transition: 'all 0.2s' }}>{u}</button>
-                ))}
-              </div>
-              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-                <span style={{ fontSize: 10, color: T.textMuted, letterSpacing: 1, textTransform: 'uppercase' }}>Payment</span>
-                {['All','10/90','20/80','30/70','40/60','50/50','60/40','70/30','80/20','Post-HO'].map(pp => (
-                  <button type='button' key={pp} onClick={() => setProjectPaymentFilter(pp)} style={{ padding: '6px 12px', borderRadius: 8, border: '1px solid '+(projectPaymentFilter===pp ? T.green : T.border), background: projectPaymentFilter===pp ? 'rgba(16,185,129,0.1)' : 'transparent', color: projectPaymentFilter===pp ? T.green : T.textSecondary, fontSize: 11, fontWeight: projectPaymentFilter===pp ? 600 : 400, cursor: 'pointer', transition: 'all 0.2s' }}>{pp}</button>
-                ))}
-              </div>
-              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-                <span style={{ fontSize: 10, color: T.textMuted, letterSpacing: 1, textTransform: 'uppercase' }}>Status</span>
-                {['All','Off Plan','Under Construction','Delivered','Ready'].map(s => (
-                  <button type='button' key={s} onClick={() => setProjectStatusFilter(s)} style={{ padding: '6px 12px', borderRadius: 8, border: '1px solid '+(projectStatusFilter===s ? T.red : T.border), background: projectStatusFilter===s ? 'rgba(239,68,68,0.1)' : 'transparent', color: projectStatusFilter===s ? T.red : T.textSecondary, fontSize: 11, fontWeight: projectStatusFilter===s ? 600 : 400, cursor: 'pointer', transition: 'all 0.2s' }}>{s}</button>
+                <span style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, letterSpacing: 1.2, textTransform: 'uppercase', marginLeft: 8, marginRight: 4, whiteSpace: 'nowrap' }}>Units</span>
+                {['All','Studio','1BR','2BR','3BR','4BR+'].map(u => (
+                  <button type='button' key={u} onClick={() => setProjectUnitFilter(u)} style={{ padding: '4px 10px', borderRadius: 20, border: '1px solid '+(projectUnitFilter===u ? '#F59E0B' : T.border), background: projectUnitFilter===u ? 'rgba(245,158,11,0.1)' : 'transparent', color: projectUnitFilter===u ? '#F59E0B' : T.textSecondary, fontSize: 11, fontWeight: projectUnitFilter===u ? 600 : 400, cursor: 'pointer', whiteSpace: 'nowrap' }}>{u}</button>
                 ))}
               </div>
             </div>
 
-            {/* Project Cards */}
+                        {/* Project Cards */}
             {projectsLoading ? <LoadingSkeleton rows={6} cols={3} /> : (
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 12, marginTop: 16 }}>
               {activeProjects
@@ -3438,7 +3422,7 @@ export default function EmaarDashboardV2() {
                             nakheel:   "https://www.nakheel.com/en/new-launches",
                             meraas:    "https://meraas.com/en",
                             aldar:     "https://www.aldar.com/en/developments/",
-                            binghatti: "https://binghatti.com/projects/",
+                            binghatti: "https://binghatti.com/projects/",azizi:"https://www.azizidevelopments.com",danube:"https://danubeproperties.com",samana:"https://www.samanadevelopers.com",beyond:"https://beyonddevelopments.ae",imtiaz:"https://imtiaz.ae",ellington:"https://ellingtonproperties.ae",iman:"https://www.imandevelopers.com",reportage:"https://reportageuae.com",wadan:"https://www.wadan.ae",wasl:"https://www.wasl.ae",mag:"https://mag.global",vincitore:"https://vincitore.ae",nshama:"https://nshama.ae"
                           };
                           const url = p.officialUrl || p.emaarUrl || devPortals[p.developerId || currentDeveloper?.id];
                           if (!url) return null;
@@ -3538,7 +3522,7 @@ export default function EmaarDashboardV2() {
                       Full Details
                     </button>
                     {(() => {
-                      const devPortals = { emaar:"https://properties.emaar.com/en/latest-launches/", damac:"https://www.damacproperties.com/en/properties/", sobha:"https://sobharealty.com/properties/", nakheel:"https://www.nakheel.com/en/new-launches", meraas:"https://meraas.com/en", aldar:"https://www.aldar.com/en/developments/", binghatti:"https://binghatti.com/projects/" };
+                      const devPortals = { emaar:"https://properties.emaar.com/en/latest-launches/", damac:"https://www.damacproperties.com/en/properties/", sobha:"https://sobharealty.com/properties/", nakheel:"https://www.nakheel.com/en/new-launches", meraas:"https://meraas.com/en", aldar:"https://www.aldar.com/en/developments/", binghatti:"https://binghatti.com/projects/",azizi:"https://www.azizidevelopments.com",danube:"https://danubeproperties.com",samana:"https://www.samanadevelopers.com",beyond:"https://beyonddevelopments.ae",imtiaz:"https://imtiaz.ae",ellington:"https://ellingtonproperties.ae",iman:"https://www.imandevelopers.com",reportage:"https://reportageuae.com",wadan:"https://www.wadan.ae",wasl:"https://www.wasl.ae",mag:"https://mag.global",vincitore:"https://vincitore.ae",nshama:"https://nshama.ae",omniyat:"https://www.omniyat.com",pantheon:"https://pantheondevelopment.ae",select:"https://www.select-group.ae"};
                       const url = p.officialUrl || p.emaarUrl || devPortals[p.developerId || currentDeveloper?.id];
                       if (!url) return null;
                       const isSpecific = !!(p.officialUrl || p.emaarUrl);
@@ -3574,7 +3558,7 @@ export default function EmaarDashboardV2() {
             )}
 
             {/* Community Summary */}
-            <Section title={`${activeCommunities.length || [...new Set(activeProjects.map(p=>p.community).filter(Boolean))].length} Communities — ${currentDeveloper?.name || "Emaar"}`} sub={`${activeCommunities.length || [...new Set(activeProjects.map(p=>p.community).filter(Boolean))].length} master-planned communities · Click for details`}>
+            <Section title={`${activeCommunities.length || [...new Set(activeProjects.map(p=>p.community).filter(Boolean))].length} Communities — ${currentDeveloper?.name || "Emaar"}`} sub={`${[...new Set(activeProjects.map(p=>p.community).filter(Boolean))].length} communities · Click for details`}>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 12, marginTop: 16 }}>
                 {(activeCommunities.length > 0 ? activeCommunities : emaarCommunities.filter(c => c.name).map(c => ({ id: c.district, name: c.name, avgPpsf: c.avgPpsf, avgYield: c.avgYield, projectCount: c.projects, isLive: false }))).map((c, i) => (
                   <div key={c.id || c.district} className="chart-box fade-up" style={{ animationDelay: `${i*0.05}s`, padding: 14, cursor: "pointer", transition: "border 0.2s" }} onClick={() => setSelectedCommunity(c.name)} title="Click for full community details">
@@ -8034,7 +8018,7 @@ export default function EmaarDashboardV2() {
                   <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
                     <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: 22, fontWeight: 900, color: T.gold, margin: 0 }}>{selectedProject_.name}</h2>
                     {(() => {
-                      const devPortals = { emaar:"https://properties.emaar.com/en/latest-launches/", damac:"https://www.damacproperties.com/en/properties/", sobha:"https://sobharealty.com/properties/", nakheel:"https://www.nakheel.com/en/new-launches", meraas:"https://meraas.com/en", aldar:"https://www.aldar.com/en/developments/", binghatti:"https://binghatti.com/projects/" };
+                      const devPortals = { emaar:"https://properties.emaar.com/en/latest-launches/", damac:"https://www.damacproperties.com/en/properties/", sobha:"https://sobharealty.com/properties/", nakheel:"https://www.nakheel.com/en/new-launches", meraas:"https://meraas.com/en", aldar:"https://www.aldar.com/en/developments/", binghatti:"https://binghatti.com/projects/",azizi:"https://www.azizidevelopments.com",danube:"https://danubeproperties.com",samana:"https://www.samanadevelopers.com",beyond:"https://beyonddevelopments.ae",imtiaz:"https://imtiaz.ae",ellington:"https://ellingtonproperties.ae",iman:"https://www.imandevelopers.com",reportage:"https://reportageuae.com",wadan:"https://www.wadan.ae",wasl:"https://www.wasl.ae",mag:"https://mag.global",vincitore:"https://vincitore.ae",nshama:"https://nshama.ae",omniyat:"https://www.omniyat.com",pantheon:"https://pantheondevelopment.ae",select:"https://www.select-group.ae"};
                       const url = selectedProject_.officialUrl || selectedProject_.emaarUrl || devPortals[selectedProject_.developerId];
                       const isSpecific = !!(selectedProject_.officialUrl || selectedProject_.emaarUrl);
                       return url ? (
@@ -8536,8 +8520,8 @@ export default function EmaarDashboardV2() {
 
                 {/* Row 2: Official Developer Link */}
                 {(() => {
-                  const devPortals = { emaar:"https://properties.emaar.com/en/latest-launches/", damac:"https://www.damacproperties.com/en/properties/", sobha:"https://sobharealty.com/properties/", nakheel:"https://www.nakheel.com/en/new-launches", meraas:"https://meraas.com/en", aldar:"https://www.aldar.com/en/developments/", binghatti:"https://binghatti.com/projects/" };
-                  const devNames = { emaar:"Emaar Properties", damac:"DAMAC Properties", sobha:"Sobha Realty", nakheel:"Nakheel", meraas:"Meraas", aldar:"Aldar Properties", binghatti:"Binghatti" };
+                  const devPortals = { emaar:"https://properties.emaar.com/en/latest-launches/", damac:"https://www.damacproperties.com/en/properties/", sobha:"https://sobharealty.com/properties/", nakheel:"https://www.nakheel.com/en/new-launches", meraas:"https://meraas.com/en", aldar:"https://www.aldar.com/en/developments/", binghatti:"https://binghatti.com/projects/",azizi:"https://www.azizidevelopments.com",danube:"https://danubeproperties.com",samana:"https://www.samanadevelopers.com",beyond:"https://beyonddevelopments.ae",imtiaz:"https://imtiaz.ae",ellington:"https://ellingtonproperties.ae",iman:"https://www.imandevelopers.com",reportage:"https://reportageuae.com",wadan:"https://www.wadan.ae",wasl:"https://www.wasl.ae",mag:"https://mag.global",vincitore:"https://vincitore.ae",nshama:"https://nshama.ae",omniyat:"https://www.omniyat.com",pantheon:"https://pantheondevelopment.ae",select:"https://www.select-group.ae"};
+                  const devNames = { emaar:"Emaar Properties", damac:"DAMAC Properties", sobha:"Sobha Realty", nakheel:"Nakheel", meraas:"Meraas", aldar:"Aldar Properties", binghatti:"Binghatti", azizi:"Azizi Developments", danube:"Danube Properties", samana:"Samana Developers", beyond:"Beyond Developments", imtiaz:"Imtiaz Developments", ellington:"Ellington Properties", iman:"Iman Developers", reportage:"Reportage Properties", wadan:"Wadan Developments", wasl:"Wasl Properties", mag:"MAG Group", vincitore:"Vincitore", nshama:"Nshama", omniyat:"Omniyat", pantheon:"Pantheon Development", select:"Select Group" };
                   const url = selectedProject_.officialUrl || selectedProject_.emaarUrl || devPortals[selectedProject_.developerId] || devPortals[currentDeveloper?.id];
                   const devName = devNames[selectedProject_.developerId] || currentDeveloper?.name || "Developer";
                   return url ? (
@@ -8658,7 +8642,7 @@ export default function EmaarDashboardV2() {
                     <div class="section-title">Investment Summary</div>
                     <div class="highlight">
                       <h3>DXB Analytics Assessment</h3>
-                      <p>${p.name} by Emaar Properties is a ${p.status === "Completed" ? "completed" : "under-development"} project in ${p.community}, Dubai. ${p.branded ? `As a branded residence (${p.brand}), it commands premium pricing and exceptional rental premiums typically 20-35% above comparable non-branded units. ` : ""}With Dubai's real estate market growing consistently, ${p.community} has delivered strong investor returns. The project's ${p.handover ? `expected handover in ${p.handover}` : "upcoming handover"} aligns with Dubai's infrastructure growth cycle.</p>
+                      <p>${p.name} by ${currentDeveloper?.name || p.developer || "the developer"} is a ${p.status === "Completed" ? "completed" : "under-development"} project in ${p.community}, Dubai. ${p.branded ? `As a branded residence (${p.brand}), it commands premium pricing and exceptional rental premiums typically 20-35% above comparable non-branded units. ` : ""}With Dubai's real estate market growing consistently, ${p.community} has delivered strong investor returns. The project's ${p.handover ? `expected handover in ${p.handover}` : "upcoming handover"} aligns with Dubai's infrastructure growth cycle.</p>
                     </div>
                   </div>
 
