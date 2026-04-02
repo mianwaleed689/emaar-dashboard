@@ -3312,56 +3312,157 @@ export default function EmaarDashboardV2() {
             </Section>
 
             {/* Search & Filters */}
-            <div style={{ marginTop: 20, display: 'flex', flexDirection: 'column', gap: 10 }}>
-              <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
-                <div style={{ position: 'relative', flex: '1 1 250px', maxWidth: 350 }}>
-                  <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: T.textMuted }}>{Icons.search}</span>
-                  <input value={projectSearch} onChange={e => { setProjectSearch(e.target.value); setProjectPage(1); }} placeholder='Search projects or community...' style={{ width: '100%', padding: '10px 12px 10px 36px', background: T.surface, border: '1px solid '+T.border, borderRadius: 10, color: T.textPrimary, fontSize: 13, fontFamily: 'Outfit, sans-serif', outline: 'none' }} />
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: '1 1 200px', background: T.surface, border: '1px solid '+T.border, borderRadius: 10, padding: '8px 14px' }}>
-                  <span style={{ fontSize: 11, color: T.textMuted, whiteSpace: 'nowrap' }}>Max Price</span>
-                  <input type='range' min={1} max={20} step={0.5} value={projectPriceMax} onChange={e => setProjectPriceMax(Number(e.target.value))} style={{ flex: 1, accentColor: T.gold, cursor: 'pointer' }} />
-                  <span style={{ fontSize: 12, fontWeight: 700, color: T.gold, whiteSpace: 'nowrap', minWidth: 60 }}>{projectPriceMax >= 20 ? 'Any' : 'AED '+projectPriceMax+'M'}</span>
-                </div>
-                {(projectSearch || projectFilter !== 'All' || projectTier !== 'All' || projectHandover !== 'All' || projectPriceMax < 20 || projectTypeFilter !== 'All' || projectUnitFilter !== 'All' || projectPaymentFilter !== 'All' || projectStatusFilter !== 'All') && (
-                  <button type='button' onClick={() => { setProjectSearch(''); setProjectFilter('All'); setProjectTier('All'); setProjectHandover('All'); setProjectPriceMax(20); setProjectTypeFilter('All'); setProjectUnitFilter('All'); setProjectPaymentFilter('All'); setProjectStatusFilter('All'); }} style={{ padding: '8px 14px', borderRadius: 8, border: '1px solid rgba(239,68,68,0.3)', background: 'rgba(239,68,68,0.08)', color: T.red, fontSize: 12, cursor: 'pointer' }}>Clear Filters</button>
-                )}
-              </div>
-              {/* Filter Row 1: Search-linked quick filters */}
-              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center', padding: '10px 14px', background: T.surface, borderRadius: 10, border: '1px solid ' + T.border }}>
-                <span style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, letterSpacing: 1.2, textTransform: 'uppercase', marginRight: 4, whiteSpace: 'nowrap' }}>Community</span>
-                {['All', ...[...new Set(activeProjects.map(p => p.community).filter(Boolean))].slice(0,7)].map(f => (
-                  <button type='button' key={f} onClick={() => setProjectFilter(f)} style={{ padding: '4px 10px', borderRadius: 20, border: '1px solid '+(projectFilter===f ? T.gold : T.border), background: projectFilter===f ? 'rgba(212,168,67,0.12)' : 'transparent', color: projectFilter===f ? T.gold : T.textSecondary, fontSize: 11, fontWeight: projectFilter===f ? 600 : 400, cursor: 'pointer', whiteSpace: 'nowrap' }}>{f}</button>
-                ))}
-                <span style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, letterSpacing: 1.2, textTransform: 'uppercase', marginLeft: 8, marginRight: 4, whiteSpace: 'nowrap' }}>Status</span>
-                {['All','Off Plan','Under Construction','Ready'].map(s => (
-                  <button type='button' key={s} onClick={() => setProjectStatusFilter(s)} style={{ padding: '4px 10px', borderRadius: 20, border: '1px solid '+(projectStatusFilter===s ? T.green : T.border), background: projectStatusFilter===s ? 'rgba(16,185,129,0.1)' : 'transparent', color: projectStatusFilter===s ? T.green : T.textSecondary, fontSize: 11, fontWeight: projectStatusFilter===s ? 600 : 400, cursor: 'pointer', whiteSpace: 'nowrap' }}>{s}</button>
-                ))}
-              </div>
-              {/* Filter Row 2: Handover + Type + Price */}
-              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center', padding: '10px 14px', background: T.surface, borderRadius: 10, border: '1px solid ' + T.border }}>
-                <span style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, letterSpacing: 1.2, textTransform: 'uppercase', marginRight: 4, whiteSpace: 'nowrap' }}>Handover</span>
-                {['All','2025','2026','2027','2028','2029','2030+'].map(y => (
-                  <button type='button' key={y} onClick={() => setProjectHandover(y)} style={{ padding: '4px 10px', borderRadius: 20, border: '1px solid '+(projectHandover===y ? T.purple : T.border), background: projectHandover===y ? 'rgba(139,92,246,0.1)' : 'transparent', color: projectHandover===y ? T.purple : T.textSecondary, fontSize: 11, fontWeight: projectHandover===y ? 600 : 400, cursor: 'pointer', whiteSpace: 'nowrap' }}>{y}</button>
-                ))}
-                <span style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, letterSpacing: 1.2, textTransform: 'uppercase', marginLeft: 8, marginRight: 4, whiteSpace: 'nowrap' }}>Type</span>
-                {['All','Apartment','Villa','Townhouse','Penthouse'].map(t => (
-                  <button type='button' key={t} onClick={() => setProjectTypeFilter(t)} style={{ padding: '4px 10px', borderRadius: 20, border: '1px solid '+(projectTypeFilter===t ? T.teal : T.border), background: projectTypeFilter===t ? 'rgba(0,191,165,0.1)' : 'transparent', color: projectTypeFilter===t ? T.teal : T.textSecondary, fontSize: 11, fontWeight: projectTypeFilter===t ? 600 : 400, cursor: 'pointer', whiteSpace: 'nowrap' }}>{t}</button>
-                ))}
-                <span style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, letterSpacing: 1.2, textTransform: 'uppercase', marginLeft: 8, marginRight: 4, whiteSpace: 'nowrap' }}>Units</span>
-                {['All','Studio','1BR','2BR','3BR','4BR+'].map(u => (
-                  <button type='button' key={u} onClick={() => setProjectUnitFilter(u)} style={{ padding: '4px 10px', borderRadius: 20, border: '1px solid '+(projectUnitFilter===u ? '#F59E0B' : T.border), background: projectUnitFilter===u ? 'rgba(245,158,11,0.1)' : 'transparent', color: projectUnitFilter===u ? '#F59E0B' : T.textSecondary, fontSize: 11, fontWeight: projectUnitFilter===u ? 600 : 400, cursor: 'pointer', whiteSpace: 'nowrap' }}>{u}</button>
-                ))}
-              </div>
-            </div>
+            {(() => {
+              // Dynamic communities from THIS developer's actual projects only
+              const devCommunities = [...new Set(activeProjects.map(p => p.community).filter(Boolean))];
+              // Dynamic handover years from actual projects
+              const devYears = [...new Set(activeProjects.map(p => {
+                const m = (p.handover || '').match(/\d{4}/);
+                return m ? m[0] : null;
+              }).filter(Boolean))].sort();
+              const handoverYears = ['All', ...devYears.filter(y => parseInt(y) >= 2025)].concat(devYears.some(y => parseInt(y) >= 2030) ? [] : []);
 
-                        {/* Project Cards */}
+              return (
+              <div style={{ marginTop: 20, display: 'flex', flexDirection: 'column', gap: 8 }}>
+
+                {/* Row 0: Search + Price + Clear */}
+                <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+                  <div style={{ position: 'relative', flex: '1 1 260px', maxWidth: 380 }}>
+                    <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: T.textMuted }}>{Icons.search}</span>
+                    <input value={projectSearch} onChange={e => { setProjectSearch(e.target.value); setProjectPage(1); }}
+                      placeholder={`Search ${currentDeveloper?.name || ''} projects or community...`}
+                      style={{ width: '100%', padding: '10px 12px 10px 36px', background: T.surface, border: '1px solid '+T.border, borderRadius: 10, color: T.textPrimary, fontSize: 13, fontFamily: 'Outfit, sans-serif', outline: 'none', boxSizing: 'border-box' }} />
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: '1 1 180px', background: T.surface, border: '1px solid '+T.border, borderRadius: 10, padding: '8px 14px' }}>
+                    <span style={{ fontSize: 11, color: T.textMuted, whiteSpace: 'nowrap' }}>Max Price</span>
+                    <input type='range' min={1} max={20} step={0.5} value={projectPriceMax}
+                      onChange={e => setProjectPriceMax(Number(e.target.value))}
+                      style={{ flex: 1, accentColor: T.gold, cursor: 'pointer' }} />
+                    <span style={{ fontSize: 12, fontWeight: 700, color: T.gold, whiteSpace: 'nowrap', minWidth: 50 }}>
+                      {projectPriceMax >= 20 ? 'Any' : 'AED '+projectPriceMax+'M'}
+                    </span>
+                  </div>
+                  {(projectSearch || projectFilter !== 'All' || projectTier !== 'All' || projectHandover !== 'All' || projectPriceMax < 20 || projectTypeFilter !== 'All' || projectUnitFilter !== 'All' || projectPaymentFilter !== 'All' || projectStatusFilter !== 'All') && (
+                    <button type='button' onClick={() => { setProjectSearch(''); setProjectFilter('All'); setProjectTier('All'); setProjectHandover('All'); setProjectPriceMax(20); setProjectTypeFilter('All'); setProjectUnitFilter('All'); setProjectPaymentFilter('All'); setProjectStatusFilter('All'); }}
+                      style={{ padding: '8px 16px', borderRadius: 8, border: '1px solid rgba(239,68,68,0.3)', background: 'rgba(239,68,68,0.08)', color: T.red, fontSize: 12, cursor: 'pointer', fontWeight: 600 }}>
+                      ✕ Clear All
+                    </button>
+                  )}
+                </div>
+
+                {/* Row 1: Community filter - 100% dynamic from this developer's projects */}
+                <div style={{ background: T.surface, border: '1px solid '+T.border, borderRadius: 10, padding: '10px 14px' }}>
+                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
+                    <span style={{ fontSize: 9, fontWeight: 800, color: T.gold, letterSpacing: 1.5, textTransform: 'uppercase', marginRight: 6, whiteSpace: 'nowrap' }}>Community</span>
+                    {['All', ...devCommunities].map(comm => {
+                      const count = comm === 'All' ? activeProjects.length : activeProjects.filter(p => p.community === comm).length;
+                      const isActive = projectFilter === comm;
+                      return (
+                        <button type='button' key={comm} onClick={() => setProjectFilter(comm)}
+                          style={{ padding: '5px 12px', borderRadius: 20, border: '1px solid '+(isActive ? T.gold : T.border),
+                            background: isActive ? 'rgba(212,168,67,0.15)' : 'transparent',
+                            color: isActive ? T.gold : T.textSecondary, fontSize: 11,
+                            fontWeight: isActive ? 700 : 400, cursor: 'pointer', whiteSpace: 'nowrap',
+                            display: 'flex', alignItems: 'center', gap: 4 }}>
+                          {comm}
+                          {comm !== 'All' && <span style={{ fontSize: 9, opacity: 0.7, background: isActive ? 'rgba(212,168,67,0.2)' : T.border, borderRadius: 10, padding: '1px 5px' }}>{count}</span>}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Row 2: Status + Handover */}
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                  <div style={{ flex: 1, minWidth: 200, background: T.surface, border: '1px solid '+T.border, borderRadius: 10, padding: '10px 14px' }}>
+                    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
+                      <span style={{ fontSize: 9, fontWeight: 800, color: T.teal, letterSpacing: 1.5, textTransform: 'uppercase', marginRight: 6, whiteSpace: 'nowrap' }}>Status</span>
+                      {['All','Off Plan','Under Construction','Ready','Delivered'].map(s => {
+                        const count = s === 'All' ? activeProjects.length : activeProjects.filter(p => (p.status||'').toLowerCase().includes(s.toLowerCase())).length;
+                        const isActive = projectStatusFilter === s;
+                        return (
+                          <button type='button' key={s} onClick={() => setProjectStatusFilter(s)}
+                            style={{ padding: '5px 12px', borderRadius: 20, border: '1px solid '+(isActive ? T.teal : T.border),
+                              background: isActive ? 'rgba(0,191,165,0.12)' : 'transparent',
+                              color: isActive ? T.teal : T.textSecondary, fontSize: 11,
+                              fontWeight: isActive ? 700 : 400, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                            {s}{s !== 'All' && count > 0 ? ` (${count})` : ''}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                  <div style={{ flex: 1, minWidth: 200, background: T.surface, border: '1px solid '+T.border, borderRadius: 10, padding: '10px 14px' }}>
+                    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
+                      <span style={{ fontSize: 9, fontWeight: 800, color: '#8B5CF6', letterSpacing: 1.5, textTransform: 'uppercase', marginRight: 6, whiteSpace: 'nowrap' }}>Handover</span>
+                      {['All','2025','2026','2027','2028','2029','2030+'].map(y => {
+                        const count = y === 'All' ? activeProjects.length : activeProjects.filter(p => y === '2030+' ? parseInt(p.handover) >= 2030 : (p.handover||'').includes(y)).length;
+                        const isActive = projectHandover === y;
+                        return (
+                          <button type='button' key={y} onClick={() => setProjectHandover(y)}
+                            style={{ padding: '5px 12px', borderRadius: 20, border: '1px solid '+(isActive ? '#8B5CF6' : T.border),
+                              background: isActive ? 'rgba(139,92,246,0.12)' : 'transparent',
+                              color: isActive ? '#8B5CF6' : T.textSecondary, fontSize: 11,
+                              fontWeight: isActive ? 700 : 400, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                            {y}{y !== 'All' && count > 0 ? ` (${count})` : ''}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Row 3: Type + Units */}
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                  <div style={{ flex: 1, minWidth: 200, background: T.surface, border: '1px solid '+T.border, borderRadius: 10, padding: '10px 14px' }}>
+                    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
+                      <span style={{ fontSize: 9, fontWeight: 800, color: '#F59E0B', letterSpacing: 1.5, textTransform: 'uppercase', marginRight: 6, whiteSpace: 'nowrap' }}>Type</span>
+                      {['All','Apartment','Villa','Townhouse','Penthouse','Mixed-Use'].map(t => {
+                        const count = t === 'All' ? activeProjects.length : activeProjects.filter(p => (p.type||'').toLowerCase().includes(t.toLowerCase())).length;
+                        const isActive = projectTypeFilter === t;
+                        return (
+                          <button type='button' key={t} onClick={() => setProjectTypeFilter(t)}
+                            style={{ padding: '5px 12px', borderRadius: 20, border: '1px solid '+(isActive ? '#F59E0B' : T.border),
+                              background: isActive ? 'rgba(245,158,11,0.12)' : 'transparent',
+                              color: isActive ? '#F59E0B' : T.textSecondary, fontSize: 11,
+                              fontWeight: isActive ? 700 : 400, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                            {t}{t !== 'All' && count > 0 ? ` (${count})` : ''}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                  <div style={{ flex: 1, minWidth: 200, background: T.surface, border: '1px solid '+T.border, borderRadius: 10, padding: '10px 14px' }}>
+                    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
+                      <span style={{ fontSize: 9, fontWeight: 800, color: T.textMuted, letterSpacing: 1.5, textTransform: 'uppercase', marginRight: 6, whiteSpace: 'nowrap' }}>Units</span>
+                      {['All','Studio','1BR','2BR','3BR','4BR+','Villa','Penthouse'].map(u => {
+                        const count = u === 'All' ? activeProjects.length : activeProjects.filter(p => (p.beds||'').includes(u) || (u==='Studio' && (p.beds||'').toLowerCase().includes('studio'))).length;
+                        const isActive = projectUnitFilter === u;
+                        return (
+                          <button type='button' key={u} onClick={() => setProjectUnitFilter(u)}
+                            style={{ padding: '5px 12px', borderRadius: 20, border: '1px solid '+(isActive ? T.textPrimary : T.border),
+                              background: isActive ? 'rgba(255,255,255,0.08)' : 'transparent',
+                              color: isActive ? T.textPrimary : T.textSecondary, fontSize: 11,
+                              fontWeight: isActive ? 700 : 400, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                            {u}{u !== 'All' && count > 0 ? ` (${count})` : ''}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+              );
+            })()}
+
+            {/* Project Cards */}
             {projectsLoading ? <LoadingSkeleton rows={6} cols={3} /> : (
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 12, marginTop: 16 }}>
               {activeProjects
                 .filter(p => {
                   const matchSearch = !projectSearch || p.name.toLowerCase().includes(projectSearch.toLowerCase()) || (p.community||"").toLowerCase().includes(projectSearch.toLowerCase()) || (p.developer||"").toLowerCase().includes(projectSearch.toLowerCase());
-                  const matchFilter = projectFilter === "All" || p.district === projectFilter || (projectFilter === "Branded" && p.branded);
+                  const matchFilter = projectFilter === "All" || p.community === projectFilter || (projectFilter === "Branded" && p.branded);
                   const matchTier = projectTier === "All" || p.tier === projectTier;
                   const matchHandover = projectHandover === "All" || (projectHandover === "2030+" ? parseInt(p.handover) >= 2030 : p.handover?.includes(projectHandover));
                   const matchPrice = projectPriceMax >= 20 || !p.price || p.price <= projectPriceMax * 1e6;
