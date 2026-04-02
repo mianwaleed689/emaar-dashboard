@@ -275,7 +275,9 @@ export function DXBProvider({ children }) {
       return [...allStatic, ...allNew];
     }
 
-    return (projectsByDeveloper[selectedDeveloper] || []).filter(p => !p.dldVerified);
+    const result = (projectsByDeveloper[selectedDeveloper] || []).filter(p => !p.dldVerified);
+    if (typeof window !== "undefined") console.log("activeProjects result:", result.length, "dev:", selectedDeveloper, "extra:", extraProjects?.length);
+    return result;
   }, [selectedDeveloper, projectsByDeveloper, emaarActiveProjects]);
   const currentDeveloper = developerById[selectedDeveloper] || developerById["emaar"];
 
