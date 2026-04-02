@@ -188,7 +188,7 @@ export function DXBProvider({ children }) {
     }),
     ...extraProjects.filter(p =>
       !emaarBaseNames.has((p.name || "").toLowerCase().trim()) &&
-      (!p.developerId || p.developerId === "emaar")
+      (p.developerId === "emaar")
     ),
   ], [emaarProjects, liveProjects, extraProjects, emaarBaseNames]);
 
