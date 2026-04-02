@@ -1,4 +1,4 @@
-﻿/**
+/**
  * DXB ANALYTICS — UNIFIED CONTEXT
  * src/context/DXBContext.jsx
  *
@@ -41,7 +41,6 @@ import {
   allProjects, allDevelopers as allDevelopersStatic, allCommunities,
   allCommunityCoords, getProjectsByDeveloper, developerById, getDistrictCode,
 } from "../data_master";
-import { allDevelopers as dldDevelopers, allProjectsDLD } from "../data_developers";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // CONTEXT CREATION
@@ -188,7 +187,7 @@ export function DXBProvider({ children }) {
     }),
     ...extraProjects.filter(p =>
       !emaarBaseNames.has((p.name || "").toLowerCase().trim()) &&
-      (p.developerId === "emaar")
+      (!p.developerId || p.developerId === "emaar")
     ),
   ], [emaarProjects, liveProjects, extraProjects, emaarBaseNames]);
 
@@ -212,73 +211,9 @@ export function DXBProvider({ children }) {
     meraas:    getDevProjects("meraas",    "Meraas"),
     aldar:     getDevProjects("aldar",     "Aldar Properties"),
     binghatti: getDevProjects("binghatti", "Binghatti"),
-    // Session 1
-    azizi:     getDevProjects("azizi",     "Azizi Developments"),
-    danube:    getDevProjects("danube",    "Danube Properties"),
-    samana:    getDevProjects("samana",    "Samana Developers"),
-    // Session 2
-    beyond:    getDevProjects("beyond",    "Beyond Developments"),
-    imtiaz:    getDevProjects("imtiaz",    "Imtiaz Developments"),
-    ellington: getDevProjects("ellington", "Ellington Properties"),
-    iman:      getDevProjects("iman",      "Iman Developers"),
-    reportage: getDevProjects("reportage", "Reportage Properties"),
-    wadan:     getDevProjects("wadan",     "Wadan Developments"),
-    wasl:      getDevProjects("wasl",      "Wasl Properties"),
-    mag:       getDevProjects("mag",       "MAG Group"),
-    vincitore: getDevProjects("vincitore", "Vincitore"),
-    nshama:    getDevProjects("nshama",    "Nshama"),
-    omniyat:   getDevProjects("omniyat",   "Omniyat"),
-    pantheon:  getDevProjects("pantheon",  "Pantheon Development"),
-    select:    getDevProjects("select",    "Select Group"),
   }), [emaarActiveProjects, getDevProjects]);
 
-  const activeProjects = React.useMemo(() => {
-    // Normalize DLD projects to match platform schema
-    const dldNormalized = (allProjectsDLD || []).map(p => ({
-      id: `dld-${p.name.replace(/\s+/g, '-').toLowerCase().slice(0, 30)}`,
-      name: p.name,
-      developerId: p.developerId,
-      developer: dldDevelopers.find(d => d.id === p.developerId)?.name || p.developerId,
-      community: p.area,
-      type: p.rooms?.['Studio'] ? 'Apartments' : p.rooms?.['Villa'] ? 'Villas' : 'Apartments',
-      beds: Object.keys(p.rooms || {}).filter(r => r !== 'NA' && r !== 'Office' && r !== 'Shop').join(' · ') || '—',
-      status: p.offplanPct > 50 ? 'Off Plan' : 'Under Construction',
-      price: p.minPrice || p.avgPrice || 0,
-      ppsf: p.avgPpsf || 0,
-      sizeFrom: 0,
-      sizeTo: 0,
-      handover: '—',
-      payment: '—',
-      construction: 0,
-      branded: false,
-      brand: '—',
-      tier: p.avgPrice > 5000000 ? 'Ultra Luxury' : p.avgPrice > 3000000 ? 'Luxury' : p.avgPrice > 1500000 ? 'Premium' : 'Mid-Market',
-      officialUrl: dldDevelopers.find(d => d.id === p.developerId)?.officialUrl || '',
-      links: { pf: '', bayut: '' },
-      dldVerified: true,
-      dldTransactions: p.transactions,
-      dldAvgPrice: p.avgPrice,
-      dldPpsf: p.avgPpsf,
-    }));
-
-    // Merge: existing static projects + DLD projects (deduplicate by name)
-    const existingNames = new Set((projectsByDeveloper[selectedDeveloper] || []).map(p => p.name.toLowerCase()));
-    const newDLDProjects = dldNormalized.filter(p =>
-      !existingNames.has(p.name.toLowerCase()) &&
-      (selectedDeveloper === 'all' || p.developerId === selectedDeveloper)
-    );
-
-    if (selectedDeveloper === 'all') {
-      const allStatic = Object.values(projectsByDeveloper).flat();
-      const allStaticNames = new Set(allStatic.map(p => p.name.toLowerCase()));
-      const allNew = dldNormalized.filter(p => !allStaticNames.has(p.name.toLowerCase()));
-      return [...allStatic, ...allNew];
-    }
-
-    const result = (projectsByDeveloper[selectedDeveloper] || []).filter(p => !p.dldVerified);
-    if (typeof window !== "undefined") console.log("activeProjects result:", result.length, "dev:", selectedDeveloper, "extra:", extraProjects?.length);
-    return result;
-  }, [selectedDeveloper, projectsByDeveloper, emaarActiveProjects]);
+  const activeProjects = projectsByDeveloper[selectedDeveloper] || emaarActiveProjects;
   const currentDeveloper = developerById[selectedDeveloper] || developerById["emaar"];
 
   // Active communities for current developer (with live PPSF wired in)
@@ -408,7 +343,7 @@ export function DXBProvider({ children }) {
         const data = { ...d.data(), id: d.id, fromFirestore: true };
         if (data.developerId === "emaar" && baseIds.has(String(data.id?.toString().replace("emaar_", "")))) return;
         if (data.developerId === "emaar" && baseNames.has((data.name || "").toLowerCase().trim())) return;
-        if (!baseIds.has(String(data.id)) && !data.fromDLD && data.developerId && data.developerId === selectedDeveloper) fsProjects.push(data);
+        if (!baseIds.has(String(data.id))) fsProjects.push(data);
       });
       setExtraProjects(prev => {
         const overridesOnly = prev.filter(p => !p.fromFirestore);
@@ -533,7 +468,7 @@ export function DXBProvider({ children }) {
       } catch (_) { /* non-critical */ }
     }, 4000);
     return () => clearTimeout(timer);
-  }, [db, allProjects, allCommunities, allDevelopersStatic]);
+  }, [db, allProjects, allCommunities, allDevelopers]);
 
   // ─────────────────────────────────────────────────────────────────────────────
   // SECTION 3: NOTIFICATIONS (auth-gated)
@@ -755,4 +690,3 @@ export function DXBProvider({ children }) {
 }
 
 export default DXBContext;
-// rebuild 12:08:47
