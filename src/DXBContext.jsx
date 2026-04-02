@@ -409,7 +409,7 @@ export function DXBProvider({ children }) {
         const data = { ...d.data(), id: d.id, fromFirestore: true };
         if (data.developerId === "emaar" && baseIds.has(String(data.id?.toString().replace("emaar_", "")))) return;
         if (data.developerId === "emaar" && baseNames.has((data.name || "").toLowerCase().trim())) return;
-        if (!baseIds.has(String(data.id)) && !data.fromDLD && data.developerId === selectedDeveloper) fsProjects.push(data);
+        if (!baseIds.has(String(data.id)) && !data.fromDLD && data.developerId && data.developerId === selectedDeveloper) fsProjects.push(data);
       });
       setExtraProjects(prev => {
         const overridesOnly = prev.filter(p => !p.fromFirestore);
