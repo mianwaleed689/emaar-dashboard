@@ -631,10 +631,10 @@ export function getAllProjectsForFirestore() {
 
 export const projectStats = {
   total:           allProjects.length,
-  byDeveloper:     Object.fromEntries(([
+  byDeveloper:     Object.fromEntries(
     (allDevelopers||[]).filter(d => d && d.id).map(d => [d.id, allProjects.filter(p => p.developerId === d.id).length])
   ),
-  byCommunity:     Object.fromEntries(([
+  byCommunity:     Object.fromEntries(
     (allCommunities||[]).filter(c => c && c.id).map(c => [c.id, allProjects.filter(p => (getDistrictCode(p.community) || p.district) === c.id).length])
   ),
   byStatus: {
