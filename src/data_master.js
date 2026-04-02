@@ -253,7 +253,7 @@ export const allDevelopers = [
 
 // Quick lookup: developerId → developer object
 export const developerById = Object.fromEntries(
-  allDevelopers.map(d => [d.id, d])
+  (allDevelopers || []).filter(d => d && d.id).map(d => [d.id, d])
 );
 
 // ─────────────────────────────────────────────────────────────────────────────
