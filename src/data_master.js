@@ -1,4 +1,4 @@
-﻿/**
+/**
  * DXB ANALYTICS — MASTER DATA FILE
  * src/data_master.js
  *
@@ -265,13 +265,13 @@ export const developerById = Object.fromEntries(
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const allProjects = [
-  ...emaarProjectsComplete.map(p => ({ ...p, developerId: p.developerId || "emaar" })),
-  ...damacProjects.map(p => ({ ...p, developerId: p.developerId || "damac" })),
-  ...sobhaProjects.map(p => ({ ...p, developerId: p.developerId || "sobha" })),
-  ...nakheelProjects.map(p => ({ ...p, developerId: p.developerId || "nakheel" })),
-  ...meraasProjects.map(p => ({ ...p, developerId: p.developerId || "meraas" })),
-  ...aldarProjects.map(p => ({ ...p, developerId: p.developerId || "aldar" })),
-  ...binghattiProjects.map(p => ({ ...p, developerId: p.developerId || "binghatti" })),
+  ...emaarProjectsComplete.map(p => ({ ...p, developerId: "emaar" })),
+  ...damacProjects.map(p => ({ ...p, developerId: "damac" })),
+  ...sobhaProjects.map(p => ({ ...p, developerId: "sobha" })),
+  ...nakheelProjects.map(p => ({ ...p, developerId: "nakheel" })),
+  ...meraasProjects.map(p => ({ ...p, developerId: "meraas" })),
+  ...aldarProjects.map(p => ({ ...p, developerId: "aldar" })),
+  ...binghattiProjects.map(p => ({ ...p, developerId: "binghatti" })),
   // Session 1 developers
   ...aziziProjects.map(p => ({ ...p, developerId: "azizi" })),
   ...danubeProjects.map(p => ({ ...p, developerId: "danube" })),
@@ -603,7 +603,7 @@ export const allCommunities = [
 
 // Quick lookup: district code → community object
 export const communityByDistrict = Object.fromEntries(
-  (allCommunities||[]).filter(c => c && c.id).map(c => [c.id, c])
+  allCommunities.map(c => [c.id, c])
 );
 
 // Quick lookup: community name → community object (handles aliases)
@@ -632,10 +632,10 @@ export function getAllProjectsForFirestore() {
 export const projectStats = {
   total:           allProjects.length,
   byDeveloper:     Object.fromEntries(
-    (allDevelopers||[]).filter(d => d && d.id).map(d => [d.id, allProjects.filter(p => p.developerId === d.id).length])
+    allDevelopers.map(d => [d.id, allProjects.filter(p => p.developerId === d.id).length])
   ),
   byCommunity:     Object.fromEntries(
-    (allCommunities||[]).filter(c => c && c.id).map(c => [c.id, allProjects.filter(p => (getDistrictCode(p.community) || p.district) === c.id).length])
+    allCommunities.map(c => [c.id, allProjects.filter(p => (getDistrictCode(p.community) || p.district) === c.id).length])
   ),
   byStatus: {
     delivered:         allProjects.filter(p => p.status === "Delivered").length,
