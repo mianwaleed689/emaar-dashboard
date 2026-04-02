@@ -1,4 +1,4 @@
-/* ─── DXB ANALYTICS — MERAAS DATA ───────────────────────────────────────────
+﻿/* ─── DXB ANALYTICS — MERAAS DATA ───────────────────────────────────────────
    S29A: Full fix — rank #7, estimated financials, removed Nad Al Sheba (Nakheel's),
          unitBreakdown added, prefixed IDs
    Sources: Meraas Official · Dubai Holding · Wikipedia · Bayut
@@ -83,7 +83,7 @@ export const meraasProjects = [
     unitBreakdown:[{type:"1BR",sqftFrom:900,sqftTo:1100,priceFrom:3500000},{type:"2BR",sqftFrom:1600,sqftTo:2000,priceFrom:6222000},{type:"3BR",sqftFrom:2500,sqftTo:3200,priceFrom:9722000},{type:"4BR PH",sqftFrom:4000,sqftTo:5000,priceFrom:15555000}] },
   { id:"meraas-11", developerId:"meraas", name:"Sur La Mer", officialUrl:"https://meraas.com/en/project/sur-la-mer", links:{pf:"https://www.propertyfinder.ae/en/new-projects/meraas-holding/sur-la-mer",bayut:"https://www.bayut.com/buildings/sur-la-mer/"},                      community:"La Mer",         district:"Jumeirah 1",     type:"Villas",      beds:"4–6BR", status:"Established",        handover:"Delivered", price:12000000, sizeFrom:6000,  sizeTo:20000,  ppsf:2000,  payment:"N/A",   construction:100, branded:false, brand:"—",           tier:"Ultra-Luxury", source:"Meraas Official", confidence:"VERIFIED",
     unitBreakdown:[{type:"4BR Villa",sqftFrom:6000,sqftTo:9000,priceFrom:12000000},{type:"5BR Villa",sqftFrom:10000,sqftTo:14000,priceFrom:20000000},{type:"6BR Villa",sqftFrom:16000,sqftTo:20000,priceFrom:32000000}] },
-];];
+];
 
 export const meraasRisks = [
   { factor:"Government-Backed — Very Low Financial Risk", level:1, likelihood:1, impact:2, score:2,  mitigation:"Dubai Holding subsidiary. Government guarantee. 752M sqft land bank.", assessment:"VERY LOW", color:"#10B981" },

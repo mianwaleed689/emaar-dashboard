@@ -1,4 +1,4 @@
-/* ─── DXB ANALYTICS — NAKHEEL DATA ──────────────────────────────────────────
+﻿/* ─── DXB ANALYTICS — NAKHEEL DATA ──────────────────────────────────────────
    S29A: Full fix — legalName, rank, estimated financials, unitBreakdown, prefixed IDs
    Sources: Nakheel Official · DLD · Wikipedia · Property Finder
    Last verified: March 2026
@@ -73,7 +73,7 @@ export const nakheelProjects = [
     unitBreakdown:[{type:"4BR Villa",sqftFrom:3000,sqftTo:4500,priceFrom:3200000},{type:"5BR Villa",sqftFrom:5000,sqftTo:6000,priceFrom:5333000}] },
   { id:"nakheel-12", developerId:"nakheel", name:"Murooj Al Furjan Villas", officialUrl:"https://www.nakheel.com/en/latest-handovers/murooj-al-furjan", links:{pf:"https://www.propertyfinder.ae/en/new-projects/nakheel/murooj-al-furjan",bayut:"https://www.bayut.com/area-guides/murooj-al-furjan/"},          community:"Al Furjan",       district:"Al Furjan",       type:"Villas",     beds:"3–5BR", status:"Delivered",           handover:"Delivered", price:2800000, sizeFrom:2500, sizeTo:5000,  ppsf:1120, payment:"80/20", construction:100, branded:false, brand:"—", tier:"Mid-Premium", source:"Nakheel Official", confidence:"VERIFIED",
     unitBreakdown:[{type:"3BR Villa",sqftFrom:2500,sqftTo:3200,priceFrom:2800000},{type:"4BR Villa",sqftFrom:3500,sqftTo:4200,priceFrom:3920000},{type:"5BR Villa",sqftFrom:4400,sqftTo:5000,priceFrom:4928000}] },
-];];
+];
 
 export const nakheelRisks = [
   { factor:"Government Ownership — Policy Risk",      level:2, likelihood:2, impact:3, score:12, mitigation:"Dubai government ownership = implicit guarantee. Sheikh Mohammed backing. No liquidity risk.", assessment:"LOW",      color:"#10B981" },

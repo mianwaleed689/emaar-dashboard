@@ -1,4 +1,4 @@
-/* ─── DXB ANALYTICS — SOBHA REALTY DATA ─────────────────────────────────────
+﻿/* ─── DXB ANALYTICS — SOBHA REALTY DATA ─────────────────────────────────────
    S25–S26: Sobha Realty Full Intelligence Module
    Sources: Sobha Official · DLD · Bayut · Zawya · Khaleej Times · Better Homes
    Last verified: March 2026
@@ -224,7 +224,7 @@ export const sobhaProjects = [
     unitBreakdown:[{type:"4BR Villa",sqftFrom:3500,sqftTo:5000,priceFrom:4500000},{type:"5BR Villa",sqftFrom:5500,sqftTo:6500,priceFrom:7071000},{type:"6BR Villa",sqftFrom:7000,sqftTo:8000,priceFrom:9000000}] },
   { id:"sobha-18", developerId:"sobha", name:"Sobha Orbis", officialUrl:"https://sobharealty.com/properties-in-dubai/sobha-orbis/", links:{pf:"https://www.propertyfinder.ae/en/new-projects/sobha-realty/sobha-orbis",bayut:"https://www.bayut.com/buildings/sobha-orbis/"},                  community:"Motor City",          district:"DMC",            type:"Apartments",  beds:"1–3BR", status:"Off Plan",           handover:"Q2 2028", price:1000000,  sizeFrom:560,   sizeTo:1800,   ppsf:1786, payment:"60/40",  construction:5,  branded:false, brand:"—",          tier:"Mid-Premium",   source:"Sobha Official", confidence:"VERIFIED",
     unitBreakdown:[{type:"1BR",sqftFrom:560,sqftTo:750,priceFrom:1000000},{type:"2BR",sqftFrom:1000,sqftTo:1250,priceFrom:1785000},{type:"3BR",sqftFrom:1500,sqftTo:1800,priceFrom:2678000}] },
-];];
+];
 
 export const sobhaRisks = [
   { factor:"Vertical Integration Risk — Single Builder Model", level:4, likelihood:3, impact:4, score:48, mitigation:"In-house construction eliminates contractor default but concentrates operational risk. 50yr track record.", assessment:"MODERATE", color:"#F59E0B" },
