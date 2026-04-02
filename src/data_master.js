@@ -602,8 +602,8 @@ export const allCommunities = [
 ];
 
 // Quick lookup: district code → community object
-export const communityByDistrict = Object.fromEntries(
-  allCommunities.map(c => [c.id, c])
+export const communityByDistrict = Object.fromEntries((
+  (allCommunities||[]).filter(c => c && c.id).map(c => [c.id, c])
 );
 
 // Quick lookup: community name → community object (handles aliases)
@@ -631,11 +631,11 @@ export function getAllProjectsForFirestore() {
 
 export const projectStats = {
   total:           allProjects.length,
-  byDeveloper:     Object.fromEntries(
-    allDevelopers.map(d => [d.id, allProjects.filter(p => p.developerId === d.id).length])
+  byDeveloper:     Object.fromEntries(([
+    (allDevelopers||[]).filter(d => d && d.id).map(d => [d.id, allProjects.filter(p => p.developerId === d.id).length])
   ),
-  byCommunity:     Object.fromEntries(
-    allCommunities.map(c => [c.id, allProjects.filter(p => (getDistrictCode(p.community) || p.district) === c.id).length])
+  byCommunity:     Object.fromEntries(([
+    (allCommunities||[]).filter(c => c && c.id).map(c => [c.id, allProjects.filter(p => (getDistrictCode(p.community) || p.district) === c.id).length])
   ),
   byStatus: {
     delivered:         allProjects.filter(p => p.status === "Delivered").length,
