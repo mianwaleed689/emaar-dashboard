@@ -55,6 +55,28 @@ import { nakheelProjects }        from "./data_nakheel";
 import { meraasProjects }         from "./data_meraas";
 import { aldarProjects }          from "./data_aldar";
 import { binghattiProjects }      from "./data_binghatti";
+// New developers — Session 1: verified from official sites + DLD Q1 2026
+import { aziziProjects, aziziIdentity }         from "./data_azizi";
+import { danubeProjects, danubeIdentity }       from "./data_danube";
+import { samanaProjects, samanaIdentity }       from "./data_samana";
+// Session 2: Beyond, Imtiaz, Ellington, Iman, Reportage, Wadan, Wasl, Mag, Vincitore, Nshama
+import { beyondProjects, beyondIdentity }       from "./data_beyond";
+import { imtiazProjects, imtiazIdentity }       from "./data_imtiaz";
+import { ellingtonProjects, ellingtonIdentity } from "./data_ellington";
+import { imanProjects, imanIdentity }           from "./data_iman";
+import { reportageProjects, reportageIdentity } from "./data_reportage";
+import { wadanProjects, wadanIdentity }         from "./data_wadan";
+import { waslProjects, waslIdentity }           from "./data_wasl";
+import { magProjects, magIdentity }             from "./data_mag";
+import { vincitoreProjects, vincitoreIdentity } from "./data_vincitore";
+import { nshamaProjects, nshamaIdentity }       from "./data_nshama";
+export {
+  aziziProjects, aziziIdentity, danubeProjects, danubeIdentity, samanaProjects, samanaIdentity,
+  beyondProjects, beyondIdentity, imtiazProjects, imtiazIdentity, ellingtonProjects, ellingtonIdentity,
+  imanProjects, imanIdentity, reportageProjects, reportageIdentity, wadanProjects, wadanIdentity,
+  waslProjects, waslIdentity, magProjects, magIdentity, vincitoreProjects, vincitoreIdentity,
+  nshamaProjects, nshamaIdentity,
+};
 
 // ── Import community arrays ───────────────────────────────────────────────────
 import { damacCommunities }       from "./data_damac";
@@ -206,6 +228,34 @@ export const allDevelopers = [
     hasLiveData:  true,
     dataFile:     "data_binghatti",
   },
+  // ── New developers added April 2026 ──────────────────────────────────────
+  { id:"azizi",     officialUrl:"https://www.azizidevelopments.com", name:"Azizi Developments",  tier:"T2", color:"#16A085", type:"Private",  listed:false, ticker:null, salesFY2025:8.5,  rank:8,  projectCount:30, communities:["Dubai South","Meydan One","Palm Jumeirah","Al Furjan","Dubai Studio City","Al Jaddaf","Sheikh Zayed Road","Dubai Islands","Jebel Ali Free Zone"], primaryMarket:"Dubai", hasLiveData:false, dataFile:"data_azizi"    },
+  { id:"danube",    officialUrl:"https://danubeproperties.com",      name:"Danube Properties",   tier:"T2", color:"#E74C3C", type:"Private",  listed:false, ticker:null, salesFY2025:7.2,  rank:9,  projectCount:29, communities:["JVC","Business Bay","JLT","Al Furjan","Dubai Sports City","Dubai Silicon Oasis","Dubai Maritime City","Al Sufouh","International City"], primaryMarket:"Dubai", hasLiveData:false, dataFile:"data_danube"   },
+  { id:"samana",    officialUrl:"https://www.samanadevelopers.com",  name:"Samana Developers",   tier:"T2", color:"#2980B9", type:"Private",  listed:false, ticker:null, salesFY2025:4.8,  rank:10, projectCount:25, communities:["JVC","Arjan","Majan","Dubai Studio City","Dubai Production City","Discovery Gardens","MBR City","Dubai Islands","Al Furjan"], primaryMarket:"Dubai", hasLiveData:false, dataFile:"data_samana"   },
+  { id:"beyond",    officialUrl:"https://beyonddevelopments.ae",     name:"Beyond Developments", tier:"T1", color:"#1ABC9C", type:"Private",  listed:false, ticker:null, salesFY2025:6.2,  rank:11, projectCount:8,  communities:["Dubai Maritime City","Palm Jumeirah","Dubai Islands"],                        primaryMarket:"Dubai", hasLiveData:false, dataFile:"data_beyond"   },
+  { id:"imtiaz",    officialUrl:"https://imtiaz.ae",                 name:"Imtiaz Developments", tier:"T2", color:"#8E44AD", type:"Private",  listed:false, ticker:null, salesFY2025:3.1,  rank:12, projectCount:21, communities:["Dubai Islands","JVC","Dubai Land","Al Furjan","Jumeirah Garden City"],          primaryMarket:"Dubai", hasLiveData:false, dataFile:"data_imtiaz"   },
+  { id:"ellington", officialUrl:"https://ellingtonproperties.ae",    name:"Ellington Properties",tier:"T1", color:"#2C3E50", type:"Private",  listed:false, ticker:null, salesFY2025:5.4,  rank:13, projectCount:17, communities:["Dubai Islands","Palm Jumeirah","MBR City","JVC","JLT","Business Bay","Al Jaddaf","Sobha Hartland","Dubai Hills Estate"], primaryMarket:"Dubai", hasLiveData:false, dataFile:"data_ellington"},
+  { id:"iman",      officialUrl:"https://www.imandevelopers.com",    name:"Iman Developers",     tier:"T2", color:"#D35400", type:"Private",  listed:false, ticker:null, salesFY2025:1.8,  rank:14, projectCount:2,  communities:["Motor City","MBR City"],                                                       primaryMarket:"Dubai", hasLiveData:false, dataFile:"data_iman"      },
+  { id:"reportage", officialUrl:"https://reportageuae.com",          name:"Reportage Properties",tier:"T2", color:"#27AE60", type:"Private",  listed:false, ticker:null, salesFY2025:2.1,  rank:15, projectCount:8,  communities:["Dubailand","Dubai Investment Park","Downtown Jebel Ali"],                       primaryMarket:"Dubai", hasLiveData:false, dataFile:"data_reportage" },
+  { id:"wadan",     officialUrl:"https://wadanproperties.com",       name:"Wadan Developments",  tier:"T3", color:"#7F8C8D", type:"Private",  listed:false, ticker:null, salesFY2025:0.8,  rank:16, projectCount:2,  communities:["Dubai Land Residence Complex"],                                                primaryMarket:"Dubai", hasLiveData:false, dataFile:"data_wadan"    },
+  { id:"wasl",      officialUrl:"https://www.wasl.ae",               name:"Wasl Properties",     tier:"T2", color:"#16A085", type:"Government",listed:false, ticker:null, salesFY2025:2.8,  rank:17, projectCount:3,  communities:["Sheikh Zayed Road","Business Bay","Jebel Ali Village"],                        primaryMarket:"Dubai", hasLiveData:false, dataFile:"data_wasl"     },
+  { id:"mag",       officialUrl:"https://mag.global",                name:"MAG Group",           tier:"T2", color:"#C0392B", type:"Private",  listed:false, ticker:null, salesFY2025:3.4,  rank:18, projectCount:5,  communities:["MBR City","Business Bay","Al Furjan","JLT","Dubai South"],                     primaryMarket:"Dubai", hasLiveData:false, dataFile:"data_mag"      },
+  { id:"vincitore", officialUrl:"https://vincitore.ae",              name:"Vincitore",           tier:"T3", color:"#9B59B6", type:"Private",  listed:false, ticker:null, salesFY2025:1.2,  rank:19, projectCount:8,  communities:["Arjan","Dubai Sports City","Dubai Science Park"],                              primaryMarket:"Dubai", hasLiveData:false, dataFile:"data_vincitore"},
+  { id:"nshama",    officialUrl:"https://nshama.ae",                 name:"Nshama",              tier:"T2", color:"#E67E22", type:"Private",  listed:false, ticker:null, salesFY2025:2.2,  rank:20, projectCount:4,  communities:["Town Square"],                                                                 primaryMarket:"Dubai", hasLiveData:false, dataFile:"data_nshama"   },
+  // New developers added April 2026
+  { id:"azizi",     officialUrl:"https://www.azizidevelopments.com", name:"Azizi Developments",  tier:"T2", color:"#16A085", type:"Private",  listed:false, ticker:null, salesFY2025:8.5,  rank:8,  projectCount:30, communities:["Dubai South","Meydan One","Palm Jumeirah","Al Furjan","Dubai Studio City","Al Jaddaf","Sheikh Zayed Road","Dubai Islands"], primaryMarket:"Dubai", hasLiveData:false, dataFile:"data_azizi"    },
+  { id:"danube",    officialUrl:"https://danubeproperties.com",      name:"Danube Properties",   tier:"T2", color:"#E74C3C", type:"Private",  listed:false, ticker:null, salesFY2025:7.2,  rank:9,  projectCount:29, communities:["JVC","Business Bay","JLT","Al Furjan","Dubai Sports City","Dubai Silicon Oasis","Dubai Maritime City"], primaryMarket:"Dubai", hasLiveData:false, dataFile:"data_danube"   },
+  { id:"samana",    officialUrl:"https://www.samanadevelopers.com",  name:"Samana Developers",   tier:"T2", color:"#2980B9", type:"Private",  listed:false, ticker:null, salesFY2025:4.8,  rank:10, projectCount:25, communities:["JVC","Arjan","Majan","Dubai Studio City","Dubai Production City","Discovery Gardens","MBR City","Dubai Islands"], primaryMarket:"Dubai", hasLiveData:false, dataFile:"data_samana"   },
+  { id:"beyond",    officialUrl:"https://beyonddevelopments.ae",     name:"Beyond Developments", tier:"T1", color:"#1ABC9C", type:"Private",  listed:false, ticker:null, salesFY2025:6.2,  rank:11, projectCount:8,  communities:["Dubai Maritime City","Palm Jumeirah","Dubai Islands"], primaryMarket:"Dubai", hasLiveData:false, dataFile:"data_beyond"   },
+  { id:"imtiaz",    officialUrl:"https://imtiaz.ae",                 name:"Imtiaz Developments", tier:"T2", color:"#8E44AD", type:"Private",  listed:false, ticker:null, salesFY2025:3.1,  rank:12, projectCount:21, communities:["Dubai Islands","JVC","Dubai Land","Al Furjan","Jumeirah Garden City"], primaryMarket:"Dubai", hasLiveData:false, dataFile:"data_imtiaz"   },
+  { id:"ellington", officialUrl:"https://ellingtonproperties.ae",    name:"Ellington Properties",tier:"T1", color:"#2C3E50", type:"Private",  listed:false, ticker:null, salesFY2025:5.4,  rank:13, projectCount:17, communities:["Dubai Islands","Palm Jumeirah","MBR City","JVC","JLT","Business Bay","Al Jaddaf","Sobha Hartland","Dubai Hills Estate"], primaryMarket:"Dubai", hasLiveData:false, dataFile:"data_ellington"},
+  { id:"iman",      officialUrl:"https://www.imandevelopers.com",    name:"Iman Developers",     tier:"T2", color:"#D35400", type:"Private",  listed:false, ticker:null, salesFY2025:1.8,  rank:14, projectCount:2,  communities:["Motor City","MBR City"], primaryMarket:"Dubai", hasLiveData:false, dataFile:"data_iman"      },
+  { id:"reportage", officialUrl:"https://reportageuae.com",          name:"Reportage Properties",tier:"T2", color:"#27AE60", type:"Private",  listed:false, ticker:null, salesFY2025:2.1,  rank:15, projectCount:8,  communities:["Dubailand","Dubai Investment Park","Downtown Jebel Ali"], primaryMarket:"Dubai", hasLiveData:false, dataFile:"data_reportage" },
+  { id:"wadan",     officialUrl:"https://wadanproperties.com",       name:"Wadan Developments",  tier:"T3", color:"#7F8C8D", type:"Private",  listed:false, ticker:null, salesFY2025:0.8,  rank:16, projectCount:2,  communities:["Dubai Land Residence Complex"], primaryMarket:"Dubai", hasLiveData:false, dataFile:"data_wadan"    },
+  { id:"wasl",      officialUrl:"https://www.wasl.ae",               name:"Wasl Properties",     tier:"T2", color:"#16A085", type:"Government",listed:false, ticker:null, salesFY2025:2.8,  rank:17, projectCount:3,  communities:["Sheikh Zayed Road","Business Bay","Jebel Ali Village"], primaryMarket:"Dubai", hasLiveData:false, dataFile:"data_wasl"     },
+  { id:"mag",       officialUrl:"https://mag.global",                name:"MAG Group",           tier:"T2", color:"#C0392B", type:"Private",  listed:false, ticker:null, salesFY2025:3.4,  rank:18, projectCount:5,  communities:["MBR City","Business Bay","Al Furjan","JLT","Dubai South"], primaryMarket:"Dubai", hasLiveData:false, dataFile:"data_mag"      },
+  { id:"vincitore", officialUrl:"https://vincitore.ae",              name:"Vincitore",           tier:"T3", color:"#9B59B6", type:"Private",  listed:false, ticker:null, salesFY2025:1.2,  rank:19, projectCount:8,  communities:["Arjan","Dubai Sports City","Dubai Science Park"], primaryMarket:"Dubai", hasLiveData:false, dataFile:"data_vincitore"},
+  { id:"nshama",    officialUrl:"https://nshama.ae",                 name:"Nshama",              tier:"T2", color:"#E67E22", type:"Private",  listed:false, ticker:null, salesFY2025:2.2,  rank:20, projectCount:4,  communities:["Town Square"], primaryMarket:"Dubai", hasLiveData:false, dataFile:"data_nshama"   },
 ];
 
 // Quick lookup: developerId → developer object
@@ -229,6 +279,21 @@ export const allProjects = [
   ...meraasProjects.map(p => ({ ...p, developerId: p.developerId || "meraas" })),
   ...aldarProjects.map(p => ({ ...p, developerId: p.developerId || "aldar" })),
   ...binghattiProjects.map(p => ({ ...p, developerId: p.developerId || "binghatti" })),
+  // Session 1 developers
+  ...aziziProjects.map(p => ({ ...p, developerId: "azizi" })),
+  ...danubeProjects.map(p => ({ ...p, developerId: "danube" })),
+  ...samanaProjects.map(p => ({ ...p, developerId: "samana" })),
+  // Session 2 developers
+  ...beyondProjects.map(p => ({ ...p, developerId: "beyond" })),
+  ...imtiazProjects.map(p => ({ ...p, developerId: "imtiaz" })),
+  ...ellingtonProjects.map(p => ({ ...p, developerId: "ellington" })),
+  ...imanProjects.map(p => ({ ...p, developerId: "iman" })),
+  ...reportageProjects.map(p => ({ ...p, developerId: "reportage" })),
+  ...wadanProjects.map(p => ({ ...p, developerId: "wadan" })),
+  ...waslProjects.map(p => ({ ...p, developerId: "wasl" })),
+  ...magProjects.map(p => ({ ...p, developerId: "mag" })),
+  ...vincitoreProjects.map(p => ({ ...p, developerId: "vincitore" })),
+  ...nshamaProjects.map(p => ({ ...p, developerId: "nshama" })),
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────
