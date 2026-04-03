@@ -17218,18 +17218,8 @@ export default function AdminPanel() {
     return "Unnamed Lead";
   };
 
-  /* ── Filter out DLD bulk import junk from real CRM leads ─────── */
-  /* Real leads = manually added OR from proper lead sources */
-  const isRealLead = (l) => {
-    const src = (l.source || "").toLowerCase();
-    const isDLD = src.includes("dld") || src.includes("sheet") || src.includes("bulk import") || src.includes("import");
-    // Also exclude leads that have no name, no email, no valid phone AND only a phone number as "name"
-    const hasRealData = l.name || l.email || (l.phone && l.phone.length > 6);
-    return !isDLD && hasRealData;
-  };
-
-  /* Use real leads for the CRM — DLD data should be in Data Manager */
-  const crmLeads = leads.filter(isRealLead);
+  /* Use all leads — no filtering by source */
+  const crmLeads = leads;
 
   /* ── Scoring ─────────────────────────────────────────────────── */
   const scoreLead = (l) => {
@@ -17489,9 +17479,7 @@ export default function AdminPanel() {
           Leads CRM
         </div>
         <div style={{ fontSize:11, color:T.textMuted, marginTop:3 }}>
-          {stats.total} real leads · {leads.length - crmLeads.length > 0
-            ? `${(leads.length - crmLeads.length).toLocaleString()} DLD imports hidden`
-            : "all leads loaded"}
+          {stats.total.toLocaleString()} leads
           {leadsLoading && <span style={{ marginLeft:8, color:T.gold }}>Loading…</span>}
         </div>
       </div>
