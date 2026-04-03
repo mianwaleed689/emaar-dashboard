@@ -12721,6 +12721,13 @@ export default function AdminPanel() {
   const [leadsLoading, setLeadsLoading] = useState(false);
 
   /* ─── ORGANISATIONS STATE (Session 2) ─── */
+  /* ─── LEAD ASSIGNMENT STATE (Session 3) ─── */
+  const [showAssignModal, setShowAssignModal] = useState(false);
+  const [assigningLead, setAssigningLead] = useState(null);
+  const [assignSearch, setAssignSearch] = useState("");
+  const [autoAssignMode, setAutoAssignMode] = useState("manual"); // manual | roundrobin | area
+  const [assignLoading, setAssignLoading] = useState(false);
+
   const [orgs, setOrgs] = useState([]);
   const [orgsLoading, setOrgsLoading] = useState(false);
   const [showCreateOrg, setShowCreateOrg] = useState(false);
@@ -17671,6 +17678,80 @@ export default function AdminPanel() {
   };
 
   /* ── Firestore actions ───────────────────────────────────────── */
+  /* ─── LEAD ASSIGNMENT ENGINE (Session 3) ─── */
+  const assignLead = async (leadId, agent) => {
+    setAssignLoading(true);
+    try {
+      const now = new Date().toISOString();
+      const upd = {
+        assignedTo:   agent.uid,
+        assignedName: agent.name || agent.email,
+        assignedAt:   now,
+        updatedAt:    now,
+      };
+      await setDoc(doc(db, "leads", leadId), upd, { merge: true });
+      await logAudit(db, {
+        action:      "lead_assigned",
+        leadId,
+        assignedTo:  agent.uid,
+        agentName:   agent.name || agent.email,
+      });
+      // Update local leadDrawer if open
+      if (leadDrawer?.id === leadId) {
+        setLeadDrawer(prev => prev ? { ...prev, ...upd } : prev);
+      }
+      notify(`✅ Assigned to ${agent.name || agent.email}`);
+      setShowAssignModal(false);
+      setAssigningLead(null);
+      setAssignSearch("");
+    } catch(e) { notify("Error: " + e.message); }
+    setAssignLoading(false);
+  };
+
+  const unassignLead = async (leadId) => {
+    try {
+      const upd = { assignedTo: null, assignedName: null, assignedAt: null, updatedAt: new Date().toISOString() };
+      await setDoc(doc(db, "leads", leadId), upd, { merge: true });
+      await logAudit(db, { action: "lead_unassigned", leadId });
+      if (leadDrawer?.id === leadId) {
+        setLeadDrawer(prev => prev ? { ...prev, ...upd } : prev);
+      }
+      notify("Lead unassigned");
+    } catch(e) { notify("Error: " + e.message); }
+  };
+
+  const bulkAssignLeads = async (agentUid, agentName) => {
+    if (leadSelectedIds.length === 0) { notify("No leads selected"); return; }
+    try {
+      const now = new Date().toISOString();
+      await Promise.all(leadSelectedIds.map(id =>
+        setDoc(doc(db, "leads", id), { assignedTo: agentUid, assignedName: agentName, assignedAt: now, updatedAt: now }, { merge: true })
+      ));
+      await logAudit(db, { action: "bulk_assign", count: leadSelectedIds.length, assignedTo: agentUid, agentName });
+      notify(`✅ ${leadSelectedIds.length} leads assigned to ${agentName}`);
+      setLeadSelectedIds([]);
+      setShowAssignModal(false);
+    } catch(e) { notify("Error: " + e.message); }
+  };
+
+  const roundRobinAssign = async (leads_to_assign) => {
+    // Get all agents in the org
+    const agents = users.filter(u => u.orgRole === "agent" || u.role === "agent");
+    if (agents.length === 0) { notify("No agents found — assign orgRole=agent to users first"); return; }
+    try {
+      const now = new Date().toISOString();
+      await Promise.all(leads_to_assign.map((lead, i) => {
+        const agent = agents[i % agents.length];
+        return setDoc(doc(db, "leads", lead.id), {
+          assignedTo: agent.uid, assignedName: agent.name || agent.email,
+          assignedAt: now, updatedAt: now
+        }, { merge: true });
+      }));
+      await logAudit(db, { action: "round_robin_assign", count: leads_to_assign.length, agentCount: agents.length });
+      notify(`✅ ${leads_to_assign.length} leads distributed across ${agents.length} agents`);
+    } catch(e) { notify("Error: " + e.message); }
+  };
+
   const updateStatus = async (leadId, newStatus) => {
     try {
       const l = leads.find(x => x.id === leadId);
@@ -18020,7 +18101,7 @@ export default function AdminPanel() {
     {leadsViewMode === "table" && (
       <div style={{ background:T.surface, border:`1px solid ${T.border}`, borderRadius:12, overflow:"hidden" }}>
         {/* Column headers */}
-        <div style={{ display:"grid", gridTemplateColumns:"36px 1fr 120px 80px 110px 100px 220px",
+        <div style={{ display:"grid", gridTemplateColumns:"36px 1fr 140px 120px 80px 110px 100px 220px",
           padding:"9px 16px", borderBottom:`1px solid ${T.border}`,
           background:"rgba(212,168,67,0.03)",
           fontSize:9, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.8 }}>
@@ -18085,7 +18166,7 @@ export default function AdminPanel() {
 
             return (
               <div key={l.id}
-                style={{ display:"grid", gridTemplateColumns:"36px 1fr 120px 80px 110px 100px 220px",
+                style={{ display:"grid", gridTemplateColumns:"36px 1fr 140px 120px 80px 110px 100px 220px",
                   padding:"10px 16px", borderBottom:`1px solid ${T.border}`,
                   alignItems:"center", transition:"background 0.1s",
                   background: selected     ? "rgba(212,168,67,0.06)"
@@ -18142,6 +18223,33 @@ export default function AdminPanel() {
                     </div>
                   )}
                   {l.community && <div style={{ fontSize:9, color:T.textMuted }}>{l.community}</div>}
+                </div>
+
+                {/* Assigned To (Session 3) */}
+                <div style={{ minWidth:0 }}>
+                  {l.assignedTo ? (
+                    <div style={{ display:"flex", flexDirection:"column", gap:2 }}>
+                      <div style={{ display:"flex", alignItems:"center", gap:4 }}>
+                        <div style={{ width:20, height:20, borderRadius:"50%", background:"rgba(20,184,166,0.2)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:8, fontWeight:700, color:T.teal, flexShrink:0 }}>
+                          {(l.assignedName||"?").slice(0,2).toUpperCase()}
+                        </div>
+                        <span style={{ fontSize:10, color:T.teal, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap", maxWidth:90 }}>
+                          {l.assignedName || l.assignedTo.slice(0,8)}
+                        </span>
+                      </div>
+                      <button type="button"
+                        onClick={e=>{e.stopPropagation();setAssigningLead(l);setShowAssignModal(true);}}
+                        style={{ fontSize:8, padding:"2px 6px", borderRadius:4, border:"1px solid rgba(20,184,166,0.3)", background:"transparent", color:T.teal, cursor:"pointer", textAlign:"left", width:"fit-content" }}>
+                        Reassign
+                      </button>
+                    </div>
+                  ) : (
+                    <button type="button"
+                      onClick={e=>{e.stopPropagation();setAssigningLead(l);setShowAssignModal(true);}}
+                      style={{ fontSize:9, padding:"4px 8px", borderRadius:5, border:"1px solid rgba(212,168,67,0.3)", background:"rgba(212,168,67,0.06)", color:T.gold, cursor:"pointer", whiteSpace:"nowrap" }}>
+                      + Assign
+                    </button>
+                  )}
                 </div>
 
                 {/* Budget */}
@@ -18536,7 +18644,7 @@ export default function AdminPanel() {
 
           {/* Tabs */}
           <div style={{ display:"flex", borderBottom:`1px solid ${T.border}`, flexShrink:0 }}>
-            {[["details","📋 Details"],["activity","⏱ Activity"],["email","✉ Email"]].map(([t,label]) => (
+            {[["details","📋 Details"],["assign","👤 Assign"],["activity","⏱ Activity"],["email","✉ Email"]].map(([t,label]) => (
               <button key={t} type="button" onClick={() => setLeadDrawerTab(t)}
                 style={{ flex:1, padding:"11px 0", fontSize:12, fontWeight:600, cursor:"pointer",
                   fontFamily:"'Outfit',sans-serif", border:"none",
@@ -18644,7 +18752,71 @@ export default function AdminPanel() {
           )}
 
           {/* Activity tab */}
-          {leadDrawerTab === "activity" && (
+          {leadDrawerTab === "assign" && (
+                <div style={{ padding:"16px 20px" }}>
+                  <div style={{ fontSize:10, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.8, marginBottom:10 }}>Current Assignment</div>
+                  {leadDrawer.assignedTo ? (
+                    <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", background:"rgba(20,184,166,0.08)", border:"1px solid rgba(20,184,166,0.2)", borderRadius:10, padding:"12px 14px", marginBottom:16 }}>
+                      <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+                        <div style={{ width:36, height:36, borderRadius:"50%", background:"rgba(20,184,166,0.2)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:13, fontWeight:700, color:T.teal }}>
+                          {(leadDrawer.assignedName||"?").slice(0,2).toUpperCase()}
+                        </div>
+                        <div>
+                          <div style={{ fontSize:13, fontWeight:700, color:T.teal }}>{leadDrawer.assignedName || leadDrawer.assignedTo}</div>
+                          {leadDrawer.assignedAt && <div style={{ fontSize:10, color:T.textMuted }}>Assigned {new Date(leadDrawer.assignedAt).toLocaleDateString("en-AE",{day:"2-digit",month:"short",year:"numeric"})}</div>}
+                        </div>
+                      </div>
+                      <button type="button" onClick={()=>unassignLead(leadDrawer.id)}
+                        style={{ fontSize:10, padding:"5px 10px", borderRadius:6, border:"1px solid rgba(239,68,68,0.3)", background:"rgba(239,68,68,0.08)", color:T.red, cursor:"pointer" }}>
+                        Unassign
+                      </button>
+                    </div>
+                  ) : (
+                    <div style={{ fontSize:12, color:T.textMuted, marginBottom:16, padding:"10px 14px", background:T.surfaceAlt, borderRadius:8 }}>Not assigned yet</div>
+                  )}
+                  <div style={{ fontSize:10, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.8, marginBottom:10 }}>Assign to Agent</div>
+                  <input value={assignSearch} onChange={e=>setAssignSearch(e.target.value)}
+                    placeholder="Search agents by name or email..."
+                    style={{ width:"100%", padding:"9px 14px", background:T.bg, border:`1px solid ${T.border}`, borderRadius:8, color:T.textPrimary, fontSize:12, fontFamily:"'Outfit',sans-serif", outline:"none", marginBottom:10, boxSizing:"border-box" }}/>
+                  <div style={{ display:"flex", flexDirection:"column", gap:6, maxHeight:280, overflowY:"auto" }}>
+                    {users.filter(u=>(u.orgRole==="agent"||u.role==="agent")&&(!assignSearch||(u.name||"").toLowerCase().includes(assignSearch.toLowerCase())||(u.email||"").toLowerCase().includes(assignSearch.toLowerCase()))).map((agent,ai)=>{
+                      const isCurrent = leadDrawer.assignedTo===agent.uid;
+                      const cnt = leads.filter(l=>l.assignedTo===agent.uid).length;
+                      return (
+                        <div key={agent.uid||ai} style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"10px 12px", background:isCurrent?"rgba(20,184,166,0.08)":T.surfaceAlt, border:`1px solid ${isCurrent?"rgba(20,184,166,0.3)":T.border}`, borderRadius:9 }}>
+                          <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+                            <div style={{ width:32, height:32, borderRadius:"50%", background:"rgba(59,130,246,0.15)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:11, fontWeight:700, color:"#3B82F6" }}>
+                              {(agent.name||agent.email||"?").slice(0,2).toUpperCase()}
+                            </div>
+                            <div>
+                              <div style={{ fontSize:12, fontWeight:600, color:T.textPrimary }}>{agent.name||agent.email}</div>
+                              <div style={{ fontSize:10, color:T.textMuted }}>{cnt} leads · {agent.orgRole||agent.role}</div>
+                            </div>
+                          </div>
+                          <button type="button" onClick={()=>assignLead(leadDrawer.id,agent)} disabled={isCurrent||assignLoading}
+                            style={{ fontSize:10, padding:"5px 12px", borderRadius:6, border:`1px solid ${isCurrent?"rgba(20,184,166,0.4)":"rgba(212,168,67,0.3)"}`, background:isCurrent?"rgba(20,184,166,0.1)":"rgba(212,168,67,0.08)", color:isCurrent?T.teal:T.gold, cursor:isCurrent?"default":"pointer", fontWeight:600 }}>
+                            {isCurrent?"✓ Current":assignLoading?"...":"Assign"}
+                          </button>
+                        </div>
+                      );
+                    })}
+                    {users.filter(u=>u.orgRole==="agent"||u.role==="agent").length===0&&(
+                      <div style={{ fontSize:12, color:T.textMuted, textAlign:"center", padding:"20px 0" }}>No agents found — set orgRole=agent in Users tab first</div>
+                    )}
+                  </div>
+                  {leads.filter(l=>!l.assignedTo).length>0&&users.filter(u=>u.orgRole==="agent"||u.role==="agent").length>0&&(
+                    <div style={{ marginTop:16, padding:"12px 14px", background:"rgba(139,92,246,0.06)", border:"1px solid rgba(139,92,246,0.2)", borderRadius:10 }}>
+                      <div style={{ fontSize:11, fontWeight:700, color:"#8B5CF6", marginBottom:4 }}>🔄 Round-Robin Auto-Assign</div>
+                      <div style={{ fontSize:11, color:T.textMuted, marginBottom:10 }}>{leads.filter(l=>!l.assignedTo).length} unassigned → {users.filter(u=>u.orgRole==="agent"||u.role==="agent").length} agents</div>
+                      <button type="button" onClick={()=>roundRobinAssign(leads.filter(l=>!l.assignedTo))}
+                        style={{ padding:"6px 14px", borderRadius:7, border:"1px solid rgba(139,92,246,0.4)", background:"rgba(139,92,246,0.1)", color:"#8B5CF6", fontSize:11, fontWeight:700, cursor:"pointer" }}>
+                        Run Round-Robin
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+              {leadDrawerTab === "activity" && (
             <div style={{ padding:"16px 20px", flex:1, overflowY:"auto" }}>
               <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:14 }}>Activity Timeline</div>
               {[...(leadDrawer.activity || [])].reverse().map((a, i) => (
