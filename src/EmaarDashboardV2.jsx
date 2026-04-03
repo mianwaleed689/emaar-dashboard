@@ -935,7 +935,7 @@ const ProGateFullPage = ({ tabName, onUpgrade }) => {
   const tabBenefits = {
     "DXB Estimate":     ["Automated property valuations", "AVM price estimates per unit", "Bayut live listings", "±15% accuracy model"],
     "Portfolio":        ["Track your Dubai investments", "ROI calculations", "Portfolio performance chart", "Yield tracking"],
-    "Yields":           ["Gross & net yield by community", "STR vs LTR comparison", "Top yielding Emaar areas", "Historical yield trends"],
+    "Yields":           ["Gross & net yield by community", "STR vs LTR comparison", "Top yielding Dubai areas", "Historical yield trends"],
     "Mortgage":         ["Live EIBOR rates", "UAE bank comparison", "Monthly payment calculator", "Affordability analysis"],
     "DLD Volumes":      ["Real transaction volumes", "Community deal counts", "YoY growth by area", "Quarterly breakdown"],
     "STR vs LTR":       ["Airbnb vs long-term yields", "Occupancy rates", "Nightly rate benchmarks", "Best STR communities"],
@@ -977,7 +977,7 @@ const ProGateFullPage = ({ tabName, onUpgrade }) => {
 const UpgradeModal = ({ show, onClose }) => {
   if (!show) return null;
   const plans = [
-    { name: "Pro", price: "99", period: "month", features: ["48 Emaar projects — full data", "AI market insights", "Portfolio ROI tracker", "DXB Estimate AVM", "Yield & STR/LTR analysis", "Mortgage calculator", "Price alerts", "PDF export"], popular: true, note: null, cta: "Upgrade to Pro →" },
+    { name: "Pro", price: "99", period: "month", features: ["All Dubai projects — full data", "AI market insights", "Portfolio ROI tracker", "DXB Estimate AVM", "Yield & STR/LTR analysis", "Mortgage calculator", "Price alerts", "PDF export"], popular: true, note: null, cta: "Upgrade to Pro →" },
     { name: "Enterprise", price: "499", period: "month", features: ["Everything in Pro", "PDF report generation ⏳", "API data access ⏳", "Custom dashboards ⏳", "Multi-user team accounts ⏳", "Developer-level raw data", "Dedicated account manager", "White-label options ⏳"], popular: false, note: "⏳ = Launching Q3 2026", cta: "Contact Sales →" },
   ];
   return (
@@ -992,7 +992,7 @@ const UpgradeModal = ({ show, onClose }) => {
             <span style={{ fontSize: 11, color: T.gold, fontWeight: 600 }}>500+ investors already using Pro</span>
           </div>
           <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: 26, fontWeight: 900, color: T.white, marginBottom: 6 }}>Unlock the Full Platform</h2>
-          <p style={{ color: T.textSecondary, fontSize: 13 }}>The most comprehensive Emaar & Dubai real estate intelligence platform</p>
+          <p style={{ color: T.textSecondary, fontSize: 13 }}>The most comprehensive Dubai real estate intelligence platform</p>
         </div>
 
         {/* ROI bar */}
@@ -2464,7 +2464,7 @@ export default function EmaarDashboardV2() {
 
         {/* Navigation */}
         <nav role="navigation" aria-label="Main navigation" style={{ flex: 1, padding: "16px 12px", display: "flex", flexDirection: "column", gap: 3, overflowY: "auto", overflowX: "hidden", minHeight: 0 }}>
-          <div style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, letterSpacing: 1.5, textTransform: "uppercase", padding: "0 16px 8px", flexShrink: 0 }}>Emaar Properties</div>
+          <div style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, letterSpacing: 1.5, textTransform: "uppercase", padding: "0 16px 8px", flexShrink: 0 }}>{allDevelopers?.find(d=>d.id===selectedDeveloper)?.name || "Emaar Properties"}</div>
           <div role="tablist" aria-label="Dashboard sections" style={{ display: "contents" }}>
           {TABS.filter(t => {
             const s = tabSettings[t.key];
@@ -2562,7 +2562,7 @@ export default function EmaarDashboardV2() {
             {sidebarOpen ? Icons.close : Icons.menu}
           </button>
           <div>
-            <h1 style={{ fontSize: 16, fontWeight: 700, color: T.white }}>Emaar Properties <span style={{ color: T.textMuted, fontWeight: 400, fontSize: 13 }}>PJSC</span></h1>
+            <h1 style={{ fontSize: 16, fontWeight: 700, color: T.white }}>{allDevelopers?.find(d=>d.id===selectedDeveloper)?.name || "Emaar Properties"} <span style={{ color: T.textMuted, fontWeight: 400, fontSize: 13 }}>PJSC</span></h1>
           </div>
         </div>
         <div className="header-badges" style={{ display: "flex", gap: 8, alignItems: "center" }}>
@@ -2945,7 +2945,7 @@ export default function EmaarDashboardV2() {
 
             <Section title="Company Strength" sub="Analyst consensus: STRONG BUY (12 of 12 analysts) · Source: Investing.com">
               <div style={{ marginBottom: 10, display: "flex", gap: 8, flexWrap: "wrap" }}>
-                <DataBadge source="Emaar Annual Report FY2025" date="Dec 2025" type="emaar" />
+                <DataBadge source="DLD + Emaar Annual Report FY2025" date="Dec 2025" type="emaar" />
                 <DataBadge source="S&P / Fitch Ratings 2025" date="2025" type="manual" />
               </div>
               <div className="chart-grid-2" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginTop: 16 }}>
@@ -2962,7 +2962,7 @@ export default function EmaarDashboardV2() {
                 </Chart>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
                   {[
-                    { label: "Founded", value: "1997", sub: "27+ years track record", kpi: { color: T.gold, description: "Emaar Properties founded in 1997 by Mohamed Alabbar. Listed on DFM in 2000.", source: "Emaar Corporate", sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "Founded", value: "1997", note: "Dubai, UAE" }, { label: "IPO", value: "2000", note: "Dubai Financial Market" }, { label: "Chairman", value: "M. Alabbar", note: "Founder & visionary" }, { label: "Employees", value: "9,000+", note: "Global workforce" }], trend: null } },
+                    { label: "Founded", value: "1997", sub: "27+ years track record", kpi: { color: T.gold, description: "Dubai's largest developer. Listed on DFM. Master planner of 14+ communities.", source: "Emaar Corporate", sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "Founded", value: "1997", note: "Dubai, UAE" }, { label: "IPO", value: "2000", note: "Dubai Financial Market" }, { label: "Chairman", value: "M. Alabbar", note: "Founder & visionary" }, { label: "Employees", value: "9,000+", note: "Global workforce" }], trend: null } },
                     { label: "Developer Rank", value: "#1", sub: "Dubai's largest by value", kpi: { color: T.teal, description: "Consistently ranked #1 developer in Dubai by property sales value with ~30% market share.", source: "DLD & Zawya 2025", sourceUrl: "https://zawya.com", items: [{ label: "UAE Rank", value: "#1", note: "By sales value" }, { label: "Market Share", value: "~30%", note: "Dubai off-plan" }, { label: "GCC Rank", value: "#1", note: "By units delivered" }, { label: "FY2025 Sales", value: "AED 80.4B", note: "vs #2 ~AED 20B" }], trend: null } },
                     { label: "Active Projects", value: String(activeProjects.length), sub: "Across 10+ communities", kpi: { color: T.blue, description: "48 active projects across Dubai Hills, Creek Harbour, Downtown, Beachfront and more.", source: "DXB Analytics Database", sourceUrl: "#", items: [{ label: "Under Construction", value: "18", note: "Active building" }, { label: "Off-Plan", value: "30", note: "Pre-launch / launched" }, { label: "Communities", value: "11", note: "Master-planned" }, { label: "Branded", value: "12+", note: "Address · Vida · Palace" }], trend: null } },
                     { label: "International", value: "AED 9.3B", sub: "+124% growth YoY", kpi: { color: T.green, description: "International operations across Egypt, India, Saudi Arabia, Pakistan and Turkey.", source: "Emaar Annual Report 2025", sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "Int'l Sales", value: "AED 9.3B", note: "+124% YoY" }, { label: "Egypt", value: "Largest market", note: "Marassi, Uptown Cairo" }, { label: "India", value: "Growing", note: "Emaar India" }, { label: "Saudi Arabia", value: "Expanding", note: "New projects" }], trend: [{ y: "2022", v: 1.8 }, { y: "2023", v: 2.9 }, { y: "2024", v: 4.1 }, { y: "2025", v: 9.3 }] } },
@@ -3504,7 +3504,7 @@ export default function EmaarDashboardV2() {
                   </div>
                 )}
 
-              <TabSources sources={[{ label: "DLD Oqood", url: "https://oqood.dubailand.gov.ae" }, { label: "Emaar Handover Centre" }, { label: "Emaar IR", url: "https://www.emaar.com/en/investor-relations/" }, { label: "Property Monitor" }]} />
+              <TabSources sources={[{ label: "DLD Oqood", url: "https://oqood.dubailand.gov.ae" }, { label: "DLD Oqood Portal" }, { label: "DLD Oqood", url: "https://oqood.dubailand.gov.ae" }, { label: "Property Monitor" }]} />
               </div>
             );
           })()}
@@ -3985,7 +3985,7 @@ export default function EmaarDashboardV2() {
 
             {/* ── HOLDINGS / SUMMARY VIEW ── */}
             {(roiMode === "holdings" || roiMode === "summary" || myPortfolio.length === 0) && (<>
-            <Section title="My Investments" sub={myPortfolio.length > 0 ? `${myPortfolio.length} holdings` : "Track your Emaar investments"}>
+            <Section title="My Investments" sub={myPortfolio.length > 0 ? `${myPortfolio.length} holdings` : "Track your Dubai investments"}>
               {myPortfolio.length > 0 ? <>
                 <div className="kpi-grid" style={{ display: "grid", gap: 12, marginTop: 16 }}>
                   <KPI label="Total Invested" value={`AED ${(myPortfolio.reduce((s,h) => s+(h.investedAmount||0), 0)/1e6).toFixed(2)}M`} sub={`${myPortfolio.length} holdings`} delay={1} />
@@ -4038,17 +4038,17 @@ export default function EmaarDashboardV2() {
               </> : <div style={{ textAlign: "center", padding: "40px 20px" }}>
                 <div style={{ fontSize: 48, marginBottom: 12 }}>📊</div>
                 <div style={{ fontFamily: "'Fraunces', serif", fontSize: 18, fontWeight: 800, color: T.white, marginBottom: 8 }}>Start Tracking Your Investments</div>
-                <div style={{ fontSize: 12, color: T.textMuted, maxWidth: 360, margin: "0 auto 16px", lineHeight: 1.6 }}>Add your Emaar property investments to track performance, projected returns, and portfolio allocation.</div>
+                <div style={{ fontSize: 12, color: T.textMuted, maxWidth: 360, margin: "0 auto 16px", lineHeight: 1.6 }}>Add your Dubai property investments to track performance, projected returns, and portfolio allocation.</div>
                 <button type="button" onClick={() => setShowAddPortfolio(true)} style={{ padding: "10px 24px", background: `linear-gradient(135deg, ${T.gold}, #B8912F)`, color: T.bg, border: "none", borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>+ Add Your First Investment</button>
               </div>}
             </Section>
 
             <Section title="Project Portfolio" sub="48 active projects · 10+ master communities · 2026–2030">
               <div className="kpi-grid" style={{ display: "grid", gap: 12, marginTop: 16 }}>
-                <KPI label="Total Projects" value={activeProjects.length} sub="18 under construction · 30 off-plan" delay={1} onClick={() => setSelectedKPI({ label: "Total Projects", value: "48", color: T.gold, description: "48 active Emaar projects across UAE — 18 under active construction and 30 in the off-plan/pre-launch phase across 10+ master communities.", source: "DXB Analytics Project Database", sourceUrl: "#", items: [{ label: "Under Construction", value: "18", note: "Active building" }, { label: "Off-Plan", value: "30", note: "Pre-launch / launched" }, { label: "Communities", value: "11", note: "Master-planned areas" }, { label: "Handover 2026", value: "7 projects", note: "Nearest deliveries" }, { label: "Handover 2029+", value: "26 projects", note: "Longest pipeline" }], trend: null })} />
-                <KPI label="Branded Projects" value="10" sub="Address · Vida · Palace" delay={2} onClick={() => setSelectedKPI({ label: "Branded Projects", value: "10", color: T.teal, description: "10 branded residences under Emaar's luxury hospitality labels — Address, Vida, and Palace. Branded units command 25–40% price premium over standard Emaar projects.", source: "Emaar Properties Portfolio 2025", sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "Address Brand", value: "5 projects", note: "Ultra-luxury tier" }, { label: "Vida Brand", value: "3 projects", note: "Lifestyle tier" }, { label: "Palace Brand", value: "2 projects", note: "Heritage luxury" }, { label: "Price Premium", value: "25–40%", note: "vs standard Emaar" }, { label: "Resale Premium", value: "Strong", note: "Brand demand maintained" }], trend: null })} />
+                <KPI label="Total Projects" value={activeProjects.length} sub="18 under construction · 30 off-plan" delay={1} onClick={() => setSelectedKPI({ label: "Total Projects", value: "48", color: T.gold, description: "48+ Dubai projects — under active construction across UAEuction and 30 in the off-plan/pre-launch phase across 10+ master communities.", source: "DXB Analytics Project Database", sourceUrl: "#", items: [{ label: "Under Construction", value: "18", note: "Active building" }, { label: "Off-Plan", value: "30", note: "Pre-launch / launched" }, { label: "Communities", value: "11", note: "Master-planned areas" }, { label: "Handover 2026", value: "7 projects", note: "Nearest deliveries" }, { label: "Handover 2029+", value: "26 projects", note: "Longest pipeline" }], trend: null })} />
+                <KPI label="Branded Projects" value="10" sub="Address · Vida · Palace" delay={2} onClick={() => setSelectedKPI({ label: "Branded Projects", value: "10", color: T.teal, description: "10 branded residences — luxury hospitality labels — Address, Vida, and Palace. Branded units command 25–40% price premium over standard projects.", source: "Emaar Properties Portfolio 2025", sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "Address Brand", value: "5 projects", note: "Ultra-luxury tier" }, { label: "Vida Brand", value: "3 projects", note: "Lifestyle tier" }, { label: "Palace Brand", value: "2 projects", note: "Heritage luxury" }, { label: "Price Premium", value: "25–40%", note: "vs non-branded" }, { label: "Resale Premium", value: "Strong", note: "Brand demand maintained" }], trend: null })} />
                 <KPI label="Avg Starting Price" value="AED 2.76M" sub="Range: 1.2M – 13.8M" delay={3} onClick={() => setSelectedKPI({ label: "Avg Starting Price", value: "AED 2.76M", color: T.blue, description: "Average entry price across the active Emaar project portfolio. Range spans from AED 1.2M (Emaar South 1BR) to AED 13.8M (The Oasis ultra-luxury villas).", source: "DXB Analytics · Emaar Price List 2025", sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "Avg Starting Price", value: "AED 2.76M", note: "Portfolio average" }, { label: "Min Price", value: "AED 1.2M", note: "Emaar South 1BR" }, { label: "Max Price", value: "AED 13.8M", note: "The Oasis villas" }, { label: "Studio Entry", value: "AED 900K+", note: "Select communities" }, { label: "Villa Entry", value: "AED 3.5M+", note: "Dubai Hills / Valley" }], trend: [{ y: "2021", v: 1.8 }, { y: "2022", v: 2.1 }, { y: "2023", v: 2.3 }, { y: "2024", v: 2.55 }, { y: "2025", v: 2.76 }] })} />
-                <KPI label="Avg Price/sqft" value="AED 2,570" sub="Across all tiers" delay={4} onClick={() => setSelectedKPI({ label: "Avg Price/sqft", value: "AED 2,570", color: T.purple, description: "Average price per square foot across all active Emaar launches. Premium branded projects push the average higher vs affordable communities.", source: "DXB Analytics · DLD 2025", sourceUrl: "https://dubailand.gov.ae", items: [{ label: "Portfolio Avg", value: "AED 2,570/sqft", note: "All projects" }, { label: "Branded Avg", value: "AED 3,500+/sqft", note: "Address / Palace" }, { label: "Standard Avg", value: "AED 1,900/sqft", note: "Emaar South / Valley" }, { label: "Downtown", value: "AED 2,800+/sqft", note: "Prime location premium" }, { label: "Creek Harbour", value: "AED 2,400/sqft", note: "Waterfront" }], trend: [{ y: "2021", v: 1450 }, { y: "2022", v: 1750 }, { y: "2023", v: 2100 }, { y: "2024", v: 2350 }, { y: "2025", v: 2570 }] })} />
+                <KPI label="Avg Price/sqft" value="AED 2,570" sub="Across all tiers" delay={4} onClick={() => setSelectedKPI({ label: "Avg Price/sqft", value: "AED 2,570", color: T.purple, description: "Average price per square foot across all active projects. Premium branded projects push the average higher vs affordable communities.", source: "DXB Analytics · DLD 2025", sourceUrl: "https://dubailand.gov.ae", items: [{ label: "Portfolio Avg", value: "AED 2,570/sqft", note: "All projects" }, { label: "Branded Avg", value: "AED 3,500+/sqft", note: "Address / Palace" }, { label: "Standard Avg", value: "AED 1,900/sqft", note: "Emaar South / Valley" }, { label: "Downtown", value: "AED 2,800+/sqft", note: "Prime location premium" }, { label: "Creek Harbour", value: "AED 2,400/sqft", note: "Waterfront" }], trend: [{ y: "2021", v: 1450 }, { y: "2022", v: 1750 }, { y: "2023", v: 2100 }, { y: "2024", v: 2350 }, { y: "2025", v: 2570 }] })} />
               </div>
             </Section>
 
@@ -4132,13 +4132,21 @@ export default function EmaarDashboardV2() {
           {tab === "DXB Estimate" && !isPro && <ProGateFullPage tabName="DXB Estimate" onUpgrade={() => setShowUpgrade(true)} />}
           {tab === "DXB Estimate" && isPro && (() => {
             const avmData = {
-              "Dubai Hills Estate":    { apt: { "Studio": { ppsf: 1680, rent: 55 }, "1BR": { ppsf: 1820, rent: 80 }, "2BR": { ppsf: 2050, rent: 125 }, "3BR": { ppsf: 2300, rent: 180 } }, villa: { "3BR": { ppsf: 1450, rent: 180 }, "4BR": { ppsf: 1550, rent: 240 }, "5BR": { ppsf: 1700, rent: 320 } }, apprRate: 0.18, sc: 18 },
-              "Dubai Creek Harbour":   { apt: { "Studio": { ppsf: 1600, rent: 52 }, "1BR": { ppsf: 1750, rent: 78 }, "2BR": { ppsf: 1950, rent: 118 }, "3BR": { ppsf: 2200, rent: 170 } }, villa: null, apprRate: 0.22, sc: 22 },
-              "Emaar Beachfront":      { apt: { "Studio": { ppsf: 2800, rent: 95 }, "1BR": { ppsf: 3200, rent: 140 }, "2BR": { ppsf: 3600, rent: 200 }, "3BR": { ppsf: 4100, rent: 290 } }, villa: null, apprRate: 0.16, sc: 28 },
-              "Downtown Dubai":        { apt: { "Studio": { ppsf: 2600, rent: 90 }, "1BR": { ppsf: 2900, rent: 135 }, "2BR": { ppsf: 3200, rent: 190 }, "3BR": { ppsf: 3800, rent: 270 } }, villa: null, apprRate: 0.12, sc: 32 },
-              "Arabian Ranches III":   { apt: null, villa: { "3BR": { ppsf: 1350, rent: 155 }, "4BR": { ppsf: 1450, rent: 200 }, "5BR": { ppsf: 1600, rent: 260 } }, apprRate: 0.15, sc: 14 },
-              "The Valley":            { apt: null, villa: { "3BR": { ppsf: 1200, rent: 140 }, "4BR": { ppsf: 1300, rent: 185 }, "5BR": { ppsf: 1450, rent: 240 } }, apprRate: 0.22, sc: 12 },
-              "The Oasis":             { apt: null, villa: { "4BR": { ppsf: 2200, rent: 260 }, "5BR": { ppsf: 2600, rent: 340 }, "6BR": { ppsf: 3200, rent: 450 } }, apprRate: 0.25, sc: 20 },
+              "Dubai Hills Estate":      { apt: { "Studio": { ppsf: 1680, rent: 55 }, "1BR": { ppsf: 1820, rent: 80 }, "2BR": { ppsf: 2050, rent: 125 }, "3BR": { ppsf: 2300, rent: 180 } }, villa: { "3BR": { ppsf: 1450, rent: 180 }, "4BR": { ppsf: 1550, rent: 240 }, "5BR": { ppsf: 1700, rent: 320 } }, apprRate: 0.18, sc: 18 },
+              "Dubai Creek Harbour":     { apt: { "Studio": { ppsf: 1600, rent: 52 }, "1BR": { ppsf: 1750, rent: 78 }, "2BR": { ppsf: 1950, rent: 118 }, "3BR": { ppsf: 2200, rent: 170 } }, villa: null, apprRate: 0.22, sc: 22 },
+              "Emaar Beachfront":        { apt: { "Studio": { ppsf: 2800, rent: 95 }, "1BR": { ppsf: 3200, rent: 140 }, "2BR": { ppsf: 3600, rent: 200 }, "3BR": { ppsf: 4100, rent: 290 } }, villa: null, apprRate: 0.16, sc: 28 },
+              "Downtown Dubai":          { apt: { "Studio": { ppsf: 2600, rent: 90 }, "1BR": { ppsf: 2900, rent: 135 }, "2BR": { ppsf: 3200, rent: 190 }, "3BR": { ppsf: 3800, rent: 270 } }, villa: null, apprRate: 0.12, sc: 32 },
+              "Business Bay":            { apt: { "Studio": { ppsf: 1500, rent: 58 }, "1BR": { ppsf: 1650, rent: 88 }, "2BR": { ppsf: 1900, rent: 130 }, "3BR": { ppsf: 2200, rent: 180 } }, villa: null, apprRate: 0.14, sc: 20 },
+              "Dubai Marina":            { apt: { "Studio": { ppsf: 1800, rent: 70 }, "1BR": { ppsf: 2000, rent: 100 }, "2BR": { ppsf: 2300, rent: 145 }, "3BR": { ppsf: 2700, rent: 200 } }, villa: null, apprRate: 0.13, sc: 22 },
+              "Jumeirah Village Circle": { apt: { "Studio": { ppsf: 1050, rent: 42 }, "1BR": { ppsf: 1180, rent: 62 }, "2BR": { ppsf: 1300, rent: 88 }, "3BR": { ppsf: 1450, rent: 115 } }, villa: null, apprRate: 0.20, sc: 14 },
+              "Palm Jumeirah":           { apt: { "Studio": { ppsf: 3200, rent: 105 }, "1BR": { ppsf: 3800, rent: 155 }, "2BR": { ppsf: 4400, rent: 220 }, "3BR": { ppsf: 5200, rent: 310 } }, villa: { "3BR": { ppsf: 4200, rent: 380 }, "4BR": { ppsf: 4800, rent: 480 }, "5BR": { ppsf: 5500, rent: 600 } }, apprRate: 0.10, sc: 30 },
+              "DAMAC Hills":             { apt: null, villa: { "3BR": { ppsf: 1350, rent: 155 }, "4BR": { ppsf: 1500, rent: 200 }, "5BR": { ppsf: 1700, rent: 260 } }, apprRate: 0.14, sc: 15 },
+              "Sobha Hartland":          { apt: { "1BR": { ppsf: 2400, rent: 95 }, "2BR": { ppsf: 2700, rent: 140 }, "3BR": { ppsf: 3000, rent: 195 } }, villa: null, apprRate: 0.18, sc: 20 },
+              "Arabian Ranches III":     { apt: null, villa: { "3BR": { ppsf: 1350, rent: 155 }, "4BR": { ppsf: 1450, rent: 200 }, "5BR": { ppsf: 1600, rent: 260 } }, apprRate: 0.15, sc: 14 },
+              "The Valley":              { apt: null, villa: { "3BR": { ppsf: 1200, rent: 140 }, "4BR": { ppsf: 1300, rent: 185 }, "5BR": { ppsf: 1450, rent: 240 } }, apprRate: 0.22, sc: 12 },
+              "The Oasis":               { apt: null, villa: { "4BR": { ppsf: 2200, rent: 260 }, "5BR": { ppsf: 2600, rent: 340 }, "6BR": { ppsf: 3200, rent: 450 } }, apprRate: 0.25, sc: 20 },
+              "Emaar South":             { apt: { "Studio": { ppsf: 900, rent: 38 }, "1BR": { ppsf: 1050, rent: 55 }, "2BR": { ppsf: 1200, rent: 78 } }, villa: null, apprRate: 0.20, sc: 12 },
+              "Meydan / MBR City":       { apt: { "1BR": { ppsf: 1800, rent: 72 }, "2BR": { ppsf: 2100, rent: 108 }, "3BR": { ppsf: 2400, rent: 155 } }, villa: null, apprRate: 0.18, sc: 18 },
             };
             const communities = Object.keys(avmData);
             const communityInfo = avmData[avmCommunity];
@@ -4170,7 +4178,7 @@ export default function EmaarDashboardV2() {
                 {/* Header */}
                 <div style={{ background: T.surface, borderRadius: 14, border: "1px solid rgba(212,168,67,0.3)", padding: "20px 24px" }}>
                   <div style={{ fontFamily: "'Fraunces',serif", fontSize: 20, fontWeight: 800, color: T.gold }}>DXB Estimate</div>
-                  <div style={{ fontSize: 12, color: T.textMuted, marginTop: 4 }}>Automated Valuation Model · Emaar Portfolio · DLD-calibrated pricing</div>
+                  <div style={{ fontSize: 12, color: T.textMuted, marginTop: 4 }}>Automated Valuation Model · Dubai Portfolio · DLD-calibrated pricing</div>
                 </div>
                 {/* Input form */}
                 <div style={{ background: T.surface, borderRadius: 14, border: "1px solid " + T.border, padding: "20px 24px" }}>
@@ -4260,7 +4268,7 @@ export default function EmaarDashboardV2() {
                       </div>
                     )}
                     <div style={{ marginTop: 14, padding: "10px 14px", borderRadius: 8, background: T.surfaceAlt, fontSize: 11, color: T.textMuted, lineHeight: 1.7 }}>
-                      ⚠️ DXB Estimate is an automated model using DLD transaction data, Emaar price lists, and rental index. Estimates may vary ±15% from actual market prices. Always verify with a registered valuer before transacting.
+                      ⚠️ DXB Estimate is an automated model using DLD transaction data, developer price lists, and rental index. Estimates may vary ±15% from actual market prices. Always verify with a registered valuer before transacting.
                     </div>
                   </div>
                 </div>
@@ -4378,7 +4386,7 @@ export default function EmaarDashboardV2() {
               // Dubai STR avg gross: ~8% | LTR avg: 6.9% | DTCM permit: AED 1,520/yr | Mgmt: 15–20%
               { community: "Emaar Beachfront", ltr: 6.8, str: 9.8, strOcc: 76, avgNight: 780, units: 42, demand: "Very High", notes: "Beachfront access drives strong STR demand. DLD data shows consistent high rental values. Winter peak season Oct–Apr essential for returns." },
               { community: "Downtown Dubai", ltr: 5.4, str: 9.2, strOcc: 81, avgNight: 890, units: 38, demand: "Very High", notes: "Burj Khalifa proximity supports year-round demand. Business travel + tourism. DLD 2025: avg Downtown apt rent AED 170–260K/yr. LTR yield lower due to high purchase price." },
-              { community: "Dubai Creek Harbour", ltr: 6.4, str: 8.6, strOcc: 69, avgNight: 640, units: 28, demand: "High", notes: "Emerging STR market growing as community matures. Creek views and proximity to Downtown. Emaar Beachfront registered 44% transaction YoY growth in 2025." },
+              { community: "Dubai Creek Harbour", ltr: 6.4, str: 8.6, strOcc: 69, avgNight: 640, units: 28, demand: "High", notes: "Emerging STR market growing as community matures. Creek views and proximity to Downtown. DLD data shows strong transaction growth in 2025." },
               { community: "Dubai Hills Estate", ltr: 6.2, str: 7.2, strOcc: 60, avgNight: 490, units: 15, demand: "Moderate", notes: "Family-oriented community. LTR preferred by tenants. Golf view units command STR premium. DLD shows DHE avg 5–6.8% gross LTR yield, mid-range for Dubai." },
               { community: "Arabian Ranches III", ltr: 5.8, str: 6.1, strOcc: 52, avgNight: 460, units: 8, demand: "Low", notes: "Suburban villa community. LTR strongly preferred. Corporate family tenants drive stable 12-month contracts. STR only viable for short summer transitions." },
               { community: "The Valley", ltr: 6.4, str: 6.9, strOcc: 55, avgNight: 420, units: 6, demand: "Low-Mod", notes: "Young community maturing. Affordable entry prices (avg AED 1.72M). LTR yield competitive at 6.4% as infrastructure grows. STR limited by distance from tourist zones." },
@@ -4510,7 +4518,7 @@ export default function EmaarDashboardV2() {
                   color: T.gold, notes: d.rating || "",
                 }))
               : [
-              { name: "Emaar Properties", ticker: "EMAAR", revenue: 49.6, profit: 25.7, backlog: 155, deliveries: 11000, projects: 48, debtEquity: 0.11, cashFlow: 30.5, margin: 52, deliveryRecord: 96, score: 95, color: T.gold, listed: true, notes: "AED 80.4B property sales in 2025 — highest ever. Revenue up 40%, net profit up 36%. AED 155B backlog = 3–4yr revenue visibility. S&P BBB+, Moody's Baa1." },
+              { name: "Emaar Properties", ticker: "EMAAR", revenue: 49.6, profit: 25.7, backlog: 155, deliveries: 11000, projects: 48, debtEquity: 0.11, cashFlow: 30.5, margin: 52, deliveryRecord: 96, score: 95, color: T.gold, listed: true, notes: "AED 80.4B property sales in 2025 — highest ever. Revenue up 40%, net profit up 36%. Top developer backlogs provide 3–4yr revenue visibility." },
               { name: "DAMAC Properties", ticker: "DAMAC", revenue: 21.8, profit: 7.6, backlog: 65, deliveries: 7400, projects: 38, debtEquity: 0.38, cashFlow: 8.4, margin: 35, deliveryRecord: 79, score: 72, color: "#3B82F6", listed: false, notes: "AED 32B estimated FY2025 sales. Went private 2025. Aggressive branded-luxury pipeline. DAMAC Lagoons, Hills 2 driving volume. Chelsea FC sponsorship deal secured." },
               { name: "Nakheel / Dubai Holding", ticker: "NAKHEEL", revenue: 17.2, profit: 6.8, backlog: 48, deliveries: 4600, projects: 24, debtEquity: 0.22, cashFlow: 7.4, margin: 40, deliveryRecord: 83, score: 79, color: "#10B981", listed: false, notes: "State-owned. AED 13B in sales by Aug 2025. Palm Jumeirah, Dubai Islands, Palm Jebel Ali. Part of Dubai Holding since Mar 2024. Government-backed balance sheet." },
               { name: "Aldar Properties", ticker: "ALDAR.AD", revenue: 16.4, profit: 6.1, backlog: 42, deliveries: 3800, projects: 31, debtEquity: 0.39, cashFlow: 7.1, margin: 37, deliveryRecord: 89, score: 76, color: "#8B5CF6", listed: true, notes: "Abu Dhabi's #1 listed developer. AED 8B in Dubai sales by Aug 2025. ADX listed, strong ESG credentials. Expanding into Dubai via JV projects and direct launches." },
@@ -4872,7 +4880,7 @@ export default function EmaarDashboardV2() {
             return <>
             <Section title="Developer Rankings" sub="DXBinteract verified · fam Properties analysis · 2025">
               <div className="kpi-grid" style={{ display: "grid", gap: 12, marginTop: 16 }}>
-                <KPI label="Emaar % of Top 30" value="11.8%" sub="% of AED 682.5B Dubai market" delay={1} onClick={() => setSelectedKPI({ label: "Emaar % of Dubai Total", value: "11.8%", color: T.gold, description: "Emaar accounts for 22.6% of all sales among the top 30 Dubai developers — nearly 1 in 4 AED of premium real estate sold in Dubai.", source: "DXBinteract · fam Properties 2025", sourceUrl: "https://dxbinteract.com", items: [{ label: "Emaar FY2025 Sales", value: "AED 80.4B", note: "All-time record" }, { label: "Dubai Total Market", value: "AED 682.5B", note: "FY2025 DLD data" }, { label: "Emaar Share", value: "11.8%", note: "Of entire Dubai market" }, { label: "Rank", value: "#1", note: "By sales value" }, { label: "#2 DAMAC", value: "~AED 32B est.", note: "2.5× smaller" }], trend: null })} />
+                <KPI label="Top Dev % of Market" value="11.8%" sub="% of AED 682.5B Dubai market" delay={1} onClick={() => setSelectedKPI({ label: "Top Dev % of Dubai Total", value: "11.8%", color: T.gold, description: "Emaar accounts for 22.6% of all sales among the top 30 Dubai developers — nearly 1 in 4 AED of premium real estate sold in Dubai.", source: "DXBinteract · fam Properties 2025", sourceUrl: "https://dxbinteract.com", items: [{ label: "Emaar FY2025 Sales", value: "AED 80.4B", note: "All-time record" }, { label: "Dubai Total Market", value: "AED 682.5B", note: "FY2025 DLD data" }, { label: "Emaar Share", value: "11.8%", note: "Of entire Dubai market" }, { label: "Rank", value: "#1", note: "By sales value" }, { label: "#2 DAMAC", value: "~AED 32B est.", note: "2.5× smaller" }], trend: null })} />
                 <KPI label="Lead vs #2" value="AED 48.4B" sub="2.5× larger than DAMAC (est.)" delay={2} onClick={() => setSelectedKPI({ label: "Lead vs #2", value: "AED 48.4B", color: T.teal, description: "Emaar leads #2 developer DAMAC by an estimated AED 48.4B in 2025 property sales — a 2.5× advantage. Gap has widened from ~AED 12B in 2023 to AED 48B+ in 2025.", source: "DXBinteract 2025", sourceUrl: "https://dxbinteract.com", items: [{ label: "Emaar Sales FY2025", value: "AED 80.4B", note: "Official Emaar press release" }, { label: "DAMAC Est. FY2025", value: "~AED 32B", note: "Went private, est." }, { label: "Sales Gap", value: "~AED 48.4B", note: "2.5× advantage" }, { label: "2023 Gap", value: "~AED 19B", note: "Gap widening fast" }, { label: "2024 Gap", value: "~AED 31B", note: "Emaar accelerating" }], trend: null })} />
                 <KPI label="% of Dubai Total" value="11.8%" sub="Of AED 682.5B market" delay={3} onClick={() => setSelectedKPI({ label: "% of Dubai Total", value: "11.8%", color: T.blue, description: "Emaar captured 11.8% of Dubai's total AED 682.5B real estate market in 2025 (AED 80.4B ÷ AED 682.5B). Nearly 1 in every 8 AED transacted in all of Dubai was an Emaar property.", source: "DLD · DXBinteract 2025", sourceUrl: "https://dubailand.gov.ae", items: [{ label: "Dubai Total Market", value: "AED 682.5B", note: "All transactions 2025" }, { label: "Emaar Share", value: "AED 80.4B", note: "11.8% of total" }, { label: "2024 Share", value: "~8.1%", note: "Growing share" }, { label: "2023 Share", value: "~7.2%", note: "Consistent gain" }, { label: "Market Type", value: "Off-plan dominant", note: "60%+ of Dubai volume" }], trend: null })} />
                 <KPI label="Delivered % Top 10" value="31%" sub="7,318 of 23,576 units" delay={4} onClick={() => setSelectedKPI({ label: "Delivered % Top 10", value: "31%", color: T.green, description: "Emaar delivered 31% of all units delivered by the top 10 developers in 2025 — 7,318 out of 23,576 total handovers.", source: "DXBinteract 2025", sourceUrl: "https://dxbinteract.com", items: [{ label: "Emaar Delivered", value: "7,318 units", note: "FY2025" }, { label: "Top 10 Total", value: "23,576 units", note: "Combined handovers" }, { label: "Emaar Share", value: "31%", note: "Of top 10 deliveries" }, { label: "On-Time Rate", value: "95%+", note: "Industry best" }, { label: "Since 2002", value: "125,600+", note: "Cumulative delivered" }], trend: null })} />
@@ -4950,7 +4958,7 @@ export default function EmaarDashboardV2() {
               </div>
             </Section>
 
-            <Section title="Emaar's Competitive Edge" sub="Why Emaar leads the market">
+            <Section title="Market Leader Analysis" sub="Why top developers lead the market">
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 12, marginTop: 16 }}>
                 {[
                   ["Brand Premium", "20-40%", "Emaar commands higher prices per sqft vs competitors in same locations. Downtown Dubai and Emaar Beachfront average 25-40% premium over nearby non-Emaar developments.", T.gold],
@@ -5006,7 +5014,7 @@ export default function EmaarDashboardV2() {
 
             <div className="kpi-grid" style={{ display: "grid", gap: 12, marginTop: 16 }}>
               <KPI label="Dubai Avg Gross Yield" value="6.9%" sub="Apartments 7.3% · Villas 5.0%" delay={1} onClick={() => setSelectedKPI({ label: "Dubai Avg Gross Yield", value: "6.9%", color: T.gold, description: "Dubai citywide average gross rental yield in 2025. Apartments outperform at 7.3% vs villas at 5.0%. Source: REIDIN Dec 2025, DXB Interact, Engel & Völkers.", source: "REIDIN · DXB Interact · Engel & Völkers 2025", sourceUrl: "https://dubailand.gov.ae", items: [{ label: "City Avg (Gross)", value: "6.9%", note: "All property types" }, { label: "Apartments Avg", value: "7.3%", note: "Highest returns" }, { label: "Villas Avg", value: "5.0%", note: "Lower but appreciation" }, { label: "Net Yield (Apt)", value: "~5.3–5.8%", note: "After costs" }, { label: "vs London", value: "2–4%", note: "Dubai 3× higher" }, { label: "vs New York", value: "3–5%", note: "Dubai outperforms" }], trend: null })} />
-              <KPI label="Best Dubai Yield" value="8–9%" sub="JVC · International City" delay={2} onClick={() => setSelectedKPI({ label: "Best Dubai Yield", value: "8–9%", color: T.green, description: "Jumeirah Village Circle and International City consistently deliver 8–9% gross yields in 2025, the highest in Dubai. Affordable entry prices + strong tenant demand drive returns.", source: "REIDIN · DXB Interact · Bayut H1 2025", sourceUrl: "https://dubailand.gov.ae", items: [{ label: "Top Area", value: "Int'l City / JVC", note: "8–9% gross" }, { label: "Al Furjan", value: "7.5–8.5%", note: "Strong yield" }, { label: "Dubai South", value: "7–8%", note: "Growing demand" }, { label: "Emaar communities", value: "5.5–7.5%", note: "Premium segment" }, { label: "Net Yield (JVC)", value: "6.5–7.5%", note: "After costs" }], trend: null })} />
+              <KPI label="Best Dubai Yield" value="8–9%" sub="JVC · International City" delay={2} onClick={() => setSelectedKPI({ label: "Best Dubai Yield", value: "8–9%", color: T.green, description: "Jumeirah Village Circle and International City consistently deliver 8–9% gross yields in 2025, the highest in Dubai. Affordable entry prices + strong tenant demand drive returns.", source: "REIDIN · DXB Interact · Bayut H1 2025", sourceUrl: "https://dubailand.gov.ae", items: [{ label: "Top Area", value: "Int'l City / JVC", note: "8–9% gross" }, { label: "Al Furjan", value: "7.5–8.5%", note: "Strong yield" }, { label: "Dubai South", value: "7–8%", note: "Growing demand" }, { label: "Dubai communities", value: "5.5–7.5%", note: "Premium segment" }, { label: "Net Yield (JVC)", value: "6.5–7.5%", note: "After costs" }], trend: null })} />
               <KPI label="Palm / Downtown Yield" value="4–5.5%" sub="Capital appreciation play" delay={3} onClick={() => setSelectedKPI({ label: "Palm / Downtown Yield", value: "4–5.5%", color: T.blue, description: "Palm Jumeirah and Downtown Dubai offer 4–5.5% gross yield — lower than city average. Capital appreciation compensates: Palm villas rose 14% YoY in 2025, Downtown apartments +12.5%.", source: "REIDIN · DXB Interact · Engel & Völkers Q4 2025", sourceUrl: "https://dubailand.gov.ae", items: [{ label: "Palm Jumeirah", value: "4–5.5%", note: "Gross yield" }, { label: "Downtown Dubai", value: "4.5–6%", note: "Gross yield" }, { label: "Palm YoY Appreciation", value: "+14%", note: "2025 capital gain" }, { label: "Downtown YoY Appr.", value: "+12.5%", note: "2025 capital gain" }, { label: "Net Yield (Palm)", value: "3–4.3%", note: "After costs" }], trend: null })} />
               <KPI label="Avg 2BR Annual Rent" value="AED 91K" sub="Dubai citywide avg Q3 2025" delay={4} onClick={() => setSelectedKPI({ label: "Avg 2BR Annual Rent", value: "AED 91K", color: T.teal, description: "Average annual rent for a 2-bedroom apartment in Dubai is AED 91,052 (Q3 2025), per Property Monitor data compiled by Engel & Völkers. Rents grew 8.5–9% YoY in 2025.", source: "Property Monitor · Engel & Völkers Q3 2025", sourceUrl: "https://dubailand.gov.ae", items: [{ label: "2BR Avg Rent", value: "AED 91,052", note: "Q3 2025 citywide" }, { label: "Rent Growth YoY", value: "+8.5–9%", note: "Apartments 2025" }, { label: "Villa Rent Growth", value: "+5.7%", note: "2025 YoY" }, { label: "EIBOR Rate", value: "3.47%", note: "Dec 2025 reference" }, { label: "900K+ contracts", value: "+8% YoY", note: "Ejari registrations 2024" }], trend: null })} />
             </div>
@@ -5153,7 +5161,7 @@ export default function EmaarDashboardV2() {
               </div>
             </div>
 
-            <Section title="Detailed Yield Data" sub="All Emaar communities · Annual rents · Launch prices · Demand levels">
+            <Section title="Detailed Yield Data" sub="All Dubai communities · Annual rents · Launch prices · Demand levels">
               <div className="table-scroll" style={{ overflowX: "auto", marginTop: 12 }}>
                 <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 750 }}>
                   <thead>
@@ -5183,7 +5191,7 @@ export default function EmaarDashboardV2() {
               </div>
             </Section>
 
-            <Section title="ROI Framework" sub="Expected returns for Emaar off-plan investments">
+            <Section title="ROI Framework" sub="Expected returns for Dubai off-plan investments">
               <Chart title="Return Range by Phase (%)" style={{ marginTop: 16 }}>
                 <ResponsiveContainer width="100%" height={260}>
                   <BarChart data={roiPhases}>
@@ -5554,7 +5562,7 @@ export default function EmaarDashboardV2() {
           })()}
 
           {/* ─── MAP / COMMUNITIES TAB ─── */}
-          {tab === "Map" && <><CommunityMapTab activeProjects={activeProjects} liveCommunityROI={liveCommunityROI} setTab={setTab} /><TabSources sources={[{ label: "Google Maps API", url: "https://maps.google.com" }, { label: "Emaar Community Boundaries" }, { label: "DLD Zoning Data", url: "https://dubailand.gov.ae" }, { label: "OpenStreetMap", url: "https://www.openstreetmap.org" }]} /></>}
+          {tab === "Map" && <><CommunityMapTab activeProjects={activeProjects} liveCommunityROI={liveCommunityROI} setTab={setTab} /><TabSources sources={[{ label: "Google Maps API", url: "https://maps.google.com" }, { label: "Dubai Community Map" }, { label: "DLD Zoning Data", url: "https://dubailand.gov.ae" }, { label: "OpenStreetMap", url: "https://www.openstreetmap.org" }]} /></>}
 
           {/* ─── LAUNCH CALENDAR TAB ─── */}
           {tab === "Launch Calendar" && (() => {
@@ -5569,7 +5577,7 @@ export default function EmaarDashboardV2() {
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 12 }}>
                     <div>
                       <div style={{ fontFamily: "'Fraunces', serif", fontSize: 20, fontWeight: 800, color: T.gold }}>Off-Plan Launch Calendar</div>
-                      <div style={{ fontSize: 13, color: T.textMuted, marginTop: 4 }}>Upcoming Emaar launches · 2026–2027 · Updated weekly</div>
+                      <div style={{ fontSize: 13, color: T.textMuted, marginTop: 4 }}>Upcoming project launches · 2026 onwards · Updated weekly</div>
                     </div>
                     <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                       {groups.map(s => (
@@ -5629,9 +5637,9 @@ export default function EmaarDashboardV2() {
                   );
                 })}
                 <div style={{ padding: "12px 16px", borderRadius: 10, background: T.surfaceAlt, border: `1px solid ${T.border}`, fontSize: 11, color: T.textMuted }}>
-                  ⚠️ Launch dates and prices are estimates based on market intelligence. Always verify with official Emaar sources before making investment decisions.
+                  ⚠️ Launch dates and prices are estimates based on market intelligence. Always verify with official developer sources before making investment decisions.
                 </div>
-              <TabSources sources={[{ label: "Emaar Press Releases", url: "https://www.emaar.com/en/media/press-releases/" }, { label: "Property Finder New Launches", url: "https://www.propertyfinder.ae" }, { label: "DLD Oqood Off-Plan Registry", url: "https://oqood.dubailand.gov.ae" }, { label: "Zawya Real Estate News", url: "https://www.zawya.com" }]} />
+              <TabSources sources={[{ label: "Developer Press Releases", url: "https://www.emaar.com/en/media/press-releases/" }, { label: "Property Finder New Launches", url: "https://www.propertyfinder.ae" }, { label: "DLD Oqood Off-Plan Registry", url: "https://oqood.dubailand.gov.ae" }, { label: "Zawya Real Estate News", url: "https://www.zawya.com" }]} />
               </div>
             );
           })()}
@@ -5858,11 +5866,11 @@ export default function EmaarDashboardV2() {
 
           {/* ─── RISK TAB ─── */}
           {tab === "Risk" && <>
-            <Section title="9-Factor Risk Assessment" sub="Overall: LOW-MODERATE · Investment Grade · BBB+/Baa1/BBB">
+            <Section title="9-Factor Risk Assessment" sub="Dubai Market · LOW-MODERATE risk · Investment Grade">
               <div className="kpi-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginTop: 16 }}>
                 <KPI label="Avg Risk Score" value="38.3" sub="LOW-MODERATE overall" delay={1} onClick={() => setSelectedKPI({ label: "Avg Risk Score", value: "38.3 / 140", color: T.teal, description: "Composite risk score across 9 factors. Score of 38.3 out of 140 max = LOW-MODERATE risk. Rated Investment Grade by S&P (BBB+), Moody's (Baa1), and Fitch (BBB).", source: "DXB Analytics · Fitch · S&P · Moody's", sourceUrl: "https://www.fitchratings.com", items: [{ label: "Overall Score", value: "38.3/140", note: "LOW-MODERATE" }, { label: "S&P Rating", value: "BBB+", note: "Stable outlook" }, { label: "Moody's", value: "Baa1", note: "Stable outlook" }, { label: "Fitch", value: "BBB", note: "Stable outlook" }, { label: "Risk Category", value: "Investment Grade", note: "3 agency consensus" }], trend: null })} />
-                <KPI label="Highest Risk" value="125" sub="Premium Pricing" delay={2} onClick={() => setSelectedKPI({ label: "Highest Risk Factor", value: "Premium Pricing", color: T.red, description: "Premium pricing (score 125/140) is Emaar's highest risk factor. At 20–40% above competitors, a market downturn could compress sales volumes faster than peers.", source: "DXB Analytics Risk Model", sourceUrl: "#", items: [{ label: "Risk Score", value: "125/140", note: "Highest risk factor" }, { label: "Price Premium", value: "20–40%", note: "vs comparable developments" }, { label: "Mitigation", value: "80/20 plans", note: "Reduces buyer barrier" }, { label: "Branded Premium", value: "Justified", note: "Address · Vida · Palace" }, { label: "Demand Buffer", value: "AED 155B backlog", note: "Pre-sold revenue" }], trend: null })} />
-                <KPI label="Lowest Risk" value="1" sub="Liquidity / Exit" delay={3} onClick={() => setSelectedKPI({ label: "Lowest Risk Factor", value: "Liquidity / Exit", color: T.green, description: "Emaar has the lowest liquidity risk (score 1/140) of any Dubai developer. DFM-listed, investment-grade rated, with AED 30.5B free cash flow and a globally recognized brand.", source: "DXB Analytics Risk Model · DFM", sourceUrl: "https://www.dfm.ae", items: [{ label: "Risk Score", value: "1/140", note: "Lowest risk factor" }, { label: "Free Cash Flow", value: "AED 30.5B", note: "FY2025" }, { label: "Net Cash", value: "AED 7.5B", note: "Cash vs debt" }, { label: "DFM Listed", value: "Yes", note: "High liquidity stock" }, { label: "Debt/Equity", value: "0.11×", note: "Very low leverage" }], trend: null })} />
+                <KPI label="Highest Risk" value="125" sub="Premium Pricing" delay={2} onClick={() => setSelectedKPI({ label: "Highest Risk Factor", value: "Premium Pricing", color: T.red, description: "Premium pricing (score 125/140) is a key risk factor for premium developers. At 20–40% above competitors, a market downturn could compress sales volumes faster than peers.", source: "DXB Analytics Risk Model", sourceUrl: "#", items: [{ label: "Risk Score", value: "125/140", note: "Highest risk factor" }, { label: "Price Premium", value: "20–40%", note: "vs comparable developments" }, { label: "Mitigation", value: "80/20 plans", note: "Reduces buyer barrier" }, { label: "Branded Premium", value: "Justified", note: "Address · Vida · Palace" }, { label: "Demand Buffer", value: "AED 155B backlog", note: "Pre-sold revenue" }], trend: null })} />
+                <KPI label="Lowest Risk" value="1" sub="Liquidity / Exit" delay={3} onClick={() => setSelectedKPI({ label: "Lowest Risk Factor", value: "Liquidity / Exit", color: T.green, description: "Top-tier developers have low liquidity risk (score 1/140) of any Dubai developer. DFM-listed, investment-grade rated, with AED 30.5B free cash flow and a globally recognized brand.", source: "DXB Analytics Risk Model · DFM", sourceUrl: "https://www.dfm.ae", items: [{ label: "Risk Score", value: "1/140", note: "Lowest risk factor" }, { label: "Free Cash Flow", value: "AED 30.5B", note: "FY2025" }, { label: "Net Cash", value: "AED 7.5B", note: "Cash vs debt" }, { label: "DFM Listed", value: "Yes", note: "High liquidity stock" }, { label: "Debt/Equity", value: "0.11×", note: "Very low leverage" }], trend: null })} />
               </div>
             </Section>
             <ProGate isPro={isPro} message="Unlock Full Risk Analysis" onUpgrade={() => setShowUpgrade(true)}>
@@ -5880,11 +5888,11 @@ export default function EmaarDashboardV2() {
                 </ResponsiveContainer>
               </Chart>
 
-            <Section title="Mitigation Strategies" sub="How Emaar mitigates key risks">
+            <Section title="Mitigation Strategies" sub="Dubai real estate risk mitigation">
               <div className="chart-grid-2" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginTop: 16 }}>
                 {[
                   ["Market Cycle", "AED 155B backlog = 3-4yr cushion. 35% recurring from malls/hotels.", T.orange],
-                  ["Supply Competition", "Brand premium 20-40%. 79K delivery track record. 14+ master communities.", T.gold],
+                  ["Supply Competition", "Brand premium 20-40%. 79K delivery track record. Master-planned communities across Dubai.", T.gold],
                   ["Premium Pricing", "80/20 payment plans reduce barrier. Branded residences justify premium.", T.red],
                   ["Geographic Conc.", "+124% intl sales YoY. Expanding to Saudi, Egypt, India.", T.teal],
                 ].map(([title, desc, color], i) => (
@@ -6020,7 +6028,7 @@ export default function EmaarDashboardV2() {
                   {!loading && !error && rates && (
                     <div style={{ background: T.surface, borderRadius: 16, border: "1px solid " + T.border, padding: 24 }}>
                       <div style={{ fontSize: 11, fontWeight: 700, color: T.goldLight, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4 }}>All Project Prices in Your Currency</div>
-                      <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 16 }}>Every Emaar project \u2014 prices converted live</div>
+                      <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 16 }}>Every Dubai projects \u2014 prices converted live</div>
                       <div style={{ overflowX: "auto" }}>
                         <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
                           <thead>
@@ -6109,7 +6117,7 @@ export default function EmaarDashboardV2() {
                   <div style={{ background: "linear-gradient(135deg, rgba(212,168,67,0.12), rgba(212,168,67,0.04))", borderRadius: 16, border: "1px solid rgba(212,168,67,0.3)", padding: "24px 28px", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 16 }}>
                     <div>
                       <div style={{ fontFamily: "'Fraunces',serif", fontSize: 22, fontWeight: 900, color: T.gold, marginBottom: 4 }}>UAE Golden Visa Calculator</div>
-                      <div style={{ fontSize: 13, color: T.textSecondary }}>Find out if your Emaar investment qualifies for a 10-year UAE residency visa</div>
+                      <div style={{ fontSize: 13, color: T.textSecondary }}>Find out if your Dubai investment qualifies for a 10-year UAE residency visa</div>
                     </div>
                     <div style={{ background: "rgba(212,168,67,0.1)", borderRadius: 12, padding: "12px 20px", textAlign: "center", border: "1px solid rgba(212,168,67,0.2)" }}>
                       <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 2 }}>MINIMUM INVESTMENT</div>
@@ -6239,7 +6247,7 @@ export default function EmaarDashboardV2() {
                       </div>
 
                       <div style={{ background: T.surface, borderRadius: 14, border: "1px solid " + T.border, padding: 20, flex: 1 }}>
-                        <div style={{ fontSize: 12, fontWeight: 700, color: T.goldLight, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4 }}>Emaar Projects That Qualify</div>
+                        <div style={{ fontSize: 12, fontWeight: 700, color: T.goldLight, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4 }}>Dubai Projects That Qualify</div>
                         <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 14 }}>{qualifyingProjects.length} projects at AED 2M+</div>
                         <div style={{ display: "flex", flexDirection: "column", gap: 6, maxHeight: 220, overflowY: "auto" }}>
                           {qualifyingProjects.slice(0, 12).map(p => (
@@ -6306,7 +6314,7 @@ export default function EmaarDashboardV2() {
                     ))}
                   </div>
 
-              <TabSources sources={[{ label: "UAE ICP — Golden Visa", url: "https://icp.gov.ae" }, { label: "GDRFA Dubai", url: "https://gdrfad.gov.ae" }, { label: "Federal Authority for Identity (ICP)", url: "https://icp.gov.ae" }, { label: "Emaar.com/en/investor-relations — Project prices" }, { label: "Dubai Economy & Tourism", url: "https://www.visitdubai.com" }]} />
+              <TabSources sources={[{ label: "UAE ICP — Golden Visa", url: "https://icp.gov.ae" }, { label: "GDRFA Dubai", url: "https://gdrfad.gov.ae" }, { label: "Federal Authority for Identity (ICP)", url: "https://icp.gov.ae" }, { label: "Developer websites — Project prices" }, { label: "Dubai Economy & Tourism", url: "https://www.visitdubai.com" }]} />
                 </div>
             );
           })()}
@@ -6621,7 +6629,7 @@ export default function EmaarDashboardV2() {
                 {[
                   { firm: "Knight Frank", color: T.gold, forecast: "+3% prime / +1% mainstream", short: "+3% prime, ~1% mainstream. Transitioning to sustainable growth phase.", detail: "Knight Frank's 2026 Dubai Residential Forecast projects prime property appreciation of +3% and mainstream market growth of ~1%. The report notes Dubai is entering a more mature, sustainable growth cycle after two years of double-digit gains. Key risks include oversupply in mid-market. Key tailwinds include continued HNWI inflows, Golden Visa demand, and Expo City activation.", bullets: ["+3% prime appreciation", "~1% mainstream growth", "Sustainable cycle ahead", "HNWI inflows continue", "Golden Visa demand strong"], sourceUrl: "https://www.knightfrank.com/research" },
                   { firm: "CW Core", color: T.teal, forecast: "5–8% appreciation", short: "5-8% appreciation forecast. Slowdown from 12-22% in 2024-25.", detail: "Cushman & Wakefield Core's 2026 outlook projects 5–8% price appreciation for Dubai residential, a marked slowdown from 12–22% seen in 2024–25. The firm cites the massive 2026 pipeline (~120K units) as a price moderator, though strong end-user demand and low mortgage penetration are supportive. Off-plan launches expected to remain dominant at 60–65% of volume.", bullets: ["5–8% price appreciation", "~120K units in 2026 pipeline", "Off-plan stays 60–65% of volume", "Strong end-user demand", "Low mortgage penetration"], sourceUrl: "https://cwcore.com" },
-                  { firm: "Fitch Ratings", color: T.orange, forecast: "Stable / Watch", short: "Moderate correction possible. ~120K units in 2026 pipeline.", detail: "Fitch Ratings maintained a Stable Outlook for UAE developers (Dec 2025), citing Emaar's strong backlog and recurring revenue as key buffers. However, Fitch warned that the 120K+ unit pipeline in 2026 could create oversupply in affordable segments. Emaar's premium positioning and AED 155B backlog provide significant earnings visibility even in a correction scenario.", bullets: ["Developer outlook: Stable", "120K unit pipeline = risk", "Affordable segment most exposed", "Emaar backlog = strong buffer", "Emaar rated BBB (Stable)"], sourceUrl: "https://www.fitchratings.com" },
+                  { firm: "Fitch Ratings", color: T.orange, forecast: "Stable / Watch", short: "Moderate correction possible. ~120K units in 2026 pipeline.", detail: "Fitch Ratings maintained a Stable Outlook for UAE developers (Dec 2025), citing strong developer backlogs and recurring revenue as key buffers. However, Fitch warned that the 120K+ unit pipeline in 2026 could create oversupply in affordable segments. Premium developer positioning and strong backlogs provide significant earnings visibility even in a correction scenario.", bullets: ["Developer outlook: Stable", "120K unit pipeline = risk", "Affordable segment most exposed", "Developer backlogs = strong buffer", "Top developers rated Investment Grade"], sourceUrl: "https://www.fitchratings.com" },
                 ].map((item, i) => <ForecastCard key={i} {...item} />)}
               </div>
             </Section>
@@ -6649,18 +6657,18 @@ export default function EmaarDashboardV2() {
             const COMMUNITIES = [
               { name: "Jumeirah Village Circle", short: "JVC", yield: 8.5, supplyRisk: 3, momentum: 7, demand: 9, goldenVisa: false, strPotential: 6, devQuality: 8, avgPriceSqft: 1180, note: "Highest yields in Dubai. Watch supply pipeline." },
               { name: "Dubai Hills Estate", short: "DHE", yield: 6.0, supplyRisk: 7, momentum: 9, demand: 9, goldenVisa: true, strPotential: 7, devQuality: 10, avgPriceSqft: 2050, note: "Premium family community. Strong capital appreciation." },
-              { name: "Dubai Creek Harbour", short: "DCH", yield: 6.0, supplyRisk: 6, momentum: 8, demand: 8, goldenVisa: true, strPotential: 7, devQuality: 10, avgPriceSqft: 1850, note: "Emaar's flagship waterfront. Creek Tower catalyst." },
+              { name: "Dubai Creek Harbour", short: "DCH", yield: 6.0, supplyRisk: 6, momentum: 8, demand: 8, goldenVisa: true, strPotential: 7, devQuality: 10, avgPriceSqft: 1850, note: "Flagship waterfront. Creek Tower catalyst." },
               { name: "Emaar Beachfront", short: "EBF", yield: 5.8, supplyRisk: 8, momentum: 9, demand: 8, goldenVisa: true, strPotential: 10, devQuality: 10, avgPriceSqft: 2800, note: "Best STR in Dubai. Limited supply = scarcity premium." },
               { name: "Business Bay", short: "BB", yield: 7.0, supplyRisk: 5, momentum: 7, demand: 8, goldenVisa: true, strPotential: 9, devQuality: 8, avgPriceSqft: 1650, note: "Central location. Strong short-term rental market." },
               { name: "Downtown Dubai", short: "DT", yield: 5.0, supplyRisk: 8, momentum: 7, demand: 9, goldenVisa: true, strPotential: 9, devQuality: 10, avgPriceSqft: 3200, note: "Most prestigious address. Yield compressed but rock solid." },
               { name: "Palm Jumeirah", short: "PJ", yield: 4.5, supplyRisk: 9, momentum: 8, demand: 7, goldenVisa: true, strPotential: 8, devQuality: 9, avgPriceSqft: 4200, note: "Ultra luxury. Limited supply but yield is low." },
-              { name: "The Valley", short: "TV", yield: 7.0, supplyRisk: 6, momentum: 8, demand: 7, goldenVisa: false, strPotential: 5, devQuality: 10, avgPriceSqft: 1200, note: "Affordable Emaar community. Growing demand." },
+              { name: "The Valley", short: "TV", yield: 7.0, supplyRisk: 6, momentum: 8, demand: 7, goldenVisa: false, strPotential: 5, devQuality: 10, avgPriceSqft: 1200, note: "Growing suburban community. Strong demand." },
               { name: "Emaar South", short: "ES", yield: 7.5, supplyRisk: 5, momentum: 7, demand: 7, goldenVisa: false, strPotential: 5, devQuality: 10, avgPriceSqft: 1050, note: "Expo 2020 legacy area. Airport proximity catalyst." },
               { name: "Dubai Marina", short: "DM", yield: 6.0, supplyRisk: 6, momentum: 6, demand: 8, goldenVisa: true, strPotential: 9, devQuality: 8, avgPriceSqft: 2100, note: "Mature market. Lifestyle premium. High STR demand." },
               { name: "Arjan / Dubailand", short: "ARJ", yield: 7.5, supplyRisk: 4, momentum: 7, demand: 7, goldenVisa: false, strPotential: 5, devQuality: 7, avgPriceSqft: 1050, note: "Budget entry point. Strong yield play." },
               { name: "Dubai South", short: "DS", yield: 7.8, supplyRisk: 4, momentum: 8, demand: 7, goldenVisa: false, strPotential: 4, devQuality: 9, avgPriceSqft: 980, note: "Al Maktoum Airport megaproject catalyst area." },
-              { name: "The Oasis by Emaar", short: "OAS", yield: 5.5, supplyRisk: 5, momentum: 9, demand: 8, goldenVisa: true, strPotential: 6, devQuality: 10, avgPriceSqft: 2600, note: "AED 20B mega development. Early buyers seeing 30%+ gains." },
-              { name: "Rashid Yachts & Marina", short: "RYM", yield: 5.5, supplyRisk: 7, momentum: 9, demand: 7, goldenVisa: true, strPotential: 8, devQuality: 10, avgPriceSqft: 2400, note: "New Emaar waterfront. Marina lifestyle premium." },
+              { name: "The Oasis by Emaar", short: "OAS", yield: 5.5, supplyRisk: 5, momentum: 9, demand: 8, goldenVisa: true, strPotential: 6, devQuality: 10, avgPriceSqft: 2600, note: "Mega development. Early buyers seeing 30%+ gains." },
+              { name: "Rashid Yachts & Marina", short: "RYM", yield: 5.5, supplyRisk: 7, momentum: 9, demand: 7, goldenVisa: true, strPotential: 8, devQuality: 10, avgPriceSqft: 2400, note: "New waterfront district. Marina lifestyle premium." },
               { name: "Town Square", short: "TSQ", yield: 7.0, supplyRisk: 4, momentum: 6, demand: 7, goldenVisa: false, strPotential: 4, devQuality: 8, avgPriceSqft: 900, note: "Most affordable in portfolio. Family living." },
             ];
 
@@ -6717,7 +6725,7 @@ export default function EmaarDashboardV2() {
 
             return (
               <>
-                <Section title="Investment Intelligence" sub="AI-scored community ratings across 7 factors · Updated Q4 2025">
+                <Section title="Investment Intelligence" sub="AI-scored community ratings across 7 factors · Updated 2026">
                   {/* Market Signal Banner */}
                   <div style={{ background: marketSignal === "BULL" ? "rgba(16,185,129,0.08)" : marketSignal === "NEUTRAL" ? "rgba(212,168,67,0.08)" : "rgba(239,68,68,0.08)", border: `1px solid ${marketSignal === "BULL" ? "rgba(16,185,129,0.25)" : marketSignal === "NEUTRAL" ? "rgba(212,168,67,0.25)" : "rgba(239,68,68,0.25)"}`, borderRadius: 16, padding: "20px 24px", marginBottom: 20, display: "flex", alignItems: "center", gap: 20, flexWrap: "wrap" }}>
                     <div style={{ flex: 1, minWidth: 200 }}>
@@ -7129,7 +7137,7 @@ export default function EmaarDashboardV2() {
 
         <footer style={{ borderTop: `1px solid ${T.border}`, padding: "20px 24px", textAlign: "center" }}>
           <p style={{ color: T.textMuted, fontSize: 11 }}>
-            Sources: Emaar IR, DLD, DXBinteract, Gulf News, Zawya, Knight Frank, CW Core, Fitch · Verified {new Date().toLocaleDateString("en-AE", { month: "short", year: "numeric" })} · Not financial advice
+            Sources: DLD, DXBinteract, Emaar IR, Gulf News, Zawya, Knight Frank, CW Core, Fitch · Verified {new Date().toLocaleDateString("en-AE", { month: "short", year: "numeric" })} · Not financial advice
           </p>
           <p style={{ color: "rgba(100,116,139,0.5)", fontSize: 10, marginTop: 4 }}>
             DXB Analytics · The Address Holding · © 2026
@@ -7855,7 +7863,7 @@ export default function EmaarDashboardV2() {
           <button type="button" onClick={() => setShowAddPortfolio(null)} style={{ position: "absolute", top: 16, right: 16, background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center", zIndex: 5 }}>{"\u2715"}</button>
           <div style={{ padding: "24px 28px 16px", borderBottom: `1px solid ${T.border}` }}>
             <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: 20, fontWeight: 800, color: T.white }}>{typeof showAddPortfolio === "object" ? "Investment Details" : "Select Project"}</h2>
-            <p style={{ fontSize: 11, color: T.textMuted, marginTop: 4 }}>{typeof showAddPortfolio === "object" ? showAddPortfolio.name + " \u00b7 " + showAddPortfolio.community : "Choose from 48 Emaar projects"}</p>
+            <p style={{ fontSize: 11, color: T.textMuted, marginTop: 4 }}>{typeof showAddPortfolio === "object" ? showAddPortfolio.name + " \u00b7 " + showAddPortfolio.community : "Select a project from your portfolio"}</p>
           </div>
           <div style={{ padding: "16px 28px 28px" }}>
             {showAddPortfolio === true ? <>
@@ -8451,7 +8459,7 @@ export default function EmaarDashboardV2() {
           },
           {
             icon: "🔍",
-            title: "Browse 48+ Emaar Projects",
+            title: "Browse All Projects",
             body: "Go to the Projects tab to explore every active development. Filter by community, tier, handover year, or price range. Click any card for full details, documents, and ROI analysis.",
             cta: "Next →"
           },
