@@ -10671,6 +10671,91 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
         </span>
       </div>
     </div>
+
+
+      {/* ── Edit User Modal (fixed) ── */}
+      {editingUser && (
+        <div style={{ position:"fixed", inset:0, background:"rgba(4,9,15,0.85)", zIndex:3000, display:"flex", alignItems:"center", justifyContent:"center", backdropFilter:"blur(8px)" }}
+          onClick={e => { if (e.target === e.currentTarget) setEditingUser(null); }}>
+          <div style={{ background:T.surface, borderRadius:16, border:"1px solid rgba(212,168,67,0.2)", width:"95%", maxWidth:500, maxHeight:"90vh", overflowY:"auto", boxShadow:"0 32px 80px rgba(0,0,0,0.6)" }}
+            onClick={e => e.stopPropagation()}>
+            <div style={{ padding:"22px 24px 16px", borderBottom:"1px solid rgba(255,255,255,0.06)", display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+              <div style={{ fontFamily:"'Fraunces',serif", fontSize:18, fontWeight:900, color:T.gold }}>Edit User</div>
+              <button type="button" onClick={() => setEditingUser(null)}
+                style={{ background:"rgba(255,255,255,0.06)", border:"1px solid rgba(255,255,255,0.06)", borderRadius:7, color:"#94A3B8", fontSize:15, cursor:"pointer", padding:"4px 10px" }}>✕</button>
+            </div>
+            <div style={{ padding:"20px 24px", display:"flex", flexDirection:"column", gap:14 }}>
+              {[
+                { key:"name",    label:"Full Name",    placeholder:"Full name"       },
+                { key:"phone",   label:"Phone",        placeholder:"+971 50 000 0000" },
+                { key:"country", label:"Country",      placeholder:"UAE"             },
+              ].map(({ key, label, placeholder }) => (
+                <div key={key}>
+                  <div style={{ fontSize:11, fontWeight:700, color:"#64748B", marginBottom:5, textTransform:"uppercase", letterSpacing:0.8 }}>{label}</div>
+                  <input value={editUserForm[key]||""} onChange={e => setEditUserForm(f => ({...f,[key]:e.target.value}))}
+                    placeholder={placeholder}
+                    style={{ width:"100%", padding:"10px 12px", background:T.bg, border:"1px solid rgba(212,168,67,0.15)", borderRadius:9, color:T.textPrimary, fontSize:13, fontFamily:"'Outfit',sans-serif", outline:"none", boxSizing:"border-box" }}/>
+                </div>
+              ))}
+              <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12 }}>
+                <div>
+                  <div style={{ fontSize:11, fontWeight:700, color:"#64748B", marginBottom:5, textTransform:"uppercase", letterSpacing:0.8 }}>Tier</div>
+                  <select value={editUserForm.tier||"free"} onChange={e => setEditUserForm(f=>({...f,tier:e.target.value}))}
+                    style={{ width:"100%", padding:"10px 12px", background:T.bg, border:"1px solid rgba(212,168,67,0.15)", borderRadius:9, color:T.textPrimary, fontSize:13, fontFamily:"'Outfit',sans-serif", outline:"none", cursor:"pointer" }}>
+                    {["free","pro_trial","pro","enterprise"].map(t => <option key={t} value={t}>{t}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <div style={{ fontSize:11, fontWeight:700, color:"#64748B", marginBottom:5, textTransform:"uppercase", letterSpacing:0.8 }}>Role</div>
+                  <select value={editUserForm.role||"user"} onChange={e => setEditUserForm(f=>({...f,role:e.target.value}))}
+                    style={{ width:"100%", padding:"10px 12px", background:T.bg, border:"1px solid rgba(212,168,67,0.15)", borderRadius:9, color:T.textPrimary, fontSize:13, fontFamily:"'Outfit',sans-serif", outline:"none", cursor:"pointer" }}>
+                    {["user","agent","manager","admin","superAdmin"].map(r => <option key={r} value={r}>{r}</option>)}
+                  </select>
+                </div>
+              </div>
+              <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12 }}>
+                <div>
+                  <div style={{ fontSize:11, fontWeight:700, color:"#64748B", marginBottom:5, textTransform:"uppercase", letterSpacing:0.8 }}>Org ID</div>
+                  <input value={editUserForm.orgId||""} onChange={e => setEditUserForm(f=>({...f,orgId:e.target.value}))}
+                    placeholder="org_xxxxx"
+                    style={{ width:"100%", padding:"10px 12px", background:T.bg, border:"1px solid rgba(212,168,67,0.15)", borderRadius:9, color:T.textPrimary, fontSize:13, fontFamily:"'Outfit',sans-serif", outline:"none", boxSizing:"border-box" }}/>
+                </div>
+                <div>
+                  <div style={{ fontSize:11, fontWeight:700, color:"#64748B", marginBottom:5, textTransform:"uppercase", letterSpacing:0.8 }}>Org Role</div>
+                  <select value={editUserForm.orgRole||""} onChange={e => setEditUserForm(f=>({...f,orgRole:e.target.value}))}
+                    style={{ width:"100%", padding:"10px 12px", background:T.bg, border:"1px solid rgba(212,168,67,0.15)", borderRadius:9, color:T.textPrimary, fontSize:13, fontFamily:"'Outfit',sans-serif", outline:"none", cursor:"pointer" }}>
+                    <option value="">None</option>
+                    <option value="agent">Agent</option>
+                    <option value="manager">Manager</option>
+                    <option value="viewer">Viewer</option>
+                  </select>
+                </div>
+              </div>
+              <div>
+                <div style={{ fontSize:11, fontWeight:700, color:"#64748B", marginBottom:5, textTransform:"uppercase", letterSpacing:0.8 }}>Trial End Date</div>
+                <input type="date" value={editUserForm.trialEnd||""} onChange={e => setEditUserForm(f=>({...f,trialEnd:e.target.value}))}
+                  style={{ width:"100%", padding:"10px 12px", background:T.bg, border:"1px solid rgba(212,168,67,0.15)", borderRadius:9, color:T.textPrimary, fontSize:13, fontFamily:"'Outfit',sans-serif", outline:"none", boxSizing:"border-box" }}/>
+              </div>
+              <div>
+                <div style={{ fontSize:11, fontWeight:700, color:"#64748B", marginBottom:5, textTransform:"uppercase", letterSpacing:0.8 }}>Notes</div>
+                <textarea value={editUserForm.notes||""} onChange={e => setEditUserForm(f=>({...f,notes:e.target.value}))} rows={2}
+                  placeholder="Internal notes..."
+                  style={{ width:"100%", padding:"10px 12px", background:T.bg, border:"1px solid rgba(212,168,67,0.15)", borderRadius:9, color:T.textPrimary, fontSize:13, fontFamily:"'Outfit',sans-serif", outline:"none", resize:"vertical", boxSizing:"border-box" }}/>
+              </div>
+            </div>
+            <div style={{ padding:"16px 24px", borderTop:"1px solid rgba(255,255,255,0.06)", display:"flex", gap:10, justifyContent:"flex-end" }}>
+              <button type="button" onClick={() => setEditingUser(null)}
+                style={{ padding:"10px 20px", borderRadius:8, border:"1px solid rgba(255,255,255,0.06)", background:"transparent", color:"#64748B", fontSize:12, cursor:"pointer" }}>
+                Cancel
+              </button>
+              <button type="button" onClick={saveEditUser} disabled={editUserLoading}
+                style={{ padding:"10px 24px", borderRadius:8, border:"1px solid #D4A843", background:"rgba(212,168,67,0.12)", color:"#D4A843", fontSize:12, fontWeight:700, cursor:"pointer", opacity:editUserLoading?0.6:1 }}>
+                {editUserLoading ? "Saving..." : "Save Changes"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
   );
 }
 
