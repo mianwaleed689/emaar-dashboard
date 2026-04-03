@@ -10672,12 +10672,11 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
       </div>
     </div>
 
-
-      {/* ── Edit User Modal (fixed) ── */}
+      {/* ── Edit User Modal ── */}
       {editingUser && (
         <div style={{ position:"fixed", inset:0, background:"rgba(4,9,15,0.85)", zIndex:3000, display:"flex", alignItems:"center", justifyContent:"center", backdropFilter:"blur(8px)" }}
           onClick={e => { if (e.target === e.currentTarget) setEditingUser(null); }}>
-          <div style={{ background:T.surface, borderRadius:16, border:"1px solid rgba(212,168,67,0.2)", width:"95%", maxWidth:500, maxHeight:"90vh", overflowY:"auto", boxShadow:"0 32px 80px rgba(0,0,0,0.6)" }}
+          <div style={{ background:T.surface, borderRadius:16, border:"1px solid rgba(212,168,67,0.2)", width:"95%", maxWidth:500, maxHeight:"90vh", overflowY:"auto" }}
             onClick={e => e.stopPropagation()}>
             <div style={{ padding:"22px 24px 16px", borderBottom:"1px solid rgba(255,255,255,0.06)", display:"flex", justifyContent:"space-between", alignItems:"center" }}>
               <div style={{ fontFamily:"'Fraunces',serif", fontSize:18, fontWeight:900, color:T.gold }}>Edit User</div>
@@ -10686,9 +10685,9 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
             </div>
             <div style={{ padding:"20px 24px", display:"flex", flexDirection:"column", gap:14 }}>
               {[
-                { key:"name",    label:"Full Name",    placeholder:"Full name"       },
-                { key:"phone",   label:"Phone",        placeholder:"+971 50 000 0000" },
-                { key:"country", label:"Country",      placeholder:"UAE"             },
+                { key:"name",    label:"Full Name",    placeholder:"Full name"        },
+                { key:"phone",   label:"Phone",        placeholder:"+971 50 000 0000"  },
+                { key:"country", label:"Country",      placeholder:"UAE"              },
               ].map(({ key, label, placeholder }) => (
                 <div key={key}>
                   <div style={{ fontSize:11, fontWeight:700, color:"#64748B", marginBottom:5, textTransform:"uppercase", letterSpacing:0.8 }}>{label}</div>
