@@ -159,6 +159,7 @@ const TABS = [
   { key: "Flip", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg> },
   { key: "Investment Score", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> },
   { key: "Price History", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg> },
+  { key: "My Leads", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> },
 ];
 
 /* ─── STYLES ─── */
@@ -1595,6 +1596,9 @@ export default function EmaarDashboardV2() {
   const [user, setUser] = useState("");
   const [userName, setUserName] = useState("");
   const [userTier, setUserTier] = useState("free");
+  const [userRole, setUserRole] = useState("user");       // user | agent | manager | admin | superAdmin
+  const [orgId, setOrgId] = useState(null);                // org they belong to
+  const [orgRole, setOrgRole] = useState(null);            // agent | manager | viewer
   const [firebaseUser, setFirebaseUser] = useState(null);
   const [trialDaysLeft, setTrialDaysLeft] = useState(0);
   const [showLogin, setShowLogin] = useState(false);
@@ -1725,6 +1729,20 @@ export default function EmaarDashboardV2() {
   const [liveCommunityROI, setLiveCommunityROI] = useState({});
   const [liveCommunityIntel, setLiveCommunityIntel] = useState({});
   const [selectedProject, setSelectedProject] = useState(null);
+
+  /* ─── MY LEADS STATE (Session 4) ─── */
+  const [myLeads, setMyLeads] = useState([]);
+  const [myLeadsLoading, setMyLeadsLoading] = useState(false);
+  const [leadSearch, setLeadSearch] = useState("");
+  const [leadStatusFilter, setLeadStatusFilter] = useState("all");
+  const [leadSourceFilter, setLeadSourceFilter] = useState("all");
+  const [selectedLead, setSelectedLead] = useState(null);
+  const [leadDrawerTab, setLeadDrawerTab] = useState("details");
+  const [leadNote, setLeadNote] = useState("");
+  const [leadNoteSaving, setLeadNoteSaving] = useState(false);
+  const [showQuickCapture, setShowQuickCapture] = useState(false);
+  const [captureForm, setCaptureForm] = useState({ name:"", phone:"", email:"", budget:"", community:"", source:"Manual", notes:"" });
+  const [captureLoading, setCaptureLoading] = useState(false);
   const [selectedCommunity, setSelectedCommunity] = useState(null);
   const [expandedMega, setExpandedMega] = useState(null);
   const [compareList, setCompareList] = useState([]);
@@ -2112,6 +2130,9 @@ export default function EmaarDashboardV2() {
             // Admin override — by role field OR by owner email
             if (data.role === "admin" || data.role === "superAdmin" || data.superAdmin === true) tier = "admin";
             setUserTier(tier);
+            setUserRole(data.role || "user");
+            setOrgId(data.orgId || null);
+            setOrgRole(data.orgRole || null);
             setIsSuspended(!!data.suspended);
             setIsVerified(!!data.verified);
             setVerifiedLevel(data.verifiedLevel || null);
@@ -2135,6 +2156,31 @@ export default function EmaarDashboardV2() {
     });
     return () => unsubscribe();
   }, []);
+
+  /* ─── MY LEADS LISTENER (Session 4) ─── */
+  useEffect(() => {
+    if (!isLoggedIn || !firebaseUser) return;
+    setMyLeadsLoading(true);
+    // Agents see only their assigned leads; admins/managers see all org leads
+    const isAgent = orgRole === "agent";
+    const isManager = orgRole === "manager";
+    let leadsQuery;
+    if (isAgent) {
+      leadsQuery = query(collection(db, "leads"), where("assignedTo", "==", firebaseUser.uid), orderBy("createdAt", "desc"), limit(200));
+    } else if (isManager && orgId) {
+      leadsQuery = query(collection(db, "leads"), where("orgId", "==", orgId), orderBy("createdAt", "desc"), limit(500));
+    } else {
+      setMyLeadsLoading(false);
+      return; // regular users don't see leads tab
+    }
+    const unsub = onSnapshot(leadsQuery, (snap) => {
+      const list = [];
+      snap.forEach(d => list.push({ id: d.id, ...d.data() }));
+      setMyLeads(list);
+      setMyLeadsLoading(false);
+    }, (err) => { console.warn("[Leads]", err); setMyLeadsLoading(false); });
+    return () => unsub();
+  }, [isLoggedIn, firebaseUser, orgRole, orgId]);
 
   // Tab settings now live via master onSnapshot listener
 
@@ -7305,6 +7351,445 @@ export default function EmaarDashboardV2() {
                 <span style={{ fontSize: 12, color: T.textSecondary }}>{selectedProject?.name}</span>
               </div>
             )}
+
+          {/* ══════════════════════════════════════════════
+              MY LEADS TAB — Session 4 — Agent CRM Inbox
+          ══════════════════════════════════════════════ */}
+          {tab === "My Leads" && (() => {
+            const isAgent   = orgRole === "agent";
+            const isManager = orgRole === "manager";
+            if (!isAgent && !isManager) return (
+              <div style={{ display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", padding:"80px 20px", textAlign:"center" }}>
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke={T.textMuted} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginBottom:16 }}><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                <div style={{ fontSize:16, fontWeight:700, color:T.textPrimary, marginBottom:6 }}>Leads not enabled for your account</div>
+                <div style={{ fontSize:12, color:T.textMuted }}>Contact your agency manager to get assigned leads</div>
+              </div>
+            );
+
+            // Status config
+            const STATUSES = {
+              "New":        { color:"#3B82F6", bg:"rgba(59,130,246,0.12)",  label:"New"       },
+              "Contacted":  { color:"#F59E0B", bg:"rgba(245,158,11,0.12)",  label:"Contacted" },
+              "Viewing":    { color:"#8B5CF6", bg:"rgba(139,92,246,0.12)",  label:"Viewing"   },
+              "Offer":      { color:"#14B8A6", bg:"rgba(20,184,166,0.12)",  label:"Offer"     },
+              "Won":        { color:"#10B981", bg:"rgba(16,185,129,0.12)",  label:"Won"       },
+              "Lost":       { color:"#EF4444", bg:"rgba(239,68,68,0.12)",   label:"Lost"      },
+            };
+
+            // Source config
+            const SOURCES = {
+              "Property Finder": "#00C08B",
+              "Bayut":           "#FF6B35",
+              "Dubizzle":        "#E8003D",
+              "Meta/Facebook":   "#1877F2",
+              "Instagram":       "#E1306C",
+              "WhatsApp":        "#25D366",
+              "Google Ads":      "#4285F4",
+              "Referral":        "#8B5CF6",
+              "Website":         "#14B8A6",
+              "Manual":          "#94A3B8",
+            };
+
+            // Filter
+            const filtered = myLeads.filter(l => {
+              if (leadStatusFilter !== "all" && (l.status||"New") !== leadStatusFilter) return false;
+              if (leadSourceFilter !== "all" && l.source !== leadSourceFilter) return false;
+              if (leadSearch.trim()) {
+                const q = leadSearch.toLowerCase();
+                if (!(l.name||"").toLowerCase().includes(q) &&
+                    !(l.phone||"").includes(q) &&
+                    !(l.email||"").toLowerCase().includes(q) &&
+                    !(l.community||"").toLowerCase().includes(q)) return false;
+              }
+              return true;
+            });
+
+            const totalVal = myLeads.reduce((a,l) => a + (parseFloat(l.budget)||0), 0);
+            const newToday = myLeads.filter(l => new Date(l.createdAt) >= new Date(new Date().setHours(0,0,0,0))).length;
+
+            // Save note helper
+            const saveNote = async (leadId) => {
+              if (!leadNote.trim()) return;
+              setLeadNoteSaving(true);
+              try {
+                const entry = { text: leadNote.trim(), by: userName || firebaseUser?.email, at: new Date().toISOString() };
+                const prev = selectedLead?.notes_log || [];
+                await setDoc(doc(db, "leads", leadId), { notes_log: [entry, ...prev], updatedAt: new Date().toISOString() }, { merge: true });
+                setSelectedLead(l => l ? { ...l, notes_log: [entry, ...(l.notes_log||[])] } : l);
+                setLeadNote("");
+              } catch(e) { console.error(e); }
+              setLeadNoteSaving(false);
+            };
+
+            // Update status helper
+            const updateLeadStatus = async (leadId, status) => {
+              await setDoc(doc(db, "leads", leadId), { status, updatedAt: new Date().toISOString() }, { merge: true });
+              setMyLeads(prev => prev.map(l => l.id === leadId ? {...l, status} : l));
+              if (selectedLead?.id === leadId) setSelectedLead(l => l ? {...l, status} : l);
+            };
+
+            // Quick capture submit
+            const submitCapture = async () => {
+              if (!captureForm.name && !captureForm.phone) { return; }
+              setCaptureLoading(true);
+              try {
+                const id = "lead_" + Date.now();
+                await setDoc(doc(db, "leads", id), {
+                  ...captureForm,
+                  assignedTo: firebaseUser?.uid,
+                  assignedName: userName || firebaseUser?.email,
+                  orgId: orgId || null,
+                  status: "New",
+                  createdAt: new Date().toISOString(),
+                  updatedAt: new Date().toISOString(),
+                });
+                setCaptureForm({ name:"", phone:"", email:"", budget:"", community:"", source:"Manual", notes:"" });
+                setShowQuickCapture(false);
+              } catch(e) { console.error(e); }
+              setCaptureLoading(false);
+            };
+
+            return (<>
+              {/* ── Header ── */}
+              <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:20, flexWrap:"wrap", gap:12 }}>
+                <div>
+                  <h1 style={{ fontFamily:"'Fraunces',serif", fontSize:22, fontWeight:900, color:T.white, margin:0 }}>
+                    {isManager ? "Team Leads" : "My Leads"}
+                  </h1>
+                  <p style={{ fontSize:12, color:T.textMuted, margin:"4px 0 0" }}>
+                    {isManager ? `All leads in your organisation` : `Leads assigned to you`}
+                  </p>
+                </div>
+                <button type="button" onClick={() => setShowQuickCapture(true)}
+                  style={{ display:"flex", alignItems:"center", gap:8, padding:"10px 20px", borderRadius:9, border:`1px solid ${T.gold}`, background:"rgba(212,168,67,0.1)", color:T.gold, fontSize:12, fontWeight:700, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  Capture Lead
+                </button>
+              </div>
+
+              {/* ── KPI Bar ── */}
+              <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:10, marginBottom:20 }}>
+                {[
+                  { label:"Total Leads",  value:myLeads.length,                                  color:T.gold,  icon:<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg> },
+                  { label:"New Today",    value:newToday,                                         color:T.teal,  icon:<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> },
+                  { label:"In Progress",  value:myLeads.filter(l=>["Contacted","Viewing","Offer"].includes(l.status)).length, color:"#8B5CF6", icon:<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg> },
+                  { label:"Pipeline Value", value:`AED ${totalVal >= 1e6 ? (totalVal/1e6).toFixed(1)+"M" : totalVal.toLocaleString()}`, color:T.green, icon:<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg> },
+                ].map((k,i) => (
+                  <div key={i} style={{ background:T.card, border:`1px solid ${T.border}`, borderRadius:12, padding:"14px 16px", position:"relative", overflow:"hidden" }}>
+                    <div style={{ position:"absolute", top:0, left:0, right:0, height:2, background:`linear-gradient(90deg,${k.color},${k.color}30)` }}/>
+                    <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:8 }}>
+                      <div style={{ fontSize:10, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.8 }}>{k.label}</div>
+                      <div style={{ color:k.color, opacity:0.6 }}>{k.icon}</div>
+                    </div>
+                    <div style={{ fontSize:24, fontWeight:900, color:k.color, fontFamily:"'Fraunces',serif", lineHeight:1 }}>{k.value}</div>
+                  </div>
+                ))}
+              </div>
+
+              {/* ── Filters ── */}
+              <div style={{ display:"flex", gap:8, marginBottom:16, flexWrap:"wrap", alignItems:"center" }}>
+                {/* Search */}
+                <div style={{ position:"relative", flex:"2 1 220px" }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={T.textMuted} strokeWidth="2" strokeLinecap="round" style={{ position:"absolute", left:12, top:"50%", transform:"translateY(-50%)" }}><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                  <input value={leadSearch} onChange={e=>setLeadSearch(e.target.value)} placeholder="Search by name, phone, community..."
+                    style={{ width:"100%", padding:"9px 12px 9px 36px", background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:8, color:T.textPrimary, fontSize:12, fontFamily:"'Outfit',sans-serif", outline:"none", boxSizing:"border-box" }}/>
+                </div>
+                {/* Status filter */}
+                <select value={leadStatusFilter} onChange={e=>setLeadStatusFilter(e.target.value)}
+                  style={{ flex:"1 1 130px", padding:"9px 12px", background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:8, color:T.textPrimary, fontSize:12, fontFamily:"'Outfit',sans-serif", outline:"none", cursor:"pointer" }}>
+                  <option value="all">All Statuses</option>
+                  {Object.keys(STATUSES).map(s => <option key={s} value={s}>{s}</option>)}
+                </select>
+                {/* Source filter */}
+                <select value={leadSourceFilter} onChange={e=>setLeadSourceFilter(e.target.value)}
+                  style={{ flex:"1 1 130px", padding:"9px 12px", background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:8, color:T.textPrimary, fontSize:12, fontFamily:"'Outfit',sans-serif", outline:"none", cursor:"pointer" }}>
+                  <option value="all">All Sources</option>
+                  {[...new Set(myLeads.map(l=>l.source).filter(Boolean))].map(s => <option key={s} value={s}>{s}</option>)}
+                </select>
+                {(leadSearch || leadStatusFilter !== "all" || leadSourceFilter !== "all") && (
+                  <button type="button" onClick={()=>{setLeadSearch("");setLeadStatusFilter("all");setLeadSourceFilter("all");}}
+                    style={{ padding:"9px 14px", borderRadius:8, border:`1px solid rgba(239,68,68,0.3)`, background:"rgba(239,68,68,0.08)", color:T.red, fontSize:11, fontWeight:600, cursor:"pointer" }}>
+                    Clear
+                  </button>
+                )}
+                <div style={{ marginLeft:"auto", fontSize:11, color:T.textMuted }}>
+                  {filtered.length} of {myLeads.length} leads
+                </div>
+              </div>
+
+              {/* ── Lead List ── */}
+              {myLeadsLoading ? (
+                <div style={{ display:"flex", alignItems:"center", justifyContent:"center", padding:"60px 0", gap:10 }}>
+                  <div style={{ width:20, height:20, border:`2px solid ${T.gold}30`, borderTopColor:T.gold, borderRadius:"50%", animation:"spin 0.7s linear infinite" }}/>
+                  <span style={{ fontSize:12, color:T.textMuted }}>Loading leads...</span>
+                </div>
+              ) : filtered.length === 0 ? (
+                <div style={{ textAlign:"center", padding:"60px 20px" }}>
+                  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke={T.textMuted} strokeWidth="1.5" strokeLinecap="round" style={{ marginBottom:12 }}><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+                  <div style={{ fontSize:14, fontWeight:600, color:T.textPrimary, marginBottom:6 }}>
+                    {myLeads.length === 0 ? "No leads assigned yet" : "No leads match your filters"}
+                  </div>
+                  <div style={{ fontSize:12, color:T.textMuted }}>
+                    {myLeads.length === 0 ? "Your manager will assign leads to you" : "Try adjusting your search or filters"}
+                  </div>
+                </div>
+              ) : (
+                <div style={{ display:"flex", flexDirection:"column", gap:2 }}>
+                  {/* Column headers */}
+                  <div style={{ display:"grid", gridTemplateColumns:"1fr 110px 110px 120px 130px 48px", gap:12, padding:"8px 16px", fontSize:10, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.8, borderBottom:`1px solid ${T.border}` }}>
+                    <div>Lead</div>
+                    <div>Status</div>
+                    <div>Source</div>
+                    <div>Budget</div>
+                    <div>Added</div>
+                    <div></div>
+                  </div>
+                  {filtered.map((l, i) => {
+                    const sc = STATUSES[l.status||"New"] || STATUSES.New;
+                    const srcColor = SOURCES[l.source] || "#94A3B8";
+                    const name = (l.name||"").trim() || l.email?.split("@")[0] || l.phone || "Unnamed";
+                    const initials = name.split(" ").map(w=>w[0]).join("").slice(0,2).toUpperCase();
+                    const budget = parseFloat(l.budget||0);
+                    return (
+                      <div key={l.id||i}
+                        onClick={()=>{setSelectedLead(l);setLeadDrawerTab("details");}}
+                        style={{ display:"grid", gridTemplateColumns:"1fr 110px 110px 120px 130px 48px", gap:12, padding:"12px 16px", alignItems:"center", borderBottom:`1px solid ${T.border}`, cursor:"pointer", transition:"background 0.12s", borderRadius:4 }}
+                        onMouseEnter={e=>e.currentTarget.style.background="rgba(212,168,67,0.04)"}
+                        onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
+
+                        {/* Lead info */}
+                        <div style={{ display:"flex", alignItems:"center", gap:10, minWidth:0 }}>
+                          <div style={{ width:34, height:34, borderRadius:"50%", background:`rgba(212,168,67,0.12)`, border:`1px solid rgba(212,168,67,0.2)`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:11, fontWeight:700, color:T.gold, flexShrink:0 }}>
+                            {initials}
+                          </div>
+                          <div style={{ minWidth:0 }}>
+                            <div style={{ fontSize:13, fontWeight:600, color:T.textPrimary, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{name}</div>
+                            <div style={{ fontSize:11, color:T.textMuted, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>
+                              {l.phone || l.email || l.community || "—"}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Status */}
+                        <div>
+                          <span style={{ display:"inline-block", padding:"4px 10px", borderRadius:6, fontSize:11, fontWeight:600, background:sc.bg, color:sc.color }}>
+                            {sc.label}
+                          </span>
+                        </div>
+
+                        {/* Source */}
+                        <div>
+                          <span style={{ display:"inline-block", padding:"3px 8px", borderRadius:5, fontSize:10, fontWeight:600, background:`${srcColor}14`, color:srcColor, border:`1px solid ${srcColor}30`, whiteSpace:"nowrap" }}>
+                            {l.source || "Manual"}
+                          </span>
+                        </div>
+
+                        {/* Budget */}
+                        <div style={{ fontSize:12, fontWeight:700, color:budget >= 2000000 ? T.gold : T.textPrimary }}>
+                          {budget > 0 ? `AED ${budget >= 1e6 ? (budget/1e6).toFixed(1)+"M" : budget.toLocaleString()}` : "—"}
+                        </div>
+
+                        {/* Date */}
+                        <div style={{ fontSize:11, color:T.textMuted }}>
+                          {l.createdAt ? new Date(l.createdAt).toLocaleDateString("en-AE",{day:"2-digit",month:"short",year:"numeric"}) : "—"}
+                        </div>
+
+                        {/* WhatsApp action */}
+                        <div onClick={e=>e.stopPropagation()}>
+                          {l.phone ? (
+                            <a href={`https://wa.me/${l.phone.replace(/[^0-9]/g,"")}`} target="_blank" rel="noopener noreferrer"
+                              style={{ display:"flex", alignItems:"center", justifyContent:"center", width:32, height:32, borderRadius:7, border:"1px solid rgba(37,211,102,0.3)", background:"rgba(37,211,102,0.08)", color:"#25D366", textDecoration:"none" }}>
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/></svg>
+                            </a>
+                          ) : (
+                            <div style={{ width:32, height:32 }}/>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* ── Lead Detail Drawer ── */}
+              {selectedLead && (
+                <div style={{ position:"fixed", inset:0, zIndex:1500, display:"flex" }} onClick={e=>{if(e.target===e.currentTarget)setSelectedLead(null);}}>
+                  <div style={{ flex:1, background:"rgba(0,0,0,0.5)", backdropFilter:"blur(4px)" }} onClick={()=>setSelectedLead(null)}/>
+                  <div style={{ width:460, background:T.bg, borderLeft:`1px solid ${T.border}`, display:"flex", flexDirection:"column", overflowY:"auto", boxShadow:"-20px 0 60px rgba(0,0,0,0.4)" }}>
+
+                    {/* Drawer header */}
+                    <div style={{ padding:"20px 20px 0", borderBottom:`1px solid ${T.border}`, flexShrink:0 }}>
+                      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:14 }}>
+                        <div style={{ display:"flex", alignItems:"center", gap:12 }}>
+                          <div style={{ width:44, height:44, borderRadius:"50%", background:"rgba(212,168,67,0.12)", border:`2px solid rgba(212,168,67,0.25)`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:15, fontWeight:700, color:T.gold }}>
+                            {((selectedLead.name||selectedLead.email||"?").split(" ").map(w=>w[0]).join("").slice(0,2)||"?").toUpperCase()}
+                          </div>
+                          <div>
+                            <div style={{ fontSize:16, fontWeight:800, color:T.white, fontFamily:"'Fraunces',serif" }}>
+                              {selectedLead.name || selectedLead.email?.split("@")[0] || selectedLead.phone || "Unnamed Lead"}
+                            </div>
+                            <div style={{ fontSize:11, color:T.textMuted, marginTop:2 }}>
+                              {selectedLead.source && <span>{selectedLead.source}</span>}
+                              {selectedLead.createdAt && <span> · {new Date(selectedLead.createdAt).toLocaleDateString("en-AE",{day:"2-digit",month:"short",year:"numeric"})}</span>}
+                            </div>
+                          </div>
+                        </div>
+                        <button type="button" onClick={()=>setSelectedLead(null)}
+                          style={{ background:"rgba(255,255,255,0.06)", border:`1px solid ${T.border}`, borderRadius:7, color:T.textMuted, fontSize:13, cursor:"pointer", padding:"5px 10px", display:"flex", alignItems:"center", gap:4 }}>
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                          Close
+                        </button>
+                      </div>
+
+                      {/* Status bar */}
+                      <div style={{ display:"flex", gap:5, flexWrap:"wrap", marginBottom:14 }}>
+                        {Object.entries(STATUSES).map(([s,sc]) => (
+                          <button key={s} type="button" onClick={()=>updateLeadStatus(selectedLead.id,s)}
+                            style={{ padding:"5px 12px", fontSize:11, fontWeight:600, cursor:"pointer", fontFamily:"'Outfit',sans-serif", border:`1px solid ${(selectedLead.status||"New")===s?sc.color:T.border}`, background:(selectedLead.status||"New")===s?sc.bg:"transparent", color:(selectedLead.status||"New")===s?sc.color:T.textMuted, borderRadius:7, transition:"all 0.12s" }}>
+                            {s}
+                          </button>
+                        ))}
+                      </div>
+
+                      {/* Drawer tabs */}
+                      <div style={{ display:"flex", gap:0, marginBottom:-1 }}>
+                        {[["details","Details"],["notes","Notes"]].map(([t,label])=>(
+                          <button key={t} type="button" onClick={()=>setLeadDrawerTab(t)}
+                            style={{ padding:"8px 16px", fontSize:12, fontWeight:600, border:"none", background:"transparent", cursor:"pointer", fontFamily:"'Outfit',sans-serif", color:leadDrawerTab===t?T.gold:T.textMuted, borderBottom:`2px solid ${leadDrawerTab===t?T.gold:"transparent"}`, transition:"all 0.12s" }}>
+                            {label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Details tab */}
+                    {leadDrawerTab === "details" && (
+                      <div style={{ padding:"20px", flex:1, overflowY:"auto" }}>
+                        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12, marginBottom:16 }}>
+                          {[
+                            { label:"Phone",     value:selectedLead.phone },
+                            { label:"Email",     value:selectedLead.email },
+                            { label:"Budget",    value:selectedLead.budget ? `AED ${parseFloat(selectedLead.budget).toLocaleString()}` : null },
+                            { label:"Community", value:selectedLead.community },
+                            { label:"Project",   value:selectedLead.project },
+                            { label:"Nationality", value:selectedLead.nationality },
+                          ].map(({label,value})=>value ? (
+                            <div key={label} style={{ background:T.surfaceAlt, borderRadius:8, padding:"10px 12px" }}>
+                              <div style={{ fontSize:9, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.7, marginBottom:4 }}>{label}</div>
+                              <div style={{ fontSize:12, fontWeight:600, color:T.textPrimary }}>{value}</div>
+                            </div>
+                          ) : null)}
+                        </div>
+                        {/* WhatsApp CTA */}
+                        {selectedLead.phone && (
+                          <a href={`https://wa.me/${selectedLead.phone.replace(/[^0-9]/g,"")}`} target="_blank" rel="noopener noreferrer"
+                            style={{ display:"flex", alignItems:"center", justifyContent:"center", gap:8, width:"100%", padding:"11px 0", borderRadius:9, border:"1px solid rgba(37,211,102,0.4)", background:"rgba(37,211,102,0.08)", color:"#25D366", fontSize:12, fontWeight:700, textDecoration:"none", fontFamily:"'Outfit',sans-serif", marginBottom:12 }}>
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/></svg>
+                            Open WhatsApp Chat
+                          </a>
+                        )}
+                        {selectedLead.notes && (
+                          <div style={{ background:T.surfaceAlt, borderRadius:8, padding:"12px 14px" }}>
+                            <div style={{ fontSize:9, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.7, marginBottom:6 }}>Notes</div>
+                            <div style={{ fontSize:12, color:T.textSecondary, lineHeight:1.6 }}>{selectedLead.notes}</div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Notes tab */}
+                    {leadDrawerTab === "notes" && (
+                      <div style={{ padding:"20px", flex:1, display:"flex", flexDirection:"column" }}>
+                        {/* Add note */}
+                        <div style={{ marginBottom:16 }}>
+                          <textarea value={leadNote} onChange={e=>setLeadNote(e.target.value)} rows={3}
+                            placeholder="Add a note about this lead..."
+                            style={{ width:"100%", padding:"10px 12px", background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:8, color:T.textPrimary, fontSize:12, fontFamily:"'Outfit',sans-serif", outline:"none", resize:"vertical", boxSizing:"border-box" }}/>
+                          <button type="button" onClick={()=>saveNote(selectedLead.id)} disabled={!leadNote.trim()||leadNoteSaving}
+                            style={{ marginTop:8, padding:"8px 20px", borderRadius:7, border:`1px solid ${T.gold}`, background:"rgba(212,168,67,0.1)", color:T.gold, fontSize:12, fontWeight:700, cursor:"pointer", opacity:(!leadNote.trim()||leadNoteSaving)?0.5:1 }}>
+                            {leadNoteSaving ? "Saving..." : "Save Note"}
+                          </button>
+                        </div>
+                        {/* Note history */}
+                        <div style={{ flex:1, overflowY:"auto", display:"flex", flexDirection:"column", gap:8 }}>
+                          {(selectedLead.notes_log||[]).map((n,ni)=>(
+                            <div key={ni} style={{ background:T.surfaceAlt, borderRadius:8, padding:"10px 12px" }}>
+                              <div style={{ fontSize:11, color:T.textPrimary, lineHeight:1.5, marginBottom:4 }}>{n.text}</div>
+                              <div style={{ fontSize:10, color:T.textMuted }}>{n.by} · {n.at ? new Date(n.at).toLocaleString("en-AE",{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"}) : ""}</div>
+                            </div>
+                          ))}
+                          {(!selectedLead.notes_log||selectedLead.notes_log.length===0) && (
+                            <div style={{ textAlign:"center", padding:"30px 0", color:T.textMuted, fontSize:12 }}>No notes yet</div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* ── Quick Capture Modal ── */}
+              {showQuickCapture && (
+                <div style={{ position:"fixed", inset:0, background:"rgba(4,9,15,0.85)", zIndex:2000, display:"flex", alignItems:"center", justifyContent:"center", backdropFilter:"blur(8px)" }} onClick={e=>{if(e.target===e.currentTarget)setShowQuickCapture(false);}}>
+                  <div style={{ background:T.surface, borderRadius:16, border:`1px solid ${T.border}`, width:"95%", maxWidth:480, maxHeight:"90vh", overflowY:"auto" }} onClick={e=>e.stopPropagation()}>
+                    <div style={{ padding:"22px 24px", borderBottom:`1px solid ${T.border}`, display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+                      <div>
+                        <div style={{ fontFamily:"'Fraunces',serif", fontSize:18, fontWeight:900, color:T.gold }}>Quick Capture</div>
+                        <div style={{ fontSize:11, color:T.textMuted, marginTop:2 }}>Add a new lead — will be assigned to you</div>
+                      </div>
+                      <button type="button" onClick={()=>setShowQuickCapture(false)}
+                        style={{ background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:8, color:T.textMuted, width:32, height:32, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center" }}>
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                      </button>
+                    </div>
+                    <div style={{ padding:"20px 24px", display:"flex", flexDirection:"column", gap:14 }}>
+                      {[
+                        { key:"name",      label:"Full Name",        placeholder:"Ahmed Al-Mansouri",    required:true },
+                        { key:"phone",     label:"Phone Number",     placeholder:"+971 50 123 4567"              },
+                        { key:"email",     label:"Email Address",    placeholder:"ahmed@example.com"             },
+                        { key:"budget",    label:"Budget (AED)",     placeholder:"2000000",      type:"number"   },
+                        { key:"community", label:"Community Interest",placeholder:"Dubai Hills Estate"           },
+                      ].map(({key,label,placeholder,required,type})=>(
+                        <div key={key}>
+                          <div style={{ fontSize:11, fontWeight:600, color:T.textMuted, marginBottom:5, letterSpacing:0.3 }}>
+                            {label}{required && <span style={{ color:T.gold }}> *</span>}
+                          </div>
+                          <input type={type||"text"} value={captureForm[key]||""} onChange={e=>setCaptureForm(f=>({...f,[key]:e.target.value}))}
+                            placeholder={placeholder}
+                            style={{ width:"100%", padding:"10px 14px", background:T.bg, border:`1px solid rgba(212,168,67,0.15)`, borderRadius:9, color:T.textPrimary, fontSize:13, fontFamily:"'Outfit',sans-serif", outline:"none", boxSizing:"border-box" }}/>
+                        </div>
+                      ))}
+                      <div>
+                        <div style={{ fontSize:11, fontWeight:600, color:T.textMuted, marginBottom:5 }}>Source</div>
+                        <select value={captureForm.source} onChange={e=>setCaptureForm(f=>({...f,source:e.target.value}))}
+                          style={{ width:"100%", padding:"10px 14px", background:T.bg, border:`1px solid rgba(212,168,67,0.15)`, borderRadius:9, color:T.textPrimary, fontSize:13, fontFamily:"'Outfit',sans-serif", outline:"none", cursor:"pointer" }}>
+                          {["Manual","Property Finder","Bayut","Dubizzle","WhatsApp","Meta/Facebook","Instagram","Google Ads","Referral","Website","Cold Call"].map(s=><option key={s} value={s}>{s}</option>)}
+                        </select>
+                      </div>
+                      <div>
+                        <div style={{ fontSize:11, fontWeight:600, color:T.textMuted, marginBottom:5 }}>Notes</div>
+                        <textarea value={captureForm.notes||""} onChange={e=>setCaptureForm(f=>({...f,notes:e.target.value}))} rows={2}
+                          placeholder="Budget range, timeline, requirements..."
+                          style={{ width:"100%", padding:"10px 14px", background:T.bg, border:`1px solid rgba(212,168,67,0.15)`, borderRadius:9, color:T.textPrimary, fontSize:13, fontFamily:"'Outfit',sans-serif", outline:"none", resize:"vertical", boxSizing:"border-box" }}/>
+                      </div>
+                    </div>
+                    <div style={{ padding:"16px 24px", borderTop:`1px solid ${T.border}`, display:"flex", gap:10, justifyContent:"flex-end" }}>
+                      <button type="button" onClick={()=>setShowQuickCapture(false)}
+                        style={{ padding:"10px 20px", borderRadius:8, border:`1px solid ${T.border}`, background:"transparent", color:T.textMuted, fontSize:12, cursor:"pointer" }}>
+                        Cancel
+                      </button>
+                      <button type="button" onClick={submitCapture} disabled={captureLoading||(!captureForm.name&&!captureForm.phone)}
+                        style={{ padding:"10px 24px", borderRadius:8, border:`1px solid ${T.gold}`, background:"rgba(212,168,67,0.12)", color:T.gold, fontSize:12, fontWeight:700, cursor:"pointer", opacity:(captureLoading||(!captureForm.name&&!captureForm.phone))?0.5:1, fontFamily:"'Outfit',sans-serif" }}>
+                        {captureLoading ? "Saving..." : "Save Lead"}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </>);
+          })()}
+
+
             {selectedProject && (() => {
         /* Resolve: if selectedProject is an ID (number/string), find the full object */
         const _sp = (typeof selectedProject === "number" || typeof selectedProject === "string" || !selectedProject.name)
