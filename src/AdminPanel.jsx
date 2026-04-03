@@ -9301,6 +9301,54 @@ const ProfileDrawerComponent = ({
                   {JOB_ROLES.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
                 </select>
 
+                {/* ── Organisation Assignment (Session 1) ── */}
+                <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.2, marginBottom: 12, marginTop: 8 }}>Organisation</div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 20 }}>
+                  <div>
+                    <div style={{ fontSize: 9, color: T.textMuted, marginBottom: 4, textTransform: "uppercase", letterSpacing: 0.7 }}>Org ID</div>
+                    <div style={{ display: "flex", gap: 6 }}>
+                      <input
+                        defaultValue={u.orgId || ""}
+                        placeholder="e.g. org_betterHomes"
+                        onBlur={async e => {
+                          const val = e.target.value.trim();
+                          if (val === (u.orgId || "")) return;
+                          try {
+                            await setDoc(doc(db, "users", u.uid), { orgId: val || null }, { merge: true });
+                            await logAudit(db, { action: "org_assign", uid: u.uid, orgId: val });
+                            setDrawerUser(prev => prev?.uid === u.uid ? { ...prev, orgId: val } : prev);
+                            fetchUsers();
+                            notify(val ? "Org ID set" : "Org ID cleared");
+                          } catch(e2) { notify("Error: " + e2.message); }
+                        }}
+                        style={{ ...inputStyle, fontSize: 11 }}
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 9, color: T.textMuted, marginBottom: 4, textTransform: "uppercase", letterSpacing: 0.7 }}>Org Role</div>
+                    <select
+                      defaultValue={u.orgRole || ""}
+                      onChange={async e => {
+                        const val = e.target.value;
+                        try {
+                          await setDoc(doc(db, "users", u.uid), { orgRole: val || null }, { merge: true });
+                          await logAudit(db, { action: "orgrole_assign", uid: u.uid, orgRole: val });
+                          setDrawerUser(prev => prev?.uid === u.uid ? { ...prev, orgRole: val } : prev);
+                          fetchUsers();
+                          notify("Org role updated");
+                        } catch(e2) { notify("Error: " + e2.message); }
+                      }}
+                      style={{ ...inputStyle, cursor: "pointer", fontSize: 11 }}>
+                      <option value="">— No org role —</option>
+                      <option value="superAdmin">Super Admin</option>
+                      <option value="manager">Manager</option>
+                      <option value="agent">Agent</option>
+                      <option value="viewer">Viewer (read-only)</option>
+                    </select>
+                  </div>
+                </div>
+
                 <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.2, marginBottom: 12 }}>Extend Trial</div>
                 <div style={{ display: "flex", gap: 8 }}>
                   {[7, 14, 30].map(d => (
@@ -9616,6 +9664,10 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
     { value: "enterprise", label: "Enterprise", color: "#06B6D4", bg: "rgba(6,182,212,0.12)",   price: "AED 499" },
   ];
   const JOB_ROLES = [
+    // ── Platform roles (Session 1 — multi-tenant foundation) ──
+    { value: "superAdmin",       label: "Super Admin",       color: "#D4A843", bg: "rgba(212,168,67,0.12)" },
+    { value: "manager",          label: "Agency Manager",    color: "#8B5CF6", bg: "rgba(139,92,246,0.12)" },
+    // ── Job roles ──
     { value: "agent",            label: "Real Estate Agent", color: "#3B82F6", bg: "rgba(59,130,246,0.12)" },
     { value: "sales_manager",    label: "Sales Manager",     color: "#8B5CF6", bg: "rgba(139,92,246,0.12)" },
     { value: "broker",           label: "Broker",            color: "#F59E0B", bg: "rgba(245,158,11,0.12)" },
