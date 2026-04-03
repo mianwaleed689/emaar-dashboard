@@ -20681,15 +20681,14 @@ export default function AdminPanel() {
           {/* View toggle */}
           <div style={{ display: "flex", background: T.bg, borderRadius: 7,
             border: `1px solid ${T.border}`, overflow: "hidden" }}>
-            {[["table","≡"],["kanban","⊞"],["analytics","◈"]].map(([m, icon]) => (
+            {[["table","List"],["kanban","Board"],["analytics","Analytics"]].map(([m, label]) => (
               <button key={m} type="button"
                 onClick={() => { setLeadsViewMode(m); setLeadAnalyticsView(m === "analytics"); }}
-                title={m}
-                style={{ padding: "6px 10px", fontSize: 13, border: "none", cursor: "pointer",
+                style={{ padding: "6px 12px", fontSize: 11, fontWeight: 600, border: "none", cursor: "pointer",
                   fontFamily: "'Outfit',sans-serif", borderRight: `1px solid ${T.border}`,
                   background: leadsViewMode === m ? "rgba(212,168,67,0.15)" : "transparent",
-                  color: leadsViewMode === m ? T.gold : T.textMuted }}>
-                {icon}
+                  color: leadsViewMode === m ? T.gold : T.textMuted, whiteSpace: "nowrap" }}>
+                {label}
               </button>
             ))}
           </div>
@@ -20922,7 +20921,7 @@ export default function AdminPanel() {
           borderRadius: 12, overflow: "hidden" }}>
           {/* Header row */}
           <div style={{ display: "grid",
-            gridTemplateColumns: "28px 2.2fr 1.1fr 100px 80px 100px 95px 120px",
+            gridTemplateColumns: "28px 2fr 1fr 90px 75px 90px 85px 185px",
             padding: "8px 14px", borderBottom: `1px solid ${T.border}`,
             background: "rgba(212,168,67,0.03)",
             fontSize: 9, fontWeight: 700, color: T.textMuted,
@@ -20979,7 +20978,7 @@ export default function AdminPanel() {
               return (
                 <div key={l.id}
                   style={{ display: "grid",
-                    gridTemplateColumns: "28px 2.2fr 1.1fr 100px 80px 100px 95px 120px",
+                    gridTemplateColumns: "28px 2fr 1fr 90px 75px 90px 85px 185px",
                     padding: "10px 14px", borderBottom: `1px solid ${T.border}`,
                     alignItems: "center", cursor: "default", transition: "background 0.1s",
                     background: selected ? "rgba(212,168,67,0.06)"
@@ -21009,7 +21008,7 @@ export default function AdminPanel() {
                       <div style={{ display: "flex", alignItems: "center", gap: 5, flexWrap: "wrap", marginBottom: 2 }}>
                         <span style={{ fontSize: 13, fontWeight: 700, color: T.white, cursor: "pointer" }}
                           onClick={() => { setLeadDrawer(l); setLeadDrawerTab("details"); }}>
-                          {l.name || <span style={{ color: T.textMuted, fontStyle: "italic" }}>No name</span>}
+                          {l.name || l.email?.split("@")[0] || l.phone || <span style={{ color: T.textMuted, fontStyle: "italic" }}>Unknown</span>}
                         </span>
                         {dup    && <span style={{ fontSize: 9, fontWeight: 700, padding: "1px 5px", borderRadius: 4, background: "rgba(239,68,68,0.12)", color: T.red }}>DUP</span>}
                         {overdue && <span style={{ fontSize: 9, fontWeight: 700, padding: "1px 5px", borderRadius: 4, background: "rgba(239,68,68,0.12)", color: T.red }}>OVERDUE</span>}
@@ -21083,32 +21082,65 @@ export default function AdminPanel() {
                     )}
                   </div>
 
-                  {/* Action buttons */}
-                  <div style={{ display: "flex", gap: 4, justifyContent: "flex-end" }}>
+                  {/* Smart labeled action buttons */}
+                  <div style={{ display: "flex", gap: 4, justifyContent: "flex-end", flexWrap: "nowrap" }}>
+                    {/* WhatsApp — only if phone exists */}
                     {l.phone && (
                       <button type="button"
                         onClick={() => openWhatsApp(l.phone, l.name)}
-                        title="WhatsApp"
-                        style={{ padding: "5px 7px", fontSize: 11, cursor: "pointer",
+                        title={`WhatsApp ${l.phone}`}
+                        style={{ display: "flex", alignItems: "center", gap: 3,
+                          padding: "5px 8px", fontSize: 10, fontWeight: 700, cursor: "pointer",
                           fontFamily: "'Outfit',sans-serif",
                           border: "1px solid rgba(37,211,102,0.4)",
-                          background: "rgba(37,211,102,0.1)", color: "#25D166", borderRadius: 6 }}>
-                        📱
+                          background: "rgba(37,211,102,0.1)", color: "#25D166", borderRadius: 6,
+                          whiteSpace: "nowrap" }}>
+                        <span style={{fontSize:11}}>📱</span> WA
                       </button>
                     )}
+                    {/* Follow-up scheduler */}
                     <button type="button" onClick={() => setShowFollowUpModal(l)}
                       title="Schedule follow-up"
-                      style={{ padding: "5px 7px", fontSize: 11, cursor: "pointer",
-                        fontFamily: "'Outfit',sans-serif", border: `1px solid ${T.border}`,
-                        background: "transparent", color: T.textMuted, borderRadius: 6 }}>
-                      📅
+                      style={{ display: "flex", alignItems: "center", gap: 3,
+                        padding: "5px 8px", fontSize: 10, fontWeight: 700, cursor: "pointer",
+                        fontFamily: "'Outfit',sans-serif",
+                        border: `1px solid ${T.border}`,
+                        background: "transparent", color: T.textMuted, borderRadius: 6,
+                        whiteSpace: "nowrap" }}>
+                      <span style={{fontSize:10}}>📅</span> Follow
                     </button>
+                    {/* Edit — opens drawer on details tab */}
                     <button type="button"
                       onClick={() => { setLeadDrawer(l); setLeadDrawerTab("details"); }}
-                      style={{ padding: "5px 10px", fontSize: 11, fontWeight: 700, cursor: "pointer",
-                        fontFamily: "'Outfit',sans-serif", border: `1px solid ${T.gold}`,
-                        background: "rgba(212,168,67,0.1)", color: T.gold, borderRadius: 6 }}>
-                      Open
+                      title="Edit lead"
+                      style={{ display: "flex", alignItems: "center", gap: 3,
+                        padding: "5px 8px", fontSize: 10, fontWeight: 700, cursor: "pointer",
+                        fontFamily: "'Outfit',sans-serif",
+                        border: `1px solid rgba(59,130,246,0.4)`,
+                        background: "rgba(59,130,246,0.1)", color: "#3B82F6", borderRadius: 6,
+                        whiteSpace: "nowrap" }}>
+                      ✏ Edit
+                    </button>
+                    {/* Delete */}
+                    <button type="button"
+                      onClick={async () => {
+                        if (!window.confirm(`Delete lead "${l.name || l.email || 'this lead'}"? This cannot be undone.`)) return;
+                        try {
+                          await deleteDoc(doc(db, "leads", l.id));
+                          await logAudit(db, { action: "lead_deleted", leadId: l.id, name: l.name });
+                          notify("Lead deleted");
+                          fetchLeads();
+                          if (leadDrawer?.id === l.id) setLeadDrawer(null);
+                        } catch(e) { notify("Error: " + e.message); }
+                      }}
+                      title="Delete lead"
+                      style={{ display: "flex", alignItems: "center", gap: 3,
+                        padding: "5px 8px", fontSize: 10, fontWeight: 700, cursor: "pointer",
+                        fontFamily: "'Outfit',sans-serif",
+                        border: "1px solid rgba(239,68,68,0.4)",
+                        background: "rgba(239,68,68,0.1)", color: "#EF4444", borderRadius: 6,
+                        whiteSpace: "nowrap" }}>
+                      🗑 Del
                     </button>
                   </div>
                 </div>
@@ -21558,6 +21590,49 @@ export default function AdminPanel() {
                 ))}
 
                 {/* Property interest */}
+                {/* Quick edit buttons */}
+                <div style={{ display: "flex", gap: 6, marginTop: 12, marginBottom: 4 }}>
+                  <button type="button"
+                    onClick={() => {
+                      const newName = window.prompt("Edit name:", leadDrawer.name || "");
+                      if (newName === null) return;
+                      setDoc(doc(db, "leads", leadDrawer.id), { name: newName, updatedAt: new Date().toISOString() }, { merge: true })
+                        .then(() => { notify("Name updated"); setLeadDrawer(p => ({...p, name: newName})); fetchLeads(); })
+                        .catch(e => notify("Error: " + e.message));
+                    }}
+                    style={{ padding: "5px 10px", fontSize: 10, fontWeight: 700, cursor: "pointer",
+                      fontFamily: "'Outfit',sans-serif", border: `1px solid rgba(59,130,246,0.4)`,
+                      background: "rgba(59,130,246,0.08)", color: "#3B82F6", borderRadius: 6 }}>
+                    ✏ Edit Name
+                  </button>
+                  <button type="button"
+                    onClick={() => {
+                      const newPhone = window.prompt("Edit phone:", leadDrawer.phone || "");
+                      if (newPhone === null) return;
+                      setDoc(doc(db, "leads", leadDrawer.id), { phone: newPhone, updatedAt: new Date().toISOString() }, { merge: true })
+                        .then(() => { notify("Phone updated"); setLeadDrawer(p => ({...p, phone: newPhone})); fetchLeads(); })
+                        .catch(e => notify("Error: " + e.message));
+                    }}
+                    style={{ padding: "5px 10px", fontSize: 10, fontWeight: 700, cursor: "pointer",
+                      fontFamily: "'Outfit',sans-serif", border: `1px solid rgba(59,130,246,0.4)`,
+                      background: "rgba(59,130,246,0.08)", color: "#3B82F6", borderRadius: 6 }}>
+                    ✏ Edit Phone
+                  </button>
+                  <button type="button"
+                    onClick={() => {
+                      const newBudget = window.prompt("Edit budget (AED):", leadDrawer.budget || "");
+                      if (newBudget === null) return;
+                      setDoc(doc(db, "leads", leadDrawer.id), { budget: newBudget, updatedAt: new Date().toISOString() }, { merge: true })
+                        .then(() => { notify("Budget updated"); setLeadDrawer(p => ({...p, budget: newBudget})); fetchLeads(); })
+                        .catch(e => notify("Error: " + e.message));
+                    }}
+                    style={{ padding: "5px 10px", fontSize: 10, fontWeight: 700, cursor: "pointer",
+                      fontFamily: "'Outfit',sans-serif", border: `1px solid rgba(59,130,246,0.4)`,
+                      background: "rgba(59,130,246,0.08)", color: "#3B82F6", borderRadius: 6 }}>
+                    ✏ Edit Budget
+                  </button>
+                </div>
+
                 <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted,
                   textTransform: "uppercase", letterSpacing: 0.8,
                   marginTop: 16, marginBottom: 8 }}>
@@ -21636,9 +21711,9 @@ export default function AdminPanel() {
                   </button>
                 </div>
 
-                {/* Convert to user */}
-                {leadDrawer.status !== "Converted" && (
-                  <div style={{ marginTop: 18, paddingTop: 16, borderTop: `1px solid ${T.border}` }}>
+                {/* Convert to user + Delete */}
+                <div style={{ marginTop: 18, paddingTop: 16, borderTop: `1px solid ${T.border}`, display: "flex", flexDirection: "column", gap: 8 }}>
+                  {leadDrawer.status !== "Converted" && (
                     <button type="button" onClick={convertToUser} disabled={convertingLead}
                       style={{ width: "100%", padding: "11px 0", fontSize: 13, fontWeight: 700,
                         cursor: "pointer", fontFamily: "'Outfit',sans-serif",
@@ -21646,8 +21721,26 @@ export default function AdminPanel() {
                         color: T.green, borderRadius: 8 }}>
                       {convertingLead ? "Converting…" : "✓ Convert to Platform User"}
                     </button>
-                  </div>
-                )}
+                  )}
+                  {/* Delete lead */}
+                  <button type="button"
+                    onClick={async () => {
+                      if (!window.confirm(`Permanently delete this lead? This cannot be undone.`)) return;
+                      try {
+                        await deleteDoc(doc(db, "leads", leadDrawer.id));
+                        await logAudit(db, { action: "lead_deleted", leadId: leadDrawer.id });
+                        notify("Lead deleted");
+                        setLeadDrawer(null);
+                        fetchLeads();
+                      } catch(e) { notify("Error: " + e.message); }
+                    }}
+                    style={{ width: "100%", padding: "9px 0", fontSize: 12, fontWeight: 700,
+                      cursor: "pointer", fontFamily: "'Outfit',sans-serif",
+                      border: "1px solid rgba(239,68,68,0.3)", background: "rgba(239,68,68,0.06)",
+                      color: "#EF4444", borderRadius: 8 }}>
+                    🗑 Delete This Lead
+                  </button>
+                </div>
               </div>
             )}
 
