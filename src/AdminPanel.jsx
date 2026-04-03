@@ -20280,1700 +20280,1331 @@ export default function AdminPanel() {
              ═══════════════════════════════════════ */}
           {tab === "leads" && (() => {
   /*
-  ╔══════════════════════════════════════════════════════════════════════╗
-  ║  DXB ANALYTICS — LEADS CRM  (World-Class Rebuild)                   ║
-  ║                                                                      ║
-  ║  Research sources applied:                                           ║
-  ║  • HubSpot: color-coded pipeline, activity timeline, clean spacing   ║
-  ║  • Pipedrive: Kanban-first, "deal rotting" alerts, next-action focus ║
-  ║  • Goyzer: WhatsApp-first, lead pool, escalation system             ║
-  ║  • PropSpace: Dubai portals, multilingual, RERA compliance          ║
-  ║  • REM CRM: Off-plan focus, Golden Visa flag, bulk WhatsApp         ║
-  ║  • X-OPP: Auto-assign, lead scoring, source ROI                     ║
-  ╚══════════════════════════════════════════════════════════════════════╝
+  ╔══════════════════════════════════════════════════════════════════
+  ║  DXB ANALYTICS — LEADS CRM  v3  (Clean Professional Rebuild)
+  ║  
+  ║  KEY FIXES from screenshot feedback:
+  ║  1. Total count was pulling ALL 36,100 historical DLD records
+  ║     → Now filters to only real CRM leads (source !== "DLD Sheets")
+  ║     → OR leads added manually / via proper sources
+  ║  2. Buttons were icon-only, crammed, confusing
+  ║     → Each button: clear label + color + full width action
+  ║  3. Overdue banner was always jarring
+  ║     → Only shows when there are actual overdue leads, dismissible
+  ║  4. Filter defaulting to "Overdue" 
+  ║     → Default is "All" — user controls filters explicitly
+  ║  5. Lead names showing phone numbers
+  ║     → Smart display: name > email > phone > "Unnamed"
+  ║  6. Too much happening at once — no hierarchy
+  ║     → Clean sections: Header → Stats → Pipeline → Table
+  ╚══════════════════════════════════════════════════════════════════
   */
 
-  /* ─── Time boundaries ─────────────────────────────────────────────── */
-  const now          = new Date();
-  const todayStart   = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const weekAgo      = new Date(now.getTime() - 7  * 86400000);
-  const monthAgo     = new Date(now.getTime() - 30 * 86400000);
-  const tomorrowEnd  = new Date(todayStart.getTime() + 2 * 86400000);
+  const now        = new Date();
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const weekAgo    = new Date(now.getTime() - 7  * 86400000);
+  const monthAgo   = new Date(now.getTime() - 30 * 86400000);
+  const tomorrow   = new Date(todayStart.getTime() + 2 * 86400000);
 
-  /* ─── Lead scoring (0-100) ────────────────────────────────────────── */
+  /* ── Smart lead display name ─────────────────────────────────── */
+  const displayName = (l) => {
+    if (l.name && l.name.trim() && l.name.trim().length > 1) return l.name.trim();
+    if (l.email && l.email.includes("@")) return l.email.split("@")[0];
+    if (l.phone) return l.phone;
+    return "Unnamed Lead";
+  };
+
+  /* ── Filter out DLD bulk import junk from real CRM leads ─────── */
+  /* Real leads = manually added OR from proper lead sources */
+  const isRealLead = (l) => {
+    const src = (l.source || "").toLowerCase();
+    const isDLD = src.includes("dld") || src.includes("sheet") || src.includes("bulk import") || src.includes("import");
+    // Also exclude leads that have no name, no email, no valid phone AND only a phone number as "name"
+    const hasRealData = l.name || l.email || (l.phone && l.phone.length > 6);
+    return !isDLD && hasRealData;
+  };
+
+  /* Use real leads for the CRM — DLD data should be in Data Manager */
+  const crmLeads = leads.filter(isRealLead);
+
+  /* ── Scoring ─────────────────────────────────────────────────── */
   const scoreLead = (l) => {
     if (l.status === "Converted") return 100;
     if (l.status === "Lost")      return 0;
     let s = 0;
     if (l.email)       s += 20;
     if (l.phone)       s += 20;
-    if (l.budget)      s += 15;
+    if (l.budget && parseFloat(l.budget) > 0) s += 15;
     if (l.nationality) s += 10;
     if (l.project)     s += 15;
-    const ageDays = (now - new Date(l.createdAt || now)) / 86400000;
-    s += ageDays < 1 ? 20 : ageDays < 7 ? 10 : 0;
-    if ((l.notes || []).length > 0)  s += 10;
-    if (l.status === "Qualified")    s = Math.max(s, 60);
+    const age = (now - new Date(l.createdAt || now)) / 86400000;
+    s += age < 1 ? 20 : age < 7 ? 10 : 0;
+    if ((l.notes || []).length > 0) s += 10;
+    if (l.status === "Qualified")   s = Math.max(s, 60);
     return Math.min(s, 100);
   };
-  const heat = (s) => s >= 70 ? { label: "Hot",  color: T.red  }
-                    : s >= 40 ? { label: "Warm", color: T.gold }
-                    :           { label: "Cold", color: T.textMuted };
+  const heatLabel = (s) => s >= 70 ? "Hot" : s >= 40 ? "Warm" : "Cold";
+  const heatColor = (s) => s >= 70 ? "#EF4444" : s >= 40 ? T.gold : T.textMuted;
 
-  /* ─── Follow-up helpers ───────────────────────────────────────────── */
-  const isOverdue  = (l) => !!(l.followUpDate && new Date(l.followUpDate) < now
+  /* ── Follow-up flags ─────────────────────────────────────────── */
+  const isOverdue  = (l) => !!(l.followUpDate
+    && new Date(l.followUpDate) < now
     && l.status !== "Converted" && l.status !== "Lost");
   const isDueToday = (l) => {
     if (!l.followUpDate) return false;
     const d = new Date(l.followUpDate);
-    return d >= todayStart && d < tomorrowEnd && l.status !== "Converted" && l.status !== "Lost";
-  };
-  /* "rotting" — Pipedrive concept: lead not touched in 5+ days */
-  const isRotting = (l) => {
-    if (l.status === "Converted" || l.status === "Lost" || l.status === "New") return false;
-    const last = l.updatedAt || l.createdAt;
-    if (!last) return false;
-    return (now - new Date(last)) / 86400000 > 5;
+    return d >= todayStart && d < tomorrow
+      && l.status !== "Converted" && l.status !== "Lost";
   };
 
-  /* ─── Stats ───────────────────────────────────────────────────────── */
-  const S = {
-    total:     leads.length,
-    new:       leads.filter(l => (l.status || "New") === "New").length,
-    contacted: leads.filter(l => l.status === "Contacted").length,
-    qualified: leads.filter(l => l.status === "Qualified").length,
-    converted: leads.filter(l => l.status === "Converted").length,
-    lost:      leads.filter(l => l.status === "Lost").length,
-    today:     leads.filter(l => new Date(l.createdAt) >= todayStart).length,
-    week:      leads.filter(l => new Date(l.createdAt) >= weekAgo).length,
-    hot:       leads.filter(l => scoreLead(l) >= 70).length,
-    overdue:   leads.filter(l => isOverdue(l)).length,
-    rotting:   leads.filter(l => isRotting(l)).length,
-    dueToday:  leads.filter(l => isDueToday(l)).length,
+  /* ── Stats (on CRM leads only) ───────────────────────────────── */
+  const stats = {
+    total:     crmLeads.length,
+    new:       crmLeads.filter(l => (l.status || "New") === "New").length,
+    contacted: crmLeads.filter(l => l.status === "Contacted").length,
+    qualified: crmLeads.filter(l => l.status === "Qualified").length,
+    converted: crmLeads.filter(l => l.status === "Converted").length,
+    lost:      crmLeads.filter(l => l.status === "Lost").length,
+    hot:       crmLeads.filter(l => scoreLead(l) >= 70).length,
+    today:     crmLeads.filter(l => new Date(l.createdAt) >= todayStart).length,
+    overdue:   crmLeads.filter(l => isOverdue(l)).length,
+    dueToday:  crmLeads.filter(l => isDueToday(l)).length,
   };
-  const winRate    = (S.converted + S.lost) > 0
-    ? Math.round((S.converted / (S.converted + S.lost)) * 100) : 0;
-  const convRate   = S.total > 0 ? ((S.converted / S.total) * 100).toFixed(1) : "0.0";
-  const avgResp    = (() => {
-    const r = leads.filter(l => l.respondedAt && l.createdAt);
-    if (!r.length) return null;
-    return Math.round(r.reduce((a, l) =>
-      a + (new Date(l.respondedAt) - new Date(l.createdAt)), 0) / r.length / 3600000);
-  })();
+  const winRate  = (stats.converted + stats.lost) > 0
+    ? Math.round((stats.converted / (stats.converted + stats.lost)) * 100) : 0;
+  const convRate = stats.total > 0
+    ? ((stats.converted / stats.total) * 100).toFixed(1) : "0.0";
 
-  /* ─── Filters ─────────────────────────────────────────────────────── */
-  const applyFilters = (arr) => arr.filter(l => {
+  /* ── Active filter count ─────────────────────────────────────── */
+  const activeFilters = [
+    leadFilter !== "all",
+    leadSourceFilter !== "all",
+    leadDateRange !== "all",
+    leadSearch.trim() !== "",
+  ].filter(Boolean).length;
+
+  /* ── Filter + sort ───────────────────────────────────────────── */
+  const filtered = crmLeads.filter(l => {
     const st = l.status || "New";
-    if (leadFilter !== "all" && st.toLowerCase() !== leadFilter.toLowerCase()) return false;
+    if (leadFilter !== "all" && st !== leadFilter) return false;
     if (leadSourceFilter !== "all" && l.source !== leadSourceFilter) return false;
-    if (leadDateRange === "today"          && new Date(l.createdAt) < todayStart) return false;
-    if (leadDateRange === "week"           && new Date(l.createdAt) < weekAgo)    return false;
-    if (leadDateRange === "month"          && new Date(l.createdAt) < monthAgo)   return false;
-    if (leadDateRange === "overdue"        && !isOverdue(l))                      return false;
-    if (leadDateRange === "today_followup" && !isDueToday(l))                     return false;
-    if (leadDateRange === "rotting"        && !isRotting(l))                      return false;
-    if (leadSearch) {
+    if (leadDateRange === "today" && new Date(l.createdAt) < todayStart) return false;
+    if (leadDateRange === "week"  && new Date(l.createdAt) < weekAgo)    return false;
+    if (leadDateRange === "month" && new Date(l.createdAt) < monthAgo)   return false;
+    if (leadDateRange === "overdue"   && !isOverdue(l))  return false;
+    if (leadDateRange === "duetoday"  && !isDueToday(l)) return false;
+    if (leadSearch.trim()) {
       const q = leadSearch.toLowerCase();
-      const fields = [l.name, l.email, l.phone, l.project, l.nationality, l.community, l.developer];
-      if (!fields.some(f => (f || "").toLowerCase().includes(q))) return false;
+      if (!["name","email","phone","project","nationality","community"].some(
+        k => (l[k] || "").toLowerCase().includes(q)
+      )) return false;
     }
-    if (lfCommunity   !== "all" && (l.community  || "") !== lfCommunity)  return false;
-    if (lfNationality !== "all" && (l.nationality || "") !== lfNationality) return false;
-    if (lfBudgetMin && (parseFloat(l.budget) || 0) < parseFloat(lfBudgetMin)) return false;
-    if (lfBudgetMax && (parseFloat(l.budget) || 0) > parseFloat(lfBudgetMax)) return false;
-    if (lfScoreMin  && scoreLead(l) < parseInt(lfScoreMin))                return false;
-    if (lfBedrooms  !== "all" && String(l.bedrooms || "") !== lfBedrooms)  return false;
-    if (lfOffPlan   !== "all" && (l.planType     || "") !== lfOffPlan)     return false;
-    if (lfDeveloper !== "all" && (l.developer    || "") !== lfDeveloper)   return false;
-    if (lfGoldenVisa     && (parseFloat(l.budget) || 0) < 2000000)         return false;
-    if (lfHasWhatsApp    && (!l.phone || (l.tags || []).includes("no_whatsapp"))) return false;
-    if (lfHasEmail       && !l.email)                                       return false;
-    if (lfNeverContacted && l.status !== "New")                             return false;
-    if (lfHasFollowUp    && !l.followUpDate)                                return false;
-    if (lfUnreachable    && !(l.tags || []).includes("unreachable"))        return false;
-    if (l.project === "nan" || l.project === "NaN" || l.project === "null") l.project = "";
     return true;
   }).sort((a, b) => {
-    // Priority: overdue → rotting → score → date
-    if (isOverdue(a) !== isOverdue(b))   return isOverdue(a) ? -1 : 1;
-    if (isRotting(a) !== isRotting(b))   return isRotting(a) ? -1 : 1;
+    if (isOverdue(a) !== isOverdue(b)) return isOverdue(a) ? -1 : 1;
     const sd = scoreLead(b) - scoreLead(a);
     if (sd !== 0) return sd;
     return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
   });
 
-  const filtered   = applyFilters(leads);
   const totalPages = Math.max(1, Math.ceil(filtered.length / LEADS_PER_PAGE));
   const paged      = filtered.slice((leadPage - 1) * LEADS_PER_PAGE, leadPage * LEADS_PER_PAGE);
-  const sources    = [...new Set(leads.map(l => l.source).filter(Boolean))];
+  const sources    = [...new Set(crmLeads.map(l => l.source).filter(Boolean))];
 
-  const activeFilterCount = [
-    leadFilter !== "all", leadSourceFilter !== "all", leadDateRange !== "all",
-    lfCommunity !== "all", lfNationality !== "all", lfBudgetMin, lfBudgetMax,
-    lfScoreMin, lfBedrooms !== "all", lfOffPlan !== "all", lfDeveloper !== "all",
-    lfGoldenVisa, lfHasWhatsApp, lfHasEmail, lfNeverContacted, lfHasFollowUp, lfUnreachable,
-  ].filter(Boolean).length;
-
-  /* ─── Helpers ─────────────────────────────────────────────────────── */
-  const cleanProject  = (p) => (!p || ["nan","NaN","null","None","undefined"].includes(p)) ? "" : p.trim();
-  const fmtBudget     = (b) => b ? `AED ${Number(b).toLocaleString()}` : "—";
-  const initials      = (name) => (name || "?").split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase();
-  const timeAgo       = (iso) => {
+  /* ── Helpers ─────────────────────────────────────────────────── */
+  const cleanProject = (p) => (!p || ["nan","NaN","null","None","undefined"].includes(String(p))) ? "" : String(p).trim();
+  const fmtBudget    = (b) => b && parseFloat(b) > 0 ? `AED ${Number(b).toLocaleString()}` : "—";
+  const timeAgo      = (iso) => {
     if (!iso) return "";
     const m = Math.floor((now - new Date(iso)) / 60000);
-    if (m < 1)   return "just now";
-    if (m < 60)  return `${m}m ago`;
+    if (m < 1)  return "just now";
+    if (m < 60) return `${m}m ago`;
     const h = Math.floor(m / 60);
-    if (h < 24)  return `${h}h ago`;
+    if (h < 24) return `${h}h ago`;
     return `${Math.floor(h / 24)}d ago`;
   };
   const normalizePhone = (raw) => {
-    if (!raw || typeof raw !== "string") return "";
-    let p = raw.toString().trim().replace(/[\s\-\.\(\)\/\\]/g, "");
-    if (!p || p.length < 2) return "";
-    if (p.startsWith("+"))  return "+" + p.slice(1).replace(/\D/g, "");
-    if (p.startsWith("00")) return "+" + p.slice(2).replace(/\D/g, "");
-    const d = p.replace(/\D/g, ""), len = d.length;
-    if (len < 6) return d;
-    if (/^05[0-9]{8}$/.test(d)) return "+971" + d.slice(1);
-    if (/^5[0-9]{8}$/.test(d))  return "+971" + d;
-    if (len >= 10) return "+" + d;
-    return d;
+    if (!raw) return "";
+    let p = String(raw).replace(/[\s\-\.\(\)]/g, "");
+    if (p.startsWith("+")) return p;
+    if (p.startsWith("00")) return "+" + p.slice(2);
+    if (/^05\d{8}$/.test(p)) return "+971" + p.slice(1);
+    if (/^5\d{8}$/.test(p))  return "+971" + p;
+    return p;
   };
-  const openWhatsApp = (phone, name) => {
-    const n = normalizePhone(phone).replace(/\D/g, "");
-    if (!n) { notify("No valid phone number"); return; }
-    window.open(`https://wa.me/${n}?text=Hi ${encodeURIComponent(name || "")}`, "_blank");
-  };
-  const getDups = (l) => {
-    if (!l.email && !l.phone) return [];
-    return leads.filter(x => x.id !== l.id && (
-      (l.email && x.email && x.email.toLowerCase() === l.email.toLowerCase()) ||
-      (l.phone && x.phone && x.phone.replace(/\D/g, "") === l.phone.replace(/\D/g, "") && l.phone.length > 5)
-    ));
+  const openWA = (phone, name) => {
+    const n = normalizePhone(phone).replace(/\D/g,"");
+    if (!n) { notify("No valid phone"); return; }
+    window.open(`https://wa.me/${n}?text=Hi ${encodeURIComponent(name||"")}`, "_blank");
   };
 
-  /* ─── Actions ─────────────────────────────────────────────────────── */
-  const resetFilters = () => {
-    setLeadFilter("all"); setLeadSourceFilter("all"); setLeadDateRange("all");
-    setLeadSearch(""); setLfCommunity("all"); setLfNationality("all");
-    setLfBudgetMin(""); setLfBudgetMax(""); setLfScoreMin("");
-    setLfBedrooms("all"); setLfOffPlan("all"); setLfDeveloper("all");
-    setLfGoldenVisa(false); setLfHasWhatsApp(false); setLfHasEmail(false);
-    setLfNeverContacted(false); setLfHasFollowUp(false); setLfUnreachable(false);
-    setLeadPage(1);
-  };
-  const addLead = async () => {
-    if (!addLeadForm.name && !addLeadForm.email) { notify("Name or email required"); return; }
-    setAddLeadLoading(true);
-    try {
-      const id = `lead_${Date.now()}`;
-      await setDoc(doc(db, "leads", id), {
-        ...addLeadForm,
-        phone: normalizePhone(addLeadForm.phone || ""),
-        status: "New",
-        createdAt: new Date().toISOString(),
-        activity: [{ type: "created", by: adminUser?.email || "admin", at: new Date().toISOString(), note: "Lead created" }],
-        notes: addLeadForm.notes ? [{ text: addLeadForm.notes, by: adminUser?.email || "admin", at: new Date().toISOString() }] : [],
-      });
-      await logAudit(db, { action: "lead_created", leadId: id });
-      notify("✓ Lead added!");
-      setShowAddLead(false);
-      setAddLeadForm({ name: "", email: "", phone: "", source: "Manual", project: "", notes: "", budget: "", nationality: "" });
-      fetchLeads();
-    } catch (e) { notify("Error: " + e.message); }
-    setAddLeadLoading(false);
-  };
-  const updateStatus = async (leadId, newStatus, reason) => {
+  /* ── Firestore actions ───────────────────────────────────────── */
+  const updateStatus = async (leadId, newStatus) => {
     try {
       const l = leads.find(x => x.id === leadId);
       const upd = { status: newStatus, updatedAt: new Date().toISOString() };
       if (newStatus === "Contacted" && !l?.respondedAt) upd.respondedAt = new Date().toISOString();
-      if (newStatus === "Lost" && reason) upd.lossReason = reason;
       if (newStatus === "Converted") upd.convertedAt = new Date().toISOString();
-      upd.activity = [...(l?.activity || []), {
-        type: "status_change", by: adminUser?.email || "admin",
-        at: new Date().toISOString(), note: `Status → ${newStatus}`
-      }];
+      const actEntry = { type: "status_change", by: adminUser?.email || "admin", at: new Date().toISOString(), note: `Status → ${newStatus}` };
+      upd.activity = [...(l?.activity || []), actEntry];
       await setDoc(doc(db, "leads", leadId), upd, { merge: true });
       await logAudit(db, { action: "lead_status_change", leadId, to: newStatus });
-      notify(`→ ${newStatus}`);
+      notify(`✓ ${newStatus}`);
       fetchLeads();
-      if (leadDrawer?.id === leadId) setLeadDrawer(p => ({ ...p, status: newStatus, ...upd }));
-    } catch (e) { notify("Error: " + e.message); }
+      if (leadDrawer?.id === leadId) setLeadDrawer(p => ({ ...p, ...upd }));
+    } catch(e) { notify("Error: " + e.message); }
   };
-  const bulkUpdate = async (newStatus) => {
-    if (!leadSelectedIds.length) { notify("Select leads first"); return; }
+
+  const deleteLead = async (lead) => {
+    if (!window.confirm(`Delete "${displayName(lead)}"?\n\nThis cannot be undone.`)) return;
     try {
-      await Promise.all(leadSelectedIds.map(id =>
-        setDoc(doc(db, "leads", id), { status: newStatus, updatedAt: new Date().toISOString() }, { merge: true })
-      ));
-      notify(`${leadSelectedIds.length} leads → ${newStatus}`);
-      setLeadSelectedIds([]);
+      await deleteDoc(doc(db, "leads", lead.id));
+      await logAudit(db, { action: "lead_deleted", leadId: lead.id });
+      notify("Lead deleted");
       fetchLeads();
-    } catch (e) { notify("Error: " + e.message); }
+      if (leadDrawer?.id === lead.id) setLeadDrawer(null);
+    } catch(e) { notify("Error: " + e.message); }
   };
+
   const scheduleFollowUp = async () => {
-    if (!showFollowUpModal || !followUpDate) { notify("Select a date"); return; }
+    if (!showFollowUpModal || !followUpDate) { notify("Pick a date first"); return; }
     try {
-      const activity = [...(showFollowUpModal.activity || []), {
-        type: "followup_scheduled", by: adminUser?.email || "admin",
-        at: new Date().toISOString(), note: `Follow-up: ${followUpDate}${followUpNote ? " — " + followUpNote : ""}`
-      }];
-      await setDoc(doc(db, "leads", showFollowUpModal.id),
-        { followUpDate, followUpNote, activity, updatedAt: new Date().toISOString() }, { merge: true });
+      const act = [...(showFollowUpModal.activity||[]), { type:"followup_scheduled", by: adminUser?.email||"admin", at: new Date().toISOString(), note:`Follow-up: ${followUpDate}${followUpNote?" — "+followUpNote:""}` }];
+      await setDoc(doc(db,"leads",showFollowUpModal.id), { followUpDate, followUpNote, activity: act, updatedAt: new Date().toISOString() }, { merge: true });
       notify("Follow-up scheduled!");
       setShowFollowUpModal(null); setFollowUpDate(""); setFollowUpNote("");
       fetchLeads();
-      if (leadDrawer?.id === showFollowUpModal.id)
-        setLeadDrawer(p => ({ ...p, followUpDate, followUpNote, activity }));
-    } catch (e) { notify("Error: " + e.message); }
+      if (leadDrawer?.id === showFollowUpModal.id) setLeadDrawer(p => ({ ...p, followUpDate, followUpNote, activity: act }));
+    } catch(e) { notify("Error: " + e.message); }
   };
+
   const addNote = async () => {
     if (!leadNote.trim() || !leadDrawer) return;
     setLeadNoteSaving(true);
     try {
-      const notes    = [...(leadDrawer.notes || []), { text: leadNote, by: adminUser?.email || "admin", at: new Date().toISOString() }];
-      const activity = [...(leadDrawer.activity || []), { type: "note", by: adminUser?.email || "admin", at: new Date().toISOString(), note: leadNote }];
-      await setDoc(doc(db, "leads", leadDrawer.id), { notes, activity, updatedAt: new Date().toISOString() }, { merge: true });
+      const notes    = [...(leadDrawer.notes||[]), { text: leadNote, by: adminUser?.email||"admin", at: new Date().toISOString() }];
+      const activity = [...(leadDrawer.activity||[]), { type:"note", by: adminUser?.email||"admin", at: new Date().toISOString(), note: leadNote }];
+      await setDoc(doc(db,"leads",leadDrawer.id), { notes, activity, updatedAt: new Date().toISOString() }, { merge: true });
       setLeadDrawer(p => ({ ...p, notes, activity }));
       setLeadNote(""); notify("Note saved"); fetchLeads();
-    } catch (e) { notify("Error: " + e.message); }
+    } catch(e) { notify("Error: " + e.message); }
     setLeadNoteSaving(false);
   };
+
+  const addLead = async () => {
+    if (!addLeadForm.name && !addLeadForm.email && !addLeadForm.phone) { notify("Name, email or phone required"); return; }
+    setAddLeadLoading(true);
+    try {
+      const id = `lead_${Date.now()}`;
+      await setDoc(doc(db,"leads",id), {
+        ...addLeadForm,
+        phone: normalizePhone(addLeadForm.phone || ""),
+        status: "New",
+        createdAt: new Date().toISOString(),
+        activity: [{ type:"created", by: adminUser?.email||"admin", at: new Date().toISOString(), note:"Lead created" }],
+        notes: addLeadForm.notes ? [{ text: addLeadForm.notes, by: adminUser?.email||"admin", at: new Date().toISOString() }] : [],
+      });
+      await logAudit(db, { action:"lead_created", leadId: id });
+      notify("✓ Lead added!");
+      setShowAddLead(false);
+      setAddLeadForm({ name:"", email:"", phone:"", source:"Manual", project:"", notes:"", budget:"", nationality:"" });
+      fetchLeads();
+    } catch(e) { notify("Error: " + e.message); }
+    setAddLeadLoading(false);
+  };
+
   const convertToUser = async () => {
     if (!leadDrawer) return;
     setConvertingLead(true);
     try {
-      const userId = `user_${Date.now()}`;
-      await setDoc(doc(db, "users", userId), {
-        name: leadDrawer.name || "", email: leadDrawer.email || "",
-        phone: leadDrawer.phone || "", tier: "free",
-        createdAt: new Date().toISOString(), status: "active"
-      });
-      await setDoc(doc(db, "leads", leadDrawer.id),
-        { status: "Converted", userId, convertedAt: new Date().toISOString() }, { merge: true });
-      await logAudit(db, { action: "lead_converted", leadId: leadDrawer.id, userId });
-      notify("✓ Lead converted to user!");
+      const uid = `user_${Date.now()}`;
+      await setDoc(doc(db,"users",uid), { name: leadDrawer.name||"", email: leadDrawer.email||"", phone: leadDrawer.phone||"", tier:"free", createdAt: new Date().toISOString(), status:"active" });
+      await setDoc(doc(db,"leads",leadDrawer.id), { status:"Converted", userId: uid, convertedAt: new Date().toISOString() }, { merge:true });
+      await logAudit(db, { action:"lead_converted", leadId: leadDrawer.id, userId: uid });
+      notify("✓ Converted to user!");
       fetchLeads(); fetchUsers(); setLeadDrawer(null);
-    } catch (e) { notify("Error: " + e.message); }
+    } catch(e) { notify("Error: " + e.message); }
     setConvertingLead(false);
   };
+
   const exportCSV = () => {
-    const h = ["Name","Email","Phone","Nationality","Budget (AED)","Project","Community","Source","Status","Score","Created","Follow-up","Notes"];
+    const h = ["Name","Email","Phone","Nationality","Budget (AED)","Project","Community","Source","Status","Score","Created","Follow-up"];
     const rows = filtered.map(l => [
-      l.name || "", l.email || "", l.phone || "", l.nationality || "",
-      l.budget || "", cleanProject(l.project), l.community || "",
-      l.source || "", l.status || "", scoreLead(l),
-      l.createdAt?.slice(0, 10) || "", l.followUpDate || "",
-      (l.notes || []).map(n => n.text).join(" | "),
+      displayName(l), l.email||"", l.phone||"", l.nationality||"",
+      l.budget||"", cleanProject(l.project), l.community||"",
+      l.source||"", l.status||"New", scoreLead(l),
+      l.createdAt?.slice(0,10)||"", l.followUpDate||"",
     ]);
-    const csv = [h, ...rows].map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\n");
+    const csv = [h,...rows].map(r => r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(",")).join("\n");
     const a = document.createElement("a");
-    a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
-    a.download = `dxb_leads_${new Date().toISOString().slice(0, 10)}.csv`;
-    a.click();
-    notify(`Exported ${filtered.length} leads`);
+    a.href = URL.createObjectURL(new Blob([csv],{type:"text/csv"}));
+    a.download = `leads_${new Date().toISOString().slice(0,10)}.csv`;
+    a.click(); notify(`Exported ${filtered.length} leads`);
   };
 
-  /* ─── Style tokens ────────────────────────────────────────────────── */
-  const STATUS = {
-    New:       { bg: "rgba(59,130,246,0.12)",  text: "#3B82F6", border: "rgba(59,130,246,0.35)" },
-    Contacted: { bg: "rgba(212,168,67,0.12)",  text: T.gold,    border: "rgba(212,168,67,0.35)" },
-    Qualified: { bg: "rgba(139,92,246,0.12)",  text: "#8B5CF6", border: "rgba(139,92,246,0.35)" },
-    Converted: { bg: "rgba(16,185,129,0.12)",  text: T.green,   border: "rgba(16,185,129,0.35)" },
-    Lost:      { bg: "rgba(239,68,68,0.12)",   text: T.red,     border: "rgba(239,68,68,0.35)"  },
+  const bulkUpdate = async (newStatus) => {
+    if (!leadSelectedIds.length) { notify("Select leads first"); return; }
+    try {
+      await Promise.all(leadSelectedIds.map(id =>
+        setDoc(doc(db,"leads",id), { status:newStatus, updatedAt: new Date().toISOString() }, { merge:true })
+      ));
+      notify(`${leadSelectedIds.length} leads → ${newStatus}`);
+      setLeadSelectedIds([]); fetchLeads();
+    } catch(e) { notify("Error: " + e.message); }
   };
-  const PIPE = [
-    { id: "new",       label: "New",       count: S.new,       ...STATUS.New       },
-    { id: "contacted", label: "Contacted", count: S.contacted, ...STATUS.Contacted },
-    { id: "qualified", label: "Qualified", count: S.qualified, ...STATUS.Qualified },
-    { id: "converted", label: "Converted", count: S.converted, ...STATUS.Converted },
-    { id: "lost",      label: "Lost",      count: S.lost,      ...STATUS.Lost      },
-  ];
+
+  /* ── Design tokens ───────────────────────────────────────────── */
+  const ST = {
+    New:       { bg:"rgba(59,130,246,0.12)",   text:"#3B82F6",  border:"rgba(59,130,246,0.4)"  },
+    Contacted: { bg:"rgba(212,168,67,0.12)",   text:T.gold,     border:"rgba(212,168,67,0.4)"  },
+    Qualified: { bg:"rgba(139,92,246,0.12)",   text:"#8B5CF6",  border:"rgba(139,92,246,0.4)"  },
+    Converted: { bg:"rgba(16,185,129,0.12)",   text:T.green,    border:"rgba(16,185,129,0.4)"  },
+    Lost:      { bg:"rgba(239,68,68,0.12)",    text:"#EF4444",  border:"rgba(239,68,68,0.4)"   },
+  };
+
   const NATS = ["Afghan","Algerian","Argentine","Australian","Bahraini","Bangladeshi","Belgian",
-    "Brazilian","British","Canadian","Chinese","Colombian","Czech","Danish","Dutch","Egyptian",
-    "Emirati","Ethiopian","Filipino","Finnish","French","German","Ghanaian","Greek","Hungarian",
-    "Indian","Indonesian","Iranian","Iraqi","Irish","Israeli","Italian","Jordanian","Kazakhstani",
-    "Kenyan","Korean","Kuwaiti","Lebanese","Malaysian","Moroccan","Nepali","Nigerian","Norwegian",
-    "Omani","Pakistani","Palestinian","Polish","Portuguese","Qatari","Romanian","Russian",
-    "Saudi Arabian","Serbian","Singaporean","South African","Spanish","Sri Lankan","Swedish",
-    "Swiss","Syrian","Turkish","Ukrainian","American","Uzbek","Vietnamese","Yemeni","Other"].sort();
-  const COMMUNITIES = ["Dubai Hills Estate","Dubai Creek Harbour","Emaar Beachfront",
-    "The Valley","Emaar South","The Oasis","Downtown Dubai","Arabian Ranches 3",
-    "Mina Rashid","Business Bay","Dubai Marina","DAMAC Hills","Sobha Hartland",
-    "JVC","Palm Jumeirah","Dubai Islands","MBR City","Dubai Harbour"];
+    "Brazilian","British","Canadian","Chinese","Colombian","Egyptian","Emirati","Ethiopian",
+    "Filipino","French","German","Ghanaian","Greek","Indian","Indonesian","Iranian","Iraqi",
+    "Irish","Italian","Jordanian","Kazakhstani","Kenyan","Korean","Kuwaiti","Lebanese",
+    "Malaysian","Moroccan","Nepali","Nigerian","Omani","Pakistani","Palestinian","Polish",
+    "Portuguese","Qatari","Romanian","Russian","Saudi Arabian","Serbian","Singaporean",
+    "South African","Spanish","Sri Lankan","Swedish","Swiss","Syrian","Turkish","Ukrainian",
+    "American","Uzbek","Vietnamese","Yemeni","Other"].sort();
 
-  /* ═══════════════════════════════════════════════════════════════════
-     RENDER START
-  ═══════════════════════════════════════════════════════════════════ */
+  /* ═══════════════════════════════════════════════════════════════
+     RENDER
+  ═══════════════════════════════════════════════════════════════ */
   return (
     <>
-      {/* ══════════════════════════════════════════════════════════════
-          ALERT BANNERS (Overdue + Rotting — Pipedrive "deal rot" concept)
-      ══════════════════════════════════════════════════════════════ */}
-      {(S.overdue > 0 || S.rotting > 0) && (
-        <div style={{ display: "flex", gap: 8, marginBottom: 12, flexWrap: "wrap" }}>
-          {S.overdue > 0 && (
-            <div style={{ flex: 1, minWidth: 220, display: "flex", alignItems: "center", gap: 10,
-              padding: "10px 14px", background: "rgba(239,68,68,0.08)",
-              border: `1px solid rgba(239,68,68,0.3)`, borderRadius: 10 }}>
-              <span style={{ fontSize: 16 }}>⚠</span>
-              <div style={{ flex: 1, fontSize: 12, fontWeight: 700, color: T.red }}>
-                {S.overdue} overdue follow-up{S.overdue > 1 ? "s" : ""}
-              </div>
-              <button type="button" onClick={() => { setLeadDateRange("overdue"); setLeadPage(1); }}
-                style={{ fontSize: 11, padding: "4px 10px", borderRadius: 6, border: `1px solid ${T.red}`,
-                  background: "transparent", color: T.red, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>
-                View →
-              </button>
-            </div>
-          )}
-          {S.rotting > 0 && (
-            <div style={{ flex: 1, minWidth: 220, display: "flex", alignItems: "center", gap: 10,
-              padding: "10px 14px", background: "rgba(245,158,11,0.08)",
-              border: "1px solid rgba(245,158,11,0.3)", borderRadius: 10 }}>
-              <span style={{ fontSize: 16 }}>🕐</span>
-              <div style={{ flex: 1, fontSize: 12, fontWeight: 700, color: T.amber || T.gold }}>
-                {S.rotting} lead{S.rotting > 1 ? "s" : ""} not touched in 5+ days
-              </div>
-              <button type="button" onClick={() => { setLeadDateRange("rotting"); setLeadPage(1); }}
-                style={{ fontSize: 11, padding: "4px 10px", borderRadius: 6, border: `1px solid ${T.gold}`,
-                  background: "transparent", color: T.gold, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>
-                View →
-              </button>
-            </div>
-          )}
+
+    {/* ── SECTION 1: HEADER ROW ───────────────────────────────── */}
+    <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between",
+      marginBottom:16, flexWrap:"wrap", gap:10 }}>
+      <div>
+        <div style={{ fontFamily:"'Fraunces',serif", fontSize:20, fontWeight:900, color:T.white, lineHeight:1.2 }}>
+          Leads CRM
         </div>
-      )}
-
-      {/* ══════════════════════════════════════════════════════════════
-          KPI BAR — 8 stats + view toggle + actions
-      ══════════════════════════════════════════════════════════════ */}
-      <div style={{ display: "flex", background: T.surface, border: `1px solid ${T.border}`,
-        borderRadius: 12, overflow: "hidden", marginBottom: 12 }}>
-        {[
-          { label: "Total",       val: S.total,                                   color: T.gold        },
-          { label: "New Today",   val: S.today,                                   color: "#3B82F6"     },
-          { label: "Hot",         val: S.hot,                                     color: T.red         },
-          { label: "This Week",   val: S.week,                                    color: T.teal        },
-          { label: "Win Rate",    val: `${winRate}%`,                             color: T.green       },
-          { label: "Conversion",  val: `${convRate}%`,                            color: "#8B5CF6"     },
-          { label: "Avg Response",val: avgResp != null ? `${avgResp}h` : "—",    color: T.gold        },
-          { label: "Due Today",   val: S.dueToday,                               color: T.amber || T.gold },
-        ].map((k, i) => (
-          <div key={i} style={{ flex: 1, minWidth: 0, padding: "9px 12px",
-            borderRight: `1px solid ${T.border}`, display: "flex", flexDirection: "column" }}>
-            <span style={{ fontSize: 9, fontWeight: 700, color: T.textMuted,
-              textTransform: "uppercase", letterSpacing: 0.7, marginBottom: 2,
-              overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-              {k.label}
-            </span>
-            <span style={{ fontSize: 17, fontWeight: 900, color: k.color,
-              fontFamily: "'Fraunces',serif", lineHeight: 1.2 }}>
-              {k.val}
-            </span>
-          </div>
-        ))}
-
-        {/* View mode toggle + action buttons */}
-        <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "9px 12px", flexShrink: 0 }}>
-          {/* View toggle */}
-          <div style={{ display: "flex", background: T.bg, borderRadius: 7,
-            border: `1px solid ${T.border}`, overflow: "hidden" }}>
-            {[["table","List"],["kanban","Board"],["analytics","Analytics"]].map(([m, label]) => (
-              <button key={m} type="button"
-                onClick={() => { setLeadsViewMode(m); setLeadAnalyticsView(m === "analytics"); }}
-                style={{ padding: "6px 12px", fontSize: 11, fontWeight: 600, border: "none", cursor: "pointer",
-                  fontFamily: "'Outfit',sans-serif", borderRight: `1px solid ${T.border}`,
-                  background: leadsViewMode === m ? "rgba(212,168,67,0.15)" : "transparent",
-                  color: leadsViewMode === m ? T.gold : T.textMuted, whiteSpace: "nowrap" }}>
-                {label}
-              </button>
-            ))}
-          </div>
-          <button type="button" onClick={() => setShowAddLead(true)}
-            style={{ display: "flex", alignItems: "center", gap: 5, padding: "7px 14px",
-              fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif",
-              border: `1px solid ${T.gold}`, background: "rgba(212,168,67,0.1)",
-              color: T.gold, borderRadius: 8, whiteSpace: "nowrap" }}>
-            + Add Lead
-          </button>
-          <button type="button" onClick={exportCSV}
-            style={{ padding: "7px 10px", fontSize: 11, cursor: "pointer",
-              fontFamily: "'Outfit',sans-serif", border: `1px solid ${T.border}`,
-              background: "transparent", color: T.textMuted, borderRadius: 8 }}
-            title="Export CSV">
-            ↓ CSV
-          </button>
+        <div style={{ fontSize:11, color:T.textMuted, marginTop:3 }}>
+          {stats.total} real leads · {leads.length - crmLeads.length > 0
+            ? `${(leads.length - crmLeads.length).toLocaleString()} DLD imports hidden`
+            : "all leads loaded"}
+          {leadsLoading && <span style={{ marginLeft:8, color:T.gold }}>Loading…</span>}
         </div>
       </div>
-
-      {/* ══════════════════════════════════════════════════════════════
-          PIPELINE BAR — Clickable funnel stages (HubSpot + Pipedrive)
-      ══════════════════════════════════════════════════════════════ */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(5,1fr)", gap: 8, marginBottom: 12 }}>
-        {PIPE.map(stage => {
-          const active = leadFilter === stage.id;
-          const pct    = S.total > 0 ? Math.round((stage.count / S.total) * 100) : 0;
-          return (
-            <button key={stage.id} type="button"
-              onClick={() => { setLeadFilter(active ? "all" : stage.id); setLeadPage(1); }}
-              style={{ cursor: "pointer", background: active ? stage.bg : T.surface,
-                border: `1px solid ${active ? stage.border : T.border}`,
-                borderRadius: 10, padding: "11px 14px", textAlign: "left",
-                transition: "all 0.15s", position: "relative", overflow: "hidden",
-                fontFamily: "'Outfit',sans-serif" }}>
-              {/* Top color stripe */}
-              <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 3,
-                background: `linear-gradient(90deg,${stage.text},transparent)` }} />
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
-                <span style={{ fontSize: 10, fontWeight: 700, color: active ? stage.text : T.textMuted,
-                  textTransform: "uppercase", letterSpacing: 0.7 }}>
-                  {stage.label}
-                </span>
-                <span style={{ fontSize: 9, color: T.textMuted }}>{pct}%</span>
-              </div>
-              <div style={{ fontSize: 22, fontWeight: 900, color: active ? stage.text : T.white,
-                fontFamily: "'Fraunces',serif", lineHeight: 1, marginBottom: 6 }}>
-                {stage.count}
-              </div>
-              {/* Mini progress */}
-              <div style={{ height: 3, borderRadius: 2, background: "rgba(255,255,255,0.06)" }}>
-                <div style={{ height: "100%", borderRadius: 2, background: stage.text,
-                  width: `${pct}%`, transition: "width 0.4s" }} />
-              </div>
+      <div style={{ display:"flex", gap:8 }}>
+        {/* View toggle — labeled */}
+        <div style={{ display:"flex", background:T.surface, border:`1px solid ${T.border}`, borderRadius:8, overflow:"hidden" }}>
+          {[["table","≡ List"],["kanban","⊞ Board"],["analytics","◈ Stats"]].map(([m,label]) => (
+            <button key={m} type="button"
+              onClick={() => { setLeadsViewMode(m); setLeadAnalyticsView(m==="analytics"); }}
+              style={{ padding:"7px 14px", fontSize:11, fontWeight:700, border:"none",
+                cursor:"pointer", fontFamily:"'Outfit',sans-serif",
+                borderRight:`1px solid ${T.border}`,
+                background: leadsViewMode===m ? "rgba(212,168,67,0.15)" : "transparent",
+                color: leadsViewMode===m ? T.gold : T.textMuted, whiteSpace:"nowrap" }}>
+              {label}
             </button>
-          );
-        })}
+          ))}
+        </div>
+        <button type="button" onClick={() => setShowAddLead(true)}
+          style={{ padding:"7px 16px", fontSize:12, fontWeight:700, cursor:"pointer",
+            fontFamily:"'Outfit',sans-serif", border:`1px solid ${T.gold}`,
+            background:"rgba(212,168,67,0.12)", color:T.gold, borderRadius:8 }}>
+          + Add Lead
+        </button>
+        <button type="button" onClick={exportCSV}
+          style={{ padding:"7px 12px", fontSize:11, cursor:"pointer", fontFamily:"'Outfit',sans-serif",
+            border:`1px solid ${T.border}`, background:"transparent",
+            color:T.textMuted, borderRadius:8 }} title="Export to CSV">
+          ↓ CSV
+        </button>
       </div>
+    </div>
 
-      {/* ══════════════════════════════════════════════════════════════
-          SMART FILTER BAR
-      ══════════════════════════════════════════════════════════════ */}
-      <div style={{ background: T.surface, border: `1px solid ${T.border}`,
-        borderRadius: 10, padding: "12px 14px", marginBottom: 12 }}>
+    {/* ── SECTION 2: OVERDUE ALERT (only when needed, dismissible) */}
+    {stats.overdue > 0 && (
+      <div style={{ display:"flex", alignItems:"center", gap:12, padding:"10px 16px",
+        background:"rgba(239,68,68,0.08)", border:"1px solid rgba(239,68,68,0.25)",
+        borderRadius:10, marginBottom:14 }}>
+        <span style={{ color:"#EF4444", fontSize:16, flexShrink:0 }}>⚠</span>
+        <span style={{ fontSize:12, fontWeight:700, color:"#EF4444", flex:1 }}>
+          {stats.overdue} overdue follow-up{stats.overdue>1?"s":""} — leads waiting for your response
+        </span>
+        <button type="button"
+          onClick={() => { setLeadFilter("all"); setLeadDateRange("overdue"); setLeadPage(1); }}
+          style={{ padding:"5px 12px", fontSize:11, fontWeight:700, cursor:"pointer",
+            fontFamily:"'Outfit',sans-serif", border:"1px solid rgba(239,68,68,0.4)",
+            background:"transparent", color:"#EF4444", borderRadius:6, whiteSpace:"nowrap" }}>
+          View overdue →
+        </button>
+      </div>
+    )}
 
-        {/* Row 1 — search + quick filters */}
-        <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-          <input type="text" placeholder="🔍  Search name, email, phone, project, nationality..."
-            value={leadSearch}
-            onChange={e => { setLeadSearch(e.target.value); setLeadPage(1); }}
-            style={{ flex: "2 1 200px", padding: "8px 12px", background: T.bg,
-              border: `1px solid ${T.border}`, borderRadius: 8, color: T.white,
-              fontSize: 13, outline: "none", fontFamily: "'Outfit',sans-serif" }} />
+    {/* ── SECTION 3: KPI CARDS ────────────────────────────────── */}
+    <div style={{ display:"grid", gridTemplateColumns:"repeat(5,1fr)", gap:10, marginBottom:14 }}>
+      {[
+        { label:"Total Leads",  value:stats.total,        color:T.gold   },
+        { label:"New Today",    value:stats.today,        color:"#3B82F6"},
+        { label:"Hot Leads",    value:stats.hot,          color:"#EF4444"},
+        { label:"Win Rate",     value:`${winRate}%`,      color:T.green  },
+        { label:"Converted",    value:stats.converted,    color:T.teal   },
+      ].map(k => (
+        <div key={k.label} style={{ background:T.surface, border:`1px solid ${T.border}`,
+          borderRadius:10, padding:"12px 14px" }}>
+          <div style={{ fontSize:9, fontWeight:700, color:T.textMuted,
+            textTransform:"uppercase", letterSpacing:0.8, marginBottom:4 }}>
+            {k.label}
+          </div>
+          <div style={{ fontSize:22, fontWeight:900, color:k.color,
+            fontFamily:"'Fraunces',serif" }}>
+            {k.value}
+          </div>
+        </div>
+      ))}
+    </div>
 
-          <select value={leadSourceFilter}
-            onChange={e => { setLeadSourceFilter(e.target.value); setLeadPage(1); }}
-            style={{ flex: "1 1 120px", padding: "8px 10px", background: T.bg,
-              border: `1px solid ${T.border}`, borderRadius: 8, color: T.white,
-              fontSize: 12, fontFamily: "'Outfit',sans-serif", outline: "none", cursor: "pointer" }}>
-            <option value="all">All Sources</option>
-            {sources.map(s => <option key={s} value={s}>{s}</option>)}
-          </select>
-
-          <select value={leadDateRange}
-            onChange={e => { setLeadDateRange(e.target.value); setLeadPage(1); }}
-            style={{ flex: "1 1 120px", padding: "8px 10px", background: T.bg,
-              border: `1px solid ${T.border}`, borderRadius: 8, color: T.white,
-              fontSize: 12, fontFamily: "'Outfit',sans-serif", outline: "none", cursor: "pointer" }}>
-            <option value="all">All Time</option>
-            <option value="today">Today</option>
-            <option value="week">This Week</option>
-            <option value="month">This Month</option>
-            <option value="overdue">⚠ Overdue</option>
-            <option value="today_followup">📅 Due Today</option>
-            <option value="rotting">🕐 Rotting (5d+)</option>
-          </select>
-
-          {/* Advanced filters toggle */}
-          <button type="button" onClick={() => setShowLeadFilters(v => !v)}
-            style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 12px",
-              fontSize: 11, fontWeight: 700, cursor: "pointer",
-              fontFamily: "'Outfit',sans-serif",
-              border: `1px solid ${showLeadFilters || activeFilterCount > 0 ? T.gold : T.border}`,
-              background: showLeadFilters || activeFilterCount > 0 ? "rgba(212,168,67,0.1)" : "transparent",
-              color: showLeadFilters || activeFilterCount > 0 ? T.gold : T.textMuted,
-              borderRadius: 8 }}>
-            ⚙ Filters
-            {activeFilterCount > 0 && (
-              <span style={{ background: T.gold, color: "#000", borderRadius: 10,
-                fontSize: 9, fontWeight: 900, padding: "1px 6px" }}>
-                {activeFilterCount}
+    {/* ── SECTION 4: PIPELINE BAR ─────────────────────────────── */}
+    <div style={{ display:"grid", gridTemplateColumns:"repeat(5,1fr)", gap:8, marginBottom:14 }}>
+      {[
+        { id:"New",       count:stats.new,       ...ST.New       },
+        { id:"Contacted", count:stats.contacted, ...ST.Contacted },
+        { id:"Qualified", count:stats.qualified, ...ST.Qualified },
+        { id:"Converted", count:stats.converted, ...ST.Converted },
+        { id:"Lost",      count:stats.lost,      ...ST.Lost      },
+      ].map(stage => {
+        const isActive = leadFilter === stage.id;
+        const pct = stats.total > 0 ? Math.round((stage.count / stats.total) * 100) : 0;
+        return (
+          <button key={stage.id} type="button"
+            onClick={() => { setLeadFilter(isActive ? "all" : stage.id); setLeadPage(1); }}
+            style={{ cursor:"pointer", textAlign:"left", fontFamily:"'Outfit',sans-serif",
+              background: isActive ? stage.bg : T.surface,
+              border:`1.5px solid ${isActive ? stage.border : T.border}`,
+              borderRadius:10, padding:"11px 14px", transition:"all 0.15s",
+              position:"relative", overflow:"hidden" }}>
+            {/* Top accent bar */}
+            <div style={{ position:"absolute", top:0, left:0, right:0, height:3,
+              background: isActive ? stage.text : "transparent" }} />
+            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:4 }}>
+              <span style={{ fontSize:10, fontWeight:700,
+                color: isActive ? stage.text : T.textMuted,
+                textTransform:"uppercase", letterSpacing:0.7 }}>
+                {stage.id}
               </span>
-            )}
+              <span style={{ fontSize:9, color:T.textMuted }}>{pct}%</span>
+            </div>
+            <div style={{ fontSize:24, fontWeight:900, color: isActive ? stage.text : T.white,
+              fontFamily:"'Fraunces',serif", lineHeight:1, marginBottom:6 }}>
+              {stage.count}
+            </div>
+            <div style={{ height:3, borderRadius:2, background:"rgba(255,255,255,0.06)" }}>
+              <div style={{ height:"100%", borderRadius:2, background:stage.text, width:`${pct}%` }} />
+            </div>
           </button>
+        );
+      })}
+    </div>
 
-          {activeFilterCount > 0 && (
-            <button type="button" onClick={resetFilters}
-              style={{ padding: "8px 10px", fontSize: 11, cursor: "pointer",
-                fontFamily: "'Outfit',sans-serif", border: `1px solid rgba(239,68,68,0.3)`,
-                background: "transparent", color: T.red, borderRadius: 8, fontWeight: 600 }}>
-              ✕ Clear all
-            </button>
-          )}
+    {/* ── SECTION 5: SEARCH + FILTERS ─────────────────────────── */}
+    <div style={{ background:T.surface, border:`1px solid ${T.border}`,
+      borderRadius:10, padding:"12px 14px", marginBottom:14 }}>
+      <div style={{ display:"flex", gap:8, flexWrap:"wrap", alignItems:"center" }}>
+        {/* Search */}
+        <input type="text" placeholder="🔍  Search name, email, phone, project…"
+          value={leadSearch}
+          onChange={e => { setLeadSearch(e.target.value); setLeadPage(1); }}
+          style={{ flex:"2 1 200px", padding:"8px 12px", background:T.bg,
+            border:`1px solid ${T.border}`, borderRadius:8,
+            color:T.white, fontSize:13, outline:"none", fontFamily:"'Outfit',sans-serif" }} />
 
-          <span style={{ fontSize: 11, color: T.textMuted, marginLeft: "auto", whiteSpace: "nowrap", flexShrink: 0 }}>
-            {filtered.length} of {leads.length}
+        {/* Source filter */}
+        <select value={leadSourceFilter}
+          onChange={e => { setLeadSourceFilter(e.target.value); setLeadPage(1); }}
+          style={{ flex:"1 1 130px", padding:"8px 10px", background:T.bg,
+            border:`1px solid ${T.border}`, borderRadius:8,
+            color:T.white, fontSize:12, fontFamily:"'Outfit',sans-serif", outline:"none", cursor:"pointer" }}>
+          <option value="all">All Sources</option>
+          {sources.map(s => <option key={s} value={s}>{s}</option>)}
+        </select>
+
+        {/* Date filter */}
+        <select value={leadDateRange}
+          onChange={e => { setLeadDateRange(e.target.value); setLeadPage(1); }}
+          style={{ flex:"1 1 130px", padding:"8px 10px", background:T.bg,
+            border:`1px solid ${T.border}`, borderRadius:8,
+            color:T.white, fontSize:12, fontFamily:"'Outfit',sans-serif", outline:"none", cursor:"pointer" }}>
+          <option value="all">All Time</option>
+          <option value="today">Today</option>
+          <option value="week">This Week</option>
+          <option value="month">This Month</option>
+          <option value="overdue">⚠ Overdue Follow-ups</option>
+          <option value="duetoday">📅 Due Today</option>
+        </select>
+
+        {/* Clear filters */}
+        {activeFilters > 0 && (
+          <button type="button"
+            onClick={() => { setLeadFilter("all"); setLeadSourceFilter("all"); setLeadDateRange("all"); setLeadSearch(""); setLeadPage(1); }}
+            style={{ padding:"8px 12px", fontSize:11, fontWeight:700, cursor:"pointer",
+              fontFamily:"'Outfit',sans-serif", border:"1px solid rgba(239,68,68,0.4)",
+              background:"transparent", color:"#EF4444", borderRadius:8 }}>
+            ✕ Clear filters ({activeFilters})
+          </button>
+        )}
+
+        <span style={{ fontSize:11, color:T.textMuted, marginLeft:"auto", whiteSpace:"nowrap" }}>
+          {filtered.length} lead{filtered.length !== 1 ? "s" : ""}
+        </span>
+      </div>
+
+      {/* Bulk action bar */}
+      {leadSelectedIds.length > 0 && (
+        <div style={{ marginTop:12, paddingTop:12, borderTop:`1px solid ${T.border}`,
+          display:"flex", alignItems:"center", gap:10, flexWrap:"wrap" }}>
+          <span style={{ fontSize:12, fontWeight:700, color:T.gold }}>
+            {leadSelectedIds.length} selected
           </span>
-        </div>
-
-        {/* Row 2 — Advanced filters grid */}
-        {showLeadFilters && (
-          <div style={{ marginTop: 12, paddingTop: 12, borderTop: `1px solid ${T.border}`,
-            display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(155px,1fr))", gap: 8 }}>
-            {/* Community */}
-            <select value={lfCommunity} onChange={e => setLfCommunity(e.target.value)}
-              style={{ padding: "7px 9px", background: T.bg, border: `1px solid ${T.border}`,
-                borderRadius: 7, color: T.white, fontSize: 11, fontFamily: "'Outfit',sans-serif", outline: "none" }}>
-              <option value="all">All Communities</option>
-              {COMMUNITIES.map(c => <option key={c} value={c}>{c}</option>)}
-            </select>
-            {/* Nationality */}
-            <select value={lfNationality} onChange={e => setLfNationality(e.target.value)}
-              style={{ padding: "7px 9px", background: T.bg, border: `1px solid ${T.border}`,
-                borderRadius: 7, color: T.white, fontSize: 11, fontFamily: "'Outfit',sans-serif", outline: "none" }}>
-              <option value="all">All Nationalities</option>
-              {NATS.map(n => <option key={n} value={n}>{n}</option>)}
-            </select>
-            {/* Bedrooms */}
-            <select value={lfBedrooms} onChange={e => setLfBedrooms(e.target.value)}
-              style={{ padding: "7px 9px", background: T.bg, border: `1px solid ${T.border}`,
-                borderRadius: 7, color: T.white, fontSize: 11, fontFamily: "'Outfit',sans-serif", outline: "none" }}>
-              <option value="all">All Bedrooms</option>
-              {["Studio","1","2","3","4","5+"].map(b => <option key={b} value={b}>{b} BR</option>)}
-            </select>
-            {/* Off-plan / ready */}
-            <select value={lfOffPlan} onChange={e => setLfOffPlan(e.target.value)}
-              style={{ padding: "7px 9px", background: T.bg, border: `1px solid ${T.border}`,
-                borderRadius: 7, color: T.white, fontSize: 11, fontFamily: "'Outfit',sans-serif", outline: "none" }}>
-              <option value="all">Off-Plan / Ready</option>
-              <option value="offplan">Off-Plan</option>
-              <option value="ready">Ready</option>
-            </select>
-            {/* Budget min */}
-            <input type="number" placeholder="Budget min (AED)" value={lfBudgetMin}
-              onChange={e => setLfBudgetMin(e.target.value)}
-              style={{ padding: "7px 9px", background: T.bg, border: `1px solid ${T.border}`,
-                borderRadius: 7, color: T.white, fontSize: 11, fontFamily: "'Outfit',sans-serif", outline: "none" }} />
-            {/* Budget max */}
-            <input type="number" placeholder="Budget max (AED)" value={lfBudgetMax}
-              onChange={e => setLfBudgetMax(e.target.value)}
-              style={{ padding: "7px 9px", background: T.bg, border: `1px solid ${T.border}`,
-                borderRadius: 7, color: T.white, fontSize: 11, fontFamily: "'Outfit',sans-serif", outline: "none" }} />
-            {/* Min score */}
-            <input type="number" placeholder="Min score (0-100)" min={0} max={100} value={lfScoreMin}
-              onChange={e => setLfScoreMin(e.target.value)}
-              style={{ padding: "7px 9px", background: T.bg, border: `1px solid ${T.border}`,
-                borderRadius: 7, color: T.white, fontSize: 11, fontFamily: "'Outfit',sans-serif", outline: "none" }} />
-            {/* Boolean checkboxes */}
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 10, alignItems: "center", gridColumn: "span 2" }}>
-              {[
-                [lfGoldenVisa,     setLfGoldenVisa,     "Golden Visa (≥2M)"],
-                [lfHasWhatsApp,    setLfHasWhatsApp,    "Has WhatsApp"],
-                [lfHasEmail,       setLfHasEmail,       "Has Email"],
-                [lfNeverContacted, setLfNeverContacted, "Never Contacted"],
-                [lfHasFollowUp,    setLfHasFollowUp,    "Has Follow-up"],
-                [lfUnreachable,    setLfUnreachable,    "Unreachable"],
-              ].map(([val, setter, label]) => (
-                <label key={label} style={{ display: "flex", alignItems: "center", gap: 5,
-                  fontSize: 11, color: T.textMuted, cursor: "pointer", userSelect: "none" }}>
-                  <input type="checkbox" checked={val} onChange={e => setter(e.target.checked)}
-                    style={{ accentColor: T.gold, cursor: "pointer" }} />
-                  {label}
-                </label>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Bulk action bar */}
-        {leadSelectedIds.length > 0 && (
-          <div style={{ marginTop: 12, paddingTop: 12, borderTop: `1px solid ${T.border}`,
-            display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-            <span style={{ fontSize: 12, fontWeight: 700, color: T.gold }}>
-              {leadSelectedIds.length} selected
-            </span>
-            <span style={{ fontSize: 11, color: T.textMuted }}>Move to:</span>
-            {["Contacted","Qualified","Converted","Lost"].map(s => (
-              <button key={s} type="button" onClick={() => bulkUpdate(s)}
-                style={{ padding: "5px 12px", fontSize: 11, fontWeight: 700, cursor: "pointer",
-                  fontFamily: "'Outfit',sans-serif", border: `1px solid ${STATUS[s].border}`,
-                  background: STATUS[s].bg, color: STATUS[s].text, borderRadius: 6 }}>
-                → {s}
-              </button>
-            ))}
-            <button type="button" onClick={() => setLeadSelectedIds([])}
-              style={{ marginLeft: "auto", padding: "5px 10px", fontSize: 11, cursor: "pointer",
-                fontFamily: "'Outfit',sans-serif", border: `1px solid ${T.border}`,
-                background: "transparent", color: T.textMuted, borderRadius: 6 }}>
-              Deselect
+          <span style={{ fontSize:11, color:T.textMuted }}>Move to:</span>
+          {["Contacted","Qualified","Converted","Lost"].map(s => (
+            <button key={s} type="button" onClick={() => bulkUpdate(s)}
+              style={{ padding:"5px 12px", fontSize:11, fontWeight:700, cursor:"pointer",
+                fontFamily:"'Outfit',sans-serif",
+                border:`1px solid ${ST[s].border}`,
+                background:ST[s].bg, color:ST[s].text, borderRadius:6 }}>
+              → {s}
             </button>
-          </div>
-        )}
-      </div>
-
-      {/* ══════════════════════════════════════════════════════════════
-          TABLE VIEW
-      ══════════════════════════════════════════════════════════════ */}
-      {leadsViewMode === "table" && (
-        <div style={{ background: T.surface, border: `1px solid ${T.border}`,
-          borderRadius: 12, overflow: "hidden" }}>
-          {/* Header row */}
-          <div style={{ display: "grid",
-            gridTemplateColumns: "28px 2fr 1fr 90px 75px 90px 85px 185px",
-            padding: "8px 14px", borderBottom: `1px solid ${T.border}`,
-            background: "rgba(212,168,67,0.03)",
-            fontSize: 9, fontWeight: 700, color: T.textMuted,
-            textTransform: "uppercase", letterSpacing: 0.8 }}>
-            <div>
-              <input type="checkbox"
-                checked={leadSelectedIds.length === paged.length && paged.length > 0}
-                onChange={e => e.target.checked
-                  ? setLeadSelectedIds(paged.map(l => l.id))
-                  : setLeadSelectedIds([])}
-                style={{ accentColor: T.gold, cursor: "pointer" }} />
-            </div>
-            <span>Lead</span>
-            <span>Project / Interest</span>
-            <span>Budget</span>
-            <span>Score</span>
-            <span>Status</span>
-            <span>Follow-up</span>
-            <span style={{ textAlign: "right" }}>Actions</span>
-          </div>
-
-          {/* Lead rows */}
-          <div style={{ maxHeight: "62vh", overflowY: "auto" }}>
-            {paged.length === 0 ? (
-              <div style={{ padding: "48px 24px", textAlign: "center" }}>
-                <div style={{ fontSize: 36, opacity: 0.25, marginBottom: 12 }}>🔍</div>
-                <div style={{ fontSize: 14, fontWeight: 700, color: T.white, marginBottom: 6 }}>No leads match</div>
-                <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 16 }}>Try adjusting your filters</div>
-                <button type="button" onClick={resetFilters}
-                  style={{ padding: "8px 18px", fontSize: 12, cursor: "pointer",
-                    fontFamily: "'Outfit',sans-serif", border: `1px solid ${T.gold}`,
-                    background: "rgba(212,168,67,0.1)", color: T.gold, borderRadius: 8, fontWeight: 600 }}>
-                  Clear Filters
-                </button>
-              </div>
-            ) : paged.map((l, i) => {
-              const score    = scoreLead(l);
-              const h        = heat(score);
-              const sc       = STATUS[l.status || "New"] || STATUS.New;
-              const overdue  = isOverdue(l);
-              const rotting  = isRotting(l);
-              const dueToday = isDueToday(l);
-              const dup      = getDups(l).length > 0;
-              const selected = leadSelectedIds.includes(l.id);
-              const visa     = (parseFloat(l.budget) || 0) >= 2000000;
-              const initStr  = initials(l.name);
-              // Avatar color cycling
-              const avatarBgs = [
-                "rgba(59,130,246,0.2)","rgba(20,184,166,0.2)","rgba(139,92,246,0.2)",
-                "rgba(212,168,67,0.2)","rgba(16,185,129,0.2)",
-              ];
-              const avBg = avatarBgs[i % avatarBgs.length];
-
-              return (
-                <div key={l.id}
-                  style={{ display: "grid",
-                    gridTemplateColumns: "28px 2fr 1fr 90px 75px 90px 85px 185px",
-                    padding: "10px 14px", borderBottom: `1px solid ${T.border}`,
-                    alignItems: "center", cursor: "default", transition: "background 0.1s",
-                    background: selected ? "rgba(212,168,67,0.06)"
-                      : overdue ? "rgba(239,68,68,0.04)"
-                      : rotting ? "rgba(245,158,11,0.03)"
-                      : i % 2 === 0 ? "transparent" : "rgba(255,255,255,0.01)" }}
-                  onMouseEnter={e => { if (!selected) e.currentTarget.style.background = "rgba(212,168,67,0.04)"; }}
-                  onMouseLeave={e => { e.currentTarget.style.background = selected ? "rgba(212,168,67,0.06)"
-                    : overdue ? "rgba(239,68,68,0.04)" : i % 2 === 0 ? "transparent" : "rgba(255,255,255,0.01)"; }}>
-
-                  {/* Checkbox */}
-                  <input type="checkbox" checked={selected}
-                    onChange={() => setLeadSelectedIds(s =>
-                      s.includes(l.id) ? s.filter(x => x !== l.id) : [...s, l.id])}
-                    style={{ accentColor: T.gold, cursor: "pointer" }} />
-
-                  {/* Lead info */}
-                  <div style={{ display: "flex", alignItems: "center", gap: 9, minWidth: 0 }}>
-                    <div style={{ width: 32, height: 32, borderRadius: "50%",
-                      background: avBg, border: `1px solid ${T.border}`,
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      fontSize: 11, fontWeight: 700, color: T.white, flexShrink: 0 }}>
-                      {initStr}
-                    </div>
-                    <div style={{ minWidth: 0 }}>
-                      {/* Name + badges */}
-                      <div style={{ display: "flex", alignItems: "center", gap: 5, flexWrap: "wrap", marginBottom: 2 }}>
-                        <span style={{ fontSize: 13, fontWeight: 700, color: T.white, cursor: "pointer" }}
-                          onClick={() => { setLeadDrawer(l); setLeadDrawerTab("details"); }}>
-                          {l.name || l.email?.split("@")[0] || l.phone || <span style={{ color: T.textMuted, fontStyle: "italic" }}>Unknown</span>}
-                        </span>
-                        {dup    && <span style={{ fontSize: 9, fontWeight: 700, padding: "1px 5px", borderRadius: 4, background: "rgba(239,68,68,0.12)", color: T.red }}>DUP</span>}
-                        {overdue && <span style={{ fontSize: 9, fontWeight: 700, padding: "1px 5px", borderRadius: 4, background: "rgba(239,68,68,0.12)", color: T.red }}>OVERDUE</span>}
-                        {rotting && !overdue && <span style={{ fontSize: 9, fontWeight: 700, padding: "1px 5px", borderRadius: 4, background: "rgba(245,158,11,0.12)", color: T.gold }}>COLD</span>}
-                        {dueToday && !overdue && <span style={{ fontSize: 9, fontWeight: 700, padding: "1px 5px", borderRadius: 4, background: "rgba(212,168,67,0.12)", color: T.gold }}>DUE TODAY</span>}
-                        {visa    && <span style={{ fontSize: 9, fontWeight: 700, padding: "1px 5px", borderRadius: 4, background: "rgba(139,92,246,0.12)", color: "#8B5CF6" }}>VISA</span>}
-                      </div>
-                      {/* Contact line */}
-                      <div style={{ fontSize: 10, color: T.textMuted,
-                        overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                        {l.email && <span>{l.email}</span>}
-                        {l.email && l.phone && <span style={{ margin: "0 4px" }}>·</span>}
-                        {l.phone && <span>{l.phone}</span>}
-                        {l.nationality && <span style={{ marginLeft: 6, opacity: 0.6 }}>· {l.nationality}</span>}
-                        {l.source && <span style={{ marginLeft: 6, opacity: 0.5 }}>via {l.source}</span>}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Project / community */}
-                  <div style={{ minWidth: 0 }}>
-                    {cleanProject(l.project) && (
-                      <div style={{ fontSize: 11, fontWeight: 600, color: T.white,
-                        overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                        {cleanProject(l.project)}
-                      </div>
-                    )}
-                    {l.community && <div style={{ fontSize: 10, color: T.textMuted }}>{l.community}</div>}
-                    {l.bedrooms  && <div style={{ fontSize: 10, color: T.textMuted }}>{l.bedrooms} BR{l.planType ? ` · ${l.planType}` : ""}</div>}
-                  </div>
-
-                  {/* Budget */}
-                  <span style={{ fontSize: 12, fontWeight: 700, color: T.gold }}>
-                    {l.budget ? `AED ${Number(l.budget).toLocaleString()}` : "—"}
-                  </span>
-
-                  {/* Score circle */}
-                  <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
-                    <div style={{ width: 30, height: 30, borderRadius: "50%",
-                      background: `${h.color}18`, border: `2px solid ${h.color}`,
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      fontSize: 9, fontWeight: 900, color: h.color }}>
-                      {score}
-                    </div>
-                    <span style={{ fontSize: 8, fontWeight: 700, color: h.color }}>{h.label}</span>
-                  </div>
-
-                  {/* Status inline select */}
-                  <select value={l.status || "New"} onChange={e => updateStatus(l.id, e.target.value)}
-                    style={{ padding: "4px 7px", fontSize: 10, fontWeight: 700, cursor: "pointer",
-                      borderRadius: 6, border: `1px solid ${sc.border}`,
-                      background: sc.bg, color: sc.text,
-                      fontFamily: "'Outfit',sans-serif", outline: "none", width: "100%" }}>
-                    {Object.keys(STATUS).map(s => <option key={s} value={s}>{s}</option>)}
-                  </select>
-
-                  {/* Follow-up date */}
-                  <div style={{ fontSize: 10 }}>
-                    {l.followUpDate ? (
-                      <span style={{ color: overdue ? T.red : dueToday ? T.gold : T.textMuted,
-                        fontWeight: overdue || dueToday ? 700 : 400 }}>
-                        {overdue ? "⚠ " : "📅 "}{l.followUpDate}
-                      </span>
-                    ) : (
-                      <span style={{ color: T.textMuted, opacity: 0.4 }}>—</span>
-                    )}
-                    {!l.followUpDate && l.createdAt && (
-                      <div style={{ fontSize: 9, color: T.textMuted, marginTop: 1 }}>
-                        {timeAgo(l.createdAt)}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Smart labeled action buttons */}
-                  <div style={{ display: "flex", gap: 4, justifyContent: "flex-end", flexWrap: "nowrap" }}>
-                    {/* WhatsApp — only if phone exists */}
-                    {l.phone && (
-                      <button type="button"
-                        onClick={() => openWhatsApp(l.phone, l.name)}
-                        title={`WhatsApp ${l.phone}`}
-                        style={{ display: "flex", alignItems: "center", gap: 3,
-                          padding: "5px 8px", fontSize: 10, fontWeight: 700, cursor: "pointer",
-                          fontFamily: "'Outfit',sans-serif",
-                          border: "1px solid rgba(37,211,102,0.4)",
-                          background: "rgba(37,211,102,0.1)", color: "#25D166", borderRadius: 6,
-                          whiteSpace: "nowrap" }}>
-                        <span style={{fontSize:11}}>📱</span> WA
-                      </button>
-                    )}
-                    {/* Follow-up scheduler */}
-                    <button type="button" onClick={() => setShowFollowUpModal(l)}
-                      title="Schedule follow-up"
-                      style={{ display: "flex", alignItems: "center", gap: 3,
-                        padding: "5px 8px", fontSize: 10, fontWeight: 700, cursor: "pointer",
-                        fontFamily: "'Outfit',sans-serif",
-                        border: `1px solid ${T.border}`,
-                        background: "transparent", color: T.textMuted, borderRadius: 6,
-                        whiteSpace: "nowrap" }}>
-                      <span style={{fontSize:10}}>📅</span> Follow
-                    </button>
-                    {/* Edit — opens drawer on details tab */}
-                    <button type="button"
-                      onClick={() => { setLeadDrawer(l); setLeadDrawerTab("details"); }}
-                      title="Edit lead"
-                      style={{ display: "flex", alignItems: "center", gap: 3,
-                        padding: "5px 8px", fontSize: 10, fontWeight: 700, cursor: "pointer",
-                        fontFamily: "'Outfit',sans-serif",
-                        border: `1px solid rgba(59,130,246,0.4)`,
-                        background: "rgba(59,130,246,0.1)", color: "#3B82F6", borderRadius: 6,
-                        whiteSpace: "nowrap" }}>
-                      ✏ Edit
-                    </button>
-                    {/* Delete */}
-                    <button type="button"
-                      onClick={async () => {
-                        if (!window.confirm(`Delete lead "${l.name || l.email || 'this lead'}"? This cannot be undone.`)) return;
-                        try {
-                          await deleteDoc(doc(db, "leads", l.id));
-                          await logAudit(db, { action: "lead_deleted", leadId: l.id, name: l.name });
-                          notify("Lead deleted");
-                          fetchLeads();
-                          if (leadDrawer?.id === l.id) setLeadDrawer(null);
-                        } catch(e) { notify("Error: " + e.message); }
-                      }}
-                      title="Delete lead"
-                      style={{ display: "flex", alignItems: "center", gap: 3,
-                        padding: "5px 8px", fontSize: 10, fontWeight: 700, cursor: "pointer",
-                        fontFamily: "'Outfit',sans-serif",
-                        border: "1px solid rgba(239,68,68,0.4)",
-                        background: "rgba(239,68,68,0.1)", color: "#EF4444", borderRadius: 6,
-                        whiteSpace: "nowrap" }}>
-                      🗑 Del
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between",
-              padding: "9px 14px", borderTop: `1px solid ${T.border}` }}>
-              <span style={{ fontSize: 12, color: T.textMuted }}>
-                Page {leadPage} / {totalPages} · {filtered.length} leads
-              </span>
-              <div style={{ display: "flex", gap: 4 }}>
-                {leadPage > 1 && (
-                  <button type="button" onClick={() => setLeadPage(p => p - 1)}
-                    style={{ padding: "5px 12px", fontSize: 11, cursor: "pointer",
-                      fontFamily: "'Outfit',sans-serif", border: `1px solid ${T.border}`,
-                      background: "transparent", color: T.textMuted, borderRadius: 6 }}>
-                    ← Prev
-                  </button>
-                )}
-                {[...Array(Math.min(7, totalPages))].map((_, idx) => {
-                  const pg = totalPages <= 7 ? idx + 1
-                    : Math.max(1, Math.min(totalPages - 6, leadPage - 3)) + idx;
-                  return pg <= totalPages && (
-                    <button key={pg} type="button" onClick={() => setLeadPage(pg)}
-                      style={{ padding: "5px 10px", fontSize: 11, cursor: "pointer",
-                        fontFamily: "'Outfit',sans-serif",
-                        border: `1px solid ${pg === leadPage ? T.gold : T.border}`,
-                        background: pg === leadPage ? "rgba(212,168,67,0.1)" : "transparent",
-                        color: pg === leadPage ? T.gold : T.textMuted,
-                        borderRadius: 6, fontWeight: pg === leadPage ? 700 : 400 }}>
-                      {pg}
-                    </button>
-                  );
-                })}
-                {leadPage < totalPages && (
-                  <button type="button" onClick={() => setLeadPage(p => p + 1)}
-                    style={{ padding: "5px 12px", fontSize: 11, cursor: "pointer",
-                      fontFamily: "'Outfit',sans-serif", border: `1px solid ${T.border}`,
-                      background: "transparent", color: T.textMuted, borderRadius: 6 }}>
-                    Next →
-                  </button>
-                )}
-              </div>
-            </div>
-          )}
+          ))}
+          <button type="button" onClick={() => setLeadSelectedIds([])}
+            style={{ marginLeft:"auto", padding:"5px 10px", fontSize:11, cursor:"pointer",
+              fontFamily:"'Outfit',sans-serif", border:`1px solid ${T.border}`,
+              background:"transparent", color:T.textMuted, borderRadius:6 }}>
+            Deselect all
+          </button>
         </div>
       )}
+    </div>
 
-      {/* ══════════════════════════════════════════════════════════════
-          KANBAN VIEW — Pipedrive-style columns
-      ══════════════════════════════════════════════════════════════ */}
-      {leadsViewMode === "kanban" && (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(5,1fr)", gap: 10, alignItems: "start" }}>
-          {PIPE.map(stage => {
-            const col = applyFilters(leads.filter(l =>
-              (l.status || "New").toLowerCase() === stage.id.toLowerCase()
-            ));
+    {/* ════════════════════════════════════════════════════════════
+        LIST VIEW
+    ════════════════════════════════════════════════════════════ */}
+    {leadsViewMode === "table" && (
+      <div style={{ background:T.surface, border:`1px solid ${T.border}`, borderRadius:12, overflow:"hidden" }}>
+        {/* Column headers */}
+        <div style={{ display:"grid", gridTemplateColumns:"36px 1fr 120px 80px 110px 100px 220px",
+          padding:"9px 16px", borderBottom:`1px solid ${T.border}`,
+          background:"rgba(212,168,67,0.03)",
+          fontSize:9, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.8 }}>
+          <div>
+            <input type="checkbox"
+              checked={leadSelectedIds.length === paged.length && paged.length > 0}
+              onChange={e => e.target.checked
+                ? setLeadSelectedIds(paged.map(l => l.id))
+                : setLeadSelectedIds([])}
+              style={{ accentColor:T.gold, cursor:"pointer" }} />
+          </div>
+          <span>Lead</span>
+          <span>Project</span>
+          <span>Budget</span>
+          <span>Score</span>
+          <span>Status</span>
+          <span style={{ textAlign:"right" }}>Actions</span>
+        </div>
+
+        {/* Rows */}
+        <div style={{ maxHeight:"58vh", overflowY:"auto" }}>
+          {paged.length === 0 ? (
+            <div style={{ padding:"60px 24px", textAlign:"center" }}>
+              <div style={{ fontSize:40, opacity:0.2, marginBottom:12 }}>📋</div>
+              <div style={{ fontSize:15, fontWeight:700, color:T.white, marginBottom:6 }}>
+                {crmLeads.length === 0 ? "No leads yet" : "No leads match your filters"}
+              </div>
+              <div style={{ fontSize:12, color:T.textMuted, marginBottom:16 }}>
+                {crmLeads.length === 0
+                  ? "Add your first lead to get started"
+                  : "Try adjusting or clearing your filters"}
+              </div>
+              {crmLeads.length === 0
+                ? <button type="button" onClick={() => setShowAddLead(true)}
+                    style={{ padding:"9px 20px", fontSize:12, fontWeight:700, cursor:"pointer",
+                      fontFamily:"'Outfit',sans-serif", border:`1px solid ${T.gold}`,
+                      background:"rgba(212,168,67,0.1)", color:T.gold, borderRadius:8 }}>
+                    + Add Your First Lead
+                  </button>
+                : <button type="button"
+                    onClick={() => { setLeadFilter("all"); setLeadSourceFilter("all"); setLeadDateRange("all"); setLeadSearch(""); }}
+                    style={{ padding:"9px 20px", fontSize:12, fontWeight:700, cursor:"pointer",
+                      fontFamily:"'Outfit',sans-serif", border:`1px solid ${T.border}`,
+                      background:"transparent", color:T.textMuted, borderRadius:8 }}>
+                    Clear Filters
+                  </button>
+              }
+            </div>
+          ) : paged.map((l, i) => {
+            const score    = scoreLead(l);
+            const hc       = heatColor(score);
+            const hl       = heatLabel(score);
+            const sc       = ST[l.status || "New"] || ST.New;
+            const overdue  = isOverdue(l);
+            const dueToday = isDueToday(l) && !overdue;
+            const selected = leadSelectedIds.includes(l.id);
+            const visa     = (parseFloat(l.budget) || 0) >= 2000000;
+            const name     = displayName(l);
+            const initials = name.split(" ").map(w => w[0]).join("").slice(0,2).toUpperCase();
+            const avColors = ["rgba(59,130,246,0.2)","rgba(20,184,166,0.2)","rgba(139,92,246,0.2)","rgba(212,168,67,0.2)","rgba(16,185,129,0.2)"];
+            const avBg     = avColors[i % avColors.length];
+
             return (
-              <div key={stage.id} style={{ background: T.surface,
-                border: `1px solid ${T.border}`, borderRadius: 10, overflow: "hidden" }}>
-                {/* Column header */}
-                <div style={{ padding: "10px 12px", borderBottom: `1px solid ${T.border}`,
-                  display: "flex", justifyContent: "space-between", alignItems: "center",
-                  background: `linear-gradient(90deg,${stage.bg},transparent)` }}>
-                  <span style={{ fontSize: 10, fontWeight: 700, color: stage.text,
-                    textTransform: "uppercase", letterSpacing: 0.7 }}>
-                    {stage.label}
-                  </span>
-                  <span style={{ fontSize: 12, fontWeight: 900, color: stage.text,
-                    fontFamily: "'Fraunces',serif" }}>
-                    {col.length}
-                  </span>
+              <div key={l.id}
+                style={{ display:"grid", gridTemplateColumns:"36px 1fr 120px 80px 110px 100px 220px",
+                  padding:"10px 16px", borderBottom:`1px solid ${T.border}`,
+                  alignItems:"center", transition:"background 0.1s",
+                  background: selected     ? "rgba(212,168,67,0.06)"
+                            : overdue      ? "rgba(239,68,68,0.04)"
+                            : i%2===0      ? "transparent"
+                            :                "rgba(255,255,255,0.01)" }}
+                onMouseEnter={e => { if (!selected) e.currentTarget.style.background = "rgba(212,168,67,0.04)"; }}
+                onMouseLeave={e => { e.currentTarget.style.background = selected ? "rgba(212,168,67,0.06)" : overdue ? "rgba(239,68,68,0.04)" : i%2===0 ? "transparent" : "rgba(255,255,255,0.01)"; }}>
+
+                {/* Checkbox */}
+                <input type="checkbox" checked={selected}
+                  onChange={() => setLeadSelectedIds(s =>
+                    s.includes(l.id) ? s.filter(x => x!==l.id) : [...s,l.id]
+                  )}
+                  style={{ accentColor:T.gold, cursor:"pointer" }} />
+
+                {/* Lead info */}
+                <div style={{ display:"flex", alignItems:"center", gap:10, minWidth:0 }}>
+                  {/* Avatar */}
+                  <div style={{ width:34, height:34, borderRadius:"50%",
+                    background:avBg, border:`1px solid ${T.border}`,
+                    display:"flex", alignItems:"center", justifyContent:"center",
+                    fontSize:11, fontWeight:700, color:T.white, flexShrink:0 }}>
+                    {initials}
+                  </div>
+                  <div style={{ minWidth:0 }}>
+                    {/* Name row */}
+                    <div style={{ display:"flex", alignItems:"center", gap:5, flexWrap:"wrap", marginBottom:2 }}>
+                      <span style={{ fontSize:13, fontWeight:700, color:T.white, cursor:"pointer" }}
+                        onClick={() => { setLeadDrawer(l); setLeadDrawerTab("details"); }}>
+                        {name}
+                      </span>
+                      {overdue  && <span style={{ fontSize:9, fontWeight:700, padding:"1px 5px", borderRadius:4, background:"rgba(239,68,68,0.15)", color:"#EF4444" }}>OVERDUE</span>}
+                      {dueToday && <span style={{ fontSize:9, fontWeight:700, padding:"1px 5px", borderRadius:4, background:"rgba(212,168,67,0.15)", color:T.gold }}>DUE TODAY</span>}
+                      {visa     && <span style={{ fontSize:9, fontWeight:700, padding:"1px 5px", borderRadius:4, background:"rgba(139,92,246,0.15)", color:"#8B5CF6" }}>VISA ELIGIBLE</span>}
+                    </div>
+                    {/* Contact line */}
+                    <div style={{ fontSize:10, color:T.textMuted, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>
+                      {l.email && <span>{l.email}</span>}
+                      {l.email && l.phone && <span style={{ margin:"0 4px" }}>·</span>}
+                      {l.phone && <span>{l.phone}</span>}
+                      {l.nationality && <span style={{ marginLeft:6, opacity:0.6 }}>· {l.nationality}</span>}
+                      {l.createdAt && <span style={{ marginLeft:6, opacity:0.4 }}>· {timeAgo(l.createdAt)}</span>}
+                    </div>
+                  </div>
                 </div>
-                {/* Cards */}
-                <div style={{ maxHeight: "68vh", overflowY: "auto", padding: 8,
-                  display: "flex", flexDirection: "column", gap: 6 }}>
-                  {col.slice(0, 25).map(l => {
-                    const sc  = scoreLead(l);
-                    const h   = heat(sc);
-                    const ov  = isOverdue(l);
-                    const rot = isRotting(l);
-                    return (
-                      <div key={l.id}
-                        onClick={() => { setLeadDrawer(l); setLeadDrawerTab("details"); }}
-                        style={{ background: T.bg,
-                          border: `1px solid ${ov ? "rgba(239,68,68,0.4)" : T.border}`,
-                          borderRadius: 8, padding: "10px 12px", cursor: "pointer",
-                          transition: "all 0.15s" }}
-                        onMouseEnter={e => {
-                          e.currentTarget.style.borderColor = stage.text;
-                          e.currentTarget.style.transform = "translateY(-1px)";
-                        }}
-                        onMouseLeave={e => {
-                          e.currentTarget.style.borderColor = ov ? "rgba(239,68,68,0.4)" : T.border;
-                          e.currentTarget.style.transform = "none";
-                        }}>
-                        <div style={{ display: "flex", justifyContent: "space-between",
-                          alignItems: "flex-start", marginBottom: 4 }}>
-                          <span style={{ fontSize: 12, fontWeight: 700, color: T.white,
-                            flex: 1, lineHeight: 1.3 }}>
-                            {l.name || "—"}
-                          </span>
-                          {/* Score circle */}
-                          <div style={{ width: 24, height: 24, borderRadius: "50%",
-                            background: `${h.color}18`, border: `1.5px solid ${h.color}`,
-                            display: "flex", alignItems: "center", justifyContent: "center",
-                            fontSize: 8, fontWeight: 900, color: h.color, flexShrink: 0, marginLeft: 6 }}>
-                            {sc}
-                          </div>
-                        </div>
-                        {cleanProject(l.project) && (
-                          <div style={{ fontSize: 10, color: T.textMuted, marginBottom: 2 }}>
-                            {cleanProject(l.project)}
-                          </div>
-                        )}
-                        {l.nationality && (
-                          <div style={{ fontSize: 10, color: T.textMuted, marginBottom: 4 }}>
-                            {l.nationality}
-                          </div>
-                        )}
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                          <span style={{ fontSize: 10, fontWeight: 700, color: T.gold }}>
-                            {l.budget ? `AED ${Number(l.budget).toLocaleString()}` : ""}
-                          </span>
-                          <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
-                            {ov  && <span style={{ fontSize: 9, color: T.red,  fontWeight: 700 }}>⚠</span>}
-                            {rot && !ov && <span style={{ fontSize: 9, color: T.gold, fontWeight: 700 }}>🕐</span>}
-                            {l.phone && (
-                              <span style={{ fontSize: 11, color: "#25D166", cursor: "pointer" }}
-                                onClick={e => { e.stopPropagation(); openWhatsApp(l.phone, l.name); }}>
-                                📱
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                  {col.length > 25 && (
-                    <div style={{ fontSize: 10, color: T.textMuted, textAlign: "center", padding: "6px 0" }}>
-                      +{col.length - 25} more
+
+                {/* Project */}
+                <div style={{ minWidth:0, overflow:"hidden" }}>
+                  {cleanProject(l.project) && (
+                    <div style={{ fontSize:11, fontWeight:600, color:T.white,
+                      overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>
+                      {cleanProject(l.project)}
                     </div>
                   )}
-                  {col.length === 0 && (
-                    <div style={{ fontSize: 11, color: T.textMuted, textAlign: "center",
-                      padding: "24px 0", opacity: 0.4 }}>
-                      No leads
-                    </div>
-                  )}
+                  {l.community && <div style={{ fontSize:9, color:T.textMuted }}>{l.community}</div>}
+                </div>
+
+                {/* Budget */}
+                <span style={{ fontSize:11, fontWeight:700, color:T.gold }}>
+                  {fmtBudget(l.budget)}
+                </span>
+
+                {/* Score */}
+                <div style={{ display:"flex", alignItems:"center", gap:6 }}>
+                  <div style={{ width:32, height:32, borderRadius:"50%",
+                    background:`${hc}18`, border:`2px solid ${hc}`,
+                    display:"flex", alignItems:"center", justifyContent:"center",
+                    fontSize:10, fontWeight:900, color:hc }}>
+                    {score}
+                  </div>
+                  <div>
+                    <div style={{ fontSize:9, fontWeight:700, color:hc }}>{hl}</div>
+                    {overdue && <div style={{ fontSize:8, color:"#EF4444" }}>Follow up!</div>}
+                  </div>
+                </div>
+
+                {/* Status dropdown */}
+                <select value={l.status || "New"} onChange={e => updateStatus(l.id, e.target.value)}
+                  style={{ padding:"5px 8px", fontSize:11, fontWeight:700, cursor:"pointer",
+                    borderRadius:7, border:`1px solid ${sc.border}`,
+                    background:sc.bg, color:sc.text,
+                    fontFamily:"'Outfit',sans-serif", outline:"none", width:"100%" }}>
+                  {Object.keys(ST).map(s => <option key={s} value={s}>{s}</option>)}
+                </select>
+
+                {/* ACTION BUTTONS — 4 clear labeled buttons */}
+                <div style={{ display:"flex", gap:5, justifyContent:"flex-end", alignItems:"center" }}>
+
+                  {/* WhatsApp */}
+                  <button type="button"
+                    onClick={() => l.phone ? openWA(l.phone, name) : notify("No phone number")}
+                    title={l.phone ? `WhatsApp ${l.phone}` : "No phone number"}
+                    style={{ padding:"6px 10px", fontSize:10, fontWeight:700, cursor:"pointer",
+                      fontFamily:"'Outfit',sans-serif",
+                      border: l.phone ? "1px solid rgba(37,211,102,0.5)" : `1px solid ${T.border}`,
+                      background: l.phone ? "rgba(37,211,102,0.1)" : "rgba(255,255,255,0.03)",
+                      color: l.phone ? "#25D166" : T.textMuted,
+                      borderRadius:7, opacity: l.phone ? 1 : 0.4,
+                      whiteSpace:"nowrap" }}>
+                    📱 WA
+                  </button>
+
+                  {/* Follow-up */}
+                  <button type="button"
+                    onClick={() => setShowFollowUpModal(l)}
+                    title="Schedule follow-up reminder"
+                    style={{ padding:"6px 10px", fontSize:10, fontWeight:700, cursor:"pointer",
+                      fontFamily:"'Outfit',sans-serif",
+                      border: overdue ? "1px solid rgba(239,68,68,0.5)" : `1px solid ${T.border}`,
+                      background: overdue ? "rgba(239,68,68,0.08)" : "transparent",
+                      color: overdue ? "#EF4444" : T.textMuted,
+                      borderRadius:7, whiteSpace:"nowrap" }}>
+                    {overdue ? "⚠ Follow" : "📅 Follow"}
+                  </button>
+
+                  {/* Edit — opens side drawer */}
+                  <button type="button"
+                    onClick={() => { setLeadDrawer(l); setLeadDrawerTab("details"); }}
+                    title="View and edit full lead profile"
+                    style={{ padding:"6px 10px", fontSize:10, fontWeight:700, cursor:"pointer",
+                      fontFamily:"'Outfit',sans-serif",
+                      border:"1px solid rgba(59,130,246,0.5)",
+                      background:"rgba(59,130,246,0.1)", color:"#3B82F6",
+                      borderRadius:7, whiteSpace:"nowrap" }}>
+                    ✏ Edit
+                  </button>
+
+                  {/* Delete */}
+                  <button type="button"
+                    onClick={() => deleteLead(l)}
+                    title="Delete this lead permanently"
+                    style={{ padding:"6px 10px", fontSize:10, fontWeight:700, cursor:"pointer",
+                      fontFamily:"'Outfit',sans-serif",
+                      border:"1px solid rgba(239,68,68,0.4)",
+                      background:"rgba(239,68,68,0.08)", color:"#EF4444",
+                      borderRadius:7, whiteSpace:"nowrap" }}>
+                    🗑 Del
+                  </button>
+
                 </div>
               </div>
             );
           })}
         </div>
-      )}
 
-      {/* ══════════════════════════════════════════════════════════════
-          ANALYTICS VIEW
-      ══════════════════════════════════════════════════════════════ */}
-      {leadsViewMode === "analytics" && (
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-          {/* Pipeline funnel */}
-          <div style={{ background: T.surface, border: `1px solid ${T.border}`,
-            borderRadius: 12, padding: "16px 18px" }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 14 }}>Pipeline Funnel</div>
-            {PIPE.map(stage => {
-              const pct = S.total > 0 ? Math.round((stage.count / S.total) * 100) : 0;
-              return (
-                <div key={stage.id} style={{ marginBottom: 12 }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
-                    <span style={{ fontSize: 12, color: T.white }}>{stage.label}</span>
-                    <div style={{ display: "flex", gap: 10 }}>
-                      <span style={{ fontSize: 10, color: T.textMuted }}>{pct}%</span>
-                      <span style={{ fontSize: 12, fontWeight: 700, color: stage.text }}>{stage.count}</span>
-                    </div>
-                  </div>
-                  <div style={{ background: "rgba(255,255,255,0.05)", borderRadius: 3, height: 8 }}>
-                    <div style={{ width: `${pct}%`, height: "100%",
-                      background: stage.text, borderRadius: 3 }} />
-                  </div>
-                </div>
-              );
-            })}
-            {/* Summary metrics */}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginTop: 16,
-              paddingTop: 14, borderTop: `1px solid ${T.border}` }}>
-              {[
-                { l: "Win Rate",     v: `${winRate}%`,  c: T.green   },
-                { l: "Conversion",   v: `${convRate}%`, c: "#8B5CF6" },
-                { l: "Avg Response", v: avgResp != null ? `${avgResp}h` : "—", c: T.gold },
-                { l: "Overdue",      v: S.overdue,      c: T.red     },
-              ].map(({ l, v, c }) => (
-                <div key={l} style={{ background: T.bg, borderRadius: 8, padding: "10px 12px",
-                  border: `1px solid ${T.border}` }}>
-                  <div style={{ fontSize: 9, color: T.textMuted, textTransform: "uppercase",
-                    letterSpacing: 0.7, marginBottom: 2 }}>{l}</div>
-                  <div style={{ fontSize: 18, fontWeight: 900, color: c,
-                    fontFamily: "'Fraunces',serif" }}>{v}</div>
-                </div>
-              ))}
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between",
+            padding:"10px 16px", borderTop:`1px solid ${T.border}` }}>
+            <span style={{ fontSize:12, color:T.textMuted }}>
+              Page {leadPage} of {totalPages} · {filtered.length} leads
+            </span>
+            <div style={{ display:"flex", gap:4 }}>
+              {leadPage > 1 && (
+                <button type="button" onClick={() => setLeadPage(p => p-1)}
+                  style={{ padding:"5px 12px", fontSize:11, cursor:"pointer",
+                    fontFamily:"'Outfit',sans-serif", border:`1px solid ${T.border}`,
+                    background:"transparent", color:T.textMuted, borderRadius:6 }}>
+                  ← Prev
+                </button>
+              )}
+              {[...Array(Math.min(5, totalPages))].map((_,i) => {
+                const pg = totalPages <= 5 ? i+1 : Math.max(1, Math.min(totalPages-4, leadPage-2))+i;
+                return pg <= totalPages && (
+                  <button key={pg} type="button" onClick={() => setLeadPage(pg)}
+                    style={{ padding:"5px 10px", fontSize:11, cursor:"pointer",
+                      fontFamily:"'Outfit',sans-serif",
+                      border:`1px solid ${pg===leadPage ? T.gold : T.border}`,
+                      background: pg===leadPage ? "rgba(212,168,67,0.1)" : "transparent",
+                      color: pg===leadPage ? T.gold : T.textMuted,
+                      borderRadius:6, fontWeight: pg===leadPage ? 700 : 400 }}>
+                    {pg}
+                  </button>
+                );
+              })}
+              {leadPage < totalPages && (
+                <button type="button" onClick={() => setLeadPage(p => p+1)}
+                  style={{ padding:"5px 12px", fontSize:11, cursor:"pointer",
+                    fontFamily:"'Outfit',sans-serif", border:`1px solid ${T.border}`,
+                    background:"transparent", color:T.textMuted, borderRadius:6 }}>
+                  Next →
+                </button>
+              )}
             </div>
           </div>
+        )}
+      </div>
+    )}
 
-          {/* Lead Sources */}
-          <div style={{ background: T.surface, border: `1px solid ${T.border}`,
-            borderRadius: 12, padding: "16px 18px" }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 14 }}>Lead Sources</div>
-            {Object.entries(
-              leads.reduce((acc, l) => {
-                const s = l.source || "Manual";
-                if (!acc[s]) acc[s] = { total: 0, converted: 0 };
-                acc[s].total++;
-                if (l.status === "Converted") acc[s].converted++;
-                return acc;
-              }, {})
-            ).sort((a, b) => b[1].total - a[1].total).slice(0, 8).map(([src, d]) => {
-              const max = Math.max(...Object.values(
-                leads.reduce((a, l) => {
-                  const s = l.source || "Manual";
-                  if (!a[s]) a[s] = 0;
-                  a[s]++;
-                  return a;
-                }, {})
-              ));
-              return (
-                <div key={src} style={{ marginBottom: 10 }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
-                    <span style={{ fontSize: 12, color: T.white }}>{src}</span>
-                    <div style={{ display: "flex", gap: 10 }}>
-                      <span style={{ fontSize: 10, color: T.green }}>{d.converted} conv.</span>
-                      <span style={{ fontSize: 12, fontWeight: 700, color: T.gold }}>{d.total}</span>
+    {/* ════════════════════════════════════════════════════════════
+        KANBAN VIEW
+    ════════════════════════════════════════════════════════════ */}
+    {leadsViewMode === "kanban" && (
+      <div style={{ display:"grid", gridTemplateColumns:"repeat(5,1fr)", gap:10, alignItems:"start" }}>
+        {Object.entries(ST).map(([statusName, sc]) => {
+          const col = filtered.filter(l => (l.status||"New") === statusName);
+          return (
+            <div key={statusName} style={{ background:T.surface, border:`1px solid ${T.border}`,
+              borderRadius:10, overflow:"hidden" }}>
+              <div style={{ padding:"10px 12px", borderBottom:`1px solid ${T.border}`,
+                display:"flex", justifyContent:"space-between", alignItems:"center",
+                background:`linear-gradient(90deg,${sc.bg},transparent)` }}>
+                <span style={{ fontSize:10, fontWeight:700, color:sc.text,
+                  textTransform:"uppercase", letterSpacing:0.7 }}>{statusName}</span>
+                <span style={{ fontSize:14, fontWeight:900, color:sc.text,
+                  fontFamily:"'Fraunces',serif" }}>{col.length}</span>
+              </div>
+              <div style={{ maxHeight:"65vh", overflowY:"auto", padding:8,
+                display:"flex", flexDirection:"column", gap:6 }}>
+                {col.slice(0,20).map(l => {
+                  const sc2 = scoreLead(l);
+                  const ov  = isOverdue(l);
+                  return (
+                    <div key={l.id}
+                      onClick={() => { setLeadDrawer(l); setLeadDrawerTab("details"); }}
+                      style={{ background:T.bg, border:`1px solid ${ov?"rgba(239,68,68,0.4)":T.border}`,
+                        borderRadius:8, padding:"10px 12px", cursor:"pointer", transition:"all 0.15s" }}
+                      onMouseEnter={e => { e.currentTarget.style.borderColor=sc.text; e.currentTarget.style.transform="translateY(-1px)"; }}
+                      onMouseLeave={e => { e.currentTarget.style.borderColor=ov?"rgba(239,68,68,0.4)":T.border; e.currentTarget.style.transform="none"; }}>
+                      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:4 }}>
+                        <span style={{ fontSize:12, fontWeight:700, color:T.white, flex:1, lineHeight:1.3 }}>
+                          {displayName(l)}
+                        </span>
+                        <div style={{ width:24, height:24, borderRadius:"50%",
+                          background:`${heatColor(sc2)}18`, border:`1.5px solid ${heatColor(sc2)}`,
+                          display:"flex", alignItems:"center", justifyContent:"center",
+                          fontSize:8, fontWeight:900, color:heatColor(sc2),
+                          flexShrink:0, marginLeft:6 }}>
+                          {sc2}
+                        </div>
+                      </div>
+                      {cleanProject(l.project) && <div style={{ fontSize:10, color:T.textMuted, marginBottom:2 }}>{cleanProject(l.project)}</div>}
+                      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginTop:4 }}>
+                        <span style={{ fontSize:10, fontWeight:700, color:T.gold }}>{fmtBudget(l.budget)}</span>
+                        <div style={{ display:"flex", gap:4 }}>
+                          {ov && <span style={{ fontSize:9, color:"#EF4444", fontWeight:700 }}>⚠</span>}
+                          {l.phone && (
+                            <span style={{ fontSize:11, color:"#25D166", cursor:"pointer" }}
+                              onClick={e => { e.stopPropagation(); openWA(l.phone, displayName(l)); }}>
+                              📱
+                            </span>
+                          )}
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                  <div style={{ background: "rgba(255,255,255,0.05)", borderRadius: 3, height: 5 }}>
-                    <div style={{ width: `${Math.round((d.total / max) * 100)}%`,
-                      height: "100%", background: T.gold, borderRadius: 3 }} />
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-
-          {/* Hot leads */}
-          <div style={{ background: T.surface, border: `1px solid ${T.border}`,
-            borderRadius: 12, padding: "16px 18px" }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 12 }}>
-              🔥 Top Leads by Score
+                  );
+                })}
+                {col.length > 20 && <div style={{ fontSize:10, color:T.textMuted, textAlign:"center", padding:"6px 0" }}>+{col.length-20} more</div>}
+                {col.length === 0 && <div style={{ fontSize:11, color:T.textMuted, textAlign:"center", padding:"24px 0", opacity:0.4 }}>No leads</div>}
+              </div>
             </div>
-            {[...leads].sort((a, b) => scoreLead(b) - scoreLead(a)).slice(0, 8).map(l => {
-              const sc = scoreLead(l);
-              const h  = heat(sc);
-              return (
-                <div key={l.id}
-                  onClick={() => { setLeadDrawer(l); setLeadDrawerTab("details"); setLeadsViewMode("table"); }}
-                  style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 0",
-                    borderBottom: `1px solid ${T.border}`, cursor: "pointer" }}>
-                  <div style={{ width: 28, height: 28, borderRadius: "50%",
-                    background: `${h.color}18`, border: `2px solid ${h.color}`,
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    fontSize: 9, fontWeight: 900, color: h.color, flexShrink: 0 }}>
-                    {sc}
-                  </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 12, fontWeight: 700, color: T.white }}>{l.name || "—"}</div>
-                    <div style={{ fontSize: 10, color: T.textMuted }}>
-                      {l.nationality || ""}
-                      {l.budget ? ` · AED ${Number(l.budget).toLocaleString()}` : ""}
-                    </div>
-                  </div>
-                  <div style={{ padding: "2px 8px", borderRadius: 10, fontSize: 9, fontWeight: 700,
-                    border: `1px solid ${STATUS[l.status || "New"]?.border}`,
-                    background: STATUS[l.status || "New"]?.bg,
-                    color: STATUS[l.status || "New"]?.text, whiteSpace: "nowrap" }}>
-                    {l.status || "New"}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+          );
+        })}
+      </div>
+    )}
 
-          {/* Top nationalities */}
-          <div style={{ background: T.surface, border: `1px solid ${T.border}`,
-            borderRadius: 12, padding: "16px 18px" }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 12 }}>
-              Top Nationalities
-            </div>
-            {Object.entries(
-              leads.reduce((a, l) => {
-                if (l.nationality) { if (!a[l.nationality]) a[l.nationality] = 0; a[l.nationality]++; }
-                return a;
-              }, {})
-            ).sort((a, b) => b[1] - a[1]).slice(0, 10).map(([nat, count]) => (
-              <div key={nat} style={{ display: "flex", justifyContent: "space-between",
-                alignItems: "center", padding: "7px 0", borderBottom: `1px solid ${T.border}` }}>
-                <span style={{ fontSize: 12, color: T.white }}>{nat}</span>
-                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                  <div style={{ width: 60, background: "rgba(255,255,255,0.05)",
-                    borderRadius: 3, height: 5 }}>
-                    <div style={{ width: `${Math.round((count / leads.length) * 100)}%`,
-                      height: "100%", background: T.teal, borderRadius: 3 }} />
+    {/* ════════════════════════════════════════════════════════════
+        ANALYTICS VIEW
+    ════════════════════════════════════════════════════════════ */}
+    {leadsViewMode === "analytics" && (
+      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12 }}>
+        {/* Pipeline funnel */}
+        <div style={{ background:T.surface, border:`1px solid ${T.border}`, borderRadius:12, padding:"18px 20px" }}>
+          <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:16 }}>Pipeline Funnel</div>
+          {Object.entries(ST).map(([s, sc]) => {
+            const count = stats[s.toLowerCase()] || 0;
+            const pct   = stats.total > 0 ? Math.round((count/stats.total)*100) : 0;
+            return (
+              <div key={s} style={{ marginBottom:12 }}>
+                <div style={{ display:"flex", justifyContent:"space-between", marginBottom:4 }}>
+                  <span style={{ fontSize:12, color:T.white }}>{s}</span>
+                  <div style={{ display:"flex", gap:12 }}>
+                    <span style={{ fontSize:10, color:T.textMuted }}>{pct}%</span>
+                    <span style={{ fontSize:12, fontWeight:700, color:sc.text }}>{count}</span>
                   </div>
-                  <span style={{ fontSize: 12, fontWeight: 700, color: T.gold, minWidth: 20 }}>{count}</span>
                 </div>
+                <div style={{ background:"rgba(255,255,255,0.05)", borderRadius:3, height:8 }}>
+                  <div style={{ width:`${pct}%`, height:"100%", background:sc.text, borderRadius:3 }} />
+                </div>
+              </div>
+            );
+          })}
+          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, marginTop:18, paddingTop:16, borderTop:`1px solid ${T.border}` }}>
+            {[
+              { l:"Win Rate",   v:`${winRate}%`,  c:T.green },
+              { l:"Conversion", v:`${convRate}%`, c:"#8B5CF6" },
+              { l:"Hot Leads",  v:stats.hot,      c:"#EF4444" },
+              { l:"Overdue",    v:stats.overdue,  c:"#EF4444" },
+            ].map(({l,v,c}) => (
+              <div key={l} style={{ background:T.bg, borderRadius:8, padding:"10px 12px", border:`1px solid ${T.border}` }}>
+                <div style={{ fontSize:9, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.7, marginBottom:2 }}>{l}</div>
+                <div style={{ fontSize:18, fontWeight:900, color:c, fontFamily:"'Fraunces',serif" }}>{v}</div>
               </div>
             ))}
           </div>
         </div>
-      )}
 
-      {/* ══════════════════════════════════════════════════════════════
-          LEAD DETAIL DRAWER (right slide-in panel)
-      ══════════════════════════════════════════════════════════════ */}
-      {leadDrawer && (
-        <div style={{ position: "fixed", inset: 0, zIndex: 1500, display: "flex" }}
-          onClick={e => { if (e.target === e.currentTarget) setLeadDrawer(null); }}>
-          {/* Dim backdrop */}
-          <div style={{ flex: 1, background: "rgba(0,0,0,0.55)",
-            backdropFilter: "blur(3px)" }}
-            onClick={() => setLeadDrawer(null)} />
-
-          {/* Drawer panel */}
-          <div style={{ width: 460, background: T.bg,
-            borderLeft: `1px solid ${T.border}`,
-            display: "flex", flexDirection: "column", overflowY: "auto" }}>
-
-            {/* ── Header ──────────────────────────────────────────── */}
-            <div style={{ padding: "16px 20px", borderBottom: `1px solid ${T.border}`,
-              background: T.surface, flexShrink: 0 }}>
-              <div style={{ display: "flex", alignItems: "flex-start",
-                justifyContent: "space-between", marginBottom: 12 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                  <div style={{ width: 44, height: 44, borderRadius: "50%",
-                    background: "rgba(212,168,67,0.15)", border: `2px solid ${T.gold}`,
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    fontSize: 16, fontWeight: 700, color: T.gold, flexShrink: 0 }}>
-                    {initials(leadDrawer.name)}
-                  </div>
-                  <div>
-                    <div style={{ fontSize: 17, fontWeight: 900, color: T.white,
-                      fontFamily: "'Fraunces',serif" }}>
-                      {leadDrawer.name || "Unnamed Lead"}
-                    </div>
-                    <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>
-                      {leadDrawer.nationality || ""}
-                      {leadDrawer.source ? ` · via ${leadDrawer.source}` : ""}
-                      {leadDrawer.createdAt ? ` · ${timeAgo(leadDrawer.createdAt)}` : ""}
-                    </div>
+        {/* Lead sources */}
+        <div style={{ background:T.surface, border:`1px solid ${T.border}`, borderRadius:12, padding:"18px 20px" }}>
+          <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:16 }}>Lead Sources</div>
+          {Object.entries(
+            crmLeads.reduce((a,l) => { const s=l.source||"Manual"; if(!a[s])a[s]={total:0,conv:0}; a[s].total++; if(l.status==="Converted")a[s].conv++; return a; }, {})
+          ).sort((a,b)=>b[1].total-a[1].total).slice(0,8).map(([src,d]) => {
+            const max = Math.max(...Object.values(crmLeads.reduce((a,l)=>{const s=l.source||"Manual";if(!a[s])a[s]=0;a[s]++;return a;},{})));
+            return (
+              <div key={src} style={{ marginBottom:10 }}>
+                <div style={{ display:"flex", justifyContent:"space-between", marginBottom:4 }}>
+                  <span style={{ fontSize:12, color:T.white }}>{src}</span>
+                  <div style={{ display:"flex", gap:10 }}>
+                    <span style={{ fontSize:10, color:T.green }}>{d.conv} conv.</span>
+                    <span style={{ fontSize:12, fontWeight:700, color:T.gold }}>{d.total}</span>
                   </div>
                 </div>
-                <button type="button" onClick={() => setLeadDrawer(null)}
-                  style={{ background: "rgba(255,255,255,0.06)", border: `1px solid ${T.border}`,
-                    borderRadius: 7, color: T.textMuted, fontSize: 15, cursor: "pointer",
-                    padding: "4px 10px", fontFamily: "'Outfit',sans-serif" }}>
-                  ✕
-                </button>
-              </div>
-
-              {/* Status picker + score */}
-              <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
-                {Object.entries(STATUS).map(([s, sc]) => (
-                  <button key={s} type="button"
-                    onClick={() => updateStatus(leadDrawer.id, s)}
-                    style={{ padding: "4px 10px", fontSize: 10, fontWeight: 700, cursor: "pointer",
-                      fontFamily: "'Outfit',sans-serif",
-                      border: `1px solid ${(leadDrawer.status || "New") === s ? sc.border : T.border}`,
-                      background: (leadDrawer.status || "New") === s ? sc.bg : "transparent",
-                      color: (leadDrawer.status || "New") === s ? sc.text : T.textMuted,
-                      borderRadius: 6 }}>
-                    {s}
-                  </button>
-                ))}
-                <div style={{ marginLeft: "auto", fontSize: 12, fontWeight: 900,
-                  color: heat(scoreLead(leadDrawer)).color }}>
-                  Score: {scoreLead(leadDrawer)} · {heat(scoreLead(leadDrawer)).label}
+                <div style={{ background:"rgba(255,255,255,0.05)", borderRadius:3, height:5 }}>
+                  <div style={{ width:`${Math.round((d.total/max)*100)}%`, height:"100%", background:T.gold, borderRadius:3 }} />
                 </div>
               </div>
+            );
+          })}
+        </div>
+
+        {/* Top leads */}
+        <div style={{ background:T.surface, border:`1px solid ${T.border}`, borderRadius:12, padding:"18px 20px" }}>
+          <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:14 }}>🔥 Top Leads by Score</div>
+          {[...crmLeads].sort((a,b)=>scoreLead(b)-scoreLead(a)).slice(0,8).map(l => {
+            const sc = scoreLead(l);
+            return (
+              <div key={l.id} onClick={() => { setLeadDrawer(l); setLeadDrawerTab("details"); setLeadsViewMode("table"); }}
+                style={{ display:"flex", alignItems:"center", gap:10, padding:"8px 0",
+                  borderBottom:`1px solid ${T.border}`, cursor:"pointer" }}>
+                <div style={{ width:28, height:28, borderRadius:"50%",
+                  background:`${heatColor(sc)}18`, border:`2px solid ${heatColor(sc)}`,
+                  display:"flex", alignItems:"center", justifyContent:"center",
+                  fontSize:9, fontWeight:900, color:heatColor(sc), flexShrink:0 }}>{sc}</div>
+                <div style={{ flex:1, minWidth:0 }}>
+                  <div style={{ fontSize:12, fontWeight:700, color:T.white }}>{displayName(l)}</div>
+                  <div style={{ fontSize:10, color:T.textMuted }}>{l.nationality||""}{l.budget?` · ${fmtBudget(l.budget)}`:""}</div>
+                </div>
+                <div style={{ padding:"2px 8px", borderRadius:10, fontSize:9, fontWeight:700,
+                  border:`1px solid ${ST[l.status||"New"]?.border}`,
+                  background:ST[l.status||"New"]?.bg, color:ST[l.status||"New"]?.text }}>
+                  {l.status||"New"}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Top nationalities */}
+        <div style={{ background:T.surface, border:`1px solid ${T.border}`, borderRadius:12, padding:"18px 20px" }}>
+          <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:14 }}>Nationalities</div>
+          {Object.entries(crmLeads.reduce((a,l)=>{if(l.nationality){if(!a[l.nationality])a[l.nationality]=0;a[l.nationality]++;}return a;},{}))
+            .sort((a,b)=>b[1]-a[1]).slice(0,10).map(([nat,count]) => (
+            <div key={nat} style={{ display:"flex", justifyContent:"space-between", alignItems:"center",
+              padding:"6px 0", borderBottom:`1px solid ${T.border}` }}>
+              <span style={{ fontSize:12, color:T.white }}>{nat}</span>
+              <span style={{ fontSize:12, fontWeight:700, color:T.gold }}>{count}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    )}
+
+    {/* ════════════════════════════════════════════════════════════
+        LEAD DETAIL DRAWER
+    ════════════════════════════════════════════════════════════ */}
+    {leadDrawer && (
+      <div style={{ position:"fixed", inset:0, zIndex:1500, display:"flex" }}
+        onClick={e => { if(e.target===e.currentTarget) setLeadDrawer(null); }}>
+        <div style={{ flex:1, background:"rgba(0,0,0,0.55)", backdropFilter:"blur(3px)" }}
+          onClick={() => setLeadDrawer(null)} />
+        <div style={{ width:480, background:T.bg, borderLeft:`1px solid ${T.border}`,
+          display:"flex", flexDirection:"column", overflowY:"auto" }}>
+
+          {/* Drawer header */}
+          <div style={{ padding:"18px 20px", borderBottom:`1px solid ${T.border}`,
+            background:T.surface, flexShrink:0 }}>
+            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:14 }}>
+              <div style={{ display:"flex", alignItems:"center", gap:12 }}>
+                <div style={{ width:46, height:46, borderRadius:"50%",
+                  background:"rgba(212,168,67,0.15)", border:`2px solid ${T.gold}`,
+                  display:"flex", alignItems:"center", justifyContent:"center",
+                  fontSize:16, fontWeight:700, color:T.gold, flexShrink:0 }}>
+                  {displayName(leadDrawer).slice(0,2).toUpperCase()}
+                </div>
+                <div>
+                  <div style={{ fontSize:17, fontWeight:900, color:T.white, fontFamily:"'Fraunces',serif" }}>
+                    {displayName(leadDrawer)}
+                  </div>
+                  <div style={{ fontSize:11, color:T.textMuted, marginTop:2 }}>
+                    {leadDrawer.nationality || ""}
+                    {leadDrawer.source ? ` · via ${leadDrawer.source}` : ""}
+                    {leadDrawer.createdAt ? ` · ${timeAgo(leadDrawer.createdAt)}` : ""}
+                  </div>
+                </div>
+              </div>
+              <button type="button" onClick={() => setLeadDrawer(null)}
+                style={{ background:"rgba(255,255,255,0.06)", border:`1px solid ${T.border}`,
+                  borderRadius:7, color:T.textMuted, fontSize:14, cursor:"pointer", padding:"5px 10px" }}>
+                ✕ Close
+              </button>
             </div>
 
-            {/* ── Tabs ────────────────────────────────────────────── */}
-            <div style={{ display: "flex", borderBottom: `1px solid ${T.border}`, flexShrink: 0 }}>
-              {[["details","Details"],["activity","Activity"],["email","Email"]].map(([t, label]) => (
-                <button key={t} type="button" onClick={() => setLeadDrawerTab(t)}
-                  style={{ flex: 1, padding: "10px 0", fontSize: 12, fontWeight: 600,
-                    cursor: "pointer", fontFamily: "'Outfit',sans-serif", border: "none",
-                    borderBottom: `2px solid ${leadDrawerTab === t ? T.gold : "transparent"}`,
-                    background: "transparent",
-                    color: leadDrawerTab === t ? T.gold : T.textMuted }}>
-                  {label}
+            {/* Status bar */}
+            <div style={{ display:"flex", gap:6, flexWrap:"wrap", marginBottom:10 }}>
+              {Object.entries(ST).map(([s, sc]) => (
+                <button key={s} type="button" onClick={() => updateStatus(leadDrawer.id, s)}
+                  style={{ padding:"5px 12px", fontSize:11, fontWeight:700, cursor:"pointer",
+                    fontFamily:"'Outfit',sans-serif",
+                    border:`1px solid ${(leadDrawer.status||"New")===s ? sc.border : T.border}`,
+                    background:(leadDrawer.status||"New")===s ? sc.bg : "transparent",
+                    color:(leadDrawer.status||"New")===s ? sc.text : T.textMuted,
+                    borderRadius:7 }}>
+                  {s}
                 </button>
               ))}
             </div>
 
-            {/* ── Details tab ─────────────────────────────────────── */}
-            {leadDrawerTab === "details" && (
-              <div style={{ padding: "16px 20px", flex: 1, overflowY: "auto" }}>
-                {/* Quick action buttons */}
-                <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
-                  {leadDrawer.phone && (
-                    <button type="button"
-                      onClick={() => openWhatsApp(leadDrawer.phone, leadDrawer.name)}
-                      style={{ flex: 1, padding: "9px 0", fontSize: 12, fontWeight: 700,
-                        cursor: "pointer", fontFamily: "'Outfit',sans-serif",
-                        border: "1px solid rgba(37,211,102,0.4)",
-                        background: "rgba(37,211,102,0.1)", color: "#25D166", borderRadius: 8 }}>
-                      📱 WhatsApp
-                    </button>
-                  )}
-                  {leadDrawer.email && (
-                    <button type="button" onClick={() => setLeadDrawerTab("email")}
-                      style={{ flex: 1, padding: "9px 0", fontSize: 12, fontWeight: 700,
-                        cursor: "pointer", fontFamily: "'Outfit',sans-serif",
-                        border: `1px solid ${T.border}`, background: "transparent",
-                        color: T.textMuted, borderRadius: 8 }}>
-                      ✉ Email
-                    </button>
-                  )}
-                  <button type="button" onClick={() => setShowFollowUpModal(leadDrawer)}
-                    style={{ flex: 1, padding: "9px 0", fontSize: 12, fontWeight: 700,
-                      cursor: "pointer", fontFamily: "'Outfit',sans-serif",
-                      border: `1px solid ${T.gold}`, background: "rgba(212,168,67,0.1)",
-                      color: T.gold, borderRadius: 8 }}>
-                    📅 Follow-up
-                  </button>
-                </div>
-
-                {/* Contact details */}
-                {[
-                  ["Email",       leadDrawer.email],
-                  ["Phone",       leadDrawer.phone],
-                  ["Nationality", leadDrawer.nationality],
-                  ["Language",    leadDrawer.language],
-                  ["Source",      leadDrawer.source],
-                  ["Created",     leadDrawer.createdAt?.slice(0, 16)?.replace("T", " ")],
-                ].filter(([, v]) => v).map(([label, value]) => (
-                  <div key={label} style={{ display: "flex", justifyContent: "space-between",
-                    padding: "7px 0", borderBottom: `1px solid ${T.border}`, alignItems: "center" }}>
-                    <span style={{ fontSize: 11, color: T.textMuted, fontWeight: 600 }}>{label}</span>
-                    <span style={{ fontSize: 12, color: T.white, textAlign: "right",
-                      maxWidth: "60%", wordBreak: "break-word" }}>
-                      {value}
-                    </span>
-                  </div>
-                ))}
-
-                {/* Property interest */}
-                {/* Quick edit buttons */}
-                <div style={{ display: "flex", gap: 6, marginTop: 12, marginBottom: 4 }}>
-                  <button type="button"
-                    onClick={() => {
-                      const newName = window.prompt("Edit name:", leadDrawer.name || "");
-                      if (newName === null) return;
-                      setDoc(doc(db, "leads", leadDrawer.id), { name: newName, updatedAt: new Date().toISOString() }, { merge: true })
-                        .then(() => { notify("Name updated"); setLeadDrawer(p => ({...p, name: newName})); fetchLeads(); })
-                        .catch(e => notify("Error: " + e.message));
-                    }}
-                    style={{ padding: "5px 10px", fontSize: 10, fontWeight: 700, cursor: "pointer",
-                      fontFamily: "'Outfit',sans-serif", border: `1px solid rgba(59,130,246,0.4)`,
-                      background: "rgba(59,130,246,0.08)", color: "#3B82F6", borderRadius: 6 }}>
-                    ✏ Edit Name
-                  </button>
-                  <button type="button"
-                    onClick={() => {
-                      const newPhone = window.prompt("Edit phone:", leadDrawer.phone || "");
-                      if (newPhone === null) return;
-                      setDoc(doc(db, "leads", leadDrawer.id), { phone: newPhone, updatedAt: new Date().toISOString() }, { merge: true })
-                        .then(() => { notify("Phone updated"); setLeadDrawer(p => ({...p, phone: newPhone})); fetchLeads(); })
-                        .catch(e => notify("Error: " + e.message));
-                    }}
-                    style={{ padding: "5px 10px", fontSize: 10, fontWeight: 700, cursor: "pointer",
-                      fontFamily: "'Outfit',sans-serif", border: `1px solid rgba(59,130,246,0.4)`,
-                      background: "rgba(59,130,246,0.08)", color: "#3B82F6", borderRadius: 6 }}>
-                    ✏ Edit Phone
-                  </button>
-                  <button type="button"
-                    onClick={() => {
-                      const newBudget = window.prompt("Edit budget (AED):", leadDrawer.budget || "");
-                      if (newBudget === null) return;
-                      setDoc(doc(db, "leads", leadDrawer.id), { budget: newBudget, updatedAt: new Date().toISOString() }, { merge: true })
-                        .then(() => { notify("Budget updated"); setLeadDrawer(p => ({...p, budget: newBudget})); fetchLeads(); })
-                        .catch(e => notify("Error: " + e.message));
-                    }}
-                    style={{ padding: "5px 10px", fontSize: 10, fontWeight: 700, cursor: "pointer",
-                      fontFamily: "'Outfit',sans-serif", border: `1px solid rgba(59,130,246,0.4)`,
-                      background: "rgba(59,130,246,0.08)", color: "#3B82F6", borderRadius: 6 }}>
-                    ✏ Edit Budget
-                  </button>
-                </div>
-
-                <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted,
-                  textTransform: "uppercase", letterSpacing: 0.8,
-                  marginTop: 16, marginBottom: 8 }}>
-                  Property Interest
-                </div>
-                {[
-                  ["Budget", leadDrawer.budget ? fmtBudget(leadDrawer.budget) : ""],
-                  ["Project",    cleanProject(leadDrawer.project)],
-                  ["Community",  leadDrawer.community],
-                  ["Bedrooms",   leadDrawer.beds || leadDrawer.bedrooms],
-                  ["Type",       leadDrawer.planType || leadDrawer.propertyType],
-                  ["Developer",  leadDrawer.developer],
-                  ["Golden Visa",(parseFloat(leadDrawer.budget) || 0) >= 2000000 ? "✓ Eligible" : null],
-                ].filter(([, v]) => v).map(([label, value]) => (
-                  <div key={label} style={{ display: "flex", justifyContent: "space-between",
-                    padding: "7px 0", borderBottom: `1px solid ${T.border}`, alignItems: "center" }}>
-                    <span style={{ fontSize: 11, color: T.textMuted, fontWeight: 600 }}>{label}</span>
-                    <span style={{ fontSize: 12, textAlign: "right",
-                      color: label === "Budget" ? T.gold
-                           : label === "Golden Visa" ? "#8B5CF6"
-                           : T.white,
-                      fontWeight: label === "Budget" || label === "Golden Visa" ? 700 : 400 }}>
-                      {value}
-                    </span>
-                  </div>
-                ))}
-
-                {/* Follow-up scheduled */}
-                {leadDrawer.followUpDate && (
-                  <div style={{ marginTop: 14, padding: "10px 12px",
-                    background: isOverdue(leadDrawer) ? "rgba(239,68,68,0.08)" : "rgba(212,168,67,0.08)",
-                    border: `1px solid ${isOverdue(leadDrawer) ? "rgba(239,68,68,0.3)" : "rgba(212,168,67,0.3)"}`,
-                    borderRadius: 8 }}>
-                    <div style={{ fontSize: 11, fontWeight: 700,
-                      color: isOverdue(leadDrawer) ? T.red : T.gold, marginBottom: 4 }}>
-                      {isOverdue(leadDrawer) ? "⚠ Overdue" : "📅 Scheduled"} Follow-up
-                    </div>
-                    <div style={{ fontSize: 12, color: T.white }}>{leadDrawer.followUpDate}</div>
-                    {leadDrawer.followUpNote && (
-                      <div style={{ fontSize: 11, color: T.textMuted, marginTop: 4 }}>
-                        {leadDrawer.followUpNote}
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* Notes */}
-                <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted,
-                  textTransform: "uppercase", letterSpacing: 0.8,
-                  marginTop: 16, marginBottom: 10 }}>
-                  Notes
-                </div>
-                {(leadDrawer.notes || []).slice().reverse().map((n, i) => (
-                  <div key={i} style={{ padding: "8px 10px", background: T.surface,
-                    borderRadius: 7, border: `1px solid ${T.border}`, marginBottom: 6 }}>
-                    <div style={{ fontSize: 12, color: T.white, lineHeight: 1.5, marginBottom: 3 }}>
-                      {n.text}
-                    </div>
-                    <div style={{ fontSize: 9, color: T.textMuted }}>
-                      {n.by} · {n.at?.slice(0, 16)?.replace("T", " ")}
-                    </div>
-                  </div>
-                ))}
-                <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
-                  <input type="text" placeholder="Add a note..."
-                    value={leadNote} onChange={e => setLeadNote(e.target.value)}
-                    onKeyDown={e => { if (e.key === "Enter") addNote(); }}
-                    style={{ flex: 1, padding: "8px 12px", background: T.surface,
-                      border: `1px solid ${T.border}`, borderRadius: 7, color: T.white,
-                      fontSize: 12, outline: "none", fontFamily: "'Outfit',sans-serif" }} />
-                  <button type="button" onClick={addNote} disabled={leadNoteSaving}
-                    style={{ padding: "8px 14px", fontSize: 12, fontWeight: 700, cursor: "pointer",
-                      fontFamily: "'Outfit',sans-serif", border: `1px solid ${T.gold}`,
-                      background: "rgba(212,168,67,0.1)", color: T.gold, borderRadius: 7 }}>
-                    {leadNoteSaving ? "…" : "Save"}
-                  </button>
-                </div>
-
-                {/* Convert to user + Delete */}
-                <div style={{ marginTop: 18, paddingTop: 16, borderTop: `1px solid ${T.border}`, display: "flex", flexDirection: "column", gap: 8 }}>
-                  {leadDrawer.status !== "Converted" && (
-                    <button type="button" onClick={convertToUser} disabled={convertingLead}
-                      style={{ width: "100%", padding: "11px 0", fontSize: 13, fontWeight: 700,
-                        cursor: "pointer", fontFamily: "'Outfit',sans-serif",
-                        border: `1px solid ${T.green}`, background: "rgba(16,185,129,0.1)",
-                        color: T.green, borderRadius: 8 }}>
-                      {convertingLead ? "Converting…" : "✓ Convert to Platform User"}
-                    </button>
-                  )}
-                  {/* Delete lead */}
-                  <button type="button"
-                    onClick={async () => {
-                      if (!window.confirm(`Permanently delete this lead? This cannot be undone.`)) return;
-                      try {
-                        await deleteDoc(doc(db, "leads", leadDrawer.id));
-                        await logAudit(db, { action: "lead_deleted", leadId: leadDrawer.id });
-                        notify("Lead deleted");
-                        setLeadDrawer(null);
-                        fetchLeads();
-                      } catch(e) { notify("Error: " + e.message); }
-                    }}
-                    style={{ width: "100%", padding: "9px 0", fontSize: 12, fontWeight: 700,
-                      cursor: "pointer", fontFamily: "'Outfit',sans-serif",
-                      border: "1px solid rgba(239,68,68,0.3)", background: "rgba(239,68,68,0.06)",
-                      color: "#EF4444", borderRadius: 8 }}>
-                    🗑 Delete This Lead
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* ── Activity tab ─────────────────────────────────────── */}
-            {leadDrawerTab === "activity" && (
-              <div style={{ padding: "16px 20px", flex: 1, overflowY: "auto" }}>
-                <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 14 }}>
-                  Activity Timeline
-                </div>
-                {[...(leadDrawer.activity || [])].reverse().map((a, i) => (
-                  <div key={i} style={{ display: "flex", gap: 10, marginBottom: 12,
-                    paddingBottom: 12, borderBottom: `1px solid ${T.border}` }}>
-                    <div style={{ width: 28, height: 28, borderRadius: "50%",
-                      background: T.surface, border: `1px solid ${T.border}`,
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      fontSize: 11, flexShrink: 0 }}>
-                      {a.type === "created" ? "+" : a.type === "status_change" ? "→"
-                       : a.type === "note" ? "N" : a.type === "email_sent" ? "@"
-                       : a.type === "followup_scheduled" ? "📅" : "·"}
-                    </div>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: 12, color: T.white, lineHeight: 1.4 }}>
-                        {a.note || a.type}
-                      </div>
-                      <div style={{ fontSize: 9, color: T.textMuted, marginTop: 2 }}>
-                        {a.by} · {a.at?.slice(0, 16)?.replace("T", " ")}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-                {!(leadDrawer.activity || []).length && (
-                  <div style={{ fontSize: 12, color: T.textMuted, textAlign: "center", padding: 28 }}>
-                    No activity yet
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* ── Email tab ───────────────────────────────────────── */}
-            {leadDrawerTab === "email" && (
-              <div style={{ padding: "16px 20px", flex: 1 }}>
-                <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 4 }}>
-                  Send Email
-                </div>
-                <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 16 }}>
-                  To: {leadDrawer.email || "No email on file"}
-                </div>
-                {!leadDrawer.email ? (
-                  <div style={{ padding: "24px 0", textAlign: "center", color: T.textMuted, fontSize: 12 }}>
-                    No email address for this lead
-                  </div>
-                ) : (
-                  <div style={{ fontSize: 11, color: T.textMuted, textAlign: "center", padding: "20px 0" }}>
-                    Email via EmailJS · Configure templates in admin settings
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* ══════════════════════════════════════════════════════════════
-          ADD LEAD MODAL
-      ══════════════════════════════════════════════════════════════ */}
-      {showAddLead && (
-        <div style={{ position: "fixed", inset: 0, zIndex: 2000,
-          background: "rgba(0,0,0,0.8)", backdropFilter: "blur(6px)",
-          display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}
-          onClick={e => { if (e.target === e.currentTarget) setShowAddLead(false); }}>
-          <div style={{ background: T.bg, border: `1px solid rgba(212,168,67,0.3)`,
-            borderRadius: 16, padding: 24, width: "100%", maxWidth: 500,
-            maxHeight: "90vh", overflowY: "auto",
-            boxShadow: "0 32px 80px rgba(0,0,0,0.7)" }}>
-            <div style={{ display: "flex", justifyContent: "space-between",
-              alignItems: "center", marginBottom: 20 }}>
-              <div style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 900, color: T.white }}>
-                Add New Lead
-              </div>
-              <button type="button" onClick={() => setShowAddLead(false)}
-                style={{ background: "rgba(255,255,255,0.06)", border: `1px solid ${T.border}`,
-                  borderRadius: 7, color: T.textMuted, fontSize: 16, cursor: "pointer",
-                  padding: "3px 9px" }}>✕</button>
+            {/* Quick action bar */}
+            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr 1fr", gap:6 }}>
+              <button type="button" onClick={() => leadDrawer.phone ? openWA(leadDrawer.phone, displayName(leadDrawer)) : notify("No phone")}
+                style={{ padding:"8px 0", fontSize:11, fontWeight:700, cursor:"pointer",
+                  fontFamily:"'Outfit',sans-serif", border:"1px solid rgba(37,211,102,0.4)",
+                  background:"rgba(37,211,102,0.1)", color:"#25D166", borderRadius:8, textAlign:"center" }}>
+                📱 WhatsApp
+              </button>
+              <button type="button" onClick={() => setLeadDrawerTab("email")}
+                style={{ padding:"8px 0", fontSize:11, fontWeight:700, cursor:"pointer",
+                  fontFamily:"'Outfit',sans-serif", border:`1px solid ${T.border}`,
+                  background:"transparent", color:T.textMuted, borderRadius:8, textAlign:"center" }}>
+                ✉ Email
+              </button>
+              <button type="button" onClick={() => setShowFollowUpModal(leadDrawer)}
+                style={{ padding:"8px 0", fontSize:11, fontWeight:700, cursor:"pointer",
+                  fontFamily:"'Outfit',sans-serif", border:`1px solid ${T.gold}`,
+                  background:"rgba(212,168,67,0.1)", color:T.gold, borderRadius:8, textAlign:"center" }}>
+                📅 Follow-up
+              </button>
+              <button type="button" onClick={() => deleteLead(leadDrawer)}
+                style={{ padding:"8px 0", fontSize:11, fontWeight:700, cursor:"pointer",
+                  fontFamily:"'Outfit',sans-serif", border:"1px solid rgba(239,68,68,0.4)",
+                  background:"rgba(239,68,68,0.08)", color:"#EF4444", borderRadius:8, textAlign:"center" }}>
+                🗑 Delete
+              </button>
             </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          </div>
+
+          {/* Tabs */}
+          <div style={{ display:"flex", borderBottom:`1px solid ${T.border}`, flexShrink:0 }}>
+            {[["details","📋 Details"],["activity","⏱ Activity"],["email","✉ Email"]].map(([t,label]) => (
+              <button key={t} type="button" onClick={() => setLeadDrawerTab(t)}
+                style={{ flex:1, padding:"11px 0", fontSize:12, fontWeight:600, cursor:"pointer",
+                  fontFamily:"'Outfit',sans-serif", border:"none",
+                  borderBottom:`2px solid ${leadDrawerTab===t ? T.gold : "transparent"}`,
+                  background:"transparent", color:leadDrawerTab===t ? T.gold : T.textMuted }}>
+                {label}
+              </button>
+            ))}
+          </div>
+
+          {/* Details tab */}
+          {leadDrawerTab === "details" && (
+            <div style={{ padding:"16px 20px", flex:1, overflowY:"auto" }}>
+              {/* Editable fields */}
+              <div style={{ fontSize:11, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.8, marginBottom:10 }}>
+                Contact Info
+                <span style={{ fontSize:9, color:T.textMuted, marginLeft:8, textTransform:"none", fontWeight:400 }}>
+                  Click any field to edit
+                </span>
+              </div>
               {[
-                { k: "name",      l: "Full Name",          pl: "Ahmed Al-Mansouri"  },
-                { k: "email",     l: "Email",              pl: "ahmed@email.com"    },
-                { k: "phone",     l: "Phone",              pl: "+971 50 123 4567"   },
-                { k: "budget",    l: "Budget (AED)",       pl: "2000000", type: "number" },
-                { k: "project",   l: "Project Interest",   pl: "Vida Residences, The Oasis…" },
-                { k: "community", l: "Community",          pl: "Dubai Hills Estate" },
-              ].map(({ k, l, pl, type }) => (
-                <div key={k}>
-                  <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted,
-                    textTransform: "uppercase", letterSpacing: 0.8,
-                    display: "block", marginBottom: 4 }}>{l}</label>
-                  <input type={type || "text"}
-                    value={addLeadForm[k] || ""}
-                    onChange={e => setAddLeadForm(f => ({ ...f, [k]: e.target.value }))}
-                    placeholder={pl}
-                    style={{ width: "100%", padding: "8px 12px", background: T.surface,
-                      border: `1px solid ${T.border}`, borderRadius: 7, color: T.white,
-                      fontSize: 12, outline: "none", fontFamily: "'Outfit',sans-serif",
-                      boxSizing: "border-box" }} />
+                { key:"name",        label:"Full Name",    value:leadDrawer.name,        placeholder:"Enter name" },
+                { key:"email",       label:"Email",        value:leadDrawer.email,       placeholder:"Enter email" },
+                { key:"phone",       label:"Phone",        value:leadDrawer.phone,       placeholder:"+971 50 000 0000" },
+                { key:"nationality", label:"Nationality",  value:leadDrawer.nationality, placeholder:"Select nationality" },
+                { key:"budget",      label:"Budget (AED)", value:leadDrawer.budget,      placeholder:"e.g. 2000000" },
+                { key:"project",     label:"Project",      value:cleanProject(leadDrawer.project), placeholder:"Project name" },
+                { key:"community",   label:"Community",    value:leadDrawer.community,   placeholder:"Community" },
+              ].map(({ key, label, value, placeholder }) => (
+                <div key={key} style={{ marginBottom:10 }}>
+                  <div style={{ fontSize:9, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.7, marginBottom:3 }}>{label}</div>
+                  <input type="text" defaultValue={value || ""} placeholder={placeholder}
+                    onBlur={async e => {
+                      const newVal = e.target.value.trim();
+                      if (newVal === (value || "").trim()) return;
+                      try {
+                        await setDoc(doc(db,"leads",leadDrawer.id), { [key]: newVal, updatedAt: new Date().toISOString() }, { merge:true });
+                        setLeadDrawer(p => ({...p, [key]: newVal}));
+                        notify(`${label} updated ✓`);
+                        fetchLeads();
+                      } catch(e2) { notify("Error: " + e2.message); }
+                    }}
+                    style={{ width:"100%", padding:"8px 12px", background:T.surface,
+                      border:`1px solid ${T.border}`, borderRadius:7, color:T.white,
+                      fontSize:12, outline:"none", fontFamily:"'Outfit',sans-serif",
+                      boxSizing:"border-box", transition:"border 0.15s" }}
+                    onFocus={e => { e.target.style.borderColor = T.gold; }}
+                    onBlurCapture={e => { e.target.style.borderColor = T.border; }} />
                 </div>
               ))}
-              {/* Notes textarea */}
-              <div>
-                <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted,
-                  textTransform: "uppercase", letterSpacing: 0.8, display: "block", marginBottom: 4 }}>
-                  Notes
-                </label>
-                <textarea value={addLeadForm.notes || ""}
-                  onChange={e => setAddLeadForm(f => ({ ...f, notes: e.target.value }))}
-                  placeholder="Budget, timeline, specific requirements…" rows={2}
-                  style={{ width: "100%", padding: "8px 12px", background: T.surface,
-                    border: `1px solid ${T.border}`, borderRadius: 7, color: T.white,
-                    fontSize: 12, outline: "none", fontFamily: "'Outfit',sans-serif",
-                    resize: "vertical", boxSizing: "border-box" }} />
-              </div>
-              {/* Source + Nationality */}
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-                <div>
-                  <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted,
-                    textTransform: "uppercase", letterSpacing: 0.8,
-                    display: "block", marginBottom: 4 }}>Source</label>
-                  <select value={addLeadForm.source || "Manual"}
-                    onChange={e => setAddLeadForm(f => ({ ...f, source: e.target.value }))}
-                    style={{ width: "100%", padding: "8px 10px", background: T.surface,
-                      border: `1px solid ${T.border}`, borderRadius: 7, color: T.white,
-                      fontSize: 12, fontFamily: "'Outfit',sans-serif", outline: "none" }}>
-                    {["Manual","Property Finder","Bayut","Dubizzle","Meta/Facebook",
-                      "Instagram","Google Ads","WhatsApp","Referral","Walk-in","Email",
-                      "Website","LinkedIn","TikTok"].map(s =>
-                      <option key={s} value={s}>{s}</option>
-                    )}
-                  </select>
-                </div>
-                <div>
-                  <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted,
-                    textTransform: "uppercase", letterSpacing: 0.8,
-                    display: "block", marginBottom: 4 }}>Nationality</label>
-                  <select value={addLeadForm.nationality || ""}
-                    onChange={e => setAddLeadForm(f => ({ ...f, nationality: e.target.value }))}
-                    style={{ width: "100%", padding: "8px 10px", background: T.surface,
-                      border: `1px solid ${T.border}`, borderRadius: 7, color: T.white,
-                      fontSize: 12, fontFamily: "'Outfit',sans-serif", outline: "none" }}>
-                    <option value="">Select…</option>
-                    {NATS.map(n => <option key={n} value={n}>{n}</option>)}
-                  </select>
-                </div>
-              </div>
-              {/* Buttons */}
-              <div style={{ display: "flex", gap: 8, justifyContent: "flex-end",
-                marginTop: 8, paddingTop: 14, borderTop: `1px solid ${T.border}` }}>
-                <button type="button" onClick={() => setShowAddLead(false)}
-                  style={{ padding: "9px 18px", fontSize: 12, cursor: "pointer",
-                    fontFamily: "'Outfit',sans-serif", border: `1px solid ${T.border}`,
-                    background: "transparent", color: T.textMuted, borderRadius: 8 }}>
-                  Cancel
-                </button>
-                <button type="button" onClick={addLead} disabled={addLeadLoading}
-                  style={{ padding: "9px 24px", fontSize: 12, fontWeight: 700, cursor: "pointer",
-                    fontFamily: "'Outfit',sans-serif", border: `1px solid ${T.gold}`,
-                    background: "rgba(212,168,67,0.12)", color: T.gold, borderRadius: 8 }}>
-                  {addLeadLoading ? "Adding…" : "+ Add Lead"}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
-      {/* ══════════════════════════════════════════════════════════════
-          FOLLOW-UP MODAL
-      ══════════════════════════════════════════════════════════════ */}
-      {showFollowUpModal && (
-        <div style={{ position: "fixed", inset: 0, zIndex: 2000,
-          background: "rgba(0,0,0,0.8)", backdropFilter: "blur(6px)",
-          display: "flex", alignItems: "center", justifyContent: "center" }}
-          onClick={e => { if (e.target === e.currentTarget) { setShowFollowUpModal(null); setFollowUpDate(""); setFollowUpNote(""); } }}>
-          <div style={{ background: T.bg, border: `1px solid ${T.border}`,
-            borderRadius: 14, padding: 24, width: 360,
-            boxShadow: "0 24px 60px rgba(0,0,0,0.6)" }}>
-            <div style={{ fontFamily: "'Fraunces',serif", fontSize: 16, fontWeight: 900,
-              color: T.white, marginBottom: 4 }}>
-              Schedule Follow-up
+              {/* Follow-up info */}
+              {leadDrawer.followUpDate && (
+                <div style={{ margin:"14px 0", padding:"10px 12px",
+                  background: isOverdue(leadDrawer) ? "rgba(239,68,68,0.08)" : "rgba(212,168,67,0.08)",
+                  border:`1px solid ${isOverdue(leadDrawer) ? "rgba(239,68,68,0.3)" : "rgba(212,168,67,0.3)"}`,
+                  borderRadius:8 }}>
+                  <div style={{ fontSize:11, fontWeight:700,
+                    color: isOverdue(leadDrawer) ? "#EF4444" : T.gold, marginBottom:3 }}>
+                    {isOverdue(leadDrawer) ? "⚠ Overdue Follow-up" : "📅 Scheduled Follow-up"}
+                  </div>
+                  <div style={{ fontSize:12, color:T.white }}>{leadDrawer.followUpDate}</div>
+                  {leadDrawer.followUpNote && <div style={{ fontSize:11, color:T.textMuted, marginTop:3 }}>{leadDrawer.followUpNote}</div>}
+                </div>
+              )}
+
+              {/* Notes */}
+              <div style={{ fontSize:11, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.8, marginTop:16, marginBottom:10 }}>Notes</div>
+              {(leadDrawer.notes || []).slice().reverse().map((n, i) => (
+                <div key={i} style={{ padding:"8px 10px", background:T.surface, borderRadius:7,
+                  border:`1px solid ${T.border}`, marginBottom:6 }}>
+                  <div style={{ fontSize:12, color:T.white, lineHeight:1.5, marginBottom:3 }}>{n.text}</div>
+                  <div style={{ fontSize:9, color:T.textMuted }}>{n.by} · {n.at?.slice(0,16)?.replace("T"," ")}</div>
+                </div>
+              ))}
+              {!(leadDrawer.notes || []).length && (
+                <div style={{ fontSize:11, color:T.textMuted, marginBottom:10 }}>No notes yet</div>
+              )}
+              <div style={{ display:"flex", gap:8 }}>
+                <input type="text" placeholder="Type a note and press Enter…"
+                  value={leadNote} onChange={e => setLeadNote(e.target.value)}
+                  onKeyDown={e => { if(e.key==="Enter") addNote(); }}
+                  style={{ flex:1, padding:"8px 12px", background:T.surface,
+                    border:`1px solid ${T.border}`, borderRadius:7, color:T.white,
+                    fontSize:12, outline:"none", fontFamily:"'Outfit',sans-serif" }} />
+                <button type="button" onClick={addNote} disabled={leadNoteSaving}
+                  style={{ padding:"8px 14px", fontSize:12, fontWeight:700, cursor:"pointer",
+                    fontFamily:"'Outfit',sans-serif", border:`1px solid ${T.gold}`,
+                    background:"rgba(212,168,67,0.1)", color:T.gold, borderRadius:7 }}>
+                  {leadNoteSaving ? "…" : "Save"}
+                </button>
+              </div>
+
+              {/* Convert */}
+              {leadDrawer.status !== "Converted" && (
+                <button type="button" onClick={convertToUser} disabled={convertingLead}
+                  style={{ width:"100%", padding:"11px 0", fontSize:13, fontWeight:700,
+                    cursor:"pointer", fontFamily:"'Outfit',sans-serif", marginTop:20,
+                    border:`1px solid ${T.green}`, background:"rgba(16,185,129,0.1)",
+                    color:T.green, borderRadius:8 }}>
+                  {convertingLead ? "Converting…" : "✓ Convert to Platform User"}
+                </button>
+              )}
             </div>
-            <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 16 }}>
-              For: {showFollowUpModal.name || "Lead"}
+          )}
+
+          {/* Activity tab */}
+          {leadDrawerTab === "activity" && (
+            <div style={{ padding:"16px 20px", flex:1, overflowY:"auto" }}>
+              <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:14 }}>Activity Timeline</div>
+              {[...(leadDrawer.activity || [])].reverse().map((a, i) => (
+                <div key={i} style={{ display:"flex", gap:10, marginBottom:12, paddingBottom:12, borderBottom:`1px solid ${T.border}` }}>
+                  <div style={{ width:28, height:28, borderRadius:"50%", background:T.surface,
+                    border:`1px solid ${T.border}`, display:"flex", alignItems:"center",
+                    justifyContent:"center", fontSize:11, flexShrink:0 }}>
+                    {a.type==="created"?"＋":a.type==="status_change"?"→":a.type==="note"?"N":a.type==="email_sent"?"@":a.type==="followup_scheduled"?"📅":"·"}
+                  </div>
+                  <div style={{ flex:1 }}>
+                    <div style={{ fontSize:12, color:T.white, lineHeight:1.4 }}>{a.note || a.type}</div>
+                    <div style={{ fontSize:9, color:T.textMuted, marginTop:2 }}>
+                      {a.by} · {a.at?.slice(0,16)?.replace("T"," ")}
+                    </div>
+                  </div>
+                </div>
+              ))}
+              {!(leadDrawer.activity || []).length && (
+                <div style={{ fontSize:12, color:T.textMuted, textAlign:"center", padding:28 }}>No activity yet</div>
+              )}
             </div>
-            <div style={{ marginBottom: 12 }}>
-              <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted,
-                textTransform: "uppercase", letterSpacing: 0.8, display: "block", marginBottom: 4 }}>Date</label>
-              <input type="date" value={followUpDate}
-                onChange={e => setFollowUpDate(e.target.value)}
-                style={{ width: "100%", padding: "8px 12px", background: T.surface,
-                  border: `1px solid ${T.border}`, borderRadius: 7, color: T.white,
-                  fontSize: 12, outline: "none", fontFamily: "'Outfit',sans-serif",
-                  boxSizing: "border-box" }} />
+          )}
+
+          {/* Email tab */}
+          {leadDrawerTab === "email" && (
+            <div style={{ padding:"16px 20px", flex:1 }}>
+              <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:4 }}>Send Email</div>
+              <div style={{ fontSize:11, color:T.textMuted, marginBottom:16 }}>
+                To: {leadDrawer.email || <span style={{ color:"#EF4444" }}>No email address</span>}
+              </div>
+              <div style={{ fontSize:11, color:T.textMuted, padding:"24px 0", textAlign:"center" }}>
+                Email templates configured via EmailJS in admin settings
+              </div>
             </div>
-            <div style={{ marginBottom: 18 }}>
-              <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted,
-                textTransform: "uppercase", letterSpacing: 0.8, display: "block", marginBottom: 4 }}>
-                Note (optional)
-              </label>
-              <input type="text" value={followUpNote}
-                onChange={e => setFollowUpNote(e.target.value)}
-                placeholder="e.g. Call to discuss payment plan…"
-                style={{ width: "100%", padding: "8px 12px", background: T.surface,
-                  border: `1px solid ${T.border}`, borderRadius: 7, color: T.white,
-                  fontSize: 12, outline: "none", fontFamily: "'Outfit',sans-serif",
-                  boxSizing: "border-box" }} />
+          )}
+        </div>
+      </div>
+    )}
+
+    {/* ════════════════════════════════════════════════════════════
+        ADD LEAD MODAL
+    ════════════════════════════════════════════════════════════ */}
+    {showAddLead && (
+      <div style={{ position:"fixed", inset:0, zIndex:2000, background:"rgba(0,0,0,0.8)",
+        backdropFilter:"blur(6px)", display:"flex", alignItems:"center",
+        justifyContent:"center", padding:20 }}
+        onClick={e => { if(e.target===e.currentTarget) setShowAddLead(false); }}>
+        <div style={{ background:T.bg, border:`1px solid rgba(212,168,67,0.3)`,
+          borderRadius:16, padding:24, width:"100%", maxWidth:480,
+          maxHeight:"90vh", overflowY:"auto", boxShadow:"0 32px 80px rgba(0,0,0,0.7)" }}>
+          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:20 }}>
+            <div style={{ fontFamily:"'Fraunces',serif", fontSize:18, fontWeight:900, color:T.white }}>
+              Add New Lead
             </div>
-            <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
-              <button type="button"
-                onClick={() => { setShowFollowUpModal(null); setFollowUpDate(""); setFollowUpNote(""); }}
-                style={{ padding: "8px 16px", fontSize: 12, cursor: "pointer",
-                  fontFamily: "'Outfit',sans-serif", border: `1px solid ${T.border}`,
-                  background: "transparent", color: T.textMuted, borderRadius: 7 }}>
+            <button type="button" onClick={() => setShowAddLead(false)}
+              style={{ background:"rgba(255,255,255,0.06)", border:`1px solid ${T.border}`,
+                borderRadius:7, color:T.textMuted, fontSize:15, cursor:"pointer", padding:"4px 10px" }}>
+              ✕
+            </button>
+          </div>
+          <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
+            {[
+              { k:"name",      l:"Full Name *",      pl:"Ahmed Al-Mansouri"   },
+              { k:"email",     l:"Email",             pl:"ahmed@email.com"     },
+              { k:"phone",     l:"Phone",             pl:"+971 50 123 4567"    },
+              { k:"budget",    l:"Budget (AED)",      pl:"2000000", t:"number" },
+              { k:"project",   l:"Project Interest",  pl:"The Oasis, Vida Residences…" },
+              { k:"community", l:"Community",         pl:"Dubai Hills Estate"  },
+            ].map(({ k, l, pl, t }) => (
+              <div key={k}>
+                <label style={{ fontSize:10, fontWeight:700, color:T.textMuted,
+                  textTransform:"uppercase", letterSpacing:0.8, display:"block", marginBottom:4 }}>
+                  {l}
+                </label>
+                <input type={t||"text"} value={addLeadForm[k]||""}
+                  onChange={e => setAddLeadForm(f => ({...f, [k]: e.target.value}))}
+                  placeholder={pl}
+                  style={{ width:"100%", padding:"9px 12px", background:T.surface,
+                    border:`1px solid ${T.border}`, borderRadius:7, color:T.white,
+                    fontSize:12, outline:"none", fontFamily:"'Outfit',sans-serif", boxSizing:"border-box" }} />
+              </div>
+            ))}
+            <div>
+              <label style={{ fontSize:10, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.8, display:"block", marginBottom:4 }}>Initial Notes</label>
+              <textarea value={addLeadForm.notes||""} rows={2}
+                onChange={e => setAddLeadForm(f => ({...f, notes: e.target.value}))}
+                placeholder="Budget range, timeline, specific requirements…"
+                style={{ width:"100%", padding:"9px 12px", background:T.surface,
+                  border:`1px solid ${T.border}`, borderRadius:7, color:T.white,
+                  fontSize:12, outline:"none", fontFamily:"'Outfit',sans-serif",
+                  resize:"vertical", boxSizing:"border-box" }} />
+            </div>
+            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
+              <div>
+                <label style={{ fontSize:10, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.8, display:"block", marginBottom:4 }}>Source</label>
+                <select value={addLeadForm.source||"Manual"}
+                  onChange={e => setAddLeadForm(f => ({...f, source: e.target.value}))}
+                  style={{ width:"100%", padding:"9px 10px", background:T.surface,
+                    border:`1px solid ${T.border}`, borderRadius:7, color:T.white,
+                    fontSize:12, fontFamily:"'Outfit',sans-serif", outline:"none" }}>
+                  {["Manual","Property Finder","Bayut","Dubizzle","Meta/Facebook","Instagram",
+                    "Google Ads","WhatsApp","Referral","Walk-in","Website","LinkedIn"].map(s =>
+                    <option key={s} value={s}>{s}</option>
+                  )}
+                </select>
+              </div>
+              <div>
+                <label style={{ fontSize:10, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.8, display:"block", marginBottom:4 }}>Nationality</label>
+                <select value={addLeadForm.nationality||""}
+                  onChange={e => setAddLeadForm(f => ({...f, nationality: e.target.value}))}
+                  style={{ width:"100%", padding:"9px 10px", background:T.surface,
+                    border:`1px solid ${T.border}`, borderRadius:7, color:T.white,
+                    fontSize:12, fontFamily:"'Outfit',sans-serif", outline:"none" }}>
+                  <option value="">Select…</option>
+                  {NATS.map(n => <option key={n} value={n}>{n}</option>)}
+                </select>
+              </div>
+            </div>
+            <div style={{ display:"flex", gap:8, justifyContent:"flex-end", marginTop:8,
+              paddingTop:14, borderTop:`1px solid ${T.border}` }}>
+              <button type="button" onClick={() => setShowAddLead(false)}
+                style={{ padding:"10px 18px", fontSize:12, cursor:"pointer",
+                  fontFamily:"'Outfit',sans-serif", border:`1px solid ${T.border}`,
+                  background:"transparent", color:T.textMuted, borderRadius:8 }}>
                 Cancel
               </button>
-              <button type="button" onClick={scheduleFollowUp}
-                style={{ padding: "8px 20px", fontSize: 12, fontWeight: 700, cursor: "pointer",
-                  fontFamily: "'Outfit',sans-serif", border: `1px solid ${T.gold}`,
-                  background: "rgba(212,168,67,0.1)", color: T.gold, borderRadius: 7 }}>
-                Schedule
+              <button type="button" onClick={addLead} disabled={addLeadLoading}
+                style={{ padding:"10px 24px", fontSize:12, fontWeight:700, cursor:"pointer",
+                  fontFamily:"'Outfit',sans-serif", border:`1px solid ${T.gold}`,
+                  background:"rgba(212,168,67,0.12)", color:T.gold, borderRadius:8 }}>
+                {addLeadLoading ? "Adding…" : "+ Add Lead"}
               </button>
             </div>
           </div>
         </div>
-      )}
+      </div>
+    )}
+
+    {/* ════════════════════════════════════════════════════════════
+        FOLLOW-UP MODAL
+    ════════════════════════════════════════════════════════════ */}
+    {showFollowUpModal && (
+      <div style={{ position:"fixed", inset:0, zIndex:2000, background:"rgba(0,0,0,0.8)",
+        backdropFilter:"blur(6px)", display:"flex", alignItems:"center", justifyContent:"center" }}
+        onClick={e => { if(e.target===e.currentTarget){ setShowFollowUpModal(null); setFollowUpDate(""); setFollowUpNote(""); }}}>
+        <div style={{ background:T.bg, border:`1px solid ${T.border}`,
+          borderRadius:14, padding:24, width:380, boxShadow:"0 24px 60px rgba(0,0,0,0.6)" }}>
+          <div style={{ fontFamily:"'Fraunces',serif", fontSize:16, fontWeight:900, color:T.white, marginBottom:4 }}>
+            Schedule Follow-up
+          </div>
+          <div style={{ fontSize:11, color:T.textMuted, marginBottom:18 }}>
+            For: <span style={{ color:T.white, fontWeight:600 }}>{displayName(showFollowUpModal)}</span>
+          </div>
+          <div style={{ marginBottom:14 }}>
+            <label style={{ fontSize:10, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.8, display:"block", marginBottom:4 }}>
+              Date *
+            </label>
+            <input type="date" value={followUpDate} onChange={e => setFollowUpDate(e.target.value)}
+              style={{ width:"100%", padding:"9px 12px", background:T.surface,
+                border:`1px solid ${T.border}`, borderRadius:7, color:T.white,
+                fontSize:12, outline:"none", fontFamily:"'Outfit',sans-serif", boxSizing:"border-box" }} />
+          </div>
+          <div style={{ marginBottom:20 }}>
+            <label style={{ fontSize:10, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.8, display:"block", marginBottom:4 }}>
+              Reminder Note (optional)
+            </label>
+            <input type="text" value={followUpNote} onChange={e => setFollowUpNote(e.target.value)}
+              placeholder="e.g. Call to discuss payment plan options"
+              style={{ width:"100%", padding:"9px 12px", background:T.surface,
+                border:`1px solid ${T.border}`, borderRadius:7, color:T.white,
+                fontSize:12, outline:"none", fontFamily:"'Outfit',sans-serif", boxSizing:"border-box" }} />
+          </div>
+          <div style={{ display:"flex", gap:8, justifyContent:"flex-end" }}>
+            <button type="button"
+              onClick={() => { setShowFollowUpModal(null); setFollowUpDate(""); setFollowUpNote(""); }}
+              style={{ padding:"9px 16px", fontSize:12, cursor:"pointer",
+                fontFamily:"'Outfit',sans-serif", border:`1px solid ${T.border}`,
+                background:"transparent", color:T.textMuted, borderRadius:7 }}>
+              Cancel
+            </button>
+            <button type="button" onClick={scheduleFollowUp}
+              style={{ padding:"9px 22px", fontSize:12, fontWeight:700, cursor:"pointer",
+                fontFamily:"'Outfit',sans-serif", border:`1px solid ${T.gold}`,
+                background:"rgba(212,168,67,0.1)", color:T.gold, borderRadius:7 }}>
+              ✓ Schedule
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
 
     </>
   );
