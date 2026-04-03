@@ -3152,13 +3152,13 @@ export default function EmaarDashboardV2() {
             {/* ── KPI Bar ── */}
             <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:10, marginBottom:20 }}>
               {[
-                { label:"Total Projects",    value:activeProjects.length, sub:\`\${activeProjects.filter(p=>p.status==="Under Construction").length} under construction · \${activeProjects.filter(p=>p.status==="Off-Plan"||p.status==="Off Plan").length} off-plan\`, color:T.gold },
+                { label:"Total Projects",    value:activeProjects.length, sub:`${activeProjects.filter(p=>p.status==="Under Construction").length} under construction · ${activeProjects.filter(p=>p.status==="Off-Plan"||p.status==="Off Plan").length} off-plan`, color:T.gold },
                 { label:"Communities",       value:[...new Set(activeProjects.map(p=>p.community))].length, sub:[...new Set(activeProjects.map(p=>p.community))].slice(0,3).join(" · "), color:T.teal },
                 { label:"Branded",           value:activeProjects.filter(p=>p.branded).length, sub:activeProjects.filter(p=>p.branded&&p.brand&&p.brand!=="—").map(p=>p.brand).filter((v,i,a)=>a.indexOf(v)===i).slice(0,3).join(" · ")||"None", color:T.purple||"#8B5CF6" },
                 { label:"Avg Construction",  value:activeProjects.length>0 ? Math.round(activeProjects.reduce((a,p)=>a+(p.construction||0),0)/activeProjects.length)+"%" : "0%", sub:"Weighted average progress", color:T.green },
               ].map((k,i) => (
-                <div key={i} style={{ background:T.card||T.surface, border:\`1px solid \${T.border}\`, borderRadius:12, padding:"16px 18px", position:"relative", overflow:"hidden" }}>
-                  <div style={{ position:"absolute", top:0, left:0, right:0, height:3, background:\`linear-gradient(90deg,\${k.color},\${k.color}40)\` }}/>
+                <div key={i} style={{ background:T.card||T.surface, border:`1px solid ${T.border}`, borderRadius:12, padding:"16px 18px", position:"relative", overflow:"hidden" }}>
+                  <div style={{ position:"absolute", top:0, left:0, right:0, height:3, background:`linear-gradient(90deg,${k.color},${k.color}40)` }}/>
                   <div style={{ fontSize:10, fontWeight:700, color:T.textMuted||T.textSecondary, textTransform:"uppercase", letterSpacing:0.8, marginBottom:4 }}>{k.label}</div>
                   <div style={{ fontSize:28, fontWeight:900, color:k.color, fontFamily:"'Fraunces',serif", lineHeight:1 }}>{k.value}</div>
                   <div style={{ fontSize:10, color:T.textMuted||T.textSecondary, marginTop:4 }}>{k.sub}</div>
@@ -3167,15 +3167,15 @@ export default function EmaarDashboardV2() {
             </div>
 
             {/* ── Search + Filters ── */}
-            <div style={{ background:T.card||T.surface, border:\`1px solid \${T.border}\`, borderRadius:12, padding:"14px 16px", marginBottom:16 }}>
+            <div style={{ background:T.card||T.surface, border:`1px solid ${T.border}`, borderRadius:12, padding:"14px 16px", marginBottom:16 }}>
               {/* Row 1: search + price */}
               <div style={{ display:"flex", gap:10, marginBottom:10, flexWrap:"wrap" }}>
                 <div style={{ position:"relative", flex:"2 1 250px" }}>
                   <span style={{ position:"absolute", left:12, top:"50%", transform:"translateY(-50%)", color:T.textMuted||T.textSecondary, fontSize:14 }}>🔍</span>
                   <input value={projectSearch} onChange={e=>setProjectSearch(e.target.value)} placeholder="Search projects or community..."
-                    style={{ width:"100%", padding:"9px 12px 9px 36px", background:T.surfaceAlt||T.bg, border:\`1px solid \${T.border}\`, borderRadius:8, color:T.textPrimary||T.white, fontSize:12, fontFamily:"'Outfit',sans-serif", outline:"none", boxSizing:"border-box" }}/>
+                    style={{ width:"100%", padding:"9px 12px 9px 36px", background:T.surfaceAlt||T.bg, border:`1px solid ${T.border}`, borderRadius:8, color:T.textPrimary||T.white, fontSize:12, fontFamily:"'Outfit',sans-serif", outline:"none", boxSizing:"border-box" }}/>
                 </div>
-                <div style={{ display:"flex", alignItems:"center", gap:8, flex:"1 1 180px", background:T.surfaceAlt||T.bg, border:\`1px solid \${T.border}\`, borderRadius:8, padding:"8px 14px" }}>
+                <div style={{ display:"flex", alignItems:"center", gap:8, flex:"1 1 180px", background:T.surfaceAlt||T.bg, border:`1px solid ${T.border}`, borderRadius:8, padding:"8px 14px" }}>
                   <span style={{ fontSize:11, color:T.textMuted||T.textSecondary, whiteSpace:"nowrap" }}>Max Price</span>
                   <input type="range" min={1} max={20} step={0.5} value={projectPriceMax} onChange={e=>setProjectPriceMax(Number(e.target.value))} style={{ flex:1, accentColor:T.gold, cursor:"pointer" }}/>
                   <span style={{ fontSize:12, fontWeight:700, color:T.gold, whiteSpace:"nowrap", minWidth:50 }}>{projectPriceMax>=20?"Any":"AED "+projectPriceMax+"M"}</span>
@@ -3192,7 +3192,7 @@ export default function EmaarDashboardV2() {
                 <span style={{ fontSize:10, color:T.textMuted||T.textSecondary, letterSpacing:1, textTransform:"uppercase", minWidth:32 }}>Area</span>
                 {["All","DHE","DCH","EBF","GPC","ES","TV","RYM","TO","BB","TH","Branded"].map(f=>(
                   <button type="button" key={f} onClick={()=>setProjectFilter(f)}
-                    style={{ padding:"5px 11px", borderRadius:20, border:\`1px solid \${projectFilter===f?T.gold:T.border}\`, background:projectFilter===f?"rgba(212,168,67,0.12)":"transparent", color:projectFilter===f?T.gold:T.textSecondary||T.textMuted, fontSize:11, fontWeight:projectFilter===f?700:400, cursor:"pointer", transition:"all 0.15s" }}>
+                    style={{ padding:"5px 11px", borderRadius:20, border:`1px solid ${projectFilter===f?T.gold:T.border}`, background:projectFilter===f?"rgba(212,168,67,0.12)":"transparent", color:projectFilter===f?T.gold:T.textSecondary||T.textMuted, fontSize:11, fontWeight:projectFilter===f?700:400, cursor:"pointer", transition:"all 0.15s" }}>
                     {f}
                   </button>
                 ))}
@@ -3202,7 +3202,7 @@ export default function EmaarDashboardV2() {
                 <span style={{ fontSize:10, color:T.textMuted||T.textSecondary, letterSpacing:1, textTransform:"uppercase", minWidth:32 }}>Tier</span>
                 {["All","Mid-Market","Mid-Premium","Premium","Luxury","Ultra-Luxury","Luxury Branded","Ultra-Lux Branded"].map(t=>(
                   <button type="button" key={t} onClick={()=>setProjectTier(t)}
-                    style={{ padding:"5px 11px", borderRadius:20, border:\`1px solid \${projectTier===t?"#14B8A6":T.border}\`, background:projectTier===t?"rgba(20,184,166,0.12)":"transparent", color:projectTier===t?"#14B8A6":T.textSecondary||T.textMuted, fontSize:11, fontWeight:projectTier===t?700:400, cursor:"pointer", transition:"all 0.15s" }}>
+                    style={{ padding:"5px 11px", borderRadius:20, border:`1px solid ${projectTier===t?"#14B8A6":T.border}`, background:projectTier===t?"rgba(20,184,166,0.12)":"transparent", color:projectTier===t?"#14B8A6":T.textSecondary||T.textMuted, fontSize:11, fontWeight:projectTier===t?700:400, cursor:"pointer", transition:"all 0.15s" }}>
                     {t}
                   </button>
                 ))}
@@ -3212,7 +3212,7 @@ export default function EmaarDashboardV2() {
                 <span style={{ fontSize:10, color:T.textMuted||T.textSecondary, letterSpacing:1, textTransform:"uppercase", minWidth:32 }}>Hand.</span>
                 {["All","2026","2027","2028","2029","2030+"].map(y=>(
                   <button type="button" key={y} onClick={()=>setProjectHandover(y)}
-                    style={{ padding:"5px 11px", borderRadius:20, border:\`1px solid \${projectHandover===y?"#8B5CF6":T.border}\`, background:projectHandover===y?"rgba(139,92,246,0.12)":"transparent", color:projectHandover===y?"#8B5CF6":T.textSecondary||T.textMuted, fontSize:11, fontWeight:projectHandover===y?700:400, cursor:"pointer", transition:"all 0.15s" }}>
+                    style={{ padding:"5px 11px", borderRadius:20, border:`1px solid ${projectHandover===y?"#8B5CF6":T.border}`, background:projectHandover===y?"rgba(139,92,246,0.12)":"transparent", color:projectHandover===y?"#8B5CF6":T.textSecondary||T.textMuted, fontSize:11, fontWeight:projectHandover===y?700:400, cursor:"pointer", transition:"all 0.15s" }}>
                     {y}
                   </button>
                 ))}
@@ -3235,7 +3235,7 @@ export default function EmaarDashboardV2() {
                   <div style={{ fontSize:32, marginBottom:12 }}>🔍</div>
                   <div style={{ fontSize:15, fontWeight:600, marginBottom:6 }}>No projects match your filters</div>
                   <button type="button" onClick={()=>{setProjectSearch("");setProjectFilter("All");setProjectTier("All");setProjectHandover("All");setProjectPriceMax(20);}}
-                    style={{ marginTop:8, padding:"8px 20px", borderRadius:8, border:\`1px solid \${T.gold}\`, background:"rgba(212,168,67,0.1)", color:T.gold, fontSize:12, cursor:"pointer" }}>
+                    style={{ marginTop:8, padding:"8px 20px", borderRadius:8, border:`1px solid ${T.gold}`, background:"rgba(212,168,67,0.1)", color:T.gold, fontSize:12, cursor:"pointer" }}>
                     Clear Filters
                   </button>
                 </div>
@@ -3256,12 +3256,12 @@ export default function EmaarDashboardV2() {
                       return (
                         <div key={p.id||i}
                           onClick={()=>setSelectedProject(p)}
-                          style={{ background:T.card||T.surface, border:\`1px solid \${T.border}\`, borderRadius:14, overflow:"hidden", cursor:"pointer", transition:"all 0.2s", position:"relative" }}
-                          onMouseEnter={e=>{e.currentTarget.style.border=\`1px solid \${T.gold}60\`;e.currentTarget.style.transform="translateY(-3px)";e.currentTarget.style.boxShadow=\`0 12px 40px rgba(212,168,67,0.12)\`;}}
-                          onMouseLeave={e=>{e.currentTarget.style.border=\`1px solid \${T.border}\`;e.currentTarget.style.transform="none";e.currentTarget.style.boxShadow="none";}}>
+                          style={{ background:T.card||T.surface, border:`1px solid ${T.border}`, borderRadius:14, overflow:"hidden", cursor:"pointer", transition:"all 0.2s", position:"relative" }}
+                          onMouseEnter={e=>{e.currentTarget.style.border=`1px solid ${T.gold}60`;e.currentTarget.style.transform="translateY(-3px)";e.currentTarget.style.boxShadow=`0 12px 40px rgba(212,168,67,0.12)`;}}
+                          onMouseLeave={e=>{e.currentTarget.style.border=`1px solid ${T.border}`;e.currentTarget.style.transform="none";e.currentTarget.style.boxShadow="none";}}>
 
                           {/* Top accent bar */}
-                          <div style={{ height:3, background:\`linear-gradient(90deg,\${statusColor},\${statusColor}40)\` }}/>
+                          <div style={{ height:3, background:`linear-gradient(90deg,${statusColor},${statusColor}40)` }}/>
 
                           {/* Project image if exists */}
                           {p.imageUrl&&(
@@ -3278,20 +3278,20 @@ export default function EmaarDashboardV2() {
                                 <div style={{ display:"flex", alignItems:"center", gap:6, flexWrap:"wrap" }}>
                                   <span style={{ fontSize:11, color:T.textSecondary||T.textMuted }}>{p.community}</span>
                                   {p.emaarUrl&&<a href={p.emaarUrl} target="_blank" rel="noopener noreferrer" onClick={e=>e.stopPropagation()}
-                                    style={{ fontSize:9, color:T.gold, textDecoration:"none", padding:"1px 6px", border:\`1px solid \${T.gold}40\`, borderRadius:4, fontWeight:600 }}>
+                                    style={{ fontSize:9, color:T.gold, textDecoration:"none", padding:"1px 6px", border:`1px solid ${T.gold}40`, borderRadius:4, fontWeight:600 }}>
                                     {getLinkLabel(p.emaarUrl)}
                                   </a>}
                                 </div>
                               </div>
                               {/* Score badge */}
                               <div style={{ display:"flex", flexDirection:"column", alignItems:"flex-end", gap:4, flexShrink:0 }}>
-                                <div style={{ display:"flex", alignItems:"center", gap:3, padding:"4px 8px", borderRadius:8, background:\`\${invColor}16\`, border:\`1px solid \${invColor}40\` }}>
+                                <div style={{ display:"flex", alignItems:"center", gap:3, padding:"4px 8px", borderRadius:8, background:`${invColor}16`, border:`1px solid ${invColor}40` }}>
                                   <span style={{ fontSize:13, fontWeight:900, color:invColor, fontFamily:"'Fraunces',serif" }}>{inv.score}</span>
                                   <span style={{ fontSize:9, color:invColor }}>/10 ★ {inv.label}</span>
                                 </div>
                                 <div style={{ display:"flex", gap:4 }}>
                                   {p.branded&&p.brand&&p.brand!=="—"&&<span style={{ fontSize:9, padding:"2px 7px", borderRadius:5, background:"rgba(212,168,67,0.15)", color:T.gold, fontWeight:600 }}>{p.brand}</span>}
-                                  <span style={{ fontSize:9, padding:"2px 7px", borderRadius:5, background:\`\${statusColor}18\`, color:statusColor, fontWeight:600 }}>{p.status==="Under Construction"?"U/C":p.status||"—"}</span>
+                                  <span style={{ fontSize:9, padding:"2px 7px", borderRadius:5, background:`${statusColor}18`, color:statusColor, fontWeight:600 }}>{p.status==="Under Construction"?"U/C":p.status||"—"}</span>
                                 </div>
                               </div>
                             </div>
@@ -3303,7 +3303,7 @@ export default function EmaarDashboardV2() {
                                 <span style={{ fontSize:11, fontWeight:700, color:constrColor }}>{p.construction||0}%</span>
                               </div>
                               <div style={{ height:5, borderRadius:3, background:"rgba(255,255,255,0.06)", overflow:"hidden" }}>
-                                <div style={{ height:"100%", width:\`\${p.construction||0}%\`, borderRadius:3, background:\`linear-gradient(90deg,\${constrColor},\${constrColor}bb)\`, transition:"width 0.4s" }}/>
+                                <div style={{ height:"100%", width:`${p.construction||0}%`, borderRadius:3, background:`linear-gradient(90deg,${constrColor},${constrColor}bb)`, transition:"width 0.4s" }}/>
                               </div>
                             </div>
 
@@ -3330,9 +3330,9 @@ export default function EmaarDashboardV2() {
 
                             {/* Tier + Full Details */}
                             <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
-                              {p.tier&&<span style={{ fontSize:9, padding:"3px 9px", borderRadius:20, background:"rgba(255,255,255,0.05)", color:T.textMuted||T.textSecondary, border:\`1px solid \${T.border}\` }}>{p.tier}</span>}
+                              {p.tier&&<span style={{ fontSize:9, padding:"3px 9px", borderRadius:20, background:"rgba(255,255,255,0.05)", color:T.textMuted||T.textSecondary, border:`1px solid ${T.border}` }}>{p.tier}</span>}
                               <button type="button" onClick={e=>{e.stopPropagation();setSelectedProject(p);}}
-                                style={{ marginLeft:"auto", padding:"7px 16px", borderRadius:8, border:\`1px solid \${T.gold}50\`, background:"rgba(212,168,67,0.08)", color:T.gold, fontSize:11, fontWeight:700, cursor:"pointer", fontFamily:"'Outfit',sans-serif", display:"flex", alignItems:"center", gap:5 }}>
+                                style={{ marginLeft:"auto", padding:"7px 16px", borderRadius:8, border:`1px solid ${T.gold}50`, background:"rgba(212,168,67,0.08)", color:T.gold, fontSize:11, fontWeight:700, cursor:"pointer", fontFamily:"'Outfit',sans-serif", display:"flex", alignItems:"center", gap:5 }}>
                                 📋 Full Details
                               </button>
                             </div>
@@ -3346,7 +3346,7 @@ export default function EmaarDashboardV2() {
             })()}
 
             {/* ── Data Source Footer ── */}
-            <div style={{ marginTop:24, padding:"10px 0", borderTop:\`1px solid \${T.border}\`, display:"flex", alignItems:"center", gap:16, flexWrap:"wrap" }}>
+            <div style={{ marginTop:24, padding:"10px 0", borderTop:`1px solid ${T.border}`, display:"flex", alignItems:"center", gap:16, flexWrap:"wrap" }}>
               <span style={{ fontSize:10, color:T.textMuted||T.textSecondary }}>Sources:</span>
               {[{ label:"DLD", url:"https://dubailand.gov.ae" },{ label:"Emaar IR", url:"https://www.emaar.com/en/investor-relations/" }].map(s=>(
                 <a key={s.label} href={s.url} target="_blank" rel="noopener noreferrer" style={{ fontSize:10, color:T.teal||"#14B8A6", textDecoration:"none" }}>{s.label} ↗</a>
