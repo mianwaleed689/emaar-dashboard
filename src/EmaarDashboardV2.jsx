@@ -1816,6 +1816,8 @@ export default function EmaarDashboardV2() {
   const [leadSearch, setLeadSearch] = useState("");
   const [leadStatusFilter, setLeadStatusFilter] = useState("all");
   const [leadSourceFilter, setLeadSourceFilter] = useState("all");
+  const [leadSortBy, setLeadSortBy] = useState("score"); // score | date | budget
+  const [leadDrawerAITab, setLeadDrawerAITab] = useState(false);
   const [selectedLead, setSelectedLead] = useState(null);
   const [leadDrawerTab, setLeadDrawerTab] = useState("details");
   const [leadNote, setLeadNote] = useState("");
@@ -7612,6 +7614,103 @@ export default function EmaarDashboardV2() {
             const newToday = myLeads.filter(l => new Date(l.createdAt) >= new Date(new Date().setHours(0,0,0,0))).length;
 
             // Save note helper
+            /* ─── AI LEAD SCORING ENGINE (Session 13) ─── */
+            const scoreLeadAI = (l) => {
+              if (l.status === "Won") return { score:100, grade:"A+", color:"#10B981", label:"Converted" };
+              if (l.status === "Lost") return { score:0, grade:"D", color:T.red, label:"Lost" };
+              let s = 0;
+              const reasons = [];
+
+              // Contact completeness (25 pts)
+              if (l.phone && l.email) { s += 25; reasons.push("Full contact info"); }
+              else if (l.phone || l.email) { s += 12; }
+
+              // Budget quality (20 pts)
+              const budget = parseFloat(l.budget) || 0;
+              if (budget >= 5000000) { s += 20; reasons.push("Luxury budget AED 5M+"); }
+              else if (budget >= 2000000) { s += 16; reasons.push("Golden Visa eligible"); }
+              else if (budget >= 1000000) { s += 10; }
+              else if (budget > 0) { s += 5; }
+
+              // Source quality (15 pts)
+              const srcScores = { "Property Finder":15, "Bayut":14, "Dubizzle":12, "Referral":15, "WhatsApp":10, "Meta/Facebook":8, "Instagram":7, "Google Ads":9, "Website":10, "Manual":5, "Cold Call":3, "Email":6 };
+              s += srcScores[l.source] || 5;
+
+              // Recency (20 pts)
+              const ageDays = (Date.now() - new Date(l.createdAt||Date.now())) / 86400000;
+              if (ageDays < 1)  { s += 20; reasons.push("New today"); }
+              else if (ageDays < 3)  { s += 15; reasons.push("New this week"); }
+              else if (ageDays < 7)  { s += 10; }
+              else if (ageDays < 14) { s += 5; }
+
+              // Activity (10 pts)
+              const notesCount = (l.notes_log||[]).length;
+              if (notesCount >= 3) { s += 10; reasons.push("Actively engaged"); }
+              else if (notesCount >= 1) { s += 5; }
+
+              // Status progression (10 pts)
+              const statusScore = { New:0, Contacted:5, Viewing:8, Offer:10, Won:10, Lost:0 };
+              s += statusScore[l.status||"New"] || 0;
+
+              // Community/project match (bonus)
+              if (l.community && l.project) s = Math.min(100, s + 5);
+
+              s = Math.min(100, Math.max(0, s));
+              const grade = s >= 80 ? "A" : s >= 60 ? "B" : s >= 40 ? "C" : "D";
+              const color = s >= 80 ? "#10B981" : s >= 60 ? T.gold : s >= 40 ? "#F59E0B" : T.red;
+              const label = s >= 80 ? "Hot" : s >= 60 ? "Warm" : s >= 40 ? "Nurture" : "Cold";
+              return { score:s, grade, color, label, reasons };
+            };
+
+            // Best follow-up time logic
+            const getFollowUpTime = (l) => {
+              const srcTimes = {
+                "Property Finder": "Evening 6–9pm (browse after work)",
+                "Bayut":           "Evening 7–9pm",
+                "Dubizzle":        "Afternoon 2–5pm",
+                "WhatsApp":        "Morning 9–11am or Evening 7–9pm",
+                "Meta/Facebook":   "Evening 6–10pm (social hours)",
+                "Instagram":       "Evening 7–10pm",
+                "Referral":        "Any time — warm lead, call directly",
+                "Google Ads":      "Afternoon 1–4pm (active intent)",
+                "Website":         "Business hours 10am–6pm",
+              };
+              return srcTimes[l.source] || "Business hours 10am–6pm";
+            };
+
+            // Property matching engine
+            const matchProperties = (l) => {
+              const budget = parseFloat(l.budget) || 0;
+              const beds   = parseInt(l.beds) || 0;
+              const comm   = (l.community||"").toLowerCase();
+
+              // Match from listings
+              const listingMatches = listings
+                .filter(li => {
+                  if (li.status !== "Available") return false;
+                  if (budget > 0 && parseFloat(li.price) > budget * 1.15) return false;
+                  if (budget > 0 && parseFloat(li.price) < budget * 0.6)  return false;
+                  if (beds > 0 && parseInt(li.beds) !== beds) return false;
+                  return true;
+                })
+                .slice(0, 3)
+                .map(li => ({ name: li.title||`${li.beds}BR ${li.type}`, price: li.price, community: li.community, type:"listing", source:"Your Listings" }));
+
+              // Match from active projects (from data)
+              const projMatches = activeProjects
+                ? activeProjects
+                    .filter(p => {
+                      if (budget > 0 && p.price && parseFloat(p.price) > budget * 1.2) return false;
+                      if (comm && p.community && !p.community.toLowerCase().includes(comm) && !comm.includes(p.community.toLowerCase())) return false;
+                      return p.status !== "Sold Out";
+                    })
+                    .slice(0, 3)
+                    .map(p => ({ name: p.name, price: p.price, community: p.community||p.district, type:"project", source:"Active Projects" }))
+                : [];
+
+              return [...listingMatches, ...projMatches].slice(0, 5);
+            };
+
             const saveNote = async (leadId) => {
               if (!leadNote.trim()) return;
               setLeadNoteSaving(true);
@@ -7740,8 +7839,9 @@ export default function EmaarDashboardV2() {
               ) : (
                 <div style={{ display:"flex", flexDirection:"column", gap:2 }}>
                   {/* Column headers */}
-                  <div style={{ display:"grid", gridTemplateColumns:"1fr 110px 110px 120px 130px 48px", gap:12, padding:"8px 16px", fontSize:10, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.8, borderBottom:`1px solid ${T.border}` }}>
+                  <div style={{ display:"grid", gridTemplateColumns:"1fr 70px 110px 110px 120px 130px 48px", gap:12, padding:"8px 16px", fontSize:10, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.8, borderBottom:`1px solid ${T.border}` }}>
                     <div>Lead</div>
+                    <div>Score</div>
                     <div>Status</div>
                     <div>Source</div>
                     <div>Budget</div>
@@ -7757,7 +7857,7 @@ export default function EmaarDashboardV2() {
                     return (
                       <div key={l.id||i}
                         onClick={()=>{setSelectedLead(l);setLeadDrawerTab("details");}}
-                        style={{ display:"grid", gridTemplateColumns:"1fr 110px 110px 120px 130px 48px", gap:12, padding:"12px 16px", alignItems:"center", borderBottom:`1px solid ${T.border}`, cursor:"pointer", transition:"background 0.12s", borderRadius:4 }}
+                        style={{ display:"grid", gridTemplateColumns:"1fr 70px 110px 110px 120px 130px 48px", gap:12, padding:"12px 16px", alignItems:"center", borderBottom:`1px solid ${T.border}`, cursor:"pointer", transition:"background 0.12s", borderRadius:4 }}
                         onMouseEnter={e=>e.currentTarget.style.background="rgba(212,168,67,0.04)"}
                         onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
 
@@ -7772,6 +7872,16 @@ export default function EmaarDashboardV2() {
                               {l.phone || l.email || l.community || "—"}
                             </div>
                           </div>
+                        </div>
+
+                        {/* AI Score (Session 13) */}
+                        <div style={{ textAlign:"center" }}>
+                          {(() => { const ai = scoreLeadAI(l); return (
+                            <div style={{ display:"inline-flex", flexDirection:"column", alignItems:"center", gap:1 }}>
+                              <span style={{ fontSize:13, fontWeight:900, color:ai.color, fontFamily:"'Fraunces',serif", lineHeight:1 }}>{ai.score}</span>
+                              <span style={{ fontSize:8, fontWeight:700, color:ai.color, letterSpacing:0.5 }}>{ai.label}</span>
+                            </div>
+                          ); })()}
                         </div>
 
                         {/* Status */}
@@ -7857,7 +7967,7 @@ export default function EmaarDashboardV2() {
 
                       {/* Drawer tabs */}
                       <div style={{ display:"flex", gap:0, marginBottom:-1 }}>
-                        {[["details","Details"],["notes","Notes"]].map(([t,label])=>(
+                        {[["details","Details"],["notes","Notes"],["ai","AI Match"]].map(([t,label])=>(
                           <button key={t} type="button" onClick={()=>setLeadDrawerTab(t)}
                             style={{ padding:"8px 16px", fontSize:12, fontWeight:600, border:"none", background:"transparent", cursor:"pointer", fontFamily:"'Outfit',sans-serif", color:leadDrawerTab===t?T.gold:T.textMuted, borderBottom:`2px solid ${leadDrawerTab===t?T.gold:"transparent"}`, transition:"all 0.12s" }}>
                             {label}
@@ -7929,6 +8039,99 @@ export default function EmaarDashboardV2() {
                       </div>
                     )}
                   </div>
+                </div>
+              )}
+
+              {/* ── AI Match Tab (Session 13) ── */}
+              {selectedLead && leadDrawerTab === "ai" && (
+                <div style={{ padding:"16px 20px", flex:1, overflowY:"auto" }}>
+
+                  {/* AI Score breakdown */}
+                  {(() => {
+                    const ai = scoreLeadAI(selectedLead);
+                    const followUp = getFollowUpTime(selectedLead);
+                    const matches = matchProperties(selectedLead);
+                    return (<>
+
+                      {/* Score card */}
+                      <div style={{ background:`${ai.color}08`, border:`1px solid ${ai.color}30`, borderRadius:12, padding:"16px", marginBottom:16 }}>
+                        <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:12 }}>
+                          <div>
+                            <div style={{ fontSize:11, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.8 }}>AI Lead Score</div>
+                            <div style={{ fontSize:11, color:ai.color, marginTop:2 }}>{ai.label} lead</div>
+                          </div>
+                          <div style={{ textAlign:"center" }}>
+                            <div style={{ fontSize:36, fontWeight:900, color:ai.color, fontFamily:"'Fraunces',serif", lineHeight:1 }}>{ai.score}</div>
+                            <div style={{ fontSize:11, fontWeight:700, color:ai.color }}>/ 100</div>
+                          </div>
+                        </div>
+                        {/* Score bar */}
+                        <div style={{ height:6, background:T.surfaceAlt, borderRadius:3, overflow:"hidden", marginBottom:10 }}>
+                          <div style={{ height:"100%", width:`${ai.score}%`, background:ai.color, borderRadius:3, transition:"width 0.6s ease" }}/>
+                        </div>
+                        {/* Positive signals */}
+                        {ai.reasons.length > 0 && (
+                          <div style={{ display:"flex", flexWrap:"wrap", gap:5 }}>
+                            {ai.reasons.map((r,i)=>(
+                              <span key={i} style={{ fontSize:9, padding:"2px 8px", borderRadius:10, background:`${ai.color}14`, color:ai.color, fontWeight:600 }}>
+                                {r}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Best follow-up time */}
+                      <div style={{ background:T.surfaceAlt, borderRadius:10, padding:"12px 14px", marginBottom:16 }}>
+                        <div style={{ fontSize:10, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.8, marginBottom:8, display:"flex", alignItems:"center", gap:6 }}>
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                          Best Time to Follow Up
+                        </div>
+                        <div style={{ fontSize:12, color:T.textPrimary, fontWeight:600, marginBottom:4 }}>{followUp}</div>
+                        <div style={{ fontSize:10, color:T.textMuted }}>Based on lead source: {selectedLead.source || "Manual"}</div>
+                        {selectedLead.phone && (
+                          <a href={`https://wa.me/${selectedLead.phone.replace(/[^0-9]/g,"")}`} target="_blank" rel="noopener noreferrer"
+                            style={{ display:"inline-flex", alignItems:"center", gap:6, marginTop:10, padding:"7px 14px", borderRadius:7, border:"1px solid rgba(37,211,102,0.3)", background:"rgba(37,211,102,0.08)", color:"#25D366", fontSize:11, fontWeight:700, textDecoration:"none" }}>
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/></svg>
+                            WhatsApp Now
+                          </a>
+                        )}
+                      </div>
+
+                      {/* Property matches */}
+                      <div>
+                        <div style={{ fontSize:10, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.8, marginBottom:10, display:"flex", alignItems:"center", gap:6 }}>
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                          Matched Properties
+                          {selectedLead.budget && <span style={{ fontSize:9, color:T.textMuted }}>Budget: AED {parseInt(selectedLead.budget).toLocaleString()}</span>}
+                        </div>
+                        {matches.length === 0 ? (
+                          <div style={{ fontSize:12, color:T.textMuted, padding:"12px 0" }}>
+                            No matching properties found — try adding listings or adjusting the lead's budget/community
+                          </div>
+                        ) : (
+                          <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
+                            {matches.map((m,i)=>(
+                              <div key={i} style={{ background:T.surfaceAlt, borderRadius:9, padding:"10px 12px", display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+                                <div style={{ flex:1, minWidth:0 }}>
+                                  <div style={{ fontSize:12, fontWeight:600, color:T.textPrimary, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{m.name}</div>
+                                  <div style={{ fontSize:10, color:T.textMuted, marginTop:2 }}>
+                                    {m.community && <span>{m.community} · </span>}
+                                    <span style={{ color: m.type==="listing"?T.teal:T.gold }}>{m.source}</span>
+                                  </div>
+                                </div>
+                                {m.price > 0 && (
+                                  <div style={{ fontSize:11, fontWeight:700, color:T.gold, flexShrink:0, marginLeft:8 }}>
+                                    AED {parseFloat(m.price)>=1e6?(parseFloat(m.price)/1e6).toFixed(2)+"M":parseInt(m.price).toLocaleString()}
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </>);
+                  })()}
                 </div>
               )}
 
@@ -8761,6 +8964,47 @@ export default function EmaarDashboardV2() {
 
               {/* ── Main grid: Leaderboard + Funnel ── */}
               <div style={{ display:"grid", gridTemplateColumns:"1fr 340px", gap:16, marginBottom:16, alignItems:"start" }}>
+
+                {/* ── AI Hot Leads Panel (Session 13) ── */}
+                {(() => {
+                  const hotLeads = myLeads
+                    .map(l => ({ ...l, aiScore: (() => { const b = parseFloat(l.budget)||0; const age = (Date.now()-new Date(l.createdAt||Date.now()))/86400000; let s=0; if(l.phone&&l.email)s+=25; if(b>=5000000)s+=20;else if(b>=2000000)s+=16;else if(b>0)s+=10; const src={"Property Finder":15,"Bayut":14,"Referral":15,"WhatsApp":10}; s+=(src[l.source]||6); if(age<1)s+=20;else if(age<3)s+=15;else if(age<7)s+=10; return Math.min(100,s); })() }))
+                    .filter(l => l.aiScore >= 60 && l.status !== "Won" && l.status !== "Lost" && !l.assignedTo === false)
+                    .sort((a,b) => b.aiScore - a.aiScore)
+                    .slice(0, 5);
+                  if (hotLeads.length === 0) return null;
+                  return (
+                    <div style={{ background:T.card, border:`1px solid ${T.border}`, borderRadius:14, overflow:"hidden", marginBottom:16 }}>
+                      <div style={{ padding:"12px 18px", borderBottom:`1px solid ${T.border}`, display:"flex", alignItems:"center", gap:10 }}>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={T.gold} strokeWidth="2" strokeLinecap="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                        <div style={{ fontSize:12, fontWeight:700, color:T.white }}>AI Hot Leads — Act Now</div>
+                        <div style={{ marginLeft:"auto", fontSize:10, color:T.textMuted }}>Score ≥ 60 · Highest priority</div>
+                      </div>
+                      <div style={{ display:"flex", flexDirection:"column" }}>
+                        {hotLeads.map((l,i)=>{
+                          const agent = teamMembers.find(u=>u.uid===l.assignedTo);
+                          const name = (l.name||"").trim()||l.phone||"Unnamed";
+                          const scoreColor = l.aiScore>=80?"#10B981":T.gold;
+                          return (
+                            <div key={l.id||i} style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"10px 18px", borderBottom:i<hotLeads.length-1?`1px solid ${T.border}`:"none" }}>
+                              <div style={{ display:"flex", alignItems:"center", gap:10, flex:1, minWidth:0 }}>
+                                <div style={{ width:32, height:32, borderRadius:"50%", background:`${scoreColor}18`, border:`2px solid ${scoreColor}40`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:11, fontWeight:900, color:scoreColor, flexShrink:0 }}>{l.aiScore}</div>
+                                <div style={{ minWidth:0 }}>
+                                  <div style={{ fontSize:12, fontWeight:600, color:T.textPrimary, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{name}</div>
+                                  <div style={{ fontSize:10, color:T.textMuted }}>{agent?(agent.name||agent.email?.split("@")[0]):"Unassigned"} · {l.source||"No source"}</div>
+                                </div>
+                              </div>
+                              <div style={{ display:"flex", alignItems:"center", gap:6, flexShrink:0 }}>
+                                {l.budget>0&&<span style={{ fontSize:10, color:T.gold }}>AED {(parseFloat(l.budget)/1e6).toFixed(1)}M</span>}
+                                {l.phone&&<a href={`https://wa.me/${l.phone.replace(/[^0-9]/g,"")}`} target="_blank" rel="noopener noreferrer" style={{ display:"flex", alignItems:"center", justifyContent:"center", width:26, height:26, borderRadius:5, border:"1px solid rgba(37,211,102,0.3)", background:"rgba(37,211,102,0.08)", color:"#25D366", textDecoration:"none" }}><svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/></svg></a>}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })()}
 
                 {/* ── Agent Leaderboard ── */}
                 <div style={{ background:T.card, border:`1px solid ${T.border}`, borderRadius:14, overflow:"hidden" }}>
