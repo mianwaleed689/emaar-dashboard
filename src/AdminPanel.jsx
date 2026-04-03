@@ -17349,6 +17349,34 @@ export default function AdminPanel() {
                 </div>
               </div>
 
+              {/* ── Pending Signups Banner (Session 11) ── */}
+              {orgs.filter(o=>o.status==="pending").length > 0 && (
+                <div style={{ marginBottom:16, padding:"14px 18px", background:"rgba(245,158,11,0.06)", border:"1px solid rgba(245,158,11,0.2)", borderRadius:12, display:"flex", alignItems:"center", justifyContent:"space-between", flexWrap:"wrap", gap:10 }}>
+                  <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" strokeWidth="2" strokeLinecap="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                    <div>
+                      <div style={{ fontSize:12, fontWeight:700, color:"#F59E0B" }}>{orgs.filter(o=>o.status==="pending").length} agency signup{orgs.filter(o=>o.status==="pending").length>1?"s":""} awaiting approval</div>
+                      <div style={{ fontSize:11, color:T.textMuted }}>Agencies registered via /agency/signup — review and approve below</div>
+                    </div>
+                  </div>
+                  <div style={{ display:"flex", gap:6 }}>
+                    {orgs.filter(o=>o.status==="pending").map(org=>(
+                      <div key={org.id} style={{ display:"flex", alignItems:"center", gap:6, padding:"6px 12px", background:T.surfaceAlt, borderRadius:8, border:`1px solid ${T.border}` }}>
+                        <span style={{ fontSize:11, color:T.textPrimary, fontWeight:600 }}>{org.name}</span>
+                        <button type="button" onClick={()=>updateOrgStatus(org.id,"active")}
+                          style={{ padding:"3px 8px", borderRadius:5, border:"1px solid rgba(16,185,129,0.4)", background:"rgba(16,185,129,0.1)", color:T.green, fontSize:9, fontWeight:700, cursor:"pointer" }}>
+                          Approve
+                        </button>
+                        <button type="button" onClick={()=>updateOrgStatus(org.id,"rejected")}
+                          style={{ padding:"3px 8px", borderRadius:5, border:"1px solid rgba(239,68,68,0.3)", background:"rgba(239,68,68,0.08)", color:T.red, fontSize:9, fontWeight:700, cursor:"pointer" }}>
+                          Reject
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* ── KPI Bar ── */}
               <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:10, marginBottom:20 }}>
                 {[

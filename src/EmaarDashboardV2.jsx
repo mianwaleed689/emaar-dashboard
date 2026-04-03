@@ -1755,6 +1755,10 @@ export default function EmaarDashboardV2() {
   const [commSplits, setCommSplits] = useState({});   // { agentUid: pct }
   const [commSaving, setCommSaving] = useState({});   // { agentUid: bool }
   const [agentRoleChanging, setAgentRoleChanging] = useState({});
+  const [showInviteAgent, setShowInviteAgent] = useState(false);
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteLoading, setInviteLoading] = useState(false);
+  const [inviteSent, setInviteSent] = useState(false);
 
   /* ─── DEV PORTAL STATE (Session 10) ─── */
   const [devUnits, setDevUnits] = useState([]);
@@ -9102,7 +9106,14 @@ export default function EmaarDashboardV2() {
                 <div style={{ padding:"14px 18px", borderBottom:`1px solid ${T.border}`, display:"flex", alignItems:"center", gap:10 }}>
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={T.teal} strokeWidth="2" strokeLinecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
                   <div style={{ fontSize:13, fontWeight:700, color:T.white }}>Agent Roster</div>
-                  <div style={{ marginLeft:"auto", fontSize:10, color:T.textMuted }}>{agents.length} members</div>
+                  <div style={{ marginLeft:"auto", display:"flex", alignItems:"center", gap:8 }}>
+                    <div style={{ fontSize:10, color:T.textMuted }}>{agents.length} members</div>
+                    <button type="button" onClick={()=>{setShowInviteAgent(true);setInviteSent(false);setInviteEmail("");}}
+                      style={{ display:"flex", alignItems:"center", gap:5, padding:"5px 12px", borderRadius:6, border:`1px solid ${T.gold}`, background:"rgba(212,168,67,0.08)", color:T.gold, fontSize:10, fontWeight:700, cursor:"pointer" }}>
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                      Invite Agent
+                    </button>
+                  </div>
                 </div>
 
                 {/* Column headers */}
@@ -9192,6 +9203,61 @@ export default function EmaarDashboardV2() {
                   );
                 })}
               </div>
+
+              {/* ── Invite Agent Modal (Session 11) ── */}
+              {showInviteAgent && (
+                <div style={{ position:"fixed", inset:0, background:"rgba(4,9,15,0.85)", zIndex:2000, display:"flex", alignItems:"center", justifyContent:"center", backdropFilter:"blur(8px)" }} onClick={e=>{if(e.target===e.currentTarget)setShowInviteAgent(false);}}>
+                  <div style={{ background:T.surface, borderRadius:14, border:`1px solid ${T.border}`, width:"95%", maxWidth:420 }} onClick={e=>e.stopPropagation()}>
+                    <div style={{ padding:"22px 24px", borderBottom:`1px solid ${T.border}`, display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+                      <div>
+                        <div style={{ fontFamily:"'Fraunces',serif", fontSize:17, fontWeight:900, color:T.gold }}>Invite Agent</div>
+                        <div style={{ fontSize:11, color:T.textMuted, marginTop:2 }}>Generate an invite link to join your agency</div>
+                      </div>
+                      <button type="button" onClick={()=>setShowInviteAgent(false)}
+                        style={{ background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:7, color:T.textMuted, width:30, height:30, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center" }}>
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                      </button>
+                    </div>
+                    <div style={{ padding:"20px 24px" }}>
+                      {inviteSent ? (
+                        <div style={{ textAlign:"center", padding:"12px 0" }}>
+                          <div style={{ width:44, height:44, borderRadius:"50%", background:"rgba(16,185,129,0.1)", border:"2px solid rgba(16,185,129,0.3)", display:"flex", alignItems:"center", justifyContent:"center", margin:"0 auto 12px" }}>
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={T.green} strokeWidth="2.5" strokeLinecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+                          </div>
+                          <div style={{ fontSize:13, fontWeight:700, color:T.green, marginBottom:6 }}>Invite link ready</div>
+                          <div style={{ padding:"10px 14px", background:T.surfaceAlt, borderRadius:8, fontSize:11, color:T.gold, wordBreak:"break-all", marginBottom:12 }}>
+                            {typeof window!=="undefined"?window.location.origin:""}/agency/signup?org={orgId}&email={encodeURIComponent(inviteEmail)}
+                          </div>
+                          <button type="button" onClick={()=>{ if(typeof navigator!=="undefined") navigator.clipboard?.writeText(`${window.location.origin}/agency/signup?org=${orgId}&email=${encodeURIComponent(inviteEmail)}`); }}
+                            style={{ padding:"8px 20px", borderRadius:7, border:`1px solid ${T.gold}`, background:"rgba(212,168,67,0.1)", color:T.gold, fontSize:11, fontWeight:700, cursor:"pointer" }}>
+                            Copy Link
+                          </button>
+                        </div>
+                      ) : (
+                        <>
+                          <div style={{ fontSize:11, fontWeight:600, color:T.textMuted, marginBottom:8 }}>Agent Email Address</div>
+                          <input value={inviteEmail} onChange={e=>setInviteEmail(e.target.value)} placeholder="agent@email.com" type="email"
+                            style={{ width:"100%", padding:"11px 14px", background:T.bg, border:`1px solid rgba(212,168,67,0.15)`, borderRadius:9, color:T.textPrimary, fontSize:13, fontFamily:"'Outfit',sans-serif", outline:"none", marginBottom:14, boxSizing:"border-box" }}/>
+                          <div style={{ padding:"10px 14px", background:"rgba(20,184,166,0.06)", border:"1px solid rgba(20,184,166,0.15)", borderRadius:8, fontSize:11, color:T.textMuted, marginBottom:16, lineHeight:1.5 }}>
+                            Agent signs up at the generated link and is automatically assigned to <strong style={{ color:T.gold }}>{orgProfile?.name}</strong>.
+                          </div>
+                          <div style={{ display:"flex", gap:10, justifyContent:"flex-end" }}>
+                            <button type="button" onClick={()=>setShowInviteAgent(false)}
+                              style={{ padding:"9px 18px", borderRadius:7, border:`1px solid ${T.border}`, background:"transparent", color:T.textMuted, fontSize:12, cursor:"pointer" }}>
+                              Cancel
+                            </button>
+                            <button type="button" disabled={!inviteEmail.trim()||inviteLoading}
+                              onClick={()=>{ setInviteLoading(true); setTimeout(()=>{ setInviteSent(true); setInviteLoading(false); },300); }}
+                              style={{ padding:"9px 20px", borderRadius:7, border:`1px solid ${T.gold}`, background:"rgba(212,168,67,0.1)", color:T.gold, fontSize:12, fontWeight:700, cursor:"pointer", opacity:(!inviteEmail.trim()||inviteLoading)?0.5:1 }}>
+                              {inviteLoading ? "Generating..." : "Generate Link"}
+                            </button>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
             </>);
           })()}
 
