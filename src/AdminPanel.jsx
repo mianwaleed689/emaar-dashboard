@@ -12840,7 +12840,7 @@ export default function AdminPanel() {
   // EIBOR Pro states
   const [eiborCompareMode, setEiborCompareMode] = useState(false);
   // Leads Pro states
-  const [leadsViewMode, setLeadsViewMode] = useState("table"); // table | kanban
+  const [leadsViewMode, setLeadsViewMode] = useState("table"); // table | kanban | inbox
 
   // Phase 1A: Real-Time Analytics
   const [realtimeUsers, setRealtimeUsers] = useState(0);
@@ -17564,7 +17564,30 @@ export default function AdminPanel() {
   };
 
   /* Use all leads — no filtering by source */
-  const crmLeads = leads;
+  /* ─── SOURCE CONFIG (Session 4) ─── */
+  const SOURCE_CONFIG = {
+    "Property Finder": { color:"#00C08B", icon:"🏡", short:"PF"   },
+    "Bayut":           { color:"#FF6B35", icon:"🔶", short:"BY"   },
+    "Dubizzle":        { color:"#E8003D", icon:"🔴", short:"DZ"   },
+    "Meta/Facebook":   { color:"#1877F2", icon:"📘", short:"FB"   },
+    "Instagram":       { color:"#E1306C", icon:"📸", short:"IG"   },
+    "Google Ads":      { color:"#4285F4", icon:"🔍", short:"GG"   },
+    "WhatsApp":        { color:"#25D366", icon:"💬", short:"WA"   },
+    "Referral":        { color:"#8B5CF6", icon:"🤝", short:"REF"  },
+    "Website":         { color:"#14B8A6", icon:"🌐", short:"WEB"  },
+    "Manual":          { color:"#94A3B8", icon:"✏️",  short:"MAN"  },
+    "Cold Call":       { color:"#F59E0B", icon:"📞", short:"CC"   },
+    "Email":           { color:"#6366F1", icon:"📧", short:"EM"   },
+  };
+  const getSource = (src) => SOURCE_CONFIG[src] || { color:"#94A3B8", icon:"📋", short:"?" };
+
+  /* ─── AGENT FILTER (Session 4) ─── */
+  // Admins see all leads. Agents see only their assigned leads.
+  const currentUserUid = adminUser?.uid;
+  const isAgentView = !isAdmin && users.some(u => u.uid === currentUserUid && (u.orgRole === "agent" || u.role === "agent"));
+  const crmLeads = isAgentView
+    ? leads.filter(l => l.assignedTo === currentUserUid)
+    : leads;
 
   /* ── Scoring ─────────────────────────────────────────────────── */
   const scoreLead = (l) => {
@@ -17905,7 +17928,7 @@ export default function AdminPanel() {
       <div style={{ display:"flex", gap:8 }}>
         {/* View toggle — labeled */}
         <div style={{ display:"flex", background:T.surface, border:`1px solid ${T.border}`, borderRadius:8, overflow:"hidden" }}>
-          {[["table","≡ List"],["kanban","⊞ Board"],["analytics","◈ Stats"]].map(([m,label]) => (
+          {[["table","≡ List"],["inbox","📥 Inbox"],["kanban","⊞ Board"],["analytics","◈ Stats"]].map(([m,label]) => (
             <button key={m} type="button"
               onClick={() => { setLeadsViewMode(m); setLeadAnalyticsView(m==="analytics"); }}
               style={{ padding:"7px 14px", fontSize:11, fontWeight:700, border:"none",
@@ -18202,6 +18225,11 @@ export default function AdminPanel() {
                       {overdue  && <span style={{ fontSize:9, fontWeight:700, padding:"1px 5px", borderRadius:4, background:"rgba(239,68,68,0.15)", color:"#EF4444" }}>OVERDUE</span>}
                       {dueToday && <span style={{ fontSize:9, fontWeight:700, padding:"1px 5px", borderRadius:4, background:"rgba(212,168,67,0.15)", color:T.gold }}>DUE TODAY</span>}
                       {visa     && <span style={{ fontSize:9, fontWeight:700, padding:"1px 5px", borderRadius:4, background:"rgba(139,92,246,0.15)", color:"#8B5CF6" }}>VISA ELIGIBLE</span>}
+                      {l.source && (() => { const sc = getSource(l.source); return (
+                        <span style={{ fontSize:9, fontWeight:700, padding:"1px 6px", borderRadius:4, background:`${sc.color}18`, color:sc.color, border:`1px solid ${sc.color}30` }}>
+                          {sc.icon} {sc.short}
+                        </span>
+                      ); })()}
                     </div>
                     {/* Contact line */}
                     <div style={{ fontSize:10, color:T.textMuted, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>
@@ -18309,6 +18337,19 @@ export default function AdminPanel() {
                       borderRadius:7, whiteSpace:"nowrap" }}>
                     {overdue ? "⚠ Follow" : "📅 Follow"}
                   </button>
+
+                  {/* WhatsApp (Session 4) */}
+                  {l.phone && (
+                    <a href={`https://wa.me/${l.phone.replace(/[^0-9]/g,"")}`} target="_blank" rel="noopener noreferrer"
+                      title="Open WhatsApp chat"
+                      style={{ padding:"6px 10px", fontSize:10, fontWeight:700, cursor:"pointer",
+                        fontFamily:"'Outfit',sans-serif",
+                        border:"1px solid rgba(37,211,102,0.4)",
+                        background:"rgba(37,211,102,0.1)", color:"#25D366",
+                        borderRadius:7, whiteSpace:"nowrap", textDecoration:"none", display:"inline-flex", alignItems:"center", gap:3 }}>
+                      💬 WA
+                    </a>
+                  )}
 
                   {/* Edit — opens side drawer */}
                   <button type="button"
@@ -18445,6 +18486,87 @@ export default function AdminPanel() {
                 {col.length > 20 && <div style={{ fontSize:10, color:T.textMuted, textAlign:"center", padding:"6px 0" }}>+{col.length-20} more</div>}
                 {col.length === 0 && <div style={{ fontSize:11, color:T.textMuted, textAlign:"center", padding:"24px 0", opacity:0.4 }}>No leads</div>}
               </div>
+            </div>
+          );
+        })}
+      </div>
+    )}
+
+    {/* ─── INBOX VIEW (Session 4) — Multi-source lead inbox ─── */}
+    {leadsViewMode === "inbox" && (
+      <div style={{ display:"flex", flexDirection:"column", gap:14 }}>
+        {isAgentView && (
+          <div style={{ display:"flex", alignItems:"center", gap:10, padding:"10px 16px", background:"rgba(20,184,166,0.08)", border:"1px solid rgba(20,184,166,0.2)", borderRadius:10 }}>
+            <span style={{ fontSize:18 }}>👤</span>
+            <div>
+              <div style={{ fontSize:12, fontWeight:700, color:T.teal }}>Agent View — Your Leads Only</div>
+              <div style={{ fontSize:11, color:T.textMuted }}>{crmLeads.length} leads assigned to you</div>
+            </div>
+          </div>
+        )}
+        {Object.entries(SOURCE_CONFIG).map(([srcName, srcCfg]) => {
+          const srcLeads = filtered.filter(l => (l.source||"Manual") === srcName);
+          const todayLeads = srcLeads.filter(l => new Date(l.createdAt) >= new Date(new Date().setHours(0,0,0,0)));
+          if (srcLeads.length === 0) return null;
+          return (
+            <div key={srcName} style={{ background:T.card, border:`1px solid ${T.border}`, borderRadius:14, overflow:"hidden" }}>
+              <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"12px 18px", background:`${srcCfg.color}08`, borderBottom:`1px solid ${T.border}` }}>
+                <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+                  <span style={{ fontSize:20 }}>{srcCfg.icon}</span>
+                  <div>
+                    <div style={{ fontSize:14, fontWeight:700, color:srcCfg.color }}>{srcName}</div>
+                    <div style={{ fontSize:11, color:T.textMuted }}>{srcLeads.length} leads · {srcLeads.filter(l=>!l.assignedTo).length} unassigned</div>
+                  </div>
+                </div>
+                <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+                  {todayLeads.length > 0 && <span style={{ fontSize:10, fontWeight:700, padding:"3px 10px", borderRadius:20, background:`${srcCfg.color}20`, color:srcCfg.color }}>+{todayLeads.length} today</span>}
+                  <button type="button" onClick={()=>{setLeadsViewMode("table");setLeadSourceFilter(srcName);}}
+                    style={{ fontSize:10, padding:"5px 12px", borderRadius:6, border:`1px solid ${srcCfg.color}40`, background:"transparent", color:srcCfg.color, cursor:"pointer" }}>
+                    View All →
+                  </button>
+                </div>
+              </div>
+              {srcLeads.slice(0,5).map((l,i) => {
+                const nm = displayName(l);
+                return (
+                  <div key={l.id||i} onClick={()=>{setLeadDrawer(l);setLeadDrawerTab("details");}}
+                    style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"10px 18px", borderBottom:i<Math.min(srcLeads.length,5)-1?`1px solid ${T.border}`:"none", cursor:"pointer" }}
+                    onMouseEnter={e=>e.currentTarget.style.background="rgba(212,168,67,0.04)"}
+                    onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
+                    <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+                      <div style={{ width:30, height:30, borderRadius:"50%", background:`${srcCfg.color}18`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:10, fontWeight:700, color:srcCfg.color }}>
+                        {nm.slice(0,2).toUpperCase()}
+                      </div>
+                      <div>
+                        <div style={{ fontSize:12, fontWeight:600, color:T.textPrimary }}>{nm}</div>
+                        <div style={{ fontSize:10, color:T.textMuted }}>
+                          {l.phone && <span>{l.phone} · </span>}
+                          {l.budget && <span style={{ color:T.gold }}>AED {parseInt(l.budget).toLocaleString()} · </span>}
+                          {new Date(l.createdAt).toLocaleDateString("en-AE",{day:"2-digit",month:"short"})}
+                        </div>
+                      </div>
+                    </div>
+                    <div style={{ display:"flex", alignItems:"center", gap:6 }}>
+                      {l.assignedTo ? (
+                        <span style={{ fontSize:10, padding:"2px 8px", borderRadius:5, background:"rgba(20,184,166,0.1)", color:T.teal }}>{l.assignedName||"Assigned"}</span>
+                      ) : (
+                        <button type="button" onClick={e=>{e.stopPropagation();setAssigningLead(l);setShowAssignModal(true);}}
+                          style={{ fontSize:9, padding:"2px 7px", borderRadius:5, border:"1px solid rgba(212,168,67,0.3)", background:"rgba(212,168,67,0.06)", color:T.gold, cursor:"pointer" }}>
+                          + Assign
+                        </button>
+                      )}
+                      <span style={{ fontSize:10, padding:"2px 7px", borderRadius:5, background:(ST[l.status||"New"]||ST.New).bg, color:(ST[l.status||"New"]||ST.New).text }}>{l.status||"New"}</span>
+                      {l.phone && <a href={`https://wa.me/${l.phone.replace(/[^0-9]/g,"")}`} target="_blank" rel="noopener noreferrer" onClick={e=>e.stopPropagation()} style={{ fontSize:12, color:"#25D366", textDecoration:"none" }}>💬</a>}
+                    </div>
+                  </div>
+                );
+              })}
+              {srcLeads.length > 5 && (
+                <div style={{ padding:"9px 18px", textAlign:"center", fontSize:11, color:T.textMuted, cursor:"pointer", borderTop:`1px solid ${T.border}` }}
+                  onClick={()=>{setLeadsViewMode("table");setLeadSourceFilter(srcName);}}>
+                  +{srcLeads.length-5} more — Click to view all
+                </div>
+              )}
             </div>
           );
         })}
