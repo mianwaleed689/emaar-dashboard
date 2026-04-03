@@ -323,8 +323,6 @@ function ProjectModal({project,onSave,onClose,saving}) {
         <Prog val={form.construction}/>
       </div>
 
-      </Grid>
-
       <Div label="DLD / RERA Compliance (Law 8/2007 + Oqood)"/>
       <Grid cols={3} gap={12}>
         <Fld label="DLD Permit No"><Inp value={form.dldPermitNo} onChange={v=>s("dldPermitNo",v)} placeholder="e.g. 0000/2024"/></Fld>
