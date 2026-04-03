@@ -2964,7 +2964,7 @@ export default function EmaarDashboardV2() {
                   {[
                     { label: "Founded", value: "1997", sub: "27+ years track record", kpi: { color: T.gold, description: "Emaar Properties founded in 1997 by Mohamed Alabbar. Listed on DFM in 2000.", source: "Emaar Corporate", sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "Founded", value: "1997", note: "Dubai, UAE" }, { label: "IPO", value: "2000", note: "Dubai Financial Market" }, { label: "Chairman", value: "M. Alabbar", note: "Founder & visionary" }, { label: "Employees", value: "9,000+", note: "Global workforce" }], trend: null } },
                     { label: "Developer Rank", value: "#1", sub: "Dubai's largest by value", kpi: { color: T.teal, description: "Consistently ranked #1 developer in Dubai by property sales value with ~30% market share.", source: "DLD & Zawya 2025", sourceUrl: "https://zawya.com", items: [{ label: "UAE Rank", value: "#1", note: "By sales value" }, { label: "Market Share", value: "~30%", note: "Dubai off-plan" }, { label: "GCC Rank", value: "#1", note: "By units delivered" }, { label: "FY2025 Sales", value: "AED 80.4B", note: "vs #2 ~AED 20B" }], trend: null } },
-                    { label: "Active Projects", value: String(activeProjects.length), sub: "Across 10+ communities", kpi: { color: T.blue, description: `${activeProjects.length} active projects across ${[...new Set(activeProjects.map(p=>p.community))].join(", ")}.`, source: "DXB Analytics Database", sourceUrl: "#", items: [{ label: "Under Construction", value: String(activeProjects.filter(p=>p.status==="Under Construction").length), note: "Active building" }, { label: "Off-Plan", value: String(activeProjects.filter(p=>p.status==="Off-Plan"||p.status==="Off Plan").length), note: "Pre-launch / launched" }, { label: "Communities", value: String([...new Set(activeProjects.map(p=>p.community))].length), note: "Master-planned" }, { label: "Branded", value: String(activeProjects.filter(p=>p.branded).length), note: "Branded residences" }], trend: null } },
+                    { label: "Active Projects", value: String(activeProjects.length), sub: "Across 10+ communities", kpi: { color: T.blue, description: "48 active projects across Dubai Hills, Creek Harbour, Downtown, Beachfront and more.", source: "DXB Analytics Database", sourceUrl: "#", items: [{ label: "Under Construction", value: "18", note: "Active building" }, { label: "Off-Plan", value: "30", note: "Pre-launch / launched" }, { label: "Communities", value: "11", note: "Master-planned" }, { label: "Branded", value: "12+", note: "Address · Vida · Palace" }], trend: null } },
                     { label: "International", value: "AED 9.3B", sub: "+124% growth YoY", kpi: { color: T.green, description: "International operations across Egypt, India, Saudi Arabia, Pakistan and Turkey.", source: "Emaar Annual Report 2025", sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "Int'l Sales", value: "AED 9.3B", note: "+124% YoY" }, { label: "Egypt", value: "Largest market", note: "Marassi, Uptown Cairo" }, { label: "India", value: "Growing", note: "Emaar India" }, { label: "Saudi Arabia", value: "Expanding", note: "New projects" }], trend: [{ y: "2022", v: 1.8 }, { y: "2023", v: 2.9 }, { y: "2024", v: 4.1 }, { y: "2025", v: 9.3 }] } },
                     { label: "Dividend/Share", value: "AED 1.00", sub: "2× increase from 2023", kpi: { color: T.gold, description: "AED 1.00 DPS for FY2025 — 100% of share capital, 2× increase from AED 0.50 in 2023.", source: "Emaar IR 2025", sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "DPS FY2025", value: "AED 1.00", note: "100% of share capital" }, { label: "DPS FY2024", value: "AED 0.70", note: "+43% YoY" }, { label: "DPS FY2023", value: "AED 0.50", note: "Base year" }, { label: "Total Payout", value: "AED 8.8B", note: "Total dividend pool" }, { label: "Yield (15.40)", value: "6.5%", note: "Attractive vs peers" }], trend: [{ y: "2021", v: 0.25 }, { y: "2022", v: 0.40 }, { y: "2023", v: 0.50 }, { y: "2024", v: 0.70 }, { y: "2025", v: 1.00 }] } },
                     { label: "Target Upside", value: "+21.8%", sub: "AED 20.77 consensus", kpi: { color: T.green, description: "12 analyst consensus target of AED 20.77 vs current AED 15.40 — all 12 rate Strong Buy.", source: "TradingView · Investing.com", sourceUrl: "https://www.tradingview.com/symbols/DFM-EMAAR/", items: [{ label: "Consensus Target", value: "AED 20.77", note: "12 analyst average" }, { label: "Current Price", value: "AED 15.40", note: "Mar 2026" }, { label: "High Target", value: "AED 30.00", note: "Bull case" }, { label: "Low Target", value: "AED 15.80", note: "Bear case" }, { label: "Rating", value: "Strong Buy", note: "12 of 12 analysts" }], trend: null } },
@@ -3144,303 +3144,214 @@ export default function EmaarDashboardV2() {
 
           {/* ─── PROJECTS TAB (48 Projects from Excel) ─── */}
           {tab === "Projects" && <>
-            <Section title={`${activeProjects.length} Active Projects`} sub="Complete portfolio · Search & filter by community, tier and handover">
-              <div className="kpi-grid" style={{ display: "grid", gap: 12, marginTop: 16 }}>
-                <KPI label="Total Projects" value={activeProjects.length} sub={`${activeProjects.filter(p=>p.status==="Under Construction").length} under construction · ${activeProjects.filter(p=>p.status==="Off-Plan"||p.status==="Off Plan").length} off-plan`} delay={1} onClick={() => setSelectedKPI({ label: "Total Projects", value: String(activeProjects.length), color: T.gold, description: `${activeProjects.length} active projects in the portfolio.`, source: "DXB Analytics", sourceUrl: "#", items: [{ label: "Under Construction", value: String(activeProjects.filter(p=>p.status==="Under Construction").length), note: "Active building" }, { label: "Off-Plan", value: String(activeProjects.filter(p=>p.status==="Off-Plan"||p.status==="Off Plan").length), note: "Pre-launch" }, { label: "Communities", value: String([...new Set(activeProjects.map(p=>p.community))].length), note: "Master-planned" }, { label: "Branded", value: String(activeProjects.filter(p=>p.branded).length), note: "Branded residences" }], trend: null })} />
-                <KPI label="Communities" value={[...new Set(activeProjects.map(p=>p.community))].length} sub={[...new Set(activeProjects.map(p=>p.community))].slice(0,4).join(" · ") + ([...new Set(activeProjects.map(p=>p.community))].length > 4 ? ` + ${[...new Set(activeProjects.map(p=>p.community))].length - 4} more` : "")} delay={2} />
-                <KPI label="Branded" value={`${activeProjects.filter(p=>p.branded).length}`} sub={activeProjects.filter(p=>p.branded&&p.brand&&p.brand!=="—").map(p=>p.brand).filter((v,i,a)=>a.indexOf(v)===i).slice(0,4).join(" · ")||"No branded projects"} delay={3} />
-                <KPI label="Avg Construction" value={`${Math.round(activeProjects.reduce((a,p)=>a+(p.construction||0),0)/activeProjects.length)}%`} sub="Weighted average progress" delay={4} />
-              </div>
-            </Section>
+            {/* ══════════════════════════════════════════════
+                PROJECTS TAB — Rebuilt
+                Clean card grid + full detail modal
+            ══════════════════════════════════════════════ */}
 
-            {/* Search & Filters */}
-            <div style={{ marginTop: 20, display: 'flex', flexDirection: 'column', gap: 10 }}>
-              <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
-                <div style={{ position: 'relative', flex: '1 1 250px', maxWidth: 350 }}>
-                  <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: T.textMuted }}>{Icons.search}</span>
-                  <input value={projectSearch} onChange={e => setProjectSearch(e.target.value)} placeholder='Search projects or community...' style={{ width: '100%', padding: '10px 12px 10px 36px', background: T.surface, border: '1px solid '+T.border, borderRadius: 10, color: T.textPrimary, fontSize: 13, fontFamily: 'Outfit, sans-serif', outline: 'none' }} />
+            {/* ── KPI Bar ── */}
+            <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:10, marginBottom:20 }}>
+              {[
+                { label:"Total Projects",    value:activeProjects.length, sub:\`\${activeProjects.filter(p=>p.status==="Under Construction").length} under construction · \${activeProjects.filter(p=>p.status==="Off-Plan"||p.status==="Off Plan").length} off-plan\`, color:T.gold },
+                { label:"Communities",       value:[...new Set(activeProjects.map(p=>p.community))].length, sub:[...new Set(activeProjects.map(p=>p.community))].slice(0,3).join(" · "), color:T.teal },
+                { label:"Branded",           value:activeProjects.filter(p=>p.branded).length, sub:activeProjects.filter(p=>p.branded&&p.brand&&p.brand!=="—").map(p=>p.brand).filter((v,i,a)=>a.indexOf(v)===i).slice(0,3).join(" · ")||"None", color:T.purple||"#8B5CF6" },
+                { label:"Avg Construction",  value:activeProjects.length>0 ? Math.round(activeProjects.reduce((a,p)=>a+(p.construction||0),0)/activeProjects.length)+"%" : "0%", sub:"Weighted average progress", color:T.green },
+              ].map((k,i) => (
+                <div key={i} style={{ background:T.card||T.surface, border:\`1px solid \${T.border}\`, borderRadius:12, padding:"16px 18px", position:"relative", overflow:"hidden" }}>
+                  <div style={{ position:"absolute", top:0, left:0, right:0, height:3, background:\`linear-gradient(90deg,\${k.color},\${k.color}40)\` }}/>
+                  <div style={{ fontSize:10, fontWeight:700, color:T.textMuted||T.textSecondary, textTransform:"uppercase", letterSpacing:0.8, marginBottom:4 }}>{k.label}</div>
+                  <div style={{ fontSize:28, fontWeight:900, color:k.color, fontFamily:"'Fraunces',serif", lineHeight:1 }}>{k.value}</div>
+                  <div style={{ fontSize:10, color:T.textMuted||T.textSecondary, marginTop:4 }}>{k.sub}</div>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: '1 1 200px', background: T.surface, border: '1px solid '+T.border, borderRadius: 10, padding: '8px 14px' }}>
-                  <span style={{ fontSize: 11, color: T.textMuted, whiteSpace: 'nowrap' }}>Max Price</span>
-                  <input type='range' min={1} max={20} step={0.5} value={projectPriceMax} onChange={e => setProjectPriceMax(Number(e.target.value))} style={{ flex: 1, accentColor: T.gold, cursor: 'pointer' }} />
-                  <span style={{ fontSize: 12, fontWeight: 700, color: T.gold, whiteSpace: 'nowrap', minWidth: 60 }}>{projectPriceMax >= 20 ? 'Any' : 'AED '+projectPriceMax+'M'}</span>
+              ))}
+            </div>
+
+            {/* ── Search + Filters ── */}
+            <div style={{ background:T.card||T.surface, border:\`1px solid \${T.border}\`, borderRadius:12, padding:"14px 16px", marginBottom:16 }}>
+              {/* Row 1: search + price */}
+              <div style={{ display:"flex", gap:10, marginBottom:10, flexWrap:"wrap" }}>
+                <div style={{ position:"relative", flex:"2 1 250px" }}>
+                  <span style={{ position:"absolute", left:12, top:"50%", transform:"translateY(-50%)", color:T.textMuted||T.textSecondary, fontSize:14 }}>🔍</span>
+                  <input value={projectSearch} onChange={e=>setProjectSearch(e.target.value)} placeholder="Search projects or community..."
+                    style={{ width:"100%", padding:"9px 12px 9px 36px", background:T.surfaceAlt||T.bg, border:\`1px solid \${T.border}\`, borderRadius:8, color:T.textPrimary||T.white, fontSize:12, fontFamily:"'Outfit',sans-serif", outline:"none", boxSizing:"border-box" }}/>
                 </div>
-                {(projectSearch || projectFilter !== 'All' || projectTier !== 'All' || projectHandover !== 'All' || projectPriceMax < 20) && (
-                  <button type='button' onClick={() => { setProjectSearch(''); setProjectFilter('All'); setProjectTier('All'); setProjectHandover('All'); setProjectPriceMax(20); }} style={{ padding: '8px 14px', borderRadius: 8, border: '1px solid rgba(239,68,68,0.3)', background: 'rgba(239,68,68,0.08)', color: T.red, fontSize: 12, cursor: 'pointer' }}>Clear Filters</button>
+                <div style={{ display:"flex", alignItems:"center", gap:8, flex:"1 1 180px", background:T.surfaceAlt||T.bg, border:\`1px solid \${T.border}\`, borderRadius:8, padding:"8px 14px" }}>
+                  <span style={{ fontSize:11, color:T.textMuted||T.textSecondary, whiteSpace:"nowrap" }}>Max Price</span>
+                  <input type="range" min={1} max={20} step={0.5} value={projectPriceMax} onChange={e=>setProjectPriceMax(Number(e.target.value))} style={{ flex:1, accentColor:T.gold, cursor:"pointer" }}/>
+                  <span style={{ fontSize:12, fontWeight:700, color:T.gold, whiteSpace:"nowrap", minWidth:50 }}>{projectPriceMax>=20?"Any":"AED "+projectPriceMax+"M"}</span>
+                </div>
+                {(projectSearch||projectFilter!=="All"||projectTier!=="All"||projectHandover!=="All"||projectPriceMax<20)&&(
+                  <button type="button" onClick={()=>{setProjectSearch("");setProjectFilter("All");setProjectTier("All");setProjectHandover("All");setProjectPriceMax(20);}}
+                    style={{ padding:"8px 14px", borderRadius:8, border:"1px solid rgba(239,68,68,0.3)", background:"rgba(239,68,68,0.08)", color:T.red||"#EF4444", fontSize:11, cursor:"pointer", whiteSpace:"nowrap" }}>
+                    ✕ Clear
+                  </button>
                 )}
               </div>
-              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-                <span style={{ fontSize: 10, color: T.textMuted, letterSpacing: 1, textTransform: 'uppercase' }}>Area</span>
-                {['All','DHE','DCH','EBF','GPC','ES','TV','RYM','TO','BB','TH','Branded'].map(f => (
-                  <button type='button' key={f} onClick={() => setProjectFilter(f)} style={{ padding: '6px 12px', borderRadius: 8, border: '1px solid '+(projectFilter===f ? T.gold : T.border), background: projectFilter===f ? T.goldGlow : 'transparent', color: projectFilter===f ? T.gold : T.textSecondary, fontSize: 11, fontWeight: projectFilter===f ? 600 : 400, cursor: 'pointer', transition: 'all 0.2s' }}>{f}</button>
+              {/* Row 2: Area pills */}
+              <div style={{ display:"flex", gap:6, flexWrap:"wrap", alignItems:"center", marginBottom:8 }}>
+                <span style={{ fontSize:10, color:T.textMuted||T.textSecondary, letterSpacing:1, textTransform:"uppercase", minWidth:32 }}>Area</span>
+                {["All","DHE","DCH","EBF","GPC","ES","TV","RYM","TO","BB","TH","Branded"].map(f=>(
+                  <button type="button" key={f} onClick={()=>setProjectFilter(f)}
+                    style={{ padding:"5px 11px", borderRadius:20, border:\`1px solid \${projectFilter===f?T.gold:T.border}\`, background:projectFilter===f?"rgba(212,168,67,0.12)":"transparent", color:projectFilter===f?T.gold:T.textSecondary||T.textMuted, fontSize:11, fontWeight:projectFilter===f?700:400, cursor:"pointer", transition:"all 0.15s" }}>
+                    {f}
+                  </button>
                 ))}
               </div>
-              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-                <span style={{ fontSize: 10, color: T.textMuted, letterSpacing: 1, textTransform: 'uppercase' }}>Tier</span>
-                {['All','Affordable','Mid-Market','Mid-Premium','Premium','Luxury','Ultra-Luxury','Luxury Branded','Ultra-Lux Branded'].map(t => (
-                  <button type='button' key={t} onClick={() => setProjectTier(t)} style={{ padding: '6px 12px', borderRadius: 8, border: '1px solid '+(projectTier===t ? T.teal : T.border), background: projectTier===t ? 'rgba(0,191,165,0.1)' : 'transparent', color: projectTier===t ? T.teal : T.textSecondary, fontSize: 11, fontWeight: projectTier===t ? 600 : 400, cursor: 'pointer', transition: 'all 0.2s' }}>{t}</button>
+              {/* Row 3: Tier pills */}
+              <div style={{ display:"flex", gap:6, flexWrap:"wrap", alignItems:"center", marginBottom:8 }}>
+                <span style={{ fontSize:10, color:T.textMuted||T.textSecondary, letterSpacing:1, textTransform:"uppercase", minWidth:32 }}>Tier</span>
+                {["All","Mid-Market","Mid-Premium","Premium","Luxury","Ultra-Luxury","Luxury Branded","Ultra-Lux Branded"].map(t=>(
+                  <button type="button" key={t} onClick={()=>setProjectTier(t)}
+                    style={{ padding:"5px 11px", borderRadius:20, border:\`1px solid \${projectTier===t?"#14B8A6":T.border}\`, background:projectTier===t?"rgba(20,184,166,0.12)":"transparent", color:projectTier===t?"#14B8A6":T.textSecondary||T.textMuted, fontSize:11, fontWeight:projectTier===t?700:400, cursor:"pointer", transition:"all 0.15s" }}>
+                    {t}
+                  </button>
                 ))}
               </div>
-              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-                <span style={{ fontSize: 10, color: T.textMuted, letterSpacing: 1, textTransform: 'uppercase' }}>Handover</span>
-                {['All','2026','2027','2028','2029','2030+'].map(y => (
-                  <button type='button' key={y} onClick={() => setProjectHandover(y)} style={{ padding: '6px 12px', borderRadius: 8, border: '1px solid '+(projectHandover===y ? T.purple : T.border), background: projectHandover===y ? 'rgba(139,92,246,0.1)' : 'transparent', color: projectHandover===y ? T.purple : T.textSecondary, fontSize: 11, fontWeight: projectHandover===y ? 600 : 400, cursor: 'pointer', transition: 'all 0.2s' }}>{y}</button>
+              {/* Row 4: Handover pills */}
+              <div style={{ display:"flex", gap:6, flexWrap:"wrap", alignItems:"center" }}>
+                <span style={{ fontSize:10, color:T.textMuted||T.textSecondary, letterSpacing:1, textTransform:"uppercase", minWidth:32 }}>Hand.</span>
+                {["All","2026","2027","2028","2029","2030+"].map(y=>(
+                  <button type="button" key={y} onClick={()=>setProjectHandover(y)}
+                    style={{ padding:"5px 11px", borderRadius:20, border:\`1px solid \${projectHandover===y?"#8B5CF6":T.border}\`, background:projectHandover===y?"rgba(139,92,246,0.12)":"transparent", color:projectHandover===y?"#8B5CF6":T.textSecondary||T.textMuted, fontSize:11, fontWeight:projectHandover===y?700:400, cursor:"pointer", transition:"all 0.15s" }}>
+                    {y}
+                  </button>
                 ))}
               </div>
             </div>
 
-            {/* Project Cards */}
-            {projectsLoading ? <LoadingSkeleton rows={6} cols={3} /> : (
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 12, marginTop: 16 }}>
-              {activeProjects
-                .filter(p => {
-                  const matchSearch = !projectSearch || p.name.toLowerCase().includes(projectSearch.toLowerCase()) || p.community.toLowerCase().includes(projectSearch.toLowerCase());
-                  const matchFilter = projectFilter === "All" || p.district === projectFilter || (projectFilter === "Branded" && p.branded);
-                  const matchTier = projectTier === "All" || p.tier === projectTier;
-                  const matchHandover = projectHandover === "All" || (projectHandover === "2030+" ? parseInt(p.handover) >= 2030 : p.handover?.includes(projectHandover));
-                  const matchPrice = projectPriceMax >= 20 || !p.price || p.price <= projectPriceMax * 1e6;
-                  return matchSearch && matchFilter && matchTier && matchHandover && matchPrice;
-                })
-                .map((p, i) => {
-                  const isLocked = !isPro && i >= 5;
-                  return (
-                <div key={p.id} className="chart-box fade-up" style={{ animationDelay: `${Math.min(i * 0.03, 0.5)}s`, padding: 0, overflow: "hidden", cursor: isLocked ? "default" : "pointer", outline: compareList.find(x=>x.id===p.id) ? `2px solid ${T.gold}` : "none", outlineOffset: "-1px", position: "relative", boxShadow: compareList.find(x=>x.id===p.id) ? `0 0 20px rgba(212,168,67,0.2)` : "none" }} onClick={() => !isLocked && setSelectedProject(p)}>
-                  {/* Radar project — data being researched overlay */}
-                  {p.fromFirestore && p.addedViaRadar && (
-                    <div style={{ position: "absolute", inset: 0, background: "rgba(4,9,15,0.82)", backdropFilter: "blur(3px)", zIndex: 10, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", borderRadius: 12, gap: 8, padding: 20 }}>
-                      <div style={{ fontSize: 22 }}>🔍</div>
-                      <div style={{ fontSize: 13, fontWeight: 700, color: T.white, textAlign: "center" }}>{p.name}</div>
-                      <div style={{ fontSize: 11, color: T.textMuted, textAlign: "center" }}>{p.community || p.developer}</div>
-                      <div style={{ padding: "4px 12px", borderRadius: 20, background: "rgba(212,168,67,0.12)", border: "1px solid rgba(212,168,67,0.3)", fontSize: 10, fontWeight: 700, color: T.gold, letterSpacing: 0.5 }}>🚀 NEW LAUNCH · DATA INCOMING</div>
-                      <div style={{ fontSize: 10, color: T.textMuted, textAlign: "center", maxWidth: 180, lineHeight: 1.5 }}>Our research team is curating full data for this project</div>
-                      {p.sourceUrl && <a href={p.sourceUrl} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{ fontSize: 10, color: T.teal, textDecoration: "none", padding: "4px 12px", border: "1px solid rgba(0,191,165,0.3)", borderRadius: 6 }}>View Listing ↗</a>}
-                    </div>
-                  )}
-                  {/* Lock overlay for free users */}
-                  {isLocked && (
-                    <div style={{ position: "absolute", inset: 0, background: "rgba(4,9,15,0.7)", backdropFilter: "blur(4px)", zIndex: 10, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", borderRadius: 12 }}>
-                      <span style={{ fontSize: 24, marginBottom: 6 }}>🔒</span>
-                      <span style={{ fontSize: 12, fontWeight: 600, color: T.white }}>Pro Feature</span>
-                      <button type="button" onClick={(e) => { e.stopPropagation(); setShowUpgrade(true); }} style={{ marginTop: 8, padding: "6px 16px", background: T.gold, color: T.bg, border: "none", borderRadius: 6, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>Unlock</button>
-                    </div>
-                  )}
-                  {/* Compare badge */}
-                  {compareList.find(x=>x.id===p.id) && (
-                    <div style={{ position: "absolute", top: 8, right: 8, padding: "3px 8px", borderRadius: 6, background: T.gold, color: T.bg, fontSize: 9, fontWeight: 800, zIndex: 5, letterSpacing: 0.5 }}>COMPARING</div>
-                  )}
-                  {/* Project Image */}
-                  {p.imageUrl && (
-                    <div style={{ width: "100%", height: 140, overflow: "hidden", borderBottom: `1px solid ${T.border}` }}>
-                      <img src={p.imageUrl} alt={p.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} onError={e => { e.target.parentElement.style.display = "none"; }} />
-                    </div>
-                  )}
-                  <div style={{ padding: 16 }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontFamily: "'Fraunces', serif", fontSize: 15, fontWeight: 700, color: T.gold, marginBottom: 2 }}>{p.name}</div>
-                      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                        <span style={{ fontSize: 11, color: T.textSecondary }}>{p.community}</span>
-                        {p.emaarUrl && <a href={p.emaarUrl} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{ fontSize: 9, color: T.gold, textDecoration: "none", padding: "1px 5px", border: "1px solid rgba(212,168,67,0.3)", borderRadius: 4, fontWeight: 600, letterSpacing: 0.3, flexShrink: 0 }} title="Official listing on Emaar.com">{getLinkLabel(p.emaarUrl)}</a>}
-                      </div>
-                    </div>
-                    <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4 }}>
-                      {(() => { const inv = p.ratingOverride != null && p.ratingOverride !== '' ? { score: parseFloat(p.ratingOverride), color: parseFloat(p.ratingOverride) >= 8 ? '#10B981' : parseFloat(p.ratingOverride) >= 6 ? '#D4A843' : parseFloat(p.ratingOverride) >= 4 ? '#F59E0B' : '#EF4444', label: parseFloat(p.ratingOverride) >= 8 ? 'Excellent' : parseFloat(p.ratingOverride) >= 6 ? 'Strong' : parseFloat(p.ratingOverride) >= 4 ? 'Good' : 'Weak', breakdown: [] } : getInvestmentScore(p); return (
-                        <div title={`Investment Score: ${inv.score}/10 — ${inv.breakdown.map(b => b.label + ': ' + b.pts + '/' + b.max).join(' · ')}`}
-                          style={{ display: "flex", alignItems: "center", gap: 4, padding: "4px 8px", borderRadius: 8, background: `${inv.color}18`, border: `1px solid ${inv.color}40`, cursor: "default" }}>
-                          <span style={{ fontSize: 11, fontWeight: 900, color: inv.color, fontFamily: "'Fraunces', serif" }}>{inv.score}</span>
-                          <span style={{ fontSize: 9, color: inv.color, fontWeight: 700, letterSpacing: 0.3 }}>/10</span>
-                          <span style={{ fontSize: 9, color: inv.color, fontWeight: 600 }}>★ {inv.label}</span>
-                        </div>
-                      ); })()}
-                      <div style={{ display: "flex", gap: 4 }}>
-                        {p.branded && <span style={{ fontSize: 9, padding: "3px 8px", borderRadius: 6, background: "rgba(212,168,67,0.15)", color: T.gold, fontWeight: 600 }}>{p.brand}</span>}
-                        <span style={{ fontSize: 9, padding: "3px 8px", borderRadius: 6, background: p.status === "Completed" ? "rgba(16,185,129,0.2)" : p.status === "Under Construction" ? "rgba(16,185,129,0.12)" : "rgba(59,130,246,0.12)", color: p.status === "Completed" ? T.green : p.status === "Under Construction" ? T.green : T.blue, fontWeight: 600 }}>{p.status === "Completed" ? "✓ Done" : p.status === "Under Construction" ? "Building" : "Off-Plan"}</span>
-                      </div>
-                    </div>
-                  </div>
-                  {/* Construction Progress */}
-                  <div style={{ marginBottom: 10 }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
-                      <span style={{ fontSize: 10, color: T.textMuted }}>Construction</span>
-                      <span style={{ fontSize: 10, fontWeight: 600, color: p.construction >= 100 ? T.green : p.construction >= 70 ? T.green : p.construction >= 30 ? T.gold : T.blue }}>{p.construction}%</span>
-                    </div>
-                    <div style={{ height: 4, borderRadius: 2, background: T.surfaceAlt, overflow: "hidden" }}>
-                      <div style={{ height: "100%", width: `${p.construction}%`, borderRadius: 2, background: p.construction >= 100 ? T.green : p.construction >= 70 ? T.green : p.construction >= 30 ? T.gold : T.blue, transition: "width 0.5s ease" }} />
-                    </div>
-                  </div>
-                  {/* Details Grid */}
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-                    <div><span style={{ fontSize: 9, color: T.textMuted, display: "block" }}>FROM</span><span style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{p.price ? `AED ${(p.price/1000000).toFixed(1)}M` : "TBD"}</span></div>
-                    <div>
-                      <span style={{ fontSize: 9, color: T.textMuted, display: "block" }}>HANDOVER</span>
-                      <span style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{p.handover}</span>
-                      {(() => { const cd = getHandoverCountdown(p.handover); return cd ? (
-                        <span style={{ display: "inline-block", marginTop: 2, fontSize: 9, fontWeight: 700, color: cd.passed ? "#10B981" : cd.color, background: cd.passed ? "rgba(16,185,129,0.1)" : cd.urgent ? "rgba(239,68,68,0.12)" : "rgba(212,168,67,0.08)", padding: "1px 5px", borderRadius: 4 }}>
-                          {cd.passed ? "\u2713 Ready" : "\u23F1 " + cd.label}
-                        </span>
-                      ) : null; })()}
-                    </div>
-                    <div><span style={{ fontSize: 9, color: T.textMuted, display: "block" }}>PRICE/SQFT</span><span style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{p.ppsf ? `AED ${p.ppsf.toLocaleString()}` : "TBD"}</span></div>
-                    <div><span style={{ fontSize: 9, color: T.textMuted, display: "block" }}>SIZE</span><span style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{p.sizeFrom?.toLocaleString()} - {p.sizeTo?.toLocaleString()} sqft</span></div>
-                    <div><span style={{ fontSize: 9, color: T.textMuted, display: "block" }}>TYPE</span><span style={{ fontSize: 12, color: T.textSecondary }}>{p.type} · {p.beds} BR</span></div>
-                    <div><span style={{ fontSize: 9, color: T.textMuted, display: "block" }}>PAYMENT</span><span style={{ fontSize: 12, color: T.textSecondary }}>{p.payment}</span></div>
-                  </div>
-                  {/* Unit Inventory */}
-                  {p.units && <div style={{ marginTop: 10, paddingTop: 10, borderTop: `1px solid ${T.border}` }}>
-                    <div style={{ fontSize: 9, color: T.textMuted, marginBottom: 6, fontWeight: 600, letterSpacing: 0.5 }}>UNIT AVAILABILITY</div>
-                    <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-                      {getUnitEntries(p.units).map(([type, d]) => {
-                        const avail = d.total - d.sold;
-                        return (
-                          <div key={type} style={{ padding: "4px 8px", borderRadius: 6, background: T.surfaceAlt, fontSize: 10, display: "flex", gap: 4, alignItems: "center" }}>
-                            <span style={{ fontWeight: 700, color: T.white, textTransform: "uppercase" }}>{type}</span>
-                            <span style={{ color: avail > 0 ? T.green : T.red }}>{avail > 0 ? `${avail} left` : "Sold out"}</span>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>}
-                  <div style={{ marginTop: 8, padding: "4px 8px", borderRadius: 6, background: T.surfaceAlt, display: "inline-block" }}>
-                    <span style={{ fontSize: 10, color: T.textMuted }}>{p.tier}</span>
-                  </div>
-                  {/* Action Buttons */}
-                  <div style={{ display: "flex", gap: 6, marginTop: 10 }} onClick={e => e.stopPropagation()}>
-                    <a href={`/project/${p.id}`} style={{ flex: 1, padding: "8px 0", background: "linear-gradient(135deg, rgba(212,168,67,0.15), rgba(212,168,67,0.08))", border: "1px solid rgba(212,168,67,0.3)", borderRadius: 8, color: T.gold, fontSize: 11, fontWeight: 700, textAlign: "center", textDecoration: "none", display: "flex", alignItems: "center", justifyContent: "center", gap: 4 }}>
-                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-                      Full Details
-                    </a>
-                    <button type="button" onClick={(e) => { e.stopPropagation(); toggleWatchlist(p); }} style={{ padding: "8px 10px", background: watchlist.find(w => w.id === p.id) ? "rgba(212,168,67,0.15)" : T.surfaceAlt, border: `1px solid ${watchlist.find(w => w.id === p.id) ? T.gold : T.border}`, borderRadius: 8, color: watchlist.find(w => w.id === p.id) ? T.gold : T.textMuted, fontSize: 14, cursor: "pointer" }} title={watchlist.find(w => w.id === p.id) ? "Remove from watchlist" : "Add to watchlist"}>
-                      {watchlist.find(w => w.id === p.id) ? "★" : "☆"}
-                    </button>
-                    <button type="button" onClick={(e) => { e.stopPropagation(); isPro ? toggleCompare(p) : setShowUpgrade(true); }} style={{ padding: "8px 10px", background: !isPro ? "rgba(212,168,67,0.05)" : compareList.find(x=>x.id===p.id) ? T.goldGlow : T.surfaceAlt, border: `1px solid ${!isPro ? T.border : compareList.find(x=>x.id===p.id) ? T.gold : T.border}`, borderRadius: 8, color: !isPro ? T.textMuted : compareList.find(x=>x.id===p.id) ? T.gold : T.textMuted, fontSize: 11, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>
-                      {!isPro ? "🔒" : compareList.find(x=>x.id===p.id) ? "✓" : "⊕"}
-                    </button>
-                    <button type="button" title={myAlerts.find(a => a.projectId === p.id && !a.triggered) ? "Alert active" : "Set Price Alert"} onClick={(e) => { e.stopPropagation(); if (!isPro) { setShowUpgrade(true); return; } setShowSetAlert(p); setAlertForm({ type: "price_below", value: p.price ? p.price.toString() : "" }); }} style={{ padding: "8px 10px", background: myAlerts.find(a => a.projectId === p.id && !a.triggered) ? "rgba(212,168,67,0.15)" : T.surfaceAlt, border: `1px solid ${myAlerts.find(a => a.projectId === p.id && !a.triggered) ? T.gold : T.border}`, borderRadius: 8, color: myAlerts.find(a => a.projectId === p.id && !a.triggered) ? T.gold : T.textMuted, fontSize: 13, cursor: "pointer" }}>
-                      {myAlerts.find(a => a.projectId === p.id && !a.triggered) ? "🔔" : "🔕"}
-                    </button>
-                  </div>
-                  </div>{/* end padding wrapper */}
+            {/* ── Project Cards Grid ── */}
+            {(() => {
+              const filtered = activeProjects.filter(p => {
+                const matchSearch = !projectSearch || p.name.toLowerCase().includes(projectSearch.toLowerCase()) || (p.community||"").toLowerCase().includes(projectSearch.toLowerCase());
+                const matchFilter = projectFilter==="All" || p.district===projectFilter || (projectFilter==="Branded"&&p.branded);
+                const matchTier   = projectTier==="All"   || p.tier===projectTier;
+                const matchHand   = projectHandover==="All" || (projectHandover==="2030+"?parseInt(p.handover)>=2030:(p.handover||"").includes(projectHandover));
+                const matchPrice  = projectPriceMax>=20 || !p.price || p.price<=projectPriceMax*1e6;
+                return matchSearch&&matchFilter&&matchTier&&matchHand&&matchPrice;
+              });
+
+              if(filtered.length===0) return (
+                <div style={{ textAlign:"center", padding:"60px 20px", color:T.textMuted||T.textSecondary }}>
+                  <div style={{ fontSize:32, marginBottom:12 }}>🔍</div>
+                  <div style={{ fontSize:15, fontWeight:600, marginBottom:6 }}>No projects match your filters</div>
+                  <button type="button" onClick={()=>{setProjectSearch("");setProjectFilter("All");setProjectTier("All");setProjectHandover("All");setProjectPriceMax(20);}}
+                    style={{ marginTop:8, padding:"8px 20px", borderRadius:8, border:\`1px solid \${T.gold}\`, background:"rgba(212,168,67,0.1)", color:T.gold, fontSize:12, cursor:"pointer" }}>
+                    Clear Filters
+                  </button>
                 </div>
-              );})}
-              {activeProjects.filter(p => { const ms = !projectSearch || p.name.toLowerCase().includes(projectSearch.toLowerCase()) || p.community.toLowerCase().includes(projectSearch.toLowerCase()); const mf = projectFilter === "All" || p.district === projectFilter || (projectFilter === "Branded" && p.branded); const mt = projectTier === "All" || p.tier === projectTier; const my = projectHandover === "All" || (projectHandover === "2030+" ? parseInt(p.handover) >= 2030 : p.handover?.includes(projectHandover)); const mp = projectPriceMax >= 20 || !p.price || p.price <= projectPriceMax * 1e6; return ms && mf && mt && my && mp; }).length === 0 && (
-                <div style={{ gridColumn: "1 / -1", textAlign: "center", padding: "48px 20px" }}>
-                  <div style={{ fontSize: 36, marginBottom: 12, opacity: 0.4 }}>🔍</div>
-                  <div style={{ fontSize: 16, fontWeight: 600, color: T.white, marginBottom: 4 }}>No projects found</div>
-                  <div style={{ fontSize: 13, color: T.textMuted }}>Try adjusting your search or filter</div>
-                </div>
-              )}
-            </div>
-            )}
+              );
 
-            {/* Community Summary */}
-            <Section title="Communities Overview" sub="11 master-planned communities">
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 12, marginTop: 16 }}>
-                {emaarCommunities.filter(c => c.name).map((c, i) => (
-                  <div key={c.district} className="chart-box fade-up" style={{ animationDelay: `${i*0.05}s`, padding: 14, cursor: "pointer", transition: "border 0.2s" }} onClick={() => setSelectedCommunity(c.name)} title="Click for full community details">
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-                      <div>
-                        <span style={{ fontFamily: "'Fraunces', serif", fontSize: 14, fontWeight: 700, color: T.gold }}>{c.district}</span>
-                        <span style={{ fontSize: 11, color: T.textSecondary, marginLeft: 8 }}>{c.name}</span>
-                      </div>
-                      <span style={{ fontSize: 11, fontWeight: 600, color: T.teal }}>{c.projects} projects</span>
-                    </div>
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 6, fontSize: 11 }}>
-                      <div><span style={{ color: T.textMuted, fontSize: 9, display: "block" }}>AVG PPSF</span><span style={{ color: T.white, fontWeight: 600 }}>{c.avgPpsf ? `AED ${c.avgPpsf.toLocaleString()}` : "—"}</span></div>
-                      <div><span style={{ color: T.textMuted, fontSize: 9, display: "block" }}>YIELD</span><span style={{ color: T.white, fontWeight: 600 }}>{c.avgYield ? `${c.avgYield}%` : "—"}</span></div>
-                      <div><span style={{ color: T.textMuted, fontSize: 9, display: "block" }}>ACRES</span><span style={{ color: T.white, fontWeight: 600 }}>{c.acres ? c.acres.toLocaleString() : "—"}</span></div>
-                    </div>
-                    <div style={{ fontSize: 10, color: T.textMuted, marginTop: 6 }}>{c.buyer} · {c.strengths}</div>
+              return (
+                <>
+                  <div style={{ fontSize:11, color:T.textMuted||T.textSecondary, marginBottom:12 }}>
+                    Showing <strong style={{ color:T.gold }}>{filtered.length}</strong> of {activeProjects.length} projects
                   </div>
-                ))}
-              </div>
-            </Section>
+                  <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(300px,1fr))", gap:14 }}>
+                    {filtered.map((p,i) => {
+                      const inv = getInvestmentScore(p);
+                      const invColor = inv.score>=8?T.green:inv.score>=6?T.gold:inv.score>=4?"#F59E0B":T.red||"#EF4444";
+                      const statusColor = p.status==="Ready"||p.status==="Delivered"||p.status==="Completed"?T.green:p.status==="Under Construction"?T.green:"#3B82F6";
+                      const constrColor = p.construction>=90?T.green:p.construction>=60?T.gold:"#F59E0B";
+                      const handInfo = p.handover?getHandoverInfo(new Date(p.handover.replace("Q1","Jan").replace("Q2","Apr").replace("Q3","Jul").replace("Q4","Oct")+" 1, "+new Date().getFullYear())):null;
+                      return (
+                        <div key={p.id||i}
+                          onClick={()=>setSelectedProject(p)}
+                          style={{ background:T.card||T.surface, border:\`1px solid \${T.border}\`, borderRadius:14, overflow:"hidden", cursor:"pointer", transition:"all 0.2s", position:"relative" }}
+                          onMouseEnter={e=>{e.currentTarget.style.border=\`1px solid \${T.gold}60\`;e.currentTarget.style.transform="translateY(-3px)";e.currentTarget.style.boxShadow=\`0 12px 40px rgba(212,168,67,0.12)\`;}}
+                          onMouseLeave={e=>{e.currentTarget.style.border=\`1px solid \${T.border}\`;e.currentTarget.style.transform="none";e.currentTarget.style.boxShadow="none";}}>
 
+                          {/* Top accent bar */}
+                          <div style={{ height:3, background:\`linear-gradient(90deg,\${statusColor},\${statusColor}40)\` }}/>
 
-            {/* Mega Projects */}
-            <Section title="Mega Projects Pipeline" sub="Strategic developments 2026-2035 · AED 800B+ combined value · Global benchmarks & DLD price data · Click any project for deep analysis">
-              <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 12, marginTop: 16 }}>
-                {megaProjects.map((m, i) => {
-                  const isOpen = expandedMega === m.name;
-                  const mStatus = m.status || "Planned";
-                  return (
-                  <div key={m.name} className="chart-box fade-up" style={{ animationDelay: `${i*0.05}s`, padding: 0, overflow: "hidden", cursor: "pointer", border: isOpen ? `1px solid ${T.gold}` : undefined }} onClick={() => setExpandedMega(isOpen ? null : m.name)}>
-                    <div style={{ padding: 16, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
-                      <div style={{ flex: "1 1 200px" }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                          <div style={{ fontFamily: "'Fraunces', serif", fontSize: 16, fontWeight: 700, color: T.gold }}>{m.name}</div>
-                          <span style={{ fontSize: 9, padding: "2px 8px", borderRadius: 6, background: mStatus === "Under Construction" ? "rgba(16,185,129,0.12)" : mStatus.includes("Active") || mStatus.includes("Partial") ? "rgba(234,179,8,0.12)" : "rgba(99,102,241,0.12)", color: mStatus === "Under Construction" ? T.green : mStatus.includes("Active") || mStatus.includes("Partial") ? T.gold : T.blue, fontWeight: 600 }}>{mStatus}</span>
-                        </div>
-                        <div style={{ fontSize: 11, color: T.textSecondary, marginTop: 3 }}>{m.community} &middot; {m.type} &middot; {m.developer || "Emaar"}</div>
-                      </div>
-                      <div style={{ display: "flex", gap: 20, flexWrap: "wrap", alignItems: "center" }}>
-                        <div><span style={{ fontSize: 9, color: T.textMuted, display: "block" }}>VALUE</span><span style={{ fontSize: 14, fontWeight: 700, color: T.white }}>{m.value}</span></div>
-                        <div><span style={{ fontSize: 9, color: T.textMuted, display: "block" }}>TIMELINE</span><span style={{ fontSize: 13, fontWeight: 600, color: T.teal }}>{m.timeline}</span></div>
-                        <span style={{ fontSize: 14, color: T.textMuted, transition: "transform 0.3s", transform: isOpen ? "rotate(180deg)" : "rotate(0)" }}>&#9660;</span>
-                      </div>
-                    </div>
-                    {isOpen && (
-                      <div style={{ padding: "0 16px 16px", borderTop: `1px solid ${T.border}` }} onClick={e => e.stopPropagation()}>
-                        <p style={{ fontSize: 13, color: T.textSecondary, lineHeight: 1.7, margin: "14px 0" }}>{m.desc || m.feature || "Details coming soon."}</p>
-                        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 12, marginTop: 12 }}>
-                          <div style={{ background: T.surfaceAlt, borderRadius: 10, padding: 14 }}>
-                            <div style={{ fontSize: 11, fontWeight: 700, color: T.gold, marginBottom: 8, letterSpacing: 0.5 }}>KEY FACTS</div>
-                            {m.keyFacts && m.keyFacts.map((f, fi) => (
-                              <div key={fi} style={{ fontSize: 11, color: T.textSecondary, padding: "3px 0", display: "flex", gap: 6, alignItems: "flex-start" }}>
-                                <span style={{ color: T.gold, fontSize: 8, marginTop: 4, flexShrink: 0 }}>&bull;</span><span>{f}</span>
+                          {/* Project image if exists */}
+                          {p.imageUrl&&(
+                            <div style={{ height:130, overflow:"hidden" }}>
+                              <img src={p.imageUrl} alt={p.name} style={{ width:"100%", height:"100%", objectFit:"cover" }} onError={e=>e.target.parentElement.style.display="none"}/>
+                            </div>
+                          )}
+
+                          <div style={{ padding:"14px 16px" }}>
+                            {/* Header row */}
+                            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:8 }}>
+                              <div style={{ flex:1 }}>
+                                <div style={{ fontSize:15, fontWeight:700, color:T.gold, fontFamily:"'Fraunces',serif", marginBottom:2, lineHeight:1.2 }}>{p.name}</div>
+                                <div style={{ display:"flex", alignItems:"center", gap:6, flexWrap:"wrap" }}>
+                                  <span style={{ fontSize:11, color:T.textSecondary||T.textMuted }}>{p.community}</span>
+                                  {p.emaarUrl&&<a href={p.emaarUrl} target="_blank" rel="noopener noreferrer" onClick={e=>e.stopPropagation()}
+                                    style={{ fontSize:9, color:T.gold, textDecoration:"none", padding:"1px 6px", border:\`1px solid \${T.gold}40\`, borderRadius:4, fontWeight:600 }}>
+                                    {getLinkLabel(p.emaarUrl)}
+                                  </a>}
+                                </div>
                               </div>
-                            ))}
-                          </div>
-                          <div>
-                            <div style={{ background: T.surfaceAlt, borderRadius: 10, padding: 14, marginBottom: 12 }}>
-                              <div style={{ fontSize: 11, fontWeight: 700, color: T.green, marginBottom: 6, letterSpacing: 0.5 }}>INVESTOR IMPACT</div>
-                              <div style={{ fontSize: 12, color: T.textSecondary, lineHeight: 1.6 }}>{m.investorImpact || "Impact analysis coming soon."}</div>
+                              {/* Score badge */}
+                              <div style={{ display:"flex", flexDirection:"column", alignItems:"flex-end", gap:4, flexShrink:0 }}>
+                                <div style={{ display:"flex", alignItems:"center", gap:3, padding:"4px 8px", borderRadius:8, background:\`\${invColor}16\`, border:\`1px solid \${invColor}40\` }}>
+                                  <span style={{ fontSize:13, fontWeight:900, color:invColor, fontFamily:"'Fraunces',serif" }}>{inv.score}</span>
+                                  <span style={{ fontSize:9, color:invColor }}>/10 ★ {inv.label}</span>
+                                </div>
+                                <div style={{ display:"flex", gap:4 }}>
+                                  {p.branded&&p.brand&&p.brand!=="—"&&<span style={{ fontSize:9, padding:"2px 7px", borderRadius:5, background:"rgba(212,168,67,0.15)", color:T.gold, fontWeight:600 }}>{p.brand}</span>}
+                                  <span style={{ fontSize:9, padding:"2px 7px", borderRadius:5, background:\`\${statusColor}18\`, color:statusColor, fontWeight:600 }}>{p.status==="Under Construction"?"U/C":p.status||"—"}</span>
+                                </div>
+                              </div>
                             </div>
-                            {m.benchmark && (
-                            <div style={{ background: T.surfaceAlt, borderRadius: 10, padding: 14, marginBottom: 12 }}>
-                              <div style={{ fontSize: 11, fontWeight: 700, color: "#a78bfa", marginBottom: 6, letterSpacing: 0.5 }}>GLOBAL BENCHMARK</div>
-                              <div style={{ fontSize: 12, color: T.textSecondary, lineHeight: 1.6 }}>{m.benchmark}</div>
+
+                            {/* Construction bar */}
+                            <div style={{ marginBottom:12 }}>
+                              <div style={{ display:"flex", justifyContent:"space-between", marginBottom:4 }}>
+                                <span style={{ fontSize:10, color:T.textMuted||T.textSecondary }}>Construction</span>
+                                <span style={{ fontSize:11, fontWeight:700, color:constrColor }}>{p.construction||0}%</span>
+                              </div>
+                              <div style={{ height:5, borderRadius:3, background:"rgba(255,255,255,0.06)", overflow:"hidden" }}>
+                                <div style={{ height:"100%", width:\`\${p.construction||0}%\`, borderRadius:3, background:\`linear-gradient(90deg,\${constrColor},\${constrColor}bb)\`, transition:"width 0.4s" }}/>
+                              </div>
                             </div>
-                            )}
-                            {m.priceImpact && (
-                            <div style={{ background: T.surfaceAlt, borderRadius: 10, padding: 14, marginBottom: 12 }}>
-                              <div style={{ fontSize: 11, fontWeight: 700, color: "#f59e0b", marginBottom: 6, letterSpacing: 0.5 }}>PRICE IMPACT DATA</div>
-                              <div style={{ fontSize: 12, color: T.textSecondary, lineHeight: 1.6 }}>{m.priceImpact}</div>
-                            </div>
-                            )}
-                            <div style={{ background: T.surfaceAlt, borderRadius: 10, padding: 14, marginBottom: 12 }}>
-                              <div style={{ fontSize: 11, fontWeight: 700, color: T.teal, marginBottom: 6, letterSpacing: 0.5 }}>COMPLETION STATUS</div>
-                              <div style={{ fontSize: 12, color: T.textSecondary, lineHeight: 1.6 }}>{m.completion || m.timeline}</div>
-                            </div>
-                            {m.milestones && (
-                            <div style={{ background: T.surfaceAlt, borderRadius: 10, padding: 14 }}>
-                              <div style={{ fontSize: 11, fontWeight: 700, color: T.blue, marginBottom: 8, letterSpacing: 0.5 }}>CONSTRUCTION MILESTONES</div>
-                              {m.milestones.map((ms, msi) => (
-                                <div key={msi} style={{ display: "flex", gap: 8, marginBottom: 4 }}>
-                                  <span style={{ fontSize: 11, color: T.blue }}>●</span>
-                                  <span style={{ fontSize: 11, color: T.textSecondary, lineHeight: 1.5 }}>{ms}</span>
+
+                            {/* 4 key data points */}
+                            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:6, marginBottom:12 }}>
+                              {[
+                                { label:"FROM",      value:p.price?("AED "+(p.price/1e6).toFixed(2)+"M"):p.priceFrom?("AED "+(p.priceFrom/1e6).toFixed(2)+"M"):"TBD" },
+                                { label:"HANDOVER",  value:p.handover||"—" },
+                                { label:"PRICE/SQFT",value:p.ppsf?("AED "+p.ppsf.toLocaleString()):p.pricePerSqft?("AED "+Number(p.pricePerSqft).toLocaleString()):"TBD" },
+                                { label:"SIZE",      value:p.sizeFrom?(p.sizeFrom.toLocaleString()+" – "+((p.sizeTo||p.sizeFrom)*1).toLocaleString()+" sqft"):p.sizeRange||"—" },
+                              ].map((d,di)=>(
+                                <div key={di} style={{ background:"rgba(255,255,255,0.03)", borderRadius:7, padding:"6px 10px" }}>
+                                  <div style={{ fontSize:8, fontWeight:700, color:T.textMuted||T.textSecondary, letterSpacing:0.7, textTransform:"uppercase", marginBottom:2 }}>{d.label}</div>
+                                  <div style={{ fontSize:12, fontWeight:700, color:di===0?T.gold:T.textPrimary||T.white }}>{d.value}</div>
                                 </div>
                               ))}
                             </div>
-                            )}
+
+                            {/* TYPE + PAYMENT row */}
+                            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:12 }}>
+                              <span style={{ fontSize:10, color:T.textSecondary||T.textMuted }}>{p.type||"Apartments"}{p.beds?" · "+p.beds:""}</span>
+                              {p.payment&&<span style={{ fontSize:10, color:T.textSecondary||T.textMuted }}>Payment: {p.payment}</span>}
+                            </div>
+
+                            {/* Tier + Full Details */}
+                            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+                              {p.tier&&<span style={{ fontSize:9, padding:"3px 9px", borderRadius:20, background:"rgba(255,255,255,0.05)", color:T.textMuted||T.textSecondary, border:\`1px solid \${T.border}\` }}>{p.tier}</span>}
+                              <button type="button" onClick={e=>{e.stopPropagation();setSelectedProject(p);}}
+                                style={{ marginLeft:"auto", padding:"7px 16px", borderRadius:8, border:\`1px solid \${T.gold}50\`, background:"rgba(212,168,67,0.08)", color:T.gold, fontSize:11, fontWeight:700, cursor:"pointer", fontFamily:"'Outfit',sans-serif", display:"flex", alignItems:"center", gap:5 }}>
+                                📋 Full Details
+                              </button>
+                            </div>
                           </div>
                         </div>
-                        <div style={{ display: "flex", gap: 16, marginTop: 14, flexWrap: "wrap", padding: "10px 0 0", borderTop: `1px solid ${T.border}` }}>
-                          <div style={{ fontSize: 10, color: T.textMuted }}>Developer: <span style={{ color: T.white, fontWeight: 600 }}>{m.developer || "Emaar"}</span></div>
-                          <div style={{ fontSize: 10, color: T.textMuted }}>Announced: <span style={{ color: T.white, fontWeight: 600 }}>{m.announced || "—"}</span></div>
-                          <div style={{ fontSize: 10, color: T.textMuted }}>Scale: <span style={{ color: T.white, fontWeight: 600 }}>{m.scale}</span></div>
-                        </div>
-                        {m.sources && (
-                        <div style={{ marginTop: 8, paddingTop: 8, borderTop: `1px solid ${T.border}` }}>
-                          <div style={{ fontSize: 9, color: T.textMuted, fontStyle: "italic" }}>Sources: {m.sources}</div>
-                        </div>
-                        )}
-                      </div>
-                    )}
+                      );
+                    })}
                   </div>
-                );})}
-              </div>
-          <TabSources sources={[{ label: "Emaar.com Projects", url: "https://www.emaar.com/en/residential/" }, { label: "DLD Project Registry", url: "https://dubailand.gov.ae" }, { label: "Emaar IR", url: "https://www.emaar.com/en/investor-relations/" }]} />
-            </Section>
+                </>
+              );
+            })()}
+
+            {/* ── Data Source Footer ── */}
+            <div style={{ marginTop:24, padding:"10px 0", borderTop:\`1px solid \${T.border}\`, display:"flex", alignItems:"center", gap:16, flexWrap:"wrap" }}>
+              <span style={{ fontSize:10, color:T.textMuted||T.textSecondary }}>Sources:</span>
+              {[{ label:"DLD", url:"https://dubailand.gov.ae" },{ label:"Emaar IR", url:"https://www.emaar.com/en/investor-relations/" }].map(s=>(
+                <a key={s.label} href={s.url} target="_blank" rel="noopener noreferrer" style={{ fontSize:10, color:T.teal||"#14B8A6", textDecoration:"none" }}>{s.label} ↗</a>
+              ))}
+            </div>
           </>}
 
           {/* ─── HANDOVER TRACKER TAB ─── */}
@@ -4134,8 +4045,8 @@ export default function EmaarDashboardV2() {
 
             <Section title="Project Portfolio" sub="48 active projects · 10+ master communities · 2026–2030">
               <div className="kpi-grid" style={{ display: "grid", gap: 12, marginTop: 16 }}>
-                <KPI label="Total Projects" value={activeProjects.length} sub="18 under construction · 30 off-plan" delay={1} onClick={() => setSelectedKPI({ label: "Total Projects", value: String(activeProjects.length), color: T.gold, description: `${activeProjects.length} active projects across ${[...new Set(activeProjects.map(p=>p.community))].length} communities.`, source: "DXB Analytics Project Database", sourceUrl: "#", items: [{ label: "Under Construction", value: String(activeProjects.filter(p=>p.status==="Under Construction").length), note: "Active building" }, { label: "Off-Plan", value: String(activeProjects.filter(p=>p.status==="Off-Plan"||p.status==="Off Plan").length), note: "Pre-launch / launched" }, { label: "Communities", value: String([...new Set(activeProjects.map(p=>p.community))].length), note: "Master-planned areas" }, { label: "Handover 2026", value: activeProjects.filter(p=>p.handover&&p.handover.includes("2026")).length+" projects", note: "Nearest deliveries" }, { label: "Handover 2029+", value: activeProjects.filter(p=>p.handoverYear>=2029||parseInt(p.handover)>=2029).length+" projects", note: "Longest pipeline" }], trend: null })} />
-                <KPI label="Branded Projects" value={`${activeProjects.filter(p=>p.branded).length}`} sub={activeProjects.filter(p=>p.branded&&p.brand&&p.brand!=="—").map(p=>p.brand).filter((v,i,a)=>a.indexOf(v)===i).slice(0,3).join(" · ")||"No branded projects"} />
+                <KPI label="Total Projects" value={activeProjects.length} sub="18 under construction · 30 off-plan" delay={1} onClick={() => setSelectedKPI({ label: "Total Projects", value: "48", color: T.gold, description: "48 active Emaar projects across UAE — 18 under active construction and 30 in the off-plan/pre-launch phase across 10+ master communities.", source: "DXB Analytics Project Database", sourceUrl: "#", items: [{ label: "Under Construction", value: "18", note: "Active building" }, { label: "Off-Plan", value: "30", note: "Pre-launch / launched" }, { label: "Communities", value: "11", note: "Master-planned areas" }, { label: "Handover 2026", value: "7 projects", note: "Nearest deliveries" }, { label: "Handover 2029+", value: "26 projects", note: "Longest pipeline" }], trend: null })} />
+                <KPI label="Branded Projects" value="10" sub="Address · Vida · Palace" delay={2} onClick={() => setSelectedKPI({ label: "Branded Projects", value: "10", color: T.teal, description: "10 branded residences under Emaar's luxury hospitality labels — Address, Vida, and Palace. Branded units command 25–40% price premium over standard Emaar projects.", source: "Emaar Properties Portfolio 2025", sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "Address Brand", value: "5 projects", note: "Ultra-luxury tier" }, { label: "Vida Brand", value: "3 projects", note: "Lifestyle tier" }, { label: "Palace Brand", value: "2 projects", note: "Heritage luxury" }, { label: "Price Premium", value: "25–40%", note: "vs standard Emaar" }, { label: "Resale Premium", value: "Strong", note: "Brand demand maintained" }], trend: null })} />
                 <KPI label="Avg Starting Price" value="AED 2.76M" sub="Range: 1.2M – 13.8M" delay={3} onClick={() => setSelectedKPI({ label: "Avg Starting Price", value: "AED 2.76M", color: T.blue, description: "Average entry price across the active Emaar project portfolio. Range spans from AED 1.2M (Emaar South 1BR) to AED 13.8M (The Oasis ultra-luxury villas).", source: "DXB Analytics · Emaar Price List 2025", sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "Avg Starting Price", value: "AED 2.76M", note: "Portfolio average" }, { label: "Min Price", value: "AED 1.2M", note: "Emaar South 1BR" }, { label: "Max Price", value: "AED 13.8M", note: "The Oasis villas" }, { label: "Studio Entry", value: "AED 900K+", note: "Select communities" }, { label: "Villa Entry", value: "AED 3.5M+", note: "Dubai Hills / Valley" }], trend: [{ y: "2021", v: 1.8 }, { y: "2022", v: 2.1 }, { y: "2023", v: 2.3 }, { y: "2024", v: 2.55 }, { y: "2025", v: 2.76 }] })} />
                 <KPI label="Avg Price/sqft" value="AED 2,570" sub="Across all tiers" delay={4} onClick={() => setSelectedKPI({ label: "Avg Price/sqft", value: "AED 2,570", color: T.purple, description: "Average price per square foot across all active Emaar launches. Premium branded projects push the average higher vs affordable communities.", source: "DXB Analytics · DLD 2025", sourceUrl: "https://dubailand.gov.ae", items: [{ label: "Portfolio Avg", value: "AED 2,570/sqft", note: "All projects" }, { label: "Branded Avg", value: "AED 3,500+/sqft", note: "Address / Palace" }, { label: "Standard Avg", value: "AED 1,900/sqft", note: "Emaar South / Valley" }, { label: "Downtown", value: "AED 2,800+/sqft", note: "Prime location premium" }, { label: "Creek Harbour", value: "AED 2,400/sqft", note: "Waterfront" }], trend: [{ y: "2021", v: 1450 }, { y: "2022", v: 1750 }, { y: "2023", v: 2100 }, { y: "2024", v: 2350 }, { y: "2025", v: 2570 }] })} />
               </div>
