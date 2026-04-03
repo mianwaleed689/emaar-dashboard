@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import ReactDOM from "react-dom";
 import { auth, db, storage, firebaseConfig } from "./firebase";
 import { initializeApp, deleteApp } from "firebase/app";
@@ -28,7 +28,7 @@ import CancellationTab from "./admin/CancellationTab";
 /* ═══════════════════════════════════════════════════════
    EMAIL CAMPAIGNS TAB
    ═══════════════════════════════════════════════════════ */
-function EmailCampaignsTab({ T, db, notify, adminUser, leads, leadsTotal }) {
+function EmailCampaignsTab({ T, db, notify, adminUser, leads, leadsTotal, fetchLeads }) {
   const [campaigns, setCampaigns]       = React.useState([]);
   const [showCreate, setShowCreate]     = React.useState(false);
   const [sending, setSending]           = React.useState(false);
@@ -82,7 +82,6 @@ function EmailCampaignsTab({ T, db, notify, adminUser, leads, leadsTotal }) {
     if (!form.name || !form.subject || !form.body) { notify("Fill in campaign name, subject and message"); return; }
     const targets = getTargetLeads();
     if (targets.length === 0) { notify("No leads match the filter with valid emails"); return; }
-    if (targets.length > 500 && !window.confirm(`You are about to send to ${targets.length.toLocaleString()} leads. This may take several minutes and could hit Resend rate limits. Continue?`)) return;
     setSending(true); setSendProgress(0); setSendTotal(targets.length);
     const campaignId = `camp_${Date.now()}`;
     const campaignDoc = { name: form.name, subject: form.subject, template: form.template, targetFilter: form.targetFilter, targetCommunity: form.targetCommunity, targetStatus: form.targetStatus, totalTargets: targets.length, sent: 0, failed: 0, status: "sending", createdAt: new Date().toISOString(), sentBy: adminUser?.email || "admin" };
@@ -9767,7 +9766,6 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
   /* ─── ACTIONS ─── */
   const handleBulkAction = async () => {
     if (!bulkTier || bulkSel.length === 0) return;
-    if (bulkSel.length > 10 && !window.confirm(`You are about to change ${bulkSel.length} users to "${bulkTier}". Are you sure?`)) return;
     for (const uid of bulkSel) await changeTier(uid, bulkTier);
     await logAudit(db, { action: "bulk_tier_change", uids: bulkSel, newTier: bulkTier });
     await checkAlerts(db);
@@ -10649,7 +10647,7 @@ function setAlertThreshold(n) { _alertThreshold = n; }
 
 async function logAudit(db, payload) {
   try {
-    const ip = _cachedIP || await getAdminIP(); // use cached IP to avoid delay
+    const ip = await getAdminIP();
     const changedBy = auth.currentUser?.email || "admin";
     const entry = { ...payload, changedBy, changedAt: new Date().toISOString(), ip };
     const id = `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
@@ -11951,7 +11949,6 @@ function LaunchRadar({ db, T, notify }) {
                         <div style={{ width: `${p.construction || 0}%`, height: "100%", background: p.construction >= 80 ? T.green : p.construction >= 40 ? T.gold : T.blue, borderRadius: 2 }} />
                       </div>
                       <span style={{ fontSize: 10, color: T.textMuted }}>{p.construction || 0}%</span>
-                    {p.constructionUpdatedAt && <div style={{ fontSize: 9, color: T.textMuted, textAlign: 'center' }}>Updated {new Date(p.constructionUpdatedAt).toLocaleDateString('en-AE')}</div>}
                     </div>
                     {/* Actions */}
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 6 }} onClick={e => e.stopPropagation()}>
@@ -12669,7 +12666,6 @@ export default function AdminPanel() {
   const [verifications, setVerifications] = useState([]);
   const [leads, setLeads] = useState([]);
   const [leadsLoading, setLeadsLoading] = useState(false);
-  const leadsLoadingRef = useRef(false); // prevents concurrent fetchLeads calls
   
   /* ─── LEADS CRM STATE ─── */
   const [leadDrawer, setLeadDrawer] = useState(null); // lead object or null
@@ -12678,8 +12674,6 @@ export default function AdminPanel() {
   }); // all | new | contacted | qualified | converted | lost
   const [leadSourceFilter, setLeadSourceFilter] = useState("all");
   const [leadSearch, setLeadSearch] = useState("");
-  const [leadSearchInput, setLeadSearchInput] = useState("");
-  const leadSearchTimer = React.useRef(null);
   const [leadDateRange, setLeadDateRange] = useState("all");
   const [leadPage, setLeadPage] = useState(1);
   const LEADS_PER_PAGE = 100;
@@ -12871,7 +12865,7 @@ export default function AdminPanel() {
 
   useEffect(() => {
     if (!isHydrated.current) return;
-    try { if (["all","new","contacted","qualified","converted","lost"].includes(leadFilter)) { localStorage.setItem("admin_leadFilter", leadFilter); } else { localStorage.removeItem("admin_leadFilter"); } } catch {}
+    try { localStorage.setItem("admin_leadFilter", leadFilter); } catch {}
   }, [leadFilter]);
 
   /* ─── ESCAPE KEY ─── */
@@ -12903,15 +12897,12 @@ export default function AdminPanel() {
 
   /* ─── FETCH USERS ─── */
   const fetchUsers = useCallback(async () => {
-    let cancelled = false;
     try {
       const snap = await getDocs(collection(db, "users"));
-      if (cancelled) return;
       const list = [];
       snap.forEach(d => list.push({ uid: d.id, ...plainify(d.data()) }));
       setUsers(list);
-    } catch (e) { if (!cancelled) console.error("Fetch users:", e); }
-    return () => { cancelled = true; };
+    } catch (e) { console.error("Fetch users:", e); }
   }, []);
 
   // Real-time listener — auto-updates table when any user doc changes
@@ -13067,8 +13058,6 @@ export default function AdminPanel() {
   }, [isAdmin, fetchVerifications]);
 
   const fetchLeads = useCallback(async (forceRefresh = false) => {
-    if (leadsLoadingRef.current && !forceRefresh) return;
-    leadsLoadingRef.current = true;
     setLeadsLoading(true);
     try {
       const cacheKey = "dxb_leads_v6";
@@ -13101,12 +13090,10 @@ export default function AdminPanel() {
 
       // ── Step 3: Background fetch remaining in batches of 500 ──
       // No re-renders until each batch completes — keeps UI smooth
-      let cancelled = false;
       let all = [...firstBatch];
       let lastDoc = snap1.empty ? null : snap1.docs[snap1.docs.length - 1];
 
       const loadNext = async () => {
-        if (cancelled) return;
         if (!lastDoc) {
           // All done — sort and update UI once
           all.sort((a,b) => new Date(b.createdAt||0) - new Date(a.createdAt||0));
@@ -13143,33 +13130,10 @@ export default function AdminPanel() {
     } catch(e) {
       console.error("fetchLeads:", e);
       setLeadsLoading(false);
-    } finally {
-      leadsLoadingRef.current = false;
     }
   }, [db]);
 
-  // ── Auto sign-out after 2 hours inactivity ──
-  useEffect(() => {
-    if (!isAdmin) return;
-    let idleTimer;
-    const resetTimer = () => {
-      clearTimeout(idleTimer);
-      idleTimer = setTimeout(() => { signOut(auth); notify("Signed out due to inactivity"); }, 2 * 60 * 60 * 1000);
-    };
-    ["mousemove","keydown","click","scroll"].forEach(e => window.addEventListener(e, resetTimer));
-    resetTimer();
-    return () => { clearTimeout(idleTimer); ["mousemove","keydown","click","scroll"].forEach(e => window.removeEventListener(e, resetTimer)); };
-  }, [isAdmin]);
-
-  useEffect(() => {
-    if (isAdmin) fetchLeads();
-    return () => {
-      if (leadSearchTimer.current) clearTimeout(leadSearchTimer.current);
-      window._revenuePayments = null;
-      window._revenuePaymentsLoaded = false;
-      window._digestLog = null;
-    };
-  }, [isAdmin]); // eslint-disable-line
+  useEffect(() => { if (isAdmin) fetchLeads(); }, [isAdmin]); // eslint-disable-line
 
   /* ─── FETCH AUDIT LOG ─── */
   const fetchAuditLog = useCallback(async () => {
@@ -13463,11 +13427,11 @@ export default function AdminPanel() {
   }).length;
   const paidLastWeek = (() => {
     // approximate: paid users whose createdAt was in last 7 days
-    const newPaidThisWeek = auditLog.filter(l => {
-      try { return l.action === "tier_change" && (l.to === "pro" || l.to === "enterprise") && (now - new Date(l.changedAt)) < msPerWeek; } catch { return false; }
+    const newPaidThisWeek = users.filter(u => {
+      try { return (u.tier === "pro" || u.tier === "enterprise") && (now - new Date(u.createdAt)) < msPerWeek; } catch { return false; }
     }).length;
-    const newPaidLastWeek = auditLog.filter(l => {
-      try { const ms = now - new Date(l.changedAt); return l.action === "tier_change" && (l.to === "pro" || l.to === "enterprise") && ms >= msPerWeek && ms < msPerWeek * 2; } catch { return false; }
+    const newPaidLastWeek = users.filter(u => {
+      try { const ms = now - new Date(u.createdAt); return (u.tier === "pro" || u.tier === "enterprise") && ms >= msPerWeek && ms < msPerWeek * 2; } catch { return false; }
     }).length;
     return { thisWeek: newPaidThisWeek, lastWeek: newPaidLastWeek };
   })();
@@ -13476,7 +13440,7 @@ export default function AdminPanel() {
     if (previous === 0 && current === 0) return { pct: 0, dir: "flat", label: "—" };
     if (previous === 0) return { pct: 100, dir: "up", label: `+${current} new` };
     const pct = Math.round(((current - previous) / previous) * 100);
-    return { pct: Math.abs(pct), dir: pct > 0 ? "up" : pct < 0 ? "down" : "flat", label: pct > 0 ? `↑${Math.abs(pct)}%` : pct < 0 ? `↓${Math.abs(pct)}%` : "=" };
+    return { pct: Math.abs(pct), dir: pct > 0 ? "up" : pct < 0 ? "down" : "flat", label: pct > 0 ? `←${Math.abs(pct)}%` : pct < 0 ? `↑${Math.abs(pct)}%` : "=" };
   };
   const usersTrend  = weekTrend(stats.thisWeek, usersLastWeekTotal);
   const mrrTrend    = weekTrend(paidLastWeek.thisWeek, paidLastWeek.lastWeek);
@@ -13484,7 +13448,7 @@ export default function AdminPanel() {
   // ── CHURN — derived from auditLog ──
   // A churn event = tier_change where from is pro/enterprise and to is free/pro_trial
   const churnEvents = auditLog.filter(l =>
-    (l.action === "tier_change" || l.action === "bulk_tier_change") &&
+    l.action === "tier_change" &&
     (l.from === "pro" || l.from === "enterprise") &&
     (l.to === "free" || l.to === "pro_trial")
   );
@@ -13615,7 +13579,7 @@ export default function AdminPanel() {
       });
     });
     // New leads
-    [...leads].sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0)).slice(0, 3).forEach(l => items.push({
+    leads.slice(0, 3).forEach(l => items.push({
       type: "lead", uid: null, user: null,
       time: l.createdAt, icon: "lead",
       label: `New lead: ${l.name || l.email || "Anonymous"}`,
@@ -13819,43 +13783,6 @@ export default function AdminPanel() {
     };
   };
   
-  // ── PLATFORM STATS SYNC ──────────────────────────────────────────────────────
-  // Single source of truth: adminSettings/platformStats
-  // App Dashboard reads from here. Admin Panel writes here. No mismatches.
-  React.useEffect(() => {
-    if (!db || !emaarProjects) return;
-    const timer = setTimeout(async () => {
-      try {
-        // Count real data
-        const paidUsers   = users.filter(u => ["pro","enterprise","pro_trial"].includes(u.tier));
-        const mrr         = paidUsers.filter(u => u.tier === "pro").length * 99
-                          + paidUsers.filter(u => u.tier === "enterprise").length * 499;
-        const allDevs     = ["emaar","damac","sobha","nakheel","meraas","aldar","binghatti"];
-        
-        const stats = {
-          // Core counts — computed from real loaded data
-          projectCount:     emaarProjects.length,        // Emaar projects count
-          communityCount:   49,                          // 49 verified communities (7 devs)
-          developerCount:   allDevs.length,              // 7 active developers
-          // User metrics — from live users collection
-          totalUsers:       users.length,
-          agentCount:       users.filter(u => u.tier !== "free").length,
-          activePaidUsers:  paidUsers.length,
-          // Revenue metrics
-          mrr,
-          arr:              mrr * 12,
-          // Meta
-          lastUpdatedAt:    new Date().toISOString(),
-          updatedBy:        "admin_panel_auto",
-        };
-        
-        // Write to the SINGLE SOURCE OF TRUTH
-        await setDoc(doc(db, "adminSettings", "platformStats"), stats, { merge: true });
-      } catch (_) { /* non-critical */ }
-    }, 5000);
-    return () => clearTimeout(timer);
-  }, [db, emaarProjects, users]);
-
   // ═══════════════════════════════════════
   // DATA INTELLIGENCE & AUTOMATION
   // ═══════════════════════════════════════
@@ -14231,7 +14158,6 @@ export default function AdminPanel() {
       });
       clean.updatedAt = new Date().toISOString();
       clean.updatedBy = adminUser?.email || "admin";
-      if (clean.construction !== undefined) clean.constructionUpdatedAt = new Date().toISOString();
       await setDoc(doc(db, "projectData", String(projectId)), clean, { merge: true });
       try {
         const oldDoc = liveProjects[projectId] || {};
@@ -15046,7 +14972,7 @@ export default function AdminPanel() {
       <div className={`mobile-overlay ${sidebarOpen ? "open" : ""}`} onClick={() => setSidebarOpen(false)} />
 
       {/* ─── SIDEBAR (matching dashboard exactly) ─── */}
-      <aside className={`admin-sidebar ${sidebarOpen ? "open" : ""}`} style={{ position: "fixed", top: 0, left: 0, bottom: 0, width: 240, background: T.surface, borderRight: `1px solid ${T.border}`, display: "flex", flexDirection: "column", zIndex: 100, transition: "transform 0.3s ease", overflow: "hidden" }}>
+      <aside className={`admin-sidebar ${sidebarOpen ? "open" : ""}`} style={{ position: "fixed", top: 0, left: 0, bottom: 0, width: 240, background: T.surface, borderRight: `1px solid ${T.border}`, display: "flex", flexDirection: "column", zIndex: 100, transition: "transform 0.3s ease" }}>
         {/* Logo */}
         <div style={{ padding: "24px 20px 20px", borderBottom: `1px solid ${T.border}` }}>
           <a href="/" style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none" }}>
@@ -15062,10 +14988,10 @@ export default function AdminPanel() {
         </div>
 
         {/* Navigation */}
-        <nav style={{ flex: 1, padding: "16px 12px", display: "flex", flexDirection: "column", gap: 3, overflowY: "auto", minHeight: 0 }}>
+        <nav style={{ flex: 1, padding: "16px 12px", display: "flex", flexDirection: "column", gap: 3, overflowY: "auto" }}>
           <div style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, letterSpacing: 1.5, textTransform: "uppercase", padding: "0 16px 8px" }}>{i18t("sidebar", "platform")}</div>
           {TABS.map(t => (
-            <button type="button" key={t.id} className={`sidebar-btn ${tab === t.id ? "active" : ""}`} onClick={() => { setTab(t.id); if (t.id === "leads") setLeadPage(1); }}>
+            <button type="button" key={t.id} className={`sidebar-btn ${tab === t.id ? "active" : ""}`} onClick={() => setTab(t.id)}>
               <span style={{ color: tab === t.id ? T.gold : T.textMuted, transition: "color 0.15s" }}>{t.icon}</span>
               {i18t("adminTabs", t.id) || t.label}
             </button>
@@ -15249,7 +15175,7 @@ export default function AdminPanel() {
                     <div style={{ fontSize: 10, color: T.textMuted, marginTop: 6 }}>ARR: AED {arr.toLocaleString()}</div>
                     <div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 5 }}>
                       <span style={{ fontSize: 10, fontWeight: 700, color: mrrTrend.dir === "up" ? T.green : mrrTrend.dir === "down" ? T.red : T.textMuted }}>
-                        {mrrTrend.dir === "up" ? "↑" : mrrTrend.dir === "down" ? "↓" : "—"} {mrrTrend.label}
+                        {mrrTrend.dir === "up" ? "←" : mrrTrend.dir === "down" ? "↑" : "—"} {mrrTrend.label}
                       </span>
                       <span style={{ fontSize: 9, color: T.textMuted }}>vs last week</span>
                     </div>
@@ -15276,7 +15202,7 @@ export default function AdminPanel() {
                     <div style={{ fontSize: 10, color: T.textMuted, marginTop: 6 }}>+{stats.today} today</div>
                     <div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 5 }}>
                       <span style={{ fontSize: 10, fontWeight: 700, color: usersTrend.dir === "up" ? T.green : usersTrend.dir === "down" ? T.red : T.textMuted }}>
-                        {usersTrend.dir === "up" ? "↑" : usersTrend.dir === "down" ? "↓" : "—"} {usersTrend.label}
+                        {usersTrend.dir === "up" ? "←" : usersTrend.dir === "down" ? "↑" : "—"} {usersTrend.label}
                       </span>
                       <span style={{ fontSize: 9, color: T.textMuted }}>vs last week</span>
                     </div>
@@ -15431,7 +15357,7 @@ export default function AdminPanel() {
                         <span style={{ color: T.textMuted }}>Last week</span>
                       </div>
                       <div style={{ padding: "3px 10px", borderRadius: 6, background: signupTrend.dir === "up" ? "rgba(16,185,129,0.1)" : signupTrend.dir === "down" ? "rgba(239,68,68,0.1)" : T.surfaceAlt, fontSize: 11, fontWeight: 700, color: signupTrend.dir === "up" ? T.green : signupTrend.dir === "down" ? T.red : T.textMuted }}>
-                        {signupTrend.dir === "up" ? "↑" : signupTrend.dir === "down" ? "↓" : ""} {signupThisWeek} vs {signupLastWeek} last week
+                        {signupTrend.dir === "up" ? "←" : signupTrend.dir === "down" ? "↑" : ""} {signupThisWeek} vs {signupLastWeek} last week
                       </div>
                     </div>
                   </div>
@@ -16054,7 +15980,7 @@ export default function AdminPanel() {
 
                   // ── 7-DAY SPARKLINE ──
                   const last7 = Array.from({length:7}, (_,i) => {
-                    const d = new Date(now); d.setDate(d.getDate() - (6-i));
+                    const d = new Date(); d.setDate(d.getDate() - (6-i));
                     const day = d.toDateString();
                     return { day: d.toLocaleDateString("en-AE",{weekday:"short"}), count: auditLog.filter(l => { try { return new Date(l.changedAt).toDateString() === day; } catch { return false; }}).length };
                   });
@@ -16062,7 +15988,7 @@ export default function AdminPanel() {
 
                   // ── 30-DAY ACTIVITY DATA ──
                   const last30 = Array.from({ length: 30 }, (_, i) => {
-                    const d = new Date(now); d.setDate(d.getDate() - (29 - i));
+                    const d = new Date(); d.setDate(d.getDate() - (29 - i));
                     const day = d.toDateString();
                     const count = auditLog.filter(l => { try { return new Date(l.changedAt).toDateString() === day; } catch { return false; } }).length;
                     return { day: d.toLocaleDateString("en-AE", { day: "2-digit", month: "short" }), count };
@@ -16358,8 +16284,7 @@ export default function AdminPanel() {
                     snap.forEach(d => list.push({ id: d.id, ...d.data() }));
                     list.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
                     window._revenuePayments = list;
-                    window._revenuePaymentsLoaded = true;
-                  }).catch(() => { window._revenuePaymentsLoaded = false; });
+                  }).catch(() => {});
                   // Log revenue tab view
                   logAudit(db, { action: "tab_view", tabId: "revenue" }).catch(() => {});
                 }
@@ -16489,8 +16414,8 @@ export default function AdminPanel() {
                         <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.2, marginBottom: 16 }}>MRR Movement — This Month</div>
                         {[
                           { label: "Starting MRR",  value: mrr - netMRR,       color: T.textSecondary },
-                          { label: "New MRR",        value: newMRRThisMonth,    color: T.green,  arrow: "↑" },
-                          { label: "Churned MRR",    value: -churnedMRR,        color: T.red,    arrow: "↓" },
+                          { label: "New MRR",        value: newMRRThisMonth,    color: T.green,  arrow: "←" },
+                          { label: "Churned MRR",    value: -churnedMRR,        color: T.red,    arrow: "↑" },
                           { label: "Net MRR",        value: mrr,                color: netMRR >= 0 ? T.green : T.red, bold: true },
                         ].map((row, i) => (
                           <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 0", borderBottom: i < 3 ? `1px solid ${T.border}` : "none" }}>
@@ -20359,7 +20284,7 @@ export default function AdminPanel() {
             const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
             const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
             const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-            const tomorrowEnd = new Date(todayStart.getTime() + 1 * 24 * 60 * 60 * 1000);
+            const tomorrowEnd = new Date(todayStart.getTime() + 2 * 24 * 60 * 60 * 1000);
 
             // ── Lead Scoring (0-100) ──────────────────────────────────────
             const scoreLead = (lead) => {
@@ -20475,6 +20400,7 @@ export default function AdminPanel() {
               if (lfDupEmail && !((l.tags||[]).includes("duplicate_email"))) return false;
               if (lfShortPhone && !((l.tags||[]).includes("phone_short"))) return false;
               // Fix nan project display inline
+              if (l.project === "nan" || l.project === "NaN" || l.project === "null") l.project = "";
               return true;
             }).sort((a, b) => {
               if (isOverdue(a) && !isOverdue(b)) return -1;
@@ -20558,8 +20484,6 @@ export default function AdminPanel() {
 
             const addLead = async () => {
               if (!addLeadForm.name && !addLeadForm.email) { notify("Name or email required"); return; }
-              if (addLeadForm.email && !/^[^s@]+@[^s@]+.[^s@]+$/.test(addLeadForm.email)) { notify("Invalid email format"); return; }
-              if (addLeadForm.phone && addLeadForm.phone.replace(/D/g, "").length < 7) { notify("Phone number too short"); return; }
               setAddLeadLoading(true);
               try {
                 const id = `lead_${Date.now()}`;
@@ -20567,8 +20491,6 @@ export default function AdminPanel() {
                 await setDoc(doc(db, "leads", id), {
                   ...addLeadForm,
                   phone: cleanPhone,
-                  budget: addLeadForm.budget ? parseFloat(String(addLeadForm.budget).replace(/[^0-9.]/g, "")) || "" : "",
-                  project: ["nan", "null", "NaN", "undefined"].includes(String(addLeadForm.project)) ? "" : addLeadForm.project,
                   status: "New",
                   createdAt: new Date().toISOString(),
                   activity: [{ type: "created", by: adminUser?.email || "admin", at: new Date().toISOString(), note: "Lead created" }],
@@ -20576,11 +20498,9 @@ export default function AdminPanel() {
                 });
                 await logAudit(db, { action: "lead_created", leadId: id });
                 notify("Lead added!");
-                const newLead = { id, ...addLeadForm, phone: cleanPhone, status: "New", createdAt: new Date().toISOString(), activity: [], notes: addLeadForm.notes ? [{ text: addLeadForm.notes, by: adminUser?.email || "admin", at: new Date().toISOString() }] : [] };
-                setLeads(prev => [newLead, ...prev]);
-                try { localStorage.removeItem("dxb_leads_v6"); localStorage.removeItem("dxb_leads_v6_ts"); } catch {}
                 setShowAddLead(false);
-                setAddLeadForm({ name: "", email: "", phone: "", phoneCode: "+971", phoneNum: "", source: "Manual", project: "", notes: "", budget: "", nationality: "", followUpDate: "" });
+                setAddLeadForm({ name: "", email: "", phone: "", source: "Manual", project: "", notes: "", budget: "", nationality: "", followUpDate: "" });
+                fetchLeads();
               } catch (e) { notify("Error: " + e.message); }
               setAddLeadLoading(false);
             };
@@ -20598,8 +20518,7 @@ export default function AdminPanel() {
                 await setDoc(doc(db, "leads", leadId), update, { merge: true });
                 await logAudit(db, { action: "lead_status_change", leadId, to: newStatus });
                 notify(`Status ${newStatus}`);
-                setLeads(prev => prev.map(l => l.id === leadId ? { ...l, ...update } : l));
-                try { localStorage.removeItem("dxb_leads_v6"); localStorage.removeItem("dxb_leads_v6_ts"); } catch {}
+                fetchLeads();
                 if (leadDrawer?.id === leadId) setLeadDrawer(prev => ({ ...prev, status: newStatus, ...update }));
               } catch (e) { notify("Error: " + e.message); }
             };
@@ -20607,13 +20526,11 @@ export default function AdminPanel() {
             // ── Bulk update ───────────────────────────────────────────────
             const bulkUpdateStatus = async (newStatus) => {
               if (leadSelectedIds.length === 0) { notify("Select leads first"); return; }
-              if (leadSelectedIds.length > 100 && !window.confirm(`You are about to update ${leadSelectedIds.length} leads to "${newStatus}". Are you sure?`)) return;
               try {
                 await Promise.all(leadSelectedIds.map(id => setDoc(doc(db, "leads", id), { status: newStatus, updatedAt: new Date().toISOString() }, { merge: true })));
                 notify(`${leadSelectedIds.length} leads -> ${newStatus}`);
-                setLeads(prev => prev.map(l => leadSelectedIds.includes(l.id) ? { ...l, status: newStatus, updatedAt: new Date().toISOString() } : l));
-                try { localStorage.removeItem("dxb_leads_v6"); localStorage.removeItem("dxb_leads_v6_ts"); } catch {}
                 setLeadSelectedIds([]);
+                fetchLeads();
               } catch (e) { notify("Error: " + e.message); }
             };
 
@@ -20624,11 +20541,10 @@ export default function AdminPanel() {
                 const activity = [...(showFollowUpModal.activity || []), { type: "followup_scheduled", by: adminUser?.email || "admin", at: new Date().toISOString(), note: `Follow-up scheduled for ${new Date(followUpDate).toLocaleDateString("en-AE", { day: "2-digit", month: "short", year: "numeric" })}${followUpNote ? ` - ${followUpNote}` : ""}` }];
                 await setDoc(doc(db, "leads", showFollowUpModal.id), { followUpDate, followUpNote, activity, updatedAt: new Date().toISOString() }, { merge: true });
                 notify("Follow-up scheduled!");
-                setLeads(prev => prev.map(l => l.id === showFollowUpModal.id ? { ...l, followUpDate, followUpNote, activity } : l));
-                try { localStorage.removeItem("dxb_leads_v6"); localStorage.removeItem("dxb_leads_v6_ts"); } catch {}
                 setShowFollowUpModal(null);
                 setFollowUpDate("");
                 setFollowUpNote("");
+                fetchLeads();
                 if (leadDrawer?.id === showFollowUpModal.id) setLeadDrawer(prev => ({ ...prev, followUpDate, followUpNote, activity }));
               } catch (e) { notify("Error: " + e.message); }
             };
@@ -20644,8 +20560,7 @@ export default function AdminPanel() {
                 setLeadDrawer(prev => ({ ...prev, notes, activity }));
                 setLeadNote("");
                 notify("Note added");
-                setLeads(prev => prev.map(l => l.id === leadDrawer.id ? { ...l, notes, activity } : l));
-                try { localStorage.removeItem("dxb_leads_v6"); localStorage.removeItem("dxb_leads_v6_ts"); } catch {}
+                fetchLeads();
               } catch (e) { notify("Error: " + e.message); }
               setLeadNoteSaving(false);
             };
@@ -20660,8 +20575,7 @@ export default function AdminPanel() {
                 await setDoc(doc(db, "leads", leadDrawer.id), { status: "Converted", userId, convertedAt: new Date().toISOString(), updatedAt: new Date().toISOString() }, { merge: true });
                 await logAudit(db, { action: "lead_converted", leadId: leadDrawer.id, userId });
                 notify("Lead converted to user!");
-                setLeads(prev => prev.map(l => l.id === leadDrawer.id ? { ...l, status: "Converted", userId, convertedAt: new Date().toISOString() } : l));
-                try { localStorage.removeItem("dxb_leads_v6"); localStorage.removeItem("dxb_leads_v6_ts"); } catch {}
+                fetchLeads();
                 fetchUsers();
                 setLeadDrawer(null);
               } catch (e) { notify("Error: " + e.message); }
@@ -20677,8 +20591,7 @@ export default function AdminPanel() {
                 await setDoc(doc(db, "leads", lead.id), { respondedAt: new Date().toISOString(), updatedAt: new Date().toISOString(), activity }, { merge: true });
                 await logAudit(db, { action: "lead_email_sent", leadId: lead.id });
                 notify("Email sent!");
-                setLeads(prev => prev.map(l => l.id === lead.id ? { ...l, activity } : l));
-                try { localStorage.removeItem("dxb_leads_v6"); localStorage.removeItem("dxb_leads_v6_ts"); } catch {}
+                fetchLeads();
                 if (leadDrawer?.id === lead.id) setLeadDrawer(prev => ({ ...prev, activity }));
               } catch (e) { notify("Email failed: " + e.message); }
               setSendingEmail(false);
@@ -20732,7 +20645,7 @@ export default function AdminPanel() {
 
                 {/* KPI BAR */}
                 <div className="fade-up" style={{ display: "flex", alignItems: "center", gap: 0, borderRadius: 14, background: T.surface, border: `1px solid ${T.border}`, marginBottom: 20, overflow: "hidden", flexWrap: "wrap" }}>
-                  <button type="button" onClick={() => { localStorage.removeItem("dxb_leads_v6"); localStorage.removeItem("dxb_leads_v6_ts"); fetchLeads(true); notify("↺ Reloading all leads..."); }} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, padding: "14px 16px", background: T.goldGlow, border: "none", borderRight: `1px solid ${T.border}`, color: T.gold, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600, flexShrink: 0 }}>{I.refresh}</button>
+                  <button type="button" onClick={() => { localStorage.removeItem("dxb_leads_v3"); localStorage.removeItem("dxb_leads_v3_ts"); fetchLeads(true); notify("↺ Reloading all leads..."); }} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, padding: "14px 16px", background: T.goldGlow, border: "none", borderRight: `1px solid ${T.border}`, color: T.gold, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600, flexShrink: 0 }}>{I.refresh}</button>
                   {[
                     { label: "Total", value: stats.total, color: T.gold },
                     { label: "New", value: stats.new, color: "#3B82F6" },
@@ -21247,7 +21160,7 @@ export default function AdminPanel() {
                                   const score = scoreLead(lead);
                                   const scoreCol = score >= 90 ? T.green : score >= 70 ? T.gold : T.orange;
                                   return (
-                                    <div key={lead.id} onClick={() => { setLeadDrawer(lead); setLeadDrawerTab("details"); }} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 12px", background: T.surfaceAlt, borderRadius: 8, cursor: "pointer", border: `1px solid ${T.border}`, transition: "border-color 0.15s" }}
+                                    <div key={lead.id} onClick={() => setLeadDrawer(lead)} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 12px", background: T.surfaceAlt, borderRadius: 8, cursor: "pointer", border: `1px solid ${T.border}`, transition: "border-color 0.15s" }}
                                       onMouseEnter={e => e.currentTarget.style.borderColor = T.gold}
                                       onMouseLeave={e => e.currentTarget.style.borderColor = T.border}>
                                       <div style={{ width: 32, height: 32, borderRadius: 8, background: `${scoreCol}20`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 900, color: scoreCol, flexShrink: 0 }}>{score}</div>
@@ -21312,19 +21225,19 @@ export default function AdminPanel() {
                     <button type="button" onClick={onClick} style={{ padding: "8px 12px", borderRadius: 8, border: `1px solid ${active ? T.gold : T.border}`, background: active ? "rgba(212,168,67,0.12)" : T.surface, color: active ? T.gold : T.textMuted, fontSize: 11, fontWeight: active ? 700 : 400, cursor: "pointer", fontFamily: "'Outfit',sans-serif", whiteSpace: "nowrap" }}>{label}</button>
                   );
                   const clearAll = () => {
-                    setLeadFilter("all"); setLeadSourceFilter("all"); setLeadDateRange("all"); setLeadSearch(""); setLeadSearchInput("");
+                    setLeadFilter("all"); setLeadSourceFilter("all"); setLeadDateRange("all"); setLeadSearch("");
                     setLfCommunity("all"); setLfNationality("all"); setLfBudgetMin(""); setLfBudgetMax(""); setLfScoreMin("");
                     setLfPropType("all"); setLfLanguage("all"); setLfLeadAge("all");
                     setLfGoldenVisa(false); setLfHasWhatsApp(false); setLfHasEmail(false); setLfNoWhatsApp(false);
                     setLfBedrooms("all"); setLfOffPlan("all"); setLfDeveloper("all");
                     setLfPayment("all"); setLfVisa("all"); setLfTag("all");
-                    setLfNeverContacted(false); setLfHasFollowUp(false); setLfUnreachable(false); setLfDupPhone(false); setLfDupEmail(false); setLfShortPhone(false); setLeadPage(1);
+                    setLfNeverContacted(false); setLfHasFollowUp(false); setLeadPage(1);
                   };
                   return (
                     <div style={{ marginBottom: 16 }}>
                       {/* Row 1: Search + Status + Source + Date + toggle */}
                       <div style={{ display: "flex", gap: 8, marginBottom: 8, flexWrap: "wrap", alignItems: "center" }}>
-                        <input type="text" placeholder="🔍  Search by name, phone, email, project..." value={leadSearchInput} onChange={e => { setLeadSearchInput(e.target.value); clearTimeout(leadSearchTimer.current); leadSearchTimer.current = setTimeout(() => { setLeadSearch(e.target.value); setLeadPage(1); }, 300); }}
+                        <input type="text" placeholder="🔍  Search by name, phone, email, project..." value={leadSearch} onChange={e => { setLeadSearch(e.target.value); setLeadPage(1); }}
                           style={{ flex: 1, minWidth: 220, padding: "9px 14px", background: T.surface, border: `1px solid ${leadSearch ? T.gold : T.border}`, borderRadius: 8, color: T.white, fontSize: 12, fontFamily: "'Outfit',sans-serif", outline: "none" }} />
                         <select value={leadFilter} onChange={e => { setLeadFilter(e.target.value); setLeadPage(1); }} style={sel}>
                           <option value="all">📋 All Status</option>
@@ -21454,7 +21367,7 @@ export default function AdminPanel() {
                       { id: "Converted", label: "Converted", color: T.green },
                       { id: "Lost", label: "Lost", color: T.red },
                     ].map(stage => {
-                      const stageLeads = filtered.filter(l => (l.status || "New") === stage.id).sort((a, b) => {
+                      const stageLeads = leads.filter(l => (l.status || "New") === stage.id).sort((a, b) => {
                         if (isOverdue(a) && !isOverdue(b)) return -1;
                         if (!isOverdue(a) && isOverdue(b)) return 1;
                         return scoreLead(b) - scoreLead(a);
@@ -21902,9 +21815,6 @@ export default function AdminPanel() {
                           </select>
                         </div>
                         {/* Duplicate email warning */}
-                        {addLeadForm.phone && leads.some(l => l.phone && l.phone.replace(/D/g,"") === addLeadForm.phone.replace(/D/g,"") && addLeadForm.phone.replace(/D/g,"").length > 6) && (
-                          <div style={{ fontSize: 10, color: T.red, marginTop: 4 }}>A lead with this phone already exists.</div>
-                        )}
                         {addLeadForm.email && leads.some(l => l.email && l.email.toLowerCase() === addLeadForm.email.toLowerCase()) && (
                           <div style={{ gridColumn: "1/-1", padding: "10px 14px", borderRadius: 8, background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.3)", display: "flex", alignItems: "center", gap: 8 }}>
                             <span style={{ fontSize: 14 }}>⚠️</span>
@@ -22054,12 +21964,9 @@ export default function AdminPanel() {
                                     onBlur={async e => {
                                       try {
                                         const activity = [...(leadDrawer.activity || []), { type: "edit", by: adminUser?.email || "admin", at: new Date().toISOString(), note: `${field.label} updated` }];
-                                        const freshDoc = await getDoc(doc(db, "leads", leadDrawer.id));
-                                        if (freshDoc.exists() && freshDoc.data().updatedAt && freshDoc.data().updatedAt > leadDrawer.updatedAt) { notify("Warning: Lead was modified by another admin — refresh to see latest"); return; }
                                         await setDoc(doc(db, "leads", leadDrawer.id), { [field.key]: e.target.value, activity, updatedAt: new Date().toISOString() }, { merge: true });
                                         notify(`${field.label} saved`);
-                                        setLeads(prev => prev.map(l => l.id === leadDrawer.id ? { ...l, [field.key]: e.target.value, activity } : l));
-                                        try { localStorage.removeItem("dxb_leads_v6"); localStorage.removeItem("dxb_leads_v6_ts"); } catch {}
+                                        fetchLeads();
                                       } catch { notify("Error saving"); }
                                     }}
                                     style={{ width: "100%", padding: "8px 10px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 6, color: T.white, fontSize: 12, fontFamily: "'Outfit',sans-serif", boxSizing: "border-box" }}
@@ -22077,8 +21984,7 @@ export default function AdminPanel() {
                                     const activity = [...(leadDrawer.activity || []), { type: "edit", by: adminUser?.email || "admin", at: new Date().toISOString(), note: "Nationality updated" }];
                                     await setDoc(doc(db, "leads", leadDrawer.id), { nationality: e.target.value, activity, updatedAt: new Date().toISOString() }, { merge: true });
                                     notify("Nationality saved");
-                                    setLeads(prev => prev.map(l => l.id === leadDrawer.id ? { ...l, nationality: e.target.value, activity } : l));
-                                    try { localStorage.removeItem("dxb_leads_v6"); localStorage.removeItem("dxb_leads_v6_ts"); } catch {}
+                                    fetchLeads();
                                   } catch { notify("Error saving"); }
                                 }}
                                 style={{ width: "100%", padding: "8px 10px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 6, color: leadDrawer.nationality ? T.white : T.textMuted, fontSize: 12, fontFamily: "'Outfit',sans-serif" }}>
@@ -22211,7 +22117,7 @@ export default function AdminPanel() {
                           </div>
                           <button type="button" onClick={async () => {
                             if (!window.confirm(`Delete lead "${leadDrawer.name || leadDrawer.email}"?`)) return;
-                            try { await deleteDoc(doc(db, "leads", leadDrawer.id)); notify("Lead deleted"); setLeads(prev => prev.filter(l => l.id !== leadDrawer.id)); try { localStorage.removeItem("dxb_leads_v6"); localStorage.removeItem("dxb_leads_v6_ts"); } catch {} setLeadDrawer(null); } catch (e) { notify("Error: " + e.message); }
+                            try { await deleteDoc(doc(db, "leads", leadDrawer.id)); notify("Lead deleted"); setLeadDrawer(null); fetchLeads(); } catch (e) { notify("Error: " + e.message); }
                           }} style={{ width: "100%", padding: "10px", borderRadius: 8, border: `1px solid rgba(239,68,68,0.3)`, background: "rgba(239,68,68,0.08)", color: T.red, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
                             Delete Lead
                           </button>
@@ -22251,8 +22157,8 @@ export default function AdminPanel() {
             // Filter + sort (FIFO - oldest pending first)
             const filtered = verifications.filter(v => {
               if (verifySubTab === "history" && v.status === "pending") return false;
-              if (verifySubTab === "queue" && v.status !== "pending") return false;
-              if (verifySubTab === "history" && verifyFilter !== "all" && v.status !== verifyFilter) return false;
+              if (verifySubTab === "queue" && v.status !== "pending" && verifyFilter === "all") return v.status === "pending";
+              if (verifyFilter !== "all" && v.status !== verifyFilter) return false;
               if (verifySearch && !((v.name || "").toLowerCase().includes(verifySearch.toLowerCase()) || (v.email || "").toLowerCase().includes(verifySearch.toLowerCase()))) return false;
               return true;
             }).sort((a, b) => {
@@ -22648,8 +22554,8 @@ export default function AdminPanel() {
                 const monthEnd = new Date(now); monthEnd.setMonth(monthEnd.getMonth() - i);
                 const monthStart = new Date(monthEnd); monthStart.setMonth(monthStart.getMonth() - 1);
                 const label = monthEnd.toLocaleString("en", { month: "short" });
-                const proCount = users.filter(u => { try { if (new Date(u.createdAt) > monthEnd) return false; const changes = auditLog.filter(l => l.uid === u.uid && l.action === "tier_change" && new Date(l.changedAt) <= monthEnd).sort((a,b) => new Date(b.changedAt) - new Date(a.changedAt)); const tier = changes.length > 0 ? changes[0].to : u.tier; return tier === "pro"; } catch { return false; } }).length;
-                const entCount = users.filter(u => { try { if (new Date(u.createdAt) > monthEnd) return false; const changes = auditLog.filter(l => l.uid === u.uid && l.action === "tier_change" && new Date(l.changedAt) <= monthEnd).sort((a,b) => new Date(b.changedAt) - new Date(a.changedAt)); const tier = changes.length > 0 ? changes[0].to : u.tier; return tier === "enterprise"; } catch { return false; } }).length;
+                const proCount = users.filter(u => { try { const d = new Date(u.createdAt); return d <= monthEnd && (u.tier === "pro" || (u.tier === "free" && u.trialEnd && new Date(u.trialEnd) > monthEnd)); } catch { return false; } }).length;
+                const entCount = users.filter(u => { try { return new Date(u.createdAt) <= monthEnd && u.tier === "enterprise"; } catch { return false; } }).length;
                 const proMRR = proCount * 99;
                 const entMRR = entCount * 499;
                 months.push({ label, mrr: proMRR + entMRR, pro: proMRR, enterprise: entMRR, proCount, entCount });

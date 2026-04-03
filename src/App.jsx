@@ -1,100 +1,88 @@
-﻿/**
- * DXB ANALYTICS — App.jsx
- *
- * DXBProvider wraps the entire app — Dashboard, Admin, Landing all share
- * the same live Firestore state. No data is fetched twice.
- *
- * Iron Rule: NEVER run npx vercel --prod — use git push only
- */
-
-import React, { Suspense } from "react";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { DXBProvider, useDXB } from "./context/DXBContext";
+import React, { useEffect, useState } from "react";
+import { BrowserRouter, Routes, Route, Navigate, useNavigate, useParams } from "react-router-dom";
+import { onAuthStateChanged } from "firebase/auth";
+import { doc, getDoc } from "firebase/firestore";
+import { auth, db } from "./firebase";
+import EmaarDashboardV2 from "./EmaarDashboardV2";
+import AdminPanel from "./AdminPanel";
+import ProjectManager from "./ProjectManager";
+import LandingPage from "./LandingPage";
+import Terms from "./Terms";
+import Privacy from "./Privacy";
+import ErrorBoundary from "./ErrorBoundary";
+import UserGuard from "./UserGuard";
+import NotFound from "./NotFound";
 import { I18nProvider } from "./i18n";
-
-// Lazy-load heavy pages for faster initial paint
-const EmaarDashboardV2 = React.lazy(() => import("./EmaarDashboardV2"));
-const AdminPanel        = React.lazy(() => import("./AdminPanel"));
-const Terms             = React.lazy(() => import("./Terms"));
-const Privacy           = React.lazy(() => import("./Privacy"));
-
-// Preload Dashboard and Admin immediately — eliminates flash when switching
-const _preloadDashboard = import("./EmaarDashboardV2");
-const _preloadAdmin     = import("./AdminPanel");
-
-// Full-screen loading fallback — original DXB Analytics logo
-function PageLoader() {
-  return (
-    <div style={{
-      minHeight: "100vh", display: "flex", alignItems: "center",
-      justifyContent: "center", background: "#04090F",
-    }}>
-      <div style={{ textAlign: "center" }}>
-        <div style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", marginBottom: 16 }}>
-          <svg width="48" height="48" viewBox="0 0 40 40">
-            <rect x="2" y="2" width="36" height="36" rx="8" fill="none" stroke="#D4A843" strokeWidth="2" />
-            <path d="M12 28V12h10l-6 8h8l-12 8z" fill="#D4A843" />
-          </svg>
-        </div>
-        <div style={{ fontFamily: "serif", fontSize: 22, fontWeight: 900, color: "#D4A843", letterSpacing: -0.5, marginBottom: 4 }}>
-          DXB Analytics
-        </div>
-        <div style={{ fontSize: 11, color: "#64748B", letterSpacing: 2, textTransform: "uppercase" }}>
-          Dubai Real Estate Intelligence
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// AdminRoute — only superAdmin/admin can access /admin
-function AdminRoute() {
-  const { adminMode, authLoading, isLoggedIn } = useDXB();
-  // Wait for auth only — profile loads async, adminMode recalculates when it arrives
-  if (authLoading) return <PageLoader />;
-  if (!isLoggedIn) return <Navigate to="/dashboard" replace />;
-  // Give profile 3 seconds to load before deciding
-  if (!adminMode) return <Navigate to="/dashboard" replace />;
-  return (
-    <Suspense fallback={null}>
-      <AdminPanel />
-    </Suspense>
-  );
+const Spinner = () => (
+  <div style={{ minHeight: "100vh", background: "#04090F", display: "flex", alignItems: "center", justifyContent: "center" }}>
+    <div style={{ width: 24, height: 24, border: "2px solid rgba(212,168,67,0.3)", borderTopColor: "#D4A843", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
+    <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+  </div>
+);
+function AuthGuard({ children }) {
+  const [status, setStatus] = useState("loading");
+  useEffect(() => {
+    const unsub = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (!firebaseUser) { setStatus("denied"); return; }
+      try {
+        const snap = await getDoc(doc(db, "users", firebaseUser.uid));
+        const data = snap.exists() ? snap.data() : {};
+        setStatus(data.role === "admin" || data.role === "superAdmin" || data.superAdmin === true ? "allowed" : "denied");
+      } catch {
+        setStatus("denied");
+      }
+    });
+    return () => unsub();
+  }, []);
+  if (status === "loading") return <Spinner />;
+  if (status === "denied") return <Navigate to="/" replace />;
+  return children;
 }
 function HomeRoute() {
-  return <Navigate to="/dashboard" replace />;
-}
-
-function DashboardRoute() {
-  const { authLoading } = useDXB();
-  if (authLoading) return <PageLoader />;
+  const [status, setStatus] = useState("loading");
+  const navigate = useNavigate();
+  useEffect(() => {
+    const unsub = onAuthStateChanged(auth, (firebaseUser) => {
+      setStatus(firebaseUser ? "loggedin" : "guest");
+    });
+    return () => unsub();
+  }, []);
+  if (status === "loading") return <Spinner />;
+  if (status === "loggedin") return <Navigate to="/dashboard" replace />;
   return (
-    <Suspense fallback={<PageLoader />}>
-      <EmaarDashboardV2 />
-    </Suspense>
+    <LandingPage
+      onLoginClick={() => navigate("/dashboard?auth=login")}
+      onSignUpClick={() => navigate("/dashboard?auth=signup")}
+    />
   );
 }
-
+function ProjectRedirect() {
+  const navigate = useNavigate();
+  const { id } = useParams();
+  useEffect(() => {
+    navigate("/dashboard", { state: { openProjectId: id }, replace: true });
+  }, [id, navigate]);
+  return <Spinner />;
+}
 function App() {
   return (
-    <BrowserRouter>
-      {/* DXBProvider wraps everything — one data load for the whole app */}
+    <ErrorBoundary>
       <I18nProvider>
-      <DXBProvider>
-        <Suspense fallback={<PageLoader />}>
+        <BrowserRouter>
           <Routes>
-            <Route path="/"          element={<HomeRoute />} />
-            <Route path="/dashboard" element={<DashboardRoute />} />
-            <Route path="/admin"     element={<AdminRoute />} />
-            <Route path="/terms"     element={<Terms />} />
-            <Route path="/privacy"   element={<Privacy />} />
-            <Route path="*"          element={<Navigate to="/" replace />} />
+            <Route path="/" element={<HomeRoute />} />
+            <Route path="/dashboard" element={<UserGuard><EmaarDashboardV2 /></UserGuard>} />
+            <Route path="/admin" element={<AuthGuard><AdminPanel /></AuthGuard>} />
+            <Route path="/manage" element={<AuthGuard><ProjectManager /></AuthGuard>} />
+            <Route path="/project/:id" element={<ProjectRedirect />} />
+            <Route path="/terms" element={<Terms />} />
+            <Route path="/privacy" element={<Privacy />} />
+            <Route path="*" element={<NotFound />} />
           </Routes>
-        </Suspense>
-      </DXBProvider>
+        </BrowserRouter>
       </I18nProvider>
-    </BrowserRouter>
+    </ErrorBoundary>
   );
 }
-
 export default App;
+
