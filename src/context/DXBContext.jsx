@@ -1,4 +1,4 @@
-/**
+﻿/**
  * DXB ANALYTICS — UNIFIED CONTEXT
  * src/context/DXBContext.jsx
  *
@@ -85,6 +85,8 @@ export function DXBProvider({ children }) {
   const [userEmail, setUserEmail]         = useState("");
   const [userTier, setUserTier]           = useState(() => sessionStorage.getItem("dxb_tier") || "free");
   const [userRole, setUserRole]           = useState(() => sessionStorage.getItem("dxb_role") || "user");
+  const [orgId, setOrgId]                 = useState(() => sessionStorage.getItem("dxb_org") || null);
+  const [orgRole, setOrgRole]             = useState(() => sessionStorage.getItem("dxb_orgrole") || null);
   const [profileLoaded, setProfileLoaded] = useState(() => !!sessionStorage.getItem("dxb_role"));
   const [authLoading, setAuthLoading]     = useState(() => !sessionStorage.getItem("dxb_role"));
   const [isSuspended, setIsSuspended]     = useState(false);
@@ -188,7 +190,7 @@ export function DXBProvider({ children }) {
     }),
     ...extraProjects.filter(p =>
       !emaarBaseNames.has((p.name || "").toLowerCase().trim()) &&
-      (!p.developerId || p.developerId === "emaar")
+      (p.developerId === "emaar")
     ),
   ], [emaarProjects, liveProjects, extraProjects, emaarBaseNames]);
 
@@ -212,6 +214,24 @@ export function DXBProvider({ children }) {
     meraas:    getDevProjects("meraas",    "Meraas"),
     aldar:     getDevProjects("aldar",     "Aldar Properties"),
     binghatti: getDevProjects("binghatti", "Binghatti"),
+    // Session 1
+    azizi:     getDevProjects("azizi",     "Azizi Developments"),
+    danube:    getDevProjects("danube",    "Danube Properties"),
+    samana:    getDevProjects("samana",    "Samana Developers"),
+    // Session 2
+    beyond:    getDevProjects("beyond",    "Beyond Developments"),
+    imtiaz:    getDevProjects("imtiaz",    "Imtiaz Developments"),
+    ellington: getDevProjects("ellington", "Ellington Properties"),
+    iman:      getDevProjects("iman",      "Iman Developers"),
+    reportage: getDevProjects("reportage", "Reportage Properties"),
+    wadan:     getDevProjects("wadan",     "Wadan Developments"),
+    wasl:      getDevProjects("wasl",      "Wasl Properties"),
+    mag:       getDevProjects("mag",       "MAG Group"),
+    vincitore: getDevProjects("vincitore", "Vincitore"),
+    nshama:    getDevProjects("nshama",    "Nshama"),
+    omniyat:   getDevProjects("omniyat",   "Omniyat"),
+    pantheon:  getDevProjects("pantheon",  "Pantheon Development"),
+    select:    getDevProjects("select",    "Select Group"),
   }), [emaarActiveProjects, getDevProjects]);
 
   const activeProjects = React.useMemo(() => {
@@ -244,7 +264,7 @@ export function DXBProvider({ children }) {
     }));
 
     // Merge: existing static projects + DLD projects (deduplicate by name)
-    const existingNames = new Set((projectsByDeveloper[selectedDeveloper] || emaarActiveProjects).map(p => p.name.toLowerCase()));
+    const existingNames = new Set((projectsByDeveloper[selectedDeveloper] || []).map(p => p.name.toLowerCase()));
     const newDLDProjects = dldNormalized.filter(p =>
       !existingNames.has(p.name.toLowerCase()) &&
       (selectedDeveloper === 'all' || p.developerId === selectedDeveloper)
@@ -258,8 +278,8 @@ export function DXBProvider({ children }) {
     }
 
     return [
-      ...(projectsByDeveloper[selectedDeveloper] || emaarActiveProjects),
-      ...newDLDProjects,
+      ...(projectsByDeveloper[selectedDeveloper] || []),
+      // DLD projects excluded from project cards - used for stats only
     ];
   }, [selectedDeveloper, projectsByDeveloper, emaarActiveProjects]);
   const currentDeveloper = developerById[selectedDeveloper] || developerById["emaar"];
@@ -302,9 +322,13 @@ export function DXBProvider({ children }) {
         setUserEmail("");
         setUserTier("free");
         setUserRole("user");
+        setOrgId(null);
+        setOrgRole(null);
         setAuthLoading(false);
         sessionStorage.removeItem("dxb_role");
         sessionStorage.removeItem("dxb_tier");
+        sessionStorage.removeItem("dxb_org");
+        sessionStorage.removeItem("dxb_orgrole");
         // Clean up user listeners
         userUnsubsRef.current.forEach(u => u());
         userUnsubsRef.current = [];
@@ -326,6 +350,8 @@ export function DXBProvider({ children }) {
         setUserName(data.name || fbUser.displayName || "");
         setUserTier(data.tier || "free");
         setUserRole(data.role || (data.tier === "admin" || data.tier === "enterprise" || data.superAdmin ? "superAdmin" : "user"));
+        setOrgId(data.orgId || null);
+        setOrgRole(data.orgRole || null);
         setIsSuspended(data.suspended === true);
         setIsVerified(data.kycStatus === "approved");
         setVerifiedLevel(data.verifiedLevel || null);
@@ -335,6 +361,8 @@ export function DXBProvider({ children }) {
         // Cache for instant subsequent loads
         sessionStorage.setItem("dxb_role", data.role || (data.tier === "admin" || data.tier === "enterprise" || data.superAdmin ? "superAdmin" : "user"));
         sessionStorage.setItem("dxb_tier", data.tier || "free");
+        if (data.orgId) sessionStorage.setItem("dxb_org", data.orgId);
+        if (data.orgRole) sessionStorage.setItem("dxb_orgrole", data.orgRole);
 
         // Trial days left
         if (data.tier === "pro_trial" && data.trialEnd) {
@@ -391,7 +419,7 @@ export function DXBProvider({ children }) {
         const data = { ...d.data(), id: d.id, fromFirestore: true };
         if (data.developerId === "emaar" && baseIds.has(String(data.id?.toString().replace("emaar_", "")))) return;
         if (data.developerId === "emaar" && baseNames.has((data.name || "").toLowerCase().trim())) return;
-        if (!baseIds.has(String(data.id))) fsProjects.push(data);
+        if (!baseIds.has(String(data.id)) && !data.fromDLD && data.developerId === selectedDeveloper) fsProjects.push(data);
       });
       setExtraProjects(prev => {
         const overridesOnly = prev.filter(p => !p.fromFirestore);
@@ -680,7 +708,7 @@ export function DXBProvider({ children }) {
   const value = {
     // ── Auth
     isLoggedIn, firebaseUser, userName, userEmail,
-    userTier, userRole, adminMode,
+    userTier, userRole, adminMode, orgId, orgRole,
     authLoading, profileLoaded, isSuspended, isVerified, verifiedLevel,
     kycStatus, trialDaysLeft,
 
@@ -738,3 +766,4 @@ export function DXBProvider({ children }) {
 }
 
 export default DXBContext;
+// rebuild 12:08:47

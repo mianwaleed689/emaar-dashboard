@@ -3252,7 +3252,7 @@ export default function EmaarDashboardV2() {
                       const invColor = inv.score>=8?T.green:inv.score>=6?T.gold:inv.score>=4?"#F59E0B":T.red||"#EF4444";
                       const statusColor = p.status==="Ready"||p.status==="Delivered"||p.status==="Completed"?T.green:p.status==="Under Construction"?T.green:"#3B82F6";
                       const constrColor = p.construction>=90?T.green:p.construction>=60?T.gold:"#F59E0B";
-                      const handInfo = p.handover?getHandoverInfo(new Date(p.handover.replace("Q1","Jan").replace("Q2","Apr").replace("Q3","Jul").replace("Q4","Oct")+" 1, "+new Date().getFullYear())):null;
+                      const handInfo = p.handover ? getHandoverCountdown(p.handover) : null;
                       return (
                         <div key={p.id||i}
                           onClick={()=>setSelectedProject(p)}

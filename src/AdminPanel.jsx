@@ -14903,6 +14903,7 @@ export default function AdminPanel() {
     { id: "overview", label: "Overview", icon: I.overview },
     { id: "auditlog", label: "Audit Log", icon: I.overview },
     { id: "users", label: "Users", icon: I.users },
+    { id: "orgs", label: "Organisations", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg> },
     { id: "revenue", label: "Revenue", icon: I.revenue },
     { id: "data", label: "Data Manager", icon: I.data },
     { id: "leads", label: "Leads", icon: I.leads },
@@ -17182,7 +17183,49 @@ export default function AdminPanel() {
           {/* ═══════════════════════════════════════════════════════
               LEADS TAB
               ═══════════════════════════════════════════════════════ */}
-          {tab === "leads" && (() => {
+          
+          {/* ══════════════════════════════════════════════
+              ORGANISATIONS TAB — Session 2 will build this
+              Foundation stub: structure is ready
+          ══════════════════════════════════════════════ */}
+          {tab === "orgs" && (
+            <div style={{ padding: "0 0 40px" }}>
+              <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:24, flexWrap:"wrap", gap:12 }}>
+                <div>
+                  <h1 style={{ fontSize:22, fontWeight:900, fontFamily:"'Fraunces',serif", color:T.white, margin:0 }}>Organisations</h1>
+                  <p style={{ fontSize:12, color:T.textMuted||"#64748B", margin:"4px 0 0" }}>Manage agencies, assign roles, control access · Built in Session 2</p>
+                </div>
+                <div style={{ display:"flex", alignItems:"center", gap:8, fontSize:11, color:"#F59E0B", background:"rgba(245,158,11,0.08)", padding:"8px 16px", borderRadius:20, border:"1px solid rgba(245,158,11,0.2)" }}>
+                  🔒 Session 2 — Coming soon
+                </div>
+              </div>
+
+              {/* Placeholder cards showing what Session 2 will build */}
+              <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(280px,1fr))", gap:12, marginBottom:24 }}>
+                {[
+                  { icon:"🏢", title:"Agency Accounts",     desc:"Create and manage agency profiles, subscription plans, and billing status" },
+                  { icon:"👥", title:"Agent Roster",        desc:"Assign agents to agencies, set roles (manager/agent), track RERA cards" },
+                  { icon:"🔑", title:"Role-Based Access",   desc:"Control what each role sees: superadmin / manager / agent / investor" },
+                  { icon:"📊", title:"Org Analytics",       desc:"Per-agency performance: leads, deals, conversion, revenue contribution" },
+                ].map((card, i) => (
+                  <div key={i} style={{ background:"rgba(255,255,255,0.02)", border:"1px solid rgba(255,255,255,0.06)", borderRadius:12, padding:20, opacity:0.6 }}>
+                    <div style={{ fontSize:24, marginBottom:10 }}>{card.icon}</div>
+                    <div style={{ fontSize:14, fontWeight:700, color:T.white||"#F8FAFC", marginBottom:6 }}>{card.title}</div>
+                    <div style={{ fontSize:11, color:T.textMuted||"#64748B", lineHeight:1.6 }}>{card.desc}</div>
+                  </div>
+                ))}
+              </div>
+
+              <div style={{ background:"rgba(245,158,11,0.06)", border:"1px solid rgba(245,158,11,0.2)", borderRadius:12, padding:20, textAlign:"center" }}>
+                <div style={{ fontSize:13, color:"#F59E0B", fontWeight:600, marginBottom:6 }}>Session 2 — Organisation Management</div>
+                <div style={{ fontSize:11, color:T.textMuted||"#64748B" }}>
+                  Full agency creation, agent assignment, role-based access control, and subscription management will be built here in Session 2 of the 18-session roadmap.
+                </div>
+              </div>
+            </div>
+          )}
+
+{tab === "leads" && (() => {
   /*
   ╔══════════════════════════════════════════════════════════════════
   ║  DXB ANALYTICS — LEADS CRM  v3  (Clean Professional Rebuild)
