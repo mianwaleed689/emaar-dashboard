@@ -12719,6 +12719,15 @@ export default function AdminPanel() {
   const [verifications, setVerifications] = useState([]);
   const [leads, setLeads] = useState([]);
   const [leadsLoading, setLeadsLoading] = useState(false);
+
+  /* ─── ORGANISATIONS STATE (Session 2) ─── */
+  const [orgs, setOrgs] = useState([]);
+  const [orgsLoading, setOrgsLoading] = useState(false);
+  const [showCreateOrg, setShowCreateOrg] = useState(false);
+  const [orgForm, setOrgForm] = useState({ name:"", type:"Agency", plan:"free", ownerId:"", ownerEmail:"", reraNo:"", tradeLicense:"", phone:"", city:"Dubai", notes:"" });
+  const [orgFormLoading, setOrgFormLoading] = useState(false);
+  const [orgSearch, setOrgSearch] = useState("");
+  const [selectedOrg, setSelectedOrg] = useState(null);
   
   /* ─── LEADS CRM STATE ─── */
   const [leadDrawer, setLeadDrawer] = useState(null); // lead object or null
@@ -13109,6 +13118,82 @@ export default function AdminPanel() {
     } catch (e) { fetchVerifications(); }
     return () => { if (unsub) unsub(); };
   }, [isAdmin, fetchVerifications]);
+
+  /* ─── ORGANISATIONS LISTENER (Session 2) ─── */
+  useEffect(() => {
+    if (!isAdmin) return;
+    setOrgsLoading(true);
+    const unsub = onSnapshot(
+      query(collection(db, "organisations"), orderBy("createdAt", "desc")),
+      (snap) => {
+        const list = [];
+        snap.forEach(d => list.push({ id: d.id, ...d.data() }));
+        setOrgs(list);
+        setOrgsLoading(false);
+      },
+      (err) => { console.warn("[Orgs]", err); setOrgsLoading(false); }
+    );
+    return () => unsub();
+  }, [isAdmin]);
+
+  const createOrg = async () => {
+    if (!orgForm.name.trim()) { notify("Organisation name is required"); return; }
+    setOrgFormLoading(true);
+    try {
+      const orgId = "org_" + orgForm.name.toLowerCase().replace(/[^a-z0-9]/g, "_").slice(0, 20) + "_" + Date.now().toString(36);
+      const now = new Date().toISOString();
+      await setDoc(doc(db, "organisations", orgId), {
+        orgId,
+        name: orgForm.name.trim(),
+        type: orgForm.type || "Agency",
+        plan: orgForm.plan || "free",
+        ownerId: orgForm.ownerId.trim() || null,
+        ownerEmail: orgForm.ownerEmail.trim() || null,
+        reraNo: orgForm.reraNo.trim() || null,
+        tradeLicense: orgForm.tradeLicense.trim() || null,
+        phone: orgForm.phone.trim() || null,
+        city: orgForm.city || "Dubai",
+        notes: orgForm.notes.trim() || null,
+        agentCount: 0,
+        leadCount: 0,
+        status: "active",
+        createdAt: now,
+        updatedAt: now,
+        createdBy: auth.currentUser?.email || "admin",
+      });
+      await logAudit(db, { action: "org_created", orgId, orgName: orgForm.name });
+      notify("✅ Organisation created — " + orgForm.name);
+      setShowCreateOrg(false);
+      setOrgForm({ name:"", type:"Agency", plan:"free", ownerId:"", ownerEmail:"", reraNo:"", tradeLicense:"", phone:"", city:"Dubai", notes:"" });
+    } catch(e) { notify("Error: " + e.message); }
+    setOrgFormLoading(false);
+  };
+
+  const deleteOrg = async (org) => {
+    if (!window.confirm(`Delete "${org.name}"? This cannot be undone.`)) return;
+    try {
+      await deleteDoc(doc(db, "organisations", org.id));
+      await logAudit(db, { action: "org_deleted", orgId: org.id, orgName: org.name });
+      notify("Organisation deleted");
+      if (selectedOrg?.id === org.id) setSelectedOrg(null);
+    } catch(e) { notify("Error: " + e.message); }
+  };
+
+  const updateOrgPlan = async (orgId, plan) => {
+    try {
+      await setDoc(doc(db, "organisations", orgId), { plan, updatedAt: new Date().toISOString() }, { merge: true });
+      await logAudit(db, { action: "org_plan_changed", orgId, plan });
+      notify("Plan updated → " + plan);
+    } catch(e) { notify("Error: " + e.message); }
+  };
+
+  const updateOrgStatus = async (orgId, status) => {
+    try {
+      await setDoc(doc(db, "organisations", orgId), { status, updatedAt: new Date().toISOString() }, { merge: true });
+      await logAudit(db, { action: "org_status_changed", orgId, status });
+      notify("Status updated → " + status);
+    } catch(e) { notify("Error: " + e.message); }
+  };
 
   const fetchLeads = useCallback(async (forceRefresh = false) => {
     setLeadsLoading(true);
@@ -17242,44 +17327,204 @@ export default function AdminPanel() {
               ORGANISATIONS TAB — Session 2 will build this
               Foundation stub: structure is ready
           ══════════════════════════════════════════════ */}
-          {tab === "orgs" && (
-            <div style={{ padding: "0 0 40px" }}>
+          {{tab === "orgs" && (
+            <div style={{ padding:"0 0 40px" }}>
+
+              {/* ── Header ── */}
               <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:24, flexWrap:"wrap", gap:12 }}>
                 <div>
                   <h1 style={{ fontSize:22, fontWeight:900, fontFamily:"'Fraunces',serif", color:T.white, margin:0 }}>Organisations</h1>
-                  <p style={{ fontSize:12, color:T.textMuted||"#64748B", margin:"4px 0 0" }}>Manage agencies, assign roles, control access · Built in Session 2</p>
+                  <p style={{ fontSize:12, color:T.textMuted, margin:"4px 0 0" }}>{orgs.length} organisations · Agencies, brokerages, and partner firms</p>
                 </div>
-                <div style={{ display:"flex", alignItems:"center", gap:8, fontSize:11, color:"#F59E0B", background:"rgba(245,158,11,0.08)", padding:"8px 16px", borderRadius:20, border:"1px solid rgba(245,158,11,0.2)" }}>
-                  🔒 Session 2 — Coming soon
+                <div style={{ display:"flex", gap:8 }}>
+                  <input value={orgSearch} onChange={e=>setOrgSearch(e.target.value)} placeholder="Search organisations..."
+                    style={{ padding:"9px 14px", background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:8, color:T.textPrimary, fontSize:12, fontFamily:"'Outfit',sans-serif", outline:"none", width:220 }}/>
+                  <button type="button" onClick={()=>setShowCreateOrg(true)}
+                    style={{ padding:"9px 18px", borderRadius:8, border:`1px solid ${T.gold}`, background:"rgba(212,168,67,0.1)", color:T.gold, fontSize:12, fontWeight:700, cursor:"pointer", whiteSpace:"nowrap", display:"flex", alignItems:"center", gap:6 }}>
+                    + New Organisation
+                  </button>
                 </div>
               </div>
 
-              {/* Placeholder cards showing what Session 2 will build */}
-              <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(280px,1fr))", gap:12, marginBottom:24 }}>
+              {/* ── KPI Bar ── */}
+              <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:10, marginBottom:20 }}>
                 {[
-                  { icon:"🏢", title:"Agency Accounts",     desc:"Create and manage agency profiles, subscription plans, and billing status" },
-                  { icon:"👥", title:"Agent Roster",        desc:"Assign agents to agencies, set roles (manager/agent), track RERA cards" },
-                  { icon:"🔑", title:"Role-Based Access",   desc:"Control what each role sees: superadmin / manager / agent / investor" },
-                  { icon:"📊", title:"Org Analytics",       desc:"Per-agency performance: leads, deals, conversion, revenue contribution" },
-                ].map((card, i) => (
-                  <div key={i} style={{ background:"rgba(255,255,255,0.02)", border:"1px solid rgba(255,255,255,0.06)", borderRadius:12, padding:20, opacity:0.6 }}>
-                    <div style={{ fontSize:24, marginBottom:10 }}>{card.icon}</div>
-                    <div style={{ fontSize:14, fontWeight:700, color:T.white||"#F8FAFC", marginBottom:6 }}>{card.title}</div>
-                    <div style={{ fontSize:11, color:T.textMuted||"#64748B", lineHeight:1.6 }}>{card.desc}</div>
+                  { label:"Total Orgs",    value:orgs.length,                                                   color:T.gold },
+                  { label:"Active",        value:orgs.filter(o=>o.status==="active").length,                    color:T.green },
+                  { label:"Pro Plan",      value:orgs.filter(o=>o.plan==="pro"||o.plan==="enterprise").length,  color:T.teal },
+                  { label:"Total Agents",  value:orgs.reduce((a,o)=>a+(o.agentCount||0),0),                    color:"#8B5CF6" },
+                ].map((k,i) => (
+                  <div key={i} style={{ background:T.card, border:`1px solid ${T.border}`, borderRadius:12, padding:"14px 16px", position:"relative", overflow:"hidden" }}>
+                    <div style={{ position:"absolute", top:0, left:0, right:0, height:3, background:`linear-gradient(90deg,${k.color},${k.color}40)` }}/>
+                    <div style={{ fontSize:10, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.8, marginBottom:4 }}>{k.label}</div>
+                    <div style={{ fontSize:28, fontWeight:900, color:k.color, fontFamily:"'Fraunces',serif", lineHeight:1 }}>{k.value}</div>
                   </div>
                 ))}
               </div>
 
-              <div style={{ background:"rgba(245,158,11,0.06)", border:"1px solid rgba(245,158,11,0.2)", borderRadius:12, padding:20, textAlign:"center" }}>
-                <div style={{ fontSize:13, color:"#F59E0B", fontWeight:600, marginBottom:6 }}>Session 2 — Organisation Management</div>
-                <div style={{ fontSize:11, color:T.textMuted||"#64748B" }}>
-                  Full agency creation, agent assignment, role-based access control, and subscription management will be built here in Session 2 of the 18-session roadmap.
+              {/* ── Org Cards ── */}
+              {orgsLoading ? (
+                <div style={{ textAlign:"center", padding:40, color:T.textMuted }}>Loading organisations...</div>
+              ) : orgs.filter(o=>!orgSearch||o.name?.toLowerCase().includes(orgSearch.toLowerCase())||o.ownerEmail?.toLowerCase().includes(orgSearch.toLowerCase())).length === 0 ? (
+                <div style={{ textAlign:"center", padding:60, color:T.textMuted }}>
+                  <div style={{ fontSize:32, marginBottom:12 }}>🏢</div>
+                  <div style={{ fontSize:15, fontWeight:600, marginBottom:6 }}>{orgSearch ? "No organisations match" : "No organisations yet"}</div>
+                  <div style={{ fontSize:12, marginBottom:20 }}>Create your first agency account to get started</div>
+                  <button type="button" onClick={()=>setShowCreateOrg(true)}
+                    style={{ padding:"10px 24px", borderRadius:8, border:`1px solid ${T.gold}`, background:"rgba(212,168,67,0.1)", color:T.gold, fontSize:12, fontWeight:700, cursor:"pointer" }}>
+                    + Create Organisation
+                  </button>
                 </div>
-              </div>
+              ) : (
+                <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(340px,1fr))", gap:12 }}>
+                  {orgs.filter(o=>!orgSearch||o.name?.toLowerCase().includes(orgSearch.toLowerCase())||o.ownerEmail?.toLowerCase().includes(orgSearch.toLowerCase())).map((org,i) => {
+                    const planColor = org.plan==="enterprise"?"#8B5CF6":org.plan==="pro"?T.teal:T.textMuted;
+                    const statusColor = org.status==="active"?T.green:org.status==="suspended"?T.red:"#F59E0B";
+                    return (
+                      <div key={org.id||i} style={{ background:T.card, border:`1px solid ${T.border}`, borderRadius:14, overflow:"hidden", transition:"all 0.15s" }}
+                        onMouseEnter={e=>{e.currentTarget.style.borderColor=`${T.gold}60`;e.currentTarget.style.boxShadow=`0 8px 32px rgba(212,168,67,0.08)`;}}
+                        onMouseLeave={e=>{e.currentTarget.style.borderColor=T.border;e.currentTarget.style.boxShadow="none";}}>
+
+                        {/* Card top accent */}
+                        <div style={{ height:3, background:`linear-gradient(90deg,${planColor},${planColor}40)` }}/>
+
+                        <div style={{ padding:"16px 18px" }}>
+                          {/* Header row */}
+                          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:12 }}>
+                            <div style={{ flex:1 }}>
+                              <div style={{ fontSize:16, fontWeight:700, color:T.gold, fontFamily:"'Fraunces',serif", marginBottom:2 }}>{org.name}</div>
+                              <div style={{ fontSize:11, color:T.textMuted }}>{org.type||"Agency"} · {org.city||"Dubai"}</div>
+                            </div>
+                            <div style={{ display:"flex", gap:5, flexShrink:0 }}>
+                              <span style={{ fontSize:9, padding:"3px 8px", borderRadius:20, background:`${planColor}18`, color:planColor, fontWeight:700, textTransform:"uppercase" }}>{org.plan||"free"}</span>
+                              <span style={{ fontSize:9, padding:"3px 8px", borderRadius:20, background:`${statusColor}18`, color:statusColor, fontWeight:700 }}>{org.status||"active"}</span>
+                            </div>
+                          </div>
+
+                          {/* Stats row */}
+                          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:6, marginBottom:12 }}>
+                            {[
+                              { label:"Agents",  value:org.agentCount||0 },
+                              { label:"Leads",   value:org.leadCount||0 },
+                              { label:"Plan",    value:org.plan||"free" },
+                            ].map((s,si)=>(
+                              <div key={si} style={{ background:"rgba(255,255,255,0.03)", borderRadius:7, padding:"7px 10px", textAlign:"center" }}>
+                                <div style={{ fontSize:9, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.5, marginBottom:2 }}>{s.label}</div>
+                                <div style={{ fontSize:13, fontWeight:700, color:T.textPrimary }}>{s.value}</div>
+                              </div>
+                            ))}
+                          </div>
+
+                          {/* Info */}
+                          <div style={{ marginBottom:12 }}>
+                            {org.ownerEmail && <div style={{ fontSize:11, color:T.textSecondary, marginBottom:3 }}>👤 {org.ownerEmail}</div>}
+                            {org.reraNo && <div style={{ fontSize:11, color:T.textSecondary, marginBottom:3 }}>🏛 RERA: {org.reraNo}</div>}
+                            {org.tradeLicense && <div style={{ fontSize:11, color:T.textSecondary, marginBottom:3 }}>📋 License: {org.tradeLicense}</div>}
+                            {org.phone && <div style={{ fontSize:11, color:T.textSecondary, marginBottom:3 }}>📞 {org.phone}</div>}
+                            <div style={{ fontSize:10, color:T.textMuted, marginTop:4 }}>
+                              Created {org.createdAt ? new Date(org.createdAt).toLocaleDateString("en-AE",{day:"2-digit",month:"short",year:"numeric"}) : "—"}
+                            </div>
+                          </div>
+
+                          {/* Actions */}
+                          <div style={{ display:"flex", gap:6 }}>
+                            {/* Plan selector */}
+                            <select value={org.plan||"free"} onChange={e=>updateOrgPlan(org.id, e.target.value)}
+                              style={{ flex:1, padding:"6px 8px", background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:7, color:T.textPrimary, fontSize:11, fontFamily:"'Outfit',sans-serif", cursor:"pointer" }}>
+                              <option value="free">Free</option>
+                              <option value="pro">Pro</option>
+                              <option value="enterprise">Enterprise</option>
+                            </select>
+                            {/* Status toggle */}
+                            <button type="button" onClick={()=>updateOrgStatus(org.id, org.status==="active"?"suspended":"active")}
+                              style={{ padding:"6px 10px", borderRadius:7, border:`1px solid ${org.status==="active"?"rgba(239,68,68,0.3)":"rgba(16,185,129,0.3)"}`, background:org.status==="active"?"rgba(239,68,68,0.08)":"rgba(16,185,129,0.08)", color:org.status==="active"?T.red:T.green, fontSize:10, fontWeight:600, cursor:"pointer" }}>
+                              {org.status==="active"?"Suspend":"Activate"}
+                            </button>
+                            {/* Delete */}
+                            <button type="button" onClick={()=>deleteOrg(org)}
+                              style={{ padding:"6px 10px", borderRadius:7, border:`1px solid rgba(239,68,68,0.2)`, background:"rgba(239,68,68,0.06)", color:T.red, fontSize:10, cursor:"pointer" }}>
+                              🗑
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* ── Create Organisation Modal ── */}
+              {showCreateOrg && (
+                <div style={{ position:"fixed", inset:0, background:"rgba(4,9,15,0.85)", zIndex:2000, display:"flex", alignItems:"center", justifyContent:"center", backdropFilter:"blur(8px)" }} onClick={()=>setShowCreateOrg(false)}>
+                  <div style={{ background:T.surface, borderRadius:16, border:`1px solid ${T.border}`, width:"95%", maxWidth:560, maxHeight:"90vh", overflowY:"auto" }} onClick={e=>e.stopPropagation()}>
+                    <div style={{ padding:"24px 24px 0" }}>
+                      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:20 }}>
+                        <h2 style={{ fontFamily:"'Fraunces',serif", fontSize:18, fontWeight:900, color:T.gold, margin:0 }}>New Organisation</h2>
+                        <button type="button" onClick={()=>setShowCreateOrg(false)} style={{ background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:8, color:T.textMuted, width:32, height:32, cursor:"pointer", fontSize:16, display:"flex", alignItems:"center", justifyContent:"center" }}>✕</button>
+                      </div>
+
+                      {/* Form fields */}
+                      {[
+                        { label:"Organisation Name *", key:"name",         type:"text",   placeholder:"e.g. Better Homes Dubai" },
+                        { label:"Owner Email",          key:"ownerEmail",   type:"email",  placeholder:"manager@agency.ae" },
+                        { label:"Owner User ID",        key:"ownerId",      type:"text",   placeholder:"Firebase UID of manager" },
+                        { label:"RERA Number",          key:"reraNo",       type:"text",   placeholder:"RERA-XXXXX" },
+                        { label:"Trade License",        key:"tradeLicense", type:"text",   placeholder:"DED-XXXXXXX" },
+                        { label:"Phone",                key:"phone",        type:"text",   placeholder:"+971 XX XXX XXXX" },
+                        { label:"Notes",                key:"notes",        type:"text",   placeholder:"Any notes about this organisation" },
+                      ].map(({label,key,type,placeholder}) => (
+                        <div key={key} style={{ marginBottom:14 }}>
+                          <div style={{ fontSize:11, color:T.textMuted, marginBottom:5, fontWeight:600, letterSpacing:0.3 }}>{label}</div>
+                          <input type={type} value={orgForm[key]} onChange={e=>setOrgForm(f=>({...f,[key]:e.target.value}))}
+                            placeholder={placeholder}
+                            style={{ width:"100%", padding:"10px 14px", background:T.bg, border:`1px solid rgba(212,168,67,0.15)`, borderRadius:9, color:T.textPrimary, fontSize:13, fontFamily:"'Outfit',sans-serif", outline:"none", boxSizing:"border-box" }}/>
+                        </div>
+                      ))}
+
+                      {/* Type + Plan selects */}
+                      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12, marginBottom:14 }}>
+                        <div>
+                          <div style={{ fontSize:11, color:T.textMuted, marginBottom:5, fontWeight:600 }}>Type</div>
+                          <select value={orgForm.type} onChange={e=>setOrgForm(f=>({...f,type:e.target.value}))}
+                            style={{ width:"100%", padding:"10px 14px", background:T.bg, border:`1px solid rgba(212,168,67,0.15)`, borderRadius:9, color:T.textPrimary, fontSize:13, fontFamily:"'Outfit',sans-serif", outline:"none", cursor:"pointer" }}>
+                            <option value="Agency">Real Estate Agency</option>
+                            <option value="Brokerage">Brokerage</option>
+                            <option value="Developer">Developer</option>
+                            <option value="Investment Firm">Investment Firm</option>
+                            <option value="Other">Other</option>
+                          </select>
+                        </div>
+                        <div>
+                          <div style={{ fontSize:11, color:T.textMuted, marginBottom:5, fontWeight:600 }}>Plan</div>
+                          <select value={orgForm.plan} onChange={e=>setOrgForm(f=>({...f,plan:e.target.value}))}
+                            style={{ width:"100%", padding:"10px 14px", background:T.bg, border:`1px solid rgba(212,168,67,0.15)`, borderRadius:9, color:T.textPrimary, fontSize:13, fontFamily:"'Outfit',sans-serif", outline:"none", cursor:"pointer" }}>
+                            <option value="free">Free</option>
+                            <option value="pro">Pro</option>
+                            <option value="enterprise">Enterprise</option>
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Footer */}
+                    <div style={{ padding:24, display:"flex", gap:10, justifyContent:"flex-end" }}>
+                      <button type="button" onClick={()=>setShowCreateOrg(false)}
+                        style={{ padding:"10px 20px", borderRadius:8, border:`1px solid ${T.border}`, background:"transparent", color:T.textMuted, fontSize:12, cursor:"pointer" }}>
+                        Cancel
+                      </button>
+                      <button type="button" onClick={createOrg} disabled={orgFormLoading}
+                        style={{ padding:"10px 24px", borderRadius:8, border:`1px solid ${T.gold}`, background:"rgba(212,168,67,0.12)", color:T.gold, fontSize:12, fontWeight:700, cursor:"pointer", opacity:orgFormLoading?0.6:1 }}>
+                        {orgFormLoading ? "Creating..." : "Create Organisation"}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
             </div>
           )}
 
-{tab === "leads" && (() => {
+          {tab === "leads" && (() => {
   /*
   ╔══════════════════════════════════════════════════════════════════
   ║  DXB ANALYTICS — LEADS CRM  v3  (Clean Professional Rebuild)
