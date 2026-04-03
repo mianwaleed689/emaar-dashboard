@@ -19,7 +19,6 @@ import PricingPlansTab from "./admin/PricingPlansTab";
 import BillingTab from "./admin/BillingTab";
 import ReferralTab from "./admin/ReferralTab";
 import CancellationTab from "./admin/CancellationTab";
-import DataManagerTab from "./admin/DataManagerTab";
 
 
 
@@ -17171,1872 +17170,4723 @@ export default function AdminPanel() {
              DATA MANAGER TAB (Bloomberg-Level Design)
              ═══════════════════════════════════════ */}
           {tab === "data" && (
-            <DataManagerTab
-              emaarProjects={emaarProjects}
-              T={T}
-              db={db}
-              notify={notify}
-            />
+            <>
+              {/* ═══════════════════════════════════════
+                 CSV IMPORT PRO MODAL
+                 ═══════════════════════════════════════ */}
+              {showDataImport && (
+                <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", zIndex: 9000, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }} onClick={() => importProgress.status !== "importing" && resetImport()}>
+                  <div style={{ background: T.surface, border: `1px solid ${T.gold}40`, borderRadius: 20, width: "100%", maxWidth: 900, maxHeight: "90vh", overflow: "hidden", display: "flex", flexDirection: "column", animation: "slideUp 0.2s ease-out" }} onClick={e => e.stopPropagation()}>
+                    {/* Header */}
+                    <div style={{ padding: "20px 24px", borderBottom: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between", alignItems: "center", background: "linear-gradient(135deg, rgba(212,168,67,0.08) 0%, transparent 60%)" }}>
+                      <div>
+                        <div style={{ fontSize: 18, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>CSV Import Pro</div>
+                        <div style={{ fontSize: 12, color: T.textMuted, marginTop: 4 }}>Import project data with preview, mapping, and validation</div>
+                      </div>
+                      <div style={{ display: "flex", gap: 8 }}>
+                        <button type="button" onClick={downloadImportTemplate} style={{ fontSize: 11, padding: "8px 14px", borderRadius: 8, border: `1px solid ${T.teal}40`, background: `${T.teal}10`, color: T.teal, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>Download Template</button>
+                        <button type="button" onClick={() => importProgress.status !== "importing" && resetImport()} disabled={importProgress.status === "importing"} style={{ fontSize: 16, width: 32, height: 32, borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.textMuted, cursor: importProgress.status === "importing" ? "not-allowed" : "pointer" }}>×</button>
+                      </div>
+                    </div>
+                    
+                    {/* Content */}
+                    <div style={{ flex: 1, overflow: "auto", padding: 24 }}>
+                      {/* Drop Zone - Show when no file */}
+                      {!importFile && (
+                        <div 
+                          onDragOver={e => { e.preventDefault(); setImportDragOver(true); }}
+                          onDragLeave={() => setImportDragOver(false)}
+                          onDrop={e => { e.preventDefault(); setImportDragOver(false); const file = e.dataTransfer.files[0]; if (file) handleImportFile(file); }}
+                          style={{ border: `2px dashed ${importDragOver ? T.gold : T.border}`, borderRadius: 16, padding: "48px 24px", textAlign: "center", background: importDragOver ? "rgba(212,168,67,0.08)" : "transparent", transition: "all 0.2s", cursor: "pointer" }}
+                          onClick={() => document.getElementById("csv-file-input")?.click()}>
+                          <input id="csv-file-input" type="file" accept=".csv" style={{ display: "none" }} onChange={e => { const file = e.target.files?.[0]; if (file) handleImportFile(file); }} />
+                          <div style={{ width: 56, height: 56, borderRadius: 14, background: "rgba(212,168,67,0.1)", border: "1px solid rgba(212,168,67,0.2)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px" }}>
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={T.gold} strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                          </div>
+                          <div style={{ fontSize: 15, fontWeight: 600, color: T.white, marginBottom: 8 }}>Drop CSV file here or click to browse</div>
+                          <div style={{ fontSize: 12, color: T.textMuted }}>Supports .csv files with header row. Max 1000 rows recommended.</div>
+                        </div>
+                      )}
+                      
+                      {/* File Loaded - Show preview, mapping, errors */}
+                      {importFile && importHeaders.length > 0 && (
+                        <>
+                          {/* File Info Bar */}
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 16px", background: T.surfaceAlt, borderRadius: 10, marginBottom: 20 }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                              <div style={{ width: 36, height: 36, borderRadius: 8, background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.2)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={T.green} strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                              </div>
+                              <div>
+                                <div style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{importFile.name}</div>
+                                <div style={{ fontSize: 11, color: T.textMuted }}>{importRows.length} rows · {importHeaders.length} columns</div>
+                              </div>
+                            </div>
+                            <button type="button" onClick={() => { setImportFile(null); setImportHeaders([]); setImportRows([]); setImportMapping({}); setImportErrors([]); }} style={{ fontSize: 11, padding: "6px 12px", borderRadius: 6, border: `1px solid ${T.border}`, background: "transparent", color: T.textMuted, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>Change File</button>
+                          </div>
+                          
+                          {/* Stats Cards */}
+                          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 20 }}>
+                            <div style={{ padding: "12px 16px", background: T.surfaceAlt, borderRadius: 10, border: `1px solid ${T.border}` }}>
+                              <div style={{ fontSize: 20, fontWeight: 800, color: T.white, fontFamily: "'Fraunces',serif" }}>{importRows.length}</div>
+                              <div style={{ fontSize: 10, color: T.textMuted, fontWeight: 600, textTransform: "uppercase" }}>Total Rows</div>
+                            </div>
+                            <div style={{ padding: "12px 16px", background: "rgba(16,185,129,0.06)", borderRadius: 10, border: "1px solid rgba(16,185,129,0.2)" }}>
+                              <div style={{ fontSize: 20, fontWeight: 800, color: T.green, fontFamily: "'Fraunces',serif" }}>{importStats.valid}</div>
+                              <div style={{ fontSize: 10, color: T.textMuted, fontWeight: 600, textTransform: "uppercase" }}>Valid</div>
+                            </div>
+                            <div style={{ padding: "12px 16px", background: "rgba(239,68,68,0.06)", borderRadius: 10, border: "1px solid rgba(239,68,68,0.2)" }}>
+                              <div style={{ fontSize: 20, fontWeight: 800, color: T.red, fontFamily: "'Fraunces',serif" }}>{importStats.invalid}</div>
+                              <div style={{ fontSize: 10, color: T.textMuted, fontWeight: 600, textTransform: "uppercase" }}>Invalid</div>
+                            </div>
+                            <div style={{ padding: "12px 16px", background: "rgba(212,168,67,0.06)", borderRadius: 10, border: "1px solid rgba(212,168,67,0.2)" }}>
+                              <div style={{ fontSize: 20, fontWeight: 800, color: T.gold, fontFamily: "'Fraunces',serif" }}>{importProgress.status === "done" ? importStats.imported : "—"}</div>
+                              <div style={{ fontSize: 10, color: T.textMuted, fontWeight: 600, textTransform: "uppercase" }}>Imported</div>
+                            </div>
+                          </div>
+                          
+                          {/* Column Mapping */}
+                          <div style={{ marginBottom: 20 }}>
+                            <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 12, display: "flex", alignItems: "center", gap: 8 }}>
+                              <span>Column Mapping</span>
+                              <span style={{ fontSize: 10, padding: "2px 8px", borderRadius: 4, background: "rgba(212,168,67,0.1)", color: T.gold }}>{Object.keys(importMapping).length} mapped</span>
+                            </div>
+                            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10, padding: 16, background: T.surfaceAlt, borderRadius: 12, border: `1px solid ${T.border}` }}>
+                              {importHeaders.map((header, idx) => (
+                                <div key={idx} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                                  <div style={{ flex: 1, fontSize: 11, color: T.textSecondary, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={header}>{header}</div>
+                                  <span style={{ color: T.textMuted }}>→</span>
+                                  <select value={importMapping[idx] || ""} onChange={e => setImportMapping(prev => ({ ...prev, [idx]: e.target.value || undefined }))}
+                                    style={{ flex: 1, padding: "6px 8px", background: T.bg, border: `1px solid ${importMapping[idx] ? "rgba(16,185,129,0.3)" : T.border}`, borderRadius: 6, color: importMapping[idx] ? T.green : T.textMuted, fontSize: 11, fontFamily: "'Outfit',sans-serif", cursor: "pointer" }}>
+                                    <option value="">— Skip —</option>
+                                    {IMPORT_FIELDS.map(f => (
+                                      <option key={f.key} value={f.key}>{f.label}{f.required ? " *" : ""}</option>
+                                    ))}
+                                  </select>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                          
+                          {/* Preview Table */}
+                          <div style={{ marginBottom: 20 }}>
+                            <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 12 }}>Preview (first 5 rows)</div>
+                            <div style={{ overflow: "auto", borderRadius: 12, border: `1px solid ${T.border}` }}>
+                              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11 }}>
+                                <thead>
+                                  <tr style={{ background: T.surfaceAlt }}>
+                                    <th style={{ padding: "10px 12px", textAlign: "left", color: T.textMuted, fontWeight: 600, borderBottom: `1px solid ${T.border}` }}>#</th>
+                                    {importHeaders.slice(0, 6).map((h, i) => (
+                                      <th key={i} style={{ padding: "10px 12px", textAlign: "left", color: importMapping[i] ? T.gold : T.textMuted, fontWeight: 600, borderBottom: `1px solid ${T.border}`, maxWidth: 120, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{importMapping[i] ? IMPORT_FIELDS.find(f => f.key === importMapping[i])?.label : h}</th>
+                                    ))}
+                                    {importHeaders.length > 6 && <th style={{ padding: "10px 12px", textAlign: "center", color: T.textMuted, fontWeight: 600, borderBottom: `1px solid ${T.border}` }}>+{importHeaders.length - 6}</th>}
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {importRows.slice(0, 5).map((row, rowIdx) => {
+                                    const result = validateImportRow(row, importMapping, importHeaders);
+                                    const hasError = result.errors.length > 0;
+                                    return (
+                                      <tr key={rowIdx} style={{ background: hasError ? "rgba(239,68,68,0.04)" : "transparent" }}>
+                                        <td style={{ padding: "8px 12px", color: T.textMuted, borderBottom: `1px solid ${T.border}` }}>{row._rowNum}</td>
+                                        {importHeaders.slice(0, 6).map((h, colIdx) => (
+                                          <td key={colIdx} style={{ padding: "8px 12px", color: T.textSecondary, borderBottom: `1px solid ${T.border}`, maxWidth: 120, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{row[h] || "—"}</td>
+                                        ))}
+                                        {importHeaders.length > 6 && <td style={{ padding: "8px 12px", textAlign: "center", color: T.textMuted, borderBottom: `1px solid ${T.border}` }}>...</td>}
+                                      </tr>
+                                    );
+                                  })}
+                                </tbody>
+                              </table>
+                            </div>
+                          </div>
+                          
+                          {/* Validation Errors */}
+                          {importErrors.length > 0 && (
+                            <div style={{ marginBottom: 20 }}>
+                              <div style={{ fontSize: 13, fontWeight: 700, color: T.red, marginBottom: 12, display: "flex", alignItems: "center", gap: 8 }}>
+                                <span>Validation Errors</span>
+                                <span style={{ fontSize: 10, padding: "2px 8px", borderRadius: 4, background: "rgba(239,68,68,0.1)", color: T.red }}>{importErrors.length} rows</span>
+                              </div>
+                              <div style={{ maxHeight: 200, overflow: "auto", padding: 16, background: "rgba(239,68,68,0.04)", borderRadius: 12, border: "1px solid rgba(239,68,68,0.2)" }}>
+                                {importErrors.slice(0, 10).map((err, idx) => (
+                                  <div key={idx} style={{ padding: "8px 0", borderBottom: idx < importErrors.length - 1 ? `1px solid ${T.border}` : "none" }}>
+                                    <div style={{ fontSize: 11, fontWeight: 600, color: T.white, marginBottom: 4 }}>Row {err.rowNum}: {err.data?.name || err.data?.id || "Unknown"}</div>
+                                    <div style={{ fontSize: 10, color: T.red }}>{err.errors.join(" · ")}</div>
+                                  </div>
+                                ))}
+                                {importErrors.length > 10 && <div style={{ fontSize: 11, color: T.textMuted, paddingTop: 8 }}>...and {importErrors.length - 10} more errors</div>}
+                              </div>
+                            </div>
+                          )}
+                          
+                          {/* Skip Invalid Toggle */}
+                          {importErrors.length > 0 && (
+                            <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 16px", background: T.surfaceAlt, borderRadius: 10, marginBottom: 20 }}>
+                              <input type="checkbox" id="skip-invalid" checked={importSkipInvalid} onChange={e => setImportSkipInvalid(e.target.checked)} style={{ accentColor: T.gold, width: 16, height: 16 }} />
+                              <label htmlFor="skip-invalid" style={{ fontSize: 12, color: T.textSecondary, cursor: "pointer" }}>Skip invalid rows (import only valid data)</label>
+                            </div>
+                          )}
+                          
+                          {/* Progress Bar */}
+                          {importProgress.status === "importing" && (
+                            <div style={{ marginBottom: 20 }}>
+                              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
+                                <span style={{ fontSize: 12, color: T.textSecondary }}>Importing...</span>
+                                <span style={{ fontSize: 12, color: T.gold, fontWeight: 600 }}>{importProgress.current} / {importProgress.total}</span>
+                              </div>
+                              <div style={{ height: 6, background: T.surfaceAlt, borderRadius: 3, overflow: "hidden" }}>
+                                <div style={{ width: `${(importProgress.current / importProgress.total) * 100}%`, height: "100%", background: `linear-gradient(90deg, ${T.gold}, ${T.teal})`, borderRadius: 3, transition: "width 0.2s" }} />
+                              </div>
+                            </div>
+                          )}
+                          
+                          {/* Success Message */}
+                          {importProgress.status === "done" && (
+                            <div style={{ padding: 20, background: "rgba(16,185,129,0.08)", borderRadius: 12, border: "1px solid rgba(16,185,129,0.2)", textAlign: "center", marginBottom: 20 }}>
+                              <div style={{ width: 48, height: 48, borderRadius: 12, background: "rgba(16,185,129,0.15)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 12px" }}>
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={T.green} strokeWidth="2"><polyline points="20 6 9 17 4 12"/></svg>
+                              </div>
+                              <div style={{ fontSize: 16, fontWeight: 700, color: T.green, marginBottom: 4 }}>Import Complete!</div>
+                              <div style={{ fontSize: 12, color: T.textSecondary }}>{importStats.imported} projects imported, {importStats.skipped} skipped</div>
+                            </div>
+                          )}
+                        </>
+                      )}
+                    </div>
+                    
+                    {/* Footer */}
+                    <div style={{ padding: "16px 24px", borderTop: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between", alignItems: "center", background: T.surfaceAlt }}>
+                      <div style={{ fontSize: 11, color: T.textMuted }}>
+                        {importProgress.status === "done" ? "Import finished — data is now live" : importFile ? `${importStats.valid} rows ready to import` : "Upload a CSV file to begin"}
+                      </div>
+                      <div style={{ display: "flex", gap: 10 }}>
+                        <button type="button" onClick={resetImport} disabled={importProgress.status === "importing"} style={{ fontSize: 12, padding: "10px 20px", borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.textSecondary, cursor: importProgress.status === "importing" ? "not-allowed" : "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>
+                          {importProgress.status === "done" ? "Close" : "Cancel"}
+                        </button>
+                        {importFile && importProgress.status !== "done" && (
+                          <button type="button" onClick={executeImport} disabled={importProgress.status === "importing" || (importStats.valid === 0 && importSkipInvalid)}
+                            style={{ fontSize: 12, padding: "10px 24px", borderRadius: 8, border: "none", background: (importProgress.status === "importing" || (importStats.valid === 0 && importSkipInvalid)) ? T.border : `linear-gradient(135deg, ${T.gold}, #B8860B)`, color: (importProgress.status === "importing" || (importStats.valid === 0 && importSkipInvalid)) ? T.textMuted : "#000", cursor: (importProgress.status === "importing" || (importStats.valid === 0 && importSkipInvalid)) ? "not-allowed" : "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 700 }}>
+                            {importProgress.status === "importing" ? "Importing..." : `Import ${importSkipInvalid ? importStats.valid : importRows.length} Projects`}
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Section Header */}
+              <div style={{ marginBottom: 24 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 8 }}>
+                  <div style={{ width: 4, height: 28, background: T.gold, borderRadius: 2 }} />
+                  {I.data}
+                  <h1 style={{ fontSize: 24, fontWeight: 700, color: T.white, fontFamily: "'Outfit',sans-serif" }}>Data Manager</h1>
+                </div>
+                <p style={{ fontSize: 13, color: T.textMuted, marginLeft: 16 }}>Manage all project data, yields, communities, and price history</p>
+              </div>
+
+              {/* KPI Cards Row */}
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16, marginBottom: 24 }}>
+                <div className="kpi-card fade-up" style={{ position: "relative", overflow: "hidden" }}>
+                  <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: T.gold, opacity: 0.7 }} />
+                  <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1.2, textTransform: "uppercase", marginBottom: 10 }}>Total Projects</div>
+                  <div style={{ fontFamily: "'Fraunces',serif", fontSize: 28, fontWeight: 900, color: T.white }}>{emaarProjects.length}</div>
+                  <div style={{ fontSize: 11, color: T.textMuted, marginTop: 6 }}>
+                    Emaar curated
+                    {firestoreProjects.filter(p => p.addedViaRadar && p.developerId !== "emaar").length > 0 &&
+                      <span style={{ color: T.gold, marginLeft: 6 }}>+{firestoreProjects.filter(p => p.addedViaRadar && p.developerId !== "emaar").length} other devs via radar</span>
+                    }
+                  </div>
+                </div>
+                <div className="kpi-card fade-up" style={{ position: "relative", overflow: "hidden", animationDelay: "0.05s" }}>
+                  <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: T.gold, opacity: 0.7 }} />
+                  <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1.2, textTransform: "uppercase", marginBottom: 10 }}>Communities</div>
+                  <div style={{ fontFamily: "'Fraunces',serif", fontSize: 28, fontWeight: 900, color: T.teal }}>{Object.keys(defaultCommunityROI).length}</div>
+                  <div style={{ fontSize: 11, color: T.textMuted, marginTop: 6 }}>ROI entries</div>
+                </div>
+                <div className="kpi-card fade-up" style={{ position: "relative", overflow: "hidden", animationDelay: "0.1s" }}>
+                  <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: T.gold, opacity: 0.7 }} />
+                  <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1.2, textTransform: "uppercase", marginBottom: 10 }}>Avg Yield</div>
+                  <div style={{ fontFamily: "'Fraunces',serif", fontSize: 28, fontWeight: 900, color: T.green }}>{(emaarYields.reduce((sum, y) => sum + (y.gross || 0), 0) / (emaarYields.length || 1)).toFixed(1)}%</div>
+                  <div style={{ fontSize: 11, color: T.textMuted, marginTop: 6 }}>portfolio average</div>
+                </div>
+                <div className="kpi-card fade-up" style={{ position: "relative", overflow: "hidden", animationDelay: "0.15s" }}>
+                  <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: T.gold, opacity: 0.7 }} />
+                  <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1.2, textTransform: "uppercase", marginBottom: 10 }}>Live Overrides</div>
+                  <div style={{ fontFamily: "'Fraunces',serif", fontSize: 28, fontWeight: 900, color: T.blue }}>{Object.keys(liveProjects).length}</div>
+                  <div style={{ fontSize: 11, color: T.textMuted, marginTop: 6 }}>Firestore updates</div>
+                </div>
+              </div>
+
+              {/* Data Health Panel */}
+              <div className="fade-up" style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 14, padding: "16px 20px", marginBottom: 20 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: T.gold, letterSpacing: 0.5 }}>Data Health Check</div>
+                  <div style={{ display: "flex", gap: 8 }}>
+                    {(() => {
+                      const issues = [];
+                      const missingPrice = emaarProjects.filter(p => !p.price || p.price <= 0).length;
+                      const missingPpsf = emaarProjects.filter(p => !p.pricePerSqFt || p.pricePerSqFt <= 0).length;
+                      const missingImage = emaarProjects.filter(p => !p.image && !liveProjects[p.id]?.image).length;
+                      const outdatedYields = emaarYields.filter(y => !y.gross || y.gross <= 0).length;
+                      if (missingPrice > 0) issues.push({ label: `${missingPrice} missing prices`, color: T.red });
+                      if (missingPpsf > 0) issues.push({ label: `${missingPpsf} missing PPSF`, color: T.orange });
+                      if (missingImage > 0) issues.push({ label: `${missingImage} no images`, color: T.textMuted });
+                      if (outdatedYields > 0) issues.push({ label: `${outdatedYields} yields need update`, color: T.orange });
+                      if (issues.length === 0) return <span style={{ fontSize: 11, color: T.green, fontWeight: 600 }}>✔ All data complete</span>;
+                      return issues.map((issue, i) => (
+                        <span key={i} style={{ fontSize: 10, padding: "3px 10px", borderRadius: 6, background: `${issue.color}15`, color: issue.color, fontWeight: 600 }}>{issue.label}</span>
+                      ));
+                    })()}
+                  </div>
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 10 }}>
+                  {[
+                    { label: "Projects", value: emaarProjects.length, color: T.gold, complete: emaarProjects.filter(p => p.price && p.pricePerSqFt && (p.image || liveProjects[p.id]?.image)).length },
+                    { label: "Yields", value: emaarYields.length, color: T.green, complete: emaarYields.filter(y => y.gross && y.gross > 0).length },
+                    { label: "Communities", value: Object.keys(defaultCommunityROI).length, color: T.teal, complete: Object.values(defaultCommunityROI).filter(c => c.roi && c.roi > 0).length },
+                    { label: "Live Overrides", value: Object.keys(liveProjects).length, color: T.blue },
+                    { label: "Price History", value: Object.values(priceHistory).reduce((sum, arr) => sum + (arr?.length || 0), 0), color: T.purple },
+                  ].map((item, i) => (
+                    <div key={i} style={{ textAlign: "center", padding: "8px 10px", background: T.surfaceAlt, borderRadius: 8, border: `1px solid ${T.border}` }}>
+                      <div style={{ fontSize: 18, fontWeight: 800, color: item.color, fontFamily: "'Fraunces',serif" }}>{item.value}</div>
+                      <div style={{ fontSize: 9, color: T.textMuted, fontWeight: 600, textTransform: "uppercase" }}>{item.label}</div>
+                      {item.complete !== undefined && <div style={{ fontSize: 9, color: item.complete === item.value ? T.green : T.orange, marginTop: 2 }}>{Math.round((item.complete / item.value) * 100)}% complete</div>}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+
+              {/* Sub-tab navigation — two groups */}
+              <div style={{ marginBottom: 24 }}>
+                {/* Group 1: Data tabs */}
+                <div style={{ display: "flex", gap: 2, marginBottom: 2, flexWrap: "wrap" }}>
+                  {[
+                    { id: "projects",    label: "Projects",      count: emaarProjects.length },
+                    { id: "yields",      label: "Yields",        count: emaarYields.length },
+                    { id: "communities", label: "Communities",   count: Object.keys(defaultCommunityROI).length },
+                    { id: "pricehistory",label: "Price History", count: Object.values(priceHistory).reduce((s, a) => s + (a?.length || 0), 0) },
+                    { id: "financials",  label: "Financials",    count: 6 },
+                    { id: "risk",        label: "Risk",          count: 9 },
+                    { id: "market",      label: "Market",        count: null },
+                    { id: "developers",  label: "Developers",    count: null },
+                  ].map(st => {
+                    const active = dataSubTab === st.id;
+                    return (
+                      <button type="button" key={st.id} onClick={() => { if (dataSubTab === st.id) return; setDataSubTab(st.id); setEditingProject(null); setEditingCommunity(null); setEditingYield(null); setEditingCommunityIntel(null); setBulkSelected([]); }}
+                        style={{ padding: "8px 14px", borderRadius: "8px 8px 0 0", border: `1px solid ${active ? T.border : "transparent"}`, borderBottom: active ? `1px solid ${T.surface}` : `1px solid ${T.border}`, background: active ? T.surface : T.surfaceAlt, color: active ? T.white : T.textMuted, fontSize: 12, fontWeight: active ? 700 : 500, cursor: "pointer", fontFamily: "'Outfit',sans-serif", display: "flex", alignItems: "center", gap: 6, transition: "all 0.15s", marginBottom: -1 }}>
+                        {st.label}
+                        {st.count !== null && <span style={{ fontSize: 10, padding: "1px 5px", borderRadius: 4, background: active ? `${T.gold}20` : T.border, color: active ? T.gold : T.textMuted, fontWeight: 700 }}>{st.count}</span>}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Group 2: Tool tabs */}
+                <div style={{ display: "flex", gap: 2, padding: "6px 8px", background: T.surfaceAlt, borderRadius: "0 8px 8px 8px", border: `1px solid ${T.border}`, alignItems: "center", justifyContent: "space-between", flexWrap: "wrap" }}>
+                  <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                    {[
+                      { id: "livedata",    label: "Live Data",     dot: "●", dotColor: "#EF4444" },
+                      { id: "launchradar", label: "Launch Radar",  dot: "🚀", dotColor: T.gold },
+                    ].map(st => {
+                      const active = dataSubTab === st.id;
+                      return (
+                        <button type="button" key={st.id} onClick={() => { if (dataSubTab === st.id) return; setDataSubTab(st.id); setEditingProject(null); setBulkSelected([]); }}
+                          style={{ padding: "6px 14px", borderRadius: 7, border: `1px solid ${active ? T.gold : T.border}`, background: active ? `${T.gold}10` : "transparent", color: active ? T.gold : T.textMuted, fontSize: 12, fontWeight: active ? 700 : 500, cursor: "pointer", fontFamily: "'Outfit',sans-serif", display: "flex", alignItems: "center", gap: 6, transition: "all 0.15s" }}>
+                          <span style={{ fontSize: st.id === "launchradar" ? 12 : 10, color: st.dotColor }}>{st.dot}</span>
+                          {st.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <span style={{ fontSize: 10, color: T.textMuted, paddingRight: 4 }}>Intelligence Tools</span>
+                </div>
+              </div>
+
+              {/* ─── PROJECTS EDITOR ─── */}
+              {dataSubTab === "projects" && (
+                <Section title="Project Data Manager" sub="Edit prices, PPSF, status — changes go live instantly" action={
+                <div style={{ display: "flex", gap: 8 }}>
+                    <button type="button" onClick={exportProjectsExcel} style={{display:"flex",alignItems:"center",gap:5,fontSize:11,padding:"7px 14px",borderRadius:8,border:"1px solid rgba(100,116,139,0.3)",background:"transparent",color:T.textSecondary,cursor:"pointer",fontFamily:"'Outfit',sans-serif",fontWeight:600}}>Export</button>
+                    <button type="button" onClick={() => setShowDataImport(true)} style={{display:"flex",alignItems:"center",gap:5,fontSize:11,padding:"7px 14px",borderRadius:8,border:"1px solid rgba(20,184,166,0.4)",background:"rgba(20,184,166,0.08)",color:T.teal,cursor:"pointer",fontFamily:"'Outfit',sans-serif",fontWeight:600}}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                      Import CSV
+                    </button>
+                    <button type="button" onClick={() => { setEditingProject("new"); setProjectForm({}); }} style={{display:"flex",alignItems:"center",gap:5,fontSize:11,padding:"7px 14px",borderRadius:8,border:"1px solid rgba(16,185,129,0.4)",background:"rgba(16,185,129,0.08)",color:"#10B981",cursor:"pointer",fontFamily:"'Outfit',sans-serif",fontWeight:600}}>+ Add Project</button>
+                    <button type="button" onClick={fetchLiveData} style={{display:"flex",alignItems:"center",gap:5,fontSize:11,padding:"7px 14px",borderRadius:8,border:"1px solid rgba(212,168,67,0.4)",background:"rgba(212,168,67,0.08)",color:"#D4A843",cursor:"pointer",fontFamily:"'Outfit',sans-serif",fontWeight:600}}>{I.refresh} Refresh</button>
+                    <button type="button" onClick={async () => {
+                      // Remove all addedViaRadar projects that duplicate existing Emaar data.js projects
+                      const snap = await getDocs(collection(db, "projects"));
+                      let removed = 0;
+                      for (const d of snap.docs) {
+                        const data = d.data();
+                        // Remove ALL radar-added Emaar projects — Emaar has full curated data
+                        if (data.addedViaRadar && (data.developerId === "emaar" || (data.developer||"").toLowerCase().includes("emaar"))) {
+                          await deleteDoc(doc(db, "projects", d.id));
+                          removed++;
+                        }
+                      }
+                      notify(`Removed ${removed} Emaar radar projects — Emaar uses curated data only`);
+                      fetchLiveData();
+                    }} style={{display:"flex",alignItems:"center",gap:5,fontSize:11,padding:"7px 14px",borderRadius:8,border:"1px solid rgba(239,68,68,0.3)",background:"rgba(239,68,68,0.06)",color:"#EF4444",cursor:"pointer",fontFamily:"'Outfit',sans-serif",fontWeight:600}}>
+                      🧹 Remove Radar Duplicates
+                    </button>
+                  </div>
+                }>
+
+                  {/* ── PROJECT LIFECYCLE MONITOR ── */}
+                  {(() => {
+                    const now = new Date();
+                    const currentYear = now.getFullYear();
+                    const currentQ = Math.ceil((now.getMonth() + 1) / 3);
+
+                    const parseHandover = (h) => {
+                      if (!h || h === "—" || h === "Delivered") return null;
+                      const m = h.match(/Q(\d)\s+(\d{4})/);
+                      if (!m) return null;
+                      return { q: parseInt(m[1]), y: parseInt(m[2]) };
+                    };
+
+                    const isOverdue = (h) => {
+                      const d = parseHandover(h);
+                      if (!d) return false;
+                      return d.y < currentYear || (d.y === currentYear && d.q < currentQ);
+                    };
+
+                    const isDueThisQuarter = (h) => {
+                      const d = parseHandover(h);
+                      if (!d) return false;
+                      return d.y === currentYear && d.q === currentQ;
+                    };
+
+                    const isDueNextQuarter = (h) => {
+                      const d = parseHandover(h);
+                      if (!d) return false;
+                      const nextQ = currentQ === 4 ? 1 : currentQ + 1;
+                      const nextY = currentQ === 4 ? currentYear + 1 : currentYear;
+                      return d.y === nextY && d.q === nextQ;
+                    };
+
+                    const allProjects = emaarProjects;
+                    const overdue = allProjects.filter(p => p.status !== "Delivered" && p.status !== "Completed" && isOverdue(p.handover));
+                    const dueThisQ = allProjects.filter(p => p.status !== "Delivered" && p.status !== "Completed" && isDueThisQuarter(p.handover));
+                    const dueNextQ = allProjects.filter(p => p.status !== "Delivered" && p.status !== "Completed" && isDueNextQuarter(p.handover));
+                    const construction100 = allProjects.filter(p => p.construction >= 100 && p.status !== "Delivered" && p.status !== "Completed");
+
+                    const total = overdue.length + dueThisQ.length + construction100.length;
+                    if (total === 0 && dueNextQ.length === 0) return null;
+
+                    return (
+                      <div style={{ background: "rgba(212,168,67,0.05)", border: `1px solid rgba(212,168,67,0.2)`, borderRadius: 12, padding: "14px 16px", marginBottom: 20 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+                          <span style={{ fontSize: 14 }}>🔔</span>
+                          <span style={{ fontSize: 13, fontWeight: 700, color: T.gold }}>Project Lifecycle Monitor</span>
+                          <span style={{ fontSize: 10, color: T.textMuted, marginLeft: "auto" }}>Auto-detected · Q{currentQ} {currentYear}</span>
+                        </div>
+
+                        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 10, marginBottom: overdue.length + dueThisQ.length + construction100.length > 0 ? 14 : 0 }}>
+                          {[
+                            { label: "⚠️ Overdue — needs status update", items: overdue, color: T.red, action: "Mark as Delivered" },
+                            { label: "📅 Due this quarter", items: dueThisQ, color: T.gold, action: "Confirm handover date" },
+                            { label: "🔜 Due next quarter", items: dueNextQ, color: T.teal, action: "Prepare handover" },
+                            { label: "🏗️ Construction 100% — not marked done", items: construction100, color: "#8B5CF6", action: "Update status" },
+                          ].filter(g => g.items.length > 0).map((group, gi) => (
+                            <div key={gi} style={{ background: T.surfaceAlt, borderRadius: 10, padding: "10px 12px", border: `1px solid ${group.color}30` }}>
+                              <div style={{ fontSize: 11, color: group.color, fontWeight: 700, marginBottom: 6 }}>{group.label}</div>
+                              {group.items.slice(0, 4).map((p, i) => (
+                                <div key={i} style={{ fontSize: 11, color: T.textSecondary, padding: "3px 0", borderBottom: i < group.items.length - 1 ? `1px solid ${T.border}` : "none", display: "flex", justifyContent: "space-between" }}>
+                                  <span>{p.name}</span>
+                                  <span style={{ color: T.textMuted }}>{p.handover}</span>
+                                </div>
+                              ))}
+                              {group.items.length > 4 && <div style={{ fontSize: 10, color: T.textMuted, marginTop: 4 }}>+{group.items.length - 4} more</div>}
+                              <div style={{ fontSize: 10, color: group.color, marginTop: 8, fontWeight: 600 }}>→ {group.action}</div>
+                            </div>
+                          ))}
+                        </div>
+
+                        {overdue.length > 0 && (
+                          <div style={{ fontSize: 11, color: T.textMuted, padding: "8px 10px", background: "rgba(239,68,68,0.05)", borderRadius: 8, border: "1px solid rgba(239,68,68,0.15)" }}>
+                            💡 <strong style={{ color: T.red }}>Action required:</strong> {overdue.length} project{overdue.length > 1 ? "s are" : " is"} past handover date but still showing "Under Construction". Update their status to <strong>"Delivered"</strong> in the table below so users see accurate information.
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
+
+                  <TabHelp items={[
+                    { icon: "[q]", title: "Data Quality Score", desc: "Each project gets a 0-100 score based on completeness. Click the panel to see field breakdown and quick actions." },
+                    { icon: "[📈]", title: "Data Intelligence", desc: "Track recent changes, find stale data, detect duplicates, and identify integrity issues. Click to expand." },
+                    { icon: "[f]", title: "Advanced Filters", desc: "Filter by price, PPSF, tier, quality, staleness, and more. Save custom filter views." },
+                    { icon: "[🗙]", title: "Linked Records", desc: "When editing a project, see community stats and quickly jump to related projects." },
+                    { icon: "[b]", title: "Bulk Actions", desc: "Select multiple projects with checkboxes. Export, update prices, or delete in bulk." },
+                  ]} />
+                  {/* ══════════════════════════════════════
+                     ADVANCED FILTER PRO SYSTEM
+                     ══════════════════════════════════════ */}
+                  
+                  {/* Saved Filter Views Pills - Always visible */}
+                  <div style={{ display: "flex", gap: 8, marginBottom: 12, flexWrap: "wrap", alignItems: "center" }}>
+                    <span style={{ fontSize: 10, color: T.textMuted, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.5 }}>Quick Filters:</span>
+                    {savedFilterViews.length === 0 && (
+                      <button type="button" onClick={() => {
+                        const defaults = [
+                          { id: 1, name: "Missing Prices", filters: { priceMin: "", priceMax: "0", status: "All", community: "All" }, color: "#EF4444" },
+                          { id: 2, name: "Live Overrides", filters: { dataSource: "live", status: "All", community: "All" }, color: "#10B981" },
+                          { id: 3, name: "Premium Projects", filters: { tier: "Premium", status: "All", community: "All" }, color: "#D4A843" },
+                        ];
+                        setSavedFilterViews(defaults);
+                        try { localStorage.setItem("admin_savedFilterViews", JSON.stringify(defaults)); } catch {}
+                        notify("Default filters restored!");
+                      }}
+                        style={{ padding: "6px 12px", borderRadius: 20, border: `1px dashed ${T.gold}`, background: `${T.gold}10`, color: T.gold, fontSize: 11, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>
+                         Restore Defaults
+                      </button>
+                    )}
+                    {savedFilterViews.map(view => (
+                      <div key={view.id} style={{ position: "relative", display: "inline-flex" }}>
+                        <button type="button"
+                          onClick={() => {
+                            if (activeFilterViewId === view.id) {
+                              // Deactivate - clear all filters
+                              setActiveFilterViewId(null);
+                              setProjectCommunityFilter("All");
+                              setProjectStatusFilter("All");
+                              setProjectTierFilter("All");
+                              setPriceMin(""); setPriceMax("");
+                              setPpsfMin(""); setPpsfMax("");
+                              setDataSourceFilter("all");
+                              setModifiedDateFilter("all");
+                              setHasImageFilter("all");
+                            } else {
+                              // Activate this view
+                              setActiveFilterViewId(view.id);
+                              const f = view.filters;
+                              if (f.community) setProjectCommunityFilter(f.community);
+                              if (f.status) setProjectStatusFilter(f.status);
+                              if (f.tier) setProjectTierFilter(f.tier);
+                              if (f.priceMin !== undefined) setPriceMin(f.priceMin);
+                              if (f.priceMax !== undefined) setPriceMax(f.priceMax);
+                              if (f.ppsfMin !== undefined) setPpsfMin(f.ppsfMin);
+                              if (f.ppsfMax !== undefined) setPpsfMax(f.ppsfMax);
+                              if (f.dataSource) setDataSourceFilter(f.dataSource);
+                              if (f.modifiedDate) setModifiedDateFilter(f.modifiedDate);
+                              if (f.hasImage) setHasImageFilter(f.hasImage);
+                            }
+                          }}
+                          style={{ 
+                            display: "flex", alignItems: "center", gap: 6,
+                            padding: "6px 12px", borderRadius: "20px 4px 4px 20px", 
+                            border: `1px solid ${activeFilterViewId === view.id ? view.color : T.border}`,
+                            borderRight: "none",
+                            background: activeFilterViewId === view.id ? `${view.color}15` : "transparent",
+                            color: activeFilterViewId === view.id ? view.color : T.textSecondary,
+                            fontSize: 11, fontWeight: activeFilterViewId === view.id ? 700 : 500,
+                            cursor: "pointer", fontFamily: "'Outfit',sans-serif", transition: "all 0.15s"
+                          }}>
+                          <span style={{ width: 6, height: 6, borderRadius: "50%", background: view.color }} />
+                          {view.name}
+                        </button>
+                        <button type="button" onClick={(e) => {
+                          e.stopPropagation();
+                          if (window.confirm(`Delete filter view "${view.name}"?`)) {
+                            const updated = savedFilterViews.filter(v => v.id !== view.id);
+                            setSavedFilterViews(updated);
+                            try { localStorage.setItem("admin_savedFilterViews", JSON.stringify(updated)); } catch {}
+                            if (activeFilterViewId === view.id) setActiveFilterViewId(null);
+                            notify("Filter view deleted");
+                          }
+                        }}
+                          style={{ 
+                            padding: "6px 8px", borderRadius: "0 20px 20px 0",
+                            border: `1px solid ${activeFilterViewId === view.id ? view.color : T.border}`,
+                            borderLeft: `1px solid ${T.border}`,
+                            background: "transparent", color: T.textMuted,
+                            fontSize: 10, cursor: "pointer", fontFamily: "'Outfit',sans-serif",
+                            transition: "all 0.15s"
+                          }}
+                          onMouseEnter={e => { e.currentTarget.style.color = T.red; e.currentTarget.style.background = `${T.red}10`; }}
+                          onMouseLeave={e => { e.currentTarget.style.color = T.textMuted; e.currentTarget.style.background = "transparent"; }}>
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                    <button type="button" onClick={() => setShowSaveFilterModal(true)}
+                      style={{ padding: "6px 10px", borderRadius: 20, border: `1px dashed ${T.border}`, background: "transparent", color: T.textMuted, fontSize: 11, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                      + Save Current
+                    </button>
+                  </div>
+                  
+                  {/* Main Filter Bar */}
+                  <div style={{ display: "flex", gap: 8, marginBottom: 12, flexWrap: "wrap", alignItems: "center", padding: "10px 16px", background: T.surfaceAlt, borderRadius: 10, border: `1px solid ${T.border}` }}>
+                    {/* Search */}
+                    <div style={{ position: "relative", flex: "1 1 200px", minWidth: 160 }}>
+                      <span style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", color: T.textMuted, fontSize: 13, pointerEvents: "none" }}></span>
+                      <input value={dataSearch} onChange={e => { setDataSearch(e.target.value); setActiveFilterViewId(null); }} placeholder="Search projects..."
+                        style={{ width: "100%", padding: "8px 10px 8px 28px", background: T.surface, border: `1px solid ${dataSearch ? T.gold : T.border}`, borderRadius: 8, color: T.white, fontSize: 12, fontFamily: "'Outfit',sans-serif", outline: "none", boxSizing: "border-box" }} />
+                    </div>
+                    
+                    {/* Developer Filter */}
+                    <select value={projectDeveloperFilter} onChange={e => { setProjectDeveloperFilter(e.target.value); setActiveFilterViewId(null); }}
+                      style={{ padding: "8px 10px", background: projectDeveloperFilter !== "All" ? `${T.gold}15` : T.surface, border: `1px solid ${projectDeveloperFilter !== "All" ? T.gold : T.border}`, borderRadius: 8, color: projectDeveloperFilter !== "All" ? T.gold : T.textSecondary, fontSize: 12, fontFamily: "'Outfit',sans-serif", cursor: "pointer", fontWeight: projectDeveloperFilter !== "All" ? 700 : 400 }}>
+                      <option value="All">All Developers</option>
+                      {[...new Set([
+                        ...emaarProjects.map(p => p.developer || "Emaar Properties"),
+                        ...firestoreProjects.map(p => p.developer).filter(Boolean)
+                      ])].sort().map(d => <option key={d} value={d}>{d}</option>)}
+                    </select>
+
+                    {/* Community Filter */}
+                    <select value={projectCommunityFilter} onChange={e => { setProjectCommunityFilter(e.target.value); setActiveFilterViewId(null); }}
+                      style={{ padding: "8px 10px", background: projectCommunityFilter !== "All" ? `${T.gold}15` : T.surface, border: `1px solid ${projectCommunityFilter !== "All" ? T.gold : T.border}`, borderRadius: 8, color: projectCommunityFilter !== "All" ? T.gold : T.textSecondary, fontSize: 12, fontFamily: "'Outfit',sans-serif", cursor: "pointer", fontWeight: projectCommunityFilter !== "All" ? 700 : 400, maxWidth: 180 }}>
+                      <option value="All">All Communities</option>
+                      {[...new Set(emaarProjects.map(p => p.community))].sort().map(c => <option key={c} value={c}>{c}</option>)}
+                    </select>
+                    
+                    {/* Status Filter */}
+                    <select value={projectStatusFilter} onChange={e => { setProjectStatusFilter(e.target.value); setActiveFilterViewId(null); }}
+                      style={{ padding: "8px 10px", background: projectStatusFilter !== "All" ? `${T.gold}15` : T.surface, border: `1px solid ${projectStatusFilter !== "All" ? T.gold : T.border}`, borderRadius: 8, color: projectStatusFilter !== "All" ? T.gold : T.textSecondary, fontSize: 12, fontFamily: "'Outfit',sans-serif", cursor: "pointer", fontWeight: projectStatusFilter !== "All" ? 700 : 400 }}>
+                      <option value="All">All Status</option>
+                      {["Under Construction","Off-Plan","Completed","Selling","Upcoming","Sold Out","Ready"].map(s => <option key={s} value={s}>{s}</option>)}
+                    </select>
+                    
+                    {/* Sort */}
+                    <select value={projectSortKey + "_" + projectSortDir} onChange={e => { const [k,d] = e.target.value.split("_"); setProjectSortKey(k); setProjectSortDir(d); }}
+                      style={{ padding: "8px 10px", background: T.surface, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textSecondary, fontSize: 12, fontFamily: "'Outfit',sans-serif", cursor: "pointer" }}>
+                      <option value="name_asc">Name A→Z</option>
+                      <option value="name_desc">Name Z→A</option>
+                      <option value="price_asc">Price Low→High</option>
+                      <option value="price_desc">Price High→Low</option>
+                      <option value="ppsf_desc">PPSF High→Low</option>
+                      <option value="construction_desc">Construction % High</option>
+                      <option value="status_asc">Status A→Z</option>
+                      <option value="community_asc">Community A→Z</option>
+                    </select>
+                    
+                    {/* Advanced Filters Toggle */}
+                    <button type="button" onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+                      style={{ 
+                        display: "flex", alignItems: "center", gap: 5,
+                        padding: "8px 12px", borderRadius: 8, 
+                        border: `1px solid ${showAdvancedFilters || priceMin || priceMax || ppsfMin || ppsfMax || projectTierFilter !== "All" || dataSourceFilter !== "all" || modifiedDateFilter !== "all" || hasImageFilter !== "all" ? T.teal : T.border}`,
+                        background: showAdvancedFilters ? `${T.teal}15` : "transparent",
+                        color: showAdvancedFilters || priceMin || priceMax || ppsfMin || ppsfMax || projectTierFilter !== "All" || dataSourceFilter !== "all" || modifiedDateFilter !== "all" || hasImageFilter !== "all" ? T.teal : T.textMuted,
+                        fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif"
+                      }}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+                      Filters
+                      {(priceMin || priceMax || ppsfMin || ppsfMax || projectTierFilter !== "All" || dataSourceFilter !== "all" || modifiedDateFilter !== "all" || hasImageFilter !== "all") && (
+                        <span style={{ width: 6, height: 6, borderRadius: "50%", background: T.teal }} />
+                      )}
+                    </button>
+                    
+                    {/* Column Settings Toggle */}
+                    <div style={{ position: "relative" }}>
+                      <button type="button" onClick={() => setShowColumnSettings(!showColumnSettings)}
+                        style={{ 
+                          display: "flex", alignItems: "center", gap: 5,
+                          padding: "8px 12px", borderRadius: 8, 
+                          border: `1px solid ${showColumnSettings ? T.purple : T.border}`,
+                          background: showColumnSettings ? `${T.purple}15` : "transparent",
+                          color: showColumnSettings ? T.purple : T.textMuted,
+                          fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif"
+                        }}>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                        Columns
+                      </button>
+                      {/* Column Settings Dropdown */}
+                      {showColumnSettings && (
+                        <div className="fade-up" style={{ 
+                          position: "absolute", top: "100%", right: 0, marginTop: 8, 
+                          background: T.surface, border: `1px solid ${T.border}`, borderRadius: 12,
+                          padding: 16, zIndex: 100, minWidth: 220, boxShadow: "0 8px 32px rgba(0,0,0,0.4)"
+                        }}>
+                          <div style={{ fontSize: 12, fontWeight: 700, color: T.white, marginBottom: 12, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                            <span>Toggle Columns</span>
+                            <button type="button" onClick={resetColumns} style={{ fontSize: 10, color: T.textMuted, background: "none", border: "none", cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>Reset</button>
+                          </div>
+                          {[
+                            { key: "community", label: "Community" },
+                            { key: "price", label: "Price" },
+                            { key: "ppsf", label: "PPSF" },
+                            { key: "status", label: "Status" },
+                            { key: "source", label: "Source" },
+                            { key: "quality", label: "Quality Score" },
+                            { key: "tier", label: "Tier" },
+                            { key: "handover", label: "Handover" },
+                            { key: "beds", label: "Beds/Type" },
+                          ].map(col => (
+                            <label key={col.key} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 0", cursor: "pointer", borderBottom: `1px solid ${T.border}20` }}>
+                              <input type="checkbox" checked={visibleColumns[col.key]} onChange={() => toggleColumn(col.key)}
+                                style={{ accentColor: T.purple, cursor: "pointer" }} />
+                              <span style={{ fontSize: 12, color: visibleColumns[col.key] ? T.white : T.textMuted }}>{col.label}</span>
+                            </label>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Clear All Filters */}
+                    {(dataSearch || projectCommunityFilter !== "All" || projectStatusFilter !== "All" || priceMin || priceMax || ppsfMin || ppsfMax || projectTierFilter !== "All" || dataSourceFilter !== "all" || modifiedDateFilter !== "all" || hasImageFilter !== "all" || qualityFilter !== "all" || stalenessFilter !== "all") && (
+                      <button type="button" onClick={() => { 
+                        setDataSearch(""); setProjectCommunityFilter("All"); setProjectStatusFilter("All");
+                        setPriceMin(""); setPriceMax(""); setPpsfMin(""); setPpsfMax("");
+                        setProjectTierFilter("All"); setDataSourceFilter("all"); setModifiedDateFilter("all");
+                        setHasImageFilter("all"); setQualityFilter("all"); setStalenessFilter("all"); setActiveFilterViewId(null);
+                      }}
+                        style={{ padding: "8px 12px", background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.25)", borderRadius: 8, color: T.red, fontSize: 11, fontFamily: "'Outfit',sans-serif", cursor: "pointer", fontWeight: 700, whiteSpace: "nowrap" }}>
+                         Clear All
+                      </button>
+                    )}
+                  </div>
+                  
+                  {/* Advanced Filters Panel */}
+                  {showAdvancedFilters && (
+                    <div className="fade-up" style={{ 
+                      display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12,
+                      padding: 16, marginBottom: 16, background: T.surface, borderRadius: 12, 
+                      border: `1px solid ${T.teal}30`
+                    }}>
+                      {/* Price Range */}
+                      <div>
+                        <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 0.5, textTransform: "uppercase", marginBottom: 6, display: "block" }}>Price Range (AED)</label>
+                        <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                          <input type="number" value={priceMin} onChange={e => { setPriceMin(e.target.value); setActiveFilterViewId(null); }} placeholder="Min"
+                            style={{ flex: 1, padding: "7px 10px", background: T.bg, border: `1px solid ${priceMin ? T.teal : T.border}`, borderRadius: 6, color: T.white, fontSize: 11, fontFamily: "'Outfit',sans-serif", outline: "none" }} />
+                          <span style={{ color: T.textMuted, fontSize: 11 }}>—</span>
+                          <input type="number" value={priceMax} onChange={e => { setPriceMax(e.target.value); setActiveFilterViewId(null); }} placeholder="Max"
+                            style={{ flex: 1, padding: "7px 10px", background: T.bg, border: `1px solid ${priceMax ? T.teal : T.border}`, borderRadius: 6, color: T.white, fontSize: 11, fontFamily: "'Outfit',sans-serif", outline: "none" }} />
+                        </div>
+                      </div>
+                      
+                      {/* PPSF Range */}
+                      <div>
+                        <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 0.5, textTransform: "uppercase", marginBottom: 6, display: "block" }}>PPSF Range</label>
+                        <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                          <input type="number" value={ppsfMin} onChange={e => { setPpsfMin(e.target.value); setActiveFilterViewId(null); }} placeholder="Min"
+                            style={{ flex: 1, padding: "7px 10px", background: T.bg, border: `1px solid ${ppsfMin ? T.teal : T.border}`, borderRadius: 6, color: T.white, fontSize: 11, fontFamily: "'Outfit',sans-serif", outline: "none" }} />
+                          <span style={{ color: T.textMuted, fontSize: 11 }}>—</span>
+                          <input type="number" value={ppsfMax} onChange={e => { setPpsfMax(e.target.value); setActiveFilterViewId(null); }} placeholder="Max"
+                            style={{ flex: 1, padding: "7px 10px", background: T.bg, border: `1px solid ${ppsfMax ? T.teal : T.border}`, borderRadius: 6, color: T.white, fontSize: 11, fontFamily: "'Outfit',sans-serif", outline: "none" }} />
+                        </div>
+                      </div>
+                      
+                      {/* Tier Filter */}
+                      <div>
+                        <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 0.5, textTransform: "uppercase", marginBottom: 6, display: "block" }}>Tier</label>
+                        <select value={projectTierFilter} onChange={e => { setProjectTierFilter(e.target.value); setActiveFilterViewId(null); }}
+                          style={{ width: "100%", padding: "7px 10px", background: T.bg, border: `1px solid ${projectTierFilter !== "All" ? T.teal : T.border}`, borderRadius: 6, color: projectTierFilter !== "All" ? T.teal : T.textSecondary, fontSize: 11, fontFamily: "'Outfit',sans-serif", cursor: "pointer" }}>
+                          <option value="All">All Tiers</option>
+                          {["Affordable", "Mid-Market", "Mid-Premium", "Premium", "Luxury", "Ultra-Luxury", "Luxury Branded", "Ultra-Lux Branded"].map(t => (
+                            <option key={t} value={t}>{t}</option>
+                          ))}
+                        </select>
+                      </div>
+                      
+                      {/* Data Source */}
+                      <div>
+                        <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 0.5, textTransform: "uppercase", marginBottom: 6, display: "block" }}>Data Source</label>
+                        <select value={dataSourceFilter} onChange={e => { setDataSourceFilter(e.target.value); setActiveFilterViewId(null); }}
+                          style={{ width: "100%", padding: "7px 10px", background: T.bg, border: `1px solid ${dataSourceFilter !== "all" ? T.teal : T.border}`, borderRadius: 6, color: dataSourceFilter !== "all" ? T.teal : T.textSecondary, fontSize: 11, fontFamily: "'Outfit',sans-serif", cursor: "pointer" }}>
+                          <option value="all">All Sources</option>
+                          <option value="live">Live Overrides Only</option>
+                          <option value="default">Default Data Only</option>
+                        </select>
+                      </div>
+                      
+                      {/* Modified Date */}
+                      <div>
+                        <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 0.5, textTransform: "uppercase", marginBottom: 6, display: "block" }}>Last Modified</label>
+                        <select value={modifiedDateFilter} onChange={e => { setModifiedDateFilter(e.target.value); setActiveFilterViewId(null); }}
+                          style={{ width: "100%", padding: "7px 10px", background: T.bg, border: `1px solid ${modifiedDateFilter !== "all" ? T.teal : T.border}`, borderRadius: 6, color: modifiedDateFilter !== "all" ? T.teal : T.textSecondary, fontSize: 11, fontFamily: "'Outfit',sans-serif", cursor: "pointer" }}>
+                          <option value="all">Any Time</option>
+                          <option value="today">Today</option>
+                          <option value="7d">Last 7 Days</option>
+                          <option value="30d">Last 30 Days</option>
+                          <option value="90d">Last 90 Days</option>
+                        </select>
+                      </div>
+                      
+                      {/* Has Image */}
+                      <div>
+                        <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 0.5, textTransform: "uppercase", marginBottom: 6, display: "block" }}>Has Image</label>
+                        <select value={hasImageFilter} onChange={e => { setHasImageFilter(e.target.value); setActiveFilterViewId(null); }}
+                          style={{ width: "100%", padding: "7px 10px", background: T.bg, border: `1px solid ${hasImageFilter !== "all" ? T.teal : T.border}`, borderRadius: 6, color: hasImageFilter !== "all" ? T.teal : T.textSecondary, fontSize: 11, fontFamily: "'Outfit',sans-serif", cursor: "pointer" }}>
+                          <option value="all">Any</option>
+                          <option value="yes">With Image</option>
+                          <option value="no">Missing Image</option>
+                        </select>
+                      </div>
+                      
+                      {/* Quick Presets */}
+                      <div style={{ gridColumn: "span 2", display: "flex", gap: 8, alignItems: "flex-end" }}>
+                        <button type="button" onClick={() => { setPriceMax("0"); setPriceMin(""); setActiveFilterViewId(null); }}
+                          style={{ padding: "7px 12px", borderRadius: 6, border: `1px solid ${T.red}40`, background: `${T.red}10`, color: T.red, fontSize: 10, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                          Missing Prices
+                        </button>
+                        <button type="button" onClick={() => { setHasImageFilter("no"); setActiveFilterViewId(null); }}
+                          style={{ padding: "7px 12px", borderRadius: 6, border: `1px solid ${T.orange}40`, background: `${T.orange}10`, color: T.orange, fontSize: 10, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                          Missing Images
+                        </button>
+                        <button type="button" onClick={() => { setDataSourceFilter("live"); setActiveFilterViewId(null); }}
+                          style={{ padding: "7px 12px", borderRadius: 6, border: `1px solid ${T.green}40`, background: `${T.green}10`, color: T.green, fontSize: 10, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                          Live Overrides
+                        </button>
+                        <button type="button" onClick={() => { setModifiedDateFilter("7d"); setActiveFilterViewId(null); }}
+                          style={{ padding: "7px 12px", borderRadius: 6, border: `1px solid ${T.blue}40`, background: `${T.blue}10`, color: T.blue, fontSize: 10, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                          Recent Changes
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Save Filter View Modal */}
+                  {showSaveFilterModal && (
+                    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.8)", zIndex: 9000, display: "flex", alignItems: "center", justifyContent: "center" }} onClick={() => setShowSaveFilterModal(false)}>
+                      <div style={{ background: T.surface, borderRadius: 16, padding: 24, width: 360, border: `1px solid ${T.border}` }} onClick={e => e.stopPropagation()}>
+                        <div style={{ fontSize: 16, fontWeight: 700, color: T.white, marginBottom: 16 }}>Save Current Filters</div>
+                        <input value={newFilterViewName} onChange={e => setNewFilterViewName(e.target.value)} placeholder="Filter view name..."
+                          style={{ width: "100%", padding: "10px 14px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif", marginBottom: 16, outline: "none", boxSizing: "border-box" }} />
+                        <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 16, padding: 12, background: T.surfaceAlt, borderRadius: 8 }}>
+                          <div style={{ marginBottom: 4 }}>Current filters:</div>
+                          {projectCommunityFilter !== "All" && <div>• Community: {projectCommunityFilter}</div>}
+                          {projectStatusFilter !== "All" && <div>• Status: {projectStatusFilter}</div>}
+                          {projectTierFilter !== "All" && <div>• Tier: {projectTierFilter}</div>}
+                          {priceMin && <div>• Price min: AED {Number(priceMin).toLocaleString()}</div>}
+                          {priceMax && <div>• Price max: AED {Number(priceMax).toLocaleString()}</div>}
+                          {ppsfMin && <div>• PPSF min: {ppsfMin}</div>}
+                          {ppsfMax && <div>• PPSF max: {ppsfMax}</div>}
+                          {dataSourceFilter !== "all" && <div>• Source: {dataSourceFilter}</div>}
+                          {modifiedDateFilter !== "all" && <div>• Modified: {modifiedDateFilter}</div>}
+                          {hasImageFilter !== "all" && <div>• Has image: {hasImageFilter}</div>}
+                        </div>
+                        <div style={{ display: "flex", gap: 10 }}>
+                          <button type="button" onClick={() => setShowSaveFilterModal(false)}
+                            style={{ flex: 1, padding: "10px", borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.textSecondary, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>Cancel</button>
+                          <button type="button" onClick={() => {
+                            if (!newFilterViewName.trim()) { notify("Enter a name"); return; }
+                            const newView = {
+                              id: Date.now(),
+                              name: newFilterViewName.trim(),
+                              filters: {
+                                community: projectCommunityFilter,
+                                status: projectStatusFilter,
+                                tier: projectTierFilter,
+                                priceMin, priceMax, ppsfMin, ppsfMax,
+                                dataSource: dataSourceFilter,
+                                modifiedDate: modifiedDateFilter,
+                                hasImage: hasImageFilter
+                              },
+                              color: ["#D4A843", "#10B981", "#3B82F6", "#8B5CF6", "#F97316", "#EF4444"][Math.floor(Math.random() * 6)]
+                            };
+                            const updated = [...savedFilterViews, newView];
+                            setSavedFilterViews(updated);
+                            try { localStorage.setItem("admin_savedFilterViews", JSON.stringify(updated)); } catch {}
+                            setNewFilterViewName("");
+                            setShowSaveFilterModal(false);
+                            notify("Filter view saved!");
+                          }}
+                            style={{ flex: 1, padding: "10px", borderRadius: 8, border: "none", background: T.gold, color: T.bg, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>Save View</button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* ══════════════════════════════════════
+                     DATA QUALITY SCORE PANEL
+                     ══════════════════════════════════════ */}
+                  {(() => {
+                    const quality = calculateOverallQuality();
+                    if (!quality) return null;
+                    
+                    return (
+                      <div style={{ marginBottom: 16 }}>
+                        {/* Quality Summary Bar */}
+                        <div 
+                          onClick={() => setShowDataQualityPanel(!showDataQualityPanel)}
+                          style={{ 
+                            display: "flex", alignItems: "center", justifyContent: "space-between",
+                            padding: "12px 16px", borderRadius: showDataQualityPanel ? "10px 10px 0 0" : 10,
+                            background: T.surfaceAlt, border: `1px solid ${T.border}`,
+                            borderBottom: showDataQualityPanel ? "none" : `1px solid ${T.border}`,
+                            cursor: "pointer", transition: "all 0.15s"
+                          }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                              <div style={{ 
+                                width: 42, height: 42, borderRadius: 10, 
+                                background: `${quality.color}15`, 
+                                display: "flex", alignItems: "center", justifyContent: "center",
+                                border: `2px solid ${quality.color}`
+                              }}>
+                                <span style={{ fontSize: 16, fontWeight: 800, color: quality.color, fontFamily: "'Fraunces',serif" }}>{quality.avgScore}</span>
+                              </div>
+                              <div>
+                                <div style={{ fontSize: 12, fontWeight: 700, color: T.white }}>Data Quality Score</div>
+                                <div style={{ fontSize: 10, color: quality.color, fontWeight: 600, textTransform: "capitalize" }}>{quality.grade}</div>
+                              </div>
+                            </div>
+                            
+                            {/* Quick Stats */}
+                            <div style={{ display: "flex", gap: 16, marginLeft: 16 }}>
+                              <div style={{ textAlign: "center" }}>
+                                <div style={{ fontSize: 14, fontWeight: 700, color: "#10B981" }}>{quality.grades.excellent}</div>
+                                <div style={{ fontSize: 9, color: T.textMuted }}>Excellent</div>
+                              </div>
+                              <div style={{ textAlign: "center" }}>
+                                <div style={{ fontSize: 14, fontWeight: 700, color: "#3B82F6" }}>{quality.grades.good}</div>
+                                <div style={{ fontSize: 9, color: T.textMuted }}>Good</div>
+                              </div>
+                              <div style={{ textAlign: "center" }}>
+                                <div style={{ fontSize: 14, fontWeight: 700, color: "#F97316" }}>{quality.grades.fair}</div>
+                                <div style={{ fontSize: 9, color: T.textMuted }}>Fair</div>
+                              </div>
+                              <div style={{ textAlign: "center" }}>
+                                <div style={{ fontSize: 14, fontWeight: 700, color: "#EF4444" }}>{quality.grades.poor}</div>
+                                <div style={{ fontSize: 9, color: T.textMuted }}>Poor</div>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                            {/* Quality Filter Pills */}
+                            <div style={{ display: "flex", gap: 6 }}>
+                              {[
+                                { key: "all", label: "All", color: T.textMuted },
+                                { key: "poor", label: "Poor", color: "#EF4444" },
+                                { key: "fair", label: "Fair", color: "#F97316" },
+                              ].map(f => (
+                                <button key={f.key} type="button" onClick={(e) => { e.stopPropagation(); setQualityFilter(qualityFilter === f.key ? "all" : f.key); }}
+                                  style={{ 
+                                    padding: "4px 10px", borderRadius: 12, fontSize: 10, fontWeight: 600,
+                                    border: `1px solid ${qualityFilter === f.key ? f.color : T.border}`,
+                                    background: qualityFilter === f.key ? `${f.color}15` : "transparent",
+                                    color: qualityFilter === f.key ? f.color : T.textMuted,
+                                    cursor: "pointer", fontFamily: "'Outfit',sans-serif"
+                                  }}>
+                                  {f.label}
+                                </button>
+                              ))}
+                            </div>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={T.textMuted} strokeWidth="2" style={{ transform: showDataQualityPanel ? "rotate(180deg)" : "rotate(0)", transition: "transform 0.2s" }}>
+                              <polyline points="6 9 12 15 18 9"/>
+                            </svg>
+                          </div>
+                        </div>
+                        
+                        {/* Expanded Quality Details */}
+                        {showDataQualityPanel && (
+                          <div className="fade-up" style={{ 
+                            padding: 16, background: T.surface, 
+                            borderRadius: "0 0 10px 10px", border: `1px solid ${T.border}`, borderTop: "none"
+                          }}>
+                            <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, marginBottom: 12, textTransform: "uppercase", letterSpacing: 0.5 }}>Field Completion Rates</div>
+                            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
+                              {[
+                                { key: "price", label: "Price", weight: 25 },
+                                { key: "status", label: "Status", weight: 15 },
+                                { key: "ppsf", label: "PPSF", weight: 15 },
+                                { key: "image", label: "Image", weight: 15 },
+                                { key: "handover", label: "Handover", weight: 10 },
+                                { key: "tier", label: "Tier", weight: 8 },
+                                { key: "beds", label: "Beds", weight: 6 },
+                                { key: "type", label: "Type", weight: 6 },
+                              ].map(field => {
+                                const rate = quality.fieldRates[field.key];
+                                const barColor = rate >= 90 ? "#10B981" : rate >= 70 ? "#3B82F6" : rate >= 50 ? "#F97316" : "#EF4444";
+                                return (
+                                  <div key={field.key} style={{ padding: 10, background: T.surfaceAlt, borderRadius: 8 }}>
+                                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+                                      <span style={{ fontSize: 11, color: T.white, fontWeight: 600 }}>{field.label}</span>
+                                      <span style={{ fontSize: 10, color: barColor, fontWeight: 700 }}>{rate}%</span>
+                                    </div>
+                                    <div style={{ height: 4, background: T.border, borderRadius: 2, overflow: "hidden" }}>
+                                      <div style={{ width: `${rate}%`, height: "100%", background: barColor, borderRadius: 2, transition: "width 0.3s" }} />
+                                    </div>
+                                    <div style={{ fontSize: 9, color: T.textMuted, marginTop: 4 }}>Weight: {field.weight}%</div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                            
+                            {/* Quick Actions */}
+                            <div style={{ display: "flex", gap: 10, marginTop: 16, paddingTop: 16, borderTop: `1px solid ${T.border}` }}>
+                              <button type="button" onClick={() => { setQualityFilter("poor"); setShowDataQualityPanel(false); }}
+                                style={{ padding: "8px 14px", borderRadius: 8, border: `1px solid ${T.red}40`, background: `${T.red}10`, color: T.red, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                                Fix {quality.grades.poor} Poor Quality Projects
+                              </button>
+                              <button type="button" onClick={() => { setPriceMax("0"); setShowDataQualityPanel(false); }}
+                                style={{ padding: "8px 14px", borderRadius: 8, border: `1px solid ${T.orange}40`, background: `${T.orange}10`, color: T.orange, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                                Find Missing Prices ({100 - quality.fieldRates.price}%)
+                              </button>
+                              <button type="button" onClick={() => { setHasImageFilter("no"); setShowDataQualityPanel(false); }}
+                                style={{ padding: "8px 14px", borderRadius: 8, border: `1px solid ${T.blue}40`, background: `${T.blue}10`, color: T.blue, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                                Find Missing Images ({100 - quality.fieldRates.image}%)
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
+                  
+                  {/* ══════════════════════════════════════
+                     DATA INTELLIGENCE PANEL
+                     ══════════════════════════════════════ */}
+                  {(() => {
+                    const intel = calculateDataIntel();
+                    if (!intel) return null;
+                    
+                    return (
+                      <div style={{ marginBottom: 16 }}>
+                        {/* Intel Summary Bar */}
+                        <div 
+                          onClick={() => setShowDataIntelPanel(!showDataIntelPanel)}
+                          style={{ 
+                            display: "flex", alignItems: "center", justifyContent: "space-between",
+                            padding: "12px 16px", borderRadius: showDataIntelPanel ? "10px 10px 0 0" : 10,
+                            background: T.surfaceAlt, border: `1px solid ${T.teal}30`,
+                            borderBottom: showDataIntelPanel ? "none" : `1px solid ${T.teal}30`,
+                            cursor: "pointer", transition: "all 0.15s"
+                          }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                              <div style={{ 
+                                width: 42, height: 42, borderRadius: 10, 
+                                background: `${T.teal}15`, 
+                                display: "flex", alignItems: "center", justifyContent: "center",
+                                border: `2px solid ${T.teal}`
+                              }}>
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={T.teal} strokeWidth="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+                              </div>
+                              <div>
+                                <div style={{ fontSize: 12, fontWeight: 700, color: T.white }}>Data Intelligence</div>
+                                <div style={{ fontSize: 10, color: T.teal, fontWeight: 600 }}>
+                                  {intel.recentChanges.length} changes this week · {intel.duplicates.length} potential duplicates
+                                </div>
+                              </div>
+                            </div>
+                            
+                            {/* Quick Stats */}
+                            <div style={{ display: "flex", gap: 16, marginLeft: 16 }}>
+                              <div style={{ textAlign: "center" }}>
+                                <div style={{ fontSize: 14, fontWeight: 700, color: "#10B981" }}>{intel.staleness.fresh + intel.staleness.recent}</div>
+                                <div style={{ fontSize: 9, color: T.textMuted }}>Fresh</div>
+                              </div>
+                              <div style={{ textAlign: "center" }}>
+                                <div style={{ fontSize: 14, fontWeight: 700, color: "#F97316" }}>{intel.staleness.stale30 + intel.staleness.stale60}</div>
+                                <div style={{ fontSize: 9, color: T.textMuted }}>Stale</div>
+                              </div>
+                              <div style={{ textAlign: "center" }}>
+                                <div style={{ fontSize: 14, fontWeight: 700, color: T.textMuted }}>{intel.staleness.never}</div>
+                                <div style={{ fontSize: 9, color: T.textMuted }}>Never</div>
+                              </div>
+                              <div style={{ textAlign: "center" }}>
+                                <div style={{ fontSize: 14, fontWeight: 700, color: T.red }}>{intel.integrityIssues.length}</div>
+                                <div style={{ fontSize: 9, color: T.textMuted }}>Issues</div>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                            {/* Staleness Filter Pills */}
+                            <div style={{ display: "flex", gap: 6 }}>
+                              {[
+                                { key: "all", label: "All", color: T.textMuted },
+                                { key: "stale60", label: "60+ days", color: "#EF4444" },
+                                { key: "never", label: "Never", color: "#7F1D1D" },
+                              ].map(f => (
+                                <button key={f.key} type="button" onClick={(e) => { e.stopPropagation(); setStalenessFilter(stalenessFilter === f.key ? "all" : f.key); }}
+                                  style={{ 
+                                    padding: "4px 10px", borderRadius: 12, fontSize: 10, fontWeight: 600,
+                                    border: `1px solid ${stalenessFilter === f.key ? f.color : T.border}`,
+                                    background: stalenessFilter === f.key ? `${f.color}15` : "transparent",
+                                    color: stalenessFilter === f.key ? f.color : T.textMuted,
+                                    cursor: "pointer", fontFamily: "'Outfit',sans-serif"
+                                  }}>
+                                  {f.label}
+                                </button>
+                              ))}
+                            </div>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={T.textMuted} strokeWidth="2" style={{ transform: showDataIntelPanel ? "rotate(180deg)" : "rotate(0)", transition: "transform 0.2s" }}>
+                              <polyline points="6 9 12 15 18 9"/>
+                            </svg>
+                          </div>
+                        </div>
+                        
+                        {/* Expanded Intel Details */}
+                        {showDataIntelPanel && (
+                          <div className="fade-up" style={{ 
+                            padding: 16, background: T.surface, 
+                            borderRadius: "0 0 10px 10px", border: `1px solid ${T.teal}30`, borderTop: "none"
+                          }}>
+                            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+                              
+                              {/* Recent Changes */}
+                              <div>
+                                <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, marginBottom: 10, textTransform: "uppercase", letterSpacing: 0.5, display: "flex", alignItems: "center", gap: 6 }}>
+                                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={T.teal} strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                                  Recent Changes (7 days)
+                                </div>
+                                {intel.recentChanges.length === 0 ? (
+                                  <div style={{ padding: 16, background: T.surfaceAlt, borderRadius: 8, textAlign: "center", color: T.textMuted, fontSize: 11 }}>No changes in the last 7 days</div>
+                                ) : (
+                                  <div style={{ maxHeight: 180, overflowY: "auto", background: T.surfaceAlt, borderRadius: 8 }}>
+                                    {intel.recentChanges.map((change, i) => (
+                                      <div key={i} onClick={() => { setEditingProject(change.project.id); setProjectForm(liveProjects[change.project.id] || {}); setShowDataIntelPanel(false); }}
+                                        style={{ padding: "8px 12px", borderBottom: `1px solid ${T.border}20`, cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center" }}
+                                        onMouseEnter={e => e.currentTarget.style.background = T.surface}
+                                        onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                                        <div>
+                                          <div style={{ fontSize: 11, fontWeight: 600, color: T.white }}>{change.project.name}</div>
+                                          <div style={{ fontSize: 10, color: T.textMuted }}>{change.updatedBy || "admin"}</div>
+                                        </div>
+                                        <div style={{ fontSize: 10, color: T.teal, fontWeight: 600 }}>{change.days === 0 ? "Today" : `${change.days}d ago`}</div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                              
+                              {/* Data Integrity Issues */}
+                              <div>
+                                <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, marginBottom: 10, textTransform: "uppercase", letterSpacing: 0.5, display: "flex", alignItems: "center", gap: 6 }}>
+                                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={T.red} strokeWidth="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                                  Data Issues ({intel.integrityIssues.length})
+                                </div>
+                                {intel.integrityIssues.length === 0 ? (
+                                  <div style={{ padding: 16, background: "rgba(16,185,129,0.08)", borderRadius: 8, textAlign: "center", color: T.green, fontSize: 11, border: `1px solid ${T.green}30` }}>
+                                    ✔ No data integrity issues found
+                                  </div>
+                                ) : (
+                                  <div style={{ maxHeight: 180, overflowY: "auto", background: T.surfaceAlt, borderRadius: 8 }}>
+                                    {intel.integrityIssues.slice(0, 8).map((issue, i) => (
+                                      <div key={i} onClick={() => { setEditingProject(issue.project.id); setProjectForm(liveProjects[issue.project.id] || {}); setShowDataIntelPanel(false); }}
+                                        style={{ padding: "8px 12px", borderBottom: `1px solid ${T.border}20`, cursor: "pointer" }}
+                                        onMouseEnter={e => e.currentTarget.style.background = T.surface}
+                                        onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                                        <div style={{ fontSize: 11, fontWeight: 600, color: T.white, marginBottom: 2 }}>{issue.project.name}</div>
+                                        <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                                          {issue.issues.map((iss, j) => (
+                                            <span key={j} style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: `${T.red}15`, color: T.red }}>{iss}</span>
+                                          ))}
+                                        </div>
+                                      </div>
+                                    ))}
+                                    {intel.integrityIssues.length > 8 && (
+                                      <div style={{ padding: 8, textAlign: "center", fontSize: 10, color: T.textMuted }}>+{intel.integrityIssues.length - 8} more issues</div>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                            
+                            {/* Potential Duplicates */}
+                            {intel.duplicates.length > 0 && (
+                              <div style={{ marginTop: 16, paddingTop: 16, borderTop: `1px solid ${T.border}` }}>
+                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+                                  <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.5, display: "flex", alignItems: "center", gap: 6 }}>
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={T.orange} strokeWidth="2"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M4 16V4a2 2 0 012-2h12"/></svg>
+                                    Potential Duplicates ({intel.duplicates.length})
+                                  </div>
+                                  <button type="button" onClick={() => setShowDuplicatesModal(true)}
+                                    style={{ fontSize: 10, padding: "4px 10px", borderRadius: 6, border: `1px solid ${T.orange}40`, background: "transparent", color: T.orange, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>
+                                    Review All
+                                  </button>
+                                </div>
+                                <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                                  {intel.duplicates.slice(0, 3).map((dup, i) => (
+                                    <div key={i} style={{ padding: "8px 12px", background: `${T.orange}10`, borderRadius: 8, border: `1px solid ${T.orange}30`, fontSize: 11 }}>
+                                      <span style={{ color: T.white }}>{dup.project1.name}</span>
+                                      <span style={{ color: T.orange, margin: "0 6px" }}></span>
+                                      <span style={{ color: T.white }}>{dup.project2.name}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                            
+                            {/* Quick Actions */}
+                            <div style={{ display: "flex", gap: 10, marginTop: 16, paddingTop: 16, borderTop: `1px solid ${T.border}` }}>
+                              <button type="button" onClick={() => { setStalenessFilter("stale60"); setShowDataIntelPanel(false); }}
+                                style={{ padding: "8px 14px", borderRadius: 8, border: `1px solid ${T.red}40`, background: `${T.red}10`, color: T.red, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                                Review Stale Data ({intel.staleness.stale60 + intel.staleness.stale90})
+                              </button>
+                              <button type="button" onClick={() => { setStalenessFilter("never"); setShowDataIntelPanel(false); }}
+                                style={{ padding: "8px 14px", borderRadius: 8, border: `1px solid ${T.textMuted}40`, background: `${T.textMuted}10`, color: T.textMuted, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                                Never Updated ({intel.staleness.never})
+                              </button>
+                              <button type="button" onClick={() => { setDataSourceFilter("live"); setShowDataIntelPanel(false); }}
+                                style={{ padding: "8px 14px", borderRadius: 8, border: `1px solid ${T.green}40`, background: `${T.green}10`, color: T.green, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                                View Live Overrides ({intel.totalLive})
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
+                  
+                  {/* ══════════════════════════════════════
+                     DUPLICATES REVIEW MODAL
+                     ══════════════════════════════════════ */}
+                  {showDuplicatesModal && (() => {
+                    const duplicates = findDuplicates();
+                    return (
+                      <div style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.92)", zIndex: 9000, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(8px)" }} onClick={() => setShowDuplicatesModal(false)}>
+                        <div style={{ background: "#0C1B2E", border: `1px solid ${T.orange}40`, borderRadius: 16, width: "95%", maxWidth: 700, maxHeight: "80vh", overflowY: "auto" }} onClick={e => e.stopPropagation()}>
+                          <div style={{ padding: "20px 24px", borderBottom: `1px solid ${T.orange}20`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                            <div>
+                              <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 700, color: T.orange, margin: 0 }}>Potential Duplicates</h3>
+                              <p style={{ fontSize: 12, color: T.textMuted, margin: "4px 0 0" }}>{duplicates.length} potential duplicate pairs found</p>
+                            </div>
+                            <button type="button" onClick={() => setShowDuplicatesModal(false)} style={{ background: "transparent", border: "none", color: T.textMuted, fontSize: 20, cursor: "pointer", padding: "4px 10px" }}>×</button>
+                          </div>
+                          <div style={{ padding: 20 }}>
+                            {duplicates.length === 0 ? (
+                              <div style={{ textAlign: "center", padding: 40 }}>
+                                <div style={{ fontSize: 40, marginBottom: 12 }}>✔</div>
+                                <div style={{ fontSize: 14, color: T.green, fontWeight: 600 }}>No duplicates detected</div>
+                                <div style={{ fontSize: 12, color: T.textMuted, marginTop: 4 }}>Your data is clean!</div>
+                              </div>
+                            ) : (
+                              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                                {duplicates.map((dup, i) => {
+                                  const m1 = getMergedProject(dup.project1);
+                                  const m2 = getMergedProject(dup.project2);
+                                  return (
+                                    <div key={i} style={{ padding: 16, background: T.surfaceAlt, borderRadius: 10, border: `1px solid ${T.border}` }}>
+                                      <div style={{ fontSize: 10, color: T.orange, fontWeight: 600, marginBottom: 10 }}>{dup.reason}</div>
+                                      <div style={{ display: "grid", gridTemplateColumns: "1fr auto 1fr", gap: 12, alignItems: "center" }}>
+                                        <div onClick={() => { setEditingProject(dup.project1.id); setProjectForm(liveProjects[dup.project1.id] || {}); setShowDuplicatesModal(false); }}
+                                          style={{ padding: 12, background: T.surface, borderRadius: 8, cursor: "pointer" }}>
+                                          <div style={{ fontSize: 12, fontWeight: 600, color: T.white }}>{dup.project1.name}</div>
+                                          <div style={{ fontSize: 10, color: T.textMuted, marginTop: 4 }}>{dup.project1.community}</div>
+                                          <div style={{ fontSize: 11, color: T.gold, marginTop: 4 }}>{m1.price ? `AED ${(m1.price/1e6).toFixed(2)}M` : "No price"}</div>
+                                        </div>
+                                        <div style={{ color: T.orange, fontSize: 20 }}></div>
+                                        <div onClick={() => { setEditingProject(dup.project2.id); setProjectForm(liveProjects[dup.project2.id] || {}); setShowDuplicatesModal(false); }}
+                                          style={{ padding: 12, background: T.surface, borderRadius: 8, cursor: "pointer" }}>
+                                          <div style={{ fontSize: 12, fontWeight: 600, color: T.white }}>{dup.project2.name}</div>
+                                          <div style={{ fontSize: 10, color: T.textMuted, marginTop: 4 }}>{dup.project2.community}</div>
+                                          <div style={{ fontSize: 11, color: T.gold, marginTop: 4 }}>{m2.price ? `AED ${(m2.price/1e6).toFixed(2)}M` : "No price"}</div>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })()}
+
+                  {/* Bulk Selection Action Bar */}
+                  {bulkSelected.length > 0 && (
+                    <div style={{ 
+                      display: "flex", alignItems: "center", justifyContent: "space-between",
+                      padding: "12px 16px", borderRadius: 10, marginBottom: 16,
+                      background: `${T.gold}15`, border: `1px solid ${T.gold}30`
+                    }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                        <span style={{ fontWeight: 700, color: T.gold, fontSize: 14 }}>{bulkSelected.length} selected</span>
+                        <button type="button" onClick={() => setBulkSelected([])}
+                          style={{ padding: "4px 10px", borderRadius: 4, border: `1px solid ${T.gold}50`, background: "transparent", color: T.gold, fontSize: 11, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>Clear</button>
+                      </div>
+                      <div style={{ display: "flex", gap: 8 }}>
+                        {/* Export Selected */}
+                        <button type="button" onClick={() => {
+                          const selectedProjects = emaarProjects.filter(p => bulkSelected.includes(String(p.id)));
+                          exportFilteredProjects(selectedProjects, `emaar-selected-${bulkSelected.length}-projects.csv`);
+                        }}
+                          style={{ padding: "8px 14px", borderRadius: 8, border: `1px solid ${T.teal}`, background: "transparent", color: T.teal, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif", display: "flex", alignItems: "center", gap: 5 }}>
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                          Export
+                        </button>
+                        {/* Bulk Price Update */}
+                        <button type="button" onClick={() => setShowBulkModal(true)}
+                          style={{ padding: "8px 14px", borderRadius: 8, border: "none", background: T.gold, color: T.bg, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif", display: "flex", alignItems: "center", gap: 5 }}>
+                          {I.revenue} Price Update
+                        </button>
+                        {/* Bulk Delete */}
+                        <button type="button" onClick={() => setShowBulkDeleteConfirm(true)}
+                          style={{ padding: "8px 14px", borderRadius: 8, border: `1px solid ${T.red}`, background: `${T.red}15`, color: T.red, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif", display: "flex", alignItems: "center", gap: 5 }}>
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Bulk Delete Confirmation Modal */}
+                  {showBulkDeleteConfirm && (
+                    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", zIndex: 9000, display: "flex", alignItems: "center", justifyContent: "center" }} onClick={() => setShowBulkDeleteConfirm(false)}>
+                      <div className="fade-up" style={{ background: T.surface, borderRadius: 16, padding: 28, width: 420, border: `1px solid ${T.red}40` }} onClick={e => e.stopPropagation()}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
+                          <div style={{ width: 48, height: 48, borderRadius: 12, background: `${T.red}15`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={T.red} strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                          </div>
+                          <div>
+                            <div style={{ fontSize: 18, fontWeight: 700, color: T.white }}>Delete {bulkSelected.length} Projects?</div>
+                            <div style={{ fontSize: 12, color: T.textMuted }}>This will remove Firestore overrides</div>
+                          </div>
+                        </div>
+                        <div style={{ padding: 14, background: T.surfaceAlt, borderRadius: 10, marginBottom: 20, fontSize: 12, color: T.textSecondary }}>
+                          <div style={{ marginBottom: 8 }}><strong>Note:</strong> Only "Live" overrides will be deleted. Default data from data.js cannot be removed.</div>
+                          <div>Projects with overrides: <strong style={{ color: T.gold }}>{bulkSelected.filter(id => liveProjects[id]).length}</strong> of {bulkSelected.length} selected</div>
+                        </div>
+                        <div style={{ display: "flex", gap: 12 }}>
+                          <button type="button" onClick={() => setShowBulkDeleteConfirm(false)}
+                            style={{ flex: 1, padding: "12px", borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.textSecondary, fontSize: 13, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>
+                            Cancel
+                          </button>
+                          <button type="button" onClick={bulkDeleteProjects} disabled={bulkDeleteLoading}
+                            style={{ flex: 1, padding: "12px", borderRadius: 8, border: "none", background: T.red, color: "#fff", fontSize: 13, cursor: bulkDeleteLoading ? "wait" : "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 700, opacity: bulkDeleteLoading ? 0.7 : 1 }}>
+                            {bulkDeleteLoading ? "Deleting..." : "Yes, Delete"}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Editing form */}
+                  {editingProject && (() => {
+                    if (editingProject === "new") return (
+                      <div className="chart-box fade-up" style={{ padding: 24, marginBottom: 20, border: "1px solid rgba(16,185,129,0.3)" }}>
+                        {/* Header */}
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
+                          <div>
+                            <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 700, color: T.green, margin: 0 }}>+ Add New Project</h3>
+                            <p style={{ fontSize: 11, color: T.textMuted, margin: "4px 0 0" }}>Fill in all relevant fields — everything here appears on the dashboard and project detail page.</p>
+                          </div>
+                          <button type="button" onClick={() => setEditingProject(null)} style={{ fontSize: 11, padding: "6px 14px", borderRadius: 8, border: "1px solid rgba(100,116,139,0.3)", background: "transparent", color: T.textSecondary, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>Cancel</button>
+                        </div>
+
+                        {/* ── SECTION: Basic Info ── */}
+                        <div style={{ marginBottom: 20 }}>
+                          <div style={{ fontSize: 10, fontWeight: 700, color: T.gold, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 12, paddingBottom: 6, borderBottom: `1px solid ${T.border}` }}>📋 Basic Information</div>
+                          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
+                            {[
+                              { key: "name", label: "Project Name *", placeholder: "e.g. Golf Heights", type: "text" },
+                              { key: "community", label: "Community *", placeholder: "e.g. Dubai Hills Estate", type: "text" },
+                              { key: "district", label: "District Code", placeholder: "e.g. DHE", type: "text" },
+                              { key: "type", label: "Type", placeholder: "", type: "select", options: ["", "Apartments", "Apts & TH", "Apts & Villas", "Apts & PH", "Townhouses", "Villas", "Branded Res."] },
+                              { key: "status", label: "Status", placeholder: "", type: "select", options: ["", "Off-Plan", "Under Construction", "Completed", "Selling", "Upcoming", "Sold Out", "Ready"] },
+                              { key: "tier", label: "Tier", placeholder: "", type: "select", options: ["", "Affordable", "Mid-Market", "Mid-Premium", "Premium", "Luxury", "Ultra-Luxury", "Luxury Branded", "Ultra-Lux Branded"] },
+                              { key: "brand", label: "Brand", placeholder: "", type: "select", options: ["", "—", "Address", "Vida", "Palace", "Bristol"] },
+                              { key: "availability", label: "Availability", placeholder: "", type: "select", options: ["", "Available", "Limited Units", "Sold Out", "Coming Soon"] },
+                              { key: "tagline", label: "Project Tagline", placeholder: "e.g. Golf-Side Family Living", type: "text" },
+                            ].map(f => (
+                              <div key={f.key}>
+                                <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>{f.label}</label>
+                                {f.type === "select" ? (
+                                  <select value={projectForm[f.key] || ""} onChange={e => setProjectForm(prev => ({ ...prev, [f.key]: e.target.value }))}
+                                    style={{ width: "100%", padding: "10px 12px", background: T.bg, border: "1px solid rgba(212,168,67,0.12)", borderRadius: 8, color: T.textPrimary, fontSize: 13, fontFamily: "'Outfit',sans-serif" }}>
+                                    {f.options.map(o => <option key={o} value={o}>{o || "— Select —"}</option>)}
+                                  </select>
+                                ) : (
+                                  <input type="text" placeholder={f.placeholder} value={projectForm[f.key] || ""} onChange={e => setProjectForm(prev => ({ ...prev, [f.key]: e.target.value }))}
+                                    style={{ width: "100%", padding: "10px 12px", background: T.bg, border: "1px solid rgba(212,168,67,0.12)", borderRadius: 8, color: T.textPrimary, fontSize: 13, fontFamily: "'Outfit',sans-serif", outline: "none" }} />
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* ── SECTION: Pricing & Size ── */}
+                        <div style={{ marginBottom: 20 }}>
+                          <div style={{ fontSize: 10, fontWeight: 700, color: T.gold, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 12, paddingBottom: 6, borderBottom: `1px solid ${T.border}` }}>💰 Pricing & Size</div>
+                          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
+                            {[
+                              { key: "price", label: "Price (AED) *", placeholder: "e.g. 2500000" },
+                              { key: "ppsf", label: "Price / sqft (AED)", placeholder: "e.g. 2200" },
+                              { key: "dldPpsf", label: "DLD PPSF (AED)", placeholder: "e.g. 2100" },
+                              { key: "sizeFrom", label: "Size From (sqft)", placeholder: "e.g. 750" },
+                              { key: "sizeTo", label: "Size To (sqft)", placeholder: "e.g. 2200" },
+                              { key: "beds", label: "Bedrooms", placeholder: "e.g. 1-3 BR" },
+                              { key: "unitsTotal", label: "Total Units", placeholder: "e.g. 200" },
+                              { key: "unitsAvail", label: "Units Available", placeholder: "e.g. 45" },
+                              { key: "ratingOverride", label: "Rating Override (/10)", placeholder: "Leave blank = auto" },
+                            ].map(f => (
+                              <div key={f.key}>
+                                <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>{f.label}</label>
+                                <input type="text" placeholder={f.placeholder} value={projectForm[f.key] || ""} onChange={e => setProjectForm(prev => ({ ...prev, [f.key]: e.target.value }))}
+                                  style={{ width: "100%", padding: "10px 12px", background: T.bg, border: "1px solid rgba(212,168,67,0.12)", borderRadius: 8, color: T.textPrimary, fontSize: 13, fontFamily: "'Outfit',sans-serif", outline: "none" }} />
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* ── SECTION: Timeline & Payment ── */}
+                        <div style={{ marginBottom: 20 }}>
+                          <div style={{ fontSize: 10, fontWeight: 700, color: T.gold, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 12, paddingBottom: 6, borderBottom: `1px solid ${T.border}` }}>📅 Timeline & Payment</div>
+                          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
+                            {[
+                              { key: "handover", label: "Handover", placeholder: "e.g. Q4 2027" },
+                              { key: "construction", label: "Construction %", placeholder: "e.g. 45" },
+                              { key: "paymentPlan", label: "Payment Plan", placeholder: "e.g. 80/20" },
+                              { key: "downPayment", label: "Down Payment %", placeholder: "e.g. 20" },
+                              { key: "duringConstruction", label: "During Construction %", placeholder: "e.g. 40" },
+                              { key: "onHandover", label: "On Handover %", placeholder: "e.g. 40" },
+                            ].map(f => (
+                              <div key={f.key}>
+                                <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>{f.label}</label>
+                                <input type="text" placeholder={f.placeholder} value={projectForm[f.key] || ""} onChange={e => setProjectForm(prev => ({ ...prev, [f.key]: e.target.value }))}
+                                  style={{ width: "100%", padding: "10px 12px", background: T.bg, border: "1px solid rgba(212,168,67,0.12)", borderRadius: 8, color: T.textPrimary, fontSize: 13, fontFamily: "'Outfit',sans-serif", outline: "none" }} />
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* ── SECTION: Yields & ROI ── */}
+                        <div style={{ marginBottom: 20 }}>
+                          <div style={{ fontSize: 10, fontWeight: 700, color: T.gold, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 12, paddingBottom: 6, borderBottom: `1px solid ${T.border}` }}>📈 Yields & ROI</div>
+                          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
+                            {[
+                              { key: "grossYield", label: "Gross Yield %", placeholder: "e.g. 7.2" },
+                              { key: "netYield", label: "Net Yield %", placeholder: "e.g. 5.8" },
+                              { key: "estimatedRent", label: "Est. Annual Rent (AED)", placeholder: "e.g. 120000" },
+                              { key: "serviceCharge", label: "Service Charge (AED/sqft)", placeholder: "e.g. 18" },
+                              { key: "appreciation", label: "Appreciation % (5yr)", placeholder: "e.g. 35" },
+                            ].map(f => (
+                              <div key={f.key}>
+                                <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>{f.label}</label>
+                                <input type="text" placeholder={f.placeholder} value={projectForm[f.key] || ""} onChange={e => setProjectForm(prev => ({ ...prev, [f.key]: e.target.value }))}
+                                  style={{ width: "100%", padding: "10px 12px", background: T.bg, border: "1px solid rgba(212,168,67,0.12)", borderRadius: 8, color: T.textPrimary, fontSize: 13, fontFamily: "'Outfit',sans-serif", outline: "none" }} />
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* ── SECTION: Location ── */}
+                        <div style={{ marginBottom: 20 }}>
+                          <div style={{ fontSize: 10, fontWeight: 700, color: T.teal, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 12, paddingBottom: 6, borderBottom: `1px solid rgba(20,184,166,0.2)` }}>📍 Location & Distances</div>
+                          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
+                            <div>
+                              <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>Latitude</label>
+                              <input type="number" step="0.000001" placeholder="e.g. 25.197525" value={projectForm.lat || ""} onChange={e => setProjectForm(prev => ({ ...prev, lat: e.target.value }))}
+                                style={{ width: "100%", padding: "10px 12px", background: T.bg, border: "1px solid rgba(20,184,166,0.15)", borderRadius: 8, color: T.textPrimary, fontSize: 13, fontFamily: "'Outfit',sans-serif", outline: "none" }} />
+                            </div>
+                            <div>
+                              <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>Longitude</label>
+                              <input type="number" step="0.000001" placeholder="e.g. 55.274288" value={projectForm.lng || ""} onChange={e => setProjectForm(prev => ({ ...prev, lng: e.target.value }))}
+                                style={{ width: "100%", padding: "10px 12px", background: T.bg, border: "1px solid rgba(20,184,166,0.15)", borderRadius: 8, color: T.textPrimary, fontSize: 13, fontFamily: "'Outfit',sans-serif", outline: "none" }} />
+                            </div>
+                            {[
+                              { key: "distDowntown", label: "Dist. to Downtown (km)", placeholder: "e.g. 12" },
+                              { key: "distAirport", label: "Dist. to Airport (km)", placeholder: "e.g. 25" },
+                              { key: "distMarina", label: "Dist. to Marina (km)", placeholder: "e.g. 8" },
+                              { key: "distMall", label: "Dist. to Mall of Emirates (km)", placeholder: "e.g. 6" },
+                            ].map(f => (
+                              <div key={f.key}>
+                                <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>{f.label}</label>
+                                <input type="text" placeholder={f.placeholder} value={projectForm[f.key] || ""} onChange={e => setProjectForm(prev => ({ ...prev, [f.key]: e.target.value }))}
+                                  style={{ width: "100%", padding: "10px 12px", background: T.bg, border: "1px solid rgba(20,184,166,0.15)", borderRadius: 8, color: T.textPrimary, fontSize: 13, fontFamily: "'Outfit',sans-serif", outline: "none" }} />
+                              </div>
+                            ))}
+                          </div>
+                          <div style={{ fontSize: 10, color: T.textMuted, marginTop: 6 }}>💡 Right-click on Google Maps → "What's here?" to get coordinates</div>
+                        </div>
+
+                        {/* ── SECTION: Media ── */}
+                        <div style={{ marginBottom: 20 }}>
+                          <div style={{ fontSize: 10, fontWeight: 700, color: T.gold, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 12, paddingBottom: 6, borderBottom: `1px solid ${T.border}` }}>🖼️ Media & Documents</div>
+                          {/* Image upload */}
+                          <div style={{ padding: 14, borderRadius: 10, border: "1px solid rgba(212,168,67,0.12)", background: T.surfaceAlt, marginBottom: 12 }}>
+                            <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 8 }}>Project Image</div>
+                            {projectForm.imageUrl && <img src={projectForm.imageUrl} alt="Preview" style={{ width: "100%", height: 120, objectFit: "cover", borderRadius: 8, marginBottom: 8 }} onError={e => e.target.style.display="none"} />}
+                            <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, padding: "9px 14px", borderRadius: 8, border: "1px solid rgba(212,168,67,0.2)", background: T.bg, color: T.textSecondary, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                              {projectForm.imageUploading ? "Uploading..." : projectForm.imageUrl ? "Image Uploaded ✔ [change]" : "Upload Project Image"}
+                              <input type="file" accept="image/*" style={{ display: "none" }} onChange={async e => {
+                                const file = e.target.files[0]; if (!file) return;
+                                setProjectForm(prev => ({ ...prev, imageUploading: true }));
+                                const fd = new FormData(); fd.append("file", file); fd.append("upload_preset", "dxb-analytics"); fd.append("cloud_name", "dh9dd5ld0");
+                                const res = await fetch("https://api.cloudinary.com/v1_1/dh9dd5ld0/auto/upload", { method: "POST", body: fd });
+                                const data = await res.json();
+                                setProjectForm(prev => ({ ...prev, imageUrl: data.secure_url, imageUploading: false }));
+                                notify("Image uploaded!");
+                              }} />
+                            </label>
+                          </div>
+                          {/* URL fields for video + PDFs */}
+                          <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 12 }}>
+                            {[
+                              { key: "videoUrl", label: "Video URL", placeholder: "e.g. https://..." },
+                              { key: "pdfBrochure", label: "Brochure PDF URL", placeholder: "e.g. https://..." },
+                              { key: "pdfFloorPlan", label: "Floor Plan PDF URL", placeholder: "e.g. https://..." },
+                              { key: "pdfPaymentPlan", label: "Payment Plan PDF URL", placeholder: "e.g. https://..." },
+                              { key: "pdfFactSheet", label: "Fact Sheet PDF URL", placeholder: "e.g. https://..." },
+                              { key: "emaarUrl", label: "Source / Listing URL", placeholder: "e.g. https://propertyfinder.ae/..." },
+                            ].map(f => (
+                              <div key={f.key}>
+                                <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>{f.label}</label>
+                                <input type="text" placeholder={f.placeholder} value={projectForm[f.key] || ""} onChange={e => setProjectForm(prev => ({ ...prev, [f.key]: e.target.value }))}
+                                  style={{ width: "100%", padding: "10px 12px", background: T.bg, border: "1px solid rgba(212,168,67,0.12)", borderRadius: 8, color: T.textPrimary, fontSize: 13, fontFamily: "'Outfit',sans-serif", outline: "none" }} />
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* ── SECTION: Data Quality ── */}
+                        <div style={{ marginBottom: 20 }}>
+                          <div style={{ fontSize: 10, fontWeight: 700, color: T.gold, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 12, paddingBottom: 6, borderBottom: `1px solid ${T.border}` }}>🗂️ Data Quality & Admin</div>
+                          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
+                            <div>
+                              <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>Data Source</label>
+                              <select value={projectForm.dataSource || ""} onChange={e => setProjectForm(prev => ({ ...prev, dataSource: e.target.value }))}
+                                style={{ width: "100%", padding: "10px 12px", background: T.bg, border: "1px solid rgba(212,168,67,0.12)", borderRadius: 8, color: T.textPrimary, fontSize: 13, fontFamily: "'Outfit',sans-serif" }}>
+                                {["", "Emaar IR Report", "DLD Portal", "DXBinteract", "Manual Entry", "Agent Verified", "Market Research"].map(o => <option key={o} value={o}>{o || "— Select —"}</option>)}
+                              </select>
+                            </div>
+                            <div>
+                              <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>Last Verified</label>
+                              <input type="text" placeholder="e.g. Mar 2026" value={projectForm.lastVerified || ""} onChange={e => setProjectForm(prev => ({ ...prev, lastVerified: e.target.value }))}
+                                style={{ width: "100%", padding: "10px 12px", background: T.bg, border: "1px solid rgba(212,168,67,0.12)", borderRadius: 8, color: T.textPrimary, fontSize: 13, fontFamily: "'Outfit',sans-serif", outline: "none" }} />
+                            </div>
+                            <div>
+                              <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>Admin Notes</label>
+                              <input type="text" placeholder="Internal notes (not shown to users)" value={projectForm.notes || ""} onChange={e => setProjectForm(prev => ({ ...prev, notes: e.target.value }))}
+                                style={{ width: "100%", padding: "10px 12px", background: T.bg, border: "1px solid rgba(212,168,67,0.12)", borderRadius: 8, color: T.textPrimary, fontSize: 13, fontFamily: "'Outfit',sans-serif", outline: "none" }} />
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Duplicate name warning */}
+                        {projectForm.name && emaarProjects.some(p => p.name?.toLowerCase() === projectForm.name?.toLowerCase()) && (
+                          <div style={{ marginBottom: 12, padding: "10px 14px", borderRadius: 8, background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)", fontSize: 11, color: "#EF4444" }}>
+                            ⚠️ A project named "{projectForm.name}" already exists in data.js. This will create a duplicate entry.
+                          </div>
+                        )}
+
+                        <button type="button" disabled={dataSaving} onClick={() => saveNewProject(projectForm)}
+                          style={{ marginTop: 4, width: "100%", padding: "14px", borderRadius: 10, border: "none", background: "linear-gradient(135deg, #10B981, #059669)", color: "#FFFFFF", fontSize: 14, fontWeight: 700, cursor: dataSaving ? "wait" : "pointer", fontFamily: "'Outfit',sans-serif", opacity: dataSaving ? 0.6 : 1 }}>
+                          {dataSaving ? "Saving..." : "+ Add Project to Firestore"}
+                        </button>
+                      </div>
+                    );
+                    const p = emaarProjects.find(x => x.id === editingProject);
+                    if (!p) return null;
+                    const merged = getMergedProject(p);
+                    const hasOverride = !!liveProjects[p.id];
+                    const fields = [
+                      { key: "price", label: "Price (AED)", type: "number", placeholder: "e.g. 2500000", tip: "Starting price of the project in AED. This appears on the project card on the dashboard." },
+                      { key: "ppsf", label: "Price/sqft (AED)", type: "number", placeholder: "e.g. 2200", tip: "Price per square foot. Used in yield calculations and shown in comparison tables." },
+                      { key: "sizeFrom", label: "Size From (sqft)", type: "number", placeholder: "e.g. 750", tip: "Minimum unit size in sqft. Shown as size range on the project detail page." },
+                      { key: "sizeTo", label: "Size To (sqft)", type: "number", placeholder: "e.g. 2200", tip: "Maximum unit size in sqft. Shown as size range on the project detail page." },
+                      { key: "status", label: "Status", type: "select", options: ["Under Construction", "Off-Plan", "Completed", "Selling", "Upcoming", "Sold Out", "Ready"], tip: "Current project status shown as a badge on the project card and detail page." },
+                      { key: "handover", label: "Handover", type: "text", placeholder: "e.g. Q4 2027", tip: "Expected handover/completion date. Shown on the project detail page with countdown." },
+                      { key: "type", label: "Type", type: "select", options: ["Apartments", "Apts & TH", "Apts & Villas", "Apts & PH", "Townhouses", "Villas", "Branded Res."], tip: "Property type used for filtering on the dashboard and yield calculations." },
+                      { key: "beds", label: "Bedrooms", type: "text", placeholder: "e.g. 1-3 BR", tip: "Available bedroom configurations, e.g. '1-3 BR' or 'Studio-4 BR'." },
+                      { key: "paymentPlan", label: "Payment Plan", type: "text", placeholder: "e.g. 80/20", tip: "Payment split — affects investment score rating on project cards." },
+                      { key: "construction", label: "Construction %", type: "number", placeholder: "e.g. 75", tip: "Construction progress percentage (0-100). Shown as a progress bar on the project card and detail page." },
+                      { key: "tier", label: "Tier", type: "select", options: ["Affordable", "Mid-Market", "Mid-Premium", "Premium", "Luxury", "Ultra-Luxury", "Luxury Branded", "Ultra-Lux Branded"], tip: "Price/quality tier badge shown on project cards and in the tier filter on the dashboard." },
+                      { key: "emaarUrl", label: "PropertyFinder / Source URL", type: "text", placeholder: "e.g. https://www.propertyfinder.ae/...", tip: "Official listing URL shown as the SOURCE button on the project detail page." },
+                      { key: "tagline", label: "Project Tagline", type: "text", placeholder: "e.g. Golf-Side Family Living...", tip: "Short italic tagline shown on the project detail page under the community name. Leave blank to use community default." },
+                      { key: "dldPpsf", label: "DLD PPSF (AED)", type: "number", placeholder: "e.g. 2100", tip: "Dubai Land Department's registered price per sqft. Used for comparison vs asking price." },
+                      { key: "dataSource", label: "Data Source", type: "select", options: ["Emaar IR Report", "DLD Portal", "DXBinteract", "Manual Entry", "Agent Verified", "Market Research"], tip: "Where this data came from. Helps track data quality and credibility." },
+                      { key: "lastVerified", label: "Last Verified Date", type: "text", placeholder: "e.g. Mar 2026", tip: "When this data was last checked against a source. Helps keep data fresh." },
+                      { key: "availability", label: "Availability", type: "select", options: ["Available", "Sold Out", "Limited Units", "Coming Soon"], tip: "Current unit availability shown on the project card." },
+                      { key: "unitsTotal", label: "Total Units", type: "number", placeholder: "e.g. 200", tip: "Total number of units in the development." },
+                      { key: "unitsAvail", label: "Units Available", type: "number", placeholder: "e.g. 45", tip: "Number of units currently available for purchase." },
+                      { key: "notes", label: "Admin Notes", type: "text", placeholder: "Internal notes...", tip: "Private notes only visible to admins. Never shown to users." },
+                      { key: "name", label: "Project Name", type: "text", placeholder: "e.g. The Golf Residence", tip: "Display name of the project shown everywhere on the dashboard." },
+                      { key: "community", label: "Community", type: "text", placeholder: "e.g. Dubai Hills Estate", tip: "Master community name. Must match exactly for ROI data to link correctly." },
+                      { key: "district", label: "District Code", type: "text", placeholder: "e.g. DHE", tip: "Short district code used for filtering (DHE, DCH, EBF, ES, GPC, TV, RYM, TO, BB, TH)." },
+                      { key: "brand", label: "Brand Name", type: "select", options: ["—", "Address", "Vida", "Palace", "Bristol"], tip: "Branded hotel/lifestyle brand. Shows as a gold badge on the project detail page." },
+                      { key: "ratingOverride", label: "Rating Override (/10)", type: "number", placeholder: "Leave blank = auto-calculated", tip: "Override the auto-calculated investment score. Set 0-10. Leave blank to use the automatic score based on yield, PPSF, handover, and payment plan." },
+                    ];
+                    return (
+                      <div className="chart-box fade-up" style={{ padding: 24, marginBottom: 20, border: `1px solid ${T.gold}30` }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+                          <div>
+                            <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 700, color: T.white }}>{merged.name || p.name}</h3>
+                            <span style={{ fontSize: 12, color: T.textMuted }}>{p.community} · ID: {p.id}</span>
+                            {hasOverride && <span style={{ marginLeft: 8, fontSize: 10, padding: "2px 8px", borderRadius: 6, background: "rgba(16,185,129,0.12)", color: T.green, fontWeight: 600 }}>LIVE DATA</span>}
+                          </div>
+                          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                            <button type="button" onClick={() => { setViewingVersions(String(p.id)); fetchProjectVersions(p.id); }} style={{ fontSize: 11, padding: "6px 14px", borderRadius: 8, border: "1px solid rgba(212,168,67,0.3)", background: "rgba(212,168,67,0.06)", color: T.gold, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>Version History</button>
+                            <button type="button" onClick={() => deleteProject(p.id)} style={{ fontSize: 11, padding: "6px 14px", borderRadius: 8, border: "1px solid rgba(239,68,68,0.3)", background: "rgba(239,68,68,0.06)", color: T.red, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>Delete</button>
+                            {hasOverride && <button type="button" onClick={() => resetProjectData(p.id)} style={{ fontSize: 11, padding: "6px 14px", borderRadius: 8, border: `1px solid rgba(239,68,68,0.3)`, background: "rgba(239,68,68,0.06)", color: T.red, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>Reset</button>}
+                            <button type="button" onClick={() => setEditingProject(null)} style={{ fontSize: 11, padding: "6px 14px", borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.textSecondary, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>Cancel</button>
+                          </div>
+                        </div>
+                        {hasOverride && (merged.updatedBy || merged.updatedAt) && (
+                          <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 14px", borderRadius: 8, background: "rgba(212,168,67,0.05)", border: "1px solid rgba(212,168,67,0.1)", marginBottom: 16, fontSize: 11, flexWrap: "wrap" }}>
+                            <span style={{ color: T.textMuted }}>Last saved by</span>
+                            <span style={{ color: T.gold, fontWeight: 700 }}>{merged.updatedBy || "—"}</span>
+                            {merged.updatedAt && <><span style={{ color: T.textMuted }}>·</span><span style={{ color: T.textSecondary }}>{new Date(merged.updatedAt).toLocaleString("en-AE", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}</span></>}
+                            {merged.rolledBackFrom && <span style={{ color: T.teal, fontSize: 10, fontWeight: 700 }}>[Rolled back from {new Date(merged.rolledBackFrom).toLocaleString("en-AE", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}]</span>}
+                          </div>
+                        )}
+                        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
+                          {fields.map(f => (
+                            <div key={f.key}>
+                              <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "flex", alignItems: "center" }}>{f.label}{f.tip && <HelpTip text={f.tip} />}</label>
+                              {(() => {
+                                const hasErr = validationErrors[f.key];
+                                const borderColor = hasErr ? "#EF4444" : T.border;
+                                return f.type === "select" ? (
+                                  <select value={projectForm[f.key] ?? merged[f.key] ?? ""} onChange={e => { setProjectForm(prev => ({ ...prev, [f.key]: e.target.value })); setValidationErrors(prev => ({ ...prev, [f.key]: null })); }}
+                                    style={{ width: "100%", padding: "10px 12px", background: T.bg, border: `1px solid ${borderColor}`, borderRadius: 8, color: T.textPrimary, fontSize: 13, fontFamily: "'Outfit',sans-serif" }}>
+                                    <option value="">—</option>
+                                    {f.options.map(o => <option key={o} value={o}>{o}</option>)}
+                                  </select>
+                                ) : (
+                                  <input type={f.type} value={projectForm[f.key] ?? merged[f.key] ?? ""} onChange={e => { setProjectForm(prev => ({ ...prev, [f.key]: e.target.value })); setValidationErrors(prev => ({ ...prev, [f.key]: null })); }} placeholder={f.placeholder}
+                                    style={{ width: "100%", padding: "10px 12px", background: T.bg, border: `1px solid ${borderColor}`, borderRadius: 8, color: T.textPrimary, fontSize: 13, fontFamily: "'Outfit',sans-serif", outline: "none" }} />
+                                );
+                              })()}
+                              {validationErrors[f.key] && <div style={{ fontSize: 10, color: "#EF4444", marginTop: 3 }}>{validationErrors[f.key]}</div>}
+                              {hasOverride && liveProjects[p.id]?.[f.key] !== undefined && (
+                                <div style={{ fontSize: 9, color: T.green, marginTop: 2 }}>Live: {liveProjects[p.id][f.key]} · Default: {p[f.key] ?? "—"}</div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                        <div style={{ marginTop: 16, padding: 16, borderRadius: 10, border: "1px solid rgba(212,168,67,0.12)", background: T.surfaceAlt }}>
+                          <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>Project Image</div>
+                          {(projectForm.imageUrl || liveProjects[p.id]?.imageUrl) && (
+                            <img src={projectForm.imageUrl || liveProjects[p.id]?.imageUrl} alt="Project" style={{ width: "100%", height: 140, objectFit: "cover", borderRadius: 8, marginBottom: 10 }} onError={e => e.target.style.display="none"} />
+                          )}
+                          <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, padding: "10px 16px", borderRadius: 8, border: "1px solid rgba(212,168,67,0.2)", background: T.bg, color: T.textSecondary, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                            {projectForm.imageUploading ? "Uploading..." : "Upload Project Image"}
+                            <input type="file" accept="image/*,video/*,.pdf" style={{ display: "none" }} onChange={async e => {
+                              const file = e.target.files[0]; if (!file) return;
+                              setProjectForm(prev => ({ ...prev, imageUploading: true }));
+                              const fd = new FormData();
+                              fd.append("file", file);
+                              fd.append("upload_preset", "dxb-analytics");
+                              fd.append("cloud_name", "dh9dd5ld0");
+                              const res = await fetch("https://api.cloudinary.com/v1_1/dh9dd5ld0/auto/upload", { method: "POST", body: fd });
+                              const data = await res.json();
+                              setProjectForm(prev => ({ ...prev, imageUrl: data.secure_url, imageUploading: false }));
+                              notify("Image uploaded!");
+                            }} />
+                          </label>
+                          <div style={{ fontSize: 10, color: T.textMuted, marginTop: 6 }}>Supports images, PDFs, videos up to 25MB</div>
+                          {/* Direct Image URL input */}
+                          <div style={{ marginTop: 10 }}>
+                            <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>Or Paste Image URL</label>
+                            <input type="url" placeholder="https://cloudinary.com/... or any image URL" value={projectForm.imageUrl ?? liveProjects[p.id]?.imageUrl ?? ""} onChange={e => setProjectForm(prev => ({ ...prev, imageUrl: e.target.value }))}
+                              style={{ width: "100%", padding: "8px 12px", background: T.bg, border: "1px solid rgba(212,168,67,0.12)", borderRadius: 8, color: T.textPrimary, fontSize: 12, fontFamily: "'Outfit',sans-serif", outline: "none", boxSizing: "border-box" }} />
+                          </div>
+                        </div>
+
+                        {/* ── COORDINATES FOR MAP ── */}
+                        <div style={{ marginTop: 12, padding: 16, borderRadius: 10, border: "1px solid rgba(20,184,166,0.2)", background: "rgba(20,184,166,0.04)" }}>
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+                            <div>
+                              <div style={{ fontSize: 11, fontWeight: 700, color: T.teal, letterSpacing: 1, textTransform: "uppercase" }}>Map Coordinates</div>
+                              <div style={{ fontSize: 10, color: T.textMuted, marginTop: 2 }}>Set the pin location on the Map tab. Get coordinates from Google Maps.</div>
+                            </div>
+                            <a href={`https://www.google.com/maps/search/${encodeURIComponent((merged.name || p.name) + " Dubai")}`} target="_blank" rel="noreferrer" style={{ fontSize: 10, color: T.teal, textDecoration: "none", padding: "4px 10px", borderRadius: 6, border: "1px solid rgba(20,184,166,0.3)", background: "rgba(20,184,166,0.08)" }}>Find on Google Maps </a>
+                          </div>
+                          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                            <div>
+                              <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "flex", alignItems: "center" }}>Latitude<HelpTip text="Latitude coordinate (e.g. 25.1234). Right-click on Google Maps and copy the first number." /></label>
+                              <input type="number" step="0.000001" placeholder="e.g. 25.197525" value={projectForm.lat ?? merged.lat ?? ""} onChange={e => setProjectForm(prev => ({ ...prev, lat: e.target.value }))}
+                                style={{ width: "100%", padding: "10px 12px", background: T.bg, border: "1px solid rgba(20,184,166,0.2)", borderRadius: 8, color: T.textPrimary, fontSize: 13, fontFamily: "'Outfit',sans-serif", outline: "none", boxSizing: "border-box" }} />
+                            </div>
+                            <div>
+                              <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "flex", alignItems: "center" }}>Longitude<HelpTip text="Longitude coordinate (e.g. 55.2743). Right-click on Google Maps and copy the second number." /></label>
+                              <input type="number" step="0.000001" placeholder="e.g. 55.274288" value={projectForm.lng ?? merged.lng ?? ""} onChange={e => setProjectForm(prev => ({ ...prev, lng: e.target.value }))}
+                                style={{ width: "100%", padding: "10px 12px", background: T.bg, border: "1px solid rgba(20,184,166,0.2)", borderRadius: 8, color: T.textPrimary, fontSize: 13, fontFamily: "'Outfit',sans-serif", outline: "none", boxSizing: "border-box" }} />
+                            </div>
+                          </div>
+                          {(projectForm.lat || merged.lat) && (projectForm.lng || merged.lng) && (
+                            <div style={{ marginTop: 10, display: "flex", alignItems: "center", gap: 10 }}>
+                              <div style={{ fontSize: 10, color: T.green }}>✔ Coordinates set: {projectForm.lat || merged.lat}, {projectForm.lng || merged.lng}</div>
+                              <a href={`https://www.google.com/maps?q=${projectForm.lat || merged.lat},${projectForm.lng || merged.lng}`} target="_blank" rel="noreferrer" style={{ fontSize: 10, color: T.teal, textDecoration: "none" }}>Preview on Map </a>
+                            </div>
+                          )}
+                        </div>
+                        
+                          <div style={{ marginTop: 12, padding: 16, borderRadius: 10, border: "1px solid rgba(212,168,67,0.12)", background: T.surfaceAlt }}>
+                          <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>Unit Inventory (per bedroom type)</div>
+                          <div style={{ fontSize: 10, color: T.textMuted, marginBottom: 10 }}>Add rows for each bedroom type. Total = all units. Available = units left to sell. This shows the inventory breakdown on the project detail page.</div>
+                          {(() => {
+                            const currentUnits = projectForm.units || (merged.units ? (Array.isArray(merged.units) ? merged.units : Object.entries(merged.units).map(([type, d]) => ({ type, total: d.total || 0, available: (d.total || 0) - (d.sold || 0) }))) : []);
+                            const unitRows = currentUnits.length > 0 ? currentUnits : [{ type: "1BR", total: "", available: "" }, { type: "2BR", total: "", available: "" }, { type: "3BR", total: "", available: "" }];
+                            return (
+                              <div>
+                                {unitRows.map((u, idx) => (
+                                  <div key={idx} style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr auto", gap: 8, marginBottom: 8, alignItems: "center" }}>
+                                    <input placeholder="Type (e.g. 1BR)" value={u.type || ""} onChange={e => { const rows = [...unitRows]; rows[idx] = { ...rows[idx], type: e.target.value }; setProjectForm(prev => ({ ...prev, units: rows })); }} style={{ padding: "8px 10px", background: T.bg, border: "1px solid " + T.border, borderRadius: 7, color: T.textPrimary, fontSize: 12, fontFamily: "'Outfit',sans-serif" }} />
+                                    <input type="number" placeholder="Total units" value={u.total || ""} onChange={e => { const rows = [...unitRows]; rows[idx] = { ...rows[idx], total: Number(e.target.value) }; setProjectForm(prev => ({ ...prev, units: rows })); }} style={{ padding: "8px 10px", background: T.bg, border: "1px solid " + T.border, borderRadius: 7, color: T.textPrimary, fontSize: 12, fontFamily: "'Outfit',sans-serif" }} />
+                                    <input type="number" placeholder="Available" value={u.available || ""} onChange={e => { const rows = [...unitRows]; rows[idx] = { ...rows[idx], available: Number(e.target.value) }; setProjectForm(prev => ({ ...prev, units: rows })); }} style={{ padding: "8px 10px", background: T.bg, border: "1px solid " + T.border, borderRadius: 7, color: T.textPrimary, fontSize: 12, fontFamily: "'Outfit',sans-serif" }} />
+                                    <button type="button" onClick={() => { const rows = unitRows.filter((_, i) => i !== idx); setProjectForm(prev => ({ ...prev, units: rows })); }} style={{ padding: "8px 10px", background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 7, color: T.red, cursor: "pointer", fontSize: 12 }}>x</button>
+                                  </div>
+                                ))}
+                                <button type="button" onClick={() => { const rows = [...unitRows, { type: "", total: "", available: "" }]; setProjectForm(prev => ({ ...prev, units: rows })); }} style={{ fontSize: 11, padding: "7px 14px", borderRadius: 8, border: "1px solid rgba(212,168,67,0.3)", background: "transparent", color: T.gold, cursor: "pointer", fontFamily: "'Outfit',sans-serif", marginTop: 4 }}>+ Add Row</button>
+                              </div>
+                            );
+                          })()}
+                        </div>
+                        <div style={{ marginTop: 12, padding: 16, borderRadius: 10, border: "1px solid rgba(212,168,67,0.12)", background: T.surfaceAlt }}>
+                          <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>Project Documents</div>
+                          </div>
+                          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                            {[
+                              { key: "pdfBrochure", label: "Brochure PDF" },
+                              { key: "pdfFloorPlan", label: "Floor Plan PDF" },
+                              { key: "pdfPaymentPlan", label: "Payment Plan PDF" },
+                              { key: "pdfFactSheet", label: "Fact Sheet PDF" },
+                            ].map(doc => (
+                              <div key={doc.key}>
+                                <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>{doc.label}</label>
+                                <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11, padding: "8px 12px", borderRadius: 8, border: "1px solid rgba(212,168,67,0.12)", background: T.bg, color: T.textSecondary, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                                  {projectForm[doc.key + "_uploading"] ? "Uploading..." : (projectForm[doc.key] || liveProjects[p.id]?.[doc.key]) ? "Uploaded ✔" : "Upload PDF"}
+                                  <input type="file" accept=".pdf,image/*" style={{ display: "none" }} onChange={async e => {
+                                    const file = e.target.files[0]; if (!file) return;
+                                    setProjectForm(prev => ({ ...prev, [doc.key + "_uploading"]: true }));
+                                    const fd = new FormData();
+                                    fd.append("file", file);
+                                    fd.append("upload_preset", "dxb-analytics");
+                                    const res = await fetch("https://api.cloudinary.com/v1_1/dh9dd5ld0/auto/upload", { method: "POST", body: fd });
+                                    const data = await res.json();
+                                    setProjectForm(prev => ({ ...prev, [doc.key]: data.secure_url, [doc.key + "_uploading"]: false }));
+                                    notify(doc.label + " uploaded!");
+                                  }} />
+                                </label>
+                                {(projectForm[doc.key] || liveProjects[p.id]?.[doc.key]) && (
+                                  <a href={projectForm[doc.key] || liveProjects[p.id]?.[doc.key]} target="_blank" rel="noreferrer" style={{ fontSize: 10, color: T.gold, textDecoration: "none", marginTop: 3, display: "block" }}>View →</a>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                          <div style={{ fontSize: 10, color: T.textMuted, marginTop: 8 }}>Tip: Upload PDFs to Google Drive, set to public, paste the share link here</div>
+                          {/* VIDEO + EXTERNAL LINK */}
+                          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginTop: 14 }}>
+                            <div>
+                              <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>Video URL</label>
+                              <input type="url" placeholder="https://youtube.com/..." value={projectForm.videoUrl ?? liveProjects[p.id]?.videoUrl ?? ""} onChange={e => setProjectForm(prev => ({ ...prev, videoUrl: e.target.value }))}
+                                style={{ width: "100%", padding: "8px 12px", background: T.bg, border: "1px solid rgba(212,168,67,0.12)", borderRadius: 8, color: T.textPrimary, fontSize: 12, fontFamily: "'Outfit',sans-serif", outline: "none", boxSizing: "border-box" }} />
+                              <div style={{ fontSize: 10, color: T.textMuted, marginTop: 3 }}>MP4 or YouTube link. Plays inline on dashboard.</div>
+                            </div>
+                            <div>
+                              <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>External Link</label>
+                              <input type="url" placeholder="https://emaar.com/project/..." value={projectForm.externalLink ?? liveProjects[p.id]?.externalLink ?? ""} onChange={e => setProjectForm(prev => ({ ...prev, externalLink: e.target.value }))}
+                                style={{ width: "100%", padding: "8px 12px", background: T.bg, border: "1px solid rgba(212,168,67,0.12)", borderRadius: 8, color: T.textPrimary, fontSize: 12, fontFamily: "'Outfit',sans-serif", outline: "none", boxSizing: "border-box" }} />
+                              <div style={{ fontSize: 10, color: T.textMuted, marginTop: 3 }}>"Visit Website" button on dashboard.</div>
+                            </div>
+                          </div>
+                          {(() => {
+                            const history = priceHistory[p.id];
+                            if (!history) return (
+                              <div style={{ marginTop: 16, padding: 16, borderRadius: 10, border: "1px solid rgba(212,168,67,0.12)", background: T.surfaceAlt, textAlign: "center" }}>
+                                <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, marginBottom: 10 }}>Price History</div>
+                                <button type="button" onClick={() => fetchPriceHistory(p.id)} style={{ fontSize: 11, padding: "6px 14px", borderRadius: 8, border: "1px solid rgba(212,168,67,0.3)", background: "transparent", color: T.gold, cursor: "pointer" }}>Load Price History</button>
+                              </div>
+                            );
+                            if (history.length === 0) return (
+                              <div style={{ marginTop: 16, padding: 16, borderRadius: 10, background: T.surfaceAlt }}>
+                                <div style={{ fontSize: 11, color: T.textMuted }}>No price history yet.</div>
+                              </div>
+                            );
+                            const max = Math.max(...history.map(h => h.price));
+                            const min = Math.min(...history.map(h => h.price));
+                            const range = max - min || 1;
+                            return (
+                              <div style={{ marginTop: 16, padding: 16, borderRadius: 10, border: "1px solid rgba(212,168,67,0.12)", background: T.surfaceAlt }}>
+                                <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, marginBottom: 12 }}>Price History</div>
+                                <div style={{ display: "flex", alignItems: "flex-end", gap: 4, height: 80 }}>
+                                  {history.map((h, i) => (
+                                    <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
+                                      <div style={{ fontSize: 8, color: T.textMuted }}>{Math.round(h.price/1000000*10)/10}M</div>
+                                      <div style={{ width: "100%", background: T.gold, borderRadius: 3, height: Math.max(4, ((h.price - min) / range) * 60 + 4) + "px" }} />
+                                      <div style={{ fontSize: 7, color: T.textMuted }}>{new Date(h.recordedAt).toLocaleDateString("en-AE", { month: "short", day: "numeric" })}</div>
+                                    </div>
+                                  ))}
+                                </div>
+                                <div style={{ display: "flex", justifyContent: "space-between", marginTop: 8 }}>
+                                  <span style={{ fontSize: 10, color: T.textMuted }}>Low: AED {min.toLocaleString()}</span>
+                                  <span style={{ fontSize: 10, color: T.gold }}>High: AED {max.toLocaleString()}</span>
+                                </div>
+                              </div>
+                            );
+                          })()}
+                        
+                        {/* ═══════════════════════════════════════
+                           LINKED RECORDS PANEL
+                           ═══════════════════════════════════════ */}
+                        {(() => {
+                          const communityName = p.community;
+                          const communityProjects = emaarProjects.filter(proj => proj.community === communityName && proj.id !== p.id);
+                          const communityROI = { ...(defaultCommunityROI[communityName] || {}), ...(liveCommunityROI[communityName] || {}) };
+                          const communityIntel = { ...(defaultCommunityIntel[communityName] || {}), ...(liveCommunityIntel[communityName] || {}) };
+                          const hasROI = !!liveCommunityROI[communityName] || !!defaultCommunityROI[communityName];
+                          const hasIntel = !!liveCommunityIntel[communityName] || !!defaultCommunityIntel[communityName];
+                          
+                          // Calculate community stats
+                          const allCommunityProjects = emaarProjects.filter(proj => proj.community === communityName);
+                          const avgPrice = allCommunityProjects.length > 0 
+                            ? Math.round(allCommunityProjects.reduce((sum, proj) => sum + (getMergedProject(proj).price || 0), 0) / allCommunityProjects.length)
+                            : 0;
+                          const avgPpsf = allCommunityProjects.length > 0
+                            ? Math.round(allCommunityProjects.reduce((sum, proj) => sum + (getMergedProject(proj).ppsf || 0), 0) / allCommunityProjects.length)
+                            : 0;
+                          
+                          return (
+                            <div style={{ marginTop: 20, padding: 16, borderRadius: 12, border: `1px solid ${T.purple}30`, background: `${T.purple}08` }}>
+                              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+                                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={T.purple} strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+                                  <span style={{ fontSize: 12, fontWeight: 700, color: T.purple }}>Linked Records</span>
+                                  <span style={{ fontSize: 10, color: T.textMuted }}>· {communityName}</span>
+                                </div>
+                                <button type="button" onClick={() => { setDataSubTab("communities"); setEditingCommunity(communityName); setEditingProject(null); }}
+                                  style={{ fontSize: 10, padding: "5px 12px", borderRadius: 6, border: `1px solid ${T.purple}40`, background: "transparent", color: T.purple, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>
+                                  Edit Community →
+                                </button>
+                              </div>
+                              
+                              {/* Community Stats Row */}
+                              <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10, marginBottom: 12 }}>
+                                <div style={{ padding: 10, background: T.surface, borderRadius: 8, textAlign: "center" }}>
+                                  <div style={{ fontSize: 16, fontWeight: 700, color: T.gold, fontFamily: "'Fraunces',serif" }}>{allCommunityProjects.length}</div>
+                                  <div style={{ fontSize: 9, color: T.textMuted }}>Projects</div>
+                                </div>
+                                <div style={{ padding: 10, background: T.surface, borderRadius: 8, textAlign: "center" }}>
+                                  <div style={{ fontSize: 14, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>{avgPrice > 0 ? `${(avgPrice/1e6).toFixed(1)}M` : "—"}</div>
+                                  <div style={{ fontSize: 9, color: T.textMuted }}>Avg Price</div>
+                                </div>
+                                <div style={{ padding: 10, background: T.surface, borderRadius: 8, textAlign: "center" }}>
+                                  <div style={{ fontSize: 14, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>{avgPpsf > 0 ? avgPpsf.toLocaleString() : "—"}</div>
+                                  <div style={{ fontSize: 9, color: T.textMuted }}>Avg PPSF</div>
+                                </div>
+                                <div style={{ padding: 10, background: T.surface, borderRadius: 8, textAlign: "center" }}>
+                                  <div style={{ fontSize: 14, fontWeight: 700, color: communityROI.yield ? T.green : T.textMuted, fontFamily: "'Fraunces',serif" }}>{communityROI.yield ? `${communityROI.yield}%` : "—"}</div>
+                                  <div style={{ fontSize: 9, color: T.textMuted }}>Yield</div>
+                                </div>
+                              </div>
+                              
+                              {/* Community Data Preview */}
+                              {(hasROI || hasIntel) && (
+                                <div style={{ padding: 10, background: T.surface, borderRadius: 8, marginBottom: 12 }}>
+                                  <div style={{ display: "flex", gap: 16, flexWrap: "wrap", fontSize: 11 }}>
+                                    {communityROI.rentalYield && <span><span style={{ color: T.textMuted }}>Rental Yield:</span> <span style={{ color: T.green }}>{communityROI.rentalYield}%</span></span>}
+                                    {communityROI.appreciation && <span><span style={{ color: T.textMuted }}>Appreciation:</span> <span style={{ color: T.teal }}>{communityROI.appreciation}%</span></span>}
+                                    {communityIntel.nearbySchools && <span><span style={{ color: T.textMuted }}>Schools:</span> <span style={{ color: T.white }}>{communityIntel.nearbySchools}</span></span>}
+                                    {communityIntel.developmentStage && <span><span style={{ color: T.textMuted }}>Stage:</span> <span style={{ color: T.white }}>{communityIntel.developmentStage}</span></span>}
+                                  </div>
+                                </div>
+                              )}
+                              
+                              {/* Other Projects in Community */}
+                              {communityProjects.length > 0 && (
+                                <div>
+                                  <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, marginBottom: 8, textTransform: "uppercase", letterSpacing: 0.5 }}>
+                                    Other Projects in {communityName} ({communityProjects.length})
+                                  </div>
+                                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                                    {communityProjects.slice(0, 8).map(proj => {
+                                      const projMerged = getMergedProject(proj);
+                                      const projQuality = calculateProjectQuality(proj);
+                                      return (
+                                        <button key={proj.id} type="button" 
+                                          onClick={() => { setEditingProject(proj.id); setProjectForm(liveProjects[proj.id] || {}); }}
+                                          style={{ 
+                                            padding: "6px 10px", borderRadius: 6, 
+                                            border: `1px solid ${T.border}`, background: T.surfaceAlt,
+                                            color: T.white, fontSize: 11, cursor: "pointer", 
+                                            fontFamily: "'Outfit',sans-serif", textAlign: "left",
+                                            display: "flex", alignItems: "center", gap: 6
+                                          }}>
+                                          <span style={{ 
+                                            width: 18, height: 18, borderRadius: 4, fontSize: 8, fontWeight: 700,
+                                            background: `${projQuality.color}20`, color: projQuality.color,
+                                            display: "flex", alignItems: "center", justifyContent: "center"
+                                          }}>{projQuality.score}</span>
+                                          <span>{proj.name}</span>
+                                          {projMerged.price && <span style={{ color: T.gold, fontSize: 10 }}>{(projMerged.price/1e6).toFixed(1)}M</span>}
+                                        </button>
+                                      );
+                                    })}
+                                    {communityProjects.length > 8 && (
+                                      <span style={{ padding: "6px 10px", fontSize: 11, color: T.textMuted }}>+{communityProjects.length - 8} more</span>
+                                    )}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })()}
+
+                        <button type="button" disabled={dataSaving} onClick={() => saveProjectData(p.id, projectForm)}
+                          style={{ marginTop: 20, width: "100%", padding: "12px", borderRadius: 10, border: "none", background: `linear-gradient(135deg, ${T.gold}, ${T.goldDim})`, color: T.bg, fontSize: 14, fontWeight: 700, cursor: dataSaving ? "wait" : "pointer", fontFamily: "'Outfit',sans-serif", opacity: dataSaving ? 0.6 : 1 }}>
+                          {dataSaving ? "Saving..." : "Save to Firestore — Goes Live Instantly"}
+                        </button>
+                      </div>
+                    );
+                  })()}
+
+                  {/* ── VERSION HISTORY MODAL ── */}
+                  {viewingVersions && (() => {
+                    const pid = viewingVersions;
+                    const p = emaarProjects.find(x => String(x.id) === pid) || { name: "Project " + pid, id: pid };
+                    const versions = projectVersions[pid] || null;
+                    return (
+                      <div style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.92)", zIndex: 9000, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(8px)" }} onClick={() => setViewingVersions(null)}>
+                        <div style={{ background: "#0C1B2E", border: "1px solid rgba(212,168,67,0.3)", borderRadius: 16, width: "95%", maxWidth: 780, maxHeight: "88vh", overflowY: "auto", position: "relative" }} onClick={e => e.stopPropagation()}>
+                          <div style={{ padding: "20px 24px", borderBottom: "1px solid rgba(212,168,67,0.15)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                            <div>
+                              <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 700, color: T.gold, margin: 0 }}>Version History</h3>
+                              <p style={{ fontSize: 12, color: T.textMuted, margin: "4px 0 0" }}>{p.name} · Every save is captured. Click Rollback to restore any version.</p>
+                            </div>
+                            <button type="button" onClick={() => setViewingVersions(null)} style={{ background: "transparent", border: "none", color: T.textMuted, fontSize: 20, cursor: "pointer", padding: "4px 10px" }}>x</button>
+                          </div>
+                          <div style={{ padding: "16px 24px" }}>
+                            {versions === null && (
+                              <div style={{ textAlign: "center", padding: 40, color: T.textMuted }}>Loading versions...</div>
+                            )}
+                            {versions !== null && versions.length === 0 && (
+                              <div style={{ textAlign: "center", padding: 40 }}>
+                                <div style={{ fontSize: 13, color: T.textMuted, marginBottom: 8 }}>No version history yet.</div>
+                                <div style={{ fontSize: 11, color: T.textMuted }}>Versions are saved automatically every time you click "Save to Firestore".</div>
+                              </div>
+                            )}
+                            {versions !== null && versions.length > 0 && versions.map((v, i) => (
+                              <div key={v.id} style={{ padding: "16px 0", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
+                                  <div>
+                                    <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                                      {i === 0 && <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 8px", borderRadius: 5, background: "rgba(16,185,129,0.15)", color: "#10B981" }}>CURRENT</span>}
+                                      <span style={{ fontSize: 13, fontWeight: 700, color: T.white }}>{new Date(v.savedAt).toLocaleString("en-AE", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}</span>
+                                      <span style={{ fontSize: 11, color: T.textMuted }}>·</span>
+                                      <span style={{ fontSize: 11, color: T.gold }}>{v.savedBy || "admin"}</span>
+                                      <span style={{ fontSize: 10, color: T.textMuted }}>· {v.fieldsChanged || 0} field{v.fieldsChanged !== 1 ? "s" : ""} changed</span>
+                                    </div>
+                                  </div>
+                                  {i !== 0 && (
+                                    <button type="button" disabled={rollbackLoading} onClick={() => rollbackToVersion(pid, v)}
+                                      style={{ fontSize: 11, padding: "6px 16px", borderRadius: 8, border: "1px solid rgba(212,168,67,0.4)", background: "rgba(212,168,67,0.08)", color: T.gold, cursor: rollbackLoading ? "wait" : "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 700, flexShrink: 0 }}>
+                                      {rollbackLoading ? "Rolling back..." : "Rollback to This"}
+                                    </button>
+                                  )}
+                                </div>
+                                {v.diff && Object.keys(v.diff).length > 0 && (
+                                  <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                                    {Object.entries(v.diff).map(([field, change]) => (
+                                      <div key={field} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", padding: "5px 10px", borderRadius: 8 }}>
+                                        <span style={{ color: T.textMuted, fontWeight: 700, fontSize: 10, textTransform: "uppercase" }}>{field}</span>
+                                        <span style={{ color: "#F87171", fontSize: 11, textDecoration: "line-through" }}>{String(change.old || "—").slice(0, 22)}</span>
+                                        <span style={{ color: T.textMuted, fontSize: 10 }}>→</span>
+                                        <span style={{ color: "#4ADE80", fontSize: 11 }}>{String(change.new || "—").slice(0, 22)}</span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                                {(!v.diff || Object.keys(v.diff).length === 0) && (
+                                  <div style={{ fontSize: 11, color: T.textMuted, fontStyle: "italic" }}>Initial save — full snapshot stored</div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })()}
+
+                  {/* ── Bulk Edit Bar — only visible when rows are checked ── */}
+                  {bulkSelected.length > 0 && (
+                    <div className="fade-up" style={{ marginBottom: 12, borderRadius: 10, background: "#0C1B2E", border: `2px solid ${T.gold}`, overflow: "hidden" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 16px 8px", borderBottom: "1px solid rgba(212,168,67,0.2)" }}>
+                        <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 26, height: 26, borderRadius: 7, background: T.gold, fontSize: 12, fontWeight: 900, color: T.bg, flexShrink: 0 }}>{bulkSelected.length}</span>
+                        <span style={{ fontSize: 13, fontWeight: 700, color: T.gold }}>projects selected</span>
+                        <span style={{ fontSize: 11, color: T.textMuted }}>Set a value below, then click Apply to All</span>
+                        <button type="button" onClick={() => { setBulkSelected([]); setBulkForm({}); }} style={{ marginLeft: "auto", fontSize: 11, padding: "4px 12px", borderRadius: 7, border: "1px solid rgba(100,116,139,0.3)", background: "transparent", color: T.textMuted, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}> Deselect all</button>
+                      </div>
+                      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: 8, padding: "12px 16px" }}>
+                        <div>
+                          <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, marginBottom: 4, textTransform: "uppercase", letterSpacing: 0.5 }}>Status</div>
+                          <select value={bulkForm.status || ""} onChange={e => setBulkForm(prev => ({ ...prev, status: e.target.value }))}
+                            style={{ width: "100%", padding: "7px 10px", background: bulkForm.status ? `${T.gold}15` : T.surface, border: `1px solid ${bulkForm.status ? T.gold : T.border}`, borderRadius: 8, color: bulkForm.status ? T.gold : T.textMuted, fontSize: 12, fontFamily: "'Outfit',sans-serif", cursor: "pointer" }}>
+                            <option value="">— unchanged —</option>
+                            {["Under Construction","Off-Plan","Completed","Selling","Upcoming","Sold Out","Ready"].map(o => <option key={o} value={o}>{o}</option>)}
+                          </select>
+                        </div>
+                        <div>
+                          <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, marginBottom: 4, textTransform: "uppercase", letterSpacing: 0.5 }}>Tier</div>
+                          <select value={bulkForm.tier || ""} onChange={e => setBulkForm(prev => ({ ...prev, tier: e.target.value }))}
+                            style={{ width: "100%", padding: "7px 10px", background: bulkForm.tier ? `${T.gold}15` : T.surface, border: `1px solid ${bulkForm.tier ? T.gold : T.border}`, borderRadius: 8, color: bulkForm.tier ? T.gold : T.textMuted, fontSize: 12, fontFamily: "'Outfit',sans-serif", cursor: "pointer" }}>
+                            <option value="">— unchanged —</option>
+                            {["Affordable","Mid-Market","Mid-Premium","Premium","Luxury","Ultra-Luxury","Luxury Branded","Ultra-Lux Branded"].map(o => <option key={o} value={o}>{o}</option>)}
+                          </select>
+                        </div>
+                        <div>
+                          <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, marginBottom: 4, textTransform: "uppercase", letterSpacing: 0.5 }}>Availability</div>
+                          <select value={bulkForm.availability || ""} onChange={e => setBulkForm(prev => ({ ...prev, availability: e.target.value }))}
+                            style={{ width: "100%", padding: "7px 10px", background: bulkForm.availability ? `${T.gold}15` : T.surface, border: `1px solid ${bulkForm.availability ? T.gold : T.border}`, borderRadius: 8, color: bulkForm.availability ? T.gold : T.textMuted, fontSize: 12, fontFamily: "'Outfit',sans-serif", cursor: "pointer" }}>
+                            <option value="">— unchanged —</option>
+                            {["Available","Sold Out","Limited Units","Coming Soon"].map(o => <option key={o} value={o}>{o}</option>)}
+                          </select>
+                        </div>
+                        <div>
+                          <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, marginBottom: 4, textTransform: "uppercase", letterSpacing: 0.5 }}>Construction %</div>
+                          <input type="number" min="0" max="100" placeholder="e.g. 75" value={bulkForm.construction || ""} onChange={e => setBulkForm(prev => ({ ...prev, construction: e.target.value }))}
+                            style={{ width: "100%", padding: "7px 10px", background: bulkForm.construction ? `${T.gold}15` : T.surface, border: `1px solid ${bulkForm.construction ? T.gold : T.border}`, borderRadius: 8, color: bulkForm.construction ? T.gold : T.white, fontSize: 12, fontFamily: "'Outfit',sans-serif", outline: "none", boxSizing: "border-box" }} />
+                        </div>
+                        <div>
+                          <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, marginBottom: 4, textTransform: "uppercase", letterSpacing: 0.5 }}>Handover</div>
+                          <input type="text" placeholder="e.g. Q4 2027" value={bulkForm.handover || ""} onChange={e => setBulkForm(prev => ({ ...prev, handover: e.target.value }))}
+                            style={{ width: "100%", padding: "7px 10px", background: bulkForm.handover ? `${T.gold}15` : T.surface, border: `1px solid ${bulkForm.handover ? T.gold : T.border}`, borderRadius: 8, color: bulkForm.handover ? T.gold : T.white, fontSize: 12, fontFamily: "'Outfit',sans-serif", outline: "none", boxSizing: "border-box" }} />
+                        </div>
+                        <div style={{ display: "flex", flexDirection: "column", justifyContent: "flex-end" }}>
+                          <button type="button" onClick={saveBulkEdit} disabled={dataSaving || Object.values(bulkForm).every(v => !v)}
+                            style={{ padding: "9px 16px", borderRadius: 8, border: "none", background: Object.values(bulkForm).some(v => v) ? T.gold : "rgba(212,168,67,0.15)", color: Object.values(bulkForm).some(v => v) ? T.bg : T.textMuted, fontSize: 12, fontWeight: 800, cursor: Object.values(bulkForm).some(v => v) ? "pointer" : "not-allowed", fontFamily: "'Outfit',sans-serif" }}>
+                            {dataSaving ? "Saving..." : `Apply to All ${bulkSelected.length}`}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  {/* Projects list */}
+                  <div className="chart-box" style={{ padding: 0, overflow: "hidden" }}>
+                    {(() => {
+                      // Build dynamic grid columns based on visibility
+                      const cols = ["40px", "2fr"]; // checkbox + project name always visible
+                      if (visibleColumns.community) cols.push("110px");
+                      if (visibleColumns.price) cols.push("110px");
+                      if (visibleColumns.ppsf) cols.push("90px");
+                      if (visibleColumns.status) cols.push("80px");
+                      if (visibleColumns.quality) cols.push("70px");
+                      if (visibleColumns.tier) cols.push("100px");
+                      if (visibleColumns.handover) cols.push("90px");
+                      if (visibleColumns.beds) cols.push("90px");
+                      if (visibleColumns.source) cols.push("90px");
+                      cols.push("80px"); // edit button always visible
+                      const gridCols = cols.join(" ");
+                      
+                      // Build header columns
+                      const headers = [
+                        { label: "#", key: null, always: true },
+                        { label: "Project", key: "name", always: true },
+                        { label: "Community", key: "community", col: "community" },
+                        { label: "Price", key: "price", col: "price" },
+                        { label: "PPSF", key: "ppsf", col: "ppsf" },
+                        { label: "Status", key: "status", col: "status" },
+                        { label: "Quality", key: null, col: "quality" },
+                        { label: "Tier", key: "tier", col: "tier" },
+                        { label: "Handover", key: "handover", col: "handover" },
+                        { label: "Beds", key: "beds", col: "beds" },
+                        { label: "Source", key: null, col: "source" },
+                        { label: "", key: null, always: true },
+                      ].filter(h => h.always || visibleColumns[h.col]);
+                      
+                      // Deduplicate by id — safety net in case data.js has duplicates
+                      const _seen = new Set();
+                      const baseEmaar = emaarProjects.filter(p => { if (_seen.has(String(p.id))) return false; _seen.add(String(p.id)); return true; });
+                      // Add Firestore projects that aren't already in emaarProjects (e.g. Aldar, DAMAC imports)
+                      const extraFS = firestoreProjects.filter(p => { const key = String(p.id); if (_seen.has(key)) return false; _seen.add(key); return true; });
+                      const radarProjects = extraFS.filter(p => p.addedViaRadar);
+                      const allProjects = [...baseEmaar, ...extraFS];
+                      const now = new Date();
+                      const filtered = allProjects
+                          .filter(p => {
+                            const merged = getMergedProject(p);
+                            const hasOverride = !!liveProjects[p.id];
+                            const projectQuality = calculateProjectQuality(p);
+                            
+                            // Basic filters
+                            const matchSearch = !dataSearch || (p.name||"").toLowerCase().includes(dataSearch.toLowerCase()) || (p.community||"").toLowerCase().includes(dataSearch.toLowerCase());
+                            const matchCommunity = projectCommunityFilter === "All" || p.community === projectCommunityFilter;
+                            const matchStatus = projectStatusFilter === "All" || (merged.status||"") === projectStatusFilter;
+                            const matchDeveloper = projectDeveloperFilter === "All" || (merged.developer || p.developer || "Emaar Properties") === projectDeveloperFilter;
+                            
+                            // Advanced filters
+                            const price = merged.price || 0;
+                            const matchPriceMin = !priceMin || price >= Number(priceMin);
+                            const matchPriceMax = !priceMax || (priceMax === "0" ? price === 0 : price <= Number(priceMax));
+                            
+                            const ppsf = merged.ppsf || 0;
+                            const matchPpsfMin = !ppsfMin || ppsf >= Number(ppsfMin);
+                            const matchPpsfMax = !ppsfMax || ppsf <= Number(ppsfMax);
+                            
+                            const matchTier = projectTierFilter === "All" || (merged.tier||"") === projectTierFilter;
+                            
+                            const matchDataSource = dataSourceFilter === "all" || 
+                              (dataSourceFilter === "live" && hasOverride) || 
+                              (dataSourceFilter === "default" && !hasOverride);
+                            
+                            // Modified date filter
+                            let matchModifiedDate = true;
+                            if (modifiedDateFilter !== "all" && hasOverride && liveProjects[p.id]?.updatedAt) {
+                              const modDate = new Date(liveProjects[p.id].updatedAt);
+                              const daysDiff = (now - modDate) / (1000 * 60 * 60 * 24);
+                              if (modifiedDateFilter === "today") matchModifiedDate = daysDiff < 1;
+                              else if (modifiedDateFilter === "7d") matchModifiedDate = daysDiff <= 7;
+                              else if (modifiedDateFilter === "30d") matchModifiedDate = daysDiff <= 30;
+                              else if (modifiedDateFilter === "90d") matchModifiedDate = daysDiff <= 90;
+                            } else if (modifiedDateFilter !== "all" && !hasOverride) {
+                              matchModifiedDate = false; // Default data has no modification date
+                            }
+                            
+                            // Has image filter
+                            const hasImage = !!(merged.imageUrl || merged.image || p.image);
+                            const matchHasImage = hasImageFilter === "all" || 
+                              (hasImageFilter === "yes" && hasImage) || 
+                              (hasImageFilter === "no" && !hasImage);
+                            
+                            // Quality filter
+                            const matchQuality = qualityFilter === "all" || projectQuality.grade === qualityFilter;
+                            
+                            // Staleness filter
+                            const staleness = calculateStaleness(p);
+                            const matchStaleness = stalenessFilter === "all" || 
+                              (stalenessFilter === "stale60" && (staleness.status === "stale60" || staleness.status === "stale90")) ||
+                              (stalenessFilter === "never" && staleness.status === "never");
+                            
+                            return matchSearch && matchCommunity && matchStatus && matchDeveloper &&
+                                   matchPriceMin && matchPriceMax && matchPpsfMin && matchPpsfMax &&
+                                   matchTier && matchDataSource && matchModifiedDate && matchHasImage && matchQuality && matchStaleness;
+                          })
+                          .sort((a, b) => {
+                            const ma = getMergedProject(a); const mb = getMergedProject(b);
+                            const va = ma[projectSortKey] ?? a[projectSortKey] ?? "";
+                            const vb = mb[projectSortKey] ?? b[projectSortKey] ?? "";
+                            const dir = projectSortDir === "asc" ? 1 : -1;
+                            if (typeof va === "number" && typeof vb === "number") return dir * (va - vb);
+                            return dir * String(va).localeCompare(String(vb));
+                          });
+                        
+                        // Count active filters
+                        const activeFilterCount = [
+                          dataSearch, 
+                          projectCommunityFilter !== "All", 
+                          projectStatusFilter !== "All",
+                          priceMin, priceMax, ppsfMin, ppsfMax,
+                          projectTierFilter !== "All",
+                          dataSourceFilter !== "all",
+                          modifiedDateFilter !== "all",
+                          hasImageFilter !== "all",
+                          qualityFilter !== "all",
+                          stalenessFilter !== "all"
+                        ].filter(Boolean).length;
+                        
+                        return (
+                          <>
+                            {/* Table Header */}
+                            <div style={{ display: "grid", gridTemplateColumns: gridCols, gap: 8, padding: "12px 20px", borderBottom: `2px solid ${T.border}`, background: T.surfaceAlt }}>
+                              {headers.map(h => (
+                                <span key={h.label || "edit"} onClick={() => { if (!h.key) return; if (projectSortKey === h.key) setProjectSortDir(d => d === "asc" ? "desc" : "asc"); else { setProjectSortKey(h.key); setProjectSortDir("asc"); } }}
+                                  style={{ fontSize: 9, fontWeight: 700, color: projectSortKey === h.key ? T.gold : T.textMuted, letterSpacing: 1, textTransform: "uppercase", cursor: h.key ? "pointer" : "default", userSelect: "none" }}>
+                                  {h.label}{projectSortKey === h.key ? (projectSortDir === "asc" ? " ←" : " ↑") : ""}
+                                </span>
+                              ))}
+                            </div>
+
+                            {/* Radar-Added Projects Banner */}
+                            {radarProjects.length > 0 && (
+                              <div style={{ margin: "0 0 0 0", padding: "12px 20px", background: `${T.gold}08`, borderBottom: `1px solid ${T.gold}30`, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
+                                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                                  <span style={{ fontSize: 14 }}>🚀</span>
+                                  <div>
+                                    <span style={{ fontSize: 12, fontWeight: 700, color: T.gold }}>
+                                      {radarProjects.length} project{radarProjects.length > 1 ? "s" : ""} added via Launch Radar
+                                    </span>
+                                    <div style={{ fontSize: 10, color: T.textMuted, marginTop: 2 }}>
+                                      {radarProjects.map(p => p.name || p.projectName).join(" · ")}
+                                    </div>
+                                  </div>
+                                </div>
+                                <div style={{ display: "flex", gap: 6 }}>
+                                  <button type="button" onClick={async () => {
+                                    if (!window.confirm(`Delete all ${radarProjects.length} radar-added projects from Firestore?`)) return;
+                                    for (const p of radarProjects) {
+                                      await deleteDoc(doc(db, "projects", String(p.id)));
+                                    }
+                                    notify(`Removed ${radarProjects.length} radar projects`);
+                                    fetchLiveData();
+                                  }} style={{ fontSize: 11, padding: "5px 12px", borderRadius: 6, border: "1px solid rgba(239,68,68,0.3)", background: "rgba(239,68,68,0.06)", color: "#EF4444", cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>
+                                    🗑 Remove All
+                                  </button>
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Results Bar */}
+                            <div style={{ padding: "6px 20px", fontSize: 11, color: T.textMuted, borderBottom: `1px solid ${T.border}`, background: T.bg, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                              <div>
+                                Showing <strong style={{ color: T.gold }}>{filtered.length}</strong> of {allProjects.length} projects
+                                {activeFilterCount > 0 && <span style={{ marginLeft: 8, padding: "2px 8px", borderRadius: 10, background: `${T.teal}20`, color: T.teal, fontSize: 10, fontWeight: 600 }}>{activeFilterCount} filter{activeFilterCount > 1 ? "s" : ""}</span>}
+                                {bulkSelected.length > 0 && <span style={{ marginLeft: 12, color: T.gold }}>· {bulkSelected.length} selected</span>}
+                              </div>
+                              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                                {filtered.length > 0 && (
+                                  <button type="button" onClick={() => exportFilteredProjects(filtered, `emaar-filtered-${filtered.length}-projects.csv`)}
+                                    style={{ fontSize: 10, color: T.teal, background: "none", border: "none", cursor: "pointer", fontFamily: "'Outfit',sans-serif", display: "flex", alignItems: "center", gap: 4 }}>
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                                    Export Filtered
+                                  </button>
+                                )}
+                                <button type="button" onClick={() => setBulkSelected(filtered.map(p => String(p.id)))} style={{ fontSize: 10, color: T.teal, background: "none", border: "none", cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>Select All Visible</button>
+                                {bulkSelected.length > 0 && <button type="button" onClick={() => setBulkSelected([])} style={{ fontSize: 10, color: T.red, background: "none", border: "none", cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>Deselect All</button>}
+                              </div>
+                            </div>
+                            {filtered.length === 0 && (
+                              <div style={{ padding: "40px 20px", textAlign: "center" }}>
+                                <div style={{ fontSize: 32, marginBottom: 12, opacity: 0.5 }}>•</div>
+                                <div style={{ fontSize: 14, fontWeight: 600, color: T.white, marginBottom: 4 }}>No projects match your filters</div>
+                                <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 16 }}>Try adjusting your filter criteria</div>
+                                <button type="button" onClick={() => { 
+                                  setDataSearch(""); setProjectCommunityFilter("All"); setProjectStatusFilter("All");
+                                  setPriceMin(""); setPriceMax(""); setPpsfMin(""); setPpsfMax("");
+                                  setProjectTierFilter("All"); setDataSourceFilter("all"); setModifiedDateFilter("all");
+                                  setHasImageFilter("all"); setQualityFilter("all"); setStalenessFilter("all"); setActiveFilterViewId(null);
+                                }}
+                                  style={{ padding: "8px 16px", borderRadius: 8, border: `1px solid ${T.gold}`, background: "transparent", color: T.gold, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>
+                                  Clear All Filters
+                                </button>
+                              </div>
+                            )}
+                            {filtered.map((p, i) => {
+                        const merged = getMergedProject(p);
+                        const hasOverride = !!liveProjects[p.id];
+                        const pQuality = calculateProjectQuality(p);
+                        const isRadar = !!p.addedViaRadar;
+                        return (
+                          <div key={p.id} className="fade-up" style={{ display: "grid", gridTemplateColumns: gridCols, gap: 8, padding: "10px 20px", borderBottom: `1px solid ${T.border}`, borderLeft: isRadar ? `3px solid ${T.gold}` : "3px solid transparent", alignItems: "center", animationDelay: `${Math.min(i * 0.02, 0.5)}s`, cursor: "pointer", transition: "background .15s", background: editingProject === p.id ? T.goldGlow : isRadar ? `${T.gold}05` : "transparent" }}
+                            onMouseEnter={e => { if (editingProject !== p.id) e.currentTarget.style.background = T.surfaceAlt; }}
+                            onMouseLeave={e => { if (editingProject !== p.id) e.currentTarget.style.background = isRadar ? `${T.gold}05` : "transparent"; }}
+                            onClick={() => { setEditingProject(p.id); setProjectForm(liveProjects[p.id] || {}); }}>
+                            <input type="checkbox" checked={bulkSelected.includes(String(p.id))} onChange={e => setBulkSelected(prev => e.target.checked ? [...prev, String(p.id)] : prev.filter(x => x !== String(p.id)))}
+                               onClick={e => e.stopPropagation()} style={{ cursor: "pointer", accentColor: T.gold }} />
+                            <div>
+                              <div style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{p.name}</div>
+                              <div style={{ fontSize: 10, color: T.textMuted }}>{merged.type || "—"}{visibleColumns.beds ? "" : ` · ${merged.beds || "—"}`}</div>
+                            </div>
+                            {visibleColumns.community && <span style={{ fontSize: 11, color: T.textSecondary }}>{p.community}</span>}
+                            {visibleColumns.price && <span style={{ fontSize: 12, fontWeight: 700, color: T.gold }}>{merged.price ? `AED ${(merged.price / 1e6).toFixed(2)}M` : "TBA"}</span>}
+                            {visibleColumns.ppsf && <span style={{ fontSize: 12, color: T.textPrimary }}>{merged.ppsf ? merged.ppsf.toLocaleString() : "—"}</span>}
+                            {visibleColumns.status && <span style={{ fontSize: 10, fontWeight: 600, padding: "3px 8px", borderRadius: 6, background: merged.status === "Selling" ? "rgba(16,185,129,0.12)" : merged.status === "Upcoming" ? "rgba(212,168,67,0.12)" : "rgba(148,163,184,0.1)", color: merged.status === "Selling" ? T.green : merged.status === "Upcoming" ? T.gold : T.textMuted }}>{merged.status || "—"}</span>}
+                            {visibleColumns.quality && (
+                              <div style={{ display: "flex", alignItems: "center", gap: 4 }} title={`Missing: ${pQuality.missing.join(", ") || "None"}`}>
+                                <div style={{ 
+                                  width: 28, height: 28, borderRadius: 6, 
+                                  background: `${pQuality.color}15`, 
+                                  display: "flex", alignItems: "center", justifyContent: "center",
+                                  border: `1.5px solid ${pQuality.color}`
+                                }}>
+                                  <span style={{ fontSize: 10, fontWeight: 700, color: pQuality.color }}>{pQuality.score}</span>
+                                </div>
+                              </div>
+                            )}
+                            {visibleColumns.tier && <span style={{ fontSize: 10, color: T.textSecondary }}>{merged.tier || "—"}</span>}
+                            {visibleColumns.handover && <span style={{ fontSize: 10, color: T.textSecondary }}>{merged.handover || "—"}</span>}
+                            {visibleColumns.beds && <span style={{ fontSize: 10, color: T.textSecondary }}>{merged.beds || "—"}</span>}
+                            {visibleColumns.source && <span style={{ fontSize: 10, color: hasOverride ? T.green : T.textMuted, fontWeight: hasOverride ? 600 : 400 }}>{hasOverride ? " Live" : " Default"}</span>}
+                            <span style={{ fontSize: 11, color: T.gold, fontWeight: 600 }}>Edit →</span>
+                          </div>
+                        );
+                      })}
+                          </>
+                        );
+                      })()}
+                  </div>
+                </Section>
+              )}
+
+              {/* ═══════════════════════════════════════
+                 UNIFIED COMMUNITIES EDITOR (ROI + INTEL)
+                 ═══════════════════════════════════════ */}
+              {dataSubTab === "communities" && (() => {
+                const communities = Object.keys(defaultCommunityROI);
+                const activeKey = editingCommunity || communities[0];
+                const roiMerged = { ...(defaultCommunityROI[activeKey] || {}), ...(liveCommunityROI[activeKey] || {}) };
+                const intelMerged = { ...(defaultCommunityIntel[activeKey] || {}), ...(liveCommunityIntel[activeKey] || {}) };
+                const hasROI = !!liveCommunityROI[activeKey];
+                const hasIntel = !!liveCommunityIntel[activeKey];
+                const hasAnyOverride = hasROI || hasIntel;
+                
+                // Initialize forms when switching communities or on first load
+                if (communities.length > 0) {
+                  const targetKey = editingCommunity && communities.includes(editingCommunity) ? editingCommunity : communities[0];
+                  if (!editingCommunity || !communities.includes(editingCommunity)) {
+                    setTimeout(() => {
+                      setEditingCommunity(targetKey);
+                      setCommunityForm({ ...(defaultCommunityROI[targetKey] || {}), ...(liveCommunityROI[targetKey] || {}) });
+                      setCommunityIntelForm({ ...(defaultCommunityIntel[targetKey] || {}), ...(liveCommunityIntel[targetKey] || {}) });
+                    }, 0);
+                  } else if (Object.keys(communityForm).length === 0) {
+                    // Forms not initialized yet (e.g., page refresh with localStorage)
+                    setTimeout(() => {
+                      setCommunityForm({ ...(defaultCommunityROI[targetKey] || {}), ...(liveCommunityROI[targetKey] || {}) });
+                      setCommunityIntelForm({ ...(defaultCommunityIntel[targetKey] || {}), ...(liveCommunityIntel[targetKey] || {}) });
+                    }, 0);
+                  }
+                }
+
+                const inp = (val, ph, onChange, extra) => (
+                  <input value={val ?? ""} onChange={onChange} placeholder={ph}
+                    style={{ width: "100%", padding: "10px 13px", background: "rgba(4,9,15,0.8)", border: "1px solid rgba(212,168,67,0.14)", borderRadius: 7, color: "#E2E8F0", fontSize: 13, fontFamily: "'Outfit',sans-serif", outline: "none", boxSizing: "border-box", transition: "border-color 0.15s", ...(extra||{}) }}
+                    onFocus={e => e.target.style.borderColor="#D4A843"} onBlur={e => e.target.style.borderColor="rgba(212,168,67,0.14)"} />
+                );
+                const ta = (val, ph, onChange, rows) => (
+                  <textarea value={val ?? ""} onChange={onChange} placeholder={ph} rows={rows||3}
+                    style={{ width: "100%", padding: "10px 13px", background: "rgba(4,9,15,0.8)", border: "1px solid rgba(212,168,67,0.14)", borderRadius: 7, color: "#E2E8F0", fontSize: 13, fontFamily: "'Outfit',sans-serif", outline: "none", boxSizing: "border-box", resize: "vertical", transition: "border-color 0.15s", lineHeight: 1.6 }}
+                    onFocus={e => e.target.style.borderColor="#D4A843"} onBlur={e => e.target.style.borderColor="rgba(212,168,67,0.14)"} />
+                );
+                const Lbl = ({ children, color }) => (
+                  <div style={{ fontSize: 10, fontWeight: 700, color: color || "#64748B", letterSpacing: 1.1, textTransform: "uppercase", marginBottom: 6 }}>{children}</div>
+                );
+
+                return (
+                  <div style={{ position: "fixed", top: 60, left: 240, right: 0, bottom: 0, display: "flex", zIndex: 50, background: "#04090F" }}>
+
+                    {/* ══════════════════════════════
+                        LEFT NAV — Community List
+                    ══════════════════════════════ */}
+                    <div style={{ width: 280, flexShrink: 0, background: "#060D1A", borderRight: "1px solid rgba(212,168,67,0.1)", display: "flex", flexDirection: "column", height: "100%", overflowY: "auto" }}>
+
+                      {/* Back Button */}
+                      <button type="button" onClick={() => setDataSubTab("projects")}
+                        style={{ display: "flex", alignItems: "center", gap: 8, padding: "14px 20px", background: "rgba(212,168,67,0.06)", border: "none", borderBottom: "1px solid rgba(212,168,67,0.1)", color: "#D4A843", fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif", textAlign: "left" }}>
+                        <span style={{ fontSize: 16 }}></span> Back to Data Manager
+                      </button>
+
+                      {/* Nav Header */}
+                      <div style={{ padding: "18px 20px 14px", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+                        <div style={{ fontSize: 10, fontWeight: 700, color: "#D4A843", letterSpacing: 2, textTransform: "uppercase", marginBottom: 4 }}>Communities</div>
+                        <div style={{ fontSize: 12, color: "#64748B" }}>{communities.length} areas · {Object.keys(liveCommunityROI).length + Object.keys(liveCommunityIntel).length} live overrides</div>
+                      </div>
+
+                      {/* Community List */}
+                      <div style={{ flex: 1, padding: "8px 10px", overflowY: "auto" }}>
+                        {communities.map(k => {
+                          const isActive = activeKey === k;
+                          const hasLiveROI = !!liveCommunityROI[k];
+                          const hasLiveIntel = !!liveCommunityIntel[k];
+                          const roi = { ...(defaultCommunityROI[k] || {}), ...(liveCommunityROI[k] || {}) };
+                          const intel = { ...(defaultCommunityIntel[k] || {}), ...(liveCommunityIntel[k] || {}) };
+                          const avgYield = roi.grossYield ? Object.values(roi.grossYield).filter(v => v).reduce((a,b) => a+b, 0) / Object.values(roi.grossYield).filter(v => v).length : null;
+                          return (
+                            <button key={k} type="button"
+                              onClick={() => { 
+                                setEditingCommunity(k); 
+                                setCommunityForm({ ...(defaultCommunityROI[k] || {}), ...(liveCommunityROI[k] || {}) });
+                                setCommunityIntelForm({ ...(defaultCommunityIntel[k] || {}), ...(liveCommunityIntel[k] || {}) });
+                              }}
+                              style={{ width: "100%", padding: "12px 14px", borderRadius: 10, border: isActive ? "1px solid rgba(212,168,67,0.3)" : "1px solid transparent", background: isActive ? "rgba(212,168,67,0.08)" : "transparent", cursor: "pointer", textAlign: "left", fontFamily: "'Outfit',sans-serif", transition: "all 0.15s", marginBottom: 4, display: "block" }}
+                              onMouseEnter={e => { if (!isActive) e.currentTarget.style.background="rgba(255,255,255,0.03)"; }}
+                              onMouseLeave={e => { if (!isActive) e.currentTarget.style.background="transparent"; }}>
+                              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 6 }}>
+                                <div style={{ fontSize: 13, fontWeight: isActive ? 700 : 500, color: isActive ? "#D4A843" : "#CBD5E1", lineHeight: 1.3 }}>{k}</div>
+                                {(hasLiveROI || hasLiveIntel)
+                                  ? <span style={{ fontSize: 8, fontWeight: 700, padding: "2px 6px", borderRadius: 4, background: "rgba(16,185,129,0.12)", color: "#10B981", flexShrink: 0, marginLeft: 6 }}>LIVE</span>
+                                  : <span style={{ fontSize: 8, fontWeight: 600, padding: "2px 6px", borderRadius: 4, background: "rgba(100,116,139,0.1)", color: "#475569", flexShrink: 0, marginLeft: 6 }}>DEFAULT</span>}
+                              </div>
+                              <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+                                <span style={{ fontSize: 13, fontWeight: 700, color: isActive ? "#D4A843" : "#94A3B8" }}>{avgYield ? avgYield.toFixed(1) + "%" : intel.avgYield || "—"}</span>
+                                {roi.goldenVisa && <span style={{ fontSize: 8, padding: "2px 6px", borderRadius: 3, background: "rgba(212,168,67,0.1)", color: "#D4A843", fontWeight: 700 }}>VISA</span>}
+                                <span style={{ fontSize: 10, color: roi.riskLevel === "Low" ? "#10B981" : roi.riskLevel === "Medium" ? "#F59E0B" : "#64748B" }}>{roi.riskLevel || ""}</span>
+                              </div>
+                              <div style={{ fontSize: 10, color: "#475569", marginTop: 4, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{intel.tagline || "No tagline"}</div>
+                            </button>
+                          );
+                        })}
+                      </div>
+
+                      {/* Nav Footer */}
+                      <div style={{ padding: "14px 16px", borderTop: "1px solid rgba(255,255,255,0.05)", fontSize: 10, color: "#334155", lineHeight: 1.6 }}>
+                        Investment + Lifestyle data saves to Firestore. Dashboard updates instantly.
+                      </div>
+                    </div>
+
+                    {/* ══════════════════════════════
+                        RIGHT — Combined Editor
+                    ══════════════════════════════ */}
+                    <div style={{ flex: 1, minWidth: 0, overflowY: "auto", height: "100%", scrollbarWidth: "thin" }}>
+
+                      {/* Hero Banner */}
+                      <div style={{ padding: "28px 36px 24px", background: "linear-gradient(135deg, rgba(212,168,67,0.07) 0%, rgba(10,22,40,0) 60%)", borderBottom: "1px solid rgba(212,168,67,0.1)", display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 24, flexWrap: "wrap" }}>
+                        <div>
+                          <div style={{ fontSize: 10, fontWeight: 700, color: "#D4A843", letterSpacing: 2, textTransform: "uppercase", marginBottom: 6 }}>Editing Community</div>
+                          <h1 style={{ fontFamily: "'Fraunces',serif", fontSize: 32, fontWeight: 900, color: "#FFFFFF", margin: "0 0 8px", lineHeight: 1.1 }}>{activeKey}</h1>
+                          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                            <span style={{ width: 8, height: 8, borderRadius: "50%", background: hasAnyOverride ? "#10B981" : "#475569", boxShadow: hasAnyOverride ? "0 0 8px #10B981" : "none" }} />
+                            <span style={{ fontSize: 12, color: hasAnyOverride ? "#10B981" : "#64748B" }}>
+                              {hasAnyOverride ? "Live — dashboard shows your custom data" : "Default — showing data.js values"}
+                            </span>
+                          </div>
+                        </div>
+                        <div style={{ display: "flex", gap: 10 }}>
+                          <button type="button" onClick={fetchLiveData}
+                            style={{ fontSize: 12, padding: "10px 18px", borderRadius: 8, border: "1px solid rgba(212,168,67,0.3)", background: "rgba(212,168,67,0.06)", color: "#D4A843", cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600, display: "flex", alignItems: "center", gap: 6 }}>
+                            {I.refresh} Refresh
+                          </button>
+                          {hasAnyOverride && (
+                            <button type="button" onClick={() => resetCombinedCommunity(activeKey)}
+                              style={{ fontSize: 12, padding: "10px 18px", borderRadius: 8, border: "1px solid rgba(239,68,68,0.25)", background: "rgba(239,68,68,0.06)", color: "#EF4444", cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>
+                              Reset All
+                            </button>
+                          )}
+                          <button type="button" disabled={dataSaving} onClick={() => saveCombinedCommunity(activeKey, communityForm, communityIntelForm)}
+                            style={{ fontSize: 14, padding: "11px 28px", borderRadius: 9, border: "none", background: "linear-gradient(135deg,#D4A843,#B8860B)", color: "#000", fontWeight: 800, cursor: dataSaving ? "wait" : "pointer", fontFamily: "'Outfit',sans-serif", boxShadow: "0 6px 24px rgba(212,168,67,0.3)" }}>
+                            {dataSaving ? "Saving..." : "Publish → Live"}
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Editor Content */}
+                      <div style={{ padding: "28px 36px" }}>
+
+                        {/* ══════ INVESTMENT DATA SECTION ══════ */}
+                        <div style={{ marginBottom: 32, padding: 24, background: "rgba(212,168,67,0.03)", border: "1px solid rgba(212,168,67,0.12)", borderRadius: 14 }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
+                            <div style={{ width: 4, height: 24, background: "#D4A843", borderRadius: 2 }} />
+                            <h2 style={{ fontSize: 18, fontWeight: 700, color: "#D4A843", margin: 0 }}>Investment Data</h2>
+                            {hasROI && <span style={{ fontSize: 9, padding: "3px 8px", borderRadius: 5, background: "rgba(16,185,129,0.12)", color: "#10B981", fontWeight: 600 }}>LIVE</span>}
+                          </div>
+
+                          {/* Yield Grid */}
+                          <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 12, marginBottom: 20 }}>
+                            {["apt1", "apt2", "apt3", "th", "villa"].map(k => (
+                              <div key={k} style={{ background: "rgba(4,9,15,0.5)", padding: 14, borderRadius: 10, border: "1px solid rgba(255,255,255,0.05)" }}>
+                                <div style={{ fontSize: 11, fontWeight: 700, color: "#94A3B8", marginBottom: 10, textTransform: "uppercase" }}>{k === "apt1" ? "1 BR" : k === "apt2" ? "2 BR" : k === "apt3" ? "3 BR" : k === "th" ? "Townhouse" : "Villa"}</div>
+                                <div style={{ marginBottom: 8 }}>
+                                  <div style={{ fontSize: 9, color: "#D4A843", marginBottom: 3 }}>Gross %</div>
+                                  <input type="number" step="0.1" value={communityForm.grossYield?.[k] ?? roiMerged.grossYield?.[k] ?? ""} 
+                                    onChange={e => setCommunityForm(prev => ({ ...prev, grossYield: { ...(prev.grossYield || roiMerged.grossYield || {}), [k]: Number(e.target.value) || null } }))}
+                                    style={{ width: "100%", padding: "8px", background: "#04090F", border: "1px solid rgba(212,168,67,0.2)", borderRadius: 6, color: "#D4A843", fontSize: 14, fontWeight: 700, fontFamily: "'Fraunces',serif", textAlign: "center" }} />
+                                </div>
+                                <div style={{ marginBottom: 8 }}>
+                                  <div style={{ fontSize: 9, color: "#10B981", marginBottom: 3 }}>Net %</div>
+                                  <input type="number" step="0.1" value={communityForm.netYield?.[k] ?? roiMerged.netYield?.[k] ?? ""} 
+                                    onChange={e => setCommunityForm(prev => ({ ...prev, netYield: { ...(prev.netYield || roiMerged.netYield || {}), [k]: Number(e.target.value) || null } }))}
+                                    style={{ width: "100%", padding: "8px", background: "#04090F", border: "1px solid rgba(16,185,129,0.2)", borderRadius: 6, color: "#10B981", fontSize: 14, fontWeight: 700, fontFamily: "'Fraunces',serif", textAlign: "center" }} />
+                                </div>
+                                <div>
+                                  <div style={{ fontSize: 9, color: "#3B82F6", marginBottom: 3 }}>Rent AED/yr</div>
+                                  <input type="number" value={communityForm.estRent?.[k] ?? roiMerged.estRent?.[k] ?? ""} 
+                                    onChange={e => setCommunityForm(prev => ({ ...prev, estRent: { ...(prev.estRent || roiMerged.estRent || {}), [k]: Number(e.target.value) || null } }))}
+                                    style={{ width: "100%", padding: "8px", background: "#04090F", border: "1px solid rgba(59,130,246,0.2)", borderRadius: 6, color: "#3B82F6", fontSize: 12, fontWeight: 600, textAlign: "center" }} />
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+
+                          {/* Other Investment Fields */}
+                          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16 }}>
+                            <div>
+                              <Lbl>5-Year Appreciation %</Lbl>
+                              <input type="number" value={communityForm.appreciation5yr ?? roiMerged.appreciation5yr ?? ""} 
+                                onChange={e => setCommunityForm(prev => ({ ...prev, appreciation5yr: Number(e.target.value) }))}
+                                style={{ width: "100%", padding: "10px 12px", background: "#04090F", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, color: "#E2E8F0", fontSize: 14, fontFamily: "'Outfit',sans-serif" }} />
+                            </div>
+                            <div>
+                              <Lbl>YoY Growth %</Lbl>
+                              <input type="number" value={communityForm.appreciationYoY ?? roiMerged.appreciationYoY ?? ""} 
+                                onChange={e => setCommunityForm(prev => ({ ...prev, appreciationYoY: Number(e.target.value) }))}
+                                style={{ width: "100%", padding: "10px 12px", background: "#04090F", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, color: "#E2E8F0", fontSize: 14, fontFamily: "'Outfit',sans-serif" }} />
+                            </div>
+                            <div>
+                              <Lbl>Occupancy %</Lbl>
+                              <input type="number" value={communityForm.occupancy ?? roiMerged.occupancy ?? ""} 
+                                onChange={e => setCommunityForm(prev => ({ ...prev, occupancy: Number(e.target.value) }))}
+                                style={{ width: "100%", padding: "10px 12px", background: "#04090F", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, color: "#E2E8F0", fontSize: 14, fontFamily: "'Outfit',sans-serif" }} />
+                            </div>
+                            <div>
+                              <Lbl>Risk Level</Lbl>
+                              <select value={communityForm.riskLevel ?? roiMerged.riskLevel ?? "Low"} 
+                                onChange={e => setCommunityForm(prev => ({ ...prev, riskLevel: e.target.value }))}
+                                style={{ width: "100%", padding: "10px 12px", background: "#04090F", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, color: "#E2E8F0", fontSize: 14, fontFamily: "'Outfit',sans-serif" }}>
+                                <option value="Low">Low</option>
+                                <option value="Low-Medium">Low-Medium</option>
+                                <option value="Medium">Medium</option>
+                                <option value="Medium-High">Medium-High</option>
+                                <option value="High">High</option>
+                              </select>
+                            </div>
+                            <div>
+                              <Lbl>Service Charge (AED/sqft)</Lbl>
+                              <input type="number" value={communityForm.serviceCharge ?? roiMerged.serviceCharge ?? ""} 
+                                onChange={e => setCommunityForm(prev => ({ ...prev, serviceCharge: Number(e.target.value) }))}
+                                style={{ width: "100%", padding: "10px 12px", background: "#04090F", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, color: "#E2E8F0", fontSize: 14, fontFamily: "'Outfit',sans-serif" }} />
+                            </div>
+                            <div>
+                              <Lbl>Avg Days to Lease</Lbl>
+                              <input type="number" value={communityForm.avgDaysToLease ?? roiMerged.avgDaysToLease ?? ""} 
+                                onChange={e => setCommunityForm(prev => ({ ...prev, avgDaysToLease: Number(e.target.value) }))}
+                                style={{ width: "100%", padding: "10px 12px", background: "#04090F", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, color: "#E2E8F0", fontSize: 14, fontFamily: "'Outfit',sans-serif" }} />
+                            </div>
+                            <div>
+                              <Lbl>Short-Term Premium %</Lbl>
+                              <input type="number" value={communityForm.shortTermPremium ?? roiMerged.shortTermPremium ?? ""} 
+                                onChange={e => setCommunityForm(prev => ({ ...prev, shortTermPremium: Number(e.target.value) }))}
+                                style={{ width: "100%", padding: "10px 12px", background: "#04090F", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, color: "#E2E8F0", fontSize: 14, fontFamily: "'Outfit',sans-serif" }} />
+                            </div>
+                            <div>
+                              <Lbl>Golden Visa Eligible</Lbl>
+                              <select value={communityForm.goldenVisa ?? roiMerged.goldenVisa ?? true} 
+                                onChange={e => setCommunityForm(prev => ({ ...prev, goldenVisa: e.target.value === "true" }))}
+                                style={{ width: "100%", padding: "10px 12px", background: "#04090F", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, color: "#E2E8F0", fontSize: 14, fontFamily: "'Outfit',sans-serif" }}>
+                                <option value="true">Yes</option>
+                                <option value="false">No</option>
+                              </select>
+                            </div>
+                          </div>
+                          <div style={{ marginTop: 16 }}>
+                            <Lbl>Capital Growth Driver</Lbl>
+                            {ta(communityForm.capitalGrowthDriver ?? roiMerged.capitalGrowthDriver ?? "", "What drives value in this community?", e => setCommunityForm(prev => ({ ...prev, capitalGrowthDriver: e.target.value })), 2)}
+                          </div>
+                        </div>
+
+                        {/* ══════ LIFESTYLE DATA SECTION ══════ */}
+                        <div style={{ padding: 24, background: "rgba(0,191,165,0.03)", border: "1px solid rgba(0,191,165,0.12)", borderRadius: 14 }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
+                            <div style={{ width: 4, height: 24, background: "#00BFA5", borderRadius: 2 }} />
+                            <h2 style={{ fontSize: 18, fontWeight: 700, color: "#00BFA5", margin: 0 }}>Lifestyle & Location</h2>
+                            {hasIntel && <span style={{ fontSize: 9, padding: "3px 8px", borderRadius: 5, background: "rgba(16,185,129,0.12)", color: "#10B981", fontWeight: 600 }}>LIVE</span>}
+                          </div>
+
+                          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
+                            <div>
+                              <Lbl color="#00BFA5">Tagline</Lbl>
+                              {inp(communityIntelForm.tagline ?? intelMerged.tagline ?? "", "e.g. Golf-Side Family Living...", e => setCommunityIntelForm(prev => ({ ...prev, tagline: e.target.value })))}
+                            </div>
+                            <div>
+                              <Lbl color="#00BFA5">Master Developer</Lbl>
+                              {inp(communityIntelForm.masterDev ?? intelMerged.masterDev ?? "", "e.g. Emaar & Meraas joint venture", e => setCommunityIntelForm(prev => ({ ...prev, masterDev: e.target.value })))}
+                            </div>
+                          </div>
+
+                          <div style={{ marginTop: 16 }}>
+                            <Lbl color="#00BFA5">Famous For</Lbl>
+                            {ta(communityIntelForm.famousFor ?? intelMerged.famousFor ?? "", "Key attractions, landmarks, features...", e => setCommunityIntelForm(prev => ({ ...prev, famousFor: e.target.value })), 2)}
+                          </div>
+
+                          <div style={{ marginTop: 16 }}>
+                            <Lbl color="#00BFA5">Lifestyle Description</Lbl>
+                            {ta(communityIntelForm.lifestyle ?? intelMerged.lifestyle ?? "", "Target demographic, community vibe...", e => setCommunityIntelForm(prev => ({ ...prev, lifestyle: e.target.value })), 2)}
+                          </div>
+
+                          <div style={{ marginTop: 16 }}>
+                            <Lbl color="#00BFA5">Road Connectivity</Lbl>
+                            {inp(communityIntelForm.roads ?? intelMerged.roads ?? "", "Major roads, metro connections...", e => setCommunityIntelForm(prev => ({ ...prev, roads: e.target.value })))}
+                          </div>
+
+                          {/* Key Amenities */}
+                          <div style={{ marginTop: 20 }}>
+                            <Lbl color="#00BFA5">Key Amenities</Lbl>
+                            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                              {(communityIntelForm.keyAmenities ?? intelMerged.keyAmenities ?? []).map((am, idx) => (
+                                <div key={idx} style={{ display: "flex", gap: 8, alignItems: "flex-start", background: "rgba(4,9,15,0.5)", padding: 12, borderRadius: 8 }}>
+                                  <input value={am.icon || ""} onChange={e => {
+                                    const arr = [...(communityIntelForm.keyAmenities ?? intelMerged.keyAmenities ?? [])];
+                                    arr[idx] = { ...arr[idx], icon: e.target.value };
+                                    setCommunityIntelForm(prev => ({ ...prev, keyAmenities: arr }));
+                                  }} style={{ width: 40, padding: "6px", background: "#04090F", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 4, color: "#E2E8F0", fontSize: 16, textAlign: "center" }} />
+                                  <div style={{ flex: 1 }}>
+                                    <input value={am.label || ""} onChange={e => {
+                                      const arr = [...(communityIntelForm.keyAmenities ?? intelMerged.keyAmenities ?? [])];
+                                      arr[idx] = { ...arr[idx], label: e.target.value };
+                                      setCommunityIntelForm(prev => ({ ...prev, keyAmenities: arr }));
+                                    }} placeholder="Label" style={{ width: "100%", padding: "6px 8px", background: "#04090F", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 4, color: "#E2E8F0", fontSize: 12, marginBottom: 4 }} />
+                                    <input value={am.items || ""} onChange={e => {
+                                      const arr = [...(communityIntelForm.keyAmenities ?? intelMerged.keyAmenities ?? [])];
+                                      arr[idx] = { ...arr[idx], items: e.target.value };
+                                      setCommunityIntelForm(prev => ({ ...prev, keyAmenities: arr }));
+                                    }} placeholder="Items (comma-separated)" style={{ width: "100%", padding: "6px 8px", background: "#04090F", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 4, color: "#94A3B8", fontSize: 11 }} />
+                                  </div>
+                                  <button type="button" onClick={() => {
+                                    const arr = (communityIntelForm.keyAmenities ?? intelMerged.keyAmenities ?? []).filter((_, i) => i !== idx);
+                                    setCommunityIntelForm(prev => ({ ...prev, keyAmenities: arr }));
+                                  }} style={{ padding: "4px 8px", background: "rgba(239,68,68,0.1)", border: "none", borderRadius: 4, color: "#EF4444", cursor: "pointer", fontSize: 14 }}>×</button>
+                                </div>
+                              ))}
+                            </div>
+                            <button type="button" onClick={() => setCommunityIntelForm(prev => ({ ...prev, keyAmenities: [...(prev.keyAmenities ?? intelMerged.keyAmenities ?? []), { icon: "", label: "", items: "" }] }))}
+                              style={{ marginTop: 8, fontSize: 11, padding: "8px 16px", borderRadius: 6, border: "1px solid rgba(0,191,165,0.3)", background: "rgba(0,191,165,0.05)", color: "#00BFA5", cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                              + Add Amenity
+                            </button>
+                          </div>
+
+                          {/* Distances */}
+                          <div style={{ marginTop: 20 }}>
+                            <Lbl color="#00BFA5">Distances to Key Locations</Lbl>
+                            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                              {(communityIntelForm.distances ?? intelMerged.distances ?? []).map((d, idx) => (
+                                <div key={idx} style={{ display: "flex", gap: 8, alignItems: "center", background: "rgba(4,9,15,0.5)", padding: 10, borderRadius: 8 }}>
+                                  <input value={d.dest || ""} onChange={e => {
+                                    const arr = [...(communityIntelForm.distances ?? intelMerged.distances ?? [])];
+                                    arr[idx] = { ...arr[idx], dest: e.target.value };
+                                    setCommunityIntelForm(prev => ({ ...prev, distances: arr }));
+                                  }} placeholder="Destination" style={{ flex: 1, padding: "6px 8px", background: "#04090F", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 4, color: "#E2E8F0", fontSize: 12 }} />
+                                  <input type="number" value={d.km || ""} onChange={e => {
+                                    const arr = [...(communityIntelForm.distances ?? intelMerged.distances ?? [])];
+                                    arr[idx] = { ...arr[idx], km: Number(e.target.value) };
+                                    setCommunityIntelForm(prev => ({ ...prev, distances: arr }));
+                                  }} placeholder="km" style={{ width: 50, padding: "6px 8px", background: "#04090F", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 4, color: "#D4A843", fontSize: 12, textAlign: "center" }} />
+                                  <input type="number" value={d.min || ""} onChange={e => {
+                                    const arr = [...(communityIntelForm.distances ?? intelMerged.distances ?? [])];
+                                    arr[idx] = { ...arr[idx], min: Number(e.target.value) };
+                                    setCommunityIntelForm(prev => ({ ...prev, distances: arr }));
+                                  }} placeholder="min" style={{ width: 50, padding: "6px 8px", background: "#04090F", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 4, color: "#00BFA5", fontSize: 12, textAlign: "center" }} />
+                                  <button type="button" onClick={() => {
+                                    const arr = (communityIntelForm.distances ?? intelMerged.distances ?? []).filter((_, i) => i !== idx);
+                                    setCommunityIntelForm(prev => ({ ...prev, distances: arr }));
+                                  }} style={{ padding: "4px 8px", background: "rgba(239,68,68,0.1)", border: "none", borderRadius: 4, color: "#EF4444", cursor: "pointer", fontSize: 14 }}>×</button>
+                                </div>
+                              ))}
+                            </div>
+                            <button type="button" onClick={() => setCommunityIntelForm(prev => ({ ...prev, distances: [...(prev.distances ?? intelMerged.distances ?? []), { dest: "", km: 0, min: 0 }] }))}
+                              style={{ marginTop: 8, fontSize: 11, padding: "8px 16px", borderRadius: 6, border: "1px solid rgba(0,191,165,0.3)", background: "rgba(0,191,165,0.05)", color: "#00BFA5", cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                              + Add Distance
+                            </button>
+                          </div>
+                        </div>
+                        
+                        {/* ═══════════════════════════════════════
+                           LINKED PROJECTS PANEL
+                           ═══════════════════════════════════════ */}
+                        {(() => {
+                          const communityProjects = emaarProjects.filter(p => p.community === activeKey);
+                          
+                          // Calculate stats
+                          const totalProjects = communityProjects.length;
+                          const avgPrice = totalProjects > 0 
+                            ? Math.round(communityProjects.reduce((sum, p) => sum + (getMergedProject(p).price || 0), 0) / totalProjects)
+                            : 0;
+                          const avgPpsf = totalProjects > 0
+                            ? Math.round(communityProjects.reduce((sum, p) => sum + (getMergedProject(p).ppsf || 0), 0) / totalProjects)
+                            : 0;
+                          const avgQuality = totalProjects > 0
+                            ? Math.round(communityProjects.reduce((sum, p) => sum + calculateProjectQuality(p).score, 0) / totalProjects)
+                            : 0;
+                          const liveCount = communityProjects.filter(p => liveProjects[p.id]).length;
+                          
+                          // Group by status
+                          const statusGroups = {};
+                          communityProjects.forEach(p => {
+                            const status = getMergedProject(p).status || "Unknown";
+                            if (!statusGroups[status]) statusGroups[status] = [];
+                            statusGroups[status].push(p);
+                          });
+                          
+                          return (
+                            <div style={{ marginTop: 24, padding: 20, borderRadius: 12, border: `1px solid ${T.purple}30`, background: `${T.purple}05` }}>
+                              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+                                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={T.purple} strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+                                  <span style={{ fontSize: 14, fontWeight: 700, color: T.purple }}>Linked Projects</span>
+                                  <span style={{ padding: "3px 10px", borderRadius: 12, background: `${T.gold}20`, color: T.gold, fontSize: 11, fontWeight: 700 }}>{totalProjects}</span>
+                                </div>
+                                <button type="button" onClick={() => { setDataSubTab("projects"); setProjectCommunityFilter(activeKey); }}
+                                  style={{ fontSize: 11, padding: "6px 14px", borderRadius: 6, border: `1px solid ${T.purple}40`, background: "transparent", color: T.purple, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>
+                                  View All in Projects →
+                                </button>
+                              </div>
+                              
+                              {/* Stats Row */}
+                              <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 12, marginBottom: 16 }}>
+                                <div style={{ padding: 12, background: T.surface, borderRadius: 8, textAlign: "center" }}>
+                                  <div style={{ fontSize: 18, fontWeight: 700, color: T.gold, fontFamily: "'Fraunces',serif" }}>{totalProjects}</div>
+                                  <div style={{ fontSize: 9, color: T.textMuted }}>Total Projects</div>
+                                </div>
+                                <div style={{ padding: 12, background: T.surface, borderRadius: 8, textAlign: "center" }}>
+                                  <div style={{ fontSize: 15, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>{avgPrice > 0 ? `${(avgPrice/1e6).toFixed(1)}M` : "—"}</div>
+                                  <div style={{ fontSize: 9, color: T.textMuted }}>Avg Price</div>
+                                </div>
+                                <div style={{ padding: 12, background: T.surface, borderRadius: 8, textAlign: "center" }}>
+                                  <div style={{ fontSize: 15, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>{avgPpsf > 0 ? avgPpsf.toLocaleString() : "—"}</div>
+                                  <div style={{ fontSize: 9, color: T.textMuted }}>Avg PPSF</div>
+                                </div>
+                                <div style={{ padding: 12, background: T.surface, borderRadius: 8, textAlign: "center" }}>
+                                  <div style={{ fontSize: 15, fontWeight: 700, color: avgQuality >= 70 ? T.green : avgQuality >= 50 ? T.orange : T.red, fontFamily: "'Fraunces',serif" }}>{avgQuality}</div>
+                                  <div style={{ fontSize: 9, color: T.textMuted }}>Avg Quality</div>
+                                </div>
+                                <div style={{ padding: 12, background: T.surface, borderRadius: 8, textAlign: "center" }}>
+                                  <div style={{ fontSize: 15, fontWeight: 700, color: T.green, fontFamily: "'Fraunces',serif" }}>{liveCount}</div>
+                                  <div style={{ fontSize: 9, color: T.textMuted }}>Live Overrides</div>
+                                </div>
+                              </div>
+                              
+                              {/* Status Breakdown */}
+                              {Object.keys(statusGroups).length > 0 && (
+                                <div style={{ marginBottom: 16 }}>
+                                  <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, marginBottom: 8, textTransform: "uppercase", letterSpacing: 0.5 }}>By Status</div>
+                                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                                    {Object.entries(statusGroups).map(([status, projects]) => (
+                                      <div key={status} style={{ 
+                                        padding: "6px 12px", borderRadius: 8, 
+                                        background: status === "Selling" ? "rgba(16,185,129,0.1)" : status === "Upcoming" ? "rgba(212,168,67,0.1)" : "rgba(148,163,184,0.1)",
+                                        border: `1px solid ${status === "Selling" ? "rgba(16,185,129,0.3)" : status === "Upcoming" ? "rgba(212,168,67,0.3)" : "rgba(148,163,184,0.2)"}`,
+                                        display: "flex", alignItems: "center", gap: 6
+                                      }}>
+                                        <span style={{ fontSize: 13, fontWeight: 700, color: status === "Selling" ? T.green : status === "Upcoming" ? T.gold : T.textMuted }}>{projects.length}</span>
+                                        <span style={{ fontSize: 11, color: T.textSecondary }}>{status}</span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                              
+                              {/* Project List (collapsed by default) */}
+                              {totalProjects > 0 && (
+                                <div>
+                                  <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, marginBottom: 8, textTransform: "uppercase", letterSpacing: 0.5 }}>Quick Edit Projects</div>
+                                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 8, maxHeight: 200, overflowY: "auto" }}>
+                                    {communityProjects.map(p => {
+                                      const merged = getMergedProject(p);
+                                      const quality = calculateProjectQuality(p);
+                                      const hasOverride = !!liveProjects[p.id];
+                                      return (
+                                        <button key={p.id} type="button"
+                                          onClick={() => { setDataSubTab("projects"); setEditingProject(p.id); setProjectForm(liveProjects[p.id] || {}); }}
+                                          style={{ 
+                                            padding: "10px 12px", borderRadius: 8, 
+                                            border: `1px solid ${T.border}`, background: T.surface,
+                                            cursor: "pointer", fontFamily: "'Outfit',sans-serif", textAlign: "left",
+                                            display: "flex", alignItems: "center", gap: 8
+                                          }}>
+                                          <div style={{ 
+                                            width: 24, height: 24, borderRadius: 6, fontSize: 10, fontWeight: 700,
+                                            background: `${quality.color}15`, color: quality.color,
+                                            display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0
+                                          }}>{quality.score}</div>
+                                          <div style={{ flex: 1, minWidth: 0 }}>
+                                            <div style={{ fontSize: 12, fontWeight: 600, color: T.white, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.name}</div>
+                                            <div style={{ fontSize: 10, color: T.textMuted, display: "flex", gap: 6 }}>
+                                              <span>{merged.price ? `${(merged.price/1e6).toFixed(1)}M` : "TBA"}</span>
+                                              {hasOverride && <span style={{ color: T.green }}> Live</span>}
+                                            </div>
+                                          </div>
+                                        </button>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+                              )}
+                              
+                              {totalProjects === 0 && (
+                                <div style={{ textAlign: "center", padding: 20, color: T.textMuted }}>
+                                  <div style={{ fontSize: 24, marginBottom: 8 }}>📡</div>
+                                  <div style={{ fontSize: 12 }}>No projects in this community yet</div>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })()}
+
+                        {/* Publish Footer */}
+                        <div style={{ marginTop: 24, background: "linear-gradient(135deg,rgba(212,168,67,0.08),rgba(212,168,67,0.03))", border: "1px solid rgba(212,168,67,0.18)", borderRadius: 12, padding: "20px 24px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 16 }}>
+                          <div>
+                            <div style={{ fontSize: 15, fontWeight: 700, color: "#FFFFFF", marginBottom: 4 }}>Ready to publish: <span style={{ color: "#D4A843" }}>{activeKey}</span></div>
+                            <div style={{ fontSize: 12, color: "#64748B" }}>Investment + Lifestyle data saves to Firestore. Dashboard updates instantly.</div>
+                          </div>
+                          <button type="button" disabled={dataSaving} onClick={() => saveCombinedCommunity(activeKey, communityForm, communityIntelForm)}
+                            style={{ fontSize: 14, padding: "12px 36px", borderRadius: 9, border: "none", background: "linear-gradient(135deg,#D4A843,#B8860B)", color: "#000", fontWeight: 800, cursor: dataSaving ? "wait" : "pointer", fontFamily: "'Outfit',sans-serif", boxShadow: "0 6px 28px rgba(212,168,67,0.32)" }}>
+                            {dataSaving ? "Publishing..." : "Publish → Goes Live Now"}
+                          </button>
+                        </div>
+
+                      </div>
+                    </div>
+
+                  </div>
+                );
+              })()}
+
+              {/* ─── YIELD TABLE EDITOR ─── */}
+              {dataSubTab === "yields" && (
+                <Section title="Yield Table Data" sub="Edit yield table entries shown in the Yields tab" action={
+                  <button type="button" onClick={fetchLiveData} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, padding: "7px 14px", borderRadius: 8, border: `1px solid ${T.gold}`, background: T.goldGlow, color: T.gold, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>{I.refresh} Refresh</button>
+                }>
+                  <TabHelp items={[
+                    { icon: "[=]", title: "What is this table?", desc: "This is the yield comparison table users see on the dashboard. It shows rent, price and yield by unit type per community." },
+                    { icon: "[e]", title: "How to edit", desc: "Click any row to open the edit form. Change rent, price, gross/net yield, demand level and Golden Visa eligibility." },
+                    { icon: "[v]", title: "Save Goes Live", desc: "Changes save to Firestore and update immediately on the main dashboard Yields tab." },
+                    { icon: "[o]", title: "Live vs Default", desc: "Green 'Live' badge means you have a Firestore override. Grey means it's showing default data from data.js." },
+                  ]} />
+                  {/* Editing form */}
+                  {editingYield !== null && (() => {
+                    const y = emaarYields[editingYield];
+                    if (!y) return null;
+                    const yieldKey = `${y.community}_${y.unit}`.replace(/\s+/g, "_");
+                    const merged = { ...y, ...(liveYields[yieldKey] || {}) };
+                    const hasOverride = !!liveYields[yieldKey];
+                    const fields = [
+                      { key: "rent", label: "Annual Rent (AED)", type: "number" },
+                      { key: "price", label: "Unit Price (AED)", type: "number" },
+                      { key: "gross", label: "Gross Yield %", type: "number" },
+                      { key: "net", label: "Net Yield %", type: "number" },
+                      { key: "demand", label: "Demand", type: "select", options: ["Very High", "High", "Moderate-High", "Moderate", "Growing"] },
+                      { key: "visa", label: "Golden Visa", type: "select", options: ["Yes", "No", "Some"] },
+                    ];
+                    return (
+                      <div className="chart-box fade-up" style={{ padding: 24, marginBottom: 20, border: `1px solid ${T.gold}30` }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+                          <div>
+                            <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 700, color: T.white }}>{y.unit} — {y.community}</h3>
+                            {hasOverride && <span style={{ fontSize: 10, padding: "2px 8px", borderRadius: 6, background: "rgba(16,185,129,0.12)", color: T.green, fontWeight: 600 }}>LIVE DATA</span>}
+                          </div>
+                          <button type="button" onClick={() => setEditingYield(null)} style={{ fontSize: 11, padding: "6px 14px", borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.textSecondary, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>Cancel</button>
+                        </div>
+                        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
+                          {fields.map(f => (
+                            <div key={f.key}>
+                              <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>{f.label}</label>
+                              {f.type === "select" ? (
+                                <select value={yieldForm[f.key] ?? merged[f.key] ?? ""} onChange={e => setYieldForm(prev => ({ ...prev, [f.key]: e.target.value }))}
+                                  style={{ width: "100%", padding: "10px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textPrimary, fontSize: 13, fontFamily: "'Outfit',sans-serif" }}>
+                                  {f.options.map(o => <option key={o} value={o}>{o}</option>)}
+                                </select>
+                              ) : (
+                                <input type={f.type} step="0.1" value={yieldForm[f.key] ?? merged[f.key] ?? ""} onChange={e => setYieldForm(prev => ({ ...prev, [f.key]: e.target.value }))} placeholder={`e.g. ${merged[f.key] || ""}`}
+                                  style={{ width: "100%", padding: "10px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textPrimary, fontSize: 13, fontFamily: "'Outfit',sans-serif", outline: "none" }} />
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                        <button type="button" disabled={dataSaving} onClick={() => saveYieldData(yieldKey, yieldForm)}
+                          style={{ marginTop: 20, width: "100%", padding: "12px", borderRadius: 10, border: "none", background: `linear-gradient(135deg, ${T.gold}, ${T.goldDim})`, color: T.bg, fontSize: 14, fontWeight: 700, cursor: dataSaving ? "wait" : "pointer", fontFamily: "'Outfit',sans-serif", opacity: dataSaving ? 0.6 : 1 }}>
+                          {dataSaving ? "Saving..." : "Save Yield Data"}
+                        </button>
+                      </div>
+                    );
+                  })()}
+
+                  {/* Yields table */}
+                  <div className="chart-box" style={{ padding: 0, overflow: "hidden" }}>
+                    <div className="table-scroll">
+                      <div style={{ display: "grid", gridTemplateColumns: "40px 1.5fr 1fr 100px 110px 80px 80px 80px 70px", gap: 8, padding: "12px 20px", borderBottom: `2px solid ${T.border}`, background: T.surfaceAlt, minWidth: 800 }}>
+                        {["#", "Unit Type", "Community", "Rent", "Price", "Gross", "Net", "Demand", ""].map(h => (
+                          <span key={h} style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase" }}>{h}</span>
+                        ))}
+                      </div>
+                      {emaarYields.map((y, i) => {
+                        const yieldKey = `${y.community}_${y.unit}`.replace(/\s+/g, "_");
+                        const hasOverride = !!liveYields[yieldKey];
+                        const merged = { ...y, ...(liveYields[yieldKey] || {}) };
+                        return (
+                          <div key={i} style={{ display: "grid", gridTemplateColumns: "40px 1.5fr 1fr 100px 110px 80px 80px 80px 70px", gap: 8, padding: "10px 20px", borderBottom: `1px solid ${T.border}`, alignItems: "center", cursor: "pointer", transition: "background .15s", minWidth: 800, background: editingYield === i ? T.goldGlow : "transparent" }}
+                            onMouseEnter={e => { if (editingYield !== i) e.currentTarget.style.background = T.surfaceAlt; }}
+                            onMouseLeave={e => { if (editingYield !== i) e.currentTarget.style.background = "transparent"; }}
+                            onClick={() => { setEditingYield(i); setYieldForm(liveYields[yieldKey] || {}); }}>
+                            <span style={{ fontSize: 11, color: T.textMuted }}>{i + 1}</span>
+
+                            <span style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{merged.unit}</span>
+                            <span style={{ fontSize: 11, color: T.textSecondary }}>{merged.community}</span>
+                            <span style={{ fontSize: 12, color: T.textPrimary }}>AED {(merged.rent / 1000).toFixed(0)}K</span>
+                            <span style={{ fontSize: 12, color: T.gold, fontWeight: 600 }}>AED {(merged.price / 1e6).toFixed(2)}M</span>
+                            <span style={{ fontSize: 12, fontWeight: 700, color: T.green }}>{merged.gross}%</span>
+                            <span style={{ fontSize: 12, color: T.teal }}>{merged.net}%</span>
+                            <span style={{ fontSize: 10, color: merged.demand === "Very High" ? T.gold : T.textSecondary }}>{merged.demand}</span>
+                            <span style={{ fontSize: 10, color: hasOverride ? T.green : T.textMuted, fontWeight: hasOverride ? 600 : 400 }}>{hasOverride ? "" : "—"}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </Section>
+              )}
+
+              {/* ─── PRICE HISTORY SUB-TAB ─── */}
+              {dataSubTab === "pricehistory" && (() => {
+                const selectedProject = emaarProjects.find(p => String(p.id) === String(phSelId));
+                const history         = phSelId ? (priceHistory[phSelId] || []) : [];
+
+                const loadHistory = async (id) => {
+                  setPhLoading(true);
+                  await fetchPriceHistory(id);
+                  setPhLoading(false);
+                };
+
+                const saveManualEntry = async () => {
+                  if (!phSelId)           { notify("Error: Select a project first"); return; }
+                  if (!phManual.price)    { notify("Error: Price is required"); return; }
+                  if (!phManual.date)     { notify("Error: Date is required"); return; }
+                  setPhSaving(true);
+                  try {
+                    const entryId = String(phSelId) + "_manual_" + Date.now();
+                    await setDoc(doc(db, "priceHistory", entryId), {
+                      projectId:  String(phSelId),
+                      projectName: selectedProject?.name || "",
+                      price:      Number(phManual.price),
+                      ppsf:       Number(phManual.ppsf) || 0,
+                      recordedAt: new Date(phManual.date).toISOString(),
+                      recordedBy: adminUser?.email || "admin",
+                      note:       phManual.note || "",
+                      manual:     true,
+                    });
+                    await logAudit(db, { action: "price_history_manual", projectId: phSelId, price: Number(phManual.price), date: phManual.date });
+                    notify("Price entry saved");
+                    setPhManual({ price: "", ppsf: "", date: "", note: "" });
+                    await loadHistory(phSelId);
+                  } catch(e) { notify("Error: " + e.message); }
+                  setPhSaving(false);
+                };
+
+                // Chart dimensions
+                const chartH = 140;
+                const chartW = 600;
+                const pad    = { t: 16, r: 20, b: 28, l: 56 };
+                const innerW = chartW - pad.l - pad.r;
+                const innerH = chartH - pad.t - pad.b;
+
+                const chartPoints = history.length >= 2 ? (() => {
+                  const prices = history.map(h => h.price);
+                  const minP   = Math.min(...prices) * 0.97;
+                  const maxP   = Math.max(...prices) * 1.03;
+                  const rangeP = maxP - minP || 1;
+                  return history.map((h, i) => ({
+                    x: pad.l + (i / (history.length - 1)) * innerW,
+                    y: pad.t + innerH - ((h.price - minP) / rangeP) * innerH,
+                    price: h.price,
+                    date:  h.recordedAt,
+                    ppsf:  h.ppsf,
+                  }));
+                })() : [];
+
+                const polyline = chartPoints.map(p => `${p.x},${p.y}`).join(" ");
+
+                const inputSt = { width: "100%", padding: "9px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textPrimary, fontSize: 12, fontFamily: "'Outfit',sans-serif", outline: "none", boxSizing: "border-box" };
+
+                return (
+                  <Section title="Price History" sub="Track and log price changes per project over time">
+                    <TabHelp items={[
+                      { icon: "[v]", title: "What is this?", desc: "An audit trail of every price change per project. Automatically records when you save a new price in the Projects tab." },
+                      { icon: "[?]", title: "Select a Project", desc: "Choose any of the 48 projects from the dropdown. The chart and table will load its full price history." },
+                      { icon: "[n]", title: "Manual Entry", desc: "Add historical price points manually — useful for logging past prices before the system was set up." },
+                      { icon: "[x]", title: "Delete Entry", desc: "Click the × button on any row to remove that price entry. A confirmation will appear first." },
+                      { icon: "[^]", title: "Chart", desc: "Gold line chart shows price trend over time. Needs at least 2 data points to appear." },
+                    ]} />
+
+                    {/* ── PROJECT SELECTOR ── */}
+                    <div style={{ display: "flex", gap: 10, alignItems: "flex-end", marginBottom: 24, flexWrap: "wrap" }}>
+                      <div style={{ flex: "1 1 300px" }}>
+                        <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, display: "block", marginBottom: 6 }}>Select Project</label>
+                        <select value={phSelId} onChange={e => { setPhSelId(e.target.value); if (e.target.value) loadHistory(e.target.value); }}
+                          style={{ ...inputSt, cursor: "pointer" }}>
+                          <option value="">— Choose a project —</option>
+                          {[...emaarProjects].sort((a,b) => (a.name||"").localeCompare(b.name||"")).map(p => (
+                            <option key={p.id} value={p.id}>{p.name} ({p.community})</option>
+                          ))}
+                        </select>
+                      </div>
+                      {phSelId && (
+                        <button type="button" onClick={() => loadHistory(phSelId)} disabled={phLoading}
+                          style={{ padding: "9px 16px", borderRadius: 8, border: `1px solid ${T.gold}40`, background: T.goldGlow, color: T.gold, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif", opacity: phLoading ? 0.6 : 1 }}>
+                          {phLoading ? "Loading..." : " Refresh"}
+                        </button>
+                      )}
+                    </div>
+
+                    {/* ── EMPTY STATE ── */}
+                    {!phSelId && (
+                      <div style={{ textAlign: "center", padding: "48px 20px", background: T.surfaceAlt, borderRadius: 14, border: `1px solid ${T.border}` }}>
+                        <div style={{ width: 48, height: 48, borderRadius: 12, background: "rgba(212,168,67,0.08)", border: "1px solid rgba(212,168,67,0.15)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 14px", color: T.gold }}>
+                          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                        </div>
+                        <div style={{ fontSize: 14, fontWeight: 700, color: T.white, marginBottom: 6 }}>Select a project to view price history</div>
+                        <div style={{ fontSize: 12, color: T.textMuted }}>Price changes are recorded automatically every time you save a project's price.</div>
+                      </div>
+                    )}
+
+                    {/* ── LOADED STATE ── */}
+                    {phSelId && !phLoading && (
+                      <>
+                        {/* KPI row */}
+                        {history.length > 0 && (() => {
+                          const prices  = history.map(h => h.price);
+                          const first   = prices[0];
+                          const last    = prices[prices.length - 1];
+                          const changePct = first > 0 ? (((last - first) / first) * 100).toFixed(1) : 0;
+                          const highest = Math.max(...prices);
+                          const lowest  = Math.min(...prices);
+                          return (
+                            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 20 }}>
+                              {[
+                                { label: "Current Price",   value: `AED ${last.toLocaleString()}`,     color: T.gold  },
+                                { label: "Total Change",    value: `${changePct >= 0 ? "+" : ""}${changePct}%`, color: changePct >= 0 ? T.green : T.red },
+                                { label: "All-Time High",   value: `AED ${highest.toLocaleString()}`,  color: T.green },
+                                { label: "All-Time Low",    value: `AED ${lowest.toLocaleString()}`,   color: T.textMuted },
+                              ].map((k, i) => (
+                                <div key={i} className="kpi-card" style={{ border: `1px solid ${T.border}`, position: "relative" }}>
+                                  <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: k.color, opacity: 0.6, borderRadius: "16px 16px 0 0" }} />
+                                  <div style={{ fontSize: 18, fontWeight: 900, color: k.color, fontFamily: "'Fraunces',serif" }}>{k.value}</div>
+                                  <div style={{ fontSize: 10, color: T.textMuted, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.5, marginTop: 4 }}>{k.label}</div>
+                                </div>
+                              ))}
+                            </div>
+                          );
+                        })()}
+
+                        {/* SVG CHART */}
+                        {history.length >= 2 ? (
+                          <div className="chart-box fade-up" style={{ padding: "16px 20px 12px", marginBottom: 20 }}>
+                            <div style={{ fontSize: 12, fontWeight: 700, color: T.white, marginBottom: 4 }}>{selectedProject?.name} — Price Timeline</div>
+                            <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 14 }}>{history.length} data points · AED values</div>
+                            <svg viewBox={`0 0 ${chartW} ${chartH}`} style={{ width: "100%", height: chartH, overflow: "visible" }}>
+                              {/* Grid lines */}
+                              {[0, 0.25, 0.5, 0.75, 1].map((t, i) => {
+                                const y = pad.t + t * innerH;
+                                const prices = history.map(h => h.price);
+                                const minP = Math.min(...prices) * 0.97;
+                                const maxP = Math.max(...prices) * 1.03;
+                                const val  = maxP - (maxP - minP) * t;
+                                return (
+                                  <g key={i}>
+                                    <line x1={pad.l} y1={y} x2={chartW - pad.r} y2={y} stroke={T.border} strokeWidth="1" />
+                                    <text x={pad.l - 6} y={y + 4} textAnchor="end" fill={T.textMuted} fontSize="9">{(val / 1e6).toFixed(1)}M</text>
+                                  </g>
+                                );
+                              })}
+                              {/* Area fill */}
+                              <defs>
+                                <linearGradient id="phGrad" x1="0" y1="0" x2="0" y2="1">
+                                  <stop offset="0%" stopColor={T.gold} stopOpacity="0.2" />
+                                  <stop offset="100%" stopColor={T.gold} stopOpacity="0" />
+                                </linearGradient>
+                              </defs>
+                              <polygon
+                                points={`${pad.l},${pad.t + innerH} ${polyline} ${chartW - pad.r},${pad.t + innerH}`}
+                                fill="url(#phGrad)"
+                              />
+                              {/* Line */}
+                              <polyline points={polyline} fill="none" stroke={T.gold} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                              {/* Dots + labels */}
+                              {chartPoints.map((pt, i) => (
+                                <g key={i}>
+                                  <circle cx={pt.x} cy={pt.y} r="4" fill={T.gold} stroke={T.bg} strokeWidth="2" />
+                                  <text x={pt.x} y={chartH - 4} textAnchor="middle" fill={T.textMuted} fontSize="8">
+                                    {new Date(pt.date).toLocaleDateString("en-AE", { day: "numeric", month: "short" })}
+                                  </text>
+                                </g>
+                              ))}
+                            </svg>
+                          </div>
+                        ) : history.length === 1 ? (
+                          <div style={{ padding: "16px 20px", background: T.surfaceAlt, borderRadius: 12, border: `1px solid ${T.border}`, marginBottom: 20, fontSize: 12, color: T.textMuted }}>
+                            Only 1 data point — chart requires at least 2 entries. Add more price records below.
+                          </div>
+                        ) : (
+                          <div style={{ padding: "24px", textAlign: "center", background: T.surfaceAlt, borderRadius: 12, border: `1px solid ${T.border}`, marginBottom: 20 }}>
+                            <div style={{ fontSize: 13, color: T.textSecondary, fontWeight: 600, marginBottom: 4 }}>No price history yet</div>
+                            <div style={{ fontSize: 11, color: T.textMuted }}>Price changes are auto-recorded when you save a project. You can also add entries manually below.</div>
+                          </div>
+                        )}
+
+                        {/* PRICE CHANGE TABLE */}
+                        {history.length > 0 && (
+                          <div className="chart-box fade-up" style={{ padding: 0, overflow: "hidden", marginBottom: 20 }}>
+                            <div style={{ padding: "14px 20px", borderBottom: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                              <div style={{ fontSize: 13, fontWeight: 700, color: T.white }}>Price Change Log</div>
+                              <div style={{ fontSize: 11, color: T.textMuted }}>{history.length} entries</div>
+                            </div>
+                            {/* Header */}
+                            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr 1fr 40px", gap: 8, padding: "10px 20px", background: T.surfaceAlt, borderBottom: `1px solid ${T.border}` }}>
+                              {["Date", "Price (AED)", "PPSF", "Change", "Recorded By", ""].map(h => (
+                                <span key={h} style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1 }}>{h}</span>
+                              ))}
+                            </div>
+                            {[...history].reverse().map((h, i, arr) => {
+                              const prev     = arr[i + 1];
+                              const changePct = prev ? (((h.price - prev.price) / prev.price) * 100).toFixed(1) : null;
+                              return (
+                                <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr 1fr 40px", gap: 8, padding: "11px 20px", borderBottom: i < arr.length - 1 ? `1px solid ${T.border}` : "none", background: i % 2 === 0 ? "transparent" : T.surfaceAlt, alignItems: "center" }}>
+                                  <span style={{ fontSize: 12, color: T.textSecondary }}>{new Date(h.recordedAt).toLocaleDateString("en-AE", { day: "numeric", month: "short", year: "numeric" })}</span>
+                                  <span style={{ fontSize: 12, fontWeight: 700, color: T.gold }}>AED {h.price.toLocaleString()}</span>
+                                  <span style={{ fontSize: 12, color: T.textSecondary }}>{h.ppsf ? h.ppsf.toLocaleString() : "—"}</span>
+                                  <span style={{ fontSize: 11, fontWeight: 700, color: changePct === null ? T.textMuted : changePct >= 0 ? T.green : T.red }}>
+                                    {changePct === null ? "—" : `${changePct >= 0 ? "+" : ""}${changePct}%`}
+                                  </span>
+                                  <span style={{ fontSize: 11, color: T.textMuted }}>{h.recordedBy || "—"}{h.manual ? " (manual)" : ""}</span>
+                                  <button type="button" onClick={() => deletePriceHistoryEntry(h.id, phSelId)}
+                                    style={{ width: 28, height: 28, borderRadius: 6, border: "1px solid rgba(239,68,68,0.3)", background: "rgba(239,68,68,0.06)", color: T.red, cursor: "pointer", fontSize: 13, display: "flex", alignItems: "center", justifyContent: "center", padding: 0 }}>
+                                    ×
+                                  </button>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+
+                        {/* MANUAL ENTRY FORM */}
+                        <div className="chart-box fade-up" style={{ padding: 20 }}>
+                          <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 4 }}>Add Manual Price Entry</div>
+                          <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 16 }}>Add a historical price point for {selectedProject?.name || "this project"}</div>
+                          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 12, marginBottom: 14 }}>
+                            <div>
+                              <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, display: "block", marginBottom: 6 }}>Price (AED) *</label>
+                              <input type="number" placeholder="e.g. 2500000" value={phManual.price} onChange={e => setPhManual(p => ({ ...p, price: e.target.value }))} style={inputSt} />
+                            </div>
+                            <div>
+                              <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, display: "block", marginBottom: 6 }}>Price/sqft</label>
+                              <input type="number" placeholder="e.g. 2200" value={phManual.ppsf} onChange={e => setPhManual(p => ({ ...p, ppsf: e.target.value }))} style={inputSt} />
+                            </div>
+                            <div>
+                              <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, display: "block", marginBottom: 6 }}>Date *</label>
+                              <input type="date" value={phManual.date} onChange={e => setPhManual(p => ({ ...p, date: e.target.value }))} style={inputSt} />
+                            </div>
+                            <div>
+                              <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, display: "block", marginBottom: 6 }}>Note</label>
+                              <input type="text" placeholder="e.g. Q1 launch price" value={phManual.note} onChange={e => setPhManual(p => ({ ...p, note: e.target.value }))} style={inputSt} />
+                            </div>
+                          </div>
+                          <button type="button" onClick={saveManualEntry} disabled={phSaving}
+                            style={{ width: "100%", padding: "11px", borderRadius: 9, border: "none", background: `linear-gradient(135deg, ${T.gold}, #B8892E)`, color: T.bg, fontSize: 13, fontWeight: 700, cursor: phSaving ? "wait" : "pointer", fontFamily: "'Outfit',sans-serif", opacity: phSaving ? 0.6 : 1 }}>
+                            {phSaving ? "Saving..." : "+ Add Price Entry"}
+                          </button>
+                        </div>
+                      </>
+                    )}
+
+                    {phLoading && (
+                      <div style={{ textAlign: "center", padding: "40px", color: T.textMuted, fontSize: 13 }}>Loading price history...</div>
+                    )}
+                  </Section>
+                );
+              })()}
+
+              {/* Data sync info */}
+              {dataSubTab !== "communities" && <div className="chart-box fade-up" style={{ padding: 16, marginTop: 8, display: "flex", alignItems: "center", gap: 12 }}>
+                <div style={{ fontSize: 24 }}></div>
+                <div>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: T.white }}>How Live Data Works</div>
+                  <div style={{ fontSize: 11, color: T.textSecondary, lineHeight: 1.6 }}>
+                    Data saved here goes to Firestore and overrides default values from data.js. The main dashboard reads Firestore first, falls back to defaults if no override exists. Click "Reset to Default" on any item to remove the live override. Last updated timestamps are tracked per entry.
+                  </div>
+                </div>
+              </div>}
+
+              {/* ─── FINANCIALS EDITOR ─── */}
+              {dataSubTab === "financials" && <FinancialsEditor db={db} T={T} notify={notify} adminUser={adminUser} Section={Section} />}
+
+              {/* ─── RISK EDITOR ─── */}
+              {dataSubTab === "risk" && <RiskEditor db={db} T={T} notify={notify} adminUser={adminUser} Section={Section} />}
+
+              {/* ─── MARKET EDITOR ─── */}
+              {dataSubTab === "market" && <MarketEditor db={db} T={T} notify={notify} adminUser={adminUser} Section={Section} />}
+
+              {dataSubTab === "developers" && <DeveloperManager db={db} T={T} notify={notify} adminUser={adminUser} Section={Section} />}
+
+              {/* ═══ LIVE DATA SYNC ═══ */}
+              {dataSubTab === "livedata" && <LiveDataSync db={db} T={T} notify={notify} />}
+              {dataSubTab === "launchradar" && <LaunchRadar db={db} T={T} notify={notify} />}
+
+            </>
           )}
 
           {/* ═══════════════════════════════════════
              LEADS TAB
              ═══════════════════════════════════════ */}
-                    {tab === "leads" && (() => {
-            /* ─── LEADS CRM — WORLD CLASS (Session 1) ─── */
-            const now = new Date();
-            const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-            const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-            const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-            const tomorrowEnd = new Date(todayStart.getTime() + 2 * 24 * 60 * 60 * 1000);
+          {tab === "leads" && (() => {
+  /*
+  ╔══════════════════════════════════════════════════════════════════════╗
+  ║  DXB ANALYTICS — LEADS CRM  (World-Class Rebuild)                   ║
+  ║                                                                      ║
+  ║  Research sources applied:                                           ║
+  ║  • HubSpot: color-coded pipeline, activity timeline, clean spacing   ║
+  ║  • Pipedrive: Kanban-first, "deal rotting" alerts, next-action focus ║
+  ║  • Goyzer: WhatsApp-first, lead pool, escalation system             ║
+  ║  • PropSpace: Dubai portals, multilingual, RERA compliance          ║
+  ║  • REM CRM: Off-plan focus, Golden Visa flag, bulk WhatsApp         ║
+  ║  • X-OPP: Auto-assign, lead scoring, source ROI                     ║
+  ╚══════════════════════════════════════════════════════════════════════╝
+  */
 
-            // ── Lead Scoring (0-100) ──────────────────────────────────────
-            const scoreLead = (lead) => {
-              let score = 0;
-              if (lead.email) score += 20;
-              if (lead.phone) score += 20;
-              if (lead.budget) score += 15;
-              if (lead.nationality) score += 10;
-              if (lead.project) score += 15;
-              const daysSinceCreated = (now - new Date(lead.createdAt || now)) / (1000 * 60 * 60 * 24);
-              if (daysSinceCreated < 1) score += 20;
-              else if (daysSinceCreated < 7) score += 10;
-              if ((lead.notes || []).length > 0) score += 10;
-              if (lead.status === "Qualified") score = Math.max(score, 60);
-              if (lead.status === "Converted") score = 100;
-              if (lead.status === "Lost") score = 0;
-              return Math.min(score, 100);
-            };
-            const getScoreColor = (score) => score >= 70 ? T.green : score >= 40 ? T.gold : T.red;
-            const getScoreLabel = (score) => score >= 70 ? "Hot" : score >= 40 ? "Warm" : "Cold";
+  /* ─── Time boundaries ─────────────────────────────────────────────── */
+  const now          = new Date();
+  const todayStart   = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const weekAgo      = new Date(now.getTime() - 7  * 86400000);
+  const monthAgo     = new Date(now.getTime() - 30 * 86400000);
+  const tomorrowEnd  = new Date(todayStart.getTime() + 2 * 86400000);
 
-            // ── Follow-up status ──────────────────────────────────────────
-            const isOverdue = (lead) => {
-              if (!lead.followUpDate) return false;
-              return new Date(lead.followUpDate) < now;
-            };
-            const isDueToday = (lead) => {
-              if (!lead.followUpDate) return false;
-              const d = new Date(lead.followUpDate);
-              return d >= todayStart && d < tomorrowEnd;
-            };
+  /* ─── Lead scoring (0-100) ────────────────────────────────────────── */
+  const scoreLead = (l) => {
+    if (l.status === "Converted") return 100;
+    if (l.status === "Lost")      return 0;
+    let s = 0;
+    if (l.email)       s += 20;
+    if (l.phone)       s += 20;
+    if (l.budget)      s += 15;
+    if (l.nationality) s += 10;
+    if (l.project)     s += 15;
+    const ageDays = (now - new Date(l.createdAt || now)) / 86400000;
+    s += ageDays < 1 ? 20 : ageDays < 7 ? 10 : 0;
+    if ((l.notes || []).length > 0)  s += 10;
+    if (l.status === "Qualified")    s = Math.max(s, 60);
+    return Math.min(s, 100);
+  };
+  const heat = (s) => s >= 70 ? { label: "Hot",  color: T.red  }
+                    : s >= 40 ? { label: "Warm", color: T.gold }
+                    :           { label: "Cold", color: T.textMuted };
 
-            // ── Stats ─────────────────────────────────────────────────────
-            const stats = {
-              total: leads.length,
-              new: leads.filter(l => (l.status || "New") === "New").length,
-              contacted: leads.filter(l => l.status === "Contacted").length,
-              qualified: leads.filter(l => l.status === "Qualified").length,
-              converted: leads.filter(l => l.status === "Converted").length,
-              lost: leads.filter(l => l.status === "Lost").length,
-              today: leads.filter(l => new Date(l.createdAt) >= todayStart).length,
-              thisWeek: leads.filter(l => new Date(l.createdAt) >= weekAgo).length,
-              overdue: leads.filter(l => isOverdue(l) && l.status !== "Converted" && l.status !== "Lost").length,
-              dueToday: leads.filter(l => isDueToday(l) && l.status !== "Converted" && l.status !== "Lost").length,
-              hot: leads.filter(l => scoreLead(l) >= 70).length,
-            };
-            const conversionRate = stats.total > 0 ? Math.round((stats.converted / stats.total) * 100) : 0;
-            const avgResponseHrs = (() => {
-              const responded = leads.filter(l => l.respondedAt && l.createdAt);
-              if (responded.length === 0) return null;
-              const total = responded.reduce((sum, l) => sum + (new Date(l.respondedAt) - new Date(l.createdAt)), 0);
-              return Math.round(total / responded.length / 1000 / 60 / 60);
-            })();
+  /* ─── Follow-up helpers ───────────────────────────────────────────── */
+  const isOverdue  = (l) => !!(l.followUpDate && new Date(l.followUpDate) < now
+    && l.status !== "Converted" && l.status !== "Lost");
+  const isDueToday = (l) => {
+    if (!l.followUpDate) return false;
+    const d = new Date(l.followUpDate);
+    return d >= todayStart && d < tomorrowEnd && l.status !== "Converted" && l.status !== "Lost";
+  };
+  /* "rotting" — Pipedrive concept: lead not touched in 5+ days */
+  const isRotting = (l) => {
+    if (l.status === "Converted" || l.status === "Lost" || l.status === "New") return false;
+    const last = l.updatedAt || l.createdAt;
+    if (!last) return false;
+    return (now - new Date(last)) / 86400000 > 5;
+  };
 
-            // ── Pipeline analytics ────────────────────────────────────────
-            const winRate = stats.converted + stats.lost > 0 ? Math.round((stats.converted / (stats.converted + stats.lost)) * 100) : 0;
-            const sourceBreakdown = leads.reduce((acc, l) => {
-              const s = l.source || "Manual";
-              if (!acc[s]) acc[s] = { total: 0, converted: 0 };
-              acc[s].total++;
-              if (l.status === "Converted") acc[s].converted++;
-              return acc;
-            }, {});
-            const avgDaysToClose = (() => {
-              const closed = leads.filter(l => l.status === "Converted" && l.createdAt && l.convertedAt);
-              if (closed.length === 0) return null;
-              const total = closed.reduce((sum, l) => sum + (new Date(l.convertedAt) - new Date(l.createdAt)), 0);
-              return Math.round(total / closed.length / (1000 * 60 * 60 * 24));
-            })();
+  /* ─── Stats ───────────────────────────────────────────────────────── */
+  const S = {
+    total:     leads.length,
+    new:       leads.filter(l => (l.status || "New") === "New").length,
+    contacted: leads.filter(l => l.status === "Contacted").length,
+    qualified: leads.filter(l => l.status === "Qualified").length,
+    converted: leads.filter(l => l.status === "Converted").length,
+    lost:      leads.filter(l => l.status === "Lost").length,
+    today:     leads.filter(l => new Date(l.createdAt) >= todayStart).length,
+    week:      leads.filter(l => new Date(l.createdAt) >= weekAgo).length,
+    hot:       leads.filter(l => scoreLead(l) >= 70).length,
+    overdue:   leads.filter(l => isOverdue(l)).length,
+    rotting:   leads.filter(l => isRotting(l)).length,
+    dueToday:  leads.filter(l => isDueToday(l)).length,
+  };
+  const winRate    = (S.converted + S.lost) > 0
+    ? Math.round((S.converted / (S.converted + S.lost)) * 100) : 0;
+  const convRate   = S.total > 0 ? ((S.converted / S.total) * 100).toFixed(1) : "0.0";
+  const avgResp    = (() => {
+    const r = leads.filter(l => l.respondedAt && l.createdAt);
+    if (!r.length) return null;
+    return Math.round(r.reduce((a, l) =>
+      a + (new Date(l.respondedAt) - new Date(l.createdAt)), 0) / r.length / 3600000);
+  })();
 
-            // ── Filters ───────────────────────────────────────────────────
-            const filtered = leads.filter(l => {
-              if (leadFilter !== "all" && (l.status || "New").toLowerCase() !== leadFilter) return false;
-              if (leadSourceFilter !== "all" && l.source !== leadSourceFilter) return false;
-              if (leadDateRange === "today" && new Date(l.createdAt) < todayStart) return false;
-              if (leadDateRange === "week" && new Date(l.createdAt) < weekAgo) return false;
-              if (leadDateRange === "month" && new Date(l.createdAt) < monthAgo) return false;
-              if (leadDateRange === "overdue") { if (!isOverdue(l) || l.status === "Converted" || l.status === "Lost") return false; }
-              if (leadDateRange === "today_followup") { if (!isDueToday(l)) return false; }
-              if (leadSearch) {
-                const s = leadSearch.toLowerCase();
-                if (!((l.name || "").toLowerCase().includes(s) || (l.email || "").toLowerCase().includes(s) || (l.phone || "").includes(s) || (l.project || "").toLowerCase().includes(s) || (l.nationality || "").toLowerCase().includes(s) || (l.community || "").toLowerCase().includes(s))) return false;
-              }
-              // Advanced filters
-              if (lfCommunity !== "all" && (l.community || "") !== lfCommunity) return false;
-              if (lfNationality !== "all" && (l.nationality || "") !== lfNationality) return false;
-              if (lfBudgetMin && (parseFloat(l.budget)||0) < parseFloat(lfBudgetMin)) return false;
-              if (lfBudgetMax && (parseFloat(l.budget)||0) > parseFloat(lfBudgetMax)) return false;
-              if (lfScoreMin && scoreLead(l) < parseInt(lfScoreMin)) return false;
-              if (lfPropType !== "all" && (l.propertyType || l.property_type || "") !== lfPropType) return false;
-              if (lfLanguage !== "all" && (l.language || "") !== lfLanguage) return false;
-              if (lfLeadAge !== "all") {
-                const ageDays = (new Date() - new Date(l.createdAt)) / 86400000;
-                if (lfLeadAge === "fresh" && ageDays > 7) return false;
-                if (lfLeadAge === "week" && (ageDays < 7 || ageDays > 30)) return false;
-                if (lfLeadAge === "month" && (ageDays < 30 || ageDays > 90)) return false;
-                if (lfLeadAge === "old" && ageDays < 90) return false;
-              }
-              if (lfGoldenVisa && (parseFloat(l.budget)||0) < 2000000) return false;
-              if (lfHasWhatsApp && (!l.phone || (l.tags||[]).includes("no_whatsapp"))) return false;
-              if (lfNoWhatsApp && !(l.tags||[]).includes("no_whatsapp")) return false;
-              if (lfHasEmail && !l.email) return false;
-              if (lfBedrooms !== "all" && String(l.bedrooms || "") !== lfBedrooms) return false;
-              if (lfOffPlan !== "all" && (l.planType || l.plan_type || "") !== lfOffPlan) return false;
-              if (lfDeveloper !== "all" && (l.developer || "") !== lfDeveloper) return false;
-              if (lfPayment !== "all" && (l.paymentType || l.payment_type || "") !== lfPayment) return false;
-              if (lfVisa !== "all" && (l.visaEligibility || l.visa || "") !== lfVisa) return false;
-              if (lfTag !== "all" && !(l.tags||[]).includes(lfTag)) return false;
-              if (lfNeverContacted && l.status !== "New") return false;
-              if (lfHasFollowUp && !l.followUpDate) return false;
-              if (lfUnreachable && !((l.tags||[]).includes("unreachable"))) return false;
-              if (lfDupPhone && !((l.tags||[]).includes("duplicate_phone"))) return false;
-              if (lfDupEmail && !((l.tags||[]).includes("duplicate_email"))) return false;
-              if (lfShortPhone && !((l.tags||[]).includes("phone_short"))) return false;
-              // Fix nan project display inline
-              if (l.project === "nan" || l.project === "NaN" || l.project === "null") l.project = "";
-              return true;
-            }).sort((a, b) => {
-              if (isOverdue(a) && !isOverdue(b)) return -1;
-              if (!isOverdue(a) && isOverdue(b)) return 1;
-              return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
-            });
+  /* ─── Filters ─────────────────────────────────────────────────────── */
+  const applyFilters = (arr) => arr.filter(l => {
+    const st = l.status || "New";
+    if (leadFilter !== "all" && st.toLowerCase() !== leadFilter.toLowerCase()) return false;
+    if (leadSourceFilter !== "all" && l.source !== leadSourceFilter) return false;
+    if (leadDateRange === "today"          && new Date(l.createdAt) < todayStart) return false;
+    if (leadDateRange === "week"           && new Date(l.createdAt) < weekAgo)    return false;
+    if (leadDateRange === "month"          && new Date(l.createdAt) < monthAgo)   return false;
+    if (leadDateRange === "overdue"        && !isOverdue(l))                      return false;
+    if (leadDateRange === "today_followup" && !isDueToday(l))                     return false;
+    if (leadDateRange === "rotting"        && !isRotting(l))                      return false;
+    if (leadSearch) {
+      const q = leadSearch.toLowerCase();
+      const fields = [l.name, l.email, l.phone, l.project, l.nationality, l.community, l.developer];
+      if (!fields.some(f => (f || "").toLowerCase().includes(q))) return false;
+    }
+    if (lfCommunity   !== "all" && (l.community  || "") !== lfCommunity)  return false;
+    if (lfNationality !== "all" && (l.nationality || "") !== lfNationality) return false;
+    if (lfBudgetMin && (parseFloat(l.budget) || 0) < parseFloat(lfBudgetMin)) return false;
+    if (lfBudgetMax && (parseFloat(l.budget) || 0) > parseFloat(lfBudgetMax)) return false;
+    if (lfScoreMin  && scoreLead(l) < parseInt(lfScoreMin))                return false;
+    if (lfBedrooms  !== "all" && String(l.bedrooms || "") !== lfBedrooms)  return false;
+    if (lfOffPlan   !== "all" && (l.planType     || "") !== lfOffPlan)     return false;
+    if (lfDeveloper !== "all" && (l.developer    || "") !== lfDeveloper)   return false;
+    if (lfGoldenVisa     && (parseFloat(l.budget) || 0) < 2000000)         return false;
+    if (lfHasWhatsApp    && (!l.phone || (l.tags || []).includes("no_whatsapp"))) return false;
+    if (lfHasEmail       && !l.email)                                       return false;
+    if (lfNeverContacted && l.status !== "New")                             return false;
+    if (lfHasFollowUp    && !l.followUpDate)                                return false;
+    if (lfUnreachable    && !(l.tags || []).includes("unreachable"))        return false;
+    if (l.project === "nan" || l.project === "NaN" || l.project === "null") l.project = "";
+    return true;
+  }).sort((a, b) => {
+    // Priority: overdue → rotting → score → date
+    if (isOverdue(a) !== isOverdue(b))   return isOverdue(a) ? -1 : 1;
+    if (isRotting(a) !== isRotting(b))   return isRotting(a) ? -1 : 1;
+    const sd = scoreLead(b) - scoreLead(a);
+    if (sd !== 0) return sd;
+    return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
+  });
 
-            const totalLeadPages = Math.max(1, Math.ceil(filtered.length / LEADS_PER_PAGE));
-            const pagedLeads = filtered.slice((leadPage - 1) * LEADS_PER_PAGE, leadPage * LEADS_PER_PAGE);
+  const filtered   = applyFilters(leads);
+  const totalPages = Math.max(1, Math.ceil(filtered.length / LEADS_PER_PAGE));
+  const paged      = filtered.slice((leadPage - 1) * LEADS_PER_PAGE, leadPage * LEADS_PER_PAGE);
+  const sources    = [...new Set(leads.map(l => l.source).filter(Boolean))];
 
-            const sources = [...new Set(leads.map(l => l.source).filter(Boolean))];
+  const activeFilterCount = [
+    leadFilter !== "all", leadSourceFilter !== "all", leadDateRange !== "all",
+    lfCommunity !== "all", lfNationality !== "all", lfBudgetMin, lfBudgetMax,
+    lfScoreMin, lfBedrooms !== "all", lfOffPlan !== "all", lfDeveloper !== "all",
+    lfGoldenVisa, lfHasWhatsApp, lfHasEmail, lfNeverContacted, lfHasFollowUp, lfUnreachable,
+  ].filter(Boolean).length;
 
-            // ── Dubai nationalities ──────────────────────────────────────
-            const DUBAI_NATIONALITIES = [
-              "🇦🇫 Afghan","🇦🇱 Albanian","🇩🇿 Algerian","🇦🇴 Angolan","🇦🇷 Argentine","🇦🇲 Armenian","🇦🇺 Australian","🇦🇹 Austrian","🇦🇿 Azerbaijani",
-              "🇧🇭 Bahraini","🇧🇩 Bangladeshi","🇧🇾 Belarusian","🇧🇪 Belgian","🇧🇴 Bolivian","🇧🇦 Bosnian","🇧🇷 Brazilian","🇧🇳 Bruneian","🇧🇬 Bulgarian",
-              "🇰🇭 Cambodian","🇨🇲 Cameroonian","🇨🇦 Canadian","🇨🇱 Chilean","🇨🇳 Chinese","🇨🇴 Colombian","🇭🇷 Croatian","🇨🇺 Cuban","🇨🇾 Cypriot","🇨🇿 Czech",
-              "🇩🇰 Danish","🇩🇯 Djiboutian","🇩🇴 Dominican",
-              "🇪🇨 Ecuadorian","🇪🇬 Egyptian","🇸🇻 El Salvadoran","🇪🇷 Eritrean","🇪🇪 Estonian","🇪🇹 Ethiopian",
-              "🇫🇯 Fijian","🇫🇮 Finnish","🇫🇷 French",
-              "🇬🇦 Gabonese","🇬🇲 Gambian","🇬🇪 Georgian","🇩🇪 German","🇬🇭 Ghanaian","🇬🇷 Greek","🇬🇹 Guatemalan","🇬🇳 Guinean","🇬🇾 Guyanese",
-              "🇭🇹 Haitian","🇭🇳 Honduran","🇭🇺 Hungarian",
-              "🇮🇸 Icelandic","🇮🇳 Indian","🇮🇩 Indonesian","🇮🇷 Iranian","🇮🇶 Iraqi","🇮🇪 Irish","🇮🇱 Israeli","🇮🇹 Italian",
-              "🇯🇲 Jamaican","🇯🇵 Japanese","🇯🇴 Jordanian",
-              "🇰🇿 Kazakhstani","🇰🇪 Kenyan","🇰🇷 Korean","🇰🇼 Kuwaiti","🇰🇬 Kyrgyz",
-              "🇱🇦 Laotian","🇱🇻 Latvian","🇱🇧 Lebanese","🇱🇷 Liberian","🇱🇾 Libyan","🇱🇹 Lithuanian","🇱🇺 Luxembourgish",
-              "🇲🇬 Malagasy","🇲🇼 Malawian","🇲🇾 Malaysian","🇲🇻 Maldivian","🇲🇱 Malian","🇲🇹 Maltese","🇲🇷 Mauritanian","🇲🇺 Mauritian","🇲🇽 Mexican","🇲🇩 Moldovan","🇲🇳 Mongolian","🇲🇪 Montenegrin","🇲🇦 Moroccan","🇲🇿 Mozambican",
-              "🇳🇦 Namibian","🇳🇵 Nepalese","🇳🇱 Dutch","🇳🇿 New Zealander","🇳🇮 Nicaraguan","🇳🇬 Nigerian","🇳🇴 Norwegian",
-              "🇴🇲 Omani",
-              "🇵🇰 Pakistani","🇵🇸 Palestinian","🇵🇦 Panamanian","🇵🇾 Paraguayan","🇵🇪 Peruvian","🇵🇭 Filipino","🇵🇱 Polish","🇵🇹 Portuguese",
-              "🇶🇦 Qatari",
-              "🇷🇴 Romanian","🇷🇺 Russian","🇷🇼 Rwandan",
-              "🇸🇦 Saudi Arabian","🇸🇳 Senegalese","🇷🇸 Serbian","🇸🇬 Singaporean","🇸🇰 Slovak","🇸🇮 Slovenian","🇸🇴 Somali","🇿🇦 South African","🇸🇸 South Sudanese","🇪🇸 Spanish","🇱🇰 Sri Lankan","🇸🇩 Sudanese","🇸🇷 Surinamese","🇸🇪 Swedish","🇨🇭 Swiss","🇸🇾 Syrian",
-              "🇹🇼 Taiwanese","🇹🇯 Tajik","🇹🇿 Tanzanian","🇹🇭 Thai","🇹🇬 Togolese","🇹🇹 Trinidadian","🇹🇳 Tunisian","🇹🇷 Turkish","🇹🇲 Turkmen",
-              "🇺🇬 Ugandan","🇺🇦 Ukrainian","🇦🇪 Emirati","🇬🇧 British","🇺🇸 American","🇺🇾 Uruguayan","🇺🇿 Uzbek",
-              "🇻🇪 Venezuelan","🇻🇳 Vietnamese",
-              "🇾🇪 Yemeni",
-              "🇿🇲 Zambian","🇿🇼 Zimbabwean","🌍 Other"
-            ].sort();
+  /* ─── Helpers ─────────────────────────────────────────────────────── */
+  const cleanProject  = (p) => (!p || ["nan","NaN","null","None","undefined"].includes(p)) ? "" : p.trim();
+  const fmtBudget     = (b) => b ? `AED ${Number(b).toLocaleString()}` : "—";
+  const initials      = (name) => (name || "?").split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase();
+  const timeAgo       = (iso) => {
+    if (!iso) return "";
+    const m = Math.floor((now - new Date(iso)) / 60000);
+    if (m < 1)   return "just now";
+    if (m < 60)  return `${m}m ago`;
+    const h = Math.floor(m / 60);
+    if (h < 24)  return `${h}h ago`;
+    return `${Math.floor(h / 24)}d ago`;
+  };
+  const normalizePhone = (raw) => {
+    if (!raw || typeof raw !== "string") return "";
+    let p = raw.toString().trim().replace(/[\s\-\.\(\)\/\\]/g, "");
+    if (!p || p.length < 2) return "";
+    if (p.startsWith("+"))  return "+" + p.slice(1).replace(/\D/g, "");
+    if (p.startsWith("00")) return "+" + p.slice(2).replace(/\D/g, "");
+    const d = p.replace(/\D/g, ""), len = d.length;
+    if (len < 6) return d;
+    if (/^05[0-9]{8}$/.test(d)) return "+971" + d.slice(1);
+    if (/^5[0-9]{8}$/.test(d))  return "+971" + d;
+    if (len >= 10) return "+" + d;
+    return d;
+  };
+  const openWhatsApp = (phone, name) => {
+    const n = normalizePhone(phone).replace(/\D/g, "");
+    if (!n) { notify("No valid phone number"); return; }
+    window.open(`https://wa.me/${n}?text=Hi ${encodeURIComponent(name || "")}`, "_blank");
+  };
+  const getDups = (l) => {
+    if (!l.email && !l.phone) return [];
+    return leads.filter(x => x.id !== l.id && (
+      (l.email && x.email && x.email.toLowerCase() === l.email.toLowerCase()) ||
+      (l.phone && x.phone && x.phone.replace(/\D/g, "") === l.phone.replace(/\D/g, "") && l.phone.length > 5)
+    ));
+  };
 
-            // ── Duplicate detection ───────────────────────────────────────
-            const getDuplicates = (lead) => {
-              if (!lead.email && !lead.phone) return [];
-              return leads.filter(l => l.id !== lead.id && (
-                (lead.email && l.email && l.email.toLowerCase() === lead.email.toLowerCase()) ||
-                (lead.phone && l.phone && l.phone.replace(/\D/g,"") === lead.phone.replace(/\D/g,"") && lead.phone.length > 5)
-              ));
-            };
+  /* ─── Actions ─────────────────────────────────────────────────────── */
+  const resetFilters = () => {
+    setLeadFilter("all"); setLeadSourceFilter("all"); setLeadDateRange("all");
+    setLeadSearch(""); setLfCommunity("all"); setLfNationality("all");
+    setLfBudgetMin(""); setLfBudgetMax(""); setLfScoreMin("");
+    setLfBedrooms("all"); setLfOffPlan("all"); setLfDeveloper("all");
+    setLfGoldenVisa(false); setLfHasWhatsApp(false); setLfHasEmail(false);
+    setLfNeverContacted(false); setLfHasFollowUp(false); setLfUnreachable(false);
+    setLeadPage(1);
+  };
+  const addLead = async () => {
+    if (!addLeadForm.name && !addLeadForm.email) { notify("Name or email required"); return; }
+    setAddLeadLoading(true);
+    try {
+      const id = `lead_${Date.now()}`;
+      await setDoc(doc(db, "leads", id), {
+        ...addLeadForm,
+        phone: normalizePhone(addLeadForm.phone || ""),
+        status: "New",
+        createdAt: new Date().toISOString(),
+        activity: [{ type: "created", by: adminUser?.email || "admin", at: new Date().toISOString(), note: "Lead created" }],
+        notes: addLeadForm.notes ? [{ text: addLeadForm.notes, by: adminUser?.email || "admin", at: new Date().toISOString() }] : [],
+      });
+      await logAudit(db, { action: "lead_created", leadId: id });
+      notify("✓ Lead added!");
+      setShowAddLead(false);
+      setAddLeadForm({ name: "", email: "", phone: "", source: "Manual", project: "", notes: "", budget: "", nationality: "" });
+      fetchLeads();
+    } catch (e) { notify("Error: " + e.message); }
+    setAddLeadLoading(false);
+  };
+  const updateStatus = async (leadId, newStatus, reason) => {
+    try {
+      const l = leads.find(x => x.id === leadId);
+      const upd = { status: newStatus, updatedAt: new Date().toISOString() };
+      if (newStatus === "Contacted" && !l?.respondedAt) upd.respondedAt = new Date().toISOString();
+      if (newStatus === "Lost" && reason) upd.lossReason = reason;
+      if (newStatus === "Converted") upd.convertedAt = new Date().toISOString();
+      upd.activity = [...(l?.activity || []), {
+        type: "status_change", by: adminUser?.email || "admin",
+        at: new Date().toISOString(), note: `Status → ${newStatus}`
+      }];
+      await setDoc(doc(db, "leads", leadId), upd, { merge: true });
+      await logAudit(db, { action: "lead_status_change", leadId, to: newStatus });
+      notify(`→ ${newStatus}`);
+      fetchLeads();
+      if (leadDrawer?.id === leadId) setLeadDrawer(p => ({ ...p, status: newStatus, ...upd }));
+    } catch (e) { notify("Error: " + e.message); }
+  };
+  const bulkUpdate = async (newStatus) => {
+    if (!leadSelectedIds.length) { notify("Select leads first"); return; }
+    try {
+      await Promise.all(leadSelectedIds.map(id =>
+        setDoc(doc(db, "leads", id), { status: newStatus, updatedAt: new Date().toISOString() }, { merge: true })
+      ));
+      notify(`${leadSelectedIds.length} leads → ${newStatus}`);
+      setLeadSelectedIds([]);
+      fetchLeads();
+    } catch (e) { notify("Error: " + e.message); }
+  };
+  const scheduleFollowUp = async () => {
+    if (!showFollowUpModal || !followUpDate) { notify("Select a date"); return; }
+    try {
+      const activity = [...(showFollowUpModal.activity || []), {
+        type: "followup_scheduled", by: adminUser?.email || "admin",
+        at: new Date().toISOString(), note: `Follow-up: ${followUpDate}${followUpNote ? " — " + followUpNote : ""}`
+      }];
+      await setDoc(doc(db, "leads", showFollowUpModal.id),
+        { followUpDate, followUpNote, activity, updatedAt: new Date().toISOString() }, { merge: true });
+      notify("Follow-up scheduled!");
+      setShowFollowUpModal(null); setFollowUpDate(""); setFollowUpNote("");
+      fetchLeads();
+      if (leadDrawer?.id === showFollowUpModal.id)
+        setLeadDrawer(p => ({ ...p, followUpDate, followUpNote, activity }));
+    } catch (e) { notify("Error: " + e.message); }
+  };
+  const addNote = async () => {
+    if (!leadNote.trim() || !leadDrawer) return;
+    setLeadNoteSaving(true);
+    try {
+      const notes    = [...(leadDrawer.notes || []), { text: leadNote, by: adminUser?.email || "admin", at: new Date().toISOString() }];
+      const activity = [...(leadDrawer.activity || []), { type: "note", by: adminUser?.email || "admin", at: new Date().toISOString(), note: leadNote }];
+      await setDoc(doc(db, "leads", leadDrawer.id), { notes, activity, updatedAt: new Date().toISOString() }, { merge: true });
+      setLeadDrawer(p => ({ ...p, notes, activity }));
+      setLeadNote(""); notify("Note saved"); fetchLeads();
+    } catch (e) { notify("Error: " + e.message); }
+    setLeadNoteSaving(false);
+  };
+  const convertToUser = async () => {
+    if (!leadDrawer) return;
+    setConvertingLead(true);
+    try {
+      const userId = `user_${Date.now()}`;
+      await setDoc(doc(db, "users", userId), {
+        name: leadDrawer.name || "", email: leadDrawer.email || "",
+        phone: leadDrawer.phone || "", tier: "free",
+        createdAt: new Date().toISOString(), status: "active"
+      });
+      await setDoc(doc(db, "leads", leadDrawer.id),
+        { status: "Converted", userId, convertedAt: new Date().toISOString() }, { merge: true });
+      await logAudit(db, { action: "lead_converted", leadId: leadDrawer.id, userId });
+      notify("✓ Lead converted to user!");
+      fetchLeads(); fetchUsers(); setLeadDrawer(null);
+    } catch (e) { notify("Error: " + e.message); }
+    setConvertingLead(false);
+  };
+  const exportCSV = () => {
+    const h = ["Name","Email","Phone","Nationality","Budget (AED)","Project","Community","Source","Status","Score","Created","Follow-up","Notes"];
+    const rows = filtered.map(l => [
+      l.name || "", l.email || "", l.phone || "", l.nationality || "",
+      l.budget || "", cleanProject(l.project), l.community || "",
+      l.source || "", l.status || "", scoreLead(l),
+      l.createdAt?.slice(0, 10) || "", l.followUpDate || "",
+      (l.notes || []).map(n => n.text).join(" | "),
+    ]);
+    const csv = [h, ...rows].map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\n");
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
+    a.download = `dxb_leads_${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    notify(`Exported ${filtered.length} leads`);
+  };
 
-            // ── Add lead ──────────────────────────────────────────────────
-            // cleanProject — removes nan/null/NaN junk from project field
-            const cleanProject = (p) => (!p || p === "nan" || p === "NaN" || p === "null" || p === "None") ? "" : p.trim();
+  /* ─── Style tokens ────────────────────────────────────────────────── */
+  const STATUS = {
+    New:       { bg: "rgba(59,130,246,0.12)",  text: "#3B82F6", border: "rgba(59,130,246,0.35)" },
+    Contacted: { bg: "rgba(212,168,67,0.12)",  text: T.gold,    border: "rgba(212,168,67,0.35)" },
+    Qualified: { bg: "rgba(139,92,246,0.12)",  text: "#8B5CF6", border: "rgba(139,92,246,0.35)" },
+    Converted: { bg: "rgba(16,185,129,0.12)",  text: T.green,   border: "rgba(16,185,129,0.35)" },
+    Lost:      { bg: "rgba(239,68,68,0.12)",   text: T.red,     border: "rgba(239,68,68,0.35)"  },
+  };
+  const PIPE = [
+    { id: "new",       label: "New",       count: S.new,       ...STATUS.New       },
+    { id: "contacted", label: "Contacted", count: S.contacted, ...STATUS.Contacted },
+    { id: "qualified", label: "Qualified", count: S.qualified, ...STATUS.Qualified },
+    { id: "converted", label: "Converted", count: S.converted, ...STATUS.Converted },
+    { id: "lost",      label: "Lost",      count: S.lost,      ...STATUS.Lost      },
+  ];
+  const NATS = ["Afghan","Algerian","Argentine","Australian","Bahraini","Bangladeshi","Belgian",
+    "Brazilian","British","Canadian","Chinese","Colombian","Czech","Danish","Dutch","Egyptian",
+    "Emirati","Ethiopian","Filipino","Finnish","French","German","Ghanaian","Greek","Hungarian",
+    "Indian","Indonesian","Iranian","Iraqi","Irish","Israeli","Italian","Jordanian","Kazakhstani",
+    "Kenyan","Korean","Kuwaiti","Lebanese","Malaysian","Moroccan","Nepali","Nigerian","Norwegian",
+    "Omani","Pakistani","Palestinian","Polish","Portuguese","Qatari","Romanian","Russian",
+    "Saudi Arabian","Serbian","Singaporean","South African","Spanish","Sri Lankan","Swedish",
+    "Swiss","Syrian","Turkish","Ukrainian","American","Uzbek","Vietnamese","Yemeni","Other"].sort();
+  const COMMUNITIES = ["Dubai Hills Estate","Dubai Creek Harbour","Emaar Beachfront",
+    "The Valley","Emaar South","The Oasis","Downtown Dubai","Arabian Ranches 3",
+    "Mina Rashid","Business Bay","Dubai Marina","DAMAC Hills","Sobha Hartland",
+    "JVC","Palm Jumeirah","Dubai Islands","MBR City","Dubai Harbour"];
 
-            // normalizePhone — smart E.164 normalizer for UAE + 194 countries
-            const normalizePhone = (raw) => {
-              if (!raw || typeof raw !== "string") return "";
-              let p = raw.toString().trim().replace(/[\s\-\.\(\)\/\\]/g, "");
-              if (!p || p.length < 2) return "";
-              if (p.startsWith("+")) return "+" + p.slice(1).replace(/\D/g, "");
-              if (p.startsWith("00")) return "+" + p.slice(2).replace(/\D/g, "");
-              const d = p.replace(/\D/g, "");
-              const len = d.length;
-              if (len < 6) return d;
-              if (/^05[0-9]{8}$/.test(d)) return "+971" + d.slice(1);
-              if (/^5[0-9]{8}$/.test(d)) return "+971" + d;
-              if (/^04[0-9]{7}$/.test(d)) return "+971" + d.slice(1);
-              if (/^4[0-9]{7}$/.test(d)) return "+971" + d;
-              if (len >= 7 && len <= 9) return "+971" + d;
-              const CC = ["421","420","389","387","386","385","382","381","380","376","375","374","373","372","371","370","359","358","357","356","355","354","353","352","351","350","299","298","297","996","995","994","993","992","977","976","975","974","973","972","971","970","968","967","966","965","964","963","962","961","960","886","880","856","855","853","852","850","509","508","507","506","505","504","503","502","501","500","423","98","95","94","93","92","91","90","86","84","82","81","66","65","64","63","62","61","60","55","54","53","52","51","49","48","47","46","45","44","43","41","40","39","36","34","33","32","31","30","27","20","7","1"];
-              if (len >= 10) {
-                for (const code of CC) {
-                  if (d.startsWith(code)) {
-                    const rem = d.slice(code.length);
-                    if (rem.length >= 6 && rem.length <= 12) return "+" + code + rem;
-                  }
-                }
-                return "+" + d;
-              }
-              return d;
-            };
+  /* ═══════════════════════════════════════════════════════════════════
+     RENDER START
+  ═══════════════════════════════════════════════════════════════════ */
+  return (
+    <>
+      {/* ══════════════════════════════════════════════════════════════
+          ALERT BANNERS (Overdue + Rotting — Pipedrive "deal rot" concept)
+      ══════════════════════════════════════════════════════════════ */}
+      {(S.overdue > 0 || S.rotting > 0) && (
+        <div style={{ display: "flex", gap: 8, marginBottom: 12, flexWrap: "wrap" }}>
+          {S.overdue > 0 && (
+            <div style={{ flex: 1, minWidth: 220, display: "flex", alignItems: "center", gap: 10,
+              padding: "10px 14px", background: "rgba(239,68,68,0.08)",
+              border: `1px solid rgba(239,68,68,0.3)`, borderRadius: 10 }}>
+              <span style={{ fontSize: 16 }}>⚠</span>
+              <div style={{ flex: 1, fontSize: 12, fontWeight: 700, color: T.red }}>
+                {S.overdue} overdue follow-up{S.overdue > 1 ? "s" : ""}
+              </div>
+              <button type="button" onClick={() => { setLeadDateRange("overdue"); setLeadPage(1); }}
+                style={{ fontSize: 11, padding: "4px 10px", borderRadius: 6, border: `1px solid ${T.red}`,
+                  background: "transparent", color: T.red, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>
+                View →
+              </button>
+            </div>
+          )}
+          {S.rotting > 0 && (
+            <div style={{ flex: 1, minWidth: 220, display: "flex", alignItems: "center", gap: 10,
+              padding: "10px 14px", background: "rgba(245,158,11,0.08)",
+              border: "1px solid rgba(245,158,11,0.3)", borderRadius: 10 }}>
+              <span style={{ fontSize: 16 }}>🕐</span>
+              <div style={{ flex: 1, fontSize: 12, fontWeight: 700, color: T.amber || T.gold }}>
+                {S.rotting} lead{S.rotting > 1 ? "s" : ""} not touched in 5+ days
+              </div>
+              <button type="button" onClick={() => { setLeadDateRange("rotting"); setLeadPage(1); }}
+                style={{ fontSize: 11, padding: "4px 10px", borderRadius: 6, border: `1px solid ${T.gold}`,
+                  background: "transparent", color: T.gold, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>
+                View →
+              </button>
+            </div>
+          )}
+        </div>
+      )}
 
-            const addLead = async () => {
-              if (!addLeadForm.name && !addLeadForm.email) { notify("Name or email required"); return; }
-              setAddLeadLoading(true);
-              try {
-                const id = `lead_${Date.now()}`;
-                const cleanPhone = normalizePhone(addLeadForm.phone || "");
-                await setDoc(doc(db, "leads", id), {
-                  ...addLeadForm,
-                  phone: cleanPhone,
-                  status: "New",
-                  createdAt: new Date().toISOString(),
-                  activity: [{ type: "created", by: adminUser?.email || "admin", at: new Date().toISOString(), note: "Lead created" }],
-                  notes: addLeadForm.notes ? [{ text: addLeadForm.notes, by: adminUser?.email || "admin", at: new Date().toISOString() }] : [],
-                });
-                await logAudit(db, { action: "lead_created", leadId: id });
-                notify("Lead added!");
-                setShowAddLead(false);
-                setAddLeadForm({ name: "", email: "", phone: "", source: "Manual", project: "", notes: "", budget: "", nationality: "", followUpDate: "" });
-                fetchLeads();
-              } catch (e) { notify("Error: " + e.message); }
-              setAddLeadLoading(false);
-            };
+      {/* ══════════════════════════════════════════════════════════════
+          KPI BAR — 8 stats + view toggle + actions
+      ══════════════════════════════════════════════════════════════ */}
+      <div style={{ display: "flex", background: T.surface, border: `1px solid ${T.border}`,
+        borderRadius: 12, overflow: "hidden", marginBottom: 12 }}>
+        {[
+          { label: "Total",       val: S.total,                                   color: T.gold        },
+          { label: "New Today",   val: S.today,                                   color: "#3B82F6"     },
+          { label: "Hot",         val: S.hot,                                     color: T.red         },
+          { label: "This Week",   val: S.week,                                    color: T.teal        },
+          { label: "Win Rate",    val: `${winRate}%`,                             color: T.green       },
+          { label: "Conversion",  val: `${convRate}%`,                            color: "#8B5CF6"     },
+          { label: "Avg Response",val: avgResp != null ? `${avgResp}h` : "—",    color: T.gold        },
+          { label: "Due Today",   val: S.dueToday,                               color: T.amber || T.gold },
+        ].map((k, i) => (
+          <div key={i} style={{ flex: 1, minWidth: 0, padding: "9px 12px",
+            borderRight: `1px solid ${T.border}`, display: "flex", flexDirection: "column" }}>
+            <span style={{ fontSize: 9, fontWeight: 700, color: T.textMuted,
+              textTransform: "uppercase", letterSpacing: 0.7, marginBottom: 2,
+              overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              {k.label}
+            </span>
+            <span style={{ fontSize: 17, fontWeight: 900, color: k.color,
+              fontFamily: "'Fraunces',serif", lineHeight: 1.2 }}>
+              {k.val}
+            </span>
+          </div>
+        ))}
 
-            // ── Update status ─────────────────────────────────────────────
-            const updateLeadStatus = async (leadId, newStatus, reason) => {
-              try {
-                const lead = leads.find(l => l.id === leadId);
-                const update = { status: newStatus, updatedAt: new Date().toISOString() };
-                if (newStatus === "Contacted" && !lead?.respondedAt) update.respondedAt = new Date().toISOString();
-                if (newStatus === "Lost" && reason) update.lossReason = reason;
-                if (newStatus === "Converted") update.convertedAt = new Date().toISOString();
-                const activity = [...(lead?.activity || []), { type: "status_change", by: adminUser?.email || "admin", at: new Date().toISOString(), note: `Status changed to ${newStatus}${reason ? ` — ${reason}` : ""}` }];
-                update.activity = activity;
-                await setDoc(doc(db, "leads", leadId), update, { merge: true });
-                await logAudit(db, { action: "lead_status_change", leadId, to: newStatus });
-                notify(`Status ${newStatus}`);
-                fetchLeads();
-                if (leadDrawer?.id === leadId) setLeadDrawer(prev => ({ ...prev, status: newStatus, ...update }));
-              } catch (e) { notify("Error: " + e.message); }
-            };
+        {/* View mode toggle + action buttons */}
+        <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "9px 12px", flexShrink: 0 }}>
+          {/* View toggle */}
+          <div style={{ display: "flex", background: T.bg, borderRadius: 7,
+            border: `1px solid ${T.border}`, overflow: "hidden" }}>
+            {[["table","≡"],["kanban","⊞"],["analytics","◈"]].map(([m, icon]) => (
+              <button key={m} type="button"
+                onClick={() => { setLeadsViewMode(m); setLeadAnalyticsView(m === "analytics"); }}
+                title={m}
+                style={{ padding: "6px 10px", fontSize: 13, border: "none", cursor: "pointer",
+                  fontFamily: "'Outfit',sans-serif", borderRight: `1px solid ${T.border}`,
+                  background: leadsViewMode === m ? "rgba(212,168,67,0.15)" : "transparent",
+                  color: leadsViewMode === m ? T.gold : T.textMuted }}>
+                {icon}
+              </button>
+            ))}
+          </div>
+          <button type="button" onClick={() => setShowAddLead(true)}
+            style={{ display: "flex", alignItems: "center", gap: 5, padding: "7px 14px",
+              fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif",
+              border: `1px solid ${T.gold}`, background: "rgba(212,168,67,0.1)",
+              color: T.gold, borderRadius: 8, whiteSpace: "nowrap" }}>
+            + Add Lead
+          </button>
+          <button type="button" onClick={exportCSV}
+            style={{ padding: "7px 10px", fontSize: 11, cursor: "pointer",
+              fontFamily: "'Outfit',sans-serif", border: `1px solid ${T.border}`,
+              background: "transparent", color: T.textMuted, borderRadius: 8 }}
+            title="Export CSV">
+            ↓ CSV
+          </button>
+        </div>
+      </div>
 
-            // ── Bulk update ───────────────────────────────────────────────
-            const bulkUpdateStatus = async (newStatus) => {
-              if (leadSelectedIds.length === 0) { notify("Select leads first"); return; }
-              try {
-                await Promise.all(leadSelectedIds.map(id => setDoc(doc(db, "leads", id), { status: newStatus, updatedAt: new Date().toISOString() }, { merge: true })));
-                notify(`${leadSelectedIds.length} leads -> ${newStatus}`);
-                setLeadSelectedIds([]);
-                fetchLeads();
-              } catch (e) { notify("Error: " + e.message); }
-            };
+      {/* ══════════════════════════════════════════════════════════════
+          PIPELINE BAR — Clickable funnel stages (HubSpot + Pipedrive)
+      ══════════════════════════════════════════════════════════════ */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(5,1fr)", gap: 8, marginBottom: 12 }}>
+        {PIPE.map(stage => {
+          const active = leadFilter === stage.id;
+          const pct    = S.total > 0 ? Math.round((stage.count / S.total) * 100) : 0;
+          return (
+            <button key={stage.id} type="button"
+              onClick={() => { setLeadFilter(active ? "all" : stage.id); setLeadPage(1); }}
+              style={{ cursor: "pointer", background: active ? stage.bg : T.surface,
+                border: `1px solid ${active ? stage.border : T.border}`,
+                borderRadius: 10, padding: "11px 14px", textAlign: "left",
+                transition: "all 0.15s", position: "relative", overflow: "hidden",
+                fontFamily: "'Outfit',sans-serif" }}>
+              {/* Top color stripe */}
+              <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 3,
+                background: `linear-gradient(90deg,${stage.text},transparent)` }} />
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
+                <span style={{ fontSize: 10, fontWeight: 700, color: active ? stage.text : T.textMuted,
+                  textTransform: "uppercase", letterSpacing: 0.7 }}>
+                  {stage.label}
+                </span>
+                <span style={{ fontSize: 9, color: T.textMuted }}>{pct}%</span>
+              </div>
+              <div style={{ fontSize: 22, fontWeight: 900, color: active ? stage.text : T.white,
+                fontFamily: "'Fraunces',serif", lineHeight: 1, marginBottom: 6 }}>
+                {stage.count}
+              </div>
+              {/* Mini progress */}
+              <div style={{ height: 3, borderRadius: 2, background: "rgba(255,255,255,0.06)" }}>
+                <div style={{ height: "100%", borderRadius: 2, background: stage.text,
+                  width: `${pct}%`, transition: "width 0.4s" }} />
+              </div>
+            </button>
+          );
+        })}
+      </div>
 
-            // ── Schedule follow-up ────────────────────────────────────────
-            const scheduleFollowUp = async () => {
-              if (!showFollowUpModal || !followUpDate) { notify("Select a date"); return; }
-              try {
-                const activity = [...(showFollowUpModal.activity || []), { type: "followup_scheduled", by: adminUser?.email || "admin", at: new Date().toISOString(), note: `Follow-up scheduled for ${new Date(followUpDate).toLocaleDateString("en-AE", { day: "2-digit", month: "short", year: "numeric" })}${followUpNote ? ` - ${followUpNote}` : ""}` }];
-                await setDoc(doc(db, "leads", showFollowUpModal.id), { followUpDate, followUpNote, activity, updatedAt: new Date().toISOString() }, { merge: true });
-                notify("Follow-up scheduled!");
-                setShowFollowUpModal(null);
-                setFollowUpDate("");
-                setFollowUpNote("");
-                fetchLeads();
-                if (leadDrawer?.id === showFollowUpModal.id) setLeadDrawer(prev => ({ ...prev, followUpDate, followUpNote, activity }));
-              } catch (e) { notify("Error: " + e.message); }
-            };
+      {/* ══════════════════════════════════════════════════════════════
+          SMART FILTER BAR
+      ══════════════════════════════════════════════════════════════ */}
+      <div style={{ background: T.surface, border: `1px solid ${T.border}`,
+        borderRadius: 10, padding: "12px 14px", marginBottom: 12 }}>
 
-            // ── Add note ──────────────────────────────────────────────────
-            const addNote = async () => {
-              if (!leadNote.trim() || !leadDrawer) return;
-              setLeadNoteSaving(true);
-              try {
-                const notes = [...(leadDrawer.notes || []), { text: leadNote, by: adminUser?.email || "admin", at: new Date().toISOString() }];
-                const activity = [...(leadDrawer.activity || []), { type: "note", by: adminUser?.email || "admin", at: new Date().toISOString(), note: leadNote }];
-                await setDoc(doc(db, "leads", leadDrawer.id), { notes, activity, updatedAt: new Date().toISOString() }, { merge: true });
-                setLeadDrawer(prev => ({ ...prev, notes, activity }));
-                setLeadNote("");
-                notify("Note added");
-                fetchLeads();
-              } catch (e) { notify("Error: " + e.message); }
-              setLeadNoteSaving(false);
-            };
+        {/* Row 1 — search + quick filters */}
+        <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+          <input type="text" placeholder="🔍  Search name, email, phone, project, nationality..."
+            value={leadSearch}
+            onChange={e => { setLeadSearch(e.target.value); setLeadPage(1); }}
+            style={{ flex: "2 1 200px", padding: "8px 12px", background: T.bg,
+              border: `1px solid ${T.border}`, borderRadius: 8, color: T.white,
+              fontSize: 13, outline: "none", fontFamily: "'Outfit',sans-serif" }} />
 
-            // ── Convert to user ───────────────────────────────────────────
-            const convertToUser = async () => {
-              if (!leadDrawer) return;
-              setConvertingLead(true);
-              try {
-                const userId = `user_${Date.now()}`;
-                await setDoc(doc(db, "users", userId), { name: leadDrawer.name || "", email: leadDrawer.email || "", phone: leadDrawer.phone || "", tier: "free", role: "user", createdAt: new Date().toISOString(), source: "lead_conversion", leadId: leadDrawer.id });
-                await setDoc(doc(db, "leads", leadDrawer.id), { status: "Converted", userId, convertedAt: new Date().toISOString(), updatedAt: new Date().toISOString() }, { merge: true });
-                await logAudit(db, { action: "lead_converted", leadId: leadDrawer.id, userId });
-                notify("Lead converted to user!");
-                fetchLeads();
-                fetchUsers();
-                setLeadDrawer(null);
-              } catch (e) { notify("Error: " + e.message); }
-              setConvertingLead(false);
-            };
+          <select value={leadSourceFilter}
+            onChange={e => { setLeadSourceFilter(e.target.value); setLeadPage(1); }}
+            style={{ flex: "1 1 120px", padding: "8px 10px", background: T.bg,
+              border: `1px solid ${T.border}`, borderRadius: 8, color: T.white,
+              fontSize: 12, fontFamily: "'Outfit',sans-serif", outline: "none", cursor: "pointer" }}>
+            <option value="all">All Sources</option>
+            {sources.map(s => <option key={s} value={s}>{s}</option>)}
+          </select>
 
-            // ── Send email ────────────────────────────────────────────────
-            const sendLeadEmail = async (lead, subject, body) => {
-              setSendingEmail(true);
-              try {
-                await emailjs.send(import.meta.env.VITE_EMAILJS_SERVICE_ID, import.meta.env.VITE_EMAILJS_TEMPLATE_ID, { user_email: lead.email, to_name: lead.name || "there", subject: subject || `Following up on ${lead.project || "your inquiry"}`, message: body || `Hi ${lead.name || "there"},\n\nThank you for your interest in ${lead.project || "our properties"}.\n\nBest regards,\nDXB Analytics`, project_name: lead.project || "DXB Analytics" }, import.meta.env.VITE_EMAILJS_PUBLIC_KEY);
-                const activity = [...(lead.activity || []), { type: "email_sent", by: adminUser?.email || "admin", at: new Date().toISOString(), note: `Email sent: ${subject || "Follow-up email"}` }];
-                await setDoc(doc(db, "leads", lead.id), { respondedAt: new Date().toISOString(), updatedAt: new Date().toISOString(), activity }, { merge: true });
-                await logAudit(db, { action: "lead_email_sent", leadId: lead.id });
-                notify("Email sent!");
-                fetchLeads();
-                if (leadDrawer?.id === lead.id) setLeadDrawer(prev => ({ ...prev, activity }));
-              } catch (e) { notify("Email failed: " + e.message); }
-              setSendingEmail(false);
-            };
+          <select value={leadDateRange}
+            onChange={e => { setLeadDateRange(e.target.value); setLeadPage(1); }}
+            style={{ flex: "1 1 120px", padding: "8px 10px", background: T.bg,
+              border: `1px solid ${T.border}`, borderRadius: 8, color: T.white,
+              fontSize: 12, fontFamily: "'Outfit',sans-serif", outline: "none", cursor: "pointer" }}>
+            <option value="all">All Time</option>
+            <option value="today">Today</option>
+            <option value="week">This Week</option>
+            <option value="month">This Month</option>
+            <option value="overdue">⚠ Overdue</option>
+            <option value="today_followup">📅 Due Today</option>
+            <option value="rotting">🕐 Rotting (5d+)</option>
+          </select>
 
-            // ── Export CSV ────────────────────────────────────────────────
-            const exportLeadsCSV = () => {
-              const headers = ["Name", "Email", "Phone", "Nationality", "Budget", "Project", "Community", "Source", "Status", "Score", "Follow-Up Date", "Created", "Notes"];
-              const rows = filtered.map(l => [l.name || "", l.email || "", l.phone || "", l.nationality || "", l.budget || "", l.project || "", l.community || "", l.source || "", l.status || "New", scoreLead(l), l.followUpDate || "", l.createdAt || "", (l.notes || []).map(n => n.text).join(" | ")]);
-              const csv = [headers, ...rows].map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\n");
-              const blob = new Blob([csv], { type: "text/csv" });
-              const url = URL.createObjectURL(blob);
-              const a = document.createElement("a"); a.href = url; a.download = `leads_${new Date().toISOString().slice(0,10)}.csv`; a.click();
-              notify(`Exported ${filtered.length} leads`);
-            };
+          {/* Advanced filters toggle */}
+          <button type="button" onClick={() => setShowLeadFilters(v => !v)}
+            style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 12px",
+              fontSize: 11, fontWeight: 700, cursor: "pointer",
+              fontFamily: "'Outfit',sans-serif",
+              border: `1px solid ${showLeadFilters || activeFilterCount > 0 ? T.gold : T.border}`,
+              background: showLeadFilters || activeFilterCount > 0 ? "rgba(212,168,67,0.1)" : "transparent",
+              color: showLeadFilters || activeFilterCount > 0 ? T.gold : T.textMuted,
+              borderRadius: 8 }}>
+            ⚙ Filters
+            {activeFilterCount > 0 && (
+              <span style={{ background: T.gold, color: "#000", borderRadius: 10,
+                fontSize: 9, fontWeight: 900, padding: "1px 6px" }}>
+                {activeFilterCount}
+              </span>
+            )}
+          </button>
 
-            const statusColors = {
-              New: { bg: "rgba(59,130,246,0.12)", color: "#3B82F6", border: "rgba(59,130,246,0.3)" },
-              Contacted: { bg: "rgba(212,168,67,0.12)", color: T.gold, border: "rgba(212,168,67,0.3)" },
-              Qualified: { bg: "rgba(139,92,246,0.12)", color: "#8B5CF6", border: "rgba(139,92,246,0.3)" },
-              Converted: { bg: "rgba(16,185,129,0.12)", color: T.green, border: "rgba(16,185,129,0.3)" },
-              Lost: { bg: "rgba(239,68,68,0.12)", color: T.red, border: "rgba(239,68,68,0.3)" },
-            };
-            const activityIcons = { created: "plus", status_change: "->", note: "N", email_sent: "@", followup_scheduled: "clock", call_logged: "tel" };
-            const emailTemplates = {
-              followup: { subject: `Following up on ${leadDrawer?.project || "your inquiry"}`, body: `Hi ${leadDrawer?.name || "there"},\n\nI wanted to follow up on your interest in ${leadDrawer?.project || "one of our properties"}. Have you had a chance to review the details?\n\nI would love to arrange a viewing at your convenience.\n\nBest regards,\nDXB Analytics Team` },
-              info: { subject: `Project Information - ${leadDrawer?.project || "DXB Analytics"}`, body: `Hi ${leadDrawer?.name || "there"},\n\nThank you for your inquiry about ${leadDrawer?.project || "our property"}.\n\nKey details:\n- Starting Price: [price]\n- Handover: [date]\n- Payment Plan: [plan]\n- Expected Yield: [yield]%\n\nWould you like to schedule a call?\n\nBest regards,\nDXB Analytics Team` },
-              viewing: { subject: `Schedule a Viewing - ${leadDrawer?.project || "Property"}`, body: `Hi ${leadDrawer?.name || "there"},\n\nI would love to arrange a viewing for you at ${leadDrawer?.project || "this property"}.\n\nPlease let me know your preferred date and time.\n\nBest regards,\nDXB Analytics Team` },
-              golden_visa: { subject: `Golden Visa Eligibility - ${leadDrawer?.project || "Property"}`, body: `Hi ${leadDrawer?.name || "there"},\n\nGreat news! ${leadDrawer?.project || "This property"} qualifies for the UAE Golden Visa.\n\nKey benefits:\n- 10-year renewable residency\n- Sponsor family members\n- No requirement to stay in UAE\n- Property must be AED 2M+\n\nBest regards,\nDXB Analytics Team` },
-            };
+          {activeFilterCount > 0 && (
+            <button type="button" onClick={resetFilters}
+              style={{ padding: "8px 10px", fontSize: 11, cursor: "pointer",
+                fontFamily: "'Outfit',sans-serif", border: `1px solid rgba(239,68,68,0.3)`,
+                background: "transparent", color: T.red, borderRadius: 8, fontWeight: 600 }}>
+              ✕ Clear all
+            </button>
+          )}
 
-            return (
-              <>
-                {/* OVERDUE ALERT */}
-                {stats.overdue > 0 && (
-                  <div className="fade-up" style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 16px", borderRadius: 10, background: "rgba(239,68,68,0.08)", border: `1px solid rgba(239,68,68,0.3)`, marginBottom: 16 }}>
-                    <span style={{ fontSize: 14 }}>!</span>
-                    <div style={{ flex: 1 }}>
-                      <span style={{ fontSize: 12, fontWeight: 700, color: T.red }}>{stats.overdue} overdue follow-up{stats.overdue > 1 ? "s" : ""}</span>
-                      <span style={{ fontSize: 11, color: T.textMuted, marginLeft: 8 }}>These leads need your attention today.</span>
+          <span style={{ fontSize: 11, color: T.textMuted, marginLeft: "auto", whiteSpace: "nowrap", flexShrink: 0 }}>
+            {filtered.length} of {leads.length}
+          </span>
+        </div>
+
+        {/* Row 2 — Advanced filters grid */}
+        {showLeadFilters && (
+          <div style={{ marginTop: 12, paddingTop: 12, borderTop: `1px solid ${T.border}`,
+            display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(155px,1fr))", gap: 8 }}>
+            {/* Community */}
+            <select value={lfCommunity} onChange={e => setLfCommunity(e.target.value)}
+              style={{ padding: "7px 9px", background: T.bg, border: `1px solid ${T.border}`,
+                borderRadius: 7, color: T.white, fontSize: 11, fontFamily: "'Outfit',sans-serif", outline: "none" }}>
+              <option value="all">All Communities</option>
+              {COMMUNITIES.map(c => <option key={c} value={c}>{c}</option>)}
+            </select>
+            {/* Nationality */}
+            <select value={lfNationality} onChange={e => setLfNationality(e.target.value)}
+              style={{ padding: "7px 9px", background: T.bg, border: `1px solid ${T.border}`,
+                borderRadius: 7, color: T.white, fontSize: 11, fontFamily: "'Outfit',sans-serif", outline: "none" }}>
+              <option value="all">All Nationalities</option>
+              {NATS.map(n => <option key={n} value={n}>{n}</option>)}
+            </select>
+            {/* Bedrooms */}
+            <select value={lfBedrooms} onChange={e => setLfBedrooms(e.target.value)}
+              style={{ padding: "7px 9px", background: T.bg, border: `1px solid ${T.border}`,
+                borderRadius: 7, color: T.white, fontSize: 11, fontFamily: "'Outfit',sans-serif", outline: "none" }}>
+              <option value="all">All Bedrooms</option>
+              {["Studio","1","2","3","4","5+"].map(b => <option key={b} value={b}>{b} BR</option>)}
+            </select>
+            {/* Off-plan / ready */}
+            <select value={lfOffPlan} onChange={e => setLfOffPlan(e.target.value)}
+              style={{ padding: "7px 9px", background: T.bg, border: `1px solid ${T.border}`,
+                borderRadius: 7, color: T.white, fontSize: 11, fontFamily: "'Outfit',sans-serif", outline: "none" }}>
+              <option value="all">Off-Plan / Ready</option>
+              <option value="offplan">Off-Plan</option>
+              <option value="ready">Ready</option>
+            </select>
+            {/* Budget min */}
+            <input type="number" placeholder="Budget min (AED)" value={lfBudgetMin}
+              onChange={e => setLfBudgetMin(e.target.value)}
+              style={{ padding: "7px 9px", background: T.bg, border: `1px solid ${T.border}`,
+                borderRadius: 7, color: T.white, fontSize: 11, fontFamily: "'Outfit',sans-serif", outline: "none" }} />
+            {/* Budget max */}
+            <input type="number" placeholder="Budget max (AED)" value={lfBudgetMax}
+              onChange={e => setLfBudgetMax(e.target.value)}
+              style={{ padding: "7px 9px", background: T.bg, border: `1px solid ${T.border}`,
+                borderRadius: 7, color: T.white, fontSize: 11, fontFamily: "'Outfit',sans-serif", outline: "none" }} />
+            {/* Min score */}
+            <input type="number" placeholder="Min score (0-100)" min={0} max={100} value={lfScoreMin}
+              onChange={e => setLfScoreMin(e.target.value)}
+              style={{ padding: "7px 9px", background: T.bg, border: `1px solid ${T.border}`,
+                borderRadius: 7, color: T.white, fontSize: 11, fontFamily: "'Outfit',sans-serif", outline: "none" }} />
+            {/* Boolean checkboxes */}
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 10, alignItems: "center", gridColumn: "span 2" }}>
+              {[
+                [lfGoldenVisa,     setLfGoldenVisa,     "Golden Visa (≥2M)"],
+                [lfHasWhatsApp,    setLfHasWhatsApp,    "Has WhatsApp"],
+                [lfHasEmail,       setLfHasEmail,       "Has Email"],
+                [lfNeverContacted, setLfNeverContacted, "Never Contacted"],
+                [lfHasFollowUp,    setLfHasFollowUp,    "Has Follow-up"],
+                [lfUnreachable,    setLfUnreachable,    "Unreachable"],
+              ].map(([val, setter, label]) => (
+                <label key={label} style={{ display: "flex", alignItems: "center", gap: 5,
+                  fontSize: 11, color: T.textMuted, cursor: "pointer", userSelect: "none" }}>
+                  <input type="checkbox" checked={val} onChange={e => setter(e.target.checked)}
+                    style={{ accentColor: T.gold, cursor: "pointer" }} />
+                  {label}
+                </label>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Bulk action bar */}
+        {leadSelectedIds.length > 0 && (
+          <div style={{ marginTop: 12, paddingTop: 12, borderTop: `1px solid ${T.border}`,
+            display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+            <span style={{ fontSize: 12, fontWeight: 700, color: T.gold }}>
+              {leadSelectedIds.length} selected
+            </span>
+            <span style={{ fontSize: 11, color: T.textMuted }}>Move to:</span>
+            {["Contacted","Qualified","Converted","Lost"].map(s => (
+              <button key={s} type="button" onClick={() => bulkUpdate(s)}
+                style={{ padding: "5px 12px", fontSize: 11, fontWeight: 700, cursor: "pointer",
+                  fontFamily: "'Outfit',sans-serif", border: `1px solid ${STATUS[s].border}`,
+                  background: STATUS[s].bg, color: STATUS[s].text, borderRadius: 6 }}>
+                → {s}
+              </button>
+            ))}
+            <button type="button" onClick={() => setLeadSelectedIds([])}
+              style={{ marginLeft: "auto", padding: "5px 10px", fontSize: 11, cursor: "pointer",
+                fontFamily: "'Outfit',sans-serif", border: `1px solid ${T.border}`,
+                background: "transparent", color: T.textMuted, borderRadius: 6 }}>
+              Deselect
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* ══════════════════════════════════════════════════════════════
+          TABLE VIEW
+      ══════════════════════════════════════════════════════════════ */}
+      {leadsViewMode === "table" && (
+        <div style={{ background: T.surface, border: `1px solid ${T.border}`,
+          borderRadius: 12, overflow: "hidden" }}>
+          {/* Header row */}
+          <div style={{ display: "grid",
+            gridTemplateColumns: "28px 2.2fr 1.1fr 100px 80px 100px 95px 120px",
+            padding: "8px 14px", borderBottom: `1px solid ${T.border}`,
+            background: "rgba(212,168,67,0.03)",
+            fontSize: 9, fontWeight: 700, color: T.textMuted,
+            textTransform: "uppercase", letterSpacing: 0.8 }}>
+            <div>
+              <input type="checkbox"
+                checked={leadSelectedIds.length === paged.length && paged.length > 0}
+                onChange={e => e.target.checked
+                  ? setLeadSelectedIds(paged.map(l => l.id))
+                  : setLeadSelectedIds([])}
+                style={{ accentColor: T.gold, cursor: "pointer" }} />
+            </div>
+            <span>Lead</span>
+            <span>Project / Interest</span>
+            <span>Budget</span>
+            <span>Score</span>
+            <span>Status</span>
+            <span>Follow-up</span>
+            <span style={{ textAlign: "right" }}>Actions</span>
+          </div>
+
+          {/* Lead rows */}
+          <div style={{ maxHeight: "62vh", overflowY: "auto" }}>
+            {paged.length === 0 ? (
+              <div style={{ padding: "48px 24px", textAlign: "center" }}>
+                <div style={{ fontSize: 36, opacity: 0.25, marginBottom: 12 }}>🔍</div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: T.white, marginBottom: 6 }}>No leads match</div>
+                <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 16 }}>Try adjusting your filters</div>
+                <button type="button" onClick={resetFilters}
+                  style={{ padding: "8px 18px", fontSize: 12, cursor: "pointer",
+                    fontFamily: "'Outfit',sans-serif", border: `1px solid ${T.gold}`,
+                    background: "rgba(212,168,67,0.1)", color: T.gold, borderRadius: 8, fontWeight: 600 }}>
+                  Clear Filters
+                </button>
+              </div>
+            ) : paged.map((l, i) => {
+              const score    = scoreLead(l);
+              const h        = heat(score);
+              const sc       = STATUS[l.status || "New"] || STATUS.New;
+              const overdue  = isOverdue(l);
+              const rotting  = isRotting(l);
+              const dueToday = isDueToday(l);
+              const dup      = getDups(l).length > 0;
+              const selected = leadSelectedIds.includes(l.id);
+              const visa     = (parseFloat(l.budget) || 0) >= 2000000;
+              const initStr  = initials(l.name);
+              // Avatar color cycling
+              const avatarBgs = [
+                "rgba(59,130,246,0.2)","rgba(20,184,166,0.2)","rgba(139,92,246,0.2)",
+                "rgba(212,168,67,0.2)","rgba(16,185,129,0.2)",
+              ];
+              const avBg = avatarBgs[i % avatarBgs.length];
+
+              return (
+                <div key={l.id}
+                  style={{ display: "grid",
+                    gridTemplateColumns: "28px 2.2fr 1.1fr 100px 80px 100px 95px 120px",
+                    padding: "10px 14px", borderBottom: `1px solid ${T.border}`,
+                    alignItems: "center", cursor: "default", transition: "background 0.1s",
+                    background: selected ? "rgba(212,168,67,0.06)"
+                      : overdue ? "rgba(239,68,68,0.04)"
+                      : rotting ? "rgba(245,158,11,0.03)"
+                      : i % 2 === 0 ? "transparent" : "rgba(255,255,255,0.01)" }}
+                  onMouseEnter={e => { if (!selected) e.currentTarget.style.background = "rgba(212,168,67,0.04)"; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = selected ? "rgba(212,168,67,0.06)"
+                    : overdue ? "rgba(239,68,68,0.04)" : i % 2 === 0 ? "transparent" : "rgba(255,255,255,0.01)"; }}>
+
+                  {/* Checkbox */}
+                  <input type="checkbox" checked={selected}
+                    onChange={() => setLeadSelectedIds(s =>
+                      s.includes(l.id) ? s.filter(x => x !== l.id) : [...s, l.id])}
+                    style={{ accentColor: T.gold, cursor: "pointer" }} />
+
+                  {/* Lead info */}
+                  <div style={{ display: "flex", alignItems: "center", gap: 9, minWidth: 0 }}>
+                    <div style={{ width: 32, height: 32, borderRadius: "50%",
+                      background: avBg, border: `1px solid ${T.border}`,
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      fontSize: 11, fontWeight: 700, color: T.white, flexShrink: 0 }}>
+                      {initStr}
                     </div>
-                    <button type="button" onClick={() => setLeadDateRange("overdue")} style={{ fontSize: 11, padding: "6px 12px", borderRadius: 6, border: `1px solid ${T.red}`, background: "transparent", color: T.red, cursor: "pointer", fontWeight: 600 }}>View Overdue</button>
-                  </div>
-                )}
-                {stats.dueToday > 0 && stats.overdue === 0 && (
-                  <div className="fade-up" style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 16px", borderRadius: 10, background: "rgba(212,168,67,0.08)", border: `1px solid rgba(212,168,67,0.3)`, marginBottom: 16 }}>
-                    <span style={{ fontSize: 12, fontWeight: 700, color: T.gold }}>{stats.dueToday} follow-up{stats.dueToday > 1 ? "s" : ""} due today</span>
-                    <button type="button" onClick={() => setLeadDateRange("today_followup")} style={{ fontSize: 11, padding: "6px 12px", borderRadius: 6, border: `1px solid ${T.gold}`, background: "transparent", color: T.gold, cursor: "pointer", fontWeight: 600, marginLeft: "auto" }}>View</button>
-                  </div>
-                )}
-
-                {/* KPI BAR */}
-                <div className="fade-up" style={{ display: "flex", alignItems: "center", gap: 0, borderRadius: 14, background: T.surface, border: `1px solid ${T.border}`, marginBottom: 20, overflow: "hidden", flexWrap: "wrap" }}>
-                  <button type="button" onClick={() => { localStorage.removeItem("dxb_leads_v3"); localStorage.removeItem("dxb_leads_v3_ts"); fetchLeads(true); notify("↺ Reloading all leads..."); }} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, padding: "14px 16px", background: T.goldGlow, border: "none", borderRight: `1px solid ${T.border}`, color: T.gold, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600, flexShrink: 0 }}>{I.refresh}</button>
-                  {[
-                    { label: "Total", value: stats.total, color: T.gold },
-                    { label: "New", value: stats.new, color: "#3B82F6" },
-                    { label: "Hot", value: stats.hot, color: T.red },
-                    { label: "This Week", value: stats.thisWeek, color: T.teal },
-                    { label: "Win Rate", value: `${winRate}%`, color: T.green },
-                    { label: "Conversion", value: `${conversionRate}%`, color: T.purple },
-                    { label: "Avg Response", value: avgResponseHrs !== null ? `${avgResponseHrs}h` : "-", color: T.orange },
-                    { label: "Days to Close", value: avgDaysToClose !== null ? `${avgDaysToClose}d` : "-", color: T.teal },
-                  ].map((item, i) => (
-                    <div key={i} style={{ display: "flex", flexDirection: "column", padding: "10px 16px", borderRight: `1px solid ${T.border}`, flexShrink: 0 }}>
-                      <span style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1 }}>{item.label}</span>
-                      <span style={{ fontSize: 17, fontWeight: 900, color: item.color, fontFamily: "'Fraunces',serif", lineHeight: 1.2 }}>{item.value}</span>
-                    </div>
-                  ))}
-                  <div style={{ marginLeft: "auto", padding: "10px 16px", display: "flex", gap: 8, flexShrink: 0 }}>
-                    <div style={{ display: "flex", background: T.surfaceAlt, borderRadius: 8, border: `1px solid ${T.border}`, overflow: "hidden" }}>
-                      <button type="button" onClick={() => { setLeadsViewMode("table"); setLeadAnalyticsView(false); }} style={{ padding: "6px 12px", fontSize: 10, fontWeight: 600, background: leadsViewMode === "table" && !leadAnalyticsView ? T.gold + "20" : "transparent", color: leadsViewMode === "table" && !leadAnalyticsView ? T.gold : T.textMuted, border: "none", cursor: "pointer" }}>Table</button>
-                      <button type="button" onClick={() => { setLeadsViewMode("kanban"); setLeadAnalyticsView(false); }} style={{ padding: "6px 12px", fontSize: 10, fontWeight: 600, background: leadsViewMode === "kanban" && !leadAnalyticsView ? T.gold + "20" : "transparent", color: leadsViewMode === "kanban" && !leadAnalyticsView ? T.gold : T.textMuted, border: "none", cursor: "pointer" }}>Kanban</button>
-                      <button type="button" onClick={() => setLeadAnalyticsView(v => !v)} style={{ padding: "6px 12px", fontSize: 10, fontWeight: 600, background: leadAnalyticsView ? T.gold + "20" : "transparent", color: leadAnalyticsView ? T.gold : T.textMuted, border: "none", cursor: "pointer" }}>Analytics</button>
-                    </div>
-                    <button type="button" onClick={() => setShowAddLead(true)} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, padding: "8px 14px", borderRadius: 8, border: `1px solid ${T.green}`, background: "rgba(16,185,129,0.08)", color: T.green, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>+ Add Lead</button>
-                    <button type="button" onClick={exportLeadsCSV} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, padding: "8px 14px", borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.textSecondary, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>{I.download} Export</button>
-                  </div>
-                </div>
-
-                {/* PIPELINE CARDS */}
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 12, marginBottom: 20 }}>
-                  {[
-                    { id: "new", label: "New", count: stats.new, color: "#3B82F6" },
-                    { id: "contacted", label: "Contacted", count: stats.contacted, color: T.gold },
-                    { id: "qualified", label: "Qualified", count: stats.qualified, color: "#8B5CF6" },
-                    { id: "converted", label: "Converted", count: stats.converted, color: T.green },
-                    { id: "lost", label: "Lost", count: stats.lost, color: T.red },
-                  ].map(s => (
-                    <div key={s.id} onClick={() => setLeadFilter(leadFilter === s.id ? "all" : s.id)} className="fade-up" style={{ padding: "16px 18px", borderRadius: 12, cursor: "pointer", background: leadFilter === s.id ? `${s.color}15` : T.surface, border: `1px solid ${leadFilter === s.id ? s.color : T.border}`, transition: "all 0.15s" }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-                        <span style={{ fontSize: 11, fontWeight: 700, color: s.color, textTransform: "uppercase", letterSpacing: 1 }}>{s.label}</span>
+                    <div style={{ minWidth: 0 }}>
+                      {/* Name + badges */}
+                      <div style={{ display: "flex", alignItems: "center", gap: 5, flexWrap: "wrap", marginBottom: 2 }}>
+                        <span style={{ fontSize: 13, fontWeight: 700, color: T.white, cursor: "pointer" }}
+                          onClick={() => { setLeadDrawer(l); setLeadDrawerTab("details"); }}>
+                          {l.name || <span style={{ color: T.textMuted, fontStyle: "italic" }}>No name</span>}
+                        </span>
+                        {dup    && <span style={{ fontSize: 9, fontWeight: 700, padding: "1px 5px", borderRadius: 4, background: "rgba(239,68,68,0.12)", color: T.red }}>DUP</span>}
+                        {overdue && <span style={{ fontSize: 9, fontWeight: 700, padding: "1px 5px", borderRadius: 4, background: "rgba(239,68,68,0.12)", color: T.red }}>OVERDUE</span>}
+                        {rotting && !overdue && <span style={{ fontSize: 9, fontWeight: 700, padding: "1px 5px", borderRadius: 4, background: "rgba(245,158,11,0.12)", color: T.gold }}>COLD</span>}
+                        {dueToday && !overdue && <span style={{ fontSize: 9, fontWeight: 700, padding: "1px 5px", borderRadius: 4, background: "rgba(212,168,67,0.12)", color: T.gold }}>DUE TODAY</span>}
+                        {visa    && <span style={{ fontSize: 9, fontWeight: 700, padding: "1px 5px", borderRadius: 4, background: "rgba(139,92,246,0.12)", color: "#8B5CF6" }}>VISA</span>}
                       </div>
-                      <div style={{ fontFamily: "'Fraunces',serif", fontSize: 28, fontWeight: 900, color: s.color }}>{s.count}</div>
-                      <div style={{ marginTop: 8, height: 3, borderRadius: 2, background: T.border }}>
-                        <div style={{ height: "100%", borderRadius: 2, background: s.color, width: `${stats.total > 0 ? (s.count / stats.total) * 100 : 0}%`, transition: "width 0.5s" }} />
+                      {/* Contact line */}
+                      <div style={{ fontSize: 10, color: T.textMuted,
+                        overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        {l.email && <span>{l.email}</span>}
+                        {l.email && l.phone && <span style={{ margin: "0 4px" }}>·</span>}
+                        {l.phone && <span>{l.phone}</span>}
+                        {l.nationality && <span style={{ marginLeft: 6, opacity: 0.6 }}>· {l.nationality}</span>}
+                        {l.source && <span style={{ marginLeft: 6, opacity: 0.5 }}>via {l.source}</span>}
                       </div>
-                    </div>
-                  ))}
-                </div>
-
-                {/* ═══════════════════════════════════════════════════════════
-                    SESSION 2 — FULL PIPELINE ANALYTICS DASHBOARD
-                    Funnel · Source · Lost Reasons · Score · Nationality · Trend
-                ═══════════════════════════════════════════════════════════ */}
-                {leadAnalyticsView && (() => {
-                  // ── Pre-compute everything once ──────────────────────────
-                  const pipelineStages = [
-                    { id: "New",       label: "New",       color: "#3B82F6", count: stats.new },
-                    { id: "Contacted", label: "Contacted", color: T.gold,    count: stats.contacted },
-                    { id: "Qualified", label: "Qualified", color: "#8B5CF6", count: stats.qualified },
-                    { id: "Converted", label: "Converted", color: T.green,   count: stats.converted },
-                    { id: "Lost",      label: "Lost",      color: T.red,     count: stats.lost },
-                  ];
-                  const funnelMax = Math.max(stats.new || 1, 1);
-
-                  // Conversion rate stage-to-stage
-                  const stageConv = [
-                    { from: "New", to: "Contacted", rate: stats.new > 0 ? Math.round((stats.contacted / stats.new) * 100) : 0 },
-                    { from: "Contacted", to: "Qualified", rate: stats.contacted > 0 ? Math.round((stats.qualified / stats.contacted) * 100) : 0 },
-                    { from: "Qualified", to: "Converted", rate: stats.qualified > 0 ? Math.round((stats.converted / stats.qualified) * 100) : 0 },
-                  ];
-
-                  // Lost reason breakdown
-                  const lostReasonMap = leads
-                    .filter(l => l.status === "Lost" && l.lossReason)
-                    .reduce((acc, l) => {
-                      const r = l.lossReason.trim() || "Unspecified";
-                      acc[r] = (acc[r] || 0) + 1;
-                      return acc;
-                    }, {});
-                  const lostReasons = Object.entries(lostReasonMap)
-                    .sort((a, b) => b[1] - a[1])
-                    .slice(0, 8);
-                  const lostTotal = lostReasons.reduce((s, [, v]) => s + v, 0) || 1;
-
-                  // Lead score distribution (0-20 Cold, 21-40 Cool, 41-60 Warm, 61-80 Hot, 81-100 🔥)
-                  const scoreBuckets = [
-                    { label: "Cold\n0–20",  range: [0,20],  color: T.red,      count: 0 },
-                    { label: "Cool\n21–40", range: [21,40], color: T.orange,   count: 0 },
-                    { label: "Warm\n41–60", range: [41,60], color: T.gold,     count: 0 },
-                    { label: "Hot\n61–80",  range: [61,80], color: "#10B981",  count: 0 },
-                    { label: "🔥\n81–100",  range: [81,100],color: "#6EE7B7",  count: 0 },
-                  ];
-                  leads.forEach(l => {
-                    const s = scoreLead(l);
-                    scoreBuckets.forEach(b => { if (s >= b.range[0] && s <= b.range[1]) b.count++; });
-                  });
-                  const scoreMax = Math.max(...scoreBuckets.map(b => b.count), 1);
-
-                  // Source breakdown (sorted by total)
-                  const sourceList = Object.entries(sourceBreakdown)
-                    .sort((a, b) => b[1].total - a[1].total)
-                    .slice(0, 10);
-                  const sourceMax = sourceList.length > 0 ? sourceList[0][1].total : 1;
-
-                  // Top nationalities
-                  const natMap = leads.reduce((acc, l) => {
-                    const n = (l.nationality || "Unknown").replace(/^[^\s]+ /, ""); // strip emoji
-                    acc[n] = (acc[n] || 0) + 1;
-                    return acc;
-                  }, {});
-                  const topNats = Object.entries(natMap).sort((a, b) => b[1] - a[1]).slice(0, 8);
-                  const natMax = topNats.length > 0 ? topNats[0][1] : 1;
-
-                  // Leads per week (last 12 weeks)
-                  const weeklyMap = {};
-                  const now12 = new Date();
-                  leads.forEach(l => {
-                    if (!l.createdAt) return;
-                    const d = new Date(l.createdAt);
-                    const diffW = Math.floor((now12 - d) / (7 * 24 * 60 * 60 * 1000));
-                    if (diffW >= 0 && diffW < 12) {
-                      const key = 11 - diffW;
-                      weeklyMap[key] = (weeklyMap[key] || 0) + 1;
-                    }
-                  });
-                  const weeklyData = Array.from({ length: 12 }, (_, i) => ({
-                    week: i === 11 ? "This wk" : i === 10 ? "Last wk" : `-${11 - i}w`,
-                    count: weeklyMap[i] || 0,
-                  }));
-                  const weeklyMax = Math.max(...weeklyData.map(w => w.count), 1);
-
-                  // Pipeline value by stage
-                  const stageValue = pipelineStages.map(s => ({
-                    ...s,
-                    value: leads.filter(l => (l.status || "New") === s.id).reduce((sum, l) => sum + (parseFloat(l.budget) || 0), 0),
-                  }));
-                  const totalPipelineVal = stageValue.reduce((s, st) => s + st.value, 0);
-
-                  // Top projects in pipeline
-                  const projectMap = leads.reduce((acc, l) => {
-                    if (!l.project) return acc;
-                    if (!acc[l.project]) acc[l.project] = { total: 0, converted: 0, hot: 0 };
-                    acc[l.project].total++;
-                    if (l.status === "Converted") acc[l.project].converted++;
-                    if (scoreLead(l) >= 70) acc[l.project].hot++;
-                    return acc;
-                  }, {});
-                  const topProjects = Object.entries(projectMap)
-                    .sort((a, b) => b[1].total - a[1].total)
-                    .slice(0, 6);
-
-                  // Community breakdown
-                  const communityMap = leads.reduce((acc, l) => {
-                    const c = l.community || "Unknown";
-                    if (!acc[c]) acc[c] = { total: 0, converted: 0 };
-                    acc[c].total++;
-                    if (l.status === "Converted") acc[c].converted++;
-                    return acc;
-                  }, {});
-                  const topCommunities = Object.entries(communityMap)
-                    .sort((a, b) => b[1].total - a[1].total)
-                    .slice(0, 6);
-
-                  const S = { // shared sub-styles
-                    card: { background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, padding: "20px 22px" },
-                    label: { fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 16 },
-                    sectionTitle: { fontSize: 12, fontWeight: 700, color: T.gold, letterSpacing: 1, textTransform: "uppercase" },
-                  };
-
-                  return (
-                    <div className="fade-up" style={{ marginBottom: 20 }}>
-
-                      {/* ── HEADER ─────────────────────────────────────────── */}
-                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
-                        <div>
-                          <div style={{ fontFamily: "'Fraunces',serif", fontSize: 22, fontWeight: 800, color: T.white }}>Pipeline Analytics</div>
-                          <div style={{ fontSize: 12, color: T.textMuted, marginTop: 2 }}>{leads.length.toLocaleString()} leads · live data</div>
-                        </div>
-                        <div style={{ display: "flex", gap: 10 }}>
-                          <div style={{ padding: "8px 16px", borderRadius: 8, background: `${T.green}12`, border: `1px solid ${T.green}30`, fontSize: 11, fontWeight: 700, color: T.green }}>{winRate}% Win Rate</div>
-                          <div style={{ padding: "8px 16px", borderRadius: 8, background: `${T.gold}12`, border: `1px solid ${T.gold}30`, fontSize: 11, fontWeight: 700, color: T.gold }}>AED {(totalPipelineVal / 1e6).toFixed(1)}M Pipeline</div>
-                        </div>
-                      </div>
-
-                      {/* ── ROW 1: KPI CARDS ───────────────────────────────── */}
-                      <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: 12, marginBottom: 16 }}>
-                        {[
-                          { label: "Win Rate",       value: `${winRate}%`,                                                                            sub: `${stats.converted} of ${stats.converted + stats.lost} closed`,   color: T.green  },
-                          { label: "Days to Close",  value: avgDaysToClose !== null ? `${avgDaysToClose}d` : "—",                                     sub: "Lead → Converted avg",                                           color: T.blue   },
-                          { label: "Hot Leads",      value: stats.hot,                                                                                sub: "Score 70+ ready to close",                                       color: T.red    },
-                          { label: "Pipeline Value", value: `AED ${(totalPipelineVal/1e6).toFixed(1)}M`,                                             sub: "Total budget across all leads",                                  color: T.gold   },
-                          { label: "Avg Response",   value: avgResponseHrs !== null ? `${avgResponseHrs}h` : "—",                                    sub: "First contact speed",                                            color: T.orange },
-                          { label: "This Week",      value: stats.thisWeek,                                                                           sub: "New leads (7 days)",                                             color: T.teal   },
-                        ].map((k, i) => (
-                          <div key={i} style={{ padding: "16px 14px", background: T.surface, borderRadius: 12, border: `1px solid ${T.border}`, position: "relative", overflow: "hidden" }}>
-                            <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: k.color, opacity: 0.7 }} />
-                            <div style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 6 }}>{k.label}</div>
-                            <div style={{ fontFamily: "'Fraunces',serif", fontSize: 22, fontWeight: 900, color: k.color, lineHeight: 1 }}>{k.value}</div>
-                            <div style={{ fontSize: 10, color: T.textMuted, marginTop: 6 }}>{k.sub}</div>
-                          </div>
-                        ))}
-                      </div>
-
-                      {/* ── ROW 2: FUNNEL + WEEKLY TREND ───────────────────── */}
-                      <div style={{ display: "grid", gridTemplateColumns: "1.1fr 1fr", gap: 16, marginBottom: 16 }}>
-
-                        {/* FUNNEL CHART */}
-                        <div style={S.card}>
-                          <div style={S.label}>Conversion Funnel</div>
-                          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                            {pipelineStages.map((stage, i) => {
-                              const pct = Math.round((stage.count / funnelMax) * 100);
-                              const dropPct = i < stageConv.length ? stageConv[i].rate : null;
-                              return (
-                                <div key={stage.id}>
-                                  <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
-                                    <div style={{ fontSize: 11, fontWeight: 700, color: stage.color, width: 74, flexShrink: 0 }}>{stage.label}</div>
-                                    <div style={{ flex: 1, height: 28, background: T.surfaceAlt, borderRadius: 6, overflow: "hidden", position: "relative" }}>
-                                      <div style={{ height: "100%", width: `${pct}%`, background: `linear-gradient(90deg, ${stage.color}CC, ${stage.color}66)`, borderRadius: 6, transition: "width 0.6s ease", display: "flex", alignItems: "center", paddingLeft: 8, minWidth: stage.count > 0 ? 32 : 0 }}>
-                                        {stage.count > 0 && <span style={{ fontSize: 11, fontWeight: 800, color: "#fff" }}>{stage.count.toLocaleString()}</span>}
-                                      </div>
-                                      {stage.count === 0 && <span style={{ position: "absolute", left: 8, top: "50%", transform: "translateY(-50%)", fontSize: 11, color: T.textMuted }}>0</span>}
-                                    </div>
-                                    <div style={{ fontSize: 10, color: T.textMuted, width: 36, textAlign: "right", flexShrink: 0 }}>{pct}%</div>
-                                  </div>
-                                  {dropPct !== null && (
-                                    <div style={{ marginLeft: 84, marginBottom: 2, fontSize: 9, color: dropPct >= 50 ? T.green : dropPct >= 25 ? T.gold : T.red, fontWeight: 600 }}>
-                                      ↓ {dropPct}% pass to next stage
-                                    </div>
-                                  )}
-                                </div>
-                              );
-                            })}
-                          </div>
-                          {/* Stage-to-stage summary */}
-                          <div style={{ marginTop: 16, paddingTop: 14, borderTop: `1px solid ${T.border}`, display: "flex", gap: 8 }}>
-                            {stageConv.map((sc, i) => (
-                              <div key={i} style={{ flex: 1, textAlign: "center", padding: "8px 4px", background: T.surfaceAlt, borderRadius: 8 }}>
-                                <div style={{ fontSize: 14, fontWeight: 900, color: sc.rate >= 50 ? T.green : sc.rate >= 25 ? T.gold : T.red, fontFamily: "'Fraunces',serif" }}>{sc.rate}%</div>
-                                <div style={{ fontSize: 9, color: T.textMuted, lineHeight: 1.3, marginTop: 2 }}>{sc.from}→{sc.to}</div>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-
-                        {/* WEEKLY TREND */}
-                        <div style={S.card}>
-                          <div style={S.label}>Leads Incoming — Last 12 Weeks</div>
-                          <div style={{ display: "flex", alignItems: "flex-end", gap: 4, height: 120 }}>
-                            {weeklyData.map((w, i) => {
-                              const barH = weeklyMax > 0 ? Math.max(4, (w.count / weeklyMax) * 108) : 4;
-                              const isThis = i === 11;
-                              return (
-                                <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 3 }}>
-                                  <div style={{ fontSize: 9, color: isThis ? T.gold : T.textMuted, fontWeight: isThis ? 700 : 400 }}>{w.count > 0 ? w.count : ""}</div>
-                                  <div style={{ width: "100%", height: barH + "px", background: isThis ? T.gold : `${T.blue}80`, borderRadius: "3px 3px 0 0", transition: "height 0.5s ease" }} />
-                                  <div style={{ fontSize: 8, color: isThis ? T.gold : T.textMuted, fontWeight: isThis ? 700 : 400, textAlign: "center" }}>{w.week}</div>
-                                </div>
-                              );
-                            })}
-                          </div>
-                          <div style={{ marginTop: 14, paddingTop: 12, borderTop: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between" }}>
-                            <div style={{ fontSize: 10, color: T.textMuted }}>Total (12 wks): <span style={{ color: T.white, fontWeight: 700 }}>{weeklyData.reduce((s, w) => s + w.count, 0).toLocaleString()}</span></div>
-                            <div style={{ fontSize: 10, color: T.textMuted }}>Avg/wk: <span style={{ color: T.gold, fontWeight: 700 }}>{Math.round(weeklyData.reduce((s, w) => s + w.count, 0) / 12)}</span></div>
-                            <div style={{ fontSize: 10, color: T.textMuted }}>This wk: <span style={{ color: T.teal, fontWeight: 700 }}>{weeklyData[11].count}</span></div>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* ── ROW 3: SOURCE + LOST REASONS ───────────────────── */}
-                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 16 }}>
-
-                        {/* SOURCE PERFORMANCE */}
-                        <div style={S.card}>
-                          <div style={S.label}>Conversion Rate by Source</div>
-                          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                            {sourceList.length === 0 && <div style={{ fontSize: 11, color: T.textMuted }}>No source data yet.</div>}
-                            {sourceList.map(([source, data]) => {
-                              const wr = data.total > 0 ? Math.round((data.converted / data.total) * 100) : 0;
-                              const barW = Math.round((data.total / sourceMax) * 100);
-                              const col = wr >= 50 ? T.green : wr >= 25 ? T.gold : T.red;
-                              return (
-                                <div key={source}>
-                                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 3 }}>
-                                    <span style={{ fontSize: 11, fontWeight: 600, color: T.textSecondary }}>{source}</span>
-                                    <div style={{ display: "flex", gap: 10 }}>
-                                      <span style={{ fontSize: 10, color: T.textMuted }}>{data.total} leads</span>
-                                      <span style={{ fontSize: 11, fontWeight: 800, color: col, minWidth: 36, textAlign: "right" }}>{wr}%</span>
-                                    </div>
-                                  </div>
-                                  <div style={{ height: 6, background: T.surfaceAlt, borderRadius: 3, overflow: "hidden" }}>
-                                    <div style={{ height: "100%", width: `${barW}%`, background: T.border, borderRadius: 3, position: "relative" }}>
-                                      <div style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: `${wr}%`, background: col, borderRadius: 3 }} />
-                                    </div>
-                                  </div>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        </div>
-
-                        {/* LOST REASON TRACKER */}
-                        <div style={S.card}>
-                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-                            <div style={S.label}>Lost Reason Analysis</div>
-                            <div style={{ fontSize: 11, fontWeight: 700, color: T.red }}>{stats.lost} lost</div>
-                          </div>
-                          {lostReasons.length === 0 ? (
-                            <div style={{ textAlign: "center", padding: "30px 0", color: T.textMuted }}>
-                              <div style={{ fontSize: 28, marginBottom: 8 }}>✅</div>
-                              <div style={{ fontSize: 12, color: T.green, fontWeight: 600 }}>No lost reason data yet</div>
-                              <div style={{ fontSize: 11, color: T.textMuted, marginTop: 4 }}>When leads are marked Lost,<br/>reasons appear here.</div>
-                            </div>
-                          ) : (
-                            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                              {lostReasons.map(([reason, count], i) => {
-                                const pct = Math.round((count / lostTotal) * 100);
-                                const colors = [T.red, T.orange, T.gold, T.blue, T.purple, T.teal, T.green, T.textMuted];
-                                const col = colors[i % colors.length];
-                                return (
-                                  <div key={reason}>
-                                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 3 }}>
-                                      <span style={{ fontSize: 11, color: T.textSecondary, maxWidth: "70%", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{reason}</span>
-                                      <span style={{ fontSize: 10, color: T.textMuted }}>{count} · {pct}%</span>
-                                    </div>
-                                    <div style={{ height: 5, background: T.surfaceAlt, borderRadius: 3, overflow: "hidden" }}>
-                                      <div style={{ height: "100%", width: `${pct}%`, background: col, borderRadius: 3, transition: "width 0.5s" }} />
-                                    </div>
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          )}
-                          {lostReasons.length > 0 && (
-                            <div style={{ marginTop: 14, paddingTop: 12, borderTop: `1px solid ${T.border}`, fontSize: 10, color: T.textMuted }}>
-                              Tip: Top lost reason is <span style={{ color: T.red, fontWeight: 700 }}>"{lostReasons[0]?.[0]}"</span> — address this in your pitch.
-                            </div>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* ── ROW 4: SCORE DISTRIBUTION + NATIONALITY ─────────── */}
-                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 16 }}>
-
-                        {/* LEAD SCORE DISTRIBUTION */}
-                        <div style={S.card}>
-                          <div style={S.label}>Lead Score Distribution</div>
-                          <div style={{ display: "flex", alignItems: "flex-end", gap: 10, height: 100, marginBottom: 8 }}>
-                            {scoreBuckets.map((b, i) => {
-                              const barH = scoreMax > 0 ? Math.max(4, (b.count / scoreMax) * 88) : 4;
-                              return (
-                                <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 3 }}>
-                                  <div style={{ fontSize: 10, fontWeight: 700, color: b.color }}>{b.count}</div>
-                                  <div style={{ width: "100%", height: barH + "px", background: `${b.color}BB`, borderRadius: "4px 4px 0 0", transition: "height 0.5s ease", border: `1px solid ${b.color}40` }} />
-                                </div>
-                              );
-                            })}
-                          </div>
-                          <div style={{ display: "flex", gap: 10 }}>
-                            {scoreBuckets.map((b, i) => (
-                              <div key={i} style={{ flex: 1, textAlign: "center" }}>
-                                <div style={{ fontSize: 8, color: b.color, fontWeight: 700, lineHeight: 1.3, whiteSpace: "pre-line" }}>{b.label}</div>
-                              </div>
-                            ))}
-                          </div>
-                          <div style={{ marginTop: 14, paddingTop: 12, borderTop: `1px solid ${T.border}`, display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
-                            {[
-                              { label: "🔥 Hot (70+)",  val: `${leads.filter(l => scoreLead(l) >= 70).length}`, color: T.green },
-                              { label: "☀️ Warm (40+)", val: `${leads.filter(l => { const s = scoreLead(l); return s >= 40 && s < 70; }).length}`, color: T.gold },
-                              { label: "❄️ Cold (<40)", val: `${leads.filter(l => scoreLead(l) < 40).length}`,  color: T.red },
-                            ].map((item, i) => (
-                              <div key={i} style={{ textAlign: "center", padding: "8px 4px", background: T.surfaceAlt, borderRadius: 8 }}>
-                                <div style={{ fontSize: 16, fontWeight: 900, color: item.color, fontFamily: "'Fraunces',serif" }}>{item.val}</div>
-                                <div style={{ fontSize: 9, color: T.textMuted, marginTop: 2 }}>{item.label}</div>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-
-                        {/* TOP NATIONALITIES */}
-                        <div style={S.card}>
-                          <div style={S.label}>Top Nationalities in Pipeline</div>
-                          <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
-                            {topNats.length === 0 && <div style={{ fontSize: 11, color: T.textMuted }}>No nationality data yet.</div>}
-                            {topNats.map(([nat, count], i) => {
-                              const pct = Math.round((count / natMax) * 100);
-                              const totalPct = leads.length > 0 ? Math.round((count / leads.length) * 100) : 0;
-                              return (
-                                <div key={nat} style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                                  <div style={{ fontSize: 10, color: T.textMuted, width: 14, textAlign: "right", flexShrink: 0 }}>#{i + 1}</div>
-                                  <div style={{ fontSize: 11, color: T.textSecondary, width: 90, flexShrink: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{nat}</div>
-                                  <div style={{ flex: 1, height: 6, background: T.surfaceAlt, borderRadius: 3 }}>
-                                    <div style={{ height: "100%", width: `${pct}%`, background: `${T.gold}99`, borderRadius: 3, transition: "width 0.5s" }} />
-                                  </div>
-                                  <div style={{ fontSize: 10, color: T.textMuted, width: 36, textAlign: "right", flexShrink: 0 }}>{count}</div>
-                                  <div style={{ fontSize: 9, color: T.gold, width: 28, textAlign: "right", flexShrink: 0 }}>{totalPct}%</div>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* ── ROW 5: PIPELINE VALUE BY STAGE + TOP PROJECTS ──── */}
-                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 16 }}>
-
-                        {/* PIPELINE VALUE BY STAGE */}
-                        <div style={S.card}>
-                          <div style={S.label}>Pipeline Value by Stage (AED)</div>
-                          {totalPipelineVal === 0 ? (
-                            <div style={{ textAlign: "center", padding: "28px 0", color: T.textMuted, fontSize: 11 }}>No budget data on leads yet.</div>
-                          ) : (
-                            <>
-                              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                                {stageValue.filter(s => s.value > 0).map((s, i) => {
-                                  const pct = Math.round((s.value / totalPipelineVal) * 100);
-                                  return (
-                                    <div key={s.id}>
-                                      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
-                                        <span style={{ fontSize: 11, fontWeight: 600, color: s.color }}>{s.label}</span>
-                                        <span style={{ fontSize: 11, fontWeight: 700, color: T.white }}>AED {(s.value / 1e6).toFixed(1)}M <span style={{ fontSize: 9, color: T.textMuted }}>({pct}%)</span></span>
-                                      </div>
-                                      <div style={{ height: 8, background: T.surfaceAlt, borderRadius: 4, overflow: "hidden" }}>
-                                        <div style={{ height: "100%", width: `${pct}%`, background: `linear-gradient(90deg, ${s.color}, ${s.color}88)`, borderRadius: 4, transition: "width 0.6s" }} />
-                                      </div>
-                                    </div>
-                                  );
-                                })}
-                              </div>
-                              <div style={{ marginTop: 16, paddingTop: 12, borderTop: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between" }}>
-                                <span style={{ fontSize: 11, color: T.textMuted }}>Total Pipeline</span>
-                                <span style={{ fontSize: 14, fontWeight: 900, color: T.gold, fontFamily: "'Fraunces',serif" }}>AED {(totalPipelineVal / 1e6).toFixed(1)}M</span>
-                              </div>
-                            </>
-                          )}
-                        </div>
-
-                        {/* TOP PROJECTS */}
-                        <div style={S.card}>
-                          <div style={S.label}>Top Projects by Lead Volume</div>
-                          {topProjects.length === 0 ? (
-                            <div style={{ textAlign: "center", padding: "28px 0", color: T.textMuted, fontSize: 11 }}>No project data yet.</div>
-                          ) : (
-                            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                              {topProjects.map(([project, data], i) => {
-                                const wr = data.total > 0 ? Math.round((data.converted / data.total) * 100) : 0;
-                                const col = wr >= 50 ? T.green : wr >= 20 ? T.gold : T.textMuted;
-                                return (
-                                  <div key={project} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 12px", background: T.surfaceAlt, borderRadius: 8 }}>
-                                    <div style={{ width: 20, height: 20, borderRadius: 6, background: `${T.gold}20`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 800, color: T.gold, flexShrink: 0 }}>{i + 1}</div>
-                                    <div style={{ flex: 1, minWidth: 0 }}>
-                                      <div style={{ fontSize: 12, fontWeight: 600, color: T.white, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{project}</div>
-                                      <div style={{ fontSize: 10, color: T.textMuted }}>{data.total} leads · {data.hot} hot 🔥</div>
-                                    </div>
-                                    <div style={{ textAlign: "right", flexShrink: 0 }}>
-                                      <div style={{ fontSize: 13, fontWeight: 800, color: col, fontFamily: "'Fraunces',serif" }}>{wr}%</div>
-                                      <div style={{ fontSize: 9, color: T.textMuted }}>win rate</div>
-                                    </div>
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* ── ROW 6: COMMUNITY BREAKDOWN + HOT LEADS LIST ─────── */}
-                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1.4fr", gap: 16 }}>
-
-                        {/* COMMUNITY BREAKDOWN */}
-                        <div style={S.card}>
-                          <div style={S.label}>Top Communities</div>
-                          {topCommunities.length === 0 ? (
-                            <div style={{ textAlign: "center", padding: "28px 0", color: T.textMuted, fontSize: 11 }}>No community data yet.</div>
-                          ) : (
-                            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                              {topCommunities.map(([community, data], i) => {
-                                const wr = data.total > 0 ? Math.round((data.converted / data.total) * 100) : 0;
-                                const pct = leads.length > 0 ? Math.round((data.total / leads.length) * 100) : 0;
-                                return (
-                                  <div key={community}>
-                                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 3 }}>
-                                      <span style={{ fontSize: 11, fontWeight: 600, color: T.textSecondary, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "60%" }}>{community}</span>
-                                      <div style={{ display: "flex", gap: 8 }}>
-                                        <span style={{ fontSize: 10, color: T.textMuted }}>{data.total}</span>
-                                        <span style={{ fontSize: 10, fontWeight: 700, color: wr >= 30 ? T.green : T.gold }}>{wr}% win</span>
-                                      </div>
-                                    </div>
-                                    <div style={{ height: 5, background: T.surfaceAlt, borderRadius: 3 }}>
-                                      <div style={{ height: "100%", width: `${pct}%`, background: `${T.teal}88`, borderRadius: 3, transition: "width 0.5s" }} />
-                                    </div>
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          )}
-                        </div>
-
-                        {/* HOT LEADS READY TO CLOSE */}
-                        <div style={S.card}>
-                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-                            <div style={S.label}>🔥 Hot Leads — Ready to Close</div>
-                            <div style={{ fontSize: 11, fontWeight: 700, color: T.red }}>{stats.hot} total</div>
-                          </div>
-                          {stats.hot === 0 ? (
-                            <div style={{ textAlign: "center", padding: "28px 0", color: T.textMuted, fontSize: 11 }}>No hot leads yet. Score leads by adding phone, email, budget & project.</div>
-                          ) : (
-                            <div style={{ display: "flex", flexDirection: "column", gap: 6, maxHeight: 220, overflowY: "auto" }}>
-                              {leads
-                                .filter(l => scoreLead(l) >= 70 && l.status !== "Converted" && l.status !== "Lost")
-                                .sort((a, b) => scoreLead(b) - scoreLead(a))
-                                .slice(0, 10)
-                                .map((lead, i) => {
-                                  const score = scoreLead(lead);
-                                  const scoreCol = score >= 90 ? T.green : score >= 70 ? T.gold : T.orange;
-                                  return (
-                                    <div key={lead.id} onClick={() => setLeadDrawer(lead)} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 12px", background: T.surfaceAlt, borderRadius: 8, cursor: "pointer", border: `1px solid ${T.border}`, transition: "border-color 0.15s" }}
-                                      onMouseEnter={e => e.currentTarget.style.borderColor = T.gold}
-                                      onMouseLeave={e => e.currentTarget.style.borderColor = T.border}>
-                                      <div style={{ width: 32, height: 32, borderRadius: 8, background: `${scoreCol}20`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 900, color: scoreCol, flexShrink: 0 }}>{score}</div>
-                                      <div style={{ flex: 1, minWidth: 0 }}>
-                                        <div style={{ fontSize: 12, fontWeight: 600, color: T.white, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{lead.name || "Unnamed"}</div>
-                                        <div style={{ fontSize: 10, color: T.textMuted, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{lead.project || lead.community || "No project"} · {lead.nationality || "—"}</div>
-                                      </div>
-                                      <div style={{ textAlign: "right", flexShrink: 0 }}>
-                                        <div style={{ fontSize: 10, fontWeight: 700, color: lead.status === "Qualified" ? "#8B5CF6" : T.gold }}>{lead.status || "New"}</div>
-                                        {lead.budget && <div style={{ fontSize: 9, color: T.textMuted }}>AED {parseFloat(lead.budget).toLocaleString()}</div>}
-                                      </div>
-                                    </div>
-                                  );
-                                })}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-
-                    </div>
-                  );
-                })()}
-
-                {/* BULK ACTIONS */}
-                {leadSelectedIds.length > 0 && (
-                  <div className="fade-up" style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 16px", borderRadius: 10, background: `rgba(59,130,246,0.08)`, border: `1px solid rgba(59,130,246,0.3)`, marginBottom: 16 }}>
-                    <span style={{ fontSize: 12, fontWeight: 700, color: T.blue }}>{leadSelectedIds.length} selected</span>
-                    <div style={{ display: "flex", gap: 8, marginLeft: "auto" }}>
-                      {["Contacted", "Qualified", "Lost"].map(status => (
-                        <button key={status} type="button" onClick={() => bulkUpdateStatus(status)} style={{ fontSize: 11, padding: "6px 12px", borderRadius: 6, border: `1px solid ${statusColors[status]?.border}`, background: statusColors[status]?.bg, color: statusColors[status]?.color, cursor: "pointer", fontWeight: 600 }}>Set {status}</button>
-                      ))}
-                      <button type="button" onClick={() => {
-                        const targets = leads.filter(l => leadSelectedIds.includes(l.id) && l.email);
-                        if (targets.length === 0) { notify("No selected leads have email addresses"); return; }
-                        setShowLeadBulkEmail(true); setLeadBulkEmailTargets(targets);
-                      }} style={{ fontSize: 11, padding: "6px 12px", borderRadius: 6, border: `1px solid ${T.green}`, background: "rgba(16,185,129,0.08)", color: T.green, cursor: "pointer", fontWeight: 600 }}>
-                        ✉️ Email ({leads.filter(l => leadSelectedIds.includes(l.id) && l.email).length})
-                      </button>
-                      <button type="button" onClick={() => setLeadSelectedIds([])} style={{ fontSize: 11, padding: "6px 12px", borderRadius: 6, border: `1px solid ${T.border}`, background: "transparent", color: T.textMuted, cursor: "pointer" }}>Clear</button>
                     </div>
                   </div>
-                )}
 
-                {/* FILTERS */}
-                {(() => {
-                  // Use ALL leads for dropdowns — not filtered — so options are always complete
-                  const communities = [...new Set(leads.map(l => l.community).filter(Boolean).filter(c => c !== "nan" && c !== "NaN" && c.trim()))].sort();
-                  const nationalities = [...new Set(leads.map(l => l.nationality).filter(Boolean).filter(n => n.trim() && n !== "none" && n !== "Unknown" && n !== "nan" && n !== "null" && n !== "-"))].sort();
-                  const developers = [...new Set(leads.map(l => l.developer).filter(Boolean))].sort();
-                  const activeFiltersCount = [
-                    leadFilter !== "all", leadSourceFilter !== "all", leadDateRange !== "all", leadSearch,
-                    lfCommunity !== "all", lfNationality !== "all", lfBudgetMin, lfBudgetMax, lfScoreMin,
-                    lfPropType !== "all", lfLanguage !== "all", lfLeadAge !== "all",
-                    lfGoldenVisa, lfHasWhatsApp, lfHasEmail, lfNoWhatsApp,
-                    lfBedrooms !== "all", lfOffPlan !== "all", lfDeveloper !== "all",
-                    lfPayment !== "all", lfVisa !== "all", lfTag !== "all",
-                    lfNeverContacted, lfHasFollowUp,
-                    lfUnreachable, lfDupPhone, lfDupEmail, lfShortPhone,
-                  ].filter(Boolean).length;
-                  const sel = { padding: "9px 12px", background: T.surface, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textSecondary, fontSize: 11, fontFamily: "'Outfit',sans-serif", cursor: "pointer", outline: "none" };
-                  const toggleBtn = (active, onClick, label) => (
-                    <button type="button" onClick={onClick} style={{ padding: "8px 12px", borderRadius: 8, border: `1px solid ${active ? T.gold : T.border}`, background: active ? "rgba(212,168,67,0.12)" : T.surface, color: active ? T.gold : T.textMuted, fontSize: 11, fontWeight: active ? 700 : 400, cursor: "pointer", fontFamily: "'Outfit',sans-serif", whiteSpace: "nowrap" }}>{label}</button>
-                  );
-                  const clearAll = () => {
-                    setLeadFilter("all"); setLeadSourceFilter("all"); setLeadDateRange("all"); setLeadSearch("");
-                    setLfCommunity("all"); setLfNationality("all"); setLfBudgetMin(""); setLfBudgetMax(""); setLfScoreMin("");
-                    setLfPropType("all"); setLfLanguage("all"); setLfLeadAge("all");
-                    setLfGoldenVisa(false); setLfHasWhatsApp(false); setLfHasEmail(false); setLfNoWhatsApp(false);
-                    setLfBedrooms("all"); setLfOffPlan("all"); setLfDeveloper("all");
-                    setLfPayment("all"); setLfVisa("all"); setLfTag("all");
-                    setLfNeverContacted(false); setLfHasFollowUp(false); setLeadPage(1);
-                  };
-                  return (
-                    <div style={{ marginBottom: 16 }}>
-                      {/* Row 1: Search + Status + Source + Date + toggle */}
-                      <div style={{ display: "flex", gap: 8, marginBottom: 8, flexWrap: "wrap", alignItems: "center" }}>
-                        <input type="text" placeholder="🔍  Search by name, phone, email, project..." value={leadSearch} onChange={e => { setLeadSearch(e.target.value); setLeadPage(1); }}
-                          style={{ flex: 1, minWidth: 220, padding: "9px 14px", background: T.surface, border: `1px solid ${leadSearch ? T.gold : T.border}`, borderRadius: 8, color: T.white, fontSize: 12, fontFamily: "'Outfit',sans-serif", outline: "none" }} />
-                        <select value={leadFilter} onChange={e => { setLeadFilter(e.target.value); setLeadPage(1); }} style={sel}>
-                          <option value="all">📋 All Status</option>
-                          <option value="new">🆕 New</option>
-                          <option value="contacted">📞 Contacted</option>
-                          <option value="qualified">⭐ Qualified</option>
-                          <option value="converted">✅ Converted</option>
-                          <option value="lost">❌ Lost</option>
-                        </select>
-                        <select value={leadSourceFilter} onChange={e => { setLeadSourceFilter(e.target.value); setLeadPage(1); }} style={sel}>
-                          <option value="all">📋 All Sources</option>
-                          {sources.map(s => <option key={s} value={s}>{s}</option>)}
-                        </select>
-                        <select value={leadDateRange} onChange={e => { setLeadDateRange(e.target.value); setLeadPage(1); }} style={sel}>
-                          <option value="all">📅 All Time</option>
-                          <option value="today">Today</option>
-                          <option value="week">This Week</option>
-                          <option value="month">This Month</option>
-                          <option value="overdue">⚠️ Overdue</option>
-                          <option value="today_followup">🔔 Due Today</option>
-                        </select>
-                        <button type="button" onClick={() => setShowLeadFilters(p => !p)}
-                          style={{ padding: "9px 14px", borderRadius: 8, border: `1px solid ${showLeadFilters || activeFiltersCount > 0 ? T.gold : T.border}`, background: showLeadFilters || activeFiltersCount > 0 ? "rgba(212,168,67,0.1)" : T.surface, color: showLeadFilters || activeFiltersCount > 0 ? T.gold : T.textMuted, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
-                          ⚙ Filters {activeFiltersCount > 0 ? `(${activeFiltersCount})` : ""}
-                        </button>
-                        {activeFiltersCount > 0 && (
-                          <button type="button" onClick={clearAll} style={{ padding: "9px 12px", borderRadius: 8, border: "1px solid rgba(239,68,68,0.4)", background: "rgba(239,68,68,0.06)", color: T.red, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>✕ Clear All</button>
-                        )}
-                        {leadsLoading
-                          ? <span style={{ fontSize: 11, color: T.gold, fontWeight: 700 }}>⟳ Loading all leads...</span>
-                          : <span style={{ fontSize: 11, color: T.textMuted }}>
-                              {filtered.length !== leads.length
-                                ? <><strong style={{ color: T.gold }}>{filtered.length.toLocaleString()}</strong> matched · {leads.length.toLocaleString()} total</>
-                                : <><strong style={{ color: T.white }}>{leads.length.toLocaleString()}</strong> leads</>}
-                            </span>}
+                  {/* Project / community */}
+                  <div style={{ minWidth: 0 }}>
+                    {cleanProject(l.project) && (
+                      <div style={{ fontSize: 11, fontWeight: 600, color: T.white,
+                        overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        {cleanProject(l.project)}
                       </div>
-                      {/* Row 2: Advanced filters panel */}
-                      {showLeadFilters && (
-                        <div style={{ background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 12, padding: "14px 16px", display: "flex", gap: 10, flexWrap: "wrap", alignItems: "flex-end" }}>
-                          <div>
-                            <div style={{ fontSize: 9, color: T.textMuted, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 4 }}>Community</div>
-                            <select value={lfCommunity} onChange={e => { setLfCommunity(e.target.value); setLeadPage(1); }} style={sel}>
-                              <option value="all">All Communities</option>
-                              {communities.map(c => <option key={c} value={c}>{c}</option>)}
-                            </select>
-                          </div>
-                          <div>
-                            <div style={{ fontSize: 9, color: T.textMuted, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 4 }}>Nationality</div>
-                            <select value={lfNationality} onChange={e => { setLfNationality(e.target.value); setLeadPage(1); }} style={sel}>
-                              <option value="all">All Nationalities</option>
-                              {nationalities.map(n => <option key={n} value={n}>{n}</option>)}
-                            </select>
-                          </div>
-                          <div>
-                            <div style={{ fontSize: 9, color: T.textMuted, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 4 }}>Budget (AED)</div>
-                            <div style={{ display: "flex", gap: 4 }}>
-                              <input type="number" placeholder="Min" value={lfBudgetMin} onChange={e => { setLfBudgetMin(e.target.value); setLeadPage(1); }} style={{ ...sel, width: 90 }} />
-                              <input type="number" placeholder="Max" value={lfBudgetMax} onChange={e => { setLfBudgetMax(e.target.value); setLeadPage(1); }} style={{ ...sel, width: 90 }} />
-                            </div>
-                          </div>
-                          <div>
-                            <div style={{ fontSize: 9, color: T.textMuted, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 4 }}>Min Score</div>
-                            <select value={lfScoreMin} onChange={e => { setLfScoreMin(e.target.value); setLeadPage(1); }} style={sel}>
-                              <option value="">All Scores</option>
-                              <option value="70">Hot (70+)</option>
-                              <option value="40">Warm+ (40+)</option>
-                              <option value="20">20+</option>
-                            </select>
-                          </div>
-                          <div>
-                            <div style={{ fontSize: 9, color: T.textMuted, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 4 }}>Bedrooms</div>
-                            <select value={lfBedrooms} onChange={e => { setLfBedrooms(e.target.value); setLeadPage(1); }} style={sel}>
-                              <option value="all">All Beds</option>
-                              {["Studio","1","2","3","4","5","6+"].map(b => <option key={b} value={b}>{b === "Studio" ? "Studio" : `${b} BR`}</option>)}
-                            </select>
-                          </div>
-                          <div>
-                            <div style={{ fontSize: 9, color: T.textMuted, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 4 }}>Type</div>
-                            <select value={lfOffPlan} onChange={e => { setLfOffPlan(e.target.value); setLeadPage(1); }} style={sel}>
-                              <option value="all">Off-Plan / Ready</option>
-                              <option value="off-plan">Off-Plan</option>
-                              <option value="ready">Ready</option>
-                            </select>
-                          </div>
-                          <div>
-                            <div style={{ fontSize: 9, color: T.textMuted, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 4 }}>Developer</div>
-                            <select value={lfDeveloper} onChange={e => { setLfDeveloper(e.target.value); setLeadPage(1); }} style={sel}>
-                              <option value="all">All Developers</option>
-                              {developers.map(d => <option key={d} value={d}>{d}</option>)}
-                            </select>
-                          </div>
-                          <div>
-                            <div style={{ fontSize: 9, color: T.textMuted, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 4 }}>Lead Age</div>
-                            <select value={lfLeadAge} onChange={e => { setLfLeadAge(e.target.value); setLeadPage(1); }} style={sel}>
-                              <option value="all">All Ages</option>
-                              <option value="fresh">Fresh (0-7d)</option>
-                              <option value="week">1-4 weeks</option>
-                              <option value="month">1-3 months</option>
-                              <option value="old">3+ months</option>
-                            </select>
-                          </div>
-                          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center", marginTop: 2 }}>
-                            {toggleBtn(lfGoldenVisa, () => { setLfGoldenVisa(p=>!p); setLeadPage(1); }, "🏆 Golden Visa")}
-                            {toggleBtn(lfHasWhatsApp, () => { setLfHasWhatsApp(p=>!p); setLeadPage(1); }, "💬 Has WhatsApp")}
-                            {toggleBtn(lfNoWhatsApp, () => { setLfNoWhatsApp(p=>!p); setLeadPage(1); }, "✕ No WhatsApp")}
-                            {toggleBtn(lfHasEmail, () => { setLfHasEmail(p=>!p); setLeadPage(1); }, "📧 Has Email")}
-                            {toggleBtn(lfNeverContacted, () => { setLfNeverContacted(p=>!p); setLeadPage(1); }, "👻 Never Contacted")}
-                            {toggleBtn(lfHasFollowUp, () => { setLfHasFollowUp(p=>!p); setLeadPage(1); }, "🔔 Has Follow-up")}
-                            {toggleBtn(lfUnreachable, () => { setLfUnreachable(p=>!p); setLeadPage(1); }, "🚫 Unreachable")}
-                            {toggleBtn(lfDupPhone, () => { setLfDupPhone(p=>!p); setLeadPage(1); }, "📞 Dup Phone")}
-                            {toggleBtn(lfDupEmail, () => { setLfDupEmail(p=>!p); setLeadPage(1); }, "📧 Dup Email")}
-                            {toggleBtn(lfShortPhone, () => { setLfShortPhone(p=>!p); setLeadPage(1); }, "⚠️ Short Phone")}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })()}
-
-                {/* KANBAN VIEW */}
-                {leadsViewMode === "kanban" && !leadAnalyticsView && (
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 12, marginBottom: 20 }}>
-                    {[
-                      { id: "New", label: "New", color: "#3B82F6" },
-                      { id: "Contacted", label: "Contacted", color: T.gold },
-                      { id: "Qualified", label: "Qualified", color: "#8B5CF6" },
-                      { id: "Converted", label: "Converted", color: T.green },
-                      { id: "Lost", label: "Lost", color: T.red },
-                    ].map(stage => {
-                      const stageLeads = leads.filter(l => (l.status || "New") === stage.id).sort((a, b) => {
-                        if (isOverdue(a) && !isOverdue(b)) return -1;
-                        if (!isOverdue(a) && isOverdue(b)) return 1;
-                        return scoreLead(b) - scoreLead(a);
-                      });
-                      const stageValue = stageLeads.filter(l => l.budget).reduce((sum, l) => sum + (parseFloat(l.budget) || 0), 0);
-                      return (
-                        <div key={stage.id} style={{ background: T.surface, borderRadius: 12, border: `1px solid ${T.border}`, overflow: "hidden", display: "flex", flexDirection: "column" }}>
-                          <div style={{ padding: "12px 14px", borderBottom: `2px solid ${stage.color}`, background: `${stage.color}08`, flexShrink: 0 }}>
-                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
-                              <span style={{ fontSize: 12, fontWeight: 700, color: stage.color }}>{stage.label}</span>
-                              <span style={{ fontSize: 11, fontWeight: 600, padding: "2px 8px", borderRadius: 10, background: `${stage.color}20`, color: stage.color }}>{stageLeads.length}</span>
-                            </div>
-                            {stageValue > 0 && <div style={{ fontSize: 10, color: T.textMuted }}>AED {(stageValue/1000000).toFixed(1)}M pipeline</div>}
-                          </div>
-                          <div style={{ padding: "8px", overflowY: "auto", flex: 1, maxHeight: 420 }}>
-                            {stageLeads.length === 0 ? (
-                              <div style={{ padding: "24px 10px", textAlign: "center", color: T.textMuted, fontSize: 11 }}>No leads</div>
-                            ) : stageLeads.map(lead => {
-                              const score = scoreLead(lead);
-                              const overdue = isOverdue(lead);
-                              const dueToday = isDueToday(lead);
-                              return (
-                                <div key={lead.id} onClick={() => setLeadDrawer(lead)} style={{ padding: "10px 12px", background: overdue ? "rgba(239,68,68,0.06)" : T.surfaceAlt, borderRadius: 8, marginBottom: 6, cursor: "pointer", border: `1px solid ${overdue ? "rgba(239,68,68,0.4)" : T.border}`, transition: "all 0.15s" }}
-                                  onMouseEnter={e => { e.currentTarget.style.borderColor = stage.color + "60"; e.currentTarget.style.transform = "translateY(-1px)"; }}
-                                  onMouseLeave={e => { e.currentTarget.style.borderColor = overdue ? "rgba(239,68,68,0.4)" : T.border; e.currentTarget.style.transform = "none"; }}>
-                                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 4 }}>
-                                    <div style={{ fontSize: 12, fontWeight: 600, color: T.white, lineHeight: 1.3 }}>{lead.name || "Unknown"}</div>
-                                    <div style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: `${getScoreColor(score)}20`, color: getScoreColor(score), fontWeight: 700, flexShrink: 0, marginLeft: 4 }}>{getScoreLabel(score)}</div>
-                                  </div>
-                                  {lead.project && <div style={{ fontSize: 10, color: T.gold, marginBottom: 2, fontWeight: 500 }}>{lead.project}</div>}
-                                  {lead.budget && <div style={{ fontSize: 10, color: T.green }}>AED {parseFloat(lead.budget).toLocaleString()}</div>}
-                                  {lead.nationality && <div style={{ fontSize: 10, color: T.textMuted }}>({lead.nationality})</div>}
-                                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 6 }}>
-                                    <span style={{ fontSize: 9, color: overdue ? T.red : dueToday ? T.gold : T.textMuted, fontWeight: overdue || dueToday ? 700 : 400 }}>
-                                      {overdue ? "OVERDUE" : dueToday ? "Due today" : lead.createdAt ? timeSince(new Date(lead.createdAt)) : "-"}
-                                    </span>
-                                    <div style={{ display: "flex", gap: 4 }}>
-                                      {(lead.notes || []).length > 0 && <span style={{ fontSize: 9, padding: "1px 5px", borderRadius: 4, background: `rgba(20,184,166,0.2)`, color: T.teal }}>{lead.notes.length}</span>}
-                                      {lead.phone && <span style={{ fontSize: 9, padding: "1px 5px", borderRadius: 4, background: "rgba(16,185,129,0.15)", color: T.green }}>WA</span>}
-                                    </div>
-                                  </div>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      );
-                    })}
+                    )}
+                    {l.community && <div style={{ fontSize: 10, color: T.textMuted }}>{l.community}</div>}
+                    {l.bedrooms  && <div style={{ fontSize: 10, color: T.textMuted }}>{l.bedrooms} BR{l.planType ? ` · ${l.planType}` : ""}</div>}
                   </div>
-                )}
 
-                {/* TABLE VIEW */}
-                {leadsViewMode === "table" && !leadAnalyticsView && (
-                  <div style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, overflow: "hidden" }}>
-                    {filtered.length === 0 ? (
-                      <div style={{ textAlign: "center", padding: 60, color: T.textMuted }}>
-                        <div style={{ fontSize: 14, fontWeight: 600, color: T.textSecondary, marginBottom: 8 }}>{leads.length === 0 ? "No leads yet" : "No leads match filters"}</div>
-                        <div style={{ fontSize: 12, color: T.textMuted }}>{leads.length === 0 ? "Add your first lead using the + Add Lead button." : "Try adjusting your filters."}</div>
-                      </div>
+                  {/* Budget */}
+                  <span style={{ fontSize: 12, fontWeight: 700, color: T.gold }}>
+                    {l.budget ? `AED ${Number(l.budget).toLocaleString()}` : "—"}
+                  </span>
+
+                  {/* Score circle */}
+                  <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
+                    <div style={{ width: 30, height: 30, borderRadius: "50%",
+                      background: `${h.color}18`, border: `2px solid ${h.color}`,
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      fontSize: 9, fontWeight: 900, color: h.color }}>
+                      {score}
+                    </div>
+                    <span style={{ fontSize: 8, fontWeight: 700, color: h.color }}>{h.label}</span>
+                  </div>
+
+                  {/* Status inline select */}
+                  <select value={l.status || "New"} onChange={e => updateStatus(l.id, e.target.value)}
+                    style={{ padding: "4px 7px", fontSize: 10, fontWeight: 700, cursor: "pointer",
+                      borderRadius: 6, border: `1px solid ${sc.border}`,
+                      background: sc.bg, color: sc.text,
+                      fontFamily: "'Outfit',sans-serif", outline: "none", width: "100%" }}>
+                    {Object.keys(STATUS).map(s => <option key={s} value={s}>{s}</option>)}
+                  </select>
+
+                  {/* Follow-up date */}
+                  <div style={{ fontSize: 10 }}>
+                    {l.followUpDate ? (
+                      <span style={{ color: overdue ? T.red : dueToday ? T.gold : T.textMuted,
+                        fontWeight: overdue || dueToday ? 700 : 400 }}>
+                        {overdue ? "⚠ " : "📅 "}{l.followUpDate}
+                      </span>
                     ) : (
-                      <div style={{ overflowX: "auto" }}>
-                        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
-                          <thead>
-                            <tr style={{ borderBottom: `2px solid ${T.border}` }}>
-                              <th style={{ padding: "12px 14px", textAlign: "left", background: T.surfaceAlt, width: 36 }}>
-                                <input type="checkbox" checked={leadSelectedIds.length === filtered.length && filtered.length > 0} onChange={e => setLeadSelectedIds(e.target.checked ? filtered.map(l => l.id) : [])} style={{ cursor: "pointer", accentColor: T.gold }} />
-                              </th>
-                              {["Name / Score", "Contact", "Project / Budget", "Source", "Follow-Up", "Status", "Actions"].map(h => (
-                                <th key={h} style={{ padding: "12px 14px", textAlign: "left", color: T.gold, fontWeight: 600, fontSize: 10, letterSpacing: 0.5, textTransform: "uppercase", background: T.surfaceAlt }}>{h}</th>
-                              ))}
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {pagedLeads.map((lead) => {
-                              const sc = statusColors[lead.status || "New"] || statusColors.New;
-                              const score = scoreLead(lead);
-                              const overdue = isOverdue(lead);
-                              const dueToday = isDueToday(lead);
-                              const selected = leadSelectedIds.includes(lead.id);
-                              return (
-                                <tr key={lead.id} style={{ borderBottom: `1px solid ${T.border}`, background: selected ? "rgba(59,130,246,0.08)" : overdue ? "rgba(239,68,68,0.04)" : "transparent", cursor: "pointer" }}
-                                  onMouseEnter={e => { if (!selected && !overdue) e.currentTarget.style.background = T.surfaceAlt; }}
-                                  onMouseLeave={e => { e.currentTarget.style.background = selected ? "rgba(59,130,246,0.08)" : overdue ? "rgba(239,68,68,0.04)" : "transparent"; }}>
-                                  <td style={{ padding: "12px 14px" }} onClick={e => e.stopPropagation()}>
-                                    <input type="checkbox" checked={selected} onChange={e => setLeadSelectedIds(prev => e.target.checked ? [...prev, lead.id] : prev.filter(id => id !== lead.id))} style={{ cursor: "pointer", accentColor: T.blue }} />
-                                  </td>
-                                  <td style={{ padding: "12px 14px" }} onClick={() => setLeadDrawer(lead)}>
-                                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                                      <div style={{ width: 28, height: 28, borderRadius: 8, background: `${getScoreColor(score)}20`, color: getScoreColor(score), display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, flexShrink: 0 }}>{score}</div>
-                                      <div>
-                                        <div style={{ fontWeight: 600, color: T.white }}>{lead.name || "-"}</div>
-                                        <div style={{ fontSize: 10, color: getScoreColor(score), fontWeight: 600 }}>{getScoreLabel(score)}{lead.nationality ? ` - ${lead.nationality}` : ""}</div>
-                                      </div>
-                                    </div>
-                                  </td>
-                                  <td style={{ padding: "12px 14px" }} onClick={() => setLeadDrawer(lead)}>
-                                    <div style={{ fontSize: 11, color: T.textSecondary }}>{lead.email || "-"}</div>
-                                    {lead.phone && <div style={{ fontSize: 10, color: T.textMuted }}>{lead.phone}</div>}
-                                  </td>
-                                  <td style={{ padding: "12px 14px" }} onClick={() => setLeadDrawer(lead)}>
-                                    <div style={{ color: T.gold, fontWeight: 600 }}>{lead.project || "-"}</div>
-                                    {lead.budget && <div style={{ fontSize: 10, color: T.green }}>AED {parseFloat(lead.budget).toLocaleString()}</div>}
-                                    {lead.community && <div style={{ fontSize: 10, color: T.textMuted }}>{lead.community}</div>}
-                                  </td>
-                                  <td style={{ padding: "12px 14px" }}>
-                                    <span style={{ fontSize: 10, padding: "3px 8px", borderRadius: 6, background: lead.source === "WhatsApp" ? "rgba(37,211,102,0.15)" : "rgba(148,163,184,0.1)", color: lead.source === "WhatsApp" ? T.green : T.textSecondary }}>{lead.source || "-"}</span>
-                                  </td>
-                                  <td style={{ padding: "12px 14px" }} onClick={e => e.stopPropagation()}>
-                                    {lead.followUpDate ? (
-                                      <div>
-                                        <div style={{ fontSize: 11, color: overdue ? T.red : dueToday ? T.gold : T.textSecondary, fontWeight: overdue || dueToday ? 700 : 400 }}>
-                                          {overdue ? "OVERDUE " : dueToday ? "Today " : ""}{new Date(lead.followUpDate).toLocaleDateString("en-AE", { day: "2-digit", month: "short" })}
-                                        </div>
-                                        {lead.followUpNote && <div style={{ fontSize: 10, color: T.textMuted }}>{String(lead.followUpNote).slice(0, 20)}...</div>}
-                                      </div>
-                                    ) : (
-                                      <button type="button" onClick={() => setShowFollowUpModal(lead)} style={{ fontSize: 10, padding: "4px 8px", borderRadius: 6, border: `1px solid ${T.border}`, background: "transparent", color: T.textMuted, cursor: "pointer" }}>+ Set</button>
-                                    )}
-                                  </td>
-                                  <td style={{ padding: "12px 14px" }} onClick={e => e.stopPropagation()}>
-                                    <select value={lead.status || "New"} onChange={e => { if (e.target.value === "Lost") setShowLossReason(lead.id); else updateLeadStatus(lead.id, e.target.value); }} style={{ padding: "4px 8px", borderRadius: 6, border: `1px solid ${sc.border}`, background: sc.bg, color: sc.color, fontSize: 10, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
-                                      <option value="New">New</option><option value="Contacted">Contacted</option><option value="Qualified">Qualified</option><option value="Converted">Converted</option><option value="Lost">Lost</option>
-                                    </select>
-                                  </td>
-                                  <td style={{ padding: "12px 14px" }} onClick={e => e.stopPropagation()}>
-                                    <div style={{ display: "flex", gap: 5, flexWrap: "wrap" }}>
-                                      {(lead.tags||[]).includes("no_whatsapp")
-                                        ? <button type="button" title="Click to restore WhatsApp" onClick={async () => {
-                                            const tags = (lead.tags||[]).filter(t => t !== "no_whatsapp");
-                                            await setDoc(doc(db, "leads", lead.id), { tags, updatedAt: new Date().toISOString() }, { merge: true });
-                                            setLeads(prev => prev.map(l => l.id === lead.id ? { ...l, tags } : l));
-                                            notify("✅ WhatsApp restored");
-                                          }} style={{ fontSize: 10, padding: "4px 8px", borderRadius: 6, border: "1px solid rgba(239,68,68,0.4)", background: "rgba(239,68,68,0.1)", color: T.red, fontWeight: 600, cursor: "pointer" }}>No WA ↩</button>
-                                        : <>
-                                          {lead.phone && <a href={`https://wa.me/${lead.phone.replace(/\D/g, "")}?text=${encodeURIComponent(`Hi ${lead.name || ""}, following up on your interest in ${lead.project || "the property"}.`)}`} target="_blank" rel="noreferrer" style={{ fontSize: 10, padding: "4px 8px", borderRadius: 6, background: "rgba(37,211,102,0.15)", color: T.green, textDecoration: "none", fontWeight: 600 }}>WA</a>}
-                                          {lead.phone && <button type="button" title="Mark as No WhatsApp" onClick={async () => {
-                                            const tags = [...(lead.tags||[]).filter(t => t !== "no_whatsapp"), "no_whatsapp"];
-                                            await setDoc(doc(db, "leads", lead.id), { tags, updatedAt: new Date().toISOString() }, { merge: true });
-                                            setLeads(prev => prev.map(l => l.id === lead.id ? { ...l, tags } : l));
-                                            notify("Marked as No WhatsApp");
-                                          }} style={{ fontSize: 10, padding: "4px 8px", borderRadius: 6, border: "none", background: "rgba(239,68,68,0.1)", color: T.red, cursor: "pointer", fontWeight: 600 }}>✕WA</button>}
-                                        </>
-                                      }
-                                      <button type="button" onClick={() => setShowFollowUpModal(lead)} style={{ fontSize: 10, padding: "4px 8px", borderRadius: 6, border: "none", background: "rgba(212,168,67,0.12)", color: T.gold, cursor: "pointer", fontWeight: 600 }}>+Followup</button>
-                                      <button type="button" onClick={() => setLeadDrawer(lead)} style={{ fontSize: 10, padding: "4px 8px", borderRadius: 6, border: `1px solid ${T.gold}`, background: "rgba(212,168,67,0.08)", color: T.gold, cursor: "pointer", fontWeight: 600 }}>Open</button>
-                                    </div>
-                                  </td>
-                                </tr>
-                              );
-                            })}
-                          </tbody>
-                        </table>
-                        {/* PAGINATION */}
-                        {totalLeadPages > 1 && (
-                          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 20px", borderTop: `1px solid ${T.border}`, flexWrap: "wrap", gap: 10 }}>
-                            <span style={{ fontSize: 11, color: T.textMuted }}>
-                              Showing <strong style={{ color: T.white }}>{((leadPage-1)*LEADS_PER_PAGE+1).toLocaleString()}–{Math.min(leadPage*LEADS_PER_PAGE, filtered.length).toLocaleString()}</strong> of <strong style={{ color: T.gold }}>{filtered.length.toLocaleString()}</strong> leads
-                            </span>
-                            <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-                              <button type="button" onClick={() => setLeadPage(1)} disabled={leadPage===1} style={{ padding: "5px 10px", borderRadius: 7, border: `1px solid ${T.border}`, background: "transparent", color: leadPage===1?T.textMuted:T.textSecondary, cursor: leadPage===1?"not-allowed":"pointer", fontSize: 11 }}>«</button>
-                              <button type="button" onClick={() => setLeadPage(p=>Math.max(1,p-1))} disabled={leadPage===1} style={{ padding: "5px 10px", borderRadius: 7, border: `1px solid ${T.border}`, background: "transparent", color: leadPage===1?T.textMuted:T.textSecondary, cursor: leadPage===1?"not-allowed":"pointer", fontSize: 11 }}>←</button>
-                              {Array.from({length: Math.min(5, totalLeadPages)}, (_,i) => {
-                                let p;
-                                if (totalLeadPages<=5) p=i+1;
-                                else if (leadPage<=3) p=i+1;
-                                else if (leadPage>=totalLeadPages-2) p=totalLeadPages-4+i;
-                                else p=leadPage-2+i;
-                                return <button key={p} type="button" onClick={() => setLeadPage(p)} style={{ width:32, height:30, borderRadius:7, border:`1px solid ${p===leadPage?T.gold:T.border}`, background:p===leadPage?"rgba(212,168,67,0.15)":"transparent", color:p===leadPage?T.gold:T.textSecondary, cursor:"pointer", fontSize:11, fontWeight:p===leadPage?700:400 }}>{p}</button>;
-                              })}
-                              <button type="button" onClick={() => setLeadPage(p=>Math.min(totalLeadPages,p+1))} disabled={leadPage===totalLeadPages} style={{ padding: "5px 10px", borderRadius: 7, border: `1px solid ${T.border}`, background: "transparent", color: leadPage===totalLeadPages?T.textMuted:T.textSecondary, cursor: leadPage===totalLeadPages?"not-allowed":"pointer", fontSize: 11 }}>→</button>
-                              <button type="button" onClick={() => setLeadPage(totalLeadPages)} disabled={leadPage===totalLeadPages} style={{ padding: "5px 10px", borderRadius: 7, border: `1px solid ${T.border}`, background: "transparent", color: leadPage===totalLeadPages?T.textMuted:T.textSecondary, cursor: leadPage===totalLeadPages?"not-allowed":"pointer", fontSize: 11 }}>»</button>
-                            </div>
+                      <span style={{ color: T.textMuted, opacity: 0.4 }}>—</span>
+                    )}
+                    {!l.followUpDate && l.createdAt && (
+                      <div style={{ fontSize: 9, color: T.textMuted, marginTop: 1 }}>
+                        {timeAgo(l.createdAt)}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Action buttons */}
+                  <div style={{ display: "flex", gap: 4, justifyContent: "flex-end" }}>
+                    {l.phone && (
+                      <button type="button"
+                        onClick={() => openWhatsApp(l.phone, l.name)}
+                        title="WhatsApp"
+                        style={{ padding: "5px 7px", fontSize: 11, cursor: "pointer",
+                          fontFamily: "'Outfit',sans-serif",
+                          border: "1px solid rgba(37,211,102,0.4)",
+                          background: "rgba(37,211,102,0.1)", color: "#25D166", borderRadius: 6 }}>
+                        📱
+                      </button>
+                    )}
+                    <button type="button" onClick={() => setShowFollowUpModal(l)}
+                      title="Schedule follow-up"
+                      style={{ padding: "5px 7px", fontSize: 11, cursor: "pointer",
+                        fontFamily: "'Outfit',sans-serif", border: `1px solid ${T.border}`,
+                        background: "transparent", color: T.textMuted, borderRadius: 6 }}>
+                      📅
+                    </button>
+                    <button type="button"
+                      onClick={() => { setLeadDrawer(l); setLeadDrawerTab("details"); }}
+                      style={{ padding: "5px 10px", fontSize: 11, fontWeight: 700, cursor: "pointer",
+                        fontFamily: "'Outfit',sans-serif", border: `1px solid ${T.gold}`,
+                        background: "rgba(212,168,67,0.1)", color: T.gold, borderRadius: 6 }}>
+                      Open
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between",
+              padding: "9px 14px", borderTop: `1px solid ${T.border}` }}>
+              <span style={{ fontSize: 12, color: T.textMuted }}>
+                Page {leadPage} / {totalPages} · {filtered.length} leads
+              </span>
+              <div style={{ display: "flex", gap: 4 }}>
+                {leadPage > 1 && (
+                  <button type="button" onClick={() => setLeadPage(p => p - 1)}
+                    style={{ padding: "5px 12px", fontSize: 11, cursor: "pointer",
+                      fontFamily: "'Outfit',sans-serif", border: `1px solid ${T.border}`,
+                      background: "transparent", color: T.textMuted, borderRadius: 6 }}>
+                    ← Prev
+                  </button>
+                )}
+                {[...Array(Math.min(7, totalPages))].map((_, idx) => {
+                  const pg = totalPages <= 7 ? idx + 1
+                    : Math.max(1, Math.min(totalPages - 6, leadPage - 3)) + idx;
+                  return pg <= totalPages && (
+                    <button key={pg} type="button" onClick={() => setLeadPage(pg)}
+                      style={{ padding: "5px 10px", fontSize: 11, cursor: "pointer",
+                        fontFamily: "'Outfit',sans-serif",
+                        border: `1px solid ${pg === leadPage ? T.gold : T.border}`,
+                        background: pg === leadPage ? "rgba(212,168,67,0.1)" : "transparent",
+                        color: pg === leadPage ? T.gold : T.textMuted,
+                        borderRadius: 6, fontWeight: pg === leadPage ? 700 : 400 }}>
+                      {pg}
+                    </button>
+                  );
+                })}
+                {leadPage < totalPages && (
+                  <button type="button" onClick={() => setLeadPage(p => p + 1)}
+                    style={{ padding: "5px 12px", fontSize: 11, cursor: "pointer",
+                      fontFamily: "'Outfit',sans-serif", border: `1px solid ${T.border}`,
+                      background: "transparent", color: T.textMuted, borderRadius: 6 }}>
+                    Next →
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ══════════════════════════════════════════════════════════════
+          KANBAN VIEW — Pipedrive-style columns
+      ══════════════════════════════════════════════════════════════ */}
+      {leadsViewMode === "kanban" && (
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(5,1fr)", gap: 10, alignItems: "start" }}>
+          {PIPE.map(stage => {
+            const col = applyFilters(leads.filter(l =>
+              (l.status || "New").toLowerCase() === stage.id.toLowerCase()
+            ));
+            return (
+              <div key={stage.id} style={{ background: T.surface,
+                border: `1px solid ${T.border}`, borderRadius: 10, overflow: "hidden" }}>
+                {/* Column header */}
+                <div style={{ padding: "10px 12px", borderBottom: `1px solid ${T.border}`,
+                  display: "flex", justifyContent: "space-between", alignItems: "center",
+                  background: `linear-gradient(90deg,${stage.bg},transparent)` }}>
+                  <span style={{ fontSize: 10, fontWeight: 700, color: stage.text,
+                    textTransform: "uppercase", letterSpacing: 0.7 }}>
+                    {stage.label}
+                  </span>
+                  <span style={{ fontSize: 12, fontWeight: 900, color: stage.text,
+                    fontFamily: "'Fraunces',serif" }}>
+                    {col.length}
+                  </span>
+                </div>
+                {/* Cards */}
+                <div style={{ maxHeight: "68vh", overflowY: "auto", padding: 8,
+                  display: "flex", flexDirection: "column", gap: 6 }}>
+                  {col.slice(0, 25).map(l => {
+                    const sc  = scoreLead(l);
+                    const h   = heat(sc);
+                    const ov  = isOverdue(l);
+                    const rot = isRotting(l);
+                    return (
+                      <div key={l.id}
+                        onClick={() => { setLeadDrawer(l); setLeadDrawerTab("details"); }}
+                        style={{ background: T.bg,
+                          border: `1px solid ${ov ? "rgba(239,68,68,0.4)" : T.border}`,
+                          borderRadius: 8, padding: "10px 12px", cursor: "pointer",
+                          transition: "all 0.15s" }}
+                        onMouseEnter={e => {
+                          e.currentTarget.style.borderColor = stage.text;
+                          e.currentTarget.style.transform = "translateY(-1px)";
+                        }}
+                        onMouseLeave={e => {
+                          e.currentTarget.style.borderColor = ov ? "rgba(239,68,68,0.4)" : T.border;
+                          e.currentTarget.style.transform = "none";
+                        }}>
+                        <div style={{ display: "flex", justifyContent: "space-between",
+                          alignItems: "flex-start", marginBottom: 4 }}>
+                          <span style={{ fontSize: 12, fontWeight: 700, color: T.white,
+                            flex: 1, lineHeight: 1.3 }}>
+                            {l.name || "—"}
+                          </span>
+                          {/* Score circle */}
+                          <div style={{ width: 24, height: 24, borderRadius: "50%",
+                            background: `${h.color}18`, border: `1.5px solid ${h.color}`,
+                            display: "flex", alignItems: "center", justifyContent: "center",
+                            fontSize: 8, fontWeight: 900, color: h.color, flexShrink: 0, marginLeft: 6 }}>
+                            {sc}
+                          </div>
+                        </div>
+                        {cleanProject(l.project) && (
+                          <div style={{ fontSize: 10, color: T.textMuted, marginBottom: 2 }}>
+                            {cleanProject(l.project)}
                           </div>
                         )}
+                        {l.nationality && (
+                          <div style={{ fontSize: 10, color: T.textMuted, marginBottom: 4 }}>
+                            {l.nationality}
+                          </div>
+                        )}
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                          <span style={{ fontSize: 10, fontWeight: 700, color: T.gold }}>
+                            {l.budget ? `AED ${Number(l.budget).toLocaleString()}` : ""}
+                          </span>
+                          <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
+                            {ov  && <span style={{ fontSize: 9, color: T.red,  fontWeight: 700 }}>⚠</span>}
+                            {rot && !ov && <span style={{ fontSize: 9, color: T.gold, fontWeight: 700 }}>🕐</span>}
+                            {l.phone && (
+                              <span style={{ fontSize: 11, color: "#25D166", cursor: "pointer" }}
+                                onClick={e => { e.stopPropagation(); openWhatsApp(l.phone, l.name); }}>
+                                📱
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                  {col.length > 25 && (
+                    <div style={{ fontSize: 10, color: T.textMuted, textAlign: "center", padding: "6px 0" }}>
+                      +{col.length - 25} more
+                    </div>
+                  )}
+                  {col.length === 0 && (
+                    <div style={{ fontSize: 11, color: T.textMuted, textAlign: "center",
+                      padding: "24px 0", opacity: 0.4 }}>
+                      No leads
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* ══════════════════════════════════════════════════════════════
+          ANALYTICS VIEW
+      ══════════════════════════════════════════════════════════════ */}
+      {leadsViewMode === "analytics" && (
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+          {/* Pipeline funnel */}
+          <div style={{ background: T.surface, border: `1px solid ${T.border}`,
+            borderRadius: 12, padding: "16px 18px" }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 14 }}>Pipeline Funnel</div>
+            {PIPE.map(stage => {
+              const pct = S.total > 0 ? Math.round((stage.count / S.total) * 100) : 0;
+              return (
+                <div key={stage.id} style={{ marginBottom: 12 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
+                    <span style={{ fontSize: 12, color: T.white }}>{stage.label}</span>
+                    <div style={{ display: "flex", gap: 10 }}>
+                      <span style={{ fontSize: 10, color: T.textMuted }}>{pct}%</span>
+                      <span style={{ fontSize: 12, fontWeight: 700, color: stage.text }}>{stage.count}</span>
+                    </div>
+                  </div>
+                  <div style={{ background: "rgba(255,255,255,0.05)", borderRadius: 3, height: 8 }}>
+                    <div style={{ width: `${pct}%`, height: "100%",
+                      background: stage.text, borderRadius: 3 }} />
+                  </div>
+                </div>
+              );
+            })}
+            {/* Summary metrics */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginTop: 16,
+              paddingTop: 14, borderTop: `1px solid ${T.border}` }}>
+              {[
+                { l: "Win Rate",     v: `${winRate}%`,  c: T.green   },
+                { l: "Conversion",   v: `${convRate}%`, c: "#8B5CF6" },
+                { l: "Avg Response", v: avgResp != null ? `${avgResp}h` : "—", c: T.gold },
+                { l: "Overdue",      v: S.overdue,      c: T.red     },
+              ].map(({ l, v, c }) => (
+                <div key={l} style={{ background: T.bg, borderRadius: 8, padding: "10px 12px",
+                  border: `1px solid ${T.border}` }}>
+                  <div style={{ fontSize: 9, color: T.textMuted, textTransform: "uppercase",
+                    letterSpacing: 0.7, marginBottom: 2 }}>{l}</div>
+                  <div style={{ fontSize: 18, fontWeight: 900, color: c,
+                    fontFamily: "'Fraunces',serif" }}>{v}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Lead Sources */}
+          <div style={{ background: T.surface, border: `1px solid ${T.border}`,
+            borderRadius: 12, padding: "16px 18px" }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 14 }}>Lead Sources</div>
+            {Object.entries(
+              leads.reduce((acc, l) => {
+                const s = l.source || "Manual";
+                if (!acc[s]) acc[s] = { total: 0, converted: 0 };
+                acc[s].total++;
+                if (l.status === "Converted") acc[s].converted++;
+                return acc;
+              }, {})
+            ).sort((a, b) => b[1].total - a[1].total).slice(0, 8).map(([src, d]) => {
+              const max = Math.max(...Object.values(
+                leads.reduce((a, l) => {
+                  const s = l.source || "Manual";
+                  if (!a[s]) a[s] = 0;
+                  a[s]++;
+                  return a;
+                }, {})
+              ));
+              return (
+                <div key={src} style={{ marginBottom: 10 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
+                    <span style={{ fontSize: 12, color: T.white }}>{src}</span>
+                    <div style={{ display: "flex", gap: 10 }}>
+                      <span style={{ fontSize: 10, color: T.green }}>{d.converted} conv.</span>
+                      <span style={{ fontSize: 12, fontWeight: 700, color: T.gold }}>{d.total}</span>
+                    </div>
+                  </div>
+                  <div style={{ background: "rgba(255,255,255,0.05)", borderRadius: 3, height: 5 }}>
+                    <div style={{ width: `${Math.round((d.total / max) * 100)}%`,
+                      height: "100%", background: T.gold, borderRadius: 3 }} />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Hot leads */}
+          <div style={{ background: T.surface, border: `1px solid ${T.border}`,
+            borderRadius: 12, padding: "16px 18px" }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 12 }}>
+              🔥 Top Leads by Score
+            </div>
+            {[...leads].sort((a, b) => scoreLead(b) - scoreLead(a)).slice(0, 8).map(l => {
+              const sc = scoreLead(l);
+              const h  = heat(sc);
+              return (
+                <div key={l.id}
+                  onClick={() => { setLeadDrawer(l); setLeadDrawerTab("details"); setLeadsViewMode("table"); }}
+                  style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 0",
+                    borderBottom: `1px solid ${T.border}`, cursor: "pointer" }}>
+                  <div style={{ width: 28, height: 28, borderRadius: "50%",
+                    background: `${h.color}18`, border: `2px solid ${h.color}`,
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    fontSize: 9, fontWeight: 900, color: h.color, flexShrink: 0 }}>
+                    {sc}
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: T.white }}>{l.name || "—"}</div>
+                    <div style={{ fontSize: 10, color: T.textMuted }}>
+                      {l.nationality || ""}
+                      {l.budget ? ` · AED ${Number(l.budget).toLocaleString()}` : ""}
+                    </div>
+                  </div>
+                  <div style={{ padding: "2px 8px", borderRadius: 10, fontSize: 9, fontWeight: 700,
+                    border: `1px solid ${STATUS[l.status || "New"]?.border}`,
+                    background: STATUS[l.status || "New"]?.bg,
+                    color: STATUS[l.status || "New"]?.text, whiteSpace: "nowrap" }}>
+                    {l.status || "New"}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Top nationalities */}
+          <div style={{ background: T.surface, border: `1px solid ${T.border}`,
+            borderRadius: 12, padding: "16px 18px" }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 12 }}>
+              Top Nationalities
+            </div>
+            {Object.entries(
+              leads.reduce((a, l) => {
+                if (l.nationality) { if (!a[l.nationality]) a[l.nationality] = 0; a[l.nationality]++; }
+                return a;
+              }, {})
+            ).sort((a, b) => b[1] - a[1]).slice(0, 10).map(([nat, count]) => (
+              <div key={nat} style={{ display: "flex", justifyContent: "space-between",
+                alignItems: "center", padding: "7px 0", borderBottom: `1px solid ${T.border}` }}>
+                <span style={{ fontSize: 12, color: T.white }}>{nat}</span>
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <div style={{ width: 60, background: "rgba(255,255,255,0.05)",
+                    borderRadius: 3, height: 5 }}>
+                    <div style={{ width: `${Math.round((count / leads.length) * 100)}%`,
+                      height: "100%", background: T.teal, borderRadius: 3 }} />
+                  </div>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: T.gold, minWidth: 20 }}>{count}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ══════════════════════════════════════════════════════════════
+          LEAD DETAIL DRAWER (right slide-in panel)
+      ══════════════════════════════════════════════════════════════ */}
+      {leadDrawer && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 1500, display: "flex" }}
+          onClick={e => { if (e.target === e.currentTarget) setLeadDrawer(null); }}>
+          {/* Dim backdrop */}
+          <div style={{ flex: 1, background: "rgba(0,0,0,0.55)",
+            backdropFilter: "blur(3px)" }}
+            onClick={() => setLeadDrawer(null)} />
+
+          {/* Drawer panel */}
+          <div style={{ width: 460, background: T.bg,
+            borderLeft: `1px solid ${T.border}`,
+            display: "flex", flexDirection: "column", overflowY: "auto" }}>
+
+            {/* ── Header ──────────────────────────────────────────── */}
+            <div style={{ padding: "16px 20px", borderBottom: `1px solid ${T.border}`,
+              background: T.surface, flexShrink: 0 }}>
+              <div style={{ display: "flex", alignItems: "flex-start",
+                justifyContent: "space-between", marginBottom: 12 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                  <div style={{ width: 44, height: 44, borderRadius: "50%",
+                    background: "rgba(212,168,67,0.15)", border: `2px solid ${T.gold}`,
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    fontSize: 16, fontWeight: 700, color: T.gold, flexShrink: 0 }}>
+                    {initials(leadDrawer.name)}
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 17, fontWeight: 900, color: T.white,
+                      fontFamily: "'Fraunces',serif" }}>
+                      {leadDrawer.name || "Unnamed Lead"}
+                    </div>
+                    <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>
+                      {leadDrawer.nationality || ""}
+                      {leadDrawer.source ? ` · via ${leadDrawer.source}` : ""}
+                      {leadDrawer.createdAt ? ` · ${timeAgo(leadDrawer.createdAt)}` : ""}
+                    </div>
+                  </div>
+                </div>
+                <button type="button" onClick={() => setLeadDrawer(null)}
+                  style={{ background: "rgba(255,255,255,0.06)", border: `1px solid ${T.border}`,
+                    borderRadius: 7, color: T.textMuted, fontSize: 15, cursor: "pointer",
+                    padding: "4px 10px", fontFamily: "'Outfit',sans-serif" }}>
+                  ✕
+                </button>
+              </div>
+
+              {/* Status picker + score */}
+              <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
+                {Object.entries(STATUS).map(([s, sc]) => (
+                  <button key={s} type="button"
+                    onClick={() => updateStatus(leadDrawer.id, s)}
+                    style={{ padding: "4px 10px", fontSize: 10, fontWeight: 700, cursor: "pointer",
+                      fontFamily: "'Outfit',sans-serif",
+                      border: `1px solid ${(leadDrawer.status || "New") === s ? sc.border : T.border}`,
+                      background: (leadDrawer.status || "New") === s ? sc.bg : "transparent",
+                      color: (leadDrawer.status || "New") === s ? sc.text : T.textMuted,
+                      borderRadius: 6 }}>
+                    {s}
+                  </button>
+                ))}
+                <div style={{ marginLeft: "auto", fontSize: 12, fontWeight: 900,
+                  color: heat(scoreLead(leadDrawer)).color }}>
+                  Score: {scoreLead(leadDrawer)} · {heat(scoreLead(leadDrawer)).label}
+                </div>
+              </div>
+            </div>
+
+            {/* ── Tabs ────────────────────────────────────────────── */}
+            <div style={{ display: "flex", borderBottom: `1px solid ${T.border}`, flexShrink: 0 }}>
+              {[["details","Details"],["activity","Activity"],["email","Email"]].map(([t, label]) => (
+                <button key={t} type="button" onClick={() => setLeadDrawerTab(t)}
+                  style={{ flex: 1, padding: "10px 0", fontSize: 12, fontWeight: 600,
+                    cursor: "pointer", fontFamily: "'Outfit',sans-serif", border: "none",
+                    borderBottom: `2px solid ${leadDrawerTab === t ? T.gold : "transparent"}`,
+                    background: "transparent",
+                    color: leadDrawerTab === t ? T.gold : T.textMuted }}>
+                  {label}
+                </button>
+              ))}
+            </div>
+
+            {/* ── Details tab ─────────────────────────────────────── */}
+            {leadDrawerTab === "details" && (
+              <div style={{ padding: "16px 20px", flex: 1, overflowY: "auto" }}>
+                {/* Quick action buttons */}
+                <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
+                  {leadDrawer.phone && (
+                    <button type="button"
+                      onClick={() => openWhatsApp(leadDrawer.phone, leadDrawer.name)}
+                      style={{ flex: 1, padding: "9px 0", fontSize: 12, fontWeight: 700,
+                        cursor: "pointer", fontFamily: "'Outfit',sans-serif",
+                        border: "1px solid rgba(37,211,102,0.4)",
+                        background: "rgba(37,211,102,0.1)", color: "#25D166", borderRadius: 8 }}>
+                      📱 WhatsApp
+                    </button>
+                  )}
+                  {leadDrawer.email && (
+                    <button type="button" onClick={() => setLeadDrawerTab("email")}
+                      style={{ flex: 1, padding: "9px 0", fontSize: 12, fontWeight: 700,
+                        cursor: "pointer", fontFamily: "'Outfit',sans-serif",
+                        border: `1px solid ${T.border}`, background: "transparent",
+                        color: T.textMuted, borderRadius: 8 }}>
+                      ✉ Email
+                    </button>
+                  )}
+                  <button type="button" onClick={() => setShowFollowUpModal(leadDrawer)}
+                    style={{ flex: 1, padding: "9px 0", fontSize: 12, fontWeight: 700,
+                      cursor: "pointer", fontFamily: "'Outfit',sans-serif",
+                      border: `1px solid ${T.gold}`, background: "rgba(212,168,67,0.1)",
+                      color: T.gold, borderRadius: 8 }}>
+                    📅 Follow-up
+                  </button>
+                </div>
+
+                {/* Contact details */}
+                {[
+                  ["Email",       leadDrawer.email],
+                  ["Phone",       leadDrawer.phone],
+                  ["Nationality", leadDrawer.nationality],
+                  ["Language",    leadDrawer.language],
+                  ["Source",      leadDrawer.source],
+                  ["Created",     leadDrawer.createdAt?.slice(0, 16)?.replace("T", " ")],
+                ].filter(([, v]) => v).map(([label, value]) => (
+                  <div key={label} style={{ display: "flex", justifyContent: "space-between",
+                    padding: "7px 0", borderBottom: `1px solid ${T.border}`, alignItems: "center" }}>
+                    <span style={{ fontSize: 11, color: T.textMuted, fontWeight: 600 }}>{label}</span>
+                    <span style={{ fontSize: 12, color: T.white, textAlign: "right",
+                      maxWidth: "60%", wordBreak: "break-word" }}>
+                      {value}
+                    </span>
+                  </div>
+                ))}
+
+                {/* Property interest */}
+                <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted,
+                  textTransform: "uppercase", letterSpacing: 0.8,
+                  marginTop: 16, marginBottom: 8 }}>
+                  Property Interest
+                </div>
+                {[
+                  ["Budget", leadDrawer.budget ? fmtBudget(leadDrawer.budget) : ""],
+                  ["Project",    cleanProject(leadDrawer.project)],
+                  ["Community",  leadDrawer.community],
+                  ["Bedrooms",   leadDrawer.beds || leadDrawer.bedrooms],
+                  ["Type",       leadDrawer.planType || leadDrawer.propertyType],
+                  ["Developer",  leadDrawer.developer],
+                  ["Golden Visa",(parseFloat(leadDrawer.budget) || 0) >= 2000000 ? "✓ Eligible" : null],
+                ].filter(([, v]) => v).map(([label, value]) => (
+                  <div key={label} style={{ display: "flex", justifyContent: "space-between",
+                    padding: "7px 0", borderBottom: `1px solid ${T.border}`, alignItems: "center" }}>
+                    <span style={{ fontSize: 11, color: T.textMuted, fontWeight: 600 }}>{label}</span>
+                    <span style={{ fontSize: 12, textAlign: "right",
+                      color: label === "Budget" ? T.gold
+                           : label === "Golden Visa" ? "#8B5CF6"
+                           : T.white,
+                      fontWeight: label === "Budget" || label === "Golden Visa" ? 700 : 400 }}>
+                      {value}
+                    </span>
+                  </div>
+                ))}
+
+                {/* Follow-up scheduled */}
+                {leadDrawer.followUpDate && (
+                  <div style={{ marginTop: 14, padding: "10px 12px",
+                    background: isOverdue(leadDrawer) ? "rgba(239,68,68,0.08)" : "rgba(212,168,67,0.08)",
+                    border: `1px solid ${isOverdue(leadDrawer) ? "rgba(239,68,68,0.3)" : "rgba(212,168,67,0.3)"}`,
+                    borderRadius: 8 }}>
+                    <div style={{ fontSize: 11, fontWeight: 700,
+                      color: isOverdue(leadDrawer) ? T.red : T.gold, marginBottom: 4 }}>
+                      {isOverdue(leadDrawer) ? "⚠ Overdue" : "📅 Scheduled"} Follow-up
+                    </div>
+                    <div style={{ fontSize: 12, color: T.white }}>{leadDrawer.followUpDate}</div>
+                    {leadDrawer.followUpNote && (
+                      <div style={{ fontSize: 11, color: T.textMuted, marginTop: 4 }}>
+                        {leadDrawer.followUpNote}
                       </div>
                     )}
                   </div>
                 )}
 
-                {/* LEAD BULK EMAIL MODAL */}
-                {showLeadBulkEmail && (
-                  <div style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.92)", zIndex: 9000, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(8px)", padding: 20 }} onClick={() => { if (!leadBulkEmailSending) setShowLeadBulkEmail(false); }}>
-                    <div style={{ background: T.surface, border: `1px solid rgba(16,185,129,0.3)`, borderRadius: 16, width: "100%", maxWidth: 540, padding: 28 }} onClick={e => e.stopPropagation()}>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-                        <div>
-                          <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 700, color: T.green, margin: 0 }}>✉️ Email Leads</h3>
-                          <p style={{ fontSize: 12, color: T.textMuted, margin: "4px 0 0" }}>{leadBulkEmailTargets.length} leads with emails selected · Use {"{name}"}, {"{community}"}, {"{project}"}</p>
-                        </div>
-                        {!leadBulkEmailSending && <button type="button" onClick={() => setShowLeadBulkEmail(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 22 }}>×</button>}
+                {/* Notes */}
+                <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted,
+                  textTransform: "uppercase", letterSpacing: 0.8,
+                  marginTop: 16, marginBottom: 10 }}>
+                  Notes
+                </div>
+                {(leadDrawer.notes || []).slice().reverse().map((n, i) => (
+                  <div key={i} style={{ padding: "8px 10px", background: T.surface,
+                    borderRadius: 7, border: `1px solid ${T.border}`, marginBottom: 6 }}>
+                    <div style={{ fontSize: 12, color: T.white, lineHeight: 1.5, marginBottom: 3 }}>
+                      {n.text}
+                    </div>
+                    <div style={{ fontSize: 9, color: T.textMuted }}>
+                      {n.by} · {n.at?.slice(0, 16)?.replace("T", " ")}
+                    </div>
+                  </div>
+                ))}
+                <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+                  <input type="text" placeholder="Add a note..."
+                    value={leadNote} onChange={e => setLeadNote(e.target.value)}
+                    onKeyDown={e => { if (e.key === "Enter") addNote(); }}
+                    style={{ flex: 1, padding: "8px 12px", background: T.surface,
+                      border: `1px solid ${T.border}`, borderRadius: 7, color: T.white,
+                      fontSize: 12, outline: "none", fontFamily: "'Outfit',sans-serif" }} />
+                  <button type="button" onClick={addNote} disabled={leadNoteSaving}
+                    style={{ padding: "8px 14px", fontSize: 12, fontWeight: 700, cursor: "pointer",
+                      fontFamily: "'Outfit',sans-serif", border: `1px solid ${T.gold}`,
+                      background: "rgba(212,168,67,0.1)", color: T.gold, borderRadius: 7 }}>
+                    {leadNoteSaving ? "…" : "Save"}
+                  </button>
+                </div>
+
+                {/* Convert to user */}
+                {leadDrawer.status !== "Converted" && (
+                  <div style={{ marginTop: 18, paddingTop: 16, borderTop: `1px solid ${T.border}` }}>
+                    <button type="button" onClick={convertToUser} disabled={convertingLead}
+                      style={{ width: "100%", padding: "11px 0", fontSize: 13, fontWeight: 700,
+                        cursor: "pointer", fontFamily: "'Outfit',sans-serif",
+                        border: `1px solid ${T.green}`, background: "rgba(16,185,129,0.1)",
+                        color: T.green, borderRadius: 8 }}>
+                      {convertingLead ? "Converting…" : "✓ Convert to Platform User"}
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* ── Activity tab ─────────────────────────────────────── */}
+            {leadDrawerTab === "activity" && (
+              <div style={{ padding: "16px 20px", flex: 1, overflowY: "auto" }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 14 }}>
+                  Activity Timeline
+                </div>
+                {[...(leadDrawer.activity || [])].reverse().map((a, i) => (
+                  <div key={i} style={{ display: "flex", gap: 10, marginBottom: 12,
+                    paddingBottom: 12, borderBottom: `1px solid ${T.border}` }}>
+                    <div style={{ width: 28, height: 28, borderRadius: "50%",
+                      background: T.surface, border: `1px solid ${T.border}`,
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      fontSize: 11, flexShrink: 0 }}>
+                      {a.type === "created" ? "+" : a.type === "status_change" ? "→"
+                       : a.type === "note" ? "N" : a.type === "email_sent" ? "@"
+                       : a.type === "followup_scheduled" ? "📅" : "·"}
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 12, color: T.white, lineHeight: 1.4 }}>
+                        {a.note || a.type}
                       </div>
-                      <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 14 }}>
-                        {[
-                          { label: "Follow-up", subject: "Following up on your property inquiry", body: "Hi {name},\n\nI wanted to follow up on your interest in {community}. We have some exciting new options available.\n\nWould you be available for a quick call?\n\nBest regards,\nThe Address Holding Team" },
-                          { label: "New Listing", subject: "New property available in {community}", body: "Hi {name},\n\nWe have a new listing in {community} that matches your criteria.\n\nWould you like to schedule a viewing?\n\nBest regards,\nThe Address Holding Team" },
-                          { label: "Golden Visa", subject: "You may qualify for a UAE Golden Visa", body: "Hi {name},\n\nBased on your interest in {community}, you may qualify for the UAE Golden Visa.\n\nProperties valued at AED 2M+ are eligible. Let us guide you through the process.\n\nBest regards,\nThe Address Holding Team" },
-                        ].map(t => (
-                          <button key={t.label} type="button" onClick={() => { setLeadBulkEmailSubject(t.subject); setLeadBulkEmailBody(t.body); }}
-                            style={{ fontSize: 11, padding: "5px 10px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.surfaceAlt, color: T.textSecondary, cursor: "pointer" }}>{t.label}</button>
-                        ))}
-                      </div>
-                      <div style={{ marginBottom: 12 }}>
-                        <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, display: "block", marginBottom: 6 }}>Subject *</label>
-                        <input type="text" value={leadBulkEmailSubject} onChange={e => setLeadBulkEmailSubject(e.target.value)} placeholder="Email subject..." style={{ width: "100%", padding: "10px 14px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif", outline: "none", boxSizing: "border-box" }} />
-                      </div>
-                      <div style={{ marginBottom: 16 }}>
-                        <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, display: "block", marginBottom: 6 }}>Message *</label>
-                        <textarea value={leadBulkEmailBody} onChange={e => setLeadBulkEmailBody(e.target.value)} rows={6} placeholder="Write your message..." style={{ width: "100%", padding: "10px 14px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif", outline: "none", resize: "vertical", boxSizing: "border-box" }} />
-                      </div>
-                      {leadBulkEmailSending && (
-                        <div style={{ marginBottom: 14 }}>
-                          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
-                            <span style={{ fontSize: 11, color: T.textMuted }}>Sending...</span>
-                            <span style={{ fontSize: 11, fontWeight: 700, color: T.green }}>{leadBulkEmailProgress} / {leadBulkEmailTargets.length}</span>
-                          </div>
-                          <div style={{ height: 4, borderRadius: 2, background: T.border }}>
-                            <div style={{ height: "100%", borderRadius: 2, background: T.green, width: `${leadBulkEmailTargets.length > 0 ? (leadBulkEmailProgress / leadBulkEmailTargets.length) * 100 : 0}%`, transition: "width 0.3s" }} />
-                          </div>
-                        </div>
-                      )}
-                      <div style={{ display: "flex", gap: 10 }}>
-                        <button type="button" onClick={() => setShowLeadBulkEmail(false)} disabled={leadBulkEmailSending} style={{ flex: 1, padding: "12px", borderRadius: 10, border: `1px solid ${T.border}`, background: "transparent", color: T.textSecondary, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>Cancel</button>
-                        <button type="button" disabled={leadBulkEmailSending || !leadBulkEmailSubject || !leadBulkEmailBody}
-                          onClick={async () => {
-                            if (!leadBulkEmailSubject || !leadBulkEmailBody) { notify("Subject and message required"); return; }
-                            setLeadBulkEmailSending(true); setLeadBulkEmailProgress(0);
-                            let sent = 0; const BATCH = 10;
-                            for (let i = 0; i < leadBulkEmailTargets.length; i += BATCH) {
-                              const chunk = leadBulkEmailTargets.slice(i, i + BATCH);
-                              await Promise.allSettled(chunk.map(async lead => {
-                                try {
-                                  const body = leadBulkEmailBody.replace(/\{name\}/g, lead.name||"there").replace(/\{community\}/g, lead.community||"Dubai").replace(/\{project\}/g, lead.project||"your property");
-                                  const subject = leadBulkEmailSubject.replace(/\{name\}/g, lead.name||"there").replace(/\{community\}/g, lead.community||"Dubai");
-                                  await sendResend(lead.email, subject, body);
-                                  sent++;
-                                } catch(e) {}
-                              }));
-                              setLeadBulkEmailProgress(Math.min(i + BATCH, leadBulkEmailTargets.length));
-                              await new Promise(r => setTimeout(r, 200));
-                            }
-                            setLeadBulkEmailSending(false);
-                            notify(`✅ Sent ${sent}/${leadBulkEmailTargets.length} emails to leads`);
-                            setShowLeadBulkEmail(false); setLeadBulkEmailSubject(""); setLeadBulkEmailBody(""); setLeadBulkEmailTargets([]); setLeadSelectedIds([]);
-                          }}
-                          style={{ flex: 2, padding: "12px", borderRadius: 10, border: "none", background: leadBulkEmailSending ? T.surfaceAlt : `linear-gradient(135deg,${T.green},#059669)`, color: leadBulkEmailSending ? T.textMuted : T.bg, fontSize: 14, fontWeight: 700, cursor: leadBulkEmailSending ? "not-allowed" : "pointer", fontFamily: "'Outfit',sans-serif" }}>
-                          {leadBulkEmailSending ? `Sending ${leadBulkEmailProgress}/${leadBulkEmailTargets.length}...` : `🚀 Send to ${leadBulkEmailTargets.length} leads`}
-                        </button>
+                      <div style={{ fontSize: 9, color: T.textMuted, marginTop: 2 }}>
+                        {a.by} · {a.at?.slice(0, 16)?.replace("T", " ")}
                       </div>
                     </div>
                   </div>
-                )}
-
-                {/* ADD LEAD MODAL */}
-
-                {/* ── ADD USER MODAL ── same pattern as Add Lead ── */}
-                {showAddUser && (
-                  <div style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.92)", zIndex: 9000, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(8px)" }} onClick={() => setShowAddUser(false)}>
-                    <div style={{ background: T.surface, border: `1px solid ${T.gold}40`, borderRadius: 16, width: "95%", maxWidth: 540, padding: 28, maxHeight: "85vh", overflowY: "auto" }} onClick={e => e.stopPropagation()}>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-                        <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 700, color: T.gold }}>+ Add New User</h3>
-                        <button type="button" onClick={() => setShowAddUser(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 22 }}>×</button>
-                      </div>
-                      <div style={{ background: "rgba(59,130,246,0.06)", border: "1px solid rgba(59,130,246,0.2)", borderRadius: 10, padding: "10px 14px", marginBottom: 16, fontSize: 12, color: "#93C5FD" }}>
-                        <strong>Note:</strong> The new user will receive a verification email. You will remain logged in as admin.
-                      </div>
-                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-                        {[
-                          { key: "name",     label: "Full Name *",      placeholder: "John Smith",         full: true },
-                          { key: "email",    label: "Email Address *",  placeholder: "john@company.com",   full: true, type: "email" },
-                          { key: "password", label: "Password *",       placeholder: "Min 6 characters",   full: true, type: "password" },
-                        ].map(f => (
-                          <div key={f.key} style={{ gridColumn: f.full ? "1/-1" : "auto" }}>
-                            <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>{f.label}</label>
-                            <input type={f.type || "text"} placeholder={f.placeholder} value={addUserForm[f.key] || ""} onChange={e => setAddUserForm(p => ({ ...p, [f.key]: e.target.value }))}
-                              style={{ width: "100%", padding: "10px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif", boxSizing: "border-box" }} />
-                            {f.key === "password" && addUserForm.password && addUserForm.password.length < 6 && (
-                              <div style={{ fontSize: 11, color: T.red, marginTop: 4 }}>⚡ Min 6 characters</div>
-                            )}
-                          </div>
-                        ))}
-                        <div style={{ gridColumn: "1/-1" }}>
-                          <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>Phone / WhatsApp</label>
-                          <div style={{ display: "flex", gap: 8 }}>
-                            <select value={addUserForm.phoneCode || "+971"} onChange={e => setAddUserForm(p => ({ ...p, phoneCode: e.target.value, phone: e.target.value + (p.phoneNum || "").replace(/\s/g, "") }))}
-                              style={{ width: 180, padding: "10px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 12, fontFamily: "'Outfit',sans-serif", flexShrink: 0 }}>
-                              {[["+971","🇦🇪 UAE"],["+91","🇮🇳 India"],["+92","🇵🇰 Pakistan"],["+44","🇬🇧 UK"],["+1","🇺🇸 USA"],["+966","🇸🇦 Saudi Arabia"],["+974","🇶🇦 Qatar"],["+965","🇰🇼 Kuwait"],["+968","🇴🇲 Oman"],["+973","🇧🇭 Bahrain"],["+20","🇪🇬 Egypt"],["+962","🇯🇴 Jordan"],["+961","🇱🇧 Lebanon"],["+963","🇸🇾 Syria"],["+964","🇮🇶 Iraq"],["+98","🇮🇷 Iran"],["+880","🇧🇩 Bangladesh"],["+94","🇱🇰 Sri Lanka"],["+977","🇳🇵 Nepal"],["+63","🇵🇭 Philippines"],["+234","🇳🇬 Nigeria"],["+254","🇰🇪 Kenya"],["+27","🇿🇦 South Africa"],["+33","🇫🇷 France"],["+49","🇩🇪 Germany"],["+39","🇮🇹 Italy"],["+34","🇪🇸 Spain"],["+7","🇷🇺 Russia"],["+86","🇨🇳 China"],["+81","🇯🇵 Japan"],["+82","🇰🇷 Korea"],["+55","🇧🇷 Brazil"],["+52","🇲🇽 Mexico"],["+61","🇦🇺 Australia"],["+64","🇳🇿 NZ"],["+31","🇳🇱 Netherlands"],["+46","🇸🇪 Sweden"],["+47","🇳🇴 Norway"],["+45","🇩🇰 Denmark"],["+358","🇫🇮 Finland"],["+41","🇨🇭 Switzerland"],["+43","🇦🇹 Austria"],["+32","🇧🇪 Belgium"],["+48","🇵🇱 Poland"],["+90","🇹🇷 Turkey"],["+30","🇬🇷 Greece"],["+351","🇵🇹 Portugal"],["+353","🇮🇪 Ireland"],["+420","🇨🇿 Czech"],["+36","🇭🇺 Hungary"],["+40","🇷🇴 Romania"],["+380","🇺🇦 Ukraine"],["+375","🇧🇾 Belarus"],["+7","🇰🇿 Kazakhstan"],["+994","🇦🇿 Azerbaijan"],["+374","🇦🇲 Armenia"],["+995","🇬🇪 Georgia"],["+998","🇺🇿 Uzbekistan"],["+992","🇹🇯 Tajikistan"],["+993","🇹🇲 Turkmenistan"],["+996","🇰🇬 Kyrgyzstan"],["+60","🇲🇾 Malaysia"],["+65","🇸🇬 Singapore"],["+66","🇹🇭 Thailand"],["+84","🇻🇳 Vietnam"],["+62","🇮🇩 Indonesia"],["+95","🇲🇲 Myanmar"],["+855","🇰🇭 Cambodia"],["+856","🇱🇦 Laos"],["+93","🇦🇫 Afghanistan"],["+213","🇩🇿 Algeria"],["+216","🇹🇳 Tunisia"],["+212","🇲🇦 Morocco"],["+218","🇱🇾 Libya"],["+249","🇸🇩 Sudan"],["+251","🇪🇹 Ethiopia"],["+255","🇹🇿 Tanzania"],["+256","🇺🇬 Uganda"],["+233","🇬🇭 Ghana"],["+225","🇨🇮 Ivory Coast"],["+237","🇨🇲 Cameroon"],["+243","🇨🇩 DR Congo"],["+221","🇸🇳 Senegal"],["+260","🇿🇲 Zambia"],["+263","🇿🇼 Zimbabwe"],["+57","🇨🇴 Colombia"],["+54","🇦🇷 Argentina"],["+56","🇨🇱 Chile"],["+51","🇵🇪 Peru"],["+58","🇻🇪 Venezuela"],["+593","🇪🇨 Ecuador"],["+502","🇬🇹 Guatemala"],["+506","🇨🇷 Costa Rica"],["+507","🇵🇦 Panama"]].sort((a,b)=>a[1].localeCompare(b[1])).map(([c,n]) => <option key={c+n} value={c}>{n} ({c})</option>)}
-                            </select>
-                            <input type="tel" placeholder="50 123 4567" value={addUserForm.phoneNum || ""}
-                              onChange={e => { const num = e.target.value.replace(/[^\d\s]/g,""); setAddUserForm(p => ({ ...p, phoneNum: num, phone: (p.phoneCode||"+971") + num.replace(/\s/g,"") })); }}
-                              style={{ flex: 1, padding: "10px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif" }} />
-                          </div>
-                        </div>
-                        <div>
-                          <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>Access Tier</label>
-                          <select value={addUserForm.tier || "free"} onChange={e => setAddUserForm(p => ({ ...p, tier: e.target.value }))}
-                            style={{ width: "100%", padding: "10px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif" }}>
-                            {BILLING_TIERS.map(r => <option key={r.value} value={r.value}>{r.label}{r.price ? ` · ${r.price}` : ""}</option>)}
-                          </select>
-                        </div>
-                        <div>
-                          <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>Job Role</label>
-                          <select value={addUserForm.role || "user"} onChange={e => setAddUserForm(p => ({ ...p, role: e.target.value }))}
-                            style={{ width: "100%", padding: "10px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif" }}>
-                            <option value="user">— No role —</option>
-                            {JOB_ROLES.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
-                          </select>
-                        </div>
-                        <div>
-                          <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>Country</label>
-                          <select value={addUserForm.country || ""} onChange={e => setAddUserForm(p => ({ ...p, country: e.target.value }))}
-                            style={{ width: "100%", padding: "10px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: addUserForm.country ? T.white : T.textMuted, fontSize: 13, fontFamily: "'Outfit',sans-serif" }}>
-                            <option value="">Select country...</option>
-                            {["🇦🇪 UAE","🇸🇦 Saudi Arabia","🇶🇦 Qatar","🇰🇼 Kuwait","🇴🇲 Oman","🇧🇭 Bahrain","🇮🇳 India","🇵🇰 Pakistan","🇧🇩 Bangladesh","🇱🇰 Sri Lanka","🇳🇵 Nepal","🇵🇭 Philippines","🇪🇬 Egypt","🇯🇴 Jordan","🇱🇧 Lebanon","🇸🇾 Syria","🇮🇶 Iraq","🇮🇷 Iran","🇬🇧 United Kingdom","🇺🇸 United States","🇦🇺 Australia","🇨🇦 Canada","🇫🇷 France","🇩🇪 Germany","🇷🇺 Russia","🇨🇳 China","🇯🇵 Japan","🇰🇷 Korea","🇳🇬 Nigeria","🇰🇪 Kenya","🇿🇦 South Africa","🇪🇹 Ethiopia","🇹🇿 Tanzania","🇺🇬 Uganda","🇬🇭 Ghana","🇲🇦 Morocco","🇹🇳 Tunisia","🇩🇿 Algeria","🇱🇾 Libya","🇸🇩 Sudan","🇹🇷 Turkey","🇺🇦 Ukraine","🇵🇱 Poland","🇷🇴 Romania","🇳🇱 Netherlands","🇧🇪 Belgium","🇨🇭 Switzerland","🇦🇹 Austria","🇸🇪 Sweden","🇳🇴 Norway","🇩🇰 Denmark","🇫🇮 Finland","🇵🇹 Portugal","🇬🇷 Greece","🇨🇿 Czech","🇭🇺 Hungary","🇲🇾 Malaysia","🇸🇬 Singapore","🇹🇭 Thailand","🇮🇩 Indonesia","🇻🇳 Vietnam","🇧🇷 Brazil","🇦🇷 Argentina","🇨🇴 Colombia","🇲🇽 Mexico","🇨🇱 Chile","🇳🇿 New Zealand","🌍 Other"].sort().map(c => <option key={c} value={c.slice(3)}>{c}</option>)}
-                          </select>
-                        </div>
-                        <div>
-                          <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>Trial End Date</label>
-                          <input type="date" value={addUserForm.trialEnd || ""} onChange={e => setAddUserForm(p => ({ ...p, trialEnd: e.target.value }))}
-                            style={{ width: "100%", padding: "10px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif" }} />
-                        </div>
-                        <div style={{ gridColumn: "1/-1" }}>
-                          <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>Admin Notes</label>
-                          <textarea placeholder="Internal notes..." value={addUserForm.notes || ""} onChange={e => setAddUserForm(p => ({ ...p, notes: e.target.value }))} rows={3}
-                            style={{ width: "100%", padding: "10px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif", resize: "vertical", boxSizing: "border-box" }} />
-                        </div>
-                      </div>
-                      {addUserForm.email && users.some(u => u.email && u.email.toLowerCase() === addUserForm.email.toLowerCase()) && (
-                        <div style={{ marginTop: 12, padding: "10px 14px", borderRadius: 8, background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.3)", fontSize: 12, color: "#F59E0B" }}>
-                          ⚠️ A user with this email already exists.
-                        </div>
-                      )}
-                      <div style={{ display: "flex", gap: 10, marginTop: 20 }}>
-                        <button type="button" onClick={() => setShowAddUser(false)} style={{ flex: 1, padding: "11px", borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.textSecondary, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>Cancel</button>
-                        <button type="button" onClick={addUserManually} disabled={addUserLoading || (addUserForm.password && addUserForm.password.length < 6)} style={{ flex: 2, padding: "11px", borderRadius: 8, border: "none", background: `linear-gradient(135deg, ${T.gold}, #B8860B)`, color: T.bg, fontWeight: 700, cursor: addUserLoading ? "wait" : "pointer", fontFamily: "'Outfit',sans-serif", opacity: addUserLoading ? 0.6 : 1 }}>
-                          {addUserLoading ? "Creating..." : "Create User"}
-                        </button>
-                      </div>
-                    </div>
+                ))}
+                {!(leadDrawer.activity || []).length && (
+                  <div style={{ fontSize: 12, color: T.textMuted, textAlign: "center", padding: 28 }}>
+                    No activity yet
                   </div>
                 )}
+              </div>
+            )}
 
-                {/* ── EDIT USER MODAL ── same pattern as Add Lead ── */}
-                {editingUser && (
-                  <div style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.92)", zIndex: 9000, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(8px)" }} onClick={() => setEditingUser(null)}>
-                    <div style={{ background: T.surface, border: `1px solid ${T.gold}40`, borderRadius: 16, width: "95%", maxWidth: 540, padding: 28, maxHeight: "85vh", overflowY: "auto" }} onClick={e => e.stopPropagation()}>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-                        <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 700, color: T.gold }}>Edit User</h3>
-                        <button type="button" onClick={() => setEditingUser(null)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 22 }}>×</button>
-                      </div>
-                      <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 16 }}>{editingUser.email}</div>
-                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-                        <div style={{ gridColumn: "1/-1" }}>
-                          <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>Full Name</label>
-                          <input type="text" placeholder="Full name" value={editUserForm.name || ""} onChange={e => setEditUserForm(p => ({ ...p, name: e.target.value }))}
-                            style={{ width: "100%", padding: "10px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif", boxSizing: "border-box" }} />
-                        </div>
-                        <div>
-                          <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>Phone</label>
-                          <input type="tel" placeholder="+971 50 000 0000" value={editUserForm.phone || ""} onChange={e => setEditUserForm(p => ({ ...p, phone: e.target.value }))}
-                            style={{ width: "100%", padding: "10px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif", boxSizing: "border-box" }} />
-                        </div>
-                        <div>
-                          <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>Country</label>
-                          <select value={editUserForm.country || ""} onChange={e => setEditUserForm(p => ({ ...p, country: e.target.value }))}
-                            style={{ width: "100%", padding: "10px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: editUserForm.country ? T.white : T.textMuted, fontSize: 13, fontFamily: "'Outfit',sans-serif" }}>
-                            <option value="">Select country...</option>
-                            {["🇦🇪 UAE","🇸🇦 Saudi Arabia","🇶🇦 Qatar","🇰🇼 Kuwait","🇴🇲 Oman","🇧🇭 Bahrain","🇮🇳 India","🇵🇰 Pakistan","🇧🇩 Bangladesh","🇱🇰 Sri Lanka","🇳🇵 Nepal","🇵🇭 Philippines","🇪🇬 Egypt","🇯🇴 Jordan","🇱🇧 Lebanon","🇸🇾 Syria","🇮🇶 Iraq","🇮🇷 Iran","🇬🇧 United Kingdom","🇺🇸 United States","🇦🇺 Australia","🇨🇦 Canada","🇫🇷 France","🇩🇪 Germany","🇷🇺 Russia","🇨🇳 China","🇯🇵 Japan","🇰🇷 Korea","🇳🇬 Nigeria","🇰🇪 Kenya","🇿🇦 South Africa","🇪🇹 Ethiopia","🇹🇿 Tanzania","🇺🇬 Uganda","🇬🇭 Ghana","🇲🇦 Morocco","🇹🇳 Tunisia","🇩🇿 Algeria","🇱🇾 Libya","🇸🇩 Sudan","🇹🇷 Turkey","🇺🇦 Ukraine","🇵🇱 Poland","🇷🇴 Romania","🇳🇱 Netherlands","🇧🇪 Belgium","🇨🇭 Switzerland","🇦🇹 Austria","🇸🇪 Sweden","🇳🇴 Norway","🇩🇰 Denmark","🇫🇮 Finland","🇵🇹 Portugal","🇬🇷 Greece","🇨🇿 Czech","🇭🇺 Hungary","🇲🇾 Malaysia","🇸🇬 Singapore","🇹🇭 Thailand","🇮🇩 Indonesia","🇻🇳 Vietnam","🇧🇷 Brazil","🇦🇷 Argentina","🇨🇴 Colombia","🇲🇽 Mexico","🇨🇱 Chile","🇳🇿 New Zealand","🌍 Other"].sort().map(c => <option key={c} value={c.slice(3)}>{c}</option>)}
-                          </select>
-                        </div>
-                        <div>
-                          <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>Access Tier</label>
-                          <select value={editUserForm.tier || "free"} onChange={e => setEditUserForm(p => ({ ...p, tier: e.target.value }))}
-                            style={{ width: "100%", padding: "10px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif" }}>
-                            {BILLING_TIERS.map(r => <option key={r.value} value={r.value}>{r.label}{r.price ? ` · ${r.price}` : ""}</option>)}
-                          </select>
-                        </div>
-                        <div>
-                          <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>Job Role</label>
-                          <select value={editUserForm.role || "user"} onChange={e => setEditUserForm(p => ({ ...p, role: e.target.value }))}
-                            style={{ width: "100%", padding: "10px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif" }}>
-                            <option value="user">— No role —</option>
-                            {JOB_ROLES.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
-                          </select>
-                        </div>
-                        <div>
-                          <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>Trial End Date</label>
-                          <input type="date" value={editUserForm.trialEnd ? editUserForm.trialEnd.slice(0,10) : ""} onChange={e => setEditUserForm(p => ({ ...p, trialEnd: e.target.value ? e.target.value + "T00:00:00.000Z" : "" }))}
-                            style={{ width: "100%", padding: "10px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif" }} />
-                        </div>
-                        <div style={{ gridColumn: "1/-1" }}>
-                          <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>Admin Notes</label>
-                          <textarea placeholder="Internal notes..." value={editUserForm.notes || ""} onChange={e => setEditUserForm(p => ({ ...p, notes: e.target.value }))} rows={3}
-                            style={{ width: "100%", padding: "10px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif", resize: "vertical", boxSizing: "border-box" }} />
-                        </div>
-                      </div>
-                      <div style={{ display: "flex", gap: 10, marginTop: 20 }}>
-                        <button type="button" onClick={() => setEditingUser(null)} style={{ flex: 1, padding: "11px", borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.textSecondary, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>Cancel</button>
-                        <button type="button" onClick={saveEditUser} disabled={editUserLoading} style={{ flex: 2, padding: "11px", borderRadius: 8, border: "none", background: `linear-gradient(135deg, ${T.gold}, #B8860B)`, color: T.bg, fontWeight: 700, cursor: editUserLoading ? "wait" : "pointer", fontFamily: "'Outfit',sans-serif", opacity: editUserLoading ? 0.6 : 1 }}>
-                          {editUserLoading ? "Saving..." : "Save Changes"}
-                        </button>
-                      </div>
-                    </div>
+            {/* ── Email tab ───────────────────────────────────────── */}
+            {leadDrawerTab === "email" && (
+              <div style={{ padding: "16px 20px", flex: 1 }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 4 }}>
+                  Send Email
+                </div>
+                <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 16 }}>
+                  To: {leadDrawer.email || "No email on file"}
+                </div>
+                {!leadDrawer.email ? (
+                  <div style={{ padding: "24px 0", textAlign: "center", color: T.textMuted, fontSize: 12 }}>
+                    No email address for this lead
+                  </div>
+                ) : (
+                  <div style={{ fontSize: 11, color: T.textMuted, textAlign: "center", padding: "20px 0" }}>
+                    Email via EmailJS · Configure templates in admin settings
                   </div>
                 )}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
-                {showAddLead && (
-                  <div style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.92)", zIndex: 9000, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(8px)" }} onClick={() => setShowAddLead(false)}>
-                    <div style={{ background: T.surface, border: `1px solid rgba(16,185,129,0.4)`, borderRadius: 16, width: "95%", maxWidth: 560, padding: 28, maxHeight: "90vh", overflowY: "auto" }} onClick={e => e.stopPropagation()}>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-                        <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 700, color: T.green }}>+ Add New Lead</h3>
-                        <button type="button" onClick={() => setShowAddLead(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>x</button>
-                      </div>
-                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-                        {[
-                          { key: "name", label: "Full Name *", placeholder: "John Smith", full: true },
-                          { key: "email", label: "Email", placeholder: "john@example.com", type: "email" },
-                          { key: "budget", label: "Budget (AED)", placeholder: "e.g. 2000000", type: "number" },
-                          { key: "project", label: "Interested Project", placeholder: "e.g. The Valley" },
-                        ].map(f => (
-                          <div key={f.key} style={{ gridColumn: f.full ? "1/-1" : "auto" }}>
-                            <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>{f.label}</label>
-                            <input type={f.type || "text"} placeholder={f.placeholder} value={addLeadForm[f.key] || ""} onChange={e => setAddLeadForm(prev => ({ ...prev, [f.key]: e.target.value }))}
-                              style={{ width: "100%", padding: "10px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif", boxSizing: "border-box" }} />
-                          </div>
-                        ))}
-                        {/* Phone with country code */}
-                        <div style={{ gridColumn: "1/-1" }}>
-                          <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>Phone / WhatsApp</label>
-                          <div style={{ display: "flex", gap: 8 }}>
-                            <select value={addLeadForm.phoneCode || "+971"} onChange={e => setAddLeadForm(p => ({...p, phoneCode: e.target.value, phone: e.target.value + (p.phoneNum||"").replace(/\s/g,"")}))}
-                              style={{ width: 200, padding: "10px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 12, fontFamily: "'Outfit',sans-serif", cursor: "pointer", flexShrink: 0 }}>
-                              {[["+93","🇦🇫 Afghanistan"],["+355","🇦🇱 Albania"],["+213","🇩🇿 Algeria"],["+244","🇦🇴 Angola"],["+54","🇦🇷 Argentina"],["+374","🇦🇲 Armenia"],["+61","🇦🇺 Australia"],["+43","🇦🇹 Austria"],["+994","🇦🇿 Azerbaijan"],["+973","🇧🇭 Bahrain"],["+880","🇧🇩 Bangladesh"],["+375","🇧🇾 Belarus"],["+32","🇧🇪 Belgium"],["+591","🇧🇴 Bolivia"],["+387","🇧🇦 Bosnia"],["+55","🇧🇷 Brazil"],["+673","🇧🇳 Brunei"],["+359","🇧🇬 Bulgaria"],["+855","🇰🇭 Cambodia"],["+237","🇨🇲 Cameroon"],["+1","🇨🇦 Canada"],["+56","🇨🇱 Chile"],["+86","🇨🇳 China"],["+57","🇨🇴 Colombia"],["+385","🇭🇷 Croatia"],["+53","🇨🇺 Cuba"],["+357","🇨🇾 Cyprus"],["+420","🇨🇿 Czech Republic"],["+45","🇩🇰 Denmark"],["+20","🇪🇬 Egypt"],["+251","🇪🇹 Ethiopia"],["+358","🇫🇮 Finland"],["+33","🇫🇷 France"],["+995","🇬🇪 Georgia"],["+49","🇩🇪 Germany"],["+233","🇬🇭 Ghana"],["+30","🇬🇷 Greece"],["+36","🇭🇺 Hungary"],["+354","🇮🇸 Iceland"],["+91","🇮🇳 India"],["+62","🇮🇩 Indonesia"],["+98","🇮🇷 Iran"],["+964","🇮🇶 Iraq"],["+353","🇮🇪 Ireland"],["+972","🇮🇱 Israel"],["+39","🇮🇹 Italy"],["+81","🇯🇵 Japan"],["+962","🇯🇴 Jordan"],["+7","🇰🇿 Kazakhstan"],["+254","🇰🇪 Kenya"],["+82","🇰🇷 Korea South"],["+965","🇰🇼 Kuwait"],["+996","🇰🇬 Kyrgyzstan"],["+856","🇱🇦 Laos"],["+371","🇱🇻 Latvia"],["+961","🇱🇧 Lebanon"],["+218","🇱🇾 Libya"],["+370","🇱🇹 Lithuania"],["+60","🇲🇾 Malaysia"],["+960","🇲🇻 Maldives"],["+356","🇲🇹 Malta"],["+52","🇲🇽 Mexico"],["+373","🇲🇩 Moldova"],["+976","🇲🇳 Mongolia"],["+212","🇲🇦 Morocco"],["+977","🇳🇵 Nepal"],["+31","🇳🇱 Netherlands"],["+64","🇳🇿 New Zealand"],["+234","🇳🇬 Nigeria"],["+47","🇳🇴 Norway"],["+968","🇴🇲 Oman"],["+92","🇵🇰 Pakistan"],["+970","🇵🇸 Palestine"],["+507","🇵🇦 Panama"],["+51","🇵🇪 Peru"],["+63","🇵🇭 Philippines"],["+48","🇵🇱 Poland"],["+351","🇵🇹 Portugal"],["+974","🇶🇦 Qatar"],["+40","🇷🇴 Romania"],["+7","🇷🇺 Russia"],["+250","🇷🇼 Rwanda"],["+966","🇸🇦 Saudi Arabia"],["+221","🇸🇳 Senegal"],["+381","🇷🇸 Serbia"],["+65","🇸🇬 Singapore"],["+421","🇸🇰 Slovakia"],["+386","🇸🇮 Slovenia"],["+252","🇸🇴 Somalia"],["+27","🇿🇦 South Africa"],["+211","🇸🇸 South Sudan"],["+34","🇪🇸 Spain"],["+94","🇱🇰 Sri Lanka"],["+249","🇸🇩 Sudan"],["+46","🇸🇪 Sweden"],["+41","🇨🇭 Switzerland"],["+963","🇸🇾 Syria"],["+886","🇹🇼 Taiwan"],["+992","🇹🇯 Tajikistan"],["+255","🇹🇿 Tanzania"],["+66","🇹🇭 Thailand"],["+216","🇹🇳 Tunisia"],["+90","🇹🇷 Turkey"],["+993","🇹🇲 Turkmenistan"],["+256","🇺🇬 Uganda"],["+380","🇺🇦 Ukraine"],["+971","🇦🇪 UAE"],["+44","🇬🇧 United Kingdom"],["+1","🇺🇸 United States"],["+998","🇺🇿 Uzbekistan"],["+58","🇻🇪 Venezuela"],["+84","🇻🇳 Vietnam"],["+967","🇾🇪 Yemen"],["+260","🇿🇲 Zambia"],["+263","🇿🇼 Zimbabwe"]].sort((a,b)=>a[1].localeCompare(b[1])).map(([c,n]) => <option key={c+n} value={c}>{n} ({c})</option>)}
-                            </select>
-                            <input type="tel" placeholder="50 123 4567" value={addLeadForm.phoneNum || ""}
-                              onChange={e => { const num=e.target.value.replace(/[^\d\s]/g,""); setAddLeadForm(p=>({...p,phoneNum:num,phone:(p.phoneCode||"+971")+num.replace(/\s/g,"")})); }}
-                              style={{ flex: 1, padding: "10px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif" }} />
-                          </div>
-                        </div>
-                        {/* Nationality dropdown */}
-                        <div>
-                          <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>Nationality</label>
-                          <select value={addLeadForm.nationality || ""} onChange={e => setAddLeadForm(prev => ({ ...prev, nationality: e.target.value }))}
-                            style={{ width: "100%", padding: "10px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: addLeadForm.nationality ? T.white : T.textMuted, fontSize: 13, fontFamily: "'Outfit',sans-serif" }}>
-                            <option value="">Select nationality...</option>
-                            {DUBAI_NATIONALITIES.map(n => <option key={n} value={n}>{n}</option>)}
-                          </select>
-                        </div>
-                        {/* Duplicate email warning */}
-                        {addLeadForm.email && leads.some(l => l.email && l.email.toLowerCase() === addLeadForm.email.toLowerCase()) && (
-                          <div style={{ gridColumn: "1/-1", padding: "10px 14px", borderRadius: 8, background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.3)", display: "flex", alignItems: "center", gap: 8 }}>
-                            <span style={{ fontSize: 14 }}>⚠️</span>
-                            <div>
-                              <div style={{ fontSize: 11, fontWeight: 700, color: "#F59E0B" }}>Duplicate Email Detected</div>
-                              <div style={{ fontSize: 10, color: T.textMuted }}>A lead with this email already exists. Check for duplicates before saving.</div>
-                            </div>
-                          </div>
-                        )}
-                        <div>
-                          <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>Source</label>
-                          <select value={addLeadForm.source} onChange={e => setAddLeadForm(prev => ({ ...prev, source: e.target.value }))} style={{ width: "100%", padding: "10px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif" }}>
-                            <option>Manual</option><option>WhatsApp</option><option>Email Inquiry</option><option>Phone Call</option><option>Walk-in</option><option>Referral</option><option>Website</option><option>Bayut</option><option>PropertyFinder</option><option>Dubizzle</option><option>Instagram</option><option>LinkedIn</option>
-                          </select>
-                        </div>
-                        <div>
-                          <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>Follow-Up Date</label>
-                          <input type="date" value={addLeadForm.followUpDate || ""} onChange={e => setAddLeadForm(prev => ({ ...prev, followUpDate: e.target.value }))} min={new Date().toISOString().slice(0,10)} style={{ width: "100%", padding: "10px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif" }} />
-                        </div>
-                        <div style={{ gridColumn: "1/-1" }}>
-                          <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>Initial Notes</label>
-                          <textarea placeholder="Initial notes about this lead..." value={addLeadForm.notes} onChange={e => setAddLeadForm(prev => ({ ...prev, notes: e.target.value }))} rows={3} style={{ width: "100%", padding: "10px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif", resize: "vertical", boxSizing: "border-box" }} />
-                        </div>
-                      </div>
-                      <button type="button" disabled={addLeadLoading} onClick={addLead} style={{ marginTop: 16, width: "100%", padding: "12px", borderRadius: 10, border: "none", background: `linear-gradient(135deg, ${T.green}, #059669)`, color: "#FFFFFF", fontSize: 14, fontWeight: 700, cursor: addLeadLoading ? "wait" : "pointer", fontFamily: "'Outfit',sans-serif", opacity: addLeadLoading ? 0.6 : 1 }}>
-                        {addLeadLoading ? "Adding..." : "+ Add Lead"}
-                      </button>
-                    </div>
-                  </div>
-                )}
+      {/* ══════════════════════════════════════════════════════════════
+          ADD LEAD MODAL
+      ══════════════════════════════════════════════════════════════ */}
+      {showAddLead && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 2000,
+          background: "rgba(0,0,0,0.8)", backdropFilter: "blur(6px)",
+          display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}
+          onClick={e => { if (e.target === e.currentTarget) setShowAddLead(false); }}>
+          <div style={{ background: T.bg, border: `1px solid rgba(212,168,67,0.3)`,
+            borderRadius: 16, padding: 24, width: "100%", maxWidth: 500,
+            maxHeight: "90vh", overflowY: "auto",
+            boxShadow: "0 32px 80px rgba(0,0,0,0.7)" }}>
+            <div style={{ display: "flex", justifyContent: "space-between",
+              alignItems: "center", marginBottom: 20 }}>
+              <div style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 900, color: T.white }}>
+                Add New Lead
+              </div>
+              <button type="button" onClick={() => setShowAddLead(false)}
+                style={{ background: "rgba(255,255,255,0.06)", border: `1px solid ${T.border}`,
+                  borderRadius: 7, color: T.textMuted, fontSize: 16, cursor: "pointer",
+                  padding: "3px 9px" }}>✕</button>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              {[
+                { k: "name",      l: "Full Name",          pl: "Ahmed Al-Mansouri"  },
+                { k: "email",     l: "Email",              pl: "ahmed@email.com"    },
+                { k: "phone",     l: "Phone",              pl: "+971 50 123 4567"   },
+                { k: "budget",    l: "Budget (AED)",       pl: "2000000", type: "number" },
+                { k: "project",   l: "Project Interest",   pl: "Vida Residences, The Oasis…" },
+                { k: "community", l: "Community",          pl: "Dubai Hills Estate" },
+              ].map(({ k, l, pl, type }) => (
+                <div key={k}>
+                  <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted,
+                    textTransform: "uppercase", letterSpacing: 0.8,
+                    display: "block", marginBottom: 4 }}>{l}</label>
+                  <input type={type || "text"}
+                    value={addLeadForm[k] || ""}
+                    onChange={e => setAddLeadForm(f => ({ ...f, [k]: e.target.value }))}
+                    placeholder={pl}
+                    style={{ width: "100%", padding: "8px 12px", background: T.surface,
+                      border: `1px solid ${T.border}`, borderRadius: 7, color: T.white,
+                      fontSize: 12, outline: "none", fontFamily: "'Outfit',sans-serif",
+                      boxSizing: "border-box" }} />
+                </div>
+              ))}
+              {/* Notes textarea */}
+              <div>
+                <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted,
+                  textTransform: "uppercase", letterSpacing: 0.8, display: "block", marginBottom: 4 }}>
+                  Notes
+                </label>
+                <textarea value={addLeadForm.notes || ""}
+                  onChange={e => setAddLeadForm(f => ({ ...f, notes: e.target.value }))}
+                  placeholder="Budget, timeline, specific requirements…" rows={2}
+                  style={{ width: "100%", padding: "8px 12px", background: T.surface,
+                    border: `1px solid ${T.border}`, borderRadius: 7, color: T.white,
+                    fontSize: 12, outline: "none", fontFamily: "'Outfit',sans-serif",
+                    resize: "vertical", boxSizing: "border-box" }} />
+              </div>
+              {/* Source + Nationality */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                <div>
+                  <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted,
+                    textTransform: "uppercase", letterSpacing: 0.8,
+                    display: "block", marginBottom: 4 }}>Source</label>
+                  <select value={addLeadForm.source || "Manual"}
+                    onChange={e => setAddLeadForm(f => ({ ...f, source: e.target.value }))}
+                    style={{ width: "100%", padding: "8px 10px", background: T.surface,
+                      border: `1px solid ${T.border}`, borderRadius: 7, color: T.white,
+                      fontSize: 12, fontFamily: "'Outfit',sans-serif", outline: "none" }}>
+                    {["Manual","Property Finder","Bayut","Dubizzle","Meta/Facebook",
+                      "Instagram","Google Ads","WhatsApp","Referral","Walk-in","Email",
+                      "Website","LinkedIn","TikTok"].map(s =>
+                      <option key={s} value={s}>{s}</option>
+                    )}
+                  </select>
+                </div>
+                <div>
+                  <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted,
+                    textTransform: "uppercase", letterSpacing: 0.8,
+                    display: "block", marginBottom: 4 }}>Nationality</label>
+                  <select value={addLeadForm.nationality || ""}
+                    onChange={e => setAddLeadForm(f => ({ ...f, nationality: e.target.value }))}
+                    style={{ width: "100%", padding: "8px 10px", background: T.surface,
+                      border: `1px solid ${T.border}`, borderRadius: 7, color: T.white,
+                      fontSize: 12, fontFamily: "'Outfit',sans-serif", outline: "none" }}>
+                    <option value="">Select…</option>
+                    {NATS.map(n => <option key={n} value={n}>{n}</option>)}
+                  </select>
+                </div>
+              </div>
+              {/* Buttons */}
+              <div style={{ display: "flex", gap: 8, justifyContent: "flex-end",
+                marginTop: 8, paddingTop: 14, borderTop: `1px solid ${T.border}` }}>
+                <button type="button" onClick={() => setShowAddLead(false)}
+                  style={{ padding: "9px 18px", fontSize: 12, cursor: "pointer",
+                    fontFamily: "'Outfit',sans-serif", border: `1px solid ${T.border}`,
+                    background: "transparent", color: T.textMuted, borderRadius: 8 }}>
+                  Cancel
+                </button>
+                <button type="button" onClick={addLead} disabled={addLeadLoading}
+                  style={{ padding: "9px 24px", fontSize: 12, fontWeight: 700, cursor: "pointer",
+                    fontFamily: "'Outfit',sans-serif", border: `1px solid ${T.gold}`,
+                    background: "rgba(212,168,67,0.12)", color: T.gold, borderRadius: 8 }}>
+                  {addLeadLoading ? "Adding…" : "+ Add Lead"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
-                {/* FOLLOW-UP MODAL */}
-                {showFollowUpModal && (
-                  <div style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.92)", zIndex: 9000, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(8px)" }} onClick={() => setShowFollowUpModal(null)}>
-                    <div style={{ background: T.surface, border: `1px solid rgba(212,168,67,0.4)`, borderRadius: 16, width: "95%", maxWidth: 420, padding: 28 }} onClick={e => e.stopPropagation()}>
-                      <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 700, color: T.gold, marginBottom: 6 }}>Schedule Follow-Up</h3>
-                      <p style={{ fontSize: 12, color: T.textMuted, marginBottom: 20 }}>For: <strong style={{ color: T.white }}>{showFollowUpModal.name || showFollowUpModal.email}</strong></p>
-                      <div style={{ marginBottom: 14 }}>
-                        <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 6, display: "block" }}>Follow-Up Date</label>
-                        <input type="date" value={followUpDate} onChange={e => setFollowUpDate(e.target.value)} min={new Date().toISOString().slice(0,10)} style={{ width: "100%", padding: "10px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif", boxSizing: "border-box" }} />
-                      </div>
-                      <div style={{ display: "flex", gap: 8, marginBottom: 14, flexWrap: "wrap" }}>
-                        {[{ label: "Tomorrow", days: 1 }, { label: "In 3 days", days: 3 }, { label: "Next week", days: 7 }, { label: "In 2 weeks", days: 14 }].map(({ label, days }) => {
-                          const d = new Date(); d.setDate(d.getDate() + days);
-                          return <button key={label} type="button" onClick={() => setFollowUpDate(d.toISOString().slice(0,10))} style={{ fontSize: 11, padding: "5px 10px", borderRadius: 6, border: `1px solid ${T.border}`, background: "transparent", color: T.textSecondary, cursor: "pointer" }}>{label}</button>;
-                        })}
-                      </div>
-                      <div style={{ marginBottom: 20 }}>
-                        <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 6, display: "block" }}>Reminder Note</label>
-                        <input type="text" placeholder="e.g. Call to confirm viewing" value={followUpNote} onChange={e => setFollowUpNote(e.target.value)} style={{ width: "100%", padding: "10px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif", boxSizing: "border-box" }} />
-                      </div>
-                      <div style={{ display: "flex", gap: 10 }}>
-                        <button type="button" onClick={() => { setShowFollowUpModal(null); setFollowUpDate(""); setFollowUpNote(""); }} style={{ flex: 1, padding: "11px", borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.textSecondary, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>Cancel</button>
-                        <button type="button" onClick={scheduleFollowUp} style={{ flex: 2, padding: "11px", borderRadius: 8, border: "none", background: `linear-gradient(135deg, ${T.gold}, #B8860B)`, color: T.bg, cursor: "pointer", fontWeight: 700, fontFamily: "'Outfit',sans-serif" }}>Schedule Follow-Up</button>
-                      </div>
-                    </div>
-                  </div>
-                )}
+      {/* ══════════════════════════════════════════════════════════════
+          FOLLOW-UP MODAL
+      ══════════════════════════════════════════════════════════════ */}
+      {showFollowUpModal && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 2000,
+          background: "rgba(0,0,0,0.8)", backdropFilter: "blur(6px)",
+          display: "flex", alignItems: "center", justifyContent: "center" }}
+          onClick={e => { if (e.target === e.currentTarget) { setShowFollowUpModal(null); setFollowUpDate(""); setFollowUpNote(""); } }}>
+          <div style={{ background: T.bg, border: `1px solid ${T.border}`,
+            borderRadius: 14, padding: 24, width: 360,
+            boxShadow: "0 24px 60px rgba(0,0,0,0.6)" }}>
+            <div style={{ fontFamily: "'Fraunces',serif", fontSize: 16, fontWeight: 900,
+              color: T.white, marginBottom: 4 }}>
+              Schedule Follow-up
+            </div>
+            <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 16 }}>
+              For: {showFollowUpModal.name || "Lead"}
+            </div>
+            <div style={{ marginBottom: 12 }}>
+              <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted,
+                textTransform: "uppercase", letterSpacing: 0.8, display: "block", marginBottom: 4 }}>Date</label>
+              <input type="date" value={followUpDate}
+                onChange={e => setFollowUpDate(e.target.value)}
+                style={{ width: "100%", padding: "8px 12px", background: T.surface,
+                  border: `1px solid ${T.border}`, borderRadius: 7, color: T.white,
+                  fontSize: 12, outline: "none", fontFamily: "'Outfit',sans-serif",
+                  boxSizing: "border-box" }} />
+            </div>
+            <div style={{ marginBottom: 18 }}>
+              <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted,
+                textTransform: "uppercase", letterSpacing: 0.8, display: "block", marginBottom: 4 }}>
+                Note (optional)
+              </label>
+              <input type="text" value={followUpNote}
+                onChange={e => setFollowUpNote(e.target.value)}
+                placeholder="e.g. Call to discuss payment plan…"
+                style={{ width: "100%", padding: "8px 12px", background: T.surface,
+                  border: `1px solid ${T.border}`, borderRadius: 7, color: T.white,
+                  fontSize: 12, outline: "none", fontFamily: "'Outfit',sans-serif",
+                  boxSizing: "border-box" }} />
+            </div>
+            <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
+              <button type="button"
+                onClick={() => { setShowFollowUpModal(null); setFollowUpDate(""); setFollowUpNote(""); }}
+                style={{ padding: "8px 16px", fontSize: 12, cursor: "pointer",
+                  fontFamily: "'Outfit',sans-serif", border: `1px solid ${T.border}`,
+                  background: "transparent", color: T.textMuted, borderRadius: 7 }}>
+                Cancel
+              </button>
+              <button type="button" onClick={scheduleFollowUp}
+                style={{ padding: "8px 20px", fontSize: 12, fontWeight: 700, cursor: "pointer",
+                  fontFamily: "'Outfit',sans-serif", border: `1px solid ${T.gold}`,
+                  background: "rgba(212,168,67,0.1)", color: T.gold, borderRadius: 7 }}>
+                Schedule
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
-                {/* LOSS REASON MODAL */}
-                {showLossReason && (
-                  <div style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.92)", zIndex: 9000, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(8px)" }} onClick={() => setShowLossReason(null)}>
-                    <div style={{ background: T.surface, border: `1px solid rgba(239,68,68,0.4)`, borderRadius: 16, width: "95%", maxWidth: 400, padding: 28 }} onClick={e => e.stopPropagation()}>
-                      <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 700, color: T.red, marginBottom: 16 }}>Mark as Lost</h3>
-                      <div style={{ marginBottom: 20 }}>
-                        <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 6, display: "block" }}>Loss Reason</label>
-                        <select value={lossReason} onChange={e => setLossReason(e.target.value)} style={{ width: "100%", padding: "10px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif" }}>
-                          <option value="">Select reason...</option>
-                          <option value="price">Too Expensive</option>
-                          <option value="competitor">Chose Competitor</option>
-                          <option value="timing">Not Ready Now</option>
-                          <option value="no_response">No Response / Ghosted</option>
-                          <option value="wrong_fit">Wrong Fit</option>
-                          <option value="budget">Budget Reduced</option>
-                          <option value="other">Other</option>
-                        </select>
-                      </div>
-                      <div style={{ display: "flex", gap: 10 }}>
-                        <button type="button" onClick={() => setShowLossReason(null)} style={{ flex: 1, padding: "10px", borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.textSecondary, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>Cancel</button>
-                        <button type="button" onClick={() => { updateLeadStatus(showLossReason, "Lost", lossReason); setShowLossReason(null); setLossReason(""); }} style={{ flex: 1, padding: "10px", borderRadius: 8, border: "none", background: T.red, color: "#FFFFFF", cursor: "pointer", fontWeight: 600, fontFamily: "'Outfit',sans-serif" }}>Mark Lost</button>
-                      </div>
-                    </div>
-                  </div>
-                )}
+    </>
+  );
+})()}
 
-                {/* LEAD DRAWER */}
-                {leadDrawer && (
-                  <div style={{ position: "fixed", inset: 0, zIndex: 8000, background: "rgba(4,9,15,0.85)", backdropFilter: "blur(4px)" }} onClick={() => setLeadDrawer(null)}>
-                    <div style={{ position: "absolute", right: 0, top: 0, bottom: 0, width: "100%", maxWidth: 520, background: T.surface, borderLeft: `1px solid rgba(212,168,67,0.3)`, display: "flex", flexDirection: "column", animation: "slideIn 0.2s ease-out" }} onClick={e => e.stopPropagation()}>
 
-                      {/* Header */}
-                      <div style={{ padding: "20px 24px", borderBottom: `1px solid ${T.border}` }}>
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
-                          <div style={{ flex: 1 }}>
-                            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
-                              <div style={{ fontFamily: "'Fraunces',serif", fontSize: 20, fontWeight: 700, color: T.white }}>{leadDrawer.name || "Unknown Lead"}</div>
-                              {(() => { const score = scoreLead(leadDrawer); return <div style={{ fontSize: 12, padding: "3px 10px", borderRadius: 20, background: `${getScoreColor(score)}20`, color: getScoreColor(score), fontWeight: 700 }}>{score} - {getScoreLabel(score)}</div>; })()}
-                            </div>
-                            <div style={{ fontSize: 12, color: T.textMuted }}>{leadDrawer.email || "No email"}</div>
-                            {leadDrawer.phone && <div style={{ fontSize: 12, color: T.textMuted }}>{leadDrawer.phone}</div>}
-                            {leadDrawer.nationality && <div style={{ fontSize: 11, color: T.blue, marginTop: 2 }}>({leadDrawer.nationality})</div>}
-                          </div>
-                          <button type="button" onClick={() => setLeadDrawer(null)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 24, lineHeight: 1, flexShrink: 0 }}>x</button>
-                        </div>
-                        <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-                          <select value={leadDrawer.status || "New"} onChange={e => { if (e.target.value === "Lost") setShowLossReason(leadDrawer.id); else updateLeadStatus(leadDrawer.id, e.target.value); }} style={{ padding: "7px 12px", borderRadius: 8, border: `1px solid ${(statusColors[leadDrawer.status || "New"] || statusColors.New).border}`, background: (statusColors[leadDrawer.status || "New"] || statusColors.New).bg, color: (statusColors[leadDrawer.status || "New"] || statusColors.New).color, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
-                            <option value="New">New</option><option value="Contacted">Contacted</option><option value="Qualified">Qualified</option><option value="Converted">Converted</option><option value="Lost">Lost</option>
-                          </select>
-                          {leadDrawer.phone && <a href={`https://wa.me/${leadDrawer.phone.replace(/\D/g, "")}?text=${encodeURIComponent(`Hi ${leadDrawer.name || ""}, following up on your interest in ${leadDrawer.project || "the property"}.`)}`} target="_blank" rel="noreferrer" style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, padding: "7px 12px", borderRadius: 8, background: "rgba(37,211,102,0.15)", color: T.green, textDecoration: "none", fontWeight: 600 }}>WhatsApp</a>}
-                          <button type="button" onClick={() => setShowFollowUpModal(leadDrawer)} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, padding: "7px 12px", borderRadius: 8, border: `1px solid rgba(212,168,67,0.4)`, background: "rgba(212,168,67,0.08)", color: T.gold, cursor: "pointer", fontWeight: 600 }}>Follow-Up</button>
-                          {leadDrawer.status !== "Converted" && <button type="button" disabled={convertingLead} onClick={convertToUser} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, padding: "7px 12px", borderRadius: 8, border: `1px solid ${T.green}`, background: "rgba(16,185,129,0.08)", color: T.green, cursor: convertingLead ? "wait" : "pointer", fontWeight: 600, marginLeft: "auto" }}>{convertingLead ? "Converting..." : "Convert to User"}</button>}
-                        </div>
-                        {leadDrawer.followUpDate && (
-                          <div style={{ marginTop: 10, padding: "8px 12px", borderRadius: 8, background: isOverdue(leadDrawer) ? "rgba(239,68,68,0.08)" : isDueToday(leadDrawer) ? "rgba(212,168,67,0.08)" : "rgba(20,184,166,0.08)", border: `1px solid ${isOverdue(leadDrawer) ? T.red : isDueToday(leadDrawer) ? T.gold : T.teal}30`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                            <span style={{ fontSize: 11, color: isOverdue(leadDrawer) ? T.red : isDueToday(leadDrawer) ? T.gold : T.teal, fontWeight: 600 }}>
-                              {isOverdue(leadDrawer) ? "OVERDUE: " : isDueToday(leadDrawer) ? "DUE TODAY: " : "Follow-up: "}
-                              {new Date(leadDrawer.followUpDate).toLocaleDateString("en-AE", { day: "2-digit", month: "short", year: "numeric" })}
-                            </span>
-                            {leadDrawer.followUpNote && <span style={{ fontSize: 10, color: T.textMuted }}>{leadDrawer.followUpNote}</span>}
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Drawer tabs */}
-                      <div style={{ display: "flex", borderBottom: `1px solid ${T.border}`, background: T.surfaceAlt }}>
-                        {[["details", "Details"], ["activity", "Activity"], ["email", "Send Email"]].map(([id, label]) => (
-                          <button key={id} type="button" onClick={() => setLeadDrawerTab(id)} style={{ flex: 1, padding: "12px 8px", fontSize: 11, fontWeight: 600, color: leadDrawerTab === id ? T.gold : T.textMuted, background: "transparent", border: "none", cursor: "pointer", borderBottom: `2px solid ${leadDrawerTab === id ? T.gold : "transparent"}`, fontFamily: "'Outfit',sans-serif", transition: "all 0.15s" }}>{label}</button>
-                        ))}
-                      </div>
-
-                      <div style={{ flex: 1, overflowY: "auto" }}>
-
-                        {/* DETAILS TAB */}
-                        {leadDrawerTab === "details" && (
-                          <div style={{ padding: "20px 24px" }}>
-                            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 20 }}>
-                              {[
-                                { key: "name", label: "Name" }, { key: "email", label: "Email" },
-                                { key: "phone", label: "Phone" }, { key: "nationality", label: "Nationality" },
-                                { key: "budget", label: "Budget (AED)", type: "number" }, { key: "project", label: "Project" },
-                                { key: "community", label: "Community" }, { key: "source", label: "Source" },
-                              ].map(field => (
-                                <div key={field.key}>
-                                  <label style={{ fontSize: 10, color: T.textMuted, display: "block", marginBottom: 4, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.5 }}>{field.label}</label>
-                                  <input type={field.type || "text"} value={leadDrawer[field.key] || ""}
-                                    onChange={e => setLeadDrawer(prev => ({ ...prev, [field.key]: e.target.value }))}
-                                    onBlur={async e => {
-                                      try {
-                                        const activity = [...(leadDrawer.activity || []), { type: "edit", by: adminUser?.email || "admin", at: new Date().toISOString(), note: `${field.label} updated` }];
-                                        await setDoc(doc(db, "leads", leadDrawer.id), { [field.key]: e.target.value, activity, updatedAt: new Date().toISOString() }, { merge: true });
-                                        notify(`${field.label} saved`);
-                                        fetchLeads();
-                                      } catch { notify("Error saving"); }
-                                    }}
-                                    style={{ width: "100%", padding: "8px 10px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 6, color: T.white, fontSize: 12, fontFamily: "'Outfit',sans-serif", boxSizing: "border-box" }}
-                                  />
-                                </div>
-                              ))}
-                            </div>
-                            {/* Nationality select in drawer */}
-                            <div style={{ marginBottom: 12 }}>
-                              <label style={{ fontSize: 10, color: T.textMuted, display: "block", marginBottom: 4, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.5 }}>Nationality</label>
-                              <select value={leadDrawer.nationality || ""}
-                                onChange={e => setLeadDrawer(prev => ({ ...prev, nationality: e.target.value }))}
-                                onBlur={async e => {
-                                  try {
-                                    const activity = [...(leadDrawer.activity || []), { type: "edit", by: adminUser?.email || "admin", at: new Date().toISOString(), note: "Nationality updated" }];
-                                    await setDoc(doc(db, "leads", leadDrawer.id), { nationality: e.target.value, activity, updatedAt: new Date().toISOString() }, { merge: true });
-                                    notify("Nationality saved");
-                                    fetchLeads();
-                                  } catch { notify("Error saving"); }
-                                }}
-                                style={{ width: "100%", padding: "8px 10px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 6, color: leadDrawer.nationality ? T.white : T.textMuted, fontSize: 12, fontFamily: "'Outfit',sans-serif" }}>
-                                <option value="">Select nationality...</option>
-                                {DUBAI_NATIONALITIES.map(n => <option key={n} value={n}>{n}</option>)}
-                              </select>
-                            </div>
-
-                            {/* Duplicate warning in drawer */}
-                            {(() => {
-                              const dupes = getDuplicates(leadDrawer);
-                              if (dupes.length === 0) return null;
-                              return (
-                                <div style={{ marginBottom: 12, padding: "10px 14px", borderRadius: 8, background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.3)" }}>
-                                  <div style={{ fontSize: 11, fontWeight: 700, color: "#F59E0B", marginBottom: 4 }}>⚠️ {dupes.length} Duplicate{dupes.length > 1 ? "s" : ""} Found</div>
-                                  <div style={{ fontSize: 10, color: T.textMuted, marginBottom: 6 }}>Same email or phone exists in other leads:</div>
-                                  {dupes.slice(0, 3).map((d, i) => (
-                                    <div key={i} style={{ fontSize: 10, color: T.textSecondary, marginBottom: 2 }}>
-                                      • {d.name || d.email} — {d.status || "New"} — {d.project || "No project"} — Created {d.createdAt ? new Date(d.createdAt).toLocaleDateString("en-AE", { day: "2-digit", month: "short" }) : "—"}
-                                    </div>
-                                  ))}
-                                </div>
-                              );
-                            })()}
-
-                            {/* Quick complete prompt */}
-                            {(() => {
-                              const missing = [];
-                              if (!leadDrawer.phone) missing.push("Phone");
-                              if (!leadDrawer.nationality) missing.push("Nationality");
-                              if (!leadDrawer.budget) missing.push("Budget");
-                              if (!leadDrawer.followUpDate) missing.push("Follow-up date");
-                              if (missing.length === 0) return null;
-                              return (
-                                <div style={{ marginBottom: 12, padding: "10px 14px", borderRadius: 8, background: "rgba(59,130,246,0.06)", border: "1px solid rgba(59,130,246,0.2)" }}>
-                                  <div style={{ fontSize: 11, fontWeight: 700, color: T.blue, marginBottom: 4 }}>📋 Complete This Lead</div>
-                                  <div style={{ fontSize: 10, color: T.textMuted }}>Missing: {missing.join(", ")} — filling these increases the lead score.</div>
-                                </div>
-                              );
-                            })()}
-
-                            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 20 }}>
-                              {[
-                                { label: "Created", value: leadDrawer.createdAt ? new Date(leadDrawer.createdAt).toLocaleDateString("en-AE", { day: "2-digit", month: "short", year: "numeric" }) : "-" },
-                                { label: "Last Updated", value: leadDrawer.updatedAt ? new Date(leadDrawer.updatedAt).toLocaleDateString("en-AE", { day: "2-digit", month: "short" }) : "-" },
-                                { label: "Lead Score", value: `${scoreLead(leadDrawer)}/100` },
-                                { label: "Responded", value: leadDrawer.respondedAt ? new Date(leadDrawer.respondedAt).toLocaleDateString("en-AE", { day: "2-digit", month: "short" }) : "Not yet" },
-                              ].map((item, i) => (
-                                <div key={i} style={{ padding: "10px 12px", background: T.bg, borderRadius: 8, border: `1px solid ${T.border}` }}>
-                                  <div style={{ fontSize: 10, color: T.textMuted, marginBottom: 2 }}>{item.label}</div>
-                                  <div style={{ fontSize: 12, color: T.textSecondary, fontWeight: 500 }}>{item.value}</div>
-                                </div>
-                              ))}
-                            </div>
-                            {leadDrawer.lossReason && <div style={{ marginBottom: 16, padding: "10px 14px", borderRadius: 8, background: "rgba(239,68,68,0.08)", border: `1px solid rgba(239,68,68,0.3)` }}><div style={{ fontSize: 10, color: T.red, fontWeight: 600 }}>Loss Reason: {leadDrawer.lossReason}</div></div>}
-                            {leadDrawer.userId && <div style={{ marginBottom: 16, padding: "10px 14px", borderRadius: 8, background: "rgba(16,185,129,0.08)", border: `1px solid rgba(16,185,129,0.3)` }}><div style={{ fontSize: 10, color: T.green, fontWeight: 600 }}>Converted to User</div><button type="button" onClick={() => { setTab("users"); setPendingOpenUid(leadDrawer.userId); setLeadDrawer(null); }} style={{ marginTop: 6, fontSize: 10, padding: "4px 10px", borderRadius: 6, border: `1px solid ${T.green}`, background: "transparent", color: T.green, cursor: "pointer" }}>View User</button></div>}
-                            <div style={{ fontSize: 10, fontWeight: 700, color: T.gold, letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>Notes ({(leadDrawer.notes || []).length})</div>
-                            {(leadDrawer.notes || []).slice().reverse().map((note, i) => (
-                              <div key={i} style={{ padding: "10px 14px", background: T.surfaceAlt, borderRadius: 10, border: `1px solid ${T.border}`, marginBottom: 8 }}>
-                                <div style={{ fontSize: 12, color: T.textSecondary, lineHeight: 1.5 }}>{note.text}</div>
-                                <div style={{ fontSize: 10, color: T.textMuted, marginTop: 6 }}>{note.by} - {note.at ? new Date(note.at).toLocaleDateString("en-AE", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }) : ""}</div>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-
-                        {/* ACTIVITY TIMELINE TAB */}
-                        {leadDrawerTab === "activity" && (
-                          <div style={{ padding: "20px 24px" }}>
-                            <div style={{ fontSize: 10, fontWeight: 700, color: T.gold, letterSpacing: 1, textTransform: "uppercase", marginBottom: 16 }}>Activity Timeline</div>
-                            {(leadDrawer.activity || []).length === 0 ? (
-                              <div style={{ textAlign: "center", padding: 40, color: T.textMuted, fontSize: 12 }}>No activity recorded yet.</div>
-                            ) : (
-                              <div style={{ position: "relative" }}>
-                                <div style={{ position: "absolute", left: 14, top: 0, bottom: 0, width: 2, background: T.border }} />
-                                {(leadDrawer.activity || []).slice().reverse().map((act, i) => (
-                                  <div key={i} style={{ display: "flex", gap: 16, marginBottom: 16, position: "relative" }}>
-                                    <div style={{ width: 28, height: 28, borderRadius: "50%", background: act.type === "email_sent" ? "rgba(59,130,246,0.2)" : act.type === "status_change" ? "rgba(212,168,67,0.2)" : act.type === "followup_scheduled" ? "rgba(20,184,166,0.2)" : "rgba(139,92,246,0.2)", color: act.type === "email_sent" ? T.blue : act.type === "status_change" ? T.gold : act.type === "followup_scheduled" ? T.teal : T.purple, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, flexShrink: 0, zIndex: 1, border: `2px solid ${T.surface}` }}>{act.type === "email_sent" ? "@" : act.type === "status_change" ? ">" : act.type === "followup_scheduled" ? "t" : act.type === "note" ? "n" : "+"}</div>
-                                    <div style={{ flex: 1, paddingTop: 4 }}>
-                                      <div style={{ fontSize: 12, color: T.textSecondary, lineHeight: 1.5 }}>{act.note}</div>
-                                      <div style={{ fontSize: 10, color: T.textMuted, marginTop: 3 }}>{act.by} - {act.at ? new Date(act.at).toLocaleDateString("en-AE", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }) : ""}</div>
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
-                            )}
-                          </div>
-                        )}
-
-                        {/* EMAIL TAB */}
-                        {leadDrawerTab === "email" && leadDrawer.email && (
-                          <div style={{ padding: "20px 24px" }}>
-                            <div style={{ fontSize: 10, fontWeight: 700, color: T.gold, letterSpacing: 1, textTransform: "uppercase", marginBottom: 16 }}>Send Email to {leadDrawer.name || leadDrawer.email}</div>
-                            <div style={{ marginBottom: 14 }}>
-                              <label style={{ fontSize: 10, color: T.textMuted, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.5, display: "block", marginBottom: 6 }}>Template</label>
-                              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-                                {Object.entries(emailTemplates).map(([key, tmpl]) => (
-                                  <button key={key} type="button" onClick={() => { setEmailTemplate(key); setEmailSubject(tmpl.subject); setEmailBody(tmpl.body); }} style={{ padding: "8px 12px", borderRadius: 8, border: `1px solid ${emailTemplate === key ? T.gold : T.border}`, background: emailTemplate === key ? `rgba(212,168,67,0.1)` : "transparent", color: emailTemplate === key ? T.gold : T.textSecondary, fontSize: 11, cursor: "pointer", fontWeight: emailTemplate === key ? 700 : 400, textAlign: "left" }}>
-                                    {key === "followup" ? "Follow-up" : key === "info" ? "Project Info" : key === "viewing" ? "Schedule Viewing" : "Golden Visa"}
-                                  </button>
-                                ))}
-                              </div>
-                            </div>
-                            <div style={{ marginBottom: 12 }}>
-                              <label style={{ fontSize: 10, color: T.textMuted, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.5, display: "block", marginBottom: 6 }}>Subject</label>
-                              <input type="text" value={emailSubject || emailTemplates[emailTemplate]?.subject || ""} onChange={e => setEmailSubject(e.target.value)} style={{ width: "100%", padding: "10px 12px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 12, fontFamily: "'Outfit',sans-serif", boxSizing: "border-box" }} />
-                            </div>
-                            <div style={{ marginBottom: 16 }}>
-                              <label style={{ fontSize: 10, color: T.textMuted, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.5, display: "block", marginBottom: 6 }}>Message</label>
-                              <textarea value={emailBody || emailTemplates[emailTemplate]?.body || ""} onChange={e => setEmailBody(e.target.value)} rows={10} style={{ width: "100%", padding: "10px 12px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 12, fontFamily: "'Outfit',sans-serif", resize: "vertical", boxSizing: "border-box" }} />
-                            </div>
-                            <button type="button" disabled={sendingEmail} onClick={() => sendLeadEmail(leadDrawer, emailSubject || emailTemplates[emailTemplate]?.subject, emailBody || emailTemplates[emailTemplate]?.body)} style={{ width: "100%", padding: "12px", borderRadius: 10, border: "none", background: `linear-gradient(135deg, ${T.blue}, #2563EB)`, color: "#FFFFFF", fontSize: 14, fontWeight: 700, cursor: sendingEmail ? "wait" : "pointer", fontFamily: "'Outfit',sans-serif", opacity: sendingEmail ? 0.6 : 1 }}>
-                              {sendingEmail ? "Sending..." : "Send Email"}
-                            </button>
-                          </div>
-                        )}
-                        {leadDrawerTab === "email" && !leadDrawer.email && (
-                          <div style={{ padding: 40, textAlign: "center", color: T.textMuted, fontSize: 12 }}>No email address for this lead. Add one in the Details tab.</div>
-                        )}
-                      </div>
-
-                      {/* Footer */}
-                      {leadDrawerTab === "details" && (
-                        <div style={{ padding: "16px 24px", borderTop: `1px solid ${T.border}`, background: T.surfaceAlt }}>
-                          <div style={{ display: "flex", gap: 10, marginBottom: 12 }}>
-                            <input type="text" placeholder="Add a note... (Enter to save)" value={leadNote} onChange={e => setLeadNote(e.target.value)} onKeyDown={e => { if (e.key === "Enter") addNote(); }} style={{ flex: 1, padding: "10px 14px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 12, fontFamily: "'Outfit',sans-serif", outline: "none" }} />
-                            <button type="button" disabled={leadNoteSaving || !leadNote.trim()} onClick={addNote} style={{ padding: "10px 16px", borderRadius: 8, border: "none", background: T.gold, color: T.bg, fontSize: 12, fontWeight: 600, cursor: leadNoteSaving ? "wait" : "pointer", fontFamily: "'Outfit',sans-serif", opacity: leadNoteSaving || !leadNote.trim() ? 0.5 : 1 }}>
-                              {leadNoteSaving ? "..." : "Add"}
-                            </button>
-                          </div>
-                          <button type="button" onClick={async () => {
-                            if (!window.confirm(`Delete lead "${leadDrawer.name || leadDrawer.email}"?`)) return;
-                            try { await deleteDoc(doc(db, "leads", leadDrawer.id)); notify("Lead deleted"); setLeadDrawer(null); fetchLeads(); } catch (e) { notify("Error: " + e.message); }
-                          }} style={{ width: "100%", padding: "10px", borderRadius: 8, border: `1px solid rgba(239,68,68,0.3)`, background: "rgba(239,68,68,0.08)", color: T.red, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
-                            Delete Lead
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </>
-            );
-          })()}
-
-          {/* ═══════════════════════════════════════
-             NOTIFICATIONS TAB
-             ═══════════════════════════════════════ */}
           {tab === "notifications" && <NotificationsTab T={T} notify={notify} adminUser={adminUser} I={I} users={users} db={db} />}
           {tab === "campaigns" && <EmailCampaignsTab T={T} db={db} notify={notify} adminUser={adminUser} leads={leads} leadsTotal={leads.length} fetchLeads={fetchLeads} />}
 
