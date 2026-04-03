@@ -17323,11 +17323,7 @@ export default function AdminPanel() {
               LEADS TAB
               ═══════════════════════════════════════════════════════ */}
           
-          {/* ══════════════════════════════════════════════
-              ORGANISATIONS TAB — Session 2 will build this
-              Foundation stub: structure is ready
-          ══════════════════════════════════════════════ */}
-          {{tab === "orgs" && (
+          {tab === "orgs" && (
             <div style={{ padding:"0 0 40px" }}>
 
               {/* ── Header ── */}
