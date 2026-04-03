@@ -48,9 +48,49 @@ const COMMUNITIES = [
   {id:"BB", name:"Business Bay",            area:"CBD",          projects:1, type:"CBD Mixed",          avgPpsf:2200},
 ];
 
-const STATUS_OPT  = ["Off-Plan","Under Construction","Ready","Delivered","On Hold","Cancelled"];
+const STATUS_OPT  = ["Off-Plan","Under Construction","Near Completion","Ready","Delivered","Resale","On Hold","Cancelled"];
 const TIER_OPT    = ["Mid-Market","Mid-Premium","Premium","Luxury","Ultra-Luxury","Luxury Branded","Ultra-Lux Branded"];
-const TYPE_OPT    = ["Apartments","Villas","Townhouses","Apts & TH","Apts & PH","Penthouse"];
+// ── Full DLD-verified property type taxonomy ─────────────────────────────────
+const PROPERTY_USAGE = ["Residential","Commercial","Mixed-Use","Hospitality","Industrial"];
+
+const TYPE_BY_USAGE = {
+  Residential: [
+    // Apartments
+    "Studio Apartment","1BR Apartment","2BR Apartment","3BR Apartment","4BR+ Apartment",
+    "Duplex Apartment","Loft Apartment","Serviced Apartment","Hotel Apartment",
+    // Large format residential
+    "Penthouse","Duplex Penthouse","Sky Villa","Full Floor",
+    // Ground-level residential
+    "Townhouse","Semi-Detached Villa","Detached Villa","Compound Villa","Mansion",
+    // Mixed apartment formats
+    "Apts & TH","Apts & PH","Mixed Residential",
+  ],
+  Commercial: [
+    // Office
+    "Office Unit","Office Floor","Business Centre Unit","Co-Working Space","Smart Desk",
+    // Retail
+    "Retail Shop","Showroom","Kiosk","F&B Unit","Mall Unit","Street Retail",
+    // Industrial
+    "Warehouse","Light Industrial","Cold Storage","Logistics Hub","Factory",
+    // Other Commercial
+    "Commercial Building","Commercial Villa","Commercial Floor","Commercial Plot",
+  ],
+  "Mixed-Use": [
+    "Mixed Residential & Commercial","Mixed Office & Retail","Mixed Hotel & Residential",
+    "Live-Work Unit","Podium Retail + Residential Tower",
+  ],
+  Hospitality: [
+    "Hotel Apartment","Serviced Apartment","Hotel Suite","Apart-Hotel","Holiday Home",
+    "Hotel Room","Branded Residence","Resort Villa",
+  ],
+  Industrial: [
+    "Warehouse","Light Industrial Unit","Heavy Industrial","Cold Storage Facility",
+    "Data Centre","Logistics Hub","Factory",
+  ],
+};
+
+// Flat list for backward compat
+const TYPE_OPT = Object.values(TYPE_BY_USAGE).flat();
 const RISK_OPT    = ["Low","Low-Medium","Medium","High","Critical"];
 const PHASE_OPT   = ["Concept","Pre-Development","Foundation","Structure","MEP","Finishing","Handover","Delivered"];
 const CONF_OPT    = ["VERIFIED","HIGH","MEDIUM","ESTIMATED"];
@@ -227,7 +267,8 @@ function ProjectModal({project,onSave,onClose,saving}) {
       <Grid cols={3} gap={12}>
         <Fld label="Project Name" cols={2}><Inp value={form.name} onChange={v=>s("name",v)} placeholder="e.g. Vida Residences Hillside"/></Fld>
         <Fld label="Community"><Sel value={form.community} onChange={v=>s("community",v)} options={["", ...COMMUNITIES.map(c=>({value:c.name,label:c.name}))]}/></Fld>
-        <Fld label="Property Type"><Sel value={form.type} onChange={v=>s("type",v)} options={TYPE_OPT}/></Fld>
+        <Fld label="Usage Category"><Sel value={form.usage} onChange={v=>{s("usage",v);s("type",(TYPE_BY_USAGE[v]||TYPE_OPT)[0]);}} options={PROPERTY_USAGE}/></Fld>
+        <Fld label="Property Type"><Sel value={form.type} onChange={v=>s("type",v)} options={(TYPE_BY_USAGE[form.usage||"Residential"]||TYPE_OPT).map(t=>({value:t,label:t}))}/></Fld>
         <Fld label="Bedrooms"><Inp value={form.beds} onChange={v=>s("beds",v)} placeholder="e.g. 1-3BR"/></Fld>
         <Fld label="Tier"><Sel value={form.tier} onChange={v=>s("tier",v)} options={TIER_OPT}/></Fld>
         <Fld label="Status"><Sel value={form.status} onChange={v=>s("status",v)} options={STATUS_OPT}/></Fld>
@@ -245,6 +286,22 @@ function ProjectModal({project,onSave,onClose,saving}) {
         <Fld label="Size From (sqft)"><Inp type="number" value={form.sizeFrom} onChange={v=>s("sizeFrom",+v)}/></Fld>
         <Fld label="Size To (sqft)"><Inp type="number" value={form.sizeTo} onChange={v=>s("sizeTo",+v)}/></Fld>
         <Fld label="Payment Plan"><Inp value={form.payment} onChange={v=>s("payment",v)} placeholder="e.g. 80/20 or 10/80/10"/></Fld>
+      </Grid>
+
+      <Div label="Unit Features & Specifications"/>
+      <Grid cols={4} gap={12}>
+        <Fld label="Balcony"><Sel value={form.balcony||"Yes"} onChange={v=>s("balcony",v)} options={["Yes","No","Multiple","Wraparound","Terrace","Private Pool Deck"]}/></Fld>
+        <Fld label="View Type"><Sel value={form.viewType||"Community"} onChange={v=>s("viewType",v)} options={["Burj Khalifa","Sea / Water","Golf Course","Creek","Marina","City","Community","Park / Garden","Pool","Desert","Multiple Sides"]}/></Fld>
+        <Fld label="Furnishing"><Sel value={form.furnishing||"Unfurnished"} onChange={v=>s("furnishing",v)} options={["Unfurnished","Semi-Furnished","Fully Furnished","Hotel-Grade","Smart Home"]}/></Fld>
+        <Fld label="Parking Spaces"><Inp type="number" min={0} value={form.parking||0} onChange={v=>s("parking",+v)}/></Fld>
+        <Fld label="Floor Level"><Inp value={form.floorLevel||""} onChange={v=>s("floorLevel",v)} placeholder="e.g. Low / Mid / High / Podium"/></Fld>
+        <Fld label="Total Floors in Building"><Inp type="number" value={form.totalFloors||0} onChange={v=>s("totalFloors",+v)}/></Fld>
+        <Fld label="Year Built / Expected"><Inp value={form.yearBuilt||""} onChange={v=>s("yearBuilt",v)} placeholder="e.g. 2024 or Q4 2027"/></Fld>
+        <Fld label="Ownership Type"><Sel value={form.ownershipType||"Freehold"} onChange={v=>s("ownershipType",v)} options={["Freehold","Leasehold","Commonhold","Usufruct"]}/></Fld>
+        <Fld label="Sale Type"><Sel value={form.saleType||"Off-Plan"} onChange={v=>s("saleType",v)} options={["Off-Plan","Ready / Resale","Post-Handover Payment Plan","Bulk Unit Sale","Plot Sale"]}/></Fld>
+        <Fld label="STR / Holiday Home License"><Sel value={form.strEligible||"TBC"} onChange={v=>s("strEligible",v)} options={["Yes — DTCM Licensed","Yes — Eligible","No","TBC"]}/></Fld>
+        <Fld label="DTCM Permit No (Holiday Home)"><Inp value={form.dtcmPermit||""} onChange={v=>s("dtcmPermit",v)} placeholder="DTCM-XXXXXX"/></Fld>
+        <Fld label="VAT Applicable"><Sel value={form.vatApplicable||"No"} onChange={v=>s("vatApplicable",v)} options={["No (Residential)","Yes — 5% (Commercial)","Yes — 0% (First Sale)"]}/></Fld>
       </Grid>
 
       <Div label="Construction Intelligence"/>
@@ -265,6 +322,8 @@ function ProjectModal({project,onSave,onClose,saving}) {
         </div>
         <Prog val={form.construction}/>
       </div>
+
+      </Grid>
 
       <Div label="DLD / RERA Compliance (Law 8/2007 + Oqood)"/>
       <Grid cols={3} gap={12}>
