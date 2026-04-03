@@ -10670,7 +10670,6 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
           MRR <span style={{ color: T.gold, fontWeight: 700 }}>AED {mrr}</span> · Conv <span style={{ color: T.green, fontWeight: 700 }}>{convRate}%</span>
         </span>
       </div>
-    </div>
 
       {/* ── Edit User Modal ── */}
       {editingUser && (
@@ -10755,6 +10754,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
           </div>
         </div>
       )}
+    </div>
   );
 }
 
