@@ -14446,6 +14446,8 @@ export default function AdminPanel() {
       trialEnd: u.trialEnd ? u.trialEnd.slice(0, 10) : "",
       notes: u.notes || "",
       role: u.role || "user",
+      orgId: u.orgId || "",
+      orgRole: u.orgRole || "",
     });
   };
 
