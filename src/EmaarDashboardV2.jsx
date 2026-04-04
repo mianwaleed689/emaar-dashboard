@@ -15587,6 +15587,9 @@ Format clearly with these 4 sections labeled. Be specific to Dubai market. Inclu
             })();
             const { totalLeads: anaTotal, srcArr } = srcAnalytics;
 
+                        // Pre-defined nationality flags - outside JSX to keep parser clean
+            const NAT_FLAGS = {"Indian":"🇮🇳","British":"🇬🇧","Russian":"🇷🇺","Chinese":"🇨🇳","French":"🇫🇷","Pakistani":"🇵🇰","Saudi":"🇸🇦","Emirati":"🇦🇪","Egyptian":"🇪🇬","German":"🇩🇪","Italian":"🇮🇹","American":"🇺🇸","Canadian":"🇨🇦","Australian":"🇦🇺","Kazakh":"🇰🇿","Lebanese":"🇱🇧","Jordanian":"🇯🇴","Iranian":"🇮🇷","Turkish":"🇹🇷","Ukrainian":"🇺🇦"};
+
                         return (<>
               {/* ── Header ── */}
               <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:20, flexWrap:"wrap", gap:12 }}>
@@ -15869,38 +15872,32 @@ Format clearly with these 4 sections labeled. Be specific to Dubai market. Inclu
                 </div>
               )}
 
-              {/* ── LEAD SOURCE ANALYTICS PANEL ── */}
-              {showLeadAnalytics && (() => {
-                return (
-                  <div style={{ padding:"16px", background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:12, marginBottom:16 }}>
-                    <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:14 }}>
-                      <div style={{ fontFamily:"'Fraunces',serif", fontSize:15, fontWeight:800, color:T.white }}>📊 Lead Source Analytics</div>
-                      <div style={{ fontSize:11, color:T.textMuted }}>{anaTotal} total leads</div>
-                    </div>
-                    <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(200px,1fr))", gap:10 }}>
-                      {srcArr.map(([src, d, convRate, contactRate, avgBudgetStr, barW]) => {
-                        return (
-                          <div key={src} style={{ padding:"12px 14px", background:T.bg, borderRadius:9, border:`1px solid ${T.border}` }}>
-                            <div style={{ display:"flex", justifyContent:"space-between", marginBottom:6 }}>
-                              <span style={{ fontSize:12, fontWeight:700, color:T.white }}>{src}</span>
-                              <span style={{ fontSize:11, color:T.gold, fontWeight:600 }}>{d.total} leads</span>
-                            </div>
-                            <div style={{ height:3, background:T.border, borderRadius:2, marginBottom:8 }}>
-                              <div style={{ height:"100%", width:`${barW}%`, background:"rgba(212,168,67,0.7)", borderRadius:2 }}/>
-                            </div>
-                            <div style={{ display:"flex", gap:10, fontSize:10, color:T.textMuted }}>
-                              <span>Conv: <strong style={{ color:convRate>=10?"#10B981":"#EF4444" }}>{convRate}%</strong></span>
-                              <span>Contacted: <strong style={{ color:T.textSecondary }}>{contactRate}%</strong></span>
-                              <span>Avg: <strong style={{ color:T.gold }}>{avgBudgetStr}</strong></span>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                    {srcArr.length === 0 && <div style={{ textAlign:"center", padding:"20px 0", color:T.textMuted, fontSize:12 }}>No lead data yet</div>}
+                            {/* ── LEAD SOURCE ANALYTICS PANEL ── */}
+              {showLeadAnalytics && (
+                <div style={{ padding:"16px", background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:12, marginBottom:16 }}>
+                  <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:14 }}>
+                    <div style={{ fontFamily:"'Fraunces',serif", fontSize:15, fontWeight:800, color:T.white }}>Source Analytics</div>
+                    <div style={{ fontSize:11, color:T.textMuted }}>{anaTotal} total leads</div>
                   </div>
-                );
-              })()}
+                  <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(180px,1fr))", gap:10 }}>
+                    {srcArr.map(([src, d, convRate, contactRate, avgBudgetStr, barW]) => (
+                      <div key={src} style={{ padding:"12px 14px", background:T.bg, borderRadius:9, border:`1px solid ${T.border}` }}>
+                        <div style={{ display:"flex", justifyContent:"space-between", marginBottom:6 }}>
+                          <span style={{ fontSize:12, fontWeight:700, color:T.white }}>{src}</span>
+                          <span style={{ fontSize:11, color:T.gold, fontWeight:600 }}>{d.total}</span>
+                        </div>
+                        <div style={{ height:3, background:T.border, borderRadius:2, marginBottom:8 }}>
+                          <div style={{ height:"100%", width:barW+"%", background:"rgba(212,168,67,0.7)", borderRadius:2 }}/>
+                        </div>
+                        <div style={{ display:"flex", gap:10, fontSize:10, color:T.textMuted }}>
+                          <span>Conv: <strong style={{ color:convRate>=10?"#10B981":"#EF4444" }}>{convRate}%</strong></span>
+                          <span>Avg: <strong style={{ color:T.gold }}>{avgBudgetStr}</strong></span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* ── Lead List ── */}
               {myLeadsLoading ? (
@@ -15937,8 +15934,7 @@ Format clearly with these 4 sections labeled. Be specific to Dubai market. Inclu
                     const initials = name.split(" ").map(w=>w[0]).join("").slice(0,2).toUpperCase();
                     const budget = parseFloat(l.budget||0);
                     const isGV = budget >= 2000000;
-                    const natFlags = {"Indian":"🇮🇳","British":"🇬🇧","Russian":"🇷🇺","Chinese":"🇨🇳","French":"🇫🇷","Pakistani":"🇵🇰","Saudi":"🇸🇦","Emirati":"🇦🇪","Egyptian":"🇪🇬","German":"🇩🇪","Italian":"🇮🇹","American":"🇺🇸","Canadian":"🇨🇦","Australian":"🇦🇺","Kazakh":"🇰🇿","Lebanese":"🇱🇧","Jordanian":"🇯🇴","Iranian":"🇮🇷","Turkish":"🇹🇷","Ukrainian":"🇺🇦"};
-                    const flag = natFlags[l.nationality] || (l.nationality ? "🌍" : "");
+                    const flag = NAT_FLAGS[l.nationality] || (l.nationality ? "🌍" : "");
                     return (
                       <div key={l.id||i}
                         onClick={()=>{setSelectedLead(l);setLeadDrawerTab("details");}}
