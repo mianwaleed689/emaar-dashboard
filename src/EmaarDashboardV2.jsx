@@ -2719,6 +2719,20 @@ export default function EmaarDashboardV2() {
   const [projectsLoading, setProjectsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
+  /* ─── MY LEADS ADDITIONAL STATE ─── */
+  const [liveLeads, setLiveLeads] = useState([]);
+  const [leadShowAdd, setLeadShowAdd] = useState(false);
+  const [leadAddName, setLeadAddName] = useState("");
+  const [leadAddPhone, setLeadAddPhone] = useState("");
+  const [leadAddEmail, setLeadAddEmail] = useState("");
+  const [leadAddBudget, setLeadAddBudget] = useState("");
+  const [leadAddSource, setLeadAddSource] = useState("Manual");
+  const [leadAddStatus, setLeadAddStatus] = useState("New");
+  const [leadAddType, setLeadAddType] = useState("Buy");
+  const [leadAddComm, setLeadAddComm] = useState("");
+  const [leadAddSaving, setLeadAddSaving] = useState(false);
+
+
   /* ─── COMPETITORS TAB STATE ─── */
   const [cptView, setCptView] = useState("matrix");
   const [cptDevA, setCptDevA] = useState("Emaar Properties");
@@ -3324,6 +3338,17 @@ export default function EmaarDashboardV2() {
         snap => {
           const d = snap.docs.map(x => ({ id:x.id, ...x.data() }));
           setLivePortfolio(d);
+        }, () => {}
+      ));
+    }
+
+    /* ─── ALL LEADS (admin/general view) ─── */
+    if (auth.currentUser?.uid) {
+      unsubs.push(onSnapshot(
+        query(collection(db, "leads"), orderBy("createdAt", "desc"), limit(500)),
+        snap => {
+          const d = snap.docs.map(x => ({ id:x.id, ...x.data() }));
+          setLiveLeads(d);
         }, () => {}
       ));
     }
@@ -15203,6 +15228,14 @@ Format clearly with these 4 sections labeled. Be specific to Dubai market. Inclu
           ══════════════════════════════════════════════ */}
           {tab === "My Leads" && (() => {
             const isAgent   = orgRole === "agent";
+            /* ── Merge myLeads with liveLeads for admin users ── */
+            const allLeads = isLoggedIn && (isAgent || orgRole === "manager")
+              ? myLeads
+              : liveLeads.filter(l =>
+                  !auth.currentUser?.uid || l.userId === auth.currentUser.uid
+                );
+            /* Use allLeads as fallback source for mortgage leads etc ── */
+            const mortgageLeads = liveLeads.filter(l => l.type === "mortgage");
             const isManager = orgRole === "manager";
             if (!isAgent && !isManager) return (
               <div style={{ display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", padding:"80px 20px", textAlign:"center" }}>
@@ -15237,6 +15270,35 @@ Format clearly with these 4 sections labeled. Be specific to Dubai market. Inclu
             };
 
             // Filter
+            /* ── Save new lead ── */
+            const saveNewLead = async () => {
+              if (!leadAddName || !leadAddPhone) return;
+              setLeadAddSaving(true);
+              try {
+                await addDoc(collection(db, "leads"), {
+                  name: leadAddName,
+                  phone: leadAddPhone,
+                  email: leadAddEmail,
+                  budget: parseFloat(leadAddBudget) || 0,
+                  source: leadAddSource,
+                  status: leadAddStatus,
+                  type: leadAddType,
+                  community: leadAddComm,
+                  userId: auth.currentUser?.uid || "",
+                  assignedTo: auth.currentUser?.uid || "",
+                  orgId: orgId || "",
+                  createdAt: new Date().toISOString(),
+                  updatedAt: new Date().toISOString(),
+                  notes_log: [],
+                });
+                setLeadAddName(""); setLeadAddPhone(""); setLeadAddEmail("");
+                setLeadAddBudget(""); setLeadAddComm("");
+                setLeadAddSource("Manual"); setLeadAddStatus("New"); setLeadAddType("Buy");
+                setLeadShowAdd(false);
+              } catch(e) { console.error(e); }
+              setLeadAddSaving(false);
+            };
+
             const filtered = myLeads.filter(l => {
               if (leadStatusFilter !== "all" && (l.status||"New") !== leadStatusFilter) return false;
               if (leadSourceFilter !== "all" && l.source !== leadSourceFilter) return false;
@@ -15452,7 +15514,21 @@ Format clearly with these 4 sections labeled. Be specific to Dubai market. Inclu
 
               {/* ── KPI Bar ── */}
               <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:10, marginBottom:20 }}>
-                {[
+                            {/* ── Mortgage leads banner (from Banking tab) ── */}
+            {mortgageLeads.length > 0 && (
+              <div style={{ padding:"10px 16px", background:"rgba(212,168,67,0.08)", border:"1px solid rgba(212,168,67,0.2)", borderRadius:10, marginBottom:12, display:"flex", gap:12, alignItems:"center" }}>
+                <div style={{ fontFamily:"'Fraunces',serif", fontSize:18, fontWeight:800, color:T.gold }}>{mortgageLeads.length}</div>
+                <div>
+                  <div style={{ fontSize:12, fontWeight:700, color:T.white }}>Mortgage Leads from Banking tab</div>
+                  <div style={{ fontSize:11, color:T.textMuted }}>Buyers who requested mortgage quotes — ready to convert</div>
+                </div>
+                <button type="button" onClick={()=>handleTabChange("Banking")}
+                  style={{ marginLeft:"auto", padding:"5px 12px", background:"rgba(212,168,67,0.15)", border:"1px solid rgba(212,168,67,0.3)", borderRadius:6, color:T.gold, fontSize:11, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>
+                  View Banking →
+                </button>
+              </div>
+            )}
+            {[
                   { label:"Total Leads",  value:myLeads.length,                                  color:T.gold,  icon:<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg> },
                   { label:"New Today",    value:newToday,                                         color:T.teal,  icon:<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> },
                   { label:"In Progress",  value:myLeads.filter(l=>["Contacted","Viewing","Offer"].includes(l.status)).length, color:"#8B5CF6", icon:<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg> },
@@ -15495,10 +15571,65 @@ Format clearly with these 4 sections labeled. Be specific to Dubai market. Inclu
                     Clear
                   </button>
                 )}
-                <div style={{ marginLeft:"auto", fontSize:11, color:T.textMuted }}>
-                  {filtered.length} of {myLeads.length} leads
+                <div style={{ marginLeft:"auto", display:"flex", gap:8, alignItems:"center" }}>
+                  <span style={{ fontSize:11, color:T.textMuted }}>{filtered.length} of {myLeads.length} leads</span>
+                  <button type="button" onClick={()=>setLeadShowAdd(v=>!v)}
+                    style={{ padding:"7px 14px", background:leadShowAdd?"rgba(212,168,67,0.15)":"linear-gradient(135deg,rgba(212,168,67,0.9),rgba(184,146,42,0.9))", border:`1px solid ${leadShowAdd?"rgba(212,168,67,0.4)":"transparent"}`, borderRadius:8, color:leadShowAdd?T.gold:"#000", fontSize:11, fontWeight:700, cursor:"pointer", fontFamily:"'Outfit',sans-serif", whiteSpace:"nowrap" }}>
+                    {leadShowAdd ? "✕ Cancel" : "+ Add Lead"}
+                  </button>
                 </div>
               </div>
+
+              {/* ── ADD LEAD FORM ── */}
+              {leadShowAdd && (
+                <div style={{ padding:"18px 20px", background:"rgba(212,168,67,0.05)", border:"1px solid rgba(212,168,67,0.2)", borderRadius:12, marginBottom:16 }}>
+                  <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:14 }}>New Lead</div>
+                  <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:10, marginBottom:10 }}>
+                    {[
+                      { label:"Full Name *", val:leadAddName, set:setLeadAddName, ph:"Client name" },
+                      { label:"WhatsApp / Phone *", val:leadAddPhone, set:setLeadAddPhone, ph:"+971 50 XXX XXXX" },
+                      { label:"Email", val:leadAddEmail, set:setLeadAddEmail, ph:"email@email.com" },
+                      { label:"Budget (AED)", val:leadAddBudget, set:setLeadAddBudget, ph:"e.g. 1500000" },
+                      { label:"Community / Area", val:leadAddComm, set:setLeadAddComm, ph:"e.g. Dubai Marina, JVC" },
+                    ].map((f,i)=>(
+                      <div key={i}>
+                        <div style={{ fontSize:11, color:T.textMuted, marginBottom:4 }}>{f.label}</div>
+                        <input type="text" value={f.val} onChange={e=>f.set(e.target.value)} placeholder={f.ph}
+                          style={{ width:"100%", padding:"8px 12px", background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:8, color:T.white, fontFamily:"'Outfit',sans-serif", fontSize:12, outline:"none", boxSizing:"border-box" }} />
+                      </div>
+                    ))}
+                    <div>
+                      <div style={{ fontSize:11, color:T.textMuted, marginBottom:4 }}>Type</div>
+                      <select value={leadAddType} onChange={e=>setLeadAddType(e.target.value)}
+                        style={{ width:"100%", padding:"8px 12px", background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:8, color:T.white, fontFamily:"'Outfit',sans-serif", fontSize:12, outline:"none", cursor:"pointer" }}>
+                        {["Buy","Rent","Invest","Off-Plan","Mortgage"].map(t=><option key={t}>{t}</option>)}
+                      </select>
+                    </div>
+                  </div>
+                  <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr auto", gap:10, alignItems:"flex-end" }}>
+                    <div>
+                      <div style={{ fontSize:11, color:T.textMuted, marginBottom:4 }}>Source</div>
+                      <select value={leadAddSource} onChange={e=>setLeadAddSource(e.target.value)}
+                        style={{ width:"100%", padding:"8px 12px", background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:8, color:T.white, fontFamily:"'Outfit',sans-serif", fontSize:12, outline:"none", cursor:"pointer" }}>
+                        {["Manual","Referral","Property Finder","Bayut","Dubizzle","WhatsApp","Meta/Facebook","Instagram","Google Ads","Website","Cold Call","Email","TikTok","LinkedIn","Snapchat"].map(s=><option key={s}>{s}</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <div style={{ fontSize:11, color:T.textMuted, marginBottom:4 }}>Status</div>
+                      <select value={leadAddStatus} onChange={e=>setLeadAddStatus(e.target.value)}
+                        style={{ width:"100%", padding:"8px 12px", background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:8, color:T.white, fontFamily:"'Outfit',sans-serif", fontSize:12, outline:"none", cursor:"pointer" }}>
+                        {["New","Contacted","Qualified","Viewing","Offer","Won","Lost","On Hold"].map(s=><option key={s}>{s}</option>)}
+                      </select>
+                    </div>
+                    <button type="button"
+                      disabled={leadAddSaving || !leadAddName || !leadAddPhone}
+                      onClick={saveNewLead}
+                      style={{ padding:"9px 24px", background:(!leadAddName||!leadAddPhone||leadAddSaving)?T.surfaceAlt:"linear-gradient(135deg,#D4A843,#B8922A)", border:"none", borderRadius:8, color:(!leadAddName||!leadAddPhone||leadAddSaving)?T.textMuted:"#000", fontSize:13, fontWeight:700, cursor:(!leadAddName||!leadAddPhone||leadAddSaving)?"not-allowed":"pointer", fontFamily:"'Outfit',sans-serif", height:38 }}>
+                      {leadAddSaving ? "Saving..." : "Save Lead →"}
+                    </button>
+                  </div>
+                </div>
+              )}
 
               {/* ── Lead List ── */}
               {myLeadsLoading ? (
