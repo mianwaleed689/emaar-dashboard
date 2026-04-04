@@ -15631,7 +15631,7 @@ Format clearly with these 4 sections labeled. Be specific to Dubai market. Inclu
                   { label:"Total Leads",  value:displayLeads.length,                                  color:T.gold,  icon:<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg> },
                   { label:"New Today",    value:newToday,                                         color:T.teal,  icon:<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> },
                   { label:"In Progress",  value:displayLeads.filter(l=>["Contacted","Viewing","Offer"].includes(l.status)).length, color:"#8B5CF6", icon:<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg> },
-                  { label:"Pipeline Value", value:`AED ${totalVal >= 1e6 ? (totalVal/1e6).toFixed(1)+"M" : totalVal.toLocaleString()}`, color:T.green, icon:<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg> },
+                  { label:"Pipeline Value", value:`AED ${totalVal >= 1e6 ? (totalVal*0.000001).toFixed(1)+"M" : totalVal.toLocaleString()}`, color:T.green, icon:<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg> },
                 ].map((k,i) => (
                   <div key={i} style={{ background:T.card, border:`1px solid ${T.border}`, borderRadius:12, padding:"14px 16px", position:"relative", overflow:"hidden" }}>
                     <div style={{ position:"absolute", top:0, left:0, right:0, height:2, background:`linear-gradient(90deg,${k.color},${k.color}30)` }}/>
@@ -15887,10 +15887,12 @@ Format clearly with these 4 sections labeled. Be specific to Dubai market. Inclu
                     </div>
                     <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(200px,1fr))", gap:10 }}>
                       {srcArr.map(([src, d]) => {
-                        const convRate = d.total > 0 ? Math.round((d.won/d.total)*100) : 0;
-                        const contactRate = d.total > 0 ? Math.round((d.contacted/d.total)*100) : 0;
-                        const avgBudget = d.total > 0 ? d.budget/d.total : 0;
-                        const barW = totalLeads > 0 ? Math.round((d.total/totalLeads)*100) : 0;
+                        const tot = Math.max(d.total, 1);
+                        const ttl = Math.max(totalLeads, 1);
+                        const convRate = d.total > 0 ? Math.round(d.won * 100 / tot) : 0;
+                        const contactRate = d.total > 0 ? Math.round(d.contacted * 100 / tot) : 0;
+                        const avgBudget = d.total > 0 ? Math.round(d.budget / tot) : 0;
+                        const barW = totalLeads > 0 ? Math.round(d.total * 100 / ttl) : 0;
                         return (
                           <div key={src} style={{ padding:"12px 14px", background:T.bg, borderRadius:9, border:`1px solid ${T.border}` }}>
                             <div style={{ display:"flex", justifyContent:"space-between", marginBottom:6 }}>
@@ -15903,7 +15905,7 @@ Format clearly with these 4 sections labeled. Be specific to Dubai market. Inclu
                             <div style={{ display:"flex", gap:10, fontSize:10, color:T.textMuted }}>
                               <span>Conv: <strong style={{ color:convRate>=10?"#10B981":"#EF4444" }}>{convRate}%</strong></span>
                               <span>Contacted: <strong style={{ color:T.textSecondary }}>{contactRate}%</strong></span>
-                              <span>Avg: <strong style={{ color:T.gold }}>{avgBudget>=1e6?(avgBudget/1e6).toFixed(1)+"M":avgBudget>0?Math.round(avgBudget/1000)+"K":"—"}</strong></span>
+                              <span>Avg: <strong style={{ color:T.gold }}>{avgBudget>=1e6?(avgBudget*0.000001).toFixed(1)+"M":avgBudget>0?Math.round(avgBudget*0.001)+"K":"—"}</strong></span>
                             </div>
                           </div>
                         );
@@ -16001,7 +16003,7 @@ Format clearly with these 4 sections labeled. Be specific to Dubai market. Inclu
 
                         {/* Budget */}
                         <div style={{ fontSize:12, fontWeight:700, color:budget >= 2000000 ? T.gold : T.textPrimary }}>
-                          {budget > 0 ? `AED ${budget >= 1e6 ? (budget/1e6).toFixed(1)+"M" : budget.toLocaleString()}` : "—"}
+                          {budget > 0 ? (budget >= 1e6 ? "AED "+(budget*0.000001).toFixed(1)+"M" : "AED "+budget.toLocaleString()) : "—"}
                         </div>
 
                         {/* Date */}
@@ -16477,7 +16479,7 @@ Write a short, professional WhatsApp message (3-4 lines) introducing Dubai prope
                                 </div>
                                 {m.price > 0 && (
                                   <div style={{ fontSize:11, fontWeight:700, color:T.gold, flexShrink:0, marginLeft:8 }}>
-                                    AED {parseFloat(m.price)>=1e6?(parseFloat(m.price)/1e6).toFixed(2)+"M":parseInt(m.price).toLocaleString()}
+                                    AED {parseFloat(m.price)>=1e6?(parseFloat(m.price)*0.000001).toFixed(2)+"M":parseInt(m.price).toLocaleString()}
                                   </div>
                                 )}
                               </div>
