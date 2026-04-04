@@ -1576,7 +1576,6 @@ function CommunityMapTab({ activeProjects, liveCommunityROI, setTab, seedCommuni
     "Emaar Beachfront":           [25.0882, 55.1385],
   };
 
-  const [selectedProject, setSelectedProjectMap] = React.useState(null);
   const [filterComm, setFilterComm] = React.useState("All");
   const [filterYield, setFilterYield] = React.useState("All");
   const [mapLoaded, setMapLoaded] = React.useState(false);
@@ -2361,7 +2360,6 @@ export default function EmaarDashboardV2() {
   // Price Alerts (old per-project alert modal — kept for project cards)
   const [showSetAlert, setShowSetAlert] = React.useState(null);
   const [selectedNbhd, setSelectedNbhd] = React.useState(null);
-  const [strCommunity, setStrCommunity] = React.useState("All");
   const [devSort, setDevSort] = React.useState("revenue");
   const [dldCommunity, setDldCommunity] = React.useState("All");
   const [dldDeveloper, setDldDeveloper] = React.useState("All");
