@@ -9018,7 +9018,7 @@ export default function EmaarDashboardV2() {
 
                   {/* Column headers */}
                   <div style={{ overflowX:"auto", WebkitOverflowScrolling:"touch" }}>
-                  <div style={{ display:"grid", gridTemplateColumns:"32px minmax(100px,1fr) 70px 70px 80px 90px 70px", minWidth:520", gap:8, padding:"8px 16px", fontSize:9, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.8, borderBottom:`1px solid ${T.border}` }}>
+                  <div style={{ display:"grid", gridTemplateColumns:"32px minmax(100px,1fr) 70px 70px 80px 90px 70px", minWidth:520, gap:8, padding:"8px 16px", fontSize:9, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.8, borderBottom:`1px solid ${T.border}` }}>
                     <div>#</div><div>Agent</div><div>Leads</div><div>Deals</div><div>Closed</div><div>Pipeline</div><div>Conv %</div>
                   </div>
 
@@ -9376,7 +9376,7 @@ export default function EmaarDashboardV2() {
                 </div>
 
                 {/* Column headers */}
-                <div style={{ display:"grid", gridTemplateColumns:"minmax(120px,1fr) 90px 110px 110px 110px 75px 36px", minWidth:660", gap:8, padding:"8px 18px", fontSize:9, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.8, borderBottom:`1px solid ${T.border}` }}>
+                <div style={{ display:"grid", gridTemplateColumns:"minmax(120px,1fr) 90px 110px 110px 110px 75px 36px", minWidth:660, gap:8, padding:"8px 18px", fontSize:9, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.8, borderBottom:`1px solid ${T.border}` }}>
                   <div>Agent</div><div>Role</div><div>RERA Card</div><div>Expiry</div><div>Comm Split</div><div>Leads</div><div></div>
                 </div>
 
@@ -9393,7 +9393,7 @@ export default function EmaarDashboardV2() {
                   const isChanging   = agentRoleChanging[agent.uid] || false;
 
                   return (
-                    <div key={agent.uid} style={{ display:"grid", gridTemplateColumns:"minmax(120px,1fr) 90px 110px 110px 110px 75px 36px", minWidth:660", gap:8, padding:"13px 18px", alignItems:"center", borderBottom:`1px solid ${T.border}`, background:i%2===0?"transparent":"rgba(255,255,255,0.01)" }}>
+                    <div key={agent.uid} style={{ display:"grid", gridTemplateColumns:"minmax(120px,1fr) 90px 110px 110px 110px 75px 36px", minWidth:660, gap:8, padding:"13px 18px", alignItems:"center", borderBottom:`1px solid ${T.border}`, background:i%2===0?"transparent":"rgba(255,255,255,0.01)" }}>
 
                       {/* Agent info */}
                       <div style={{ display:"flex", alignItems:"center", gap:10, minWidth:0 }}>
@@ -10177,7 +10177,7 @@ export default function EmaarDashboardV2() {
                   </div>
 
                   {/* Column headers */}
-                  <div style={{ display:"grid", gridTemplateColumns:"70px minmax(80px,1fr) 65px 65px 80px 100px 90px", minWidth:570", gap:8, padding:"8px 16px", fontSize:9, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.8, borderBottom:`1px solid ${T.border}` }}>
+                  <div style={{ display:"grid", gridTemplateColumns:"70px minmax(80px,1fr) 65px 65px 80px 100px 90px", minWidth:570, gap:8, padding:"8px 16px", fontSize:9, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.8, borderBottom:`1px solid ${T.border}` }}>
                     <div>Unit</div><div>Type / View</div><div>Beds</div><div>Size</div><div>Floor</div><div>Price (AED)</div><div>Status</div>
                   </div>
 
@@ -10191,7 +10191,7 @@ export default function EmaarDashboardV2() {
                   ) : filteredUnits.map((unit, i) => {
                     const sc = UNIT_STATUS[unit.status||"Available"] || UNIT_STATUS.Available;
                     return (
-                      <div key={unit.id||i} style={{ display:"grid", gridTemplateColumns:"70px minmax(80px,1fr) 65px 65px 80px 100px 90px", minWidth:570", gap:8, padding:"11px 16px", alignItems:"center", borderBottom:`1px solid ${T.border}`, background:i%2===0?"transparent":"rgba(255,255,255,0.01)" }}>
+                      <div key={unit.id||i} style={{ display:"grid", gridTemplateColumns:"70px minmax(80px,1fr) 65px 65px 80px 100px 90px", minWidth:570, gap:8, padding:"11px 16px", alignItems:"center", borderBottom:`1px solid ${T.border}`, background:i%2===0?"transparent":"rgba(255,255,255,0.01)" }}>
                         <div style={{ fontSize:12, fontWeight:700, color:T.white }}>{unit.unitNo}</div>
                         <div>
                           <div style={{ fontSize:11, fontWeight:600, color:T.textPrimary }}>{unit.type}</div>
