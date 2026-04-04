@@ -1673,25 +1673,106 @@ function CommunityMapTab({ activeProjects, liveCommunityROI, setTab, seedCommuni
   };
 
   const getCoords = (project) => {
-    // Exact match first
+    // 1. Direct lat/lng on project (future Firestore projects can store this)
+    if (project.lat && project.lng) return [project.lat, project.lng];
+    if (project.latitude && project.longitude) return [project.latitude, project.longitude];
+    if (project.coords && project.coords.length === 2) return project.coords;
+
+    // 2. Exact project name match
     if (projectCoords[project.name]) return projectCoords[project.name];
     if (projectCoords[project.project]) return projectCoords[project.project];
-    // Community fallback coords
-    const communityFallback = {
-      "Dubai Creek Harbour": [25.1876, 55.3344],
-      "Dubai Hills Estate": [25.1100, 55.2580],
-      "Emaar South": [24.8980, 55.1640],
-      "Emaar Beachfront": [25.0780, 55.1340],
-      "Downtown Dubai": [25.1972, 55.2744],
-      "Business Bay": [25.1867, 55.2653],
-      "Arabian Ranches 3": [25.0530, 55.2690],
-      "Mudon": [25.0200, 55.2500],
-      "The Valley": [25.0000, 55.5000],
-      "Grand Polo Club": [24.8500, 55.4200],
-      "The Oasis": [25.0200, 55.1800],
-      "Rashid Yachts & Marina": [25.2200, 55.3100],
+
+    // 3. Community lookup — comprehensive list of ALL Dubai communities
+    const ALL_COMMUNITY_COORDS = {
+      // Our 20 seed communities
+      "Jumeirah Village Circle":    [25.0607, 55.2088],
+      "JVC":                        [25.0607, 55.2088],
+      "Dubai Marina":               [25.0807, 55.1429],
+      "Business Bay":               [25.1854, 55.2719],
+      "Downtown Dubai":             [25.1972, 55.2744],
+      "Dubai Hills Estate":         [25.1124, 55.2594],
+      "Dubai Hills":                [25.1124, 55.2594],
+      "Palm Jumeirah":              [25.1124, 55.1390],
+      "Jumeirah Lake Towers":       [25.0699, 55.1478],
+      "JLT":                        [25.0699, 55.1478],
+      "Arabian Ranches":            [25.0517, 55.2699],
+      "International City":         [25.1621, 55.4121],
+      "Dubai Creek Harbour":        [25.1942, 55.3556],
+      "Al Furjan":                  [25.0255, 55.1494],
+      "Dubai South":                [24.8972, 55.1615],
+      "Mohammed Bin Rashid City":   [25.1740, 55.3310],
+      "MBR City":                   [25.1740, 55.3310],
+      "Sobha Hartland":             [25.1825, 55.3427],
+      "Tilal Al Ghaf":              [25.0308, 55.2290],
+      "Discovery Gardens":          [25.0366, 55.1318],
+      "Dubai Silicon Oasis":        [25.1175, 55.3796],
+      "DSO":                        [25.1175, 55.3796],
+      "Arjan":                      [25.0552, 55.2178],
+      "DAMAC Hills 2":              [24.9729, 55.3035],
+      "Emaar Beachfront":           [25.0882, 55.1385],
+      // Extended communities
+      "DIFC":                       [25.2100, 55.2800],
+      "City Walk":                  [25.2000, 55.2550],
+      "Jumeirah":                   [25.1900, 55.2200],
+      "Jumeirah 1":                 [25.1900, 55.2200],
+      "Jumeirah 2":                 [25.1900, 55.2400],
+      "Jumeirah 3":                 [25.1900, 55.2100],
+      "Mirdif":                     [25.2200, 55.4200],
+      "Al Quoz":                    [25.1500, 55.2200],
+      "Bur Dubai":                  [25.2600, 55.2900],
+      "Deira":                      [25.2700, 55.3200],
+      "Al Barsha":                  [25.1100, 55.2000],
+      "The Greens":                 [25.0900, 55.1700],
+      "The Views":                  [25.0900, 55.1750],
+      "The Meadows":                [25.0650, 55.1700],
+      "The Springs":                [25.0550, 55.1750],
+      "The Lakes":                  [25.0500, 55.1600],
+      "Arabian Ranches 2":          [25.0300, 55.2800],
+      "Arabian Ranches 3":          [25.0530, 55.2690],
+      "Dubailand":                  [25.0400, 55.3800],
+      "Motor City":                 [25.0520, 55.2380],
+      "Sports City":                [25.0400, 55.2300],
+      "Dubai Sports City":          [25.0400, 55.2300],
+      "DAMAC Hills":                [25.0300, 55.2500],
+      "Mudon":                      [25.0200, 55.2500],
+      "Town Square":                [25.0000, 55.2800],
+      "The Valley":                 [25.0100, 55.5000],
+      "The Oasis":                  [25.0200, 55.1800],
+      "Tilal Al Ghaf":              [25.0308, 55.2290],
+      "Emaar South":                [24.8980, 55.1640],
+      "Dubai World Central":        [24.8972, 55.1615],
+      "Jebel Ali":                  [24.9900, 55.0700],
+      "Dubai Industrial City":      [24.9500, 55.1500],
+      "Rashid Yachts & Marina":     [25.2200, 55.3100],
+      "Dubai Islands":              [25.2900, 55.3300],
+      "Palm Deira":                 [25.2900, 55.3300],
+      "Bluewaters":                 [25.0800, 55.1200],
+      "Dubai Harbour":              [25.0800, 55.1300],
+      "Grand Polo Club":            [24.8500, 55.4200],
+      "Yas Island":                 [24.4900, 54.6100], // Abu Dhabi
+      "Saadiyat Island":            [24.5300, 54.4300], // Abu Dhabi
+      "Reem Island":                [24.5000, 54.4000], // Abu Dhabi
+      "Creek Waters":               [25.1876, 55.3344],
+      "Dubai Creek Harbour":        [25.1942, 55.3556],
+      "Nad Al Sheba":               [25.1600, 55.3100],
+      "Meydan":                     [25.1700, 55.3000],
+      "Al Safa":                    [25.1700, 55.2400],
+      "Umm Suqeim":                 [25.1400, 55.2000],
+      "Madinat Jumeirah":           [25.1400, 55.1850],
     };
-    return communityFallback[project.community] || [25.1972, 55.2744];
+
+    if (ALL_COMMUNITY_COORDS[project.community]) return ALL_COMMUNITY_COORDS[project.community];
+
+    // 4. Partial community name match (handles "Dubai Hills" matching "Dubai Hills Estate")
+    const commLower = (project.community || "").toLowerCase();
+    const partialMatch = Object.entries(ALL_COMMUNITY_COORDS).find(([key]) =>
+      key.toLowerCase().includes(commLower) || commLower.includes(key.toLowerCase().split(" ").slice(0,2).join(" "))
+    );
+    if (partialMatch) return partialMatch[1];
+
+    // 5. Default — Downtown Dubai center (never fails)
+    console.warn("DXB Map: No coords for", project.community, "— using Downtown default");
+    return [25.1972, 55.2744];
   };
 
   const getYield = (project) => {
@@ -1777,13 +1858,13 @@ function CommunityMapTab({ activeProjects, liveCommunityROI, setTab, seedCommuni
       const icon = L.divIcon({
         className: "",
         html: `<div style="display:flex;flex-direction:column;align-items:center;cursor:pointer;"><div style="background:${color};color:#000;font-size:10px;font-weight:800;padding:3px 7px;border-radius:6px;box-shadow:0 2px 10px rgba(0,0,0,0.7);">${y.toFixed(1)}%</div><div style="width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-top:7px solid ${color};"></div></div>`,
-        iconSize: [46, 32], iconAnchor: [23, 32],: [6, 6],
+        iconSize: [46, 32], iconAnchor: [23, 32],
       });
       const marker = L.marker(coords, { icon })
         .addTo(map)
         .bindPopup(`<div style="font-family:'Outfit',sans-serif;min-width:180px;background:#0D1821;color:#fff;border-radius:10px;padding:0;">
           <div style="background:linear-gradient(135deg,rgba(212,168,67,0.15),rgba(212,168,67,0.05));padding:12px 14px;border-radius:10px 10px 0 0;border-bottom:1px solid rgba(255,255,255,0.08);">
-            <div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:2px;">\${p.name}</div>
+            <div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:2px;">\${p.project || p.name || "Project"}</div>
             <div style="font-size:10px;color:#94A3B8;">\${p.community}</div>
           </div>
           <div style="padding:10px 14px;display:grid;grid-template-columns:1fr 1fr;gap:6px;">
