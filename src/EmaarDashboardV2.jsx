@@ -1897,18 +1897,7 @@ function CommunityMapTab({ activeProjects, liveCommunityROI, setTab, seedCommuni
       });
       const marker = L.marker(coords, { icon })
         .addTo(map)
-        .bindPopup(`<div style="font-family:'Outfit',sans-serif;min-width:180px;background:#0D1821;color:#fff;border-radius:10px;padding:0;">
-          <div style="background:linear-gradient(135deg,rgba(212,168,67,0.15),rgba(212,168,67,0.05));padding:12px 14px;border-radius:10px 10px 0 0;border-bottom:1px solid rgba(255,255,255,0.08);">
-            <div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:2px;">\${p.project || p.name || "Project"}</div>
-            <div style="font-size:10px;color:#94A3B8;">\${p.community}</div>
-          </div>
-          <div style="padding:10px 14px;display:grid;grid-template-columns:1fr 1fr;gap:6px;">
-            <div><div style="font-size:9px;color:#94A3B8;text-transform:uppercase;">Price</div><div style="font-size:12px;font-weight:700;color:#D4A843;">\${p.priceMin ? "AED " + (p.priceMin/1e6).toFixed(2) + "M" : (p.priceMin || p.price) ? "AED " + ((p.priceMin || p.price)/1e6).toFixed(2) + "M" : "TBC"}</div></div>
-            <div><div style="font-size:9px;color:#94A3B8;text-transform:uppercase;">Yield</div><div style="font-size:12px;font-weight:700;color:\${color}">\${y.toFixed(1)}%</div></div>
-            <div><div style="font-size:9px;color:#94A3B8;text-transform:uppercase;">Type</div><div style="font-size:11px;color:#CBD5E1;">\${p.type || "Residential"}</div></div>
-            <div><div style="font-size:9px;color:#94A3B8;text-transform:uppercase;">Handover</div><div style="font-size:11px;color:#CBD5E1;">\${p.handover || "TBC"}</div></div>
-          </div>
-        </div>`, { className: "dxb-popup" });
+        .bindPopup(`<div style="font-family:'Outfit',sans-serif;min-width:180px;background:#0D1821;color:#fff;border-radius:10px;padding:0;">\n          <div style="background:linear-gradient(135deg,rgba(212,168,67,0.15),rgba(212,168,67,0.05));padding:12px 14px;border-radius:10px 10px 0 0;border-bottom:1px solid rgba(255,255,255,0.08);">\n            <div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:2px;">\${p.project || p.name || "Project"}</div>\n            <div style="font-size:10px;color:#94A3B8;">\${p.community}</div>\n          </div>\n          <div style="padding:10px 14px;display:grid;grid-template-columns:1fr 1fr;gap:6px;">\n            <div><div style="font-size:9px;color:#94A3B8;text-transform:uppercase;">Price</div><div style="font-size:12px;font-weight:700;color:#D4A843;">\${p.priceMin ? "AED " + (p.priceMin/1e6).toFixed(2) + "M" : (p.priceMin || p.price) ? "AED " + ((p.priceMin || p.price)/1e6).toFixed(2) + "M" : "TBC"}</div></div>\n            <div><div style="font-size:9px;color:#94A3B8;text-transform:uppercase;">Yield</div><div style="font-size:12px;font-weight:700;color:\${color}">\${y.toFixed(1)}%</div></div>\n            <div><div style="font-size:9px;color:#94A3B8;text-transform:uppercase;">Type</div><div style="font-size:11px;color:#CBD5E1;">\${p.type || "Residential"}</div></div>\n            <div><div style="font-size:9px;color:#94A3B8;text-transform:uppercase;">Handover</div><div style="font-size:11px;color:#CBD5E1;">\${p.handover || "TBC"}</div></div>\n          </div>\n        </div>`, { className: "dxb-popup" });
       marker.on("click", () => setSelectedProjectMap(p));
       markersRef.current.push(marker);
     });
@@ -1931,11 +1920,7 @@ function CommunityMapTab({ activeProjects, liveCommunityROI, setTab, seedCommuni
           weight: 2,
           opacity: 0.7,
         }).addTo(map);
-        circle.bindTooltip(`<div style="font-family:'Outfit',sans-serif;background:#0D1821;color:#fff;border:1px solid ${color};border-radius:8px;padding:8px 12px;font-size:12px;">
-          <strong style="color:${color}">${name}</strong><br/>
-          ${mapLayer === "ppsf" ? "PPSF: " : mapLayer === "volume" ? "Volume: " : "Yield: "}<strong>${value}</strong><br/>
-          <span style="color:#94A3B8;font-size:10px">YoY: +${data.yoy}%</span>
-        </div>`, { permanent: false, sticky: true, className: "dxb-tooltip" });
+        circle.bindTooltip(`<div style="font-family:'Outfit',sans-serif;background:#0D1821;color:#fff;border:1px solid ${color};border-radius:8px;padding:8px 12px;font-size:12px;">\n          <strong style="color:${color}">${name}</strong><br/>\n          ${mapLayer === "ppsf" ? "PPSF: " : mapLayer === "volume" ? "Volume: " : "Yield: "}<strong>${value}</strong><br/>\n          <span style="color:#94A3B8;font-size:10px">YoY: +${data.yoy}%</span>\n        </div>`, { permanent: false, sticky: true, className: "dxb-tooltip" });
         heatLayersRef.current.push(circle);
       });
     }
@@ -14198,22 +14183,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                     max_tokens:1000,
                     messages:[{
                       role:"user",
-                      content:`You are a Dubai real estate listing specialist. Write a professional, SEO-optimized property listing description for Bayut and Property Finder.
-
-Property details:
-- Community: ${mktListingComm}
-- Type: ${mktListingType}
-- Bedrooms: ${mktListingBeds}BR
-- Price: AED ${(mktListingPrice/1000000).toFixed(2)}M
-- Key features: ${mktListingFeatures || "Modern finishes, built-in wardrobes, balcony"}
-
-Write:
-1. HEADLINE (max 10 words, compelling)
-2. DESCRIPTION (150-200 words, include ROI angle, Golden Visa eligibility if AED 2M+, community highlights, payment terms)
-3. WHATSAPP MESSAGE (50 words max, casual, with call to action)
-4. KEY SEARCH TAGS (10 tags for portal SEO)
-
-Format clearly with these 4 sections labeled. Be specific to Dubai market. Include yield % if relevant. No generic phrases.`
+                      content:`You are a Dubai real estate listing specialist. Write a professional, SEO-optimized property listing description for Bayut and Property Finder.\n\nProperty details:\n- Community: ${mktListingComm}\n- Type: ${mktListingType}\n- Bedrooms: ${mktListingBeds}BR\n- Price: AED ${(mktListingPrice/1000000).toFixed(2)}M\n- Key features: ${mktListingFeatures || "Modern finishes, built-in wardrobes, balcony"}\n\nWrite:\n1. HEADLINE (max 10 words, compelling)\n2. DESCRIPTION (150-200 words, include ROI angle, Golden Visa eligibility if AED 2M+, community highlights, payment terms)\n3. WHATSAPP MESSAGE (50 words max, casual, with call to action)\n4. KEY SEARCH TAGS (10 tags for portal SEO)\n\nFormat clearly with these 4 sections labeled. Be specific to Dubai market. Include yield % if relevant. No generic phrases.`
                     }]
                   })
                 });
@@ -16070,13 +16040,7 @@ Format clearly with these 4 sections labeled. Be specific to Dubai market. Inclu
                         <button type="button" onClick={async()=>{
                           setBrochureLoading(true);
                           try {
-                            const prompt = `Create a professional property brochure message for this Dubai real estate client:
-Name: ${selectedLead.name||"Client"}
-Budget: AED ${Number(selectedLead.budget||0).toLocaleString()}
-Looking for: ${selectedLead.type||"Property"} in ${selectedLead.community||"Dubai"}
-Beds: ${selectedLead.beds||"Any"}
-Purpose: ${selectedLead.purpose||"Purchase"}
-Write a short, professional WhatsApp message (3-4 lines) introducing Dubai properties matching their profile. Include a call to action.`;
+                            const prompt = `Create a professional property brochure message for this Dubai real estate client:\nName: ${selectedLead.name||"Client"}\nBudget: AED ${Number(selectedLead.budget||0).toLocaleString()}\nLooking for: ${selectedLead.type||"Property"} in ${selectedLead.community||"Dubai"}\nBeds: ${selectedLead.beds||"Any"}\nPurpose: ${selectedLead.purpose||"Purchase"}\nWrite a short, professional WhatsApp message (3-4 lines) introducing Dubai properties matching their profile. Include a call to action.`;
                             const res = await fetch("/api/proxy?service=claude",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:300,messages:[{role:"user",content:prompt}]})});
                             const data = await res.json();
                             const text = data.content?.[0]?.text||"";
@@ -19992,13 +19956,7 @@ Write a short, professional WhatsApp message (3-4 lines) introducing Dubai prope
                     </div>
                   </div>
 
-                  ${Array.isArray(p.units) && p.units.length > 0 ? `
-                  <div class="section">
-                    <div class="section-title">Unit Mix & Availability</div>
-                    <div class="grid4">
-                      ${p.units.map(u => `<div class="card"><div class="card-label">${u.type}</div><div class="card-value" style="font-size:16px">${u.available}/${u.total}</div><div class="card-note">Available</div></div>`).join("")}
-                    </div>
-                  </div>` : ""}
+                  ${Array.isArray(p.units) && p.units.length > 0 ? `\n                  <div class="section">\n                    <div class="section-title">Unit Mix & Availability</div>\n                    <div class="grid4">\n                      ${p.units.map(u => `<div class="card"><div class="card-label">${u.type}</div><div class="card-value" style="font-size:16px">${u.available}/${u.total}</div><div class="card-note">Available</div></div>`).join("")}\n                    </div>\n                  </div>` : ""}
 
                   <div class="section">
                     <div class="section-title">Investment Summary</div>
