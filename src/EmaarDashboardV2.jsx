@@ -2689,7 +2689,7 @@ export default function EmaarDashboardV2() {
   const [lcDev, setLcDev] = useState("All");
   const [lcStatus, setLcStatus] = useState("All");
   const [lcType, setLcType] = useState("All");
-  const [lcView, setLcView] = useState("cards");
+  const [lcView, setLcView] = useState("list");
 
   /* ─── NEIGHBOURHOODS STATE ─── */
   const [nbhSearch, setNbhSearch] = useState("");
@@ -2707,8 +2707,8 @@ export default function EmaarDashboardV2() {
 
 
   /* ─── PROJECTS TAB FILTER STATE ─── */
-  const [projMode, setProjMode] = useState("Residential");
-  const [projView, setProjView] = useState("cards");
+  const [projMode, setProjMode] = useState("Apartment");
+  const [projView, setProjView] = useState("grid");
   const [projSearch, setProjSearch] = useState("");
   const [projDev, setProjDev] = useState("All");
   const [projCommunity, setProjCommunity] = useState("All");
