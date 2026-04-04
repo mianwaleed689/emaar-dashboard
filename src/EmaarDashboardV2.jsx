@@ -4066,6 +4066,20 @@ export default function EmaarDashboardV2() {
                   </div>
                 </div>
 
+                {/* Quick nav */}
+                <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
+                  {[
+                    { label: "DLD Volumes →", tab: "DLD Volumes" },
+                    { label: "Price History →", tab: "Price History" },
+                    { label: "Neighbourhoods →", tab: "Neighbourhoods" },
+                    { label: "Developer Health →", tab: "Developer Health" },
+                  ].map((n,i) => (
+                    <button key={i} type="button" onClick={() => handleTabChange(n.tab)}
+                      style={{ padding: "6px 14px", background: "rgba(212,168,67,0.06)", border: `1px solid ${T.border}`, borderRadius: 8, color: T.gold, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                      {n.label}
+                    </button>
+                  ))}
+                </div>
                 {/* Data sources */}
                 <div style={{ paddingTop: 16, borderTop: `1px solid ${T.border}`, display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
                   <span style={{ fontSize: 10, color: T.textMuted }}>Sources:</span>
@@ -4262,6 +4276,19 @@ export default function EmaarDashboardV2() {
                   </div>
                 )}
 
+                {/* Quick nav */}
+                <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
+                  {[
+                    { label: "Price History →", tab: "Price History" },
+                    { label: "Neighbourhoods →", tab: "Neighbourhoods" },
+                    { label: "Investment Score →", tab: "Investment Score" },
+                  ].map((n,i) => (
+                    <button key={i} type="button" onClick={() => handleTabChange(n.tab)}
+                      style={{ padding: "6px 14px", background: "rgba(212,168,67,0.06)", border: `1px solid ${T.border}`, borderRadius: 8, color: T.gold, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                      {n.label}
+                    </button>
+                  ))}
+                </div>
                 {/* Sources */}
                 <div style={{ paddingTop: 12, borderTop: `1px solid ${T.border}`, display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
                   <span style={{ fontSize: 10, color: T.textMuted }}>Sources:</span>
@@ -4510,6 +4537,19 @@ export default function EmaarDashboardV2() {
                   </div>
                 )}
 
+                {/* Quick nav */}
+                <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
+                  {[
+                    { label: "DLD Volumes →", tab: "DLD Volumes" },
+                    { label: "Yields →", tab: "Yields" },
+                    { label: "Neighbourhoods →", tab: "Neighbourhoods" },
+                  ].map((n,i) => (
+                    <button key={i} type="button" onClick={() => handleTabChange(n.tab)}
+                      style={{ padding: "6px 14px", background: "rgba(212,168,67,0.06)", border: `1px solid ${T.border}`, borderRadius: 8, color: T.gold, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                      {n.label}
+                    </button>
+                  ))}
+                </div>
                 {/* Sources */}
                 <div style={{ paddingTop: 12, borderTop: `1px solid ${T.border}`, display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
                   <span style={{ fontSize: 10, color: T.textMuted }}>Sources:</span>
@@ -5164,6 +5204,19 @@ export default function EmaarDashboardV2() {
                   </div>
                 )}
 
+                {/* Quick nav */}
+                <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
+                  {[
+                    { label: "Browse Projects →", tab: "Projects" },
+                    { label: "Dev Portal →", tab: "Dev Portal" },
+                    { label: "DLD Volumes →", tab: "DLD Volumes" },
+                  ].map((n,i) => (
+                    <button key={i} type="button" onClick={() => handleTabChange(n.tab)}
+                      style={{ padding: "6px 14px", background: "rgba(212,168,67,0.06)", border: `1px solid ${T.border}`, borderRadius: 8, color: T.gold, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                      {n.label}
+                    </button>
+                  ))}
+                </div>
                 {/* Sources */}
                 <div style={{ paddingTop: 12, borderTop: `1px solid ${T.border}`, display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
                   <span style={{ fontSize: 10, color: T.textMuted }}>Sources:</span>
