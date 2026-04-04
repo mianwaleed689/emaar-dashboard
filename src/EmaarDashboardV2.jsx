@@ -2700,6 +2700,15 @@ export default function EmaarDashboardV2() {
   const [scCalcRate, setScCalcRate] = useState(15);
   const [scCalcRent, setScCalcRent] = useState(90000);
   /* ─── HANDOVER TAB STATE ─── */
+  /* ─── HANDOVER DETAIL VIEW STATE ─── */
+  const [hdvFilter, setHdvFilter] = useState("All");
+  const [hdvDev, setHdvDev] = useState("All");
+  const [hdvCommunity, setHdvCommunity] = useState("All");
+  const [hdvRisk, setHdvRisk] = useState("All");
+  const [hdvView, setHdvView] = useState("cards");
+  const [hdvSearch, setHdvSearch] = useState("");
+  const [hdvSelected, setHdvSelected] = useState(null);
+  /* ─── HANDOVER TAB STATE ─── */
   const [hvFilter, setHvFilter] = useState("All");
   const [hvSort, setHvSort] = useState("handover");
   const [hvDev, setHvDev] = useState("All");
