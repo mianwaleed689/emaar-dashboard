@@ -2139,6 +2139,32 @@ export default function EmaarDashboardV2() {
   const [gPriceMax, setGPriceMax] = useState(0);
   const [gFilterOpen, setGFilterOpen] = useState(false);
 
+  /* ─── MARKET TAB STATE ─── */
+  const [expandedForecast, setExpandedForecast] = useState(null);
+
+  /* ─── DLD VOLUMES TAB STATE ─── */
+  const [dldFilter, setDldFilter] = useState({ community: "All", type: "All", txType: "All", developer: "All", nationality: "All" });
+  const [dldSort, setDldSort] = useState("transactions");
+  const [dldSearch, setDldSearch] = useState("");
+  const [dldView, setDldView] = useState("table");
+
+  /* ─── PRICE HISTORY TAB STATE ─── */
+  const [phCommunity, setPhCommunity] = useState("All");
+  const [phType, setPhType] = useState("Apartment");
+  const [phBeds, setPhBeds] = useState("All");
+  const [phView, setPhView] = useState("chart");
+  const [phCompare, setPhCompare] = useState(false);
+  const [phCommunity2, setPhCommunity2] = useState("All");
+
+  /* ─── NEIGHBOURHOODS TAB STATE ─── */
+  const [nbhSearch, setNbhSearch] = useState("");
+  const [nbhTypeFilter, setNbhTypeFilter] = useState("All");
+  const [nbhYieldFilter, setNbhYieldFilter] = useState("All");
+  const [nbhRiskFilter, setNbhRiskFilter] = useState("All");
+  const [nbhSort, setNbhSort] = useState("yield");
+  const [nbhView, setNbhView] = useState("grid");
+  const [nbhCompare, setNbhCompare] = useState([]);
+
   /* Expose as single context object for all tabs */
   const globalCtx = {
     developer: gDeveloper, community: gCommunity,
@@ -3716,7 +3742,7 @@ export default function EmaarDashboardV2() {
 
             /* ── Forecast Card ── */
             const ForecastCard = ({ firm, forecast, detail, color }) => {
-              const [expanded, setExpanded] = React.useState(false);
+              /* use expandedForecast state from top level */
               return (
                 <div className="chart-box" style={{ borderTop: `3px solid ${color}`, cursor: "pointer" }} onClick={() => setExpanded(e => !e)}>
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
@@ -3897,10 +3923,7 @@ export default function EmaarDashboardV2() {
           {tab === "DLD Volumes" && (() => {
 
             /* ── Local state ── */
-            const [dldFilter, setDldFilter] = React.useState({ community: "All", type: "All", txType: "All", developer: "All", nationality: "All" });
-            const [dldSort, setDldSort] = React.useState("transactions");
-            const [dldSearch, setDldSearch] = React.useState("");
-            const [dldView, setDldView] = React.useState("table"); // table | chart
+            /* state moved to top level */
 
             /* ── Filter data ── */
             const rawData = liveDLDVolumes || [];
@@ -4087,12 +4110,7 @@ export default function EmaarDashboardV2() {
           {/* ─── PRICE HISTORY TAB ─── */}
           {tab === "Price History" && (() => {
 
-            const [phCommunity, setPhCommunity] = React.useState("All");
-            const [phType, setPhType] = React.useState("Apartment");
-            const [phBeds, setPhBeds] = React.useState("All");
-            const [phView, setPhView] = React.useState("chart"); // chart | table
-            const [phCompare, setPhCompare] = React.useState(false);
-            const [phCommunity2, setPhCommunity2] = React.useState("All");
+            /* state moved to top level */
 
             /* ── Data from Firestore priceHistory collection ── */
             const phData = liveMarketData?.filter?.(d => d.type === "priceHistory") || [];
@@ -4330,13 +4348,7 @@ export default function EmaarDashboardV2() {
           {/* ─── NEIGHBOURHOODS TAB ─── */}
           {tab === "Neighbourhoods" && (() => {
 
-            const [nbhSearch, setNbhSearch] = React.useState("");
-            const [nbhTypeFilter, setNbhTypeFilter] = React.useState("All");
-            const [nbhYieldFilter, setNbhYieldFilter] = React.useState("All");
-            const [nbhRiskFilter, setNbhRiskFilter] = React.useState("All");
-            const [nbhSort, setNbhSort] = React.useState("yield");
-            const [nbhView, setNbhView] = React.useState("grid"); // grid | table
-            const [nbhCompare, setNbhCompare] = React.useState([]);
+            /* state moved to top level */
 
             /* ── Community data from Firestore ── */
             const rawNbh = liveMarketData?.filter?.(d => d.type === "community") || [];
