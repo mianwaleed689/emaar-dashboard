@@ -2477,6 +2477,19 @@ export default function EmaarDashboardV2() {
   };
   const scoreColor = (s) => s >= 80 ? T.green : s >= 65 ? T.gold : T.red;
   const scoreLabel = (s) => s >= 80 ? "Strong Buy" : s >= 65 ? "Buy" : s >= 50 ? "Hold" : "Caution";
+  /* ─── HANDOVER STATUS + RISK CONFIG — top level (used by tab + overlay) ─── */
+  const statusCfg = {
+    "On Track": { color: T.green,   bg: "rgba(16,185,129,0.12)",  label: "On Track"  },
+    "Delayed":  { color: "#F97316", bg: "rgba(249,115,22,0.12)",  label: "Delayed"   },
+    "At Risk":  { color: T.red,     bg: "rgba(239,68,68,0.12)",   label: "At Risk"   },
+    "Ready":    { color: T.teal,    bg: "rgba(20,184,166,0.12)",  label: "Ready"     },
+  };
+  const riskCfg = {
+    "Low":    { color: T.green,   dot: T.green   },
+    "Medium": { color: "#F97316", dot: "#F97316" },
+    "High":   { color: T.red,     dot: T.red     },
+  };
+
 
   /* ─── SEED PROJECTS — top level so Map + Projects tabs can both use it ─── */
   const SEED_PROJECTS = [
@@ -6792,18 +6805,8 @@ export default function EmaarDashboardV2() {
             const daysTo = (dateStr) => Math.round((new Date(dateStr) - today) / 86400000);
             const monthsTo = (dateStr) => Math.round(daysTo(dateStr) / 30);
 
-            const statusCfg = {
-              "On Track": { color: T.green,   bg: "rgba(16,185,129,0.12)",  label: "On Track"  },
-              "Delayed":  { color: "#F97316", bg: "rgba(249,115,22,0.12)",  label: "Delayed"   },
-              "At Risk":  { color: T.red,     bg: "rgba(239,68,68,0.12)",   label: "At Risk"   },
-              "Ready":    { color: T.teal,    bg: "rgba(20,184,166,0.12)",  label: "Ready"     },
-            };
-
-            const riskCfg = {
-              "Low":    { color: T.green,   dot: T.green   },
-              "Medium": { color: "#F97316", dot: "#F97316" },
-              "High":   { color: T.red,     dot: T.red     },
-            };
+            /* statusCfg and riskCfg defined at top level */
+            /* selSt defined locally */
 
             const filtered = rawHandover.filter(p => {
               if (hvFilter !== "All" && p.status !== hvFilter) return false;
@@ -7478,13 +7481,7 @@ export default function EmaarDashboardV2() {
             };
 
             /* ══ RISK CONFIG ══ */
-            const riskCfg = {
-              "On Track":     { color: T.green, bg: "rgba(16,185,129,0.12)", label: "On Track" },
-              "Near Handover":{ color: T.teal,  bg: "rgba(20,184,166,0.12)", label: "Near Handover" },
-              "Minor Delay":  { color: T.gold,  bg: "rgba(212,168,67,0.12)", label: "Minor Delay" },
-              "Major Delay":  { color: T.red,   bg: "rgba(239,68,68,0.12)",  label: "Major Delay" },
-              "Early Stage":  { color: "#8B5CF6",bg:"rgba(139,92,246,0.12)", label: "Early Stage" },
-            };
+            /* riskCfg — defined at top level */
 
             const delayRiskCfg = {
               "Low":    { color: T.green, label: "Low Risk" },
