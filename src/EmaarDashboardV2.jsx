@@ -15227,17 +15227,22 @@ Format clearly with these 4 sections labeled. Be specific to Dubai market. Inclu
               MY LEADS TAB — Session 4 — Agent CRM Inbox
           ══════════════════════════════════════════════ */}
           {tab === "My Leads" && (() => {
-            const isAgent   = orgRole === "agent";
-            /* ── Merge myLeads with liveLeads for admin users ── */
-            const allLeads = isLoggedIn && (isAgent || orgRole === "manager")
-              ? myLeads
-              : liveLeads.filter(l =>
-                  !auth.currentUser?.uid || l.userId === auth.currentUser.uid
-                );
+            const isAgent      = orgRole === "agent";
+            const isManager    = orgRole === "manager";
+            const isSuperAdmin = orgRole === "superadmin" || orgRole === "admin" || isSuperAdminUser === true || userRole === "superadmin" || userRole === "admin";
+            const canSeeleads  = isAgent || isManager || isSuperAdmin;
+            /* ── Merge myLeads with liveLeads — superadmin sees ALL ── */
+            const allLeads = isSuperAdmin
+              ? liveLeads  /* superadmin sees every lead in the platform */
+              : isAgent || isManager
+                ? myLeads  /* agents/managers see their org leads */
+                : liveLeads.filter(l =>
+                    !auth.currentUser?.uid || l.userId === auth.currentUser.uid
+                  );
             /* Use allLeads as fallback source for mortgage leads etc ── */
             const mortgageLeads = liveLeads.filter(l => l.type === "mortgage");
             const isManager = orgRole === "manager";
-            if (!isAgent && !isManager) return (
+            if (!canSeeleads) return (
               <div style={{ display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", padding:"80px 20px", textAlign:"center" }}>
                 <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke={T.textMuted} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginBottom:16 }}><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
                 <div style={{ fontSize:16, fontWeight:700, color:T.textPrimary, marginBottom:6 }}>Leads not enabled for your account</div>
@@ -15299,7 +15304,8 @@ Format clearly with these 4 sections labeled. Be specific to Dubai market. Inclu
               setLeadAddSaving(false);
             };
 
-            const filtered = myLeads.filter(l => {
+            const displayLeads = isSuperAdmin ? allLeads : myLeads;
+            const filtered = displayLeads.filter(l => {
               if (leadStatusFilter !== "all" && (l.status||"New") !== leadStatusFilter) return false;
               if (leadSourceFilter !== "all" && l.source !== leadSourceFilter) return false;
               if (leadSearch.trim()) {
@@ -15529,9 +15535,9 @@ Format clearly with these 4 sections labeled. Be specific to Dubai market. Inclu
               </div>
             )}
             {[
-                  { label:"Total Leads",  value:myLeads.length,                                  color:T.gold,  icon:<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg> },
+                  { label:"Total Leads",  value:displayLeads.length,                                  color:T.gold,  icon:<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg> },
                   { label:"New Today",    value:newToday,                                         color:T.teal,  icon:<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> },
-                  { label:"In Progress",  value:myLeads.filter(l=>["Contacted","Viewing","Offer"].includes(l.status)).length, color:"#8B5CF6", icon:<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg> },
+                  { label:"In Progress",  value:displayLeads.filter(l=>["Contacted","Viewing","Offer"].includes(l.status)).length, color:"#8B5CF6", icon:<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg> },
                   { label:"Pipeline Value", value:`AED ${totalVal >= 1e6 ? (totalVal/1e6).toFixed(1)+"M" : totalVal.toLocaleString()}`, color:T.green, icon:<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg> },
                 ].map((k,i) => (
                   <div key={i} style={{ background:T.card, border:`1px solid ${T.border}`, borderRadius:12, padding:"14px 16px", position:"relative", overflow:"hidden" }}>
@@ -15563,7 +15569,7 @@ Format clearly with these 4 sections labeled. Be specific to Dubai market. Inclu
                 <select value={leadSourceFilter} onChange={e=>setLeadSourceFilter(e.target.value)}
                   style={{ flex:"1 1 130px", padding:"9px 12px", background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:8, color:T.textPrimary, fontSize:12, fontFamily:"'Outfit',sans-serif", outline:"none", cursor:"pointer" }}>
                   <option value="all">All Sources</option>
-                  {[...new Set(myLeads.map(l=>l.source).filter(Boolean))].map(s => <option key={s} value={s}>{s}</option>)}
+                  {[...new Set(displayLeads.map(l=>l.source).filter(Boolean))].map(s => <option key={s} value={s}>{s}</option>)}
                 </select>
                 {(leadSearch || leadStatusFilter !== "all" || leadSourceFilter !== "all") && (
                   <button type="button" onClick={()=>{setLeadSearch("");setLeadStatusFilter("all");setLeadSourceFilter("all");}}
@@ -15572,7 +15578,7 @@ Format clearly with these 4 sections labeled. Be specific to Dubai market. Inclu
                   </button>
                 )}
                 <div style={{ marginLeft:"auto", display:"flex", gap:8, alignItems:"center" }}>
-                  <span style={{ fontSize:11, color:T.textMuted }}>{filtered.length} of {myLeads.length} leads</span>
+                  <span style={{ fontSize:11, color:T.textMuted }}>{filtered.length} of {displayLeads.length} leads</span>
                   <button type="button" onClick={()=>setLeadShowAdd(v=>!v)}
                     style={{ padding:"7px 14px", background:leadShowAdd?"rgba(212,168,67,0.15)":"linear-gradient(135deg,rgba(212,168,67,0.9),rgba(184,146,42,0.9))", border:`1px solid ${leadShowAdd?"rgba(212,168,67,0.4)":"transparent"}`, borderRadius:8, color:leadShowAdd?T.gold:"#000", fontSize:11, fontWeight:700, cursor:"pointer", fontFamily:"'Outfit',sans-serif", whiteSpace:"nowrap" }}>
                     {leadShowAdd ? "✕ Cancel" : "+ Add Lead"}
