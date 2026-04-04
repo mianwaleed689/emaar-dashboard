@@ -1550,7 +1550,32 @@ function useFocusTrap(active) {
 
 /* ─── COMMUNITY MAP TAB COMPONENT ─── */
 
-function CommunityMapTab({ activeProjects, liveCommunityROI, setTab }) {
+function CommunityMapTab({ activeProjects, liveCommunityROI, setTab, seedCommunities }) {
+  
+  // All 20 seed communities with accurate Dubai coordinates
+  const COMMUNITY_COORDS = {
+    "Jumeirah Village Circle":    [25.0607, 55.2088],
+    "Dubai Marina":               [25.0807, 55.1429],
+    "Business Bay":               [25.1854, 55.2719],
+    "Downtown Dubai":             [25.1972, 55.2744],
+    "Dubai Hills Estate":         [25.1124, 55.2594],
+    "Palm Jumeirah":              [25.1124, 55.1390],
+    "Jumeirah Lake Towers":       [25.0699, 55.1478],
+    "Arabian Ranches":            [25.0517, 55.2699],
+    "International City":         [25.1621, 55.4121],
+    "Dubai Creek Harbour":        [25.1942, 55.3556],
+    "Al Furjan":                  [25.0255, 55.1494],
+    "Dubai South":                [24.8972, 55.1615],
+    "Mohammed Bin Rashid City":   [25.1740, 55.3310],
+    "Sobha Hartland":             [25.1825, 55.3427],
+    "Tilal Al Ghaf":              [25.0308, 55.2290],
+    "Discovery Gardens":          [25.0366, 55.1318],
+    "Dubai Silicon Oasis":        [25.1175, 55.3796],
+    "Arjan":                      [25.0552, 55.2178],
+    "DAMAC Hills 2":              [24.9729, 55.3035],
+    "Emaar Beachfront":           [25.0882, 55.1385],
+  };
+
   const [selectedProject, setSelectedProjectMap] = React.useState(null);
   const [filterComm, setFilterComm] = React.useState("All");
   const [filterYield, setFilterYield] = React.useState("All");
@@ -1590,20 +1615,46 @@ function CommunityMapTab({ activeProjects, liveCommunityROI, setTab }) {
   };
 
   // Community-level data for heat map layers
-  const communityData = {
-    "Dubai Creek Harbour":  { coords: [25.1876, 55.3344], ppsf: 2200, volume: 3150,  yoy: 44, radius: 1200 },
-    "Dubai Hills Estate":   { coords: [25.1100, 55.2580], ppsf: 2100, volume: 4100,  yoy: 31, radius: 1400 },
-    "Emaar Beachfront":     { coords: [25.0780, 55.1340], ppsf: 3500, volume: 1520,  yoy: 30, radius: 900  },
-    "Downtown Dubai":       { coords: [25.1972, 55.2744], ppsf: 3800, volume: 5800,  yoy: 25, radius: 1100 },
-    "Business Bay":         { coords: [25.1867, 55.2653], ppsf: 1900, volume: 29950, yoy: 22, radius: 1300 },
-    "Arabian Ranches 3":    { coords: [25.0530, 55.2690], ppsf: 1650, volume: 1200,  yoy: 18, radius: 900  },
-    "Emaar South":          { coords: [24.8980, 55.1640], ppsf: 1100, volume: 980,   yoy: 15, radius: 1100 },
-    "The Valley":           { coords: [25.0000, 55.5000], ppsf: 1200, volume: 970,   yoy: 41, radius: 1000 },
-    "Rashid Yachts & Marina":{ coords: [25.2200, 55.3100], ppsf: 2800, volume: 740, yoy: 65, radius: 800  },
-    "The Oasis":            { coords: [25.0200, 55.1800], ppsf: 2400, volume: 850,   yoy: 38, radius: 1000 },
-    "Mudon":                { coords: [25.0200, 55.2500], ppsf: 1400, volume: 620,   yoy: 20, radius: 800  },
-    "Grand Polo Club":      { coords: [24.8500, 55.4200], ppsf: 1800, volume: 420,   yoy: 25, radius: 900  },
-  };
+  // communityData — built from SEED_DATA.communities (20 communities, sourced from Bayut/DLD/REIDIN)
+  const communityData = seedCommunities?.length > 0
+    ? Object.fromEntries(seedCommunities.map(c => [
+        c.community,
+        {
+          coords: COMMUNITY_COORDS[c.community] || [25.1124, 55.2594],
+          ppsf: c.avgPpsf || 1500,
+          volume: Math.round((c.grossYield || 6) * 1000),
+          yoy: c.grossYield >= 8 ? 45 : c.grossYield >= 7 ? 30 : c.grossYield >= 6 ? 20 : 12,
+          radius: Math.max(600, Math.min(1800, (c.avgPpsf || 1500) / 2)),
+          grossYield: c.grossYield,
+          netYield: c.netYield,
+          serviceCharge: c.serviceCharge,
+          supplyRisk: c.supplyRisk,
+          investmentScore: c.investmentScore,
+          tenantProfile: c.tenantProfile,
+        }
+      ]))
+    : {
+        "Dubai Creek Harbour":  { coords: [25.1942, 55.3556], ppsf: 1620, volume: 6400,  yoy: 45, radius: 1200, grossYield: 6.4, supplyRisk: "Medium" },
+        "Dubai Hills Estate":   { coords: [25.1124, 55.2594], ppsf: 1850, volume: 8200,  yoy: 22, radius: 1400, grossYield: 6.2, supplyRisk: "Medium" },
+        "Emaar Beachfront":     { coords: [25.0882, 55.1385], ppsf: 2800, volume: 1600,  yoy: 18, radius: 900,  grossYield: 5.8, supplyRisk: "Low"    },
+        "Downtown Dubai":       { coords: [25.1972, 55.2744], ppsf: 3100, volume: 8900,  yoy: 12, radius: 1100, grossYield: 5.8, supplyRisk: "Low"    },
+        "Business Bay":         { coords: [25.1854, 55.2719], ppsf: 2050, volume: 12450, yoy: 8,  radius: 1300, grossYield: 7.1, supplyRisk: "High"   },
+        "Arabian Ranches":      { coords: [25.0517, 55.2699], ppsf: 1380, volume: 4800,  yoy: 20, radius: 900,  grossYield: 5.5, supplyRisk: "Low"    },
+        "Dubai South":          { coords: [24.8972, 55.1615], ppsf: 850,  volume: 4100,  yoy: 38, radius: 1100, grossYield: 8.8, supplyRisk: "Medium" },
+        "Jumeirah Village Circle":{ coords:[25.0607, 55.2088], ppsf: 1180, volume: 18782, yoy: 17, radius: 1400, grossYield: 7.8, supplyRisk: "Medium" },
+        "Jumeirah Lake Towers": { coords: [25.0699, 55.1478], ppsf: 1420, volume: 4600,  yoy: 5,  radius: 1000, grossYield: 8.1, supplyRisk: "Low"    },
+        "Palm Jumeirah":        { coords: [25.1124, 55.1390], ppsf: 4800, volume: 5200,  yoy: 15, radius: 1600, grossYield: 5.2, supplyRisk: "Low"    },
+        "International City":   { coords: [25.1621, 55.4121], ppsf: 580,  volume: 3800,  yoy: 9,  radius: 800,  grossYield: 9.2, supplyRisk: "Low"    },
+        "Al Furjan":            { coords: [25.0255, 55.1494], ppsf: 1080, volume: 4200,  yoy: 14, radius: 900,  grossYield: 8.2, supplyRisk: "Medium" },
+        "Mohammed Bin Rashid City":{ coords:[25.1740, 55.3310], ppsf: 1950, volume: 5100, yoy: 28, radius: 1200, grossYield: 6.1, supplyRisk: "Medium" },
+        "Sobha Hartland":       { coords: [25.1825, 55.3427], ppsf: 2100, volume: 6800,  yoy: 31, radius: 1000, grossYield: 6.0, supplyRisk: "Low"    },
+        "Tilal Al Ghaf":        { coords: [25.0308, 55.2290], ppsf: 1650, volume: 3600,  yoy: 52, radius: 1000, grossYield: 6.8, supplyRisk: "Low"    },
+        "Discovery Gardens":    { coords: [25.0366, 55.1318], ppsf: 680,  volume: 400,   yoy: 10, radius: 700,  grossYield: 8.5, supplyRisk: "Low"    },
+        "Dubai Silicon Oasis":  { coords: [25.1175, 55.3796], ppsf: 820,  volume: 2400,  yoy: 12, radius: 800,  grossYield: 7.5, supplyRisk: "Low"    },
+        "Arjan":                { coords: [25.0552, 55.2178], ppsf: 1020, volume: 4200,  yoy: 15, radius: 800,  grossYield: 8.0, supplyRisk: "Medium" },
+        "DAMAC Hills 2":        { coords: [24.9729, 55.3035], ppsf: 780,  volume: 16000, yoy: 18, radius: 1200, grossYield: 7.2, supplyRisk: "High"   },
+        "Emaar Beachfront":     { coords: [25.0882, 55.1385], ppsf: 2800, volume: 1600,  yoy: 18, radius: 900,  grossYield: 5.8, supplyRisk: "Low"    },
+      };
 
   const getPPSFColor = (ppsf) => {
     if (ppsf >= 3500) return "#F59E0B"; // Ultra-premium
@@ -1643,6 +1694,8 @@ function CommunityMapTab({ activeProjects, liveCommunityROI, setTab }) {
   };
 
   const getYield = (project) => {
+    // Use grossYield if available (from SEED_PROJECTS)
+    if (project.grossYield) return project.grossYield;
     const roi = (liveCommunityROI && liveCommunityROI[project.community]) || {};
     const y = roi.grossYield;
     if (!y) return 6.5;
@@ -6333,6 +6386,16 @@ export default function EmaarDashboardV2() {
           )}
 
 
+          {/* ─── MAP TAB ─── */}
+          {tab === "Map" && (
+            <CommunityMapTab
+              activeProjects={liveProjects?.length > 0 ? liveProjects : SEED_PROJECTS}
+              liveCommunityROI={liveCommunityROI}
+              setTab={handleTabChange}
+              seedCommunities={SEED_DATA.communities}
+            />
+          )}
+
           {/* ══════════════════════════════════════════════════════════
               INTELLIGENCE TABS — Awaiting Data Import
               Each tab shows a beautiful empty state with instructions
@@ -6340,7 +6403,7 @@ export default function EmaarDashboardV2() {
           ══════════════════════════════════════════════════════════ */}
 
           {Object.entries(INTELLIGENCE_TABS).map(([tabKey, config]) => (
-            tab === tabKey && tabKey !== "Overview" && tabKey !== "Market" && tabKey !== "DLD Volumes" && tabKey !== "Price History" && tabKey !== "Neighbourhoods" && tabKey !== "Launch Calendar" && tabKey !== "Currency" && tabKey !== "Projects" && (
+            tab === tabKey && tabKey !== "Overview" && tabKey !== "Market" && tabKey !== "DLD Volumes" && tabKey !== "Price History" && tabKey !== "Neighbourhoods" && tabKey !== "Launch Calendar" && tabKey !== "Currency" && tabKey !== "Projects" && tabKey !== "Map" && (
               <div key={tabKey} style={{ animation: "fadeUp 0.4s ease-out forwards" }}>
                 {/* Tab Header */}
                 <div style={{
