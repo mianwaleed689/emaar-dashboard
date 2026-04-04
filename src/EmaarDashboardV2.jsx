@@ -2684,6 +2684,22 @@ export default function EmaarDashboardV2() {
   const [projectsLoading, setProjectsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
+  /* ─── PROJECTS TAB FILTER STATE ─── */
+  const [projMode, setProjMode] = useState("Residential");
+  const [projView, setProjView] = useState("cards");
+  const [projSearch, setProjSearch] = useState("");
+  const [projDev, setProjDev] = useState("All");
+  const [projCommunity, setProjCommunity] = useState("All");
+  const [projStatus, setProjStatus] = useState("All");
+  const [projBeds, setProjBeds] = useState("All");
+  const [projPriceMin, setProjPriceMin] = useState(0);
+  const [projPriceMax, setProjPriceMax] = useState(999999999);
+  const [projHandover, setProjHandover] = useState("All");
+  const [projSort, setProjSort] = useState("score");
+  const [projGrade, setProjGrade] = useState("All");
+  const [projFurnished, setProjFurnished] = useState(false);
+
+
   /* ─── PROJECT MODAL STATE ─── */
   const [selectedProject, setSelectedProject] = useState(null);
   const [projDetailTab, setProjDetailTab] = useState("Overview");
