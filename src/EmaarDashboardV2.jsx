@@ -326,7 +326,8 @@ const css = `
     /* Sidebar slides in as drawer */
     .sidebar { transform: translateX(-100%); position: fixed !important; z-index: 100; height: 100dvh !important; box-shadow: 8px 0 40px rgba(0,0,0,0.6); }
     .sidebar.open { transform: translateX(0); }
-    .main-content { margin-left: 0 !important; }
+    .free-banner { left: 0 !important; }
+    .main-content { margin-left: 0 !important; overflow-x: hidden !important; }
     .top-bar { left: 0 !important; padding: 0 14px !important; }
 
     /* Grids */
@@ -2788,7 +2789,7 @@ export default function EmaarDashboardV2() {
 
       {/* ─── FREE TIER BANNER ─── */}
       {userTier === "free" && (
-        <div style={{ position: "fixed", top: 0, left: 240, right: 0, zIndex: 60, background: `linear-gradient(90deg, ${T.gold}ee, #B8912Fee)`, padding: "8px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+        <div className="free-banner" style={{ position: "fixed", top: 60, left: 240, right: 0, zIndex: 60, background: `linear-gradient(90deg, ${T.gold}ee, #B8912Fee)`, padding: "8px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <span style={{ fontSize: 14 }}>🔒</span>
             <span style={{ fontSize: 12, fontWeight: 700, color: "#04090F" }}>You're on the Free plan — 12 tabs locked</span>
@@ -2833,7 +2834,7 @@ export default function EmaarDashboardV2() {
       </header>
 
       {/* ─── MAIN CONTENT ─── */}
-      <main role="main" id="main-content" className="main-content" style={{ marginLeft: 240, paddingTop: 60, minHeight: "100vh" }}>
+      <main role="main" id="main-content" className="main-content" style={{ marginLeft: 240, paddingTop: userTier === "free" ? 104 : 60, minHeight: "100vh", overflowX: "hidden" }}>
         {/* Trial / Free tier banner */}
         {userTier === "pro_trial" && trialDaysLeft > 0 && (() => {
           const isUrgent = trialDaysLeft <= 1;
@@ -7839,7 +7840,7 @@ export default function EmaarDashboardV2() {
               ) : (
                 <div style={{ display:"flex", flexDirection:"column", gap:2 }}>
                   {/* Column headers */}
-                  <div style={{ display:"grid", gridTemplateColumns:"1fr 70px 110px 110px 120px 130px 48px", gap:12, padding:"8px 16px", fontSize:10, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.8, borderBottom:`1px solid ${T.border}` }}>
+                  <div style={{ display:"grid", gridTemplateColumns:"minmax(150px,1fr) 65px 100px 100px 110px 110px 44px", gap:8, padding:"8px 14px", fontSize:10, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.8, borderBottom:`1px solid ${T.border}` }}>
                     <div>Lead</div>
                     <div>Score</div>
                     <div>Status</div>
@@ -7857,7 +7858,7 @@ export default function EmaarDashboardV2() {
                     return (
                       <div key={l.id||i}
                         onClick={()=>{setSelectedLead(l);setLeadDrawerTab("details");}}
-                        style={{ display:"grid", gridTemplateColumns:"1fr 70px 110px 110px 120px 130px 48px", gap:12, padding:"12px 16px", alignItems:"center", borderBottom:`1px solid ${T.border}`, cursor:"pointer", transition:"background 0.12s", borderRadius:4 }}
+                        style={{ display:"grid", gridTemplateColumns:"minmax(150px,1fr) 65px 100px 100px 110px 110px 44px", gap:8, padding:"10px 14px", alignItems:"center", borderBottom:`1px solid ${T.border}`, cursor:"pointer", transition:"background 0.12s", borderRadius:4 }}
                         onMouseEnter={e=>e.currentTarget.style.background="rgba(212,168,67,0.04)"}
                         onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
 
