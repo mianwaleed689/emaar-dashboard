@@ -2682,6 +2682,7 @@ export default function EmaarDashboardV2() {
   // Load projects from Firestore (runs for ALL users — guests and logged-in)
   const [projectsLoading, setProjectsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [livePortfolio, setLivePortfolio] = useState([]);
 
   /* ─── DXB ESTIMATE (AVM) STATE ─── */
   const [avmView, setAvmView] = useState("estimate");
