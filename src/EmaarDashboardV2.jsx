@@ -189,7 +189,7 @@ const TAB_GROUPS = [
     icon: SvgIcons.Building2,
     tabs: [
       { key: "Projects",        icon: SvgIcons.Building2 },
-      { key: "Map",             icon: Map },
+      { key: "Map",             icon: SvgIcons.Map },
       { key: "Handover",        icon: SvgIcons.Clock },
       { key: "Service Charges", icon: SvgIcons.Receipt },
     ]
@@ -227,7 +227,7 @@ const TAB_GROUPS = [
     tabs: [
       { key: "My Leads",    icon: SvgIcons.Users },
       { key: "Pipeline",    icon: SvgIcons.LayoutGrid },
-      { key: "Listings",    icon: Building },
+      { key: "Listings",    icon: SvgIcons.Building },
       { key: "Team",        icon: SvgIcons.Users2 },
       { key: "Agency",      icon: SvgIcons.Building2 },
       { key: "Compliance",  icon: SvgIcons.Shield },
