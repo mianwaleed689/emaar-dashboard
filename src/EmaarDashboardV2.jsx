@@ -629,6 +629,7 @@ const TAB_GROUPS = [
       { key: "Financials",       icon: SvgIcons.BarChart2 },
       { key: "Developer Health", icon: SvgIcons.Activity },
       { key: "Competitors",      icon: SvgIcons.Layers },
+      { key: "Banking",           icon: SvgIcons.DollarSign },
     ]
   },
   {
