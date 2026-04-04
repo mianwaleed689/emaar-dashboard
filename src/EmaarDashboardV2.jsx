@@ -3668,18 +3668,18 @@ export default function EmaarDashboardV2() {
                     onClick={() => handleTabChange("Market")} />
                   <OvKPI delay={2} label="DLD Transactions" icon={SvgIcons.Database({width:16,height:16})}
                     value={overviewKpis?.find?.(d=>d.metric==="Total Transactions")?.value || "—"}
-                    sub={liveMarketData?.find?.(d=>d.metric==="Total Transactions")?.change || "+36% YoY · 2025 record"}
+                    sub={overviewKpis?.find?.(d=>d.metric==="Total Transactions")?.change || "Source: DLD Annual Report 2025"}
                     onClick={() => handleTabChange("DLD Volumes")} />
                   <OvKPI delay={3} label="EIBOR 3M — Live" icon={SvgIcons.Landmark({width:16,height:16})}
                     value={liveMortgageRates?.[0]?.eibor3m ? liveMortgageRates[0].eibor3m.toFixed(2) + "%" : "—"}
                     sub="Updated daily · Central Bank UAE"
                     color={T.teal} onClick={() => handleTabChange("Mortgage")} />
                   <OvKPI delay={4} label="Active Developers" icon={SvgIcons.Building2({width:16,height:16})}
-                    value={allDevelopers?.length > 0 ? allDevelopers.length.toString() : "228"}
+                    value={allDevelopers?.length > 0 ? allDevelopers.length.toString() : "50+"}
                     sub="RERA registered · DLD approved"
                     onClick={() => handleTabChange("Developer Health")} />
                   <OvKPI delay={5} label="Avg Gross Yield" icon={SvgIcons.BarChart3({width:16,height:16})}
-                    value={liveYields?.length > 0 ? (liveYields.reduce((a,b) => a + (parseFloat(b.gross)||0), 0) / liveYields.length).toFixed(1) + "%" : "—"}
+                    value={liveYields?.length > 0 ? (liveYields.reduce((a,b) => a + (parseFloat(b.gross)||0), 0) / liveYields.length).toFixed(1) + "%" : SEED_DATA.communities.length > 0 ? (SEED_DATA.communities.reduce((a,b) => a + (parseFloat(b.grossYield)||0), 0) / SEED_DATA.communities.length).toFixed(1) + "%" : "—"}
                     sub="Across all communities · Bayut data"
                     color={T.green} onClick={() => handleTabChange("Yields")} />
                   <OvKPI delay={6} label="Off-Plan Share" icon={SvgIcons.BarChart2({width:16,height:16})}
@@ -3929,6 +3929,8 @@ export default function EmaarDashboardV2() {
             const stats = liveMarketData?.length > 0 ? liveMarketData : SEED_DATA.market;
             const mktIsSeed = liveMarketData?.length === 0;
             const getStat = (metric) => stats.find(s => s.metric === metric);
+            // Chart data — filter only year-based entries for bar chart
+            const chartData = stats.filter(d => d.year && d.type === "annual").map(d => ({ year: d.year, value: parseFloat(d.value) || d.value || 0 }));
 
             return (
               <div style={{ animation: "fadeUp 0.4s ease-out forwards" }}>
@@ -3946,6 +3948,13 @@ export default function EmaarDashboardV2() {
                   </div>
                 </div>
 
+                {/* Seed badge */}
+                {mktIsSeed && (
+                  <div style={{ display:"flex", alignItems:"center", gap:8, padding:"8px 14px", borderRadius:8, background:"rgba(212,168,67,0.06)", border:`1px solid rgba(212,168,67,0.2)`, marginBottom:12 }}>
+                    <span style={{width:6,height:6,borderRadius:"50%",background:T.gold,display:"inline-block"}} />
+                    <span style={{fontSize:11,color:T.textMuted}}><span style={{color:T.gold,fontWeight:700}}>Research-based seed data</span> — DLD Annual Report 2025, REIDIN Dec 2025, ValuStrat · Replace via Admin → Data Manager</span>
+                  </div>
+                )}
                 {/* ── KPI Grid ── */}
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(175px, 1fr))", gap: 12, marginBottom: 28 }}>
                   <MktStat label="Total Market Value"
@@ -3994,10 +4003,10 @@ export default function EmaarDashboardV2() {
                   <div className="chart-box">
                     <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 4 }}>Dubai Total Sales Value (AED Billions)</div>
                     <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 16 }}>Historical growth trajectory · DLD Official</div>
-                    {liveMarketData?.length > 0
+                    {chartData?.length > 0
                       ? (
                         <ResponsiveContainer width="100%" height={220}>
-                          <BarChart data={liveMarketData.filter(d => d.year).map(d => ({ year: d.year, value: parseFloat(d.value) || 0 }))}>
+                          <BarChart data={chartData.length > 0 ? chartData : []}>
                             <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
                             <XAxis dataKey="year" tick={{ fill: T.textMuted, fontSize: 11 }} axisLine={false} tickLine={false} />
                             <YAxis tick={{ fill: T.textMuted, fontSize: 11 }} axisLine={false} tickLine={false} />
@@ -4021,8 +4030,8 @@ export default function EmaarDashboardV2() {
                     <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 20 }}>Off-plan vs secondary · DLD</div>
                     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
                       {[
-                        { label: "Off-Plan", pct: getStat("Off-Plan Share")?.numericValue || 60, color: T.gold },
-                        { label: "Secondary Market", pct: 100 - (getStat("Off-Plan Share")?.numericValue || 60), color: T.teal },
+                        { label: "Off-Plan", pct: getStat("Off-Plan Share")?.numericValue || 63, color: T.gold },
+                        { label: "Secondary Market", pct: 100 - (getStat("Off-Plan Share")?.numericValue || 63), color: T.teal },
                         { label: "Cash Transactions", pct: getStat("Cash Share")?.numericValue || 55, color: T.green },
                         { label: "Mortgage Transactions", pct: getStat("Mortgage Share")?.numericValue || 45, color: T.blue },
                       ].map((item, i) => (
@@ -4156,6 +4165,13 @@ export default function EmaarDashboardV2() {
                   </div>
                 </div>
 
+                {/* Seed badge */}
+                {dldIsSeed && (
+                  <div style={{ display:"flex", alignItems:"center", gap:8, padding:"8px 14px", borderRadius:8, background:"rgba(212,168,67,0.06)", border:`1px solid rgba(212,168,67,0.2)`, marginBottom:12 }}>
+                    <span style={{width:6,height:6,borderRadius:"50%",background:T.gold,display:"inline-block"}} />
+                    <span style={{fontSize:11,color:T.textMuted}}><span style={{color:T.gold,fontWeight:700}}>Research-based seed data</span> — DXBAnalytics.com / DLD 2025 · Replace via Admin → Data Manager</span>
+                  </div>
+                )}
                 {/* ── Summary KPIs ── */}
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: 12, marginBottom: 20 }}>
                   {[
@@ -4288,7 +4304,12 @@ export default function EmaarDashboardV2() {
             const phRaw = liveMarketData?.filter?.(d => d.type === "priceHistory") || [];
             const phData = phRaw.length > 0 ? phRaw : SEED_DATA.priceHistory;
             const phIsSeed = phRaw.length === 0;
-            const communities = ["All", ...new Set(phData.map(d => d.community).filter(Boolean))];
+            // Separate year trend data from community data
+            const phChartData = phData.filter(d => d.period && !d.community);
+            const phCommunityData = phData.filter(d => d.community);
+            // Apply community filter
+            const phFiltered = phCommunity === "All" ? phCommunityData : phCommunityData.filter(d => d.community === phCommunity);
+            const communities = ["All", ...new Set(phCommunityData.map(d => d.community).filter(Boolean))];
             const bedOptions = ["All", "Studio", "1 BR", "2 BR", "3 BR", "4 BR", "5 BR+"];
             const typeOptions = ["Apartment", "Villa", "Townhouse", "Office", "Hotel Apartment"];
 
@@ -4377,7 +4398,7 @@ export default function EmaarDashboardV2() {
                 </div>
 
                 {/* ── No data state ── */}
-                {phData.length === 0 && (
+                {phCommunityData.length === 0 && phChartData.length === 0 && (
                   <div style={{ background: "rgba(212,168,67,0.05)", border: `1px solid rgba(212,168,67,0.15)`, borderRadius: 12, padding: "48px 24px", textAlign: "center", marginBottom: 20 }}>
                     <div style={{ marginBottom: 14 }}>
                       {SvgIcons.TrendingUp({ width: 40, height: 40, style: { color: T.textMuted, display: "inline-block" } })}
@@ -4389,7 +4410,7 @@ export default function EmaarDashboardV2() {
                 )}
 
                 {/* ── Chart View ── */}
-                {phView === "chart" && phData.length > 0 && (
+                {phView === "chart" && (phChartData.length > 0 || phCommunityData.length > 0) && (
                   <div style={{ display: "flex", flexDirection: "column", gap: 16, marginBottom: 20 }}>
                     {/* Main price trend chart */}
                     <div className="chart-box">
@@ -4412,7 +4433,7 @@ export default function EmaarDashboardV2() {
                         </div>
                       </div>
                       <ResponsiveContainer width="100%" height={280}>
-                        <AreaChart data={filtered.length > 0 ? filtered : phData.slice(0, 20)}>
+                        <AreaChart data={phChartData.length > 0 ? phChartData : []}>
                           <defs>
                             <linearGradient id="priceGold" x1="0" y1="0" x2="0" y2="1">
                               <stop offset="5%" stopColor={T.gold} stopOpacity={0.2}/>
@@ -4441,7 +4462,7 @@ export default function EmaarDashboardV2() {
                         <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 4 }}>Off-Plan vs Secondary</div>
                         <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 16 }}>Price divergence — same community</div>
                         <ResponsiveContainer width="100%" height={180}>
-                          <LineChart data={phData.slice(0, 12)}>
+                          <LineChart data={phChartData.slice(0, 12)}>
                             <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
                             <XAxis dataKey="period" tick={{ fill: T.textMuted, fontSize: 10 }} axisLine={false} tickLine={false} />
                             <YAxis tick={{ fill: T.textMuted, fontSize: 10 }} axisLine={false} tickLine={false} />
@@ -4458,7 +4479,7 @@ export default function EmaarDashboardV2() {
                         <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 4 }}>Price Momentum</div>
                         <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 16 }}>Community price change indicators</div>
                         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                          {phData.slice(0, 6).map((d, i) => (
+                          {phCommunityData.slice(0, 6).map((d, i) => (
                             <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                               <span style={{ fontSize: 12, color: T.textSecondary }}>{d.community || "—"}</span>
                               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -4474,14 +4495,14 @@ export default function EmaarDashboardV2() {
                 )}
 
                 {/* ── Table View ── */}
-                {phView === "table" && phData.length > 0 && (
+                {phView === "table" && phCommunityData.length > 0 && (
                   <div style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 12, overflow: "hidden", marginBottom: 20 }}>
                     <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr 1fr 1fr", padding: "10px 16px", background: T.surfaceAlt, borderBottom: `1px solid ${T.border}` }}>
                       {["Community", "Type", "Beds", "Current PPSF", "1Y Change", "3Y Change", "5Y Change"].map((h, i) => (
                         <div key={i} style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 0.8, textTransform: "uppercase" }}>{h}</div>
                       ))}
                     </div>
-                    {phData.slice(0, 50).map((row, i) => (
+                    {phCommunityData.slice(0, 50).map((row, i) => (
                       <div key={i} style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr 1fr 1fr", padding: "10px 16px", borderBottom: i < phData.length - 1 ? `1px solid ${T.border}` : "none", background: i % 2 === 0 ? "transparent" : "rgba(255,255,255,0.01)" }}
                         onMouseEnter={e => e.currentTarget.style.background = "rgba(212,168,67,0.04)"}
                         onMouseLeave={e => e.currentTarget.style.background = i % 2 === 0 ? "transparent" : "rgba(255,255,255,0.01)"}>
