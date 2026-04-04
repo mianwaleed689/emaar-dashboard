@@ -1778,9 +1778,6 @@ export default function EmaarDashboardV2() {
   const [dldLastRefresh, setDldLastRefresh] = useState(new Date());
   const [dldRefreshTick, setDldRefreshTick] = useState(0);
 
-  /* ─── BULK SELECT STATE (Session 16) ─── */
-  const [selectedLeadIds, setSelectedLeadIds] = useState(new Set());
-  const [bulkDeleting, setBulkDeleting]       = useState(false);
   /* ─── BULK IMPORT STATE (Session 16) ─── */
   const [showBulkImport, setShowBulkImport] = useState(false);
   const [importStep, setImportStep]         = useState(1); // 1=upload, 2=map, 3=preview, 4=done
@@ -7908,38 +7905,7 @@ export default function EmaarDashboardV2() {
               ) : (
                 <div style={{ display:"flex", flexDirection:"column", gap:2 }}>
                   {/* Column headers */}
-                  {/* Bulk action bar - Session 16 */}
-                  {selectedLeadIds.size > 0 && (
-                    <div style={{ display:"flex", alignItems:"center", gap:12, padding:"10px 14px", background:"rgba(239,68,68,0.08)", border:`1px solid rgba(239,68,68,0.25)`, borderRadius:10, marginBottom:8 }}>
-                      <span style={{ fontSize:13, fontWeight:700, color:T.white }}>{selectedLeadIds.size} lead{selectedLeadIds.size>1?"s":""} selected</span>
-                      <button type="button" onClick={() => setSelectedLeadIds(new Set())}
-                        style={{ padding:"5px 12px", borderRadius:6, border:`1px solid ${T.border}`, background:"none", color:T.textMuted, fontSize:11, cursor:"pointer" }}>
-                        Deselect All
-                      </button>
-                      {isManager && (
-                        <button type="button" disabled={bulkDeleting} onClick={async () => {
-                          if (!window.confirm(`Delete ${selectedLeadIds.size} lead(s)? This cannot be undone.`)) return;
-                          setBulkDeleting(true);
-                          try {
-                            for (const lid of selectedLeadIds) {
-                              await deleteDoc(doc(db, "leads", lid));
-                            }
-                            setSelectedLeadIds(new Set());
-                          } catch(e) { console.error(e); }
-                          setBulkDeleting(false);
-                        }}
-                          style={{ marginLeft:"auto", padding:"5px 16px", borderRadius:6, border:"1px solid rgba(239,68,68,0.5)", background:"rgba(239,68,68,0.1)", color:"#EF4444", fontSize:12, fontWeight:700, cursor:"pointer", opacity:bulkDeleting?0.6:1 }}>
-                          {bulkDeleting ? "Deleting..." : `Delete ${selectedLeadIds.size} Lead${selectedLeadIds.size>1?"s":""}`}
-                        </button>
-                      )}
-                    </div>
-                  )}
-                  <div style={{ display:"grid", gridTemplateColumns:`32px minmax(150px,1fr) 65px 100px 100px 110px 110px 44px${isManager?" 44px":""}`, gap:8, padding:"8px 14px", fontSize:10, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.8, borderBottom:`1px solid ${T.border}` }}>
-                    <div onClick={() => { if(selectedLeadIds.size===filtered.length) setSelectedLeadIds(new Set()); else setSelectedLeadIds(new Set(filtered.map(l=>l.id))); }} style={{ cursor:"pointer", display:"flex", alignItems:"center" }}>
-                      <div style={{ width:16, height:16, borderRadius:4, border:`2px solid ${selectedLeadIds.size===filtered.length&&filtered.length>0?T.gold:T.border}`, background:selectedLeadIds.size===filtered.length&&filtered.length>0?"rgba(212,168,67,0.2)":"none", display:"flex", alignItems:"center", justifyContent:"center" }}>
-                        {selectedLeadIds.size===filtered.length&&filtered.length>0&&<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={T.gold} strokeWidth="3"><polyline points="20 6 9 17 4 12"/></svg>}
-                      </div>
-                    </div>
+                  <div style={{ display:"grid", gridTemplateColumns:"minmax(150px,1fr) 65px 100px 100px 110px 110px 44px", gap:8, padding:"8px 14px", fontSize:10, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.8, borderBottom:`1px solid ${T.border}` }}>
                     <div>Lead</div>
                     <div>Score</div>
                     <div>Status</div>
@@ -7947,7 +7913,6 @@ export default function EmaarDashboardV2() {
                     <div>Budget</div>
                     <div>Added</div>
                     <div></div>
-                    {isManager && <div></div>}
                   </div>
                   {filtered.map((l, i) => {
                     const sc = STATUSES[l.status||"New"] || STATUSES.New;
@@ -7957,19 +7922,13 @@ export default function EmaarDashboardV2() {
                     const budget = parseFloat(l.budget||0);
                     return (
                       <div key={l.id||i}
-                        style={{ display:"grid", gridTemplateColumns:`32px minmax(150px,1fr) 65px 100px 100px 110px 110px 44px${isManager?" 44px":""}`, gap:8, padding:"10px 14px", alignItems:"center", borderBottom:`1px solid ${T.border}`, cursor:"pointer", transition:"background 0.12s", borderRadius:4, background:selectedLeadIds.has(l.id)?"rgba(212,168,67,0.06)":"transparent" }}
-                        onMouseEnter={e=>{ if(!selectedLeadIds.has(l.id)) e.currentTarget.style.background="rgba(212,168,67,0.04)"; }}
-                        onMouseLeave={e=>{ if(!selectedLeadIds.has(l.id)) e.currentTarget.style.background="transparent"; }}>
+                        onClick={()=>{setSelectedLead(l);setLeadDrawerTab("details");}}
+                        style={{ display:"grid", gridTemplateColumns:"minmax(150px,1fr) 65px 100px 100px 110px 110px 44px", gap:8, padding:"10px 14px", alignItems:"center", borderBottom:`1px solid ${T.border}`, cursor:"pointer", transition:"background 0.12s", borderRadius:4 }}
+                        onMouseEnter={e=>e.currentTarget.style.background="rgba(212,168,67,0.04)"}
+                        onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
 
-                        {/* Checkbox */}
-                        <div onClick={e=>{ e.stopPropagation(); setSelectedLeadIds(prev => { const n=new Set(prev); n.has(l.id)?n.delete(l.id):n.add(l.id); return n; }); }}
-                          style={{ display:"flex", alignItems:"center", justifyContent:"center", cursor:"pointer" }}>
-                          <div style={{ width:16, height:16, borderRadius:4, border:`2px solid ${selectedLeadIds.has(l.id)?T.gold:T.border}`, background:selectedLeadIds.has(l.id)?"rgba(212,168,67,0.2)":"none", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
-                            {selectedLeadIds.has(l.id)&&<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={T.gold} strokeWidth="3"><polyline points="20 6 9 17 4 12"/></svg>}
-                          </div>
-                        </div>
                         {/* Lead info */}
-                        <div onClick={()=>{setSelectedLead(l);setLeadDrawerTab("details");}} style={{ display:"flex", alignItems:"center", gap:10, minWidth:0 }}>
+                        <div style={{ display:"flex", alignItems:"center", gap:10, minWidth:0 }}>
                           <div style={{ width:34, height:34, borderRadius:"50%", background:`rgba(212,168,67,0.12)`, border:`1px solid rgba(212,168,67,0.2)`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:11, fontWeight:700, color:T.gold, flexShrink:0 }}>
                             {initials}
                           </div>
@@ -7979,7 +7938,6 @@ export default function EmaarDashboardV2() {
                               {l.phone || l.email || l.community || "—"}
                             </div>
                           </div>
-                        </div>
                         </div>
 
                         {/* AI Score (Session 13) */}
@@ -8027,18 +7985,6 @@ export default function EmaarDashboardV2() {
                             <div style={{ width:32, height:32 }}/>
                           )}
                         </div>
-                        {/* Delete - manager only */}
-                        {isManager && (
-                          <div onClick={e=>e.stopPropagation()}>
-                            <button type="button" onClick={async () => {
-                              if (!window.confirm(`Delete ${l.name||"this lead"}?`)) return;
-                              try { await deleteDoc(doc(db, "leads", l.id)); } catch(e) { console.error(e); }
-                            }}
-                              style={{ width:32, height:32, borderRadius:6, border:"1px solid rgba(239,68,68,0.3)", background:"rgba(239,68,68,0.06)", color:"#EF4444", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center" }}>
-                              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
-                            </button>
-                          </div>
-                        )}
                       </div>
                     );
                   })}
