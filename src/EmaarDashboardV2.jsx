@@ -255,6 +255,17 @@ const GlobalContextFilter = ({
   gPriceMax, setGPriceMax,
   allDevelopers, T,
 }) => {
+  // ─── cleanPhone: strips non-digits — NEVER use regex inside JSX ───
+  const cleanPhone = (p) => {
+    if (!p) return "";
+    let out = "";
+    for (let i = 0; i < p.length; i++) {
+      const c = p.charCodeAt(i);
+      if (c >= 48 && c <= 57) out += p[i];
+    }
+    return out;
+  };
+
   const [open, setOpen] = React.useState(false);
 
   // Get beds options from selected property type
@@ -2720,12 +2731,25 @@ export default function EmaarDashboardV2() {
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   /* ─── MY LEADS MISSING STATE (V11) ─── */
+
+  /* ─── V12 NEW STATE ─── */
+  const [leadTagFilter, setLeadTagFilter] = useState("all");
+  const [leadAgentFilter, setLeadAgentFilter] = useState("all");
+  const [showLeadAnalytics, setShowLeadAnalytics] = useState(false);
+  const [showTemplates, setShowTemplates] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState("");
+  const [leadDocUpload, setLeadDocUpload] = useState({});
+  const [leadDocUploading, setLeadDocUploading] = useState(false);
+  const [tagInput, setTagInput] = useState("");
+  const [showBrochure, setShowBrochure] = useState(false);
+  const [brochureLoading, setBrochureLoading] = useState(false);
+
+
   const [leadBudgetFilter, setLeadBudgetFilter] = useState("all");
   const [leadTypeFilter, setLeadTypeFilter] = useState("all");
   const [leadPurposeFilter, setLeadPurposeFilter] = useState("all");
   const [leadNatFilter, setLeadNatFilter] = useState("all");
   const [leadDateFilter, setLeadDateFilter] = useState("all");
-  const [leadAgentFilter, setLeadAgentFilter] = useState("all");
 
 
   /* ─── MY LEADS ADDITIONAL STATE ─── */
@@ -7310,7 +7334,8 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   </div>
                 )}
 
-                {/* ── KPI Cards ── */}
+                
+              {/* ── KPI Cards ── */}
                 <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(150px,1fr))", gap:10, marginBottom:20 }}>
                   {[
                     { label:"Total Projects",   value:rawHandover.length,  color:T.white   },
@@ -7327,7 +7352,31 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   ))}
                 </div>
 
-                {/* ── Filters ── */}
+                {/* ── Auto Follow-up Alert (Follow Up Boss style) ── */}
+              {(() => {
+                const now = Date.now();
+                const stale = displayLeads.filter(l => {
+                  if (l.status === "Won" || l.status === "Lost") return false;
+                  const lastContact = l.updatedAt ? new Date(l.updatedAt).getTime() : new Date(l.createdAt||now).getTime();
+                  return (now - lastContact) > 7 * 24 * 60 * 60 * 1000;
+                });
+                if (stale.length === 0) return null;
+                return (
+                  <div style={{ padding:"10px 16px", background:"rgba(239,68,68,0.08)", border:"1px solid rgba(239,68,68,0.25)", borderRadius:10, marginBottom:12, display:"flex", alignItems:"center", gap:12 }}>
+                    <span style={{ fontSize:18 }}>⚠️</span>
+                    <div style={{ flex:1 }}>
+                      <div style={{ fontSize:12, fontWeight:700, color:"#EF4444" }}>{stale.length} lead{stale.length>1?"s have":" has"} not been contacted in 7+ days</div>
+                      <div style={{ fontSize:11, color:T.textMuted, marginTop:2 }}>{stale.slice(0,3).map(l=>l.name||l.phone||"Unnamed").join(", ")}{stale.length>3?` +${stale.length-3} more`:""} — follow up now</div>
+                    </div>
+                    <button type="button" onClick={()=>{ setLeadStatusFilter("all"); setLeadSortBy("date"); }}
+                      style={{ padding:"6px 12px", background:"rgba(239,68,68,0.15)", border:"1px solid rgba(239,68,68,0.3)", borderRadius:7, color:"#EF4444", fontSize:11, fontWeight:700, cursor:"pointer", fontFamily:"'Outfit',sans-serif", whiteSpace:"nowrap" }}>
+                      View Leads
+                    </button>
+                  </div>
+                );
+              })()}
+
+              {/* ── Filters ── */}
                 <div style={{ background:T.surface, border:`1px solid ${T.border}`, borderRadius:10, padding:"12px 14px", marginBottom:16 }}>
                   <div style={{ display:"flex", gap:8, flexWrap:"wrap", alignItems:"center" }}>
                     <div style={{ position:"relative", flex:"0 0 200px" }}>
@@ -15334,6 +15383,7 @@ Format clearly with these 4 sections labeled. Be specific to Dubai market. Inclu
                 if (leadDateFilter === "month") { const m = new Date(); m.setDate(m.getDate()-30); if (created < m) return false; }
               }
               if (leadAgentFilter !== "all" && (l.assignedTo||"") !== leadAgentFilter) return false;
+              if (leadTagFilter !== "all" && !(l.tags||[]).includes(leadTagFilter)) return false;
               if (leadSearch.trim()) {
                 const q = leadSearch.toLowerCase();
                 if (!(l.name||"").toLowerCase().includes(q) &&
@@ -15583,6 +15633,56 @@ Format clearly with these 4 sections labeled. Be specific to Dubai market. Inclu
                 ))}
               </div>
 
+                            {/* ── Smart Lists ── */}
+              {(() => {
+                const smartLists = [
+                  { label:"🔥 Hot Leads",    count: displayLeads.filter(l=>scoreLeadAI(l).score>=70).length },
+                  { label:"🏅 GV Eligible",  count: displayLeads.filter(l=>parseFloat(l.budget||0)>=2000000).length },
+                  { label:"⚠️ Stale 7d+",    count: displayLeads.filter(l=>{ if(l.status==="Won"||l.status==="Lost") return false; return Date.now()-new Date(l.updatedAt||l.createdAt||Date.now()).getTime()>604800000; }).length },
+                  { label:"💰 AED 5M+",      count: displayLeads.filter(l=>parseFloat(l.budget||0)>=5000000).length },
+                  { label:"🇮🇳 Indian",       count: displayLeads.filter(l=>l.nationality==="Indian").length },
+                  { label:"🇷🇺 Russian",      count: displayLeads.filter(l=>l.nationality==="Russian").length },
+                  { label:"🏗 Off-Plan",     count: displayLeads.filter(l=>(l.type||"")==="Off-Plan").length },
+                  { label:"🆕 Today",         count: displayLeads.filter(l=>new Date(l.createdAt)>=new Date(new Date().setHours(0,0,0,0))).length },
+                ];
+                return (
+                  <div style={{ marginBottom:12 }}>
+                    <div style={{ fontSize:10, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.8, marginBottom:6 }}>Smart Lists</div>
+                    <div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>
+                      {smartLists.filter(sl=>sl.count>0).map((sl,i) => (
+                        <button key={i} type="button"
+                          style={{ padding:"4px 12px", borderRadius:20, border:`1px solid ${T.border}`, background:T.surfaceAlt, color:T.textSecondary, fontSize:11, cursor:"pointer", fontFamily:"'Outfit',sans-serif", display:"flex", alignItems:"center", gap:5 }}>
+                          {sl.label}
+                          <span style={{ padding:"1px 6px", borderRadius:10, background:"rgba(212,168,67,0.15)", color:T.gold, fontSize:10, fontWeight:700 }}>{sl.count}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {/* ── Auto Follow-up Alert ── */}
+              {(() => {
+                const stale = displayLeads.filter(l => {
+                  if (l.status === "Won" || l.status === "Lost") return false;
+                  return Date.now() - new Date(l.updatedAt||l.createdAt||Date.now()).getTime() > 604800000;
+                });
+                if (stale.length === 0) return null;
+                return (
+                  <div style={{ padding:"10px 16px", background:"rgba(239,68,68,0.08)", border:"1px solid rgba(239,68,68,0.25)", borderRadius:10, marginBottom:12, display:"flex", alignItems:"center", gap:12 }}>
+                    <span style={{ fontSize:18 }}>⚠️</span>
+                    <div style={{ flex:1 }}>
+                      <div style={{ fontSize:12, fontWeight:700, color:"#EF4444" }}>{stale.length} lead{stale.length>1?"s":""}  not contacted in 7+ days</div>
+                      <div style={{ fontSize:11, color:T.textMuted, marginTop:2 }}>{stale.slice(0,3).map(l=>l.name||"Unnamed").join(", ")}{stale.length>3?` +${stale.length-3} more`:""}</div>
+                    </div>
+                    <button type="button" onClick={()=>setLeadSortBy("date")}
+                      style={{ padding:"6px 12px", background:"rgba(239,68,68,0.15)", border:"1px solid rgba(239,68,68,0.3)", borderRadius:7, color:"#EF4444", fontSize:11, fontWeight:700, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>
+                      View →
+                    </button>
+                  </div>
+                );
+              })()}
+
               {/* ── Filters ── */}
               <div style={{ marginBottom:16 }}>
                 {/* Row 1: Search + Sort */}
@@ -15660,14 +15760,45 @@ Format clearly with these 4 sections labeled. Be specific to Dubai market. Inclu
                       Clear All
                     </button>
                   )}
-                {(leadSearch || leadStatusFilter !== "all" || leadSourceFilter !== "all") && (
-                  <button type="button" onClick={()=>{setLeadSearch("");setLeadStatusFilter("all");setLeadSourceFilter("all");}}
-                    style={{ padding:"9px 14px", borderRadius:8, border:`1px solid rgba(239,68,68,0.3)`, background:"rgba(239,68,68,0.08)", color:T.red, fontSize:11, fontWeight:600, cursor:"pointer" }}>
-                    Clear
-                  </button>
-                )}
+
+                {/* Tag filter */}
+                <select value={leadTagFilter} onChange={e=>setLeadTagFilter(e.target.value)}
+                  style={{ flex:"1 1 110px", padding:"8px 10px", background:T.surfaceAlt, border:`1px solid ${leadTagFilter!=="all"?"rgba(212,168,67,0.5)":T.border}`, borderRadius:8, color:leadTagFilter!=="all"?T.gold:T.textPrimary, fontSize:11, fontFamily:"'Outfit',sans-serif", outline:"none", cursor:"pointer" }}>
+                  <option value="all">🏷 All Tags</option>
+                  <option value="VIP">⭐ VIP</option>
+                  <option value="Cash Buyer">💵 Cash Buyer</option>
+                  <option value="Investor">📈 Investor</option>
+                  <option value="Urgent">🔥 Urgent</option>
+                  <option value="GCC National">🌙 GCC National</option>
+                  <option value="Off-Plan Ready">🏗 Off-Plan Ready</option>
+                  <option value="Mortgage Needed">🏦 Mortgage Needed</option>
+                  {[...new Set(displayLeads.flatMap(l=>l.tags||[]).filter(Boolean))].filter(t=>!["VIP","Cash Buyer","Investor","Urgent","GCC National","Off-Plan Ready","Mortgage Needed"].includes(t)).map(t=><option key={t} value={t}>{t}</option>)}
+                </select>
                 <div style={{ marginLeft:"auto", display:"flex", gap:8, alignItems:"center" }}>
                   <span style={{ fontSize:11, color:T.textMuted }}>{filtered.length} of {displayLeads.length} leads</span>
+                  {/* Export CSV button */}
+                  <button type="button" onClick={()=>{
+                    const headers = ["Name","Phone","Email","Budget","Status","Source","Nationality","Language","Timeline","Community","Type","Purpose","Tags","AI Score","Added"];
+                    const rows = filtered.map(l=>{
+                      const ai = scoreLeadAI(l);
+                      return [l.name||"",l.phone||"",l.email||"",l.budget||"",l.status||"",l.source||"",l.nationality||"",l.language||"",l.timeline||"",l.community||"",l.type||"",l.purpose||"",(l.tags||[]).join("|"),ai.score,l.createdAt?new Date(l.createdAt).toLocaleDateString("en-GB"):""].map(v=>'"'+String(v).replace(/"/g,'""')+'"');
+                    });
+                    const csv = [headers.join(","),...rows.map(r=>r.join(","))].join("
+");
+                    const blob = new Blob([csv],{type:"text/csv"});
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement("a");
+                    a.href=url; a.download=`leads_${new Date().toISOString().slice(0,10)}.csv`;
+                    a.click(); URL.revokeObjectURL(url);
+                  }}
+                    style={{ padding:"7px 12px", background:"rgba(16,185,129,0.1)", border:"1px solid rgba(16,185,129,0.3)", borderRadius:8, color:"#10B981", fontSize:11, fontWeight:600, cursor:"pointer", fontFamily:"'Outfit',sans-serif", whiteSpace:"nowrap" }}>
+                    ↓ Export CSV
+                  </button>
+                  {/* Source Analytics button */}
+                  <button type="button" onClick={()=>setShowLeadAnalytics(v=>!v)}
+                    style={{ padding:"7px 12px", background:showLeadAnalytics?"rgba(212,168,67,0.2)":"rgba(212,168,67,0.08)", border:`1px solid rgba(212,168,67,${showLeadAnalytics?0.6:0.3})`, borderRadius:8, color:T.gold, fontSize:11, fontWeight:600, cursor:"pointer", fontFamily:"'Outfit',sans-serif", whiteSpace:"nowrap" }}>
+                    📊 Analytics
+                  </button>
                   <button type="button" onClick={()=>setLeadShowAdd(v=>!v)}
                     style={{ padding:"7px 14px", background:leadShowAdd?"rgba(212,168,67,0.15)":"linear-gradient(135deg,rgba(212,168,67,0.9),rgba(184,146,42,0.9))", border:`1px solid ${leadShowAdd?"rgba(212,168,67,0.4)":"transparent"}`, borderRadius:8, color:leadShowAdd?T.gold:"#000", fontSize:11, fontWeight:700, cursor:"pointer", fontFamily:"'Outfit',sans-serif", whiteSpace:"nowrap" }}>
                     {leadShowAdd ? "✕ Cancel" : "+ Add Lead"}
@@ -15725,6 +15856,54 @@ Format clearly with these 4 sections labeled. Be specific to Dubai market. Inclu
                   </div>
                 </div>
               )}
+
+              {/* ── LEAD SOURCE ANALYTICS PANEL ── */}
+              {showLeadAnalytics && (() => {
+                const sources = {};
+                const totalLeads = displayLeads.length;
+                displayLeads.forEach(l => {
+                  const src = l.source || "Unknown";
+                  if (!sources[src]) sources[src] = {total:0, won:0, contacted:0, budget:0};
+                  sources[src].total++;
+                  if (l.status === "Won") sources[src].won++;
+                  if (l.status !== "New") sources[src].contacted++;
+                  sources[src].budget += parseFloat(l.budget||0);
+                });
+                const srcArr = Object.entries(sources).sort((a,b)=>b[1].total-a[1].total);
+                return (
+                  <div style={{ padding:"16px", background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:12, marginBottom:16 }}>
+                    <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:14 }}>
+                      <div style={{ fontFamily:"'Fraunces',serif", fontSize:15, fontWeight:800, color:T.white }}>📊 Lead Source Analytics</div>
+                      <div style={{ fontSize:11, color:T.textMuted }}>{totalLeads} total leads</div>
+                    </div>
+                    <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(200px,1fr))", gap:10 }}>
+                      {srcArr.map(([src, d]) => {
+                        const convRate = d.total > 0 ? Math.round((d.won/d.total)*100) : 0;
+                        const contactRate = d.total > 0 ? Math.round((d.contacted/d.total)*100) : 0;
+                        const avgBudget = d.total > 0 ? d.budget/d.total : 0;
+                        const barW = totalLeads > 0 ? Math.round((d.total/totalLeads)*100) : 0;
+                        return (
+                          <div key={src} style={{ padding:"12px 14px", background:T.bg, borderRadius:9, border:`1px solid ${T.border}` }}>
+                            <div style={{ display:"flex", justifyContent:"space-between", marginBottom:6 }}>
+                              <span style={{ fontSize:12, fontWeight:700, color:T.white }}>{src}</span>
+                              <span style={{ fontSize:11, color:T.gold, fontWeight:600 }}>{d.total} leads</span>
+                            </div>
+                            <div style={{ height:3, background:T.border, borderRadius:2, marginBottom:8 }}>
+                              <div style={{ height:"100%", width:`${barW}%`, background:"rgba(212,168,67,0.7)", borderRadius:2 }}/>
+                            </div>
+                            <div style={{ display:"flex", gap:10, fontSize:10, color:T.textMuted }}>
+                              <span>Conv: <strong style={{ color:convRate>=10?"#10B981":"#EF4444" }}>{convRate}%</strong></span>
+                              <span>Contacted: <strong style={{ color:T.textSecondary }}>{contactRate}%</strong></span>
+                              <span>Avg: <strong style={{ color:T.gold }}>{avgBudget>=1e6?(avgBudget/1e6).toFixed(1)+"M":avgBudget>0?Math.round(avgBudget/1000)+"K":"—"}</strong></span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    {srcArr.length === 0 && <div style={{ textAlign:"center", padding:"20px 0", color:T.textMuted, fontSize:12 }}>No lead data yet</div>}
+                  </div>
+                );
+              })()}
 
               {/* ── Lead List ── */}
               {myLeadsLoading ? (
@@ -15823,7 +16002,7 @@ Format clearly with these 4 sections labeled. Be specific to Dubai market. Inclu
 
                         {/* WhatsApp + Email + Call */}
                         <div style={{ display:"flex", gap:4 }} onClick={e=>e.stopPropagation()}>
-                          {l.phone && <a href={`https://wa.me/${l.phone.replace(/[^0-9]/g,"")}`} target="_blank" rel="noopener noreferrer"
+                          {l.phone && <a href={`https://wa.me/${cleanPhone(l.phone)}`} target="_blank" rel="noopener noreferrer"
                             style={{ width:22, height:22, borderRadius:5, border:"1px solid rgba(37,211,102,0.3)", background:"rgba(37,211,102,0.08)", display:"flex", alignItems:"center", justifyContent:"center", textDecoration:"none" }}
                             title="WhatsApp">
                             <svg width="11" height="11" viewBox="0 0 24 24" fill="#25D366"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.123.558 4.116 1.535 5.847L.057 23.571l6.194-1.622A11.955 11.955 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.75a9.738 9.738 0 0 1-4.964-1.356l-.356-.212-3.677.963.98-3.585-.232-.369A9.72 9.72 0 0 1 2.25 12C2.25 6.615 6.615 2.25 12 2.25S21.75 6.615 21.75 12 17.385 21.75 12 21.75z"/></svg>
@@ -15885,10 +16064,42 @@ Format clearly with these 4 sections labeled. Be specific to Dubai market. Inclu
                           </button>
                         ))}
                       </div>
+                      {/* Quick actions row */}
+                      <div style={{ display:"flex", gap:6, marginBottom:10 }}>
+                        <button type="button" onClick={()=>setShowTemplates(v=>!v)}
+                          style={{ flex:1, padding:"6px 0", background:"rgba(212,168,67,0.08)", border:"1px solid rgba(212,168,67,0.25)", borderRadius:7, color:T.gold, fontSize:11, fontWeight:600, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>
+                          📋 Templates
+                        </button>
+                        <button type="button" onClick={async()=>{
+                          setBrochureLoading(true);
+                          try {
+                            const prompt = `Create a professional property brochure message for this Dubai real estate client:
+Name: ${selectedLead.name||"Client"}
+Budget: AED ${Number(selectedLead.budget||0).toLocaleString()}
+Looking for: ${selectedLead.type||"Property"} in ${selectedLead.community||"Dubai"}
+Beds: ${selectedLead.beds||"Any"}
+Purpose: ${selectedLead.purpose||"Purchase"}
+Write a short, professional WhatsApp message (3-4 lines) introducing Dubai properties matching their profile. Include a call to action.`;
+                            const res = await fetch("/api/proxy?service=claude",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:300,messages:[{role:"user",content:prompt}]})});
+                            const data = await res.json();
+                            const text = data.content?.[0]?.text||"";
+                            if(text) navigator.clipboard.writeText(text);
+                            alert("Brochure message copied to clipboard!");
+                          } catch(e){ alert("Error generating brochure"); }
+                          setBrochureLoading(false);
+                        }}
+                          style={{ flex:1, padding:"6px 0", background:"rgba(59,130,246,0.08)", border:"1px solid rgba(59,130,246,0.25)", borderRadius:7, color:"#3B82F6", fontSize:11, fontWeight:600, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>
+                          {brochureLoading?"Generating...":"🏗 AI Brochure"}
+                        </button>
+                        <button type="button" onClick={()=>{ setLeadDrawerTab("tags"); }}
+                          style={{ flex:1, padding:"6px 0", background:"rgba(139,92,246,0.08)", border:"1px solid rgba(139,92,246,0.25)", borderRadius:7, color:"#8B5CF6", fontSize:11, fontWeight:600, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>
+                          🏷 Tags {(selectedLead.tags||[]).length>0?`(${selectedLead.tags.length})`:""}
+                        </button>
+                      </div>
 
                       {/* Drawer tabs */}
                       <div style={{ display:"flex", gap:0, marginBottom:0 }}>
-                        {[["details","Details"],["notes","Notes"],["ai","AI Score"],["tasks","Tasks"]].map(([t,label])=>(
+                        {[["details","Details"],["notes","Notes"],["timeline","Timeline"],["tags","Tags"],["ai","AI Score"],["tasks","Tasks"]].map(([t,label])=>(
                           <button key={t} type="button" onClick={()=>setLeadDrawerTab(t)}
                             style={{ padding:"8px 16px", fontSize:12, fontWeight:600, border:"none", background:"transparent", cursor:"pointer", fontFamily:"'Outfit',sans-serif", color:leadDrawerTab===t?T.gold:T.textMuted, borderBottom:`2px solid ${leadDrawerTab===t?T.gold:"transparent"}`, transition:"all 0.12s" }}>
                             {label}
@@ -15922,7 +16133,7 @@ Format clearly with these 4 sections labeled. Be specific to Dubai market. Inclu
                         {/* Contact CTAs — WhatsApp + Email + Call */}
                         <div style={{ display:"flex", gap:8, marginTop:4 }}>
                           {selectedLead.phone && (
-                            <a href={`https://wa.me/${selectedLead.phone.replace(/[^0-9]/g,"")}`} target="_blank" rel="noopener noreferrer"
+                            <a href={`https://wa.me/${cleanPhone(selectedLead.phone)}`} target="_blank" rel="noopener noreferrer"
                               style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"center", gap:6, padding:"10px 0", borderRadius:9, border:"1px solid rgba(37,211,102,0.4)", background:"rgba(37,211,102,0.08)", color:"#25D366", fontSize:12, fontWeight:700, textDecoration:"none" }}>
                               <svg width="13" height="13" viewBox="0 0 24 24" fill="#25D366"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.123.558 4.116 1.535 5.847L.057 23.571l6.194-1.622A11.955 11.955 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.75a9.738 9.738 0 0 1-4.964-1.356l-.356-.212-3.677.963.98-3.585-.232-.369A9.72 9.72 0 0 1 2.25 12C2.25 6.615 6.615 2.25 12 2.25S21.75 6.615 21.75 12 17.385 21.75 12 21.75z"/></svg>
                               WhatsApp
@@ -15950,6 +16161,32 @@ Format clearly with these 4 sections labeled. Be specific to Dubai market. Inclu
                             <div style={{ fontSize:12, color:T.textSecondary, lineHeight:1.6 }}>{selectedLead.notes}</div>
                           </div>
                         )}
+                      {/* ── Document Upload ── */}
+                        <div style={{ marginTop:14 }}>
+                          <div style={{ fontSize:11, fontWeight:600, color:T.textMuted, marginBottom:8, letterSpacing:0.3 }}>📎 Documents</div>
+                          <div style={{ display:"flex", flexWrap:"wrap", gap:6, marginBottom:8 }}>
+                            {["Passport","Visa","Emirates ID","Bank Statement","Proof of Funds","Salary Cert"].map(docType => {
+                              const hasDoc = (selectedLead.docs||{})[docType];
+                              return (
+                                <label key={docType} style={{ padding:"5px 10px", borderRadius:7, border:`1px solid ${hasDoc?"rgba(16,185,129,0.4)":T.border}`, background:hasDoc?"rgba(16,185,129,0.08)":"transparent", color:hasDoc?"#10B981":T.textMuted, fontSize:10, fontWeight:600, cursor:"pointer", display:"block" }}>
+                                  {hasDoc?"✓ ":""}{docType}
+                                  <input type="file" accept=".pdf,.jpg,.jpeg,.png" style={{ display:"none" }} onChange={async(e)=>{
+                                    const file = e.target.files[0]; if(!file) return;
+                                    const docs = {...(selectedLead.docs||{}), [docType]:{ name:file.name, size:file.size, uploadedAt:new Date().toISOString() }};
+                                    try { await setDoc(doc(db,"leads",selectedLead.id),{docs,updatedAt:new Date().toISOString()},{merge:true}); setSelectedLead(l=>l?{...l,docs}:l); } catch(ex){ console.error(ex); }
+                                  }}/>
+                                </label>
+                              );
+                            })}
+                          </div>
+                          {Object.keys(selectedLead.docs||{}).length > 0 && (
+                            <div style={{ fontSize:10, color:T.textMuted, lineHeight:1.8 }}>
+                              {Object.entries(selectedLead.docs||{}).map(([k,v])=>(
+                                <span key={k} style={{ marginRight:10 }}>✓ {k}: {v.name}</span>
+                              ))}
+                            </div>
+                          )}
+                        </div>
                       </div>
                     )}
 
@@ -16062,6 +16299,95 @@ Format clearly with these 4 sections labeled. Be specific to Dubai market. Inclu
                 </div>
               )}
 
+              {/* ── Activity Timeline Tab ── */}
+              {selectedLead && leadDrawerTab === "timeline" && (
+                <div style={{ padding:"16px 20px", flex:1, overflowY:"auto" }}>
+                  <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:14 }}>🕐 Activity Timeline</div>
+                  {(() => {
+                    // Build timeline from notes_log + status + createdAt
+                    const events = [];
+                    // Add notes as timeline events
+                    (selectedLead.notes_log||[]).forEach(n => {
+                      events.push({ time:n.at, type: n.text?.startsWith("🏠")?"viewing": n.text?.startsWith("📋")?"task":"note", text:n.text, by:n.by });
+                    });
+                    // Add creation event
+                    if (selectedLead.createdAt) events.push({ time:selectedLead.createdAt, type:"created", text:"Lead created", by:selectedLead.addedBy||"System" });
+                    // Sort newest first
+                    events.sort((a,b) => new Date(b.time||0) - new Date(a.time||0));
+                    const typeColors = { note:"#3B82F6", viewing:"#10B981", task:"#D4A843", created:"#8B5CF6" };
+                    const typeIcons = { note:"📝", viewing:"🏠", task:"📋", created:"✨" };
+                    if (events.length === 0) return (
+                      <div style={{ textAlign:"center", padding:"40px 0", color:T.textMuted, fontSize:12 }}>
+                        <div style={{ fontSize:32, marginBottom:8 }}>📭</div>
+                        No activity yet — add a note or schedule a viewing
+                      </div>
+                    );
+                    return events.map((ev, i) => (
+                      <div key={i} style={{ display:"flex", gap:12, marginBottom:14, paddingBottom:14, borderBottom:i<events.length-1?`1px solid ${T.border}`:"none" }}>
+                        <div style={{ width:32, height:32, borderRadius:"50%", background:`${typeColors[ev.type]||"#6B7280"}15`, border:`1px solid ${typeColors[ev.type]||"#6B7280"}40`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:14, flexShrink:0 }}>
+                          {typeIcons[ev.type]||"📌"}
+                        </div>
+                        <div style={{ flex:1, minWidth:0 }}>
+                          <div style={{ fontSize:12, color:T.white, lineHeight:1.5 }}>{ev.text}</div>
+                          <div style={{ fontSize:10, color:T.textMuted, marginTop:3 }}>
+                            {ev.by} · {ev.time ? new Date(ev.time).toLocaleDateString("en-GB",{day:"2-digit",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit"}) : ""}
+                          </div>
+                        </div>
+                      </div>
+                    ));
+                  })()}
+                </div>
+              )}
+
+              {/* ── Tags Tab ── */}
+              {selectedLead && leadDrawerTab === "tags" && (
+                <div style={{ padding:"16px 20px", flex:1, overflowY:"auto" }}>
+                  <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:14 }}>🏷 Tags & Labels</div>
+                  {/* Current tags */}
+                  <div style={{ display:"flex", flexWrap:"wrap", gap:6, marginBottom:16 }}>
+                    {(selectedLead.tags||[]).length === 0 && <div style={{ fontSize:12, color:T.textMuted }}>No tags yet</div>}
+                    {(selectedLead.tags||[]).map((tag,i) => (
+                      <div key={i} style={{ display:"flex", alignItems:"center", gap:5, padding:"5px 10px", background:"rgba(212,168,67,0.12)", border:"1px solid rgba(212,168,67,0.3)", borderRadius:20, fontSize:12, color:T.gold }}>
+                        {tag}
+                        <button type="button" onClick={async()=>{
+                          const newTags = (selectedLead.tags||[]).filter(t=>t!==tag);
+                          try { await setDoc(doc(db,"leads",selectedLead.id),{tags:newTags,updatedAt:new Date().toISOString()},{merge:true}); setSelectedLead(l=>l?{...l,tags:newTags}:l); } catch(e){ console.error(e); }
+                        }} style={{ background:"none", border:"none", color:T.textMuted, cursor:"pointer", fontSize:14, lineHeight:1, padding:0, marginLeft:2 }}>×</button>
+                      </div>
+                    ))}
+                  </div>
+                  {/* Quick tag buttons */}
+                  <div style={{ fontSize:11, color:T.textMuted, marginBottom:8, fontWeight:600 }}>Quick add</div>
+                  <div style={{ display:"flex", flexWrap:"wrap", gap:6, marginBottom:14 }}>
+                    {["⭐ VIP","💵 Cash Buyer","📈 Investor","🔥 Urgent","🌙 GCC National","🏗 Off-Plan Ready","🏦 Mortgage Needed","🎯 Hot Lead","🤝 Referral","🔄 Repeat Client"].map(tag => {
+                      const clean = tag.replace(/^[^\s]+ /,"").trim();
+                      const already = (selectedLead.tags||[]).includes(tag);
+                      return (
+                        <button key={tag} type="button" onClick={async()=>{
+                          const cur = selectedLead.tags||[];
+                          const newTags = already ? cur.filter(t=>t!==tag) : [...cur, tag];
+                          try { await setDoc(doc(db,"leads",selectedLead.id),{tags:newTags,updatedAt:new Date().toISOString()},{merge:true}); setSelectedLead(l=>l?{...l,tags:newTags}:l); } catch(e){ console.error(e); }
+                        }}
+                          style={{ padding:"6px 12px", borderRadius:20, border:`1px solid ${already?"rgba(212,168,67,0.5)":T.border}`, background:already?"rgba(212,168,67,0.1)":"transparent", color:already?T.gold:T.textSecondary, fontSize:11, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>
+                          {tag}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {/* Custom tag input */}
+                  <div style={{ fontSize:11, color:T.textMuted, marginBottom:6, fontWeight:600 }}>Custom tag</div>
+                  <div style={{ display:"flex", gap:8 }}>
+                    <input value={tagInput} onChange={e=>setTagInput(e.target.value)} placeholder="Type a custom tag..."
+                      onKeyDown={async e=>{ if(e.key==="Enter"&&tagInput.trim()){ const newTags=[...(selectedLead.tags||[]),tagInput.trim()]; try{ await setDoc(doc(db,"leads",selectedLead.id),{tags:newTags,updatedAt:new Date().toISOString()},{merge:true}); setSelectedLead(l=>l?{...l,tags:newTags}:l); setTagInput(""); }catch(ex){} }}}
+                      style={{ flex:1, padding:"8px 12px", background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:8, color:T.white, fontFamily:"'Outfit',sans-serif", fontSize:12, outline:"none" }} />
+                    <button type="button" onClick={async()=>{ if(!tagInput.trim()) return; const newTags=[...(selectedLead.tags||[]),tagInput.trim()]; try{ await setDoc(doc(db,"leads",selectedLead.id),{tags:newTags,updatedAt:new Date().toISOString()},{merge:true}); setSelectedLead(l=>l?{...l,tags:newTags}:l); setTagInput(""); }catch(ex){} }}
+                      style={{ padding:"8px 16px", background:"rgba(212,168,67,0.9)", border:"none", borderRadius:8, color:"#000", fontSize:12, fontWeight:700, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>
+                      Add
+                    </button>
+                  </div>
+                </div>
+              )}
+
               {/* ── AI Match Tab (Session 13) ── */}
               {selectedLead && leadDrawerTab === "ai" && (
                 <div style={{ padding:"16px 20px", flex:1, overflowY:"auto" }}>
@@ -16110,7 +16436,7 @@ Format clearly with these 4 sections labeled. Be specific to Dubai market. Inclu
                         <div style={{ fontSize:12, color:T.textPrimary, fontWeight:600, marginBottom:4 }}>{followUp}</div>
                         <div style={{ fontSize:10, color:T.textMuted }}>Based on lead source: {selectedLead.source || "Manual"}</div>
                         {selectedLead.phone && (
-                          <a href={`https://wa.me/${selectedLead.phone.replace(/[^0-9]/g,"")}`} target="_blank" rel="noopener noreferrer"
+                          <a href={`https://wa.me/${cleanPhone(selectedLead.phone)}`} target="_blank" rel="noopener noreferrer"
                             style={{ display:"inline-flex", alignItems:"center", gap:6, marginTop:10, padding:"7px 14px", borderRadius:7, border:"1px solid rgba(37,211,102,0.3)", background:"rgba(37,211,102,0.08)", color:"#25D366", fontSize:11, fontWeight:700, textDecoration:"none" }}>
                             <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/></svg>
                             WhatsApp Now
@@ -16156,6 +16482,62 @@ Format clearly with these 4 sections labeled. Be specific to Dubai market. Inclu
               )}
 
               {/* ── Quick Capture Modal ── */}
+                            {/* ── WhatsApp / Email Templates Modal ── */}
+              {showTemplates && (
+                <div style={{ position:"fixed", inset:0, background:"rgba(4,9,15,0.85)", zIndex:2001, display:"flex", alignItems:"center", justifyContent:"center", backdropFilter:"blur(8px)" }}
+                  onClick={e=>{ if(e.target===e.currentTarget) setShowTemplates(false); }}>
+                  <div style={{ background:T.surface, borderRadius:16, border:`1px solid ${T.border}`, width:"95%", maxWidth:560, maxHeight:"85vh", overflowY:"auto" }}
+                    onClick={e=>e.stopPropagation()}>
+                    <div style={{ padding:"20px 24px", borderBottom:`1px solid ${T.border}`, display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+                      <div style={{ fontFamily:"'Fraunces',serif", fontSize:17, fontWeight:900, color:T.gold }}>📋 Message Templates</div>
+                      <button type="button" onClick={()=>setShowTemplates(false)}
+                        style={{ background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:8, color:T.textMuted, width:30, height:30, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center" }}>✕</button>
+                    </div>
+                    <div style={{ padding:"20px 24px" }}>
+                      {[
+                        { label:"🏠 Initial Inquiry Response", type:"WhatsApp", text:"Hello! Thank you for your interest in properties in Dubai. I'm your dedicated property consultant at The Address Holding. Could you please share your budget range and preferred community? I'd love to find you the perfect property. 🏙" },
+                        { label:"📅 Viewing Confirmation", type:"WhatsApp", text:"Dear [Name], your property viewing has been confirmed for [Date] at [Time]. The property is located at [Address]. Please let me know if you need directions. Looking forward to meeting you! 🔑" },
+                        { label:"💰 Payment Plan Follow-up", type:"WhatsApp", text:"Hi [Name]! Following up on your interest in [Property]. Great news — they offer flexible payment plans: 20% down, rest over 3 years post-handover. Would you like me to prepare a full breakdown? 📊" },
+                        { label:"🏅 Golden Visa Info", type:"WhatsApp", text:"Did you know? Investing AED 2M+ in Dubai real estate qualifies you for the UAE Golden Visa — 10-year renewable residency for you and your family. Would you like more details? 🇦🇪" },
+                        { label:"📊 Market Update", type:"Email", text:"Subject: Dubai Property Market Update
+
+Dear [Name],
+
+I wanted to share the latest market insights from the Dubai Land Department. Transactions in your preferred community have [increased/decreased] by X% this quarter.
+
+Best regards,
+[Your Name]
+The Address Holding" },
+                        { label:"🤝 Post-Viewing Thank You", type:"WhatsApp", text:"Thank you for visiting the property today, [Name]! I hope you found it as impressive as I do. Please feel free to ask any questions. If you'd like to proceed or view other options, I'm here to help. 😊" },
+                        { label:"⚡ Off-Plan Launch Alert", type:"WhatsApp", text:"🚨 NEW LAUNCH ALERT! [Developer] has just launched [Project] in [Community]. Starting from AED [Price]. Payment plan: [X]% down + [Y]% on handover. Limited units available — shall I reserve one for you? 🔥" },
+                        { label:"📝 Re-engagement (Cold Lead)", type:"WhatsApp", text:"Hi [Name], it's been a while since we spoke! The Dubai property market has some exciting new opportunities that match your profile. Are you still considering a purchase? Happy to share the latest options. 🏙" },
+                      ].map((tmpl, i) => (
+                        <div key={i} style={{ padding:"14px 16px", background:T.surfaceAlt, borderRadius:10, border:`1px solid ${T.border}`, marginBottom:10 }}>
+                          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:8 }}>
+                            <div style={{ fontSize:13, fontWeight:600, color:T.white }}>{tmpl.label}</div>
+                            <span style={{ fontSize:10, padding:"2px 8px", borderRadius:4, background:tmpl.type==="WhatsApp"?"rgba(37,211,102,0.15)":"rgba(59,130,246,0.15)", color:tmpl.type==="WhatsApp"?"#25D366":"#3B82F6", fontWeight:600 }}>{tmpl.type}</span>
+                          </div>
+                          <div style={{ fontSize:11, color:T.textSecondary, lineHeight:1.6, marginBottom:10, whiteSpace:"pre-line" }}>{tmpl.text.slice(0,120)}{tmpl.text.length>120?"...":""}</div>
+                          <div style={{ display:"flex", gap:6 }}>
+                            <button type="button" onClick={()=>{ navigator.clipboard.writeText(tmpl.text); }}
+                              style={{ padding:"5px 12px", background:"rgba(212,168,67,0.1)", border:"1px solid rgba(212,168,67,0.3)", borderRadius:6, color:T.gold, fontSize:11, fontWeight:600, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>
+                              📋 Copy
+                            </button>
+                            {tmpl.type==="WhatsApp" && selectedLead?.phone && (
+                              <a href={`https://wa.me/${cleanPhone(selectedLead.phone)}?text=${encodeURIComponent(tmpl.text)}`}
+                                target="_blank" rel="noopener noreferrer"
+                                style={{ padding:"5px 12px", background:"rgba(37,211,102,0.1)", border:"1px solid rgba(37,211,102,0.3)", borderRadius:6, color:"#25D366", fontSize:11, fontWeight:600, cursor:"pointer", fontFamily:"'Outfit',sans-serif", textDecoration:"none" }}>
+                                Send via WhatsApp
+                              </a>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {showQuickCapture && (
                 <div style={{ position:"fixed", inset:0, background:"rgba(4,9,15,0.85)", zIndex:2000, display:"flex", alignItems:"center", justifyContent:"center", backdropFilter:"blur(8px)" }} onClick={e=>{if(e.target===e.currentTarget)setShowQuickCapture(false);}}>
                   <div style={{ background:T.surface, borderRadius:16, border:`1px solid ${T.border}`, width:"95%", maxWidth:480, maxHeight:"90vh", overflowY:"auto" }} onClick={e=>e.stopPropagation()}>
@@ -16324,9 +16706,9 @@ Format clearly with these 4 sections labeled. Be specific to Dubai market. Inclu
                               return mapped;
                             });
                             // Check dupes by phone
-                            const existingPhones = new Set(myLeads.map(l => (l.phone||"").replace(/[^0-9]/g,"")));
+                            const existingPhones = new Set(myLeads.map(l => cleanPhone(l.phone||"")));
                             const dupeRows = importRawRows.filter(row => {
-                              const phone = (row[importMapping.phone]||"").replace(/[^0-9]/g,"");
+                              const phone = cleanPhone(row[importMapping.phone]||"");
                               return phone && existingPhones.has(phone);
                             });
                             setImportPreview(preview);
@@ -16389,10 +16771,10 @@ Format clearly with these 4 sections labeled. Be specific to Dubai market. Inclu
                             style={{ padding:"10px 20px", borderRadius:8, border:`1px solid ${T.border}`, background:"none", color:T.textMuted, fontSize:12, cursor:"pointer" }}>Back</button>
                           <button type="button" disabled={importLoading} onClick={async () => {
                             setImportLoading(true);
-                            const existingPhones = new Set(myLeads.map(l => (l.phone||"").replace(/[^0-9]/g,"")));
+                            const existingPhones = new Set(myLeads.map(l => cleanPhone(l.phone||"")));
                             let imported = 0, dupes = 0, errors = 0;
                             const toImport = importRawRows.filter(row => {
-                              const phone = (row[importMapping.phone]||"").replace(/[^0-9]/g,"");
+                              const phone = cleanPhone(row[importMapping.phone]||"");
                               if(phone && existingPhones.has(phone)) { dupes++; return false; }
                               return true;
                             });
@@ -17262,7 +17644,7 @@ Format clearly with these 4 sections labeled. Be specific to Dubai market. Inclu
                               </div>
                               <div style={{ display:"flex", alignItems:"center", gap:6, flexShrink:0 }}>
                                 {l.budget>0&&<span style={{ fontSize:10, color:T.gold }}>AED {(parseFloat(l.budget)/1e6).toFixed(1)}M</span>}
-                                {l.phone&&<a href={`https://wa.me/${l.phone.replace(/[^0-9]/g,"")}`} target="_blank" rel="noopener noreferrer" style={{ display:"flex", alignItems:"center", justifyContent:"center", width:26, height:26, borderRadius:5, border:"1px solid rgba(37,211,102,0.3)", background:"rgba(37,211,102,0.08)", color:"#25D366", textDecoration:"none" }}><svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/></svg></a>}
+                                {l.phone&&<a href={`https://wa.me/${cleanPhone(l.phone)}`} target="_blank" rel="noopener noreferrer" style={{ display:"flex", alignItems:"center", justifyContent:"center", width:26, height:26, borderRadius:5, border:"1px solid rgba(37,211,102,0.3)", background:"rgba(37,211,102,0.08)", color:"#25D366", textDecoration:"none" }}><svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/></svg></a>}
                               </div>
                             </div>
                           );
@@ -17436,7 +17818,7 @@ Format clearly with these 4 sections labeled. Be specific to Dubai market. Inclu
                               {daysSince}d ago
                             </span>
                             {l.phone && (
-                              <a href={`https://wa.me/${l.phone.replace(/[^0-9]/g,"")}`} target="_blank" rel="noopener noreferrer"
+                              <a href={`https://wa.me/${cleanPhone(l.phone)}`} target="_blank" rel="noopener noreferrer"
                                 style={{ display:"flex", alignItems:"center", justifyContent:"center", width:28, height:28, borderRadius:6, border:"1px solid rgba(37,211,102,0.3)", background:"rgba(37,211,102,0.08)", color:"#25D366", textDecoration:"none" }}>
                                 <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/></svg>
                               </a>
