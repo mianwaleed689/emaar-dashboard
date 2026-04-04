@@ -3709,65 +3709,65 @@ export default function EmaarDashboardV2() {
                   <div className="chart-box" style={{ padding: 18 }}>
                     <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 14 }}>Top Communities — Yield</div>
                     {(() => {
-                        const yieldData = liveYields?.length > 0 ? liveYields :
-                          SEED_DATA.communities.map(c => ({ community: c.community, label: c.tenantProfile, gross: c.grossYield }));
-                        return yieldData.length > 0
-                      ? [...yieldData].sort((a,b) => (parseFloat(b.grossYield||b.gross)||0) - (parseFloat(a.grossYield||a.gross)||0)).slice(0,6).map((y, i) => (
+                      const yieldData = liveYields?.length > 0 ? liveYields
+                        : SEED_DATA.communities.map(c => ({ community: c.community, tenantProfile: c.tenantProfile, gross: c.grossYield }));
+                      if (yieldData.length === 0) return (
+                        <div style={{ textAlign: "center", padding: "30px 0" }}>
+                          <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 8 }}>No yield data yet</div>
+                          <div style={{ fontSize: 11, color: T.textMuted, opacity: 0.7 }}>Connect via Admin → Data Health</div>
+                        </div>
+                      );
+                      return [...yieldData]
+                        .sort((a,b) => (parseFloat(b.grossYield||b.gross)||0) - (parseFloat(a.grossYield||a.gross)||0))
+                        .slice(0,6)
+                        .map((y, i) => (
                           <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "7px 0", borderBottom: i < 5 ? `1px solid ${T.border}` : "none" }}>
                             <div>
-                              <div style={{ fontSize: 12, color: T.white, fontWeight: 500 }}>{y.community || y.label || "—"}</div>
-                              <div style={{ fontSize: 10, color: T.textMuted }}>{y.tenantProfile || y.label || "Apartment"}</div>
+                              <div style={{ fontSize: 12, color: T.white, fontWeight: 500 }}>{y.community || "—"}</div>
+                              <div style={{ fontSize: 10, color: T.textMuted }}>{y.tenantProfile || "Apartment"}</div>
                             </div>
-                            <div style={{ fontFamily: "'Fraunces', serif", fontSize: 16, fontWeight: 700, color: parseFloat(y.grossYield||y.gross) >= 7 ? T.green : parseFloat(y.grossYield||y.gross) >= 5.5 ? T.gold : T.textSecondary }}>
+                            <div style={{ fontFamily: "'Fraunces', serif", fontSize: 16, fontWeight: 700, color: parseFloat(y.grossYield||y.gross||0) >= 7 ? T.green : parseFloat(y.grossYield||y.gross||0) >= 5.5 ? T.gold : T.textSecondary }}>
                               {parseFloat(y.grossYield||y.gross||0).toFixed(1)}%
                             </div>
                           </div>
-                        ))
-                      : (
-                          <div style={{ textAlign: "center", padding: "30px 0" }}>
-                            <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 8 }}>No yield data yet</div>
-                            <div style={{ fontSize: 11, color: T.textMuted, opacity: 0.7 }}>Connect via Admin → Data Health</div>
-                          </div>
-                        )
-                    }
+                        ));
+                    })()}
                     <button type="button" onClick={() => handleTabChange("Yields")} style={{ width: "100%", marginTop: 12, padding: "7px 0", background: "rgba(212,168,67,0.06)", border: `1px solid ${T.border}`, borderRadius: 8, color: T.gold, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
                       View All Yields →
                     </button>
-                  </div>;
-                  })()}
+                  </div>
 
                   {/* Column 2: DLD Volume by Community */}
                   <div className="chart-box" style={{ padding: 18 }}>
                     <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 14 }}>DLD Transaction Volume</div>
                     {(() => {
-                        const dldData = liveDLDVolumes?.length > 0 ? liveDLDVolumes : SEED_DATA.dldVolumes;
-                        return dldData.length > 0
-                      ? [...dldData].sort((a,b) => (b.transactions||b.count||0) - (a.transactions||a.count||0)).slice(0,6).map((d, i) => {
-                          const maxVal = liveDLDVolumes.reduce((m,x) => Math.max(m, x.transactions||x.count||0), 1);
-                          const pct = Math.round(((d.transactions||d.count||0) / maxVal) * 100);
-                          return (
-                            <div key={i} style={{ marginBottom: 10 }}>
-                              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
-                                <span style={{ fontSize: 11, color: T.textSecondary }}>{d.community || d.label}</span>
-                                <span style={{ fontSize: 11, color: T.white, fontWeight: 600 }}>{(d.transactions||d.count||0).toLocaleString()}</span>
-                              </div>
-                              <div style={{ height: 4, borderRadius: 2, background: T.border }}>
-                                <div style={{ height: "100%", width: `${pct}%`, borderRadius: 2, background: `linear-gradient(90deg, ${T.gold}, ${T.teal})`, transition: "width 0.8s ease" }} />
-                              </div>
+                      const dldData = liveDLDVolumes?.length > 0 ? liveDLDVolumes : SEED_DATA.dldVolumes;
+                      if (dldData.length === 0) return (
+                        <div style={{ textAlign: "center", padding: "30px 0" }}>
+                          <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 8 }}>No DLD data yet</div>
+                          <div style={{ fontSize: 11, color: T.textMuted, opacity: 0.7 }}>Auto-syncs daily via cron</div>
+                        </div>
+                      );
+                      const maxVal = Math.max(...dldData.map(x => x.transactions||x.count||0), 1);
+                      return [...dldData].sort((a,b) => (b.transactions||b.count||0) - (a.transactions||a.count||0)).slice(0,6).map((d, i) => {
+                        const pct = Math.round(((d.transactions||d.count||0) / maxVal) * 100);
+                        return (
+                          <div key={i} style={{ marginBottom: 10 }}>
+                            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
+                              <span style={{ fontSize: 11, color: T.textSecondary }}>{d.community || d.label}</span>
+                              <span style={{ fontSize: 11, color: T.white, fontWeight: 600 }}>{(d.transactions||d.count||0).toLocaleString()}</span>
                             </div>
-                          );
-                        })
-                      : (
-                          <div style={{ textAlign: "center", padding: "30px 0" }}>
-                            <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 8 }}>No DLD data yet</div>
-                            <div style={{ fontSize: 11, color: T.textMuted, opacity: 0.7 }}>Auto-syncs daily via cron</div>
+                            <div style={{ height: 4, borderRadius: 2, background: T.border }}>
+                              <div style={{ height: "100%", width: `${pct}%`, borderRadius: 2, background: `linear-gradient(90deg, ${T.gold}, ${T.teal})`, transition: "width 0.8s ease" }} />
+                            </div>
                           </div>
-                        )
-                    }
+                        );
+                      });
+                    })()}
                     <button type="button" onClick={() => handleTabChange("DLD Volumes")} style={{ width: "100%", marginTop: 12, padding: "7px 0", background: "rgba(212,168,67,0.06)", border: `1px solid ${T.border}`, borderRadius: 8, color: T.gold, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
                       View DLD Volumes →
                     </button>
-                  </div>;
+                  </div>
                   })()}
 
                   {/* Column 3: AI Market Insight + Developer Health */}
