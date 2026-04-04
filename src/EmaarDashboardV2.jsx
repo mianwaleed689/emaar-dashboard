@@ -16405,7 +16405,7 @@ Write a short, professional WhatsApp message (3-4 lines) introducing Dubai prope
                           </div>
                           <div style={{ textAlign:"center" }}>
                             <div style={{ fontSize:36, fontWeight:900, color:ai.color, fontFamily:"'Fraunces',serif", lineHeight:1 }}>{ai.score}</div>
-                            <div style={{ fontSize:11, fontWeight:700, color:ai.color }}>/ 100</div>
+                            <div style={{ fontSize:11, fontWeight:700, color:ai.color }}>{"/ 100"}</div>
                           </div>
                         </div>
                         {/* Score bar */}
@@ -16793,7 +16793,7 @@ The Address Holding" },
                                   importedAt:   new Date().toISOString(),
                                 });
                                 imported++;
-                                { const _pct = toImport.length > 0 ? (idx+1)*100 : 0; const _div = toImport.length > 0 ? toImport.length : 1; setImportProgress(Math.round(_pct / _div)); }
+                                { const _tot = toImport.length > 0 ? toImport.length : 1; setImportProgress(Math.min(100, Math.trunc((idx+1)*100 / _tot))); }
                               } catch(e) { errors++; }
                             }
                             setImportDone({ imported, dupes, errors });
