@@ -10948,9 +10948,9 @@ export default function EmaarDashboardV2() {
                             <div style={{ fontSize:11, color:T.textSecondary, marginTop:4 }}>
                               Sellers asking AED {priceGap.toLocaleString()}/sqft above DLD registered prices.
                               {parseFloat(priceGapPct) > 15
-                                ? " Negotiate hard — significant overpricing."
+                                ? " Negotiate hard - significant overpricing."
                                 : parseFloat(priceGapPct) > 8
-                                ? " Moderate premium — room to negotiate."
+                                ? " Moderate premium - room to negotiate."
                                 : " Fairly priced vs market."}
                             </div>
                           </div>
@@ -11004,7 +11004,7 @@ export default function EmaarDashboardV2() {
                             `DLD registered ${activeDld.txMonth} transactions in ${dldActiveCommunity} this month`,
                             `Average registered price is AED ${activeDld.avgPpsf.toLocaleString()}/sqft vs AED ${activeDld.askPpsf.toLocaleString()}/sqft asking`,
                             `Price has ${trendUp?"increased":"decreased"} ${Math.abs(parseFloat(trendChange))}% over 6 months`,
-                            `Market is ${activeDld.txMonth>50?"very active — act quickly":"moderate — you have negotiating room"}`,
+                            `Market is ${activeDld.txMonth>50?"very active - act quickly":"moderate - you have negotiating room"}`,
                           ].map((point,i) => (
                             <div key={i} style={{ display:"flex", gap:8, alignItems:"flex-start" }}>
                               <div style={{ width:16, height:16, borderRadius:"50%", background:`rgba(212,168,67,0.15)`, border:`1px solid rgba(212,168,67,0.3)`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:9, color:T.gold, fontWeight:700, flexShrink:0, marginTop:1 }}>{i+1}</div>
