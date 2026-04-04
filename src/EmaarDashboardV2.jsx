@@ -10769,7 +10769,7 @@ export default function EmaarDashboardV2() {
                 const maxTrend = Math.max(...activeDld.trend);
                 const minTrend = Math.min(...activeDld.trend);
 
-                return (<>
+                return (<React.Fragment>
 
                   {/* ── DLD Header ── */}
                   <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:16, marginTop:8, flexWrap:"wrap", gap:8 }}>
@@ -11018,10 +11018,10 @@ export default function EmaarDashboardV2() {
                   </div>
                 </div>
 
-                </>);
+                </div>);
               })()}
 
-            </>);
+            </React.Fragment>);
           })()}
 
 
