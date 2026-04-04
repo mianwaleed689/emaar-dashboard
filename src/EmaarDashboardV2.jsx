@@ -2871,7 +2871,7 @@ export default function EmaarDashboardV2() {
             <button type="button" onClick={() => setShowUpgrade(true)} style={{ padding: "6px 16px", borderRadius: 6, background: T.gold, color: T.bg, border: "none", fontSize: 12, fontWeight: 700, fontFamily: "'Outfit', sans-serif", cursor: "pointer" }}>Upgrade to Pro — AED 99/mo</button>
           </div>
         )}
-        <div style={{ maxWidth: 1200, margin: "0 auto", padding: `0 24px ${compareList.length > 0 && tab === "Projects" ? "120px" : "60px"}` }}>
+        <div style={{ padding: `0 24px ${compareList.length > 0 && tab === "Projects" ? "120px" : "60px"}` }}>
 
           {/* ─── OVERVIEW TAB ─── */}
           {tab === "Overview" && <>
@@ -7396,8 +7396,7 @@ export default function EmaarDashboardV2() {
             DXB Analytics · The Address Holding · © 2026
           </p>
         </footer>
-      </main>
-
+      
       {/* ─── FLOATING COMPARE BAR ─── */}
       {compareList.length > 0 && tab === "Projects" && (
         <div className="compare-bar" style={{ position: "fixed", bottom: 0, left: 0, right: 0, background: T.surface, borderTop: `2px solid ${T.gold}`, padding: "12px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", zIndex: 1000, backdropFilter: "blur(12px)", flexWrap: "wrap", gap: 8 }}>
@@ -11924,6 +11923,8 @@ export default function EmaarDashboardV2() {
           </div>
         );
       })()}
+
+      </main>
 
       {/* Upgrade Modal */}
       <UpgradeModal show={showUpgrade} onClose={() => setShowUpgrade(false)} />
