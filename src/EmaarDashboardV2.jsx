@@ -453,6 +453,9 @@ const SEED_DATA = {
     { metric: "Nationalities",            value: "193+",        isSeedData: true, source: "DLD Investor Base Report 2025" },
     { metric: "Off-Plan Share",           numericValue: 63,     isSeedData: true },
     { metric: "Cash Share",               numericValue: 55,     isSeedData: true, source: "DLD Mortgage Report 2025" },
+    { metric: "Active Developers", value: "50+", change: "RERA registered · DLD approved", isSeedData: true, source: "RERA Registry 2026" },
+    { metric: "REIDIN Growth",      value: "+19.8%", change: "Residential Sales Price Index Dec 2025", isSeedData: true, source: "REIDIN Dec 2025" },
+    { metric: "Price Growth YoY",   value: "+19.8%", change: "Dec 2025", isSeedData: true, source: "REIDIN 2025" },
     { metric: "Mortgage Share",           numericValue: 45,     isSeedData: true },
     /* Historical sales chart data */
     { year: "2020", value: 175,  type: "annual", isSeedData: true, source: "DLD Annual Report" },
@@ -3162,7 +3165,7 @@ export default function EmaarDashboardV2() {
       { key: "competitorData",     setter: setLiveCompetitors },
       { key: "mortgageRates",      setter: setLiveMortgageRates },
       { key: "neighbourhoodScores",setter: setLiveNeighbourhoods },
-      { key: "marketData",         setter: setLiveMarketData },
+      /* marketData handled by collection listener, not tabData doc */
       { key: "financials",         setter: setLiveFinancials },
       { key: "riskFactors",        setter: setLiveRisk },
     ];
@@ -3197,7 +3200,8 @@ export default function EmaarDashboardV2() {
     
     /* ─── MARKET DATA ─── */
     unsubs.push(onSnapshot(collection(db, "marketData"), snap => {
-      const d = snap.docs.map(x => ({ id:x.id, ...x.data() }));
+      const d = snap.docs.map(x => ({ id:x.id, ...x.data() }))
+                         .filter(x => x.metric && x.value);
       if (d.length > 0) setLiveMarketData(d);
     }, () => {}));
 
@@ -4426,7 +4430,10 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
             };
 
             /* ── Live market stats from Firestore ── */
-            const stats = liveMarketData?.length > 0 ? liveMarketData : SEED_DATA.market;
+            const stats = (() => {
+              const live = (liveMarketData || []).filter(d => d.metric && d.value);
+              return live.length > 0 ? live : SEED_DATA.market;
+            })();
             const mktIsSeed = liveMarketData?.length === 0;
             const getStat = (metric) => {
               const exact = stats.find(s => s.metric === metric);
@@ -4627,7 +4634,10 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
             /* state moved to top level */
 
             /* ── Filter data ── */
-            const rawData = liveDLDVolumes?.length > 0 ? liveDLDVolumes : SEED_DATA.dldVolumes;
+            const rawData = (() => {
+              const live = (liveDLDVolumes || []).filter(d => d.community || d.developer || d.type);
+              return live.length > 0 ? live : SEED_DATA.dldVolumes;
+            })();
             const dldIsSeed = !liveDLDVolumes?.length;
             const filtered = rawData.filter(d => {
               if (dldFilter.community !== "All" && d.community !== dldFilter.community) return false;
