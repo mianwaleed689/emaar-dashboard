@@ -9100,7 +9100,6 @@ export default function EmaarDashboardV2() {
                   </div>
                 </div>
               </div>
-              </div>
 
               {/* ── Bottom row: Source ROI + Overdue ── */}
               <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16 }}>
@@ -9182,9 +9181,7 @@ export default function EmaarDashboardV2() {
                         </div>
                       );
                     })}
-                  </div>
                 </div>
-              </div>
               </div>
               </div>
             </>);
