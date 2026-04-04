@@ -15536,9 +15536,9 @@ Format clearly with these 4 sections labeled. Be specific to Dubai market. Inclu
                 const text = e.target.result;
                 const lines = text.split(/\r?\n/).filter(l => l.trim());
                 if (lines.length < 2) return;
-                const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g,''));
+                const headers = lines[0].split(',').map(h => h.trim().replace(/^[\x22]/,'').replace(/[\x22]$/,''));
                 const rows = lines.slice(1).map(line => {
-                  const vals = line.split(',').map(v => v.trim().replace(/^"|"$/g,''));
+                  const vals = line.split(',').map(v => v.trim().replace(/^[\x22]/,'').replace(/[\x22]$/,''));
                   const obj = {};
                   headers.forEach((h,i) => { obj[h] = vals[i]||""; });
                   return obj;
