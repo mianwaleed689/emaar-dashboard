@@ -1778,6 +1778,18 @@ export default function EmaarDashboardV2() {
   const [dldLastRefresh, setDldLastRefresh] = useState(new Date());
   const [dldRefreshTick, setDldRefreshTick] = useState(0);
 
+  /* ─── BULK IMPORT STATE (Session 16) ─── */
+  const [showBulkImport, setShowBulkImport] = useState(false);
+  const [importStep, setImportStep]         = useState(1); // 1=upload, 2=map, 3=preview, 4=done
+  const [importRawRows, setImportRawRows]   = useState([]);
+  const [importHeaders, setImportHeaders]   = useState([]);
+  const [importMapping, setImportMapping]   = useState({});
+  const [importPreview, setImportPreview]   = useState([]);
+  const [importDupes, setImportDupes]       = useState([]);
+  const [importProgress, setImportProgress] = useState(0);
+  const [importDone, setImportDone]         = useState({ imported:0, dupes:0, errors:0 });
+  const [importLoading, setImportLoading]   = useState(false);
+
   /* ─── DLD AUTO-REFRESH (Session 15) ─── */
   React.useEffect(() => {
     const interval = setInterval(() => {
@@ -7766,6 +7778,37 @@ export default function EmaarDashboardV2() {
               setCaptureLoading(false);
             };
 
+            // ── CSV Parser (Session 16) ──────────────────────────────────
+            const handleCsvFile = (file) => {
+              const reader = new FileReader();
+              reader.onload = (e) => {
+                const text = e.target.result;
+                const lines = text.split(/\r?\n/).filter(l => l.trim());
+                if (lines.length < 2) return;
+                const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g,''));
+                const rows = lines.slice(1).map(line => {
+                  const vals = line.split(',').map(v => v.trim().replace(/^"|"$/g,''));
+                  const obj = {};
+                  headers.forEach((h,i) => { obj[h] = vals[i]||""; });
+                  return obj;
+                }).filter(r => Object.values(r).some(v => v));
+                setImportHeaders(headers);
+                setImportRawRows(rows);
+                // Auto-map common column names
+                const autoMap = {};
+                const fieldMap = { name:['name','full name','client name','contact name'], phone:['phone','mobile','tel','telephone','phone number'], email:['email','email address'], budget:['budget','price','amount'], community:['community','area','location','project'], source:['source','lead source'], status:['status','stage'], notes:['notes','comments','remarks'], nationality:['nationality','country'], beds:['beds','bedrooms','br'] };
+                headers.forEach(h => {
+                  const hl = h.toLowerCase().trim();
+                  Object.entries(fieldMap).forEach(([field, aliases]) => {
+                    if (!autoMap[field] && aliases.some(a => hl.includes(a))) autoMap[field] = h;
+                  });
+                });
+                setImportMapping(autoMap);
+                setImportStep(2);
+              };
+              reader.readAsText(file);
+            };
+
             return (<>
               {/* ── Header ── */}
               <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:20, flexWrap:"wrap", gap:12 }}>
@@ -7777,11 +7820,20 @@ export default function EmaarDashboardV2() {
                     {isManager ? `All leads in your organisation` : `Leads assigned to you`}
                   </p>
                 </div>
-                <button type="button" onClick={() => setShowQuickCapture(true)}
-                  style={{ display:"flex", alignItems:"center", gap:8, padding:"10px 20px", borderRadius:9, border:`1px solid ${T.gold}`, background:"rgba(212,168,67,0.1)", color:T.gold, fontSize:12, fontWeight:700, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                  Capture Lead
-                </button>
+                <div style={{ display:"flex", gap:8 }}>
+                  {isManager && (
+                    <button type="button" onClick={() => { setShowBulkImport(true); setImportStep(1); setImportRawRows([]); setImportHeaders([]); setImportMapping({}); setImportPreview([]); setImportDone({imported:0,dupes:0,errors:0}); }}
+                      style={{ display:"flex", alignItems:"center", gap:8, padding:"10px 18px", borderRadius:9, border:`1px solid ${T.border}`, background:T.surfaceAlt, color:T.textSecondary, fontSize:12, fontWeight:700, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                      Import CSV
+                    </button>
+                  )}
+                  <button type="button" onClick={() => setShowQuickCapture(true)}
+                    style={{ display:"flex", alignItems:"center", gap:8, padding:"10px 20px", borderRadius:9, border:`1px solid ${T.gold}`, background:"rgba(212,168,67,0.1)", color:T.gold, fontSize:12, fontWeight:700, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    Capture Lead
+                  </button>
+                </div>
               </div>
 
               {/* ── KPI Bar ── */}
@@ -8207,6 +8259,247 @@ export default function EmaarDashboardV2() {
                   </div>
                 </div>
               )}
+
+              {/* ══════════════════════════════════════════════
+                  SESSION 16 — BULK IMPORT MODAL
+                  CSV/Excel lead import with field mapping
+              ══════════════════════════════════════════════ */}
+              {showBulkImport && (
+                <div style={{ position:"fixed", inset:0, background:"rgba(4,9,15,0.92)", zIndex:2000, display:"flex", alignItems:"center", justifyContent:"center", padding:16 }}
+                  onClick={e => { if(e.target===e.currentTarget) setShowBulkImport(false); }}>
+                  <div style={{ background:T.surface, borderRadius:20, border:`1px solid ${T.border}`, width:"min(780px,95vw)", maxHeight:"90vh", overflowY:"auto", padding:28 }}>
+
+                    {/* Modal Header */}
+                    <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:24 }}>
+                      <div>
+                        <div style={{ fontSize:18, fontWeight:800, color:T.white }}>Import Leads from CSV</div>
+                        <div style={{ fontSize:12, color:T.textMuted, marginTop:2 }}>Upload CSV - Map fields - Preview - Import</div>
+                      </div>
+                      <button type="button" onClick={() => setShowBulkImport(false)}
+                        style={{ background:"none", border:"none", color:T.textMuted, fontSize:20, cursor:"pointer", padding:4 }}>✕</button>
+                    </div>
+
+                    {/* Step indicator */}
+                    <div style={{ display:"flex", gap:4, marginBottom:24 }}>
+                      {["Upload","Map Fields","Preview","Done"].map((s,i) => (
+                        <div key={i} style={{ flex:1, display:"flex", alignItems:"center", gap:4 }}>
+                          <div style={{ width:24, height:24, borderRadius:"50%", display:"flex", alignItems:"center", justifyContent:"center", fontSize:11, fontWeight:700,
+                            background: importStep > i+1 ? "#10B981" : importStep === i+1 ? T.gold : T.surfaceAlt,
+                            color: importStep >= i+1 ? "#000" : T.textMuted }}>
+                            {importStep > i+1 ? "✓" : i+1}
+                          </div>
+                          <div style={{ fontSize:11, color:importStep===i+1?T.gold:T.textMuted, fontWeight:importStep===i+1?700:400 }}>{s}</div>
+                          {i < 3 && <div style={{ flex:1, height:1, background:T.border }}/>}
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Step 1: Upload */}
+                    {importStep === 1 && (
+                      <div>
+                        <div style={{ border:`2px dashed ${T.border}`, borderRadius:12, padding:"40px 24px", textAlign:"center", marginBottom:16, cursor:"pointer" }}
+                          onClick={() => document.getElementById("csv-upload-input").click()}
+                          onDragOver={e => e.preventDefault()}
+                          onDrop={e => {
+                            e.preventDefault();
+                            const file = e.dataTransfer.files[0];
+                            if (file) handleCsvFile(file);
+                          }}>
+                          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke={T.gold} strokeWidth="1.5" strokeLinecap="round" style={{ marginBottom:12 }}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                          <div style={{ fontSize:14, fontWeight:700, color:T.white, marginBottom:6 }}>Drop CSV file here or click to browse</div>
+                          <div style={{ fontSize:11, color:T.textMuted }}>Supports: CSV files from PropSpace, Goyzer, Property Finder, Bayut, Excel exports</div>
+                          <input id="csv-upload-input" type="file" accept=".csv,.txt" style={{ display:"none" }}
+                            onChange={e => { if(e.target.files[0]) handleCsvFile(e.target.files[0]); }} />
+                        </div>
+
+                        <div style={{ background:T.card, borderRadius:10, padding:"14px 16px", marginBottom:16 }}>
+                          <div style={{ fontSize:12, fontWeight:700, color:T.white, marginBottom:8 }}>Expected CSV columns (any order):</div>
+                          <div style={{ display:"flex", flexWrap:"wrap", gap:6 }}>
+                            {["Name","Phone","Email","Budget","Community","Source","Status","Notes","Nationality","Beds"].map(f => (
+                              <span key={f} style={{ padding:"3px 10px", borderRadius:20, background:T.surfaceAlt, border:`1px solid ${T.border}`, fontSize:11, color:T.textSecondary }}>{f}</span>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div style={{ fontSize:11, color:T.textMuted, textAlign:"center" }}>
+                          Duplicate leads (same phone number) will be automatically detected and skipped
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Step 2: Field Mapping */}
+                    {importStep === 2 && (
+                      <div>
+                        <div style={{ fontSize:13, color:T.textMuted, marginBottom:16 }}>
+                          Match your CSV columns to our fields. Detected {importHeaders.length} columns, {importRawRows.length} rows.
+                        </div>
+                        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, marginBottom:20 }}>
+                          {[
+                            { field:"name",        label:"Name",        required:false },
+                            { field:"phone",       label:"Phone",       required:false },
+                            { field:"email",       label:"Email",       required:false },
+                            { field:"budget",      label:"Budget (AED)",required:false },
+                            { field:"community",   label:"Community",   required:false },
+                            { field:"source",      label:"Source",      required:false },
+                            { field:"status",      label:"Status",      required:false },
+                            { field:"notes",       label:"Notes",       required:false },
+                            { field:"nationality", label:"Nationality", required:false },
+                            { field:"beds",        label:"Beds",        required:false },
+                          ].map(({ field, label }) => (
+                            <div key={field} style={{ display:"flex", flexDirection:"column", gap:4 }}>
+                              <div style={{ fontSize:11, fontWeight:600, color:T.textSecondary }}>{label}</div>
+                              <select value={importMapping[field]||""} onChange={e => setImportMapping(m => ({...m,[field]:e.target.value}))}
+                                style={{ padding:"8px 10px", background:T.surfaceAlt, border:`1px solid ${importMapping[field]?T.gold:T.border}`, borderRadius:8, color:T.textPrimary, fontSize:12, fontFamily:"'Outfit',sans-serif" }}>
+                                <option value="">— Skip —</option>
+                                {importHeaders.map(h => <option key={h} value={h}>{h}</option>)}
+                              </select>
+                            </div>
+                          ))}
+                        </div>
+                        <div style={{ display:"flex", gap:10 }}>
+                          <button type="button" onClick={() => setImportStep(1)}
+                            style={{ padding:"10px 20px", borderRadius:8, border:`1px solid ${T.border}`, background:"none", color:T.textMuted, fontSize:12, cursor:"pointer" }}>Back</button>
+                          <button type="button" onClick={() => {
+                            // Generate preview with mapping applied
+                            const preview = importRawRows.slice(0,10).map(row => {
+                              const mapped = {};
+                              Object.entries(importMapping).forEach(([field, col]) => { if(col) mapped[field] = row[col]||""; });
+                              return mapped;
+                            });
+                            // Check dupes by phone
+                            const existingPhones = new Set(myLeads.map(l => (l.phone||"").replace(/[^0-9]/g,"")));
+                            const dupeRows = importRawRows.filter(row => {
+                              const phone = (row[importMapping.phone]||"").replace(/[^0-9]/g,"");
+                              return phone && existingPhones.has(phone);
+                            });
+                            setImportPreview(preview);
+                            setImportDupes(dupeRows);
+                            setImportStep(3);
+                          }}
+                            style={{ flex:1, padding:"10px 20px", borderRadius:8, border:`1px solid ${T.gold}`, background:"rgba(212,168,67,0.1)", color:T.gold, fontSize:12, fontWeight:700, cursor:"pointer" }}>
+                            Preview Import ({importRawRows.length} rows)
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Step 3: Preview */}
+                    {importStep === 3 && (
+                      <div>
+                        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:10, marginBottom:16 }}>
+                          {[
+                            { label:"Total Rows",   value:importRawRows.length,                              color:T.gold },
+                            { label:"Duplicates",   value:importDupes.length,                                color:importDupes.length>0?T.red:"#10B981" },
+                            { label:"Will Import",  value:importRawRows.length - importDupes.length,         color:"#10B981" },
+                          ].map((k,i) => (
+                            <div key={i} style={{ background:T.card, border:`1px solid ${T.border}`, borderRadius:10, padding:"12px 14px", textAlign:"center" }}>
+                              <div style={{ fontSize:9, fontWeight:700, color:T.textMuted, textTransform:"uppercase", marginBottom:4 }}>{k.label}</div>
+                              <div style={{ fontSize:24, fontWeight:900, color:k.color, fontFamily:"'Fraunces',serif" }}>{k.value}</div>
+                            </div>
+                          ))}
+                        </div>
+
+                        {importDupes.length > 0 && (
+                          <div style={{ padding:"10px 14px", borderRadius:8, background:"rgba(239,68,68,0.08)", border:"1px solid rgba(239,68,68,0.2)", marginBottom:14, fontSize:11, color:T.red }}>
+                            ⚠️ {importDupes.length} duplicate leads detected (same phone number already in system) — they will be skipped
+                          </div>
+                        )}
+
+                        <div style={{ fontSize:12, fontWeight:700, color:T.white, marginBottom:8 }}>Preview (first 10 rows):</div>
+                        <div style={{ overflowX:"auto", marginBottom:16 }}>
+                          <table style={{ width:"100%", borderCollapse:"collapse", fontSize:11 }}>
+                            <thead>
+                              <tr style={{ borderBottom:`1px solid ${T.border}` }}>
+                                {Object.keys(importPreview[0]||{}).map(k => (
+                                  <th key={k} style={{ padding:"6px 10px", textAlign:"left", color:T.textMuted, fontWeight:700, textTransform:"uppercase", fontSize:9, letterSpacing:0.8 }}>{k}</th>
+                                ))}
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {importPreview.map((row,i) => (
+                                <tr key={i} style={{ borderBottom:`1px solid ${T.border}`, background:i%2===0?"transparent":"rgba(255,255,255,0.01)" }}>
+                                  {Object.values(row).map((v,j) => (
+                                    <td key={j} style={{ padding:"7px 10px", color:T.textPrimary, maxWidth:120, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{v||"—"}</td>
+                                  ))}
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+
+                        <div style={{ display:"flex", gap:10 }}>
+                          <button type="button" onClick={() => setImportStep(2)}
+                            style={{ padding:"10px 20px", borderRadius:8, border:`1px solid ${T.border}`, background:"none", color:T.textMuted, fontSize:12, cursor:"pointer" }}>Back</button>
+                          <button type="button" disabled={importLoading} onClick={async () => {
+                            setImportLoading(true);
+                            const existingPhones = new Set(myLeads.map(l => (l.phone||"").replace(/[^0-9]/g,"")));
+                            let imported = 0, dupes = 0, errors = 0;
+                            const toImport = importRawRows.filter(row => {
+                              const phone = (row[importMapping.phone]||"").replace(/[^0-9]/g,"");
+                              if(phone && existingPhones.has(phone)) { dupes++; return false; }
+                              return true;
+                            });
+                            for(let idx=0; idx<toImport.length; idx++) {
+                              const row = toImport[idx];
+                              try {
+                                const mapped = {};
+                                Object.entries(importMapping).forEach(([field,col]) => { if(col) mapped[field] = row[col]||""; });
+                                const id = "lead_import_" + Date.now() + "_" + idx;
+                                await setDoc(doc(db, "leads", id), {
+                                  ...mapped,
+                                  assignedTo:   firebaseUser?.uid,
+                                  assignedName: userName || firebaseUser?.email,
+                                  orgId:        orgId || null,
+                                  status:       mapped.status || "New",
+                                  source:       mapped.source || "Import",
+                                  createdAt:    new Date().toISOString(),
+                                  updatedAt:    new Date().toISOString(),
+                                  importedAt:   new Date().toISOString(),
+                                });
+                                imported++;
+                                setImportProgress(Math.round(((idx+1)/toImport.length)*100));
+                              } catch(e) { errors++; }
+                            }
+                            setImportDone({ imported, dupes, errors });
+                            setImportLoading(false);
+                            setImportStep(4);
+                          }}
+                            style={{ flex:1, padding:"10px 20px", borderRadius:8, border:`1px solid ${T.gold}`, background:"rgba(212,168,67,0.1)", color:T.gold, fontSize:12, fontWeight:700, cursor:"pointer", opacity:importLoading?0.6:1 }}>
+                            {importLoading ? `Importing... ${importProgress}%` : `Import ${importRawRows.length - importDupes.length} Leads`}
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Step 4: Done */}
+                    {importStep === 4 && (
+                      <div style={{ textAlign:"center", padding:"20px 0" }}>
+                        <div style={{ fontSize:48, marginBottom:16 }}>✅</div>
+                        <div style={{ fontSize:20, fontWeight:800, color:T.white, marginBottom:8 }}>Import Complete</div>
+                        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:10, margin:"20px 0" }}>
+                          {[
+                            { label:"Imported",   value:importDone.imported,  color:"#10B981" },
+                            { label:"Duplicates", value:importDone.dupes,     color:T.gold },
+                            { label:"Errors",     value:importDone.errors,    color:importDone.errors>0?T.red:T.textMuted },
+                          ].map((k,i) => (
+                            <div key={i} style={{ background:T.card, border:`1px solid ${T.border}`, borderRadius:10, padding:"14px", textAlign:"center" }}>
+                              <div style={{ fontSize:9, fontWeight:700, color:T.textMuted, textTransform:"uppercase", marginBottom:4 }}>{k.label}</div>
+                              <div style={{ fontSize:28, fontWeight:900, color:k.color, fontFamily:"'Fraunces',serif" }}>{k.value}</div>
+                            </div>
+                          ))}
+                        </div>
+                        <div style={{ fontSize:12, color:T.textMuted, marginBottom:20 }}>Leads are now visible in your My Leads list</div>
+                        <button type="button" onClick={() => setShowBulkImport(false)}
+                          style={{ padding:"12px 32px", borderRadius:9, border:`1px solid ${T.gold}`, background:"rgba(212,168,67,0.1)", color:T.gold, fontSize:13, fontWeight:700, cursor:"pointer" }}>
+                          Done
+                        </button>
+                      </div>
+                    )}
+
+                  </div>
+                </div>
+              )}
+
             </>);
           })()}
 
