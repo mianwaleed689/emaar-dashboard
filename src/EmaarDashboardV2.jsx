@@ -3749,15 +3749,15 @@ export default function EmaarDashboardV2() {
 
             /* ── Forecast Card ── */
             const ForecastCard = ({ firm, forecast, detail, color }) => {
-              /* use expandedForecast state from top level */
+              const isExp = expandedForecast === firm;
               return (
-                <div className="chart-box" style={{ borderTop: `3px solid ${color}`, cursor: "pointer" }} onClick={() => setExpanded(e => !e)}>
+                <div className="chart-box" style={{ borderTop: `3px solid ${color}`, cursor: "pointer" }} onClick={() => setExpandedForecast(isExp ? null : firm)}>
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
                     <div style={{ fontSize: 13, fontWeight: 700, color, fontFamily: "'Fraunces',serif" }}>{firm}</div>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={T.textMuted} strokeWidth="2" strokeLinecap="round"><polyline points={expanded ? "18 15 12 9 6 15" : "6 9 12 15 18 15"}/></svg>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={T.textMuted} strokeWidth="2" strokeLinecap="round"><polyline points={isExp ? "18 15 12 9 6 15" : "6 9 12 15 18 15"}/></svg>
                   </div>
                   <div style={{ fontSize: 15, fontWeight: 700, color: T.white, marginBottom: 6 }}>{forecast}</div>
-                  {expanded && <div style={{ fontSize: 12, color: T.textSecondary, lineHeight: 1.7, marginTop: 8, paddingTop: 8, borderTop: `1px solid ${T.border}` }}>{detail}</div>}
+                  {isExp && <div style={{ fontSize: 12, color: T.textSecondary, lineHeight: 1.7, marginTop: 8, paddingTop: 8, borderTop: `1px solid ${T.border}` }}>{detail}</div>}
                 </div>
               );
             };
