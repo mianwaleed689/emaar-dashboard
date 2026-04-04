@@ -1675,6 +1675,7 @@ function CommunityMapTab({ activeProjects, liveCommunityROI, setTab, seedCommuni
   const getCoords = (project) => {
     // Exact match first
     if (projectCoords[project.name]) return projectCoords[project.name];
+    if (projectCoords[project.project]) return projectCoords[project.project];
     // Community fallback coords
     const communityFallback = {
       "Dubai Creek Harbour": [25.1876, 55.3344],
@@ -1778,7 +1779,7 @@ function CommunityMapTab({ activeProjects, liveCommunityROI, setTab, seedCommuni
             <div style="font-size:10px;color:#94A3B8;">\${p.community}</div>
           </div>
           <div style="padding:10px 14px;display:grid;grid-template-columns:1fr 1fr;gap:6px;">
-            <div><div style="font-size:9px;color:#94A3B8;text-transform:uppercase;">Price</div><div style="font-size:12px;font-weight:700;color:#D4A843;">\${p.price ? "AED " + (p.price/1e6).toFixed(2) + "M" : "TBC"}</div></div>
+            <div><div style="font-size:9px;color:#94A3B8;text-transform:uppercase;">Price</div><div style="font-size:12px;font-weight:700;color:#D4A843;">\${p.priceMin ? "AED " + (p.priceMin/1e6).toFixed(2) + "M" : p.price ? "AED " + (p.price/1e6).toFixed(2) + "M" : "TBC"}</div></div>
             <div><div style="font-size:9px;color:#94A3B8;text-transform:uppercase;">Yield</div><div style="font-size:12px;font-weight:700;color:\${color}">\${y.toFixed(1)}%</div></div>
             <div><div style="font-size:9px;color:#94A3B8;text-transform:uppercase;">Type</div><div style="font-size:11px;color:#CBD5E1;">\${p.type || "Residential"}</div></div>
             <div><div style="font-size:9px;color:#94A3B8;text-transform:uppercase;">Handover</div><div style="font-size:11px;color:#CBD5E1;">\${p.handover || "TBC"}</div></div>
@@ -1913,7 +1914,7 @@ function CommunityMapTab({ activeProjects, liveCommunityROI, setTab, seedCommuni
             <div style={{ background: T.surface, borderRadius: 14, border: "1px solid " + T.gold, padding: 18 }}>
               <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 12 }}>
                 <div>
-                  <div style={{ fontFamily: "'Fraunces',serif", fontSize: 15, fontWeight: 700, color: T.gold }}>{selectedProject.name}</div>
+                  <div style={{ fontFamily: "'Fraunces',serif", fontSize: 15, fontWeight: 700, color: T.gold }}>{selectedProject.project || selectedProject.name}</div>
                   <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>{selectedProject.community}</div>
                 </div>
                 <button type="button" onClick={() => setSelectedProjectMap(null)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 18 }}>×</button>
@@ -1949,7 +1950,7 @@ function CommunityMapTab({ activeProjects, liveCommunityROI, setTab, seedCommuni
                 onMouseEnter={e => e.currentTarget.style.background = T.surfaceAlt}
                 onMouseLeave={e => e.currentTarget.style.background = selectedProject?.id === p.id ? "rgba(212,168,67,0.1)" : "transparent"}>
                 <div>
-                  <div style={{ fontSize: 11, fontWeight: 600, color: T.white }}>{p.name}</div>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: T.white }}>{p.project || p.name}</div>
                   <div style={{ fontSize: 10, color: T.textMuted }}>{p.community}</div>
                 </div>
                 <div style={{ textAlign: "right" }}>
