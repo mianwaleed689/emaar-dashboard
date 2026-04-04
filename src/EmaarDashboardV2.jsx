@@ -2327,6 +2327,29 @@ const INTELLIGENCE_TABS = {
   },
 };
 
+
+/* ══ TAB ERROR BOUNDARY ══ */
+class TabErrorBoundary extends React.Component {
+  constructor(props) { super(props); this.state = { hasError:false, error:null }; }
+  static getDerivedStateFromError(e) { return { hasError:true, error:e }; }
+  componentDidCatch(e,i) { console.error("DXB Tab Error:",e); }
+  render() {
+    if (this.state.hasError) return (
+      <div style={{ padding:"60px 24px", textAlign:"center" }}>
+        <div style={{ fontSize:28, marginBottom:12 }}>⚠️</div>
+        <div style={{ fontFamily:"'Fraunces',serif", fontSize:16, fontWeight:700, color:"#EF4444", marginBottom:8 }}>Tab Error</div>
+        <div style={{ fontSize:12, color:"#9CA3AF", marginBottom:16 }}>{this.state.error?.message || "Something went wrong in this tab"}</div>
+        <button onClick={()=>this.setState({hasError:false,error:null})}
+          style={{ padding:"7px 20px", background:"rgba(212,168,67,0.15)", border:"1px solid rgba(212,168,67,0.4)", borderRadius:8, color:"#D4A843", fontSize:12, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>
+          Try Again
+        </button>
+        <div style={{ fontSize:11, color:"#6B7280", marginTop:10 }}>All other tabs remain accessible — use the sidebar to navigate</div>
+      </div>
+    );
+    return this.props.children;
+  }
+}
+
 export default function EmaarDashboardV2() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [user, setUser] = useState("");
@@ -4096,6 +4119,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
           </div>
         )}
         <div style={{ padding: `0 24px ${compareList.length > 0 && tab === "Projects" ? "120px" : "60px"}` }}>
+          <TabErrorBoundary key={tab}>
 
           {/* ─── OVERVIEW TAB ─── */}
           {tab === "Overview" && (() => {
@@ -4123,7 +4147,11 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
 
             const syncTime = lastDataSync ? lastDataSync.toLocaleTimeString("en-AE", { hour: "2-digit", minute: "2-digit" }) : null;
             const isSeed = !liveMarketData?.length;
-            const kpis = liveMarketData?.length > 0 ? liveMarketData : SEED_DATA.overviewKpis;
+            const kpis = (() => {
+              // Only use liveMarketData if it contains metric/value formatted docs
+              const live = liveMarketData?.filter?.(d => d.metric && d.value) || [];
+              return live.length > 0 ? live : SEED_DATA.overviewKpis;
+            })();
             const getKpi = (metric) => kpis?.find(d => d.metric === metric)?.value || "—";
             const getKpiChange = (metric) => kpis?.find(d => d.metric === metric)?.change || "";
 
@@ -16339,6 +16367,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
         );
       })()}
 
+          </TabErrorBoundary>
         </div>
       </main>
 
