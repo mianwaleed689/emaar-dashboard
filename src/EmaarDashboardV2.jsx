@@ -2682,6 +2682,8 @@ export default function EmaarDashboardV2() {
   // Load projects from Firestore (runs for ALL users — guests and logged-in)
   const [projectsLoading, setProjectsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [liveInvestScores, setLiveInvestScores] = useState([]);
+  const [liveLaunches, setLiveLaunches] = useState([]);
 
   /* ─── GOLDEN VISA TAB STATE ─── */
   const [gvView, setGvView] = useState("checker");
@@ -3161,7 +3163,103 @@ export default function EmaarDashboardV2() {
       if (data.insights && data.generatedAt > oneWeekAgo) setAiInsights(data.insights);
     }));
 
-    return () => unsubs.forEach(u => { try { u(); } catch {} });
+    
+    /* ─── MARKET DATA ─── */
+    unsubs.push(onSnapshot(collection(db, "marketData"), snap => {
+      const d = snap.docs.map(x => ({ id:x.id, ...x.data() }));
+      if (d.length > 0) setLiveMarketData(d);
+    }, () => {}));
+
+    /* ─── HANDOVER ─── */
+    unsubs.push(onSnapshot(collection(db, "handover"), snap => {
+      const d = snap.docs.map(x => ({ id:x.id, ...x.data() }));
+      if (d.length > 0) setLiveHandover(d);
+    }, () => {}));
+
+    /* ─── SERVICE CHARGES ─── */
+    unsubs.push(onSnapshot(collection(db, "serviceCharges"), snap => {
+      const d = snap.docs.map(x => ({ id:x.id, ...x.data() }));
+      if (d.length > 0) setLiveServiceCharges(d);
+    }, () => {}));
+
+    /* ─── DLD VOLUMES ─── */
+    unsubs.push(onSnapshot(collection(db, "dldVolumes"), snap => {
+      const d = snap.docs.map(x => ({ id:x.id, ...x.data() }));
+      if (d.length > 0) setLiveDLDVolumes(d);
+    }, () => {}));
+
+    /* ─── NEIGHBOURHOODS ─── */
+    unsubs.push(onSnapshot(collection(db, "neighbourhoods"), snap => {
+      const d = snap.docs.map(x => ({ id:x.id, ...x.data() }));
+      if (d.length > 0) setLiveNeighbourhoods(d);
+    }, () => {}));
+
+    /* ─── STR DATA ─── */
+    unsubs.push(onSnapshot(collection(db, "strData"), snap => {
+      const d = snap.docs.map(x => ({ id:x.id, ...x.data() }));
+      if (d.length > 0) setLiveSTRData(d);
+    }, () => {}));
+
+    /* ─── YIELDS DATA ─── */
+    unsubs.push(onSnapshot(collection(db, "yieldsData"), snap => {
+      const d = snap.docs.map(x => ({ id:x.id, ...x.data() }));
+      if (d.length > 0) setLiveYieldsData(d);
+    }, () => {}));
+
+    /* ─── MORTGAGE RATES ─── */
+    unsubs.push(onSnapshot(collection(db, "mortgageRates"), snap => {
+      const d = snap.docs.map(x => ({ id:x.id, ...x.data() }));
+      if (d.length > 0) setLiveMortgageRates(d);
+    }, () => {}));
+
+    /* ─── PORTFOLIO (user-specific) ─── */
+    if (auth.currentUser?.uid) {
+      unsubs.push(onSnapshot(
+        query(collection(db, "portfolios"), where("userId", "==", auth.currentUser.uid)),
+        snap => {
+          const d = snap.docs.map(x => ({ id:x.id, ...x.data() }));
+          setLivePortfolio(d);
+        }, () => {}
+      ));
+    }
+
+    /* ─── INVEST SCORES ─── */
+    unsubs.push(onSnapshot(collection(db, "investScores"), snap => {
+      const d = snap.docs.map(x => ({ id:x.id, ...x.data() }));
+      if (d.length > 0) setLiveInvestScores(d);
+    }, () => {}));
+
+    /* ─── RISK DATA ─── */
+    unsubs.push(onSnapshot(collection(db, "riskData"), snap => {
+      const d = snap.docs.map(x => ({ id:x.id, ...x.data() }));
+      if (d.length > 0) setLiveRisk(d);
+    }, () => {}));
+
+    /* ─── FINANCIALS ─── */
+    unsubs.push(onSnapshot(collection(db, "financials"), snap => {
+      const d = snap.docs.map(x => ({ id:x.id, ...x.data() }));
+      if (d.length > 0) setLiveFinancials(d);
+    }, () => {}));
+
+    /* ─── DEV HEALTH ─── */
+    unsubs.push(onSnapshot(collection(db, "devHealth"), snap => {
+      const d = snap.docs.map(x => ({ id:x.id, ...x.data() }));
+      if (d.length > 0) setLiveDevHealth(d);
+    }, () => {}));
+
+    /* ─── COMPETITORS ─── */
+    unsubs.push(onSnapshot(collection(db, "competitors"), snap => {
+      const d = snap.docs.map(x => ({ id:x.id, ...x.data() }));
+      if (d.length > 0) setLiveCompetitors(d);
+    }, () => {}));
+
+    /* ─── LAUNCH CALENDAR ─── */
+    unsubs.push(onSnapshot(collection(db, "launches"), snap => {
+      const d = snap.docs.map(x => ({ id:x.id, ...x.data() }));
+      if (d.length > 0) setLiveLaunches(d);
+    }, () => {}));
+
+return () => unsubs.forEach(u => { try { u(); } catch {} });
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // USER-SCOPED LIVE LISTENERS — portfolio, watchlist, price alerts
@@ -9448,7 +9546,7 @@ export default function EmaarDashboardV2() {
                 note:"Al Maktoum Airport expansion play. 5-10yr horizon. Highest growth potential. Low current liquidity." },
             ];
 
-            const rawScores = SEED_SCORES;
+            const rawScores = liveInvestScores?.length > 0 ? liveInvestScores : SEED_SCORES;
 
             /* ── Calculate weighted total score ── */
             const getTotal = (d) => {
