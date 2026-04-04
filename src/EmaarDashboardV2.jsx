@@ -3768,7 +3768,6 @@ export default function EmaarDashboardV2() {
                       View DLD Volumes →
                     </button>
                   </div>
-                  })()}
 
                   {/* Column 3: AI Market Insight + Developer Health */}
                   <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
