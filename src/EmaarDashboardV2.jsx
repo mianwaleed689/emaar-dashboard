@@ -2719,6 +2719,15 @@ export default function EmaarDashboardV2() {
   const [projectsLoading, setProjectsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
+  /* ─── MY LEADS MISSING STATE (V11) ─── */
+  const [leadBudgetFilter, setLeadBudgetFilter] = useState("all");
+  const [leadTypeFilter, setLeadTypeFilter] = useState("all");
+  const [leadPurposeFilter, setLeadPurposeFilter] = useState("all");
+  const [leadNatFilter, setLeadNatFilter] = useState("all");
+  const [leadDateFilter, setLeadDateFilter] = useState("all");
+  const [leadAgentFilter, setLeadAgentFilter] = useState("all");
+
+
   /* ─── MY LEADS ADDITIONAL STATE ─── */
   const [liveLeads, setLiveLeads] = useState([]);
   const [leadShowAdd, setLeadShowAdd] = useState(false);
@@ -15306,14 +15315,39 @@ Format clearly with these 4 sections labeled. Be specific to Dubai market. Inclu
             const filtered = displayLeads.filter(l => {
               if (leadStatusFilter !== "all" && (l.status||"New") !== leadStatusFilter) return false;
               if (leadSourceFilter !== "all" && l.source !== leadSourceFilter) return false;
+              if (leadNatFilter !== "all" && (l.nationality||"") !== leadNatFilter) return false;
+              if (leadTypeFilter !== "all" && (l.type||"") !== leadTypeFilter) return false;
+              if (leadPurposeFilter !== "all" && (l.purpose||l.type||"") !== leadPurposeFilter) return false;
+              if (leadBudgetFilter !== "all") {
+                const b = parseFloat(l.budget||0);
+                if (leadBudgetFilter === "u1m"  && b >= 1000000)  return false;
+                if (leadBudgetFilter === "1-3m"  && (b < 1000000 || b >= 3000000))  return false;
+                if (leadBudgetFilter === "3-5m"  && (b < 3000000 || b >= 5000000))  return false;
+                if (leadBudgetFilter === "5-10m" && (b < 5000000 || b >= 10000000)) return false;
+                if (leadBudgetFilter === "10m+"  && b < 10000000) return false;
+              }
+              if (leadDateFilter !== "all") {
+                const created = new Date(l.createdAt||Date.now());
+                const now = new Date();
+                if (leadDateFilter === "today" && created < new Date(now.setHours(0,0,0,0))) return false;
+                if (leadDateFilter === "week") { const w = new Date(); w.setDate(w.getDate()-7); if (created < w) return false; }
+                if (leadDateFilter === "month") { const m = new Date(); m.setDate(m.getDate()-30); if (created < m) return false; }
+              }
+              if (leadAgentFilter !== "all" && (l.assignedTo||"") !== leadAgentFilter) return false;
               if (leadSearch.trim()) {
                 const q = leadSearch.toLowerCase();
                 if (!(l.name||"").toLowerCase().includes(q) &&
                     !(l.phone||"").includes(q) &&
                     !(l.email||"").toLowerCase().includes(q) &&
-                    !(l.community||"").toLowerCase().includes(q)) return false;
+                    !(l.community||"").toLowerCase().includes(q) &&
+                    !(l.nationality||"").toLowerCase().includes(q)) return false;
               }
               return true;
+            }).sort((a,b) => {
+              if (leadSortBy === "score")  return (scoreLeadAI(b).score) - (scoreLeadAI(a).score);
+              if (leadSortBy === "budget") return (parseFloat(b.budget||0)) - (parseFloat(a.budget||0));
+              if (leadSortBy === "name")   return (a.name||"").localeCompare(b.name||"");
+              return new Date(b.createdAt||0) - new Date(a.createdAt||0); // default: newest first
             });
 
             const totalVal = myLeads.reduce((a,l) => a + (parseFloat(l.budget)||0), 0);
@@ -15550,25 +15584,82 @@ Format clearly with these 4 sections labeled. Be specific to Dubai market. Inclu
               </div>
 
               {/* ── Filters ── */}
-              <div style={{ display:"flex", gap:8, marginBottom:16, flexWrap:"wrap", alignItems:"center" }}>
-                {/* Search */}
-                <div style={{ position:"relative", flex:"2 1 220px" }}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={T.textMuted} strokeWidth="2" strokeLinecap="round" style={{ position:"absolute", left:12, top:"50%", transform:"translateY(-50%)" }}><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                  <input value={leadSearch} onChange={e=>setLeadSearch(e.target.value)} placeholder="Search by name, phone, community..."
-                    style={{ width:"100%", padding:"9px 12px 9px 36px", background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:8, color:T.textPrimary, fontSize:12, fontFamily:"'Outfit',sans-serif", outline:"none", boxSizing:"border-box" }}/>
+              <div style={{ marginBottom:16 }}>
+                {/* Row 1: Search + Sort */}
+                <div style={{ display:"flex", gap:8, marginBottom:8, flexWrap:"wrap", alignItems:"center" }}>
+                  <div style={{ position:"relative", flex:"2 1 220px" }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={T.textMuted} strokeWidth="2" strokeLinecap="round" style={{ position:"absolute", left:12, top:"50%", transform:"translateY(-50%)" }}><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                    <input value={leadSearch} onChange={e=>setLeadSearch(e.target.value)} placeholder="Search name, phone, email, community, nationality..."
+                      style={{ width:"100%", padding:"9px 12px 9px 36px", background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:8, color:T.textPrimary, fontSize:12, fontFamily:"'Outfit',sans-serif", outline:"none", boxSizing:"border-box" }}/>
+                  </div>
+                  {/* Sort by */}
+                  <select value={leadSortBy} onChange={e=>setLeadSortBy(e.target.value)}
+                    style={{ flex:"1 1 140px", padding:"9px 12px", background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:8, color:T.textPrimary, fontSize:12, fontFamily:"'Outfit',sans-serif", outline:"none", cursor:"pointer" }}>
+                    <option value="date">↓ Newest First</option>
+                    <option value="score">↓ AI Score (Hottest)</option>
+                    <option value="budget">↓ Budget (Highest)</option>
+                    <option value="name">A→Z Name</option>
+                  </select>
                 </div>
-                {/* Status filter */}
-                <select value={leadStatusFilter} onChange={e=>setLeadStatusFilter(e.target.value)}
-                  style={{ flex:"1 1 130px", padding:"9px 12px", background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:8, color:T.textPrimary, fontSize:12, fontFamily:"'Outfit',sans-serif", outline:"none", cursor:"pointer" }}>
-                  <option value="all">All Statuses</option>
-                  {Object.keys(STATUSES).map(s => <option key={s} value={s}>{s}</option>)}
-                </select>
-                {/* Source filter */}
-                <select value={leadSourceFilter} onChange={e=>setLeadSourceFilter(e.target.value)}
-                  style={{ flex:"1 1 130px", padding:"9px 12px", background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:8, color:T.textPrimary, fontSize:12, fontFamily:"'Outfit',sans-serif", outline:"none", cursor:"pointer" }}>
-                  <option value="all">All Sources</option>
-                  {[...new Set(displayLeads.map(l=>l.source).filter(Boolean))].map(s => <option key={s} value={s}>{s}</option>)}
-                </select>
+                {/* Row 2: All filters */}
+                <div style={{ display:"flex", gap:8, flexWrap:"wrap", alignItems:"center" }}>
+                  {/* Status */}
+                  <select value={leadStatusFilter} onChange={e=>setLeadStatusFilter(e.target.value)}
+                    style={{ flex:"1 1 110px", padding:"8px 10px", background:T.surfaceAlt, border:`1px solid ${leadStatusFilter!=="all"?"rgba(212,168,67,0.5)":T.border}`, borderRadius:8, color:leadStatusFilter!=="all"?T.gold:T.textPrimary, fontSize:11, fontFamily:"'Outfit',sans-serif", outline:"none", cursor:"pointer" }}>
+                    <option value="all">All Statuses</option>
+                    {Object.keys(STATUSES).map(s=><option key={s} value={s}>{s}</option>)}
+                  </select>
+                  {/* Source */}
+                  <select value={leadSourceFilter} onChange={e=>setLeadSourceFilter(e.target.value)}
+                    style={{ flex:"1 1 110px", padding:"8px 10px", background:T.surfaceAlt, border:`1px solid ${leadSourceFilter!=="all"?"rgba(212,168,67,0.5)":T.border}`, borderRadius:8, color:leadSourceFilter!=="all"?T.gold:T.textPrimary, fontSize:11, fontFamily:"'Outfit',sans-serif", outline:"none", cursor:"pointer" }}>
+                    <option value="all">All Sources</option>
+                    {[...new Set(displayLeads.map(l=>l.source).filter(Boolean))].map(s=><option key={s} value={s}>{s}</option>)}
+                  </select>
+                  {/* Nationality */}
+                  <select value={leadNatFilter} onChange={e=>setLeadNatFilter(e.target.value)}
+                    style={{ flex:"1 1 110px", padding:"8px 10px", background:T.surfaceAlt, border:`1px solid ${leadNatFilter!=="all"?"rgba(212,168,67,0.5)":T.border}`, borderRadius:8, color:leadNatFilter!=="all"?T.gold:T.textPrimary, fontSize:11, fontFamily:"'Outfit',sans-serif", outline:"none", cursor:"pointer" }}>
+                    <option value="all">🌍 All Nations</option>
+                    {["🇮🇳 Indian","🇬🇧 British","🇷🇺 Russian","🇨🇳 Chinese","🇫🇷 French","🇵🇰 Pakistani","🇸🇦 Saudi","🇦🇪 Emirati","🇪🇬 Egyptian","🇩🇪 German","🇮🇹 Italian","🇺🇸 American","🇨🇦 Canadian","🇦🇺 Australian","🇰🇿 Kazakh","🇱🇧 Lebanese","🇯🇴 Jordanian","🇮🇷 Iranian"].map(n=>{
+                      const nat = n.split(" ").slice(1).join(" ");
+                      return <option key={nat} value={nat}>{n}</option>;
+                    })}
+                    {[...new Set(displayLeads.map(l=>l.nationality).filter(n=>n&&!["Indian","British","Russian","Chinese","French","Pakistani","Saudi","Emirati","Egyptian","German","Italian","American","Canadian","Australian","Kazakh","Lebanese","Jordanian","Iranian"].includes(n)))].map(n=><option key={n} value={n}>{n}</option>)}
+                  </select>
+                  {/* Budget range */}
+                  <select value={leadBudgetFilter} onChange={e=>setLeadBudgetFilter(e.target.value)}
+                    style={{ flex:"1 1 110px", padding:"8px 10px", background:T.surfaceAlt, border:`1px solid ${leadBudgetFilter!=="all"?"rgba(212,168,67,0.5)":T.border}`, borderRadius:8, color:leadBudgetFilter!=="all"?T.gold:T.textPrimary, fontSize:11, fontFamily:"'Outfit',sans-serif", outline:"none", cursor:"pointer" }}>
+                    <option value="all">💰 All Budgets</option>
+                    <option value="u1m">Under AED 1M</option>
+                    <option value="1-3m">AED 1M – 3M</option>
+                    <option value="3-5m">AED 3M – 5M</option>
+                    <option value="5-10m">AED 5M – 10M</option>
+                    <option value="10m+">AED 10M+</option>
+                  </select>
+                  {/* Property type */}
+                  <select value={leadTypeFilter} onChange={e=>setLeadTypeFilter(e.target.value)}
+                    style={{ flex:"1 1 110px", padding:"8px 10px", background:T.surfaceAlt, border:`1px solid ${leadTypeFilter!=="all"?"rgba(212,168,67,0.5)":T.border}`, borderRadius:8, color:leadTypeFilter!=="all"?T.gold:T.textPrimary, fontSize:11, fontFamily:"'Outfit',sans-serif", outline:"none", cursor:"pointer" }}>
+                    <option value="all">🏠 All Types</option>
+                    <option value="Buy">Buy</option>
+                    <option value="Rent">Rent</option>
+                    <option value="Invest">Invest</option>
+                    <option value="Off-Plan">Off-Plan</option>
+                    <option value="Mortgage">Mortgage</option>
+                  </select>
+                  {/* Date added */}
+                  <select value={leadDateFilter} onChange={e=>setLeadDateFilter(e.target.value)}
+                    style={{ flex:"1 1 110px", padding:"8px 10px", background:T.surfaceAlt, border:`1px solid ${leadDateFilter!=="all"?"rgba(212,168,67,0.5)":T.border}`, borderRadius:8, color:leadDateFilter!=="all"?T.gold:T.textPrimary, fontSize:11, fontFamily:"'Outfit',sans-serif", outline:"none", cursor:"pointer" }}>
+                    <option value="all">📅 All Dates</option>
+                    <option value="today">Today</option>
+                    <option value="week">Last 7 days</option>
+                    <option value="month">Last 30 days</option>
+                  </select>
+                  {/* Clear filters */}
+                  {(leadSearch||leadStatusFilter!=="all"||leadSourceFilter!=="all"||leadNatFilter!=="all"||leadBudgetFilter!=="all"||leadTypeFilter!=="all"||leadDateFilter!=="all") && (
+                    <button type="button" onClick={()=>{ setLeadSearch(""); setLeadStatusFilter("all"); setLeadSourceFilter("all"); setLeadNatFilter("all"); setLeadBudgetFilter("all"); setLeadTypeFilter("all"); setLeadDateFilter("all"); }}
+                      style={{ padding:"8px 14px", borderRadius:8, border:"1px solid rgba(239,68,68,0.3)", background:"rgba(239,68,68,0.08)", color:T.red, fontSize:11, fontWeight:600, cursor:"pointer", fontFamily:"'Outfit',sans-serif", whiteSpace:"nowrap" }}>
+                      Clear All
+                    </button>
+                  )}
                 {(leadSearch || leadStatusFilter !== "all" || leadSourceFilter !== "all") && (
                   <button type="button" onClick={()=>{setLeadSearch("");setLeadStatusFilter("all");setLeadSourceFilter("all");}}
                     style={{ padding:"9px 14px", borderRadius:8, border:`1px solid rgba(239,68,68,0.3)`, background:"rgba(239,68,68,0.08)", color:T.red, fontSize:11, fontWeight:600, cursor:"pointer" }}>
@@ -15654,14 +15745,14 @@ Format clearly with these 4 sections labeled. Be specific to Dubai market. Inclu
               ) : (
                 <div style={{ display:"flex", flexDirection:"column", gap:2 }}>
                   {/* Column headers */}
-                  <div style={{ display:"grid", gridTemplateColumns:"minmax(150px,1fr) 65px 100px 100px 110px 110px 44px", gap:8, padding:"8px 14px", fontSize:10, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.8, borderBottom:`1px solid ${T.border}` }}>
+                  <div style={{ display:"grid", gridTemplateColumns:"minmax(160px,1fr) 65px 90px 90px 110px 90px 72px", gap:8, padding:"8px 14px", fontSize:10, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.8, borderBottom:`1px solid ${T.border}` }}>
                     <div>Lead</div>
                     <div>Score</div>
                     <div>Status</div>
                     <div>Source</div>
                     <div>Budget</div>
                     <div>Added</div>
-                    <div></div>
+                    <div>Actions</div>
                   </div>
                   {filtered.map((l, i) => {
                     const sc = STATUSES[l.status||"New"] || STATUSES.New;
@@ -15669,20 +15760,27 @@ Format clearly with these 4 sections labeled. Be specific to Dubai market. Inclu
                     const name = (l.name||"").trim() || l.email?.split("@")[0] || l.phone || "Unnamed";
                     const initials = name.split(" ").map(w=>w[0]).join("").slice(0,2).toUpperCase();
                     const budget = parseFloat(l.budget||0);
+                    const isGV = budget >= 2000000;
+                    const natFlags = {"Indian":"🇮🇳","British":"🇬🇧","Russian":"🇷🇺","Chinese":"🇨🇳","French":"🇫🇷","Pakistani":"🇵🇰","Saudi":"🇸🇦","Emirati":"🇦🇪","Egyptian":"🇪🇬","German":"🇩🇪","Italian":"🇮🇹","American":"🇺🇸","Canadian":"🇨🇦","Australian":"🇦🇺","Kazakh":"🇰🇿","Lebanese":"🇱🇧","Jordanian":"🇯🇴","Iranian":"🇮🇷","Turkish":"🇹🇷","Ukrainian":"🇺🇦"};
+                    const flag = natFlags[l.nationality] || (l.nationality ? "🌍" : "");
                     return (
                       <div key={l.id||i}
                         onClick={()=>{setSelectedLead(l);setLeadDrawerTab("details");}}
-                        style={{ display:"grid", gridTemplateColumns:"minmax(150px,1fr) 65px 100px 100px 110px 110px 44px", gap:8, padding:"10px 14px", alignItems:"center", borderBottom:`1px solid ${T.border}`, cursor:"pointer", transition:"background 0.12s", borderRadius:4 }}
+                        style={{ display:"grid", gridTemplateColumns:"minmax(160px,1fr) 65px 90px 90px 110px 90px 72px", gap:8, padding:"10px 14px", alignItems:"center", borderBottom:`1px solid ${T.border}`, cursor:"pointer", transition:"background 0.12s", borderRadius:4 }}
                         onMouseEnter={e=>e.currentTarget.style.background="rgba(212,168,67,0.04)"}
                         onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
 
-                        {/* Lead info */}
+                        {/* Lead info + flag + GV badge */}
                         <div style={{ display:"flex", alignItems:"center", gap:10, minWidth:0 }}>
-                          <div style={{ width:34, height:34, borderRadius:"50%", background:`rgba(212,168,67,0.12)`, border:`1px solid rgba(212,168,67,0.2)`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:11, fontWeight:700, color:T.gold, flexShrink:0 }}>
+                          <div style={{ width:34, height:34, borderRadius:"50%", background:`rgba(212,168,67,0.12)`, border:`1px solid rgba(212,168,67,0.2)`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:11, fontWeight:700, color:T.gold, flexShrink:0, position:"relative" }}>
                             {initials}
+                            {flag && <span style={{ position:"absolute", bottom:-4, right:-4, fontSize:11, lineHeight:1 }}>{flag}</span>}
                           </div>
                           <div style={{ minWidth:0 }}>
-                            <div style={{ fontSize:13, fontWeight:600, color:T.textPrimary, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{name}</div>
+                            <div style={{ display:"flex", gap:5, alignItems:"center" }}>
+                              <span style={{ fontSize:13, fontWeight:600, color:T.textPrimary, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{name}</span>
+                              {isGV && <span style={{ fontSize:9, padding:"1px 5px", borderRadius:4, background:"rgba(212,168,67,0.15)", color:T.gold, flexShrink:0, fontWeight:700 }}>🏅 GV</span>}
+                            </div>
                             <div style={{ fontSize:11, color:T.textMuted, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>
                               {l.phone || l.email || l.community || "—"}
                             </div>
@@ -15723,12 +15821,29 @@ Format clearly with these 4 sections labeled. Be specific to Dubai market. Inclu
                           {l.createdAt ? new Date(l.createdAt).toLocaleDateString("en-AE",{day:"2-digit",month:"short",year:"numeric"}) : "—"}
                         </div>
 
-                        {/* WhatsApp action */}
-                        <div onClick={e=>e.stopPropagation()}>
-                          {l.phone ? (
-                            <a href={`https://wa.me/${l.phone.replace(/[^0-9]/g,"")}`} target="_blank" rel="noopener noreferrer"
-                              style={{ display:"flex", alignItems:"center", justifyContent:"center", width:32, height:32, borderRadius:7, border:"1px solid rgba(37,211,102,0.3)", background:"rgba(37,211,102,0.08)", color:"#25D366", textDecoration:"none" }}>
-                              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/></svg>
+                        {/* WhatsApp + Email + Call */}
+                        <div style={{ display:"flex", gap:4 }} onClick={e=>e.stopPropagation()}>
+                          {l.phone && <a href={`https://wa.me/${l.phone.replace(/[^0-9]/g,"")}`} target="_blank" rel="noopener noreferrer"
+                            style={{ width:22, height:22, borderRadius:5, border:"1px solid rgba(37,211,102,0.3)", background:"rgba(37,211,102,0.08)", display:"flex", alignItems:"center", justifyContent:"center", textDecoration:"none" }}
+                            title="WhatsApp">
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="#25D366"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.123.558 4.116 1.535 5.847L.057 23.571l6.194-1.622A11.955 11.955 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.75a9.738 9.738 0 0 1-4.964-1.356l-.356-.212-3.677.963.98-3.585-.232-.369A9.72 9.72 0 0 1 2.25 12C2.25 6.615 6.615 2.25 12 2.25S21.75 6.615 21.75 12 17.385 21.75 12 21.75z"/></svg>
+                          </a>}
+                          {l.email && <a href={`mailto:${l.email}`}
+                            style={{ width:22, height:22, borderRadius:5, border:"1px solid rgba(59,130,246,0.3)", background:"rgba(59,130,246,0.08)", display:"flex", alignItems:"center", justifyContent:"center", textDecoration:"none" }}
+                            title="Email">
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#3B82F6" strokeWidth="2.5" strokeLinecap="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                          </a>}
+                          {l.phone && <a href={`tel:${l.phone}`}
+                            style={{ width:22, height:22, borderRadius:5, border:"1px solid rgba(16,185,129,0.3)", background:"rgba(16,185,129,0.08)", display:"flex", alignItems:"center", justifyContent:"center", textDecoration:"none" }}
+                            title="Call">
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#10B981" strokeWidth="2.5" strokeLinecap="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.6 3.42 2 2 0 0 1 3.58 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.54a16 16 0 0 0 6.01 6.01l.95-.95a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                          </a>}
+                        </div>
+                        {/* hidden WA fallback to keep old closing */}
+                        {false && l.phone ? (
+                          <a href={`https://wa.me/${l.phone.replace(/[^0-9]/g,"")}`} target="_blank" rel="noopener noreferrer"
+                            style={{ display:"flex", alignItems:"center", justifyContent:"center", width:32, height:32, borderRadius:7, border:"1px solid rgba(37,211,102,0.3)", background:"rgba(37,211,102,0.08)", color:"#25D366", textDecoration:"none" }}>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/></svg>
                             </a>
                           ) : (
                             <div style={{ width:32, height:32 }}/>
@@ -15782,7 +15897,7 @@ Format clearly with these 4 sections labeled. Be specific to Dubai market. Inclu
 
                       {/* Drawer tabs */}
                       <div style={{ display:"flex", gap:0, marginBottom:0 }}>
-                        {[["details","Details"],["notes","Notes"],["ai","AI Match"]].map(([t,label])=>(
+                        {[["details","Details"],["notes","Notes"],["ai","AI Score"],["tasks","Tasks"]].map(([t,label])=>(
                           <button key={t} type="button" onClick={()=>setLeadDrawerTab(t)}
                             style={{ padding:"8px 16px", fontSize:12, fontWeight:600, border:"none", background:"transparent", cursor:"pointer", fontFamily:"'Outfit',sans-serif", color:leadDrawerTab===t?T.gold:T.textMuted, borderBottom:`2px solid ${leadDrawerTab===t?T.gold:"transparent"}`, transition:"all 0.12s" }}>
                             {label}
@@ -15801,7 +15916,11 @@ Format clearly with these 4 sections labeled. Be specific to Dubai market. Inclu
                             { label:"Budget",    value:selectedLead.budget ? `AED ${parseFloat(selectedLead.budget).toLocaleString()}` : null },
                             { label:"Community", value:selectedLead.community },
                             { label:"Project",   value:selectedLead.project },
-                            { label:"Nationality", value:selectedLead.nationality },
+                            { label:"Nationality",   value:selectedLead.nationality   },
+                            { label:"Language Pref",  value:selectedLead.language      },
+                            { label:"Timeline",       value:selectedLead.timeline      },
+                            { label:"Preferred Dev",  value:selectedLead.developer     },
+                            { label:"Golden Visa",    value:parseFloat(selectedLead.budget||0)>=2000000?"✅ Eligible (AED 2M+)":null },
                           ].map(({label,value})=>value ? (
                             <div key={label} style={{ background:T.surfaceAlt, borderRadius:8, padding:"10px 12px" }}>
                               <div style={{ fontSize:9, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.7, marginBottom:4 }}>{label}</div>
@@ -15809,8 +15928,31 @@ Format clearly with these 4 sections labeled. Be specific to Dubai market. Inclu
                             </div>
                           ) : null)}
                         </div>
-                        {/* WhatsApp CTA */}
-                        {selectedLead.phone && (
+                        {/* Contact CTAs — WhatsApp + Email + Call */}
+                        <div style={{ display:"flex", gap:8, marginTop:4 }}>
+                          {selectedLead.phone && (
+                            <a href={`https://wa.me/${selectedLead.phone.replace(/[^0-9]/g,"")}`} target="_blank" rel="noopener noreferrer"
+                              style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"center", gap:6, padding:"10px 0", borderRadius:9, border:"1px solid rgba(37,211,102,0.4)", background:"rgba(37,211,102,0.08)", color:"#25D366", fontSize:12, fontWeight:700, textDecoration:"none" }}>
+                              <svg width="13" height="13" viewBox="0 0 24 24" fill="#25D366"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.123.558 4.116 1.535 5.847L.057 23.571l6.194-1.622A11.955 11.955 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.75a9.738 9.738 0 0 1-4.964-1.356l-.356-.212-3.677.963.98-3.585-.232-.369A9.72 9.72 0 0 1 2.25 12C2.25 6.615 6.615 2.25 12 2.25S21.75 6.615 21.75 12 17.385 21.75 12 21.75z"/></svg>
+                              WhatsApp
+                            </a>
+                          )}
+                          {selectedLead.email && (
+                            <a href={`mailto:${selectedLead.email}`}
+                              style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"center", gap:6, padding:"10px 0", borderRadius:9, border:"1px solid rgba(59,130,246,0.4)", background:"rgba(59,130,246,0.08)", color:"#3B82F6", fontSize:12, fontWeight:700, textDecoration:"none" }}>
+                              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#3B82F6" strokeWidth="2.5" strokeLinecap="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                              Email
+                            </a>
+                          )}
+                          {selectedLead.phone && (
+                            <a href={`tel:${selectedLead.phone}`}
+                              style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"center", gap:6, padding:"10px 0", borderRadius:9, border:"1px solid rgba(16,185,129,0.4)", background:"rgba(16,185,129,0.08)", color:"#10B981", fontSize:12, fontWeight:700, textDecoration:"none" }}>
+                              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#10B981" strokeWidth="2.5" strokeLinecap="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.6 3.42 2 2 0 0 1 3.58 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.54a16 16 0 0 0 6.01 6.01l.95-.95a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                              Call
+                            </a>
+                          )}
+                        </div>
+                        {false && selectedLead.phone && (
                           <a href={`https://wa.me/${selectedLead.phone.replace(/[^0-9]/g,"")}`} target="_blank" rel="noopener noreferrer"
                             style={{ display:"flex", alignItems:"center", justifyContent:"center", gap:8, width:"100%", padding:"11px 0", borderRadius:9, border:"1px solid rgba(37,211,102,0.4)", background:"rgba(37,211,102,0.08)", color:"#25D366", fontSize:12, fontWeight:700, textDecoration:"none", fontFamily:"'Outfit',sans-serif", marginBottom:12 }}>
                             <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/></svg>
@@ -15854,6 +15996,84 @@ Format clearly with these 4 sections labeled. Be specific to Dubai market. Inclu
                       </div>
                     )}
                   </div>
+                </div>
+              )}
+
+              {/* ── Tasks Tab ── */}
+              {selectedLead && leadDrawerTab === "tasks" && (
+                <div style={{ padding:"16px 20px", flex:1, overflowY:"auto" }}>
+                  {/* Task reminder */}
+                  <div style={{ marginBottom:20 }}>
+                    <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:10 }}>📋 Follow-up Reminders</div>
+                    <div style={{ padding:"12px 14px", background:"rgba(212,168,67,0.06)", border:"1px solid rgba(212,168,67,0.2)", borderRadius:10, marginBottom:12, fontSize:12, color:T.textSecondary, lineHeight:1.8 }}>
+                      Best time to contact this lead: <strong style={{ color:T.gold }}>{getFollowUpTime(selectedLead)}</strong>
+                    </div>
+                    {/* Quick reminder buttons */}
+                    <div style={{ fontSize:11, color:T.textMuted, marginBottom:8, fontWeight:600 }}>Quick follow-up schedule</div>
+                    <div style={{ display:"flex", gap:6, flexWrap:"wrap", marginBottom:14 }}>
+                      {["Call tomorrow 10am","Follow up in 3 days","Check in next week","Schedule viewing","Send WhatsApp","Send listing PDF"].map((t,i)=>(
+                        <button key={i} type="button"
+                          onClick={async()=>{
+                            try {
+                              const entry = { text:`📋 Task: ${t}`, by: userName||firebaseUser?.email, at: new Date().toISOString() };
+                              const prev = selectedLead?.notes_log || [];
+                              await setDoc(doc(db,"leads",selectedLead.id),{ notes_log:[entry,...prev], updatedAt:new Date().toISOString() },{ merge:true });
+                              setSelectedLead(l=>l?{...l,notes_log:[entry,...(l.notes_log||[])]}:l);
+                            } catch(e){ console.error(e); }
+                          }}
+                          style={{ padding:"6px 12px", background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:8, color:T.textSecondary, fontSize:11, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>
+                          {t}
+                        </button>
+                      ))}
+                    </div>
+                    {/* Viewing scheduler */}
+                    <div style={{ fontSize:11, color:T.textMuted, marginBottom:8, fontWeight:600 }}>Schedule a viewing</div>
+                    <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8, marginBottom:10 }}>
+                      <div>
+                        <div style={{ fontSize:10, color:T.textMuted, marginBottom:3 }}>Date</div>
+                        <input type="date" id={`view-date-${selectedLead.id}`}
+                          style={{ width:"100%", padding:"8px 10px", background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:8, color:T.white, fontFamily:"'Outfit',sans-serif", fontSize:12, outline:"none", colorScheme:"dark" }} />
+                      </div>
+                      <div>
+                        <div style={{ fontSize:10, color:T.textMuted, marginBottom:3 }}>Time</div>
+                        <input type="time" id={`view-time-${selectedLead.id}`}
+                          style={{ width:"100%", padding:"8px 10px", background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:8, color:T.white, fontFamily:"'Outfit',sans-serif", fontSize:12, outline:"none", colorScheme:"dark" }} />
+                      </div>
+                    </div>
+                    <div style={{ marginBottom:10 }}>
+                      <div style={{ fontSize:10, color:T.textMuted, marginBottom:3 }}>Property / Location</div>
+                      <input type="text" id={`view-prop-${selectedLead.id}`} placeholder="e.g. Dubai Hills Estate, Unit 204"
+                        style={{ width:"100%", padding:"8px 10px", background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:8, color:T.white, fontFamily:"'Outfit',sans-serif", fontSize:12, outline:"none", boxSizing:"border-box" }} />
+                    </div>
+                    <button type="button"
+                      onClick={async()=>{
+                        const date = document.getElementById(`view-date-${selectedLead.id}`)?.value;
+                        const time = document.getElementById(`view-time-${selectedLead.id}`)?.value;
+                        const prop = document.getElementById(`view-prop-${selectedLead.id}`)?.value;
+                        if (!date) return;
+                        const entry = { text:`🏠 Viewing scheduled: ${prop||"TBD"} on ${date}${time?" at "+time:""}`, by:userName||firebaseUser?.email, at:new Date().toISOString() };
+                        const prev = selectedLead?.notes_log || [];
+                        try {
+                          await setDoc(doc(db,"leads",selectedLead.id),{ notes_log:[entry,...prev], updatedAt:new Date().toISOString() },{ merge:true });
+                          setSelectedLead(l=>l?{...l,notes_log:[entry,...(l.notes_log||[])]}:l);
+                        } catch(e){ console.error(e); }
+                      }}
+                      style={{ width:"100%", padding:"10px 0", background:"linear-gradient(135deg,#D4A843,#B8922A)", border:"none", borderRadius:9, color:"#000", fontSize:12, fontWeight:700, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>
+                      📅 Save Viewing to Lead History
+                    </button>
+                  </div>
+                  {/* Viewing history from notes */}
+                  {(selectedLead.notes_log||[]).filter(n=>n.text?.startsWith("🏠")||n.text?.startsWith("📋")).length > 0 && (
+                    <div>
+                      <div style={{ fontSize:11, color:T.textMuted, fontWeight:600, marginBottom:8 }}>History</div>
+                      {(selectedLead.notes_log||[]).filter(n=>n.text?.startsWith("🏠")||n.text?.startsWith("📋")).map((n,i)=>(
+                        <div key={i} style={{ padding:"8px 12px", background:T.surfaceAlt, borderRadius:8, border:`1px solid ${T.border}`, marginBottom:6 }}>
+                          <div style={{ fontSize:12, color:T.white }}>{n.text}</div>
+                          <div style={{ fontSize:10, color:T.textMuted, marginTop:3 }}>{n.by} · {n.at?new Date(n.at).toLocaleDateString("en-GB",{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"}):""}</div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -15971,6 +16191,9 @@ Format clearly with these 4 sections labeled. Be specific to Dubai market. Inclu
                         { key:"email",     label:"Email Address",    placeholder:"ahmed@example.com"             },
                         { key:"budget",    label:"Budget (AED)",     placeholder:"2000000",      type:"number"   },
                         { key:"community", label:"Community Interest",placeholder:"Dubai Hills Estate"           },
+                        { key:"nationality",label:"Nationality",      placeholder:"e.g. Indian, British, Russian" },
+                        { key:"language",   label:"Language Pref",   placeholder:"e.g. English, Arabic, Russian" },
+                        { key:"timeline",   label:"Purchase Timeline",placeholder:"Immediate / 1-3 months / 6-12 months" },
                       ].map(({key,label,placeholder,required,type})=>(
                         <div key={key}>
                           <div style={{ fontSize:11, fontWeight:600, color:T.textMuted, marginBottom:5, letterSpacing:0.3 }}>
