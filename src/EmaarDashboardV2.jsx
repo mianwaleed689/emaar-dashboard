@@ -2236,6 +2236,19 @@ export default function EmaarDashboardV2() {
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [onboardingStep, setOnboardingStep] = useState(0);
 
+  /* ─── Tab persistence: restore on load + back/forward ─── */
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('dxb_active_tab');
+      if (stored && stored !== 'Overview') setTab(stored);
+    } catch(e) {}
+    const handlePop = (e) => {
+      if (e.state?.tab) setTab(e.state.tab);
+    };
+    window.addEventListener('popstate', handlePop);
+    return () => window.removeEventListener('popstate', handlePop);
+  }, []);
+
   useEffect(() => {
     const handler = (e) => { setShowCheckout(e.detail); setCheckoutStep(1); };
     window.addEventListener("dxb-checkout", handler);
@@ -2307,6 +2320,21 @@ export default function EmaarDashboardV2() {
   const [phView, setPhView] = useState("chart");
   const [phCompare, setPhCompare] = useState(false);
   const [phCommunity2, setPhCommunity2] = useState("All");
+
+
+  /* ─── INVESTMENT SCORE CALCULATOR (top level — used by Projects tab and overlay) ─── */
+  const calcScore = (p) => {
+    if (p && p.investmentScore) return p.investmentScore;
+    if (!p) return 50;
+    let s = 50;
+    if (p.grossYield >= 8) s += 15; else if (p.grossYield >= 6) s += 10; else if (p.grossYield >= 4) s += 5;
+    if (p.distMetro <= 0.8) s += 10; else if (p.distMetro <= 2) s += 6; else if (p.distMetro <= 5) s += 3;
+    if ((p.developerScore||70) >= 90) s += 8; else if ((p.developerScore||70) >= 80) s += 5;
+    if ((p.constructionPct||0) >= 50) s += 5;
+    return Math.min(99, Math.max(40, s));
+  };
+  const scoreColor = (s) => s >= 80 ? T.green : s >= 65 ? T.gold : T.red;
+  const scoreLabel = (s) => s >= 80 ? "Strong Buy" : s >= 65 ? "Buy" : s >= 50 ? "Hold" : "Caution";
 
   /* ─── PROJECTS TAB STATE ─── */
   const [projMode, setProjMode] = useState("Apartment");
@@ -3353,6 +3381,8 @@ export default function EmaarDashboardV2() {
     sessionStorage.removeItem("dxb_active_tab");
     setTab(key);
     setSidebarOpen(false);
+    try { localStorage.setItem('dxb_active_tab', key); } catch(e) {}
+    try { window.history.pushState({ tab: key }, '', '#' + key.replace(/ /g, '-').toLowerCase()); } catch(e) {}
     if (key === "Admin" && userTier === "admin") fetchAdminUsers();
     window.scrollTo({ top: 0, behavior: "smooth" });
     const mainEl = document.querySelector(".main-content");
@@ -5281,9 +5311,7 @@ export default function EmaarDashboardV2() {
             const MONTHS = ["May","Jun","Jul","Aug","Sep","Oct","Nov","Dec","Jan","Feb","Mar","Apr"];
 
             /* ── State ── */
-            const [selectedCcy, setSelectedCcy] = React.useState("GBP");
-            const [aedAmount, setAedAmount] = React.useState(2000000);
-            const [searchCcy, setSearchCcy] = React.useState("");
+            /* state from top level: selectedCcy, aedAmount, searchCcy */
 
             const selectedRate = TOP_CURRENCIES.find(c => c.code === selectedCcy)?.rate || 1;
             const convertedAmount = (aedAmount * selectedRate).toLocaleString(undefined, { maximumFractionDigits: 0 });
@@ -5516,18 +5544,7 @@ export default function EmaarDashboardV2() {
               { id:"p013", type:"Land", developer:"Dubai South", project:"Residential Plot — Phase 3", community:"Dubai South", status:"Ready", handover:"Available Now", beds:[], sizeMin:15000, sizeMax:120000, priceMin:2800000, priceMax:18000000, ppsf:200, paymentPlan:"Cash", postHandover:false, grossYield:0, netYield:0, serviceCharge:0, investmentScore:72, plotType:"Residential", zoning:"R1", permittedFAR:2.5, maxFloors:8, utilitiesConnected:true, roadFrontage:45, titleDeedStatus:"Freehold", gdvEstimate:45000000, distMetro:4, distDIFC:38, distAirport:12, distBeach:35, distMall:6, distSchool:2, distHospital:5, amenities:["Road Access","DEWA Connected","Sewage Connected","Master Plan Community"], reraNo:"0000456789", escrowBank:"N/A", constructionPct:0, developerScore:82, notes:"Dubai South Expo 2020 legacy. Near Al Maktoum Airport expansion. FAR 2.5 allows G+8.", isSeedData:true, source:"Dubai South Official / DLD 2025" },
             ];
 
-            const calcScore = (p) => {
-              if (p.investmentScore) return p.investmentScore;
-              let s = 50;
-              if (p.grossYield >= 8) s += 15; else if (p.grossYield >= 6) s += 10; else if (p.grossYield >= 4) s += 5;
-              if (p.distMetro <= 0.8) s += 10; else if (p.distMetro <= 2) s += 6; else if (p.distMetro <= 5) s += 3;
-              if ((p.developerScore||70) >= 90) s += 8; else if ((p.developerScore||70) >= 80) s += 5;
-              if ((p.constructionPct||0) >= 50) s += 5;
-              return Math.min(99, Math.max(40, s));
-            };
-
-            const scoreColor = (s) => s >= 80 ? T.green : s >= 65 ? T.gold : T.red;
-            const scoreLabel = (s) => s >= 80 ? "Strong Buy" : s >= 65 ? "Buy" : s >= 50 ? "Hold" : "Caution";
+            /* calcScore, scoreColor, scoreLabel — defined at top level */
 
             const MODES = [
               { key:"Apartment" }, { key:"Villa" }, { key:"Townhouse" },
@@ -5825,6 +5842,106 @@ export default function EmaarDashboardV2() {
               </div>
             );
           })()}
+
+
+          {/* ═══ COMPARE MODAL ═══ */}
+          {showCompare && projCompare.length >= 2 && (
+            <div role="dialog" aria-modal="true" onClick={() => setShowCompare(false)}
+              style={{ position:"fixed", inset:0, background:"rgba(4,9,15,0.97)", zIndex:3000, display:"flex", flexDirection:"column", backdropFilter:"blur(8px)" }}>
+              <div onClick={e => e.stopPropagation()} style={{ display:"flex", flexDirection:"column", height:"100%" }}>
+                {/* Header */}
+                <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"16px 24px", borderBottom:`1px solid ${T.border}`, background:T.surface, flexShrink:0 }}>
+                  <div>
+                    <div style={{ fontFamily:"'Fraunces',serif", fontSize:20, fontWeight:800, color:T.white }}>Project Comparison</div>
+                    <div style={{ fontSize:11, color:T.textMuted }}>Side-by-side analysis · {projCompare.length} projects</div>
+                  </div>
+                  <button type="button" onClick={() => setShowCompare(false)}
+                    style={{ width:36, height:36, borderRadius:"50%", background:T.surfaceAlt, border:`1px solid ${T.border}`, color:T.white, cursor:"pointer", fontSize:18, fontFamily:"'Outfit',sans-serif" }}>×</button>
+                </div>
+                {/* Compare grid */}
+                <div style={{ flex:1, overflowY:"auto", padding:24 }}>
+                  <div style={{ display:"grid", gridTemplateColumns:`200px ${projCompare.map(()=>"1fr").join(" ")}`, gap:0, minWidth:600 }}>
+                    {/* Label column */}
+                    <div style={{ display:"flex", flexDirection:"column" }}>
+                      <div style={{ height:80, padding:"12px 16px", background:T.surfaceAlt, borderRadius:"8px 0 0 0", display:"flex", alignItems:"center" }}>
+                        <span style={{ fontSize:11, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.8 }}>Metric</span>
+                      </div>
+                      {[
+                        "Developer","Community","Status","Handover","Starting Price","Price per Sqft","Payment Plan","Gross Yield","Net Yield","Service Charge","Investment Score","Metro Distance","DIFC Distance","Beach Distance","Airport Distance","Construction %","Developer Score","Amenities Count",
+                      ].map((label, i) => (
+                        <div key={i} style={{ padding:"10px 16px", background:i%2===0?T.surfaceAlt:"transparent", borderBottom:`1px solid ${T.border}`, minHeight:38, display:"flex", alignItems:"center" }}>
+                          <span style={{ fontSize:11, color:T.textMuted, fontWeight:500 }}>{label}</span>
+                        </div>
+                      ))}
+                    </div>
+                    {/* Project columns */}
+                    {projCompare.map((p, pi) => {
+                      const score = calcScore(p);
+                      const vals = [
+                        p.developer || "—",
+                        p.community || "—",
+                        p.status || "—",
+                        p.handover || "—",
+                        p.priceMin ? "AED " + (p.priceMin/1000000).toFixed(2) + "M" : "—",
+                        p.ppsf ? "AED " + p.ppsf.toLocaleString() + "/sqft" : "—",
+                        p.paymentPlan || "—",
+                        p.grossYield ? p.grossYield.toFixed(1) + "%" : "—",
+                        p.netYield ? p.netYield.toFixed(1) + "%" : "—",
+                        p.serviceCharge ? "AED " + p.serviceCharge + "/sqft/yr" : "—",
+                        score.toString() + " — " + scoreLabel(score),
+                        p.distMetro != null ? p.distMetro + " km" : "—",
+                        p.distDIFC != null ? p.distDIFC + " km" : "—",
+                        p.distBeach != null ? p.distBeach + " km" : "—",
+                        p.distAirport != null ? p.distAirport + " km" : "—",
+                        p.constructionPct != null ? p.constructionPct + "%" : "—",
+                        p.developerScore ? p.developerScore + "/100" : "—",
+                        p.amenities ? p.amenities.length + " amenities" : "—",
+                      ];
+                      const colors = [
+                        null, null, null, null,
+                        T.gold, T.gold, null,
+                        p.grossYield >= 7 ? T.green : p.grossYield >= 5 ? T.gold : T.red,
+                        p.netYield >= 5 ? T.green : p.netYield >= 3.5 ? T.gold : T.red,
+                        null,
+                        score >= 80 ? T.green : score >= 65 ? T.gold : T.red,
+                        p.distMetro <= 0.8 ? T.green : null,
+                        null, p.distBeach <= 2 ? T.green : null, null,
+                        p.constructionPct >= 50 ? T.green : null,
+                        p.developerScore >= 85 ? T.green : null,
+                        null,
+                      ];
+                      return (
+                        <div key={pi} style={{ display:"flex", flexDirection:"column", borderLeft:`1px solid ${T.border}` }}>
+                          {/* Project header */}
+                          <div style={{ height:80, padding:"12px 16px", background:"rgba(212,168,67,0.06)", borderTop:"none", display:"flex", flexDirection:"column", justifyContent:"center" }}>
+                            <div style={{ fontSize:10, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.6, marginBottom:2 }}>{p.type}</div>
+                            <div style={{ fontFamily:"'Fraunces',serif", fontSize:13, fontWeight:700, color:T.white, lineHeight:1.3 }}>{p.project}</div>
+                          </div>
+                          {/* Values */}
+                          {vals.map((val, vi) => (
+                            <div key={vi} style={{ padding:"10px 16px", background:vi%2===0?T.surfaceAlt:"transparent", borderBottom:`1px solid ${T.border}`, minHeight:38, display:"flex", alignItems:"center" }}>
+                              <span style={{ fontSize:12, color:colors[vi] || T.textSecondary, fontWeight:colors[vi] ? 700 : 400 }}>{val}</span>
+                            </div>
+                          ))}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+                {/* Footer */}
+                <div style={{ padding:"12px 24px", borderTop:`1px solid ${T.border}`, background:T.surface, flexShrink:0, display:"flex", gap:10, justifyContent:"flex-end" }}>
+                  <button type="button" onClick={() => { setProjCompare([]); setShowCompare(false); }}
+                    style={{ padding:"8px 18px", background:"none", border:`1px solid ${T.border}`, borderRadius:8, color:T.textMuted, fontSize:12, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>
+                    Clear & Close
+                  </button>
+                  <button type="button" onClick={() => setShowCompare(false)}
+                    style={{ padding:"8px 18px", background:"rgba(212,168,67,0.12)", border:`1px solid rgba(212,168,67,0.3)`, borderRadius:8, color:T.gold, fontSize:12, fontWeight:700, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>
+                    Close
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* ═══ PROJECT DETAIL OVERLAY ═══ */}
           {selectedProject && (
