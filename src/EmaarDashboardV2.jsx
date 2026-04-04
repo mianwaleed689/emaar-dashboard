@@ -1746,7 +1746,15 @@ function CommunityMapTab({ activeProjects, liveCommunityROI, setTab, seedCommuni
   React.useEffect(() => {
     if (!mapLoaded || !mapRef.current || mapInstanceRef.current) return;
     const L = window.L;
-    const map = L.map(mapRef.current, { center: [25.1124, 55.2594], zoom: 11, zoomControl: true });
+    const map = L.map(mapRef.current, {
+      center: [25.1124, 55.2594],
+      zoom: 12,
+      minZoom: 11,
+      maxZoom: 18,
+      zoomControl: true,
+      maxBounds: [[24.7, 54.8], [25.5, 55.9]],
+      maxBoundsViscosity: 0.9,
+    });
     L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
       attribution: "© OpenStreetMap © CARTO", maxZoom: 19,
     }).addTo(map);
@@ -1768,8 +1776,8 @@ function CommunityMapTab({ activeProjects, liveCommunityROI, setTab, seedCommuni
       const y = getYield(p);
       const icon = L.divIcon({
         className: "",
-        html: `<div style="width:12px;height:12px;border-radius:50%;background:\${color};border:2px solid rgba(255,255,255,0.8);box-shadow:0 0 8px \${color}88;cursor:pointer;"></div>`,
-        iconSize: [12, 12], iconAnchor: [6, 6],
+        html: `<div style="display:flex;flex-direction:column;align-items:center;cursor:pointer;"><div style="background:${color};color:#000;font-size:10px;font-weight:800;padding:3px 7px;border-radius:6px;box-shadow:0 2px 10px rgba(0,0,0,0.7);">${y.toFixed(1)}%</div><div style="width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-top:7px solid ${color};"></div></div>`,
+        iconSize: [46, 32], iconAnchor: [23, 32],: [6, 6],
       });
       const marker = L.marker(coords, { icon })
         .addTo(map)
@@ -1779,7 +1787,7 @@ function CommunityMapTab({ activeProjects, liveCommunityROI, setTab, seedCommuni
             <div style="font-size:10px;color:#94A3B8;">\${p.community}</div>
           </div>
           <div style="padding:10px 14px;display:grid;grid-template-columns:1fr 1fr;gap:6px;">
-            <div><div style="font-size:9px;color:#94A3B8;text-transform:uppercase;">Price</div><div style="font-size:12px;font-weight:700;color:#D4A843;">\${p.priceMin ? "AED " + (p.priceMin/1e6).toFixed(2) + "M" : p.price ? "AED " + (p.price/1e6).toFixed(2) + "M" : "TBC"}</div></div>
+            <div><div style="font-size:9px;color:#94A3B8;text-transform:uppercase;">Price</div><div style="font-size:12px;font-weight:700;color:#D4A843;">\${p.priceMin ? "AED " + (p.priceMin/1e6).toFixed(2) + "M" : (p.priceMin || p.price) ? "AED " + ((p.priceMin || p.price)/1e6).toFixed(2) + "M" : "TBC"}</div></div>
             <div><div style="font-size:9px;color:#94A3B8;text-transform:uppercase;">Yield</div><div style="font-size:12px;font-weight:700;color:\${color}">\${y.toFixed(1)}%</div></div>
             <div><div style="font-size:9px;color:#94A3B8;text-transform:uppercase;">Type</div><div style="font-size:11px;color:#CBD5E1;">\${p.type || "Residential"}</div></div>
             <div><div style="font-size:9px;color:#94A3B8;text-transform:uppercase;">Handover</div><div style="font-size:11px;color:#CBD5E1;">\${p.handover || "TBC"}</div></div>
@@ -1794,11 +1802,11 @@ function CommunityMapTab({ activeProjects, liveCommunityROI, setTab, seedCommuni
     heatLayersRef.current = [];
 
     // Add PPSF or Volume heat circles
-    if (mapLayer === "ppsf" || mapLayer === "volume") {
+    if (mapLayer === "ppsf" || mapLayer === "volume" || mapLayer === "yield") {
       Object.entries(communityData).forEach(([name, data]) => {
-        const color = mapLayer === "ppsf" ? getPPSFColor(data.ppsf) : getVolumeColor(data.volume);
-        const value = mapLayer === "ppsf" ? `AED ${data.ppsf.toLocaleString()}/sqft` : `${data.volume.toLocaleString()} deals`;
-        const radiusScale = mapLayer === "volume" ? Math.min(data.volume / 100, 600) + 400 : data.radius;
+        const color = mapLayer === "ppsf" ? getPPSFColor(data.ppsf) : mapLayer === "volume" ? getVolumeColor(data.volume) : ((data.grossYield||0) >= 8 ? "#10B981" : (data.grossYield||0) >= 6 ? "#D4A843" : "#3B82F6");
+        const value = mapLayer === "ppsf" ? `AED ${data.ppsf.toLocaleString()}/sqft` : mapLayer === "volume" ? `${data.volume.toLocaleString()} deals` : `${(data.grossYield||6).toFixed(1)}% yield`;
+        const radiusScale = mapLayer === "volume" ? Math.min(data.volume / 100, 600) + 400 : mapLayer === "yield" ? Math.max(800, Math.min((data.grossYield||6) * 200, 2000)) : data.radius;
         const circle = L.circle(data.coords, {
           radius: radiusScale,
           color: color,
@@ -1809,7 +1817,7 @@ function CommunityMapTab({ activeProjects, liveCommunityROI, setTab, seedCommuni
         }).addTo(map);
         circle.bindTooltip(`<div style="font-family:'Outfit',sans-serif;background:#0D1821;color:#fff;border:1px solid ${color};border-radius:8px;padding:8px 12px;font-size:12px;">
           <strong style="color:${color}">${name}</strong><br/>
-          ${mapLayer === "ppsf" ? "PPSF: " : "Volume: "}<strong>${value}</strong><br/>
+          ${mapLayer === "ppsf" ? "PPSF: " : mapLayer === "volume" ? "Volume: " : "Yield: "}<strong>${value}</strong><br/>
           <span style="color:#94A3B8;font-size:10px">YoY: +${data.yoy}%</span>
         </div>`, { permanent: false, sticky: true, className: "dxb-tooltip" });
         heatLayersRef.current.push(circle);
