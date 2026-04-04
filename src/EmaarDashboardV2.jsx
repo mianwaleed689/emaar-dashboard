@@ -11016,7 +11016,6 @@ export default function EmaarDashboardV2() {
 
                     </div>
                   </div>
-                </div>
 
                 </div>);
               })()}
