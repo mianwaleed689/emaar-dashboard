@@ -15534,7 +15534,7 @@ Format clearly with these 4 sections labeled. Be specific to Dubai market. Inclu
               const reader = new FileReader();
               reader.onload = (e) => {
                 const text = e.target.result;
-                const lines = text.split(/\r?\n/).filter(l => l.trim());
+                const lines = text.split(/\n/).map(l => l.replace(/\r$/,"")).filter(l => l.trim());
                 if (lines.length < 2) return;
                 const headers = lines[0].split(',').map(h => h.trim().replace(/^[\x22]/,'').replace(/[\x22]$/,''));
                 const rows = lines.slice(1).map(line => {
