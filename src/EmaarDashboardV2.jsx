@@ -3466,7 +3466,7 @@ export default function EmaarDashboardV2() {
                 {/* ── Section A: 7 KPI Cards ── */}
                 <OvSection title="Market Pulse" sub="Dubai real estate — key indicators" />
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: 12, marginBottom: 8 }}>
-                  <OvKPI delay={1} label="Total Market 2025" icon={SvgIcons.TrendingUp({width:16,height:16})}
+                  <OvKPI delay={1} label="Total Market Value" icon={SvgIcons.TrendingUp({width:16,height:16})}
                     value={liveMarketData?.find?.(d=>d.metric==="Total Market Value")?.value || "AED 919B"}
                     sub={liveMarketData?.find?.(d=>d.metric==="Total Market Value")?.change || "+20% YoY · All-time record"}
                     onClick={() => handleTabChange("Market")} />
@@ -3488,11 +3488,11 @@ export default function EmaarDashboardV2() {
                     color={T.green} onClick={() => handleTabChange("Yields")} />
                   <OvKPI delay={6} label="Off-Plan Share" icon={SvgIcons.BarChart2({width:16,height:16})}
                     value={liveMarketData?.find?.(d=>d.metric==="Off-Plan Share")?.value || "60%+"}
-                    sub="Of total DLD transactions 2025"
+                    sub="Of total DLD transactions"
                     onClick={() => handleTabChange("Projects")} />
                   <OvKPI delay={7} label="Units Launched" icon={SvgIcons.Activity({width:16,height:16})}
                     value={liveMarketData?.find?.(d=>d.metric==="Units Launched")?.value || "131,504"}
-                    sub="New units launched in 2025"
+                    sub="New units launched"
                     onClick={() => handleTabChange("Launch Calendar")} />
                 </div>
 
@@ -3704,7 +3704,7 @@ export default function EmaarDashboardV2() {
           ══════════════════════════════════════════════════════════ */}
 
           {Object.entries(INTELLIGENCE_TABS).map(([tabKey, config]) => (
-            tab === tabKey && (
+            tab === tabKey && tabKey !== "Overview" && (
               <div key={tabKey} style={{ animation: "fadeUp 0.4s ease-out forwards" }}>
                 {/* Tab Header */}
                 <div style={{
