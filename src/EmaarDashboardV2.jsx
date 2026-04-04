@@ -2922,7 +2922,7 @@ export default function EmaarDashboardV2() {
 
         {/* Search */}
         <div style={{ padding: "10px 12px 4px", flexShrink: 0, position: "relative" }}>
-          <Search size={13} strokeWidth={1.5} style={{ position: "absolute", left: 22, top: "50%", transform: "translateY(-50%)", color: T.textMuted, pointerEvents: "none" }} />
+          {SvgIcons.Search({ width: 13, height: 13, strokeWidth: 1.5, style: { position: "absolute", left: 22, top: "50%", transform: "translateY(-50%)", color: T.textMuted, pointerEvents: "none" } })}
           <input className="sidebar-search" placeholder="Search tabs..." value={sidebarSearch} onChange={e => setSidebarSearch(e.target.value)} />
         </div>
 
@@ -2946,7 +2946,7 @@ export default function EmaarDashboardV2() {
                     {badgeCount > 0 && (
                       <span style={{ background: T.red, color: "#fff", fontSize: 9, fontWeight: 700, padding: "1px 5px", borderRadius: 10, minWidth: 16, textAlign: "center" }}>{badgeCount}</span>
                     )}
-                    {isCollapsed ? <ChevronRight size={11} strokeWidth={2} /> : <ChevronDown size={11} strokeWidth={2} />}
+                    {isCollapsed ? SvgIcons.ChevronRight({ width: 11, height: 11, strokeWidth: 2 }) : SvgIcons.ChevronDown({ width: 11, height: 11, strokeWidth: 2 })}
                   </button>
                 )}
                 {(!isCollapsed || !!sidebarSearch) && (
@@ -2986,7 +2986,7 @@ export default function EmaarDashboardV2() {
               <button type="button" className="sidebar-btn"
                 onClick={() => window.location.href = "/admin"}
                 style={{ background: "rgba(212,168,67,0.08)", border: `1px solid rgba(212,168,67,0.2)` }}>
-                <Settings size={15} strokeWidth={1.5} style={{ color: T.gold, flexShrink: 0 }} />
+                {SvgIcons.Settings({ width: 15, height: 15, strokeWidth: 1.5, style: { color: T.gold, flexShrink: 0 } })}
                 <span>Admin Console</span>
                 <span style={{ marginLeft: "auto", fontSize: 9, color: T.textMuted }}>↗</span>
               </button>
@@ -3023,11 +3023,11 @@ export default function EmaarDashboardV2() {
             </div>
             <button type="button" onClick={() => { setShowProfile(true); setProfileEdit({ name: userName || "" }); }}
               style={{ background: "none", border: `1px solid ${T.border}`, cursor: "pointer", color: T.textMuted, padding: 5, borderRadius: 6, display: "flex" }} title="Profile">
-              <User size={13} strokeWidth={1.5} />
+              {SvgIcons.User({ width: 13, height: 13, strokeWidth: 1.5 })}
             </button>
             <button type="button" onClick={() => signOut(auth)}
               style={{ background: "none", border: "none", cursor: "pointer", color: T.textMuted, padding: 5, display: "flex" }} title="Sign out">
-              <LogOut size={13} strokeWidth={1.5} />
+              {SvgIcons.LogOut({ width: 13, height: 13, strokeWidth: 1.5 })}
             </button>
           </div>
         </div>
@@ -3058,7 +3058,7 @@ export default function EmaarDashboardV2() {
         <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
           {/* Mobile menu button */}
           <button type="button" onClick={() => setSidebarOpen(!sidebarOpen)} style={{ background: "none", border: "none", cursor: "pointer", color: T.textSecondary, display: "none", padding: 4 }} className="mobile-menu-btn">
-            {sidebarOpen ? <X size={20} strokeWidth={2} /> : <Menu size={20} strokeWidth={2} />}
+            {sidebarOpen ? SvgIcons.X({ width: 20, height: 20, strokeWidth: 2 }) : SvgIcons.Menu({ width: 20, height: 20, strokeWidth: 2 })}
           </button>
           <div>
             <h1 style={{ fontSize: 16, fontWeight: 700, color: T.white }}>{allDevelopers?.find(d=>d.id===selectedDeveloper)?.name || "Emaar Properties"} <span style={{ color: T.textMuted, fontWeight: 400, fontSize: 13 }}>PJSC</span></h1>
