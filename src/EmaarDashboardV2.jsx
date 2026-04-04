@@ -2485,11 +2485,18 @@ export default function EmaarDashboardV2() {
     "Ready":    { color: T.teal,    bg: "rgba(20,184,166,0.12)",  label: "Ready"     },
   };
   const riskCfg = {
-    "Low":    { color: T.green,   dot: T.green   },
-    "Medium": { color: "#F97316", dot: "#F97316" },
-    "High":   { color: T.red,     dot: T.red     },
-  };
-
+  "Low":          { color: T.green,   dot: T.green,   bg: "rgba(16,185,129,0.12)" },
+  "Medium":       { color: "#F97316", dot: "#F97316", bg: "rgba(249,115,22,0.12)"  },
+  "High":         { color: T.red,     dot: T.red,     bg: "rgba(239,68,68,0.12)"   },
+  "On Track":     { color: T.green,   dot: T.green,   bg: "rgba(16,185,129,0.12)" },
+  "Delayed":      { color: "#F97316", dot: "#F97316", bg: "rgba(249,115,22,0.12)"  },
+  "At Risk":      { color: T.red,     dot: T.red,     bg: "rgba(239,68,68,0.12)"   },
+  "Ready":        { color: T.teal,    dot: T.teal,    bg: "rgba(20,184,166,0.12)" },
+  "Near Handover":{ color: T.teal,    dot: T.teal,    bg: "rgba(20,184,166,0.12)" },
+  "Minor Delay":  { color: "#F97316", dot: "#F97316", bg: "rgba(249,115,22,0.12)"  },
+  "Major Delay":  { color: T.red,     dot: T.red,     bg: "rgba(239,68,68,0.12)"   },
+  "Early Stage":  { color: "#8B5CF6", dot: "#8B5CF6", bg: "rgba(139,92,246,0.12)" },
+};
 
   /* ─── SEED PROJECTS — top level so Map + Projects tabs can both use it ─── */
   const SEED_PROJECTS = [
