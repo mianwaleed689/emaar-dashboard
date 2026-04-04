@@ -7363,30 +7363,6 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   ))}
                 </div>
 
-                {/* ── Auto Follow-up Alert (Follow Up Boss style) ── */}
-              {(() => {
-                const now = Date.now();
-                const stale = displayLeads.filter(l => {
-                  if (l.status === "Won" || l.status === "Lost") return false;
-                  const lastContact = l.updatedAt ? new Date(l.updatedAt).getTime() : new Date(l.createdAt||now).getTime();
-                  return (now - lastContact) > 7 * 24 * 60 * 60 * 1000;
-                });
-                if (stale.length === 0) return null;
-                return (
-                  <div style={{ padding:"10px 16px", background:"rgba(239,68,68,0.08)", border:"1px solid rgba(239,68,68,0.25)", borderRadius:10, marginBottom:12, display:"flex", alignItems:"center", gap:12 }}>
-                    <span style={{ fontSize:18 }}>⚠️</span>
-                    <div style={{ flex:1 }}>
-                      <div style={{ fontSize:12, fontWeight:700, color:"#EF4444" }}>{stale.length} lead{stale.length>1?"s have":" has"} not been contacted in 7+ days</div>
-                      <div style={{ fontSize:11, color:T.textMuted, marginTop:2 }}>{stale.slice(0,3).map(l=>l.name||l.phone||"Unnamed").join(", ")}{stale.length>3?` +${stale.length-3} more`:""} — follow up now</div>
-                    </div>
-                    <button type="button" onClick={()=>{ setLeadStatusFilter("all"); setLeadSortBy("date"); }}
-                      style={{ padding:"6px 12px", background:"rgba(239,68,68,0.15)", border:"1px solid rgba(239,68,68,0.3)", borderRadius:7, color:"#EF4444", fontSize:11, fontWeight:700, cursor:"pointer", fontFamily:"'Outfit',sans-serif", whiteSpace:"nowrap" }}>
-                      View Leads
-                    </button>
-                  </div>
-                );
-              })()}
-
               {/* ── Filters ── */}
                 <div style={{ background:T.surface, border:`1px solid ${T.border}`, borderRadius:10, padding:"12px 14px", marginBottom:16 }}>
                   <div style={{ display:"flex", gap:8, flexWrap:"wrap", alignItems:"center" }}>
