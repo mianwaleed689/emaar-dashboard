@@ -15584,7 +15584,34 @@ Format clearly with these 4 sections labeled. Be specific to Dubai market. Inclu
               reader.readAsText(file);
             };
 
-            return (<>
+            // ── Pre-computed analytics (moved out of JSX to avoid Rolldown regex confusion) ──
+            const srcAnalytics = (() => {
+              const sources = {};
+              const totalLeads = displayLeads.length;
+              displayLeads.forEach(l => {
+                const src = l.source || "Unknown";
+                if (!sources[src]) sources[src] = {total:0, won:0, contacted:0, budget:0};
+                sources[src].total++;
+                if (l.status === "Won") sources[src].won++;
+                if (l.status !== "New") sources[src].contacted++;
+                sources[src].budget += parseFloat(l.budget||0);
+              });
+              const rawArr = Object.entries(sources).sort((a,b)=>b[1].total-a[1].total);
+              const safeTotal = totalLeads > 0 ? totalLeads : 1;
+              const enriched = rawArr.map(([src, d]) => {
+                const tot = d.total > 0 ? d.total : 1;
+                const convRate = Math.round(d.won * 100 / tot);
+                const contactRate = Math.round(d.contacted * 100 / tot);
+                const avgBudget = Math.round(d.budget / tot);
+                const barW = Math.round(d.total * 100 / safeTotal);
+                const avgBudgetStr = avgBudget >= 1000000 ? (avgBudget * 0.000001).toFixed(1)+"M" : avgBudget > 0 ? Math.round(avgBudget * 0.001)+"K" : "—";
+                return [src, d, convRate, contactRate, avgBudgetStr, barW];
+              });
+              return { totalLeads, srcArr: enriched };
+            })();
+            const { totalLeads: anaTotal, srcArr } = srcAnalytics;
+
+                        return (<>
               {/* ── Header ── */}
               <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:20, flexWrap:"wrap", gap:12 }}>
                 <div>
@@ -15868,31 +15895,14 @@ Format clearly with these 4 sections labeled. Be specific to Dubai market. Inclu
 
               {/* ── LEAD SOURCE ANALYTICS PANEL ── */}
               {showLeadAnalytics && (() => {
-                const sources = {};
-                const totalLeads = displayLeads.length;
-                displayLeads.forEach(l => {
-                  const src = l.source || "Unknown";
-                  if (!sources[src]) sources[src] = {total:0, won:0, contacted:0, budget:0};
-                  sources[src].total++;
-                  if (l.status === "Won") sources[src].won++;
-                  if (l.status !== "New") sources[src].contacted++;
-                  sources[src].budget += parseFloat(l.budget||0);
-                });
-                const srcArr = Object.entries(sources).sort((a,b)=>b[1].total-a[1].total);
                 return (
                   <div style={{ padding:"16px", background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:12, marginBottom:16 }}>
                     <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:14 }}>
                       <div style={{ fontFamily:"'Fraunces',serif", fontSize:15, fontWeight:800, color:T.white }}>📊 Lead Source Analytics</div>
-                      <div style={{ fontSize:11, color:T.textMuted }}>{totalLeads} total leads</div>
+                      <div style={{ fontSize:11, color:T.textMuted }}>{anaTotal} total leads</div>
                     </div>
                     <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(200px,1fr))", gap:10 }}>
-                      {srcArr.map(([src, d]) => {
-                        const tot = Math.max(d.total, 1);
-                        const ttl = Math.max(totalLeads, 1);
-                        const convRate = d.total > 0 ? Math.round(d.won * 100 / tot) : 0;
-                        const contactRate = d.total > 0 ? Math.round(d.contacted * 100 / tot) : 0;
-                        const avgBudget = d.total > 0 ? Math.round(d.budget / tot) : 0;
-                        const barW = totalLeads > 0 ? Math.round(d.total * 100 / ttl) : 0;
+                      {srcArr.map(([src, d, convRate, contactRate, avgBudgetStr, barW]) => {
                         return (
                           <div key={src} style={{ padding:"12px 14px", background:T.bg, borderRadius:9, border:`1px solid ${T.border}` }}>
                             <div style={{ display:"flex", justifyContent:"space-between", marginBottom:6 }}>
@@ -15905,7 +15915,7 @@ Format clearly with these 4 sections labeled. Be specific to Dubai market. Inclu
                             <div style={{ display:"flex", gap:10, fontSize:10, color:T.textMuted }}>
                               <span>Conv: <strong style={{ color:convRate>=10?"#10B981":"#EF4444" }}>{convRate}%</strong></span>
                               <span>Contacted: <strong style={{ color:T.textSecondary }}>{contactRate}%</strong></span>
-                              <span>Avg: <strong style={{ color:T.gold }}>{avgBudget>=1e6?(avgBudget*0.000001).toFixed(1)+"M":avgBudget>0?Math.round(avgBudget*0.001)+"K":"—"}</strong></span>
+                              <span>Avg: <strong style={{ color:T.gold }}>{avgBudgetStr}</strong></span>
                             </div>
                           </div>
                         );
@@ -16371,7 +16381,7 @@ Write a short, professional WhatsApp message (3-4 lines) introducing Dubai prope
                   <div style={{ fontSize:11, color:T.textMuted, marginBottom:8, fontWeight:600 }}>Quick add</div>
                   <div style={{ display:"flex", flexWrap:"wrap", gap:6, marginBottom:14 }}>
                     {["⭐ VIP","💵 Cash Buyer","📈 Investor","🔥 Urgent","🌙 GCC National","🏗 Off-Plan Ready","🏦 Mortgage Needed","🎯 Hot Lead","🤝 Referral","🔄 Repeat Client"].map(tag => {
-                      const clean = tag.replace(/^[^\s]+ /,"").trim();
+                      const clean = (() => { let s=tag; for(let ii=0;ii<s.length;ii++){ if(s[ii]===" ") return s.slice(ii+1).trim(); } return s.trim(); })();
                       const already = (selectedLead.tags||[]).includes(tag);
                       return (
                         <button key={tag} type="button" onClick={async()=>{
@@ -16807,7 +16817,7 @@ The Address Holding" },
                                   importedAt:   new Date().toISOString(),
                                 });
                                 imported++;
-                                setImportProgress(Math.round(((idx+1)/toImport.length)*100));
+                                { const _pct = toImport.length > 0 ? (idx+1)*100 : 0; const _div = toImport.length > 0 ? toImport.length : 1; setImportProgress(Math.round(_pct / _div)); }
                               } catch(e) { errors++; }
                             }
                             setImportDone({ imported, dupes, errors });
