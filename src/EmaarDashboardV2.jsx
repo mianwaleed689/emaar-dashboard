@@ -1,4 +1,4 @@
-/* eslint-disable */
+﻿/* eslint-disable */
 /* ═══════════════════════════════════════════════════════════════════
    DXB ANALYTICS INTELLIGENCE PLATFORM
    Clean Architecture — Data-Driven, Firestore-Connected
@@ -15971,12 +15971,12 @@ Format clearly with these 4 sections labeled. Be specific to Dubai market. Inclu
                         <div style={{ display:"flex", alignItems:"center", gap:10, minWidth:0 }}>
                           <div style={{ width:34, height:34, borderRadius:"50%", background:`rgba(212,168,67,0.12)`, border:`1px solid rgba(212,168,67,0.2)`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:11, fontWeight:700, color:T.gold, flexShrink:0, position:"relative" }}>
                             {initials}
-                            {flag && <span style={{ position:"absolute", bottom:-4, right:-4, fontSize:11, lineHeight:1 }}>{flag}</span>}
+                            {flag ? <span style={{ position:"absolute", bottom:-4, right:-4, fontSize:11, lineHeight:1 }}>{flag}</span> : null}
                           </div>
                           <div style={{ minWidth:0 }}>
                             <div style={{ display:"flex", gap:5, alignItems:"center" }}>
                               <span style={{ fontSize:13, fontWeight:600, color:T.textPrimary, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{name}</span>
-                              {isGV && <span style={{ fontSize:9, padding:"1px 5px", borderRadius:4, background:"rgba(212,168,67,0.15)", color:T.gold, flexShrink:0, fontWeight:700 }}>🏅 GV</span>}
+                              {isGV ? <span style={{ fontSize:9, padding:"1px 5px", borderRadius:4, background:"rgba(212,168,67,0.15)", color:T.gold, flexShrink:0, fontWeight:700 }}>🏅 GV</span> : null}
                             </div>
                             <div style={{ fontSize:11, color:T.textMuted, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>
                               {l.phone || l.email || l.community || "—"}
