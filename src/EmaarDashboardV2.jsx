@@ -15783,8 +15783,7 @@ Format clearly with these 4 sections labeled. Be specific to Dubai market. Inclu
                       const ai = scoreLeadAI(l);
                       return [l.name||"",l.phone||"",l.email||"",l.budget||"",l.status||"",l.source||"",l.nationality||"",l.language||"",l.timeline||"",l.community||"",l.type||"",l.purpose||"",(l.tags||[]).join("|"),ai.score,l.createdAt?new Date(l.createdAt).toLocaleDateString("en-GB"):""].map(v=>'"'+String(v).replace(/"/g,'""')+'"');
                     });
-                    const csv = [headers.join(","),...rows.map(r=>r.join(","))].join("
-");
+                    const csv = [headers.join(","),...rows.map(r=>r.join(","))].join(String.fromCharCode(10));
                     const blob = new Blob([csv],{type:"text/csv"});
                     const url = URL.createObjectURL(blob);
                     const a = document.createElement("a");
