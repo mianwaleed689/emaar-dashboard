@@ -2156,6 +2156,13 @@ export default function EmaarDashboardV2() {
   const [phCompare, setPhCompare] = useState(false);
   const [phCommunity2, setPhCommunity2] = useState("All");
 
+  /* ─── LAUNCH CALENDAR TAB STATE ─── */
+  const [lcSearch, setLcSearch] = useState("");
+  const [lcDev, setLcDev] = useState("All");
+  const [lcStatus, setLcStatus] = useState("All");
+  const [lcType, setLcType] = useState("All");
+  const [lcView, setLcView] = useState("list");
+
   /* ─── NEIGHBOURHOODS TAB STATE ─── */
   const [nbhSearch, setNbhSearch] = useState("");
   const [nbhTypeFilter, setNbhTypeFilter] = useState("All");
@@ -4663,6 +4670,338 @@ export default function EmaarDashboardV2() {
             );
           })()}
 
+          {/* ─── LAUNCH CALENDAR TAB ─── */}
+          {tab === "Launch Calendar" && (() => {
+
+            /* ── Status config ── */
+            const STATUS_CFG = {
+              "EOI Open":     { color: T.green,  bg: "rgba(16,185,129,0.12)",  dot: T.green  },
+              "EOI Closed":   { color: T.red,    bg: "rgba(239,68,68,0.12)",   dot: T.red    },
+              "Upcoming":     { color: T.gold,   bg: "rgba(212,168,67,0.12)",  dot: T.gold   },
+              "Launched":     { color: T.teal,   bg: "rgba(20,184,166,0.12)",  dot: T.teal   },
+              "Sold Out":     { color: T.textMuted, bg: "rgba(255,255,255,0.05)", dot: T.textMuted },
+            };
+
+            /* ── Firestore data ── */
+            const rawLaunches = liveMarketData?.filter?.(d => d.type === "launch") || [];
+
+            /* ── Local filter state ── */
+            /* state from top level: lcSearch, lcDev, lcStatus, lcType, lcView */
+
+            /* ── Filter ── */
+            const filtered = rawLaunches.filter(l => {
+              if (lcSearch && !JSON.stringify(l).toLowerCase().includes(lcSearch.toLowerCase())) return false;
+              if (lcDev !== "All" && l.developer !== lcDev) return false;
+              if (lcStatus !== "All" && l.status !== lcStatus) return false;
+              if (lcType !== "All" && l.propertyType !== lcType) return false;
+              return true;
+            }).sort((a, b) => new Date(a.launchDate || 0) - new Date(b.launchDate || 0));
+
+            const developers = ["All", ...new Set(rawLaunches.map(l => l.developer).filter(Boolean))];
+
+            const selStyle = {
+              background: T.surfaceAlt, border: `1px solid ${T.border}`,
+              borderRadius: 8, color: T.white, fontFamily: "'Outfit',sans-serif",
+              fontSize: 12, padding: "7px 28px 7px 10px", outline: "none", cursor: "pointer",
+              appearance: "none", WebkitAppearance: "none",
+              backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E")`,
+              backgroundRepeat: "no-repeat", backgroundPosition: "right 8px center",
+            };
+
+            /* ── Status badge ── */
+            const StatusBadge = ({ status }) => {
+              const cfg = STATUS_CFG[status] || STATUS_CFG["Upcoming"];
+              return (
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "3px 10px", borderRadius: 20, background: cfg.bg, fontSize: 11, fontWeight: 700, color: cfg.color }}>
+                  <span style={{ width: 5, height: 5, borderRadius: "50%", background: cfg.dot, display: "inline-block", animation: status === "EOI Open" ? "pulse 2s infinite" : "none" }} />
+                  {status}
+                </span>
+              );
+            };
+
+            /* ── Days until launch ── */
+            const daysUntil = (dateStr) => {
+              if (!dateStr) return null;
+              const diff = Math.ceil((new Date(dateStr) - new Date()) / (1000 * 60 * 60 * 24));
+              if (diff < 0) return null;
+              if (diff === 0) return "Today";
+              if (diff === 1) return "Tomorrow";
+              if (diff <= 7) return `${diff} days`;
+              if (diff <= 30) return `${Math.ceil(diff/7)} weeks`;
+              return `${Math.ceil(diff/30)} months`;
+            };
+
+            /* ── Launch Card ── */
+            const LaunchCard = ({ l }) => {
+              const cfg = STATUS_CFG[l.status] || STATUS_CFG["Upcoming"];
+              const days = daysUntil(l.launchDate);
+              return (
+                <div className="chart-box" style={{ padding: 18, borderLeft: `3px solid ${cfg.color}`, position: "relative" }}>
+                  {/* Days countdown */}
+                  {days && (
+                    <div style={{ position: "absolute", top: 14, right: 14, fontSize: 10, fontWeight: 700, color: cfg.color, background: cfg.bg, padding: "2px 8px", borderRadius: 10 }}>
+                      {days}
+                    </div>
+                  )}
+
+                  {/* Developer + Project */}
+                  <div style={{ marginBottom: 10 }}>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 4 }}>{l.developer || "Developer TBC"}</div>
+                    <div style={{ fontSize: 15, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif", marginBottom: 6 }}>{l.projectName || "Project Name TBC"}</div>
+                    <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" }}>
+                      <StatusBadge status={l.status || "Upcoming"} />
+                      {l.community && <span style={{ fontSize: 11, color: T.textMuted }}>{l.community}</span>}
+                      {l.propertyType && <span style={{ fontSize: 11, color: T.textMuted }}>· {l.propertyType}</span>}
+                    </div>
+                  </div>
+
+                  {/* Key metrics */}
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 12 }}>
+                    {[
+                      { label: "Launch Date", value: l.launchDate ? new Date(l.launchDate).toLocaleDateString("en-AE", { day: "numeric", month: "short", year: "numeric" }) : "TBC" },
+                      { label: "Starting Price", value: l.startingPrice ? "AED " + (l.startingPrice/1000000).toFixed(1) + "M" : "TBC" },
+                      { label: "Units Available", value: l.totalUnits ? l.totalUnits.toLocaleString() : "TBC" },
+                    ].map((m, i) => (
+                      <div key={i} style={{ background: T.surfaceAlt, borderRadius: 8, padding: "8px 10px" }}>
+                        <div style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 3 }}>{m.label}</div>
+                        <div style={{ fontSize: 13, fontWeight: 700, color: T.white }}>{m.value}</div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Payment plan */}
+                  {l.paymentPlan && (
+                    <div style={{ display: "flex", gap: 6, marginBottom: 12, flexWrap: "wrap" }}>
+                      <span style={{ fontSize: 10, color: T.textMuted }}>Payment Plan:</span>
+                      <span style={{ fontSize: 10, fontWeight: 700, color: T.gold }}>{l.paymentPlan}</span>
+                    </div>
+                  )}
+
+                  {/* EOI details */}
+                  {(l.status === "EOI Open" || l.status === "EOI Closed") && (
+                    <div style={{ background: l.status === "EOI Open" ? "rgba(16,185,129,0.06)" : "rgba(239,68,68,0.06)", border: `1px solid ${l.status === "EOI Open" ? "rgba(16,185,129,0.2)" : "rgba(239,68,68,0.2)"}`, borderRadius: 8, padding: "8px 12px", marginBottom: 12 }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 6 }}>
+                        <div>
+                          <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 2 }}>EOI Amount</div>
+                          <div style={{ fontSize: 13, fontWeight: 700, color: l.status === "EOI Open" ? T.green : T.textSecondary }}>
+                            {l.eoiAmount ? "AED " + l.eoiAmount.toLocaleString() : "AED 20K–50K"}
+                          </div>
+                        </div>
+                        {l.eoiDeadline && (
+                          <div>
+                            <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 2 }}>EOI Deadline</div>
+                            <div style={{ fontSize: 13, fontWeight: 700, color: T.gold }}>{new Date(l.eoiDeadline).toLocaleDateString("en-AE", { day: "numeric", month: "short" })}</div>
+                          </div>
+                        )}
+                        <div>
+                          <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 2 }}>Refundable</div>
+                          <div style={{ fontSize: 13, fontWeight: 700, color: T.green }}>{l.eoiRefundable !== false ? "Yes" : "No"}</div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Past performance vs actual */}
+                  {l.launchPrice && l.currentPrice && (
+                    <div style={{ background: T.surfaceAlt, borderRadius: 8, padding: "8px 12px", marginBottom: 12 }}>
+                      <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 6 }}>Launch vs Current Price</div>
+                      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                        <div style={{ fontSize: 12, color: T.textSecondary }}>Launch: <span style={{ color: T.white, fontWeight: 600 }}>AED {(l.launchPrice/1000).toFixed(0)}K/sqft</span></div>
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={T.textMuted} strokeWidth="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                        <div style={{ fontSize: 12, color: T.textSecondary }}>Now: <span style={{ color: T.gold, fontWeight: 600 }}>AED {(l.currentPrice/1000).toFixed(0)}K/sqft</span></div>
+                        <span style={{ fontSize: 11, fontWeight: 700, color: l.currentPrice > l.launchPrice ? T.green : T.red, marginLeft: "auto" }}>
+                          {l.currentPrice > l.launchPrice ? "+" : ""}{(((l.currentPrice - l.launchPrice) / l.launchPrice) * 100).toFixed(1)}%
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Notes */}
+                  {l.notes && (
+                    <div style={{ fontSize: 11, color: T.textMuted, lineHeight: 1.6, marginBottom: 12, paddingTop: 8, borderTop: `1px solid ${T.border}` }}>{l.notes}</div>
+                  )}
+
+                  {/* Action */}
+                  <div style={{ display: "flex", gap: 8 }}>
+                    {l.status === "EOI Open" && (
+                      <button type="button" onClick={() => handleTabChange("Dev Portal")}
+                        style={{ flex: 1, padding: "7px 0", background: `linear-gradient(135deg, ${T.green}, #059669)`, border: "none", borderRadius: 8, color: "#fff", fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                        Register EOI →
+                      </button>
+                    )}
+                    <button type="button" onClick={() => handleTabChange("Projects")}
+                      style={{ flex: 1, padding: "7px 0", background: "rgba(212,168,67,0.06)", border: `1px solid ${T.border}`, borderRadius: 8, color: T.gold, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                      View Projects →
+                    </button>
+                  </div>
+                </div>
+              );
+            };
+
+            /* ── Group by month ── */
+            const byMonth = filtered.reduce((acc, l) => {
+              const month = l.launchDate
+                ? new Date(l.launchDate).toLocaleDateString("en-AE", { month: "long", year: "numeric" })
+                : "Date TBC";
+              if (!acc[month]) acc[month] = [];
+              acc[month].push(l);
+              return acc;
+            }, {});
+
+            return (
+              <div style={{ animation: "fadeUp 0.4s ease-out forwards" }}>
+
+                {/* Tab header */}
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0", marginBottom: 20, borderBottom: `1px solid ${T.border}`, flexWrap: "wrap", gap: 8 }}>
+                  <div>
+                    <div style={{ fontSize: 20, fontWeight: 800, color: T.white, fontFamily: "'Fraunces',serif" }}>Launch Calendar</div>
+                    <div style={{ fontSize: 11, color: T.textMuted, marginTop: 3 }}>Upcoming off-plan launches · EOI tracking · Developer radar · Never miss a launch</div>
+                  </div>
+                  <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                    <div style={{ display: "flex", background: T.surfaceAlt, borderRadius: 8, border: `1px solid ${T.border}`, overflow: "hidden" }}>
+                      {["list", "calendar"].map(v => (
+                        <button key={v} type="button" onClick={() => setLcView(v)}
+                          style={{ padding: "6px 14px", background: lcView === v ? "rgba(212,168,67,0.15)" : "transparent", color: lcView === v ? T.gold : T.textMuted, border: "none", cursor: "pointer", fontSize: 11, fontWeight: 600, fontFamily: "'Outfit',sans-serif", textTransform: "capitalize" }}>
+                          {v}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* EOI summary row */}
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: 12, marginBottom: 20 }}>
+                  {[
+                    { label: "EOI Open Now", value: rawLaunches.filter(l => l.status === "EOI Open").length || "—", color: T.green },
+                    { label: "Upcoming Launches", value: rawLaunches.filter(l => l.status === "Upcoming").length || "—", color: T.gold },
+                    { label: "This Month", value: rawLaunches.filter(l => { const d = new Date(l.launchDate); const now = new Date(); return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear(); }).length || "—", color: T.teal },
+                    { label: "Total Tracked", value: rawLaunches.length || "—", color: T.textSecondary },
+                  ].map((kpi, i) => (
+                    <div key={i} className="kpi-card">
+                      <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 8 }}>{kpi.label}</div>
+                      <div style={{ fontFamily: "'Fraunces',serif", fontSize: 28, fontWeight: 800, color: kpi.color }}>{kpi.value}</div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Smart Filters */}
+                <div style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 12, padding: "14px 16px", marginBottom: 20 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+                    <div style={{ position: "relative", flex: "0 0 200px" }}>
+                      {SvgIcons.Search({ width: 13, height: 13, style: { position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", color: T.textMuted, pointerEvents: "none" } })}
+                      <input value={lcSearch} onChange={e => setLcSearch(e.target.value)} placeholder="Search launches..."
+                        style={{ ...selStyle, paddingLeft: 30, paddingRight: 10, width: "100%", backgroundImage: "none" }} />
+                    </div>
+                    <select value={lcDev} onChange={e => setLcDev(e.target.value)} style={selStyle}>
+                      {developers.map(d => <option key={d}>{d}</option>)}
+                    </select>
+                    <select value={lcStatus} onChange={e => setLcStatus(e.target.value)} style={selStyle}>
+                      {["All", "EOI Open", "EOI Closed", "Upcoming", "Launched", "Sold Out"].map(s => <option key={s}>{s}</option>)}
+                    </select>
+                    <select value={lcType} onChange={e => setLcType(e.target.value)} style={selStyle}>
+                      {["All", "Apartment", "Villa", "Townhouse", "Penthouse", "Hotel Apartment", "Mixed"].map(t => <option key={t}>{t}</option>)}
+                    </select>
+                    <span style={{ fontSize: 11, color: T.textMuted, marginLeft: "auto" }}>{filtered.length} launches</span>
+                    {(lcSearch || lcDev !== "All" || lcStatus !== "All" || lcType !== "All") && (
+                      <button type="button" onClick={() => { setLcSearch(""); setLcDev("All"); setLcStatus("All"); setLcType("All"); }}
+                        style={{ background: "none", border: `1px solid ${T.border}`, borderRadius: 8, padding: "6px 12px", color: T.textMuted, fontSize: 11, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                        Clear
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* EOI Alert banner */}
+                {rawLaunches.filter(l => l.status === "EOI Open").length > 0 && (
+                  <div style={{ background: "rgba(16,185,129,0.06)", border: "1px solid rgba(16,185,129,0.2)", borderRadius: 10, padding: "10px 16px", marginBottom: 16, display: "flex", alignItems: "center", gap: 10 }}>
+                    <span style={{ width: 8, height: 8, borderRadius: "50%", background: T.green, animation: "pulse 2s infinite", display: "inline-block", flexShrink: 0 }} />
+                    <div style={{ fontSize: 12, color: T.textSecondary }}>
+                      <span style={{ color: T.green, fontWeight: 700 }}>{rawLaunches.filter(l => l.status === "EOI Open").length} EOI{rawLaunches.filter(l => l.status === "EOI Open").length > 1 ? "s" : ""} open right now</span>
+                      {" — "}EOI payments are typically AED 20K–50K and fully refundable until SPA is signed. Register through Dev Portal.
+                    </div>
+                  </div>
+                )}
+
+                {/* No data state */}
+                {rawLaunches.length === 0 && (
+                  <div style={{ background: "rgba(212,168,67,0.05)", border: `1px solid rgba(212,168,67,0.15)`, borderRadius: 12, padding: "48px 24px", textAlign: "center", marginBottom: 20 }}>
+                    {SvgIcons.Calendar({ width: 40, height: 40, style: { color: T.textMuted, display: "inline-block", marginBottom: 14 } })}
+                    <div style={{ fontSize: 16, fontWeight: 700, color: T.white, marginBottom: 8 }}>No launches tracked yet</div>
+                    <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 4 }}>Launch data auto-populates from developer portals daily</div>
+                    <div style={{ fontSize: 11, color: T.textMuted, opacity: 0.7 }}>Add launches manually from Admin → Data Manager → Launches</div>
+                  </div>
+                )}
+
+                {/* List view — grouped by month */}
+                {lcView === "list" && filtered.length > 0 && (
+                  <div style={{ marginBottom: 20 }}>
+                    {Object.entries(byMonth).map(([month, launches]) => (
+                      <div key={month} style={{ marginBottom: 28 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 14 }}>
+                          <div style={{ fontSize: 13, fontWeight: 700, color: T.gold, fontFamily: "'Fraunces',serif" }}>{month}</div>
+                          <div style={{ flex: 1, height: 1, background: T.border }} />
+                          <div style={{ fontSize: 11, color: T.textMuted }}>{launches.length} launch{launches.length > 1 ? "es" : ""}</div>
+                        </div>
+                        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: 14 }}>
+                          {launches.map((l, i) => <LaunchCard key={i} l={l} />)}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Calendar view — simple month grid */}
+                {lcView === "calendar" && filtered.length > 0 && (
+                  <div className="chart-box" style={{ padding: 20, marginBottom: 20 }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 16 }}>
+                      {new Date().toLocaleDateString("en-AE", { month: "long", year: "numeric" })}
+                    </div>
+                    {/* Simple calendar grid */}
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 4, marginBottom: 8 }}>
+                      {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(d => (
+                        <div key={d} style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textAlign: "center", padding: "4px 0" }}>{d}</div>
+                      ))}
+                    </div>
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 4 }}>
+                      {(() => {
+                        const now = new Date();
+                        const firstDay = new Date(now.getFullYear(), now.getMonth(), 1).getDay();
+                        const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+                        const cells = [];
+                        for (let i = 0; i < firstDay; i++) cells.push(<div key={`e${i}`} />);
+                        for (let d = 1; d <= daysInMonth; d++) {
+                          const dateStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
+                          const dayLaunches = filtered.filter(l => l.launchDate?.startsWith(dateStr));
+                          const isToday = d === now.getDate();
+                          cells.push(
+                            <div key={d} style={{ minHeight: 44, borderRadius: 8, padding: "4px 6px", background: dayLaunches.length > 0 ? "rgba(212,168,67,0.1)" : isToday ? "rgba(255,255,255,0.06)" : "transparent", border: `1px solid ${isToday ? "rgba(212,168,67,0.4)" : dayLaunches.length > 0 ? "rgba(212,168,67,0.2)" : T.border}` }}>
+                              <div style={{ fontSize: 11, fontWeight: isToday ? 700 : 400, color: isToday ? T.gold : T.textMuted, marginBottom: 2 }}>{d}</div>
+                              {dayLaunches.map((l, i) => (
+                                <div key={i} style={{ fontSize: 9, fontWeight: 700, color: STATUS_CFG[l.status]?.color || T.gold, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                                  {l.projectName?.substring(0, 10) || "Launch"}
+                                </div>
+                              ))}
+                            </div>
+                          );
+                        }
+                        return cells;
+                      })()}
+                    </div>
+                  </div>
+                )}
+
+                {/* Sources */}
+                <div style={{ paddingTop: 12, borderTop: `1px solid ${T.border}`, display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+                  <span style={{ fontSize: 10, color: T.textMuted }}>Sources:</span>
+                  {["Developer Portals", "Bayut Launch Radar", "Property Finder", "Admin Manual Entry"].map((s, i) => (
+                    <span key={i} style={{ fontSize: 10, color: T.textMuted, padding: "2px 8px", borderRadius: 10, border: `1px solid ${T.border}`, background: T.surfaceAlt }}>{s}</span>
+                  ))}
+                </div>
+
+              </div>
+            );
+          })()}
+
           {/* ══════════════════════════════════════════════════════════
               INTELLIGENCE TABS — Awaiting Data Import
               Each tab shows a beautiful empty state with instructions
@@ -4670,7 +5009,7 @@ export default function EmaarDashboardV2() {
           ══════════════════════════════════════════════════════════ */}
 
           {Object.entries(INTELLIGENCE_TABS).map(([tabKey, config]) => (
-            tab === tabKey && tabKey !== "Overview" && tabKey !== "Market" && tabKey !== "DLD Volumes" && tabKey !== "Price History" && tabKey !== "Neighbourhoods" && (
+            tab === tabKey && tabKey !== "Overview" && tabKey !== "Market" && tabKey !== "DLD Volumes" && tabKey !== "Price History" && tabKey !== "Neighbourhoods" && tabKey !== "Launch Calendar" && (
               <div key={tabKey} style={{ animation: "fadeUp 0.4s ease-out forwards" }}>
                 {/* Tab Header */}
                 <div style={{
