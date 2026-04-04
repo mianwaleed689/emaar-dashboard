@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { createUserWithEmailAndPassword } from "firebase/auth";
-import { doc, setDoc, collection, query, where, getDocs } from "firebase/firestore";
+import { doc, setDoc, collection } from "firebase/firestore";
 import { auth, db } from "./firebase";
 
 const T = {
@@ -75,11 +75,7 @@ export default function AgencySignup() {
     setLoading(true);
     setError("");
     try {
-      // Check if agency name already taken
-      const existing = await getDocs(query(collection(db, "organisations"), where("name","==",agencyForm.name.trim())));
-      if (!existing.empty) { setError("An organisation with this name already exists"); setLoading(false); return; }
-
-      // Create Firebase auth account
+      // Create Firebase auth account first (must be authenticated before Firestore writes)
       const cred = await createUserWithEmailAndPassword(auth, managerForm.email.trim(), managerForm.password);
       const uid = cred.user.uid;
 
