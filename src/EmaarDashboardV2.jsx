@@ -184,7 +184,7 @@ const STATUS_OPTIONS = [
 ];
 
 const PRICE_PRESETS_APT = [
-  { label: "Any", min: 0, max: 0 },
+  { label: "Any Price", min: 0, max: 0 },
   { label: "< 500K", min: 0, max: 500000 },
   { label: "500K–1M", min: 500000, max: 1000000 },
   { label: "1M–2M", min: 1000000, max: 2000000 },
@@ -194,7 +194,7 @@ const PRICE_PRESETS_APT = [
 ];
 
 const PRICE_PRESETS_VILLA = [
-  { label: "Any", min: 0, max: 0 },
+  { label: "Any Price", min: 0, max: 0 },
   { label: "< 2M", min: 0, max: 2000000 },
   { label: "2M–5M", min: 2000000, max: 5000000 },
   { label: "5M–10M", min: 5000000, max: 10000000 },
@@ -493,12 +493,12 @@ const SEED_DATA = {
   ─────────────────────────────────────────────────────────────── */
   priceHistory: [
     /* 5-year PPSF trend — Dubai overall apartment average */
-    { period: "2020", ppsf: 1050, type: "priceHistory", isSeedData: true, source: "ValuStrat VPI / REIDIN" },
-    { period: "2021", ppsf: 1080, type: "priceHistory", isSeedData: true, source: "ValuStrat VPI / REIDIN" },
-    { period: "2022", ppsf: 1250, type: "priceHistory", isSeedData: true, source: "ValuStrat VPI / REIDIN" },
-    { period: "2023", ppsf: 1380, type: "priceHistory", isSeedData: true, source: "ValuStrat VPI / REIDIN" },
-    { period: "2024", ppsf: 1600, type: "priceHistory", isSeedData: true, source: "ValuStrat VPI / REIDIN" },
-    { period: "2025", ppsf: 1840, type: "priceHistory", isSeedData: true, source: "ValuStrat VPI / REIDIN" },
+    { period: "2020", ppsf: 1050, offPlanPpsf: 980,  secondaryPpsf: 1100, type: "priceHistory", isSeedData: true, source: "ValuStrat VPI / REIDIN" },
+    { period: "2021", ppsf: 1080, offPlanPpsf: 1020, secondaryPpsf: 1140, type: "priceHistory", isSeedData: true, source: "ValuStrat VPI / REIDIN" },
+    { period: "2022", ppsf: 1250, offPlanPpsf: 1180, secondaryPpsf: 1310, type: "priceHistory", isSeedData: true, source: "ValuStrat VPI / REIDIN" },
+    { period: "2023", ppsf: 1380, offPlanPpsf: 1290, secondaryPpsf: 1460, type: "priceHistory", isSeedData: true, source: "ValuStrat VPI / REIDIN" },
+    { period: "2024", ppsf: 1600, offPlanPpsf: 1520, secondaryPpsf: 1680, type: "priceHistory", isSeedData: true, source: "ValuStrat VPI / REIDIN" },
+    { period: "2025", ppsf: 1840, offPlanPpsf: 1760, secondaryPpsf: 1920, type: "priceHistory", isSeedData: true, source: "ValuStrat VPI / REIDIN" },
     /* Community-level momentum */
     { community: "Dubai Hills Estate",   ppsf: 1850, change6m: 8.2,  change1y: 22.1, change3y: 58.4, change5y: 89.2, type: "priceHistory", isSeedData: true, source: "Knight Frank / REIDIN 2025" },
     { community: "Downtown Dubai",       ppsf: 3100, change6m: 4.1,  change1y: 12.3, change3y: 38.6, change5y: 71.4, type: "priceHistory", isSeedData: true, source: "Property Monitor DPI" },
@@ -3708,15 +3708,18 @@ export default function EmaarDashboardV2() {
                   {/* Column 1: Top Communities by Yield */}
                   <div className="chart-box" style={{ padding: 18 }}>
                     <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 14 }}>Top Communities — Yield</div>
-                    {liveYields?.length > 0
-                      ? [...liveYields].sort((a,b) => (parseFloat(b.gross)||0) - (parseFloat(a.gross)||0)).slice(0,6).map((y, i) => (
+                    {(() => {
+                        const yieldData = liveYields?.length > 0 ? liveYields :
+                          SEED_DATA.communities.map(c => ({ community: c.community, label: c.tenantProfile, gross: c.grossYield }));
+                        return yieldData.length > 0
+                      ? [...yieldData].sort((a,b) => (parseFloat(b.grossYield||b.gross)||0) - (parseFloat(a.grossYield||a.gross)||0)).slice(0,6).map((y, i) => (
                           <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "7px 0", borderBottom: i < 5 ? `1px solid ${T.border}` : "none" }}>
                             <div>
-                              <div style={{ fontSize: 12, color: T.white, fontWeight: 500 }}>{y.community || y.label}</div>
-                              <div style={{ fontSize: 10, color: T.textMuted }}>{y.label || "Apartment"}</div>
+                              <div style={{ fontSize: 12, color: T.white, fontWeight: 500 }}>{y.community || y.label || "—"}</div>
+                              <div style={{ fontSize: 10, color: T.textMuted }}>{y.tenantProfile || y.label || "Apartment"}</div>
                             </div>
-                            <div style={{ fontFamily: "'Fraunces', serif", fontSize: 16, fontWeight: 700, color: parseFloat(y.gross) >= 7 ? T.green : parseFloat(y.gross) >= 5.5 ? T.gold : T.textSecondary }}>
-                              {parseFloat(y.gross).toFixed(1)}%
+                            <div style={{ fontFamily: "'Fraunces', serif", fontSize: 16, fontWeight: 700, color: parseFloat(y.grossYield||y.gross) >= 7 ? T.green : parseFloat(y.grossYield||y.gross) >= 5.5 ? T.gold : T.textSecondary }}>
+                              {parseFloat(y.grossYield||y.gross||0).toFixed(1)}%
                             </div>
                           </div>
                         ))
@@ -3730,13 +3733,16 @@ export default function EmaarDashboardV2() {
                     <button type="button" onClick={() => handleTabChange("Yields")} style={{ width: "100%", marginTop: 12, padding: "7px 0", background: "rgba(212,168,67,0.06)", border: `1px solid ${T.border}`, borderRadius: 8, color: T.gold, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
                       View All Yields →
                     </button>
-                  </div>
+                  </div>;
+                  })()}
 
                   {/* Column 2: DLD Volume by Community */}
                   <div className="chart-box" style={{ padding: 18 }}>
                     <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 14 }}>DLD Transaction Volume</div>
-                    {liveDLDVolumes?.length > 0
-                      ? [...liveDLDVolumes].sort((a,b) => (b.transactions||b.count||0) - (a.transactions||a.count||0)).slice(0,6).map((d, i) => {
+                    {(() => {
+                        const dldData = liveDLDVolumes?.length > 0 ? liveDLDVolumes : SEED_DATA.dldVolumes;
+                        return dldData.length > 0
+                      ? [...dldData].sort((a,b) => (b.transactions||b.count||0) - (a.transactions||a.count||0)).slice(0,6).map((d, i) => {
                           const maxVal = liveDLDVolumes.reduce((m,x) => Math.max(m, x.transactions||x.count||0), 1);
                           const pct = Math.round(((d.transactions||d.count||0) / maxVal) * 100);
                           return (
@@ -3761,7 +3767,8 @@ export default function EmaarDashboardV2() {
                     <button type="button" onClick={() => handleTabChange("DLD Volumes")} style={{ width: "100%", marginTop: 12, padding: "7px 0", background: "rgba(212,168,67,0.06)", border: `1px solid ${T.border}`, borderRadius: 8, color: T.gold, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
                       View DLD Volumes →
                     </button>
-                  </div>
+                  </div>;
+                  })()}
 
                   {/* Column 3: AI Market Insight + Developer Health */}
                   <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
@@ -3928,9 +3935,16 @@ export default function EmaarDashboardV2() {
             /* ── Live market stats from Firestore ── */
             const stats = liveMarketData?.length > 0 ? liveMarketData : SEED_DATA.market;
             const mktIsSeed = liveMarketData?.length === 0;
-            const getStat = (metric) => stats.find(s => s.metric === metric);
+            const getStat = (metric) => {
+              const exact = stats.find(s => s.metric === metric);
+              if (exact) return exact;
+              const lower = metric.toLowerCase();
+              return stats.find(s => s.metric && s.metric.toLowerCase().includes(lower));
+            };
             // Chart data — filter only year-based entries for bar chart
-            const chartData = stats.filter(d => d.year && d.type === "annual").map(d => ({ year: d.year, value: parseFloat(d.value) || d.value || 0 }));
+            const chartData = stats.filter(d => d.year && d.type === "annual")
+              .sort((a,b) => parseInt(a.year) - parseInt(b.year))
+              .map(d => ({ year: String(d.year), value: parseFloat(d.value) || 0 }));
 
             return (
               <div style={{ animation: "fadeUp 0.4s ease-out forwards" }}>
@@ -4231,7 +4245,7 @@ export default function EmaarDashboardV2() {
                 </div>
 
                 {/* ── No data state ── */}
-                {rawData.length === 0 && (
+                {rawData.length === 0 && !dldIsSeed && (
                   <div style={{ background: "rgba(212,168,67,0.05)", border: `1px solid rgba(212,168,67,0.15)`, borderRadius: 12, padding: "40px 24px", textAlign: "center", marginBottom: 20 }}>
                     <div style={{ marginBottom: 12 }}>{SvgIcons.Database({ width: 36, height: 36, style: { color: T.textMuted, display: "inline-block" } })}</div>
                     <div style={{ fontSize: 15, fontWeight: 700, color: T.white, marginBottom: 8 }}>DLD data not yet synced</div>
@@ -4305,7 +4319,10 @@ export default function EmaarDashboardV2() {
             const phData = phRaw.length > 0 ? phRaw : SEED_DATA.priceHistory;
             const phIsSeed = phRaw.length === 0;
             // Separate year trend data from community data
-            const phChartData = phData.filter(d => d.period && !d.community);
+            const phChartData = phData
+              .filter(d => d.period && !d.community)
+              .sort((a,b) => parseInt(a.period) - parseInt(b.period))
+              .map(d => ({ ...d, period: String(d.period), ppsf: parseFloat(d.ppsf) || 0 }));
             const phCommunityData = phData.filter(d => d.community);
             // Apply community filter
             const phFiltered = phCommunity === "All" ? phCommunityData : phCommunityData.filter(d => d.community === phCommunity);
@@ -4484,7 +4501,7 @@ export default function EmaarDashboardV2() {
                               <span style={{ fontSize: 12, color: T.textSecondary }}>{d.community || "—"}</span>
                               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                                 <span style={{ fontSize: 12, color: T.white, fontWeight: 600 }}>AED {(d.ppsf || 0).toLocaleString()}</span>
-                                <MomentumBadge change={d.change6m} />
+                                <MomentumBadge change={d.change6m ?? d.change1y ?? d.change ?? null} />
                               </div>
                             </div>
                           ))}
