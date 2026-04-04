@@ -2509,7 +2509,7 @@ export default function EmaarDashboardV2() {
             )
           ))}
 
-
+          {/* ══════════════════════════════════════════════
               MY LEADS TAB — Session 4 — Agent CRM Inbox
           ══════════════════════════════════════════════ */}
           {tab === "My Leads" && (() => {
@@ -5953,7 +5953,6 @@ export default function EmaarDashboardV2() {
                 </div>
               </div>
             
-              {/* ══════════════════════════════════════════════════════════
               {/* ══════════════════════════════════════════════════════════
                   SESSION 15 - DLD LIVE TRANSACTION INTELLIGENCE
               ══════════════════════════════════════════════════════════ */}
