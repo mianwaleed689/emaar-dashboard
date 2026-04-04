@@ -1,4 +1,4 @@
-﻿/* eslint-disable */
+/* eslint-disable */
 /* ═══════════════════════════════════════════════════════════════════
    DXB ANALYTICS INTELLIGENCE PLATFORM
    Clean Architecture — Data-Driven, Firestore-Connected
@@ -16020,9 +16020,7 @@ Format clearly with these 4 sections labeled. Be specific to Dubai market. Inclu
 
                         {/* WhatsApp */}
                         <div style={{ display:"flex", gap:4 }} onClick={e=>e.stopPropagation()}>
-                          {l.phone ? renderWABtn(l.phone) : null}
-                          {l.email ? renderEmailBtn(l.email) : null}
-                          {l.phone ? renderCallBtn(l.phone) : null}
+                          {[l.phone?renderWABtn(l.phone):null, l.email?renderEmailBtn(l.email):null, l.phone?renderCallBtn(l.phone):null]}
                         </div>
                         </div>
                       </div>
