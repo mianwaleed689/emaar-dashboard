@@ -9070,6 +9070,7 @@ export default function EmaarDashboardV2() {
                       </div>
                     );
                   })}
+                  </div>
                 </div>
 
                 {/* ── Pipeline Funnel ── */}
@@ -9182,7 +9183,6 @@ export default function EmaarDashboardV2() {
                     })}
                   </div>
                 </div>
-              </div>
               </div>
               </div>
               </div>
