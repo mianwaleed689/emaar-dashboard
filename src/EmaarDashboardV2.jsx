@@ -2684,6 +2684,13 @@ export default function EmaarDashboardV2() {
   const [projectsLoading, setProjectsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
+  /* ─── PROJECT MODAL STATE ─── */
+  const [selectedProject, setSelectedProject] = useState(null);
+  const [projDetailTab, setProjDetailTab] = useState("Overview");
+  const [projCompare, setProjCompare] = useState([]);
+  const [showCompare, setShowCompare] = useState(false);
+
+
   /* ─── SERVICE CHARGES TAB STATE ─── */
   const [scView, setScView] = useState("table");
   const [scType, setScType] = useState("All");
