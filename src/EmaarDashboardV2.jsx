@@ -20,8 +20,6 @@ import RoiCalculator from "./RoiCalculator";
 /* Projects load from: Firestore 'projects' collection */
 /* Populated via: Admin → Data Manager → Import Projects */
 
-
-};
 const getLinkDomain = (url) => {
   if (!url) return "Listing";
   if (url.includes("propertyfinder.ae")) return "PropertyFinder.ae";
