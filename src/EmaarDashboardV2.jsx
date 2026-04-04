@@ -3073,7 +3073,7 @@ export default function EmaarDashboardV2() {
           });
           const apiData = await res.json();
           const text = apiData.content?.[0]?.text || "[]";
-          const parsed = JSON.parse(text.replace(/```json|```/g, "").trim());
+          const parsed = JSON.parse(text.replace(/```json/g, "").replace(/```/g, "").trim());
           setAiInsights(parsed);
           // Cache for a week
           try { await setDoc(doc(db, "aiInsights", "latest"), { insights: parsed, generatedAt: Date.now() }); } catch(e) {}
