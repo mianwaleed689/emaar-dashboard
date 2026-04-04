@@ -2405,7 +2405,6 @@ export default function EmaarDashboardV2() {
   const [tabSettings, setTabSettings] = useState({});
   const [liveCommunityROI, setLiveCommunityROI] = useState({});
   const [liveCommunityIntel, setLiveCommunityIntel] = useState({});
-  const [selectedProject, setSelectedProject] = useState(null);
 
   /* ─── MY LEADS STATE (Session 4) ─── */
   const [myLeads, setMyLeads] = useState([]);
@@ -2523,7 +2522,6 @@ export default function EmaarDashboardV2() {
   const [selectedCommunity, setSelectedCommunity] = useState(null);
   const [expandedMega, setExpandedMega] = useState(null);
   const [compareList, setCompareList] = useState([]);
-  const [showCompare, setShowCompare] = useState(false);
   // Flip Calculator state (lifted up to prevent reset on re-render)
   const [investScoreFilter, setInvestScoreFilter] = useState("All");
   const [investExpandedComm, setInvestExpandedComm] = useState(null);
