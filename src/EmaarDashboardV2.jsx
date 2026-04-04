@@ -977,6 +977,541 @@ const ProGateFullPage = ({ tabName, onUpgrade }) => {
 /* ─── UPGRADE MODAL ─── */
 
 
+const UpgradeModal = ({ show, onClose }) => {
+  if (!show) return null;
+  const plans = [
+    { name: "Pro", price: "99", period: "month", features: ["All Dubai projects — full data", "AI market insights", "Portfolio ROI tracker", "DXB Estimate AVM", "Yield & STR/LTR analysis", "Mortgage calculator", "Price alerts", "PDF export"], popular: true, note: null, cta: "Upgrade to Pro →" },
+    { name: "Enterprise", price: "499", period: "month", features: ["Everything in Pro", "PDF report generation ⏳", "API data access ⏳", "Custom dashboards ⏳", "Multi-user team accounts ⏳", "Developer-level raw data", "Dedicated account manager", "White-label options ⏳"], popular: false, note: "⏳ = Launching Q3 2026", cta: "Contact Sales →" },
+  ];
+  return (
+    <div style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.92)", zIndex: 3000, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(12px)", padding: 16 }} onClick={onClose}>
+      <div className="upgrade-modal" style={{ background: T.surface, borderRadius: 24, border: `1px solid ${T.border}`, width: "95%", maxWidth: 720, padding: 36, position: "relative", boxShadow: "0 40px 100px rgba(0,0,0,0.6)" }} onClick={e => e.stopPropagation()}>
+        <button type="button" onClick={onClose} style={{ position: "absolute", top: 16, right: 16, background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
+
+        {/* Header */}
+        <div style={{ textAlign: "center", marginBottom: 28 }}>
+          <div style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "4px 14px", borderRadius: 20, background: "rgba(212,168,67,0.1)", border: `1px solid ${T.gold}40`, marginBottom: 12 }}>
+            <span style={{ width: 6, height: 6, borderRadius: "50%", background: T.green, animation: "pulse 2s infinite", display: "inline-block" }} />
+            <span style={{ fontSize: 11, color: T.gold, fontWeight: 600 }}>500+ investors already using Pro</span>
+          </div>
+          <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: 26, fontWeight: 900, color: T.white, marginBottom: 6 }}>Unlock the Full Platform</h2>
+          <p style={{ color: T.textSecondary, fontSize: 13 }}>The most comprehensive Dubai real estate intelligence platform</p>
+        </div>
+
+        {/* ROI bar */}
+        <div style={{ background: "rgba(16,185,129,0.08)", border: `1px solid ${T.green}30`, borderRadius: 12, padding: "12px 20px", marginBottom: 24, display: "flex", alignItems: "center", justifyContent: "center", gap: 16, flexWrap: "wrap" }}>
+          {[["📊", "AED 80.4B", "FY25 Sales tracked"], ["📈", "+40% YoY", "Revenue growth"], ["🏠", "48 Projects", "Full intelligence"], ["💰", "AED 155B", "Backlog visibility"]].map(([icon, val, label], i) => (
+            <div key={i} style={{ textAlign: "center" }}>
+              <div style={{ fontSize: 13 }}>{icon} <span style={{ fontFamily: "'Fraunces', serif", fontWeight: 800, color: T.green }}>{val}</span></div>
+              <div style={{ fontSize: 10, color: T.textMuted }}>{label}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* Plans */}
+        <div className="plans-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 20 }}>
+          {plans.map((plan, i) => (
+            <div key={i} style={{ background: T.surfaceAlt, borderRadius: 16, padding: 24, border: plan.popular ? `2px solid ${T.gold}` : `1px solid ${T.border}`, position: "relative" }}>
+              {plan.popular && <div style={{ position: "absolute", top: -12, left: "50%", transform: "translateX(-50%)", padding: "4px 16px", borderRadius: 20, background: `linear-gradient(135deg, ${T.gold}, #B8912F)`, color: T.bg, fontSize: 10, fontWeight: 800, letterSpacing: 0.5, whiteSpace: "nowrap" }}>⭐ MOST POPULAR</div>}
+              <h3 style={{ fontSize: 18, fontWeight: 700, color: T.white, marginBottom: 4, marginTop: plan.popular ? 8 : 0 }}>{plan.name}</h3>
+              <div style={{ display: "flex", alignItems: "baseline", gap: 3, marginBottom: 16 }}>
+                <span style={{ fontSize: 11, color: T.textMuted }}>AED</span>
+                <span style={{ fontFamily: "'Fraunces', serif", fontSize: 38, fontWeight: 900, color: plan.popular ? T.gold : T.white, lineHeight: 1 }}>{plan.price}</span>
+                <span style={{ fontSize: 12, color: T.textMuted }}>/{plan.period}</span>
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 7, marginBottom: 16 }}>
+                {plan.features.map((f, j) => (
+                  <div key={j} style={{ display: "flex", alignItems: "flex-start", gap: 7, fontSize: 12, color: f.includes("⏳") ? T.textMuted : T.textSecondary }}>
+                    <span style={{ color: f.includes("⏳") ? T.textMuted : T.green, fontSize: 11, marginTop: 1, flexShrink: 0 }}>✓</span>{f}
+                  </div>
+                ))}
+              </div>
+              {plan.note && <div style={{ fontSize: 10, color: T.textMuted, marginBottom: 12, fontStyle: "italic" }}>{plan.note}</div>}
+              <button type="button" onClick={() => { onClose(); window.dispatchEvent(new CustomEvent("dxb-checkout", { detail: plan })); }}
+                style={{ width: "100%", padding: "12px 0", background: plan.popular ? `linear-gradient(135deg, ${T.gold}, #B8912F)` : "transparent", color: plan.popular ? T.bg : T.gold, border: plan.popular ? "none" : `1px solid ${T.gold}`, borderRadius: 10, fontSize: 13, fontWeight: 800, cursor: "pointer", fontFamily: "'Outfit', sans-serif", letterSpacing: 0.3 }}>
+                {plan.cta}
+              </button>
+            </div>
+          ))}
+        </div>
+
+        <div style={{ textAlign: "center", display: "flex", justifyContent: "center", gap: 24, flexWrap: "wrap" }}>
+          {["🔒 Secure payment", "↩ 7-day money-back", "⚡ Instant access", "❌ Cancel anytime"].map((t, i) => (
+            <span key={i} style={{ fontSize: 11, color: T.textMuted }}>{t}</span>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+function useFocusTrap(active) {
+  const ref = React.useRef(null);
+  React.useEffect(() => {
+    if (!active || !ref.current) return;
+    const el = ref.current;
+    const focusable = el.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    const handler = (e) => {
+      if (e.key !== 'Tab') return;
+      if (e.shiftKey) { if (document.activeElement === first) { e.preventDefault(); last?.focus(); } }
+      else { if (document.activeElement === last) { e.preventDefault(); first?.focus(); } }
+    };
+    el.addEventListener('keydown', handler);
+    first?.focus();
+    return () => el.removeEventListener('keydown', handler);
+  }, [active]);
+  return ref;
+}
+
+/* ─── COMMUNITY MAP TAB COMPONENT ─── */
+
+function CommunityMapTab({ activeProjects, liveCommunityROI, setTab }) {
+  const [selectedProject, setSelectedProjectMap] = React.useState(null);
+  const [filterComm, setFilterComm] = React.useState("All");
+  const [filterYield, setFilterYield] = React.useState("All");
+  const [mapLoaded, setMapLoaded] = React.useState(false);
+  const [mapLayer, setMapLayer] = React.useState("yield"); // yield | ppsf | volume
+  const heatLayersRef = React.useRef([]);
+  const mapRef = React.useRef(null);
+  const mapInstanceRef = React.useRef(null);
+  const markersRef = React.useRef([]);
+
+  // Project coordinates (lat/lng for Dubai)
+  const projectCoords = {
+    "Creek Waters": [25.1876, 55.3344], "Creek Waters 2": [25.1890, 55.3360],
+    "Creek Horizon": [25.1860, 55.3320], "Creek Beach": [25.1920, 55.3380],
+    "Creek Palace": [25.1840, 55.3300], "Harbour Gate": [25.1950, 55.3400],
+    "Address Harbour Point": [25.1930, 55.3390], "Creek Edge": [25.1870, 55.3350],
+    "Dubai Hills": [25.1124, 55.2594], "Golf Grand": [25.1050, 55.2650],
+    "Elvira": [25.1070, 55.2570], "Lime Gardens": [25.1090, 55.2530],
+    "Greenside": [25.1030, 55.2510], "Parkside Hills": [25.1000, 55.2480],
+    "The Acres": [24.9800, 55.2000], "The Oasis": [25.0200, 55.1800],
+    "Emaar South": [24.8980, 55.1640], "Greenview": [24.9000, 55.1660],
+    "Urbana": [24.8950, 55.1600], "Expo Golf Villas": [24.8900, 55.1580],
+    "Emaar Beachfront": [25.0780, 55.1340], "Address Beach Resort": [25.0800, 55.1360],
+    "Marina Shores": [25.0760, 55.1320], "Beach Mansion": [25.0820, 55.1380],
+    "Grand Polo Club": [24.8500, 55.4200], "The Valley": [25.0000, 55.5000],
+    "Sunridge": [25.0100, 55.5100], "Farm Gardens": [25.0050, 55.4950],
+    "Alana": [25.0080, 55.5050], "Orania": [24.9950, 55.4900],
+    "Downtown Dubai": [25.1972, 55.2744], "The Grand": [25.1950, 55.2720],
+    "Palace Residences": [25.1990, 55.2760], "IL Primo": [25.1960, 55.2730],
+    "Act One Act Two": [25.1980, 55.2750], "Forte": [25.1940, 55.2710],
+    "Opera District": [25.1930, 55.2700], "Address Residences": [25.1970, 55.2740],
+    "Business Bay": [25.1867, 55.2653], "The Crest": [25.1850, 55.2640],
+    "Arabian Ranches": [25.0530, 55.2690], "Ruba": [25.0550, 55.2710],
+    "Mudon": [25.0200, 55.2500], "Nima": [25.0220, 55.2520],
+    "Rashid Yachts": [25.2200, 55.3100], "Elvire": [25.1080, 55.2560],
+    "Park Lane": [25.1110, 55.2580], "Golf Place": [25.1060, 55.2620],
+  };
+
+  // Community-level data for heat map layers
+  const communityData = {
+    "Dubai Creek Harbour":  { coords: [25.1876, 55.3344], ppsf: 2200, volume: 3150,  yoy: 44, radius: 1200 },
+    "Dubai Hills Estate":   { coords: [25.1100, 55.2580], ppsf: 2100, volume: 4100,  yoy: 31, radius: 1400 },
+    "Emaar Beachfront":     { coords: [25.0780, 55.1340], ppsf: 3500, volume: 1520,  yoy: 30, radius: 900  },
+    "Downtown Dubai":       { coords: [25.1972, 55.2744], ppsf: 3800, volume: 5800,  yoy: 25, radius: 1100 },
+    "Business Bay":         { coords: [25.1867, 55.2653], ppsf: 1900, volume: 29950, yoy: 22, radius: 1300 },
+    "Arabian Ranches 3":    { coords: [25.0530, 55.2690], ppsf: 1650, volume: 1200,  yoy: 18, radius: 900  },
+    "Emaar South":          { coords: [24.8980, 55.1640], ppsf: 1100, volume: 980,   yoy: 15, radius: 1100 },
+    "The Valley":           { coords: [25.0000, 55.5000], ppsf: 1200, volume: 970,   yoy: 41, radius: 1000 },
+    "Rashid Yachts & Marina":{ coords: [25.2200, 55.3100], ppsf: 2800, volume: 740, yoy: 65, radius: 800  },
+    "The Oasis":            { coords: [25.0200, 55.1800], ppsf: 2400, volume: 850,   yoy: 38, radius: 1000 },
+    "Mudon":                { coords: [25.0200, 55.2500], ppsf: 1400, volume: 620,   yoy: 20, radius: 800  },
+    "Grand Polo Club":      { coords: [24.8500, 55.4200], ppsf: 1800, volume: 420,   yoy: 25, radius: 900  },
+  };
+
+  const getPPSFColor = (ppsf) => {
+    if (ppsf >= 3500) return "#F59E0B"; // Ultra-premium
+    if (ppsf >= 2500) return "#D4A843"; // Luxury
+    if (ppsf >= 1800) return "#14B8A6"; // Premium
+    if (ppsf >= 1400) return "#3B82F6"; // Mid-market
+    return "#10B981";                   // Affordable
+  };
+
+  const getVolumeColor = (volume) => {
+    if (volume >= 10000) return "#EF4444";
+    if (volume >= 3000)  return "#F97316";
+    if (volume >= 1500)  return "#F59E0B";
+    if (volume >= 800)   return "#10B981";
+    return "#3B82F6";
+  };
+
+  const getCoords = (project) => {
+    // Exact match first
+    if (projectCoords[project.name]) return projectCoords[project.name];
+    // Community fallback coords
+    const communityFallback = {
+      "Dubai Creek Harbour": [25.1876, 55.3344],
+      "Dubai Hills Estate": [25.1100, 55.2580],
+      "Emaar South": [24.8980, 55.1640],
+      "Emaar Beachfront": [25.0780, 55.1340],
+      "Downtown Dubai": [25.1972, 55.2744],
+      "Business Bay": [25.1867, 55.2653],
+      "Arabian Ranches 3": [25.0530, 55.2690],
+      "Mudon": [25.0200, 55.2500],
+      "The Valley": [25.0000, 55.5000],
+      "Grand Polo Club": [24.8500, 55.4200],
+      "The Oasis": [25.0200, 55.1800],
+      "Rashid Yachts & Marina": [25.2200, 55.3100],
+    };
+    return communityFallback[project.community] || [25.1972, 55.2744];
+  };
+
+  const getYield = (project) => {
+    const roi = (liveCommunityROI && liveCommunityROI[project.community]) || {};
+    const y = roi.grossYield;
+    if (!y) return 6.5;
+    if (typeof y === "object") return parseFloat(y.apt1 || y.apt2 || Object.values(y)[0]) || 6.5;
+    return parseFloat(y) || 6.5;
+  };
+
+  const getPinColor = (project) => {
+    const y = getYield(project);
+    if (y >= 8) return "#10B981";
+    if (y >= 6.5) return "#D4A843";
+    if (y >= 5) return "#3B82F6";
+    return "#94A3B8";
+  };
+
+  const communities = ["All", ...Array.from(new Set(activeProjects.map(p => p.community)))];
+  const filteredProjects = activeProjects.filter(p => {
+    const commOk = filterComm === "All" || p.community === filterComm;
+    const y = getYield(p);
+    const yieldOk = filterYield === "All" || (filterYield === "8%+" && y >= 8) || (filterYield === "6-8%" && y >= 6 && y < 8) || (filterYield === "<6%" && y < 6);
+    return commOk && yieldOk;
+  });
+
+  // Load Leaflet dynamically
+  React.useEffect(() => {
+    if (mapLoaded || typeof window === "undefined") return;
+    // Load Leaflet CSS
+    if (!document.getElementById("leaflet-css")) {
+      const link = document.createElement("link");
+      link.id = "leaflet-css";
+      link.rel = "stylesheet";
+      link.href = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
+      document.head.appendChild(link);
+    }
+    // Load Leaflet JS
+    if (!window.L) {
+      const script = document.createElement("script");
+      script.src = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
+      script.onload = () => setMapLoaded(true);
+      document.head.appendChild(script);
+    } else {
+      setMapLoaded(true);
+    }
+  }, []);
+
+  // Init map after Leaflet loads
+  React.useEffect(() => {
+    if (!mapLoaded || !mapRef.current || mapInstanceRef.current) return;
+    const L = window.L;
+    const map = L.map(mapRef.current, { center: [25.1124, 55.2594], zoom: 11, zoomControl: true });
+    L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
+      attribution: "© OpenStreetMap © CARTO", maxZoom: 19,
+    }).addTo(map);
+    mapInstanceRef.current = map;
+  }, [mapLoaded]);
+
+  // Update markers when filters change
+  React.useEffect(() => {
+    if (!mapInstanceRef.current || !window.L) return;
+    const L = window.L;
+    const map = mapInstanceRef.current;
+    // Clear old markers
+    markersRef.current.forEach(m => map.removeLayer(m));
+    markersRef.current = [];
+    // Add new markers
+    filteredProjects.forEach(p => {
+      const coords = getCoords(p);
+      const color = getPinColor(p);
+      const y = getYield(p);
+      const icon = L.divIcon({
+        className: "",
+        html: `<div style="width:12px;height:12px;border-radius:50%;background:\${color};border:2px solid rgba(255,255,255,0.8);box-shadow:0 0 8px \${color}88;cursor:pointer;"></div>`,
+        iconSize: [12, 12], iconAnchor: [6, 6],
+      });
+      const marker = L.marker(coords, { icon })
+        .addTo(map)
+        .bindPopup(`<div style="font-family:'Outfit',sans-serif;min-width:180px;background:#0D1821;color:#fff;border-radius:10px;padding:0;">
+          <div style="background:linear-gradient(135deg,rgba(212,168,67,0.15),rgba(212,168,67,0.05));padding:12px 14px;border-radius:10px 10px 0 0;border-bottom:1px solid rgba(255,255,255,0.08);">
+            <div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:2px;">\${p.name}</div>
+            <div style="font-size:10px;color:#94A3B8;">\${p.community}</div>
+          </div>
+          <div style="padding:10px 14px;display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+            <div><div style="font-size:9px;color:#94A3B8;text-transform:uppercase;">Price</div><div style="font-size:12px;font-weight:700;color:#D4A843;">\${p.price ? "AED " + (p.price/1e6).toFixed(2) + "M" : "TBC"}</div></div>
+            <div><div style="font-size:9px;color:#94A3B8;text-transform:uppercase;">Yield</div><div style="font-size:12px;font-weight:700;color:\${color}">\${y.toFixed(1)}%</div></div>
+            <div><div style="font-size:9px;color:#94A3B8;text-transform:uppercase;">Type</div><div style="font-size:11px;color:#CBD5E1;">\${p.type || "Residential"}</div></div>
+            <div><div style="font-size:9px;color:#94A3B8;text-transform:uppercase;">Handover</div><div style="font-size:11px;color:#CBD5E1;">\${p.handover || "TBC"}</div></div>
+          </div>
+        </div>`, { className: "dxb-popup" });
+      marker.on("click", () => setSelectedProjectMap(p));
+      markersRef.current.push(marker);
+    });
+
+    // Clear old heat circles
+    heatLayersRef.current.forEach(c => map.removeLayer(c));
+    heatLayersRef.current = [];
+
+    // Add PPSF or Volume heat circles
+    if (mapLayer === "ppsf" || mapLayer === "volume") {
+      Object.entries(communityData).forEach(([name, data]) => {
+        const color = mapLayer === "ppsf" ? getPPSFColor(data.ppsf) : getVolumeColor(data.volume);
+        const value = mapLayer === "ppsf" ? `AED ${data.ppsf.toLocaleString()}/sqft` : `${data.volume.toLocaleString()} deals`;
+        const radiusScale = mapLayer === "volume" ? Math.min(data.volume / 100, 600) + 400 : data.radius;
+        const circle = L.circle(data.coords, {
+          radius: radiusScale,
+          color: color,
+          fillColor: color,
+          fillOpacity: 0.25,
+          weight: 2,
+          opacity: 0.7,
+        }).addTo(map);
+        circle.bindTooltip(`<div style="font-family:'Outfit',sans-serif;background:#0D1821;color:#fff;border:1px solid ${color};border-radius:8px;padding:8px 12px;font-size:12px;">
+          <strong style="color:${color}">${name}</strong><br/>
+          ${mapLayer === "ppsf" ? "PPSF: " : "Volume: "}<strong>${value}</strong><br/>
+          <span style="color:#94A3B8;font-size:10px">YoY: +${data.yoy}%</span>
+        </div>`, { permanent: false, sticky: true, className: "dxb-tooltip" });
+        heatLayersRef.current.push(circle);
+      });
+    }
+  }, [mapLoaded, filteredProjects.length, filterComm, filterYield, mapLayer]);
+
+  // Cleanup on unmount
+  React.useEffect(() => {
+    return () => {
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.remove();
+        mapInstanceRef.current = null;
+      }
+    };
+  }, []);
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+
+      {/* Layer switcher + Filters */}
+      <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center", marginBottom: 4 }}>
+        <div style={{ display: "flex", background: T.surfaceAlt, borderRadius: 8, border: `1px solid ${T.border}`, overflow: "hidden" }}>
+          {[
+            { id: "yield",  label: "🎯 Yield Layer",  desc: "Color by rental yield" },
+            { id: "ppsf",   label: "📐 PPSF Layer",   desc: "Color by price/sqft" },
+            { id: "volume", label: "📊 Volume Layer",  desc: "Size by DLD transactions" },
+          ].map(l => (
+            <button key={l.id} type="button" onClick={() => setMapLayer(l.id)}
+              style={{ padding: "7px 14px", fontSize: 11, fontWeight: 600, background: mapLayer === l.id ? `${T.gold}20` : "transparent", color: mapLayer === l.id ? T.gold : T.textMuted, border: "none", cursor: "pointer", fontFamily: "'Outfit',sans-serif", whiteSpace: "nowrap" }}>
+              {l.label}
+            </button>
+          ))}
+        </div>
+        {/* Layer legend */}
+        {mapLayer === "ppsf" && (
+          <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+            {[["#F59E0B","AED 3,500+/sqft"],["#D4A843","AED 2,500+"],["#14B8A6","AED 1,800+"],["#3B82F6","AED 1,400+"],["#10B981","<AED 1,400"]].map(([col, label]) => (
+              <div key={label} style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                <div style={{ width: 10, height: 10, borderRadius: "50%", background: col, opacity: 0.8 }} />
+                <span style={{ fontSize: 9, color: T.textMuted }}>{label}</span>
+              </div>
+            ))}
+          </div>
+        )}
+        {mapLayer === "volume" && (
+          <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+            {[["#EF4444","10,000+ deals"],["#F97316","3,000+"],["#F59E0B","1,500+"],["#10B981","800+"],["#3B82F6","<800"]].map(([col, label]) => (
+              <div key={label} style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                <div style={{ width: 10, height: 10, borderRadius: "50%", background: col, opacity: 0.8 }} />
+                <span style={{ fontSize: 9, color: T.textMuted }}>{label}</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+        <div style={{ fontSize: 11, color: T.textMuted, fontWeight: 600 }}>FILTER:</div>
+        <select value={filterComm} onChange={e => setFilterComm(e.target.value)} style={{ padding: "6px 12px", background: T.surfaceAlt, border: "1px solid " + T.border, borderRadius: 8, color: T.white, fontSize: 11, fontFamily: "'Outfit',sans-serif", cursor: "pointer" }}>
+          {communities.map(c => <option key={c} value={c}>{c}</option>)}
+        </select>
+        <div style={{ display: "flex", gap: 6 }}>
+          {["All", "8%+", "6-8%", "<6%"].map(f => (
+            <button key={f} type="button" onClick={() => setFilterYield(f)} style={{ padding: "6px 12px", borderRadius: 8, border: "1px solid " + (filterYield === f ? T.gold : T.border), background: filterYield === f ? "rgba(212,168,67,0.15)" : T.surfaceAlt, color: filterYield === f ? T.gold : T.textSecondary, fontSize: 11, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>{f === "All" ? "All Yields" : f + " yield"}</button>
+          ))}
+        </div>
+        <div style={{ marginLeft: "auto", display: "flex", gap: 10, alignItems: "center" }}>
+          {[["#10B981", "8%+ yield"], ["#D4A843", "6-8% yield"], ["#3B82F6", "5-6% yield"], ["#94A3B8", "<5% yield"]].map(([col, label]) => (
+            <div key={label} style={{ display: "flex", alignItems: "center", gap: 5 }}>
+              <div style={{ width: 10, height: 10, borderRadius: "50%", background: col, boxShadow: "0 0 6px " + col + "88" }} />
+              <span style={{ fontSize: 10, color: T.textMuted }}>{label}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Map + sidebar */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 320px", gap: 16, height: 560 }}>
+
+        {/* Map */}
+        <div style={{ borderRadius: 16, overflow: "hidden", border: "1px solid " + T.border, position: "relative" }}>
+          {!mapLoaded && (
+            <div style={{ position: "absolute", inset: 0, background: T.surface, display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 12, zIndex: 10 }}>
+              <div style={{ fontSize: 32 }}>&#x1F5FA;</div>
+              <div style={{ fontSize: 13, color: T.textMuted }}>Loading map...</div>
+            </div>
+          )}
+          <div ref={mapRef} style={{ width: "100%", height: "100%" }} />
+          {/* Floating counter */}
+          <div style={{ position: "absolute", bottom: 12, left: 12, background: "rgba(13,24,33,0.9)", backdropFilter: "blur(8px)", borderRadius: 8, padding: "6px 12px", border: "1px solid " + T.border, zIndex: 999, fontSize: 11, color: T.textSecondary }}>
+            <span style={{ color: T.gold, fontWeight: 700 }}>{filteredProjects.length}</span> projects ·{" "}
+            <span style={{ color: T.teal, fontWeight: 600 }}>
+              {mapLayer === "yield" ? "Yield layer" : mapLayer === "ppsf" ? "PPSF heat map" : "Volume heat map"}
+            </span>
+          </div>
+        </div>
+
+        {/* Right sidebar */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 10, overflowY: "auto" }}>
+          {selectedProject ? (
+            <div style={{ background: T.surface, borderRadius: 14, border: "1px solid " + T.gold, padding: 18 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 12 }}>
+                <div>
+                  <div style={{ fontFamily: "'Fraunces',serif", fontSize: 15, fontWeight: 700, color: T.gold }}>{selectedProject.name}</div>
+                  <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>{selectedProject.community}</div>
+                </div>
+                <button type="button" onClick={() => setSelectedProjectMap(null)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 18 }}>×</button>
+              </div>
+              {selectedProject.imageUrl && <img src={selectedProject.imageUrl} alt="" style={{ width: "100%", height: 120, objectFit: "cover", borderRadius: 8, marginBottom: 12 }} onError={e => e.target.style.display="none"} />}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 12 }}>
+                {[
+                  ["Price", selectedProject.price ? "AED " + (selectedProject.price/1e6).toFixed(2) + "M" : "TBC", T.gold],
+                  ["Yield", getYield(selectedProject).toFixed(1) + "%", getPinColor(selectedProject)],
+                  ["Handover", selectedProject.handover || "TBC", T.teal],
+                  ["Type", selectedProject.type || "Residential", T.textPrimary],
+                ].map(([l, v, c]) => (
+                  <div key={l} style={{ background: T.card, borderRadius: 8, padding: "10px 12px" }}>
+                    <div style={{ fontSize: 9, color: T.textMuted, textTransform: "uppercase", marginBottom: 3 }}>{l}</div>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: c }}>{v}</div>
+                  </div>
+                ))}
+              </div>
+              <button type="button" onClick={() => setTab("Projects")} style={{ width: "100%", padding: "9px 0", background: "linear-gradient(135deg," + T.gold + ",#B8912F)", color: T.bg, border: "none", borderRadius: 8, fontWeight: 700, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>View Full Details →</button>
+            </div>
+          ) : (
+            <div style={{ background: T.surface, borderRadius: 14, border: "1px solid " + T.border, padding: 16 }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: T.white, marginBottom: 4 }}>Click any pin on the map</div>
+              <div style={{ fontSize: 11, color: T.textMuted }}>to see project details here</div>
+            </div>
+          )}
+
+          {/* Project list */}
+          <div style={{ background: T.surface, borderRadius: 14, border: "1px solid " + T.border, padding: 14, flex: 1, overflowY: "auto" }}>
+            <div style={{ fontSize: 10, fontWeight: 700, color: T.goldLight, letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>All Projects ({filteredProjects.length})</div>
+            {filteredProjects.map(p => (
+              <div key={p.id} onClick={() => { setSelectedProjectMap(p); const coords = getCoords(p); if (mapInstanceRef.current) mapInstanceRef.current.setView(coords, 14, { animate: true }); }} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 10px", borderRadius: 8, marginBottom: 4, cursor: "pointer", background: selectedProject?.id === p.id ? "rgba(212,168,67,0.1)" : "transparent", border: "1px solid " + (selectedProject?.id === p.id ? T.gold : "transparent"), transition: "all 0.15s" }}
+                onMouseEnter={e => e.currentTarget.style.background = T.surfaceAlt}
+                onMouseLeave={e => e.currentTarget.style.background = selectedProject?.id === p.id ? "rgba(212,168,67,0.1)" : "transparent"}>
+                <div>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: T.white }}>{p.name}</div>
+                  <div style={{ fontSize: 10, color: T.textMuted }}>{p.community}</div>
+                </div>
+                <div style={{ textAlign: "right" }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: getPinColor(p) }}>{getYield(p).toFixed(1)}%</div>
+                  <div style={{ fontSize: 10, color: T.textMuted }}>{p.price ? (p.price/1e6).toFixed(1) + "M" : "TBC"}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Popup CSS */}
+      <style>{".dxb-popup .leaflet-popup-content-wrapper { background: #0D1821; border: 1px solid rgba(212,168,67,0.3); border-radius: 12px; padding: 0; box-shadow: 0 20px 60px rgba(0,0,0,0.6); } .dxb-popup .leaflet-popup-content { margin: 0; } .dxb-popup .leaflet-popup-tip { background: #0D1821; } .leaflet-container { background: #0D1821; }"}</style>
+    </div>
+  );
+}
+
+
+// ─── Tab Data Sources Footer ────────────────────────────────────────────────
+/* ─── DATA BADGE — verified data stamp ─── */
+
+const DataBadge = ({ source, date, type = "dld" }) => {
+  const cfg = {
+    dld:     { label: "DLD Verified",     color: "#10B981", icon: "✓" },
+    reidin:  { label: "REIDIN Index",     color: "#3B82F6", icon: "✓" },
+    emaar:   { label: "Emaar IR",         color: "#D4A843", icon: "✓" },
+    live:    { label: "Live · Firestore", color: "#10B981", icon: "●" },
+    ai:      { label: "AI Estimate",      color: "#8B5CF6", icon: "✦" },
+    manual:  { label: "Admin Verified",   color: "#F59E0B", icon: "✓" },
+  };
+  const c = cfg[type] || cfg.dld;
+  return (
+    <span title={`Source: ${source || c.label}${date ? " · " + date : ""}`} style={{
+      display: "inline-flex", alignItems: "center", gap: 4,
+      fontSize: 9, fontWeight: 700, color: c.color, letterSpacing: 0.5,
+      background: c.color + "12", border: `1px solid ${c.color}30`,
+      borderRadius: 5, padding: "1px 6px", cursor: "default", flexShrink: 0,
+    }}>
+      <span style={{ fontSize: 8 }}>{c.icon}</span>{c.label}
+    </span>
+  );
+};
+
+const TabSources = ({ sources }) => (
+  <div style={{
+    marginTop: 28,
+    padding: "12px 16px",
+    background: "rgba(255,255,255,0.025)",
+    border: "1px solid rgba(255,255,255,0.07)",
+    borderRadius: 12,
+    display: "flex",
+    alignItems: "flex-start",
+    gap: 10,
+    flexWrap: "wrap"
+  }}>
+    <span style={{
+      fontSize: 9,
+      fontWeight: 700,
+      color: "rgba(212,168,67,0.7)",
+      letterSpacing: 1.2,
+      textTransform: "uppercase",
+      paddingTop: 2,
+      flexShrink: 0
+    }}>Sources</span>
+    <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+      {sources.map((s, i) => (
+        s.url ? (
+          <a key={i} href={s.url} target="_blank" rel="noopener noreferrer" style={{
+            fontSize: 10,
+            color: "rgba(255,255,255,0.55)",
+            background: "rgba(255,255,255,0.05)",
+            border: "1px solid rgba(255,255,255,0.1)",
+            borderRadius: 20,
+            padding: "3px 10px",
+            textDecoration: "none",
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 4
+          }}
+          onMouseEnter={e => { e.currentTarget.style.color = "#D4A843"; e.currentTarget.style.borderColor = "rgba(212,168,67,0.4)"; }}
+          onMouseLeave={e => { e.currentTarget.style.color = "rgba(255,255,255,0.55)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)"; }}
+          >{s.label} ↗</a>
+        ) : (
+          <span key={i} style={{
+            fontSize: 10,
+            color: "rgba(255,255,255,0.45)",
+            background: "rgba(255,255,255,0.04)",
+            border: "1px solid rgba(255,255,255,0.07)",
+            borderRadius: 20,
+            padding: "3px 10px"
+          }}>{s.label}</span>
+        )
+      ))}
+    </div>
+  </div>
+);
+
 /* ─────────────────────────────────────────────────────────────
    EMPTY STATE COMPONENT
    Shows for all intelligence tabs while awaiting data import
