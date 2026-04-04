@@ -381,3 +381,126 @@ export const projectStats = {
   ultraLuxury:       allProjects.filter(p => p.tier?.includes("Ultra")).length,
 };
 
+
+// ─────────────────────────────────────────────────────────────────────────────
+// STUB EXPORTS — Placeholder exports for developer data not yet implemented
+// These prevent import errors in EmaarDashboardV2.jsx
+// Replace with real data files when developer data is ready
+// ─────────────────────────────────────────────────────────────────────────────
+
+// DAMAC stubs
+export const damacIdentity          = { id: "damac", name: "DAMAC Properties", color: "#E84393" };
+export const damacLive              = {};
+export const damacProjects          = [];
+export const damacCommunities       = [];
+export const damacFinancials        = {};
+export const damacFinancialHistory  = [];
+export const damacYields            = [];
+export const damacRisks             = [];
+export const damacSegments          = [];
+export const damacHealthScore       = null;
+export const damacBadges            = [];
+
+// Sobha stubs
+export const sobhaIdentity          = { id: "sobha", name: "Sobha Realty", color: "#8B5CF6" };
+export const sobhaLive              = {};
+export const sobhaProjects          = [];
+export const sobhaCommunities       = [];
+export const sobhaFinancials        = {};
+export const sobhaFinancialHistory  = [];
+export const sobhaYields            = [];
+export const sobhaRisks             = [];
+export const sobhaSegments          = [];
+export const sobhaHealthScore       = null;
+export const sobhaBadges            = [];
+
+// Nakheel stubs
+export const nakheelIdentity        = { id: "nakheel", name: "Nakheel", color: "#10B981" };
+export const nakheelLive            = {};
+export const nakheelProjects        = [];
+export const nakheelCommunities     = [];
+export const nakheelFinancials      = {};
+export const nakheelFinancialHistory= [];
+export const nakheelYields          = [];
+export const nakheelRisks           = [];
+export const nakheelSegments        = [];
+export const nakheelHealthScore     = null;
+export const nakheelBadges          = [];
+
+// Meraas stubs
+export const meraasIdentity         = { id: "meraas", name: "Meraas", color: "#3B82F6" };
+export const meraasLive             = {};
+export const meraasProjects         = [];
+export const meerasCommunities      = [];
+export const meraasFinancials       = {};
+export const meraasFinancialHistory = [];
+export const meraasYields           = [];
+export const meraasRisks            = [];
+export const meraasSegments         = [];
+export const meraasHealthScore      = null;
+export const meerasBadges           = [];
+
+// Binghatti stubs
+export const binghattiIdentity          = { id: "binghatti", name: "Binghatti", color: "#F59E0B" };
+export const binghattiLive              = {};
+export const binghattiProjects          = [];
+export const binghattiCommunities       = [];
+export const binghattiFinancials        = {};
+export const binghattiFinancialHistory  = [];
+export const binghattiYields            = [];
+export const binghattiRisks             = [];
+export const binghattiSegments          = [];
+export const binghattiHealthScore       = null;
+export const binghattiBadges            = [];
+
+// Aldar stubs
+export const aldarIdentity          = { id: "aldar", name: "Aldar Properties", color: "#06B6D4" };
+export const aldarLive              = {};
+export const aldarProjects          = [];
+export const aldarCommunities       = [];
+export const aldarFinancials        = {};
+export const aldarFinancialHistory  = [];
+export const aldarYields            = [];
+export const aldarRisks             = [];
+export const aldarSegments          = [];
+export const aldarHealthScore       = null;
+export const aldarBadges            = [];
+
+// Azizi stubs
+export const aziziIdentity          = { id: "azizi", name: "Azizi Developments", color: "#EF4444" };
+export const aziziLive              = {};
+export const aziziProjects          = [];
+export const aziziCommunities       = [];
+export const aziziFinancials        = {};
+export const aziziFinancialHistory  = [];
+export const aziziYields            = [];
+export const aziziRisks             = [];
+export const aziziSegments          = [];
+export const aziziHealthScore       = null;
+export const aziziBadges            = [];
+
+// Danube stubs
+export const danubeIdentity         = { id: "danube", name: "Danube Properties", color: "#F97316" };
+export const danubeLive             = {};
+export const danubeProjects         = [];
+export const danubeCommunities      = [];
+export const danubeFinancials       = {};
+export const danubeFinancialHistory = [];
+export const danubeYields           = [];
+export const danubeRisks            = [];
+export const danubeSegments         = [];
+export const danubeHealthScore      = null;
+export const danubeBadges           = [];
+
+// Ellington stubs
+export const ellingtonIdentity          = { id: "ellington", name: "Ellington Properties", color: "#A78BFA" };
+export const ellingtonLive              = {};
+export const ellingtonProjects          = [];
+export const ellingtonCommunities       = [];
+export const ellingtonFinancials        = {};
+export const ellingtonFinancialHistory  = [];
+export const ellingtonYields            = [];
+export const ellingtonRisks             = [];
+export const ellingtonSegments          = [];
+export const ellingtonHealthScore       = null;
+export const ellingtonBadges            = [];

@@ -478,7 +478,7 @@ const HelpTip = ({ text }) => {
       {show && (
         <span style={{ position: "absolute", bottom: "calc(100% + 6px)", left: "50%", transform: "translateX(-50%)", background: "rgba(4,9,15,0.97)", border: "1px solid rgba(212,168,67,0.25)", borderRadius: 8, padding: "8px 12px", fontSize: 11, color: T.textSecondary, whiteSpace: "pre-wrap", minWidth: 200, maxWidth: 280, zIndex: 9999, lineHeight: 1.6, boxShadow: "0 8px 24px rgba(0,0,0,0.4)", pointerEvents: "none" }}>
           {text}
-          <span style={{ position: "absolute", bottom: -5, left: "50%", transform: "translateX(-50%)", width: 8, height: 8, background: "rgba(4,9,15,0.97)", border: "1px solid rgba(212,168,67,0.25)", borderTop: "none", borderLeft: "none", transform: "translateX(-50%) rotate(45deg)" }} />
+          <span style={{ position: "absolute", bottom: -5, left: "50%", width: 8, height: 8, background: "rgba(4,9,15,0.97)", border: "1px solid rgba(212,168,67,0.25)", borderTop: "none", borderLeft: "none", transform: "translateX(-50%) rotate(45deg)" }} />
         </span>
       )}
     </span>
