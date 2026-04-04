@@ -2684,6 +2684,28 @@ export default function EmaarDashboardV2() {
   const [projectsLoading, setProjectsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
+  /* ─── LAUNCH CALENDAR STATE ─── */
+  const [lcSearch, setLcSearch] = useState("");
+  const [lcDev, setLcDev] = useState("All");
+  const [lcStatus, setLcStatus] = useState("All");
+  const [lcType, setLcType] = useState("All");
+  const [lcView, setLcView] = useState("cards");
+
+  /* ─── NEIGHBOURHOODS STATE ─── */
+  const [nbhSearch, setNbhSearch] = useState("");
+  const [nbhTypeFilter, setNbhTypeFilter] = useState("All");
+  const [nbhYieldFilter, setNbhYieldFilter] = useState("All");
+  const [nbhRiskFilter, setNbhRiskFilter] = useState("All");
+  const [nbhSort, setNbhSort] = useState("yield");
+  const [nbhView, setNbhView] = useState("grid");
+  const [nbhCompare, setNbhCompare] = useState([]);
+
+  /* ─── CURRENCY STATE ─── */
+  const [selectedCcy, setSelectedCcy] = useState("USD");
+  const [aedAmount, setAedAmount] = useState(100000);
+  const [searchCcy, setSearchCcy] = useState("");
+
+
   /* ─── PROJECTS TAB FILTER STATE ─── */
   const [projMode, setProjMode] = useState("Residential");
   const [projView, setProjView] = useState("cards");
