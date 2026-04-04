@@ -4817,7 +4817,7 @@ export default function EmaarDashboardV2() {
                 </div>
 
                 {/* Compare panel */}
-                {nbhCompare.length > 0 && (
+                {nbhCompare.length > 0 ? (
                   <div style={{ background: "rgba(212,168,67,0.06)", border: `1px solid rgba(212,168,67,0.2)`, borderRadius: 10, padding: "10px 16px", marginBottom: 16, display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
                     <span style={{ fontSize: 11, fontWeight: 700, color: T.gold }}>Comparing:</span>
                     {nbhCompare.map(c => (
@@ -4827,7 +4827,7 @@ export default function EmaarDashboardV2() {
                     ))}
                     {nbhCompare.length < 2 && <span style={{ fontSize: 10, color: T.textMuted }}>Select one more community to compare</span>}
                   </div>
-                )}
+                ) : null}
 
                 {/* No data state */}
                 {rawNbh.length === 0 && (
