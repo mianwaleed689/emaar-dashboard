@@ -3493,11 +3493,11 @@ export default function EmaarDashboardV2() {
                 <OvSection title="Market Pulse" sub="Dubai real estate — key indicators" />
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: 12, marginBottom: 8 }}>
                   <OvKPI delay={1} label="Total Market Value" icon={SvgIcons.TrendingUp({width:16,height:16})}
-                    value={liveMarketData?.find?.(d=>d.metric==="Total Market Value")?.value || "AED 919B"}
+                    value={liveMarketData?.find?.(d=>d.metric==="Total Market Value")?.value || "—"}
                     sub={liveMarketData?.find?.(d=>d.metric==="Total Market Value")?.change || "+20% YoY · All-time record"}
                     onClick={() => handleTabChange("Market")} />
                   <OvKPI delay={2} label="DLD Transactions" icon={SvgIcons.Database({width:16,height:16})}
-                    value={liveMarketData?.find?.(d=>d.metric==="Total Transactions")?.value || "226,000+"}
+                    value={liveMarketData?.find?.(d=>d.metric==="Total Transactions")?.value || "—"}
                     sub={liveMarketData?.find?.(d=>d.metric==="Total Transactions")?.change || "+36% YoY · 2025 record"}
                     onClick={() => handleTabChange("DLD Volumes")} />
                   <OvKPI delay={3} label="EIBOR 3M — Live" icon={SvgIcons.Landmark({width:16,height:16})}
@@ -3509,15 +3509,15 @@ export default function EmaarDashboardV2() {
                     sub="RERA registered · DLD approved"
                     onClick={() => handleTabChange("Developer Health")} />
                   <OvKPI delay={5} label="Avg Gross Yield" icon={SvgIcons.BarChart3({width:16,height:16})}
-                    value={liveYields?.length > 0 ? (liveYields.reduce((a,b) => a + (parseFloat(b.gross)||0), 0) / liveYields.length).toFixed(1) + "%" : "6.9%"}
+                    value={liveYields?.length > 0 ? (liveYields.reduce((a,b) => a + (parseFloat(b.gross)||0), 0) / liveYields.length).toFixed(1) + "%" : "—"}
                     sub="Across all communities · Bayut data"
                     color={T.green} onClick={() => handleTabChange("Yields")} />
                   <OvKPI delay={6} label="Off-Plan Share" icon={SvgIcons.BarChart2({width:16,height:16})}
-                    value={liveMarketData?.find?.(d=>d.metric==="Off-Plan Share")?.value || "60%+"}
+                    value={liveMarketData?.find?.(d=>d.metric==="Off-Plan Share")?.value || "—"}
                     sub="Of total DLD transactions"
                     onClick={() => handleTabChange("Projects")} />
                   <OvKPI delay={7} label="Units Launched" icon={SvgIcons.Activity({width:16,height:16})}
-                    value={liveMarketData?.find?.(d=>d.metric==="Units Launched")?.value || "131,504"}
+                    value={liveMarketData?.find?.(d=>d.metric==="Units Launched")?.value || "—"}
                     sub="New units launched"
                     onClick={() => handleTabChange("Launch Calendar")} />
                 </div>
@@ -3875,12 +3875,12 @@ export default function EmaarDashboardV2() {
                   <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 16 }}>Structural metrics shaping Dubai's real estate future</div>
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: 10 }}>
                     {[
-                      { k: "Population Target", v: getStat("Population Target")?.value || "5.8M by 2040" },
-                      { k: "Price Cycle Duration", v: getStat("Price Cycle")?.value || "56+ months" },
-                      { k: "Active Developers", v: getStat("Active Developers")?.value || (allDevelopers?.length > 0 ? allDevelopers.length + " live" : "228 registered") },
-                      { k: "2026 Pipeline", v: getStat("2026 Pipeline")?.value || "~120K units" },
+                      { k: "Population Target", v: getStat("Population Target")?.value || "—" },
+                      { k: "Price Cycle Duration", v: getStat("Price Cycle")?.value || "—" },
+                      { k: "Active Developers", v: getStat("Active Developers")?.value || (allDevelopers?.length > 0 ? allDevelopers.length + " registered" : "—") },
+                      { k: "Units Pipeline", v: getStat("2026 Pipeline")?.value || "—" },
                       { k: "REIDIN Price Growth", v: getStat("REIDIN Growth")?.value || "—" },
-                      { k: "Nationalities Investing", v: getStat("Nationalities")?.value || "193+" },
+                      { k: "Nationalities Investing", v: getStat("Nationalities")?.value || "—" },
                     ].map(({ k, v }, i) => (
                       <div key={i} style={{ padding: "14px 16px", background: T.surfaceAlt, borderRadius: 12, border: `1px solid ${T.border}` }}>
                         <div style={{ fontSize: 9.5, fontWeight: 700, color: T.textMuted, letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 6 }}>{k}</div>
