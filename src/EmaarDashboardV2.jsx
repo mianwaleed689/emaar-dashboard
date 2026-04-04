@@ -2709,6 +2709,14 @@ export default function EmaarDashboardV2() {
   const [projectsLoading, setProjectsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
+  /* ─── MORTGAGE LEAD CAPTURE STATE ─── */
+  const [mortLeadName, setMortLeadName] = useState("");
+  const [mortLeadPhone, setMortLeadPhone] = useState("");
+  const [mortLeadEmail, setMortLeadEmail] = useState("");
+  const [mortLeadSubmitted, setMortLeadSubmitted] = useState(false);
+  const [mortLeadSubmitting, setMortLeadSubmitting] = useState(false);
+
+
   /* ─── BANKING INTELLIGENCE TAB STATE ─── */
   const [bankView, setBankView] = useState("compare");
   const [bankType, setBankType] = useState("resident");
@@ -13651,10 +13659,162 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   </div>
                 )}
 
+                {/* ── MORTGAGE LEAD CAPTURE FORM ── */}
+                <div style={{ padding:"20px 22px", background:"linear-gradient(135deg,rgba(212,168,67,0.08),rgba(212,168,67,0.02))", border:"1px solid rgba(212,168,67,0.25)", borderRadius:14, marginBottom:16 }}>
+                  <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", flexWrap:"wrap", gap:12, marginBottom:16 }}>
+                    <div>
+                      <div style={{ fontFamily:"'Fraunces',serif", fontSize:16, fontWeight:800, color:T.white, marginBottom:4 }}>Get a Free Personalised Mortgage Quote</div>
+                      <div style={{ fontSize:12, color:T.textSecondary, lineHeight:1.7 }}>
+                        Our RERA-licensed broker partners compare all 8 banks for you — free of charge.<br/>
+                        They call you within 2 hours and find the best rate for your exact profile.
+                      </div>
+                    </div>
+                    <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
+                      {["Mortgage Finder UAE","Holo Dubai","Free comparison"].map((p,i)=>(
+                        <span key={i} style={{ fontSize:10, padding:"3px 10px", borderRadius:8, background:"rgba(212,168,67,0.12)", color:T.gold, fontWeight:600, border:"1px solid rgba(212,168,67,0.2)" }}>{p}</span>
+                      ))}
+                    </div>
+                  </div>
+
+                  {mortLeadSubmitted ? (
+                    <div style={{ textAlign:"center", padding:"20px 0" }}>
+                      <div style={{ fontSize:28, marginBottom:8 }}>✅</div>
+                      <div style={{ fontFamily:"'Fraunces',serif", fontSize:16, fontWeight:700, color:T.green, marginBottom:6 }}>Request Received!</div>
+                      <div style={{ fontSize:12, color:T.textSecondary, lineHeight:1.7 }}>
+                        Our mortgage specialist will call you within 2 hours.<br/>
+                        They will compare all 8 banks and find your best rate — completely free.
+                      </div>
+                      <button type="button" onClick={()=>{ setMortLeadSubmitted(false); setMortLeadName(""); setMortLeadPhone(""); setMortLeadEmail(""); }}
+                        style={{ marginTop:14, padding:"6px 18px", background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:8, color:T.textMuted, fontSize:11, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>
+                        Submit another
+                      </button>
+                    </div>
+                  ) : (
+                    <div>
+                      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr auto", gap:10, alignItems:"flex-end" }}>
+                        {/* Name */}
+                        <div>
+                          <div style={{ fontSize:11, color:T.textMuted, marginBottom:4 }}>Full Name</div>
+                          <input
+                            type="text"
+                            placeholder="Your name"
+                            value={mortLeadName}
+                            onChange={e=>setMortLeadName(e.target.value)}
+                            style={{ width:"100%", padding:"9px 12px", background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:8, color:T.white, fontFamily:"'Outfit',sans-serif", fontSize:12, outline:"none" }}
+                          />
+                        </div>
+                        {/* Phone */}
+                        <div>
+                          <div style={{ fontSize:11, color:T.textMuted, marginBottom:4 }}>WhatsApp / Phone</div>
+                          <input
+                            type="tel"
+                            placeholder="+971 50 XXX XXXX"
+                            value={mortLeadPhone}
+                            onChange={e=>setMortLeadPhone(e.target.value)}
+                            style={{ width:"100%", padding:"9px 12px", background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:8, color:T.white, fontFamily:"'Outfit',sans-serif", fontSize:12, outline:"none" }}
+                          />
+                        </div>
+                        {/* Email */}
+                        <div>
+                          <div style={{ fontSize:11, color:T.textMuted, marginBottom:4 }}>Email</div>
+                          <input
+                            type="email"
+                            placeholder="your@email.com"
+                            value={mortLeadEmail}
+                            onChange={e=>setMortLeadEmail(e.target.value)}
+                            style={{ width:"100%", padding:"9px 12px", background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:8, color:T.white, fontFamily:"'Outfit',sans-serif", fontSize:12, outline:"none" }}
+                          />
+                        </div>
+                        {/* Submit */}
+                        <button
+                          type="button"
+                          disabled={mortLeadSubmitting || !mortLeadName || !mortLeadPhone}
+                          onClick={async () => {
+                            if (!mortLeadName || !mortLeadPhone) return;
+                            setMortLeadSubmitting(true);
+                            try {
+                              await addDoc(collection(db, "leads"), {
+                                type: "mortgage",
+                                name: mortLeadName,
+                                phone: mortLeadPhone,
+                                email: mortLeadEmail,
+                                propertyValue: bankPropValue,
+                                salary: bankSalary,
+                                loanAmount: bankPropValue * (Math.min(bankLTV, 80) / 100),
+                                borrowerType: bankType,
+                                purpose: bankPurpose,
+                                preferredBank: bankSelected,
+                                eibor3M: 3.593,
+                                source: "Banking Tab — DXB Analytics",
+                                userId: auth.currentUser?.uid || "guest",
+                                createdAt: new Date().toISOString(),
+                                status: "new",
+                              });
+                              setMortLeadSubmitted(true);
+                            } catch(e) {
+                              console.error(e);
+                            }
+                            setMortLeadSubmitting(false);
+                          }}
+                          style={{ padding:"9px 22px", background:(!mortLeadName||!mortLeadPhone)?T.surfaceAlt:`linear-gradient(135deg,${T.gold},#B8922A)`, border:"none", borderRadius:8, color:(!mortLeadName||!mortLeadPhone)?T.textMuted:"#000", fontSize:12, fontWeight:700, cursor:(!mortLeadName||!mortLeadPhone)?"not-allowed":"pointer", fontFamily:"'Outfit',sans-serif", whiteSpace:"nowrap" }}>
+                          {mortLeadSubmitting ? "Sending..." : "Get Free Quote →"}
+                        </button>
+                      </div>
+
+                      {/* What they get */}
+                      <div style={{ display:"flex", gap:16, marginTop:12, flexWrap:"wrap" }}>
+                        {[
+                          "Free comparison across all 8 banks",
+                          "Call within 2 hours",
+                          "No obligation, no hidden fees",
+                          "RERA-licensed advisors",
+                        ].map((b,i)=>(
+                          <div key={i} style={{ display:"flex", alignItems:"center", gap:5, fontSize:11, color:T.textSecondary }}>
+                            <span style={{ color:T.green }}>✓</span> {b}
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Profile summary */}
+                      <div style={{ marginTop:12, padding:"10px 14px", background:T.surfaceAlt, borderRadius:8, border:`1px solid ${T.border}`, fontSize:11, color:T.textMuted }}>
+                        Your profile: <strong style={{ color:T.white }}>{bankType === "national" ? "UAE National" : bankType === "resident" ? "Expat Resident" : "Non-Resident"}</strong>
+                        {" · Property: "}<strong style={{ color:T.white }}>AED {(bankPropValue/1e6).toFixed(2)}M</strong>
+                        {" · Salary: "}<strong style={{ color:T.white }}>AED {bankSalary.toLocaleString()}/mo</strong>
+                        {" · Purpose: "}<strong style={{ color:T.white }}>{bankPurpose === "firstHome" ? "First Home" : bankPurpose === "investment" ? "Investment" : "Off-Plan"}</strong>
+                        {" · Preferred: "}<strong style={{ color:T.gold }}>{bankSelected}</strong>
+                        <span style={{ color:T.textMuted }}> (will be included in your brief)</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* ── APPLY BUTTONS ── */}
+                <div style={{ marginBottom:16 }}>
+                  <div style={{ fontSize:12, fontWeight:700, color:T.white, marginBottom:10 }}>Apply directly at each bank</div>
+                  <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
+                    {[
+                      { name:"Emirates NBD", url:"https://www.emiratesnbd.com/en/loans/home-loans", color:"#D4A843" },
+                      { name:"ADCB",         url:"https://www.adcb.com/en/personal/loans/mortgages", color:"#10B981" },
+                      { name:"FAB",          url:"https://www.bankfab.com/en-ae/personal/mortgages", color:"#3B82F6" },
+                      { name:"Mashreq",      url:"https://www.mashreq.com/en/uae/personal/loans/home-loan", color:"#EC4899" },
+                      { name:"HSBC UAE",     url:"https://www.hsbc.ae/mortgages", color:"#EF4444" },
+                      { name:"DIB",          url:"https://www.dib.ae/personal/home-finance", color:"#8B5CF6" },
+                      { name:"RAKBank",      url:"https://rakbank.ae/wps/portal/retail-banking/loans/personal/mortgage-home-loan", color:"#F97316" },
+                      { name:"Std Chartered",url:"https://www.sc.com/ae/mortgages", color:"#0EA5E9" },
+                    ].map((b,i)=>(
+                      <a key={i} href={b.url} target="_blank" rel="noopener noreferrer"
+                        style={{ padding:"7px 14px", background:b.color+"18", border:`1px solid ${b.color}40`, borderRadius:8, color:b.color, fontSize:11, fontWeight:600, cursor:"pointer", fontFamily:"'Outfit',sans-serif", textDecoration:"none", display:"inline-block" }}>
+                        Apply at {b.name} →
+                      </a>
+                    ))}
+                  </div>
+                  <div style={{ fontSize:10, color:T.textMuted, marginTop:6 }}>Links go directly to each bank's official mortgage application page. DXB Analytics is not a lender — we help you compare and connect.</div>
+                </div>
+
                 {/* ── SOURCE FOOTER ── */}
                 <div style={{ paddingTop:12, borderTop:`1px solid ${T.border}`, display:"flex", gap:8, flexWrap:"wrap", alignItems:"center" }}>
                   <span style={{ fontSize:10, color:T.textMuted }}>Sources:</span>
-                  {["UAE Central Bank (centralbank.ae)","CBUAE Rulebook — Mortgage Regulations","Emirates NBD IR","ADCB","FAB (bankfab.com)","Mashreq","HSBC UAE","DIB","RAKBank","Standard Chartered","realestateclubdubai.com Apr 2026"].map((s,i)=>(
+                  {["UAE Central Bank (centralbank.ae) (centralbank.ae)","CBUAE Rulebook — Mortgage Regulations","Emirates NBD IR","ADCB","FAB (bankfab.com)","Mashreq","HSBC UAE","DIB","RAKBank","Standard Chartered","realestateclubdubai.com Apr 2026"].map((s,i)=>(
                     <span key={i} style={{ fontSize:10, color:T.textMuted, padding:"2px 8px", borderRadius:10, border:`1px solid ${T.border}`, background:T.surfaceAlt }}>{s}</span>
                   ))}
                 </div>
