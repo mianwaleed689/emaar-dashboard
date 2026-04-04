@@ -240,6 +240,7 @@ const SvgIcons = {
   ChevronRight: (p) => <svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={p.strokeWidth||2} strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>,
   X: (p) => <svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={p.strokeWidth||2} strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>,
   Menu: (p) => <svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={p.strokeWidth||2} strokeLinecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>,
+  DollarSign: ({ width=16, height=16, strokeWidth=2, style={} } = {}) => SvgIcons.CreditCard({ width, height, strokeWidth, style }),
 };
 
 /* ─── GLOBAL CONTEXT FILTER COMPONENT ─── */
@@ -629,7 +630,7 @@ const TAB_GROUPS = [
       { key: "Financials",       icon: SvgIcons.BarChart2 },
       { key: "Developer Health", icon: SvgIcons.Activity },
       { key: "Competitors",      icon: SvgIcons.Layers },
-      { key: "Banking",           icon: SvgIcons.DollarSign },
+      { key: "Banking",           icon: SvgIcons.CreditCard },
     ]
   },
   {
@@ -3994,7 +3995,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               <div key={group.id} style={{ marginBottom: 2 }}>
                 {!sidebarSearch && (
                   <button type="button" className="sidebar-group-btn" onClick={() => toggleGroup(group.id)}>
-                    {group.icon({ width: 12, height: 12, strokeWidth: 2, style: { flexShrink: 0 } })}
+                    {typeof group.icon === "function" ? group.icon({ width: 12, height: 12, strokeWidth: 2, style: { flexShrink: 0 } }) : null}
                     <span style={{ flex: 1 }}>{group.label}</span>
                     {badgeCount > 0 && (
                       <span style={{ background: T.red, color: "#fff", fontSize: 9, fontWeight: 700, padding: "1px 5px", borderRadius: 10, minWidth: 16, textAlign: "center" }}>{badgeCount}</span>
@@ -4016,7 +4017,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                           className={`sidebar-btn ${isActive ? "active" : ""}`}
                           onClick={() => { if (isLocked) { setShowUpgrade(true); return; } handleTabChange(t.key); if (window.innerWidth < 768) setSidebarOpen(false); }}
                           style={isLocked ? { opacity: 0.45 } : {}} title={t.key}>
-                          {t.icon({ width: 15, height: 15, strokeWidth: isActive ? 2 : 1.5, style: { flexShrink: 0, color: isActive ? T.gold : "inherit" } })}
+                          {typeof t.icon === "function" ? t.icon({ width: 15, height: 15, strokeWidth: isActive ? 2 : 1.5, style: { flexShrink: 0, color: isActive ? T.gold : "inherit" } }) : null}
                           <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{t.key}</span>
                           {isLocked && (
                             <span style={{ fontSize: 8.5, color: minTier === "enterprise" ? "#8B5CF6" : T.gold, fontWeight: 700, letterSpacing: 0.3, flexShrink: 0 }}>
@@ -14111,10 +14112,11 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               setMktAiLoading(true);
               setMktAiResult("");
               try {
-                const res = await fetch("https://api.anthropic.com/v1/messages", {
+                const res = await fetch("/api/proxy", {
                   method:"POST",
                   headers:{ "Content-Type":"application/json" },
                   body: JSON.stringify({
+                    service:"claude",
                     model:"claude-sonnet-4-20250514",
                     max_tokens:1000,
                     messages:[{
