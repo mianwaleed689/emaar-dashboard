@@ -7966,7 +7966,7 @@ export default function EmaarDashboardV2() {
                       </div>
 
                       {/* Drawer tabs */}
-                      <div style={{ display:"flex", gap:0, marginBottom:-1 }}>
+                      <div style={{ display:"flex", gap:0, marginBottom:0 }}>
                         {[["details","Details"],["notes","Notes"],["ai","AI Match"]].map(([t,label])=>(
                           <button key={t} type="button" onClick={()=>setLeadDrawerTab(t)}
                             style={{ padding:"8px 16px", fontSize:12, fontWeight:600, border:"none", background:"transparent", cursor:"pointer", fontFamily:"'Outfit',sans-serif", color:leadDrawerTab===t?T.gold:T.textMuted, borderBottom:`2px solid ${leadDrawerTab===t?T.gold:"transparent"}`, transition:"all 0.12s" }}>
@@ -8341,7 +8341,8 @@ export default function EmaarDashboardV2() {
               </div>
 
               {/* ── Stage Progress Bar ── */}
-              <div style={{ display:"grid", gridTemplateColumns:`repeat(${STAGES.length},1fr)`, marginBottom:20, borderRadius:10, overflow:"hidden", border:`1px solid ${T.border}` }}>
+              <div style={{ overflowX:"auto", marginBottom:20 }}>
+                <div style={{ display:"grid", gridTemplateColumns:`repeat(${STAGES.length},minmax(200px,1fr))`, borderRadius:10, overflow:"hidden", border:`1px solid ${T.border}`, minWidth:700 }}>
                 {STAGES.map((s,i) => {
                   const cnt = (byStage[s.key]||[]).length;
                   const val = (byStage[s.key]||[]).reduce((a,d)=>a+(parseFloat(d.price)||0),0);
@@ -8963,7 +8964,7 @@ export default function EmaarDashboardV2() {
               </div>
 
               {/* ── Main grid: Leaderboard + Funnel ── */}
-              <div style={{ display:"grid", gridTemplateColumns:"1fr 340px", gap:16, marginBottom:16, alignItems:"start" }}>
+              <div style={{ display:"grid", gridTemplateColumns:"minmax(0,1fr) min(340px,38%)", gap:16, marginBottom:16, alignItems:"start" }}>
 
                 {/* ── AI Hot Leads Panel (Session 13) ── */}
                 {(() => {
@@ -9015,7 +9016,8 @@ export default function EmaarDashboardV2() {
                   </div>
 
                   {/* Column headers */}
-                  <div style={{ display:"grid", gridTemplateColumns:"32px 1fr 70px 70px 80px 90px 70px", gap:8, padding:"8px 16px", fontSize:9, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.8, borderBottom:`1px solid ${T.border}` }}>
+                  <div style={{ overflowX:"auto", WebkitOverflowScrolling:"touch" }}>
+                  <div style={{ display:"grid", gridTemplateColumns:"32px minmax(100px,1fr) 70px 70px 80px 90px 70px", minWidth:520", gap:8, padding:"8px 16px", fontSize:9, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.8, borderBottom:`1px solid ${T.border}` }}>
                     <div>#</div><div>Agent</div><div>Leads</div><div>Deals</div><div>Closed</div><div>Pipeline</div><div>Conv %</div>
                   </div>
 
@@ -9029,7 +9031,7 @@ export default function EmaarDashboardV2() {
                   ) : agentStats.map((agent, i) => {
                     const rankColor = i===0?T.gold : i===1?"#94A3B8" : i===2?"#B45309" : T.textMuted;
                     return (
-                      <div key={agent.uid} style={{ display:"grid", gridTemplateColumns:"32px 1fr 70px 70px 80px 90px 70px", gap:8, padding:"12px 16px", alignItems:"center", borderBottom:`1px solid ${T.border}`, background:i%2===0?"transparent":"rgba(255,255,255,0.01)" }}>
+                      <div key={agent.uid} style={{ display:"grid", gridTemplateColumns:"32px minmax(100px,1fr) 70px 70px 80px 90px 70px", gap:8, padding:"12px 16px", alignItems:"center", borderBottom:`1px solid ${T.border}`, background:i%2===0?"transparent":"rgba(255,255,255,0.01)" }}>
                         {/* Rank */}
                         <div style={{ fontSize:12, fontWeight:700, color:rankColor, textAlign:"center" }}>
                           {i===0 ? <svg width="14" height="14" viewBox="0 0 24 24" fill={T.gold} stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> : i+1}
@@ -9109,13 +9111,13 @@ export default function EmaarDashboardV2() {
                   </div>
                   <div style={{ padding:"0 0 8px" }}>
                     {/* Headers */}
-                    <div style={{ display:"grid", gridTemplateColumns:"1fr 60px 60px 70px", gap:8, padding:"8px 16px", fontSize:9, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.8, borderBottom:`1px solid ${T.border}` }}>
+                    <div style={{ display:"grid", gridTemplateColumns:"minmax(100px,1fr) 60px 60px 70px", gap:8, padding:"8px 16px", fontSize:9, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.8, borderBottom:`1px solid ${T.border}` }}>
                       <div>Source</div><div style={{ textAlign:"center" }}>Leads</div><div style={{ textAlign:"center" }}>Closed</div><div style={{ textAlign:"right" }}>Conv %</div>
                     </div>
                     {sourceStats.length === 0 ? (
                       <div style={{ padding:"24px 16px", textAlign:"center", fontSize:12, color:T.textMuted }}>No source data yet</div>
                     ) : sourceStats.map(({src,leads,closed,convRate,color},i) => (
-                      <div key={src} style={{ display:"grid", gridTemplateColumns:"1fr 60px 60px 70px", gap:8, padding:"10px 16px", alignItems:"center", borderBottom:`1px solid ${T.border}`, background:i%2===0?"transparent":"rgba(255,255,255,0.01)" }}>
+                      <div key={src} style={{ display:"grid", gridTemplateColumns:"minmax(100px,1fr) 60px 60px 70px", gap:8, padding:"10px 16px", alignItems:"center", borderBottom:`1px solid ${T.border}`, background:i%2===0?"transparent":"rgba(255,255,255,0.01)" }}>
                         <div style={{ display:"flex", alignItems:"center", gap:8 }}>
                           <div style={{ width:8, height:8, borderRadius:"50%", background:color, flexShrink:0 }}/>
                           <span style={{ fontSize:11, fontWeight:600, color:T.textPrimary, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{src}</span>
@@ -9278,7 +9280,7 @@ export default function EmaarDashboardV2() {
               </div>
 
               {/* ── Top row: Profile + Stats ── */}
-              <div style={{ display:"grid", gridTemplateColumns:"1fr 320px", gap:16, marginBottom:16, alignItems:"start" }}>
+              <div style={{ display:"grid", gridTemplateColumns:"minmax(0,1fr) min(320px,36%)", gap:16, marginBottom:16, alignItems:"start" }}>
 
                 {/* Agency Profile Editor */}
                 <div style={{ background:T.card, border:`1px solid ${T.border}`, borderRadius:14, overflow:"hidden" }}>
@@ -9373,7 +9375,7 @@ export default function EmaarDashboardV2() {
                 </div>
 
                 {/* Column headers */}
-                <div style={{ display:"grid", gridTemplateColumns:"1fr 100px 120px 120px 120px 80px 40px", gap:8, padding:"8px 18px", fontSize:9, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.8, borderBottom:`1px solid ${T.border}` }}>
+                <div style={{ display:"grid", gridTemplateColumns:"minmax(120px,1fr) 90px 110px 110px 110px 75px 36px", minWidth:660", gap:8, padding:"8px 18px", fontSize:9, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.8, borderBottom:`1px solid ${T.border}` }}>
                   <div>Agent</div><div>Role</div><div>RERA Card</div><div>Expiry</div><div>Comm Split</div><div>Leads</div><div></div>
                 </div>
 
@@ -9390,7 +9392,7 @@ export default function EmaarDashboardV2() {
                   const isChanging   = agentRoleChanging[agent.uid] || false;
 
                   return (
-                    <div key={agent.uid} style={{ display:"grid", gridTemplateColumns:"1fr 100px 120px 120px 120px 80px 40px", gap:8, padding:"13px 18px", alignItems:"center", borderBottom:`1px solid ${T.border}`, background:i%2===0?"transparent":"rgba(255,255,255,0.01)" }}>
+                    <div key={agent.uid} style={{ display:"grid", gridTemplateColumns:"minmax(120px,1fr) 90px 110px 110px 110px 75px 36px", minWidth:660", gap:8, padding:"13px 18px", alignItems:"center", borderBottom:`1px solid ${T.border}`, background:i%2===0?"transparent":"rgba(255,255,255,0.01)" }}>
 
                       {/* Agent info */}
                       <div style={{ display:"flex", alignItems:"center", gap:10, minWidth:0 }}>
@@ -10156,7 +10158,7 @@ export default function EmaarDashboardV2() {
               </div>
 
               {/* ── Main grid: Units + EOI Pipeline ── */}
-              <div style={{ display:"grid", gridTemplateColumns:"1fr 380px", gap:16, marginBottom:16, alignItems:"start" }}>
+              <div style={{ display:"grid", gridTemplateColumns:"minmax(0,1fr) min(380px,38%)", gap:16, marginBottom:16, alignItems:"start" }}>
 
                 {/* ── Unit Inventory ── */}
                 <div style={{ background:T.card, border:`1px solid ${T.border}`, borderRadius:14, overflow:"hidden" }}>
@@ -10174,7 +10176,7 @@ export default function EmaarDashboardV2() {
                   </div>
 
                   {/* Column headers */}
-                  <div style={{ display:"grid", gridTemplateColumns:"80px 1fr 70px 70px 90px 110px 100px", gap:8, padding:"8px 16px", fontSize:9, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.8, borderBottom:`1px solid ${T.border}` }}>
+                  <div style={{ display:"grid", gridTemplateColumns:"70px minmax(80px,1fr) 65px 65px 80px 100px 90px", minWidth:570", gap:8, padding:"8px 16px", fontSize:9, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.8, borderBottom:`1px solid ${T.border}` }}>
                     <div>Unit</div><div>Type / View</div><div>Beds</div><div>Size</div><div>Floor</div><div>Price (AED)</div><div>Status</div>
                   </div>
 
@@ -10188,7 +10190,7 @@ export default function EmaarDashboardV2() {
                   ) : filteredUnits.map((unit, i) => {
                     const sc = UNIT_STATUS[unit.status||"Available"] || UNIT_STATUS.Available;
                     return (
-                      <div key={unit.id||i} style={{ display:"grid", gridTemplateColumns:"80px 1fr 70px 70px 90px 110px 100px", gap:8, padding:"11px 16px", alignItems:"center", borderBottom:`1px solid ${T.border}`, background:i%2===0?"transparent":"rgba(255,255,255,0.01)" }}>
+                      <div key={unit.id||i} style={{ display:"grid", gridTemplateColumns:"70px minmax(80px,1fr) 65px 65px 80px 100px 90px", minWidth:570", gap:8, padding:"11px 16px", alignItems:"center", borderBottom:`1px solid ${T.border}`, background:i%2===0?"transparent":"rgba(255,255,255,0.01)" }}>
                         <div style={{ fontSize:12, fontWeight:700, color:T.white }}>{unit.unitNo}</div>
                         <div>
                           <div style={{ fontSize:11, fontWeight:600, color:T.textPrimary }}>{unit.type}</div>
@@ -10522,7 +10524,7 @@ export default function EmaarDashboardV2() {
                   </div>
                   <div style={{ padding:"14px 18px" }}>
                     {/* Filters */}
-                    <div style={{ display:"grid", gridTemplateColumns:"1fr 120px 100px", gap:8, marginBottom:14 }}>
+                    <div style={{ display:"grid", gridTemplateColumns:"minmax(100px,1fr) 110px 90px", gap:8, marginBottom:14 }}>
                       <div>
                         <div style={{ fontSize:10, color:T.textMuted, marginBottom:4, fontWeight:600 }}>Community</div>
                         <select value={compCommunity} onChange={e=>setCompCommunity(e.target.value)}
@@ -10563,11 +10565,11 @@ export default function EmaarDashboardV2() {
                         </div>
 
                         {/* Comp transactions table */}
-                        <div style={{ fontSize:9, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.8, marginBottom:6, display:"grid", gridTemplateColumns:"1fr 60px 70px 80px 80px", gap:6 }}>
+                        <div style={{ fontSize:9, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.8, marginBottom:6, display:"grid", gridTemplateColumns:"minmax(80px,1fr) 60px 70px 80px 80px", gap:6 }}>
                           <div>Unit</div><div>Size</div><div>AED/sqft</div><div>Price</div><div>Date</div>
                         </div>
                         {comps.map((c,i)=>(
-                          <div key={i} style={{ display:"grid", gridTemplateColumns:"1fr 60px 70px 80px 80px", gap:6, padding:"7px 0", borderBottom:i<comps.length-1?`1px solid ${T.border}`:"none", alignItems:"center" }}>
+                          <div key={i} style={{ display:"grid", gridTemplateColumns:"minmax(80px,1fr) 60px 70px 80px 80px", gap:6, padding:"7px 0", borderBottom:i<comps.length-1?`1px solid ${T.border}`:"none", alignItems:"center" }}>
                             <div style={{ fontSize:11, color:T.textPrimary, fontWeight:600 }}>{c.unit}</div>
                             <div style={{ fontSize:10, color:T.textMuted }}>{c.size.toLocaleString()}</div>
                             <div style={{ fontSize:10, color:T.gold, fontWeight:600 }}>{c.ppsf.toLocaleString()}</div>
@@ -10630,12 +10632,12 @@ export default function EmaarDashboardV2() {
                     </div>
 
                     {/* Year-by-year table */}
-                    <div style={{ fontSize:9, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.8, display:"grid", gridTemplateColumns:"40px 1fr 1fr 1fr 1fr", gap:6, marginBottom:6 }}>
+                    <div style={{ fontSize:9, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.8, display:"grid", gridTemplateColumns:"minmax(35px,40px) 1fr 1fr 1fr 1fr", gap:6, marginBottom:6 }}>
                       <div>Yr</div><div>Net Rent</div><div>Prop Value</div><div>Equity</div><div>Cum Rent</div>
                     </div>
                     <div style={{ maxHeight:160, overflowY:"auto" }}>
                       {yearTable.map(r=>(
-                        <div key={r.yr} style={{ display:"grid", gridTemplateColumns:"40px 1fr 1fr 1fr 1fr", gap:6, padding:"5px 0", borderBottom:`1px solid ${T.border}`, fontSize:10 }}>
+                        <div key={r.yr} style={{ display:"grid", gridTemplateColumns:"minmax(35px,40px) 1fr 1fr 1fr 1fr", gap:6, padding:"5px 0", borderBottom:`1px solid ${T.border}`, fontSize:10 }}>
                           <div style={{ color:T.textMuted, fontWeight:600 }}>Y{r.yr}</div>
                           <div style={{ color:T.teal }}>{(r.netRent/1000).toFixed(0)}K</div>
                           <div style={{ color:T.gold }}>{(r.propVal/1e6).toFixed(2)}M</div>
@@ -10700,11 +10702,11 @@ export default function EmaarDashboardV2() {
                   <div style={{ marginLeft:"auto", fontSize:10, color:T.textMuted }}>Based on DLD pipeline + demand analysis</div>
                 </div>
                 <div style={{ padding:"0 0 8px" }}>
-                  <div style={{ display:"grid", gridTemplateColumns:"160px 80px 1fr", gap:12, padding:"8px 18px", fontSize:9, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.8, borderBottom:`1px solid ${T.border}` }}>
+                  <div style={{ display:"grid", gridTemplateColumns:"minmax(120px,160px) 80px 1fr", gap:12, padding:"8px 18px", fontSize:9, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.8, borderBottom:`1px solid ${T.border}` }}>
                     <div>Community</div><div>Risk Level</div><div>Analysis</div>
                   </div>
                   {RISK_ZONES.map(({community,risk,reason,color},i)=>(
-                    <div key={i} style={{ display:"grid", gridTemplateColumns:"160px 80px 1fr", gap:12, padding:"12px 18px", alignItems:"center", borderBottom:i<RISK_ZONES.length-1?`1px solid ${T.border}`:"none", background:i%2===0?"transparent":"rgba(255,255,255,0.01)" }}>
+                    <div key={i} style={{ display:"grid", gridTemplateColumns:"minmax(120px,160px) 80px 1fr", gap:12, padding:"12px 18px", alignItems:"center", borderBottom:i<RISK_ZONES.length-1?`1px solid ${T.border}`:"none", background:i%2===0?"transparent":"rgba(255,255,255,0.01)" }}>
                       <div style={{ fontSize:12, fontWeight:600, color:T.textPrimary }}>{community}</div>
                       <div>
                         <span style={{ fontSize:10, fontWeight:700, padding:"3px 9px", borderRadius:5, background:`${color}14`, color }}>
