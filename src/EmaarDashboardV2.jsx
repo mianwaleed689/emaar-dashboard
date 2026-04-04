@@ -10,6 +10,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area, ComposedChart, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ReferenceLine, Legend } from "recharts";
 import { auth, db } from "./firebase";
+import { LayoutDashboard, TrendingUp, BarChart3, Clock, Calendar, MapPin, Receipt, ArrowLeftRight, Activity, Database, Search, Briefcase, BarChart2, Landmark, Map, AlertTriangle, Globe, CreditCard, Award, RefreshCw, Star, Timer, Building2, Users, Shield, Users2, Building, LayoutGrid, Layers, ChevronDown, ChevronRight, LogOut, User, Bell, Eye, Settings, X, Menu } from "lucide-react";
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail, sendEmailVerification, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import { collection, getDocs, doc, getDoc, setDoc, updateDoc, deleteDoc, onSnapshot, addDoc, query, where, orderBy, limit } from "firebase/firestore";
 import { T } from "./data";
@@ -127,39 +128,79 @@ const Icons = {
   admin: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>,
 };
 
-const TABS = [
-  { key: "Overview", icon: Icons.overview },
-  { key: "Financials", icon: Icons.financials },
-  { key: "Projects", icon: Icons.projects },
-  { key: "Handover", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><polyline points="8 14 10 16 16 13"/></svg> },
-  { key: "Launch Calendar", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><circle cx="8" cy="15" r="1" fill="currentColor"/><circle cx="12" cy="15" r="1" fill="currentColor"/><circle cx="16" cy="15" r="1" fill="currentColor"/></svg> },
-  { key: "Neighbourhoods", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/><path d="M15 7l2 2"/><path d="M9 7L7 9"/></svg> },
-  { key: "Service Charges", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg> },
-  { key: "STR vs LTR", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/><polyline points="22 12 12 2 2 12"/></svg> },
-  { key: "Developer Health", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg> },
-  { key: "DLD Volumes", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg> },
-  { key: "DXB Estimate", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><path d="M11 8v6M8 11h6"/></svg> },
-  { key: "Portfolio", icon: Icons.portfolio },
-  { key: "Competitors", icon: Icons.competitors },
-  { key: "Yields", icon: Icons.yields },
-  { key: "Mortgage", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg> },
-  { key: "Map", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg> },
-  { key: "Risk", icon: Icons.risk },
-  { key: "Market", icon: Icons.market },
-  { key: "Currency", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v2m0 8v2M9.5 9.5C9.5 8.1 10.6 7 12 7s2.5 1.1 2.5 2.5c0 3-5 3-5 6 0 1.4 1.1 2.5 2.5 2.5s2.5-1.1 2.5-2.5"/></svg> },
-  { key: "Golden Visa", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg> },
-  { key: "Flip", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg> },
-  { key: "Investment Score", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> },
-  { key: "Price History", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg> },
-  { key: "My Leads", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> },
-  { key: "Pipeline", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="4" height="18" rx="1"/><rect x="10" y="3" width="4" height="12" rx="1"/><rect x="17" y="3" width="4" height="15" rx="1"/></svg> },
-  { key: "Compliance", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> },
-  { key: "Team", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> },
-  { key: "Agency", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg> },
-  { key: "Listings", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg> },
-  { key: "Dev Portal", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg> },
-  { key: "Intelligence", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg> },
+/* ─── TAB GROUPS ─ 5 sections, 32 tabs in sequence ─── */
+const TAB_GROUPS = [
+  {
+    id: "market",
+    label: "Market Intelligence",
+    icon: TrendingUp,
+    tabs: [
+      { key: "Overview",        icon: LayoutDashboard },
+      { key: "Market",          icon: Globe },
+      { key: "DLD Volumes",     icon: Database },
+      { key: "Price History",   icon: TrendingUp },
+      { key: "Neighbourhoods",  icon: MapPin },
+      { key: "Launch Calendar", icon: Calendar },
+      { key: "Currency",        icon: CreditCard },
+    ]
+  },
+  {
+    id: "property",
+    label: "Property Explorer",
+    icon: Building2,
+    tabs: [
+      { key: "Projects",        icon: Building2 },
+      { key: "Map",             icon: Map },
+      { key: "Handover",        icon: Clock },
+      { key: "Service Charges", icon: Receipt },
+    ]
+  },
+  {
+    id: "investment",
+    label: "Investment Tools",
+    icon: BarChart3,
+    tabs: [
+      { key: "Yields",           icon: BarChart3 },
+      { key: "STR vs LTR",       icon: ArrowLeftRight },
+      { key: "Mortgage",         icon: Landmark },
+      { key: "Investment Score", icon: Star },
+      { key: "Flip",             icon: RefreshCw },
+      { key: "DXB Estimate",     icon: Search },
+      { key: "Portfolio",        icon: Briefcase },
+      { key: "Golden Visa",      icon: Award },
+      { key: "Risk",             icon: AlertTriangle },
+    ]
+  },
+  {
+    id: "developer",
+    label: "Developer Intelligence",
+    icon: Activity,
+    tabs: [
+      { key: "Financials",       icon: BarChart2 },
+      { key: "Developer Health", icon: Activity },
+      { key: "Competitors",      icon: Layers },
+    ]
+  },
+  {
+    id: "crm",
+    label: "Agency CRM",
+    icon: Users,
+    tabs: [
+      { key: "My Leads",    icon: Users },
+      { key: "Pipeline",    icon: LayoutGrid },
+      { key: "Listings",    icon: Building },
+      { key: "Team",        icon: Users2 },
+      { key: "Agency",      icon: Building2 },
+      { key: "Compliance",  icon: Shield },
+      { key: "Dev Portal",  icon: Layers },
+      { key: "Intelligence",icon: Database },
+    ]
+  },
 ];
+
+/* ─── Flat TABS for backward compatibility ─── */
+const TABS = TAB_GROUPS.flatMap(g => g.tabs);
+
 
 /* ─── STYLES ─── */
 const css = `
@@ -229,40 +270,34 @@ const css = `
   * { scrollbar-width: thin; scrollbar-color: rgba(212,168,67,0.15) transparent; }
 
   .sidebar-btn {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    width: 100%;
-    padding: 11px 16px;
-    border: none;
-    border-radius: 10px;
-    cursor: pointer;
-    font-family: 'Outfit', sans-serif;
-    font-size: 13px;
-    font-weight: 500;
-    transition: all 0.2s ease;
-    color: ${T.textSecondary};
-    background: transparent;
-    text-align: left;
-    position: relative;
+    display: flex; align-items: center; gap: 10px;
+    width: 100%; padding: 9px 14px;
+    border: none; border-radius: 8px; cursor: pointer;
+    font-family: 'Outfit', sans-serif; font-size: 12.5px; font-weight: 400;
+    transition: all 0.15s ease; color: ${T.textSecondary};
+    background: transparent; text-align: left; position: relative; letter-spacing: 0.1px;
   }
-  .sidebar-btn:hover { background: rgba(212,168,67,0.06); color: ${T.white}; }
-  .sidebar-btn.active {
-    background: linear-gradient(135deg, rgba(212,168,67,0.12), rgba(212,168,67,0.04));
-    color: ${T.gold};
-    font-weight: 600;
-  }
+  .sidebar-btn:hover { background: rgba(212,168,67,0.05); color: ${T.white}; }
+  .sidebar-btn.active { background: rgba(212,168,67,0.1); color: ${T.gold}; font-weight: 500; }
   .sidebar-btn.active::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 3px;
-    height: 60%;
-    background: ${T.gold};
-    border-radius: 0 3px 3px 0;
+    content: ''; position: absolute; left: 0; top: 50%;
+    transform: translateY(-50%); width: 2.5px; height: 55%;
+    background: ${T.gold}; border-radius: 0 2px 2px 0;
   }
+  .sidebar-group-btn {
+    display: flex; align-items: center; gap: 10px; width: 100%; padding: 8px 14px;
+    border: none; border-radius: 8px; cursor: pointer; font-family: 'Outfit', sans-serif;
+    font-size: 10px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase;
+    color: ${T.textMuted}; background: transparent; text-align: left; transition: all 0.15s ease; margin-top: 6px;
+  }
+  .sidebar-group-btn:hover { color: ${T.textSecondary}; }
+  .sidebar-search {
+    width: 100%; padding: 7px 10px 7px 32px; background: rgba(255,255,255,0.03);
+    border: 1px solid ${T.border}; border-radius: 8px; color: ${T.white};
+    font-family: 'Outfit', sans-serif; font-size: 12px; outline: none; transition: border-color 0.2s;
+  }
+  .sidebar-search:focus { border-color: rgba(212,168,67,0.4); }
+  .sidebar-search::placeholder { color: ${T.textMuted}; }
 
   .login-input {
     width: 100%;
@@ -1793,6 +1828,9 @@ export default function EmaarDashboardV2() {
   const [projectPage, setProjectPage] = useState(1);
   const PROJECTS_PER_PAGE = 12;
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [groupCollapsed, setGroupCollapsed] = useState({});
+  const [sidebarSearch, setSidebarSearch] = useState("");
+  const toggleGroup = (id) => setGroupCollapsed(prev => ({ ...prev, [id]: !prev[id] }));
   const [time, setTime] = useState(new Date());
   const [authLoading, setAuthLoading] = useState(true);
   const [isSuspended, setIsSuspended] = useState(false);
@@ -2827,86 +2865,132 @@ export default function EmaarDashboardV2() {
         transition: "transform 0.3s ease",
       }}>
         {/* Logo */}
-        <div style={{ padding: "24px 20px 20px", borderBottom: `1px solid ${T.border}` }}>
+        <div style={{ padding: "20px 16px 14px", borderBottom: `1px solid ${T.border}`, flexShrink: 0 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <svg width="32" height="32" viewBox="0 0 40 40">
-              <rect x="2" y="2" width="36" height="36" rx="8" fill="none" stroke={T.gold} strokeWidth="2" />
-              <path d="M12 28V12h10l-6 8h8l-12 8z" fill={T.gold} />
+            <svg width="30" height="30" viewBox="0 0 40 40">
+              <rect x="2" y="2" width="36" height="36" rx="8" fill="none" stroke={T.gold} strokeWidth="2"/>
+              <path d="M12 28V12h10l-6 8h8l-12 8z" fill={T.gold}/>
             </svg>
             <div>
-              <div style={{ fontFamily: "'Fraunces', serif", fontSize: 16, fontWeight: 800, color: T.gold }}>DXB Analytics</div>
-              <div style={{ fontSize: 9, color: T.textMuted, letterSpacing: 1.5, textTransform: "uppercase" }}>Intelligence Platform</div>
+              <div style={{ fontFamily: "'Fraunces', serif", fontSize: 15, fontWeight: 800, color: T.gold, lineHeight: 1.2 }}>DXB Analytics</div>
+              <div style={{ fontSize: 8.5, color: T.textMuted, letterSpacing: 1.5, textTransform: "uppercase" }}>Intelligence Platform</div>
             </div>
+          </div>
+          <div style={{ marginTop: 10, fontSize: 11, color: T.textMuted, letterSpacing: 0.2 }}>
+            {allDevelopers?.find(d => d.id === selectedDeveloper)?.name || "Emaar Properties"}
           </div>
         </div>
 
+        {/* Search */}
+        <div style={{ padding: "10px 12px 4px", flexShrink: 0, position: "relative" }}>
+          <Search size={13} strokeWidth={1.5} style={{ position: "absolute", left: 22, top: "50%", transform: "translateY(-50%)", color: T.textMuted, pointerEvents: "none" }} />
+          <input className="sidebar-search" placeholder="Search tabs..." value={sidebarSearch} onChange={e => setSidebarSearch(e.target.value)} />
+        </div>
+
         {/* Navigation */}
-        <nav role="navigation" aria-label="Main navigation" style={{ flex: 1, padding: "16px 12px", display: "flex", flexDirection: "column", gap: 3, overflowY: "auto", overflowX: "hidden", minHeight: 0 }}>
-          <div style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, letterSpacing: 1.5, textTransform: "uppercase", padding: "0 16px 8px", flexShrink: 0 }}>{allDevelopers?.find(d=>d.id===selectedDeveloper)?.name || "Emaar Properties"}</div>
-          <div role="tablist" aria-label="Dashboard sections" style={{ display: "contents" }}>
-          {TABS.filter(t => {
-            const s = tabSettings[t.key];
-            if (s && s.visible === false) return false;
-            return true;
-          }).map(t => {
-            const s = tabSettings[t.key] || {};
-            const minTier = s.minTier || "free";
-            const tierOrder = { free: 0, pro: 1, enterprise: 2 };
-            const userTierOrder = tierOrder[userTier] ?? (userTier === "admin" ? 3 : userTier === "pro_trial" ? 1 : 0);
-            const isLocked = tierOrder[minTier] > userTierOrder && userTier !== "admin";
+        <nav role="navigation" aria-label="Main navigation" style={{ flex: 1, padding: "4px 8px 8px", overflowY: "auto", overflowX: "hidden", minHeight: 0 }}>
+          {TAB_GROUPS.map(group => {
+            const GroupIcon = group.icon;
+            const isCollapsed = groupCollapsed[group.id];
+            const filteredTabs = sidebarSearch
+              ? group.tabs.filter(t => t.key.toLowerCase().includes(sidebarSearch.toLowerCase()))
+              : group.tabs;
+            if (sidebarSearch && filteredTabs.length === 0) return null;
+            const badgeCount = group.id === "crm" && myLeads?.length > 0
+              ? myLeads.filter(l => !l.lastContact || (Date.now() - new Date(l.lastContact).getTime()) > 86400000 * 3).length
+              : 0;
             return (
-              <button type="button" role="tab" aria-selected={tab === t.key} key={t.key}
-                className={`sidebar-btn ${tab === t.key ? "active" : ""}`}
-                onClick={() => isLocked ? setShowUpgrade(true) : handleTabChange(t.key)}
-                style={isLocked ? { opacity: 0.55 } : {}}
-                title={isLocked ? `Requires ${minTier} plan` : t.key}
-              >
-                {t.icon}
-                {t.key}
-                {isLocked && <span style={{ marginLeft: "auto", fontSize: 9, color: minTier === "enterprise" ? "#8B5CF6" : "#D4A843", fontWeight: 700, letterSpacing: 0.5 }}>{minTier === "enterprise" ? "ENT" : "PRO"}</span>}
-              </button>
+              <div key={group.id} style={{ marginBottom: 2 }}>
+                {!sidebarSearch && (
+                  <button type="button" className="sidebar-group-btn" onClick={() => toggleGroup(group.id)}>
+                    <GroupIcon size={12} strokeWidth={2} style={{ flexShrink: 0 }} />
+                    <span style={{ flex: 1 }}>{group.label}</span>
+                    {badgeCount > 0 && (
+                      <span style={{ background: T.red, color: "#fff", fontSize: 9, fontWeight: 700, padding: "1px 5px", borderRadius: 10, minWidth: 16, textAlign: "center" }}>{badgeCount}</span>
+                    )}
+                    {isCollapsed ? <ChevronRight size={11} strokeWidth={2} /> : <ChevronDown size={11} strokeWidth={2} />}
+                  </button>
+                )}
+                {(!isCollapsed || !!sidebarSearch) && (
+                  <div style={{ paddingLeft: sidebarSearch ? 0 : 4 }}>
+                    {filteredTabs.map(t => {
+                      const TabIcon = t.icon;
+                      const s = tabSettings[t.key] || {};
+                      const minTier = s.minTier || "free";
+                      const tierOrder = { free: 0, pro: 1, enterprise: 2 };
+                      const userTierOrder = tierOrder[userTier] ?? (userTier === "admin" ? 3 : userTier === "pro_trial" ? 1 : 0);
+                      const isLocked = tierOrder[minTier] > userTierOrder && userTier !== "admin";
+                      const isActive = tab === t.key;
+                      return (
+                        <button type="button" key={t.key} role="tab" aria-selected={isActive}
+                          className={`sidebar-btn ${isActive ? "active" : ""}`}
+                          onClick={() => { if (isLocked) { setShowUpgrade(true); return; } handleTabChange(t.key); if (window.innerWidth < 768) setSidebarOpen(false); }}
+                          style={isLocked ? { opacity: 0.45 } : {}} title={t.key}>
+                          <TabIcon size={15} strokeWidth={isActive ? 2 : 1.5} style={{ flexShrink: 0, color: isActive ? T.gold : "inherit" }} />
+                          <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{t.key}</span>
+                          {isLocked && (
+                            <span style={{ fontSize: 8.5, color: minTier === "enterprise" ? "#8B5CF6" : T.gold, fontWeight: 700, letterSpacing: 0.3, flexShrink: 0 }}>
+                              {minTier === "enterprise" ? "ENT" : "PRO"}
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
             );
           })}
-          </div>
+
+          {/* Admin link */}
           {userTier === "admin" && (
-            <>
-              <div style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, letterSpacing: 1.5, textTransform: "uppercase", padding: "16px 16px 8px", marginTop: 8, borderTop: `1px solid ${T.border}` }}>Admin</div>
-              <button type="button" className="sidebar-btn" onClick={() => window.location.href = "/admin"} style={{ background: "linear-gradient(135deg, rgba(212,168,67,0.15), rgba(212,168,67,0.05))", border: "1px solid rgba(212,168,67,0.3)" }}>
-                {Icons.admin}
-                Admin Console ↗
+            <div style={{ marginTop: 8, paddingTop: 8, borderTop: `1px solid ${T.border}` }}>
+              <div style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, letterSpacing: 1.5, textTransform: "uppercase", padding: "4px 14px 6px" }}>Admin</div>
+              <button type="button" className="sidebar-btn"
+                onClick={() => window.location.href = "/admin"}
+                style={{ background: "rgba(212,168,67,0.08)", border: `1px solid rgba(212,168,67,0.2)` }}>
+                <Settings size={15} strokeWidth={1.5} style={{ color: T.gold, flexShrink: 0 }} />
+                <span>Admin Console</span>
+                <span style={{ marginLeft: "auto", fontSize: 9, color: T.textMuted }}>↗</span>
               </button>
-            </>
+            </div>
           )}
         </nav>
 
-        {/* Bottom */}
-        <div style={{ padding: "16px 12px", borderTop: `1px solid ${T.border}` }}>
-          {/* Trial Banner */}
+        {/* Bottom user row */}
+        <div style={{ padding: "10px 8px", borderTop: `1px solid ${T.border}`, flexShrink: 0 }}>
           {userTier === "pro_trial" && trialDaysLeft > 0 && (
-            <div style={{ marginBottom: 8, padding: "8px 12px", borderRadius: 8, background: "rgba(212,168,67,0.08)", border: `1px solid ${T.border}`, textAlign: "center" }}>
-              <div style={{ fontSize: 10, fontWeight: 700, color: T.gold, letterSpacing: 0.5 }}>⭐ PRO TRIAL</div>
-              <div style={{ fontSize: 11, color: T.textSecondary, marginTop: 2 }}>{trialDaysLeft} day{trialDaysLeft !== 1 ? "s" : ""} remaining</div>
+            <div style={{ marginBottom: 8, padding: "7px 12px", borderRadius: 8, background: "rgba(212,168,67,0.08)", border: `1px solid ${T.border}`, textAlign: "center" }}>
+              <div style={{ fontSize: 9.5, fontWeight: 700, color: T.gold, letterSpacing: 0.5 }}>PRO TRIAL</div>
+              <div style={{ fontSize: 10.5, color: T.textSecondary, marginTop: 1 }}>{trialDaysLeft} day{trialDaysLeft !== 1 ? "s" : ""} remaining</div>
             </div>
           )}
           {userTier === "free" && (
-            <div role="button" tabIndex={0} onKeyDown={e => { if (e.key === "Enter" || e.key === " ") setShowUpgrade(true); }} onClick={() => setShowUpgrade(true)} style={{ marginBottom: 8, padding: "8px 12px", borderRadius: 8, background: "rgba(59,130,246,0.08)", border: "1px solid rgba(59,130,246,0.15)", textAlign: "center", cursor: "pointer" }}>
-              <div style={{ fontSize: 10, fontWeight: 700, color: T.blue, letterSpacing: 0.5 }}>FREE PLAN</div>
-              <div style={{ fontSize: 11, color: T.textSecondary, marginTop: 2 }}>Upgrade to Pro →</div>
+            <div role="button" tabIndex={0}
+              onKeyDown={e => { if (e.key === "Enter" || e.key === " ") setShowUpgrade(true); }}
+              onClick={() => setShowUpgrade(true)}
+              style={{ marginBottom: 8, padding: "7px 12px", borderRadius: 8, background: "rgba(59,130,246,0.07)", border: "1px solid rgba(59,130,246,0.15)", textAlign: "center", cursor: "pointer" }}>
+              <div style={{ fontSize: 9.5, fontWeight: 700, color: "#60A5FA", letterSpacing: 0.5 }}>FREE PLAN</div>
+              <div style={{ fontSize: 10.5, color: T.textSecondary, marginTop: 1 }}>Upgrade to Pro →</div>
             </div>
           )}
-          <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 12px", borderRadius: 10, background: T.surfaceAlt }}>
-            <div style={{ width: 32, height: 32, borderRadius: "50%", background: `linear-gradient(135deg, ${T.gold}, #B8912F)`, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 13, color: T.bg }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "7px 10px", borderRadius: 10, background: T.surfaceAlt }}>
+            <div style={{ width: 30, height: 30, borderRadius: "50%", background: `linear-gradient(135deg, ${T.gold}, #B8912F)`, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 12, color: T.bg, flexShrink: 0 }}>
               {user.charAt(0).toUpperCase()}
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 12, fontWeight: 600, color: T.white, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{userName || user.split("@")[0]}</div>
-              <div style={{ fontSize: 10, color: userTier === "pro_trial" ? T.gold : userTier === "admin" || userTier === "pro" || userTier === "enterprise" ? T.green : T.textMuted }}>
-                {userTier === "admin" ? "Admin" : userTier === "pro_trial" ? "Pro Trial" : userTier === "pro" ? "Pro Plan" : userTier === "enterprise" ? "Enterprise" : "Free Plan"}
+              <div style={{ fontSize: 11.5, fontWeight: 600, color: T.white, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{userName || user.split("@")[0]}</div>
+              <div style={{ fontSize: 9.5, color: userTier === "pro_trial" ? T.gold : ["admin","pro","enterprise"].includes(userTier) ? T.green : T.textMuted }}>
+                {userTier === "admin" ? "Admin" : userTier === "pro_trial" ? "Pro Trial" : userTier === "pro" ? "Pro" : userTier === "enterprise" ? "Enterprise" : "Free"}
               </div>
             </div>
-            <button type="button" onClick={() => { setShowProfile(true); setProfileEdit({ name: userName || "" }); }} style={{ background: "none", border: `1px solid ${T.border}`, cursor: "pointer", color: T.gold, padding: "3px 8px", borderRadius: 6, fontSize: 10, fontWeight: 600, fontFamily: "'Outfit', sans-serif" }}>Profile</button>
-            <button type="button" onClick={() => { signOut(auth); }} style={{ background: "none", border: "none", cursor: "pointer", color: T.textMuted, padding: 4 }} title="Sign out">
-              {Icons.logout}
+            <button type="button" onClick={() => { setShowProfile(true); setProfileEdit({ name: userName || "" }); }}
+              style={{ background: "none", border: `1px solid ${T.border}`, cursor: "pointer", color: T.textMuted, padding: 5, borderRadius: 6, display: "flex" }} title="Profile">
+              <User size={13} strokeWidth={1.5} />
+            </button>
+            <button type="button" onClick={() => signOut(auth)}
+              style={{ background: "none", border: "none", cursor: "pointer", color: T.textMuted, padding: 5, display: "flex" }} title="Sign out">
+              <LogOut size={13} strokeWidth={1.5} />
             </button>
           </div>
         </div>
@@ -2937,7 +3021,7 @@ export default function EmaarDashboardV2() {
         <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
           {/* Mobile menu button */}
           <button type="button" onClick={() => setSidebarOpen(!sidebarOpen)} style={{ background: "none", border: "none", cursor: "pointer", color: T.textSecondary, display: "none", padding: 4 }} className="mobile-menu-btn">
-            {sidebarOpen ? Icons.close : Icons.menu}
+            {sidebarOpen ? <X size={20} strokeWidth={2} /> : <Menu size={20} strokeWidth={2} />}
           </button>
           <div>
             <h1 style={{ fontSize: 16, fontWeight: 700, color: T.white }}>{allDevelopers?.find(d=>d.id===selectedDeveloper)?.name || "Emaar Properties"} <span style={{ color: T.textMuted, fontWeight: 400, fontSize: 13 }}>PJSC</span></h1>
