@@ -7369,6 +7369,7 @@ export default function EmaarDashboardV2() {
         );
       })()}
 
+        </div>
       </main>
 
       {/* Upgrade Modal */}
