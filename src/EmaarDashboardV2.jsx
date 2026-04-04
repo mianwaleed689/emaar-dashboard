@@ -2737,7 +2737,7 @@ export default function EmaarDashboardV2() {
     // ── Live EMAAR stock price via Yahoo Finance (free, no key) ──
     const fetchEmaarStock = async () => {
       try {
-        const res = await fetch("/api/stock?symbol=EMAAR.DU&range=1d&interval=1d");
+        const res = await fetch("/api/proxy?service=stock&symbol=EMAAR.DU&range=1d&interval=1d");
         const data = await res.json();
         const price = data?.chart?.result?.[0]?.meta?.regularMarketPrice;
         const prev  = data?.chart?.result?.[0]?.meta?.chartPreviousClose;
@@ -2761,7 +2761,7 @@ export default function EmaarDashboardV2() {
         {
           // Generate fresh insights via Claude API
           setInsightsLoading(true);
-          const res = await fetch("/api/claude", {
+          const res = await fetch("/api/proxy?service=claude", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
