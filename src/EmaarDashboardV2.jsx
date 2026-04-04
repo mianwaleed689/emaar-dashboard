@@ -5470,7 +5470,7 @@ export default function EmaarDashboardV2() {
                         </div>
                         <div style={{ fontSize: 11, color: T.textMuted }}>{c.buyers}</div>
                       </div>
-                    ))}
+                    )) : null}
                   </div>
                 </div>
 
