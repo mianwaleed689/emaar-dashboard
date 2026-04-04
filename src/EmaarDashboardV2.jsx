@@ -10971,7 +10971,7 @@ export default function EmaarDashboardV2() {
                                          : heat > 20 ? { label:"📊 Moderate", color:T.gold,    advice:"Balanced market. Buyers have some negotiating room." }
                                          :             { label:"❄️ Slow",     color:"#3B82F6", advice:"Low activity. Buyers can negotiate significant discounts." };
                             return (
-                              <>
+                              <div>
                                 <div style={{ fontSize:18, fontWeight:900, color:signal.color, fontFamily:"'Fraunces',serif", marginBottom:8 }}>{signal.label}</div>
                                 <div style={{ fontSize:11, color:T.textSecondary, lineHeight:1.6, marginBottom:12 }}>{signal.advice}</div>
                                 <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
@@ -10987,7 +10987,7 @@ export default function EmaarDashboardV2() {
                                     </div>
                                   ))}
                                 </div>
-                              </>
+                              </div>
                             );
                           })()}
                         </div>
