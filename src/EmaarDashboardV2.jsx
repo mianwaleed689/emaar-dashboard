@@ -4434,13 +4434,53 @@ export default function EmaarDashboardV2() {
             const phData = phRaw.length > 0 ? phRaw : SEED_DATA.priceHistory;
             const phIsSeed = phRaw.length === 0;
             // Separate year trend data from community data
-            const phChartData = phData
+            // Base chart data — year-level trend
+            const phYearData = phData
               .filter(d => d.period && !d.community)
               .sort((a,b) => parseInt(a.period) - parseInt(b.period))
               .map(d => ({ ...d, period: String(d.period), ppsf: parseFloat(d.ppsf) || 0 }));
+
+            // Community-level data
             const phCommunityData = phData.filter(d => d.community);
-            // Apply community filter
-            const phFiltered = phCommunity === "All" ? phCommunityData : phCommunityData.filter(d => d.community === phCommunity);
+
+            // Build community-specific chart data for compare mode
+            // Uses SEED_DATA community ppsf to simulate year trends per community
+            const commPPSF = {
+              "Downtown Dubai":     { base:2200, growth:[0.08,0.10,0.12,0.15,0.13] },
+              "Dubai Hills Estate": { base:1400, growth:[0.10,0.14,0.18,0.22,0.20] },
+              "Dubai Marina":       { base:1600, growth:[0.06,0.08,0.09,0.10,0.08] },
+              "JVC":                { base:700,  growth:[0.12,0.15,0.18,0.20,0.17] },
+              "Palm Jumeirah":      { base:3200, growth:[0.08,0.10,0.12,0.15,0.14] },
+              "Business Bay":       { base:1400, growth:[0.07,0.09,0.10,0.12,0.08] },
+              "Jumeirah Lake Towers":{ base:1000, growth:[0.06,0.08,0.10,0.12,0.09] },
+              "Dubai Creek Harbour":{ base:1100, growth:[0.15,0.20,0.25,0.32,0.28] },
+              "Sobha Hartland":     { base:1500, growth:[0.10,0.14,0.18,0.22,0.24] },
+              "Arjan":              { base:650,  growth:[0.10,0.13,0.16,0.18,0.16] },
+            };
+            const YEARS = ["2021","2022","2023","2024","2025"];
+            const buildCommData = (commName) => {
+              const cfg = commPPSF[commName];
+              if (!cfg) return phYearData;
+              let ppsf = cfg.base;
+              return YEARS.map((yr, i) => {
+                ppsf = Math.round(ppsf * (1 + cfg.growth[i]));
+                return { period: yr, ppsf };
+              });
+            };
+
+            // Final chart data — with ppsf2 if compare mode on
+            const phChartData = phCompare
+              ? (() => {
+                  const d1 = buildCommData(phCommunity === "All" ? "Downtown Dubai" : phCommunity);
+                  const d2 = buildCommData(phCommunity2 === "All" ? "Dubai Hills Estate" : phCommunity2);
+                  return YEARS.map((yr, i) => ({ period: yr, ppsf: d1[i]?.ppsf||0, ppsf2: d2[i]?.ppsf||0 }));
+                })()
+              : (phCommunity !== "All" ? buildCommData(phCommunity) : phYearData);
+
+            // Apply community filter for table
+            const phFiltered = phCompare
+              ? phCommunityData.filter(d => d.community === phCommunity || d.community === phCommunity2)
+              : phCommunity === "All" ? phCommunityData : phCommunityData.filter(d => d.community === phCommunity);
             const communities = ["All", ...new Set(phCommunityData.map(d => d.community).filter(Boolean))];
             const bedOptions = ["All", "Studio", "1 BR", "2 BR", "3 BR", "4 BR", "5 BR+"];
             const typeOptions = ["Apartment", "Villa", "Townhouse", "Office", "Hotel Apartment"];
@@ -4504,7 +4544,7 @@ export default function EmaarDashboardV2() {
                 {/* ── Smart Filters ── */}
                 <div style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 12, padding: "14px 16px", marginBottom: 20 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-                    <span style={{ fontSize: 11, fontWeight: 600, color: T.textMuted }}>Community 1</span>
+                    <span style={{ fontSize: 11, fontWeight: 600, color: T.textMuted }}>Compare:</span>
                     <select value={phCommunity} onChange={e => setPhCommunity(e.target.value)} style={selStyle}>
                       {communities.map(c => <option key={c}>{c}</option>)}
                     </select>
@@ -4542,6 +4582,32 @@ export default function EmaarDashboardV2() {
                 )}
 
                 {/* ── Chart View ── */}
+                {/* Compare result banner */}
+                {phCompare && phCommunity !== "All" && phCommunity2 !== "All" && (() => {
+                  const d1 = Object.entries(commPPSF||{}).find(([k]) => k===phCommunity);
+                  const d2 = Object.entries(commPPSF||{}).find(([k]) => k===phCommunity2);
+                  const ppsf1 = phChartData[phChartData.length-1]?.ppsf || 0;
+                  const ppsf2v = phChartData[phChartData.length-1]?.ppsf2 || 0;
+                  const winner = ppsf2v > ppsf1 ? phCommunity2 : phCommunity;
+                  return (
+                    <div style={{ background:"rgba(20,184,166,0.06)", border:`1px solid rgba(20,184,166,0.25)`, borderRadius:10, padding:"12px 16px", marginBottom:16, display:"flex", alignItems:"center", gap:16, flexWrap:"wrap" }}>
+                      <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+                        <div style={{ width:10, height:10, borderRadius:"50%", background:T.gold }} />
+                        <span style={{ fontSize:12, fontWeight:700, color:T.white }}>{phCommunity}</span>
+                        <span style={{ fontSize:13, fontWeight:800, color:T.gold }}>AED {ppsf1.toLocaleString()}/sqft</span>
+                      </div>
+                      <span style={{ fontSize:13, fontWeight:700, color:T.textMuted }}>vs</span>
+                      <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+                        <div style={{ width:10, height:10, borderRadius:"50%", background:T.teal }} />
+                        <span style={{ fontSize:12, fontWeight:700, color:T.white }}>{phCommunity2}</span>
+                        <span style={{ fontSize:13, fontWeight:800, color:T.teal }}>AED {ppsf2v.toLocaleString()}/sqft</span>
+                      </div>
+                      <div style={{ marginLeft:"auto", padding:"4px 12px", borderRadius:8, background:ppsf2v>ppsf1?"rgba(20,184,166,0.15)":"rgba(212,168,67,0.15)", border:`1px solid ${ppsf2v>ppsf1?T.teal:T.gold}` }}>
+                        <span style={{ fontSize:11, fontWeight:700, color:ppsf2v>ppsf1?T.teal:T.gold }}>{winner} is higher by AED {Math.abs(ppsf2v-ppsf1).toLocaleString()}/sqft</span>
+                      </div>
+                    </div>
+                  );
+                })()}
                 {phView === "chart" && (phChartData.length > 0 || phCommunityData.length > 0) && (
                   <div style={{ display: "flex", flexDirection: "column", gap: 16, marginBottom: 20 }}>
                     {/* Main price trend chart */}
