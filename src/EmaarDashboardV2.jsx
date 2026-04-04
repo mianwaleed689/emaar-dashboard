@@ -266,6 +266,17 @@ const GlobalContextFilter = ({
     return out;
   };
 
+  // ─── csvEsc: CSV-safe quoting — defined here, NOT inside JSX ───
+  const csvEsc = (v) => {
+    const s = v == null ? "" : String(v);
+    let out = "";
+    for (let i = 0; i < s.length; i++) {
+      if (s[i] === '"') out += '"';
+      out += s[i];
+    }
+    return '"' + out + '"';
+  };
+
   const [open, setOpen] = React.useState(false);
 
   // Get beds options from selected property type
@@ -15778,12 +15789,11 @@ Format clearly with these 4 sections labeled. Be specific to Dubai market. Inclu
                   <span style={{ fontSize:11, color:T.textMuted }}>{filtered.length} of {displayLeads.length} leads</span>
                   {/* Export CSV button */}
                   <button type="button" onClick={()=>{
-                    const esc = (v) => { const s = String(v==null?"":v); let out=""; for(let i=0;i<s.length;i++){ if(s[i]==='"') out+='"'; out+=s[i]; } return '"'+out+'"'; };
                     const sep = ",";
                     const nl = String.fromCharCode(10);
                     const hdr = ["Name","Phone","Email","Budget","Status","Source","Nationality","Language","Timeline","Community","Type","Purpose","Tags","AI Score","Added"];
-                    const dataRows = filtered.map(l=>{ const ai=scoreLeadAI(l); return [l.name,l.phone,l.email,l.budget,l.status,l.source,l.nationality,l.language,l.timeline,l.community,l.type,l.purpose,(l.tags||[]).join("|"),ai.score,l.createdAt?new Date(l.createdAt).toLocaleDateString("en-GB"):""].map(esc).join(sep); });
-                    const csv = [hdr.map(esc).join(sep), ...dataRows].join(nl);
+                    const dataRows = filtered.map(l=>{ const ai=scoreLeadAI(l); return [l.name,l.phone,l.email,l.budget,l.status,l.source,l.nationality,l.language,l.timeline,l.community,l.type,l.purpose,(l.tags||[]).join("|"),ai.score,l.createdAt?new Date(l.createdAt).toLocaleDateString("en-GB"):""].map(csvEsc).join(sep); });
+                    const csv = [hdr.map(csvEsc).join(sep), ...dataRows].join(nl);
                     const blob = new Blob([csv],{type:"text/csv;charset=utf-8;"});
                     const url = URL.createObjectURL(blob);
                     const a = document.createElement("a");
