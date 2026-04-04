@@ -16496,15 +16496,7 @@ Write a short, professional WhatsApp message (3-4 lines) introducing Dubai prope
                         { label:"\uD83D\uDCC5 Viewing Confirmation", type:"WhatsApp", text:"Dear [Name], your property viewing has been confirmed for [Date] at [Time]. The property is located at [Address]. Please let me know if you need directions. Looking forward to meeting you! \uD83D\uDD11" },
                         { label:"\uD83D\uDCB0 Payment Plan Follow-up", type:"WhatsApp", text:"Hi [Name]! Following up on your interest in [Property]. Great news \u2014 they offer flexible payment plans: 20% down, rest over 3 years post-handover. Would you like me to prepare a full breakdown? \uD83D\uDCCA" },
                         { label:"\uD83C\uDFC5 Golden Visa Info", type:"WhatsApp", text:"Did you know? Investing AED 2M+ in Dubai real estate qualifies you for the UAE Golden Visa \u2014 10-year renewable residency for you and your family. Would you like more details? \uD83C\uDDE6\uD83C\uDDEA" },
-                        { label:"\uD83D\uDCCA Market Update", type:"Email", text:"Subject: Dubai Property Market Update
-
-Dear [Name],
-
-I wanted to share the latest market insights from the Dubai Land Department. Transactions in your preferred community have [increased/decreased] by X% this quarter.
-
-Best regards,
-[Your Name]
-The Address Holding" },
+                        { label:"\uD83D\uDCCA Market Update", type:"Email", text:"Subject: Dubai Property Market Update\n\nDear [Name],\n\nI wanted to share the latest market insights from the Dubai Land Department. Transactions in your preferred community have [increased/decreased] by X% this quarter.\n\nBest regards,\n[Your Name]\nThe Address Holding" },
                         { label:"\uD83E\uDD1D Post-Viewing Thank You", type:"WhatsApp", text:"Thank you for visiting the property today, [Name]! I hope you found it as impressive as I do. Please feel free to ask any questions. If you'd like to proceed or view other options, I'm here to help. \uD83D\uDE0A" },
                         { label:"\u26A1 Off-Plan Launch Alert", type:"WhatsApp", text:"\uD83D\uDEA8 NEW LAUNCH ALERT! [Developer] has just launched [Project] in [Community]. Starting from AED [Price]. Payment plan: [X]% down + [Y]% on handover. Limited units available \u2014 shall I reserve one for you? \uD83D\uDD25" },
                         { label:"\uD83D\uDCDD Re-engagement (Cold Lead)", type:"WhatsApp", text:"Hi [Name], it's been a while since we spoke! The Dubai property market has some exciting new opportunities that match your profile. Are you still considering a purchase? Happy to share the latest options. \uD83C\uDFD9" },
