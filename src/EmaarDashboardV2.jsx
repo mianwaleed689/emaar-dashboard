@@ -14145,11 +14145,10 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               setMktAiLoading(true);
               setMktAiResult("");
               try {
-                const res = await fetch("/api/proxy", {
+                const res = await fetch("/api/proxy?service=claude", {
                   method:"POST",
                   headers:{ "Content-Type":"application/json" },
                   body: JSON.stringify({
-                    service:"claude",
                     model:"claude-sonnet-4-20250514",
                     max_tokens:1000,
                     messages:[{
@@ -15229,7 +15228,7 @@ Format clearly with these 4 sections labeled. Be specific to Dubai market. Inclu
           {tab === "My Leads" && (() => {
             const isAgent      = orgRole === "agent";
             const isManager    = orgRole === "manager";
-            const isSuperAdmin = orgRole === "superadmin" || orgRole === "admin" || isSuperAdminUser === true || userRole === "superadmin" || userRole === "admin";
+            const isSuperAdmin = userRole === "admin" || userRole === "superAdmin";
             const canSeeleads  = isAgent || isManager || isSuperAdmin;
             /* ── Merge myLeads with liveLeads — superadmin sees ALL ── */
             const allLeads = isSuperAdmin
