@@ -12,7 +12,7 @@ import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, R
 import { auth, db } from "./firebase";
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail, sendEmailVerification, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import { collection, getDocs, doc, getDoc, setDoc, updateDoc, deleteDoc, onSnapshot, addDoc, query, where, orderBy, limit } from "firebase/firestore";
-import { T } from "./theme";
+import { T } from "./data";
 import LandingPage from "./LandingPage";
 import RoiCalculator from "./RoiCalculator";
 
@@ -1616,7 +1616,7 @@ export default function EmaarDashboardV2() {
     unsubs.push(onSnapshot(collection(db, "communityIntel"), (snap) => {
       if (!snap.size) return;
       const map = {};
-      snap.forEach(d => { map[d.id] = { ...communityIntel[d.id], ...d.data() }; });
+      snap.forEach(d => { map[d.id] = { ...d.data() }; });
       setLiveCommunityIntel(map);
     }));
 
