@@ -4250,7 +4250,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               </button>
             </div>
           );
-        })() : null}
+        })()}
         {userTier === "free" && (
           <div style={{ margin: "12px 24px 0", padding: "10px 16px", borderRadius: 10, background: "rgba(59,130,246,0.06)", border: "1px solid rgba(59,130,246,0.15)", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -4534,7 +4534,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
 
               </div>
             );
-          })() : null}
+          })()}
 
           {/* ─── MARKET TAB ─── */}
           {tab === "Market" && (() => {
@@ -4764,7 +4764,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
 
               </div>
             );
-          })() : null}
+          })()}
 
           {/* ─── DLD VOLUMES TAB ─── */}
           {tab === "DLD Volumes" && (() => {
@@ -4976,7 +4976,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
 
               </div>
             );
-          })() : null}
+          })()}
 
           {/* ─── PRICE HISTORY TAB ─── */}
           {tab === "Price History" && (() => {
@@ -5161,7 +5161,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                       </div>
                     </div>
                   );
-                })() : null}
+                })()}
                 {phView === "chart" && (phChartData.length > 0 || phCommunityData.length > 0) && (
                   <div style={{ display: "flex", flexDirection: "column", gap: 16, marginBottom: 20 }}>
                     {/* Main price trend chart */}
@@ -5303,7 +5303,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
 
               </div>
             );
-          })() : null}
+          })()}
 
           {/* ─── NEIGHBOURHOODS TAB ─── */}
           {tab === "Neighbourhoods" && (() => {
@@ -5623,7 +5623,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
 
               </div>
             );
-          })() : null}
+          })()}
 
           {/* ─── LAUNCH CALENDAR TAB ─── */}
           {tab === "Launch Calendar" && (() => {
@@ -5942,7 +5942,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                           );
                         }
                         return cells;
-                      })() : null}
+                      })()}
                     </div>
                   </div>
                 )}
@@ -5970,7 +5970,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
 
               </div>
             );
-          })() : null}
+          })()}
 
           {/* ─── CURRENCY TAB ─── */}
           {tab === "Currency" && (() => {
@@ -6175,7 +6175,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
 
               </div>
             );
-          })() : null}
+          })()}
 
           {/* ─── PROJECTS TAB ─── */}
           {tab === "Projects" && (() => {
@@ -6494,7 +6494,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 </div>
               </div>
             );
-          })() : null}
+          })()}
 
 
           {/* ═══ COMPARE MODAL ═══ */}
@@ -7506,7 +7506,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
 
               </div>
             );
-          })() : null}
+          })()}
 
 
           {/* ═══ HANDOVER DETAIL OVERLAY ═══ */}
@@ -8189,7 +8189,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
 
               </div>
             );
-          })() : null}
+          })()}
 
           {/* ═══ HANDOVER DETAIL OVERLAY ═══ */}
           {hdvSelected && (
@@ -8633,7 +8633,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
 
               </div>
             );
-          })() : null}
+          })()}
 
 
           {/* ─── YIELDS TAB ─── */}
@@ -8953,7 +8953,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
 
               </div>
             );
-          })() : null}
+          })()}
 
 
           {/* ─── STR vs LTR TAB ─── */}
@@ -9250,7 +9250,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
 
               </div>
             );
-          })() : null}
+          })()}
 
 
           {/* ─── MORTGAGE TAB ─── */}
@@ -9614,7 +9614,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
 
               </div>
             );
-          })() : null}
+          })()}
 
 
           {/* ─── INVESTMENT SCORE TAB ─── */}
@@ -10004,7 +10004,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
 
               </div>
             );
-          })() : null}
+          })()}
 
 
           {/* ─── FLIP CALCULATOR TAB ─── */}
@@ -10375,7 +10375,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 </div>
               </div>
             );
-          })() : null}
+          })()}
 
 
           {/* ─── DXB ESTIMATE TAB ─── */}
@@ -10629,7 +10629,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 </div>
               </div>
             );
-          })() : null}
+          })()}
 
 
           {/* ─── PORTFOLIO TAB ─── */}
@@ -10879,7 +10879,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 </div>
               </div>
             );
-          })() : null}
+          })()}
 
 
           {/* ─── GOLDEN VISA TAB ─── */}
@@ -11334,7 +11334,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
 
               </div>
             );
-          })() : null}
+          })()}
 
 
           {/* ─── RISK TAB ─── */}
@@ -11612,7 +11612,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 </div>
               </div>
             );
-          })() : null}
+          })()}
 
 
           {/* ─── FINANCIALS TAB ─── */}
@@ -12516,7 +12516,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
 
               </div>
             );
-          })() : null}
+          })()}
 
 
           {/* ─── DEVELOPER HEALTH TAB ─── */}
@@ -12971,7 +12971,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
 
               </div>
             );
-          })() : null}
+          })()}
 
 
           {/* ─── BANKING INTELLIGENCE TAB ─── */}
@@ -13923,7 +13923,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
 
               </div>
             );
-          })() : null}
+          })()}
 
 
           {/* ─── MARKETING INTELLIGENCE TAB ─── */}
@@ -14629,7 +14629,7 @@ Format clearly with these 4 sections labeled. Be specific to Dubai market. Inclu
 
               </div>
             );
-          })() : null}
+          })()}
 
 
           {/* ─── COMPETITORS TAB ─── */}
@@ -15222,7 +15222,7 @@ Format clearly with these 4 sections labeled. Be specific to Dubai market. Inclu
 
               </div>
             );
-          })() : null}
+          })()}
 
           {/* ══════════════════════════════════════════════════════════
               INTELLIGENCE TABS — Awaiting Data Import
@@ -15701,7 +15701,7 @@ Format clearly with these 4 sections labeled. Be specific to Dubai market. Inclu
                     </div>
                   </div>
                 );
-              })() : null}
+              })()}
 
               {/* ── Auto Follow-up Alert ── */}
               {(() => {
@@ -15723,7 +15723,7 @@ Format clearly with these 4 sections labeled. Be specific to Dubai market. Inclu
                     </button>
                   </div>
                 );
-              })() : null}
+              })()}
 
               {/* ── Filters ── */}
               <div style={{ marginBottom:16 }}>
@@ -15991,7 +15991,7 @@ Format clearly with these 4 sections labeled. Be specific to Dubai market. Inclu
                               <span style={{ fontSize:13, fontWeight:900, color:ai.color, fontFamily:"'Fraunces',serif", lineHeight:1 }}>{ai.score}</span>
                               <span style={{ fontSize:8, fontWeight:700, color:ai.color, letterSpacing:0.5 }}>{ai.label}</span>
                             </div>
-                          ); })() : null}
+                          ); })()}
                         </div>
 
                         {/* Status */}
@@ -16339,7 +16339,7 @@ Write a short, professional WhatsApp message (3-4 lines) introducing Dubai prope
                         </div>
                       </div>
                     ));
-                  })() : null}
+                  })()}
                 </div>
               )}
 
@@ -16481,7 +16481,7 @@ Write a short, professional WhatsApp message (3-4 lines) introducing Dubai prope
                         )}
                       </div>
                     </>);
-                  })() : null}
+                  })()}
                 </div>
               )}
 
@@ -16844,7 +16844,7 @@ The Address Holding" },
               )}
 
             </>);
-          })() : null}
+          })()}
 
 
 
@@ -17289,7 +17289,7 @@ The Address Holding" },
                 </div>
               )}
             </>);
-          })() : null}
+          })()}
 
 
 
@@ -17509,7 +17509,7 @@ The Address Holding" },
                 </div>
               </div>
             </>);
-          })() : null}
+          })()}
 
 
 
@@ -17656,7 +17656,7 @@ The Address Holding" },
                       </div>
                     </div>
                   );
-                })() : null}
+                })()}
 
                 {/* ── Agent Leaderboard ── */}
                 <div style={{ background:T.card, border:`1px solid ${T.border}`, borderRadius:14, overflow:"hidden" }}>
@@ -17835,7 +17835,7 @@ The Address Holding" },
               </div>
               </div>
             </>);
-          })() : null}
+          })()}
 
 
 
@@ -18169,7 +18169,7 @@ The Address Holding" },
                 </div>
               )}
             </>);
-          })() : null}
+          })()}
 
 
 
@@ -18668,7 +18668,7 @@ The Address Holding" },
                 </div>
               )}
             </>);
-          })() : null}
+          })()}
 
 
 
@@ -19040,7 +19040,7 @@ The Address Holding" },
                 </div>
               )}
             </>);
-          })() : null}
+          })()}
 
 
 
@@ -19577,10 +19577,10 @@ The Address Holding" },
                     </div>
                   </div>
                 );
-              })() : null}
+              })()}
 
             </>);
-          })() : null}
+          })()}
 
 
             {selectedProject && (() => {
@@ -19817,7 +19817,7 @@ The Address Holding" },
                   </div>
                   </ProGate>
                 );
-              })() : null}
+              })()}
 
 
               {/* ROI Calculator */}
@@ -19831,7 +19831,7 @@ The Address Holding" },
                   <RoiCalculator project={selectedProject_} roi={roi} T={T} />
                   </ProGate>
                 );
-              })() : null}
+              })()}
 
               {/* Price History */}
               {(() => {
@@ -19851,7 +19851,7 @@ The Address Holding" },
                     </ResponsiveContainer>
                   </div>
                 );
-              })() : null}
+              })()}
 
               {/* Project Documents & Media */}
               {(selectedProject_.pdfBrochure || selectedProject_.pdfFloorPlan || selectedProject_.pdfPaymentPlan || selectedProject_.pdfFactSheet || selectedProject_.videoUrl || selectedProject_.externalLink || selectedProject_.imageUrl) && (
@@ -20054,7 +20054,7 @@ The Address Holding" },
           </div>
         </div>
         );
-      })() : null}
+      })()}
 
       {/* ─── COMPARE MODAL ─── */}
       {showCompare && compareList.length >= 2 && (
@@ -20159,7 +20159,7 @@ The Address Holding" },
                     <div style={{ textAlign: "right" }}>
                       <div style={{ fontSize: 12, fontWeight: 700, color: T.gold }}>AED {p.price ? (p.price/1e6).toFixed(2) + "M" : "TBD"}</div>
                       <div style={{ fontSize: 9, color: T.textMuted }}>{p.handover}</div>
-                      {(() => { const cd = getHandoverCountdown(p.handover); return cd ? <div style={{ fontSize: 9, fontWeight: 700, color: cd.passed ? "#10B981" : cd.color, marginTop: 1 }}>{cd.passed ? "\u2713 Ready" : "\u23F1 " + cd.label}</div> : null; })() : null}
+                      {(() => { const cd = getHandoverCountdown(p.handover); return cd ? <div style={{ fontSize: 9, fontWeight: 700, color: cd.passed ? "#10B981" : cd.color, marginTop: 1 }}>{cd.passed ? "\u2713 Ready" : "\u23F1 " + cd.label}</div> : null; })()}
                     </div>
                   </div>
                 ))}
@@ -20387,7 +20387,7 @@ The Address Holding" },
                       <span style={{ fontSize: 9, padding: "3px 10px", borderRadius: 6, background: "rgba(34,197,94,0.12)", color: "#22C55E", fontWeight: 700, border: "1px solid rgba(34,197,94,0.2)" }}>RECOMMENDED</span>
                     </div>
                   );
-                })() : null}
+                })()}
 
                 {/* WhatsApp */}
                 <div onClick={() => { window.open(`https://wa.me/971542410599?text=${encodeURIComponent(`Hi Mian Waleed, I want to subscribe to DXB Analytics ${showCheckout.name} Plan (AED ${showCheckout.price}/mo). My email: ${user}`)}`, "_blank"); setCheckoutStep(3); }} style={{ padding: "16px", borderRadius: 12, background: "rgba(37,211,102,0.06)", border: "1px solid rgba(37,211,102,0.25)", display: "flex", alignItems: "center", gap: 12, cursor: "pointer", transition: "all 0.2s", marginBottom: 8 }} onMouseEnter={e => e.currentTarget.style.borderColor = "#25D366"} onMouseLeave={e => e.currentTarget.style.borderColor = "rgba(37,211,102,0.25)"}>
@@ -20606,7 +20606,7 @@ The Address Holding" },
                     </div>
                   </>
                 );
-              })() : null}
+              })()}
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: 16, borderTop: `1px solid ${T.border}` }}>
                 <div>
                   <div style={{ fontSize: 9, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.8 }}>Source</div>
@@ -20785,7 +20785,7 @@ The Address Holding" },
             </div>
           </div>
         );
-      })() : null}
+      })()}
 
           </TabErrorBoundary>
         </div>
