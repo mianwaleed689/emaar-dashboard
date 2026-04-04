@@ -5332,12 +5332,15 @@ export default function EmaarDashboardV2() {
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0", marginBottom: 20, borderBottom: `1px solid ${T.border}`, flexWrap: "wrap", gap: 8 }}>
                   <div>
                     <div style={{ fontFamily: "'Fraunces', serif", fontSize: 20, fontWeight: 800, color: T.white }}>Currency Intelligence</div>
-                    <div style={{ fontSize: 11, color: T.textMuted, marginTop: 3 }}>Live AED exchange rates · Property price converter · International buyer tool</div>
+                    <div style={{ fontSize: 11, color: T.textMuted, marginTop: 3 }}>AED exchange rates · Property price converter · International buyer tool</div>
                   </div>
                   <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
                     <span style={{ fontSize: 10, padding: "3px 10px", borderRadius: 20, background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.2)", color: T.green, display: "flex", alignItems: "center", gap: 4 }}>
                       <span style={{ width: 5, height: 5, borderRadius: "50%", background: T.green, display: "inline-block", animation: "pulse 2s infinite" }} />
                       UAE Central Bank Peg
+                    </span>
+                    <span style={{ fontSize: 10, padding: "3px 10px", borderRadius: 20, background: "rgba(255,255,255,0.04)", border: `1px solid ${T.border}`, color: T.textMuted }}>
+                      Reference rates · Verify on xe.com
                     </span>
                   </div>
                 </div>
@@ -5437,7 +5440,7 @@ export default function EmaarDashboardV2() {
                 {/* Full rates table */}
                 <div style={{ marginBottom: 20 }}>
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-                    <div style={{ fontFamily: "'Fraunces', serif", fontSize: 14, fontWeight: 700, color: T.white }}>Live Exchange Rates</div>
+                    <div style={{ fontFamily: "'Fraunces', serif", fontSize: 14, fontWeight: 700, color: T.white }}>Reference Exchange Rates</div>
                     <div style={{ position: "relative" }}>
                       {SvgIcons.Search({ width: 13, height: 13, style: { position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", color: T.textMuted, pointerEvents: "none" } })}
                       <input value={searchCcy} onChange={e => setSearchCcy(e.target.value)} placeholder="Search currency..."
@@ -5451,7 +5454,7 @@ export default function EmaarDashboardV2() {
                         <div key={i} style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 0.8, textTransform: "uppercase" }}>{h}</div>
                       ))}
                     </div>
-                    {filteredCcys.map((c, i) => (
+                    {filteredCcys.length > 0 ? filteredCcys.map((c, i) => (
                       <div key={i} onClick={() => setSelectedCcy(c.code)}
                         style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr 2fr", padding: "11px 16px", borderBottom: i < filteredCcys.length - 1 ? `1px solid ${T.border}` : "none", background: selectedCcy === c.code ? "rgba(212,168,67,0.06)" : i % 2 === 0 ? "transparent" : "rgba(255,255,255,0.01)", cursor: "pointer", transition: "background 0.15s" }}
                         onMouseEnter={e => { if (selectedCcy !== c.code) e.currentTarget.style.background = "rgba(212,168,67,0.03)"; }}
@@ -5772,7 +5775,15 @@ export default function EmaarDashboardV2() {
                         <button type="button" onClick={() => setProjCompare(prev => prev.filter(c=>c.id!==p.id))} style={{ background:"none", border:"none", color:T.textMuted, cursor:"pointer", fontSize:12, padding:0 }}>×</button>
                       </span>
                     ))}
-                    <button type="button" onClick={() => setProjCompare([])} style={{ background:"none", border:`1px solid ${T.border}`, borderRadius:8, padding:"5px 10px", color:T.textMuted, fontSize:11, cursor:"pointer", fontFamily:"'Outfit',sans-serif", marginLeft:"auto" }}>Clear</button>
+                    <div style={{ display:"flex", gap:8, marginLeft:"auto" }}>
+                      {projCompare.length >= 2 && (
+                        <button type="button" onClick={() => setShowCompare(true)}
+                          style={{ padding:"7px 16px", background:`linear-gradient(135deg, ${T.gold}, #B8922A)`, border:"none", borderRadius:8, color:"#000", fontSize:12, fontWeight:700, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>
+                          View Comparison →
+                        </button>
+                      )}
+                      <button type="button" onClick={() => setProjCompare([])} style={{ background:"none", border:`1px solid ${T.border}`, borderRadius:8, padding:"5px 10px", color:T.textMuted, fontSize:11, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>Clear</button>
+                    </div>
                   </div>
                 )}
 
@@ -6018,7 +6029,49 @@ export default function EmaarDashboardV2() {
                       <button type="button" onClick={() => { setSelectedProject(null); handleTabChange("Investment Score"); }} style={{ padding:"9px 18px", background:`linear-gradient(135deg,${T.gold},#B8922A)`, border:"none", borderRadius:8, color:"#000", fontSize:12, fontWeight:700, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>Calculate ROI →</button>
                       <button type="button" onClick={() => { setSelectedProject(null); handleTabChange("Mortgage"); }} style={{ padding:"9px 18px", background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:8, color:T.textSecondary, fontSize:12, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>Mortgage</button>
                       <button type="button" onClick={() => { setSelectedProject(null); handleTabChange("My Leads"); }} style={{ padding:"9px 18px", background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:8, color:T.textSecondary, fontSize:12, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>Add to Lead</button>
-                      <button type="button" onClick={() => { const txt = `DXB Analytics — ${selectedProject.project}\nDeveloper: ${selectedProject.developer}\nCommunity: ${selectedProject.community}\nFrom: AED ${(selectedProject.priceMin||0).toLocaleString()}\nYield: ${selectedProject.grossYield||"—"}%\nHandover: ${selectedProject.handover||"TBC"}\nPayment: ${selectedProject.paymentPlan||"TBC"}`; window.open(`https://wa.me/?text=${encodeURIComponent(txt)}`,"_blank"); }} style={{ padding:"9px 18px", background:"rgba(37,211,102,0.1)", border:"1px solid rgba(37,211,102,0.3)", borderRadius:8, color:"#25D366", fontSize:12, fontWeight:600, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>Share WhatsApp</button>
+                      <button type="button" onClick={() => {
+                          const score = calcScore(selectedProject);
+                          const units = selectedProject.unitBreakdown?.map(u => `  • ${u.type}: AED ${(u.ppsf||0).toLocaleString()}/sqft | From AED ${(u.priceMin/1000000).toFixed(2)}M | Yield ${u.grossYield||"—"}%`).join("\n") || "";
+                          const dists = [
+                            selectedProject.distMetro != null ? `Metro: ${selectedProject.distMetro}km` : null,
+                            selectedProject.distDIFC != null ? `DIFC: ${selectedProject.distDIFC}km` : null,
+                            selectedProject.distBeach != null && selectedProject.distBeach <= 5 ? `Beach: ${selectedProject.distBeach < 1 ? (selectedProject.distBeach*1000).toFixed(0)+"m" : selectedProject.distBeach+"km"}` : null,
+                            selectedProject.distSchool != null ? `School: ${selectedProject.distSchool}km` : null,
+                          ].filter(Boolean).join(" | ");
+                          const txt = [
+                            "🏙️ DXB ANALYTICS — PROPERTY BRIEF",
+                            "━━━━━━━━━━━━━━━━━━━━━━━━",
+                            `📌 ${selectedProject.project}`,
+                            `🏢 Developer: ${selectedProject.developer}`,
+                            `📍 Community: ${selectedProject.community}`,
+                            `🏠 Type: ${selectedProject.type}`,
+                            "",
+                            "💰 PRICING",
+                            `   Starting from: AED ${((selectedProject.priceMin||0)/1000000).toFixed(2)}M`,
+                            `   Price per sqft: AED ${(selectedProject.ppsf||0).toLocaleString()}`,
+                            units ? `\n📐 UNIT BREAKDOWN\n${units}` : "",
+                            "",
+                            "📊 INVESTMENT",
+                            `   Gross Yield: ${selectedProject.grossYield||"—"}%`,
+                            `   Net Yield: ${selectedProject.netYield||"—"}%`,
+                            `   Payment Plan: ${selectedProject.paymentPlan||"TBC"}`,
+                            `   Post-Handover: ${selectedProject.postHandover?"Yes":"No"}`,
+                            `   Handover: ${selectedProject.handover||"TBC"}`,
+                            `   Investment Score: ${score}/100 — ${score>=80?"Strong Buy":score>=65?"Buy":"Hold"}`,
+                            "",
+                            "📍 DISTANCES",
+                            `   ${dists || "See full details"}`,
+                            "",
+                            selectedProject.amenities?.length > 0 ? `✨ AMENITIES\n   ${selectedProject.amenities.slice(0,6).join(" · ")}` : "",
+                            "",
+                            `🔐 RERA: ${selectedProject.reraNo||"TBC"} | Escrow: ${selectedProject.escrowBank||"TBC"}`,
+                            "",
+                            "━━━━━━━━━━━━━━━━━━━━━━━━",
+                            "Powered by DXB Analytics Intelligence Platform",
+                            "emaar-dashboard.vercel.app",
+                          ].filter(line => line !== "").join("\n");
+                          window.open(`https://wa.me/?text=${encodeURIComponent(txt)}`,"_blank");
+                        }} style={{ padding:"9px 18px", background:"rgba(37,211,102,0.1)", border:"1px solid rgba(37,211,102,0.3)", borderRadius:8, color:"#25D366", fontSize:12, fontWeight:600, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>Share WhatsApp</button>
                     </div>
                   </div>
                 )}
