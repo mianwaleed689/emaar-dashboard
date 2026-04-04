@@ -3413,7 +3413,289 @@ export default function EmaarDashboardV2() {
         <div style={{ padding: `0 24px ${compareList.length > 0 && tab === "Projects" ? "120px" : "60px"}` }}>
 
           {/* ─── OVERVIEW TAB ─── */}
+          {tab === "Overview" && (() => {
 
+            /* ── KPI Card Component ── */
+            const OvKPI = ({ label, value, sub, color, icon, onClick, delay }) => (
+              <div className={`kpi-card fade-up delay-${delay||1}`} onClick={onClick}
+                style={{ cursor: onClick ? "pointer" : "default" }}>
+                <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 12 }}>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase" }}>{label}</div>
+                  <div style={{ color: color || T.gold, opacity: 0.8 }}>{icon}</div>
+                </div>
+                <div style={{ fontFamily: "'Fraunces', serif", fontSize: 26, fontWeight: 800, color: T.white, lineHeight: 1.1, marginBottom: 6 }}>{value || "—"}</div>
+                {sub && <div style={{ fontSize: 11, color: T.textSecondary }}>{sub}</div>}
+              </div>
+            );
+
+            /* ── Section Header ── */
+            const OvSection = ({ title, sub, action }) => (
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14, marginTop: 28 }}>
+                <div>
+                  <div style={{ fontFamily: "'Fraunces', serif", fontSize: 16, fontWeight: 700, color: T.white }}>{title}</div>
+                  {sub && <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>{sub}</div>}
+                </div>
+                {action}
+              </div>
+            );
+
+            /* ── Live KPI data from Firestore ── */
+            const mkt = liveMarketData?.[0] || {};
+            const syncTime = lastDataSync ? lastDataSync.toLocaleTimeString("en-AE", { hour: "2-digit", minute: "2-digit" }) : null;
+
+            return (
+              <div style={{ paddingTop: 8 }}>
+
+                {/* ── Verified bar ── */}
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0", marginBottom: 20, borderBottom: `1px solid ${T.border}`, flexWrap: "wrap", gap: 8 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <span style={{ position: "relative", display: "inline-flex", alignItems: "center", justifyContent: "center", width: 10, height: 10 }}>
+                      <span style={{ width: 7, height: 7, borderRadius: "50%", background: T.green, display: "inline-block", animation: "pulse 2s infinite" }} />
+                    </span>
+                    <span style={{ fontSize: 11, color: T.textSecondary }}>
+                      Live data — <span style={{ color: T.gold, fontWeight: 600 }}>DXB Analytics Intelligence Platform</span>
+                      {syncTime && <span style={{ color: T.textMuted }}> · Last sync {syncTime}</span>}
+                    </span>
+                  </div>
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <span style={{ fontSize: 10, padding: "3px 10px", borderRadius: 20, background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.2)", color: T.green }}>DLD Official</span>
+                    <span style={{ fontSize: 10, padding: "3px 10px", borderRadius: 20, background: "rgba(212,168,67,0.08)", border: `1px solid ${T.border}`, color: T.textMuted }}>RERA Verified</span>
+                  </div>
+                </div>
+
+                {/* ── Section A: 7 KPI Cards ── */}
+                <OvSection title="Market Pulse" sub="Dubai real estate — key indicators" />
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: 12, marginBottom: 8 }}>
+                  <OvKPI delay={1} label="Total Market 2025" icon={SvgIcons.TrendingUp({width:16,height:16})}
+                    value={liveMarketData?.find?.(d=>d.metric==="Total Market Value")?.value || "AED 919B"}
+                    sub={liveMarketData?.find?.(d=>d.metric==="Total Market Value")?.change || "+20% YoY · All-time record"}
+                    onClick={() => handleTabChange("Market")} />
+                  <OvKPI delay={2} label="DLD Transactions" icon={SvgIcons.Database({width:16,height:16})}
+                    value={liveMarketData?.find?.(d=>d.metric==="Total Transactions")?.value || "226,000+"}
+                    sub={liveMarketData?.find?.(d=>d.metric==="Total Transactions")?.change || "+36% YoY · 2025 record"}
+                    onClick={() => handleTabChange("DLD Volumes")} />
+                  <OvKPI delay={3} label="EIBOR 3M — Live" icon={SvgIcons.Landmark({width:16,height:16})}
+                    value={liveMortgageRates?.[0]?.eibor3m ? liveMortgageRates[0].eibor3m.toFixed(2) + "%" : "—"}
+                    sub="Updated daily · Central Bank UAE"
+                    color={T.teal} onClick={() => handleTabChange("Mortgage")} />
+                  <OvKPI delay={4} label="Active Developers" icon={SvgIcons.Building2({width:16,height:16})}
+                    value={allDevelopers?.length > 0 ? allDevelopers.length.toString() : "228"}
+                    sub="RERA registered · DLD approved"
+                    onClick={() => handleTabChange("Developer Health")} />
+                  <OvKPI delay={5} label="Avg Gross Yield" icon={SvgIcons.BarChart3({width:16,height:16})}
+                    value={liveYields?.length > 0 ? (liveYields.reduce((a,b) => a + (parseFloat(b.gross)||0), 0) / liveYields.length).toFixed(1) + "%" : "6.9%"}
+                    sub="Across all communities · Bayut data"
+                    color={T.green} onClick={() => handleTabChange("Yields")} />
+                  <OvKPI delay={6} label="Off-Plan Share" icon={SvgIcons.BarChart2({width:16,height:16})}
+                    value={liveMarketData?.find?.(d=>d.metric==="Off-Plan Share")?.value || "60%+"}
+                    sub="Of total DLD transactions 2025"
+                    onClick={() => handleTabChange("Projects")} />
+                  <OvKPI delay={7} label="Units Launched" icon={SvgIcons.Activity({width:16,height:16})}
+                    value={liveMarketData?.find?.(d=>d.metric==="Units Launched")?.value || "131,504"}
+                    sub="New units launched in 2025"
+                    onClick={() => handleTabChange("Launch Calendar")} />
+                </div>
+
+                {/* ── Section B: 3-column intelligence panel ── */}
+                <OvSection title="Intelligence Panel"
+                  sub="Context-aware — updates with your filter selection"
+                  action={
+                    <div style={{ fontSize: 10, color: T.textMuted, display: "flex", alignItems: "center", gap: 4 }}>
+                      <span style={{ width: 5, height: 5, borderRadius: "50%", background: gDeveloper !== "all" ? T.gold : T.textMuted, display: "inline-block" }} />
+                      {gDeveloper !== "all" ? "Filtered" : "All Developers"}
+                    </div>
+                  }
+                />
+
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 14, marginBottom: 8 }}>
+
+                  {/* Column 1: Top Communities by Yield */}
+                  <div className="chart-box" style={{ padding: 18 }}>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 14 }}>Top Communities — Yield</div>
+                    {liveYields?.length > 0
+                      ? [...liveYields].sort((a,b) => (parseFloat(b.gross)||0) - (parseFloat(a.gross)||0)).slice(0,6).map((y, i) => (
+                          <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "7px 0", borderBottom: i < 5 ? `1px solid ${T.border}` : "none" }}>
+                            <div>
+                              <div style={{ fontSize: 12, color: T.white, fontWeight: 500 }}>{y.community || y.label}</div>
+                              <div style={{ fontSize: 10, color: T.textMuted }}>{y.label || "Apartment"}</div>
+                            </div>
+                            <div style={{ fontFamily: "'Fraunces', serif", fontSize: 16, fontWeight: 700, color: parseFloat(y.gross) >= 7 ? T.green : parseFloat(y.gross) >= 5.5 ? T.gold : T.textSecondary }}>
+                              {parseFloat(y.gross).toFixed(1)}%
+                            </div>
+                          </div>
+                        ))
+                      : (
+                          <div style={{ textAlign: "center", padding: "30px 0" }}>
+                            <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 8 }}>No yield data yet</div>
+                            <div style={{ fontSize: 11, color: T.textMuted, opacity: 0.7 }}>Connect via Admin → Data Health</div>
+                          </div>
+                        )
+                    }
+                    <button type="button" onClick={() => handleTabChange("Yields")} style={{ width: "100%", marginTop: 12, padding: "7px 0", background: "rgba(212,168,67,0.06)", border: `1px solid ${T.border}`, borderRadius: 8, color: T.gold, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                      View All Yields →
+                    </button>
+                  </div>
+
+                  {/* Column 2: DLD Volume by Community */}
+                  <div className="chart-box" style={{ padding: 18 }}>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 14 }}>DLD Transaction Volume</div>
+                    {liveDLDVolumes?.length > 0
+                      ? [...liveDLDVolumes].sort((a,b) => (b.transactions||b.count||0) - (a.transactions||a.count||0)).slice(0,6).map((d, i) => {
+                          const maxVal = liveDLDVolumes.reduce((m,x) => Math.max(m, x.transactions||x.count||0), 1);
+                          const pct = Math.round(((d.transactions||d.count||0) / maxVal) * 100);
+                          return (
+                            <div key={i} style={{ marginBottom: 10 }}>
+                              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
+                                <span style={{ fontSize: 11, color: T.textSecondary }}>{d.community || d.label}</span>
+                                <span style={{ fontSize: 11, color: T.white, fontWeight: 600 }}>{(d.transactions||d.count||0).toLocaleString()}</span>
+                              </div>
+                              <div style={{ height: 4, borderRadius: 2, background: T.border }}>
+                                <div style={{ height: "100%", width: `${pct}%`, borderRadius: 2, background: `linear-gradient(90deg, ${T.gold}, ${T.teal})`, transition: "width 0.8s ease" }} />
+                              </div>
+                            </div>
+                          );
+                        })
+                      : (
+                          <div style={{ textAlign: "center", padding: "30px 0" }}>
+                            <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 8 }}>No DLD data yet</div>
+                            <div style={{ fontSize: 11, color: T.textMuted, opacity: 0.7 }}>Auto-syncs daily via cron</div>
+                          </div>
+                        )
+                    }
+                    <button type="button" onClick={() => handleTabChange("DLD Volumes")} style={{ width: "100%", marginTop: 12, padding: "7px 0", background: "rgba(212,168,67,0.06)", border: `1px solid ${T.border}`, borderRadius: 8, color: T.gold, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                      View DLD Volumes →
+                    </button>
+                  </div>
+
+                  {/* Column 3: AI Market Insight + Developer Health */}
+                  <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                    {/* AI Insight */}
+                    <div className="chart-box" style={{ padding: 18, flex: 1 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+                        <div style={{ width: 6, height: 6, borderRadius: "50%", background: T.gold, animation: "pulse 2s infinite" }} />
+                        <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, letterSpacing: 0.8, textTransform: "uppercase" }}>AI Market Insight</div>
+                      </div>
+                      {aiInsights?.length > 0
+                        ? <div style={{ fontSize: 12, color: T.textSecondary, lineHeight: 1.7 }}>
+                            {aiInsights[0]?.text || aiInsights[0]}
+                          </div>
+                        : <div style={{ fontSize: 12, color: T.textMuted, lineHeight: 1.7, fontStyle: "italic" }}>
+                            AI market analysis generates automatically every 7 days from live DLD and Bayut data.
+                          </div>
+                      }
+                      <div style={{ marginTop: 10, fontSize: 10, color: T.textMuted }}>
+                        Powered by Claude · {aiInsights?.length > 0 ? "Updated this week" : "Connect data to activate"}
+                      </div>
+                    </div>
+
+                    {/* Top Developer Health */}
+                    <div className="chart-box" style={{ padding: 18 }}>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 12 }}>Developer Health</div>
+                      {liveDevHealth?.length > 0
+                        ? [...liveDevHealth].slice(0,4).map((d, i) => (
+                            <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "5px 0", borderBottom: i < 3 ? `1px solid ${T.border}` : "none" }}>
+                              <span style={{ fontSize: 11, color: T.textSecondary }}>{d.developer || d.name}</span>
+                              <span style={{ fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 20, background: (d.score||d.healthScore||0) >= 75 ? "rgba(16,185,129,0.15)" : (d.score||d.healthScore||0) >= 50 ? "rgba(212,168,67,0.15)" : "rgba(239,68,68,0.15)", color: (d.score||d.healthScore||0) >= 75 ? T.green : (d.score||d.healthScore||0) >= 50 ? T.gold : T.red }}>
+                                {d.score || d.healthScore || "—"}
+                              </span>
+                            </div>
+                          ))
+                        : <div style={{ fontSize: 11, color: T.textMuted }}>Health scores load from Admin → Developer Health</div>
+                      }
+                      <button type="button" onClick={() => handleTabChange("Developer Health")} style={{ width: "100%", marginTop: 10, padding: "7px 0", background: "rgba(212,168,67,0.06)", border: `1px solid ${T.border}`, borderRadius: 8, color: T.gold, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                        View All →
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* ── Section C: Live feeds ── */}
+                <OvSection title="Live Intelligence Feeds"
+                  sub="Real-time data streams — auto-refreshing"
+                />
+
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 14, marginBottom: 32 }}>
+
+                  {/* Feed 1: Recent DLD Transactions */}
+                  <div className="chart-box" style={{ padding: 18 }}>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, letterSpacing: 0.8, textTransform: "uppercase" }}>Recent DLD</div>
+                      <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                        <span style={{ width: 5, height: 5, borderRadius: "50%", background: T.green, animation: "pulse 2s infinite", display: "inline-block" }} />
+                        <span style={{ fontSize: 9, color: T.textMuted }}>Live</span>
+                      </div>
+                    </div>
+                    {liveDLDVolumes?.length > 0
+                      ? liveDLDVolumes.slice(0,5).map((tx, i) => (
+                          <div key={i} style={{ padding: "8px 0", borderBottom: i < 4 ? `1px solid ${T.border}` : "none" }}>
+                            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 2 }}>
+                              <span style={{ fontSize: 11, color: T.white, fontWeight: 500 }}>{tx.community || "—"}</span>
+                              <span style={{ fontSize: 11, color: T.gold, fontWeight: 700 }}>{tx.avgPrice ? "AED " + (tx.avgPrice/1000000).toFixed(1) + "M" : "—"}</span>
+                            </div>
+                            <div style={{ fontSize: 10, color: T.textMuted }}>{tx.type || "Residential"} · {tx.transactions || tx.count || "—"} deals</div>
+                          </div>
+                        ))
+                      : (
+                          <div style={{ padding: "24px 0", textAlign: "center" }}>
+                            <div style={{ fontSize: 12, color: T.textMuted }}>DLD data syncs daily</div>
+                            <div style={{ fontSize: 10, color: T.textMuted, marginTop: 4, opacity: 0.7 }}>Check Admin → Data Health</div>
+                          </div>
+                        )
+                    }
+                  </div>
+
+                  {/* Feed 2: Launch Radar */}
+                  <div className="chart-box" style={{ padding: 18 }}>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, letterSpacing: 0.8, textTransform: "uppercase" }}>Launch Radar</div>
+                      <button type="button" onClick={() => handleTabChange("Launch Calendar")} style={{ fontSize: 10, color: T.gold, background: "none", border: "none", cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>View all →</button>
+                    </div>
+                    <div style={{ padding: "20px 0", textAlign: "center" }}>
+                      <div style={{ marginBottom: 10 }}>
+                        {SvgIcons.Calendar({ width: 28, height: 28, style: { color: T.textMuted, display: "inline-block" } })}
+                      </div>
+                      <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 6 }}>Launch data auto-scans Bayut daily</div>
+                      <div style={{ fontSize: 10, color: T.textMuted, opacity: 0.7 }}>New launches appear here automatically</div>
+                    </div>
+                    <button type="button" onClick={() => handleTabChange("Launch Calendar")} style={{ width: "100%", marginTop: 4, padding: "7px 0", background: "rgba(212,168,67,0.06)", border: `1px solid ${T.border}`, borderRadius: 8, color: T.gold, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                      Open Launch Calendar →
+                    </button>
+                  </div>
+
+                  {/* Feed 3: Platform Activity */}
+                  <div className="chart-box" style={{ padding: 18 }}>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 14 }}>Platform Activity</div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                      {[
+                        { label: "Active Leads", value: myLeads?.length || 0, icon: SvgIcons.Users({width:14,height:14}), tab: "My Leads", color: T.blue },
+                        { label: "My Listings", value: listings?.length || 0, icon: SvgIcons.Building({width:14,height:14}), tab: "Listings", color: T.gold },
+                        { label: "Portfolio Items", value: myPortfolio?.length || 0, icon: SvgIcons.Briefcase({width:14,height:14}), tab: "Portfolio", color: T.green },
+                        { label: "Watchlist", value: watchlist?.length || 0, icon: SvgIcons.Star({width:14,height:14}), tab: null, color: T.textSecondary },
+                      ].map((item, i) => (
+                        <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 10px", borderRadius: 8, background: T.surfaceAlt, cursor: item.tab ? "pointer" : "default" }}
+                          onClick={() => item.tab && handleTabChange(item.tab)}>
+                          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                            <span style={{ color: item.color }}>{item.icon}</span>
+                            <span style={{ fontSize: 12, color: T.textSecondary }}>{item.label}</span>
+                          </div>
+                          <span style={{ fontSize: 14, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>{item.value}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Data sources footer */}
+                <div style={{ paddingBottom: 16, paddingTop: 4, borderTop: `1px solid ${T.border}`, display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+                  <span style={{ fontSize: 10, color: T.textMuted }}>Sources:</span>
+                  {["Dubai Land Department", "RERA", "Bayut API", "ValuStrat", "REIDIN", "Claude AI"].map((s, i) => (
+                    <span key={i} style={{ fontSize: 10, color: T.textMuted, padding: "2px 8px", borderRadius: 10, border: `1px solid ${T.border}`, background: T.surfaceAlt }}>{s}</span>
+                  ))}
+                </div>
+
+              </div>
+            );
+          })()}
 
           {/* ══════════════════════════════════════════════════════════
               INTELLIGENCE TABS — Awaiting Data Import
