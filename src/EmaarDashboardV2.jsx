@@ -17269,11 +17269,11 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
 
             // WhatsApp templates
             const WA_TEMPLATES = {
-              intro:    { label:"Introduction", text:(name,phone)=>`Hello${name?` ${name}`:""},\n\nI'm ${userName||"your agent"} from DXB Analytics. I'd love to help you find the perfect property in Dubai.\n\nAre you looking to buy or invest? Let me know your requirements and I'll send you matching properties right away.\n\nBest regards` },
-              followup: { label:"Follow-Up",    text:(name)=>`Hi${name?` ${name}`:""},\n\nJust following up on our previous conversation about Dubai properties. I have some exciting new listings that match your criteria.\n\nWould you be available for a quick call this week?\n\nLooking forward to hearing from you.` },
-              match:    { label:"Property Match",text:(name)=>`Hi${name?` ${name}`:""},\n\nGreat news! I've found a property that matches exactly what you're looking for.\n\nI'll send you the full details shortly. Would you like to schedule a viewing?\n\nBest regards` },
-              meeting:  { label:"Meeting Request",text:(name)=>`Hello${name?` ${name}`:""},\n\nI'd like to schedule a meeting to discuss your property requirements in detail and show you some exclusive listings.\n\nAre you free for a 30-minute call this week? Please let me know your preferred time.\n\nThank you` },
-              gv:       { label:"Golden Visa",  text:(name)=>`Hi${name?` ${name}`:""},\n\nDid you know that purchasing a property above AED 2 Million in Dubai qualifies you for a 10-year UAE Golden Visa?\n\nI have some excellent options in this range \u2014 would you like me to share the details?\n\nBest regards` },
+              intro:    { label:"Introduction", text:(name,phone)=>`Hello${name?" "+name:""},\n\nI'm ${userName||"your agent"} from DXB Analytics. I'd love to help you find the perfect property in Dubai.\n\nAre you looking to buy or invest? Let me know your requirements and I'll send you matching properties right away.\n\nBest regards` },
+              followup: { label:"Follow-Up",    text:(name)=>`Hi${name?" "+name:""},\n\nJust following up on our previous conversation about Dubai properties. I have some exciting new listings that match your criteria.\n\nWould you be available for a quick call this week?\n\nLooking forward to hearing from you.` },
+              match:    { label:"Property Match",text:(name)=>`Hi${name?" "+name:""},\n\nGreat news! I've found a property that matches exactly what you're looking for.\n\nI'll send you the full details shortly. Would you like to schedule a viewing?\n\nBest regards` },
+              meeting:  { label:"Meeting Request",text:(name)=>`Hello${name?" "+name:""},\n\nI'd like to schedule a meeting to discuss your property requirements in detail and show you some exclusive listings.\n\nAre you free for a 30-minute call this week? Please let me know your preferred time.\n\nThank you` },
+              gv:       { label:"Golden Visa",  text:(name)=>`Hi${name?" "+name:""},\n\nDid you know that purchasing a property above AED 2 Million in Dubai qualifies you for a 10-year UAE Golden Visa?\n\nI have some excellent options in this range \u2014 would you like me to share the details?\n\nBest regards` },
             };
 
             // Save RERA card
