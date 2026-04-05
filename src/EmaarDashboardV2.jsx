@@ -2757,6 +2757,10 @@ export default function EmaarDashboardV2() {
   const [leadAddEmail, setLeadAddEmail] = useState("");
   const [leadAddBudget, setLeadAddBudget] = useState("");
   const [leadAddSource, setLeadAddSource] = useState("Manual");
+  const [leadAddNat, setLeadAddNat] = useState("");
+  const [leadAddLang, setLeadAddLang] = useState("");
+  const [leadAddTimeline, setLeadAddTimeline] = useState("");
+  const [leadAddPurpose, setLeadAddPurpose] = useState("");
   const [leadAddStatus, setLeadAddStatus] = useState("New");
   const [leadAddType, setLeadAddType] = useState("Buy");
   const [leadAddComm, setLeadAddComm] = useState("");
@@ -15241,304 +15245,459 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
           {/* ══════════════════════════════════════════════
               MY LEADS TAB — Session 4 — Agent CRM Inbox
           ══════════════════════════════════════════════ */}
-{tab === "My Leads" && (() => {
-            const mlIsAgent=orgRole==="agent";
-            const mlIsManager=orgRole==="manager";
-            const mlIsSuperAdmin=userRole==="admin"||userRole==="superAdmin";
-            const mlCanSee=(mlIsAgent||mlIsManager||mlIsSuperAdmin)||false;
-            const mlAllLeads=mlIsSuperAdmin?liveLeads:(mlIsAgent||mlIsManager)?myLeads:liveLeads.filter(l=>!auth.currentUser?.uid||l.userId===auth.currentUser.uid);
-            const ML_STATUSES={"New":{color:"#3B82F6",bg:"rgba(59,130,246,0.12)",label:"New"},"Contacted":{color:"#F59E0B",bg:"rgba(245,158,11,0.12)",label:"Contacted"},"Viewing":{color:"#8B5CF6",bg:"rgba(139,92,246,0.12)",label:"Viewing"},"Offer":{color:"#14B8A6",bg:"rgba(20,184,166,0.12)",label:"Offer"},"Won":{color:"#10B981",bg:"rgba(16,185,129,0.12)",label:"Won"},"Lost":{color:"#EF4444",bg:"rgba(239,68,68,0.12)",label:"Lost"}};
-            const ML_SOURCES={"Property Finder":"#00C08B","Bayut":"#FF6B35","Dubizzle":"#E8003D","Meta/Facebook":"#1877F2","Instagram":"#E1306C","WhatsApp":"#25D366","Google Ads":"#4285F4","Referral":"#8B5CF6","Website":"#14B8A6","Manual":"#94A3B8"};
-            function mlScore(l){let s=0;const b=parseFloat(l.budget||0);if(l.phone&&l.email)s+=25;else if(l.phone||l.email)s+=10;if(b>=5000000)s+=20;else if(b>=2000000)s+=15;else if(b>=1000000)s+=10;const d=(Date.now()-new Date(l.createdAt||Date.now()).getTime())*0.000000011574;if(d<1)s+=20;else if(d<3)s+=15;else if(d<7)s+=10;const n=(l.notes_log||[]).length;if(n>=3)s+=10;else if(n>=1)s+=5;return{score:s,color:s>=70?"#10B981":s>=40?T.gold:"#EF4444",label:s>=70?"Hot":s>=40?"Warm":"Cold"};}
-            const mlFiltered=(()=>{let a=mlAllLeads||[];if(leadStatusFilter!=="all")a=a.filter(l=>(l.status||"New")===leadStatusFilter);if(leadSourceFilter!=="all")a=a.filter(l=>l.source===leadSourceFilter);if(leadBudgetFilter!=="all")a=a.filter(l=>{const b=parseFloat(l.budget||0);if(leadBudgetFilter==="under1m")return b<1000000;if(leadBudgetFilter==="1to2m")return b>=1000000&&b<2000000;if(leadBudgetFilter==="2to5m")return b>=2000000&&b<5000000;if(leadBudgetFilter==="above5m")return b>=5000000;return true;});if(leadTypeFilter!=="all")a=a.filter(l=>(l.type||"Buy")===leadTypeFilter);if(leadSearch.trim()){const q=leadSearch.trim().toLowerCase();a=a.filter(l=>(l.name||"").toLowerCase().includes(q)||(l.phone||"").includes(q)||(l.email||"").toLowerCase().includes(q));}if(leadSortBy==="score")a=[...a].sort((a,b)=>mlScore(b).score-mlScore(a).score);else if(leadSortBy==="budget")a=[...a].sort((a,b)=>parseFloat(b.budget||0)-parseFloat(a.budget||0));else a=[...a].sort((a,b)=>new Date(b.createdAt||0)-new Date(a.createdAt||0));return a;})();
-            const mlTotalVal=(mlAllLeads||[]).reduce((s,l)=>s+parseFloat(l.budget||0),0);
-            const mlNewToday=(mlAllLeads||[]).filter(l=>{const d=new Date(l.createdAt||0),n=new Date();return d.getDate()===n.getDate()&&d.getMonth()===n.getMonth();}).length;
-            const mlWA="https://wa.me/";
-            async function mlSave(){if(!leadAddName)return;if(!leadAddPhone)return;setLeadAddSaving(true);try{await addDoc(collection(db,"leads"),{name:leadAddName,phone:leadAddPhone,email:leadAddEmail,budget:parseFloat(leadAddBudget)||0,source:leadAddSource,status:leadAddStatus,type:leadAddType,community:leadAddComm,userId:auth.currentUser?.uid||"",assignedTo:auth.currentUser?.uid||"",orgId:orgId||"",createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),notes_log:[]});setLeadAddName("");setLeadAddPhone("");setLeadAddEmail("");setLeadAddBudget("");setLeadAddComm("");setLeadAddSource("Manual");setLeadAddStatus("New");setLeadAddType("Buy");setLeadShowAdd(false);}catch(e){console.error(e);}setLeadAddSaving(false);}
-            async function mlNote(id){if(!noteText.trim())return;setNoteLoading(true);try{await updateDoc(doc(db,"leads",id),{notes_log:arrayUnion({text:noteText,type:noteType,by:auth.currentUser?.email||"",at:new Date().toISOString()}),updatedAt:new Date().toISOString()});setNoteText("");}catch(e){console.error(e);}setNoteLoading(false);}
-            async function mlStatus(id,st){try{await updateDoc(doc(db,"leads",id),{status:st,updatedAt:new Date().toISOString()});if(selectedLead&&selectedLead.id===id)setSelectedLead({...selectedLead,status:st});}catch(e){console.error(e);}}
-            function mlCSV(){const h=["Name","Phone","Email","Budget","Status","Source","Community","Type","Created"];const r=mlFiltered.map(l=>[l.name||"",l.phone||"",l.email||"",l.budget||"",l.status||"New",l.source||"",l.community||"",l.type||"Buy",l.createdAt?new Date(l.createdAt).toLocaleDateString("en-GB"):""].map(v=>csvEsc(v)));const c=[h.join(","),...r.map(x=>x.join(","))].join(String.fromCharCode(10));const b=new Blob([c],{type:"text/csv"});const u=URL.createObjectURL(b);const a=document.createElement("a");a.href=u;a.download="leads_"+new Date().toISOString().slice(0,10)+".csv";a.click();URL.revokeObjectURL(u);}
-            const cleanPhone = (p) => { if(!p) return ""; let o=""; for(let i=0;i<p.length;i++){const c=p.charCodeAt(i);if(c>=48&&c<=57)o+=p[i];} return o; };
-            const csvEsc = (v) => { const s=v==null?"":String(v); let o=""; for(let i=0;i<s.length;i++){if(s[i]==='"')o+='"';o+=s[i];} return '"'+o+'"'; };
-            const mlExportCSV = mlCSV;
-            const mlSaveNewLead = mlSave;
-            const mlSaveNote = mlNote;
-            const mlScoreLead = mlScore;
-            const mlUpdateStatus = mlStatus;
-            const mlWaBase = mlWA;
+          {tab === "My Leads" && (() => {
+            // ── All vars defined here (after all hooks) ──
+            const mlIsAgent      = orgRole === "agent";
+            const mlIsManager    = orgRole === "manager";
+            const mlIsSuperAdmin = userRole === "admin" || userRole === "superAdmin";
+            const mlCanSee       = mlIsAgent || mlIsManager || mlIsSuperAdmin;
+            const mlAllLeads     = mlIsSuperAdmin ? (liveLeads||[])
+              : (mlIsAgent || mlIsManager) ? (myLeads||[])
+              : (liveLeads||[]).filter(l => !auth.currentUser?.uid || l.userId === auth.currentUser.uid);
+
+            const ML_STATUSES = {
+              "New":       { color:"#3B82F6", bg:"rgba(59,130,246,0.12)",  label:"New"       },
+              "Contacted": { color:"#F59E0B", bg:"rgba(245,158,11,0.12)",  label:"Contacted" },
+              "Viewing":   { color:"#8B5CF6", bg:"rgba(139,92,246,0.12)",  label:"Viewing"   },
+              "Offer":     { color:"#14B8A6", bg:"rgba(20,184,166,0.12)",  label:"Offer"     },
+              "Won":       { color:"#10B981", bg:"rgba(16,185,129,0.12)",  label:"Won"       },
+              "Lost":      { color:"#EF4444", bg:"rgba(239,68,68,0.12)",   label:"Lost"      },
+            };
+            const ML_SOURCES = {
+              "Property Finder":"#00C08B","Bayut":"#FF6B35","Dubizzle":"#E8003D",
+              "Meta/Facebook":"#1877F2","Instagram":"#E1306C","WhatsApp":"#25D366",
+              "Google Ads":"#4285F4","Referral":"#8B5CF6","Website":"#14B8A6","Manual":"#94A3B8",
+            };
+            const ML_NATS = ["Indian","British","Russian","Chinese","French","Pakistani","Saudi","Egyptian","German","American","Italian","Canadian","Australian","Japanese","Korean","Emirati","Filipino","Lebanese","Jordanian","Other"];
+            const ML_LANGS = ["Arabic","English","Russian","Mandarin","French","Hindi","Urdu","Filipino","German","Italian","Japanese","Korean"];
+            const ML_FLAGS = {"Indian":"🇮🇳","British":"🇬🇧","Russian":"🇷🇺","Chinese":"🇨🇳","French":"🇫🇷","Pakistani":"🇵🇰","Saudi":"🇸🇦","Egyptian":"🇪🇬","German":"🇩🇪","American":"🇺🇸","Italian":"🇮🇹","Canadian":"🇨🇦","Australian":"🇦🇺","Japanese":"🇯🇵","Korean":"🇰🇷","Emirati":"🇦🇪","Filipino":"🇵🇭","Lebanese":"🇱🇧","Jordanian":"🇯🇴"};
+
+            const clnPhone = (p) => { if(!p) return ""; let o=""; for(let i=0;i<p.length;i++){const c=p.charCodeAt(i);if(c>=48&&c<=57)o+=p[i];} return o; };
+            const escCSV = (v) => { const s=v==null?"":String(v); let o=""; for(let i=0;i<s.length;i++){if(s[i]==='"')o+='"';o+=s[i];} return '"'+o+'"'; };
+
+            function mlScore(l) {
+              let s = 0;
+              const b = parseFloat(l.budget||0);
+              if (l.phone && l.email) s += 25; else if (l.phone || l.email) s += 10;
+              if (b >= 5000000) s += 20; else if (b >= 2000000) s += 15; else if (b >= 1000000) s += 10;
+              const d = (Date.now() - new Date(l.createdAt||Date.now()).getTime()) * 0.000000011574;
+              if (d < 1) s += 20; else if (d < 3) s += 15; else if (d < 7) s += 10;
+              const n = (l.notes_log||[]).length;
+              if (n >= 3) s += 10; else if (n >= 1) s += 5;
+              if (l.timeline === "Immediate") s += 15; else if (l.timeline === "1-3 months") s += 10;
+              if (l.nationality) s += 5;
+              const clr = s >= 70 ? "#10B981" : s >= 40 ? "#D4A843" : "#EF4444";
+              return { score:s, color:clr, label:s>=70?"Hot":s>=40?"Warm":"Cold" };
+            }
+
+            const mlFiltered = (() => {
+              let a = mlAllLeads;
+              if (leadStatusFilter !== "all") a = a.filter(l => (l.status||"New") === leadStatusFilter);
+              if (leadSourceFilter !== "all") a = a.filter(l => l.source === leadSourceFilter);
+              if (leadNatFilter !== "all") a = a.filter(l => (l.nationality||"") === leadNatFilter);
+              if (leadBudgetFilter !== "all") a = a.filter(l => {
+                const b = parseFloat(l.budget||0);
+                if (leadBudgetFilter === "under1m") return b < 1000000;
+                if (leadBudgetFilter === "1to3m") return b >= 1000000 && b < 3000000;
+                if (leadBudgetFilter === "3to5m") return b >= 3000000 && b < 5000000;
+                if (leadBudgetFilter === "5to10m") return b >= 5000000 && b < 10000000;
+                if (leadBudgetFilter === "above10m") return b >= 10000000;
+                return true;
+              });
+              if (leadTypeFilter !== "all") a = a.filter(l => (l.type||"Buy") === leadTypeFilter);
+              if (leadTagFilter !== "all") a = a.filter(l => (l.timeline||"") === leadTagFilter);
+              if (leadSearch.trim()) {
+                const q = leadSearch.trim().toLowerCase();
+                a = a.filter(l => (l.name||"").toLowerCase().includes(q) || (l.phone||"").includes(q) || (l.email||"").toLowerCase().includes(q) || (l.community||"").toLowerCase().includes(q));
+              }
+              if (leadSortBy === "score") a = [...a].sort((a,b) => mlScore(b).score - mlScore(a).score);
+              else if (leadSortBy === "budget") a = [...a].sort((a,b) => parseFloat(b.budget||0) - parseFloat(a.budget||0));
+              else if (leadSortBy === "name") a = [...a].sort((a,b) => (a.name||"").localeCompare(b.name||""));
+              else a = [...a].sort((a,b) => new Date(b.createdAt||0) - new Date(a.createdAt||0));
+              return a;
+            })();
+
+            const mlTotalVal = mlAllLeads.reduce((s,l) => s + parseFloat(l.budget||0), 0);
+            const mlNewToday = mlAllLeads.filter(l => { const d=new Date(l.createdAt||0),n=new Date(); return d.getDate()===n.getDate()&&d.getMonth()===n.getMonth(); }).length;
+            const mlWon = mlAllLeads.filter(l => l.status === "Won").length;
+            const mlWA = "https://wa.me/";
+
+            async function mlSave() {
+              if (!leadAddName) return; if (!leadAddPhone) return;
+              setLeadAddSaving(true);
+              try {
+                await addDoc(collection(db,"leads"), {
+                  name:leadAddName, phone:leadAddPhone, email:leadAddEmail,
+                  budget:parseFloat(leadAddBudget)||0, source:leadAddSource,
+                  status:leadAddStatus, type:leadAddType, community:leadAddComm,
+                  nationality:leadAddNat||"", language:leadAddLang||"",
+                  timeline:leadAddTimeline||"", purpose:leadAddPurpose||"",
+                  userId:auth.currentUser?.uid||"", assignedTo:auth.currentUser?.uid||"",
+                  orgId:orgId||"", createdAt:new Date().toISOString(),
+                  updatedAt:new Date().toISOString(), notes_log:[],
+                });
+                setLeadAddName(""); setLeadAddPhone(""); setLeadAddEmail("");
+                setLeadAddBudget(""); setLeadAddComm(""); setLeadAddNat("");
+                setLeadAddLang(""); setLeadAddTimeline(""); setLeadAddPurpose("");
+                setLeadAddSource("Manual"); setLeadAddStatus("New"); setLeadAddType("Buy");
+                setLeadShowAdd(false);
+              } catch(e) { console.error(e); }
+              setLeadAddSaving(false);
+            }
+
+            async function mlNote(id) {
+              if (!noteText.trim()) return; setNoteLoading(true);
+              try {
+                await updateDoc(doc(db,"leads",id), {
+                  notes_log: arrayUnion({ text:noteText, type:noteType, by:auth.currentUser?.email||"", at:new Date().toISOString() }),
+                  updatedAt: new Date().toISOString(),
+                });
+                setNoteText("");
+              } catch(e) { console.error(e); }
+              setNoteLoading(false);
+            }
+
+            async function mlStatus(id, st) {
+              try {
+                await updateDoc(doc(db,"leads",id), { status:st, updatedAt:new Date().toISOString() });
+                if (selectedLead && selectedLead.id === id) setSelectedLead({...selectedLead, status:st});
+              } catch(e) { console.error(e); }
+            }
+
+            function mlCSV() {
+              const h = ["Name","Phone","Email","Budget","Status","Source","Nationality","Language","Timeline","Purpose","Community","Type","Created"];
+              const r = mlFiltered.map(l => [
+                l.name||"",l.phone||"",l.email||"",l.budget||"",l.status||"New",
+                l.source||"",l.nationality||"",l.language||"",l.timeline||"",
+                l.purpose||"",l.community||"",l.type||"Buy",
+                l.createdAt?new Date(l.createdAt).toLocaleDateString("en-GB"):""
+              ].map(v => escCSV(v)));
+              const csv = [h.join(","),...r.map(x=>x.join(","))].join(String.fromCharCode(10));
+              const b = new Blob([csv],{type:"text/csv"});
+              const u = URL.createObjectURL(b);
+              const a = document.createElement("a");
+              a.href=u; a.download="leads_"+new Date().toISOString().slice(0,10)+".csv"; a.click(); URL.revokeObjectURL(u);
+            }
+
             if (!mlCanSee) return (
-              <div style={{ display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", height:400, gap:16 }}>
-                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke={T.textMuted} strokeWidth="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                <div style={{ fontSize:16, fontWeight:700, color:T.textPrimary }}>Leads not enabled for your role</div>
-                <div style={{ fontSize:12, color:T.textMuted }}>Contact your agency manager to get access</div>
+              <div style={{ display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",height:400,gap:16 }}>
+                <div style={{ fontSize:16,fontWeight:700,color:T.textPrimary }}>Leads not enabled for your role</div>
+                <div style={{ fontSize:12,color:T.textMuted }}>Contact your agency manager to get access</div>
               </div>
             );
-            return (
-              <div style={{ padding:"0 0 40px" }}>
 
-                {/* Ã¢"â‚¬Ã¢"â‚¬ HEADER Ã¢"â‚¬Ã¢"â‚¬ */}
-                <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:20, flexWrap:"wrap", gap:12 }}>
+            return (
+              <div style={{ padding:"0 0 60px" }}>
+
+                {/* ── HEADER ── */}
+                <div style={{ display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:20,flexWrap:"wrap",gap:12 }}>
                   <div>
-                    <h1 style={{ fontFamily:"'Fraunces',serif", fontSize:22, fontWeight:900, color:T.white, margin:0 }}>
+                    <h1 style={{ fontFamily:"'Fraunces',serif",fontSize:22,fontWeight:900,color:T.white,margin:0 }}>
                       {mlIsManager ? "Team Leads" : "My Leads"}
                     </h1>
-                    <p style={{ fontSize:12, color:T.textMuted, margin:"4px 0 0" }}>
-                      {mlIsManager ? "All leads in your organisation" : "Leads assigned to you — AI scored, WhatsApp ready, WhatsApp ready"}
+                    <p style={{ fontSize:12,color:T.textMuted,margin:"4px 0 0" }}>
+                      {mlFiltered.length} leads shown of {mlAllLeads.length} total — AI scored, WhatsApp ready
                     </p>
                   </div>
-                  <div style={{ display:"flex", gap:8 }}>
-                    <button type="button" onClick={mlExportCSV}
-                      style={{ display:"flex", alignItems:"center", gap:6, padding:"9px 16px", borderRadius:9, border:"1px solid "+T.border, background:"transparent", color:T.textSecondary, fontSize:12, fontWeight:600, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                  <div style={{ display:"flex",gap:8 }}>
+                    <button type="button" onClick={mlCSV}
+                      style={{ display:"flex",alignItems:"center",gap:6,padding:"9px 14px",borderRadius:9,border:"1px solid "+T.border,background:"transparent",color:T.textSecondary,fontSize:12,fontWeight:600,cursor:"pointer" }}>
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                       Export CSV
                     </button>
                     <button type="button" onClick={() => setShowQuickCapture(true)}
-                      style={{ display:"flex", alignItems:"center", gap:8, padding:"9px 20px", borderRadius:9, border:"none", background:"linear-gradient(135deg,"+T.gold+",#B8902E)", color:"#0A0E1A", fontSize:13, fontWeight:700, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                      Quick Capture
+                      style={{ display:"flex",alignItems:"center",gap:8,padding:"9px 18px",borderRadius:9,border:"none",background:"linear-gradient(135deg,#D4A843,#B8902E)",color:"#0A0E1A",fontSize:13,fontWeight:700,cursor:"pointer" }}>
+                      + Quick Capture
                     </button>
                   </div>
                 </div>
 
-                {/* Ã¢"â‚¬Ã¢"â‚¬ KPI CARDS Ã¢"â‚¬Ã¢"â‚¬ */}
-                {(() => {
-                  const kpis = [
-                    { label:"Total Leads",    value:String((mlAllLeads||[]).length),  color:T.gold  },
-                    { label:"New Today",       value:String(mlNewToday),               color:T.teal  },
-                    { label:"In Progress",     value:String((mlAllLeads||[]).filter(l=>["Contacted","Viewing","Offer"].includes(l.status||"New")).length), color:"#8B5CF6" },
-                    { label:"Pipeline Value",  value:"AED "+(mlTotalVal>=1e6?(mlTotalVal*0.000001).toFixed(1)+"M":mlTotalVal.toLocaleString()), color:"#10B981" },
-                  ];
-                  return (
-                    <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:10, marginBottom:20 }}>
-                      {kpis.map((k,i) => (
-                        <div key={i} style={{ background:T.card, border:"1px solid "+T.border, borderRadius:12, padding:"14px 16px", position:"relative", overflow:"hidden" }}>
-                          <div style={{ position:"absolute", top:0, left:0, right:0, height:2, background:k.color, opacity:0.7 }}/>
-                          <div style={{ fontSize:10, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.8, marginBottom:6 }}>{k.label}</div>
-                          <div style={{ fontSize:22, fontWeight:900, color:k.color, fontFamily:"'Fraunces',serif" }}>{k.value}</div>
-                        </div>
-                      ))}
+                {/* ── KPI CARDS ── */}
+                <div style={{ display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10,marginBottom:20 }}>
+                  {[
+                    { label:"Total Leads",    value:String(mlAllLeads.length),   color:"#D4A843" },
+                    { label:"New Today",       value:String(mlNewToday),          color:"#0EA5E9" },
+                    { label:"In Progress",     value:String(mlAllLeads.filter(l=>["Contacted","Viewing","Offer"].includes(l.status||"New")).length), color:"#8B5CF6" },
+                    { label:"Pipeline Value",  value:"AED "+(mlTotalVal>=1000000000?(mlTotalVal*0.000000001).toFixed(1)+"B":mlTotalVal>=1000000?(mlTotalVal*0.000001).toFixed(1)+"M":mlTotalVal.toLocaleString()), color:"#10B981" },
+                  ].map((k,i) => (
+                    <div key={i} style={{ background:T.card,border:"1px solid "+T.border,borderRadius:12,padding:"14px 16px",position:"relative",overflow:"hidden" }}>
+                      <div style={{ position:"absolute",top:0,left:0,right:0,height:2,background:k.color,opacity:0.8 }}/>
+                      <div style={{ fontSize:10,fontWeight:700,color:T.textMuted,textTransform:"uppercase",letterSpacing:0.8,marginBottom:6 }}>{k.label}</div>
+                      <div style={{ fontSize:22,fontWeight:900,color:k.color,fontFamily:"'Fraunces',serif" }}>{k.value}</div>
                     </div>
-                  );
-                })()}
+                  ))}
+                </div>
 
-                {/* Ã¢"â‚¬Ã¢"â‚¬ STALE LEADS ALERT Ã¢"â‚¬Ã¢"â‚¬ */}
+                {/* ── STALE ALERT ── */}
                 {(() => {
-                  const stale = (mlAllLeads||[]).filter(l => {
-                    if (l.status === "Won" || l.status === "Lost") return false;
-                    const days = (Date.now() - new Date(l.updatedAt||l.createdAt||Date.now()).getTime()) * 0.000000011574;
-                    return days > 7;
+                  const stale = mlAllLeads.filter(l => {
+                    if (l.status==="Won"||l.status==="Lost") return false;
+                    return (Date.now()-new Date(l.updatedAt||l.createdAt||Date.now()).getTime())*0.000000011574 > 7;
                   });
-                  if (stale.length === 0) return null;
+                  if (stale.length===0) return null;
                   return (
-                    <div style={{ padding:"10px 16px", background:"rgba(239,68,68,0.08)", border:"1px solid rgba(239,68,68,0.2)", borderRadius:10, marginBottom:16, display:"flex", alignItems:"center", gap:12 }}>
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#EF4444" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                      <div style={{ flex:1, fontSize:12, color:"#EF4444", fontWeight:600 }}>
-                        {stale.length} lead{stale.length > 1 ? "s" : ""} haven't been updated in 7+ days: {stale.slice(0,3).map(l => l.name||"Unnamed").join(", ")}{stale.length > 3 ? "..." : ""}
+                    <div style={{ padding:"10px 16px",background:"rgba(239,68,68,0.08)",border:"1px solid rgba(239,68,68,0.2)",borderRadius:10,marginBottom:16,display:"flex",alignItems:"center",gap:12 }}>
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#EF4444" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                      <div style={{ flex:1,fontSize:12,color:"#EF4444",fontWeight:600 }}>
+                        {stale.length} lead{stale.length>1?"s":""} not updated in 7+ days — {stale.slice(0,3).map(l=>l.name||"Unnamed").join(", ")}{stale.length>3?"...":""}
                       </div>
-                      <button type="button" onClick={() => setLeadSortBy("date")}
-                        style={{ padding:"5px 12px", background:"rgba(239,68,68,0.15)", border:"1px solid rgba(239,68,68,0.3)", borderRadius:6, color:"#EF4444", fontSize:11, fontWeight:700, cursor:"pointer" }}>
+                      <button type="button" onClick={()=>setLeadSortBy("date")}
+                        style={{ padding:"4px 12px",background:"rgba(239,68,68,0.15)",border:"1px solid rgba(239,68,68,0.3)",borderRadius:6,color:"#EF4444",fontSize:11,fontWeight:700,cursor:"pointer" }}>
                         View
                       </button>
                     </div>
                   );
                 })()}
 
-                {/* Ã¢"â‚¬Ã¢"â‚¬ FILTERS Ã¢"â‚¬Ã¢"â‚¬ */}
-                <div style={{ background:T.surfaceAlt, border:"1px solid "+T.border, borderRadius:12, padding:"12px 14px", marginBottom:16 }}>
-                  <div style={{ display:"flex", gap:8, flexWrap:"wrap", alignItems:"center" }}>
-                    <div style={{ position:"relative", flex:"2 1 200px" }}>
-                      <svg style={{ position:"absolute", left:10, top:"50%", transform:"translateY(-50%)" }} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={T.textMuted} strokeWidth="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                      <input value={leadSearch} onChange={e => setLeadSearch(e.target.value)}
-                        placeholder="Search name, phone, email..."
-                        style={{ width:"100%", padding:"8px 10px 8px 32px", background:T.surface, border:"1px solid "+T.border, borderRadius:8, color:T.textPrimary, fontSize:12, outline:"none", boxSizing:"border-box" }}/>
+                {/* ── FILTER BAR ── */}
+                <div style={{ background:T.surfaceAlt,border:"1px solid "+T.border,borderRadius:12,padding:"12px 14px",marginBottom:16 }}>
+                  <div style={{ display:"flex",gap:8,flexWrap:"wrap",alignItems:"center",marginBottom:8 }}>
+                    <div style={{ position:"relative",flex:"2 1 200px" }}>
+                      <svg style={{ position:"absolute",left:10,top:"50%",transform:"translateY(-50%)" }} width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={T.textMuted} strokeWidth="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                      <input value={leadSearch} onChange={e=>setLeadSearch(e.target.value)} placeholder="Search name, phone, email, area..."
+                        style={{ width:"100%",padding:"8px 10px 8px 30px",background:T.surface,border:"1px solid "+T.border,borderRadius:8,color:T.textPrimary,fontSize:12,outline:"none",boxSizing:"border-box" }}/>
                     </div>
-                    <select value={leadSortBy} onChange={e => setLeadSortBy(e.target.value)}
-                      style={{ flex:"1 1 110px", padding:"8px 10px", background:T.surface, border:"1px solid "+T.border, borderRadius:8, color:T.textPrimary, fontSize:12, outline:"none" }}>
+                    <select value={leadSortBy} onChange={e=>setLeadSortBy(e.target.value)}
+                      style={{ flex:"1 1 110px",padding:"8px 10px",background:T.surface,border:"1px solid "+T.border,borderRadius:8,color:T.textPrimary,fontSize:12,outline:"none" }}>
                       <option value="date">Latest First</option>
                       <option value="score">AI Score</option>
                       <option value="budget">Budget</option>
+                      <option value="name">Name</option>
                     </select>
-                    <select value={leadStatusFilter} onChange={e => setLeadStatusFilter(e.target.value)}
-                      style={{ flex:"1 1 100px", padding:"8px 10px", background:T.surface, border:"1px solid "+T.border, borderRadius:8, color:T.textPrimary, fontSize:12, outline:"none" }}>
+                    <select value={leadStatusFilter} onChange={e=>setLeadStatusFilter(e.target.value)}
+                      style={{ flex:"1 1 100px",padding:"8px 10px",background:T.surface,border:"1px solid "+T.border,borderRadius:8,color:T.textPrimary,fontSize:12,outline:"none" }}>
                       <option value="all">All Status</option>
-                      {Object.entries(ML_STATUSES).map(([k,v]) => <option key={k} value={k}>{v.label}</option>)}
+                      {Object.entries(ML_STATUSES).map(([k,v])=><option key={k} value={k}>{v.label}</option>)}
                     </select>
-                    <select value={leadSourceFilter} onChange={e => setLeadSourceFilter(e.target.value)}
-                      style={{ flex:"1 1 110px", padding:"8px 10px", background:T.surface, border:"1px solid "+T.border, borderRadius:8, color:T.textPrimary, fontSize:12, outline:"none" }}>
+                    <select value={leadSourceFilter} onChange={e=>setLeadSourceFilter(e.target.value)}
+                      style={{ flex:"1 1 110px",padding:"8px 10px",background:T.surface,border:"1px solid "+T.border,borderRadius:8,color:T.textPrimary,fontSize:12,outline:"none" }}>
                       <option value="all">All Sources</option>
-                      {Object.keys(ML_SOURCES).map(s => <option key={s} value={s}>{s}</option>)}
+                      {Object.keys(ML_SOURCES).map(s=><option key={s} value={s}>{s}</option>)}
                     </select>
-                    <select value={leadBudgetFilter} onChange={e => setLeadBudgetFilter(e.target.value)}
-                      style={{ flex:"1 1 110px", padding:"8px 10px", background:T.surface, border:"1px solid "+T.border, borderRadius:8, color:T.textPrimary, fontSize:12, outline:"none" }}>
+                    <select value={leadNatFilter} onChange={e=>setLeadNatFilter(e.target.value)}
+                      style={{ flex:"1 1 110px",padding:"8px 10px",background:T.surface,border:"1px solid "+T.border,borderRadius:8,color:T.textPrimary,fontSize:12,outline:"none" }}>
+                      <option value="all">All Nationalities</option>
+                      {ML_NATS.map(n=><option key={n} value={n}>{(ML_FLAGS[n]||"")} {n}</option>)}
+                    </select>
+                  </div>
+                  <div style={{ display:"flex",gap:8,flexWrap:"wrap",alignItems:"center" }}>
+                    <select value={leadBudgetFilter} onChange={e=>setLeadBudgetFilter(e.target.value)}
+                      style={{ flex:"1 1 110px",padding:"8px 10px",background:T.surface,border:"1px solid "+T.border,borderRadius:8,color:T.textPrimary,fontSize:12,outline:"none" }}>
                       <option value="all">All Budgets</option>
-                      <option value="under1m">Under 1M</option>
-                      <option value="1to2m">1M —œ 2M</option>
-                      <option value="2to5m">2M —œ 5M</option>
-                      <option value="above5m">5M+</option>
+                      <option value="under1m">Under AED 1M</option>
+                      <option value="1to3m">AED 1M - 3M</option>
+                      <option value="3to5m">AED 3M - 5M</option>
+                      <option value="5to10m">AED 5M - 10M</option>
+                      <option value="above10m">AED 10M+</option>
                     </select>
-                    <select value={leadTypeFilter} onChange={e => setLeadTypeFilter(e.target.value)}
-                      style={{ flex:"1 1 90px", padding:"8px 10px", background:T.surface, border:"1px solid "+T.border, borderRadius:8, color:T.textPrimary, fontSize:12, outline:"none" }}>
+                    <select value={leadTypeFilter} onChange={e=>setLeadTypeFilter(e.target.value)}
+                      style={{ flex:"1 1 110px",padding:"8px 10px",background:T.surface,border:"1px solid "+T.border,borderRadius:8,color:T.textPrimary,fontSize:12,outline:"none" }}>
                       <option value="all">All Types</option>
                       <option value="Buy">Buy</option>
                       <option value="Rent">Rent</option>
                       <option value="Off-Plan">Off-Plan</option>
                       <option value="Invest">Invest</option>
                     </select>
+                    <select value={leadTagFilter} onChange={e=>setLeadTagFilter(e.target.value)}
+                      style={{ flex:"1 1 110px",padding:"8px 10px",background:T.surface,border:"1px solid "+T.border,borderRadius:8,color:T.textPrimary,fontSize:12,outline:"none" }}>
+                      <option value="all">All Timelines</option>
+                      <option value="Immediate">Immediate</option>
+                      <option value="1-3 months">1-3 Months</option>
+                      <option value="3-6 months">3-6 Months</option>
+                      <option value="6-12 months">6-12 Months</option>
+                      <option value="Just browsing">Just Browsing</option>
+                    </select>
                     <button type="button"
-                      onClick={() => { setLeadSearch(""); setLeadStatusFilter("all"); setLeadSourceFilter("all"); setLeadBudgetFilter("all"); setLeadTypeFilter("all"); setLeadSortBy("date"); }}
-                      style={{ padding:"8px 12px", borderRadius:8, border:"1px solid "+T.border, background:"transparent", color:T.textMuted, fontSize:11, cursor:"pointer" }}>
-                      Reset
+                      onClick={()=>{setLeadSearch("");setLeadStatusFilter("all");setLeadSourceFilter("all");setLeadNatFilter("all");setLeadBudgetFilter("all");setLeadTypeFilter("all");setLeadTagFilter("all");setLeadSortBy("date");}}
+                      style={{ padding:"8px 14px",borderRadius:8,border:"1px solid "+T.border,background:"transparent",color:T.textMuted,fontSize:11,cursor:"pointer" }}>
+                      Reset Filters
                     </button>
-                    <button type="button" onClick={() => setLeadShowAdd(v => !v)}
-                      style={{ padding:"8px 16px", borderRadius:8, border:"none", background:leadShowAdd?"rgba(212,168,67,0.15)":"linear-gradient(135deg,"+T.gold+",#B8902E)", color:leadShowAdd?T.gold:"#0A0E1A", fontSize:12, fontWeight:700, cursor:"pointer" }}>
-                      {leadShowAdd ? "Ã¢Å“â€¢ Cancel" : "+ Add Lead"}
+                    <button type="button" onClick={()=>setLeadShowAdd(v=>!v)}
+                      style={{ marginLeft:"auto",padding:"8px 16px",borderRadius:8,border:"none",background:leadShowAdd?"rgba(212,168,67,0.15)":"linear-gradient(135deg,#D4A843,#B8902E)",color:leadShowAdd?"#D4A843":"#0A0E1A",fontSize:12,fontWeight:700,cursor:"pointer" }}>
+                      {leadShowAdd ? "Cancel" : "+ Add Lead"}
                     </button>
                   </div>
                 </div>
 
-                {/* Ã¢"â‚¬Ã¢"â‚¬ ADD LEAD FORM Ã¢"â‚¬Ã¢"â‚¬ */}
+                {/* ── ADD LEAD FORM ── */}
                 {leadShowAdd && (
-                  <div style={{ padding:"18px 20px", background:"rgba(212,168,67,0.05)", border:"1px solid rgba(212,168,67,0.2)", borderRadius:12, marginBottom:16 }}>
-                    <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:14 }}>New Lead</div>
-                    <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:10, marginBottom:10 }}>
+                  <div style={{ padding:"20px",background:"rgba(212,168,67,0.05)",border:"1px solid rgba(212,168,67,0.2)",borderRadius:12,marginBottom:16 }}>
+                    <div style={{ fontSize:13,fontWeight:700,color:T.white,marginBottom:14 }}>Add New Lead</div>
+                    <div style={{ display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10,marginBottom:10 }}>
                       {[
-                        { label:"Full Name *",         val:leadAddName,   set:setLeadAddName,   ph:"Client name"        },
-                        { label:"WhatsApp / Phone *",  val:leadAddPhone,  set:setLeadAddPhone,  ph:"+971 50 XXX XXXX"   },
-                        { label:"Email",               val:leadAddEmail,  set:setLeadAddEmail,  ph:"email@example.com"  },
-                        { label:"Budget (AED)",        val:leadAddBudget, set:setLeadAddBudget, ph:"e.g. 2000000"       },
-                        { label:"Community / Area",    val:leadAddComm,   set:setLeadAddComm,   ph:"e.g. Dubai Hills"   },
-                      ].map((f,i) => (
-                        <div key={i}>
-                          <div style={{ fontSize:11, color:T.textMuted, marginBottom:4 }}>{f.label}</div>
-                          <input value={f.val} onChange={e => f.set(e.target.value)} placeholder={f.ph}
-                            style={{ width:"100%", padding:"8px 12px", background:T.surfaceAlt, border:"1px solid "+T.border, borderRadius:8, color:T.textPrimary, fontSize:12, outline:"none", boxSizing:"border-box" }}/>
+                        {label:"Full Name *",      val:leadAddName,    set:setLeadAddName,    ph:"Client name"},
+                        {label:"Phone / WhatsApp *",val:leadAddPhone,   set:setLeadAddPhone,   ph:"+971 50 XXX XXXX"},
+                        {label:"Email",             val:leadAddEmail,   set:setLeadAddEmail,   ph:"email@example.com"},
+                        {label:"Budget (AED)",      val:leadAddBudget,  set:setLeadAddBudget,  ph:"e.g. 2000000"},
+                        {label:"Community / Area",  val:leadAddComm,    set:setLeadAddComm,    ph:"e.g. Dubai Hills"},
+                      ].map((f,i)=>(
+                        <div key={i} style={{ gridColumn: i===4?"span 1":"span 1" }}>
+                          <div style={{ fontSize:11,color:T.textMuted,marginBottom:4 }}>{f.label}</div>
+                          <input value={f.val} onChange={e=>f.set(e.target.value)} placeholder={f.ph}
+                            style={{ width:"100%",padding:"8px 10px",background:T.surfaceAlt,border:"1px solid "+T.border,borderRadius:8,color:T.textPrimary,fontSize:12,outline:"none",boxSizing:"border-box" }}/>
                         </div>
                       ))}
                     </div>
-                    <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr auto", gap:10, alignItems:"end" }}>
+                    <div style={{ display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10,marginBottom:10 }}>
                       <div>
-                        <div style={{ fontSize:11, color:T.textMuted, marginBottom:4 }}>Source</div>
-                        <select value={leadAddSource} onChange={e => setLeadAddSource(e.target.value)}
-                          style={{ width:"100%", padding:"8px 12px", background:T.surfaceAlt, border:"1px solid "+T.border, borderRadius:8, color:T.textPrimary, fontSize:12, outline:"none" }}>
-                          {Object.keys(ML_SOURCES).map(s => <option key={s} value={s}>{s}</option>)}
+                        <div style={{ fontSize:11,color:T.textMuted,marginBottom:4 }}>Nationality</div>
+                        <select value={leadAddNat||""} onChange={e=>setLeadAddNat(e.target.value)}
+                          style={{ width:"100%",padding:"8px 10px",background:T.surfaceAlt,border:"1px solid "+T.border,borderRadius:8,color:T.textPrimary,fontSize:12,outline:"none" }}>
+                          <option value="">Select...</option>
+                          {ML_NATS.map(n=><option key={n} value={n}>{(ML_FLAGS[n]||"")} {n}</option>)}
                         </select>
                       </div>
                       <div>
-                        <div style={{ fontSize:11, color:T.textMuted, marginBottom:4 }}>Status</div>
-                        <select value={leadAddStatus} onChange={e => setLeadAddStatus(e.target.value)}
-                          style={{ width:"100%", padding:"8px 12px", background:T.surfaceAlt, border:"1px solid "+T.border, borderRadius:8, color:T.textPrimary, fontSize:12, outline:"none" }}>
-                          {Object.entries(ML_STATUSES).map(([k,v]) => <option key={k} value={k}>{v.label}</option>)}
+                        <div style={{ fontSize:11,color:T.textMuted,marginBottom:4 }}>Language</div>
+                        <select value={leadAddLang||""} onChange={e=>setLeadAddLang(e.target.value)}
+                          style={{ width:"100%",padding:"8px 10px",background:T.surfaceAlt,border:"1px solid "+T.border,borderRadius:8,color:T.textPrimary,fontSize:12,outline:"none" }}>
+                          <option value="">Select...</option>
+                          {ML_LANGS.map(l=><option key={l} value={l}>{l}</option>)}
                         </select>
                       </div>
                       <div>
-                        <div style={{ fontSize:11, color:T.textMuted, marginBottom:4 }}>Type</div>
-                        <select value={leadAddType} onChange={e => setLeadAddType(e.target.value)}
-                          style={{ width:"100%", padding:"8px 12px", background:T.surfaceAlt, border:"1px solid "+T.border, borderRadius:8, color:T.textPrimary, fontSize:12, outline:"none" }}>
-                          {["Buy","Rent","Off-Plan","Invest"].map(t => <option key={t} value={t}>{t}</option>)}
+                        <div style={{ fontSize:11,color:T.textMuted,marginBottom:4 }}>Timeline / Urgency</div>
+                        <select value={leadAddTimeline||""} onChange={e=>setLeadAddTimeline(e.target.value)}
+                          style={{ width:"100%",padding:"8px 10px",background:T.surfaceAlt,border:"1px solid "+T.border,borderRadius:8,color:T.textPrimary,fontSize:12,outline:"none" }}>
+                          <option value="">Select...</option>
+                          <option value="Immediate">Immediate</option>
+                          <option value="1-3 months">1-3 Months</option>
+                          <option value="3-6 months">3-6 Months</option>
+                          <option value="6-12 months">6-12 Months</option>
+                          <option value="Just browsing">Just Browsing</option>
                         </select>
                       </div>
-                      <button type="button" onClick={mlSaveNewLead} disabled={leadAddSaving}
-                        style={{ padding:"9px 24px", background:(!leadAddName||!leadAddPhone||leadAddSaving)?"rgba(212,168,67,0.3)":"linear-gradient(135deg,"+T.gold+",#B8902E)", color:"#0A0E1A", borderRadius:8, border:"none", fontSize:13, fontWeight:700, cursor:"pointer" }}>
+                      <div>
+                        <div style={{ fontSize:11,color:T.textMuted,marginBottom:4 }}>Purpose</div>
+                        <select value={leadAddPurpose||""} onChange={e=>setLeadAddPurpose(e.target.value)}
+                          style={{ width:"100%",padding:"8px 10px",background:T.surfaceAlt,border:"1px solid "+T.border,borderRadius:8,color:T.textPrimary,fontSize:12,outline:"none" }}>
+                          <option value="">Select...</option>
+                          <option value="Live-in">Live-in</option>
+                          <option value="Investment">Investment</option>
+                          <option value="Rental income">Rental Income</option>
+                          <option value="Golden Visa">Golden Visa</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div style={{ display:"grid",gridTemplateColumns:"repeat(4,1fr) auto",gap:10,alignItems:"end" }}>
+                      <div>
+                        <div style={{ fontSize:11,color:T.textMuted,marginBottom:4 }}>Source</div>
+                        <select value={leadAddSource} onChange={e=>setLeadAddSource(e.target.value)}
+                          style={{ width:"100%",padding:"8px 10px",background:T.surfaceAlt,border:"1px solid "+T.border,borderRadius:8,color:T.textPrimary,fontSize:12,outline:"none" }}>
+                          {Object.keys(ML_SOURCES).map(s=><option key={s} value={s}>{s}</option>)}
+                        </select>
+                      </div>
+                      <div>
+                        <div style={{ fontSize:11,color:T.textMuted,marginBottom:4 }}>Status</div>
+                        <select value={leadAddStatus} onChange={e=>setLeadAddStatus(e.target.value)}
+                          style={{ width:"100%",padding:"8px 10px",background:T.surfaceAlt,border:"1px solid "+T.border,borderRadius:8,color:T.textPrimary,fontSize:12,outline:"none" }}>
+                          {Object.entries(ML_STATUSES).map(([k,v])=><option key={k} value={k}>{v.label}</option>)}
+                        </select>
+                      </div>
+                      <div>
+                        <div style={{ fontSize:11,color:T.textMuted,marginBottom:4 }}>Type</div>
+                        <select value={leadAddType} onChange={e=>setLeadAddType(e.target.value)}
+                          style={{ width:"100%",padding:"8px 10px",background:T.surfaceAlt,border:"1px solid "+T.border,borderRadius:8,color:T.textPrimary,fontSize:12,outline:"none" }}>
+                          {["Buy","Rent","Off-Plan","Invest"].map(t=><option key={t} value={t}>{t}</option>)}
+                        </select>
+                      </div>
+                      <div style={{ gridColumn:"span 1" }}/>
+                      <button type="button" onClick={mlSave} disabled={leadAddSaving}
+                        style={{ padding:"9px 24px",background:(!leadAddName||!leadAddPhone||leadAddSaving)?"rgba(212,168,67,0.3)":"linear-gradient(135deg,#D4A843,#B8902E)",color:"#0A0E1A",borderRadius:8,border:"none",fontSize:13,fontWeight:700,cursor:"pointer",whiteSpace:"nowrap" }}>
                         {leadAddSaving ? "Saving..." : "Save Lead"}
                       </button>
                     </div>
                   </div>
                 )}
 
-                {/* Ã¢"â‚¬Ã¢"â‚¬ LEAD LIST Ã¢"â‚¬Ã¢"â‚¬ */}
-                <div style={{ background:T.card, border:"1px solid "+T.border, borderRadius:12, overflow:"hidden" }}>
-                  {/* List header */}
-                  <div style={{ display:"grid", gridTemplateColumns:"minmax(160px,1fr) 60px 90px 100px 110px 90px 80px", gap:8, padding:"10px 14px", background:T.surfaceAlt, borderBottom:"1px solid "+T.border }}>
-                    {["Lead","Score","Status","Source","Budget","Date","Actions"].map((h,i) => (
-                      <div key={i} style={{ fontSize:10, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.6 }}>{h}</div>
+                {/* ── LEAD LIST ── */}
+                <div style={{ background:T.card,border:"1px solid "+T.border,borderRadius:12,overflow:"hidden" }}>
+                  <div style={{ display:"grid",gridTemplateColumns:"minmax(200px,1fr) 55px 90px 100px 55px 110px 90px 80px",gap:8,padding:"10px 14px",background:T.surfaceAlt,borderBottom:"1px solid "+T.border }}>
+                    {["Lead","Score","Status","Source","Type","Budget","Date","Actions"].map((h,i)=>(
+                      <div key={i} style={{ fontSize:10,fontWeight:700,color:T.textMuted,textTransform:"uppercase",letterSpacing:0.6 }}>{h}</div>
                     ))}
                   </div>
 
-                  {/* Empty state */}
                   {mlFiltered.length === 0 && (
-                    <div style={{ padding:"48px 24px", textAlign:"center" }}>
-                      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke={T.textMuted} strokeWidth="1" style={{ marginBottom:12, opacity:0.4 }}><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg>
-                      <div style={{ fontSize:14, fontWeight:600, color:T.textPrimary, marginBottom:4 }}>No leads found</div>
-                      <div style={{ fontSize:12, color:T.textMuted }}>Try adjusting filters or add a new lead</div>
+                    <div style={{ padding:"48px 24px",textAlign:"center" }}>
+                      <div style={{ fontSize:14,fontWeight:600,color:T.textPrimary,marginBottom:4 }}>No leads found</div>
+                      <div style={{ fontSize:12,color:T.textMuted }}>Try adjusting your filters or add a new lead</div>
                     </div>
                   )}
 
-                  {/* Lead rows */}
-                  {mlFiltered.map((l, idx) => {
-                    const sc   = ML_STATUSES[l.status||"New"] || ML_STATUSES["New"];
+                  {mlFiltered.map((l,idx)=>{
+                    const sc = ML_STATUSES[l.status||"New"] || ML_STATUSES["New"];
                     const srcC = ML_SOURCES[l.source] || "#94A3B8";
                     const name = (l.name||"").trim() || (l.email||"").split("@")[0] || l.phone || "Unnamed";
-                    const initials = name.split(" ").map(w => w[0]||"").join("").slice(0,2).toUpperCase();
+                    const initials = name.split(" ").map(w=>w[0]||"").join("").slice(0,2).toUpperCase();
                     const budget = parseFloat(l.budget||0);
-                    const isGV  = budget >= 2000000;
-                    const ai    = mlScoreLead(l);
-                    const waHref = mlWaBase + cleanPhone(l.phone);
+                    const isGV = budget >= 2000000;
+                    const ai = mlScore(l);
+                    const flag = ML_FLAGS[l.nationality] || "";
                     return (
                       <div key={l.id||idx}
-                        onClick={() => { setSelectedLead(l); setLeadDrawerTab("details"); }}
-                        onMouseEnter={e => e.currentTarget.style.background = "rgba(212,168,67,0.03)"}
-                        onMouseLeave={e => e.currentTarget.style.background = "transparent"}
-                        style={{ display:"grid", gridTemplateColumns:"minmax(160px,1fr) 60px 90px 100px 110px 90px 80px", gap:8, padding:"10px 14px", alignItems:"center", borderBottom:"1px solid "+T.border, cursor:"pointer", transition:"background 0.12s" }}>
+                        onClick={()=>{setSelectedLead(l);setLeadDrawerTab("details");}}
+                        onMouseEnter={e=>e.currentTarget.style.background="rgba(212,168,67,0.03)"}
+                        onMouseLeave={e=>e.currentTarget.style.background="transparent"}
+                        style={{ display:"grid",gridTemplateColumns:"minmax(200px,1fr) 55px 90px 100px 55px 110px 90px 80px",gap:8,padding:"10px 14px",alignItems:"center",borderBottom:"1px solid "+T.border,cursor:"pointer",transition:"background 0.12s" }}>
 
-                        {/* Lead info */}
-                        <div style={{ display:"flex", alignItems:"center", gap:10, minWidth:0 }}>
-                          <div style={{ width:34, height:34, borderRadius:"50%", background:"rgba(212,168,67,0.12)", border:"1px solid rgba(212,168,67,0.2)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:11, fontWeight:700, color:T.gold, flexShrink:0 }}>
+                        <div style={{ display:"flex",alignItems:"center",gap:10,minWidth:0 }}>
+                          <div style={{ width:34,height:34,borderRadius:"50%",background:"rgba(212,168,67,0.12)",border:"1px solid rgba(212,168,67,0.2)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:700,color:"#D4A843",flexShrink:0,position:"relative" }}>
                             {initials}
+                            {flag && <span style={{ position:"absolute",bottom:-4,right:-4,fontSize:11,lineHeight:1 }}>{flag}</span>}
                           </div>
                           <div style={{ minWidth:0 }}>
-                            <div style={{ display:"flex", gap:5, alignItems:"center" }}>
-                              <span style={{ fontSize:13, fontWeight:600, color:T.textPrimary, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{name}</span>
-                              {isGV && <span style={{ fontSize:9, padding:"1px 5px", borderRadius:4, background:"rgba(212,168,67,0.15)", color:T.gold, fontWeight:700 }}>GV</span>}
+                            <div style={{ display:"flex",gap:5,alignItems:"center",flexWrap:"wrap" }}>
+                              <span style={{ fontSize:13,fontWeight:600,color:T.textPrimary,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis" }}>{name}</span>
+                              {isGV && <span style={{ fontSize:9,padding:"1px 5px",borderRadius:4,background:"rgba(212,168,67,0.15)",color:"#D4A843",fontWeight:700,flexShrink:0 }}>GV</span>}
+                              {l.timeline==="Immediate" && <span style={{ fontSize:9,padding:"1px 5px",borderRadius:4,background:"rgba(239,68,68,0.15)",color:"#EF4444",fontWeight:700,flexShrink:0 }}>URGENT</span>}
                             </div>
-                            <div style={{ fontSize:11, color:T.textMuted, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>
-                              {l.phone || l.email || l.community || "—"}
+                            <div style={{ fontSize:11,color:T.textMuted,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis" }}>
+                              {l.phone||l.email||l.community||"—"}
+                              {l.nationality ? " · "+l.nationality : ""}
                             </div>
                           </div>
                         </div>
 
-                        {/* AI Score */}
                         <div style={{ textAlign:"center" }}>
-                          <div style={{ fontSize:14, fontWeight:900, color:ai.color, fontFamily:"'Fraunces',serif", lineHeight:1 }}>{ai.score}</div>
-                          <div style={{ fontSize:8, fontWeight:700, color:ai.color, letterSpacing:0.5 }}>{ai.label}</div>
+                          <div style={{ fontSize:14,fontWeight:900,color:ai.color,fontFamily:"'Fraunces',serif",lineHeight:1 }}>{ai.score}</div>
+                          <div style={{ fontSize:8,fontWeight:700,color:ai.color,letterSpacing:0.5 }}>{ai.label}</div>
                         </div>
 
-                        {/* Status */}
                         <div>
-                          <span style={{ display:"inline-block", padding:"3px 8px", borderRadius:6, fontSize:11, fontWeight:600, background:sc.bg, color:sc.color }}>{sc.label}</span>
+                          <span style={{ display:"inline-block",padding:"3px 8px",borderRadius:6,fontSize:11,fontWeight:600,background:sc.bg,color:sc.color }}>{sc.label}</span>
                         </div>
 
-                        {/* Source */}
                         <div>
-                          <span style={{ display:"inline-block", padding:"3px 8px", borderRadius:5, fontSize:10, fontWeight:600, background:srcC+"14", color:srcC, whiteSpace:"nowrap" }}>{l.source||"Manual"}</span>
+                          <span style={{ display:"inline-block",padding:"3px 8px",borderRadius:5,fontSize:10,fontWeight:600,background:srcC+"20",color:srcC,whiteSpace:"nowrap" }}>{l.source||"Manual"}</span>
                         </div>
 
-                        {/* Budget */}
-                        <div style={{ fontSize:12, fontWeight:700, color:isGV?T.gold:T.textPrimary }}>
-                          {budget > 0 ? ("AED " + (budget>=1000000?(budget*0.000001).toFixed(1)+"M":budget.toLocaleString())) : "—"}
+                        <div style={{ fontSize:11,color:T.textMuted }}>{l.type||"Buy"}</div>
+
+                        <div style={{ fontSize:12,fontWeight:700,color:isGV?"#D4A843":T.textPrimary }}>
+                          {budget>0?("AED "+(budget>=1000000?(budget*0.000001).toFixed(1)+"M":budget.toLocaleString())):"—"}
                         </div>
 
-                        {/* Date */}
-                        <div style={{ fontSize:11, color:T.textMuted }}>
-                          {l.createdAt ? new Date(l.createdAt).toLocaleDateString("en-AE",{day:"2-digit",month:"short"}) : "—"}
+                        <div style={{ fontSize:11,color:T.textMuted }}>
+                          {l.createdAt?new Date(l.createdAt).toLocaleDateString("en-AE",{day:"2-digit",month:"short"}):"—"}
                         </div>
 
-                        {/* Actions */}
-                        <div onClick={e => e.stopPropagation()} style={{ display:"flex", gap:4 }}>
+                        <div onClick={e=>e.stopPropagation()} style={{ display:"flex",gap:3 }}>
                           {l.phone && (
-                            <a href={"https://wa.me/"+cleanPhone(l.phone)} target="_blank" rel="noopener noreferrer"
-                              style={{ display:"flex", alignItems:"center", justifyContent:"center", width:28, height:28, borderRadius:7, border:"1px solid rgba(37,211,102,0.3)", background:"rgba(37,211,102,0.08)", color:"#25D366", textDecoration:"none" }}>
+                            <a href={"https://wa.me/"+clnPhone(l.phone)} target="_blank" rel="noopener noreferrer"
+                              style={{ display:"flex",alignItems:"center",justifyContent:"center",width:26,height:26,borderRadius:6,border:"1px solid rgba(37,211,102,0.3)",background:"rgba(37,211,102,0.08)",color:"#25D366",textDecoration:"none" }}>
                               <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/></svg>
                             </a>
                           )}
                           {l.email && (
                             <a href={"mailto:"+l.email}
-                              style={{ display:"flex", alignItems:"center", justifyContent:"center", width:28, height:28, borderRadius:7, border:"1px solid rgba(59,130,246,0.3)", background:"rgba(59,130,246,0.08)", color:"#3B82F6", textDecoration:"none" }}>
+                              style={{ display:"flex",alignItems:"center",justifyContent:"center",width:26,height:26,borderRadius:6,border:"1px solid rgba(59,130,246,0.3)",background:"rgba(59,130,246,0.08)",color:"#3B82F6",textDecoration:"none" }}>
                               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
                             </a>
                           )}
                           {l.phone && (
                             <a href={"tel:"+l.phone}
-                              style={{ display:"flex", alignItems:"center", justifyContent:"center", width:28, height:28, borderRadius:7, border:"1px solid rgba(16,185,129,0.3)", background:"rgba(16,185,129,0.08)", color:"#10B981", textDecoration:"none" }}>
+                              style={{ display:"flex",alignItems:"center",justifyContent:"center",width:26,height:26,borderRadius:6,border:"1px solid rgba(16,185,129,0.3)",background:"rgba(16,185,129,0.08)",color:"#10B981",textDecoration:"none" }}>
                               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 2.18h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 9.91a16 16 0 0 0 6.08 6.08l.91-.91a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7a2 2 0 0 1 1.72 2.02z"/></svg>
                             </a>
                           )}
@@ -15547,191 +15706,181 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                     );
                   })}
 
-                  {/* Footer count */}
                   {mlFiltered.length > 0 && (
-                    <div style={{ padding:"10px 14px", borderTop:"1px solid "+T.border, fontSize:11, color:T.textMuted, display:"flex", justifyContent:"space-between" }}>
-                      <span>Showing {mlFiltered.length} of {(mlAllLeads||[]).length} leads</span>
-                      <span>{(mlAllLeads||[]).filter(l => l.status === "Won").length} Won Ã‚Â· {(mlAllLeads||[]).filter(l => l.status === "Lost").length} Lost</span>
+                    <div style={{ padding:"10px 14px",borderTop:"1px solid "+T.border,fontSize:11,color:T.textMuted,display:"flex",justifyContent:"space-between" }}>
+                      <span>Showing {mlFiltered.length} of {mlAllLeads.length} leads</span>
+                      <span>{mlWon} Won · {mlAllLeads.filter(l=>l.status==="Lost").length} Lost · Pipeline AED {(mlTotalVal*0.000001).toFixed(1)}M</span>
                     </div>
                   )}
                 </div>
 
-                {/* Ã¢"â‚¬Ã¢"â‚¬ LEAD DETAIL DRAWER Ã¢"â‚¬Ã¢"â‚¬ */}
+                {/* ── LEAD DETAIL DRAWER ── */}
                 {selectedLead && (
-                  <div style={{ position:"fixed", inset:0, zIndex:1500, display:"flex" }}
-                    onClick={e => { if (e.target === e.currentTarget) setSelectedLead(null); }}>
-                    <div style={{ flex:1, background:"rgba(0,0,0,0.5)" }} onClick={() => setSelectedLead(null)}/>
-                    <div style={{ width:460, background:T.bg, borderLeft:"1px solid "+T.border, display:"flex", flexDirection:"column", overflowY:"auto" }}>
-
-                      {/* Drawer header */}
-                      <div style={{ padding:"20px 20px 0", borderBottom:"1px solid "+T.border, flexShrink:0 }}>
-                        <div style={{ display:"flex", alignItems:"flex-start", justifyContent:"space-between", marginBottom:12 }}>
+                  <div style={{ position:"fixed",inset:0,zIndex:1500,display:"flex" }}
+                    onClick={e=>{if(e.target===e.currentTarget)setSelectedLead(null);}}>
+                    <div style={{ flex:1,background:"rgba(0,0,0,0.5)" }} onClick={()=>setSelectedLead(null)}/>
+                    <div style={{ width:480,background:T.bg,borderLeft:"1px solid "+T.border,display:"flex",flexDirection:"column",overflowY:"auto" }}>
+                      <div style={{ padding:"20px 20px 0",borderBottom:"1px solid "+T.border,flexShrink:0 }}>
+                        <div style={{ display:"flex",alignItems:"flex-start",justifyContent:"space-between",marginBottom:12 }}>
                           <div>
-                            <div style={{ fontSize:17, fontWeight:700, color:T.white, fontFamily:"'Fraunces',serif" }}>{selectedLead.name||"Unnamed Lead"}</div>
-                            <div style={{ fontSize:12, color:T.textMuted, marginTop:2 }}>{selectedLead.community||""} {selectedLead.type ? "Ã‚Â· "+selectedLead.type : ""}</div>
+                            <div style={{ fontSize:17,fontWeight:700,color:T.white,fontFamily:"'Fraunces',serif" }}>
+                              {(ML_FLAGS[selectedLead.nationality]||"")} {selectedLead.name||"Unnamed Lead"}
+                            </div>
+                            <div style={{ fontSize:12,color:T.textMuted,marginTop:2 }}>
+                              {selectedLead.nationality||""}{selectedLead.language?" · "+selectedLead.language:""}{selectedLead.community?" · "+selectedLead.community:""}
+                            </div>
+                            {selectedLead.timeline && (
+                              <span style={{ display:"inline-block",marginTop:4,fontSize:10,padding:"2px 8px",borderRadius:10,background:selectedLead.timeline==="Immediate"?"rgba(239,68,68,0.15)":"rgba(212,168,67,0.12)",color:selectedLead.timeline==="Immediate"?"#EF4444":"#D4A843",fontWeight:700 }}>
+                                {selectedLead.timeline}
+                              </span>
+                            )}
                           </div>
-                          <button type="button" onClick={() => setSelectedLead(null)}
-                            style={{ background:T.surfaceAlt, border:"1px solid "+T.border, borderRadius:8, color:T.textMuted, width:30, height:30, cursor:"pointer", fontSize:16, display:"flex", alignItems:"center", justifyContent:"center" }}>Ã¢Å“â€¢</button>
+                          <button type="button" onClick={()=>setSelectedLead(null)}
+                            style={{ background:T.surfaceAlt,border:"1px solid "+T.border,borderRadius:8,color:T.textMuted,width:30,height:30,cursor:"pointer",fontSize:16,display:"flex",alignItems:"center",justifyContent:"center" }}>X</button>
                         </div>
 
-                        {/* Status selector */}
-                        <div style={{ display:"flex", gap:6, marginBottom:12, flexWrap:"wrap" }}>
-                          {Object.entries(ML_STATUSES).map(([k,v]) => (
-                            <button key={k} type="button" onClick={() => mlUpdateStatus(selectedLead.id, k)}
-                              style={{ padding:"4px 12px", borderRadius:20, fontSize:11, fontWeight:700, cursor:"pointer", border:"1px solid "+(selectedLead.status===k?v.color:T.border), background:selectedLead.status===k?v.bg:"transparent", color:selectedLead.status===k?v.color:T.textMuted }}>
+                        <div style={{ display:"flex",gap:5,marginBottom:12,flexWrap:"wrap" }}>
+                          {Object.entries(ML_STATUSES).map(([k,v])=>(
+                            <button key={k} type="button" onClick={()=>mlStatus(selectedLead.id,k)}
+                              style={{ padding:"3px 10px",borderRadius:16,fontSize:11,fontWeight:700,cursor:"pointer",border:"1px solid "+(selectedLead.status===k?v.color:T.border),background:selectedLead.status===k?v.bg:"transparent",color:selectedLead.status===k?v.color:T.textMuted }}>
                               {v.label}
                             </button>
                           ))}
                         </div>
 
-                        {/* Drawer tabs */}
-                        <div style={{ display:"flex", gap:0, marginBottom:0 }}>
-                          {["details","notes","tasks"].map(t => (
-                            <button key={t} type="button" onClick={() => setLeadDrawerTab(t)}
-                              style={{ padding:"8px 16px", fontSize:12, fontWeight:600, border:"none", background:"transparent", color:leadDrawerTab===t?T.gold:T.textMuted, borderBottom:"2px solid "+(leadDrawerTab===t?T.gold:"transparent"), cursor:"pointer", textTransform:"capitalize" }}>
+                        <div style={{ display:"flex",gap:0 }}>
+                          {["details","notes","tasks","activity"].map(t=>(
+                            <button key={t} type="button" onClick={()=>setLeadDrawerTab(t)}
+                              style={{ padding:"8px 14px",fontSize:12,fontWeight:600,border:"none",background:"transparent",color:leadDrawerTab===t?"#D4A843":T.textMuted,borderBottom:"2px solid "+(leadDrawerTab===t?"#D4A843":"transparent"),cursor:"pointer",textTransform:"capitalize" }}>
                               {t}
                             </button>
                           ))}
                         </div>
                       </div>
 
-                      {/* Drawer body */}
-                      <div style={{ flex:1, padding:"16px 20px", overflowY:"auto" }}>
+                      <div style={{ flex:1,padding:"16px 20px",overflowY:"auto" }}>
 
-                        {/* Details tab */}
                         {leadDrawerTab === "details" && (
                           <div>
-                            {/* AI Score card */}
                             {(() => {
-                              const ai = mlScoreLead(selectedLead);
+                              const ai = mlScore(selectedLead);
                               return (
-                                <div style={{ background:"rgba(212,168,67,0.06)", border:"1px solid rgba(212,168,67,0.2)", borderRadius:10, padding:"12px 14px", marginBottom:14 }}>
-                                  <div style={{ display:"flex", alignItems:"center", gap:10 }}>
-                                    <div style={{ fontSize:28, fontWeight:900, color:ai.color, fontFamily:"'Fraunces',serif", lineHeight:1 }}>{ai.score}</div>
-                                    <div>
-                                      <div style={{ fontSize:12, fontWeight:700, color:ai.color }}>{ai.label} Lead</div>
-                                      <div style={{ fontSize:11, color:T.textMuted }}>AI Lead Score</div>
-                                    </div>
+                                <div style={{ background:"rgba(212,168,67,0.06)",border:"1px solid rgba(212,168,67,0.2)",borderRadius:10,padding:"12px 14px",marginBottom:14 }}>
+                                  <div style={{ display:"flex",alignItems:"center",gap:12 }}>
+                                    <div style={{ fontSize:28,fontWeight:900,color:ai.color,fontFamily:"'Fraunces',serif",lineHeight:1 }}>{ai.score}</div>
                                     <div style={{ flex:1 }}>
-                                      <div style={{ height:4, background:T.border, borderRadius:2, overflow:"hidden" }}>
-                                        <div style={{ height:"100%", width:String(ai.score)+"%", background:ai.color, borderRadius:2 }}/>
+                                      <div style={{ fontSize:12,fontWeight:700,color:ai.color }}>{ai.label} Lead</div>
+                                      <div style={{ height:4,background:T.border,borderRadius:2,marginTop:4,overflow:"hidden" }}>
+                                        <div style={{ height:"100%",width:ai.score+"%",background:ai.color,borderRadius:2 }}/>
                                       </div>
                                     </div>
                                   </div>
                                 </div>
                               );
                             })()}
-
-                            {/* Lead details table */}
-                            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, marginBottom:16 }}>
+                            <div style={{ display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:14 }}>
                               {[
-                                { label:"Budget",  value: selectedLead.budget ? "AED "+(parseFloat(selectedLead.budget)*0.000001).toFixed(2)+"M" : "—" },
-                                { label:"Source",  value: selectedLead.source || "—"        },
-                                { label:"Status",  value: selectedLead.status || "New"      },
-                                { label:"Type",    value: selectedLead.type || "—"          },
-                                { label:"Nationality", value: selectedLead.nationality || "—" },
-                                { label:"Created", value: selectedLead.createdAt ? new Date(selectedLead.createdAt).toLocaleDateString("en-AE") : "—" },
-                              ].map((item,i) => (
-                                <div key={i} style={{ background:T.surfaceAlt, borderRadius:8, padding:"8px 12px" }}>
-                                  <div style={{ fontSize:10, color:T.textMuted, marginBottom:2 }}>{item.label}</div>
-                                  <div style={{ fontSize:13, fontWeight:600, color:T.textPrimary }}>{item.value}</div>
+                                {label:"Budget",      value:selectedLead.budget?"AED "+(parseFloat(selectedLead.budget)*0.000001).toFixed(2)+"M":"—"},
+                                {label:"Source",      value:selectedLead.source||"—"},
+                                {label:"Nationality", value:(ML_FLAGS[selectedLead.nationality]||"")+" "+(selectedLead.nationality||"—")},
+                                {label:"Language",    value:selectedLead.language||"—"},
+                                {label:"Timeline",    value:selectedLead.timeline||"—"},
+                                {label:"Purpose",     value:selectedLead.purpose||"—"},
+                                {label:"Type",        value:selectedLead.type||"—"},
+                                {label:"Community",   value:selectedLead.community||"—"},
+                                {label:"Created",     value:selectedLead.createdAt?new Date(selectedLead.createdAt).toLocaleDateString("en-AE"):"—"},
+                                {label:"Updated",     value:selectedLead.updatedAt?new Date(selectedLead.updatedAt).toLocaleDateString("en-AE"):"—"},
+                              ].map((item,i)=>(
+                                <div key={i} style={{ background:T.surfaceAlt,borderRadius:8,padding:"8px 12px" }}>
+                                  <div style={{ fontSize:10,color:T.textMuted,marginBottom:2 }}>{item.label}</div>
+                                  <div style={{ fontSize:13,fontWeight:600,color:T.textPrimary }}>{item.value}</div>
                                 </div>
                               ))}
                             </div>
-
-                            {/* Contact buttons */}
-                            <div style={{ display:"flex", gap:8, marginBottom:16 }}>
-                              {selectedLead.phone && (
-                                <a href={"https://wa.me/"+cleanPhone(selectedLead.phone)} target="_blank" rel="noopener noreferrer"
-                                  style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"center", gap:8, padding:"10px", borderRadius:9, background:"rgba(37,211,102,0.1)", border:"1px solid rgba(37,211,102,0.3)", color:"#25D366", textDecoration:"none", fontSize:12, fontWeight:600 }}>
-                                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/></svg>
-                                  WhatsApp
-                                </a>
-                              )}
-                              {selectedLead.email && (
-                                <a href={"mailto:"+selectedLead.email}
-                                  style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"center", gap:8, padding:"10px", borderRadius:9, background:"rgba(59,130,246,0.1)", border:"1px solid rgba(59,130,246,0.3)", color:"#3B82F6", textDecoration:"none", fontSize:12, fontWeight:600 }}>
-                                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-                                  Email
-                                </a>
-                              )}
-                              {selectedLead.phone && (
-                                <a href={"tel:"+selectedLead.phone}
-                                  style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"center", gap:8, padding:"10px", borderRadius:9, background:"rgba(16,185,129,0.1)", border:"1px solid rgba(16,185,129,0.3)", color:"#10B981", textDecoration:"none", fontSize:12, fontWeight:600 }}>
-                                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 2.18h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 9.91a16 16 0 0 0 6.08 6.08l.91-.91a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7a2 2 0 0 1 1.72 2.02z"/></svg>
-                                  Call
-                                </a>
-                              )}
+                            <div style={{ display:"flex",gap:8 }}>
+                              {selectedLead.phone && <a href={"https://wa.me/"+clnPhone(selectedLead.phone)} target="_blank" rel="noopener noreferrer" style={{ flex:1,display:"flex",alignItems:"center",justifyContent:"center",gap:8,padding:"10px",borderRadius:9,background:"rgba(37,211,102,0.1)",border:"1px solid rgba(37,211,102,0.3)",color:"#25D366",textDecoration:"none",fontSize:12,fontWeight:600 }}>WhatsApp</a>}
+                              {selectedLead.email && <a href={"mailto:"+selectedLead.email} style={{ flex:1,display:"flex",alignItems:"center",justifyContent:"center",gap:8,padding:"10px",borderRadius:9,background:"rgba(59,130,246,0.1)",border:"1px solid rgba(59,130,246,0.3)",color:"#3B82F6",textDecoration:"none",fontSize:12,fontWeight:600 }}>Email</a>}
+                              {selectedLead.phone && <a href={"tel:"+selectedLead.phone} style={{ flex:1,display:"flex",alignItems:"center",justifyContent:"center",gap:8,padding:"10px",borderRadius:9,background:"rgba(16,185,129,0.1)",border:"1px solid rgba(16,185,129,0.3)",color:"#10B981",textDecoration:"none",fontSize:12,fontWeight:600 }}>Call</a>}
                             </div>
                           </div>
                         )}
 
-                        {/* Notes tab */}
                         {leadDrawerTab === "notes" && (
                           <div>
-                            <div style={{ display:"flex", gap:8, marginBottom:16 }}>
-                              <select value={noteType} onChange={e => setNoteType(e.target.value)}
-                                style={{ padding:"8px 12px", background:T.surfaceAlt, border:"1px solid "+T.border, borderRadius:8, color:T.textPrimary, fontSize:12, outline:"none" }}>
-                                {["Call","WhatsApp","Email","Meeting","Note"].map(t => <option key={t} value={t}>{t}</option>)}
+                            <div style={{ display:"flex",gap:8,marginBottom:14 }}>
+                              <select value={noteType} onChange={e=>setNoteType(e.target.value)}
+                                style={{ padding:"8px 10px",background:T.surfaceAlt,border:"1px solid "+T.border,borderRadius:8,color:T.textPrimary,fontSize:12,outline:"none" }}>
+                                {["Call","WhatsApp","Email","Meeting","Site Visit","Note"].map(t=><option key={t} value={t}>{t}</option>)}
                               </select>
-                              <input value={noteText} onChange={e => setNoteText(e.target.value)}
-                                placeholder="Add a note..."
-                                style={{ flex:1, padding:"8px 12px", background:T.surfaceAlt, border:"1px solid "+T.border, borderRadius:8, color:T.textPrimary, fontSize:12, outline:"none" }}
-                                onKeyDown={e => { if (e.key === "Enter") mlSaveNote(selectedLead.id); }}/>
-                              <button type="button" onClick={() => mlSaveNote(selectedLead.id)} disabled={noteLoading}
-                                style={{ padding:"8px 16px", borderRadius:8, border:"none", background:T.gold, color:"#0A0E1A", fontSize:12, fontWeight:700, cursor:"pointer" }}>
-                                {noteLoading ? "..." : "Add"}
+                              <input value={noteText} onChange={e=>setNoteText(e.target.value)}
+                                placeholder="Add note..." onKeyDown={e=>{if(e.key==="Enter")mlNote(selectedLead.id);}}
+                                style={{ flex:1,padding:"8px 10px",background:T.surfaceAlt,border:"1px solid "+T.border,borderRadius:8,color:T.textPrimary,fontSize:12,outline:"none" }}/>
+                              <button type="button" onClick={()=>mlNote(selectedLead.id)} disabled={noteLoading}
+                                style={{ padding:"8px 14px",borderRadius:8,border:"none",background:"#D4A843",color:"#0A0E1A",fontSize:12,fontWeight:700,cursor:"pointer" }}>
+                                {noteLoading?"...":"Add"}
                               </button>
                             </div>
-                            {(selectedLead.notes_log||[]).length === 0 && (
-                              <div style={{ textAlign:"center", padding:"32px", color:T.textMuted, fontSize:13 }}>No notes yet — add the first one above</div>
-                            )}
-                            {[...(selectedLead.notes_log||[])].reverse().map((n,i) => (
-                              <div key={i} style={{ padding:"10px 12px", background:T.surfaceAlt, borderRadius:8, marginBottom:8, borderLeft:"3px solid "+T.gold }}>
-                                <div style={{ display:"flex", justifyContent:"space-between", marginBottom:4 }}>
-                                  <span style={{ fontSize:11, fontWeight:700, color:T.gold }}>{n.type||"Note"}</span>
-                                  <span style={{ fontSize:10, color:T.textMuted }}>{n.at ? new Date(n.at).toLocaleDateString("en-AE",{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"}) : ""}</span>
+                            {(selectedLead.notes_log||[]).length===0 && <div style={{ textAlign:"center",padding:"32px",color:T.textMuted,fontSize:13 }}>No notes yet</div>}
+                            {[...(selectedLead.notes_log||[])].reverse().map((n,i)=>(
+                              <div key={i} style={{ padding:"10px 12px",background:T.surfaceAlt,borderRadius:8,marginBottom:8,borderLeft:"3px solid #D4A843" }}>
+                                <div style={{ display:"flex",justifyContent:"space-between",marginBottom:4 }}>
+                                  <span style={{ fontSize:11,fontWeight:700,color:"#D4A843" }}>{n.type||"Note"}</span>
+                                  <span style={{ fontSize:10,color:T.textMuted }}>{n.at?new Date(n.at).toLocaleDateString("en-AE",{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"}):""}</span>
                                 </div>
-                                <div style={{ fontSize:12, color:T.textPrimary }}>{n.text}</div>
-                                <div style={{ fontSize:10, color:T.textMuted, marginTop:4 }}>{n.by||""}</div>
+                                <div style={{ fontSize:12,color:T.textPrimary }}>{n.text}</div>
+                                <div style={{ fontSize:10,color:T.textMuted,marginTop:4 }}>{n.by||""}</div>
                               </div>
                             ))}
                           </div>
                         )}
 
-                        {/* Tasks tab */}
                         {leadDrawerTab === "tasks" && (
                           <div>
-                            <div style={{ display:"flex", gap:8, marginBottom:16 }}>
-                              <input value={taskText} onChange={e => setTaskText(e.target.value)}
-                                placeholder="Add a task or follow-up..."
-                                style={{ flex:1, padding:"8px 12px", background:T.surfaceAlt, border:"1px solid "+T.border, borderRadius:8, color:T.textPrimary, fontSize:12, outline:"none" }}/>
-                              <input type="date" value={taskDue} onChange={e => setTaskDue(e.target.value)}
-                                style={{ padding:"8px 10px", background:T.surfaceAlt, border:"1px solid "+T.border, borderRadius:8, color:T.textPrimary, fontSize:12, outline:"none" }}/>
-                              <button type="button" onClick={async () => {
-                                  if (!taskText.trim()) return;
-                                  try {
-                                    await updateDoc(doc(db,"leads",selectedLead.id), {
-                                      notes_log: arrayUnion({ text:"Task: "+taskText, type:"Task", due:taskDue, by:auth.currentUser?.email||"", at:new Date().toISOString() }),
-                                      updatedAt: new Date().toISOString(),
-                                    });
-                                    setTaskText(""); setTaskDue("");
-                                  } catch(e) { console.error(e); }
+                            <div style={{ display:"flex",gap:8,marginBottom:14 }}>
+                              <input value={taskText} onChange={e=>setTaskText(e.target.value)}
+                                placeholder="Task description..."
+                                style={{ flex:1,padding:"8px 10px",background:T.surfaceAlt,border:"1px solid "+T.border,borderRadius:8,color:T.textPrimary,fontSize:12,outline:"none" }}/>
+                              <input type="date" value={taskDue} onChange={e=>setTaskDue(e.target.value)}
+                                style={{ padding:"8px 10px",background:T.surfaceAlt,border:"1px solid "+T.border,borderRadius:8,color:T.textPrimary,fontSize:12,outline:"none" }}/>
+                              <button type="button" onClick={async()=>{
+                                  if(!taskText.trim()) return;
+                                  try{await updateDoc(doc(db,"leads",selectedLead.id),{notes_log:arrayUnion({text:"Task: "+taskText,type:"Task",due:taskDue,by:auth.currentUser?.email||"",at:new Date().toISOString()}),updatedAt:new Date().toISOString()});setTaskText("");setTaskDue("");}catch(e){console.error(e);}
                                 }}
-                                style={{ padding:"8px 16px", borderRadius:8, border:"none", background:T.gold, color:"#0A0E1A", fontSize:12, fontWeight:700, cursor:"pointer" }}>
-                                Add
-                              </button>
+                                style={{ padding:"8px 14px",borderRadius:8,border:"none",background:"#D4A843",color:"#0A0E1A",fontSize:12,fontWeight:700,cursor:"pointer" }}>Add</button>
                             </div>
-                            {(selectedLead.notes_log||[]).filter(n => n.type === "Task").length === 0 && (
-                              <div style={{ textAlign:"center", padding:"32px", color:T.textMuted, fontSize:13 }}>No tasks yet</div>
-                            )}
-                            {(selectedLead.notes_log||[]).filter(n => n.type === "Task").reverse().map((n,i) => (
-                              <div key={i} style={{ padding:"10px 12px", background:T.surfaceAlt, borderRadius:8, marginBottom:8, borderLeft:"3px solid #8B5CF6" }}>
-                                <div style={{ fontSize:12, color:T.textPrimary, marginBottom:2 }}>{n.text.replace("Task: ","")}</div>
-                                {n.due && <div style={{ fontSize:10, color:T.gold }}>Due: {n.due}</div>}
-                                <div style={{ fontSize:10, color:T.textMuted, marginTop:2 }}>{n.by||""}</div>
+                            {(selectedLead.notes_log||[]).filter(n=>n.type==="Task").length===0 && <div style={{ textAlign:"center",padding:"32px",color:T.textMuted,fontSize:13 }}>No tasks yet</div>}
+                            {(selectedLead.notes_log||[]).filter(n=>n.type==="Task").reverse().map((n,i)=>(
+                              <div key={i} style={{ padding:"10px 12px",background:T.surfaceAlt,borderRadius:8,marginBottom:8,borderLeft:"3px solid #8B5CF6" }}>
+                                <div style={{ fontSize:12,color:T.textPrimary,marginBottom:2 }}>{n.text.replace("Task: ","")}</div>
+                                {n.due&&<div style={{ fontSize:10,color:"#D4A843" }}>Due: {n.due}</div>}
+                                <div style={{ fontSize:10,color:T.textMuted,marginTop:2 }}>{n.by||""}</div>
                               </div>
                             ))}
+                          </div>
+                        )}
+
+                        {leadDrawerTab === "activity" && (
+                          <div>
+                            {(selectedLead.notes_log||[]).length===0 && <div style={{ textAlign:"center",padding:"32px",color:T.textMuted,fontSize:13 }}>No activity yet</div>}
+                            {[...(selectedLead.notes_log||[])].reverse().map((n,i)=>{
+                              const typeColors = {"Call":"#10B981","WhatsApp":"#25D366","Email":"#3B82F6","Meeting":"#8B5CF6","Site Visit":"#F59E0B","Task":"#D4A843","Note":"#94A3B8"};
+                              const c = typeColors[n.type]||"#94A3B8";
+                              return (
+                                <div key={i} style={{ display:"flex",gap:12,marginBottom:14,paddingBottom:14,borderBottom:"1px solid "+T.border }}>
+                                  <div style={{ width:32,height:32,borderRadius:"50%",background:c+"20",border:"1px solid "+c+"40",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0 }}>
+                                    <div style={{ width:8,height:8,borderRadius:"50%",background:c }}/>
+                                  </div>
+                                  <div style={{ flex:1 }}>
+                                    <div style={{ display:"flex",justifyContent:"space-between",marginBottom:3 }}>
+                                      <span style={{ fontSize:11,fontWeight:700,color:c }}>{n.type||"Note"}</span>
+                                      <span style={{ fontSize:10,color:T.textMuted }}>{n.at?new Date(n.at).toLocaleDateString("en-AE",{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"}):""}</span>
+                                    </div>
+                                    <div style={{ fontSize:12,color:T.textPrimary }}>{n.text}</div>
+                                    <div style={{ fontSize:10,color:T.textMuted,marginTop:2 }}>{n.by||""}</div>
+                                  </div>
+                                </div>
+                              );
+                            })}
                           </div>
                         )}
                       </div>
@@ -15739,50 +15888,62 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   </div>
                 )}
 
-                {/* Ã¢"â‚¬Ã¢"â‚¬ QUICK CAPTURE MODAL Ã¢"â‚¬Ã¢"â‚¬ */}
+                {/* ── QUICK CAPTURE MODAL ── */}
                 {showQuickCapture && (
-                  <div style={{ position:"fixed", inset:0, background:"rgba(4,9,15,0.85)", zIndex:2000, display:"flex", alignItems:"center", justifyContent:"center" }}
-                    onClick={e => { if (e.target === e.currentTarget) setShowQuickCapture(false); }}>
-                    <div style={{ background:T.surface, borderRadius:16, border:"1px solid "+T.border, width:"95%", maxWidth:480, padding:"24px" }} onClick={e => e.stopPropagation()}>
-                      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:20 }}>
-                        <div style={{ fontFamily:"'Fraunces',serif", fontSize:17, fontWeight:900, color:T.white }}>Quick Lead Capture</div>
-                        <button type="button" onClick={() => setShowQuickCapture(false)}
-                          style={{ background:T.surfaceAlt, border:"1px solid "+T.border, borderRadius:8, color:T.textMuted, width:30, height:30, cursor:"pointer", fontSize:16 }}>Ã¢Å“â€¢</button>
+                  <div style={{ position:"fixed",inset:0,background:"rgba(4,9,15,0.85)",zIndex:2000,display:"flex",alignItems:"center",justifyContent:"center" }}
+                    onClick={e=>{if(e.target===e.currentTarget)setShowQuickCapture(false);}}>
+                    <div style={{ background:T.surface,borderRadius:16,border:"1px solid "+T.border,width:"95%",maxWidth:520,padding:"24px" }} onClick={e=>e.stopPropagation()}>
+                      <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:20 }}>
+                        <div style={{ fontFamily:"'Fraunces',serif",fontSize:17,fontWeight:900,color:T.white }}>Quick Lead Capture</div>
+                        <button type="button" onClick={()=>setShowQuickCapture(false)}
+                          style={{ background:T.surfaceAlt,border:"1px solid "+T.border,borderRadius:8,color:T.textMuted,width:30,height:30,cursor:"pointer",fontSize:14 }}>X</button>
                       </div>
-                      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12 }}>
+                      <div style={{ display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:12 }}>
                         {[
-                          { label:"Full Name *",    val:leadAddName,   set:setLeadAddName,   ph:"Client name",     type:"text"   },
-                          { label:"Phone *",         val:leadAddPhone,  set:setLeadAddPhone,  ph:"+971 50 XXX XXXX", type:"tel"   },
-                          { label:"Email",           val:leadAddEmail,  set:setLeadAddEmail,  ph:"email@example.com", type:"email" },
-                          { label:"Budget (AED)",    val:leadAddBudget, set:setLeadAddBudget, ph:"e.g. 2000000",    type:"number" },
-                        ].map((f,i) => (
+                          {label:"Full Name *",    val:leadAddName,   set:setLeadAddName,   ph:"Client name",      type:"text"},
+                          {label:"Phone *",         val:leadAddPhone,  set:setLeadAddPhone,  ph:"+971 50 XXX XXXX",  type:"tel"},
+                          {label:"Email",           val:leadAddEmail,  set:setLeadAddEmail,  ph:"email@example.com", type:"email"},
+                          {label:"Budget (AED)",    val:leadAddBudget, set:setLeadAddBudget, ph:"e.g. 2000000",      type:"number"},
+                        ].map((f,i)=>(
                           <div key={i}>
-                            <div style={{ fontSize:11, color:T.textMuted, marginBottom:4 }}>{f.label}</div>
-                            <input type={f.type} value={f.val} onChange={e => f.set(e.target.value)} placeholder={f.ph}
-                              style={{ width:"100%", padding:"9px 12px", background:T.surfaceAlt, border:"1px solid "+T.border, borderRadius:8, color:T.textPrimary, fontSize:13, outline:"none", boxSizing:"border-box" }}/>
+                            <div style={{ fontSize:11,color:T.textMuted,marginBottom:4 }}>{f.label}</div>
+                            <input type={f.type} value={f.val} onChange={e=>f.set(e.target.value)} placeholder={f.ph}
+                              style={{ width:"100%",padding:"9px 12px",background:T.surfaceAlt,border:"1px solid "+T.border,borderRadius:8,color:T.textPrimary,fontSize:13,outline:"none",boxSizing:"border-box" }}/>
                           </div>
                         ))}
                       </div>
-                      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12, marginTop:12 }}>
+                      <div style={{ display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:12,marginBottom:16 }}>
                         <div>
-                          <div style={{ fontSize:11, color:T.textMuted, marginBottom:4 }}>Source</div>
-                          <select value={leadAddSource} onChange={e => setLeadAddSource(e.target.value)}
-                            style={{ width:"100%", padding:"9px 12px", background:T.surfaceAlt, border:"1px solid "+T.border, borderRadius:8, color:T.textPrimary, fontSize:13, outline:"none" }}>
-                            {Object.keys(ML_SOURCES).map(s => <option key={s} value={s}>{s}</option>)}
+                          <div style={{ fontSize:11,color:T.textMuted,marginBottom:4 }}>Nationality</div>
+                          <select value={leadAddNat||""} onChange={e=>setLeadAddNat(e.target.value)}
+                            style={{ width:"100%",padding:"9px 10px",background:T.surfaceAlt,border:"1px solid "+T.border,borderRadius:8,color:T.textPrimary,fontSize:12,outline:"none" }}>
+                            <option value="">Select...</option>
+                            {ML_NATS.map(n=><option key={n} value={n}>{(ML_FLAGS[n]||"")} {n}</option>)}
                           </select>
                         </div>
                         <div>
-                          <div style={{ fontSize:11, color:T.textMuted, marginBottom:4 }}>Type</div>
-                          <select value={leadAddType} onChange={e => setLeadAddType(e.target.value)}
-                            style={{ width:"100%", padding:"9px 12px", background:T.surfaceAlt, border:"1px solid "+T.border, borderRadius:8, color:T.textPrimary, fontSize:13, outline:"none" }}>
-                            {["Buy","Rent","Off-Plan","Invest"].map(t => <option key={t} value={t}>{t}</option>)}
+                          <div style={{ fontSize:11,color:T.textMuted,marginBottom:4 }}>Source</div>
+                          <select value={leadAddSource} onChange={e=>setLeadAddSource(e.target.value)}
+                            style={{ width:"100%",padding:"9px 10px",background:T.surfaceAlt,border:"1px solid "+T.border,borderRadius:8,color:T.textPrimary,fontSize:12,outline:"none" }}>
+                            {Object.keys(ML_SOURCES).map(s=><option key={s} value={s}>{s}</option>)}
+                          </select>
+                        </div>
+                        <div>
+                          <div style={{ fontSize:11,color:T.textMuted,marginBottom:4 }}>Timeline</div>
+                          <select value={leadAddTimeline||""} onChange={e=>setLeadAddTimeline(e.target.value)}
+                            style={{ width:"100%",padding:"9px 10px",background:T.surfaceAlt,border:"1px solid "+T.border,borderRadius:8,color:T.textPrimary,fontSize:12,outline:"none" }}>
+                            <option value="">Select...</option>
+                            <option value="Immediate">Immediate</option>
+                            <option value="1-3 months">1-3 Months</option>
+                            <option value="3-6 months">3-6 Months</option>
+                            <option value="6-12 months">6-12 Months</option>
+                            <option value="Just browsing">Just Browsing</option>
                           </select>
                         </div>
                       </div>
-                      <button type="button" onClick={async () => { await mlSaveNewLead(); setShowQuickCapture(false); }}
-                        disabled={leadAddSaving}
-                        style={{ width:"100%", marginTop:18, padding:"12px", borderRadius:9, border:"none", background:"linear-gradient(135deg,"+T.gold+",#B8902E)", color:"#0A0E1A", fontSize:14, fontWeight:700, cursor:"pointer" }}>
-                        {leadAddSaving ? "Saving..." : "Save Lead"}
+                      <button type="button" onClick={async()=>{await mlSave();setShowQuickCapture(false);}} disabled={leadAddSaving}
+                        style={{ width:"100%",padding:"12px",borderRadius:9,border:"none",background:"linear-gradient(135deg,#D4A843,#B8902E)",color:"#0A0E1A",fontSize:14,fontWeight:700,cursor:"pointer" }}>
+                        {leadAddSaving?"Saving...":"Save Lead"}
                       </button>
                     </div>
                   </div>
