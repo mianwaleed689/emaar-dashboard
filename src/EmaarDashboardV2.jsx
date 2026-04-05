@@ -1,10 +1,10 @@
 /* eslint-disable */
-/* \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
+/* ═══════════════════════════════════════════════════════════════════
    DXB ANALYTICS INTELLIGENCE PLATFORM
-   Clean Architecture \u2014 Data-Driven, Firestore-Connected
+   Clean Architecture — Data-Driven, Firestore-Connected
    All intelligence tabs: empty state, ready for data import
    CRM tabs: fully functional (Leads, Pipeline, Team, Agency etc)
-   \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 */
+   ═══════════════════════════════════════════════════════════════════ */
 
 import React, { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
@@ -16,7 +16,7 @@ import { T } from "./data";
 import LandingPage from "./LandingPage";
 import RoiCalculator from "./RoiCalculator";
 
-/* \u2500\u2500\u2500 ACTIVE PROJECTS \u2014 now Firestore-only \u2500\u2500\u2500 */
+/* ─── ACTIVE PROJECTS — now Firestore-only ─── */
 /* Projects load from: Firestore 'projects' collection */
 /* Populated via: Admin \u2192 Data Manager \u2192 Import Projects */
 
@@ -28,7 +28,7 @@ const getLinkDomain = (url) => {
   return "Official Listing";
 };
 
-/* \u2500\u2500\u2500 HANDOVER COUNTDOWN \u2500\u2500\u2500 */
+/* ─── HANDOVER COUNTDOWN ─── */
 const getHandoverCountdown = (handover) => {
   if (!handover) return null;
   const match = handover.match(/Q([1-4])\s+(\d{4})/);
@@ -51,26 +51,26 @@ const getHandoverCountdown = (handover) => {
   return { label, color, urgent: diffDays <= 90, months: diffMonths, days: diffDays };
 };
 
-// \u2500\u2500\u2500 INVESTMENT SCORE (out of 10) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+// ─── INVESTMENT SCORE (out of 10) ─────────────────────────────────────────
 const getInvestmentScore = (p) => {
   let score = 0;
   const breakdown = [];
 
-  // 1. Yield (0\u20133 pts)
+  // 1. Yield (0–3 pts)
   const gross = p.gross || p.yield || 0;
   if (gross >= 8)      { score += 3; breakdown.push({ label: "Yield", pts: 3, max: 3, note: gross + "% gross" }); }
   else if (gross >= 6) { score += 2; breakdown.push({ label: "Yield", pts: 2, max: 3, note: gross + "% gross" }); }
   else if (gross >= 4) { score += 1; breakdown.push({ label: "Yield", pts: 1, max: 3, note: gross + "% gross" }); }
   else                 { breakdown.push({ label: "Yield", pts: 0, max: 3, note: gross ? gross + "%" : "No data" }); }
 
-  // 2. Value (PPSF) (0\u20132 pts)
+  // 2. Value (PPSF) (0–2 pts)
   const ppsf = p.ppsf || 0;
   if (ppsf > 0 && ppsf <= 1500)       { score += 2; breakdown.push({ label: "Value", pts: 2, max: 2, note: "AED " + ppsf + "/sqft" }); }
   else if (ppsf > 0 && ppsf <= 2200)  { score += 1; breakdown.push({ label: "Value", pts: 1, max: 2, note: "AED " + ppsf + "/sqft" }); }
   else if (ppsf > 0)                  { breakdown.push({ label: "Value", pts: 0, max: 2, note: "AED " + ppsf + "/sqft" }); }
   else                                { breakdown.push({ label: "Value", pts: 0, max: 2, note: "No PPSF" }); }
 
-  // 3. Handover timing (0\u20132 pts) \u2014 sweet spot is 12\u201336 months
+  // 3. Handover timing (0–2 pts) — sweet spot is 12–36 months
   const cd = getHandoverCountdown(p.handover);
   if (cd) {
     if (cd.passed)              { score += 1.5; breakdown.push({ label: "Handover", pts: 1.5, max: 2, note: "Ready now" }); }
@@ -82,7 +82,7 @@ const getInvestmentScore = (p) => {
     breakdown.push({ label: "Handover", pts: 0, max: 2, note: "No date" });
   }
 
-  // 4. Payment plan (0\u20132 pts)
+  // 4. Payment plan (0–2 pts)
   const pp = (p.paymentPlan || p.payment || "").toLowerCase();
   if (pp.includes("80/20") || pp.includes("80:20"))       { score += 2;   breakdown.push({ label: "Payment", pts: 2,   max: 2, note: "80/20 plan" }); }
   else if (pp.includes("70/30") || pp.includes("60/40"))  { score += 1.5; breakdown.push({ label: "Payment", pts: 1.5, max: 2, note: pp }); }
@@ -90,7 +90,7 @@ const getInvestmentScore = (p) => {
   else if (pp.length > 0)                                 { score += 0.5; breakdown.push({ label: "Payment", pts: 0.5, max: 2, note: pp }); }
   else                                                    { breakdown.push({ label: "Payment", pts: 0, max: 2, note: "Unknown" }); }
 
-  // 5. Golden Visa eligible (0\u20131 pt)
+  // 5. Golden Visa eligible (0–1 pt)
   if (p.price && p.price >= 2000000) {
     score += 1; breakdown.push({ label: "Golden Visa", pts: 1, max: 1, note: "Eligible" });
   } else {
@@ -103,7 +103,7 @@ const getInvestmentScore = (p) => {
   return { score: final, color, label, breakdown };
 };
 
-/* \u2500\u2500\u2500 ICONS (inline SVG) \u2500\u2500\u2500 */
+/* ─── ICONS (inline SVG) ─── */
 const Icons = {
   overview: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>,
   financials: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>,
@@ -128,7 +128,7 @@ const Icons = {
 };
 
 
-/* \u2500\u2500\u2500 GLOBAL FILTER CONFIG \u2500\u2500\u2500 */
+/* ─── GLOBAL FILTER CONFIG ─── */
 const PROPERTY_TYPES = [
   {
     group: "Residential",
@@ -154,30 +154,30 @@ const PROPERTY_TYPES = [
   {
     group: "Commercial",
     types: [
-      { value: "office",        label: "Office",          beds: ["< 500 sqft","500\u20131K sqft","1K\u20132.5K sqft","2.5K\u20135K sqft","5K+ sqft","Full Floor","Full Building"] },
-      { value: "retail",        label: "Retail / Shop",   beds: ["< 500 sqft","500\u20131K sqft","1K\u20132.5K sqft","2.5K+ sqft"] },
-      { value: "showroom",      label: "Showroom",        beds: ["< 2K sqft","2K\u20135K sqft","5K+ sqft"] },
-      { value: "warehouse",     label: "Warehouse",       beds: ["< 5K sqft","5K\u201310K sqft","10K+ sqft"] },
+      { value: "office",        label: "Office",          beds: ["< 500 sqft","500–1K sqft","1K–2.5K sqft","2.5K–5K sqft","5K+ sqft","Full Floor","Full Building"] },
+      { value: "retail",        label: "Retail / Shop",   beds: ["< 500 sqft","500–1K sqft","1K–2.5K sqft","2.5K+ sqft"] },
+      { value: "showroom",      label: "Showroom",        beds: ["< 2K sqft","2K–5K sqft","5K+ sqft"] },
+      { value: "warehouse",     label: "Warehouse",       beds: ["< 5K sqft","5K–10K sqft","10K+ sqft"] },
       { value: "coworking",     label: "Co-working Space",beds: ["Hot Desk","Dedicated Desk","Private Office","Full Floor"] },
     ]
   },
   {
     group: "Industrial & Land",
     types: [
-      { value: "industrial",    label: "Industrial Unit",    beds: ["< 5K sqft","5K\u201320K sqft","20K+ sqft"] },
-      { value: "land_res",      label: "Land \u2014 Residential", beds: ["< 5K sqft","5K\u201315K sqft","15K+ sqft"] },
-      { value: "land_comm",     label: "Land \u2014 Commercial",  beds: ["< 10K sqft","10K\u201350K sqft","50K+ sqft"] },
-      { value: "land_mixed",    label: "Mixed Use Plot",     beds: ["< 10K sqft","10K\u201350K sqft","50K+ sqft"] },
+      { value: "industrial",    label: "Industrial Unit",    beds: ["< 5K sqft","5K–20K sqft","20K+ sqft"] },
+      { value: "land_res",      label: "Land — Residential", beds: ["< 5K sqft","5K–15K sqft","15K+ sqft"] },
+      { value: "land_comm",     label: "Land — Commercial",  beds: ["< 10K sqft","10K–50K sqft","50K+ sqft"] },
+      { value: "land_mixed",    label: "Mixed Use Plot",     beds: ["< 10K sqft","10K–50K sqft","50K+ sqft"] },
     ]
   },
 ];
 
 const STATUS_OPTIONS = [
   { value: "all",          label: "All Status" },
-  { value: "offplan",      label: "Off-Plan \u2014 Under Construction" },
-  { value: "prelaunch",    label: "Off-Plan \u2014 Pre-Launch / EOI" },
-  { value: "ready_new",    label: "Ready \u2014 New (Primary)" },
-  { value: "secondary",    label: "Ready \u2014 Secondary Market" },
+  { value: "offplan",      label: "Off-Plan — Under Construction" },
+  { value: "prelaunch",    label: "Off-Plan — Pre-Launch / EOI" },
+  { value: "ready_new",    label: "Ready — New (Primary)" },
+  { value: "secondary",    label: "Ready — Secondary Market" },
   { value: "handover_now", label: "Handover This Year" },
   { value: "handover_2026",label: "Handover 2026" },
   { value: "handover_2027",label: "Handover 2027+" },
@@ -186,24 +186,24 @@ const STATUS_OPTIONS = [
 const PRICE_PRESETS_APT = [
   { label: "Any Price", min: 0, max: 0 },
   { label: "< 500K", min: 0, max: 500000 },
-  { label: "500K\u20131M", min: 500000, max: 1000000 },
-  { label: "1M\u20132M", min: 1000000, max: 2000000 },
-  { label: "2M\u20135M", min: 2000000, max: 5000000 },
-  { label: "5M\u201310M", min: 5000000, max: 10000000 },
+  { label: "500K–1M", min: 500000, max: 1000000 },
+  { label: "1M–2M", min: 1000000, max: 2000000 },
+  { label: "2M–5M", min: 2000000, max: 5000000 },
+  { label: "5M–10M", min: 5000000, max: 10000000 },
   { label: "10M+", min: 10000000, max: 0 },
 ];
 
 const PRICE_PRESETS_VILLA = [
   { label: "Any Price", min: 0, max: 0 },
   { label: "< 2M", min: 0, max: 2000000 },
-  { label: "2M\u20135M", min: 2000000, max: 5000000 },
-  { label: "5M\u201310M", min: 5000000, max: 10000000 },
-  { label: "10M\u201325M", min: 10000000, max: 25000000 },
-  { label: "25M\u201350M", min: 25000000, max: 50000000 },
+  { label: "2M–5M", min: 2000000, max: 5000000 },
+  { label: "5M–10M", min: 5000000, max: 10000000 },
+  { label: "10M–25M", min: 10000000, max: 25000000 },
+  { label: "25M–50M", min: 25000000, max: 50000000 },
   { label: "50M+", min: 50000000, max: 0 },
 ];
 
-/* \u2500\u2500\u2500 SVG ICON HELPER \u2500 replaces lucide-react dependency \u2500\u2500\u2500 */
+/* ─── SVG ICON HELPER ─ replaces lucide-react dependency ─── */
 const SvgIcons = {
   LayoutDashboard: (p) => <svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={p.strokeWidth||1.5} strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>,
   Globe: (p) => <svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={p.strokeWidth||1.5} strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>,
@@ -243,7 +243,7 @@ const SvgIcons = {
   DollarSign: ({ width=16, height=16, strokeWidth=2, style={} } = {}) => SvgIcons.CreditCard({ width, height, strokeWidth, style }),
 };
 
-/* \u2500\u2500\u2500 GLOBAL CONTEXT FILTER COMPONENT \u2500\u2500\u2500 */
+/* ─── GLOBAL CONTEXT FILTER COMPONENT ─── */
 const GlobalContextFilter = ({
   gDeveloper, setGDeveloperAndReset,
   gCommunity, setGCommunity,
@@ -255,7 +255,7 @@ const GlobalContextFilter = ({
   gPriceMax, setGPriceMax,
   allDevelopers, T,
 }) => {
-  // \u2500\u2500\u2500 cleanPhone: strips non-digits \u2014 NEVER use regex inside JSX \u2500\u2500\u2500
+  // ─── cleanPhone: strips non-digits — NEVER use regex inside JSX ───
   const cleanPhone = (p) => {
     if (!p) return "";
     let out = "";
@@ -266,7 +266,7 @@ const GlobalContextFilter = ({
     return out;
   };
 
-  // \u2500\u2500\u2500 csvEsc: CSV-safe quoting \u2014 defined here, NOT inside JSX \u2500\u2500\u2500
+  // ─── csvEsc: CSV-safe quoting — defined here, NOT inside JSX ───
   const csvEsc = (v) => {
     const s = v == null ? "" : String(v);
     let out = "";
@@ -328,7 +328,7 @@ const GlobalContextFilter = ({
       background: `${T.surface}f8`, backdropFilter: "blur(12px)",
       borderBottom: `1px solid ${T.border}`,
     }}>
-      {/* \u2500\u2500 Compact filter bar \u2500\u2500 */}
+      {/* ── Compact filter bar ── */}
       <div style={{
         display: "flex", alignItems: "center", gap: 8,
         padding: "8px 20px", flexWrap: "wrap",
@@ -440,7 +440,7 @@ const GlobalContextFilter = ({
         {/* Spacer + data source note */}
         <div style={{ marginLeft: "auto", fontSize: 10, color: T.textMuted, display: "flex", alignItems: "center", gap: 4 }}>
           <span style={{ width: 5, height: 5, borderRadius: "50%", background: T.green, display: "inline-block" }} />
-          Live \u00B7 Firestore
+          Live · Firestore
         </div>
       </div>
     </div>
@@ -448,20 +448,20 @@ const GlobalContextFilter = ({
 };
 
 
-/* \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
-   DXB ANALYTICS \u2014 RESEARCH-BASED SEED DATA
-   All figures sourced from official publications \u2014 listed per dataset
+/* ════════════════════════════════════════════════════════════════
+   DXB ANALYTICS — RESEARCH-BASED SEED DATA
+   All figures sourced from official publications — listed per dataset
    Seed data displays until real Firestore data is imported from Admin
    isSeedData: true flag marks all seed entries for easy identification
-   \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 */
+   ════════════════════════════════════════════════════════════════ */
 
 const SEED_DATA = {
 
-  /* \u2500\u2500\u2500 MARKET TAB \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+  /* ─── MARKET TAB ───────────────────────────────────────────────
      Sources: DLD Annual Report 2025, DXB Interact Jan 2026,
      Property Monitor DPI Dec 2025, REIDIN Residential Index Dec 2025
      URL: dubailand.gov.ae/en/open-data/research/annual-report-real-estate-sector-performance-2024
-  \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */
+  ─────────────────────────────────────────────────────────────── */
   market: [
     { metric: "Total Market Value",       value: "AED 682.6B",  change: "+21% YoY",  numericValue: 682.6, isSeedData: true, source: "DLD / DXB Interact Jan 2026" },
     { metric: "Total Transactions",       value: "215,060",     change: "+19% YoY",  numericValue: 215060, isSeedData: true, source: "DLD Annual Report 2025" },
@@ -477,7 +477,7 @@ const SEED_DATA = {
     { metric: "Nationalities",            value: "193+",        isSeedData: true, source: "DLD Investor Base Report 2025" },
     { metric: "Off-Plan Share",           numericValue: 63,     isSeedData: true },
     { metric: "Cash Share",               numericValue: 55,     isSeedData: true, source: "DLD Mortgage Report 2025" },
-    { metric: "Active Developers", value: "50+", change: "RERA registered \u00B7 DLD approved", isSeedData: true, source: "RERA Registry 2026" },
+    { metric: "Active Developers", value: "50+", change: "RERA registered · DLD approved", isSeedData: true, source: "RERA Registry 2026" },
     { metric: "REIDIN Growth",      value: "+19.8%", change: "Residential Sales Price Index Dec 2025", isSeedData: true, source: "REIDIN Dec 2025" },
     { metric: "Price Growth YoY",   value: "+19.8%", change: "Dec 2025", isSeedData: true, source: "REIDIN 2025" },
     { metric: "Mortgage Share",           numericValue: 45,     isSeedData: true },
@@ -490,11 +490,11 @@ const SEED_DATA = {
     { year: "2025", value: 919,  type: "annual", isSeedData: true, source: "DLD / DXB Interact Jan 2026" },
   ],
 
-  /* \u2500\u2500\u2500 DLD VOLUMES TAB \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+  /* ─── DLD VOLUMES TAB ──────────────────────────────────────────
      Sources: DXBAnalytics.com Community Volume Report Feb 2026,
      DLD Direct Database Query, Property Monitor 2025
      URL: dxbanalytics.com/blog/dubai-property-transaction-volume-2026
-  \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */
+  ─────────────────────────────────────────────────────────────── */
   dldVolumes: [
     { community: "Jumeirah Village Circle",   type: "Apartment", transactions: 18782, avgPpsf: 1180, volume: 9800000000,  change: 17,  isSeedData: true, source: "DXBAnalytics / DLD 2025" },
     { community: "Business Bay",              type: "Apartment", transactions: 12450, avgPpsf: 2050, volume: 14200000000, change: 8,   isSeedData: true, source: "DXBAnalytics / DLD 2025" },
@@ -513,13 +513,13 @@ const SEED_DATA = {
     { community: "Tilal Al Ghaf",             type: "Villa",     transactions: 3600,  avgPpsf: 1650, volume: 5800000000,  change: 52,  isSeedData: true, source: "DXBAnalytics / DLD 2025" },
   ],
 
-  /* \u2500\u2500\u2500 PRICE HISTORY TAB \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+  /* ─── PRICE HISTORY TAB ────────────────────────────────────────
      Sources: ValuStrat VPI Q4 2025, REIDIN Residential Index Dec 2025,
      Property Monitor DPI 2025, Knight Frank Dubai Residential Q1 2025
      URL: reidin.com | valustrat.com/vpi
-  \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */
+  ─────────────────────────────────────────────────────────────── */
   priceHistory: [
-    /* 5-year PPSF trend \u2014 Dubai overall apartment average */
+    /* 5-year PPSF trend — Dubai overall apartment average */
     { period: "2020", ppsf: 1050, offPlanPpsf: 980,  secondaryPpsf: 1100, type: "priceHistory", isSeedData: true, source: "ValuStrat VPI / REIDIN" },
     { period: "2021", ppsf: 1080, offPlanPpsf: 1020, secondaryPpsf: 1140, type: "priceHistory", isSeedData: true, source: "ValuStrat VPI / REIDIN" },
     { period: "2022", ppsf: 1250, offPlanPpsf: 1180, secondaryPpsf: 1310, type: "priceHistory", isSeedData: true, source: "ValuStrat VPI / REIDIN" },
@@ -535,12 +535,12 @@ const SEED_DATA = {
     { community: "Business Bay",         ppsf: 2050, change6m: 3.1,  change1y: 8.4,  change3y: 29.7, change5y: 58.9, type: "priceHistory", isSeedData: true, source: "REIDIN Dec 2025" },
   ],
 
-  /* \u2500\u2500\u2500 NEIGHBOURHOODS TAB \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+  /* ─── NEIGHBOURHOODS TAB ───────────────────────────────────────
      Sources: Bayut H1 2025 Sales Report, Knight Frank Dubai 2025,
      RERA Service Charge Index 2025, uaeexperthub.com Dubai Yields 2026,
      Alkira Dubai Investment Guide Feb 2026, RTA Metro Blue Line plans
      URL: bayut.com/mybayut/bayut-h1-2025-dubai-rental-market-report
-  \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */
+  ─────────────────────────────────────────────────────────────── */
   communities: [
     { community: "Jumeirah Village Circle", avgPpsf: 1180, grossYield: 7.8,  netYield: 6.2, serviceCharge: 14,  metroDistance: 1800, supplyRisk: "Medium", investmentScore: 82, tenantProfile: "Professionals", hasSchool: true,  hasMall: true,  hasBeach: false, hasHospital: false, pipeline2026: 8200,  type: "community", isSeedData: true, source: "Bayut H1 2025 / uaeexperthub.com Jan 2026" },
     { community: "Dubai Marina",            avgPpsf: 2280, grossYield: 6.5,  netYield: 5.0, serviceCharge: 22,  metroDistance: 400,  supplyRisk: "Low",    investmentScore: 78, tenantProfile: "Professionals", hasSchool: false, hasMall: true,  hasBeach: true,  hasHospital: false, pipeline2026: 2800,  type: "community", isSeedData: true, source: "Bayut H1 2025 / Knight Frank Q1 2025" },
@@ -548,50 +548,50 @@ const SEED_DATA = {
     { community: "Downtown Dubai",          avgPpsf: 3100, grossYield: 5.8,  netYield: 4.2, serviceCharge: 35,  metroDistance: 300,  supplyRisk: "Low",    investmentScore: 74, tenantProfile: "Luxury / HNWI", hasSchool: false, hasMall: true,  hasBeach: false, hasHospital: false, pipeline2026: 1800,  type: "community", isSeedData: true, source: "Knight Frank Dubai 2025 / REIDIN" },
     { community: "Dubai Hills Estate",      avgPpsf: 1850, grossYield: 6.2,  netYield: 5.0, serviceCharge: 16,  metroDistance: 3500, supplyRisk: "Medium", investmentScore: 85, tenantProfile: "Families",      hasSchool: true,  hasMall: true,  hasBeach: false, hasHospital: true,  pipeline2026: 6800,  type: "community", isSeedData: true, source: "Knight Frank / Bayut H1 2025" },
     { community: "Palm Jumeirah",           avgPpsf: 4800, grossYield: 5.2,  netYield: 3.8, serviceCharge: 28,  metroDistance: 2200, supplyRisk: "Low",    investmentScore: 76, tenantProfile: "Luxury / HNWI", hasSchool: false, hasMall: true,  hasBeach: true,  hasHospital: false, pipeline2026: 800,   type: "community", isSeedData: true, source: "Knight Frank Dubai 2025" },
-    { community: "Jumeirah Lake Towers",    avgPpsf: 1420, grossYield: 8.1,  netYield: 6.4, serviceCharge: 16,  metroDistance: 350,  supplyRisk: "Low",    investmentScore: 84, tenantProfile: "Professionals", hasSchool: false, hasMall: true,  hasBeach: false, hasHospital: false, pipeline2026: 1200,  type: "community", isSeedData: true, source: "Middle East Insider Apr 2026 \u2014 ranked #1 yield+quality" },
+    { community: "Jumeirah Lake Towers",    avgPpsf: 1420, grossYield: 8.1,  netYield: 6.4, serviceCharge: 16,  metroDistance: 350,  supplyRisk: "Low",    investmentScore: 84, tenantProfile: "Professionals", hasSchool: false, hasMall: true,  hasBeach: false, hasHospital: false, pipeline2026: 1200,  type: "community", isSeedData: true, source: "Middle East Insider Apr 2026 — ranked #1 yield+quality" },
     { community: "Arabian Ranches",         avgPpsf: 1380, grossYield: 5.5,  netYield: 4.4, serviceCharge: 8,   metroDistance: 8000, supplyRisk: "Low",    investmentScore: 79, tenantProfile: "Families",      hasSchool: true,  hasMall: false, hasBeach: false, hasHospital: false, pipeline2026: 1400,  type: "community", isSeedData: true, source: "uaeexperthub.com / Bayut 2025" },
-    { community: "International City",      avgPpsf: 580,  grossYield: 9.2,  netYield: 7.8, serviceCharge: 8,   metroDistance: 5500, supplyRisk: "Low",    investmentScore: 71, tenantProfile: "Mixed",         hasSchool: false, hasMall: true,  hasBeach: false, hasHospital: false, pipeline2026: 600,   type: "community", isSeedData: true, source: "Middle East Insider Apr 2026 \u2014 9.2% yield leader" },
+    { community: "International City",      avgPpsf: 580,  grossYield: 9.2,  netYield: 7.8, serviceCharge: 8,   metroDistance: 5500, supplyRisk: "Low",    investmentScore: 71, tenantProfile: "Mixed",         hasSchool: false, hasMall: true,  hasBeach: false, hasHospital: false, pipeline2026: 600,   type: "community", isSeedData: true, source: "Middle East Insider Apr 2026 — 9.2% yield leader" },
     { community: "Dubai Creek Harbour",     avgPpsf: 1620, grossYield: 6.4,  netYield: 5.1, serviceCharge: 14,  metroDistance: 1200, supplyRisk: "Medium", investmentScore: 80, tenantProfile: "Mixed",         hasSchool: false, hasMall: true,  hasBeach: true,  hasHospital: false, pipeline2026: 9200,  type: "community", isSeedData: true, source: "Alkira Dubai Investment Guide Feb 2026" },
     { community: "Al Furjan",               avgPpsf: 1080, grossYield: 8.2,  netYield: 6.8, serviceCharge: 12,  metroDistance: 700,  supplyRisk: "Medium", investmentScore: 77, tenantProfile: "Families",      hasSchool: true,  hasMall: false, hasBeach: false, hasHospital: false, pipeline2026: 3200,  type: "community", isSeedData: true, source: "GuestReady Feb 2026 / Bayut H1 2025" },
-    { community: "Dubai South",             avgPpsf: 850,  grossYield: 8.8,  netYield: 7.2, serviceCharge: 10,  metroDistance: 4000, supplyRisk: "Medium", investmentScore: 73, tenantProfile: "Mixed",         hasSchool: true,  hasMall: false, hasBeach: false, hasHospital: false, pipeline2026: 14000, type: "community", isSeedData: true, source: "uaeexperthub.com Jan 2026 \u2014 7.5-9.5% yield range" },
+    { community: "Dubai South",             avgPpsf: 850,  grossYield: 8.8,  netYield: 7.2, serviceCharge: 10,  metroDistance: 4000, supplyRisk: "Medium", investmentScore: 73, tenantProfile: "Mixed",         hasSchool: true,  hasMall: false, hasBeach: false, hasHospital: false, pipeline2026: 14000, type: "community", isSeedData: true, source: "uaeexperthub.com Jan 2026 — 7.5-9.5% yield range" },
     { community: "Mohammed Bin Rashid City",avgPpsf: 1950, grossYield: 6.1,  netYield: 4.9, serviceCharge: 16,  metroDistance: 2800, supplyRisk: "Medium", investmentScore: 81, tenantProfile: "Families",      hasSchool: true,  hasMall: true,  hasBeach: false, hasHospital: true,  pipeline2026: 8800,  type: "community", isSeedData: true, source: "Knight Frank / Sands of Wealth Jan 2026" },
     { community: "Sobha Hartland",          avgPpsf: 2100, grossYield: 6.0,  netYield: 4.8, serviceCharge: 18,  metroDistance: 2400, supplyRisk: "Low",    investmentScore: 82, tenantProfile: "Luxury / HNWI", hasSchool: true,  hasMall: false, hasBeach: false, hasHospital: false, pipeline2026: 2200,  type: "community", isSeedData: true, source: "Knight Frank Q1 2025 / REIDIN" },
-    { community: "Tilal Al Ghaf",           avgPpsf: 1650, grossYield: 6.8,  netYield: 5.5, serviceCharge: 12,  metroDistance: 5000, supplyRisk: "Low",    investmentScore: 80, tenantProfile: "Families",      hasSchool: true,  hasMall: false, hasBeach: false, hasHospital: false, pipeline2026: 1800,  type: "community", isSeedData: true, source: "DLD 2025 \u2014 52% YoY growth" },
-    { community: "Discovery Gardens",       avgPpsf: 680,  grossYield: 8.5,  netYield: 7.1, serviceCharge: 9,   metroDistance: 600,  supplyRisk: "Low",    investmentScore: 75, tenantProfile: "Professionals", hasSchool: false, hasMall: true,  hasBeach: false, hasHospital: false, pipeline2026: 400,   type: "community", isSeedData: true, source: "Middle East Insider Apr 2026 \u2014 8.5% yield" },
+    { community: "Tilal Al Ghaf",           avgPpsf: 1650, grossYield: 6.8,  netYield: 5.5, serviceCharge: 12,  metroDistance: 5000, supplyRisk: "Low",    investmentScore: 80, tenantProfile: "Families",      hasSchool: true,  hasMall: false, hasBeach: false, hasHospital: false, pipeline2026: 1800,  type: "community", isSeedData: true, source: "DLD 2025 — 52% YoY growth" },
+    { community: "Discovery Gardens",       avgPpsf: 680,  grossYield: 8.5,  netYield: 7.1, serviceCharge: 9,   metroDistance: 600,  supplyRisk: "Low",    investmentScore: 75, tenantProfile: "Professionals", hasSchool: false, hasMall: true,  hasBeach: false, hasHospital: false, pipeline2026: 400,   type: "community", isSeedData: true, source: "Middle East Insider Apr 2026 — 8.5% yield" },
     { community: "Dubai Silicon Oasis",     avgPpsf: 820,  grossYield: 7.5,  netYield: 6.0, serviceCharge: 12,  metroDistance: 4500, supplyRisk: "Low",    investmentScore: 74, tenantProfile: "Professionals", hasSchool: true,  hasMall: true,  hasBeach: false, hasHospital: false, pipeline2026: 2400,  type: "community", isSeedData: true, source: "uaeexperthub.com Jan 2026" },
     { community: "Arjan",                   avgPpsf: 1020, grossYield: 8.0,  netYield: 6.5, serviceCharge: 13,  metroDistance: 1500, supplyRisk: "Medium", investmentScore: 76, tenantProfile: "Professionals", hasSchool: false, hasMall: false, hasBeach: false, hasHospital: false, pipeline2026: 4200,  type: "community", isSeedData: true, source: "GuestReady Feb 2026 / Keyone Q1 2026" },
     { community: "DAMAC Hills 2",           avgPpsf: 780,  grossYield: 7.2,  netYield: 6.0, serviceCharge: 10,  metroDistance: 6000, supplyRisk: "High",   investmentScore: 69, tenantProfile: "Families",      hasSchool: true,  hasMall: true,  hasBeach: false, hasHospital: false, pipeline2026: 16000, type: "community", isSeedData: true, source: "uaeexperthub.com Jan 2026" },
     { community: "Emaar Beachfront",        avgPpsf: 2800, grossYield: 5.8,  netYield: 4.6, serviceCharge: 20,  metroDistance: 800,  supplyRisk: "Low",    investmentScore: 79, tenantProfile: "Luxury / HNWI", hasSchool: false, hasMall: false, hasBeach: true,  hasHospital: false, pipeline2026: 1600,  type: "community", isSeedData: true, source: "Bayut H1 2025 / Driven Properties 2025" },
   ],
 
-  /* \u2500\u2500\u2500 LAUNCH CALENDAR TAB \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+  /* ─── LAUNCH CALENDAR TAB ──────────────────────────────────────
      Sources: Developer official portals, Bayut Launch Radar 2026,
      Property Finder New Projects, Reelly.ai Launch Calendar
      URL: reelly.ai | bayut.com | propertyfinder.ae
-  \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */
+  ─────────────────────────────────────────────────────────────── */
   launches: [
-    { projectName: "Emaar Grand Polo Club & Resort \u2014 Phase 2", developer: "Emaar", community: "Dubai Investment South", propertyType: "Villa", status: "EOI Open", launchDate: "2026-04-20", startingPrice: 5700000, totalUnits: 420, paymentPlan: "80/20", eoiAmount: 50000, eoiRefundable: true, launchPrice: 4800, currentPrice: 5200, notes: "Emaar's 60M sqft master plan. Polo fields, 7 clubhouses, equestrian estates. Strong appreciation history on Emaar launches.", type: "launch", isSeedData: true, source: "Alkira Dubai Investment Guide Feb 2026" },
-    { projectName: "Dubai Islands \u2014 Island B Phase 1", developer: "Nakheel", community: "Dubai Islands", propertyType: "Apartment", status: "EOI Open", launchDate: "2026-04-28", startingPrice: 1200000, totalUnits: 680, paymentPlan: "60/40", eoiAmount: 30000, eoiRefundable: true, notes: "Island B offers more controlled planning vs Island A. 24% price growth in 2025. Beachfront value.", type: "launch", isSeedData: true, source: "Alkira Feb 2026 \u2014 Dubai Islands 24% growth 2025" },
-    { projectName: "Sobha Hartland II \u2014 The Waterfront", developer: "Sobha Realty", community: "Sobha Hartland", propertyType: "Apartment", status: "Upcoming", launchDate: "2026-05-15", startingPrice: 1800000, totalUnits: 520, paymentPlan: "70/30", eoiAmount: 40000, eoiRefundable: true, notes: "High-rise community with green living concept. Sobha known for quality finishes and delivery track record.", type: "launch", isSeedData: true, source: "Arthur Mackenzy Q3 2025 Report" },
-    { projectName: "The Oasis by Emaar \u2014 Phase 11", developer: "Emaar", community: "The Oasis", propertyType: "Villa", status: "Launched", launchDate: "2026-03-10", startingPrice: 6150000, totalUnits: 280, paymentPlan: "80/20 post-handover", eoiAmount: 50000, eoiRefundable: true, launchPrice: 5800, currentPrice: 6300, notes: "10-to-1 scarcity vs Dubai Hills (2,700 units vs 30,000). Lagoon pools, wave pools. Handover Jun 2029.", type: "launch", isSeedData: true, source: "Alkira Feb 2026 \u2014 'Blue Lagoon' exclusivity" },
-    { projectName: "DAMAC Lagoons \u2014 Santorini Phase 3", developer: "DAMAC Properties", community: "DAMAC Lagoons", propertyType: "Villa", status: "EOI Closed", launchDate: "2026-03-22", startingPrice: 2200000, totalUnits: 380, paymentPlan: "60/40", eoiAmount: 25000, eoiRefundable: true, notes: "Mediterranean-inspired villas. DAMAC sold out previous phases within hours.", type: "launch", isSeedData: true, source: "Property Finder Launch Radar 2026" },
-    { projectName: "Binghatti Skyrise \u2014 Business Bay", developer: "Binghatti", community: "Business Bay", propertyType: "Apartment", status: "Upcoming", launchDate: "2026-05-08", startingPrice: 850000, totalUnits: 720, paymentPlan: "70/30", eoiAmount: 20000, eoiRefundable: true, notes: "Binghatti's signature bold architecture. Business Bay canal views. Target professional renters \u2014 strong yield community.", type: "launch", isSeedData: true, source: "Bayut Launch Radar Apr 2026" },
-    { projectName: "Tilal Al Ghaf \u2014 Serenity Mansions", developer: "Majid Al Futtaim", community: "Tilal Al Ghaf", propertyType: "Villa", status: "Sold Out", launchDate: "2026-02-18", startingPrice: 8500000, totalUnits: 85, paymentPlan: "50/50", eoiAmount: 100000, eoiRefundable: false, notes: "Ultra-luxury mansions sold out within 48 hours. DLD 2025 shows 52% YoY transaction growth in Tilal Al Ghaf.", type: "launch", isSeedData: true, source: "DLD 2025 / Bayut 2026" },
-    { projectName: "Ellington Ocean House \u2014 Dubai Islands", developer: "Ellington Properties", community: "Dubai Islands", propertyType: "Apartment", status: "Upcoming", launchDate: "2026-06-01", startingPrice: 2400000, totalUnits: 180, paymentPlan: "70/30", eoiAmount: 50000, eoiRefundable: true, notes: "Design-forward beachfront living. Ellington known for curated interiors. Limited units.", type: "launch", isSeedData: true, source: "Reelly.ai Launch Calendar Apr 2026" },
+    { projectName: "Emaar Grand Polo Club & Resort — Phase 2", developer: "Emaar", community: "Dubai Investment South", propertyType: "Villa", status: "EOI Open", launchDate: "2026-04-20", startingPrice: 5700000, totalUnits: 420, paymentPlan: "80/20", eoiAmount: 50000, eoiRefundable: true, launchPrice: 4800, currentPrice: 5200, notes: "Emaar's 60M sqft master plan. Polo fields, 7 clubhouses, equestrian estates. Strong appreciation history on Emaar launches.", type: "launch", isSeedData: true, source: "Alkira Dubai Investment Guide Feb 2026" },
+    { projectName: "Dubai Islands — Island B Phase 1", developer: "Nakheel", community: "Dubai Islands", propertyType: "Apartment", status: "EOI Open", launchDate: "2026-04-28", startingPrice: 1200000, totalUnits: 680, paymentPlan: "60/40", eoiAmount: 30000, eoiRefundable: true, notes: "Island B offers more controlled planning vs Island A. 24% price growth in 2025. Beachfront value.", type: "launch", isSeedData: true, source: "Alkira Feb 2026 — Dubai Islands 24% growth 2025" },
+    { projectName: "Sobha Hartland II — The Waterfront", developer: "Sobha Realty", community: "Sobha Hartland", propertyType: "Apartment", status: "Upcoming", launchDate: "2026-05-15", startingPrice: 1800000, totalUnits: 520, paymentPlan: "70/30", eoiAmount: 40000, eoiRefundable: true, notes: "High-rise community with green living concept. Sobha known for quality finishes and delivery track record.", type: "launch", isSeedData: true, source: "Arthur Mackenzy Q3 2025 Report" },
+    { projectName: "The Oasis by Emaar — Phase 11", developer: "Emaar", community: "The Oasis", propertyType: "Villa", status: "Launched", launchDate: "2026-03-10", startingPrice: 6150000, totalUnits: 280, paymentPlan: "80/20 post-handover", eoiAmount: 50000, eoiRefundable: true, launchPrice: 5800, currentPrice: 6300, notes: "10-to-1 scarcity vs Dubai Hills (2,700 units vs 30,000). Lagoon pools, wave pools. Handover Jun 2029.", type: "launch", isSeedData: true, source: "Alkira Feb 2026 — 'Blue Lagoon' exclusivity" },
+    { projectName: "DAMAC Lagoons — Santorini Phase 3", developer: "DAMAC Properties", community: "DAMAC Lagoons", propertyType: "Villa", status: "EOI Closed", launchDate: "2026-03-22", startingPrice: 2200000, totalUnits: 380, paymentPlan: "60/40", eoiAmount: 25000, eoiRefundable: true, notes: "Mediterranean-inspired villas. DAMAC sold out previous phases within hours.", type: "launch", isSeedData: true, source: "Property Finder Launch Radar 2026" },
+    { projectName: "Binghatti Skyrise — Business Bay", developer: "Binghatti", community: "Business Bay", propertyType: "Apartment", status: "Upcoming", launchDate: "2026-05-08", startingPrice: 850000, totalUnits: 720, paymentPlan: "70/30", eoiAmount: 20000, eoiRefundable: true, notes: "Binghatti's signature bold architecture. Business Bay canal views. Target professional renters — strong yield community.", type: "launch", isSeedData: true, source: "Bayut Launch Radar Apr 2026" },
+    { projectName: "Tilal Al Ghaf — Serenity Mansions", developer: "Majid Al Futtaim", community: "Tilal Al Ghaf", propertyType: "Villa", status: "Sold Out", launchDate: "2026-02-18", startingPrice: 8500000, totalUnits: 85, paymentPlan: "50/50", eoiAmount: 100000, eoiRefundable: false, notes: "Ultra-luxury mansions sold out within 48 hours. DLD 2025 shows 52% YoY transaction growth in Tilal Al Ghaf.", type: "launch", isSeedData: true, source: "DLD 2025 / Bayut 2026" },
+    { projectName: "Ellington Ocean House — Dubai Islands", developer: "Ellington Properties", community: "Dubai Islands", propertyType: "Apartment", status: "Upcoming", launchDate: "2026-06-01", startingPrice: 2400000, totalUnits: 180, paymentPlan: "70/30", eoiAmount: 50000, eoiRefundable: true, notes: "Design-forward beachfront living. Ellington known for curated interiors. Limited units.", type: "launch", isSeedData: true, source: "Reelly.ai Launch Calendar Apr 2026" },
   ],
 
-  /* \u2500\u2500\u2500 OVERVIEW TAB KPIs \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+  /* ─── OVERVIEW TAB KPIs ────────────────────────────────────────
      Sources: Same as Market tab
-  \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */
+  ─────────────────────────────────────────────────────────────── */
   overviewKpis: [
-    { metric: "Total Market Value",  value: "AED 682.6B",  change: "+21% YoY \u2014 Full year 2025",   isSeedData: true, source: "DLD / DXB Interact Jan 2026" },
-    { metric: "Total Transactions",  value: "215,060",      change: "+19% YoY \u2014 Sales only",        isSeedData: true, source: "DLD Annual Report 2025" },
-    { metric: "Off-Plan Share",      value: "63%",          change: "+3pp \u2014 Off-plan dominated 2025", isSeedData: true, source: "DLD / Property Monitor 2025" },
+    { metric: "Total Market Value",  value: "AED 682.6B",  change: "+21% YoY — Full year 2025",   isSeedData: true, source: "DLD / DXB Interact Jan 2026" },
+    { metric: "Total Transactions",  value: "215,060",      change: "+19% YoY — Sales only",        isSeedData: true, source: "DLD Annual Report 2025" },
+    { metric: "Off-Plan Share",      value: "63%",          change: "+3pp — Off-plan dominated 2025", isSeedData: true, source: "DLD / Property Monitor 2025" },
     { metric: "Units Launched",      value: "131,504",      change: "532 projects by Oct 2025",     isSeedData: true, source: "DLD Oct 2025" },
   ],
 };
 
-/* Seed data source reference \u2014 shown in UI */
+/* Seed data source reference — shown in UI */
 const SEED_SOURCE_URL = {
   DLD: "https://dubailand.gov.ae/en/open-data/research/",
   Bayut: "https://www.bayut.com/mybayut/bayut-h1-2025-dubai-rental-market-report/",
@@ -602,7 +602,7 @@ const SEED_SOURCE_URL = {
   DXBAnalytics: "https://www.dxbanalytics.com/blog/dubai-property-transaction-volume-2026",
 };
 
-/* \u2500\u2500\u2500 TAB GROUPS \u2500 5 sections, 32 tabs in sequence \u2500\u2500\u2500 */
+/* ─── TAB GROUPS ─ 5 sections, 32 tabs in sequence ─── */
 const TAB_GROUPS = [
   {
     id: "market",
@@ -681,11 +681,11 @@ const TAB_GROUPS = [
   },
 ];
 
-/* \u2500\u2500\u2500 Flat TABS for backward compatibility \u2500\u2500\u2500 */
+/* ─── Flat TABS for backward compatibility ─── */
 const TABS = TAB_GROUPS.flatMap(g => g.tabs);
 
 
-/* \u2500\u2500\u2500 STYLES \u2500\u2500\u2500 */
+/* ─── STYLES ─── */
 const css = `
   @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700;9..144,900&display=swap');
 
@@ -829,7 +829,7 @@ const css = `
   }
   .mobile-overlay.open { opacity: 1; pointer-events: auto; }
 
-  /* \u2500\u2500 768px: Tablet / small laptop \u2500\u2500 */
+  /* ── 768px: Tablet / small laptop ── */
   @media (max-width: 768px) {
     html { font-size: 13px; }
 
@@ -863,7 +863,7 @@ const css = `
     .filter-scroll::-webkit-scrollbar { display: none; }
     .filter-scroll button { flex-shrink: 0; }
 
-    /* Tables \u2014 horizontal scroll with hint arrow */
+    /* Tables — horizontal scroll with hint arrow */
     .table-scroll { overflow-x: auto !important; -webkit-overflow-scrolling: touch; }
     .table-scroll::after { content: "swipe \u2192"; position: absolute; right: 8px; top: 12px; color: ${T.gold}; font-size: 10px; opacity: 0.5; pointer-events: none; letter-spacing: 0.5px; }
     .table-scroll table { min-width: 560px; }
@@ -882,7 +882,7 @@ const css = `
     .alerts-modal { max-width: 100% !important; max-height: 100dvh !important; border-radius: 20px 20px 0 0 !important; position: fixed !important; bottom: 0 !important; top: auto !important; margin: 0 !important; }
   }
 
-  /* \u2500\u2500 480px: Mobile phones \u2500\u2500 */
+  /* ── 480px: Mobile phones ── */
   @media (max-width: 480px) {
     html { font-size: 12px; }
 
@@ -918,18 +918,18 @@ const css = `
     .tab-content-pad { padding-bottom: 80px !important; }
   }
 
-  /* \u2500\u2500 360px: Very small phones \u2500\u2500 */
+  /* ── 360px: Very small phones ── */
   @media (max-width: 360px) {
     .kpi-grid { grid-template-columns: 1fr !important; }
     html { font-size: 11px; }
   }
 
-  /* \u2500\u2500 Touch improvements \u2500\u2500 */
+  /* ── Touch improvements ── */
   * { -webkit-tap-highlight-color: transparent; }
   button, a, [role="button"] { touch-action: manipulation; }
   input[type="range"] { height: 32px; }
 
-  /* \u2500\u2500 Mobile Bottom Nav Bar \u2500\u2500 */
+  /* ── Mobile Bottom Nav Bar ── */
   @media (max-width: 768px) {
     .mobile-bottom-nav {
       display: flex !important;
@@ -946,7 +946,7 @@ const css = `
   }
 `;
 
-/* \u2500\u2500\u2500 COMPONENTS \u2500\u2500\u2500 */
+/* ─── COMPONENTS ─── */
 
 /* Loading Skeleton for data fetch */
 const LoadingSkeleton = ({ rows = 6, cols = 3 }) => (
@@ -1046,7 +1046,7 @@ const CustomTooltip = ({ active, payload, label }) => {
   );
 };
 
-/* \u2500\u2500\u2500 LOGIN SCREEN \u2500\u2500\u2500 */
+/* ─── LOGIN SCREEN ─── */
 const googleProvider = new GoogleAuthProvider();
 
 const PasswordStrength = ({ password }) => {
@@ -1187,7 +1187,7 @@ const LoginScreen = ({ onLogin, onBack, defaultMode = "login" }) => {
         await emailjs.send(import.meta.env.VITE_EMAILJS_SERVICE_ID, import.meta.env.VITE_EMAILJS_TEMPLATE_ID, {
           user_email: email, user_name: name.trim(),
           project_name: "DXB Analytics Platform",
-          change_type: "Welcome to DXB Analytics! \u2014 Please verify your email",
+          change_type: "Welcome to DXB Analytics! — Please verify your email",
           new_value: "Your 7-day Pro Trial is active. Check your inbox to verify your email address.",
           old_value: "New Account",
           updated_at: now.toLocaleDateString("en-AE"),
@@ -1205,7 +1205,7 @@ const LoginScreen = ({ onLogin, onBack, defaultMode = "login" }) => {
     setLoading(false);
   };
 
-  // \u2500\u2500 Verify Email Screen \u2500\u2500
+  // ── Verify Email Screen ──
   if (screen === "verify") return (
     <div style={{ minHeight: "100vh", background: T.bg, display: "flex", alignItems: "center", justifyContent: "center" }}>
       <style>{css}</style>
@@ -1238,7 +1238,7 @@ const LoginScreen = ({ onLogin, onBack, defaultMode = "login" }) => {
     </div>
   );
 
-  // \u2500\u2500 Reset Sent Screen \u2500\u2500
+  // ── Reset Sent Screen ──
   if (screen === "reset_sent") return (
     <div style={{ minHeight: "100vh", background: T.bg, display: "flex", alignItems: "center", justifyContent: "center" }}>
       <style>{css}</style>
@@ -1258,7 +1258,7 @@ const LoginScreen = ({ onLogin, onBack, defaultMode = "login" }) => {
     </div>
   );
 
-  // \u2500\u2500 Main Form \u2500\u2500
+  // ── Main Form ──
   return (
     <div style={{ minHeight: "100vh", background: T.bg, display: "flex", alignItems: "center", justifyContent: "center", position: "relative", overflow: "hidden" }}>
       <style>{css}</style>
@@ -1293,7 +1293,7 @@ const LoginScreen = ({ onLogin, onBack, defaultMode = "login" }) => {
             {mode === "login" ? "Welcome back" : "Start your free trial"}
           </h2>
           <p style={{ color: T.textSecondary, fontSize: 13, marginBottom: 20 }}>
-            {mode === "login" ? "Sign in to access your dashboard" : "7 days full Pro access \u2014 no credit card required"}
+            {mode === "login" ? "Sign in to access your dashboard" : "7 days full Pro access — no credit card required"}
           </p>
 
           {/* Google Sign-In */}
@@ -1342,7 +1342,7 @@ const LoginScreen = ({ onLogin, onBack, defaultMode = "login" }) => {
             <div>
               <label style={{ fontSize: 11, fontWeight: 600, color: T.textSecondary, textTransform: "uppercase", letterSpacing: 1, display: "block", marginBottom: 6 }}>Password *</label>
               <div style={{ position: "relative" }}>
-                <input className="login-input" type={showPass ? "text" : "password"} placeholder={mode === "signup" ? "Min 8 chars + 1 number" : "\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022"} value={pass} onChange={e => setPass(e.target.value)} onKeyDown={e => e.key === "Enter" && mode === "login" && handleLogin()} style={{ paddingRight: 44 }} />
+                <input className="login-input" type={showPass ? "text" : "password"} placeholder={mode === "signup" ? "Min 8 chars + 1 number" : "••••••••"} value={pass} onChange={e => setPass(e.target.value)} onKeyDown={e => e.key === "Enter" && mode === "login" && handleLogin()} style={{ paddingRight: 44 }} />
                 <button type="button" onClick={() => setShowPass(!showPass)} style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: T.textMuted, padding: 4 }}>
                   {showPass ? Icons.eyeOff : Icons.eye}
                 </button>
@@ -1396,7 +1396,7 @@ const LoginScreen = ({ onLogin, onBack, defaultMode = "login" }) => {
               <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 12px", background: "rgba(212,168,67,0.06)", borderRadius: 8, border: `1px solid ${T.border}` }}>
                 <span style={{ fontSize: 16 }}>\u2B50</span>
                 <div style={{ fontSize: 11, color: T.textSecondary, lineHeight: 1.4 }}>
-                  <span style={{ color: T.gold, fontWeight: 600 }}>7-day Pro trial</span> \u2014 Full access. No credit card. Cancel anytime.
+                  <span style={{ color: T.gold, fontWeight: 600 }}>7-day Pro trial</span> — Full access. No credit card. Cancel anytime.
                 </div>
               </div>
             )}
@@ -1414,7 +1414,7 @@ const LoginScreen = ({ onLogin, onBack, defaultMode = "login" }) => {
         </div>
 
         <p style={{ textAlign: "center", color: T.textMuted, fontSize: 11, marginTop: 20 }}>
-          \uD83D\uDD12 Secured by Firebase \u00B7 SSL Encrypted \u00B7 GDPR Compliant
+          \uD83D\uDD12 Secured by Firebase · SSL Encrypted · GDPR Compliant
         </p>
       </div>
     </div>
@@ -1422,7 +1422,7 @@ const LoginScreen = ({ onLogin, onBack, defaultMode = "login" }) => {
 };
 
 
-/* \u2500\u2500\u2500 PRO GATE OVERLAY \u2500\u2500\u2500 */
+/* ─── PRO GATE OVERLAY ─── */
 const ProGate = ({ children, isPro, message = "Upgrade to Pro to unlock this data", onUpgrade, blur = true }) => {
   if (isPro) return children;
   return (
@@ -1441,16 +1441,16 @@ const ProGate = ({ children, isPro, message = "Upgrade to Pro to unlock this dat
             ))}
           </div>
           <button type="button" onClick={onUpgrade} style={{ width: "100%", padding: "11px 0", background: `linear-gradient(135deg, ${T.gold}, #B8912F)`, color: T.bg, border: "none", borderRadius: 10, fontSize: 13, fontWeight: 800, cursor: "pointer", fontFamily: "'Outfit', sans-serif", letterSpacing: 0.3 }}>
-            Unlock Pro \u2014 AED 99/mo \u2192
+            Unlock Pro — AED 99/mo \u2192
           </button>
-          <div style={{ fontSize: 10, color: T.textMuted, marginTop: 8 }}>7-day money-back guarantee \u00B7 Cancel anytime</div>
+          <div style={{ fontSize: 10, color: T.textMuted, marginTop: 8 }}>7-day money-back guarantee · Cancel anytime</div>
         </div>
       </div>
     </div>
   );
 };
 
-/* \u2500\u2500\u2500 PRO GATE FULL PAGE \u2500\u2500\u2500 */
+/* ─── PRO GATE FULL PAGE ─── */
 const ProGateFullPage = ({ tabName, onUpgrade }) => {
   const tabBenefits = {
     "DXB Estimate":     ["Automated property valuations", "AVM price estimates per unit", "Bayut live listings", "\u00B115% accuracy model"],
@@ -1485,21 +1485,21 @@ const ProGateFullPage = ({ tabName, onUpgrade }) => {
           ))}
         </div>
         <button type="button" onClick={onUpgrade} style={{ width: "100%", padding: "14px 0", background: `linear-gradient(135deg, ${T.gold}, #B8912F)`, color: T.bg, border: "none", borderRadius: 12, fontSize: 14, fontWeight: 800, cursor: "pointer", fontFamily: "'Outfit', sans-serif", letterSpacing: 0.3, marginBottom: 10 }}>
-          Upgrade to Pro \u2014 AED 99/mo \u2192
+          Upgrade to Pro — AED 99/mo \u2192
         </button>
-        <div style={{ fontSize: 11, color: T.textMuted }}>7-day free trial \u00B7 Cancel anytime \u00B7 Money-back guarantee</div>
+        <div style={{ fontSize: 11, color: T.textMuted }}>7-day free trial · Cancel anytime · Money-back guarantee</div>
       </div>
     </div>
   );
 };
 
-/* \u2500\u2500\u2500 UPGRADE MODAL \u2500\u2500\u2500 */
+/* ─── UPGRADE MODAL ─── */
 
 
 const UpgradeModal = ({ show, onClose }) => {
   if (!show) return null;
   const plans = [
-    { name: "Pro", price: "99", period: "month", features: ["All Dubai projects \u2014 full data", "AI market insights", "Portfolio ROI tracker", "DXB Estimate AVM", "Yield & STR/LTR analysis", "Mortgage calculator", "Price alerts", "PDF export"], popular: true, note: null, cta: "Upgrade to Pro \u2192" },
+    { name: "Pro", price: "99", period: "month", features: ["All Dubai projects — full data", "AI market insights", "Portfolio ROI tracker", "DXB Estimate AVM", "Yield & STR/LTR analysis", "Mortgage calculator", "Price alerts", "PDF export"], popular: true, note: null, cta: "Upgrade to Pro \u2192" },
     { name: "Enterprise", price: "499", period: "month", features: ["Everything in Pro", "PDF report generation \u23F3", "API data access \u23F3", "Custom dashboards \u23F3", "Multi-user team accounts \u23F3", "Developer-level raw data", "Dedicated account manager", "White-label options \u23F3"], popular: false, note: "\u23F3 = Launching Q3 2026", cta: "Contact Sales \u2192" },
   ];
   return (
@@ -1584,7 +1584,7 @@ function useFocusTrap(active) {
   return ref;
 }
 
-/* \u2500\u2500\u2500 COMMUNITY MAP TAB COMPONENT \u2500\u2500\u2500 */
+/* ─── COMMUNITY MAP TAB COMPONENT ─── */
 
 function CommunityMapTab({ activeProjects, liveCommunityROI, setTab, seedCommunities }) {
   
@@ -1651,7 +1651,7 @@ function CommunityMapTab({ activeProjects, liveCommunityROI, setTab, seedCommuni
   };
 
   // Community-level data for heat map layers
-  // communityData \u2014 built from SEED_DATA.communities (20 communities, sourced from Bayut/DLD/REIDIN)
+  // communityData — built from SEED_DATA.communities (20 communities, sourced from Bayut/DLD/REIDIN)
   const communityData = seedCommunities?.length > 0
     ? Object.fromEntries(seedCommunities.map(c => [
         c.community,
@@ -1718,7 +1718,7 @@ function CommunityMapTab({ activeProjects, liveCommunityROI, setTab, seedCommuni
     if (projectCoords[project.name]) return projectCoords[project.name];
     if (projectCoords[project.project]) return projectCoords[project.project];
 
-    // 3. Community lookup \u2014 comprehensive list of ALL Dubai communities
+    // 3. Community lookup — comprehensive list of ALL Dubai communities
     const ALL_COMMUNITY_COORDS = {
       // Our 20 seed communities
       "Jumeirah Village Circle":    [25.0607, 55.2088],
@@ -1806,8 +1806,8 @@ function CommunityMapTab({ activeProjects, liveCommunityROI, setTab, seedCommuni
     );
     if (partialMatch) return partialMatch[1];
 
-    // 5. Default \u2014 Downtown Dubai center (never fails)
-    console.warn("DXB Map: No coords for", project.community, "\u2014 using Downtown default");
+    // 5. Default — Downtown Dubai center (never fails)
+    console.warn("DXB Map: No coords for", project.community, "— using Downtown default");
     return [25.1972, 55.2744];
   };
 
@@ -2011,7 +2011,7 @@ function CommunityMapTab({ activeProjects, liveCommunityROI, setTab, seedCommuni
           <div ref={mapRef} style={{ width: "100%", height: "100%" }} />
           {/* Floating counter */}
           <div style={{ position: "absolute", bottom: 12, left: 12, background: "rgba(13,24,33,0.9)", backdropFilter: "blur(8px)", borderRadius: 8, padding: "6px 12px", border: "1px solid " + T.border, zIndex: 999, fontSize: 11, color: T.textSecondary }}>
-            <span style={{ color: T.gold, fontWeight: 700 }}>{filteredProjects.length}</span> projects \u00B7{" "}
+            <span style={{ color: T.gold, fontWeight: 700 }}>{filteredProjects.length}</span> projects ·{" "}
             <span style={{ color: T.teal, fontWeight: 600 }}>
               {mapLayer === "yield" ? "Yield layer" : mapLayer === "ppsf" ? "PPSF heat map" : "Volume heat map"}
             </span>
@@ -2080,21 +2080,21 @@ function CommunityMapTab({ activeProjects, liveCommunityROI, setTab, seedCommuni
 }
 
 
-// \u2500\u2500\u2500 Tab Data Sources Footer \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
-/* \u2500\u2500\u2500 DATA BADGE \u2014 verified data stamp \u2500\u2500\u2500 */
+// ─── Tab Data Sources Footer ────────────────────────────────────────────────
+/* ─── DATA BADGE — verified data stamp ─── */
 
 const DataBadge = ({ source, date, type = "dld" }) => {
   const cfg = {
     dld:     { label: "DLD Verified",     color: "#10B981", icon: "\u2713" },
     reidin:  { label: "REIDIN Index",     color: "#3B82F6", icon: "\u2713" },
     emaar:   { label: "Emaar IR",         color: "#D4A843", icon: "\u2713" },
-    live:    { label: "Live \u00B7 Firestore", color: "#10B981", icon: "\u25CF" },
+    live:    { label: "Live · Firestore", color: "#10B981", icon: "\u25CF" },
     ai:      { label: "AI Estimate",      color: "#8B5CF6", icon: "\u2726" },
     manual:  { label: "Admin Verified",   color: "#F59E0B", icon: "\u2713" },
   };
   const c = cfg[type] || cfg.dld;
   return (
-    <span title={`Source: ${source || c.label}${date ? " \u00B7 " + date : ""}`} style={{
+    <span title={`Source: ${source || c.label}${date ? " · " + date : ""}`} style={{
       display: "inline-flex", alignItems: "center", gap: 4,
       fontSize: 9, fontWeight: 700, color: c.color, letterSpacing: 0.5,
       background: c.color + "12", border: `1px solid ${c.color}30`,
@@ -2159,10 +2159,10 @@ const TabSources = ({ sources }) => (
   </div>
 );
 
-/* \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+/* ─────────────────────────────────────────────────────────────
    EMPTY STATE COMPONENT
    Shows for all intelligence tabs while awaiting data import
-   \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */
+   ───────────────────────────────────────────────────────────── */
 const EmptyState = ({ tab, icon, description, adminHint }) => (
   <div style={{
     display: "flex", flexDirection: "column", alignItems: "center",
@@ -2226,24 +2226,24 @@ const EmptyState = ({ tab, icon, description, adminHint }) => (
   </div>
 );
 
-/* \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+/* ─────────────────────────────────────────────────────────────
    INTELLIGENCE TAB CONFIGS
    Each tab has its icon, description and admin hint
-   \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */
+   ───────────────────────────────────────────────────────────── */
 const INTELLIGENCE_TABS = {
   "Overview": {
     icon: "\uD83D\uDCCA",
-    description: "Your Bloomberg-style command centre. Live market ticker, KPI cards, developer intelligence panel, and real-time DLD feed \u2014 all connected to your data sources.",
+    description: "Your Bloomberg-style command centre. Live market ticker, KPI cards, developer intelligence panel, and real-time DLD feed — all connected to your data sources.",
     adminHint: "Connect data sources from Admin \u2192 Data Manager \u2192 Market Data"
   },
   "Financials": {
     icon: "\uD83D\uDCB9",
-    description: "Developer financial intelligence \u2014 revenue, net profit, EBITDA, backlog, EPS, DPS \u2014 6-year history charts. Auto-updated from developer IR reports.",
+    description: "Developer financial intelligence — revenue, net profit, EBITDA, backlog, EPS, DPS — 6-year history charts. Auto-updated from developer IR reports.",
     adminHint: "Add developer financials from Admin \u2192 Data Manager \u2192 Developers"
   },
   "Projects": {
     icon: "\uD83C\uDFD7\uFE0F",
-    description: "Browse all projects across all property types \u2014 Off-Plan, Residential, Commercial, Secondary Market, Hotel Apartments, Villas, Balcony View Units. Filter, compare, and score every property.",
+    description: "Browse all projects across all property types — Off-Plan, Residential, Commercial, Secondary Market, Hotel Apartments, Villas, Balcony View Units. Filter, compare, and score every property.",
     adminHint: "Import projects from Admin \u2192 Data Manager \u2192 Projects"
   },
   "Handover": {
@@ -2254,11 +2254,11 @@ const INTELLIGENCE_TABS = {
   "Launch Calendar": {
     icon: "\uD83D\uDE80",
     description: "Never miss a launch. Upcoming project launches by developer, EOI status, expected pricing, and past launch performance vs actual prices.",
-    adminHint: "Launch data auto-populates from Bayut API scanner \u2014 check Admin \u2192 Data Health"
+    adminHint: "Launch data auto-populates from Bayut API scanner — check Admin \u2192 Data Health"
   },
   "Neighbourhoods": {
     icon: "\uD83C\uDFD8\uFE0F",
-    description: "Community intelligence \u2014 average PPSF, yields, schools, hospitals, metro access, lifestyle ratings, supply risk, and demand strength for every Dubai community.",
+    description: "Community intelligence — average PPSF, yields, schools, hospitals, metro access, lifestyle ratings, supply risk, and demand strength for every Dubai community.",
     adminHint: "Add community data from Admin \u2192 Data Manager \u2192 Communities"
   },
   "Service Charges": {
@@ -2269,47 +2269,47 @@ const INTELLIGENCE_TABS = {
   "STR vs LTR": {
     icon: "\uD83C\uDFE0",
     description: "Short-term Airbnb vs long-term tenancy comparison per community per unit type. Occupancy rates, daily rates, platform fees, management costs, and net income.",
-    adminHint: "STR data connects to Bayut API \u2014 configure from Admin \u2192 Data Health"
+    adminHint: "STR data connects to Bayut API — configure from Admin \u2192 Data Health"
   },
   "Developer Health": {
     icon: "\uD83E\uDE7A",
-    description: "Developer health scores \u2014 delivery track record, financial strength, project pipeline risk, RERA status, and complaint ratios. 9-factor radar chart.",
+    description: "Developer health scores — delivery track record, financial strength, project pipeline risk, RERA status, and complaint ratios. 9-factor radar chart.",
     adminHint: "Add developer profiles from Admin \u2192 Data Manager \u2192 Developers"
   },
   "DLD Volumes": {
     icon: "\uD83D\uDCC8",
-    description: "Live DLD transaction data \u2014 volume by community, developer, property type, nationality, cash vs mortgage. Monthly trends, price anomaly alerts.",
-    adminHint: "DLD data auto-syncs daily \u2014 check Admin \u2192 Data Health \u2192 DLD Cron"
+    description: "Live DLD transaction data — volume by community, developer, property type, nationality, cash vs mortgage. Monthly trends, price anomaly alerts.",
+    adminHint: "DLD data auto-syncs daily — check Admin \u2192 Data Health \u2192 DLD Cron"
   },
   "DXB Estimate": {
     icon: "\uD83D\uDD0D",
     description: "The Zestimate for Dubai. Enter any unit details and get an estimated market value backed by actual DLD transaction comparables.",
-    adminHint: "AVM requires DLD data \u2014 check Admin \u2192 Data Health \u2192 DLD Cron"
+    adminHint: "AVM requires DLD data — check Admin \u2192 Data Health \u2192 DLD Cron"
   },
   "Portfolio": {
     icon: "\uD83D\uDCBC",
     description: "Personal investment portfolio tracker. Add your properties, track current market value, unrealised gains, rental income, IRR, and Golden Visa eligibility.",
-    adminHint: "Portfolio reads from live market data \u2014 connect DLD and Bayut first"
+    adminHint: "Portfolio reads from live market data — connect DLD and Bayut first"
   },
   "Competitors": {
     icon: "\u2694\uFE0F",
-    description: "Developer vs developer intelligence \u2014 sales volume, delivery record, PPSF comparison, market share, community presence, and branded residence count.",
+    description: "Developer vs developer intelligence — sales volume, delivery record, PPSF comparison, market share, community presence, and branded residence count.",
     adminHint: "Add developer data from Admin \u2192 Data Manager \u2192 Developers"
   },
   "Yields": {
     icon: "\uD83D\uDCCA",
     description: "Gross and net rental yields by community and unit type. 5-year historical trend, best yielding communities ranked, and yield vs appreciation tradeoff.",
-    adminHint: "Yield data auto-syncs weekly from Bayut API \u2014 check Admin \u2192 Data Health"
+    adminHint: "Yield data auto-syncs weekly from Bayut API — check Admin \u2192 Data Health"
   },
   "Mortgage": {
     icon: "\uD83C\uDFE6",
     description: "Live EIBOR mortgage calculator. Monthly payment, total cost of acquisition (DLD 4%, agency 2%, trustee fees), amortisation schedule, and 5 bank rate comparison.",
-    adminHint: "EIBOR updates daily \u2014 check Admin \u2192 EIBOR Rates"
+    adminHint: "EIBOR updates daily — check Admin \u2192 EIBOR Rates"
   },
   "Map": {
     icon: "\uD83D\uDDFA\uFE0F",
     description: "Interactive property map with yield heatmap, PPSF heatmap, transaction volume layer, project pins, and community boundaries. Distance rings from key landmarks.",
-    adminHint: "Map renders from project data \u2014 import projects first"
+    adminHint: "Map renders from project data — import projects first"
   },
   "Risk": {
     icon: "\u26A0\uFE0F",
@@ -2318,12 +2318,12 @@ const INTELLIGENCE_TABS = {
   },
   "Market": {
     icon: "\uD83C\uDF0D",
-    description: "Dubai real estate macro view \u2014 total market size, transaction count, off-plan vs secondary split, top developers, international buyer breakdown, and analyst forecasts.",
+    description: "Dubai real estate macro view — total market size, transaction count, off-plan vs secondary split, top developers, international buyer breakdown, and analyst forecasts.",
     adminHint: "Market data updates from Admin \u2192 Market Intelligence \u2192 Update Stats"
   },
   "Currency": {
     icon: "\uD83D\uDCB1",
-    description: "Live AED exchange rates for international buyers \u2014 GBP, USD, EUR, RUB, INR, CNY, and more. Property price converter and historical rate chart.",
+    description: "Live AED exchange rates for international buyers — GBP, USD, EUR, RUB, INR, CNY, and more. Property price converter and historical rate chart.",
     adminHint: "Currency rates update automatically via ExchangeRate API"
   },
   "Golden Visa": {
@@ -2333,23 +2333,23 @@ const INTELLIGENCE_TABS = {
   },
   "Flip": {
     icon: "\uD83D\uDD04",
-    description: "Property flip ROI calculator \u2014 purchase price, renovation cost, holding period, selling price. Returns net profit, ROI, annualised return, and optimal hold period.",
-    adminHint: "Flip calculator works with market data \u2014 connect DLD and Bayut first"
+    description: "Property flip ROI calculator — purchase price, renovation cost, holding period, selling price. Returns net profit, ROI, annualised return, and optimal hold period.",
+    adminHint: "Flip calculator works with market data — connect DLD and Bayut first"
   },
   "Investment Score": {
     icon: "\u2B50",
-    description: "AI investment scoring for any property \u2014 yield potential, location quality, developer health, price vs market, liquidity, handover risk, supply risk. 0-100 score with breakdown.",
-    adminHint: "Investment Score requires project data \u2014 import projects first"
+    description: "AI investment scoring for any property — yield potential, location quality, developer health, price vs market, liquidity, handover risk, supply risk. 0-100 score with breakdown.",
+    adminHint: "Investment Score requires project data — import projects first"
   },
   "Price History": {
     icon: "\uD83D\uDCC9",
     description: "5-year PPSF trend per community per unit type. Off-plan vs secondary price divergence, correction alerts, and momentum indicators.",
-    adminHint: "Price history syncs from DLD data \u2014 check Admin \u2192 Data Health \u2192 DLD Cron"
+    adminHint: "Price history syncs from DLD data — check Admin \u2192 Data Health \u2192 DLD Cron"
   },
 };
 
 
-/* \u2550\u2550 TAB ERROR BOUNDARY \u2550\u2550 */
+/* ══ TAB ERROR BOUNDARY ══ */
 class TabErrorBoundary extends React.Component {
   constructor(props) { super(props); this.state = { hasError:false, error:null }; }
   static getDerivedStateFromError(e) { return { hasError:true, error:e }; }
@@ -2364,7 +2364,7 @@ class TabErrorBoundary extends React.Component {
           style={{ padding:"7px 20px", background:"rgba(212,168,67,0.15)", border:"1px solid rgba(212,168,67,0.4)", borderRadius:8, color:"#D4A843", fontSize:12, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>
           Try Again
         </button>
-        <div style={{ fontSize:11, color:"#6B7280", marginTop:10 }}>All other tabs remain accessible \u2014 use the sidebar to navigate</div>
+        <div style={{ fontSize:11, color:"#6B7280", marginTop:10 }}>All other tabs remain accessible — use the sidebar to navigate</div>
       </div>
     );
     return this.props.children;
@@ -2402,7 +2402,7 @@ export default function EmaarDashboardV2() {
   const [showNotifications, setShowNotifications] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
 
-  // Price Alerts (old per-project alert modal \u2014 kept for project cards)
+  // Price Alerts (old per-project alert modal — kept for project cards)
   const [showSetAlert, setShowSetAlert] = React.useState(null);
   const [selectedNbhd, setSelectedNbhd] = React.useState(null);
   const [devSort, setDevSort] = React.useState("revenue");
@@ -2421,7 +2421,7 @@ export default function EmaarDashboardV2() {
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [onboardingStep, setOnboardingStep] = useState(0);
 
-  /* \u2500\u2500\u2500 Tab persistence: restore on load + back/forward \u2500\u2500\u2500 */
+  /* ─── Tab persistence: restore on load + back/forward ─── */
   useEffect(() => {
     try {
       const stored = localStorage.getItem('dxb_active_tab');
@@ -2478,7 +2478,7 @@ export default function EmaarDashboardV2() {
   const [sidebarSearch, setSidebarSearch] = useState("");
   const toggleGroup = (id) => setGroupCollapsed(prev => ({ ...prev, [id]: !prev[id] }));
 
-  /* \u2500\u2500\u2500 GLOBAL CONTEXT FILTER STATE \u2500\u2500\u2500 */
+  /* ─── GLOBAL CONTEXT FILTER STATE ─── */
   const [gDeveloper, setGDeveloper] = useState("all");
   const [gCommunity, setGCommunity] = useState("all");
   const [gPropertyType, setGPropertyType] = useState("all");
@@ -2489,16 +2489,16 @@ export default function EmaarDashboardV2() {
   const [gPriceMax, setGPriceMax] = useState(0);
   const [gFilterOpen, setGFilterOpen] = useState(false);
 
-  /* \u2500\u2500\u2500 MARKET TAB STATE \u2500\u2500\u2500 */
+  /* ─── MARKET TAB STATE ─── */
   const [expandedForecast, setExpandedForecast] = useState(null);
 
-  /* \u2500\u2500\u2500 DLD VOLUMES TAB STATE \u2500\u2500\u2500 */
+  /* ─── DLD VOLUMES TAB STATE ─── */
   const [dldFilter, setDldFilter] = useState({ community: "All", type: "All", txType: "All", developer: "All", nationality: "All" });
   const [dldSort, setDldSort] = useState("transactions");
   const [dldSearch, setDldSearch] = useState("");
   const [dldView, setDldView] = useState("table");
 
-  /* \u2500\u2500\u2500 PRICE HISTORY TAB STATE \u2500\u2500\u2500 */
+  /* ─── PRICE HISTORY TAB STATE ─── */
   const [phCommunity, setPhCommunity] = useState("All");
   const [phType, setPhType] = useState("Apartment");
   const [phBeds, setPhBeds] = useState("All");
@@ -2507,7 +2507,7 @@ export default function EmaarDashboardV2() {
   const [phCommunity2, setPhCommunity2] = useState("All");
 
 
-  /* \u2500\u2500\u2500 INVESTMENT SCORE CALCULATOR (top level \u2014 used by Projects tab and overlay) \u2500\u2500\u2500 */
+  /* ─── INVESTMENT SCORE CALCULATOR (top level — used by Projects tab and overlay) ─── */
   const calcScore = (p) => {
     if (p && p.investmentScore) return p.investmentScore;
     if (!p) return 50;
@@ -2520,7 +2520,7 @@ export default function EmaarDashboardV2() {
   };
   const scoreColor = (s) => s >= 80 ? T.green : s >= 65 ? T.gold : T.red;
   const scoreLabel = (s) => s >= 80 ? "Strong Buy" : s >= 65 ? "Buy" : s >= 50 ? "Hold" : "Caution";
-  /* \u2500\u2500\u2500 HANDOVER STATUS + RISK CONFIG \u2014 top level (used by tab + overlay) \u2500\u2500\u2500 */
+  /* ─── HANDOVER STATUS + RISK CONFIG — top level (used by tab + overlay) ─── */
   const statusCfg = {
     "On Track": { color: T.green,   bg: "rgba(16,185,129,0.12)",  label: "On Track"  },
     "Delayed":  { color: "#F97316", bg: "rgba(249,115,22,0.12)",  label: "Delayed"   },
@@ -2564,12 +2564,12 @@ export default function EmaarDashboardV2() {
   const [liveProjects, setLiveProjects] = useState({});
   const [extraProjects, setExtraProjects] = useState([]);
   const [liveYields, setLiveYields] = useState([]);
-  // \u2500\u2500 Price Alerts \u2500\u2500
+  // ── Price Alerts ──
   const [showAlerts, setShowAlerts] = useState(false);
   const [myAlerts, setMyAlerts] = useState([]);
   const [alertForm, setAlertForm] = useState({ community: "Dubai Hills Estate", metric: "grossYield", condition: "above", value: "8" });
   const [alertSaving, setAlertSaving] = useState(false);
-  // \u2500\u2500 AI Insights \u2500\u2500
+  // ── AI Insights ──
   const [aiInsights, setAiInsights] = useState([]);
   const [insightsLoading, setInsightsLoading] = useState(false);
   const [liveDevHealth, setLiveDevHealth] = useState([]);
@@ -2591,17 +2591,17 @@ export default function EmaarDashboardV2() {
   const [liveCommunityROI, setLiveCommunityROI] = useState({});
   const [liveCommunityIntel, setLiveCommunityIntel] = useState({});
 
-  /* \u2500\u2500\u2500 MY LEADS STATE (Session 4) \u2500\u2500\u2500 */
+  /* ─── MY LEADS STATE (Session 4) ─── */
   const [myLeads, setMyLeads] = useState([]);
 
-  /* \u2500\u2500\u2500 DEAL PIPELINE STATE (Session 5) \u2500\u2500\u2500 */
+  /* ─── DEAL PIPELINE STATE (Session 5) ─── */
   const [deals, setDeals] = useState([]);
 
-  /* \u2500\u2500\u2500 MANAGER DASHBOARD STATE (Session 7) \u2500\u2500\u2500 */
+  /* ─── MANAGER DASHBOARD STATE (Session 7) ─── */
   const [teamMembers, setTeamMembers] = useState([]);
   const [teamMembersLoading, setTeamMembersLoading] = useState(false);
 
-  /* \u2500\u2500\u2500 AGENCY HUB STATE (Session 8) \u2500\u2500\u2500 */
+  /* ─── AGENCY HUB STATE (Session 8) ─── */
   const [orgProfile, setOrgProfile] = useState(null);
   const [orgProfileForm, setOrgProfileForm] = useState({ name:"", reraNo:"", tradeLicense:"", phone:"", email:"", website:"", notes:"" });
   const [orgProfileSaving, setOrgProfileSaving] = useState(false);
@@ -2614,7 +2614,7 @@ export default function EmaarDashboardV2() {
   const [inviteLoading, setInviteLoading] = useState(false);
   const [inviteSent, setInviteSent] = useState(false);
 
-  /* \u2500\u2500\u2500 INTELLIGENCE STATE (Session 12) \u2500\u2500\u2500 */
+  /* ─── INTELLIGENCE STATE (Session 12) ─── */
   const [compCommunity, setCompCommunity] = useState("Dubai Hills Estate");
   const [compType, setCompType] = useState("Apartment");
   const [compBeds, setCompBeds] = useState("2BR");
@@ -2625,12 +2625,12 @@ export default function EmaarDashboardV2() {
   const [irrServiceCharge, setIrrServiceCharge] = useState("18");
   const [irrMgmtFee, setIrrMgmtFee] = useState("9");
 
-  /* \u2500\u2500\u2500 DLD LIVE INTELLIGENCE STATE (Session 15) \u2500\u2500\u2500 */
+  /* ─── DLD LIVE INTELLIGENCE STATE (Session 15) ─── */
   const [dldActiveCommunity, setDldActiveCommunity] = useState("Dubai Hills Estate");
   const [dldLastRefresh, setDldLastRefresh] = useState(new Date());
   const [dldRefreshTick, setDldRefreshTick] = useState(0);
 
-  /* \u2500\u2500\u2500 BULK IMPORT STATE (Session 16) \u2500\u2500\u2500 */
+  /* ─── BULK IMPORT STATE (Session 16) ─── */
   const [showBulkImport, setShowBulkImport] = useState(false);
   const [importStep, setImportStep]         = useState(1); // 1=upload, 2=map, 3=preview, 4=done
   const [importRawRows, setImportRawRows]   = useState([]);
@@ -2642,7 +2642,7 @@ export default function EmaarDashboardV2() {
   const [importDone, setImportDone]         = useState({ imported:0, dupes:0, errors:0 });
   const [importLoading, setImportLoading]   = useState(false);
 
-  /* \u2500\u2500\u2500 DLD AUTO-REFRESH (Session 15) \u2500\u2500\u2500 */
+  /* ─── DLD AUTO-REFRESH (Session 15) ─── */
   React.useEffect(() => {
     const interval = setInterval(() => {
       setDldLastRefresh(new Date());
@@ -2651,7 +2651,7 @@ export default function EmaarDashboardV2() {
     return () => clearInterval(interval);
   }, []);
 
-  /* \u2500\u2500\u2500 DEV PORTAL STATE (Session 10) \u2500\u2500\u2500 */
+  /* ─── DEV PORTAL STATE (Session 10) ─── */
   const [devUnits, setDevUnits] = useState([]);
   const [devUnitsLoading, setDevUnitsLoading] = useState(false);
   const [devEOIs, setDevEOIs] = useState([]);
@@ -2665,7 +2665,7 @@ export default function EmaarDashboardV2() {
   const [unitForm, setUnitForm] = useState({ unitNo:"", type:"Apartment", beds:"1", baths:"1", size:"", price:"", floor:"", view:"", status:"Available" });
   const [unitFormLoading, setUnitFormLoading] = useState(false);
 
-  /* \u2500\u2500\u2500 LISTINGS STATE (Session 9) \u2500\u2500\u2500 */
+  /* ─── LISTINGS STATE (Session 9) ─── */
   const [listings, setListings] = useState([]);
   const [listingsLoading, setListingsLoading] = useState(false);
   const [showNewListing, setShowNewListing] = useState(false);
@@ -2680,7 +2680,7 @@ export default function EmaarDashboardV2() {
   const [listingSearch, setListingSearch] = useState("");
   const [publishingId, setPublishingId] = useState(null);
 
-  /* \u2500\u2500\u2500 COMPLIANCE STATE (Session 6) \u2500\u2500\u2500 */
+  /* ─── COMPLIANCE STATE (Session 6) ─── */
   const [reraCard, setReraCard] = useState({ number:"", expiry:"", name:"" });
   const [reraCardLoading, setReraCardLoading] = useState(false);
   const [reraCardSaved, setReraCardSaved] = useState(false);
@@ -2723,13 +2723,13 @@ export default function EmaarDashboardV2() {
   const [gvNationality, setGvNationality] = useState("other");
   const [gvSelectedProj, setGvSelectedProj] = useState(null);
 
-  // Load projects from Firestore (runs for ALL users \u2014 guests and logged-in)
+  // Load projects from Firestore (runs for ALL users — guests and logged-in)
   const [projectsLoading, setProjectsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  /* \u2500\u2500\u2500 MY LEADS MISSING STATE (V11) \u2500\u2500\u2500 */
+  /* ─── MY LEADS MISSING STATE (V11) ─── */
 
-  /* \u2500\u2500\u2500 V12 NEW STATE \u2500\u2500\u2500 */
+  /* ─── V12 NEW STATE ─── */
   const [leadTagFilter, setLeadTagFilter] = useState("all");
   const [leadAgentFilter, setLeadAgentFilter] = useState("all");
   const [showLeadAnalytics, setShowLeadAnalytics] = useState(false);
@@ -2749,7 +2749,7 @@ export default function EmaarDashboardV2() {
   const [leadDateFilter, setLeadDateFilter] = useState("all");
 
 
-  /* \u2500\u2500\u2500 MY LEADS ADDITIONAL STATE \u2500\u2500\u2500 */
+  /* ─── MY LEADS ADDITIONAL STATE ─── */
   const [liveLeads, setLiveLeads] = useState([]);
   const [leadShowAdd, setLeadShowAdd] = useState(false);
   const [leadAddName, setLeadAddName] = useState("");
@@ -2763,7 +2763,7 @@ export default function EmaarDashboardV2() {
   const [leadAddSaving, setLeadAddSaving] = useState(false);
 
 
-  /* \u2500\u2500\u2500 COMPETITORS TAB STATE \u2500\u2500\u2500 */
+  /* ─── COMPETITORS TAB STATE ─── */
   const [cptView, setCptView] = useState("matrix");
   const [cptDevA, setCptDevA] = useState("Emaar Properties");
   const [cptDevB, setCptDevB] = useState("DAMAC Properties");
@@ -2771,7 +2771,7 @@ export default function EmaarDashboardV2() {
   const [cptSearch, setCptSearch] = useState("");
 
 
-  /* \u2500\u2500\u2500 MARKETING INTELLIGENCE TAB STATE \u2500\u2500\u2500 */
+  /* ─── MARKETING INTELLIGENCE TAB STATE ─── */
   const [mktView, setMktView] = useState("channels");
   const [mktPropType, setMktPropType] = useState("all");
   const [mktBudget, setMktBudget] = useState(10000);
@@ -2785,7 +2785,7 @@ export default function EmaarDashboardV2() {
   const [mktAiLoading, setMktAiLoading] = useState(false);
 
 
-  /* \u2500\u2500\u2500 MORTGAGE LEAD CAPTURE STATE \u2500\u2500\u2500 */
+  /* ─── MORTGAGE LEAD CAPTURE STATE ─── */
   const [mortLeadName, setMortLeadName] = useState("");
   const [mortLeadPhone, setMortLeadPhone] = useState("");
   const [mortLeadEmail, setMortLeadEmail] = useState("");
@@ -2793,7 +2793,7 @@ export default function EmaarDashboardV2() {
   const [mortLeadSubmitting, setMortLeadSubmitting] = useState(false);
 
 
-  /* \u2500\u2500\u2500 BANKING INTELLIGENCE TAB STATE \u2500\u2500\u2500 */
+  /* ─── BANKING INTELLIGENCE TAB STATE ─── */
   const [bankView, setBankView] = useState("compare");
   const [bankType, setBankType] = useState("resident");
   const [bankFinType, setBankFinType] = useState("conventional");
@@ -2806,7 +2806,7 @@ export default function EmaarDashboardV2() {
   const [bankFixedYrs, setBankFixedYrs] = useState(3);
 
 
-  /* \u2500\u2500\u2500 DEVELOPER HEALTH TAB STATE \u2500\u2500\u2500 */
+  /* ─── DEVELOPER HEALTH TAB STATE ─── */
   const [dhView, setDhView] = useState("leaderboard");
   const [dhTier, setDhTier] = useState("All");
   const [dhSort, setDhSort] = useState("score");
@@ -2814,7 +2814,7 @@ export default function EmaarDashboardV2() {
   const [dhSearch, setDhSearch] = useState("");
 
 
-  /* \u2500\u2500\u2500 FINANCIALS TAB STATE \u2500\u2500\u2500 */
+  /* ─── FINANCIALS TAB STATE ─── */
   const [finDeveloper, setFinDeveloper] = useState("Emaar Properties");
   const [finView, setFinView] = useState("overview");
   const [finPeriod, setFinPeriod] = useState("annual");
@@ -2823,7 +2823,7 @@ export default function EmaarDashboardV2() {
   const [finCompareDev, setFinCompareDev] = useState("Aldar Properties");
 
 
-  /* \u2500\u2500\u2500 RISK TAB STATE \u2500\u2500\u2500 */
+  /* ─── RISK TAB STATE ─── */
   const [riskTabView, setRiskTabView] = useState("radar");
   const [riskCommunity2, setRiskCommunity2] = useState("Jumeirah Village Circle");
   const [riskType2, setRiskType2] = useState("Apartment");
@@ -2833,7 +2833,7 @@ export default function EmaarDashboardV2() {
   const [liveInvestScores, setLiveInvestScores] = useState([]);
   const [liveLaunches, setLiveLaunches] = useState([]);
 
-  /* \u2500\u2500\u2500 GOLDEN VISA TAB STATE \u2500\u2500\u2500 */
+  /* ─── GOLDEN VISA TAB STATE ─── */
   const [gvView, setGvView] = useState("checker");
   const [gvMortgage, setGvMortgage] = useState(false);
   const [gvMortgagePaid, setGvMortgagePaid] = useState(2000000);
@@ -2844,7 +2844,7 @@ export default function EmaarDashboardV2() {
 
   const [livePortfolio, setLivePortfolio] = useState([]);
 
-  /* \u2500\u2500\u2500 DXB ESTIMATE (AVM) STATE \u2500\u2500\u2500 */
+  /* ─── DXB ESTIMATE (AVM) STATE ─── */
   const [avmView, setAvmView] = useState("estimate");
   const [avmFloor, setAvmFloor] = useState("mid");
   const [avmView2, setAvmView2] = useState("pool");
@@ -2853,7 +2853,7 @@ export default function EmaarDashboardV2() {
   const [avmRenovated, setAvmRenovated] = useState(false);
   const [avmParking, setAvmParking] = useState(1);
 
-  /* \u2500\u2500\u2500 PORTFOLIO STATE \u2500\u2500\u2500 */
+  /* ─── PORTFOLIO STATE ─── */
   const [portView, setPortView] = useState("overview");
   const [portShowAdd, setPortShowAdd] = useState(false);
   const [portBuyPrice, setPortBuyPrice] = useState(1200000);
@@ -2867,7 +2867,7 @@ export default function EmaarDashboardV2() {
   const [portYear2, setPortYear2] = useState(2022);
 
 
-  /* \u2500\u2500\u2500 FLIP CALCULATOR ADDITIONAL STATE \u2500\u2500\u2500 */
+  /* ─── FLIP CALCULATOR ADDITIONAL STATE ─── */
   const [flpRenovCost, setFlpRenovCost] = useState(80000);
   const [flpAgentBuy, setFlpAgentBuy] = useState(2);
   const [flpAgentSell, setFlpAgentSell] = useState(2);
@@ -2878,7 +2878,7 @@ export default function EmaarDashboardV2() {
   const [flpScenario, setFlpScenario] = useState("base");
 
 
-  /* \u2500\u2500\u2500 INVESTMENT SCORE TAB STATE \u2500\u2500\u2500 */
+  /* ─── INVESTMENT SCORE TAB STATE ─── */
   const [invScView, setInvScView] = useState("community");
   const [invScSort, setInvScSort] = useState("total");
   const [invScFilter, setInvScFilter] = useState("All");
@@ -2886,7 +2886,7 @@ export default function EmaarDashboardV2() {
   const [invScSearch, setInvScSearch] = useState("");
 
 
-  /* \u2500\u2500\u2500 MORTGAGE TAB STATE \u2500\u2500\u2500 */
+  /* ─── MORTGAGE TAB STATE ─── */
   const [mortPrice, setMortPrice] = useState(1500000);
   const [mortDown, setMortDown] = useState(20);
   const [mortRate, setMortRate] = useState(4.25);
@@ -2897,7 +2897,7 @@ export default function EmaarDashboardV2() {
   const [mortIncome, setMortIncome] = useState(30000);
 
 
-  /* \u2500\u2500\u2500 STR vs LTR TAB STATE \u2500\u2500\u2500 */
+  /* ─── STR vs LTR TAB STATE ─── */
   const [strView, setStrView] = useState("comparison");
   const [strCommunity, setStrCommunity] = useState("All");
   const [strBeds, setStrBeds] = useState("1BR");
@@ -2909,7 +2909,7 @@ export default function EmaarDashboardV2() {
   const [strCalcLTR, setStrCalcLTR] = useState(90000);
 
 
-  /* \u2500\u2500\u2500 YIELDS TAB STATE \u2500\u2500\u2500 */
+  /* ─── YIELDS TAB STATE ─── */
   const [yldView, setYldView] = useState("table");
   const [yldType, setYldType] = useState("Apartment");
   const [yldSort, setYldSort] = useState("gross");
@@ -2924,14 +2924,14 @@ export default function EmaarDashboardV2() {
   const [liveYieldsData, setLiveYieldsData] = useState([]);
 
 
-  /* \u2500\u2500\u2500 LAUNCH CALENDAR STATE \u2500\u2500\u2500 */
+  /* ─── LAUNCH CALENDAR STATE ─── */
   const [lcSearch, setLcSearch] = useState("");
   const [lcDev, setLcDev] = useState("All");
   const [lcStatus, setLcStatus] = useState("All");
   const [lcType, setLcType] = useState("All");
   const [lcView, setLcView] = useState("list");
 
-  /* \u2500\u2500\u2500 NEIGHBOURHOODS STATE \u2500\u2500\u2500 */
+  /* ─── NEIGHBOURHOODS STATE ─── */
   const [nbhSearch, setNbhSearch] = useState("");
   const [nbhTypeFilter, setNbhTypeFilter] = useState("All");
   const [nbhYieldFilter, setNbhYieldFilter] = useState("All");
@@ -2940,13 +2940,13 @@ export default function EmaarDashboardV2() {
   const [nbhView, setNbhView] = useState("grid");
   const [nbhCompare, setNbhCompare] = useState([]);
 
-  /* \u2500\u2500\u2500 CURRENCY STATE \u2500\u2500\u2500 */
+  /* ─── CURRENCY STATE ─── */
   const [selectedCcy, setSelectedCcy] = useState("USD");
   const [aedAmount, setAedAmount] = useState(100000);
   const [searchCcy, setSearchCcy] = useState("");
 
 
-  /* \u2500\u2500\u2500 PROJECTS TAB FILTER STATE \u2500\u2500\u2500 */
+  /* ─── PROJECTS TAB FILTER STATE ─── */
   const [projMode, setProjMode] = useState("Apartment");
   const [projView, setProjView] = useState("grid");
   const [projSearch, setProjSearch] = useState("");
@@ -2962,14 +2962,14 @@ export default function EmaarDashboardV2() {
   const [projFurnished, setProjFurnished] = useState(false);
 
 
-  /* \u2500\u2500\u2500 PROJECT MODAL STATE \u2500\u2500\u2500 */
+  /* ─── PROJECT MODAL STATE ─── */
   const [selectedProject, setSelectedProject] = useState(null);
   const [projDetailTab, setProjDetailTab] = useState("Overview");
   const [projCompare, setProjCompare] = useState([]);
   const [showCompare, setShowCompare] = useState(false);
 
 
-  /* \u2500\u2500\u2500 SERVICE CHARGES TAB STATE \u2500\u2500\u2500 */
+  /* ─── SERVICE CHARGES TAB STATE ─── */
   const [scView, setScView] = useState("table");
   const [scType, setScType] = useState("All");
   const [scSort, setScSort] = useState("rate");
@@ -2977,8 +2977,8 @@ export default function EmaarDashboardV2() {
   const [scCalcSize, setScCalcSize] = useState(1000);
   const [scCalcRate, setScCalcRate] = useState(15);
   const [scCalcRent, setScCalcRent] = useState(90000);
-  /* \u2500\u2500\u2500 HANDOVER TAB STATE \u2500\u2500\u2500 */
-  /* \u2500\u2500\u2500 HANDOVER DETAIL VIEW STATE \u2500\u2500\u2500 */
+  /* ─── HANDOVER TAB STATE ─── */
+  /* ─── HANDOVER DETAIL VIEW STATE ─── */
   const [hdvFilter, setHdvFilter] = useState("All");
   const [hdvDev, setHdvDev] = useState("All");
   const [hdvCommunity, setHdvCommunity] = useState("All");
@@ -2986,7 +2986,7 @@ export default function EmaarDashboardV2() {
   const [hdvView, setHdvView] = useState("cards");
   const [hdvSearch, setHdvSearch] = useState("");
   const [hdvSelected, setHdvSelected] = useState(null);
-  /* \u2500\u2500\u2500 HANDOVER TAB STATE \u2500\u2500\u2500 */
+  /* ─── HANDOVER TAB STATE ─── */
   const [hvFilter, setHvFilter] = useState("All");
   const [hvSort, setHvSort] = useState("handover");
   const [hvDev, setHvDev] = useState("All");
@@ -3005,7 +3005,7 @@ export default function EmaarDashboardV2() {
     const loadProjects = async () => {
       setProjectsLoading(true);
       try {
-        // Initial projectData load for first paint \u2014 onSnapshot takes over immediately
+        // Initial projectData load for first paint — onSnapshot takes over immediately
         const pdSnap = await getDocs(collection(db, "projectData"));
         const overrides = {};
         pdSnap.forEach(d => { overrides[d.id.replace("project_", "")] = d.data(); });
@@ -3021,7 +3021,7 @@ export default function EmaarDashboardV2() {
       } catch (e) { console.log("Firestore not available, using static data"); }
       setProjectsLoading(false);
     };
-    // \u2500\u2500 Live EMAAR stock price via Yahoo Finance (free, no key) \u2500\u2500
+    // ── Live EMAAR stock price via Yahoo Finance (free, no key) ──
     const fetchEmaarStock = async () => {
       try {
         const res = await fetch("/api/proxy?service=stock&symbol=EMAAR.DU&range=1d&interval=1d");
@@ -3036,11 +3036,11 @@ export default function EmaarDashboardV2() {
     };
     fetchEmaarStock();
     const stockInterval = setInterval(fetchEmaarStock, 300000);
-    loadProjects(); // Load for everyone \u2014 no isLoggedIn gate
+    loadProjects(); // Load for everyone — no isLoggedIn gate
 
     // priceAlerts now live via user onSnapshot listener
 
-    // \u2500\u2500 AI Insights \u2014 generated fresh if not in cache (cache read now via onSnapshot) \u2500\u2500
+    // ── AI Insights — generated fresh if not in cache (cache read now via onSnapshot) ──
     (async () => {
       try {
         const oneWeekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
@@ -3068,12 +3068,12 @@ export default function EmaarDashboardV2() {
       } catch(e) { setInsightsLoading(false); }
     })();
 
-    // \u2500\u2500 Load Paddle.js for billing \u2500\u2500
+    // ── Load Paddle.js for billing ──
     if (!window.Paddle) {
       const script = document.createElement("script");
       script.src = "https://cdn.paddle.com/paddle/v2/paddle.js";
       script.onload = () => {
-        // \u2500\u2500 PASTE YOUR PADDLE CLIENT TOKEN BELOW \u2500\u2500
+        // ── PASTE YOUR PADDLE CLIENT TOKEN BELOW ──
         // Get it from paddle.com \u2192 Developer \u2192 Authentication \u2192 Client-side token
         const PADDLE_CLIENT_TOKEN = "live_4393f28d4ec943ebe056835651f";
         if (!PADDLE_CLIENT_TOKEN.includes("PASTE")) {
@@ -3110,26 +3110,26 @@ export default function EmaarDashboardV2() {
 
 
   const SEED_PROJECTS = [
-    { id:"p001", commission:2.0, type:"Apartment", developer:"Emaar", project:"Golf Grand \u2014 Phase 2", community:"Dubai Hills Estate", status:"Off-Plan", handover:"Q4 2027", beds:["1BR","2BR","3BR"], sizeMin:748, sizeMax:1842, priceMin:1200000, priceMax:3800000, ppsf:1850,
+    { id:"p001", commission:2.0, type:"Apartment", developer:"Emaar", project:"Golf Grand — Phase 2", community:"Dubai Hills Estate", status:"Off-Plan", handover:"Q4 2027", beds:["1BR","2BR","3BR"], sizeMin:748, sizeMax:1842, priceMin:1200000, priceMax:3800000, ppsf:1850,
       unitBreakdown:[
         { type:"1BR", sizeMin:748,  sizeMax:900,  priceMin:1200000, priceMax:1650000, ppsf:1850, grossYield:7.2, available:42 },
         { type:"2BR", sizeMin:1100, sizeMax:1380, priceMin:1980000, priceMax:2550000, ppsf:1800, grossYield:6.8, available:28 },
         { type:"3BR", sizeMin:1600, sizeMax:1842, priceMin:2900000, priceMax:3800000, ppsf:1780, grossYield:6.2, available:14 },
       ], paymentPlan:"80/20", postHandover:false, grossYield:6.8, netYield:5.4, serviceCharge:16, investmentScore:84, distMetro:3.5, distDIFC:12, distAirport:28, distBeach:18, distMall:2.2, distSchool:0.8, distHospital:4, amenities:["Pool","Gym","Golf Course","Kids Area","BBQ","Retail","Cycling Track"], view:["Golf View","Garden View"], reraNo:"0991234567", escrowBank:"Emirates NBD", constructionPct:15, developerScore:92, notes:"Overlooking 18-hole championship golf course. Emaar proven delivery. Strong resale liquidity in Dubai Hills.", isSeedData:true, source:"Emaar Official / Bayut Apr 2026" },
-    { id:"p002", commission:3.0, type:"Apartment", developer:"DAMAC Properties", project:"Lagoons \u2014 Azure Beach", community:"DAMAC Lagoons", status:"Off-Plan", handover:"Q2 2027", beds:["Studio","1BR","2BR"], sizeMin:420, sizeMax:1240, priceMin:680000, priceMax:2100000, ppsf:1420,
+    { id:"p002", commission:3.0, type:"Apartment", developer:"DAMAC Properties", project:"Lagoons — Azure Beach", community:"DAMAC Lagoons", status:"Off-Plan", handover:"Q2 2027", beds:["Studio","1BR","2BR"], sizeMin:420, sizeMax:1240, priceMin:680000, priceMax:2100000, ppsf:1420,
       unitBreakdown:[
         { type:"Studio", sizeMin:420, sizeMax:520,  priceMin:680000,  priceMax:820000,  ppsf:1480, grossYield:8.2, available:60 },
         { type:"1BR",    sizeMin:650, sizeMax:820,  priceMin:950000,  priceMax:1200000, ppsf:1420, grossYield:7.4, available:45 },
         { type:"2BR",    sizeMin:980, sizeMax:1240, priceMin:1550000, priceMax:2100000, ppsf:1380, grossYield:6.8, available:22 },
       ], paymentPlan:"70/30", postHandover:true, grossYield:7.4, netYield:5.9, serviceCharge:14, investmentScore:76, distMetro:5.5, distDIFC:22, distAirport:35, distBeach:25, distMall:3.8, distSchool:1.2, distHospital:6, amenities:["Lagoon Pool","Beach Access","Gym","Waterpark","Restaurants","Kids Club"], view:["Lagoon View","Pool View"], reraNo:"0882345678", escrowBank:"Dubai Islamic Bank", constructionPct:35, developerScore:78, notes:"Mediterranean-inspired community. Private lagoon access. High demand from European buyers.", isSeedData:true, source:"DAMAC Official / PropertyFinder Apr 2026" },
-    { id:"p003", commission:2.0, type:"Apartment", developer:"Sobha Realty", project:"Hartland II \u2014 Skyvista", community:"Sobha Hartland", status:"Off-Plan", handover:"Q3 2027", beds:["1BR","2BR","3BR","4BR"], sizeMin:780, sizeMax:2800, priceMin:1800000, priceMax:6500000, ppsf:2100,
+    { id:"p003", commission:2.0, type:"Apartment", developer:"Sobha Realty", project:"Hartland II — Skyvista", community:"Sobha Hartland", status:"Off-Plan", handover:"Q3 2027", beds:["1BR","2BR","3BR","4BR"], sizeMin:780, sizeMax:2800, priceMin:1800000, priceMax:6500000, ppsf:2100,
       unitBreakdown:[
         { type:"1BR", sizeMin:780,  sizeMax:950,  priceMin:1800000, priceMax:2200000, ppsf:2180, grossYield:6.8, available:38 },
         { type:"2BR", sizeMin:1200, sizeMax:1450, priceMin:2600000, priceMax:3200000, ppsf:2100, grossYield:6.2, available:30 },
         { type:"3BR", sizeMin:1800, sizeMax:2100, priceMin:3800000, priceMax:4600000, ppsf:2050, grossYield:5.8, available:18 },
         { type:"4BR", sizeMin:2400, sizeMax:2800, priceMin:5200000, priceMax:6500000, ppsf:2020, grossYield:5.2, available:8  },
       ], paymentPlan:"70/30", postHandover:false, grossYield:6.2, netYield:4.9, serviceCharge:18, investmentScore:82, distMetro:2.8, distDIFC:8, distAirport:18, distBeach:22, distMall:6, distSchool:0.5, distHospital:3, amenities:["Infinity Pool","Gym","Spa","Concierge","Kids Pool","Retail","Co-working"], view:["Creek View","Burj Khalifa View","City View"], reraNo:"0773456789", escrowBank:"Mashreq Bank", constructionPct:28, developerScore:88, notes:"Sobha known for quality finishes and on-time delivery. Creek views. Walking distance to top schools.", isSeedData:true, source:"Sobha Official / Bayut Apr 2026" },
-    { id:"p004", commission:4.0, type:"Apartment", developer:"Binghatti", project:"Skyrise \u2014 Business Bay", community:"Business Bay", status:"Off-Plan", handover:"Q1 2027", beds:["Studio","1BR","2BR"], sizeMin:380, sizeMax:1050, priceMin:750000, priceMax:2200000, ppsf:1980,
+    { id:"p004", commission:4.0, type:"Apartment", developer:"Binghatti", project:"Skyrise — Business Bay", community:"Business Bay", status:"Off-Plan", handover:"Q1 2027", beds:["Studio","1BR","2BR"], sizeMin:380, sizeMax:1050, priceMin:750000, priceMax:2200000, ppsf:1980,
       unitBreakdown:[
         { type:"Studio", sizeMin:380, sizeMax:480,  priceMin:750000,  priceMax:920000,  ppsf:2050, grossYield:8.8, available:80 },
         { type:"1BR",    sizeMin:620, sizeMax:780,  priceMin:1200000, priceMax:1550000, ppsf:1980, grossYield:7.8, available:55 },
@@ -3142,14 +3142,14 @@ export default function EmaarDashboardV2() {
         { type:"3BR", sizeMin:2200, sizeMax:2800, priceMin:6800000,  priceMax:9000000,  ppsf:2780, grossYield:5.8, available:5  },
         { type:"4BR", sizeMin:3400, sizeMax:4200, priceMin:12000000, priceMax:18000000, ppsf:2700, grossYield:5.2, available:3  },
       ], paymentPlan:"70/30", postHandover:false, grossYield:6.0, netYield:4.6, serviceCharge:20, investmentScore:79, distMetro:1.2, distDIFC:16, distAirport:20, distBeach:0.1, distMall:8, distSchool:4, distHospital:5, amenities:["Beach Access","Infinity Pool","Spa","Gym","Concierge","Yacht Jetty"], view:["Sea View","Beach View","Marina View"], reraNo:"0555678901", escrowBank:"Emirates NBD", constructionPct:78, developerScore:86, notes:"Ellington curated design. Beachfront. Dubai Islands 24% price growth 2025. Near ready.", isSeedData:true, source:"Ellington Official / Alkira Feb 2026" },
-    { id:"p006", commission:2.0, type:"Villa", developer:"Emaar", project:"The Oasis \u2014 Phase 11", community:"The Oasis", status:"Off-Plan", handover:"Q2 2029", beds:["4BR","5BR","6BR"], sizeMin:5800, sizeMax:14000, priceMin:6150000, priceMax:32000000, ppsf:1480,
+    { id:"p006", commission:2.0, type:"Villa", developer:"Emaar", project:"The Oasis — Phase 11", community:"The Oasis", status:"Off-Plan", handover:"Q2 2029", beds:["4BR","5BR","6BR"], sizeMin:5800, sizeMax:14000, priceMin:6150000, priceMax:32000000, ppsf:1480,
       unitBreakdown:[
         { type:"4BR Villa",    sizeMin:5800,  sizeMax:7200,  plotMin:7500,  plotMax:10000, priceMin:6150000,  priceMax:9500000,  ppsf:1520, grossYield:5.2, available:28 },
         { type:"5BR Villa",    sizeMin:7800,  sizeMax:9500,  plotMin:10000, plotMax:14000, priceMin:10500000, priceMax:16000000, ppsf:1490, grossYield:4.8, available:18 },
         { type:"6BR Mansion",  sizeMin:11000, sizeMax:14000, plotMin:16000, plotMax:22000, priceMin:20000000, priceMax:32000000, ppsf:1450, grossYield:4.2, available:8  },
       ], paymentPlan:"80/20", postHandover:false, grossYield:4.8, netYield:3.8, serviceCharge:6, investmentScore:86, plotMin:7500, plotMax:22000, privatePool:true, garage:2, maidRoom:true, distMetro:8, distDIFC:25, distAirport:32, distBeach:28, distMall:6, distSchool:3, distHospital:8, amenities:["Lagoon Pool","Wave Pool","Polo Fields","Equestrian","Golf","Clubhouse","Cycling Tracks"], view:["Lagoon View","Garden View","Golf View"], reraNo:"0446789012", escrowBank:"Emirates NBD", constructionPct:8, developerScore:92, notes:"10:1 scarcity vs Dubai Hills. Emaar ultra-luxury 60M sqft master plan.", isSeedData:true, source:"Emaar Official / Alkira Feb 2026" },
     { id:"p007", commission:2.0, type:"Villa", developer:"Majid Al Futtaim", project:"Serenity Mansions", community:"Tilal Al Ghaf", status:"Sold Out", handover:"Q4 2027", beds:["5BR","6BR","7BR"], sizeMin:9500, sizeMax:18000, priceMin:8500000, priceMax:45000000, ppsf:1650, paymentPlan:"50/50", postHandover:false, grossYield:4.2, netYield:3.3, serviceCharge:8, investmentScore:80, privatePool:true, garage:3, maidRoom:true, distMetro:5, distDIFC:20, distAirport:30, distBeach:24, distMall:4, distSchool:1.5, distHospital:6, amenities:["Private Beach","Crystal Lagoon","Tennis","Padel","Golf","Stables"], view:["Lake View","Garden View","Lagoon View"], reraNo:"0337890123", escrowBank:"FAB", constructionPct:62, developerScore:89, notes:"Sold out in 48 hours. Tilal Al Ghaf 52% YoY growth DLD 2025.", isSeedData:true, source:"DLD 2025 / Majid Al Futtaim" },
-    { id:"p008", commission:2.0, type:"Townhouse", developer:"Nakheel", project:"Dubai Islands \u2014 Cluster B", community:"Dubai Islands", status:"Off-Plan", handover:"Q4 2027", beds:["3BR","4BR"], sizeMin:2200, sizeMax:3800, priceMin:3200000, priceMax:6500000, ppsf:1620,
+    { id:"p008", commission:2.0, type:"Townhouse", developer:"Nakheel", project:"Dubai Islands — Cluster B", community:"Dubai Islands", status:"Off-Plan", handover:"Q4 2027", beds:["3BR","4BR"], sizeMin:2200, sizeMax:3800, priceMin:3200000, priceMax:6500000, ppsf:1620,
       unitBreakdown:[
         { type:"3BR TH", sizeMin:2200, sizeMax:2600, plotMin:2800, plotMax:3500, priceMin:3200000, priceMax:4200000, ppsf:1680, grossYield:6.8, available:35 },
         { type:"4BR TH", sizeMin:3000, sizeMax:3800, plotMin:3800, plotMax:5000, priceMin:4800000, priceMax:6500000, ppsf:1580, grossYield:6.1, available:20 },
@@ -3162,12 +3162,12 @@ export default function EmaarDashboardV2() {
         { type:"3BR Suite",  sizeMin:4000, sizeMax:6500, priceMin:35000000, priceMax:65000000, ppsf:4600, grossYield:6.2, available:5  },
       ], paymentPlan:"50/50", postHandover:false, grossYield:7.2, netYield:5.5, serviceCharge:28, investmentScore:77, hotelOperator:"Dorchester Collection", starRating:5, dtcmLicense:true, revenueShare:65, managementFee:15, avgDailyRate:3200, occupancyRate:82, distMetro:2.2, distDIFC:20, distAirport:32, distBeach:0.05, distMall:18, distSchool:8, distHospital:12, amenities:["Private Beach","5-Star Spa","Infinity Pool","Fine Dining","Butler Service","Yacht Jetty"], view:["Sea View","Palm View","Burj Al Arab View"], reraNo:"0119012345", escrowBank:"Emirates NBD", constructionPct:45, developerScore:88, notes:"Managed by Dorchester Collection. 65% revenue to owner. 4 weeks personal use.", isSeedData:true, source:"Omniyat Official / Bayut Apr 2026" },
     { id:"p010", commission:5.0, type:"Office", developer:"Brookfield Properties", project:"ICD Brookfield Place", community:"DIFC", status:"Ready", handover:"Available Now", beds:[], sizeMin:1200, sizeMax:45000, priceMin:3500000, priceMax:280000000, ppsf:3200, paymentPlan:"Cash / Mortgage", postHandover:false, grossYield:7.2, netYield:5.8, serviceCharge:38, investmentScore:85, officeGrade:"A", fitOut:"Shell & Core", parking:4, freeZone:true, licenseTypes:["Financial","Professional","Tech"], leedCertified:true, wault:4.2, vacancyRate:0.3, distMetro:0.3, distDIFC:0, distAirport:16, distBeach:18, distMall:8, distSchool:6, distHospital:4, amenities:["Concierge","F&B Ground Floor","Conference Rooms","Gym","EV Charging","24h Security"], reraNo:"0000123456", escrowBank:"N/A", constructionPct:100, developerScore:95, notes:"Grade A DIFC. Near-zero vacancy. Institutional tenant base. LEED Platinum. 30% DIFC growth 2025.", isSeedData:true, source:"DIFC Official / Chestertons Mar 2026" },
-    { id:"p011", commission:5.0, type:"Retail", developer:"Meraas", project:"City Walk \u2014 Retail Units", community:"City Walk", status:"Ready", handover:"Available Now", beds:[], sizeMin:800, sizeMax:8000, priceMin:2800000, priceMax:42000000, ppsf:3800, paymentPlan:"Cash / Mortgage", postHandover:false, grossYield:8.4, netYield:6.8, serviceCharge:32, investmentScore:82, shopType:"Inline / Corner", frontageMin:8, frontageMax:24, ceilingHeight:4.5, greaseTrap:true, loadingBay:true, signageRights:true, groundFloor:true, dailyFootfall:45000, distMetro:1.8, distDIFC:4, distAirport:18, distBeach:3, distMall:0, distSchool:5, distHospital:4, amenities:["High Footfall","Tourist Zone","Ample Parking","F&B Ready","Flex Fit-Out"], reraNo:"0000234567", escrowBank:"N/A", constructionPct:100, developerScore:90, notes:"City Walk 45K daily visitors. Tourism zone. Strong F&B and lifestyle tenant mix.", isSeedData:true, source:"Meraas Official / Chestertons 2026" },
-    { id:"p012", commission:5.0, type:"Warehouse", developer:"DIC Authority", project:"Dubai Industrial City \u2014 Unit W7", community:"Dubai Industrial City", status:"Ready", handover:"Available Now", beds:[], sizeMin:10000, sizeMax:80000, priceMin:4500000, priceMax:48000000, ppsf:580, paymentPlan:"Cash / Mortgage", postHandover:false, grossYield:9.8, netYield:8.2, serviceCharge:8, investmentScore:78, warehouseType:"Dry Storage / Light Industrial", clearHeight:12, loadingDocks:8, officeComponent:1800, yardSpace:15000, rollerShutters:6, fireSuppression:true, freeZone:true, occupancyRate:96, distPort:28, distMetro:8, distDIFC:40, distAirport:18, amenities:["24h Access","Security","Heavy Vehicle Access","On-site Management","CCTV"], reraNo:"0000345678", escrowBank:"N/A", constructionPct:100, developerScore:87, notes:"DIC 96% occupancy. E-commerce demand driving rents up 15% YoY. Near Al Maktoum Airport.", isSeedData:true, source:"Dubai Industrial City / Chestertons 2026" },
-    { id:"p013", commission:2.0, type:"Land", developer:"Dubai South", project:"Residential Plot \u2014 Phase 3", community:"Dubai South", status:"Ready", handover:"Available Now", beds:[], sizeMin:15000, sizeMax:120000, priceMin:2800000, priceMax:18000000, ppsf:200, paymentPlan:"Cash", postHandover:false, grossYield:0, netYield:0, serviceCharge:0, investmentScore:72, plotType:"Residential", zoning:"R1", permittedFAR:2.5, maxFloors:8, utilitiesConnected:true, roadFrontage:45, titleDeedStatus:"Freehold", gdvEstimate:45000000, distMetro:4, distDIFC:38, distAirport:12, distBeach:35, distMall:6, distSchool:2, distHospital:5, amenities:["Road Access","DEWA Connected","Sewage Connected","Master Plan Community"], reraNo:"0000456789", escrowBank:"N/A", constructionPct:0, developerScore:82, notes:"Dubai South Expo 2020 legacy. Near Al Maktoum Airport expansion. FAR 2.5 allows G+8.", isSeedData:true, source:"Dubai South Official / DLD 2025" },
+    { id:"p011", commission:5.0, type:"Retail", developer:"Meraas", project:"City Walk — Retail Units", community:"City Walk", status:"Ready", handover:"Available Now", beds:[], sizeMin:800, sizeMax:8000, priceMin:2800000, priceMax:42000000, ppsf:3800, paymentPlan:"Cash / Mortgage", postHandover:false, grossYield:8.4, netYield:6.8, serviceCharge:32, investmentScore:82, shopType:"Inline / Corner", frontageMin:8, frontageMax:24, ceilingHeight:4.5, greaseTrap:true, loadingBay:true, signageRights:true, groundFloor:true, dailyFootfall:45000, distMetro:1.8, distDIFC:4, distAirport:18, distBeach:3, distMall:0, distSchool:5, distHospital:4, amenities:["High Footfall","Tourist Zone","Ample Parking","F&B Ready","Flex Fit-Out"], reraNo:"0000234567", escrowBank:"N/A", constructionPct:100, developerScore:90, notes:"City Walk 45K daily visitors. Tourism zone. Strong F&B and lifestyle tenant mix.", isSeedData:true, source:"Meraas Official / Chestertons 2026" },
+    { id:"p012", commission:5.0, type:"Warehouse", developer:"DIC Authority", project:"Dubai Industrial City — Unit W7", community:"Dubai Industrial City", status:"Ready", handover:"Available Now", beds:[], sizeMin:10000, sizeMax:80000, priceMin:4500000, priceMax:48000000, ppsf:580, paymentPlan:"Cash / Mortgage", postHandover:false, grossYield:9.8, netYield:8.2, serviceCharge:8, investmentScore:78, warehouseType:"Dry Storage / Light Industrial", clearHeight:12, loadingDocks:8, officeComponent:1800, yardSpace:15000, rollerShutters:6, fireSuppression:true, freeZone:true, occupancyRate:96, distPort:28, distMetro:8, distDIFC:40, distAirport:18, amenities:["24h Access","Security","Heavy Vehicle Access","On-site Management","CCTV"], reraNo:"0000345678", escrowBank:"N/A", constructionPct:100, developerScore:87, notes:"DIC 96% occupancy. E-commerce demand driving rents up 15% YoY. Near Al Maktoum Airport.", isSeedData:true, source:"Dubai Industrial City / Chestertons 2026" },
+    { id:"p013", commission:2.0, type:"Land", developer:"Dubai South", project:"Residential Plot — Phase 3", community:"Dubai South", status:"Ready", handover:"Available Now", beds:[], sizeMin:15000, sizeMax:120000, priceMin:2800000, priceMax:18000000, ppsf:200, paymentPlan:"Cash", postHandover:false, grossYield:0, netYield:0, serviceCharge:0, investmentScore:72, plotType:"Residential", zoning:"R1", permittedFAR:2.5, maxFloors:8, utilitiesConnected:true, roadFrontage:45, titleDeedStatus:"Freehold", gdvEstimate:45000000, distMetro:4, distDIFC:38, distAirport:12, distBeach:35, distMall:6, distSchool:2, distHospital:5, amenities:["Road Access","DEWA Connected","Sewage Connected","Master Plan Community"], reraNo:"0000456789", escrowBank:"N/A", constructionPct:0, developerScore:82, notes:"Dubai South Expo 2020 legacy. Near Al Maktoum Airport expansion. FAR 2.5 allows G+8.", isSeedData:true, source:"Dubai South Official / DLD 2025" },
   ];
 
-  /* calcScore, scoreColor, scoreLabel \u2014 defined at top level */
+  /* calcScore, scoreColor, scoreLabel — defined at top level */
 
   const MODES = [
     { key:"Apartment" }, { key:"Villa" }, { key:"Townhouse" },
@@ -3194,7 +3194,7 @@ export default function EmaarDashboardV2() {
 
   // Listen to Firebase auth state + fetch user profile
 
-  // \u2500\u2500 MASTER LIVE LISTENERS \u2014 all Firestore real-time subscriptions \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+  // ── MASTER LIVE LISTENERS — all Firestore real-time subscriptions ──────────
   useEffect(() => {
     const unsubs = [];
 
@@ -3312,56 +3312,56 @@ export default function EmaarDashboardV2() {
     }));
 
     
-    /* \u2500\u2500\u2500 MARKET DATA \u2500\u2500\u2500 */
+    /* ─── MARKET DATA ─── */
     unsubs.push(onSnapshot(collection(db, "marketData"), snap => {
       const d = snap.docs.map(x => ({ id:x.id, ...x.data() }))
                          .filter(x => x.metric && x.value);
       if (d.length > 0) setLiveMarketData(d);
     }, () => {}));
 
-    /* \u2500\u2500\u2500 HANDOVER \u2500\u2500\u2500 */
+    /* ─── HANDOVER ─── */
     unsubs.push(onSnapshot(collection(db, "handover"), snap => {
       const d = snap.docs.map(x => ({ id:x.id, ...x.data() }));
       if (d.length > 0) setLiveHandover(d);
     }, () => {}));
 
-    /* \u2500\u2500\u2500 SERVICE CHARGES \u2500\u2500\u2500 */
+    /* ─── SERVICE CHARGES ─── */
     unsubs.push(onSnapshot(collection(db, "serviceCharges"), snap => {
       const d = snap.docs.map(x => ({ id:x.id, ...x.data() }));
       if (d.length > 0) setLiveServiceCharges(d);
     }, () => {}));
 
-    /* \u2500\u2500\u2500 DLD VOLUMES \u2500\u2500\u2500 */
+    /* ─── DLD VOLUMES ─── */
     unsubs.push(onSnapshot(collection(db, "dldVolumes"), snap => {
       const d = snap.docs.map(x => ({ id:x.id, ...x.data() }));
       if (d.length > 0) setLiveDLDVolumes(d);
     }, () => {}));
 
-    /* \u2500\u2500\u2500 NEIGHBOURHOODS \u2500\u2500\u2500 */
+    /* ─── NEIGHBOURHOODS ─── */
     unsubs.push(onSnapshot(collection(db, "neighbourhoods"), snap => {
       const d = snap.docs.map(x => ({ id:x.id, ...x.data() }));
       if (d.length > 0) setLiveNeighbourhoods(d);
     }, () => {}));
 
-    /* \u2500\u2500\u2500 STR DATA \u2500\u2500\u2500 */
+    /* ─── STR DATA ─── */
     unsubs.push(onSnapshot(collection(db, "strData"), snap => {
       const d = snap.docs.map(x => ({ id:x.id, ...x.data() }));
       if (d.length > 0) setLiveSTRData(d);
     }, () => {}));
 
-    /* \u2500\u2500\u2500 YIELDS DATA \u2500\u2500\u2500 */
+    /* ─── YIELDS DATA ─── */
     unsubs.push(onSnapshot(collection(db, "yieldsData"), snap => {
       const d = snap.docs.map(x => ({ id:x.id, ...x.data() }));
       if (d.length > 0) setLiveYieldsData(d);
     }, () => {}));
 
-    /* \u2500\u2500\u2500 MORTGAGE RATES \u2500\u2500\u2500 */
+    /* ─── MORTGAGE RATES ─── */
     unsubs.push(onSnapshot(collection(db, "mortgageRates"), snap => {
       const d = snap.docs.map(x => ({ id:x.id, ...x.data() }));
       if (d.length > 0) setLiveMortgageRates(d);
     }, () => {}));
 
-    /* \u2500\u2500\u2500 PORTFOLIO (user-specific) \u2500\u2500\u2500 */
+    /* ─── PORTFOLIO (user-specific) ─── */
     if (auth.currentUser?.uid) {
       unsubs.push(onSnapshot(
         query(collection(db, "portfolios"), where("userId", "==", auth.currentUser.uid)),
@@ -3372,7 +3372,7 @@ export default function EmaarDashboardV2() {
       ));
     }
 
-    /* \u2500\u2500\u2500 ALL LEADS (admin/general view) \u2500\u2500\u2500 */
+    /* ─── ALL LEADS (admin/general view) ─── */
     if (auth.currentUser?.uid) {
       unsubs.push(onSnapshot(
         query(collection(db, "leads"), orderBy("createdAt", "desc"), limit(500)),
@@ -3383,37 +3383,37 @@ export default function EmaarDashboardV2() {
       ));
     }
 
-    /* \u2500\u2500\u2500 INVEST SCORES \u2500\u2500\u2500 */
+    /* ─── INVEST SCORES ─── */
     unsubs.push(onSnapshot(collection(db, "investScores"), snap => {
       const d = snap.docs.map(x => ({ id:x.id, ...x.data() }));
       if (d.length > 0) setLiveInvestScores(d);
     }, () => {}));
 
-    /* \u2500\u2500\u2500 RISK DATA \u2500\u2500\u2500 */
+    /* ─── RISK DATA ─── */
     unsubs.push(onSnapshot(collection(db, "riskData"), snap => {
       const d = snap.docs.map(x => ({ id:x.id, ...x.data() }));
       if (d.length > 0) setLiveRisk(d);
     }, () => {}));
 
-    /* \u2500\u2500\u2500 FINANCIALS \u2500\u2500\u2500 */
+    /* ─── FINANCIALS ─── */
     unsubs.push(onSnapshot(collection(db, "financials"), snap => {
       const d = snap.docs.map(x => ({ id:x.id, ...x.data() }));
       if (d.length > 0) setLiveFinancials(d);
     }, () => {}));
 
-    /* \u2500\u2500\u2500 DEV HEALTH \u2500\u2500\u2500 */
+    /* ─── DEV HEALTH ─── */
     unsubs.push(onSnapshot(collection(db, "devHealth"), snap => {
       const d = snap.docs.map(x => ({ id:x.id, ...x.data() }));
       if (d.length > 0) setLiveDevHealth(d);
     }, () => {}));
 
-    /* \u2500\u2500\u2500 COMPETITORS \u2500\u2500\u2500 */
+    /* ─── COMPETITORS ─── */
     unsubs.push(onSnapshot(collection(db, "competitors"), snap => {
       const d = snap.docs.map(x => ({ id:x.id, ...x.data() }));
       if (d.length > 0) setLiveCompetitors(d);
     }, () => {}));
 
-    /* \u2500\u2500\u2500 LAUNCH CALENDAR \u2500\u2500\u2500 */
+    /* ─── LAUNCH CALENDAR ─── */
     unsubs.push(onSnapshot(collection(db, "launches"), snap => {
       const d = snap.docs.map(x => ({ id:x.id, ...x.data() }));
       if (d.length > 0) setLiveLaunches(d);
@@ -3422,7 +3422,7 @@ export default function EmaarDashboardV2() {
 return () => unsubs.forEach(u => { try { u(); } catch {} });
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // USER-SCOPED LIVE LISTENERS \u2014 portfolio, watchlist, price alerts
+  // USER-SCOPED LIVE LISTENERS — portfolio, watchlist, price alerts
   useEffect(() => {
     if (!isLoggedIn || !auth.currentUser) return;
     const unsubs = [];
@@ -3506,7 +3506,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                       user_email: firebaseUser.email, user_name: data.name || firebaseUser.email.split("@")[0],
                       project_name: "DXB Analytics Platform",
                       change_type: `\u26A0\uFE0F Your Trial Expires in ${daysLeft} Day${daysLeft !== 1 ? "s" : ""}`,
-                      new_value: `Only ${daysLeft} day${daysLeft !== 1 ? "s" : ""} left on your Pro trial. Don't lose access \u2014 upgrade now to keep all features.`,
+                      new_value: `Only ${daysLeft} day${daysLeft !== 1 ? "s" : ""} left on your Pro trial. Don't lose access — upgrade now to keep all features.`,
                       old_value: "Pro Trial Active", updated_at: new Date().toLocaleDateString("en-AE"),
                     }, import.meta.env.VITE_EMAILJS_PUBLIC_KEY);
                     await setDoc(doc(db, "users", firebaseUser.uid), { emailSent_trial3d: true }, { merge: true });
@@ -3520,14 +3520,14 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                       project_name: "DXB Analytics Platform",
                       change_type: "\uD83D\uDEA8 Last Day of Your Pro Trial!",
                       new_value: "Today is your last day. After midnight your account moves to Free and you lose access to 48 projects, community yields, ROI data and PDF reports.",
-                      old_value: "Pro Trial \u2014 Final Day", updated_at: new Date().toLocaleDateString("en-AE"),
+                      old_value: "Pro Trial — Final Day", updated_at: new Date().toLocaleDateString("en-AE"),
                     }, import.meta.env.VITE_EMAILJS_PUBLIC_KEY);
                     await setDoc(doc(db, "users", firebaseUser.uid), { emailSent_trial1d: true }, { merge: true });
                   } catch(e) {}
                 }
               }
             }
-            // Admin override \u2014 by role field OR by owner email
+            // Admin override — by role field OR by owner email
             if (data.role === "admin" || data.role === "superAdmin" || data.superAdmin === true) tier = "admin";
             setUserTier(tier);
             setUserRole(data.role || "user");
@@ -3539,7 +3539,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
             setVerifiedLevel(data.verifiedLevel || null);
             setKycStatus(data.kycStatus || null);
           } else {
-            // Existing user without profile (e.g. your admin account) \u2014 treat as admin/pro
+            // Existing user without profile (e.g. your admin account) — treat as admin/pro
             setUserTier("admin");
             setUserName("");
           }
@@ -3558,7 +3558,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
     return () => unsubscribe();
   }, []);
 
-  /* \u2500\u2500\u2500 MY LEADS LISTENER (Session 4) \u2500\u2500\u2500 */
+  /* ─── MY LEADS LISTENER (Session 4) ─── */
   useEffect(() => {
     if (!isLoggedIn || !firebaseUser) return;
     setMyLeadsLoading(true);
@@ -3583,7 +3583,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
     return () => unsub();
   }, [isLoggedIn, firebaseUser, orgRole, orgId]);
 
-  /* \u2500\u2500\u2500 DEALS PIPELINE LISTENER (Session 5) \u2500\u2500\u2500 */
+  /* ─── DEALS PIPELINE LISTENER (Session 5) ─── */
   useEffect(() => {
     if (!isLoggedIn || !firebaseUser) return;
     const isAgent   = orgRole === "agent";
@@ -3605,7 +3605,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
     return () => unsub();
   }, [isLoggedIn, firebaseUser, orgRole, orgId]);
 
-  /* \u2500\u2500\u2500 TEAM MEMBERS LISTENER (Session 7) \u2500\u2500\u2500 */
+  /* ─── TEAM MEMBERS LISTENER (Session 7) ─── */
   useEffect(() => {
     if (!isLoggedIn || !firebaseUser || orgRole !== "manager" || !orgId) return;
     setTeamMembersLoading(true);
@@ -3619,7 +3619,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
     return () => unsub();
   }, [isLoggedIn, firebaseUser, orgRole, orgId]);
 
-  /* \u2500\u2500\u2500 ORG PROFILE LISTENER (Session 8) \u2500\u2500\u2500 */
+  /* ─── ORG PROFILE LISTENER (Session 8) ─── */
   useEffect(() => {
     if (!isLoggedIn || !firebaseUser || orgRole !== "manager" || !orgId) return;
     const unsub = onSnapshot(doc(db, "organisations", orgId), snap => {
@@ -3642,7 +3642,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
     return () => unsub();
   }, [isLoggedIn, firebaseUser, orgRole, orgId]);
 
-  /* \u2500\u2500\u2500 LISTINGS LISTENER (Session 9) \u2500\u2500\u2500 */
+  /* ─── LISTINGS LISTENER (Session 9) ─── */
   useEffect(() => {
     if (!isLoggedIn || !firebaseUser) return;
     const isAgent   = orgRole === "agent";
@@ -3664,7 +3664,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
     return () => unsub();
   }, [isLoggedIn, firebaseUser, orgRole, orgId]);
 
-  /* \u2500\u2500\u2500 DEV PORTAL LISTENERS (Session 10) \u2500\u2500\u2500 */
+  /* ─── DEV PORTAL LISTENERS (Session 10) ─── */
   useEffect(() => {
     if (!isLoggedIn || !firebaseUser || userRole !== "developer" || !devId) return;
     // Dev projects from allDevelopers (already loaded)
@@ -3694,7 +3694,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
     return () => { unsubUnits(); unsubEOIs(); };
   }, [isLoggedIn, firebaseUser, userRole, devId, allDevelopers]);
 
-  /* \u2500\u2500\u2500 RERA CARD READER (Session 6) \u2500\u2500\u2500 */
+  /* ─── RERA CARD READER (Session 6) ─── */
   useEffect(() => {
     if (!isLoggedIn || !firebaseUser) return;
     const unsub = onSnapshot(doc(db, "users", firebaseUser.uid), snap => {
@@ -3764,7 +3764,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
     }
   }, [myAlerts, activeProjects]);
 
-  // NOTIFICATIONS \u2014 live listener so admin messages appear instantly
+  // NOTIFICATIONS — live listener so admin messages appear instantly
   useEffect(() => {
     if (!isLoggedIn || !auth.currentUser) return;
     const uid = auth.currentUser.uid;
@@ -4013,7 +4013,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
       {/* Mobile overlay */}
       <div className={`mobile-overlay ${sidebarOpen ? "open" : ""}`} onClick={() => setSidebarOpen(false)} />
 
-      {/* \u2500\u2500\u2500 SIDEBAR \u2500\u2500\u2500 */}
+      {/* ─── SIDEBAR ─── */}
       <aside className={`sidebar ${sidebarOpen ? "open" : ""}`} style={{
         position: "fixed", top: 0, left: 0, bottom: 0, width: 240,
         background: T.surface, borderRight: `1px solid ${T.border}`,
@@ -4150,12 +4150,12 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
         </div>
       </aside>
 
-      {/* \u2500\u2500\u2500 FREE TIER BANNER \u2500\u2500\u2500 */}
+      {/* ─── FREE TIER BANNER ─── */}
       {userTier === "free" && (
         <div className="free-banner" style={{ position: "fixed", top: 60, left: 240, right: 0, zIndex: 60, background: `linear-gradient(90deg, ${T.gold}ee, #B8912Fee)`, padding: "8px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <span style={{ fontSize: 14 }}>\uD83D\uDD12</span>
-            <span style={{ fontSize: 12, fontWeight: 700, color: "#04090F" }}>You're on the Free plan \u2014 12 tabs locked</span>
+            <span style={{ fontSize: 12, fontWeight: 700, color: "#04090F" }}>You're on the Free plan — 12 tabs locked</span>
             <span style={{ fontSize: 11, color: "rgba(4,9,15,0.7)" }}>Upgrade to Pro to unlock DXB Estimate, Yields, Mortgage, Portfolio & more</span>
           </div>
           <button type="button" onClick={() => setShowUpgrade(true)} style={{ padding: "5px 16px", background: "#04090F", color: T.gold, border: "none", borderRadius: 8, fontSize: 11, fontWeight: 800, cursor: "pointer", fontFamily: "'Outfit',sans-serif", whiteSpace: "nowrap" }}>
@@ -4164,7 +4164,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
         </div>
       )}
 
-      {/* \u2500\u2500\u2500 TOP BAR \u2500\u2500\u2500 */}
+      {/* ─── TOP BAR ─── */}
       <header className="top-bar" style={{
         position: "fixed", top: 0, right: 0, left: 240, height: 60,
         background: `${T.surface}ee`, backdropFilter: "blur(16px)",
@@ -4183,7 +4183,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
         </div>
         <div className="header-badges" style={{ display: "flex", gap: 8, alignItems: "center" }}>
           <button type="button" onClick={() => setShowWatchlist(true)} style={{ background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 10, padding: "8px 12px", cursor: "pointer", color: watchlist.length > 0 ? T.gold : T.textSecondary, display: "flex", alignItems: "center", gap: 6, fontSize: 12, fontFamily: "'Outfit',sans-serif" }} title="My Watchlist">
-            \u2606 {watchlist.length > 0 && <span style={{ fontWeight: 700 }}>{watchlist.length}</span>}
+            ★ {watchlist.length > 0 && <span style={{ fontWeight: 700 }}>{watchlist.length}</span>}
           </button>
           <button type="button" onClick={globalRefresh} disabled={isRefreshing} title="Refresh all data" style={{ background: isRefreshing ? T.surfaceAlt : "rgba(212,168,67,0.08)", border: "1px solid " + (isRefreshing ? T.border : "rgba(212,168,67,0.25)"), borderRadius: 10, padding: "8px 12px", cursor: isRefreshing ? "not-allowed" : "pointer", color: isRefreshing ? T.textMuted : T.gold, display: "flex", alignItems: "center", gap: 6, fontSize: 11, fontWeight: 600, fontFamily: "'Outfit',sans-serif" }}>
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" style={{ animation: isRefreshing ? "spin 1s linear infinite" : "none" }}><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
@@ -4196,7 +4196,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
         </div>
       </header>
 
-      {/* \u2500\u2500\u2500 GLOBAL CONTEXT FILTER \u2500\u2500\u2500 */}
+      {/* ─── GLOBAL CONTEXT FILTER ─── */}
       <GlobalContextFilter
         gDeveloper={gDeveloper} setGDeveloperAndReset={setGDeveloperAndReset}
         gCommunity={gCommunity} setGCommunity={setGCommunity}
@@ -4209,7 +4209,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
         allDevelopers={allDevelopers} T={T}
       />
 
-      {/* \u2500\u2500\u2500 MAIN CONTENT \u2500\u2500\u2500 */}
+      {/* ─── MAIN CONTENT ─── */}
       <main role="main" id="main-content" className="main-content" style={{ marginLeft: 240, paddingTop: userTier === "free" ? 140 : 100, minHeight: "100vh", overflowX: "hidden" }}>
         {/* Trial / Free tier banner */}
         {userTier === "pro_trial" && trialDaysLeft > 0 && (() => {
@@ -4222,14 +4222,14 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
           const sub = isUrgent
             ? "Your trial expires today. Upgrade now to keep full access."
             : isWarning
-            ? `${trialDaysLeft} days left \u2014 don't lose your access to 48+ projects and yield data.`
+            ? `${trialDaysLeft} days left — don't lose your access to 48+ projects and yield data.`
             : `${trialDaysLeft} day${trialDaysLeft !== 1 ? "s" : ""} remaining. Full Pro access active.`;
           return (
             <div style={{ margin: "12px 24px 0", padding: "10px 16px", borderRadius: 10, background: bg, border: `1px solid ${border}`, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <span style={{ fontSize: 16 }}>{icon}</span>
                 <span style={{ fontSize: 13, color: isUrgent ? T.red : isWarning ? T.gold : T.white, fontWeight: 700 }}>{label}</span>
-                <span style={{ fontSize: 12, color: T.textSecondary }}>\u2014 {sub}</span>
+                <span style={{ fontSize: 12, color: T.textSecondary }}>— {sub}</span>
               </div>
               <button type="button" onClick={() => setShowUpgrade(true)} style={{ padding: "6px 16px", borderRadius: 6, background: isUrgent ? T.red : T.gold, color: isUrgent ? "#fff" : T.bg, border: "none", fontSize: 12, fontWeight: 700, fontFamily: "'Outfit', sans-serif", cursor: "pointer" }}>
                 {isUrgent ? "\uD83D\uDD25 Upgrade Now" : "Upgrade to Pro"}
@@ -4242,15 +4242,15 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <span style={{ fontSize: 16 }}>\uD83D\uDD12</span>
               <span style={{ fontSize: 13, color: T.white, fontWeight: 600 }}>Free Plan</span>
-              <span style={{ fontSize: 12, color: T.textSecondary }}>\u2014 You're seeing limited data. Upgrade to unlock all projects, yields & more.</span>
+              <span style={{ fontSize: 12, color: T.textSecondary }}>— You're seeing limited data. Upgrade to unlock all projects, yields & more.</span>
             </div>
-            <button type="button" onClick={() => setShowUpgrade(true)} style={{ padding: "6px 16px", borderRadius: 6, background: T.gold, color: T.bg, border: "none", fontSize: 12, fontWeight: 700, fontFamily: "'Outfit', sans-serif", cursor: "pointer" }}>Upgrade to Pro \u2014 AED 99/mo</button>
+            <button type="button" onClick={() => setShowUpgrade(true)} style={{ padding: "6px 16px", borderRadius: 6, background: T.gold, color: T.bg, border: "none", fontSize: 12, fontWeight: 700, fontFamily: "'Outfit', sans-serif", cursor: "pointer" }}>Upgrade to Pro — AED 99/mo</button>
           </div>
         )}
         <div style={{ padding: `0 24px ${compareList.length > 0 && tab === "Projects" ? "120px" : "60px"}` }}>
           <TabErrorBoundary key={tab}>
 
-          {/* \u2500\u2500\u2500 OVERVIEW TAB \u2500\u2500\u2500 */}
+          {/* ─── OVERVIEW TAB ─── */}
           {tab === "Overview" && (() => {
 
             const OvKPI = ({ label, value, sub, color, icon, onClick, delay }) => (
@@ -4259,7 +4259,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase" }}>{label}</div>
                   <div style={{ color: color || T.gold, opacity: 0.8 }}>{icon}</div>
                 </div>
-                <div style={{ fontFamily: "'Fraunces', serif", fontSize: 26, fontWeight: 800, color: T.white, lineHeight: 1.1, marginBottom: 6 }}>{value || "\u2014"}</div>
+                <div style={{ fontFamily: "'Fraunces', serif", fontSize: 26, fontWeight: 800, color: T.white, lineHeight: 1.1, marginBottom: 6 }}>{value || "—"}</div>
                 {sub && <div style={{ fontSize: 11, color: T.textSecondary }}>{sub}</div>}
               </div>
             );
@@ -4281,15 +4281,15 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               const live = liveMarketData?.filter?.(d => d.metric && d.value) || [];
               return live.length > 0 ? live : SEED_DATA.overviewKpis;
             })();
-            const getKpi = (metric) => kpis?.find(d => d.metric === metric)?.value || "\u2014";
+            const getKpi = (metric) => kpis?.find(d => d.metric === metric)?.value || "—";
             const getKpiChange = (metric) => kpis?.find(d => d.metric === metric)?.change || "";
 
-            // yield data \u2014 live or seed
+            // yield data — live or seed
             const yieldDisplay = liveYields?.length > 0 ? liveYields
               : SEED_DATA.communities.map(c => ({ community: c.community, tenantProfile: c.tenantProfile, gross: c.grossYield }));
             const sortedYields = [...yieldDisplay].sort((a,b) => (parseFloat(b.grossYield||b.gross)||0) - (parseFloat(a.grossYield||a.gross)||0)).slice(0,6);
 
-            // DLD data \u2014 live or seed
+            // DLD data — live or seed
             const dldDisplay = liveDLDVolumes?.length > 0 ? liveDLDVolumes : SEED_DATA.dldVolumes;
             const sortedDLD = [...dldDisplay].sort((a,b) => (b.transactions||b.count||0) - (a.transactions||a.count||0)).slice(0,6);
             const dldMax = Math.max(...sortedDLD.map(d => d.transactions||d.count||0), 1);
@@ -4302,7 +4302,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 14px", borderRadius: 8, background: "rgba(212,168,67,0.06)", border: `1px solid rgba(212,168,67,0.2)`, marginBottom: 12 }}>
                     <span style={{ width: 6, height: 6, borderRadius: "50%", background: T.gold, display: "inline-block" }} />
                     <span style={{ fontSize: 11, color: T.textMuted }}>
-                      <span style={{ color: T.gold, fontWeight: 700 }}>Research-based seed data</span> \u2014 DLD 2025, Bayut, REIDIN, ValuStrat \u00B7 Replace via Admin \u2192 Data Manager
+                      <span style={{ color: T.gold, fontWeight: 700 }}>Research-based seed data</span> — DLD 2025, Bayut, REIDIN, ValuStrat · Replace via Admin \u2192 Data Manager
                     </span>
                   </div>
                 )}
@@ -4312,8 +4312,8 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                     <span style={{ width: 7, height: 7, borderRadius: "50%", background: T.green, display: "inline-block", animation: "pulse 2s infinite" }} />
                     <span style={{ fontSize: 11, color: T.textSecondary }}>
-                      Live data \u2014 <span style={{ color: T.gold, fontWeight: 600 }}>DXB Analytics Intelligence Platform</span>
-                      {syncTime && <span style={{ color: T.textMuted }}> \u00B7 Last sync {syncTime}</span>}
+                      Live data — <span style={{ color: T.gold, fontWeight: 600 }}>DXB Analytics Intelligence Platform</span>
+                      {syncTime && <span style={{ color: T.textMuted }}> · Last sync {syncTime}</span>}
                     </span>
                   </div>
                   <div style={{ display: "flex", gap: 8 }}>
@@ -4323,7 +4323,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 </div>
 
                 {/* 7 KPI Cards */}
-                <OvSection title="Market Pulse" sub="Dubai real estate \u2014 key indicators" />
+                <OvSection title="Market Pulse" sub="Dubai real estate — key indicators" />
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: 12, marginBottom: 8 }}>
                   <OvKPI delay={1} label="Total Market Value" icon={SvgIcons.TrendingUp({width:16,height:16})}
                     value={getKpi("Total Market Value")}
@@ -4333,19 +4333,19 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                     value={getKpi("Total Transactions")}
                     sub={getKpiChange("Total Transactions") || "Source: DLD Annual Report 2025"}
                     onClick={() => handleTabChange("DLD Volumes")} />
-                  <OvKPI delay={3} label="EIBOR 3M \u2014 Live" icon={SvgIcons.Landmark({width:16,height:16})}
-                    value={liveMortgageRates?.[0]?.eibor3m ? liveMortgageRates[0].eibor3m.toFixed(2) + "%" : "\u2014"}
-                    sub="Updated daily \u00B7 Central Bank UAE"
+                  <OvKPI delay={3} label="EIBOR 3M — Live" icon={SvgIcons.Landmark({width:16,height:16})}
+                    value={liveMortgageRates?.[0]?.eibor3m ? liveMortgageRates[0].eibor3m.toFixed(2) + "%" : "—"}
+                    sub="Updated daily · Central Bank UAE"
                     color={T.teal} onClick={() => handleTabChange("Mortgage")} />
                   <OvKPI delay={4} label="Active Developers" icon={SvgIcons.Building2({width:16,height:16})}
                     value={allDevelopers?.length > 0 ? allDevelopers.length.toString() : "50+"}
-                    sub="RERA registered \u00B7 DLD approved"
+                    sub="RERA registered · DLD approved"
                     onClick={() => handleTabChange("Developer Health")} />
                   <OvKPI delay={5} label="Avg Gross Yield" icon={SvgIcons.BarChart3({width:16,height:16})}
                     value={liveYields?.length > 0
                       ? (liveYields.reduce((a,b) => a + (parseFloat(b.gross)||0), 0) / liveYields.length).toFixed(1) + "%"
                       : (SEED_DATA.communities.reduce((a,b) => a + (parseFloat(b.grossYield)||0), 0) / SEED_DATA.communities.length).toFixed(1) + "%"}
-                    sub="Across all communities \u00B7 Bayut data"
+                    sub="Across all communities · Bayut data"
                     color={T.green} onClick={() => handleTabChange("Yields")} />
                   <OvKPI delay={6} label="Off-Plan Share" icon={SvgIcons.BarChart2({width:16,height:16})}
                     value={getKpi("Off-Plan Share")}
@@ -4359,7 +4359,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
 
                 {/* 3-Column Intelligence Panel */}
                 <OvSection title="Intelligence Panel"
-                  sub="Context-aware \u2014 updates with your filter selection"
+                  sub="Context-aware — updates with your filter selection"
                   action={
                     <div style={{ fontSize: 10, color: T.textMuted, display: "flex", alignItems: "center", gap: 4 }}>
                       <span style={{ width: 5, height: 5, borderRadius: "50%", background: gDeveloper !== "all" ? T.gold : T.textMuted, display: "inline-block" }} />
@@ -4371,11 +4371,11 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
 
                   {/* Column 1: Top Yield Communities */}
                   <div className="chart-box" style={{ padding: 18 }}>
-                    <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 14 }}>Top Communities \u2014 Yield</div>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 14 }}>Top Communities — Yield</div>
                     {sortedYields.map((y, i) => (
                       <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "7px 0", borderBottom: i < 5 ? `1px solid ${T.border}` : "none" }}>
                         <div>
-                          <div style={{ fontSize: 12, color: T.white, fontWeight: 500 }}>{y.community || "\u2014"}</div>
+                          <div style={{ fontSize: 12, color: T.white, fontWeight: 500 }}>{y.community || "—"}</div>
                           <div style={{ fontSize: 10, color: T.textMuted }}>{y.tenantProfile || "Apartment"}</div>
                         </div>
                         <div style={{ fontFamily: "'Fraunces', serif", fontSize: 16, fontWeight: 700, color: parseFloat(y.grossYield||y.gross||0) >= 7 ? T.green : parseFloat(y.grossYield||y.gross||0) >= 5.5 ? T.gold : T.textSecondary }}>
@@ -4396,7 +4396,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                       return (
                         <div key={i} style={{ marginBottom: 10 }}>
                           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
-                            <span style={{ fontSize: 11, color: T.textSecondary }}>{d.community || "\u2014"}</span>
+                            <span style={{ fontSize: 11, color: T.textSecondary }}>{d.community || "—"}</span>
                             <span style={{ fontSize: 11, color: T.white, fontWeight: 600 }}>{(d.transactions||d.count||0).toLocaleString()}</span>
                           </div>
                           <div style={{ height: 4, borderRadius: 2, background: T.border }}>
@@ -4422,7 +4422,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                         : <div style={{ fontSize: 12, color: T.textMuted, lineHeight: 1.7, fontStyle: "italic" }}>AI market analysis generates automatically every 7 days from live DLD and Bayut data.</div>
                       }
                       <div style={{ marginTop: 10, fontSize: 10, color: T.textMuted }}>
-                        Powered by Claude \u00B7 {aiInsights?.length > 0 ? "Updated this week" : "Connect data to activate"}
+                        Powered by Claude · {aiInsights?.length > 0 ? "Updated this week" : "Connect data to activate"}
                       </div>
                     </div>
                     <div className="chart-box" style={{ padding: 18 }}>
@@ -4432,7 +4432,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                             <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "5px 0", borderBottom: i < 3 ? `1px solid ${T.border}` : "none" }}>
                               <span style={{ fontSize: 11, color: T.textSecondary }}>{d.developer || d.name}</span>
                               <span style={{ fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 20, background: (d.score||0) >= 75 ? "rgba(16,185,129,0.15)" : "rgba(212,168,67,0.15)", color: (d.score||0) >= 75 ? T.green : T.gold }}>
-                                {d.score || "\u2014"}
+                                {d.score || "—"}
                               </span>
                             </div>
                           ))
@@ -4446,7 +4446,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 </div>
 
                 {/* Live Feeds */}
-                <OvSection title="Live Intelligence Feeds" sub="Real-time data streams \u2014 auto-refreshing" />
+                <OvSection title="Live Intelligence Feeds" sub="Real-time data streams — auto-refreshing" />
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 14, marginBottom: 32 }}>
 
                   {/* Recent DLD */}
@@ -4461,10 +4461,10 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                     {sortedDLD.slice(0,5).map((tx, i) => (
                       <div key={i} style={{ padding: "8px 0", borderBottom: i < 4 ? `1px solid ${T.border}` : "none" }}>
                         <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 2 }}>
-                          <span style={{ fontSize: 11, color: T.white, fontWeight: 500 }}>{tx.community || "\u2014"}</span>
-                          <span style={{ fontSize: 11, color: T.gold, fontWeight: 700 }}>{tx.volume ? "AED " + (tx.volume/1000000000).toFixed(1) + "B" : "\u2014"}</span>
+                          <span style={{ fontSize: 11, color: T.white, fontWeight: 500 }}>{tx.community || "—"}</span>
+                          <span style={{ fontSize: 11, color: T.gold, fontWeight: 700 }}>{tx.volume ? "AED " + (tx.volume/1000000000).toFixed(1) + "B" : "—"}</span>
                         </div>
-                        <div style={{ fontSize: 10, color: T.textMuted }}>{tx.type || "Residential"}{"\u00B7"}{(tx.transactions||tx.count||0).toLocaleString()} deals</div>
+                        <div style={{ fontSize: 10, color: T.textMuted }}>{tx.type || "Residential"}{"·"}{(tx.transactions||tx.count||0).toLocaleString()} deals</div>
                       </div>
                     ))}
                   </div>
@@ -4478,10 +4478,10 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                     {SEED_DATA.launches.filter(l => l.status === "EOI Open" || l.status === "Upcoming").slice(0,3).map((l, i) => (
                       <div key={i} style={{ padding: "8px 0", borderBottom: i < 2 ? `1px solid ${T.border}` : "none" }}>
                         <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 2 }}>
-                          <span style={{ fontSize: 11, color: T.white, fontWeight: 500 }}>{l.projectName?.split("\u2014")[0]?.trim() || l.projectName}</span>
+                          <span style={{ fontSize: 11, color: T.white, fontWeight: 500 }}>{l.projectName?.split("—")[0]?.trim() || l.projectName}</span>
                           <span style={{ fontSize: 9, padding: "1px 6px", borderRadius: 10, background: l.status === "EOI Open" ? "rgba(16,185,129,0.15)" : "rgba(212,168,67,0.1)", color: l.status === "EOI Open" ? T.green : T.gold }}>{l.status}</span>
                         </div>
-                        <div style={{ fontSize: 10, color: T.textMuted }}>{l.developer}{"\u00B7"}{l.community}</div>
+                        <div style={{ fontSize: 10, color: T.textMuted }}>{l.developer}{"·"}{l.community}</div>
                       </div>
                     ))}
                     <button type="button" onClick={() => handleTabChange("Launch Calendar")} style={{ width: "100%", marginTop: 12, padding: "7px 0", background: "rgba(212,168,67,0.06)", border: `1px solid ${T.border}`, borderRadius: 8, color: T.gold, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
@@ -4522,14 +4522,14 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
             );
           })()}
 
-          {/* \u2500\u2500\u2500 MARKET TAB \u2500\u2500\u2500 */}
+          {/* ─── MARKET TAB ─── */}
           {tab === "Market" && (() => {
 
-            /* \u2500\u2500 Stat Card \u2500\u2500 */
+            /* ── Stat Card ── */
             const MktStat = ({ label, value, change, positive, onClick }) => (
               <div className="kpi-card" onClick={onClick} style={{ cursor: onClick ? "pointer" : "default" }}>
                 <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>{label}</div>
-                <div style={{ fontFamily: "'Fraunces', serif", fontSize: 24, fontWeight: 800, color: T.white, lineHeight: 1.1, marginBottom: 6 }}>{value || "\u2014"}</div>
+                <div style={{ fontFamily: "'Fraunces', serif", fontSize: 24, fontWeight: 800, color: T.white, lineHeight: 1.1, marginBottom: 6 }}>{value || "—"}</div>
                 {change && (
                   <div style={{ fontSize: 11, display: "flex", alignItems: "center", gap: 4, color: positive === false ? T.red : T.green }}>
                     <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points={positive === false ? "18 15 12 9 6 15" : "6 9 12 15 18 15"}/></svg>
@@ -4539,7 +4539,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               </div>
             );
 
-            /* \u2500\u2500 Forecast Card \u2500\u2500 */
+            /* ── Forecast Card ── */
             const ForecastCard = ({ firm, forecast, detail, color }) => {
               const isExp = expandedForecast === firm;
               return (
@@ -4554,7 +4554,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               );
             };
 
-            /* \u2500\u2500 Live market stats from Firestore \u2500\u2500 */
+            /* ── Live market stats from Firestore ── */
             const stats = (() => {
               const live = (liveMarketData || []).filter(d => d.metric && d.value);
               return live.length > 0 ? live : SEED_DATA.market;
@@ -4566,7 +4566,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               const lower = metric.toLowerCase();
               return stats.find(s => s.metric && s.metric.toLowerCase().includes(lower));
             };
-            // Chart data \u2014 filter only year-based entries for bar chart
+            // Chart data — filter only year-based entries for bar chart
             const chartData = stats.filter(d => d.year && d.type === "annual")
               .sort((a,b) => parseInt(a.year) - parseInt(b.year))
               .map(d => ({ year: String(d.year), value: parseFloat(d.value) || 0 }));
@@ -4578,7 +4578,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0", marginBottom: 20, borderBottom: `1px solid ${T.border}`, flexWrap: "wrap", gap: 8 }}>
                   <div>
                     <div style={{ fontSize: 20, fontWeight: 800, color: T.white, fontFamily: "'Fraunces',serif" }}>Dubai Real Estate Market</div>
-                    <div style={{ fontSize: 11, color: T.textMuted, marginTop: 3 }}>Macro view \u2014 Official DLD data \u00B7 REIDIN \u00B7 ValuStrat</div>
+                    <div style={{ fontSize: 11, color: T.textMuted, marginTop: 3 }}>Macro view — Official DLD data · REIDIN · ValuStrat</div>
                   </div>
                   <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                     {["Dubai Land Department", "REIDIN", "ValuStrat", "Knight Frank"].map((s, i) => (
@@ -4591,40 +4591,40 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 {mktIsSeed && (
                   <div style={{ display:"flex", alignItems:"center", gap:8, padding:"8px 14px", borderRadius:8, background:"rgba(212,168,67,0.06)", border:`1px solid rgba(212,168,67,0.2)`, marginBottom:12 }}>
                     <span style={{width:6,height:6,borderRadius:"50%",background:T.gold,display:"inline-block"}} />
-                    <span style={{fontSize:11,color:T.textMuted}}><span style={{color:T.gold,fontWeight:700}}>Research-based seed data</span> \u2014 DLD Annual Report 2025, REIDIN Dec 2025, ValuStrat \u00B7 Replace via Admin \u2192 Data Manager</span>
+                    <span style={{fontSize:11,color:T.textMuted}}><span style={{color:T.gold,fontWeight:700}}>Research-based seed data</span> — DLD Annual Report 2025, REIDIN Dec 2025, ValuStrat · Replace via Admin \u2192 Data Manager</span>
                   </div>
                 )}
-                {/* \u2500\u2500 KPI Grid \u2500\u2500 */}
+                {/* ── KPI Grid ── */}
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(175px, 1fr))", gap: 12, marginBottom: 28 }}>
                   <MktStat label="Total Market Value"
-                    value={getStat("Total Market Value")?.value || "\u2014"}
+                    value={getStat("Total Market Value")?.value || "—"}
                     change={getStat("Total Market Value")?.change}
                     onClick={() => handleTabChange("DLD Volumes")} />
                   <MktStat label="Total Transactions"
-                    value={getStat("Total Transactions")?.value || "\u2014"}
+                    value={getStat("Total Transactions")?.value || "—"}
                     change={getStat("Total Transactions")?.change}
                     onClick={() => handleTabChange("DLD Volumes")} />
                   <MktStat label="Off-Plan Share"
-                    value={getStat("Off-Plan Share")?.value || "\u2014"}
+                    value={getStat("Off-Plan Share")?.value || "—"}
                     change={getStat("Off-Plan Share")?.change} />
                   <MktStat label="Units Launched"
-                    value={getStat("Units Launched")?.value || "\u2014"}
+                    value={getStat("Units Launched")?.value || "—"}
                     change={getStat("Units Launched")?.change} />
                   <MktStat label="Mortgage Transactions"
-                    value={getStat("Mortgage Transactions")?.value || "\u2014"}
+                    value={getStat("Mortgage Transactions")?.value || "—"}
                     change={getStat("Mortgage Transactions")?.change} />
                   <MktStat label="Investor Base"
-                    value={getStat("Investor Base")?.value || "\u2014"}
+                    value={getStat("Investor Base")?.value || "—"}
                     change={getStat("Investor Base")?.change} />
                   <MktStat label="Price Growth YoY"
-                    value={getStat("Price Growth")?.value || "\u2014"}
+                    value={getStat("Price Growth")?.value || "—"}
                     change={getStat("Price Growth")?.change} />
                   <MktStat label="Women Investors"
-                    value={getStat("Women Investors")?.value || "\u2014"}
+                    value={getStat("Women Investors")?.value || "—"}
                     change={getStat("Women Investors")?.change} />
                 </div>
 
-                {/* \u2500\u2500 No data state \u2500\u2500 */}
+                {/* ── No data state ── */}
                 {stats.length === 0 && (
                   <div style={{ background: "rgba(212,168,67,0.05)", border: `1px solid rgba(212,168,67,0.15)`, borderRadius: 12, padding: "20px 24px", marginBottom: 24, display: "flex", alignItems: "center", gap: 14 }}>
                     <div style={{ width: 8, height: 8, borderRadius: "50%", background: T.gold, animation: "pulse 2s infinite", flexShrink: 0 }} />
@@ -4635,13 +4635,13 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   </div>
                 )}
 
-                {/* \u2500\u2500 2-column layout: Sales Trend Chart + Market Split \u2500\u2500 */}
+                {/* ── 2-column layout: Sales Trend Chart + Market Split ── */}
                 <div style={{ display: "grid", gridTemplateColumns: "1.5fr 1fr", gap: 16, marginBottom: 24 }}>
 
                   {/* Sales trend - bar chart from Recharts */}
                   <div className="chart-box">
                     <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 4 }}>Dubai Total Sales Value (AED Billions)</div>
-                    <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 16 }}>Historical growth trajectory \u00B7 DLD Official</div>
+                    <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 16 }}>Historical growth trajectory · DLD Official</div>
                     {chartData?.length > 0
                       ? (
                         <ResponsiveContainer width="100%" height={220}>
@@ -4666,7 +4666,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   {/* Market split breakdown */}
                   <div className="chart-box">
                     <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 4 }}>Market Composition</div>
-                    <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 20 }}>Off-plan vs secondary \u00B7 DLD</div>
+                    <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 20 }}>Off-plan vs secondary · DLD</div>
                     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
                       {[
                         { label: "Off-Plan", pct: getStat("Off-Plan Share")?.numericValue || 63, color: T.gold },
@@ -4688,18 +4688,18 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   </div>
                 </div>
 
-                {/* \u2500\u2500 Market Indicators Grid \u2500\u2500 */}
+                {/* ── Market Indicators Grid ── */}
                 <div style={{ marginBottom: 24 }}>
                   <div style={{ fontSize: 14, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif", marginBottom: 4 }}>Key Market Indicators</div>
                   <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 16 }}>Structural metrics shaping Dubai's real estate future</div>
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: 10 }}>
                     {[
-                      { k: "Population Target", v: getStat("Population Target")?.value || "\u2014" },
-                      { k: "Price Cycle Duration", v: getStat("Price Cycle")?.value || "\u2014" },
-                      { k: "Active Developers", v: getStat("Active Developers")?.value || (allDevelopers?.length > 0 ? allDevelopers.length + " registered" : "\u2014") },
-                      { k: "Units Pipeline", v: getStat("2026 Pipeline")?.value || "\u2014" },
-                      { k: "REIDIN Price Growth", v: getStat("REIDIN Growth")?.value || "\u2014" },
-                      { k: "Nationalities Investing", v: getStat("Nationalities")?.value || "\u2014" },
+                      { k: "Population Target", v: getStat("Population Target")?.value || "—" },
+                      { k: "Price Cycle Duration", v: getStat("Price Cycle")?.value || "—" },
+                      { k: "Active Developers", v: getStat("Active Developers")?.value || (allDevelopers?.length > 0 ? allDevelopers.length + " registered" : "—") },
+                      { k: "Units Pipeline", v: getStat("2026 Pipeline")?.value || "—" },
+                      { k: "REIDIN Price Growth", v: getStat("REIDIN Growth")?.value || "—" },
+                      { k: "Nationalities Investing", v: getStat("Nationalities")?.value || "—" },
                     ].map(({ k, v }, i) => (
                       <div key={i} style={{ padding: "14px 16px", background: T.surfaceAlt, borderRadius: 12, border: `1px solid ${T.border}` }}>
                         <div style={{ fontSize: 9.5, fontWeight: 700, color: T.textMuted, letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 6 }}>{k}</div>
@@ -4709,17 +4709,17 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   </div>
                 </div>
 
-                {/* \u2500\u2500 2026 Analyst Forecasts \u2500\u2500 */}
+                {/* ── 2026 Analyst Forecasts ── */}
                 <div style={{ marginBottom: 24 }}>
                   <div style={{ fontSize: 14, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif", marginBottom: 4 }}>2026 Analyst Forecasts</div>
-                  <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 16 }}>Knight Frank \u00B7 CW Core \u00B7 Fitch Ratings \u2014 Click each to expand</div>
+                  <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 16 }}>Knight Frank · CW Core · Fitch Ratings — Click each to expand</div>
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 14 }}>
                     <ForecastCard firm="Knight Frank" color={T.gold}
                       forecast="+3% prime / +1% mainstream"
                       detail="Knight Frank's 2026 Dubai Residential Forecast projects prime property appreciation of +3% and mainstream market growth of ~1%. Dubai is entering a more mature, sustainable growth cycle after two years of double-digit gains. Key tailwinds: continued HNWI inflows, Golden Visa demand, Expo City activation." />
                     <ForecastCard firm="CW Core" color={T.teal}
-                      forecast="5\u20138% appreciation"
-                      detail="Cushman & Wakefield Core projects 5\u20138% price appreciation for 2026, a slowdown from 12\u201322% in 2024\u201325. The massive 2026 pipeline (~120K units) acts as a price moderator, though strong end-user demand and low mortgage penetration are supportive. Off-plan expected to stay 60\u201365% of volume." />
+                      forecast="5–8% appreciation"
+                      detail="Cushman & Wakefield Core projects 5–8% price appreciation for 2026, a slowdown from 12–22% in 2024–25. The massive 2026 pipeline (~120K units) acts as a price moderator, though strong end-user demand and low mortgage penetration are supportive. Off-plan expected to stay 60–65% of volume." />
                     <ForecastCard firm="Fitch Ratings" color={T.orange}
                       forecast="Stable / Watch"
                       detail="Fitch maintained a Stable Outlook for UAE developers, citing strong backlogs and recurring revenue as key buffers. However, the 120K+ unit pipeline in 2026 could create oversupply in affordable segments. Premium developer backlogs provide earnings visibility even in a correction scenario." />
@@ -4752,13 +4752,13 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
             );
           })()}
 
-          {/* \u2500\u2500\u2500 DLD VOLUMES TAB \u2500\u2500\u2500 */}
+          {/* ─── DLD VOLUMES TAB ─── */}
           {tab === "DLD Volumes" && (() => {
 
-            /* \u2500\u2500 Local state \u2500\u2500 */
+            /* ── Local state ── */
             /* state moved to top level */
 
-            /* \u2500\u2500 Filter data \u2500\u2500 */
+            /* ── Filter data ── */
             const rawData = (() => {
               const live = (liveDLDVolumes || []).filter(d => d.community || d.developer || d.type);
               return live.length > 0 ? live : SEED_DATA.dldVolumes;
@@ -4774,13 +4774,13 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               return true;
             }).sort((a, b) => (b[dldSort] || 0) - (a[dldSort] || 0));
 
-            /* \u2500\u2500 Unique filter options \u2500\u2500 */
+            /* ── Unique filter options ── */
             const communities = ["All", ...new Set(rawData.map(d => d.community).filter(Boolean))];
             const types = ["All", "Apartment", "Villa", "Townhouse", "Office", "Retail", "Hotel Apartment", "Land"];
             const txTypes = ["All", "Off-Plan", "Ready", "Secondary"];
             const developers = ["All", ...new Set(rawData.map(d => d.developer).filter(Boolean))];
 
-            /* \u2500\u2500 Summary stats \u2500\u2500 */
+            /* ── Summary stats ── */
             const totalTx = filtered.reduce((a, b) => a + (b.transactions || b.count || 0), 0);
             const totalVol = filtered.reduce((a, b) => a + (b.volume || b.totalValue || 0), 0);
             const avgPpsf = filtered.length > 0
@@ -4803,7 +4803,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0", marginBottom: 20, borderBottom: `1px solid ${T.border}`, flexWrap: "wrap", gap: 8 }}>
                   <div>
                     <div style={{ fontSize: 20, fontWeight: 800, color: T.white, fontFamily: "'Fraunces',serif" }}>DLD Transaction Intelligence</div>
-                    <div style={{ fontSize: 11, color: T.textMuted, marginTop: 3 }}>Official Dubai Land Department registry \u00B7 Live data \u00B7 Auto-refreshes daily</div>
+                    <div style={{ fontSize: 11, color: T.textMuted, marginTop: 3 }}>Official Dubai Land Department registry · Live data · Auto-refreshes daily</div>
                   </div>
                   <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
                     {/* View toggle */}
@@ -4825,16 +4825,16 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 {dldIsSeed && (
                   <div style={{ display:"flex", alignItems:"center", gap:8, padding:"8px 14px", borderRadius:8, background:"rgba(212,168,67,0.06)", border:`1px solid rgba(212,168,67,0.2)`, marginBottom:12 }}>
                     <span style={{width:6,height:6,borderRadius:"50%",background:T.gold,display:"inline-block"}} />
-                    <span style={{fontSize:11,color:T.textMuted}}><span style={{color:T.gold,fontWeight:700}}>Research-based seed data</span> \u2014 DXBAnalytics.com / DLD 2025 \u00B7 Replace via Admin \u2192 Data Manager</span>
+                    <span style={{fontSize:11,color:T.textMuted}}><span style={{color:T.gold,fontWeight:700}}>Research-based seed data</span> — DXBAnalytics.com / DLD 2025 · Replace via Admin \u2192 Data Manager</span>
                   </div>
                 )}
-                {/* \u2500\u2500 Summary KPIs \u2500\u2500 */}
+                {/* ── Summary KPIs ── */}
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: 12, marginBottom: 20 }}>
                   {[
-                    { label: "Total Transactions", value: totalTx > 0 ? totalTx.toLocaleString() : "\u2014", sub: "Filtered results" },
-                    { label: "Total Volume", value: totalVol > 0 ? "AED " + (totalVol / 1e9).toFixed(1) + "B" : "\u2014", sub: "Registered value" },
-                    { label: "Avg Price/sqft", value: avgPpsf > 0 ? "AED " + avgPpsf.toLocaleString() : "\u2014", sub: "Registered PPSF" },
-                    { label: "Communities", value: communities.length - 1 > 0 ? (communities.length - 1).toString() : "\u2014", sub: "In dataset" },
+                    { label: "Total Transactions", value: totalTx > 0 ? totalTx.toLocaleString() : "—", sub: "Filtered results" },
+                    { label: "Total Volume", value: totalVol > 0 ? "AED " + (totalVol / 1e9).toFixed(1) + "B" : "—", sub: "Registered value" },
+                    { label: "Avg Price/sqft", value: avgPpsf > 0 ? "AED " + avgPpsf.toLocaleString() : "—", sub: "Registered PPSF" },
+                    { label: "Communities", value: communities.length - 1 > 0 ? (communities.length - 1).toString() : "—", sub: "In dataset" },
                   ].map((kpi, i) => (
                     <div key={i} className="kpi-card">
                       <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 8 }}>{kpi.label}</div>
@@ -4844,7 +4844,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   ))}
                 </div>
 
-                {/* \u2500\u2500 Smart Filters \u2500\u2500 */}
+                {/* ── Smart Filters ── */}
                 <div style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 12, padding: "14px 16px", marginBottom: 16 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
                     {/* Search */}
@@ -4886,7 +4886,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   </div>
                 </div>
 
-                {/* \u2500\u2500 No data state \u2500\u2500 */}
+                {/* ── No data state ── */}
                 {rawData.length === 0 && !dldIsSeed && (
                   <div style={{ background: "rgba(212,168,67,0.05)", border: `1px solid rgba(212,168,67,0.15)`, borderRadius: 12, padding: "40px 24px", textAlign: "center", marginBottom: 20 }}>
                     <div style={{ marginBottom: 12 }}>{SvgIcons.Database({ width: 36, height: 36, style: { color: T.textMuted, display: "inline-block" } })}</div>
@@ -4896,7 +4896,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   </div>
                 )}
 
-                {/* \u2500\u2500 Chart View \u2500\u2500 */}
+                {/* ── Chart View ── */}
                 {dldView === "chart" && filtered.length > 0 && (
                   <div className="chart-box" style={{ marginBottom: 16 }}>
                     <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 16 }}>Transaction Volume by Community</div>
@@ -4912,7 +4912,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   </div>
                 )}
 
-                {/* \u2500\u2500 Table View \u2500\u2500 */}
+                {/* ── Table View ── */}
                 {dldView === "table" && filtered.length > 0 && (
                   <div style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 12, overflow: "hidden", marginBottom: 16 }}>
                     {/* Table header */}
@@ -4926,13 +4926,13 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                       <div key={i} style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr 1fr", gap: 0, padding: "11px 16px", borderBottom: i < filtered.length - 1 ? `1px solid ${T.border}` : "none", background: i % 2 === 0 ? "transparent" : "rgba(255,255,255,0.01)", transition: "background 0.15s" }}
                         onMouseEnter={e => e.currentTarget.style.background = "rgba(212,168,67,0.04)"}
                         onMouseLeave={e => e.currentTarget.style.background = i % 2 === 0 ? "transparent" : "rgba(255,255,255,0.01)"}>
-                        <div style={{ fontSize: 13, color: T.white, fontWeight: 500 }}>{row.community || "\u2014"}</div>
+                        <div style={{ fontSize: 13, color: T.white, fontWeight: 500 }}>{row.community || "—"}</div>
                         <div style={{ fontSize: 12, color: T.textSecondary }}>{row.type || "Residential"}</div>
                         <div style={{ fontSize: 13, color: T.white, fontWeight: 600 }}>{(row.transactions || row.count || 0).toLocaleString()}</div>
                         <div style={{ fontSize: 13, color: T.gold }}>AED {(row.avgPpsf || row.ppsf || 0).toLocaleString()}</div>
-                        <div style={{ fontSize: 12, color: T.textSecondary }}>{row.volume ? "AED " + (row.volume / 1e6).toFixed(0) + "M" : "\u2014"}</div>
+                        <div style={{ fontSize: 12, color: T.textSecondary }}>{row.volume ? "AED " + (row.volume / 1e6).toFixed(0) + "M" : "—"}</div>
                         <div style={{ fontSize: 12, color: row.change > 0 ? T.green : row.change < 0 ? T.red : T.textMuted }}>
-                          {row.change ? (row.change > 0 ? "+" : "") + row.change + "%" : "\u2014"}
+                          {row.change ? (row.change > 0 ? "+" : "") + row.change + "%" : "—"}
                         </div>
                       </div>
                     ))}
@@ -4964,17 +4964,17 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
             );
           })()}
 
-          {/* \u2500\u2500\u2500 PRICE HISTORY TAB \u2500\u2500\u2500 */}
+          {/* ─── PRICE HISTORY TAB ─── */}
           {tab === "Price History" && (() => {
 
             /* state moved to top level */
 
-            /* \u2500\u2500 Data from Firestore priceHistory collection \u2500\u2500 */
+            /* ── Data from Firestore priceHistory collection ── */
             const phRaw = liveMarketData?.filter?.(d => d.type === "priceHistory") || [];
             const phData = phRaw.length > 0 ? phRaw : SEED_DATA.priceHistory;
             const phIsSeed = phRaw.length === 0;
             // Separate year trend data from community data
-            // Base chart data \u2014 year-level trend
+            // Base chart data — year-level trend
             const phYearData = phData
               .filter(d => d.period && !d.community)
               .sort((a,b) => parseInt(a.period) - parseInt(b.period))
@@ -5008,7 +5008,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               });
             };
 
-            // Final chart data \u2014 with ppsf2 if compare mode on
+            // Final chart data — with ppsf2 if compare mode on
             const phChartData = phCompare
               ? (() => {
                   const d1 = buildCommData(phCommunity === "All" ? "Downtown Dubai" : phCommunity);
@@ -5025,7 +5025,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
             const bedOptions = ["All", "Studio", "1 BR", "2 BR", "3 BR", "4 BR", "5 BR+"];
             const typeOptions = ["Apartment", "Villa", "Townhouse", "Office", "Hotel Apartment"];
 
-            /* \u2500\u2500 Filter data \u2500\u2500 */
+            /* ── Filter data ── */
             const filtered = phData.filter(d => {
               if (phCommunity !== "All" && d.community !== phCommunity) return false;
               if (phType !== "All" && d.type !== phType) return false;
@@ -5042,7 +5042,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               backgroundRepeat: "no-repeat", backgroundPosition: "right 8px center",
             };
 
-            /* \u2500\u2500 Momentum badge \u2500\u2500 */
+            /* ── Momentum badge ── */
             const MomentumBadge = ({ change }) => {
               if (!change) return null;
               const positive = change > 0;
@@ -5061,7 +5061,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0", marginBottom: 20, borderBottom: `1px solid ${T.border}`, flexWrap: "wrap", gap: 8 }}>
                   <div>
                     <div style={{ fontSize: 20, fontWeight: 800, color: T.white, fontFamily: "'Fraunces',serif" }}>Price History</div>
-                    <div style={{ fontSize: 11, color: T.textMuted, marginTop: 3 }}>PPSF trends per community \u00B7 DLD registered transactions \u00B7 5-year view</div>
+                    <div style={{ fontSize: 11, color: T.textMuted, marginTop: 3 }}>PPSF trends per community · DLD registered transactions · 5-year view</div>
                   </div>
                   <div style={{ display: "flex", gap: 8 }}>
                     {/* View toggle */}
@@ -5081,7 +5081,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   </div>
                 </div>
 
-                {/* \u2500\u2500 Smart Filters \u2500\u2500 */}
+                {/* ── Smart Filters ── */}
                 <div style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 12, padding: "14px 16px", marginBottom: 20 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
                     <span style={{ fontSize: 11, fontWeight: 600, color: T.textMuted }}>Compare:</span>
@@ -5109,7 +5109,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   </div>
                 </div>
 
-                {/* \u2500\u2500 No data state \u2500\u2500 */}
+                {/* ── No data state ── */}
                 {phCommunityData.length === 0 && phChartData.length === 0 && (
                   <div style={{ background: "rgba(212,168,67,0.05)", border: `1px solid rgba(212,168,67,0.15)`, borderRadius: 12, padding: "48px 24px", textAlign: "center", marginBottom: 20 }}>
                     <div style={{ marginBottom: 14 }}>
@@ -5121,7 +5121,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   </div>
                 )}
 
-                {/* \u2500\u2500 Chart View \u2500\u2500 */}
+                {/* ── Chart View ── */}
                 {/* Compare result banner */}
                 {phCompare && phCommunity !== "All" && phCommunity2 !== "All" && (() => {
                   const d1 = Object.entries(commPPSF||{}).find(([k]) => k===phCommunity);
@@ -5154,8 +5154,8 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                     <div className="chart-box">
                       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
                         <div>
-                          <div style={{ fontSize: 13, fontWeight: 700, color: T.white }}>Price Per Sqft \u2014 Historical Trend</div>
-                          <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>AED/sqft \u00B7 DLD registered transactions</div>
+                          <div style={{ fontSize: 13, fontWeight: 700, color: T.white }}>Price Per Sqft — Historical Trend</div>
+                          <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>AED/sqft · DLD registered transactions</div>
                         </div>
                         <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
                           <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
@@ -5198,7 +5198,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
                       <div className="chart-box">
                         <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 4 }}>Off-Plan vs Secondary</div>
-                        <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 16 }}>Price divergence \u2014 same community</div>
+                        <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 16 }}>Price divergence — same community</div>
                         <ResponsiveContainer width="100%" height={180}>
                           <LineChart data={phChartData.slice(0, 12)}>
                             <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
@@ -5219,7 +5219,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                           {phCommunityData.slice(0, 6).map((d, i) => (
                             <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                              <span style={{ fontSize: 12, color: T.textSecondary }}>{d.community || "\u2014"}</span>
+                              <span style={{ fontSize: 12, color: T.textSecondary }}>{d.community || "—"}</span>
                               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                                 <span style={{ fontSize: 12, color: T.white, fontWeight: 600 }}>AED {(d.ppsf || 0).toLocaleString()}</span>
                                 <MomentumBadge change={d.change6m ?? d.change1y ?? d.change ?? null} />
@@ -5232,7 +5232,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   </div>
                 )}
 
-                {/* \u2500\u2500 Table View \u2500\u2500 */}
+                {/* ── Table View ── */}
                 {phView === "table" && phCommunityData.length > 0 && (
                   <div style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 12, overflow: "hidden", marginBottom: 20 }}>
                     <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr 1fr 1fr", padding: "10px 16px", background: T.surfaceAlt, borderBottom: `1px solid ${T.border}` }}>
@@ -5244,9 +5244,9 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                       <div key={i} style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr 1fr 1fr", padding: "10px 16px", borderBottom: i < phData.length - 1 ? `1px solid ${T.border}` : "none", background: i % 2 === 0 ? "transparent" : "rgba(255,255,255,0.01)" }}
                         onMouseEnter={e => e.currentTarget.style.background = "rgba(212,168,67,0.04)"}
                         onMouseLeave={e => e.currentTarget.style.background = i % 2 === 0 ? "transparent" : "rgba(255,255,255,0.01)"}>
-                        <div style={{ fontSize: 13, color: T.white, fontWeight: 500 }}>{row.community || "\u2014"}</div>
+                        <div style={{ fontSize: 13, color: T.white, fontWeight: 500 }}>{row.community || "—"}</div>
                         <div style={{ fontSize: 12, color: T.textSecondary }}>{row.type || "Apt"}</div>
-                        <div style={{ fontSize: 12, color: T.textSecondary }}>{row.beds || "\u2014"}</div>
+                        <div style={{ fontSize: 12, color: T.textSecondary }}>{row.beds || "—"}</div>
                         <div style={{ fontSize: 13, color: T.gold, fontWeight: 600 }}>AED {(row.ppsf || 0).toLocaleString()}</div>
                         <div><MomentumBadge change={row.change1y} /></div>
                         <div><MomentumBadge change={row.change3y} /></div>
@@ -5256,12 +5256,12 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   </div>
                 )}
 
-                {/* Correction alert banner \u2014 shows if any community has negative 6M momentum */}
+                {/* Correction alert banner — shows if any community has negative 6M momentum */}
                 {phData.some(d => d.change6m < -5) && (
                   <div style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 10, padding: "12px 16px", marginBottom: 16, display: "flex", alignItems: "center", gap: 10 }}>
                     {SvgIcons.AlertTriangle({ width: 16, height: 16, style: { color: T.red, flexShrink: 0 } })}
                     <div style={{ fontSize: 12, color: T.textSecondary }}>
-                      <span style={{ color: T.red, fontWeight: 700 }}>Price correction detected</span> \u2014 Some communities showing &gt;5% decline over 6 months. Review before recommending to clients.
+                      <span style={{ color: T.red, fontWeight: 700 }}>Price correction detected</span> — Some communities showing &gt;5% decline over 6 months. Review before recommending to clients.
                     </div>
                   </div>
                 )}
@@ -5291,17 +5291,17 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
             );
           })()}
 
-          {/* \u2500\u2500\u2500 NEIGHBOURHOODS TAB \u2500\u2500\u2500 */}
+          {/* ─── NEIGHBOURHOODS TAB ─── */}
           {tab === "Neighbourhoods" && (() => {
 
             /* state moved to top level */
 
-            /* \u2500\u2500 Community data from Firestore \u2500\u2500 */
+            /* ── Community data from Firestore ── */
             const rawNbhFirestore = liveMarketData?.filter?.(d => d.type === "community") || [];
             const rawNbh = rawNbhFirestore.length > 0 ? rawNbhFirestore : SEED_DATA.communities;
             const nbhIsSeed = rawNbhFirestore.length === 0;
 
-            /* \u2500\u2500 Score badge component \u2500\u2500 */
+            /* ── Score badge component ── */
             const ScoreBadge = ({ score, size = "sm" }) => {
               const color = score >= 75 ? T.green : score >= 50 ? T.gold : score >= 30 ? T.orange : T.red;
               const bg = score >= 75 ? "rgba(16,185,129,0.12)" : score >= 50 ? "rgba(212,168,67,0.12)" : score >= 30 ? "rgba(245,158,11,0.12)" : "rgba(239,68,68,0.12)";
@@ -5309,14 +5309,14 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               return (
                 <div style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
                   <div style={{ width: size === "lg" ? 44 : 32, height: size === "lg" ? 44 : 32, borderRadius: "50%", background: bg, border: `2px solid ${color}`, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                    <span style={{ fontSize: size === "lg" ? 13 : 11, fontWeight: 800, color, fontFamily: "'Fraunces',serif" }}>{score || "\u2014"}</span>
+                    <span style={{ fontSize: size === "lg" ? 13 : 11, fontWeight: 800, color, fontFamily: "'Fraunces',serif" }}>{score || "—"}</span>
                   </div>
                   {size === "lg" && <div style={{ fontSize: 11, fontWeight: 700, color }}>{label}</div>}
                 </div>
               );
             };
 
-            /* \u2500\u2500 Metro badge \u2500\u2500 */
+            /* ── Metro badge ── */
             const MetroBadge = ({ distance }) => {
               if (!distance) return null;
               const close = distance <= 700;
@@ -5327,18 +5327,18 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               );
             };
 
-            /* \u2500\u2500 Risk badge \u2500\u2500 */
+            /* ── Risk badge ── */
             const RiskBadge = ({ risk }) => {
               const cfg = { Low: { color: T.green, bg: "rgba(16,185,129,0.1)" }, Medium: { color: T.gold, bg: "rgba(212,168,67,0.1)" }, High: { color: T.red, bg: "rgba(239,68,68,0.1)" } };
               const c = cfg[risk] || cfg["Medium"];
               return (
                 <span style={{ fontSize: 10, padding: "2px 8px", borderRadius: 10, fontWeight: 600, background: c.bg, color: c.color }}>
-                  {risk || "\u2014"} Risk
+                  {risk || "—"} Risk
                 </span>
               );
             };
 
-            /* \u2500\u2500 Filter & sort \u2500\u2500 */
+            /* ── Filter & sort ── */
             const filtered = rawNbh.filter(n => {
               if (nbhSearch && !n.community?.toLowerCase().includes(nbhSearch.toLowerCase())) return false;
               if (nbhTypeFilter !== "All" && n.tenantProfile !== nbhTypeFilter) return false;
@@ -5367,7 +5367,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               backgroundRepeat: "no-repeat", backgroundPosition: "right 8px center",
             };
 
-            /* \u2500\u2500 Community card \u2500\u2500 */
+            /* ── Community card ── */
             const NbhCard = ({ n }) => {
               const isCompared = nbhCompare.includes(n.community);
               return (
@@ -5378,7 +5378,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   {/* Header row */}
                   <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 12 }}>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 3, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{n.community || "\u2014"}</div>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 3, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{n.community || "—"}</div>
                       <div style={{ display: "flex", gap: 5, flexWrap: "wrap" }}>
                         <MetroBadge distance={n.metroDistance} />
                         <RiskBadge risk={n.supplyRisk} />
@@ -5390,10 +5390,10 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   {/* Key metrics grid */}
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 12 }}>
                     {[
-                      { label: "Gross Yield", value: n.grossYield ? parseFloat(n.grossYield).toFixed(1) + "%" : "\u2014", color: parseFloat(n.grossYield) >= 7 ? T.green : parseFloat(n.grossYield) >= 5 ? T.gold : T.textSecondary },
-                      { label: "Net Yield", value: n.netYield ? parseFloat(n.netYield).toFixed(1) + "%" : "\u2014", color: T.textSecondary },
-                      { label: "Avg PPSF", value: n.avgPpsf ? "AED " + n.avgPpsf.toLocaleString() : "\u2014", color: T.white },
-                      { label: "Service Charge", value: n.serviceCharge ? "AED " + n.serviceCharge + "/sqft" : "\u2014", color: T.textMuted },
+                      { label: "Gross Yield", value: n.grossYield ? parseFloat(n.grossYield).toFixed(1) + "%" : "—", color: parseFloat(n.grossYield) >= 7 ? T.green : parseFloat(n.grossYield) >= 5 ? T.gold : T.textSecondary },
+                      { label: "Net Yield", value: n.netYield ? parseFloat(n.netYield).toFixed(1) + "%" : "—", color: T.textSecondary },
+                      { label: "Avg PPSF", value: n.avgPpsf ? "AED " + n.avgPpsf.toLocaleString() : "—", color: T.white },
+                      { label: "Service Charge", value: n.serviceCharge ? "AED " + n.serviceCharge + "/sqft" : "—", color: T.textMuted },
                     ].map((m, i) => (
                       <div key={i} style={{ background: T.surfaceAlt, borderRadius: 8, padding: "8px 10px" }}>
                         <div style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 4 }}>{m.label}</div>
@@ -5471,7 +5471,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0", marginBottom: 20, borderBottom: `1px solid ${T.border}`, flexWrap: "wrap", gap: 8 }}>
                   <div>
                     <div style={{ fontSize: 20, fontWeight: 800, color: T.white, fontFamily: "'Fraunces',serif" }}>Neighbourhood Intelligence</div>
-                    <div style={{ fontSize: 11, color: T.textMuted, marginTop: 3 }}>Community scorecards \u00B7 Yield \u00B7 Metro access \u00B7 Supply risk \u00B7 Schools \u00B7 Lifestyle</div>
+                    <div style={{ fontSize: 11, color: T.textMuted, marginTop: 3 }}>Community scorecards · Yield · Metro access · Supply risk · Schools · Lifestyle</div>
                   </div>
                   <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
                     {/* View toggle */}
@@ -5490,7 +5490,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 <div style={{ background: "rgba(20,184,166,0.06)", border: "1px solid rgba(20,184,166,0.2)", borderRadius: 10, padding: "10px 16px", marginBottom: 16, display: "flex", alignItems: "center", gap: 10 }}>
                   <span style={{ width: 6, height: 6, borderRadius: "50%", background: T.teal, flexShrink: 0, animation: "pulse 2s infinite", display: "inline-block" }} />
                   <div style={{ fontSize: 11, color: T.textSecondary }}>
-                    <span style={{ color: T.teal, fontWeight: 700 }}>Metro Blue Line opening 2029</span> \u2014 14 new stations \u00B7 Properties within 700m historically see 20\u201330% value premium \u00B7 Communities near Blue Line flagged below
+                    <span style={{ color: T.teal, fontWeight: 700 }}>Metro Blue Line opening 2029</span> — 14 new stations · Properties within 700m historically see 20–30% value premium · Communities near Blue Line flagged below
                   </div>
                 </div>
 
@@ -5516,7 +5516,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                     <select value={nbhYieldFilter} onChange={e => setNbhYieldFilter(e.target.value)} style={selStyle}>
                       <option value="All">All Yields</option>
                       <option value="7%+">7%+ High Yield</option>
-                      <option value="5-7%">5\u20137% Mid Yield</option>
+                      <option value="5-7%">5–7% Mid Yield</option>
                       <option value="<5%">Under 5%</option>
                     </select>
                     {/* Supply risk */}
@@ -5531,7 +5531,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                       <option value="yield">Sort: Yield High</option>
                       <option value="ppsf">Sort: PPSF High</option>
                       <option value="score">Sort: Score High</option>
-                      <option value="name">Sort: A\u2013Z</option>
+                      <option value="name">Sort: A–Z</option>
                     </select>
                     <span style={{ fontSize: 11, color: T.textMuted, marginLeft: "auto" }}>
                       {filtered.length} communities
@@ -5587,12 +5587,12 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                       <div key={i} style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr 1fr 1fr", padding: "10px 16px", borderBottom: i < filtered.length - 1 ? `1px solid ${T.border}` : "none", background: i % 2 === 0 ? "transparent" : "rgba(255,255,255,0.01)" }}
                         onMouseEnter={e => e.currentTarget.style.background = "rgba(212,168,67,0.04)"}
                         onMouseLeave={e => e.currentTarget.style.background = i % 2 === 0 ? "transparent" : "rgba(255,255,255,0.01)"}>
-                        <div style={{ fontSize: 13, color: T.white, fontWeight: 500 }}>{n.community || "\u2014"}</div>
+                        <div style={{ fontSize: 13, color: T.white, fontWeight: 500 }}>{n.community || "—"}</div>
                         <div><ScoreBadge score={n.investmentScore} /></div>
-                        <div style={{ fontSize: 13, color: parseFloat(n.grossYield) >= 7 ? T.green : T.gold, fontWeight: 700 }}>{n.grossYield ? parseFloat(n.grossYield).toFixed(1) + "%" : "\u2014"}</div>
-                        <div style={{ fontSize: 12, color: T.textSecondary }}>{n.netYield ? parseFloat(n.netYield).toFixed(1) + "%" : "\u2014"}</div>
+                        <div style={{ fontSize: 13, color: parseFloat(n.grossYield) >= 7 ? T.green : T.gold, fontWeight: 700 }}>{n.grossYield ? parseFloat(n.grossYield).toFixed(1) + "%" : "—"}</div>
+                        <div style={{ fontSize: 12, color: T.textSecondary }}>{n.netYield ? parseFloat(n.netYield).toFixed(1) + "%" : "—"}</div>
                         <div style={{ fontSize: 12, color: T.white }}>AED {(n.avgPpsf || 0).toLocaleString()}</div>
-                        <div style={{ fontSize: 12, color: T.textMuted }}>AED {n.serviceCharge || "\u2014"}/sqft</div>
+                        <div style={{ fontSize: 12, color: T.textMuted }}>AED {n.serviceCharge || "—"}/sqft</div>
                         <div><RiskBadge risk={n.supplyRisk} /></div>
                       </div>
                     ))}
@@ -5611,10 +5611,10 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
             );
           })()}
 
-          {/* \u2500\u2500\u2500 LAUNCH CALENDAR TAB \u2500\u2500\u2500 */}
+          {/* ─── LAUNCH CALENDAR TAB ─── */}
           {tab === "Launch Calendar" && (() => {
 
-            /* \u2500\u2500 Status config \u2500\u2500 */
+            /* ── Status config ── */
             const STATUS_CFG = {
               "EOI Open":     { color: T.green,  bg: "rgba(16,185,129,0.12)",  dot: T.green  },
               "EOI Closed":   { color: T.red,    bg: "rgba(239,68,68,0.12)",   dot: T.red    },
@@ -5623,15 +5623,15 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               "Sold Out":     { color: T.textMuted, bg: "rgba(255,255,255,0.05)", dot: T.textMuted },
             };
 
-            /* \u2500\u2500 Firestore data \u2500\u2500 */
+            /* ── Firestore data ── */
             const rawLaunchesFirestore = liveMarketData?.filter?.(d => d.type === "launch") || [];
             const rawLaunches = rawLaunchesFirestore.length > 0 ? rawLaunchesFirestore : SEED_DATA.launches;
             const lcIsSeed = rawLaunchesFirestore.length === 0;
 
-            /* \u2500\u2500 Local filter state \u2500\u2500 */
+            /* ── Local filter state ── */
             /* state from top level: lcSearch, lcDev, lcStatus, lcType, lcView */
 
-            /* \u2500\u2500 Filter \u2500\u2500 */
+            /* ── Filter ── */
             const filtered = rawLaunches.filter(l => {
               if (lcSearch && !JSON.stringify(l).toLowerCase().includes(lcSearch.toLowerCase())) return false;
               if (lcDev !== "All" && l.developer !== lcDev) return false;
@@ -5651,7 +5651,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               backgroundRepeat: "no-repeat", backgroundPosition: "right 8px center",
             };
 
-            /* \u2500\u2500 Status badge \u2500\u2500 */
+            /* ── Status badge ── */
             const StatusBadge = ({ status }) => {
               const cfg = STATUS_CFG[status] || STATUS_CFG["Upcoming"];
               return (
@@ -5662,7 +5662,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               );
             };
 
-            /* \u2500\u2500 Days until launch \u2500\u2500 */
+            /* ── Days until launch ── */
             const daysUntil = (dateStr) => {
               if (!dateStr) return null;
               const diff = Math.ceil((new Date(dateStr) - new Date()) / (1000 * 60 * 60 * 24));
@@ -5674,7 +5674,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               return `${Math.ceil(diff/30)} months`;
             };
 
-            /* \u2500\u2500 Launch Card \u2500\u2500 */
+            /* ── Launch Card ── */
             const LaunchCard = ({ l }) => {
               const cfg = STATUS_CFG[l.status] || STATUS_CFG["Upcoming"];
               const days = daysUntil(l.launchDate);
@@ -5694,7 +5694,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                     <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" }}>
                       <StatusBadge status={l.status || "Upcoming"} />
                       {l.community && <span style={{ fontSize: 11, color: T.textMuted }}>{l.community}</span>}
-                      {l.propertyType && <span style={{ fontSize: 11, color: T.textMuted }}>{"\u00B7"}{l.propertyType}</span>}
+                      {l.propertyType && <span style={{ fontSize: 11, color: T.textMuted }}>{"·"}{l.propertyType}</span>}
                     </div>
                   </div>
 
@@ -5727,7 +5727,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                         <div>
                           <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 2 }}>EOI Amount</div>
                           <div style={{ fontSize: 13, fontWeight: 700, color: l.status === "EOI Open" ? T.green : T.textSecondary }}>
-                            {l.eoiAmount ? "AED " + l.eoiAmount.toLocaleString() : "AED 20K\u201350K"}
+                            {l.eoiAmount ? "AED " + l.eoiAmount.toLocaleString() : "AED 20K–50K"}
                           </div>
                         </div>
                         {l.eoiDeadline && (
@@ -5781,7 +5781,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               );
             };
 
-            /* \u2500\u2500 Group by month \u2500\u2500 */
+            /* ── Group by month ── */
             const byMonth = filtered.reduce((acc, l) => {
               const month = l.launchDate
                 ? new Date(l.launchDate).toLocaleDateString("en-AE", { month: "long", year: "numeric" })
@@ -5798,7 +5798,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0", marginBottom: 20, borderBottom: `1px solid ${T.border}`, flexWrap: "wrap", gap: 8 }}>
                   <div>
                     <div style={{ fontSize: 20, fontWeight: 800, color: T.white, fontFamily: "'Fraunces',serif" }}>Launch Calendar</div>
-                    <div style={{ fontSize: 11, color: T.textMuted, marginTop: 3 }}>Upcoming off-plan launches \u00B7 EOI tracking \u00B7 Developer radar \u00B7 Never miss a launch</div>
+                    <div style={{ fontSize: 11, color: T.textMuted, marginTop: 3 }}>Upcoming off-plan launches · EOI tracking · Developer radar · Never miss a launch</div>
                   </div>
                   <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
                     <div style={{ display: "flex", background: T.surfaceAlt, borderRadius: 8, border: `1px solid ${T.border}`, overflow: "hidden" }}>
@@ -5815,10 +5815,10 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 {/* EOI summary row */}
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: 12, marginBottom: 20 }}>
                   {[
-                    { label: "EOI Open Now", value: rawLaunches.filter(l => l.status === "EOI Open").length || "\u2014", color: T.green },
-                    { label: "Upcoming Launches", value: rawLaunches.filter(l => l.status === "Upcoming").length || "\u2014", color: T.gold },
-                    { label: "This Month", value: rawLaunches.filter(l => { const d = new Date(l.launchDate); const now = new Date(); return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear(); }).length || "\u2014", color: T.teal },
-                    { label: "Total Tracked", value: rawLaunches.length || "\u2014", color: T.textSecondary },
+                    { label: "EOI Open Now", value: rawLaunches.filter(l => l.status === "EOI Open").length || "—", color: T.green },
+                    { label: "Upcoming Launches", value: rawLaunches.filter(l => l.status === "Upcoming").length || "—", color: T.gold },
+                    { label: "This Month", value: rawLaunches.filter(l => { const d = new Date(l.launchDate); const now = new Date(); return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear(); }).length || "—", color: T.teal },
+                    { label: "Total Tracked", value: rawLaunches.length || "—", color: T.textSecondary },
                   ].map((kpi, i) => (
                     <div key={i} className="kpi-card">
                       <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 8 }}>{kpi.label}</div>
@@ -5860,7 +5860,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                     <span style={{ width: 8, height: 8, borderRadius: "50%", background: T.green, animation: "pulse 2s infinite", display: "inline-block", flexShrink: 0 }} />
                     <div style={{ fontSize: 12, color: T.textSecondary }}>
                       <span style={{ color: T.green, fontWeight: 700 }}>{rawLaunches.filter(l => l.status === "EOI Open").length} EOI{rawLaunches.filter(l => l.status === "EOI Open").length > 1 ? "s" : ""} open right now</span>
-                      {" \u2014 "}EOI payments are typically AED 20K\u201350K and fully refundable until SPA is signed. Register through Dev Portal.
+                      {" — "}EOI payments are typically AED 20K–50K and fully refundable until SPA is signed. Register through Dev Portal.
                     </div>
                   </div>
                 )}
@@ -5875,7 +5875,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   </div>
                 )}
 
-                {/* List view \u2014 grouped by month */}
+                {/* List view — grouped by month */}
                 {lcView === "list" && filtered.length > 0 && (
                   <div style={{ marginBottom: 20 }}>
                     {Object.entries(byMonth).map(([month, launches]) => (
@@ -5893,7 +5893,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   </div>
                 )}
 
-                {/* Calendar view \u2014 simple month grid */}
+                {/* Calendar view — simple month grid */}
                 {lcView === "calendar" && filtered.length > 0 && (
                   <div className="chart-box" style={{ padding: 20, marginBottom: 20 }}>
                     <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 16 }}>
@@ -5958,15 +5958,15 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
             );
           })()}
 
-          {/* \u2500\u2500\u2500 CURRENCY TAB \u2500\u2500\u2500 */}
+          {/* ─── CURRENCY TAB ─── */}
           {tab === "Currency" && (() => {
 
-            /* \u2500\u2500 Top currencies for Dubai international buyers \u2500\u2500 */
+            /* ── Top currencies for Dubai international buyers ── */
             const TOP_CURRENCIES = [
               { code: "USD", name: "US Dollar",        flag: "\uD83C\uDDFA\uD83C\uDDF8", rate: 3.6725, change: 0.0,   buyers: "Americas" },
               { code: "GBP", name: "British Pound",    flag: "\uD83C\uDDEC\uD83C\uDDE7", rate: 4.6420, change: +0.8,  buyers: "UK" },
               { code: "EUR", name: "Euro",             flag: "\uD83C\uDDEA\uD83C\uDDFA", rate: 3.9850, change: -0.3,  buyers: "Europe" },
-              { code: "INR", name: "Indian Rupee",     flag: "\uD83C\uDDEE\uD83C\uDDF3", rate: 0.0441, change: -0.2,  buyers: "India \u2014 #1 buyer nation" },
+              { code: "INR", name: "Indian Rupee",     flag: "\uD83C\uDDEE\uD83C\uDDF3", rate: 0.0441, change: -0.2,  buyers: "India — #1 buyer nation" },
               { code: "RUB", name: "Russian Ruble",    flag: "\uD83C\uDDF7\uD83C\uDDFA", rate: 0.0401, change: +1.2,  buyers: "Russia" },
               { code: "CNY", name: "Chinese Yuan",     flag: "\uD83C\uDDE8\uD83C\uDDF3", rate: 0.5062, change: +0.1,  buyers: "China" },
               { code: "PKR", name: "Pakistani Rupee",  flag: "\uD83C\uDDF5\uD83C\uDDF0", rate: 0.0131, change: -0.5,  buyers: "Pakistan" },
@@ -5977,7 +5977,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               { code: "JPY", name: "Japanese Yen",     flag: "\uD83C\uDDEF\uD83C\uDDF5", rate: 0.0245, change: -0.8,  buyers: "Japan" },
             ];
 
-            /* \u2500\u2500 12-month historical data (seed) \u2500\u2500 */
+            /* ── 12-month historical data (seed) ── */
             const RATE_HISTORY = {
               GBP: [4.51, 4.53, 4.58, 4.60, 4.62, 4.59, 4.55, 4.57, 4.61, 4.63, 4.64, 4.642],
               EUR: [3.97, 3.99, 4.01, 3.98, 3.96, 3.94, 3.92, 3.95, 3.97, 3.99, 3.98, 3.985],
@@ -5987,7 +5987,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
 
             const MONTHS = ["May","Jun","Jul","Aug","Sep","Oct","Nov","Dec","Jan","Feb","Mar","Apr"];
 
-            /* \u2500\u2500 State \u2500\u2500 */
+            /* ── State ── */
             /* state from top level: selectedCcy, aedAmount, searchCcy */
 
             const selectedRate = TOP_CURRENCIES.find(c => c.code === selectedCcy)?.rate || 1;
@@ -6009,7 +6009,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0", marginBottom: 20, borderBottom: `1px solid ${T.border}`, flexWrap: "wrap", gap: 8 }}>
                   <div>
                     <div style={{ fontFamily: "'Fraunces', serif", fontSize: 20, fontWeight: 800, color: T.white }}>Currency Intelligence</div>
-                    <div style={{ fontSize: 11, color: T.textMuted, marginTop: 3 }}>AED exchange rates \u00B7 Property price converter \u00B7 International buyer tool</div>
+                    <div style={{ fontSize: 11, color: T.textMuted, marginTop: 3 }}>AED exchange rates · Property price converter · International buyer tool</div>
                   </div>
                   <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
                     <span style={{ fontSize: 10, padding: "3px 10px", borderRadius: 20, background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.2)", color: T.green, display: "flex", alignItems: "center", gap: 4 }}>
@@ -6017,7 +6017,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                       UAE Central Bank Peg
                     </span>
                     <span style={{ fontSize: 10, padding: "3px 10px", borderRadius: 20, background: "rgba(255,255,255,0.04)", border: `1px solid ${T.border}`, color: T.textMuted }}>
-                      Reference rates \u00B7 Verify on xe.com
+                      Reference rates · Verify on xe.com
                     </span>
                   </div>
                 </div>
@@ -6026,7 +6026,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 <div style={{ background: "rgba(212,168,67,0.06)", border: `1px solid rgba(212,168,67,0.2)`, borderRadius: 10, padding: "10px 16px", marginBottom: 20, display: "flex", alignItems: "center", gap: 10 }}>
                   {SvgIcons.Landmark({ width: 16, height: 16, style: { color: T.gold, flexShrink: 0 } })}
                   <span style={{ fontSize: 12, color: T.textSecondary }}>
-                    <span style={{ color: T.gold, fontWeight: 700 }}>AED is pegged to USD at 3.6725</span> \u2014 fixed since 1997 by UAE Central Bank. AED/USD rate never changes. All other pairs fluctuate vs USD.
+                    <span style={{ color: T.gold, fontWeight: 700 }}>AED is pegged to USD at 3.6725</span> — fixed since 1997 by UAE Central Bank. AED/USD rate never changes. All other pairs fluctuate vs USD.
                   </span>
                 </div>
 
@@ -6089,10 +6089,10 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   {/* 12-month chart */}
                   <div className="chart-box" style={{ padding: 20 }}>
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
-                      <div style={{ fontFamily: "'Fraunces', serif", fontSize: 14, fontWeight: 700, color: T.white }}>AED/{selectedCcy} \u2014 12 Month Trend</div>
-                      <span style={{ fontSize: 10, color: T.textMuted }}>Apr 2025 \u2013 Apr 2026</span>
+                      <div style={{ fontFamily: "'Fraunces', serif", fontSize: 14, fontWeight: 700, color: T.white }}>AED/{selectedCcy} — 12 Month Trend</div>
+                      <span style={{ fontSize: 10, color: T.textMuted }}>Apr 2025 – Apr 2026</span>
                     </div>
-                    <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 16 }}>Exchange rate per 1 AED \u00B7 UAE Central Bank data</div>
+                    <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 16 }}>Exchange rate per 1 AED · UAE Central Bank data</div>
                     <ResponsiveContainer width="100%" height={220}>
                       <AreaChart data={chartData}>
                         <defs>
@@ -6163,10 +6163,10 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
             );
           })()}
 
-          {/* \u2500\u2500\u2500 PROJECTS TAB \u2500\u2500\u2500 */}
+          {/* ─── PROJECTS TAB ─── */}
           {tab === "Projects" && (() => {
 
-            /* SEED_PROJECTS \u2014 defined at top level */
+            /* SEED_PROJECTS — defined at top level */
             const rawProjects = liveProjects?.length > 0 ? liveProjects : SEED_PROJECTS;
 
             const filtered = rawProjects.filter(p => {
@@ -6190,7 +6190,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
             });
 
             const avgYield = filtered.length > 0 && filtered.some(p => p.grossYield > 0)
-              ? (filtered.filter(p=>p.grossYield>0).reduce((a,p) => a + p.grossYield, 0) / filtered.filter(p=>p.grossYield>0).length).toFixed(1) : "\u2014";
+              ? (filtered.filter(p=>p.grossYield>0).reduce((a,p) => a + p.grossYield, 0) / filtered.filter(p=>p.grossYield>0).length).toFixed(1) : "—";
             const avgPpsf = filtered.length > 0 && filtered.some(p=>p.ppsf)
               ? Math.round(filtered.filter(p=>p.ppsf).reduce((a,p) => a + p.ppsf, 0) / filtered.filter(p=>p.ppsf).length) : 0;
 
@@ -6227,12 +6227,12 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   <div style={{ padding:"14px 16px", borderBottom:`1px solid ${T.border}` }} onClick={() => { setSelectedProject(p); setProjDetailTab("overview"); }}>
                     <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:8 }}>
                       <div style={{ flex:1 }}>
-                        <div style={{ fontSize:10, fontWeight:700, color:T.textMuted, letterSpacing:0.8, textTransform:"uppercase", marginBottom:3 }}>{p.developer}{"\u00B7"}{p.community}</div>
+                        <div style={{ fontSize:10, fontWeight:700, color:T.textMuted, letterSpacing:0.8, textTransform:"uppercase", marginBottom:3 }}>{p.developer}{"·"}{p.community}</div>
                         <div style={{ fontFamily:"'Fraunces',serif", fontSize:15, fontWeight:700, color:T.white, marginBottom:6 }}>{p.project}</div>
                         <div style={{ display:"flex", gap:6, flexWrap:"wrap", alignItems:"center" }}>
                           <StatusBadge status={p.status} />
                           {p.handover && <span style={{ fontSize:10, color:T.textMuted }}>{p.handover}</span>}
-                          {p.beds?.length > 0 && <span style={{ fontSize:10, color:T.textMuted }}>{"\u00B7"}{p.beds.join(" / ")}</span>}
+                          {p.beds?.length > 0 && <span style={{ fontSize:10, color:T.textMuted }}>{"·"}{p.beds.join(" / ")}</span>}
                         </div>
                       </div>
                       <div style={{ display:"flex", flexDirection:"column", alignItems:"flex-end", gap:6 }}>
@@ -6254,7 +6254,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                       </div>
                       <div>
                         <div style={{ fontSize:9, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.6, marginBottom:2 }}>Yield</div>
-                        <div style={{ fontSize:13, fontWeight:700, color:p.grossYield >= 7 ? T.green : p.grossYield >= 5 ? T.gold : T.textSecondary }}>{p.grossYield ? p.grossYield.toFixed(1) + "%" : "\u2014"}</div>
+                        <div style={{ fontSize:13, fontWeight:700, color:p.grossYield >= 7 ? T.green : p.grossYield >= 5 ? T.gold : T.textSecondary }}>{p.grossYield ? p.grossYield.toFixed(1) + "%" : "—"}</div>
                       </div>
                       <div>
                         <div style={{ fontSize:9, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.6, marginBottom:2 }}>Plan</div>
@@ -6304,7 +6304,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"10px 0", marginBottom:16, borderBottom:`1px solid ${T.border}`, flexWrap:"wrap", gap:8 }}>
                   <div>
                     <div style={{ fontFamily:"'Fraunces',serif", fontSize:20, fontWeight:800, color:T.white }}>Project Explorer</div>
-                    <div style={{ fontSize:11, color:T.textMuted, marginTop:3 }}>All Dubai property types \u00B7 Investment intelligence \u00B7 Full project data</div>
+                    <div style={{ fontSize:11, color:T.textMuted, marginTop:3 }}>All Dubai property types · Investment intelligence · Full project data</div>
                   </div>
                   <div style={{ display:"flex", gap:8 }}>
                     {["grid","list"].map(v => (
@@ -6366,9 +6366,9 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(170px,1fr))", gap:10, marginBottom:20 }}>
                   {[
                     { label:"Projects Found", value:filtered.length.toString(), color:T.white },
-                    { label:"Price Range", value:filtered.length > 0 ? `AED ${(Math.min(...filtered.map(p=>p.priceMin))/1000000).toFixed(1)}M+` : "\u2014", color:T.white },
-                    { label:"Avg Gross Yield", value:avgYield !== "\u2014" ? avgYield + "%" : "\u2014", color:T.green },
-                    { label:"Avg PPSF", value:avgPpsf > 0 ? "AED " + avgPpsf.toLocaleString() : "\u2014", color:T.gold },
+                    { label:"Price Range", value:filtered.length > 0 ? `AED ${(Math.min(...filtered.map(p=>p.priceMin))/1000000).toFixed(1)}M+` : "—", color:T.white },
+                    { label:"Avg Gross Yield", value:avgYield !== "—" ? avgYield + "%" : "—", color:T.green },
+                    { label:"Avg PPSF", value:avgPpsf > 0 ? "AED " + avgPpsf.toLocaleString() : "—", color:T.gold },
                   ].map((kpi,i) => (
                     <div key={i} className="kpi-card">
                       <div style={{ fontSize:10, fontWeight:700, color:T.textMuted, letterSpacing:1, textTransform:"uppercase", marginBottom:8 }}>{kpi.label}</div>
@@ -6403,7 +6403,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 {!liveProjects?.length && (
                   <div style={{ display:"flex", alignItems:"center", gap:8, padding:"8px 14px", borderRadius:8, background:"rgba(212,168,67,0.06)", border:`1px solid rgba(212,168,67,0.2)`, marginBottom:16 }}>
                     <span style={{ width:6, height:6, borderRadius:"50%", background:T.gold, display:"inline-block" }} />
-                    <span style={{ fontSize:11, color:T.textMuted }}><span style={{ color:T.gold, fontWeight:700 }}>Research-based seed projects</span> \u2014 Developer portals, Bayut, PropertyFinder, DLD Apr 2026 \u00B7 Import via Admin \u2192 Data Manager</span>
+                    <span style={{ fontSize:11, color:T.textMuted }}><span style={{ color:T.gold, fontWeight:700 }}>Research-based seed projects</span> — Developer portals, Bayut, PropertyFinder, DLD Apr 2026 · Import via Admin \u2192 Data Manager</span>
                   </div>
                 )}
 
@@ -6440,13 +6440,13 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                           onMouseLeave={e => e.currentTarget.style.background="transparent"}>
                           <div>
                             <div style={{ fontSize:13, fontWeight:600, color:T.white }}>{p.project}</div>
-                            <div style={{ fontSize:11, color:T.textMuted }}>{p.developer}{"\u00B7"}{p.community}</div>
+                            <div style={{ fontSize:11, color:T.textMuted }}>{p.developer}{"·"}{p.community}</div>
                           </div>
-                          <div style={{ fontSize:13, color:T.white }}>{p.priceMin ? "AED " + (p.priceMin/1000000).toFixed(1) + "M" : "\u2014"}</div>
+                          <div style={{ fontSize:13, color:T.white }}>{p.priceMin ? "AED " + (p.priceMin/1000000).toFixed(1) + "M" : "—"}</div>
                           <div style={{ fontSize:13, color:T.gold, fontWeight:600 }}>AED {(p.ppsf||0).toLocaleString()}</div>
-                          <div style={{ fontSize:13, fontWeight:700, color:p.grossYield>=7?T.green:p.grossYield>=5?T.gold:T.textSecondary }}>{p.grossYield?p.grossYield.toFixed(1)+"%":"\u2014"}</div>
-                          <div style={{ fontSize:12, color:T.textSecondary }}>{p.paymentPlan||"\u2014"}</div>
-                          <div style={{ fontSize:12, color:T.textMuted }}>{p.handover||"\u2014"}</div>
+                          <div style={{ fontSize:13, fontWeight:700, color:p.grossYield>=7?T.green:p.grossYield>=5?T.gold:T.textSecondary }}>{p.grossYield?p.grossYield.toFixed(1)+"%":"—"}</div>
+                          <div style={{ fontSize:12, color:T.textSecondary }}>{p.paymentPlan||"—"}</div>
+                          <div style={{ fontSize:12, color:T.textMuted }}>{p.handover||"—"}</div>
                           <div style={{ display:"flex", alignItems:"center", gap:6 }}>
                             <span style={{ fontSize:14, fontWeight:700, color:scoreColor(sc) }}>{sc}</span>
                             <span style={{ fontSize:10, color:scoreColor(sc) }}>{scoreLabel(sc)}</span>
@@ -6483,7 +6483,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
           })()}
 
 
-          {/* \u2550\u2550\u2550 COMPARE MODAL \u2550\u2550\u2550 */}
+          {/* ═══ COMPARE MODAL ═══ */}
           {showCompare && projCompare.length >= 2 && (
             <div role="dialog" aria-modal="true" onClick={() => setShowCompare(false)}
               style={{ position:"fixed", inset:0, background:"rgba(4,9,15,0.97)", zIndex:3000, display:"flex", flexDirection:"column", backdropFilter:"blur(8px)" }}>
@@ -6492,7 +6492,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"16px 24px", borderBottom:`1px solid ${T.border}`, background:T.surface, flexShrink:0 }}>
                   <div>
                     <div style={{ fontFamily:"'Fraunces',serif", fontSize:20, fontWeight:800, color:T.white }}>Project Comparison</div>
-                    <div style={{ fontSize:11, color:T.textMuted }}>Side-by-side analysis \u00B7 {projCompare.length} projects</div>
+                    <div style={{ fontSize:11, color:T.textMuted }}>Side-by-side analysis · {projCompare.length} projects</div>
                   </div>
                   <button type="button" onClick={() => setShowCompare(false)}
                     style={{ width:36, height:36, borderRadius:"50%", background:T.surfaceAlt, border:`1px solid ${T.border}`, color:T.white, cursor:"pointer", fontSize:18, fontFamily:"'Outfit',sans-serif" }}>\u00D7</button>
@@ -6517,24 +6517,24 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                     {projCompare.map((p, pi) => {
                       const score = calcScore(p);
                       const vals = [
-                        p.developer || "\u2014",
-                        p.community || "\u2014",
-                        p.status || "\u2014",
-                        p.handover || "\u2014",
-                        p.priceMin ? "AED " + (p.priceMin/1000000).toFixed(2) + "M" : "\u2014",
-                        p.ppsf ? "AED " + p.ppsf.toLocaleString() + "/sqft" : "\u2014",
-                        p.paymentPlan || "\u2014",
-                        p.grossYield ? p.grossYield.toFixed(1) + "%" : "\u2014",
-                        p.netYield ? p.netYield.toFixed(1) + "%" : "\u2014",
-                        p.serviceCharge ? "AED " + p.serviceCharge + "/sqft/yr" : "\u2014",
-                        score.toString() + " \u2014 " + scoreLabel(score),
-                        p.distMetro != null ? p.distMetro + " km" : "\u2014",
-                        p.distDIFC != null ? p.distDIFC + " km" : "\u2014",
-                        p.distBeach != null ? p.distBeach + " km" : "\u2014",
-                        p.distAirport != null ? p.distAirport + " km" : "\u2014",
-                        p.constructionPct != null ? p.constructionPct + "%" : "\u2014",
-                        p.developerScore ? p.developerScore + "/100" : "\u2014",
-                        p.amenities ? p.amenities.length + " amenities" : "\u2014",
+                        p.developer || "—",
+                        p.community || "—",
+                        p.status || "—",
+                        p.handover || "—",
+                        p.priceMin ? "AED " + (p.priceMin/1000000).toFixed(2) + "M" : "—",
+                        p.ppsf ? "AED " + p.ppsf.toLocaleString() + "/sqft" : "—",
+                        p.paymentPlan || "—",
+                        p.grossYield ? p.grossYield.toFixed(1) + "%" : "—",
+                        p.netYield ? p.netYield.toFixed(1) + "%" : "—",
+                        p.serviceCharge ? "AED " + p.serviceCharge + "/sqft/yr" : "—",
+                        score.toString() + " — " + scoreLabel(score),
+                        p.distMetro != null ? p.distMetro + " km" : "—",
+                        p.distDIFC != null ? p.distDIFC + " km" : "—",
+                        p.distBeach != null ? p.distBeach + " km" : "—",
+                        p.distAirport != null ? p.distAirport + " km" : "—",
+                        p.constructionPct != null ? p.constructionPct + "%" : "—",
+                        p.developerScore ? p.developerScore + "/100" : "—",
+                        p.amenities ? p.amenities.length + " amenities" : "—",
                       ];
                       const colors = [
                         null, null, null, null,
@@ -6582,12 +6582,12 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
             </div>
           )}
 
-          {/* \u2550\u2550\u2550 PROJECT DETAIL OVERLAY \u2550\u2550\u2550 */}
+          {/* ═══ PROJECT DETAIL OVERLAY ═══ */}
           {selectedProject && (
             <div role="dialog" aria-modal="true" style={{ position:"fixed", inset:0, background:"rgba(4,9,15,0.97)", zIndex:2000, display:"flex", flexDirection:"column", backdropFilter:"blur(8px)" }}>
               <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"16px 24px", borderBottom:`1px solid ${T.border}`, background:T.surface, flexShrink:0 }}>
                 <div>
-                  <div style={{ fontSize:11, fontWeight:700, color:T.textMuted, letterSpacing:0.8, textTransform:"uppercase", marginBottom:3 }}>{selectedProject.developer}{"\u00B7"}{selectedProject.community}</div>
+                  <div style={{ fontSize:11, fontWeight:700, color:T.textMuted, letterSpacing:0.8, textTransform:"uppercase", marginBottom:3 }}>{selectedProject.developer}{"·"}{selectedProject.community}</div>
                   <div style={{ fontFamily:"'Fraunces',serif", fontSize:22, fontWeight:800, color:T.white }}>{selectedProject.project}</div>
                 </div>
                 <div style={{ display:"flex", alignItems:"center", gap:10 }}>
@@ -6612,8 +6612,8 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                     <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr 1fr", gap:12, marginBottom:20 }}>
                       {[
                         { label:"Investment Score", value:calcScore(selectedProject).toString(), color:(() => { const s=calcScore(selectedProject); return s>=80?T.green:s>=65?T.gold:T.red; })(), sub:scoreLabel(calcScore(selectedProject)) },
-                        { label:"Gross Yield", value:selectedProject.grossYield?selectedProject.grossYield.toFixed(1)+"%":"\u2014", color:T.green, sub:"Annual return estimate" },
-                        { label:"PPSF", value:selectedProject.ppsf?"AED "+selectedProject.ppsf.toLocaleString():"\u2014", color:T.gold, sub:"Price per sqft" },
+                        { label:"Gross Yield", value:selectedProject.grossYield?selectedProject.grossYield.toFixed(1)+"%":"—", color:T.green, sub:"Annual return estimate" },
+                        { label:"PPSF", value:selectedProject.ppsf?"AED "+selectedProject.ppsf.toLocaleString():"—", color:T.gold, sub:"Price per sqft" },
                         { label:"Handover", value:selectedProject.handover||"TBC", color:T.white, sub:"Expected completion" },
                       ].map((kpi,i) => (
                         <div key={i} className="kpi-card">
@@ -6643,7 +6643,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                       <button type="button" onClick={() => { setSelectedProject(null); handleTabChange("My Leads"); }} style={{ padding:"9px 18px", background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:8, color:T.textSecondary, fontSize:12, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>Add to Lead</button>
                       <button type="button" onClick={() => {
                           const score = calcScore(selectedProject);
-                          const units = selectedProject.unitBreakdown?.map(u => `  \u2022 ${u.type}: AED ${(u.ppsf||0).toLocaleString()}/sqft | From AED ${(u.priceMin/1000000).toFixed(2)}M | Yield ${u.grossYield||"\u2014"}%`).join("\n") || "";
+                          const units = selectedProject.unitBreakdown?.map(u => `  • ${u.type}: AED ${(u.ppsf||0).toLocaleString()}/sqft | From AED ${(u.priceMin/1000000).toFixed(2)}M | Yield ${u.grossYield||"—"}%`).join("\n") || "";
                           const dists = [
                             selectedProject.distMetro != null ? `Metro: ${selectedProject.distMetro}km` : null,
                             selectedProject.distDIFC != null ? `DIFC: ${selectedProject.distDIFC}km` : null,
@@ -6651,7 +6651,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                             selectedProject.distSchool != null ? `School: ${selectedProject.distSchool}km` : null,
                           ].filter(Boolean).join(" | ");
                           const txt = [
-                            "\uD83C\uDFD9\uFE0F DXB ANALYTICS \u2014 PROPERTY BRIEF",
+                            "\uD83C\uDFD9\uFE0F DXB ANALYTICS — PROPERTY BRIEF",
                             "\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501",
                             `\uD83D\uDCCC ${selectedProject.project}`,
                             `\uD83C\uDFE2 Developer: ${selectedProject.developer}`,
@@ -6664,17 +6664,17 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                             units ? `\n\uD83D\uDCD0 UNIT BREAKDOWN\n${units}` : "",
                             "",
                             "\uD83D\uDCCA INVESTMENT",
-                            `   Gross Yield: ${selectedProject.grossYield||"\u2014"}%`,
-                            `   Net Yield: ${selectedProject.netYield||"\u2014"}%`,
+                            `   Gross Yield: ${selectedProject.grossYield||"—"}%`,
+                            `   Net Yield: ${selectedProject.netYield||"—"}%`,
                             `   Payment Plan: ${selectedProject.paymentPlan||"TBC"}`,
                             `   Post-Handover: ${selectedProject.postHandover?"Yes":"No"}`,
                             `   Handover: ${selectedProject.handover||"TBC"}`,
-                            `   Investment Score: ${score}/100 \u2014 ${score>=80?"Strong Buy":score>=65?"Buy":"Hold"}`,
+                            `   Investment Score: ${score}/100 — ${score>=80?"Strong Buy":score>=65?"Buy":"Hold"}`,
                             "",
                             "\uD83D\uDCCD DISTANCES",
                             `   ${dists || "See full details"}`,
                             "",
-                            selectedProject.amenities?.length > 0 ? `\u2728 AMENITIES\n   ${selectedProject.amenities.slice(0,6).join(" \u00B7 ")}` : "",
+                            selectedProject.amenities?.length > 0 ? `\u2728 AMENITIES\n   ${selectedProject.amenities.slice(0,6).join(" · ")}` : "",
                             "",
                             `\uD83D\uDD10 RERA: ${selectedProject.reraNo||"TBC"} | Escrow: ${selectedProject.escrowBank||"TBC"}`,
                             "",
@@ -6693,7 +6693,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                     {selectedProject.unitBreakdown?.length > 0 ? (
                       <div className="chart-box" style={{ padding:20, marginBottom:16 }}>
                         <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:16 }}>
-                          <div style={{ fontSize:13, fontWeight:700, color:T.white }}>Unit Breakdown \u2014 Price & PPSF per Type</div>
+                          <div style={{ fontSize:13, fontWeight:700, color:T.white }}>Unit Breakdown — Price & PPSF per Type</div>
                           <span style={{ fontSize:10, padding:"2px 8px", borderRadius:8, background:"rgba(212,168,67,0.1)", color:T.gold }}>Source: {selectedProject.source || "Developer"}</span>
                         </div>
                         {/* Table header */}
@@ -6709,9 +6709,9 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                             <div style={{ fontFamily:"'Fraunces',serif", fontSize:14, fontWeight:700, color:T.gold }}>{u.type}</div>
                             {/* Size range */}
                             <div>
-                              <div style={{ fontSize:12, color:T.white, fontWeight:600 }}>{(u.sizeMin||0).toLocaleString()} \u2013 {(u.sizeMax||0).toLocaleString()}</div>
+                              <div style={{ fontSize:12, color:T.white, fontWeight:600 }}>{(u.sizeMin||0).toLocaleString()} – {(u.sizeMax||0).toLocaleString()}</div>
                               <div style={{ fontSize:10, color:T.textMuted }}>sqft</div>
-                              {u.plotMin && <div style={{ fontSize:10, color:T.textMuted }}>Plot: {u.plotMin.toLocaleString()}\u2013{(u.plotMax||0).toLocaleString()} sqft</div>}
+                              {u.plotMin && <div style={{ fontSize:10, color:T.textMuted }}>Plot: {u.plotMin.toLocaleString()}–{(u.plotMax||0).toLocaleString()} sqft</div>}
                             </div>
                             {/* Price range */}
                             <div>
@@ -6725,11 +6725,11 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                             </div>
                             {/* Yield */}
                             <div style={{ fontSize:13, fontWeight:700, color:u.grossYield>=7?T.green:u.grossYield>=5?T.gold:T.textSecondary }}>
-                              {u.grossYield?u.grossYield.toFixed(1)+"%":"\u2014"}
+                              {u.grossYield?u.grossYield.toFixed(1)+"%":"—"}
                             </div>
                             {/* Available units */}
                             <div style={{ fontSize:13, fontWeight:600, color:u.available<=10?"#EF4444":u.available<=20?T.gold:T.green }}>
-                              {u.available!=null?u.available+" units":"\u2014"}
+                              {u.available!=null?u.available+" units":"—"}
                             </div>
                             {/* Quick actions */}
                             <div style={{ display:"flex", gap:4 }}>
@@ -6743,10 +6743,10 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                             Total available: <span style={{ color:T.white, fontWeight:700 }}>{selectedProject.unitBreakdown.reduce((a,u)=>a+(u.available||0),0)} units</span>
                           </div>
                           <div style={{ fontSize:11, color:T.textMuted }}>
-                            Price range: <span style={{ color:T.gold, fontWeight:700 }}>AED {(Math.min(...selectedProject.unitBreakdown.map(u=>u.priceMin))/1000000).toFixed(2)}M \u2013 AED {(Math.max(...selectedProject.unitBreakdown.map(u=>u.priceMax))/1000000).toFixed(2)}M</span>
+                            Price range: <span style={{ color:T.gold, fontWeight:700 }}>AED {(Math.min(...selectedProject.unitBreakdown.map(u=>u.priceMin))/1000000).toFixed(2)}M – AED {(Math.max(...selectedProject.unitBreakdown.map(u=>u.priceMax))/1000000).toFixed(2)}M</span>
                           </div>
                           <div style={{ fontSize:11, color:T.textMuted }}>
-                            PPSF range: <span style={{ color:T.white, fontWeight:700 }}>AED {Math.min(...selectedProject.unitBreakdown.map(u=>u.ppsf||0)).toLocaleString()} \u2013 AED {Math.max(...selectedProject.unitBreakdown.map(u=>u.ppsf||0)).toLocaleString()}</span>
+                            PPSF range: <span style={{ color:T.white, fontWeight:700 }}>AED {Math.min(...selectedProject.unitBreakdown.map(u=>u.ppsf||0)).toLocaleString()} – AED {Math.max(...selectedProject.unitBreakdown.map(u=>u.ppsf||0)).toLocaleString()}</span>
                           </div>
                           <div style={{ fontSize:11, color:T.textMuted }}>
                             Best yield: <span style={{ color:T.green, fontWeight:700 }}>{Math.max(...selectedProject.unitBreakdown.map(u=>u.grossYield||0)).toFixed(1)}%</span>
@@ -6754,7 +6754,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                         </div>
                       </div>
                     ) : (
-                      /* Fallback \u2014 no unitBreakdown yet */
+                      /* Fallback — no unitBreakdown yet */
                       <div className="chart-box" style={{ padding:20, marginBottom:16 }}>
                         <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:16 }}>Unit Types & Sizes</div>
                         {selectedProject.beds?.length > 0 ? (
@@ -6762,14 +6762,14 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                             {selectedProject.beds.map((bed,i) => (
                               <div key={i} style={{ padding:"14px", background:T.surfaceAlt, borderRadius:10, border:`1px solid ${T.border}` }}>
                                 <div style={{ fontFamily:"'Fraunces',serif", fontSize:18, fontWeight:700, color:T.gold, marginBottom:8 }}>{bed}</div>
-                                <div style={{ fontSize:12, color:T.textSecondary }}>Size: {(selectedProject.sizeMin||0).toLocaleString()} \u2013 {(selectedProject.sizeMax||0).toLocaleString()} sqft</div>
+                                <div style={{ fontSize:12, color:T.textSecondary }}>Size: {(selectedProject.sizeMin||0).toLocaleString()} – {(selectedProject.sizeMax||0).toLocaleString()} sqft</div>
                                 <div style={{ fontSize:12, color:T.textSecondary }}>PPSF: AED {(selectedProject.ppsf||0).toLocaleString()}</div>
                                 {selectedProject.grossYield > 0 && <div style={{ fontSize:12, color:T.green, marginTop:6 }}>Yield: ~{selectedProject.grossYield.toFixed(1)}%</div>}
                               </div>
                             ))}
                           </div>
                         ) : (
-                          <div style={{ fontSize:13, color:T.textSecondary }}>Size: {(selectedProject.sizeMin||0).toLocaleString()} \u2013 {(selectedProject.sizeMax||0).toLocaleString()} sqft \u00B7 PPSF: AED {(selectedProject.ppsf||0).toLocaleString()}</div>
+                          <div style={{ fontSize:13, color:T.textSecondary }}>Size: {(selectedProject.sizeMin||0).toLocaleString()} – {(selectedProject.sizeMax||0).toLocaleString()} sqft · PPSF: AED {(selectedProject.ppsf||0).toLocaleString()}</div>
                         )}
                         <div style={{ marginTop:12, padding:"10px 14px", background:"rgba(212,168,67,0.06)", borderRadius:8, fontSize:11, color:T.textMuted }}>
                           Add unit breakdown from Admin \u2192 Data Manager \u2192 Projects \u2192 Unit Breakdown
@@ -6791,12 +6791,12 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   <div>
                     <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:12, marginBottom:20 }}>
                       {[
-                        { label:"Gross Yield", value:selectedProject.grossYield?selectedProject.grossYield.toFixed(1)+"%":"\u2014", color:T.green, note:"Annual rent / purchase price" },
-                        { label:"Net Yield", value:selectedProject.netYield?selectedProject.netYield.toFixed(1)+"%":"\u2014", color:T.teal, note:"After service charges" },
-                        { label:"Service Charge", value:selectedProject.serviceCharge?"AED "+selectedProject.serviceCharge+"/sqft/yr":"\u2014", color:T.white, note:"Annual RERA rate" },
+                        { label:"Gross Yield", value:selectedProject.grossYield?selectedProject.grossYield.toFixed(1)+"%":"—", color:T.green, note:"Annual rent / purchase price" },
+                        { label:"Net Yield", value:selectedProject.netYield?selectedProject.netYield.toFixed(1)+"%":"—", color:T.teal, note:"After service charges" },
+                        { label:"Service Charge", value:selectedProject.serviceCharge?"AED "+selectedProject.serviceCharge+"/sqft/yr":"—", color:T.white, note:"Annual RERA rate" },
                         { label:"Investment Score", value:calcScore(selectedProject).toString(), color:scoreColor(calcScore(selectedProject)), note:scoreLabel(calcScore(selectedProject)) },
-                        { label:"Developer Score", value:selectedProject.developerScore?selectedProject.developerScore+"/100":"\u2014", color:T.gold, note:"Track record rating" },
-                        { label:"Construction", value:selectedProject.constructionPct!=null?selectedProject.constructionPct+"%":"\u2014", color:T.white, note:"Build progress" },
+                        { label:"Developer Score", value:selectedProject.developerScore?selectedProject.developerScore+"/100":"—", color:T.gold, note:"Track record rating" },
+                        { label:"Construction", value:selectedProject.constructionPct!=null?selectedProject.constructionPct+"%":"—", color:T.white, note:"Build progress" },
                       ].map((item,i) => (
                         <div key={i} className="kpi-card">
                           <div style={{ fontSize:10, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:1, marginBottom:8 }}>{item.label}</div>
@@ -6806,7 +6806,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                       ))}
                     </div>
                     <div className="chart-box" style={{ padding:18 }}>
-                      <div style={{ fontSize:12, fontWeight:700, color:T.white, marginBottom:14 }}>Investment Score Breakdown \u2014 7 Factors</div>
+                      <div style={{ fontSize:12, fontWeight:700, color:T.white, marginBottom:14 }}>Investment Score Breakdown — 7 Factors</div>
                       {[
                         { factor:"Yield vs Market Average", score:selectedProject.grossYield>=7?90:selectedProject.grossYield>=5?70:50, weight:"20%" },
                         { factor:"Location (Metro + DIFC)", score:selectedProject.distMetro<=1?95:selectedProject.distMetro<=3?75:55, weight:"20%" },
@@ -6849,7 +6849,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                           <div key={i} style={{ padding:"12px 14px", background:T.surfaceAlt, borderRadius:10, border:`1px solid ${d.warn&&d.val<=d.warn?"rgba(16,185,129,0.3)":T.border}`, textAlign:"center" }}>
                             <div style={{ fontSize:10, color:T.textMuted, marginBottom:6 }}>{d.label}</div>
                             <div style={{ fontFamily:"'Fraunces',serif", fontSize:18, fontWeight:700, color:d.warn&&d.val!=null&&d.val<=d.warn?T.green:T.white }}>
-                              {d.val!=null ? (d.val<1?(d.val*1000).toFixed(0)+"m":d.val+"km") : "\u2014"}
+                              {d.val!=null ? (d.val<1?(d.val*1000).toFixed(0)+"m":d.val+"km") : "—"}
                             </div>
                             {d.warn && d.val!=null && d.val<=d.warn && <div style={{ fontSize:9, color:T.green, marginTop:2 }}>Excellent</div>}
                           </div>
@@ -6858,9 +6858,9 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                     </div>
                     <div className="chart-box" style={{ padding:18 }}>
                       <div style={{ fontSize:12, color:T.textSecondary, lineHeight:1.8 }}>
-                        <strong style={{ color:T.white }}>Community:</strong> {selectedProject.community} \u00B7 <strong style={{ color:T.white }}>Developer:</strong> {selectedProject.developer}
-                        {selectedProject.reraNo && <>{"\u00B7"}<strong style={{ color:T.gold }}>RERA:</strong> {selectedProject.reraNo}</>}
-                        {selectedProject.escrowBank && <>{"\u00B7"}<strong style={{ color:T.teal }}>Escrow:</strong> {selectedProject.escrowBank}</>}
+                        <strong style={{ color:T.white }}>Community:</strong> {selectedProject.community} · <strong style={{ color:T.white }}>Developer:</strong> {selectedProject.developer}
+                        {selectedProject.reraNo && <>{"·"}<strong style={{ color:T.gold }}>RERA:</strong> {selectedProject.reraNo}</>}
+                        {selectedProject.escrowBank && <>{"·"}<strong style={{ color:T.teal }}>Escrow:</strong> {selectedProject.escrowBank}</>}
                       </div>
                     </div>
                   </div>
@@ -6872,7 +6872,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                       <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:12, marginBottom:16 }}>
                         <div className="kpi-card">
                           <div style={{ fontSize:10, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:1, marginBottom:8 }}>Payment Plan</div>
-                          <div style={{ fontFamily:"'Fraunces',serif", fontSize:28, fontWeight:800, color:T.gold }}>{selectedProject.paymentPlan||"\u2014"}</div>
+                          <div style={{ fontFamily:"'Fraunces',serif", fontSize:28, fontWeight:800, color:T.gold }}>{selectedProject.paymentPlan||"—"}</div>
                         </div>
                         <div className="kpi-card">
                           <div style={{ fontSize:10, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:1, marginBottom:8 }}>Post Handover</div>
@@ -6880,7 +6880,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                         </div>
                         <div className="kpi-card">
                           <div style={{ fontSize:10, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:1, marginBottom:8 }}>Escrow Bank</div>
-                          <div style={{ fontSize:16, fontWeight:700, color:T.teal }}>{selectedProject.escrowBank||"\u2014"}</div>
+                          <div style={{ fontSize:16, fontWeight:700, color:T.teal }}>{selectedProject.escrowBank||"—"}</div>
                         </div>
                       </div>
                       {selectedProject.paymentPlan && selectedProject.paymentPlan.includes("/") && !selectedProject.paymentPlan.includes("Cash") && (
@@ -6909,7 +6909,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 {projDetailTab === "dld" && (
                   <div className="chart-box" style={{ padding:20 }}>
                     <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:6 }}>DLD Transaction History</div>
-                    <div style={{ fontSize:12, color:T.textMuted, marginBottom:20 }}>Community: {selectedProject.community}{"\u00B7"}{selectedProject.type}</div>
+                    <div style={{ fontSize:12, color:T.textMuted, marginBottom:20 }}>Community: {selectedProject.community}{"·"}{selectedProject.type}</div>
                     <div style={{ padding:"40px 24px", textAlign:"center", background:T.surfaceAlt, borderRadius:10 }}>
                       {SvgIcons.Database({ width:32, height:32, style:{ color:T.textMuted, marginBottom:12, display:"inline-block" } })}
                       <div style={{ fontSize:14, fontWeight:700, color:T.white, marginBottom:8 }}>DLD transaction data syncs daily</div>
@@ -6929,11 +6929,11 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                         </div>
                         <div className="kpi-card">
                           <div style={{ fontSize:10, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:1, marginBottom:8 }}>Health Score</div>
-                          <div style={{ fontFamily:"'Fraunces',serif", fontSize:28, fontWeight:800, color:scoreColor(selectedProject.developerScore||75) }}>{selectedProject.developerScore||"\u2014"}</div>
+                          <div style={{ fontFamily:"'Fraunces',serif", fontSize:28, fontWeight:800, color:scoreColor(selectedProject.developerScore||75) }}>{selectedProject.developerScore||"—"}</div>
                         </div>
                         <div className="kpi-card">
                           <div style={{ fontSize:10, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:1, marginBottom:8 }}>RERA No</div>
-                          <div style={{ fontSize:14, fontWeight:700, color:T.teal }}>{selectedProject.reraNo||"\u2014"}</div>
+                          <div style={{ fontSize:14, fontWeight:700, color:T.teal }}>{selectedProject.reraNo||"—"}</div>
                         </div>
                       </div>
                       <button type="button" onClick={() => { setSelectedProject(null); handleTabChange("Developer Health"); }} style={{ padding:"8px 18px", background:"rgba(212,168,67,0.1)", border:`1px solid ${T.border}`, borderRadius:8, color:T.gold, fontSize:12, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>Full Developer Profile \u2192</button>
@@ -6945,7 +6945,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
           )}
 
 
-          {/* \u2500\u2500\u2500 MAP TAB \u2500\u2500\u2500 */}
+          {/* ─── MAP TAB ─── */}
           {tab === "Map" && (
             <CommunityMapTab
               activeProjects={liveProjects?.length > 0 ? liveProjects : SEED_PROJECTS}
@@ -6956,18 +6956,18 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
           )}
 
 
-          {/* \u2500\u2500\u2500 HANDOVER TAB \u2500\u2500\u2500 */}
+          {/* ─── HANDOVER TAB ─── */}
           {tab === "Handover" && (() => {
 
-            /* \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
-               SEED DATA \u2014 Research-based
+            /* ══════════════════════════════
+               SEED DATA — Research-based
                Source: DLD, RERA, Developer portals
                48% on-time rate for 2026 (prelaunch.ae)
                Grace period: 6-12 months post SPA date
-            \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 */
+            ══════════════════════════════ */
             const SEED_HANDOVER = [
               {
-                id:"h001", project:"Golf Grand \u2014 Phase 2", developer:"Emaar", community:"Dubai Hills Estate",
+                id:"h001", project:"Golf Grand — Phase 2", developer:"Emaar", community:"Dubai Hills Estate",
                 reraNo:"0991234567", escrowBank:"Emirates NBD",
                 contractedHandover:"2027-12-31", expectedHandover:"2027-12-31",
                 constructionPct:15, milestonesCurrent:"Foundation Complete",
@@ -6991,7 +6991,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 isSeedData:true, source:"Emaar IR / RERA Apr 2026"
               },
               {
-                id:"h002", project:"Lagoons \u2014 Azure Beach", developer:"DAMAC Properties", community:"DAMAC Lagoons",
+                id:"h002", project:"Lagoons — Azure Beach", developer:"DAMAC Properties", community:"DAMAC Lagoons",
                 reraNo:"0882345678", escrowBank:"Dubai Islamic Bank",
                 contractedHandover:"2027-06-30", expectedHandover:"2027-09-30",
                 constructionPct:35, milestonesCurrent:"Structural Framework",
@@ -7015,7 +7015,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 isSeedData:true, source:"DAMAC IR / RERA Apr 2026"
               },
               {
-                id:"h003", project:"Hartland II \u2014 Skyvista", developer:"Sobha Realty", community:"Sobha Hartland",
+                id:"h003", project:"Hartland II — Skyvista", developer:"Sobha Realty", community:"Sobha Hartland",
                 reraNo:"0773456789", escrowBank:"Mashreq Bank",
                 contractedHandover:"2027-09-30", expectedHandover:"2027-09-30",
                 constructionPct:28, milestonesCurrent:"Foundation Complete",
@@ -7039,7 +7039,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 isSeedData:true, source:"Sobha Realty IR / RERA Apr 2026"
               },
               {
-                id:"h004", project:"Skyrise \u2014 Business Bay", developer:"Binghatti", community:"Business Bay",
+                id:"h004", project:"Skyrise — Business Bay", developer:"Binghatti", community:"Business Bay",
                 reraNo:"0664567890", escrowBank:"ADCB",
                 contractedHandover:"2027-03-31", expectedHandover:"2027-06-30",
                 constructionPct:55, milestonesCurrent:"MEP Works",
@@ -7073,7 +7073,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 totalUnits:168, handedOver:0, unitType:"Apartment",
                 escrowPct:82, inspectionsPassed:14, inspectionsFailed:0,
                 developerScore:86, developerOnTimeRate:88,
-                lastSiteVisit:"2026-04-02", reraStatus:"Active \u2014 Handing Over Q2 2026",
+                lastSiteVisit:"2026-04-02", reraStatus:"Active — Handing Over Q2 2026",
                 milestones:[
                   { name:"Land Acquisition", pct:0,   date:"2022-06-01", done:true  },
                   { name:"RERA Approval",    pct:0,   date:"2022-09-01", done:true  },
@@ -7087,7 +7087,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 isSeedData:true, source:"Ellington IR / RERA Apr 2026"
               },
               {
-                id:"h006", project:"The Oasis \u2014 Phase 11", developer:"Emaar", community:"The Oasis",
+                id:"h006", project:"The Oasis — Phase 11", developer:"Emaar", community:"The Oasis",
                 reraNo:"0446789012", escrowBank:"Emirates NBD",
                 contractedHandover:"2029-06-30", expectedHandover:"2029-06-30",
                 constructionPct:8, milestonesCurrent:"Excavation",
@@ -7111,7 +7111,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 isSeedData:true, source:"Emaar IR / RERA Apr 2026"
               },
               {
-                id:"h007", project:"Dubai Islands \u2014 Cluster B", developer:"Nakheel", community:"Dubai Islands",
+                id:"h007", project:"Dubai Islands — Cluster B", developer:"Nakheel", community:"Dubai Islands",
                 reraNo:"0228901234", escrowBank:"Nakheel Escrow / DIB",
                 contractedHandover:"2027-12-31", expectedHandover:"2028-03-31",
                 constructionPct:22, milestonesCurrent:"Foundation Complete",
@@ -7145,7 +7145,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 totalUnits:89, handedOver:0, unitType:"Villa",
                 escrowPct:65, inspectionsPassed:11, inspectionsFailed:0,
                 developerScore:89, developerOnTimeRate:87,
-                lastSiteVisit:"2026-03-30", reraStatus:"Sold Out \u2014 On Track",
+                lastSiteVisit:"2026-03-30", reraStatus:"Sold Out — On Track",
                 milestones:[
                   { name:"Land Acquisition", pct:0,   date:"2022-09-01", done:true  },
                   { name:"RERA Approval",    pct:0,   date:"2023-01-01", done:true  },
@@ -7160,7 +7160,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               },
             ];
 
-            /* \u2550\u2550 HELPERS \u2550\u2550 */
+            /* ══ HELPERS ══ */
             const rawHandover = liveHandover?.length > 0 ? liveHandover : SEED_HANDOVER;
 
             const today = new Date();
@@ -7194,7 +7194,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               backgroundRepeat:"no-repeat", backgroundPosition:"right 8px center",
             };
 
-            /* \u2550\u2550 KPIs \u2550\u2550 */
+            /* ══ KPIs ══ */
             const onTrack   = rawHandover.filter(p => p.status === "On Track").length;
             const delayed   = rawHandover.filter(p => p.status === "Delayed").length;
             const atRisk    = rawHandover.filter(p => p.status === "At Risk").length;
@@ -7203,7 +7203,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
             const due30     = rawHandover.filter(p => daysTo(p.expectedHandover) <= 30 && daysTo(p.expectedHandover) > 0).length;
             const avgPct    = rawHandover.length > 0 ? Math.round(rawHandover.reduce((a,p) => a + p.constructionPct, 0) / rawHandover.length) : 0;
 
-            /* \u2550\u2550 PROJECT CARD \u2550\u2550 */
+            /* ══ PROJECT CARD ══ */
             const HandoverCard = ({ p }) => {
               const cfg = statusCfg[p.status] || statusCfg["On Track"];
               const risk = riskCfg[p.delayRisk] || riskCfg["Low"];
@@ -7222,7 +7222,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   <div style={{ padding:"14px 16px", borderBottom:`1px solid ${T.border}`, background:p.status==="At Risk"?"rgba(239,68,68,0.03)":p.status==="Delayed"?"rgba(249,115,22,0.03)":"transparent" }}>
                     <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:8 }}>
                       <div style={{ flex:1 }}>
-                        <div style={{ fontSize:10, fontWeight:700, color:T.textMuted, letterSpacing:0.8, textTransform:"uppercase", marginBottom:3 }}>{p.developer}{"\u00B7"}{p.community}</div>
+                        <div style={{ fontSize:10, fontWeight:700, color:T.textMuted, letterSpacing:0.8, textTransform:"uppercase", marginBottom:3 }}>{p.developer}{"·"}{p.community}</div>
                         <div style={{ fontFamily:"'Fraunces',serif", fontSize:15, fontWeight:700, color:T.white, marginBottom:6 }}>{p.project}</div>
                         <div style={{ display:"flex", gap:6, flexWrap:"wrap", alignItems:"center" }}>
                           <span style={{ fontSize:10, fontWeight:700, padding:"2px 8px", borderRadius:10, background:cfg.bg, color:cfg.color }}>{cfg.label}</span>
@@ -7270,10 +7270,10 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   {(d <= 90 || p.status === "At Risk" || p.status === "Delayed") && (
                     <div style={{ padding:"8px 16px", background:d<=30?"rgba(239,68,68,0.08)":d<=90?"rgba(249,115,22,0.06)":"rgba(249,115,22,0.04)", borderBottom:`1px solid ${T.border}`, display:"flex", alignItems:"center", gap:8 }}>
                       <span style={{ fontSize:9, fontWeight:700, color:d<=30?T.red:d<=90?"#F97316":T.gold, letterSpacing:0.6, textTransform:"uppercase" }}>
-                        {d<=30?"\u26A0 30-Day Alert":d<=60?"\u26A0 60-Day Alert":d<=90?"\u26A0 90-Day Alert":p.status==="Delayed"?"Delayed "+p.delayMonths+"mo \u00B7 Grace period "+p.gracePeriodMonths+"mo":"At Risk of Delay"}
+                        {d<=30?"\u26A0 30-Day Alert":d<=60?"\u26A0 60-Day Alert":d<=90?"\u26A0 90-Day Alert":p.status==="Delayed"?"Delayed "+p.delayMonths+"mo · Grace period "+p.gracePeriodMonths+"mo":"At Risk of Delay"}
                       </span>
                       <span style={{ fontSize:10, color:T.textMuted }}>
-                        {p.status==="At Risk"||p.status==="Delayed" ? "Developer on-time rate: "+p.developerOnTimeRate+"% \u00B7 Escrow funded: "+p.escrowPct+"%" : "Prepare client handover docs"}
+                        {p.status==="At Risk"||p.status==="Delayed" ? "Developer on-time rate: "+p.developerOnTimeRate+"% · Escrow funded: "+p.escrowPct+"%" : "Prepare client handover docs"}
                       </span>
                     </div>
                   )}
@@ -7297,11 +7297,11 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
             return (
               <div style={{ animation:"fadeUp 0.4s ease-out forwards" }}>
 
-                {/* \u2500\u2500 Header \u2500\u2500 */}
+                {/* ── Header ── */}
                 <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"10px 0", marginBottom:16, borderBottom:`1px solid ${T.border}`, flexWrap:"wrap", gap:8 }}>
                   <div>
                     <div style={{ fontFamily:"'Fraunces',serif", fontSize:20, fontWeight:800, color:T.white }}>Handover Intelligence</div>
-                    <div style={{ fontSize:11, color:T.textMuted, marginTop:3 }}>Construction progress \u00B7 Delay risk \u00B7 90/60/30 alerts \u00B7 RERA status \u00B7 Buyer rights</div>
+                    <div style={{ fontSize:11, color:T.textMuted, marginTop:3 }}>Construction progress · Delay risk · 90/60/30 alerts · RERA status · Buyer rights</div>
                   </div>
                   <div style={{ display:"flex", gap:8 }}>
                     {["cards","table"].map(v => (
@@ -7313,7 +7313,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   </div>
                 </div>
 
-                {/* \u2500\u2500 Alert Banner \u2014 30/60/90 day summary \u2500\u2500 */}
+                {/* ── Alert Banner — 30/60/90 day summary ── */}
                 {(due30 > 0 || due60 > 0 || due90 > 0) && (
                   <div style={{ display:"flex", gap:10, marginBottom:16, flexWrap:"wrap" }}>
                     {due30 > 0 && <div style={{ flex:1, minWidth:160, padding:"10px 16px", background:"rgba(239,68,68,0.08)", border:"1px solid rgba(239,68,68,0.3)", borderRadius:10, display:"flex", alignItems:"center", gap:10 }}>
@@ -7332,7 +7332,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 )}
 
                 
-              {/* \u2500\u2500 KPI Cards \u2500\u2500 */}
+              {/* ── KPI Cards ── */}
                 <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(150px,1fr))", gap:10, marginBottom:20 }}>
                   {[
                     { label:"Total Projects",   value:rawHandover.length,  color:T.white   },
@@ -7349,7 +7349,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   ))}
                 </div>
 
-              {/* \u2500\u2500 Filters \u2500\u2500 */}
+              {/* ── Filters ── */}
                 <div style={{ background:T.surface, border:`1px solid ${T.border}`, borderRadius:10, padding:"12px 14px", marginBottom:16 }}>
                   <div style={{ display:"flex", gap:8, flexWrap:"wrap", alignItems:"center" }}>
                     <div style={{ position:"relative", flex:"0 0 200px" }}>
@@ -7376,22 +7376,22 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   </div>
                 </div>
 
-                {/* \u2500\u2500 Seed notice \u2500\u2500 */}
+                {/* ── Seed notice ── */}
                 {!liveHandover?.length && (
                   <div style={{ display:"flex", alignItems:"center", gap:8, padding:"8px 14px", borderRadius:8, background:"rgba(212,168,67,0.06)", border:`1px solid rgba(212,168,67,0.2)`, marginBottom:16 }}>
                     <span style={{ width:6, height:6, borderRadius:"50%", background:T.gold, display:"inline-block" }} />
-                    <span style={{ fontSize:11, color:T.textMuted }}><span style={{ color:T.gold, fontWeight:700 }}>Research-based seed data</span> \u2014 DLD, RERA, Developer IR reports Apr 2026 \u00B7 Add real data via Admin \u2192 Data Manager \u2192 Handover</span>
+                    <span style={{ fontSize:11, color:T.textMuted }}><span style={{ color:T.gold, fontWeight:700 }}>Research-based seed data</span> — DLD, RERA, Developer IR reports Apr 2026 · Add real data via Admin \u2192 Data Manager \u2192 Handover</span>
                   </div>
                 )}
 
-                {/* \u2500\u2500 Cards Grid \u2500\u2500 */}
+                {/* ── Cards Grid ── */}
                 {hvView === "cards" && filtered.length > 0 && (
                   <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(360px,1fr))", gap:16, marginBottom:20 }}>
                     {filtered.map((p,i) => <HandoverCard key={p.id||i} p={p} />)}
                   </div>
                 )}
 
-                {/* \u2500\u2500 Table View \u2500\u2500 */}
+                {/* ── Table View ── */}
                 {hvView === "table" && filtered.length > 0 && (
                   <div style={{ background:T.surface, border:`1px solid ${T.border}`, borderRadius:12, overflow:"hidden", marginBottom:20 }}>
                     <div style={{ display:"grid", gridTemplateColumns:"2fr 1fr 1fr 1fr 1fr 1fr 1fr", padding:"10px 16px", background:T.surfaceAlt, borderBottom:`1px solid ${T.border}` }}>
@@ -7408,7 +7408,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                           onMouseLeave={e => e.currentTarget.style.background="transparent"}>
                           <div>
                             <div style={{ fontSize:13, fontWeight:600, color:T.white }}>{p.project}</div>
-                            <div style={{ fontSize:11, color:T.textMuted }}>{p.unitType}{"\u00B7"}{p.totalUnits} units</div>
+                            <div style={{ fontSize:11, color:T.textMuted }}>{p.unitType}{"·"}{p.totalUnits} units</div>
                           </div>
                           <div style={{ fontSize:12, color:T.textSecondary }}>{p.developer}</div>
                           <div><span style={{ fontSize:10, padding:"2px 8px", borderRadius:8, background:cfg.bg, color:cfg.color, fontWeight:700 }}>{p.status}</span></div>
@@ -7427,7 +7427,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   </div>
                 )}
 
-                {/* \u2500\u2500 Empty state \u2500\u2500 */}
+                {/* ── Empty state ── */}
                 {filtered.length === 0 && (
                   <div style={{ textAlign:"center", padding:"60px 24px", background:"rgba(212,168,67,0.03)", borderRadius:12, border:`1px solid ${T.border}` }}>
                     <div style={{ fontSize:15, fontWeight:700, color:T.white, marginBottom:8 }}>No projects match your filters</div>
@@ -7435,10 +7435,10 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   </div>
                 )}
 
-                {/* \u2500\u2500 Developer On-Time Leaderboard \u2500\u2500 */}
+                {/* ── Developer On-Time Leaderboard ── */}
                 <div className="chart-box" style={{ padding:20, marginBottom:16 }}>
                   <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:4 }}>Developer On-Time Delivery Rate</div>
-                  <div style={{ fontSize:11, color:T.textMuted, marginBottom:16 }}>Based on historical RERA data \u00B7 48% industry average for 2026 handovers (prelaunch.ae)</div>
+                  <div style={{ fontSize:11, color:T.textMuted, marginBottom:16 }}>Based on historical RERA data · 48% industry average for 2026 handovers (prelaunch.ae)</div>
                   <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(200px,1fr))", gap:10 }}>
                     {[
                       { dev:"Sobha Realty",        rate:91, color:T.green   },
@@ -7463,13 +7463,13 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   </div>
                 </div>
 
-                {/* \u2500\u2500 Buyer Rights box \u2500\u2500 */}
+                {/* ── Buyer Rights box ── */}
                 <div className="chart-box" style={{ padding:18, marginBottom:16, border:`1px solid rgba(20,184,166,0.2)` }}>
-                  <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:12 }}>Know Your Rights \u2014 Off-Plan Buyer Protection</div>
+                  <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:12 }}>Know Your Rights — Off-Plan Buyer Protection</div>
                   <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(260px,1fr))", gap:10 }}>
                     {[
                       { icon:"\uD83D\uDD10", title:"Escrow Protection", desc:"All payments held in DLD-registered escrow. Developer cannot withdraw until RERA verifies each milestone (Law 8 of 2007)." },
-                      { icon:"\u23F1", title:"Grace Period", desc:"Developer allowed 6\u201312 months grace after contractual handover date before legal action is possible. Check your SPA." },
+                      { icon:"\u23F1", title:"Grace Period", desc:"Developer allowed 6–12 months grace after contractual handover date before legal action is possible. Check your SPA." },
                       { icon:"\uD83D\uDCB0", title:"Delay Compensation", desc:"SPA penalty clauses typically specify ~1% monthly interest on purchase price for delays beyond grace period." },
                       { icon:"\uD83D\uDCCB", title:"RERA Complaint", desc:"File dispute via RERA portal if developer misses grace period. Dubai Real Estate Court handles property disputes." },
                     ].map((r,i) => (
@@ -7482,7 +7482,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   </div>
                 </div>
 
-                {/* \u2500\u2500 Sources \u2500\u2500 */}
+                {/* ── Sources ── */}
                 <div style={{ paddingTop:12, borderTop:`1px solid ${T.border}`, display:"flex", gap:8, flexWrap:"wrap", alignItems:"center" }}>
                   <span style={{ fontSize:10, color:T.textMuted }}>Sources:</span>
                   {["RERA Project Registry","DLD Open Data","Developer IR Reports","UAE Law 8 of 2007","prelaunch.ae 2026"].map((s,i) => (
@@ -7495,13 +7495,13 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
           })()}
 
 
-          {/* \u2550\u2550\u2550 HANDOVER DETAIL OVERLAY \u2550\u2550\u2550 */}
+          {/* ═══ HANDOVER DETAIL OVERLAY ═══ */}
           {hvSelected && (
             <div role="dialog" aria-modal="true" style={{ position:"fixed", inset:0, background:"rgba(4,9,15,0.97)", zIndex:2000, display:"flex", flexDirection:"column", backdropFilter:"blur(8px)" }}>
               {/* Header */}
               <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"16px 24px", borderBottom:`1px solid ${T.border}`, background:T.surface, flexShrink:0 }}>
                 <div>
-                  <div style={{ fontSize:11, fontWeight:700, color:T.textMuted, letterSpacing:0.8, textTransform:"uppercase", marginBottom:3 }}>{hvSelected.developer}{"\u00B7"}{hvSelected.community}</div>
+                  <div style={{ fontSize:11, fontWeight:700, color:T.textMuted, letterSpacing:0.8, textTransform:"uppercase", marginBottom:3 }}>{hvSelected.developer}{"·"}{hvSelected.community}</div>
                   <div style={{ fontFamily:"'Fraunces',serif", fontSize:22, fontWeight:800, color:T.white }}>{hvSelected.project}</div>
                 </div>
                 <div style={{ display:"flex", alignItems:"center", gap:10 }}>
@@ -7537,7 +7537,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 {/* Milestone Gantt Timeline */}
                 <div className="chart-box" style={{ padding:20, marginBottom:20 }}>
                   <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:4 }}>Construction Milestone Timeline</div>
-                  <div style={{ fontSize:11, color:T.textMuted, marginBottom:20 }}>RERA-verified progress \u00B7 Each milestone unlocks escrow disbursement</div>
+                  <div style={{ fontSize:11, color:T.textMuted, marginBottom:20 }}>RERA-verified progress · Each milestone unlocks escrow disbursement</div>
                   
                   {/* Timeline */}
                   <div style={{ position:"relative" }}>
@@ -7573,7 +7573,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                             {/* Escrow release indicator */}
                             {m.pct > 0 && (
                               <div style={{ display:"inline-flex", alignItems:"center", gap:4, padding:"2px 8px", borderRadius:6, background:isPast?"rgba(16,185,129,0.1)":"rgba(212,168,67,0.06)", border:`1px solid ${isPast?"rgba(16,185,129,0.3)":"rgba(212,168,67,0.15)"}` }}>
-                                <span style={{ fontSize:9, color:isPast?T.green:T.textMuted }}>Escrow release at {m.pct}% \u00B7 {isPast?"\u2713 Released":"Pending"}</span>
+                                <span style={{ fontSize:9, color:isPast?T.green:T.textMuted }}>Escrow release at {m.pct}% · {isPast?"\u2713 Released":"Pending"}</span>
                               </div>
                             )}
                           </div>
@@ -7591,11 +7591,11 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                       { label:"RERA Number",     value:hvSelected.reraNo },
                       { label:"Escrow Bank",      value:hvSelected.escrowBank },
                       { label:"RERA Status",      value:hvSelected.reraStatus },
-                      { label:"Last Site Visit",  value:hvSelected.lastSiteVisit ? new Date(hvSelected.lastSiteVisit).toLocaleDateString("en-GB") : "\u2014" },
+                      { label:"Last Site Visit",  value:hvSelected.lastSiteVisit ? new Date(hvSelected.lastSiteVisit).toLocaleDateString("en-GB") : "—" },
                     ].map((r,i) => (
                       <div key={i} style={{ display:"flex", justifyContent:"space-between", padding:"6px 0", borderBottom:i<3?`1px solid ${T.border}`:"none" }}>
                         <span style={{ fontSize:11, color:T.textMuted }}>{r.label}</span>
-                        <span style={{ fontSize:11, fontWeight:600, color:T.white }}>{r.value||"\u2014"}</span>
+                        <span style={{ fontSize:11, fontWeight:600, color:T.white }}>{r.value||"—"}</span>
                       </div>
                     ))}
                   </div>
@@ -7619,7 +7619,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   <button type="button" onClick={() => { setHvSelected(null); handleTabChange("Projects"); }} style={{ padding:"9px 18px", background:`linear-gradient(135deg,${T.gold},#B8922A)`, border:"none", borderRadius:8, color:"#000", fontSize:12, fontWeight:700, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>View Full Project \u2192</button>
                   <button type="button" onClick={() => { setHvSelected(null); handleTabChange("My Leads"); }} style={{ padding:"9px 18px", background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:8, color:T.textSecondary, fontSize:12, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>Add to Lead</button>
                   <button type="button" onClick={() => {
-                    const txt = `\uD83C\uDFD7\uFE0F HANDOVER UPDATE \u2014 ${hvSelected.project}\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\uD83C\uDFE2 Developer: ${hvSelected.developer}\n\uD83D\uDCCD Community: ${hvSelected.community}\n\n\uD83D\uDCCA CONSTRUCTION STATUS\n   Progress: ${hvSelected.constructionPct}% complete\n   Status: ${hvSelected.status}\n   Current Stage: ${hvSelected.milestonesCurrent}\n   Next Milestone: ${hvSelected.milestonesNext}\n\n\uD83D\uDCC5 HANDOVER DATES\n   Contracted: ${new Date(hvSelected.contractedHandover).toLocaleDateString("en-GB",{month:"long",year:"numeric"})}\n   Expected: ${new Date(hvSelected.expectedHandover).toLocaleDateString("en-GB",{month:"long",year:"numeric"})}\n   Delay: ${hvSelected.delayMonths>0?"+"+hvSelected.delayMonths+" months":"None"}\n\n\uD83D\uDD10 REGULATORY\n   RERA: ${hvSelected.reraNo}\n   Escrow Bank: ${hvSelected.escrowBank}\n   Status: ${hvSelected.reraStatus}\n\nPowered by DXB Analytics Intelligence Platform\nemaar-dashboard.vercel.app`;
+                    const txt = `\uD83C\uDFD7\uFE0F HANDOVER UPDATE — ${hvSelected.project}\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\uD83C\uDFE2 Developer: ${hvSelected.developer}\n\uD83D\uDCCD Community: ${hvSelected.community}\n\n\uD83D\uDCCA CONSTRUCTION STATUS\n   Progress: ${hvSelected.constructionPct}% complete\n   Status: ${hvSelected.status}\n   Current Stage: ${hvSelected.milestonesCurrent}\n   Next Milestone: ${hvSelected.milestonesNext}\n\n\uD83D\uDCC5 HANDOVER DATES\n   Contracted: ${new Date(hvSelected.contractedHandover).toLocaleDateString("en-GB",{month:"long",year:"numeric"})}\n   Expected: ${new Date(hvSelected.expectedHandover).toLocaleDateString("en-GB",{month:"long",year:"numeric"})}\n   Delay: ${hvSelected.delayMonths>0?"+"+hvSelected.delayMonths+" months":"None"}\n\n\uD83D\uDD10 REGULATORY\n   RERA: ${hvSelected.reraNo}\n   Escrow Bank: ${hvSelected.escrowBank}\n   Status: ${hvSelected.reraStatus}\n\nPowered by DXB Analytics Intelligence Platform\nemaar-dashboard.vercel.app`;
                     window.open(`https://wa.me/?text=${encodeURIComponent(txt)}`,"_blank");
                   }} style={{ padding:"9px 18px", background:"rgba(37,211,102,0.1)", border:"1px solid rgba(37,211,102,0.3)", borderRadius:8, color:"#25D366", fontSize:12, fontWeight:600, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>
                     Share Update
@@ -7629,21 +7629,21 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
             </div>
           )}
 
-          {/* \u2500\u2500\u2500 HANDOVER TAB \u2500\u2500\u2500 */}
+          {/* ─── HANDOVER TAB ─── */}
           {tab === "Handover" && (() => {
 
-            /* \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
-               SEED DATA \u2014 Research-based handover projects
+            /* ══════════════════════════════════════════════════════
+               SEED DATA — Research-based handover projects
                Sources:
                - prelaunch.ae Dec 2025: 48% on-time rate, 45K units 2026
                - RERA ORDS project database Apr 2026
                - Developer IR reports Q4 2025
                - Dubai REST app construction milestone data
                - uaeexperthub.com handover delays guide Mar 2026
-            \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 */
+            ══════════════════════════════════════════════════════ */
             const SEED_HANDOVER = [
               {
-                id:"h001", project:"Golf Grand \u2014 Phase 2", developer:"Emaar",
+                id:"h001", project:"Golf Grand — Phase 2", developer:"Emaar",
                 community:"Dubai Hills Estate", type:"Apartment",
                 contractedDate:"2027-12-31", expectedDate:"2027-12-31",
                 reraDate:"2027-12-31", constructionPct:15,
@@ -7666,7 +7666,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 isSeedData:true, source:"RERA ORDS / Emaar IR Q4 2025"
               },
               {
-                id:"h002", project:"Lagoons \u2014 Azure Beach", developer:"DAMAC Properties",
+                id:"h002", project:"Lagoons — Azure Beach", developer:"DAMAC Properties",
                 community:"DAMAC Lagoons", type:"Apartment",
                 contractedDate:"2027-06-30", expectedDate:"2027-09-30",
                 reraDate:"2027-06-30", constructionPct:35,
@@ -7689,7 +7689,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 isSeedData:true, source:"RERA ORDS / prelaunch.ae Dec 2025"
               },
               {
-                id:"h003", project:"Hartland II \u2014 Skyvista", developer:"Sobha Realty",
+                id:"h003", project:"Hartland II — Skyvista", developer:"Sobha Realty",
                 community:"Sobha Hartland", type:"Apartment",
                 contractedDate:"2027-09-30", expectedDate:"2027-09-30",
                 reraDate:"2027-09-30", constructionPct:28,
@@ -7712,7 +7712,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 isSeedData:true, source:"RERA ORDS / Sobha IR Q4 2025"
               },
               {
-                id:"h004", project:"Skyrise \u2014 Business Bay", developer:"Binghatti",
+                id:"h004", project:"Skyrise — Business Bay", developer:"Binghatti",
                 community:"Business Bay", type:"Apartment",
                 contractedDate:"2027-03-31", expectedDate:"2027-03-31",
                 reraDate:"2027-03-31", constructionPct:55,
@@ -7758,7 +7758,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 isSeedData:true, source:"RERA ORDS / Ellington portal Apr 2026"
               },
               {
-                id:"h006", project:"The Oasis \u2014 Phase 11", developer:"Emaar",
+                id:"h006", project:"The Oasis — Phase 11", developer:"Emaar",
                 community:"The Oasis", type:"Villa",
                 contractedDate:"2029-06-30", expectedDate:"2029-06-30",
                 reraDate:"2029-06-30", constructionPct:8,
@@ -7781,7 +7781,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 isSeedData:true, source:"RERA ORDS / Emaar IR Q4 2025"
               },
               {
-                id:"h007", project:"Dubai Islands \u2014 Cluster B", developer:"Nakheel",
+                id:"h007", project:"Dubai Islands — Cluster B", developer:"Nakheel",
                 community:"Dubai Islands", type:"Townhouse",
                 contractedDate:"2027-12-31", expectedDate:"2028-03-31",
                 reraDate:"2027-12-31", constructionPct:22,
@@ -7828,10 +7828,10 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               },
             ];
 
-            /* \u2550\u2550 DERIVED DATA \u2550\u2550 */
+            /* ══ DERIVED DATA ══ */
             const rawHandover = liveHandover?.length > 0 ? liveHandover : SEED_HANDOVER;
 
-            /* \u2550\u2550 MARKET STATS \u2550\u2550 */
+            /* ══ MARKET STATS ══ */
             const MARKET_STATS = {
               total2026Units: 45000,
               onTimeRate: 48,
@@ -7843,12 +7843,12 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               penaltyRate: 1,
             };
 
-            /* \u2550\u2550 RISK CONFIG \u2550\u2550 */
-            /* riskCfg \u2014 defined at top level */
+            /* ══ RISK CONFIG ══ */
+            /* riskCfg — defined at top level */
 
-            /* risk config \u2014 use riskCfg at top level */
+            /* risk config — use riskCfg at top level */
 
-            /* \u2550\u2550 FILTERS \u2550\u2550 */
+            /* ══ FILTERS ══ */
             const devOptions = ["All", ...new Set(rawHandover.map(p => p.developer))];
             const commOptions = ["All", ...new Set(rawHandover.map(p => p.community))];
 
@@ -7861,7 +7861,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               return true;
             });
 
-            /* \u2550\u2550 UPCOMING ALERTS \u2550\u2550 */
+            /* ══ UPCOMING ALERTS ══ */
             const today = new Date();
             const alerts = rawHandover.filter(p => {
               if (p.status === "Near Handover" || p.status === "Minor Delay") return true;
@@ -7870,7 +7870,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               return daysLeft <= 90;
             }).sort((a,b) => new Date(a.expectedDate) - new Date(b.expectedDate));
 
-            /* \u2550\u2550 COUNTDOWN HELPER \u2550\u2550 */
+            /* ══ COUNTDOWN HELPER ══ */
             const getDaysLeft = (dateStr) => {
               const d = new Date(dateStr);
               const days = Math.ceil((d - today) / (1000*60*60*24));
@@ -7882,7 +7882,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               return { days: months, label: "months to handover", color: T.textSecondary };
             };
 
-            /* \u2550\u2550 SUMMARY KPIs \u2550\u2550 */
+            /* ══ SUMMARY KPIs ══ */
             const onTrackCount = rawHandover.filter(p => p.status === "On Track" || p.status === "Near Handover").length;
             const delayedCount = rawHandover.filter(p => p.status === "Minor Delay" || p.status === "Major Delay").length;
             const avgProgress = Math.round(rawHandover.reduce((a,p) => a+(p.constructionPct||0),0)/rawHandover.length);
@@ -7899,11 +7899,11 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
             return (
               <div style={{ animation:"fadeUp 0.4s ease-out forwards" }}>
 
-                {/* \u2500\u2500 Header \u2500\u2500 */}
+                {/* ── Header ── */}
                 <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"10px 0", marginBottom:16, borderBottom:`1px solid ${T.border}`, flexWrap:"wrap", gap:8 }}>
                   <div>
                     <div style={{ fontFamily:"'Fraunces',serif", fontSize:20, fontWeight:800, color:T.white }}>Handover Intelligence</div>
-                    <div style={{ fontSize:11, color:T.textMuted, marginTop:3 }}>Construction timelines \u00B7 Delay risk \u00B7 90/60/30 day alerts \u00B7 RERA milestones</div>
+                    <div style={{ fontSize:11, color:T.textMuted, marginTop:3 }}>Construction timelines · Delay risk · 90/60/30 day alerts · RERA milestones</div>
                   </div>
                   <div style={{ display:"flex", gap:8 }}>
                     {["cards","list"].map(v => (
@@ -7913,7 +7913,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   </div>
                 </div>
 
-                {/* \u2500\u2500 Market Context Banner \u2500\u2500 */}
+                {/* ── Market Context Banner ── */}
                 <div style={{ background:"rgba(212,168,67,0.06)", border:`1px solid rgba(212,168,67,0.2)`, borderRadius:10, padding:"12px 16px", marginBottom:16, display:"flex", gap:20, flexWrap:"wrap", alignItems:"center" }}>
                   <div style={{ fontSize:10, fontWeight:700, color:T.gold, letterSpacing:0.8, textTransform:"uppercase", flexShrink:0 }}>2026 Dubai Handover Market</div>
                   {[
@@ -7921,7 +7921,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                     { label:"On-Time Rate", value:"48%", color:T.gold },
                     { label:"Peak Year", value:"2027 (70K units)" },
                     { label:"Avg Delay", value:"4.2 months", color:T.gold },
-                    { label:"Grace Period (typical)", value:"6\u201312 months" },
+                    { label:"Grace Period (typical)", value:"6–12 months" },
                     { label:"Penalty Rate", value:"1%/month" },
                   ].map((s,i) => (
                     <div key={i} style={{ display:"flex", flexDirection:"column" }}>
@@ -7930,11 +7930,11 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                     </div>
                   ))}
                   <div style={{ marginLeft:"auto", fontSize:10, color:T.textMuted, textAlign:"right" }}>
-                    Source: prelaunch.ae Dec 2025 \u00B7 RERA ORDS
+                    Source: prelaunch.ae Dec 2025 · RERA ORDS
                   </div>
                 </div>
 
-                {/* \u2500\u2500 KPI Cards \u2500\u2500 */}
+                {/* ── KPI Cards ── */}
                 <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(170px,1fr))", gap:10, marginBottom:20 }}>
                   {[
                     { label:"Projects Tracked", value:rawHandover.length.toString(), color:T.white, sub:"In portfolio" },
@@ -7951,12 +7951,12 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   ))}
                 </div>
 
-                {/* \u2500\u2500 90/60/30 Day Alerts \u2500\u2500 */}
+                {/* ── 90/60/30 Day Alerts ── */}
                 {alerts.length > 0 && (
                   <div style={{ background:"rgba(212,168,67,0.04)", border:`1px solid rgba(212,168,67,0.25)`, borderRadius:10, padding:"14px 16px", marginBottom:20 }}>
                     <div style={{ fontSize:12, fontWeight:700, color:T.gold, marginBottom:12, display:"flex", alignItems:"center", gap:8 }}>
                       <span style={{ width:8, height:8, borderRadius:"50%", background:T.gold, display:"inline-block", animation:"pulse 2s infinite" }} />
-                      Handover Alerts \u2014 Next 90 Days
+                      Handover Alerts — Next 90 Days
                     </div>
                     <div style={{ display:"flex", gap:10, flexWrap:"wrap" }}>
                       {alerts.map((p,i) => {
@@ -7968,7 +7968,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                             onMouseEnter={e => e.currentTarget.style.borderColor=rc.color}
                             onMouseLeave={e => e.currentTarget.style.borderColor=`${rc.color}33`}>
                             <div style={{ fontSize:11, fontWeight:700, color:T.white, marginBottom:2 }}>{p.project}</div>
-                            <div style={{ fontSize:10, color:T.textMuted, marginBottom:6 }}>{p.developer}{"\u00B7"}{p.community}</div>
+                            <div style={{ fontSize:10, color:T.textMuted, marginBottom:6 }}>{p.developer}{"·"}{p.community}</div>
                             <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between" }}>
                               <span style={{ fontSize:10, padding:"2px 7px", borderRadius:8, background:rc.bg, color:rc.color, fontWeight:700 }}>{p.status}</span>
                               <span style={{ fontSize:12, fontWeight:700, color:cd.color }}>{cd.days} {cd.label}</span>
@@ -7980,7 +7980,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   </div>
                 )}
 
-                {/* \u2500\u2500 Filters \u2500\u2500 */}
+                {/* ── Filters ── */}
                 <div style={{ background:T.surface, border:`1px solid ${T.border}`, borderRadius:10, padding:"12px 14px", marginBottom:16, display:"flex", gap:8, flexWrap:"wrap", alignItems:"center" }}>
                   <div style={{ position:"relative" }}>
                     {SvgIcons.Search({ width:13, height:13, style:{ position:"absolute", left:10, top:"50%", transform:"translateY(-50%)", color:T.textMuted, pointerEvents:"none" } })}
@@ -8006,15 +8006,15 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   )}
                 </div>
 
-                {/* \u2500\u2500 Seed notice \u2500\u2500 */}
+                {/* ── Seed notice ── */}
                 {!liveHandover?.length && (
                   <div style={{ display:"flex", alignItems:"center", gap:8, padding:"8px 14px", borderRadius:8, background:"rgba(212,168,67,0.06)", border:`1px solid rgba(212,168,67,0.2)`, marginBottom:16 }}>
                     <span style={{ width:6, height:6, borderRadius:"50%", background:T.gold, display:"inline-block" }} />
-                    <span style={{ fontSize:11, color:T.textMuted }}><span style={{ color:T.gold, fontWeight:700 }}>Research-based seed data</span> \u2014 RERA ORDS, developer portals, prelaunch.ae Dec 2025 \u00B7 Import your projects via Admin \u2192 Data Manager</span>
+                    <span style={{ fontSize:11, color:T.textMuted }}><span style={{ color:T.gold, fontWeight:700 }}>Research-based seed data</span> — RERA ORDS, developer portals, prelaunch.ae Dec 2025 · Import your projects via Admin \u2192 Data Manager</span>
                   </div>
                 )}
 
-                {/* \u2500\u2500 Cards View \u2500\u2500 */}
+                {/* ── Cards View ── */}
                 {hdvView === "cards" && (
                   <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(360px,1fr))", gap:16, marginBottom:20 }}>
                     {filtered.map((p,i) => {
@@ -8033,7 +8033,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                           <div style={{ padding:"14px 16px", borderBottom:`1px solid ${T.border}`, background:`${rc.color}08` }}>
                             <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start" }}>
                               <div style={{ flex:1 }}>
-                                <div style={{ fontSize:10, fontWeight:700, color:T.textMuted, letterSpacing:0.8, textTransform:"uppercase", marginBottom:3 }}>{p.developer}{"\u00B7"}{p.community}</div>
+                                <div style={{ fontSize:10, fontWeight:700, color:T.textMuted, letterSpacing:0.8, textTransform:"uppercase", marginBottom:3 }}>{p.developer}{"·"}{p.community}</div>
                                 <div style={{ fontFamily:"'Fraunces',serif", fontSize:15, fontWeight:700, color:T.white, marginBottom:6 }}>{p.project}</div>
                                 <div style={{ display:"flex", gap:6, flexWrap:"wrap", alignItems:"center" }}>
                                   <span style={{ fontSize:10, fontWeight:700, padding:"2px 8px", borderRadius:10, background:rc.bg, color:rc.color }}>{p.status}</span>
@@ -8101,7 +8101,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   </div>
                 )}
 
-                {/* \u2500\u2500 List View \u2500\u2500 */}
+                {/* ── List View ── */}
                 {hdvView === "list" && (
                   <div style={{ background:T.surface, border:`1px solid ${T.border}`, borderRadius:12, overflow:"hidden", marginBottom:20 }}>
                     <div style={{ display:"grid", gridTemplateColumns:"2.5fr 1fr 1fr 1fr 1fr 1fr 1fr", padding:"10px 16px", background:T.surfaceAlt, borderBottom:`1px solid ${T.border}` }}>
@@ -8120,7 +8120,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                           onMouseLeave={e => e.currentTarget.style.background="transparent"}>
                           <div>
                             <div style={{ fontSize:13, fontWeight:600, color:T.white }}>{p.project}</div>
-                            <div style={{ fontSize:11, color:T.textMuted }}>{p.developer}{"\u00B7"}{p.community}</div>
+                            <div style={{ fontSize:11, color:T.textMuted }}>{p.developer}{"·"}{p.community}</div>
                           </div>
                           <div style={{ display:"flex", alignItems:"center" }}>
                             <span style={{ fontSize:10, padding:"2px 8px", borderRadius:8, background:rc.bg, color:rc.color, fontWeight:700 }}>{p.status}</span>
@@ -8141,15 +8141,15 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   </div>
                 )}
 
-                {/* \u2500\u2500 Delay Impact Calculator \u2500\u2500 */}
+                {/* ── Delay Impact Calculator ── */}
                 <div className="chart-box" style={{ padding:20, marginBottom:20 }}>
                   <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:4 }}>Delay Impact Calculator</div>
                   <div style={{ fontSize:11, color:T.textMuted, marginBottom:16 }}>What a 1% monthly penalty + lost rental means for your portfolio</div>
                   <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(200px,1fr))", gap:12 }}>
                     {[
-                      { label:"1 month delay", penalty:"1% purchase price", rental:"1\u00D7 monthly rent lost", total:"~AED 18,000\u201365,000 loss" },
-                      { label:"3 month delay", penalty:"3% purchase price", rental:"3\u00D7 monthly rent lost", total:"~AED 54,000\u2013195,000 loss" },
-                      { label:"6 month delay", penalty:"6% purchase price", rental:"6\u00D7 monthly rent lost", total:"~AED 108,000\u2013390,000 loss" },
+                      { label:"1 month delay", penalty:"1% purchase price", rental:"1\u00D7 monthly rent lost", total:"~AED 18,000–65,000 loss" },
+                      { label:"3 month delay", penalty:"3% purchase price", rental:"3\u00D7 monthly rent lost", total:"~AED 54,000–195,000 loss" },
+                      { label:"6 month delay", penalty:"6% purchase price", rental:"6\u00D7 monthly rent lost", total:"~AED 108,000–390,000 loss" },
                       { label:"12 month delay", penalty:"Grace period ends", rental:"12\u00D7 monthly rent lost", total:"Legal action recommended" },
                     ].map((calc,i) => (
                       <div key={i} style={{ padding:"12px 14px", background:T.surfaceAlt, borderRadius:10, border:`1px solid ${T.border}` }}>
@@ -8161,11 +8161,11 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                     ))}
                   </div>
                   <div style={{ marginTop:14, fontSize:11, color:T.textMuted, padding:"8px 12px", background:"rgba(212,168,67,0.04)", borderRadius:8, border:`1px solid rgba(212,168,67,0.15)` }}>
-                    <strong style={{ color:T.gold }}>Legal Framework:</strong> Law No. 13 of 2008 (amended by Law No. 19 of 2017). After 6\u201312 month grace period (per SPA), buyers can claim compensation or cancellation. Penalty clause: typically 1% monthly on purchase price. Escrow protected under Law No. 8 of 2007. RERA dispute resolution via DLD portal.
+                    <strong style={{ color:T.gold }}>Legal Framework:</strong> Law No. 13 of 2008 (amended by Law No. 19 of 2017). After 6–12 month grace period (per SPA), buyers can claim compensation or cancellation. Penalty clause: typically 1% monthly on purchase price. Escrow protected under Law No. 8 of 2007. RERA dispute resolution via DLD portal.
                   </div>
                 </div>
 
-                {/* \u2500\u2500 Sources \u2500\u2500 */}
+                {/* ── Sources ── */}
                 <div style={{ paddingTop:12, borderTop:`1px solid ${T.border}`, display:"flex", gap:8, flexWrap:"wrap", alignItems:"center" }}>
                   <span style={{ fontSize:10, color:T.textMuted }}>Sources:</span>
                   {["RERA ORDS Database","Developer IR Reports Q4 2025","prelaunch.ae Dec 2025","DLD REST App","uaeexperthub.com Mar 2026","Dubai REST Construction Tracker"].map((s,i) => (
@@ -8177,13 +8177,13 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
             );
           })()}
 
-          {/* \u2550\u2550\u2550 HANDOVER DETAIL OVERLAY \u2550\u2550\u2550 */}
+          {/* ═══ HANDOVER DETAIL OVERLAY ═══ */}
           {hdvSelected && (
             <div role="dialog" aria-modal="true" style={{ position:"fixed", inset:0, background:"rgba(4,9,15,0.97)", zIndex:2000, display:"flex", flexDirection:"column", backdropFilter:"blur(8px)" }}>
               {/* Overlay header */}
               <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"16px 24px", borderBottom:`1px solid ${T.border}`, background:T.surface, flexShrink:0 }}>
                 <div>
-                  <div style={{ fontSize:11, fontWeight:700, color:T.textMuted, letterSpacing:0.8, textTransform:"uppercase", marginBottom:3 }}>{hdvSelected.developer}{"\u00B7"}{hdvSelected.community}</div>
+                  <div style={{ fontSize:11, fontWeight:700, color:T.textMuted, letterSpacing:0.8, textTransform:"uppercase", marginBottom:3 }}>{hdvSelected.developer}{"·"}{hdvSelected.community}</div>
                   <div style={{ fontFamily:"'Fraunces',serif", fontSize:22, fontWeight:800, color:T.white }}>{hdvSelected.project}</div>
                 </div>
                 <div style={{ display:"flex", alignItems:"center", gap:12 }}>
@@ -8213,7 +8213,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 </div>
                 {/* Milestone Gantt */}
                 <div className="chart-box" style={{ padding:20, marginBottom:16 }}>
-                  <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:16 }}>Construction Milestones \u2014 RERA Verified</div>
+                  <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:16 }}>Construction Milestones — RERA Verified</div>
                   {(hdvSelected.milestones||[]).map((m,i) => {
                     const isNext = !m.done && (hdvSelected.milestones[i-1]?.done || i===0);
                     return (
@@ -8273,7 +8273,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   <button type="button" onClick={() => { setHdvSelected(null); handleTabChange("My Leads"); }}
                     style={{ padding:"9px 18px", background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:8, color:T.textSecondary, fontSize:12, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>Add to Lead</button>
                   <button type="button" onClick={() => {
-                    const txt = `\uD83C\uDFD7\uFE0F DXB ANALYTICS \u2014 HANDOVER UPDATE\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\uD83D\uDCCC ${hdvSelected.project}\n\uD83C\uDFE2 ${hdvSelected.developer} \u00B7 ${hdvSelected.community}\n\n\uD83D\uDCCA STATUS: ${hdvSelected.status}\n\uD83D\uDD27 Construction: ${hdvSelected.constructionPct}% complete\n\uD83D\uDCC5 Expected Handover: ${new Date(hdvSelected.expectedDate).toLocaleDateString("en-GB",{day:"numeric",month:"long",year:"numeric"})}\n\u26A0\uFE0F Delay Risk: ${hdvSelected.delayRisk}\n\n\uD83D\uDD10 RERA: ${hdvSelected.reraNo}\n\uD83C\uDFE6 Escrow: ${hdvSelected.escrowBank}\n\uD83D\uDCCB Developer Record: ${hdvSelected.onTimeHistory}\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\nPowered by DXB Analytics\nemaar-dashboard.vercel.app`;
+                    const txt = `\uD83C\uDFD7\uFE0F DXB ANALYTICS — HANDOVER UPDATE\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\uD83D\uDCCC ${hdvSelected.project}\n\uD83C\uDFE2 ${hdvSelected.developer} · ${hdvSelected.community}\n\n\uD83D\uDCCA STATUS: ${hdvSelected.status}\n\uD83D\uDD27 Construction: ${hdvSelected.constructionPct}% complete\n\uD83D\uDCC5 Expected Handover: ${new Date(hdvSelected.expectedDate).toLocaleDateString("en-GB",{day:"numeric",month:"long",year:"numeric"})}\n\u26A0\uFE0F Delay Risk: ${hdvSelected.delayRisk}\n\n\uD83D\uDD10 RERA: ${hdvSelected.reraNo}\n\uD83C\uDFE6 Escrow: ${hdvSelected.escrowBank}\n\uD83D\uDCCB Developer Record: ${hdvSelected.onTimeHistory}\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\nPowered by DXB Analytics\nemaar-dashboard.vercel.app`;
                     window.open(`https://wa.me/?text=${encodeURIComponent(txt)}`,"_blank");
                   }} style={{ padding:"9px 18px", background:"rgba(37,211,102,0.1)", border:"1px solid rgba(37,211,102,0.3)", borderRadius:8, color:"#25D366", fontSize:12, fontWeight:600, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>
                     Share Handover Update
@@ -8285,15 +8285,15 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
 
 
 
-          {/* \u2500\u2500\u2500 SERVICE CHARGES TAB \u2500\u2500\u2500 */}
+          {/* ─── SERVICE CHARGES TAB ─── */}
           {tab === "Service Charges" && (() => {
 
-            /* \u2550\u2550 SEED DATA \u2014 RERA 2026 Research \u2550\u2550
+            /* ══ SEED DATA — RERA 2026 Research ══
                Source: DLD Service Charge Index, RERA Mollak 2026
                realestateclubdubai.com, drivenproperties.com, luxuryproperty.com
-            \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 */
+            ══════════════════════════════════════ */
             const SEED_SC = [
-              /* \u2500\u2500\u2500 APARTMENTS \u2500\u2500\u2500 */
+              /* ─── APARTMENTS ─── */
               { id:"sc01", community:"International City",    type:"Apartment", rate:6,   rate3yAgo:5,   yoy:5,  tier:"Budget",    chiller:false, notes:"Lowest in Dubai. Basic facilities. High yield offset by low charges.", investGrade:"Excellent" },
               { id:"sc02", community:"Discovery Gardens",     type:"Apartment", rate:8,   rate3yAgo:7,   yoy:5,  tier:"Budget",    chiller:false, notes:"Well managed. Good value for money. Consistent OA management.", investGrade:"Excellent" },
               { id:"sc03", community:"Jumeirah Village Circle",type:"Apartment", rate:12,  rate3yAgo:10,  yoy:8,  tier:"Mid-Range", chiller:false, notes:"Growing community. Rates rising with new amenities. 18,000+ transactions 2025.", investGrade:"Good" },
@@ -8304,19 +8304,19 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               { id:"sc08", community:"Jumeirah Lake Towers",  type:"Apartment", rate:16,  rate3yAgo:14,  yoy:7,  tier:"Mid-Range", chiller:true,  notes:"Chiller included. Very liquid market. Strong rental demand.", investGrade:"Good" },
               { id:"sc09", community:"Business Bay",          type:"Apartment", rate:18,  rate3yAgo:15,  yoy:10, tier:"Mid-Range", chiller:true,  notes:"Canal views command premium. Chiller extra in some towers.", investGrade:"Average" },
               { id:"sc10", community:"Dubai Marina",          type:"Apartment", rate:18,  rate3yAgo:15,  yoy:8,  tier:"Mid-Range", chiller:true,  notes:"Premium waterfront. District cooling in most towers.", investGrade:"Average" },
-              { id:"sc11", community:"Dubai Creek Harbour",   type:"Apartment", rate:16,  rate3yAgo:13,  yoy:10, tier:"Mid-Range", chiller:false, notes:"Newer community rising fast. Emaar managed \u2014 professional OA.", investGrade:"Good" },
+              { id:"sc11", community:"Dubai Creek Harbour",   type:"Apartment", rate:16,  rate3yAgo:13,  yoy:10, tier:"Mid-Range", chiller:false, notes:"Newer community rising fast. Emaar managed — professional OA.", investGrade:"Good" },
               { id:"sc12", community:"Sobha Hartland",        type:"Apartment", rate:18,  rate3yAgo:15,  yoy:8,  tier:"Premium",   chiller:false, notes:"Sobha self-managed. High quality finish = higher charge.", investGrade:"Average" },
               { id:"sc13", community:"Dubai Hills Estate",    type:"Apartment", rate:16,  rate3yAgo:14,  yoy:7,  tier:"Premium",   chiller:false, notes:"Emaar managed. Golf views add premium. Good OA track record.", investGrade:"Good" },
               { id:"sc14", community:"Mohammed Bin Rashid City",type:"Apartment",rate:20, rate3yAgo:16,  yoy:12, tier:"Premium",   chiller:false, notes:"Upscale community. Rising charges as more amenities complete.", investGrade:"Average" },
               { id:"sc15", community:"Downtown Dubai",        type:"Apartment", rate:28,  rate3yAgo:24,  yoy:8,  tier:"Premium",   chiller:true,  notes:"District cooling mandatory. Burj Khalifa AED 68/sqft. Highest charges.", investGrade:"Poor" },
-              { id:"sc16", community:"Palm Jumeirah",         type:"Apartment", rate:32,  rate3yAgo:28,  yoy:7,  tier:"Ultra",     chiller:true,  notes:"Luxury managed. Very high charges vs yield \u2014 for lifestyle buyers.", investGrade:"Poor" },
+              { id:"sc16", community:"Palm Jumeirah",         type:"Apartment", rate:32,  rate3yAgo:28,  yoy:7,  tier:"Ultra",     chiller:true,  notes:"Luxury managed. Very high charges vs yield — for lifestyle buyers.", investGrade:"Poor" },
               { id:"sc17", community:"Emaar Beachfront",      type:"Apartment", rate:20,  rate3yAgo:16,  yoy:11, tier:"Premium",   chiller:false, notes:"Beachfront premium. Emaar managed. Charges rising with popularity.", investGrade:"Average" },
-              /* \u2500\u2500\u2500 VILLAS \u2500\u2500\u2500 */
+              /* ─── VILLAS ─── */
               { id:"sc18", community:"Arabian Ranches",       type:"Villa",     rate:4.5, rate3yAgo:3.8, yoy:8,  tier:"Mid-Range", chiller:false, notes:"Established community. Low charges = excellent yield impact for villas.", investGrade:"Excellent" },
               { id:"sc19", community:"Dubai Hills Estate",    type:"Villa",     rate:5,   rate3yAgo:4.2, yoy:8,  tier:"Mid-Range", chiller:false, notes:"Golf community. Park access. Good OA quality.", investGrade:"Excellent" },
               { id:"sc20", community:"Tilal Al Ghaf",         type:"Villa",     rate:5.5, rate3yAgo:4,   yoy:15, tier:"Mid-Range", chiller:false, notes:"Newer community. Charges rising but still excellent value.", investGrade:"Good" },
               { id:"sc21", community:"DAMAC Hills 2",         type:"Villa",     rate:3.5, rate3yAgo:3,   yoy:8,  tier:"Budget",    chiller:false, notes:"Most affordable villa charges in Dubai. Excellent for yield.", investGrade:"Excellent" },
-              { id:"sc22", community:"The Oasis",             type:"Villa",     rate:6,   rate3yAgo:0,   yoy:0,  tier:"Premium",   chiller:false, notes:"New launch \u2014 estimated based on Emaar premium communities.", investGrade:"Good" },
+              { id:"sc22", community:"The Oasis",             type:"Villa",     rate:6,   rate3yAgo:0,   yoy:0,  tier:"Premium",   chiller:false, notes:"New launch — estimated based on Emaar premium communities.", investGrade:"Good" },
               { id:"sc23", community:"Palm Jumeirah",         type:"Villa",     rate:6,   rate3yAgo:5,   yoy:8,  tier:"Ultra",     chiller:false, notes:"Frond villas. Very high capital value vs modest service charge.", investGrade:"Good" },
             ];
 
@@ -8375,7 +8375,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"10px 0", marginBottom:16, borderBottom:`1px solid ${T.border}`, flexWrap:"wrap", gap:8 }}>
                   <div>
                     <div style={{ fontFamily:"'Fraunces',serif", fontSize:20, fontWeight:800, color:T.white }}>Service Charge Intelligence</div>
-                    <div style={{ fontSize:11, color:T.textMuted, marginTop:3 }}>RERA-regulated rates \u00B7 Mollak system \u00B7 Yield impact analysis \u00B7 2026 data</div>
+                    <div style={{ fontSize:11, color:T.textMuted, marginTop:3 }}>RERA-regulated rates · Mollak system · Yield impact analysis · 2026 data</div>
                   </div>
                   <div style={{ display:"flex", gap:8 }}>
                     {["table","chart","calculator"].map(v => (
@@ -8391,7 +8391,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 <div style={{ padding:"10px 16px", background:"rgba(249,115,22,0.06)", border:"1px solid rgba(249,115,22,0.25)", borderRadius:10, marginBottom:16, display:"flex", alignItems:"center", gap:10 }}>
                   {SvgIcons.TrendingUp({ width:14, height:14, style:{ color:"#F97316", flexShrink:0 } })}
                   <span style={{ fontSize:12, color:T.textSecondary }}>
-                    <span style={{ color:"#F97316", fontWeight:700 }}>5\u201310% increase forecast for 2026</span> \u2014 RERA Mollak data. Inflation, aging infrastructure, sustainability mandates driving rises. Service charges consume <strong style={{ color:T.white }}>15\u201325% of gross rental income</strong>. Factor into your yield calculations.
+                    <span style={{ color:"#F97316", fontWeight:700 }}>5–10% increase forecast for 2026</span> — RERA Mollak data. Inflation, aging infrastructure, sustainability mandates driving rises. Service charges consume <strong style={{ color:T.white }}>15–25% of gross rental income</strong>. Factor into your yield calculations.
                   </span>
                 </div>
 
@@ -8401,8 +8401,8 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                     { label:"Communities",      value:filtered.length,                  color:T.white   },
                     { label:"Avg Rate (AED/sqft)",value:"AED " + avgRate,               color:T.gold    },
                     { label:"Avg YoY Increase", value:avgYoY + "%",                    color:"#F97316" },
-                    { label:"Highest Rate",     value:highest ? "AED " + highest.rate : "\u2014", color:T.red  },
-                    { label:"Lowest Rate",      value:lowest  ? "AED " + lowest.rate  : "\u2014", color:T.green },
+                    { label:"Highest Rate",     value:highest ? "AED " + highest.rate : "—", color:T.red  },
+                    { label:"Lowest Rate",      value:lowest  ? "AED " + lowest.rate  : "—", color:T.green },
                     { label:"Chiller Included", value:withChiller + " communities",    color:T.teal    },
                   ].map((k,i) => (
                     <div key={i} className="kpi-card">
@@ -8477,11 +8477,11 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   </div>
                 )}
 
-                {/* CHART VIEW \u2014 Rate comparison bar chart */}
+                {/* CHART VIEW — Rate comparison bar chart */}
                 {scView === "chart" && (
                   <div className="chart-box" style={{ padding:20, marginBottom:20 }}>
-                    <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:4 }}>Service Charge by Community \u2014 AED per sqft per year</div>
-                    <div style={{ fontSize:11, color:T.textMuted, marginBottom:20 }}>RERA Mollak 2026 approved rates \u00B7 Lower is better for investors</div>
+                    <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:4 }}>Service Charge by Community — AED per sqft per year</div>
+                    <div style={{ fontSize:11, color:T.textMuted, marginBottom:20 }}>RERA Mollak 2026 approved rates · Lower is better for investors</div>
                     <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
                       {filtered.slice(0,15).map((d,i) => {
                         const maxRate = Math.max(...filtered.map(x=>x.rate));
@@ -8502,7 +8502,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                     </div>
                     {/* Legend */}
                     <div style={{ display:"flex", gap:16, marginTop:16, flexWrap:"wrap" }}>
-                      {[["#10B981","AED <10 \u2014 Excellent"],["#D4A843","AED 10-15 \u2014 Good"],["#F97316","AED 15-25 \u2014 Average"],["#EF4444","AED 25+ \u2014 Poor"]].map(([c,l],i) => (
+                      {[["#10B981","AED <10 — Excellent"],["#D4A843","AED 10-15 — Good"],["#F97316","AED 15-25 — Average"],["#EF4444","AED 25+ — Poor"]].map(([c,l],i) => (
                         <div key={i} style={{ display:"flex", alignItems:"center", gap:5 }}>
                           <div style={{ width:10, height:10, borderRadius:2, background:c }} />
                           <span style={{ fontSize:10, color:T.textMuted }}>{l}</span>
@@ -8584,13 +8584,13 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
 
                 {/* Info box */}
                 <div className="chart-box" style={{ padding:18, marginBottom:16 }}>
-                  <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:12 }}>RERA Service Charge Framework \u2014 Key Facts</div>
+                  <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:12 }}>RERA Service Charge Framework — Key Facts</div>
                   <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(240px,1fr))", gap:10 }}>
                     {[
                       { icon:"\uD83C\uDFDB", title:"RERA Mollak System", desc:"All OA budgets submitted and approved via Mollak. 1,240+ buildings, AED 4B processed annually. Cannot charge above approved rate." },
                       { icon:"\uD83D\uDCCA", title:"DLD Service Charge Index", desc:"Public database on DLD website. Check any building's RERA-approved rate vs what you're being charged." },
                       { icon:"\uD83D\uDCC8", title:"5-10% Rise in 2026", desc:"DEWA tariffs rising. Aging buildings need more maintenance. Sustainability mandates add cost. Budget for increases." },
-                      { icon:"\u2744", title:"Chiller (District Cooling)", desc:"Downtown, Dubai Marina, Palm \u2014 extra AED 2,000-6,000/yr NOT included in standard service charge. Ask before buying." },
+                      { icon:"\u2744", title:"Chiller (District Cooling)", desc:"Downtown, Dubai Marina, Palm — extra AED 2,000-6,000/yr NOT included in standard service charge. Ask before buying." },
                     ].map((f,i) => (
                       <div key={i} style={{ padding:"12px 14px", background:T.surfaceAlt, borderRadius:10, border:`1px solid ${T.border}` }}>
                         <div style={{ fontSize:16, marginBottom:5 }}>{f.icon}</div>
@@ -8605,7 +8605,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 {!liveServiceCharges?.length && (
                   <div style={{ display:"flex", alignItems:"center", gap:8, padding:"8px 14px", borderRadius:8, background:"rgba(212,168,67,0.06)", border:`1px solid rgba(212,168,67,0.2)`, marginBottom:12 }}>
                     <span style={{ width:6, height:6, borderRadius:"50%", background:T.gold, display:"inline-block" }} />
-                    <span style={{ fontSize:11, color:T.textMuted }}><span style={{ color:T.gold, fontWeight:700 }}>RERA 2026 reference data</span> \u2014 DLD Mollak, luxuryproperty.com, realestateclubdubai.com \u00B7 Import live data via Admin \u2192 Data Manager</span>
+                    <span style={{ fontSize:11, color:T.textMuted }}><span style={{ color:T.gold, fontWeight:700 }}>RERA 2026 reference data</span> — DLD Mollak, luxuryproperty.com, realestateclubdubai.com · Import live data via Admin \u2192 Data Manager</span>
                   </div>
                 )}
 
@@ -8622,15 +8622,15 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
           })()}
 
 
-          {/* \u2500\u2500\u2500 YIELDS TAB \u2500\u2500\u2500 */}
+          {/* ─── YIELDS TAB ─── */}
           {tab === "Yields" && (() => {
 
-            /* \u2550\u2550 SEED DATA \u2014 Research-based 2026 \u2550\u2550
+            /* ══ SEED DATA — Research-based 2026 ══
                Sources: DLD Ejari, Bayut, PropertyFinder, Cavendish Maxwell,
                themiddleeastinsider.com Apr 2026, sandsofwealth.com, valorisimo.com
-            \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 */
+            ════════════════════════════════════════ */
             const SEED_YIELDS = [
-              /* \u2500\u2500\u2500 HIGH YIELD \u2014 Budget/Mid \u2500\u2500\u2500 */
+              /* ─── HIGH YIELD — Budget/Mid ─── */
               { id:"y01", community:"International City",     type:"Apartment", grossYield:9.2, netYield:7.8, avgRent:42000,  avgPrice:456000,  ppsf:650,  sc:6,   vacancy:8, trend:"+0.4%", trend3y:"+1.2%", tier:"High Yield",  badge:"#10B981", beds:{ studio:10.1, "1BR":8.8, "2BR":7.9 }, demand:"Very High", source:"themiddleeastinsider.com Apr 2026" },
               { id:"y02", community:"Discovery Gardens",      type:"Apartment", grossYield:8.5, netYield:7.1, avgRent:55000,  avgPrice:647000,  ppsf:800,  sc:8,   vacancy:6, trend:"+0.3%", trend3y:"+0.9%", tier:"High Yield",  badge:"#10B981", beds:{ studio:9.4, "1BR":8.2, "2BR":7.6 }, demand:"High",      source:"sandsofwealth.com 2026" },
               { id:"y03", community:"Jumeirah Village Circle",type:"Apartment", grossYield:7.8, netYield:6.4, avgRent:72000,  avgPrice:923000,  ppsf:1180, sc:12,  vacancy:6, trend:"+0.2%", trend3y:"+0.8%", tier:"High Yield",  badge:"#10B981", beds:{ studio:7.9, "1BR":7.0, "2BR":6.8, "3BR":7.2 }, demand:"Very High", source:"Bayut / GuestReady 2026" },
@@ -8638,17 +8638,17 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               { id:"y05", community:"Arjan",                  type:"Apartment", grossYield:7.5, netYield:6.1, avgRent:63000,  avgPrice:840000,  ppsf:1150, sc:13,  vacancy:7, trend:"+0.3%", trend3y:"+0.7%", tier:"High Yield",  badge:"#10B981", beds:{ studio:8.0, "1BR":7.3, "2BR":6.5 }, demand:"High",      source:"valorisimo.com 2026" },
               { id:"y06", community:"Al Furjan",              type:"Apartment", grossYield:7.2, netYield:5.9, avgRent:71000,  avgPrice:985000,  ppsf:1350, sc:14,  vacancy:7, trend:"+0.2%", trend3y:"+0.5%", tier:"High Yield",  badge:"#10B981", beds:{ "1BR":7.5, "2BR":6.8, "3BR":6.1 }, demand:"High",      source:"Cavendish Maxwell Q1 2026" },
               { id:"y07", community:"Jumeirah Lake Towers",   type:"Apartment", grossYield:8.1, netYield:6.5, avgRent:80000,  avgPrice:988000,  ppsf:1380, sc:16,  vacancy:5, trend:"+0.1%", trend3y:"+0.4%", tier:"High Yield",  badge:"#10B981", beds:{ studio:7.2, "1BR":8.2, "2BR":7.0, "3BR":6.5 }, demand:"Very High", source:"themiddleeastinsider.com Apr 2026" },
-              /* \u2500\u2500\u2500 MID YIELD \u2014 Established \u2500\u2500\u2500 */
+              /* ─── MID YIELD — Established ─── */
               { id:"y08", community:"Business Bay",           type:"Apartment", grossYield:7.6, netYield:5.8, avgRent:85000,  avgPrice:1120000, ppsf:2050, sc:18,  vacancy:6, trend:"+0.2%", trend3y:"+0.6%", tier:"Mid Yield",   badge:"#D4A843", beds:{ studio:7.8, "1BR":7.6, "2BR":6.9 }, demand:"Very High", source:"themiddleeastinsider.com Apr 2026" },
               { id:"y09", community:"Dubai Marina",           type:"Apartment", grossYield:6.8, netYield:5.0, avgRent:115000, avgPrice:1690000, ppsf:2280, sc:18,  vacancy:5, trend:"+0.1%", trend3y:"+0.3%", tier:"Mid Yield",   badge:"#D4A843", beds:{ studio:6.5, "1BR":6.8, "2BR":6.2, "3BR":5.5 }, demand:"High",      source:"GuestReady / Bayut 2026" },
               { id:"y10", community:"Dubai Hills Estate",     type:"Apartment", grossYield:6.2, netYield:4.9, avgRent:105000, avgPrice:1694000, ppsf:1850, sc:16,  vacancy:5, trend:"+0.1%", trend3y:"+0.5%", tier:"Mid Yield",   badge:"#D4A843", beds:{ "1BR":6.5, "2BR":6.0, "3BR":5.6 }, demand:"High",      source:"Cavendish Maxwell Q1 2026" },
               { id:"y11", community:"Dubai Creek Harbour",    type:"Apartment", grossYield:6.0, netYield:4.8, avgRent:95000,  avgPrice:1583000, ppsf:1942, sc:16,  vacancy:6, trend:"+0.3%", trend3y:"+0.9%", tier:"Mid Yield",   badge:"#D4A843", beds:{ "1BR":6.3, "2BR":5.9 }, demand:"High",      source:"Emaar IR / DLD Q1 2026" },
               { id:"y12", community:"Sobha Hartland",         type:"Apartment", grossYield:5.8, netYield:4.4, avgRent:110000, avgPrice:1897000, ppsf:2100, sc:18,  vacancy:5, trend:"+0.2%", trend3y:"+0.6%", tier:"Mid Yield",   badge:"#D4A843", beds:{ "1BR":6.0, "2BR":5.7, "3BR":5.2 }, demand:"High",      source:"Sobha IR / DLD Q1 2026" },
-              /* \u2500\u2500\u2500 LOW YIELD \u2014 Premium \u2500\u2500\u2500 */
+              /* ─── LOW YIELD — Premium ─── */
               { id:"y13", community:"Downtown Dubai",         type:"Apartment", grossYield:5.5, netYield:3.8, avgRent:175000, avgPrice:3182000, ppsf:3100, sc:28,  vacancy:4, trend:"0.0%",  trend3y:"+0.1%", tier:"Low Yield",   badge:"#3B82F6", beds:{ studio:5.8, "1BR":5.5, "2BR":5.0, "3BR":4.5 }, demand:"High",      source:"themiddleeastinsider.com Apr 2026" },
               { id:"y14", community:"Palm Jumeirah",          type:"Apartment", grossYield:5.5, netYield:3.9, avgRent:220000, avgPrice:4000000, ppsf:4800, sc:32,  vacancy:4, trend:"0.0%",  trend3y:"+0.2%", tier:"Low Yield",   badge:"#3B82F6", beds:{ "1BR":5.8, "2BR":5.5, "3BR":5.0 }, demand:"Medium",    source:"CBRE / DLD Q1 2026" },
               { id:"y15", community:"Emaar Beachfront",       type:"Apartment", grossYield:5.8, netYield:4.2, avgRent:165000, avgPrice:2845000, ppsf:2950, sc:20,  vacancy:5, trend:"+0.2%", trend3y:"+0.5%", tier:"Low Yield",   badge:"#3B82F6", beds:{ "1BR":6.0, "2BR":5.7, "3BR":5.1 }, demand:"High",      source:"Emaar IR / DLD Q1 2026" },
-              /* \u2500\u2500\u2500 VILLAS \u2500\u2500\u2500 */
+              /* ─── VILLAS ─── */
               { id:"y16", community:"Arabian Ranches",        type:"Villa",     grossYield:4.8, netYield:3.9, avgRent:215000, avgPrice:4479000, ppsf:1200, sc:4.5, vacancy:4, trend:"+0.2%", trend3y:"+0.8%", tier:"Villa Yield", badge:"#8B5CF6", beds:{ "3BR":4.9, "4BR":4.7, "5BR":4.5 }, demand:"High",      source:"Cavendish Maxwell Q1 2026" },
               { id:"y17", community:"Dubai Hills Estate",     type:"Villa",     grossYield:4.9, netYield:4.0, avgRent:280000, avgPrice:5714000, ppsf:1400, sc:5,   vacancy:4, trend:"+0.2%", trend3y:"+0.9%", tier:"Villa Yield", badge:"#8B5CF6", beds:{ "3BR":5.1, "4BR":4.8, "5BR":4.5 }, demand:"High",      source:"Knight Frank Q1 2026" },
               { id:"y18", community:"Tilal Al Ghaf",          type:"Villa",     grossYield:4.8, netYield:3.9, avgRent:245000, avgPrice:5104000, ppsf:1200, sc:5.5, vacancy:5, trend:"+0.3%", trend3y:"+1.1%", tier:"Villa Yield", badge:"#8B5CF6", beds:{ "4BR":4.9, "5BR":4.7 }, demand:"High",      source:"Knight Frank Q1 2026" },
@@ -8670,7 +8670,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               return 0;
             });
 
-            /* \u2500\u2500 KPIs \u2500\u2500 */
+            /* ── KPIs ── */
             const apts = rawData.filter(d => d.type === "Apartment");
             const villas = rawData.filter(d => d.type === "Villa");
             const avgGross = apts.length ? (apts.reduce((s,d) => s+d.grossYield,0)/apts.length).toFixed(1) : 0;
@@ -8678,7 +8678,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
             const topYield = [...rawData].sort((a,b) => b.grossYield - a.grossYield)[0];
             const lowYield = [...rawData].sort((a,b) => a.grossYield - b.grossYield)[0];
 
-            /* \u2500\u2500 Calculator \u2500\u2500 */
+            /* ── Calculator ── */
             const calcGross   = yldCalcRent / yldCalcPrice * 100;
             const calcSCAed   = yldCalcSize * yldCalcSC;
             const calcVacAed  = yldCalcRent * (yldCalcVacancy/100);
@@ -8704,7 +8704,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"10px 0", marginBottom:16, borderBottom:`1px solid ${T.border}`, flexWrap:"wrap", gap:8 }}>
                   <div>
                     <div style={{ fontFamily:"'Fraunces',serif", fontSize:20, fontWeight:800, color:T.white }}>Rental Yield Intelligence</div>
-                    <div style={{ fontSize:11, color:T.textMuted, marginTop:3 }}>Gross & net yields \u00B7 Community comparison \u00B7 DLD Ejari data \u00B7 Yield calculator \u00B7 2026</div>
+                    <div style={{ fontSize:11, color:T.textMuted, marginTop:3 }}>Gross & net yields · Community comparison · DLD Ejari data · Yield calculator · 2026</div>
                   </div>
                   <div style={{ display:"flex", gap:8 }}>
                     {["table","chart","calculator"].map(v => (
@@ -8720,7 +8720,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 <div style={{ padding:"10px 16px", background:"rgba(16,185,129,0.06)", border:"1px solid rgba(16,185,129,0.25)", borderRadius:10, marginBottom:16, display:"flex", alignItems:"center", gap:10 }}>
                   {SvgIcons.TrendingUp({ width:14, height:14, style:{ color:T.green, flexShrink:0 } })}
                   <span style={{ fontSize:12, color:T.textSecondary }}>
-                    <span style={{ color:T.green, fontWeight:700 }}>Dubai zero-tax advantage</span> \u2014 A 7% yield in Dubai equals ~10-12% gross in London after UK taxes. No income tax, no capital gains tax. Net yields are 1.5\u20132% below gross after service charges and vacancy. <span style={{ color:T.gold }}>International City leads at 9.2%.</span>
+                    <span style={{ color:T.green, fontWeight:700 }}>Dubai zero-tax advantage</span> — A 7% yield in Dubai equals ~10-12% gross in London after UK taxes. No income tax, no capital gains tax. Net yields are 1.5–2% below gross after service charges and vacancy. <span style={{ color:T.gold }}>International City leads at 9.2%.</span>
                   </span>
                 </div>
 
@@ -8796,12 +8796,12 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   </div>
                 )}
 
-                {/* CHART VIEW \u2014 horizontal yield bars */}
+                {/* CHART VIEW — horizontal yield bars */}
                 {yldView === "chart" && (
                   <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16, marginBottom:20 }}>
                     <div className="chart-box" style={{ padding:20 }}>
                       <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:4 }}>Gross Yield by Community</div>
-                      <div style={{ fontSize:11, color:T.textMuted, marginBottom:16 }}>Ranked highest to lowest \u00B7 2026 DLD Ejari data</div>
+                      <div style={{ fontSize:11, color:T.textMuted, marginBottom:16 }}>Ranked highest to lowest · 2026 DLD Ejari data</div>
                       {[...filtered].sort((a,b) => b.grossYield - a.grossYield).slice(0,10).map((d,i) => (
                         <div key={i} style={{ display:"flex", alignItems:"center", gap:10, marginBottom:10 }}>
                           <div style={{ fontSize:11, color:T.textSecondary, minWidth:130, textAlign:"right" }}>{d.community.split(" ").slice(0,2).join(" ")}</div>
@@ -8815,7 +8815,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                     </div>
                     <div className="chart-box" style={{ padding:20 }}>
                       <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:4 }}>Gross vs Net Yield Gap</div>
-                      <div style={{ fontSize:11, color:T.textMuted, marginBottom:16 }}>Service charges + vacancy impact \u00B7 Net is what you keep</div>
+                      <div style={{ fontSize:11, color:T.textMuted, marginBottom:16 }}>Service charges + vacancy impact · Net is what you keep</div>
                       {[...filtered].sort((a,b) => b.grossYield - a.grossYield).slice(0,8).map((d,i) => (
                         <div key={i} style={{ marginBottom:12 }}>
                           <div style={{ display:"flex", justifyContent:"space-between", marginBottom:3 }}>
@@ -8892,7 +8892,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                         ))}
                       </div>
                       <div style={{ marginTop:12, padding:"10px 12px", background:"rgba(16,185,129,0.05)", borderRadius:8, border:`1px solid rgba(16,185,129,0.15)`, fontSize:11, color:T.textMuted, lineHeight:1.7 }}>
-                        Dubai zero income tax \u2014 your net yield IS your after-tax return. Equivalent to {(calcNet * 1.45).toFixed(1)}% gross in UK or {(calcNet * 1.35).toFixed(1)}% gross in Germany.
+                        Dubai zero income tax — your net yield IS your after-tax return. Equivalent to {(calcNet * 1.45).toFixed(1)}% gross in UK or {(calcNet * 1.35).toFixed(1)}% gross in Germany.
                       </div>
                     </div>
                   </div>
@@ -8925,7 +8925,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 {!liveYieldsData?.length && (
                   <div style={{ display:"flex", alignItems:"center", gap:8, padding:"8px 14px", borderRadius:8, background:"rgba(212,168,67,0.06)", border:`1px solid rgba(212,168,67,0.2)`, marginBottom:12 }}>
                     <span style={{ width:6, height:6, borderRadius:"50%", background:T.gold, display:"inline-block" }} />
-                    <span style={{ fontSize:11, color:T.textMuted }}><span style={{ color:T.gold, fontWeight:700 }}>2026 research data</span> \u2014 DLD Ejari, Bayut, themiddleeastinsider.com, Cavendish Maxwell, Knight Frank Q1 2026</span>
+                    <span style={{ fontSize:11, color:T.textMuted }}><span style={{ color:T.gold, fontWeight:700 }}>2026 research data</span> — DLD Ejari, Bayut, themiddleeastinsider.com, Cavendish Maxwell, Knight Frank Q1 2026</span>
                   </div>
                 )}
 
@@ -8942,24 +8942,24 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
           })()}
 
 
-          {/* \u2500\u2500\u2500 STR vs LTR TAB \u2500\u2500\u2500 */}
+          {/* ─── STR vs LTR TAB ─── */}
           {tab === "STR vs LTR" && (() => {
 
-            /* \u2550\u2550 RESEARCH-BASED SEED DATA 2026 \u2550\u2550
+            /* ══ RESEARCH-BASED SEED DATA 2026 ══
                Sources: DTCM, AirROI, Airbtics, homevy.com, maphomesrealestate.com
                ADR median Dubai: AED 609/night (Airbtics 2026)
                Median occupancy: 72% (Airbtics 2026)
                STR yields: 7-12% vs LTR 4-6% (homevy.com)
                DTCM license: AED 1,500-2,500/year
                Management fee STR: 15-25% of revenue
-            \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 */
+            ══════════════════════════════════════ */
             const SEED_STR = [
               { id:"s01", community:"Downtown Dubai",      strNightly:850,  strOccupancy:76, ltrAnnual:175000, strGross:11.2, ltrGross:5.5, strNet:8.1, ltrNet:3.8, beds:"1BR", dtcmAllowed:true,  mgmtFee:20, strCosts:28000, verdict:"STR",    note:"Burj Khalifa proximity drives premium rates. Peak Dec-Mar occupancy 90%+" },
               { id:"s02", community:"Dubai Marina",        strNightly:680,  strOccupancy:74, ltrAnnual:115000, strGross:10.8, ltrGross:6.8, strNet:7.6, ltrNet:5.0, beds:"1BR", dtcmAllowed:true,  mgmtFee:20, strCosts:22000, verdict:"STR",    note:"Marina Walk tourists + business travelers. Strong year-round demand." },
               { id:"s03", community:"Palm Jumeirah",       strNightly:1200, strOccupancy:70, ltrAnnual:220000, strGross:9.8,  ltrGross:5.5, strNet:7.0, ltrNet:3.9, beds:"1BR", dtcmAllowed:true,  mgmtFee:22, strCosts:38000, verdict:"STR",    note:"Luxury tourism demand. High costs but premium pricing supports STR." },
               { id:"s04", community:"JBR / The Walk",      strNightly:720,  strOccupancy:73, ltrAnnual:125000, strGross:11.0, ltrGross:6.5, strNet:7.8, ltrNet:4.8, beds:"1BR", dtcmAllowed:true,  mgmtFee:20, strCosts:23000, verdict:"STR",    note:"Beach access. Tourist zone. Strong summer STR from GCC visitors." },
               { id:"s05", community:"Business Bay",        strNightly:580,  strOccupancy:71, ltrAnnual:85000,  strGross:10.2, ltrGross:7.6, strNet:7.1, ltrNet:5.8, beds:"1BR", dtcmAllowed:true,  mgmtFee:18, strCosts:18000, verdict:"STR",    note:"Corporate travelers. Weekday demand strong. Mix of STR/LTR works." },
-              { id:"s06", community:"Jumeirah Village Circle", strNightly:320, strOccupancy:68, ltrAnnual:72000, strGross:8.8, ltrGross:7.8, strNet:6.0, ltrNet:6.4, beds:"1BR", dtcmAllowed:true, mgmtFee:18, strCosts:14000, verdict:"LTR",   note:"Resident community. LTR wins \u2014 lower STR demand, high LTR occupancy." },
+              { id:"s06", community:"Jumeirah Village Circle", strNightly:320, strOccupancy:68, ltrAnnual:72000, strGross:8.8, ltrGross:7.8, strNet:6.0, ltrNet:6.4, beds:"1BR", dtcmAllowed:true, mgmtFee:18, strCosts:14000, verdict:"LTR",   note:"Resident community. LTR wins — lower STR demand, high LTR occupancy." },
               { id:"s07", community:"Dubai Hills Estate",  strNightly:480,  strOccupancy:62, ltrAnnual:105000, strGross:7.8,  ltrGross:6.2, strNet:5.1, ltrNet:4.9, beds:"2BR", dtcmAllowed:true,  mgmtFee:20, strCosts:20000, verdict:"LTR",    note:"Family suburb. Residents prefer LTR. STR inconsistent occupancy." },
               { id:"s08", community:"Jumeirah Lake Towers",strNightly:450,  strOccupancy:72, ltrAnnual:80000,  strGross:10.4, ltrGross:8.1, strNet:7.2, ltrNet:6.5, beds:"1BR", dtcmAllowed:true,  mgmtFee:18, strCosts:16000, verdict:"STR",    note:"Near Marina. Corporate + leisure mix. STR edges LTR at good occupancy." },
               { id:"s09", community:"Dubai Creek Harbour", strNightly:520,  strOccupancy:65, ltrAnnual:95000,  strGross:8.5,  ltrGross:6.0, strNet:5.8, ltrNet:4.8, beds:"1BR", dtcmAllowed:true,  mgmtFee:19, strCosts:18000, verdict:"Mixed",  note:"Growing community. Tourism developing. LTR safer until more hotels." },
@@ -8976,7 +8976,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
             const communities = ["All", ...new Set(rawSTR.map(d => d.community))];
             const bedOptions  = ["All", "Studio", "1BR", "2BR", "3BR"];
 
-            /* \u2500\u2500 Calculator \u2500\u2500 */
+            /* ── Calculator ── */
             const calcSTRRevenue  = Math.round(strCalcNightly * 365 * (strCalcOccupancy/100));
             const calcSTRMgmt     = Math.round(calcSTRRevenue * (strCalcMgmt/100));
             const calcSTRDTCM     = 2000;
@@ -9005,7 +9005,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"10px 0", marginBottom:16, borderBottom:`1px solid ${T.border}`, flexWrap:"wrap", gap:8 }}>
                   <div>
                     <div style={{ fontFamily:"'Fraunces',serif", fontSize:20, fontWeight:800, color:T.white }}>STR vs LTR Intelligence</div>
-                    <div style={{ fontSize:11, color:T.textMuted, marginTop:3 }}>Airbnb vs long-term \u00B7 DTCM costs \u00B7 Break-even \u00B7 Community verdict \u00B7 2026</div>
+                    <div style={{ fontSize:11, color:T.textMuted, marginTop:3 }}>Airbnb vs long-term · DTCM costs · Break-even · Community verdict · 2026</div>
                   </div>
                   <div style={{ display:"flex", gap:8 }}>
                     {["comparison","calculator"].map(v => (
@@ -9020,8 +9020,8 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 {/* Key insight banner */}
                 <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:10, marginBottom:16 }}>
                   {[
-                    { color:"#10B981", bg:"rgba(16,185,129,0.06)", border:"rgba(16,185,129,0.25)", icon:"\uD83C\uDFD6", title:"STR Gross Yield", val:"7\u201312%", sub:"Tourist zones. Active management." },
-                    { color:T.teal,    bg:"rgba(20,184,166,0.06)", border:"rgba(20,184,166,0.25)", icon:"\uD83C\uDFE0", title:"LTR Gross Yield", val:"4\u20138%",  sub:"Resident zones. Passive income." },
+                    { color:"#10B981", bg:"rgba(16,185,129,0.06)", border:"rgba(16,185,129,0.25)", icon:"\uD83C\uDFD6", title:"STR Gross Yield", val:"7–12%", sub:"Tourist zones. Active management." },
+                    { color:T.teal,    bg:"rgba(20,184,166,0.06)", border:"rgba(20,184,166,0.25)", icon:"\uD83C\uDFE0", title:"LTR Gross Yield", val:"4–8%",  sub:"Resident zones. Passive income." },
                     { color:T.gold,    bg:"rgba(212,168,67,0.06)", border:"rgba(212,168,67,0.2)",  icon:"\u2696", title:"STR Net vs LTR", val:"Varies", sub:"Net yields often similar after costs." },
                   ].map((b,i) => (
                     <div key={i} style={{ padding:"14px 16px", background:b.bg, border:`1px solid ${b.border}`, borderRadius:10 }}>
@@ -9086,16 +9086,16 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                     <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16, marginBottom:16 }}>
                       <div className="chart-box" style={{ padding:20 }}>
                         <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:4 }}>STR Annual Costs (DTCM)</div>
-                        <div style={{ fontSize:11, color:T.textMuted, marginBottom:16 }}>What eats your Airbnb income \u2014 based on AED 1M property</div>
+                        <div style={{ fontSize:11, color:T.textMuted, marginBottom:16 }}>What eats your Airbnb income — based on AED 1M property</div>
                         {[
-                          { label:"DTCM Holiday Home License", val:"AED 1,500\u20132,500/yr", color:T.red    },
-                          { label:"Management Fee (15-25%)",   val:"AED 15,000\u201325,000/yr", color:T.red  },
-                          { label:"Furnishing (amortized)",    val:"AED 8,000\u201315,000/yr", color:"#F97316"},
-                          { label:"Cleaning per turnover",     val:"AED 150\u2013300/clean",   color:"#F97316"},
+                          { label:"DTCM Holiday Home License", val:"AED 1,500–2,500/yr", color:T.red    },
+                          { label:"Management Fee (15-25%)",   val:"AED 15,000–25,000/yr", color:T.red  },
+                          { label:"Furnishing (amortized)",    val:"AED 8,000–15,000/yr", color:"#F97316"},
+                          { label:"Cleaning per turnover",     val:"AED 150–300/clean",   color:"#F97316"},
                           { label:"Tourism Dirham fee",        val:"AED 15/night occupied",color:"#F97316"},
                           { label:"Platform fee (Airbnb)",     val:"3% of revenue",        color:"#F97316"},
                           { label:"Municipality fee (DEWA)",   val:"5% of annual rent",    color:T.textMuted },
-                          { label:"Utilities (if included)",   val:"AED 6,000\u201318,000/yr", color:T.textMuted },
+                          { label:"Utilities (if included)",   val:"AED 6,000–18,000/yr", color:T.textMuted },
                         ].map((r,i) => (
                           <div key={i} style={{ display:"flex", justifyContent:"space-between", padding:"7px 0", borderBottom:i<7?`1px solid ${T.border}`:"none" }}>
                             <span style={{ fontSize:12, color:T.textMuted }}>{r.label}</span>
@@ -9106,7 +9106,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
 
                       <div className="chart-box" style={{ padding:20 }}>
                         <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:4 }}>When STR Beats LTR</div>
-                        <div style={{ fontSize:11, color:T.textMuted, marginBottom:16 }}>Location is the key decision \u2014 not personal preference</div>
+                        <div style={{ fontSize:11, color:T.textMuted, marginBottom:16 }}>Location is the key decision — not personal preference</div>
                         {[
                           { icon:"\u2705", label:"Tourist/lifestyle zone", sub:"Downtown, Marina, Palm, JBR", model:"STR", color:"#10B981" },
                           { icon:"\u2705", label:"Occupancy stays above 65%", sub:"Peak months sustained year-round", model:"STR", color:"#10B981" },
@@ -9130,7 +9130,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
 
                     {/* Seasonality */}
                     <div className="chart-box" style={{ padding:20, marginBottom:16 }}>
-                      <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:4 }}>STR Seasonality \u2014 Dubai 2026</div>
+                      <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:4 }}>STR Seasonality — Dubai 2026</div>
                       <div style={{ fontSize:11, color:T.textMuted, marginBottom:16 }}>ADR and occupancy swing 30-50% between peak and low season</div>
                       <div style={{ display:"grid", gridTemplateColumns:"repeat(12,1fr)", gap:4 }}>
                         {[
@@ -9224,7 +9224,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 {!liveSTRData?.length && (
                   <div style={{ display:"flex", alignItems:"center", gap:8, padding:"8px 14px", borderRadius:8, background:"rgba(212,168,67,0.06)", border:`1px solid rgba(212,168,67,0.2)`, marginBottom:12 }}>
                     <span style={{ width:6, height:6, borderRadius:"50%", background:T.gold, display:"inline-block" }} />
-                    <span style={{ fontSize:11, color:T.textMuted }}><span style={{ color:T.gold, fontWeight:700 }}>2026 research data</span> \u2014 DTCM, Airbtics, homevy.com, maphomesrealestate.com, AirROI Feb 2025-Jan 2026</span>
+                    <span style={{ fontSize:11, color:T.textMuted }}><span style={{ color:T.gold, fontWeight:700 }}>2026 research data</span> — DTCM, Airbtics, homevy.com, maphomesrealestate.com, AirROI Feb 2025-Jan 2026</span>
                   </div>
                 )}
                 <div style={{ paddingTop:12, borderTop:`1px solid ${T.border}`, display:"flex", gap:8, flexWrap:"wrap" }}>
@@ -9239,14 +9239,14 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
           })()}
 
 
-          {/* \u2500\u2500\u2500 MORTGAGE TAB \u2500\u2500\u2500 */}
+          {/* ─── MORTGAGE TAB ─── */}
           {tab === "Mortgage" && (() => {
 
-            /* \u2550\u2550 BANK DATA \u2014 Research-based Apr 2026 \u2550\u2550
+            /* ══ BANK DATA — Research-based Apr 2026 ══
                Sources: ricadimortgages.com, realestateclubdubai.com,
                capitalzone.ae, finnxstar.com
                EIBOR 3-month: 3.593% (Feb 2026, capitalzone.ae)
-            \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 */
+            ════════════════════════════════════════════ */
             const EIBOR_3M = 3.593;
             const EIBOR_6M = 3.676;
             const EIBOR_1Y = 3.674;
@@ -9260,7 +9260,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               { bank:"HSBC UAE",      logo:"\uD83C\uDFE6", fixed1y:4.09, fixed3y:4.34, fixed5y:4.59, variable:EIBOR_3M+1.60, maxLTV:80, minSalary:15000, maxLoan:15000000, processingFee:1.0, islamic:false, salaryTransfer:false, highlight:false, note:"Global bank. Good for international income documentation. Non-resident friendly." },
             ];
 
-            /* \u2500\u2500 LTV Rules (UAE Central Bank) \u2500\u2500 */
+            /* ── LTV Rules (UAE Central Bank) ── */
             const LTV_RULES = {
               expat:       { under5m: 80, over5m: 65, nonResident: 60 },
               uae_national:{ under5m: 85, over5m: 70, nonResident: 85 },
@@ -9271,7 +9271,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
             const maxLTV = mortPrice > 5000000 ? profileRule.over5m : profileRule.under5m;
             const minDown = 100 - maxLTV;
 
-            /* \u2500\u2500 Calculator \u2500\u2500 */
+            /* ── Calculator ── */
             const loanAmount    = mortPrice * ((100 - mortDown) / 100);
             const downPayment   = mortPrice * (mortDown / 100);
             const annualRate    = mortRate / 100;
@@ -9285,7 +9285,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
             const maxAfford     = mortIncome * 0.50 * 12 / annualRate * (1 - Math.pow(1 + monthlyRate, -numPayments)); // DBR 50%
             const dbr           = (monthlyPayment / mortIncome) * 100;
 
-            /* \u2500\u2500 Buying cost breakdown \u2500\u2500 */
+            /* ── Buying cost breakdown ── */
             const dldFee        = mortPrice * 0.04;
             const agencyFee     = mortPrice * 0.02;
             const mortReg       = loanAmount * 0.0025;
@@ -9294,7 +9294,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
             const totalBuyCosts = dldFee + agencyFee + mortReg + valuationFee + processingFee;
             const totalCashNeeded = downPayment + totalBuyCosts;
 
-            /* \u2500\u2500 Rate for selected type \u2500\u2500 */
+            /* ── Rate for selected type ── */
             const getRateForType = (bank) => {
               if (mortType === "fixed1") return bank.fixed1y;
               if (mortType === "fixed3") return bank.fixed3y;
@@ -9318,7 +9318,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"10px 0", marginBottom:16, borderBottom:`1px solid ${T.border}`, flexWrap:"wrap", gap:8 }}>
                   <div>
                     <div style={{ fontFamily:"'Fraunces',serif", fontSize:20, fontWeight:800, color:T.white }}>Mortgage Intelligence</div>
-                    <div style={{ fontSize:11, color:T.textMuted, marginTop:3 }}>Live EIBOR \u00B7 6 bank comparison \u00B7 LTV rules \u00B7 Monthly payment \u00B7 Total cost of buying</div>
+                    <div style={{ fontSize:11, color:T.textMuted, marginTop:3 }}>Live EIBOR · 6 bank comparison · LTV rules · Monthly payment · Total cost of buying</div>
                   </div>
                   <div style={{ display:"flex", gap:8 }}>
                     {["calculator","banks"].map(v => (
@@ -9355,7 +9355,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                       {/* Inputs */}
                       <div className="chart-box" style={{ padding:24 }}>
                         <div style={{ fontFamily:"'Fraunces',serif", fontSize:14, fontWeight:700, color:T.white, marginBottom:4 }}>Your Mortgage</div>
-                        <div style={{ fontSize:11, color:T.textMuted, marginBottom:20 }}>Based on UAE Central Bank rules \u00B7 Apr 2026</div>
+                        <div style={{ fontSize:11, color:T.textMuted, marginBottom:20 }}>Based on UAE Central Bank rules · Apr 2026</div>
 
                         {/* Profile selector */}
                         <div style={{ marginBottom:16 }}>
@@ -9421,7 +9421,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                           <div style={{ fontFamily:"'Fraunces',serif", fontSize:42, fontWeight:900, color:T.gold, lineHeight:1 }}>
                             AED {Math.round(monthlyPayment).toLocaleString()}
                           </div>
-                          <div style={{ fontSize:12, color:T.textMuted, marginTop:8 }}>{mortYears} years \u00B7 {mortRate}% \u00B7 AED {(loanAmount/1000000).toFixed(2)}M loan</div>
+                          <div style={{ fontSize:12, color:T.textMuted, marginTop:8 }}>{mortYears} years · {mortRate}% · AED {(loanAmount/1000000).toFixed(2)}M loan</div>
                           {/* DBR indicator */}
                           <div style={{ marginTop:16, padding:"10px 14px", background:dbr<=50?"rgba(16,185,129,0.1)":"rgba(239,68,68,0.1)", borderRadius:8, border:`1px solid ${dbr<=50?T.green:T.red}30` }}>
                             <div style={{ display:"flex", justifyContent:"space-between", marginBottom:4 }}>
@@ -9486,7 +9486,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                           { profile:"Non-Resident",     under5m:"60% LTV (40% down)", over5m:"50% LTV (50% down)", color:"#3B82F6"},
                           { profile:"Max Tenure",        under5m:"25 years",           over5m:"Age cap: 70 yrs",    color:T.teal   },
                           { profile:"DBR Cap",           under5m:"50% of gross salary",over5m:"All loans combined", color:"#F97316"},
-                          { profile:"Min Salary",        under5m:"AED 10,000\u201315,000",  over5m:"Varies by bank",     color:T.textMuted },
+                          { profile:"Min Salary",        under5m:"AED 10,000–15,000",  over5m:"Varies by bank",     color:T.textMuted },
                         ].map((r,i) => (
                           <div key={i} style={{ padding:"12px 14px", background:T.surfaceAlt, borderRadius:10, border:`1px solid ${T.border}` }}>
                             <div style={{ fontSize:11, fontWeight:700, color:r.color, marginBottom:6 }}>{r.profile}</div>
@@ -9603,16 +9603,16 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
           })()}
 
 
-          {/* \u2500\u2500\u2500 INVESTMENT SCORE TAB \u2500\u2500\u2500 */}
+          {/* ─── INVESTMENT SCORE TAB ─── */}
           {tab === "Investment Score" && (() => {
 
-            /* \u2550\u2550 RESEARCH-BASED SCORING 2026 \u2550\u2550
+            /* ══ RESEARCH-BASED SCORING 2026 ══
                7 factors: Yield, Capital Growth, Liquidity, Infrastructure,
                Developer Quality, Risk, Demand Strength
                Sources: DLD Q1 2026, Knight Frank, Cavendish Maxwell,
                themiddleeastinsider.com, sterlingcapital.realestate,
                casttio.com, propertyfinder.ae
-            \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 */
+            ════════════════════════════════════════════════════════ */
 
             const SCORE_FACTORS = [
               { key:"yield",       label:"Rental Yield",     weight:20, icon:"\uD83D\uDCB0", desc:"Gross yield vs Dubai avg 7.2%. High yield = income-positive investment." },
@@ -9624,7 +9624,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               { key:"demand",      label:"Demand Strength",  weight:5,  icon:"\uD83D\uDC65", desc:"Occupancy rates, tenant diversity, population growth corridor." },
             ];
 
-            /* \u2550\u2550 COMMUNITY SCORES \u2014 Research-based \u2550\u2550 */
+            /* ══ COMMUNITY SCORES — Research-based ══ */
             const SEED_SCORES = [
               { id:"is01", community:"Jumeirah Lake Towers", type:"Apartment",
                 yield:88, growth:72, liquidity:90, infra:92, developer:80, risk:75, demand:88,
@@ -9637,7 +9637,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 grossYield:7.6, avgPrice:1120000, ppsf:2050, transactions2025:15300,
                 metroAccess:true, supplyRisk:"High", trend:"+0.2%", vacancyRate:6,
                 verdict:"Buy", badge:"#10B981",
-                note:"Highest transaction volume in Dubai. Corporate demand. Watch oversupply risk \u2014 15,000+ units 2026-27." },
+                note:"Highest transaction volume in Dubai. Corporate demand. Watch oversupply risk — 15,000+ units 2026-27." },
               { id:"is03", community:"Jumeirah Village Circle", type:"Apartment",
                 yield:82, growth:70, liquidity:85, infra:72, developer:75, risk:72, demand:85,
                 grossYield:7.8, avgPrice:923000, ppsf:1180, transactions2025:18200,
@@ -9655,7 +9655,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 grossYield:6.0, avgPrice:1583000, ppsf:1942, transactions2025:5200,
                 metroAccess:false, supplyRisk:"Low", trend:"+0.3%", vacancyRate:6,
                 verdict:"Buy", badge:"#10B981",
-                note:"Emaar flagship. 24% price growth 2025. Infrastructure still developing \u2014 patience required." },
+                note:"Emaar flagship. 24% price growth 2025. Infrastructure still developing — patience required." },
               { id:"is06", community:"Dubai Marina", type:"Apartment",
                 yield:75, growth:68, liquidity:92, infra:95, developer:80, risk:78, demand:88,
                 grossYield:6.8, avgPrice:1690000, ppsf:2280, transactions2025:11400,
@@ -9667,7 +9667,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 grossYield:5.8, avgPrice:1897000, ppsf:2100, transactions2025:4100,
                 metroAccess:false, supplyRisk:"Low", trend:"+0.2%", vacancyRate:5,
                 verdict:"Hold", badge:"#D4A843",
-                note:"Sobha quality premium. Good capital growth. Lower liquidity \u2014 longer exit time. For patient capital." },
+                note:"Sobha quality premium. Good capital growth. Lower liquidity — longer exit time. For patient capital." },
               { id:"is08", community:"Downtown Dubai", type:"Apartment",
                 yield:60, growth:65, liquidity:85, infra:98, developer:85, risk:80, demand:85,
                 grossYield:5.5, avgPrice:3182000, ppsf:3100, transactions2025:9200,
@@ -9703,7 +9703,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 grossYield:4.8, avgPrice:5104000, ppsf:1200, transactions2025:2100,
                 metroAccess:false, supplyRisk:"Low", trend:"+0.3%", vacancyRate:5,
                 verdict:"Buy", badge:"#10B981",
-                note:"MAF crystal lagoon. 52% YoY growth 2025. Premium community. Lower liquidity \u2014 long hold recommended." },
+                note:"MAF crystal lagoon. 52% YoY growth 2025. Premium community. Lower liquidity — long hold recommended." },
               { id:"is14", community:"Arabian Ranches", type:"Villa",
                 yield:54, growth:72, liquidity:75, infra:82, developer:90, risk:85, demand:80,
                 grossYield:4.8, avgPrice:4479000, ppsf:1200, transactions2025:2800,
@@ -9720,7 +9720,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
 
             const rawScores = liveInvestScores?.length > 0 ? liveInvestScores : SEED_SCORES;
 
-            /* \u2500\u2500 Calculate weighted total score \u2500\u2500 */
+            /* ── Calculate weighted total score ── */
             const getTotal = (d) => {
               return Math.round(
                 d.yield * 0.20 + d.growth * 0.20 + d.liquidity * 0.15 +
@@ -9777,7 +9777,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"10px 0", marginBottom:16, borderBottom:`1px solid ${T.border}`, flexWrap:"wrap", gap:8 }}>
                   <div>
                     <div style={{ fontFamily:"'Fraunces',serif", fontSize:20, fontWeight:800, color:T.white }}>Investment Score</div>
-                    <div style={{ fontSize:11, color:T.textMuted, marginTop:3 }}>7-factor scoring \u00B7 15 communities \u00B7 Weighted algorithm \u00B7 DLD Q1 2026 \u00B7 Research-backed</div>
+                    <div style={{ fontSize:11, color:T.textMuted, marginTop:3 }}>7-factor scoring · 15 communities · Weighted algorithm · DLD Q1 2026 · Research-backed</div>
                   </div>
                   <div style={{ display:"flex", gap:8 }}>
                     {["community","factors"].map(v => (
@@ -9881,7 +9881,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                               <div style={{ fontSize:12, color:T.textMuted, fontWeight:600 }}>{i+1}</div>
                               <div>
                                 <div style={{ fontSize:13, fontWeight:600, color:T.white }}>{d.community}</div>
-                                <div style={{ fontSize:10, color:T.textMuted }}>{d.type}{"\u00B7"}{d.grossYield}% yield</div>
+                                <div style={{ fontSize:10, color:T.textMuted }}>{d.type}{"·"}{d.grossYield}% yield</div>
                               </div>
                               <div style={{ fontFamily:"'Fraunces',serif", fontSize:18, fontWeight:900, color:d.total>=80?T.green:d.total>=65?T.gold:d.total>=50?"#F97316":T.red }}>{d.total}</div>
                               {[d.yield, d.growth, d.liquidity, d.infra, d.risk, d.demand].map((v,j) => (
@@ -9975,7 +9975,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   <div style={{ fontSize:11, color:T.textMuted, lineHeight:1.8 }}>
                     Scores are research-based using DLD Q1 2026 data, Knight Frank, Cavendish Maxwell, PropertyFinder, and Bayut market reports.
                     100 = top performer on that factor. Weighted average gives final Investment Score (0-100).
-                    Score \u226580 = Strong Buy \u00B7 65-79 = Buy \u00B7 50-64 = Hold \u00B7 &lt;50 = Caution.
+                    Score \u226580 = Strong Buy · 65-79 = Buy · 50-64 = Hold · &lt;50 = Caution.
                     Scores are updated quarterly as market conditions change.
                   </div>
                 </div>
@@ -9993,10 +9993,10 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
           })()}
 
 
-          {/* \u2500\u2500\u2500 FLIP CALCULATOR TAB \u2500\u2500\u2500 */}
+          {/* ─── FLIP CALCULATOR TAB ─── */}
           {tab === "Flip" && (() => {
 
-            /* \u2550\u2550 RESEARCH NOTES \u2550\u2550
+            /* ══ RESEARCH NOTES ══
                Dubai flip market 2026: Buy-renovate-sell or off-plan flip
                DLD 4% on buy + 4% on sell (if resell before registration = NOC)
                Off-plan flip: sell before completion (requires developer NOC)
@@ -10005,23 +10005,23 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                Typical hold: 6-24 months for ready flip, 12-36 for off-plan
                Capital gains tax: ZERO in Dubai
                Typical net profit: 8-25% on well-chosen properties
-            \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 */
+            ══════════════════════════════════════════════════════════ */
 
-            /* \u2500\u2500 All inputs come from existing flipBuyPrice etc
-               + new flp* state for renovation/costs \u2500\u2500 */
+            /* ── All inputs come from existing flipBuyPrice etc
+               + new flp* state for renovation/costs ── */
             const buyPrice     = flipBuyPrice;
             const sellPrice    = flipSellPrice;
             const holdYears    = flipHoldYears;
             const rentalYield  = flipRentalYield;
             const inclRental   = flipIncludeRental;
 
-            /* \u2500\u2500 Acquisition costs \u2500\u2500 */
+            /* ── Acquisition costs ── */
             const dldBuy       = buyPrice * 0.04;
             const agentBuy     = buyPrice * (flpAgentBuy / 100);
             const regFee       = 4000;
             const totalAcqCost = dldBuy + agentBuy + regFee;
 
-            /* \u2500\u2500 Mortgage costs (if leveraged) \u2500\u2500 */
+            /* ── Mortgage costs (if leveraged) ── */
             const loanAmt      = flpMortgage ? buyPrice * (flpLTV / 100) : 0;
             const mortMonthly  = flpMortgage && loanAmt > 0
               ? loanAmt * ((flpMortgageRate/100/12) * Math.pow(1+flpMortgageRate/100/12, holdYears*12)) / (Math.pow(1+flpMortgageRate/100/12, holdYears*12) - 1)
@@ -10030,23 +10030,23 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
             const mortInterest  = totalMortCost - loanAmt;
             const equityIn      = flpMortgage ? buyPrice - loanAmt : buyPrice;
 
-            /* \u2500\u2500 Holding costs \u2500\u2500 */
+            /* ── Holding costs ── */
             const scPerYear    = buyPrice * 0.01; // ~1% service charge estimate
             const totalSC      = scPerYear * holdYears;
 
-            /* \u2500\u2500 Rental income during hold \u2500\u2500 */
+            /* ── Rental income during hold ── */
             const annualRental = inclRental ? buyPrice * (rentalYield / 100) : 0;
             const totalRental  = annualRental * holdYears;
 
-            /* \u2500\u2500 Renovation \u2500\u2500 */
+            /* ── Renovation ── */
             const renovCost    = flpRenovCost;
 
-            /* \u2500\u2500 Disposal costs \u2500\u2500 */
+            /* ── Disposal costs ── */
             const dldSell      = sellPrice * 0.04;
             const agentSell    = sellPrice * (flpAgentSell / 100);
             const totalDispose = dldSell + agentSell;
 
-            /* \u2500\u2500 P&L \u2500\u2500 */
+            /* ── P&L ── */
             const totalIn      = buyPrice + totalAcqCost + renovCost + totalSC + (flpMortgage ? mortInterest : 0);
             const totalOut     = sellPrice + totalRental;
             const netProfit    = sellPrice + totalRental - totalIn;
@@ -10056,7 +10056,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
             const cashIn       = flpMortgage ? equityIn + totalAcqCost + renovCost + totalSC : buyPrice + totalAcqCost + renovCost + totalSC;
             const cashROI      = cashIn > 0 ? (netProfit / cashIn * 100) : 0;
 
-            /* \u2500\u2500 Scenarios \u2500\u2500 */
+            /* ── Scenarios ── */
             const scenarios = {
               bear:  { sellMulti: 0.90, note: "Market softens 10%. Common in oversupplied areas." },
               base:  { sellMulti: 1.00, note: "Sell at planned price. Realistic in established communities." },
@@ -10082,7 +10082,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"10px 0", marginBottom:16, borderBottom:`1px solid ${T.border}`, flexWrap:"wrap", gap:8 }}>
                   <div>
                     <div style={{ fontFamily:"'Fraunces',serif", fontSize:20, fontWeight:800, color:T.white }}>Flip Calculator</div>
-                    <div style={{ fontSize:11, color:T.textMuted, marginTop:3 }}>Buy \u00B7 Renovate \u00B7 Sell \u00B7 ROI \u00B7 DLD costs \u00B7 Mortgage leverage \u00B7 Scenario analysis</div>
+                    <div style={{ fontSize:11, color:T.textMuted, marginTop:3 }}>Buy · Renovate · Sell · ROI · DLD costs · Mortgage leverage · Scenario analysis</div>
                   </div>
                   <div style={{ display:"flex", gap:8 }}>
                     {["calculator","guide"].map(v => (
@@ -10101,7 +10101,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                     { label:"DLD on Buy",         val:"4%",      color:"#F97316", note:"of purchase price" },
                     { label:"DLD on Sell",        val:"4%",      color:"#F97316", note:"of sale price" },
                     { label:"Agent (Buy+Sell)",   val:"2%+2%",   color:T.textMuted, note:"negotiable" },
-                    { label:"Typical Net ROI",    val:"8\u201325%",   color:T.gold,   note:"well-chosen flip" },
+                    { label:"Typical Net ROI",    val:"8–25%",   color:T.gold,   note:"well-chosen flip" },
                     { label:"Off-Plan Flip",      val:"NOC req", color:T.teal,   note:"developer permission" },
                   ].map((e,i) => (
                     <div key={i} style={{ padding:"8px 14px", background:T.surface, border:`1px solid ${T.border}`, borderRadius:8, textAlign:"center", flex:"1 1 80px" }}>
@@ -10115,7 +10115,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 {flpView === "calculator" && (
                   <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16, marginBottom:16 }}>
 
-                    {/* Left \u2014 Inputs */}
+                    {/* Left — Inputs */}
                     <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
                       {/* Main sliders */}
                       <div className="chart-box" style={{ padding:22 }}>
@@ -10213,7 +10213,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                       </div>
                     </div>
 
-                    {/* Right \u2014 Results */}
+                    {/* Right — Results */}
                     <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
 
                       {/* Scenario selector */}
@@ -10234,15 +10234,15 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                       {/* Net profit hero */}
                       <div style={{ padding:"22px", background:netProfit>0?"linear-gradient(135deg,rgba(16,185,129,0.12),rgba(16,185,129,0.04))":"linear-gradient(135deg,rgba(239,68,68,0.12),rgba(239,68,68,0.04))", border:`1px solid ${netProfit>0?"rgba(16,185,129,0.3)":"rgba(239,68,68,0.3)"}`, borderRadius:14, textAlign:"center" }}>
                         <div style={{ fontSize:11, fontWeight:700, color:T.textMuted, letterSpacing:1, textTransform:"uppercase", marginBottom:8 }}>
-                          {flpScenario !== "base" ? `${flpScenario.toUpperCase()} SCENARIO \u2014 ` : ""}Net Profit
+                          {flpScenario !== "base" ? `${flpScenario.toUpperCase()} SCENARIO — ` : ""}Net Profit
                         </div>
                         <div style={{ fontFamily:"'Fraunces',serif", fontSize:38, fontWeight:900, color:scenProfit>0?T.green:T.red, lineHeight:1 }}>
                           {scenProfit>=0?"+":" "}AED {Math.abs(Math.round(scenProfit)).toLocaleString()}
                         </div>
                         <div style={{ fontSize:12, color:T.textMuted, marginTop:8 }}>
-                          {flpScenario!=="base" && <span>Sell at AED {Math.round(scenSell).toLocaleString()} \u00B7 </span>}
+                          {flpScenario!=="base" && <span>Sell at AED {Math.round(scenSell).toLocaleString()} · </span>}
                           ROI: <span style={{ color:scenROI>0?T.green:T.red, fontWeight:700 }}>{scenROI.toFixed(1)}%</span>
-                          {holdYears > 0 && <span style={{ color:T.textMuted }}>{"\u00B7"}{(((Math.pow(1+scenROI/100,1/holdYears)-1)*100)).toFixed(1)}% p.a.</span>}
+                          {holdYears > 0 && <span style={{ color:T.textMuted }}>{"·"}{(((Math.pow(1+scenROI/100,1/holdYears)-1)*100)).toFixed(1)}% p.a.</span>}
                         </div>
                         {scenProfit !== netProfit && (
                           <div style={{ marginTop:6, fontSize:11, color:T.textMuted }}>vs Base: {netProfit>0?"+":""}{Math.round(scenProfit-netProfit).toLocaleString()} AED</div>
@@ -10317,7 +10317,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                       <div style={{ fontFamily:"'Fraunces',serif", fontSize:13, fontWeight:700, color:T.white, marginBottom:16 }}>Ready Property Flip</div>
                       {[
                         { step:"1", title:"Find undervalued ready unit", detail:"Distressed sellers, divorce sales, estate sales, motivated sellers. Look for properties 10-15% below market." },
-                        { step:"2", title:"Negotiate + buy quickly", detail:"Cash buyers close in 2-3 weeks. Get pre-approved mortgage for speed. Don't over-negotiate \u2014 speed beats price." },
+                        { step:"2", title:"Negotiate + buy quickly", detail:"Cash buyers close in 2-3 weeks. Get pre-approved mortgage for speed. Don't over-negotiate — speed beats price." },
                         { step:"3", title:"Renovate strategically", detail:"Kitchen + bathrooms = 80% of value add. Budget AED 80-150/sqft for mid-range. Don't over-renovate for the area." },
                         { step:"4", title:"Rent while waiting (optional)", detail:"Furnished short-term rental during renovation period. 6-8% yield offsets holding costs." },
                         { step:"5", title:"Market and sell", detail:"Professional photography, Bayut + PF listings. Target 3-6 months to sell. Price 5-8% above similar units." },
@@ -10364,7 +10364,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
           })()}
 
 
-          {/* \u2500\u2500\u2500 DXB ESTIMATE TAB \u2500\u2500\u2500 */}
+          {/* ─── DXB ESTIMATE TAB ─── */}
           {tab === "DXB Estimate" && (() => {
 
             const BASE_PPSF = {
@@ -10438,7 +10438,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 <div style={{ display:"flex",alignItems:"center",justifyContent:"space-between",padding:"10px 0",marginBottom:16,borderBottom:`1px solid ${T.border}`,flexWrap:"wrap",gap:8 }}>
                   <div>
                     <div style={{ fontFamily:"'Fraunces',serif",fontSize:20,fontWeight:800,color:T.white }}>DXB Estimate</div>
-                    <div style={{ fontSize:11,color:T.textMuted,marginTop:3 }}>Automated Valuation \u00B7 18 communities \u00B7 DLD PPSF \u00B7 3-method cross-check \u00B7 Confidence scoring</div>
+                    <div style={{ fontSize:11,color:T.textMuted,marginTop:3 }}>Automated Valuation · 18 communities · DLD PPSF · 3-method cross-check · Confidence scoring</div>
                   </div>
                   <div style={{ display:"flex",gap:8 }}>
                     {["estimate","comparables"].map(v=>(
@@ -10526,7 +10526,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                         <span style={{ fontSize:10,padding:"2px 8px",borderRadius:8,background:confColor+"22",color:confColor,fontWeight:700 }}>{confidence} Confidence</span>
                       </div>
                       <div style={{ fontFamily:"'Fraunces',serif",fontSize:38,fontWeight:900,color:T.gold,lineHeight:1 }}>AED {(estValue/1e6).toFixed(2)}M</div>
-                      <div style={{ fontSize:12,color:T.textMuted,marginTop:6 }}>Range: AED {(estLow/1e6).toFixed(2)}M \u2013 AED {(estHigh/1e6).toFixed(2)}M</div>
+                      <div style={{ fontSize:12,color:T.textMuted,marginTop:6 }}>Range: AED {(estLow/1e6).toFixed(2)}M – AED {(estHigh/1e6).toFixed(2)}M</div>
                       <div style={{ position:"relative",height:8,borderRadius:4,background:T.border,margin:"12px 0" }}>
                         <div style={{ position:"absolute",left:"8%",right:"8%",height:"100%",background:"rgba(212,168,67,0.2)",borderRadius:4 }} />
                         <div style={{ position:"absolute",left:"50%",transform:"translateX(-50%)",width:3,height:"100%",background:T.gold,borderRadius:2 }} />
@@ -10539,8 +10539,8 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                     <div className="chart-box" style={{ padding:18 }}>
                       <div style={{ fontSize:12,fontWeight:700,color:T.white,marginBottom:12 }}>3-Method Cross-Check</div>
                       {[
-                        {method:"Sales Comparison",val:estValue,weight:"60%",color:T.gold,desc:`DLD PPSF AED ${adjPPSF}/sqft \u00D7 ${avmSize}sqft \u00B7 adjusted for your attributes`},
-                        {method:"Income Approach", val:incomeVal,weight:"30%",color:T.teal,desc:`${commYield}% community yield capitalisation \u00B7 Est rent AED ${Math.round(estValue*commYield/100/1000)}K/yr`},
+                        {method:"Sales Comparison",val:estValue,weight:"60%",color:T.gold,desc:`DLD PPSF AED ${adjPPSF}/sqft \u00D7 ${avmSize}sqft · adjusted for your attributes`},
+                        {method:"Income Approach", val:incomeVal,weight:"30%",color:T.teal,desc:`${commYield}% community yield capitalisation · Est rent AED ${Math.round(estValue*commYield/100/1000)}K/yr`},
                         {method:"Cost Approach",   val:costVal,  weight:"10%",color:"#8B5CF6",desc:"Land + construction cost + depreciation (indicative)"},
                       ].map((m,i)=>(
                         <div key={i} style={{ marginBottom:i<2?12:0,paddingBottom:i<2?12:0,borderBottom:i<2?`1px solid ${T.border}`:"none" }}>
@@ -10576,8 +10576,8 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 </div>
                 {avmView === "comparables" && (
                   <div className="chart-box" style={{ padding:20,marginTop:16 }}>
-                    <div style={{ fontSize:13,fontWeight:700,color:T.white,marginBottom:4 }}>DLD Comparable Transactions \u2014 {avmCommunity}</div>
-                    <div style={{ fontSize:11,color:T.textMuted,marginBottom:16 }}>Recent registered sales \u00B7 Q4 2025 \u2013 Q1 2026</div>
+                    <div style={{ fontSize:13,fontWeight:700,color:T.white,marginBottom:4 }}>DLD Comparable Transactions — {avmCommunity}</div>
+                    <div style={{ fontSize:11,color:T.textMuted,marginBottom:16 }}>Recent registered sales · Q4 2025 – Q1 2026</div>
                     {comps.length > 0 ? (
                       <>
                         <div style={{ background:T.surfaceAlt,borderRadius:8,overflow:"hidden" }}>
@@ -10618,10 +10618,10 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
           })()}
 
 
-          {/* \u2500\u2500\u2500 PORTFOLIO TAB \u2500\u2500\u2500 */}
+          {/* ─── PORTFOLIO TAB ─── */}
           {tab === "Portfolio" && (() => {
 
-            /* \u2550\u2550 PORTFOLIO TRACKER
+            /* ══ PORTFOLIO TRACKER
                Tracks user's Dubai property portfolio:
                - Total portfolio value vs cost
                - Unrealised gain/loss per property
@@ -10630,9 +10630,9 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                - IRR calculator
                - Wealth growth chart
                Data: stored in Firestore under user's profile
-            \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 */
+            ════════════════════════════════════════════════════════ */
 
-            /* Seed portfolio \u2014 replaced by Firestore on login */
+            /* Seed portfolio — replaced by Firestore on login */
             const SEED_PORTFOLIO = [
               { id:"p01", name:"Marina Heights 1BR", community:"Dubai Marina",   type:"Apartment", beds:"1BR", size:850,  buyPrice:1100000, currentVal:1380000, buyYear:2022, annualRent:78000,  sc:16000, mortgage:660000, mortRate:4.25, status:"Ready",   isSeed:true },
               { id:"p02", name:"JVC Studio",          community:"Jumeirah Village Circle", type:"Apartment", beds:"Studio", size:480, buyPrice:580000, currentVal:695000, buyYear:2023, annualRent:50000, sc:9000, mortgage:0, mortRate:0, status:"Ready", isSeed:true },
@@ -10642,7 +10642,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
             const portfolio = livePortfolio?.length > 0 ? livePortfolio : SEED_PORTFOLIO;
             const isSeed    = !(livePortfolio?.length > 0);
 
-            /* \u2500\u2500 Portfolio KPIs \u2500\u2500 */
+            /* ── Portfolio KPIs ── */
             const totalCost    = portfolio.reduce((s,p) => s + p.buyPrice, 0);
             const totalVal     = portfolio.reduce((s,p) => s + p.currentVal, 0);
             const totalGain    = totalVal - totalCost;
@@ -10655,7 +10655,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
             const grossYieldPort = totalVal > 0 ? (totalRent/totalVal*100) : 0;
             const netYieldPort   = totalVal > 0 ? (netRent/totalVal*100) : 0;
 
-            /* \u2500\u2500 IRR calculation (simplified) \u2500\u2500 */
+            /* ── IRR calculation (simplified) ── */
             const avgHoldYears = portfolio.length > 0
               ? portfolio.reduce((s,p) => s + (2026 - p.buyYear), 0) / portfolio.length : 1;
             const totalReturn  = totalGain + (netRent * avgHoldYears);
@@ -10670,7 +10670,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 <div style={{ display:"flex",alignItems:"center",justifyContent:"space-between",padding:"10px 0",marginBottom:16,borderBottom:`1px solid ${T.border}`,flexWrap:"wrap",gap:8 }}>
                   <div>
                     <div style={{ fontFamily:"'Fraunces',serif",fontSize:20,fontWeight:800,color:T.white }}>Portfolio Tracker</div>
-                    <div style={{ fontSize:11,color:T.textMuted,marginTop:3 }}>Wealth tracking \u00B7 IRR \u00B7 Rental income \u00B7 Equity \u00B7 Gain/loss \u00B7 Firebase synced</div>
+                    <div style={{ fontSize:11,color:T.textMuted,marginTop:3 }}>Wealth tracking · IRR · Rental income · Equity · Gain/loss · Firebase synced</div>
                   </div>
                   <div style={{ display:"flex",gap:8 }}>
                     {["overview","properties","irr"].map(v=>(
@@ -10686,7 +10686,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 {isSeed && (
                   <div style={{ padding:"10px 16px",background:"rgba(212,168,67,0.06)",border:"1px solid rgba(212,168,67,0.2)",borderRadius:10,marginBottom:16,display:"flex",alignItems:"center",gap:10 }}>
                     <span style={{ width:6,height:6,borderRadius:"50%",background:T.gold,display:"inline-block" }} />
-                    <span style={{ fontSize:12,color:T.textMuted }}><span style={{ color:T.gold,fontWeight:700 }}>Sample portfolio</span> \u2014 Add your real properties below. Data saves to your Firebase account and syncs across devices.</span>
+                    <span style={{ fontSize:12,color:T.textMuted }}><span style={{ color:T.gold,fontWeight:700 }}>Sample portfolio</span> — Add your real properties below. Data saves to your Firebase account and syncs across devices.</span>
                   </div>
                 )}
 
@@ -10731,7 +10731,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                                 <div style={{ height:"100%",width:pct+"%",background:i===0?T.gold:i===1?T.teal:T.green,borderRadius:4 }} />
                               </div>
                               <div style={{ display:"flex",justifyContent:"space-between",marginTop:3 }}>
-                                <span style={{ fontSize:10,color:T.textMuted }}>{p.community}{"\u00B7"}{p.beds}</span>
+                                <span style={{ fontSize:10,color:T.textMuted }}>{p.community}{"·"}{p.beds}</span>
                                 <span style={{ fontSize:10,color:T.textMuted }}>AED {(p.currentVal/1e6).toFixed(2)}M ({pct}%)</span>
                               </div>
                             </div>
@@ -10772,7 +10772,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                           <div style={{ padding:"14px 18px",borderBottom:`1px solid ${T.border}`,display:"flex",justifyContent:"space-between",alignItems:"center" }}>
                             <div>
                               <div style={{ fontFamily:"'Fraunces',serif",fontSize:15,fontWeight:700,color:T.white }}>{p.name}</div>
-                              <div style={{ fontSize:11,color:T.textMuted,marginTop:2 }}>{p.community}{"\u00B7"}{p.type}{"\u00B7"}{p.beds}{"\u00B7"}{p.size.toLocaleString()} sqft \u00B7 Bought {p.buyYear}</div>
+                              <div style={{ fontSize:11,color:T.textMuted,marginTop:2 }}>{p.community}{"·"}{p.type}{"·"}{p.beds}{"·"}{p.size.toLocaleString()} sqft · Bought {p.buyYear}</div>
                             </div>
                             <div style={{ textAlign:"right" }}>
                               <div style={{ fontFamily:"'Fraunces',serif",fontSize:20,fontWeight:900,color:T.white }}>AED {(p.currentVal/1e6).toFixed(2)}M</div>
@@ -10804,7 +10804,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                         style={{ padding:"8px 24px",background:`linear-gradient(135deg,${T.gold},#B8922A)`,border:"none",borderRadius:8,color:"#000",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"'Outfit',sans-serif" }}>
                         + Add Property
                       </button>
-                      <div style={{ fontSize:11,color:T.textMuted,marginTop:8 }}>Properties sync to your Firebase account \u00B7 Private to you only</div>
+                      <div style={{ fontSize:11,color:T.textMuted,marginTop:8 }}>Properties sync to your Firebase account · Private to you only</div>
                     </div>
                   </div>
                 )}
@@ -10817,7 +10817,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                       <div style={{ fontSize:11,color:T.textMuted,marginBottom:20 }}>Combined rental income + capital appreciation</div>
                       <div style={{ textAlign:"center",padding:"24px 0" }}>
                         <div style={{ fontFamily:"'Fraunces',serif",fontSize:52,fontWeight:900,color:T.gold,lineHeight:1 }}>{irr.toFixed(1)}%</div>
-                        <div style={{ fontSize:13,color:T.textMuted,marginTop:8 }}>Annualised IRR \u00B7 {avgHoldYears.toFixed(1)} yr avg hold</div>
+                        <div style={{ fontSize:13,color:T.textMuted,marginTop:8 }}>Annualised IRR · {avgHoldYears.toFixed(1)} yr avg hold</div>
                       </div>
                       {[
                         {label:"Total Capital Invested",  val:"AED "+(totalCost/1e6).toFixed(2)+"M"},
@@ -10850,7 +10850,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                         </div>
                       ))}
                       <div style={{ marginTop:12,padding:"10px 12px",background:"rgba(212,168,67,0.06)",borderRadius:8,fontSize:11,color:T.textMuted,lineHeight:1.7 }}>
-                        Dubai zero tax means your gross IRR IS your net IRR \u2014 no income tax, no capital gains tax deducted.
+                        Dubai zero tax means your gross IRR IS your net IRR — no income tax, no capital gains tax deducted.
                       </div>
                     </div>
                   </div>
@@ -10868,18 +10868,18 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
           })()}
 
 
-          {/* \u2500\u2500\u2500 GOLDEN VISA TAB \u2500\u2500\u2500 */}
+          {/* ─── GOLDEN VISA TAB ─── */}
           {tab === "Golden Visa" && (() => {
 
-            /* \u2550\u2550 RESEARCH \u2014 Golden Visa 2026 \u2550\u2550
+            /* ══ RESEARCH — Golden Visa 2026 ══
                Sources: dubailand.gov.ae, icp.gov.ae, u.ae, gdrfad.gov.ae
                realestateclubdubai.com (updated 15hrs ago Apr 2026)
                Federal Decree-Law No. 14 of 2022
-            \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 */
+            ════════════════════════════════════ */
 
             const THRESHOLD = 2000000; // AED 2M as of 2026
 
-            /* \u2500\u2500 Eligibility check \u2500\u2500 */
+            /* ── Eligibility check ── */
             const effectivePropValue = gvMortgage
               ? gvMortgagePaid
               : gvOffplan
@@ -10890,7 +10890,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
             const gap            = THRESHOLD - effectivePropValue;
             const pctToThreshold = Math.min((effectivePropValue / THRESHOLD) * 100, 100);
 
-            /* \u2500\u2500 Categories \u2500\u2500 */
+            /* ── Categories ── */
             const CATEGORIES = [
               {
                 key:"property", icon:"\uD83C\uDFE0", title:"Real Estate Investor",
@@ -10902,7 +10902,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   "Ready or off-plan from DLD-approved developer",
                   "Mortgaged property: need bank NOC + AED 2M paid",
                   "Property must be in applicant's personal name",
-                  "Freehold zone \u2014 registered with DLD",
+                  "Freehold zone — registered with DLD",
                 ],
                 family:["Spouse (10yr)","Children any age","Sons up to 25","Domestic staff unlimited"],
                 fees:[
@@ -10975,7 +10975,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               },
             ];
 
-            /* \u2500\u2500 Application steps \u2500\u2500 */
+            /* ── Application steps ── */
             const STEPS = [
               { n:"1", title:"Buy qualifying property", detail:"Purchase property \u2265 AED 2M. Get title deed from DLD or Oqood for off-plan. Property must be in freehold zone." },
               { n:"2", title:"DLD property status certificate", detail:"Get official 'Property Status Statement' from Dubai Land Department confirming your ownership and value." },
@@ -10987,7 +10987,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               { n:"8", title:"Receive Golden Visa", detail:"10-year residency permit issued and emailed. DLD places a lien on property to ensure ownership continuity throughout validity." },
             ];
 
-            /* \u2500\u2500 Properties near threshold from seed \u2500\u2500 */
+            /* ── Properties near threshold from seed ── */
             const nearThreshold = (liveProjects?.length > 0 ? liveProjects : SEED_PROJECTS)
               .filter(p => p.minPrice >= 1500000 && p.minPrice <= 4000000)
               .slice(0, 4);
@@ -11010,7 +11010,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"10px 0", marginBottom:16, borderBottom:`1px solid ${T.border}`, flexWrap:"wrap", gap:8 }}>
                   <div>
                     <div style={{ fontFamily:"'Fraunces',serif", fontSize:20, fontWeight:800, color:T.white }}>UAE Golden Visa</div>
-                    <div style={{ fontSize:11, color:T.textMuted, marginTop:3 }}>10-year residency \u00B7 AED 2M threshold \u00B7 Family sponsorship \u00B7 No minimum stay \u00B7 Official DLD 2026</div>
+                    <div style={{ fontSize:11, color:T.textMuted, marginTop:3 }}>10-year residency · AED 2M threshold · Family sponsorship · No minimum stay · Official DLD 2026</div>
                   </div>
                   <div style={{ display:"flex", gap:8 }}>
                     {["checker","guide","properties"].map(v=>(
@@ -11057,7 +11057,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
 
                     {gvCategory === "property" && (
                       <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16, marginBottom:16 }}>
-                        {/* Left \u2014 Calculator */}
+                        {/* Left — Calculator */}
                         <div className="chart-box" style={{ padding:22 }}>
                           <div style={{ fontFamily:"'Fraunces',serif", fontSize:13, fontWeight:700, color:T.white, marginBottom:16 }}>Eligibility Calculator</div>
 
@@ -11136,7 +11136,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                           </div>
                         </div>
 
-                        {/* Right \u2014 Result */}
+                        {/* Right — Result */}
                         <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
                           {/* Verdict */}
                           <div style={{ padding:"24px", background:eligible?"linear-gradient(135deg,rgba(16,185,129,0.12),rgba(16,185,129,0.04))":"linear-gradient(135deg,rgba(239,68,68,0.08),rgba(239,68,68,0.02))", border:`1px solid ${eligible?"rgba(16,185,129,0.3)":"rgba(239,68,68,0.25)"}`, borderRadius:14, textAlign:"center" }}>
@@ -11162,7 +11162,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
 
                           {/* Requirements checklist */}
                           <div className="chart-box" style={{ padding:18 }}>
-                            <div style={{ fontSize:12, fontWeight:700, color:T.white, marginBottom:12 }}>Requirements \u2014 {activeCat.title}</div>
+                            <div style={{ fontSize:12, fontWeight:700, color:T.white, marginBottom:12 }}>Requirements — {activeCat.title}</div>
                             {activeCat.requirements.map((r,i)=>(
                               <div key={i} style={{ display:"flex", gap:8, padding:"5px 0", borderBottom:i<activeCat.requirements.length-1?`1px solid ${T.border}`:"none" }}>
                                 <span style={{ color:T.green, flexShrink:0, marginTop:1 }}>\u2713</span>
@@ -11199,7 +11199,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                     {gvCategory !== "property" && (
                       <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16, marginBottom:16 }}>
                         <div className="chart-box" style={{ padding:20 }}>
-                          <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:12 }}>Requirements \u2014 {activeCat.title}</div>
+                          <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:12 }}>Requirements — {activeCat.title}</div>
                           {activeCat.requirements.map((r,i)=>(
                             <div key={i} style={{ display:"flex", gap:8, padding:"6px 0", borderBottom:i<activeCat.requirements.length-1?`1px solid ${T.border}`:"none" }}>
                               <span style={{ color:T.green, flexShrink:0 }}>\u2713</span>
@@ -11226,8 +11226,8 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 {/* STEP-BY-STEP GUIDE */}
                 {gvView === "guide" && (
                   <div style={{ marginBottom:16 }}>
-                    <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:4 }}>Application Process \u2014 Property Investor Route</div>
-                    <div style={{ fontSize:11, color:T.textMuted, marginBottom:16 }}>Official DLD process \u00B7 Typically 2-4 weeks end to end \u00B7 Apply at DLD Golden Cube or online via GDRFA</div>
+                    <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:4 }}>Application Process — Property Investor Route</div>
+                    <div style={{ fontSize:11, color:T.textMuted, marginBottom:16 }}>Official DLD process · Typically 2-4 weeks end to end · Apply at DLD Golden Cube or online via GDRFA</div>
                     <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
                       {STEPS.map((s,i)=>(
                         <div key={i} style={{ display:"flex", gap:12, padding:"14px 16px", background:T.surface, border:`1px solid ${T.border}`, borderRadius:10 }}>
@@ -11261,7 +11261,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 {gvView === "properties" && (
                   <div style={{ marginBottom:16 }}>
                     <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:4 }}>Properties Qualifying for Golden Visa</div>
-                    <div style={{ fontSize:11, color:T.textMuted, marginBottom:16 }}>Projects priced AED 2M+ in freehold zones \u00B7 Ready or off-plan \u00B7 DLD registered</div>
+                    <div style={{ fontSize:11, color:T.textMuted, marginBottom:16 }}>Projects priced AED 2M+ in freehold zones · Ready or off-plan · DLD registered</div>
                     {nearThreshold.length > 0 ? (
                       <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(280px,1fr))", gap:12 }}>
                         {nearThreshold.map((p,i)=>{
@@ -11273,7 +11273,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                                 <div>
                                   <div style={{ fontSize:10, color:T.textMuted, marginBottom:2 }}>{p.developer}</div>
                                   <div style={{ fontSize:14, fontWeight:700, color:T.white }}>{p.name}</div>
-                                  <div style={{ fontSize:11, color:T.textMuted }}>{p.community}{"\u00B7"}{p.type}</div>
+                                  <div style={{ fontSize:11, color:T.textMuted }}>{p.community}{"·"}{p.type}</div>
                                 </div>
                                 <span style={{ fontSize:9, padding:"2px 8px", borderRadius:8, background:gvReady?"rgba(16,185,129,0.12)":"rgba(212,168,67,0.12)", color:gvReady?T.green:T.gold, fontWeight:700, height:"fit-content" }}>
                                   {gvReady?"\u2713 GV Eligible":"Near Threshold"}
@@ -11303,7 +11303,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                       <div style={{ fontSize:11, color:T.textSecondary, lineHeight:1.8 }}>
                         Investors often buy <strong style={{ color:T.white }}>2 \u00D7 AED 1M properties in JVC</strong> to reach the AED 2M threshold.
                         Combined title deed values qualify. Both properties must be in your name.
-                        JVC studios from AED 480K\u2013700K + 1BR from AED 750K\u20131.1M = AED 2M threshold reached.
+                        JVC studios from AED 480K–700K + 1BR from AED 750K–1.1M = AED 2M threshold reached.
                         Benefit: higher total rental yield (7-8%) vs single AED 2M Downtown property (5.5%).
                       </div>
                     </div>
@@ -11323,17 +11323,17 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
           })()}
 
 
-          {/* \u2500\u2500\u2500 RISK TAB \u2500\u2500\u2500 */}
+          {/* ─── RISK TAB ─── */}
           {tab === "Risk" && (() => {
 
-            /* \u2550\u2550 RESEARCH \u2014 Risk Analysis Apr 2026 \u2550\u2550
+            /* ══ RESEARCH — Risk Analysis Apr 2026 ══
                Sources: Fitch Ratings (15% correction forecast), Goldman Sachs
                (51% transaction drop Mar 2026), DFM index -21% post Feb 28
                mitchellscommercialrealty.com, 1tab.co, lionandland.com
                87% cash transactions (Fitch) | RERA escrow protections
                9 risk factors: Supply, Geopolitical, Developer, Liquidity,
                Vacancy, Currency, Regulatory, Construction, Market Cycle
-            \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 */
+            ════════════════════════════════════════════════════════ */
 
             const RISK_FACTORS = [
               { key:"supply",       label:"Supply Oversupply",   weight:20, icon:"\uD83C\uDFD7",
@@ -11365,7 +11365,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 communityScores:{ "Jumeirah Village Circle":55, "Business Bay":48, "Dubai Marina":35, "Downtown Dubai":30, "Dubai Hills Estate":38, "Palm Jumeirah":28, "International City":45, "Dubai South":42 } },
             ];
 
-            /* \u2500\u2500 Community risk profiles \u2500\u2500 */
+            /* ── Community risk profiles ── */
             const COMMUNITY_RISK = {
               "Jumeirah Village Circle": { grade:"B+", label:"Moderate Risk", color:"#F97316", score:48, segment:"Mid-market apartment", note:"Highest supply pipeline in Dubai. Strong yield but correction risk elevated in 2026." },
               "Business Bay":            { grade:"B+", label:"Moderate Risk", color:"#F97316", score:42, segment:"Urban apartment/office", note:"Corporate demand strong but highest new supply pipeline. Watch absorption carefully." },
@@ -11374,13 +11374,13 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               "Dubai Hills Estate":      { grade:"A-", label:"Low-Moderate",  color:T.gold,   score:30, segment:"Family villa/apt", note:"Emaar quality + management. Strong end-user demand. Family community insulated from speculation." },
               "Palm Jumeirah":           { grade:"A",  label:"Low Risk",      color:T.green,  score:26, segment:"Luxury apartment/villa", note:"Finite supply. Global recognition. Ultra-HNW buyer base less sensitive to market cycles." },
               "International City":      { grade:"C+", label:"Higher Risk",   color:T.red,    score:58, segment:"Budget apartment", note:"High supply, high tenant turnover. Strong yield but vulnerable to correction and vacancy." },
-              "Dubai South":             { grade:"B",  label:"Moderate-High", color:"#F97316", score:52, segment:"Emerging market", note:"Long-term upside from AMI Airport. High current risk \u2014 not for short-term investors." },
+              "Dubai South":             { grade:"B",  label:"Moderate-High", color:"#F97316", score:52, segment:"Emerging market", note:"Long-term upside from AMI Airport. High current risk — not for short-term investors." },
             };
 
             const comm = riskCommunity2;
             const commRisk = COMMUNITY_RISK[comm] || COMMUNITY_RISK["Dubai Marina"];
 
-            /* \u2500\u2500 Overall risk score for selected community \u2500\u2500 */
+            /* ── Overall risk score for selected community ── */
             const communityRiskScore = Math.round(
               RISK_FACTORS.reduce((sum, f) => {
                 const s = f.communityScores[comm] || 30;
@@ -11388,7 +11388,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               }, 0)
             );
 
-            /* \u2500\u2500 Horizon adjustment \u2500\u2500 */
+            /* ── Horizon adjustment ── */
             const horizonAdj = { short:-12, medium:0, long:10 };
             const adjScore = Math.max(5, Math.min(95, communityRiskScore + (horizonAdj[riskHorizon]||0)));
 
@@ -11415,7 +11415,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"10px 0", marginBottom:16, borderBottom:`1px solid ${T.border}`, flexWrap:"wrap", gap:8 }}>
                   <div>
                     <div style={{ fontFamily:"'Fraunces',serif", fontSize:20, fontWeight:800, color:T.white }}>Risk Intelligence</div>
-                    <div style={{ fontSize:11, color:T.textMuted, marginTop:3 }}>9-factor risk model \u00B7 Community scoring \u00B7 Investment grade \u00B7 Fitch/Goldman Sachs data \u00B7 Apr 2026</div>
+                    <div style={{ fontSize:11, color:T.textMuted, marginTop:3 }}>9-factor risk model · Community scoring · Investment grade · Fitch/Goldman Sachs data · Apr 2026</div>
                   </div>
                   <div style={{ display:"flex", gap:8 }}>
                     {["radar","matrix","factors"].map(v=>(
@@ -11431,7 +11431,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 <div style={{ padding:"12px 16px", background:"rgba(239,68,68,0.06)", border:"1px solid rgba(239,68,68,0.2)", borderRadius:10, marginBottom:16 }}>
                   <div style={{ display:"flex", gap:10, flexWrap:"wrap" }}>
                     <span style={{ fontSize:11, fontWeight:700, color:T.red }}>\u26A0 Market Alert Apr 2026:</span>
-                    <span style={{ fontSize:11, color:T.textSecondary }}>DFM index -21% post Feb 28 \u00B7 Transaction volumes -51% Mar (Goldman Sachs) \u00B7 Physical prices -3% YoY (median AED 1,770/sqft, still +14% YoY) \u00B7 Fitch: 10-15% correction probable in mid-market \u00B7 87% cash market = no systemic collapse risk \u00B7 Prime areas resilient</span>
+                    <span style={{ fontSize:11, color:T.textSecondary }}>DFM index -21% post Feb 28 · Transaction volumes -51% Mar (Goldman Sachs) · Physical prices -3% YoY (median AED 1,770/sqft, still +14% YoY) · Fitch: 10-15% correction probable in mid-market · 87% cash market = no systemic collapse risk · Prime areas resilient</span>
                   </div>
                 </div>
 
@@ -11457,10 +11457,10 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                       {/* Risk score card */}
                       <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
                         <div style={{ padding:"24px", background:`linear-gradient(135deg,${riskGrade.color}14,${riskGrade.color}04)`, border:`1px solid ${riskGrade.color}40`, borderRadius:14, textAlign:"center" }}>
-                          <div style={{ fontSize:11, color:T.textMuted, textTransform:"uppercase", letterSpacing:1, marginBottom:6 }}>Risk Score \u2014 {comm.split(" ").slice(0,2).join(" ")}</div>
+                          <div style={{ fontSize:11, color:T.textMuted, textTransform:"uppercase", letterSpacing:1, marginBottom:6 }}>Risk Score — {comm.split(" ").slice(0,2).join(" ")}</div>
                           <div style={{ fontFamily:"'Fraunces',serif", fontSize:52, fontWeight:900, color:riskGrade.color, lineHeight:1 }}>{adjScore}</div>
                           <div style={{ fontSize:14, fontWeight:700, color:riskGrade.color, marginTop:6 }}>{riskGrade.label}</div>
-                          <div style={{ fontSize:12, color:T.textMuted, marginTop:4 }}>Investment Grade: <strong style={{ color:riskGrade.color }}>{riskGrade.grade}</strong>{"\u00B7"}{riskHorizon} horizon</div>
+                          <div style={{ fontSize:12, color:T.textMuted, marginTop:4 }}>Investment Grade: <strong style={{ color:riskGrade.color }}>{riskGrade.grade}</strong>{"·"}{riskHorizon} horizon</div>
                           {/* Risk bar */}
                           <div style={{ height:8, borderRadius:4, background:`linear-gradient(90deg,${T.green} 0%,${T.gold} 40%,#F97316 65%,${T.red} 100%)`, margin:"14px 0 6px", position:"relative" }}>
                             <div style={{ position:"absolute", top:-2, left:`${adjScore}%`, transform:"translateX(-50%)", width:12, height:12, borderRadius:"50%", background:T.white, border:`2px solid ${riskGrade.color}` }} />
@@ -11487,8 +11487,8 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
 
                       {/* Factor breakdown */}
                       <div className="chart-box" style={{ padding:20 }}>
-                        <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:4 }}>Risk Factors \u2014 {comm.split(" ").slice(0,2).join(" ")}</div>
-                        <div style={{ fontSize:11, color:T.textMuted, marginBottom:16 }}>Higher score = higher risk \u00B7 Weighted by importance</div>
+                        <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:4 }}>Risk Factors — {comm.split(" ").slice(0,2).join(" ")}</div>
+                        <div style={{ fontSize:11, color:T.textMuted, marginBottom:16 }}>Higher score = higher risk · Weighted by importance</div>
                         {RISK_FACTORS.map((f,i)=>{
                           const score = f.communityScores[comm] || 30;
                           const weighted = (score * f.weight / 100).toFixed(1);
@@ -11514,7 +11514,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 {riskTabView === "matrix" && (
                   <>
                     <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:4 }}>Community Risk Matrix</div>
-                    <div style={{ fontSize:11, color:T.textMuted, marginBottom:16 }}>All communities ranked \u00B7 Risk score vs rental yield \u00B7 Click any row to explore</div>
+                    <div style={{ fontSize:11, color:T.textMuted, marginBottom:16 }}>All communities ranked · Risk score vs rental yield · Click any row to explore</div>
                     <div style={{ background:T.surface, border:`1px solid ${T.border}`, borderRadius:12, overflow:"hidden", marginBottom:16 }}>
                       <div style={{ display:"grid", gridTemplateColumns:"2fr 0.8fr 0.8fr 0.8fr 0.8fr 1fr 1.2fr", padding:"10px 16px", background:T.surfaceAlt, borderBottom:`1px solid ${T.border}` }}>
                         {["Community","Grade","Risk Score","Gross Yield","Supply Risk","Geo Risk","Verdict"].map((h,i)=>(
@@ -11601,11 +11601,11 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
           })()}
 
 
-          {/* \u2500\u2500\u2500 FINANCIALS TAB \u2500\u2500\u2500 */}
+          {/* ─── FINANCIALS TAB ─── */}
           {tab === "Financials" && (() => {
 
-            /* \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
-               FINANCIALS TAB \u2014 Developer Intelligence
+            /* ══════════════════════════════════════════════════════════
+               FINANCIALS TAB — Developer Intelligence
                Sources: Official Investor Relations, DFM Filings, Annual Reports
                
                Emaar Properties (DFM: EMAAR):
@@ -11630,7 +11630,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                  - Delisted from DFM Feb 2022 (taken private)
                
                Sources: Official IR pages, DFM filings, AGBI, Emaar.com
-            \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 */
+            ══════════════════════════════════════════════════════════ */
 
             const DEVELOPERS_FIN = {
               "Emaar Properties": {
@@ -11669,14 +11669,14 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   "9M 2025: Property sales AED 61B (+22%)",
                   "9M 2025: Net Profit AED 9.8B (+49% YoY)",
                   "62 new project launches in UAE in 2024",
-                  "Grand Polo Club unveiled \u2014 new flagship masterplan",
+                  "Grand Polo Club unveiled — new flagship masterplan",
                 ],
                 risks: [
                   "Supply pipeline concentration in mid-market",
                   "Geopolitical risk (Iran-US conflict impact)",
                   "Off-plan delivery execution risk at scale",
                 ],
-                source: "Emaar IR \u2014 properties.emaar.com | Feb 2025 FY results",
+                source: "Emaar IR — properties.emaar.com | Feb 2025 FY results",
               },
 
               "Aldar Properties": {
@@ -11709,10 +11709,10 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   { name: "Other / JVs",                 pct: 8,  color: "#F97316" },
                 ],
                 highlights: [
-                  "FY2024: Revenue AED 15.7B (+90% YoY) \u2014 record",
+                  "FY2024: Revenue AED 15.7B (+90% YoY) — record",
                   "FY2024: Sales AED 33.6B (+20%), Backlog AED 54.6B (record)",
-                  "Net profit near AED 7B \u2014 approaching Emaar level",
-                  "AUM AED 42B \u2014 significant investment portfolio",
+                  "Net profit near AED 7B — approaching Emaar level",
+                  "AUM AED 42B — significant investment portfolio",
                   "Dubai commercial expansion: AED 1.8B office tower",
                   "International: SODIC (Egypt) + London Square (UK)",
                 ],
@@ -11721,7 +11721,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   "International execution risk (Egypt/UK)",
                   "Leverage creep as develop-to-hold pipeline grows",
                 ],
-                source: "Aldar IR \u2014 aldar.com/en/news-and-media | Feb 2025 FY results",
+                source: "Aldar IR — aldar.com/en/news-and-media | Feb 2025 FY results",
               },
 
               "DAMAC Properties": {
@@ -11754,18 +11754,18 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 ],
                 highlights: [
                   "FY2024: Revenue AED 9.8B (+15% forecast growth 2025)",
-                  "~$5B cash on hand (2024) \u2014 zero debt strategy",
-                  "Delisted DFM Feb 2022 \u2014 fully private",
+                  "~$5B cash on hand (2024) — zero debt strategy",
+                  "Delisted DFM Feb 2022 — fully private",
                   "Chelsea FC front-of-shirt sponsor 2025",
                   "Trump-branded projects driving luxury demand",
-                  "DAMAC Lagoons \u2014 fastest-selling community 2024",
+                  "DAMAC Lagoons — fastest-selling community 2024",
                 ],
                 risks: [
-                  "Private \u2014 limited financial transparency",
+                  "Private — limited financial transparency",
                   "Heavy dependence on branded/luxury segment",
                   "Bond distress signals (>1000bps spread) reported Mar 2026",
                 ],
-                source: "DAMAC IR \u2014 damacproperties.com | Various sources 2024-2025",
+                source: "DAMAC IR — damacproperties.com | Various sources 2024-2025",
               },
 
               "Sobha Realty": {
@@ -11796,19 +11796,19 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   { name: "Oman / International",   pct: 14, color: "#3B82F6" },
                 ],
                 highlights: [
-                  "FY2024: Sales ~AED 17B \u2014 strong FDI buyer base",
+                  "FY2024: Sales ~AED 17B — strong FDI buyer base",
                   "In-house construction = quality control advantage",
-                  "Sobha Hartland 2 launched \u2014 new Meydan masterplan",
+                  "Sobha Hartland 2 launched — new Meydan masterplan",
                   "Revenue backlog ~AED 30B supports 3yr revenue visibility",
                   "Strong Indian diaspora + GCC HNW buyer base",
                   "PPSF premium: AED 2,100-2,200/sqft (above market avg)",
                 ],
                 risks: [
-                  "Private \u2014 limited public disclosures",
+                  "Private — limited public disclosures",
                   "Single-developer, single-community concentration",
                   "Delivery execution at Hartland 2 scale",
                 ],
-                source: "Sobha Realty IR \u2014 sobharealty.com | Various 2024-2025",
+                source: "Sobha Realty IR — sobharealty.com | Various 2024-2025",
               },
 
               "Nakheel": {
@@ -11836,13 +11836,13 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 ],
                 highlights:[
                   "2024: Sales AED 20B+, Nakheel #1 in Dubai luxury segment",
-                  "2025: AED 16.9B in high-end segment (>AED 15M) \u2014 #1 market leader",
-                  "Palm Jumeirah \u2014 global icon, 672 luxury transactions 2025",
-                  "Dubai Islands \u2014 major new masterplan, multiple phases launching",
+                  "2025: AED 16.9B in high-end segment (>AED 15M) — #1 market leader",
+                  "Palm Jumeirah — global icon, 672 luxury transactions 2025",
+                  "Dubai Islands — major new masterplan, multiple phases launching",
                   "Integrated into Dubai Holding (Mar 2024) alongside Meraas",
                   "DLD 2024: 3,248 transactions, AED 5.82B apartments only",
                 ],
-                risks:["Part of Dubai Holding \u2014 limited standalone disclosures","Supply concentration in luxury waterfront","Long development cycles for island projects"],
+                risks:["Part of Dubai Holding — limited standalone disclosures","Supply concentration in luxury waterfront","Long development cycles for island projects"],
                 source:"Dubai Holding / DLD data / Arabian Business 2025",
               },
 
@@ -11871,13 +11871,13 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 ],
                 highlights:[
                   "2025: AED 10B sales Jan-Aug (1,188 transactions, avg AED 8.4M)",
-                  "Nad Al Sheba Gardens Phase 10 \u2014 fastest-selling villa launch 2025",
-                  "City Walk, La Mer, Bluewaters \u2014 iconic lifestyle destinations",
-                  "Asora Bay Residences at La Mer Peninsula \u2014 premium waterfront",
-                  "Jumeirah Residences Emirates Towers \u2014 DIFC branded address",
+                  "Nad Al Sheba Gardens Phase 10 — fastest-selling villa launch 2025",
+                  "City Walk, La Mer, Bluewaters — iconic lifestyle destinations",
+                  "Asora Bay Residences at La Mer Peninsula — premium waterfront",
+                  "Jumeirah Residences Emirates Towers — DIFC branded address",
                   "Part of Dubai Holding alongside Nakheel, Jumeirah Group",
                 ],
-                risks:["Private \u2014 Dubai Holding subsidiary, no standalone reports","Lifestyle retail exposure (mall vacancy risk)","High avg sale price limits buyer pool"],
+                risks:["Private — Dubai Holding subsidiary, no standalone reports","Lifestyle retail exposure (mall vacancy risk)","High avg sale price limits buyer pool"],
                 source:"Dubai Holding / Provident Estate / DLD data 2025",
               },
 
@@ -11906,13 +11906,13 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 ],
                 highlights:[
                   "2024: Revenue AED 6.3B (+18% forecast for 2025)",
-                  "2025: AED 26B total sales (The National, Jan 2026 \u2014 chairman statement)",
+                  "2025: AED 26B total sales (The National, Jan 2026 — chairman statement)",
                   "Q1 2026: 2,426 transactions, AED 3.5B (avg AED 1.46M/unit)",
-                  "60+ completed projects \u2014 strong delivery track record",
+                  "60+ completed projects — strong delivery track record",
                   "Bugatti Residences + Jacob & Co = highest-profile branded play",
-                  "Bond stress signals >1000bps (Mar 2026) \u2014 monitor carefully",
+                  "Bond stress signals >1000bps (Mar 2026) — monitor carefully",
                 ],
-                risks:["Bond distress signals reported Mar 2026 \u2014 Omniyat/Binghatti group","High leverage historically (D/E 0.75x)","Rapid expansion pace \u2014 execution risk","Private \u2014 limited financial transparency"],
+                risks:["Bond distress signals reported Mar 2026 — Omniyat/Binghatti group","High leverage historically (D/E 0.75x)","Rapid expansion pace — execution risk","Private — limited financial transparency"],
                 source:"The National Jan 2026 / DLD Q1 2026 / timehomesrealestate.com",
               },
 
@@ -11940,14 +11940,14 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   {name:"Commercial", pct:10, color:"#6B7280"},
                 ],
                 highlights:[
-                  "2024: Revenue exceeding AED 10B \u2014 10,229 units sold",
-                  "19 projects delivered in 2024 \u2014 strong execution record",
-                  "Azizi Venice \u2014 Dubai South flagship, integrated resort concept",
-                  "Burj Azizi \u2014 world's 2nd tallest building under development",
-                  "Q1 2026: AED 905M sales (880K\u2013905M range, DLD data)",
-                  "Entry prices from AED 400K \u2014 accessible investor segment",
+                  "2024: Revenue exceeding AED 10B — 10,229 units sold",
+                  "19 projects delivered in 2024 — strong execution record",
+                  "Azizi Venice — Dubai South flagship, integrated resort concept",
+                  "Burj Azizi — world's 2nd tallest building under development",
+                  "Q1 2026: AED 905M sales (880K–905M range, DLD data)",
+                  "Entry prices from AED 400K — accessible investor segment",
                 ],
-                risks:["Private \u2014 limited financial disclosures","Dubai South concentration risk","High unit volume = execution complexity","Burj Azizi scale delivery risk"],
+                risks:["Private — limited financial disclosures","Dubai South concentration risk","High unit volume = execution complexity","Burj Azizi scale delivery risk"],
                 source:"takayamotorcity.com / DLD 2024 data / primocapital.ae",
               },
 
@@ -11976,13 +11976,13 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 ],
                 highlights:[
                   "2024: AED 8.5B sales, AED 9.42B apartments 2024 (DLD)",
-                  "2024: 6,334 transactions at AED 1.48M avg \u2014 volume leader",
+                  "2024: 6,334 transactions at AED 1.48M avg — volume leader",
                   "Aug 2025: 2,500 transactions, AED 4.1B (Provident data)",
-                  "Pioneer of 1% monthly payment \u2014 copied industry-wide",
-                  "Part of Danube Group \u2014 backward integration in materials",
-                  "On-time delivery reputation \u2014 minor delays but always completes",
+                  "Pioneer of 1% monthly payment — copied industry-wide",
+                  "Part of Danube Group — backward integration in materials",
+                  "On-time delivery reputation — minor delays but always completes",
                 ],
-                risks:["Private \u2014 no standalone financial reports","Affordable segment = thin margins","Buyer reliance on extended payment plans","Volume dependence"],
+                risks:["Private — no standalone financial reports","Affordable segment = thin margins","Buyer reliance on extended payment plans","Volume dependence"],
                 source:"primocapital.ae / Provident Estate / DLD 2024",
               },
 
@@ -12010,13 +12010,13 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 ],
                 highlights:[
                   "2024: AED 6.81B sales, 2,871 transactions (DLD apartments data)",
-                  "AED 2.37M avg price, AED 2,009/sqft \u2014 mid-premium positioning",
+                  "AED 2.37M avg price, AED 2,009/sqft — mid-premium positioning",
                   "Q1 2026: AED 2.48B sales, 1,084 transactions",
                   "Design-led: exceeds competitors on finish quality at same price",
-                  "Strong tenant demand \u2014 premium rents vs area avg",
+                  "Strong tenant demand — premium rents vs area avg",
                   "Lowest D/E ratio of private developers (0.38x)",
                 ],
-                risks:["Private \u2014 no financial disclosures","Low volume limits economies of scale","Design-led = higher COGS vs competitors","Small team relative to pipeline"],
+                risks:["Private — no financial disclosures","Low volume limits economies of scale","Design-led = higher COGS vs competitors","Small team relative to pipeline"],
                 source:"primocapital.ae / timehomesrealestate.com / DLD 2024",
               },
             };
@@ -12025,7 +12025,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
             const rawData = finPeriod === "annual" ? devData.annualData : devData.quarterly;
             const compareData = DEVELOPERS_FIN[finCompareDev];
 
-            /* \u2500\u2500 Chart helpers \u2500\u2500 */
+            /* ── Chart helpers ── */
             const getMetricVal = (d) => {
               switch(finMetric) {
                 case "revenue":    return d.revenue;
@@ -12076,12 +12076,12 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
             return (
               <div style={{ animation:"fadeUp 0.4s ease-out forwards" }}>
 
-                {/* \u2500\u2500 HEADER \u2500\u2500 */}
+                {/* ── HEADER ── */}
                 <div style={{ display:"flex", alignItems:"flex-start", justifyContent:"space-between", padding:"10px 0", marginBottom:16, borderBottom:`1px solid ${T.border}`, flexWrap:"wrap", gap:12 }}>
                   <div>
                     <div style={{ fontFamily:"'Fraunces',serif", fontSize:20, fontWeight:800, color:T.white }}>Developer Financials</div>
                     <div style={{ fontSize:11, color:T.textMuted, marginTop:3 }}>
-                      Official investor relations data \u00B7 DFM/ADX filings \u00B7 Annual reports \u00B7 Revenue, profit, backlog, sales
+                      Official investor relations data · DFM/ADX filings · Annual reports · Revenue, profit, backlog, sales
                     </div>
                   </div>
                   <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
@@ -12094,10 +12094,10 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   </div>
                 </div>
 
-                {/* \u2500\u2500 DEVELOPER SELECTOR + CONTROLS \u2500\u2500 */}
+                {/* ── DEVELOPER SELECTOR + CONTROLS ── */}
                 <div style={{ background:T.surface, border:`1px solid ${T.border}`, borderRadius:12, padding:"14px 16px", marginBottom:16 }}>
                   <div style={{ display:"flex", gap:10, flexWrap:"wrap", alignItems:"center" }}>
-                    {/* Developer pills \u2014 detailed data available */}
+                    {/* Developer pills — detailed data available */}
                     <div style={{ display:"flex", gap:6, flexWrap:"wrap", flex:1 }}>
                       {developers.map(dev=>{
                         const d = DEVELOPERS_FIN[dev];
@@ -12135,7 +12135,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   </div>
                 </div>
 
-                {/* \u2500\u2500 OVERVIEW VIEW \u2500\u2500 */}
+                {/* ── OVERVIEW VIEW ── */}
                 {finView === "overview" && (
                   <>
                     {/* Developer identity card */}
@@ -12150,7 +12150,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                             }
                           </div>
                           <div style={{ fontSize:12, color:T.textSecondary, maxWidth:500, lineHeight:1.6 }}>{devData.description}</div>
-                          <div style={{ fontSize:11, color:T.textMuted, marginTop:4 }}>Founded {devData.founded} \u00B7 Source: <span style={{ color:devData.color }}>{devData.source}</span></div>
+                          <div style={{ fontSize:11, color:T.textMuted, marginTop:4 }}>Founded {devData.founded} · Source: <span style={{ color:devData.color }}>{devData.source}</span></div>
                         </div>
                         <div style={{ textAlign:"right" }}>
                           <div style={{ fontSize:10, color:T.textMuted, marginBottom:4 }}>LATEST YEAR REVENUE</div>
@@ -12200,13 +12200,13 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                         return (
                           <div key={i} style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr 1fr 1fr 1fr 1fr", padding:"11px 16px", borderBottom:i<devData.annualData.length-1?`1px solid ${T.border}`:"none", background:isLatest?"rgba(212,168,67,0.03)":"transparent", alignItems:"center" }}>
                             <div style={{ fontFamily:"'Fraunces',serif", fontSize:13, fontWeight:700, color:isLatest?T.gold:T.white }}>{d.year}</div>
-                            <div style={{ fontSize:13, fontWeight:600, color:T.white }}>{d.revenue ? d.revenue.toFixed(1) : "\u2014"}</div>
-                            <div style={{ fontSize:13, fontWeight:600, color:d.netProfit > 0 ? T.green : d.netProfit < 0 ? T.red : T.textMuted }}>{d.netProfit !== null ? d.netProfit.toFixed(1) : "\u2014"}</div>
-                            <div style={{ fontSize:13, color:T.white }}>{d.sales ? d.sales.toFixed(1) : "\u2014"}</div>
-                            <div style={{ fontSize:13, color:T.teal }}>{d.backlog ? d.backlog.toFixed(1) : "\u2014"}</div>
-                            <div style={{ fontSize:13, color:T.textMuted }}>{d.ebitda ? d.ebitda.toFixed(1) : "\u2014"}</div>
+                            <div style={{ fontSize:13, fontWeight:600, color:T.white }}>{d.revenue ? d.revenue.toFixed(1) : "—"}</div>
+                            <div style={{ fontSize:13, fontWeight:600, color:d.netProfit > 0 ? T.green : d.netProfit < 0 ? T.red : T.textMuted }}>{d.netProfit !== null ? d.netProfit.toFixed(1) : "—"}</div>
+                            <div style={{ fontSize:13, color:T.white }}>{d.sales ? d.sales.toFixed(1) : "—"}</div>
+                            <div style={{ fontSize:13, color:T.teal }}>{d.backlog ? d.backlog.toFixed(1) : "—"}</div>
+                            <div style={{ fontSize:13, color:T.textMuted }}>{d.ebitda ? d.ebitda.toFixed(1) : "—"}</div>
                             <div style={{ fontSize:12, fontWeight:700, color:revGrowth > 0 ? T.green : revGrowth < 0 ? T.red : T.textMuted }}>
-                              {revGrowth !== null ? (revGrowth > 0 ? "+" : "") + revGrowth.toFixed(0) + "%" : "\u2014"}
+                              {revGrowth !== null ? (revGrowth > 0 ? "+" : "") + revGrowth.toFixed(0) + "%" : "—"}
                             </div>
                           </div>
                         );
@@ -12252,7 +12252,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   </>
                 )}
 
-                {/* \u2500\u2500 CHARTS VIEW \u2500\u2500 */}
+                {/* ── CHARTS VIEW ── */}
                 {finView === "charts" && (
                   <>
                     {/* Metric selector */}
@@ -12303,7 +12303,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                         </div>
                       </div>
                       <div style={{ fontSize:11, color:T.textMuted, marginBottom:20 }}>
-                        {yoy > 0 ? `+${yoy.toFixed(0)}%` : yoy.toFixed(0) + "%"} YoY \u00B7 Latest: AED {latestVal.toFixed(1)}B
+                        {yoy > 0 ? `+${yoy.toFixed(0)}%` : yoy.toFixed(0) + "%"} YoY · Latest: AED {latestVal.toFixed(1)}B
                       </div>
 
                       {/* Bars */}
@@ -12367,12 +12367,12 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   </>
                 )}
 
-                {/* \u2500\u2500 SEGMENTS VIEW \u2500\u2500 */}
+                {/* ── SEGMENTS VIEW ── */}
                 {finView === "segments" && (
                   <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16, marginBottom:16 }}>
                     <div className="chart-box" style={{ padding:20 }}>
                       <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:4 }}>Revenue Segments</div>
-                      <div style={{ fontSize:11, color:T.textMuted, marginBottom:20 }}>Business unit contribution \u2014 FY2024</div>
+                      <div style={{ fontSize:11, color:T.textMuted, marginBottom:20 }}>Business unit contribution — FY2024</div>
                       {devData.segments.map((s,i)=>(
                         <div key={i} style={{ marginBottom:14 }}>
                           <div style={{ display:"flex", justifyContent:"space-between", marginBottom:4 }}>
@@ -12391,15 +12391,15 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
 
                     <div className="chart-box" style={{ padding:20 }}>
                       <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:16 }}>Backlog vs Revenue</div>
-                      <div style={{ fontSize:11, color:T.textMuted, marginBottom:16 }}>Revenue visibility ratio \u2014 backlog \u00F7 annual revenue</div>
+                      <div style={{ fontSize:11, color:T.textMuted, marginBottom:16 }}>Revenue visibility ratio — backlog \u00F7 annual revenue</div>
                       {devData.annualData.map((d,i)=>{
-                        const ratio = d.revenue > 0 ? (d.backlog / d.revenue).toFixed(1) : "\u2014";
+                        const ratio = d.revenue > 0 ? (d.backlog / d.revenue).toFixed(1) : "—";
                         const isLatest = i === devData.annualData.length - 1;
                         return (
                           <div key={i} style={{ display:"flex", justifyContent:"space-between", padding:"7px 0", borderBottom:i<devData.annualData.length-1?`1px solid ${T.border}`:"none" }}>
                             <span style={{ fontSize:12, color:isLatest?T.white:T.textMuted, fontWeight:isLatest?700:400 }}>{d.year}</span>
                             <div style={{ display:"flex", gap:16 }}>
-                              <span style={{ fontSize:12, color:T.teal }}>{d.backlog ? "AED "+d.backlog+"B" : "\u2014"}</span>
+                              <span style={{ fontSize:12, color:T.teal }}>{d.backlog ? "AED "+d.backlog+"B" : "—"}</span>
                               <span style={{ fontSize:12, fontWeight:700, color:isLatest?T.gold:T.textMuted }}>{ratio}x coverage</span>
                             </div>
                           </div>
@@ -12408,19 +12408,19 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                       <div style={{ marginTop:12, padding:"10px 12px", background:"rgba(212,168,67,0.06)", borderRadius:8, fontSize:11, color:T.textSecondary, lineHeight:1.7 }}>
                         Backlog \u00F7 Revenue = years of revenue visibility. Higher = more predictable future income.
                         {devData.annualData[4].backlog && devData.annualData[4].revenue ?
-                          ` ${finDeveloper.split(" ")[0]} current: ${(devData.annualData[4].backlog/devData.annualData[4].revenue).toFixed(1)}x \u2014 ${(devData.annualData[4].backlog/devData.annualData[4].revenue) > 3 ? "Excellent visibility" : "Good visibility"}.` : ""
+                          ` ${finDeveloper.split(" ")[0]} current: ${(devData.annualData[4].backlog/devData.annualData[4].revenue).toFixed(1)}x — ${(devData.annualData[4].backlog/devData.annualData[4].revenue) > 3 ? "Excellent visibility" : "Good visibility"}.` : ""
                         }
                       </div>
                     </div>
                   </div>
                 )}
 
-                {/* \u2500\u2500 DEEP DIVE VIEW \u2500\u2500 */}
+                {/* ── DEEP DIVE VIEW ── */}
                 {finView === "deep" && (
                   <div style={{ marginBottom:16 }}>
                     {/* All 4 developers side by side comparison */}
-                    <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:4 }}>All Developers \u2014 FY2024 Comparison</div>
-                    <div style={{ fontSize:11, color:T.textMuted, marginBottom:16 }}>Official annual results \u00B7 Click developer to explore</div>
+                    <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:4 }}>All Developers — FY2024 Comparison</div>
+                    <div style={{ fontSize:11, color:T.textMuted, marginBottom:16 }}>Official annual results · Click developer to explore</div>
                     <div style={{ background:T.surface, border:`1px solid ${T.border}`, borderRadius:12, overflow:"hidden", marginBottom:16 }}>
                       <div style={{ display:"grid", gridTemplateColumns:"1.8fr 1fr 1fr 1fr 1fr 1fr 1fr", padding:"10px 16px", background:T.surfaceAlt, borderBottom:`1px solid ${T.border}` }}>
                         {["Developer","Revenue","Net Profit","Sales","Backlog","Net Margin","Listed"].map((h,i)=>(
@@ -12430,7 +12430,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                       {developers.map((dev,i)=>{
                         const d = DEVELOPERS_FIN[dev];
                         const fy24 = d.annualData[4];
-                        const margin = fy24.revenue > 0 ? (fy24.netProfit / fy24.revenue * 100).toFixed(0) : "\u2014";
+                        const margin = fy24.revenue > 0 ? (fy24.netProfit / fy24.revenue * 100).toFixed(0) : "—";
                         const isActive = dev === finDeveloper;
                         return (
                           <div key={i} style={{ display:"grid", gridTemplateColumns:"1.8fr 1fr 1fr 1fr 1fr 1fr 1fr", padding:"12px 16px", borderBottom:i<developers.length-1?`1px solid ${T.border}`:"none", cursor:"pointer", background:isActive?"rgba(212,168,67,0.04)":"transparent" }}
@@ -12492,7 +12492,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   </div>
                 )}
 
-                {/* \u2500\u2500 SOURCE FOOTER \u2500\u2500 */}
+                {/* ── SOURCE FOOTER ── */}
                 <div style={{ paddingTop:12, borderTop:`1px solid ${T.border}`, display:"flex", gap:8, flexWrap:"wrap", alignItems:"center" }}>
                   <span style={{ fontSize:10, color:T.textMuted }}>Sources:</span>
                   {["Emaar Properties IR (emaar.com)","Aldar Properties IR (aldar.com)","DAMAC IR","Sobha Realty IR","DFM Official Filings","ADX Filings","AGBI","Official Annual Reports 2024-2025"].map((s,i)=>(
@@ -12505,28 +12505,28 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
           })()}
 
 
-          {/* \u2500\u2500\u2500 DEVELOPER HEALTH TAB \u2500\u2500\u2500 */}
+          {/* ─── DEVELOPER HEALTH TAB ─── */}
           {tab === "Developer Health" && (() => {
 
-            /* \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
-               DEVELOPER HEALTH \u2014 9-Factor Scoring Model
+            /* ══════════════════════════════════════════════════════
+               DEVELOPER HEALTH — 9-Factor Scoring Model
                Sources: DLD transaction data, RERA registry,
                DXBinteract, Arabian Business, company disclosures
                
                9 Factors (total 100 pts):
-               1. Sales Velocity       (15pts) \u2014 DLD monthly transactions
-               2. Delivery Track Record(20pts) \u2014 on-time %, completed projects
-               3. Financial Strength   (20pts) \u2014 revenue, cash, debt
-               4. Project Pipeline     (10pts) \u2014 active launches, backlog
-               5. Market Reputation    (10pts) \u2014 buyer reviews, complaints
-               6. RERA Compliance      (10pts) \u2014 violations, escrow status
-               7. DLD Transaction Rank (5pts)  \u2014 market share rank
-               8. Pricing Stability    (5pts)  \u2014 PPSF consistency
-               9. Buyer Nationality Mix(5pts)  \u2014 diversification
-            \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 */
+               1. Sales Velocity       (15pts) — DLD monthly transactions
+               2. Delivery Track Record(20pts) — on-time %, completed projects
+               3. Financial Strength   (20pts) — revenue, cash, debt
+               4. Project Pipeline     (10pts) — active launches, backlog
+               5. Market Reputation    (10pts) — buyer reviews, complaints
+               6. RERA Compliance      (10pts) — violations, escrow status
+               7. DLD Transaction Rank (5pts)  — market share rank
+               8. Pricing Stability    (5pts)  — PPSF consistency
+               9. Buyer Nationality Mix(5pts)  — diversification
+            ══════════════════════════════════════════════════════ */
 
             const HEALTH_SCORES = [
-              /* \u2500\u2500\u2500 TIER 1: MARKET LEADERS \u2500\u2500\u2500 */
+              /* ─── TIER 1: MARKET LEADERS ─── */
               {
                 name:"Emaar Properties", tier:"Tier 1", color:"#D4A843",
                 score:94, grade:"A+",
@@ -12534,7 +12534,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 badges:["DFM Listed","Market Leader","On-Time Delivery","Golden Visa Projects"],
                 dldRank:1, marketShare:"14.4%", avgPPSF:2415, transactions2024:19515,
                 salesAED:"AED 70B (2024)", deliveryRate:"95%", activeProjects:62,
-                summary:"Undisputed market leader. Highest delivery rate. DFM listed \u2014 full transparency. 60+ active project launches in 2024.",
+                summary:"Undisputed market leader. Highest delivery rate. DFM listed — full transparency. 60+ active project launches in 2024.",
               },
               {
                 name:"Aldar Properties", tier:"Tier 1", color:"#10B981",
@@ -12573,7 +12573,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 summary:"#1 in Dubai luxury segment (>AED 15M) in 2025 with AED 16.9B. Palm Jumeirah global brand. Government backing = zero default risk.",
               },
 
-              /* \u2500\u2500\u2500 TIER 2: STRONG PERFORMERS \u2500\u2500\u2500 */
+              /* ─── TIER 2: STRONG PERFORMERS ─── */
               {
                 name:"Meraas", tier:"Tier 2", color:"#EC4899",
                 score:80, grade:"B+",
@@ -12590,7 +12590,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 badges:["Fastest Growing","Iconic Architecture","60+ Projects","Bond Watch \u26A0"],
                 dldRank:3, marketShare:"6.2%", avgPPSF:1460, transactions2024:11200,
                 salesAED:"AED 14B (2024) / AED 26B 2025", deliveryRate:"78%", activeProjects:42,
-                summary:"Fastest growing private developer. 2025 sales AED 26B \u2014 extraordinary growth. Bond stress signals Mar 2026 require monitoring.",
+                summary:"Fastest growing private developer. 2025 sales AED 26B — extraordinary growth. Bond stress signals Mar 2026 require monitoring.",
               },
               {
                 name:"Azizi Developments", tier:"Tier 2", color:"#6366F1",
@@ -12620,7 +12620,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 summary:"Highest design standard per AED. Premium finishes above competitors at same price. Strong resale premiums. Lowest D/E ratio (0.38x).",
               },
 
-              /* \u2500\u2500\u2500 TIER 3: MID-MARKET \u2500\u2500\u2500 */
+              /* ─── TIER 3: MID-MARKET ─── */
               {
                 name:"Samana Developers", tier:"Tier 3", color:"#6B7280",
                 score:65, grade:"B-",
@@ -12655,7 +12655,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 badges:["Mid-Market","JVC Focus","Private"],
                 dldRank:8, marketShare:"2.0%", avgPPSF:1300, transactions2024:3800,
                 salesAED:"AED 4.9B (2024)", deliveryRate:"74%", activeProjects:18,
-                summary:"Mid-market affordable developer. JVC + Business Bay projects. Private \u2014 limited disclosures. Improving delivery consistency.",
+                summary:"Mid-market affordable developer. JVC + Business Bay projects. Private — limited disclosures. Improving delivery consistency.",
               },
               {
                 name:"Imtiaz Developments", tier:"Tier 3", color:"#6B7280",
@@ -12686,12 +12686,12 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
 
             const tiers = ["All","Tier 1","Tier 2","Tier 3"];
 
-            /* \u2500\u2500 live data \u2192 seed swap \u2500\u2500 */
+            /* ── live data \u2192 seed swap ── */
             const rawHealth = liveDevHealth?.filter?.(d => d.name && d.score).length > 0
               ? liveDevHealth.filter(d => d.name && d.score)
               : HEALTH_SCORES;
 
-            /* \u2500\u2500 Filter + sort \u2500\u2500 */
+            /* ── Filter + sort ── */
             const filtered = rawHealth
               .filter(d => dhTier === "All" || d.tier === dhTier)
               .filter(d => !dhSearch || d.name.toLowerCase().includes(dhSearch.toLowerCase()))
@@ -12721,7 +12721,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 <div style={{ display:"flex", alignItems:"flex-start", justifyContent:"space-between", padding:"10px 0", marginBottom:16, borderBottom:`1px solid ${T.border}`, flexWrap:"wrap", gap:8 }}>
                   <div>
                     <div style={{ fontFamily:"'Fraunces',serif", fontSize:20, fontWeight:800, color:T.white }}>Developer Health</div>
-                    <div style={{ fontSize:11, color:T.textMuted, marginTop:3 }}>9-factor scoring \u00B7 15 developers ranked \u00B7 DLD + RERA + IR data \u00B7 {rawHealth === HEALTH_SCORES ? "Seed data \u2014 upload via Admin" : "Live Firestore data"}</div>
+                    <div style={{ fontSize:11, color:T.textMuted, marginTop:3 }}>9-factor scoring · 15 developers ranked · DLD + RERA + IR data · {rawHealth === HEALTH_SCORES ? "Seed data — upload via Admin" : "Live Firestore data"}</div>
                   </div>
                   <div style={{ display:"flex", gap:8 }}>
                     {["leaderboard","detail","compare"].map(v=>(
@@ -12837,7 +12837,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                           <div style={{ fontSize:11, color:T.textMuted, textTransform:"uppercase", letterSpacing:1, marginBottom:6 }}>Health Score</div>
                           <div style={{ fontFamily:"'Fraunces',serif", fontSize:56, fontWeight:900, color:selected.color, lineHeight:1 }}>{selected.score}</div>
                           <div style={{ fontFamily:"'Fraunces',serif", fontSize:20, fontWeight:800, color:gradeColor(selected.grade), marginTop:4 }}>{selected.grade}</div>
-                          <div style={{ fontSize:11, color:T.textMuted, marginTop:6 }}>{selected.tier}{"\u00B7"}{selected.dldRank ? `DLD Rank #${selected.dldRank}` : ""}</div>
+                          <div style={{ fontSize:11, color:T.textMuted, marginTop:6 }}>{selected.tier}{"·"}{selected.dldRank ? `DLD Rank #${selected.dldRank}` : ""}</div>
                           {/* Score bar */}
                           <div style={{ height:8, borderRadius:4, background:`linear-gradient(90deg,${T.red} 0%,#F97316 40%,${T.gold} 65%,${T.green} 100%)`, margin:"16px 0 6px", position:"relative" }}>
                             <div style={{ position:"absolute", top:-2, left:`${selected.score}%`, transform:"translateX(-50%)", width:12, height:12, borderRadius:"50%", background:T.white, border:`2px solid ${selected.color}` }} />
@@ -12921,7 +12921,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 {dhView === "compare" && (
                   <div style={{ marginBottom:16 }}>
                     <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:4 }}>Factor-by-Factor Comparison</div>
-                    <div style={{ fontSize:11, color:T.textMuted, marginBottom:16 }}>All developers \u00B7 Each factor scored out of max points</div>
+                    <div style={{ fontSize:11, color:T.textMuted, marginBottom:16 }}>All developers · Each factor scored out of max points</div>
                     {FACTOR_WEIGHTS.map((factor,fi)=>(
                       <div key={fi} className="chart-box" style={{ padding:"14px 16px", marginBottom:10 }}>
                         <div style={{ display:"flex", justifyContent:"space-between", marginBottom:8 }}>
@@ -12960,13 +12960,13 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
           })()}
 
 
-          {/* \u2500\u2500\u2500 BANKING INTELLIGENCE TAB \u2500\u2500\u2500 */}
+          {/* ─── BANKING INTELLIGENCE TAB ─── */}
           {tab === "Banking" && (() => {
 
-            /* \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
-               BANKING INTELLIGENCE \u2014 Research Sources (Apr 2026)
+            /* ══════════════════════════════════════════════════════════
+               BANKING INTELLIGENCE — Research Sources (Apr 2026)
                
-               EIBOR (UAE Central Bank \u2014 centralbank.ae/en/forex-eibor):
+               EIBOR (UAE Central Bank — centralbank.ae/en/forex-eibor):
                  27 Feb 2026: 1M=3.635% | 3M=3.593% | 6M=3.676% | 1Y=3.674%
                
                UAE Central Bank LTV Rules (rulebook.centralbank.ae):
@@ -12976,9 +12976,9 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                  Expats resident first home \u2264AED 5M: max 80% LTV (20% down)
                  Expats resident first home >AED 5M: max 70% LTV (30% down)
                  Expats 2nd/investment: max 60% LTV (40% down)
-                 Off-plan ALL buyers: max 50% LTV (50% down) \u2014 CBUAE mandatory
+                 Off-plan ALL buyers: max 50% LTV (50% down) — CBUAE mandatory
                  Non-residents: max 50-65% LTV (35-50% down)
-                 DBR cap: 50% of gross monthly salary \u2014 all loans combined
+                 DBR cap: 50% of gross monthly salary — all loans combined
                  Max term: 25 years | Age at maturity: max 65 (expat), 70 (national)
                
                Bank Rates (multiple sources, Jan-Apr 2026):
@@ -12989,7 +12989,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                  HSBC: Fixed 4.30% (3yr). EIBOR variable. Valuation fee AED 2,625. Min AED 40K Premier
                  DIB (Islamic): Profit 3.75-4.50%. Murabaha/Ijara. Processing 1% of finance
                  RAKBank: Fixed rate + EIBOR variable. 20% min DP. 1-25yr term
-                 Standard Chartered: Fixed 4.10% (5yr fixed \u2014 most stable). Min AED 15K
+                 Standard Chartered: Fixed 4.10% (5yr fixed — most stable). Min AED 15K
                
                Fees confirmed (multiple sources):
                  Processing fee: 0.5-1% of loan amount (varies by bank)
@@ -12998,9 +12998,9 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                  Early settlement: 1% of outstanding (capped by CBUAE regulation)
                  DLD transfer fee: 4% of property value (all buyers)
                  Insurance (mandatory): Life + property insurance
-            \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 */
+            ══════════════════════════════════════════════════════════ */
 
-            /* \u2500\u2500 EIBOR data (Feb 27, 2026 \u2014 UAE Central Bank) \u2500\u2500 */
+            /* ── EIBOR data (Feb 27, 2026 — UAE Central Bank) ── */
             const EIBOR = {
               "1M":  { rate: 3.635, label: "1 Month",  trend: "down" },
               "3M":  { rate: 3.593, label: "3 Month",  trend: "down" },
@@ -13009,7 +13009,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
             };
             const EIBOR_3M = 3.593;
 
-            /* \u2500\u2500 Historical EIBOR for chart (3M rate) \u2500\u2500 */
+            /* ── Historical EIBOR for chart (3M rate) ── */
             const EIBOR_HISTORY = [
               { period:"Jan 22", rate:0.51  },
               { period:"Jul 22", rate:2.80  },
@@ -13022,7 +13022,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               { period:"Feb 26", rate:3.593 },
             ];
 
-            /* \u2500\u2500 LTV rules (UAE Central Bank official) \u2500\u2500 */
+            /* ── LTV rules (UAE Central Bank official) ── */
             const LTV_RULES = {
               national: {
                 firstHome_under5M:  85, firstHome_over5M:  75,
@@ -13038,7 +13038,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               },
             };
 
-            /* \u2500\u2500 8 Banks with full data \u2500\u2500 */
+            /* ── 8 Banks with full data ── */
             const BANKS = [
               {
                 name: "Emirates NBD",
@@ -13059,7 +13059,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 salaryTransferDiscount: 0.25,
                 islamicOption: true,
                 strengths: ["Largest UAE bank","Digital-first process","Broadest nationality acceptance","Expat + non-resident specialist"],
-                bestFor: "All profiles \u2014 especially expats and non-residents",
+                bestFor: "All profiles — especially expats and non-residents",
                 processingTime: "2-5 days pre-approval, 4-6 weeks full",
                 websiteUrl: "emiratesnbd.com",
               },
@@ -13163,7 +13163,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 listed: true,
                 fixedRate1yr: 3.75, fixedRate3yr: 4.00, fixedRate5yr: 4.50,
                 variableMargin: 1.80,
-                minSalary: 7000,   // Lowest min salary \u2014 DIB confirmed
+                minSalary: 7000,   // Lowest min salary — DIB confirmed
                 maxLTV_resident: 80, maxLTV_nonResident: 65,
                 processingFee: 1.0,  // Ijarah 1% processing fee (DIB confirmed)
                 valuationFee: 2500,
@@ -13227,13 +13227,13 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               },
             ];
 
-            /* \u2500\u2500 Calculator logic \u2500\u2500 */
+            /* ── Calculator logic ── */
             const propVal     = bankPropValue;
             const isNational  = bankType === "national";
             const isResident  = bankType === "resident";
             const isNonRes    = bankType === "nonResident";
 
-            /* \u2500\u2500 Determine max LTV from CBUAE rules \u2500\u2500 */
+            /* ── Determine max LTV from CBUAE rules ── */
             const getLTV = () => {
               const rules = isNational ? LTV_RULES.national
                           : isResident ? LTV_RULES.resident
@@ -13249,14 +13249,14 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
             const downPayment  = propVal - loanAmount;
             const downPct      = 100 - effectiveLTV;
 
-            /* \u2500\u2500 Selected bank rate \u2500\u2500 */
+            /* ── Selected bank rate ── */
             const selBank = BANKS.find(b => b.name === bankSelected) || BANKS[0];
             const fixedRate = bankFixedYrs === 1 ? selBank.fixedRate1yr
                             : bankFixedYrs === 3 ? selBank.fixedRate3yr
                             : selBank.fixedRate5yr;
             const varRate   = EIBOR_3M + selBank.variableMargin;
 
-            /* \u2500\u2500 Monthly payment calculator \u2500\u2500 */
+            /* ── Monthly payment calculator ── */
             const calcMonthly = (principal, annualRate, termYrs) => {
               const r = annualRate / 100 / 12;
               const n = termYrs * 12;
@@ -13269,7 +13269,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
             const totalInterestFixed = monthlyFixed * bankTerm * 12 - loanAmount;
             const totalInterestVar   = monthlyVar   * bankTerm * 12 - loanAmount;
 
-            /* \u2500\u2500 DBR check \u2500\u2500 */
+            /* ── DBR check ── */
             const dbr          = bankSalary > 0 ? (monthlyFixed / bankSalary * 100) : 0;
             const dbrOk        = dbr <= 50;
             const maxLoan_dbr  = bankSalary * 0.50;  // max monthly payment from DBR
@@ -13279,13 +13279,13 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 : 0
               : 0;
 
-            /* \u2500\u2500 Fees breakdown \u2500\u2500 */
+            /* ── Fees breakdown ── */
             const processingFeeAmt = loanAmount * selBank.processingFee / 100;
             const mortgageReg      = loanAmount * 0.0025 + 290;  // 0.25% + AED 290
             const dldTransfer      = propVal * 0.04;              // 4% DLD fee
             const totalFees        = processingFeeAmt + selBank.valuationFee + mortgageReg + dldTransfer;
 
-            /* \u2500\u2500 Filtered banks \u2500\u2500 */
+            /* ── Filtered banks ── */
             const filteredBanks = BANKS.filter(b => {
               if (bankFinType === "islamic" && !b.islamicOnly) return false;
               if (bankFinType === "conventional" && b.islamicOnly) return false;
@@ -13307,12 +13307,12 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
             return (
               <div style={{ animation:"fadeUp 0.4s ease-out forwards" }}>
 
-                {/* \u2500\u2500 HEADER \u2500\u2500 */}
+                {/* ── HEADER ── */}
                 <div style={{ display:"flex", alignItems:"flex-start", justifyContent:"space-between", padding:"10px 0", marginBottom:16, borderBottom:`1px solid ${T.border}`, flexWrap:"wrap", gap:10 }}>
                   <div>
                     <div style={{ fontFamily:"'Fraunces',serif", fontSize:20, fontWeight:800, color:T.white }}>Banking Intelligence</div>
                     <div style={{ fontSize:11, color:T.textMuted, marginTop:3 }}>
-                      8 UAE banks compared \u00B7 Live EIBOR Feb 2026 \u00B7 Official CBUAE LTV rules \u00B7 Affordability calculator \u00B7 Mortgage fees breakdown
+                      8 UAE banks compared · Live EIBOR Feb 2026 · Official CBUAE LTV rules · Affordability calculator · Mortgage fees breakdown
                     </div>
                   </div>
                   <div style={{ display:"flex", gap:8 }}>
@@ -13325,7 +13325,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   </div>
                 </div>
 
-                {/* \u2500\u2500 EIBOR strip \u2500\u2500 */}
+                {/* ── EIBOR strip ── */}
                 <div style={{ display:"flex", gap:8, marginBottom:16, flexWrap:"wrap" }}>
                   {Object.entries(EIBOR).map(([key, e])=>(
                     <div key={key} style={{ flex:"1 1 80px", padding:"10px 14px", background:T.surface, border:`1px solid ${T.border}`, borderRadius:10, textAlign:"center" }}>
@@ -13342,7 +13342,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   </div>
                 </div>
 
-                {/* \u2550\u2550 BANK COMPARISON VIEW \u2550\u2550 */}
+                {/* ══ BANK COMPARISON VIEW ══ */}
                 {bankView === "compare" && (
                   <>
                     {/* Filters */}
@@ -13379,11 +13379,11 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                     {/* LTV info banner */}
                     <div style={{ padding:"10px 16px", background:"rgba(212,168,67,0.06)", border:"1px solid rgba(212,168,67,0.2)", borderRadius:10, marginBottom:14, fontSize:11, color:T.textSecondary, lineHeight:1.8 }}>
                       <strong style={{ color:T.gold }}>CBUAE LTV Rule for your profile ({bankType}, {bankPurpose}):</strong>{" "}
-                      {bankType==="national" && bankPurpose==="firstHome" && "UAE National First Home \u2014 Max 85% LTV (\u2264AED 5M) / 75% LTV (>AED 5M). Down payment from 15%."}
-                      {bankType==="resident" && bankPurpose==="firstHome" && "Expat Resident First Home \u2014 Max 80% LTV (\u2264AED 5M) / 70% LTV (>AED 5M). Down payment from 20%."}
-                      {bankType==="nonResident" && bankPurpose==="firstHome" && "Non-Resident \u2014 Max 65% LTV. Down payment minimum 35%. Limited bank options."}
-                      {bankPurpose==="investment" && "Investment/2nd Property \u2014 Max 65% (National) / 60% (Expat). Down payment 35-40%."}
-                      {bankPurpose==="offPlan" && "Off-Plan ALL buyers \u2014 Mandatory Max 50% LTV regardless of nationality. 50% down payment required. CBUAE regulation."}
+                      {bankType==="national" && bankPurpose==="firstHome" && "UAE National First Home — Max 85% LTV (\u2264AED 5M) / 75% LTV (>AED 5M). Down payment from 15%."}
+                      {bankType==="resident" && bankPurpose==="firstHome" && "Expat Resident First Home — Max 80% LTV (\u2264AED 5M) / 70% LTV (>AED 5M). Down payment from 20%."}
+                      {bankType==="nonResident" && bankPurpose==="firstHome" && "Non-Resident — Max 65% LTV. Down payment minimum 35%. Limited bank options."}
+                      {bankPurpose==="investment" && "Investment/2nd Property — Max 65% (National) / 60% (Expat). Down payment 35-40%."}
+                      {bankPurpose==="offPlan" && "Off-Plan ALL buyers — Mandatory Max 50% LTV regardless of nationality. 50% down payment required. CBUAE regulation."}
                       {" | DBR cap: 50% of gross salary | Max term: 25 years"}
                     </div>
 
@@ -13435,12 +13435,12 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                       <div className="chart-box" style={{ padding:18 }}>
                         <div style={{ fontSize:12, fontWeight:700, color:T.white, marginBottom:12 }}>Standard Fees (AED)</div>
                         {[
-                          { item:"Processing fee", val:"0.5\u20131.0% of loan" },
-                          { item:"Property valuation", val:"AED 2,500\u20133,000" },
+                          { item:"Processing fee", val:"0.5–1.0% of loan" },
+                          { item:"Property valuation", val:"AED 2,500–3,000" },
                           { item:"Mortgage registration (DLD)", val:"0.25% + AED 290" },
                           { item:"DLD transfer fee", val:"4% of property value" },
-                          { item:"Life insurance (mandatory)", val:"0.3\u20130.6% p.a." },
-                          { item:"Property insurance", val:"AED 800\u20132,000/yr" },
+                          { item:"Life insurance (mandatory)", val:"0.3–0.6% p.a." },
+                          { item:"Property insurance", val:"AED 800–2,000/yr" },
                           { item:"Early settlement cap", val:"1% of outstanding (CBUAE max)" },
                         ].map((f,i)=>(
                           <div key={i} style={{ display:"flex", justifyContent:"space-between", padding:"6px 0", borderBottom:i<6?`1px solid ${T.border}`:"none" }}>
@@ -13452,11 +13452,11 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                       <div className="chart-box" style={{ padding:18 }}>
                         <div style={{ fontSize:12, fontWeight:700, color:T.white, marginBottom:12 }}>Process Timeline</div>
                         {[
-                          { step:"Pre-approval / MIP",       time:"2\u20135 days",   color:T.green  },
-                          { step:"Property valuation",       time:"3\u20137 days",   color:T.gold   },
-                          { step:"Final offer letter",       time:"7\u201314 days",  color:T.gold   },
-                          { step:"Mortgage disbursement",    time:"3\u20137 days",   color:"#F97316"},
-                          { step:"Total end-to-end",         time:"4\u20136 weeks",  color:T.teal   },
+                          { step:"Pre-approval / MIP",       time:"2–5 days",   color:T.green  },
+                          { step:"Property valuation",       time:"3–7 days",   color:T.gold   },
+                          { step:"Final offer letter",       time:"7–14 days",  color:T.gold   },
+                          { step:"Mortgage disbursement",    time:"3–7 days",   color:"#F97316"},
+                          { step:"Total end-to-end",         time:"4–6 weeks",  color:T.teal   },
                         ].map((s,i)=>(
                           <div key={i} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"7px 0", borderBottom:i<4?`1px solid ${T.border}`:"none" }}>
                             <span style={{ fontSize:11, color:T.textSecondary }}>{s.step}</span>
@@ -13471,11 +13471,11 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   </>
                 )}
 
-                {/* \u2550\u2550 EIBOR TRACKER VIEW \u2550\u2550 */}
+                {/* ══ EIBOR TRACKER VIEW ══ */}
                 {bankView === "eibor" && (
                   <div style={{ marginBottom:16 }}>
                     <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:4 }}>EIBOR Historical Trend (3-Month Rate)</div>
-                    <div style={{ fontSize:11, color:T.textMuted, marginBottom:20 }}>UAE Central Bank \u00B7 Jan 2022 \u2013 Feb 2026 \u00B7 Rate peaked at 5.28% (Jul 2023) \u00B7 Now at 3.593% and falling</div>
+                    <div style={{ fontSize:11, color:T.textMuted, marginBottom:20 }}>UAE Central Bank · Jan 2022 – Feb 2026 · Rate peaked at 5.28% (Jul 2023) · Now at 3.593% and falling</div>
                     <div className="chart-box" style={{ padding:20, marginBottom:16 }}>
                       <div style={{ display:"flex", gap:6, alignItems:"flex-end", height:180 }}>
                         {EIBOR_HISTORY.map((e,i)=>{
@@ -13498,8 +13498,8 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                     </div>
                     <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:12 }}>
                       {[
-                        { title:"EIBOR peaked at", val:"5.28%", sub:"July 2023 \u2014 highest in 15yrs", color:T.red },
-                        { title:"Current 3M EIBOR", val:"3.593%", sub:"27 Feb 2026 \u2014 UAE Central Bank", color:T.green },
+                        { title:"EIBOR peaked at", val:"5.28%", sub:"July 2023 — highest in 15yrs", color:T.red },
+                        { title:"Current 3M EIBOR", val:"3.593%", sub:"27 Feb 2026 — UAE Central Bank", color:T.green },
                         { title:"Effect on variable rate", val:`~${(EIBOR_3M+1.85).toFixed(2)}%`, sub:"At typical EIBOR+1.85% margin", color:T.gold },
                       ].map((c,i)=>(
                         <div key={i} className="chart-box" style={{ padding:16, textAlign:"center" }}>
@@ -13510,12 +13510,12 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                       ))}
                     </div>
                     <div style={{ marginTop:12, padding:"12px 16px", background:"rgba(16,185,129,0.06)", border:"1px solid rgba(16,185,129,0.2)", borderRadius:10, fontSize:11, color:T.textSecondary, lineHeight:1.8 }}>
-                      <strong style={{ color:T.green }}>Broker insight:</strong> EIBOR has fallen from the 5.28% peak (Jul 2023) to 3.593% today \u2014 a 1.69% drop. A borrower on EIBOR+2% variable rate has seen their effective rate fall from ~7.3% to ~5.6%. Variable rate is currently 0.5-1% cheaper than fixed rates. If you expect EIBOR to continue falling (Fed rate cuts), variable makes sense. For stability, 3yr fixed is the current sweet spot.
+                      <strong style={{ color:T.green }}>Broker insight:</strong> EIBOR has fallen from the 5.28% peak (Jul 2023) to 3.593% today — a 1.69% drop. A borrower on EIBOR+2% variable rate has seen their effective rate fall from ~7.3% to ~5.6%. Variable rate is currently 0.5-1% cheaper than fixed rates. If you expect EIBOR to continue falling (Fed rate cuts), variable makes sense. For stability, 3yr fixed is the current sweet spot.
                     </div>
                   </div>
                 )}
 
-                {/* \u2550\u2550 CALCULATOR VIEW \u2550\u2550 */}
+                {/* ══ CALCULATOR VIEW ══ */}
                 {bankView === "calculator" && (
                   <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16, marginBottom:16 }}>
                     {/* Inputs */}
@@ -13633,7 +13633,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                       <div style={{ padding:"14px 16px", background:dbrOk?"rgba(16,185,129,0.06)":"rgba(239,68,68,0.06)", border:`1px solid ${dbrOk?"rgba(16,185,129,0.25)":"rgba(239,68,68,0.25)"}`, borderRadius:10 }}>
                         <div style={{ display:"flex", justifyContent:"space-between", marginBottom:6 }}>
                           <span style={{ fontSize:12, fontWeight:700, color:dbrOk?T.green:T.red }}>
-                            {dbrOk?"\u2713 DBR check passed":"\u2717 DBR exceeded \u2014 reduce loan or increase salary"}
+                            {dbrOk?"\u2713 DBR check passed":"\u2717 DBR exceeded — reduce loan or increase salary"}
                           </span>
                           <span style={{ fontSize:13, fontWeight:800, color:dbrOk?T.green:T.red }}>{dbr.toFixed(1)}% / 50%</span>
                         </div>
@@ -13684,7 +13684,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   </div>
                 )}
 
-                {/* \u2550\u2550 ELIGIBILITY VIEW \u2550\u2550 */}
+                {/* ══ ELIGIBILITY VIEW ══ */}
                 {bankView === "eligibility" && (
                   <div style={{ marginBottom:16 }}>
                     <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:4 }}>Bank Eligibility Checker</div>
@@ -13693,7 +13693,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                     {/* CBUAE LTV table */}
                     <div style={{ background:T.surface, border:`1px solid ${T.border}`, borderRadius:12, overflow:"hidden", marginBottom:16 }}>
                       <div style={{ padding:"12px 16px", background:T.surfaceAlt, borderBottom:`1px solid ${T.border}`, fontSize:12, fontWeight:700, color:T.white }}>
-                        CBUAE Mortgage LTV Rules (Official \u2014 centralbank.ae/en/rulebook)
+                        CBUAE Mortgage LTV Rules (Official — centralbank.ae/en/rulebook)
                       </div>
                       <div style={{ display:"grid", gridTemplateColumns:"1.5fr 1fr 1fr 1fr 1fr", padding:"9px 16px", background:T.surfaceAlt, borderBottom:`1px solid ${T.border}` }}>
                         {["Category","1st Home \u2264AED 5M","1st Home >AED 5M","2nd/Investment","Off-Plan"].map((h,i)=>(
@@ -13747,13 +13747,13 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   </div>
                 )}
 
-                {/* \u2500\u2500 MORTGAGE LEAD CAPTURE FORM \u2500\u2500 */}
+                {/* ── MORTGAGE LEAD CAPTURE FORM ── */}
                 <div style={{ padding:"20px 22px", background:"linear-gradient(135deg,rgba(212,168,67,0.08),rgba(212,168,67,0.02))", border:"1px solid rgba(212,168,67,0.25)", borderRadius:14, marginBottom:16 }}>
                   <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", flexWrap:"wrap", gap:12, marginBottom:16 }}>
                     <div>
                       <div style={{ fontFamily:"'Fraunces',serif", fontSize:16, fontWeight:800, color:T.white, marginBottom:4 }}>Get a Free Personalised Mortgage Quote</div>
                       <div style={{ fontSize:12, color:T.textSecondary, lineHeight:1.7 }}>
-                        Our RERA-licensed broker partners compare all 8 banks for you \u2014 free of charge.<br/>
+                        Our RERA-licensed broker partners compare all 8 banks for you — free of charge.<br/>
                         They call you within 2 hours and find the best rate for your exact profile.
                       </div>
                     </div>
@@ -13770,7 +13770,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                       <div style={{ fontFamily:"'Fraunces',serif", fontSize:16, fontWeight:700, color:T.green, marginBottom:6 }}>Request Received!</div>
                       <div style={{ fontSize:12, color:T.textSecondary, lineHeight:1.7 }}>
                         Our mortgage specialist will call you within 2 hours.<br/>
-                        They will compare all 8 banks and find your best rate \u2014 completely free.
+                        They will compare all 8 banks and find your best rate — completely free.
                       </div>
                       <button type="button" onClick={()=>{ setMortLeadSubmitted(false); setMortLeadName(""); setMortLeadPhone(""); setMortLeadEmail(""); }}
                         style={{ marginTop:14, padding:"6px 18px", background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:8, color:T.textMuted, fontSize:11, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>
@@ -13833,7 +13833,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                                 purpose: bankPurpose,
                                 preferredBank: bankSelected,
                                 eibor3M: 3.593,
-                                source: "Banking Tab \u2014 DXB Analytics",
+                                source: "Banking Tab — DXB Analytics",
                                 userId: auth.currentUser?.uid || "guest",
                                 createdAt: new Date().toISOString(),
                                 status: "new",
@@ -13866,17 +13866,17 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                       {/* Profile summary */}
                       <div style={{ marginTop:12, padding:"10px 14px", background:T.surfaceAlt, borderRadius:8, border:`1px solid ${T.border}`, fontSize:11, color:T.textMuted }}>
                         Your profile: <strong style={{ color:T.white }}>{bankType === "national" ? "UAE National" : bankType === "resident" ? "Expat Resident" : "Non-Resident"}</strong>
-                        {" \u00B7 Property: "}<strong style={{ color:T.white }}>AED {(bankPropValue/1e6).toFixed(2)}M</strong>
-                        {" \u00B7 Salary: "}<strong style={{ color:T.white }}>AED {bankSalary.toLocaleString()}/mo</strong>
-                        {" \u00B7 Purpose: "}<strong style={{ color:T.white }}>{bankPurpose === "firstHome" ? "First Home" : bankPurpose === "investment" ? "Investment" : "Off-Plan"}</strong>
-                        {" \u00B7 Preferred: "}<strong style={{ color:T.gold }}>{bankSelected}</strong>
+                        {" · Property: "}<strong style={{ color:T.white }}>AED {(bankPropValue/1e6).toFixed(2)}M</strong>
+                        {" · Salary: "}<strong style={{ color:T.white }}>AED {bankSalary.toLocaleString()}/mo</strong>
+                        {" · Purpose: "}<strong style={{ color:T.white }}>{bankPurpose === "firstHome" ? "First Home" : bankPurpose === "investment" ? "Investment" : "Off-Plan"}</strong>
+                        {" · Preferred: "}<strong style={{ color:T.gold }}>{bankSelected}</strong>
                         <span style={{ color:T.textMuted }}> (will be included in your brief)</span>
                       </div>
                     </div>
                   )}
                 </div>
 
-                {/* \u2500\u2500 APPLY BUTTONS \u2500\u2500 */}
+                {/* ── APPLY BUTTONS ── */}
                 <div style={{ marginBottom:16 }}>
                   <div style={{ fontSize:12, fontWeight:700, color:T.white, marginBottom:10 }}>Apply directly at each bank</div>
                   <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
@@ -13896,13 +13896,13 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                       </a>
                     ))}
                   </div>
-                  <div style={{ fontSize:10, color:T.textMuted, marginTop:6 }}>Links go directly to each bank's official mortgage application page. DXB Analytics is not a lender \u2014 we help you compare and connect.</div>
+                  <div style={{ fontSize:10, color:T.textMuted, marginTop:6 }}>Links go directly to each bank's official mortgage application page. DXB Analytics is not a lender — we help you compare and connect.</div>
                 </div>
 
-                {/* \u2500\u2500 SOURCE FOOTER \u2500\u2500 */}
+                {/* ── SOURCE FOOTER ── */}
                 <div style={{ paddingTop:12, borderTop:`1px solid ${T.border}`, display:"flex", gap:8, flexWrap:"wrap", alignItems:"center" }}>
                   <span style={{ fontSize:10, color:T.textMuted }}>Sources:</span>
-                  {["UAE Central Bank (centralbank.ae) (centralbank.ae)","CBUAE Rulebook \u2014 Mortgage Regulations","Emirates NBD IR","ADCB","FAB (bankfab.com)","Mashreq","HSBC UAE","DIB","RAKBank","Standard Chartered","realestateclubdubai.com Apr 2026"].map((s,i)=>(
+                  {["UAE Central Bank (centralbank.ae) (centralbank.ae)","CBUAE Rulebook — Mortgage Regulations","Emirates NBD IR","ADCB","FAB (bankfab.com)","Mashreq","HSBC UAE","DIB","RAKBank","Standard Chartered","realestateclubdubai.com Apr 2026"].map((s,i)=>(
                     <span key={i} style={{ fontSize:10, color:T.textMuted, padding:"2px 8px", borderRadius:10, border:`1px solid ${T.border}`, background:T.surfaceAlt }}>{s}</span>
                   ))}
                 </div>
@@ -13912,21 +13912,21 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
           })()}
 
 
-          {/* \u2500\u2500\u2500 MARKETING INTELLIGENCE TAB \u2500\u2500\u2500 */}
+          {/* ─── MARKETING INTELLIGENCE TAB ─── */}
           {tab === "Marketing" && (() => {
 
-            /* \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
-               MARKETING INTELLIGENCE \u2014 Research Sources (Apr 2026)
+            /* ══════════════════════════════════════════════════════════
+               MARKETING INTELLIGENCE — Research Sources (Apr 2026)
 
                CPL BENCHMARKS (theprimeads.com + Dubai-specific research):
-                 Google Search Ads: AED 450\u2013900 per lead (high intent)
-                 Meta (Facebook/Instagram): AED 30\u2013300 per lead
-                 Property Portal (Bayut/PF): AED 50\u2013200 per lead
-                 TikTok: AED 20\u2013150 per lead (growing fast)
-                 LinkedIn: AED 200\u2013800 per lead (B2B, HNW)
-                 Cold calling: AED 5\u201315 (time cost)
-                 Off-plan specific: AED 30\u2013120 per qualified lead
-                 WhatsApp broadcast: AED 1\u201310 per message
+                 Google Search Ads: AED 450–900 per lead (high intent)
+                 Meta (Facebook/Instagram): AED 30–300 per lead
+                 Property Portal (Bayut/PF): AED 50–200 per lead
+                 TikTok: AED 20–150 per lead (growing fast)
+                 LinkedIn: AED 200–800 per lead (B2B, HNW)
+                 Cold calling: AED 5–15 (time cost)
+                 Off-plan specific: AED 30–120 per qualified lead
+                 WhatsApp broadcast: AED 1–10 per message
 
                PORTAL COMPARISON (brightsanddesigns.com Nov 2025):
                  Property Finder: AED 60K spend \u2192 120 leads/mo, 5% conversion
@@ -13936,30 +13936,30 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                  Dubizzle: Budget segment, rentals, lower CPL
 
                BUYER NATIONALITY DATA (DLD 2025, keltandcorealty.com):
-                 1. India \u2014 22% of foreign buyers (4th consecutive year #1)
+                 1. India — 22% of foreign buyers (4th consecutive year #1)
                     Platform: Meta (Facebook/Instagram), WhatsApp, Google
-                    Budget: AED 500K\u20133M, strong off-plan demand
-                 2. UK \u2014 17% of foreign buyers (12% of all transactions 2024)
+                    Budget: AED 500K–3M, strong off-plan demand
+                 2. UK — 17% of foreign buyers (12% of all transactions 2024)
                     Platform: Property Finder, Google, Instagram
-                    Budget: AED 1.5M\u20135M+, ready premium preferred
-                 3. Russia \u2014 9% of transactions
+                    Budget: AED 1.5M–5M+, ready premium preferred
+                 3. Russia — 9% of transactions
                     Platform: Instagram, Telegram, targeted in-person
-                    Budget: AED 2M\u201315M, luxury focus
-                 4. China \u2014 13-14% of transactions (AED 2B invested 2024)
+                    Budget: AED 2M–15M, luxury focus
+                 4. China — 13-14% of transactions (AED 2B invested 2024)
                     Platform: Douyin (TikTok), WeChat, Weibo
-                    Budget: AED 1.5M\u20135M+, Business Bay/Creek Harbour
-                 5. France \u2014 7% of transactions
+                    Budget: AED 1.5M–5M+, Business Bay/Creek Harbour
+                 5. France — 7% of transactions
                     Platform: Meta, LinkedIn, francophones
-                    Budget: AED 1.5M\u20133M, branded residences
-                 6. Italy \u2014 Top 3 European buyer
+                    Budget: AED 1.5M–3M, branded residences
+                 6. Italy — Top 3 European buyer
                     Platform: Meta, Instagram, luxury focus
-                 7. Pakistan \u2014 AED 11B total ownership in Dubai
+                 7. Pakistan — AED 11B total ownership in Dubai
                     Platform: WhatsApp, Facebook, off-plan focus
-                 8. Saudi Arabia \u2014 Holiday homes, Palm/Emaar Beachfront
+                 8. Saudi Arabia — Holiday homes, Palm/Emaar Beachfront
                     Platform: Snapchat, Meta, Arabic targeting
-                 9. Egypt \u2014 Fast growing
+                 9. Egypt — Fast growing
                     Platform: Facebook, TikTok Arabic
-                10. Germany/Austria \u2014 Growing segment, ESG-focused
+                10. Germany/Austria — Growing segment, ESG-focused
                     Platform: Google, LinkedIn
 
                COMMISSION RATES (Dubai standard):
@@ -13979,9 +13979,9 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                RERA COMPLIANCE: Trakheesi permit required for all listings
                Sources: theprimeads.com, brightsanddesigns.com Nov 2025,
                DLD 2025 nationality data, campaignme.com, keltandcorealty.com
-            \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 */
+            ══════════════════════════════════════════════════════════ */
 
-            /* \u2500\u2500 Channel data \u2500\u2500 */
+            /* ── Channel data ── */
             const CHANNELS = [
               {
                 name:"Google Search Ads", icon:"G",
@@ -13992,7 +13992,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 offPlan:false, luxury:true, midMarket:true, affordable:false,
                 setup:"AED 5,000+ per campaign",
                 monthlyMin:5000,
-                tip:"Target keywords like 'buy apartment Dubai Marina' \u2014 CPC AED 8-25. Add negative keywords weekly. Separate campaigns by community.",
+                tip:"Target keywords like 'buy apartment Dubai Marina' — CPC AED 8-25. Add negative keywords weekly. Separate campaigns by community.",
                 platforms:["Google Search","Google Display","YouTube"],
               },
               {
@@ -14004,7 +14004,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 offPlan:true, luxury:false, midMarket:true, affordable:true,
                 setup:"AED 3,000+ per month minimum",
                 monthlyMin:3000,
-                tip:"Use Lead Ads (native forms) for off-plan. Carousel format for multi-unit projects. Retarget website visitors \u2014 3-5x better ROAS.",
+                tip:"Use Lead Ads (native forms) for off-plan. Carousel format for multi-unit projects. Retarget website visitors — 3-5x better ROAS.",
                 platforms:["Facebook","Instagram","WhatsApp","Messenger"],
               },
               {
@@ -14062,7 +14062,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 convRate:8.0, leadQuality:85,
                 bestFor:"Existing database, referrals, payment plan follow-up",
                 offPlan:true, luxury:false, midMarket:true, affordable:true,
-                setup:"WhatsApp Business API \u2014 AED 500-2,000 setup",
+                setup:"WhatsApp Business API — AED 500-2,000 setup",
                 monthlyMin:500,
                 tip:"Highest conversion rate of any channel. Response time under 5 minutes = 100x more likely to convert. Use templates for off-plan launches. Arabic + English.",
                 platforms:["WhatsApp Business","WhatsApp API"],
@@ -14081,11 +14081,11 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               },
             ];
 
-            /* \u2500\u2500 Nationality targeting data \u2500\u2500 */
+            /* ── Nationality targeting data ── */
             const NATIONALITIES = [
               {
                 flag:"\uD83C\uDDEE\uD83C\uDDF3", name:"Indian", share:"22%", rank:1,
-                budget:"AED 500K\u20133M", type:"Off-plan + Mid-market",
+                budget:"AED 500K–3M", type:"Off-plan + Mid-market",
                 platforms:["Meta (Facebook/Instagram)","WhatsApp","Google"],
                 communities:["JVC","Dubai South","International City","Business Bay"],
                 language:"English + Hindi",
@@ -14094,7 +14094,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               },
               {
                 flag:"\uD83C\uDDEC\uD83C\uDDE7", name:"British", share:"17%", rank:2,
-                budget:"AED 1.5M\u20135M+", type:"Ready premium",
+                budget:"AED 1.5M–5M+", type:"Ready premium",
                 platforms:["Property Finder","Google","Instagram"],
                 communities:["Dubai Marina","Downtown","Palm Jumeirah","Dubai Hills"],
                 language:"English",
@@ -14103,7 +14103,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               },
               {
                 flag:"\uD83C\uDDF7\uD83C\uDDFA", name:"Russian", share:"9%", rank:3,
-                budget:"AED 2M\u201315M+", type:"Luxury/Ultra-luxury",
+                budget:"AED 2M–15M+", type:"Luxury/Ultra-luxury",
                 platforms:["Instagram","Telegram","In-person events"],
                 communities:["Palm Jumeirah","Emirates Hills","Downtown","Business Bay"],
                 language:"Russian",
@@ -14112,16 +14112,16 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               },
               {
                 flag:"\uD83C\uDDE8\uD83C\uDDF3", name:"Chinese", share:"13-14%", rank:4,
-                budget:"AED 1.5M\u20135M+", type:"Luxury + Business Bay",
+                budget:"AED 1.5M–5M+", type:"Luxury + Business Bay",
                 platforms:["Douyin (TikTok China)","WeChat","Weibo"],
                 communities:["Business Bay","Dubai Creek Harbour","Downtown","JVC"],
                 language:"Mandarin",
-                tip:"80% of China's top 200 developers on Douyin. WeChat property groups extremely active. AED 2B invested in 2024. Mandarin-speaking agent is essential \u2014 not optional.",
+                tip:"80% of China's top 200 developers on Douyin. WeChat property groups extremely active. AED 2B invested in 2024. Mandarin-speaking agent is essential — not optional.",
                 color:"#E53935",
               },
               {
                 flag:"\uD83C\uDDEB\uD83C\uDDF7", name:"French", share:"7%", rank:5,
-                budget:"AED 1.5M\u20133M", type:"Branded residences",
+                budget:"AED 1.5M–3M", type:"Branded residences",
                 platforms:["Meta","LinkedIn","SmartLeads CRM"],
                 communities:["Downtown","Dubai Marina","Bluewaters","City Walk"],
                 language:"French",
@@ -14130,25 +14130,25 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               },
               {
                 flag:"\uD83C\uDDF5\uD83C\uDDF0", name:"Pakistani", share:"8%", rank:6,
-                budget:"AED 300K\u20132M", type:"Off-plan + Affordable",
+                budget:"AED 300K–2M", type:"Off-plan + Affordable",
                 platforms:["WhatsApp","Facebook","Off-plan events"],
                 communities:["International City","JVC","Dubai South","Al Furjan"],
                 language:"Urdu + English",
-                tip:"AED 11B total ownership in Dubai. Strong community networks on WhatsApp. Off-plan at AED 500K\u20131.5M is sweet spot. Sharjah spillover to Dubai common.",
+                tip:"AED 11B total ownership in Dubai. Strong community networks on WhatsApp. Off-plan at AED 500K–1.5M is sweet spot. Sharjah spillover to Dubai common.",
                 color:"#1B5E20",
               },
               {
                 flag:"\uD83C\uDDF8\uD83C\uDDE6", name:"Saudi", share:"5%", rank:7,
-                budget:"AED 3M\u201320M+", type:"Holiday homes + Villas",
+                budget:"AED 3M–20M+", type:"Holiday homes + Villas",
                 platforms:["Snapchat","Meta","Arabic Google"],
                 communities:["Palm Jumeirah","Emaar Beachfront","Dubai Hills","JBR"],
                 language:"Arabic",
-                tip:"Holiday home and villa dominant. Snapchat #1 for Saudi audience. Privacy key \u2014 gated communities preferred. Weekend visits from KSA = high conversion for ready homes.",
+                tip:"Holiday home and villa dominant. Snapchat #1 for Saudi audience. Privacy key — gated communities preferred. Weekend visits from KSA = high conversion for ready homes.",
                 color:"#1B5E20",
               },
               {
                 flag:"\uD83C\uDDEA\uD83C\uDDEC", name:"Egyptian", share:"4%", rank:8,
-                budget:"AED 500K\u20132M", type:"Mid-market + Off-plan",
+                budget:"AED 500K–2M", type:"Mid-market + Off-plan",
                 platforms:["Facebook","TikTok Arabic","WhatsApp"],
                 communities:["JVC","Business Bay","Dubai South","Silicon Oasis"],
                 language:"Arabic + English",
@@ -14159,7 +14159,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
 
             const selNat = NATIONALITIES.find(n => n.name === mktNationality) || NATIONALITIES[0];
 
-            /* \u2500\u2500 ROI Calculator \u2500\u2500 */
+            /* ── ROI Calculator ── */
             const budgetPerChannel = mktBudget;
             const bestChannel = CHANNELS.reduce((a,b) => a.cplAvg < b.cplAvg ? a : b);
             const calcROI = (ch) => {
@@ -14170,7 +14170,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               return { leads, deals, commission, roi: roi.toFixed(0) };
             };
 
-            /* \u2500\u2500 AI Listing Generator \u2500\u2500 */
+            /* ── AI Listing Generator ── */
             const generateListing = async () => {
               if (!mktListingComm) return;
               setMktAiLoading(true);
@@ -14209,12 +14209,12 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
             return (
               <div style={{ animation:"fadeUp 0.4s ease-out forwards" }}>
 
-                {/* \u2500\u2500 HEADER \u2500\u2500 */}
+                {/* ── HEADER ── */}
                 <div style={{ display:"flex", alignItems:"flex-start", justifyContent:"space-between", padding:"10px 0", marginBottom:16, borderBottom:`1px solid ${T.border}`, flexWrap:"wrap", gap:10 }}>
                   <div>
                     <div style={{ fontFamily:"'Fraunces',serif", fontSize:20, fontWeight:800, color:T.white }}>Marketing Intelligence</div>
                     <div style={{ fontSize:11, color:T.textMuted, marginTop:3 }}>
-                      8 channels \u00B7 CPL benchmarks \u00B7 Buyer nationality targeting \u00B7 AI listing generator \u00B7 ROI calculator \u00B7 Apr 2026
+                      8 channels · CPL benchmarks · Buyer nationality targeting · AI listing generator · ROI calculator · Apr 2026
                     </div>
                   </div>
                   <div style={{ display:"flex", gap:8 }}>
@@ -14227,7 +14227,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   </div>
                 </div>
 
-                {/* \u2550\u2550 CHANNEL INTELLIGENCE VIEW \u2550\u2550 */}
+                {/* ══ CHANNEL INTELLIGENCE VIEW ══ */}
                 {mktView === "channels" && (
                   <>
                     {/* Property type filter */}
@@ -14323,11 +14323,11 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   </>
                 )}
 
-                {/* \u2550\u2550 BUYER NATIONALITY TARGETING VIEW \u2550\u2550 */}
+                {/* ══ BUYER NATIONALITY TARGETING VIEW ══ */}
                 {mktView === "nationality" && (
                   <>
                     <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:4 }}>Buyer Nationality Intelligence</div>
-                    <div style={{ fontSize:11, color:T.textMuted, marginBottom:16 }}>Top 8 investor nationalities \u00B7 Platform strategy per nationality \u00B7 DLD 2025 data</div>
+                    <div style={{ fontSize:11, color:T.textMuted, marginBottom:16 }}>Top 8 investor nationalities · Platform strategy per nationality · DLD 2025 data</div>
 
                     {/* Nationality selector */}
                     <div style={{ display:"flex", gap:8, flexWrap:"wrap", marginBottom:16 }}>
@@ -14348,8 +14348,8 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                           <div style={{ fontSize:36 }}>{selNat.flag}</div>
                           <div>
                             <div style={{ fontFamily:"'Fraunces',serif", fontSize:20, fontWeight:800, color:T.white }}>{selNat.name} Buyers</div>
-                            <div style={{ fontSize:13, color:selNat.color, fontWeight:700 }}>Rank #{selNat.rank}{"\u00B7"}{selNat.share} of foreign buyers</div>
-                            <div style={{ fontSize:11, color:T.textMuted, marginTop:2 }}>Budget: {selNat.budget}{"\u00B7"}{selNat.type}</div>
+                            <div style={{ fontSize:13, color:selNat.color, fontWeight:700 }}>Rank #{selNat.rank}{"·"}{selNat.share} of foreign buyers</div>
+                            <div style={{ fontSize:11, color:T.textMuted, marginTop:2 }}>Budget: {selNat.budget}{"·"}{selNat.type}</div>
                           </div>
                         </div>
                         <div style={{ fontSize:12, color:T.textSecondary, lineHeight:1.8, marginBottom:12 }}>{selNat.tip}</div>
@@ -14404,11 +14404,11 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   </>
                 )}
 
-                {/* \u2550\u2550 ROI CALCULATOR VIEW \u2550\u2550 */}
+                {/* ══ ROI CALCULATOR VIEW ══ */}
                 {mktView === "roi" && (
                   <div style={{ marginBottom:16 }}>
                     <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:4 }}>Marketing ROI Calculator</div>
-                    <div style={{ fontSize:11, color:T.textMuted, marginBottom:16 }}>Enter your monthly budget \u00B7 See leads, deals, commission, and ROI per channel \u00B7 Based on real Dubai CPL benchmarks</div>
+                    <div style={{ fontSize:11, color:T.textMuted, marginBottom:16 }}>Enter your monthly budget · See leads, deals, commission, and ROI per channel · Based on real Dubai CPL benchmarks</div>
 
                     {/* Budget input */}
                     <div className="chart-box" style={{ padding:18, marginBottom:16 }}>
@@ -14488,11 +14488,11 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   </div>
                 )}
 
-                {/* \u2550\u2550 AI LISTING GENERATOR VIEW \u2550\u2550 */}
+                {/* ══ AI LISTING GENERATOR VIEW ══ */}
                 {mktView === "listing" && (
                   <div style={{ marginBottom:16 }}>
                     <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:4 }}>AI Listing Generator</div>
-                    <div style={{ fontSize:11, color:T.textMuted, marginBottom:16 }}>Powered by Claude AI \u00B7 Generates headline, description, WhatsApp message, and SEO tags for Bayut and Property Finder</div>
+                    <div style={{ fontSize:11, color:T.textMuted, marginBottom:16 }}>Powered by Claude AI · Generates headline, description, WhatsApp message, and SEO tags for Bayut and Property Finder</div>
 
                     {/* Inputs */}
                     <div className="chart-box" style={{ padding:20, marginBottom:16 }}>
@@ -14542,7 +14542,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
 
                       {mktListingPrice >= 2000000 && (
                         <div style={{ marginTop:10, padding:"8px 12px", background:"rgba(16,185,129,0.06)", borderRadius:8, fontSize:11, color:T.green }}>
-                          \u2713 AED {(mktListingPrice/1e6).toFixed(2)}M \u2014 Golden Visa eligible (AED 2M threshold). Will be included in listing automatically.
+                          \u2713 AED {(mktListingPrice/1e6).toFixed(2)}M — Golden Visa eligible (AED 2M threshold). Will be included in listing automatically.
                         </div>
                       )}
 
@@ -14575,7 +14575,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                           {mktAiResult}
                         </div>
                         <div style={{ marginTop:10, fontSize:11, color:T.textMuted }}>
-                          Generated by Claude Sonnet \u00B7 Copy and paste directly to Bayut, Property Finder, or WhatsApp \u00B7 Always verify facts before publishing
+                          Generated by Claude Sonnet · Copy and paste directly to Bayut, Property Finder, or WhatsApp · Always verify facts before publishing
                         </div>
                       </div>
                     )}
@@ -14590,7 +14590,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   </div>
                 )}
 
-                {/* \u2500\u2500 SOURCE FOOTER \u2500\u2500 */}
+                {/* ── SOURCE FOOTER ── */}
                 <div style={{ paddingTop:12, borderTop:`1px solid ${T.border}`, display:"flex", gap:8, flexWrap:"wrap", alignItems:"center" }}>
                   <span style={{ fontSize:10, color:T.textMuted }}>Sources:</span>
                   {["theprimeads.com 2026","DLD 2025 Nationality Data","brightsanddesigns.com Nov 2025","campaignme.com","ninjasofts.com","keltandcorealty.com Feb 2026","dubaipropertyinsight.com","WordStream 2025"].map((s,i)=>(
@@ -14603,37 +14603,37 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
           })()}
 
 
-          {/* \u2500\u2500\u2500 COMPETITORS TAB \u2500\u2500\u2500 */}
+          {/* ─── COMPETITORS TAB ─── */}
           {tab === "Competitors" && (() => {
 
-            /* \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
-               COMPETITORS \u2014 Developer vs Developer Intelligence
+            /* ══════════════════════════════════════════════════════════
+               COMPETITORS — Developer vs Developer Intelligence
                Sources: DLD 2025 data, mieyaruae.com Q3 2025 report,
                dubaipropertyinsight.com, takayamotorcity.com Feb 2026,
                prelaunch.ae delivery tracker, prophero.net
 
                Sales 2025 YTD (Jan-Aug, mieyaruae.com Oct 2025):
-                 Emaar: AED 51B (~10,000 transactions) \u2014 #1 by wide margin
-                 DAMAC: AED 24B (~9,000 transactions) \u2014 #2
-                 Nakheel: AED 13B \u2014 #3
-                 Sobha: AED 13B \u2014 #4
-                 Meraas: AED 10B \u2014 #5
-                 Binghatti: AED 9B \u2014 #6
-                 Aldar: AED 8B \u2014 #7
+                 Emaar: AED 51B (~10,000 transactions) — #1 by wide margin
+                 DAMAC: AED 24B (~9,000 transactions) — #2
+                 Nakheel: AED 13B — #3
+                 Sobha: AED 13B — #4
+                 Meraas: AED 10B — #5
+                 Binghatti: AED 9B — #6
+                 Aldar: AED 8B — #7
 
                Delivery track record (prelaunch.ae Dec 2025):
-                 Emaar: 95%+ on time \u2014 industry best
-                 Sobha: 91% \u2014 in-house construction advantage
-                 Nakheel: 88% \u2014 government backing
-                 Danube: 88% \u2014 best in affordable segment
-                 Ellington: 90% \u2014 boutique discipline
-                 DAMAC: 82% \u2014 complex branded projects
-                 Azizi: 80% \u2014 high volume, improving
-                 Binghatti: 78% \u2014 rapid expansion risk
+                 Emaar: 95%+ on time — industry best
+                 Sobha: 91% — in-house construction advantage
+                 Nakheel: 88% — government backing
+                 Danube: 88% — best in affordable segment
+                 Ellington: 90% — boutique discipline
+                 DAMAC: 82% — complex branded projects
+                 Azizi: 80% — high volume, improving
+                 Binghatti: 78% — rapid expansion risk
 
                S&P Rating: Emaar upgraded to BBB+ in 2025
                Off-plan market share 2025: 60%+ of all transactions
-            \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 */
+            ══════════════════════════════════════════════════════════ */
 
             const COMP_DATA = [
               {
@@ -14656,10 +14656,10 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   creditRating:"BBB+ (S&P 2025)",
                   offPlanShare:"72% of sales",
                   grossYield:"5-7%",
-                  capitalAppreciation:"Strong \u2014 established communities",
+                  capitalAppreciation:"Strong — established communities",
                 },
                 strengths:["#1 developer 3 consecutive years","BBB+ credit rating","95%+ on-time delivery","140,000+ units delivered lifetime","Burj Khalifa / Dubai Mall brand"],
-                weaknesses:["Premium pricing \u2014 lowest entry yields","High competition for their units","Slower payment plans vs private devs"],
+                weaknesses:["Premium pricing — lowest entry yields","High competition for their units","Slower payment plans vs private devs"],
                 bestFor:"Long-term capital appreciation, brand prestige, end-users",
               },
               {
@@ -14679,13 +14679,13 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   segments:["Branded luxury","Villa communities","Hospitality"],
                   communities:["DAMAC Hills","DAMAC Hills 2","DAMAC Lagoons","DAMAC Islands","Business Bay towers"],
                   paymentPlans:"Flexible 80/20, post-handover",
-                  creditRating:"Private \u2014 $5B cash",
+                  creditRating:"Private — $5B cash",
                   offPlanShare:"78% of sales",
                   grossYield:"6-8% (short-term rental focus)",
-                  capitalAppreciation:"Moderate \u2014 depends on brand appeal",
+                  capitalAppreciation:"Moderate — depends on brand appeal",
                 },
                 strengths:["$5B cash reserves","Luxury brand partnerships (Versace, Cavalli, Bugatti)","Strong marketing engine","Flexible payment plans"],
-                weaknesses:["Delisted from DFM 2022 \u2014 limited transparency","82% delivery rate \u2014 below Tier 1","Bond stress signals Mar 2026 \u2014 monitor","Investor-heavy, less end-user demand"],
+                weaknesses:["Delisted from DFM 2022 — limited transparency","82% delivery rate — below Tier 1","Bond stress signals Mar 2026 — monitor","Investor-heavy, less end-user demand"],
                 bestFor:"STR/luxury investors, buyers seeking branded residences",
               },
               {
@@ -14705,13 +14705,13 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   segments:["Premium residential","Waterfront","Integrated communities"],
                   communities:["Sobha Hartland I","Sobha Hartland II","Sobha Seahaven","Sobha One"],
                   paymentPlans:"60/40, construction-linked",
-                  creditRating:"Private \u2014 strong balance sheet",
+                  creditRating:"Private — strong balance sheet",
                   offPlanShare:"75% of sales",
                   grossYield:"5.5-7.5%",
-                  capitalAppreciation:"Strong \u2014 premium quality commands premium",
+                  capitalAppreciation:"Strong — premium quality commands premium",
                 },
                 strengths:["In-house construction = best quality control","91% on-time delivery","No reliance on subcontractors","Premium finishes at consistent standard","Strong FDI buyer base (Indian HNW)"],
-                weaknesses:["Community concentration (Hartland/MBR City)","Private \u2014 limited financial disclosure","Higher PSF than comparable developers","Slower sales cadence than Emaar/DAMAC"],
+                weaknesses:["Community concentration (Hartland/MBR City)","Private — limited financial disclosure","Higher PSF than comparable developers","Slower sales cadence than Emaar/DAMAC"],
                 bestFor:"Quality-focused buyers, long-term hold, Indian HNW investors",
               },
               {
@@ -14731,13 +14731,13 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   segments:["Waterfront villas","Island communities","Luxury towers"],
                   communities:["Palm Jumeirah","Palm Jebel Ali","Dubai Islands","The World","Deira Islands"],
                   paymentPlans:"Government-backed, conservative plans",
-                  creditRating:"Government backed \u2014 zero default risk",
+                  creditRating:"Government backed — zero default risk",
                   offPlanShare:"65% of sales",
                   grossYield:"5-7% (Palm premium)",
-                  capitalAppreciation:"Exceptional \u2014 finite island supply",
+                  capitalAppreciation:"Exceptional — finite island supply",
                 },
-                strengths:["Government backing = zero default risk","Finite waterfront supply \u2014 impossible to replicate","Palm Jumeirah global brand recognition","Luxury segment #1 (AED 16.9B >AED15M properties 2025)","Dubai Holding integration (Meraas, Jumeirah Group)"],
-                weaknesses:["Very high price points \u2014 limited buyer pool","Large project complexity = delivery timeline risk","Limited affordable offering","Island infrastructure complexity"],
+                strengths:["Government backing = zero default risk","Finite waterfront supply — impossible to replicate","Palm Jumeirah global brand recognition","Luxury segment #1 (AED 16.9B >AED15M properties 2025)","Dubai Holding integration (Meraas, Jumeirah Group)"],
+                weaknesses:["Very high price points — limited buyer pool","Large project complexity = delivery timeline risk","Limited affordable offering","Island infrastructure complexity"],
                 bestFor:"Ultra-HNW buyers, capital preservation, waterfront luxury",
               },
               {
@@ -14756,14 +14756,14 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   minPrice:"AED 1.5M", maxPrice:"AED 50M+",
                   segments:["Lifestyle communities","Retail-integrated living","Urban destinations"],
                   communities:["Nad Al Sheba Gardens","City Walk Residences","Bluewaters Island","La Mer","Jumeirah Residences"],
-                  paymentPlans:"Government conservative \u2014 less flexible",
-                  creditRating:"Government backed \u2014 Dubai Holding",
+                  paymentPlans:"Government conservative — less flexible",
+                  creditRating:"Government backed — Dubai Holding",
                   offPlanShare:"70% of sales",
                   grossYield:"5-6.5%",
-                  capitalAppreciation:"Strong \u2014 iconic lifestyle brand",
+                  capitalAppreciation:"Strong — iconic lifestyle brand",
                 },
-                strengths:["City Walk, La Mer, Bluewaters \u2014 iconic lifestyle brand","Government backing","Nad Al Sheba fastest-selling villa 2025","AED 8.4M avg transaction \u2014 premium positioning","Meraas lifestyle retail drives property value"],
-                weaknesses:["Very high avg price \u2014 limited buyer pool","Government conservative structure = less innovation","Limited affordable product","Strong competition from Emaar on lifestyle"],
+                strengths:["City Walk, La Mer, Bluewaters — iconic lifestyle brand","Government backing","Nad Al Sheba fastest-selling villa 2025","AED 8.4M avg transaction — premium positioning","Meraas lifestyle retail drives property value"],
+                weaknesses:["Very high avg price — limited buyer pool","Government conservative structure = less innovation","Limited affordable product","Strong competition from Emaar on lifestyle"],
                 bestFor:"Lifestyle-focused luxury buyers, GCC HNW, weekend home buyers",
               },
               {
@@ -14782,15 +14782,15 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   minPrice:"AED 400K", maxPrice:"AED 5M",
                   segments:["Mid-market apartments","Branded luxury (Jacob & Co, Bugatti)","Investment units"],
                   communities:["Business Bay","JVC","Silicon Oasis","Downtown","Al Jaddaf"],
-                  paymentPlans:"50/50, 1% monthly \u2014 very flexible",
-                  creditRating:"Private \u2014 bond stress signals Mar 2026",
+                  paymentPlans:"50/50, 1% monthly — very flexible",
+                  creditRating:"Private — bond stress signals Mar 2026",
                   offPlanShare:"90% of sales",
-                  grossYield:"8-10% \u2014 highest in mid-market",
-                  capitalAppreciation:"Moderate \u2014 volume play, less brand premium",
+                  grossYield:"8-10% — highest in mid-market",
+                  capitalAppreciation:"Moderate — volume play, less brand premium",
                 },
                 strengths:["Highest gross yield in mid-market (8-10%)","Lowest entry price point AED 400K","60+ completed projects track record","Fastest growing developer 2024-2025","Unique architectural designs drive demand"],
-                weaknesses:["Bond stress signals reported Mar 2026 \u2014 HIGH RISK","78% delivery rate \u2014 below average","High leverage historically","Rapid expansion pace \u2014 execution risk","Private \u2014 very limited financial transparency"],
-                bestFor:"Yield-focused investors, entry-level buyers \u2014 monitor financial health",
+                weaknesses:["Bond stress signals reported Mar 2026 — HIGH RISK","78% delivery rate — below average","High leverage historically","Rapid expansion pace — execution risk","Private — very limited financial transparency"],
+                bestFor:"Yield-focused investors, entry-level buyers — monitor financial health",
               },
               {
                 name:"Danube Properties",
@@ -14809,13 +14809,13 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   segments:["Affordable luxury","Mid-market apartments","1% monthly payment pioneer"],
                   communities:["JVC","Arjan","Business Bay","Al Furjan"],
                   paymentPlans:"1% monthly (industry pioneer), 50/50, post-handover",
-                  creditRating:"Private \u2014 Danube Group backing",
+                  creditRating:"Private — Danube Group backing",
                   offPlanShare:"85% of sales",
-                  grossYield:"8-10% \u2014 JVC/Arjan segment",
-                  capitalAppreciation:"Moderate \u2014 affordable segment entry",
+                  grossYield:"8-10% — JVC/Arjan segment",
+                  capitalAppreciation:"Moderate — affordable segment entry",
                 },
-                strengths:["Best delivery record in affordable segment (88%)","Pioneer of 1% monthly payment \u2014 copied industry-wide","Danube Group material cost advantage","Lowest entry prices AED 350K","Strong tenant demand = low vacancy"],
-                weaknesses:["Small team relative to pipeline","Private \u2014 no financial disclosures","Affordable segment = thin margins","Limited luxury product","Community concentration JVC/Arjan"],
+                strengths:["Best delivery record in affordable segment (88%)","Pioneer of 1% monthly payment — copied industry-wide","Danube Group material cost advantage","Lowest entry prices AED 350K","Strong tenant demand = low vacancy"],
+                weaknesses:["Small team relative to pipeline","Private — no financial disclosures","Affordable segment = thin margins","Limited luxury product","Community concentration JVC/Arjan"],
                 bestFor:"First-time investors, yield maximisers, budget-conscious buyers",
               },
               {
@@ -14834,19 +14834,19 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   minPrice:"AED 600K", maxPrice:"AED 8M",
                   segments:["Design-led mid-premium","Boutique apartments","JVC + Business Bay specialist"],
                   communities:["JVC","Business Bay","Palm Jumeirah","Downtown"],
-                  paymentPlans:"60/40, 70/30 \u2014 construction linked",
-                  creditRating:"Private \u2014 lowest D/E ratio in segment",
+                  paymentPlans:"60/40, 70/30 — construction linked",
+                  creditRating:"Private — lowest D/E ratio in segment",
                   offPlanShare:"80% of sales",
-                  grossYield:"7-9% \u2014 premium finish drives premium rent",
-                  capitalAppreciation:"Strong \u2014 design premium commands resale premium",
+                  grossYield:"7-9% — premium finish drives premium rent",
+                  capitalAppreciation:"Strong — design premium commands resale premium",
                 },
-                strengths:["Highest finish quality per AED in mid-market","90% delivery rate","Lowest D/E ratio (0.38x) \u2014 most conservative","Strong resale premiums vs area average","Design-led = tenant quality above segment avg"],
-                weaknesses:["Low volume \u2014 can't compete on scale","Private \u2014 no financial disclosures","Small pipeline relative to demand","Limited community diversity","JVC oversupply risk affects all JVC developers"],
+                strengths:["Highest finish quality per AED in mid-market","90% delivery rate","Lowest D/E ratio (0.38x) — most conservative","Strong resale premiums vs area average","Design-led = tenant quality above segment avg"],
+                weaknesses:["Low volume — can't compete on scale","Private — no financial disclosures","Small pipeline relative to demand","Limited community diversity","JVC oversupply risk affects all JVC developers"],
                 bestFor:"Quality buyers, design-conscious investors, strong resale strategy",
               },
             ];
 
-            /* \u2500\u2500 Scoring metric labels \u2500\u2500 */
+            /* ── Scoring metric labels ── */
             const METRICS = [
               {key:"overall",         label:"Overall Score",        icon:"\u2B50"},
               {key:"salesVolume",     label:"Sales Volume",         icon:"\uD83D\uDCCA"},
@@ -14862,7 +14862,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
 
             const selMetric = METRICS.find(m => m.key === cptMetric) || METRICS[0];
 
-            /* \u2500\u2500 Sort by selected metric \u2500\u2500 */
+            /* ── Sort by selected metric ── */
             const sorted = [...COMP_DATA]
               .filter(d => !cptSearch || d.name.toLowerCase().includes(cptSearch.toLowerCase()))
               .sort((a,b) => (b.scores[cptMetric]||0) - (a.scores[cptMetric]||0));
@@ -14884,11 +14884,11 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
             return (
               <div style={{ animation:"fadeUp 0.4s ease-out forwards" }}>
 
-                {/* \u2500\u2500 HEADER \u2500\u2500 */}
+                {/* ── HEADER ── */}
                 <div style={{ display:"flex", alignItems:"flex-start", justifyContent:"space-between", padding:"10px 0", marginBottom:16, borderBottom:`1px solid ${T.border}`, flexWrap:"wrap", gap:10 }}>
                   <div>
                     <div style={{ fontFamily:"'Fraunces',serif", fontSize:20, fontWeight:800, color:T.white }}>Developer Competitors</div>
-                    <div style={{ fontSize:11, color:T.textMuted, marginTop:3 }}>8 developers \u00B7 10-factor scoring \u00B7 Head-to-head compare \u00B7 DLD 2025 data \u00B7 Sales, delivery, yield, brand</div>
+                    <div style={{ fontSize:11, color:T.textMuted, marginTop:3 }}>8 developers · 10-factor scoring · Head-to-head compare · DLD 2025 data · Sales, delivery, yield, brand</div>
                   </div>
                   <div style={{ display:"flex", gap:8 }}>
                     {["matrix","headToHead","detail","radar"].map(v=>(
@@ -14900,7 +14900,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   </div>
                 </div>
 
-                {/* \u2550\u2550 MARKET MATRIX VIEW \u2550\u2550 */}
+                {/* ══ MARKET MATRIX VIEW ══ */}
                 {cptView === "matrix" && (
                   <>
                     {/* Metric selector + search */}
@@ -14952,14 +14952,14 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
 
                     {/* Key insight */}
                     <div style={{ padding:"12px 16px", background:"rgba(212,168,67,0.06)", border:"1px solid rgba(212,168,67,0.2)", borderRadius:10, fontSize:11, color:T.textSecondary, lineHeight:1.8 }}>
-                      <strong style={{ color:T.gold }}>Market insight 2025:</strong> Emaar dominates with AED 51B sales (Jan-Aug) \u2014 nearly double DAMAC in second place at AED 24B.
-                      Off-plan share exceeded 60% of all Dubai transactions. Emaar upgraded to BBB+ by S&P \u2014 only UAE developer with investment-grade credit rating.
-                      Binghatti's AED 26B full-year 2025 sales were extraordinary \u2014 but monitor bond stress signals reported Mar 2026.
+                      <strong style={{ color:T.gold }}>Market insight 2025:</strong> Emaar dominates with AED 51B sales (Jan-Aug) — nearly double DAMAC in second place at AED 24B.
+                      Off-plan share exceeded 60% of all Dubai transactions. Emaar upgraded to BBB+ by S&P — only UAE developer with investment-grade credit rating.
+                      Binghatti's AED 26B full-year 2025 sales were extraordinary — but monitor bond stress signals reported Mar 2026.
                     </div>
                   </>
                 )}
 
-                {/* \u2550\u2550 HEAD TO HEAD VIEW \u2550\u2550 */}
+                {/* ══ HEAD TO HEAD VIEW ══ */}
                 {cptView === "headToHead" && (
                   <>
                     {/* Selector */}
@@ -14979,7 +14979,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                       <div style={{ padding:"20px", background:`linear-gradient(135deg,${devA.color}14,${devA.color}04)`, border:`1px solid ${devA.color}30`, borderRadius:14, textAlign:"center" }}>
                         <div style={{ fontFamily:"'Fraunces',serif", fontSize:18, fontWeight:800, color:T.white, marginBottom:6 }}>{devA.name}</div>
                         <div style={{ fontFamily:"'Fraunces',serif", fontSize:48, fontWeight:900, color:devA.color, lineHeight:1 }}>{devA.scores.overall}</div>
-                        <div style={{ fontSize:11, color:T.textMuted, marginTop:4 }}>{devA.tier}{"\u00B7"}{devA.data.deliveryRate} delivery</div>
+                        <div style={{ fontSize:11, color:T.textMuted, marginTop:4 }}>{devA.tier}{"·"}{devA.data.deliveryRate} delivery</div>
                       </div>
                       {/* VS */}
                       <div style={{ textAlign:"center", padding:"10px" }}>
@@ -14989,7 +14989,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                       <div style={{ padding:"20px", background:`linear-gradient(135deg,${devB.color}14,${devB.color}04)`, border:`1px solid ${devB.color}30`, borderRadius:14, textAlign:"center" }}>
                         <div style={{ fontFamily:"'Fraunces',serif", fontSize:18, fontWeight:800, color:T.white, marginBottom:6 }}>{devB.name}</div>
                         <div style={{ fontFamily:"'Fraunces',serif", fontSize:48, fontWeight:900, color:devB.color, lineHeight:1 }}>{devB.scores.overall}</div>
-                        <div style={{ fontSize:11, color:T.textMuted, marginTop:4 }}>{devB.tier}{"\u00B7"}{devB.data.deliveryRate} delivery</div>
+                        <div style={{ fontSize:11, color:T.textMuted, marginTop:4 }}>{devB.tier}{"·"}{devB.data.deliveryRate} delivery</div>
                       </div>
                     </div>
 
@@ -15043,7 +15043,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   </>
                 )}
 
-                {/* \u2550\u2550 DETAIL VIEW \u2550\u2550 */}
+                {/* ══ DETAIL VIEW ══ */}
                 {cptView === "detail" && (
                   <>
                     <div style={{ display:"flex", gap:8, marginBottom:16 }}>
@@ -15066,7 +15066,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                         <div style={{ display:"flex", justifyContent:"space-between", marginBottom:12 }}>
                           <div>
                             <div style={{ fontFamily:"'Fraunces',serif", fontSize:18, fontWeight:800, color:T.white }}>{devA.name}</div>
-                            <div style={{ fontSize:11, color:T.textMuted, marginTop:2 }}>{devA.tier}{"\u00B7"}{devA.listed?`${devA.exchange} Listed`:"Private"}</div>
+                            <div style={{ fontSize:11, color:T.textMuted, marginTop:2 }}>{devA.tier}{"·"}{devA.listed?`${devA.exchange} Listed`:"Private"}</div>
                           </div>
                           <div style={{ textAlign:"right" }}>
                             <div style={{ fontFamily:"'Fraunces',serif", fontSize:32, fontWeight:900, color:devA.color }}>{devA.scores.overall}</div>
@@ -15146,11 +15146,11 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   </>
                 )}
 
-                {/* \u2550\u2550 SCORE RADAR VIEW \u2550\u2550 */}
+                {/* ══ SCORE RADAR VIEW ══ */}
                 {cptView === "radar" && (
                   <div style={{ marginBottom:16 }}>
-                    <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:4 }}>Score Radar \u2014 All Developers</div>
-                    <div style={{ fontSize:11, color:T.textMuted, marginBottom:16 }}>Each factor scored 0-100 \u00B7 Higher = better \u00B7 Click developer to see detail</div>
+                    <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:4 }}>Score Radar — All Developers</div>
+                    <div style={{ fontSize:11, color:T.textMuted, marginBottom:16 }}>Each factor scored 0-100 · Higher = better · Click developer to see detail</div>
                     <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(200px,1fr))", gap:10 }}>
                       {COMP_DATA.map((d,i)=>(
                         <div key={i} className="chart-box" style={{ padding:16, cursor:"pointer", borderLeft:`3px solid ${d.color}` }}
@@ -15183,7 +15183,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   </div>
                 )}
 
-                {/* \u2500\u2500 SOURCE FOOTER \u2500\u2500 */}
+                {/* ── SOURCE FOOTER ── */}
                 <div style={{ paddingTop:12, borderTop:`1px solid ${T.border}`, display:"flex", gap:8, flexWrap:"wrap", alignItems:"center" }}>
                   <span style={{ fontSize:10, color:T.textMuted }}>Sources:</span>
                   {["DLD 2025 Transaction Data","mieyaruae.com Q3 2025 Report","dubaipropertyinsight.com","prelaunch.ae Dec 2025","takayamotorcity.com Feb 2026","prophero.net Jan 2026","S&P BBB+ Emaar 2025"].map((s,i)=>(
@@ -15195,11 +15195,11 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
             );
           })()}
 
-          {/* \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
-              INTELLIGENCE TABS \u2014 Awaiting Data Import
+          {/* ══════════════════════════════════════════════════════════
+              INTELLIGENCE TABS — Awaiting Data Import
               Each tab shows a beautiful empty state with instructions
-              Data connects via Firestore \u2014 Admin \u2192 Data Manager
-          \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 */}
+              Data connects via Firestore — Admin \u2192 Data Manager
+          ══════════════════════════════════════════════════════════ */}
 
           {Object.entries(INTELLIGENCE_TABS).map(([tabKey, config]) => (
             tab === tabKey && tabKey !== "Overview" && tabKey !== "Market" && tabKey !== "DLD Volumes" && tabKey !== "Price History" && tabKey !== "Neighbourhoods" && tabKey !== "Launch Calendar" && tabKey !== "Currency" && tabKey !== "Projects" && tabKey !== "Map" && tabKey !== "Handover" && tabKey !== "Service Charges" && tabKey !== "Yields" && tabKey !== "STR vs LTR" && tabKey !== "Mortgage" && tabKey !== "Investment Score" && tabKey !== "Flip" && tabKey !== "DXB Estimate" && tabKey !== "Portfolio" && tabKey !== "Golden Visa" && tabKey !== "Risk" && tabKey !== "Financials" && tabKey !== "Developer Health" && tabKey !== "Banking" && tabKey !== "Marketing" && tabKey !== "Competitors" && (
@@ -15213,7 +15213,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                     <span style={{ fontSize: 11, color: T.textSecondary }}>
                       <span style={{ color: T.gold, fontWeight: 600 }}>DXB Analytics</span>
-                      {" "}{"\u00B7"}{tabKey}
+                      {" "}{"·"}{tabKey}
                     </span>
                   </div>
                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -15238,9 +15238,9 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
             )
           ))}
 
-          {/* \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
-              MY LEADS TAB \u2014 Session 4 \u2014 Agent CRM Inbox
-          \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 */}
+          {/* ══════════════════════════════════════════════
+              MY LEADS TAB — Session 4 — Agent CRM Inbox
+          ══════════════════════════════════════════════ */}
 {tab === "My Leads" && (() => {
             const mlIsAgent=orgRole==="agent";
             const mlIsManager=orgRole==="manager";
@@ -15794,10 +15794,10 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
 
 
 
-          {/* \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
-              PIPELINE TAB \u2014 Session 5 \u2014 Deal Pipeline
+          {/* ══════════════════════════════════════════════
+              PIPELINE TAB — Session 5 — Deal Pipeline
               EOI \u2192 Booking \u2192 SPA \u2192 DLD \u2192 Completed
-          \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 */}
+          ══════════════════════════════════════════════ */}
           {tab === "Pipeline" && (() => {
             const isAgent   = orgRole === "agent";
             const isManager = orgRole === "manager";
@@ -15893,11 +15893,11 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
 
             return (<>
 
-              {/* \u2500\u2500 Header \u2500\u2500 */}
+              {/* ── Header ── */}
               <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:20, flexWrap:"wrap", gap:12 }}>
                 <div>
                   <h1 style={{ fontFamily:"'Fraunces',serif", fontSize:22, fontWeight:900, color:T.white, margin:0 }}>Deal Pipeline</h1>
-                  <p style={{ fontSize:12, color:T.textMuted, margin:"4px 0 0" }}>EOI \u2192 Booking \u2192 SPA \u2192 DLD \u00B7 Track every deal to close</p>
+                  <p style={{ fontSize:12, color:T.textMuted, margin:"4px 0 0" }}>EOI \u2192 Booking \u2192 SPA \u2192 DLD · Track every deal to close</p>
                 </div>
                 <div style={{ display:"flex", gap:8 }}>
                   {/* Type filter */}
@@ -15917,7 +15917,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 </div>
               </div>
 
-              {/* \u2500\u2500 KPI Bar \u2500\u2500 */}
+              {/* ── KPI Bar ── */}
               <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:10, marginBottom:20 }}>
                 {[
                   { label:"Active Deals",    value:filteredDeals.filter(d=>d.stage!=="Completed").length, color:T.gold,   icon:<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><rect x="3" y="3" width="4" height="18" rx="1"/><rect x="10" y="3" width="4" height="12" rx="1"/><rect x="17" y="3" width="4" height="15" rx="1"/></svg> },
@@ -15936,7 +15936,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 ))}
               </div>
 
-              {/* \u2500\u2500 Stage Progress Bar \u2500\u2500 */}
+              {/* ── Stage Progress Bar ── */}
               <div style={{ overflowX:"auto", marginBottom:20 }}>
                 <div style={{ display:"grid", gridTemplateColumns:`repeat(${STAGES.length},minmax(200px,1fr))`, borderRadius:10, overflow:"hidden", border:`1px solid ${T.border}`, minWidth:700 }}>
                 {STAGES.map((s,i) => {
@@ -15953,7 +15953,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 </div>
               </div>
 
-              {/* \u2500\u2500 Kanban Board \u2500\u2500 */}
+              {/* ── Kanban Board ── */}
               {dealsLoading ? (
                 <div style={{ display:"flex", alignItems:"center", justifyContent:"center", padding:"60px 0", gap:10 }}>
                   <div style={{ width:20, height:20, border:`2px solid ${T.gold}30`, borderTopColor:T.gold, borderRadius:"50%", animation:"spin 0.7s linear infinite" }}/>
@@ -16030,7 +16030,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 </div>
               )}
 
-              {/* \u2500\u2500 Deal Detail Drawer \u2500\u2500 */}
+              {/* ── Deal Detail Drawer ── */}
               {selectedDeal && (
                 <div style={{ position:"fixed", inset:0, zIndex:1500, display:"flex" }} onClick={e=>{if(e.target===e.currentTarget)setSelectedDeal(null);}}>
                   <div style={{ flex:1, background:"rgba(0,0,0,0.5)", backdropFilter:"blur(4px)" }} onClick={()=>setSelectedDeal(null)}/>
@@ -16040,7 +16040,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                       <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:14 }}>
                         <div>
                           <div style={{ fontFamily:"'Fraunces',serif", fontSize:18, fontWeight:900, color:T.white }}>{selectedDeal.leadName||"Unnamed Deal"}</div>
-                          <div style={{ fontSize:11, color:T.textMuted, marginTop:3 }}>{selectedDeal.project} {selectedDeal.unitNo && `\u00B7 Unit ${selectedDeal.unitNo}`}</div>
+                          <div style={{ fontSize:11, color:T.textMuted, marginTop:3 }}>{selectedDeal.project} {selectedDeal.unitNo && `· Unit ${selectedDeal.unitNo}`}</div>
                         </div>
                         <button type="button" onClick={()=>setSelectedDeal(null)}
                           style={{ background:"rgba(255,255,255,0.06)", border:`1px solid ${T.border}`, borderRadius:7, color:T.textMuted, cursor:"pointer", padding:"5px 10px", display:"flex", alignItems:"center", gap:4, fontSize:12 }}>
@@ -16083,7 +16083,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                           <div>
                             <div style={{ fontSize:10, color:T.textMuted, marginBottom:5 }}>Deal Price (AED)</div>
                             <div style={{ fontSize:18, fontWeight:900, color:T.gold, fontFamily:"'Fraunces',serif" }}>
-                              {selectedDeal.price>0?`${(parseFloat(selectedDeal.price)/1e6).toFixed(2)}M`:"\u2014"}
+                              {selectedDeal.price>0?`${(parseFloat(selectedDeal.price)/1e6).toFixed(2)}M`:"—"}
                             </div>
                           </div>
                           <div>
@@ -16117,7 +16117,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                             <div key={pi} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"6px 0", borderBottom:pi<2?`1px solid ${T.border}`:"none" }}>
                               <div>
                                 <div style={{ fontSize:11, fontWeight:600, color:T.textPrimary }}>{p.name}</div>
-                                <div style={{ fontSize:10, color:T.textMuted }}>AED {p.price?(p.price/1e6).toFixed(2)+"M":"TBD"}{"\u00B7"}{p.status}</div>
+                                <div style={{ fontSize:10, color:T.textMuted }}>AED {p.price?(p.price/1e6).toFixed(2)+"M":"TBD"}{"·"}{p.status}</div>
                               </div>
                               <span style={{ fontSize:9, padding:"2px 6px", borderRadius:4, background:"rgba(212,168,67,0.1)", color:T.gold }}>{p.handover}</span>
                             </div>
@@ -16146,14 +16146,14 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 </div>
               )}
 
-              {/* \u2500\u2500 New Deal Modal \u2500\u2500 */}
+              {/* ── New Deal Modal ── */}
               {showNewDeal && (
                 <div style={{ position:"fixed", inset:0, background:"rgba(4,9,15,0.85)", zIndex:2000, display:"flex", alignItems:"center", justifyContent:"center", backdropFilter:"blur(8px)" }} onClick={e=>{if(e.target===e.currentTarget)setShowNewDeal(false);}}>
                   <div style={{ background:T.surface, borderRadius:16, border:`1px solid ${T.border}`, width:"95%", maxWidth:520, maxHeight:"90vh", overflowY:"auto" }} onClick={e=>e.stopPropagation()}>
                     <div style={{ padding:"22px 24px", borderBottom:`1px solid ${T.border}`, display:"flex", justifyContent:"space-between", alignItems:"center" }}>
                       <div>
                         <div style={{ fontFamily:"'Fraunces',serif", fontSize:18, fontWeight:900, color:T.gold }}>New Deal</div>
-                        <div style={{ fontSize:11, color:T.textMuted, marginTop:2 }}>Start at EOI stage \u2014 advance as the deal progresses</div>
+                        <div style={{ fontSize:11, color:T.textMuted, marginTop:2 }}>Start at EOI stage — advance as the deal progresses</div>
                       </div>
                       <button type="button" onClick={()=>setShowNewDeal(false)}
                         style={{ background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:8, color:T.textMuted, width:32, height:32, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center" }}>
@@ -16239,10 +16239,10 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
 
 
 
-          {/* \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
-              COMPLIANCE TAB \u2014 Session 6
+          {/* ══════════════════════════════════════════════
+              COMPLIANCE TAB — Session 6
               RERA card tracker + WhatsApp templates
-          \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 */}
+          ══════════════════════════════════════════════ */}
           {tab === "Compliance" && (() => {
             const isAgent   = orgRole === "agent";
             const isManager = orgRole === "manager";
@@ -16270,7 +16270,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               followup: { label:"Follow-Up",    text:(name)=>`Hi${name?" "+name:""},\n\nJust following up on our previous conversation about Dubai properties. I have some exciting new listings that match your criteria.\n\nWould you be available for a quick call this week?\n\nLooking forward to hearing from you.` },
               match:    { label:"Property Match",text:(name)=>`Hi${name?" "+name:""},\n\nGreat news! I've found a property that matches exactly what you're looking for.\n\nI'll send you the full details shortly. Would you like to schedule a viewing?\n\nBest regards` },
               meeting:  { label:"Meeting Request",text:(name)=>`Hello${name?" "+name:""},\n\nI'd like to schedule a meeting to discuss your property requirements in detail and show you some exclusive listings.\n\nAre you free for a 30-minute call this week? Please let me know your preferred time.\n\nThank you` },
-              gv:       { label:"Golden Visa",  text:(name)=>`Hi${name?" "+name:""},\n\nDid you know that purchasing a property above AED 2 Million in Dubai qualifies you for a 10-year UAE Golden Visa?\n\nI have some excellent options in this range \u2014 would you like me to share the details?\n\nBest regards` },
+              gv:       { label:"Golden Visa",  text:(name)=>`Hi${name?" "+name:""},\n\nDid you know that purchasing a property above AED 2 Million in Dubai qualifies you for a 10-year UAE Golden Visa?\n\nI have some excellent options in this range — would you like me to share the details?\n\nBest regards` },
             };
 
             // Save RERA card
@@ -16289,13 +16289,13 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:20, flexWrap:"wrap", gap:12 }}>
                 <div>
                   <h1 style={{ fontFamily:"'Fraunces',serif", fontSize:22, fontWeight:900, color:T.white, margin:0 }}>Compliance</h1>
-                  <p style={{ fontSize:12, color:T.textMuted, margin:"4px 0 0" }}>RERA card tracker \u00B7 WhatsApp templates \u00B7 Regulatory alerts</p>
+                  <p style={{ fontSize:12, color:T.textMuted, margin:"4px 0 0" }}>RERA card tracker · WhatsApp templates · Regulatory alerts</p>
                 </div>
               </div>
 
               <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16, alignItems:"start" }}>
 
-                {/* \u2500\u2500 Left column \u2500\u2500 */}
+                {/* ── Left column ── */}
                 <div style={{ display:"flex", flexDirection:"column", gap:16 }}>
 
                   {/* RERA Card Status */}
@@ -16313,7 +16313,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                           <div style={{ fontSize:12, fontWeight:700, color:sc.color }}>{sc.label}</div>
                           {daysLeft !== null && (
                             <div style={{ fontSize:11, color:T.textMuted, marginTop:2 }}>
-                              {daysLeft <= 0 ? "Your RERA card has expired \u2014 renew immediately" : `${daysLeft} days remaining until expiry`}
+                              {daysLeft <= 0 ? "Your RERA card has expired — renew immediately" : `${daysLeft} days remaining until expiry`}
                             </div>
                           )}
                         </div>
@@ -16381,7 +16381,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   )}
                 </div>
 
-                {/* \u2500\u2500 Right column \u2500\u2500 */}
+                {/* ── Right column ── */}
                 <div style={{ display:"flex", flexDirection:"column", gap:16 }}>
 
                   {/* WhatsApp Message Templates */}
@@ -16439,11 +16439,11 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   <div style={{ background:T.card, border:`1px solid ${T.border}`, borderRadius:14, padding:"16px 18px" }}>
                     <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:12 }}>Official Regulatory Links</div>
                     {[
-                      { label:"RERA \u2014 Real Estate Regulatory Agency",   url:"https://www.dubailand.gov.ae/en/eservices/real-estate-broker-registration/" },
-                      { label:"DLD \u2014 Dubai Land Department",            url:"https://dubailand.gov.ae"                },
-                      { label:"Trakheesi \u2014 Permit System",              url:"https://www.dubailand.gov.ae/en/eservices/trakheesi/" },
-                      { label:"DTCM \u2014 Holiday Home Permits",            url:"https://dtcm.gov.ae"                     },
-                      { label:"ICP \u2014 Visa & Golden Visa",               url:"https://icp.gov.ae"                      },
+                      { label:"RERA — Real Estate Regulatory Agency",   url:"https://www.dubailand.gov.ae/en/eservices/real-estate-broker-registration/" },
+                      { label:"DLD — Dubai Land Department",            url:"https://dubailand.gov.ae"                },
+                      { label:"Trakheesi — Permit System",              url:"https://www.dubailand.gov.ae/en/eservices/trakheesi/" },
+                      { label:"DTCM — Holiday Home Permits",            url:"https://dtcm.gov.ae"                     },
+                      { label:"ICP — Visa & Golden Visa",               url:"https://icp.gov.ae"                      },
                     ].map(({label,url},i)=>(
                       <a key={i} href={url} target="_blank" rel="noopener noreferrer"
                         style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"9px 0", borderBottom:i<4?`1px solid ${T.border}`:"none", textDecoration:"none" }}>
@@ -16459,11 +16459,11 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
 
 
 
-          {/* \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
-              TEAM TAB \u2014 Session 7 \u2014 Agency Manager Dashboard
-              Agent leaderboard \u00B7 Source ROI \u00B7 Pipeline funnel
-              Overdue follow-ups \u00B7 Team KPIs
-          \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 */}
+          {/* ══════════════════════════════════════════════
+              TEAM TAB — Session 7 — Agency Manager Dashboard
+              Agent leaderboard · Source ROI · Pipeline funnel
+              Overdue follow-ups · Team KPIs
+          ══════════════════════════════════════════════ */}
           {tab === "Team" && (() => {
             const isManager = orgRole === "manager";
             if (!isManager) return (
@@ -16474,7 +16474,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               </div>
             );
 
-            // \u2500\u2500 Derived metrics \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+            // ── Derived metrics ──────────────────────────────────────────
 
             const agents = teamMembers.filter(u => u.orgRole === "agent");
             const now = new Date();
@@ -16530,17 +16530,17 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
 
             return (<>
 
-              {/* \u2500\u2500 Header \u2500\u2500 */}
+              {/* ── Header ── */}
               <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:20, flexWrap:"wrap", gap:12 }}>
                 <div>
                   <h1 style={{ fontFamily:"'Fraunces',serif", fontSize:22, fontWeight:900, color:T.white, margin:0 }}>Team Dashboard</h1>
                   <p style={{ fontSize:12, color:T.textMuted, margin:"4px 0 0" }}>
-                    {agents.length} agents \u00B7 {teamLeads} leads \u00B7 {teamDeals} deals \u00B7 Live Firestore
+                    {agents.length} agents · {teamLeads} leads · {teamDeals} deals · Live Firestore
                   </p>
                 </div>
               </div>
 
-              {/* \u2500\u2500 Team KPI Bar \u2500\u2500 */}
+              {/* ── Team KPI Bar ── */}
               <div style={{ display:"grid", gridTemplateColumns:"repeat(5,1fr)", gap:10, marginBottom:20 }}>
                 {[
                   { label:"Total Leads",    value:teamLeads,   color:T.gold,    icon:<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg> },
@@ -16560,10 +16560,10 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 ))}
               </div>
 
-              {/* \u2500\u2500 Main grid: Leaderboard + Funnel \u2500\u2500 */}
+              {/* ── Main grid: Leaderboard + Funnel ── */}
               <div style={{ display:"grid", gridTemplateColumns:"minmax(0,1fr) min(340px,38%)", gap:16, marginBottom:16, alignItems:"start" }}>
 
-                {/* \u2500\u2500 AI Hot Leads Panel (Session 13) \u2500\u2500 */}
+                {/* ── AI Hot Leads Panel (Session 13) ── */}
                 {(() => {
                   const hotLeads = myLeads
                     .map(l => ({ ...l, aiScore: (() => { const b = parseFloat(l.budget)||0; const age = (Date.now()-new Date(l.createdAt||Date.now()))/86400000; let s=0; if(l.phone&&l.email)s+=25; if(b>=5000000)s+=20;else if(b>=2000000)s+=16;else if(b>0)s+=10; const src={"Property Finder":15,"Bayut":14,"Referral":15,"WhatsApp":10}; s+=(src[l.source]||6); if(age<1)s+=20;else if(age<3)s+=15;else if(age<7)s+=10; return Math.min(100,s); })() }))
@@ -16575,8 +16575,8 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                     <div style={{ background:T.card, border:`1px solid ${T.border}`, borderRadius:14, overflow:"hidden", marginBottom:16 }}>
                       <div style={{ padding:"12px 18px", borderBottom:`1px solid ${T.border}`, display:"flex", alignItems:"center", gap:10 }}>
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={T.gold} strokeWidth="2" strokeLinecap="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-                        <div style={{ fontSize:12, fontWeight:700, color:T.white }}>AI Hot Leads \u2014 Act Now</div>
-                        <div style={{ marginLeft:"auto", fontSize:10, color:T.textMuted }}>Score \u2265 60 \u00B7 Highest priority</div>
+                        <div style={{ fontSize:12, fontWeight:700, color:T.white }}>AI Hot Leads — Act Now</div>
+                        <div style={{ marginLeft:"auto", fontSize:10, color:T.textMuted }}>Score \u2265 60 · Highest priority</div>
                       </div>
                       <div style={{ display:"flex", flexDirection:"column" }}>
                         {hotLeads.map((l,i)=>{
@@ -16589,7 +16589,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                                 <div style={{ width:32, height:32, borderRadius:"50%", background:`${scoreColor}18`, border:`2px solid ${scoreColor}40`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:11, fontWeight:900, color:scoreColor, flexShrink:0 }}>{l.aiScore}</div>
                                 <div style={{ minWidth:0 }}>
                                   <div style={{ fontSize:12, fontWeight:600, color:T.textPrimary, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{name}</div>
-                                  <div style={{ fontSize:10, color:T.textMuted }}>{agent?(agent.name||agent.email?.split("@")[0]):"Unassigned"}{"\u00B7"}{l.source||"No source"}</div>
+                                  <div style={{ fontSize:10, color:T.textMuted }}>{agent?(agent.name||agent.email?.split("@")[0]):"Unassigned"}{"·"}{l.source||"No source"}</div>
                                 </div>
                               </div>
                               <div style={{ display:"flex", alignItems:"center", gap:6, flexShrink:0 }}>
@@ -16604,7 +16604,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   );
                 })()}
 
-                {/* \u2500\u2500 Agent Leaderboard \u2500\u2500 */}
+                {/* ── Agent Leaderboard ── */}
                 <div style={{ background:T.card, border:`1px solid ${T.border}`, borderRadius:14, overflow:"hidden" }}>
                   <div style={{ padding:"14px 18px", borderBottom:`1px solid ${T.border}`, display:"flex", alignItems:"center", gap:10 }}>
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={T.gold} strokeWidth="2" strokeLinecap="round"><polyline points="18 20 18 10"/><polyline points="12 20 12 4"/><polyline points="6 20 6 14"/></svg>
@@ -16655,7 +16655,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                         </div>
                         {/* Pipeline value */}
                         <div style={{ fontSize:11, fontWeight:600, color:agent.totalValue>0?T.gold:T.textMuted, textAlign:"center" }}>
-                          {agent.totalValue>0 ? `AED ${(agent.totalValue/1e6).toFixed(1)}M` : "\u2014"}
+                          {agent.totalValue>0 ? `AED ${(agent.totalValue/1e6).toFixed(1)}M` : "—"}
                         </div>
                         {/* Conversion */}
                         <div style={{ textAlign:"center" }}>
@@ -16669,7 +16669,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   </div>
                 </div>
 
-                {/* \u2500\u2500 Pipeline Funnel \u2500\u2500 */}
+                {/* ── Pipeline Funnel ── */}
                 <div style={{ background:T.card, border:`1px solid ${T.border}`, borderRadius:14, overflow:"hidden" }}>
                   <div style={{ padding:"14px 18px", borderBottom:`1px solid ${T.border}`, display:"flex", alignItems:"center", gap:10 }}>
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={T.teal} strokeWidth="2" strokeLinecap="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
@@ -16697,7 +16697,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 </div>
               </div>
 
-              {/* \u2500\u2500 Bottom row: Source ROI + Overdue \u2500\u2500 */}
+              {/* ── Bottom row: Source ROI + Overdue ── */}
               <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16 }}>
 
                 {/* Source ROI */}
@@ -16760,7 +16760,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                             <div style={{ fontSize:12, fontWeight:600, color:T.textPrimary, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{name}</div>
                             <div style={{ fontSize:10, color:T.textMuted, marginTop:2 }}>
                               {agent ? (agent.name||agent.email?.split("@")[0]||"Agent") : "Unassigned"}
-                              {l.source ? ` \u00B7 ${l.source}` : ""}
+                              {l.source ? ` · ${l.source}` : ""}
                             </div>
                           </div>
                           <div style={{ display:"flex", alignItems:"center", gap:8, flexShrink:0 }}>
@@ -16785,10 +16785,10 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
 
 
 
-          {/* \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
-              AGENCY TAB \u2014 Session 8 \u2014 Agency Management Hub
-              Profile \u00B7 Agent Roster \u00B7 RERA Tracker \u00B7 Commission
-          \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 */}
+          {/* ══════════════════════════════════════════════
+              AGENCY TAB — Session 8 — Agency Management Hub
+              Profile · Agent Roster · RERA Tracker · Commission
+          ══════════════════════════════════════════════ */}
           {tab === "Agency" && (() => {
             const isManager = orgRole === "manager";
             if (!isManager) return (
@@ -16865,19 +16865,19 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
 
             return (<>
 
-              {/* \u2500\u2500 Header \u2500\u2500 */}
+              {/* ── Header ── */}
               <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:20, flexWrap:"wrap", gap:12 }}>
                 <div>
                   <h1 style={{ fontFamily:"'Fraunces',serif", fontSize:22, fontWeight:900, color:T.white, margin:0 }}>Agency Hub</h1>
                   <p style={{ fontSize:12, color:T.textMuted, margin:"4px 0 0" }}>
-                    {orgProfile?.name || "Your Organisation"} \u00B7&nbsp;
+                    {orgProfile?.name || "Your Organisation"} ·&nbsp;
                     <span style={{ color:planColors[plan]||T.textMuted, fontWeight:600, textTransform:"capitalize" }}>{plan} plan</span>
-                    &nbsp;\u00B7 {agents.length} members
+                    &nbsp;· {agents.length} members
                   </p>
                 </div>
               </div>
 
-              {/* \u2500\u2500 Top row: Profile + Stats \u2500\u2500 */}
+              {/* ── Top row: Profile + Stats ── */}
               <div style={{ display:"grid", gridTemplateColumns:"minmax(0,1fr) min(320px,36%)", gap:16, marginBottom:16, alignItems:"start" }}>
 
                 {/* Agency Profile Editor */}
@@ -16957,7 +16957,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 </div>
               </div>
 
-              {/* \u2500\u2500 Agent Roster \u2500\u2500 */}
+              {/* ── Agent Roster ── */}
               <div style={{ background:T.card, border:`1px solid ${T.border}`, borderRadius:14, overflow:"hidden" }}>
                 <div style={{ padding:"14px 18px", borderBottom:`1px solid ${T.border}`, display:"flex", alignItems:"center", gap:10 }}>
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={T.teal} strokeWidth="2" strokeLinecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
@@ -16980,7 +16980,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 {agents.length === 0 ? (
                   <div style={{ padding:"48px 20px", textAlign:"center" }}>
                     <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke={T.textMuted} strokeWidth="1.5" strokeLinecap="round" style={{ marginBottom:10 }}><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
-                    <div style={{ fontSize:13, color:T.textMuted }}>No agents yet \u2014 ask your admin to assign agents to this organisation</div>
+                    <div style={{ fontSize:13, color:T.textMuted }}>No agents yet — ask your admin to assign agents to this organisation</div>
                   </div>
                 ) : agents.map((agent, i) => {
                   const agentLeads   = myLeads.filter(l => l.assignedTo === agent.uid).length;
@@ -16999,7 +16999,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                         </div>
                         <div style={{ minWidth:0 }}>
                           <div style={{ fontSize:12, fontWeight:600, color:T.textPrimary, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{agent.name || agent.email?.split("@")[0] || "Agent"}</div>
-                          <div style={{ fontSize:10, color:T.textMuted, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{agent.email||"\u2014"}</div>
+                          <div style={{ fontSize:10, color:T.textMuted, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{agent.email||"—"}</div>
                         </div>
                       </div>
 
@@ -17015,7 +17015,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
 
                       {/* RERA card number */}
                       <div style={{ fontSize:11, color:T.textSecondary, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>
-                        {agent.reraCard?.number || <span style={{ color:T.textMuted }}>\u2014</span>}
+                        {agent.reraCard?.number || <span style={{ color:T.textMuted }}>—</span>}
                       </div>
 
                       {/* RERA expiry with status */}
@@ -17060,7 +17060,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 })}
               </div>
 
-              {/* \u2500\u2500 Invite Agent Modal (Session 11) \u2500\u2500 */}
+              {/* ── Invite Agent Modal (Session 11) ── */}
               {showInviteAgent && (
                 <div style={{ position:"fixed", inset:0, background:"rgba(4,9,15,0.85)", zIndex:2000, display:"flex", alignItems:"center", justifyContent:"center", backdropFilter:"blur(8px)" }} onClick={e=>{if(e.target===e.currentTarget)setShowInviteAgent(false);}}>
                   <div style={{ background:T.surface, borderRadius:14, border:`1px solid ${T.border}`, width:"95%", maxWidth:420 }} onClick={e=>e.stopPropagation()}>
@@ -17119,10 +17119,10 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
 
 
 
-          {/* \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
-              LISTINGS TAB \u2014 Session 9
-              Create \u00B7 Trakheesi \u00B7 Portal Syndication \u00B7 Track
-          \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 */}
+          {/* ══════════════════════════════════════════════
+              LISTINGS TAB — Session 9
+              Create · Trakheesi · Portal Syndication · Track
+          ══════════════════════════════════════════════ */}
           {tab === "Listings" && (() => {
             const isAgent   = orgRole === "agent";
             const isManager = orgRole === "manager";
@@ -17235,11 +17235,11 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
 
             return (<>
 
-              {/* \u2500\u2500 Header \u2500\u2500 */}
+              {/* ── Header ── */}
               <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:20, flexWrap:"wrap", gap:12 }}>
                 <div>
                   <h1 style={{ fontFamily:"'Fraunces',serif", fontSize:22, fontWeight:900, color:T.white, margin:0 }}>Listings</h1>
-                  <p style={{ fontSize:12, color:T.textMuted, margin:"4px 0 0" }}>Create \u00B7 Manage \u00B7 Publish to portals \u00B7 Track performance</p>
+                  <p style={{ fontSize:12, color:T.textMuted, margin:"4px 0 0" }}>Create · Manage · Publish to portals · Track performance</p>
                 </div>
                 <button type="button" onClick={()=>setShowNewListing(true)}
                   style={{ display:"flex", alignItems:"center", gap:8, padding:"10px 20px", borderRadius:9, border:`1px solid ${T.gold}`, background:"rgba(212,168,67,0.1)", color:T.gold, fontSize:12, fontWeight:700, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>
@@ -17248,7 +17248,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 </button>
               </div>
 
-              {/* \u2500\u2500 KPI Bar \u2500\u2500 */}
+              {/* ── KPI Bar ── */}
               <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:10, marginBottom:20 }}>
                 {[
                   { label:"Total Listings",  value:listings.length,   color:T.gold,    icon:<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg> },
@@ -17267,7 +17267,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 ))}
               </div>
 
-              {/* \u2500\u2500 Filters \u2500\u2500 */}
+              {/* ── Filters ── */}
               <div style={{ display:"flex", gap:8, marginBottom:16, flexWrap:"wrap", alignItems:"center" }}>
                 <div style={{ display:"flex", background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:8, overflow:"hidden" }}>
                   {[["all","All"],["Available","Available"],["Reserved","Reserved"],["Sold","Sold"]].map(([v,l])=>(
@@ -17285,7 +17285,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 <div style={{ marginLeft:"auto", fontSize:11, color:T.textMuted }}>{filtered.length} of {listings.length}</div>
               </div>
 
-              {/* \u2500\u2500 Listings Grid \u2500\u2500 */}
+              {/* ── Listings Grid ── */}
               {listingsLoading ? (
                 <div style={{ display:"flex", alignItems:"center", justifyContent:"center", padding:"60px 0", gap:10 }}>
                   <div style={{ width:20, height:20, border:`2px solid ${T.gold}30`, borderTopColor:T.gold, borderRadius:"50%", animation:"spin 0.7s linear infinite" }}/>
@@ -17325,7 +17325,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                             <div style={{ flex:1, minWidth:0 }}>
                               <div style={{ fontSize:13, fontWeight:700, color:T.white, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{l.title || `${l.beds}BR ${l.type}`}</div>
                               <div style={{ fontSize:11, color:T.textMuted, marginTop:2 }}>
-                                {l.community}{l.building ? ` \u00B7 ${l.building}` : ""}{l.unitNo ? ` \u00B7 Unit ${l.unitNo}` : ""}
+                                {l.community}{l.building ? ` · ${l.building}` : ""}{l.unitNo ? ` · Unit ${l.unitNo}` : ""}
                               </div>
                             </div>
                             <div style={{ display:"flex", gap:5, flexShrink:0, marginLeft:8 }}>
@@ -17343,7 +17343,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                             {l.beds > 0 && <span>{l.beds} BR</span>}
                             {l.baths > 0 && <span>{l.baths} Bath</span>}
                             {l.size > 0 && <span>{l.size.toLocaleString()} sqft</span>}
-                            {l.type && <span style={{ color:T.textMuted }}>{"\u00B7"}{l.type}</span>}
+                            {l.type && <span style={{ color:T.textMuted }}>{"·"}{l.type}</span>}
                           </div>
                         </div>
 
@@ -17422,7 +17422,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 </div>
               )}
 
-              {/* \u2500\u2500 Listing Detail Drawer \u2500\u2500 */}
+              {/* ── Listing Detail Drawer ── */}
               {selectedListing && (
                 <div style={{ position:"fixed", inset:0, zIndex:1500, display:"flex" }} onClick={e=>{if(e.target===e.currentTarget)setSelectedListing(null);}}>
                   <div style={{ flex:1, background:"rgba(0,0,0,0.5)", backdropFilter:"blur(4px)" }} onClick={()=>setSelectedListing(null)}/>
@@ -17430,7 +17430,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                     <div style={{ padding:"20px", borderBottom:`1px solid ${T.border}`, display:"flex", justifyContent:"space-between", alignItems:"center" }}>
                       <div>
                         <div style={{ fontFamily:"'Fraunces',serif", fontSize:17, fontWeight:900, color:T.white }}>{selectedListing.title}</div>
-                        <div style={{ fontSize:11, color:T.textMuted, marginTop:2 }}>{selectedListing.community}{"\u00B7"}{selectedListing.building} \u00B7 Unit {selectedListing.unitNo}</div>
+                        <div style={{ fontSize:11, color:T.textMuted, marginTop:2 }}>{selectedListing.community}{"·"}{selectedListing.building} · Unit {selectedListing.unitNo}</div>
                       </div>
                       <button type="button" onClick={()=>setSelectedListing(null)}
                         style={{ background:"rgba(255,255,255,0.06)", border:`1px solid ${T.border}`, borderRadius:7, color:T.textMuted, cursor:"pointer", padding:"5px 10px", display:"flex", alignItems:"center", gap:4, fontSize:12 }}>
@@ -17515,14 +17515,14 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 </div>
               )}
 
-              {/* \u2500\u2500 New Listing Modal \u2500\u2500 */}
+              {/* ── New Listing Modal ── */}
               {showNewListing && (
                 <div style={{ position:"fixed", inset:0, background:"rgba(4,9,15,0.85)", zIndex:2000, display:"flex", alignItems:"center", justifyContent:"center", backdropFilter:"blur(8px)" }} onClick={e=>{if(e.target===e.currentTarget)setShowNewListing(false);}}>
                   <div style={{ background:T.surface, borderRadius:16, border:`1px solid ${T.border}`, width:"95%", maxWidth:600, maxHeight:"90vh", overflowY:"auto" }} onClick={e=>e.stopPropagation()}>
                     <div style={{ padding:"22px 24px", borderBottom:`1px solid ${T.border}`, display:"flex", justifyContent:"space-between", alignItems:"center" }}>
                       <div>
                         <div style={{ fontFamily:"'Fraunces',serif", fontSize:18, fontWeight:900, color:T.gold }}>New Listing</div>
-                        <div style={{ fontSize:11, color:T.textMuted, marginTop:2 }}>All DLD required fields \u2014 get your Trakheesi permit before listing</div>
+                        <div style={{ fontSize:11, color:T.textMuted, marginTop:2 }}>All DLD required fields — get your Trakheesi permit before listing</div>
                       </div>
                       <button type="button" onClick={()=>setShowNewListing(false)}
                         style={{ background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:8, color:T.textMuted, width:32, height:32, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center" }}>
@@ -17618,10 +17618,10 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
 
 
 
-          {/* \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
-              DEV PORTAL TAB \u2014 Session 10
-              Unit Inventory \u00B7 EOI Pipeline \u00B7 Commission \u00B7 Assets
-          \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 */}
+          {/* ══════════════════════════════════════════════
+              DEV PORTAL TAB — Session 10
+              Unit Inventory · EOI Pipeline · Commission · Assets
+          ══════════════════════════════════════════════ */}
           {tab === "Dev Portal" && (() => {
             const isDeveloper = userRole === "developer";
             if (!isDeveloper) return (
@@ -17718,14 +17718,14 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
 
             return (<>
 
-              {/* \u2500\u2500 Header \u2500\u2500 */}
+              {/* ── Header ── */}
               <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:20, flexWrap:"wrap", gap:12 }}>
                 <div>
                   <h1 style={{ fontFamily:"'Fraunces',serif", fontSize:22, fontWeight:900, color:T.white, margin:0 }}>
-                    {devName} \u2014 Developer Portal
+                    {devName} — Developer Portal
                   </h1>
                   <p style={{ fontSize:12, color:T.textMuted, margin:"4px 0 0" }}>
-                    Unit inventory \u00B7 EOI pipeline \u00B7 Commission config \u00B7 Marketing hub
+                    Unit inventory · EOI pipeline · Commission config · Marketing hub
                   </p>
                 </div>
                 <button type="button" onClick={()=>setShowAddUnit(true)}
@@ -17735,7 +17735,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 </button>
               </div>
 
-              {/* \u2500\u2500 KPI Bar \u2500\u2500 */}
+              {/* ── KPI Bar ── */}
               <div style={{ display:"grid", gridTemplateColumns:"repeat(5,1fr)", gap:10, marginBottom:20 }}>
                 {[
                   { label:"Total Units",    value:devUnits.length, color:T.gold,    icon:<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg> },
@@ -17755,10 +17755,10 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 ))}
               </div>
 
-              {/* \u2500\u2500 Main grid: Units + EOI Pipeline \u2500\u2500 */}
+              {/* ── Main grid: Units + EOI Pipeline ── */}
               <div style={{ display:"grid", gridTemplateColumns:"minmax(0,1fr) min(380px,38%)", gap:16, marginBottom:16, alignItems:"start" }}>
 
-                {/* \u2500\u2500 Unit Inventory \u2500\u2500 */}
+                {/* ── Unit Inventory ── */}
                 <div style={{ background:T.card, border:`1px solid ${T.border}`, borderRadius:14, overflow:"hidden" }}>
                   <div style={{ padding:"14px 18px", borderBottom:`1px solid ${T.border}`, display:"flex", alignItems:"center", gap:10 }}>
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={T.gold} strokeWidth="2" strokeLinecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
@@ -17783,7 +17783,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   ) : filteredUnits.length === 0 ? (
                     <div style={{ padding:"48px 20px", textAlign:"center" }}>
                       <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke={T.textMuted} strokeWidth="1.5" strokeLinecap="round" style={{ marginBottom:10 }}><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
-                      <div style={{ fontSize:13, color:T.textMuted }}>No units yet \u2014 click Add Unit to start building inventory</div>
+                      <div style={{ fontSize:13, color:T.textMuted }}>No units yet — click Add Unit to start building inventory</div>
                     </div>
                   ) : filteredUnits.map((unit, i) => {
                     const sc = UNIT_STATUS[unit.status||"Available"] || UNIT_STATUS.Available;
@@ -17794,10 +17794,10 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                           <div style={{ fontSize:11, fontWeight:600, color:T.textPrimary }}>{unit.type}</div>
                           {unit.view && <div style={{ fontSize:10, color:T.textMuted }}>{unit.view}</div>}
                         </div>
-                        <div style={{ fontSize:11, color:T.textSecondary, textAlign:"center" }}>{unit.beds > 0 ? `${unit.beds} BR` : "\u2014"}</div>
-                        <div style={{ fontSize:11, color:T.textSecondary, textAlign:"center" }}>{unit.size > 0 ? `${unit.size.toLocaleString()}` : "\u2014"}</div>
-                        <div style={{ fontSize:11, color:T.textSecondary, textAlign:"center" }}>{unit.floor > 0 ? `Floor ${unit.floor}` : "\u2014"}</div>
-                        <div style={{ fontSize:11, fontWeight:700, color:T.gold }}>{unit.price > 0 ? `${(parseFloat(unit.price)/1e6).toFixed(2)}M` : "\u2014"}</div>
+                        <div style={{ fontSize:11, color:T.textSecondary, textAlign:"center" }}>{unit.beds > 0 ? `${unit.beds} BR` : "—"}</div>
+                        <div style={{ fontSize:11, color:T.textSecondary, textAlign:"center" }}>{unit.size > 0 ? `${unit.size.toLocaleString()}` : "—"}</div>
+                        <div style={{ fontSize:11, color:T.textSecondary, textAlign:"center" }}>{unit.floor > 0 ? `Floor ${unit.floor}` : "—"}</div>
+                        <div style={{ fontSize:11, fontWeight:700, color:T.gold }}>{unit.price > 0 ? `${(parseFloat(unit.price)/1e6).toFixed(2)}M` : "—"}</div>
                         <div>
                           <select value={unit.status||"Available"} onChange={e=>updateUnitStatus(unit.id, e.target.value)}
                             style={{ padding:"4px 6px", background:sc.bg, border:`1px solid ${sc.color}40`, borderRadius:5, color:sc.color, fontSize:10, fontWeight:700, cursor:"pointer", fontFamily:"'Outfit',sans-serif", outline:"none" }}>
@@ -17809,7 +17809,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   })}
                 </div>
 
-                {/* \u2500\u2500 EOI Pipeline \u2500\u2500 */}
+                {/* ── EOI Pipeline ── */}
                 <div style={{ background:T.card, border:`1px solid ${T.border}`, borderRadius:14, overflow:"hidden" }}>
                   <div style={{ padding:"14px 18px", borderBottom:`1px solid ${T.border}`, display:"flex", alignItems:"center", gap:10 }}>
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={T.teal} strokeWidth="2" strokeLinecap="round"><rect x="3" y="3" width="4" height="18" rx="1"/><rect x="10" y="3" width="4" height="12" rx="1"/><rect x="17" y="3" width="4" height="15" rx="1"/></svg>
@@ -17831,7 +17831,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                           <div key={eoi.id||i} style={{ padding:"10px 16px", borderBottom:`1px solid ${T.border}`, display:"flex", alignItems:"center", justifyContent:"space-between" }}>
                             <div>
                               <div style={{ fontSize:11, fontWeight:600, color:T.textPrimary }}>{eoi.clientName||"Client"}</div>
-                              <div style={{ fontSize:10, color:T.textMuted }}>Unit {eoi.unitNo}{"\u00B7"}{eoi.broker||"Direct"}</div>
+                              <div style={{ fontSize:10, color:T.textMuted }}>Unit {eoi.unitNo}{"·"}{eoi.broker||"Direct"}</div>
                             </div>
                             <div style={{ display:"flex", alignItems:"center", gap:6 }}>
                               {eoi.price > 0 && <span style={{ fontSize:10, color:T.gold }}>{(parseFloat(eoi.price)/1e6).toFixed(2)}M</span>}
@@ -17851,7 +17851,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 </div>
               </div>
 
-              {/* \u2500\u2500 Bottom row: Commission Config + Marketing Hub \u2500\u2500 */}
+              {/* ── Bottom row: Commission Config + Marketing Hub ── */}
               <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16 }}>
 
                 {/* Commission Config */}
@@ -17926,7 +17926,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 </div>
               </div>
 
-              {/* \u2500\u2500 Add Unit Modal \u2500\u2500 */}
+              {/* ── Add Unit Modal ── */}
               {showAddUnit && (
                 <div style={{ position:"fixed", inset:0, background:"rgba(4,9,15,0.85)", zIndex:2000, display:"flex", alignItems:"center", justifyContent:"center", backdropFilter:"blur(8px)" }} onClick={e=>{if(e.target===e.currentTarget)setShowAddUnit(false);}}>
                   <div style={{ background:T.surface, borderRadius:16, border:`1px solid ${T.border}`, width:"95%", maxWidth:500, maxHeight:"90vh", overflowY:"auto" }} onClick={e=>e.stopPropagation()}>
@@ -17990,13 +17990,13 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
 
 
 
-          {/* \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
-              INTELLIGENCE TAB \u2014 Session 12
-              Comparable Sales \u00B7 IRR Calculator \u00B7 Supply Pipeline
-          \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 */}
+          {/* ══════════════════════════════════════════════
+              INTELLIGENCE TAB — Session 12
+              Comparable Sales · IRR Calculator · Supply Pipeline
+          ══════════════════════════════════════════════ */}
           {tab === "Intelligence" && (() => {
 
-            // \u2500\u2500 AVM / Comps data (DLD-calibrated) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+            // ── AVM / Comps data (DLD-calibrated) ──────────────────────
             const AVM_DATA = {
               "Dubai Hills Estate":      { apt: { "Studio": { ppsf:1680, rent:55 }, "1BR": { ppsf:1820, rent:80 }, "2BR": { ppsf:2050, rent:125 }, "3BR": { ppsf:2300, rent:180 } }, villa: { "3BR": { ppsf:1450, rent:180 }, "4BR": { ppsf:1550, rent:240 }, "5BR": { ppsf:1700, rent:320 } } },
               "Dubai Creek Harbour":     { apt: { "Studio": { ppsf:1600, rent:52 }, "1BR": { ppsf:1750, rent:78 }, "2BR": { ppsf:1950, rent:118 }, "3BR": { ppsf:2200, rent:170 } }, villa: null },
@@ -18031,7 +18031,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               { community:"Emaar Beachfront",    risk:"Low",    reason:"Limited permits. Beachfront scarcity premium maintained.",     color:T.green   },
             ];
 
-            // \u2500\u2500 Comps engine \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+            // ── Comps engine ─────────────────────────────────────────────
             const communities = Object.keys(AVM_DATA);
             const commData = AVM_DATA[compCommunity];
             const typeMap = compType === "Villa" ? commData?.villa : commData?.apt;
@@ -18062,7 +18062,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
             const avgPpsf = comps.length ? Math.round(comps.reduce((a,c) => a+c.ppsf, 0) / comps.length) : 0;
             const avgPrice = comps.length ? Math.round(comps.reduce((a,c) => a+c.price, 0) / comps.length) : 0;
 
-            // \u2500\u2500 IRR Calculator \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+            // ── IRR Calculator ─────────────────────────────────────────
             const price     = parseFloat(irrPrice)      || 2000000;
             const rent      = parseFloat(irrRent)       || 120000;
             const holdYrs   = parseInt(irrHoldYears)    || 5;
@@ -18105,16 +18105,16 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
 
             return (<>
 
-              {/* \u2500\u2500 Header \u2500\u2500 */}
+              {/* ── Header ── */}
               <div style={{ marginBottom:20 }}>
                 <h1 style={{ fontFamily:"'Fraunces',serif", fontSize:22, fontWeight:900, color:T.white, margin:0 }}>Transaction Intelligence</h1>
-                <p style={{ fontSize:12, color:T.textMuted, margin:"4px 0 0" }}>Comparable sales \u00B7 IRR calculator \u00B7 Supply pipeline risk</p>
+                <p style={{ fontSize:12, color:T.textMuted, margin:"4px 0 0" }}>Comparable sales · IRR calculator · Supply pipeline risk</p>
               </div>
 
-              {/* \u2500\u2500 Top row: Comps + IRR \u2500\u2500 */}
+              {/* ── Top row: Comps + IRR ── */}
               <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16, marginBottom:16 }}>
 
-                {/* \u2500\u2500 Comparable Sales Engine \u2500\u2500 */}
+                {/* ── Comparable Sales Engine ── */}
                 <div style={{ background:T.card, border:`1px solid ${T.border}`, borderRadius:14, overflow:"hidden" }}>
                   <div style={{ padding:"14px 18px", borderBottom:`1px solid ${T.border}`, display:"flex", alignItems:"center", gap:10 }}>
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={T.gold} strokeWidth="2" strokeLinecap="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
@@ -18187,7 +18187,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   </div>
                 </div>
 
-                {/* \u2500\u2500 IRR Calculator \u2500\u2500 */}
+                {/* ── IRR Calculator ── */}
                 <div style={{ background:T.card, border:`1px solid ${T.border}`, borderRadius:14, overflow:"hidden" }}>
                   <div style={{ padding:"14px 18px", borderBottom:`1px solid ${T.border}`, display:"flex", alignItems:"center", gap:10 }}>
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={T.teal} strokeWidth="2" strokeLinecap="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
@@ -18248,14 +18248,14 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 </div>
               </div>
 
-              {/* \u2500\u2500 Supply Pipeline \u2500\u2500 */}
+              {/* ── Supply Pipeline ── */}
               <div style={{ background:T.card, border:`1px solid ${T.border}`, borderRadius:14, overflow:"hidden", marginBottom:16 }}>
                 <div style={{ padding:"14px 18px", borderBottom:`1px solid ${T.border}`, display:"flex", alignItems:"center", justifyContent:"space-between" }}>
                   <div style={{ display:"flex", alignItems:"center", gap:10 }}>
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" style={{ color:"#8B5CF6" }}><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
-                    <div style={{ fontSize:13, fontWeight:700, color:T.white }}>Dubai Supply Pipeline 2025\u20132028</div>
+                    <div style={{ fontSize:13, fontWeight:700, color:T.white }}>Dubai Supply Pipeline 2025–2028</div>
                   </div>
-                  <div style={{ fontSize:10, color:T.textMuted }}>Source: DLD \u00B7 Property Monitor \u00B7 Reidin 2025</div>
+                  <div style={{ fontSize:10, color:T.textMuted }}>Source: DLD · Property Monitor · Reidin 2025</div>
                 </div>
                 <div style={{ padding:"18px" }}>
                   {/* Bar chart */}
@@ -18264,7 +18264,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                       const maxUnits = 140000;
                       return (
                         <div key={year} style={{ textAlign:"center" }}>
-                          <div style={{ fontSize:11, fontWeight:700, color:highlight?"#F59E0B":T.textMuted, marginBottom:8 }}>{year}{highlight&&<span style={{ marginLeft:4, fontSize:9, color:"#F59E0B" }}>\u25B6 NOW</span>}</div>
+                          <div style={{ fontSize:11, fontWeight:700, color:highlight?"#F59E0B":T.textMuted, marginBottom:8 }}>{year}{highlight&&<span style={{ marginLeft:4, fontSize:9, color:"#F59E0B" }}>▶ NOW</span>}</div>
                           <div style={{ height:120, display:"flex", alignItems:"flex-end", justifyContent:"center", gap:4, marginBottom:8 }}>
                             <div style={{ flex:1, background:"rgba(59,130,246,0.7)", borderRadius:"4px 4px 0 0", height:`${(offplan/maxUnits)*100}%`, transition:"height 0.4s", position:"relative" }}>
                               <div style={{ position:"absolute", top:-16, left:"50%", transform:"translateX(-50%)", fontSize:9, color:"#3B82F6", fontWeight:700, whiteSpace:"nowrap" }}>{(offplan/1000).toFixed(0)}K</div>
@@ -18287,12 +18287,12 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                         <span style={{ fontSize:10, color:T.textMuted }}>{label}</span>
                       </div>
                     ))}
-                    <div style={{ marginLeft:"auto", fontSize:10, color:T.textMuted }}>366K+ units scheduled 2025\u20132028</div>
+                    <div style={{ marginLeft:"auto", fontSize:10, color:T.textMuted }}>366K+ units scheduled 2025–2028</div>
                   </div>
                 </div>
               </div>
 
-              {/* \u2500\u2500 Supply Risk by Community \u2500\u2500 */}
+              {/* ── Supply Risk by Community ── */}
               <div style={{ background:T.card, border:`1px solid ${T.border}`, borderRadius:14, overflow:"hidden" }}>
                 <div style={{ padding:"14px 18px", borderBottom:`1px solid ${T.border}`, display:"flex", alignItems:"center", gap:10 }}>
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={T.red} strokeWidth="2" strokeLinecap="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
@@ -18317,9 +18317,9 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 </div>
               </div>
             
-              {/* \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
+              {/* ══════════════════════════════════════════════════════════
                   SESSION 15 - DLD LIVE TRANSACTION INTELLIGENCE
-              \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 */}
+              ══════════════════════════════════════════════════════════ */}
 
               {/* DLD Header */}
               <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:16, marginTop:8, flexWrap:"wrap", gap:8 }}>
@@ -18561,11 +18561,11 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                     {selectedProject_.emaarUrl && <a href={selectedProject_.emaarUrl} target="_blank" rel="noopener noreferrer" style={{ fontSize: 10, color: T.gold, textDecoration: "none", padding: "3px 8px", border: "1px solid rgba(212,168,67,0.4)", borderRadius: 6, fontWeight: 700, background: "rgba(212,168,67,0.08)", whiteSpace: "nowrap" }} title={`Official listing on ${getLinkDomain(selectedProject_.emaarUrl)}`}>SOURCE \u2197</a>}
                     <Link to={`/project/${selectedProject_.id}`} style={{ fontSize: 10, color: T.teal, textDecoration: "none", padding: "3px 8px", border: "1px solid rgba(0,191,165,0.4)", borderRadius: 6, fontWeight: 700, background: "rgba(0,191,165,0.08)", whiteSpace: "nowrap" }} title="Open full page">FULL PAGE \u2197</Link>
                   </div>
-                  <p style={{ color: T.textSecondary, fontSize: 13, marginTop: 4 }}>{selectedProject_.community}{"\u00B7"}{selectedProject_.district}{"\u00B7"}{selectedProject_.type}</p>
+                  <p style={{ color: T.textSecondary, fontSize: 13, marginTop: 4 }}>{selectedProject_.community}{"·"}{selectedProject_.district}{"·"}{selectedProject_.type}</p>
                   {(selectedProject_.tagline || (ci && ci.tagline)) && <p style={{ color: T.teal, fontSize: 11, marginTop: 2, fontStyle: "italic" }}>{selectedProject_.tagline || ci.tagline}</p>}
                 </div>
                 <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
-                  {(selectedProject_.branded || (selectedProject_.brand && selectedProject_.brand !== '\u2014')) && <span style={{ fontSize: 10, padding: "4px 10px", borderRadius: 6, background: "rgba(212,168,67,0.15)", color: T.gold, fontWeight: 600 }}>{selectedProject_.brand}</span>}
+                  {(selectedProject_.branded || (selectedProject_.brand && selectedProject_.brand !== '—')) && <span style={{ fontSize: 10, padding: "4px 10px", borderRadius: 6, background: "rgba(212,168,67,0.15)", color: T.gold, fontWeight: 600 }}>{selectedProject_.brand}</span>}
                   <span style={{ fontSize: 10, padding: "4px 10px", borderRadius: 6, background: selectedProject_.status === "Completed" ? "rgba(16,185,129,0.15)" : selectedProject_.status === "Under Construction" ? "rgba(16,185,129,0.12)" : "rgba(59,130,246,0.12)", color: selectedProject_.status === "Completed" ? T.green : selectedProject_.status === "Under Construction" ? T.green : T.blue, fontWeight: 600 }}>{selectedProject_.status}</span>
                 </div>
               </div>
@@ -18585,11 +18585,11 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginBottom: 16 }}>
                 {[
                   ["Starting From", selectedProject_.price ? `AED ${(selectedProject_.price/1000000).toFixed(1)}M` : selectedProject_.priceFrom ? `AED ${(Number(selectedProject_.priceFrom)/1000000).toFixed(1)}M` : "TBD"],
-                  ["Handover", selectedProject_.handover || "\u2014"],
+                  ["Handover", selectedProject_.handover || "—"],
                   ["Price/sqft", selectedProject_.ppsf ? `AED ${selectedProject_.ppsf.toLocaleString()}` : selectedProject_.pricePerSqft ? `AED ${Number(selectedProject_.pricePerSqft).toLocaleString()}` : "TBD"],
-                  ["Size Range", selectedProject_.sizeFrom ? `${selectedProject_.sizeFrom.toLocaleString()} - ${selectedProject_.sizeTo?.toLocaleString()} sqft` : selectedProject_.sizeRange || "\u2014"],
-                  ["Bedrooms", selectedProject_.beds ? selectedProject_.beds + " BR" : "\u2014"],
-                  ["Payment Plan", selectedProject_.payment || selectedProject_.paymentPlan || "\u2014"],
+                  ["Size Range", selectedProject_.sizeFrom ? `${selectedProject_.sizeFrom.toLocaleString()} - ${selectedProject_.sizeTo?.toLocaleString()} sqft` : selectedProject_.sizeRange || "—"],
+                  ["Bedrooms", selectedProject_.beds ? selectedProject_.beds + " BR" : "—"],
+                  ["Payment Plan", selectedProject_.payment || selectedProject_.paymentPlan || "—"],
                 ].map(([label, value], idx) => (
                   <div key={idx} style={{ background: T.surfaceAlt, borderRadius: 10, padding: 10 }}>
                     <div style={{ fontSize: 9, color: T.textMuted, marginBottom: 3, textTransform: "uppercase", letterSpacing: 0.5 }}>{label}</div>
@@ -18622,7 +18622,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 </div>
               )}
 
-              {/* \u2500\u2500\u2500 LOCATION INTELLIGENCE SECTION \u2500\u2500\u2500 */}
+              {/* ─── LOCATION INTELLIGENCE SECTION ─── */}
               {ciExists && (
                 <ProGate isPro={isPro} message="Unlock Location Intelligence" onUpgrade={() => setShowUpgrade(true)}>
                 <>
@@ -18759,7 +18759,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                         <div style={{ fontSize: 9, color: T.textMuted }}>{roi.goldenVisaNote}</div>
                       </div>
                     </div>
-                    <div style={{ marginTop: 8, fontSize: 9, color: T.textMuted }}>Risk: <span style={{ color: roi.riskLevel === "Low" ? T.green : roi.riskLevel === "Medium" ? T.gold : T.red }}>{roi.riskLevel}</span> \u00B7 Occupancy: {roi.occupancy ? roi.occupancy + "%" : "N/A"}</div>
+                    <div style={{ marginTop: 8, fontSize: 9, color: T.textMuted }}>Risk: <span style={{ color: roi.riskLevel === "Low" ? T.green : roi.riskLevel === "Medium" ? T.gold : T.red }}>{roi.riskLevel}</span> · Occupancy: {roi.occupancy ? roi.occupancy + "%" : "N/A"}</div>
                   </div>
                   </ProGate>
                 );
@@ -18862,7 +18862,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 </button>
               </div>
 
-              {/* \u2500\u2500\u2500 SOURCE LINK: Official Emaar listing \u2500\u2500\u2500 */}
+              {/* ─── SOURCE LINK: Official Emaar listing ─── */}
               {selectedProject_.emaarUrl && (
                 <a href={selectedProject_.emaarUrl} target="_blank" rel="noopener noreferrer"
                   style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, width: "100%", marginTop: 8, padding: "13px 0", background: "linear-gradient(135deg, rgba(212,168,67,0.12), rgba(212,168,67,0.06))", border: "1px solid rgba(212,168,67,0.4)", borderRadius: 12, color: T.gold, fontSize: 13, fontWeight: 700, textDecoration: "none", fontFamily: "'Outfit', sans-serif", letterSpacing: 0.2 }}
@@ -18873,7 +18873,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 </a>
               )}
 
-              {/* \u2500\u2500\u2500 PDF REPORT BUTTON \u2500\u2500\u2500 */}
+              {/* ─── PDF REPORT BUTTON ─── */}
               <button type="button" onClick={() => {
                 const p = selectedProject_;
                 const roiData = (liveCommunityROI && liveCommunityROI[p.community]) || ({}) || {};
@@ -18891,7 +18891,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
         );
       })()}
 
-      {/* \u2500\u2500\u2500 COMPARE MODAL \u2500\u2500\u2500 */}
+      {/* ─── COMPARE MODAL ─── */}
       {showCompare && compareList.length >= 2 && (
         <div role="dialog" aria-modal="true" aria-label="Project comparison" style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.9)", zIndex: 3000, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(8px)" }} onClick={() => setShowCompare(false)}>
           <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.gold}`, width: "95%", maxWidth: 900, maxHeight: "90vh", overflowY: "auto", padding: 28 }} onClick={e => e.stopPropagation()}>
@@ -18927,9 +18927,9 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                     { label: "Payment Plan", fn: p => p.payment },
                     { label: "Tier", fn: p => p.tier },
                     { label: "Branded", fn: p => p.branded ? `\u2713 ${p.brand}` : "No" },
-                    { label: "Total Units", fn: p => p.units ? getUnitEntries(p.units).reduce((a,[,u]) => a + u.total, 0) : "\u2014" },
-                    { label: "Available", fn: p => p.units ? getUnitEntries(p.units).reduce((a,[,u]) => a + (u.total - u.sold), 0) : "\u2014", highlight: true },
-                    { label: "% Sold", fn: p => { if (!p.units) return "\u2014"; const entries = getUnitEntries(p.units); const t = entries.reduce((a,[,u]) => a + u.total, 0); const s = entries.reduce((a,[,u]) => a + u.sold, 0); return t > 0 ? `${((s/t)*100).toFixed(0)}%` : "\u2014"; } },
+                    { label: "Total Units", fn: p => p.units ? getUnitEntries(p.units).reduce((a,[,u]) => a + u.total, 0) : "—" },
+                    { label: "Available", fn: p => p.units ? getUnitEntries(p.units).reduce((a,[,u]) => a + (u.total - u.sold), 0) : "—", highlight: true },
+                    { label: "% Sold", fn: p => { if (!p.units) return "—"; const entries = getUnitEntries(p.units); const t = entries.reduce((a,[,u]) => a + u.total, 0); const s = entries.reduce((a,[,u]) => a + u.sold, 0); return t > 0 ? `${((s/t)*100).toFixed(0)}%` : "—"; } },
                   ].map((row, ri) => (
                     <tr key={ri} style={{ borderBottom: `1px solid ${T.border}`, background: row.highlight ? "rgba(212,168,67,0.04)" : "transparent" }}>
                       <td style={{ padding: "10px 16px", color: T.textMuted, fontSize: 11, fontWeight: 600, textTransform: "uppercase" }}>{row.label}</td>
@@ -19043,7 +19043,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
             <div style={{ marginBottom: 20 }}>
               <div style={{ fontSize: 10, color: T.gold, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 6 }}>Price Alert</div>
               <div style={{ fontFamily: "'Fraunces', serif", fontSize: 20, fontWeight: 800, color: T.white }}>{showSetAlert.name}</div>
-              <div style={{ fontSize: 12, color: T.textMuted, marginTop: 3 }}>{showSetAlert.community}{"\u00B7"}{showSetAlert.type}</div>
+              <div style={{ fontSize: 12, color: T.textMuted, marginTop: 3 }}>{showSetAlert.community}{"·"}{showSetAlert.type}</div>
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
               <div>
@@ -19077,7 +19077,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
       )}
 
       {/* CHECKOUT PAYMENT MODAL */}
-      {/* \u2500\u2500\u2500 PRICE ALERTS MODAL \u2500\u2500\u2500 */}
+      {/* ─── PRICE ALERTS MODAL ─── */}
       {showAlerts && isLoggedIn && <div role="dialog" aria-modal="true" aria-label="Price Alerts" style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.93)", zIndex: 3200, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(12px)", padding: 16 }} onClick={() => setShowAlerts(false)}>
         <div className="alerts-modal" style={{ background: T.surface, borderRadius: 20, border: `1px solid ${T.border}`, width: "95%", maxWidth: 560, maxHeight: "88vh", overflow: "auto", position: "relative" }} onClick={e => e.stopPropagation()}>
           <button type="button" onClick={() => setShowAlerts(false)} style={{ position: "absolute", top: 16, right: 16, background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center", zIndex: 5 }}>\u2715</button>
@@ -19132,7 +19132,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
             </div>
             {/* Existing alerts */}
             <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>Active Alerts ({myAlerts.filter(a => a.active).length})</div>
-            {myAlerts.length === 0 && <div style={{ textAlign: "center", padding: "24px 0", color: T.textMuted, fontSize: 13 }}>No alerts yet \u2014 create your first one above</div>}
+            {myAlerts.length === 0 && <div style={{ textAlign: "center", padding: "24px 0", color: T.textMuted, fontSize: 13 }}>No alerts yet — create your first one above</div>}
             {myAlerts.map((a, i) => (
               <div key={a.id || i} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", background: T.surfaceAlt, borderRadius: 10, border: `1px solid ${T.border}`, marginBottom: 8 }}>
                 <span style={{ fontSize: 18 }}>{a.condition === "above" ? "\uD83D\uDCC8" : "\uD83D\uDCC9"}</span>
@@ -19176,9 +19176,9 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, marginBottom: 12 }}>CHOOSE PAYMENT METHOD</div>
 
                 {/* Stripe Payment Links */}
-                {/* \u2500\u2500 Paddle Card Payment \u2500\u2500 */}
+                {/* ── Paddle Card Payment ── */}
                 {(() => {
-                  // \u2500\u2500\u2500 PADDLE PRICE IDs \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+                  // ─── PADDLE PRICE IDs ─────────────────────────────────
                   // 1. Sign up at paddle.com (free)
                   // 2. Create products: Pro (AED 99/mo), Enterprise (AED 499/mo)
                   // 3. Paste the price IDs below (format: pri_XXXXXXXX)
@@ -19217,7 +19217,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                       <div style={{ fontSize: 24 }}>\uD83D\uDCB3</div>
                       <div style={{ flex: 1 }}>
                         <div style={{ fontSize: 13, fontWeight: 700, color: "#fff" }}>Credit / Debit Card</div>
-                        <div style={{ fontSize: 10, color: T.textMuted }}>Visa \u00B7 Mastercard \u00B7 Amex \u00B7 Apple Pay \u00B7 {paddleReady ? "Powered by Paddle" : "Powered by Paddle (setup pending)"}</div>
+                        <div style={{ fontSize: 10, color: T.textMuted }}>Visa · Mastercard · Amex · Apple Pay · {paddleReady ? "Powered by Paddle" : "Powered by Paddle (setup pending)"}</div>
                       </div>
                       <span style={{ fontSize: 9, padding: "3px 10px", borderRadius: 6, background: "rgba(34,197,94,0.12)", color: "#22C55E", fontWeight: 700, border: "1px solid rgba(34,197,94,0.2)" }}>RECOMMENDED</span>
                     </div>
@@ -19229,12 +19229,12 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   <div style={{ fontSize: 24 }}>\uD83D\uDCAC</div>
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: 13, fontWeight: 700, color: "#fff" }}>WhatsApp + Bank Transfer</div>
-                    <div style={{ fontSize: 10, color: T.textMuted }}>Manual \u2014 activated within 5 minutes of payment</div>
+                    <div style={{ fontSize: 10, color: T.textMuted }}>Manual — activated within 5 minutes of payment</div>
                   </div>
                   <span style={{ color: "#25D366", fontSize: 16 }}>\u2192</span>
                 </div>
 
-                <div style={{ padding: "10px 14px", borderRadius: 8, background: "rgba(212,168,67,0.04)", border: "1px solid rgba(212,168,67,0.1)", fontSize: 11, color: T.textMuted, lineHeight: 1.5, marginBottom: 12 }}>\uD83D\uDD12 All payments secure \u00B7 7-day money-back guarantee</div>
+                <div style={{ padding: "10px 14px", borderRadius: 8, background: "rgba(212,168,67,0.04)", border: "1px solid rgba(212,168,67,0.1)", fontSize: 11, color: T.textMuted, lineHeight: 1.5, marginBottom: 12 }}>\uD83D\uDD12 All payments secure · 7-day money-back guarantee</div>
               </div>
               <div style={{ display: "flex", gap: 10 }}>
                 <button type="button" onClick={() => setCheckoutStep(1)} style={{ width: "100%", padding: "10px 0", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textSecondary, fontWeight: 600, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>\u2190 Back</button>
@@ -19255,7 +19255,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
         </div>
       </div>}
 
-      {/* \u2500\u2500 MOBILE BOTTOM NAV BAR \u2500\u2500 */}
+      {/* ── MOBILE BOTTOM NAV BAR ── */}
       <nav style={{ display: "none" }} className="mobile-bottom-nav" aria-label="Quick navigation">
         {[
           { key: "Overview", icon: "\u25C8", label: "Overview" },
@@ -19288,8 +19288,8 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               <div>
                 <div style={{ fontFamily: "'Fraunces', serif", fontSize: 20, fontWeight: 800, color: T.white }}>{userName || user.split("@")[0]}</div>
                 <div style={{ fontSize: 12, color: T.textSecondary, marginTop: 2 }}>{user}</div>
-                <div style={{ display: "inline-flex", alignItems: "center", gap: 4, marginTop: 6, padding: "3px 10px", borderRadius: 6, background: userTier === "admin" || userTier === "pro" || userTier === "enterprise" ? "rgba(16,185,129,0.12)" : userTier === "pro_trial" ? "rgba(212,168,67,0.12)" : "rgba(59,130,246,0.12)", fontSize: 10, fontWeight: 700, color: userTier === "admin" || userTier === "pro" || userTier === "enterprise" ? T.green : userTier === "pro_trial" ? T.gold : T.blue }}>{userTier === "admin" ? "\u26A1 Admin" : userTier === "pro" ? "\u2B50 Pro Plan" : userTier === "pro_trial" ? `\u2B50 Pro Trial \u00B7 ${trialDaysLeft}d left` : userTier === "enterprise" ? "\uD83C\uDFE2 Enterprise" : "Free Plan"}</div>
-                {isVerified && <div style={{ display: "inline-flex", alignItems: "center", gap: 4, marginTop: 6, marginLeft: 6, padding: "3px 10px", borderRadius: 6, background: "rgba(0,191,165,0.12)", fontSize: 10, fontWeight: 700, color: "#00BFA5" }}>\u2713 Verified {verifiedLevel ? `\u00B7 ${verifiedLevel.charAt(0).toUpperCase() + verifiedLevel.slice(1)}` : ""}</div>}
+                <div style={{ display: "inline-flex", alignItems: "center", gap: 4, marginTop: 6, padding: "3px 10px", borderRadius: 6, background: userTier === "admin" || userTier === "pro" || userTier === "enterprise" ? "rgba(16,185,129,0.12)" : userTier === "pro_trial" ? "rgba(212,168,67,0.12)" : "rgba(59,130,246,0.12)", fontSize: 10, fontWeight: 700, color: userTier === "admin" || userTier === "pro" || userTier === "enterprise" ? T.green : userTier === "pro_trial" ? T.gold : T.blue }}>{userTier === "admin" ? "\u26A1 Admin" : userTier === "pro" ? "\u2B50 Pro Plan" : userTier === "pro_trial" ? `\u2B50 Pro Trial · ${trialDaysLeft}d left` : userTier === "enterprise" ? "\uD83C\uDFE2 Enterprise" : "Free Plan"}</div>
+                {isVerified && <div style={{ display: "inline-flex", alignItems: "center", gap: 4, marginTop: 6, marginLeft: 6, padding: "3px 10px", borderRadius: 6, background: "rgba(0,191,165,0.12)", fontSize: 10, fontWeight: 700, color: "#00BFA5" }}>\u2713 Verified {verifiedLevel ? `· ${verifiedLevel.charAt(0).toUpperCase() + verifiedLevel.slice(1)}` : ""}</div>}
               </div>
             </div>
           </div>
@@ -19309,7 +19309,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 <div><div style={{ fontSize: 10, color: T.textMuted }}>Status</div><div style={{ fontSize: 14, fontWeight: 700, color: userTier === "free" ? T.blue : T.green }}>{userTier === "free" ? "Limited" : "Active"}</div></div>
                 <div><div style={{ fontSize: 10, color: T.textMuted }}>Access</div><div style={{ fontSize: 14, fontWeight: 700, color: T.white }}>{userTier === "free" ? "5 projects" : "All 48"}</div></div>
               </div>
-              {(userTier === "free" || userTier === "pro_trial") && <button type="button" onClick={() => { setShowProfile(false); setShowUpgrade(true); }} style={{ marginTop: 12, width: "100%", padding: "10px 0", background: `linear-gradient(135deg, ${T.gold}, #B8912F)`, color: T.bg, border: "none", borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>{userTier === "pro_trial" ? "Subscribe Before Trial Ends" : "\u2B50 Upgrade to Pro \u2014 AED 99/mo"}</button>}
+              {(userTier === "free" || userTier === "pro_trial") && <button type="button" onClick={() => { setShowProfile(false); setShowUpgrade(true); }} style={{ marginTop: 12, width: "100%", padding: "10px 0", background: `linear-gradient(135deg, ${T.gold}, #B8912F)`, color: T.bg, border: "none", borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>{userTier === "pro_trial" ? "Subscribe Before Trial Ends" : "\u2B50 Upgrade to Pro — AED 99/mo"}</button>}
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
               <button type="button" onClick={() => { setShowProfile(false); handleTabChange("Portfolio"); }} style={{ padding: "10px 0", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textSecondary, fontWeight: 600, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>\uD83D\uDCCA Portfolio</button>
@@ -19323,7 +19323,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   <div style={{ width: 36, height: 36, borderRadius: "50%", background: "rgba(0,191,165,0.15)", border: "2px solid #00BFA5", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 }}>\u2713</div>
                   <div>
                     <div style={{ fontSize: 13, fontWeight: 700, color: "#00BFA5" }}>Identity Verified</div>
-                    <div style={{ fontSize: 11, color: T.textMuted }}>Level: {verifiedLevel || "Basic"} \u00B7 Approved by admin</div>
+                    <div style={{ fontSize: 11, color: T.textMuted }}>Level: {verifiedLevel || "Basic"} · Approved by admin</div>
                   </div>
                 </div>
               ) : kycStatus === "pending" ? (
@@ -19331,7 +19331,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   <div style={{ width: 36, height: 36, borderRadius: "50%", background: "rgba(245,158,11,0.15)", border: "2px solid #F59E0B", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 }}>\u23F3</div>
                   <div>
                     <div style={{ fontSize: 13, fontWeight: 700, color: "#F59E0B" }}>Verification Pending</div>
-                    <div style={{ fontSize: 11, color: T.textMuted }}>Admin review in progress \u00B7 Usually within 24h</div>
+                    <div style={{ fontSize: 11, color: T.textMuted }}>Admin review in progress · Usually within 24h</div>
                   </div>
                 </div>
               ) : (
@@ -19345,7 +19345,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
         </div>
       </div>}
 
-      {/* \u2500\u2500\u2500 KYC VERIFICATION MODAL \u2500\u2500\u2500 */}
+      {/* ─── KYC VERIFICATION MODAL ─── */}
       {showKYC && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.92)", zIndex: 5000, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(10px)", padding: 16 }} onClick={() => setShowKYC(false)}>
           <div style={{ background: T.surface, borderRadius: 20, border: `1px solid rgba(0,191,165,0.3)`, width: "95%", maxWidth: 520, maxHeight: "90vh", overflow: "auto", boxShadow: "0 30px 80px rgba(0,0,0,0.6)" }} onClick={e => e.stopPropagation()}>
@@ -19353,7 +19353,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <div>
                   <div style={{ fontFamily: "'Fraunces', serif", fontSize: 20, fontWeight: 800, color: "#00BFA5" }}>\uD83D\uDEE1 Identity Verification</div>
-                  <div style={{ fontSize: 12, color: T.textMuted, marginTop: 4 }}>Submit your details for admin review \u00B7 Usually approved within 24h</div>
+                  <div style={{ fontSize: 12, color: T.textMuted, marginTop: 4 }}>Submit your details for admin review · Usually approved within 24h</div>
                 </div>
                 <button type="button" onClick={() => setShowKYC(false)} style={{ background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center" }}>\u2715</button>
               </div>
@@ -19393,7 +19393,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
         </div>
       )}
 
-      {/* \u2500\u2500\u2500 KPI DETAIL MODAL \u2500\u2500\u2500 */}
+      {/* ─── KPI DETAIL MODAL ─── */}
       {selectedKPI && (
         <div role="dialog" aria-modal="true" aria-label={`${selectedKPI?.label} details`} style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.92)", zIndex: 5000, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(10px)", padding: 16 }} onClick={() => setSelectedKPI(null)}>
           <div style={{ background: T.surface, borderRadius: 20, border: `1px solid ${selectedKPI.color || T.gold}`, width: "95%", maxWidth: 640, maxHeight: "88vh", overflowY: "auto", position: "relative", boxShadow: `0 24px 80px rgba(0,0,0,0.6), 0 0 40px ${selectedKPI.color || T.gold}22` }} onClick={e => e.stopPropagation()}>
@@ -19456,7 +19456,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
         </div>
       )}
 
-      {/* \u2500\u2500\u2500 NOTIFICATIONS PANEL \u2500\u2500\u2500 */}
+      {/* ─── NOTIFICATIONS PANEL ─── */}
       {showNotifications && (
         <div style={{ position: "fixed", top: 60, right: 16, width: 360, maxHeight: 480, background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, boxShadow: "0 20px 60px rgba(0,0,0,0.6)", zIndex: 4000, overflow: "hidden", display: "flex", flexDirection: "column" }}>
           <div style={{ padding: "16px 20px", borderBottom: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -19508,7 +19508,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
         </div>
       )}
 
-      {/* \u2500\u2500\u2500 WATCHLIST PANEL \u2500\u2500\u2500 */}
+      {/* ─── WATCHLIST PANEL ─── */}
       {showWatchlist && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.85)", zIndex: 3500, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(8px)" }} onClick={() => setShowWatchlist(false)}>
           <div style={{ background: T.surface, borderRadius: 20, border: `1px solid ${T.border}`, width: "min(640px,95vw)", maxHeight: "80vh", overflow: "hidden", display: "flex", flexDirection: "column" }} onClick={e => e.stopPropagation()}>
@@ -19522,9 +19522,9 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
             <div style={{ overflowY: "auto", padding: 20, flex: 1 }}>
               {watchlist.length === 0 ? (
                 <div style={{ textAlign: "center", padding: "48px 20px", color: T.textMuted }}>
-                  <div style={{ fontSize: 40, marginBottom: 12 }}>\u2606</div>
+                  <div style={{ fontSize: 40, marginBottom: 12 }}>★</div>
                   <div style={{ fontSize: 14, color: T.textSecondary, marginBottom: 8 }}>No projects saved yet</div>
-                  <div style={{ fontSize: 12 }}>Click the \u2606 star on any project card to add it here.</div>
+                  <div style={{ fontSize: 12 }}>Click the ★ star on any project card to add it here.</div>
                 </div>
               ) : (
                 <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
@@ -19547,7 +19547,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                           {priceChanged && <div style={{ fontSize: 10, color: liveP.price > w.price ? T.red : T.green, marginTop: 4, fontWeight: 600 }}>{liveP.price > w.price ? "\u2191" : "\u2193"} Price changed since you saved this</div>}
                         </div>
                         <div style={{ textAlign: "right" }}>
-                          <div style={{ fontSize: 13, fontWeight: 700, color: T.gold }}>AED {currentPrice ? (currentPrice / 1e6).toFixed(2) + "M" : "\u2014"}</div>
+                          <div style={{ fontSize: 13, fontWeight: 700, color: T.gold }}>AED {currentPrice ? (currentPrice / 1e6).toFixed(2) + "M" : "—"}</div>
                           <div style={{ fontSize: 10, color: T.textMuted, marginTop: 2 }}>Starting from</div>
                         </div>
                         <button type="button" onClick={e => { e.stopPropagation(); toggleWatchlist(w); }} style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 6, color: "#EF4444", padding: "4px 8px", cursor: "pointer", fontSize: 11, flexShrink: 0 }}>Remove</button>
@@ -19561,7 +19561,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
         </div>
       )}
 
-      {/* \u2500\u2500\u2500 ONBOARDING MODAL \u2500\u2500\u2500 */}
+      {/* ─── ONBOARDING MODAL ─── */}
       {showOnboarding && (() => {
         const steps = [
           {
@@ -19579,7 +19579,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
           {
             icon: "\u2B50",
             title: "Build Your Watchlist",
-            body: "See the \u2606 star button on every project card? Click it to save projects you're interested in. Your watchlist syncs across devices.",
+            body: "See the ★ star button on every project card? Click it to save projects you're interested in. Your watchlist syncs across devices.",
             cta: "Next \u2192"
           },
           {
@@ -19591,7 +19591,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
           {
             icon: "\uD83D\uDE80",
             title: "You're All Set!",
-            body: userTier === "free" ? "You're on the Free plan. Upgrade to Pro for compare mode, full project details, PDF reports, and portfolio tracking \u2014 from AED 99/month." : "You have full Pro access. Explore everything \u2014 compare projects, track your portfolio, and download reports.",
+            body: userTier === "free" ? "You're on the Free plan. Upgrade to Pro for compare mode, full project details, PDF reports, and portfolio tracking — from AED 99/month." : "You have full Pro access. Explore everything — compare projects, track your portfolio, and download reports.",
             cta: userTier === "free" ? "Explore Free Features" : "Start Exploring"
           },
         ];
