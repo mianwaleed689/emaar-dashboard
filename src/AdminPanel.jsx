@@ -93,17 +93,7 @@ function EmailCampaignsTab({ T, db, notify, adminUser, leads, leadsTotal, fetchL
       await Promise.allSettled(chunk.map(async lead => {
         try {
           const bodyText = form.body.replace(/\{name\}/g, lead.name||"there").replace(/\{community\}/g, lead.community||"Dubai").replace(/\{project\}/g, lead.project||"your property");
-          const html = `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:24px">
-            <div style="border-bottom:2px solid #D4A843;padding-bottom:12px;margin-bottom:20px">
-              <h2 style="color:#D4A843;margin:0;font-size:20px">DXB Analytics</h2>
-              <p style="color:#64748B;margin:4px 0 0;font-size:12px">The Address Holding · Dubai</p>
-            </div>
-            <div style="color:#1E293B;font-size:14px;line-height:1.7;white-space:pre-wrap">${bodyText}</div>
-            <div style="border-top:1px solid #E2E8F0;margin-top:24px;padding-top:16px;color:#94A3B8;font-size:11px">
-              DXB Analytics · The Address Holding · Dubai, UAE<br/>
-              <a href="mailto:info@theaddressholding.ae" style="color:#D4A843">info@theaddressholding.ae</a>
-            </div>
-          </div>`;
+          const html = `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:24px">\n            <div style="border-bottom:2px solid #D4A843;padding-bottom:12px;margin-bottom:20px">\n              <h2 style="color:#D4A843;margin:0;font-size:20px">DXB Analytics</h2>\n              <p style="color:#64748B;margin:4px 0 0;font-size:12px">The Address Holding · Dubai</p>\n            </div>\n            <div style="color:#1E293B;font-size:14px;line-height:1.7;white-space:pre-wrap">${bodyText}</div>\n            <div style="border-top:1px solid #E2E8F0;margin-top:24px;padding-top:16px;color:#94A3B8;font-size:11px">\n              DXB Analytics · The Address Holding · Dubai, UAE<br/>\n              <a href="mailto:info@theaddressholding.ae" style="color:#D4A843">info@theaddressholding.ae</a>\n            </div>\n          </div>`;
           await sendWithResend(lead.email, form.subject, html);
           sent++;
         } catch(e) { failed++; }
@@ -208,16 +198,7 @@ function EmailCampaignsTab({ T, db, notify, adminUser, leads, leadsTotal, fetchL
 /* ─── RESEND EMAIL HELPER ─── */
 const RESEND_KEY = import.meta.env.VITE_RESEND_API_KEY;
 const sendResend = async (to, subject, bodyText) => {
-  const html = `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:24px">
-    <div style="border-bottom:2px solid #D4A843;padding-bottom:12px;margin-bottom:20px">
-      <h2 style="color:#D4A843;margin:0;font-size:18px">DXB Analytics</h2>
-      <p style="color:#64748B;margin:4px 0 0;font-size:11px">The Address Holding · Dubai, UAE</p>
-    </div>
-    <div style="color:#1E293B;font-size:14px;line-height:1.7;white-space:pre-wrap">${bodyText}</div>
-    <div style="border-top:1px solid #E2E8F0;margin-top:24px;padding-top:12px;color:#94A3B8;font-size:11px">
-      DXB Analytics · <a href="mailto:info@theaddressholding.ae" style="color:#D4A843">info@theaddressholding.ae</a>
-    </div>
-  </div>`;
+  const html = `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:24px">\n    <div style="border-bottom:2px solid #D4A843;padding-bottom:12px;margin-bottom:20px">\n      <h2 style="color:#D4A843;margin:0;font-size:18px">DXB Analytics</h2>\n      <p style="color:#64748B;margin:4px 0 0;font-size:11px">The Address Holding · Dubai, UAE</p>\n    </div>\n    <div style="color:#1E293B;font-size:14px;line-height:1.7;white-space:pre-wrap">${bodyText}</div>\n    <div style="border-top:1px solid #E2E8F0;margin-top:24px;padding-top:12px;color:#94A3B8;font-size:11px">\n      DXB Analytics · <a href="mailto:info@theaddressholding.ae" style="color:#D4A843">info@theaddressholding.ae</a>\n    </div>\n  </div>`;
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: { "Authorization": `Bearer ${RESEND_KEY}`, "Content-Type": "application/json" },
@@ -269,148 +250,7 @@ const I = {
 };
 
 /* ─── CSS (exactly matching main dashboard design DNA) ─── */
-const css = `
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700;9..144,900&display=swap');
-* { margin: 0; padding: 0; box-sizing: border-box; }
-html { font-size: 14px; }
-body { background: ${T.bg}; color: ${T.textPrimary}; font-family: 'Outfit', sans-serif; }
-::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(212,168,67,0.2); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(212,168,67,0.35); }
-* { scrollbar-width: thin; scrollbar-color: rgba(212,168,67,0.15) transparent; }
-select option { background: ${T.surface}; color: ${T.textPrimary}; }
-
-@keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
-@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
-@keyframes spin { to { transform: rotate(360deg); } }
-@keyframes livePulse { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.2); opacity: 0.7; } }
-@keyframes countUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-.live-pulse { animation: livePulse 2s ease-in-out infinite; }
-.count-up { animation: countUp 0.3s ease-out; }
-.fade-up { animation: fadeUp 0.5s ease-out forwards; opacity: 0; }
-  @keyframes toastIn { 0% { opacity: 0; transform: translateY(20px); } 100% { opacity: 1; transform: translateY(0); } }
-  @keyframes toastOut { 0% { opacity: 1; } 100% { opacity: 0; transform: translateY(-10px); } }
-  .toast-notify { animation: toastIn 0.3s ease-out, toastOut 0.4s ease-in 2.4s forwards; }
-
-.kpi-card {
-  background: linear-gradient(135deg, ${T.card} 0%, ${T.surfaceAlt} 100%);
-  border: 1px solid ${T.border};
-  border-radius: 16px;
-  padding: 20px 16px;
-  position: relative;
-  overflow: hidden;
-  transition: all 0.3s ease;
-}
-.kpi-card:hover {
-  border-color: ${T.borderHover};
-  transform: translateY(-2px);
-  box-shadow: 0 8px 32px rgba(0,0,0,0.3), 0 0 0 1px rgba(212,168,67,0.1);
-}
-.kpi-card::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 2px;
-  background: linear-gradient(90deg, transparent, ${T.gold}, transparent);
-  opacity: 0;
-  transition: opacity 0.3s;
-}
-.kpi-card:hover::before { opacity: 1; }
-
-.chart-box {
-  background: linear-gradient(180deg, ${T.card} 0%, rgba(4,9,15,0.95) 100%);
-  border: 1px solid ${T.border};
-  border-radius: 16px;
-  padding: 20px;
-  transition: border-color 0.3s;
-}
-.chart-box:hover { border-color: ${T.borderHover}; }
-
-.sidebar-btn {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  width: 100%;
-  padding: 11px 16px;
-  border: none;
-  border-radius: 10px;
-  cursor: pointer;
-  font-family: 'Outfit', sans-serif;
-  font-size: 13px;
-  font-weight: 500;
-  transition: all 0.2s ease;
-  color: ${T.textSecondary};
-  background: transparent;
-  text-align: left;
-  position: relative;
-}
-.sidebar-btn:hover { background: rgba(212,168,67,0.06); color: ${T.white}; }
-.sidebar-btn.active {
-  background: linear-gradient(135deg, rgba(212,168,67,0.12), rgba(212,168,67,0.04));
-  color: ${T.gold};
-  font-weight: 600;
-}
-.sidebar-btn.active::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 3px;
-  height: 60%;
-  background: ${T.gold};
-  border-radius: 0 3px 3px 0;
-}
-
-.mobile-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.6);
-  backdrop-filter: blur(4px);
-  z-index: 90;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.3s;
-}
-.mobile-overlay.open { opacity: 1; pointer-events: auto; }
-
-@media (max-width: 768px) {
-  .admin-sidebar { transform: translateX(-100%); position: fixed !important; z-index: 100; }
-  .admin-sidebar.open { transform: translateX(0); }
-  .admin-main { margin-left: 0 !important; }
-  .admin-topbar { left: 0 !important; }
-  .admin-mobile-btn { display: flex !important; }
-  .kpi-grid-4 { grid-template-columns: 1fr 1fr !important; }
-  .kpi-grid-6 { grid-template-columns: 1fr 1fr !important; }
-  .kpi-grid-overview { grid-template-columns: repeat(2, 1fr) !important; }
-  .charts-row-overview { grid-template-columns: 1fr !important; }
-  .chart-grid-2 { grid-template-columns: 1fr !important; }
-  .chart-grid-3 { grid-template-columns: 1fr !important; }
-  .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-  .data-sub-tabs { flex-direction: column !important; }
-  .community-grid { grid-template-columns: 1fr !important; }
-  .users-table-desktop { display: none !important; }
-  .users-table-mobile { display: flex !important; }
-  .users-kpi-grid { grid-template-columns: 1fr 1fr !important; }
-}
-@media (max-width: 480px) {
-  .kpi-grid-4 { grid-template-columns: 1fr !important; }
-  .kpi-grid-6 { grid-template-columns: 1fr !important; }
-  .kpi-grid-overview { grid-template-columns: 1fr 1fr !important; }
-  .charts-row-overview { grid-template-columns: 1fr !important; }
-  .edit-grid-3 { grid-template-columns: 1fr !important; }
-  .users-kpi-grid { grid-template-columns: 1fr 1fr !important; }
-}
-@keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
-@keyframes fadeBackdrop { from { opacity: 0; } to { opacity: 1; } }
-.drawer-panel { animation: slideIn 0.32s cubic-bezier(0.16,1,0.3,1) forwards; }
-
-@keyframes slideUp { from { transform: translateY(16px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-.users-table-mobile { display: none; flex-direction: column; gap: 10px; }
-.risk-btn-wrap:hover .risk-tooltip { opacity: 1 !important; pointer-events: auto !important; }
-
-`;
+const css = `\n@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700;9..144,900&display=swap');\n* { margin: 0; padding: 0; box-sizing: border-box; }\nhtml { font-size: 14px; }\nbody { background: ${T.bg}; color: ${T.textPrimary}; font-family: 'Outfit', sans-serif; }\n::-webkit-scrollbar { width: 6px; height: 6px; }\n::-webkit-scrollbar-track { background: transparent; }\n::-webkit-scrollbar-thumb { background: rgba(212,168,67,0.2); border-radius: 3px; }\n::-webkit-scrollbar-thumb:hover { background: rgba(212,168,67,0.35); }\n* { scrollbar-width: thin; scrollbar-color: rgba(212,168,67,0.15) transparent; }\nselect option { background: ${T.surface}; color: ${T.textPrimary}; }\n\n@keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }\n@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }\n@keyframes spin { to { transform: rotate(360deg); } }\n@keyframes livePulse { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.2); opacity: 0.7; } }\n@keyframes countUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }\n.live-pulse { animation: livePulse 2s ease-in-out infinite; }\n.count-up { animation: countUp 0.3s ease-out; }\n.fade-up { animation: fadeUp 0.5s ease-out forwards; opacity: 0; }\n  @keyframes toastIn { 0% { opacity: 0; transform: translateY(20px); } 100% { opacity: 1; transform: translateY(0); } }\n  @keyframes toastOut { 0% { opacity: 1; } 100% { opacity: 0; transform: translateY(-10px); } }\n  .toast-notify { animation: toastIn 0.3s ease-out, toastOut 0.4s ease-in 2.4s forwards; }\n\n.kpi-card {\n  background: linear-gradient(135deg, ${T.card} 0%, ${T.surfaceAlt} 100%);\n  border: 1px solid ${T.border};\n  border-radius: 16px;\n  padding: 20px 16px;\n  position: relative;\n  overflow: hidden;\n  transition: all 0.3s ease;\n}\n.kpi-card:hover {\n  border-color: ${T.borderHover};\n  transform: translateY(-2px);\n  box-shadow: 0 8px 32px rgba(0,0,0,0.3), 0 0 0 1px rgba(212,168,67,0.1);\n}\n.kpi-card::before {\n  content: '';\n  position: absolute;\n  top: 0; left: 0; right: 0;\n  height: 2px;\n  background: linear-gradient(90deg, transparent, ${T.gold}, transparent);\n  opacity: 0;\n  transition: opacity 0.3s;\n}\n.kpi-card:hover::before { opacity: 1; }\n\n.chart-box {\n  background: linear-gradient(180deg, ${T.card} 0%, rgba(4,9,15,0.95) 100%);\n  border: 1px solid ${T.border};\n  border-radius: 16px;\n  padding: 20px;\n  transition: border-color 0.3s;\n}\n.chart-box:hover { border-color: ${T.borderHover}; }\n\n.sidebar-btn {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n  width: 100%;\n  padding: 11px 16px;\n  border: none;\n  border-radius: 10px;\n  cursor: pointer;\n  font-family: 'Outfit', sans-serif;\n  font-size: 13px;\n  font-weight: 500;\n  transition: all 0.2s ease;\n  color: ${T.textSecondary};\n  background: transparent;\n  text-align: left;\n  position: relative;\n}\n.sidebar-btn:hover { background: rgba(212,168,67,0.06); color: ${T.white}; }\n.sidebar-btn.active {\n  background: linear-gradient(135deg, rgba(212,168,67,0.12), rgba(212,168,67,0.04));\n  color: ${T.gold};\n  font-weight: 600;\n}\n.sidebar-btn.active::before {\n  content: '';\n  position: absolute;\n  left: 0;\n  top: 50%;\n  transform: translateY(-50%);\n  width: 3px;\n  height: 60%;\n  background: ${T.gold};\n  border-radius: 0 3px 3px 0;\n}\n\n.mobile-overlay {\n  position: fixed;\n  inset: 0;\n  background: rgba(0,0,0,0.6);\n  backdrop-filter: blur(4px);\n  z-index: 90;\n  opacity: 0;\n  pointer-events: none;\n  transition: opacity 0.3s;\n}\n.mobile-overlay.open { opacity: 1; pointer-events: auto; }\n\n@media (max-width: 768px) {\n  .admin-sidebar { transform: translateX(-100%); position: fixed !important; z-index: 100; }\n  .admin-sidebar.open { transform: translateX(0); }\n  .admin-main { margin-left: 0 !important; }\n  .admin-topbar { left: 0 !important; }\n  .admin-mobile-btn { display: flex !important; }\n  .kpi-grid-4 { grid-template-columns: 1fr 1fr !important; }\n  .kpi-grid-6 { grid-template-columns: 1fr 1fr !important; }\n  .kpi-grid-overview { grid-template-columns: repeat(2, 1fr) !important; }\n  .charts-row-overview { grid-template-columns: 1fr !important; }\n  .chart-grid-2 { grid-template-columns: 1fr !important; }\n  .chart-grid-3 { grid-template-columns: 1fr !important; }\n  .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }\n  .data-sub-tabs { flex-direction: column !important; }\n  .community-grid { grid-template-columns: 1fr !important; }\n  .users-table-desktop { display: none !important; }\n  .users-table-mobile { display: flex !important; }\n  .users-kpi-grid { grid-template-columns: 1fr 1fr !important; }\n}\n@media (max-width: 480px) {\n  .kpi-grid-4 { grid-template-columns: 1fr !important; }\n  .kpi-grid-6 { grid-template-columns: 1fr !important; }\n  .kpi-grid-overview { grid-template-columns: 1fr 1fr !important; }\n  .charts-row-overview { grid-template-columns: 1fr !important; }\n  .edit-grid-3 { grid-template-columns: 1fr !important; }\n  .users-kpi-grid { grid-template-columns: 1fr 1fr !important; }\n}\n@keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }\n@keyframes fadeBackdrop { from { opacity: 0; } to { opacity: 1; } }\n.drawer-panel { animation: slideIn 0.32s cubic-bezier(0.16,1,0.3,1) forwards; }\n\n@keyframes slideUp { from { transform: translateY(16px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }\n.users-table-mobile { display: none; flex-direction: column; gap: 10px; }\n.risk-btn-wrap:hover .risk-tooltip { opacity: 1 !important; pointer-events: auto !important; }\n\n`;
 
 /* ─── CUSTOM TOOLTIP (matching dashboard) ─── */
 const CustomTooltip = ({ active, payload, label }) => {
