@@ -327,8 +327,8 @@ const GlobalContextFilter = ({
   const mlIsSuperAdmin=userRole==="admin"||userRole==="superAdmin";
   const mlCanSee=mlIsAgent||mlIsManager||mlIsSuperAdmin;
   const mlAllLeads=mlIsSuperAdmin?liveLeads:(mlIsAgent||mlIsManager)?myLeads:liveLeads.filter(l=>!auth.currentUser?.uid||l.userId===auth.currentUser.uid);
-  const ML_ST={"New":{color:"#3B82F6",bg:"rgba(59,130,246,0.12)",label:"New"},"Contacted":{color:"#F59E0B",bg:"rgba(245,158,11,0.12)",label:"Contacted"},"Viewing":{color:"#8B5CF6",bg:"rgba(139,92,246,0.12)",label:"Viewing"},"Offer":{color:"#14B8A6",bg:"rgba(20,184,166,0.12)",label:"Offer"},"Won":{color:"#10B981",bg:"rgba(16,185,129,0.12)",label:"Won"},"Lost":{color:"#EF4444",bg:"rgba(239,68,68,0.12)",label:"Lost"}};
-  const ML_SRC={"Property Finder":"#00C08B","Bayut":"#FF6B35","Dubizzle":"#E8003D","Meta/Facebook":"#1877F2","Instagram":"#E1306C","WhatsApp":"#25D366","Google Ads":"#4285F4","Referral":"#8B5CF6","Website":"#14B8A6","Manual":"#94A3B8"};
+  const ML_STATUSES={"New":{color:"#3B82F6",bg:"rgba(59,130,246,0.12)",label:"New"},"Contacted":{color:"#F59E0B",bg:"rgba(245,158,11,0.12)",label:"Contacted"},"Viewing":{color:"#8B5CF6",bg:"rgba(139,92,246,0.12)",label:"Viewing"},"Offer":{color:"#14B8A6",bg:"rgba(20,184,166,0.12)",label:"Offer"},"Won":{color:"#10B981",bg:"rgba(16,185,129,0.12)",label:"Won"},"Lost":{color:"#EF4444",bg:"rgba(239,68,68,0.12)",label:"Lost"}};
+  const ML_SOURCES={"Property Finder":"#00C08B","Bayut":"#FF6B35","Dubizzle":"#E8003D","Meta/Facebook":"#1877F2","Instagram":"#E1306C","WhatsApp":"#25D366","Google Ads":"#4285F4","Referral":"#8B5CF6","Website":"#14B8A6","Manual":"#94A3B8"};
   function mlScore(l){let s=0;const b=parseFloat(l.budget||0);if(l.phone&&l.email)s+=25;else if(l.phone||l.email)s+=10;if(b>=5000000)s+=20;else if(b>=2000000)s+=15;else if(b>=1000000)s+=10;const d=(Date.now()-new Date(l.createdAt||Date.now()).getTime())*0.000000011574;if(d<1)s+=20;else if(d<3)s+=15;else if(d<7)s+=10;const n=(l.notes_log||[]).length;if(n>=3)s+=10;else if(n>=1)s+=5;return{score:s,color:s>=70?"#10B981":s>=40?T.gold:"#EF4444",label:s>=70?"Hot":s>=40?"Warm":"Cold"};}
   const mlFiltered=(()=>{let a=mlAllLeads||[];if(leadStatusFilter!=="all")a=a.filter(l=>(l.status||"New")===leadStatusFilter);if(leadSourceFilter!=="all")a=a.filter(l=>l.source===leadSourceFilter);if(leadBudgetFilter!=="all")a=a.filter(l=>{const b=parseFloat(l.budget||0);if(leadBudgetFilter==="under1m")return b<1000000;if(leadBudgetFilter==="1to2m")return b>=1000000&&b<2000000;if(leadBudgetFilter==="2to5m")return b>=2000000&&b<5000000;if(leadBudgetFilter==="above5m")return b>=5000000;return true;});if(leadTypeFilter!=="all")a=a.filter(l=>(l.type||"Buy")===leadTypeFilter);if(leadSearch.trim()){const q=leadSearch.trim().toLowerCase();a=a.filter(l=>(l.name||"").toLowerCase().includes(q)||(l.phone||"").includes(q)||(l.email||"").toLowerCase().includes(q));}if(leadSortBy==="score")a=[...a].sort((a,b)=>mlScore(b).score-mlScore(a).score);else if(leadSortBy==="budget")a=[...a].sort((a,b)=>parseFloat(b.budget||0)-parseFloat(a.budget||0));else a=[...a].sort((a,b)=>new Date(b.createdAt||0)-new Date(a.createdAt||0));return a;})();
   const mlTotalVal=(mlAllLeads||[]).reduce((s,l)=>s+parseFloat(l.budget||0),0);
@@ -15269,14 +15269,14 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
             return (
               <div style={{ padding:"0 0 40px" }}>
 
-                {/* ── HEADER ── */}
+                {/* â”€â”€ HEADER â”€â”€ */}
                 <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:20, flexWrap:"wrap", gap:12 }}>
                   <div>
                     <h1 style={{ fontFamily:"'Fraunces',serif", fontSize:22, fontWeight:900, color:T.white, margin:0 }}>
                       {mlIsManager ? "Team Leads" : "My Leads"}
                     </h1>
                     <p style={{ fontSize:12, color:T.textMuted, margin:"4px 0 0" }}>
-                      {mlIsManager ? "All leads in your organisation" : "Leads assigned to you — AI scored, WhatsApp ready"}
+                      {mlIsManager ? "All leads in your organisation" : "Leads assigned to you â€” AI scored, WhatsApp ready"}
                     </p>
                   </div>
                   <div style={{ display:"flex", gap:8 }}>
@@ -15293,7 +15293,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   </div>
                 </div>
 
-                {/* ── KPI CARDS ── */}
+                {/* â”€â”€ KPI CARDS â”€â”€ */}
                 {(() => {
                   const kpis = [
                     { label:"Total Leads",    value:String((mlAllLeads||[]).length),  color:T.gold  },
@@ -15314,7 +15314,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   );
                 })()}
 
-                {/* ── STALE LEADS ALERT ── */}
+                {/* â”€â”€ STALE LEADS ALERT â”€â”€ */}
                 {(() => {
                   const stale = (mlAllLeads||[]).filter(l => {
                     if (l.status === "Won" || l.status === "Lost") return false;
@@ -15336,7 +15336,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   );
                 })()}
 
-                {/* ── FILTERS ── */}
+                {/* â”€â”€ FILTERS â”€â”€ */}
                 <div style={{ background:T.surfaceAlt, border:"1px solid "+T.border, borderRadius:12, padding:"12px 14px", marginBottom:16 }}>
                   <div style={{ display:"flex", gap:8, flexWrap:"wrap", alignItems:"center" }}>
                     <div style={{ position:"relative", flex:"2 1 200px" }}>
@@ -15365,8 +15365,8 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                       style={{ flex:"1 1 110px", padding:"8px 10px", background:T.surface, border:"1px solid "+T.border, borderRadius:8, color:T.textPrimary, fontSize:12, outline:"none" }}>
                       <option value="all">All Budgets</option>
                       <option value="under1m">Under 1M</option>
-                      <option value="1to2m">1M – 2M</option>
-                      <option value="2to5m">2M – 5M</option>
+                      <option value="1to2m">1M â€“ 2M</option>
+                      <option value="2to5m">2M â€“ 5M</option>
                       <option value="above5m">5M+</option>
                     </select>
                     <select value={leadTypeFilter} onChange={e => setLeadTypeFilter(e.target.value)}
@@ -15384,12 +15384,12 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                     </button>
                     <button type="button" onClick={() => setLeadShowAdd(v => !v)}
                       style={{ padding:"8px 16px", borderRadius:8, border:"none", background:leadShowAdd?"rgba(212,168,67,0.15)":"linear-gradient(135deg,"+T.gold+",#B8902E)", color:leadShowAdd?T.gold:"#0A0E1A", fontSize:12, fontWeight:700, cursor:"pointer" }}>
-                      {leadShowAdd ? "✕ Cancel" : "+ Add Lead"}
+                      {leadShowAdd ? "âœ• Cancel" : "+ Add Lead"}
                     </button>
                   </div>
                 </div>
 
-                {/* ── ADD LEAD FORM ── */}
+                {/* â”€â”€ ADD LEAD FORM â”€â”€ */}
                 {leadShowAdd && (
                   <div style={{ padding:"18px 20px", background:"rgba(212,168,67,0.05)", border:"1px solid rgba(212,168,67,0.2)", borderRadius:12, marginBottom:16 }}>
                     <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:14 }}>New Lead</div>
@@ -15438,7 +15438,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   </div>
                 )}
 
-                {/* ── LEAD LIST ── */}
+                {/* â”€â”€ LEAD LIST â”€â”€ */}
                 <div style={{ background:T.card, border:"1px solid "+T.border, borderRadius:12, overflow:"hidden" }}>
                   {/* List header */}
                   <div style={{ display:"grid", gridTemplateColumns:"minmax(160px,1fr) 60px 90px 100px 110px 90px 80px", gap:8, padding:"10px 14px", background:T.surfaceAlt, borderBottom:"1px solid "+T.border }}>
@@ -15484,7 +15484,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                               {isGV && <span style={{ fontSize:9, padding:"1px 5px", borderRadius:4, background:"rgba(212,168,67,0.15)", color:T.gold, fontWeight:700 }}>GV</span>}
                             </div>
                             <div style={{ fontSize:11, color:T.textMuted, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>
-                              {l.phone || l.email || l.community || "—"}
+                              {l.phone || l.email || l.community || "â€”"}
                             </div>
                           </div>
                         </div>
@@ -15507,12 +15507,12 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
 
                         {/* Budget */}
                         <div style={{ fontSize:12, fontWeight:700, color:isGV?T.gold:T.textPrimary }}>
-                          {budget > 0 ? ("AED " + (budget>=1000000?(budget*0.000001).toFixed(1)+"M":budget.toLocaleString())) : "—"}
+                          {budget > 0 ? ("AED " + (budget>=1000000?(budget*0.000001).toFixed(1)+"M":budget.toLocaleString())) : "â€”"}
                         </div>
 
                         {/* Date */}
                         <div style={{ fontSize:11, color:T.textMuted }}>
-                          {l.createdAt ? new Date(l.createdAt).toLocaleDateString("en-AE",{day:"2-digit",month:"short"}) : "—"}
+                          {l.createdAt ? new Date(l.createdAt).toLocaleDateString("en-AE",{day:"2-digit",month:"short"}) : "â€”"}
                         </div>
 
                         {/* Actions */}
@@ -15544,12 +15544,12 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   {mlFiltered.length > 0 && (
                     <div style={{ padding:"10px 14px", borderTop:"1px solid "+T.border, fontSize:11, color:T.textMuted, display:"flex", justifyContent:"space-between" }}>
                       <span>Showing {mlFiltered.length} of {(mlAllLeads||[]).length} leads</span>
-                      <span>{(mlAllLeads||[]).filter(l => l.status === "Won").length} Won · {(mlAllLeads||[]).filter(l => l.status === "Lost").length} Lost</span>
+                      <span>{(mlAllLeads||[]).filter(l => l.status === "Won").length} Won Â· {(mlAllLeads||[]).filter(l => l.status === "Lost").length} Lost</span>
                     </div>
                   )}
                 </div>
 
-                {/* ── LEAD DETAIL DRAWER ── */}
+                {/* â”€â”€ LEAD DETAIL DRAWER â”€â”€ */}
                 {selectedLead && (
                   <div style={{ position:"fixed", inset:0, zIndex:1500, display:"flex" }}
                     onClick={e => { if (e.target === e.currentTarget) setSelectedLead(null); }}>
@@ -15561,10 +15561,10 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                         <div style={{ display:"flex", alignItems:"flex-start", justifyContent:"space-between", marginBottom:12 }}>
                           <div>
                             <div style={{ fontSize:17, fontWeight:700, color:T.white, fontFamily:"'Fraunces',serif" }}>{selectedLead.name||"Unnamed Lead"}</div>
-                            <div style={{ fontSize:12, color:T.textMuted, marginTop:2 }}>{selectedLead.community||""} {selectedLead.type ? "· "+selectedLead.type : ""}</div>
+                            <div style={{ fontSize:12, color:T.textMuted, marginTop:2 }}>{selectedLead.community||""} {selectedLead.type ? "Â· "+selectedLead.type : ""}</div>
                           </div>
                           <button type="button" onClick={() => setSelectedLead(null)}
-                            style={{ background:T.surfaceAlt, border:"1px solid "+T.border, borderRadius:8, color:T.textMuted, width:30, height:30, cursor:"pointer", fontSize:16, display:"flex", alignItems:"center", justifyContent:"center" }}>✕</button>
+                            style={{ background:T.surfaceAlt, border:"1px solid "+T.border, borderRadius:8, color:T.textMuted, width:30, height:30, cursor:"pointer", fontSize:16, display:"flex", alignItems:"center", justifyContent:"center" }}>âœ•</button>
                         </div>
 
                         {/* Status selector */}
@@ -15618,12 +15618,12 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                             {/* Lead details table */}
                             <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, marginBottom:16 }}>
                               {[
-                                { label:"Budget",  value: selectedLead.budget ? "AED "+(parseFloat(selectedLead.budget)*0.000001).toFixed(2)+"M" : "—" },
-                                { label:"Source",  value: selectedLead.source || "—"        },
+                                { label:"Budget",  value: selectedLead.budget ? "AED "+(parseFloat(selectedLead.budget)*0.000001).toFixed(2)+"M" : "â€”" },
+                                { label:"Source",  value: selectedLead.source || "â€”"        },
                                 { label:"Status",  value: selectedLead.status || "New"      },
-                                { label:"Type",    value: selectedLead.type || "—"          },
-                                { label:"Nationality", value: selectedLead.nationality || "—" },
-                                { label:"Created", value: selectedLead.createdAt ? new Date(selectedLead.createdAt).toLocaleDateString("en-AE") : "—" },
+                                { label:"Type",    value: selectedLead.type || "â€”"          },
+                                { label:"Nationality", value: selectedLead.nationality || "â€”" },
+                                { label:"Created", value: selectedLead.createdAt ? new Date(selectedLead.createdAt).toLocaleDateString("en-AE") : "â€”" },
                               ].map((item,i) => (
                                 <div key={i} style={{ background:T.surfaceAlt, borderRadius:8, padding:"8px 12px" }}>
                                   <div style={{ fontSize:10, color:T.textMuted, marginBottom:2 }}>{item.label}</div>
@@ -15677,7 +15677,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                               </button>
                             </div>
                             {(selectedLead.notes_log||[]).length === 0 && (
-                              <div style={{ textAlign:"center", padding:"32px", color:T.textMuted, fontSize:13 }}>No notes yet — add the first one above</div>
+                              <div style={{ textAlign:"center", padding:"32px", color:T.textMuted, fontSize:13 }}>No notes yet â€” add the first one above</div>
                             )}
                             {[...(selectedLead.notes_log||[])].reverse().map((n,i) => (
                               <div key={i} style={{ padding:"10px 12px", background:T.surfaceAlt, borderRadius:8, marginBottom:8, borderLeft:"3px solid "+T.gold }}>
@@ -15732,7 +15732,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   </div>
                 )}
 
-                {/* ── QUICK CAPTURE MODAL ── */}
+                {/* â”€â”€ QUICK CAPTURE MODAL â”€â”€ */}
                 {showQuickCapture && (
                   <div style={{ position:"fixed", inset:0, background:"rgba(4,9,15,0.85)", zIndex:2000, display:"flex", alignItems:"center", justifyContent:"center" }}
                     onClick={e => { if (e.target === e.currentTarget) setShowQuickCapture(false); }}>
@@ -15740,7 +15740,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                       <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:20 }}>
                         <div style={{ fontFamily:"'Fraunces',serif", fontSize:17, fontWeight:900, color:T.white }}>Quick Lead Capture</div>
                         <button type="button" onClick={() => setShowQuickCapture(false)}
-                          style={{ background:T.surfaceAlt, border:"1px solid "+T.border, borderRadius:8, color:T.textMuted, width:30, height:30, cursor:"pointer", fontSize:16 }}>✕</button>
+                          style={{ background:T.surfaceAlt, border:"1px solid "+T.border, borderRadius:8, color:T.textMuted, width:30, height:30, cursor:"pointer", fontSize:16 }}>âœ•</button>
                       </div>
                       <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12 }}>
                         {[
