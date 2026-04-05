@@ -15381,8 +15381,9 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               try {
                 const upd = {status:st,updatedAt:new Date().toISOString()};
                 if (st==="Won") upd.wonAt = new Date().toISOString();
-                await updateDoc(doc(db,"leads",id),upd);
-                if (selectedLead&&selectedLead.id===id) setSelectedLead({...selectedLead,status:st});
+                const logEntry = {text:"Status changed to "+st,type:"Status Change",by:auth.currentUser?.email||"agent",at:new Date().toISOString()};
+                await updateDoc(doc(db,"leads",id),{...upd,notes_log:arrayUnion(logEntry)});
+                if (selectedLead&&selectedLead.id===id) setSelectedLead({...selectedLead,status:st,notes_log:[...(selectedLead.notes_log||[]),logEntry]});
               } catch(e){console.error(e);}
             }
 
@@ -15974,26 +15975,69 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
 
                         {leadDrawerTab==="activity" && (
                           <div>
-                            {(selectedLead.notes_log||[]).length===0 && <div style={{textAlign:"center",padding:"28px",color:T.textMuted,fontSize:13}}>No activity yet</div>}
-                            {[...(selectedLead.notes_log||[])].reverse().map((n,i)=>{
-                              const typeC={"Call":"#10B981","WhatsApp":"#25D366","Email":"#3B82F6","Meeting":"#8B5CF6","Site Visit":"#F59E0B","Task":"#D4A843","Note":"#94A3B8"};
-                              const c=typeC[n.type]||"#94A3B8";
-                              return (
-                                <div key={i} style={{display:"flex",gap:10,marginBottom:12,paddingBottom:12,borderBottom:"1px solid "+T.border}}>
-                                  <div style={{width:30,height:30,borderRadius:"50%",background:c+"18",border:"1px solid "+c+"40",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
-                                    <div style={{width:7,height:7,borderRadius:"50%",background:c}}/>
+                            {/* Quick add note inline */}
+                            <div style={{display:"flex",gap:7,marginBottom:14}}>
+                              <select value={noteType} onChange={e=>setNoteType(e.target.value)}
+                                style={{padding:"7px 9px",background:T.surfaceAlt,border:"1px solid "+T.border,borderRadius:7,color:T.textPrimary,fontSize:11,outline:"none"}}>
+                                {["Call","WhatsApp","Email","Meeting","Site Visit","Note"].map(t=><option key={t} value={t}>{t}</option>)}
+                              </select>
+                              <input value={noteText} onChange={e=>setNoteText(e.target.value)}
+                                placeholder="Log an activity..." onKeyDown={e=>{if(e.key==="Enter")mlNote(selectedLead.id);}}
+                                style={{flex:1,padding:"7px 10px",background:T.surfaceAlt,border:"1px solid "+T.border,borderRadius:7,color:T.textPrimary,fontSize:12,outline:"none"}}/>
+                              <button type="button" onClick={()=>mlNote(selectedLead.id)} disabled={noteLoading}
+                                style={{padding:"7px 12px",borderRadius:7,border:"none",background:"#D4A843",color:"#0A0E1A",fontSize:12,fontWeight:700,cursor:"pointer"}}>
+                                {noteLoading?"...":"Log"}
+                              </button>
+                            </div>
+
+                            {/* Timeline */}
+                            <div style={{position:"relative"}}>
+                              {/* Vertical line */}
+                              <div style={{position:"absolute",left:14,top:0,bottom:0,width:1,background:T.border}}/>
+
+                              {/* Lead created event */}
+                              <div style={{display:"flex",gap:12,marginBottom:16,position:"relative"}}>
+                                <div style={{width:28,height:28,borderRadius:"50%",background:"rgba(212,168,67,0.15)",border:"2px solid #D4A843",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,zIndex:1}}>
+                                  <div style={{width:7,height:7,borderRadius:"50%",background:"#D4A843"}}/>
+                                </div>
+                                <div style={{flex:1,paddingTop:4}}>
+                                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                                    <span style={{fontSize:12,fontWeight:700,color:"#D4A843"}}>Lead Created</span>
+                                    <span style={{fontSize:10,color:T.textMuted}}>{selectedLead.createdAt?new Date(selectedLead.createdAt).toLocaleDateString("en-AE",{day:"2-digit",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit"}):""}</span>
                                   </div>
-                                  <div style={{flex:1}}>
-                                    <div style={{display:"flex",justifyContent:"space-between",marginBottom:2}}>
-                                      <span style={{fontSize:11,fontWeight:700,color:c}}>{n.type||"Note"}</span>
-                                      <span style={{fontSize:10,color:T.textMuted}}>{n.at?new Date(n.at).toLocaleDateString("en-AE",{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"}):""}</span>
-                                    </div>
-                                    <div style={{fontSize:12,color:T.textPrimary}}>{n.text}</div>
-                                    <div style={{fontSize:10,color:T.textMuted,marginTop:2}}>{n.by||""}</div>
+                                  <div style={{fontSize:11,color:T.textMuted,marginTop:2}}>
+                                    Source: {selectedLead.source||"Manual"} · Budget: {selectedLead.budget?"AED "+(parseFloat(selectedLead.budget)*0.000001).toFixed(1)+"M":"—"}
                                   </div>
                                 </div>
-                              );
-                            })}
+                              </div>
+
+                              {/* Activity items */}
+                              {(selectedLead.notes_log||[]).length===0 && (
+                                <div style={{paddingLeft:40,fontSize:12,color:T.textMuted,paddingTop:8}}>No activities logged yet — use the form above to log a call, WhatsApp, or meeting.</div>
+                              )}
+
+                              {[...(selectedLead.notes_log||[])].sort((a,b)=>new Date(a.at||0)-new Date(b.at||0)).map((n,i)=>{
+                                const typeColors={"Call":"#10B981","WhatsApp":"#25D366","Email":"#3B82F6","Meeting":"#8B5CF6","Site Visit":"#F59E0B","Task":"#D4A843","Note":"#94A3B8","Status Change":"#14B8A6"};
+                                const typeIcons={"Call":"C","WhatsApp":"W","Email":"E","Meeting":"M","Site Visit":"S","Task":"T","Note":"N","Status Change":"ST"};
+                                const c=typeColors[n.type]||"#94A3B8";
+                                return (
+                                  <div key={i} style={{display:"flex",gap:12,marginBottom:14,position:"relative"}}>
+                                    <div style={{width:28,height:28,borderRadius:"50%",background:c+"18",border:"1px solid "+c+"50",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,zIndex:1,fontSize:8,fontWeight:700,color:c}}>
+                                      {typeIcons[n.type]||"N"}
+                                    </div>
+                                    <div style={{flex:1,background:T.surfaceAlt,borderRadius:8,padding:"9px 12px",border:"1px solid "+T.border}}>
+                                      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:3}}>
+                                        <span style={{fontSize:11,fontWeight:700,color:c}}>{n.type||"Note"}</span>
+                                        <span style={{fontSize:10,color:T.textMuted}}>{n.at?new Date(n.at).toLocaleDateString("en-AE",{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"}):""}</span>
+                                      </div>
+                                      <div style={{fontSize:12,color:T.textPrimary}}>{n.text}</div>
+                                      {n.due && <div style={{fontSize:10,color:"#D4A843",marginTop:3}}>Due: {n.due}</div>}
+                                      <div style={{fontSize:10,color:T.textMuted,marginTop:3}}>{n.by||""}</div>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
                           </div>
                         )}
 
