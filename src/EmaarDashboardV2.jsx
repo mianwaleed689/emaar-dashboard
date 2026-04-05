@@ -2593,6 +2593,7 @@ export default function EmaarDashboardV2() {
 
   /* ─── MY LEADS STATE (Session 4) ─── */
   const [myLeads, setMyLeads] = useState([]);
+  const [myLeadsLoading, setMyLeadsLoading] = useState(false);
 
   /* ─── DEAL PIPELINE STATE (Session 5) ─── */
   const [deals, setDeals] = useState([]);
