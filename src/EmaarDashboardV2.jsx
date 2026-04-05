@@ -15258,6 +15258,12 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
             async function mlNote(id){if(!noteText.trim())return;setNoteLoading(true);try{await updateDoc(doc(db,"leads",id),{notes_log:arrayUnion({text:noteText,type:noteType,by:auth.currentUser?.email||"",at:new Date().toISOString()}),updatedAt:new Date().toISOString()});setNoteText("");}catch(e){console.error(e);}setNoteLoading(false);}
             async function mlStatus(id,st){try{await updateDoc(doc(db,"leads",id),{status:st,updatedAt:new Date().toISOString()});if(selectedLead&&selectedLead.id===id)setSelectedLead({...selectedLead,status:st});}catch(e){console.error(e);}}
             function mlCSV(){const h=["Name","Phone","Email","Budget","Status","Source","Community","Type","Created"];const r=mlFiltered.map(l=>[l.name||"",l.phone||"",l.email||"",l.budget||"",l.status||"New",l.source||"",l.community||"",l.type||"Buy",l.createdAt?new Date(l.createdAt).toLocaleDateString("en-GB"):""].map(v=>csvEsc(v)));const c=[h.join(","),...r.map(x=>x.join(","))].join(String.fromCharCode(10));const b=new Blob([c],{type:"text/csv"});const u=URL.createObjectURL(b);const a=document.createElement("a");a.href=u;a.download="leads_"+new Date().toISOString().slice(0,10)+".csv";a.click();URL.revokeObjectURL(u);}
+            const mlExportCSV = mlCSV;
+            const mlSaveNewLead = mlSave;
+            const mlSaveNote = mlNote;
+            const mlScoreLead = mlScore;
+            const mlUpdateStatus = mlStatus;
+            const mlWaBase = mlWA;
             if (!mlCanSee) return (
               <div style={{ display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", height:400, gap:16 }}>
                 <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke={T.textMuted} strokeWidth="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
