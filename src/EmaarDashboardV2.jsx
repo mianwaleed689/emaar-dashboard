@@ -15436,14 +15436,17 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   });
                   if (stale.length===0) return null;
                   return (
-                    <div style={{ padding:"10px 16px",background:"rgba(239,68,68,0.08)",border:"1px solid rgba(239,68,68,0.2)",borderRadius:10,marginBottom:16,display:"flex",alignItems:"center",gap:12 }}>
-                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#EF4444" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                      <div style={{ flex:1,fontSize:12,color:"#EF4444",fontWeight:600 }}>
-                        {stale.length} lead{stale.length>1?"s":""} not updated in 7+ days — {stale.slice(0,3).map(l=>l.name||"Unnamed").join(", ")}{stale.length>3?"...":""}
+                    <div style={{ padding:"8px 14px",background:"rgba(239,68,68,0.06)",border:"1px solid rgba(239,68,68,0.15)",borderRadius:8,marginBottom:12,display:"flex",alignItems:"center",gap:10 }}>
+                      <div style={{ width:6,height:6,borderRadius:"50%",background:"#EF4444",flexShrink:0 }}/>
+                      <div style={{ flex:1,fontSize:11,color:"#EF4444",fontWeight:500 }}>
+                        {stale.filter(l=>l.name&&l.name.trim()).length > 0
+                          ? stale.filter(l=>l.name&&l.name.trim()).slice(0,2).map(l=>l.name).join(", ")+(stale.length>2?" + "+(stale.length-2)+" more":"")+" — not updated in 7+ days"
+                          : stale.length+" leads not updated in 7+ days"
+                        }
                       </div>
                       <button type="button" onClick={()=>setLeadSortBy("date")}
-                        style={{ padding:"4px 12px",background:"rgba(239,68,68,0.15)",border:"1px solid rgba(239,68,68,0.3)",borderRadius:6,color:"#EF4444",fontSize:11,fontWeight:700,cursor:"pointer" }}>
-                        View
+                        style={{ padding:"3px 10px",background:"transparent",border:"1px solid rgba(239,68,68,0.3)",borderRadius:5,color:"#EF4444",fontSize:10,fontWeight:600,cursor:"pointer" }}>
+                        Sort by date
                       </button>
                     </div>
                   );
@@ -15612,7 +15615,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
 
                 {/* ── LEAD LIST ── */}
                 <div style={{ background:T.card,border:"1px solid "+T.border,borderRadius:12,overflow:"hidden" }}>
-                  <div style={{ display:"grid",gridTemplateColumns:"minmax(200px,1fr) 55px 90px 100px 55px 110px 90px 80px",gap:8,padding:"10px 14px",background:T.surfaceAlt,borderBottom:"1px solid "+T.border }}>
+                  <div style={{ display:"grid",gridTemplateColumns:"minmax(180px,1fr) 60px 95px 130px 60px 110px 80px 90px",gap:8,padding:"10px 14px",background:T.surfaceAlt,borderBottom:"1px solid "+T.border }}>
                     {["Lead","Score","Status","Source","Type","Budget","Date","Actions"].map((h,i)=>(
                       <div key={i} style={{ fontSize:10,fontWeight:700,color:T.textMuted,textTransform:"uppercase",letterSpacing:0.6 }}>{h}</div>
                     ))}
@@ -15639,7 +15642,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                         onClick={()=>{setSelectedLead(l);setLeadDrawerTab("details");}}
                         onMouseEnter={e=>e.currentTarget.style.background="rgba(212,168,67,0.03)"}
                         onMouseLeave={e=>e.currentTarget.style.background="transparent"}
-                        style={{ display:"grid",gridTemplateColumns:"minmax(200px,1fr) 55px 90px 100px 55px 110px 90px 80px",gap:8,padding:"10px 14px",alignItems:"center",borderBottom:"1px solid "+T.border,cursor:"pointer",transition:"background 0.12s" }}>
+                        style={{ display:"grid",gridTemplateColumns:"minmax(180px,1fr) 60px 95px 130px 60px 110px 80px 90px",gap:8,padding:"10px 14px",alignItems:"center",borderBottom:"1px solid "+T.border,cursor:"pointer",transition:"background 0.12s" }}>
 
                         <div style={{ display:"flex",alignItems:"center",gap:10,minWidth:0 }}>
                           <div style={{ width:34,height:34,borderRadius:"50%",background:"rgba(212,168,67,0.12)",border:"1px solid rgba(212,168,67,0.2)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:700,color:"#D4A843",flexShrink:0,position:"relative" }}>
@@ -15669,7 +15672,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                         </div>
 
                         <div>
-                          <span style={{ display:"inline-block",padding:"3px 8px",borderRadius:5,fontSize:10,fontWeight:600,background:srcC+"20",color:srcC,whiteSpace:"nowrap" }}>{l.source||"Manual"}</span>
+                          <span style={{ display:"inline-block",padding:"3px 8px",borderRadius:5,fontSize:10,fontWeight:600,background:srcC+"20",color:srcC,whiteSpace:"nowrap",maxWidth:100,overflow:"hidden",textOverflow:"ellipsis" }}>{(l.source||"Manual").slice(0,20)}</span>
                         </div>
 
                         <div style={{ fontSize:11,color:T.textMuted }}>{l.type||"Buy"}</div>
