@@ -2691,18 +2691,13 @@ export default function EmaarDashboardV2() {
   const [dealForm, setDealForm] = useState({ leadName:"", leadPhone:"", project:"", community:"", type:"Off-Plan", unitNo:"", price:"", commission:"", commissionPct:"4", stage:"EOI", notes:"" });
   const [dealFormLoading, setDealFormLoading] = useState(false);
   const [pipelineType, setPipelineType] = useState("all"); // all | offplan | secondary
-  const [myLeadsLoading, setMyLeadsLoading] = useState(false);
   const [leadSearch, setLeadSearch] = useState("");
   const [leadStatusFilter, setLeadStatusFilter] = useState("all");
   const [leadSourceFilter, setLeadSourceFilter] = useState("all");
   const [leadSortBy, setLeadSortBy] = useState("score"); // score | date | budget
-  const [leadDrawerAITab, setLeadDrawerAITab] = useState(false);
   const [selectedLead, setSelectedLead] = useState(null);
   const [leadDrawerTab, setLeadDrawerTab] = useState("details");
-  const [leadNote, setLeadNote] = useState("");
-  const [leadNoteSaving, setLeadNoteSaving] = useState(false);
   const [showQuickCapture, setShowQuickCapture] = useState(false);
-  const [captureForm, setCaptureForm] = useState({ name:"", phone:"", email:"", budget:"", community:"", source:"Manual", notes:"" });
   const [captureLoading, setCaptureLoading] = useState(false);
   const [selectedCommunity, setSelectedCommunity] = useState(null);
   const [expandedMega, setExpandedMega] = useState(null);
@@ -2731,12 +2726,8 @@ export default function EmaarDashboardV2() {
 
   /* ─── V12 NEW STATE ─── */
   const [leadTagFilter, setLeadTagFilter] = useState("all");
-  const [leadAgentFilter, setLeadAgentFilter] = useState("all");
-  const [showLeadAnalytics, setShowLeadAnalytics] = useState(false);
   const [showTemplates, setShowTemplates] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState("");
-  const [leadDocUpload, setLeadDocUpload] = useState({});
-  const [leadDocUploading, setLeadDocUploading] = useState(false);
   const [tagInput, setTagInput] = useState("");
   const [showBrochure, setShowBrochure] = useState(false);
   const [brochureLoading, setBrochureLoading] = useState(false);
@@ -2744,9 +2735,7 @@ export default function EmaarDashboardV2() {
 
   const [leadBudgetFilter, setLeadBudgetFilter] = useState("all");
   const [leadTypeFilter, setLeadTypeFilter] = useState("all");
-  const [leadPurposeFilter, setLeadPurposeFilter] = useState("all");
   const [leadNatFilter, setLeadNatFilter] = useState("all");
-  const [leadDateFilter, setLeadDateFilter] = useState("all");
 
 
   /* ─── MY LEADS ADDITIONAL STATE ─── */
@@ -2770,6 +2759,11 @@ export default function EmaarDashboardV2() {
   const [leadAddType, setLeadAddType] = useState("Buy");
   const [leadAddComm, setLeadAddComm] = useState("");
   const [leadAddSaving, setLeadAddSaving] = useState(false);
+  const [noteText, setNoteText] = useState("");
+  const [noteType, setNoteType] = useState("Call");
+  const [noteLoading, setNoteLoading] = useState(false);
+  const [taskText, setTaskText] = useState("");
+  const [taskDue, setTaskDue] = useState("");
 
 
   /* ─── COMPETITORS TAB STATE ─── */
