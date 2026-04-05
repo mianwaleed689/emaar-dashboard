@@ -31,7 +31,7 @@ const getLinkDomain = (url) => {
 /* \u2500\u2500\u2500 HANDOVER COUNTDOWN \u2500\u2500\u2500 */
 const getHandoverCountdown = (handover) => {
   if (!handover) return null;
-  const match = handover.match(new RegExp("Q([1-4])\\s+(\\d{4})"));
+  const match = handover.match(/Q([1-4])\s+(\d{4})/);
   if (!match) return null;
   const q = parseInt(match[1]);
   const year = parseInt(match[2]);
@@ -320,6 +320,24 @@ const GlobalContextFilter = ({
   };
 
   const activeSelStyle = { ...selStyle, borderColor: `rgba(212,168,67,0.5)`, color: T.gold };
+
+
+  const mlIsAgent=orgRole==="agent";
+  const mlIsManager=orgRole==="manager";
+  const mlIsSuperAdmin=userRole==="admin"||userRole==="superAdmin";
+  const mlCanSee=mlIsAgent||mlIsManager||mlIsSuperAdmin;
+  const mlAllLeads=mlIsSuperAdmin?liveLeads:(mlIsAgent||mlIsManager)?myLeads:liveLeads.filter(l=>!auth.currentUser?.uid||l.userId===auth.currentUser.uid);
+  const ML_ST={"New":{color:"#3B82F6",bg:"rgba(59,130,246,0.12)",label:"New"},"Contacted":{color:"#F59E0B",bg:"rgba(245,158,11,0.12)",label:"Contacted"},"Viewing":{color:"#8B5CF6",bg:"rgba(139,92,246,0.12)",label:"Viewing"},"Offer":{color:"#14B8A6",bg:"rgba(20,184,166,0.12)",label:"Offer"},"Won":{color:"#10B981",bg:"rgba(16,185,129,0.12)",label:"Won"},"Lost":{color:"#EF4444",bg:"rgba(239,68,68,0.12)",label:"Lost"}};
+  const ML_SRC={"Property Finder":"#00C08B","Bayut":"#FF6B35","Dubizzle":"#E8003D","Meta/Facebook":"#1877F2","Instagram":"#E1306C","WhatsApp":"#25D366","Google Ads":"#4285F4","Referral":"#8B5CF6","Website":"#14B8A6","Manual":"#94A3B8"};
+  function mlScore(l){let s=0;const b=parseFloat(l.budget||0);if(l.phone&&l.email)s+=25;else if(l.phone||l.email)s+=10;if(b>=5000000)s+=20;else if(b>=2000000)s+=15;else if(b>=1000000)s+=10;const d=(Date.now()-new Date(l.createdAt||Date.now()).getTime())*0.000000011574;if(d<1)s+=20;else if(d<3)s+=15;else if(d<7)s+=10;const n=(l.notes_log||[]).length;if(n>=3)s+=10;else if(n>=1)s+=5;return{score:s,color:s>=70?"#10B981":s>=40?T.gold:"#EF4444",label:s>=70?"Hot":s>=40?"Warm":"Cold"};}
+  const mlFiltered=(()=>{let a=mlAllLeads||[];if(leadStatusFilter!=="all")a=a.filter(l=>(l.status||"New")===leadStatusFilter);if(leadSourceFilter!=="all")a=a.filter(l=>l.source===leadSourceFilter);if(leadBudgetFilter!=="all")a=a.filter(l=>{const b=parseFloat(l.budget||0);if(leadBudgetFilter==="under1m")return b<1000000;if(leadBudgetFilter==="1to2m")return b>=1000000&&b<2000000;if(leadBudgetFilter==="2to5m")return b>=2000000&&b<5000000;if(leadBudgetFilter==="above5m")return b>=5000000;return true;});if(leadTypeFilter!=="all")a=a.filter(l=>(l.type||"Buy")===leadTypeFilter);if(leadSearch.trim()){const q=leadSearch.trim().toLowerCase();a=a.filter(l=>(l.name||"").toLowerCase().includes(q)||(l.phone||"").includes(q)||(l.email||"").toLowerCase().includes(q));}if(leadSortBy==="score")a=[...a].sort((a,b)=>mlScore(b).score-mlScore(a).score);else if(leadSortBy==="budget")a=[...a].sort((a,b)=>parseFloat(b.budget||0)-parseFloat(a.budget||0));else a=[...a].sort((a,b)=>new Date(b.createdAt||0)-new Date(a.createdAt||0));return a;})();
+  const mlTotalVal=(mlAllLeads||[]).reduce((s,l)=>s+parseFloat(l.budget||0),0);
+  const mlNewToday=(mlAllLeads||[]).filter(l=>{const d=new Date(l.createdAt||0),n=new Date();return d.getDate()===n.getDate()&&d.getMonth()===n.getMonth();}).length;
+  const mlWA="https://wa.me/";
+  async function mlSave(){if(!leadAddName)return;if(!leadAddPhone)return;setLeadAddSaving(true);try{await addDoc(collection(db,"leads"),{name:leadAddName,phone:leadAddPhone,email:leadAddEmail,budget:parseFloat(leadAddBudget)||0,source:leadAddSource,status:leadAddStatus,type:leadAddType,community:leadAddComm,userId:auth.currentUser?.uid||"",assignedTo:auth.currentUser?.uid||"",orgId:orgId||"",createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),notes_log:[]});setLeadAddName("");setLeadAddPhone("");setLeadAddEmail("");setLeadAddBudget("");setLeadAddComm("");setLeadAddSource("Manual");setLeadAddStatus("New");setLeadAddType("Buy");setLeadShowAdd(false);}catch(e){console.error(e);}setLeadAddSaving(false);}
+  async function mlNote(id){if(!noteText.trim())return;setNoteLoading(true);try{await updateDoc(doc(db,"leads",id),{notes_log:arrayUnion({text:noteText,type:noteType,by:auth.currentUser?.email||"",at:new Date().toISOString()}),updatedAt:new Date().toISOString()});setNoteText("");}catch(e){console.error(e);}setNoteLoading(false);}
+  async function mlStatus(id,st){try{await updateDoc(doc(db,"leads",id),{status:st,updatedAt:new Date().toISOString()});if(selectedLead&&selectedLead.id===id)setSelectedLead({...selectedLead,status:st});}catch(e){console.error(e);}}
+  function mlCSV(){const h=["Name","Phone","Email","Budget","Status","Source","Community","Type","Created"];const r=mlFiltered.map(l=>[l.name||"",l.phone||"",l.email||"",l.budget||"",l.status||"New",l.source||"",l.community||"",l.type||"Buy",l.createdAt?new Date(l.createdAt).toLocaleDateString("en-GB"):""].map(v=>csvEsc(v)));const c=[h.join(","),...r.map(x=>x.join(","))].join(String.fromCharCode(10));const b=new Blob([c],{type:"text/csv"});const u=URL.createObjectURL(b);const a=document.createElement("a");a.href=u;a.download="leads_"+new Date().toISOString().slice(0,10)+".csv";a.click();URL.revokeObjectURL(u);}
 
   return (
     <div style={{
@@ -15240,1559 +15258,531 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
           {/* \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
               MY LEADS TAB \u2014 Session 4 \u2014 Agent CRM Inbox
           \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 */}
-          {tab === "My Leads" && (() => {
-            const isAgent      = orgRole === "agent";
-            const isManager    = orgRole === "manager";
-            const isSuperAdmin = userRole === "admin" || userRole === "superAdmin";
-            const canSeeleads  = isAgent || isManager || isSuperAdmin;
-            /* \u2500\u2500 Merge myLeads with liveLeads \u2014 superadmin sees ALL \u2500\u2500 */
-            const allLeads = isSuperAdmin
-              ? liveLeads  /* superadmin sees every lead in the platform */
-              : isAgent || isManager
-                ? myLeads  /* agents/managers see their org leads */
-                : liveLeads.filter(l =>
-                    !auth.currentUser?.uid || l.userId === auth.currentUser.uid
-                  );
-            /* Use allLeads as fallback source for mortgage leads etc \u2500\u2500 */
-            const mortgageLeads = liveLeads.filter(l => l.type === "mortgage");
-            if (!canSeeleads) return (
-              <div style={{ display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", padding:"80px 20px", textAlign:"center" }}>
-                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke={T.textMuted} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginBottom:16 }}><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                <div style={{ fontSize:16, fontWeight:700, color:T.textPrimary, marginBottom:6 }}>Leads not enabled for your account</div>
-                <div style={{ fontSize:12, color:T.textMuted }}>Contact your agency manager to get assigned leads</div>
+{tab === "My Leads" && (() => {
+            if (!mlCanSee) return (
+              <div style={{ display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", height:400, gap:16 }}>
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke={T.textMuted} strokeWidth="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                <div style={{ fontSize:16, fontWeight:700, color:T.textPrimary }}>Leads not enabled for your role</div>
+                <div style={{ fontSize:12, color:T.textMuted }}>Contact your agency manager to get access</div>
               </div>
             );
+            return (
+              <div style={{ padding:"0 0 40px" }}>
 
-            // Status config
-            const STATUSES = {
-              "New":        { color:"#3B82F6", bg:"rgba(59,130,246,0.12)",  label:"New"       },
-              "Contacted":  { color:"#F59E0B", bg:"rgba(245,158,11,0.12)",  label:"Contacted" },
-              "Viewing":    { color:"#8B5CF6", bg:"rgba(139,92,246,0.12)",  label:"Viewing"   },
-              "Offer":      { color:"#14B8A6", bg:"rgba(20,184,166,0.12)",  label:"Offer"     },
-              "Won":        { color:"#10B981", bg:"rgba(16,185,129,0.12)",  label:"Won"       },
-              "Lost":       { color:"#EF4444", bg:"rgba(239,68,68,0.12)",   label:"Lost"      },
-            };
-
-            // Source config
-            const SOURCES = {
-              "Property Finder": "#00C08B",
-              "Bayut":           "#FF6B35",
-              "Dubizzle":        "#E8003D",
-              "Meta/Facebook":   "#1877F2",
-              "Instagram":       "#E1306C",
-              "WhatsApp":        "#25D366",
-              "Google Ads":      "#4285F4",
-              "Referral":        "#8B5CF6",
-              "Website":         "#14B8A6",
-              "Manual":          "#94A3B8",
-            };
-
-            // Filter
-            /* \u2500\u2500 Save new lead \u2500\u2500 */
-            const saveNewLead = async () => {
-              if (!leadAddName || !leadAddPhone) return;
-              setLeadAddSaving(true);
-              try {
-                await addDoc(collection(db, "leads"), {
-                  name: leadAddName,
-                  phone: leadAddPhone,
-                  email: leadAddEmail,
-                  budget: parseFloat(leadAddBudget) || 0,
-                  source: leadAddSource,
-                  status: leadAddStatus,
-                  type: leadAddType,
-                  community: leadAddComm,
-                  userId: auth.currentUser?.uid || "",
-                  assignedTo: auth.currentUser?.uid || "",
-                  orgId: orgId || "",
-                  createdAt: new Date().toISOString(),
-                  updatedAt: new Date().toISOString(),
-                  notes_log: [],
-                });
-                setLeadAddName(""); setLeadAddPhone(""); setLeadAddEmail("");
-                setLeadAddBudget(""); setLeadAddComm("");
-                setLeadAddSource("Manual"); setLeadAddStatus("New"); setLeadAddType("Buy");
-                setLeadShowAdd(false);
-              } catch(e) { console.error(e); }
-              setLeadAddSaving(false);
-            };
-
-            const displayLeads = isSuperAdmin ? allLeads : myLeads;
-            const filtered = displayLeads.filter(l => {
-              if (leadStatusFilter !== "all" && (l.status||"New") !== leadStatusFilter) return false;
-              if (leadSourceFilter !== "all" && l.source !== leadSourceFilter) return false;
-              if (leadNatFilter !== "all" && (l.nationality||"") !== leadNatFilter) return false;
-              if (leadTypeFilter !== "all" && (l.type||"") !== leadTypeFilter) return false;
-              if (leadPurposeFilter !== "all" && (l.purpose||l.type||"") !== leadPurposeFilter) return false;
-              if (leadBudgetFilter !== "all") {
-                const b = parseFloat(l.budget||0);
-                if (leadBudgetFilter === "u1m"  && b >= 1000000)  return false;
-                if (leadBudgetFilter === "1-3m"  && (b < 1000000 || b >= 3000000))  return false;
-                if (leadBudgetFilter === "3-5m"  && (b < 3000000 || b >= 5000000))  return false;
-                if (leadBudgetFilter === "5-10m" && (b < 5000000 || b >= 10000000)) return false;
-                if (leadBudgetFilter === "10m+"  && b < 10000000) return false;
-              }
-              if (leadDateFilter !== "all") {
-                const created = new Date(l.createdAt||Date.now());
-                const now = new Date();
-                if (leadDateFilter === "today" && created < new Date(now.setHours(0,0,0,0))) return false;
-                if (leadDateFilter === "week") { const w = new Date(); w.setDate(w.getDate()-7); if (created < w) return false; }
-                if (leadDateFilter === "month") { const m = new Date(); m.setDate(m.getDate()-30); if (created < m) return false; }
-              }
-              if (leadAgentFilter !== "all" && (l.assignedTo||"") !== leadAgentFilter) return false;
-              if (leadTagFilter !== "all" && !(l.tags||[]).includes(leadTagFilter)) return false;
-              if (leadSearch.trim()) {
-                const q = leadSearch.toLowerCase();
-                if (!(l.name||"").toLowerCase().includes(q) &&
-                    !(l.phone||"").includes(q) &&
-                    !(l.email||"").toLowerCase().includes(q) &&
-                    !(l.community||"").toLowerCase().includes(q) &&
-                    !(l.nationality||"").toLowerCase().includes(q)) return false;
-              }
-              return true;
-            }).sort((a,b) => {
-              if (leadSortBy === "score")  return (scoreLeadAI(b).score) - (scoreLeadAI(a).score);
-              if (leadSortBy === "budget") return (parseFloat(b.budget||0)) - (parseFloat(a.budget||0));
-              if (leadSortBy === "name")   return (a.name||"").localeCompare(b.name||"");
-              return new Date(b.createdAt||0) - new Date(a.createdAt||0); // default: newest first
-            });
-
-            const totalVal = myLeads.reduce((a,l) => a + (parseFloat(l.budget)||0), 0);
-            const newToday = myLeads.filter(l => new Date(l.createdAt) >= new Date(new Date().setHours(0,0,0,0))).length;
-
-            // Save note helper
-            /* \u2500\u2500\u2500 AI LEAD SCORING ENGINE (Session 13) \u2500\u2500\u2500 */
-            const scoreLeadAI = (l) => {
-              if (l.status === "Won") return { score:100, grade:"A+", color:"#10B981", label:"Converted" };
-              if (l.status === "Lost") return { score:0, grade:"D", color:T.red, label:"Lost" };
-              let s = 0;
-              const reasons = [];
-
-              // Contact completeness (25 pts)
-              if (l.phone && l.email) { s += 25; reasons.push("Full contact info"); }
-              else if (l.phone || l.email) { s += 12; }
-
-              // Budget quality (20 pts)
-              const budget = parseFloat(l.budget) || 0;
-              if (budget >= 5000000) { s += 20; reasons.push("Luxury budget AED 5M+"); }
-              else if (budget >= 2000000) { s += 16; reasons.push("Golden Visa eligible"); }
-              else if (budget >= 1000000) { s += 10; }
-              else if (budget > 0) { s += 5; }
-
-              // Source quality (15 pts)
-              const srcScores = { "Property Finder":15, "Bayut":14, "Dubizzle":12, "Referral":15, "WhatsApp":10, "Meta/Facebook":8, "Instagram":7, "Google Ads":9, "Website":10, "Manual":5, "Cold Call":3, "Email":6 };
-              s += srcScores[l.source] || 5;
-
-              // Recency (20 pts)
-              const ageDays = (Date.now() - new Date(l.createdAt||Date.now())) / 86400000;
-              if (ageDays < 1)  { s += 20; reasons.push("New today"); }
-              else if (ageDays < 3)  { s += 15; reasons.push("New this week"); }
-              else if (ageDays < 7)  { s += 10; }
-              else if (ageDays < 14) { s += 5; }
-
-              // Activity (10 pts)
-              const notesCount = (l.notes_log||[]).length;
-              if (notesCount >= 3) { s += 10; reasons.push("Actively engaged"); }
-              else if (notesCount >= 1) { s += 5; }
-
-              // Status progression (10 pts)
-              const statusScore = { New:0, Contacted:5, Viewing:8, Offer:10, Won:10, Lost:0 };
-              s += statusScore[l.status||"New"] || 0;
-
-              // Community/project match (bonus)
-              if (l.community && l.project) s = Math.min(100, s + 5);
-
-              s = Math.min(100, Math.max(0, s));
-              const grade = s >= 80 ? "A" : s >= 60 ? "B" : s >= 40 ? "C" : "D";
-              const color = s >= 80 ? "#10B981" : s >= 60 ? T.gold : s >= 40 ? "#F59E0B" : T.red;
-              const label = s >= 80 ? "Hot" : s >= 60 ? "Warm" : s >= 40 ? "Nurture" : "Cold";
-              return { score:s, grade, color, label, reasons };
-            };
-
-            // Best follow-up time logic
-            const getFollowUpTime = (l) => {
-              const srcTimes = {
-                "Property Finder": "Evening 6\u20139pm (browse after work)",
-                "Bayut":           "Evening 7\u20139pm",
-                "Dubizzle":        "Afternoon 2\u20135pm",
-                "WhatsApp":        "Morning 9\u201311am or Evening 7\u20139pm",
-                "Meta/Facebook":   "Evening 6\u201310pm (social hours)",
-                "Instagram":       "Evening 7\u201310pm",
-                "Referral":        "Any time \u2014 warm lead, call directly",
-                "Google Ads":      "Afternoon 1\u20134pm (active intent)",
-                "Website":         "Business hours 10am\u20136pm",
-              };
-              return srcTimes[l.source] || "Business hours 10am\u20136pm";
-            };
-
-            // Property matching engine
-            const matchProperties = (l) => {
-              const budget = parseFloat(l.budget) || 0;
-              const beds   = parseInt(l.beds) || 0;
-              const comm   = (l.community||"").toLowerCase();
-
-              // Match from listings
-              const listingMatches = listings
-                .filter(li => {
-                  if (li.status !== "Available") return false;
-                  if (budget > 0 && parseFloat(li.price) > budget * 1.15) return false;
-                  if (budget > 0 && parseFloat(li.price) < budget * 0.6)  return false;
-                  if (beds > 0 && parseInt(li.beds) !== beds) return false;
-                  return true;
-                })
-                .slice(0, 3)
-                .map(li => ({ name: li.title||`${li.beds}BR ${li.type}`, price: li.price, community: li.community, type:"listing", source:"Your Listings" }));
-
-              // Match from active projects (from data)
-              const projMatches = activeProjects
-                ? activeProjects
-                    .filter(p => {
-                      if (budget > 0 && p.price && parseFloat(p.price) > budget * 1.2) return false;
-                      if (comm && p.community && !p.community.toLowerCase().includes(comm) && !comm.includes(p.community.toLowerCase())) return false;
-                      return p.status !== "Sold Out";
-                    })
-                    .slice(0, 3)
-                    .map(p => ({ name: p.name, price: p.price, community: p.community||p.district, type:"project", source:"Active Projects" }))
-                : [];
-
-              return [...listingMatches, ...projMatches].slice(0, 5);
-            };
-
-            const saveNote = async (leadId) => {
-              if (!leadNote.trim()) return;
-              setLeadNoteSaving(true);
-              try {
-                const entry = { text: leadNote.trim(), by: userName || firebaseUser?.email, at: new Date().toISOString() };
-                const prev = selectedLead?.notes_log || [];
-                await setDoc(doc(db, "leads", leadId), { notes_log: [entry, ...prev], updatedAt: new Date().toISOString() }, { merge: true });
-                setSelectedLead(l => l ? { ...l, notes_log: [entry, ...(l.notes_log||[])] } : l);
-                setLeadNote("");
-              } catch(e) { console.error(e); }
-              setLeadNoteSaving(false);
-            };
-
-            // Update status helper
-            const updateLeadStatus = async (leadId, status) => {
-              await setDoc(doc(db, "leads", leadId), { status, updatedAt: new Date().toISOString() }, { merge: true });
-              setMyLeads(prev => prev.map(l => l.id === leadId ? {...l, status} : l));
-              if (selectedLead?.id === leadId) setSelectedLead(l => l ? {...l, status} : l);
-            };
-
-            // Quick capture submit
-            const submitCapture = async () => {
-              if (!captureForm.name && !captureForm.phone) { return; }
-              setCaptureLoading(true);
-              try {
-                const id = "lead_" + Date.now();
-                await setDoc(doc(db, "leads", id), {
-                  ...captureForm,
-                  assignedTo: firebaseUser?.uid,
-                  assignedName: userName || firebaseUser?.email,
-                  orgId: orgId || null,
-                  status: "New",
-                  createdAt: new Date().toISOString(),
-                  updatedAt: new Date().toISOString(),
-                });
-                setCaptureForm({ name:"", phone:"", email:"", budget:"", community:"", source:"Manual", notes:"" });
-                setShowQuickCapture(false);
-              } catch(e) { console.error(e); }
-              setCaptureLoading(false);
-            };
-
-            // \u2500\u2500 CSV Parser (Session 16) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
-            const handleCsvFile = (file) => {
-              const reader = new FileReader();
-              reader.onload = (e) => {
-                const text = e.target.result;
-                const lines = text.split(/\n/).map(l => l.replace(/\r$/,"")).filter(l => l.trim());
-                if (lines.length < 2) return;
-                const headers = lines[0].split(',').map(h => h.trim().replace(/^[\x22]/,'').replace(/[\x22]$/,''));
-                const rows = lines.slice(1).map(line => {
-                  const vals = line.split(',').map(v => v.trim().replace(/^[\x22]/,'').replace(/[\x22]$/,''));
-                  const obj = {};
-                  headers.forEach((h,i) => { obj[h] = vals[i]||""; });
-                  return obj;
-                }).filter(r => Object.values(r).some(v => v));
-                setImportHeaders(headers);
-                setImportRawRows(rows);
-                // Auto-map common column names
-                const autoMap = {};
-                const fieldMap = { name:['name','full name','client name','contact name'], phone:['phone','mobile','tel','telephone','phone number'], email:['email','email address'], budget:['budget','price','amount'], community:['community','area','location','project'], source:['source','lead source'], status:['status','stage'], notes:['notes','comments','remarks'], nationality:['nationality','country'], beds:['beds','bedrooms','br'] };
-                headers.forEach(h => {
-                  const hl = h.toLowerCase().trim();
-                  Object.entries(fieldMap).forEach(([field, aliases]) => {
-                    if (!autoMap[field] && aliases.some(a => hl.includes(a))) autoMap[field] = h;
-                  });
-                });
-                setImportMapping(autoMap);
-                setImportStep(2);
-              };
-              reader.readAsText(file);
-            };
-
-            // \u2500\u2500 Pre-computed analytics (moved out of JSX to avoid Rolldown regex confusion) \u2500\u2500
-            const srcAnalytics = (() => {
-              const sources = {};
-              const totalLeads = displayLeads.length;
-              displayLeads.forEach(l => {
-                const src = l.source || "Unknown";
-                if (!sources[src]) sources[src] = {total:0, won:0, contacted:0, budget:0};
-                sources[src].total++;
-                if (l.status === "Won") sources[src].won++;
-                if (l.status !== "New") sources[src].contacted++;
-                sources[src].budget += parseFloat(l.budget||0);
-              });
-              const rawArr = Object.entries(sources).sort((a,b)=>b[1].total-a[1].total);
-              const safeTotal = totalLeads > 0 ? totalLeads : 1;
-              const enriched = rawArr.map(([src, d]) => {
-                const tot = d.total > 0 ? d.total : 1;
-                const convRate = Math.round(d.won * 100 / tot);
-                const contactRate = Math.round(d.contacted * 100 / tot);
-                const avgBudget = Math.round(d.budget / tot);
-                const barW = Math.round(d.total * 100 / safeTotal);
-                const avgBudgetStr = avgBudget >= 1000000 ? (avgBudget * 0.000001).toFixed(1)+"M" : avgBudget > 0 ? Math.round(avgBudget * 0.001)+"K" : "\u2014";
-                return [src, d, convRate, contactRate, avgBudgetStr, barW];
-              });
-              return { totalLeads, srcArr: enriched };
-            })();
-            const { totalLeads: anaTotal, srcArr } = srcAnalytics;
-
-                        return (<>
-              {/* \u2500\u2500 Header \u2500\u2500 */}
-              <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:20, flexWrap:"wrap", gap:12 }}>
-                <div>
-                  <h1 style={{ fontFamily:"'Fraunces',serif", fontSize:22, fontWeight:900, color:T.white, margin:0 }}>
-                    {isManager ? "Team Leads" : "My Leads"}
-                  </h1>
-                  <p style={{ fontSize:12, color:T.textMuted, margin:"4px 0 0" }}>
-                    {isManager ? `All leads in your organisation` : `Leads assigned to you`}
-                  </p>
-                </div>
-                <div style={{ display:"flex", gap:8 }}>
-                  {isManager && (
-                    <button type="button" onClick={() => { setShowBulkImport(true); setImportStep(1); setImportRawRows([]); setImportHeaders([]); setImportMapping({}); setImportPreview([]); setImportDone({imported:0,dupes:0,errors:0}); }}
-                      style={{ display:"flex", alignItems:"center", gap:8, padding:"10px 18px", borderRadius:9, border:`1px solid ${T.border}`, background:T.surfaceAlt, color:T.textSecondary, fontSize:12, fontWeight:700, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                      Import CSV
-                    </button>
-                  )}
-                  <button type="button" onClick={() => setShowQuickCapture(true)}
-                    style={{ display:"flex", alignItems:"center", gap:8, padding:"10px 20px", borderRadius:9, border:`1px solid ${T.gold}`, background:"rgba(212,168,67,0.1)", color:T.gold, fontSize:12, fontWeight:700, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                    Capture Lead
-                  </button>
-                </div>
-              </div>
-
-              {/* \u2500\u2500 KPI Bar \u2500\u2500 */}
-              <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:10, marginBottom:20 }}>
-                            {/* \u2500\u2500 Mortgage leads banner (from Banking tab) \u2500\u2500 */}
-            {mortgageLeads.length > 0 && (
-              <div style={{ padding:"10px 16px", background:"rgba(212,168,67,0.08)", border:"1px solid rgba(212,168,67,0.2)", borderRadius:10, marginBottom:12, display:"flex", gap:12, alignItems:"center" }}>
-                <div style={{ fontFamily:"'Fraunces',serif", fontSize:18, fontWeight:800, color:T.gold }}>{mortgageLeads.length}</div>
-                <div>
-                  <div style={{ fontSize:12, fontWeight:700, color:T.white }}>Mortgage Leads from Banking tab</div>
-                  <div style={{ fontSize:11, color:T.textMuted }}>Buyers who requested mortgage quotes \u2014 ready to convert</div>
-                </div>
-                <button type="button" onClick={()=>handleTabChange("Banking")}
-                  style={{ marginLeft:"auto", padding:"5px 12px", background:"rgba(212,168,67,0.15)", border:"1px solid rgba(212,168,67,0.3)", borderRadius:6, color:T.gold, fontSize:11, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>
-                  View Banking \u2192
-                </button>
-              </div>
-            )}
-            {[
-                  { label:"Total Leads",  value:displayLeads.length,                                  color:T.gold,  icon:<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg> },
-                  { label:"New Today",    value:newToday,                                         color:T.teal,  icon:<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> },
-                  { label:"In Progress",  value:displayLeads.filter(l=>["Contacted","Viewing","Offer"].includes(l.status)).length, color:"#8B5CF6", icon:<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg> },
-                  { label:"Pipeline Value", value:`AED ${totalVal >= 1e6 ? (totalVal*0.000001).toFixed(1)+"M" : totalVal.toLocaleString()}`, color:T.green, icon:<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg> },
-                ].map((k,i) => (
-                  <div key={i} style={{ background:T.card, border:`1px solid ${T.border}`, borderRadius:12, padding:"14px 16px", position:"relative", overflow:"hidden" }}>
-                    <div style={{ position:"absolute", top:0, left:0, right:0, height:2, background:`linear-gradient(90deg,${k.color},${k.color}30)` }}/>
-                    <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:8 }}>
-                      <div style={{ fontSize:10, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.8 }}>{k.label}</div>
-                      <div style={{ color:k.color, opacity:0.6 }}>{k.icon}</div>
-                    </div>
-                    <div style={{ fontSize:24, fontWeight:900, color:k.color, fontFamily:"'Fraunces',serif", lineHeight:1 }}>{k.value}</div>
+                {/* ── HEADER ── */}
+                <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:20, flexWrap:"wrap", gap:12 }}>
+                  <div>
+                    <h1 style={{ fontFamily:"'Fraunces',serif", fontSize:22, fontWeight:900, color:T.white, margin:0 }}>
+                      {mlIsManager ? "Team Leads" : "My Leads"}
+                    </h1>
+                    <p style={{ fontSize:12, color:T.textMuted, margin:"4px 0 0" }}>
+                      {mlIsManager ? "All leads in your organisation" : "Leads assigned to you — AI scored, WhatsApp ready"}
+                    </p>
                   </div>
-                ))}
-              </div>
+                  <div style={{ display:"flex", gap:8 }}>
+                    <button type="button" onClick={mlExportCSV}
+                      style={{ display:"flex", alignItems:"center", gap:6, padding:"9px 16px", borderRadius:9, border:"1px solid "+T.border, background:"transparent", color:T.textSecondary, fontSize:12, fontWeight:600, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                      Export CSV
+                    </button>
+                    <button type="button" onClick={() => setShowQuickCapture(true)}
+                      style={{ display:"flex", alignItems:"center", gap:8, padding:"9px 20px", borderRadius:9, border:"none", background:"linear-gradient(135deg,"+T.gold+",#B8902E)", color:"#0A0E1A", fontSize:13, fontWeight:700, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                      Quick Capture
+                    </button>
+                  </div>
+                </div>
 
-                            {/* \u2500\u2500 Smart Lists \u2500\u2500 */}
-              {(() => {
-                const smartLists = [
-                  { label:"\uD83D\uDD25 Hot Leads",    count: displayLeads.filter(l=>scoreLeadAI(l).score>=70).length },
-                  { label:"\uD83C\uDFC5 GV Eligible",  count: displayLeads.filter(l=>parseFloat(l.budget||0)>=2000000).length },
-                  { label:"\u26A0\uFE0F Stale 7d+",    count: displayLeads.filter(l=>{ if(l.status==="Won"||l.status==="Lost") return false; return Date.now()-new Date(l.updatedAt||l.createdAt||Date.now()).getTime()>604800000; }).length },
-                  { label:"\uD83D\uDCB0 AED 5M+",      count: displayLeads.filter(l=>parseFloat(l.budget||0)>=5000000).length },
-                  { label:"\uD83C\uDDEE\uD83C\uDDF3 Indian",       count: displayLeads.filter(l=>l.nationality==="Indian").length },
-                  { label:"\uD83C\uDDF7\uD83C\uDDFA Russian",      count: displayLeads.filter(l=>l.nationality==="Russian").length },
-                  { label:"\uD83C\uDFD7 Off-Plan",     count: displayLeads.filter(l=>(l.type||"")==="Off-Plan").length },
-                  { label:"\uD83C\uDD95 Today",         count: displayLeads.filter(l=>new Date(l.createdAt)>=new Date(new Date().setHours(0,0,0,0))).length },
-                ];
-                return (
-                  <div style={{ marginBottom:12 }}>
-                    <div style={{ fontSize:10, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.8, marginBottom:6 }}>Smart Lists</div>
-                    <div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>
-                      {smartLists.filter(sl=>sl.count>0).map((sl,i) => (
-                        <button key={i} type="button"
-                          style={{ padding:"4px 12px", borderRadius:20, border:`1px solid ${T.border}`, background:T.surfaceAlt, color:T.textSecondary, fontSize:11, cursor:"pointer", fontFamily:"'Outfit',sans-serif", display:"flex", alignItems:"center", gap:5 }}>
-                          {sl.label}
-                          <span style={{ padding:"1px 6px", borderRadius:10, background:"rgba(212,168,67,0.15)", color:T.gold, fontSize:10, fontWeight:700 }}>{sl.count}</span>
-                        </button>
+                {/* ── KPI CARDS ── */}
+                {(() => {
+                  const kpis = [
+                    { label:"Total Leads",    value:String((mlAllLeads||[]).length),  color:T.gold  },
+                    { label:"New Today",       value:String(mlNewToday),               color:T.teal  },
+                    { label:"In Progress",     value:String((mlAllLeads||[]).filter(l=>["Contacted","Viewing","Offer"].includes(l.status||"New")).length), color:"#8B5CF6" },
+                    { label:"Pipeline Value",  value:"AED "+(mlTotalVal>=1e6?(mlTotalVal*0.000001).toFixed(1)+"M":mlTotalVal.toLocaleString()), color:"#10B981" },
+                  ];
+                  return (
+                    <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:10, marginBottom:20 }}>
+                      {kpis.map((k,i) => (
+                        <div key={i} style={{ background:T.card, border:"1px solid "+T.border, borderRadius:12, padding:"14px 16px", position:"relative", overflow:"hidden" }}>
+                          <div style={{ position:"absolute", top:0, left:0, right:0, height:2, background:k.color, opacity:0.7 }}/>
+                          <div style={{ fontSize:10, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.8, marginBottom:6 }}>{k.label}</div>
+                          <div style={{ fontSize:22, fontWeight:900, color:k.color, fontFamily:"'Fraunces',serif" }}>{k.value}</div>
+                        </div>
                       ))}
                     </div>
-                  </div>
-                );
-              })()}
+                  );
+                })()}
 
-              {/* \u2500\u2500 Auto Follow-up Alert \u2500\u2500 */}
-              {(() => {
-                const stale = displayLeads.filter(l => {
-                  if (l.status === "Won" || l.status === "Lost") return false;
-                  return Date.now() - new Date(l.updatedAt||l.createdAt||Date.now()).getTime() > 604800000;
-                });
-                if (stale.length === 0) return null;
-                return (
-                  <div style={{ padding:"10px 16px", background:"rgba(239,68,68,0.08)", border:"1px solid rgba(239,68,68,0.25)", borderRadius:10, marginBottom:12, display:"flex", alignItems:"center", gap:12 }}>
-                    <span style={{ fontSize:18 }}>\u26A0\uFE0F</span>
-                    <div style={{ flex:1 }}>
-                      <div style={{ fontSize:12, fontWeight:700, color:"#EF4444" }}>{stale.length} lead{stale.length>1?"s":""}  not contacted in 7+ days</div>
-                      <div style={{ fontSize:11, color:T.textMuted, marginTop:2 }}>{stale.slice(0,3).map(l=>l.name||"Unnamed").join(", ")}{stale.length>3?` +${stale.length-3} more`:""}</div>
+                {/* ── STALE LEADS ALERT ── */}
+                {(() => {
+                  const stale = (mlAllLeads||[]).filter(l => {
+                    if (l.status === "Won" || l.status === "Lost") return false;
+                    const days = (Date.now() - new Date(l.updatedAt||l.createdAt||Date.now()).getTime()) * 0.000000011574;
+                    return days > 7;
+                  });
+                  if (stale.length === 0) return null;
+                  return (
+                    <div style={{ padding:"10px 16px", background:"rgba(239,68,68,0.08)", border:"1px solid rgba(239,68,68,0.2)", borderRadius:10, marginBottom:16, display:"flex", alignItems:"center", gap:12 }}>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#EF4444" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                      <div style={{ flex:1, fontSize:12, color:"#EF4444", fontWeight:600 }}>
+                        {stale.length} lead{stale.length > 1 ? "s" : ""} haven't been updated in 7+ days: {stale.slice(0,3).map(l => l.name||"Unnamed").join(", ")}{stale.length > 3 ? "..." : ""}
+                      </div>
+                      <button type="button" onClick={() => setLeadSortBy("date")}
+                        style={{ padding:"5px 12px", background:"rgba(239,68,68,0.15)", border:"1px solid rgba(239,68,68,0.3)", borderRadius:6, color:"#EF4444", fontSize:11, fontWeight:700, cursor:"pointer" }}>
+                        View
+                      </button>
                     </div>
-                    <button type="button" onClick={()=>setLeadSortBy("date")}
-                      style={{ padding:"6px 12px", background:"rgba(239,68,68,0.15)", border:"1px solid rgba(239,68,68,0.3)", borderRadius:7, color:"#EF4444", fontSize:11, fontWeight:700, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>
-                      View \u2192
-                    </button>
-                  </div>
-                );
-              })()}
+                  );
+                })()}
 
-              {/* \u2500\u2500 Filters \u2500\u2500 */}
-              <div style={{ marginBottom:16 }}>
-                {/* Row 1: Search + Sort */}
-                <div style={{ display:"flex", gap:8, marginBottom:8, flexWrap:"wrap", alignItems:"center" }}>
-                  <div style={{ position:"relative", flex:"2 1 220px" }}>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={T.textMuted} strokeWidth="2" strokeLinecap="round" style={{ position:"absolute", left:12, top:"50%", transform:"translateY(-50%)" }}><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                    <input value={leadSearch} onChange={e=>setLeadSearch(e.target.value)} placeholder="Search name, phone, email, community, nationality..."
-                      style={{ width:"100%", padding:"9px 12px 9px 36px", background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:8, color:T.textPrimary, fontSize:12, fontFamily:"'Outfit',sans-serif", outline:"none", boxSizing:"border-box" }}/>
-                  </div>
-                  {/* Sort by */}
-                  <select value={leadSortBy} onChange={e=>setLeadSortBy(e.target.value)}
-                    style={{ flex:"1 1 140px", padding:"9px 12px", background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:8, color:T.textPrimary, fontSize:12, fontFamily:"'Outfit',sans-serif", outline:"none", cursor:"pointer" }}>
-                    <option value="date">\u2193 Newest First</option>
-                    <option value="score">\u2193 AI Score (Hottest)</option>
-                    <option value="budget">\u2193 Budget (Highest)</option>
-                    <option value="name">A\u2192Z Name</option>
-                  </select>
-                </div>
-                {/* Row 2: All filters */}
-                <div style={{ display:"flex", gap:8, flexWrap:"wrap", alignItems:"center" }}>
-                  {/* Status */}
-                  <select value={leadStatusFilter} onChange={e=>setLeadStatusFilter(e.target.value)}
-                    style={{ flex:"1 1 110px", padding:"8px 10px", background:T.surfaceAlt, border:`1px solid ${leadStatusFilter!=="all"?"rgba(212,168,67,0.5)":T.border}`, borderRadius:8, color:leadStatusFilter!=="all"?T.gold:T.textPrimary, fontSize:11, fontFamily:"'Outfit',sans-serif", outline:"none", cursor:"pointer" }}>
-                    <option value="all">All Statuses</option>
-                    {Object.keys(STATUSES).map(s=><option key={s} value={s}>{s}</option>)}
-                  </select>
-                  {/* Source */}
-                  <select value={leadSourceFilter} onChange={e=>setLeadSourceFilter(e.target.value)}
-                    style={{ flex:"1 1 110px", padding:"8px 10px", background:T.surfaceAlt, border:`1px solid ${leadSourceFilter!=="all"?"rgba(212,168,67,0.5)":T.border}`, borderRadius:8, color:leadSourceFilter!=="all"?T.gold:T.textPrimary, fontSize:11, fontFamily:"'Outfit',sans-serif", outline:"none", cursor:"pointer" }}>
-                    <option value="all">All Sources</option>
-                    {[...new Set(displayLeads.map(l=>l.source).filter(Boolean))].map(s=><option key={s} value={s}>{s}</option>)}
-                  </select>
-                  {/* Nationality */}
-                  <select value={leadNatFilter} onChange={e=>setLeadNatFilter(e.target.value)}
-                    style={{ flex:"1 1 110px", padding:"8px 10px", background:T.surfaceAlt, border:`1px solid ${leadNatFilter!=="all"?"rgba(212,168,67,0.5)":T.border}`, borderRadius:8, color:leadNatFilter!=="all"?T.gold:T.textPrimary, fontSize:11, fontFamily:"'Outfit',sans-serif", outline:"none", cursor:"pointer" }}>
-                    <option value="all">\uD83C\uDF0D All Nations</option>
-                    {["\uD83C\uDDEE\uD83C\uDDF3 Indian","\uD83C\uDDEC\uD83C\uDDE7 British","\uD83C\uDDF7\uD83C\uDDFA Russian","\uD83C\uDDE8\uD83C\uDDF3 Chinese","\uD83C\uDDEB\uD83C\uDDF7 French","\uD83C\uDDF5\uD83C\uDDF0 Pakistani","\uD83C\uDDF8\uD83C\uDDE6 Saudi","\uD83C\uDDE6\uD83C\uDDEA Emirati","\uD83C\uDDEA\uD83C\uDDEC Egyptian","\uD83C\uDDE9\uD83C\uDDEA German","\uD83C\uDDEE\uD83C\uDDF9 Italian","\uD83C\uDDFA\uD83C\uDDF8 American","\uD83C\uDDE8\uD83C\uDDE6 Canadian","\uD83C\uDDE6\uD83C\uDDFA Australian","\uD83C\uDDF0\uD83C\uDDFF Kazakh","\uD83C\uDDF1\uD83C\uDDE7 Lebanese","\uD83C\uDDEF\uD83C\uDDF4 Jordanian","\uD83C\uDDEE\uD83C\uDDF7 Iranian"].map(n=>{
-                      const nat = n.split(" ").slice(1).join(" ");
-                      return <option key={nat} value={nat}>{n}</option>;
-                    })}
-                    {[...new Set(displayLeads.map(l=>l.nationality).filter(n=>n&&!["Indian","British","Russian","Chinese","French","Pakistani","Saudi","Emirati","Egyptian","German","Italian","American","Canadian","Australian","Kazakh","Lebanese","Jordanian","Iranian"].includes(n)))].map(n=><option key={n} value={n}>{n}</option>)}
-                  </select>
-                  {/* Budget range */}
-                  <select value={leadBudgetFilter} onChange={e=>setLeadBudgetFilter(e.target.value)}
-                    style={{ flex:"1 1 110px", padding:"8px 10px", background:T.surfaceAlt, border:`1px solid ${leadBudgetFilter!=="all"?"rgba(212,168,67,0.5)":T.border}`, borderRadius:8, color:leadBudgetFilter!=="all"?T.gold:T.textPrimary, fontSize:11, fontFamily:"'Outfit',sans-serif", outline:"none", cursor:"pointer" }}>
-                    <option value="all">\uD83D\uDCB0 All Budgets</option>
-                    <option value="u1m">Under AED 1M</option>
-                    <option value="1-3m">AED 1M \u2013 3M</option>
-                    <option value="3-5m">AED 3M \u2013 5M</option>
-                    <option value="5-10m">AED 5M \u2013 10M</option>
-                    <option value="10m+">AED 10M+</option>
-                  </select>
-                  {/* Property type */}
-                  <select value={leadTypeFilter} onChange={e=>setLeadTypeFilter(e.target.value)}
-                    style={{ flex:"1 1 110px", padding:"8px 10px", background:T.surfaceAlt, border:`1px solid ${leadTypeFilter!=="all"?"rgba(212,168,67,0.5)":T.border}`, borderRadius:8, color:leadTypeFilter!=="all"?T.gold:T.textPrimary, fontSize:11, fontFamily:"'Outfit',sans-serif", outline:"none", cursor:"pointer" }}>
-                    <option value="all">\uD83C\uDFE0 All Types</option>
-                    <option value="Buy">Buy</option>
-                    <option value="Rent">Rent</option>
-                    <option value="Invest">Invest</option>
-                    <option value="Off-Plan">Off-Plan</option>
-                    <option value="Mortgage">Mortgage</option>
-                  </select>
-                  {/* Date added */}
-                  <select value={leadDateFilter} onChange={e=>setLeadDateFilter(e.target.value)}
-                    style={{ flex:"1 1 110px", padding:"8px 10px", background:T.surfaceAlt, border:`1px solid ${leadDateFilter!=="all"?"rgba(212,168,67,0.5)":T.border}`, borderRadius:8, color:leadDateFilter!=="all"?T.gold:T.textPrimary, fontSize:11, fontFamily:"'Outfit',sans-serif", outline:"none", cursor:"pointer" }}>
-                    <option value="all">\uD83D\uDCC5 All Dates</option>
-                    <option value="today">Today</option>
-                    <option value="week">Last 7 days</option>
-                    <option value="month">Last 30 days</option>
-                  </select>
-                  {/* Clear filters */}
-                  {(leadSearch||leadStatusFilter!=="all"||leadSourceFilter!=="all"||leadNatFilter!=="all"||leadBudgetFilter!=="all"||leadTypeFilter!=="all"||leadDateFilter!=="all") && (
-                    <button type="button" onClick={()=>{ setLeadSearch(""); setLeadStatusFilter("all"); setLeadSourceFilter("all"); setLeadNatFilter("all"); setLeadBudgetFilter("all"); setLeadTypeFilter("all"); setLeadDateFilter("all"); }}
-                      style={{ padding:"8px 14px", borderRadius:8, border:"1px solid rgba(239,68,68,0.3)", background:"rgba(239,68,68,0.08)", color:T.red, fontSize:11, fontWeight:600, cursor:"pointer", fontFamily:"'Outfit',sans-serif", whiteSpace:"nowrap" }}>
-                      Clear All
+                {/* ── FILTERS ── */}
+                <div style={{ background:T.surfaceAlt, border:"1px solid "+T.border, borderRadius:12, padding:"12px 14px", marginBottom:16 }}>
+                  <div style={{ display:"flex", gap:8, flexWrap:"wrap", alignItems:"center" }}>
+                    <div style={{ position:"relative", flex:"2 1 200px" }}>
+                      <svg style={{ position:"absolute", left:10, top:"50%", transform:"translateY(-50%)" }} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={T.textMuted} strokeWidth="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                      <input value={leadSearch} onChange={e => setLeadSearch(e.target.value)}
+                        placeholder="Search name, phone, email..."
+                        style={{ width:"100%", padding:"8px 10px 8px 32px", background:T.surface, border:"1px solid "+T.border, borderRadius:8, color:T.textPrimary, fontSize:12, outline:"none", boxSizing:"border-box" }}/>
+                    </div>
+                    <select value={leadSortBy} onChange={e => setLeadSortBy(e.target.value)}
+                      style={{ flex:"1 1 110px", padding:"8px 10px", background:T.surface, border:"1px solid "+T.border, borderRadius:8, color:T.textPrimary, fontSize:12, outline:"none" }}>
+                      <option value="date">Latest First</option>
+                      <option value="score">AI Score</option>
+                      <option value="budget">Budget</option>
+                    </select>
+                    <select value={leadStatusFilter} onChange={e => setLeadStatusFilter(e.target.value)}
+                      style={{ flex:"1 1 100px", padding:"8px 10px", background:T.surface, border:"1px solid "+T.border, borderRadius:8, color:T.textPrimary, fontSize:12, outline:"none" }}>
+                      <option value="all">All Status</option>
+                      {Object.entries(ML_STATUSES).map(([k,v]) => <option key={k} value={k}>{v.label}</option>)}
+                    </select>
+                    <select value={leadSourceFilter} onChange={e => setLeadSourceFilter(e.target.value)}
+                      style={{ flex:"1 1 110px", padding:"8px 10px", background:T.surface, border:"1px solid "+T.border, borderRadius:8, color:T.textPrimary, fontSize:12, outline:"none" }}>
+                      <option value="all">All Sources</option>
+                      {Object.keys(ML_SOURCES).map(s => <option key={s} value={s}>{s}</option>)}
+                    </select>
+                    <select value={leadBudgetFilter} onChange={e => setLeadBudgetFilter(e.target.value)}
+                      style={{ flex:"1 1 110px", padding:"8px 10px", background:T.surface, border:"1px solid "+T.border, borderRadius:8, color:T.textPrimary, fontSize:12, outline:"none" }}>
+                      <option value="all">All Budgets</option>
+                      <option value="under1m">Under 1M</option>
+                      <option value="1to2m">1M – 2M</option>
+                      <option value="2to5m">2M – 5M</option>
+                      <option value="above5m">5M+</option>
+                    </select>
+                    <select value={leadTypeFilter} onChange={e => setLeadTypeFilter(e.target.value)}
+                      style={{ flex:"1 1 90px", padding:"8px 10px", background:T.surface, border:"1px solid "+T.border, borderRadius:8, color:T.textPrimary, fontSize:12, outline:"none" }}>
+                      <option value="all">All Types</option>
+                      <option value="Buy">Buy</option>
+                      <option value="Rent">Rent</option>
+                      <option value="Off-Plan">Off-Plan</option>
+                      <option value="Invest">Invest</option>
+                    </select>
+                    <button type="button"
+                      onClick={() => { setLeadSearch(""); setLeadStatusFilter("all"); setLeadSourceFilter("all"); setLeadBudgetFilter("all"); setLeadTypeFilter("all"); setLeadSortBy("date"); }}
+                      style={{ padding:"8px 12px", borderRadius:8, border:"1px solid "+T.border, background:"transparent", color:T.textMuted, fontSize:11, cursor:"pointer" }}>
+                      Reset
                     </button>
+                    <button type="button" onClick={() => setLeadShowAdd(v => !v)}
+                      style={{ padding:"8px 16px", borderRadius:8, border:"none", background:leadShowAdd?"rgba(212,168,67,0.15)":"linear-gradient(135deg,"+T.gold+",#B8902E)", color:leadShowAdd?T.gold:"#0A0E1A", fontSize:12, fontWeight:700, cursor:"pointer" }}>
+                      {leadShowAdd ? "✕ Cancel" : "+ Add Lead"}
+                    </button>
+                  </div>
+                </div>
+
+                {/* ── ADD LEAD FORM ── */}
+                {leadShowAdd && (
+                  <div style={{ padding:"18px 20px", background:"rgba(212,168,67,0.05)", border:"1px solid rgba(212,168,67,0.2)", borderRadius:12, marginBottom:16 }}>
+                    <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:14 }}>New Lead</div>
+                    <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:10, marginBottom:10 }}>
+                      {[
+                        { label:"Full Name *",         val:leadAddName,   set:setLeadAddName,   ph:"Client name"        },
+                        { label:"WhatsApp / Phone *",  val:leadAddPhone,  set:setLeadAddPhone,  ph:"+971 50 XXX XXXX"   },
+                        { label:"Email",               val:leadAddEmail,  set:setLeadAddEmail,  ph:"email@example.com"  },
+                        { label:"Budget (AED)",        val:leadAddBudget, set:setLeadAddBudget, ph:"e.g. 2000000"       },
+                        { label:"Community / Area",    val:leadAddComm,   set:setLeadAddComm,   ph:"e.g. Dubai Hills"   },
+                      ].map((f,i) => (
+                        <div key={i}>
+                          <div style={{ fontSize:11, color:T.textMuted, marginBottom:4 }}>{f.label}</div>
+                          <input value={f.val} onChange={e => f.set(e.target.value)} placeholder={f.ph}
+                            style={{ width:"100%", padding:"8px 12px", background:T.surfaceAlt, border:"1px solid "+T.border, borderRadius:8, color:T.textPrimary, fontSize:12, outline:"none", boxSizing:"border-box" }}/>
+                        </div>
+                      ))}
+                    </div>
+                    <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr auto", gap:10, alignItems:"end" }}>
+                      <div>
+                        <div style={{ fontSize:11, color:T.textMuted, marginBottom:4 }}>Source</div>
+                        <select value={leadAddSource} onChange={e => setLeadAddSource(e.target.value)}
+                          style={{ width:"100%", padding:"8px 12px", background:T.surfaceAlt, border:"1px solid "+T.border, borderRadius:8, color:T.textPrimary, fontSize:12, outline:"none" }}>
+                          {Object.keys(ML_SOURCES).map(s => <option key={s} value={s}>{s}</option>)}
+                        </select>
+                      </div>
+                      <div>
+                        <div style={{ fontSize:11, color:T.textMuted, marginBottom:4 }}>Status</div>
+                        <select value={leadAddStatus} onChange={e => setLeadAddStatus(e.target.value)}
+                          style={{ width:"100%", padding:"8px 12px", background:T.surfaceAlt, border:"1px solid "+T.border, borderRadius:8, color:T.textPrimary, fontSize:12, outline:"none" }}>
+                          {Object.entries(ML_STATUSES).map(([k,v]) => <option key={k} value={k}>{v.label}</option>)}
+                        </select>
+                      </div>
+                      <div>
+                        <div style={{ fontSize:11, color:T.textMuted, marginBottom:4 }}>Type</div>
+                        <select value={leadAddType} onChange={e => setLeadAddType(e.target.value)}
+                          style={{ width:"100%", padding:"8px 12px", background:T.surfaceAlt, border:"1px solid "+T.border, borderRadius:8, color:T.textPrimary, fontSize:12, outline:"none" }}>
+                          {["Buy","Rent","Off-Plan","Invest"].map(t => <option key={t} value={t}>{t}</option>)}
+                        </select>
+                      </div>
+                      <button type="button" onClick={mlSaveNewLead} disabled={leadAddSaving}
+                        style={{ padding:"9px 24px", background:(!leadAddName||!leadAddPhone||leadAddSaving)?"rgba(212,168,67,0.3)":"linear-gradient(135deg,"+T.gold+",#B8902E)", color:"#0A0E1A", borderRadius:8, border:"none", fontSize:13, fontWeight:700, cursor:"pointer" }}>
+                        {leadAddSaving ? "Saving..." : "Save Lead"}
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* ── LEAD LIST ── */}
+                <div style={{ background:T.card, border:"1px solid "+T.border, borderRadius:12, overflow:"hidden" }}>
+                  {/* List header */}
+                  <div style={{ display:"grid", gridTemplateColumns:"minmax(160px,1fr) 60px 90px 100px 110px 90px 80px", gap:8, padding:"10px 14px", background:T.surfaceAlt, borderBottom:"1px solid "+T.border }}>
+                    {["Lead","Score","Status","Source","Budget","Date","Actions"].map((h,i) => (
+                      <div key={i} style={{ fontSize:10, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.6 }}>{h}</div>
+                    ))}
+                  </div>
+
+                  {/* Empty state */}
+                  {mlFiltered.length === 0 && (
+                    <div style={{ padding:"48px 24px", textAlign:"center" }}>
+                      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke={T.textMuted} strokeWidth="1" style={{ marginBottom:12, opacity:0.4 }}><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg>
+                      <div style={{ fontSize:14, fontWeight:600, color:T.textPrimary, marginBottom:4 }}>No leads found</div>
+                      <div style={{ fontSize:12, color:T.textMuted }}>Try adjusting filters or add a new lead</div>
+                    </div>
                   )}
 
-                {/* Tag filter */}
-                <select value={leadTagFilter} onChange={e=>setLeadTagFilter(e.target.value)}
-                  style={{ flex:"1 1 110px", padding:"8px 10px", background:T.surfaceAlt, border:`1px solid ${leadTagFilter!=="all"?"rgba(212,168,67,0.5)":T.border}`, borderRadius:8, color:leadTagFilter!=="all"?T.gold:T.textPrimary, fontSize:11, fontFamily:"'Outfit',sans-serif", outline:"none", cursor:"pointer" }}>
-                  <option value="all">\uD83C\uDFF7 All Tags</option>
-                  <option value="VIP">\u2B50 VIP</option>
-                  <option value="Cash Buyer">\uD83D\uDCB5 Cash Buyer</option>
-                  <option value="Investor">\uD83D\uDCC8 Investor</option>
-                  <option value="Urgent">\uD83D\uDD25 Urgent</option>
-                  <option value="GCC National">\uD83C\uDF19 GCC National</option>
-                  <option value="Off-Plan Ready">\uD83C\uDFD7 Off-Plan Ready</option>
-                  <option value="Mortgage Needed">\uD83C\uDFE6 Mortgage Needed</option>
-                  {[...new Set(displayLeads.flatMap(l=>l.tags||[]).filter(Boolean))].filter(t=>!["VIP","Cash Buyer","Investor","Urgent","GCC National","Off-Plan Ready","Mortgage Needed"].includes(t)).map(t=><option key={t} value={t}>{t}</option>)}
-                </select>
-                <div style={{ marginLeft:"auto", display:"flex", gap:8, alignItems:"center" }}>
-                  <span style={{ fontSize:11, color:T.textMuted }}>{filtered.length} of {displayLeads.length} leads</span>
-                  {/* Export CSV button */}
-                  <button type="button" onClick={()=>{
-                    const sep = ",";
-                    const nl = String.fromCharCode(10);
-                    const hdr = ["Name","Phone","Email","Budget","Status","Source","Nationality","Language","Timeline","Community","Type","Purpose","Tags","AI Score","Added"];
-                    const dataRows = filtered.map(l=>{ const ai=scoreLeadAI(l); return [l.name,l.phone,l.email,l.budget,l.status,l.source,l.nationality,l.language,l.timeline,l.community,l.type,l.purpose,(l.tags||[]).join("|"),ai.score,l.createdAt?new Date(l.createdAt).toLocaleDateString("en-GB"):""].map(csvEsc).join(sep); });
-                    const csv = [hdr.map(csvEsc).join(sep), ...dataRows].join(nl);
-                    const blob = new Blob([csv],{type:"text/csv;charset=utf-8;"});
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement("a");
-                    a.href=url; a.download="leads_"+new Date().toISOString().slice(0,10)+".csv";
-                    document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
-                  }}
-                    style={{ padding:"7px 12px", background:"rgba(16,185,129,0.1)", border:"1px solid rgba(16,185,129,0.3)", borderRadius:8, color:"#10B981", fontSize:11, fontWeight:600, cursor:"pointer", fontFamily:"'Outfit',sans-serif", whiteSpace:"nowrap" }}>
-                    \u2193 Export CSV
-                  </button>
-                  {/* Source Analytics button */}
-                  <button type="button" onClick={()=>setShowLeadAnalytics(v=>!v)}
-                    style={{ padding:"7px 12px", background:showLeadAnalytics?"rgba(212,168,67,0.2)":"rgba(212,168,67,0.08)", border:`1px solid rgba(212,168,67,${showLeadAnalytics?0.6:0.3})`, borderRadius:8, color:T.gold, fontSize:11, fontWeight:600, cursor:"pointer", fontFamily:"'Outfit',sans-serif", whiteSpace:"nowrap" }}>
-                    \uD83D\uDCCA Analytics
-                  </button>
-                  <button type="button" onClick={()=>setLeadShowAdd(v=>!v)}
-                    style={{ padding:"7px 14px", background:leadShowAdd?"rgba(212,168,67,0.15)":"linear-gradient(135deg,rgba(212,168,67,0.9),rgba(184,146,42,0.9))", border:`1px solid ${leadShowAdd?"rgba(212,168,67,0.4)":"transparent"}`, borderRadius:8, color:leadShowAdd?T.gold:"#000", fontSize:11, fontWeight:700, cursor:"pointer", fontFamily:"'Outfit',sans-serif", whiteSpace:"nowrap" }}>
-                    {leadShowAdd ? "\u2715 Cancel" : "+ Add Lead"}
-                  </button>
-                </div>
-              </div>
-
-              {/* \u2500\u2500 ADD LEAD FORM \u2500\u2500 */}
-              {leadShowAdd && (
-                <div style={{ padding:"18px 20px", background:"rgba(212,168,67,0.05)", border:"1px solid rgba(212,168,67,0.2)", borderRadius:12, marginBottom:16 }}>
-                  <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:14 }}>New Lead</div>
-                  <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:10, marginBottom:10 }}>
-                    {[
-                      { label:"Full Name *", val:leadAddName, set:setLeadAddName, ph:"Client name" },
-                      { label:"WhatsApp / Phone *", val:leadAddPhone, set:setLeadAddPhone, ph:"+971 50 XXX XXXX" },
-                      { label:"Email", val:leadAddEmail, set:setLeadAddEmail, ph:"email@email.com" },
-                      { label:"Budget (AED)", val:leadAddBudget, set:setLeadAddBudget, ph:"e.g. 1500000" },
-                      { label:"Community / Area", val:leadAddComm, set:setLeadAddComm, ph:"e.g. Dubai Marina, JVC" },
-                    ].map((f,i)=>(
-                      <div key={i}>
-                        <div style={{ fontSize:11, color:T.textMuted, marginBottom:4 }}>{f.label}</div>
-                        <input type="text" value={f.val} onChange={e=>f.set(e.target.value)} placeholder={f.ph}
-                          style={{ width:"100%", padding:"8px 12px", background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:8, color:T.white, fontFamily:"'Outfit',sans-serif", fontSize:12, outline:"none", boxSizing:"border-box" }} />
-                      </div>
-                    ))}
-                    <div>
-                      <div style={{ fontSize:11, color:T.textMuted, marginBottom:4 }}>Type</div>
-                      <select value={leadAddType} onChange={e=>setLeadAddType(e.target.value)}
-                        style={{ width:"100%", padding:"8px 12px", background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:8, color:T.white, fontFamily:"'Outfit',sans-serif", fontSize:12, outline:"none", cursor:"pointer" }}>
-                        {["Buy","Rent","Invest","Off-Plan","Mortgage"].map(t=><option key={t}>{t}</option>)}
-                      </select>
-                    </div>
-                  </div>
-                  <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr auto", gap:10, alignItems:"flex-end" }}>
-                    <div>
-                      <div style={{ fontSize:11, color:T.textMuted, marginBottom:4 }}>Source</div>
-                      <select value={leadAddSource} onChange={e=>setLeadAddSource(e.target.value)}
-                        style={{ width:"100%", padding:"8px 12px", background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:8, color:T.white, fontFamily:"'Outfit',sans-serif", fontSize:12, outline:"none", cursor:"pointer" }}>
-                        {["Manual","Referral","Property Finder","Bayut","Dubizzle","WhatsApp","Meta/Facebook","Instagram","Google Ads","Website","Cold Call","Email","TikTok","LinkedIn","Snapchat"].map(s=><option key={s}>{s}</option>)}
-                      </select>
-                    </div>
-                    <div>
-                      <div style={{ fontSize:11, color:T.textMuted, marginBottom:4 }}>Status</div>
-                      <select value={leadAddStatus} onChange={e=>setLeadAddStatus(e.target.value)}
-                        style={{ width:"100%", padding:"8px 12px", background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:8, color:T.white, fontFamily:"'Outfit',sans-serif", fontSize:12, outline:"none", cursor:"pointer" }}>
-                        {["New","Contacted","Qualified","Viewing","Offer","Won","Lost","On Hold"].map(s=><option key={s}>{s}</option>)}
-                      </select>
-                    </div>
-                    <button type="button"
-                      disabled={leadAddSaving || !leadAddName || !leadAddPhone}
-                      onClick={saveNewLead}
-                      style={{ padding:"9px 24px", background:(!leadAddName||!leadAddPhone||leadAddSaving)?T.surfaceAlt:"linear-gradient(135deg,#D4A843,#B8922A)", border:"none", borderRadius:8, color:(!leadAddName||!leadAddPhone||leadAddSaving)?T.textMuted:"#000", fontSize:13, fontWeight:700, cursor:(!leadAddName||!leadAddPhone||leadAddSaving)?"not-allowed":"pointer", fontFamily:"'Outfit',sans-serif", height:38 }}>
-                      {leadAddSaving ? "Saving..." : "Save Lead \u2192"}
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* \u2500\u2500 LEAD SOURCE ANALYTICS PANEL \u2500\u2500 */}
-              {showLeadAnalytics && (() => {
-                return (
-                  <div style={{ padding:"16px", background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:12, marginBottom:16 }}>
-                    <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:14 }}>
-                      <div style={{ fontFamily:"'Fraunces',serif", fontSize:15, fontWeight:800, color:T.white }}>\uD83D\uDCCA Lead Source Analytics</div>
-                      <div style={{ fontSize:11, color:T.textMuted }}>{anaTotal} total leads</div>
-                    </div>
-                    <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(200px,1fr))", gap:10 }}>
-                      {srcArr.map(([src, d, convRate, contactRate, avgBudgetStr, barW]) => {
-                        return (
-                          <div key={src} style={{ padding:"12px 14px", background:T.bg, borderRadius:9, border:`1px solid ${T.border}` }}>
-                            <div style={{ display:"flex", justifyContent:"space-between", marginBottom:6 }}>
-                              <span style={{ fontSize:12, fontWeight:700, color:T.white }}>{src}</span>
-                              <span style={{ fontSize:11, color:T.gold, fontWeight:600 }}>{d.total} leads</span>
-                            </div>
-                            <div style={{ height:3, background:T.border, borderRadius:2, marginBottom:8 }}>
-                              <div style={{ height:"100%", width:`${barW}%`, background:"rgba(212,168,67,0.7)", borderRadius:2 }}/>
-                            </div>
-                            <div style={{ display:"flex", gap:10, fontSize:10, color:T.textMuted }}>
-                              <span>Conv: <strong style={{ color:convRate>=10?"#10B981":"#EF4444" }}>{convRate}%</strong></span>
-                              <span>Contacted: <strong style={{ color:T.textSecondary }}>{contactRate}%</strong></span>
-                              <span>Avg: <strong style={{ color:T.gold }}>{avgBudgetStr}</strong></span>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                    {srcArr.length === 0 && <div style={{ textAlign:"center", padding:"20px 0", color:T.textMuted, fontSize:12 }}>No lead data yet</div>}
-                  </div>
-                );
-              })()}
-
-              {/* \u2500\u2500 Lead List \u2500\u2500 */}
-              {myLeadsLoading ? (
-                <div style={{ display:"flex", alignItems:"center", justifyContent:"center", padding:"60px 0", gap:10 }}>
-                  <div style={{ width:20, height:20, border:`2px solid ${T.gold}30`, borderTopColor:T.gold, borderRadius:"50%", animation:"spin 0.7s linear infinite" }}/>
-                  <span style={{ fontSize:12, color:T.textMuted }}>Loading leads...</span>
-                </div>
-              ) : filtered.length === 0 ? (
-                <div style={{ textAlign:"center", padding:"60px 20px" }}>
-                  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke={T.textMuted} strokeWidth="1.5" strokeLinecap="round" style={{ marginBottom:12 }}><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
-                  <div style={{ fontSize:14, fontWeight:600, color:T.textPrimary, marginBottom:6 }}>
-                    {myLeads.length === 0 ? "No leads assigned yet" : "No leads match your filters"}
-                  </div>
-                  <div style={{ fontSize:12, color:T.textMuted }}>
-                    {myLeads.length === 0 ? "Your manager will assign leads to you" : "Try adjusting your search or filters"}
-                  </div>
-                </div>
-              ) : (
-                <div style={{ display:"flex", flexDirection:"column", gap:2 }}>
-                  {/* Column headers */}
-                  <div style={{ display:"grid", gridTemplateColumns:"minmax(160px,1fr) 65px 90px 90px 110px 90px 72px", gap:8, padding:"8px 14px", fontSize:10, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.8, borderBottom:`1px solid ${T.border}` }}>
-                    <div>Lead</div>
-                    <div>Score</div>
-                    <div>Status</div>
-                    <div>Source</div>
-                    <div>Budget</div>
-                    <div>Added</div>
-                    <div>Actions</div>
-                  </div>
-                  {filtered.map((l, i) => {
-                    const sc = STATUSES[l.status||"New"] || STATUSES.New;
-                    const srcColor = SOURCES[l.source] || "#94A3B8";
-                    const name = (l.name||"").trim() || l.email?.split("@")[0] || l.phone || "Unnamed";
-                    const initials = name.split(" ").map(w=>w[0]).join("").slice(0,2).toUpperCase();
+                  {/* Lead rows */}
+                  {mlFiltered.map((l, idx) => {
+                    const sc   = ML_STATUSES[l.status||"New"] || ML_STATUSES["New"];
+                    const srcC = ML_SOURCES[l.source] || "#94A3B8";
+                    const name = (l.name||"").trim() || (l.email||"").split("@")[0] || l.phone || "Unnamed";
+                    const initials = name.split(" ").map(w => w[0]||"").join("").slice(0,2).toUpperCase();
                     const budget = parseFloat(l.budget||0);
-                    const isGV = budget >= 2000000;
-                    const natFlags = {"Indian":"\uD83C\uDDEE\uD83C\uDDF3","British":"\uD83C\uDDEC\uD83C\uDDE7","Russian":"\uD83C\uDDF7\uD83C\uDDFA","Chinese":"\uD83C\uDDE8\uD83C\uDDF3","French":"\uD83C\uDDEB\uD83C\uDDF7","Pakistani":"\uD83C\uDDF5\uD83C\uDDF0","Saudi":"\uD83C\uDDF8\uD83C\uDDE6","Emirati":"\uD83C\uDDE6\uD83C\uDDEA","Egyptian":"\uD83C\uDDEA\uD83C\uDDEC","German":"\uD83C\uDDE9\uD83C\uDDEA","Italian":"\uD83C\uDDEE\uD83C\uDDF9","American":"\uD83C\uDDFA\uD83C\uDDF8","Canadian":"\uD83C\uDDE8\uD83C\uDDE6","Australian":"\uD83C\uDDE6\uD83C\uDDFA","Kazakh":"\uD83C\uDDF0\uD83C\uDDFF","Lebanese":"\uD83C\uDDF1\uD83C\uDDE7","Jordanian":"\uD83C\uDDEF\uD83C\uDDF4","Iranian":"\uD83C\uDDEE\uD83C\uDDF7","Turkish":"\uD83C\uDDF9\uD83C\uDDF7","Ukrainian":"\uD83C\uDDFA\uD83C\uDDE6"};
-                    const flag = natFlags[l.nationality] || (l.nationality ? "\uD83C\uDF0D" : "");
+                    const isGV  = budget >= 2000000;
+                    const ai    = mlScoreLead(l);
+                    const waHref = mlWaBase + cleanPhone(l.phone);
                     return (
-                      <div key={l.id||i}
-                        onClick={()=>{setSelectedLead(l);setLeadDrawerTab("details");}}
-                        style={{ display:"grid", gridTemplateColumns:"minmax(160px,1fr) 65px 90px 90px 110px 90px 72px", gap:8, padding:"10px 14px", alignItems:"center", borderBottom:`1px solid ${T.border}`, cursor:"pointer", transition:"background 0.12s", borderRadius:4 }}
-                        onMouseEnter={e=>e.currentTarget.style.background="rgba(212,168,67,0.04)"}
-                        onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
+                      <div key={l.id||idx}
+                        onClick={() => { setSelectedLead(l); setLeadDrawerTab("details"); }}
+                        onMouseEnter={e => e.currentTarget.style.background = "rgba(212,168,67,0.03)"}
+                        onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+                        style={{ display:"grid", gridTemplateColumns:"minmax(160px,1fr) 60px 90px 100px 110px 90px 80px", gap:8, padding:"10px 14px", alignItems:"center", borderBottom:"1px solid "+T.border, cursor:"pointer", transition:"background 0.12s" }}>
 
-                        {/* Lead info + flag + GV badge */}
+                        {/* Lead info */}
                         <div style={{ display:"flex", alignItems:"center", gap:10, minWidth:0 }}>
-                          <div style={{ width:34, height:34, borderRadius:"50%", background:`rgba(212,168,67,0.12)`, border:`1px solid rgba(212,168,67,0.2)`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:11, fontWeight:700, color:T.gold, flexShrink:0, position:"relative" }}>
+                          <div style={{ width:34, height:34, borderRadius:"50%", background:"rgba(212,168,67,0.12)", border:"1px solid rgba(212,168,67,0.2)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:11, fontWeight:700, color:T.gold, flexShrink:0 }}>
                             {initials}
-                            {flag && <span style={{ position:"absolute", bottom:-4, right:-4, fontSize:11, lineHeight:1 }}>{flag}</span>}
                           </div>
                           <div style={{ minWidth:0 }}>
                             <div style={{ display:"flex", gap:5, alignItems:"center" }}>
                               <span style={{ fontSize:13, fontWeight:600, color:T.textPrimary, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{name}</span>
-                              {isGV && <span style={{ fontSize:9, padding:"1px 5px", borderRadius:4, background:"rgba(212,168,67,0.15)", color:T.gold, flexShrink:0, fontWeight:700 }}>\uD83C\uDFC5 GV</span>}
+                              {isGV && <span style={{ fontSize:9, padding:"1px 5px", borderRadius:4, background:"rgba(212,168,67,0.15)", color:T.gold, fontWeight:700 }}>GV</span>}
                             </div>
                             <div style={{ fontSize:11, color:T.textMuted, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>
-                              {l.phone || l.email || l.community || "\u2014"}
+                              {l.phone || l.email || l.community || "—"}
                             </div>
                           </div>
                         </div>
 
-                        {/* AI Score (Session 13) */}
+                        {/* AI Score */}
                         <div style={{ textAlign:"center" }}>
-                          {(() => { const ai = scoreLeadAI(l); return (
-                            <div style={{ display:"inline-flex", flexDirection:"column", alignItems:"center", gap:1 }}>
-                              <span style={{ fontSize:13, fontWeight:900, color:ai.color, fontFamily:"'Fraunces',serif", lineHeight:1 }}>{ai.score}</span>
-                              <span style={{ fontSize:8, fontWeight:700, color:ai.color, letterSpacing:0.5 }}>{ai.label}</span>
-                            </div>
-                          ); })()}
+                          <div style={{ fontSize:14, fontWeight:900, color:ai.color, fontFamily:"'Fraunces',serif", lineHeight:1 }}>{ai.score}</div>
+                          <div style={{ fontSize:8, fontWeight:700, color:ai.color, letterSpacing:0.5 }}>{ai.label}</div>
                         </div>
 
                         {/* Status */}
                         <div>
-                          <span style={{ display:"inline-block", padding:"4px 10px", borderRadius:6, fontSize:11, fontWeight:600, background:sc.bg, color:sc.color }}>
-                            {sc.label}
-                          </span>
+                          <span style={{ display:"inline-block", padding:"3px 8px", borderRadius:6, fontSize:11, fontWeight:600, background:sc.bg, color:sc.color }}>{sc.label}</span>
                         </div>
 
                         {/* Source */}
                         <div>
-                          <span style={{ display:"inline-block", padding:"3px 8px", borderRadius:5, fontSize:10, fontWeight:600, background:`${srcColor}14`, color:srcColor, border:`1px solid ${srcColor}30`, whiteSpace:"nowrap" }}>
-                            {l.source || "Manual"}
-                          </span>
+                          <span style={{ display:"inline-block", padding:"3px 8px", borderRadius:5, fontSize:10, fontWeight:600, background:srcC+"14", color:srcC, whiteSpace:"nowrap" }}>{l.source||"Manual"}</span>
                         </div>
 
                         {/* Budget */}
-                        <div style={{ fontSize:12, fontWeight:700, color:budget >= 2000000 ? T.gold : T.textPrimary }}>
-                          {budget > 0 ? (budget >= 1e6 ? "AED "+(budget*0.000001).toFixed(1)+"M" : "AED "+budget.toLocaleString()) : "\u2014"}
+                        <div style={{ fontSize:12, fontWeight:700, color:isGV?T.gold:T.textPrimary }}>
+                          {budget > 0 ? ("AED " + (budget>=1000000?(budget*0.000001).toFixed(1)+"M":budget.toLocaleString())) : "—"}
                         </div>
 
                         {/* Date */}
                         <div style={{ fontSize:11, color:T.textMuted }}>
-                          {l.createdAt ? new Date(l.createdAt).toLocaleDateString("en-AE",{day:"2-digit",month:"short",year:"numeric"}) : "\u2014"}
+                          {l.createdAt ? new Date(l.createdAt).toLocaleDateString("en-AE",{day:"2-digit",month:"short"}) : "—"}
                         </div>
 
-                        {/* WhatsApp + Email + Call */}
-                        <div style={{ display:"flex", gap:4 }} onClick={e=>e.stopPropagation()}>
-                          {l.phone && <a href={`https://wa.me/${cleanPhone(l.phone)}`} target="_blank" rel="noopener noreferrer"
-                            style={{ width:22, height:22, borderRadius:5, border:"1px solid rgba(37,211,102,0.3)", background:"rgba(37,211,102,0.08)", display:"flex", alignItems:"center", justifyContent:"center", textDecoration:"none" }}
-                            title="WhatsApp">
-                            <svg width="11" height="11" viewBox="0 0 24 24" fill="#25D366"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.123.558 4.116 1.535 5.847L.057 23.571l6.194-1.622A11.955 11.955 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.75a9.738 9.738 0 0 1-4.964-1.356l-.356-.212-3.677.963.98-3.585-.232-.369A9.72 9.72 0 0 1 2.25 12C2.25 6.615 6.615 2.25 12 2.25S21.75 6.615 21.75 12 17.385 21.75 12 21.75z"/></svg>
-                          </a>}
-                          {l.email && <a href={`mailto:${l.email}`}
-                            style={{ width:22, height:22, borderRadius:5, border:"1px solid rgba(59,130,246,0.3)", background:"rgba(59,130,246,0.08)", display:"flex", alignItems:"center", justifyContent:"center", textDecoration:"none" }}
-                            title="Email">
-                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#3B82F6" strokeWidth="2.5" strokeLinecap="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-                          </a>}
-                          {l.phone && <a href={`tel:${l.phone}`}
-                            style={{ width:22, height:22, borderRadius:5, border:"1px solid rgba(16,185,129,0.3)", background:"rgba(16,185,129,0.08)", display:"flex", alignItems:"center", justifyContent:"center", textDecoration:"none" }}
-                            title="Call">
-                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#10B981" strokeWidth="2.5" strokeLinecap="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.6 3.42 2 2 0 0 1 3.58 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.54a16 16 0 0 0 6.01 6.01l.95-.95a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-                          </a>}
-                        </div>
+                        {/* Actions */}
+                        <div onClick={e => e.stopPropagation()} style={{ display:"flex", gap:4 }}>
+                          {l.phone && (
+                            <a href={"https://wa.me/"+cleanPhone(l.phone)} target="_blank" rel="noopener noreferrer"
+                              style={{ display:"flex", alignItems:"center", justifyContent:"center", width:28, height:28, borderRadius:7, border:"1px solid rgba(37,211,102,0.3)", background:"rgba(37,211,102,0.08)", color:"#25D366", textDecoration:"none" }}>
+                              <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/></svg>
+                            </a>
+                          )}
+                          {l.email && (
+                            <a href={"mailto:"+l.email}
+                              style={{ display:"flex", alignItems:"center", justifyContent:"center", width:28, height:28, borderRadius:7, border:"1px solid rgba(59,130,246,0.3)", background:"rgba(59,130,246,0.08)", color:"#3B82F6", textDecoration:"none" }}>
+                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                            </a>
+                          )}
+                          {l.phone && (
+                            <a href={"tel:"+l.phone}
+                              style={{ display:"flex", alignItems:"center", justifyContent:"center", width:28, height:28, borderRadius:7, border:"1px solid rgba(16,185,129,0.3)", background:"rgba(16,185,129,0.08)", color:"#10B981", textDecoration:"none" }}>
+                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 2.18h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 9.91a16 16 0 0 0 6.08 6.08l.91-.91a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7a2 2 0 0 1 1.72 2.02z"/></svg>
+                            </a>
+                          )}
                         </div>
                       </div>
                     );
                   })}
-                </div>
-              )}
 
-              {/* \u2500\u2500 Lead Detail Drawer \u2500\u2500 */}
-              {selectedLead && (
-                <div style={{ position:"fixed", inset:0, zIndex:1500, display:"flex" }} onClick={e=>{if(e.target===e.currentTarget)setSelectedLead(null);}}>
-                  <div style={{ flex:1, background:"rgba(0,0,0,0.5)", backdropFilter:"blur(4px)" }} onClick={()=>setSelectedLead(null)}/>
-                  <div style={{ width:460, background:T.bg, borderLeft:`1px solid ${T.border}`, display:"flex", flexDirection:"column", overflowY:"auto", boxShadow:"-20px 0 60px rgba(0,0,0,0.4)" }}>
-
-                    {/* Drawer header */}
-                    <div style={{ padding:"20px 20px 0", borderBottom:`1px solid ${T.border}`, flexShrink:0 }}>
-                      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:14 }}>
-                        <div style={{ display:"flex", alignItems:"center", gap:12 }}>
-                          <div style={{ width:44, height:44, borderRadius:"50%", background:"rgba(212,168,67,0.12)", border:`2px solid rgba(212,168,67,0.25)`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:15, fontWeight:700, color:T.gold }}>
-                            {((selectedLead.name||selectedLead.email||"?").split(" ").map(w=>w[0]).join("").slice(0,2)||"?").toUpperCase()}
-                          </div>
-                          <div>
-                            <div style={{ fontSize:16, fontWeight:800, color:T.white, fontFamily:"'Fraunces',serif" }}>
-                              {selectedLead.name || selectedLead.email?.split("@")[0] || selectedLead.phone || "Unnamed Lead"}
-                            </div>
-                            <div style={{ fontSize:11, color:T.textMuted, marginTop:2 }}>
-                              {selectedLead.source && <span>{selectedLead.source}</span>}
-                              {selectedLead.createdAt && <span>{"\u00B7"}{new Date(selectedLead.createdAt).toLocaleDateString("en-AE",{day:"2-digit",month:"short",year:"numeric"})}</span>}
-                            </div>
-                          </div>
-                        </div>
-                        <button type="button" onClick={()=>setSelectedLead(null)}
-                          style={{ background:"rgba(255,255,255,0.06)", border:`1px solid ${T.border}`, borderRadius:7, color:T.textMuted, fontSize:13, cursor:"pointer", padding:"5px 10px", display:"flex", alignItems:"center", gap:4 }}>
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                          Close
-                        </button>
-                      </div>
-
-                      {/* Status bar */}
-                      <div style={{ display:"flex", gap:5, flexWrap:"wrap", marginBottom:14 }}>
-                        {Object.entries(STATUSES).map(([s,sc]) => (
-                          <button key={s} type="button" onClick={()=>updateLeadStatus(selectedLead.id,s)}
-                            style={{ padding:"5px 12px", fontSize:11, fontWeight:600, cursor:"pointer", fontFamily:"'Outfit',sans-serif", border:`1px solid ${(selectedLead.status||"New")===s?sc.color:T.border}`, background:(selectedLead.status||"New")===s?sc.bg:"transparent", color:(selectedLead.status||"New")===s?sc.color:T.textMuted, borderRadius:7, transition:"all 0.12s" }}>
-                            {s}
-                          </button>
-                        ))}
-                      </div>
-                      {/* Quick actions row */}
-                      <div style={{ display:"flex", gap:6, marginBottom:10 }}>
-                        <button type="button" onClick={()=>setShowTemplates(v=>!v)}
-                          style={{ flex:1, padding:"6px 0", background:"rgba(212,168,67,0.08)", border:"1px solid rgba(212,168,67,0.25)", borderRadius:7, color:T.gold, fontSize:11, fontWeight:600, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>
-                          \uD83D\uDCCB Templates
-                        </button>
-                        <button type="button" onClick={async()=>{
-                          setBrochureLoading(true);
-                          try {
-                            const prompt = `Create a professional property brochure message for this Dubai real estate client:\nName: ${selectedLead.name||"Client"}\nBudget: AED ${Number(selectedLead.budget||0).toLocaleString()}\nLooking for: ${selectedLead.type||"Property"} in ${selectedLead.community||"Dubai"}\nBeds: ${selectedLead.beds||"Any"}\nPurpose: ${selectedLead.purpose||"Purchase"}\nWrite a short, professional WhatsApp message (3-4 lines) introducing Dubai properties matching their profile. Include a call to action.`;
-                            const res = await fetch("/api/proxy?service=claude",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:300,messages:[{role:"user",content:prompt}]})});
-                            const data = await res.json();
-                            const text = data.content?.[0]?.text||"";
-                            if(text) navigator.clipboard.writeText(text);
-                            alert("Brochure message copied to clipboard!");
-                          } catch(e){ alert("Error generating brochure"); }
-                          setBrochureLoading(false);
-                        }}
-                          style={{ flex:1, padding:"6px 0", background:"rgba(59,130,246,0.08)", border:"1px solid rgba(59,130,246,0.25)", borderRadius:7, color:"#3B82F6", fontSize:11, fontWeight:600, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>
-                          {brochureLoading?"Generating...":"\uD83C\uDFD7 AI Brochure"}
-                        </button>
-                        <button type="button" onClick={()=>{ setLeadDrawerTab("tags"); }}
-                          style={{ flex:1, padding:"6px 0", background:"rgba(139,92,246,0.08)", border:"1px solid rgba(139,92,246,0.25)", borderRadius:7, color:"#8B5CF6", fontSize:11, fontWeight:600, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>
-                          \uD83C\uDFF7 Tags {(selectedLead.tags||[]).length>0?`(${selectedLead.tags.length})`:""}
-                        </button>
-                      </div>
-
-                      {/* Drawer tabs */}
-                      <div style={{ display:"flex", gap:0, marginBottom:0 }}>
-                        {[["details","Details"],["notes","Notes"],["timeline","Timeline"],["tags","Tags"],["ai","AI Score"],["tasks","Tasks"]].map(([t,label])=>(
-                          <button key={t} type="button" onClick={()=>setLeadDrawerTab(t)}
-                            style={{ padding:"8px 16px", fontSize:12, fontWeight:600, border:"none", background:"transparent", cursor:"pointer", fontFamily:"'Outfit',sans-serif", color:leadDrawerTab===t?T.gold:T.textMuted, borderBottom:`2px solid ${leadDrawerTab===t?T.gold:"transparent"}`, transition:"all 0.12s" }}>
-                            {label}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Details tab */}
-                    {leadDrawerTab === "details" && (
-                      <div style={{ padding:"20px", flex:1, overflowY:"auto" }}>
-                        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12, marginBottom:16 }}>
-                          {[
-                            { label:"Phone",     value:selectedLead.phone },
-                            { label:"Email",     value:selectedLead.email },
-                            { label:"Budget",    value:selectedLead.budget ? `AED ${parseFloat(selectedLead.budget).toLocaleString()}` : null },
-                            { label:"Community", value:selectedLead.community },
-                            { label:"Project",   value:selectedLead.project },
-                            { label:"Nationality",   value:selectedLead.nationality   },
-                            { label:"Language Pref",  value:selectedLead.language      },
-                            { label:"Timeline",       value:selectedLead.timeline      },
-                            { label:"Preferred Dev",  value:selectedLead.developer     },
-                            { label:"Golden Visa",    value:parseFloat(selectedLead.budget||0)>=2000000?"\u2705 Eligible (AED 2M+)":null },
-                          ].map(({label,value})=>value ? (
-                            <div key={label} style={{ background:T.surfaceAlt, borderRadius:8, padding:"10px 12px" }}>
-                              <div style={{ fontSize:9, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.7, marginBottom:4 }}>{label}</div>
-                              <div style={{ fontSize:12, fontWeight:600, color:T.textPrimary }}>{value}</div>
-                            </div>
-                          ) : null)}
-                        </div>
-                        {/* Contact CTAs \u2014 WhatsApp + Email + Call */}
-                        <div style={{ display:"flex", gap:8, marginTop:4 }}>
-                          {selectedLead.phone && (
-                            <a href={`https://wa.me/${cleanPhone(selectedLead.phone)}`} target="_blank" rel="noopener noreferrer"
-                              style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"center", gap:6, padding:"10px 0", borderRadius:9, border:"1px solid rgba(37,211,102,0.4)", background:"rgba(37,211,102,0.08)", color:"#25D366", fontSize:12, fontWeight:700, textDecoration:"none" }}>
-                              <svg width="13" height="13" viewBox="0 0 24 24" fill="#25D366"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.123.558 4.116 1.535 5.847L.057 23.571l6.194-1.622A11.955 11.955 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.75a9.738 9.738 0 0 1-4.964-1.356l-.356-.212-3.677.963.98-3.585-.232-.369A9.72 9.72 0 0 1 2.25 12C2.25 6.615 6.615 2.25 12 2.25S21.75 6.615 21.75 12 17.385 21.75 12 21.75z"/></svg>
-                              WhatsApp
-                            </a>
-                          )}
-                          {selectedLead.email && (
-                            <a href={`mailto:${selectedLead.email}`}
-                              style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"center", gap:6, padding:"10px 0", borderRadius:9, border:"1px solid rgba(59,130,246,0.4)", background:"rgba(59,130,246,0.08)", color:"#3B82F6", fontSize:12, fontWeight:700, textDecoration:"none" }}>
-                              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#3B82F6" strokeWidth="2.5" strokeLinecap="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-                              Email
-                            </a>
-                          )}
-                          {selectedLead.phone && (
-                            <a href={`tel:${selectedLead.phone}`}
-                              style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"center", gap:6, padding:"10px 0", borderRadius:9, border:"1px solid rgba(16,185,129,0.4)", background:"rgba(16,185,129,0.08)", color:"#10B981", fontSize:12, fontWeight:700, textDecoration:"none" }}>
-                              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#10B981" strokeWidth="2.5" strokeLinecap="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.6 3.42 2 2 0 0 1 3.58 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.54a16 16 0 0 0 6.01 6.01l.95-.95a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-                              Call
-                            </a>
-                          )}
-                        </div>
-                        
-                        {selectedLead.notes && (
-                          <div style={{ background:T.surfaceAlt, borderRadius:8, padding:"12px 14px" }}>
-                            <div style={{ fontSize:9, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.7, marginBottom:6 }}>Notes</div>
-                            <div style={{ fontSize:12, color:T.textSecondary, lineHeight:1.6 }}>{selectedLead.notes}</div>
-                          </div>
-                        )}
-                      {/* \u2500\u2500 Document Upload \u2500\u2500 */}
-                        <div style={{ marginTop:14 }}>
-                          <div style={{ fontSize:11, fontWeight:600, color:T.textMuted, marginBottom:8, letterSpacing:0.3 }}>\uD83D\uDCCE Documents</div>
-                          <div style={{ display:"flex", flexWrap:"wrap", gap:6, marginBottom:8 }}>
-                            {["Passport","Visa","Emirates ID","Bank Statement","Proof of Funds","Salary Cert"].map(docType => {
-                              const hasDoc = (selectedLead.docs||{})[docType];
-                              return (
-                                <label key={docType} style={{ padding:"5px 10px", borderRadius:7, border:`1px solid ${hasDoc?"rgba(16,185,129,0.4)":T.border}`, background:hasDoc?"rgba(16,185,129,0.08)":"transparent", color:hasDoc?"#10B981":T.textMuted, fontSize:10, fontWeight:600, cursor:"pointer", display:"block" }}>
-                                  {hasDoc?"\u2713 ":""}{docType}
-                                  <input type="file" accept=".pdf,.jpg,.jpeg,.png" style={{ display:"none" }} onChange={async(e)=>{
-                                    const file = e.target.files[0]; if(!file) return;
-                                    const docs = {...(selectedLead.docs||{}), [docType]:{ name:file.name, size:file.size, uploadedAt:new Date().toISOString() }};
-                                    try { await setDoc(doc(db,"leads",selectedLead.id),{docs,updatedAt:new Date().toISOString()},{merge:true}); setSelectedLead(l=>l?{...l,docs}:l); } catch(ex){ console.error(ex); }
-                                  }}/>
-                                </label>
-                              );
-                            })}
-                          </div>
-                          {Object.keys(selectedLead.docs||{}).length > 0 && (
-                            <div style={{ fontSize:10, color:T.textMuted, lineHeight:1.8 }}>
-                              {Object.entries(selectedLead.docs||{}).map(([k,v])=>(
-                                <span key={k} style={{ marginRight:10 }}>\u2713 {k}: {v.name}</span>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Notes tab */}
-                    {leadDrawerTab === "notes" && (
-                      <div style={{ padding:"20px", flex:1, display:"flex", flexDirection:"column" }}>
-                        {/* Add note */}
-                        <div style={{ marginBottom:16 }}>
-                          <textarea value={leadNote} onChange={e=>setLeadNote(e.target.value)} rows={3}
-                            placeholder="Add a note about this lead..."
-                            style={{ width:"100%", padding:"10px 12px", background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:8, color:T.textPrimary, fontSize:12, fontFamily:"'Outfit',sans-serif", outline:"none", resize:"vertical", boxSizing:"border-box" }}/>
-                          <button type="button" onClick={()=>saveNote(selectedLead.id)} disabled={!leadNote.trim()||leadNoteSaving}
-                            style={{ marginTop:8, padding:"8px 20px", borderRadius:7, border:`1px solid ${T.gold}`, background:"rgba(212,168,67,0.1)", color:T.gold, fontSize:12, fontWeight:700, cursor:"pointer", opacity:(!leadNote.trim()||leadNoteSaving)?0.5:1 }}>
-                            {leadNoteSaving ? "Saving..." : "Save Note"}
-                          </button>
-                        </div>
-                        {/* Note history */}
-                        <div style={{ flex:1, overflowY:"auto", display:"flex", flexDirection:"column", gap:8 }}>
-                          {(selectedLead.notes_log||[]).map((n,ni)=>(
-                            <div key={ni} style={{ background:T.surfaceAlt, borderRadius:8, padding:"10px 12px" }}>
-                              <div style={{ fontSize:11, color:T.textPrimary, lineHeight:1.5, marginBottom:4 }}>{n.text}</div>
-                              <div style={{ fontSize:10, color:T.textMuted }}>{n.by}{"\u00B7"}{n.at ? new Date(n.at).toLocaleString("en-AE",{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"}) : ""}</div>
-                            </div>
-                          ))}
-                          {(!selectedLead.notes_log||selectedLead.notes_log.length===0) && (
-                            <div style={{ textAlign:"center", padding:"30px 0", color:T.textMuted, fontSize:12 }}>No notes yet</div>
-                          )}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {/* \u2500\u2500 Tasks Tab \u2500\u2500 */}
-              {selectedLead && leadDrawerTab === "tasks" && (
-                <div style={{ padding:"16px 20px", flex:1, overflowY:"auto" }}>
-                  {/* Task reminder */}
-                  <div style={{ marginBottom:20 }}>
-                    <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:10 }}>\uD83D\uDCCB Follow-up Reminders</div>
-                    <div style={{ padding:"12px 14px", background:"rgba(212,168,67,0.06)", border:"1px solid rgba(212,168,67,0.2)", borderRadius:10, marginBottom:12, fontSize:12, color:T.textSecondary, lineHeight:1.8 }}>
-                      Best time to contact this lead: <strong style={{ color:T.gold }}>{getFollowUpTime(selectedLead)}</strong>
-                    </div>
-                    {/* Quick reminder buttons */}
-                    <div style={{ fontSize:11, color:T.textMuted, marginBottom:8, fontWeight:600 }}>Quick follow-up schedule</div>
-                    <div style={{ display:"flex", gap:6, flexWrap:"wrap", marginBottom:14 }}>
-                      {["Call tomorrow 10am","Follow up in 3 days","Check in next week","Schedule viewing","Send WhatsApp","Send listing PDF"].map((t,i)=>(
-                        <button key={i} type="button"
-                          onClick={async()=>{
-                            try {
-                              const entry = { text:`\uD83D\uDCCB Task: ${t}`, by: userName||firebaseUser?.email, at: new Date().toISOString() };
-                              const prev = selectedLead?.notes_log || [];
-                              await setDoc(doc(db,"leads",selectedLead.id),{ notes_log:[entry,...prev], updatedAt:new Date().toISOString() },{ merge:true });
-                              setSelectedLead(l=>l?{...l,notes_log:[entry,...(l.notes_log||[])]}:l);
-                            } catch(e){ console.error(e); }
-                          }}
-                          style={{ padding:"6px 12px", background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:8, color:T.textSecondary, fontSize:11, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>
-                          {t}
-                        </button>
-                      ))}
-                    </div>
-                    {/* Viewing scheduler */}
-                    <div style={{ fontSize:11, color:T.textMuted, marginBottom:8, fontWeight:600 }}>Schedule a viewing</div>
-                    <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8, marginBottom:10 }}>
-                      <div>
-                        <div style={{ fontSize:10, color:T.textMuted, marginBottom:3 }}>Date</div>
-                        <input type="date" id={`view-date-${selectedLead.id}`}
-                          style={{ width:"100%", padding:"8px 10px", background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:8, color:T.white, fontFamily:"'Outfit',sans-serif", fontSize:12, outline:"none", colorScheme:"dark" }} />
-                      </div>
-                      <div>
-                        <div style={{ fontSize:10, color:T.textMuted, marginBottom:3 }}>Time</div>
-                        <input type="time" id={`view-time-${selectedLead.id}`}
-                          style={{ width:"100%", padding:"8px 10px", background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:8, color:T.white, fontFamily:"'Outfit',sans-serif", fontSize:12, outline:"none", colorScheme:"dark" }} />
-                      </div>
-                    </div>
-                    <div style={{ marginBottom:10 }}>
-                      <div style={{ fontSize:10, color:T.textMuted, marginBottom:3 }}>Property / Location</div>
-                      <input type="text" id={`view-prop-${selectedLead.id}`} placeholder="e.g. Dubai Hills Estate, Unit 204"
-                        style={{ width:"100%", padding:"8px 10px", background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:8, color:T.white, fontFamily:"'Outfit',sans-serif", fontSize:12, outline:"none", boxSizing:"border-box" }} />
-                    </div>
-                    <button type="button"
-                      onClick={async()=>{
-                        const date = document.getElementById(`view-date-${selectedLead.id}`)?.value;
-                        const time = document.getElementById(`view-time-${selectedLead.id}`)?.value;
-                        const prop = document.getElementById(`view-prop-${selectedLead.id}`)?.value;
-                        if (!date) return;
-                        const entry = { text:`\uD83C\uDFE0 Viewing scheduled: ${prop||"TBD"} on ${date}${time?" at "+time:""}`, by:userName||firebaseUser?.email, at:new Date().toISOString() };
-                        const prev = selectedLead?.notes_log || [];
-                        try {
-                          await setDoc(doc(db,"leads",selectedLead.id),{ notes_log:[entry,...prev], updatedAt:new Date().toISOString() },{ merge:true });
-                          setSelectedLead(l=>l?{...l,notes_log:[entry,...(l.notes_log||[])]}:l);
-                        } catch(e){ console.error(e); }
-                      }}
-                      style={{ width:"100%", padding:"10px 0", background:"linear-gradient(135deg,#D4A843,#B8922A)", border:"none", borderRadius:9, color:"#000", fontSize:12, fontWeight:700, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>
-                      \uD83D\uDCC5 Save Viewing to Lead History
-                    </button>
-                  </div>
-                  {/* Viewing history from notes */}
-                  {(selectedLead.notes_log||[]).filter(n=>n.text?.startsWith("\uD83C\uDFE0")||n.text?.startsWith("\uD83D\uDCCB")).length > 0 && (
-                    <div>
-                      <div style={{ fontSize:11, color:T.textMuted, fontWeight:600, marginBottom:8 }}>History</div>
-                      {(selectedLead.notes_log||[]).filter(n=>n.text?.startsWith("\uD83C\uDFE0")||n.text?.startsWith("\uD83D\uDCCB")).map((n,i)=>(
-                        <div key={i} style={{ padding:"8px 12px", background:T.surfaceAlt, borderRadius:8, border:`1px solid ${T.border}`, marginBottom:6 }}>
-                          <div style={{ fontSize:12, color:T.white }}>{n.text}</div>
-                          <div style={{ fontSize:10, color:T.textMuted, marginTop:3 }}>{n.by}{"\u00B7"}{n.at?new Date(n.at).toLocaleDateString("en-GB",{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"}):""}</div>
-                        </div>
-                      ))}
+                  {/* Footer count */}
+                  {mlFiltered.length > 0 && (
+                    <div style={{ padding:"10px 14px", borderTop:"1px solid "+T.border, fontSize:11, color:T.textMuted, display:"flex", justifyContent:"space-between" }}>
+                      <span>Showing {mlFiltered.length} of {(mlAllLeads||[]).length} leads</span>
+                      <span>{(mlAllLeads||[]).filter(l => l.status === "Won").length} Won · {(mlAllLeads||[]).filter(l => l.status === "Lost").length} Lost</span>
                     </div>
                   )}
                 </div>
-              )}
 
-              {/* \u2500\u2500 Activity Timeline Tab \u2500\u2500 */}
-              {selectedLead && leadDrawerTab === "timeline" && (
-                <div style={{ padding:"16px 20px", flex:1, overflowY:"auto" }}>
-                  <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:14 }}>\uD83D\uDD50 Activity Timeline</div>
-                  {(() => {
-                    // Build timeline from notes_log + status + createdAt
-                    const events = [];
-                    // Add notes as timeline events
-                    (selectedLead.notes_log||[]).forEach(n => {
-                      events.push({ time:n.at, type: n.text?.startsWith("\uD83C\uDFE0")?"viewing": n.text?.startsWith("\uD83D\uDCCB")?"task":"note", text:n.text, by:n.by });
-                    });
-                    // Add creation event
-                    if (selectedLead.createdAt) events.push({ time:selectedLead.createdAt, type:"created", text:"Lead created", by:selectedLead.addedBy||"System" });
-                    // Sort newest first
-                    events.sort((a,b) => new Date(b.time||0) - new Date(a.time||0));
-                    const typeColors = { note:"#3B82F6", viewing:"#10B981", task:"#D4A843", created:"#8B5CF6" };
-                    const typeIcons = { note:"\uD83D\uDCDD", viewing:"\uD83C\uDFE0", task:"\uD83D\uDCCB", created:"\u2728" };
-                    if (events.length === 0) return (
-                      <div style={{ textAlign:"center", padding:"40px 0", color:T.textMuted, fontSize:12 }}>
-                        <div style={{ fontSize:32, marginBottom:8 }}>\uD83D\uDCED</div>
-                        No activity yet \u2014 add a note or schedule a viewing
-                      </div>
-                    );
-                    return events.map((ev, i) => (
-                      <div key={i} style={{ display:"flex", gap:12, marginBottom:14, paddingBottom:14, borderBottom:i<events.length-1?`1px solid ${T.border}`:"none" }}>
-                        <div style={{ width:32, height:32, borderRadius:"50%", background:`${typeColors[ev.type]||"#6B7280"}15`, border:`1px solid ${typeColors[ev.type]||"#6B7280"}40`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:14, flexShrink:0 }}>
-                          {typeIcons[ev.type]||"\uD83D\uDCCC"}
-                        </div>
-                        <div style={{ flex:1, minWidth:0 }}>
-                          <div style={{ fontSize:12, color:T.white, lineHeight:1.5 }}>{ev.text}</div>
-                          <div style={{ fontSize:10, color:T.textMuted, marginTop:3 }}>
-                            {ev.by}{"\u00B7"}{ev.time ? new Date(ev.time).toLocaleDateString("en-GB",{day:"2-digit",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit"}) : ""}
-                          </div>
-                        </div>
-                      </div>
-                    ));
-                  })()}
-                </div>
-              )}
+                {/* ── LEAD DETAIL DRAWER ── */}
+                {selectedLead && (
+                  <div style={{ position:"fixed", inset:0, zIndex:1500, display:"flex" }}
+                    onClick={e => { if (e.target === e.currentTarget) setSelectedLead(null); }}>
+                    <div style={{ flex:1, background:"rgba(0,0,0,0.5)" }} onClick={() => setSelectedLead(null)}/>
+                    <div style={{ width:460, background:T.bg, borderLeft:"1px solid "+T.border, display:"flex", flexDirection:"column", overflowY:"auto" }}>
 
-              {/* \u2500\u2500 Tags Tab \u2500\u2500 */}
-              {selectedLead && leadDrawerTab === "tags" && (
-                <div style={{ padding:"16px 20px", flex:1, overflowY:"auto" }}>
-                  <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:14 }}>\uD83C\uDFF7 Tags & Labels</div>
-                  {/* Current tags */}
-                  <div style={{ display:"flex", flexWrap:"wrap", gap:6, marginBottom:16 }}>
-                    {(selectedLead.tags||[]).length === 0 && <div style={{ fontSize:12, color:T.textMuted }}>No tags yet</div>}
-                    {(selectedLead.tags||[]).map((tag,i) => (
-                      <div key={i} style={{ display:"flex", alignItems:"center", gap:5, padding:"5px 10px", background:"rgba(212,168,67,0.12)", border:"1px solid rgba(212,168,67,0.3)", borderRadius:20, fontSize:12, color:T.gold }}>
-                        {tag}
-                        <button type="button" onClick={async()=>{
-                          const newTags = (selectedLead.tags||[]).filter(t=>t!==tag);
-                          try { await setDoc(doc(db,"leads",selectedLead.id),{tags:newTags,updatedAt:new Date().toISOString()},{merge:true}); setSelectedLead(l=>l?{...l,tags:newTags}:l); } catch(e){ console.error(e); }
-                        }} style={{ background:"none", border:"none", color:T.textMuted, cursor:"pointer", fontSize:14, lineHeight:1, padding:0, marginLeft:2 }}>\u00D7</button>
-                      </div>
-                    ))}
-                  </div>
-                  {/* Quick tag buttons */}
-                  <div style={{ fontSize:11, color:T.textMuted, marginBottom:8, fontWeight:600 }}>Quick add</div>
-                  <div style={{ display:"flex", flexWrap:"wrap", gap:6, marginBottom:14 }}>
-                    {["\u2B50 VIP","\uD83D\uDCB5 Cash Buyer","\uD83D\uDCC8 Investor","\uD83D\uDD25 Urgent","\uD83C\uDF19 GCC National","\uD83C\uDFD7 Off-Plan Ready","\uD83C\uDFE6 Mortgage Needed","\uD83C\uDFAF Hot Lead","\uD83E\uDD1D Referral","\uD83D\uDD04 Repeat Client"].map(tag => {
-                      const clean = (() => { let s=tag; for(let ii=0;ii<s.length;ii++){ if(s[ii]===" ") return s.slice(ii+1).trim(); } return s.trim(); })();
-                      const already = (selectedLead.tags||[]).includes(tag);
-                      return (
-                        <button key={tag} type="button" onClick={async()=>{
-                          const cur = selectedLead.tags||[];
-                          const newTags = already ? cur.filter(t=>t!==tag) : [...cur, tag];
-                          try { await setDoc(doc(db,"leads",selectedLead.id),{tags:newTags,updatedAt:new Date().toISOString()},{merge:true}); setSelectedLead(l=>l?{...l,tags:newTags}:l); } catch(e){ console.error(e); }
-                        }}
-                          style={{ padding:"6px 12px", borderRadius:20, border:`1px solid ${already?"rgba(212,168,67,0.5)":T.border}`, background:already?"rgba(212,168,67,0.1)":"transparent", color:already?T.gold:T.textSecondary, fontSize:11, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>
-                          {tag}
-                        </button>
-                      );
-                    })}
-                  </div>
-                  {/* Custom tag input */}
-                  <div style={{ fontSize:11, color:T.textMuted, marginBottom:6, fontWeight:600 }}>Custom tag</div>
-                  <div style={{ display:"flex", gap:8 }}>
-                    <input value={tagInput} onChange={e=>setTagInput(e.target.value)} placeholder="Type a custom tag..."
-                      onKeyDown={async e=>{ if(e.key==="Enter"&&tagInput.trim()){ const newTags=[...(selectedLead.tags||[]),tagInput.trim()]; try{ await setDoc(doc(db,"leads",selectedLead.id),{tags:newTags,updatedAt:new Date().toISOString()},{merge:true}); setSelectedLead(l=>l?{...l,tags:newTags}:l); setTagInput(""); }catch(ex){} }}}
-                      style={{ flex:1, padding:"8px 12px", background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:8, color:T.white, fontFamily:"'Outfit',sans-serif", fontSize:12, outline:"none" }} />
-                    <button type="button" onClick={async()=>{ if(!tagInput.trim()) return; const newTags=[...(selectedLead.tags||[]),tagInput.trim()]; try{ await setDoc(doc(db,"leads",selectedLead.id),{tags:newTags,updatedAt:new Date().toISOString()},{merge:true}); setSelectedLead(l=>l?{...l,tags:newTags}:l); setTagInput(""); }catch(ex){} }}
-                      style={{ padding:"8px 16px", background:"rgba(212,168,67,0.9)", border:"none", borderRadius:8, color:"#000", fontSize:12, fontWeight:700, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>
-                      Add
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* \u2500\u2500 AI Match Tab (Session 13) \u2500\u2500 */}
-              {selectedLead && leadDrawerTab === "ai" && (
-                <div style={{ padding:"16px 20px", flex:1, overflowY:"auto" }}>
-
-                  {/* AI Score breakdown */}
-                  {(() => {
-                    const ai = scoreLeadAI(selectedLead);
-                    const followUp = getFollowUpTime(selectedLead);
-                    const matches = matchProperties(selectedLead);
-                    return (<>
-
-                      {/* Score card */}
-                      <div style={{ background:`${ai.color}08`, border:`1px solid ${ai.color}30`, borderRadius:12, padding:"16px", marginBottom:16 }}>
-                        <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:12 }}>
+                      {/* Drawer header */}
+                      <div style={{ padding:"20px 20px 0", borderBottom:"1px solid "+T.border, flexShrink:0 }}>
+                        <div style={{ display:"flex", alignItems:"flex-start", justifyContent:"space-between", marginBottom:12 }}>
                           <div>
-                            <div style={{ fontSize:11, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.8 }}>AI Lead Score</div>
-                            <div style={{ fontSize:11, color:ai.color, marginTop:2 }}>{ai.label} lead</div>
+                            <div style={{ fontSize:17, fontWeight:700, color:T.white, fontFamily:"'Fraunces',serif" }}>{selectedLead.name||"Unnamed Lead"}</div>
+                            <div style={{ fontSize:12, color:T.textMuted, marginTop:2 }}>{selectedLead.community||""} {selectedLead.type ? "· "+selectedLead.type : ""}</div>
                           </div>
-                          <div style={{ textAlign:"center" }}>
-                            <div style={{ fontSize:36, fontWeight:900, color:ai.color, fontFamily:"'Fraunces',serif", lineHeight:1 }}>{ai.score}</div>
-                            <div style={{ fontSize:11, fontWeight:700, color:ai.color }}>{"/ 100"}</div>
+                          <button type="button" onClick={() => setSelectedLead(null)}
+                            style={{ background:T.surfaceAlt, border:"1px solid "+T.border, borderRadius:8, color:T.textMuted, width:30, height:30, cursor:"pointer", fontSize:16, display:"flex", alignItems:"center", justifyContent:"center" }}>✕</button>
+                        </div>
+
+                        {/* Status selector */}
+                        <div style={{ display:"flex", gap:6, marginBottom:12, flexWrap:"wrap" }}>
+                          {Object.entries(ML_STATUSES).map(([k,v]) => (
+                            <button key={k} type="button" onClick={() => mlUpdateStatus(selectedLead.id, k)}
+                              style={{ padding:"4px 12px", borderRadius:20, fontSize:11, fontWeight:700, cursor:"pointer", border:"1px solid "+(selectedLead.status===k?v.color:T.border), background:selectedLead.status===k?v.bg:"transparent", color:selectedLead.status===k?v.color:T.textMuted }}>
+                              {v.label}
+                            </button>
+                          ))}
+                        </div>
+
+                        {/* Drawer tabs */}
+                        <div style={{ display:"flex", gap:0, marginBottom:0 }}>
+                          {["details","notes","tasks"].map(t => (
+                            <button key={t} type="button" onClick={() => setLeadDrawerTab(t)}
+                              style={{ padding:"8px 16px", fontSize:12, fontWeight:600, border:"none", background:"transparent", color:leadDrawerTab===t?T.gold:T.textMuted, borderBottom:"2px solid "+(leadDrawerTab===t?T.gold:"transparent"), cursor:"pointer", textTransform:"capitalize" }}>
+                              {t}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Drawer body */}
+                      <div style={{ flex:1, padding:"16px 20px", overflowY:"auto" }}>
+
+                        {/* Details tab */}
+                        {leadDrawerTab === "details" && (
+                          <div>
+                            {/* AI Score card */}
+                            {(() => {
+                              const ai = mlScoreLead(selectedLead);
+                              return (
+                                <div style={{ background:"rgba(212,168,67,0.06)", border:"1px solid rgba(212,168,67,0.2)", borderRadius:10, padding:"12px 14px", marginBottom:14 }}>
+                                  <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+                                    <div style={{ fontSize:28, fontWeight:900, color:ai.color, fontFamily:"'Fraunces',serif", lineHeight:1 }}>{ai.score}</div>
+                                    <div>
+                                      <div style={{ fontSize:12, fontWeight:700, color:ai.color }}>{ai.label} Lead</div>
+                                      <div style={{ fontSize:11, color:T.textMuted }}>AI Lead Score</div>
+                                    </div>
+                                    <div style={{ flex:1 }}>
+                                      <div style={{ height:4, background:T.border, borderRadius:2, overflow:"hidden" }}>
+                                        <div style={{ height:"100%", width:String(ai.score)+"%", background:ai.color, borderRadius:2 }}/>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })()}
+
+                            {/* Lead details table */}
+                            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, marginBottom:16 }}>
+                              {[
+                                { label:"Budget",  value: selectedLead.budget ? "AED "+(parseFloat(selectedLead.budget)*0.000001).toFixed(2)+"M" : "—" },
+                                { label:"Source",  value: selectedLead.source || "—"        },
+                                { label:"Status",  value: selectedLead.status || "New"      },
+                                { label:"Type",    value: selectedLead.type || "—"          },
+                                { label:"Nationality", value: selectedLead.nationality || "—" },
+                                { label:"Created", value: selectedLead.createdAt ? new Date(selectedLead.createdAt).toLocaleDateString("en-AE") : "—" },
+                              ].map((item,i) => (
+                                <div key={i} style={{ background:T.surfaceAlt, borderRadius:8, padding:"8px 12px" }}>
+                                  <div style={{ fontSize:10, color:T.textMuted, marginBottom:2 }}>{item.label}</div>
+                                  <div style={{ fontSize:13, fontWeight:600, color:T.textPrimary }}>{item.value}</div>
+                                </div>
+                              ))}
+                            </div>
+
+                            {/* Contact buttons */}
+                            <div style={{ display:"flex", gap:8, marginBottom:16 }}>
+                              {selectedLead.phone && (
+                                <a href={"https://wa.me/"+cleanPhone(selectedLead.phone)} target="_blank" rel="noopener noreferrer"
+                                  style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"center", gap:8, padding:"10px", borderRadius:9, background:"rgba(37,211,102,0.1)", border:"1px solid rgba(37,211,102,0.3)", color:"#25D366", textDecoration:"none", fontSize:12, fontWeight:600 }}>
+                                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/></svg>
+                                  WhatsApp
+                                </a>
+                              )}
+                              {selectedLead.email && (
+                                <a href={"mailto:"+selectedLead.email}
+                                  style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"center", gap:8, padding:"10px", borderRadius:9, background:"rgba(59,130,246,0.1)", border:"1px solid rgba(59,130,246,0.3)", color:"#3B82F6", textDecoration:"none", fontSize:12, fontWeight:600 }}>
+                                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                                  Email
+                                </a>
+                              )}
+                              {selectedLead.phone && (
+                                <a href={"tel:"+selectedLead.phone}
+                                  style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"center", gap:8, padding:"10px", borderRadius:9, background:"rgba(16,185,129,0.1)", border:"1px solid rgba(16,185,129,0.3)", color:"#10B981", textDecoration:"none", fontSize:12, fontWeight:600 }}>
+                                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 2.18h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 9.91a16 16 0 0 0 6.08 6.08l.91-.91a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7a2 2 0 0 1 1.72 2.02z"/></svg>
+                                  Call
+                                </a>
+                              )}
+                            </div>
                           </div>
-                        </div>
-                        {/* Score bar */}
-                        <div style={{ height:6, background:T.surfaceAlt, borderRadius:3, overflow:"hidden", marginBottom:10 }}>
-                          <div style={{ height:"100%", width:`${ai.score}%`, background:ai.color, borderRadius:3, transition:"width 0.6s ease" }}/>
-                        </div>
-                        {/* Positive signals */}
-                        {ai.reasons.length > 0 && (
-                          <div style={{ display:"flex", flexWrap:"wrap", gap:5 }}>
-                            {ai.reasons.map((r,i)=>(
-                              <span key={i} style={{ fontSize:9, padding:"2px 8px", borderRadius:10, background:`${ai.color}14`, color:ai.color, fontWeight:600 }}>
-                                {r}
-                              </span>
+                        )}
+
+                        {/* Notes tab */}
+                        {leadDrawerTab === "notes" && (
+                          <div>
+                            <div style={{ display:"flex", gap:8, marginBottom:16 }}>
+                              <select value={noteType} onChange={e => setNoteType(e.target.value)}
+                                style={{ padding:"8px 12px", background:T.surfaceAlt, border:"1px solid "+T.border, borderRadius:8, color:T.textPrimary, fontSize:12, outline:"none" }}>
+                                {["Call","WhatsApp","Email","Meeting","Note"].map(t => <option key={t} value={t}>{t}</option>)}
+                              </select>
+                              <input value={noteText} onChange={e => setNoteText(e.target.value)}
+                                placeholder="Add a note..."
+                                style={{ flex:1, padding:"8px 12px", background:T.surfaceAlt, border:"1px solid "+T.border, borderRadius:8, color:T.textPrimary, fontSize:12, outline:"none" }}
+                                onKeyDown={e => { if (e.key === "Enter") mlSaveNote(selectedLead.id); }}/>
+                              <button type="button" onClick={() => mlSaveNote(selectedLead.id)} disabled={noteLoading}
+                                style={{ padding:"8px 16px", borderRadius:8, border:"none", background:T.gold, color:"#0A0E1A", fontSize:12, fontWeight:700, cursor:"pointer" }}>
+                                {noteLoading ? "..." : "Add"}
+                              </button>
+                            </div>
+                            {(selectedLead.notes_log||[]).length === 0 && (
+                              <div style={{ textAlign:"center", padding:"32px", color:T.textMuted, fontSize:13 }}>No notes yet — add the first one above</div>
+                            )}
+                            {[...(selectedLead.notes_log||[])].reverse().map((n,i) => (
+                              <div key={i} style={{ padding:"10px 12px", background:T.surfaceAlt, borderRadius:8, marginBottom:8, borderLeft:"3px solid "+T.gold }}>
+                                <div style={{ display:"flex", justifyContent:"space-between", marginBottom:4 }}>
+                                  <span style={{ fontSize:11, fontWeight:700, color:T.gold }}>{n.type||"Note"}</span>
+                                  <span style={{ fontSize:10, color:T.textMuted }}>{n.at ? new Date(n.at).toLocaleDateString("en-AE",{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"}) : ""}</span>
+                                </div>
+                                <div style={{ fontSize:12, color:T.textPrimary }}>{n.text}</div>
+                                <div style={{ fontSize:10, color:T.textMuted, marginTop:4 }}>{n.by||""}</div>
+                              </div>
                             ))}
                           </div>
                         )}
-                      </div>
 
-                      {/* Best follow-up time */}
-                      <div style={{ background:T.surfaceAlt, borderRadius:10, padding:"12px 14px", marginBottom:16 }}>
-                        <div style={{ fontSize:10, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.8, marginBottom:8, display:"flex", alignItems:"center", gap:6 }}>
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                          Best Time to Follow Up
-                        </div>
-                        <div style={{ fontSize:12, color:T.textPrimary, fontWeight:600, marginBottom:4 }}>{followUp}</div>
-                        <div style={{ fontSize:10, color:T.textMuted }}>Based on lead source: {selectedLead.source || "Manual"}</div>
-                        {selectedLead.phone && (
-                          <a href={`https://wa.me/${cleanPhone(selectedLead.phone)}`} target="_blank" rel="noopener noreferrer"
-                            style={{ display:"inline-flex", alignItems:"center", gap:6, marginTop:10, padding:"7px 14px", borderRadius:7, border:"1px solid rgba(37,211,102,0.3)", background:"rgba(37,211,102,0.08)", color:"#25D366", fontSize:11, fontWeight:700, textDecoration:"none" }}>
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/></svg>
-                            WhatsApp Now
-                          </a>
-                        )}
-                      </div>
-
-                      {/* Property matches */}
-                      <div>
-                        <div style={{ fontSize:10, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.8, marginBottom:10, display:"flex", alignItems:"center", gap:6 }}>
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-                          Matched Properties
-                          {selectedLead.budget && <span style={{ fontSize:9, color:T.textMuted }}>Budget: AED {parseInt(selectedLead.budget).toLocaleString()}</span>}
-                        </div>
-                        {matches.length === 0 ? (
-                          <div style={{ fontSize:12, color:T.textMuted, padding:"12px 0" }}>
-                            No matching properties found \u2014 try adding listings or adjusting the lead's budget/community
-                          </div>
-                        ) : (
-                          <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
-                            {matches.map((m,i)=>(
-                              <div key={i} style={{ background:T.surfaceAlt, borderRadius:9, padding:"10px 12px", display:"flex", justifyContent:"space-between", alignItems:"center" }}>
-                                <div style={{ flex:1, minWidth:0 }}>
-                                  <div style={{ fontSize:12, fontWeight:600, color:T.textPrimary, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{m.name}</div>
-                                  <div style={{ fontSize:10, color:T.textMuted, marginTop:2 }}>
-                                    {m.community && <span>{m.community} \u00B7 </span>}
-                                    <span style={{ color: m.type==="listing"?T.teal:T.gold }}>{m.source}</span>
-                                  </div>
-                                </div>
-                                {m.price > 0 && (
-                                  <div style={{ fontSize:11, fontWeight:700, color:T.gold, flexShrink:0, marginLeft:8 }}>
-                                    AED {parseFloat(m.price)>=1e6?(parseFloat(m.price)*0.000001).toFixed(2)+"M":parseInt(m.price).toLocaleString()}
-                                  </div>
-                                )}
+                        {/* Tasks tab */}
+                        {leadDrawerTab === "tasks" && (
+                          <div>
+                            <div style={{ display:"flex", gap:8, marginBottom:16 }}>
+                              <input value={taskText} onChange={e => setTaskText(e.target.value)}
+                                placeholder="Add a task or follow-up..."
+                                style={{ flex:1, padding:"8px 12px", background:T.surfaceAlt, border:"1px solid "+T.border, borderRadius:8, color:T.textPrimary, fontSize:12, outline:"none" }}/>
+                              <input type="date" value={taskDue} onChange={e => setTaskDue(e.target.value)}
+                                style={{ padding:"8px 10px", background:T.surfaceAlt, border:"1px solid "+T.border, borderRadius:8, color:T.textPrimary, fontSize:12, outline:"none" }}/>
+                              <button type="button" onClick={async () => {
+                                  if (!taskText.trim()) return;
+                                  try {
+                                    await updateDoc(doc(db,"leads",selectedLead.id), {
+                                      notes_log: arrayUnion({ text:"Task: "+taskText, type:"Task", due:taskDue, by:auth.currentUser?.email||"", at:new Date().toISOString() }),
+                                      updatedAt: new Date().toISOString(),
+                                    });
+                                    setTaskText(""); setTaskDue("");
+                                  } catch(e) { console.error(e); }
+                                }}
+                                style={{ padding:"8px 16px", borderRadius:8, border:"none", background:T.gold, color:"#0A0E1A", fontSize:12, fontWeight:700, cursor:"pointer" }}>
+                                Add
+                              </button>
+                            </div>
+                            {(selectedLead.notes_log||[]).filter(n => n.type === "Task").length === 0 && (
+                              <div style={{ textAlign:"center", padding:"32px", color:T.textMuted, fontSize:13 }}>No tasks yet</div>
+                            )}
+                            {(selectedLead.notes_log||[]).filter(n => n.type === "Task").reverse().map((n,i) => (
+                              <div key={i} style={{ padding:"10px 12px", background:T.surfaceAlt, borderRadius:8, marginBottom:8, borderLeft:"3px solid #8B5CF6" }}>
+                                <div style={{ fontSize:12, color:T.textPrimary, marginBottom:2 }}>{n.text.replace("Task: ","")}</div>
+                                {n.due && <div style={{ fontSize:10, color:T.gold }}>Due: {n.due}</div>}
+                                <div style={{ fontSize:10, color:T.textMuted, marginTop:2 }}>{n.by||""}</div>
                               </div>
                             ))}
                           </div>
                         )}
                       </div>
-                    </>);
-                  })()}
-                </div>
-              )}
-
-              {/* \u2500\u2500 Quick Capture Modal \u2500\u2500 */}
-                            {/* \u2500\u2500 WhatsApp / Email Templates Modal \u2500\u2500 */}
-              {showTemplates && (
-                <div style={{ position:"fixed", inset:0, background:"rgba(4,9,15,0.85)", zIndex:2001, display:"flex", alignItems:"center", justifyContent:"center", backdropFilter:"blur(8px)" }}
-                  onClick={e=>{ if(e.target===e.currentTarget) setShowTemplates(false); }}>
-                  <div style={{ background:T.surface, borderRadius:16, border:`1px solid ${T.border}`, width:"95%", maxWidth:560, maxHeight:"85vh", overflowY:"auto" }}
-                    onClick={e=>e.stopPropagation()}>
-                    <div style={{ padding:"20px 24px", borderBottom:`1px solid ${T.border}`, display:"flex", justifyContent:"space-between", alignItems:"center" }}>
-                      <div style={{ fontFamily:"'Fraunces',serif", fontSize:17, fontWeight:900, color:T.gold }}>\uD83D\uDCCB Message Templates</div>
-                      <button type="button" onClick={()=>setShowTemplates(false)}
-                        style={{ background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:8, color:T.textMuted, width:30, height:30, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center" }}>\u2715</button>
-                    </div>
-                    <div style={{ padding:"20px 24px" }}>
-                      {[
-                        { label:"\uD83C\uDFE0 Initial Inquiry Response", type:"WhatsApp", text:"Hello! Thank you for your interest in properties in Dubai. I'm your dedicated property consultant at The Address Holding. Could you please share your budget range and preferred community? I'd love to find you the perfect property. \uD83C\uDFD9" },
-                        { label:"\uD83D\uDCC5 Viewing Confirmation", type:"WhatsApp", text:"Dear [Name], your property viewing has been confirmed for [Date] at [Time]. The property is located at [Address]. Please let me know if you need directions. Looking forward to meeting you! \uD83D\uDD11" },
-                        { label:"\uD83D\uDCB0 Payment Plan Follow-up", type:"WhatsApp", text:"Hi [Name]! Following up on your interest in [Property]. Great news \u2014 they offer flexible payment plans: 20% down, rest over 3 years post-handover. Would you like me to prepare a full breakdown? \uD83D\uDCCA" },
-                        { label:"\uD83C\uDFC5 Golden Visa Info", type:"WhatsApp", text:"Did you know? Investing AED 2M+ in Dubai real estate qualifies you for the UAE Golden Visa \u2014 10-year renewable residency for you and your family. Would you like more details? \uD83C\uDDE6\uD83C\uDDEA" },
-                        { label:"\uD83D\uDCCA Market Update", type:"Email", text:"Subject: Dubai Property Market Update\n\nDear [Name],\n\nI wanted to share the latest market insights from the Dubai Land Department. Transactions in your preferred community have [increased/decreased] by X% this quarter.\n\nBest regards,\n[Your Name]\nThe Address Holding" },
-                        { label:"\uD83E\uDD1D Post-Viewing Thank You", type:"WhatsApp", text:"Thank you for visiting the property today, [Name]! I hope you found it as impressive as I do. Please feel free to ask any questions. If you'd like to proceed or view other options, I'm here to help. \uD83D\uDE0A" },
-                        { label:"\u26A1 Off-Plan Launch Alert", type:"WhatsApp", text:"\uD83D\uDEA8 NEW LAUNCH ALERT! [Developer] has just launched [Project] in [Community]. Starting from AED [Price]. Payment plan: [X]% down + [Y]% on handover. Limited units available \u2014 shall I reserve one for you? \uD83D\uDD25" },
-                        { label:"\uD83D\uDCDD Re-engagement (Cold Lead)", type:"WhatsApp", text:"Hi [Name], it's been a while since we spoke! The Dubai property market has some exciting new opportunities that match your profile. Are you still considering a purchase? Happy to share the latest options. \uD83C\uDFD9" },
-                      ].map((tmpl, i) => (
-                        <div key={i} style={{ padding:"14px 16px", background:T.surfaceAlt, borderRadius:10, border:`1px solid ${T.border}`, marginBottom:10 }}>
-                          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:8 }}>
-                            <div style={{ fontSize:13, fontWeight:600, color:T.white }}>{tmpl.label}</div>
-                            <span style={{ fontSize:10, padding:"2px 8px", borderRadius:4, background:tmpl.type==="WhatsApp"?"rgba(37,211,102,0.15)":"rgba(59,130,246,0.15)", color:tmpl.type==="WhatsApp"?"#25D366":"#3B82F6", fontWeight:600 }}>{tmpl.type}</span>
-                          </div>
-                          <div style={{ fontSize:11, color:T.textSecondary, lineHeight:1.6, marginBottom:10, whiteSpace:"pre-line" }}>{tmpl.text.slice(0,120)}{tmpl.text.length>120?"...":""}</div>
-                          <div style={{ display:"flex", gap:6 }}>
-                            <button type="button" onClick={()=>{ navigator.clipboard.writeText(tmpl.text); }}
-                              style={{ padding:"5px 12px", background:"rgba(212,168,67,0.1)", border:"1px solid rgba(212,168,67,0.3)", borderRadius:6, color:T.gold, fontSize:11, fontWeight:600, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>
-                              \uD83D\uDCCB Copy
-                            </button>
-                            {tmpl.type==="WhatsApp" && selectedLead?.phone && (
-                              <a href={`https://wa.me/${cleanPhone(selectedLead.phone)}?text=${encodeURIComponent(tmpl.text)}`}
-                                target="_blank" rel="noopener noreferrer"
-                                style={{ padding:"5px 12px", background:"rgba(37,211,102,0.1)", border:"1px solid rgba(37,211,102,0.3)", borderRadius:6, color:"#25D366", fontSize:11, fontWeight:600, cursor:"pointer", fontFamily:"'Outfit',sans-serif", textDecoration:"none" }}>
-                                Send via WhatsApp
-                              </a>
-                            )}
-                          </div>
-                        </div>
-                      ))}
                     </div>
                   </div>
-                </div>
-              )}
+                )}
 
-              {showQuickCapture && (
-                <div style={{ position:"fixed", inset:0, background:"rgba(4,9,15,0.85)", zIndex:2000, display:"flex", alignItems:"center", justifyContent:"center", backdropFilter:"blur(8px)" }} onClick={e=>{if(e.target===e.currentTarget)setShowQuickCapture(false);}}>
-                  <div style={{ background:T.surface, borderRadius:16, border:`1px solid ${T.border}`, width:"95%", maxWidth:480, maxHeight:"90vh", overflowY:"auto" }} onClick={e=>e.stopPropagation()}>
-                    <div style={{ padding:"22px 24px", borderBottom:`1px solid ${T.border}`, display:"flex", justifyContent:"space-between", alignItems:"center" }}>
-                      <div>
-                        <div style={{ fontFamily:"'Fraunces',serif", fontSize:18, fontWeight:900, color:T.gold }}>Quick Capture</div>
-                        <div style={{ fontSize:11, color:T.textMuted, marginTop:2 }}>Add a new lead \u2014 will be assigned to you</div>
+                {/* ── QUICK CAPTURE MODAL ── */}
+                {showQuickCapture && (
+                  <div style={{ position:"fixed", inset:0, background:"rgba(4,9,15,0.85)", zIndex:2000, display:"flex", alignItems:"center", justifyContent:"center" }}
+                    onClick={e => { if (e.target === e.currentTarget) setShowQuickCapture(false); }}>
+                    <div style={{ background:T.surface, borderRadius:16, border:"1px solid "+T.border, width:"95%", maxWidth:480, padding:"24px" }} onClick={e => e.stopPropagation()}>
+                      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:20 }}>
+                        <div style={{ fontFamily:"'Fraunces',serif", fontSize:17, fontWeight:900, color:T.white }}>Quick Lead Capture</div>
+                        <button type="button" onClick={() => setShowQuickCapture(false)}
+                          style={{ background:T.surfaceAlt, border:"1px solid "+T.border, borderRadius:8, color:T.textMuted, width:30, height:30, cursor:"pointer", fontSize:16 }}>✕</button>
                       </div>
-                      <button type="button" onClick={()=>setShowQuickCapture(false)}
-                        style={{ background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:8, color:T.textMuted, width:32, height:32, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center" }}>
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                      </button>
-                    </div>
-                    <div style={{ padding:"20px 24px", display:"flex", flexDirection:"column", gap:14 }}>
-                      {[
-                        { key:"name",      label:"Full Name",        placeholder:"Ahmed Al-Mansouri",    required:true },
-                        { key:"phone",     label:"Phone Number",     placeholder:"+971 50 123 4567"              },
-                        { key:"email",     label:"Email Address",    placeholder:"ahmed@example.com"             },
-                        { key:"budget",    label:"Budget (AED)",     placeholder:"2000000",      type:"number"   },
-                        { key:"community", label:"Community Interest",placeholder:"Dubai Hills Estate"           },
-                        { key:"nationality",label:"Nationality",      placeholder:"e.g. Indian, British, Russian" },
-                        { key:"language",   label:"Language Pref",   placeholder:"e.g. English, Arabic, Russian" },
-                        { key:"timeline",   label:"Purchase Timeline",placeholder:"Immediate / 1-3 months / 6-12 months" },
-                      ].map(({key,label,placeholder,required,type})=>(
-                        <div key={key}>
-                          <div style={{ fontSize:11, fontWeight:600, color:T.textMuted, marginBottom:5, letterSpacing:0.3 }}>
-                            {label}{required && <span style={{ color:T.gold }}> *</span>}
+                      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12 }}>
+                        {[
+                          { label:"Full Name *",    val:leadAddName,   set:setLeadAddName,   ph:"Client name",     type:"text"   },
+                          { label:"Phone *",         val:leadAddPhone,  set:setLeadAddPhone,  ph:"+971 50 XXX XXXX", type:"tel"   },
+                          { label:"Email",           val:leadAddEmail,  set:setLeadAddEmail,  ph:"email@example.com", type:"email" },
+                          { label:"Budget (AED)",    val:leadAddBudget, set:setLeadAddBudget, ph:"e.g. 2000000",    type:"number" },
+                        ].map((f,i) => (
+                          <div key={i}>
+                            <div style={{ fontSize:11, color:T.textMuted, marginBottom:4 }}>{f.label}</div>
+                            <input type={f.type} value={f.val} onChange={e => f.set(e.target.value)} placeholder={f.ph}
+                              style={{ width:"100%", padding:"9px 12px", background:T.surfaceAlt, border:"1px solid "+T.border, borderRadius:8, color:T.textPrimary, fontSize:13, outline:"none", boxSizing:"border-box" }}/>
                           </div>
-                          <input type={type||"text"} value={captureForm[key]||""} onChange={e=>setCaptureForm(f=>({...f,[key]:e.target.value}))}
-                            placeholder={placeholder}
-                            style={{ width:"100%", padding:"10px 14px", background:T.bg, border:`1px solid rgba(212,168,67,0.15)`, borderRadius:9, color:T.textPrimary, fontSize:13, fontFamily:"'Outfit',sans-serif", outline:"none", boxSizing:"border-box" }}/>
+                        ))}
+                      </div>
+                      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12, marginTop:12 }}>
+                        <div>
+                          <div style={{ fontSize:11, color:T.textMuted, marginBottom:4 }}>Source</div>
+                          <select value={leadAddSource} onChange={e => setLeadAddSource(e.target.value)}
+                            style={{ width:"100%", padding:"9px 12px", background:T.surfaceAlt, border:"1px solid "+T.border, borderRadius:8, color:T.textPrimary, fontSize:13, outline:"none" }}>
+                            {Object.keys(ML_SOURCES).map(s => <option key={s} value={s}>{s}</option>)}
+                          </select>
                         </div>
-                      ))}
-                      <div>
-                        <div style={{ fontSize:11, fontWeight:600, color:T.textMuted, marginBottom:5 }}>Source</div>
-                        <select value={captureForm.source} onChange={e=>setCaptureForm(f=>({...f,source:e.target.value}))}
-                          style={{ width:"100%", padding:"10px 14px", background:T.bg, border:`1px solid rgba(212,168,67,0.15)`, borderRadius:9, color:T.textPrimary, fontSize:13, fontFamily:"'Outfit',sans-serif", outline:"none", cursor:"pointer" }}>
-                          {["Manual","Property Finder","Bayut","Dubizzle","WhatsApp","Meta/Facebook","Instagram","Google Ads","Referral","Website","Cold Call"].map(s=><option key={s} value={s}>{s}</option>)}
-                        </select>
+                        <div>
+                          <div style={{ fontSize:11, color:T.textMuted, marginBottom:4 }}>Type</div>
+                          <select value={leadAddType} onChange={e => setLeadAddType(e.target.value)}
+                            style={{ width:"100%", padding:"9px 12px", background:T.surfaceAlt, border:"1px solid "+T.border, borderRadius:8, color:T.textPrimary, fontSize:13, outline:"none" }}>
+                            {["Buy","Rent","Off-Plan","Invest"].map(t => <option key={t} value={t}>{t}</option>)}
+                          </select>
+                        </div>
                       </div>
-                      <div>
-                        <div style={{ fontSize:11, fontWeight:600, color:T.textMuted, marginBottom:5 }}>Notes</div>
-                        <textarea value={captureForm.notes||""} onChange={e=>setCaptureForm(f=>({...f,notes:e.target.value}))} rows={2}
-                          placeholder="Budget range, timeline, requirements..."
-                          style={{ width:"100%", padding:"10px 14px", background:T.bg, border:`1px solid rgba(212,168,67,0.15)`, borderRadius:9, color:T.textPrimary, fontSize:13, fontFamily:"'Outfit',sans-serif", outline:"none", resize:"vertical", boxSizing:"border-box" }}/>
-                      </div>
-                    </div>
-                    <div style={{ padding:"16px 24px", borderTop:`1px solid ${T.border}`, display:"flex", gap:10, justifyContent:"flex-end" }}>
-                      <button type="button" onClick={()=>setShowQuickCapture(false)}
-                        style={{ padding:"10px 20px", borderRadius:8, border:`1px solid ${T.border}`, background:"transparent", color:T.textMuted, fontSize:12, cursor:"pointer" }}>
-                        Cancel
-                      </button>
-                      <button type="button" onClick={submitCapture} disabled={captureLoading||(!captureForm.name&&!captureForm.phone)}
-                        style={{ padding:"10px 24px", borderRadius:8, border:`1px solid ${T.gold}`, background:"rgba(212,168,67,0.12)", color:T.gold, fontSize:12, fontWeight:700, cursor:"pointer", opacity:(captureLoading||(!captureForm.name&&!captureForm.phone))?0.5:1, fontFamily:"'Outfit',sans-serif" }}>
-                        {captureLoading ? "Saving..." : "Save Lead"}
+                      <button type="button" onClick={async () => { await mlSaveNewLead(); setShowQuickCapture(false); }}
+                        disabled={leadAddSaving}
+                        style={{ width:"100%", marginTop:18, padding:"12px", borderRadius:9, border:"none", background:"linear-gradient(135deg,"+T.gold+",#B8902E)", color:"#0A0E1A", fontSize:14, fontWeight:700, cursor:"pointer" }}>
+                        {leadAddSaving ? "Saving..." : "Save Lead"}
                       </button>
                     </div>
                   </div>
-                </div>
-              )}
+                )}
 
-              {/* \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
-                  SESSION 16 \u2014 BULK IMPORT MODAL
-                  CSV/Excel lead import with field mapping
-              \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 */}
-              {showBulkImport && (
-                <div style={{ position:"fixed", inset:0, background:"rgba(4,9,15,0.92)", zIndex:2000, display:"flex", alignItems:"center", justifyContent:"center", padding:16 }}
-                  onClick={e => { if(e.target===e.currentTarget) setShowBulkImport(false); }}>
-                  <div style={{ background:T.surface, borderRadius:20, border:`1px solid ${T.border}`, width:"min(780px,95vw)", maxHeight:"90vh", overflowY:"auto", padding:28 }}>
-
-                    {/* Modal Header */}
-                    <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:24 }}>
-                      <div>
-                        <div style={{ fontSize:18, fontWeight:800, color:T.white }}>Import Leads from CSV</div>
-                        <div style={{ fontSize:12, color:T.textMuted, marginTop:2 }}>Upload CSV - Map fields - Preview - Import</div>
-                      </div>
-                      <button type="button" onClick={() => setShowBulkImport(false)}
-                        style={{ background:"none", border:"none", color:T.textMuted, fontSize:20, cursor:"pointer", padding:4 }}>\u2715</button>
-                    </div>
-
-                    {/* Step indicator */}
-                    <div style={{ display:"flex", gap:4, marginBottom:24 }}>
-                      {["Upload","Map Fields","Preview","Done"].map((s,i) => (
-                        <div key={i} style={{ flex:1, display:"flex", alignItems:"center", gap:4 }}>
-                          <div style={{ width:24, height:24, borderRadius:"50%", display:"flex", alignItems:"center", justifyContent:"center", fontSize:11, fontWeight:700,
-                            background: importStep > i+1 ? "#10B981" : importStep === i+1 ? T.gold : T.surfaceAlt,
-                            color: importStep >= i+1 ? "#000" : T.textMuted }}>
-                            {importStep > i+1 ? "\u2713" : i+1}
-                          </div>
-                          <div style={{ fontSize:11, color:importStep===i+1?T.gold:T.textMuted, fontWeight:importStep===i+1?700:400 }}>{s}</div>
-                          {i < 3 && <div style={{ flex:1, height:1, background:T.border }}/>}
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* Step 1: Upload */}
-                    {importStep === 1 && (
-                      <div>
-                        <div style={{ border:`2px dashed ${T.border}`, borderRadius:12, padding:"40px 24px", textAlign:"center", marginBottom:16, cursor:"pointer" }}
-                          onClick={() => document.getElementById("csv-upload-input").click()}
-                          onDragOver={e => e.preventDefault()}
-                          onDrop={e => {
-                            e.preventDefault();
-                            const file = e.dataTransfer.files[0];
-                            if (file) handleCsvFile(file);
-                          }}>
-                          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke={T.gold} strokeWidth="1.5" strokeLinecap="round" style={{ marginBottom:12 }}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                          <div style={{ fontSize:14, fontWeight:700, color:T.white, marginBottom:6 }}>Drop CSV file here or click to browse</div>
-                          <div style={{ fontSize:11, color:T.textMuted }}>Supports: CSV files from PropSpace, Goyzer, Property Finder, Bayut, Excel exports</div>
-                          <input id="csv-upload-input" type="file" accept=".csv,.txt" style={{ display:"none" }}
-                            onChange={e => { if(e.target.files[0]) handleCsvFile(e.target.files[0]); }} />
-                        </div>
-
-                        <div style={{ background:T.card, borderRadius:10, padding:"14px 16px", marginBottom:16 }}>
-                          <div style={{ fontSize:12, fontWeight:700, color:T.white, marginBottom:8 }}>Expected CSV columns (any order):</div>
-                          <div style={{ display:"flex", flexWrap:"wrap", gap:6 }}>
-                            {["Name","Phone","Email","Budget","Community","Source","Status","Notes","Nationality","Beds"].map(f => (
-                              <span key={f} style={{ padding:"3px 10px", borderRadius:20, background:T.surfaceAlt, border:`1px solid ${T.border}`, fontSize:11, color:T.textSecondary }}>{f}</span>
-                            ))}
-                          </div>
-                        </div>
-
-                        <div style={{ fontSize:11, color:T.textMuted, textAlign:"center" }}>
-                          Duplicate leads (same phone number) will be automatically detected and skipped
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Step 2: Field Mapping */}
-                    {importStep === 2 && (
-                      <div>
-                        <div style={{ fontSize:13, color:T.textMuted, marginBottom:16 }}>
-                          Match your CSV columns to our fields. Detected {importHeaders.length} columns, {importRawRows.length} rows.
-                        </div>
-                        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, marginBottom:20 }}>
-                          {[
-                            { field:"name",        label:"Name",        required:false },
-                            { field:"phone",       label:"Phone",       required:false },
-                            { field:"email",       label:"Email",       required:false },
-                            { field:"budget",      label:"Budget (AED)",required:false },
-                            { field:"community",   label:"Community",   required:false },
-                            { field:"source",      label:"Source",      required:false },
-                            { field:"status",      label:"Status",      required:false },
-                            { field:"notes",       label:"Notes",       required:false },
-                            { field:"nationality", label:"Nationality", required:false },
-                            { field:"beds",        label:"Beds",        required:false },
-                          ].map(({ field, label }) => (
-                            <div key={field} style={{ display:"flex", flexDirection:"column", gap:4 }}>
-                              <div style={{ fontSize:11, fontWeight:600, color:T.textSecondary }}>{label}</div>
-                              <select value={importMapping[field]||""} onChange={e => setImportMapping(m => ({...m,[field]:e.target.value}))}
-                                style={{ padding:"8px 10px", background:T.surfaceAlt, border:`1px solid ${importMapping[field]?T.gold:T.border}`, borderRadius:8, color:T.textPrimary, fontSize:12, fontFamily:"'Outfit',sans-serif" }}>
-                                <option value="">\u2014 Skip \u2014</option>
-                                {importHeaders.map(h => <option key={h} value={h}>{h}</option>)}
-                              </select>
-                            </div>
-                          ))}
-                        </div>
-                        <div style={{ display:"flex", gap:10 }}>
-                          <button type="button" onClick={() => setImportStep(1)}
-                            style={{ padding:"10px 20px", borderRadius:8, border:`1px solid ${T.border}`, background:"none", color:T.textMuted, fontSize:12, cursor:"pointer" }}>Back</button>
-                          <button type="button" onClick={() => {
-                            // Generate preview with mapping applied
-                            const preview = importRawRows.slice(0,10).map(row => {
-                              const mapped = {};
-                              Object.entries(importMapping).forEach(([field, col]) => { if(col) mapped[field] = row[col]||""; });
-                              return mapped;
-                            });
-                            // Check dupes by phone
-                            const existingPhones = new Set(myLeads.map(l => cleanPhone(l.phone||"")));
-                            const dupeRows = importRawRows.filter(row => {
-                              const phone = cleanPhone(row[importMapping.phone]||"");
-                              return phone && existingPhones.has(phone);
-                            });
-                            setImportPreview(preview);
-                            setImportDupes(dupeRows);
-                            setImportStep(3);
-                          }}
-                            style={{ flex:1, padding:"10px 20px", borderRadius:8, border:`1px solid ${T.gold}`, background:"rgba(212,168,67,0.1)", color:T.gold, fontSize:12, fontWeight:700, cursor:"pointer" }}>
-                            Preview Import ({importRawRows.length} rows)
-                          </button>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Step 3: Preview */}
-                    {importStep === 3 && (
-                      <div>
-                        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:10, marginBottom:16 }}>
-                          {[
-                            { label:"Total Rows",   value:importRawRows.length,                              color:T.gold },
-                            { label:"Duplicates",   value:importDupes.length,                                color:importDupes.length>0?T.red:"#10B981" },
-                            { label:"Will Import",  value:importRawRows.length - importDupes.length,         color:"#10B981" },
-                          ].map((k,i) => (
-                            <div key={i} style={{ background:T.card, border:`1px solid ${T.border}`, borderRadius:10, padding:"12px 14px", textAlign:"center" }}>
-                              <div style={{ fontSize:9, fontWeight:700, color:T.textMuted, textTransform:"uppercase", marginBottom:4 }}>{k.label}</div>
-                              <div style={{ fontSize:24, fontWeight:900, color:k.color, fontFamily:"'Fraunces',serif" }}>{k.value}</div>
-                            </div>
-                          ))}
-                        </div>
-
-                        {importDupes.length > 0 && (
-                          <div style={{ padding:"10px 14px", borderRadius:8, background:"rgba(239,68,68,0.08)", border:"1px solid rgba(239,68,68,0.2)", marginBottom:14, fontSize:11, color:T.red }}>
-                            \u26A0\uFE0F {importDupes.length} duplicate leads detected (same phone number already in system) \u2014 they will be skipped
-                          </div>
-                        )}
-
-                        <div style={{ fontSize:12, fontWeight:700, color:T.white, marginBottom:8 }}>Preview (first 10 rows):</div>
-                        <div style={{ overflowX:"auto", marginBottom:16 }}>
-                          <table style={{ width:"100%", borderCollapse:"collapse", fontSize:11 }}>
-                            <thead>
-                              <tr style={{ borderBottom:`1px solid ${T.border}` }}>
-                                {Object.keys(importPreview[0]||{}).map(k => (
-                                  <th key={k} style={{ padding:"6px 10px", textAlign:"left", color:T.textMuted, fontWeight:700, textTransform:"uppercase", fontSize:9, letterSpacing:0.8 }}>{k}</th>
-                                ))}
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {importPreview.map((row,i) => (
-                                <tr key={i} style={{ borderBottom:`1px solid ${T.border}`, background:i%2===0?"transparent":"rgba(255,255,255,0.01)" }}>
-                                  {Object.values(row).map((v,j) => (
-                                    <td key={j} style={{ padding:"7px 10px", color:T.textPrimary, maxWidth:120, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{v||"\u2014"}</td>
-                                  ))}
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
-                        </div>
-
-                        <div style={{ display:"flex", gap:10 }}>
-                          <button type="button" onClick={() => setImportStep(2)}
-                            style={{ padding:"10px 20px", borderRadius:8, border:`1px solid ${T.border}`, background:"none", color:T.textMuted, fontSize:12, cursor:"pointer" }}>Back</button>
-                          <button type="button" disabled={importLoading} onClick={async () => {
-                            setImportLoading(true);
-                            const existingPhones = new Set(myLeads.map(l => cleanPhone(l.phone||"")));
-                            let imported = 0, dupes = 0, errors = 0;
-                            const toImport = importRawRows.filter(row => {
-                              const phone = cleanPhone(row[importMapping.phone]||"");
-                              if(phone && existingPhones.has(phone)) { dupes++; return false; }
-                              return true;
-                            });
-                            for(let idx=0; idx<toImport.length; idx++) {
-                              const row = toImport[idx];
-                              try {
-                                const mapped = {};
-                                Object.entries(importMapping).forEach(([field,col]) => { if(col) mapped[field] = row[col]||""; });
-                                const id = "lead_import_" + Date.now() + "_" + idx;
-                                await setDoc(doc(db, "leads", id), {
-                                  ...mapped,
-                                  assignedTo:   firebaseUser?.uid,
-                                  assignedName: userName || firebaseUser?.email,
-                                  orgId:        orgId || null,
-                                  status:       mapped.status || "New",
-                                  source:       mapped.source || "Import",
-                                  createdAt:    new Date().toISOString(),
-                                  updatedAt:    new Date().toISOString(),
-                                  importedAt:   new Date().toISOString(),
-                                });
-                                imported++;
-                                { const _tot = toImport.length > 0 ? toImport.length : 1; setImportProgress(Math.min(100, Math.trunc((idx+1)*100 / _tot))); }
-                              } catch(e) { errors++; }
-                            }
-                            setImportDone({ imported, dupes, errors });
-                            setImportLoading(false);
-                            setImportStep(4);
-                          }}
-                            style={{ flex:1, padding:"10px 20px", borderRadius:8, border:`1px solid ${T.gold}`, background:"rgba(212,168,67,0.1)", color:T.gold, fontSize:12, fontWeight:700, cursor:"pointer", opacity:importLoading?0.6:1 }}>
-                            {importLoading ? `Importing... ${importProgress}%` : `Import ${importRawRows.length - importDupes.length} Leads`}
-                          </button>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Step 4: Done */}
-                    {importStep === 4 && (
-                      <div style={{ textAlign:"center", padding:"20px 0" }}>
-                        <div style={{ fontSize:48, marginBottom:16 }}>\u2705</div>
-                        <div style={{ fontSize:20, fontWeight:800, color:T.white, marginBottom:8 }}>Import Complete</div>
-                        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:10, margin:"20px 0" }}>
-                          {[
-                            { label:"Imported",   value:importDone.imported,  color:"#10B981" },
-                            { label:"Duplicates", value:importDone.dupes,     color:T.gold },
-                            { label:"Errors",     value:importDone.errors,    color:importDone.errors>0?T.red:T.textMuted },
-                          ].map((k,i) => (
-                            <div key={i} style={{ background:T.card, border:`1px solid ${T.border}`, borderRadius:10, padding:"14px", textAlign:"center" }}>
-                              <div style={{ fontSize:9, fontWeight:700, color:T.textMuted, textTransform:"uppercase", marginBottom:4 }}>{k.label}</div>
-                              <div style={{ fontSize:28, fontWeight:900, color:k.color, fontFamily:"'Fraunces',serif" }}>{k.value}</div>
-                            </div>
-                          ))}
-                        </div>
-                        <div style={{ fontSize:12, color:T.textMuted, marginBottom:20 }}>Leads are now visible in your My Leads list</div>
-                        <button type="button" onClick={() => setShowBulkImport(false)}
-                          style={{ padding:"12px 32px", borderRadius:9, border:`1px solid ${T.gold}`, background:"rgba(212,168,67,0.1)", color:T.gold, fontSize:13, fontWeight:700, cursor:"pointer" }}>
-                          Done
-                        </button>
-                      </div>
-                    )}
-
-                  </div>
-                </div>
-              )}
-
-            </>);
+              </div>
+            );
           })()}
 
 
@@ -19880,7 +18870,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               <button type="button" onClick={() => {
                 const p = selectedProject_;
                 const roiData = (liveCommunityROI && liveCommunityROI[p.community]) || ({}) || {};
-                const reportHtml = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${p.name} \u2014 Investment Report</title>\n                <style>\n                  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Inter:wght@400;500;600;700&display=swap');\n                  *{margin:0;padding:0;box-sizing:border-box}\n                  body{font-family:'Inter',sans-serif;background:#fff;color:#111;padding:0}\n                  .cover{background:linear-gradient(135deg,#04090F 0%,#0A1628 60%,#0E1D35 100%);color:#fff;padding:48px 48px 40px;min-height:220px;position:relative}\n                  .cover h1{font-family:'Playfair Display',serif;font-size:32px;font-weight:900;color:#D4A843;margin-bottom:6px}\n                  .cover .sub{color:#94A3B8;font-size:14px;margin-bottom:24px}\n                  .badge{display:inline-block;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:600;border:1px solid rgba(212,168,67,0.4);color:#D4A843;margin-right:8px}\n                  .logo{font-family:'Playfair Display',serif;font-size:13px;color:#D4A843;letter-spacing:2px;text-transform:uppercase;opacity:0.8;position:absolute;top:28px;right:48px}\n                  .date{color:#64748B;font-size:11px;position:absolute;bottom:20px;right:48px}\n                  .body{padding:36px 48px}\n                  .section{margin-bottom:28px}\n                  .section-title{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#94A3B8;margin-bottom:14px;padding-bottom:8px;border-bottom:2px solid #f0f0f0}\n                  .grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:0}\n                  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}\n                  .card{border:1px solid #e8e8e8;border-radius:10px;padding:16px}\n                  .card-label{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#94A3B8;margin-bottom:6px;font-weight:600}\n                  .card-value{font-size:20px;font-weight:700;color:#D4A843;margin-bottom:2px}\n                  .card-note{font-size:11px;color:#64748B}\n                  .highlight{background:linear-gradient(135deg,#fffbf0,#fff8e1);border:1px solid #D4A843;border-radius:10px;padding:20px}\n                  .highlight h3{font-family:'Playfair Display',serif;font-size:16px;color:#B8912F;margin-bottom:8px}\n                  .highlight p{font-size:12px;color:#555;line-height:1.7}\n                  .row{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid #f0f0f0;font-size:12px}\n                  .row:last-child{border-bottom:none}\n                  .row-label{color:#555}\n                  .row-value{font-weight:600;color:#111}\n                  .footer{margin-top:40px;padding:20px 48px;background:#f8f9fa;border-top:1px solid #e8e8e8;display:flex;justify-content:space-between;align-items:center}\n                  .footer-brand{font-family:'Playfair Display',serif;font-size:14px;color:#D4A843;letter-spacing:1px}\n                  .footer-note{font-size:10px;color:#94A3B8;max-width:400px;line-height:1.5}\n                  @media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}\n                </style></head><body>\n                <div class="cover">\n                  <div class="logo">DXB Analytics</div>\n                  <p class="sub">${p.community} \u00B7 ${p.district || "Dubai"} \u00B7 ${p.type || "Residential"}</p>\n                  <h1>${p.name}</h1>\n                  <div style="margin-top:16px">\n                    <span class="badge">${p.status || "Off-Plan"}</span>\n                    ${p.branded ? `<span class="badge">${p.brand || "Branded"}</span>` : ""}\n                    ${p.tier ? `<span class="badge">${p.tier}</span>` : ""}\n                  </div>\n                  <p class="date">Generated: ${new Date().toLocaleDateString("en-AE",{day:"2-digit",month:"long",year:"numeric"})}</p>\n                </div>\n\n                <div class="body">\n                  <div class="section">\n                    <div class="section-title">Key Investment Metrics</div>\n                    <div class="grid4">\n                      <div class="card"><div class="card-label">Starting Price</div><div class="card-value">${p.price ? "AED "+((p.price/1e6).toFixed(2))+"M" : "TBD"}</div><div class="card-note">From</div></div>\n                      <div class="card"><div class="card-label">Handover</div><div class="card-value" style="font-size:16px">${p.handover || "TBD"}</div><div class="card-note">Completion</div></div>\n                      <div class="card"><div class="card-label">Construction</div><div class="card-value">${p.constructionProgress || 0}%</div><div class="card-note">Progress</div></div>\n                      <div class="card"><div class="card-label">Gross Yield</div><div class="card-value">${roiData.grossYield || "6-8"}%</div><div class="card-note">Estimated p.a.</div></div>\n                    </div>\n                  </div>\n\n                  <div class="section">\n                    <div class="section-title">Community ROI Analysis \u2014 ${p.community}</div>\n                    <div class="grid2">\n                      <div>\n                        ${[\n                          ["Gross Yield", (roiData.grossYield||"6-8")+"%"],\n                          ["Net Yield (after fees)", (roiData.netYield||"4-6")+"%"],\n                          ["5-Year Capital Appreciation", (roiData.appreciation||"35-45")+"%"],\n                          ["Avg Price/sqft", "AED "+(roiData.pricePerSqft||"1,800-2,400")],\n                          ["Avg Annual Rent", "AED "+(roiData.avgRent||"90,000-150,000")],\n                          ["Occupancy Rate", (roiData.occupancy||"88")+"%"],\n                        ].map(([l,v]) => `<div class="row"><span class="row-label">${l}</span><span class="row-value">${v}</span></div>`).join("")}\n                      </div>\n                      <div class="highlight">\n                        <h3>Why ${p.community}?</h3>\n                        <p>${(communityIntel[p.community]?.tagline) || "One of Dubai's most sought-after investment communities, offering strong capital appreciation and consistent rental demand."}</p>\n                        <p style="margin-top:10px">${(communityIntel[p.community]?.notes) || "Strong fundamentals with infrastructure, schools, retail, and transport connectivity making it a preferred choice for investors and end-users."}</p>\n                      </div>\n                    </div>\n                  </div>\n\n                  ${Array.isArray(p.units) && p.units.length > 0 ? `\n                  <div class="section">\n                    <div class="section-title">Unit Mix & Availability</div>\n                    <div class="grid4">\n                      ${p.units.map(u => `<div class="card"><div class="card-label">${u.type}</div><div class="card-value" style="font-size:16px">${u.available}/${u.total}</div><div class="card-note">Available</div></div>`).join("")}\n                    </div>\n                  </div>` : ""}\n\n                  <div class="section">\n                    <div class="section-title">Investment Summary</div>\n                    <div class="highlight">\n                      <h3>DXB Analytics Assessment</h3>\n                      <p>${p.name} by Emaar Properties is a ${p.status === "Completed" ? "completed" : "under-development"} project in ${p.community}, Dubai. ${p.branded ? `As a branded residence (${p.brand}), it commands premium pricing and exceptional rental premiums typically 20-35% above comparable non-branded units. ` : ""}With Dubai's real estate market growing consistently, ${p.community} has delivered strong investor returns. The project's ${p.handover ? `expected handover in ${p.handover}` : "upcoming handover"} aligns with Dubai's infrastructure growth cycle.</p>\n                    </div>\n                  </div>\n\n                  <div class="section">\n                    <div class="section-title">Available Documents</div>\n                    <div style="display:flex;gap:10px;flex-wrap:wrap">\n                      ${p.brochureUrl ? `<a href="${p.brochureUrl}" target="_blank" style="padding:8px 16px;background:#fff;border:1px solid #D4A843;border-radius:8px;color:#D4A843;font-size:12px;font-weight:600;text-decoration:none">\uD83D\uDCC4 Brochure PDF</a>` : ""}\n                      ${p.floorPlanUrl ? `<a href="${p.floorPlanUrl}" target="_blank" style="padding:8px 16px;background:#fff;border:1px solid #D4A843;border-radius:8px;color:#D4A843;font-size:12px;font-weight:600;text-decoration:none">\uD83D\uDCD0 Floor Plan</a>` : ""}\n                      ${p.paymentPlanUrl ? `<a href="${p.paymentPlanUrl}" target="_blank" style="padding:8px 16px;background:#fff;border:1px solid #D4A843;border-radius:8px;color:#D4A843;font-size:12px;font-weight:600;text-decoration:none">\uD83D\uDCB3 Payment Plan</a>` : ""}\n                      ${!p.brochureUrl && !p.floorPlanUrl && !p.paymentPlanUrl ? `<span style="color:#94A3B8;font-size:12px">Contact us to receive full documentation package.</span>` : ""}\n                    </div>\n                  </div>\n                </div>\n\n                <div class="footer">\n                  <div>\n                    <div class="footer-brand">DXB ANALYTICS</div>\n                    <div style="font-size:10px;color:#94A3B8;margin-top:2px">Dubai Real Estate Intelligence Platform</div>\n                  </div>\n                  <div class="footer-note">This report is generated for informational purposes only. All projections are estimates based on market data. DXB Analytics does not provide financial advice. Please conduct independent due diligence before making investment decisions.</div>\n                </div>\n                <script>window.onload=()=>window.print();</script>\n                </body></html>`;
+                const reportHtml = "<html><body><h1>" + (p.name||"") + "</h1><p>Investment Report - Contact admin for full branded report.</p></body></html>";
                 const w = window.open("", "_blank");
                 w.document.write(reportHtml);
                 w.document.close();
