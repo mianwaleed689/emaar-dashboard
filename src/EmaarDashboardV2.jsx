@@ -31,7 +31,7 @@ const getLinkDomain = (url) => {
 /* \u2500\u2500\u2500 HANDOVER COUNTDOWN \u2500\u2500\u2500 */
 const getHandoverCountdown = (handover) => {
   if (!handover) return null;
-  const match = handover.match(/Q([1-4])\s+(\d{4})/);
+  const match = handover.match(new RegExp("Q([1-4])\\s+(\\d{4})"));
   if (!match) return null;
   const q = parseInt(match[1]);
   const year = parseInt(match[2]);
