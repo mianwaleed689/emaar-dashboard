@@ -15276,14 +15276,14 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
             return (
               <div style={{ padding:"0 0 40px" }}>
 
-                {/* Ã¢â€â‚¬Ã¢â€â‚¬ HEADER Ã¢â€â‚¬Ã¢â€â‚¬ */}
+                {/* Ã¢"â‚¬Ã¢"â‚¬ HEADER Ã¢"â‚¬Ã¢"â‚¬ */}
                 <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:20, flexWrap:"wrap", gap:12 }}>
                   <div>
                     <h1 style={{ fontFamily:"'Fraunces',serif", fontSize:22, fontWeight:900, color:T.white, margin:0 }}>
                       {mlIsManager ? "Team Leads" : "My Leads"}
                     </h1>
                     <p style={{ fontSize:12, color:T.textMuted, margin:"4px 0 0" }}>
-                      {mlIsManager ? "All leads in your organisation" : "Leads assigned to you Ã¢â‚¬â€ AI scored, WhatsApp ready"}
+                      {mlIsManager ? "All leads in your organisation" : "Leads assigned to you — AI scored, WhatsApp ready, WhatsApp ready"}
                     </p>
                   </div>
                   <div style={{ display:"flex", gap:8 }}>
@@ -15300,7 +15300,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   </div>
                 </div>
 
-                {/* Ã¢â€â‚¬Ã¢â€â‚¬ KPI CARDS Ã¢â€â‚¬Ã¢â€â‚¬ */}
+                {/* Ã¢"â‚¬Ã¢"â‚¬ KPI CARDS Ã¢"â‚¬Ã¢"â‚¬ */}
                 {(() => {
                   const kpis = [
                     { label:"Total Leads",    value:String((mlAllLeads||[]).length),  color:T.gold  },
@@ -15321,7 +15321,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   );
                 })()}
 
-                {/* Ã¢â€â‚¬Ã¢â€â‚¬ STALE LEADS ALERT Ã¢â€â‚¬Ã¢â€â‚¬ */}
+                {/* Ã¢"â‚¬Ã¢"â‚¬ STALE LEADS ALERT Ã¢"â‚¬Ã¢"â‚¬ */}
                 {(() => {
                   const stale = (mlAllLeads||[]).filter(l => {
                     if (l.status === "Won" || l.status === "Lost") return false;
@@ -15343,7 +15343,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   );
                 })()}
 
-                {/* Ã¢â€â‚¬Ã¢â€â‚¬ FILTERS Ã¢â€â‚¬Ã¢â€â‚¬ */}
+                {/* Ã¢"â‚¬Ã¢"â‚¬ FILTERS Ã¢"â‚¬Ã¢"â‚¬ */}
                 <div style={{ background:T.surfaceAlt, border:"1px solid "+T.border, borderRadius:12, padding:"12px 14px", marginBottom:16 }}>
                   <div style={{ display:"flex", gap:8, flexWrap:"wrap", alignItems:"center" }}>
                     <div style={{ position:"relative", flex:"2 1 200px" }}>
@@ -15372,8 +15372,8 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                       style={{ flex:"1 1 110px", padding:"8px 10px", background:T.surface, border:"1px solid "+T.border, borderRadius:8, color:T.textPrimary, fontSize:12, outline:"none" }}>
                       <option value="all">All Budgets</option>
                       <option value="under1m">Under 1M</option>
-                      <option value="1to2m">1M Ã¢â‚¬â€œ 2M</option>
-                      <option value="2to5m">2M Ã¢â‚¬â€œ 5M</option>
+                      <option value="1to2m">1M —œ 2M</option>
+                      <option value="2to5m">2M —œ 5M</option>
                       <option value="above5m">5M+</option>
                     </select>
                     <select value={leadTypeFilter} onChange={e => setLeadTypeFilter(e.target.value)}
@@ -15396,7 +15396,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   </div>
                 </div>
 
-                {/* Ã¢â€â‚¬Ã¢â€â‚¬ ADD LEAD FORM Ã¢â€â‚¬Ã¢â€â‚¬ */}
+                {/* Ã¢"â‚¬Ã¢"â‚¬ ADD LEAD FORM Ã¢"â‚¬Ã¢"â‚¬ */}
                 {leadShowAdd && (
                   <div style={{ padding:"18px 20px", background:"rgba(212,168,67,0.05)", border:"1px solid rgba(212,168,67,0.2)", borderRadius:12, marginBottom:16 }}>
                     <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:14 }}>New Lead</div>
@@ -15445,7 +15445,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   </div>
                 )}
 
-                {/* Ã¢â€â‚¬Ã¢â€â‚¬ LEAD LIST Ã¢â€â‚¬Ã¢â€â‚¬ */}
+                {/* Ã¢"â‚¬Ã¢"â‚¬ LEAD LIST Ã¢"â‚¬Ã¢"â‚¬ */}
                 <div style={{ background:T.card, border:"1px solid "+T.border, borderRadius:12, overflow:"hidden" }}>
                   {/* List header */}
                   <div style={{ display:"grid", gridTemplateColumns:"minmax(160px,1fr) 60px 90px 100px 110px 90px 80px", gap:8, padding:"10px 14px", background:T.surfaceAlt, borderBottom:"1px solid "+T.border }}>
@@ -15491,7 +15491,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                               {isGV && <span style={{ fontSize:9, padding:"1px 5px", borderRadius:4, background:"rgba(212,168,67,0.15)", color:T.gold, fontWeight:700 }}>GV</span>}
                             </div>
                             <div style={{ fontSize:11, color:T.textMuted, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>
-                              {l.phone || l.email || l.community || "Ã¢â‚¬â€"}
+                              {l.phone || l.email || l.community || "—"}
                             </div>
                           </div>
                         </div>
@@ -15514,12 +15514,12 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
 
                         {/* Budget */}
                         <div style={{ fontSize:12, fontWeight:700, color:isGV?T.gold:T.textPrimary }}>
-                          {budget > 0 ? ("AED " + (budget>=1000000?(budget*0.000001).toFixed(1)+"M":budget.toLocaleString())) : "Ã¢â‚¬â€"}
+                          {budget > 0 ? ("AED " + (budget>=1000000?(budget*0.000001).toFixed(1)+"M":budget.toLocaleString())) : "—"}
                         </div>
 
                         {/* Date */}
                         <div style={{ fontSize:11, color:T.textMuted }}>
-                          {l.createdAt ? new Date(l.createdAt).toLocaleDateString("en-AE",{day:"2-digit",month:"short"}) : "Ã¢â‚¬â€"}
+                          {l.createdAt ? new Date(l.createdAt).toLocaleDateString("en-AE",{day:"2-digit",month:"short"}) : "—"}
                         </div>
 
                         {/* Actions */}
@@ -15556,7 +15556,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   )}
                 </div>
 
-                {/* Ã¢â€â‚¬Ã¢â€â‚¬ LEAD DETAIL DRAWER Ã¢â€â‚¬Ã¢â€â‚¬ */}
+                {/* Ã¢"â‚¬Ã¢"â‚¬ LEAD DETAIL DRAWER Ã¢"â‚¬Ã¢"â‚¬ */}
                 {selectedLead && (
                   <div style={{ position:"fixed", inset:0, zIndex:1500, display:"flex" }}
                     onClick={e => { if (e.target === e.currentTarget) setSelectedLead(null); }}>
@@ -15625,12 +15625,12 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                             {/* Lead details table */}
                             <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, marginBottom:16 }}>
                               {[
-                                { label:"Budget",  value: selectedLead.budget ? "AED "+(parseFloat(selectedLead.budget)*0.000001).toFixed(2)+"M" : "Ã¢â‚¬â€" },
-                                { label:"Source",  value: selectedLead.source || "Ã¢â‚¬â€"        },
+                                { label:"Budget",  value: selectedLead.budget ? "AED "+(parseFloat(selectedLead.budget)*0.000001).toFixed(2)+"M" : "—" },
+                                { label:"Source",  value: selectedLead.source || "—"        },
                                 { label:"Status",  value: selectedLead.status || "New"      },
-                                { label:"Type",    value: selectedLead.type || "Ã¢â‚¬â€"          },
-                                { label:"Nationality", value: selectedLead.nationality || "Ã¢â‚¬â€" },
-                                { label:"Created", value: selectedLead.createdAt ? new Date(selectedLead.createdAt).toLocaleDateString("en-AE") : "Ã¢â‚¬â€" },
+                                { label:"Type",    value: selectedLead.type || "—"          },
+                                { label:"Nationality", value: selectedLead.nationality || "—" },
+                                { label:"Created", value: selectedLead.createdAt ? new Date(selectedLead.createdAt).toLocaleDateString("en-AE") : "—" },
                               ].map((item,i) => (
                                 <div key={i} style={{ background:T.surfaceAlt, borderRadius:8, padding:"8px 12px" }}>
                                   <div style={{ fontSize:10, color:T.textMuted, marginBottom:2 }}>{item.label}</div>
@@ -15684,7 +15684,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                               </button>
                             </div>
                             {(selectedLead.notes_log||[]).length === 0 && (
-                              <div style={{ textAlign:"center", padding:"32px", color:T.textMuted, fontSize:13 }}>No notes yet Ã¢â‚¬â€ add the first one above</div>
+                              <div style={{ textAlign:"center", padding:"32px", color:T.textMuted, fontSize:13 }}>No notes yet — add the first one above</div>
                             )}
                             {[...(selectedLead.notes_log||[])].reverse().map((n,i) => (
                               <div key={i} style={{ padding:"10px 12px", background:T.surfaceAlt, borderRadius:8, marginBottom:8, borderLeft:"3px solid "+T.gold }}>
@@ -15739,7 +15739,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   </div>
                 )}
 
-                {/* Ã¢â€â‚¬Ã¢â€â‚¬ QUICK CAPTURE MODAL Ã¢â€â‚¬Ã¢â€â‚¬ */}
+                {/* Ã¢"â‚¬Ã¢"â‚¬ QUICK CAPTURE MODAL Ã¢"â‚¬Ã¢"â‚¬ */}
                 {showQuickCapture && (
                   <div style={{ position:"fixed", inset:0, background:"rgba(4,9,15,0.85)", zIndex:2000, display:"flex", alignItems:"center", justifyContent:"center" }}
                     onClick={e => { if (e.target === e.currentTarget) setShowQuickCapture(false); }}>
