@@ -1,169 +1,307 @@
 rules_version = '2';
 
-// ══════════════════════════════════════════════════════════════════
-//  DXB ANALYTICS — FIRESTORE SECURITY RULES
-//  Session 1: Security Foundation
-//
-//  Merged from live rules + Session 1 additions
-//  Key fixes vs first draft:
-//    - Kept publicStats as public read (landing page needs it)
-//    - Kept brokerages collection (legacy data)
-//    - Kept user subcollections (watchlist/portfolio/preferences/alerts)
-//    - Leads: support BOTH agentId (legacy) and assignedTo (new)
-//    - Kept communityData collection
-//    - Kept cronLogs, subscriptions, reports, comparisons
-// ══════════════════════════════════════════════════════════════════
-
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    function isLoggedIn() { return request.auth != null; }
-    function uid() { return request.auth.uid; }
-    function userData() { return get(/databases/$(database)/documents/users/$(request.auth.uid)).data; }
+    // ═══════════════════════════════════════════════════════════════════════
+    // HELPER FUNCTIONS
+    // ═══════════════════════════════════════════════════════════════════════
+
+    function isLoggedIn()    { return request.auth != null; }
+    function uid()           { return request.auth.uid; }
+    function userData()      { return get(/databases/$(database)/documents/users/$(request.auth.uid)).data; }
+    function userExists()    { return isLoggedIn() && exists(/databases/$(database)/documents/users/$(request.auth.uid)); }
 
     function isSuperAdmin() {
-      return isLoggedIn() && (
+      return isLoggedIn() && userExists() && (
         userData().superAdmin == true ||
         userData().role == 'superAdmin' ||
-        userData().role == 'admin' ||
-        userData().tier == 'enterprise'
+        userData().role == 'admin'
       );
     }
 
     function isAdmin() {
-      return isLoggedIn() && userData().role in ['admin', 'superAdmin'];
+      return isLoggedIn() && userExists() && userData().role in ['admin', 'superAdmin'];
     }
 
     function isManager() {
-      return isLoggedIn() && userData().orgRole == 'manager';
+      return isLoggedIn() && userExists() && userData().orgRole == 'manager';
     }
 
     function isAgent() {
-      return isLoggedIn() && (userData().orgRole == 'agent' || userData().role == 'agent');
+      return isLoggedIn() && userExists() && (
+        userData().orgRole == 'agent' ||
+        userData().role == 'agent'
+      );
     }
 
-    function myOrgId() { return userData().orgId; }
+    function isAgencyStaff() {
+      return isManager() || isAgent();
+    }
+
+    function myOrgId() {
+      return userData().orgId;
+    }
 
     function isPro() {
-      return isLoggedIn() && (userData().tier in ['pro', 'pro_trial', 'enterprise'] || isSuperAdmin());
+      return isLoggedIn() && userExists() && (
+        userData().tier in ['pro', 'pro_trial', 'enterprise'] || isSuperAdmin()
+      );
     }
 
-    function isOwner(userId) { return isLoggedIn() && uid() == userId; }
+    function isOwner(userId) {
+      return isLoggedIn() && uid() == userId;
+    }
 
     function notSuspended() {
-      return !('suspended' in userData()) || userData().suspended == false;
+      return userExists() && (
+        !('suspended' in userData()) || userData().suspended == false
+      );
     }
 
-    function isBrokerageManager() { return isLoggedIn() && userData().role == 'brokerageManager'; }
-    function sameBrokerage(bid) { return isLoggedIn() && userData().brokerageId == bid; }
+    // Safe org check — only used on existing documents (reads/updates/deletes)
+    function sameOrg() {
+      return isLoggedIn() && userExists() &&
+             resource != null &&
+             resource.data.orgId == myOrgId();
+    }
 
-    // Wildcard — superAdmin sees everything (keep this first)
-    match /{document=**} { allow read, write: if isSuperAdmin(); }
+    // For creates — check incoming data orgId matches user's orgId
+    function creatingForMyOrg() {
+      return isLoggedIn() && userExists() &&
+             request.resource.data.orgId == myOrgId();
+    }
 
-    // ── PUBLIC ──────────────────────────────────────────────────
-    match /adminSettings/publicStats { allow read: if true; allow write: if isAdmin(); }
-    match /tabData/{doc}             { allow read: if true; allow write: if isAdmin(); }
-    match /liveMarketData/{doc}      { allow read: if true; allow write: if isAdmin(); }
-    match /marketData/{doc}          { allow read: if true; allow write: if isAdmin(); }
+    function isBrokerageManager() {
+      return isLoggedIn() && userExists() && userData().role == 'brokerageManager';
+    }
 
-    // ── ADMIN SETTINGS ──────────────────────────────────────────
-    match /adminSettings/{doc}    { allow read, write: if isAdmin(); }
-    match /platformSettings/{doc} { allow read: if isLoggedIn(); allow write: if isAdmin(); }
+    function sameBrokerage(bid) {
+      return isLoggedIn() && userExists() && userData().brokerageId == bid;
+    }
 
-    // ── USERS ───────────────────────────────────────────────────
+    // ═══════════════════════════════════════════════════════════════════════
+    // SUPER ADMIN — full access to everything
+    // ═══════════════════════════════════════════════════════════════════════
+    match /{document=**} {
+      allow read, write: if isSuperAdmin();
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // PUBLIC & ADMIN-ONLY PLATFORM DATA
+    // ═══════════════════════════════════════════════════════════════════════
+    match /adminSettings/publicStats { allow read: if true;         allow write: if isAdmin(); }
+    match /tabData/{doc}             { allow read: if true;         allow write: if isAdmin(); }
+    match /liveMarketData/{doc}      { allow read: if true;         allow write: if isAdmin(); }
+    match /marketData/{doc}          { allow read: if true;         allow write: if isAdmin(); }
+    match /adminSettings/{doc}       { allow read, write: if isAdmin(); }
+    match /platformSettings/{doc}    { allow read: if isLoggedIn(); allow write: if isAdmin(); }
+    match /pricingPlans/{doc}        { allow read: if true;         allow write: if isAdmin(); }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // USERS
+    // ═══════════════════════════════════════════════════════════════════════
     match /users/{userId} {
-      allow read: if isOwner(userId) || isAdmin();
-      allow create: if isLoggedIn() && uid() == userId;
+      // Own profile OR admin OR manager viewing their org's agents
+      allow read: if isOwner(userId) ||
+                     isAdmin() ||
+                     (isManager() && userExists() && resource != null && resource.data.orgId == myOrgId());
+
+      // Only the user themselves can create their own doc (on signup)
+      allow create: if isLoggedIn() && uid() == userId &&
+                       request.resource.data.keys().hasAll(['email', 'createdAt']) &&
+                       request.resource.data.role != 'admin' &&
+                       request.resource.data.role != 'superAdmin';
+
+      // Users can update their own profile; admins can update anyone
       allow update: if (isOwner(userId) && notSuspended()) || isAdmin();
       allow delete: if isSuperAdmin();
     }
-    // Legacy subcollections
+
+    // User subcollections
     match /users/{userId}/watchlist/{item}   { allow read, write: if isOwner(userId) || isSuperAdmin(); }
     match /users/{userId}/portfolio/{item}   { allow read, write: if isOwner(userId) || isSuperAdmin(); }
     match /users/{userId}/preferences/{item} { allow read, write: if isOwner(userId) || isSuperAdmin(); }
     match /users/{userId}/alerts/{item}      { allow read, write: if isOwner(userId) || isSuperAdmin(); }
-    // Top-level user data
-    match /portfolios/{userId}  { allow read, write: if isOwner(userId) || isSuperAdmin(); }
-    match /watchlists/{userId}  { allow read, write: if isOwner(userId) || isSuperAdmin(); }
-    match /priceAlerts/{userId} { allow read, write: if isOwner(userId) || isSuperAdmin(); }
+    match /portfolios/{userId}               { allow read, write: if isOwner(userId) || isSuperAdmin(); }
+    match /watchlists/{userId}               { allow read, write: if isOwner(userId) || isSuperAdmin(); }
+    match /priceAlerts/{userId}              { allow read, write: if isOwner(userId) || isSuperAdmin(); }
 
-    // ── MARKET DATA ─────────────────────────────────────────────
-    match /projects/{doc}       { allow read: if isLoggedIn() && notSuspended(); allow write: if isAdmin(); }
-    match /projectData/{doc}    { allow read: if isLoggedIn() && notSuspended(); allow write: if isAdmin(); }
-    match /projectVersions/{doc}{ allow read, write: if isAdmin(); }
-    match /communityData/{doc}  { allow read: if isLoggedIn() && notSuspended(); allow write: if isAdmin(); }
-    match /communityROI/{doc}   { allow read: if isLoggedIn() && notSuspended(); allow write: if isAdmin(); }
-    match /communityIntel/{doc} { allow read: if isLoggedIn() && notSuspended(); allow write: if isAdmin(); }
-    match /developers/{doc}     { allow read: if isLoggedIn() && notSuspended(); allow write: if isAdmin(); }
-    match /radarLaunches/{doc}  { allow read: if isLoggedIn(); allow write: if isAdmin(); }
-    match /eiborHistory/{doc}   { allow read: if isLoggedIn(); allow write: if isAdmin(); }
-    match /yieldData/{doc}      { allow read: if isPro(); allow write: if isAdmin(); }
-    match /priceHistory/{doc}   { allow read: if isPro(); allow write: if isAdmin(); }
-    match /aiInsights/{doc}     { allow read: if isPro(); allow write: if isAdmin(); }
-    match /reports/{doc}        { allow read: if isPro(); allow write: if isAdmin(); }
-    match /comparisons/{doc}    { allow read, write: if isPro(); }
+    // ═══════════════════════════════════════════════════════════════════════
+    // MARKET INTELLIGENCE (investor tabs — gated by plan)
+    // ═══════════════════════════════════════════════════════════════════════
+    match /projects/{doc}        { allow read: if isLoggedIn() && notSuspended(); allow write: if isAdmin(); }
+    match /projectData/{doc}     { allow read: if isLoggedIn() && notSuspended(); allow write: if isAdmin(); }
+    match /projectVersions/{doc} { allow read, write: if isAdmin(); }
+    match /communityData/{doc}   { allow read: if isLoggedIn() && notSuspended(); allow write: if isAdmin(); }
+    match /communityROI/{doc}    { allow read: if isLoggedIn() && notSuspended(); allow write: if isAdmin(); }
+    match /communityIntel/{doc}  { allow read: if isLoggedIn() && notSuspended(); allow write: if isAdmin(); }
+    match /developers/{doc}      { allow read: if isLoggedIn() && notSuspended(); allow write: if isAdmin(); }
+    match /radarLaunches/{doc}   { allow read: if isLoggedIn();                   allow write: if isAdmin(); }
+    match /eiborHistory/{doc}    { allow read: if isLoggedIn();                   allow write: if isAdmin(); }
+    match /yieldData/{doc}       { allow read: if isPro();                         allow write: if isAdmin(); }
+    match /priceHistory/{doc}    { allow read: if isPro();                         allow write: if isAdmin(); }
+    match /aiInsights/{doc}      { allow read: if isPro();                         allow write: if isAdmin(); }
+    match /reports/{doc}         { allow read: if isPro();                         allow write: if isAdmin(); }
+    match /comparisons/{doc}     { allow read, write: if isPro(); }
 
-    // ── LEADS ───────────────────────────────────────────────────
+    // ═══════════════════════════════════════════════════════════════════════
+    // LEADS — core CRM data, strictly org-isolated
+    // ═══════════════════════════════════════════════════════════════════════
     match /leads/{leadId} {
+      // Admin: full access
       allow read, write: if isAdmin();
-      allow read, write: if isManager() && resource.data.orgId == myOrgId();
-      allow read: if isAgent() && (
-        resource.data.agentId == uid() ||
-        resource.data.assignedTo == uid()
-      );
-      allow update: if isLoggedIn() && (
-        resource.data.agentId == uid() ||
-        resource.data.assignedTo == uid()
-      );
-      allow create: if isLoggedIn();
+
+      // Manager: full access to own org leads
+      // list queries + single doc reads both allowed
+      allow read:   if isManager() && (
+                       resource == null ||
+                       resource.data.orgId == myOrgId()
+                    );
+      allow update: if isManager() && sameOrg();
+      allow delete: if isManager() && sameOrg();
+
+      // Agent: read and update only their assigned leads
+      allow read:   if isAgent() && resource != null && (
+                       resource.data.agentId == uid() ||
+                       resource.data.assignedTo == uid()
+                    );
+      allow update: if isAgent() && resource != null && (
+                       resource.data.agentId == uid() ||
+                       resource.data.assignedTo == uid()
+                    );
+
+      // Any agency staff can create leads (manager or agent capturing)
+      allow create: if isAgencyStaff() && creatingForMyOrg();
+
+      // Fallback: any logged-in user can create (for direct lead capture by new users)
+      allow create: if isLoggedIn() && !userExists();
     }
 
-    // ── ORGANISATIONS (Session 2) ────────────────────────────────
+    // ═══════════════════════════════════════════════════════════════════════
+    // DEALS — pipeline data, org-isolated
+    // ═══════════════════════════════════════════════════════════════════════
+    match /deals/{dealId} {
+      allow read, write: if isAdmin();
+
+      // Manager: full org access
+      allow read:   if isManager() && sameOrg();
+      allow update: if isManager() && sameOrg();
+      allow delete: if isManager() && sameOrg();
+
+      // Agent: own deals only
+      allow read:   if isAgent() && resource != null && resource.data.agentId == uid();
+      allow update: if isAgent() && resource != null && resource.data.agentId == uid();
+
+      // Create: agency staff, must belong to their org
+      allow create: if isAgencyStaff() && creatingForMyOrg();
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // LISTINGS — property listings, org-isolated
+    // ═══════════════════════════════════════════════════════════════════════
+    match /listings/{listingId} {
+      allow read, write: if isAdmin();
+
+      // Manager: full org access
+      allow read:   if isManager() && sameOrg();
+      allow update: if isManager() && sameOrg();
+      allow delete: if isManager() && sameOrg();
+
+      // Agent: read and update own org listings
+      allow read:   if isAgent() && sameOrg();
+      allow update: if isAgent() && resource != null && resource.data.agentId == uid();
+
+      // Create: agency staff
+      allow create: if isAgencyStaff() && creatingForMyOrg();
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // DEVELOPER UNITS & EOIs — Dev Portal tab
+    // ═══════════════════════════════════════════════════════════════════════
+    match /devUnits/{docId} {
+      allow read, write: if isAdmin();
+      allow read:        if isLoggedIn() && notSuspended();
+      allow create:      if isAgencyStaff() && creatingForMyOrg();
+      allow update:      if isAgencyStaff() && sameOrg();
+      allow delete:      if isManager() && sameOrg();
+    }
+
+    match /devEOIs/{docId} {
+      allow read, write: if isAdmin();
+      allow read:        if isAgencyStaff() && sameOrg();
+      allow create:      if isAgencyStaff() && creatingForMyOrg();
+      allow update:      if isAgencyStaff() && sameOrg();
+      allow delete:      if isManager() && sameOrg();
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // ORGANISATIONS — one per agency
+    // ═══════════════════════════════════════════════════════════════════════
     match /organisations/{orgId} {
-      allow read: if isLoggedIn() && (isAdmin() || myOrgId() == orgId);
-      allow write: if isAdmin();
+      // Admin: full access
+      allow read, write: if isAdmin();
+
+      // Manager/agent: read own org only
+      allow read: if isLoggedIn() && userExists() && myOrgId() == orgId;
+
+      // New signup: any authenticated user can create an org (self-serve signup)
+      allow create: if isLoggedIn();
+
+      // Manager can update their own org profile
+      allow update: if isManager() && userExists() && myOrgId() == orgId;
     }
 
-    // ── LEGACY BROKERAGES ────────────────────────────────────────
+    // ═══════════════════════════════════════════════════════════════════════
+    // BROKERAGES
+    // ═══════════════════════════════════════════════════════════════════════
     match /brokerages/{brokerageId} {
-      allow read: if isLoggedIn();
-      allow update: if sameBrokerage(brokerageId) && isBrokerageManager();
+      allow read:           if isLoggedIn();
+      allow update:         if sameBrokerage(brokerageId) && isBrokerageManager();
       allow create, delete: if isAdmin();
     }
     match /brokerages/{brokerageId}/agents/{agentId} {
-      allow read: if sameBrokerage(brokerageId) || isAdmin();
+      allow read:  if sameBrokerage(brokerageId) || isAdmin();
       allow write: if (sameBrokerage(brokerageId) && isBrokerageManager()) || isAdmin();
     }
 
-    // ── NOTIFICATIONS ───────────────────────────────────────────
+    // ═══════════════════════════════════════════════════════════════════════
+    // NOTIFICATIONS
+    // ═══════════════════════════════════════════════════════════════════════
     match /notifications/{doc} {
-      allow read: if isAdmin() || (isLoggedIn() && resource.data.userId == uid());
+      allow read:          if isAdmin() || (isLoggedIn() && resource != null && resource.data.userId == uid());
       allow create, update: if isAdmin();
-      allow delete: if isAdmin() || (isLoggedIn() && resource.data.userId == uid());
+      allow delete:         if isAdmin() || (isLoggedIn() && resource != null && resource.data.userId == uid());
     }
     match /notificationTemplates/{doc} { allow read, write: if isAdmin(); }
 
-    // ── AUDIT LOG ───────────────────────────────────────────────
+    // ═══════════════════════════════════════════════════════════════════════
+    // AUDIT LOG
+    // ═══════════════════════════════════════════════════════════════════════
     match /auditLog/{doc} {
-      allow read: if isAdmin();
-      allow create: if isLoggedIn();
+      allow read:           if isAdmin();
+      allow create:         if isLoggedIn();
       allow update, delete: if isSuperAdmin();
     }
 
-    // ── ADMIN-ONLY ───────────────────────────────────────────────
-    match /campaigns/{doc}          { allow read, write: if isAdmin(); }
-    match /cronLogs/{doc}           { allow read, write: if isAdmin(); }
-    match /digestLog/{doc}          { allow read, write: if isAdmin(); }
-    match /digestSettings/{doc}     { allow read: if isLoggedIn(); allow write: if isAdmin(); }
-    match /verifications/{doc}      { allow read, write: if isAdmin(); }
-    match /payments/{doc}           { allow read, write: if isAdmin(); }
-    match /subscriptions/{userId}   { allow read: if isOwner(userId) || isAdmin(); allow write: if isAdmin(); }
+    // ═══════════════════════════════════════════════════════════════════════
+    // PLATFORM / ADMIN COLLECTIONS
+    // ═══════════════════════════════════════════════════════════════════════
+    match /campaigns/{doc}        { allow read, write: if isAdmin(); }
+    match /cronLogs/{doc}         { allow read, write: if isAdmin(); }
+    match /digestLog/{doc}        { allow read, write: if isAdmin(); }
+    match /digestSettings/{doc}   { allow read: if isLoggedIn(); allow write: if isAdmin(); }
+    match /verifications/{doc}    { allow read, write: if isAdmin(); }
+    match /payments/{doc}         { allow read, write: if isAdmin(); }
+    match /subscriptions/{userId} { allow read: if isOwner(userId) || isAdmin(); allow write: if isAdmin(); }
 
-    // ── SUPPORT SYSTEM ──────────────────────────────────────────
+    // ═══════════════════════════════════════════════════════════════════════
+    // SUPPORT
+    // ═══════════════════════════════════════════════════════════════════════
     match /supportTickets/{doc} {
       allow read, write: if isAdmin();
-      allow create: if isLoggedIn();
-      allow read: if isLoggedIn() && resource.data.userId == uid();
+      allow create:      if isLoggedIn();
+      allow read:        if isLoggedIn() && resource != null && resource.data.userId == uid();
     }
     match /supportAgentPermissions/{doc}  { allow read, write: if isAdmin(); }
     match /supportAutoAssignRules/{doc}   { allow read, write: if isAdmin(); }
