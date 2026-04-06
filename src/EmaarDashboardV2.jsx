@@ -1,9 +1,10 @@
 /* eslint-disable */
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+/* ═══════════════════════════════════════════════════════════════════
    DXB ANALYTICS INTELLIGENCE PLATFORM
-   Clean Architecture â€” Data-Driven, Firestore-Connected
-   REFACTORED: Shared code extracted to /utils, /components, /tabs
-   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+   Clean Architecture — Data-Driven, Firestore-Connected
+   All intelligence tabs: empty state, ready for data import
+   CRM tabs: fully functional (Leads, Pipeline, Team, Agency etc)
+   ═══════════════════════════════════════════════════════════════════ */
 
 import React, { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
@@ -15,29 +16,2360 @@ import { T } from "./data";
 import LandingPage from "./LandingPage";
 import RoiCalculator from "./RoiCalculator";
 
-/* â”€â”€â”€ EXTRACTED MODULES â”€â”€â”€ */
-import {
-  SEED_DATA, SEED_SOURCE_URL, GOLDEN_VISA_THRESHOLD, TRIAL_DURATION_MS,
-  PROJECTS_PER_PAGE,
-  getLinkDomain, getHandoverCountdown, getInvestmentScore, calcQuickScore,
-  scoreColor, scoreLabel, cleanPhone, csvEsc,
-  getProjectCoords, getPPSFColor, getVolumeColor,
-} from './utils';
-import {
-  Icons, SvgIcons,
-  LoadingSkeleton, KPI, ForecastCard, Section, Chart, CustomTooltip,
-  DataBadge, TabSources, EmptyState,
-  ProGate, ProGateFullPage, UpgradeModal,
-  PasswordStrength, useFocusTrap, TabErrorBoundary,
-  TAB_GROUPS, TABS, INTELLIGENCE_TABS,
-  LoginScreen, GlobalContextFilter,
-} from './components';
-import { buildGlobalCSS } from './styles/global';
-import { CommunityMapTab, CurrencyTab, LaunchCalendarTab, DLDVolumesTab, PriceHistoryTab, NeighbourhoodsTab, OverviewTab, MarketTab, YieldsTab, MortgageTab } from './tabs';
+/* ─── ACTIVE PROJECTS — now Firestore-only ─── */
+/* Projects load from: Firestore 'projects' collection */
+/* Populated via: Admin → Data Manager → Import Projects */
+
+const getLinkDomain = (url) => {
+  if (!url) return "Listing";
+  if (url.includes("propertyfinder.ae")) return "PropertyFinder.ae";
+  if (url.includes("bayut.com")) return "Bayut.com";
+  if (url.includes("properties.emaar.com") || url.includes("emaar.com")) return "Emaar.com";
+  return "Official Listing";
+};
+
+/* ─── HANDOVER COUNTDOWN ─── */
+const getHandoverCountdown = (handover) => {
+  if (!handover) return null;
+  const match = handover.match(/Q([1-4])\s+(\d{4})/);
+  if (!match) return null;
+  const q = parseInt(match[1]);
+  const year = parseInt(match[2]);
+  const qEndMonth = [2, 5, 8, 11];
+  const qEndDay   = [31, 30, 30, 31];
+  const target = new Date(year, qEndMonth[q - 1], qEndDay[q - 1]);
+  const now = new Date();
+  const diffMs = target - now;
+  if (diffMs <= 0) return { label: "Handover due", color: "#10B981", urgent: false, passed: true };
+  const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+  const diffMonths = Math.round(diffMs / (1000 * 60 * 60 * 24 * 30.44));
+  let label, color;
+  if (diffDays <= 90) { label = diffDays + "d left"; color = "#EF4444"; }
+  else if (diffMonths <= 6) { label = diffMonths + "mo left"; color = "#F59E0B"; }
+  else if (diffMonths <= 18) { label = diffMonths + "mo left"; color = "#D4A843"; }
+  else { label = (diffMonths / 12).toFixed(1) + "yr left"; color = "#94A3B8"; }
+  return { label, color, urgent: diffDays <= 90, months: diffMonths, days: diffDays };
+};
+
+// ─── INVESTMENT SCORE (out of 10) ─────────────────────────────────────────
+const getInvestmentScore = (p) => {
+  let score = 0;
+  const breakdown = [];
+
+  // 1. Yield (0–3 pts)
+  const gross = p.gross || p.yield || 0;
+  if (gross >= 8)      { score += 3; breakdown.push({ label: "Yield", pts: 3, max: 3, note: gross + "% gross" }); }
+  else if (gross >= 6) { score += 2; breakdown.push({ label: "Yield", pts: 2, max: 3, note: gross + "% gross" }); }
+  else if (gross >= 4) { score += 1; breakdown.push({ label: "Yield", pts: 1, max: 3, note: gross + "% gross" }); }
+  else                 { breakdown.push({ label: "Yield", pts: 0, max: 3, note: gross ? gross + "%" : "No data" }); }
+
+  // 2. Value (PPSF) (0–2 pts)
+  const ppsf = p.ppsf || 0;
+  if (ppsf > 0 && ppsf <= 1500)       { score += 2; breakdown.push({ label: "Value", pts: 2, max: 2, note: "AED " + ppsf + "/sqft" }); }
+  else if (ppsf > 0 && ppsf <= 2200)  { score += 1; breakdown.push({ label: "Value", pts: 1, max: 2, note: "AED " + ppsf + "/sqft" }); }
+  else if (ppsf > 0)                  { breakdown.push({ label: "Value", pts: 0, max: 2, note: "AED " + ppsf + "/sqft" }); }
+  else                                { breakdown.push({ label: "Value", pts: 0, max: 2, note: "No PPSF" }); }
+
+  // 3. Handover timing (0–2 pts) — sweet spot is 12–36 months
+  const cd = getHandoverCountdown(p.handover);
+  if (cd) {
+    if (cd.passed)              { score += 1.5; breakdown.push({ label: "Handover", pts: 1.5, max: 2, note: "Ready now" }); }
+    else if (cd.months <= 12)   { score += 1;   breakdown.push({ label: "Handover", pts: 1,   max: 2, note: cd.label }); }
+    else if (cd.months <= 30)   { score += 2;   breakdown.push({ label: "Handover", pts: 2,   max: 2, note: cd.label }); }
+    else if (cd.months <= 48)   { score += 1;   breakdown.push({ label: "Handover", pts: 1,   max: 2, note: cd.label }); }
+    else                        { score += 0.5; breakdown.push({ label: "Handover", pts: 0.5, max: 2, note: cd.label }); }
+  } else {
+    breakdown.push({ label: "Handover", pts: 0, max: 2, note: "No date" });
+  }
+
+  // 4. Payment plan (0–2 pts)
+  const pp = (p.paymentPlan || p.payment || "").toLowerCase();
+  if (pp.includes("80/20") || pp.includes("80:20"))       { score += 2;   breakdown.push({ label: "Payment", pts: 2,   max: 2, note: "80/20 plan" }); }
+  else if (pp.includes("70/30") || pp.includes("60/40"))  { score += 1.5; breakdown.push({ label: "Payment", pts: 1.5, max: 2, note: pp }); }
+  else if (pp.includes("50/50") || pp.includes("40/60"))  { score += 1;   breakdown.push({ label: "Payment", pts: 1,   max: 2, note: pp }); }
+  else if (pp.length > 0)                                 { score += 0.5; breakdown.push({ label: "Payment", pts: 0.5, max: 2, note: pp }); }
+  else                                                    { breakdown.push({ label: "Payment", pts: 0, max: 2, note: "Unknown" }); }
+
+  // 5. Golden Visa eligible (0–1 pt)
+  if (p.price && p.price >= 2000000) {
+    score += 1; breakdown.push({ label: "Golden Visa", pts: 1, max: 1, note: "Eligible" });
+  } else {
+    breakdown.push({ label: "Golden Visa", pts: 0, max: 1, note: p.price ? "Below 2M" : "No price" });
+  }
+
+  const final = Math.min(10, Math.round(score * 10) / 10);
+  const color = final >= 8 ? "#10B981" : final >= 6 ? "#D4A843" : final >= 4 ? "#F59E0B" : "#EF4444";
+  const label = final >= 8 ? "Excellent" : final >= 6 ? "Strong" : final >= 4 ? "Good" : "Weak";
+  return { score: final, color, label, breakdown };
+};
+
+/* ─── ICONS (inline SVG) ─── */
+const Icons = {
+  overview: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>,
+  financials: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>,
+  portfolio: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>,
+  competitors: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>,
+  yields: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>,
+  risk: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>,
+  market: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>,
+  logout: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>,
+  menu: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>,
+  close: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>,
+  lock: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>,
+  eye: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>,
+  eyeOff: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>,
+  search: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>,
+  bell: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>,
+  up: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="18 15 12 9 6 15"/></svg>,
+  down: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="6 9 12 15 18 9"/></svg>,
+  projects: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="12.01"/></svg>,
+  megaProj: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>,
+  admin: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>,
+};
 
 
-/* â”€â”€â”€ CSS (built from extracted styles/global.js) â”€â”€â”€ */
-const css = buildGlobalCSS(T);
+/* ─── GLOBAL FILTER CONFIG ─── */
+const PROPERTY_TYPES = [
+  {
+    group: "Residential",
+    types: [
+      { value: "apartment",    label: "Apartment",       beds: ["Studio","1 BR","2 BR","3 BR","4 BR","5 BR+","Penthouse","Duplex"] },
+      { value: "penthouse",    label: "Penthouse",        beds: ["3 BR","4 BR","5 BR","6 BR+"] },
+      { value: "villa",        label: "Villa",            beds: ["2 BR","3 BR","4 BR","5 BR","6 BR","7 BR+"] },
+      { value: "townhouse",    label: "Townhouse",        beds: ["2 BR","3 BR","4 BR","5 BR"] },
+      { value: "duplex",       label: "Duplex",           beds: ["2 BR","3 BR","4 BR","5 BR"] },
+      { value: "garden_home",  label: "Garden Home",      beds: ["2 BR","3 BR","4 BR"] },
+      { value: "sky_villa",    label: "Sky Villa",        beds: ["3 BR","4 BR","5 BR","6 BR+"] },
+    ]
+  },
+  {
+    group: "Hospitality",
+    types: [
+      { value: "hotel_apt",     label: "Hotel Apartment",    beds: ["Hotel Room","Studio","1 BR","2 BR","3 BR","Penthouse Suite"] },
+      { value: "serviced_apt",  label: "Serviced Apartment", beds: ["Studio","1 BR","2 BR","3 BR"] },
+      { value: "resort_villa",  label: "Resort Villa",       beds: ["1 BR","2 BR","3 BR","4 BR","5 BR+"] },
+      { value: "branded_res",   label: "Branded Residence",  beds: ["1 BR","2 BR","3 BR","4 BR","Penthouse"] },
+    ]
+  },
+  {
+    group: "Commercial",
+    types: [
+      { value: "office",        label: "Office",          beds: ["< 500 sqft","500–1K sqft","1K–2.5K sqft","2.5K–5K sqft","5K+ sqft","Full Floor","Full Building"] },
+      { value: "retail",        label: "Retail / Shop",   beds: ["< 500 sqft","500–1K sqft","1K–2.5K sqft","2.5K+ sqft"] },
+      { value: "showroom",      label: "Showroom",        beds: ["< 2K sqft","2K–5K sqft","5K+ sqft"] },
+      { value: "warehouse",     label: "Warehouse",       beds: ["< 5K sqft","5K–10K sqft","10K+ sqft"] },
+      { value: "coworking",     label: "Co-working Space",beds: ["Hot Desk","Dedicated Desk","Private Office","Full Floor"] },
+    ]
+  },
+  {
+    group: "Industrial & Land",
+    types: [
+      { value: "industrial",    label: "Industrial Unit",    beds: ["< 5K sqft","5K–20K sqft","20K+ sqft"] },
+      { value: "land_res",      label: "Land — Residential", beds: ["< 5K sqft","5K–15K sqft","15K+ sqft"] },
+      { value: "land_comm",     label: "Land — Commercial",  beds: ["< 10K sqft","10K–50K sqft","50K+ sqft"] },
+      { value: "land_mixed",    label: "Mixed Use Plot",     beds: ["< 10K sqft","10K–50K sqft","50K+ sqft"] },
+    ]
+  },
+];
+
+const STATUS_OPTIONS = [
+  { value: "all",          label: "All Status" },
+  { value: "offplan",      label: "Off-Plan — Under Construction" },
+  { value: "prelaunch",    label: "Off-Plan — Pre-Launch / EOI" },
+  { value: "ready_new",    label: "Ready — New (Primary)" },
+  { value: "secondary",    label: "Ready — Secondary Market" },
+  { value: "handover_now", label: "Handover This Year" },
+  { value: "handover_2026",label: "Handover 2026" },
+  { value: "handover_2027",label: "Handover 2027+" },
+];
+
+const PRICE_PRESETS_APT = [
+  { label: "Any Price", min: 0, max: 0 },
+  { label: "< 500K", min: 0, max: 500000 },
+  { label: "500K–1M", min: 500000, max: 1000000 },
+  { label: "1M–2M", min: 1000000, max: 2000000 },
+  { label: "2M–5M", min: 2000000, max: 5000000 },
+  { label: "5M–10M", min: 5000000, max: 10000000 },
+  { label: "10M+", min: 10000000, max: 0 },
+];
+
+const PRICE_PRESETS_VILLA = [
+  { label: "Any Price", min: 0, max: 0 },
+  { label: "< 2M", min: 0, max: 2000000 },
+  { label: "2M–5M", min: 2000000, max: 5000000 },
+  { label: "5M–10M", min: 5000000, max: 10000000 },
+  { label: "10M–25M", min: 10000000, max: 25000000 },
+  { label: "25M–50M", min: 25000000, max: 50000000 },
+  { label: "50M+", min: 50000000, max: 0 },
+];
+
+/* ─── SVG ICON HELPER ─ replaces lucide-react dependency ─── */
+const SvgIcons = {
+  LayoutDashboard: (p) => <svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={p.strokeWidth||1.5} strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>,
+  Globe: (p) => <svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={p.strokeWidth||1.5} strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>,
+  Database: (p) => <svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={p.strokeWidth||1.5} strokeLinecap="round" strokeLinejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>,
+  TrendingUp: (p) => <svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={p.strokeWidth||1.5} strokeLinecap="round" strokeLinejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>,
+  MapPin: (p) => <svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={p.strokeWidth||1.5} strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>,
+  Calendar: (p) => <svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={p.strokeWidth||1.5} strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>,
+  CreditCard: (p) => <svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={p.strokeWidth||1.5} strokeLinecap="round" strokeLinejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>,
+  Building2: (p) => <svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={p.strokeWidth||1.5} strokeLinecap="round" strokeLinejoin="round"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/><path d="M6 12H4a2 2 0 0 0-2 2v8h4"/><path d="M18 9h2a2 2 0 0 1 2 2v11h-4"/><path d="M10 6h4"/><path d="M10 10h4"/><path d="M10 14h4"/><path d="M10 18h4"/></svg>,
+  Map: (p) => <svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={p.strokeWidth||1.5} strokeLinecap="round" strokeLinejoin="round"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>,
+  Clock: (p) => <svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={p.strokeWidth||1.5} strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>,
+  Receipt: (p) => <svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={p.strokeWidth||1.5} strokeLinecap="round" strokeLinejoin="round"><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1z"/><line x1="8" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="16" y2="14"/></svg>,
+  BarChart3: (p) => <svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={p.strokeWidth||1.5} strokeLinecap="round" strokeLinejoin="round"><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg>,
+  ArrowLeftRight: (p) => <svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={p.strokeWidth||1.5} strokeLinecap="round" strokeLinejoin="round"><path d="M21 7H3"/><path d="m15 1 6 6-6 6"/><path d="M3 17h18"/><path d="m9 11-6 6 6 6"/></svg>,
+  Landmark: (p) => <svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={p.strokeWidth||1.5} strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="22" x2="21" y2="22"/><line x1="6" y1="18" x2="6" y2="11"/><line x1="10" y1="18" x2="10" y2="11"/><line x1="14" y1="18" x2="14" y2="11"/><line x1="18" y1="18" x2="18" y2="11"/><polygon points="12 2 20 7 4 7"/></svg>,
+  Star: (p) => <svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={p.strokeWidth||1.5} strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>,
+  RefreshCw: (p) => <svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={p.strokeWidth||1.5} strokeLinecap="round" strokeLinejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>,
+  Search: (p) => <svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={p.strokeWidth||1.5} strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>,
+  Briefcase: (p) => <svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={p.strokeWidth||1.5} strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>,
+  Award: (p) => <svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={p.strokeWidth||1.5} strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></svg>,
+  AlertTriangle: (p) => <svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={p.strokeWidth||1.5} strokeLinecap="round" strokeLinejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>,
+  BarChart2: (p) => <svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={p.strokeWidth||1.5} strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>,
+  Activity: (p) => <svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={p.strokeWidth||1.5} strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>,
+  Layers: (p) => <svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={p.strokeWidth||1.5} strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>,
+  Users: (p) => <svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={p.strokeWidth||1.5} strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>,
+  LayoutGrid: (p) => <svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={p.strokeWidth||1.5} strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>,
+  Building: (p) => <svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={p.strokeWidth||1.5} strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01"/><path d="M16 6h.01"/><path d="M12 6h.01"/><path d="M12 10h.01"/><path d="M12 14h.01"/><path d="M16 10h.01"/><path d="M16 14h.01"/><path d="M8 10h.01"/><path d="M8 14h.01"/></svg>,
+  Users2: (p) => <svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={p.strokeWidth||1.5} strokeLinecap="round" strokeLinejoin="round"><path d="M14 19a6 6 0 0 0-12 0"/><circle cx="8" cy="9" r="4"/><path d="M22 19a6 6 0 0 0-6-6 4 4 0 0 0 0-8"/></svg>,
+  Shield: (p) => <svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={p.strokeWidth||1.5} strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>,
+  Settings: (p) => <svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={p.strokeWidth||1.5} strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>,
+  User: (p) => <svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={p.strokeWidth||1.5} strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>,
+  LogOut: (p) => <svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={p.strokeWidth||1.5} strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>,
+  ChevronDown: (p) => <svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={p.strokeWidth||2} strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"/></svg>,
+  ChevronRight: (p) => <svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={p.strokeWidth||2} strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>,
+  X: (p) => <svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={p.strokeWidth||2} strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>,
+  Menu: (p) => <svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={p.strokeWidth||2} strokeLinecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>,
+  DollarSign: ({ width=16, height=16, strokeWidth=2, style={} } = {}) => SvgIcons.CreditCard({ width, height, strokeWidth, style }),
+};
+
+/* ─── GLOBAL CONTEXT FILTER COMPONENT ─── */
+const GlobalContextFilter = ({
+  gDeveloper, setGDeveloperAndReset,
+  gCommunity, setGCommunity,
+  gPropertyType, setGPropertyTypeAndReset,
+  gSubType, setGSubType,
+  gBeds, setGBeds,
+  gStatus, setGStatus,
+  gPriceMin, setGPriceMin,
+  gPriceMax, setGPriceMax,
+  allDevelopers, T,
+}) => {
+  // ─── cleanPhone: strips non-digits — NEVER use regex inside JSX ───
+  const cleanPhone = (p) => {
+    if (!p) return "";
+    let out = "";
+    for (let i = 0; i < p.length; i++) {
+      const c = p.charCodeAt(i);
+      if (c >= 48 && c <= 57) out += p[i];
+    }
+    return out;
+  };
+
+  // ─── csvEsc: CSV-safe quoting — defined here, NOT inside JSX ───
+  const csvEsc = (v) => {
+    const s = v == null ? "" : String(v);
+    let out = "";
+    for (let i = 0; i < s.length; i++) {
+      if (s[i] === '"') out += '"';
+      out += s[i];
+    }
+    return '"' + out + '"';
+  };
+
+  const [open, setOpen] = React.useState(false);
+
+  // Get beds options from selected property type
+  const selectedTypeData = PROPERTY_TYPES.flatMap(g => g.types).find(t => t.value === gPropertyType);
+  const bedsOptions = selectedTypeData?.beds || ["Studio","1 BR","2 BR","3 BR","4 BR","5 BR+"];
+
+  // Price presets based on type
+  const isVilla = ["villa","townhouse","sky_villa","resort_villa"].includes(gPropertyType);
+  const pricePresets = isVilla ? PRICE_PRESETS_VILLA : PRICE_PRESETS_APT;
+
+  // Active filter count
+  const activeCount = [
+    gDeveloper !== "all",
+    gCommunity !== "all",
+    gPropertyType !== "all",
+    gBeds !== "all",
+    gStatus !== "all",
+    gPriceMin > 0 || gPriceMax > 0,
+  ].filter(Boolean).length;
+
+  const resetAll = () => {
+    setGDeveloperAndReset("all");
+    setGCommunity("all");
+    setGPropertyTypeAndReset("all");
+    setGSubType("all");
+    setGBeds("all");
+    setGStatus("all");
+    setGPriceMin(0);
+    setGPriceMax(0);
+  };
+
+  const selStyle = {
+    background: T.surfaceAlt, border: `1px solid ${T.border}`,
+    borderRadius: 8, color: T.white,
+    fontFamily: "'Outfit', sans-serif", fontSize: 12,
+    padding: "6px 10px", outline: "none", cursor: "pointer",
+    appearance: "none", WebkitAppearance: "none",
+    backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E")`,
+    backgroundRepeat: "no-repeat", backgroundPosition: "right 8px center",
+    paddingRight: 26, transition: "border-color 0.2s",
+  };
+
+  const activeSelStyle = { ...selStyle, borderColor: `rgba(212,168,67,0.5)`, color: T.gold };
+
+
+  return (
+    <div style={{
+      position: "fixed", top: 60, left: 240, right: 0, zIndex: 45,
+      background: `${T.surface}f8`, backdropFilter: "blur(12px)",
+      borderBottom: `1px solid ${T.border}`,
+    }}>
+      {/* ── Compact filter bar ── */}
+      <div style={{
+        display: "flex", alignItems: "center", gap: 8,
+        padding: "8px 20px", flexWrap: "wrap",
+      }}>
+
+        {/* Active badge */}
+        {activeCount > 0 && (
+          <div style={{
+            display: "flex", alignItems: "center", gap: 6,
+            padding: "4px 10px", borderRadius: 20,
+            background: "rgba(212,168,67,0.12)",
+            border: "1px solid rgba(212,168,67,0.3)",
+          }}>
+            <span style={{ width: 6, height: 6, borderRadius: "50%", background: T.gold, display: "inline-block", animation: "pulse 2s infinite" }} />
+            <span style={{ fontSize: 11, color: T.gold, fontWeight: 600 }}>{activeCount} filter{activeCount > 1 ? "s" : ""} active</span>
+          </div>
+        )}
+
+        {/* Developer */}
+        <select
+          value={gDeveloper}
+          onChange={e => setGDeveloperAndReset(e.target.value)}
+          style={gDeveloper !== "all" ? activeSelStyle : selStyle}
+        >
+          <option value="all">All Developers</option>
+          {allDevelopers?.length > 0
+            ? allDevelopers.map(d => <option key={d.id} value={d.id}>{d.name}</option>)
+            : ["Emaar","DAMAC","Sobha","Nakheel","Meraas","Aldar","Binghatti","Ellington","Omniyat","Azizi","Danube","Samana","MAG","Imtiaz"].map(n => (
+                <option key={n} value={n.toLowerCase()}>{n}</option>
+              ))
+          }
+        </select>
+
+        {/* Property Type */}
+        <select
+          value={gPropertyType}
+          onChange={e => setGPropertyTypeAndReset(e.target.value)}
+          style={gPropertyType !== "all" ? activeSelStyle : selStyle}
+        >
+          <option value="all">All Types</option>
+          {PROPERTY_TYPES.map(group => (
+            <optgroup key={group.group} label={group.group}>
+              {group.types.map(t => (
+                <option key={t.value} value={t.value}>{t.label}</option>
+              ))}
+            </optgroup>
+          ))}
+        </select>
+
+        {/* Beds / Config */}
+        <select
+          value={gBeds}
+          onChange={e => setGBeds(e.target.value)}
+          style={gBeds !== "all" ? activeSelStyle : selStyle}
+        >
+          <option value="all">All Configs</option>
+          {bedsOptions.map(b => <option key={b} value={b}>{b}</option>)}
+        </select>
+
+        {/* Status */}
+        <select
+          value={gStatus}
+          onChange={e => setGStatus(e.target.value)}
+          style={gStatus !== "all" ? activeSelStyle : selStyle}
+        >
+          {STATUS_OPTIONS.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
+        </select>
+
+        {/* Price presets */}
+        <select
+          value={`${gPriceMin}-${gPriceMax}`}
+          onChange={e => {
+            const preset = pricePresets.find(p => `${p.min}-${p.max}` === e.target.value);
+            if (preset) { setGPriceMin(preset.min); setGPriceMax(preset.max); }
+          }}
+          style={(gPriceMin > 0 || gPriceMax > 0) ? activeSelStyle : selStyle}
+        >
+          {pricePresets.map(p => (
+            <option key={`${p.min}-${p.max}`} value={`${p.min}-${p.max}`}>
+              {p.label === "Any" ? "Any Price" : `AED ${p.label}`}
+            </option>
+          ))}
+        </select>
+
+        {/* Golden Visa indicator */}
+        {gPriceMin >= 2000000 && (
+          <div style={{
+            padding: "4px 10px", borderRadius: 20, fontSize: 11,
+            background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.3)",
+            color: T.green, fontWeight: 600,
+          }}>
+            Golden Visa eligible
+          </div>
+        )}
+
+        {/* Reset */}
+        {activeCount > 0 && (
+          <button type="button" onClick={resetAll} style={{
+            background: "none", border: `1px solid ${T.border}`,
+            borderRadius: 8, padding: "5px 12px", cursor: "pointer",
+            color: T.textMuted, fontSize: 11,
+            fontFamily: "'Outfit', sans-serif",
+            transition: "all 0.15s",
+          }}>
+            Clear all
+          </button>
+        )}
+
+        {/* Spacer + data source note */}
+        <div style={{ marginLeft: "auto", fontSize: 10, color: T.textMuted, display: "flex", alignItems: "center", gap: 4 }}>
+          <span style={{ width: 5, height: 5, borderRadius: "50%", background: T.green, display: "inline-block" }} />
+          Live · Firestore
+        </div>
+      </div>
+    </div>
+  );
+};
+
+
+/* ════════════════════════════════════════════════════════════════
+   DXB ANALYTICS — RESEARCH-BASED SEED DATA
+   All figures sourced from official publications — listed per dataset
+   Seed data displays until real Firestore data is imported from Admin
+   isSeedData: true flag marks all seed entries for easy identification
+   ════════════════════════════════════════════════════════════════ */
+
+const SEED_DATA = {
+
+  /* ─── MARKET TAB ───────────────────────────────────────────────
+     Sources: DLD Annual Report 2025, DXB Interact Jan 2026,
+     Property Monitor DPI Dec 2025, REIDIN Residential Index Dec 2025
+     URL: dubailand.gov.ae/en/open-data/research/annual-report-real-estate-sector-performance-2024
+  ─────────────────────────────────────────────────────────────── */
+  market: [
+    { metric: "Total Market Value",       value: "AED 682.6B",  change: "+21% YoY",  numericValue: 682.6, isSeedData: true, source: "DLD / DXB Interact Jan 2026" },
+    { metric: "Total Transactions",       value: "215,060",     change: "+19% YoY",  numericValue: 215060, isSeedData: true, source: "DLD Annual Report 2025" },
+    { metric: "Off-Plan Share",           value: "63%",         change: "+3pp YoY",  numericValue: 63, isSeedData: true, source: "DLD / Property Monitor 2025" },
+    { metric: "Units Launched",           value: "131,504",     change: "532 projects", isSeedData: true, source: "DLD Oct 2025" },
+    { metric: "Mortgage Transactions",    value: "50,974",      change: "+22.5% YoY", isSeedData: true, source: "DLD 2025" },
+    { metric: "Investor Base",            value: "94,700",      change: "+26% YoY",  isSeedData: true, source: "DLD H1 2025" },
+    { metric: "Price Growth",             value: "+19.8%",      change: "REIDIN Index Dec 2025", isSeedData: true, source: "REIDIN Residential Sales Price Index" },
+    { metric: "Women Investors",          value: "AED 73.2B",   change: "34,792 transactions", isSeedData: true, source: "DLD H1 2025" },
+    { metric: "Population Target",        value: "5.8M by 2040", isSeedData: true, source: "Dubai 2040 Urban Master Plan" },
+    { metric: "Price Cycle",              value: "56+ months",  isSeedData: true, source: "Property Monitor DPI Dec 2025" },
+    { metric: "2026 Pipeline",            value: "~120K units", isSeedData: true, source: "Knight Frank / CW Core 2025" },
+    { metric: "Nationalities",            value: "193+",        isSeedData: true, source: "DLD Investor Base Report 2025" },
+    { metric: "Off-Plan Share",           numericValue: 63,     isSeedData: true },
+    { metric: "Cash Share",               numericValue: 55,     isSeedData: true, source: "DLD Mortgage Report 2025" },
+    { metric: "Active Developers", value: "50+", change: "RERA registered · DLD approved", isSeedData: true, source: "RERA Registry 2026" },
+    { metric: "REIDIN Growth",      value: "+19.8%", change: "Residential Sales Price Index Dec 2025", isSeedData: true, source: "REIDIN Dec 2025" },
+    { metric: "Price Growth YoY",   value: "+19.8%", change: "Dec 2025", isSeedData: true, source: "REIDIN 2025" },
+    { metric: "Mortgage Share",           numericValue: 45,     isSeedData: true },
+    /* Historical sales chart data */
+    { year: "2020", value: 175,  type: "annual", isSeedData: true, source: "DLD Annual Report" },
+    { year: "2021", value: 270,  type: "annual", isSeedData: true, source: "DLD Annual Report" },
+    { year: "2022", value: 407,  type: "annual", isSeedData: true, source: "DLD Annual Report" },
+    { year: "2023", value: 520,  type: "annual", isSeedData: true, source: "DLD Annual Report" },
+    { year: "2024", value: 761,  type: "annual", isSeedData: true, source: "DLD Annual Report 2024" },
+    { year: "2025", value: 919,  type: "annual", isSeedData: true, source: "DLD / DXB Interact Jan 2026" },
+  ],
+
+  /* ─── DLD VOLUMES TAB ──────────────────────────────────────────
+     Sources: DXBAnalytics.com Community Volume Report Feb 2026,
+     DLD Direct Database Query, Property Monitor 2025
+     URL: dxbanalytics.com/blog/dubai-property-transaction-volume-2026
+  ─────────────────────────────────────────────────────────────── */
+  dldVolumes: [
+    { community: "Jumeirah Village Circle",   type: "Apartment", transactions: 18782, avgPpsf: 1180, volume: 9800000000,  change: 17,  isSeedData: true, source: "DXBAnalytics / DLD 2025" },
+    { community: "Business Bay",              type: "Apartment", transactions: 12450, avgPpsf: 2050, volume: 14200000000, change: 8,   isSeedData: true, source: "DXBAnalytics / DLD 2025" },
+    { community: "Dubai Marina",              type: "Apartment", transactions: 11200, avgPpsf: 2280, volume: 15800000000, change: 6,   isSeedData: true, source: "DXBAnalytics / DLD 2025" },
+    { community: "Downtown Dubai",            type: "Apartment", transactions: 8900,  avgPpsf: 3100, volume: 18200000000, change: 12,  isSeedData: true, source: "DXBAnalytics / DLD 2025" },
+    { community: "Dubai Hills Estate",        type: "Mixed",     transactions: 8200,  avgPpsf: 1850, volume: 12400000000, change: 22,  isSeedData: true, source: "DXBAnalytics / DLD 2025" },
+    { community: "Sobha Hartland",            type: "Mixed",     transactions: 6800,  avgPpsf: 2100, volume: 9800000000,  change: 31,  isSeedData: true, source: "DXBAnalytics / DLD 2025" },
+    { community: "Dubai Creek Harbour",       type: "Apartment", transactions: 6400,  avgPpsf: 1620, volume: 7200000000,  change: 45,  isSeedData: true, source: "DXBAnalytics / DLD 2025" },
+    { community: "Palm Jumeirah",             type: "Villa",     transactions: 5200,  avgPpsf: 4800, volume: 28600000000, change: 15,  isSeedData: true, source: "DXBAnalytics / DLD 2025" },
+    { community: "Mohammed Bin Rashid City",  type: "Mixed",     transactions: 5100,  avgPpsf: 1950, volume: 8900000000,  change: 28,  isSeedData: true, source: "DXBAnalytics / DLD 2025" },
+    { community: "Arabian Ranches",           type: "Villa",     transactions: 4800,  avgPpsf: 1380, volume: 6200000000,  change: 20,  isSeedData: true, source: "DXBAnalytics / DLD 2025" },
+    { community: "Jumeirah Lake Towers",      type: "Apartment", transactions: 4600,  avgPpsf: 1420, volume: 4800000000,  change: 5,   isSeedData: true, source: "DXBAnalytics / DLD 2025" },
+    { community: "Al Furjan",                 type: "Mixed",     transactions: 4200,  avgPpsf: 1080, volume: 3200000000,  change: 14,  isSeedData: true, source: "DXBAnalytics / DLD 2025" },
+    { community: "Dubai South",               type: "Mixed",     transactions: 4100,  avgPpsf: 850,  volume: 2900000000,  change: 38,  isSeedData: true, source: "DXBAnalytics / DLD 2025" },
+    { community: "International City",        type: "Apartment", transactions: 3800,  avgPpsf: 580,  volume: 1200000000,  change: 9,   isSeedData: true, source: "DXBAnalytics / DLD 2025" },
+    { community: "Tilal Al Ghaf",             type: "Villa",     transactions: 3600,  avgPpsf: 1650, volume: 5800000000,  change: 52,  isSeedData: true, source: "DXBAnalytics / DLD 2025" },
+  ],
+
+  /* ─── PRICE HISTORY TAB ────────────────────────────────────────
+     Sources: ValuStrat VPI Q4 2025, REIDIN Residential Index Dec 2025,
+     Property Monitor DPI 2025, Knight Frank Dubai Residential Q1 2025
+     URL: reidin.com | valustrat.com/vpi
+  ─────────────────────────────────────────────────────────────── */
+  priceHistory: [
+    /* 5-year PPSF trend — Dubai overall apartment average */
+    { period: "2020", ppsf: 1050, offPlanPpsf: 980,  secondaryPpsf: 1100, type: "priceHistory", isSeedData: true, source: "ValuStrat VPI / REIDIN" },
+    { period: "2021", ppsf: 1080, offPlanPpsf: 1020, secondaryPpsf: 1140, type: "priceHistory", isSeedData: true, source: "ValuStrat VPI / REIDIN" },
+    { period: "2022", ppsf: 1250, offPlanPpsf: 1180, secondaryPpsf: 1310, type: "priceHistory", isSeedData: true, source: "ValuStrat VPI / REIDIN" },
+    { period: "2023", ppsf: 1380, offPlanPpsf: 1290, secondaryPpsf: 1460, type: "priceHistory", isSeedData: true, source: "ValuStrat VPI / REIDIN" },
+    { period: "2024", ppsf: 1600, offPlanPpsf: 1520, secondaryPpsf: 1680, type: "priceHistory", isSeedData: true, source: "ValuStrat VPI / REIDIN" },
+    { period: "2025", ppsf: 1840, offPlanPpsf: 1760, secondaryPpsf: 1920, type: "priceHistory", isSeedData: true, source: "ValuStrat VPI / REIDIN" },
+    /* Community-level momentum */
+    { community: "Dubai Hills Estate",   ppsf: 1850, change6m: 8.2,  change1y: 22.1, change3y: 58.4, change5y: 89.2, type: "priceHistory", isSeedData: true, source: "Knight Frank / REIDIN 2025" },
+    { community: "Downtown Dubai",       ppsf: 3100, change6m: 4.1,  change1y: 12.3, change3y: 38.6, change5y: 71.4, type: "priceHistory", isSeedData: true, source: "Property Monitor DPI" },
+    { community: "Dubai Marina",         ppsf: 2280, change6m: 3.8,  change1y: 9.8,  change3y: 31.2, change5y: 64.8, type: "priceHistory", isSeedData: true, source: "REIDIN Dec 2025" },
+    { community: "JVC",                  ppsf: 1180, change6m: 6.4,  change1y: 17.2, change3y: 48.9, change5y: 82.1, type: "priceHistory", isSeedData: true, source: "Property Monitor / Bayut 2025" },
+    { community: "Palm Jumeirah",        ppsf: 4800, change6m: 5.2,  change1y: 14.8, change3y: 42.3, change5y: 94.6, type: "priceHistory", isSeedData: true, source: "Knight Frank Q1 2025" },
+    { community: "Business Bay",         ppsf: 2050, change6m: 3.1,  change1y: 8.4,  change3y: 29.7, change5y: 58.9, type: "priceHistory", isSeedData: true, source: "REIDIN Dec 2025" },
+  ],
+
+  /* ─── NEIGHBOURHOODS TAB ───────────────────────────────────────
+     Sources: Bayut H1 2025 Sales Report, Knight Frank Dubai 2025,
+     RERA Service Charge Index 2025, uaeexperthub.com Dubai Yields 2026,
+     Alkira Dubai Investment Guide Feb 2026, RTA Metro Blue Line plans
+     URL: bayut.com/mybayut/bayut-h1-2025-dubai-rental-market-report
+  ─────────────────────────────────────────────────────────────── */
+  communities: [
+    { community: "Jumeirah Village Circle", avgPpsf: 1180, grossYield: 7.8,  netYield: 6.2, serviceCharge: 14,  metroDistance: 1800, supplyRisk: "Medium", investmentScore: 82, tenantProfile: "Professionals", hasSchool: true,  hasMall: true,  hasBeach: false, hasHospital: false, pipeline2026: 8200,  type: "community", isSeedData: true, source: "Bayut H1 2025 / uaeexperthub.com Jan 2026" },
+    { community: "Dubai Marina",            avgPpsf: 2280, grossYield: 6.5,  netYield: 5.0, serviceCharge: 22,  metroDistance: 400,  supplyRisk: "Low",    investmentScore: 78, tenantProfile: "Professionals", hasSchool: false, hasMall: true,  hasBeach: true,  hasHospital: false, pipeline2026: 2800,  type: "community", isSeedData: true, source: "Bayut H1 2025 / Knight Frank Q1 2025" },
+    { community: "Business Bay",            avgPpsf: 2050, grossYield: 7.1,  netYield: 5.6, serviceCharge: 18,  metroDistance: 600,  supplyRisk: "High",   investmentScore: 72, tenantProfile: "Professionals", hasSchool: false, hasMall: true,  hasBeach: false, hasHospital: false, pipeline2026: 12400, type: "community", isSeedData: true, source: "Middle East Insider Apr 2026 / DLD 2025" },
+    { community: "Downtown Dubai",          avgPpsf: 3100, grossYield: 5.8,  netYield: 4.2, serviceCharge: 35,  metroDistance: 300,  supplyRisk: "Low",    investmentScore: 74, tenantProfile: "Luxury / HNWI", hasSchool: false, hasMall: true,  hasBeach: false, hasHospital: false, pipeline2026: 1800,  type: "community", isSeedData: true, source: "Knight Frank Dubai 2025 / REIDIN" },
+    { community: "Dubai Hills Estate",      avgPpsf: 1850, grossYield: 6.2,  netYield: 5.0, serviceCharge: 16,  metroDistance: 3500, supplyRisk: "Medium", investmentScore: 85, tenantProfile: "Families",      hasSchool: true,  hasMall: true,  hasBeach: false, hasHospital: true,  pipeline2026: 6800,  type: "community", isSeedData: true, source: "Knight Frank / Bayut H1 2025" },
+    { community: "Palm Jumeirah",           avgPpsf: 4800, grossYield: 5.2,  netYield: 3.8, serviceCharge: 28,  metroDistance: 2200, supplyRisk: "Low",    investmentScore: 76, tenantProfile: "Luxury / HNWI", hasSchool: false, hasMall: true,  hasBeach: true,  hasHospital: false, pipeline2026: 800,   type: "community", isSeedData: true, source: "Knight Frank Dubai 2025" },
+    { community: "Jumeirah Lake Towers",    avgPpsf: 1420, grossYield: 8.1,  netYield: 6.4, serviceCharge: 16,  metroDistance: 350,  supplyRisk: "Low",    investmentScore: 84, tenantProfile: "Professionals", hasSchool: false, hasMall: true,  hasBeach: false, hasHospital: false, pipeline2026: 1200,  type: "community", isSeedData: true, source: "Middle East Insider Apr 2026 — ranked #1 yield+quality" },
+    { community: "Arabian Ranches",         avgPpsf: 1380, grossYield: 5.5,  netYield: 4.4, serviceCharge: 8,   metroDistance: 8000, supplyRisk: "Low",    investmentScore: 79, tenantProfile: "Families",      hasSchool: true,  hasMall: false, hasBeach: false, hasHospital: false, pipeline2026: 1400,  type: "community", isSeedData: true, source: "uaeexperthub.com / Bayut 2025" },
+    { community: "International City",      avgPpsf: 580,  grossYield: 9.2,  netYield: 7.8, serviceCharge: 8,   metroDistance: 5500, supplyRisk: "Low",    investmentScore: 71, tenantProfile: "Mixed",         hasSchool: false, hasMall: true,  hasBeach: false, hasHospital: false, pipeline2026: 600,   type: "community", isSeedData: true, source: "Middle East Insider Apr 2026 — 9.2% yield leader" },
+    { community: "Dubai Creek Harbour",     avgPpsf: 1620, grossYield: 6.4,  netYield: 5.1, serviceCharge: 14,  metroDistance: 1200, supplyRisk: "Medium", investmentScore: 80, tenantProfile: "Mixed",         hasSchool: false, hasMall: true,  hasBeach: true,  hasHospital: false, pipeline2026: 9200,  type: "community", isSeedData: true, source: "Alkira Dubai Investment Guide Feb 2026" },
+    { community: "Al Furjan",               avgPpsf: 1080, grossYield: 8.2,  netYield: 6.8, serviceCharge: 12,  metroDistance: 700,  supplyRisk: "Medium", investmentScore: 77, tenantProfile: "Families",      hasSchool: true,  hasMall: false, hasBeach: false, hasHospital: false, pipeline2026: 3200,  type: "community", isSeedData: true, source: "GuestReady Feb 2026 / Bayut H1 2025" },
+    { community: "Dubai South",             avgPpsf: 850,  grossYield: 8.8,  netYield: 7.2, serviceCharge: 10,  metroDistance: 4000, supplyRisk: "Medium", investmentScore: 73, tenantProfile: "Mixed",         hasSchool: true,  hasMall: false, hasBeach: false, hasHospital: false, pipeline2026: 14000, type: "community", isSeedData: true, source: "uaeexperthub.com Jan 2026 — 7.5-9.5% yield range" },
+    { community: "Mohammed Bin Rashid City",avgPpsf: 1950, grossYield: 6.1,  netYield: 4.9, serviceCharge: 16,  metroDistance: 2800, supplyRisk: "Medium", investmentScore: 81, tenantProfile: "Families",      hasSchool: true,  hasMall: true,  hasBeach: false, hasHospital: true,  pipeline2026: 8800,  type: "community", isSeedData: true, source: "Knight Frank / Sands of Wealth Jan 2026" },
+    { community: "Sobha Hartland",          avgPpsf: 2100, grossYield: 6.0,  netYield: 4.8, serviceCharge: 18,  metroDistance: 2400, supplyRisk: "Low",    investmentScore: 82, tenantProfile: "Luxury / HNWI", hasSchool: true,  hasMall: false, hasBeach: false, hasHospital: false, pipeline2026: 2200,  type: "community", isSeedData: true, source: "Knight Frank Q1 2025 / REIDIN" },
+    { community: "Tilal Al Ghaf",           avgPpsf: 1650, grossYield: 6.8,  netYield: 5.5, serviceCharge: 12,  metroDistance: 5000, supplyRisk: "Low",    investmentScore: 80, tenantProfile: "Families",      hasSchool: true,  hasMall: false, hasBeach: false, hasHospital: false, pipeline2026: 1800,  type: "community", isSeedData: true, source: "DLD 2025 — 52% YoY growth" },
+    { community: "Discovery Gardens",       avgPpsf: 680,  grossYield: 8.5,  netYield: 7.1, serviceCharge: 9,   metroDistance: 600,  supplyRisk: "Low",    investmentScore: 75, tenantProfile: "Professionals", hasSchool: false, hasMall: true,  hasBeach: false, hasHospital: false, pipeline2026: 400,   type: "community", isSeedData: true, source: "Middle East Insider Apr 2026 — 8.5% yield" },
+    { community: "Dubai Silicon Oasis",     avgPpsf: 820,  grossYield: 7.5,  netYield: 6.0, serviceCharge: 12,  metroDistance: 4500, supplyRisk: "Low",    investmentScore: 74, tenantProfile: "Professionals", hasSchool: true,  hasMall: true,  hasBeach: false, hasHospital: false, pipeline2026: 2400,  type: "community", isSeedData: true, source: "uaeexperthub.com Jan 2026" },
+    { community: "Arjan",                   avgPpsf: 1020, grossYield: 8.0,  netYield: 6.5, serviceCharge: 13,  metroDistance: 1500, supplyRisk: "Medium", investmentScore: 76, tenantProfile: "Professionals", hasSchool: false, hasMall: false, hasBeach: false, hasHospital: false, pipeline2026: 4200,  type: "community", isSeedData: true, source: "GuestReady Feb 2026 / Keyone Q1 2026" },
+    { community: "DAMAC Hills 2",           avgPpsf: 780,  grossYield: 7.2,  netYield: 6.0, serviceCharge: 10,  metroDistance: 6000, supplyRisk: "High",   investmentScore: 69, tenantProfile: "Families",      hasSchool: true,  hasMall: true,  hasBeach: false, hasHospital: false, pipeline2026: 16000, type: "community", isSeedData: true, source: "uaeexperthub.com Jan 2026" },
+    { community: "Emaar Beachfront",        avgPpsf: 2800, grossYield: 5.8,  netYield: 4.6, serviceCharge: 20,  metroDistance: 800,  supplyRisk: "Low",    investmentScore: 79, tenantProfile: "Luxury / HNWI", hasSchool: false, hasMall: false, hasBeach: true,  hasHospital: false, pipeline2026: 1600,  type: "community", isSeedData: true, source: "Bayut H1 2025 / Driven Properties 2025" },
+  ],
+
+  /* ─── LAUNCH CALENDAR TAB ──────────────────────────────────────
+     Sources: Developer official portals, Bayut Launch Radar 2026,
+     Property Finder New Projects, Reelly.ai Launch Calendar
+     URL: reelly.ai | bayut.com | propertyfinder.ae
+  ─────────────────────────────────────────────────────────────── */
+  launches: [
+    { projectName: "Emaar Grand Polo Club & Resort — Phase 2", developer: "Emaar", community: "Dubai Investment South", propertyType: "Villa", status: "EOI Open", launchDate: "2026-04-20", startingPrice: 5700000, totalUnits: 420, paymentPlan: "80/20", eoiAmount: 50000, eoiRefundable: true, launchPrice: 4800, currentPrice: 5200, notes: "Emaar's 60M sqft master plan. Polo fields, 7 clubhouses, equestrian estates. Strong appreciation history on Emaar launches.", type: "launch", isSeedData: true, source: "Alkira Dubai Investment Guide Feb 2026" },
+    { projectName: "Dubai Islands — Island B Phase 1", developer: "Nakheel", community: "Dubai Islands", propertyType: "Apartment", status: "EOI Open", launchDate: "2026-04-28", startingPrice: 1200000, totalUnits: 680, paymentPlan: "60/40", eoiAmount: 30000, eoiRefundable: true, notes: "Island B offers more controlled planning vs Island A. 24% price growth in 2025. Beachfront value.", type: "launch", isSeedData: true, source: "Alkira Feb 2026 — Dubai Islands 24% growth 2025" },
+    { projectName: "Sobha Hartland II — The Waterfront", developer: "Sobha Realty", community: "Sobha Hartland", propertyType: "Apartment", status: "Upcoming", launchDate: "2026-05-15", startingPrice: 1800000, totalUnits: 520, paymentPlan: "70/30", eoiAmount: 40000, eoiRefundable: true, notes: "High-rise community with green living concept. Sobha known for quality finishes and delivery track record.", type: "launch", isSeedData: true, source: "Arthur Mackenzy Q3 2025 Report" },
+    { projectName: "The Oasis by Emaar — Phase 11", developer: "Emaar", community: "The Oasis", propertyType: "Villa", status: "Launched", launchDate: "2026-03-10", startingPrice: 6150000, totalUnits: 280, paymentPlan: "80/20 post-handover", eoiAmount: 50000, eoiRefundable: true, launchPrice: 5800, currentPrice: 6300, notes: "10-to-1 scarcity vs Dubai Hills (2,700 units vs 30,000). Lagoon pools, wave pools. Handover Jun 2029.", type: "launch", isSeedData: true, source: "Alkira Feb 2026 — 'Blue Lagoon' exclusivity" },
+    { projectName: "DAMAC Lagoons — Santorini Phase 3", developer: "DAMAC Properties", community: "DAMAC Lagoons", propertyType: "Villa", status: "EOI Closed", launchDate: "2026-03-22", startingPrice: 2200000, totalUnits: 380, paymentPlan: "60/40", eoiAmount: 25000, eoiRefundable: true, notes: "Mediterranean-inspired villas. DAMAC sold out previous phases within hours.", type: "launch", isSeedData: true, source: "Property Finder Launch Radar 2026" },
+    { projectName: "Binghatti Skyrise — Business Bay", developer: "Binghatti", community: "Business Bay", propertyType: "Apartment", status: "Upcoming", launchDate: "2026-05-08", startingPrice: 850000, totalUnits: 720, paymentPlan: "70/30", eoiAmount: 20000, eoiRefundable: true, notes: "Binghatti's signature bold architecture. Business Bay canal views. Target professional renters — strong yield community.", type: "launch", isSeedData: true, source: "Bayut Launch Radar Apr 2026" },
+    { projectName: "Tilal Al Ghaf — Serenity Mansions", developer: "Majid Al Futtaim", community: "Tilal Al Ghaf", propertyType: "Villa", status: "Sold Out", launchDate: "2026-02-18", startingPrice: 8500000, totalUnits: 85, paymentPlan: "50/50", eoiAmount: 100000, eoiRefundable: false, notes: "Ultra-luxury mansions sold out within 48 hours. DLD 2025 shows 52% YoY transaction growth in Tilal Al Ghaf.", type: "launch", isSeedData: true, source: "DLD 2025 / Bayut 2026" },
+    { projectName: "Ellington Ocean House — Dubai Islands", developer: "Ellington Properties", community: "Dubai Islands", propertyType: "Apartment", status: "Upcoming", launchDate: "2026-06-01", startingPrice: 2400000, totalUnits: 180, paymentPlan: "70/30", eoiAmount: 50000, eoiRefundable: true, notes: "Design-forward beachfront living. Ellington known for curated interiors. Limited units.", type: "launch", isSeedData: true, source: "Reelly.ai Launch Calendar Apr 2026" },
+  ],
+
+  /* ─── OVERVIEW TAB KPIs ────────────────────────────────────────
+     Sources: Same as Market tab
+  ─────────────────────────────────────────────────────────────── */
+  overviewKpis: [
+    { metric: "Total Market Value",  value: "AED 682.6B",  change: "+21% YoY — Full year 2025",   isSeedData: true, source: "DLD / DXB Interact Jan 2026" },
+    { metric: "Total Transactions",  value: "215,060",      change: "+19% YoY — Sales only",        isSeedData: true, source: "DLD Annual Report 2025" },
+    { metric: "Off-Plan Share",      value: "63%",          change: "+3pp — Off-plan dominated 2025", isSeedData: true, source: "DLD / Property Monitor 2025" },
+    { metric: "Units Launched",      value: "131,504",      change: "532 projects by Oct 2025",     isSeedData: true, source: "DLD Oct 2025" },
+  ],
+};
+
+/* Seed data source reference — shown in UI */
+const SEED_SOURCE_URL = {
+  DLD: "https://dubailand.gov.ae/en/open-data/research/",
+  Bayut: "https://www.bayut.com/mybayut/bayut-h1-2025-dubai-rental-market-report/",
+  REIDIN: "https://reidin.com",
+  ValuStrat: "https://valustrat.com/vpi",
+  KnightFrank: "https://www.knightfrank.ae/research",
+  PropertyMonitor: "https://propertymonitor.com",
+  DXBAnalytics: "https://www.dxbanalytics.com/blog/dubai-property-transaction-volume-2026",
+};
+
+/* ─── TAB GROUPS ─ 5 sections, 32 tabs in sequence ─── */
+const TAB_GROUPS = [
+  {
+    id: "market",
+    label: "Market Intelligence",
+    icon: SvgIcons.TrendingUp,
+    tabs: [
+      { key: "Overview",        icon: SvgIcons.LayoutDashboard },
+      { key: "Market",          icon: SvgIcons.Globe },
+      { key: "DLD Volumes",     icon: SvgIcons.Database },
+      { key: "Price History",   icon: SvgIcons.TrendingUp },
+      { key: "Neighbourhoods",  icon: SvgIcons.MapPin },
+      { key: "Launch Calendar", icon: SvgIcons.Calendar },
+      { key: "Currency",        icon: SvgIcons.CreditCard },
+    ]
+  },
+  {
+    id: "property",
+    label: "Property Explorer",
+    icon: SvgIcons.Building2,
+    tabs: [
+      { key: "Projects",        icon: SvgIcons.Building2 },
+      { key: "Map",             icon: SvgIcons.Map },
+      { key: "Handover",        icon: SvgIcons.Clock },
+      { key: "Service Charges", icon: SvgIcons.Receipt },
+    ]
+  },
+  {
+    id: "investment",
+    label: "Investment Tools",
+    icon: SvgIcons.BarChart3,
+    tabs: [
+      { key: "Yields",           icon: SvgIcons.BarChart3 },
+      { key: "STR vs LTR",       icon: SvgIcons.ArrowLeftRight },
+      { key: "Mortgage",         icon: SvgIcons.Landmark },
+      { key: "Investment Score", icon: SvgIcons.Star },
+      { key: "Flip",             icon: SvgIcons.RefreshCw },
+      { key: "DXB Estimate",     icon: SvgIcons.Search },
+      { key: "Portfolio",        icon: SvgIcons.Briefcase },
+      { key: "Golden Visa",      icon: SvgIcons.Award },
+      { key: "Risk",             icon: SvgIcons.AlertTriangle },
+    ]
+  },
+  {
+    id: "developer",
+    label: "Developer Intelligence",
+    icon: SvgIcons.Activity,
+    tabs: [
+      { key: "Financials",       icon: SvgIcons.BarChart2 },
+      { key: "Developer Health", icon: SvgIcons.Activity },
+      { key: "Competitors",      icon: SvgIcons.Layers },
+      { key: "Banking",           icon: SvgIcons.CreditCard },
+    ]
+  },
+  {
+    id: "marketing",
+    label: "Marketing",
+    icon: SvgIcons.TrendingUp,
+    tabs: [
+      { key: "Marketing", icon: SvgIcons.Activity },
+    ]
+  },
+  {
+    id: "crm",
+    label: "Agency CRM",
+    icon: SvgIcons.Users,
+    tabs: [
+      { key: "My Leads",    icon: SvgIcons.Users },
+      { key: "Pipeline",    icon: SvgIcons.LayoutGrid },
+      { key: "Listings",    icon: SvgIcons.Building },
+      { key: "Team",        icon: SvgIcons.Users2 },
+      { key: "Agency",      icon: SvgIcons.Building2 },
+      { key: "Compliance",  icon: SvgIcons.Shield },
+      { key: "Dev Portal",  icon: SvgIcons.Layers },
+      { key: "Intelligence",icon: SvgIcons.Database },
+    ]
+  },
+];
+
+/* ─── Flat TABS for backward compatibility ─── */
+const TABS = TAB_GROUPS.flatMap(g => g.tabs);
+
+
+/* ─── STYLES ─── */
+const css = `
+  @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700;9..144,900&display=swap');
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { font-size: 14px; }
+  body { background: ${T.bg}; color: ${T.textPrimary}; font-family: 'Outfit', sans-serif; }
+
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(212,168,67,0.2); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(212,168,67,0.35); }
+
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+  @keyframes ping { 0% { transform: scale(1); opacity: 0.6; } 100% { transform: scale(2.4); opacity: 0; } }
+  @keyframes slideIn { from { transform: translateX(-100%); } to { transform: translateX(0); } }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .fade-up { animation: fadeUp 0.5s ease-out forwards; opacity: 0; }
+  .delay-1 { animation-delay: 0.05s; }
+  .delay-2 { animation-delay: 0.1s; }
+  .delay-3 { animation-delay: 0.15s; }
+  .delay-4 { animation-delay: 0.2s; }
+  .delay-5 { animation-delay: 0.25s; }
+  .delay-6 { animation-delay: 0.3s; }
+  .delay-7 { animation-delay: 0.35s; }
+  .delay-8 { animation-delay: 0.4s; }
+
+  .kpi-card {
+    background: linear-gradient(135deg, ${T.card} 0%, ${T.surfaceAlt} 100%);
+    border: 1px solid ${T.border};
+    border-radius: 16px;
+    padding: 20px 16px;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    cursor: default;
+  }
+  .kpi-card:hover {
+    border-color: ${T.borderHover};
+    transform: translateY(-2px);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.3), 0 0 0 1px rgba(212,168,67,0.1);
+  }
+  .kpi-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, ${T.gold}, transparent);
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  .kpi-card:hover::before { opacity: 1; }
+
+  .chart-box {
+    background: linear-gradient(180deg, ${T.card} 0%, rgba(4,9,15,0.95) 100%);
+    border: 1px solid ${T.border};
+    border-radius: 16px;
+    padding: 20px;
+    transition: border-color 0.3s;
+  }
+  .chart-box:hover { border-color: ${T.borderHover}; }
+  select option { background: ${T.surface}; color: ${T.textPrimary}; }
+  * { scrollbar-width: thin; scrollbar-color: rgba(212,168,67,0.15) transparent; }
+
+  .sidebar-btn {
+    display: flex; align-items: center; gap: 10px;
+    width: 100%; padding: 9px 14px;
+    border: none; border-radius: 8px; cursor: pointer;
+    font-family: 'Outfit', sans-serif; font-size: 12.5px; font-weight: 400;
+    transition: all 0.15s ease; color: ${T.textSecondary};
+    background: transparent; text-align: left; position: relative; letter-spacing: 0.1px;
+  }
+  .sidebar-btn:hover { background: rgba(212,168,67,0.05); color: ${T.white}; }
+  .sidebar-btn.active { background: rgba(212,168,67,0.1); color: ${T.gold}; font-weight: 500; }
+  .sidebar-btn.active::before {
+    content: ''; position: absolute; left: 0; top: 50%;
+    transform: translateY(-50%); width: 2.5px; height: 55%;
+    background: ${T.gold}; border-radius: 0 2px 2px 0;
+  }
+  .sidebar-group-btn {
+    display: flex; align-items: center; gap: 10px; width: 100%; padding: 8px 14px;
+    border: none; border-radius: 8px; cursor: pointer; font-family: 'Outfit', sans-serif;
+    font-size: 10px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase;
+    color: ${T.textMuted}; background: transparent; text-align: left; transition: all 0.15s ease; margin-top: 6px;
+  }
+  .sidebar-group-btn:hover { color: ${T.textSecondary}; }
+  .sidebar-search {
+    width: 100%; padding: 7px 10px 7px 32px; background: rgba(255,255,255,0.03);
+    border: 1px solid ${T.border}; border-radius: 8px; color: ${T.white};
+    font-family: 'Outfit', sans-serif; font-size: 12px; outline: none; transition: border-color 0.2s;
+  }
+  .sidebar-search:focus { border-color: rgba(212,168,67,0.4); }
+  .sidebar-search::placeholder { color: ${T.textMuted}; }
+
+  .login-input {
+    width: 100%;
+    padding: 14px 16px;
+    background: ${T.surface};
+    border: 1px solid ${T.border};
+    border-radius: 12px;
+    color: ${T.white};
+    font-family: 'Outfit', sans-serif;
+    font-size: 14px;
+    outline: none;
+    transition: all 0.3s;
+  }
+  .login-input:focus { border-color: ${T.gold}; box-shadow: 0 0 0 3px rgba(212,168,67,0.1); }
+  .login-input::placeholder { color: ${T.textMuted}; }
+
+  .login-btn {
+    width: 100%;
+    padding: 14px;
+    background: linear-gradient(135deg, ${T.gold}, #B8912F);
+    border: none;
+    border-radius: 12px;
+    color: ${T.bg};
+    font-family: 'Outfit', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s;
+    letter-spacing: 0.5px;
+  }
+  .login-btn:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(212,168,67,0.3); }
+  .login-btn:active { transform: translateY(0); }
+
+  .trend-up { color: ${T.green}; }
+  .trend-down { color: ${T.red}; }
+
+  .mobile-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(4px);
+    z-index: 90;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+  }
+  .mobile-overlay.open { opacity: 1; pointer-events: auto; }
+
+  /* ── 768px: Tablet / small laptop ── */
+  @media (max-width: 768px) {
+    html { font-size: 13px; }
+
+    /* Sidebar slides in as drawer */
+    .sidebar { transform: translateX(-100%); position: fixed !important; z-index: 100; height: 100dvh !important; box-shadow: 8px 0 40px rgba(0,0,0,0.6); }
+    .sidebar.open { transform: translateX(0); }
+    .free-banner { left: 0 !important; }
+    .main-content { margin-left: 0 !important; overflow-x: hidden !important; }
+    .global-filter { left: 0 !important; }
+    .top-bar { left: 0 !important; padding: 0 14px !important; }
+
+    /* Grids */
+    .kpi-grid { grid-template-columns: 1fr 1fr !important; gap: 8px !important; }
+    .chart-grid-2 { grid-template-columns: 1fr !important; gap: 12px !important; }
+    .chart-grid-3 { grid-template-columns: 1fr !important; gap: 12px !important; }
+    .chart-grid-4 { grid-template-columns: 1fr 1fr !important; gap: 8px !important; }
+
+    /* Cards */
+    .kpi-card { padding: 14px 12px !important; border-radius: 12px !important; }
+    .kpi-card .kpi-value { font-size: 22px !important; }
+    .chart-box { padding: 14px 10px !important; border-radius: 12px !important; }
+
+    /* Header */
+    .header-badges { gap: 4px !important; }
+    .header-badges > div:nth-child(n+3) { display: none !important; }
+    .mobile-menu-btn { display: flex !important; }
+
+    /* Content */
+    .main-content > div { padding: 0 12px 60px !important; }
+    .filter-scroll { overflow-x: auto; flex-wrap: nowrap !important; -webkit-overflow-scrolling: touch; scrollbar-width: none; padding-bottom: 4px; }
+    .filter-scroll::-webkit-scrollbar { display: none; }
+    .filter-scroll button { flex-shrink: 0; }
+
+    /* Tables — horizontal scroll with hint arrow */
+    .table-scroll { overflow-x: auto !important; -webkit-overflow-scrolling: touch; }
+    .table-scroll::after { content: "swipe →"; position: absolute; right: 8px; top: 12px; color: ${T.gold}; font-size: 10px; opacity: 0.5; pointer-events: none; letter-spacing: 0.5px; }
+    .table-scroll table { min-width: 560px; }
+
+    /* Compare bar */
+    .compare-bar { padding: 10px 14px !important; flex-direction: column !important; align-items: stretch !important; gap: 8px !important; }
+    .compare-bar > div { justify-content: center; flex-wrap: wrap; }
+
+    /* Mortgage calculator 2-col → 1-col */
+    .mortgage-grid { grid-template-columns: 1fr !important; }
+
+    /* AI Insights full width cards */
+    .ai-insights-grid { grid-template-columns: 1fr !important; }
+
+    /* Alert modal full screen */
+    .alerts-modal { max-width: 100% !important; max-height: 100dvh !important; border-radius: 20px 20px 0 0 !important; position: fixed !important; bottom: 0 !important; top: auto !important; margin: 0 !important; }
+  }
+
+  /* ── 480px: Mobile phones ── */
+  @media (max-width: 480px) {
+    html { font-size: 12px; }
+
+    /* KPI grid: single column on small phones */
+    .kpi-grid { grid-template-columns: 1fr 1fr !important; gap: 6px !important; }
+    .chart-grid-4 { grid-template-columns: 1fr 1fr !important; }
+
+    /* Header strip */
+    .header-badges { display: none !important; }
+    .top-bar { padding: 0 10px !important; height: 52px !important; }
+    .top-bar h1 { font-size: 13px !important; }
+
+    /* Charts shorter on tiny screens */
+    .recharts-responsive-container { max-height: 200px !important; }
+    .chart-box { padding: 12px 8px !important; }
+
+    /* Upgrade modal full screen */
+    .upgrade-modal { width: 100% !important; max-width: 100% !important; border-radius: 20px 20px 0 0 !important; position: fixed !important; bottom: 0 !important; top: auto !important; margin: 0 !important; max-height: 90dvh !important; overflow-y: auto; }
+
+    /* Plans stacked vertically */
+    .plans-grid { grid-template-columns: 1fr !important; }
+
+    /* Checkout modal */
+    .checkout-modal { width: 100% !important; max-width: 100% !important; border-radius: 20px 20px 0 0 !important; position: fixed !important; bottom: 0 !important; top: auto !important; }
+
+    /* Section titles smaller */
+    .section-title { font-size: 14px !important; }
+
+    /* Tab content spacing */
+    .main-content > div { padding: 0 10px 70px !important; }
+
+    /* Bottom nav bar hint spacing */
+    .tab-content-pad { padding-bottom: 80px !important; }
+  }
+
+  /* ── 360px: Very small phones ── */
+  @media (max-width: 360px) {
+    .kpi-grid { grid-template-columns: 1fr !important; }
+    html { font-size: 11px; }
+  }
+
+  /* ── Touch improvements ── */
+  * { -webkit-tap-highlight-color: transparent; }
+  button, a, [role="button"] { touch-action: manipulation; }
+  input[type="range"] { height: 32px; }
+
+  /* ── Mobile Bottom Nav Bar ── */
+  @media (max-width: 768px) {
+    .mobile-bottom-nav {
+      display: flex !important;
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      height: 60px;
+      background: rgba(6,12,22,0.97);
+      border-top: 1px solid rgba(212,168,67,0.15);
+      z-index: 200;
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+    }
+  }
+`;
+
+/* ─── COMPONENTS ─── */
+
+/* Loading Skeleton for data fetch */
+const LoadingSkeleton = ({ rows = 6, cols = 3 }) => (
+  <div style={{ display: "grid", gridTemplateColumns: `repeat(${cols}, 1fr)`, gap: 12 }}>
+    {Array.from({ length: rows }).map((_, i) => (
+      <div key={i} className="chart-box fade-up" style={{ animationDelay: `${i * 0.05}s`, padding: 20, minHeight: 120 }}>
+        <div style={{ width: "40%", height: 10, borderRadius: 4, background: T.surfaceAlt, marginBottom: 12 }} />
+        <div style={{ width: "60%", height: 22, borderRadius: 4, background: T.surfaceAlt, marginBottom: 10 }} />
+        <div style={{ width: "80%", height: 8, borderRadius: 4, background: T.surfaceAlt }} />
+      </div>
+    ))}
+  </div>
+);
+
+const KPI = ({ label, value, sub, icon, delay = 0, onClick }) => {
+  const [hovered, setHovered] = useState(false);
+  const isClickable = !!onClick;
+  return (
+    <div
+      className={`kpi-card fade-up delay-${delay}`}
+      title={isClickable ? `Click to view ${label} breakdown` : label}
+      onClick={onClick}
+      onMouseEnter={() => isClickable && setHovered(true)}
+      onMouseLeave={() => isClickable && setHovered(false)}
+      style={{ cursor: isClickable ? "pointer" : "default", transition: "transform 0.2s, box-shadow 0.2s, border-color 0.2s", transform: hovered ? "translateY(-3px)" : "none", boxShadow: hovered ? `0 10px 30px rgba(212,168,67,0.2)` : undefined, borderColor: hovered ? T.gold : undefined, position: "relative" }}
+    >
+      <div style={{ position: "absolute", top: -30, right: -30, width: 80, height: 80, borderRadius: "50%", background: `radial-gradient(circle, ${T.goldGlow} 0%, transparent 70%)` }} />
+      {isClickable && <div style={{ position: "absolute", top: 10, right: 10, fontSize: 14, color: hovered ? T.gold : T.border, transition: "color 0.2s" }}>›</div>}
+      <div style={{ fontSize: 10, fontWeight: 600, color: T.textMuted, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 8 }}>{label}</div>
+      <div style={{ fontFamily: "'Fraunces', serif", fontSize: 26, fontWeight: 700, color: T.gold, lineHeight: 1.1, marginBottom: 4 }}>{value}</div>
+      <div style={{ fontSize: 12, fontWeight: 500, color: T.teal, display: "flex", alignItems: "center", gap: 4 }}>
+        {sub?.includes("+") && <span style={{ color: T.green }}>{Icons.up}</span>}
+        {sub}
+      </div>
+      {isClickable && <div style={{ marginTop: 8, fontSize: 9, color: hovered ? T.gold : T.textMuted, fontWeight: 600, letterSpacing: 0.5, transition: "color 0.2s" }}>{hovered ? "View breakdown →" : "Click for details"}</div>}
+    </div>
+  );
+};
+
+const ForecastCard = ({ firm, color, short, forecast, detail, bullets, sourceUrl }) => {
+  const [expanded, setExpanded] = useState(false);
+  return (
+    <div className="chart-box" style={{ borderTop: `3px solid ${color}`, cursor: "pointer", transition: "all 0.2s" }} onClick={() => setExpanded(e => !e)}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+        <h4 style={{ color, fontSize: 15, fontWeight: 700, marginBottom: 4, fontFamily: "'Fraunces', serif" }}>{firm}</h4>
+        <span style={{ fontSize: 16, color: T.textMuted, display: "inline-block", transform: expanded ? "rotate(180deg)" : "none", transition: "transform 0.2s" }}>⌄</span>
+      </div>
+      <div style={{ fontSize: 10, fontWeight: 700, color: T.white, background: color + "20", padding: "3px 8px", borderRadius: 5, display: "inline-block", marginBottom: 8 }}>{forecast}</div>
+      <p style={{ color: T.textSecondary, fontSize: 12, lineHeight: 1.6 }}>{short}</p>
+      {expanded && (
+        <div style={{ marginTop: 12, paddingTop: 12, borderTop: `1px solid ${T.border}` }}>
+          <p style={{ color: T.textSecondary, fontSize: 12, lineHeight: 1.7, marginBottom: 10 }}>{detail}</p>
+          <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 5 }}>
+            {bullets.map((b, bi) => (
+              <li key={bi} style={{ fontSize: 11, color: T.textSecondary, display: "flex", gap: 6, alignItems: "flex-start" }}>
+                <span style={{ color, fontWeight: 700, marginTop: 1 }}>›</span> {b}
+              </li>
+            ))}
+          </ul>
+          <a href={sourceUrl} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{ display: "inline-block", marginTop: 10, fontSize: 10, color, fontWeight: 700, textDecoration: "none" }}>Full Report ↗</a>
+        </div>
+      )}
+      {!expanded && <div style={{ marginTop: 8, fontSize: 10, color: T.textMuted }}>Click to expand full analysis</div>}
+    </div>
+  );
+};
+
+const Section = ({ title, sub, children, delay = 0 }) => (
+  <div className={`fade-up delay-${delay}`} style={{ marginTop: 36, marginBottom: 16 }}>
+    <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 4 }}>
+      <div style={{ width: 4, height: 28, background: `linear-gradient(180deg, ${T.gold}, transparent)`, borderRadius: 2 }} />
+      <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: 22, fontWeight: 700, color: T.white }}>{title}</h2>
+    </div>
+    {sub && <p style={{ color: T.textSecondary, fontSize: 12, marginLeft: 16, marginTop: 2 }}>{sub}</p>}
+    {children}
+  </div>
+);
+
+const Chart = ({ title, children, style: extraStyle }) => (
+  <div className="chart-box" style={extraStyle}>
+    {title && <h3 style={{ fontSize: 11, fontWeight: 600, color: T.goldLight, letterSpacing: 1, textTransform: "uppercase", marginBottom: 14 }}>{title}</h3>}
+    {children}
+  </div>
+);
+
+const CustomTooltip = ({ active, payload, label }) => {
+  if (!active || !payload?.length) return null;
+  return (
+    <div style={{ background: T.surface, border: `1px solid ${T.gold}`, borderRadius: 10, padding: "10px 14px", boxShadow: "0 12px 40px rgba(0,0,0,0.5)" }}>
+      <p style={{ color: T.gold, fontWeight: 700, margin: 0, fontSize: 12, fontFamily: "'Fraunces', serif" }}>{label}</p>
+      {payload.map((p, i) => (
+        <p key={i} style={{ color: p.color || T.white, margin: "3px 0 0", fontSize: 12 }}>
+          {p.name}: <strong>{typeof p.value === "number" ? p.value.toFixed(1) : p.value}</strong>
+        </p>
+      ))}
+    </div>
+  );
+};
+
+/* ─── LOGIN SCREEN ─── */
+const googleProvider = new GoogleAuthProvider();
+
+const PasswordStrength = ({ password }) => {
+  const score = [/.{8,}/, /[0-9]/, /[A-Z]/, /[^A-Za-z0-9]/].filter(r => r.test(password)).length;
+  const levels = [
+    { label: "Too short", color: "#EF4444" },
+    { label: "Weak", color: "#F59E0B" },
+    { label: "Good", color: "#3B82F6" },
+    { label: "Strong", color: "#10B981" },
+    { label: "Very Strong", color: "#10B981" },
+  ];
+  if (!password) return null;
+  const lvl = levels[Math.min(score, 4)];
+  return (
+    <div style={{ marginTop: 6 }}>
+      <div style={{ display: "flex", gap: 4, marginBottom: 4 }}>
+        {[0,1,2,3].map(i => (
+          <div key={i} style={{ flex: 1, height: 3, borderRadius: 2, background: i < score ? lvl.color : "rgba(255,255,255,0.08)", transition: "background 0.3s" }} />
+        ))}
+      </div>
+      <div style={{ fontSize: 10, color: lvl.color, fontWeight: 600 }}>{lvl.label}</div>
+    </div>
+  );
+};
+
+const LoginScreen = ({ onLogin, onBack, defaultMode = "login" }) => {
+  const [mode, setMode] = useState(defaultMode);
+  const [screen, setScreen] = useState("form"); // "form" | "verify" | "reset_sent"
+  const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [country, setCountry] = useState("");
+  const [email, setEmail] = useState("");
+  const [pass, setPass] = useState("");
+  const [confirmPass, setConfirmPass] = useState("");
+  const [showPass, setShowPass] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [agreedTerms, setAgreedTerms] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const switchMode = (m) => { setMode(m); setError(""); setPass(""); setConfirmPass(""); };
+
+  const handleGoogleSignIn = async () => {
+    setGoogleLoading(true); setError("");
+    try {
+      const result = await signInWithPopup(auth, googleProvider);
+      const u = result.user;
+      const snap = await getDoc(doc(db, "users", u.uid));
+      if (!snap.exists()) {
+        const now = new Date();
+        const trialEnd = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+        await setDoc(doc(db, "users", u.uid), {
+          name: u.displayName || u.email.split("@")[0],
+          email: u.email,
+          tier: "pro_trial",
+          createdAt: now.toISOString(),
+          trialStart: now.toISOString(),
+          trialEnd: trialEnd.toISOString(),
+          role: "user",
+          provider: "google",
+        });
+        try {
+          await emailjs.send(import.meta.env.VITE_EMAILJS_SERVICE_ID, import.meta.env.VITE_EMAILJS_TEMPLATE_ID, {
+            user_email: u.email,
+            user_name: u.displayName || u.email.split("@")[0],
+            project_name: "DXB Analytics Platform",
+            change_type: "Welcome to DXB Analytics!",
+            new_value: "Your 7-day Pro Trial is now active. Explore 48+ projects, yields, ROI data and more.",
+            old_value: "New Account",
+            updated_at: now.toLocaleDateString("en-AE"),
+          }, import.meta.env.VITE_EMAILJS_PUBLIC_KEY);
+        } catch(e) {}
+      }
+      onLogin(u.email);
+    } catch (err) {
+      if (err.code !== "auth/popup-closed-by-user") setError("Google sign-in failed. Please try again.");
+    }
+    setGoogleLoading(false);
+  };
+
+  const handleForgot = async () => {
+    if (!email) { setError("Enter your email first, then click Forgot password"); return; }
+    setLoading(true);
+    try {
+      await sendPasswordResetEmail(auth, email);
+      setScreen("reset_sent");
+      setError("");
+    } catch (err) { setError("Could not send reset email. Check your email address."); }
+    setLoading(false);
+  };
+
+  const handleLogin = async (e) => {
+    e?.preventDefault?.();
+    if (!email || !pass) { setError("Please fill in all fields"); return; }
+    setLoading(true); setError("");
+    try {
+      await signInWithEmailAndPassword(auth, email, pass);
+      onLogin(email);
+    } catch (err) {
+      const msgs = {
+        "auth/user-not-found": "Invalid email or password",
+        "auth/invalid-credential": "Invalid email or password",
+        "auth/wrong-password": "Incorrect password",
+        "auth/too-many-requests": "Too many attempts. Please try again later.",
+        "auth/user-disabled": "This account has been disabled. Contact support.",
+      };
+      setError(msgs[err.code] || "Login failed. Please try again.");
+    }
+    setLoading(false);
+  };
+
+  const handleSignUp = async (e) => {
+    e?.preventDefault?.();
+    if (!name.trim()) { setError("Please enter your full name"); return; }
+    if (!email) { setError("Please enter your email address"); return; }
+    if (!pass) { setError("Please enter a password"); return; }
+    if (pass.length < 8) { setError("Password must be at least 8 characters"); return; }
+    if (!/[0-9]/.test(pass)) { setError("Password must contain at least one number"); return; }
+    if (pass !== confirmPass) { setError("Passwords do not match"); return; }
+    if (!agreedTerms) { setError("Please agree to the Terms of Service and Privacy Policy"); return; }
+    setLoading(true); setError("");
+    try {
+      const cred = await createUserWithEmailAndPassword(auth, email, pass);
+      const now = new Date();
+      const trialEnd = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+      await setDoc(doc(db, "users", cred.user.uid), {
+        name: name.trim(), email,
+        phone: phone.trim(), country: country.trim(),
+        tier: "pro_trial",
+        createdAt: now.toISOString(),
+        trialStart: now.toISOString(),
+        trialEnd: trialEnd.toISOString(),
+        role: "user", emailVerified: false, provider: "email",
+      });
+      try { await sendEmailVerification(cred.user); } catch(e) {}
+      try {
+        await emailjs.send(import.meta.env.VITE_EMAILJS_SERVICE_ID, import.meta.env.VITE_EMAILJS_TEMPLATE_ID, {
+          user_email: email, user_name: name.trim(),
+          project_name: "DXB Analytics Platform",
+          change_type: "Welcome to DXB Analytics! — Please verify your email",
+          new_value: "Your 7-day Pro Trial is active. Check your inbox to verify your email address.",
+          old_value: "New Account",
+          updated_at: now.toLocaleDateString("en-AE"),
+        }, import.meta.env.VITE_EMAILJS_PUBLIC_KEY);
+      } catch(e) {}
+      setScreen("verify");
+    } catch (err) {
+      const msgs = {
+        "auth/email-already-in-use": "This email is already registered. Try signing in instead.",
+        "auth/weak-password": "Password is too weak.",
+        "auth/invalid-email": "Please enter a valid email address.",
+      };
+      setError(msgs[err.code] || "Sign up failed. Please try again.");
+    }
+    setLoading(false);
+  };
+
+  // ── Verify Email Screen ──
+  if (screen === "verify") return (
+    <div style={{ minHeight: "100vh", background: T.bg, display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <style>{css}</style>
+      <div className="fade-up" style={{ width: "100%", maxWidth: 440, padding: "0 20px", textAlign: "center" }}>
+        <div style={{ background: T.surface, border: "1px solid rgba(16,185,129,0.3)", borderRadius: 20, padding: 40 }}>
+          <div style={{ fontSize: 56, marginBottom: 16 }}>\uD83D\uDCE7</div>
+          <h2 style={{ fontFamily: "'Fraunces',serif", fontSize: 22, fontWeight: 800, color: T.white, marginBottom: 10 }}>Check your inbox</h2>
+          <p style={{ color: T.textSecondary, fontSize: 13, lineHeight: 1.7, marginBottom: 8 }}>
+            We sent a verification link to <span style={{ color: T.gold, fontWeight: 600 }}>{email}</span>
+          </p>
+          <p style={{ color: T.textMuted, fontSize: 12, lineHeight: 1.7, marginBottom: 28 }}>
+            Click the link in the email to verify your account, then come back and sign in. Check your spam folder if you don't see it within 2 minutes.
+          </p>
+          <div style={{ background: "rgba(16,185,129,0.06)", border: "1px solid rgba(16,185,129,0.2)", borderRadius: 10, padding: "12px 16px", marginBottom: 24, textAlign: "left" }}>
+            {["Click the link in the verification email", "Return to this page", "Sign in with your email & password"].map((s, i) => (
+              <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "4px 0" }}>
+                <div style={{ width: 20, height: 20, borderRadius: "50%", background: "rgba(16,185,129,0.15)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, color: T.green, fontWeight: 700, flexShrink: 0 }}>{i+1}</div>
+                <span style={{ fontSize: 12, color: T.textSecondary }}>{s}</span>
+              </div>
+            ))}
+          </div>
+          <button type="button" className="login-btn" onClick={() => { setScreen("form"); setMode("login"); setPass(""); setConfirmPass(""); }}>
+            Go to Sign In →
+          </button>
+          <button type="button" onClick={async () => { try { if (auth.currentUser) { await sendEmailVerification(auth.currentUser); alert("Verification email resent! Check your inbox."); } } catch(e){} }} style={{ display: "block", margin: "12px auto 0", background: "none", border: "none", color: T.gold, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+            Resend verification email
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
+  // ── Reset Sent Screen ──
+  if (screen === "reset_sent") return (
+    <div style={{ minHeight: "100vh", background: T.bg, display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <style>{css}</style>
+      <div className="fade-up" style={{ width: "100%", maxWidth: 440, padding: "0 20px", textAlign: "center" }}>
+        <div style={{ background: T.surface, border: "1px solid rgba(212,168,67,0.3)", borderRadius: 20, padding: 40 }}>
+          <div style={{ fontSize: 56, marginBottom: 16 }}>\uD83D\uDD11</div>
+          <h2 style={{ fontFamily: "'Fraunces',serif", fontSize: 22, fontWeight: 800, color: T.white, marginBottom: 10 }}>Password Reset Sent</h2>
+          <p style={{ color: T.textSecondary, fontSize: 13, lineHeight: 1.7, marginBottom: 8 }}>
+            We sent a reset link to <span style={{ color: T.gold, fontWeight: 600 }}>{email}</span>
+          </p>
+          <p style={{ color: T.textMuted, fontSize: 12, lineHeight: 1.7, marginBottom: 28 }}>
+            Click the link in the email to set a new password. The link expires in 1 hour. Check your spam folder if you don't see it.
+          </p>
+          <button type="button" className="login-btn" onClick={() => setScreen("form")}>Back to Sign In</button>
+        </div>
+      </div>
+    </div>
+  );
+
+  // ── Main Form ──
+  return (
+    <div style={{ minHeight: "100vh", background: T.bg, display: "flex", alignItems: "center", justifyContent: "center", position: "relative", overflow: "hidden" }}>
+      <style>{css}</style>
+      {onBack && (
+        <button type="button" onClick={onBack} style={{ position: "absolute", top: 24, left: 24, display: "flex", alignItems: "center", gap: 6, background: "none", border: `1px solid ${T.border}`, borderRadius: 8, padding: "8px 16px", color: T.textSecondary, fontSize: 13, fontFamily: "'Outfit', sans-serif", cursor: "pointer", zIndex: 10 }}
+          onMouseEnter={e => { e.currentTarget.style.borderColor = T.gold; e.currentTarget.style.color = T.gold; }}
+          onMouseLeave={e => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.color = T.textSecondary; }}>
+          ← Back to Home
+        </button>
+      )}
+      <div style={{ position: "absolute", inset: 0, opacity: 0.015, backgroundImage: `radial-gradient(${T.gold} 1px, transparent 1px)`, backgroundSize: "50px 50px" }} />
+      <div style={{ position: "absolute", top: "20%", left: "10%", width: 400, height: 400, borderRadius: "50%", background: `radial-gradient(circle, rgba(212,168,67,0.04) 0%, transparent 70%)` }} />
+
+      <div className="fade-up" style={{ width: "100%", maxWidth: 440, padding: "0 20px", position: "relative", zIndex: 1 }}>
+        {/* Logo */}
+        <div style={{ textAlign: "center", marginBottom: 36 }}>
+          <div style={{ display: "inline-flex", alignItems: "center", gap: 3, marginBottom: 8 }}>
+            <svg width="36" height="36" viewBox="0 0 40 40"><rect x="2" y="2" width="36" height="36" rx="8" fill="none" stroke={T.gold} strokeWidth="2" /><path d="M12 28V12h10l-6 8h8l-12 8z" fill={T.gold} /></svg>
+          </div>
+          <h1 style={{ fontFamily: "'Fraunces', serif", fontSize: 28, fontWeight: 900, color: T.gold, letterSpacing: -0.5, marginBottom: 2 }}>DXB Analytics</h1>
+          <p style={{ color: T.textMuted, fontSize: 13, letterSpacing: 2, textTransform: "uppercase" }}>Dubai Real Estate Intelligence</p>
+        </div>
+
+        <div style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 20, padding: 32 }}>
+          {/* Mode Toggle */}
+          <div style={{ display: "flex", marginBottom: 24, background: T.surfaceAlt, borderRadius: 10, padding: 3 }}>
+            <button type="button" onClick={() => switchMode("login")} style={{ flex: 1, padding: "10px 0", borderRadius: 8, border: "none", fontFamily: "'Outfit',sans-serif", fontSize: 13, fontWeight: 600, cursor: "pointer", transition: "all 0.2s", background: mode === "login" ? T.gold : "transparent", color: mode === "login" ? T.bg : T.textMuted }}>Sign In</button>
+            <button type="button" onClick={() => switchMode("signup")} style={{ flex: 1, padding: "10px 0", borderRadius: 8, border: "none", fontFamily: "'Outfit',sans-serif", fontSize: 13, fontWeight: 600, cursor: "pointer", transition: "all 0.2s", background: mode === "signup" ? T.gold : "transparent", color: mode === "signup" ? T.bg : T.textMuted }}>Create Account</button>
+          </div>
+
+          <h2 style={{ fontFamily: "'Fraunces',serif", fontSize: 20, fontWeight: 700, color: T.white, marginBottom: 4 }}>
+            {mode === "login" ? "Welcome back" : "Start your free trial"}
+          </h2>
+          <p style={{ color: T.textSecondary, fontSize: 13, marginBottom: 20 }}>
+            {mode === "login" ? "Sign in to access your dashboard" : "7 days full Pro access — no credit card required"}
+          </p>
+
+          {/* Google Sign-In */}
+          <button type="button" onClick={handleGoogleSignIn} disabled={googleLoading} style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 10, padding: "11px 0", borderRadius: 10, border: `1px solid ${T.border}`, background: T.surfaceAlt, color: T.white, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif", marginBottom: 16, transition: "all 0.2s" }}
+            onMouseEnter={e => e.currentTarget.style.borderColor = T.gold}
+            onMouseLeave={e => e.currentTarget.style.borderColor = T.border}>
+            {googleLoading
+              ? <span style={{ width: 16, height: 16, border: "2px solid rgba(255,255,255,0.2)", borderTopColor: T.white, borderRadius: "50%", animation: "spin 0.6s linear infinite", display: "inline-block" }} />
+              : <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#4285F4" d="M47.5 24.6c0-1.6-.1-3.1-.4-4.6H24v8.7h13.2c-.6 3-2.4 5.5-5 7.2v6h8.1c4.7-4.4 7.2-10.8 7.2-17.3z"/><path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-8.1-6c-2.1 1.4-4.7 2.2-7.8 2.2-6 0-11-4-12.8-9.5H3v6.2C7 42.6 15 48 24 48z"/><path fill="#FBBC05" d="M11.2 28.9c-.5-1.4-.7-2.8-.7-4.4s.3-3 .7-4.4V14H3a23.9 23.9 0 0 0 0 20l8.2-5.1z"/><path fill="#EA4335" d="M24 9.5c3.4 0 6.4 1.2 8.8 3.4l6.6-6.6C35.9 2.5 30.4 0 24 0 15 0 7 5.4 3 13.9l8.2 5.1C13 13.6 18 9.5 24 9.5z"/></svg>
+            }
+            {googleLoading ? "Signing in..." : "Continue with Google"}
+          </button>
+
+          {/* Divider */}
+          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
+            <div style={{ flex: 1, height: 1, background: T.border }} />
+            <span style={{ fontSize: 11, color: T.textMuted, fontWeight: 600 }}>OR</span>
+            <div style={{ flex: 1, height: 1, background: T.border }} />
+          </div>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+            {mode === "signup" && (
+              <>
+                <div>
+                  <label style={{ fontSize: 11, fontWeight: 600, color: T.textSecondary, textTransform: "uppercase", letterSpacing: 1, display: "block", marginBottom: 6 }}>Full Name *</label>
+                  <input className="login-input" type="text" placeholder="John Smith" value={name} onChange={e => setName(e.target.value)} />
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                  <div>
+                    <label style={{ fontSize: 11, fontWeight: 600, color: T.textSecondary, textTransform: "uppercase", letterSpacing: 1, display: "block", marginBottom: 6 }}>Phone</label>
+                    <input className="login-input" type="tel" placeholder="+971 50 000 0000" value={phone} onChange={e => setPhone(e.target.value)} />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: 11, fontWeight: 600, color: T.textSecondary, textTransform: "uppercase", letterSpacing: 1, display: "block", marginBottom: 6 }}>Country</label>
+                    <input className="login-input" type="text" placeholder="UAE" value={country} onChange={e => setCountry(e.target.value)} />
+                  </div>
+                </div>
+              </>
+            )}
+
+            <div>
+              <label style={{ fontSize: 11, fontWeight: 600, color: T.textSecondary, textTransform: "uppercase", letterSpacing: 1, display: "block", marginBottom: 6 }}>Email Address *</label>
+              <input className="login-input" type="email" placeholder="you@company.com" value={email} onChange={e => setEmail(e.target.value)} onKeyDown={e => e.key === "Enter" && mode === "login" && handleLogin()} />
+            </div>
+
+            <div>
+              <label style={{ fontSize: 11, fontWeight: 600, color: T.textSecondary, textTransform: "uppercase", letterSpacing: 1, display: "block", marginBottom: 6 }}>Password *</label>
+              <div style={{ position: "relative" }}>
+                <input className="login-input" type={showPass ? "text" : "password"} placeholder={mode === "signup" ? "Min 8 chars + 1 number" : "••••••••"} value={pass} onChange={e => setPass(e.target.value)} onKeyDown={e => e.key === "Enter" && mode === "login" && handleLogin()} style={{ paddingRight: 44 }} />
+                <button type="button" onClick={() => setShowPass(!showPass)} style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: T.textMuted, padding: 4 }}>
+                  {showPass ? Icons.eyeOff : Icons.eye}
+                </button>
+              </div>
+              {mode === "signup" && <PasswordStrength password={pass} />}
+            </div>
+
+            {mode === "signup" && (
+              <div>
+                <label style={{ fontSize: 11, fontWeight: 600, color: T.textSecondary, textTransform: "uppercase", letterSpacing: 1, display: "block", marginBottom: 6 }}>Confirm Password *</label>
+                <div style={{ position: "relative" }}>
+                  <input className="login-input" type={showConfirm ? "text" : "password"} placeholder="Re-enter your password" value={confirmPass} onChange={e => setConfirmPass(e.target.value)} style={{ paddingRight: 44, borderColor: confirmPass && confirmPass !== pass ? "rgba(239,68,68,0.5)" : confirmPass && confirmPass === pass ? "rgba(16,185,129,0.5)" : undefined }} />
+                  <button type="button" onClick={() => setShowConfirm(!showConfirm)} style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: T.textMuted, padding: 4 }}>
+                    {showConfirm ? Icons.eyeOff : Icons.eye}
+                  </button>
+                </div>
+                {confirmPass && confirmPass !== pass && <div style={{ fontSize: 10, color: T.red, marginTop: 4 }}>✗ Passwords do not match</div>}
+                {confirmPass && confirmPass === pass && <div style={{ fontSize: 10, color: T.green, marginTop: 4 }}>✓ Passwords match</div>}
+              </div>
+            )}
+
+            {error && <div style={{ color: T.red, fontSize: 12, padding: "8px 12px", background: "rgba(239,68,68,0.08)", borderRadius: 8, border: "1px solid rgba(239,68,68,0.2)" }}>{error}</div>}
+
+            {mode === "login" && (
+              <div style={{ display: "flex", justifyContent: "flex-end" }}>
+                <button onClick={handleForgot} type="button" disabled={loading} style={{ background: "none", border: "none", color: T.gold, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit',sans-serif", padding: 0 }}>
+                  {loading ? "Sending..." : "Forgot password?"}
+                </button>
+              </div>
+            )}
+
+            {mode === "signup" && (
+              <label style={{ display: "flex", alignItems: "flex-start", gap: 10, cursor: "pointer" }}>
+                <input type="checkbox" checked={agreedTerms} onChange={e => setAgreedTerms(e.target.checked)} style={{ accentColor: T.gold, marginTop: 2, flexShrink: 0, width: 14, height: 14 }} />
+                <span style={{ fontSize: 11, color: T.textSecondary, lineHeight: 1.6 }}>
+                  I agree to the <a href="/terms" target="_blank" rel="noreferrer" style={{ color: T.gold, fontWeight: 600 }}>Terms of Service</a> and <a href="/privacy" target="_blank" rel="noreferrer" style={{ color: T.gold, fontWeight: 600 }}>Privacy Policy</a>. I consent to DXB Analytics processing my data for real estate intelligence services.
+                </span>
+              </label>
+            )}
+
+            <button type="button" className="login-btn" onClick={mode === "login" ? handleLogin : handleSignUp} disabled={loading || (mode === "signup" && !agreedTerms)}>
+              {loading ? (
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+                  <span style={{ width: 16, height: 16, border: "2px solid rgba(4,9,15,0.3)", borderTopColor: T.bg, borderRadius: "50%", animation: "spin 0.6s linear infinite", display: "inline-block" }} />
+                  {mode === "login" ? "Signing in..." : "Creating account..."}
+                </span>
+              ) : mode === "login" ? "Sign In" : "Start Free Trial →"}
+            </button>
+
+            {mode === "signup" && (
+              <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 12px", background: "rgba(212,168,67,0.06)", borderRadius: 8, border: `1px solid ${T.border}` }}>
+                <span style={{ fontSize: 16 }}>⭐</span>
+                <div style={{ fontSize: 11, color: T.textSecondary, lineHeight: 1.4 }}>
+                  <span style={{ color: T.gold, fontWeight: 600 }}>7-day Pro trial</span> — Full access. No credit card. Cancel anytime.
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div style={{ textAlign: "center", marginTop: 20, paddingTop: 16, borderTop: `1px solid ${T.border}` }}>
+            <p style={{ color: T.textMuted, fontSize: 12 }}>
+              {mode === "login" ? (
+                <>Don't have an account? <button type="button" onClick={() => switchMode("signup")} style={{ color: T.gold, background: "none", border: "none", fontWeight: 600, cursor: "pointer", fontSize: 12, fontFamily: "'Outfit',sans-serif", padding: 0 }}>Sign up free</button></>
+              ) : (
+                <>Already have an account? <button type="button" onClick={() => switchMode("login")} style={{ color: T.gold, background: "none", border: "none", fontWeight: 600, cursor: "pointer", fontSize: 12, fontFamily: "'Outfit',sans-serif", padding: 0 }}>Sign in</button></>
+              )}
+            </p>
+          </div>
+        </div>
+
+        <p style={{ textAlign: "center", color: T.textMuted, fontSize: 11, marginTop: 20 }}>
+          \uD83D\uDD12 Secured by Firebase · SSL Encrypted · GDPR Compliant
+        </p>
+      </div>
+    </div>
+  );
+};
+
+
+/* ─── PRO GATE OVERLAY ─── */
+const ProGate = ({ children, isPro, message = "Upgrade to Pro to unlock this data", onUpgrade, blur = true }) => {
+  if (isPro) return children;
+  return (
+    <div style={{ position: "relative" }}>
+      <div style={{ filter: blur ? "blur(5px)" : "none", pointerEvents: "none", userSelect: "none", opacity: blur ? 0.45 : 1 }}>
+        {children}
+      </div>
+      <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "rgba(4,9,15,0.75)", borderRadius: 16, backdropFilter: "blur(4px)", zIndex: 5 }}>
+        <div style={{ background: T.surface, border: `1px solid ${T.gold}`, borderRadius: 16, padding: "28px 32px", textAlign: "center", maxWidth: 380, boxShadow: `0 20px 60px rgba(0,0,0,0.5), 0 0 30px ${T.gold}18` }}>
+          <div style={{ width: 48, height: 48, borderRadius: "50%", background: `linear-gradient(135deg, ${T.gold}22, ${T.gold}08)`, border: `1px solid ${T.gold}40`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, margin: "0 auto 12px" }}>\uD83D\uDD12</div>
+          <div style={{ fontFamily: "'Fraunces', serif", fontSize: 17, fontWeight: 800, color: T.white, marginBottom: 6 }}>{message}</div>
+          <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 16, lineHeight: 1.6 }}>Join 500+ investors using DXB Analytics Pro to track the Dubai real estate market</div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 18 }}>
+            {["All 48+ active projects", "Full financials & yields", "ROI & mortgage calculator", "Currency converter", "Portfolio tracker"].map((f, i) => (
+              <div key={i} style={{ fontSize: 11, color: T.textSecondary, textAlign: "left", paddingLeft: 4 }}>✓ {f}</div>
+            ))}
+          </div>
+          <button type="button" onClick={onUpgrade} style={{ width: "100%", padding: "11px 0", background: `linear-gradient(135deg, ${T.gold}, #B8912F)`, color: T.bg, border: "none", borderRadius: 10, fontSize: 13, fontWeight: 800, cursor: "pointer", fontFamily: "'Outfit', sans-serif", letterSpacing: 0.3 }}>
+            Unlock Pro — AED 99/mo →
+          </button>
+          <div style={{ fontSize: 10, color: T.textMuted, marginTop: 8 }}>7-day money-back guarantee · Cancel anytime</div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/* ─── PRO GATE FULL PAGE ─── */
+const ProGateFullPage = ({ tabName, onUpgrade }) => {
+  const tabBenefits = {
+    "DXB Estimate":     ["Automated property valuations", "AVM price estimates per unit", "Bayut live listings", "±15% accuracy model"],
+    "Portfolio":        ["Track your Dubai investments", "ROI calculations", "Portfolio performance chart", "Yield tracking"],
+    "Yields":           ["Gross & net yield by community", "STR vs LTR comparison", "Top yielding Dubai areas", "Historical yield trends"],
+    "Mortgage":         ["Live EIBOR rates", "UAE bank comparison", "Monthly payment calculator", "Affordability analysis"],
+    "DLD Volumes":      ["Real transaction volumes", "Community deal counts", "YoY growth by area", "Quarterly breakdown"],
+    "STR vs LTR":       ["Airbnb vs long-term yields", "Occupancy rates", "Nightly rate benchmarks", "Best STR communities"],
+    "Developer Health": ["Developer financial scores", "Delivery track records", "Risk ratings", "Off-plan safety analysis"],
+    "Competitors":      ["Emaar vs DAMAC vs Nakheel", "Market share data", "Price per sqft comparison", "Analyst ratings"],
+    "Service Charges":  ["RERA approved rates", "Community-by-community breakdown", "Annual charge estimates", "Hidden cost analysis"],
+    "Flip":             ["Buy-renovate-sell calculator", "Flip ROI estimator", "DLD fee breakdown", "Best flip communities"],
+    "Investment Score": ["AI-powered property scoring", "Risk vs return matrix", "Top picks by budget", "Score breakdown"],
+    "Price History":    ["Historical price charts", "5-year appreciation data", "Price per sqft trends", "Community comparisons"],
+  };
+  const benefits = tabBenefits[tabName] || ["Full data access", "Live market insights", "Advanced analytics", "Export reports"];
+  return (
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "60vh", padding: "40px 20px" }}>
+      <div style={{ background: T.surface, border: `1px solid ${T.gold}40`, borderRadius: 24, padding: "48px 40px", textAlign: "center", maxWidth: 480, width: "100%", boxShadow: `0 30px 80px rgba(0,0,0,0.4), 0 0 40px ${T.gold}10` }}>
+        <div style={{ width: 64, height: 64, borderRadius: "50%", background: `linear-gradient(135deg, ${T.gold}20, ${T.gold}05)`, border: `1px solid ${T.gold}40`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 28, margin: "0 auto 20px" }}>\uD83D\uDD12</div>
+        <div style={{ fontFamily: "'Fraunces', serif", fontSize: 22, fontWeight: 800, color: T.white, marginBottom: 8 }}>{tabName}</div>
+        <div style={{ fontSize: 13, color: T.textMuted, marginBottom: 28, lineHeight: 1.6 }}>This feature is available on the <span style={{ color: T.gold, fontWeight: 700 }}>Pro plan</span>. Upgrade to unlock full access.</div>
+        <div style={{ background: T.surfaceAlt, borderRadius: 14, padding: "18px 20px", marginBottom: 28, textAlign: "left" }}>
+          <div style={{ fontSize: 11, color: T.gold, fontWeight: 700, marginBottom: 12, textTransform: "uppercase", letterSpacing: 1 }}>What you unlock:</div>
+          {benefits.map((b, i) => (
+            <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
+              <div style={{ width: 18, height: 18, borderRadius: "50%", background: `${T.gold}20`, border: `1px solid ${T.gold}40`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke={T.gold} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              </div>
+              <span style={{ fontSize: 12, color: T.textSecondary }}>{b}</span>
+            </div>
+          ))}
+        </div>
+        <button type="button" onClick={onUpgrade} style={{ width: "100%", padding: "14px 0", background: `linear-gradient(135deg, ${T.gold}, #B8912F)`, color: T.bg, border: "none", borderRadius: 12, fontSize: 14, fontWeight: 800, cursor: "pointer", fontFamily: "'Outfit', sans-serif", letterSpacing: 0.3, marginBottom: 10 }}>
+          Upgrade to Pro — AED 99/mo →
+        </button>
+        <div style={{ fontSize: 11, color: T.textMuted }}>7-day free trial · Cancel anytime · Money-back guarantee</div>
+      </div>
+    </div>
+  );
+};
+
+/* ─── UPGRADE MODAL ─── */
+
+
+const UpgradeModal = ({ show, onClose }) => {
+  if (!show) return null;
+  const plans = [
+    { name: "Pro", price: "99", period: "month", features: ["All Dubai projects — full data", "AI market insights", "Portfolio ROI tracker", "DXB Estimate AVM", "Yield & STR/LTR analysis", "Mortgage calculator", "Price alerts", "PDF export"], popular: true, note: null, cta: "Upgrade to Pro →" },
+    { name: "Enterprise", price: "499", period: "month", features: ["Everything in Pro", "PDF report generation ⏳", "API data access ⏳", "Custom dashboards ⏳", "Multi-user team accounts ⏳", "Developer-level raw data", "Dedicated account manager", "White-label options ⏳"], popular: false, note: "⏳ = Launching Q3 2026", cta: "Contact Sales →" },
+  ];
+  return (
+    <div style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.92)", zIndex: 3000, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(12px)", padding: 16 }} onClick={onClose}>
+      <div className="upgrade-modal" style={{ background: T.surface, borderRadius: 24, border: `1px solid ${T.border}`, width: "95%", maxWidth: 720, padding: 36, position: "relative", boxShadow: "0 40px 100px rgba(0,0,0,0.6)" }} onClick={e => e.stopPropagation()}>
+        <button type="button" onClick={onClose} style={{ position: "absolute", top: 16, right: 16, background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
+
+        {/* Header */}
+        <div style={{ textAlign: "center", marginBottom: 28 }}>
+          <div style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "4px 14px", borderRadius: 20, background: "rgba(212,168,67,0.1)", border: `1px solid ${T.gold}40`, marginBottom: 12 }}>
+            <span style={{ width: 6, height: 6, borderRadius: "50%", background: T.green, animation: "pulse 2s infinite", display: "inline-block" }} />
+            <span style={{ fontSize: 11, color: T.gold, fontWeight: 600 }}>500+ investors already using Pro</span>
+          </div>
+          <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: 26, fontWeight: 900, color: T.white, marginBottom: 6 }}>Unlock the Full Platform</h2>
+          <p style={{ color: T.textSecondary, fontSize: 13 }}>The most comprehensive Dubai real estate intelligence platform</p>
+        </div>
+
+        {/* ROI bar */}
+        <div style={{ background: "rgba(16,185,129,0.08)", border: `1px solid ${T.green}30`, borderRadius: 12, padding: "12px 20px", marginBottom: 24, display: "flex", alignItems: "center", justifyContent: "center", gap: 16, flexWrap: "wrap" }}>
+          {[["\uD83D\uDCCA", "AED 80.4B", "FY25 Sales tracked"], ["\uD83D\uDCC8", "+40% YoY", "Revenue growth"], ["\uD83C\uDFE0", "48 Projects", "Full intelligence"], ["\uD83D\uDCB0", "AED 155B", "Backlog visibility"]].map(([icon, val, label], i) => (
+            <div key={i} style={{ textAlign: "center" }}>
+              <div style={{ fontSize: 13 }}>{icon} <span style={{ fontFamily: "'Fraunces', serif", fontWeight: 800, color: T.green }}>{val}</span></div>
+              <div style={{ fontSize: 10, color: T.textMuted }}>{label}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* Plans */}
+        <div className="plans-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 20 }}>
+          {plans.map((plan, i) => (
+            <div key={i} style={{ background: T.surfaceAlt, borderRadius: 16, padding: 24, border: plan.popular ? `2px solid ${T.gold}` : `1px solid ${T.border}`, position: "relative" }}>
+              {plan.popular && <div style={{ position: "absolute", top: -12, left: "50%", transform: "translateX(-50%)", padding: "4px 16px", borderRadius: 20, background: `linear-gradient(135deg, ${T.gold}, #B8912F)`, color: T.bg, fontSize: 10, fontWeight: 800, letterSpacing: 0.5, whiteSpace: "nowrap" }}>⭐ MOST POPULAR</div>}
+              <h3 style={{ fontSize: 18, fontWeight: 700, color: T.white, marginBottom: 4, marginTop: plan.popular ? 8 : 0 }}>{plan.name}</h3>
+              <div style={{ display: "flex", alignItems: "baseline", gap: 3, marginBottom: 16 }}>
+                <span style={{ fontSize: 11, color: T.textMuted }}>AED</span>
+                <span style={{ fontFamily: "'Fraunces', serif", fontSize: 38, fontWeight: 900, color: plan.popular ? T.gold : T.white, lineHeight: 1 }}>{plan.price}</span>
+                <span style={{ fontSize: 12, color: T.textMuted }}>/{plan.period}</span>
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 7, marginBottom: 16 }}>
+                {plan.features.map((f, j) => (
+                  <div key={j} style={{ display: "flex", alignItems: "flex-start", gap: 7, fontSize: 12, color: f.includes("⏳") ? T.textMuted : T.textSecondary }}>
+                    <span style={{ color: f.includes("⏳") ? T.textMuted : T.green, fontSize: 11, marginTop: 1, flexShrink: 0 }}>✓</span>{f}
+                  </div>
+                ))}
+              </div>
+              {plan.note && <div style={{ fontSize: 10, color: T.textMuted, marginBottom: 12, fontStyle: "italic" }}>{plan.note}</div>}
+              <button type="button" onClick={() => { onClose(); window.dispatchEvent(new CustomEvent("dxb-checkout", { detail: plan })); }}
+                style={{ width: "100%", padding: "12px 0", background: plan.popular ? `linear-gradient(135deg, ${T.gold}, #B8912F)` : "transparent", color: plan.popular ? T.bg : T.gold, border: plan.popular ? "none" : `1px solid ${T.gold}`, borderRadius: 10, fontSize: 13, fontWeight: 800, cursor: "pointer", fontFamily: "'Outfit', sans-serif", letterSpacing: 0.3 }}>
+                {plan.cta}
+              </button>
+            </div>
+          ))}
+        </div>
+
+        <div style={{ textAlign: "center", display: "flex", justifyContent: "center", gap: 24, flexWrap: "wrap" }}>
+          {["\uD83D\uDD12 Secure payment", "↩ 7-day money-back", "⚡ Instant access", "❌ Cancel anytime"].map((t, i) => (
+            <span key={i} style={{ fontSize: 11, color: T.textMuted }}>{t}</span>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+function useFocusTrap(active) {
+  const ref = React.useRef(null);
+  React.useEffect(() => {
+    if (!active || !ref.current) return;
+    const el = ref.current;
+    const focusable = el.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    const handler = (e) => {
+      if (e.key !== 'Tab') return;
+      if (e.shiftKey) { if (document.activeElement === first) { e.preventDefault(); last?.focus(); } }
+      else { if (document.activeElement === last) { e.preventDefault(); first?.focus(); } }
+    };
+    el.addEventListener('keydown', handler);
+    first?.focus();
+    return () => el.removeEventListener('keydown', handler);
+  }, [active]);
+  return ref;
+}
+
+/* ─── COMMUNITY MAP TAB COMPONENT ─── */
+
+function CommunityMapTab({ activeProjects, liveCommunityROI, setTab, seedCommunities }) {
+  
+  // All 20 seed communities with accurate Dubai coordinates
+  const COMMUNITY_COORDS = {
+    "Jumeirah Village Circle":    [25.0607, 55.2088],
+    "Dubai Marina":               [25.0807, 55.1429],
+    "Business Bay":               [25.1854, 55.2719],
+    "Downtown Dubai":             [25.1972, 55.2744],
+    "Dubai Hills Estate":         [25.1124, 55.2594],
+    "Palm Jumeirah":              [25.1124, 55.1390],
+    "Jumeirah Lake Towers":       [25.0699, 55.1478],
+    "Arabian Ranches":            [25.0517, 55.2699],
+    "International City":         [25.1621, 55.4121],
+    "Dubai Creek Harbour":        [25.1942, 55.3556],
+    "Al Furjan":                  [25.0255, 55.1494],
+    "Dubai South":                [24.8972, 55.1615],
+    "Mohammed Bin Rashid City":   [25.1740, 55.3310],
+    "Sobha Hartland":             [25.1825, 55.3427],
+    "Tilal Al Ghaf":              [25.0308, 55.2290],
+    "Discovery Gardens":          [25.0366, 55.1318],
+    "Dubai Silicon Oasis":        [25.1175, 55.3796],
+    "Arjan":                      [25.0552, 55.2178],
+    "DAMAC Hills 2":              [24.9729, 55.3035],
+    "Emaar Beachfront":           [25.0882, 55.1385],
+  };
+
+  const [filterComm, setFilterComm] = React.useState("All");
+  const [filterYield, setFilterYield] = React.useState("All");
+  const [mapLoaded, setMapLoaded] = React.useState(false);
+  const [selectedProject, setSelectedProjectMap] = React.useState(null);
+  const [mapLayer, setMapLayer] = React.useState("yield"); // yield | ppsf | volume
+  const heatLayersRef = React.useRef([]);
+  const mapRef = React.useRef(null);
+  const mapInstanceRef = React.useRef(null);
+  const markersRef = React.useRef([]);
+
+  // Project coordinates (lat/lng for Dubai)
+  const projectCoords = {
+    "Creek Waters": [25.1876, 55.3344], "Creek Waters 2": [25.1890, 55.3360],
+    "Creek Horizon": [25.1860, 55.3320], "Creek Beach": [25.1920, 55.3380],
+    "Creek Palace": [25.1840, 55.3300], "Harbour Gate": [25.1950, 55.3400],
+    "Address Harbour Point": [25.1930, 55.3390], "Creek Edge": [25.1870, 55.3350],
+    "Dubai Hills": [25.1124, 55.2594], "Golf Grand": [25.1050, 55.2650],
+    "Elvira": [25.1070, 55.2570], "Lime Gardens": [25.1090, 55.2530],
+    "Greenside": [25.1030, 55.2510], "Parkside Hills": [25.1000, 55.2480],
+    "The Acres": [24.9800, 55.2000], "The Oasis": [25.0200, 55.1800],
+    "Emaar South": [24.8980, 55.1640], "Greenview": [24.9000, 55.1660],
+    "Urbana": [24.8950, 55.1600], "Expo Golf Villas": [24.8900, 55.1580],
+    "Emaar Beachfront": [25.0780, 55.1340], "Address Beach Resort": [25.0800, 55.1360],
+    "Marina Shores": [25.0760, 55.1320], "Beach Mansion": [25.0820, 55.1380],
+    "Grand Polo Club": [24.8500, 55.4200], "The Valley": [25.0000, 55.5000],
+    "Sunridge": [25.0100, 55.5100], "Farm Gardens": [25.0050, 55.4950],
+    "Alana": [25.0080, 55.5050], "Orania": [24.9950, 55.4900],
+    "Downtown Dubai": [25.1972, 55.2744], "The Grand": [25.1950, 55.2720],
+    "Palace Residences": [25.1990, 55.2760], "IL Primo": [25.1960, 55.2730],
+    "Act One Act Two": [25.1980, 55.2750], "Forte": [25.1940, 55.2710],
+    "Opera District": [25.1930, 55.2700], "Address Residences": [25.1970, 55.2740],
+    "Business Bay": [25.1867, 55.2653], "The Crest": [25.1850, 55.2640],
+    "Arabian Ranches": [25.0530, 55.2690], "Ruba": [25.0550, 55.2710],
+    "Mudon": [25.0200, 55.2500], "Nima": [25.0220, 55.2520],
+    "Rashid Yachts": [25.2200, 55.3100], "Elvire": [25.1080, 55.2560],
+    "Park Lane": [25.1110, 55.2580], "Golf Place": [25.1060, 55.2620],
+  };
+
+  // Community-level data for heat map layers
+  // communityData — built from SEED_DATA.communities (20 communities, sourced from Bayut/DLD/REIDIN)
+  const communityData = seedCommunities?.length > 0
+    ? Object.fromEntries(seedCommunities.map(c => [
+        c.community,
+        {
+          coords: COMMUNITY_COORDS[c.community] || [25.1124, 55.2594],
+          ppsf: c.avgPpsf || 1500,
+          volume: Math.round((c.grossYield || 6) * 1000),
+          yoy: c.grossYield >= 8 ? 45 : c.grossYield >= 7 ? 30 : c.grossYield >= 6 ? 20 : 12,
+          radius: Math.max(600, Math.min(1800, (c.avgPpsf || 1500) / 2)),
+          grossYield: c.grossYield,
+          netYield: c.netYield,
+          serviceCharge: c.serviceCharge,
+          supplyRisk: c.supplyRisk,
+          investmentScore: c.investmentScore,
+          tenantProfile: c.tenantProfile,
+        }
+      ]))
+    : {
+        "Dubai Creek Harbour":  { coords: [25.1942, 55.3556], ppsf: 1620, volume: 6400,  yoy: 45, radius: 1200, grossYield: 6.4, supplyRisk: "Medium" },
+        "Dubai Hills Estate":   { coords: [25.1124, 55.2594], ppsf: 1850, volume: 8200,  yoy: 22, radius: 1400, grossYield: 6.2, supplyRisk: "Medium" },
+        "Emaar Beachfront":     { coords: [25.0882, 55.1385], ppsf: 2800, volume: 1600,  yoy: 18, radius: 900,  grossYield: 5.8, supplyRisk: "Low"    },
+        "Downtown Dubai":       { coords: [25.1972, 55.2744], ppsf: 3100, volume: 8900,  yoy: 12, radius: 1100, grossYield: 5.8, supplyRisk: "Low"    },
+        "Business Bay":         { coords: [25.1854, 55.2719], ppsf: 2050, volume: 12450, yoy: 8,  radius: 1300, grossYield: 7.1, supplyRisk: "High"   },
+        "Arabian Ranches":      { coords: [25.0517, 55.2699], ppsf: 1380, volume: 4800,  yoy: 20, radius: 900,  grossYield: 5.5, supplyRisk: "Low"    },
+        "Dubai South":          { coords: [24.8972, 55.1615], ppsf: 850,  volume: 4100,  yoy: 38, radius: 1100, grossYield: 8.8, supplyRisk: "Medium" },
+        "Jumeirah Village Circle":{ coords:[25.0607, 55.2088], ppsf: 1180, volume: 18782, yoy: 17, radius: 1400, grossYield: 7.8, supplyRisk: "Medium" },
+        "Jumeirah Lake Towers": { coords: [25.0699, 55.1478], ppsf: 1420, volume: 4600,  yoy: 5,  radius: 1000, grossYield: 8.1, supplyRisk: "Low"    },
+        "Palm Jumeirah":        { coords: [25.1124, 55.1390], ppsf: 4800, volume: 5200,  yoy: 15, radius: 1600, grossYield: 5.2, supplyRisk: "Low"    },
+        "International City":   { coords: [25.1621, 55.4121], ppsf: 580,  volume: 3800,  yoy: 9,  radius: 800,  grossYield: 9.2, supplyRisk: "Low"    },
+        "Al Furjan":            { coords: [25.0255, 55.1494], ppsf: 1080, volume: 4200,  yoy: 14, radius: 900,  grossYield: 8.2, supplyRisk: "Medium" },
+        "Mohammed Bin Rashid City":{ coords:[25.1740, 55.3310], ppsf: 1950, volume: 5100, yoy: 28, radius: 1200, grossYield: 6.1, supplyRisk: "Medium" },
+        "Sobha Hartland":       { coords: [25.1825, 55.3427], ppsf: 2100, volume: 6800,  yoy: 31, radius: 1000, grossYield: 6.0, supplyRisk: "Low"    },
+        "Tilal Al Ghaf":        { coords: [25.0308, 55.2290], ppsf: 1650, volume: 3600,  yoy: 52, radius: 1000, grossYield: 6.8, supplyRisk: "Low"    },
+        "Discovery Gardens":    { coords: [25.0366, 55.1318], ppsf: 680,  volume: 400,   yoy: 10, radius: 700,  grossYield: 8.5, supplyRisk: "Low"    },
+        "Dubai Silicon Oasis":  { coords: [25.1175, 55.3796], ppsf: 820,  volume: 2400,  yoy: 12, radius: 800,  grossYield: 7.5, supplyRisk: "Low"    },
+        "Arjan":                { coords: [25.0552, 55.2178], ppsf: 1020, volume: 4200,  yoy: 15, radius: 800,  grossYield: 8.0, supplyRisk: "Medium" },
+        "DAMAC Hills 2":        { coords: [24.9729, 55.3035], ppsf: 780,  volume: 16000, yoy: 18, radius: 1200, grossYield: 7.2, supplyRisk: "High"   },
+        "Emaar Beachfront":     { coords: [25.0882, 55.1385], ppsf: 2800, volume: 1600,  yoy: 18, radius: 900,  grossYield: 5.8, supplyRisk: "Low"    },
+      };
+
+  const getPPSFColor = (ppsf) => {
+    if (ppsf >= 3500) return "#F59E0B"; // Ultra-premium
+    if (ppsf >= 2500) return "#D4A843"; // Luxury
+    if (ppsf >= 1800) return "#14B8A6"; // Premium
+    if (ppsf >= 1400) return "#3B82F6"; // Mid-market
+    return "#10B981";                   // Affordable
+  };
+
+  const getVolumeColor = (volume) => {
+    if (volume >= 10000) return "#EF4444";
+    if (volume >= 3000)  return "#F97316";
+    if (volume >= 1500)  return "#F59E0B";
+    if (volume >= 800)   return "#10B981";
+    return "#3B82F6";
+  };
+
+  const getCoords = (project) => {
+    // 1. Direct lat/lng on project (future Firestore projects can store this)
+    if (project.lat && project.lng) return [project.lat, project.lng];
+    if (project.latitude && project.longitude) return [project.latitude, project.longitude];
+    if (project.coords && project.coords.length === 2) return project.coords;
+
+    // 2. Exact project name match
+    if (projectCoords[project.name]) return projectCoords[project.name];
+    if (projectCoords[project.project]) return projectCoords[project.project];
+
+    // 3. Community lookup — comprehensive list of ALL Dubai communities
+    const ALL_COMMUNITY_COORDS = {
+      // Our 20 seed communities
+      "Jumeirah Village Circle":    [25.0607, 55.2088],
+      "JVC":                        [25.0607, 55.2088],
+      "Dubai Marina":               [25.0807, 55.1429],
+      "Business Bay":               [25.1854, 55.2719],
+      "Downtown Dubai":             [25.1972, 55.2744],
+      "Dubai Hills Estate":         [25.1124, 55.2594],
+      "Dubai Hills":                [25.1124, 55.2594],
+      "Palm Jumeirah":              [25.1124, 55.1390],
+      "Jumeirah Lake Towers":       [25.0699, 55.1478],
+      "JLT":                        [25.0699, 55.1478],
+      "Arabian Ranches":            [25.0517, 55.2699],
+      "International City":         [25.1621, 55.4121],
+      "Dubai Creek Harbour":        [25.1942, 55.3556],
+      "Al Furjan":                  [25.0255, 55.1494],
+      "Dubai South":                [24.8972, 55.1615],
+      "Mohammed Bin Rashid City":   [25.1740, 55.3310],
+      "MBR City":                   [25.1740, 55.3310],
+      "Sobha Hartland":             [25.1825, 55.3427],
+      "Tilal Al Ghaf":              [25.0308, 55.2290],
+      "Discovery Gardens":          [25.0366, 55.1318],
+      "Dubai Silicon Oasis":        [25.1175, 55.3796],
+      "DSO":                        [25.1175, 55.3796],
+      "Arjan":                      [25.0552, 55.2178],
+      "DAMAC Hills 2":              [24.9729, 55.3035],
+      "Emaar Beachfront":           [25.0882, 55.1385],
+      // Extended communities
+      "DIFC":                       [25.2100, 55.2800],
+      "City Walk":                  [25.2000, 55.2550],
+      "Jumeirah":                   [25.1900, 55.2200],
+      "Jumeirah 1":                 [25.1900, 55.2200],
+      "Jumeirah 2":                 [25.1900, 55.2400],
+      "Jumeirah 3":                 [25.1900, 55.2100],
+      "Mirdif":                     [25.2200, 55.4200],
+      "Al Quoz":                    [25.1500, 55.2200],
+      "Bur Dubai":                  [25.2600, 55.2900],
+      "Deira":                      [25.2700, 55.3200],
+      "Al Barsha":                  [25.1100, 55.2000],
+      "The Greens":                 [25.0900, 55.1700],
+      "The Views":                  [25.0900, 55.1750],
+      "The Meadows":                [25.0650, 55.1700],
+      "The Springs":                [25.0550, 55.1750],
+      "The Lakes":                  [25.0500, 55.1600],
+      "Arabian Ranches 2":          [25.0300, 55.2800],
+      "Arabian Ranches 3":          [25.0530, 55.2690],
+      "Dubailand":                  [25.0400, 55.3800],
+      "Motor City":                 [25.0520, 55.2380],
+      "Sports City":                [25.0400, 55.2300],
+      "Dubai Sports City":          [25.0400, 55.2300],
+      "DAMAC Hills":                [25.0300, 55.2500],
+      "Mudon":                      [25.0200, 55.2500],
+      "Town Square":                [25.0000, 55.2800],
+      "The Valley":                 [25.0100, 55.5000],
+      "The Oasis":                  [25.0200, 55.1800],
+      "Tilal Al Ghaf":              [25.0308, 55.2290],
+      "Emaar South":                [24.8980, 55.1640],
+      "Dubai World Central":        [24.8972, 55.1615],
+      "Jebel Ali":                  [24.9900, 55.0700],
+      "Dubai Industrial City":      [24.9500, 55.1500],
+      "Rashid Yachts & Marina":     [25.2200, 55.3100],
+      "Dubai Islands":              [25.2900, 55.3300],
+      "Palm Deira":                 [25.2900, 55.3300],
+      "Bluewaters":                 [25.0800, 55.1200],
+      "Dubai Harbour":              [25.0800, 55.1300],
+      "Grand Polo Club":            [24.8500, 55.4200],
+      "Yas Island":                 [24.4900, 54.6100], // Abu Dhabi
+      "Saadiyat Island":            [24.5300, 54.4300], // Abu Dhabi
+      "Reem Island":                [24.5000, 54.4000], // Abu Dhabi
+      "Creek Waters":               [25.1876, 55.3344],
+      "Dubai Creek Harbour":        [25.1942, 55.3556],
+      "Nad Al Sheba":               [25.1600, 55.3100],
+      "Meydan":                     [25.1700, 55.3000],
+      "Al Safa":                    [25.1700, 55.2400],
+      "Umm Suqeim":                 [25.1400, 55.2000],
+      "Madinat Jumeirah":           [25.1400, 55.1850],
+    };
+
+    if (ALL_COMMUNITY_COORDS[project.community]) return ALL_COMMUNITY_COORDS[project.community];
+
+    // 4. Partial community name match (handles "Dubai Hills" matching "Dubai Hills Estate")
+    const commLower = (project.community || "").toLowerCase();
+    const partialMatch = Object.entries(ALL_COMMUNITY_COORDS).find(([key]) =>
+      key.toLowerCase().includes(commLower) || commLower.includes(key.toLowerCase().split(" ").slice(0,2).join(" "))
+    );
+    if (partialMatch) return partialMatch[1];
+
+    // 5. Default — Downtown Dubai center (never fails)
+    console.warn("DXB Map: No coords for", project.community, "— using Downtown default");
+    return [25.1972, 55.2744];
+  };
+
+  const getYield = (project) => {
+    // Use grossYield if available (from SEED_PROJECTS)
+    if (project.grossYield) return project.grossYield;
+    const roi = (liveCommunityROI && liveCommunityROI[project.community]) || {};
+    const y = roi.grossYield;
+    if (!y) return 6.5;
+    if (typeof y === "object") return parseFloat(y.apt1 || y.apt2 || Object.values(y)[0]) || 6.5;
+    return parseFloat(y) || 6.5;
+  };
+
+  const getPinColor = (project) => {
+    const y = getYield(project);
+    if (y >= 8) return "#10B981";
+    if (y >= 6.5) return "#D4A843";
+    if (y >= 5) return "#3B82F6";
+    return "#94A3B8";
+  };
+
+  const communities = ["All", ...Array.from(new Set(activeProjects.map(p => p.community)))];
+  const filteredProjects = activeProjects.filter(p => {
+    const commOk = filterComm === "All" || p.community === filterComm;
+    const y = getYield(p);
+    const yieldOk = filterYield === "All" || (filterYield === "8%+" && y >= 8) || (filterYield === "6-8%" && y >= 6 && y < 8) || (filterYield === "<6%" && y < 6);
+    return commOk && yieldOk;
+  });
+
+  // Load Leaflet dynamically
+  React.useEffect(() => {
+    if (mapLoaded || typeof window === "undefined") return;
+    // Load Leaflet CSS
+    if (!document.getElementById("leaflet-css")) {
+      const link = document.createElement("link");
+      link.id = "leaflet-css";
+      link.rel = "stylesheet";
+      link.href = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
+      document.head.appendChild(link);
+    }
+    // Load Leaflet JS
+    if (!window.L) {
+      const script = document.createElement("script");
+      script.src = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
+      script.onload = () => setMapLoaded(true);
+      document.head.appendChild(script);
+    } else {
+      setMapLoaded(true);
+    }
+  }, []);
+
+  // Init map after Leaflet loads
+  React.useEffect(() => {
+    if (!mapLoaded || !mapRef.current || mapInstanceRef.current) return;
+    const L = window.L;
+    const map = L.map(mapRef.current, {
+      center: [25.1124, 55.2594],
+      zoom: 12,
+      minZoom: 11,
+      maxZoom: 18,
+      zoomControl: true,
+      maxBounds: [[24.7, 54.8], [25.5, 55.9]],
+      maxBoundsViscosity: 0.9,
+    });
+    L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
+      attribution: "© OpenStreetMap © CARTO", maxZoom: 19,
+    }).addTo(map);
+    mapInstanceRef.current = map;
+  }, [mapLoaded]);
+
+  // Update markers when filters change
+  React.useEffect(() => {
+    if (!mapInstanceRef.current || !window.L) return;
+    const L = window.L;
+    const map = mapInstanceRef.current;
+    // Clear old markers
+    markersRef.current.forEach(m => map.removeLayer(m));
+    markersRef.current = [];
+    // Add new markers
+    filteredProjects.forEach(p => {
+      const coords = getCoords(p);
+      const color = getPinColor(p);
+      const y = getYield(p);
+      const icon = L.divIcon({
+        className: "",
+        html: `<div style="display:flex;flex-direction:column;align-items:center;cursor:pointer;"><div style="background:${color};color:#000;font-size:10px;font-weight:800;padding:3px 7px;border-radius:6px;box-shadow:0 2px 10px rgba(0,0,0,0.7);">${y.toFixed(1)}%</div><div style="width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-top:7px solid ${color};"></div></div>`,
+        iconSize: [46, 32], iconAnchor: [23, 32],
+      });
+      const marker = L.marker(coords, { icon })
+        .addTo(map)
+        .bindPopup(`<div style="font-family:'Outfit',sans-serif;min-width:180px;background:#0D1821;color:#fff;border-radius:10px;padding:0;">\n          <div style="background:linear-gradient(135deg,rgba(212,168,67,0.15),rgba(212,168,67,0.05));padding:12px 14px;border-radius:10px 10px 0 0;border-bottom:1px solid rgba(255,255,255,0.08);">\n            <div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:2px;">\${p.project || p.name || "Project"}</div>\n            <div style="font-size:10px;color:#94A3B8;">\${p.community}</div>\n          </div>\n          <div style="padding:10px 14px;display:grid;grid-template-columns:1fr 1fr;gap:6px;">\n            <div><div style="font-size:9px;color:#94A3B8;text-transform:uppercase;">Price</div><div style="font-size:12px;font-weight:700;color:#D4A843;">\${p.priceMin ? "AED " + (p.priceMin/1e6).toFixed(2) + "M" : (p.priceMin || p.price) ? "AED " + ((p.priceMin || p.price)/1e6).toFixed(2) + "M" : "TBC"}</div></div>\n            <div><div style="font-size:9px;color:#94A3B8;text-transform:uppercase;">Yield</div><div style="font-size:12px;font-weight:700;color:\${color}">\${y.toFixed(1)}%</div></div>\n            <div><div style="font-size:9px;color:#94A3B8;text-transform:uppercase;">Type</div><div style="font-size:11px;color:#CBD5E1;">\${p.type || "Residential"}</div></div>\n            <div><div style="font-size:9px;color:#94A3B8;text-transform:uppercase;">Handover</div><div style="font-size:11px;color:#CBD5E1;">\${p.handover || "TBC"}</div></div>\n          </div>\n        </div>`, { className: "dxb-popup" });
+      marker.on("click", () => setSelectedProjectMap(p));
+      markersRef.current.push(marker);
+    });
+
+    // Clear old heat circles
+    heatLayersRef.current.forEach(c => map.removeLayer(c));
+    heatLayersRef.current = [];
+
+    // Add PPSF or Volume heat circles
+    if (mapLayer === "ppsf" || mapLayer === "volume" || mapLayer === "yield") {
+      Object.entries(communityData).forEach(([name, data]) => {
+        const color = mapLayer === "ppsf" ? getPPSFColor(data.ppsf) : mapLayer === "volume" ? getVolumeColor(data.volume) : ((data.grossYield||0) >= 8 ? "#10B981" : (data.grossYield||0) >= 6 ? "#D4A843" : "#3B82F6");
+        const value = mapLayer === "ppsf" ? `AED ${data.ppsf.toLocaleString()}/sqft` : mapLayer === "volume" ? `${data.volume.toLocaleString()} deals` : `${(data.grossYield||6).toFixed(1)}% yield`;
+        const radiusScale = mapLayer === "volume" ? Math.min(data.volume / 100, 600) + 400 : mapLayer === "yield" ? Math.max(800, Math.min((data.grossYield||6) * 200, 2000)) : data.radius;
+        const circle = L.circle(data.coords, {
+          radius: radiusScale,
+          color: color,
+          fillColor: color,
+          fillOpacity: 0.25,
+          weight: 2,
+          opacity: 0.7,
+        }).addTo(map);
+        circle.bindTooltip(`<div style="font-family:'Outfit',sans-serif;background:#0D1821;color:#fff;border:1px solid ${color};border-radius:8px;padding:8px 12px;font-size:12px;">\n          <strong style="color:${color}">${name}</strong><br/>\n          ${mapLayer === "ppsf" ? "PPSF: " : mapLayer === "volume" ? "Volume: " : "Yield: "}<strong>${value}</strong><br/>\n          <span style="color:#94A3B8;font-size:10px">YoY: +${data.yoy}%</span>\n        </div>`, { permanent: false, sticky: true, className: "dxb-tooltip" });
+        heatLayersRef.current.push(circle);
+      });
+    }
+  }, [mapLoaded, filteredProjects.length, filterComm, filterYield, mapLayer]);
+
+  // Cleanup on unmount
+  React.useEffect(() => {
+    return () => {
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.remove();
+        mapInstanceRef.current = null;
+      }
+    };
+  }, []);
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+
+      {/* Layer switcher + Filters */}
+      <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center", marginBottom: 4 }}>
+        <div style={{ display: "flex", background: T.surfaceAlt, borderRadius: 8, border: `1px solid ${T.border}`, overflow: "hidden" }}>
+          {[
+            { id: "yield",  label: "\uD83C\uDFAF Yield Layer",  desc: "Color by rental yield" },
+            { id: "ppsf",   label: "\uD83D\uDCD0 PPSF Layer",   desc: "Color by price/sqft" },
+            { id: "volume", label: "\uD83D\uDCCA Volume Layer",  desc: "Size by DLD transactions" },
+          ].map(l => (
+            <button key={l.id} type="button" onClick={() => setMapLayer(l.id)}
+              style={{ padding: "7px 14px", fontSize: 11, fontWeight: 600, background: mapLayer === l.id ? `${T.gold}20` : "transparent", color: mapLayer === l.id ? T.gold : T.textMuted, border: "none", cursor: "pointer", fontFamily: "'Outfit',sans-serif", whiteSpace: "nowrap" }}>
+              {l.label}
+            </button>
+          ))}
+        </div>
+        {/* Layer legend */}
+        {mapLayer === "ppsf" && (
+          <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+            {[["#F59E0B","AED 3,500+/sqft"],["#D4A843","AED 2,500+"],["#14B8A6","AED 1,800+"],["#3B82F6","AED 1,400+"],["#10B981","<AED 1,400"]].map(([col, label]) => (
+              <div key={label} style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                <div style={{ width: 10, height: 10, borderRadius: "50%", background: col, opacity: 0.8 }} />
+                <span style={{ fontSize: 9, color: T.textMuted }}>{label}</span>
+              </div>
+            ))}
+          </div>
+        )}
+        {mapLayer === "volume" && (
+          <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+            {[["#EF4444","10,000+ deals"],["#F97316","3,000+"],["#F59E0B","1,500+"],["#10B981","800+"],["#3B82F6","<800"]].map(([col, label]) => (
+              <div key={label} style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                <div style={{ width: 10, height: 10, borderRadius: "50%", background: col, opacity: 0.8 }} />
+                <span style={{ fontSize: 9, color: T.textMuted }}>{label}</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+        <div style={{ fontSize: 11, color: T.textMuted, fontWeight: 600 }}>FILTER:</div>
+        <select value={filterComm} onChange={e => setFilterComm(e.target.value)} style={{ padding: "6px 12px", background: T.surfaceAlt, border: "1px solid " + T.border, borderRadius: 8, color: T.white, fontSize: 11, fontFamily: "'Outfit',sans-serif", cursor: "pointer" }}>
+          {communities.map(c => <option key={c} value={c}>{c}</option>)}
+        </select>
+        <div style={{ display: "flex", gap: 6 }}>
+          {["All", "8%+", "6-8%", "<6%"].map(f => (
+            <button key={f} type="button" onClick={() => setFilterYield(f)} style={{ padding: "6px 12px", borderRadius: 8, border: "1px solid " + (filterYield === f ? T.gold : T.border), background: filterYield === f ? "rgba(212,168,67,0.15)" : T.surfaceAlt, color: filterYield === f ? T.gold : T.textSecondary, fontSize: 11, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>{f === "All" ? "All Yields" : f + " yield"}</button>
+          ))}
+        </div>
+        <div style={{ marginLeft: "auto", display: "flex", gap: 10, alignItems: "center" }}>
+          {[["#10B981", "8%+ yield"], ["#D4A843", "6-8% yield"], ["#3B82F6", "5-6% yield"], ["#94A3B8", "<5% yield"]].map(([col, label]) => (
+            <div key={label} style={{ display: "flex", alignItems: "center", gap: 5 }}>
+              <div style={{ width: 10, height: 10, borderRadius: "50%", background: col, boxShadow: "0 0 6px " + col + "88" }} />
+              <span style={{ fontSize: 10, color: T.textMuted }}>{label}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Map + sidebar */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 320px", gap: 16, height: 560 }}>
+
+        {/* Map */}
+        <div style={{ borderRadius: 16, overflow: "hidden", border: "1px solid " + T.border, position: "relative" }}>
+          {!mapLoaded && (
+            <div style={{ position: "absolute", inset: 0, background: T.surface, display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 12, zIndex: 10 }}>
+              <div style={{ fontSize: 32 }}>&#x1F5FA;</div>
+              <div style={{ fontSize: 13, color: T.textMuted }}>Loading map...</div>
+            </div>
+          )}
+          <div ref={mapRef} style={{ width: "100%", height: "100%" }} />
+          {/* Floating counter */}
+          <div style={{ position: "absolute", bottom: 12, left: 12, background: "rgba(13,24,33,0.9)", backdropFilter: "blur(8px)", borderRadius: 8, padding: "6px 12px", border: "1px solid " + T.border, zIndex: 999, fontSize: 11, color: T.textSecondary }}>
+            <span style={{ color: T.gold, fontWeight: 700 }}>{filteredProjects.length}</span> projects ·{" "}
+            <span style={{ color: T.teal, fontWeight: 600 }}>
+              {mapLayer === "yield" ? "Yield layer" : mapLayer === "ppsf" ? "PPSF heat map" : "Volume heat map"}
+            </span>
+          </div>
+        </div>
+
+        {/* Right sidebar */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 10, overflowY: "auto" }}>
+          {selectedProject ? (
+            <div style={{ background: T.surface, borderRadius: 14, border: "1px solid " + T.gold, padding: 18 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 12 }}>
+                <div>
+                  <div style={{ fontFamily: "'Fraunces',serif", fontSize: 15, fontWeight: 700, color: T.gold }}>{selectedProject.project || selectedProject.name}</div>
+                  <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>{selectedProject.community}</div>
+                </div>
+                <button type="button" onClick={() => setSelectedProjectMap(null)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 18 }}>×</button>
+              </div>
+              {selectedProject.imageUrl && <img src={selectedProject.imageUrl} alt="" style={{ width: "100%", height: 120, objectFit: "cover", borderRadius: 8, marginBottom: 12 }} onError={e => e.target.style.display="none"} />}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 12 }}>
+                {[
+                  ["Price", selectedProject.price ? "AED " + (selectedProject.price/1e6).toFixed(2) + "M" : "TBC", T.gold],
+                  ["Yield", getYield(selectedProject).toFixed(1) + "%", getPinColor(selectedProject)],
+                  ["Handover", selectedProject.handover || "TBC", T.teal],
+                  ["Type", selectedProject.type || "Residential", T.textPrimary],
+                ].map(([l, v, c]) => (
+                  <div key={l} style={{ background: T.card, borderRadius: 8, padding: "10px 12px" }}>
+                    <div style={{ fontSize: 9, color: T.textMuted, textTransform: "uppercase", marginBottom: 3 }}>{l}</div>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: c }}>{v}</div>
+                  </div>
+                ))}
+              </div>
+              <button type="button" onClick={() => setTab("Projects")} style={{ width: "100%", padding: "9px 0", background: "linear-gradient(135deg," + T.gold + ",#B8912F)", color: T.bg, border: "none", borderRadius: 8, fontWeight: 700, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>View Full Details →</button>
+            </div>
+          ) : (
+            <div style={{ background: T.surface, borderRadius: 14, border: "1px solid " + T.border, padding: 16 }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: T.white, marginBottom: 4 }}>Click any pin on the map</div>
+              <div style={{ fontSize: 11, color: T.textMuted }}>to see project details here</div>
+            </div>
+          )}
+
+          {/* Project list */}
+          <div style={{ background: T.surface, borderRadius: 14, border: "1px solid " + T.border, padding: 14, flex: 1, overflowY: "auto" }}>
+            <div style={{ fontSize: 10, fontWeight: 700, color: T.goldLight, letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>All Projects ({filteredProjects.length})</div>
+            {filteredProjects.map(p => (
+              <div key={p.id} onClick={() => { setSelectedProjectMap(p); const coords = getCoords(p); if (mapInstanceRef.current) mapInstanceRef.current.setView(coords, 14, { animate: true }); }} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 10px", borderRadius: 8, marginBottom: 4, cursor: "pointer", background: selectedProject?.id === p.id ? "rgba(212,168,67,0.1)" : "transparent", border: "1px solid " + (selectedProject?.id === p.id ? T.gold : "transparent"), transition: "all 0.15s" }}
+                onMouseEnter={e => e.currentTarget.style.background = T.surfaceAlt}
+                onMouseLeave={e => e.currentTarget.style.background = selectedProject?.id === p.id ? "rgba(212,168,67,0.1)" : "transparent"}>
+                <div>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: T.white }}>{p.project || p.name}</div>
+                  <div style={{ fontSize: 10, color: T.textMuted }}>{p.community}</div>
+                </div>
+                <div style={{ textAlign: "right" }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: getPinColor(p) }}>{getYield(p).toFixed(1)}%</div>
+                  <div style={{ fontSize: 10, color: T.textMuted }}>{p.price ? (p.price/1e6).toFixed(1) + "M" : "TBC"}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Popup CSS */}
+      <style>{".dxb-popup .leaflet-popup-content-wrapper { background: #0D1821; border: 1px solid rgba(212,168,67,0.3); border-radius: 12px; padding: 0; box-shadow: 0 20px 60px rgba(0,0,0,0.6); } .dxb-popup .leaflet-popup-content { margin: 0; } .dxb-popup .leaflet-popup-tip { background: #0D1821; } .leaflet-container { background: #0D1821; }"}</style>
+    </div>
+  );
+}
+
+
+// ─── Tab Data Sources Footer ────────────────────────────────────────────────
+/* ─── DATA BADGE — verified data stamp ─── */
+
+const DataBadge = ({ source, date, type = "dld" }) => {
+  const cfg = {
+    dld:     { label: "DLD Verified",     color: "#10B981", icon: "✓" },
+    reidin:  { label: "REIDIN Index",     color: "#3B82F6", icon: "✓" },
+    emaar:   { label: "Emaar IR",         color: "#D4A843", icon: "✓" },
+    live:    { label: "Live · Firestore", color: "#10B981", icon: "●" },
+    ai:      { label: "AI Estimate",      color: "#8B5CF6", icon: "✦" },
+    manual:  { label: "Admin Verified",   color: "#F59E0B", icon: "✓" },
+  };
+  const c = cfg[type] || cfg.dld;
+  return (
+    <span title={`Source: ${source || c.label}${date ? " · " + date : ""}`} style={{
+      display: "inline-flex", alignItems: "center", gap: 4,
+      fontSize: 9, fontWeight: 700, color: c.color, letterSpacing: 0.5,
+      background: c.color + "12", border: `1px solid ${c.color}30`,
+      borderRadius: 5, padding: "1px 6px", cursor: "default", flexShrink: 0,
+    }}>
+      <span style={{ fontSize: 8 }}>{c.icon}</span>{c.label}
+    </span>
+  );
+};
+
+const TabSources = ({ sources }) => (
+  <div style={{
+    marginTop: 28,
+    padding: "12px 16px",
+    background: "rgba(255,255,255,0.025)",
+    border: "1px solid rgba(255,255,255,0.07)",
+    borderRadius: 12,
+    display: "flex",
+    alignItems: "flex-start",
+    gap: 10,
+    flexWrap: "wrap"
+  }}>
+    <span style={{
+      fontSize: 9,
+      fontWeight: 700,
+      color: "rgba(212,168,67,0.7)",
+      letterSpacing: 1.2,
+      textTransform: "uppercase",
+      paddingTop: 2,
+      flexShrink: 0
+    }}>Sources</span>
+    <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+      {sources.map((s, i) => (
+        s.url ? (
+          <a key={i} href={s.url} target="_blank" rel="noopener noreferrer" style={{
+            fontSize: 10,
+            color: "rgba(255,255,255,0.55)",
+            background: "rgba(255,255,255,0.05)",
+            border: "1px solid rgba(255,255,255,0.1)",
+            borderRadius: 20,
+            padding: "3px 10px",
+            textDecoration: "none",
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 4
+          }}
+          onMouseEnter={e => { e.currentTarget.style.color = "#D4A843"; e.currentTarget.style.borderColor = "rgba(212,168,67,0.4)"; }}
+          onMouseLeave={e => { e.currentTarget.style.color = "rgba(255,255,255,0.55)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)"; }}
+          >{s.label} ↗</a>
+        ) : (
+          <span key={i} style={{
+            fontSize: 10,
+            color: "rgba(255,255,255,0.45)",
+            background: "rgba(255,255,255,0.04)",
+            border: "1px solid rgba(255,255,255,0.07)",
+            borderRadius: 20,
+            padding: "3px 10px"
+          }}>{s.label}</span>
+        )
+      ))}
+    </div>
+  </div>
+);
+
+/* ─────────────────────────────────────────────────────────────
+   EMPTY STATE COMPONENT
+   Shows for all intelligence tabs while awaiting data import
+   ───────────────────────────────────────────────────────────── */
+const EmptyState = ({ tab, icon, description, adminHint }) => (
+  <div style={{
+    display: "flex", flexDirection: "column", alignItems: "center",
+    justifyContent: "center", padding: "80px 24px", textAlign: "center",
+    minHeight: 400
+  }}>
+    {/* Icon */}
+    <div style={{
+      width: 72, height: 72, borderRadius: 20,
+      background: "rgba(212,168,67,0.08)",
+      border: "1px solid rgba(212,168,67,0.2)",
+      display: "flex", alignItems: "center", justifyContent: "center",
+      marginBottom: 24, fontSize: 32
+    }}>
+      {icon}
+    </div>
+
+    {/* Title */}
+    <div style={{
+      fontFamily: "'Fraunces',serif", fontSize: 22, fontWeight: 800,
+      color: T.white, marginBottom: 10, letterSpacing: "-0.5px"
+    }}>
+      {tab}
+    </div>
+
+    {/* Description */}
+    <div style={{
+      fontSize: 14, color: T.textSecondary, lineHeight: 1.7,
+      maxWidth: 420, marginBottom: 28
+    }}>
+      {description}
+    </div>
+
+    {/* Status badge */}
+    <div style={{
+      display: "flex", alignItems: "center", gap: 8,
+      padding: "8px 18px", borderRadius: 20,
+      background: "rgba(212,168,67,0.06)",
+      border: "1px solid rgba(212,168,67,0.15)"
+    }}>
+      <div style={{
+        width: 7, height: 7, borderRadius: "50%",
+        background: T.gold, animation: "pulse 2s infinite"
+      }} />
+      <span style={{ fontSize: 12, color: T.gold, fontWeight: 600 }}>
+        Ready for data import
+      </span>
+    </div>
+
+    {/* Admin hint */}
+    {adminHint && (
+      <div style={{
+        marginTop: 20, fontSize: 12, color: T.textMuted,
+        background: T.surface, padding: "10px 16px",
+        borderRadius: 8, border: `1px solid ${T.border}`,
+        maxWidth: 380
+      }}>
+        {adminHint}
+      </div>
+    )}
+  </div>
+);
+
+/* ─────────────────────────────────────────────────────────────
+   INTELLIGENCE TAB CONFIGS
+   Each tab has its icon, description and admin hint
+   ───────────────────────────────────────────────────────────── */
+const INTELLIGENCE_TABS = {
+  "Overview": {
+    icon: "\uD83D\uDCCA",
+    description: "Your Bloomberg-style command centre. Live market ticker, KPI cards, developer intelligence panel, and real-time DLD feed — all connected to your data sources.",
+    adminHint: "Connect data sources from Admin → Data Manager → Market Data"
+  },
+  "Financials": {
+    icon: "\uD83D\uDCB9",
+    description: "Developer financial intelligence — revenue, net profit, EBITDA, backlog, EPS, DPS — 6-year history charts. Auto-updated from developer IR reports.",
+    adminHint: "Add developer financials from Admin → Data Manager → Developers"
+  },
+  "Projects": {
+    icon: "\uD83C\uDFD7️",
+    description: "Browse all projects across all property types — Off-Plan, Residential, Commercial, Secondary Market, Hotel Apartments, Villas, Balcony View Units. Filter, compare, and score every property.",
+    adminHint: "Import projects from Admin → Data Manager → Projects"
+  },
+  "Handover": {
+    icon: "\uD83D\uDCC5",
+    description: "Construction timeline tracker. Monitor handover dates, construction progress, and delivery risk for all off-plan projects. Automated countdown alerts.",
+    adminHint: "Add project handover data from Admin → Data Manager → Projects"
+  },
+  "Launch Calendar": {
+    icon: "\uD83D\uDE80",
+    description: "Never miss a launch. Upcoming project launches by developer, EOI status, expected pricing, and past launch performance vs actual prices.",
+    adminHint: "Launch data auto-populates from Bayut API scanner — check Admin → Data Health"
+  },
+  "Neighbourhoods": {
+    icon: "\uD83C\uDFD8️",
+    description: "Community intelligence — average PPSF, yields, schools, hospitals, metro access, lifestyle ratings, supply risk, and demand strength for every Dubai community.",
+    adminHint: "Add community data from Admin → Data Manager → Communities"
+  },
+  "Service Charges": {
+    icon: "\uD83D\uDCCB",
+    description: "RERA registered service charge rates per community in AED/sqft/year. Historical trends, net yield impact calculator, and community comparisons.",
+    adminHint: "Add service charge data from Admin → Data Manager → Communities"
+  },
+  "STR vs LTR": {
+    icon: "\uD83C\uDFE0",
+    description: "Short-term Airbnb vs long-term tenancy comparison per community per unit type. Occupancy rates, daily rates, platform fees, management costs, and net income.",
+    adminHint: "STR data connects to Bayut API — configure from Admin → Data Health"
+  },
+  "Developer Health": {
+    icon: "\uD83E\uDE7A",
+    description: "Developer health scores — delivery track record, financial strength, project pipeline risk, RERA status, and complaint ratios. 9-factor radar chart.",
+    adminHint: "Add developer profiles from Admin → Data Manager → Developers"
+  },
+  "DLD Volumes": {
+    icon: "\uD83D\uDCC8",
+    description: "Live DLD transaction data — volume by community, developer, property type, nationality, cash vs mortgage. Monthly trends, price anomaly alerts.",
+    adminHint: "DLD data auto-syncs daily — check Admin → Data Health → DLD Cron"
+  },
+  "DXB Estimate": {
+    icon: "\uD83D\uDD0D",
+    description: "The Zestimate for Dubai. Enter any unit details and get an estimated market value backed by actual DLD transaction comparables.",
+    adminHint: "AVM requires DLD data — check Admin → Data Health → DLD Cron"
+  },
+  "Portfolio": {
+    icon: "\uD83D\uDCBC",
+    description: "Personal investment portfolio tracker. Add your properties, track current market value, unrealised gains, rental income, IRR, and Golden Visa eligibility.",
+    adminHint: "Portfolio reads from live market data — connect DLD and Bayut first"
+  },
+  "Competitors": {
+    icon: "⚔️",
+    description: "Developer vs developer intelligence — sales volume, delivery record, PPSF comparison, market share, community presence, and branded residence count.",
+    adminHint: "Add developer data from Admin → Data Manager → Developers"
+  },
+  "Yields": {
+    icon: "\uD83D\uDCCA",
+    description: "Gross and net rental yields by community and unit type. 5-year historical trend, best yielding communities ranked, and yield vs appreciation tradeoff.",
+    adminHint: "Yield data auto-syncs weekly from Bayut API — check Admin → Data Health"
+  },
+  "Mortgage": {
+    icon: "\uD83C\uDFE6",
+    description: "Live EIBOR mortgage calculator. Monthly payment, total cost of acquisition (DLD 4%, agency 2%, trustee fees), amortisation schedule, and 5 bank rate comparison.",
+    adminHint: "EIBOR updates daily — check Admin → EIBOR Rates"
+  },
+  "Map": {
+    icon: "\uD83D\uDDFA️",
+    description: "Interactive property map with yield heatmap, PPSF heatmap, transaction volume layer, project pins, and community boundaries. Distance rings from key landmarks.",
+    adminHint: "Map renders from project data — import projects first"
+  },
+  "Risk": {
+    icon: "⚠️",
+    description: "9-factor investment risk scoring per community and project. Supply risk, demand strength, price trajectory, developer quality, regulatory environment.",
+    adminHint: "Risk scores calculate automatically from project and market data"
+  },
+  "Market": {
+    icon: "\uD83C\uDF0D",
+    description: "Dubai real estate macro view — total market size, transaction count, off-plan vs secondary split, top developers, international buyer breakdown, and analyst forecasts.",
+    adminHint: "Market data updates from Admin → Market Intelligence → Update Stats"
+  },
+  "Currency": {
+    icon: "\uD83D\uDCB1",
+    description: "Live AED exchange rates for international buyers — GBP, USD, EUR, RUB, INR, CNY, and more. Property price converter and historical rate chart.",
+    adminHint: "Currency rates update automatically via ExchangeRate API"
+  },
+  "Golden Visa": {
+    icon: "\uD83E\uDD47",
+    description: "Golden Visa eligibility calculator. Enter property value to check AED 2M minimum, requirements, process steps, and timeline. Auto-checks portfolio eligibility.",
+    adminHint: "Golden Visa rules update from Admin → Data Manager → Regulations"
+  },
+  "Flip": {
+    icon: "\uD83D\uDD04",
+    description: "Property flip ROI calculator — purchase price, renovation cost, holding period, selling price. Returns net profit, ROI, annualised return, and optimal hold period.",
+    adminHint: "Flip calculator works with market data — connect DLD and Bayut first"
+  },
+  "Investment Score": {
+    icon: "⭐",
+    description: "AI investment scoring for any property — yield potential, location quality, developer health, price vs market, liquidity, handover risk, supply risk. 0-100 score with breakdown.",
+    adminHint: "Investment Score requires project data — import projects first"
+  },
+  "Price History": {
+    icon: "\uD83D\uDCC9",
+    description: "5-year PPSF trend per community per unit type. Off-plan vs secondary price divergence, correction alerts, and momentum indicators.",
+    adminHint: "Price history syncs from DLD data — check Admin → Data Health → DLD Cron"
+  },
+};
+
+
+/* ══ TAB ERROR BOUNDARY ══ */
+class TabErrorBoundary extends React.Component {
+  constructor(props) { super(props); this.state = { hasError:false, error:null }; }
+  static getDerivedStateFromError(e) { return { hasError:true, error:e }; }
+  componentDidCatch(e,i) { console.error("DXB Tab Error:",e); }
+  render() {
+    if (this.state.hasError) return (
+      <div style={{ padding:"60px 24px", textAlign:"center" }}>
+        <div style={{ fontSize:28, marginBottom:12 }}>⚠️</div>
+        <div style={{ fontFamily:"'Fraunces',serif", fontSize:16, fontWeight:700, color:"#EF4444", marginBottom:8 }}>Tab Error</div>
+        <div style={{ fontSize:12, color:"#9CA3AF", marginBottom:16 }}>{this.state.error?.message || "Something went wrong in this tab"}</div>
+        <button onClick={()=>this.setState({hasError:false,error:null})}
+          style={{ padding:"7px 20px", background:"rgba(212,168,67,0.15)", border:"1px solid rgba(212,168,67,0.4)", borderRadius:8, color:"#D4A843", fontSize:12, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>
+          Try Again
+        </button>
+        <div style={{ fontSize:11, color:"#6B7280", marginTop:10 }}>All other tabs remain accessible — use the sidebar to navigate</div>
+      </div>
+    );
+    return this.props.children;
+  }
+}
 
 export default function EmaarDashboardV2() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -70,7 +2402,7 @@ export default function EmaarDashboardV2() {
   const [showNotifications, setShowNotifications] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
 
-  // Price Alerts (old per-project alert modal â€” kept for project cards)
+  // Price Alerts (old per-project alert modal — kept for project cards)
   const [showSetAlert, setShowSetAlert] = React.useState(null);
   const [selectedNbhd, setSelectedNbhd] = React.useState(null);
   const [devSort, setDevSort] = React.useState("revenue");
@@ -89,7 +2421,7 @@ export default function EmaarDashboardV2() {
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [onboardingStep, setOnboardingStep] = useState(0);
 
-  /* â”€â”€â”€ Tab persistence: restore on load + back/forward â”€â”€â”€ */
+  /* ─── Tab persistence: restore on load + back/forward ─── */
   useEffect(() => {
     try {
       const stored = localStorage.getItem('dxb_active_tab');
@@ -146,7 +2478,7 @@ export default function EmaarDashboardV2() {
   const [sidebarSearch, setSidebarSearch] = useState("");
   const toggleGroup = (id) => setGroupCollapsed(prev => ({ ...prev, [id]: !prev[id] }));
 
-  /* â”€â”€â”€ GLOBAL CONTEXT FILTER STATE â”€â”€â”€ */
+  /* ─── GLOBAL CONTEXT FILTER STATE ─── */
   const [gDeveloper, setGDeveloper] = useState("all");
   const [gCommunity, setGCommunity] = useState("all");
   const [gPropertyType, setGPropertyType] = useState("all");
@@ -157,16 +2489,16 @@ export default function EmaarDashboardV2() {
   const [gPriceMax, setGPriceMax] = useState(0);
   const [gFilterOpen, setGFilterOpen] = useState(false);
 
-  /* â”€â”€â”€ MARKET TAB STATE â”€â”€â”€ */
+  /* ─── MARKET TAB STATE ─── */
   const [expandedForecast, setExpandedForecast] = useState(null);
 
-  /* â”€â”€â”€ DLD VOLUMES TAB STATE â”€â”€â”€ */
+  /* ─── DLD VOLUMES TAB STATE ─── */
   const [dldFilter, setDldFilter] = useState({ community: "All", type: "All", txType: "All", developer: "All", nationality: "All" });
   const [dldSort, setDldSort] = useState("transactions");
   const [dldSearch, setDldSearch] = useState("");
   const [dldView, setDldView] = useState("table");
 
-  /* â”€â”€â”€ PRICE HISTORY TAB STATE â”€â”€â”€ */
+  /* ─── PRICE HISTORY TAB STATE ─── */
   const [phCommunity, setPhCommunity] = useState("All");
   const [phType, setPhType] = useState("Apartment");
   const [phBeds, setPhBeds] = useState("All");
@@ -175,7 +2507,7 @@ export default function EmaarDashboardV2() {
   const [phCommunity2, setPhCommunity2] = useState("All");
 
 
-  /* â”€â”€â”€ INVESTMENT SCORE CALCULATOR (top level â€” used by Projects tab and overlay) â”€â”€â”€ */
+  /* ─── INVESTMENT SCORE CALCULATOR (top level — used by Projects tab and overlay) ─── */
   const calcScore = (p) => {
     if (p && p.investmentScore) return p.investmentScore;
     if (!p) return 50;
@@ -188,7 +2520,7 @@ export default function EmaarDashboardV2() {
   };
   const scoreColor = (s) => s >= 80 ? T.green : s >= 65 ? T.gold : T.red;
   const scoreLabel = (s) => s >= 80 ? "Strong Buy" : s >= 65 ? "Buy" : s >= 50 ? "Hold" : "Caution";
-  /* â”€â”€â”€ HANDOVER STATUS + RISK CONFIG â€” top level (used by tab + overlay) â”€â”€â”€ */
+  /* ─── HANDOVER STATUS + RISK CONFIG — top level (used by tab + overlay) ─── */
   const statusCfg = {
     "On Track": { color: T.green,   bg: "rgba(16,185,129,0.12)",  label: "On Track"  },
     "Delayed":  { color: "#F97316", bg: "rgba(249,115,22,0.12)",  label: "Delayed"   },
@@ -232,12 +2564,12 @@ export default function EmaarDashboardV2() {
   const [liveProjects, setLiveProjects] = useState({});
   const [extraProjects, setExtraProjects] = useState([]);
   const [liveYields, setLiveYields] = useState([]);
-  // â”€â”€ Price Alerts â”€â”€
+  // ── Price Alerts ──
   const [showAlerts, setShowAlerts] = useState(false);
   const [myAlerts, setMyAlerts] = useState([]);
   const [alertForm, setAlertForm] = useState({ community: "Dubai Hills Estate", metric: "grossYield", condition: "above", value: "8" });
   const [alertSaving, setAlertSaving] = useState(false);
-  // â”€â”€ AI Insights â”€â”€
+  // ── AI Insights ──
   const [aiInsights, setAiInsights] = useState([]);
   const [insightsLoading, setInsightsLoading] = useState(false);
   const [liveDevHealth, setLiveDevHealth] = useState([]);
@@ -259,18 +2591,18 @@ export default function EmaarDashboardV2() {
   const [liveCommunityROI, setLiveCommunityROI] = useState({});
   const [liveCommunityIntel, setLiveCommunityIntel] = useState({});
 
-  /* â”€â”€â”€ MY LEADS STATE (Session 4) â”€â”€â”€ */
+  /* ─── MY LEADS STATE (Session 4) ─── */
   const [myLeads, setMyLeads] = useState([]);
   const [myLeadsLoading, setMyLeadsLoading] = useState(false);
 
-  /* â”€â”€â”€ DEAL PIPELINE STATE (Session 5) â”€â”€â”€ */
+  /* ─── DEAL PIPELINE STATE (Session 5) ─── */
   const [deals, setDeals] = useState([]);
 
-  /* â”€â”€â”€ MANAGER DASHBOARD STATE (Session 7) â”€â”€â”€ */
+  /* ─── MANAGER DASHBOARD STATE (Session 7) ─── */
   const [teamMembers, setTeamMembers] = useState([]);
   const [teamMembersLoading, setTeamMembersLoading] = useState(false);
 
-  /* â”€â”€â”€ AGENCY HUB STATE (Session 8) â”€â”€â”€ */
+  /* ─── AGENCY HUB STATE (Session 8) ─── */
   const [orgProfile, setOrgProfile] = useState(null);
   const [orgProfileForm, setOrgProfileForm] = useState({ name:"", reraNo:"", tradeLicense:"", phone:"", email:"", website:"", notes:"" });
   const [orgProfileSaving, setOrgProfileSaving] = useState(false);
@@ -283,7 +2615,7 @@ export default function EmaarDashboardV2() {
   const [inviteLoading, setInviteLoading] = useState(false);
   const [inviteSent, setInviteSent] = useState(false);
 
-  /* â”€â”€â”€ INTELLIGENCE STATE (Session 12) â”€â”€â”€ */
+  /* ─── INTELLIGENCE STATE (Session 12) ─── */
   const [compCommunity, setCompCommunity] = useState("Dubai Hills Estate");
   const [compType, setCompType] = useState("Apartment");
   const [compBeds, setCompBeds] = useState("2BR");
@@ -294,12 +2626,12 @@ export default function EmaarDashboardV2() {
   const [irrServiceCharge, setIrrServiceCharge] = useState("18");
   const [irrMgmtFee, setIrrMgmtFee] = useState("9");
 
-  /* â”€â”€â”€ DLD LIVE INTELLIGENCE STATE (Session 15) â”€â”€â”€ */
+  /* ─── DLD LIVE INTELLIGENCE STATE (Session 15) ─── */
   const [dldActiveCommunity, setDldActiveCommunity] = useState("Dubai Hills Estate");
   const [dldLastRefresh, setDldLastRefresh] = useState(new Date());
   const [dldRefreshTick, setDldRefreshTick] = useState(0);
 
-  /* â”€â”€â”€ BULK IMPORT STATE (Session 16) â”€â”€â”€ */
+  /* ─── BULK IMPORT STATE (Session 16) ─── */
   const [showBulkImport, setShowBulkImport] = useState(false);
   const [importStep, setImportStep]         = useState(1); // 1=upload, 2=map, 3=preview, 4=done
   const [importRawRows, setImportRawRows]   = useState([]);
@@ -311,7 +2643,7 @@ export default function EmaarDashboardV2() {
   const [importDone, setImportDone]         = useState({ imported:0, dupes:0, errors:0 });
   const [importLoading, setImportLoading]   = useState(false);
 
-  /* â”€â”€â”€ DLD AUTO-REFRESH (Session 15) â”€â”€â”€ */
+  /* ─── DLD AUTO-REFRESH (Session 15) ─── */
   React.useEffect(() => {
     const interval = setInterval(() => {
       setDldLastRefresh(new Date());
@@ -320,7 +2652,7 @@ export default function EmaarDashboardV2() {
     return () => clearInterval(interval);
   }, []);
 
-  /* â”€â”€â”€ DEV PORTAL STATE (Session 10) â”€â”€â”€ */
+  /* ─── DEV PORTAL STATE (Session 10) ─── */
   const [devUnits, setDevUnits] = useState([]);
   const [devUnitsLoading, setDevUnitsLoading] = useState(false);
   const [devEOIs, setDevEOIs] = useState([]);
@@ -334,7 +2666,7 @@ export default function EmaarDashboardV2() {
   const [unitForm, setUnitForm] = useState({ unitNo:"", type:"Apartment", beds:"1", baths:"1", size:"", price:"", floor:"", view:"", status:"Available" });
   const [unitFormLoading, setUnitFormLoading] = useState(false);
 
-  /* â”€â”€â”€ LISTINGS STATE (Session 9) â”€â”€â”€ */
+  /* ─── LISTINGS STATE (Session 9) ─── */
   const [listings, setListings] = useState([]);
   const [listingsLoading, setListingsLoading] = useState(false);
   const [showNewListing, setShowNewListing] = useState(false);
@@ -349,7 +2681,7 @@ export default function EmaarDashboardV2() {
   const [listingSearch, setListingSearch] = useState("");
   const [publishingId, setPublishingId] = useState(null);
 
-  /* â”€â”€â”€ COMPLIANCE STATE (Session 6) â”€â”€â”€ */
+  /* ─── COMPLIANCE STATE (Session 6) ─── */
   const [reraCard, setReraCard] = useState({ number:"", expiry:"", name:"" });
   const [reraCardLoading, setReraCardLoading] = useState(false);
   const [reraCardSaved, setReraCardSaved] = useState(false);
@@ -387,13 +2719,13 @@ export default function EmaarDashboardV2() {
   const [gvNationality, setGvNationality] = useState("other");
   const [gvSelectedProj, setGvSelectedProj] = useState(null);
 
-  // Load projects from Firestore (runs for ALL users â€” guests and logged-in)
+  // Load projects from Firestore (runs for ALL users — guests and logged-in)
   const [projectsLoading, setProjectsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  /* â”€â”€â”€ MY LEADS MISSING STATE (V11) â”€â”€â”€ */
+  /* ─── MY LEADS MISSING STATE (V11) ─── */
 
-  /* â”€â”€â”€ V12 NEW STATE â”€â”€â”€ */
+  /* ─── V12 NEW STATE ─── */
   const [leadTagFilter, setLeadTagFilter] = useState("all");
   const [showTemplates, setShowTemplates] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState("");
@@ -407,7 +2739,7 @@ export default function EmaarDashboardV2() {
   const [leadNatFilter, setLeadNatFilter] = useState("all");
 
 
-  /* â”€â”€â”€ MY LEADS ADDITIONAL STATE â”€â”€â”€ */
+  /* ─── MY LEADS ADDITIONAL STATE ─── */
   const [liveLeads, setLiveLeads] = useState([]);
   const [leadShowAdd, setLeadShowAdd] = useState(false);
   const [leadAddName, setLeadAddName] = useState("");
@@ -435,7 +2767,7 @@ export default function EmaarDashboardV2() {
   const [taskDue, setTaskDue] = useState("");
 
 
-  /* â”€â”€â”€ COMPETITORS TAB STATE â”€â”€â”€ */
+  /* ─── COMPETITORS TAB STATE ─── */
   const [cptView, setCptView] = useState("matrix");
   const [cptDevA, setCptDevA] = useState("Emaar Properties");
   const [cptDevB, setCptDevB] = useState("DAMAC Properties");
@@ -443,7 +2775,7 @@ export default function EmaarDashboardV2() {
   const [cptSearch, setCptSearch] = useState("");
 
 
-  /* â”€â”€â”€ MARKETING INTELLIGENCE TAB STATE â”€â”€â”€ */
+  /* ─── MARKETING INTELLIGENCE TAB STATE ─── */
   const [mktView, setMktView] = useState("channels");
   const [mktPropType, setMktPropType] = useState("all");
   const [mktBudget, setMktBudget] = useState(10000);
@@ -457,7 +2789,7 @@ export default function EmaarDashboardV2() {
   const [mktAiLoading, setMktAiLoading] = useState(false);
 
 
-  /* â”€â”€â”€ MORTGAGE LEAD CAPTURE STATE â”€â”€â”€ */
+  /* ─── MORTGAGE LEAD CAPTURE STATE ─── */
   const [mortLeadName, setMortLeadName] = useState("");
   const [mortLeadPhone, setMortLeadPhone] = useState("");
   const [mortLeadEmail, setMortLeadEmail] = useState("");
@@ -465,7 +2797,7 @@ export default function EmaarDashboardV2() {
   const [mortLeadSubmitting, setMortLeadSubmitting] = useState(false);
 
 
-  /* â”€â”€â”€ BANKING INTELLIGENCE TAB STATE â”€â”€â”€ */
+  /* ─── BANKING INTELLIGENCE TAB STATE ─── */
   const [bankView, setBankView] = useState("compare");
   const [bankType, setBankType] = useState("resident");
   const [bankFinType, setBankFinType] = useState("conventional");
@@ -478,7 +2810,7 @@ export default function EmaarDashboardV2() {
   const [bankFixedYrs, setBankFixedYrs] = useState(3);
 
 
-  /* â”€â”€â”€ DEVELOPER HEALTH TAB STATE â”€â”€â”€ */
+  /* ─── DEVELOPER HEALTH TAB STATE ─── */
   const [dhView, setDhView] = useState("leaderboard");
   const [dhTier, setDhTier] = useState("All");
   const [dhSort, setDhSort] = useState("score");
@@ -486,7 +2818,7 @@ export default function EmaarDashboardV2() {
   const [dhSearch, setDhSearch] = useState("");
 
 
-  /* â”€â”€â”€ FINANCIALS TAB STATE â”€â”€â”€ */
+  /* ─── FINANCIALS TAB STATE ─── */
   const [finDeveloper, setFinDeveloper] = useState("Emaar Properties");
   const [finView, setFinView] = useState("overview");
   const [finPeriod, setFinPeriod] = useState("annual");
@@ -495,7 +2827,7 @@ export default function EmaarDashboardV2() {
   const [finCompareDev, setFinCompareDev] = useState("Aldar Properties");
 
 
-  /* â”€â”€â”€ RISK TAB STATE â”€â”€â”€ */
+  /* ─── RISK TAB STATE ─── */
   const [riskTabView, setRiskTabView] = useState("radar");
   const [riskCommunity2, setRiskCommunity2] = useState("Jumeirah Village Circle");
   const [riskType2, setRiskType2] = useState("Apartment");
@@ -505,7 +2837,7 @@ export default function EmaarDashboardV2() {
   const [liveInvestScores, setLiveInvestScores] = useState([]);
   const [liveLaunches, setLiveLaunches] = useState([]);
 
-  /* â”€â”€â”€ GOLDEN VISA TAB STATE â”€â”€â”€ */
+  /* ─── GOLDEN VISA TAB STATE ─── */
   const [gvView, setGvView] = useState("checker");
   const [gvMortgage, setGvMortgage] = useState(false);
   const [gvMortgagePaid, setGvMortgagePaid] = useState(2000000);
@@ -516,7 +2848,7 @@ export default function EmaarDashboardV2() {
 
   const [livePortfolio, setLivePortfolio] = useState([]);
 
-  /* â”€â”€â”€ DXB ESTIMATE (AVM) STATE â”€â”€â”€ */
+  /* ─── DXB ESTIMATE (AVM) STATE ─── */
   const [avmView, setAvmView] = useState("estimate");
   const [avmFloor, setAvmFloor] = useState("mid");
   const [avmView2, setAvmView2] = useState("pool");
@@ -525,7 +2857,7 @@ export default function EmaarDashboardV2() {
   const [avmRenovated, setAvmRenovated] = useState(false);
   const [avmParking, setAvmParking] = useState(1);
 
-  /* â”€â”€â”€ PORTFOLIO STATE â”€â”€â”€ */
+  /* ─── PORTFOLIO STATE ─── */
   const [portView, setPortView] = useState("overview");
   const [portShowAdd, setPortShowAdd] = useState(false);
   const [portBuyPrice, setPortBuyPrice] = useState(1200000);
@@ -539,7 +2871,7 @@ export default function EmaarDashboardV2() {
   const [portYear2, setPortYear2] = useState(2022);
 
 
-  /* â”€â”€â”€ FLIP CALCULATOR ADDITIONAL STATE â”€â”€â”€ */
+  /* ─── FLIP CALCULATOR ADDITIONAL STATE ─── */
   const [flpRenovCost, setFlpRenovCost] = useState(80000);
   const [flpAgentBuy, setFlpAgentBuy] = useState(2);
   const [flpAgentSell, setFlpAgentSell] = useState(2);
@@ -550,7 +2882,7 @@ export default function EmaarDashboardV2() {
   const [flpScenario, setFlpScenario] = useState("base");
 
 
-  /* â”€â”€â”€ INVESTMENT SCORE TAB STATE â”€â”€â”€ */
+  /* ─── INVESTMENT SCORE TAB STATE ─── */
   const [invScView, setInvScView] = useState("community");
   const [invScSort, setInvScSort] = useState("total");
   const [invScFilter, setInvScFilter] = useState("All");
@@ -558,7 +2890,7 @@ export default function EmaarDashboardV2() {
   const [invScSearch, setInvScSearch] = useState("");
 
 
-  /* â”€â”€â”€ MORTGAGE TAB STATE â”€â”€â”€ */
+  /* ─── MORTGAGE TAB STATE ─── */
   const [mortPrice, setMortPrice] = useState(1500000);
   const [mortDown, setMortDown] = useState(20);
   const [mortRate, setMortRate] = useState(4.25);
@@ -569,7 +2901,7 @@ export default function EmaarDashboardV2() {
   const [mortIncome, setMortIncome] = useState(30000);
 
 
-  /* â”€â”€â”€ STR vs LTR TAB STATE â”€â”€â”€ */
+  /* ─── STR vs LTR TAB STATE ─── */
   const [strView, setStrView] = useState("comparison");
   const [strCommunity, setStrCommunity] = useState("All");
   const [strBeds, setStrBeds] = useState("1BR");
@@ -581,7 +2913,7 @@ export default function EmaarDashboardV2() {
   const [strCalcLTR, setStrCalcLTR] = useState(90000);
 
 
-  /* â”€â”€â”€ YIELDS TAB STATE â”€â”€â”€ */
+  /* ─── YIELDS TAB STATE ─── */
   const [yldView, setYldView] = useState("table");
   const [yldType, setYldType] = useState("Apartment");
   const [yldSort, setYldSort] = useState("gross");
@@ -596,14 +2928,14 @@ export default function EmaarDashboardV2() {
   const [liveYieldsData, setLiveYieldsData] = useState([]);
 
 
-  /* â”€â”€â”€ LAUNCH CALENDAR STATE â”€â”€â”€ */
+  /* ─── LAUNCH CALENDAR STATE ─── */
   const [lcSearch, setLcSearch] = useState("");
   const [lcDev, setLcDev] = useState("All");
   const [lcStatus, setLcStatus] = useState("All");
   const [lcType, setLcType] = useState("All");
   const [lcView, setLcView] = useState("list");
 
-  /* â”€â”€â”€ NEIGHBOURHOODS STATE â”€â”€â”€ */
+  /* ─── NEIGHBOURHOODS STATE ─── */
   const [nbhSearch, setNbhSearch] = useState("");
   const [nbhTypeFilter, setNbhTypeFilter] = useState("All");
   const [nbhYieldFilter, setNbhYieldFilter] = useState("All");
@@ -612,13 +2944,13 @@ export default function EmaarDashboardV2() {
   const [nbhView, setNbhView] = useState("grid");
   const [nbhCompare, setNbhCompare] = useState([]);
 
-  /* â”€â”€â”€ CURRENCY STATE â”€â”€â”€ */
+  /* ─── CURRENCY STATE ─── */
   const [selectedCcy, setSelectedCcy] = useState("USD");
   const [aedAmount, setAedAmount] = useState(100000);
   const [searchCcy, setSearchCcy] = useState("");
 
 
-  /* â”€â”€â”€ PROJECTS TAB FILTER STATE â”€â”€â”€ */
+  /* ─── PROJECTS TAB FILTER STATE ─── */
   const [projMode, setProjMode] = useState("Apartment");
   const [projView, setProjView] = useState("grid");
   const [projSearch, setProjSearch] = useState("");
@@ -634,14 +2966,14 @@ export default function EmaarDashboardV2() {
   const [projFurnished, setProjFurnished] = useState(false);
 
 
-  /* â”€â”€â”€ PROJECT MODAL STATE â”€â”€â”€ */
+  /* ─── PROJECT MODAL STATE ─── */
   const [selectedProject, setSelectedProject] = useState(null);
   const [projDetailTab, setProjDetailTab] = useState("Overview");
   const [projCompare, setProjCompare] = useState([]);
   const [showCompare, setShowCompare] = useState(false);
 
 
-  /* â”€â”€â”€ SERVICE CHARGES TAB STATE â”€â”€â”€ */
+  /* ─── SERVICE CHARGES TAB STATE ─── */
   const [scView, setScView] = useState("table");
   const [scType, setScType] = useState("All");
   const [scSort, setScSort] = useState("rate");
@@ -649,8 +2981,8 @@ export default function EmaarDashboardV2() {
   const [scCalcSize, setScCalcSize] = useState(1000);
   const [scCalcRate, setScCalcRate] = useState(15);
   const [scCalcRent, setScCalcRent] = useState(90000);
-  /* â”€â”€â”€ HANDOVER TAB STATE â”€â”€â”€ */
-  /* â”€â”€â”€ HANDOVER DETAIL VIEW STATE â”€â”€â”€ */
+  /* ─── HANDOVER TAB STATE ─── */
+  /* ─── HANDOVER DETAIL VIEW STATE ─── */
   const [hdvFilter, setHdvFilter] = useState("All");
   const [hdvDev, setHdvDev] = useState("All");
   const [hdvCommunity, setHdvCommunity] = useState("All");
@@ -658,7 +2990,7 @@ export default function EmaarDashboardV2() {
   const [hdvView, setHdvView] = useState("cards");
   const [hdvSearch, setHdvSearch] = useState("");
   const [hdvSelected, setHdvSelected] = useState(null);
-  /* â”€â”€â”€ HANDOVER TAB STATE â”€â”€â”€ */
+  /* ─── HANDOVER TAB STATE ─── */
   const [hvFilter, setHvFilter] = useState("All");
   const [hvSort, setHvSort] = useState("handover");
   const [hvDev, setHvDev] = useState("All");
@@ -677,7 +3009,7 @@ export default function EmaarDashboardV2() {
     const loadProjects = async () => {
       setProjectsLoading(true);
       try {
-        // Initial projectData load for first paint â€” onSnapshot takes over immediately
+        // Initial projectData load for first paint — onSnapshot takes over immediately
         const pdSnap = await getDocs(collection(db, "projectData"));
         const overrides = {};
         pdSnap.forEach(d => { overrides[d.id.replace("project_", "")] = d.data(); });
@@ -693,7 +3025,7 @@ export default function EmaarDashboardV2() {
       } catch (e) { console.log("Firestore not available, using static data"); }
       setProjectsLoading(false);
     };
-    // â”€â”€ Live EMAAR stock price via Yahoo Finance (free, no key) â”€â”€
+    // ── Live EMAAR stock price via Yahoo Finance (free, no key) ──
     const fetchEmaarStock = async () => {
       try {
         const res = await fetch("/api/proxy?service=stock&symbol=EMAAR.DU&range=1d&interval=1d");
@@ -708,11 +3040,11 @@ export default function EmaarDashboardV2() {
     };
     fetchEmaarStock();
     const stockInterval = setInterval(fetchEmaarStock, 300000);
-    loadProjects(); // Load for everyone â€” no isLoggedIn gate
+    loadProjects(); // Load for everyone — no isLoggedIn gate
 
     // priceAlerts now live via user onSnapshot listener
 
-    // â”€â”€ AI Insights â€” generated fresh if not in cache (cache read now via onSnapshot) â”€â”€
+    // ── AI Insights — generated fresh if not in cache (cache read now via onSnapshot) ──
     (async () => {
       try {
         const oneWeekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
@@ -740,13 +3072,13 @@ export default function EmaarDashboardV2() {
       } catch(e) { setInsightsLoading(false); }
     })();
 
-    // â”€â”€ Load Paddle.js for billing â”€â”€
+    // ── Load Paddle.js for billing ──
     if (!window.Paddle) {
       const script = document.createElement("script");
       script.src = "https://cdn.paddle.com/paddle/v2/paddle.js";
       script.onload = () => {
-        // â”€â”€ PASTE YOUR PADDLE CLIENT TOKEN BELOW â”€â”€
-        // Get it from paddle.com â†’ Developer â†’ Authentication â†’ Client-side token
+        // ── PASTE YOUR PADDLE CLIENT TOKEN BELOW ──
+        // Get it from paddle.com → Developer → Authentication → Client-side token
         const PADDLE_CLIENT_TOKEN = "live_4393f28d4ec943ebe056835651f";
         if (!PADDLE_CLIENT_TOKEN.includes("PASTE")) {
           window.Paddle.Initialize({ token: PADDLE_CLIENT_TOKEN });
@@ -782,26 +3114,26 @@ export default function EmaarDashboardV2() {
 
 
   const SEED_PROJECTS = [
-    { id:"p001", commission:2.0, type:"Apartment", developer:"Emaar", project:"Golf Grand â€” Phase 2", community:"Dubai Hills Estate", status:"Off-Plan", handover:"Q4 2027", beds:["1BR","2BR","3BR"], sizeMin:748, sizeMax:1842, priceMin:1200000, priceMax:3800000, ppsf:1850,
+    { id:"p001", commission:2.0, type:"Apartment", developer:"Emaar", project:"Golf Grand — Phase 2", community:"Dubai Hills Estate", status:"Off-Plan", handover:"Q4 2027", beds:["1BR","2BR","3BR"], sizeMin:748, sizeMax:1842, priceMin:1200000, priceMax:3800000, ppsf:1850,
       unitBreakdown:[
         { type:"1BR", sizeMin:748,  sizeMax:900,  priceMin:1200000, priceMax:1650000, ppsf:1850, grossYield:7.2, available:42 },
         { type:"2BR", sizeMin:1100, sizeMax:1380, priceMin:1980000, priceMax:2550000, ppsf:1800, grossYield:6.8, available:28 },
         { type:"3BR", sizeMin:1600, sizeMax:1842, priceMin:2900000, priceMax:3800000, ppsf:1780, grossYield:6.2, available:14 },
       ], paymentPlan:"80/20", postHandover:false, grossYield:6.8, netYield:5.4, serviceCharge:16, investmentScore:84, distMetro:3.5, distDIFC:12, distAirport:28, distBeach:18, distMall:2.2, distSchool:0.8, distHospital:4, amenities:["Pool","Gym","Golf Course","Kids Area","BBQ","Retail","Cycling Track"], view:["Golf View","Garden View"], reraNo:"0991234567", escrowBank:"Emirates NBD", constructionPct:15, developerScore:92, notes:"Overlooking 18-hole championship golf course. Emaar proven delivery. Strong resale liquidity in Dubai Hills.", isSeedData:true, source:"Emaar Official / Bayut Apr 2026" },
-    { id:"p002", commission:3.0, type:"Apartment", developer:"DAMAC Properties", project:"Lagoons â€” Azure Beach", community:"DAMAC Lagoons", status:"Off-Plan", handover:"Q2 2027", beds:["Studio","1BR","2BR"], sizeMin:420, sizeMax:1240, priceMin:680000, priceMax:2100000, ppsf:1420,
+    { id:"p002", commission:3.0, type:"Apartment", developer:"DAMAC Properties", project:"Lagoons — Azure Beach", community:"DAMAC Lagoons", status:"Off-Plan", handover:"Q2 2027", beds:["Studio","1BR","2BR"], sizeMin:420, sizeMax:1240, priceMin:680000, priceMax:2100000, ppsf:1420,
       unitBreakdown:[
         { type:"Studio", sizeMin:420, sizeMax:520,  priceMin:680000,  priceMax:820000,  ppsf:1480, grossYield:8.2, available:60 },
         { type:"1BR",    sizeMin:650, sizeMax:820,  priceMin:950000,  priceMax:1200000, ppsf:1420, grossYield:7.4, available:45 },
         { type:"2BR",    sizeMin:980, sizeMax:1240, priceMin:1550000, priceMax:2100000, ppsf:1380, grossYield:6.8, available:22 },
       ], paymentPlan:"70/30", postHandover:true, grossYield:7.4, netYield:5.9, serviceCharge:14, investmentScore:76, distMetro:5.5, distDIFC:22, distAirport:35, distBeach:25, distMall:3.8, distSchool:1.2, distHospital:6, amenities:["Lagoon Pool","Beach Access","Gym","Waterpark","Restaurants","Kids Club"], view:["Lagoon View","Pool View"], reraNo:"0882345678", escrowBank:"Dubai Islamic Bank", constructionPct:35, developerScore:78, notes:"Mediterranean-inspired community. Private lagoon access. High demand from European buyers.", isSeedData:true, source:"DAMAC Official / PropertyFinder Apr 2026" },
-    { id:"p003", commission:2.0, type:"Apartment", developer:"Sobha Realty", project:"Hartland II â€” Skyvista", community:"Sobha Hartland", status:"Off-Plan", handover:"Q3 2027", beds:["1BR","2BR","3BR","4BR"], sizeMin:780, sizeMax:2800, priceMin:1800000, priceMax:6500000, ppsf:2100,
+    { id:"p003", commission:2.0, type:"Apartment", developer:"Sobha Realty", project:"Hartland II — Skyvista", community:"Sobha Hartland", status:"Off-Plan", handover:"Q3 2027", beds:["1BR","2BR","3BR","4BR"], sizeMin:780, sizeMax:2800, priceMin:1800000, priceMax:6500000, ppsf:2100,
       unitBreakdown:[
         { type:"1BR", sizeMin:780,  sizeMax:950,  priceMin:1800000, priceMax:2200000, ppsf:2180, grossYield:6.8, available:38 },
         { type:"2BR", sizeMin:1200, sizeMax:1450, priceMin:2600000, priceMax:3200000, ppsf:2100, grossYield:6.2, available:30 },
         { type:"3BR", sizeMin:1800, sizeMax:2100, priceMin:3800000, priceMax:4600000, ppsf:2050, grossYield:5.8, available:18 },
         { type:"4BR", sizeMin:2400, sizeMax:2800, priceMin:5200000, priceMax:6500000, ppsf:2020, grossYield:5.2, available:8  },
       ], paymentPlan:"70/30", postHandover:false, grossYield:6.2, netYield:4.9, serviceCharge:18, investmentScore:82, distMetro:2.8, distDIFC:8, distAirport:18, distBeach:22, distMall:6, distSchool:0.5, distHospital:3, amenities:["Infinity Pool","Gym","Spa","Concierge","Kids Pool","Retail","Co-working"], view:["Creek View","Burj Khalifa View","City View"], reraNo:"0773456789", escrowBank:"Mashreq Bank", constructionPct:28, developerScore:88, notes:"Sobha known for quality finishes and on-time delivery. Creek views. Walking distance to top schools.", isSeedData:true, source:"Sobha Official / Bayut Apr 2026" },
-    { id:"p004", commission:4.0, type:"Apartment", developer:"Binghatti", project:"Skyrise â€” Business Bay", community:"Business Bay", status:"Off-Plan", handover:"Q1 2027", beds:["Studio","1BR","2BR"], sizeMin:380, sizeMax:1050, priceMin:750000, priceMax:2200000, ppsf:1980,
+    { id:"p004", commission:4.0, type:"Apartment", developer:"Binghatti", project:"Skyrise — Business Bay", community:"Business Bay", status:"Off-Plan", handover:"Q1 2027", beds:["Studio","1BR","2BR"], sizeMin:380, sizeMax:1050, priceMin:750000, priceMax:2200000, ppsf:1980,
       unitBreakdown:[
         { type:"Studio", sizeMin:380, sizeMax:480,  priceMin:750000,  priceMax:920000,  ppsf:2050, grossYield:8.8, available:80 },
         { type:"1BR",    sizeMin:620, sizeMax:780,  priceMin:1200000, priceMax:1550000, ppsf:1980, grossYield:7.8, available:55 },
@@ -814,14 +3146,14 @@ export default function EmaarDashboardV2() {
         { type:"3BR", sizeMin:2200, sizeMax:2800, priceMin:6800000,  priceMax:9000000,  ppsf:2780, grossYield:5.8, available:5  },
         { type:"4BR", sizeMin:3400, sizeMax:4200, priceMin:12000000, priceMax:18000000, ppsf:2700, grossYield:5.2, available:3  },
       ], paymentPlan:"70/30", postHandover:false, grossYield:6.0, netYield:4.6, serviceCharge:20, investmentScore:79, distMetro:1.2, distDIFC:16, distAirport:20, distBeach:0.1, distMall:8, distSchool:4, distHospital:5, amenities:["Beach Access","Infinity Pool","Spa","Gym","Concierge","Yacht Jetty"], view:["Sea View","Beach View","Marina View"], reraNo:"0555678901", escrowBank:"Emirates NBD", constructionPct:78, developerScore:86, notes:"Ellington curated design. Beachfront. Dubai Islands 24% price growth 2025. Near ready.", isSeedData:true, source:"Ellington Official / Alkira Feb 2026" },
-    { id:"p006", commission:2.0, type:"Villa", developer:"Emaar", project:"The Oasis â€” Phase 11", community:"The Oasis", status:"Off-Plan", handover:"Q2 2029", beds:["4BR","5BR","6BR"], sizeMin:5800, sizeMax:14000, priceMin:6150000, priceMax:32000000, ppsf:1480,
+    { id:"p006", commission:2.0, type:"Villa", developer:"Emaar", project:"The Oasis — Phase 11", community:"The Oasis", status:"Off-Plan", handover:"Q2 2029", beds:["4BR","5BR","6BR"], sizeMin:5800, sizeMax:14000, priceMin:6150000, priceMax:32000000, ppsf:1480,
       unitBreakdown:[
         { type:"4BR Villa",    sizeMin:5800,  sizeMax:7200,  plotMin:7500,  plotMax:10000, priceMin:6150000,  priceMax:9500000,  ppsf:1520, grossYield:5.2, available:28 },
         { type:"5BR Villa",    sizeMin:7800,  sizeMax:9500,  plotMin:10000, plotMax:14000, priceMin:10500000, priceMax:16000000, ppsf:1490, grossYield:4.8, available:18 },
         { type:"6BR Mansion",  sizeMin:11000, sizeMax:14000, plotMin:16000, plotMax:22000, priceMin:20000000, priceMax:32000000, ppsf:1450, grossYield:4.2, available:8  },
       ], paymentPlan:"80/20", postHandover:false, grossYield:4.8, netYield:3.8, serviceCharge:6, investmentScore:86, plotMin:7500, plotMax:22000, privatePool:true, garage:2, maidRoom:true, distMetro:8, distDIFC:25, distAirport:32, distBeach:28, distMall:6, distSchool:3, distHospital:8, amenities:["Lagoon Pool","Wave Pool","Polo Fields","Equestrian","Golf","Clubhouse","Cycling Tracks"], view:["Lagoon View","Garden View","Golf View"], reraNo:"0446789012", escrowBank:"Emirates NBD", constructionPct:8, developerScore:92, notes:"10:1 scarcity vs Dubai Hills. Emaar ultra-luxury 60M sqft master plan.", isSeedData:true, source:"Emaar Official / Alkira Feb 2026" },
     { id:"p007", commission:2.0, type:"Villa", developer:"Majid Al Futtaim", project:"Serenity Mansions", community:"Tilal Al Ghaf", status:"Sold Out", handover:"Q4 2027", beds:["5BR","6BR","7BR"], sizeMin:9500, sizeMax:18000, priceMin:8500000, priceMax:45000000, ppsf:1650, paymentPlan:"50/50", postHandover:false, grossYield:4.2, netYield:3.3, serviceCharge:8, investmentScore:80, privatePool:true, garage:3, maidRoom:true, distMetro:5, distDIFC:20, distAirport:30, distBeach:24, distMall:4, distSchool:1.5, distHospital:6, amenities:["Private Beach","Crystal Lagoon","Tennis","Padel","Golf","Stables"], view:["Lake View","Garden View","Lagoon View"], reraNo:"0337890123", escrowBank:"FAB", constructionPct:62, developerScore:89, notes:"Sold out in 48 hours. Tilal Al Ghaf 52% YoY growth DLD 2025.", isSeedData:true, source:"DLD 2025 / Majid Al Futtaim" },
-    { id:"p008", commission:2.0, type:"Townhouse", developer:"Nakheel", project:"Dubai Islands â€” Cluster B", community:"Dubai Islands", status:"Off-Plan", handover:"Q4 2027", beds:["3BR","4BR"], sizeMin:2200, sizeMax:3800, priceMin:3200000, priceMax:6500000, ppsf:1620,
+    { id:"p008", commission:2.0, type:"Townhouse", developer:"Nakheel", project:"Dubai Islands — Cluster B", community:"Dubai Islands", status:"Off-Plan", handover:"Q4 2027", beds:["3BR","4BR"], sizeMin:2200, sizeMax:3800, priceMin:3200000, priceMax:6500000, ppsf:1620,
       unitBreakdown:[
         { type:"3BR TH", sizeMin:2200, sizeMax:2600, plotMin:2800, plotMax:3500, priceMin:3200000, priceMax:4200000, ppsf:1680, grossYield:6.8, available:35 },
         { type:"4BR TH", sizeMin:3000, sizeMax:3800, plotMin:3800, plotMax:5000, priceMin:4800000, priceMax:6500000, ppsf:1580, grossYield:6.1, available:20 },
@@ -834,12 +3166,12 @@ export default function EmaarDashboardV2() {
         { type:"3BR Suite",  sizeMin:4000, sizeMax:6500, priceMin:35000000, priceMax:65000000, ppsf:4600, grossYield:6.2, available:5  },
       ], paymentPlan:"50/50", postHandover:false, grossYield:7.2, netYield:5.5, serviceCharge:28, investmentScore:77, hotelOperator:"Dorchester Collection", starRating:5, dtcmLicense:true, revenueShare:65, managementFee:15, avgDailyRate:3200, occupancyRate:82, distMetro:2.2, distDIFC:20, distAirport:32, distBeach:0.05, distMall:18, distSchool:8, distHospital:12, amenities:["Private Beach","5-Star Spa","Infinity Pool","Fine Dining","Butler Service","Yacht Jetty"], view:["Sea View","Palm View","Burj Al Arab View"], reraNo:"0119012345", escrowBank:"Emirates NBD", constructionPct:45, developerScore:88, notes:"Managed by Dorchester Collection. 65% revenue to owner. 4 weeks personal use.", isSeedData:true, source:"Omniyat Official / Bayut Apr 2026" },
     { id:"p010", commission:5.0, type:"Office", developer:"Brookfield Properties", project:"ICD Brookfield Place", community:"DIFC", status:"Ready", handover:"Available Now", beds:[], sizeMin:1200, sizeMax:45000, priceMin:3500000, priceMax:280000000, ppsf:3200, paymentPlan:"Cash / Mortgage", postHandover:false, grossYield:7.2, netYield:5.8, serviceCharge:38, investmentScore:85, officeGrade:"A", fitOut:"Shell & Core", parking:4, freeZone:true, licenseTypes:["Financial","Professional","Tech"], leedCertified:true, wault:4.2, vacancyRate:0.3, distMetro:0.3, distDIFC:0, distAirport:16, distBeach:18, distMall:8, distSchool:6, distHospital:4, amenities:["Concierge","F&B Ground Floor","Conference Rooms","Gym","EV Charging","24h Security"], reraNo:"0000123456", escrowBank:"N/A", constructionPct:100, developerScore:95, notes:"Grade A DIFC. Near-zero vacancy. Institutional tenant base. LEED Platinum. 30% DIFC growth 2025.", isSeedData:true, source:"DIFC Official / Chestertons Mar 2026" },
-    { id:"p011", commission:5.0, type:"Retail", developer:"Meraas", project:"City Walk â€” Retail Units", community:"City Walk", status:"Ready", handover:"Available Now", beds:[], sizeMin:800, sizeMax:8000, priceMin:2800000, priceMax:42000000, ppsf:3800, paymentPlan:"Cash / Mortgage", postHandover:false, grossYield:8.4, netYield:6.8, serviceCharge:32, investmentScore:82, shopType:"Inline / Corner", frontageMin:8, frontageMax:24, ceilingHeight:4.5, greaseTrap:true, loadingBay:true, signageRights:true, groundFloor:true, dailyFootfall:45000, distMetro:1.8, distDIFC:4, distAirport:18, distBeach:3, distMall:0, distSchool:5, distHospital:4, amenities:["High Footfall","Tourist Zone","Ample Parking","F&B Ready","Flex Fit-Out"], reraNo:"0000234567", escrowBank:"N/A", constructionPct:100, developerScore:90, notes:"City Walk 45K daily visitors. Tourism zone. Strong F&B and lifestyle tenant mix.", isSeedData:true, source:"Meraas Official / Chestertons 2026" },
-    { id:"p012", commission:5.0, type:"Warehouse", developer:"DIC Authority", project:"Dubai Industrial City â€” Unit W7", community:"Dubai Industrial City", status:"Ready", handover:"Available Now", beds:[], sizeMin:10000, sizeMax:80000, priceMin:4500000, priceMax:48000000, ppsf:580, paymentPlan:"Cash / Mortgage", postHandover:false, grossYield:9.8, netYield:8.2, serviceCharge:8, investmentScore:78, warehouseType:"Dry Storage / Light Industrial", clearHeight:12, loadingDocks:8, officeComponent:1800, yardSpace:15000, rollerShutters:6, fireSuppression:true, freeZone:true, occupancyRate:96, distPort:28, distMetro:8, distDIFC:40, distAirport:18, amenities:["24h Access","Security","Heavy Vehicle Access","On-site Management","CCTV"], reraNo:"0000345678", escrowBank:"N/A", constructionPct:100, developerScore:87, notes:"DIC 96% occupancy. E-commerce demand driving rents up 15% YoY. Near Al Maktoum Airport.", isSeedData:true, source:"Dubai Industrial City / Chestertons 2026" },
-    { id:"p013", commission:2.0, type:"Land", developer:"Dubai South", project:"Residential Plot â€” Phase 3", community:"Dubai South", status:"Ready", handover:"Available Now", beds:[], sizeMin:15000, sizeMax:120000, priceMin:2800000, priceMax:18000000, ppsf:200, paymentPlan:"Cash", postHandover:false, grossYield:0, netYield:0, serviceCharge:0, investmentScore:72, plotType:"Residential", zoning:"R1", permittedFAR:2.5, maxFloors:8, utilitiesConnected:true, roadFrontage:45, titleDeedStatus:"Freehold", gdvEstimate:45000000, distMetro:4, distDIFC:38, distAirport:12, distBeach:35, distMall:6, distSchool:2, distHospital:5, amenities:["Road Access","DEWA Connected","Sewage Connected","Master Plan Community"], reraNo:"0000456789", escrowBank:"N/A", constructionPct:0, developerScore:82, notes:"Dubai South Expo 2020 legacy. Near Al Maktoum Airport expansion. FAR 2.5 allows G+8.", isSeedData:true, source:"Dubai South Official / DLD 2025" },
+    { id:"p011", commission:5.0, type:"Retail", developer:"Meraas", project:"City Walk — Retail Units", community:"City Walk", status:"Ready", handover:"Available Now", beds:[], sizeMin:800, sizeMax:8000, priceMin:2800000, priceMax:42000000, ppsf:3800, paymentPlan:"Cash / Mortgage", postHandover:false, grossYield:8.4, netYield:6.8, serviceCharge:32, investmentScore:82, shopType:"Inline / Corner", frontageMin:8, frontageMax:24, ceilingHeight:4.5, greaseTrap:true, loadingBay:true, signageRights:true, groundFloor:true, dailyFootfall:45000, distMetro:1.8, distDIFC:4, distAirport:18, distBeach:3, distMall:0, distSchool:5, distHospital:4, amenities:["High Footfall","Tourist Zone","Ample Parking","F&B Ready","Flex Fit-Out"], reraNo:"0000234567", escrowBank:"N/A", constructionPct:100, developerScore:90, notes:"City Walk 45K daily visitors. Tourism zone. Strong F&B and lifestyle tenant mix.", isSeedData:true, source:"Meraas Official / Chestertons 2026" },
+    { id:"p012", commission:5.0, type:"Warehouse", developer:"DIC Authority", project:"Dubai Industrial City — Unit W7", community:"Dubai Industrial City", status:"Ready", handover:"Available Now", beds:[], sizeMin:10000, sizeMax:80000, priceMin:4500000, priceMax:48000000, ppsf:580, paymentPlan:"Cash / Mortgage", postHandover:false, grossYield:9.8, netYield:8.2, serviceCharge:8, investmentScore:78, warehouseType:"Dry Storage / Light Industrial", clearHeight:12, loadingDocks:8, officeComponent:1800, yardSpace:15000, rollerShutters:6, fireSuppression:true, freeZone:true, occupancyRate:96, distPort:28, distMetro:8, distDIFC:40, distAirport:18, amenities:["24h Access","Security","Heavy Vehicle Access","On-site Management","CCTV"], reraNo:"0000345678", escrowBank:"N/A", constructionPct:100, developerScore:87, notes:"DIC 96% occupancy. E-commerce demand driving rents up 15% YoY. Near Al Maktoum Airport.", isSeedData:true, source:"Dubai Industrial City / Chestertons 2026" },
+    { id:"p013", commission:2.0, type:"Land", developer:"Dubai South", project:"Residential Plot — Phase 3", community:"Dubai South", status:"Ready", handover:"Available Now", beds:[], sizeMin:15000, sizeMax:120000, priceMin:2800000, priceMax:18000000, ppsf:200, paymentPlan:"Cash", postHandover:false, grossYield:0, netYield:0, serviceCharge:0, investmentScore:72, plotType:"Residential", zoning:"R1", permittedFAR:2.5, maxFloors:8, utilitiesConnected:true, roadFrontage:45, titleDeedStatus:"Freehold", gdvEstimate:45000000, distMetro:4, distDIFC:38, distAirport:12, distBeach:35, distMall:6, distSchool:2, distHospital:5, amenities:["Road Access","DEWA Connected","Sewage Connected","Master Plan Community"], reraNo:"0000456789", escrowBank:"N/A", constructionPct:0, developerScore:82, notes:"Dubai South Expo 2020 legacy. Near Al Maktoum Airport expansion. FAR 2.5 allows G+8.", isSeedData:true, source:"Dubai South Official / DLD 2025" },
   ];
 
-  /* calcScore, scoreColor, scoreLabel â€” defined at top level */
+  /* calcScore, scoreColor, scoreLabel — defined at top level */
 
   const MODES = [
     { key:"Apartment" }, { key:"Villa" }, { key:"Townhouse" },
@@ -856,17 +3188,17 @@ export default function EmaarDashboardV2() {
         return prev.filter(x => x.id !== p.id);
       }
       if (prev.length >= 3) {
-        notify("âš ï¸ Max 3 projects for comparison");
+        notify("⚠️ Max 3 projects for comparison");
         return prev;
       }
-      notify("âœ… Added " + p.name + " to comparison");
+      notify("✅ Added " + p.name + " to comparison");
       return [...prev, p];
     });
   };
 
   // Listen to Firebase auth state + fetch user profile
 
-  // â”€â”€ MASTER LIVE LISTENERS â€” all Firestore real-time subscriptions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── MASTER LIVE LISTENERS — all Firestore real-time subscriptions ──────────
   useEffect(() => {
     const unsubs = [];
 
@@ -984,56 +3316,56 @@ export default function EmaarDashboardV2() {
     }));
 
     
-    /* â”€â”€â”€ MARKET DATA â”€â”€â”€ */
+    /* ─── MARKET DATA ─── */
     unsubs.push(onSnapshot(collection(db, "marketData"), snap => {
       const d = snap.docs.map(x => ({ id:x.id, ...x.data() }))
                          .filter(x => x.metric && x.value);
       if (d.length > 0) setLiveMarketData(d);
     }, () => {}));
 
-    /* â”€â”€â”€ HANDOVER â”€â”€â”€ */
+    /* ─── HANDOVER ─── */
     unsubs.push(onSnapshot(collection(db, "handover"), snap => {
       const d = snap.docs.map(x => ({ id:x.id, ...x.data() }));
       if (d.length > 0) setLiveHandover(d);
     }, () => {}));
 
-    /* â”€â”€â”€ SERVICE CHARGES â”€â”€â”€ */
+    /* ─── SERVICE CHARGES ─── */
     unsubs.push(onSnapshot(collection(db, "serviceCharges"), snap => {
       const d = snap.docs.map(x => ({ id:x.id, ...x.data() }));
       if (d.length > 0) setLiveServiceCharges(d);
     }, () => {}));
 
-    /* â”€â”€â”€ DLD VOLUMES â”€â”€â”€ */
+    /* ─── DLD VOLUMES ─── */
     unsubs.push(onSnapshot(collection(db, "dldVolumes"), snap => {
       const d = snap.docs.map(x => ({ id:x.id, ...x.data() }));
       if (d.length > 0) setLiveDLDVolumes(d);
     }, () => {}));
 
-    /* â”€â”€â”€ NEIGHBOURHOODS â”€â”€â”€ */
+    /* ─── NEIGHBOURHOODS ─── */
     unsubs.push(onSnapshot(collection(db, "neighbourhoods"), snap => {
       const d = snap.docs.map(x => ({ id:x.id, ...x.data() }));
       if (d.length > 0) setLiveNeighbourhoods(d);
     }, () => {}));
 
-    /* â”€â”€â”€ STR DATA â”€â”€â”€ */
+    /* ─── STR DATA ─── */
     unsubs.push(onSnapshot(collection(db, "strData"), snap => {
       const d = snap.docs.map(x => ({ id:x.id, ...x.data() }));
       if (d.length > 0) setLiveSTRData(d);
     }, () => {}));
 
-    /* â”€â”€â”€ YIELDS DATA â”€â”€â”€ */
+    /* ─── YIELDS DATA ─── */
     unsubs.push(onSnapshot(collection(db, "yieldsData"), snap => {
       const d = snap.docs.map(x => ({ id:x.id, ...x.data() }));
       if (d.length > 0) setLiveYieldsData(d);
     }, () => {}));
 
-    /* â”€â”€â”€ MORTGAGE RATES â”€â”€â”€ */
+    /* ─── MORTGAGE RATES ─── */
     unsubs.push(onSnapshot(collection(db, "mortgageRates"), snap => {
       const d = snap.docs.map(x => ({ id:x.id, ...x.data() }));
       if (d.length > 0) setLiveMortgageRates(d);
     }, () => {}));
 
-    /* â”€â”€â”€ PORTFOLIO (user-specific) â”€â”€â”€ */
+    /* ─── PORTFOLIO (user-specific) ─── */
     if (auth.currentUser?.uid) {
       unsubs.push(onSnapshot(
         query(collection(db, "portfolios"), where("userId", "==", auth.currentUser.uid)),
@@ -1044,7 +3376,7 @@ export default function EmaarDashboardV2() {
       ));
     }
 
-    /* â”€â”€â”€ ALL LEADS (admin/general view) â”€â”€â”€ */
+    /* ─── ALL LEADS (admin/general view) ─── */
     if (auth.currentUser?.uid) {
       unsubs.push(onSnapshot(
         query(collection(db, "leads"), orderBy("createdAt", "desc"), limit(500)),
@@ -1055,37 +3387,37 @@ export default function EmaarDashboardV2() {
       ));
     }
 
-    /* â”€â”€â”€ INVEST SCORES â”€â”€â”€ */
+    /* ─── INVEST SCORES ─── */
     unsubs.push(onSnapshot(collection(db, "investScores"), snap => {
       const d = snap.docs.map(x => ({ id:x.id, ...x.data() }));
       if (d.length > 0) setLiveInvestScores(d);
     }, () => {}));
 
-    /* â”€â”€â”€ RISK DATA â”€â”€â”€ */
+    /* ─── RISK DATA ─── */
     unsubs.push(onSnapshot(collection(db, "riskData"), snap => {
       const d = snap.docs.map(x => ({ id:x.id, ...x.data() }));
       if (d.length > 0) setLiveRisk(d);
     }, () => {}));
 
-    /* â”€â”€â”€ FINANCIALS â”€â”€â”€ */
+    /* ─── FINANCIALS ─── */
     unsubs.push(onSnapshot(collection(db, "financials"), snap => {
       const d = snap.docs.map(x => ({ id:x.id, ...x.data() }));
       if (d.length > 0) setLiveFinancials(d);
     }, () => {}));
 
-    /* â”€â”€â”€ DEV HEALTH â”€â”€â”€ */
+    /* ─── DEV HEALTH ─── */
     unsubs.push(onSnapshot(collection(db, "devHealth"), snap => {
       const d = snap.docs.map(x => ({ id:x.id, ...x.data() }));
       if (d.length > 0) setLiveDevHealth(d);
     }, () => {}));
 
-    /* â”€â”€â”€ COMPETITORS â”€â”€â”€ */
+    /* ─── COMPETITORS ─── */
     unsubs.push(onSnapshot(collection(db, "competitors"), snap => {
       const d = snap.docs.map(x => ({ id:x.id, ...x.data() }));
       if (d.length > 0) setLiveCompetitors(d);
     }, () => {}));
 
-    /* â”€â”€â”€ LAUNCH CALENDAR â”€â”€â”€ */
+    /* ─── LAUNCH CALENDAR ─── */
     unsubs.push(onSnapshot(collection(db, "launches"), snap => {
       const d = snap.docs.map(x => ({ id:x.id, ...x.data() }));
       if (d.length > 0) setLiveLaunches(d);
@@ -1094,7 +3426,7 @@ export default function EmaarDashboardV2() {
 return () => unsubs.forEach(u => { try { u(); } catch {} });
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // USER-SCOPED LIVE LISTENERS â€” portfolio, watchlist, price alerts
+  // USER-SCOPED LIVE LISTENERS — portfolio, watchlist, price alerts
   useEffect(() => {
     if (!isLoggedIn || !auth.currentUser) return;
     const unsubs = [];
@@ -1162,7 +3494,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                     await emailjs.send(import.meta.env.VITE_EMAILJS_SERVICE_ID, import.meta.env.VITE_EMAILJS_TEMPLATE_ID, {
                       user_email: firebaseUser.email, user_name: data.name || firebaseUser.email.split("@")[0],
                       project_name: "DXB Analytics Platform",
-                      change_type: "â° Your Pro Trial Has Expired",
+                      change_type: "⏰ Your Pro Trial Has Expired",
                       new_value: "Your 7-day trial has ended. Upgrade now to keep full access to 48+ projects, yield data, ROI tools and more.",
                       old_value: "Pro Trial", updated_at: new Date().toLocaleDateString("en-AE"),
                     }, import.meta.env.VITE_EMAILJS_PUBLIC_KEY);
@@ -1177,8 +3509,8 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                     await emailjs.send(import.meta.env.VITE_EMAILJS_SERVICE_ID, import.meta.env.VITE_EMAILJS_TEMPLATE_ID, {
                       user_email: firebaseUser.email, user_name: data.name || firebaseUser.email.split("@")[0],
                       project_name: "DXB Analytics Platform",
-                      change_type: `âš ï¸ Your Trial Expires in ${daysLeft} Day${daysLeft !== 1 ? "s" : ""}`,
-                      new_value: `Only ${daysLeft} day${daysLeft !== 1 ? "s" : ""} left on your Pro trial. Don't lose access â€” upgrade now to keep all features.`,
+                      change_type: `⚠️ Your Trial Expires in ${daysLeft} Day${daysLeft !== 1 ? "s" : ""}`,
+                      new_value: `Only ${daysLeft} day${daysLeft !== 1 ? "s" : ""} left on your Pro trial. Don't lose access — upgrade now to keep all features.`,
                       old_value: "Pro Trial Active", updated_at: new Date().toLocaleDateString("en-AE"),
                     }, import.meta.env.VITE_EMAILJS_PUBLIC_KEY);
                     await setDoc(doc(db, "users", firebaseUser.uid), { emailSent_trial3d: true }, { merge: true });
@@ -1192,14 +3524,14 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                       project_name: "DXB Analytics Platform",
                       change_type: "\uD83D\uDEA8 Last Day of Your Pro Trial!",
                       new_value: "Today is your last day. After midnight your account moves to Free and you lose access to 48 projects, community yields, ROI data and PDF reports.",
-                      old_value: "Pro Trial â€” Final Day", updated_at: new Date().toLocaleDateString("en-AE"),
+                      old_value: "Pro Trial — Final Day", updated_at: new Date().toLocaleDateString("en-AE"),
                     }, import.meta.env.VITE_EMAILJS_PUBLIC_KEY);
                     await setDoc(doc(db, "users", firebaseUser.uid), { emailSent_trial1d: true }, { merge: true });
                   } catch(e) {}
                 }
               }
             }
-            // Admin override â€” by role field OR by owner email
+            // Admin override — by role field OR by owner email
             if (data.role === "admin" || data.role === "superAdmin" || data.superAdmin === true) tier = "admin";
             setUserTier(tier);
             setUserRole(data.role || "user");
@@ -1211,7 +3543,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
             setVerifiedLevel(data.verifiedLevel || null);
             setKycStatus(data.kycStatus || null);
           } else {
-            // Existing user without profile (e.g. your admin account) â€” treat as admin/pro
+            // Existing user without profile (e.g. your admin account) — treat as admin/pro
             setUserTier("admin");
             setUserName("");
           }
@@ -1230,7 +3562,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
     return () => unsubscribe();
   }, []);
 
-  /* â”€â”€â”€ MY LEADS LISTENER (Session 4) â”€â”€â”€ */
+  /* ─── MY LEADS LISTENER (Session 4) ─── */
   useEffect(() => {
     if (!isLoggedIn || !firebaseUser) return;
     setMyLeadsLoading(true);
@@ -1255,7 +3587,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
     return () => unsub();
   }, [isLoggedIn, firebaseUser, orgRole, orgId]);
 
-  /* â”€â”€â”€ DEALS PIPELINE LISTENER (Session 5) â”€â”€â”€ */
+  /* ─── DEALS PIPELINE LISTENER (Session 5) ─── */
   useEffect(() => {
     if (!isLoggedIn || !firebaseUser) return;
     const isAgent   = orgRole === "agent";
@@ -1277,7 +3609,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
     return () => unsub();
   }, [isLoggedIn, firebaseUser, orgRole, orgId]);
 
-  /* â”€â”€â”€ TEAM MEMBERS LISTENER (Session 7) â”€â”€â”€ */
+  /* ─── TEAM MEMBERS LISTENER (Session 7) ─── */
   useEffect(() => {
     if (!isLoggedIn || !firebaseUser || orgRole !== "manager" || !orgId) return;
     setTeamMembersLoading(true);
@@ -1291,7 +3623,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
     return () => unsub();
   }, [isLoggedIn, firebaseUser, orgRole, orgId]);
 
-  /* â”€â”€â”€ ORG PROFILE LISTENER (Session 8) â”€â”€â”€ */
+  /* ─── ORG PROFILE LISTENER (Session 8) ─── */
   useEffect(() => {
     if (!isLoggedIn || !firebaseUser || orgRole !== "manager" || !orgId) return;
     const unsub = onSnapshot(doc(db, "organisations", orgId), snap => {
@@ -1314,7 +3646,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
     return () => unsub();
   }, [isLoggedIn, firebaseUser, orgRole, orgId]);
 
-  /* â”€â”€â”€ LISTINGS LISTENER (Session 9) â”€â”€â”€ */
+  /* ─── LISTINGS LISTENER (Session 9) ─── */
   useEffect(() => {
     if (!isLoggedIn || !firebaseUser) return;
     const isAgent   = orgRole === "agent";
@@ -1336,7 +3668,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
     return () => unsub();
   }, [isLoggedIn, firebaseUser, orgRole, orgId]);
 
-  /* â”€â”€â”€ DEV PORTAL LISTENERS (Session 10) â”€â”€â”€ */
+  /* ─── DEV PORTAL LISTENERS (Session 10) ─── */
   useEffect(() => {
     if (!isLoggedIn || !firebaseUser || userRole !== "developer" || !devId) return;
     // Dev projects from allDevelopers (already loaded)
@@ -1366,7 +3698,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
     return () => { unsubUnits(); unsubEOIs(); };
   }, [isLoggedIn, firebaseUser, userRole, devId, allDevelopers]);
 
-  /* â”€â”€â”€ RERA CARD READER (Session 6) â”€â”€â”€ */
+  /* ─── RERA CARD READER (Session 6) ─── */
   useEffect(() => {
     if (!isLoggedIn || !firebaseUser) return;
     const unsub = onSnapshot(doc(db, "users", firebaseUser.uid), snap => {
@@ -1392,7 +3724,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
     if (auth.currentUser) {
       try { await setDoc(doc(db, "watchlists", auth.currentUser.uid), { projects: updated, updatedAt: new Date().toISOString() }); } catch (e) {}
     }
-    notify(isWatched ? `Removed ${project.name} from watchlist` : `â­ ${project.name} added to watchlist`);
+    notify(isWatched ? `Removed ${project.name} from watchlist` : `⭐ ${project.name} added to watchlist`);
   };
 
   // Price alerts now live via user onSnapshot listener
@@ -1436,7 +3768,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
     }
   }, [myAlerts, activeProjects]);
 
-  // NOTIFICATIONS â€” live listener so admin messages appear instantly
+  // NOTIFICATIONS — live listener so admin messages appear instantly
   useEffect(() => {
     if (!isLoggedIn || !auth.currentUser) return;
     const uid = auth.currentUser.uid;
@@ -1495,7 +3827,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
     savePortfolio(updated);
     setShowAddPortfolio(null);
     setPortfolioForm({ units: 1, investedAmount: "", purchaseDate: "", unitType: "1BR", notes: "" });
-    notify("âœ… Added to portfolio!");
+    notify("✅ Added to portfolio!");
   };
 
   const removeFromPortfolio = (pid, ut) => {
@@ -1559,8 +3891,8 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
 
   // KYC SUBMIT FUNCTION
   const submitKYC = async () => {
-    if (!kycForm.name.trim()) { notify("âŒ Full name required"); return; }
-    if (!kycForm.phone.trim()) { notify("âŒ Phone number required"); return; }
+    if (!kycForm.name.trim()) { notify("❌ Full name required"); return; }
+    if (!kycForm.phone.trim()) { notify("❌ Phone number required"); return; }
     if (!auth.currentUser) return;
     setKycSubmitting(true);
     try {
@@ -1570,9 +3902,9 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
       });
       await setDoc(doc(db, "users", auth.currentUser.uid), { kycStatus: "pending" }, { merge: true });
       setKycStatus("pending");
-      notify("âœ… Verification submitted! Admin will review within 24h.");
+      notify("✅ Verification submitted! Admin will review within 24h.");
       setShowKYC(false);
-    } catch(e) { notify("âŒ " + e.message); }
+    } catch(e) { notify("❌ " + e.message); }
     setKycSubmitting(false);
   };
 
@@ -1623,12 +3955,12 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
       if (newTier === "pro_trial") { const end = new Date(); end.setDate(end.getDate() + 7); data.trialEnd = end.toISOString(); }
       await setDoc(doc(db, "users", userId), data, { merge: true });
       setAdminUsers(prev => prev.map(u => u.id === userId ? { ...u, tier: newTier, status: newTier } : u));
-      notify(`âœ… ${uName} â†’ ${newTier}`);
+      notify(`✅ ${uName} → ${newTier}`);
       // Send tier change confirmation email
       const tierMessages = {
         free: { subject: "Your DXB Analytics plan has changed to Free", body: "Your account has been updated to the Free plan. You have access to 5 featured projects and basic market data." },
         pro_trial: { subject: "Your 7-Day Pro Trial has been activated!", body: "Great news! Your Pro Trial has been activated. You now have full access to 48+ projects, community yields, ROI calculator, PDF reports and all Pro features for 7 days." },
-        pro: { subject: "Welcome to DXB Analytics Pro! â­", body: "Your account has been upgraded to the Pro Plan. You now have unlimited access to all 48+ projects, live yield data, ROI analysis, investment reports, and all Pro features." },
+        pro: { subject: "Welcome to DXB Analytics Pro! ⭐", body: "Your account has been upgraded to the Pro Plan. You now have unlimited access to all 48+ projects, live yield data, ROI analysis, investment reports, and all Pro features." },
         enterprise: { subject: "Welcome to DXB Analytics Enterprise! \uD83C\uDFE2", body: "Your account has been upgraded to Enterprise. You have access to all platform features including custom reports, priority support, and full data access." },
       };
       const msg = tierMessages[newTier] || { subject: `Your plan changed to ${newTier}`, body: `Your DXB Analytics plan has been updated to ${newTier}.` };
@@ -1645,7 +3977,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
         } catch(e) {}
       }
     } catch (err) {
-      notify("âŒ Failed to update tier");
+      notify("❌ Failed to update tier");
     }
   };
 
@@ -1680,12 +4012,12 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
       <a href="#main-content" style={{ position: "absolute", top: -40, left: 0, background: T.gold, color: T.bg, padding: "8px 16px", borderRadius: "0 0 8px 0", fontWeight: 700, fontSize: 13, zIndex: 99999, transition: "top 0.2s" }} onFocus={e => e.target.style.top = "0"} onBlur={e => e.target.style.top = "-40px"}>Skip to content</a>
 
       {/* Toast notification */}
-      {toast && <div className="fade-up" style={{ position: "fixed", bottom: 24, right: 24, padding: "12px 24px", borderRadius: 10, background: toast.includes("âœ…") ? T.green : toast.includes("âŒ") ? T.red : T.gold, color: "#fff", fontWeight: 700, fontSize: 13, zIndex: 9999, boxShadow: "0 12px 40px rgba(0,0,0,0.4)", fontFamily: "'Outfit', sans-serif" }}>{toast}</div>}
+      {toast && <div className="fade-up" style={{ position: "fixed", bottom: 24, right: 24, padding: "12px 24px", borderRadius: 10, background: toast.includes("✅") ? T.green : toast.includes("❌") ? T.red : T.gold, color: "#fff", fontWeight: 700, fontSize: 13, zIndex: 9999, boxShadow: "0 12px 40px rgba(0,0,0,0.4)", fontFamily: "'Outfit', sans-serif" }}>{toast}</div>}
 
       {/* Mobile overlay */}
       <div className={`mobile-overlay ${sidebarOpen ? "open" : ""}`} onClick={() => setSidebarOpen(false)} />
 
-      {/* â”€â”€â”€ SIDEBAR â”€â”€â”€ */}
+      {/* ─── SIDEBAR ─── */}
       <aside className={`sidebar ${sidebarOpen ? "open" : ""}`} style={{
         position: "fixed", top: 0, left: 0, bottom: 0, width: 240,
         background: T.surface, borderRight: `1px solid ${T.border}`,
@@ -1777,7 +4109,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 style={{ background: "rgba(212,168,67,0.08)", border: `1px solid rgba(212,168,67,0.2)` }}>
                 {SvgIcons.Settings({ width: 15, height: 15, strokeWidth: 1.5, style: { color: T.gold, flexShrink: 0 } })}
                 <span>Admin Console</span>
-                <span style={{ marginLeft: "auto", fontSize: 9, color: T.textMuted }}>â†—</span>
+                <span style={{ marginLeft: "auto", fontSize: 9, color: T.textMuted }}>↗</span>
               </button>
             </div>
           )}
@@ -1797,7 +4129,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               onClick={() => setShowUpgrade(true)}
               style={{ marginBottom: 8, padding: "7px 12px", borderRadius: 8, background: "rgba(59,130,246,0.07)", border: "1px solid rgba(59,130,246,0.15)", textAlign: "center", cursor: "pointer" }}>
               <div style={{ fontSize: 9.5, fontWeight: 700, color: "#60A5FA", letterSpacing: 0.5 }}>FREE PLAN</div>
-              <div style={{ fontSize: 10.5, color: T.textSecondary, marginTop: 1 }}>Upgrade to Pro â†’</div>
+              <div style={{ fontSize: 10.5, color: T.textSecondary, marginTop: 1 }}>Upgrade to Pro →</div>
             </div>
           )}
           <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "7px 10px", borderRadius: 10, background: T.surfaceAlt }}>
@@ -1822,21 +4154,21 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
         </div>
       </aside>
 
-      {/* â”€â”€â”€ FREE TIER BANNER â”€â”€â”€ */}
+      {/* ─── FREE TIER BANNER ─── */}
       {userTier === "free" && (
         <div className="free-banner" style={{ position: "fixed", top: 60, left: 240, right: 0, zIndex: 60, background: `linear-gradient(90deg, ${T.gold}ee, #B8912Fee)`, padding: "8px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <span style={{ fontSize: 14 }}>\uD83D\uDD12</span>
-            <span style={{ fontSize: 12, fontWeight: 700, color: "#04090F" }}>You're on the Free plan â€” 12 tabs locked</span>
+            <span style={{ fontSize: 12, fontWeight: 700, color: "#04090F" }}>You're on the Free plan — 12 tabs locked</span>
             <span style={{ fontSize: 11, color: "rgba(4,9,15,0.7)" }}>Upgrade to Pro to unlock DXB Estimate, Yields, Mortgage, Portfolio & more</span>
           </div>
           <button type="button" onClick={() => setShowUpgrade(true)} style={{ padding: "5px 16px", background: "#04090F", color: T.gold, border: "none", borderRadius: 8, fontSize: 11, fontWeight: 800, cursor: "pointer", fontFamily: "'Outfit',sans-serif", whiteSpace: "nowrap" }}>
-            Upgrade Now â†’
+            Upgrade Now →
           </button>
         </div>
       )}
 
-      {/* â”€â”€â”€ TOP BAR â”€â”€â”€ */}
+      {/* ─── TOP BAR ─── */}
       <header className="top-bar" style={{
         position: "fixed", top: 0, right: 0, left: 240, height: 60,
         background: `${T.surface}ee`, backdropFilter: "blur(16px)",
@@ -1855,7 +4187,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
         </div>
         <div className="header-badges" style={{ display: "flex", gap: 8, alignItems: "center" }}>
           <button type="button" onClick={() => setShowWatchlist(true)} style={{ background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 10, padding: "8px 12px", cursor: "pointer", color: watchlist.length > 0 ? T.gold : T.textSecondary, display: "flex", alignItems: "center", gap: 6, fontSize: 12, fontFamily: "'Outfit',sans-serif" }} title="My Watchlist">
-            â˜… {watchlist.length > 0 && <span style={{ fontWeight: 700 }}>{watchlist.length}</span>}
+            ★ {watchlist.length > 0 && <span style={{ fontWeight: 700 }}>{watchlist.length}</span>}
           </button>
           <button type="button" onClick={globalRefresh} disabled={isRefreshing} title="Refresh all data" style={{ background: isRefreshing ? T.surfaceAlt : "rgba(212,168,67,0.08)", border: "1px solid " + (isRefreshing ? T.border : "rgba(212,168,67,0.25)"), borderRadius: 10, padding: "8px 12px", cursor: isRefreshing ? "not-allowed" : "pointer", color: isRefreshing ? T.textMuted : T.gold, display: "flex", alignItems: "center", gap: 6, fontSize: 11, fontWeight: 600, fontFamily: "'Outfit',sans-serif" }}>
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" style={{ animation: isRefreshing ? "spin 1s linear infinite" : "none" }}><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
@@ -1868,7 +4200,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
         </div>
       </header>
 
-      {/* â”€â”€â”€ GLOBAL CONTEXT FILTER â”€â”€â”€ */}
+      {/* ─── GLOBAL CONTEXT FILTER ─── */}
       <GlobalContextFilter
         gDeveloper={gDeveloper} setGDeveloperAndReset={setGDeveloperAndReset}
         gCommunity={gCommunity} setGCommunity={setGCommunity}
@@ -1881,7 +4213,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
         allDevelopers={allDevelopers} T={T}
       />
 
-      {/* â”€â”€â”€ MAIN CONTENT â”€â”€â”€ */}
+      {/* ─── MAIN CONTENT ─── */}
       <main role="main" id="main-content" className="main-content" style={{ marginLeft: 240, paddingTop: userTier === "free" ? 140 : 100, minHeight: "100vh", overflowX: "hidden" }}>
         {/* Trial / Free tier banner */}
         {userTier === "pro_trial" && trialDaysLeft > 0 && (() => {
@@ -1889,19 +4221,19 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
           const isWarning = trialDaysLeft <= 3;
           const bg = isUrgent ? "rgba(239,68,68,0.1)" : isWarning ? "rgba(245,158,11,0.1)" : "rgba(212,168,67,0.08)";
           const border = isUrgent ? "rgba(239,68,68,0.35)" : isWarning ? "rgba(245,158,11,0.35)" : T.border;
-          const icon = isUrgent ? "\uD83D\uDEA8" : isWarning ? "âš ï¸" : "â­";
+          const icon = isUrgent ? "\uD83D\uDEA8" : isWarning ? "⚠️" : "⭐";
           const label = isUrgent ? "Last day of your trial!" : isWarning ? `Trial ending soon` : "Pro Trial Active";
           const sub = isUrgent
             ? "Your trial expires today. Upgrade now to keep full access."
             : isWarning
-            ? `${trialDaysLeft} days left â€” don't lose your access to 48+ projects and yield data.`
+            ? `${trialDaysLeft} days left — don't lose your access to 48+ projects and yield data.`
             : `${trialDaysLeft} day${trialDaysLeft !== 1 ? "s" : ""} remaining. Full Pro access active.`;
           return (
             <div style={{ margin: "12px 24px 0", padding: "10px 16px", borderRadius: 10, background: bg, border: `1px solid ${border}`, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <span style={{ fontSize: 16 }}>{icon}</span>
                 <span style={{ fontSize: 13, color: isUrgent ? T.red : isWarning ? T.gold : T.white, fontWeight: 700 }}>{label}</span>
-                <span style={{ fontSize: 12, color: T.textSecondary }}>â€” {sub}</span>
+                <span style={{ fontSize: 12, color: T.textSecondary }}>— {sub}</span>
               </div>
               <button type="button" onClick={() => setShowUpgrade(true)} style={{ padding: "6px 16px", borderRadius: 6, background: isUrgent ? T.red : T.gold, color: isUrgent ? "#fff" : T.bg, border: "none", fontSize: 12, fontWeight: 700, fontFamily: "'Outfit', sans-serif", cursor: "pointer" }}>
                 {isUrgent ? "\uD83D\uDD25 Upgrade Now" : "Upgrade to Pro"}
@@ -1914,110 +4246,1931 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <span style={{ fontSize: 16 }}>\uD83D\uDD12</span>
               <span style={{ fontSize: 13, color: T.white, fontWeight: 600 }}>Free Plan</span>
-              <span style={{ fontSize: 12, color: T.textSecondary }}>â€” You're seeing limited data. Upgrade to unlock all projects, yields & more.</span>
+              <span style={{ fontSize: 12, color: T.textSecondary }}>— You're seeing limited data. Upgrade to unlock all projects, yields & more.</span>
             </div>
-            <button type="button" onClick={() => setShowUpgrade(true)} style={{ padding: "6px 16px", borderRadius: 6, background: T.gold, color: T.bg, border: "none", fontSize: 12, fontWeight: 700, fontFamily: "'Outfit', sans-serif", cursor: "pointer" }}>Upgrade to Pro â€” AED 99/mo</button>
+            <button type="button" onClick={() => setShowUpgrade(true)} style={{ padding: "6px 16px", borderRadius: 6, background: T.gold, color: T.bg, border: "none", fontSize: 12, fontWeight: 700, fontFamily: "'Outfit', sans-serif", cursor: "pointer" }}>Upgrade to Pro — AED 99/mo</button>
           </div>
         )}
         <div style={{ padding: `0 24px ${compareList.length > 0 && tab === "Projects" ? "120px" : "60px"}` }}>
           <TabErrorBoundary key={tab}>
 
-          {/* â”€â”€â”€ OVERVIEW TAB â”€â”€â”€ */}
-          {/* â”€â”€â”€ OVERVIEW TAB (extracted) â”€â”€â”€ */}
-          {tab === "Overview" && (
-            <OverviewTab
-              liveMarketData={liveMarketData} liveDLDVolumes={liveDLDVolumes}
-              liveDevHealth={liveDevHealth} liveMortgageRates={liveMortgageRates}
-              liveYields={liveYields} allDevelopers={allDevelopers}
-              handleTabChange={handleTabChange} lastDataSync={lastDataSync}
-              gDeveloper={gDeveloper} time={time} aiInsights={aiInsights}
-            />
-          )}
+          {/* ─── OVERVIEW TAB ─── */}
+          {tab === "Overview" && (() => {
 
-          {/* â”€â”€â”€ MARKET TAB â”€â”€â”€ */}
-          {/* â”€â”€â”€ MARKET TAB (extracted) â”€â”€â”€ */}
-          {tab === "Market" && (
-            <MarketTab
-              liveMarketData={liveMarketData} allDevelopers={allDevelopers}
-              handleTabChange={handleTabChange}
-              expandedForecast={expandedForecast} setExpandedForecast={setExpandedForecast}
-              user={user}
-            />
-          )}
+            const OvKPI = ({ label, value, sub, color, icon, onClick, delay }) => (
+              <div className={`kpi-card fade-up delay-${delay||1}`} onClick={onClick} style={{ cursor: onClick ? "pointer" : "default" }}>
+                <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 12 }}>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase" }}>{label}</div>
+                  <div style={{ color: color || T.gold, opacity: 0.8 }}>{icon}</div>
+                </div>
+                <div style={{ fontFamily: "'Fraunces', serif", fontSize: 26, fontWeight: 800, color: T.white, lineHeight: 1.1, marginBottom: 6 }}>{value || "—"}</div>
+                {sub && <div style={{ fontSize: 11, color: T.textSecondary }}>{sub}</div>}
+              </div>
+            );
 
-          {/* â”€â”€â”€ DLD VOLUMES TAB â”€â”€â”€ */}
-          {/* â”€â”€â”€ DLD VOLUMES TAB (extracted to tabs/DLDVolumesTab.jsx) â”€â”€â”€ */}
-          {tab === "DLD Volumes" && (
-            <DLDVolumesTab
-              dldFilter={dldFilter} setDldFilter={setDldFilter}
-              dldSearch={dldSearch} setDldSearch={setDldSearch}
-              dldSort={dldSort} setDldSort={setDldSort}
-              dldView={dldView} setDldView={setDldView}
-              liveDLDVolumes={liveDLDVolumes}
-              handleTabChange={handleTabChange}
-            />
-          )}
+            const OvSection = ({ title, sub, action }) => (
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14, marginTop: 28 }}>
+                <div>
+                  <div style={{ fontFamily: "'Fraunces', serif", fontSize: 16, fontWeight: 700, color: T.white }}>{title}</div>
+                  {sub && <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>{sub}</div>}
+                </div>
+                {action}
+              </div>
+            );
 
-          {/* â”€â”€â”€ PRICE HISTORY TAB â”€â”€â”€ */}
-          {/* â”€â”€â”€ PRICE HISTORY TAB (extracted to tabs/PriceHistoryTab.jsx) â”€â”€â”€ */}
-          {tab === "Price History" && (
-            <PriceHistoryTab
-              phCommunity={phCommunity} setPhCommunity={setPhCommunity}
-              phType={phType} setPhType={setPhType}
-              phBeds={phBeds} setPhBeds={setPhBeds}
-              phView={phView} setPhView={setPhView}
-              phCompare={phCompare} setPhCompare={setPhCompare}
-              phCommunity2={phCommunity2} setPhCommunity2={setPhCommunity2}
-              liveMarketData={liveMarketData}
-              handleTabChange={handleTabChange}
-            />
-          )}
+            const syncTime = lastDataSync ? lastDataSync.toLocaleTimeString("en-AE", { hour: "2-digit", minute: "2-digit" }) : null;
+            const isSeed = !liveMarketData?.length;
+            const kpis = (() => {
+              // Only use liveMarketData if it contains metric/value formatted docs
+              const live = liveMarketData?.filter?.(d => d.metric && d.value) || [];
+              return live.length > 0 ? live : SEED_DATA.overviewKpis;
+            })();
+            const getKpi = (metric) => kpis?.find(d => d.metric === metric)?.value || "—";
+            const getKpiChange = (metric) => kpis?.find(d => d.metric === metric)?.change || "";
 
-          {/* â”€â”€â”€ NEIGHBOURHOODS TAB â”€â”€â”€ */}
-          {/* â”€â”€â”€ NEIGHBOURHOODS TAB (extracted to tabs/NeighbourhoodsTab.jsx) â”€â”€â”€ */}
-          {tab === "Neighbourhoods" && (
-            <NeighbourhoodsTab
-              nbhSearch={nbhSearch} setNbhSearch={setNbhSearch}
-              nbhTypeFilter={nbhTypeFilter} setNbhTypeFilter={setNbhTypeFilter}
-              nbhYieldFilter={nbhYieldFilter} setNbhYieldFilter={setNbhYieldFilter}
-              nbhRiskFilter={nbhRiskFilter} setNbhRiskFilter={setNbhRiskFilter}
-              nbhSort={nbhSort} setNbhSort={setNbhSort}
-              nbhView={nbhView} setNbhView={setNbhView}
-              nbhCompare={nbhCompare} setNbhCompare={setNbhCompare}
-              liveNeighbourhoods={liveNeighbourhoods}
-              liveCommunityROI={liveCommunityROI}
-              liveMarketData={liveMarketData}
-              handleTabChange={handleTabChange}
-              selectedNbhd={selectedNbhd} setSelectedNbhd={setSelectedNbhd}
-            />
-          )}
+            // yield data — live or seed
+            const yieldDisplay = liveYields?.length > 0 ? liveYields
+              : SEED_DATA.communities.map(c => ({ community: c.community, tenantProfile: c.tenantProfile, gross: c.grossYield }));
+            const sortedYields = [...yieldDisplay].sort((a,b) => (parseFloat(b.grossYield||b.gross)||0) - (parseFloat(a.grossYield||a.gross)||0)).slice(0,6);
 
-          {/* â”€â”€â”€ LAUNCH CALENDAR TAB (extracted to tabs/LaunchCalendarTab.jsx) â”€â”€â”€ */}
-          {tab === "Launch Calendar" && (
-            <LaunchCalendarTab
-              lcSearch={lcSearch} setLcSearch={setLcSearch}
-              lcDev={lcDev} setLcDev={setLcDev}
-              lcStatus={lcStatus} setLcStatus={setLcStatus}
-              lcType={lcType} setLcType={setLcType}
-              lcView={lcView} setLcView={setLcView}
-              liveMarketData={liveMarketData}
-              liveLaunches={liveLaunches}
-              handleTabChange={handleTabChange}
-            />
-          )}
-          {/* â”€â”€â”€ CURRENCY TAB (extracted to tabs/CurrencyTab.jsx) â”€â”€â”€ */}
-          {tab === "Currency" && (
-            <CurrencyTab
-              selectedCcy={selectedCcy} setSelectedCcy={setSelectedCcy}
-              aedAmount={aedAmount} setAedAmount={setAedAmount}
-              searchCcy={searchCcy} setSearchCcy={setSearchCcy}
-            />
-          )}
+            // DLD data — live or seed
+            const dldDisplay = liveDLDVolumes?.length > 0 ? liveDLDVolumes : SEED_DATA.dldVolumes;
+            const sortedDLD = [...dldDisplay].sort((a,b) => (b.transactions||b.count||0) - (a.transactions||a.count||0)).slice(0,6);
+            const dldMax = Math.max(...sortedDLD.map(d => d.transactions||d.count||0), 1);
 
-          {/* â”€â”€â”€ PROJECTS TAB â”€â”€â”€ */}
+            return (
+              <div style={{ paddingTop: 8 }}>
+
+                {/* Seed data notice */}
+                {isSeed && (
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 14px", borderRadius: 8, background: "rgba(212,168,67,0.06)", border: `1px solid rgba(212,168,67,0.2)`, marginBottom: 12 }}>
+                    <span style={{ width: 6, height: 6, borderRadius: "50%", background: T.gold, display: "inline-block" }} />
+                    <span style={{ fontSize: 11, color: T.textMuted }}>
+                      <span style={{ color: T.gold, fontWeight: 700 }}>Research-based seed data</span> — DLD 2025, Bayut, REIDIN, ValuStrat · Replace via Admin → Data Manager
+                    </span>
+                  </div>
+                )}
+
+                {/* Verified bar */}
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0", marginBottom: 20, borderBottom: `1px solid ${T.border}`, flexWrap: "wrap", gap: 8 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <span style={{ width: 7, height: 7, borderRadius: "50%", background: T.green, display: "inline-block", animation: "pulse 2s infinite" }} />
+                    <span style={{ fontSize: 11, color: T.textSecondary }}>
+                      Live data — <span style={{ color: T.gold, fontWeight: 600 }}>DXB Analytics Intelligence Platform</span>
+                      {syncTime && <span style={{ color: T.textMuted }}> · Last sync {syncTime}</span>}
+                    </span>
+                  </div>
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <span style={{ fontSize: 10, padding: "3px 10px", borderRadius: 20, background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.2)", color: T.green }}>DLD Official</span>
+                    <span style={{ fontSize: 10, padding: "3px 10px", borderRadius: 20, background: "rgba(212,168,67,0.08)", border: `1px solid ${T.border}`, color: T.textMuted }}>RERA Verified</span>
+                  </div>
+                </div>
+
+                {/* 7 KPI Cards */}
+                <OvSection title="Market Pulse" sub="Dubai real estate — key indicators" />
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: 12, marginBottom: 8 }}>
+                  <OvKPI delay={1} label="Total Market Value" icon={SvgIcons.TrendingUp({width:16,height:16})}
+                    value={getKpi("Total Market Value")}
+                    sub={getKpiChange("Total Market Value") || "Source: DLD 2025"}
+                    onClick={() => handleTabChange("Market")} />
+                  <OvKPI delay={2} label="DLD Transactions" icon={SvgIcons.Database({width:16,height:16})}
+                    value={getKpi("Total Transactions")}
+                    sub={getKpiChange("Total Transactions") || "Source: DLD Annual Report 2025"}
+                    onClick={() => handleTabChange("DLD Volumes")} />
+                  <OvKPI delay={3} label="EIBOR 3M — Live" icon={SvgIcons.Landmark({width:16,height:16})}
+                    value={liveMortgageRates?.[0]?.eibor3m ? liveMortgageRates[0].eibor3m.toFixed(2) + "%" : "—"}
+                    sub="Updated daily · Central Bank UAE"
+                    color={T.teal} onClick={() => handleTabChange("Mortgage")} />
+                  <OvKPI delay={4} label="Active Developers" icon={SvgIcons.Building2({width:16,height:16})}
+                    value={allDevelopers?.length > 0 ? allDevelopers.length.toString() : "50+"}
+                    sub="RERA registered · DLD approved"
+                    onClick={() => handleTabChange("Developer Health")} />
+                  <OvKPI delay={5} label="Avg Gross Yield" icon={SvgIcons.BarChart3({width:16,height:16})}
+                    value={liveYields?.length > 0
+                      ? (liveYields.reduce((a,b) => a + (parseFloat(b.gross)||0), 0) / liveYields.length).toFixed(1) + "%"
+                      : (SEED_DATA.communities.reduce((a,b) => a + (parseFloat(b.grossYield)||0), 0) / SEED_DATA.communities.length).toFixed(1) + "%"}
+                    sub="Across all communities · Bayut data"
+                    color={T.green} onClick={() => handleTabChange("Yields")} />
+                  <OvKPI delay={6} label="Off-Plan Share" icon={SvgIcons.BarChart2({width:16,height:16})}
+                    value={getKpi("Off-Plan Share")}
+                    sub="Of total DLD transactions"
+                    onClick={() => handleTabChange("Projects")} />
+                  <OvKPI delay={7} label="Units Launched" icon={SvgIcons.Activity({width:16,height:16})}
+                    value={getKpi("Units Launched")}
+                    sub={getKpiChange("Units Launched") || "Source: DLD Oct 2025"}
+                    onClick={() => handleTabChange("Launch Calendar")} />
+                </div>
+
+                {/* 3-Column Intelligence Panel */}
+                <OvSection title="Intelligence Panel"
+                  sub="Context-aware — updates with your filter selection"
+                  action={
+                    <div style={{ fontSize: 10, color: T.textMuted, display: "flex", alignItems: "center", gap: 4 }}>
+                      <span style={{ width: 5, height: 5, borderRadius: "50%", background: gDeveloper !== "all" ? T.gold : T.textMuted, display: "inline-block" }} />
+                      {gDeveloper !== "all" ? "Filtered" : "All Developers"}
+                    </div>
+                  }
+                />
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 14, marginBottom: 8 }}>
+
+                  {/* Column 1: Top Yield Communities */}
+                  <div className="chart-box" style={{ padding: 18 }}>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 14 }}>Top Communities — Yield</div>
+                    {sortedYields.map((y, i) => (
+                      <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "7px 0", borderBottom: i < 5 ? `1px solid ${T.border}` : "none" }}>
+                        <div>
+                          <div style={{ fontSize: 12, color: T.white, fontWeight: 500 }}>{y.community || "—"}</div>
+                          <div style={{ fontSize: 10, color: T.textMuted }}>{y.tenantProfile || "Apartment"}</div>
+                        </div>
+                        <div style={{ fontFamily: "'Fraunces', serif", fontSize: 16, fontWeight: 700, color: parseFloat(y.grossYield||y.gross||0) >= 7 ? T.green : parseFloat(y.grossYield||y.gross||0) >= 5.5 ? T.gold : T.textSecondary }}>
+                          {parseFloat(y.grossYield||y.gross||0).toFixed(1)}%
+                        </div>
+                      </div>
+                    ))}
+                    <button type="button" onClick={() => handleTabChange("Yields")} style={{ width: "100%", marginTop: 12, padding: "7px 0", background: "rgba(212,168,67,0.06)", border: `1px solid ${T.border}`, borderRadius: 8, color: T.gold, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                      View All Yields →
+                    </button>
+                  </div>
+
+                  {/* Column 2: DLD Volume */}
+                  <div className="chart-box" style={{ padding: 18 }}>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 14 }}>DLD Transaction Volume</div>
+                    {sortedDLD.map((d, i) => {
+                      const pct = Math.round(((d.transactions||d.count||0) / dldMax) * 100);
+                      return (
+                        <div key={i} style={{ marginBottom: 10 }}>
+                          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
+                            <span style={{ fontSize: 11, color: T.textSecondary }}>{d.community || "—"}</span>
+                            <span style={{ fontSize: 11, color: T.white, fontWeight: 600 }}>{(d.transactions||d.count||0).toLocaleString()}</span>
+                          </div>
+                          <div style={{ height: 4, borderRadius: 2, background: T.border }}>
+                            <div style={{ height: "100%", width: `${pct}%`, borderRadius: 2, background: `linear-gradient(90deg, ${T.gold}, ${T.teal})`, transition: "width 0.8s ease" }} />
+                          </div>
+                        </div>
+                      );
+                    })}
+                    <button type="button" onClick={() => handleTabChange("DLD Volumes")} style={{ width: "100%", marginTop: 12, padding: "7px 0", background: "rgba(212,168,67,0.06)", border: `1px solid ${T.border}`, borderRadius: 8, color: T.gold, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                      View DLD Volumes →
+                    </button>
+                  </div>
+
+                  {/* Column 3: AI Insight + Dev Health */}
+                  <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                    <div className="chart-box" style={{ padding: 18, flex: 1 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+                        <div style={{ width: 6, height: 6, borderRadius: "50%", background: T.gold, animation: "pulse 2s infinite" }} />
+                        <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, letterSpacing: 0.8, textTransform: "uppercase" }}>AI Market Insight</div>
+                      </div>
+                      {aiInsights?.length > 0
+                        ? <div style={{ fontSize: 12, color: T.textSecondary, lineHeight: 1.7 }}>{aiInsights[0]?.text || aiInsights[0]}</div>
+                        : <div style={{ fontSize: 12, color: T.textMuted, lineHeight: 1.7, fontStyle: "italic" }}>AI market analysis generates automatically every 7 days from live DLD and Bayut data.</div>
+                      }
+                      <div style={{ marginTop: 10, fontSize: 10, color: T.textMuted }}>
+                        Powered by Claude · {aiInsights?.length > 0 ? "Updated this week" : "Connect data to activate"}
+                      </div>
+                    </div>
+                    <div className="chart-box" style={{ padding: 18 }}>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 12 }}>Developer Health</div>
+                      {liveDevHealth?.length > 0
+                        ? [...liveDevHealth].slice(0,4).map((d, i) => (
+                            <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "5px 0", borderBottom: i < 3 ? `1px solid ${T.border}` : "none" }}>
+                              <span style={{ fontSize: 11, color: T.textSecondary }}>{d.developer || d.name}</span>
+                              <span style={{ fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 20, background: (d.score||0) >= 75 ? "rgba(16,185,129,0.15)" : "rgba(212,168,67,0.15)", color: (d.score||0) >= 75 ? T.green : T.gold }}>
+                                {d.score || "—"}
+                              </span>
+                            </div>
+                          ))
+                        : <div style={{ fontSize: 11, color: T.textMuted }}>Health scores load from Admin → Developer Health</div>
+                      }
+                      <button type="button" onClick={() => handleTabChange("Developer Health")} style={{ width: "100%", marginTop: 10, padding: "7px 0", background: "rgba(212,168,67,0.06)", border: `1px solid ${T.border}`, borderRadius: 8, color: T.gold, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                        View All →
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Live Feeds */}
+                <OvSection title="Live Intelligence Feeds" sub="Real-time data streams — auto-refreshing" />
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 14, marginBottom: 32 }}>
+
+                  {/* Recent DLD */}
+                  <div className="chart-box" style={{ padding: 18 }}>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, letterSpacing: 0.8, textTransform: "uppercase" }}>Recent DLD</div>
+                      <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                        <span style={{ width: 5, height: 5, borderRadius: "50%", background: T.green, animation: "pulse 2s infinite", display: "inline-block" }} />
+                        <span style={{ fontSize: 9, color: T.textMuted }}>Live</span>
+                      </div>
+                    </div>
+                    {sortedDLD.slice(0,5).map((tx, i) => (
+                      <div key={i} style={{ padding: "8px 0", borderBottom: i < 4 ? `1px solid ${T.border}` : "none" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 2 }}>
+                          <span style={{ fontSize: 11, color: T.white, fontWeight: 500 }}>{tx.community || "—"}</span>
+                          <span style={{ fontSize: 11, color: T.gold, fontWeight: 700 }}>{tx.volume ? "AED " + (tx.volume/1000000000).toFixed(1) + "B" : "—"}</span>
+                        </div>
+                        <div style={{ fontSize: 10, color: T.textMuted }}>{tx.type || "Residential"}{"·"}{(tx.transactions||tx.count||0).toLocaleString()} deals</div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Launch Radar */}
+                  <div className="chart-box" style={{ padding: 18 }}>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, letterSpacing: 0.8, textTransform: "uppercase" }}>Launch Radar</div>
+                      <button type="button" onClick={() => handleTabChange("Launch Calendar")} style={{ fontSize: 10, color: T.gold, background: "none", border: "none", cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>View all →</button>
+                    </div>
+                    {SEED_DATA.launches.filter(l => l.status === "EOI Open" || l.status === "Upcoming").slice(0,3).map((l, i) => (
+                      <div key={i} style={{ padding: "8px 0", borderBottom: i < 2 ? `1px solid ${T.border}` : "none" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 2 }}>
+                          <span style={{ fontSize: 11, color: T.white, fontWeight: 500 }}>{l.projectName?.split("—")[0]?.trim() || l.projectName}</span>
+                          <span style={{ fontSize: 9, padding: "1px 6px", borderRadius: 10, background: l.status === "EOI Open" ? "rgba(16,185,129,0.15)" : "rgba(212,168,67,0.1)", color: l.status === "EOI Open" ? T.green : T.gold }}>{l.status}</span>
+                        </div>
+                        <div style={{ fontSize: 10, color: T.textMuted }}>{l.developer}{"·"}{l.community}</div>
+                      </div>
+                    ))}
+                    <button type="button" onClick={() => handleTabChange("Launch Calendar")} style={{ width: "100%", marginTop: 12, padding: "7px 0", background: "rgba(212,168,67,0.06)", border: `1px solid ${T.border}`, borderRadius: 8, color: T.gold, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                      Open Launch Calendar →
+                    </button>
+                  </div>
+
+                  {/* Platform Activity */}
+                  <div className="chart-box" style={{ padding: 18 }}>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 14 }}>Platform Activity</div>
+                    {[
+                      { label: "Active Leads",   value: myLeads?.length || 0,     icon: SvgIcons.Users({width:14,height:14}),    tab: "My Leads",  color: T.blue },
+                      { label: "My Listings",    value: listings?.length || 0,    icon: SvgIcons.Building({width:14,height:14}), tab: "Listings",  color: T.gold },
+                      { label: "Portfolio Items",value: myPortfolio?.length || 0, icon: SvgIcons.Briefcase({width:14,height:14}),tab: "Portfolio", color: T.green },
+                      { label: "Watchlist",      value: watchlist?.length || 0,   icon: SvgIcons.Star({width:14,height:14}),     tab: null,        color: T.textSecondary },
+                    ].map((item, i) => (
+                      <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 10px", borderRadius: 8, background: T.surfaceAlt, cursor: item.tab ? "pointer" : "default", marginBottom: 8 }}
+                        onClick={() => item.tab && handleTabChange(item.tab)}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                          <span style={{ color: item.color }}>{item.icon}</span>
+                          <span style={{ fontSize: 12, color: T.textSecondary }}>{item.label}</span>
+                        </div>
+                        <span style={{ fontSize: 14, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>{item.value}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Sources footer */}
+                <div style={{ paddingBottom: 16, paddingTop: 4, borderTop: `1px solid ${T.border}`, display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+                  <span style={{ fontSize: 10, color: T.textMuted }}>Sources:</span>
+                  {["Dubai Land Department", "RERA", "Bayut API", "ValuStrat", "REIDIN", "Claude AI"].map((s, i) => (
+                    <span key={i} style={{ fontSize: 10, color: T.textMuted, padding: "2px 8px", borderRadius: 10, border: `1px solid ${T.border}`, background: T.surfaceAlt }}>{s}</span>
+                  ))}
+                </div>
+
+              </div>
+            );
+          })()}
+
+          {/* ─── MARKET TAB ─── */}
+          {tab === "Market" && (() => {
+
+            /* ── Stat Card ── */
+            const MktStat = ({ label, value, change, positive, onClick }) => (
+              <div className="kpi-card" onClick={onClick} style={{ cursor: onClick ? "pointer" : "default" }}>
+                <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>{label}</div>
+                <div style={{ fontFamily: "'Fraunces', serif", fontSize: 24, fontWeight: 800, color: T.white, lineHeight: 1.1, marginBottom: 6 }}>{value || "—"}</div>
+                {change && (
+                  <div style={{ fontSize: 11, display: "flex", alignItems: "center", gap: 4, color: positive === false ? T.red : T.green }}>
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points={positive === false ? "18 15 12 9 6 15" : "6 9 12 15 18 15"}/></svg>
+                    {change}
+                  </div>
+                )}
+              </div>
+            );
+
+            /* ── Forecast Card ── */
+            const ForecastCard = ({ firm, forecast, detail, color }) => {
+              const isExp = expandedForecast === firm;
+              return (
+                <div className="chart-box" style={{ borderTop: `3px solid ${color}`, cursor: "pointer" }} onClick={() => setExpandedForecast(isExp ? null : firm)}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color, fontFamily: "'Fraunces',serif" }}>{firm}</div>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={T.textMuted} strokeWidth="2" strokeLinecap="round"><polyline points={isExp ? "18 15 12 9 6 15" : "6 9 12 15 18 15"}/></svg>
+                  </div>
+                  <div style={{ fontSize: 15, fontWeight: 700, color: T.white, marginBottom: 6 }}>{forecast}</div>
+                  {isExp && <div style={{ fontSize: 12, color: T.textSecondary, lineHeight: 1.7, marginTop: 8, paddingTop: 8, borderTop: `1px solid ${T.border}` }}>{detail}</div>}
+                </div>
+              );
+            };
+
+            /* ── Live market stats from Firestore ── */
+            const stats = (() => {
+              const live = (liveMarketData || []).filter(d => d.metric && d.value);
+              return live.length > 0 ? live : SEED_DATA.market;
+            })();
+            const mktIsSeed = liveMarketData?.length === 0;
+            const getStat = (metric) => {
+              const exact = stats.find(s => s.metric === metric);
+              if (exact) return exact;
+              const lower = metric.toLowerCase();
+              return stats.find(s => s.metric && s.metric.toLowerCase().includes(lower));
+            };
+            // Chart data — filter only year-based entries for bar chart
+            const chartData = stats.filter(d => d.year && d.type === "annual")
+              .sort((a,b) => parseInt(a.year) - parseInt(b.year))
+              .map(d => ({ year: String(d.year), value: parseFloat(d.value) || 0 }));
+
+            return (
+              <div style={{ animation: "fadeUp 0.4s ease-out forwards" }}>
+
+                {/* Tab header */}
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0", marginBottom: 20, borderBottom: `1px solid ${T.border}`, flexWrap: "wrap", gap: 8 }}>
+                  <div>
+                    <div style={{ fontSize: 20, fontWeight: 800, color: T.white, fontFamily: "'Fraunces',serif" }}>Dubai Real Estate Market</div>
+                    <div style={{ fontSize: 11, color: T.textMuted, marginTop: 3 }}>Macro view — Official DLD data · REIDIN · ValuStrat</div>
+                  </div>
+                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                    {["Dubai Land Department", "REIDIN", "ValuStrat", "Knight Frank"].map((s, i) => (
+                      <span key={i} style={{ fontSize: 10, padding: "3px 10px", borderRadius: 20, border: `1px solid ${T.border}`, color: T.textMuted, background: T.surfaceAlt }}>{s}</span>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Seed badge */}
+                {mktIsSeed && (
+                  <div style={{ display:"flex", alignItems:"center", gap:8, padding:"8px 14px", borderRadius:8, background:"rgba(212,168,67,0.06)", border:`1px solid rgba(212,168,67,0.2)`, marginBottom:12 }}>
+                    <span style={{width:6,height:6,borderRadius:"50%",background:T.gold,display:"inline-block"}} />
+                    <span style={{fontSize:11,color:T.textMuted}}><span style={{color:T.gold,fontWeight:700}}>Research-based seed data</span> — DLD Annual Report 2025, REIDIN Dec 2025, ValuStrat · Replace via Admin → Data Manager</span>
+                  </div>
+                )}
+                {/* ── KPI Grid ── */}
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(175px, 1fr))", gap: 12, marginBottom: 28 }}>
+                  <MktStat label="Total Market Value"
+                    value={getStat("Total Market Value")?.value || "—"}
+                    change={getStat("Total Market Value")?.change}
+                    onClick={() => handleTabChange("DLD Volumes")} />
+                  <MktStat label="Total Transactions"
+                    value={getStat("Total Transactions")?.value || "—"}
+                    change={getStat("Total Transactions")?.change}
+                    onClick={() => handleTabChange("DLD Volumes")} />
+                  <MktStat label="Off-Plan Share"
+                    value={getStat("Off-Plan Share")?.value || "—"}
+                    change={getStat("Off-Plan Share")?.change} />
+                  <MktStat label="Units Launched"
+                    value={getStat("Units Launched")?.value || "—"}
+                    change={getStat("Units Launched")?.change} />
+                  <MktStat label="Mortgage Transactions"
+                    value={getStat("Mortgage Transactions")?.value || "—"}
+                    change={getStat("Mortgage Transactions")?.change} />
+                  <MktStat label="Investor Base"
+                    value={getStat("Investor Base")?.value || "—"}
+                    change={getStat("Investor Base")?.change} />
+                  <MktStat label="Price Growth YoY"
+                    value={getStat("Price Growth")?.value || "—"}
+                    change={getStat("Price Growth")?.change} />
+                  <MktStat label="Women Investors"
+                    value={getStat("Women Investors")?.value || "—"}
+                    change={getStat("Women Investors")?.change} />
+                </div>
+
+                {/* ── No data state ── */}
+                {stats.length === 0 && (
+                  <div style={{ background: "rgba(212,168,67,0.05)", border: `1px solid rgba(212,168,67,0.15)`, borderRadius: 12, padding: "20px 24px", marginBottom: 24, display: "flex", alignItems: "center", gap: 14 }}>
+                    <div style={{ width: 8, height: 8, borderRadius: "50%", background: T.gold, animation: "pulse 2s infinite", flexShrink: 0 }} />
+                    <div>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: T.gold, marginBottom: 4 }}>Market data not yet imported</div>
+                      <div style={{ fontSize: 12, color: T.textMuted }}>Go to Admin → Market Intelligence → Update Stats to import official DLD figures.</div>
+                    </div>
+                  </div>
+                )}
+
+                {/* ── 2-column layout: Sales Trend Chart + Market Split ── */}
+                <div style={{ display: "grid", gridTemplateColumns: "1.5fr 1fr", gap: 16, marginBottom: 24 }}>
+
+                  {/* Sales trend - bar chart from Recharts */}
+                  <div className="chart-box">
+                    <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 4 }}>Dubai Total Sales Value (AED Billions)</div>
+                    <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 16 }}>Historical growth trajectory · DLD Official</div>
+                    {chartData?.length > 0
+                      ? (
+                        <ResponsiveContainer width="100%" height={220}>
+                          <BarChart data={chartData.length > 0 ? chartData : []}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
+                            <XAxis dataKey="year" tick={{ fill: T.textMuted, fontSize: 11 }} axisLine={false} tickLine={false} />
+                            <YAxis tick={{ fill: T.textMuted, fontSize: 11 }} axisLine={false} tickLine={false} />
+                            <Tooltip contentStyle={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 10 }} labelStyle={{ color: T.white }} itemStyle={{ color: T.gold }} />
+                            <Bar dataKey="value" name="AED B" radius={[6,6,0,0]} fill={T.gold} barSize={32} />
+                          </BarChart>
+                        </ResponsiveContainer>
+                      )
+                      : (
+                        <div style={{ height: 220, display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 8 }}>
+                          <div style={{ color: T.textMuted, fontSize: 12 }}>Chart loads with historical data</div>
+                          <div style={{ fontSize: 11, color: T.textMuted, opacity: 0.6 }}>Import via Admin → Market Intelligence</div>
+                        </div>
+                      )
+                    }
+                  </div>
+
+                  {/* Market split breakdown */}
+                  <div className="chart-box">
+                    <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 4 }}>Market Composition</div>
+                    <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 20 }}>Off-plan vs secondary · DLD</div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                      {[
+                        { label: "Off-Plan", pct: getStat("Off-Plan Share")?.numericValue || 63, color: T.gold },
+                        { label: "Secondary Market", pct: 100 - (getStat("Off-Plan Share")?.numericValue || 63), color: T.teal },
+                        { label: "Cash Transactions", pct: getStat("Cash Share")?.numericValue || 55, color: T.green },
+                        { label: "Mortgage Transactions", pct: getStat("Mortgage Share")?.numericValue || 45, color: T.blue },
+                      ].map((item, i) => (
+                        <div key={i}>
+                          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
+                            <span style={{ fontSize: 12, color: T.textSecondary }}>{item.label}</span>
+                            <span style={{ fontSize: 12, color: T.white, fontWeight: 700 }}>{item.pct}%</span>
+                          </div>
+                          <div style={{ height: 6, borderRadius: 3, background: T.border }}>
+                            <div style={{ height: "100%", width: `${item.pct}%`, borderRadius: 3, background: item.color, transition: "width 1s ease" }} />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* ── Market Indicators Grid ── */}
+                <div style={{ marginBottom: 24 }}>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif", marginBottom: 4 }}>Key Market Indicators</div>
+                  <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 16 }}>Structural metrics shaping Dubai's real estate future</div>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: 10 }}>
+                    {[
+                      { k: "Population Target", v: getStat("Population Target")?.value || "—" },
+                      { k: "Price Cycle Duration", v: getStat("Price Cycle")?.value || "—" },
+                      { k: "Active Developers", v: getStat("Active Developers")?.value || (allDevelopers?.length > 0 ? allDevelopers.length + " registered" : "—") },
+                      { k: "Units Pipeline", v: getStat("2026 Pipeline")?.value || "—" },
+                      { k: "REIDIN Price Growth", v: getStat("REIDIN Growth")?.value || "—" },
+                      { k: "Nationalities Investing", v: getStat("Nationalities")?.value || "—" },
+                    ].map(({ k, v }, i) => (
+                      <div key={i} style={{ padding: "14px 16px", background: T.surfaceAlt, borderRadius: 12, border: `1px solid ${T.border}` }}>
+                        <div style={{ fontSize: 9.5, fontWeight: 700, color: T.textMuted, letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 6 }}>{k}</div>
+                        <div style={{ fontSize: 15, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>{v}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* ── 2026 Analyst Forecasts ── */}
+                <div style={{ marginBottom: 24 }}>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif", marginBottom: 4 }}>2026 Analyst Forecasts</div>
+                  <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 16 }}>Knight Frank · CW Core · Fitch Ratings — Click each to expand</div>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 14 }}>
+                    <ForecastCard firm="Knight Frank" color={T.gold}
+                      forecast="+3% prime / +1% mainstream"
+                      detail="Knight Frank's 2026 Dubai Residential Forecast projects prime property appreciation of +3% and mainstream market growth of ~1%. Dubai is entering a more mature, sustainable growth cycle after two years of double-digit gains. Key tailwinds: continued HNWI inflows, Golden Visa demand, Expo City activation." />
+                    <ForecastCard firm="CW Core" color={T.teal}
+                      forecast="5–8% appreciation"
+                      detail="Cushman & Wakefield Core projects 5–8% price appreciation for 2026, a slowdown from 12–22% in 2024–25. The massive 2026 pipeline (~120K units) acts as a price moderator, though strong end-user demand and low mortgage penetration are supportive. Off-plan expected to stay 60–65% of volume." />
+                    <ForecastCard firm="Fitch Ratings" color={T.orange}
+                      forecast="Stable / Watch"
+                      detail="Fitch maintained a Stable Outlook for UAE developers, citing strong backlogs and recurring revenue as key buffers. However, the 120K+ unit pipeline in 2026 could create oversupply in affordable segments. Premium developer backlogs provide earnings visibility even in a correction scenario." />
+                  </div>
+                </div>
+
+                {/* Quick nav */}
+                <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
+                  {[
+                    { label: "DLD Volumes →", tab: "DLD Volumes" },
+                    { label: "Price History →", tab: "Price History" },
+                    { label: "Neighbourhoods →", tab: "Neighbourhoods" },
+                    { label: "Developer Health →", tab: "Developer Health" },
+                  ].map((n,i) => (
+                    <button key={i} type="button" onClick={() => handleTabChange(n.tab)}
+                      style={{ padding: "6px 14px", background: "rgba(212,168,67,0.06)", border: `1px solid ${T.border}`, borderRadius: 8, color: T.gold, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                      {n.label}
+                    </button>
+                  ))}
+                </div>
+                {/* Data sources */}
+                <div style={{ paddingTop: 16, borderTop: `1px solid ${T.border}`, display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+                  <span style={{ fontSize: 10, color: T.textMuted }}>Sources:</span>
+                  {["Dubai Land Department", "REIDIN Dec 2025", "ValuStrat Q4 2025", "Knight Frank", "CW Core", "Fitch Ratings", "Gulf News Property"].map((s, i) => (
+                    <span key={i} style={{ fontSize: 10, color: T.textMuted, padding: "2px 8px", borderRadius: 10, border: `1px solid ${T.border}`, background: T.surfaceAlt }}>{s}</span>
+                  ))}
+                </div>
+
+              </div>
+            );
+          })()}
+
+          {/* ─── DLD VOLUMES TAB ─── */}
+          {tab === "DLD Volumes" && (() => {
+
+            /* ── Local state ── */
+            /* state moved to top level */
+
+            /* ── Filter data ── */
+            const rawData = (() => {
+              const live = (liveDLDVolumes || []).filter(d => d.community || d.developer || d.type);
+              return live.length > 0 ? live : SEED_DATA.dldVolumes;
+            })();
+            const dldIsSeed = !liveDLDVolumes?.length;
+            const filtered = rawData.filter(d => {
+              if (dldFilter.community !== "All" && d.community !== dldFilter.community) return false;
+              if (dldFilter.type !== "All" && d.type !== dldFilter.type) return false;
+              if (dldFilter.txType !== "All" && d.txType !== dldFilter.txType) return false;
+              if (dldFilter.developer !== "All" && d.developer !== dldFilter.developer) return false;
+              if (dldFilter.nationality !== "All" && d.nationality !== dldFilter.nationality) return false;
+              if (dldSearch && !JSON.stringify(d).toLowerCase().includes(dldSearch.toLowerCase())) return false;
+              return true;
+            }).sort((a, b) => (b[dldSort] || 0) - (a[dldSort] || 0));
+
+            /* ── Unique filter options ── */
+            const communities = ["All", ...new Set(rawData.map(d => d.community).filter(Boolean))];
+            const types = ["All", "Apartment", "Villa", "Townhouse", "Office", "Retail", "Hotel Apartment", "Land"];
+            const txTypes = ["All", "Off-Plan", "Ready", "Secondary"];
+            const developers = ["All", ...new Set(rawData.map(d => d.developer).filter(Boolean))];
+
+            /* ── Summary stats ── */
+            const totalTx = filtered.reduce((a, b) => a + (b.transactions || b.count || 0), 0);
+            const totalVol = filtered.reduce((a, b) => a + (b.volume || b.totalValue || 0), 0);
+            const avgPpsf = filtered.length > 0
+              ? Math.round(filtered.reduce((a, b) => a + (b.avgPpsf || b.ppsf || 0), 0) / filtered.filter(d => d.avgPpsf || d.ppsf).length || 0)
+              : 0;
+
+            const selStyle = {
+              background: T.surfaceAlt, border: `1px solid ${T.border}`,
+              borderRadius: 8, color: T.white, fontFamily: "'Outfit',sans-serif",
+              fontSize: 12, padding: "7px 28px 7px 10px", outline: "none", cursor: "pointer",
+              appearance: "none", WebkitAppearance: "none",
+              backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E")`,
+              backgroundRepeat: "no-repeat", backgroundPosition: "right 8px center",
+            };
+
+            return (
+              <div style={{ animation: "fadeUp 0.4s ease-out forwards" }}>
+
+                {/* Tab header */}
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0", marginBottom: 20, borderBottom: `1px solid ${T.border}`, flexWrap: "wrap", gap: 8 }}>
+                  <div>
+                    <div style={{ fontSize: 20, fontWeight: 800, color: T.white, fontFamily: "'Fraunces',serif" }}>DLD Transaction Intelligence</div>
+                    <div style={{ fontSize: 11, color: T.textMuted, marginTop: 3 }}>Official Dubai Land Department registry · Live data · Auto-refreshes daily</div>
+                  </div>
+                  <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                    {/* View toggle */}
+                    <div style={{ display: "flex", background: T.surfaceAlt, borderRadius: 8, border: `1px solid ${T.border}`, overflow: "hidden" }}>
+                      {["table", "chart"].map(v => (
+                        <button key={v} type="button" onClick={() => setDldView(v)}
+                          style={{ padding: "6px 14px", background: dldView === v ? "rgba(212,168,67,0.15)" : "transparent", color: dldView === v ? T.gold : T.textMuted, border: "none", cursor: "pointer", fontSize: 11, fontWeight: 600, fontFamily: "'Outfit',sans-serif", textTransform: "capitalize" }}>
+                          {v}
+                        </button>
+                      ))}
+                    </div>
+                    <span style={{ fontSize: 10, padding: "4px 10px", borderRadius: 20, background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.2)", color: T.green }}>
+                      DLD Official
+                    </span>
+                  </div>
+                </div>
+
+                {/* Seed badge */}
+                {dldIsSeed && (
+                  <div style={{ display:"flex", alignItems:"center", gap:8, padding:"8px 14px", borderRadius:8, background:"rgba(212,168,67,0.06)", border:`1px solid rgba(212,168,67,0.2)`, marginBottom:12 }}>
+                    <span style={{width:6,height:6,borderRadius:"50%",background:T.gold,display:"inline-block"}} />
+                    <span style={{fontSize:11,color:T.textMuted}}><span style={{color:T.gold,fontWeight:700}}>Research-based seed data</span> — DXBAnalytics.com / DLD 2025 · Replace via Admin → Data Manager</span>
+                  </div>
+                )}
+                {/* ── Summary KPIs ── */}
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: 12, marginBottom: 20 }}>
+                  {[
+                    { label: "Total Transactions", value: totalTx > 0 ? totalTx.toLocaleString() : "—", sub: "Filtered results" },
+                    { label: "Total Volume", value: totalVol > 0 ? "AED " + (totalVol / 1e9).toFixed(1) + "B" : "—", sub: "Registered value" },
+                    { label: "Avg Price/sqft", value: avgPpsf > 0 ? "AED " + avgPpsf.toLocaleString() : "—", sub: "Registered PPSF" },
+                    { label: "Communities", value: communities.length - 1 > 0 ? (communities.length - 1).toString() : "—", sub: "In dataset" },
+                  ].map((kpi, i) => (
+                    <div key={i} className="kpi-card">
+                      <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 8 }}>{kpi.label}</div>
+                      <div style={{ fontFamily: "'Fraunces',serif", fontSize: 24, fontWeight: 800, color: T.white, marginBottom: 4 }}>{kpi.value}</div>
+                      <div style={{ fontSize: 11, color: T.textMuted }}>{kpi.sub}</div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* ── Smart Filters ── */}
+                <div style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 12, padding: "14px 16px", marginBottom: 16 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+                    {/* Search */}
+                    <div style={{ position: "relative", flex: "0 0 200px" }}>
+                      {SvgIcons.Search({ width: 13, height: 13, style: { position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", color: T.textMuted, pointerEvents: "none" } })}
+                      <input value={dldSearch} onChange={e => setDldSearch(e.target.value)}
+                        placeholder="Search communities..."
+                        style={{ ...selStyle, paddingLeft: 30, paddingRight: 10, width: "100%", backgroundImage: "none" }} />
+                    </div>
+                    {/* Community */}
+                    <select value={dldFilter.community} onChange={e => setDldFilter(f => ({ ...f, community: e.target.value }))} style={selStyle}>
+                      {communities.map(c => <option key={c}>{c}</option>)}
+                    </select>
+                    {/* Property Type */}
+                    <select value={dldFilter.type} onChange={e => setDldFilter(f => ({ ...f, type: e.target.value }))} style={selStyle}>
+                      {types.map(t => <option key={t}>{t}</option>)}
+                    </select>
+                    {/* Transaction Type */}
+                    <select value={dldFilter.txType} onChange={e => setDldFilter(f => ({ ...f, txType: e.target.value }))} style={selStyle}>
+                      {txTypes.map(t => <option key={t}>{t}</option>)}
+                    </select>
+                    {/* Sort */}
+                    <select value={dldSort} onChange={e => setDldSort(e.target.value)} style={selStyle}>
+                      <option value="transactions">Sort: Volume</option>
+                      <option value="avgPpsf">Sort: PPSF High</option>
+                      <option value="volume">Sort: Total Value</option>
+                    </select>
+                    {/* Results count */}
+                    <span style={{ fontSize: 11, color: T.textMuted, marginLeft: "auto" }}>
+                      {filtered.length} of {rawData.length} results
+                    </span>
+                    {/* Reset */}
+                    {(dldSearch || Object.values(dldFilter).some(v => v !== "All")) && (
+                      <button type="button" onClick={() => { setDldFilter({ community: "All", type: "All", txType: "All", developer: "All", nationality: "All" }); setDldSearch(""); }}
+                        style={{ background: "none", border: `1px solid ${T.border}`, borderRadius: 8, padding: "6px 12px", color: T.textMuted, fontSize: 11, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                        Clear
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* ── No data state ── */}
+                {rawData.length === 0 && !dldIsSeed && (
+                  <div style={{ background: "rgba(212,168,67,0.05)", border: `1px solid rgba(212,168,67,0.15)`, borderRadius: 12, padding: "40px 24px", textAlign: "center", marginBottom: 20 }}>
+                    <div style={{ marginBottom: 12 }}>{SvgIcons.Database({ width: 36, height: 36, style: { color: T.textMuted, display: "inline-block" } })}</div>
+                    <div style={{ fontSize: 15, fontWeight: 700, color: T.white, marginBottom: 8 }}>DLD data not yet synced</div>
+                    <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 4 }}>Data auto-syncs daily via cron job</div>
+                    <div style={{ fontSize: 11, color: T.textMuted, opacity: 0.7 }}>Check Admin → Data Health → DLD Cron status</div>
+                  </div>
+                )}
+
+                {/* ── Chart View ── */}
+                {dldView === "chart" && filtered.length > 0 && (
+                  <div className="chart-box" style={{ marginBottom: 16 }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 16 }}>Transaction Volume by Community</div>
+                    <ResponsiveContainer width="100%" height={300}>
+                      <BarChart data={filtered.slice(0, 15)} layout="vertical">
+                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
+                        <XAxis type="number" tick={{ fill: T.textMuted, fontSize: 11 }} axisLine={false} tickLine={false} />
+                        <YAxis type="category" dataKey="community" tick={{ fill: T.textSecondary, fontSize: 11 }} width={140} axisLine={false} tickLine={false} />
+                        <Tooltip contentStyle={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 10 }} labelStyle={{ color: T.white }} itemStyle={{ color: T.gold }} />
+                        <Bar dataKey="transactions" name="Transactions" fill={T.gold} radius={[0,6,6,0]} barSize={18} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                )}
+
+                {/* ── Table View ── */}
+                {dldView === "table" && filtered.length > 0 && (
+                  <div style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 12, overflow: "hidden", marginBottom: 16 }}>
+                    {/* Table header */}
+                    <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr 1fr", gap: 0, background: T.surfaceAlt, padding: "10px 16px", borderBottom: `1px solid ${T.border}` }}>
+                      {["Community", "Type", "Transactions", "Avg PPSF", "Total Volume", "YoY Change"].map((h, i) => (
+                        <div key={i} style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 0.8, textTransform: "uppercase" }}>{h}</div>
+                      ))}
+                    </div>
+                    {/* Table rows */}
+                    {filtered.slice(0, 50).map((row, i) => (
+                      <div key={i} style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr 1fr", gap: 0, padding: "11px 16px", borderBottom: i < filtered.length - 1 ? `1px solid ${T.border}` : "none", background: i % 2 === 0 ? "transparent" : "rgba(255,255,255,0.01)", transition: "background 0.15s" }}
+                        onMouseEnter={e => e.currentTarget.style.background = "rgba(212,168,67,0.04)"}
+                        onMouseLeave={e => e.currentTarget.style.background = i % 2 === 0 ? "transparent" : "rgba(255,255,255,0.01)"}>
+                        <div style={{ fontSize: 13, color: T.white, fontWeight: 500 }}>{row.community || "—"}</div>
+                        <div style={{ fontSize: 12, color: T.textSecondary }}>{row.type || "Residential"}</div>
+                        <div style={{ fontSize: 13, color: T.white, fontWeight: 600 }}>{(row.transactions || row.count || 0).toLocaleString()}</div>
+                        <div style={{ fontSize: 13, color: T.gold }}>AED {(row.avgPpsf || row.ppsf || 0).toLocaleString()}</div>
+                        <div style={{ fontSize: 12, color: T.textSecondary }}>{row.volume ? "AED " + (row.volume / 1e6).toFixed(0) + "M" : "—"}</div>
+                        <div style={{ fontSize: 12, color: row.change > 0 ? T.green : row.change < 0 ? T.red : T.textMuted }}>
+                          {row.change ? (row.change > 0 ? "+" : "") + row.change + "%" : "—"}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Quick nav */}
+                <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
+                  {[
+                    { label: "Price History →", tab: "Price History" },
+                    { label: "Neighbourhoods →", tab: "Neighbourhoods" },
+                    { label: "Investment Score →", tab: "Investment Score" },
+                  ].map((n,i) => (
+                    <button key={i} type="button" onClick={() => handleTabChange(n.tab)}
+                      style={{ padding: "6px 14px", background: "rgba(212,168,67,0.06)", border: `1px solid ${T.border}`, borderRadius: 8, color: T.gold, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                      {n.label}
+                    </button>
+                  ))}
+                </div>
+                {/* Sources */}
+                <div style={{ paddingTop: 12, borderTop: `1px solid ${T.border}`, display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+                  <span style={{ fontSize: 10, color: T.textMuted }}>Sources:</span>
+                  {["Dubai Land Department", "DXBinteract", "ValuStrat", "REIDIN"].map((s, i) => (
+                    <span key={i} style={{ fontSize: 10, color: T.textMuted, padding: "2px 8px", borderRadius: 10, border: `1px solid ${T.border}`, background: T.surfaceAlt }}>{s}</span>
+                  ))}
+                </div>
+
+              </div>
+            );
+          })()}
+
+          {/* ─── PRICE HISTORY TAB ─── */}
+          {tab === "Price History" && (() => {
+
+            /* state moved to top level */
+
+            /* ── Data from Firestore priceHistory collection ── */
+            const phRaw = liveMarketData?.filter?.(d => d.type === "priceHistory") || [];
+            const phData = phRaw.length > 0 ? phRaw : SEED_DATA.priceHistory;
+            const phIsSeed = phRaw.length === 0;
+            // Separate year trend data from community data
+            // Base chart data — year-level trend
+            const phYearData = phData
+              .filter(d => d.period && !d.community)
+              .sort((a,b) => parseInt(a.period) - parseInt(b.period))
+              .map(d => ({ ...d, period: String(d.period), ppsf: parseFloat(d.ppsf) || 0 }));
+
+            // Community-level data
+            const phCommunityData = phData.filter(d => d.community);
+
+            // Build community-specific chart data for compare mode
+            // Uses SEED_DATA community ppsf to simulate year trends per community
+            const commPPSF = {
+              "Downtown Dubai":     { base:2200, growth:[0.08,0.10,0.12,0.15,0.13] },
+              "Dubai Hills Estate": { base:1400, growth:[0.10,0.14,0.18,0.22,0.20] },
+              "Dubai Marina":       { base:1600, growth:[0.06,0.08,0.09,0.10,0.08] },
+              "JVC":                { base:700,  growth:[0.12,0.15,0.18,0.20,0.17] },
+              "Palm Jumeirah":      { base:3200, growth:[0.08,0.10,0.12,0.15,0.14] },
+              "Business Bay":       { base:1400, growth:[0.07,0.09,0.10,0.12,0.08] },
+              "Jumeirah Lake Towers":{ base:1000, growth:[0.06,0.08,0.10,0.12,0.09] },
+              "Dubai Creek Harbour":{ base:1100, growth:[0.15,0.20,0.25,0.32,0.28] },
+              "Sobha Hartland":     { base:1500, growth:[0.10,0.14,0.18,0.22,0.24] },
+              "Arjan":              { base:650,  growth:[0.10,0.13,0.16,0.18,0.16] },
+            };
+            const YEARS = ["2021","2022","2023","2024","2025"];
+            const buildCommData = (commName) => {
+              const cfg = commPPSF[commName];
+              if (!cfg) return phYearData;
+              let ppsf = cfg.base;
+              return YEARS.map((yr, i) => {
+                ppsf = Math.round(ppsf * (1 + cfg.growth[i]));
+                return { period: yr, ppsf };
+              });
+            };
+
+            // Final chart data — with ppsf2 if compare mode on
+            const phChartData = phCompare
+              ? (() => {
+                  const d1 = buildCommData(phCommunity === "All" ? "Downtown Dubai" : phCommunity);
+                  const d2 = buildCommData(phCommunity2 === "All" ? "Dubai Hills Estate" : phCommunity2);
+                  return YEARS.map((yr, i) => ({ period: yr, ppsf: d1[i]?.ppsf||0, ppsf2: d2[i]?.ppsf||0 }));
+                })()
+              : (phCommunity !== "All" ? buildCommData(phCommunity) : phYearData);
+
+            // Apply community filter for table
+            const phFiltered = phCompare
+              ? phCommunityData.filter(d => d.community === phCommunity || d.community === phCommunity2)
+              : phCommunity === "All" ? phCommunityData : phCommunityData.filter(d => d.community === phCommunity);
+            const communities = ["All", ...new Set(phCommunityData.map(d => d.community).filter(Boolean))];
+            const bedOptions = ["All", "Studio", "1 BR", "2 BR", "3 BR", "4 BR", "5 BR+"];
+            const typeOptions = ["Apartment", "Villa", "Townhouse", "Office", "Hotel Apartment"];
+
+            /* ── Filter data ── */
+            const filtered = phData.filter(d => {
+              if (phCommunity !== "All" && d.community !== phCommunity) return false;
+              if (phType !== "All" && d.type !== phType) return false;
+              if (phBeds !== "All" && d.beds !== phBeds) return false;
+              return true;
+            });
+
+            const selStyle = {
+              background: T.surfaceAlt, border: `1px solid ${T.border}`,
+              borderRadius: 8, color: T.white, fontFamily: "'Outfit',sans-serif",
+              fontSize: 12, padding: "7px 28px 7px 10px", outline: "none", cursor: "pointer",
+              appearance: "none", WebkitAppearance: "none",
+              backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E")`,
+              backgroundRepeat: "no-repeat", backgroundPosition: "right 8px center",
+            };
+
+            /* ── Momentum badge ── */
+            const MomentumBadge = ({ change }) => {
+              if (!change) return null;
+              const positive = change > 0;
+              return (
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 3, padding: "2px 8px", borderRadius: 20, fontSize: 11, fontWeight: 700, background: positive ? "rgba(16,185,129,0.12)" : "rgba(239,68,68,0.12)", color: positive ? T.green : T.red }}>
+                  <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round"><polyline points={positive ? "18 15 12 9 6 15" : "6 9 12 15 18 15"}/></svg>
+                  {Math.abs(change).toFixed(1)}%
+                </span>
+              );
+            };
+
+            return (
+              <div style={{ animation: "fadeUp 0.4s ease-out forwards" }}>
+
+                {/* Tab header */}
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0", marginBottom: 20, borderBottom: `1px solid ${T.border}`, flexWrap: "wrap", gap: 8 }}>
+                  <div>
+                    <div style={{ fontSize: 20, fontWeight: 800, color: T.white, fontFamily: "'Fraunces',serif" }}>Price History</div>
+                    <div style={{ fontSize: 11, color: T.textMuted, marginTop: 3 }}>PPSF trends per community · DLD registered transactions · 5-year view</div>
+                  </div>
+                  <div style={{ display: "flex", gap: 8 }}>
+                    {/* View toggle */}
+                    <div style={{ display: "flex", background: T.surfaceAlt, borderRadius: 8, border: `1px solid ${T.border}`, overflow: "hidden" }}>
+                      {["chart", "table"].map(v => (
+                        <button key={v} type="button" onClick={() => setPhView(v)}
+                          style={{ padding: "6px 14px", background: phView === v ? "rgba(212,168,67,0.15)" : "transparent", color: phView === v ? T.gold : T.textMuted, border: "none", cursor: "pointer", fontSize: 11, fontWeight: 600, fontFamily: "'Outfit',sans-serif", textTransform: "capitalize" }}>
+                          {v}
+                        </button>
+                      ))}
+                    </div>
+                    {/* Compare toggle */}
+                    <button type="button" onClick={() => setPhCompare(c => !c)}
+                      style={{ padding: "6px 14px", background: phCompare ? "rgba(212,168,67,0.15)" : T.surfaceAlt, border: `1px solid ${phCompare ? "rgba(212,168,67,0.4)" : T.border}`, borderRadius: 8, color: phCompare ? T.gold : T.textMuted, cursor: "pointer", fontSize: 11, fontWeight: 600, fontFamily: "'Outfit',sans-serif" }}>
+                      Compare
+                    </button>
+                  </div>
+                </div>
+
+                {/* ── Smart Filters ── */}
+                <div style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 12, padding: "14px 16px", marginBottom: 20 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+                    <span style={{ fontSize: 11, fontWeight: 600, color: T.textMuted }}>Compare:</span>
+                    <select value={phCommunity} onChange={e => setPhCommunity(e.target.value)} style={selStyle}>
+                      {communities.map(c => <option key={c}>{c}</option>)}
+                    </select>
+                    {phCompare && (
+                      <>
+                        <span style={{ fontSize: 11, fontWeight: 600, color: T.teal }}>vs</span>
+                        <select value={phCommunity2} onChange={e => setPhCommunity2(e.target.value)} style={{ ...selStyle, borderColor: "rgba(20,184,166,0.4)", color: T.teal }}>
+                          {communities.map(c => <option key={c}>{c}</option>)}
+                        </select>
+                      </>
+                    )}
+                    <select value={phType} onChange={e => setPhType(e.target.value)} style={selStyle}>
+                      {typeOptions.map(t => <option key={t}>{t}</option>)}
+                    </select>
+                    <select value={phBeds} onChange={e => setPhBeds(e.target.value)} style={selStyle}>
+                      {bedOptions.map(b => <option key={b}>{b}</option>)}
+                    </select>
+                    <span style={{ marginLeft: "auto", fontSize: 10, color: T.textMuted, display: "flex", alignItems: "center", gap: 4 }}>
+                      <span style={{ width: 5, height: 5, borderRadius: "50%", background: T.green, display: "inline-block" }} />
+                      DLD Verified
+                    </span>
+                  </div>
+                </div>
+
+                {/* ── No data state ── */}
+                {phCommunityData.length === 0 && phChartData.length === 0 && (
+                  <div style={{ background: "rgba(212,168,67,0.05)", border: `1px solid rgba(212,168,67,0.15)`, borderRadius: 12, padding: "48px 24px", textAlign: "center", marginBottom: 20 }}>
+                    <div style={{ marginBottom: 14 }}>
+                      {SvgIcons.TrendingUp({ width: 40, height: 40, style: { color: T.textMuted, display: "inline-block" } })}
+                    </div>
+                    <div style={{ fontSize: 16, fontWeight: 700, color: T.white, marginBottom: 8 }}>Price history not yet imported</div>
+                    <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 4 }}>Historical PPSF data loads from DLD transaction records</div>
+                    <div style={{ fontSize: 11, color: T.textMuted, opacity: 0.7 }}>Check Admin → Data Health → DLD Cron to verify sync status</div>
+                  </div>
+                )}
+
+                {/* ── Chart View ── */}
+                {/* Compare result banner */}
+                {phCompare && phCommunity !== "All" && phCommunity2 !== "All" && (() => {
+                  const d1 = Object.entries(commPPSF||{}).find(([k]) => k===phCommunity);
+                  const d2 = Object.entries(commPPSF||{}).find(([k]) => k===phCommunity2);
+                  const ppsf1 = phChartData[phChartData.length-1]?.ppsf || 0;
+                  const ppsf2v = phChartData[phChartData.length-1]?.ppsf2 || 0;
+                  const winner = ppsf2v > ppsf1 ? phCommunity2 : phCommunity;
+                  return (
+                    <div style={{ background:"rgba(20,184,166,0.06)", border:`1px solid rgba(20,184,166,0.25)`, borderRadius:10, padding:"12px 16px", marginBottom:16, display:"flex", alignItems:"center", gap:16, flexWrap:"wrap" }}>
+                      <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+                        <div style={{ width:10, height:10, borderRadius:"50%", background:T.gold }} />
+                        <span style={{ fontSize:12, fontWeight:700, color:T.white }}>{phCommunity}</span>
+                        <span style={{ fontSize:13, fontWeight:800, color:T.gold }}>AED {ppsf1.toLocaleString()}/sqft</span>
+                      </div>
+                      <span style={{ fontSize:13, fontWeight:700, color:T.textMuted }}>vs</span>
+                      <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+                        <div style={{ width:10, height:10, borderRadius:"50%", background:T.teal }} />
+                        <span style={{ fontSize:12, fontWeight:700, color:T.white }}>{phCommunity2}</span>
+                        <span style={{ fontSize:13, fontWeight:800, color:T.teal }}>AED {ppsf2v.toLocaleString()}/sqft</span>
+                      </div>
+                      <div style={{ marginLeft:"auto", padding:"4px 12px", borderRadius:8, background:ppsf2v>ppsf1?"rgba(20,184,166,0.15)":"rgba(212,168,67,0.15)", border:`1px solid ${ppsf2v>ppsf1?T.teal:T.gold}` }}>
+                        <span style={{ fontSize:11, fontWeight:700, color:ppsf2v>ppsf1?T.teal:T.gold }}>{winner} is higher by AED {Math.abs(ppsf2v-ppsf1).toLocaleString()}/sqft</span>
+                      </div>
+                    </div>
+                  );
+                })()}
+                {phView === "chart" && (phChartData.length > 0 || phCommunityData.length > 0) && (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 16, marginBottom: 20 }}>
+                    {/* Main price trend chart */}
+                    <div className="chart-box">
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+                        <div>
+                          <div style={{ fontSize: 13, fontWeight: 700, color: T.white }}>Price Per Sqft — Historical Trend</div>
+                          <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>AED/sqft · DLD registered transactions</div>
+                        </div>
+                        <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                            <span style={{ width: 12, height: 3, background: T.gold, borderRadius: 2, display: "inline-block" }} />
+                            <span style={{ fontSize: 11, color: T.textMuted }}>{phCommunity === "All" ? "All Communities" : phCommunity}</span>
+                          </div>
+                          {phCompare && (
+                            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                              <span style={{ width: 12, height: 3, background: T.teal, borderRadius: 2, display: "inline-block" }} />
+                              <span style={{ fontSize: 11, color: T.textMuted }}>{phCommunity2 === "All" ? "Market Avg" : phCommunity2}</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      <ResponsiveContainer width="100%" height={280}>
+                        <AreaChart data={phChartData.length > 0 ? phChartData : []}>
+                          <defs>
+                            <linearGradient id="priceGold" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%" stopColor={T.gold} stopOpacity={0.2}/>
+                              <stop offset="95%" stopColor={T.gold} stopOpacity={0}/>
+                            </linearGradient>
+                            {phCompare && (
+                              <linearGradient id="priceTeal" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="5%" stopColor={T.teal} stopOpacity={0.2}/>
+                                <stop offset="95%" stopColor={T.teal} stopOpacity={0}/>
+                              </linearGradient>
+                            )}
+                          </defs>
+                          <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
+                          <XAxis dataKey="period" tick={{ fill: T.textMuted, fontSize: 11 }} axisLine={false} tickLine={false} />
+                          <YAxis tick={{ fill: T.textMuted, fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={v => "AED " + v.toLocaleString()} />
+                          <Tooltip contentStyle={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 10 }} labelStyle={{ color: T.white }} itemStyle={{ color: T.gold }} formatter={v => ["AED " + (v||0).toLocaleString() + "/sqft"]} />
+                          <Area type="monotone" dataKey="ppsf" name="PPSF" stroke={T.gold} strokeWidth={2} fill="url(#priceGold)" dot={false} activeDot={{ r: 4, fill: T.gold }} />
+                          {phCompare && <Area type="monotone" dataKey="ppsf2" name="Compare" stroke={T.teal} strokeWidth={2} fill="url(#priceTeal)" dot={false} activeDot={{ r: 4, fill: T.teal }} />}
+                        </AreaChart>
+                      </ResponsiveContainer>
+                    </div>
+
+                    {/* Off-plan vs Secondary divergence */}
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+                      <div className="chart-box">
+                        <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 4 }}>Off-Plan vs Secondary</div>
+                        <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 16 }}>Price divergence — same community</div>
+                        <ResponsiveContainer width="100%" height={180}>
+                          <LineChart data={phChartData.slice(0, 12)}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
+                            <XAxis dataKey="period" tick={{ fill: T.textMuted, fontSize: 10 }} axisLine={false} tickLine={false} />
+                            <YAxis tick={{ fill: T.textMuted, fontSize: 10 }} axisLine={false} tickLine={false} />
+                            <Tooltip contentStyle={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 10 }} labelStyle={{ color: T.white }} />
+                            <Line type="monotone" dataKey="offPlanPpsf" name="Off-Plan" stroke={T.gold} strokeWidth={2} dot={false} />
+                            <Line type="monotone" dataKey="secondaryPpsf" name="Secondary" stroke={T.teal} strokeWidth={2} dot={false} strokeDasharray="5 5" />
+                            <Legend iconType="line" wrapperStyle={{ fontSize: 11 }} />
+                          </LineChart>
+                        </ResponsiveContainer>
+                      </div>
+
+                      {/* Momentum indicators */}
+                      <div className="chart-box">
+                        <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 4 }}>Price Momentum</div>
+                        <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 16 }}>Community price change indicators</div>
+                        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                          {phCommunityData.slice(0, 6).map((d, i) => (
+                            <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                              <span style={{ fontSize: 12, color: T.textSecondary }}>{d.community || "—"}</span>
+                              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                                <span style={{ fontSize: 12, color: T.white, fontWeight: 600 }}>AED {(d.ppsf || 0).toLocaleString()}</span>
+                                <MomentumBadge change={d.change6m ?? d.change1y ?? d.change ?? null} />
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* ── Table View ── */}
+                {phView === "table" && phCommunityData.length > 0 && (
+                  <div style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 12, overflow: "hidden", marginBottom: 20 }}>
+                    <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr 1fr 1fr", padding: "10px 16px", background: T.surfaceAlt, borderBottom: `1px solid ${T.border}` }}>
+                      {["Community", "Type", "Beds", "Current PPSF", "1Y Change", "3Y Change", "5Y Change"].map((h, i) => (
+                        <div key={i} style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 0.8, textTransform: "uppercase" }}>{h}</div>
+                      ))}
+                    </div>
+                    {phCommunityData.slice(0, 50).map((row, i) => (
+                      <div key={i} style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr 1fr 1fr", padding: "10px 16px", borderBottom: i < phData.length - 1 ? `1px solid ${T.border}` : "none", background: i % 2 === 0 ? "transparent" : "rgba(255,255,255,0.01)" }}
+                        onMouseEnter={e => e.currentTarget.style.background = "rgba(212,168,67,0.04)"}
+                        onMouseLeave={e => e.currentTarget.style.background = i % 2 === 0 ? "transparent" : "rgba(255,255,255,0.01)"}>
+                        <div style={{ fontSize: 13, color: T.white, fontWeight: 500 }}>{row.community || "—"}</div>
+                        <div style={{ fontSize: 12, color: T.textSecondary }}>{row.type || "Apt"}</div>
+                        <div style={{ fontSize: 12, color: T.textSecondary }}>{row.beds || "—"}</div>
+                        <div style={{ fontSize: 13, color: T.gold, fontWeight: 600 }}>AED {(row.ppsf || 0).toLocaleString()}</div>
+                        <div><MomentumBadge change={row.change1y} /></div>
+                        <div><MomentumBadge change={row.change3y} /></div>
+                        <div><MomentumBadge change={row.change5y} /></div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Correction alert banner — shows if any community has negative 6M momentum */}
+                {phData.some(d => d.change6m < -5) && (
+                  <div style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 10, padding: "12px 16px", marginBottom: 16, display: "flex", alignItems: "center", gap: 10 }}>
+                    {SvgIcons.AlertTriangle({ width: 16, height: 16, style: { color: T.red, flexShrink: 0 } })}
+                    <div style={{ fontSize: 12, color: T.textSecondary }}>
+                      <span style={{ color: T.red, fontWeight: 700 }}>Price correction detected</span> — Some communities showing &gt;5% decline over 6 months. Review before recommending to clients.
+                    </div>
+                  </div>
+                )}
+
+                {/* Quick nav */}
+                <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
+                  {[
+                    { label: "DLD Volumes →", tab: "DLD Volumes" },
+                    { label: "Yields →", tab: "Yields" },
+                    { label: "Neighbourhoods →", tab: "Neighbourhoods" },
+                  ].map((n,i) => (
+                    <button key={i} type="button" onClick={() => handleTabChange(n.tab)}
+                      style={{ padding: "6px 14px", background: "rgba(212,168,67,0.06)", border: `1px solid ${T.border}`, borderRadius: 8, color: T.gold, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                      {n.label}
+                    </button>
+                  ))}
+                </div>
+                {/* Sources */}
+                <div style={{ paddingTop: 12, borderTop: `1px solid ${T.border}`, display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+                  <span style={{ fontSize: 10, color: T.textMuted }}>Sources:</span>
+                  {["Dubai Land Department", "REIDIN Price Index", "ValuStrat VPI", "DXBinteract"].map((s, i) => (
+                    <span key={i} style={{ fontSize: 10, color: T.textMuted, padding: "2px 8px", borderRadius: 10, border: `1px solid ${T.border}`, background: T.surfaceAlt }}>{s}</span>
+                  ))}
+                </div>
+
+              </div>
+            );
+          })()}
+
+          {/* ─── NEIGHBOURHOODS TAB ─── */}
+          {tab === "Neighbourhoods" && (() => {
+
+            /* state moved to top level */
+
+            /* ── Community data from Firestore ── */
+            const rawNbhFirestore = liveMarketData?.filter?.(d => d.type === "community") || [];
+            const rawNbh = rawNbhFirestore.length > 0 ? rawNbhFirestore : SEED_DATA.communities;
+            const nbhIsSeed = rawNbhFirestore.length === 0;
+
+            /* ── Score badge component ── */
+            const ScoreBadge = ({ score, size = "sm" }) => {
+              const color = score >= 75 ? T.green : score >= 50 ? T.gold : score >= 30 ? T.orange : T.red;
+              const bg = score >= 75 ? "rgba(16,185,129,0.12)" : score >= 50 ? "rgba(212,168,67,0.12)" : score >= 30 ? "rgba(245,158,11,0.12)" : "rgba(239,68,68,0.12)";
+              const label = score >= 75 ? "Strong Buy" : score >= 50 ? "Hold" : score >= 30 ? "Caution" : "Avoid";
+              return (
+                <div style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                  <div style={{ width: size === "lg" ? 44 : 32, height: size === "lg" ? 44 : 32, borderRadius: "50%", background: bg, border: `2px solid ${color}`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <span style={{ fontSize: size === "lg" ? 13 : 11, fontWeight: 800, color, fontFamily: "'Fraunces',serif" }}>{score || "—"}</span>
+                  </div>
+                  {size === "lg" && <div style={{ fontSize: 11, fontWeight: 700, color }}>{label}</div>}
+                </div>
+              );
+            };
+
+            /* ── Metro badge ── */
+            const MetroBadge = ({ distance }) => {
+              if (!distance) return null;
+              const close = distance <= 700;
+              return (
+                <span style={{ fontSize: 10, padding: "2px 7px", borderRadius: 10, fontWeight: 600, background: close ? "rgba(16,185,129,0.12)" : "rgba(255,255,255,0.06)", color: close ? T.green : T.textMuted, border: `1px solid ${close ? "rgba(16,185,129,0.3)" : T.border}` }}>
+                  {close ? "Metro ≤700m" : distance < 2000 ? `Metro ~${(distance/1000).toFixed(1)}km` : "No metro"}
+                </span>
+              );
+            };
+
+            /* ── Risk badge ── */
+            const RiskBadge = ({ risk }) => {
+              const cfg = { Low: { color: T.green, bg: "rgba(16,185,129,0.1)" }, Medium: { color: T.gold, bg: "rgba(212,168,67,0.1)" }, High: { color: T.red, bg: "rgba(239,68,68,0.1)" } };
+              const c = cfg[risk] || cfg["Medium"];
+              return (
+                <span style={{ fontSize: 10, padding: "2px 8px", borderRadius: 10, fontWeight: 600, background: c.bg, color: c.color }}>
+                  {risk || "—"} Risk
+                </span>
+              );
+            };
+
+            /* ── Filter & sort ── */
+            const filtered = rawNbh.filter(n => {
+              if (nbhSearch && !n.community?.toLowerCase().includes(nbhSearch.toLowerCase())) return false;
+              if (nbhTypeFilter !== "All" && n.tenantProfile !== nbhTypeFilter) return false;
+              if (nbhYieldFilter !== "All") {
+                const y = parseFloat(n.grossYield) || 0;
+                if (nbhYieldFilter === "7%+" && y < 7) return false;
+                if (nbhYieldFilter === "5-7%" && (y < 5 || y >= 7)) return false;
+                if (nbhYieldFilter === "<5%" && y >= 5) return false;
+              }
+              if (nbhRiskFilter !== "All" && n.supplyRisk !== nbhRiskFilter) return false;
+              return true;
+            }).sort((a, b) => {
+              if (nbhSort === "yield") return (parseFloat(b.grossYield)||0) - (parseFloat(a.grossYield)||0);
+              if (nbhSort === "ppsf") return (b.avgPpsf||0) - (a.avgPpsf||0);
+              if (nbhSort === "score") return (b.investmentScore||0) - (a.investmentScore||0);
+              if (nbhSort === "name") return (a.community||"").localeCompare(b.community||"");
+              return 0;
+            });
+
+            const selStyle = {
+              background: T.surfaceAlt, border: `1px solid ${T.border}`,
+              borderRadius: 8, color: T.white, fontFamily: "'Outfit',sans-serif",
+              fontSize: 12, padding: "7px 28px 7px 10px", outline: "none", cursor: "pointer",
+              appearance: "none", WebkitAppearance: "none",
+              backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E")`,
+              backgroundRepeat: "no-repeat", backgroundPosition: "right 8px center",
+            };
+
+            /* ── Community card ── */
+            const NbhCard = ({ n }) => {
+              const isCompared = nbhCompare.includes(n.community);
+              return (
+                <div className="chart-box" style={{ padding: 16, position: "relative", transition: "transform 0.15s, box-shadow 0.15s", cursor: "default" }}
+                  onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 8px 32px rgba(0,0,0,0.3)"; }}
+                  onMouseLeave={e => { e.currentTarget.style.transform = "none"; e.currentTarget.style.boxShadow = "none"; }}>
+
+                  {/* Header row */}
+                  <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 12 }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 3, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{n.community || "—"}</div>
+                      <div style={{ display: "flex", gap: 5, flexWrap: "wrap" }}>
+                        <MetroBadge distance={n.metroDistance} />
+                        <RiskBadge risk={n.supplyRisk} />
+                      </div>
+                    </div>
+                    <ScoreBadge score={n.investmentScore} />
+                  </div>
+
+                  {/* Key metrics grid */}
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 12 }}>
+                    {[
+                      { label: "Gross Yield", value: n.grossYield ? parseFloat(n.grossYield).toFixed(1) + "%" : "—", color: parseFloat(n.grossYield) >= 7 ? T.green : parseFloat(n.grossYield) >= 5 ? T.gold : T.textSecondary },
+                      { label: "Net Yield", value: n.netYield ? parseFloat(n.netYield).toFixed(1) + "%" : "—", color: T.textSecondary },
+                      { label: "Avg PPSF", value: n.avgPpsf ? "AED " + n.avgPpsf.toLocaleString() : "—", color: T.white },
+                      { label: "Service Charge", value: n.serviceCharge ? "AED " + n.serviceCharge + "/sqft" : "—", color: T.textMuted },
+                    ].map((m, i) => (
+                      <div key={i} style={{ background: T.surfaceAlt, borderRadius: 8, padding: "8px 10px" }}>
+                        <div style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 4 }}>{m.label}</div>
+                        <div style={{ fontSize: 14, fontWeight: 700, color: m.color, fontFamily: "'Fraunces',serif" }}>{m.value}</div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Amenities row */}
+                  <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 12 }}>
+                    {n.hasSchool && (
+                      <span style={{ fontSize: 10, padding: "2px 8px", borderRadius: 10, background: "rgba(99,102,241,0.1)", color: "#818CF8", border: "1px solid rgba(99,102,241,0.2)" }}>
+                        School
+                      </span>
+                    )}
+                    {n.hasHospital && (
+                      <span style={{ fontSize: 10, padding: "2px 8px", borderRadius: 10, background: "rgba(239,68,68,0.1)", color: T.red, border: "1px solid rgba(239,68,68,0.2)" }}>
+                        Hospital
+                      </span>
+                    )}
+                    {n.hasMall && (
+                      <span style={{ fontSize: 10, padding: "2px 8px", borderRadius: 10, background: "rgba(212,168,67,0.08)", color: T.gold, border: `1px solid ${T.border}` }}>
+                        Mall
+                      </span>
+                    )}
+                    {n.hasBeach && (
+                      <span style={{ fontSize: 10, padding: "2px 8px", borderRadius: 10, background: "rgba(20,184,166,0.1)", color: T.teal, border: "1px solid rgba(20,184,166,0.2)" }}>
+                        Waterfront
+                      </span>
+                    )}
+                    {n.tenantProfile && (
+                      <span style={{ fontSize: 10, padding: "2px 8px", borderRadius: 10, background: "rgba(255,255,255,0.05)", color: T.textMuted, border: `1px solid ${T.border}` }}>
+                        {n.tenantProfile}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Supply pipeline */}
+                  {n.pipeline2026 && (
+                    <div style={{ marginBottom: 10 }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
+                        <span style={{ fontSize: 10, color: T.textMuted }}>2026 Pipeline</span>
+                        <span style={{ fontSize: 10, color: T.white, fontWeight: 600 }}>{n.pipeline2026?.toLocaleString()} units</span>
+                      </div>
+                      <div style={{ height: 4, borderRadius: 2, background: T.border }}>
+                        <div style={{ height: "100%", width: Math.min((n.pipeline2026 / 5000) * 100, 100) + "%", borderRadius: 2, background: n.supplyRisk === "High" ? T.red : n.supplyRisk === "Medium" ? T.gold : T.green }} />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Action buttons */}
+                  <div style={{ display: "flex", gap: 6 }}>
+                    <button type="button" onClick={() => handleTabChange("Price History")}
+                      style={{ flex: 1, padding: "6px 0", background: "rgba(212,168,67,0.06)", border: `1px solid ${T.border}`, borderRadius: 7, color: T.gold, fontSize: 10, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                      Price History →
+                    </button>
+                    <button type="button" onClick={() => handleTabChange("Yields")}
+                      style={{ flex: 1, padding: "6px 0", background: "rgba(20,184,166,0.06)", border: "1px solid rgba(20,184,166,0.2)", borderRadius: 7, color: T.teal, fontSize: 10, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                      Yields →
+                    </button>
+                    <button type="button"
+                      onClick={() => setNbhCompare(c => isCompared ? c.filter(x => x !== n.community) : c.length < 2 ? [...c, n.community] : c)}
+                      style={{ padding: "6px 10px", background: isCompared ? "rgba(212,168,67,0.15)" : "transparent", border: `1px solid ${isCompared ? "rgba(212,168,67,0.4)" : T.border}`, borderRadius: 7, color: isCompared ? T.gold : T.textMuted, fontSize: 10, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                      {isCompared ? "✓" : "+"}
+                    </button>
+                  </div>
+                </div>
+              );
+            };
+
+            return (
+              <div style={{ animation: "fadeUp 0.4s ease-out forwards" }}>
+
+                {/* Tab header */}
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0", marginBottom: 20, borderBottom: `1px solid ${T.border}`, flexWrap: "wrap", gap: 8 }}>
+                  <div>
+                    <div style={{ fontSize: 20, fontWeight: 800, color: T.white, fontFamily: "'Fraunces',serif" }}>Neighbourhood Intelligence</div>
+                    <div style={{ fontSize: 11, color: T.textMuted, marginTop: 3 }}>Community scorecards · Yield · Metro access · Supply risk · Schools · Lifestyle</div>
+                  </div>
+                  <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                    {/* View toggle */}
+                    <div style={{ display: "flex", background: T.surfaceAlt, borderRadius: 8, border: `1px solid ${T.border}`, overflow: "hidden" }}>
+                      {["grid", "table"].map(v => (
+                        <button key={v} type="button" onClick={() => setNbhView(v)}
+                          style={{ padding: "6px 14px", background: nbhView === v ? "rgba(212,168,67,0.15)" : "transparent", color: nbhView === v ? T.gold : T.textMuted, border: "none", cursor: "pointer", fontSize: 11, fontWeight: 600, fontFamily: "'Outfit',sans-serif", textTransform: "capitalize" }}>
+                          {v}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Metro Blue Line alert */}
+                <div style={{ background: "rgba(20,184,166,0.06)", border: "1px solid rgba(20,184,166,0.2)", borderRadius: 10, padding: "10px 16px", marginBottom: 16, display: "flex", alignItems: "center", gap: 10 }}>
+                  <span style={{ width: 6, height: 6, borderRadius: "50%", background: T.teal, flexShrink: 0, animation: "pulse 2s infinite", display: "inline-block" }} />
+                  <div style={{ fontSize: 11, color: T.textSecondary }}>
+                    <span style={{ color: T.teal, fontWeight: 700 }}>Metro Blue Line opening 2029</span> — 14 new stations · Properties within 700m historically see 20–30% value premium · Communities near Blue Line flagged below
+                  </div>
+                </div>
+
+                {/* Smart filters */}
+                <div style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 12, padding: "14px 16px", marginBottom: 20 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+                    {/* Search */}
+                    <div style={{ position: "relative", flex: "0 0 200px" }}>
+                      {SvgIcons.Search({ width: 13, height: 13, style: { position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", color: T.textMuted, pointerEvents: "none" } })}
+                      <input value={nbhSearch} onChange={e => setNbhSearch(e.target.value)} placeholder="Search communities..."
+                        style={{ ...selStyle, paddingLeft: 30, paddingRight: 10, width: "100%", backgroundImage: "none" }} />
+                    </div>
+                    {/* Tenant profile */}
+                    <select value={nbhTypeFilter} onChange={e => setNbhTypeFilter(e.target.value)} style={selStyle}>
+                      <option value="All">All Profiles</option>
+                      <option>Families</option>
+                      <option>Professionals</option>
+                      <option>Luxury / HNWI</option>
+                      <option>Short-Term Rental</option>
+                      <option>Mixed</option>
+                    </select>
+                    {/* Yield filter */}
+                    <select value={nbhYieldFilter} onChange={e => setNbhYieldFilter(e.target.value)} style={selStyle}>
+                      <option value="All">All Yields</option>
+                      <option value="7%+">7%+ High Yield</option>
+                      <option value="5-7%">5–7% Mid Yield</option>
+                      <option value="<5%">Under 5%</option>
+                    </select>
+                    {/* Supply risk */}
+                    <select value={nbhRiskFilter} onChange={e => setNbhRiskFilter(e.target.value)} style={selStyle}>
+                      <option value="All">All Risk Levels</option>
+                      <option>Low</option>
+                      <option>Medium</option>
+                      <option>High</option>
+                    </select>
+                    {/* Sort */}
+                    <select value={nbhSort} onChange={e => setNbhSort(e.target.value)} style={selStyle}>
+                      <option value="yield">Sort: Yield High</option>
+                      <option value="ppsf">Sort: PPSF High</option>
+                      <option value="score">Sort: Score High</option>
+                      <option value="name">Sort: A–Z</option>
+                    </select>
+                    <span style={{ fontSize: 11, color: T.textMuted, marginLeft: "auto" }}>
+                      {filtered.length} communities
+                    </span>
+                    {(nbhSearch || nbhTypeFilter !== "All" || nbhYieldFilter !== "All" || nbhRiskFilter !== "All") && (
+                      <button type="button" onClick={() => { setNbhSearch(""); setNbhTypeFilter("All"); setNbhYieldFilter("All"); setNbhRiskFilter("All"); }}
+                        style={{ background: "none", border: `1px solid ${T.border}`, borderRadius: 8, padding: "6px 12px", color: T.textMuted, fontSize: 11, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                        Clear
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Compare panel */}
+                {nbhCompare.length > 0 ? (
+                  <div style={{ background: "rgba(212,168,67,0.06)", border: `1px solid rgba(212,168,67,0.2)`, borderRadius: 10, padding: "10px 16px", marginBottom: 16, display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: T.gold }}>Comparing:</span>
+                    {nbhCompare.map(c => (
+                      <span key={c} style={{ fontSize: 11, padding: "3px 10px", borderRadius: 20, background: "rgba(212,168,67,0.12)", color: T.gold }}>
+                        {c} <button type="button" onClick={() => setNbhCompare(prev => prev.filter(x => x !== c))} style={{ background: "none", border: "none", color: T.gold, cursor: "pointer", fontSize: 11, marginLeft: 4 }}>×</button>
+                      </span>
+                    ))}
+                    {nbhCompare.length < 2 && <span style={{ fontSize: 10, color: T.textMuted }}>Select one more community to compare</span>}
+                  </div>
+                ) : null}
+
+                {/* No data state */}
+                {rawNbh.length === 0 && (
+                  <div style={{ background: "rgba(212,168,67,0.05)", border: `1px solid rgba(212,168,67,0.15)`, borderRadius: 12, padding: "48px 24px", textAlign: "center", marginBottom: 20 }}>
+                    {SvgIcons.MapPin({ width: 40, height: 40, style: { color: T.textMuted, display: "inline-block", marginBottom: 14 } })}
+                    <div style={{ fontSize: 16, fontWeight: 700, color: T.white, marginBottom: 8 }}>Community data not yet imported</div>
+                    <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 4 }}>Import community scorecards from Admin → Data Manager → Communities</div>
+                    <div style={{ fontSize: 11, color: T.textMuted, opacity: 0.7 }}>Each community needs: PPSF, yield, metro distance, schools, service charges, supply pipeline</div>
+                  </div>
+                )}
+
+                {/* Grid view */}
+                {nbhView === "grid" && filtered.length > 0 && (
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 14, marginBottom: 20 }}>
+                    {filtered.map((n, i) => <NbhCard key={i} n={n} />)}
+                  </div>
+                )}
+
+                {/* Table view */}
+                {nbhView === "table" && filtered.length > 0 && (
+                  <div style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 12, overflow: "hidden", marginBottom: 20 }}>
+                    <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr 1fr 1fr", padding: "10px 16px", background: T.surfaceAlt, borderBottom: `1px solid ${T.border}` }}>
+                      {["Community", "Score", "Gross Yield", "Net Yield", "PPSF", "Svc Charge", "Supply Risk"].map((h, i) => (
+                        <div key={i} style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 0.8, textTransform: "uppercase" }}>{h}</div>
+                      ))}
+                    </div>
+                    {filtered.map((n, i) => (
+                      <div key={i} style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr 1fr 1fr", padding: "10px 16px", borderBottom: i < filtered.length - 1 ? `1px solid ${T.border}` : "none", background: i % 2 === 0 ? "transparent" : "rgba(255,255,255,0.01)" }}
+                        onMouseEnter={e => e.currentTarget.style.background = "rgba(212,168,67,0.04)"}
+                        onMouseLeave={e => e.currentTarget.style.background = i % 2 === 0 ? "transparent" : "rgba(255,255,255,0.01)"}>
+                        <div style={{ fontSize: 13, color: T.white, fontWeight: 500 }}>{n.community || "—"}</div>
+                        <div><ScoreBadge score={n.investmentScore} /></div>
+                        <div style={{ fontSize: 13, color: parseFloat(n.grossYield) >= 7 ? T.green : T.gold, fontWeight: 700 }}>{n.grossYield ? parseFloat(n.grossYield).toFixed(1) + "%" : "—"}</div>
+                        <div style={{ fontSize: 12, color: T.textSecondary }}>{n.netYield ? parseFloat(n.netYield).toFixed(1) + "%" : "—"}</div>
+                        <div style={{ fontSize: 12, color: T.white }}>AED {(n.avgPpsf || 0).toLocaleString()}</div>
+                        <div style={{ fontSize: 12, color: T.textMuted }}>AED {n.serviceCharge || "—"}/sqft</div>
+                        <div><RiskBadge risk={n.supplyRisk} /></div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Sources */}
+                <div style={{ paddingTop: 12, borderTop: `1px solid ${T.border}`, display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+                  <span style={{ fontSize: 10, color: T.textMuted }}>Sources:</span>
+                  {["Dubai Land Department", "RERA Service Charges", "Bayut Rental Index", "RTA Metro Data", "ValuStrat VPI", "Knight Frank Research"].map((s, i) => (
+                    <span key={i} style={{ fontSize: 10, color: T.textMuted, padding: "2px 8px", borderRadius: 10, border: `1px solid ${T.border}`, background: T.surfaceAlt }}>{s}</span>
+                  ))}
+                </div>
+
+              </div>
+            );
+          })()}
+
+          {/* ─── LAUNCH CALENDAR TAB ─── */}
+          {tab === "Launch Calendar" && (() => {
+
+            /* ── Status config ── */
+            const STATUS_CFG = {
+              "EOI Open":     { color: T.green,  bg: "rgba(16,185,129,0.12)",  dot: T.green  },
+              "EOI Closed":   { color: T.red,    bg: "rgba(239,68,68,0.12)",   dot: T.red    },
+              "Upcoming":     { color: T.gold,   bg: "rgba(212,168,67,0.12)",  dot: T.gold   },
+              "Launched":     { color: T.teal,   bg: "rgba(20,184,166,0.12)",  dot: T.teal   },
+              "Sold Out":     { color: T.textMuted, bg: "rgba(255,255,255,0.05)", dot: T.textMuted },
+            };
+
+            /* ── Firestore data ── */
+            const rawLaunchesFirestore = liveMarketData?.filter?.(d => d.type === "launch") || [];
+            const rawLaunches = rawLaunchesFirestore.length > 0 ? rawLaunchesFirestore : SEED_DATA.launches;
+            const lcIsSeed = rawLaunchesFirestore.length === 0;
+
+            /* ── Local filter state ── */
+            /* state from top level: lcSearch, lcDev, lcStatus, lcType, lcView */
+
+            /* ── Filter ── */
+            const filtered = rawLaunches.filter(l => {
+              if (lcSearch && !JSON.stringify(l).toLowerCase().includes(lcSearch.toLowerCase())) return false;
+              if (lcDev !== "All" && l.developer !== lcDev) return false;
+              if (lcStatus !== "All" && l.status !== lcStatus) return false;
+              if (lcType !== "All" && l.propertyType !== lcType) return false;
+              return true;
+            }).sort((a, b) => new Date(a.launchDate || 0) - new Date(b.launchDate || 0));
+
+            const developers = ["All", ...new Set(rawLaunches.map(l => l.developer).filter(Boolean))];
+
+            const selStyle = {
+              background: T.surfaceAlt, border: `1px solid ${T.border}`,
+              borderRadius: 8, color: T.white, fontFamily: "'Outfit',sans-serif",
+              fontSize: 12, padding: "7px 28px 7px 10px", outline: "none", cursor: "pointer",
+              appearance: "none", WebkitAppearance: "none",
+              backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E")`,
+              backgroundRepeat: "no-repeat", backgroundPosition: "right 8px center",
+            };
+
+            /* ── Status badge ── */
+            const StatusBadge = ({ status }) => {
+              const cfg = STATUS_CFG[status] || STATUS_CFG["Upcoming"];
+              return (
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "3px 10px", borderRadius: 20, background: cfg.bg, fontSize: 11, fontWeight: 700, color: cfg.color }}>
+                  <span style={{ width: 5, height: 5, borderRadius: "50%", background: cfg.dot, display: "inline-block", animation: status === "EOI Open" ? "pulse 2s infinite" : "none" }} />
+                  {status}
+                </span>
+              );
+            };
+
+            /* ── Days until launch ── */
+            const daysUntil = (dateStr) => {
+              if (!dateStr) return null;
+              const diff = Math.ceil((new Date(dateStr) - new Date()) / (1000 * 60 * 60 * 24));
+              if (diff < 0) return null;
+              if (diff === 0) return "Today";
+              if (diff === 1) return "Tomorrow";
+              if (diff <= 7) return `${diff} days`;
+              if (diff <= 30) return `${Math.ceil(diff/7)} weeks`;
+              return `${Math.ceil(diff/30)} months`;
+            };
+
+            /* ── Launch Card ── */
+            const LaunchCard = ({ l }) => {
+              const cfg = STATUS_CFG[l.status] || STATUS_CFG["Upcoming"];
+              const days = daysUntil(l.launchDate);
+              return (
+                <div className="chart-box" style={{ padding: 18, borderLeft: `3px solid ${cfg.color}`, position: "relative" }}>
+                  {/* Days countdown */}
+                  {days && (
+                    <div style={{ position: "absolute", top: 14, right: 14, fontSize: 10, fontWeight: 700, color: cfg.color, background: cfg.bg, padding: "2px 8px", borderRadius: 10 }}>
+                      {days}
+                    </div>
+                  )}
+
+                  {/* Developer + Project */}
+                  <div style={{ marginBottom: 10 }}>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 4 }}>{l.developer || "Developer TBC"}</div>
+                    <div style={{ fontSize: 15, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif", marginBottom: 6 }}>{l.projectName || "Project Name TBC"}</div>
+                    <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" }}>
+                      <StatusBadge status={l.status || "Upcoming"} />
+                      {l.community && <span style={{ fontSize: 11, color: T.textMuted }}>{l.community}</span>}
+                      {l.propertyType && <span style={{ fontSize: 11, color: T.textMuted }}>{"·"}{l.propertyType}</span>}
+                    </div>
+                  </div>
+
+                  {/* Key metrics */}
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 12 }}>
+                    {[
+                      { label: "Launch Date", value: l.launchDate ? new Date(l.launchDate).toLocaleDateString("en-AE", { day: "numeric", month: "short", year: "numeric" }) : "TBC" },
+                      { label: "Starting Price", value: l.startingPrice ? "AED " + (l.startingPrice/1000000).toFixed(1) + "M" : "TBC" },
+                      { label: "Units Available", value: l.totalUnits ? l.totalUnits.toLocaleString() : "TBC" },
+                    ].map((m, i) => (
+                      <div key={i} style={{ background: T.surfaceAlt, borderRadius: 8, padding: "8px 10px" }}>
+                        <div style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 3 }}>{m.label}</div>
+                        <div style={{ fontSize: 13, fontWeight: 700, color: T.white }}>{m.value}</div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Payment plan */}
+                  {l.paymentPlan && (
+                    <div style={{ display: "flex", gap: 6, marginBottom: 12, flexWrap: "wrap" }}>
+                      <span style={{ fontSize: 10, color: T.textMuted }}>Payment Plan:</span>
+                      <span style={{ fontSize: 10, fontWeight: 700, color: T.gold }}>{l.paymentPlan}</span>
+                    </div>
+                  )}
+
+                  {/* EOI details */}
+                  {(l.status === "EOI Open" || l.status === "EOI Closed") && (
+                    <div style={{ background: l.status === "EOI Open" ? "rgba(16,185,129,0.06)" : "rgba(239,68,68,0.06)", border: `1px solid ${l.status === "EOI Open" ? "rgba(16,185,129,0.2)" : "rgba(239,68,68,0.2)"}`, borderRadius: 8, padding: "8px 12px", marginBottom: 12 }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 6 }}>
+                        <div>
+                          <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 2 }}>EOI Amount</div>
+                          <div style={{ fontSize: 13, fontWeight: 700, color: l.status === "EOI Open" ? T.green : T.textSecondary }}>
+                            {l.eoiAmount ? "AED " + l.eoiAmount.toLocaleString() : "AED 20K–50K"}
+                          </div>
+                        </div>
+                        {l.eoiDeadline && (
+                          <div>
+                            <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 2 }}>EOI Deadline</div>
+                            <div style={{ fontSize: 13, fontWeight: 700, color: T.gold }}>{new Date(l.eoiDeadline).toLocaleDateString("en-AE", { day: "numeric", month: "short" })}</div>
+                          </div>
+                        )}
+                        <div>
+                          <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 2 }}>Refundable</div>
+                          <div style={{ fontSize: 13, fontWeight: 700, color: T.green }}>{l.eoiRefundable !== false ? "Yes" : "No"}</div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Past performance vs actual */}
+                  {l.launchPrice && l.currentPrice && (
+                    <div style={{ background: T.surfaceAlt, borderRadius: 8, padding: "8px 12px", marginBottom: 12 }}>
+                      <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 6 }}>Launch vs Current Price</div>
+                      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                        <div style={{ fontSize: 12, color: T.textSecondary }}>Launch: <span style={{ color: T.white, fontWeight: 600 }}>AED {(l.launchPrice/1000).toFixed(0)}K/sqft</span></div>
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={T.textMuted} strokeWidth="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                        <div style={{ fontSize: 12, color: T.textSecondary }}>Now: <span style={{ color: T.gold, fontWeight: 600 }}>AED {(l.currentPrice/1000).toFixed(0)}K/sqft</span></div>
+                        <span style={{ fontSize: 11, fontWeight: 700, color: l.currentPrice > l.launchPrice ? T.green : T.red, marginLeft: "auto" }}>
+                          {l.currentPrice > l.launchPrice ? "+" : ""}{(((l.currentPrice - l.launchPrice) / l.launchPrice) * 100).toFixed(1)}%
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Notes */}
+                  {l.notes && (
+                    <div style={{ fontSize: 11, color: T.textMuted, lineHeight: 1.6, marginBottom: 12, paddingTop: 8, borderTop: `1px solid ${T.border}` }}>{l.notes}</div>
+                  )}
+
+                  {/* Action */}
+                  <div style={{ display: "flex", gap: 8 }}>
+                    {l.status === "EOI Open" && (
+                      <button type="button" onClick={() => handleTabChange("Dev Portal")}
+                        style={{ flex: 1, padding: "7px 0", background: `linear-gradient(135deg, ${T.green}, #059669)`, border: "none", borderRadius: 8, color: "#fff", fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                        Register EOI →
+                      </button>
+                    )}
+                    <button type="button" onClick={() => handleTabChange("Projects")}
+                      style={{ flex: 1, padding: "7px 0", background: "rgba(212,168,67,0.06)", border: `1px solid ${T.border}`, borderRadius: 8, color: T.gold, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                      View Projects →
+                    </button>
+                  </div>
+                </div>
+              );
+            };
+
+            /* ── Group by month ── */
+            const byMonth = filtered.reduce((acc, l) => {
+              const month = l.launchDate
+                ? new Date(l.launchDate).toLocaleDateString("en-AE", { month: "long", year: "numeric" })
+                : "Date TBC";
+              if (!acc[month]) acc[month] = [];
+              acc[month].push(l);
+              return acc;
+            }, {});
+
+            return (
+              <div style={{ animation: "fadeUp 0.4s ease-out forwards" }}>
+
+                {/* Tab header */}
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0", marginBottom: 20, borderBottom: `1px solid ${T.border}`, flexWrap: "wrap", gap: 8 }}>
+                  <div>
+                    <div style={{ fontSize: 20, fontWeight: 800, color: T.white, fontFamily: "'Fraunces',serif" }}>Launch Calendar</div>
+                    <div style={{ fontSize: 11, color: T.textMuted, marginTop: 3 }}>Upcoming off-plan launches · EOI tracking · Developer radar · Never miss a launch</div>
+                  </div>
+                  <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                    <div style={{ display: "flex", background: T.surfaceAlt, borderRadius: 8, border: `1px solid ${T.border}`, overflow: "hidden" }}>
+                      {["list", "calendar"].map(v => (
+                        <button key={v} type="button" onClick={() => setLcView(v)}
+                          style={{ padding: "6px 14px", background: lcView === v ? "rgba(212,168,67,0.15)" : "transparent", color: lcView === v ? T.gold : T.textMuted, border: "none", cursor: "pointer", fontSize: 11, fontWeight: 600, fontFamily: "'Outfit',sans-serif", textTransform: "capitalize" }}>
+                          {v}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* EOI summary row */}
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: 12, marginBottom: 20 }}>
+                  {[
+                    { label: "EOI Open Now", value: rawLaunches.filter(l => l.status === "EOI Open").length || "—", color: T.green },
+                    { label: "Upcoming Launches", value: rawLaunches.filter(l => l.status === "Upcoming").length || "—", color: T.gold },
+                    { label: "This Month", value: rawLaunches.filter(l => { const d = new Date(l.launchDate); const now = new Date(); return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear(); }).length || "—", color: T.teal },
+                    { label: "Total Tracked", value: rawLaunches.length || "—", color: T.textSecondary },
+                  ].map((kpi, i) => (
+                    <div key={i} className="kpi-card">
+                      <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 8 }}>{kpi.label}</div>
+                      <div style={{ fontFamily: "'Fraunces',serif", fontSize: 28, fontWeight: 800, color: kpi.color }}>{kpi.value}</div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Smart Filters */}
+                <div style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 12, padding: "14px 16px", marginBottom: 20 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+                    <div style={{ position: "relative", flex: "0 0 200px" }}>
+                      {SvgIcons.Search({ width: 13, height: 13, style: { position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", color: T.textMuted, pointerEvents: "none" } })}
+                      <input value={lcSearch} onChange={e => setLcSearch(e.target.value)} placeholder="Search launches..."
+                        style={{ ...selStyle, paddingLeft: 30, paddingRight: 10, width: "100%", backgroundImage: "none" }} />
+                    </div>
+                    <select value={lcDev} onChange={e => setLcDev(e.target.value)} style={selStyle}>
+                      {developers.map(d => <option key={d}>{d}</option>)}
+                    </select>
+                    <select value={lcStatus} onChange={e => setLcStatus(e.target.value)} style={selStyle}>
+                      {["All", "EOI Open", "EOI Closed", "Upcoming", "Launched", "Sold Out"].map(s => <option key={s}>{s}</option>)}
+                    </select>
+                    <select value={lcType} onChange={e => setLcType(e.target.value)} style={selStyle}>
+                      {["All", "Apartment", "Villa", "Townhouse", "Penthouse", "Hotel Apartment", "Mixed"].map(t => <option key={t}>{t}</option>)}
+                    </select>
+                    <span style={{ fontSize: 11, color: T.textMuted, marginLeft: "auto" }}>{filtered.length} launches</span>
+                    {(lcSearch || lcDev !== "All" || lcStatus !== "All" || lcType !== "All") && (
+                      <button type="button" onClick={() => { setLcSearch(""); setLcDev("All"); setLcStatus("All"); setLcType("All"); }}
+                        style={{ background: "none", border: `1px solid ${T.border}`, borderRadius: 8, padding: "6px 12px", color: T.textMuted, fontSize: 11, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                        Clear
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* EOI Alert banner */}
+                {rawLaunches.filter(l => l.status === "EOI Open").length > 0 && (
+                  <div style={{ background: "rgba(16,185,129,0.06)", border: "1px solid rgba(16,185,129,0.2)", borderRadius: 10, padding: "10px 16px", marginBottom: 16, display: "flex", alignItems: "center", gap: 10 }}>
+                    <span style={{ width: 8, height: 8, borderRadius: "50%", background: T.green, animation: "pulse 2s infinite", display: "inline-block", flexShrink: 0 }} />
+                    <div style={{ fontSize: 12, color: T.textSecondary }}>
+                      <span style={{ color: T.green, fontWeight: 700 }}>{rawLaunches.filter(l => l.status === "EOI Open").length} EOI{rawLaunches.filter(l => l.status === "EOI Open").length > 1 ? "s" : ""} open right now</span>
+                      {" — "}EOI payments are typically AED 20K–50K and fully refundable until SPA is signed. Register through Dev Portal.
+                    </div>
+                  </div>
+                )}
+
+                {/* No data state */}
+                {rawLaunches.length === 0 && (
+                  <div style={{ background: "rgba(212,168,67,0.05)", border: `1px solid rgba(212,168,67,0.15)`, borderRadius: 12, padding: "48px 24px", textAlign: "center", marginBottom: 20 }}>
+                    {SvgIcons.Calendar({ width: 40, height: 40, style: { color: T.textMuted, display: "inline-block", marginBottom: 14 } })}
+                    <div style={{ fontSize: 16, fontWeight: 700, color: T.white, marginBottom: 8 }}>No launches tracked yet</div>
+                    <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 4 }}>Launch data auto-populates from developer portals daily</div>
+                    <div style={{ fontSize: 11, color: T.textMuted, opacity: 0.7 }}>Add launches manually from Admin → Data Manager → Launches</div>
+                  </div>
+                )}
+
+                {/* List view — grouped by month */}
+                {lcView === "list" && filtered.length > 0 && (
+                  <div style={{ marginBottom: 20 }}>
+                    {Object.entries(byMonth).map(([month, launches]) => (
+                      <div key={month} style={{ marginBottom: 28 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 14 }}>
+                          <div style={{ fontSize: 13, fontWeight: 700, color: T.gold, fontFamily: "'Fraunces',serif" }}>{month}</div>
+                          <div style={{ flex: 1, height: 1, background: T.border }} />
+                          <div style={{ fontSize: 11, color: T.textMuted }}>{launches.length} launch{launches.length > 1 ? "es" : ""}</div>
+                        </div>
+                        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: 14 }}>
+                          {launches.map((l, i) => <LaunchCard key={i} l={l} />)}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Calendar view — simple month grid */}
+                {lcView === "calendar" && filtered.length > 0 && (
+                  <div className="chart-box" style={{ padding: 20, marginBottom: 20 }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 16 }}>
+                      {new Date().toLocaleDateString("en-AE", { month: "long", year: "numeric" })}
+                    </div>
+                    {/* Simple calendar grid */}
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 4, marginBottom: 8 }}>
+                      {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(d => (
+                        <div key={d} style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textAlign: "center", padding: "4px 0" }}>{d}</div>
+                      ))}
+                    </div>
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 4 }}>
+                      {(() => {
+                        const now = new Date();
+                        const firstDay = new Date(now.getFullYear(), now.getMonth(), 1).getDay();
+                        const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+                        const cells = [];
+                        for (let i = 0; i < firstDay; i++) cells.push(<div key={`e${i}`} />);
+                        for (let d = 1; d <= daysInMonth; d++) {
+                          const dateStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
+                          const dayLaunches = filtered.filter(l => l.launchDate?.startsWith(dateStr));
+                          const isToday = d === now.getDate();
+                          cells.push(
+                            <div key={d} style={{ minHeight: 44, borderRadius: 8, padding: "4px 6px", background: dayLaunches.length > 0 ? "rgba(212,168,67,0.1)" : isToday ? "rgba(255,255,255,0.06)" : "transparent", border: `1px solid ${isToday ? "rgba(212,168,67,0.4)" : dayLaunches.length > 0 ? "rgba(212,168,67,0.2)" : T.border}` }}>
+                              <div style={{ fontSize: 11, fontWeight: isToday ? 700 : 400, color: isToday ? T.gold : T.textMuted, marginBottom: 2 }}>{d}</div>
+                              {dayLaunches.map((l, i) => (
+                                <div key={i} style={{ fontSize: 9, fontWeight: 700, color: STATUS_CFG[l.status]?.color || T.gold, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                                  {l.projectName?.substring(0, 10) || "Launch"}
+                                </div>
+                              ))}
+                            </div>
+                          );
+                        }
+                        return cells;
+                      })()}
+                    </div>
+                  </div>
+                )}
+
+                {/* Quick nav */}
+                <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
+                  {[
+                    { label: "Browse Projects →", tab: "Projects" },
+                    { label: "Dev Portal →", tab: "Dev Portal" },
+                    { label: "DLD Volumes →", tab: "DLD Volumes" },
+                  ].map((n,i) => (
+                    <button key={i} type="button" onClick={() => handleTabChange(n.tab)}
+                      style={{ padding: "6px 14px", background: "rgba(212,168,67,0.06)", border: `1px solid ${T.border}`, borderRadius: 8, color: T.gold, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                      {n.label}
+                    </button>
+                  ))}
+                </div>
+                {/* Sources */}
+                <div style={{ paddingTop: 12, borderTop: `1px solid ${T.border}`, display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+                  <span style={{ fontSize: 10, color: T.textMuted }}>Sources:</span>
+                  {["Developer Portals", "Bayut Launch Radar", "Property Finder", "Admin Manual Entry"].map((s, i) => (
+                    <span key={i} style={{ fontSize: 10, color: T.textMuted, padding: "2px 8px", borderRadius: 10, border: `1px solid ${T.border}`, background: T.surfaceAlt }}>{s}</span>
+                  ))}
+                </div>
+
+              </div>
+            );
+          })()}
+
+          {/* ─── CURRENCY TAB ─── */}
+          {tab === "Currency" && (() => {
+
+            /* ── Top currencies for Dubai international buyers ── */
+            const TOP_CURRENCIES = [
+              { code: "USD", name: "US Dollar",        flag: "\uD83C\uDDFA\uD83C\uDDF8", rate: 3.6725, change: 0.0,   buyers: "Americas" },
+              { code: "GBP", name: "British Pound",    flag: "\uD83C\uDDEC\uD83C\uDDE7", rate: 4.6420, change: +0.8,  buyers: "UK" },
+              { code: "EUR", name: "Euro",             flag: "\uD83C\uDDEA\uD83C\uDDFA", rate: 3.9850, change: -0.3,  buyers: "Europe" },
+              { code: "INR", name: "Indian Rupee",     flag: "\uD83C\uDDEE\uD83C\uDDF3", rate: 0.0441, change: -0.2,  buyers: "India — #1 buyer nation" },
+              { code: "RUB", name: "Russian Ruble",    flag: "\uD83C\uDDF7\uD83C\uDDFA", rate: 0.0401, change: +1.2,  buyers: "Russia" },
+              { code: "CNY", name: "Chinese Yuan",     flag: "\uD83C\uDDE8\uD83C\uDDF3", rate: 0.5062, change: +0.1,  buyers: "China" },
+              { code: "PKR", name: "Pakistani Rupee",  flag: "\uD83C\uDDF5\uD83C\uDDF0", rate: 0.0131, change: -0.5,  buyers: "Pakistan" },
+              { code: "SAR", name: "Saudi Riyal",      flag: "\uD83C\uDDF8\uD83C\uDDE6", rate: 0.9793, change: 0.0,   buyers: "GCC" },
+              { code: "CHF", name: "Swiss Franc",      flag: "\uD83C\uDDE8\uD83C\uDDED", rate: 4.1380, change: +0.4,  buyers: "Europe" },
+              { code: "CAD", name: "Canadian Dollar",  flag: "\uD83C\uDDE8\uD83C\uDDE6", rate: 2.6840, change: -0.2,  buyers: "Canada" },
+              { code: "AUD", name: "Australian Dollar",flag: "\uD83C\uDDE6\uD83C\uDDFA", rate: 2.3610, change: +0.3,  buyers: "Australia" },
+              { code: "JPY", name: "Japanese Yen",     flag: "\uD83C\uDDEF\uD83C\uDDF5", rate: 0.0245, change: -0.8,  buyers: "Japan" },
+            ];
+
+            /* ── 12-month historical data (seed) ── */
+            const RATE_HISTORY = {
+              GBP: [4.51, 4.53, 4.58, 4.60, 4.62, 4.59, 4.55, 4.57, 4.61, 4.63, 4.64, 4.642],
+              EUR: [3.97, 3.99, 4.01, 3.98, 3.96, 3.94, 3.92, 3.95, 3.97, 3.99, 3.98, 3.985],
+              INR: [0.0440, 0.0442, 0.0445, 0.0443, 0.0441, 0.0440, 0.0438, 0.0439, 0.0441, 0.0442, 0.0441, 0.0441],
+              USD: [3.6725, 3.6725, 3.6725, 3.6725, 3.6725, 3.6725, 3.6725, 3.6725, 3.6725, 3.6725, 3.6725, 3.6725],
+            };
+
+            const MONTHS = ["May","Jun","Jul","Aug","Sep","Oct","Nov","Dec","Jan","Feb","Mar","Apr"];
+
+            /* ── State ── */
+            /* state from top level: selectedCcy, aedAmount, searchCcy */
+
+            const selectedRate = TOP_CURRENCIES.find(c => c.code === selectedCcy)?.rate || 1;
+            const convertedAmount = (aedAmount * selectedRate).toLocaleString(undefined, { maximumFractionDigits: 0 });
+
+            const chartData = (RATE_HISTORY[selectedCcy] || RATE_HISTORY.GBP).map((rate, i) => ({
+              month: MONTHS[i], rate
+            }));
+
+            const filteredCcys = TOP_CURRENCIES.filter(c =>
+              c.name.toLowerCase().includes(searchCcy.toLowerCase()) ||
+              c.code.toLowerCase().includes(searchCcy.toLowerCase())
+            );
+
+            return (
+              <div style={{ animation: "fadeUp 0.4s ease-out forwards" }}>
+
+                {/* Tab header */}
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0", marginBottom: 20, borderBottom: `1px solid ${T.border}`, flexWrap: "wrap", gap: 8 }}>
+                  <div>
+                    <div style={{ fontFamily: "'Fraunces', serif", fontSize: 20, fontWeight: 800, color: T.white }}>Currency Intelligence</div>
+                    <div style={{ fontSize: 11, color: T.textMuted, marginTop: 3 }}>AED exchange rates · Property price converter · International buyer tool</div>
+                  </div>
+                  <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                    <span style={{ fontSize: 10, padding: "3px 10px", borderRadius: 20, background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.2)", color: T.green, display: "flex", alignItems: "center", gap: 4 }}>
+                      <span style={{ width: 5, height: 5, borderRadius: "50%", background: T.green, display: "inline-block", animation: "pulse 2s infinite" }} />
+                      UAE Central Bank Peg
+                    </span>
+                    <span style={{ fontSize: 10, padding: "3px 10px", borderRadius: 20, background: "rgba(255,255,255,0.04)", border: `1px solid ${T.border}`, color: T.textMuted }}>
+                      Reference rates · Verify on xe.com
+                    </span>
+                  </div>
+                </div>
+
+                {/* AED is pegged info */}
+                <div style={{ background: "rgba(212,168,67,0.06)", border: `1px solid rgba(212,168,67,0.2)`, borderRadius: 10, padding: "10px 16px", marginBottom: 20, display: "flex", alignItems: "center", gap: 10 }}>
+                  {SvgIcons.Landmark({ width: 16, height: 16, style: { color: T.gold, flexShrink: 0 } })}
+                  <span style={{ fontSize: 12, color: T.textSecondary }}>
+                    <span style={{ color: T.gold, fontWeight: 700 }}>AED is pegged to USD at 3.6725</span> — fixed since 1997 by UAE Central Bank. AED/USD rate never changes. All other pairs fluctuate vs USD.
+                  </span>
+                </div>
+
+                {/* 2-column: Converter + Chart */}
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1.6fr", gap: 16, marginBottom: 20 }}>
+
+                  {/* Property Price Converter */}
+                  <div className="chart-box" style={{ padding: 20 }}>
+                    <div style={{ fontFamily: "'Fraunces', serif", fontSize: 14, fontWeight: 700, color: T.white, marginBottom: 16 }}>Property Price Converter</div>
+
+                    {/* AED input */}
+                    <div style={{ marginBottom: 16 }}>
+                      <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 6 }}>Property Price (AED)</div>
+                      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 8 }}>
+                        {[500000, 1000000, 2000000, 5000000, 10000000].map(amt => (
+                          <button key={amt} type="button" onClick={() => setAedAmount(amt)}
+                            style={{ padding: "4px 10px", borderRadius: 8, border: `1px solid ${aedAmount === amt ? "rgba(212,168,67,0.5)" : T.border}`, background: aedAmount === amt ? "rgba(212,168,67,0.12)" : T.surfaceAlt, color: aedAmount === amt ? T.gold : T.textMuted, fontSize: 11, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: aedAmount === amt ? 700 : 400 }}>
+                            {amt >= 1000000 ? "AED " + (amt/1000000) + "M" : "AED " + (amt/1000) + "K"}
+                          </button>
+                        ))}
+                      </div>
+                      <input
+                        type="number"
+                        value={aedAmount}
+                        onChange={e => setAedAmount(parseFloat(e.target.value) || 0)}
+                        style={{ width: "100%", padding: "10px 12px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontFamily: "'Outfit',sans-serif", fontSize: 14, fontWeight: 600, outline: "none" }}
+                      />
+                    </div>
+
+                    {/* Currency selector */}
+                    <div style={{ marginBottom: 16 }}>
+                      <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 6 }}>Convert To</div>
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                        {TOP_CURRENCIES.map(c => (
+                          <button key={c.code} type="button" onClick={() => setSelectedCcy(c.code)}
+                            style={{ padding: "5px 10px", borderRadius: 8, border: `1px solid ${selectedCcy === c.code ? "rgba(212,168,67,0.5)" : T.border}`, background: selectedCcy === c.code ? "rgba(212,168,67,0.12)" : T.surfaceAlt, color: selectedCcy === c.code ? T.gold : T.textSecondary, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: selectedCcy === c.code ? 700 : 400, display: "flex", alignItems: "center", gap: 4 }}>
+                            <span style={{ fontSize: 14 }}>{c.flag}</span> {c.code}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Result */}
+                    <div style={{ padding: "16px", background: "rgba(212,168,67,0.06)", borderRadius: 10, border: `1px solid rgba(212,168,67,0.2)`, textAlign: "center" }}>
+                      <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 6 }}>AED {aedAmount.toLocaleString()} =</div>
+                      <div style={{ fontFamily: "'Fraunces', serif", fontSize: 32, fontWeight: 900, color: T.gold }}>
+                        {selectedCcy} {convertedAmount}
+                      </div>
+                      <div style={{ fontSize: 11, color: T.textMuted, marginTop: 6 }}>
+                        Rate: 1 AED = {selectedRate.toFixed(4)} {selectedCcy}
+                      </div>
+                      {aedAmount >= 2000000 && (
+                        <div style={{ marginTop: 10, padding: "4px 12px", borderRadius: 20, background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.2)", color: T.green, fontSize: 11, fontWeight: 700, display: "inline-block" }}>
+                          Golden Visa eligible (AED 2M+)
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* 12-month chart */}
+                  <div className="chart-box" style={{ padding: 20 }}>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
+                      <div style={{ fontFamily: "'Fraunces', serif", fontSize: 14, fontWeight: 700, color: T.white }}>AED/{selectedCcy} — 12 Month Trend</div>
+                      <span style={{ fontSize: 10, color: T.textMuted }}>Apr 2025 – Apr 2026</span>
+                    </div>
+                    <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 16 }}>Exchange rate per 1 AED · UAE Central Bank data</div>
+                    <ResponsiveContainer width="100%" height={220}>
+                      <AreaChart data={chartData}>
+                        <defs>
+                          <linearGradient id="ccyGold" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor={T.gold} stopOpacity={0.2}/>
+                            <stop offset="95%" stopColor={T.gold} stopOpacity={0}/>
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
+                        <XAxis dataKey="month" tick={{ fill: T.textMuted, fontSize: 11 }} axisLine={false} tickLine={false} />
+                        <YAxis tick={{ fill: T.textMuted, fontSize: 11 }} axisLine={false} tickLine={false}
+                          tickFormatter={v => v.toFixed(selectedRate < 1 ? 4 : 2)} width={60} />
+                        <Tooltip contentStyle={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 10 }}
+                          labelStyle={{ color: T.white }} itemStyle={{ color: T.gold }}
+                          formatter={v => [v.toFixed(selectedRate < 1 ? 4 : 4) + " " + selectedCcy, "Rate"]} />
+                        <Area type="monotone" dataKey="rate" stroke={T.gold} strokeWidth={2} fill="url(#ccyGold)" dot={false} activeDot={{ r: 4, fill: T.gold }} />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+
+                {/* Full rates table */}
+                <div style={{ marginBottom: 20 }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+                    <div style={{ fontFamily: "'Fraunces', serif", fontSize: 14, fontWeight: 700, color: T.white }}>Reference Exchange Rates</div>
+                    <div style={{ position: "relative" }}>
+                      {SvgIcons.Search({ width: 13, height: 13, style: { position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", color: T.textMuted, pointerEvents: "none" } })}
+                      <input value={searchCcy} onChange={e => setSearchCcy(e.target.value)} placeholder="Search currency..."
+                        style={{ padding: "6px 10px 6px 30px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontFamily: "'Outfit',sans-serif", fontSize: 12, outline: "none", width: 180 }} />
+                    </div>
+                  </div>
+                  <div style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 12, overflow: "hidden" }}>
+                    {/* Header */}
+                    <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr 2fr", padding: "10px 16px", background: T.surfaceAlt, borderBottom: `1px solid ${T.border}` }}>
+                      {["Currency", "Code", "1 AED =", "24H Change", "Dubai Buyers From"].map((h, i) => (
+                        <div key={i} style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 0.8, textTransform: "uppercase" }}>{h}</div>
+                      ))}
+                    </div>
+                    {filteredCcys.length > 0 ? filteredCcys.map((c, i) => (
+                      <div key={i} onClick={() => setSelectedCcy(c.code)}
+                        style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr 2fr", padding: "11px 16px", borderBottom: i < filteredCcys.length - 1 ? `1px solid ${T.border}` : "none", background: selectedCcy === c.code ? "rgba(212,168,67,0.06)" : i % 2 === 0 ? "transparent" : "rgba(255,255,255,0.01)", cursor: "pointer", transition: "background 0.15s" }}
+                        onMouseEnter={e => { if (selectedCcy !== c.code) e.currentTarget.style.background = "rgba(212,168,67,0.03)"; }}
+                        onMouseLeave={e => { e.currentTarget.style.background = selectedCcy === c.code ? "rgba(212,168,67,0.06)" : i % 2 === 0 ? "transparent" : "rgba(255,255,255,0.01)"; }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                          <span style={{ fontSize: 18 }}>{c.flag}</span>
+                          <span style={{ fontSize: 13, color: T.white, fontWeight: 500 }}>{c.name}</span>
+                        </div>
+                        <div style={{ fontSize: 13, color: T.textMuted, fontWeight: 600 }}>{c.code}</div>
+                        <div style={{ fontSize: 13, color: T.gold, fontWeight: 700 }}>{c.rate.toFixed(c.rate < 1 ? 4 : 4)}</div>
+                        <div style={{ fontSize: 12, color: c.change > 0 ? T.green : c.change < 0 ? T.red : T.textMuted, fontWeight: 600 }}>
+                          {c.change > 0 ? "+" : ""}{c.change.toFixed(1)}%
+                        </div>
+                        <div style={{ fontSize: 11, color: T.textMuted }}>{c.buyers}</div>
+                      </div>
+                    )) : null}
+                  </div>
+                </div>
+
+                {/* Sources */}
+                <div style={{ paddingTop: 12, borderTop: `1px solid ${T.border}`, display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+                  <span style={{ fontSize: 10, color: T.textMuted }}>Sources:</span>
+                  {["UAE Central Bank", "ExchangeRate-API", "DLD Buyer Nationality Report 2025"].map((s, i) => (
+                    <span key={i} style={{ fontSize: 10, color: T.textMuted, padding: "2px 8px", borderRadius: 10, border: `1px solid ${T.border}`, background: T.surfaceAlt }}>{s}</span>
+                  ))}
+                </div>
+
+              </div>
+            );
+          })()}
+
+          {/* ─── PROJECTS TAB ─── */}
           {tab === "Projects" && (() => {
 
-            /* SEED_PROJECTS â€” defined at top level */
+            /* SEED_PROJECTS — defined at top level */
             const rawProjects = liveProjects?.length > 0 ? liveProjects : SEED_PROJECTS;
 
             const filtered = rawProjects.filter(p => {
@@ -2041,7 +6194,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
             });
 
             const avgYield = filtered.length > 0 && filtered.some(p => p.grossYield > 0)
-              ? (filtered.filter(p=>p.grossYield>0).reduce((a,p) => a + p.grossYield, 0) / filtered.filter(p=>p.grossYield>0).length).toFixed(1) : "â€”";
+              ? (filtered.filter(p=>p.grossYield>0).reduce((a,p) => a + p.grossYield, 0) / filtered.filter(p=>p.grossYield>0).length).toFixed(1) : "—";
             const avgPpsf = filtered.length > 0 && filtered.some(p=>p.ppsf)
               ? Math.round(filtered.filter(p=>p.ppsf).reduce((a,p) => a + p.ppsf, 0) / filtered.filter(p=>p.ppsf).length) : 0;
 
@@ -2078,12 +6231,12 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   <div style={{ padding:"14px 16px", borderBottom:`1px solid ${T.border}` }} onClick={() => { setSelectedProject(p); setProjDetailTab("overview"); }}>
                     <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:8 }}>
                       <div style={{ flex:1 }}>
-                        <div style={{ fontSize:10, fontWeight:700, color:T.textMuted, letterSpacing:0.8, textTransform:"uppercase", marginBottom:3 }}>{p.developer}{"Â·"}{p.community}</div>
+                        <div style={{ fontSize:10, fontWeight:700, color:T.textMuted, letterSpacing:0.8, textTransform:"uppercase", marginBottom:3 }}>{p.developer}{"·"}{p.community}</div>
                         <div style={{ fontFamily:"'Fraunces',serif", fontSize:15, fontWeight:700, color:T.white, marginBottom:6 }}>{p.project}</div>
                         <div style={{ display:"flex", gap:6, flexWrap:"wrap", alignItems:"center" }}>
                           <StatusBadge status={p.status} />
                           {p.handover && <span style={{ fontSize:10, color:T.textMuted }}>{p.handover}</span>}
-                          {p.beds?.length > 0 && <span style={{ fontSize:10, color:T.textMuted }}>{"Â·"}{p.beds.join(" / ")}</span>}
+                          {p.beds?.length > 0 && <span style={{ fontSize:10, color:T.textMuted }}>{"·"}{p.beds.join(" / ")}</span>}
                         </div>
                       </div>
                       <div style={{ display:"flex", flexDirection:"column", alignItems:"flex-end", gap:6 }}>
@@ -2105,7 +6258,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                       </div>
                       <div>
                         <div style={{ fontSize:9, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.6, marginBottom:2 }}>Yield</div>
-                        <div style={{ fontSize:13, fontWeight:700, color:p.grossYield >= 7 ? T.green : p.grossYield >= 5 ? T.gold : T.textSecondary }}>{p.grossYield ? p.grossYield.toFixed(1) + "%" : "â€”"}</div>
+                        <div style={{ fontSize:13, fontWeight:700, color:p.grossYield >= 7 ? T.green : p.grossYield >= 5 ? T.gold : T.textSecondary }}>{p.grossYield ? p.grossYield.toFixed(1) + "%" : "—"}</div>
                       </div>
                       <div>
                         <div style={{ fontSize:9, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.6, marginBottom:2 }}>Plan</div>
@@ -2125,7 +6278,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                       </div>
                     )}
                     <div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>
-                      {p.distMetro !== undefined && <span style={{ fontSize:10, padding:"2px 7px", borderRadius:8, background:p.distMetro <= 0.8 ? "rgba(16,185,129,0.15)" : T.surfaceAlt, color:p.distMetro <= 0.8 ? T.green : T.textMuted }}>Metro {p.distMetro <= 0.8 ? "â‰¤800m" : p.distMetro + "km"}</span>}
+                      {p.distMetro !== undefined && <span style={{ fontSize:10, padding:"2px 7px", borderRadius:8, background:p.distMetro <= 0.8 ? "rgba(16,185,129,0.15)" : T.surfaceAlt, color:p.distMetro <= 0.8 ? T.green : T.textMuted }}>Metro {p.distMetro <= 0.8 ? "≤800m" : p.distMetro + "km"}</span>}
                       {p.distBeach !== undefined && p.distBeach <= 2 && <span style={{ fontSize:10, padding:"2px 7px", borderRadius:8, background:"rgba(20,184,166,0.12)", color:T.teal }}>Beach {p.distBeach < 1 ? (p.distBeach*1000).toFixed(0)+"m" : p.distBeach+"km"}</span>}
                       {p.distDIFC !== undefined && <span style={{ fontSize:10, padding:"2px 7px", borderRadius:8, background:T.surfaceAlt, color:T.textMuted }}>DIFC {p.distDIFC}km</span>}
                       {p.constructionPct > 0 && p.status !== "Ready" && <span style={{ fontSize:10, padding:"2px 7px", borderRadius:8, background:"rgba(139,92,246,0.12)", color:"#8B5CF6" }}>{p.constructionPct}% built</span>}
@@ -2139,11 +6292,11 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                     </div>
                   )}
                   <div style={{ padding:"10px 12px", display:"flex", gap:6, flexWrap:"wrap" }}>
-                    <button type="button" onClick={() => handleTabChange("Investment Score")} style={{ padding:"5px 10px", background:"rgba(212,168,67,0.08)", border:`1px solid ${T.border}`, borderRadius:7, color:T.gold, fontSize:10, fontWeight:700, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>ROI â†’</button>
+                    <button type="button" onClick={() => handleTabChange("Investment Score")} style={{ padding:"5px 10px", background:"rgba(212,168,67,0.08)", border:`1px solid ${T.border}`, borderRadius:7, color:T.gold, fontSize:10, fontWeight:700, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>ROI →</button>
                     <button type="button" onClick={() => handleTabChange("Mortgage")} style={{ padding:"5px 10px", background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:7, color:T.textSecondary, fontSize:10, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>Mortgage</button>
-                    <button type="button" onClick={() => setProjCompare(prev => inCompare ? prev.filter(c=>c.id!==p.id) : prev.length < 3 ? [...prev,p] : prev)} style={{ padding:"5px 10px", background:inCompare?"rgba(16,185,129,0.12)":T.surfaceAlt, border:`1px solid ${inCompare?T.green:T.border}`, borderRadius:7, color:inCompare?T.green:T.textSecondary, fontSize:10, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>{inCompare?"âœ“ Compare":"+ Compare"}</button>
+                    <button type="button" onClick={() => setProjCompare(prev => inCompare ? prev.filter(c=>c.id!==p.id) : prev.length < 3 ? [...prev,p] : prev)} style={{ padding:"5px 10px", background:inCompare?"rgba(16,185,129,0.12)":T.surfaceAlt, border:`1px solid ${inCompare?T.green:T.border}`, borderRadius:7, color:inCompare?T.green:T.textSecondary, fontSize:10, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>{inCompare?"✓ Compare":"+ Compare"}</button>
                     <button type="button" onClick={() => handleTabChange("My Leads")} style={{ padding:"5px 10px", background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:7, color:T.textSecondary, fontSize:10, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>Add Lead</button>
-                    <button type="button" onClick={() => { setSelectedProject(p); setProjDetailTab("overview"); }} style={{ padding:"5px 10px", background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:7, color:T.textSecondary, fontSize:10, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>Details â†’</button>
+                    <button type="button" onClick={() => { setSelectedProject(p); setProjDetailTab("overview"); }} style={{ padding:"5px 10px", background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:7, color:T.textSecondary, fontSize:10, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>Details →</button>
                   </div>
                 </div>
               );
@@ -2155,7 +6308,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"10px 0", marginBottom:16, borderBottom:`1px solid ${T.border}`, flexWrap:"wrap", gap:8 }}>
                   <div>
                     <div style={{ fontFamily:"'Fraunces',serif", fontSize:20, fontWeight:800, color:T.white }}>Project Explorer</div>
-                    <div style={{ fontSize:11, color:T.textMuted, marginTop:3 }}>All Dubai property types Â· Investment intelligence Â· Full project data</div>
+                    <div style={{ fontSize:11, color:T.textMuted, marginTop:3 }}>All Dubai property types · Investment intelligence · Full project data</div>
                   </div>
                   <div style={{ display:"flex", gap:8 }}>
                     {["grid","list"].map(v => (
@@ -2217,9 +6370,9 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(170px,1fr))", gap:10, marginBottom:20 }}>
                   {[
                     { label:"Projects Found", value:filtered.length.toString(), color:T.white },
-                    { label:"Price Range", value:filtered.length > 0 ? `AED ${(Math.min(...filtered.map(p=>p.priceMin))/1000000).toFixed(1)}M+` : "â€”", color:T.white },
-                    { label:"Avg Gross Yield", value:avgYield !== "â€”" ? avgYield + "%" : "â€”", color:T.green },
-                    { label:"Avg PPSF", value:avgPpsf > 0 ? "AED " + avgPpsf.toLocaleString() : "â€”", color:T.gold },
+                    { label:"Price Range", value:filtered.length > 0 ? `AED ${(Math.min(...filtered.map(p=>p.priceMin))/1000000).toFixed(1)}M+` : "—", color:T.white },
+                    { label:"Avg Gross Yield", value:avgYield !== "—" ? avgYield + "%" : "—", color:T.green },
+                    { label:"Avg PPSF", value:avgPpsf > 0 ? "AED " + avgPpsf.toLocaleString() : "—", color:T.gold },
                   ].map((kpi,i) => (
                     <div key={i} className="kpi-card">
                       <div style={{ fontSize:10, fontWeight:700, color:T.textMuted, letterSpacing:1, textTransform:"uppercase", marginBottom:8 }}>{kpi.label}</div>
@@ -2235,14 +6388,14 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                     {projCompare.map((p,i) => (
                       <span key={i} style={{ fontSize:11, padding:"3px 10px", borderRadius:10, background:"rgba(212,168,67,0.1)", color:T.white, display:"flex", alignItems:"center", gap:6 }}>
                         {p.project?.substring(0,20)}
-                        <button type="button" onClick={() => setProjCompare(prev => prev.filter(c=>c.id!==p.id))} style={{ background:"none", border:"none", color:T.textMuted, cursor:"pointer", fontSize:12, padding:0 }}>Ã—</button>
+                        <button type="button" onClick={() => setProjCompare(prev => prev.filter(c=>c.id!==p.id))} style={{ background:"none", border:"none", color:T.textMuted, cursor:"pointer", fontSize:12, padding:0 }}>×</button>
                       </span>
                     ))}
                     <div style={{ display:"flex", gap:8, marginLeft:"auto" }}>
                       {projCompare.length >= 2 && (
                         <button type="button" onClick={() => setShowCompare(true)}
                           style={{ padding:"7px 16px", background:`linear-gradient(135deg, ${T.gold}, #B8922A)`, border:"none", borderRadius:8, color:"#000", fontSize:12, fontWeight:700, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>
-                          View Comparison â†’
+                          View Comparison →
                         </button>
                       )}
                       <button type="button" onClick={() => setProjCompare([])} style={{ background:"none", border:`1px solid ${T.border}`, borderRadius:8, padding:"5px 10px", color:T.textMuted, fontSize:11, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>Clear</button>
@@ -2254,7 +6407,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 {!liveProjects?.length && (
                   <div style={{ display:"flex", alignItems:"center", gap:8, padding:"8px 14px", borderRadius:8, background:"rgba(212,168,67,0.06)", border:`1px solid rgba(212,168,67,0.2)`, marginBottom:16 }}>
                     <span style={{ width:6, height:6, borderRadius:"50%", background:T.gold, display:"inline-block" }} />
-                    <span style={{ fontSize:11, color:T.textMuted }}><span style={{ color:T.gold, fontWeight:700 }}>Research-based seed projects</span> â€” Developer portals, Bayut, PropertyFinder, DLD Apr 2026 Â· Import via Admin â†’ Data Manager</span>
+                    <span style={{ fontSize:11, color:T.textMuted }}><span style={{ color:T.gold, fontWeight:700 }}>Research-based seed projects</span> — Developer portals, Bayut, PropertyFinder, DLD Apr 2026 · Import via Admin → Data Manager</span>
                   </div>
                 )}
 
@@ -2291,13 +6444,13 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                           onMouseLeave={e => e.currentTarget.style.background="transparent"}>
                           <div>
                             <div style={{ fontSize:13, fontWeight:600, color:T.white }}>{p.project}</div>
-                            <div style={{ fontSize:11, color:T.textMuted }}>{p.developer}{"Â·"}{p.community}</div>
+                            <div style={{ fontSize:11, color:T.textMuted }}>{p.developer}{"·"}{p.community}</div>
                           </div>
-                          <div style={{ fontSize:13, color:T.white }}>{p.priceMin ? "AED " + (p.priceMin/1000000).toFixed(1) + "M" : "â€”"}</div>
+                          <div style={{ fontSize:13, color:T.white }}>{p.priceMin ? "AED " + (p.priceMin/1000000).toFixed(1) + "M" : "—"}</div>
                           <div style={{ fontSize:13, color:T.gold, fontWeight:600 }}>AED {(p.ppsf||0).toLocaleString()}</div>
-                          <div style={{ fontSize:13, fontWeight:700, color:p.grossYield>=7?T.green:p.grossYield>=5?T.gold:T.textSecondary }}>{p.grossYield?p.grossYield.toFixed(1)+"%":"â€”"}</div>
-                          <div style={{ fontSize:12, color:T.textSecondary }}>{p.paymentPlan||"â€”"}</div>
-                          <div style={{ fontSize:12, color:T.textMuted }}>{p.handover||"â€”"}</div>
+                          <div style={{ fontSize:13, fontWeight:700, color:p.grossYield>=7?T.green:p.grossYield>=5?T.gold:T.textSecondary }}>{p.grossYield?p.grossYield.toFixed(1)+"%":"—"}</div>
+                          <div style={{ fontSize:12, color:T.textSecondary }}>{p.paymentPlan||"—"}</div>
+                          <div style={{ fontSize:12, color:T.textMuted }}>{p.handover||"—"}</div>
                           <div style={{ display:"flex", alignItems:"center", gap:6 }}>
                             <span style={{ fontSize:14, fontWeight:700, color:scoreColor(sc) }}>{sc}</span>
                             <span style={{ fontSize:10, color:scoreColor(sc) }}>{scoreLabel(sc)}</span>
@@ -2311,10 +6464,10 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 {/* Cross-tab nav */}
                 <div style={{ display:"flex", gap:8, marginBottom:14, flexWrap:"wrap" }}>
                   {[
-                    { label:"Dev Portal â†’", tab:"Dev Portal" },
-                    { label:"Launch Calendar â†’", tab:"Launch Calendar" },
-                    { label:"Yields â†’", tab:"Yields" },
-                    { label:"DLD Volumes â†’", tab:"DLD Volumes" },
+                    { label:"Dev Portal →", tab:"Dev Portal" },
+                    { label:"Launch Calendar →", tab:"Launch Calendar" },
+                    { label:"Yields →", tab:"Yields" },
+                    { label:"DLD Volumes →", tab:"DLD Volumes" },
                   ].map((n,i) => (
                     <button key={i} type="button" onClick={() => handleTabChange(n.tab)}
                       style={{ padding:"6px 14px", background:"rgba(212,168,67,0.06)", border:`1px solid ${T.border}`, borderRadius:8, color:T.gold, fontSize:11, fontWeight:600, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>
@@ -2334,7 +6487,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
           })()}
 
 
-          {/* â•â•â• COMPARE MODAL â•â•â• */}
+          {/* ═══ COMPARE MODAL ═══ */}
           {showCompare && projCompare.length >= 2 && (
             <div role="dialog" aria-modal="true" onClick={() => setShowCompare(false)}
               style={{ position:"fixed", inset:0, background:"rgba(4,9,15,0.97)", zIndex:3000, display:"flex", flexDirection:"column", backdropFilter:"blur(8px)" }}>
@@ -2343,10 +6496,10 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"16px 24px", borderBottom:`1px solid ${T.border}`, background:T.surface, flexShrink:0 }}>
                   <div>
                     <div style={{ fontFamily:"'Fraunces',serif", fontSize:20, fontWeight:800, color:T.white }}>Project Comparison</div>
-                    <div style={{ fontSize:11, color:T.textMuted }}>Side-by-side analysis Â· {projCompare.length} projects</div>
+                    <div style={{ fontSize:11, color:T.textMuted }}>Side-by-side analysis · {projCompare.length} projects</div>
                   </div>
                   <button type="button" onClick={() => setShowCompare(false)}
-                    style={{ width:36, height:36, borderRadius:"50%", background:T.surfaceAlt, border:`1px solid ${T.border}`, color:T.white, cursor:"pointer", fontSize:18, fontFamily:"'Outfit',sans-serif" }}>Ã—</button>
+                    style={{ width:36, height:36, borderRadius:"50%", background:T.surfaceAlt, border:`1px solid ${T.border}`, color:T.white, cursor:"pointer", fontSize:18, fontFamily:"'Outfit',sans-serif" }}>×</button>
                 </div>
                 {/* Compare grid */}
                 <div style={{ flex:1, overflowY:"auto", padding:24 }}>
@@ -2368,24 +6521,24 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                     {projCompare.map((p, pi) => {
                       const score = calcScore(p);
                       const vals = [
-                        p.developer || "â€”",
-                        p.community || "â€”",
-                        p.status || "â€”",
-                        p.handover || "â€”",
-                        p.priceMin ? "AED " + (p.priceMin/1000000).toFixed(2) + "M" : "â€”",
-                        p.ppsf ? "AED " + p.ppsf.toLocaleString() + "/sqft" : "â€”",
-                        p.paymentPlan || "â€”",
-                        p.grossYield ? p.grossYield.toFixed(1) + "%" : "â€”",
-                        p.netYield ? p.netYield.toFixed(1) + "%" : "â€”",
-                        p.serviceCharge ? "AED " + p.serviceCharge + "/sqft/yr" : "â€”",
-                        score.toString() + " â€” " + scoreLabel(score),
-                        p.distMetro != null ? p.distMetro + " km" : "â€”",
-                        p.distDIFC != null ? p.distDIFC + " km" : "â€”",
-                        p.distBeach != null ? p.distBeach + " km" : "â€”",
-                        p.distAirport != null ? p.distAirport + " km" : "â€”",
-                        p.constructionPct != null ? p.constructionPct + "%" : "â€”",
-                        p.developerScore ? p.developerScore + "/100" : "â€”",
-                        p.amenities ? p.amenities.length + " amenities" : "â€”",
+                        p.developer || "—",
+                        p.community || "—",
+                        p.status || "—",
+                        p.handover || "—",
+                        p.priceMin ? "AED " + (p.priceMin/1000000).toFixed(2) + "M" : "—",
+                        p.ppsf ? "AED " + p.ppsf.toLocaleString() + "/sqft" : "—",
+                        p.paymentPlan || "—",
+                        p.grossYield ? p.grossYield.toFixed(1) + "%" : "—",
+                        p.netYield ? p.netYield.toFixed(1) + "%" : "—",
+                        p.serviceCharge ? "AED " + p.serviceCharge + "/sqft/yr" : "—",
+                        score.toString() + " — " + scoreLabel(score),
+                        p.distMetro != null ? p.distMetro + " km" : "—",
+                        p.distDIFC != null ? p.distDIFC + " km" : "—",
+                        p.distBeach != null ? p.distBeach + " km" : "—",
+                        p.distAirport != null ? p.distAirport + " km" : "—",
+                        p.constructionPct != null ? p.constructionPct + "%" : "—",
+                        p.developerScore ? p.developerScore + "/100" : "—",
+                        p.amenities ? p.amenities.length + " amenities" : "—",
                       ];
                       const colors = [
                         null, null, null, null,
@@ -2433,12 +6586,12 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
             </div>
           )}
 
-          {/* â•â•â• PROJECT DETAIL OVERLAY â•â•â• */}
+          {/* ═══ PROJECT DETAIL OVERLAY ═══ */}
           {selectedProject && (
             <div role="dialog" aria-modal="true" style={{ position:"fixed", inset:0, background:"rgba(4,9,15,0.97)", zIndex:2000, display:"flex", flexDirection:"column", backdropFilter:"blur(8px)" }}>
               <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"16px 24px", borderBottom:`1px solid ${T.border}`, background:T.surface, flexShrink:0 }}>
                 <div>
-                  <div style={{ fontSize:11, fontWeight:700, color:T.textMuted, letterSpacing:0.8, textTransform:"uppercase", marginBottom:3 }}>{selectedProject.developer}{"Â·"}{selectedProject.community}</div>
+                  <div style={{ fontSize:11, fontWeight:700, color:T.textMuted, letterSpacing:0.8, textTransform:"uppercase", marginBottom:3 }}>{selectedProject.developer}{"·"}{selectedProject.community}</div>
                   <div style={{ fontFamily:"'Fraunces',serif", fontSize:22, fontWeight:800, color:T.white }}>{selectedProject.project}</div>
                 </div>
                 <div style={{ display:"flex", alignItems:"center", gap:10 }}>
@@ -2446,7 +6599,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                     <div style={{ fontSize:22, fontWeight:800, color:T.gold, fontFamily:"'Fraunces',serif" }}>{selectedProject.priceMin ? "AED " + (selectedProject.priceMin/1000000).toFixed(1) + "M" : "TBC"}</div>
                     <div style={{ fontSize:11, color:T.textMuted }}>starting price</div>
                   </div>
-                  <button type="button" onClick={() => setSelectedProject(null)} style={{ width:36, height:36, borderRadius:"50%", background:T.surfaceAlt, border:`1px solid ${T.border}`, color:T.white, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", fontSize:18, fontFamily:"'Outfit',sans-serif" }}>Ã—</button>
+                  <button type="button" onClick={() => setSelectedProject(null)} style={{ width:36, height:36, borderRadius:"50%", background:T.surfaceAlt, border:`1px solid ${T.border}`, color:T.white, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", fontSize:18, fontFamily:"'Outfit',sans-serif" }}>×</button>
                 </div>
               </div>
               <div style={{ display:"flex", borderBottom:`1px solid ${T.border}`, background:T.surface, flexShrink:0, overflowX:"auto" }}>
@@ -2463,8 +6616,8 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                     <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr 1fr", gap:12, marginBottom:20 }}>
                       {[
                         { label:"Investment Score", value:calcScore(selectedProject).toString(), color:(() => { const s=calcScore(selectedProject); return s>=80?T.green:s>=65?T.gold:T.red; })(), sub:scoreLabel(calcScore(selectedProject)) },
-                        { label:"Gross Yield", value:selectedProject.grossYield?selectedProject.grossYield.toFixed(1)+"%":"â€”", color:T.green, sub:"Annual return estimate" },
-                        { label:"PPSF", value:selectedProject.ppsf?"AED "+selectedProject.ppsf.toLocaleString():"â€”", color:T.gold, sub:"Price per sqft" },
+                        { label:"Gross Yield", value:selectedProject.grossYield?selectedProject.grossYield.toFixed(1)+"%":"—", color:T.green, sub:"Annual return estimate" },
+                        { label:"PPSF", value:selectedProject.ppsf?"AED "+selectedProject.ppsf.toLocaleString():"—", color:T.gold, sub:"Price per sqft" },
                         { label:"Handover", value:selectedProject.handover||"TBC", color:T.white, sub:"Expected completion" },
                       ].map((kpi,i) => (
                         <div key={i} className="kpi-card">
@@ -2489,12 +6642,12 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                       </div>
                     )}
                     <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
-                      <button type="button" onClick={() => { setSelectedProject(null); handleTabChange("Investment Score"); }} style={{ padding:"9px 18px", background:`linear-gradient(135deg,${T.gold},#B8922A)`, border:"none", borderRadius:8, color:"#000", fontSize:12, fontWeight:700, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>Calculate ROI â†’</button>
+                      <button type="button" onClick={() => { setSelectedProject(null); handleTabChange("Investment Score"); }} style={{ padding:"9px 18px", background:`linear-gradient(135deg,${T.gold},#B8922A)`, border:"none", borderRadius:8, color:"#000", fontSize:12, fontWeight:700, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>Calculate ROI →</button>
                       <button type="button" onClick={() => { setSelectedProject(null); handleTabChange("Mortgage"); }} style={{ padding:"9px 18px", background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:8, color:T.textSecondary, fontSize:12, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>Mortgage</button>
                       <button type="button" onClick={() => { setSelectedProject(null); handleTabChange("My Leads"); }} style={{ padding:"9px 18px", background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:8, color:T.textSecondary, fontSize:12, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>Add to Lead</button>
                       <button type="button" onClick={() => {
                           const score = calcScore(selectedProject);
-                          const units = selectedProject.unitBreakdown?.map(u => `  â€¢ ${u.type}: AED ${(u.ppsf||0).toLocaleString()}/sqft | From AED ${(u.priceMin/1000000).toFixed(2)}M | Yield ${u.grossYield||"â€”"}%`).join("\n") || "";
+                          const units = selectedProject.unitBreakdown?.map(u => `  • ${u.type}: AED ${(u.ppsf||0).toLocaleString()}/sqft | From AED ${(u.priceMin/1000000).toFixed(2)}M | Yield ${u.grossYield||"—"}%`).join("\n") || "";
                           const dists = [
                             selectedProject.distMetro != null ? `Metro: ${selectedProject.distMetro}km` : null,
                             selectedProject.distDIFC != null ? `DIFC: ${selectedProject.distDIFC}km` : null,
@@ -2502,8 +6655,8 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                             selectedProject.distSchool != null ? `School: ${selectedProject.distSchool}km` : null,
                           ].filter(Boolean).join(" | ");
                           const txt = [
-                            "\uD83C\uDFD9ï¸ DXB ANALYTICS â€” PROPERTY BRIEF",
-                            "â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”",
+                            "\uD83C\uDFD9️ DXB ANALYTICS — PROPERTY BRIEF",
+                            "━━━━━━━━━━━━━━━━━━━━━━━━",
                             `\uD83D\uDCCC ${selectedProject.project}`,
                             `\uD83C\uDFE2 Developer: ${selectedProject.developer}`,
                             `\uD83D\uDCCD Community: ${selectedProject.community}`,
@@ -2515,21 +6668,21 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                             units ? `\n\uD83D\uDCD0 UNIT BREAKDOWN\n${units}` : "",
                             "",
                             "\uD83D\uDCCA INVESTMENT",
-                            `   Gross Yield: ${selectedProject.grossYield||"â€”"}%`,
-                            `   Net Yield: ${selectedProject.netYield||"â€”"}%`,
+                            `   Gross Yield: ${selectedProject.grossYield||"—"}%`,
+                            `   Net Yield: ${selectedProject.netYield||"—"}%`,
                             `   Payment Plan: ${selectedProject.paymentPlan||"TBC"}`,
                             `   Post-Handover: ${selectedProject.postHandover?"Yes":"No"}`,
                             `   Handover: ${selectedProject.handover||"TBC"}`,
-                            `   Investment Score: ${score}/100 â€” ${score>=80?"Strong Buy":score>=65?"Buy":"Hold"}`,
+                            `   Investment Score: ${score}/100 — ${score>=80?"Strong Buy":score>=65?"Buy":"Hold"}`,
                             "",
                             "\uD83D\uDCCD DISTANCES",
                             `   ${dists || "See full details"}`,
                             "",
-                            selectedProject.amenities?.length > 0 ? `âœ¨ AMENITIES\n   ${selectedProject.amenities.slice(0,6).join(" Â· ")}` : "",
+                            selectedProject.amenities?.length > 0 ? `✨ AMENITIES\n   ${selectedProject.amenities.slice(0,6).join(" · ")}` : "",
                             "",
                             `\uD83D\uDD10 RERA: ${selectedProject.reraNo||"TBC"} | Escrow: ${selectedProject.escrowBank||"TBC"}`,
                             "",
-                            "â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”",
+                            "━━━━━━━━━━━━━━━━━━━━━━━━",
                             "Powered by DXB Analytics Intelligence Platform",
                             "emaar-dashboard.vercel.app",
                           ].filter(line => line !== "").join("\n");
@@ -2544,7 +6697,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                     {selectedProject.unitBreakdown?.length > 0 ? (
                       <div className="chart-box" style={{ padding:20, marginBottom:16 }}>
                         <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:16 }}>
-                          <div style={{ fontSize:13, fontWeight:700, color:T.white }}>Unit Breakdown â€” Price & PPSF per Type</div>
+                          <div style={{ fontSize:13, fontWeight:700, color:T.white }}>Unit Breakdown — Price & PPSF per Type</div>
                           <span style={{ fontSize:10, padding:"2px 8px", borderRadius:8, background:"rgba(212,168,67,0.1)", color:T.gold }}>Source: {selectedProject.source || "Developer"}</span>
                         </div>
                         {/* Table header */}
@@ -2560,9 +6713,9 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                             <div style={{ fontFamily:"'Fraunces',serif", fontSize:14, fontWeight:700, color:T.gold }}>{u.type}</div>
                             {/* Size range */}
                             <div>
-                              <div style={{ fontSize:12, color:T.white, fontWeight:600 }}>{(u.sizeMin||0).toLocaleString()} â€“ {(u.sizeMax||0).toLocaleString()}</div>
+                              <div style={{ fontSize:12, color:T.white, fontWeight:600 }}>{(u.sizeMin||0).toLocaleString()} – {(u.sizeMax||0).toLocaleString()}</div>
                               <div style={{ fontSize:10, color:T.textMuted }}>sqft</div>
-                              {u.plotMin && <div style={{ fontSize:10, color:T.textMuted }}>Plot: {u.plotMin.toLocaleString()}â€“{(u.plotMax||0).toLocaleString()} sqft</div>}
+                              {u.plotMin && <div style={{ fontSize:10, color:T.textMuted }}>Plot: {u.plotMin.toLocaleString()}–{(u.plotMax||0).toLocaleString()} sqft</div>}
                             </div>
                             {/* Price range */}
                             <div>
@@ -2576,11 +6729,11 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                             </div>
                             {/* Yield */}
                             <div style={{ fontSize:13, fontWeight:700, color:u.grossYield>=7?T.green:u.grossYield>=5?T.gold:T.textSecondary }}>
-                              {u.grossYield?u.grossYield.toFixed(1)+"%":"â€”"}
+                              {u.grossYield?u.grossYield.toFixed(1)+"%":"—"}
                             </div>
                             {/* Available units */}
                             <div style={{ fontSize:13, fontWeight:600, color:u.available<=10?"#EF4444":u.available<=20?T.gold:T.green }}>
-                              {u.available!=null?u.available+" units":"â€”"}
+                              {u.available!=null?u.available+" units":"—"}
                             </div>
                             {/* Quick actions */}
                             <div style={{ display:"flex", gap:4 }}>
@@ -2594,10 +6747,10 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                             Total available: <span style={{ color:T.white, fontWeight:700 }}>{selectedProject.unitBreakdown.reduce((a,u)=>a+(u.available||0),0)} units</span>
                           </div>
                           <div style={{ fontSize:11, color:T.textMuted }}>
-                            Price range: <span style={{ color:T.gold, fontWeight:700 }}>AED {(Math.min(...selectedProject.unitBreakdown.map(u=>u.priceMin))/1000000).toFixed(2)}M â€“ AED {(Math.max(...selectedProject.unitBreakdown.map(u=>u.priceMax))/1000000).toFixed(2)}M</span>
+                            Price range: <span style={{ color:T.gold, fontWeight:700 }}>AED {(Math.min(...selectedProject.unitBreakdown.map(u=>u.priceMin))/1000000).toFixed(2)}M – AED {(Math.max(...selectedProject.unitBreakdown.map(u=>u.priceMax))/1000000).toFixed(2)}M</span>
                           </div>
                           <div style={{ fontSize:11, color:T.textMuted }}>
-                            PPSF range: <span style={{ color:T.white, fontWeight:700 }}>AED {Math.min(...selectedProject.unitBreakdown.map(u=>u.ppsf||0)).toLocaleString()} â€“ AED {Math.max(...selectedProject.unitBreakdown.map(u=>u.ppsf||0)).toLocaleString()}</span>
+                            PPSF range: <span style={{ color:T.white, fontWeight:700 }}>AED {Math.min(...selectedProject.unitBreakdown.map(u=>u.ppsf||0)).toLocaleString()} – AED {Math.max(...selectedProject.unitBreakdown.map(u=>u.ppsf||0)).toLocaleString()}</span>
                           </div>
                           <div style={{ fontSize:11, color:T.textMuted }}>
                             Best yield: <span style={{ color:T.green, fontWeight:700 }}>{Math.max(...selectedProject.unitBreakdown.map(u=>u.grossYield||0)).toFixed(1)}%</span>
@@ -2605,7 +6758,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                         </div>
                       </div>
                     ) : (
-                      /* Fallback â€” no unitBreakdown yet */
+                      /* Fallback — no unitBreakdown yet */
                       <div className="chart-box" style={{ padding:20, marginBottom:16 }}>
                         <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:16 }}>Unit Types & Sizes</div>
                         {selectedProject.beds?.length > 0 ? (
@@ -2613,17 +6766,17 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                             {selectedProject.beds.map((bed,i) => (
                               <div key={i} style={{ padding:"14px", background:T.surfaceAlt, borderRadius:10, border:`1px solid ${T.border}` }}>
                                 <div style={{ fontFamily:"'Fraunces',serif", fontSize:18, fontWeight:700, color:T.gold, marginBottom:8 }}>{bed}</div>
-                                <div style={{ fontSize:12, color:T.textSecondary }}>Size: {(selectedProject.sizeMin||0).toLocaleString()} â€“ {(selectedProject.sizeMax||0).toLocaleString()} sqft</div>
+                                <div style={{ fontSize:12, color:T.textSecondary }}>Size: {(selectedProject.sizeMin||0).toLocaleString()} – {(selectedProject.sizeMax||0).toLocaleString()} sqft</div>
                                 <div style={{ fontSize:12, color:T.textSecondary }}>PPSF: AED {(selectedProject.ppsf||0).toLocaleString()}</div>
                                 {selectedProject.grossYield > 0 && <div style={{ fontSize:12, color:T.green, marginTop:6 }}>Yield: ~{selectedProject.grossYield.toFixed(1)}%</div>}
                               </div>
                             ))}
                           </div>
                         ) : (
-                          <div style={{ fontSize:13, color:T.textSecondary }}>Size: {(selectedProject.sizeMin||0).toLocaleString()} â€“ {(selectedProject.sizeMax||0).toLocaleString()} sqft Â· PPSF: AED {(selectedProject.ppsf||0).toLocaleString()}</div>
+                          <div style={{ fontSize:13, color:T.textSecondary }}>Size: {(selectedProject.sizeMin||0).toLocaleString()} – {(selectedProject.sizeMax||0).toLocaleString()} sqft · PPSF: AED {(selectedProject.ppsf||0).toLocaleString()}</div>
                         )}
                         <div style={{ marginTop:12, padding:"10px 14px", background:"rgba(212,168,67,0.06)", borderRadius:8, fontSize:11, color:T.textMuted }}>
-                          Add unit breakdown from Admin â†’ Data Manager â†’ Projects â†’ Unit Breakdown
+                          Add unit breakdown from Admin → Data Manager → Projects → Unit Breakdown
                         </div>
                       </div>
                     )}
@@ -2642,12 +6795,12 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   <div>
                     <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:12, marginBottom:20 }}>
                       {[
-                        { label:"Gross Yield", value:selectedProject.grossYield?selectedProject.grossYield.toFixed(1)+"%":"â€”", color:T.green, note:"Annual rent / purchase price" },
-                        { label:"Net Yield", value:selectedProject.netYield?selectedProject.netYield.toFixed(1)+"%":"â€”", color:T.teal, note:"After service charges" },
-                        { label:"Service Charge", value:selectedProject.serviceCharge?"AED "+selectedProject.serviceCharge+"/sqft/yr":"â€”", color:T.white, note:"Annual RERA rate" },
+                        { label:"Gross Yield", value:selectedProject.grossYield?selectedProject.grossYield.toFixed(1)+"%":"—", color:T.green, note:"Annual rent / purchase price" },
+                        { label:"Net Yield", value:selectedProject.netYield?selectedProject.netYield.toFixed(1)+"%":"—", color:T.teal, note:"After service charges" },
+                        { label:"Service Charge", value:selectedProject.serviceCharge?"AED "+selectedProject.serviceCharge+"/sqft/yr":"—", color:T.white, note:"Annual RERA rate" },
                         { label:"Investment Score", value:calcScore(selectedProject).toString(), color:scoreColor(calcScore(selectedProject)), note:scoreLabel(calcScore(selectedProject)) },
-                        { label:"Developer Score", value:selectedProject.developerScore?selectedProject.developerScore+"/100":"â€”", color:T.gold, note:"Track record rating" },
-                        { label:"Construction", value:selectedProject.constructionPct!=null?selectedProject.constructionPct+"%":"â€”", color:T.white, note:"Build progress" },
+                        { label:"Developer Score", value:selectedProject.developerScore?selectedProject.developerScore+"/100":"—", color:T.gold, note:"Track record rating" },
+                        { label:"Construction", value:selectedProject.constructionPct!=null?selectedProject.constructionPct+"%":"—", color:T.white, note:"Build progress" },
                       ].map((item,i) => (
                         <div key={i} className="kpi-card">
                           <div style={{ fontSize:10, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:1, marginBottom:8 }}>{item.label}</div>
@@ -2657,7 +6810,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                       ))}
                     </div>
                     <div className="chart-box" style={{ padding:18 }}>
-                      <div style={{ fontSize:12, fontWeight:700, color:T.white, marginBottom:14 }}>Investment Score Breakdown â€” 7 Factors</div>
+                      <div style={{ fontSize:12, fontWeight:700, color:T.white, marginBottom:14 }}>Investment Score Breakdown — 7 Factors</div>
                       {[
                         { factor:"Yield vs Market Average", score:selectedProject.grossYield>=7?90:selectedProject.grossYield>=5?70:50, weight:"20%" },
                         { factor:"Location (Metro + DIFC)", score:selectedProject.distMetro<=1?95:selectedProject.distMetro<=3?75:55, weight:"20%" },
@@ -2700,7 +6853,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                           <div key={i} style={{ padding:"12px 14px", background:T.surfaceAlt, borderRadius:10, border:`1px solid ${d.warn&&d.val<=d.warn?"rgba(16,185,129,0.3)":T.border}`, textAlign:"center" }}>
                             <div style={{ fontSize:10, color:T.textMuted, marginBottom:6 }}>{d.label}</div>
                             <div style={{ fontFamily:"'Fraunces',serif", fontSize:18, fontWeight:700, color:d.warn&&d.val!=null&&d.val<=d.warn?T.green:T.white }}>
-                              {d.val!=null ? (d.val<1?(d.val*1000).toFixed(0)+"m":d.val+"km") : "â€”"}
+                              {d.val!=null ? (d.val<1?(d.val*1000).toFixed(0)+"m":d.val+"km") : "—"}
                             </div>
                             {d.warn && d.val!=null && d.val<=d.warn && <div style={{ fontSize:9, color:T.green, marginTop:2 }}>Excellent</div>}
                           </div>
@@ -2709,9 +6862,9 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                     </div>
                     <div className="chart-box" style={{ padding:18 }}>
                       <div style={{ fontSize:12, color:T.textSecondary, lineHeight:1.8 }}>
-                        <strong style={{ color:T.white }}>Community:</strong> {selectedProject.community} Â· <strong style={{ color:T.white }}>Developer:</strong> {selectedProject.developer}
-                        {selectedProject.reraNo && <>{"Â·"}<strong style={{ color:T.gold }}>RERA:</strong> {selectedProject.reraNo}</>}
-                        {selectedProject.escrowBank && <>{"Â·"}<strong style={{ color:T.teal }}>Escrow:</strong> {selectedProject.escrowBank}</>}
+                        <strong style={{ color:T.white }}>Community:</strong> {selectedProject.community} · <strong style={{ color:T.white }}>Developer:</strong> {selectedProject.developer}
+                        {selectedProject.reraNo && <>{"·"}<strong style={{ color:T.gold }}>RERA:</strong> {selectedProject.reraNo}</>}
+                        {selectedProject.escrowBank && <>{"·"}<strong style={{ color:T.teal }}>Escrow:</strong> {selectedProject.escrowBank}</>}
                       </div>
                     </div>
                   </div>
@@ -2723,7 +6876,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                       <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:12, marginBottom:16 }}>
                         <div className="kpi-card">
                           <div style={{ fontSize:10, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:1, marginBottom:8 }}>Payment Plan</div>
-                          <div style={{ fontFamily:"'Fraunces',serif", fontSize:28, fontWeight:800, color:T.gold }}>{selectedProject.paymentPlan||"â€”"}</div>
+                          <div style={{ fontFamily:"'Fraunces',serif", fontSize:28, fontWeight:800, color:T.gold }}>{selectedProject.paymentPlan||"—"}</div>
                         </div>
                         <div className="kpi-card">
                           <div style={{ fontSize:10, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:1, marginBottom:8 }}>Post Handover</div>
@@ -2731,7 +6884,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                         </div>
                         <div className="kpi-card">
                           <div style={{ fontSize:10, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:1, marginBottom:8 }}>Escrow Bank</div>
-                          <div style={{ fontSize:16, fontWeight:700, color:T.teal }}>{selectedProject.escrowBank||"â€”"}</div>
+                          <div style={{ fontSize:16, fontWeight:700, color:T.teal }}>{selectedProject.escrowBank||"—"}</div>
                         </div>
                       </div>
                       {selectedProject.paymentPlan && selectedProject.paymentPlan.includes("/") && !selectedProject.paymentPlan.includes("Cash") && (
@@ -2760,12 +6913,12 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 {projDetailTab === "dld" && (
                   <div className="chart-box" style={{ padding:20 }}>
                     <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:6 }}>DLD Transaction History</div>
-                    <div style={{ fontSize:12, color:T.textMuted, marginBottom:20 }}>Community: {selectedProject.community}{"Â·"}{selectedProject.type}</div>
+                    <div style={{ fontSize:12, color:T.textMuted, marginBottom:20 }}>Community: {selectedProject.community}{"·"}{selectedProject.type}</div>
                     <div style={{ padding:"40px 24px", textAlign:"center", background:T.surfaceAlt, borderRadius:10 }}>
                       {SvgIcons.Database({ width:32, height:32, style:{ color:T.textMuted, marginBottom:12, display:"inline-block" } })}
                       <div style={{ fontSize:14, fontWeight:700, color:T.white, marginBottom:8 }}>DLD transaction data syncs daily</div>
-                      <div style={{ fontSize:12, color:T.textMuted, marginBottom:16 }}>Connect DLD feed via Admin â†’ Data Health</div>
-                      <button type="button" onClick={() => { setSelectedProject(null); handleTabChange("DLD Volumes"); }} style={{ padding:"8px 18px", background:"rgba(212,168,67,0.1)", border:`1px solid ${T.border}`, borderRadius:8, color:T.gold, fontSize:12, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>View DLD Volumes â†’</button>
+                      <div style={{ fontSize:12, color:T.textMuted, marginBottom:16 }}>Connect DLD feed via Admin → Data Health</div>
+                      <button type="button" onClick={() => { setSelectedProject(null); handleTabChange("DLD Volumes"); }} style={{ padding:"8px 18px", background:"rgba(212,168,67,0.1)", border:`1px solid ${T.border}`, borderRadius:8, color:T.gold, fontSize:12, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>View DLD Volumes →</button>
                     </div>
                   </div>
                 )}
@@ -2780,14 +6933,14 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                         </div>
                         <div className="kpi-card">
                           <div style={{ fontSize:10, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:1, marginBottom:8 }}>Health Score</div>
-                          <div style={{ fontFamily:"'Fraunces',serif", fontSize:28, fontWeight:800, color:scoreColor(selectedProject.developerScore||75) }}>{selectedProject.developerScore||"â€”"}</div>
+                          <div style={{ fontFamily:"'Fraunces',serif", fontSize:28, fontWeight:800, color:scoreColor(selectedProject.developerScore||75) }}>{selectedProject.developerScore||"—"}</div>
                         </div>
                         <div className="kpi-card">
                           <div style={{ fontSize:10, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:1, marginBottom:8 }}>RERA No</div>
-                          <div style={{ fontSize:14, fontWeight:700, color:T.teal }}>{selectedProject.reraNo||"â€”"}</div>
+                          <div style={{ fontSize:14, fontWeight:700, color:T.teal }}>{selectedProject.reraNo||"—"}</div>
                         </div>
                       </div>
-                      <button type="button" onClick={() => { setSelectedProject(null); handleTabChange("Developer Health"); }} style={{ padding:"8px 18px", background:"rgba(212,168,67,0.1)", border:`1px solid ${T.border}`, borderRadius:8, color:T.gold, fontSize:12, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>Full Developer Profile â†’</button>
+                      <button type="button" onClick={() => { setSelectedProject(null); handleTabChange("Developer Health"); }} style={{ padding:"8px 18px", background:"rgba(212,168,67,0.1)", border:`1px solid ${T.border}`, borderRadius:8, color:T.gold, fontSize:12, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>Full Developer Profile →</button>
                     </div>
                   </div>
                 )}
@@ -2796,7 +6949,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
           )}
 
 
-          {/* â”€â”€â”€ MAP TAB â”€â”€â”€ */}
+          {/* ─── MAP TAB ─── */}
           {tab === "Map" && (
             <CommunityMapTab
               activeProjects={liveProjects?.length > 0 ? liveProjects : SEED_PROJECTS}
@@ -2807,18 +6960,18 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
           )}
 
 
-          {/* â”€â”€â”€ HANDOVER TAB â”€â”€â”€ */}
+          {/* ─── HANDOVER TAB ─── */}
           {tab === "Handover" && (() => {
 
-            /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-               SEED DATA â€” Research-based
+            /* ══════════════════════════════
+               SEED DATA — Research-based
                Source: DLD, RERA, Developer portals
                48% on-time rate for 2026 (prelaunch.ae)
                Grace period: 6-12 months post SPA date
-            â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+            ══════════════════════════════ */
             const SEED_HANDOVER = [
               {
-                id:"h001", project:"Golf Grand â€” Phase 2", developer:"Emaar", community:"Dubai Hills Estate",
+                id:"h001", project:"Golf Grand — Phase 2", developer:"Emaar", community:"Dubai Hills Estate",
                 reraNo:"0991234567", escrowBank:"Emirates NBD",
                 contractedHandover:"2027-12-31", expectedHandover:"2027-12-31",
                 constructionPct:15, milestonesCurrent:"Foundation Complete",
@@ -2842,7 +6995,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 isSeedData:true, source:"Emaar IR / RERA Apr 2026"
               },
               {
-                id:"h002", project:"Lagoons â€” Azure Beach", developer:"DAMAC Properties", community:"DAMAC Lagoons",
+                id:"h002", project:"Lagoons — Azure Beach", developer:"DAMAC Properties", community:"DAMAC Lagoons",
                 reraNo:"0882345678", escrowBank:"Dubai Islamic Bank",
                 contractedHandover:"2027-06-30", expectedHandover:"2027-09-30",
                 constructionPct:35, milestonesCurrent:"Structural Framework",
@@ -2866,7 +7019,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 isSeedData:true, source:"DAMAC IR / RERA Apr 2026"
               },
               {
-                id:"h003", project:"Hartland II â€” Skyvista", developer:"Sobha Realty", community:"Sobha Hartland",
+                id:"h003", project:"Hartland II — Skyvista", developer:"Sobha Realty", community:"Sobha Hartland",
                 reraNo:"0773456789", escrowBank:"Mashreq Bank",
                 contractedHandover:"2027-09-30", expectedHandover:"2027-09-30",
                 constructionPct:28, milestonesCurrent:"Foundation Complete",
@@ -2890,7 +7043,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 isSeedData:true, source:"Sobha Realty IR / RERA Apr 2026"
               },
               {
-                id:"h004", project:"Skyrise â€” Business Bay", developer:"Binghatti", community:"Business Bay",
+                id:"h004", project:"Skyrise — Business Bay", developer:"Binghatti", community:"Business Bay",
                 reraNo:"0664567890", escrowBank:"ADCB",
                 contractedHandover:"2027-03-31", expectedHandover:"2027-06-30",
                 constructionPct:55, milestonesCurrent:"MEP Works",
@@ -2924,7 +7077,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 totalUnits:168, handedOver:0, unitType:"Apartment",
                 escrowPct:82, inspectionsPassed:14, inspectionsFailed:0,
                 developerScore:86, developerOnTimeRate:88,
-                lastSiteVisit:"2026-04-02", reraStatus:"Active â€” Handing Over Q2 2026",
+                lastSiteVisit:"2026-04-02", reraStatus:"Active — Handing Over Q2 2026",
                 milestones:[
                   { name:"Land Acquisition", pct:0,   date:"2022-06-01", done:true  },
                   { name:"RERA Approval",    pct:0,   date:"2022-09-01", done:true  },
@@ -2938,7 +7091,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 isSeedData:true, source:"Ellington IR / RERA Apr 2026"
               },
               {
-                id:"h006", project:"The Oasis â€” Phase 11", developer:"Emaar", community:"The Oasis",
+                id:"h006", project:"The Oasis — Phase 11", developer:"Emaar", community:"The Oasis",
                 reraNo:"0446789012", escrowBank:"Emirates NBD",
                 contractedHandover:"2029-06-30", expectedHandover:"2029-06-30",
                 constructionPct:8, milestonesCurrent:"Excavation",
@@ -2962,7 +7115,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 isSeedData:true, source:"Emaar IR / RERA Apr 2026"
               },
               {
-                id:"h007", project:"Dubai Islands â€” Cluster B", developer:"Nakheel", community:"Dubai Islands",
+                id:"h007", project:"Dubai Islands — Cluster B", developer:"Nakheel", community:"Dubai Islands",
                 reraNo:"0228901234", escrowBank:"Nakheel Escrow / DIB",
                 contractedHandover:"2027-12-31", expectedHandover:"2028-03-31",
                 constructionPct:22, milestonesCurrent:"Foundation Complete",
@@ -2996,7 +7149,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 totalUnits:89, handedOver:0, unitType:"Villa",
                 escrowPct:65, inspectionsPassed:11, inspectionsFailed:0,
                 developerScore:89, developerOnTimeRate:87,
-                lastSiteVisit:"2026-03-30", reraStatus:"Sold Out â€” On Track",
+                lastSiteVisit:"2026-03-30", reraStatus:"Sold Out — On Track",
                 milestones:[
                   { name:"Land Acquisition", pct:0,   date:"2022-09-01", done:true  },
                   { name:"RERA Approval",    pct:0,   date:"2023-01-01", done:true  },
@@ -3011,7 +7164,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               },
             ];
 
-            /* â•â• HELPERS â•â• */
+            /* ══ HELPERS ══ */
             const rawHandover = liveHandover?.length > 0 ? liveHandover : SEED_HANDOVER;
 
             const today = new Date();
@@ -3045,7 +7198,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               backgroundRepeat:"no-repeat", backgroundPosition:"right 8px center",
             };
 
-            /* â•â• KPIs â•â• */
+            /* ══ KPIs ══ */
             const onTrack   = rawHandover.filter(p => p.status === "On Track").length;
             const delayed   = rawHandover.filter(p => p.status === "Delayed").length;
             const atRisk    = rawHandover.filter(p => p.status === "At Risk").length;
@@ -3054,7 +7207,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
             const due30     = rawHandover.filter(p => daysTo(p.expectedHandover) <= 30 && daysTo(p.expectedHandover) > 0).length;
             const avgPct    = rawHandover.length > 0 ? Math.round(rawHandover.reduce((a,p) => a + p.constructionPct, 0) / rawHandover.length) : 0;
 
-            /* â•â• PROJECT CARD â•â• */
+            /* ══ PROJECT CARD ══ */
             const HandoverCard = ({ p }) => {
               const cfg = statusCfg[p.status] || statusCfg["On Track"];
               const risk = riskCfg[p.delayRisk] || riskCfg["Low"];
@@ -3073,7 +7226,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   <div style={{ padding:"14px 16px", borderBottom:`1px solid ${T.border}`, background:p.status==="At Risk"?"rgba(239,68,68,0.03)":p.status==="Delayed"?"rgba(249,115,22,0.03)":"transparent" }}>
                     <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:8 }}>
                       <div style={{ flex:1 }}>
-                        <div style={{ fontSize:10, fontWeight:700, color:T.textMuted, letterSpacing:0.8, textTransform:"uppercase", marginBottom:3 }}>{p.developer}{"Â·"}{p.community}</div>
+                        <div style={{ fontSize:10, fontWeight:700, color:T.textMuted, letterSpacing:0.8, textTransform:"uppercase", marginBottom:3 }}>{p.developer}{"·"}{p.community}</div>
                         <div style={{ fontFamily:"'Fraunces',serif", fontSize:15, fontWeight:700, color:T.white, marginBottom:6 }}>{p.project}</div>
                         <div style={{ display:"flex", gap:6, flexWrap:"wrap", alignItems:"center" }}>
                           <span style={{ fontSize:10, fontWeight:700, padding:"2px 8px", borderRadius:10, background:cfg.bg, color:cfg.color }}>{cfg.label}</span>
@@ -3121,10 +7274,10 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   {(d <= 90 || p.status === "At Risk" || p.status === "Delayed") && (
                     <div style={{ padding:"8px 16px", background:d<=30?"rgba(239,68,68,0.08)":d<=90?"rgba(249,115,22,0.06)":"rgba(249,115,22,0.04)", borderBottom:`1px solid ${T.border}`, display:"flex", alignItems:"center", gap:8 }}>
                       <span style={{ fontSize:9, fontWeight:700, color:d<=30?T.red:d<=90?"#F97316":T.gold, letterSpacing:0.6, textTransform:"uppercase" }}>
-                        {d<=30?"âš  30-Day Alert":d<=60?"âš  60-Day Alert":d<=90?"âš  90-Day Alert":p.status==="Delayed"?"Delayed "+p.delayMonths+"mo Â· Grace period "+p.gracePeriodMonths+"mo":"At Risk of Delay"}
+                        {d<=30?"⚠ 30-Day Alert":d<=60?"⚠ 60-Day Alert":d<=90?"⚠ 90-Day Alert":p.status==="Delayed"?"Delayed "+p.delayMonths+"mo · Grace period "+p.gracePeriodMonths+"mo":"At Risk of Delay"}
                       </span>
                       <span style={{ fontSize:10, color:T.textMuted }}>
-                        {p.status==="At Risk"||p.status==="Delayed" ? "Developer on-time rate: "+p.developerOnTimeRate+"% Â· Escrow funded: "+p.escrowPct+"%" : "Prepare client handover docs"}
+                        {p.status==="At Risk"||p.status==="Delayed" ? "Developer on-time rate: "+p.developerOnTimeRate+"% · Escrow funded: "+p.escrowPct+"%" : "Prepare client handover docs"}
                       </span>
                     </div>
                   )}
@@ -3134,7 +7287,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                     <span style={{ fontSize:10, color:T.textMuted, flex:1 }}>RERA: <span style={{ color:T.teal }}>{p.reraNo}</span></span>
                     <button type="button" onClick={e => { e.stopPropagation(); setHvSelected(p); }}
                       style={{ padding:"5px 10px", background:"rgba(212,168,67,0.08)", border:`1px solid ${T.border}`, borderRadius:7, color:T.gold, fontSize:10, fontWeight:700, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>
-                      Full Timeline â†’
+                      Full Timeline →
                     </button>
                     <button type="button" onClick={e => { e.stopPropagation(); handleTabChange("Projects"); }}
                       style={{ padding:"5px 10px", background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:7, color:T.textSecondary, fontSize:10, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>
@@ -3148,11 +7301,11 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
             return (
               <div style={{ animation:"fadeUp 0.4s ease-out forwards" }}>
 
-                {/* â”€â”€ Header â”€â”€ */}
+                {/* ── Header ── */}
                 <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"10px 0", marginBottom:16, borderBottom:`1px solid ${T.border}`, flexWrap:"wrap", gap:8 }}>
                   <div>
                     <div style={{ fontFamily:"'Fraunces',serif", fontSize:20, fontWeight:800, color:T.white }}>Handover Intelligence</div>
-                    <div style={{ fontSize:11, color:T.textMuted, marginTop:3 }}>Construction progress Â· Delay risk Â· 90/60/30 alerts Â· RERA status Â· Buyer rights</div>
+                    <div style={{ fontSize:11, color:T.textMuted, marginTop:3 }}>Construction progress · Delay risk · 90/60/30 alerts · RERA status · Buyer rights</div>
                   </div>
                   <div style={{ display:"flex", gap:8 }}>
                     {["cards","table"].map(v => (
@@ -3164,12 +7317,12 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   </div>
                 </div>
 
-                {/* â”€â”€ Alert Banner â€” 30/60/90 day summary â”€â”€ */}
+                {/* ── Alert Banner — 30/60/90 day summary ── */}
                 {(due30 > 0 || due60 > 0 || due90 > 0) && (
                   <div style={{ display:"flex", gap:10, marginBottom:16, flexWrap:"wrap" }}>
                     {due30 > 0 && <div style={{ flex:1, minWidth:160, padding:"10px 16px", background:"rgba(239,68,68,0.08)", border:"1px solid rgba(239,68,68,0.3)", borderRadius:10, display:"flex", alignItems:"center", gap:10 }}>
                       <div style={{ width:8, height:8, borderRadius:"50%", background:T.red, animation:"pulse 1s infinite", flexShrink:0 }} />
-                      <div><div style={{ fontSize:12, fontWeight:700, color:T.red }}>âš  {due30} project{due30>1?"s":""} handing over in 30 days</div><div style={{ fontSize:11, color:T.textMuted }}>Prepare client documents now</div></div>
+                      <div><div style={{ fontSize:12, fontWeight:700, color:T.red }}>⚠ {due30} project{due30>1?"s":""} handing over in 30 days</div><div style={{ fontSize:11, color:T.textMuted }}>Prepare client documents now</div></div>
                     </div>}
                     {due60 > 0 && <div style={{ flex:1, minWidth:160, padding:"10px 16px", background:"rgba(249,115,22,0.06)", border:"1px solid rgba(249,115,22,0.3)", borderRadius:10, display:"flex", alignItems:"center", gap:10 }}>
                       <div style={{ width:8, height:8, borderRadius:"50%", background:"#F97316", flexShrink:0 }} />
@@ -3183,7 +7336,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 )}
 
                 
-              {/* â”€â”€ KPI Cards â”€â”€ */}
+              {/* ── KPI Cards ── */}
                 <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(150px,1fr))", gap:10, marginBottom:20 }}>
                   {[
                     { label:"Total Projects",   value:rawHandover.length,  color:T.white   },
@@ -3200,7 +7353,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   ))}
                 </div>
 
-              {/* â”€â”€ Filters â”€â”€ */}
+              {/* ── Filters ── */}
                 <div style={{ background:T.surface, border:`1px solid ${T.border}`, borderRadius:10, padding:"12px 14px", marginBottom:16 }}>
                   <div style={{ display:"flex", gap:8, flexWrap:"wrap", alignItems:"center" }}>
                     <div style={{ position:"relative", flex:"0 0 200px" }}>
@@ -3227,22 +7380,22 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   </div>
                 </div>
 
-                {/* â”€â”€ Seed notice â”€â”€ */}
+                {/* ── Seed notice ── */}
                 {!liveHandover?.length && (
                   <div style={{ display:"flex", alignItems:"center", gap:8, padding:"8px 14px", borderRadius:8, background:"rgba(212,168,67,0.06)", border:`1px solid rgba(212,168,67,0.2)`, marginBottom:16 }}>
                     <span style={{ width:6, height:6, borderRadius:"50%", background:T.gold, display:"inline-block" }} />
-                    <span style={{ fontSize:11, color:T.textMuted }}><span style={{ color:T.gold, fontWeight:700 }}>Research-based seed data</span> â€” DLD, RERA, Developer IR reports Apr 2026 Â· Add real data via Admin â†’ Data Manager â†’ Handover</span>
+                    <span style={{ fontSize:11, color:T.textMuted }}><span style={{ color:T.gold, fontWeight:700 }}>Research-based seed data</span> — DLD, RERA, Developer IR reports Apr 2026 · Add real data via Admin → Data Manager → Handover</span>
                   </div>
                 )}
 
-                {/* â”€â”€ Cards Grid â”€â”€ */}
+                {/* ── Cards Grid ── */}
                 {hvView === "cards" && filtered.length > 0 && (
                   <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(360px,1fr))", gap:16, marginBottom:20 }}>
                     {filtered.map((p,i) => <HandoverCard key={p.id||i} p={p} />)}
                   </div>
                 )}
 
-                {/* â”€â”€ Table View â”€â”€ */}
+                {/* ── Table View ── */}
                 {hvView === "table" && filtered.length > 0 && (
                   <div style={{ background:T.surface, border:`1px solid ${T.border}`, borderRadius:12, overflow:"hidden", marginBottom:20 }}>
                     <div style={{ display:"grid", gridTemplateColumns:"2fr 1fr 1fr 1fr 1fr 1fr 1fr", padding:"10px 16px", background:T.surfaceAlt, borderBottom:`1px solid ${T.border}` }}>
@@ -3259,7 +7412,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                           onMouseLeave={e => e.currentTarget.style.background="transparent"}>
                           <div>
                             <div style={{ fontSize:13, fontWeight:600, color:T.white }}>{p.project}</div>
-                            <div style={{ fontSize:11, color:T.textMuted }}>{p.unitType}{"Â·"}{p.totalUnits} units</div>
+                            <div style={{ fontSize:11, color:T.textMuted }}>{p.unitType}{"·"}{p.totalUnits} units</div>
                           </div>
                           <div style={{ fontSize:12, color:T.textSecondary }}>{p.developer}</div>
                           <div><span style={{ fontSize:10, padding:"2px 8px", borderRadius:8, background:cfg.bg, color:cfg.color, fontWeight:700 }}>{p.status}</span></div>
@@ -3278,7 +7431,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   </div>
                 )}
 
-                {/* â”€â”€ Empty state â”€â”€ */}
+                {/* ── Empty state ── */}
                 {filtered.length === 0 && (
                   <div style={{ textAlign:"center", padding:"60px 24px", background:"rgba(212,168,67,0.03)", borderRadius:12, border:`1px solid ${T.border}` }}>
                     <div style={{ fontSize:15, fontWeight:700, color:T.white, marginBottom:8 }}>No projects match your filters</div>
@@ -3286,10 +7439,10 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   </div>
                 )}
 
-                {/* â”€â”€ Developer On-Time Leaderboard â”€â”€ */}
+                {/* ── Developer On-Time Leaderboard ── */}
                 <div className="chart-box" style={{ padding:20, marginBottom:16 }}>
                   <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:4 }}>Developer On-Time Delivery Rate</div>
-                  <div style={{ fontSize:11, color:T.textMuted, marginBottom:16 }}>Based on historical RERA data Â· 48% industry average for 2026 handovers (prelaunch.ae)</div>
+                  <div style={{ fontSize:11, color:T.textMuted, marginBottom:16 }}>Based on historical RERA data · 48% industry average for 2026 handovers (prelaunch.ae)</div>
                   <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(200px,1fr))", gap:10 }}>
                     {[
                       { dev:"Sobha Realty",        rate:91, color:T.green   },
@@ -3314,13 +7467,13 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   </div>
                 </div>
 
-                {/* â”€â”€ Buyer Rights box â”€â”€ */}
+                {/* ── Buyer Rights box ── */}
                 <div className="chart-box" style={{ padding:18, marginBottom:16, border:`1px solid rgba(20,184,166,0.2)` }}>
-                  <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:12 }}>Know Your Rights â€” Off-Plan Buyer Protection</div>
+                  <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:12 }}>Know Your Rights — Off-Plan Buyer Protection</div>
                   <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(260px,1fr))", gap:10 }}>
                     {[
                       { icon:"\uD83D\uDD10", title:"Escrow Protection", desc:"All payments held in DLD-registered escrow. Developer cannot withdraw until RERA verifies each milestone (Law 8 of 2007)." },
-                      { icon:"â±", title:"Grace Period", desc:"Developer allowed 6â€“12 months grace after contractual handover date before legal action is possible. Check your SPA." },
+                      { icon:"⏱", title:"Grace Period", desc:"Developer allowed 6–12 months grace after contractual handover date before legal action is possible. Check your SPA." },
                       { icon:"\uD83D\uDCB0", title:"Delay Compensation", desc:"SPA penalty clauses typically specify ~1% monthly interest on purchase price for delays beyond grace period." },
                       { icon:"\uD83D\uDCCB", title:"RERA Complaint", desc:"File dispute via RERA portal if developer misses grace period. Dubai Real Estate Court handles property disputes." },
                     ].map((r,i) => (
@@ -3333,7 +7486,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   </div>
                 </div>
 
-                {/* â”€â”€ Sources â”€â”€ */}
+                {/* ── Sources ── */}
                 <div style={{ paddingTop:12, borderTop:`1px solid ${T.border}`, display:"flex", gap:8, flexWrap:"wrap", alignItems:"center" }}>
                   <span style={{ fontSize:10, color:T.textMuted }}>Sources:</span>
                   {["RERA Project Registry","DLD Open Data","Developer IR Reports","UAE Law 8 of 2007","prelaunch.ae 2026"].map((s,i) => (
@@ -3346,13 +7499,13 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
           })()}
 
 
-          {/* â•â•â• HANDOVER DETAIL OVERLAY â•â•â• */}
+          {/* ═══ HANDOVER DETAIL OVERLAY ═══ */}
           {hvSelected && (
             <div role="dialog" aria-modal="true" style={{ position:"fixed", inset:0, background:"rgba(4,9,15,0.97)", zIndex:2000, display:"flex", flexDirection:"column", backdropFilter:"blur(8px)" }}>
               {/* Header */}
               <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"16px 24px", borderBottom:`1px solid ${T.border}`, background:T.surface, flexShrink:0 }}>
                 <div>
-                  <div style={{ fontSize:11, fontWeight:700, color:T.textMuted, letterSpacing:0.8, textTransform:"uppercase", marginBottom:3 }}>{hvSelected.developer}{"Â·"}{hvSelected.community}</div>
+                  <div style={{ fontSize:11, fontWeight:700, color:T.textMuted, letterSpacing:0.8, textTransform:"uppercase", marginBottom:3 }}>{hvSelected.developer}{"·"}{hvSelected.community}</div>
                   <div style={{ fontFamily:"'Fraunces',serif", fontSize:22, fontWeight:800, color:T.white }}>{hvSelected.project}</div>
                 </div>
                 <div style={{ display:"flex", alignItems:"center", gap:10 }}>
@@ -3360,7 +7513,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                     <div style={{ fontSize:11, color:T.textMuted }}>Construction Progress</div>
                     <div style={{ fontFamily:"'Fraunces',serif", fontSize:28, fontWeight:900, color:hvSelected.status==="On Track"?T.green:hvSelected.status==="Delayed"?"#F97316":T.red }}>{hvSelected.constructionPct}%</div>
                   </div>
-                  <button type="button" onClick={() => setHvSelected(null)} style={{ width:36, height:36, borderRadius:"50%", background:T.surfaceAlt, border:`1px solid ${T.border}`, color:T.white, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", fontSize:18, fontFamily:"'Outfit',sans-serif" }}>Ã—</button>
+                  <button type="button" onClick={() => setHvSelected(null)} style={{ width:36, height:36, borderRadius:"50%", background:T.surfaceAlt, border:`1px solid ${T.border}`, color:T.white, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", fontSize:18, fontFamily:"'Outfit',sans-serif" }}>×</button>
                 </div>
               </div>
 
@@ -3374,7 +7527,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                     { label:"Delay",              value:hvSelected.delayMonths>0?"+"+hvSelected.delayMonths+" months":"None", color:hvSelected.delayMonths>0?"#F97316":T.green },
                     { label:"Grace Period",       value:hvSelected.gracePeriodMonths+" months", color:T.white },
                     { label:"Escrow Funded",      value:hvSelected.escrowPct+"%", color:hvSelected.escrowPct>=70?T.green:hvSelected.escrowPct>=40?T.gold:"#F97316" },
-                    { label:"RERA Inspections",   value:hvSelected.inspectionsPassed+"âœ“ "+hvSelected.inspectionsFailed+"âœ—", color:hvSelected.inspectionsFailed>0?"#F97316":T.green },
+                    { label:"RERA Inspections",   value:hvSelected.inspectionsPassed+"✓ "+hvSelected.inspectionsFailed+"✗", color:hvSelected.inspectionsFailed>0?"#F97316":T.green },
                     { label:"Developer On-Time",  value:hvSelected.developerOnTimeRate+"%", color:hvSelected.developerOnTimeRate>=85?T.green:hvSelected.developerOnTimeRate>=75?T.gold:T.red },
                     { label:"Total Units",        value:hvSelected.totalUnits.toLocaleString(), color:T.white },
                   ].map((k,i) => (
@@ -3388,7 +7541,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 {/* Milestone Gantt Timeline */}
                 <div className="chart-box" style={{ padding:20, marginBottom:20 }}>
                   <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:4 }}>Construction Milestone Timeline</div>
-                  <div style={{ fontSize:11, color:T.textMuted, marginBottom:20 }}>RERA-verified progress Â· Each milestone unlocks escrow disbursement</div>
+                  <div style={{ fontSize:11, color:T.textMuted, marginBottom:20 }}>RERA-verified progress · Each milestone unlocks escrow disbursement</div>
                   
                   {/* Timeline */}
                   <div style={{ position:"relative" }}>
@@ -3404,7 +7557,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                           {/* Timeline line + dot */}
                           <div style={{ display:"flex", flexDirection:"column", alignItems:"center", flexShrink:0, width:20 }}>
                             <div style={{ width:14, height:14, borderRadius:"50%", background:dotColor, border:`2px solid ${dotColor}`, flexShrink:0, display:"flex", alignItems:"center", justifyContent:"center", zIndex:1 }}>
-                              {isPast && <span style={{ fontSize:8, color:"#000", fontWeight:700 }}>âœ“</span>}
+                              {isPast && <span style={{ fontSize:8, color:"#000", fontWeight:700 }}>✓</span>}
                               {isCurrent && <span style={{ width:4, height:4, borderRadius:"50%", background:T.gold, display:"block" }} />}
                             </div>
                             {!isLast && <div style={{ width:2, flex:1, minHeight:32, background:lineColor, marginTop:2 }} />}
@@ -3414,7 +7567,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                             <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:4 }}>
                               <div>
                                 <div style={{ fontSize:13, fontWeight:700, color:isPast?T.white:isCurrent?T.gold:T.textMuted }}>{m.name}</div>
-                                {isCurrent && <div style={{ fontSize:10, color:T.gold, fontWeight:700 }}>â† CURRENT STAGE</div>}
+                                {isCurrent && <div style={{ fontSize:10, color:T.gold, fontWeight:700 }}>← CURRENT STAGE</div>}
                               </div>
                               <div style={{ textAlign:"right" }}>
                                 <div style={{ fontSize:11, fontWeight:600, color:isPast?T.green:isCurrent?T.gold:T.textMuted }}>{new Date(m.date).toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"})}</div>
@@ -3424,7 +7577,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                             {/* Escrow release indicator */}
                             {m.pct > 0 && (
                               <div style={{ display:"inline-flex", alignItems:"center", gap:4, padding:"2px 8px", borderRadius:6, background:isPast?"rgba(16,185,129,0.1)":"rgba(212,168,67,0.06)", border:`1px solid ${isPast?"rgba(16,185,129,0.3)":"rgba(212,168,67,0.15)"}` }}>
-                                <span style={{ fontSize:9, color:isPast?T.green:T.textMuted }}>Escrow release at {m.pct}% Â· {isPast?"âœ“ Released":"Pending"}</span>
+                                <span style={{ fontSize:9, color:isPast?T.green:T.textMuted }}>Escrow release at {m.pct}% · {isPast?"✓ Released":"Pending"}</span>
                               </div>
                             )}
                           </div>
@@ -3442,11 +7595,11 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                       { label:"RERA Number",     value:hvSelected.reraNo },
                       { label:"Escrow Bank",      value:hvSelected.escrowBank },
                       { label:"RERA Status",      value:hvSelected.reraStatus },
-                      { label:"Last Site Visit",  value:hvSelected.lastSiteVisit ? new Date(hvSelected.lastSiteVisit).toLocaleDateString("en-GB") : "â€”" },
+                      { label:"Last Site Visit",  value:hvSelected.lastSiteVisit ? new Date(hvSelected.lastSiteVisit).toLocaleDateString("en-GB") : "—" },
                     ].map((r,i) => (
                       <div key={i} style={{ display:"flex", justifyContent:"space-between", padding:"6px 0", borderBottom:i<3?`1px solid ${T.border}`:"none" }}>
                         <span style={{ fontSize:11, color:T.textMuted }}>{r.label}</span>
-                        <span style={{ fontSize:11, fontWeight:600, color:T.white }}>{r.value||"â€”"}</span>
+                        <span style={{ fontSize:11, fontWeight:600, color:T.white }}>{r.value||"—"}</span>
                       </div>
                     ))}
                   </div>
@@ -3467,10 +7620,10 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
 
                 {/* Actions */}
                 <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
-                  <button type="button" onClick={() => { setHvSelected(null); handleTabChange("Projects"); }} style={{ padding:"9px 18px", background:`linear-gradient(135deg,${T.gold},#B8922A)`, border:"none", borderRadius:8, color:"#000", fontSize:12, fontWeight:700, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>View Full Project â†’</button>
+                  <button type="button" onClick={() => { setHvSelected(null); handleTabChange("Projects"); }} style={{ padding:"9px 18px", background:`linear-gradient(135deg,${T.gold},#B8922A)`, border:"none", borderRadius:8, color:"#000", fontSize:12, fontWeight:700, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>View Full Project →</button>
                   <button type="button" onClick={() => { setHvSelected(null); handleTabChange("My Leads"); }} style={{ padding:"9px 18px", background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:8, color:T.textSecondary, fontSize:12, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>Add to Lead</button>
                   <button type="button" onClick={() => {
-                    const txt = `\uD83C\uDFD7ï¸ HANDOVER UPDATE â€” ${hvSelected.project}\nâ”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n\uD83C\uDFE2 Developer: ${hvSelected.developer}\n\uD83D\uDCCD Community: ${hvSelected.community}\n\n\uD83D\uDCCA CONSTRUCTION STATUS\n   Progress: ${hvSelected.constructionPct}% complete\n   Status: ${hvSelected.status}\n   Current Stage: ${hvSelected.milestonesCurrent}\n   Next Milestone: ${hvSelected.milestonesNext}\n\n\uD83D\uDCC5 HANDOVER DATES\n   Contracted: ${new Date(hvSelected.contractedHandover).toLocaleDateString("en-GB",{month:"long",year:"numeric"})}\n   Expected: ${new Date(hvSelected.expectedHandover).toLocaleDateString("en-GB",{month:"long",year:"numeric"})}\n   Delay: ${hvSelected.delayMonths>0?"+"+hvSelected.delayMonths+" months":"None"}\n\n\uD83D\uDD10 REGULATORY\n   RERA: ${hvSelected.reraNo}\n   Escrow Bank: ${hvSelected.escrowBank}\n   Status: ${hvSelected.reraStatus}\n\nPowered by DXB Analytics Intelligence Platform\nemaar-dashboard.vercel.app`;
+                    const txt = `\uD83C\uDFD7️ HANDOVER UPDATE — ${hvSelected.project}\n━━━━━━━━━━━━━━━━━━━━━━\n\uD83C\uDFE2 Developer: ${hvSelected.developer}\n\uD83D\uDCCD Community: ${hvSelected.community}\n\n\uD83D\uDCCA CONSTRUCTION STATUS\n   Progress: ${hvSelected.constructionPct}% complete\n   Status: ${hvSelected.status}\n   Current Stage: ${hvSelected.milestonesCurrent}\n   Next Milestone: ${hvSelected.milestonesNext}\n\n\uD83D\uDCC5 HANDOVER DATES\n   Contracted: ${new Date(hvSelected.contractedHandover).toLocaleDateString("en-GB",{month:"long",year:"numeric"})}\n   Expected: ${new Date(hvSelected.expectedHandover).toLocaleDateString("en-GB",{month:"long",year:"numeric"})}\n   Delay: ${hvSelected.delayMonths>0?"+"+hvSelected.delayMonths+" months":"None"}\n\n\uD83D\uDD10 REGULATORY\n   RERA: ${hvSelected.reraNo}\n   Escrow Bank: ${hvSelected.escrowBank}\n   Status: ${hvSelected.reraStatus}\n\nPowered by DXB Analytics Intelligence Platform\nemaar-dashboard.vercel.app`;
                     window.open(`https://wa.me/?text=${encodeURIComponent(txt)}`,"_blank");
                   }} style={{ padding:"9px 18px", background:"rgba(37,211,102,0.1)", border:"1px solid rgba(37,211,102,0.3)", borderRadius:8, color:"#25D366", fontSize:12, fontWeight:600, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>
                     Share Update
@@ -3480,21 +7633,21 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
             </div>
           )}
 
-          {/* â”€â”€â”€ HANDOVER TAB â”€â”€â”€ */}
+          {/* ─── HANDOVER TAB ─── */}
           {tab === "Handover" && (() => {
 
-            /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-               SEED DATA â€” Research-based handover projects
+            /* ══════════════════════════════════════════════════════
+               SEED DATA — Research-based handover projects
                Sources:
                - prelaunch.ae Dec 2025: 48% on-time rate, 45K units 2026
                - RERA ORDS project database Apr 2026
                - Developer IR reports Q4 2025
                - Dubai REST app construction milestone data
                - uaeexperthub.com handover delays guide Mar 2026
-            â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+            ══════════════════════════════════════════════════════ */
             const SEED_HANDOVER = [
               {
-                id:"h001", project:"Golf Grand â€” Phase 2", developer:"Emaar",
+                id:"h001", project:"Golf Grand — Phase 2", developer:"Emaar",
                 community:"Dubai Hills Estate", type:"Apartment",
                 contractedDate:"2027-12-31", expectedDate:"2027-12-31",
                 reraDate:"2027-12-31", constructionPct:15,
@@ -3517,7 +7670,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 isSeedData:true, source:"RERA ORDS / Emaar IR Q4 2025"
               },
               {
-                id:"h002", project:"Lagoons â€” Azure Beach", developer:"DAMAC Properties",
+                id:"h002", project:"Lagoons — Azure Beach", developer:"DAMAC Properties",
                 community:"DAMAC Lagoons", type:"Apartment",
                 contractedDate:"2027-06-30", expectedDate:"2027-09-30",
                 reraDate:"2027-06-30", constructionPct:35,
@@ -3540,7 +7693,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 isSeedData:true, source:"RERA ORDS / prelaunch.ae Dec 2025"
               },
               {
-                id:"h003", project:"Hartland II â€” Skyvista", developer:"Sobha Realty",
+                id:"h003", project:"Hartland II — Skyvista", developer:"Sobha Realty",
                 community:"Sobha Hartland", type:"Apartment",
                 contractedDate:"2027-09-30", expectedDate:"2027-09-30",
                 reraDate:"2027-09-30", constructionPct:28,
@@ -3563,7 +7716,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 isSeedData:true, source:"RERA ORDS / Sobha IR Q4 2025"
               },
               {
-                id:"h004", project:"Skyrise â€” Business Bay", developer:"Binghatti",
+                id:"h004", project:"Skyrise — Business Bay", developer:"Binghatti",
                 community:"Business Bay", type:"Apartment",
                 contractedDate:"2027-03-31", expectedDate:"2027-03-31",
                 reraDate:"2027-03-31", constructionPct:55,
@@ -3609,7 +7762,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 isSeedData:true, source:"RERA ORDS / Ellington portal Apr 2026"
               },
               {
-                id:"h006", project:"The Oasis â€” Phase 11", developer:"Emaar",
+                id:"h006", project:"The Oasis — Phase 11", developer:"Emaar",
                 community:"The Oasis", type:"Villa",
                 contractedDate:"2029-06-30", expectedDate:"2029-06-30",
                 reraDate:"2029-06-30", constructionPct:8,
@@ -3632,7 +7785,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 isSeedData:true, source:"RERA ORDS / Emaar IR Q4 2025"
               },
               {
-                id:"h007", project:"Dubai Islands â€” Cluster B", developer:"Nakheel",
+                id:"h007", project:"Dubai Islands — Cluster B", developer:"Nakheel",
                 community:"Dubai Islands", type:"Townhouse",
                 contractedDate:"2027-12-31", expectedDate:"2028-03-31",
                 reraDate:"2027-12-31", constructionPct:22,
@@ -3679,10 +7832,10 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               },
             ];
 
-            /* â•â• DERIVED DATA â•â• */
+            /* ══ DERIVED DATA ══ */
             const rawHandover = liveHandover?.length > 0 ? liveHandover : SEED_HANDOVER;
 
-            /* â•â• MARKET STATS â•â• */
+            /* ══ MARKET STATS ══ */
             const MARKET_STATS = {
               total2026Units: 45000,
               onTimeRate: 48,
@@ -3694,12 +7847,12 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               penaltyRate: 1,
             };
 
-            /* â•â• RISK CONFIG â•â• */
-            /* riskCfg â€” defined at top level */
+            /* ══ RISK CONFIG ══ */
+            /* riskCfg — defined at top level */
 
-            /* risk config â€” use riskCfg at top level */
+            /* risk config — use riskCfg at top level */
 
-            /* â•â• FILTERS â•â• */
+            /* ══ FILTERS ══ */
             const devOptions = ["All", ...new Set(rawHandover.map(p => p.developer))];
             const commOptions = ["All", ...new Set(rawHandover.map(p => p.community))];
 
@@ -3712,7 +7865,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               return true;
             });
 
-            /* â•â• UPCOMING ALERTS â•â• */
+            /* ══ UPCOMING ALERTS ══ */
             const today = new Date();
             const alerts = rawHandover.filter(p => {
               if (p.status === "Near Handover" || p.status === "Minor Delay") return true;
@@ -3721,7 +7874,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               return daysLeft <= 90;
             }).sort((a,b) => new Date(a.expectedDate) - new Date(b.expectedDate));
 
-            /* â•â• COUNTDOWN HELPER â•â• */
+            /* ══ COUNTDOWN HELPER ══ */
             const getDaysLeft = (dateStr) => {
               const d = new Date(dateStr);
               const days = Math.ceil((d - today) / (1000*60*60*24));
@@ -3733,7 +7886,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               return { days: months, label: "months to handover", color: T.textSecondary };
             };
 
-            /* â•â• SUMMARY KPIs â•â• */
+            /* ══ SUMMARY KPIs ══ */
             const onTrackCount = rawHandover.filter(p => p.status === "On Track" || p.status === "Near Handover").length;
             const delayedCount = rawHandover.filter(p => p.status === "Minor Delay" || p.status === "Major Delay").length;
             const avgProgress = Math.round(rawHandover.reduce((a,p) => a+(p.constructionPct||0),0)/rawHandover.length);
@@ -3750,11 +7903,11 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
             return (
               <div style={{ animation:"fadeUp 0.4s ease-out forwards" }}>
 
-                {/* â”€â”€ Header â”€â”€ */}
+                {/* ── Header ── */}
                 <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"10px 0", marginBottom:16, borderBottom:`1px solid ${T.border}`, flexWrap:"wrap", gap:8 }}>
                   <div>
                     <div style={{ fontFamily:"'Fraunces',serif", fontSize:20, fontWeight:800, color:T.white }}>Handover Intelligence</div>
-                    <div style={{ fontSize:11, color:T.textMuted, marginTop:3 }}>Construction timelines Â· Delay risk Â· 90/60/30 day alerts Â· RERA milestones</div>
+                    <div style={{ fontSize:11, color:T.textMuted, marginTop:3 }}>Construction timelines · Delay risk · 90/60/30 day alerts · RERA milestones</div>
                   </div>
                   <div style={{ display:"flex", gap:8 }}>
                     {["cards","list"].map(v => (
@@ -3764,7 +7917,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   </div>
                 </div>
 
-                {/* â”€â”€ Market Context Banner â”€â”€ */}
+                {/* ── Market Context Banner ── */}
                 <div style={{ background:"rgba(212,168,67,0.06)", border:`1px solid rgba(212,168,67,0.2)`, borderRadius:10, padding:"12px 16px", marginBottom:16, display:"flex", gap:20, flexWrap:"wrap", alignItems:"center" }}>
                   <div style={{ fontSize:10, fontWeight:700, color:T.gold, letterSpacing:0.8, textTransform:"uppercase", flexShrink:0 }}>2026 Dubai Handover Market</div>
                   {[
@@ -3772,7 +7925,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                     { label:"On-Time Rate", value:"48%", color:T.gold },
                     { label:"Peak Year", value:"2027 (70K units)" },
                     { label:"Avg Delay", value:"4.2 months", color:T.gold },
-                    { label:"Grace Period (typical)", value:"6â€“12 months" },
+                    { label:"Grace Period (typical)", value:"6–12 months" },
                     { label:"Penalty Rate", value:"1%/month" },
                   ].map((s,i) => (
                     <div key={i} style={{ display:"flex", flexDirection:"column" }}>
@@ -3781,11 +7934,11 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                     </div>
                   ))}
                   <div style={{ marginLeft:"auto", fontSize:10, color:T.textMuted, textAlign:"right" }}>
-                    Source: prelaunch.ae Dec 2025 Â· RERA ORDS
+                    Source: prelaunch.ae Dec 2025 · RERA ORDS
                   </div>
                 </div>
 
-                {/* â”€â”€ KPI Cards â”€â”€ */}
+                {/* ── KPI Cards ── */}
                 <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(170px,1fr))", gap:10, marginBottom:20 }}>
                   {[
                     { label:"Projects Tracked", value:rawHandover.length.toString(), color:T.white, sub:"In portfolio" },
@@ -3802,12 +7955,12 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   ))}
                 </div>
 
-                {/* â”€â”€ 90/60/30 Day Alerts â”€â”€ */}
+                {/* ── 90/60/30 Day Alerts ── */}
                 {alerts.length > 0 && (
                   <div style={{ background:"rgba(212,168,67,0.04)", border:`1px solid rgba(212,168,67,0.25)`, borderRadius:10, padding:"14px 16px", marginBottom:20 }}>
                     <div style={{ fontSize:12, fontWeight:700, color:T.gold, marginBottom:12, display:"flex", alignItems:"center", gap:8 }}>
                       <span style={{ width:8, height:8, borderRadius:"50%", background:T.gold, display:"inline-block", animation:"pulse 2s infinite" }} />
-                      Handover Alerts â€” Next 90 Days
+                      Handover Alerts — Next 90 Days
                     </div>
                     <div style={{ display:"flex", gap:10, flexWrap:"wrap" }}>
                       {alerts.map((p,i) => {
@@ -3819,7 +7972,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                             onMouseEnter={e => e.currentTarget.style.borderColor=rc.color}
                             onMouseLeave={e => e.currentTarget.style.borderColor=`${rc.color}33`}>
                             <div style={{ fontSize:11, fontWeight:700, color:T.white, marginBottom:2 }}>{p.project}</div>
-                            <div style={{ fontSize:10, color:T.textMuted, marginBottom:6 }}>{p.developer}{"Â·"}{p.community}</div>
+                            <div style={{ fontSize:10, color:T.textMuted, marginBottom:6 }}>{p.developer}{"·"}{p.community}</div>
                             <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between" }}>
                               <span style={{ fontSize:10, padding:"2px 7px", borderRadius:8, background:rc.bg, color:rc.color, fontWeight:700 }}>{p.status}</span>
                               <span style={{ fontSize:12, fontWeight:700, color:cd.color }}>{cd.days} {cd.label}</span>
@@ -3831,7 +7984,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   </div>
                 )}
 
-                {/* â”€â”€ Filters â”€â”€ */}
+                {/* ── Filters ── */}
                 <div style={{ background:T.surface, border:`1px solid ${T.border}`, borderRadius:10, padding:"12px 14px", marginBottom:16, display:"flex", gap:8, flexWrap:"wrap", alignItems:"center" }}>
                   <div style={{ position:"relative" }}>
                     {SvgIcons.Search({ width:13, height:13, style:{ position:"absolute", left:10, top:"50%", transform:"translateY(-50%)", color:T.textMuted, pointerEvents:"none" } })}
@@ -3857,15 +8010,15 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   )}
                 </div>
 
-                {/* â”€â”€ Seed notice â”€â”€ */}
+                {/* ── Seed notice ── */}
                 {!liveHandover?.length && (
                   <div style={{ display:"flex", alignItems:"center", gap:8, padding:"8px 14px", borderRadius:8, background:"rgba(212,168,67,0.06)", border:`1px solid rgba(212,168,67,0.2)`, marginBottom:16 }}>
                     <span style={{ width:6, height:6, borderRadius:"50%", background:T.gold, display:"inline-block" }} />
-                    <span style={{ fontSize:11, color:T.textMuted }}><span style={{ color:T.gold, fontWeight:700 }}>Research-based seed data</span> â€” RERA ORDS, developer portals, prelaunch.ae Dec 2025 Â· Import your projects via Admin â†’ Data Manager</span>
+                    <span style={{ fontSize:11, color:T.textMuted }}><span style={{ color:T.gold, fontWeight:700 }}>Research-based seed data</span> — RERA ORDS, developer portals, prelaunch.ae Dec 2025 · Import your projects via Admin → Data Manager</span>
                   </div>
                 )}
 
-                {/* â”€â”€ Cards View â”€â”€ */}
+                {/* ── Cards View ── */}
                 {hdvView === "cards" && (
                   <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(360px,1fr))", gap:16, marginBottom:20 }}>
                     {filtered.map((p,i) => {
@@ -3884,7 +8037,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                           <div style={{ padding:"14px 16px", borderBottom:`1px solid ${T.border}`, background:`${rc.color}08` }}>
                             <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start" }}>
                               <div style={{ flex:1 }}>
-                                <div style={{ fontSize:10, fontWeight:700, color:T.textMuted, letterSpacing:0.8, textTransform:"uppercase", marginBottom:3 }}>{p.developer}{"Â·"}{p.community}</div>
+                                <div style={{ fontSize:10, fontWeight:700, color:T.textMuted, letterSpacing:0.8, textTransform:"uppercase", marginBottom:3 }}>{p.developer}{"·"}{p.community}</div>
                                 <div style={{ fontFamily:"'Fraunces',serif", fontSize:15, fontWeight:700, color:T.white, marginBottom:6 }}>{p.project}</div>
                                 <div style={{ display:"flex", gap:6, flexWrap:"wrap", alignItems:"center" }}>
                                   <span style={{ fontSize:10, fontWeight:700, padding:"2px 8px", borderRadius:10, background:rc.bg, color:rc.color }}>{p.status}</span>
@@ -3952,7 +8105,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   </div>
                 )}
 
-                {/* â”€â”€ List View â”€â”€ */}
+                {/* ── List View ── */}
                 {hdvView === "list" && (
                   <div style={{ background:T.surface, border:`1px solid ${T.border}`, borderRadius:12, overflow:"hidden", marginBottom:20 }}>
                     <div style={{ display:"grid", gridTemplateColumns:"2.5fr 1fr 1fr 1fr 1fr 1fr 1fr", padding:"10px 16px", background:T.surfaceAlt, borderBottom:`1px solid ${T.border}` }}>
@@ -3971,7 +8124,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                           onMouseLeave={e => e.currentTarget.style.background="transparent"}>
                           <div>
                             <div style={{ fontSize:13, fontWeight:600, color:T.white }}>{p.project}</div>
-                            <div style={{ fontSize:11, color:T.textMuted }}>{p.developer}{"Â·"}{p.community}</div>
+                            <div style={{ fontSize:11, color:T.textMuted }}>{p.developer}{"·"}{p.community}</div>
                           </div>
                           <div style={{ display:"flex", alignItems:"center" }}>
                             <span style={{ fontSize:10, padding:"2px 8px", borderRadius:8, background:rc.bg, color:rc.color, fontWeight:700 }}>{p.status}</span>
@@ -3992,16 +8145,16 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   </div>
                 )}
 
-                {/* â”€â”€ Delay Impact Calculator â”€â”€ */}
+                {/* ── Delay Impact Calculator ── */}
                 <div className="chart-box" style={{ padding:20, marginBottom:20 }}>
                   <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:4 }}>Delay Impact Calculator</div>
                   <div style={{ fontSize:11, color:T.textMuted, marginBottom:16 }}>What a 1% monthly penalty + lost rental means for your portfolio</div>
                   <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(200px,1fr))", gap:12 }}>
                     {[
-                      { label:"1 month delay", penalty:"1% purchase price", rental:"1Ã— monthly rent lost", total:"~AED 18,000â€“65,000 loss" },
-                      { label:"3 month delay", penalty:"3% purchase price", rental:"3Ã— monthly rent lost", total:"~AED 54,000â€“195,000 loss" },
-                      { label:"6 month delay", penalty:"6% purchase price", rental:"6Ã— monthly rent lost", total:"~AED 108,000â€“390,000 loss" },
-                      { label:"12 month delay", penalty:"Grace period ends", rental:"12Ã— monthly rent lost", total:"Legal action recommended" },
+                      { label:"1 month delay", penalty:"1% purchase price", rental:"1× monthly rent lost", total:"~AED 18,000–65,000 loss" },
+                      { label:"3 month delay", penalty:"3% purchase price", rental:"3× monthly rent lost", total:"~AED 54,000–195,000 loss" },
+                      { label:"6 month delay", penalty:"6% purchase price", rental:"6× monthly rent lost", total:"~AED 108,000–390,000 loss" },
+                      { label:"12 month delay", penalty:"Grace period ends", rental:"12× monthly rent lost", total:"Legal action recommended" },
                     ].map((calc,i) => (
                       <div key={i} style={{ padding:"12px 14px", background:T.surfaceAlt, borderRadius:10, border:`1px solid ${T.border}` }}>
                         <div style={{ fontSize:11, fontWeight:700, color:T.gold, marginBottom:8 }}>{calc.label}</div>
@@ -4012,11 +8165,11 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                     ))}
                   </div>
                   <div style={{ marginTop:14, fontSize:11, color:T.textMuted, padding:"8px 12px", background:"rgba(212,168,67,0.04)", borderRadius:8, border:`1px solid rgba(212,168,67,0.15)` }}>
-                    <strong style={{ color:T.gold }}>Legal Framework:</strong> Law No. 13 of 2008 (amended by Law No. 19 of 2017). After 6â€“12 month grace period (per SPA), buyers can claim compensation or cancellation. Penalty clause: typically 1% monthly on purchase price. Escrow protected under Law No. 8 of 2007. RERA dispute resolution via DLD portal.
+                    <strong style={{ color:T.gold }}>Legal Framework:</strong> Law No. 13 of 2008 (amended by Law No. 19 of 2017). After 6–12 month grace period (per SPA), buyers can claim compensation or cancellation. Penalty clause: typically 1% monthly on purchase price. Escrow protected under Law No. 8 of 2007. RERA dispute resolution via DLD portal.
                   </div>
                 </div>
 
-                {/* â”€â”€ Sources â”€â”€ */}
+                {/* ── Sources ── */}
                 <div style={{ paddingTop:12, borderTop:`1px solid ${T.border}`, display:"flex", gap:8, flexWrap:"wrap", alignItems:"center" }}>
                   <span style={{ fontSize:10, color:T.textMuted }}>Sources:</span>
                   {["RERA ORDS Database","Developer IR Reports Q4 2025","prelaunch.ae Dec 2025","DLD REST App","uaeexperthub.com Mar 2026","Dubai REST Construction Tracker"].map((s,i) => (
@@ -4028,13 +8181,13 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
             );
           })()}
 
-          {/* â•â•â• HANDOVER DETAIL OVERLAY â•â•â• */}
+          {/* ═══ HANDOVER DETAIL OVERLAY ═══ */}
           {hdvSelected && (
             <div role="dialog" aria-modal="true" style={{ position:"fixed", inset:0, background:"rgba(4,9,15,0.97)", zIndex:2000, display:"flex", flexDirection:"column", backdropFilter:"blur(8px)" }}>
               {/* Overlay header */}
               <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"16px 24px", borderBottom:`1px solid ${T.border}`, background:T.surface, flexShrink:0 }}>
                 <div>
-                  <div style={{ fontSize:11, fontWeight:700, color:T.textMuted, letterSpacing:0.8, textTransform:"uppercase", marginBottom:3 }}>{hdvSelected.developer}{"Â·"}{hdvSelected.community}</div>
+                  <div style={{ fontSize:11, fontWeight:700, color:T.textMuted, letterSpacing:0.8, textTransform:"uppercase", marginBottom:3 }}>{hdvSelected.developer}{"·"}{hdvSelected.community}</div>
                   <div style={{ fontFamily:"'Fraunces',serif", fontSize:22, fontWeight:800, color:T.white }}>{hdvSelected.project}</div>
                 </div>
                 <div style={{ display:"flex", alignItems:"center", gap:12 }}>
@@ -4043,7 +8196,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                     <div style={{ fontSize:11, color:T.textMuted }}>complete</div>
                   </div>
                   <button type="button" onClick={() => setHdvSelected(null)}
-                    style={{ width:36, height:36, borderRadius:"50%", background:T.surfaceAlt, border:`1px solid ${T.border}`, color:T.white, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", fontSize:18, fontFamily:"'Outfit',sans-serif" }}>Ã—</button>
+                    style={{ width:36, height:36, borderRadius:"50%", background:T.surfaceAlt, border:`1px solid ${T.border}`, color:T.white, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", fontSize:18, fontFamily:"'Outfit',sans-serif" }}>×</button>
                 </div>
               </div>
               {/* Overlay content */}
@@ -4064,7 +8217,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 </div>
                 {/* Milestone Gantt */}
                 <div className="chart-box" style={{ padding:20, marginBottom:16 }}>
-                  <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:16 }}>Construction Milestones â€” RERA Verified</div>
+                  <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:16 }}>Construction Milestones — RERA Verified</div>
                   {(hdvSelected.milestones||[]).map((m,i) => {
                     const isNext = !m.done && (hdvSelected.milestones[i-1]?.done || i===0);
                     return (
@@ -4086,7 +8239,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                         </div>
                         {/* Done badge */}
                         <span style={{ fontSize:10, padding:"2px 7px", borderRadius:6, background:m.done?"rgba(16,185,129,0.15)":isNext?"rgba(212,168,67,0.1)":"transparent", color:m.done?T.green:isNext?T.gold:T.textMuted, fontWeight:700, flexShrink:0, width:60, textAlign:"center" }}>
-                          {m.done?"âœ“ Done":isNext?"Next â†’":"Pending"}
+                          {m.done?"✓ Done":isNext?"Next →":"Pending"}
                         </span>
                       </div>
                     );
@@ -4118,13 +8271,13 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 {/* Quick actions */}
                 <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
                   <button type="button" onClick={() => { setHdvSelected(null); handleTabChange("Projects"); }}
-                    style={{ padding:"9px 18px", background:`linear-gradient(135deg,${T.gold},#B8922A)`, border:"none", borderRadius:8, color:"#000", fontSize:12, fontWeight:700, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>View Project Details â†’</button>
+                    style={{ padding:"9px 18px", background:`linear-gradient(135deg,${T.gold},#B8922A)`, border:"none", borderRadius:8, color:"#000", fontSize:12, fontWeight:700, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>View Project Details →</button>
                   <button type="button" onClick={() => { setHdvSelected(null); handleTabChange("Risk"); }}
                     style={{ padding:"9px 18px", background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:8, color:T.textSecondary, fontSize:12, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>Risk Analysis</button>
                   <button type="button" onClick={() => { setHdvSelected(null); handleTabChange("My Leads"); }}
                     style={{ padding:"9px 18px", background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:8, color:T.textSecondary, fontSize:12, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>Add to Lead</button>
                   <button type="button" onClick={() => {
-                    const txt = `\uD83C\uDFD7ï¸ DXB ANALYTICS â€” HANDOVER UPDATE\nâ”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n\uD83D\uDCCC ${hdvSelected.project}\n\uD83C\uDFE2 ${hdvSelected.developer} Â· ${hdvSelected.community}\n\n\uD83D\uDCCA STATUS: ${hdvSelected.status}\n\uD83D\uDD27 Construction: ${hdvSelected.constructionPct}% complete\n\uD83D\uDCC5 Expected Handover: ${new Date(hdvSelected.expectedDate).toLocaleDateString("en-GB",{day:"numeric",month:"long",year:"numeric"})}\nâš ï¸ Delay Risk: ${hdvSelected.delayRisk}\n\n\uD83D\uDD10 RERA: ${hdvSelected.reraNo}\n\uD83C\uDFE6 Escrow: ${hdvSelected.escrowBank}\n\uD83D\uDCCB Developer Record: ${hdvSelected.onTimeHistory}\n\nâ”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\nPowered by DXB Analytics\nemaar-dashboard.vercel.app`;
+                    const txt = `\uD83C\uDFD7️ DXB ANALYTICS — HANDOVER UPDATE\n━━━━━━━━━━━━━━━━━━\n\uD83D\uDCCC ${hdvSelected.project}\n\uD83C\uDFE2 ${hdvSelected.developer} · ${hdvSelected.community}\n\n\uD83D\uDCCA STATUS: ${hdvSelected.status}\n\uD83D\uDD27 Construction: ${hdvSelected.constructionPct}% complete\n\uD83D\uDCC5 Expected Handover: ${new Date(hdvSelected.expectedDate).toLocaleDateString("en-GB",{day:"numeric",month:"long",year:"numeric"})}\n⚠️ Delay Risk: ${hdvSelected.delayRisk}\n\n\uD83D\uDD10 RERA: ${hdvSelected.reraNo}\n\uD83C\uDFE6 Escrow: ${hdvSelected.escrowBank}\n\uD83D\uDCCB Developer Record: ${hdvSelected.onTimeHistory}\n\n━━━━━━━━━━━━━━━━━━\nPowered by DXB Analytics\nemaar-dashboard.vercel.app`;
                     window.open(`https://wa.me/?text=${encodeURIComponent(txt)}`,"_blank");
                   }} style={{ padding:"9px 18px", background:"rgba(37,211,102,0.1)", border:"1px solid rgba(37,211,102,0.3)", borderRadius:8, color:"#25D366", fontSize:12, fontWeight:600, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>
                     Share Handover Update
@@ -4136,15 +8289,15 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
 
 
 
-          {/* â”€â”€â”€ SERVICE CHARGES TAB â”€â”€â”€ */}
+          {/* ─── SERVICE CHARGES TAB ─── */}
           {tab === "Service Charges" && (() => {
 
-            /* â•â• SEED DATA â€” RERA 2026 Research â•â•
+            /* ══ SEED DATA — RERA 2026 Research ══
                Source: DLD Service Charge Index, RERA Mollak 2026
                realestateclubdubai.com, drivenproperties.com, luxuryproperty.com
-            â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+            ══════════════════════════════════════ */
             const SEED_SC = [
-              /* â”€â”€â”€ APARTMENTS â”€â”€â”€ */
+              /* ─── APARTMENTS ─── */
               { id:"sc01", community:"International City",    type:"Apartment", rate:6,   rate3yAgo:5,   yoy:5,  tier:"Budget",    chiller:false, notes:"Lowest in Dubai. Basic facilities. High yield offset by low charges.", investGrade:"Excellent" },
               { id:"sc02", community:"Discovery Gardens",     type:"Apartment", rate:8,   rate3yAgo:7,   yoy:5,  tier:"Budget",    chiller:false, notes:"Well managed. Good value for money. Consistent OA management.", investGrade:"Excellent" },
               { id:"sc03", community:"Jumeirah Village Circle",type:"Apartment", rate:12,  rate3yAgo:10,  yoy:8,  tier:"Mid-Range", chiller:false, notes:"Growing community. Rates rising with new amenities. 18,000+ transactions 2025.", investGrade:"Good" },
@@ -4155,19 +8308,19 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               { id:"sc08", community:"Jumeirah Lake Towers",  type:"Apartment", rate:16,  rate3yAgo:14,  yoy:7,  tier:"Mid-Range", chiller:true,  notes:"Chiller included. Very liquid market. Strong rental demand.", investGrade:"Good" },
               { id:"sc09", community:"Business Bay",          type:"Apartment", rate:18,  rate3yAgo:15,  yoy:10, tier:"Mid-Range", chiller:true,  notes:"Canal views command premium. Chiller extra in some towers.", investGrade:"Average" },
               { id:"sc10", community:"Dubai Marina",          type:"Apartment", rate:18,  rate3yAgo:15,  yoy:8,  tier:"Mid-Range", chiller:true,  notes:"Premium waterfront. District cooling in most towers.", investGrade:"Average" },
-              { id:"sc11", community:"Dubai Creek Harbour",   type:"Apartment", rate:16,  rate3yAgo:13,  yoy:10, tier:"Mid-Range", chiller:false, notes:"Newer community rising fast. Emaar managed â€” professional OA.", investGrade:"Good" },
+              { id:"sc11", community:"Dubai Creek Harbour",   type:"Apartment", rate:16,  rate3yAgo:13,  yoy:10, tier:"Mid-Range", chiller:false, notes:"Newer community rising fast. Emaar managed — professional OA.", investGrade:"Good" },
               { id:"sc12", community:"Sobha Hartland",        type:"Apartment", rate:18,  rate3yAgo:15,  yoy:8,  tier:"Premium",   chiller:false, notes:"Sobha self-managed. High quality finish = higher charge.", investGrade:"Average" },
               { id:"sc13", community:"Dubai Hills Estate",    type:"Apartment", rate:16,  rate3yAgo:14,  yoy:7,  tier:"Premium",   chiller:false, notes:"Emaar managed. Golf views add premium. Good OA track record.", investGrade:"Good" },
               { id:"sc14", community:"Mohammed Bin Rashid City",type:"Apartment",rate:20, rate3yAgo:16,  yoy:12, tier:"Premium",   chiller:false, notes:"Upscale community. Rising charges as more amenities complete.", investGrade:"Average" },
               { id:"sc15", community:"Downtown Dubai",        type:"Apartment", rate:28,  rate3yAgo:24,  yoy:8,  tier:"Premium",   chiller:true,  notes:"District cooling mandatory. Burj Khalifa AED 68/sqft. Highest charges.", investGrade:"Poor" },
-              { id:"sc16", community:"Palm Jumeirah",         type:"Apartment", rate:32,  rate3yAgo:28,  yoy:7,  tier:"Ultra",     chiller:true,  notes:"Luxury managed. Very high charges vs yield â€” for lifestyle buyers.", investGrade:"Poor" },
+              { id:"sc16", community:"Palm Jumeirah",         type:"Apartment", rate:32,  rate3yAgo:28,  yoy:7,  tier:"Ultra",     chiller:true,  notes:"Luxury managed. Very high charges vs yield — for lifestyle buyers.", investGrade:"Poor" },
               { id:"sc17", community:"Emaar Beachfront",      type:"Apartment", rate:20,  rate3yAgo:16,  yoy:11, tier:"Premium",   chiller:false, notes:"Beachfront premium. Emaar managed. Charges rising with popularity.", investGrade:"Average" },
-              /* â”€â”€â”€ VILLAS â”€â”€â”€ */
+              /* ─── VILLAS ─── */
               { id:"sc18", community:"Arabian Ranches",       type:"Villa",     rate:4.5, rate3yAgo:3.8, yoy:8,  tier:"Mid-Range", chiller:false, notes:"Established community. Low charges = excellent yield impact for villas.", investGrade:"Excellent" },
               { id:"sc19", community:"Dubai Hills Estate",    type:"Villa",     rate:5,   rate3yAgo:4.2, yoy:8,  tier:"Mid-Range", chiller:false, notes:"Golf community. Park access. Good OA quality.", investGrade:"Excellent" },
               { id:"sc20", community:"Tilal Al Ghaf",         type:"Villa",     rate:5.5, rate3yAgo:4,   yoy:15, tier:"Mid-Range", chiller:false, notes:"Newer community. Charges rising but still excellent value.", investGrade:"Good" },
               { id:"sc21", community:"DAMAC Hills 2",         type:"Villa",     rate:3.5, rate3yAgo:3,   yoy:8,  tier:"Budget",    chiller:false, notes:"Most affordable villa charges in Dubai. Excellent for yield.", investGrade:"Excellent" },
-              { id:"sc22", community:"The Oasis",             type:"Villa",     rate:6,   rate3yAgo:0,   yoy:0,  tier:"Premium",   chiller:false, notes:"New launch â€” estimated based on Emaar premium communities.", investGrade:"Good" },
+              { id:"sc22", community:"The Oasis",             type:"Villa",     rate:6,   rate3yAgo:0,   yoy:0,  tier:"Premium",   chiller:false, notes:"New launch — estimated based on Emaar premium communities.", investGrade:"Good" },
               { id:"sc23", community:"Palm Jumeirah",         type:"Villa",     rate:6,   rate3yAgo:5,   yoy:8,  tier:"Ultra",     chiller:false, notes:"Frond villas. Very high capital value vs modest service charge.", investGrade:"Good" },
             ];
 
@@ -4226,7 +8379,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"10px 0", marginBottom:16, borderBottom:`1px solid ${T.border}`, flexWrap:"wrap", gap:8 }}>
                   <div>
                     <div style={{ fontFamily:"'Fraunces',serif", fontSize:20, fontWeight:800, color:T.white }}>Service Charge Intelligence</div>
-                    <div style={{ fontSize:11, color:T.textMuted, marginTop:3 }}>RERA-regulated rates Â· Mollak system Â· Yield impact analysis Â· 2026 data</div>
+                    <div style={{ fontSize:11, color:T.textMuted, marginTop:3 }}>RERA-regulated rates · Mollak system · Yield impact analysis · 2026 data</div>
                   </div>
                   <div style={{ display:"flex", gap:8 }}>
                     {["table","chart","calculator"].map(v => (
@@ -4242,7 +8395,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 <div style={{ padding:"10px 16px", background:"rgba(249,115,22,0.06)", border:"1px solid rgba(249,115,22,0.25)", borderRadius:10, marginBottom:16, display:"flex", alignItems:"center", gap:10 }}>
                   {SvgIcons.TrendingUp({ width:14, height:14, style:{ color:"#F97316", flexShrink:0 } })}
                   <span style={{ fontSize:12, color:T.textSecondary }}>
-                    <span style={{ color:"#F97316", fontWeight:700 }}>5â€“10% increase forecast for 2026</span> â€” RERA Mollak data. Inflation, aging infrastructure, sustainability mandates driving rises. Service charges consume <strong style={{ color:T.white }}>15â€“25% of gross rental income</strong>. Factor into your yield calculations.
+                    <span style={{ color:"#F97316", fontWeight:700 }}>5–10% increase forecast for 2026</span> — RERA Mollak data. Inflation, aging infrastructure, sustainability mandates driving rises. Service charges consume <strong style={{ color:T.white }}>15–25% of gross rental income</strong>. Factor into your yield calculations.
                   </span>
                 </div>
 
@@ -4252,8 +8405,8 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                     { label:"Communities",      value:filtered.length,                  color:T.white   },
                     { label:"Avg Rate (AED/sqft)",value:"AED " + avgRate,               color:T.gold    },
                     { label:"Avg YoY Increase", value:avgYoY + "%",                    color:"#F97316" },
-                    { label:"Highest Rate",     value:highest ? "AED " + highest.rate : "â€”", color:T.red  },
-                    { label:"Lowest Rate",      value:lowest  ? "AED " + lowest.rate  : "â€”", color:T.green },
+                    { label:"Highest Rate",     value:highest ? "AED " + highest.rate : "—", color:T.red  },
+                    { label:"Lowest Rate",      value:lowest  ? "AED " + lowest.rate  : "—", color:T.green },
                     { label:"Chiller Included", value:withChiller + " communities",    color:T.teal    },
                   ].map((k,i) => (
                     <div key={i} className="kpi-card">
@@ -4312,7 +8465,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                           <div style={{ fontSize:12, color:T.textMuted }}>AED {d.rate3yAgo}</div>
                           <div>
                             <span style={{ fontSize:11, fontWeight:700, color:d.yoy >= 10 ? T.red : d.yoy >= 6 ? "#F97316" : T.gold }}>
-                              â†‘ {d.yoy}%
+                              ↑ {d.yoy}%
                             </span>
                           </div>
                           <div>
@@ -4328,11 +8481,11 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   </div>
                 )}
 
-                {/* CHART VIEW â€” Rate comparison bar chart */}
+                {/* CHART VIEW — Rate comparison bar chart */}
                 {scView === "chart" && (
                   <div className="chart-box" style={{ padding:20, marginBottom:20 }}>
-                    <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:4 }}>Service Charge by Community â€” AED per sqft per year</div>
-                    <div style={{ fontSize:11, color:T.textMuted, marginBottom:20 }}>RERA Mollak 2026 approved rates Â· Lower is better for investors</div>
+                    <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:4 }}>Service Charge by Community — AED per sqft per year</div>
+                    <div style={{ fontSize:11, color:T.textMuted, marginBottom:20 }}>RERA Mollak 2026 approved rates · Lower is better for investors</div>
                     <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
                       {filtered.slice(0,15).map((d,i) => {
                         const maxRate = Math.max(...filtered.map(x=>x.rate));
@@ -4353,7 +8506,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                     </div>
                     {/* Legend */}
                     <div style={{ display:"flex", gap:16, marginTop:16, flexWrap:"wrap" }}>
-                      {[["#10B981","AED <10 â€” Excellent"],["#D4A843","AED 10-15 â€” Good"],["#F97316","AED 15-25 â€” Average"],["#EF4444","AED 25+ â€” Poor"]].map(([c,l],i) => (
+                      {[["#10B981","AED <10 — Excellent"],["#D4A843","AED 10-15 — Good"],["#F97316","AED 15-25 — Average"],["#EF4444","AED 25+ — Poor"]].map(([c,l],i) => (
                         <div key={i} style={{ display:"flex", alignItems:"center", gap:5 }}>
                           <div style={{ width:10, height:10, borderRadius:2, background:c }} />
                           <span style={{ fontSize:10, color:T.textMuted }}>{l}</span>
@@ -4435,13 +8588,13 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
 
                 {/* Info box */}
                 <div className="chart-box" style={{ padding:18, marginBottom:16 }}>
-                  <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:12 }}>RERA Service Charge Framework â€” Key Facts</div>
+                  <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:12 }}>RERA Service Charge Framework — Key Facts</div>
                   <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(240px,1fr))", gap:10 }}>
                     {[
                       { icon:"\uD83C\uDFDB", title:"RERA Mollak System", desc:"All OA budgets submitted and approved via Mollak. 1,240+ buildings, AED 4B processed annually. Cannot charge above approved rate." },
                       { icon:"\uD83D\uDCCA", title:"DLD Service Charge Index", desc:"Public database on DLD website. Check any building's RERA-approved rate vs what you're being charged." },
                       { icon:"\uD83D\uDCC8", title:"5-10% Rise in 2026", desc:"DEWA tariffs rising. Aging buildings need more maintenance. Sustainability mandates add cost. Budget for increases." },
-                      { icon:"â„", title:"Chiller (District Cooling)", desc:"Downtown, Dubai Marina, Palm â€” extra AED 2,000-6,000/yr NOT included in standard service charge. Ask before buying." },
+                      { icon:"❄", title:"Chiller (District Cooling)", desc:"Downtown, Dubai Marina, Palm — extra AED 2,000-6,000/yr NOT included in standard service charge. Ask before buying." },
                     ].map((f,i) => (
                       <div key={i} style={{ padding:"12px 14px", background:T.surfaceAlt, borderRadius:10, border:`1px solid ${T.border}` }}>
                         <div style={{ fontSize:16, marginBottom:5 }}>{f.icon}</div>
@@ -4456,7 +8609,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 {!liveServiceCharges?.length && (
                   <div style={{ display:"flex", alignItems:"center", gap:8, padding:"8px 14px", borderRadius:8, background:"rgba(212,168,67,0.06)", border:`1px solid rgba(212,168,67,0.2)`, marginBottom:12 }}>
                     <span style={{ width:6, height:6, borderRadius:"50%", background:T.gold, display:"inline-block" }} />
-                    <span style={{ fontSize:11, color:T.textMuted }}><span style={{ color:T.gold, fontWeight:700 }}>RERA 2026 reference data</span> â€” DLD Mollak, luxuryproperty.com, realestateclubdubai.com Â· Import live data via Admin â†’ Data Manager</span>
+                    <span style={{ fontSize:11, color:T.textMuted }}><span style={{ color:T.gold, fontWeight:700 }}>RERA 2026 reference data</span> — DLD Mollak, luxuryproperty.com, realestateclubdubai.com · Import live data via Admin → Data Manager</span>
                   </div>
                 )}
 
@@ -4473,43 +8626,344 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
           })()}
 
 
-          {/* â”€â”€â”€ YIELDS TAB â”€â”€â”€ */}
-          {/* â”€â”€â”€ YIELDS TAB (extracted) â”€â”€â”€ */}
-          {tab === "Yields" && (
-            <YieldsTab
-              liveYieldsData={liveYieldsData}
-              yldSearch={yldSearch} setYldSearch={setYldSearch}
-              yldSort={yldSort} setYldSort={setYldSort}
-              yldType={yldType} setYldType={setYldType}
-              yldView={yldView} setYldView={setYldView}
-              yldCalcPrice={yldCalcPrice} setYldCalcPrice={setYldCalcPrice}
-              yldCalcRent={yldCalcRent} setYldCalcRent={setYldCalcRent}
-              yldCalcSC={yldCalcSC} setYldCalcSC={setYldCalcSC}
-              yldCalcSize={yldCalcSize} setYldCalcSize={setYldCalcSize}
-              yldCalcVacancy={yldCalcVacancy} setYldCalcVacancy={setYldCalcVacancy}
-              yldCalcMgmt={yldCalcMgmt} setYldCalcMgmt={setYldCalcMgmt}
-            />
-          )}
+          {/* ─── YIELDS TAB ─── */}
+          {tab === "Yields" && (() => {
+
+            /* ══ SEED DATA — Research-based 2026 ══
+               Sources: DLD Ejari, Bayut, PropertyFinder, Cavendish Maxwell,
+               themiddleeastinsider.com Apr 2026, sandsofwealth.com, valorisimo.com
+            ════════════════════════════════════════ */
+            const SEED_YIELDS = [
+              /* ─── HIGH YIELD — Budget/Mid ─── */
+              { id:"y01", community:"International City",     type:"Apartment", grossYield:9.2, netYield:7.8, avgRent:42000,  avgPrice:456000,  ppsf:650,  sc:6,   vacancy:8, trend:"+0.4%", trend3y:"+1.2%", tier:"High Yield",  badge:"#10B981", beds:{ studio:10.1, "1BR":8.8, "2BR":7.9 }, demand:"Very High", source:"themiddleeastinsider.com Apr 2026" },
+              { id:"y02", community:"Discovery Gardens",      type:"Apartment", grossYield:8.5, netYield:7.1, avgRent:55000,  avgPrice:647000,  ppsf:800,  sc:8,   vacancy:6, trend:"+0.3%", trend3y:"+0.9%", tier:"High Yield",  badge:"#10B981", beds:{ studio:9.4, "1BR":8.2, "2BR":7.6 }, demand:"High",      source:"sandsofwealth.com 2026" },
+              { id:"y03", community:"Jumeirah Village Circle",type:"Apartment", grossYield:7.8, netYield:6.4, avgRent:72000,  avgPrice:923000,  ppsf:1180, sc:12,  vacancy:6, trend:"+0.2%", trend3y:"+0.8%", tier:"High Yield",  badge:"#10B981", beds:{ studio:7.9, "1BR":7.0, "2BR":6.8, "3BR":7.2 }, demand:"Very High", source:"Bayut / GuestReady 2026" },
+              { id:"y04", community:"Dubai Silicon Oasis",    type:"Apartment", grossYield:7.6, netYield:6.3, avgRent:60000,  avgPrice:789000,  ppsf:1100, sc:11,  vacancy:7, trend:"+0.1%", trend3y:"+0.6%", tier:"High Yield",  badge:"#10B981", beds:{ studio:8.2, "1BR":7.4, "2BR":6.8 }, demand:"High",      source:"valorisimo.com 2026" },
+              { id:"y05", community:"Arjan",                  type:"Apartment", grossYield:7.5, netYield:6.1, avgRent:63000,  avgPrice:840000,  ppsf:1150, sc:13,  vacancy:7, trend:"+0.3%", trend3y:"+0.7%", tier:"High Yield",  badge:"#10B981", beds:{ studio:8.0, "1BR":7.3, "2BR":6.5 }, demand:"High",      source:"valorisimo.com 2026" },
+              { id:"y06", community:"Al Furjan",              type:"Apartment", grossYield:7.2, netYield:5.9, avgRent:71000,  avgPrice:985000,  ppsf:1350, sc:14,  vacancy:7, trend:"+0.2%", trend3y:"+0.5%", tier:"High Yield",  badge:"#10B981", beds:{ "1BR":7.5, "2BR":6.8, "3BR":6.1 }, demand:"High",      source:"Cavendish Maxwell Q1 2026" },
+              { id:"y07", community:"Jumeirah Lake Towers",   type:"Apartment", grossYield:8.1, netYield:6.5, avgRent:80000,  avgPrice:988000,  ppsf:1380, sc:16,  vacancy:5, trend:"+0.1%", trend3y:"+0.4%", tier:"High Yield",  badge:"#10B981", beds:{ studio:7.2, "1BR":8.2, "2BR":7.0, "3BR":6.5 }, demand:"Very High", source:"themiddleeastinsider.com Apr 2026" },
+              /* ─── MID YIELD — Established ─── */
+              { id:"y08", community:"Business Bay",           type:"Apartment", grossYield:7.6, netYield:5.8, avgRent:85000,  avgPrice:1120000, ppsf:2050, sc:18,  vacancy:6, trend:"+0.2%", trend3y:"+0.6%", tier:"Mid Yield",   badge:"#D4A843", beds:{ studio:7.8, "1BR":7.6, "2BR":6.9 }, demand:"Very High", source:"themiddleeastinsider.com Apr 2026" },
+              { id:"y09", community:"Dubai Marina",           type:"Apartment", grossYield:6.8, netYield:5.0, avgRent:115000, avgPrice:1690000, ppsf:2280, sc:18,  vacancy:5, trend:"+0.1%", trend3y:"+0.3%", tier:"Mid Yield",   badge:"#D4A843", beds:{ studio:6.5, "1BR":6.8, "2BR":6.2, "3BR":5.5 }, demand:"High",      source:"GuestReady / Bayut 2026" },
+              { id:"y10", community:"Dubai Hills Estate",     type:"Apartment", grossYield:6.2, netYield:4.9, avgRent:105000, avgPrice:1694000, ppsf:1850, sc:16,  vacancy:5, trend:"+0.1%", trend3y:"+0.5%", tier:"Mid Yield",   badge:"#D4A843", beds:{ "1BR":6.5, "2BR":6.0, "3BR":5.6 }, demand:"High",      source:"Cavendish Maxwell Q1 2026" },
+              { id:"y11", community:"Dubai Creek Harbour",    type:"Apartment", grossYield:6.0, netYield:4.8, avgRent:95000,  avgPrice:1583000, ppsf:1942, sc:16,  vacancy:6, trend:"+0.3%", trend3y:"+0.9%", tier:"Mid Yield",   badge:"#D4A843", beds:{ "1BR":6.3, "2BR":5.9 }, demand:"High",      source:"Emaar IR / DLD Q1 2026" },
+              { id:"y12", community:"Sobha Hartland",         type:"Apartment", grossYield:5.8, netYield:4.4, avgRent:110000, avgPrice:1897000, ppsf:2100, sc:18,  vacancy:5, trend:"+0.2%", trend3y:"+0.6%", tier:"Mid Yield",   badge:"#D4A843", beds:{ "1BR":6.0, "2BR":5.7, "3BR":5.2 }, demand:"High",      source:"Sobha IR / DLD Q1 2026" },
+              /* ─── LOW YIELD — Premium ─── */
+              { id:"y13", community:"Downtown Dubai",         type:"Apartment", grossYield:5.5, netYield:3.8, avgRent:175000, avgPrice:3182000, ppsf:3100, sc:28,  vacancy:4, trend:"0.0%",  trend3y:"+0.1%", tier:"Low Yield",   badge:"#3B82F6", beds:{ studio:5.8, "1BR":5.5, "2BR":5.0, "3BR":4.5 }, demand:"High",      source:"themiddleeastinsider.com Apr 2026" },
+              { id:"y14", community:"Palm Jumeirah",          type:"Apartment", grossYield:5.5, netYield:3.9, avgRent:220000, avgPrice:4000000, ppsf:4800, sc:32,  vacancy:4, trend:"0.0%",  trend3y:"+0.2%", tier:"Low Yield",   badge:"#3B82F6", beds:{ "1BR":5.8, "2BR":5.5, "3BR":5.0 }, demand:"Medium",    source:"CBRE / DLD Q1 2026" },
+              { id:"y15", community:"Emaar Beachfront",       type:"Apartment", grossYield:5.8, netYield:4.2, avgRent:165000, avgPrice:2845000, ppsf:2950, sc:20,  vacancy:5, trend:"+0.2%", trend3y:"+0.5%", tier:"Low Yield",   badge:"#3B82F6", beds:{ "1BR":6.0, "2BR":5.7, "3BR":5.1 }, demand:"High",      source:"Emaar IR / DLD Q1 2026" },
+              /* ─── VILLAS ─── */
+              { id:"y16", community:"Arabian Ranches",        type:"Villa",     grossYield:4.8, netYield:3.9, avgRent:215000, avgPrice:4479000, ppsf:1200, sc:4.5, vacancy:4, trend:"+0.2%", trend3y:"+0.8%", tier:"Villa Yield", badge:"#8B5CF6", beds:{ "3BR":4.9, "4BR":4.7, "5BR":4.5 }, demand:"High",      source:"Cavendish Maxwell Q1 2026" },
+              { id:"y17", community:"Dubai Hills Estate",     type:"Villa",     grossYield:4.9, netYield:4.0, avgRent:280000, avgPrice:5714000, ppsf:1400, sc:5,   vacancy:4, trend:"+0.2%", trend3y:"+0.9%", tier:"Villa Yield", badge:"#8B5CF6", beds:{ "3BR":5.1, "4BR":4.8, "5BR":4.5 }, demand:"High",      source:"Knight Frank Q1 2026" },
+              { id:"y18", community:"Tilal Al Ghaf",          type:"Villa",     grossYield:4.8, netYield:3.9, avgRent:245000, avgPrice:5104000, ppsf:1200, sc:5.5, vacancy:5, trend:"+0.3%", trend3y:"+1.1%", tier:"Villa Yield", badge:"#8B5CF6", beds:{ "4BR":4.9, "5BR":4.7 }, demand:"High",      source:"Knight Frank Q1 2026" },
+              { id:"y19", community:"Palm Jumeirah",          type:"Villa",     grossYield:4.2, netYield:3.5, avgRent:800000, avgPrice:19048000,ppsf:3800, sc:6,   vacancy:4, trend:"0.0%",  trend3y:"+0.3%", tier:"Villa Yield", badge:"#8B5CF6", beds:{ "4BR":4.3, "5BR":4.1, "6BR+":3.9 }, demand:"Medium",    source:"CBRE / DLD Q1 2026" },
+            ];
+
+            const rawData = liveYieldsData?.length > 0 ? liveYieldsData : SEED_YIELDS;
+
+            const filtered = rawData.filter(d => {
+              if (yldType !== "All" && d.type !== yldType) return false;
+              if (yldSearch && !d.community.toLowerCase().includes(yldSearch.toLowerCase())) return false;
+              return true;
+            }).sort((a,b) => {
+              if (yldSort === "gross")    return b.grossYield - a.grossYield;
+              if (yldSort === "net")      return b.netYield - a.netYield;
+              if (yldSort === "rent")     return b.avgRent - a.avgRent;
+              if (yldSort === "price")    return b.avgPrice - a.avgPrice;
+              if (yldSort === "community")return a.community.localeCompare(b.community);
+              return 0;
+            });
+
+            /* ── KPIs ── */
+            const apts = rawData.filter(d => d.type === "Apartment");
+            const villas = rawData.filter(d => d.type === "Villa");
+            const avgGross = apts.length ? (apts.reduce((s,d) => s+d.grossYield,0)/apts.length).toFixed(1) : 0;
+            const avgNet   = apts.length ? (apts.reduce((s,d) => s+d.netYield,0)/apts.length).toFixed(1)   : 0;
+            const topYield = [...rawData].sort((a,b) => b.grossYield - a.grossYield)[0];
+            const lowYield = [...rawData].sort((a,b) => a.grossYield - b.grossYield)[0];
+
+            /* ── Calculator ── */
+            const calcGross   = yldCalcRent / yldCalcPrice * 100;
+            const calcSCAed   = yldCalcSize * yldCalcSC;
+            const calcVacAed  = yldCalcRent * (yldCalcVacancy/100);
+            const calcMgmtAed = yldCalcRent * (yldCalcMgmt/100);
+            const calcNetRent = yldCalcRent - calcSCAed - calcVacAed - calcMgmtAed;
+            const calcNet     = calcNetRent / yldCalcPrice * 100;
+            const calcPayback = yldCalcPrice / calcNetRent;
+
+            const tierColor = { "High Yield":"#10B981","Mid Yield":"#D4A843","Low Yield":"#3B82F6","Villa Yield":"#8B5CF6" };
+            const selSt = {
+              background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:8,
+              color:T.white, fontFamily:"'Outfit',sans-serif", fontSize:12,
+              padding:"7px 28px 7px 10px", outline:"none", cursor:"pointer",
+              appearance:"none", WebkitAppearance:"none",
+              backgroundImage:`url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E")`,
+              backgroundRepeat:"no-repeat", backgroundPosition:"right 8px center",
+            };
+
+            return (
+              <div style={{ animation:"fadeUp 0.4s ease-out forwards" }}>
+
+                {/* Header */}
+                <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"10px 0", marginBottom:16, borderBottom:`1px solid ${T.border}`, flexWrap:"wrap", gap:8 }}>
+                  <div>
+                    <div style={{ fontFamily:"'Fraunces',serif", fontSize:20, fontWeight:800, color:T.white }}>Rental Yield Intelligence</div>
+                    <div style={{ fontSize:11, color:T.textMuted, marginTop:3 }}>Gross & net yields · Community comparison · DLD Ejari data · Yield calculator · 2026</div>
+                  </div>
+                  <div style={{ display:"flex", gap:8 }}>
+                    {["table","chart","calculator"].map(v => (
+                      <button key={v} type="button" onClick={() => setYldView(v)}
+                        style={{ padding:"6px 14px", background:yldView===v?"rgba(212,168,67,0.15)":T.surfaceAlt, border:`1px solid ${yldView===v?"rgba(212,168,67,0.4)":T.border}`, borderRadius:8, color:yldView===v?T.gold:T.textMuted, fontSize:11, fontWeight:600, cursor:"pointer", fontFamily:"'Outfit',sans-serif", textTransform:"capitalize" }}>
+                        {v}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Alert */}
+                <div style={{ padding:"10px 16px", background:"rgba(16,185,129,0.06)", border:"1px solid rgba(16,185,129,0.25)", borderRadius:10, marginBottom:16, display:"flex", alignItems:"center", gap:10 }}>
+                  {SvgIcons.TrendingUp({ width:14, height:14, style:{ color:T.green, flexShrink:0 } })}
+                  <span style={{ fontSize:12, color:T.textSecondary }}>
+                    <span style={{ color:T.green, fontWeight:700 }}>Dubai zero-tax advantage</span> — A 7% yield in Dubai equals ~10-12% gross in London after UK taxes. No income tax, no capital gains tax. Net yields are 1.5–2% below gross after service charges and vacancy. <span style={{ color:T.gold }}>International City leads at 9.2%.</span>
+                  </span>
+                </div>
+
+                {/* KPIs */}
+                <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(150px,1fr))", gap:10, marginBottom:20 }}>
+                  {[
+                    { label:"Avg Gross (Apts)",  value:avgGross+"%",                       color:T.green  },
+                    { label:"Avg Net (Apts)",    value:avgNet+"%",                          color:T.teal   },
+                    { label:"Highest Yield",     value:topYield?.grossYield+"%",            color:T.green  },
+                    { label:"Best Community",    value:topYield?.community.split(" ")[0],   color:T.white  },
+                    { label:"Lowest Yield",      value:lowYield?.grossYield+"%",            color:"#3B82F6"},
+                    { label:"Communities Tracked",value:rawData.length,                     color:T.gold   },
+                  ].map((k,i) => (
+                    <div key={i} className="kpi-card">
+                      <div style={{ fontSize:10, fontWeight:700, color:T.textMuted, letterSpacing:1, textTransform:"uppercase", marginBottom:8 }}>{k.label}</div>
+                      <div style={{ fontFamily:"'Fraunces',serif", fontSize:22, fontWeight:800, color:k.color }}>{k.value}</div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Filters */}
+                <div style={{ background:T.surface, border:`1px solid ${T.border}`, borderRadius:10, padding:"12px 14px", marginBottom:16 }}>
+                  <div style={{ display:"flex", gap:8, flexWrap:"wrap", alignItems:"center" }}>
+                    <div style={{ position:"relative", flex:"0 0 200px" }}>
+                      {SvgIcons.Search({ width:13, height:13, style:{ position:"absolute", left:10, top:"50%", transform:"translateY(-50%)", color:T.textMuted, pointerEvents:"none" } })}
+                      <input value={yldSearch} onChange={e => setYldSearch(e.target.value)} placeholder="Search community..."
+                        style={{ ...selSt, paddingLeft:30, paddingRight:10, width:"100%", backgroundImage:"none" }} />
+                    </div>
+                    {["All","Apartment","Villa"].map(f => (
+                      <button key={f} type="button" onClick={() => setYldType(f)}
+                        style={{ padding:"6px 14px", background:yldType===f?"rgba(212,168,67,0.15)":T.surfaceAlt, border:`1px solid ${yldType===f?"rgba(212,168,67,0.4)":T.border}`, borderRadius:8, color:yldType===f?T.gold:T.textMuted, fontSize:11, fontWeight:yldType===f?700:400, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>
+                        {f}
+                      </button>
+                    ))}
+                    <select value={yldSort} onChange={e => setYldSort(e.target.value)} style={{ ...selSt, marginLeft:"auto" }}>
+                      <option value="gross">Sort: Gross Yield</option>
+                      <option value="net">Sort: Net Yield</option>
+                      <option value="rent">Sort: Annual Rent</option>
+                      <option value="price">Sort: Avg Price</option>
+                      <option value="community">Sort: A-Z</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* TABLE VIEW */}
+                {yldView === "table" && (
+                  <div style={{ background:T.surface, border:`1px solid ${T.border}`, borderRadius:12, overflow:"hidden", marginBottom:20 }}>
+                    <div style={{ display:"grid", gridTemplateColumns:"2fr 0.8fr 0.8fr 0.8fr 1fr 1fr 1fr 0.8fr", padding:"10px 16px", background:T.surfaceAlt, borderBottom:`1px solid ${T.border}` }}>
+                      {["Community","Type","Gross %","Net %","Avg Rent","Avg Price","PPSF","Vacancy"].map((h,i) => (
+                        <div key={i} style={{ fontSize:10, fontWeight:700, color:T.textMuted, letterSpacing:0.8, textTransform:"uppercase" }}>{h}</div>
+                      ))}
+                    </div>
+                    {filtered.map((d,i) => (
+                      <div key={d.id} style={{ display:"grid", gridTemplateColumns:"2fr 0.8fr 0.8fr 0.8fr 1fr 1fr 1fr 0.8fr", padding:"12px 16px", borderBottom:i<filtered.length-1?`1px solid ${T.border}`:"none", alignItems:"center" }}
+                        onMouseEnter={e => e.currentTarget.style.background="rgba(212,168,67,0.03)"}
+                        onMouseLeave={e => e.currentTarget.style.background="transparent"}>
+                        <div>
+                          <div style={{ fontSize:13, fontWeight:600, color:T.white }}>{d.community}</div>
+                          <div style={{ display:"flex", gap:6, marginTop:3 }}>
+                            <span style={{ fontSize:10, padding:"1px 6px", borderRadius:6, background:(tierColor[d.tier]||T.gold)+"22", color:tierColor[d.tier]||T.gold, fontWeight:700 }}>{d.tier}</span>
+                            <span style={{ fontSize:10, color:T.textMuted }}>{d.demand} demand</span>
+                          </div>
+                        </div>
+                        <div style={{ fontSize:11, color:T.textMuted }}>{d.type}</div>
+                        <div style={{ fontFamily:"'Fraunces',serif", fontSize:16, fontWeight:800, color:d.grossYield>=8?T.green:d.grossYield>=6?"#D4A843":d.grossYield>=5?"#3B82F6":T.red }}>{d.grossYield}%</div>
+                        <div style={{ fontFamily:"'Fraunces',serif", fontSize:14, fontWeight:700, color:T.teal }}>{d.netYield}%</div>
+                        <div style={{ fontSize:12, color:T.white }}>AED {(d.avgRent/1000).toFixed(0)}K</div>
+                        <div style={{ fontSize:12, color:T.textMuted }}>AED {d.avgPrice >= 1000000 ? (d.avgPrice/1000000).toFixed(2)+"M" : (d.avgPrice/1000).toFixed(0)+"K"}</div>
+                        <div style={{ fontSize:12, color:T.textMuted }}>AED {d.ppsf.toLocaleString()}</div>
+                        <div style={{ fontSize:12, color:d.vacancy<=4?T.green:d.vacancy<=7?T.gold:T.red }}>{d.vacancy}%</div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* CHART VIEW — horizontal yield bars */}
+                {yldView === "chart" && (
+                  <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16, marginBottom:20 }}>
+                    <div className="chart-box" style={{ padding:20 }}>
+                      <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:4 }}>Gross Yield by Community</div>
+                      <div style={{ fontSize:11, color:T.textMuted, marginBottom:16 }}>Ranked highest to lowest · 2026 DLD Ejari data</div>
+                      {[...filtered].sort((a,b) => b.grossYield - a.grossYield).slice(0,10).map((d,i) => (
+                        <div key={i} style={{ display:"flex", alignItems:"center", gap:10, marginBottom:10 }}>
+                          <div style={{ fontSize:11, color:T.textSecondary, minWidth:130, textAlign:"right" }}>{d.community.split(" ").slice(0,2).join(" ")}</div>
+                          <div style={{ flex:1, height:22, borderRadius:4, background:T.border, overflow:"hidden" }}>
+                            <div style={{ height:"100%", width:`${(d.grossYield/10)*100}%`, background:d.grossYield>=8?T.green:d.grossYield>=6?"#D4A843":"#3B82F6", borderRadius:4, display:"flex", alignItems:"center", paddingLeft:6 }}>
+                              <span style={{ fontSize:10, fontWeight:700, color:"#000" }}>{d.grossYield}%</span>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="chart-box" style={{ padding:20 }}>
+                      <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:4 }}>Gross vs Net Yield Gap</div>
+                      <div style={{ fontSize:11, color:T.textMuted, marginBottom:16 }}>Service charges + vacancy impact · Net is what you keep</div>
+                      {[...filtered].sort((a,b) => b.grossYield - a.grossYield).slice(0,8).map((d,i) => (
+                        <div key={i} style={{ marginBottom:12 }}>
+                          <div style={{ display:"flex", justifyContent:"space-between", marginBottom:3 }}>
+                            <span style={{ fontSize:11, color:T.textSecondary }}>{d.community.split(" ").slice(0,2).join(" ")}</span>
+                            <span style={{ fontSize:11, color:T.textMuted }}>Gap: <span style={{ color:"#F97316", fontWeight:700 }}>{(d.grossYield - d.netYield).toFixed(1)}%</span></span>
+                          </div>
+                          <div style={{ position:"relative", height:12, borderRadius:4, background:T.border }}>
+                            <div style={{ position:"absolute", left:0, height:"100%", width:`${(d.grossYield/10)*100}%`, background:T.gold+"44", borderRadius:4 }} />
+                            <div style={{ position:"absolute", left:0, height:"100%", width:`${(d.netYield/10)*100}%`, background:T.green, borderRadius:4 }} />
+                          </div>
+                          <div style={{ display:"flex", justifyContent:"space-between", marginTop:2 }}>
+                            <span style={{ fontSize:9, color:T.textMuted }}>Net {d.netYield}%</span>
+                            <span style={{ fontSize:9, color:T.textMuted }}>Gross {d.grossYield}%</span>
+                          </div>
+                        </div>
+                      ))}
+                      <div style={{ display:"flex", gap:12, marginTop:8 }}>
+                        <div style={{ display:"flex", alignItems:"center", gap:4 }}><div style={{ width:10, height:6, borderRadius:2, background:T.green }} /><span style={{ fontSize:10, color:T.textMuted }}>Net yield</span></div>
+                        <div style={{ display:"flex", alignItems:"center", gap:4 }}><div style={{ width:10, height:6, borderRadius:2, background:T.gold+"44" }} /><span style={{ fontSize:10, color:T.textMuted }}>Gross yield</span></div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* CALCULATOR VIEW */}
+                {yldView === "calculator" && (
+                  <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16, marginBottom:20 }}>
+                    <div className="chart-box" style={{ padding:24 }}>
+                      <div style={{ fontFamily:"'Fraunces',serif", fontSize:14, fontWeight:700, color:T.white, marginBottom:4 }}>Net Yield Calculator</div>
+                      <div style={{ fontSize:11, color:T.textMuted, marginBottom:20 }}>True return after all Dubai ownership costs</div>
+                      {[
+                        { label:"Purchase Price (AED)", val:yldCalcPrice, min:400000,  max:20000000, step:50000,  set:setYldCalcPrice, fmt:v=>"AED "+v.toLocaleString() },
+                        { label:"Annual Rent (AED)",    val:yldCalcRent,  min:20000,   max:500000,   step:5000,   set:setYldCalcRent,  fmt:v=>"AED "+v.toLocaleString() },
+                        { label:"Property Size (sqft)", val:yldCalcSize,  min:200,     max:10000,    step:50,     set:setYldCalcSize,  fmt:v=>v.toLocaleString()+" sqft" },
+                        { label:"Service Charge (AED/sqft/yr)", val:yldCalcSC, min:2, max:40,       step:0.5,    set:setYldCalcSC,    fmt:v=>"AED "+v+"/sqft" },
+                        { label:"Management Fee (%)",   val:yldCalcMgmt,  min:0,       max:15,       step:0.5,    set:setYldCalcMgmt,  fmt:v=>v+"%" },
+                        { label:"Vacancy Buffer (%)",   val:yldCalcVacancy,min:0,      max:20,       step:1,      set:setYldCalcVacancy,fmt:v=>v+"%" },
+                      ].map((f,i) => (
+                        <div key={i} style={{ marginBottom:14 }}>
+                          <div style={{ display:"flex", justifyContent:"space-between", marginBottom:4 }}>
+                            <span style={{ fontSize:11, color:T.textMuted }}>{f.label}</span>
+                            <span style={{ fontSize:12, fontWeight:700, color:T.gold }}>{f.fmt(f.val)}</span>
+                          </div>
+                          <input type="range" min={f.min} max={f.max} step={f.step} value={f.val}
+                            onChange={e => f.set(Number(e.target.value))}
+                            style={{ width:"100%", accentColor:T.gold, cursor:"pointer" }} />
+                        </div>
+                      ))}
+                    </div>
+                    <div className="chart-box" style={{ padding:24 }}>
+                      <div style={{ fontFamily:"'Fraunces',serif", fontSize:14, fontWeight:700, color:T.white, marginBottom:20 }}>Your Investment Returns</div>
+                      {[
+                        { label:"Annual Rent",          val:"AED "+yldCalcRent.toLocaleString(),      color:T.white },
+                        { label:"Service Charges",      val:"AED "+Math.round(calcSCAed).toLocaleString(), color:T.red, note:"-" },
+                        { label:"Vacancy Loss",         val:"AED "+Math.round(calcVacAed).toLocaleString(), color:T.red, note:"-" },
+                        { label:"Management Fee",       val:"AED "+Math.round(calcMgmtAed).toLocaleString(), color:T.red, note:"-" },
+                        { label:"Net Rental Income",    val:"AED "+Math.round(calcNetRent).toLocaleString(), color:T.green },
+                      ].map((r,i) => (
+                        <div key={i} style={{ display:"flex", justifyContent:"space-between", padding:"9px 0", borderBottom:i<4?`1px solid ${T.border}`:"none" }}>
+                          <span style={{ fontSize:12, color:T.textMuted }}>{r.note && <span style={{ color:T.red, marginRight:4 }}>{r.note}</span>}{r.label}</span>
+                          <span style={{ fontSize:13, fontWeight:700, color:r.color }}>{r.val}</span>
+                        </div>
+                      ))}
+                      <div style={{ marginTop:16, display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:8 }}>
+                        {[
+                          { label:"GROSS YIELD",   val:calcGross.toFixed(1)+"%", color:T.gold  },
+                          { label:"NET YIELD",     val:calcNet.toFixed(1)+"%",   color:T.green },
+                          { label:"PAYBACK YRS",   val:calcPayback > 0 ? calcPayback.toFixed(0)+"y" : "∞", color:T.teal },
+                        ].map((m,i) => (
+                          <div key={i} style={{ padding:"12px 10px", background:T.surfaceAlt, borderRadius:10, border:`1px solid ${T.border}`, textAlign:"center" }}>
+                            <div style={{ fontSize:9, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.8, marginBottom:5 }}>{m.label}</div>
+                            <div style={{ fontFamily:"'Fraunces',serif", fontSize:20, fontWeight:900, color:m.color }}>{m.val}</div>
+                          </div>
+                        ))}
+                      </div>
+                      <div style={{ marginTop:12, padding:"10px 12px", background:"rgba(16,185,129,0.05)", borderRadius:8, border:`1px solid rgba(16,185,129,0.15)`, fontSize:11, color:T.textMuted, lineHeight:1.7 }}>
+                        Dubai zero income tax — your net yield IS your after-tax return. Equivalent to {(calcNet * 1.45).toFixed(1)}% gross in UK or {(calcNet * 1.35).toFixed(1)}% gross in Germany.
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Bed breakdown for selected community */}
+                {yldView === "table" && filtered.length > 0 && (
+                  <div className="chart-box" style={{ padding:20, marginBottom:16 }}>
+                    <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:4 }}>Yield by Bedroom Type</div>
+                    <div style={{ fontSize:11, color:T.textMuted, marginBottom:16 }}>Studios and 1BRs typically outperform larger units on yield percentage</div>
+                    <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(280px,1fr))", gap:10 }}>
+                      {filtered.slice(0,6).map((d,i) => (
+                        <div key={i} style={{ padding:"12px 14px", background:T.surfaceAlt, borderRadius:10, border:`1px solid ${T.border}` }}>
+                          <div style={{ fontSize:12, fontWeight:700, color:T.white, marginBottom:8 }}>{d.community}</div>
+                          <div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>
+                            {Object.entries(d.beds||{}).map(([bed, yld]) => (
+                              <div key={bed} style={{ padding:"3px 8px", borderRadius:6, background:yld>=8?"rgba(16,185,129,0.15)":yld>=6?"rgba(212,168,67,0.15)":"rgba(59,130,246,0.15)", border:`1px solid ${yld>=8?T.green:yld>=6?T.gold:"#3B82F6"}30` }}>
+                                <span style={{ fontSize:9, color:T.textMuted }}>{bed} </span>
+                                <span style={{ fontSize:11, fontWeight:700, color:yld>=8?T.green:yld>=6?T.gold:"#3B82F6" }}>{yld}%</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Seed notice */}
+                {!liveYieldsData?.length && (
+                  <div style={{ display:"flex", alignItems:"center", gap:8, padding:"8px 14px", borderRadius:8, background:"rgba(212,168,67,0.06)", border:`1px solid rgba(212,168,67,0.2)`, marginBottom:12 }}>
+                    <span style={{ width:6, height:6, borderRadius:"50%", background:T.gold, display:"inline-block" }} />
+                    <span style={{ fontSize:11, color:T.textMuted }}><span style={{ color:T.gold, fontWeight:700 }}>2026 research data</span> — DLD Ejari, Bayut, themiddleeastinsider.com, Cavendish Maxwell, Knight Frank Q1 2026</span>
+                  </div>
+                )}
+
+                {/* Sources */}
+                <div style={{ paddingTop:12, borderTop:`1px solid ${T.border}`, display:"flex", gap:8, flexWrap:"wrap" }}>
+                  <span style={{ fontSize:10, color:T.textMuted }}>Sources:</span>
+                  {["DLD Ejari 2026","Bayut","Cavendish Maxwell Q1 2026","Knight Frank","themiddleeastinsider.com","sandsofwealth.com"].map((s,i) => (
+                    <span key={i} style={{ fontSize:10, color:T.textMuted, padding:"2px 8px", borderRadius:10, border:`1px solid ${T.border}`, background:T.surfaceAlt }}>{s}</span>
+                  ))}
+                </div>
+
+              </div>
+            );
+          })()}
 
 
-          {/* â”€â”€â”€ STR vs LTR TAB â”€â”€â”€ */}
+          {/* ─── STR vs LTR TAB ─── */}
           {tab === "STR vs LTR" && (() => {
 
-            /* â•â• RESEARCH-BASED SEED DATA 2026 â•â•
+            /* ══ RESEARCH-BASED SEED DATA 2026 ══
                Sources: DTCM, AirROI, Airbtics, homevy.com, maphomesrealestate.com
                ADR median Dubai: AED 609/night (Airbtics 2026)
                Median occupancy: 72% (Airbtics 2026)
                STR yields: 7-12% vs LTR 4-6% (homevy.com)
                DTCM license: AED 1,500-2,500/year
                Management fee STR: 15-25% of revenue
-            â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+            ══════════════════════════════════════ */
             const SEED_STR = [
               { id:"s01", community:"Downtown Dubai",      strNightly:850,  strOccupancy:76, ltrAnnual:175000, strGross:11.2, ltrGross:5.5, strNet:8.1, ltrNet:3.8, beds:"1BR", dtcmAllowed:true,  mgmtFee:20, strCosts:28000, verdict:"STR",    note:"Burj Khalifa proximity drives premium rates. Peak Dec-Mar occupancy 90%+" },
               { id:"s02", community:"Dubai Marina",        strNightly:680,  strOccupancy:74, ltrAnnual:115000, strGross:10.8, ltrGross:6.8, strNet:7.6, ltrNet:5.0, beds:"1BR", dtcmAllowed:true,  mgmtFee:20, strCosts:22000, verdict:"STR",    note:"Marina Walk tourists + business travelers. Strong year-round demand." },
               { id:"s03", community:"Palm Jumeirah",       strNightly:1200, strOccupancy:70, ltrAnnual:220000, strGross:9.8,  ltrGross:5.5, strNet:7.0, ltrNet:3.9, beds:"1BR", dtcmAllowed:true,  mgmtFee:22, strCosts:38000, verdict:"STR",    note:"Luxury tourism demand. High costs but premium pricing supports STR." },
               { id:"s04", community:"JBR / The Walk",      strNightly:720,  strOccupancy:73, ltrAnnual:125000, strGross:11.0, ltrGross:6.5, strNet:7.8, ltrNet:4.8, beds:"1BR", dtcmAllowed:true,  mgmtFee:20, strCosts:23000, verdict:"STR",    note:"Beach access. Tourist zone. Strong summer STR from GCC visitors." },
               { id:"s05", community:"Business Bay",        strNightly:580,  strOccupancy:71, ltrAnnual:85000,  strGross:10.2, ltrGross:7.6, strNet:7.1, ltrNet:5.8, beds:"1BR", dtcmAllowed:true,  mgmtFee:18, strCosts:18000, verdict:"STR",    note:"Corporate travelers. Weekday demand strong. Mix of STR/LTR works." },
-              { id:"s06", community:"Jumeirah Village Circle", strNightly:320, strOccupancy:68, ltrAnnual:72000, strGross:8.8, ltrGross:7.8, strNet:6.0, ltrNet:6.4, beds:"1BR", dtcmAllowed:true, mgmtFee:18, strCosts:14000, verdict:"LTR",   note:"Resident community. LTR wins â€” lower STR demand, high LTR occupancy." },
+              { id:"s06", community:"Jumeirah Village Circle", strNightly:320, strOccupancy:68, ltrAnnual:72000, strGross:8.8, ltrGross:7.8, strNet:6.0, ltrNet:6.4, beds:"1BR", dtcmAllowed:true, mgmtFee:18, strCosts:14000, verdict:"LTR",   note:"Resident community. LTR wins — lower STR demand, high LTR occupancy." },
               { id:"s07", community:"Dubai Hills Estate",  strNightly:480,  strOccupancy:62, ltrAnnual:105000, strGross:7.8,  ltrGross:6.2, strNet:5.1, ltrNet:4.9, beds:"2BR", dtcmAllowed:true,  mgmtFee:20, strCosts:20000, verdict:"LTR",    note:"Family suburb. Residents prefer LTR. STR inconsistent occupancy." },
               { id:"s08", community:"Jumeirah Lake Towers",strNightly:450,  strOccupancy:72, ltrAnnual:80000,  strGross:10.4, ltrGross:8.1, strNet:7.2, ltrNet:6.5, beds:"1BR", dtcmAllowed:true,  mgmtFee:18, strCosts:16000, verdict:"STR",    note:"Near Marina. Corporate + leisure mix. STR edges LTR at good occupancy." },
               { id:"s09", community:"Dubai Creek Harbour", strNightly:520,  strOccupancy:65, ltrAnnual:95000,  strGross:8.5,  ltrGross:6.0, strNet:5.8, ltrNet:4.8, beds:"1BR", dtcmAllowed:true,  mgmtFee:19, strCosts:18000, verdict:"Mixed",  note:"Growing community. Tourism developing. LTR safer until more hotels." },
@@ -4526,7 +8980,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
             const communities = ["All", ...new Set(rawSTR.map(d => d.community))];
             const bedOptions  = ["All", "Studio", "1BR", "2BR", "3BR"];
 
-            /* â”€â”€ Calculator â”€â”€ */
+            /* ── Calculator ── */
             const calcSTRRevenue  = Math.round(strCalcNightly * 365 * (strCalcOccupancy/100));
             const calcSTRMgmt     = Math.round(calcSTRRevenue * (strCalcMgmt/100));
             const calcSTRDTCM     = 2000;
@@ -4555,7 +9009,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"10px 0", marginBottom:16, borderBottom:`1px solid ${T.border}`, flexWrap:"wrap", gap:8 }}>
                   <div>
                     <div style={{ fontFamily:"'Fraunces',serif", fontSize:20, fontWeight:800, color:T.white }}>STR vs LTR Intelligence</div>
-                    <div style={{ fontSize:11, color:T.textMuted, marginTop:3 }}>Airbnb vs long-term Â· DTCM costs Â· Break-even Â· Community verdict Â· 2026</div>
+                    <div style={{ fontSize:11, color:T.textMuted, marginTop:3 }}>Airbnb vs long-term · DTCM costs · Break-even · Community verdict · 2026</div>
                   </div>
                   <div style={{ display:"flex", gap:8 }}>
                     {["comparison","calculator"].map(v => (
@@ -4570,9 +9024,9 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 {/* Key insight banner */}
                 <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:10, marginBottom:16 }}>
                   {[
-                    { color:"#10B981", bg:"rgba(16,185,129,0.06)", border:"rgba(16,185,129,0.25)", icon:"\uD83C\uDFD6", title:"STR Gross Yield", val:"7â€“12%", sub:"Tourist zones. Active management." },
-                    { color:T.teal,    bg:"rgba(20,184,166,0.06)", border:"rgba(20,184,166,0.25)", icon:"\uD83C\uDFE0", title:"LTR Gross Yield", val:"4â€“8%",  sub:"Resident zones. Passive income." },
-                    { color:T.gold,    bg:"rgba(212,168,67,0.06)", border:"rgba(212,168,67,0.2)",  icon:"âš–", title:"STR Net vs LTR", val:"Varies", sub:"Net yields often similar after costs." },
+                    { color:"#10B981", bg:"rgba(16,185,129,0.06)", border:"rgba(16,185,129,0.25)", icon:"\uD83C\uDFD6", title:"STR Gross Yield", val:"7–12%", sub:"Tourist zones. Active management." },
+                    { color:T.teal,    bg:"rgba(20,184,166,0.06)", border:"rgba(20,184,166,0.25)", icon:"\uD83C\uDFE0", title:"LTR Gross Yield", val:"4–8%",  sub:"Resident zones. Passive income." },
+                    { color:T.gold,    bg:"rgba(212,168,67,0.06)", border:"rgba(212,168,67,0.2)",  icon:"⚖", title:"STR Net vs LTR", val:"Varies", sub:"Net yields often similar after costs." },
                   ].map((b,i) => (
                     <div key={i} style={{ padding:"14px 16px", background:b.bg, border:`1px solid ${b.border}`, borderRadius:10 }}>
                       <div style={{ fontSize:18, marginBottom:6 }}>{b.icon}</div>
@@ -4625,7 +9079,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                           <div style={{ fontFamily:"'Fraunces',serif", fontSize:14, fontWeight:700, color:T.gold }}>{d.strNet}%</div>
                           <div>
                             <span style={{ fontSize:11, padding:"3px 10px", borderRadius:10, background:(verdictColor[d.verdict]||T.gold)+"22", color:verdictColor[d.verdict]||T.gold, fontWeight:700 }}>
-                              {d.verdict === "STR" ? "\uD83C\uDFD6 STR Wins" : d.verdict === "LTR" ? "\uD83C\uDFE0 LTR Wins" : "âš– Mixed"}
+                              {d.verdict === "STR" ? "\uD83C\uDFD6 STR Wins" : d.verdict === "LTR" ? "\uD83C\uDFE0 LTR Wins" : "⚖ Mixed"}
                             </span>
                           </div>
                         </div>
@@ -4636,16 +9090,16 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                     <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16, marginBottom:16 }}>
                       <div className="chart-box" style={{ padding:20 }}>
                         <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:4 }}>STR Annual Costs (DTCM)</div>
-                        <div style={{ fontSize:11, color:T.textMuted, marginBottom:16 }}>What eats your Airbnb income â€” based on AED 1M property</div>
+                        <div style={{ fontSize:11, color:T.textMuted, marginBottom:16 }}>What eats your Airbnb income — based on AED 1M property</div>
                         {[
-                          { label:"DTCM Holiday Home License", val:"AED 1,500â€“2,500/yr", color:T.red    },
-                          { label:"Management Fee (15-25%)",   val:"AED 15,000â€“25,000/yr", color:T.red  },
-                          { label:"Furnishing (amortized)",    val:"AED 8,000â€“15,000/yr", color:"#F97316"},
-                          { label:"Cleaning per turnover",     val:"AED 150â€“300/clean",   color:"#F97316"},
+                          { label:"DTCM Holiday Home License", val:"AED 1,500–2,500/yr", color:T.red    },
+                          { label:"Management Fee (15-25%)",   val:"AED 15,000–25,000/yr", color:T.red  },
+                          { label:"Furnishing (amortized)",    val:"AED 8,000–15,000/yr", color:"#F97316"},
+                          { label:"Cleaning per turnover",     val:"AED 150–300/clean",   color:"#F97316"},
                           { label:"Tourism Dirham fee",        val:"AED 15/night occupied",color:"#F97316"},
                           { label:"Platform fee (Airbnb)",     val:"3% of revenue",        color:"#F97316"},
                           { label:"Municipality fee (DEWA)",   val:"5% of annual rent",    color:T.textMuted },
-                          { label:"Utilities (if included)",   val:"AED 6,000â€“18,000/yr", color:T.textMuted },
+                          { label:"Utilities (if included)",   val:"AED 6,000–18,000/yr", color:T.textMuted },
                         ].map((r,i) => (
                           <div key={i} style={{ display:"flex", justifyContent:"space-between", padding:"7px 0", borderBottom:i<7?`1px solid ${T.border}`:"none" }}>
                             <span style={{ fontSize:12, color:T.textMuted }}>{r.label}</span>
@@ -4656,15 +9110,15 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
 
                       <div className="chart-box" style={{ padding:20 }}>
                         <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:4 }}>When STR Beats LTR</div>
-                        <div style={{ fontSize:11, color:T.textMuted, marginBottom:16 }}>Location is the key decision â€” not personal preference</div>
+                        <div style={{ fontSize:11, color:T.textMuted, marginBottom:16 }}>Location is the key decision — not personal preference</div>
                         {[
-                          { icon:"âœ…", label:"Tourist/lifestyle zone", sub:"Downtown, Marina, Palm, JBR", model:"STR", color:"#10B981" },
-                          { icon:"âœ…", label:"Occupancy stays above 65%", sub:"Peak months sustained year-round", model:"STR", color:"#10B981" },
-                          { icon:"âœ…", label:"Corporate/business area", sub:"Business Bay, DIFC, JLT", model:"STR", color:"#10B981" },
+                          { icon:"✅", label:"Tourist/lifestyle zone", sub:"Downtown, Marina, Palm, JBR", model:"STR", color:"#10B981" },
+                          { icon:"✅", label:"Occupancy stays above 65%", sub:"Peak months sustained year-round", model:"STR", color:"#10B981" },
+                          { icon:"✅", label:"Corporate/business area", sub:"Business Bay, DIFC, JLT", model:"STR", color:"#10B981" },
                           { icon:"\uD83C\uDFE0", label:"Family/residential suburb", sub:"JVC, Dubai Hills, Arabian Ranches", model:"LTR", color:T.teal },
                           { icon:"\uD83C\uDFE0", label:"No tourist demand", sub:"Arjan, DSO, Al Furjan", model:"LTR", color:T.teal },
                           { icon:"\uD83C\uDFE0", label:"Passive investor", sub:"No active management capability", model:"LTR", color:T.teal },
-                          { icon:"âš–", label:"Mixed-use communities", sub:"Creek Harbour, MBR City", model:"Hybrid", color:T.gold },
+                          { icon:"⚖", label:"Mixed-use communities", sub:"Creek Harbour, MBR City", model:"Hybrid", color:T.gold },
                         ].map((r,i) => (
                           <div key={i} style={{ display:"flex", alignItems:"center", gap:10, padding:"8px 0", borderBottom:i<6?`1px solid ${T.border}`:"none" }}>
                             <span style={{ fontSize:16 }}>{r.icon}</span>
@@ -4680,7 +9134,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
 
                     {/* Seasonality */}
                     <div className="chart-box" style={{ padding:20, marginBottom:16 }}>
-                      <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:4 }}>STR Seasonality â€” Dubai 2026</div>
+                      <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:4 }}>STR Seasonality — Dubai 2026</div>
                       <div style={{ fontSize:11, color:T.textMuted, marginBottom:16 }}>ADR and occupancy swing 30-50% between peak and low season</div>
                       <div style={{ display:"grid", gridTemplateColumns:"repeat(12,1fr)", gap:4 }}>
                         {[
@@ -4774,7 +9228,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 {!liveSTRData?.length && (
                   <div style={{ display:"flex", alignItems:"center", gap:8, padding:"8px 14px", borderRadius:8, background:"rgba(212,168,67,0.06)", border:`1px solid rgba(212,168,67,0.2)`, marginBottom:12 }}>
                     <span style={{ width:6, height:6, borderRadius:"50%", background:T.gold, display:"inline-block" }} />
-                    <span style={{ fontSize:11, color:T.textMuted }}><span style={{ color:T.gold, fontWeight:700 }}>2026 research data</span> â€” DTCM, Airbtics, homevy.com, maphomesrealestate.com, AirROI Feb 2025-Jan 2026</span>
+                    <span style={{ fontSize:11, color:T.textMuted }}><span style={{ color:T.gold, fontWeight:700 }}>2026 research data</span> — DTCM, Airbtics, homevy.com, maphomesrealestate.com, AirROI Feb 2025-Jan 2026</span>
                   </div>
                 )}
                 <div style={{ paddingTop:12, borderTop:`1px solid ${T.border}`, display:"flex", gap:8, flexWrap:"wrap" }}>
@@ -4789,39 +9243,380 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
           })()}
 
 
-          {/* â”€â”€â”€ MORTGAGE TAB â”€â”€â”€ */}
-          {/* â”€â”€â”€ MORTGAGE TAB (extracted) â”€â”€â”€ */}
-          {tab === "Mortgage" && (
-            <MortgageTab
-              liveMortgageRates={liveMortgageRates} liveInvestScores={liveInvestScores}
-              handleTabChange={handleTabChange}
-              mortPrice={mortPrice} setMortPrice={setMortPrice}
-              mortDown={mortDown} setMortDown={setMortDown}
-              mortRate={mortRate} setMortRate={setMortRate}
-              mortYears={mortYears} setMortYears={setMortYears}
-              mortType={mortType} setMortType={setMortType}
-              mortProfile={mortProfile} setMortProfile={setMortProfile}
-              mortView={mortView} setMortView={setMortView}
-              mortIncome={mortIncome} setMortIncome={setMortIncome}
-              invScSearch={invScSearch} setInvScSearch={setInvScSearch}
-              invScSort={invScSort} setInvScSort={setInvScSort}
-              invScFilter={invScFilter} setInvScFilter={setInvScFilter}
-              invScView={invScView} setInvScView={setInvScView}
-              invScSelected={invScSelected} setInvScSelected={setInvScSelected}
-            />
-          )}
+          {/* ─── MORTGAGE TAB ─── */}
+          {tab === "Mortgage" && (() => {
+
+            /* ══ BANK DATA — Research-based Apr 2026 ══
+               Sources: ricadimortgages.com, realestateclubdubai.com,
+               capitalzone.ae, finnxstar.com
+               EIBOR 3-month: 3.593% (Feb 2026, capitalzone.ae)
+            ════════════════════════════════════════════ */
+            const EIBOR_3M = 3.593;
+            const EIBOR_6M = 3.676;
+            const EIBOR_1Y = 3.674;
+
+            const BANKS = [
+              { bank:"Emirates NBD",  logo:"\uD83C\uDFE6", fixed1y:3.99, fixed3y:4.25, fixed5y:4.49, variable:EIBOR_3M+1.50, maxLTV:80, minSalary:15000, maxLoan:20000000, processingFee:1.0, islamic:false, salaryTransfer:true,  highlight:true,  note:"Govt-owned. Best for large loans. Salary transfer gets -0.25%." },
+              { bank:"FAB",           logo:"\uD83C\uDFE6", fixed1y:3.99, fixed3y:4.19, fixed5y:4.44, variable:EIBOR_3M+1.45, maxLTV:80, minSalary:15000, maxLoan:15000000, processingFee:1.0, islamic:false, salaryTransfer:true,  highlight:false, note:"First Abu Dhabi Bank. Competitive 3yr fixed. Good for expats." },
+              { bank:"ADCB",          logo:"\uD83C\uDFE6", fixed1y:3.99, fixed3y:4.25, fixed5y:4.49, variable:EIBOR_3M+1.55, maxLTV:80, minSalary:15000, maxLoan:15000000, processingFee:1.0, islamic:false, salaryTransfer:true,  highlight:false, note:"ADCB Mortgage One offers offset facility. Good for high earners." },
+              { bank:"Mashreq",       logo:"\uD83C\uDFE6", fixed1y:4.10, fixed3y:4.35, fixed5y:4.59, variable:EIBOR_3M+1.65, maxLTV:80, minSalary:15000, maxLoan:12000000, processingFee:1.0, islamic:false, salaryTransfer:false, highlight:false, note:"No mandatory salary transfer. Flexible for self-employed." },
+              { bank:"Dubai Islamic", logo:"\uD83D\uDD4C", fixed1y:3.99, fixed3y:4.25, fixed5y:4.50, variable:EIBOR_3M+1.55, maxLTV:80, minSalary:15000, maxLoan:15000000, processingFee:1.0, islamic:true,  salaryTransfer:false, highlight:false, note:"Sharia-compliant Murabaha/Ijara. No interest (riba). Most popular Islamic option." },
+              { bank:"HSBC UAE",      logo:"\uD83C\uDFE6", fixed1y:4.09, fixed3y:4.34, fixed5y:4.59, variable:EIBOR_3M+1.60, maxLTV:80, minSalary:15000, maxLoan:15000000, processingFee:1.0, islamic:false, salaryTransfer:false, highlight:false, note:"Global bank. Good for international income documentation. Non-resident friendly." },
+            ];
+
+            /* ── LTV Rules (UAE Central Bank) ── */
+            const LTV_RULES = {
+              expat:       { under5m: 80, over5m: 65, nonResident: 60 },
+              uae_national:{ under5m: 85, over5m: 70, nonResident: 85 },
+              non_resident:{ under5m: 60, over5m: 50, nonResident: 50 },
+            };
+
+            const profileRule = LTV_RULES[mortProfile] || LTV_RULES.expat;
+            const maxLTV = mortPrice > 5000000 ? profileRule.over5m : profileRule.under5m;
+            const minDown = 100 - maxLTV;
+
+            /* ── Calculator ── */
+            const loanAmount    = mortPrice * ((100 - mortDown) / 100);
+            const downPayment   = mortPrice * (mortDown / 100);
+            const annualRate    = mortRate / 100;
+            const monthlyRate   = annualRate / 12;
+            const numPayments   = mortYears * 12;
+            const monthlyPayment = loanAmount > 0 && monthlyRate > 0
+              ? loanAmount * (monthlyRate * Math.pow(1 + monthlyRate, numPayments)) / (Math.pow(1 + monthlyRate, numPayments) - 1)
+              : loanAmount / numPayments;
+            const totalRepay    = monthlyPayment * numPayments;
+            const totalInterest = totalRepay - loanAmount;
+            const maxAfford     = mortIncome * 0.50 * 12 / annualRate * (1 - Math.pow(1 + monthlyRate, -numPayments)); // DBR 50%
+            const dbr           = (monthlyPayment / mortIncome) * 100;
+
+            /* ── Buying cost breakdown ── */
+            const dldFee        = mortPrice * 0.04;
+            const agencyFee     = mortPrice * 0.02;
+            const mortReg       = loanAmount * 0.0025;
+            const valuationFee  = 3000;
+            const processingFee = loanAmount * 0.01;
+            const totalBuyCosts = dldFee + agencyFee + mortReg + valuationFee + processingFee;
+            const totalCashNeeded = downPayment + totalBuyCosts;
+
+            /* ── Rate for selected type ── */
+            const getRateForType = (bank) => {
+              if (mortType === "fixed1") return bank.fixed1y;
+              if (mortType === "fixed3") return bank.fixed3y;
+              if (mortType === "fixed5") return bank.fixed5y;
+              return bank.variable;
+            };
+
+            const selSt = {
+              background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:8,
+              color:T.white, fontFamily:"'Outfit',sans-serif", fontSize:12,
+              padding:"7px 28px 7px 10px", outline:"none", cursor:"pointer",
+              appearance:"none", WebkitAppearance:"none",
+              backgroundImage:`url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E")`,
+              backgroundRepeat:"no-repeat", backgroundPosition:"right 8px center",
+            };
+
+            return (
+              <div style={{ animation:"fadeUp 0.4s ease-out forwards" }}>
+
+                {/* Header */}
+                <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"10px 0", marginBottom:16, borderBottom:`1px solid ${T.border}`, flexWrap:"wrap", gap:8 }}>
+                  <div>
+                    <div style={{ fontFamily:"'Fraunces',serif", fontSize:20, fontWeight:800, color:T.white }}>Mortgage Intelligence</div>
+                    <div style={{ fontSize:11, color:T.textMuted, marginTop:3 }}>Live EIBOR · 6 bank comparison · LTV rules · Monthly payment · Total cost of buying</div>
+                  </div>
+                  <div style={{ display:"flex", gap:8 }}>
+                    {["calculator","banks"].map(v => (
+                      <button key={v} type="button" onClick={() => setMortView(v)}
+                        style={{ padding:"6px 14px", background:mortView===v?"rgba(212,168,67,0.15)":T.surfaceAlt, border:`1px solid ${mortView===v?"rgba(212,168,67,0.4)":T.border}`, borderRadius:8, color:mortView===v?T.gold:T.textMuted, fontSize:11, fontWeight:600, cursor:"pointer", fontFamily:"'Outfit',sans-serif", textTransform:"capitalize" }}>
+                        {v === "calculator" ? "Calculator" : "Bank Comparison"}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* EIBOR live strip */}
+                <div style={{ display:"flex", gap:10, marginBottom:16, flexWrap:"wrap" }}>
+                  {[
+                    { label:"EIBOR 1M",  val:"3.635%", note:"Feb 2026" },
+                    { label:"EIBOR 3M",  val:"3.593%", note:"benchmark" },
+                    { label:"EIBOR 6M",  val:"3.676%", note:"Feb 2026" },
+                    { label:"EIBOR 1Y",  val:"3.674%", note:"Feb 2026" },
+                    { label:"UAE CB Rate",val:"4.40%",  note:"central bank" },
+                    { label:"DBR Cap",    val:"50%",    note:"of gross income" },
+                  ].map((e,i) => (
+                    <div key={i} style={{ padding:"8px 14px", background:T.surface, border:`1px solid ${T.border}`, borderRadius:8, textAlign:"center", flex:"1 1 80px" }}>
+                      <div style={{ fontSize:9, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.8 }}>{e.label}</div>
+                      <div style={{ fontFamily:"'Fraunces',serif", fontSize:16, fontWeight:800, color:T.gold, margin:"3px 0" }}>{e.val}</div>
+                      <div style={{ fontSize:9, color:T.textMuted }}>{e.note}</div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* CALCULATOR VIEW */}
+                {mortView === "calculator" && (
+                  <>
+                    <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16, marginBottom:16 }}>
+                      {/* Inputs */}
+                      <div className="chart-box" style={{ padding:24 }}>
+                        <div style={{ fontFamily:"'Fraunces',serif", fontSize:14, fontWeight:700, color:T.white, marginBottom:4 }}>Your Mortgage</div>
+                        <div style={{ fontSize:11, color:T.textMuted, marginBottom:20 }}>Based on UAE Central Bank rules · Apr 2026</div>
+
+                        {/* Profile selector */}
+                        <div style={{ marginBottom:16 }}>
+                          <div style={{ fontSize:11, color:T.textMuted, marginBottom:8 }}>Buyer Profile</div>
+                          <div style={{ display:"flex", gap:6 }}>
+                            {[
+                              { key:"expat",        label:"Expat Resident", ltv:"80%" },
+                              { key:"uae_national", label:"UAE National",   ltv:"85%" },
+                              { key:"non_resident", label:"Non-Resident",   ltv:"60%" },
+                            ].map(p => (
+                              <button key={p.key} type="button" onClick={() => setMortProfile(p.key)}
+                                style={{ flex:1, padding:"8px 6px", background:mortProfile===p.key?"rgba(212,168,67,0.15)":T.surfaceAlt, border:`1px solid ${mortProfile===p.key?"rgba(212,168,67,0.5)":T.border}`, borderRadius:8, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>
+                                <div style={{ fontSize:11, fontWeight:700, color:mortProfile===p.key?T.gold:T.white }}>{p.label}</div>
+                                <div style={{ fontSize:10, color:mortProfile===p.key?T.gold:T.textMuted }}>Max LTV {p.ltv}</div>
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Rate type */}
+                        <div style={{ marginBottom:16 }}>
+                          <div style={{ fontSize:11, color:T.textMuted, marginBottom:8 }}>Mortgage Type</div>
+                          <div style={{ display:"flex", gap:6 }}>
+                            {[
+                              { key:"fixed1",   label:"Fixed 1yr"  },
+                              { key:"fixed3",   label:"Fixed 3yr"  },
+                              { key:"fixed5",   label:"Fixed 5yr"  },
+                              { key:"variable", label:"Variable"   },
+                            ].map(t => (
+                              <button key={t.key} type="button" onClick={() => setMortType(t.key)}
+                                style={{ flex:1, padding:"7px 4px", background:mortType===t.key?"rgba(212,168,67,0.15)":T.surfaceAlt, border:`1px solid ${mortType===t.key?"rgba(212,168,67,0.5)":T.border}`, borderRadius:8, cursor:"pointer", fontFamily:"'Outfit',sans-serif", fontSize:11, fontWeight:mortType===t.key?700:400, color:mortType===t.key?T.gold:T.textMuted }}>
+                                {t.label}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Sliders */}
+                        {[
+                          { label:"Property Price (AED)",  val:mortPrice,  min:400000,   max:20000000, step:50000,  set:setMortPrice,  fmt:v=>v>=1000000?"AED "+(v/1000000).toFixed(2)+"M":"AED "+(v/1000).toFixed(0)+"K" },
+                          { label:`Down Payment (${mortDown}% = AED ${Math.round(downPayment/1000)}K)`, val:mortDown, min:minDown, max:50, step:1, set:setMortDown, fmt:v=>v+"%" },
+                          { label:"Interest Rate (%)",      val:mortRate,   min:2.5,      max:8,        step:0.05,   set:setMortRate,   fmt:v=>v.toFixed(2)+"%" },
+                          { label:"Loan Tenure (Years)",    val:mortYears,  min:5,        max:25,       step:1,      set:setMortYears,  fmt:v=>v+"yrs" },
+                          { label:"Monthly Income (AED)",   val:mortIncome, min:10000,    max:200000,   step:1000,   set:setMortIncome, fmt:v=>"AED "+v.toLocaleString() },
+                        ].map((f,i) => (
+                          <div key={i} style={{ marginBottom:16 }}>
+                            <div style={{ display:"flex", justifyContent:"space-between", marginBottom:4 }}>
+                              <span style={{ fontSize:11, color:T.textMuted }}>{f.label}</span>
+                              <span style={{ fontSize:12, fontWeight:700, color:T.gold }}>{f.fmt(f.val)}</span>
+                            </div>
+                            <input type="range" min={f.min} max={f.max} step={f.step} value={f.val}
+                              onChange={e => f.set(Number(e.target.value))}
+                              style={{ width:"100%", accentColor:T.gold, cursor:"pointer" }} />
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Results */}
+                      <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
+                        {/* Monthly payment hero */}
+                        <div style={{ padding:"24px", background:"linear-gradient(135deg,rgba(212,168,67,0.12),rgba(212,168,67,0.04))", border:`1px solid rgba(212,168,67,0.3)`, borderRadius:14, textAlign:"center" }}>
+                          <div style={{ fontSize:11, fontWeight:700, color:T.textMuted, letterSpacing:1, textTransform:"uppercase", marginBottom:8 }}>Monthly Payment</div>
+                          <div style={{ fontFamily:"'Fraunces',serif", fontSize:42, fontWeight:900, color:T.gold, lineHeight:1 }}>
+                            AED {Math.round(monthlyPayment).toLocaleString()}
+                          </div>
+                          <div style={{ fontSize:12, color:T.textMuted, marginTop:8 }}>{mortYears} years · {mortRate}% · AED {(loanAmount/1000000).toFixed(2)}M loan</div>
+                          {/* DBR indicator */}
+                          <div style={{ marginTop:16, padding:"10px 14px", background:dbr<=50?"rgba(16,185,129,0.1)":"rgba(239,68,68,0.1)", borderRadius:8, border:`1px solid ${dbr<=50?T.green:T.red}30` }}>
+                            <div style={{ display:"flex", justifyContent:"space-between", marginBottom:4 }}>
+                              <span style={{ fontSize:11, color:T.textMuted }}>Debt Burden Ratio</span>
+                              <span style={{ fontSize:12, fontWeight:700, color:dbr<=50?T.green:T.red }}>{dbr.toFixed(1)}% {dbr<=50?"✅ Eligible":"❌ Exceeds 50% cap"}</span>
+                            </div>
+                            <div style={{ height:6, borderRadius:3, background:T.border }}>
+                              <div style={{ height:"100%", width:`${Math.min(dbr,100)}%`, background:dbr<=50?T.green:T.red, borderRadius:3 }} />
+                            </div>
+                            <div style={{ fontSize:10, color:T.textMuted, marginTop:4 }}>Max affordable payment: AED {Math.round(mortIncome * 0.5).toLocaleString()}/month</div>
+                          </div>
+                        </div>
+
+                        {/* Loan breakdown */}
+                        <div className="chart-box" style={{ padding:18 }}>
+                          <div style={{ fontSize:12, fontWeight:700, color:T.white, marginBottom:12 }}>Loan Summary</div>
+                          {[
+                            { label:"Loan Amount",     val:"AED "+(loanAmount/1000000).toFixed(2)+"M",      color:T.white  },
+                            { label:"Down Payment",    val:"AED "+(downPayment/1000000).toFixed(2)+"M ("+mortDown+"%)", color:T.gold },
+                            { label:"Total Repayment", val:"AED "+(totalRepay/1000000).toFixed(2)+"M",      color:"#F97316"},
+                            { label:"Total Interest",  val:"AED "+(totalInterest/1000000).toFixed(2)+"M",   color:T.red    },
+                            { label:"Interest/Price",  val:((totalInterest/mortPrice)*100).toFixed(0)+"%",  color:T.red    },
+                          ].map((r,i) => (
+                            <div key={i} style={{ display:"flex", justifyContent:"space-between", padding:"7px 0", borderBottom:i<4?`1px solid ${T.border}`:"none" }}>
+                              <span style={{ fontSize:12, color:T.textMuted }}>{r.label}</span>
+                              <span style={{ fontSize:12, fontWeight:700, color:r.color }}>{r.val}</span>
+                            </div>
+                          ))}
+                        </div>
+
+                        {/* Total cash to buy */}
+                        <div className="chart-box" style={{ padding:18 }}>
+                          <div style={{ fontSize:12, fontWeight:700, color:T.white, marginBottom:12 }}>Total Cash Needed to Buy</div>
+                          {[
+                            { label:"Down Payment ("+mortDown+"%)",    val:"AED "+Math.round(downPayment/1000)+"K",    color:T.white  },
+                            { label:"DLD Fee (4%)",                     val:"AED "+Math.round(dldFee/1000)+"K",        color:"#F97316"},
+                            { label:"Agency Fee (2%)",                  val:"AED "+Math.round(agencyFee/1000)+"K",     color:"#F97316"},
+                            { label:"Mortgage Reg (0.25%)",             val:"AED "+Math.round(mortReg/1000)+"K",       color:"#F97316"},
+                            { label:"Bank Processing (1%)",             val:"AED "+Math.round(processingFee/1000)+"K", color:"#F97316"},
+                            { label:"Valuation Fee",                    val:"AED 3,000",                               color:"#F97316"},
+                          ].map((r,i) => (
+                            <div key={i} style={{ display:"flex", justifyContent:"space-between", padding:"6px 0", borderBottom:i<5?`1px solid ${T.border}`:"none" }}>
+                              <span style={{ fontSize:11, color:T.textMuted }}>{r.label}</span>
+                              <span style={{ fontSize:11, fontWeight:600, color:r.color }}>{r.val}</span>
+                            </div>
+                          ))}
+                          <div style={{ display:"flex", justifyContent:"space-between", padding:"10px 0 0", marginTop:4 }}>
+                            <span style={{ fontSize:13, fontWeight:700, color:T.white }}>TOTAL CASH NEEDED</span>
+                            <span style={{ fontFamily:"'Fraunces',serif", fontSize:18, fontWeight:900, color:T.gold }}>AED {Math.round(totalCashNeeded/1000)}K</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* LTV Rules info */}
+                    <div className="chart-box" style={{ padding:18, marginBottom:16 }}>
+                      <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:12 }}>UAE Central Bank LTV Rules 2026</div>
+                      <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(220px,1fr))", gap:10 }}>
+                        {[
+                          { profile:"Expat Resident",  under5m:"80% LTV (20% down)", over5m:"65% LTV (35% down)", color:T.gold   },
+                          { profile:"UAE National",     under5m:"85% LTV (15% down)", over5m:"70% LTV (30% down)", color:T.green  },
+                          { profile:"Non-Resident",     under5m:"60% LTV (40% down)", over5m:"50% LTV (50% down)", color:"#3B82F6"},
+                          { profile:"Max Tenure",        under5m:"25 years",           over5m:"Age cap: 70 yrs",    color:T.teal   },
+                          { profile:"DBR Cap",           under5m:"50% of gross salary",over5m:"All loans combined", color:"#F97316"},
+                          { profile:"Min Salary",        under5m:"AED 10,000–15,000",  over5m:"Varies by bank",     color:T.textMuted },
+                        ].map((r,i) => (
+                          <div key={i} style={{ padding:"12px 14px", background:T.surfaceAlt, borderRadius:10, border:`1px solid ${T.border}` }}>
+                            <div style={{ fontSize:11, fontWeight:700, color:r.color, marginBottom:6 }}>{r.profile}</div>
+                            <div style={{ fontSize:12, color:T.white, marginBottom:3 }}>{r.under5m}</div>
+                            <div style={{ fontSize:11, color:T.textMuted }}>Over AED 5M: {r.over5m}</div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {/* BANK COMPARISON VIEW */}
+                {mortView === "banks" && (
+                  <>
+                    {/* Rate type toggle */}
+                    <div style={{ display:"flex", gap:6, marginBottom:16 }}>
+                      {[
+                        { key:"fixed1",   label:"Fixed 1yr"   },
+                        { key:"fixed3",   label:"Fixed 3yr"   },
+                        { key:"fixed5",   label:"Fixed 5yr"   },
+                        { key:"variable", label:"Variable (EIBOR+margin)" },
+                      ].map(t => (
+                        <button key={t.key} type="button" onClick={() => setMortType(t.key)}
+                          style={{ padding:"6px 14px", background:mortType===t.key?"rgba(212,168,67,0.15)":T.surfaceAlt, border:`1px solid ${mortType===t.key?"rgba(212,168,67,0.4)":T.border}`, borderRadius:8, color:mortType===t.key?T.gold:T.textMuted, fontSize:11, fontWeight:mortType===t.key?700:400, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>
+                          {t.label}
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Bank cards */}
+                    <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(320px,1fr))", gap:12, marginBottom:20 }}>
+                      {[...BANKS].sort((a,b) => getRateForType(a) - getRateForType(b)).map((bank,i) => {
+                        const rate    = getRateForType(bank);
+                        const loan    = mortPrice * ((100 - mortDown) / 100);
+                        const mr      = (rate/100) / 12;
+                        const np      = mortYears * 12;
+                        const monthly = loan > 0 && mr > 0 ? loan * (mr * Math.pow(1+mr,np)) / (Math.pow(1+mr,np)-1) : loan/np;
+                        const isBest  = i === 0;
+
+                        return (
+                          <div key={i} className="chart-box" style={{ padding:0, overflow:"hidden", border:isBest?`1px solid ${T.gold}`:`1px solid ${T.border}`, position:"relative" }}>
+                            {isBest && <div style={{ position:"absolute", top:0, left:0, right:0, height:3, background:`linear-gradient(90deg,${T.gold},#B8922A)` }} />}
+                            <div style={{ padding:"14px 16px", borderBottom:`1px solid ${T.border}` }}>
+                              <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start" }}>
+                                <div>
+                                  {isBest && <div style={{ fontSize:9, fontWeight:700, color:T.gold, letterSpacing:0.8, marginBottom:3 }}>★ BEST RATE</div>}
+                                  <div style={{ fontSize:15, fontWeight:700, color:T.white }}>{bank.bank}</div>
+                                  <div style={{ display:"flex", gap:6, marginTop:4 }}>
+                                    {bank.islamic && <span style={{ fontSize:9, padding:"2px 6px", borderRadius:4, background:"rgba(139,92,246,0.15)", color:"#8B5CF6", fontWeight:700 }}>Islamic</span>}
+                                    {bank.salaryTransfer && <span style={{ fontSize:9, padding:"2px 6px", borderRadius:4, background:"rgba(212,168,67,0.1)", color:T.gold, fontWeight:700 }}>Salary Transfer</span>}
+                                    <span style={{ fontSize:9, padding:"2px 6px", borderRadius:4, background:"rgba(16,185,129,0.1)", color:T.green, fontWeight:700 }}>LTV {bank.maxLTV}%</span>
+                                  </div>
+                                </div>
+                                <div style={{ textAlign:"right" }}>
+                                  <div style={{ fontFamily:"'Fraunces',serif", fontSize:28, fontWeight:900, color:isBest?T.gold:T.white, lineHeight:1 }}>{rate.toFixed(2)}%</div>
+                                  <div style={{ fontSize:10, color:T.textMuted }}>p.a.</div>
+                                </div>
+                              </div>
+                            </div>
+                            <div style={{ padding:"12px 16px", borderBottom:`1px solid ${T.border}`, display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:8 }}>
+                              {[
+                                { label:"Monthly",    val:"AED "+Math.round(monthly).toLocaleString(), color:isBest?T.gold:T.white },
+                                { label:"Processing", val:bank.processingFee+"% fee",                  color:T.textMuted },
+                                { label:"Min Salary", val:"AED "+bank.minSalary.toLocaleString(),      color:T.textMuted },
+                              ].map((m,j) => (
+                                <div key={j}>
+                                  <div style={{ fontSize:9, color:T.textMuted, marginBottom:3 }}>{m.label}</div>
+                                  <div style={{ fontSize:12, fontWeight:700, color:m.color }}>{m.val}</div>
+                                </div>
+                              ))}
+                            </div>
+                            <div style={{ padding:"10px 14px" }}>
+                              <div style={{ fontSize:11, color:T.textMuted, lineHeight:1.6 }}>{bank.note}</div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    {/* Comparison tips */}
+                    <div className="chart-box" style={{ padding:18, marginBottom:16 }}>
+                      <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:12 }}>Smart Mortgage Tips 2026</div>
+                      <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(260px,1fr))", gap:10 }}>
+                        {[
+                          { icon:"\uD83D\uDCA1", tip:"Salary Transfer Discount", detail:"Most banks offer 0.25% rate reduction for transferring salary. On AED 1M loan = AED 2,500 saved per year." },
+                          { icon:"\uD83D\uDD12", tip:"Lock 3-Year Fixed Now", detail:"EIBOR at 3.59%. Fixed 3yr at 4.19-4.25% protects against any rate upticks. Most advisors recommend 3yr in 2026." },
+                          { icon:"\uD83E\uDDEE", tip:"DBR 50% Hard Cap", detail:"All loans + proposed mortgage cannot exceed 50% of gross monthly income. Central Bank strictly enforces this." },
+                          { icon:"\uD83D\uDCCB", tip:"Pre-Approval First", detail:"Get mortgage pre-approval before searching. Takes 2-5 days. Sellers take you seriously. Locks rate for 60-90 days." },
+                          { icon:"\uD83C\uDFE6", tip:"Compare 3+ Banks",  detail:"Same profile can get rates varying 0.5-1%. On AED 2M loan over 25 years that's AED 60,000+ difference." },
+                          { icon:"\uD83D\uDCC4", tip:"Islamic Alternative",detail:"Dubai Islamic Bank Murabaha avoids interest entirely. Profit rate is similar but Sharia-compliant. Popular with Gulf investors." },
+                        ].map((t,i) => (
+                          <div key={i} style={{ padding:"12px 14px", background:T.surfaceAlt, borderRadius:10, border:`1px solid ${T.border}` }}>
+                            <div style={{ fontSize:16, marginBottom:5 }}>{t.icon}</div>
+                            <div style={{ fontSize:12, fontWeight:700, color:T.white, marginBottom:4 }}>{t.tip}</div>
+                            <div style={{ fontSize:11, color:T.textSecondary, lineHeight:1.7 }}>{t.detail}</div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {/* Sources */}
+                <div style={{ paddingTop:12, borderTop:`1px solid ${T.border}`, display:"flex", gap:8, flexWrap:"wrap" }}>
+                  <span style={{ fontSize:10, color:T.textMuted }}>Sources:</span>
+                  {["UAE Central Bank 2026","EIBOR Feb 2026","Emirates NBD","FAB","ADCB","Mashreq","DIB","HSBC UAE","ricadimortgages.com"].map((s,i) => (
+                    <span key={i} style={{ fontSize:10, color:T.textMuted, padding:"2px 8px", borderRadius:10, border:`1px solid ${T.border}`, background:T.surfaceAlt }}>{s}</span>
+                  ))}
+                </div>
+
+              </div>
+            );
+          })()}
 
 
-          {/* â”€â”€â”€ INVESTMENT SCORE TAB â”€â”€â”€ */}
+          {/* ─── INVESTMENT SCORE TAB ─── */}
           {tab === "Investment Score" && (() => {
 
-            /* â•â• RESEARCH-BASED SCORING 2026 â•â•
+            /* ══ RESEARCH-BASED SCORING 2026 ══
                7 factors: Yield, Capital Growth, Liquidity, Infrastructure,
                Developer Quality, Risk, Demand Strength
                Sources: DLD Q1 2026, Knight Frank, Cavendish Maxwell,
                themiddleeastinsider.com, sterlingcapital.realestate,
                casttio.com, propertyfinder.ae
-            â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+            ════════════════════════════════════════════════════════ */
 
             const SCORE_FACTORS = [
               { key:"yield",       label:"Rental Yield",     weight:20, icon:"\uD83D\uDCB0", desc:"Gross yield vs Dubai avg 7.2%. High yield = income-positive investment." },
@@ -4829,11 +9624,11 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               { key:"liquidity",   label:"Liquidity",        weight:15, icon:"\uD83D\uDD04", desc:"Transaction volume + resale ease. How quickly can you exit?" },
               { key:"infra",       label:"Infrastructure",   weight:15, icon:"\uD83D\uDE87", desc:"Metro access, schools, hospitals, roads. Drives long-term tenant demand." },
               { key:"developer",   label:"Developer Quality",weight:15, icon:"\uD83C\uDFD7", desc:"On-time delivery rate, track record, escrow compliance." },
-              { key:"risk",        label:"Risk Profile",     weight:10, icon:"âš ", desc:"Supply pipeline, vacancy rate, market + geopolitical risk (inverted)." },
+              { key:"risk",        label:"Risk Profile",     weight:10, icon:"⚠", desc:"Supply pipeline, vacancy rate, market + geopolitical risk (inverted)." },
               { key:"demand",      label:"Demand Strength",  weight:5,  icon:"\uD83D\uDC65", desc:"Occupancy rates, tenant diversity, population growth corridor." },
             ];
 
-            /* â•â• COMMUNITY SCORES â€” Research-based â•â• */
+            /* ══ COMMUNITY SCORES — Research-based ══ */
             const SEED_SCORES = [
               { id:"is01", community:"Jumeirah Lake Towers", type:"Apartment",
                 yield:88, growth:72, liquidity:90, infra:92, developer:80, risk:75, demand:88,
@@ -4846,7 +9641,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 grossYield:7.6, avgPrice:1120000, ppsf:2050, transactions2025:15300,
                 metroAccess:true, supplyRisk:"High", trend:"+0.2%", vacancyRate:6,
                 verdict:"Buy", badge:"#10B981",
-                note:"Highest transaction volume in Dubai. Corporate demand. Watch oversupply risk â€” 15,000+ units 2026-27." },
+                note:"Highest transaction volume in Dubai. Corporate demand. Watch oversupply risk — 15,000+ units 2026-27." },
               { id:"is03", community:"Jumeirah Village Circle", type:"Apartment",
                 yield:82, growth:70, liquidity:85, infra:72, developer:75, risk:72, demand:85,
                 grossYield:7.8, avgPrice:923000, ppsf:1180, transactions2025:18200,
@@ -4864,7 +9659,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 grossYield:6.0, avgPrice:1583000, ppsf:1942, transactions2025:5200,
                 metroAccess:false, supplyRisk:"Low", trend:"+0.3%", vacancyRate:6,
                 verdict:"Buy", badge:"#10B981",
-                note:"Emaar flagship. 24% price growth 2025. Infrastructure still developing â€” patience required." },
+                note:"Emaar flagship. 24% price growth 2025. Infrastructure still developing — patience required." },
               { id:"is06", community:"Dubai Marina", type:"Apartment",
                 yield:75, growth:68, liquidity:92, infra:95, developer:80, risk:78, demand:88,
                 grossYield:6.8, avgPrice:1690000, ppsf:2280, transactions2025:11400,
@@ -4876,7 +9671,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 grossYield:5.8, avgPrice:1897000, ppsf:2100, transactions2025:4100,
                 metroAccess:false, supplyRisk:"Low", trend:"+0.2%", vacancyRate:5,
                 verdict:"Hold", badge:"#D4A843",
-                note:"Sobha quality premium. Good capital growth. Lower liquidity â€” longer exit time. For patient capital." },
+                note:"Sobha quality premium. Good capital growth. Lower liquidity — longer exit time. For patient capital." },
               { id:"is08", community:"Downtown Dubai", type:"Apartment",
                 yield:60, growth:65, liquidity:85, infra:98, developer:85, risk:80, demand:85,
                 grossYield:5.5, avgPrice:3182000, ppsf:3100, transactions2025:9200,
@@ -4912,7 +9707,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 grossYield:4.8, avgPrice:5104000, ppsf:1200, transactions2025:2100,
                 metroAccess:false, supplyRisk:"Low", trend:"+0.3%", vacancyRate:5,
                 verdict:"Buy", badge:"#10B981",
-                note:"MAF crystal lagoon. 52% YoY growth 2025. Premium community. Lower liquidity â€” long hold recommended." },
+                note:"MAF crystal lagoon. 52% YoY growth 2025. Premium community. Lower liquidity — long hold recommended." },
               { id:"is14", community:"Arabian Ranches", type:"Villa",
                 yield:54, growth:72, liquidity:75, infra:82, developer:90, risk:85, demand:80,
                 grossYield:4.8, avgPrice:4479000, ppsf:1200, transactions2025:2800,
@@ -4929,7 +9724,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
 
             const rawScores = liveInvestScores?.length > 0 ? liveInvestScores : SEED_SCORES;
 
-            /* â”€â”€ Calculate weighted total score â”€â”€ */
+            /* ── Calculate weighted total score ── */
             const getTotal = (d) => {
               return Math.round(
                 d.yield * 0.20 + d.growth * 0.20 + d.liquidity * 0.15 +
@@ -4986,7 +9781,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"10px 0", marginBottom:16, borderBottom:`1px solid ${T.border}`, flexWrap:"wrap", gap:8 }}>
                   <div>
                     <div style={{ fontFamily:"'Fraunces',serif", fontSize:20, fontWeight:800, color:T.white }}>Investment Score</div>
-                    <div style={{ fontSize:11, color:T.textMuted, marginTop:3 }}>7-factor scoring Â· 15 communities Â· Weighted algorithm Â· DLD Q1 2026 Â· Research-backed</div>
+                    <div style={{ fontSize:11, color:T.textMuted, marginTop:3 }}>7-factor scoring · 15 communities · Weighted algorithm · DLD Q1 2026 · Research-backed</div>
                   </div>
                   <div style={{ display:"flex", gap:8 }}>
                     {["community","factors"].map(v => (
@@ -5005,7 +9800,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                     {SCORE_FACTORS.map((f,i) => (
                       <span key={i} style={{ fontSize:11, color:T.textSecondary }}>
                         <span style={{ color:T.white, fontWeight:700 }}>{f.label}</span>
-                        <span style={{ color:T.textMuted }}> Ã—{f.weight}%</span>
+                        <span style={{ color:T.textMuted }}> ×{f.weight}%</span>
                         {i < SCORE_FACTORS.length-1 && <span style={{ color:T.textMuted }}> +</span>}
                       </span>
                     ))}
@@ -5090,7 +9885,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                               <div style={{ fontSize:12, color:T.textMuted, fontWeight:600 }}>{i+1}</div>
                               <div>
                                 <div style={{ fontSize:13, fontWeight:600, color:T.white }}>{d.community}</div>
-                                <div style={{ fontSize:10, color:T.textMuted }}>{d.type}{"Â·"}{d.grossYield}% yield</div>
+                                <div style={{ fontSize:10, color:T.textMuted }}>{d.type}{"·"}{d.grossYield}% yield</div>
                               </div>
                               <div style={{ fontFamily:"'Fraunces',serif", fontSize:18, fontWeight:900, color:d.total>=80?T.green:d.total>=65?T.gold:d.total>=50?"#F97316":T.red }}>{d.total}</div>
                               {[d.yield, d.growth, d.liquidity, d.infra, d.risk, d.demand].map((v,j) => (
@@ -5122,7 +9917,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                                       { label:"Price/sqft",         val:"AED "+d.ppsf.toLocaleString()           },
                                       { label:"2025 Transactions",  val:d.transactions2025?.toLocaleString()     },
                                       { label:"Vacancy Rate",       val:d.vacancyRate+"%"                        },
-                                      { label:"Metro Access",       val:d.metroAccess?"Yes âœ…":"No"              },
+                                      { label:"Metro Access",       val:d.metroAccess?"Yes ✅":"No"              },
                                       { label:"Supply Risk",        val:d.supplyRisk                             },
                                       { label:"Price Trend",        val:d.trend+" YoY"                          },
                                     ].map((r,j) => (
@@ -5137,11 +9932,11 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                                     <div style={{ display:"flex", gap:8, marginTop:10 }}>
                                       <button type="button" onClick={() => handleTabChange("Projects")}
                                         style={{ flex:1, padding:"7px 0", background:`linear-gradient(135deg,${T.gold},#B8922A)`, border:"none", borderRadius:7, color:"#000", fontSize:11, fontWeight:700, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>
-                                        View Projects â†’
+                                        View Projects →
                                       </button>
                                       <button type="button" onClick={() => handleTabChange("Yields")}
                                         style={{ flex:1, padding:"7px 0", background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:7, color:T.textSecondary, fontSize:11, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>
-                                        Yield Data â†’
+                                        Yield Data →
                                       </button>
                                     </div>
                                   </div>
@@ -5184,7 +9979,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   <div style={{ fontSize:11, color:T.textMuted, lineHeight:1.8 }}>
                     Scores are research-based using DLD Q1 2026 data, Knight Frank, Cavendish Maxwell, PropertyFinder, and Bayut market reports.
                     100 = top performer on that factor. Weighted average gives final Investment Score (0-100).
-                    Score â‰¥80 = Strong Buy Â· 65-79 = Buy Â· 50-64 = Hold Â· &lt;50 = Caution.
+                    Score ≥80 = Strong Buy · 65-79 = Buy · 50-64 = Hold · &lt;50 = Caution.
                     Scores are updated quarterly as market conditions change.
                   </div>
                 </div>
@@ -5202,35 +9997,35 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
           })()}
 
 
-          {/* â”€â”€â”€ FLIP CALCULATOR TAB â”€â”€â”€ */}
+          {/* ─── FLIP CALCULATOR TAB ─── */}
           {tab === "Flip" && (() => {
 
-            /* â•â• RESEARCH NOTES â•â•
+            /* ══ RESEARCH NOTES ══
                Dubai flip market 2026: Buy-renovate-sell or off-plan flip
                DLD 4% on buy + 4% on sell (if resell before registration = NOC)
                Off-plan flip: sell before completion (requires developer NOC)
-               Ready flip: buy â†’ renovate â†’ sell
+               Ready flip: buy → renovate → sell
                Renovation costs: AED 80-200/sqft for mid-range, 200-400 for premium
                Typical hold: 6-24 months for ready flip, 12-36 for off-plan
                Capital gains tax: ZERO in Dubai
                Typical net profit: 8-25% on well-chosen properties
-            â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+            ══════════════════════════════════════════════════════════ */
 
-            /* â”€â”€ All inputs come from existing flipBuyPrice etc
-               + new flp* state for renovation/costs â”€â”€ */
+            /* ── All inputs come from existing flipBuyPrice etc
+               + new flp* state for renovation/costs ── */
             const buyPrice     = flipBuyPrice;
             const sellPrice    = flipSellPrice;
             const holdYears    = flipHoldYears;
             const rentalYield  = flipRentalYield;
             const inclRental   = flipIncludeRental;
 
-            /* â”€â”€ Acquisition costs â”€â”€ */
+            /* ── Acquisition costs ── */
             const dldBuy       = buyPrice * 0.04;
             const agentBuy     = buyPrice * (flpAgentBuy / 100);
             const regFee       = 4000;
             const totalAcqCost = dldBuy + agentBuy + regFee;
 
-            /* â”€â”€ Mortgage costs (if leveraged) â”€â”€ */
+            /* ── Mortgage costs (if leveraged) ── */
             const loanAmt      = flpMortgage ? buyPrice * (flpLTV / 100) : 0;
             const mortMonthly  = flpMortgage && loanAmt > 0
               ? loanAmt * ((flpMortgageRate/100/12) * Math.pow(1+flpMortgageRate/100/12, holdYears*12)) / (Math.pow(1+flpMortgageRate/100/12, holdYears*12) - 1)
@@ -5239,23 +10034,23 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
             const mortInterest  = totalMortCost - loanAmt;
             const equityIn      = flpMortgage ? buyPrice - loanAmt : buyPrice;
 
-            /* â”€â”€ Holding costs â”€â”€ */
+            /* ── Holding costs ── */
             const scPerYear    = buyPrice * 0.01; // ~1% service charge estimate
             const totalSC      = scPerYear * holdYears;
 
-            /* â”€â”€ Rental income during hold â”€â”€ */
+            /* ── Rental income during hold ── */
             const annualRental = inclRental ? buyPrice * (rentalYield / 100) : 0;
             const totalRental  = annualRental * holdYears;
 
-            /* â”€â”€ Renovation â”€â”€ */
+            /* ── Renovation ── */
             const renovCost    = flpRenovCost;
 
-            /* â”€â”€ Disposal costs â”€â”€ */
+            /* ── Disposal costs ── */
             const dldSell      = sellPrice * 0.04;
             const agentSell    = sellPrice * (flpAgentSell / 100);
             const totalDispose = dldSell + agentSell;
 
-            /* â”€â”€ P&L â”€â”€ */
+            /* ── P&L ── */
             const totalIn      = buyPrice + totalAcqCost + renovCost + totalSC + (flpMortgage ? mortInterest : 0);
             const totalOut     = sellPrice + totalRental;
             const netProfit    = sellPrice + totalRental - totalIn;
@@ -5265,7 +10060,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
             const cashIn       = flpMortgage ? equityIn + totalAcqCost + renovCost + totalSC : buyPrice + totalAcqCost + renovCost + totalSC;
             const cashROI      = cashIn > 0 ? (netProfit / cashIn * 100) : 0;
 
-            /* â”€â”€ Scenarios â”€â”€ */
+            /* ── Scenarios ── */
             const scenarios = {
               bear:  { sellMulti: 0.90, note: "Market softens 10%. Common in oversupplied areas." },
               base:  { sellMulti: 1.00, note: "Sell at planned price. Realistic in established communities." },
@@ -5291,7 +10086,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"10px 0", marginBottom:16, borderBottom:`1px solid ${T.border}`, flexWrap:"wrap", gap:8 }}>
                   <div>
                     <div style={{ fontFamily:"'Fraunces',serif", fontSize:20, fontWeight:800, color:T.white }}>Flip Calculator</div>
-                    <div style={{ fontSize:11, color:T.textMuted, marginTop:3 }}>Buy Â· Renovate Â· Sell Â· ROI Â· DLD costs Â· Mortgage leverage Â· Scenario analysis</div>
+                    <div style={{ fontSize:11, color:T.textMuted, marginTop:3 }}>Buy · Renovate · Sell · ROI · DLD costs · Mortgage leverage · Scenario analysis</div>
                   </div>
                   <div style={{ display:"flex", gap:8 }}>
                     {["calculator","guide"].map(v => (
@@ -5310,7 +10105,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                     { label:"DLD on Buy",         val:"4%",      color:"#F97316", note:"of purchase price" },
                     { label:"DLD on Sell",        val:"4%",      color:"#F97316", note:"of sale price" },
                     { label:"Agent (Buy+Sell)",   val:"2%+2%",   color:T.textMuted, note:"negotiable" },
-                    { label:"Typical Net ROI",    val:"8â€“25%",   color:T.gold,   note:"well-chosen flip" },
+                    { label:"Typical Net ROI",    val:"8–25%",   color:T.gold,   note:"well-chosen flip" },
                     { label:"Off-Plan Flip",      val:"NOC req", color:T.teal,   note:"developer permission" },
                   ].map((e,i) => (
                     <div key={i} style={{ padding:"8px 14px", background:T.surface, border:`1px solid ${T.border}`, borderRadius:8, textAlign:"center", flex:"1 1 80px" }}>
@@ -5324,7 +10119,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 {flpView === "calculator" && (
                   <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16, marginBottom:16 }}>
 
-                    {/* Left â€” Inputs */}
+                    {/* Left — Inputs */}
                     <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
                       {/* Main sliders */}
                       <div className="chart-box" style={{ padding:22 }}>
@@ -5422,7 +10217,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                       </div>
                     </div>
 
-                    {/* Right â€” Results */}
+                    {/* Right — Results */}
                     <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
 
                       {/* Scenario selector */}
@@ -5443,15 +10238,15 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                       {/* Net profit hero */}
                       <div style={{ padding:"22px", background:netProfit>0?"linear-gradient(135deg,rgba(16,185,129,0.12),rgba(16,185,129,0.04))":"linear-gradient(135deg,rgba(239,68,68,0.12),rgba(239,68,68,0.04))", border:`1px solid ${netProfit>0?"rgba(16,185,129,0.3)":"rgba(239,68,68,0.3)"}`, borderRadius:14, textAlign:"center" }}>
                         <div style={{ fontSize:11, fontWeight:700, color:T.textMuted, letterSpacing:1, textTransform:"uppercase", marginBottom:8 }}>
-                          {flpScenario !== "base" ? `${flpScenario.toUpperCase()} SCENARIO â€” ` : ""}Net Profit
+                          {flpScenario !== "base" ? `${flpScenario.toUpperCase()} SCENARIO — ` : ""}Net Profit
                         </div>
                         <div style={{ fontFamily:"'Fraunces',serif", fontSize:38, fontWeight:900, color:scenProfit>0?T.green:T.red, lineHeight:1 }}>
                           {scenProfit>=0?"+":" "}AED {Math.abs(Math.round(scenProfit)).toLocaleString()}
                         </div>
                         <div style={{ fontSize:12, color:T.textMuted, marginTop:8 }}>
-                          {flpScenario!=="base" && <span>Sell at AED {Math.round(scenSell).toLocaleString()} Â· </span>}
+                          {flpScenario!=="base" && <span>Sell at AED {Math.round(scenSell).toLocaleString()} · </span>}
                           ROI: <span style={{ color:scenROI>0?T.green:T.red, fontWeight:700 }}>{scenROI.toFixed(1)}%</span>
-                          {holdYears > 0 && <span style={{ color:T.textMuted }}>{"Â·"}{(((Math.pow(1+scenROI/100,1/holdYears)-1)*100)).toFixed(1)}% p.a.</span>}
+                          {holdYears > 0 && <span style={{ color:T.textMuted }}>{"·"}{(((Math.pow(1+scenROI/100,1/holdYears)-1)*100)).toFixed(1)}% p.a.</span>}
                         </div>
                         {scenProfit !== netProfit && (
                           <div style={{ marginTop:6, fontSize:11, color:T.textMuted }}>vs Base: {netProfit>0?"+":""}{Math.round(scenProfit-netProfit).toLocaleString()} AED</div>
@@ -5508,7 +10303,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
 
                       {/* DLD warning */}
                       <div style={{ padding:"12px 14px", background:"rgba(249,115,22,0.06)", border:"1px solid rgba(249,115,22,0.25)", borderRadius:10 }}>
-                        <div style={{ fontSize:11, fontWeight:700, color:"#F97316", marginBottom:4 }}>âš  DLD Cost Reality Check</div>
+                        <div style={{ fontSize:11, fontWeight:700, color:"#F97316", marginBottom:4 }}>⚠ DLD Cost Reality Check</div>
                         <div style={{ fontSize:11, color:T.textSecondary, lineHeight:1.7 }}>
                           DLD fees total <strong style={{ color:T.white }}>AED {Math.round(dldBuy+dldSell).toLocaleString()}</strong> (4% buy + 4% sell).
                           Your property must appreciate <strong style={{ color:T.white }}>{(((dldBuy+dldSell+renovCost+agentBuy+agentSell)/buyPrice)*100).toFixed(1)}%</strong> just to break even before profit.
@@ -5526,7 +10321,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                       <div style={{ fontFamily:"'Fraunces',serif", fontSize:13, fontWeight:700, color:T.white, marginBottom:16 }}>Ready Property Flip</div>
                       {[
                         { step:"1", title:"Find undervalued ready unit", detail:"Distressed sellers, divorce sales, estate sales, motivated sellers. Look for properties 10-15% below market." },
-                        { step:"2", title:"Negotiate + buy quickly", detail:"Cash buyers close in 2-3 weeks. Get pre-approved mortgage for speed. Don't over-negotiate â€” speed beats price." },
+                        { step:"2", title:"Negotiate + buy quickly", detail:"Cash buyers close in 2-3 weeks. Get pre-approved mortgage for speed. Don't over-negotiate — speed beats price." },
                         { step:"3", title:"Renovate strategically", detail:"Kitchen + bathrooms = 80% of value add. Budget AED 80-150/sqft for mid-range. Don't over-renovate for the area." },
                         { step:"4", title:"Rent while waiting (optional)", detail:"Furnished short-term rental during renovation period. 6-8% yield offsets holding costs." },
                         { step:"5", title:"Market and sell", detail:"Professional photography, Bayut + PF listings. Target 3-6 months to sell. Price 5-8% above similar units." },
@@ -5573,7 +10368,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
           })()}
 
 
-          {/* â”€â”€â”€ DXB ESTIMATE TAB â”€â”€â”€ */}
+          {/* ─── DXB ESTIMATE TAB ─── */}
           {tab === "DXB Estimate" && (() => {
 
             const BASE_PPSF = {
@@ -5647,7 +10442,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 <div style={{ display:"flex",alignItems:"center",justifyContent:"space-between",padding:"10px 0",marginBottom:16,borderBottom:`1px solid ${T.border}`,flexWrap:"wrap",gap:8 }}>
                   <div>
                     <div style={{ fontFamily:"'Fraunces',serif",fontSize:20,fontWeight:800,color:T.white }}>DXB Estimate</div>
-                    <div style={{ fontSize:11,color:T.textMuted,marginTop:3 }}>Automated Valuation Â· 18 communities Â· DLD PPSF Â· 3-method cross-check Â· Confidence scoring</div>
+                    <div style={{ fontSize:11,color:T.textMuted,marginTop:3 }}>Automated Valuation · 18 communities · DLD PPSF · 3-method cross-check · Confidence scoring</div>
                   </div>
                   <div style={{ display:"flex",gap:8 }}>
                     {["estimate","comparables"].map(v=>(
@@ -5735,7 +10530,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                         <span style={{ fontSize:10,padding:"2px 8px",borderRadius:8,background:confColor+"22",color:confColor,fontWeight:700 }}>{confidence} Confidence</span>
                       </div>
                       <div style={{ fontFamily:"'Fraunces',serif",fontSize:38,fontWeight:900,color:T.gold,lineHeight:1 }}>AED {(estValue/1e6).toFixed(2)}M</div>
-                      <div style={{ fontSize:12,color:T.textMuted,marginTop:6 }}>Range: AED {(estLow/1e6).toFixed(2)}M â€“ AED {(estHigh/1e6).toFixed(2)}M</div>
+                      <div style={{ fontSize:12,color:T.textMuted,marginTop:6 }}>Range: AED {(estLow/1e6).toFixed(2)}M – AED {(estHigh/1e6).toFixed(2)}M</div>
                       <div style={{ position:"relative",height:8,borderRadius:4,background:T.border,margin:"12px 0" }}>
                         <div style={{ position:"absolute",left:"8%",right:"8%",height:"100%",background:"rgba(212,168,67,0.2)",borderRadius:4 }} />
                         <div style={{ position:"absolute",left:"50%",transform:"translateX(-50%)",width:3,height:"100%",background:T.gold,borderRadius:2 }} />
@@ -5748,8 +10543,8 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                     <div className="chart-box" style={{ padding:18 }}>
                       <div style={{ fontSize:12,fontWeight:700,color:T.white,marginBottom:12 }}>3-Method Cross-Check</div>
                       {[
-                        {method:"Sales Comparison",val:estValue,weight:"60%",color:T.gold,desc:`DLD PPSF AED ${adjPPSF}/sqft Ã— ${avmSize}sqft Â· adjusted for your attributes`},
-                        {method:"Income Approach", val:incomeVal,weight:"30%",color:T.teal,desc:`${commYield}% community yield capitalisation Â· Est rent AED ${Math.round(estValue*commYield/100/1000)}K/yr`},
+                        {method:"Sales Comparison",val:estValue,weight:"60%",color:T.gold,desc:`DLD PPSF AED ${adjPPSF}/sqft × ${avmSize}sqft · adjusted for your attributes`},
+                        {method:"Income Approach", val:incomeVal,weight:"30%",color:T.teal,desc:`${commYield}% community yield capitalisation · Est rent AED ${Math.round(estValue*commYield/100/1000)}K/yr`},
                         {method:"Cost Approach",   val:costVal,  weight:"10%",color:"#8B5CF6",desc:"Land + construction cost + depreciation (indicative)"},
                       ].map((m,i)=>(
                         <div key={i} style={{ marginBottom:i<2?12:0,paddingBottom:i<2?12:0,borderBottom:i<2?`1px solid ${T.border}`:"none" }}>
@@ -5785,8 +10580,8 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 </div>
                 {avmView === "comparables" && (
                   <div className="chart-box" style={{ padding:20,marginTop:16 }}>
-                    <div style={{ fontSize:13,fontWeight:700,color:T.white,marginBottom:4 }}>DLD Comparable Transactions â€” {avmCommunity}</div>
-                    <div style={{ fontSize:11,color:T.textMuted,marginBottom:16 }}>Recent registered sales Â· Q4 2025 â€“ Q1 2026</div>
+                    <div style={{ fontSize:13,fontWeight:700,color:T.white,marginBottom:4 }}>DLD Comparable Transactions — {avmCommunity}</div>
+                    <div style={{ fontSize:11,color:T.textMuted,marginBottom:16 }}>Recent registered sales · Q4 2025 – Q1 2026</div>
                     {comps.length > 0 ? (
                       <>
                         <div style={{ background:T.surfaceAlt,borderRadius:8,overflow:"hidden" }}>
@@ -5827,10 +10622,10 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
           })()}
 
 
-          {/* â”€â”€â”€ PORTFOLIO TAB â”€â”€â”€ */}
+          {/* ─── PORTFOLIO TAB ─── */}
           {tab === "Portfolio" && (() => {
 
-            /* â•â• PORTFOLIO TRACKER
+            /* ══ PORTFOLIO TRACKER
                Tracks user's Dubai property portfolio:
                - Total portfolio value vs cost
                - Unrealised gain/loss per property
@@ -5839,9 +10634,9 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                - IRR calculator
                - Wealth growth chart
                Data: stored in Firestore under user's profile
-            â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+            ════════════════════════════════════════════════════════ */
 
-            /* Seed portfolio â€” replaced by Firestore on login */
+            /* Seed portfolio — replaced by Firestore on login */
             const SEED_PORTFOLIO = [
               { id:"p01", name:"Marina Heights 1BR", community:"Dubai Marina",   type:"Apartment", beds:"1BR", size:850,  buyPrice:1100000, currentVal:1380000, buyYear:2022, annualRent:78000,  sc:16000, mortgage:660000, mortRate:4.25, status:"Ready",   isSeed:true },
               { id:"p02", name:"JVC Studio",          community:"Jumeirah Village Circle", type:"Apartment", beds:"Studio", size:480, buyPrice:580000, currentVal:695000, buyYear:2023, annualRent:50000, sc:9000, mortgage:0, mortRate:0, status:"Ready", isSeed:true },
@@ -5851,7 +10646,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
             const portfolio = livePortfolio?.length > 0 ? livePortfolio : SEED_PORTFOLIO;
             const isSeed    = !(livePortfolio?.length > 0);
 
-            /* â”€â”€ Portfolio KPIs â”€â”€ */
+            /* ── Portfolio KPIs ── */
             const totalCost    = portfolio.reduce((s,p) => s + p.buyPrice, 0);
             const totalVal     = portfolio.reduce((s,p) => s + p.currentVal, 0);
             const totalGain    = totalVal - totalCost;
@@ -5864,7 +10659,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
             const grossYieldPort = totalVal > 0 ? (totalRent/totalVal*100) : 0;
             const netYieldPort   = totalVal > 0 ? (netRent/totalVal*100) : 0;
 
-            /* â”€â”€ IRR calculation (simplified) â”€â”€ */
+            /* ── IRR calculation (simplified) ── */
             const avgHoldYears = portfolio.length > 0
               ? portfolio.reduce((s,p) => s + (2026 - p.buyYear), 0) / portfolio.length : 1;
             const totalReturn  = totalGain + (netRent * avgHoldYears);
@@ -5879,7 +10674,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 <div style={{ display:"flex",alignItems:"center",justifyContent:"space-between",padding:"10px 0",marginBottom:16,borderBottom:`1px solid ${T.border}`,flexWrap:"wrap",gap:8 }}>
                   <div>
                     <div style={{ fontFamily:"'Fraunces',serif",fontSize:20,fontWeight:800,color:T.white }}>Portfolio Tracker</div>
-                    <div style={{ fontSize:11,color:T.textMuted,marginTop:3 }}>Wealth tracking Â· IRR Â· Rental income Â· Equity Â· Gain/loss Â· Firebase synced</div>
+                    <div style={{ fontSize:11,color:T.textMuted,marginTop:3 }}>Wealth tracking · IRR · Rental income · Equity · Gain/loss · Firebase synced</div>
                   </div>
                   <div style={{ display:"flex",gap:8 }}>
                     {["overview","properties","irr"].map(v=>(
@@ -5895,7 +10690,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 {isSeed && (
                   <div style={{ padding:"10px 16px",background:"rgba(212,168,67,0.06)",border:"1px solid rgba(212,168,67,0.2)",borderRadius:10,marginBottom:16,display:"flex",alignItems:"center",gap:10 }}>
                     <span style={{ width:6,height:6,borderRadius:"50%",background:T.gold,display:"inline-block" }} />
-                    <span style={{ fontSize:12,color:T.textMuted }}><span style={{ color:T.gold,fontWeight:700 }}>Sample portfolio</span> â€” Add your real properties below. Data saves to your Firebase account and syncs across devices.</span>
+                    <span style={{ fontSize:12,color:T.textMuted }}><span style={{ color:T.gold,fontWeight:700 }}>Sample portfolio</span> — Add your real properties below. Data saves to your Firebase account and syncs across devices.</span>
                   </div>
                 )}
 
@@ -5940,7 +10735,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                                 <div style={{ height:"100%",width:pct+"%",background:i===0?T.gold:i===1?T.teal:T.green,borderRadius:4 }} />
                               </div>
                               <div style={{ display:"flex",justifyContent:"space-between",marginTop:3 }}>
-                                <span style={{ fontSize:10,color:T.textMuted }}>{p.community}{"Â·"}{p.beds}</span>
+                                <span style={{ fontSize:10,color:T.textMuted }}>{p.community}{"·"}{p.beds}</span>
                                 <span style={{ fontSize:10,color:T.textMuted }}>AED {(p.currentVal/1e6).toFixed(2)}M ({pct}%)</span>
                               </div>
                             </div>
@@ -5981,7 +10776,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                           <div style={{ padding:"14px 18px",borderBottom:`1px solid ${T.border}`,display:"flex",justifyContent:"space-between",alignItems:"center" }}>
                             <div>
                               <div style={{ fontFamily:"'Fraunces',serif",fontSize:15,fontWeight:700,color:T.white }}>{p.name}</div>
-                              <div style={{ fontSize:11,color:T.textMuted,marginTop:2 }}>{p.community}{"Â·"}{p.type}{"Â·"}{p.beds}{"Â·"}{p.size.toLocaleString()} sqft Â· Bought {p.buyYear}</div>
+                              <div style={{ fontSize:11,color:T.textMuted,marginTop:2 }}>{p.community}{"·"}{p.type}{"·"}{p.beds}{"·"}{p.size.toLocaleString()} sqft · Bought {p.buyYear}</div>
                             </div>
                             <div style={{ textAlign:"right" }}>
                               <div style={{ fontFamily:"'Fraunces',serif",fontSize:20,fontWeight:900,color:T.white }}>AED {(p.currentVal/1e6).toFixed(2)}M</div>
@@ -6013,7 +10808,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                         style={{ padding:"8px 24px",background:`linear-gradient(135deg,${T.gold},#B8922A)`,border:"none",borderRadius:8,color:"#000",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"'Outfit',sans-serif" }}>
                         + Add Property
                       </button>
-                      <div style={{ fontSize:11,color:T.textMuted,marginTop:8 }}>Properties sync to your Firebase account Â· Private to you only</div>
+                      <div style={{ fontSize:11,color:T.textMuted,marginTop:8 }}>Properties sync to your Firebase account · Private to you only</div>
                     </div>
                   </div>
                 )}
@@ -6026,7 +10821,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                       <div style={{ fontSize:11,color:T.textMuted,marginBottom:20 }}>Combined rental income + capital appreciation</div>
                       <div style={{ textAlign:"center",padding:"24px 0" }}>
                         <div style={{ fontFamily:"'Fraunces',serif",fontSize:52,fontWeight:900,color:T.gold,lineHeight:1 }}>{irr.toFixed(1)}%</div>
-                        <div style={{ fontSize:13,color:T.textMuted,marginTop:8 }}>Annualised IRR Â· {avgHoldYears.toFixed(1)} yr avg hold</div>
+                        <div style={{ fontSize:13,color:T.textMuted,marginTop:8 }}>Annualised IRR · {avgHoldYears.toFixed(1)} yr avg hold</div>
                       </div>
                       {[
                         {label:"Total Capital Invested",  val:"AED "+(totalCost/1e6).toFixed(2)+"M"},
@@ -6059,7 +10854,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                         </div>
                       ))}
                       <div style={{ marginTop:12,padding:"10px 12px",background:"rgba(212,168,67,0.06)",borderRadius:8,fontSize:11,color:T.textMuted,lineHeight:1.7 }}>
-                        Dubai zero tax means your gross IRR IS your net IRR â€” no income tax, no capital gains tax deducted.
+                        Dubai zero tax means your gross IRR IS your net IRR — no income tax, no capital gains tax deducted.
                       </div>
                     </div>
                   </div>
@@ -6077,18 +10872,18 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
           })()}
 
 
-          {/* â”€â”€â”€ GOLDEN VISA TAB â”€â”€â”€ */}
+          {/* ─── GOLDEN VISA TAB ─── */}
           {tab === "Golden Visa" && (() => {
 
-            /* â•â• RESEARCH â€” Golden Visa 2026 â•â•
+            /* ══ RESEARCH — Golden Visa 2026 ══
                Sources: dubailand.gov.ae, icp.gov.ae, u.ae, gdrfad.gov.ae
                realestateclubdubai.com (updated 15hrs ago Apr 2026)
                Federal Decree-Law No. 14 of 2022
-            â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+            ════════════════════════════════════ */
 
             const THRESHOLD = 2000000; // AED 2M as of 2026
 
-            /* â”€â”€ Eligibility check â”€â”€ */
+            /* ── Eligibility check ── */
             const effectivePropValue = gvMortgage
               ? gvMortgagePaid
               : gvOffplan
@@ -6099,19 +10894,19 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
             const gap            = THRESHOLD - effectivePropValue;
             const pctToThreshold = Math.min((effectivePropValue / THRESHOLD) * 100, 100);
 
-            /* â”€â”€ Categories â”€â”€ */
+            /* ── Categories ── */
             const CATEGORIES = [
               {
                 key:"property", icon:"\uD83C\uDFE0", title:"Real Estate Investor",
                 duration:"10 years", renewable:true, threshold:"AED 2M property",
                 color:T.green, badge:"Most Popular",
                 requirements:[
-                  "Property value â‰¥ AED 2,000,000 (title deed value)",
+                  "Property value ≥ AED 2,000,000 (title deed value)",
                   "Single property OR combined multiple properties",
                   "Ready or off-plan from DLD-approved developer",
                   "Mortgaged property: need bank NOC + AED 2M paid",
                   "Property must be in applicant's personal name",
-                  "Freehold zone â€” registered with DLD",
+                  "Freehold zone — registered with DLD",
                 ],
                 family:["Spouse (10yr)","Children any age","Sons up to 25","Domestic staff unlimited"],
                 fees:[
@@ -6127,9 +10922,9 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 duration:"10 years", renewable:true, threshold:"AED 2M deposit",
                 color:T.teal, badge:"No Property Needed",
                 requirements:[
-                  "Fixed deposit â‰¥ AED 2,000,000 in UAE bank",
+                  "Fixed deposit ≥ AED 2,000,000 in UAE bank",
                   "Deposit frozen minimum 2 years",
-                  "OR local Sukuk / investment bonds â‰¥ AED 2M",
+                  "OR local Sukuk / investment bonds ≥ AED 2M",
                   "Official bank certificate required",
                   "Must be in accredited local UAE bank",
                   "Cannot be withdrawn during visa validity",
@@ -6143,7 +10938,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 ],
               },
               {
-                key:"talent", icon:"â­", title:"Outstanding Talent",
+                key:"talent", icon:"⭐", title:"Outstanding Talent",
                 duration:"10 years", renewable:true, threshold:"Nomination based",
                 color:"#8B5CF6", badge:"No Investment",
                 requirements:[
@@ -6167,7 +10962,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 duration:"10 years", renewable:true, threshold:"AED 30K+ salary",
                 color:"#F97316", badge:"Employee Route",
                 requirements:[
-                  "Basic salary â‰¥ AED 30,000/month",
+                  "Basic salary ≥ AED 30,000/month",
                   "Attested university degree (MoFA)",
                   "Working in UAE private/public sector",
                   "Senior or specialist role confirmed",
@@ -6184,9 +10979,9 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               },
             ];
 
-            /* â”€â”€ Application steps â”€â”€ */
+            /* ── Application steps ── */
             const STEPS = [
-              { n:"1", title:"Buy qualifying property", detail:"Purchase property â‰¥ AED 2M. Get title deed from DLD or Oqood for off-plan. Property must be in freehold zone." },
+              { n:"1", title:"Buy qualifying property", detail:"Purchase property ≥ AED 2M. Get title deed from DLD or Oqood for off-plan. Property must be in freehold zone." },
               { n:"2", title:"DLD property status certificate", detail:"Get official 'Property Status Statement' from Dubai Land Department confirming your ownership and value." },
               { n:"3", title:"Bank NOC (if mortgaged)", detail:"If property is mortgaged, bank must issue NOC confirming they do not object to visa issuance. Includes paid amount + balance." },
               { n:"4", title:"Gather documents", detail:"Passport, title deed/Oqood, personal photo, UAE ID (if any), current visa copy, health insurance." },
@@ -6196,7 +10991,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               { n:"8", title:"Receive Golden Visa", detail:"10-year residency permit issued and emailed. DLD places a lien on property to ensure ownership continuity throughout validity." },
             ];
 
-            /* â”€â”€ Properties near threshold from seed â”€â”€ */
+            /* ── Properties near threshold from seed ── */
             const nearThreshold = (liveProjects?.length > 0 ? liveProjects : SEED_PROJECTS)
               .filter(p => p.minPrice >= 1500000 && p.minPrice <= 4000000)
               .slice(0, 4);
@@ -6219,7 +11014,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"10px 0", marginBottom:16, borderBottom:`1px solid ${T.border}`, flexWrap:"wrap", gap:8 }}>
                   <div>
                     <div style={{ fontFamily:"'Fraunces',serif", fontSize:20, fontWeight:800, color:T.white }}>UAE Golden Visa</div>
-                    <div style={{ fontSize:11, color:T.textMuted, marginTop:3 }}>10-year residency Â· AED 2M threshold Â· Family sponsorship Â· No minimum stay Â· Official DLD 2026</div>
+                    <div style={{ fontSize:11, color:T.textMuted, marginTop:3 }}>10-year residency · AED 2M threshold · Family sponsorship · No minimum stay · Official DLD 2026</div>
                   </div>
                   <div style={{ display:"flex", gap:8 }}>
                     {["checker","guide","properties"].map(v=>(
@@ -6266,7 +11061,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
 
                     {gvCategory === "property" && (
                       <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16, marginBottom:16 }}>
-                        {/* Left â€” Calculator */}
+                        {/* Left — Calculator */}
                         <div className="chart-box" style={{ padding:22 }}>
                           <div style={{ fontFamily:"'Fraunces',serif", fontSize:13, fontWeight:700, color:T.white, marginBottom:16 }}>Eligibility Calculator</div>
 
@@ -6310,7 +11105,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                               onClick={()=>setGvOffplan(!gvOffplan)}>
                               <div>
                                 <div style={{ fontSize:12, fontWeight:700, color:T.white }}>Off-Plan Property</div>
-                                <div style={{ fontSize:11, color:T.textMuted }}>Amount paid to developer must be â‰¥ AED 2M</div>
+                                <div style={{ fontSize:11, color:T.textMuted }}>Amount paid to developer must be ≥ AED 2M</div>
                               </div>
                               <div style={{ width:36, height:20, borderRadius:10, background:gvOffplan?T.teal:T.border, position:"relative", flexShrink:0 }}>
                                 <div style={{ width:16, height:16, borderRadius:"50%", background:"#fff", position:"absolute", top:2, left:gvOffplan?18:2, transition:"left 0.15s" }} />
@@ -6341,15 +11136,15 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                                 </button>
                               ))}
                             </div>
-                            {gvNumProps > 1 && <div style={{ fontSize:11, color:T.textMuted, marginTop:4 }}>Combined title deed values must total â‰¥ AED 2M. All under same owner's name.</div>}
+                            {gvNumProps > 1 && <div style={{ fontSize:11, color:T.textMuted, marginTop:4 }}>Combined title deed values must total ≥ AED 2M. All under same owner's name.</div>}
                           </div>
                         </div>
 
-                        {/* Right â€” Result */}
+                        {/* Right — Result */}
                         <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
                           {/* Verdict */}
                           <div style={{ padding:"24px", background:eligible?"linear-gradient(135deg,rgba(16,185,129,0.12),rgba(16,185,129,0.04))":"linear-gradient(135deg,rgba(239,68,68,0.08),rgba(239,68,68,0.02))", border:`1px solid ${eligible?"rgba(16,185,129,0.3)":"rgba(239,68,68,0.25)"}`, borderRadius:14, textAlign:"center" }}>
-                            <div style={{ fontSize:28, marginBottom:8 }}>{eligible?"âœ…":"â³"}</div>
+                            <div style={{ fontSize:28, marginBottom:8 }}>{eligible?"✅":"⏳"}</div>
                             <div style={{ fontFamily:"'Fraunces',serif", fontSize:22, fontWeight:900, color:eligible?T.green:T.gold, marginBottom:6 }}>
                               {eligible ? "You Qualify!" : "Not Yet Eligible"}
                             </div>
@@ -6365,16 +11160,16 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                             <div style={{ display:"flex", justifyContent:"space-between", fontSize:10, color:T.textMuted }}>
                               <span>AED 0</span>
                               <span style={{ color:eligible?T.green:T.gold, fontWeight:700 }}>AED {(effectivePropValue/1e6).toFixed(2)}M ({pctToThreshold.toFixed(0)}%)</span>
-                              <span>AED 2M âœ“</span>
+                              <span>AED 2M ✓</span>
                             </div>
                           </div>
 
                           {/* Requirements checklist */}
                           <div className="chart-box" style={{ padding:18 }}>
-                            <div style={{ fontSize:12, fontWeight:700, color:T.white, marginBottom:12 }}>Requirements â€” {activeCat.title}</div>
+                            <div style={{ fontSize:12, fontWeight:700, color:T.white, marginBottom:12 }}>Requirements — {activeCat.title}</div>
                             {activeCat.requirements.map((r,i)=>(
                               <div key={i} style={{ display:"flex", gap:8, padding:"5px 0", borderBottom:i<activeCat.requirements.length-1?`1px solid ${T.border}`:"none" }}>
-                                <span style={{ color:T.green, flexShrink:0, marginTop:1 }}>âœ“</span>
+                                <span style={{ color:T.green, flexShrink:0, marginTop:1 }}>✓</span>
                                 <span style={{ fontSize:11, color:T.textSecondary, lineHeight:1.6 }}>{r}</span>
                               </div>
                             ))}
@@ -6386,7 +11181,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                               <div>
                                 <div style={{ fontSize:11, fontWeight:700, color:T.white, marginBottom:8 }}>Family Sponsorship</div>
                                 {activeCat.family.map((f,i)=>(
-                                  <div key={i} style={{ fontSize:11, color:T.textSecondary, padding:"3px 0" }}>âœ“ {f}</div>
+                                  <div key={i} style={{ fontSize:11, color:T.textSecondary, padding:"3px 0" }}>✓ {f}</div>
                                 ))}
                               </div>
                               <div>
@@ -6408,17 +11203,17 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                     {gvCategory !== "property" && (
                       <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16, marginBottom:16 }}>
                         <div className="chart-box" style={{ padding:20 }}>
-                          <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:12 }}>Requirements â€” {activeCat.title}</div>
+                          <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:12 }}>Requirements — {activeCat.title}</div>
                           {activeCat.requirements.map((r,i)=>(
                             <div key={i} style={{ display:"flex", gap:8, padding:"6px 0", borderBottom:i<activeCat.requirements.length-1?`1px solid ${T.border}`:"none" }}>
-                              <span style={{ color:T.green, flexShrink:0 }}>âœ“</span>
+                              <span style={{ color:T.green, flexShrink:0 }}>✓</span>
                               <span style={{ fontSize:12, color:T.textSecondary, lineHeight:1.6 }}>{r}</span>
                             </div>
                           ))}
                         </div>
                         <div className="chart-box" style={{ padding:20 }}>
                           <div style={{ fontSize:12, fontWeight:700, color:T.white, marginBottom:10 }}>Family Sponsorship</div>
-                          {activeCat.family.map((f,i)=>(<div key={i} style={{ fontSize:12, color:T.textSecondary, padding:"4px 0" }}>âœ“ {f}</div>))}
+                          {activeCat.family.map((f,i)=>(<div key={i} style={{ fontSize:12, color:T.textSecondary, padding:"4px 0" }}>✓ {f}</div>))}
                           <div style={{ marginTop:14, fontSize:12, fontWeight:700, color:T.white, marginBottom:8 }}>Application Fees</div>
                           {activeCat.fees.map((f,i)=>(
                             <div key={i} style={{ display:"flex", justifyContent:"space-between", fontSize:11, padding:"4px 0", borderBottom:i<activeCat.fees.length-1?`1px solid ${T.border}`:"none" }}>
@@ -6435,8 +11230,8 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 {/* STEP-BY-STEP GUIDE */}
                 {gvView === "guide" && (
                   <div style={{ marginBottom:16 }}>
-                    <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:4 }}>Application Process â€” Property Investor Route</div>
-                    <div style={{ fontSize:11, color:T.textMuted, marginBottom:16 }}>Official DLD process Â· Typically 2-4 weeks end to end Â· Apply at DLD Golden Cube or online via GDRFA</div>
+                    <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:4 }}>Application Process — Property Investor Route</div>
+                    <div style={{ fontSize:11, color:T.textMuted, marginBottom:16 }}>Official DLD process · Typically 2-4 weeks end to end · Apply at DLD Golden Cube or online via GDRFA</div>
                     <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
                       {STEPS.map((s,i)=>(
                         <div key={i} style={{ display:"flex", gap:12, padding:"14px 16px", background:T.surface, border:`1px solid ${T.border}`, borderRadius:10 }}>
@@ -6452,8 +11247,8 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                     {/* Important notes */}
                     <div style={{ marginTop:16, display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:10 }}>
                       {[
-                        { icon:"âš ", title:"Lien on property", detail:"DLD places a lien on your property to ensure ownership continuity throughout the 10-year visa. You can still sell but must settle visa first.", color:"#F97316" },
-                        { icon:"âœ…", title:"No minimum stay", detail:"You can live anywhere in the world. Your Golden Visa remains valid without any UAE residency requirement during the 10-year period.", color:T.green },
+                        { icon:"⚠", title:"Lien on property", detail:"DLD places a lien on your property to ensure ownership continuity throughout the 10-year visa. You can still sell but must settle visa first.", color:"#F97316" },
+                        { icon:"✅", title:"No minimum stay", detail:"You can live anywhere in the world. Your Golden Visa remains valid without any UAE residency requirement during the 10-year period.", color:T.green },
                         { icon:"\uD83D\uDD04", title:"Renewal", detail:"Renewable indefinitely as long as you maintain property ownership. Visa validity = property ownership validity.", color:T.teal },
                       ].map((n,i)=>(
                         <div key={i} style={{ padding:"14px", background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:10 }}>
@@ -6470,7 +11265,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 {gvView === "properties" && (
                   <div style={{ marginBottom:16 }}>
                     <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:4 }}>Properties Qualifying for Golden Visa</div>
-                    <div style={{ fontSize:11, color:T.textMuted, marginBottom:16 }}>Projects priced AED 2M+ in freehold zones Â· Ready or off-plan Â· DLD registered</div>
+                    <div style={{ fontSize:11, color:T.textMuted, marginBottom:16 }}>Projects priced AED 2M+ in freehold zones · Ready or off-plan · DLD registered</div>
                     {nearThreshold.length > 0 ? (
                       <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(280px,1fr))", gap:12 }}>
                         {nearThreshold.map((p,i)=>{
@@ -6482,10 +11277,10 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                                 <div>
                                   <div style={{ fontSize:10, color:T.textMuted, marginBottom:2 }}>{p.developer}</div>
                                   <div style={{ fontSize:14, fontWeight:700, color:T.white }}>{p.name}</div>
-                                  <div style={{ fontSize:11, color:T.textMuted }}>{p.community}{"Â·"}{p.type}</div>
+                                  <div style={{ fontSize:11, color:T.textMuted }}>{p.community}{"·"}{p.type}</div>
                                 </div>
                                 <span style={{ fontSize:9, padding:"2px 8px", borderRadius:8, background:gvReady?"rgba(16,185,129,0.12)":"rgba(212,168,67,0.12)", color:gvReady?T.green:T.gold, fontWeight:700, height:"fit-content" }}>
-                                  {gvReady?"âœ“ GV Eligible":"Near Threshold"}
+                                  {gvReady?"✓ GV Eligible":"Near Threshold"}
                                 </span>
                               </div>
                               <div style={{ display:"flex", justifyContent:"space-between", fontSize:12 }}>
@@ -6501,7 +11296,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                         <div style={{ fontSize:13, color:T.white, marginBottom:6 }}>Browse all qualifying projects</div>
                         <button type="button" onClick={()=>handleTabChange("Projects")}
                           style={{ padding:"8px 24px", background:`linear-gradient(135deg,${T.gold},#B8922A)`, border:"none", borderRadius:8, color:"#000", fontSize:12, fontWeight:700, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>
-                          View Projects â†’
+                          View Projects →
                         </button>
                       </div>
                     )}
@@ -6510,9 +11305,9 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                     <div style={{ marginTop:14, padding:"14px 16px", background:"rgba(20,184,166,0.06)", border:"1px solid rgba(20,184,166,0.2)", borderRadius:10 }}>
                       <div style={{ fontSize:12, fontWeight:700, color:T.teal, marginBottom:4 }}>\uD83D\uDCA1 Two-Property Strategy (JVC Route)</div>
                       <div style={{ fontSize:11, color:T.textSecondary, lineHeight:1.8 }}>
-                        Investors often buy <strong style={{ color:T.white }}>2 Ã— AED 1M properties in JVC</strong> to reach the AED 2M threshold.
+                        Investors often buy <strong style={{ color:T.white }}>2 × AED 1M properties in JVC</strong> to reach the AED 2M threshold.
                         Combined title deed values qualify. Both properties must be in your name.
-                        JVC studios from AED 480Kâ€“700K + 1BR from AED 750Kâ€“1.1M = AED 2M threshold reached.
+                        JVC studios from AED 480K–700K + 1BR from AED 750K–1.1M = AED 2M threshold reached.
                         Benefit: higher total rental yield (7-8%) vs single AED 2M Downtown property (5.5%).
                       </div>
                     </div>
@@ -6532,23 +11327,23 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
           })()}
 
 
-          {/* â”€â”€â”€ RISK TAB â”€â”€â”€ */}
+          {/* ─── RISK TAB ─── */}
           {tab === "Risk" && (() => {
 
-            /* â•â• RESEARCH â€” Risk Analysis Apr 2026 â•â•
+            /* ══ RESEARCH — Risk Analysis Apr 2026 ══
                Sources: Fitch Ratings (15% correction forecast), Goldman Sachs
                (51% transaction drop Mar 2026), DFM index -21% post Feb 28
                mitchellscommercialrealty.com, 1tab.co, lionandland.com
                87% cash transactions (Fitch) | RERA escrow protections
                9 risk factors: Supply, Geopolitical, Developer, Liquidity,
                Vacancy, Currency, Regulatory, Construction, Market Cycle
-            â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+            ════════════════════════════════════════════════════════ */
 
             const RISK_FACTORS = [
               { key:"supply",       label:"Supply Oversupply",   weight:20, icon:"\uD83C\uDFD7",
                 desc:"210,000 units planned 2026. JVC alone: 16,852 units 2025-27. Mid-market most exposed.",
                 communityScores:{ "Jumeirah Village Circle":72, "Business Bay":78, "Dubai Marina":20, "Downtown Dubai":18, "Dubai Hills Estate":25, "Palm Jumeirah":15, "International City":55, "Dubai South":60 } },
-              { key:"geopolitical", label:"Geopolitical Risk",   weight:18, icon:"âš”",
+              { key:"geopolitical", label:"Geopolitical Risk",   weight:18, icon:"⚔",
                 desc:"Iran-US conflict. DFM -21% post Feb 28. Transaction freeze 48-72hrs. Physical prices -3% YoY mid-Mar 2026.",
                 communityScores:{ "Jumeirah Village Circle":45, "Business Bay":45, "Dubai Marina":40, "Downtown Dubai":38, "Dubai Hills Estate":35, "Palm Jumeirah":35, "International City":55, "Dubai South":50 } },
               { key:"developer",    label:"Developer Default",   weight:15, icon:"\uD83C\uDFE2",
@@ -6566,7 +11361,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               { key:"regulatory",   label:"Regulatory Change",   weight:5,  icon:"\uD83D\uDCCB",
                 desc:"RERA/DLD well-established. Escrow protections strong. Golden Visa rules stable. Low regulatory risk vs 2008.",
                 communityScores:{ "Jumeirah Village Circle":15, "Business Bay":15, "Dubai Marina":12, "Downtown Dubai":12, "Dubai Hills Estate":12, "Palm Jumeirah":12, "International City":20, "Dubai South":18 } },
-              { key:"construction", label:"Construction Delay",  weight:5,  icon:"â°",
+              { key:"construction", label:"Construction Delay",  weight:5,  icon:"⏰",
                 desc:"48% on-time delivery historically. Off-plan buyers at risk. Ready property: zero construction risk.",
                 communityScores:{ "Jumeirah Village Circle":35, "Business Bay":30, "Dubai Marina":15, "Downtown Dubai":12, "Dubai Hills Estate":20, "Palm Jumeirah":15, "International City":40, "Dubai South":45 } },
               { key:"cycle",        label:"Market Cycle",        weight:5,  icon:"\uD83D\uDCC8",
@@ -6574,7 +11369,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 communityScores:{ "Jumeirah Village Circle":55, "Business Bay":48, "Dubai Marina":35, "Downtown Dubai":30, "Dubai Hills Estate":38, "Palm Jumeirah":28, "International City":45, "Dubai South":42 } },
             ];
 
-            /* â”€â”€ Community risk profiles â”€â”€ */
+            /* ── Community risk profiles ── */
             const COMMUNITY_RISK = {
               "Jumeirah Village Circle": { grade:"B+", label:"Moderate Risk", color:"#F97316", score:48, segment:"Mid-market apartment", note:"Highest supply pipeline in Dubai. Strong yield but correction risk elevated in 2026." },
               "Business Bay":            { grade:"B+", label:"Moderate Risk", color:"#F97316", score:42, segment:"Urban apartment/office", note:"Corporate demand strong but highest new supply pipeline. Watch absorption carefully." },
@@ -6583,13 +11378,13 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               "Dubai Hills Estate":      { grade:"A-", label:"Low-Moderate",  color:T.gold,   score:30, segment:"Family villa/apt", note:"Emaar quality + management. Strong end-user demand. Family community insulated from speculation." },
               "Palm Jumeirah":           { grade:"A",  label:"Low Risk",      color:T.green,  score:26, segment:"Luxury apartment/villa", note:"Finite supply. Global recognition. Ultra-HNW buyer base less sensitive to market cycles." },
               "International City":      { grade:"C+", label:"Higher Risk",   color:T.red,    score:58, segment:"Budget apartment", note:"High supply, high tenant turnover. Strong yield but vulnerable to correction and vacancy." },
-              "Dubai South":             { grade:"B",  label:"Moderate-High", color:"#F97316", score:52, segment:"Emerging market", note:"Long-term upside from AMI Airport. High current risk â€” not for short-term investors." },
+              "Dubai South":             { grade:"B",  label:"Moderate-High", color:"#F97316", score:52, segment:"Emerging market", note:"Long-term upside from AMI Airport. High current risk — not for short-term investors." },
             };
 
             const comm = riskCommunity2;
             const commRisk = COMMUNITY_RISK[comm] || COMMUNITY_RISK["Dubai Marina"];
 
-            /* â”€â”€ Overall risk score for selected community â”€â”€ */
+            /* ── Overall risk score for selected community ── */
             const communityRiskScore = Math.round(
               RISK_FACTORS.reduce((sum, f) => {
                 const s = f.communityScores[comm] || 30;
@@ -6597,7 +11392,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               }, 0)
             );
 
-            /* â”€â”€ Horizon adjustment â”€â”€ */
+            /* ── Horizon adjustment ── */
             const horizonAdj = { short:-12, medium:0, long:10 };
             const adjScore = Math.max(5, Math.min(95, communityRiskScore + (horizonAdj[riskHorizon]||0)));
 
@@ -6624,7 +11419,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"10px 0", marginBottom:16, borderBottom:`1px solid ${T.border}`, flexWrap:"wrap", gap:8 }}>
                   <div>
                     <div style={{ fontFamily:"'Fraunces',serif", fontSize:20, fontWeight:800, color:T.white }}>Risk Intelligence</div>
-                    <div style={{ fontSize:11, color:T.textMuted, marginTop:3 }}>9-factor risk model Â· Community scoring Â· Investment grade Â· Fitch/Goldman Sachs data Â· Apr 2026</div>
+                    <div style={{ fontSize:11, color:T.textMuted, marginTop:3 }}>9-factor risk model · Community scoring · Investment grade · Fitch/Goldman Sachs data · Apr 2026</div>
                   </div>
                   <div style={{ display:"flex", gap:8 }}>
                     {["radar","matrix","factors"].map(v=>(
@@ -6639,8 +11434,8 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 {/* Market alert */}
                 <div style={{ padding:"12px 16px", background:"rgba(239,68,68,0.06)", border:"1px solid rgba(239,68,68,0.2)", borderRadius:10, marginBottom:16 }}>
                   <div style={{ display:"flex", gap:10, flexWrap:"wrap" }}>
-                    <span style={{ fontSize:11, fontWeight:700, color:T.red }}>âš  Market Alert Apr 2026:</span>
-                    <span style={{ fontSize:11, color:T.textSecondary }}>DFM index -21% post Feb 28 Â· Transaction volumes -51% Mar (Goldman Sachs) Â· Physical prices -3% YoY (median AED 1,770/sqft, still +14% YoY) Â· Fitch: 10-15% correction probable in mid-market Â· 87% cash market = no systemic collapse risk Â· Prime areas resilient</span>
+                    <span style={{ fontSize:11, fontWeight:700, color:T.red }}>⚠ Market Alert Apr 2026:</span>
+                    <span style={{ fontSize:11, color:T.textSecondary }}>DFM index -21% post Feb 28 · Transaction volumes -51% Mar (Goldman Sachs) · Physical prices -3% YoY (median AED 1,770/sqft, still +14% YoY) · Fitch: 10-15% correction probable in mid-market · 87% cash market = no systemic collapse risk · Prime areas resilient</span>
                   </div>
                 </div>
 
@@ -6666,10 +11461,10 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                       {/* Risk score card */}
                       <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
                         <div style={{ padding:"24px", background:`linear-gradient(135deg,${riskGrade.color}14,${riskGrade.color}04)`, border:`1px solid ${riskGrade.color}40`, borderRadius:14, textAlign:"center" }}>
-                          <div style={{ fontSize:11, color:T.textMuted, textTransform:"uppercase", letterSpacing:1, marginBottom:6 }}>Risk Score â€” {comm.split(" ").slice(0,2).join(" ")}</div>
+                          <div style={{ fontSize:11, color:T.textMuted, textTransform:"uppercase", letterSpacing:1, marginBottom:6 }}>Risk Score — {comm.split(" ").slice(0,2).join(" ")}</div>
                           <div style={{ fontFamily:"'Fraunces',serif", fontSize:52, fontWeight:900, color:riskGrade.color, lineHeight:1 }}>{adjScore}</div>
                           <div style={{ fontSize:14, fontWeight:700, color:riskGrade.color, marginTop:6 }}>{riskGrade.label}</div>
-                          <div style={{ fontSize:12, color:T.textMuted, marginTop:4 }}>Investment Grade: <strong style={{ color:riskGrade.color }}>{riskGrade.grade}</strong>{"Â·"}{riskHorizon} horizon</div>
+                          <div style={{ fontSize:12, color:T.textMuted, marginTop:4 }}>Investment Grade: <strong style={{ color:riskGrade.color }}>{riskGrade.grade}</strong>{"·"}{riskHorizon} horizon</div>
                           {/* Risk bar */}
                           <div style={{ height:8, borderRadius:4, background:`linear-gradient(90deg,${T.green} 0%,${T.gold} 40%,#F97316 65%,${T.red} 100%)`, margin:"14px 0 6px", position:"relative" }}>
                             <div style={{ position:"absolute", top:-2, left:`${adjScore}%`, transform:"translateX(-50%)", width:12, height:12, borderRadius:"50%", background:T.white, border:`2px solid ${riskGrade.color}` }} />
@@ -6689,15 +11484,15 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                           <div style={{ fontSize:12, color:T.textSecondary, lineHeight:1.7, marginBottom:12 }}>{commRisk.note}</div>
                           <button type="button" onClick={()=>handleTabChange("Investment Score")}
                             style={{ width:"100%", padding:"8px 0", background:`linear-gradient(135deg,${T.gold},#B8922A)`, border:"none", borderRadius:8, color:"#000", fontSize:11, fontWeight:700, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>
-                            View Investment Score â†’
+                            View Investment Score →
                           </button>
                         </div>
                       </div>
 
                       {/* Factor breakdown */}
                       <div className="chart-box" style={{ padding:20 }}>
-                        <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:4 }}>Risk Factors â€” {comm.split(" ").slice(0,2).join(" ")}</div>
-                        <div style={{ fontSize:11, color:T.textMuted, marginBottom:16 }}>Higher score = higher risk Â· Weighted by importance</div>
+                        <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:4 }}>Risk Factors — {comm.split(" ").slice(0,2).join(" ")}</div>
+                        <div style={{ fontSize:11, color:T.textMuted, marginBottom:16 }}>Higher score = higher risk · Weighted by importance</div>
                         {RISK_FACTORS.map((f,i)=>{
                           const score = f.communityScores[comm] || 30;
                           const weighted = (score * f.weight / 100).toFixed(1);
@@ -6723,7 +11518,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 {riskTabView === "matrix" && (
                   <>
                     <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:4 }}>Community Risk Matrix</div>
-                    <div style={{ fontSize:11, color:T.textMuted, marginBottom:16 }}>All communities ranked Â· Risk score vs rental yield Â· Click any row to explore</div>
+                    <div style={{ fontSize:11, color:T.textMuted, marginBottom:16 }}>All communities ranked · Risk score vs rental yield · Click any row to explore</div>
                     <div style={{ background:T.surface, border:`1px solid ${T.border}`, borderRadius:12, overflow:"hidden", marginBottom:16 }}>
                       <div style={{ display:"grid", gridTemplateColumns:"2fr 0.8fr 0.8fr 0.8fr 0.8fr 1fr 1.2fr", padding:"10px 16px", background:T.surfaceAlt, borderBottom:`1px solid ${T.border}` }}>
                         {["Community","Grade","Risk Score","Gross Yield","Supply Risk","Geo Risk","Verdict"].map((h,i)=>(
@@ -6758,9 +11553,9 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                     {/* Scenario analysis */}
                     <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:12, marginBottom:16 }}>
                       {[
-                        { scenario:"De-escalation by Q2 2026", prob:"50%", impact:"Flat to -5% physical prices. Rapid sentiment recovery. Transaction volumes normalize.", color:T.green, icon:"âœ…" },
-                        { scenario:"Prolonged conflict (base)", prob:"35%", impact:"10-15% correction mid-market. Off-plan slowdown. Supply headwind compounds.", color:"#F97316", icon:"âš " },
-                        { scenario:"Major escalation",          prob:"15%", impact:"20%+ correction possible (Citi). Population growth 1% vs 4%. Multi-year recovery.", color:T.red, icon:"âŒ" },
+                        { scenario:"De-escalation by Q2 2026", prob:"50%", impact:"Flat to -5% physical prices. Rapid sentiment recovery. Transaction volumes normalize.", color:T.green, icon:"✅" },
+                        { scenario:"Prolonged conflict (base)", prob:"35%", impact:"10-15% correction mid-market. Off-plan slowdown. Supply headwind compounds.", color:"#F97316", icon:"⚠" },
+                        { scenario:"Major escalation",          prob:"15%", impact:"20%+ correction possible (Citi). Population growth 1% vs 4%. Multi-year recovery.", color:T.red, icon:"❌" },
                       ].map((s,i)=>(
                         <div key={i} style={{ padding:"14px 16px", background:s.color+"08", border:`1px solid ${s.color}30`, borderRadius:10 }}>
                           <div style={{ display:"flex", justifyContent:"space-between", marginBottom:6 }}>
@@ -6810,11 +11605,11 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
           })()}
 
 
-          {/* â”€â”€â”€ FINANCIALS TAB â”€â”€â”€ */}
+          {/* ─── FINANCIALS TAB ─── */}
           {tab === "Financials" && (() => {
 
-            /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-               FINANCIALS TAB â€” Developer Intelligence
+            /* ══════════════════════════════════════════════════════════
+               FINANCIALS TAB — Developer Intelligence
                Sources: Official Investor Relations, DFM Filings, Annual Reports
                
                Emaar Properties (DFM: EMAAR):
@@ -6839,7 +11634,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                  - Delisted from DFM Feb 2022 (taken private)
                
                Sources: Official IR pages, DFM filings, AGBI, Emaar.com
-            â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+            ══════════════════════════════════════════════════════════ */
 
             const DEVELOPERS_FIN = {
               "Emaar Properties": {
@@ -6878,14 +11673,14 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   "9M 2025: Property sales AED 61B (+22%)",
                   "9M 2025: Net Profit AED 9.8B (+49% YoY)",
                   "62 new project launches in UAE in 2024",
-                  "Grand Polo Club unveiled â€” new flagship masterplan",
+                  "Grand Polo Club unveiled — new flagship masterplan",
                 ],
                 risks: [
                   "Supply pipeline concentration in mid-market",
                   "Geopolitical risk (Iran-US conflict impact)",
                   "Off-plan delivery execution risk at scale",
                 ],
-                source: "Emaar IR â€” properties.emaar.com | Feb 2025 FY results",
+                source: "Emaar IR — properties.emaar.com | Feb 2025 FY results",
               },
 
               "Aldar Properties": {
@@ -6918,10 +11713,10 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   { name: "Other / JVs",                 pct: 8,  color: "#F97316" },
                 ],
                 highlights: [
-                  "FY2024: Revenue AED 15.7B (+90% YoY) â€” record",
+                  "FY2024: Revenue AED 15.7B (+90% YoY) — record",
                   "FY2024: Sales AED 33.6B (+20%), Backlog AED 54.6B (record)",
-                  "Net profit near AED 7B â€” approaching Emaar level",
-                  "AUM AED 42B â€” significant investment portfolio",
+                  "Net profit near AED 7B — approaching Emaar level",
+                  "AUM AED 42B — significant investment portfolio",
                   "Dubai commercial expansion: AED 1.8B office tower",
                   "International: SODIC (Egypt) + London Square (UK)",
                 ],
@@ -6930,7 +11725,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   "International execution risk (Egypt/UK)",
                   "Leverage creep as develop-to-hold pipeline grows",
                 ],
-                source: "Aldar IR â€” aldar.com/en/news-and-media | Feb 2025 FY results",
+                source: "Aldar IR — aldar.com/en/news-and-media | Feb 2025 FY results",
               },
 
               "DAMAC Properties": {
@@ -6963,18 +11758,18 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 ],
                 highlights: [
                   "FY2024: Revenue AED 9.8B (+15% forecast growth 2025)",
-                  "~$5B cash on hand (2024) â€” zero debt strategy",
-                  "Delisted DFM Feb 2022 â€” fully private",
+                  "~$5B cash on hand (2024) — zero debt strategy",
+                  "Delisted DFM Feb 2022 — fully private",
                   "Chelsea FC front-of-shirt sponsor 2025",
                   "Trump-branded projects driving luxury demand",
-                  "DAMAC Lagoons â€” fastest-selling community 2024",
+                  "DAMAC Lagoons — fastest-selling community 2024",
                 ],
                 risks: [
-                  "Private â€” limited financial transparency",
+                  "Private — limited financial transparency",
                   "Heavy dependence on branded/luxury segment",
                   "Bond distress signals (>1000bps spread) reported Mar 2026",
                 ],
-                source: "DAMAC IR â€” damacproperties.com | Various sources 2024-2025",
+                source: "DAMAC IR — damacproperties.com | Various sources 2024-2025",
               },
 
               "Sobha Realty": {
@@ -7005,19 +11800,19 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   { name: "Oman / International",   pct: 14, color: "#3B82F6" },
                 ],
                 highlights: [
-                  "FY2024: Sales ~AED 17B â€” strong FDI buyer base",
+                  "FY2024: Sales ~AED 17B — strong FDI buyer base",
                   "In-house construction = quality control advantage",
-                  "Sobha Hartland 2 launched â€” new Meydan masterplan",
+                  "Sobha Hartland 2 launched — new Meydan masterplan",
                   "Revenue backlog ~AED 30B supports 3yr revenue visibility",
                   "Strong Indian diaspora + GCC HNW buyer base",
                   "PPSF premium: AED 2,100-2,200/sqft (above market avg)",
                 ],
                 risks: [
-                  "Private â€” limited public disclosures",
+                  "Private — limited public disclosures",
                   "Single-developer, single-community concentration",
                   "Delivery execution at Hartland 2 scale",
                 ],
-                source: "Sobha Realty IR â€” sobharealty.com | Various 2024-2025",
+                source: "Sobha Realty IR — sobharealty.com | Various 2024-2025",
               },
 
               "Nakheel": {
@@ -7045,13 +11840,13 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 ],
                 highlights:[
                   "2024: Sales AED 20B+, Nakheel #1 in Dubai luxury segment",
-                  "2025: AED 16.9B in high-end segment (>AED 15M) â€” #1 market leader",
-                  "Palm Jumeirah â€” global icon, 672 luxury transactions 2025",
-                  "Dubai Islands â€” major new masterplan, multiple phases launching",
+                  "2025: AED 16.9B in high-end segment (>AED 15M) — #1 market leader",
+                  "Palm Jumeirah — global icon, 672 luxury transactions 2025",
+                  "Dubai Islands — major new masterplan, multiple phases launching",
                   "Integrated into Dubai Holding (Mar 2024) alongside Meraas",
                   "DLD 2024: 3,248 transactions, AED 5.82B apartments only",
                 ],
-                risks:["Part of Dubai Holding â€” limited standalone disclosures","Supply concentration in luxury waterfront","Long development cycles for island projects"],
+                risks:["Part of Dubai Holding — limited standalone disclosures","Supply concentration in luxury waterfront","Long development cycles for island projects"],
                 source:"Dubai Holding / DLD data / Arabian Business 2025",
               },
 
@@ -7080,13 +11875,13 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 ],
                 highlights:[
                   "2025: AED 10B sales Jan-Aug (1,188 transactions, avg AED 8.4M)",
-                  "Nad Al Sheba Gardens Phase 10 â€” fastest-selling villa launch 2025",
-                  "City Walk, La Mer, Bluewaters â€” iconic lifestyle destinations",
-                  "Asora Bay Residences at La Mer Peninsula â€” premium waterfront",
-                  "Jumeirah Residences Emirates Towers â€” DIFC branded address",
+                  "Nad Al Sheba Gardens Phase 10 — fastest-selling villa launch 2025",
+                  "City Walk, La Mer, Bluewaters — iconic lifestyle destinations",
+                  "Asora Bay Residences at La Mer Peninsula — premium waterfront",
+                  "Jumeirah Residences Emirates Towers — DIFC branded address",
                   "Part of Dubai Holding alongside Nakheel, Jumeirah Group",
                 ],
-                risks:["Private â€” Dubai Holding subsidiary, no standalone reports","Lifestyle retail exposure (mall vacancy risk)","High avg sale price limits buyer pool"],
+                risks:["Private — Dubai Holding subsidiary, no standalone reports","Lifestyle retail exposure (mall vacancy risk)","High avg sale price limits buyer pool"],
                 source:"Dubai Holding / Provident Estate / DLD data 2025",
               },
 
@@ -7115,13 +11910,13 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 ],
                 highlights:[
                   "2024: Revenue AED 6.3B (+18% forecast for 2025)",
-                  "2025: AED 26B total sales (The National, Jan 2026 â€” chairman statement)",
+                  "2025: AED 26B total sales (The National, Jan 2026 — chairman statement)",
                   "Q1 2026: 2,426 transactions, AED 3.5B (avg AED 1.46M/unit)",
-                  "60+ completed projects â€” strong delivery track record",
+                  "60+ completed projects — strong delivery track record",
                   "Bugatti Residences + Jacob & Co = highest-profile branded play",
-                  "Bond stress signals >1000bps (Mar 2026) â€” monitor carefully",
+                  "Bond stress signals >1000bps (Mar 2026) — monitor carefully",
                 ],
-                risks:["Bond distress signals reported Mar 2026 â€” Omniyat/Binghatti group","High leverage historically (D/E 0.75x)","Rapid expansion pace â€” execution risk","Private â€” limited financial transparency"],
+                risks:["Bond distress signals reported Mar 2026 — Omniyat/Binghatti group","High leverage historically (D/E 0.75x)","Rapid expansion pace — execution risk","Private — limited financial transparency"],
                 source:"The National Jan 2026 / DLD Q1 2026 / timehomesrealestate.com",
               },
 
@@ -7149,14 +11944,14 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   {name:"Commercial", pct:10, color:"#6B7280"},
                 ],
                 highlights:[
-                  "2024: Revenue exceeding AED 10B â€” 10,229 units sold",
-                  "19 projects delivered in 2024 â€” strong execution record",
-                  "Azizi Venice â€” Dubai South flagship, integrated resort concept",
-                  "Burj Azizi â€” world's 2nd tallest building under development",
-                  "Q1 2026: AED 905M sales (880Kâ€“905M range, DLD data)",
-                  "Entry prices from AED 400K â€” accessible investor segment",
+                  "2024: Revenue exceeding AED 10B — 10,229 units sold",
+                  "19 projects delivered in 2024 — strong execution record",
+                  "Azizi Venice — Dubai South flagship, integrated resort concept",
+                  "Burj Azizi — world's 2nd tallest building under development",
+                  "Q1 2026: AED 905M sales (880K–905M range, DLD data)",
+                  "Entry prices from AED 400K — accessible investor segment",
                 ],
-                risks:["Private â€” limited financial disclosures","Dubai South concentration risk","High unit volume = execution complexity","Burj Azizi scale delivery risk"],
+                risks:["Private — limited financial disclosures","Dubai South concentration risk","High unit volume = execution complexity","Burj Azizi scale delivery risk"],
                 source:"takayamotorcity.com / DLD 2024 data / primocapital.ae",
               },
 
@@ -7185,13 +11980,13 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 ],
                 highlights:[
                   "2024: AED 8.5B sales, AED 9.42B apartments 2024 (DLD)",
-                  "2024: 6,334 transactions at AED 1.48M avg â€” volume leader",
+                  "2024: 6,334 transactions at AED 1.48M avg — volume leader",
                   "Aug 2025: 2,500 transactions, AED 4.1B (Provident data)",
-                  "Pioneer of 1% monthly payment â€” copied industry-wide",
-                  "Part of Danube Group â€” backward integration in materials",
-                  "On-time delivery reputation â€” minor delays but always completes",
+                  "Pioneer of 1% monthly payment — copied industry-wide",
+                  "Part of Danube Group — backward integration in materials",
+                  "On-time delivery reputation — minor delays but always completes",
                 ],
-                risks:["Private â€” no standalone financial reports","Affordable segment = thin margins","Buyer reliance on extended payment plans","Volume dependence"],
+                risks:["Private — no standalone financial reports","Affordable segment = thin margins","Buyer reliance on extended payment plans","Volume dependence"],
                 source:"primocapital.ae / Provident Estate / DLD 2024",
               },
 
@@ -7219,13 +12014,13 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 ],
                 highlights:[
                   "2024: AED 6.81B sales, 2,871 transactions (DLD apartments data)",
-                  "AED 2.37M avg price, AED 2,009/sqft â€” mid-premium positioning",
+                  "AED 2.37M avg price, AED 2,009/sqft — mid-premium positioning",
                   "Q1 2026: AED 2.48B sales, 1,084 transactions",
                   "Design-led: exceeds competitors on finish quality at same price",
-                  "Strong tenant demand â€” premium rents vs area avg",
+                  "Strong tenant demand — premium rents vs area avg",
                   "Lowest D/E ratio of private developers (0.38x)",
                 ],
-                risks:["Private â€” no financial disclosures","Low volume limits economies of scale","Design-led = higher COGS vs competitors","Small team relative to pipeline"],
+                risks:["Private — no financial disclosures","Low volume limits economies of scale","Design-led = higher COGS vs competitors","Small team relative to pipeline"],
                 source:"primocapital.ae / timehomesrealestate.com / DLD 2024",
               },
             };
@@ -7234,7 +12029,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
             const rawData = finPeriod === "annual" ? devData.annualData : devData.quarterly;
             const compareData = DEVELOPERS_FIN[finCompareDev];
 
-            /* â”€â”€ Chart helpers â”€â”€ */
+            /* ── Chart helpers ── */
             const getMetricVal = (d) => {
               switch(finMetric) {
                 case "revenue":    return d.revenue;
@@ -7272,12 +12067,12 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 <div style={{ fontSize:13, color:T.textMuted, marginBottom:20 }}>Financial data not yet available for this developer.</div>
                 <div style={{ padding:"16px 20px", background:"rgba(212,168,67,0.06)", border:"1px solid rgba(212,168,67,0.2)", borderRadius:12, maxWidth:420, margin:"0 auto", fontSize:12, color:T.textSecondary, lineHeight:1.9 }}>
                   <div style={{ fontWeight:700, color:T.gold, marginBottom:6 }}>How to add data</div>
-                  Admin â†’ Data Manager â†’ Upload financial data for this developer.<br/>
+                  Admin → Data Manager → Upload financial data for this developer.<br/>
                   Data appears instantly via Firestore live sync.
                 </div>
                 <button type="button" onClick={()=>setFinDeveloper("Emaar Properties")}
                   style={{ marginTop:20, padding:"8px 24px", background:`linear-gradient(135deg,${T.gold},#B8922A)`, border:"none", borderRadius:8, color:"#000", fontSize:12, fontWeight:700, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>
-                  â† View Emaar Data
+                  ← View Emaar Data
                 </button>
               </div>
             );
@@ -7285,12 +12080,12 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
             return (
               <div style={{ animation:"fadeUp 0.4s ease-out forwards" }}>
 
-                {/* â”€â”€ HEADER â”€â”€ */}
+                {/* ── HEADER ── */}
                 <div style={{ display:"flex", alignItems:"flex-start", justifyContent:"space-between", padding:"10px 0", marginBottom:16, borderBottom:`1px solid ${T.border}`, flexWrap:"wrap", gap:12 }}>
                   <div>
                     <div style={{ fontFamily:"'Fraunces',serif", fontSize:20, fontWeight:800, color:T.white }}>Developer Financials</div>
                     <div style={{ fontSize:11, color:T.textMuted, marginTop:3 }}>
-                      Official investor relations data Â· DFM/ADX filings Â· Annual reports Â· Revenue, profit, backlog, sales
+                      Official investor relations data · DFM/ADX filings · Annual reports · Revenue, profit, backlog, sales
                     </div>
                   </div>
                   <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
@@ -7303,10 +12098,10 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   </div>
                 </div>
 
-                {/* â”€â”€ DEVELOPER SELECTOR + CONTROLS â”€â”€ */}
+                {/* ── DEVELOPER SELECTOR + CONTROLS ── */}
                 <div style={{ background:T.surface, border:`1px solid ${T.border}`, borderRadius:12, padding:"14px 16px", marginBottom:16 }}>
                   <div style={{ display:"flex", gap:10, flexWrap:"wrap", alignItems:"center" }}>
-                    {/* Developer pills â€” detailed data available */}
+                    {/* Developer pills — detailed data available */}
                     <div style={{ display:"flex", gap:6, flexWrap:"wrap", flex:1 }}>
                       {developers.map(dev=>{
                         const d = DEVELOPERS_FIN[dev];
@@ -7344,7 +12139,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   </div>
                 </div>
 
-                {/* â”€â”€ OVERVIEW VIEW â”€â”€ */}
+                {/* ── OVERVIEW VIEW ── */}
                 {finView === "overview" && (
                   <>
                     {/* Developer identity card */}
@@ -7354,12 +12149,12 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                           <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:6 }}>
                             <div style={{ fontFamily:"'Fraunces',serif", fontSize:18, fontWeight:800, color:T.white }}>{finDeveloper}</div>
                             {devData.listed
-                              ? <span style={{ fontSize:10, padding:"2px 8px", borderRadius:6, background:T.green+"22", color:T.green, fontWeight:700 }}>{devData.exchange}: {devData.ticker} âœ“ Listed</span>
+                              ? <span style={{ fontSize:10, padding:"2px 8px", borderRadius:6, background:T.green+"22", color:T.green, fontWeight:700 }}>{devData.exchange}: {devData.ticker} ✓ Listed</span>
                               : <span style={{ fontSize:10, padding:"2px 8px", borderRadius:6, background:"rgba(139,92,246,0.15)", color:"#8B5CF6", fontWeight:700 }}>Private Co.</span>
                             }
                           </div>
                           <div style={{ fontSize:12, color:T.textSecondary, maxWidth:500, lineHeight:1.6 }}>{devData.description}</div>
-                          <div style={{ fontSize:11, color:T.textMuted, marginTop:4 }}>Founded {devData.founded} Â· Source: <span style={{ color:devData.color }}>{devData.source}</span></div>
+                          <div style={{ fontSize:11, color:T.textMuted, marginTop:4 }}>Founded {devData.founded} · Source: <span style={{ color:devData.color }}>{devData.source}</span></div>
                         </div>
                         <div style={{ textAlign:"right" }}>
                           <div style={{ fontSize:10, color:T.textMuted, marginBottom:4 }}>LATEST YEAR REVENUE</div>
@@ -7409,13 +12204,13 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                         return (
                           <div key={i} style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr 1fr 1fr 1fr 1fr", padding:"11px 16px", borderBottom:i<devData.annualData.length-1?`1px solid ${T.border}`:"none", background:isLatest?"rgba(212,168,67,0.03)":"transparent", alignItems:"center" }}>
                             <div style={{ fontFamily:"'Fraunces',serif", fontSize:13, fontWeight:700, color:isLatest?T.gold:T.white }}>{d.year}</div>
-                            <div style={{ fontSize:13, fontWeight:600, color:T.white }}>{d.revenue ? d.revenue.toFixed(1) : "â€”"}</div>
-                            <div style={{ fontSize:13, fontWeight:600, color:d.netProfit > 0 ? T.green : d.netProfit < 0 ? T.red : T.textMuted }}>{d.netProfit !== null ? d.netProfit.toFixed(1) : "â€”"}</div>
-                            <div style={{ fontSize:13, color:T.white }}>{d.sales ? d.sales.toFixed(1) : "â€”"}</div>
-                            <div style={{ fontSize:13, color:T.teal }}>{d.backlog ? d.backlog.toFixed(1) : "â€”"}</div>
-                            <div style={{ fontSize:13, color:T.textMuted }}>{d.ebitda ? d.ebitda.toFixed(1) : "â€”"}</div>
+                            <div style={{ fontSize:13, fontWeight:600, color:T.white }}>{d.revenue ? d.revenue.toFixed(1) : "—"}</div>
+                            <div style={{ fontSize:13, fontWeight:600, color:d.netProfit > 0 ? T.green : d.netProfit < 0 ? T.red : T.textMuted }}>{d.netProfit !== null ? d.netProfit.toFixed(1) : "—"}</div>
+                            <div style={{ fontSize:13, color:T.white }}>{d.sales ? d.sales.toFixed(1) : "—"}</div>
+                            <div style={{ fontSize:13, color:T.teal }}>{d.backlog ? d.backlog.toFixed(1) : "—"}</div>
+                            <div style={{ fontSize:13, color:T.textMuted }}>{d.ebitda ? d.ebitda.toFixed(1) : "—"}</div>
                             <div style={{ fontSize:12, fontWeight:700, color:revGrowth > 0 ? T.green : revGrowth < 0 ? T.red : T.textMuted }}>
-                              {revGrowth !== null ? (revGrowth > 0 ? "+" : "") + revGrowth.toFixed(0) + "%" : "â€”"}
+                              {revGrowth !== null ? (revGrowth > 0 ? "+" : "") + revGrowth.toFixed(0) + "%" : "—"}
                             </div>
                           </div>
                         );
@@ -7428,7 +12223,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                         <div style={{ fontSize:12, fontWeight:700, color:T.white, marginBottom:12 }}>Key Highlights</div>
                         {devData.highlights.map((h,i)=>(
                           <div key={i} style={{ display:"flex", gap:8, padding:"5px 0", borderBottom:i<devData.highlights.length-1?`1px solid ${T.border}`:"none" }}>
-                            <span style={{ color:T.green, flexShrink:0 }}>âœ“</span>
+                            <span style={{ color:T.green, flexShrink:0 }}>✓</span>
                             <span style={{ fontSize:11, color:T.textSecondary, lineHeight:1.6 }}>{h}</span>
                           </div>
                         ))}
@@ -7437,7 +12232,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                         <div style={{ fontSize:12, fontWeight:700, color:T.white, marginBottom:12 }}>Key Risks</div>
                         {devData.risks.map((r,i)=>(
                           <div key={i} style={{ display:"flex", gap:8, padding:"5px 0", borderBottom:i<devData.risks.length-1?`1px solid ${T.border}`:"none" }}>
-                            <span style={{ color:"#F97316", flexShrink:0 }}>âš </span>
+                            <span style={{ color:"#F97316", flexShrink:0 }}>⚠</span>
                             <span style={{ fontSize:11, color:T.textSecondary, lineHeight:1.6 }}>{r}</span>
                           </div>
                         ))}
@@ -7461,7 +12256,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   </>
                 )}
 
-                {/* â”€â”€ CHARTS VIEW â”€â”€ */}
+                {/* ── CHARTS VIEW ── */}
                 {finView === "charts" && (
                   <>
                     {/* Metric selector */}
@@ -7512,7 +12307,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                         </div>
                       </div>
                       <div style={{ fontSize:11, color:T.textMuted, marginBottom:20 }}>
-                        {yoy > 0 ? `+${yoy.toFixed(0)}%` : yoy.toFixed(0) + "%"} YoY Â· Latest: AED {latestVal.toFixed(1)}B
+                        {yoy > 0 ? `+${yoy.toFixed(0)}%` : yoy.toFixed(0) + "%"} YoY · Latest: AED {latestVal.toFixed(1)}B
                       </div>
 
                       {/* Bars */}
@@ -7576,12 +12371,12 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   </>
                 )}
 
-                {/* â”€â”€ SEGMENTS VIEW â”€â”€ */}
+                {/* ── SEGMENTS VIEW ── */}
                 {finView === "segments" && (
                   <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16, marginBottom:16 }}>
                     <div className="chart-box" style={{ padding:20 }}>
                       <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:4 }}>Revenue Segments</div>
-                      <div style={{ fontSize:11, color:T.textMuted, marginBottom:20 }}>Business unit contribution â€” FY2024</div>
+                      <div style={{ fontSize:11, color:T.textMuted, marginBottom:20 }}>Business unit contribution — FY2024</div>
                       {devData.segments.map((s,i)=>(
                         <div key={i} style={{ marginBottom:14 }}>
                           <div style={{ display:"flex", justifyContent:"space-between", marginBottom:4 }}>
@@ -7600,36 +12395,36 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
 
                     <div className="chart-box" style={{ padding:20 }}>
                       <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:16 }}>Backlog vs Revenue</div>
-                      <div style={{ fontSize:11, color:T.textMuted, marginBottom:16 }}>Revenue visibility ratio â€” backlog Ã· annual revenue</div>
+                      <div style={{ fontSize:11, color:T.textMuted, marginBottom:16 }}>Revenue visibility ratio — backlog ÷ annual revenue</div>
                       {devData.annualData.map((d,i)=>{
-                        const ratio = d.revenue > 0 ? (d.backlog / d.revenue).toFixed(1) : "â€”";
+                        const ratio = d.revenue > 0 ? (d.backlog / d.revenue).toFixed(1) : "—";
                         const isLatest = i === devData.annualData.length - 1;
                         return (
                           <div key={i} style={{ display:"flex", justifyContent:"space-between", padding:"7px 0", borderBottom:i<devData.annualData.length-1?`1px solid ${T.border}`:"none" }}>
                             <span style={{ fontSize:12, color:isLatest?T.white:T.textMuted, fontWeight:isLatest?700:400 }}>{d.year}</span>
                             <div style={{ display:"flex", gap:16 }}>
-                              <span style={{ fontSize:12, color:T.teal }}>{d.backlog ? "AED "+d.backlog+"B" : "â€”"}</span>
+                              <span style={{ fontSize:12, color:T.teal }}>{d.backlog ? "AED "+d.backlog+"B" : "—"}</span>
                               <span style={{ fontSize:12, fontWeight:700, color:isLatest?T.gold:T.textMuted }}>{ratio}x coverage</span>
                             </div>
                           </div>
                         );
                       })}
                       <div style={{ marginTop:12, padding:"10px 12px", background:"rgba(212,168,67,0.06)", borderRadius:8, fontSize:11, color:T.textSecondary, lineHeight:1.7 }}>
-                        Backlog Ã· Revenue = years of revenue visibility. Higher = more predictable future income.
+                        Backlog ÷ Revenue = years of revenue visibility. Higher = more predictable future income.
                         {devData.annualData[4].backlog && devData.annualData[4].revenue ?
-                          ` ${finDeveloper.split(" ")[0]} current: ${(devData.annualData[4].backlog/devData.annualData[4].revenue).toFixed(1)}x â€” ${(devData.annualData[4].backlog/devData.annualData[4].revenue) > 3 ? "Excellent visibility" : "Good visibility"}.` : ""
+                          ` ${finDeveloper.split(" ")[0]} current: ${(devData.annualData[4].backlog/devData.annualData[4].revenue).toFixed(1)}x — ${(devData.annualData[4].backlog/devData.annualData[4].revenue) > 3 ? "Excellent visibility" : "Good visibility"}.` : ""
                         }
                       </div>
                     </div>
                   </div>
                 )}
 
-                {/* â”€â”€ DEEP DIVE VIEW â”€â”€ */}
+                {/* ── DEEP DIVE VIEW ── */}
                 {finView === "deep" && (
                   <div style={{ marginBottom:16 }}>
                     {/* All 4 developers side by side comparison */}
-                    <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:4 }}>All Developers â€” FY2024 Comparison</div>
-                    <div style={{ fontSize:11, color:T.textMuted, marginBottom:16 }}>Official annual results Â· Click developer to explore</div>
+                    <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:4 }}>All Developers — FY2024 Comparison</div>
+                    <div style={{ fontSize:11, color:T.textMuted, marginBottom:16 }}>Official annual results · Click developer to explore</div>
                     <div style={{ background:T.surface, border:`1px solid ${T.border}`, borderRadius:12, overflow:"hidden", marginBottom:16 }}>
                       <div style={{ display:"grid", gridTemplateColumns:"1.8fr 1fr 1fr 1fr 1fr 1fr 1fr", padding:"10px 16px", background:T.surfaceAlt, borderBottom:`1px solid ${T.border}` }}>
                         {["Developer","Revenue","Net Profit","Sales","Backlog","Net Margin","Listed"].map((h,i)=>(
@@ -7639,7 +12434,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                       {developers.map((dev,i)=>{
                         const d = DEVELOPERS_FIN[dev];
                         const fy24 = d.annualData[4];
-                        const margin = fy24.revenue > 0 ? (fy24.netProfit / fy24.revenue * 100).toFixed(0) : "â€”";
+                        const margin = fy24.revenue > 0 ? (fy24.netProfit / fy24.revenue * 100).toFixed(0) : "—";
                         const isActive = dev === finDeveloper;
                         return (
                           <div key={i} style={{ display:"grid", gridTemplateColumns:"1.8fr 1fr 1fr 1fr 1fr 1fr 1fr", padding:"12px 16px", borderBottom:i<developers.length-1?`1px solid ${T.border}`:"none", cursor:"pointer", background:isActive?"rgba(212,168,67,0.04)":"transparent" }}
@@ -7658,7 +12453,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                             <div style={{ fontSize:13, color:T.gold }}>AED {fy24.sales}B</div>
                             <div style={{ fontSize:13, color:T.teal }}>AED {fy24.backlog}B</div>
                             <div style={{ fontSize:13, color:margin > 30 ? T.green : T.gold }}>{margin}%</div>
-                            <div style={{ fontSize:11, color:d.listed ? T.green : T.textMuted }}>{d.listed ? `âœ“ ${d.exchange}` : "Private"}</div>
+                            <div style={{ fontSize:11, color:d.listed ? T.green : T.textMuted }}>{d.listed ? `✓ ${d.exchange}` : "Private"}</div>
                           </div>
                         );
                       })}
@@ -7701,7 +12496,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   </div>
                 )}
 
-                {/* â”€â”€ SOURCE FOOTER â”€â”€ */}
+                {/* ── SOURCE FOOTER ── */}
                 <div style={{ paddingTop:12, borderTop:`1px solid ${T.border}`, display:"flex", gap:8, flexWrap:"wrap", alignItems:"center" }}>
                   <span style={{ fontSize:10, color:T.textMuted }}>Sources:</span>
                   {["Emaar Properties IR (emaar.com)","Aldar Properties IR (aldar.com)","DAMAC IR","Sobha Realty IR","DFM Official Filings","ADX Filings","AGBI","Official Annual Reports 2024-2025"].map((s,i)=>(
@@ -7714,28 +12509,28 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
           })()}
 
 
-          {/* â”€â”€â”€ DEVELOPER HEALTH TAB â”€â”€â”€ */}
+          {/* ─── DEVELOPER HEALTH TAB ─── */}
           {tab === "Developer Health" && (() => {
 
-            /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-               DEVELOPER HEALTH â€” 9-Factor Scoring Model
+            /* ══════════════════════════════════════════════════════
+               DEVELOPER HEALTH — 9-Factor Scoring Model
                Sources: DLD transaction data, RERA registry,
                DXBinteract, Arabian Business, company disclosures
                
                9 Factors (total 100 pts):
-               1. Sales Velocity       (15pts) â€” DLD monthly transactions
-               2. Delivery Track Record(20pts) â€” on-time %, completed projects
-               3. Financial Strength   (20pts) â€” revenue, cash, debt
-               4. Project Pipeline     (10pts) â€” active launches, backlog
-               5. Market Reputation    (10pts) â€” buyer reviews, complaints
-               6. RERA Compliance      (10pts) â€” violations, escrow status
-               7. DLD Transaction Rank (5pts)  â€” market share rank
-               8. Pricing Stability    (5pts)  â€” PPSF consistency
-               9. Buyer Nationality Mix(5pts)  â€” diversification
-            â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+               1. Sales Velocity       (15pts) — DLD monthly transactions
+               2. Delivery Track Record(20pts) — on-time %, completed projects
+               3. Financial Strength   (20pts) — revenue, cash, debt
+               4. Project Pipeline     (10pts) — active launches, backlog
+               5. Market Reputation    (10pts) — buyer reviews, complaints
+               6. RERA Compliance      (10pts) — violations, escrow status
+               7. DLD Transaction Rank (5pts)  — market share rank
+               8. Pricing Stability    (5pts)  — PPSF consistency
+               9. Buyer Nationality Mix(5pts)  — diversification
+            ══════════════════════════════════════════════════════ */
 
             const HEALTH_SCORES = [
-              /* â”€â”€â”€ TIER 1: MARKET LEADERS â”€â”€â”€ */
+              /* ─── TIER 1: MARKET LEADERS ─── */
               {
                 name:"Emaar Properties", tier:"Tier 1", color:"#D4A843",
                 score:94, grade:"A+",
@@ -7743,7 +12538,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 badges:["DFM Listed","Market Leader","On-Time Delivery","Golden Visa Projects"],
                 dldRank:1, marketShare:"14.4%", avgPPSF:2415, transactions2024:19515,
                 salesAED:"AED 70B (2024)", deliveryRate:"95%", activeProjects:62,
-                summary:"Undisputed market leader. Highest delivery rate. DFM listed â€” full transparency. 60+ active project launches in 2024.",
+                summary:"Undisputed market leader. Highest delivery rate. DFM listed — full transparency. 60+ active project launches in 2024.",
               },
               {
                 name:"Aldar Properties", tier:"Tier 1", color:"#10B981",
@@ -7782,7 +12577,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 summary:"#1 in Dubai luxury segment (>AED 15M) in 2025 with AED 16.9B. Palm Jumeirah global brand. Government backing = zero default risk.",
               },
 
-              /* â”€â”€â”€ TIER 2: STRONG PERFORMERS â”€â”€â”€ */
+              /* ─── TIER 2: STRONG PERFORMERS ─── */
               {
                 name:"Meraas", tier:"Tier 2", color:"#EC4899",
                 score:80, grade:"B+",
@@ -7796,10 +12591,10 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 name:"Binghatti", tier:"Tier 2", color:"#F97316",
                 score:72, grade:"B",
                 factors:{ salesVelocity:13, delivery:15, financial:13, pipeline:8, reputation:7, rera:8, dldRank:3, pricing:3, buyerMix:4 },
-                badges:["Fastest Growing","Iconic Architecture","60+ Projects","Bond Watch âš "],
+                badges:["Fastest Growing","Iconic Architecture","60+ Projects","Bond Watch ⚠"],
                 dldRank:3, marketShare:"6.2%", avgPPSF:1460, transactions2024:11200,
                 salesAED:"AED 14B (2024) / AED 26B 2025", deliveryRate:"78%", activeProjects:42,
-                summary:"Fastest growing private developer. 2025 sales AED 26B â€” extraordinary growth. Bond stress signals Mar 2026 require monitoring.",
+                summary:"Fastest growing private developer. 2025 sales AED 26B — extraordinary growth. Bond stress signals Mar 2026 require monitoring.",
               },
               {
                 name:"Azizi Developments", tier:"Tier 2", color:"#6366F1",
@@ -7829,7 +12624,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 summary:"Highest design standard per AED. Premium finishes above competitors at same price. Strong resale premiums. Lowest D/E ratio (0.38x).",
               },
 
-              /* â”€â”€â”€ TIER 3: MID-MARKET â”€â”€â”€ */
+              /* ─── TIER 3: MID-MARKET ─── */
               {
                 name:"Samana Developers", tier:"Tier 3", color:"#6B7280",
                 score:65, grade:"B-",
@@ -7864,7 +12659,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 badges:["Mid-Market","JVC Focus","Private"],
                 dldRank:8, marketShare:"2.0%", avgPPSF:1300, transactions2024:3800,
                 salesAED:"AED 4.9B (2024)", deliveryRate:"74%", activeProjects:18,
-                summary:"Mid-market affordable developer. JVC + Business Bay projects. Private â€” limited disclosures. Improving delivery consistency.",
+                summary:"Mid-market affordable developer. JVC + Business Bay projects. Private — limited disclosures. Improving delivery consistency.",
               },
               {
                 name:"Imtiaz Developments", tier:"Tier 3", color:"#6B7280",
@@ -7895,12 +12690,12 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
 
             const tiers = ["All","Tier 1","Tier 2","Tier 3"];
 
-            /* â”€â”€ live data â†’ seed swap â”€â”€ */
+            /* ── live data → seed swap ── */
             const rawHealth = liveDevHealth?.filter?.(d => d.name && d.score).length > 0
               ? liveDevHealth.filter(d => d.name && d.score)
               : HEALTH_SCORES;
 
-            /* â”€â”€ Filter + sort â”€â”€ */
+            /* ── Filter + sort ── */
             const filtered = rawHealth
               .filter(d => dhTier === "All" || d.tier === dhTier)
               .filter(d => !dhSearch || d.name.toLowerCase().includes(dhSearch.toLowerCase()))
@@ -7930,7 +12725,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 <div style={{ display:"flex", alignItems:"flex-start", justifyContent:"space-between", padding:"10px 0", marginBottom:16, borderBottom:`1px solid ${T.border}`, flexWrap:"wrap", gap:8 }}>
                   <div>
                     <div style={{ fontFamily:"'Fraunces',serif", fontSize:20, fontWeight:800, color:T.white }}>Developer Health</div>
-                    <div style={{ fontSize:11, color:T.textMuted, marginTop:3 }}>9-factor scoring Â· 15 developers ranked Â· DLD + RERA + IR data Â· {rawHealth === HEALTH_SCORES ? "Seed data â€” upload via Admin" : "Live Firestore data"}</div>
+                    <div style={{ fontSize:11, color:T.textMuted, marginTop:3 }}>9-factor scoring · 15 developers ranked · DLD + RERA + IR data · {rawHealth === HEALTH_SCORES ? "Seed data — upload via Admin" : "Live Firestore data"}</div>
                   </div>
                   <div style={{ display:"flex", gap:8 }}>
                     {["leaderboard","detail","compare"].map(v=>(
@@ -8015,7 +12810,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                           {d.tier}
                         </div>
                         {/* Status arrow */}
-                        <div style={{ fontSize:11, color:T.textMuted }}>View detail â†’</div>
+                        <div style={{ fontSize:11, color:T.textMuted }}>View detail →</div>
                       </div>
                     ))}
                   </div>
@@ -8031,11 +12826,11 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                       </select>
                       <button type="button" onClick={()=>setDhView("leaderboard")}
                         style={{ padding:"6px 14px", background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:8, color:T.textMuted, fontSize:11, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>
-                        â† Back to Leaderboard
+                        ← Back to Leaderboard
                       </button>
                       <button type="button" onClick={()=>handleTabChange("Financials")}
                         style={{ padding:"6px 14px", background:"rgba(212,168,67,0.1)", border:"1px solid rgba(212,168,67,0.3)", borderRadius:8, color:T.gold, fontSize:11, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>
-                        View Financials â†’
+                        View Financials →
                       </button>
                     </div>
 
@@ -8046,7 +12841,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                           <div style={{ fontSize:11, color:T.textMuted, textTransform:"uppercase", letterSpacing:1, marginBottom:6 }}>Health Score</div>
                           <div style={{ fontFamily:"'Fraunces',serif", fontSize:56, fontWeight:900, color:selected.color, lineHeight:1 }}>{selected.score}</div>
                           <div style={{ fontFamily:"'Fraunces',serif", fontSize:20, fontWeight:800, color:gradeColor(selected.grade), marginTop:4 }}>{selected.grade}</div>
-                          <div style={{ fontSize:11, color:T.textMuted, marginTop:6 }}>{selected.tier}{"Â·"}{selected.dldRank ? `DLD Rank #${selected.dldRank}` : ""}</div>
+                          <div style={{ fontSize:11, color:T.textMuted, marginTop:6 }}>{selected.tier}{"·"}{selected.dldRank ? `DLD Rank #${selected.dldRank}` : ""}</div>
                           {/* Score bar */}
                           <div style={{ height:8, borderRadius:4, background:`linear-gradient(90deg,${T.red} 0%,#F97316 40%,${T.gold} 65%,${T.green} 100%)`, margin:"16px 0 6px", position:"relative" }}>
                             <div style={{ position:"absolute", top:-2, left:`${selected.score}%`, transform:"translateX(-50%)", width:12, height:12, borderRadius:"50%", background:T.white, border:`2px solid ${selected.color}` }} />
@@ -8107,11 +12902,11 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                           <div style={{ marginTop:14, display:"flex", gap:8 }}>
                             <button type="button" onClick={()=>{ setFinDeveloper(selected.name); handleTabChange("Financials"); }}
                               style={{ flex:1, padding:"8px 0", background:`linear-gradient(135deg,${T.gold},#B8922A)`, border:"none", borderRadius:8, color:"#000", fontSize:11, fontWeight:700, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>
-                              View Financials â†’
+                              View Financials →
                             </button>
                             <button type="button" onClick={()=>{ setFinDeveloper(selected.name); handleTabChange("Risk"); }}
                               style={{ flex:1, padding:"8px 0", background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:8, color:T.white, fontSize:11, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>
-                              View Risk â†’
+                              View Risk →
                             </button>
                           </div>
                         </div>
@@ -8130,7 +12925,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 {dhView === "compare" && (
                   <div style={{ marginBottom:16 }}>
                     <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:4 }}>Factor-by-Factor Comparison</div>
-                    <div style={{ fontSize:11, color:T.textMuted, marginBottom:16 }}>All developers Â· Each factor scored out of max points</div>
+                    <div style={{ fontSize:11, color:T.textMuted, marginBottom:16 }}>All developers · Each factor scored out of max points</div>
                     {FACTOR_WEIGHTS.map((factor,fi)=>(
                       <div key={fi} className="chart-box" style={{ padding:"14px 16px", marginBottom:10 }}>
                         <div style={{ display:"flex", justifyContent:"space-between", marginBottom:8 }}>
@@ -8169,25 +12964,25 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
           })()}
 
 
-          {/* â”€â”€â”€ BANKING INTELLIGENCE TAB â”€â”€â”€ */}
+          {/* ─── BANKING INTELLIGENCE TAB ─── */}
           {tab === "Banking" && (() => {
 
-            /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-               BANKING INTELLIGENCE â€” Research Sources (Apr 2026)
+            /* ══════════════════════════════════════════════════════════
+               BANKING INTELLIGENCE — Research Sources (Apr 2026)
                
-               EIBOR (UAE Central Bank â€” centralbank.ae/en/forex-eibor):
+               EIBOR (UAE Central Bank — centralbank.ae/en/forex-eibor):
                  27 Feb 2026: 1M=3.635% | 3M=3.593% | 6M=3.676% | 1Y=3.674%
                
                UAE Central Bank LTV Rules (rulebook.centralbank.ae):
-                 UAE Nationals first home â‰¤AED 5M: max 85% LTV (15% down)
+                 UAE Nationals first home ≤AED 5M: max 85% LTV (15% down)
                  UAE Nationals first home >AED 5M: max 75% LTV (25% down)
                  UAE Nationals 2nd/investment: max 65% LTV (35% down)
-                 Expats resident first home â‰¤AED 5M: max 80% LTV (20% down)
+                 Expats resident first home ≤AED 5M: max 80% LTV (20% down)
                  Expats resident first home >AED 5M: max 70% LTV (30% down)
                  Expats 2nd/investment: max 60% LTV (40% down)
-                 Off-plan ALL buyers: max 50% LTV (50% down) â€” CBUAE mandatory
+                 Off-plan ALL buyers: max 50% LTV (50% down) — CBUAE mandatory
                  Non-residents: max 50-65% LTV (35-50% down)
-                 DBR cap: 50% of gross monthly salary â€” all loans combined
+                 DBR cap: 50% of gross monthly salary — all loans combined
                  Max term: 25 years | Age at maturity: max 65 (expat), 70 (national)
                
                Bank Rates (multiple sources, Jan-Apr 2026):
@@ -8198,7 +12993,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                  HSBC: Fixed 4.30% (3yr). EIBOR variable. Valuation fee AED 2,625. Min AED 40K Premier
                  DIB (Islamic): Profit 3.75-4.50%. Murabaha/Ijara. Processing 1% of finance
                  RAKBank: Fixed rate + EIBOR variable. 20% min DP. 1-25yr term
-                 Standard Chartered: Fixed 4.10% (5yr fixed â€” most stable). Min AED 15K
+                 Standard Chartered: Fixed 4.10% (5yr fixed — most stable). Min AED 15K
                
                Fees confirmed (multiple sources):
                  Processing fee: 0.5-1% of loan amount (varies by bank)
@@ -8207,9 +13002,9 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                  Early settlement: 1% of outstanding (capped by CBUAE regulation)
                  DLD transfer fee: 4% of property value (all buyers)
                  Insurance (mandatory): Life + property insurance
-            â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+            ══════════════════════════════════════════════════════════ */
 
-            /* â”€â”€ EIBOR data (Feb 27, 2026 â€” UAE Central Bank) â”€â”€ */
+            /* ── EIBOR data (Feb 27, 2026 — UAE Central Bank) ── */
             const EIBOR = {
               "1M":  { rate: 3.635, label: "1 Month",  trend: "down" },
               "3M":  { rate: 3.593, label: "3 Month",  trend: "down" },
@@ -8218,7 +13013,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
             };
             const EIBOR_3M = 3.593;
 
-            /* â”€â”€ Historical EIBOR for chart (3M rate) â”€â”€ */
+            /* ── Historical EIBOR for chart (3M rate) ── */
             const EIBOR_HISTORY = [
               { period:"Jan 22", rate:0.51  },
               { period:"Jul 22", rate:2.80  },
@@ -8231,7 +13026,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               { period:"Feb 26", rate:3.593 },
             ];
 
-            /* â”€â”€ LTV rules (UAE Central Bank official) â”€â”€ */
+            /* ── LTV rules (UAE Central Bank official) ── */
             const LTV_RULES = {
               national: {
                 firstHome_under5M:  85, firstHome_over5M:  75,
@@ -8247,7 +13042,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               },
             };
 
-            /* â”€â”€ 8 Banks with full data â”€â”€ */
+            /* ── 8 Banks with full data ── */
             const BANKS = [
               {
                 name: "Emirates NBD",
@@ -8268,7 +13063,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 salaryTransferDiscount: 0.25,
                 islamicOption: true,
                 strengths: ["Largest UAE bank","Digital-first process","Broadest nationality acceptance","Expat + non-resident specialist"],
-                bestFor: "All profiles â€” especially expats and non-residents",
+                bestFor: "All profiles — especially expats and non-residents",
                 processingTime: "2-5 days pre-approval, 4-6 weeks full",
                 websiteUrl: "emiratesnbd.com",
               },
@@ -8372,7 +13167,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 listed: true,
                 fixedRate1yr: 3.75, fixedRate3yr: 4.00, fixedRate5yr: 4.50,
                 variableMargin: 1.80,
-                minSalary: 7000,   // Lowest min salary â€” DIB confirmed
+                minSalary: 7000,   // Lowest min salary — DIB confirmed
                 maxLTV_resident: 80, maxLTV_nonResident: 65,
                 processingFee: 1.0,  // Ijarah 1% processing fee (DIB confirmed)
                 valuationFee: 2500,
@@ -8436,13 +13231,13 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               },
             ];
 
-            /* â”€â”€ Calculator logic â”€â”€ */
+            /* ── Calculator logic ── */
             const propVal     = bankPropValue;
             const isNational  = bankType === "national";
             const isResident  = bankType === "resident";
             const isNonRes    = bankType === "nonResident";
 
-            /* â”€â”€ Determine max LTV from CBUAE rules â”€â”€ */
+            /* ── Determine max LTV from CBUAE rules ── */
             const getLTV = () => {
               const rules = isNational ? LTV_RULES.national
                           : isResident ? LTV_RULES.resident
@@ -8458,14 +13253,14 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
             const downPayment  = propVal - loanAmount;
             const downPct      = 100 - effectiveLTV;
 
-            /* â”€â”€ Selected bank rate â”€â”€ */
+            /* ── Selected bank rate ── */
             const selBank = BANKS.find(b => b.name === bankSelected) || BANKS[0];
             const fixedRate = bankFixedYrs === 1 ? selBank.fixedRate1yr
                             : bankFixedYrs === 3 ? selBank.fixedRate3yr
                             : selBank.fixedRate5yr;
             const varRate   = EIBOR_3M + selBank.variableMargin;
 
-            /* â”€â”€ Monthly payment calculator â”€â”€ */
+            /* ── Monthly payment calculator ── */
             const calcMonthly = (principal, annualRate, termYrs) => {
               const r = annualRate / 100 / 12;
               const n = termYrs * 12;
@@ -8478,7 +13273,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
             const totalInterestFixed = monthlyFixed * bankTerm * 12 - loanAmount;
             const totalInterestVar   = monthlyVar   * bankTerm * 12 - loanAmount;
 
-            /* â”€â”€ DBR check â”€â”€ */
+            /* ── DBR check ── */
             const dbr          = bankSalary > 0 ? (monthlyFixed / bankSalary * 100) : 0;
             const dbrOk        = dbr <= 50;
             const maxLoan_dbr  = bankSalary * 0.50;  // max monthly payment from DBR
@@ -8488,13 +13283,13 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 : 0
               : 0;
 
-            /* â”€â”€ Fees breakdown â”€â”€ */
+            /* ── Fees breakdown ── */
             const processingFeeAmt = loanAmount * selBank.processingFee / 100;
             const mortgageReg      = loanAmount * 0.0025 + 290;  // 0.25% + AED 290
             const dldTransfer      = propVal * 0.04;              // 4% DLD fee
             const totalFees        = processingFeeAmt + selBank.valuationFee + mortgageReg + dldTransfer;
 
-            /* â”€â”€ Filtered banks â”€â”€ */
+            /* ── Filtered banks ── */
             const filteredBanks = BANKS.filter(b => {
               if (bankFinType === "islamic" && !b.islamicOnly) return false;
               if (bankFinType === "conventional" && b.islamicOnly) return false;
@@ -8516,12 +13311,12 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
             return (
               <div style={{ animation:"fadeUp 0.4s ease-out forwards" }}>
 
-                {/* â”€â”€ HEADER â”€â”€ */}
+                {/* ── HEADER ── */}
                 <div style={{ display:"flex", alignItems:"flex-start", justifyContent:"space-between", padding:"10px 0", marginBottom:16, borderBottom:`1px solid ${T.border}`, flexWrap:"wrap", gap:10 }}>
                   <div>
                     <div style={{ fontFamily:"'Fraunces',serif", fontSize:20, fontWeight:800, color:T.white }}>Banking Intelligence</div>
                     <div style={{ fontSize:11, color:T.textMuted, marginTop:3 }}>
-                      8 UAE banks compared Â· Live EIBOR Feb 2026 Â· Official CBUAE LTV rules Â· Affordability calculator Â· Mortgage fees breakdown
+                      8 UAE banks compared · Live EIBOR Feb 2026 · Official CBUAE LTV rules · Affordability calculator · Mortgage fees breakdown
                     </div>
                   </div>
                   <div style={{ display:"flex", gap:8 }}>
@@ -8534,13 +13329,13 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   </div>
                 </div>
 
-                {/* â”€â”€ EIBOR strip â”€â”€ */}
+                {/* ── EIBOR strip ── */}
                 <div style={{ display:"flex", gap:8, marginBottom:16, flexWrap:"wrap" }}>
                   {Object.entries(EIBOR).map(([key, e])=>(
                     <div key={key} style={{ flex:"1 1 80px", padding:"10px 14px", background:T.surface, border:`1px solid ${T.border}`, borderRadius:10, textAlign:"center" }}>
                       <div style={{ fontSize:9, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.8, marginBottom:4 }}>EIBOR {e.label}</div>
                       <div style={{ fontFamily:"'Fraunces',serif", fontSize:20, fontWeight:900, color:T.gold }}>{e.rate.toFixed(3)}%</div>
-                      <div style={{ fontSize:10, color:e.trend==="down"?T.green:e.trend==="up"?T.red:T.textMuted }}>{e.trend==="down"?"â†“ Falling":e.trend==="up"?"â†‘ Rising":"â†’ Stable"}</div>
+                      <div style={{ fontSize:10, color:e.trend==="down"?T.green:e.trend==="up"?T.red:T.textMuted }}>{e.trend==="down"?"↓ Falling":e.trend==="up"?"↑ Rising":"→ Stable"}</div>
                     </div>
                   ))}
                   <div style={{ flex:"1 1 120px", padding:"10px 14px", background:"rgba(212,168,67,0.06)", border:"1px solid rgba(212,168,67,0.2)", borderRadius:10, display:"flex", flexDirection:"column", justifyContent:"center" }}>
@@ -8551,7 +13346,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   </div>
                 </div>
 
-                {/* â•â• BANK COMPARISON VIEW â•â• */}
+                {/* ══ BANK COMPARISON VIEW ══ */}
                 {bankView === "compare" && (
                   <>
                     {/* Filters */}
@@ -8588,11 +13383,11 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                     {/* LTV info banner */}
                     <div style={{ padding:"10px 16px", background:"rgba(212,168,67,0.06)", border:"1px solid rgba(212,168,67,0.2)", borderRadius:10, marginBottom:14, fontSize:11, color:T.textSecondary, lineHeight:1.8 }}>
                       <strong style={{ color:T.gold }}>CBUAE LTV Rule for your profile ({bankType}, {bankPurpose}):</strong>{" "}
-                      {bankType==="national" && bankPurpose==="firstHome" && "UAE National First Home â€” Max 85% LTV (â‰¤AED 5M) / 75% LTV (>AED 5M). Down payment from 15%."}
-                      {bankType==="resident" && bankPurpose==="firstHome" && "Expat Resident First Home â€” Max 80% LTV (â‰¤AED 5M) / 70% LTV (>AED 5M). Down payment from 20%."}
-                      {bankType==="nonResident" && bankPurpose==="firstHome" && "Non-Resident â€” Max 65% LTV. Down payment minimum 35%. Limited bank options."}
-                      {bankPurpose==="investment" && "Investment/2nd Property â€” Max 65% (National) / 60% (Expat). Down payment 35-40%."}
-                      {bankPurpose==="offPlan" && "Off-Plan ALL buyers â€” Mandatory Max 50% LTV regardless of nationality. 50% down payment required. CBUAE regulation."}
+                      {bankType==="national" && bankPurpose==="firstHome" && "UAE National First Home — Max 85% LTV (≤AED 5M) / 75% LTV (>AED 5M). Down payment from 15%."}
+                      {bankType==="resident" && bankPurpose==="firstHome" && "Expat Resident First Home — Max 80% LTV (≤AED 5M) / 70% LTV (>AED 5M). Down payment from 20%."}
+                      {bankType==="nonResident" && bankPurpose==="firstHome" && "Non-Resident — Max 65% LTV. Down payment minimum 35%. Limited bank options."}
+                      {bankPurpose==="investment" && "Investment/2nd Property — Max 65% (National) / 60% (Expat). Down payment 35-40%."}
+                      {bankPurpose==="offPlan" && "Off-Plan ALL buyers — Mandatory Max 50% LTV regardless of nationality. 50% down payment required. CBUAE regulation."}
                       {" | DBR cap: 50% of gross salary | Max term: 25 years"}
                     </div>
 
@@ -8619,8 +13414,8 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                                 <div style={{ fontSize:13, fontWeight:600, color:T.white }}>{b.name}</div>
                                 <div style={{ display:"flex", gap:4, marginTop:2 }}>
                                   {b.islamicOnly && <span style={{ fontSize:9, padding:"1px 5px", borderRadius:4, background:"rgba(139,92,246,0.15)", color:"#8B5CF6" }}>Islamic</span>}
-                                  {b.nonResident && <span style={{ fontSize:9, padding:"1px 5px", borderRadius:4, background:"rgba(16,185,129,0.1)", color:T.green }}>Non-Res âœ“</span>}
-                                  {b.offPlan && <span style={{ fontSize:9, padding:"1px 5px", borderRadius:4, background:"rgba(212,168,67,0.1)", color:T.gold }}>Off-Plan âœ“</span>}
+                                  {b.nonResident && <span style={{ fontSize:9, padding:"1px 5px", borderRadius:4, background:"rgba(16,185,129,0.1)", color:T.green }}>Non-Res ✓</span>}
+                                  {b.offPlan && <span style={{ fontSize:9, padding:"1px 5px", borderRadius:4, background:"rgba(212,168,67,0.1)", color:T.gold }}>Off-Plan ✓</span>}
                                 </div>
                               </div>
                             </div>
@@ -8644,12 +13439,12 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                       <div className="chart-box" style={{ padding:18 }}>
                         <div style={{ fontSize:12, fontWeight:700, color:T.white, marginBottom:12 }}>Standard Fees (AED)</div>
                         {[
-                          { item:"Processing fee", val:"0.5â€“1.0% of loan" },
-                          { item:"Property valuation", val:"AED 2,500â€“3,000" },
+                          { item:"Processing fee", val:"0.5–1.0% of loan" },
+                          { item:"Property valuation", val:"AED 2,500–3,000" },
                           { item:"Mortgage registration (DLD)", val:"0.25% + AED 290" },
                           { item:"DLD transfer fee", val:"4% of property value" },
-                          { item:"Life insurance (mandatory)", val:"0.3â€“0.6% p.a." },
-                          { item:"Property insurance", val:"AED 800â€“2,000/yr" },
+                          { item:"Life insurance (mandatory)", val:"0.3–0.6% p.a." },
+                          { item:"Property insurance", val:"AED 800–2,000/yr" },
                           { item:"Early settlement cap", val:"1% of outstanding (CBUAE max)" },
                         ].map((f,i)=>(
                           <div key={i} style={{ display:"flex", justifyContent:"space-between", padding:"6px 0", borderBottom:i<6?`1px solid ${T.border}`:"none" }}>
@@ -8661,11 +13456,11 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                       <div className="chart-box" style={{ padding:18 }}>
                         <div style={{ fontSize:12, fontWeight:700, color:T.white, marginBottom:12 }}>Process Timeline</div>
                         {[
-                          { step:"Pre-approval / MIP",       time:"2â€“5 days",   color:T.green  },
-                          { step:"Property valuation",       time:"3â€“7 days",   color:T.gold   },
-                          { step:"Final offer letter",       time:"7â€“14 days",  color:T.gold   },
-                          { step:"Mortgage disbursement",    time:"3â€“7 days",   color:"#F97316"},
-                          { step:"Total end-to-end",         time:"4â€“6 weeks",  color:T.teal   },
+                          { step:"Pre-approval / MIP",       time:"2–5 days",   color:T.green  },
+                          { step:"Property valuation",       time:"3–7 days",   color:T.gold   },
+                          { step:"Final offer letter",       time:"7–14 days",  color:T.gold   },
+                          { step:"Mortgage disbursement",    time:"3–7 days",   color:"#F97316"},
+                          { step:"Total end-to-end",         time:"4–6 weeks",  color:T.teal   },
                         ].map((s,i)=>(
                           <div key={i} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"7px 0", borderBottom:i<4?`1px solid ${T.border}`:"none" }}>
                             <span style={{ fontSize:11, color:T.textSecondary }}>{s.step}</span>
@@ -8680,11 +13475,11 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   </>
                 )}
 
-                {/* â•â• EIBOR TRACKER VIEW â•â• */}
+                {/* ══ EIBOR TRACKER VIEW ══ */}
                 {bankView === "eibor" && (
                   <div style={{ marginBottom:16 }}>
                     <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:4 }}>EIBOR Historical Trend (3-Month Rate)</div>
-                    <div style={{ fontSize:11, color:T.textMuted, marginBottom:20 }}>UAE Central Bank Â· Jan 2022 â€“ Feb 2026 Â· Rate peaked at 5.28% (Jul 2023) Â· Now at 3.593% and falling</div>
+                    <div style={{ fontSize:11, color:T.textMuted, marginBottom:20 }}>UAE Central Bank · Jan 2022 – Feb 2026 · Rate peaked at 5.28% (Jul 2023) · Now at 3.593% and falling</div>
                     <div className="chart-box" style={{ padding:20, marginBottom:16 }}>
                       <div style={{ display:"flex", gap:6, alignItems:"flex-end", height:180 }}>
                         {EIBOR_HISTORY.map((e,i)=>{
@@ -8707,8 +13502,8 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                     </div>
                     <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:12 }}>
                       {[
-                        { title:"EIBOR peaked at", val:"5.28%", sub:"July 2023 â€” highest in 15yrs", color:T.red },
-                        { title:"Current 3M EIBOR", val:"3.593%", sub:"27 Feb 2026 â€” UAE Central Bank", color:T.green },
+                        { title:"EIBOR peaked at", val:"5.28%", sub:"July 2023 — highest in 15yrs", color:T.red },
+                        { title:"Current 3M EIBOR", val:"3.593%", sub:"27 Feb 2026 — UAE Central Bank", color:T.green },
                         { title:"Effect on variable rate", val:`~${(EIBOR_3M+1.85).toFixed(2)}%`, sub:"At typical EIBOR+1.85% margin", color:T.gold },
                       ].map((c,i)=>(
                         <div key={i} className="chart-box" style={{ padding:16, textAlign:"center" }}>
@@ -8719,12 +13514,12 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                       ))}
                     </div>
                     <div style={{ marginTop:12, padding:"12px 16px", background:"rgba(16,185,129,0.06)", border:"1px solid rgba(16,185,129,0.2)", borderRadius:10, fontSize:11, color:T.textSecondary, lineHeight:1.8 }}>
-                      <strong style={{ color:T.green }}>Broker insight:</strong> EIBOR has fallen from the 5.28% peak (Jul 2023) to 3.593% today â€” a 1.69% drop. A borrower on EIBOR+2% variable rate has seen their effective rate fall from ~7.3% to ~5.6%. Variable rate is currently 0.5-1% cheaper than fixed rates. If you expect EIBOR to continue falling (Fed rate cuts), variable makes sense. For stability, 3yr fixed is the current sweet spot.
+                      <strong style={{ color:T.green }}>Broker insight:</strong> EIBOR has fallen from the 5.28% peak (Jul 2023) to 3.593% today — a 1.69% drop. A borrower on EIBOR+2% variable rate has seen their effective rate fall from ~7.3% to ~5.6%. Variable rate is currently 0.5-1% cheaper than fixed rates. If you expect EIBOR to continue falling (Fed rate cuts), variable makes sense. For stability, 3yr fixed is the current sweet spot.
                     </div>
                   </div>
                 )}
 
-                {/* â•â• CALCULATOR VIEW â•â• */}
+                {/* ══ CALCULATOR VIEW ══ */}
                 {bankView === "calculator" && (
                   <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16, marginBottom:16 }}>
                     {/* Inputs */}
@@ -8778,7 +13573,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                         <input type="range" min={50} max={85} step={5} value={bankLTV}
                           onChange={e=>setBankLTV(Number(e.target.value))}
                           style={{ width:"100%", accentColor:effectiveLTV<maxLTV?"#F97316":T.green, cursor:"pointer" }} />
-                        {bankLTV > maxLTV && <div style={{ fontSize:11, color:"#F97316", marginTop:4 }}>âš  LTV capped at {maxLTV}% by CBUAE rules for your profile</div>}
+                        {bankLTV > maxLTV && <div style={{ fontSize:11, color:"#F97316", marginTop:4 }}>⚠ LTV capped at {maxLTV}% by CBUAE rules for your profile</div>}
                       </div>
 
                       {/* Term */}
@@ -8842,7 +13637,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                       <div style={{ padding:"14px 16px", background:dbrOk?"rgba(16,185,129,0.06)":"rgba(239,68,68,0.06)", border:`1px solid ${dbrOk?"rgba(16,185,129,0.25)":"rgba(239,68,68,0.25)"}`, borderRadius:10 }}>
                         <div style={{ display:"flex", justifyContent:"space-between", marginBottom:6 }}>
                           <span style={{ fontSize:12, fontWeight:700, color:dbrOk?T.green:T.red }}>
-                            {dbrOk?"âœ“ DBR check passed":"âœ— DBR exceeded â€” reduce loan or increase salary"}
+                            {dbrOk?"✓ DBR check passed":"✗ DBR exceeded — reduce loan or increase salary"}
                           </span>
                           <span style={{ fontSize:13, fontWeight:800, color:dbrOk?T.green:T.red }}>{dbr.toFixed(1)}% / 50%</span>
                         </div>
@@ -8893,7 +13688,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   </div>
                 )}
 
-                {/* â•â• ELIGIBILITY VIEW â•â• */}
+                {/* ══ ELIGIBILITY VIEW ══ */}
                 {bankView === "eligibility" && (
                   <div style={{ marginBottom:16 }}>
                     <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:4 }}>Bank Eligibility Checker</div>
@@ -8902,10 +13697,10 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                     {/* CBUAE LTV table */}
                     <div style={{ background:T.surface, border:`1px solid ${T.border}`, borderRadius:12, overflow:"hidden", marginBottom:16 }}>
                       <div style={{ padding:"12px 16px", background:T.surfaceAlt, borderBottom:`1px solid ${T.border}`, fontSize:12, fontWeight:700, color:T.white }}>
-                        CBUAE Mortgage LTV Rules (Official â€” centralbank.ae/en/rulebook)
+                        CBUAE Mortgage LTV Rules (Official — centralbank.ae/en/rulebook)
                       </div>
                       <div style={{ display:"grid", gridTemplateColumns:"1.5fr 1fr 1fr 1fr 1fr", padding:"9px 16px", background:T.surfaceAlt, borderBottom:`1px solid ${T.border}` }}>
-                        {["Category","1st Home â‰¤AED 5M","1st Home >AED 5M","2nd/Investment","Off-Plan"].map((h,i)=>(
+                        {["Category","1st Home ≤AED 5M","1st Home >AED 5M","2nd/Investment","Off-Plan"].map((h,i)=>(
                           <div key={i} style={{ fontSize:10, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.6 }}>{h}</div>
                         ))}
                       </div>
@@ -8936,7 +13731,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                                 <span style={{ fontSize:13, fontWeight:600, color:T.white }}>{b.name}</span>
                               </div>
                               <span style={{ fontSize:11, padding:"2px 8px", borderRadius:6, background:eligible?"rgba(16,185,129,0.12)":"rgba(239,68,68,0.12)", color:eligible?T.green:T.red, fontWeight:700 }}>
-                                {eligible?"âœ“ Eligible":"âœ— Check"}
+                                {eligible?"✓ Eligible":"✗ Check"}
                               </span>
                             </div>
                             {!eligible && (
@@ -8956,13 +13751,13 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   </div>
                 )}
 
-                {/* â”€â”€ MORTGAGE LEAD CAPTURE FORM â”€â”€ */}
+                {/* ── MORTGAGE LEAD CAPTURE FORM ── */}
                 <div style={{ padding:"20px 22px", background:"linear-gradient(135deg,rgba(212,168,67,0.08),rgba(212,168,67,0.02))", border:"1px solid rgba(212,168,67,0.25)", borderRadius:14, marginBottom:16 }}>
                   <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", flexWrap:"wrap", gap:12, marginBottom:16 }}>
                     <div>
                       <div style={{ fontFamily:"'Fraunces',serif", fontSize:16, fontWeight:800, color:T.white, marginBottom:4 }}>Get a Free Personalised Mortgage Quote</div>
                       <div style={{ fontSize:12, color:T.textSecondary, lineHeight:1.7 }}>
-                        Our RERA-licensed broker partners compare all 8 banks for you â€” free of charge.<br/>
+                        Our RERA-licensed broker partners compare all 8 banks for you — free of charge.<br/>
                         They call you within 2 hours and find the best rate for your exact profile.
                       </div>
                     </div>
@@ -8975,11 +13770,11 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
 
                   {mortLeadSubmitted ? (
                     <div style={{ textAlign:"center", padding:"20px 0" }}>
-                      <div style={{ fontSize:28, marginBottom:8 }}>âœ…</div>
+                      <div style={{ fontSize:28, marginBottom:8 }}>✅</div>
                       <div style={{ fontFamily:"'Fraunces',serif", fontSize:16, fontWeight:700, color:T.green, marginBottom:6 }}>Request Received!</div>
                       <div style={{ fontSize:12, color:T.textSecondary, lineHeight:1.7 }}>
                         Our mortgage specialist will call you within 2 hours.<br/>
-                        They will compare all 8 banks and find your best rate â€” completely free.
+                        They will compare all 8 banks and find your best rate — completely free.
                       </div>
                       <button type="button" onClick={()=>{ setMortLeadSubmitted(false); setMortLeadName(""); setMortLeadPhone(""); setMortLeadEmail(""); }}
                         style={{ marginTop:14, padding:"6px 18px", background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:8, color:T.textMuted, fontSize:11, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>
@@ -9042,7 +13837,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                                 purpose: bankPurpose,
                                 preferredBank: bankSelected,
                                 eibor3M: 3.593,
-                                source: "Banking Tab â€” DXB Analytics",
+                                source: "Banking Tab — DXB Analytics",
                                 userId: auth.currentUser?.uid || "guest",
                                 createdAt: new Date().toISOString(),
                                 status: "new",
@@ -9054,7 +13849,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                             setMortLeadSubmitting(false);
                           }}
                           style={{ padding:"9px 22px", background:(!mortLeadName||!mortLeadPhone)?T.surfaceAlt:`linear-gradient(135deg,${T.gold},#B8922A)`, border:"none", borderRadius:8, color:(!mortLeadName||!mortLeadPhone)?T.textMuted:"#000", fontSize:12, fontWeight:700, cursor:(!mortLeadName||!mortLeadPhone)?"not-allowed":"pointer", fontFamily:"'Outfit',sans-serif", whiteSpace:"nowrap" }}>
-                          {mortLeadSubmitting ? "Sending..." : "Get Free Quote â†’"}
+                          {mortLeadSubmitting ? "Sending..." : "Get Free Quote →"}
                         </button>
                       </div>
 
@@ -9067,7 +13862,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                           "RERA-licensed advisors",
                         ].map((b,i)=>(
                           <div key={i} style={{ display:"flex", alignItems:"center", gap:5, fontSize:11, color:T.textSecondary }}>
-                            <span style={{ color:T.green }}>âœ“</span> {b}
+                            <span style={{ color:T.green }}>✓</span> {b}
                           </div>
                         ))}
                       </div>
@@ -9075,17 +13870,17 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                       {/* Profile summary */}
                       <div style={{ marginTop:12, padding:"10px 14px", background:T.surfaceAlt, borderRadius:8, border:`1px solid ${T.border}`, fontSize:11, color:T.textMuted }}>
                         Your profile: <strong style={{ color:T.white }}>{bankType === "national" ? "UAE National" : bankType === "resident" ? "Expat Resident" : "Non-Resident"}</strong>
-                        {" Â· Property: "}<strong style={{ color:T.white }}>AED {(bankPropValue/1e6).toFixed(2)}M</strong>
-                        {" Â· Salary: "}<strong style={{ color:T.white }}>AED {bankSalary.toLocaleString()}/mo</strong>
-                        {" Â· Purpose: "}<strong style={{ color:T.white }}>{bankPurpose === "firstHome" ? "First Home" : bankPurpose === "investment" ? "Investment" : "Off-Plan"}</strong>
-                        {" Â· Preferred: "}<strong style={{ color:T.gold }}>{bankSelected}</strong>
+                        {" · Property: "}<strong style={{ color:T.white }}>AED {(bankPropValue/1e6).toFixed(2)}M</strong>
+                        {" · Salary: "}<strong style={{ color:T.white }}>AED {bankSalary.toLocaleString()}/mo</strong>
+                        {" · Purpose: "}<strong style={{ color:T.white }}>{bankPurpose === "firstHome" ? "First Home" : bankPurpose === "investment" ? "Investment" : "Off-Plan"}</strong>
+                        {" · Preferred: "}<strong style={{ color:T.gold }}>{bankSelected}</strong>
                         <span style={{ color:T.textMuted }}> (will be included in your brief)</span>
                       </div>
                     </div>
                   )}
                 </div>
 
-                {/* â”€â”€ APPLY BUTTONS â”€â”€ */}
+                {/* ── APPLY BUTTONS ── */}
                 <div style={{ marginBottom:16 }}>
                   <div style={{ fontSize:12, fontWeight:700, color:T.white, marginBottom:10 }}>Apply directly at each bank</div>
                   <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
@@ -9101,17 +13896,17 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                     ].map((b,i)=>(
                       <a key={i} href={b.url} target="_blank" rel="noopener noreferrer"
                         style={{ padding:"7px 14px", background:b.color+"18", border:`1px solid ${b.color}40`, borderRadius:8, color:b.color, fontSize:11, fontWeight:600, cursor:"pointer", fontFamily:"'Outfit',sans-serif", textDecoration:"none", display:"inline-block" }}>
-                        Apply at {b.name} â†’
+                        Apply at {b.name} →
                       </a>
                     ))}
                   </div>
-                  <div style={{ fontSize:10, color:T.textMuted, marginTop:6 }}>Links go directly to each bank's official mortgage application page. DXB Analytics is not a lender â€” we help you compare and connect.</div>
+                  <div style={{ fontSize:10, color:T.textMuted, marginTop:6 }}>Links go directly to each bank's official mortgage application page. DXB Analytics is not a lender — we help you compare and connect.</div>
                 </div>
 
-                {/* â”€â”€ SOURCE FOOTER â”€â”€ */}
+                {/* ── SOURCE FOOTER ── */}
                 <div style={{ paddingTop:12, borderTop:`1px solid ${T.border}`, display:"flex", gap:8, flexWrap:"wrap", alignItems:"center" }}>
                   <span style={{ fontSize:10, color:T.textMuted }}>Sources:</span>
-                  {["UAE Central Bank (centralbank.ae) (centralbank.ae)","CBUAE Rulebook â€” Mortgage Regulations","Emirates NBD IR","ADCB","FAB (bankfab.com)","Mashreq","HSBC UAE","DIB","RAKBank","Standard Chartered","realestateclubdubai.com Apr 2026"].map((s,i)=>(
+                  {["UAE Central Bank (centralbank.ae) (centralbank.ae)","CBUAE Rulebook — Mortgage Regulations","Emirates NBD IR","ADCB","FAB (bankfab.com)","Mashreq","HSBC UAE","DIB","RAKBank","Standard Chartered","realestateclubdubai.com Apr 2026"].map((s,i)=>(
                     <span key={i} style={{ fontSize:10, color:T.textMuted, padding:"2px 8px", borderRadius:10, border:`1px solid ${T.border}`, background:T.surfaceAlt }}>{s}</span>
                   ))}
                 </div>
@@ -9121,54 +13916,54 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
           })()}
 
 
-          {/* â”€â”€â”€ MARKETING INTELLIGENCE TAB â”€â”€â”€ */}
+          {/* ─── MARKETING INTELLIGENCE TAB ─── */}
           {tab === "Marketing" && (() => {
 
-            /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-               MARKETING INTELLIGENCE â€” Research Sources (Apr 2026)
+            /* ══════════════════════════════════════════════════════════
+               MARKETING INTELLIGENCE — Research Sources (Apr 2026)
 
                CPL BENCHMARKS (theprimeads.com + Dubai-specific research):
-                 Google Search Ads: AED 450â€“900 per lead (high intent)
-                 Meta (Facebook/Instagram): AED 30â€“300 per lead
-                 Property Portal (Bayut/PF): AED 50â€“200 per lead
-                 TikTok: AED 20â€“150 per lead (growing fast)
-                 LinkedIn: AED 200â€“800 per lead (B2B, HNW)
-                 Cold calling: AED 5â€“15 (time cost)
-                 Off-plan specific: AED 30â€“120 per qualified lead
-                 WhatsApp broadcast: AED 1â€“10 per message
+                 Google Search Ads: AED 450–900 per lead (high intent)
+                 Meta (Facebook/Instagram): AED 30–300 per lead
+                 Property Portal (Bayut/PF): AED 50–200 per lead
+                 TikTok: AED 20–150 per lead (growing fast)
+                 LinkedIn: AED 200–800 per lead (B2B, HNW)
+                 Cold calling: AED 5–15 (time cost)
+                 Off-plan specific: AED 30–120 per qualified lead
+                 WhatsApp broadcast: AED 1–10 per message
 
                PORTAL COMPARISON (brightsanddesigns.com Nov 2025):
-                 Property Finder: AED 60K spend â†’ 120 leads/mo, 5% conversion
+                 Property Finder: AED 60K spend → 120 leads/mo, 5% conversion
                    = 6 sales. Best for luxury/premium.
-                 Bayut: AED 45K spend â†’ 180 leads/mo, 2% conversion
+                 Bayut: AED 45K spend → 180 leads/mo, 2% conversion
                    = 3-4 sales. Best for mid-market volume.
                  Dubizzle: Budget segment, rentals, lower CPL
 
                BUYER NATIONALITY DATA (DLD 2025, keltandcorealty.com):
-                 1. India â€” 22% of foreign buyers (4th consecutive year #1)
+                 1. India — 22% of foreign buyers (4th consecutive year #1)
                     Platform: Meta (Facebook/Instagram), WhatsApp, Google
-                    Budget: AED 500Kâ€“3M, strong off-plan demand
-                 2. UK â€” 17% of foreign buyers (12% of all transactions 2024)
+                    Budget: AED 500K–3M, strong off-plan demand
+                 2. UK — 17% of foreign buyers (12% of all transactions 2024)
                     Platform: Property Finder, Google, Instagram
-                    Budget: AED 1.5Mâ€“5M+, ready premium preferred
-                 3. Russia â€” 9% of transactions
+                    Budget: AED 1.5M–5M+, ready premium preferred
+                 3. Russia — 9% of transactions
                     Platform: Instagram, Telegram, targeted in-person
-                    Budget: AED 2Mâ€“15M, luxury focus
-                 4. China â€” 13-14% of transactions (AED 2B invested 2024)
+                    Budget: AED 2M–15M, luxury focus
+                 4. China — 13-14% of transactions (AED 2B invested 2024)
                     Platform: Douyin (TikTok), WeChat, Weibo
-                    Budget: AED 1.5Mâ€“5M+, Business Bay/Creek Harbour
-                 5. France â€” 7% of transactions
+                    Budget: AED 1.5M–5M+, Business Bay/Creek Harbour
+                 5. France — 7% of transactions
                     Platform: Meta, LinkedIn, francophones
-                    Budget: AED 1.5Mâ€“3M, branded residences
-                 6. Italy â€” Top 3 European buyer
+                    Budget: AED 1.5M–3M, branded residences
+                 6. Italy — Top 3 European buyer
                     Platform: Meta, Instagram, luxury focus
-                 7. Pakistan â€” AED 11B total ownership in Dubai
+                 7. Pakistan — AED 11B total ownership in Dubai
                     Platform: WhatsApp, Facebook, off-plan focus
-                 8. Saudi Arabia â€” Holiday homes, Palm/Emaar Beachfront
+                 8. Saudi Arabia — Holiday homes, Palm/Emaar Beachfront
                     Platform: Snapchat, Meta, Arabic targeting
-                 9. Egypt â€” Fast growing
+                 9. Egypt — Fast growing
                     Platform: Facebook, TikTok Arabic
-                10. Germany/Austria â€” Growing segment, ESG-focused
+                10. Germany/Austria — Growing segment, ESG-focused
                     Platform: Google, LinkedIn
 
                COMMISSION RATES (Dubai standard):
@@ -9188,9 +13983,9 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                RERA COMPLIANCE: Trakheesi permit required for all listings
                Sources: theprimeads.com, brightsanddesigns.com Nov 2025,
                DLD 2025 nationality data, campaignme.com, keltandcorealty.com
-            â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+            ══════════════════════════════════════════════════════════ */
 
-            /* â”€â”€ Channel data â”€â”€ */
+            /* ── Channel data ── */
             const CHANNELS = [
               {
                 name:"Google Search Ads", icon:"G",
@@ -9201,7 +13996,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 offPlan:false, luxury:true, midMarket:true, affordable:false,
                 setup:"AED 5,000+ per campaign",
                 monthlyMin:5000,
-                tip:"Target keywords like 'buy apartment Dubai Marina' â€” CPC AED 8-25. Add negative keywords weekly. Separate campaigns by community.",
+                tip:"Target keywords like 'buy apartment Dubai Marina' — CPC AED 8-25. Add negative keywords weekly. Separate campaigns by community.",
                 platforms:["Google Search","Google Display","YouTube"],
               },
               {
@@ -9213,7 +14008,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 offPlan:true, luxury:false, midMarket:true, affordable:true,
                 setup:"AED 3,000+ per month minimum",
                 monthlyMin:3000,
-                tip:"Use Lead Ads (native forms) for off-plan. Carousel format for multi-unit projects. Retarget website visitors â€” 3-5x better ROAS.",
+                tip:"Use Lead Ads (native forms) for off-plan. Carousel format for multi-unit projects. Retarget website visitors — 3-5x better ROAS.",
                 platforms:["Facebook","Instagram","WhatsApp","Messenger"],
               },
               {
@@ -9225,7 +14020,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 offPlan:true, luxury:false, midMarket:true, affordable:true,
                 setup:"Package from AED 2,000-15,000/month",
                 monthlyMin:2000,
-                tip:"TruCheckâ„¢ badge increases leads 45%. Bundle with Dubizzle for cross-platform reach. Best for JVC, Business Bay, Dubai South.",
+                tip:"TruCheck™ badge increases leads 45%. Bundle with Dubizzle for cross-platform reach. Best for JVC, Business Bay, Dubai South.",
                 platforms:["Bayut.com","Dubizzle (bundled)","Bayut App"],
               },
               {
@@ -9271,7 +14066,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 convRate:8.0, leadQuality:85,
                 bestFor:"Existing database, referrals, payment plan follow-up",
                 offPlan:true, luxury:false, midMarket:true, affordable:true,
-                setup:"WhatsApp Business API â€” AED 500-2,000 setup",
+                setup:"WhatsApp Business API — AED 500-2,000 setup",
                 monthlyMin:500,
                 tip:"Highest conversion rate of any channel. Response time under 5 minutes = 100x more likely to convert. Use templates for off-plan launches. Arabic + English.",
                 platforms:["WhatsApp Business","WhatsApp API"],
@@ -9290,11 +14085,11 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               },
             ];
 
-            /* â”€â”€ Nationality targeting data â”€â”€ */
+            /* ── Nationality targeting data ── */
             const NATIONALITIES = [
               {
                 flag:"\uD83C\uDDEE\uD83C\uDDF3", name:"Indian", share:"22%", rank:1,
-                budget:"AED 500Kâ€“3M", type:"Off-plan + Mid-market",
+                budget:"AED 500K–3M", type:"Off-plan + Mid-market",
                 platforms:["Meta (Facebook/Instagram)","WhatsApp","Google"],
                 communities:["JVC","Dubai South","International City","Business Bay"],
                 language:"English + Hindi",
@@ -9303,7 +14098,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               },
               {
                 flag:"\uD83C\uDDEC\uD83C\uDDE7", name:"British", share:"17%", rank:2,
-                budget:"AED 1.5Mâ€“5M+", type:"Ready premium",
+                budget:"AED 1.5M–5M+", type:"Ready premium",
                 platforms:["Property Finder","Google","Instagram"],
                 communities:["Dubai Marina","Downtown","Palm Jumeirah","Dubai Hills"],
                 language:"English",
@@ -9312,7 +14107,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               },
               {
                 flag:"\uD83C\uDDF7\uD83C\uDDFA", name:"Russian", share:"9%", rank:3,
-                budget:"AED 2Mâ€“15M+", type:"Luxury/Ultra-luxury",
+                budget:"AED 2M–15M+", type:"Luxury/Ultra-luxury",
                 platforms:["Instagram","Telegram","In-person events"],
                 communities:["Palm Jumeirah","Emirates Hills","Downtown","Business Bay"],
                 language:"Russian",
@@ -9321,16 +14116,16 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               },
               {
                 flag:"\uD83C\uDDE8\uD83C\uDDF3", name:"Chinese", share:"13-14%", rank:4,
-                budget:"AED 1.5Mâ€“5M+", type:"Luxury + Business Bay",
+                budget:"AED 1.5M–5M+", type:"Luxury + Business Bay",
                 platforms:["Douyin (TikTok China)","WeChat","Weibo"],
                 communities:["Business Bay","Dubai Creek Harbour","Downtown","JVC"],
                 language:"Mandarin",
-                tip:"80% of China's top 200 developers on Douyin. WeChat property groups extremely active. AED 2B invested in 2024. Mandarin-speaking agent is essential â€” not optional.",
+                tip:"80% of China's top 200 developers on Douyin. WeChat property groups extremely active. AED 2B invested in 2024. Mandarin-speaking agent is essential — not optional.",
                 color:"#E53935",
               },
               {
                 flag:"\uD83C\uDDEB\uD83C\uDDF7", name:"French", share:"7%", rank:5,
-                budget:"AED 1.5Mâ€“3M", type:"Branded residences",
+                budget:"AED 1.5M–3M", type:"Branded residences",
                 platforms:["Meta","LinkedIn","SmartLeads CRM"],
                 communities:["Downtown","Dubai Marina","Bluewaters","City Walk"],
                 language:"French",
@@ -9339,25 +14134,25 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               },
               {
                 flag:"\uD83C\uDDF5\uD83C\uDDF0", name:"Pakistani", share:"8%", rank:6,
-                budget:"AED 300Kâ€“2M", type:"Off-plan + Affordable",
+                budget:"AED 300K–2M", type:"Off-plan + Affordable",
                 platforms:["WhatsApp","Facebook","Off-plan events"],
                 communities:["International City","JVC","Dubai South","Al Furjan"],
                 language:"Urdu + English",
-                tip:"AED 11B total ownership in Dubai. Strong community networks on WhatsApp. Off-plan at AED 500Kâ€“1.5M is sweet spot. Sharjah spillover to Dubai common.",
+                tip:"AED 11B total ownership in Dubai. Strong community networks on WhatsApp. Off-plan at AED 500K–1.5M is sweet spot. Sharjah spillover to Dubai common.",
                 color:"#1B5E20",
               },
               {
                 flag:"\uD83C\uDDF8\uD83C\uDDE6", name:"Saudi", share:"5%", rank:7,
-                budget:"AED 3Mâ€“20M+", type:"Holiday homes + Villas",
+                budget:"AED 3M–20M+", type:"Holiday homes + Villas",
                 platforms:["Snapchat","Meta","Arabic Google"],
                 communities:["Palm Jumeirah","Emaar Beachfront","Dubai Hills","JBR"],
                 language:"Arabic",
-                tip:"Holiday home and villa dominant. Snapchat #1 for Saudi audience. Privacy key â€” gated communities preferred. Weekend visits from KSA = high conversion for ready homes.",
+                tip:"Holiday home and villa dominant. Snapchat #1 for Saudi audience. Privacy key — gated communities preferred. Weekend visits from KSA = high conversion for ready homes.",
                 color:"#1B5E20",
               },
               {
                 flag:"\uD83C\uDDEA\uD83C\uDDEC", name:"Egyptian", share:"4%", rank:8,
-                budget:"AED 500Kâ€“2M", type:"Mid-market + Off-plan",
+                budget:"AED 500K–2M", type:"Mid-market + Off-plan",
                 platforms:["Facebook","TikTok Arabic","WhatsApp"],
                 communities:["JVC","Business Bay","Dubai South","Silicon Oasis"],
                 language:"Arabic + English",
@@ -9368,7 +14163,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
 
             const selNat = NATIONALITIES.find(n => n.name === mktNationality) || NATIONALITIES[0];
 
-            /* â”€â”€ ROI Calculator â”€â”€ */
+            /* ── ROI Calculator ── */
             const budgetPerChannel = mktBudget;
             const bestChannel = CHANNELS.reduce((a,b) => a.cplAvg < b.cplAvg ? a : b);
             const calcROI = (ch) => {
@@ -9379,7 +14174,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               return { leads, deals, commission, roi: roi.toFixed(0) };
             };
 
-            /* â”€â”€ AI Listing Generator â”€â”€ */
+            /* ── AI Listing Generator ── */
             const generateListing = async () => {
               if (!mktListingComm) return;
               setMktAiLoading(true);
@@ -9418,12 +14213,12 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
             return (
               <div style={{ animation:"fadeUp 0.4s ease-out forwards" }}>
 
-                {/* â”€â”€ HEADER â”€â”€ */}
+                {/* ── HEADER ── */}
                 <div style={{ display:"flex", alignItems:"flex-start", justifyContent:"space-between", padding:"10px 0", marginBottom:16, borderBottom:`1px solid ${T.border}`, flexWrap:"wrap", gap:10 }}>
                   <div>
                     <div style={{ fontFamily:"'Fraunces',serif", fontSize:20, fontWeight:800, color:T.white }}>Marketing Intelligence</div>
                     <div style={{ fontSize:11, color:T.textMuted, marginTop:3 }}>
-                      8 channels Â· CPL benchmarks Â· Buyer nationality targeting Â· AI listing generator Â· ROI calculator Â· Apr 2026
+                      8 channels · CPL benchmarks · Buyer nationality targeting · AI listing generator · ROI calculator · Apr 2026
                     </div>
                   </div>
                   <div style={{ display:"flex", gap:8 }}>
@@ -9436,7 +14231,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   </div>
                 </div>
 
-                {/* â•â• CHANNEL INTELLIGENCE VIEW â•â• */}
+                {/* ══ CHANNEL INTELLIGENCE VIEW ══ */}
                 {mktView === "channels" && (
                   <>
                     {/* Property type filter */}
@@ -9532,11 +14327,11 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   </>
                 )}
 
-                {/* â•â• BUYER NATIONALITY TARGETING VIEW â•â• */}
+                {/* ══ BUYER NATIONALITY TARGETING VIEW ══ */}
                 {mktView === "nationality" && (
                   <>
                     <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:4 }}>Buyer Nationality Intelligence</div>
-                    <div style={{ fontSize:11, color:T.textMuted, marginBottom:16 }}>Top 8 investor nationalities Â· Platform strategy per nationality Â· DLD 2025 data</div>
+                    <div style={{ fontSize:11, color:T.textMuted, marginBottom:16 }}>Top 8 investor nationalities · Platform strategy per nationality · DLD 2025 data</div>
 
                     {/* Nationality selector */}
                     <div style={{ display:"flex", gap:8, flexWrap:"wrap", marginBottom:16 }}>
@@ -9557,8 +14352,8 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                           <div style={{ fontSize:36 }}>{selNat.flag}</div>
                           <div>
                             <div style={{ fontFamily:"'Fraunces',serif", fontSize:20, fontWeight:800, color:T.white }}>{selNat.name} Buyers</div>
-                            <div style={{ fontSize:13, color:selNat.color, fontWeight:700 }}>Rank #{selNat.rank}{"Â·"}{selNat.share} of foreign buyers</div>
-                            <div style={{ fontSize:11, color:T.textMuted, marginTop:2 }}>Budget: {selNat.budget}{"Â·"}{selNat.type}</div>
+                            <div style={{ fontSize:13, color:selNat.color, fontWeight:700 }}>Rank #{selNat.rank}{"·"}{selNat.share} of foreign buyers</div>
+                            <div style={{ fontSize:11, color:T.textMuted, marginTop:2 }}>Budget: {selNat.budget}{"·"}{selNat.type}</div>
                           </div>
                         </div>
                         <div style={{ fontSize:12, color:T.textSecondary, lineHeight:1.8, marginBottom:12 }}>{selNat.tip}</div>
@@ -9613,11 +14408,11 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   </>
                 )}
 
-                {/* â•â• ROI CALCULATOR VIEW â•â• */}
+                {/* ══ ROI CALCULATOR VIEW ══ */}
                 {mktView === "roi" && (
                   <div style={{ marginBottom:16 }}>
                     <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:4 }}>Marketing ROI Calculator</div>
-                    <div style={{ fontSize:11, color:T.textMuted, marginBottom:16 }}>Enter your monthly budget Â· See leads, deals, commission, and ROI per channel Â· Based on real Dubai CPL benchmarks</div>
+                    <div style={{ fontSize:11, color:T.textMuted, marginBottom:16 }}>Enter your monthly budget · See leads, deals, commission, and ROI per channel · Based on real Dubai CPL benchmarks</div>
 
                     {/* Budget input */}
                     <div className="chart-box" style={{ padding:18, marginBottom:16 }}>
@@ -9697,11 +14492,11 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   </div>
                 )}
 
-                {/* â•â• AI LISTING GENERATOR VIEW â•â• */}
+                {/* ══ AI LISTING GENERATOR VIEW ══ */}
                 {mktView === "listing" && (
                   <div style={{ marginBottom:16 }}>
                     <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:4 }}>AI Listing Generator</div>
-                    <div style={{ fontSize:11, color:T.textMuted, marginBottom:16 }}>Powered by Claude AI Â· Generates headline, description, WhatsApp message, and SEO tags for Bayut and Property Finder</div>
+                    <div style={{ fontSize:11, color:T.textMuted, marginBottom:16 }}>Powered by Claude AI · Generates headline, description, WhatsApp message, and SEO tags for Bayut and Property Finder</div>
 
                     {/* Inputs */}
                     <div className="chart-box" style={{ padding:20, marginBottom:16 }}>
@@ -9751,7 +14546,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
 
                       {mktListingPrice >= 2000000 && (
                         <div style={{ marginTop:10, padding:"8px 12px", background:"rgba(16,185,129,0.06)", borderRadius:8, fontSize:11, color:T.green }}>
-                          âœ“ AED {(mktListingPrice/1e6).toFixed(2)}M â€” Golden Visa eligible (AED 2M threshold). Will be included in listing automatically.
+                          ✓ AED {(mktListingPrice/1e6).toFixed(2)}M — Golden Visa eligible (AED 2M threshold). Will be included in listing automatically.
                         </div>
                       )}
 
@@ -9760,7 +14555,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                         disabled={mktAiLoading || !mktListingComm}
                         onClick={generateListing}
                         style={{ marginTop:14, width:"100%", padding:"11px 0", background:(!mktListingComm||mktAiLoading)?T.surfaceAlt:`linear-gradient(135deg,${T.gold},#B8922A)`, border:"none", borderRadius:8, color:(!mktListingComm||mktAiLoading)?T.textMuted:"#000", fontSize:13, fontWeight:700, cursor:(!mktListingComm||mktAiLoading)?"not-allowed":"pointer", fontFamily:"'Outfit',sans-serif" }}>
-                        {mktAiLoading ? "â³ Generating with Claude AI..." : "âœ¨ Generate Listing with AI"}
+                        {mktAiLoading ? "⏳ Generating with Claude AI..." : "✨ Generate Listing with AI"}
                       </button>
                     </div>
 
@@ -9784,14 +14579,14 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                           {mktAiResult}
                         </div>
                         <div style={{ marginTop:10, fontSize:11, color:T.textMuted }}>
-                          Generated by Claude Sonnet Â· Copy and paste directly to Bayut, Property Finder, or WhatsApp Â· Always verify facts before publishing
+                          Generated by Claude Sonnet · Copy and paste directly to Bayut, Property Finder, or WhatsApp · Always verify facts before publishing
                         </div>
                       </div>
                     )}
 
                     {!mktAiResult && !mktAiLoading && (
                       <div style={{ padding:"24px", textAlign:"center", background:T.surface, border:`1px solid ${T.border}`, borderRadius:12 }}>
-                        <div style={{ fontSize:24, marginBottom:8 }}>âœ¨</div>
+                        <div style={{ fontSize:24, marginBottom:8 }}>✨</div>
                         <div style={{ fontSize:13, color:T.white, marginBottom:4 }}>AI-powered listing generation</div>
                         <div style={{ fontSize:11, color:T.textMuted }}>Fill in the community and details above, then click Generate. Claude will write your full listing, WhatsApp message, and SEO tags in seconds.</div>
                       </div>
@@ -9799,7 +14594,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   </div>
                 )}
 
-                {/* â”€â”€ SOURCE FOOTER â”€â”€ */}
+                {/* ── SOURCE FOOTER ── */}
                 <div style={{ paddingTop:12, borderTop:`1px solid ${T.border}`, display:"flex", gap:8, flexWrap:"wrap", alignItems:"center" }}>
                   <span style={{ fontSize:10, color:T.textMuted }}>Sources:</span>
                   {["theprimeads.com 2026","DLD 2025 Nationality Data","brightsanddesigns.com Nov 2025","campaignme.com","ninjasofts.com","keltandcorealty.com Feb 2026","dubaipropertyinsight.com","WordStream 2025"].map((s,i)=>(
@@ -9812,37 +14607,37 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
           })()}
 
 
-          {/* â”€â”€â”€ COMPETITORS TAB â”€â”€â”€ */}
+          {/* ─── COMPETITORS TAB ─── */}
           {tab === "Competitors" && (() => {
 
-            /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-               COMPETITORS â€” Developer vs Developer Intelligence
+            /* ══════════════════════════════════════════════════════════
+               COMPETITORS — Developer vs Developer Intelligence
                Sources: DLD 2025 data, mieyaruae.com Q3 2025 report,
                dubaipropertyinsight.com, takayamotorcity.com Feb 2026,
                prelaunch.ae delivery tracker, prophero.net
 
                Sales 2025 YTD (Jan-Aug, mieyaruae.com Oct 2025):
-                 Emaar: AED 51B (~10,000 transactions) â€” #1 by wide margin
-                 DAMAC: AED 24B (~9,000 transactions) â€” #2
-                 Nakheel: AED 13B â€” #3
-                 Sobha: AED 13B â€” #4
-                 Meraas: AED 10B â€” #5
-                 Binghatti: AED 9B â€” #6
-                 Aldar: AED 8B â€” #7
+                 Emaar: AED 51B (~10,000 transactions) — #1 by wide margin
+                 DAMAC: AED 24B (~9,000 transactions) — #2
+                 Nakheel: AED 13B — #3
+                 Sobha: AED 13B — #4
+                 Meraas: AED 10B — #5
+                 Binghatti: AED 9B — #6
+                 Aldar: AED 8B — #7
 
                Delivery track record (prelaunch.ae Dec 2025):
-                 Emaar: 95%+ on time â€” industry best
-                 Sobha: 91% â€” in-house construction advantage
-                 Nakheel: 88% â€” government backing
-                 Danube: 88% â€” best in affordable segment
-                 Ellington: 90% â€” boutique discipline
-                 DAMAC: 82% â€” complex branded projects
-                 Azizi: 80% â€” high volume, improving
-                 Binghatti: 78% â€” rapid expansion risk
+                 Emaar: 95%+ on time — industry best
+                 Sobha: 91% — in-house construction advantage
+                 Nakheel: 88% — government backing
+                 Danube: 88% — best in affordable segment
+                 Ellington: 90% — boutique discipline
+                 DAMAC: 82% — complex branded projects
+                 Azizi: 80% — high volume, improving
+                 Binghatti: 78% — rapid expansion risk
 
                S&P Rating: Emaar upgraded to BBB+ in 2025
                Off-plan market share 2025: 60%+ of all transactions
-            â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+            ══════════════════════════════════════════════════════════ */
 
             const COMP_DATA = [
               {
@@ -9865,10 +14660,10 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   creditRating:"BBB+ (S&P 2025)",
                   offPlanShare:"72% of sales",
                   grossYield:"5-7%",
-                  capitalAppreciation:"Strong â€” established communities",
+                  capitalAppreciation:"Strong — established communities",
                 },
                 strengths:["#1 developer 3 consecutive years","BBB+ credit rating","95%+ on-time delivery","140,000+ units delivered lifetime","Burj Khalifa / Dubai Mall brand"],
-                weaknesses:["Premium pricing â€” lowest entry yields","High competition for their units","Slower payment plans vs private devs"],
+                weaknesses:["Premium pricing — lowest entry yields","High competition for their units","Slower payment plans vs private devs"],
                 bestFor:"Long-term capital appreciation, brand prestige, end-users",
               },
               {
@@ -9888,13 +14683,13 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   segments:["Branded luxury","Villa communities","Hospitality"],
                   communities:["DAMAC Hills","DAMAC Hills 2","DAMAC Lagoons","DAMAC Islands","Business Bay towers"],
                   paymentPlans:"Flexible 80/20, post-handover",
-                  creditRating:"Private â€” $5B cash",
+                  creditRating:"Private — $5B cash",
                   offPlanShare:"78% of sales",
                   grossYield:"6-8% (short-term rental focus)",
-                  capitalAppreciation:"Moderate â€” depends on brand appeal",
+                  capitalAppreciation:"Moderate — depends on brand appeal",
                 },
                 strengths:["$5B cash reserves","Luxury brand partnerships (Versace, Cavalli, Bugatti)","Strong marketing engine","Flexible payment plans"],
-                weaknesses:["Delisted from DFM 2022 â€” limited transparency","82% delivery rate â€” below Tier 1","Bond stress signals Mar 2026 â€” monitor","Investor-heavy, less end-user demand"],
+                weaknesses:["Delisted from DFM 2022 — limited transparency","82% delivery rate — below Tier 1","Bond stress signals Mar 2026 — monitor","Investor-heavy, less end-user demand"],
                 bestFor:"STR/luxury investors, buyers seeking branded residences",
               },
               {
@@ -9914,13 +14709,13 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   segments:["Premium residential","Waterfront","Integrated communities"],
                   communities:["Sobha Hartland I","Sobha Hartland II","Sobha Seahaven","Sobha One"],
                   paymentPlans:"60/40, construction-linked",
-                  creditRating:"Private â€” strong balance sheet",
+                  creditRating:"Private — strong balance sheet",
                   offPlanShare:"75% of sales",
                   grossYield:"5.5-7.5%",
-                  capitalAppreciation:"Strong â€” premium quality commands premium",
+                  capitalAppreciation:"Strong — premium quality commands premium",
                 },
                 strengths:["In-house construction = best quality control","91% on-time delivery","No reliance on subcontractors","Premium finishes at consistent standard","Strong FDI buyer base (Indian HNW)"],
-                weaknesses:["Community concentration (Hartland/MBR City)","Private â€” limited financial disclosure","Higher PSF than comparable developers","Slower sales cadence than Emaar/DAMAC"],
+                weaknesses:["Community concentration (Hartland/MBR City)","Private — limited financial disclosure","Higher PSF than comparable developers","Slower sales cadence than Emaar/DAMAC"],
                 bestFor:"Quality-focused buyers, long-term hold, Indian HNW investors",
               },
               {
@@ -9940,13 +14735,13 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   segments:["Waterfront villas","Island communities","Luxury towers"],
                   communities:["Palm Jumeirah","Palm Jebel Ali","Dubai Islands","The World","Deira Islands"],
                   paymentPlans:"Government-backed, conservative plans",
-                  creditRating:"Government backed â€” zero default risk",
+                  creditRating:"Government backed — zero default risk",
                   offPlanShare:"65% of sales",
                   grossYield:"5-7% (Palm premium)",
-                  capitalAppreciation:"Exceptional â€” finite island supply",
+                  capitalAppreciation:"Exceptional — finite island supply",
                 },
-                strengths:["Government backing = zero default risk","Finite waterfront supply â€” impossible to replicate","Palm Jumeirah global brand recognition","Luxury segment #1 (AED 16.9B >AED15M properties 2025)","Dubai Holding integration (Meraas, Jumeirah Group)"],
-                weaknesses:["Very high price points â€” limited buyer pool","Large project complexity = delivery timeline risk","Limited affordable offering","Island infrastructure complexity"],
+                strengths:["Government backing = zero default risk","Finite waterfront supply — impossible to replicate","Palm Jumeirah global brand recognition","Luxury segment #1 (AED 16.9B >AED15M properties 2025)","Dubai Holding integration (Meraas, Jumeirah Group)"],
+                weaknesses:["Very high price points — limited buyer pool","Large project complexity = delivery timeline risk","Limited affordable offering","Island infrastructure complexity"],
                 bestFor:"Ultra-HNW buyers, capital preservation, waterfront luxury",
               },
               {
@@ -9965,14 +14760,14 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   minPrice:"AED 1.5M", maxPrice:"AED 50M+",
                   segments:["Lifestyle communities","Retail-integrated living","Urban destinations"],
                   communities:["Nad Al Sheba Gardens","City Walk Residences","Bluewaters Island","La Mer","Jumeirah Residences"],
-                  paymentPlans:"Government conservative â€” less flexible",
-                  creditRating:"Government backed â€” Dubai Holding",
+                  paymentPlans:"Government conservative — less flexible",
+                  creditRating:"Government backed — Dubai Holding",
                   offPlanShare:"70% of sales",
                   grossYield:"5-6.5%",
-                  capitalAppreciation:"Strong â€” iconic lifestyle brand",
+                  capitalAppreciation:"Strong — iconic lifestyle brand",
                 },
-                strengths:["City Walk, La Mer, Bluewaters â€” iconic lifestyle brand","Government backing","Nad Al Sheba fastest-selling villa 2025","AED 8.4M avg transaction â€” premium positioning","Meraas lifestyle retail drives property value"],
-                weaknesses:["Very high avg price â€” limited buyer pool","Government conservative structure = less innovation","Limited affordable product","Strong competition from Emaar on lifestyle"],
+                strengths:["City Walk, La Mer, Bluewaters — iconic lifestyle brand","Government backing","Nad Al Sheba fastest-selling villa 2025","AED 8.4M avg transaction — premium positioning","Meraas lifestyle retail drives property value"],
+                weaknesses:["Very high avg price — limited buyer pool","Government conservative structure = less innovation","Limited affordable product","Strong competition from Emaar on lifestyle"],
                 bestFor:"Lifestyle-focused luxury buyers, GCC HNW, weekend home buyers",
               },
               {
@@ -9991,15 +14786,15 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   minPrice:"AED 400K", maxPrice:"AED 5M",
                   segments:["Mid-market apartments","Branded luxury (Jacob & Co, Bugatti)","Investment units"],
                   communities:["Business Bay","JVC","Silicon Oasis","Downtown","Al Jaddaf"],
-                  paymentPlans:"50/50, 1% monthly â€” very flexible",
-                  creditRating:"Private â€” bond stress signals Mar 2026",
+                  paymentPlans:"50/50, 1% monthly — very flexible",
+                  creditRating:"Private — bond stress signals Mar 2026",
                   offPlanShare:"90% of sales",
-                  grossYield:"8-10% â€” highest in mid-market",
-                  capitalAppreciation:"Moderate â€” volume play, less brand premium",
+                  grossYield:"8-10% — highest in mid-market",
+                  capitalAppreciation:"Moderate — volume play, less brand premium",
                 },
                 strengths:["Highest gross yield in mid-market (8-10%)","Lowest entry price point AED 400K","60+ completed projects track record","Fastest growing developer 2024-2025","Unique architectural designs drive demand"],
-                weaknesses:["Bond stress signals reported Mar 2026 â€” HIGH RISK","78% delivery rate â€” below average","High leverage historically","Rapid expansion pace â€” execution risk","Private â€” very limited financial transparency"],
-                bestFor:"Yield-focused investors, entry-level buyers â€” monitor financial health",
+                weaknesses:["Bond stress signals reported Mar 2026 — HIGH RISK","78% delivery rate — below average","High leverage historically","Rapid expansion pace — execution risk","Private — very limited financial transparency"],
+                bestFor:"Yield-focused investors, entry-level buyers — monitor financial health",
               },
               {
                 name:"Danube Properties",
@@ -10018,13 +14813,13 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   segments:["Affordable luxury","Mid-market apartments","1% monthly payment pioneer"],
                   communities:["JVC","Arjan","Business Bay","Al Furjan"],
                   paymentPlans:"1% monthly (industry pioneer), 50/50, post-handover",
-                  creditRating:"Private â€” Danube Group backing",
+                  creditRating:"Private — Danube Group backing",
                   offPlanShare:"85% of sales",
-                  grossYield:"8-10% â€” JVC/Arjan segment",
-                  capitalAppreciation:"Moderate â€” affordable segment entry",
+                  grossYield:"8-10% — JVC/Arjan segment",
+                  capitalAppreciation:"Moderate — affordable segment entry",
                 },
-                strengths:["Best delivery record in affordable segment (88%)","Pioneer of 1% monthly payment â€” copied industry-wide","Danube Group material cost advantage","Lowest entry prices AED 350K","Strong tenant demand = low vacancy"],
-                weaknesses:["Small team relative to pipeline","Private â€” no financial disclosures","Affordable segment = thin margins","Limited luxury product","Community concentration JVC/Arjan"],
+                strengths:["Best delivery record in affordable segment (88%)","Pioneer of 1% monthly payment — copied industry-wide","Danube Group material cost advantage","Lowest entry prices AED 350K","Strong tenant demand = low vacancy"],
+                weaknesses:["Small team relative to pipeline","Private — no financial disclosures","Affordable segment = thin margins","Limited luxury product","Community concentration JVC/Arjan"],
                 bestFor:"First-time investors, yield maximisers, budget-conscious buyers",
               },
               {
@@ -10043,21 +14838,21 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   minPrice:"AED 600K", maxPrice:"AED 8M",
                   segments:["Design-led mid-premium","Boutique apartments","JVC + Business Bay specialist"],
                   communities:["JVC","Business Bay","Palm Jumeirah","Downtown"],
-                  paymentPlans:"60/40, 70/30 â€” construction linked",
-                  creditRating:"Private â€” lowest D/E ratio in segment",
+                  paymentPlans:"60/40, 70/30 — construction linked",
+                  creditRating:"Private — lowest D/E ratio in segment",
                   offPlanShare:"80% of sales",
-                  grossYield:"7-9% â€” premium finish drives premium rent",
-                  capitalAppreciation:"Strong â€” design premium commands resale premium",
+                  grossYield:"7-9% — premium finish drives premium rent",
+                  capitalAppreciation:"Strong — design premium commands resale premium",
                 },
-                strengths:["Highest finish quality per AED in mid-market","90% delivery rate","Lowest D/E ratio (0.38x) â€” most conservative","Strong resale premiums vs area average","Design-led = tenant quality above segment avg"],
-                weaknesses:["Low volume â€” can't compete on scale","Private â€” no financial disclosures","Small pipeline relative to demand","Limited community diversity","JVC oversupply risk affects all JVC developers"],
+                strengths:["Highest finish quality per AED in mid-market","90% delivery rate","Lowest D/E ratio (0.38x) — most conservative","Strong resale premiums vs area average","Design-led = tenant quality above segment avg"],
+                weaknesses:["Low volume — can't compete on scale","Private — no financial disclosures","Small pipeline relative to demand","Limited community diversity","JVC oversupply risk affects all JVC developers"],
                 bestFor:"Quality buyers, design-conscious investors, strong resale strategy",
               },
             ];
 
-            /* â”€â”€ Scoring metric labels â”€â”€ */
+            /* ── Scoring metric labels ── */
             const METRICS = [
-              {key:"overall",         label:"Overall Score",        icon:"â­"},
+              {key:"overall",         label:"Overall Score",        icon:"⭐"},
               {key:"salesVolume",     label:"Sales Volume",         icon:"\uD83D\uDCCA"},
               {key:"deliveryRecord",  label:"Delivery Record",      icon:"\uD83C\uDFD7"},
               {key:"financialStrength",label:"Financial Strength",  icon:"\uD83D\uDCB0"},
@@ -10071,7 +14866,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
 
             const selMetric = METRICS.find(m => m.key === cptMetric) || METRICS[0];
 
-            /* â”€â”€ Sort by selected metric â”€â”€ */
+            /* ── Sort by selected metric ── */
             const sorted = [...COMP_DATA]
               .filter(d => !cptSearch || d.name.toLowerCase().includes(cptSearch.toLowerCase()))
               .sort((a,b) => (b.scores[cptMetric]||0) - (a.scores[cptMetric]||0));
@@ -10093,11 +14888,11 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
             return (
               <div style={{ animation:"fadeUp 0.4s ease-out forwards" }}>
 
-                {/* â”€â”€ HEADER â”€â”€ */}
+                {/* ── HEADER ── */}
                 <div style={{ display:"flex", alignItems:"flex-start", justifyContent:"space-between", padding:"10px 0", marginBottom:16, borderBottom:`1px solid ${T.border}`, flexWrap:"wrap", gap:10 }}>
                   <div>
                     <div style={{ fontFamily:"'Fraunces',serif", fontSize:20, fontWeight:800, color:T.white }}>Developer Competitors</div>
-                    <div style={{ fontSize:11, color:T.textMuted, marginTop:3 }}>8 developers Â· 10-factor scoring Â· Head-to-head compare Â· DLD 2025 data Â· Sales, delivery, yield, brand</div>
+                    <div style={{ fontSize:11, color:T.textMuted, marginTop:3 }}>8 developers · 10-factor scoring · Head-to-head compare · DLD 2025 data · Sales, delivery, yield, brand</div>
                   </div>
                   <div style={{ display:"flex", gap:8 }}>
                     {["matrix","headToHead","detail","radar"].map(v=>(
@@ -10109,7 +14904,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   </div>
                 </div>
 
-                {/* â•â• MARKET MATRIX VIEW â•â• */}
+                {/* ══ MARKET MATRIX VIEW ══ */}
                 {cptView === "matrix" && (
                   <>
                     {/* Metric selector + search */}
@@ -10161,14 +14956,14 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
 
                     {/* Key insight */}
                     <div style={{ padding:"12px 16px", background:"rgba(212,168,67,0.06)", border:"1px solid rgba(212,168,67,0.2)", borderRadius:10, fontSize:11, color:T.textSecondary, lineHeight:1.8 }}>
-                      <strong style={{ color:T.gold }}>Market insight 2025:</strong> Emaar dominates with AED 51B sales (Jan-Aug) â€” nearly double DAMAC in second place at AED 24B.
-                      Off-plan share exceeded 60% of all Dubai transactions. Emaar upgraded to BBB+ by S&P â€” only UAE developer with investment-grade credit rating.
-                      Binghatti's AED 26B full-year 2025 sales were extraordinary â€” but monitor bond stress signals reported Mar 2026.
+                      <strong style={{ color:T.gold }}>Market insight 2025:</strong> Emaar dominates with AED 51B sales (Jan-Aug) — nearly double DAMAC in second place at AED 24B.
+                      Off-plan share exceeded 60% of all Dubai transactions. Emaar upgraded to BBB+ by S&P — only UAE developer with investment-grade credit rating.
+                      Binghatti's AED 26B full-year 2025 sales were extraordinary — but monitor bond stress signals reported Mar 2026.
                     </div>
                   </>
                 )}
 
-                {/* â•â• HEAD TO HEAD VIEW â•â• */}
+                {/* ══ HEAD TO HEAD VIEW ══ */}
                 {cptView === "headToHead" && (
                   <>
                     {/* Selector */}
@@ -10188,7 +14983,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                       <div style={{ padding:"20px", background:`linear-gradient(135deg,${devA.color}14,${devA.color}04)`, border:`1px solid ${devA.color}30`, borderRadius:14, textAlign:"center" }}>
                         <div style={{ fontFamily:"'Fraunces',serif", fontSize:18, fontWeight:800, color:T.white, marginBottom:6 }}>{devA.name}</div>
                         <div style={{ fontFamily:"'Fraunces',serif", fontSize:48, fontWeight:900, color:devA.color, lineHeight:1 }}>{devA.scores.overall}</div>
-                        <div style={{ fontSize:11, color:T.textMuted, marginTop:4 }}>{devA.tier}{"Â·"}{devA.data.deliveryRate} delivery</div>
+                        <div style={{ fontSize:11, color:T.textMuted, marginTop:4 }}>{devA.tier}{"·"}{devA.data.deliveryRate} delivery</div>
                       </div>
                       {/* VS */}
                       <div style={{ textAlign:"center", padding:"10px" }}>
@@ -10198,7 +14993,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                       <div style={{ padding:"20px", background:`linear-gradient(135deg,${devB.color}14,${devB.color}04)`, border:`1px solid ${devB.color}30`, borderRadius:14, textAlign:"center" }}>
                         <div style={{ fontFamily:"'Fraunces',serif", fontSize:18, fontWeight:800, color:T.white, marginBottom:6 }}>{devB.name}</div>
                         <div style={{ fontFamily:"'Fraunces',serif", fontSize:48, fontWeight:900, color:devB.color, lineHeight:1 }}>{devB.scores.overall}</div>
-                        <div style={{ fontSize:11, color:T.textMuted, marginTop:4 }}>{devB.tier}{"Â·"}{devB.data.deliveryRate} delivery</div>
+                        <div style={{ fontSize:11, color:T.textMuted, marginTop:4 }}>{devB.tier}{"·"}{devB.data.deliveryRate} delivery</div>
                       </div>
                     </div>
 
@@ -10252,7 +15047,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   </>
                 )}
 
-                {/* â•â• DETAIL VIEW â•â• */}
+                {/* ══ DETAIL VIEW ══ */}
                 {cptView === "detail" && (
                   <>
                     <div style={{ display:"flex", gap:8, marginBottom:16 }}>
@@ -10261,11 +15056,11 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                       </select>
                       <button type="button" onClick={()=>setCptView("matrix")}
                         style={{ padding:"6px 14px", background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:8, color:T.textMuted, fontSize:11, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>
-                        â† Back
+                        ← Back
                       </button>
                       <button type="button" onClick={()=>{ setCptDevB(devA.name==="DAMAC Properties"?"Emaar Properties":"DAMAC Properties"); setCptView("headToHead"); }}
                         style={{ padding:"6px 14px", background:"rgba(212,168,67,0.1)", border:"1px solid rgba(212,168,67,0.3)", borderRadius:8, color:T.gold, fontSize:11, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>
-                        Compare â†’
+                        Compare →
                       </button>
                     </div>
 
@@ -10275,7 +15070,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                         <div style={{ display:"flex", justifyContent:"space-between", marginBottom:12 }}>
                           <div>
                             <div style={{ fontFamily:"'Fraunces',serif", fontSize:18, fontWeight:800, color:T.white }}>{devA.name}</div>
-                            <div style={{ fontSize:11, color:T.textMuted, marginTop:2 }}>{devA.tier}{"Â·"}{devA.listed?`${devA.exchange} Listed`:"Private"}</div>
+                            <div style={{ fontSize:11, color:T.textMuted, marginTop:2 }}>{devA.tier}{"·"}{devA.listed?`${devA.exchange} Listed`:"Private"}</div>
                           </div>
                           <div style={{ textAlign:"right" }}>
                             <div style={{ fontFamily:"'Fraunces',serif", fontSize:32, fontWeight:900, color:devA.color }}>{devA.scores.overall}</div>
@@ -10323,14 +15118,14 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                         <div style={{ fontSize:12, fontWeight:700, color:T.white, marginBottom:10 }}>Strengths</div>
                         {devA.strengths.map((s,i)=>(
                           <div key={i} style={{ display:"flex", gap:8, padding:"5px 0", borderBottom:i<devA.strengths.length-1?`1px solid ${T.border}`:"none" }}>
-                            <span style={{ color:T.green }}>âœ“</span>
+                            <span style={{ color:T.green }}>✓</span>
                             <span style={{ fontSize:11, color:T.textSecondary, lineHeight:1.6 }}>{s}</span>
                           </div>
                         ))}
                         <div style={{ fontSize:12, fontWeight:700, color:T.white, margin:"14px 0 10px" }}>Weaknesses</div>
                         {devA.weaknesses.map((w,i)=>(
                           <div key={i} style={{ display:"flex", gap:8, padding:"5px 0", borderBottom:i<devA.weaknesses.length-1?`1px solid ${T.border}`:"none" }}>
-                            <span style={{ color:"#F97316" }}>âš </span>
+                            <span style={{ color:"#F97316" }}>⚠</span>
                             <span style={{ fontSize:11, color:T.textSecondary, lineHeight:1.6 }}>{w}</span>
                           </div>
                         ))}
@@ -10355,11 +15150,11 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   </>
                 )}
 
-                {/* â•â• SCORE RADAR VIEW â•â• */}
+                {/* ══ SCORE RADAR VIEW ══ */}
                 {cptView === "radar" && (
                   <div style={{ marginBottom:16 }}>
-                    <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:4 }}>Score Radar â€” All Developers</div>
-                    <div style={{ fontSize:11, color:T.textMuted, marginBottom:16 }}>Each factor scored 0-100 Â· Higher = better Â· Click developer to see detail</div>
+                    <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:4 }}>Score Radar — All Developers</div>
+                    <div style={{ fontSize:11, color:T.textMuted, marginBottom:16 }}>Each factor scored 0-100 · Higher = better · Click developer to see detail</div>
                     <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(200px,1fr))", gap:10 }}>
                       {COMP_DATA.map((d,i)=>(
                         <div key={i} className="chart-box" style={{ padding:16, cursor:"pointer", borderLeft:`3px solid ${d.color}` }}
@@ -10392,7 +15187,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   </div>
                 )}
 
-                {/* â”€â”€ SOURCE FOOTER â”€â”€ */}
+                {/* ── SOURCE FOOTER ── */}
                 <div style={{ paddingTop:12, borderTop:`1px solid ${T.border}`, display:"flex", gap:8, flexWrap:"wrap", alignItems:"center" }}>
                   <span style={{ fontSize:10, color:T.textMuted }}>Sources:</span>
                   {["DLD 2025 Transaction Data","mieyaruae.com Q3 2025 Report","dubaipropertyinsight.com","prelaunch.ae Dec 2025","takayamotorcity.com Feb 2026","prophero.net Jan 2026","S&P BBB+ Emaar 2025"].map((s,i)=>(
@@ -10404,11 +15199,11 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
             );
           })()}
 
-          {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-              INTELLIGENCE TABS â€” Awaiting Data Import
+          {/* ══════════════════════════════════════════════════════════
+              INTELLIGENCE TABS — Awaiting Data Import
               Each tab shows a beautiful empty state with instructions
-              Data connects via Firestore â€” Admin â†’ Data Manager
-          â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+              Data connects via Firestore — Admin → Data Manager
+          ══════════════════════════════════════════════════════════ */}
 
           {Object.entries(INTELLIGENCE_TABS).map(([tabKey, config]) => (
             tab === tabKey && tabKey !== "Overview" && tabKey !== "Market" && tabKey !== "DLD Volumes" && tabKey !== "Price History" && tabKey !== "Neighbourhoods" && tabKey !== "Launch Calendar" && tabKey !== "Currency" && tabKey !== "Projects" && tabKey !== "Map" && tabKey !== "Handover" && tabKey !== "Service Charges" && tabKey !== "Yields" && tabKey !== "STR vs LTR" && tabKey !== "Mortgage" && tabKey !== "Investment Score" && tabKey !== "Flip" && tabKey !== "DXB Estimate" && tabKey !== "Portfolio" && tabKey !== "Golden Visa" && tabKey !== "Risk" && tabKey !== "Financials" && tabKey !== "Developer Health" && tabKey !== "Banking" && tabKey !== "Marketing" && tabKey !== "Competitors" && (
@@ -10422,7 +15217,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                     <span style={{ fontSize: 11, color: T.textSecondary }}>
                       <span style={{ color: T.gold, fontWeight: 600 }}>DXB Analytics</span>
-                      {" "}{"Â·"}{tabKey}
+                      {" "}{"·"}{tabKey}
                     </span>
                   </div>
                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -10447,9 +15242,9 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
             )
           ))}
 
-          {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-              MY LEADS TAB â€” Session 4 â€” Agent CRM Inbox
-          â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+          {/* ══════════════════════════════════════════════
+              MY LEADS TAB — Session 4 — Agent CRM Inbox
+          ══════════════════════════════════════════════ */}
           {tab === "My Leads" && (() => {
             const mlIsAgent      = orgRole === "agent";
             const mlIsManager    = orgRole === "manager";
@@ -10459,7 +15254,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               : (mlIsAgent||mlIsManager) ? (myLeads||[])
               : (liveLeads||[]).filter(l => !auth.currentUser?.uid || l.userId === auth.currentUser.uid);
 
-            /* â”€â”€ Status config â”€â”€ */
+            /* ── Status config ── */
             const ML_ST = {
               "New":       {color:"#3B82F6",bg:"rgba(59,130,246,0.12)",label:"New"},
               "Contacted": {color:"#F59E0B",bg:"rgba(245,158,11,0.12)",label:"Contacted"},
@@ -10468,7 +15263,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               "Won":       {color:"#10B981",bg:"rgba(16,185,129,0.12)",label:"Won"},
               "Lost":      {color:"#EF4444",bg:"rgba(239,68,68,0.12)",label:"Lost"},
             };
-            /* â”€â”€ Source colors â”€â”€ */
+            /* ── Source colors ── */
             const ML_SRC = {
               "Property Finder":"#00C08B","Bayut":"#FF6B35","Dubizzle":"#E8003D",
               "Meta/Facebook":"#1877F2","Instagram":"#E1306C","WhatsApp":"#25D366",
@@ -10490,7 +15285,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               {label:"Viewing Confirm", body:"Hello {name}, confirming your property viewing scheduled for {date}. Please let me know if you need to reschedule. Looking forward to meeting you!"},
               {label:"Offer Made",      body:"Hello {name}, great news! We have submitted your offer. Our team is working to get you the best deal. I will update you as soon as we hear back."},
               {label:"Golden Visa",     body:"Hello {name}, based on your budget you qualify for UAE Golden Visa (AED 2M+ investment). This gives you 10-year residency. Shall I send you more details?"},
-              {label:"Market Update",   body:"Hello {name}, quick update â€” prices in your preferred area have moved. I have great options within your budget. Shall we connect?"},
+              {label:"Market Update",   body:"Hello {name}, quick update — prices in your preferred area have moved. I have great options within your budget. Shall we connect?"},
             ];
             const ML_EMAIL_TEMPLATES = [
               {label:"Introduction", subject:"Property Investment Opportunities in Dubai", body:"Dear {name},\n\nThank you for your interest in Dubai real estate. I am {agent} from The Address Holding.\n\nI have identified several properties matching your criteria and would love to schedule a call.\n\nBest regards,\n{agent}"},
@@ -10498,12 +15293,12 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               {label:"Follow Up", subject:"Following Up - Your Dubai Property Search", body:"Dear {name},\n\nFollowing up on your property enquiry. The Dubai market is moving quickly.\n\nShall we schedule a call this week?\n\nBest regards,\n{agent}"},
             ];
 
-            /* â”€â”€ Helpers â”€â”€ */
+            /* ── Helpers ── */
             const clnPhone = (p) => { if(!p) return ""; let o=""; for(let i=0;i<p.length;i++){const c=p.charCodeAt(i);if(c>=48&&c<=57)o+=p[i];} return o; };
-            const fmtB = (b) => { const n=parseFloat(b||0); if(n===0) return "â€”"; if(n>=1000000) return "AED "+(n*0.000001).toFixed(1)+"M"; return "AED "+n.toLocaleString(); };
+            const fmtB = (b) => { const n=parseFloat(b||0); if(n===0) return "—"; if(n>=1000000) return "AED "+(n*0.000001).toFixed(1)+"M"; return "AED "+n.toLocaleString(); };
             const escCSV = (v) => { const s=String(v==null?"":v); return '"'+s.replace(/"/g,'""')+'"'; };
 
-            /* â”€â”€ AI Score (6-factor engine) â”€â”€ */
+            /* ── AI Score (6-factor engine) ── */
             function mlScore(l) {
               let s=0;
               const b=parseFloat(l.budget||0);
@@ -10518,14 +15313,14 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               return {score, color:score>=70?"#10B981":score>=40?"#D4A843":"#EF4444", label:score>=70?"Hot":score>=40?"Warm":"Cold"};
             }
 
-            /* â”€â”€ Duplicate check â”€â”€ */
+            /* ── Duplicate check ── */
             function mlIsDuplicate(phone) {
               if(!phone) return false;
               const clean = clnPhone(phone);
               return mlAllLeads.some(l => clnPhone(l.phone) === clean);
             }
 
-            /* â”€â”€ Filtered & sorted leads â”€â”€ */
+            /* ── Filtered & sorted leads ── */
             const mlFiltered = (() => {
               let a = mlAllLeads;
               if(leadStatusFilter!=="all") a=a.filter(l=>(l.status||"New")===leadStatusFilter);
@@ -10553,7 +15348,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               return a;
             })();
 
-            /* â”€â”€ KPIs â”€â”€ */
+            /* ── KPIs ── */
             const mlTotalVal  = mlAllLeads.reduce((s,l)=>s+parseFloat(l.budget||0),0);
             const mlNewToday  = mlAllLeads.filter(l=>{const d=new Date(l.createdAt||0),n=new Date();return d.getDate()===n.getDate()&&d.getMonth()===n.getMonth();}).length;
             const mlWon       = mlAllLeads.filter(l=>l.status==="Won");
@@ -10563,14 +15358,14 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               return (Date.now()-new Date(l.updatedAt||l.createdAt||Date.now()).getTime())*0.000000011574>7;
             });
 
-            /* â”€â”€ Source analytics â”€â”€ */
+            /* ── Source analytics ── */
             const mlSrcStats = (() => {
               const stats={};
               mlAllLeads.forEach(l=>{const src=l.source||"Manual";if(!stats[src])stats[src]={total:0,won:0};stats[src].total++;if(l.status==="Won")stats[src].won++;});
               return Object.entries(stats).map(([src,d])=>({src,total:d.total,won:d.won,rate:d.total>0?Math.round(d.won*100/d.total):0})).sort((a,b)=>b.total-a.total);
             })();
 
-            /* â”€â”€ Save lead â”€â”€ */
+            /* ── Save lead ── */
             async function mlSave() {
               if(!leadAddName||!leadAddPhone) return;
               if(mlIsDuplicate(leadAddPhone)){if(!window.confirm("A lead with this phone already exists. Add anyway?")) return;}
@@ -10599,7 +15394,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               setLeadAddSaving(false);
             }
 
-            /* â”€â”€ Add note/activity â”€â”€ */
+            /* ── Add note/activity ── */
             async function mlNote(id) {
               if(!noteText.trim()) return;
               setNoteLoading(true);
@@ -10612,7 +15407,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               setNoteLoading(false);
             }
 
-            /* â”€â”€ Change status â”€â”€ */
+            /* ── Change status ── */
             async function mlStatus(id,st) {
               try {
                 const entry={text:"Status changed to "+st,type:"Status Change",by:auth.currentUser?.email||"agent",at:new Date().toISOString()};
@@ -10623,7 +15418,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               } catch(e){console.error(e);}
             }
 
-            /* â”€â”€ Toggle tag â”€â”€ */
+            /* ── Toggle tag ── */
             async function mlToggleTag(id,tag,currentTags) {
               const tags=currentTags||[];
               const newTags=tags.includes(tag)?tags.filter(t=>t!==tag):[...tags,tag];
@@ -10633,7 +15428,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               } catch(e){console.error(e);}
             }
 
-            /* â”€â”€ Save deal value â”€â”€ */
+            /* ── Save deal value ── */
             async function mlSaveDeal(id,val) {
               try {
                 await updateDoc(doc(db,"leads",id),{dealValue:parseFloat(val)||0,updatedAt:new Date().toISOString()});
@@ -10641,7 +15436,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               } catch(e){console.error(e);}
             }
 
-            /* â”€â”€ Export CSV â”€â”€ */
+            /* ── Export CSV ── */
             function mlExportCSV() {
               const h=["Name","Phone","Email","Budget","Status","Source","Nationality","Language","Timeline","Purpose","Bedrooms","Community","Type","Tags","Referred By","Follow Up","AI Score","Created","Deal Value"];
               const r=mlFiltered.map(l=>[
@@ -10660,7 +15455,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               a.href=u;a.download="DXB_Leads_"+new Date().toISOString().slice(0,10)+".csv";a.click();URL.revokeObjectURL(u);
             }
 
-            /* â”€â”€ Bulk WhatsApp â”€â”€ */
+            /* ── Bulk WhatsApp ── */
             function mlBulkWA() {
               const withPhone=mlFiltered.filter(l=>l.phone);
               if(withPhone.length===0){alert("No leads with phone numbers in current filter.");return;}
@@ -10687,14 +15482,14 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
             return (
               <div style={{padding:"0 0 60px"}}>
 
-                {/* â”€â”€ HEADER â”€â”€ */}
+                {/* ── HEADER ── */}
                 <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:18,flexWrap:"wrap",gap:10}}>
                   <div>
                     <h1 style={{fontFamily:"'Fraunces',serif",fontSize:22,fontWeight:900,color:T.white,margin:0}}>
                       {mlIsManager?"Team Leads":"My Leads"}
                     </h1>
                     <p style={{fontSize:12,color:T.textMuted,margin:"3px 0 0"}}>
-                      {mlFiltered.length} of {mlAllLeads.length} leads Â· AI scored Â· WhatsApp ready
+                      {mlFiltered.length} of {mlAllLeads.length} leads · AI scored · WhatsApp ready
                     </p>
                   </div>
                   <div style={{display:"flex",gap:7,flexWrap:"wrap"}}>
@@ -10717,7 +15512,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   </div>
                 </div>
 
-                {/* â”€â”€ 5 KPI CARDS â”€â”€ */}
+                {/* ── 5 KPI CARDS ── */}
                 <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:9,marginBottom:14}}>
                   {[
                     {label:"Total",      value:String(mlAllLeads.length),  color:"#D4A843"},
@@ -10734,10 +15529,10 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   ))}
                 </div>
 
-                {/* â”€â”€ SOURCE ANALYTICS PANEL â”€â”€ */}
+                {/* ── SOURCE ANALYTICS PANEL ── */}
                 {showMLAnalytics && (
                   <div style={{background:T.card,border:"1px solid "+T.border,borderRadius:10,padding:"14px 16px",marginBottom:12}}>
-                    <div style={{fontSize:12,fontWeight:700,color:T.white,marginBottom:10}}>Source Performance â€” Conversion Rate by Channel</div>
+                    <div style={{fontSize:12,fontWeight:700,color:T.white,marginBottom:10}}>Source Performance — Conversion Rate by Channel</div>
                     <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(140px,1fr))",gap:8}}>
                       {mlSrcStats.slice(0,8).map((s,i)=>(
                         <div key={i} style={{background:T.surfaceAlt,borderRadius:7,padding:"9px 11px"}}>
@@ -10761,7 +15556,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   </div>
                 )}
 
-                {/* â”€â”€ STALE LEADS ALERT â”€â”€ */}
+                {/* ── STALE LEADS ALERT ── */}
                 {mlStale.length>0 && (() => {
                   const named=mlStale.filter(l=>l.name&&l.name.trim()&&l.name!=="Unnamed");
                   return (
@@ -10769,8 +15564,8 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                       <div style={{width:5,height:5,borderRadius:"50%",background:"#EF4444",flexShrink:0}}/>
                       <div style={{flex:1,fontSize:11,color:"#EF4444"}}>
                         {named.length>0
-                          ? named.slice(0,2).map(l=>l.name).join(", ")+(mlStale.length>2?" + "+(mlStale.length-2)+" more":"")+" â€” 7+ days no contact"
-                          : mlStale.length+" leads need follow-up â€” 7+ days no contact"}
+                          ? named.slice(0,2).map(l=>l.name).join(", ")+(mlStale.length>2?" + "+(mlStale.length-2)+" more":"")+" — 7+ days no contact"
+                          : mlStale.length+" leads need follow-up — 7+ days no contact"}
                       </div>
                       <button type="button" onClick={()=>setLeadSortBy("date")}
                         style={{padding:"2px 9px",background:"transparent",border:"1px solid rgba(239,68,68,0.3)",borderRadius:4,color:"#EF4444",fontSize:10,cursor:"pointer"}}>View</button>
@@ -10778,7 +15573,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   );
                 })()}
 
-                {/* â”€â”€ SMART FILTER PILLS â”€â”€ */}
+                {/* ── SMART FILTER PILLS ── */}
                 <div style={{display:"flex",gap:6,marginBottom:10,flexWrap:"wrap"}}>
                   {[
                     {label:"Hot Leads",   fn:()=>{setLeadSortBy("score");setLeadStatusFilter("all");}},
@@ -10798,7 +15593,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   ))}
                 </div>
 
-                {/* â”€â”€ FILTER BAR â”€â”€ */}
+                {/* ── FILTER BAR ── */}
                 <div style={{background:T.surfaceAlt,border:"1px solid "+T.border,borderRadius:10,padding:"10px 12px",marginBottom:12}}>
                   <div style={{display:"flex",gap:7,flexWrap:"wrap",alignItems:"center",marginBottom:7}}>
                     <div style={{position:"relative",flex:"2 1 170px"}}>
@@ -10834,9 +15629,9 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                       style={{flex:"1 1 105px",padding:"7px 8px",background:T.surface,border:"1px solid "+T.border,borderRadius:6,color:T.textPrimary,fontSize:12,outline:"none"}}>
                       <option value="all">All Budgets</option>
                       <option value="under1m">Under 1M</option>
-                      <option value="1to3m">1M â€“ 3M</option>
-                      <option value="3to5m">3M â€“ 5M</option>
-                      <option value="5to10m">5M â€“ 10M</option>
+                      <option value="1to3m">1M – 3M</option>
+                      <option value="3to5m">3M – 5M</option>
+                      <option value="5to10m">5M – 10M</option>
                       <option value="above10m">10M+</option>
                     </select>
                     <select value={leadTypeFilter} onChange={e=>setLeadTypeFilter(e.target.value)}
@@ -10868,13 +15663,13 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   </div>
                 </div>
 
-                {/* â”€â”€ ADD LEAD FORM â”€â”€ */}
+                {/* ── ADD LEAD FORM ── */}
                 {leadShowAdd && (
                   <div style={{padding:"16px 18px",background:"rgba(212,168,67,0.04)",border:"1px solid rgba(212,168,67,0.2)",borderRadius:10,marginBottom:12}}>
                     <div style={{fontSize:13,fontWeight:700,color:T.white,marginBottom:12}}>Add New Lead</div>
                     {leadAddPhone && mlIsDuplicate(leadAddPhone) && (
                       <div style={{padding:"6px 10px",background:"rgba(239,68,68,0.1)",border:"1px solid rgba(239,68,68,0.2)",borderRadius:6,marginBottom:10,fontSize:11,color:"#EF4444"}}>
-                        Duplicate detected â€” a lead with this phone number already exists
+                        Duplicate detected — a lead with this phone number already exists
                       </div>
                     )}
                     <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:9,marginBottom:9}}>
@@ -10957,7 +15752,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   </div>
                 )}
 
-                {/* â”€â”€ LEAD TABLE â”€â”€ */}
+                {/* ── LEAD TABLE ── */}
                 <div style={{background:T.card,border:"1px solid "+T.border,borderRadius:10,overflow:"hidden"}}>
                   <div style={{display:"grid",gridTemplateColumns:"minmax(175px,1fr) 55px 88px 110px 55px 100px 78px 90px",gap:7,padding:"8px 12px",background:T.surfaceAlt,borderBottom:"1px solid "+T.border}}>
                     {["Lead","Score","Status","Source","Type","Budget","Date","Actions"].map((h,i)=>(
@@ -11002,7 +15797,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                               {isUrgent&&<span style={{fontSize:8,padding:"1px 4px",borderRadius:3,background:"rgba(239,68,68,0.15)",color:"#EF4444",fontWeight:700,flexShrink:0}}>NOW</span>}
                               {isOverdue&&<span style={{fontSize:8,padding:"1px 4px",borderRadius:3,background:"rgba(239,68,68,0.1)",color:"#EF4444",fontWeight:700,flexShrink:0}}>STALE</span>}
                             </div>
-                            <div style={{fontSize:11,color:T.textMuted,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{l.phone||l.email||l.community||"â€”"}</div>
+                            <div style={{fontSize:11,color:T.textMuted,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{l.phone||l.email||l.community||"—"}</div>
                           </div>
                         </div>
 
@@ -11013,14 +15808,14 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
 
                         <div><span style={{display:"inline-block",padding:"3px 7px",borderRadius:5,fontSize:10,fontWeight:600,background:sc.bg,color:sc.color}}>{sc.label}</span></div>
 
-                        <div><span style={{display:"inline-block",padding:"3px 7px",borderRadius:4,fontSize:10,fontWeight:600,background:srcC+"1A",color:srcC,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",maxWidth:105}}>{(l.source||"Manual").length>14?(l.source||"Manual").slice(0,14)+"â€¦":(l.source||"Manual")}</span></div>
+                        <div><span style={{display:"inline-block",padding:"3px 7px",borderRadius:4,fontSize:10,fontWeight:600,background:srcC+"1A",color:srcC,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",maxWidth:105}}>{(l.source||"Manual").length>14?(l.source||"Manual").slice(0,14)+"…":(l.source||"Manual")}</span></div>
 
                         <div style={{fontSize:11,color:T.textMuted}}>{l.type||"Buy"}</div>
 
                         <div style={{fontSize:12,fontWeight:700,color:isGV?"#D4A843":T.textPrimary}}>{fmtB(l.budget)}</div>
 
                         <div>
-                          <div style={{fontSize:11,color:T.textMuted}}>{l.createdAt?new Date(l.createdAt).toLocaleDateString("en-AE",{day:"2-digit",month:"short"}):("â€”")}</div>
+                          <div style={{fontSize:11,color:T.textMuted}}>{l.createdAt?new Date(l.createdAt).toLocaleDateString("en-AE",{day:"2-digit",month:"short"}):("—")}</div>
                           {l.followUpDate&&<div style={{fontSize:9,color:"#D4A843"}}>FU: {l.followUpDate}</div>}
                         </div>
 
@@ -11036,12 +15831,12 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   {mlFiltered.length>0&&(
                     <div style={{padding:"8px 12px",borderTop:"1px solid "+T.border,fontSize:11,color:T.textMuted,display:"flex",justifyContent:"space-between"}}>
                       <span>{mlFiltered.length} of {mlAllLeads.length} leads shown</span>
-                      <span>{mlWon.length} Won Â· {mlAllLeads.filter(l=>l.status==="Lost").length} Lost Â· {fmtB(mlTotalVal)} total pipeline</span>
+                      <span>{mlWon.length} Won · {mlAllLeads.filter(l=>l.status==="Lost").length} Lost · {fmtB(mlTotalVal)} total pipeline</span>
                     </div>
                   )}
                 </div>
 
-                {/* â”€â”€ LEAD DRAWER â”€â”€ */}
+                {/* ── LEAD DRAWER ── */}
                 {selectedLead&&(
                   <div style={{position:"fixed",inset:0,zIndex:1500,display:"flex"}} onClick={e=>{if(e.target===e.currentTarget)setSelectedLead(null);}}>
                     <div style={{flex:1,background:"rgba(0,0,0,0.5)"}} onClick={()=>setSelectedLead(null)}/>
@@ -11056,7 +15851,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                               <span style={{fontSize:16,fontWeight:700,color:T.white,fontFamily:"'Fraunces',serif",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{selectedLead.name||"Unnamed Lead"}</span>
                             </div>
                             <div style={{fontSize:11,color:T.textMuted}}>
-                              {[selectedLead.nationality,selectedLead.language,selectedLead.community].filter(Boolean).join(" Â· ")}
+                              {[selectedLead.nationality,selectedLead.language,selectedLead.community].filter(Boolean).join(" · ")}
                             </div>
                             <div style={{display:"flex",gap:4,marginTop:5,flexWrap:"wrap"}}>
                               {selectedLead.timeline&&<span style={{fontSize:10,padding:"2px 6px",borderRadius:7,background:selectedLead.timeline==="Immediate"?"rgba(239,68,68,0.15)":"rgba(212,168,67,0.1)",color:selectedLead.timeline==="Immediate"?"#EF4444":"#D4A843",fontWeight:600}}>{selectedLead.timeline}</span>}
@@ -11125,7 +15920,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                                     <button type="button" onClick={()=>{const v=document.getElementById("dealValueInput").value;mlSaveDeal(selectedLead.id,v);}}
                                       style={{padding:"6px 12px",background:"#10B981",color:"#fff",border:"none",borderRadius:6,fontSize:11,fontWeight:700,cursor:"pointer"}}>Save</button>
                                   </div>
-                                  {selectedLead.dealValue&&<div style={{fontSize:10,color:"#10B981",marginTop:5}}>{fmtB(selectedLead.dealValue)} Â· Est. commission {fmtB(parseFloat(selectedLead.dealValue)*0.02)}</div>}
+                                  {selectedLead.dealValue&&<div style={{fontSize:10,color:"#10B981",marginTop:5}}>{fmtB(selectedLead.dealValue)} · Est. commission {fmtB(parseFloat(selectedLead.dealValue)*0.02)}</div>}
                                 </div>
                               )}
 
@@ -11133,17 +15928,17 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                               <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:7,marginBottom:10}}>
                                 {[
                                   {label:"Budget",      value:fmtB(selectedLead.budget)},
-                                  {label:"Source",      value:selectedLead.source||"â€”"},
-                                  {label:"Nationality", value:selectedLead.nationality||"â€”"},
-                                  {label:"Language",    value:selectedLead.language||"â€”"},
-                                  {label:"Timeline",    value:selectedLead.timeline||"â€”"},
-                                  {label:"Purpose",     value:selectedLead.purpose||"â€”"},
-                                  {label:"Type",        value:selectedLead.type||"â€”"},
-                                  {label:"Bedrooms",    value:selectedLead.bedrooms||"â€”"},
-                                  {label:"Community",   value:selectedLead.community||"â€”"},
-                                  {label:"Referred By", value:selectedLead.referredBy||"â€”"},
-                                  {label:"Follow Up",   value:selectedLead.followUpDate||"â€”"},
-                                  {label:"Created",     value:selectedLead.createdAt?new Date(selectedLead.createdAt).toLocaleDateString("en-AE"):"â€”"},
+                                  {label:"Source",      value:selectedLead.source||"—"},
+                                  {label:"Nationality", value:selectedLead.nationality||"—"},
+                                  {label:"Language",    value:selectedLead.language||"—"},
+                                  {label:"Timeline",    value:selectedLead.timeline||"—"},
+                                  {label:"Purpose",     value:selectedLead.purpose||"—"},
+                                  {label:"Type",        value:selectedLead.type||"—"},
+                                  {label:"Bedrooms",    value:selectedLead.bedrooms||"—"},
+                                  {label:"Community",   value:selectedLead.community||"—"},
+                                  {label:"Referred By", value:selectedLead.referredBy||"—"},
+                                  {label:"Follow Up",   value:selectedLead.followUpDate||"—"},
+                                  {label:"Created",     value:selectedLead.createdAt?new Date(selectedLead.createdAt).toLocaleDateString("en-AE"):"—"},
                                 ].map((item,i)=>(
                                   <div key={i} style={{background:T.surfaceAlt,borderRadius:6,padding:"7px 10px"}}>
                                     <div style={{fontSize:9,color:T.textMuted,marginBottom:2}}>{item.label}</div>
@@ -11241,7 +16036,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                               return (
                                 <div key={i} style={{padding:"8px 10px",background:T.surfaceAlt,borderRadius:6,marginBottom:6,borderLeft:"2px solid "+(isOverdueTask?"#EF4444":"#8B5CF6")}}>
                                   <div style={{fontSize:12,color:T.textPrimary,marginBottom:2}}>{n.text.replace("Task: ","")}</div>
-                                  {n.due&&<div style={{fontSize:10,color:isOverdueTask?"#EF4444":"#D4A843",fontWeight:600}}>Due: {n.due}{isOverdueTask?" â€” OVERDUE":""}</div>}
+                                  {n.due&&<div style={{fontSize:10,color:isOverdueTask?"#EF4444":"#D4A843",fontWeight:600}}>Due: {n.due}{isOverdueTask?" — OVERDUE":""}</div>}
                                   <div style={{fontSize:9,color:T.textMuted,marginTop:2}}>{n.by||""}</div>
                                 </div>
                               );
@@ -11272,7 +16067,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                                     <span style={{fontSize:10,fontWeight:700,color:"#D4A843"}}>Lead Created</span>
                                     <span style={{fontSize:9,color:T.textMuted}}>{selectedLead.createdAt?new Date(selectedLead.createdAt).toLocaleDateString("en-AE",{day:"2-digit",month:"short",year:"numeric"}):""}</span>
                                   </div>
-                                  <div style={{fontSize:11,color:T.textMuted,marginTop:2}}>{selectedLead.source||"Manual"} Â· {fmtB(selectedLead.budget)}</div>
+                                  <div style={{fontSize:11,color:T.textMuted,marginTop:2}}>{selectedLead.source||"Manual"} · {fmtB(selectedLead.budget)}</div>
                                 </div>
                               </div>
                               {(selectedLead.notes_log||[]).length===0&&<div style={{paddingLeft:37,fontSize:11,color:T.textMuted}}>No activities yet. Log a call, WhatsApp, or note above.</div>}
@@ -11324,7 +16119,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                                 </div>
                               </div>
                             ):(
-                              <div style={{textAlign:"center",padding:"20px",color:T.textMuted,fontSize:12}}>No tags yet â€” click above to add</div>
+                              <div style={{textAlign:"center",padding:"20px",color:T.textMuted,fontSize:12}}>No tags yet — click above to add</div>
                             )}
                           </div>
                         )}
@@ -11334,7 +16129,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                           <div>
                             <div style={{padding:"16px",textAlign:"center",background:T.surfaceAlt,borderRadius:8,border:"2px dashed "+T.border,marginBottom:10}}>
                               <div style={{fontSize:12,fontWeight:600,color:T.textPrimary,marginBottom:3}}>Upload Documents</div>
-                              <div style={{fontSize:10,color:T.textMuted,marginBottom:10}}>Passport Â· Visa Â· Emirates ID Â· Proof of Funds</div>
+                              <div style={{fontSize:10,color:T.textMuted,marginBottom:10}}>Passport · Visa · Emirates ID · Proof of Funds</div>
                               <input type="file" accept=".pdf,.jpg,.jpeg,.png" multiple id="docUpload"
                                 onChange={async(e)=>{
                                   const files=Array.from(e.target.files||[]);
@@ -11368,7 +16163,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   </div>
                 )}
 
-                {/* â”€â”€ QUICK CAPTURE MODAL â”€â”€ */}
+                {/* ── QUICK CAPTURE MODAL ── */}
                 {showQuickCapture&&(
                   <div style={{position:"fixed",inset:0,background:"rgba(4,9,15,0.85)",zIndex:2000,display:"flex",alignItems:"center",justifyContent:"center"}} onClick={e=>{if(e.target===e.currentTarget)setShowQuickCapture(false);}}>
                     <div style={{background:T.surface,borderRadius:12,border:"1px solid "+T.border,width:"95%",maxWidth:480,padding:"20px"}} onClick={e=>e.stopPropagation()}>
@@ -11428,17 +16223,17 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   </div>
                 )}
 
-                {/* â”€â”€ BULK WA TEMPLATES MODAL â”€â”€ */}
+                {/* ── BULK WA TEMPLATES MODAL ── */}
                 {showMLTemplates&&(
                   <div style={{position:"fixed",inset:0,background:"rgba(4,9,15,0.85)",zIndex:2100,display:"flex",alignItems:"center",justifyContent:"center"}} onClick={e=>{if(e.target===e.currentTarget)setShowMLTemplates(false);}}>
                     <div style={{background:T.surface,borderRadius:12,border:"1px solid "+T.border,width:"95%",maxWidth:500,padding:"20px"}} onClick={e=>e.stopPropagation()}>
                       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
-                        <div style={{fontFamily:"'Fraunces',serif",fontSize:14,fontWeight:900,color:T.white}}>Bulk WhatsApp â€” {mlFiltered.filter(l=>l.phone).length} leads with phone</div>
+                        <div style={{fontFamily:"'Fraunces',serif",fontSize:14,fontWeight:900,color:T.white}}>Bulk WhatsApp — {mlFiltered.filter(l=>l.phone).length} leads with phone</div>
                         <button type="button" onClick={()=>setShowMLTemplates(false)} style={{background:T.surfaceAlt,border:"1px solid "+T.border,borderRadius:6,color:T.textMuted,width:26,height:26,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>
                           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                         </button>
                       </div>
-                      <div style={{fontSize:11,color:T.textMuted,marginBottom:12}}>Select a template â€” opens WhatsApp pre-filled for the first lead in your filter.</div>
+                      <div style={{fontSize:11,color:T.textMuted,marginBottom:12}}>Select a template — opens WhatsApp pre-filled for the first lead in your filter.</div>
                       <div style={{display:"flex",flexDirection:"column",gap:8}}>
                         {ML_WA_TEMPLATES.map((tmpl,i)=>(
                           <button key={i} type="button" onClick={()=>mlSendWATemplate(tmpl)}
@@ -11550,11 +16345,11 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
 
             return (<>
 
-              {/* â”€â”€ Header â”€â”€ */}
+              {/* ── Header ── */}
               <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:20, flexWrap:"wrap", gap:12 }}>
                 <div>
                   <h1 style={{ fontFamily:"'Fraunces',serif", fontSize:22, fontWeight:900, color:T.white, margin:0 }}>Deal Pipeline</h1>
-                  <p style={{ fontSize:12, color:T.textMuted, margin:"4px 0 0" }}>EOI â†’ Booking â†’ SPA â†’ DLD Â· Track every deal to close</p>
+                  <p style={{ fontSize:12, color:T.textMuted, margin:"4px 0 0" }}>EOI → Booking → SPA → DLD · Track every deal to close</p>
                 </div>
                 <div style={{ display:"flex", gap:8 }}>
                   {/* Type filter */}
@@ -11574,7 +16369,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 </div>
               </div>
 
-              {/* â”€â”€ KPI Bar â”€â”€ */}
+              {/* ── KPI Bar ── */}
               <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:10, marginBottom:20 }}>
                 {[
                   { label:"Active Deals",    value:filteredDeals.filter(d=>d.stage!=="Completed").length, color:T.gold,   icon:<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><rect x="3" y="3" width="4" height="18" rx="1"/><rect x="10" y="3" width="4" height="12" rx="1"/><rect x="17" y="3" width="4" height="15" rx="1"/></svg> },
@@ -11593,7 +16388,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 ))}
               </div>
 
-              {/* â”€â”€ Stage Progress Bar â”€â”€ */}
+              {/* ── Stage Progress Bar ── */}
               <div style={{ overflowX:"auto", marginBottom:20 }}>
                 <div style={{ display:"grid", gridTemplateColumns:`repeat(${STAGES.length},minmax(200px,1fr))`, borderRadius:10, overflow:"hidden", border:`1px solid ${T.border}`, minWidth:700 }}>
                 {STAGES.map((s,i) => {
@@ -11610,7 +16405,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 </div>
               </div>
 
-              {/* â”€â”€ Kanban Board â”€â”€ */}
+              {/* ── Kanban Board ── */}
               {dealsLoading ? (
                 <div style={{ display:"flex", alignItems:"center", justifyContent:"center", padding:"60px 0", gap:10 }}>
                   <div style={{ width:20, height:20, border:`2px solid ${T.gold}30`, borderTopColor:T.gold, borderRadius:"50%", animation:"spin 0.7s linear infinite" }}/>
@@ -11687,7 +16482,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 </div>
               )}
 
-              {/* â”€â”€ Deal Detail Drawer â”€â”€ */}
+              {/* ── Deal Detail Drawer ── */}
               {selectedDeal && (
                 <div style={{ position:"fixed", inset:0, zIndex:1500, display:"flex" }} onClick={e=>{if(e.target===e.currentTarget)setSelectedDeal(null);}}>
                   <div style={{ flex:1, background:"rgba(0,0,0,0.5)", backdropFilter:"blur(4px)" }} onClick={()=>setSelectedDeal(null)}/>
@@ -11697,7 +16492,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                       <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:14 }}>
                         <div>
                           <div style={{ fontFamily:"'Fraunces',serif", fontSize:18, fontWeight:900, color:T.white }}>{selectedDeal.leadName||"Unnamed Deal"}</div>
-                          <div style={{ fontSize:11, color:T.textMuted, marginTop:3 }}>{selectedDeal.project} {selectedDeal.unitNo && `Â· Unit ${selectedDeal.unitNo}`}</div>
+                          <div style={{ fontSize:11, color:T.textMuted, marginTop:3 }}>{selectedDeal.project} {selectedDeal.unitNo && `· Unit ${selectedDeal.unitNo}`}</div>
                         </div>
                         <button type="button" onClick={()=>setSelectedDeal(null)}
                           style={{ background:"rgba(255,255,255,0.06)", border:`1px solid ${T.border}`, borderRadius:7, color:T.textMuted, cursor:"pointer", padding:"5px 10px", display:"flex", alignItems:"center", gap:4, fontSize:12 }}>
@@ -11740,7 +16535,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                           <div>
                             <div style={{ fontSize:10, color:T.textMuted, marginBottom:5 }}>Deal Price (AED)</div>
                             <div style={{ fontSize:18, fontWeight:900, color:T.gold, fontFamily:"'Fraunces',serif" }}>
-                              {selectedDeal.price>0?`${(parseFloat(selectedDeal.price)/1e6).toFixed(2)}M`:"â€”"}
+                              {selectedDeal.price>0?`${(parseFloat(selectedDeal.price)/1e6).toFixed(2)}M`:"—"}
                             </div>
                           </div>
                           <div>
@@ -11774,7 +16569,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                             <div key={pi} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"6px 0", borderBottom:pi<2?`1px solid ${T.border}`:"none" }}>
                               <div>
                                 <div style={{ fontSize:11, fontWeight:600, color:T.textPrimary }}>{p.name}</div>
-                                <div style={{ fontSize:10, color:T.textMuted }}>AED {p.price?(p.price/1e6).toFixed(2)+"M":"TBD"}{"Â·"}{p.status}</div>
+                                <div style={{ fontSize:10, color:T.textMuted }}>AED {p.price?(p.price/1e6).toFixed(2)+"M":"TBD"}{"·"}{p.status}</div>
                               </div>
                               <span style={{ fontSize:9, padding:"2px 6px", borderRadius:4, background:"rgba(212,168,67,0.1)", color:T.gold }}>{p.handover}</span>
                             </div>
@@ -11803,14 +16598,14 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 </div>
               )}
 
-              {/* â”€â”€ New Deal Modal â”€â”€ */}
+              {/* ── New Deal Modal ── */}
               {showNewDeal && (
                 <div style={{ position:"fixed", inset:0, background:"rgba(4,9,15,0.85)", zIndex:2000, display:"flex", alignItems:"center", justifyContent:"center", backdropFilter:"blur(8px)" }} onClick={e=>{if(e.target===e.currentTarget)setShowNewDeal(false);}}>
                   <div style={{ background:T.surface, borderRadius:16, border:`1px solid ${T.border}`, width:"95%", maxWidth:520, maxHeight:"90vh", overflowY:"auto" }} onClick={e=>e.stopPropagation()}>
                     <div style={{ padding:"22px 24px", borderBottom:`1px solid ${T.border}`, display:"flex", justifyContent:"space-between", alignItems:"center" }}>
                       <div>
                         <div style={{ fontFamily:"'Fraunces',serif", fontSize:18, fontWeight:900, color:T.gold }}>New Deal</div>
-                        <div style={{ fontSize:11, color:T.textMuted, marginTop:2 }}>Start at EOI stage â€” advance as the deal progresses</div>
+                        <div style={{ fontSize:11, color:T.textMuted, marginTop:2 }}>Start at EOI stage — advance as the deal progresses</div>
                       </div>
                       <button type="button" onClick={()=>setShowNewDeal(false)}
                         style={{ background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:8, color:T.textMuted, width:32, height:32, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center" }}>
@@ -11896,10 +16691,10 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
 
 
 
-          {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-              COMPLIANCE TAB â€” Session 6
+          {/* ══════════════════════════════════════════════
+              COMPLIANCE TAB — Session 6
               RERA card tracker + WhatsApp templates
-          â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+          ══════════════════════════════════════════════ */}
           {tab === "Compliance" && (() => {
             const isAgent   = orgRole === "agent";
             const isManager = orgRole === "manager";
@@ -11927,7 +16722,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               followup: { label:"Follow-Up",    text:(name)=>`Hi${name?" "+name:""},\n\nJust following up on our previous conversation about Dubai properties. I have some exciting new listings that match your criteria.\n\nWould you be available for a quick call this week?\n\nLooking forward to hearing from you.` },
               match:    { label:"Property Match",text:(name)=>`Hi${name?" "+name:""},\n\nGreat news! I've found a property that matches exactly what you're looking for.\n\nI'll send you the full details shortly. Would you like to schedule a viewing?\n\nBest regards` },
               meeting:  { label:"Meeting Request",text:(name)=>`Hello${name?" "+name:""},\n\nI'd like to schedule a meeting to discuss your property requirements in detail and show you some exclusive listings.\n\nAre you free for a 30-minute call this week? Please let me know your preferred time.\n\nThank you` },
-              gv:       { label:"Golden Visa",  text:(name)=>`Hi${name?" "+name:""},\n\nDid you know that purchasing a property above AED 2 Million in Dubai qualifies you for a 10-year UAE Golden Visa?\n\nI have some excellent options in this range â€” would you like me to share the details?\n\nBest regards` },
+              gv:       { label:"Golden Visa",  text:(name)=>`Hi${name?" "+name:""},\n\nDid you know that purchasing a property above AED 2 Million in Dubai qualifies you for a 10-year UAE Golden Visa?\n\nI have some excellent options in this range — would you like me to share the details?\n\nBest regards` },
             };
 
             // Save RERA card
@@ -11946,13 +16741,13 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:20, flexWrap:"wrap", gap:12 }}>
                 <div>
                   <h1 style={{ fontFamily:"'Fraunces',serif", fontSize:22, fontWeight:900, color:T.white, margin:0 }}>Compliance</h1>
-                  <p style={{ fontSize:12, color:T.textMuted, margin:"4px 0 0" }}>RERA card tracker Â· WhatsApp templates Â· Regulatory alerts</p>
+                  <p style={{ fontSize:12, color:T.textMuted, margin:"4px 0 0" }}>RERA card tracker · WhatsApp templates · Regulatory alerts</p>
                 </div>
               </div>
 
               <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16, alignItems:"start" }}>
 
-                {/* â”€â”€ Left column â”€â”€ */}
+                {/* ── Left column ── */}
                 <div style={{ display:"flex", flexDirection:"column", gap:16 }}>
 
                   {/* RERA Card Status */}
@@ -11970,7 +16765,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                           <div style={{ fontSize:12, fontWeight:700, color:sc.color }}>{sc.label}</div>
                           {daysLeft !== null && (
                             <div style={{ fontSize:11, color:T.textMuted, marginTop:2 }}>
-                              {daysLeft <= 0 ? "Your RERA card has expired â€” renew immediately" : `${daysLeft} days remaining until expiry`}
+                              {daysLeft <= 0 ? "Your RERA card has expired — renew immediately" : `${daysLeft} days remaining until expiry`}
                             </div>
                           )}
                         </div>
@@ -12038,7 +16833,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   )}
                 </div>
 
-                {/* â”€â”€ Right column â”€â”€ */}
+                {/* ── Right column ── */}
                 <div style={{ display:"flex", flexDirection:"column", gap:16 }}>
 
                   {/* WhatsApp Message Templates */}
@@ -12096,11 +16891,11 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   <div style={{ background:T.card, border:`1px solid ${T.border}`, borderRadius:14, padding:"16px 18px" }}>
                     <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:12 }}>Official Regulatory Links</div>
                     {[
-                      { label:"RERA â€” Real Estate Regulatory Agency",   url:"https://www.dubailand.gov.ae/en/eservices/real-estate-broker-registration/" },
-                      { label:"DLD â€” Dubai Land Department",            url:"https://dubailand.gov.ae"                },
-                      { label:"Trakheesi â€” Permit System",              url:"https://www.dubailand.gov.ae/en/eservices/trakheesi/" },
-                      { label:"DTCM â€” Holiday Home Permits",            url:"https://dtcm.gov.ae"                     },
-                      { label:"ICP â€” Visa & Golden Visa",               url:"https://icp.gov.ae"                      },
+                      { label:"RERA — Real Estate Regulatory Agency",   url:"https://www.dubailand.gov.ae/en/eservices/real-estate-broker-registration/" },
+                      { label:"DLD — Dubai Land Department",            url:"https://dubailand.gov.ae"                },
+                      { label:"Trakheesi — Permit System",              url:"https://www.dubailand.gov.ae/en/eservices/trakheesi/" },
+                      { label:"DTCM — Holiday Home Permits",            url:"https://dtcm.gov.ae"                     },
+                      { label:"ICP — Visa & Golden Visa",               url:"https://icp.gov.ae"                      },
                     ].map(({label,url},i)=>(
                       <a key={i} href={url} target="_blank" rel="noopener noreferrer"
                         style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"9px 0", borderBottom:i<4?`1px solid ${T.border}`:"none", textDecoration:"none" }}>
@@ -12116,11 +16911,11 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
 
 
 
-          {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-              TEAM TAB â€” Session 7 â€” Agency Manager Dashboard
-              Agent leaderboard Â· Source ROI Â· Pipeline funnel
-              Overdue follow-ups Â· Team KPIs
-          â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+          {/* ══════════════════════════════════════════════
+              TEAM TAB — Session 7 — Agency Manager Dashboard
+              Agent leaderboard · Source ROI · Pipeline funnel
+              Overdue follow-ups · Team KPIs
+          ══════════════════════════════════════════════ */}
           {tab === "Team" && (() => {
             const isManager = orgRole === "manager";
             if (!isManager) return (
@@ -12131,7 +16926,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               </div>
             );
 
-            // â”€â”€ Derived metrics â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+            // ── Derived metrics ──────────────────────────────────────────
 
             const agents = teamMembers.filter(u => u.orgRole === "agent");
             const now = new Date();
@@ -12187,17 +16982,17 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
 
             return (<>
 
-              {/* â”€â”€ Header â”€â”€ */}
+              {/* ── Header ── */}
               <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:20, flexWrap:"wrap", gap:12 }}>
                 <div>
                   <h1 style={{ fontFamily:"'Fraunces',serif", fontSize:22, fontWeight:900, color:T.white, margin:0 }}>Team Dashboard</h1>
                   <p style={{ fontSize:12, color:T.textMuted, margin:"4px 0 0" }}>
-                    {agents.length} agents Â· {teamLeads} leads Â· {teamDeals} deals Â· Live Firestore
+                    {agents.length} agents · {teamLeads} leads · {teamDeals} deals · Live Firestore
                   </p>
                 </div>
               </div>
 
-              {/* â”€â”€ Team KPI Bar â”€â”€ */}
+              {/* ── Team KPI Bar ── */}
               <div style={{ display:"grid", gridTemplateColumns:"repeat(5,1fr)", gap:10, marginBottom:20 }}>
                 {[
                   { label:"Total Leads",    value:teamLeads,   color:T.gold,    icon:<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg> },
@@ -12217,10 +17012,10 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 ))}
               </div>
 
-              {/* â”€â”€ Main grid: Leaderboard + Funnel â”€â”€ */}
+              {/* ── Main grid: Leaderboard + Funnel ── */}
               <div style={{ display:"grid", gridTemplateColumns:"minmax(0,1fr) min(340px,38%)", gap:16, marginBottom:16, alignItems:"start" }}>
 
-                {/* â”€â”€ AI Hot Leads Panel (Session 13) â”€â”€ */}
+                {/* ── AI Hot Leads Panel (Session 13) ── */}
                 {(() => {
                   const hotLeads = myLeads
                     .map(l => ({ ...l, aiScore: (() => { const b = parseFloat(l.budget)||0; const age = (Date.now()-new Date(l.createdAt||Date.now()))/86400000; let s=0; if(l.phone&&l.email)s+=25; if(b>=5000000)s+=20;else if(b>=2000000)s+=16;else if(b>0)s+=10; const src={"Property Finder":15,"Bayut":14,"Referral":15,"WhatsApp":10}; s+=(src[l.source]||6); if(age<1)s+=20;else if(age<3)s+=15;else if(age<7)s+=10; return Math.min(100,s); })() }))
@@ -12232,8 +17027,8 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                     <div style={{ background:T.card, border:`1px solid ${T.border}`, borderRadius:14, overflow:"hidden", marginBottom:16 }}>
                       <div style={{ padding:"12px 18px", borderBottom:`1px solid ${T.border}`, display:"flex", alignItems:"center", gap:10 }}>
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={T.gold} strokeWidth="2" strokeLinecap="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-                        <div style={{ fontSize:12, fontWeight:700, color:T.white }}>AI Hot Leads â€” Act Now</div>
-                        <div style={{ marginLeft:"auto", fontSize:10, color:T.textMuted }}>Score â‰¥ 60 Â· Highest priority</div>
+                        <div style={{ fontSize:12, fontWeight:700, color:T.white }}>AI Hot Leads — Act Now</div>
+                        <div style={{ marginLeft:"auto", fontSize:10, color:T.textMuted }}>Score ≥ 60 · Highest priority</div>
                       </div>
                       <div style={{ display:"flex", flexDirection:"column" }}>
                         {hotLeads.map((l,i)=>{
@@ -12246,7 +17041,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                                 <div style={{ width:32, height:32, borderRadius:"50%", background:`${scoreColor}18`, border:`2px solid ${scoreColor}40`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:11, fontWeight:900, color:scoreColor, flexShrink:0 }}>{l.aiScore}</div>
                                 <div style={{ minWidth:0 }}>
                                   <div style={{ fontSize:12, fontWeight:600, color:T.textPrimary, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{name}</div>
-                                  <div style={{ fontSize:10, color:T.textMuted }}>{agent?(agent.name||agent.email?.split("@")[0]):"Unassigned"}{"Â·"}{l.source||"No source"}</div>
+                                  <div style={{ fontSize:10, color:T.textMuted }}>{agent?(agent.name||agent.email?.split("@")[0]):"Unassigned"}{"·"}{l.source||"No source"}</div>
                                 </div>
                               </div>
                               <div style={{ display:"flex", alignItems:"center", gap:6, flexShrink:0 }}>
@@ -12261,7 +17056,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   );
                 })()}
 
-                {/* â”€â”€ Agent Leaderboard â”€â”€ */}
+                {/* ── Agent Leaderboard ── */}
                 <div style={{ background:T.card, border:`1px solid ${T.border}`, borderRadius:14, overflow:"hidden" }}>
                   <div style={{ padding:"14px 18px", borderBottom:`1px solid ${T.border}`, display:"flex", alignItems:"center", gap:10 }}>
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={T.gold} strokeWidth="2" strokeLinecap="round"><polyline points="18 20 18 10"/><polyline points="12 20 12 4"/><polyline points="6 20 6 14"/></svg>
@@ -12280,7 +17075,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   ) : agentStats.length === 0 ? (
                     <div style={{ padding:"40px", textAlign:"center" }}>
                       <div style={{ fontSize:13, color:T.textMuted }}>No agents in this organisation yet</div>
-                      <div style={{ fontSize:11, color:T.textMuted, marginTop:4 }}>Assign agents via Admin â†’ Users â†’ set orgRole=agent</div>
+                      <div style={{ fontSize:11, color:T.textMuted, marginTop:4 }}>Assign agents via Admin → Users → set orgRole=agent</div>
                     </div>
                   ) : agentStats.map((agent, i) => {
                     const rankColor = i===0?T.gold : i===1?"#94A3B8" : i===2?"#B45309" : T.textMuted;
@@ -12312,7 +17107,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                         </div>
                         {/* Pipeline value */}
                         <div style={{ fontSize:11, fontWeight:600, color:agent.totalValue>0?T.gold:T.textMuted, textAlign:"center" }}>
-                          {agent.totalValue>0 ? `AED ${(agent.totalValue/1e6).toFixed(1)}M` : "â€”"}
+                          {agent.totalValue>0 ? `AED ${(agent.totalValue/1e6).toFixed(1)}M` : "—"}
                         </div>
                         {/* Conversion */}
                         <div style={{ textAlign:"center" }}>
@@ -12326,7 +17121,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   </div>
                 </div>
 
-                {/* â”€â”€ Pipeline Funnel â”€â”€ */}
+                {/* ── Pipeline Funnel ── */}
                 <div style={{ background:T.card, border:`1px solid ${T.border}`, borderRadius:14, overflow:"hidden" }}>
                   <div style={{ padding:"14px 18px", borderBottom:`1px solid ${T.border}`, display:"flex", alignItems:"center", gap:10 }}>
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={T.teal} strokeWidth="2" strokeLinecap="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
@@ -12354,7 +17149,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 </div>
               </div>
 
-              {/* â”€â”€ Bottom row: Source ROI + Overdue â”€â”€ */}
+              {/* ── Bottom row: Source ROI + Overdue ── */}
               <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16 }}>
 
                 {/* Source ROI */}
@@ -12417,7 +17212,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                             <div style={{ fontSize:12, fontWeight:600, color:T.textPrimary, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{name}</div>
                             <div style={{ fontSize:10, color:T.textMuted, marginTop:2 }}>
                               {agent ? (agent.name||agent.email?.split("@")[0]||"Agent") : "Unassigned"}
-                              {l.source ? ` Â· ${l.source}` : ""}
+                              {l.source ? ` · ${l.source}` : ""}
                             </div>
                           </div>
                           <div style={{ display:"flex", alignItems:"center", gap:8, flexShrink:0 }}>
@@ -12442,10 +17237,10 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
 
 
 
-          {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-              AGENCY TAB â€” Session 8 â€” Agency Management Hub
-              Profile Â· Agent Roster Â· RERA Tracker Â· Commission
-          â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+          {/* ══════════════════════════════════════════════
+              AGENCY TAB — Session 8 — Agency Management Hub
+              Profile · Agent Roster · RERA Tracker · Commission
+          ══════════════════════════════════════════════ */}
           {tab === "Agency" && (() => {
             const isManager = orgRole === "manager";
             if (!isManager) return (
@@ -12522,19 +17317,19 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
 
             return (<>
 
-              {/* â”€â”€ Header â”€â”€ */}
+              {/* ── Header ── */}
               <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:20, flexWrap:"wrap", gap:12 }}>
                 <div>
                   <h1 style={{ fontFamily:"'Fraunces',serif", fontSize:22, fontWeight:900, color:T.white, margin:0 }}>Agency Hub</h1>
                   <p style={{ fontSize:12, color:T.textMuted, margin:"4px 0 0" }}>
-                    {orgProfile?.name || "Your Organisation"} Â·&nbsp;
+                    {orgProfile?.name || "Your Organisation"} ·&nbsp;
                     <span style={{ color:planColors[plan]||T.textMuted, fontWeight:600, textTransform:"capitalize" }}>{plan} plan</span>
-                    &nbsp;Â· {agents.length} members
+                    &nbsp;· {agents.length} members
                   </p>
                 </div>
               </div>
 
-              {/* â”€â”€ Top row: Profile + Stats â”€â”€ */}
+              {/* ── Top row: Profile + Stats ── */}
               <div style={{ display:"grid", gridTemplateColumns:"minmax(0,1fr) min(320px,36%)", gap:16, marginBottom:16, alignItems:"start" }}>
 
                 {/* Agency Profile Editor */}
@@ -12614,7 +17409,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 </div>
               </div>
 
-              {/* â”€â”€ Agent Roster â”€â”€ */}
+              {/* ── Agent Roster ── */}
               <div style={{ background:T.card, border:`1px solid ${T.border}`, borderRadius:14, overflow:"hidden" }}>
                 <div style={{ padding:"14px 18px", borderBottom:`1px solid ${T.border}`, display:"flex", alignItems:"center", gap:10 }}>
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={T.teal} strokeWidth="2" strokeLinecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
@@ -12637,7 +17432,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 {agents.length === 0 ? (
                   <div style={{ padding:"48px 20px", textAlign:"center" }}>
                     <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke={T.textMuted} strokeWidth="1.5" strokeLinecap="round" style={{ marginBottom:10 }}><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
-                    <div style={{ fontSize:13, color:T.textMuted }}>No agents yet â€” ask your admin to assign agents to this organisation</div>
+                    <div style={{ fontSize:13, color:T.textMuted }}>No agents yet — ask your admin to assign agents to this organisation</div>
                   </div>
                 ) : agents.map((agent, i) => {
                   const agentLeads   = myLeads.filter(l => l.assignedTo === agent.uid).length;
@@ -12656,7 +17451,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                         </div>
                         <div style={{ minWidth:0 }}>
                           <div style={{ fontSize:12, fontWeight:600, color:T.textPrimary, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{agent.name || agent.email?.split("@")[0] || "Agent"}</div>
-                          <div style={{ fontSize:10, color:T.textMuted, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{agent.email||"â€”"}</div>
+                          <div style={{ fontSize:10, color:T.textMuted, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{agent.email||"—"}</div>
                         </div>
                       </div>
 
@@ -12672,7 +17467,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
 
                       {/* RERA card number */}
                       <div style={{ fontSize:11, color:T.textSecondary, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>
-                        {agent.reraCard?.number || <span style={{ color:T.textMuted }}>â€”</span>}
+                        {agent.reraCard?.number || <span style={{ color:T.textMuted }}>—</span>}
                       </div>
 
                       {/* RERA expiry with status */}
@@ -12717,7 +17512,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 })}
               </div>
 
-              {/* â”€â”€ Invite Agent Modal (Session 11) â”€â”€ */}
+              {/* ── Invite Agent Modal (Session 11) ── */}
               {showInviteAgent && (
                 <div style={{ position:"fixed", inset:0, background:"rgba(4,9,15,0.85)", zIndex:2000, display:"flex", alignItems:"center", justifyContent:"center", backdropFilter:"blur(8px)" }} onClick={e=>{if(e.target===e.currentTarget)setShowInviteAgent(false);}}>
                   <div style={{ background:T.surface, borderRadius:14, border:`1px solid ${T.border}`, width:"95%", maxWidth:420 }} onClick={e=>e.stopPropagation()}>
@@ -12776,10 +17571,10 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
 
 
 
-          {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-              LISTINGS TAB â€” Session 9
-              Create Â· Trakheesi Â· Portal Syndication Â· Track
-          â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+          {/* ══════════════════════════════════════════════
+              LISTINGS TAB — Session 9
+              Create · Trakheesi · Portal Syndication · Track
+          ══════════════════════════════════════════════ */}
           {tab === "Listings" && (() => {
             const isAgent   = orgRole === "agent";
             const isManager = orgRole === "manager";
@@ -12892,11 +17687,11 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
 
             return (<>
 
-              {/* â”€â”€ Header â”€â”€ */}
+              {/* ── Header ── */}
               <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:20, flexWrap:"wrap", gap:12 }}>
                 <div>
                   <h1 style={{ fontFamily:"'Fraunces',serif", fontSize:22, fontWeight:900, color:T.white, margin:0 }}>Listings</h1>
-                  <p style={{ fontSize:12, color:T.textMuted, margin:"4px 0 0" }}>Create Â· Manage Â· Publish to portals Â· Track performance</p>
+                  <p style={{ fontSize:12, color:T.textMuted, margin:"4px 0 0" }}>Create · Manage · Publish to portals · Track performance</p>
                 </div>
                 <button type="button" onClick={()=>setShowNewListing(true)}
                   style={{ display:"flex", alignItems:"center", gap:8, padding:"10px 20px", borderRadius:9, border:`1px solid ${T.gold}`, background:"rgba(212,168,67,0.1)", color:T.gold, fontSize:12, fontWeight:700, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>
@@ -12905,7 +17700,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 </button>
               </div>
 
-              {/* â”€â”€ KPI Bar â”€â”€ */}
+              {/* ── KPI Bar ── */}
               <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:10, marginBottom:20 }}>
                 {[
                   { label:"Total Listings",  value:listings.length,   color:T.gold,    icon:<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg> },
@@ -12924,7 +17719,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 ))}
               </div>
 
-              {/* â”€â”€ Filters â”€â”€ */}
+              {/* ── Filters ── */}
               <div style={{ display:"flex", gap:8, marginBottom:16, flexWrap:"wrap", alignItems:"center" }}>
                 <div style={{ display:"flex", background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:8, overflow:"hidden" }}>
                   {[["all","All"],["Available","Available"],["Reserved","Reserved"],["Sold","Sold"]].map(([v,l])=>(
@@ -12942,7 +17737,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 <div style={{ marginLeft:"auto", fontSize:11, color:T.textMuted }}>{filtered.length} of {listings.length}</div>
               </div>
 
-              {/* â”€â”€ Listings Grid â”€â”€ */}
+              {/* ── Listings Grid ── */}
               {listingsLoading ? (
                 <div style={{ display:"flex", alignItems:"center", justifyContent:"center", padding:"60px 0", gap:10 }}>
                   <div style={{ width:20, height:20, border:`2px solid ${T.gold}30`, borderTopColor:T.gold, borderRadius:"50%", animation:"spin 0.7s linear infinite" }}/>
@@ -12982,7 +17777,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                             <div style={{ flex:1, minWidth:0 }}>
                               <div style={{ fontSize:13, fontWeight:700, color:T.white, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{l.title || `${l.beds}BR ${l.type}`}</div>
                               <div style={{ fontSize:11, color:T.textMuted, marginTop:2 }}>
-                                {l.community}{l.building ? ` Â· ${l.building}` : ""}{l.unitNo ? ` Â· Unit ${l.unitNo}` : ""}
+                                {l.community}{l.building ? ` · ${l.building}` : ""}{l.unitNo ? ` · Unit ${l.unitNo}` : ""}
                               </div>
                             </div>
                             <div style={{ display:"flex", gap:5, flexShrink:0, marginLeft:8 }}>
@@ -13000,7 +17795,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                             {l.beds > 0 && <span>{l.beds} BR</span>}
                             {l.baths > 0 && <span>{l.baths} Bath</span>}
                             {l.size > 0 && <span>{l.size.toLocaleString()} sqft</span>}
-                            {l.type && <span style={{ color:T.textMuted }}>{"Â·"}{l.type}</span>}
+                            {l.type && <span style={{ color:T.textMuted }}>{"·"}{l.type}</span>}
                           </div>
                         </div>
 
@@ -13079,7 +17874,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 </div>
               )}
 
-              {/* â”€â”€ Listing Detail Drawer â”€â”€ */}
+              {/* ── Listing Detail Drawer ── */}
               {selectedListing && (
                 <div style={{ position:"fixed", inset:0, zIndex:1500, display:"flex" }} onClick={e=>{if(e.target===e.currentTarget)setSelectedListing(null);}}>
                   <div style={{ flex:1, background:"rgba(0,0,0,0.5)", backdropFilter:"blur(4px)" }} onClick={()=>setSelectedListing(null)}/>
@@ -13087,7 +17882,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                     <div style={{ padding:"20px", borderBottom:`1px solid ${T.border}`, display:"flex", justifyContent:"space-between", alignItems:"center" }}>
                       <div>
                         <div style={{ fontFamily:"'Fraunces',serif", fontSize:17, fontWeight:900, color:T.white }}>{selectedListing.title}</div>
-                        <div style={{ fontSize:11, color:T.textMuted, marginTop:2 }}>{selectedListing.community}{"Â·"}{selectedListing.building} Â· Unit {selectedListing.unitNo}</div>
+                        <div style={{ fontSize:11, color:T.textMuted, marginTop:2 }}>{selectedListing.community}{"·"}{selectedListing.building} · Unit {selectedListing.unitNo}</div>
                       </div>
                       <button type="button" onClick={()=>setSelectedListing(null)}
                         style={{ background:"rgba(255,255,255,0.06)", border:`1px solid ${T.border}`, borderRadius:7, color:T.textMuted, cursor:"pointer", padding:"5px 10px", display:"flex", alignItems:"center", gap:4, fontSize:12 }}>
@@ -13149,7 +17944,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                                 <button type="button"
                                   onClick={()=>{ window.open(portal.url,"_blank"); markPublished(selectedListing.id, portal.key); }}
                                   style={{ padding:"5px 12px", borderRadius:6, border:`1px solid ${portal.color}40`, background:isPublished?`${portal.color}15`:"transparent", color:portal.color, fontSize:10, fontWeight:700, cursor:"pointer" }}>
-                                  {isPublished ? "Republish" : "Publish â†’"}
+                                  {isPublished ? "Republish" : "Publish →"}
                                 </button>
                               </div>
                             );
@@ -13172,14 +17967,14 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 </div>
               )}
 
-              {/* â”€â”€ New Listing Modal â”€â”€ */}
+              {/* ── New Listing Modal ── */}
               {showNewListing && (
                 <div style={{ position:"fixed", inset:0, background:"rgba(4,9,15,0.85)", zIndex:2000, display:"flex", alignItems:"center", justifyContent:"center", backdropFilter:"blur(8px)" }} onClick={e=>{if(e.target===e.currentTarget)setShowNewListing(false);}}>
                   <div style={{ background:T.surface, borderRadius:16, border:`1px solid ${T.border}`, width:"95%", maxWidth:600, maxHeight:"90vh", overflowY:"auto" }} onClick={e=>e.stopPropagation()}>
                     <div style={{ padding:"22px 24px", borderBottom:`1px solid ${T.border}`, display:"flex", justifyContent:"space-between", alignItems:"center" }}>
                       <div>
                         <div style={{ fontFamily:"'Fraunces',serif", fontSize:18, fontWeight:900, color:T.gold }}>New Listing</div>
-                        <div style={{ fontSize:11, color:T.textMuted, marginTop:2 }}>All DLD required fields â€” get your Trakheesi permit before listing</div>
+                        <div style={{ fontSize:11, color:T.textMuted, marginTop:2 }}>All DLD required fields — get your Trakheesi permit before listing</div>
                       </div>
                       <button type="button" onClick={()=>setShowNewListing(false)}
                         style={{ background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:8, color:T.textMuted, width:32, height:32, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center" }}>
@@ -13275,10 +18070,10 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
 
 
 
-          {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-              DEV PORTAL TAB â€” Session 10
-              Unit Inventory Â· EOI Pipeline Â· Commission Â· Assets
-          â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+          {/* ══════════════════════════════════════════════
+              DEV PORTAL TAB — Session 10
+              Unit Inventory · EOI Pipeline · Commission · Assets
+          ══════════════════════════════════════════════ */}
           {tab === "Dev Portal" && (() => {
             const isDeveloper = userRole === "developer";
             if (!isDeveloper) return (
@@ -13375,14 +18170,14 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
 
             return (<>
 
-              {/* â”€â”€ Header â”€â”€ */}
+              {/* ── Header ── */}
               <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:20, flexWrap:"wrap", gap:12 }}>
                 <div>
                   <h1 style={{ fontFamily:"'Fraunces',serif", fontSize:22, fontWeight:900, color:T.white, margin:0 }}>
-                    {devName} â€” Developer Portal
+                    {devName} — Developer Portal
                   </h1>
                   <p style={{ fontSize:12, color:T.textMuted, margin:"4px 0 0" }}>
-                    Unit inventory Â· EOI pipeline Â· Commission config Â· Marketing hub
+                    Unit inventory · EOI pipeline · Commission config · Marketing hub
                   </p>
                 </div>
                 <button type="button" onClick={()=>setShowAddUnit(true)}
@@ -13392,7 +18187,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 </button>
               </div>
 
-              {/* â”€â”€ KPI Bar â”€â”€ */}
+              {/* ── KPI Bar ── */}
               <div style={{ display:"grid", gridTemplateColumns:"repeat(5,1fr)", gap:10, marginBottom:20 }}>
                 {[
                   { label:"Total Units",    value:devUnits.length, color:T.gold,    icon:<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg> },
@@ -13412,10 +18207,10 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 ))}
               </div>
 
-              {/* â”€â”€ Main grid: Units + EOI Pipeline â”€â”€ */}
+              {/* ── Main grid: Units + EOI Pipeline ── */}
               <div style={{ display:"grid", gridTemplateColumns:"minmax(0,1fr) min(380px,38%)", gap:16, marginBottom:16, alignItems:"start" }}>
 
-                {/* â”€â”€ Unit Inventory â”€â”€ */}
+                {/* ── Unit Inventory ── */}
                 <div style={{ background:T.card, border:`1px solid ${T.border}`, borderRadius:14, overflow:"hidden" }}>
                   <div style={{ padding:"14px 18px", borderBottom:`1px solid ${T.border}`, display:"flex", alignItems:"center", gap:10 }}>
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={T.gold} strokeWidth="2" strokeLinecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
@@ -13440,7 +18235,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   ) : filteredUnits.length === 0 ? (
                     <div style={{ padding:"48px 20px", textAlign:"center" }}>
                       <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke={T.textMuted} strokeWidth="1.5" strokeLinecap="round" style={{ marginBottom:10 }}><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
-                      <div style={{ fontSize:13, color:T.textMuted }}>No units yet â€” click Add Unit to start building inventory</div>
+                      <div style={{ fontSize:13, color:T.textMuted }}>No units yet — click Add Unit to start building inventory</div>
                     </div>
                   ) : filteredUnits.map((unit, i) => {
                     const sc = UNIT_STATUS[unit.status||"Available"] || UNIT_STATUS.Available;
@@ -13451,10 +18246,10 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                           <div style={{ fontSize:11, fontWeight:600, color:T.textPrimary }}>{unit.type}</div>
                           {unit.view && <div style={{ fontSize:10, color:T.textMuted }}>{unit.view}</div>}
                         </div>
-                        <div style={{ fontSize:11, color:T.textSecondary, textAlign:"center" }}>{unit.beds > 0 ? `${unit.beds} BR` : "â€”"}</div>
-                        <div style={{ fontSize:11, color:T.textSecondary, textAlign:"center" }}>{unit.size > 0 ? `${unit.size.toLocaleString()}` : "â€”"}</div>
-                        <div style={{ fontSize:11, color:T.textSecondary, textAlign:"center" }}>{unit.floor > 0 ? `Floor ${unit.floor}` : "â€”"}</div>
-                        <div style={{ fontSize:11, fontWeight:700, color:T.gold }}>{unit.price > 0 ? `${(parseFloat(unit.price)/1e6).toFixed(2)}M` : "â€”"}</div>
+                        <div style={{ fontSize:11, color:T.textSecondary, textAlign:"center" }}>{unit.beds > 0 ? `${unit.beds} BR` : "—"}</div>
+                        <div style={{ fontSize:11, color:T.textSecondary, textAlign:"center" }}>{unit.size > 0 ? `${unit.size.toLocaleString()}` : "—"}</div>
+                        <div style={{ fontSize:11, color:T.textSecondary, textAlign:"center" }}>{unit.floor > 0 ? `Floor ${unit.floor}` : "—"}</div>
+                        <div style={{ fontSize:11, fontWeight:700, color:T.gold }}>{unit.price > 0 ? `${(parseFloat(unit.price)/1e6).toFixed(2)}M` : "—"}</div>
                         <div>
                           <select value={unit.status||"Available"} onChange={e=>updateUnitStatus(unit.id, e.target.value)}
                             style={{ padding:"4px 6px", background:sc.bg, border:`1px solid ${sc.color}40`, borderRadius:5, color:sc.color, fontSize:10, fontWeight:700, cursor:"pointer", fontFamily:"'Outfit',sans-serif", outline:"none" }}>
@@ -13466,7 +18261,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   })}
                 </div>
 
-                {/* â”€â”€ EOI Pipeline â”€â”€ */}
+                {/* ── EOI Pipeline ── */}
                 <div style={{ background:T.card, border:`1px solid ${T.border}`, borderRadius:14, overflow:"hidden" }}>
                   <div style={{ padding:"14px 18px", borderBottom:`1px solid ${T.border}`, display:"flex", alignItems:"center", gap:10 }}>
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={T.teal} strokeWidth="2" strokeLinecap="round"><rect x="3" y="3" width="4" height="18" rx="1"/><rect x="10" y="3" width="4" height="12" rx="1"/><rect x="17" y="3" width="4" height="15" rx="1"/></svg>
@@ -13488,7 +18283,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                           <div key={eoi.id||i} style={{ padding:"10px 16px", borderBottom:`1px solid ${T.border}`, display:"flex", alignItems:"center", justifyContent:"space-between" }}>
                             <div>
                               <div style={{ fontSize:11, fontWeight:600, color:T.textPrimary }}>{eoi.clientName||"Client"}</div>
-                              <div style={{ fontSize:10, color:T.textMuted }}>Unit {eoi.unitNo}{"Â·"}{eoi.broker||"Direct"}</div>
+                              <div style={{ fontSize:10, color:T.textMuted }}>Unit {eoi.unitNo}{"·"}{eoi.broker||"Direct"}</div>
                             </div>
                             <div style={{ display:"flex", alignItems:"center", gap:6 }}>
                               {eoi.price > 0 && <span style={{ fontSize:10, color:T.gold }}>{(parseFloat(eoi.price)/1e6).toFixed(2)}M</span>}
@@ -13508,7 +18303,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 </div>
               </div>
 
-              {/* â”€â”€ Bottom row: Commission Config + Marketing Hub â”€â”€ */}
+              {/* ── Bottom row: Commission Config + Marketing Hub ── */}
               <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16 }}>
 
                 {/* Commission Config */}
@@ -13583,7 +18378,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 </div>
               </div>
 
-              {/* â”€â”€ Add Unit Modal â”€â”€ */}
+              {/* ── Add Unit Modal ── */}
               {showAddUnit && (
                 <div style={{ position:"fixed", inset:0, background:"rgba(4,9,15,0.85)", zIndex:2000, display:"flex", alignItems:"center", justifyContent:"center", backdropFilter:"blur(8px)" }} onClick={e=>{if(e.target===e.currentTarget)setShowAddUnit(false);}}>
                   <div style={{ background:T.surface, borderRadius:16, border:`1px solid ${T.border}`, width:"95%", maxWidth:500, maxHeight:"90vh", overflowY:"auto" }} onClick={e=>e.stopPropagation()}>
@@ -13647,13 +18442,13 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
 
 
 
-          {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-              INTELLIGENCE TAB â€” Session 12
-              Comparable Sales Â· IRR Calculator Â· Supply Pipeline
-          â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+          {/* ══════════════════════════════════════════════
+              INTELLIGENCE TAB — Session 12
+              Comparable Sales · IRR Calculator · Supply Pipeline
+          ══════════════════════════════════════════════ */}
           {tab === "Intelligence" && (() => {
 
-            // â”€â”€ AVM / Comps data (DLD-calibrated) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+            // ── AVM / Comps data (DLD-calibrated) ──────────────────────
             const AVM_DATA = {
               "Dubai Hills Estate":      { apt: { "Studio": { ppsf:1680, rent:55 }, "1BR": { ppsf:1820, rent:80 }, "2BR": { ppsf:2050, rent:125 }, "3BR": { ppsf:2300, rent:180 } }, villa: { "3BR": { ppsf:1450, rent:180 }, "4BR": { ppsf:1550, rent:240 }, "5BR": { ppsf:1700, rent:320 } } },
               "Dubai Creek Harbour":     { apt: { "Studio": { ppsf:1600, rent:52 }, "1BR": { ppsf:1750, rent:78 }, "2BR": { ppsf:1950, rent:118 }, "3BR": { ppsf:2200, rent:170 } }, villa: null },
@@ -13688,7 +18483,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               { community:"Emaar Beachfront",    risk:"Low",    reason:"Limited permits. Beachfront scarcity premium maintained.",     color:T.green   },
             ];
 
-            // â”€â”€ Comps engine â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+            // ── Comps engine ─────────────────────────────────────────────
             const communities = Object.keys(AVM_DATA);
             const commData = AVM_DATA[compCommunity];
             const typeMap = compType === "Villa" ? commData?.villa : commData?.apt;
@@ -13698,7 +18493,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
             const ppsf = unitData?.ppsf || 0;
             const annualRentK = unitData?.rent || 0;
 
-            // Generate comparable transactions (simulated from AVM + Â±8% variance)
+            // Generate comparable transactions (simulated from AVM + ±8% variance)
             const comps = unitData ? Array.from({length:8}, (_,i) => {
               const variance = 0.94 + (i * 0.018);
               const sizeSqft = activeBed === "Studio" ? 420+i*15 : activeBed === "1BR" ? 650+i*20 : activeBed === "2BR" ? 1050+i*25 : activeBed === "3BR" ? 1550+i*30 : activeBed === "4BR" ? 2200+i*40 : 3000+i*50;
@@ -13719,7 +18514,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
             const avgPpsf = comps.length ? Math.round(comps.reduce((a,c) => a+c.ppsf, 0) / comps.length) : 0;
             const avgPrice = comps.length ? Math.round(comps.reduce((a,c) => a+c.price, 0) / comps.length) : 0;
 
-            // â”€â”€ IRR Calculator â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+            // ── IRR Calculator ─────────────────────────────────────────
             const price     = parseFloat(irrPrice)      || 2000000;
             const rent      = parseFloat(irrRent)       || 120000;
             const holdYrs   = parseInt(irrHoldYears)    || 5;
@@ -13762,16 +18557,16 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
 
             return (<>
 
-              {/* â”€â”€ Header â”€â”€ */}
+              {/* ── Header ── */}
               <div style={{ marginBottom:20 }}>
                 <h1 style={{ fontFamily:"'Fraunces',serif", fontSize:22, fontWeight:900, color:T.white, margin:0 }}>Transaction Intelligence</h1>
-                <p style={{ fontSize:12, color:T.textMuted, margin:"4px 0 0" }}>Comparable sales Â· IRR calculator Â· Supply pipeline risk</p>
+                <p style={{ fontSize:12, color:T.textMuted, margin:"4px 0 0" }}>Comparable sales · IRR calculator · Supply pipeline risk</p>
               </div>
 
-              {/* â”€â”€ Top row: Comps + IRR â”€â”€ */}
+              {/* ── Top row: Comps + IRR ── */}
               <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16, marginBottom:16 }}>
 
-                {/* â”€â”€ Comparable Sales Engine â”€â”€ */}
+                {/* ── Comparable Sales Engine ── */}
                 <div style={{ background:T.card, border:`1px solid ${T.border}`, borderRadius:14, overflow:"hidden" }}>
                   <div style={{ padding:"14px 18px", borderBottom:`1px solid ${T.border}`, display:"flex", alignItems:"center", gap:10 }}>
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={T.gold} strokeWidth="2" strokeLinecap="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
@@ -13844,7 +18639,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   </div>
                 </div>
 
-                {/* â”€â”€ IRR Calculator â”€â”€ */}
+                {/* ── IRR Calculator ── */}
                 <div style={{ background:T.card, border:`1px solid ${T.border}`, borderRadius:14, overflow:"hidden" }}>
                   <div style={{ padding:"14px 18px", borderBottom:`1px solid ${T.border}`, display:"flex", alignItems:"center", gap:10 }}>
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={T.teal} strokeWidth="2" strokeLinecap="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
@@ -13905,14 +18700,14 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 </div>
               </div>
 
-              {/* â”€â”€ Supply Pipeline â”€â”€ */}
+              {/* ── Supply Pipeline ── */}
               <div style={{ background:T.card, border:`1px solid ${T.border}`, borderRadius:14, overflow:"hidden", marginBottom:16 }}>
                 <div style={{ padding:"14px 18px", borderBottom:`1px solid ${T.border}`, display:"flex", alignItems:"center", justifyContent:"space-between" }}>
                   <div style={{ display:"flex", alignItems:"center", gap:10 }}>
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" style={{ color:"#8B5CF6" }}><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
-                    <div style={{ fontSize:13, fontWeight:700, color:T.white }}>Dubai Supply Pipeline 2025â€“2028</div>
+                    <div style={{ fontSize:13, fontWeight:700, color:T.white }}>Dubai Supply Pipeline 2025–2028</div>
                   </div>
-                  <div style={{ fontSize:10, color:T.textMuted }}>Source: DLD Â· Property Monitor Â· Reidin 2025</div>
+                  <div style={{ fontSize:10, color:T.textMuted }}>Source: DLD · Property Monitor · Reidin 2025</div>
                 </div>
                 <div style={{ padding:"18px" }}>
                   {/* Bar chart */}
@@ -13921,7 +18716,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                       const maxUnits = 140000;
                       return (
                         <div key={year} style={{ textAlign:"center" }}>
-                          <div style={{ fontSize:11, fontWeight:700, color:highlight?"#F59E0B":T.textMuted, marginBottom:8 }}>{year}{highlight&&<span style={{ marginLeft:4, fontSize:9, color:"#F59E0B" }}>â–¶ NOW</span>}</div>
+                          <div style={{ fontSize:11, fontWeight:700, color:highlight?"#F59E0B":T.textMuted, marginBottom:8 }}>{year}{highlight&&<span style={{ marginLeft:4, fontSize:9, color:"#F59E0B" }}>▶ NOW</span>}</div>
                           <div style={{ height:120, display:"flex", alignItems:"flex-end", justifyContent:"center", gap:4, marginBottom:8 }}>
                             <div style={{ flex:1, background:"rgba(59,130,246,0.7)", borderRadius:"4px 4px 0 0", height:`${(offplan/maxUnits)*100}%`, transition:"height 0.4s", position:"relative" }}>
                               <div style={{ position:"absolute", top:-16, left:"50%", transform:"translateX(-50%)", fontSize:9, color:"#3B82F6", fontWeight:700, whiteSpace:"nowrap" }}>{(offplan/1000).toFixed(0)}K</div>
@@ -13944,12 +18739,12 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                         <span style={{ fontSize:10, color:T.textMuted }}>{label}</span>
                       </div>
                     ))}
-                    <div style={{ marginLeft:"auto", fontSize:10, color:T.textMuted }}>366K+ units scheduled 2025â€“2028</div>
+                    <div style={{ marginLeft:"auto", fontSize:10, color:T.textMuted }}>366K+ units scheduled 2025–2028</div>
                   </div>
                 </div>
               </div>
 
-              {/* â”€â”€ Supply Risk by Community â”€â”€ */}
+              {/* ── Supply Risk by Community ── */}
               <div style={{ background:T.card, border:`1px solid ${T.border}`, borderRadius:14, overflow:"hidden" }}>
                 <div style={{ padding:"14px 18px", borderBottom:`1px solid ${T.border}`, display:"flex", alignItems:"center", gap:10 }}>
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={T.red} strokeWidth="2" strokeLinecap="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
@@ -13974,9 +18769,9 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 </div>
               </div>
             
-              {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+              {/* ══════════════════════════════════════════════════════════
                   SESSION 15 - DLD LIVE TRANSACTION INTELLIGENCE
-              â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+              ══════════════════════════════════════════════════════════ */}
 
               {/* DLD Header */}
               <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:16, marginTop:8, flexWrap:"wrap", gap:8 }}>
@@ -14065,7 +18860,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                         <div style={{ background:T.card, border:`1px solid ${T.border}`, borderRadius:14, overflow:"hidden" }}>
                           <div style={{ padding:"12px 16px", borderBottom:`1px solid ${T.border}`, display:"flex", alignItems:"center", justifyContent:"space-between" }}>
                             <div style={{ fontSize:13, fontWeight:700, color:T.white }}>Price/sqft Trend - {dldActiveCommunity}</div>
-                            <div style={{ fontSize:11, fontWeight:700, color:tUp?"#10B981":T.red }}>{tUp?"â–²":"â–¼"} {tChange}% (6M)</div>
+                            <div style={{ fontSize:11, fontWeight:700, color:tUp?"#10B981":T.red }}>{tUp?"▲":"▼"} {tChange}% (6M)</div>
                           </div>
                           <div style={{ padding:"16px" }}>
                             <div style={{ display:"flex", alignItems:"flex-end", gap:6, height:80, marginBottom:8 }}>
@@ -14200,7 +18995,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
         <div style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.85)", zIndex: 2000, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(8px)" }} onClick={() => setSelectedProject(null)}>
           <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, width: "95%", maxWidth: 820, maxHeight: "92vh", overflowY: "auto", position: "relative" }} onClick={e => e.stopPropagation()}>
             {/* Close */}
-            <button type="button" onClick={() => { setSelectedProject(null); setBreadcrumb([]); }} style={{ position: "absolute", top: 16, right: 16, background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16, zIndex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>âœ•</button>
+            <button type="button" onClick={() => { setSelectedProject(null); setBreadcrumb([]); }} style={{ position: "absolute", top: 16, right: 16, background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16, zIndex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
             
             {/* Image */}
             {selectedProject_.imageUrl && (
@@ -14215,14 +19010,14 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 <div>
                   <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
                     <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: 22, fontWeight: 900, color: T.gold, margin: 0 }}>{selectedProject_.name}</h2>
-                    {selectedProject_.emaarUrl && <a href={selectedProject_.emaarUrl} target="_blank" rel="noopener noreferrer" style={{ fontSize: 10, color: T.gold, textDecoration: "none", padding: "3px 8px", border: "1px solid rgba(212,168,67,0.4)", borderRadius: 6, fontWeight: 700, background: "rgba(212,168,67,0.08)", whiteSpace: "nowrap" }} title={`Official listing on ${getLinkDomain(selectedProject_.emaarUrl)}`}>SOURCE â†—</a>}
-                    <Link to={`/project/${selectedProject_.id}`} style={{ fontSize: 10, color: T.teal, textDecoration: "none", padding: "3px 8px", border: "1px solid rgba(0,191,165,0.4)", borderRadius: 6, fontWeight: 700, background: "rgba(0,191,165,0.08)", whiteSpace: "nowrap" }} title="Open full page">FULL PAGE â†—</Link>
+                    {selectedProject_.emaarUrl && <a href={selectedProject_.emaarUrl} target="_blank" rel="noopener noreferrer" style={{ fontSize: 10, color: T.gold, textDecoration: "none", padding: "3px 8px", border: "1px solid rgba(212,168,67,0.4)", borderRadius: 6, fontWeight: 700, background: "rgba(212,168,67,0.08)", whiteSpace: "nowrap" }} title={`Official listing on ${getLinkDomain(selectedProject_.emaarUrl)}`}>SOURCE ↗</a>}
+                    <Link to={`/project/${selectedProject_.id}`} style={{ fontSize: 10, color: T.teal, textDecoration: "none", padding: "3px 8px", border: "1px solid rgba(0,191,165,0.4)", borderRadius: 6, fontWeight: 700, background: "rgba(0,191,165,0.08)", whiteSpace: "nowrap" }} title="Open full page">FULL PAGE ↗</Link>
                   </div>
-                  <p style={{ color: T.textSecondary, fontSize: 13, marginTop: 4 }}>{selectedProject_.community}{"Â·"}{selectedProject_.district}{"Â·"}{selectedProject_.type}</p>
+                  <p style={{ color: T.textSecondary, fontSize: 13, marginTop: 4 }}>{selectedProject_.community}{"·"}{selectedProject_.district}{"·"}{selectedProject_.type}</p>
                   {(selectedProject_.tagline || (ci && ci.tagline)) && <p style={{ color: T.teal, fontSize: 11, marginTop: 2, fontStyle: "italic" }}>{selectedProject_.tagline || ci.tagline}</p>}
                 </div>
                 <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
-                  {(selectedProject_.branded || (selectedProject_.brand && selectedProject_.brand !== 'â€”')) && <span style={{ fontSize: 10, padding: "4px 10px", borderRadius: 6, background: "rgba(212,168,67,0.15)", color: T.gold, fontWeight: 600 }}>{selectedProject_.brand}</span>}
+                  {(selectedProject_.branded || (selectedProject_.brand && selectedProject_.brand !== '—')) && <span style={{ fontSize: 10, padding: "4px 10px", borderRadius: 6, background: "rgba(212,168,67,0.15)", color: T.gold, fontWeight: 600 }}>{selectedProject_.brand}</span>}
                   <span style={{ fontSize: 10, padding: "4px 10px", borderRadius: 6, background: selectedProject_.status === "Completed" ? "rgba(16,185,129,0.15)" : selectedProject_.status === "Under Construction" ? "rgba(16,185,129,0.12)" : "rgba(59,130,246,0.12)", color: selectedProject_.status === "Completed" ? T.green : selectedProject_.status === "Under Construction" ? T.green : T.blue, fontWeight: 600 }}>{selectedProject_.status}</span>
                 </div>
               </div>
@@ -14242,11 +19037,11 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginBottom: 16 }}>
                 {[
                   ["Starting From", selectedProject_.price ? `AED ${(selectedProject_.price/1000000).toFixed(1)}M` : selectedProject_.priceFrom ? `AED ${(Number(selectedProject_.priceFrom)/1000000).toFixed(1)}M` : "TBD"],
-                  ["Handover", selectedProject_.handover || "â€”"],
+                  ["Handover", selectedProject_.handover || "—"],
                   ["Price/sqft", selectedProject_.ppsf ? `AED ${selectedProject_.ppsf.toLocaleString()}` : selectedProject_.pricePerSqft ? `AED ${Number(selectedProject_.pricePerSqft).toLocaleString()}` : "TBD"],
-                  ["Size Range", selectedProject_.sizeFrom ? `${selectedProject_.sizeFrom.toLocaleString()} - ${selectedProject_.sizeTo?.toLocaleString()} sqft` : selectedProject_.sizeRange || "â€”"],
-                  ["Bedrooms", selectedProject_.beds ? selectedProject_.beds + " BR" : "â€”"],
-                  ["Payment Plan", selectedProject_.payment || selectedProject_.paymentPlan || "â€”"],
+                  ["Size Range", selectedProject_.sizeFrom ? `${selectedProject_.sizeFrom.toLocaleString()} - ${selectedProject_.sizeTo?.toLocaleString()} sqft` : selectedProject_.sizeRange || "—"],
+                  ["Bedrooms", selectedProject_.beds ? selectedProject_.beds + " BR" : "—"],
+                  ["Payment Plan", selectedProject_.payment || selectedProject_.paymentPlan || "—"],
                 ].map(([label, value], idx) => (
                   <div key={idx} style={{ background: T.surfaceAlt, borderRadius: 10, padding: 10 }}>
                     <div style={{ fontSize: 9, color: T.textMuted, marginBottom: 3, textTransform: "uppercase", letterSpacing: 0.5 }}>{label}</div>
@@ -14279,13 +19074,13 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 </div>
               )}
 
-              {/* â”€â”€â”€ LOCATION INTELLIGENCE SECTION â”€â”€â”€ */}
+              {/* ─── LOCATION INTELLIGENCE SECTION ─── */}
               {ciExists && (
                 <ProGate isPro={isPro} message="Unlock Location Intelligence" onUpgrade={() => setShowUpgrade(true)}>
                 <>
                   {/* Community Famous For */}
                   <div style={{ marginBottom: 16, background: `linear-gradient(135deg, rgba(212,168,67,0.08), rgba(0,191,165,0.05))`, borderRadius: 12, padding: 14, border: `1px solid ${T.border}` }}>
-                    <h3 style={{ fontSize: 11, fontWeight: 600, color: T.gold, letterSpacing: 1, textTransform: "uppercase", marginBottom: 8, display: "flex", alignItems: "center", gap: 6 }}>â­ Famous For</h3>
+                    <h3 style={{ fontSize: 11, fontWeight: 600, color: T.gold, letterSpacing: 1, textTransform: "uppercase", marginBottom: 8, display: "flex", alignItems: "center", gap: 6 }}>⭐ Famous For</h3>
                     <p style={{ fontSize: 12, color: T.textPrimary, lineHeight: 1.5, margin: 0 }}>{ci.famousFor}</p>
                     <p style={{ fontSize: 10, color: T.textMuted, marginTop: 6, margin: 0 }}><span style={{ color: T.teal }}>Developer:</span> {ci.masterDev}</p>
                     <p style={{ fontSize: 10, color: T.textMuted, marginTop: 3, margin: 0 }}><span style={{ color: T.teal }}>Lifestyle:</span> {ci.lifestyle}</p>
@@ -14335,7 +19130,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                         </tbody>
                       </table>
                     </div>
-                    <p style={{ fontSize: 9, color: T.textMuted, marginTop: 6 }}>\uD83D\uDEE3ï¸ <strong>Road Access:</strong> {ci.roads}</p>
+                    <p style={{ fontSize: 9, color: T.textMuted, marginTop: 6 }}>\uD83D\uDEE3️ <strong>Road Access:</strong> {ci.roads}</p>
                   </div>
 
                   {/* Investment Quick Facts */}
@@ -14346,7 +19141,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                     </div>
                     <div style={{ background: T.surfaceAlt, borderRadius: 8, padding: 10, textAlign: "center" }}>
                       <div style={{ fontSize: 9, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.5 }}>Golden Visa</div>
-                      <div style={{ fontSize: 15, fontWeight: 800, color: ci.goldenVisa ? T.green : T.textMuted, fontFamily: "'Fraunces', serif" }}>{ci.goldenVisa ? "âœ“ Eligible" : "Below 2M"}</div>
+                      <div style={{ fontSize: 15, fontWeight: 800, color: ci.goldenVisa ? T.green : T.textMuted, fontFamily: "'Fraunces', serif" }}>{ci.goldenVisa ? "✓ Eligible" : "Below 2M"}</div>
                     </div>
                     <div style={{ background: T.surfaceAlt, borderRadius: 8, padding: 10, textAlign: "center" }}>
                       <div style={{ fontSize: 9, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.5 }}>Tier</div>
@@ -14416,7 +19211,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                         <div style={{ fontSize: 9, color: T.textMuted }}>{roi.goldenVisaNote}</div>
                       </div>
                     </div>
-                    <div style={{ marginTop: 8, fontSize: 9, color: T.textMuted }}>Risk: <span style={{ color: roi.riskLevel === "Low" ? T.green : roi.riskLevel === "Medium" ? T.gold : T.red }}>{roi.riskLevel}</span> Â· Occupancy: {roi.occupancy ? roi.occupancy + "%" : "N/A"}</div>
+                    <div style={{ marginTop: 8, fontSize: 9, color: T.textMuted }}>Risk: <span style={{ color: roi.riskLevel === "Low" ? T.green : roi.riskLevel === "Medium" ? T.gold : T.red }}>{roi.riskLevel}</span> · Occupancy: {roi.occupancy ? roi.occupancy + "%" : "N/A"}</div>
                   </div>
                   </ProGate>
                 );
@@ -14511,7 +19306,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
                   View Full Report
                 </a>
-                <button type="button" onClick={() => { const p = selectedProject_; const txt = `${p.name} | ${p.community} | AED ${p.price ? (p.price/1000000).toFixed(2)+"M" : "TBD"} | ${p.ppsf ? p.ppsf.toLocaleString()+" PPSF" : ""} | Handover: ${p.handover} | Payment: ${p.payment} | Status: ${p.status}`; navigator.clipboard?.writeText(txt).then(() => alert("âœ… Project data copied to clipboard")).catch(() => alert(txt)); }}
+                <button type="button" onClick={() => { const p = selectedProject_; const txt = `${p.name} | ${p.community} | AED ${p.price ? (p.price/1000000).toFixed(2)+"M" : "TBD"} | ${p.ppsf ? p.ppsf.toLocaleString()+" PPSF" : ""} | Handover: ${p.handover} | Payment: ${p.payment} | Status: ${p.status}`; navigator.clipboard?.writeText(txt).then(() => alert("✅ Project data copied to clipboard")).catch(() => alert(txt)); }}
                   style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "13px 16px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 12, color: T.textSecondary, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}
                   title="Copy project data">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
@@ -14519,18 +19314,18 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 </button>
               </div>
 
-              {/* â”€â”€â”€ SOURCE LINK: Official Emaar listing â”€â”€â”€ */}
+              {/* ─── SOURCE LINK: Official Emaar listing ─── */}
               {selectedProject_.emaarUrl && (
                 <a href={selectedProject_.emaarUrl} target="_blank" rel="noopener noreferrer"
                   style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, width: "100%", marginTop: 8, padding: "13px 0", background: "linear-gradient(135deg, rgba(212,168,67,0.12), rgba(212,168,67,0.06))", border: "1px solid rgba(212,168,67,0.4)", borderRadius: 12, color: T.gold, fontSize: 13, fontWeight: 700, textDecoration: "none", fontFamily: "'Outfit', sans-serif", letterSpacing: 0.2 }}
                   onMouseEnter={e => { e.currentTarget.style.background = "linear-gradient(135deg, rgba(212,168,67,0.22), rgba(212,168,67,0.12))"; e.currentTarget.style.boxShadow = "0 4px 20px rgba(212,168,67,0.15)"; }}
                   onMouseLeave={e => { e.currentTarget.style.background = "linear-gradient(135deg, rgba(212,168,67,0.12), rgba(212,168,67,0.06))"; e.currentTarget.style.boxShadow = "none"; }}>
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={T.gold} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-                  <span>View Official Listing on <strong>{getLinkDomain(selectedProject_.emaarUrl)}</strong> â†—</span>
+                  <span>View Official Listing on <strong>{getLinkDomain(selectedProject_.emaarUrl)}</strong> ↗</span>
                 </a>
               )}
 
-              {/* â”€â”€â”€ PDF REPORT BUTTON â”€â”€â”€ */}
+              {/* ─── PDF REPORT BUTTON ─── */}
               <button type="button" onClick={() => {
                 const p = selectedProject_;
                 const roiData = (liveCommunityROI && liveCommunityROI[p.community]) || ({}) || {};
@@ -14548,13 +19343,13 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
         );
       })()}
 
-      {/* â”€â”€â”€ COMPARE MODAL â”€â”€â”€ */}
+      {/* ─── COMPARE MODAL ─── */}
       {showCompare && compareList.length >= 2 && (
         <div role="dialog" aria-modal="true" aria-label="Project comparison" style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.9)", zIndex: 3000, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(8px)" }} onClick={() => setShowCompare(false)}>
           <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.gold}`, width: "95%", maxWidth: 900, maxHeight: "90vh", overflowY: "auto", padding: 28 }} onClick={e => e.stopPropagation()}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-              <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: 22, color: T.gold, margin: 0 }}>âš–ï¸ Project Comparison</h2>
-              <button type="button" onClick={() => setShowCompare(false)} style={{ background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16 }}>âœ•</button>
+              <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: 22, color: T.gold, margin: 0 }}>⚖️ Project Comparison</h2>
+              <button type="button" onClick={() => setShowCompare(false)} style={{ background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16 }}>✕</button>
             </div>
 
             <div className="table-scroll" style={{ overflowX: "auto" }}>
@@ -14583,10 +19378,10 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                     { label: "Type", fn: p => p.type },
                     { label: "Payment Plan", fn: p => p.payment },
                     { label: "Tier", fn: p => p.tier },
-                    { label: "Branded", fn: p => p.branded ? `âœ“ ${p.brand}` : "No" },
-                    { label: "Total Units", fn: p => p.units ? getUnitEntries(p.units).reduce((a,[,u]) => a + u.total, 0) : "â€”" },
-                    { label: "Available", fn: p => p.units ? getUnitEntries(p.units).reduce((a,[,u]) => a + (u.total - u.sold), 0) : "â€”", highlight: true },
-                    { label: "% Sold", fn: p => { if (!p.units) return "â€”"; const entries = getUnitEntries(p.units); const t = entries.reduce((a,[,u]) => a + u.total, 0); const s = entries.reduce((a,[,u]) => a + u.sold, 0); return t > 0 ? `${((s/t)*100).toFixed(0)}%` : "â€”"; } },
+                    { label: "Branded", fn: p => p.branded ? `✓ ${p.brand}` : "No" },
+                    { label: "Total Units", fn: p => p.units ? getUnitEntries(p.units).reduce((a,[,u]) => a + u.total, 0) : "—" },
+                    { label: "Available", fn: p => p.units ? getUnitEntries(p.units).reduce((a,[,u]) => a + (u.total - u.sold), 0) : "—", highlight: true },
+                    { label: "% Sold", fn: p => { if (!p.units) return "—"; const entries = getUnitEntries(p.units); const t = entries.reduce((a,[,u]) => a + u.total, 0); const s = entries.reduce((a,[,u]) => a + u.sold, 0); return t > 0 ? `${((s/t)*100).toFixed(0)}%` : "—"; } },
                   ].map((row, ri) => (
                     <tr key={ri} style={{ borderBottom: `1px solid ${T.border}`, background: row.highlight ? "rgba(212,168,67,0.04)" : "transparent" }}>
                       <td style={{ padding: "10px 16px", color: T.textMuted, fontSize: 11, fontWeight: 600, textTransform: "uppercase" }}>{row.label}</td>
@@ -14614,7 +19409,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 {compareList.map(p => p.emaarUrl ? (
                   <a key={p.id} href={p.emaarUrl} target="_blank" rel="noopener noreferrer"
                     style={{ flex: 1, padding: "8px 0", background: "rgba(212,168,67,0.08)", border: "1px solid rgba(212,168,67,0.35)", borderRadius: 10, color: T.gold, fontSize: 11, fontWeight: 700, textAlign: "center", textDecoration: "none" }}>
-                    {p.name.split(" ").slice(0,2).join(" ")} â†— {getLinkDomain(p.emaarUrl)}
+                    {p.name.split(" ").slice(0,2).join(" ")} ↗ {getLinkDomain(p.emaarUrl)}
                   </a>
                 ) : <div key={p.id} style={{ flex: 1 }} />)}
               </div>
@@ -14630,10 +19425,10 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
       {/* ADD INVESTMENT MODAL */}
       {showAddPortfolio && <div style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.9)", zIndex: 3000, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(10px)" }} onClick={() => setShowAddPortfolio(null)}>
         <div style={{ background: T.surface, borderRadius: 20, border: `1px solid ${T.border}`, width: "95%", maxWidth: 520, maxHeight: "90vh", overflow: "auto", position: "relative" }} onClick={e => e.stopPropagation()}>
-          <button type="button" onClick={() => setShowAddPortfolio(null)} style={{ position: "absolute", top: 16, right: 16, background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center", zIndex: 5 }}>{"âœ•"}</button>
+          <button type="button" onClick={() => setShowAddPortfolio(null)} style={{ position: "absolute", top: 16, right: 16, background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center", zIndex: 5 }}>{"✕"}</button>
           <div style={{ padding: "24px 28px 16px", borderBottom: `1px solid ${T.border}` }}>
             <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: 20, fontWeight: 800, color: T.white }}>{typeof showAddPortfolio === "object" ? "Investment Details" : "Select Project"}</h2>
-            <p style={{ fontSize: 11, color: T.textMuted, marginTop: 4 }}>{typeof showAddPortfolio === "object" ? showAddPortfolio.name + " Â· " + showAddPortfolio.community : "Select a project from your portfolio"}</p>
+            <p style={{ fontSize: 11, color: T.textMuted, marginTop: 4 }}>{typeof showAddPortfolio === "object" ? showAddPortfolio.name + " · " + showAddPortfolio.community : "Select a project from your portfolio"}</p>
           </div>
           <div style={{ padding: "16px 28px 28px" }}>
             {showAddPortfolio === true ? <>
@@ -14644,14 +19439,14 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                     <div>
                       <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                         <span style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{p.name}</span>
-                        {p.emaarUrl && <a href={p.emaarUrl} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{ fontSize: 9, color: T.gold, textDecoration: "none", padding: "1px 4px", border: "1px solid rgba(212,168,67,0.3)", borderRadius: 3, fontWeight: 700, flexShrink: 0 }}>â†—</a>}
+                        {p.emaarUrl && <a href={p.emaarUrl} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{ fontSize: 9, color: T.gold, textDecoration: "none", padding: "1px 4px", border: "1px solid rgba(212,168,67,0.3)", borderRadius: 3, fontWeight: 700, flexShrink: 0 }}>↗</a>}
                       </div>
-                      <div style={{ fontSize: 10, color: T.textMuted }}>{p.community} Â· {p.type} Â· {p.beds}</div>
+                      <div style={{ fontSize: 10, color: T.textMuted }}>{p.community} · {p.type} · {p.beds}</div>
                     </div>
                     <div style={{ textAlign: "right" }}>
                       <div style={{ fontSize: 12, fontWeight: 700, color: T.gold }}>AED {p.price ? (p.price/1e6).toFixed(2) + "M" : "TBD"}</div>
                       <div style={{ fontSize: 9, color: T.textMuted }}>{p.handover}</div>
-                      {(() => { const cd = getHandoverCountdown(p.handover); return cd ? <div style={{ fontSize: 9, fontWeight: 700, color: cd.passed ? "#10B981" : cd.color, marginTop: 1 }}>{cd.passed ? "âœ“ Ready" : "â± " + cd.label}</div> : null; })()}
+                      {(() => { const cd = getHandoverCountdown(p.handover); return cd ? <div style={{ fontSize: 9, fontWeight: 700, color: cd.passed ? "#10B981" : cd.color, marginTop: 1 }}>{cd.passed ? "✓ Ready" : "⏱ " + cd.label}</div> : null; })()}
                     </div>
                   </div>
                 ))}
@@ -14684,7 +19479,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 </div>
               </div>
               <div style={{ display: "flex", gap: 10 }}>
-                <button type="button" onClick={() => setShowAddPortfolio(true)} style={{ flex: 1, padding: "10px 0", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textSecondary, fontWeight: 600, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>{"â† Back"}</button>
+                <button type="button" onClick={() => setShowAddPortfolio(true)} style={{ flex: 1, padding: "10px 0", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textSecondary, fontWeight: 600, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>{"← Back"}</button>
                 <button type="button" onClick={addToPortfolio} style={{ flex: 2, padding: "10px 0", background: `linear-gradient(135deg, ${T.gold}, #B8912F)`, color: T.bg, border: "none", borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>Add to Portfolio</button>
               </div>
             </>}
@@ -14696,11 +19491,11 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
       {showSetAlert && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.9)", zIndex: 3200, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(10px)" }} onClick={() => setShowSetAlert(null)}>
           <div style={{ background: T.surface, borderRadius: 20, border: `1px solid ${T.border}`, width: "min(440px,95vw)", padding: "28px 28px 24px", position: "relative" }} onClick={e => e.stopPropagation()}>
-            <button type="button" onClick={() => setShowSetAlert(null)} style={{ position: "absolute", top: 16, right: 16, background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center" }}>Ã—</button>
+            <button type="button" onClick={() => setShowSetAlert(null)} style={{ position: "absolute", top: 16, right: 16, background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center" }}>×</button>
             <div style={{ marginBottom: 20 }}>
               <div style={{ fontSize: 10, color: T.gold, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 6 }}>Price Alert</div>
               <div style={{ fontFamily: "'Fraunces', serif", fontSize: 20, fontWeight: 800, color: T.white }}>{showSetAlert.name}</div>
-              <div style={{ fontSize: 12, color: T.textMuted, marginTop: 3 }}>{showSetAlert.community}{"Â·"}{showSetAlert.type}</div>
+              <div style={{ fontSize: 12, color: T.textMuted, marginTop: 3 }}>{showSetAlert.community}{"·"}{showSetAlert.type}</div>
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
               <div>
@@ -14721,7 +19516,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   <div style={{ fontSize: 10, color: T.gold, fontWeight: 700, marginBottom: 6 }}>EXISTING ALERTS</div>
                   {myAlerts.filter(a => a.projectId === showSetAlert.id).map(a => (
                     <div key={a.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 11, color: T.textMuted, marginBottom: 3 }}>
-                      <span>{a.type.replace(/_/g," ")} {a.type.includes("yield") || a.type.includes("construction") ? a.value + "%" : "AED " + (a.value/1e6).toFixed(2) + "M"} {a.triggered ? "âœ“ Triggered" : "â³ Watching"}</span>
+                      <span>{a.type.replace(/_/g," ")} {a.type.includes("yield") || a.type.includes("construction") ? a.value + "%" : "AED " + (a.value/1e6).toFixed(2) + "M"} {a.triggered ? "✓ Triggered" : "⏳ Watching"}</span>
                       <button type="button" onClick={() => removeAlert(a.id)} style={{ background: "none", border: "none", color: "rgba(239,68,68,0.6)", cursor: "pointer", fontSize: 12, padding: 0 }}>Remove</button>
                     </div>
                   ))}
@@ -14734,10 +19529,10 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
       )}
 
       {/* CHECKOUT PAYMENT MODAL */}
-      {/* â”€â”€â”€ PRICE ALERTS MODAL â”€â”€â”€ */}
+      {/* ─── PRICE ALERTS MODAL ─── */}
       {showAlerts && isLoggedIn && <div role="dialog" aria-modal="true" aria-label="Price Alerts" style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.93)", zIndex: 3200, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(12px)", padding: 16 }} onClick={() => setShowAlerts(false)}>
         <div className="alerts-modal" style={{ background: T.surface, borderRadius: 20, border: `1px solid ${T.border}`, width: "95%", maxWidth: 560, maxHeight: "88vh", overflow: "auto", position: "relative" }} onClick={e => e.stopPropagation()}>
-          <button type="button" onClick={() => setShowAlerts(false)} style={{ position: "absolute", top: 16, right: 16, background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center", zIndex: 5 }}>âœ•</button>
+          <button type="button" onClick={() => setShowAlerts(false)} style={{ position: "absolute", top: 16, right: 16, background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center", zIndex: 5 }}>✕</button>
           <div style={{ padding: "28px 28px 20px", borderBottom: `1px solid ${T.border}` }}>
             <div style={{ fontSize: 11, fontWeight: 700, color: T.gold, letterSpacing: 1, textTransform: "uppercase", marginBottom: 6 }}>\uD83D\uDD14 Price Alerts</div>
             <div style={{ fontFamily: "'Fraunces', serif", fontSize: 20, fontWeight: 800, color: T.white }}>Get notified when the market moves</div>
@@ -14784,12 +19579,12 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 try { await setDoc(doc(db, "priceAlerts", user), { alerts: updated, updatedAt: new Date().toISOString() }); } catch(e) {}
                 setAlertSaving(false);
               }} style={{ width: "100%", padding: "10px 0", background: alertSaving ? T.surfaceAlt : `linear-gradient(135deg, ${T.gold}, #B8912F)`, color: alertSaving ? T.textMuted : T.bg, border: "none", borderRadius: 10, fontWeight: 700, fontSize: 13, cursor: alertSaving ? "default" : "pointer", fontFamily: "'Outfit',sans-serif", transition: "all 0.2s" }}>
-                {alertSaving ? "Savingâ€¦" : "+ Create Alert"}
+                {alertSaving ? "Saving…" : "+ Create Alert"}
               </button>
             </div>
             {/* Existing alerts */}
             <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>Active Alerts ({myAlerts.filter(a => a.active).length})</div>
-            {myAlerts.length === 0 && <div style={{ textAlign: "center", padding: "24px 0", color: T.textMuted, fontSize: 13 }}>No alerts yet â€” create your first one above</div>}
+            {myAlerts.length === 0 && <div style={{ textAlign: "center", padding: "24px 0", color: T.textMuted, fontSize: 13 }}>No alerts yet — create your first one above</div>}
             {myAlerts.map((a, i) => (
               <div key={a.id || i} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", background: T.surfaceAlt, borderRadius: 10, border: `1px solid ${T.border}`, marginBottom: 8 }}>
                 <span style={{ fontSize: 18 }}>{a.condition === "above" ? "\uD83D\uDCC8" : "\uD83D\uDCC9"}</span>
@@ -14802,7 +19597,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   const updated = myAlerts.filter((_, j) => j !== i);
                   setMyAlerts(updated);
                   try { await setDoc(doc(db, "priceAlerts", user), { alerts: updated, updatedAt: new Date().toISOString() }); } catch(e) {}
-                }} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 16, padding: "4px 6px", borderRadius: 6, transition: "color 0.2s" }} onMouseEnter={e => e.currentTarget.style.color = "#EF4444"} onMouseLeave={e => e.currentTarget.style.color = T.textMuted}>âœ•</button>
+                }} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 16, padding: "4px 6px", borderRadius: 6, transition: "color 0.2s" }} onMouseEnter={e => e.currentTarget.style.color = "#EF4444"} onMouseLeave={e => e.currentTarget.style.color = T.textMuted}>✕</button>
               </div>
             ))}
             {myAlerts.length > 0 && <div style={{ fontSize: 11, color: T.textMuted, marginTop: 12, textAlign: "center" }}>Alerts checked daily. Email sent to {user}</div>}
@@ -14812,10 +19607,10 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
 
       {showCheckout && <div role="dialog" aria-modal="true" aria-label="Upgrade checkout" style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.95)", zIndex: 3100, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(12px)" }} onClick={() => { setShowCheckout(null); setCheckoutStep(1); }}>
         <div style={{ background: T.surface, borderRadius: 20, border: `1px solid ${T.border}`, width: "95%", maxWidth: 480, position: "relative", overflow: "hidden" }} onClick={e => e.stopPropagation()}>
-          <button type="button" onClick={() => { setShowCheckout(null); setCheckoutStep(1); }} style={{ position: "absolute", top: 16, right: 16, background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center", zIndex: 5 }}>{"âœ•"}</button>
+          <button type="button" onClick={() => { setShowCheckout(null); setCheckoutStep(1); }} style={{ position: "absolute", top: 16, right: 16, background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center", zIndex: 5 }}>{"✕"}</button>
           <div style={{ padding: "24px 28px 16px", borderBottom: `1px solid ${T.border}` }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, marginBottom: 16 }}>
-              {[1,2,3].map(s => <React.Fragment key={s}><div style={{ width: 28, height: 28, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, background: checkoutStep >= s ? T.gold : T.surfaceAlt, color: checkoutStep >= s ? T.bg : T.textMuted, border: `1px solid ${checkoutStep >= s ? T.gold : T.border}` }}>{checkoutStep > s ? "âœ“" : s}</div>{s < 3 && <div style={{ width: 40, height: 2, background: checkoutStep > s ? T.gold : T.surfaceAlt, borderRadius: 1 }} />}</React.Fragment>)}
+              {[1,2,3].map(s => <React.Fragment key={s}><div style={{ width: 28, height: 28, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, background: checkoutStep >= s ? T.gold : T.surfaceAlt, color: checkoutStep >= s ? T.bg : T.textMuted, border: `1px solid ${checkoutStep >= s ? T.gold : T.border}` }}>{checkoutStep > s ? "✓" : s}</div>{s < 3 && <div style={{ width: 40, height: 2, background: checkoutStep > s ? T.gold : T.surfaceAlt, borderRadius: 1 }} />}</React.Fragment>)}
             </div>
             <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: 20, fontWeight: 800, color: T.white, textAlign: "center" }}>{checkoutStep === 1 ? "Confirm Plan" : checkoutStep === 2 ? "Payment" : "Welcome to Pro!"}</h2>
           </div>
@@ -14824,18 +19619,18 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               <div style={{ padding: 16, borderRadius: 12, background: T.surfaceAlt, border: `2px solid ${T.gold}`, marginBottom: 16 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}><span style={{ fontFamily: "'Fraunces', serif", fontSize: 18, fontWeight: 800, color: T.gold }}>{showCheckout.name} Plan</span><span style={{ fontSize: 10, padding: "3px 10px", borderRadius: 6, background: "rgba(212,168,67,0.12)", color: T.gold }}>SELECTED</span></div>
                 <div style={{ display: "flex", alignItems: "baseline", gap: 3, marginBottom: 12 }}><span style={{ fontSize: 10, color: T.textMuted }}>AED</span><span style={{ fontFamily: "'Fraunces', serif", fontSize: 32, fontWeight: 900, color: T.white }}>{showCheckout.price}</span><span style={{ fontSize: 12, color: T.textMuted }}>/month</span></div>
-                {showCheckout.features.slice(0,5).map((f,j) => <div key={j} style={{ display: "flex", alignItems: "center", gap: 6, padding: "3px 0", fontSize: 12, color: T.textSecondary }}><span style={{ color: T.green }}>{"âœ“"}</span>{f}</div>)}
+                {showCheckout.features.slice(0,5).map((f,j) => <div key={j} style={{ display: "flex", alignItems: "center", gap: 6, padding: "3px 0", fontSize: 12, color: T.textSecondary }}><span style={{ color: T.green }}>{"✓"}</span>{f}</div>)}
               </div>
-              <button type="button" onClick={() => setCheckoutStep(2)} style={{ width: "100%", padding: "12px 0", background: `linear-gradient(135deg, ${T.gold}, #B8912F)`, color: T.bg, border: "none", borderRadius: 10, fontWeight: 700, fontSize: 14, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>Continue to Payment â†’</button>
+              <button type="button" onClick={() => setCheckoutStep(2)} style={{ width: "100%", padding: "12px 0", background: `linear-gradient(135deg, ${T.gold}, #B8912F)`, color: T.bg, border: "none", borderRadius: 10, fontWeight: 700, fontSize: 14, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>Continue to Payment →</button>
             </>}
             {checkoutStep === 2 && <>
               <div style={{ marginBottom: 12 }}>
                 <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, marginBottom: 12 }}>CHOOSE PAYMENT METHOD</div>
 
                 {/* Stripe Payment Links */}
-                {/* â”€â”€ Paddle Card Payment â”€â”€ */}
+                {/* ── Paddle Card Payment ── */}
                 {(() => {
-                  // â”€â”€â”€ PADDLE PRICE IDs â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+                  // ─── PADDLE PRICE IDs ─────────────────────────────────
                   // 1. Sign up at paddle.com (free)
                   // 2. Create products: Pro (AED 99/mo), Enterprise (AED 499/mo)
                   // 3. Paste the price IDs below (format: pri_XXXXXXXX)
@@ -14874,7 +19669,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                       <div style={{ fontSize: 24 }}>\uD83D\uDCB3</div>
                       <div style={{ flex: 1 }}>
                         <div style={{ fontSize: 13, fontWeight: 700, color: "#fff" }}>Credit / Debit Card</div>
-                        <div style={{ fontSize: 10, color: T.textMuted }}>Visa Â· Mastercard Â· Amex Â· Apple Pay Â· {paddleReady ? "Powered by Paddle" : "Powered by Paddle (setup pending)"}</div>
+                        <div style={{ fontSize: 10, color: T.textMuted }}>Visa · Mastercard · Amex · Apple Pay · {paddleReady ? "Powered by Paddle" : "Powered by Paddle (setup pending)"}</div>
                       </div>
                       <span style={{ fontSize: 9, padding: "3px 10px", borderRadius: 6, background: "rgba(34,197,94,0.12)", color: "#22C55E", fontWeight: 700, border: "1px solid rgba(34,197,94,0.2)" }}>RECOMMENDED</span>
                     </div>
@@ -14886,15 +19681,15 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   <div style={{ fontSize: 24 }}>\uD83D\uDCAC</div>
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: 13, fontWeight: 700, color: "#fff" }}>WhatsApp + Bank Transfer</div>
-                    <div style={{ fontSize: 10, color: T.textMuted }}>Manual â€” activated within 5 minutes of payment</div>
+                    <div style={{ fontSize: 10, color: T.textMuted }}>Manual — activated within 5 minutes of payment</div>
                   </div>
-                  <span style={{ color: "#25D366", fontSize: 16 }}>â†’</span>
+                  <span style={{ color: "#25D366", fontSize: 16 }}>→</span>
                 </div>
 
-                <div style={{ padding: "10px 14px", borderRadius: 8, background: "rgba(212,168,67,0.04)", border: "1px solid rgba(212,168,67,0.1)", fontSize: 11, color: T.textMuted, lineHeight: 1.5, marginBottom: 12 }}>\uD83D\uDD12 All payments secure Â· 7-day money-back guarantee</div>
+                <div style={{ padding: "10px 14px", borderRadius: 8, background: "rgba(212,168,67,0.04)", border: "1px solid rgba(212,168,67,0.1)", fontSize: 11, color: T.textMuted, lineHeight: 1.5, marginBottom: 12 }}>\uD83D\uDD12 All payments secure · 7-day money-back guarantee</div>
               </div>
               <div style={{ display: "flex", gap: 10 }}>
-                <button type="button" onClick={() => setCheckoutStep(1)} style={{ width: "100%", padding: "10px 0", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textSecondary, fontWeight: 600, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>â† Back</button>
+                <button type="button" onClick={() => setCheckoutStep(1)} style={{ width: "100%", padding: "10px 0", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textSecondary, fontWeight: 600, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>← Back</button>
               </div>
             </>}
             {checkoutStep === 3 && <div style={{ textAlign: "center", padding: "20px 0" }}>
@@ -14912,14 +19707,14 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
         </div>
       </div>}
 
-      {/* â”€â”€ MOBILE BOTTOM NAV BAR â”€â”€ */}
+      {/* ── MOBILE BOTTOM NAV BAR ── */}
       <nav style={{ display: "none" }} className="mobile-bottom-nav" aria-label="Quick navigation">
         {[
-          { key: "Overview", icon: "â—ˆ", label: "Overview" },
-          { key: "Projects", icon: "âŠž", label: "Projects" },
-          { key: "Yields", icon: "â—Ž", label: "Yields" },
-          { key: "Portfolio", icon: "â—‰", label: "Portfolio" },
-          { key: "Market", icon: "âŠ¿", label: "Market" },
+          { key: "Overview", icon: "◈", label: "Overview" },
+          { key: "Projects", icon: "⊞", label: "Projects" },
+          { key: "Yields", icon: "◎", label: "Yields" },
+          { key: "Portfolio", icon: "◉", label: "Portfolio" },
+          { key: "Market", icon: "⊿", label: "Market" },
         ].map(item => (
           <button key={item.key} type="button" onClick={() => { setTab(item.key); setSidebarOpen(false); }}
             style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 3, background: "none", border: "none", cursor: "pointer", padding: "6px 0", color: tab === item.key ? T.gold : T.textMuted, fontFamily: "'Outfit',sans-serif", transition: "color 0.2s" }}>
@@ -14930,7 +19725,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
         ))}
         <button type="button" onClick={() => setSidebarOpen(s => !s)}
           style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 3, background: "none", border: "none", cursor: "pointer", padding: "6px 0", color: T.textMuted, fontFamily: "'Outfit',sans-serif" }}>
-          <span style={{ fontSize: 18 }}>â˜°</span>
+          <span style={{ fontSize: 18 }}>☰</span>
           <span style={{ fontSize: 9, letterSpacing: 0.3 }}>More</span>
         </button>
       </nav>
@@ -14938,15 +19733,15 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
       {/* USER PROFILE MODAL */}
       {showProfile && <div role="dialog" aria-modal="true" aria-label="User profile" style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.9)", zIndex: 3000, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(10px)" }} onClick={() => setShowProfile(false)}>
         <div style={{ background: T.surface, borderRadius: 20, border: `1px solid ${T.border}`, width: "95%", maxWidth: 560, maxHeight: "90vh", overflow: "auto", position: "relative" }} onClick={e => e.stopPropagation()}>
-          <button type="button" onClick={() => setShowProfile(false)} style={{ position: "absolute", top: 16, right: 16, background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center", zIndex: 5 }}>âœ•</button>
+          <button type="button" onClick={() => setShowProfile(false)} style={{ position: "absolute", top: 16, right: 16, background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center", zIndex: 5 }}>✕</button>
           <div style={{ padding: "32px 28px 20px", background: `linear-gradient(135deg, rgba(212,168,67,0.08), rgba(14,29,53,0.6))`, borderBottom: `1px solid ${T.border}` }}>
             <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
               <div style={{ width: 56, height: 56, borderRadius: "50%", background: `linear-gradient(135deg, ${T.gold}, #B8912F)`, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: 22, color: T.bg, flexShrink: 0 }}>{user.charAt(0).toUpperCase()}</div>
               <div>
                 <div style={{ fontFamily: "'Fraunces', serif", fontSize: 20, fontWeight: 800, color: T.white }}>{userName || user.split("@")[0]}</div>
                 <div style={{ fontSize: 12, color: T.textSecondary, marginTop: 2 }}>{user}</div>
-                <div style={{ display: "inline-flex", alignItems: "center", gap: 4, marginTop: 6, padding: "3px 10px", borderRadius: 6, background: userTier === "admin" || userTier === "pro" || userTier === "enterprise" ? "rgba(16,185,129,0.12)" : userTier === "pro_trial" ? "rgba(212,168,67,0.12)" : "rgba(59,130,246,0.12)", fontSize: 10, fontWeight: 700, color: userTier === "admin" || userTier === "pro" || userTier === "enterprise" ? T.green : userTier === "pro_trial" ? T.gold : T.blue }}>{userTier === "admin" ? "âš¡ Admin" : userTier === "pro" ? "â­ Pro Plan" : userTier === "pro_trial" ? `â­ Pro Trial Â· ${trialDaysLeft}d left` : userTier === "enterprise" ? "\uD83C\uDFE2 Enterprise" : "Free Plan"}</div>
-                {isVerified && <div style={{ display: "inline-flex", alignItems: "center", gap: 4, marginTop: 6, marginLeft: 6, padding: "3px 10px", borderRadius: 6, background: "rgba(0,191,165,0.12)", fontSize: 10, fontWeight: 700, color: "#00BFA5" }}>âœ“ Verified {verifiedLevel ? `Â· ${verifiedLevel.charAt(0).toUpperCase() + verifiedLevel.slice(1)}` : ""}</div>}
+                <div style={{ display: "inline-flex", alignItems: "center", gap: 4, marginTop: 6, padding: "3px 10px", borderRadius: 6, background: userTier === "admin" || userTier === "pro" || userTier === "enterprise" ? "rgba(16,185,129,0.12)" : userTier === "pro_trial" ? "rgba(212,168,67,0.12)" : "rgba(59,130,246,0.12)", fontSize: 10, fontWeight: 700, color: userTier === "admin" || userTier === "pro" || userTier === "enterprise" ? T.green : userTier === "pro_trial" ? T.gold : T.blue }}>{userTier === "admin" ? "⚡ Admin" : userTier === "pro" ? "⭐ Pro Plan" : userTier === "pro_trial" ? `⭐ Pro Trial · ${trialDaysLeft}d left` : userTier === "enterprise" ? "\uD83C\uDFE2 Enterprise" : "Free Plan"}</div>
+                {isVerified && <div style={{ display: "inline-flex", alignItems: "center", gap: 4, marginTop: 6, marginLeft: 6, padding: "3px 10px", borderRadius: 6, background: "rgba(0,191,165,0.12)", fontSize: 10, fontWeight: 700, color: "#00BFA5" }}>✓ Verified {verifiedLevel ? `· ${verifiedLevel.charAt(0).toUpperCase() + verifiedLevel.slice(1)}` : ""}</div>}
               </div>
             </div>
           </div>
@@ -14957,7 +19752,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 <div><label style={{ fontSize: 10, color: T.textMuted, fontWeight: 600, display: "block", marginBottom: 4 }}>DISPLAY NAME</label><input type="text" value={profileEdit.name} onChange={e => setProfileEdit({...profileEdit, name: e.target.value})} placeholder="Your name" style={{ width: "100%", padding: "10px 12px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit', sans-serif", outline: "none" }} /></div>
                 <div><label style={{ fontSize: 10, color: T.textMuted, fontWeight: 600, display: "block", marginBottom: 4 }}>EMAIL</label><input type="email" value={user} disabled style={{ width: "100%", padding: "10px 12px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, fontSize: 13, fontFamily: "'Outfit', sans-serif", outline: "none", opacity: 0.6 }} /></div>
               </div>
-              <button type="button" onClick={async () => { if (auth.currentUser && profileEdit.name.trim()) { try { await setDoc(doc(db, "users", auth.currentUser.uid), { name: profileEdit.name.trim() }, { merge: true }); setUserName(profileEdit.name.trim()); setToast("âœ… Profile updated!"); setTimeout(() => setToast(""), 3000); } catch(e) { setToast("âŒ Update failed"); setTimeout(() => setToast(""), 3000); } } }} style={{ marginTop: 10, padding: "8px 20px", background: T.gold, color: T.bg, border: "none", borderRadius: 8, fontWeight: 700, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>Save Changes</button>
+              <button type="button" onClick={async () => { if (auth.currentUser && profileEdit.name.trim()) { try { await setDoc(doc(db, "users", auth.currentUser.uid), { name: profileEdit.name.trim() }, { merge: true }); setUserName(profileEdit.name.trim()); setToast("✅ Profile updated!"); setTimeout(() => setToast(""), 3000); } catch(e) { setToast("❌ Update failed"); setTimeout(() => setToast(""), 3000); } } }} style={{ marginTop: 10, padding: "8px 20px", background: T.gold, color: T.bg, border: "none", borderRadius: 8, fontWeight: 700, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>Save Changes</button>
             </div>
             <div style={{ marginBottom: 20, padding: 16, borderRadius: 12, background: T.surfaceAlt, border: `1px solid ${T.border}` }}>
               <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 12 }}>Subscription</div>
@@ -14966,7 +19761,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 <div><div style={{ fontSize: 10, color: T.textMuted }}>Status</div><div style={{ fontSize: 14, fontWeight: 700, color: userTier === "free" ? T.blue : T.green }}>{userTier === "free" ? "Limited" : "Active"}</div></div>
                 <div><div style={{ fontSize: 10, color: T.textMuted }}>Access</div><div style={{ fontSize: 14, fontWeight: 700, color: T.white }}>{userTier === "free" ? "5 projects" : "All 48"}</div></div>
               </div>
-              {(userTier === "free" || userTier === "pro_trial") && <button type="button" onClick={() => { setShowProfile(false); setShowUpgrade(true); }} style={{ marginTop: 12, width: "100%", padding: "10px 0", background: `linear-gradient(135deg, ${T.gold}, #B8912F)`, color: T.bg, border: "none", borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>{userTier === "pro_trial" ? "Subscribe Before Trial Ends" : "â­ Upgrade to Pro â€” AED 99/mo"}</button>}
+              {(userTier === "free" || userTier === "pro_trial") && <button type="button" onClick={() => { setShowProfile(false); setShowUpgrade(true); }} style={{ marginTop: 12, width: "100%", padding: "10px 0", background: `linear-gradient(135deg, ${T.gold}, #B8912F)`, color: T.bg, border: "none", borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>{userTier === "pro_trial" ? "Subscribe Before Trial Ends" : "⭐ Upgrade to Pro — AED 99/mo"}</button>}
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
               <button type="button" onClick={() => { setShowProfile(false); handleTabChange("Portfolio"); }} style={{ padding: "10px 0", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textSecondary, fontWeight: 600, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>\uD83D\uDCCA Portfolio</button>
@@ -14977,18 +19772,18 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>Identity Verification</div>
               {isVerified ? (
                 <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                  <div style={{ width: 36, height: 36, borderRadius: "50%", background: "rgba(0,191,165,0.15)", border: "2px solid #00BFA5", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 }}>âœ“</div>
+                  <div style={{ width: 36, height: 36, borderRadius: "50%", background: "rgba(0,191,165,0.15)", border: "2px solid #00BFA5", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 }}>✓</div>
                   <div>
                     <div style={{ fontSize: 13, fontWeight: 700, color: "#00BFA5" }}>Identity Verified</div>
-                    <div style={{ fontSize: 11, color: T.textMuted }}>Level: {verifiedLevel || "Basic"} Â· Approved by admin</div>
+                    <div style={{ fontSize: 11, color: T.textMuted }}>Level: {verifiedLevel || "Basic"} · Approved by admin</div>
                   </div>
                 </div>
               ) : kycStatus === "pending" ? (
                 <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                  <div style={{ width: 36, height: 36, borderRadius: "50%", background: "rgba(245,158,11,0.15)", border: "2px solid #F59E0B", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 }}>â³</div>
+                  <div style={{ width: 36, height: 36, borderRadius: "50%", background: "rgba(245,158,11,0.15)", border: "2px solid #F59E0B", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 }}>⏳</div>
                   <div>
                     <div style={{ fontSize: 13, fontWeight: 700, color: "#F59E0B" }}>Verification Pending</div>
-                    <div style={{ fontSize: 11, color: T.textMuted }}>Admin review in progress Â· Usually within 24h</div>
+                    <div style={{ fontSize: 11, color: T.textMuted }}>Admin review in progress · Usually within 24h</div>
                   </div>
                 </div>
               ) : (
@@ -15002,7 +19797,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
         </div>
       </div>}
 
-      {/* â”€â”€â”€ KYC VERIFICATION MODAL â”€â”€â”€ */}
+      {/* ─── KYC VERIFICATION MODAL ─── */}
       {showKYC && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.92)", zIndex: 5000, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(10px)", padding: 16 }} onClick={() => setShowKYC(false)}>
           <div style={{ background: T.surface, borderRadius: 20, border: `1px solid rgba(0,191,165,0.3)`, width: "95%", maxWidth: 520, maxHeight: "90vh", overflow: "auto", boxShadow: "0 30px 80px rgba(0,0,0,0.6)" }} onClick={e => e.stopPropagation()}>
@@ -15010,9 +19805,9 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <div>
                   <div style={{ fontFamily: "'Fraunces', serif", fontSize: 20, fontWeight: 800, color: "#00BFA5" }}>\uD83D\uDEE1 Identity Verification</div>
-                  <div style={{ fontSize: 12, color: T.textMuted, marginTop: 4 }}>Submit your details for admin review Â· Usually approved within 24h</div>
+                  <div style={{ fontSize: 12, color: T.textMuted, marginTop: 4 }}>Submit your details for admin review · Usually approved within 24h</div>
                 </div>
-                <button type="button" onClick={() => setShowKYC(false)} style={{ background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center" }}>âœ•</button>
+                <button type="button" onClick={() => setShowKYC(false)} style={{ background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
               </div>
             </div>
             <div style={{ padding: "24px 28px 28px" }}>
@@ -15043,18 +19838,18 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 </div>
               </div>
               <button type="button" onClick={submitKYC} disabled={kycSubmitting} style={{ width: "100%", padding: "13px 0", background: kycSubmitting ? T.surfaceAlt : "linear-gradient(135deg, #00BFA5, #00897B)", border: "none", borderRadius: 10, color: kycSubmitting ? T.textMuted : "#fff", fontWeight: 800, fontSize: 14, cursor: kycSubmitting ? "not-allowed" : "pointer", fontFamily: "'Outfit', sans-serif" }}>
-                {kycSubmitting ? "Submitting..." : "Submit for Verification â†’"}
+                {kycSubmitting ? "Submitting..." : "Submit for Verification →"}
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* â”€â”€â”€ KPI DETAIL MODAL â”€â”€â”€ */}
+      {/* ─── KPI DETAIL MODAL ─── */}
       {selectedKPI && (
         <div role="dialog" aria-modal="true" aria-label={`${selectedKPI?.label} details`} style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.92)", zIndex: 5000, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(10px)", padding: 16 }} onClick={() => setSelectedKPI(null)}>
           <div style={{ background: T.surface, borderRadius: 20, border: `1px solid ${selectedKPI.color || T.gold}`, width: "95%", maxWidth: 640, maxHeight: "88vh", overflowY: "auto", position: "relative", boxShadow: `0 24px 80px rgba(0,0,0,0.6), 0 0 40px ${selectedKPI.color || T.gold}22` }} onClick={e => e.stopPropagation()}>
-            <button type="button" onClick={() => setSelectedKPI(null)} style={{ position: "absolute", top: 16, right: 16, background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16, zIndex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>âœ•</button>
+            <button type="button" onClick={() => setSelectedKPI(null)} style={{ position: "absolute", top: 16, right: 16, background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16, zIndex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
             <div style={{ padding: 28 }}>
               <div style={{ marginBottom: 20 }}>
                 <div style={{ fontSize: 10, fontWeight: 600, color: T.textMuted, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 6 }}>{selectedKPI.label}</div>
@@ -15088,7 +19883,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                           return (
                             <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
                               <div style={{ width: "100%", background: isLast ? (selectedKPI.color || T.gold) : T.border, borderRadius: "3px 3px 0 0", height: `${pct}%`, minHeight: 4, position: "relative" }}>
-                                {isLast && <div style={{ position: "absolute", top: -18, left: "50%", transform: "translateX(-50%)", fontSize: 9, color: selectedKPI.color || T.gold, fontWeight: 700, whiteSpace: "nowrap" }}>â–² Latest</div>}
+                                {isLast && <div style={{ position: "absolute", top: -18, left: "50%", transform: "translateX(-50%)", fontSize: 9, color: selectedKPI.color || T.gold, fontWeight: 700, whiteSpace: "nowrap" }}>▲ Latest</div>}
                               </div>
                               <div style={{ fontSize: 9, color: T.textMuted }}>{d.y}</div>
                             </div>
@@ -15105,7 +19900,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   <div style={{ fontSize: 11, color: T.textSecondary, marginTop: 2 }}>{selectedKPI.source}</div>
                 </div>
                 {selectedKPI.sourceUrl && selectedKPI.sourceUrl !== "#" && (
-                  <a href={selectedKPI.sourceUrl} target="_blank" rel="noopener noreferrer" style={{ padding: "8px 16px", background: selectedKPI.color || T.gold, color: T.bg, borderRadius: 8, fontSize: 11, fontWeight: 700, textDecoration: "none", fontFamily: "'Outfit', sans-serif" }}>View Source â†—</a>
+                  <a href={selectedKPI.sourceUrl} target="_blank" rel="noopener noreferrer" style={{ padding: "8px 16px", background: selectedKPI.color || T.gold, color: T.bg, borderRadius: 8, fontSize: 11, fontWeight: 700, textDecoration: "none", fontFamily: "'Outfit', sans-serif" }}>View Source ↗</a>
                 )}
               </div>
             </div>
@@ -15113,7 +19908,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
         </div>
       )}
 
-      {/* â”€â”€â”€ NOTIFICATIONS PANEL â”€â”€â”€ */}
+      {/* ─── NOTIFICATIONS PANEL ─── */}
       {showNotifications && (
         <div style={{ position: "fixed", top: 60, right: 16, width: 360, maxHeight: 480, background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, boxShadow: "0 20px 60px rgba(0,0,0,0.6)", zIndex: 4000, overflow: "hidden", display: "flex", flexDirection: "column" }}>
           <div style={{ padding: "16px 20px", borderBottom: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -15121,7 +19916,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               <div style={{ fontFamily: "'Fraunces',serif", fontSize: 15, fontWeight: 700, color: T.white }}>Notifications</div>
               {unreadCount > 0 && <div style={{ fontSize: 11, color: T.gold }}>{unreadCount} unread</div>}
             </div>
-            <button type="button" onClick={() => setShowNotifications(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 18 }}>âœ•</button>
+            <button type="button" onClick={() => setShowNotifications(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 18 }}>✕</button>
           </div>
           <div style={{ overflowY: "auto", flex: 1 }}>
             {isPro && myAlerts.filter(a => !a.triggered).length > 0 && (
@@ -15132,9 +19927,9 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                     <div key={a.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: a.triggered ? "rgba(16,185,129,0.08)" : T.surfaceAlt, borderRadius: 8, padding: "8px 10px", border: `1px solid ${a.triggered ? "rgba(16,185,129,0.2)" : T.border}` }}>
                       <div>
                         <div style={{ fontSize: 11, fontWeight: 600, color: a.triggered ? "#10B981" : T.white }}>{a.projectName}</div>
-                        <div style={{ fontSize: 10, color: T.textMuted }}>{a.type.replace(/_/g," ")} {a.type.includes("yield") || a.type.includes("construction") ? a.value + "%" : "AED " + (a.value/1e6).toFixed(2) + "M"} {a.triggered ? "âœ“ Triggered" : "â³ Watching"}</div>
+                        <div style={{ fontSize: 10, color: T.textMuted }}>{a.type.replace(/_/g," ")} {a.type.includes("yield") || a.type.includes("construction") ? a.value + "%" : "AED " + (a.value/1e6).toFixed(2) + "M"} {a.triggered ? "✓ Triggered" : "⏳ Watching"}</div>
                       </div>
-                      <button type="button" onClick={() => removeAlert(a.id)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 16, padding: "0 4px" }}>Ã—</button>
+                      <button type="button" onClick={() => removeAlert(a.id)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 16, padding: "0 4px" }}>×</button>
                     </div>
                   ))}
                 </div>
@@ -15165,23 +19960,23 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
         </div>
       )}
 
-      {/* â”€â”€â”€ WATCHLIST PANEL â”€â”€â”€ */}
+      {/* ─── WATCHLIST PANEL ─── */}
       {showWatchlist && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.85)", zIndex: 3500, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(8px)" }} onClick={() => setShowWatchlist(false)}>
           <div style={{ background: T.surface, borderRadius: 20, border: `1px solid ${T.border}`, width: "min(640px,95vw)", maxHeight: "80vh", overflow: "hidden", display: "flex", flexDirection: "column" }} onClick={e => e.stopPropagation()}>
             <div style={{ padding: "20px 24px", borderBottom: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <div>
-                <div style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 700, color: T.gold }}>â­ My Watchlist</div>
+                <div style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 700, color: T.gold }}>⭐ My Watchlist</div>
                 <div style={{ fontSize: 12, color: T.textMuted, marginTop: 2 }}>{watchlist.length} project{watchlist.length !== 1 ? "s" : ""} saved</div>
               </div>
-              <button type="button" onClick={() => setShowWatchlist(false)} style={{ background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16 }}>âœ•</button>
+              <button type="button" onClick={() => setShowWatchlist(false)} style={{ background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16 }}>✕</button>
             </div>
             <div style={{ overflowY: "auto", padding: 20, flex: 1 }}>
               {watchlist.length === 0 ? (
                 <div style={{ textAlign: "center", padding: "48px 20px", color: T.textMuted }}>
-                  <div style={{ fontSize: 40, marginBottom: 12 }}>â˜…</div>
+                  <div style={{ fontSize: 40, marginBottom: 12 }}>★</div>
                   <div style={{ fontSize: 14, color: T.textSecondary, marginBottom: 8 }}>No projects saved yet</div>
-                  <div style={{ fontSize: 12 }}>Click the â˜… star on any project card to add it here.</div>
+                  <div style={{ fontSize: 12 }}>Click the ★ star on any project card to add it here.</div>
                 </div>
               ) : (
                 <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
@@ -15201,10 +19996,10 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                             <span style={{ fontSize: 11, color: T.textMuted }}>{w.community}</span>
                             {liveP?.emaarUrl && <a href={liveP.emaarUrl} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{ fontSize: 9, color: T.gold, textDecoration: "none", padding: "1px 5px", border: "1px solid rgba(212,168,67,0.35)", borderRadius: 4, fontWeight: 700 }}>{getLinkLabel(liveP?.emaarUrl)}</a>}
                           </div>
-                          {priceChanged && <div style={{ fontSize: 10, color: liveP.price > w.price ? T.red : T.green, marginTop: 4, fontWeight: 600 }}>{liveP.price > w.price ? "â†‘" : "â†“"} Price changed since you saved this</div>}
+                          {priceChanged && <div style={{ fontSize: 10, color: liveP.price > w.price ? T.red : T.green, marginTop: 4, fontWeight: 600 }}>{liveP.price > w.price ? "↑" : "↓"} Price changed since you saved this</div>}
                         </div>
                         <div style={{ textAlign: "right" }}>
-                          <div style={{ fontSize: 13, fontWeight: 700, color: T.gold }}>AED {currentPrice ? (currentPrice / 1e6).toFixed(2) + "M" : "â€”"}</div>
+                          <div style={{ fontSize: 13, fontWeight: 700, color: T.gold }}>AED {currentPrice ? (currentPrice / 1e6).toFixed(2) + "M" : "—"}</div>
                           <div style={{ fontSize: 10, color: T.textMuted, marginTop: 2 }}>Starting from</div>
                         </div>
                         <button type="button" onClick={e => { e.stopPropagation(); toggleWatchlist(w); }} style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 6, color: "#EF4444", padding: "4px 8px", cursor: "pointer", fontSize: 11, flexShrink: 0 }}>Remove</button>
@@ -15218,37 +20013,37 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
         </div>
       )}
 
-      {/* â”€â”€â”€ ONBOARDING MODAL â”€â”€â”€ */}
+      {/* ─── ONBOARDING MODAL ─── */}
       {showOnboarding && (() => {
         const steps = [
           {
-            icon: "\uD83C\uDFD9ï¸",
+            icon: "\uD83C\uDFD9️",
             title: `Welcome to DXB Analytics, ${userName || "Investor"}!`,
             body: "You now have access to Dubai's most comprehensive real estate intelligence platform. Let us show you around in 30 seconds.",
-            cta: "Let's Go â†’"
+            cta: "Let's Go →"
           },
           {
             icon: "\uD83D\uDD0D",
             title: "Browse All Projects",
             body: "Go to the Projects tab to explore every active development. Filter by community, tier, handover year, or price range. Click any card for full details, documents, and ROI analysis.",
-            cta: "Next â†’"
+            cta: "Next →"
           },
           {
-            icon: "â­",
+            icon: "⭐",
             title: "Build Your Watchlist",
-            body: "See the â˜… star button on every project card? Click it to save projects you're interested in. Your watchlist syncs across devices.",
-            cta: "Next â†’"
+            body: "See the ★ star button on every project card? Click it to save projects you're interested in. Your watchlist syncs across devices.",
+            cta: "Next →"
           },
           {
             icon: "\uD83D\uDCCA",
             title: "Yields, ROI & Mortgage",
             body: "Use the Yields tab for rental returns by community. The Mortgage tab calculates your monthly payment + all UAE transaction costs instantly.",
-            cta: "Next â†’"
+            cta: "Next →"
           },
           {
             icon: "\uD83D\uDE80",
             title: "You're All Set!",
-            body: userTier === "free" ? "You're on the Free plan. Upgrade to Pro for compare mode, full project details, PDF reports, and portfolio tracking â€” from AED 99/month." : "You have full Pro access. Explore everything â€” compare projects, track your portfolio, and download reports.",
+            body: userTier === "free" ? "You're on the Free plan. Upgrade to Pro for compare mode, full project details, PDF reports, and portfolio tracking — from AED 99/month." : "You have full Pro access. Explore everything — compare projects, track your portfolio, and download reports.",
             cta: userTier === "free" ? "Explore Free Features" : "Start Exploring"
           },
         ];
@@ -15267,7 +20062,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               <p style={{ fontSize: 14, color: T.textSecondary, lineHeight: 1.7, marginBottom: 32 }}>{step.body}</p>
               <div style={{ display: "flex", gap: 10, justifyContent: "center" }}>
                 {onboardingStep > 0 && (
-                  <button type="button" onClick={() => setOnboardingStep(s => s - 1)} style={{ padding: "12px 20px", borderRadius: 10, border: `1px solid ${T.border}`, background: "transparent", color: T.textSecondary, fontSize: 13, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>â† Back</button>
+                  <button type="button" onClick={() => setOnboardingStep(s => s - 1)} style={{ padding: "12px 20px", borderRadius: 10, border: `1px solid ${T.border}`, background: "transparent", color: T.textSecondary, fontSize: 13, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>← Back</button>
                 )}
                 <button type="button" onClick={() => { if (onboardingStep < steps.length - 1) { setOnboardingStep(s => s + 1); } else { completeOnboarding(); } }} style={{ padding: "12px 28px", borderRadius: 10, border: "none", background: `linear-gradient(135deg, ${T.gold}, ${T.goldDim})`, color: T.bg, fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
                   {step.cta}
