@@ -5,13 +5,13 @@
    AED exchange rates, property price converter, 12-month trend chart
    ═══════════════════════════════════════════════════════════════════ */
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { T } from "../data";
 import { SvgIcons } from "../components/Icons";
 import { GOLDEN_VISA_THRESHOLD } from "../utils/constants";
 
-/* ── Top currencies for Dubai international buyers ── */
+/* ── Top currencies for Dubai international buyers (FALLBACK rates) ── */
 const TOP_CURRENCIES = [
   { code: "USD", name: "US Dollar",        flag: "🇺🇸", rate: 3.6725, change: 0.0,   buyers: "Americas" },
   { code: "GBP", name: "British Pound",    flag: "🇬🇧", rate: 4.6420, change: +0.8,  buyers: "UK" },
@@ -37,10 +37,47 @@ const RATE_HISTORY = {
 const MONTHS = ["May","Jun","Jul","Aug","Sep","Oct","Nov","Dec","Jan","Feb","Mar","Apr"];
 
 function CurrencyTab({ selectedCcy, setSelectedCcy, aedAmount, setAedAmount, searchCcy, setSearchCcy }) {
-  const selectedRate = TOP_CURRENCIES.find(c => c.code === selectedCcy)?.rate || 1;
+  /* ─── LIVE RATES from exchangerate.host (free, UAE Central Bank source) ─── */
+  const [liveRates, setLiveRates] = useState(null);
+  const [lastUpdated, setLastUpdated] = useState(null);
+  const [fetchStatus, setFetchStatus] = useState('loading'); // loading | live | fallback
+
+  useEffect(() => {
+    const fetchRates = async () => {
+      try {
+        const codes = TOP_CURRENCIES.map(c => c.code).join(',');
+        const res = await fetch(`https://api.exchangerate.host/latest?base=AED&symbols=${codes}`);
+        if (!res.ok) throw new Error('API failed');
+        const data = await res.json();
+        if (data && data.rates) {
+          setLiveRates(data.rates);
+          setLastUpdated(new Date());
+          setFetchStatus('live');
+        } else {
+          setFetchStatus('fallback');
+        }
+      } catch (err) {
+        console.warn('Currency API failed, using fallback rates:', err);
+        setFetchStatus('fallback');
+      }
+    };
+    fetchRates();
+    // Refresh every 5 minutes while tab is open
+    const interval = setInterval(fetchRates, 5 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  /* Merge live rates into TOP_CURRENCIES (live takes priority, fallback to seed) */
+  const currenciesWithLiveRates = TOP_CURRENCIES.map(c => ({
+    ...c,
+    rate: liveRates?.[c.code] || c.rate,
+    isLive: !!liveRates?.[c.code],
+  }));
+
+  const selectedRate = currenciesWithLiveRates.find(c => c.code === selectedCcy)?.rate || 1;
   const convertedAmount = (aedAmount * selectedRate).toLocaleString(undefined, { maximumFractionDigits: 0 });
   const chartData = (RATE_HISTORY[selectedCcy] || RATE_HISTORY.GBP).map((rate, i) => ({ month: MONTHS[i], rate }));
-  const filteredCcys = TOP_CURRENCIES.filter(c =>
+  const filteredCcys = currenciesWithLiveRates.filter(c =>
     c.name.toLowerCase().includes(searchCcy.toLowerCase()) || c.code.toLowerCase().includes(searchCcy.toLowerCase())
   );
 
@@ -53,10 +90,26 @@ function CurrencyTab({ selectedCcy, setSelectedCcy, aedAmount, setAedAmount, sea
           <div style={{ fontSize: 11, color: T.textMuted, marginTop: 3 }}>AED exchange rates · Property price converter · International buyer tool</div>
         </div>
         <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          {fetchStatus === 'live' && lastUpdated && (
+            <span style={{ fontSize: 10, padding: "3px 10px", borderRadius: 20, background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.3)", color: T.green, display: "flex", alignItems: "center", gap: 4 }}>
+              <span style={{ width: 5, height: 5, borderRadius: "50%", background: T.green, display: "inline-block", animation: "pulse 2s infinite" }} />
+              Live · Updated {lastUpdated.toLocaleTimeString("en-AE", { hour: "2-digit", minute: "2-digit" })}
+            </span>
+          )}
+          {fetchStatus === 'loading' && (
+            <span style={{ fontSize: 10, padding: "3px 10px", borderRadius: 20, background: "rgba(212,168,67,0.1)", border: "1px solid rgba(212,168,67,0.2)", color: T.gold }}>
+              Fetching live rates...
+            </span>
+          )}
+          {fetchStatus === 'fallback' && (
+            <span style={{ fontSize: 10, padding: "3px 10px", borderRadius: 20, background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.2)", color: "#F59E0B" }}>
+              Reference rates (live API unavailable)
+            </span>
+          )}
           <span style={{ fontSize: 10, padding: "3px 10px", borderRadius: 20, background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.2)", color: T.green, display: "flex", alignItems: "center", gap: 4 }}>
-            <span style={{ width: 5, height: 5, borderRadius: "50%", background: T.green, display: "inline-block", animation: "pulse 2s infinite" }} />UAE Central Bank Peg
+            <span style={{ width: 5, height: 5, borderRadius: "50%", background: T.green, display: "inline-block" }} />UAE Central Bank Peg
           </span>
-          <span style={{ fontSize: 10, padding: "3px 10px", borderRadius: 20, background: "rgba(255,255,255,0.04)", border: `1px solid ${T.border}`, color: T.textMuted }}>Reference rates · Verify on xe.com</span>
+          <span style={{ fontSize: 10, padding: "3px 10px", borderRadius: 20, background: "rgba(255,255,255,0.04)", border: `1px solid ${T.border}`, color: T.textMuted }}>Bank spread 2-4% additional</span>
         </div>
       </div>
 
