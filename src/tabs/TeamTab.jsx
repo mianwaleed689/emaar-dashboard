@@ -7,6 +7,7 @@
 import React from "react";
 import { T } from "../data";
 import { SvgIcons } from "../components/Icons";
+import { cleanPhone } from "../utils";
 
 function TeamTab({ teamMembers, teamMembersLoading, myLeads, deals, orgRole }) {
 

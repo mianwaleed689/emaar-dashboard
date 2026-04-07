@@ -11749,6 +11749,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               reraCardSaved={reraCardSaved} setReraCardSaved={setReraCardSaved}
               waTemplate={waTemplate} setWaTemplate={setWaTemplate}
               firebaseUser={firebaseUser} orgRole={orgRole}
+              userName={userName}
             />
           )}
 

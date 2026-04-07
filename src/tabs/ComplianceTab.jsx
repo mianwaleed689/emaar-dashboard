@@ -8,7 +8,7 @@ import React from "react";
 import { T } from "../data";
 import { SvgIcons } from "../components/Icons";
 
-function ComplianceTab({ reraCard, setReraCard, reraCardLoading, setReraCardLoading, reraCardSaved, setReraCardSaved, waTemplate, setWaTemplate, firebaseUser, orgRole }) {
+function ComplianceTab({ reraCard, setReraCard, reraCardLoading, setReraCardLoading, reraCardSaved, setReraCardSaved, waTemplate, setWaTemplate, firebaseUser, orgRole, userName }) {
 
             const isAgent   = orgRole === "agent";
             const isManager = orgRole === "manager";
