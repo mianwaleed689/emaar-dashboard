@@ -22,7 +22,8 @@
    • Avg yield/PPSF computed across filtered set
    ═══════════════════════════════════════════════════════════════════ */
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from "recharts";
 import { T } from "../data";
 
@@ -1650,239 +1651,389 @@ function LaunchCalendarTab({
       </div>
 
       {/* ═══════════════════════════════════════════════════════════
-         PROJECT DETAIL MODAL
+         PROJECT DETAIL MODAL — Rendered via React Portal directly
+         into document.body so it's never trapped by parent scroll/transform
          ═══════════════════════════════════════════════════════════ */}
-      {detailModalProject && (
-        <div style={{
-          position: "fixed",
-          top: 0, left: 0, right: 0, bottom: 0,
-          background: "rgba(0,0,0,0.85)",
-          zIndex: 9999,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          padding: 20,
-          overflowY: "auto",
+      {detailModalProject && typeof document !== "undefined" && createPortal(
+        <ProjectDetailModal
+          project={detailModalProject}
+          onClose={() => setDetailModalProject(null)}
+          statusColor={statusColor}
+          scoreColor={scoreColor}
+          intelligenceBadge={intelligenceBadge}
+          handleTabChange={handleTabChange}
+          toggleCompare={toggleCompare}
+          compareIds={compareIds}
+        />,
+        document.body
+      )}
+
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   PROJECT DETAIL MODAL COMPONENT
+   World-class detail page rendered via Portal so it always centers
+   in the viewport regardless of parent scroll position
+   ═══════════════════════════════════════════════════════════════════ */
+function ProjectDetailModal({ project, onClose, statusColor, scoreColor, intelligenceBadge, handleTabChange, toggleCompare, compareIds }) {
+  const p = project;
+
+  // Lock body scroll while modal is open
+  useEffect(() => {
+    const original = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = original; };
+  }, []);
+
+  // Close on Escape key
+  useEffect(() => {
+    const handler = (e) => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [onClose]);
+
+  const badge = intelligenceBadge(p);
+  const isCompared = compareIds.includes(p.id);
+
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      style={{
+        position: "fixed",
+        inset: 0,
+        background: "rgba(0,0,0,0.88)",
+        backdropFilter: "blur(8px)",
+        WebkitBackdropFilter: "blur(8px)",
+        zIndex: 999999,
+        display: "flex",
+        alignItems: "flex-start",
+        justifyContent: "center",
+        padding: "40px 20px",
+        overflowY: "auto",
+        animation: "fadeIn 0.2s ease-out",
+      }}
+      onClick={onClose}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          background: "linear-gradient(180deg, #1a1a1a 0%, #0f0f0f 100%)",
+          border: `1px solid ${T.gold}`,
+          borderRadius: 16,
+          maxWidth: 1200,
+          width: "100%",
+          padding: 0,
+          boxShadow: `0 20px 80px rgba(0,0,0,0.8), 0 0 60px ${T.gold}33`,
+          overflow: "hidden",
+          color: T.white,
         }}
-          onClick={() => setDetailModalProject(null)}>
+      >
+        {/* ─── HERO HEADER ─── */}
+        <div style={{
+          padding: "32px 36px 24px",
+          background: `linear-gradient(135deg, ${T.surface} 0%, rgba(212,168,67,0.08) 100%)`,
+          borderBottom: `1px solid ${T.border}`,
+          position: "relative",
+        }}>
+          {/* Close button */}
+          <button
+            type="button"
+            onClick={onClose}
+            style={{
+              position: "absolute",
+              top: 20,
+              right: 20,
+              width: 40,
+              height: 40,
+              background: "rgba(255,255,255,0.06)",
+              border: `1px solid ${T.border}`,
+              borderRadius: 10,
+              color: T.white,
+              fontSize: 22,
+              fontWeight: 300,
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              transition: "all 0.15s",
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(239,68,68,0.15)"; e.currentTarget.style.borderColor = "#EF4444"; e.currentTarget.style.color = "#EF4444"; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.06)"; e.currentTarget.style.borderColor = T.border; e.currentTarget.style.color = T.white; }}
+          >
+            ×
+          </button>
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 20, alignItems: "flex-start", marginRight: 50 }}>
+            <div>
+              <div style={{ fontSize: 11, color: T.gold, textTransform: "uppercase", letterSpacing: 1, fontWeight: 700, marginBottom: 6 }}>
+                {p.developer} · {p.community}
+              </div>
+              <div style={{ fontFamily: "'Fraunces', serif", fontSize: 32, fontWeight: 800, color: T.white, lineHeight: 1.1, marginBottom: 10 }}>
+                {p.project}
+              </div>
+              <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                <span style={{ fontSize: 11, padding: "4px 12px", borderRadius: 6, background: `${statusColor(p.status)}22`, color: statusColor(p.status), fontWeight: 700 }}>● {p.status}</span>
+                {p.tier === 1 && <span style={{ fontSize: 11, padding: "4px 12px", borderRadius: 6, background: "rgba(16,185,129,0.12)", color: "#10B981", fontWeight: 700 }}>Tier 1 Developer</span>}
+                {p.goldenVisa && <span style={{ fontSize: 11, padding: "4px 12px", borderRadius: 6, background: "rgba(212,168,67,0.15)", color: T.gold, fontWeight: 700 }}>★ Golden Visa Eligible</span>}
+                {p.branded && <span style={{ fontSize: 11, padding: "4px 12px", borderRadius: 6, background: "rgba(139,92,246,0.15)", color: "#A78BFA", fontWeight: 700 }}>◆ {p.brandPartner}</span>}
+                {p.beachAccess && <span style={{ fontSize: 11, padding: "4px 12px", borderRadius: 6, background: "rgba(59,130,246,0.15)", color: "#3B82F6", fontWeight: 700 }}>🏖 Beachfront</span>}
+                <span style={{ fontSize: 11, padding: "4px 12px", borderRadius: 6, background: `${badge.color}22`, color: badge.color, fontWeight: 800, textTransform: "uppercase", letterSpacing: 0.5 }}>{badge.label}</span>
+              </div>
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
+              <div style={{
+                width: 90,
+                height: 90,
+                borderRadius: "50%",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                border: `4px solid ${scoreColor(p.investmentScore)}`,
+                background: `${scoreColor(p.investmentScore)}15`,
+                boxShadow: `0 0 30px ${scoreColor(p.investmentScore)}44`,
+              }}>
+                <span style={{ fontFamily: "'Fraunces',serif", fontSize: 30, fontWeight: 900, color: scoreColor(p.investmentScore), lineHeight: 1 }}>{p.investmentScore}</span>
+                <span style={{ fontSize: 8, color: scoreColor(p.investmentScore), fontWeight: 800, marginTop: 2, letterSpacing: 0.8 }}>SCORE / 100</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* ─── BODY ─── */}
+        <div style={{ padding: 32 }}>
+
+          {/* Insight quote */}
           <div style={{
-            background: T.surface,
-            border: `1px solid ${T.gold}`,
-            borderRadius: 16,
-            maxWidth: 1100,
-            width: "100%",
-            maxHeight: "90vh",
-            overflowY: "auto",
-            padding: 28,
-            boxShadow: `0 0 60px ${T.gold}33`,
-          }}
-            onClick={(e) => e.stopPropagation()}>
+            marginBottom: 24,
+            padding: "16px 20px",
+            background: "rgba(212,168,67,0.05)",
+            borderLeft: `3px solid ${T.gold}`,
+            borderRadius: 8,
+            fontSize: 14,
+            color: T.textPrimary,
+            lineHeight: 1.7,
+            fontStyle: "italic",
+          }}>
+            "{p.insight}"
+          </div>
 
-            {/* Modal Header */}
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 18, paddingBottom: 18, borderBottom: `1px solid ${T.border}` }}>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 11, color: T.gold, textTransform: "uppercase", letterSpacing: 0.8, fontWeight: 700 }}>{detailModalProject.developer} · {detailModalProject.community}</div>
-                <div style={{ fontFamily: "'Fraunces', serif", fontSize: 28, fontWeight: 800, color: T.white, marginTop: 4 }}>{detailModalProject.project}</div>
-                <div style={{ display: "flex", gap: 6, marginTop: 8, flexWrap: "wrap" }}>
-                  <span style={{ fontSize: 10, padding: "3px 10px", borderRadius: 6, background: `${statusColor(detailModalProject.status)}22`, color: statusColor(detailModalProject.status), fontWeight: 700 }}>● {detailModalProject.status}</span>
-                  {detailModalProject.tier === 1 && <span style={{ fontSize: 10, padding: "3px 10px", borderRadius: 6, background: "rgba(16,185,129,0.12)", color: "#10B981", fontWeight: 700 }}>Tier 1</span>}
-                  {detailModalProject.goldenVisa && <span style={{ fontSize: 10, padding: "3px 10px", borderRadius: 6, background: "rgba(212,168,67,0.15)", color: T.gold, fontWeight: 700 }}>★ Golden Visa</span>}
-                  {detailModalProject.branded && <span style={{ fontSize: 10, padding: "3px 10px", borderRadius: 6, background: "rgba(139,92,246,0.15)", color: "#A78BFA", fontWeight: 700 }}>◆ {detailModalProject.brandPartner}</span>}
-                  {(() => { const b = intelligenceBadge(detailModalProject); return <span style={{ fontSize: 10, padding: "3px 10px", borderRadius: 6, background: `${b.color}22`, color: b.color, fontWeight: 800 }}>{b.label}</span>; })()}
-                </div>
-              </div>
-              <div style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
-                <div style={{ width: 64, height: 64, borderRadius: "50%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", border: `3px solid ${scoreColor(detailModalProject.investmentScore)}`, background: `${scoreColor(detailModalProject.investmentScore)}22` }}>
-                  <span style={{ fontFamily: "'Fraunces',serif", fontSize: 20, fontWeight: 900, color: scoreColor(detailModalProject.investmentScore), lineHeight: 1 }}>{detailModalProject.investmentScore}</span>
-                </div>
-                <button type="button" onClick={() => setDetailModalProject(null)}
-                  style={{ width: 36, height: 36, background: "rgba(239,68,68,0.1)", border: `1px solid #EF4444`, borderRadius: 8, color: "#EF4444", fontSize: 18, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>
-                  ×
-                </button>
-              </div>
+          {/* Hero stats — 4 big cards */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 12, marginBottom: 24 }}>
+            <div style={{ padding: "16px 18px", background: T.surfaceAlt, borderRadius: 12, border: `1px solid ${T.gold}33` }}>
+              <div style={{ fontSize: 10, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 6 }}>Starting Price</div>
+              <div style={{ fontFamily: "'Fraunces', serif", fontSize: 26, fontWeight: 800, color: T.gold, lineHeight: 1 }}>AED {(p.startingPrice / 1000000).toFixed(2)}M</div>
+              <div style={{ fontSize: 11, color: T.textMuted, marginTop: 4 }}>{p.pricePerSqft} AED/sqft</div>
             </div>
-
-            {/* Insight */}
-            <div style={{ marginBottom: 18, padding: 14, background: T.surfaceAlt, borderRadius: 10, fontSize: 13, color: T.textPrimary, lineHeight: 1.6 }}>
-              {detailModalProject.insight}
+            <div style={{ padding: "16px 18px", background: T.surfaceAlt, borderRadius: 12 }}>
+              <div style={{ fontSize: 10, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 6 }}>Yields</div>
+              <div style={{ fontFamily: "'Fraunces', serif", fontSize: 26, fontWeight: 800, color: "#10B981", lineHeight: 1 }}>{p.grossYield}%</div>
+              <div style={{ fontSize: 11, color: T.textMuted, marginTop: 4 }}>Gross · Net {p.netYield}%</div>
             </div>
-
-            {/* Pricing & Yield */}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 10, marginBottom: 18 }}>
-              <div style={{ padding: 14, background: T.surfaceAlt, borderRadius: 10, border: `1px solid ${T.gold}33` }}>
-                <div style={{ fontSize: 10, color: T.textMuted, textTransform: "uppercase" }}>Starting Price</div>
-                <div style={{ fontFamily: "'Fraunces', serif", fontSize: 22, fontWeight: 800, color: T.gold }}>AED {(detailModalProject.startingPrice / 1000000).toFixed(2)}M</div>
-                <div style={{ fontSize: 10, color: T.textMuted, marginTop: 2 }}>{detailModalProject.pricePerSqft} AED/sqft</div>
-              </div>
-              <div style={{ padding: 14, background: T.surfaceAlt, borderRadius: 10 }}>
-                <div style={{ fontSize: 10, color: T.textMuted, textTransform: "uppercase" }}>Gross Yield</div>
-                <div style={{ fontFamily: "'Fraunces', serif", fontSize: 22, fontWeight: 800, color: "#10B981" }}>{detailModalProject.grossYield}%</div>
-                <div style={{ fontSize: 10, color: T.textMuted, marginTop: 2 }}>Net: {detailModalProject.netYield}%</div>
-              </div>
-              <div style={{ padding: 14, background: T.surfaceAlt, borderRadius: 10 }}>
-                <div style={{ fontSize: 10, color: T.textMuted, textTransform: "uppercase" }}>Pre→Handover</div>
-                <div style={{ fontFamily: "'Fraunces', serif", fontSize: 22, fontWeight: 800, color: T.gold }}>+{detailModalProject.appreciationToHandover}%</div>
-                <div style={{ fontSize: 10, color: T.textMuted, marginTop: 2 }}>Capital appreciation</div>
-              </div>
-              <div style={{ padding: 14, background: T.surfaceAlt, borderRadius: 10 }}>
-                <div style={{ fontSize: 10, color: T.textMuted, textTransform: "uppercase" }}>Velocity Score</div>
-                <div style={{ fontFamily: "'Fraunces', serif", fontSize: 22, fontWeight: 800, color: detailModalProject.velocityScore >= 80 ? "#10B981" : T.gold }}>{detailModalProject.velocityScore}/100</div>
-                <div style={{ fontSize: 10, color: T.textMuted, marginTop: 2 }}>Sales momentum</div>
-              </div>
+            <div style={{ padding: "16px 18px", background: T.surfaceAlt, borderRadius: 12 }}>
+              <div style={{ fontSize: 10, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 6 }}>Pre→Handover</div>
+              <div style={{ fontFamily: "'Fraunces', serif", fontSize: 26, fontWeight: 800, color: T.gold, lineHeight: 1 }}>+{p.appreciationToHandover}%</div>
+              <div style={{ fontSize: 11, color: T.textMuted, marginTop: 4 }}>Capital appreciation</div>
             </div>
+            <div style={{ padding: "16px 18px", background: T.surfaceAlt, borderRadius: 12 }}>
+              <div style={{ fontSize: 10, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 6 }}>Sales Velocity</div>
+              <div style={{ fontFamily: "'Fraunces', serif", fontSize: 26, fontWeight: 800, color: p.velocityScore >= 80 ? "#10B981" : T.gold, lineHeight: 1 }}>{p.velocityScore}<span style={{ fontSize: 14, color: T.textMuted }}>/100</span></div>
+              <div style={{ fontSize: 11, color: T.textMuted, marginTop: 4 }}>Sales momentum</div>
+            </div>
+          </div>
 
-            {/* Bed Breakdown */}
-            {detailModalProject.unitBreakdown && (
-              <div style={{ marginBottom: 18 }}>
-                <div style={{ fontSize: 12, color: T.gold, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 10 }}>Unit Inventory</div>
-                <div style={{ overflowX: "auto", background: T.surfaceAlt, borderRadius: 10, padding: 12 }}>
-                  <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
-                    <thead>
-                      <tr style={{ borderBottom: `2px solid ${T.gold}` }}>
-                        <th style={{ padding: "8px 12px", textAlign: "left", color: T.textMuted, fontSize: 10, textTransform: "uppercase", fontWeight: 700 }}>Type</th>
-                        <th style={{ padding: "8px 12px", textAlign: "right", color: T.textMuted, fontSize: 10, textTransform: "uppercase", fontWeight: 700 }}>Size (sqft)</th>
-                        {detailModalProject.unitBreakdown.some(u => u.plotMin) && <th style={{ padding: "8px 12px", textAlign: "right", color: T.textMuted, fontSize: 10, textTransform: "uppercase", fontWeight: 700 }}>Plot</th>}
-                        <th style={{ padding: "8px 12px", textAlign: "right", color: T.textMuted, fontSize: 10, textTransform: "uppercase", fontWeight: 700 }}>Price (AED M)</th>
-                        <th style={{ padding: "8px 12px", textAlign: "right", color: T.textMuted, fontSize: 10, textTransform: "uppercase", fontWeight: 700 }}>PPSF</th>
-                        <th style={{ padding: "8px 12px", textAlign: "right", color: T.textMuted, fontSize: 10, textTransform: "uppercase", fontWeight: 700 }}>Yield</th>
-                        <th style={{ padding: "8px 12px", textAlign: "right", color: T.textMuted, fontSize: 10, textTransform: "uppercase", fontWeight: 700 }}>Available</th>
+          {/* Bed Inventory Table */}
+          {p.unitBreakdown && p.unitBreakdown.length > 0 && (
+            <div style={{ marginBottom: 24 }}>
+              <div style={{ fontSize: 12, color: T.gold, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 12 }}>📋 Unit Inventory by Bed Type</div>
+              <div style={{ overflowX: "auto", background: T.surfaceAlt, borderRadius: 12, border: `1px solid ${T.border}` }}>
+                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
+                  <thead>
+                    <tr style={{ borderBottom: `2px solid ${T.gold}`, background: "rgba(212,168,67,0.05)" }}>
+                      <th style={{ padding: "12px 16px", textAlign: "left", color: T.gold, fontSize: 10, textTransform: "uppercase", fontWeight: 800, letterSpacing: 0.5 }}>Type</th>
+                      <th style={{ padding: "12px 16px", textAlign: "right", color: T.gold, fontSize: 10, textTransform: "uppercase", fontWeight: 800, letterSpacing: 0.5 }}>Size (sqft)</th>
+                      {p.unitBreakdown.some(u => u.plotMin) && <th style={{ padding: "12px 16px", textAlign: "right", color: T.gold, fontSize: 10, textTransform: "uppercase", fontWeight: 800, letterSpacing: 0.5 }}>Plot (sqft)</th>}
+                      <th style={{ padding: "12px 16px", textAlign: "right", color: T.gold, fontSize: 10, textTransform: "uppercase", fontWeight: 800, letterSpacing: 0.5 }}>Price (AED M)</th>
+                      <th style={{ padding: "12px 16px", textAlign: "right", color: T.gold, fontSize: 10, textTransform: "uppercase", fontWeight: 800, letterSpacing: 0.5 }}>PPSF</th>
+                      <th style={{ padding: "12px 16px", textAlign: "right", color: T.gold, fontSize: 10, textTransform: "uppercase", fontWeight: 800, letterSpacing: 0.5 }}>Yield</th>
+                      <th style={{ padding: "12px 16px", textAlign: "right", color: T.gold, fontSize: 10, textTransform: "uppercase", fontWeight: 800, letterSpacing: 0.5 }}>Available</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {p.unitBreakdown.map((u, i) => (
+                      <tr key={i} style={{ borderBottom: i < p.unitBreakdown.length - 1 ? `1px solid ${T.border}` : "none" }}>
+                        <td style={{ padding: "14px 16px", color: T.white, fontWeight: 700 }}>{u.type}</td>
+                        <td style={{ padding: "14px 16px", textAlign: "right", color: T.textPrimary }}>{u.sizeMin.toLocaleString()} – {u.sizeMax.toLocaleString()}</td>
+                        {p.unitBreakdown.some(x => x.plotMin) && <td style={{ padding: "14px 16px", textAlign: "right", color: T.textPrimary }}>{u.plotMin ? `${u.plotMin.toLocaleString()} – ${u.plotMax.toLocaleString()}` : "—"}</td>}
+                        <td style={{ padding: "14px 16px", textAlign: "right", color: T.gold, fontWeight: 700 }}>{(u.priceMin / 1000000).toFixed(2)} – {(u.priceMax / 1000000).toFixed(2)}</td>
+                        <td style={{ padding: "14px 16px", textAlign: "right", color: T.textPrimary }}>{u.ppsf.toLocaleString()}</td>
+                        <td style={{ padding: "14px 16px", textAlign: "right", color: "#10B981", fontWeight: 700 }}>{u.grossYield}%</td>
+                        <td style={{ padding: "14px 16px", textAlign: "right" }}>
+                          <span style={{
+                            padding: "3px 10px",
+                            borderRadius: 12,
+                            background: u.available > 20 ? "rgba(16,185,129,0.15)" : u.available > 0 ? "rgba(245,158,11,0.15)" : "rgba(239,68,68,0.15)",
+                            color: u.available > 20 ? "#10B981" : u.available > 0 ? "#F59E0B" : "#EF4444",
+                            fontWeight: 700,
+                            fontSize: 11,
+                          }}>
+                            {u.available > 0 ? `${u.available} units` : "Sold out"}
+                          </span>
+                        </td>
                       </tr>
-                    </thead>
-                    <tbody>
-                      {detailModalProject.unitBreakdown.map((u, i) => (
-                        <tr key={i} style={{ borderBottom: `1px solid ${T.border}` }}>
-                          <td style={{ padding: "10px 12px", color: T.white, fontWeight: 700 }}>{u.type}</td>
-                          <td style={{ padding: "10px 12px", textAlign: "right", color: T.textPrimary }}>{u.sizeMin}-{u.sizeMax}</td>
-                          {detailModalProject.unitBreakdown.some(x => x.plotMin) && <td style={{ padding: "10px 12px", textAlign: "right", color: T.textPrimary }}>{u.plotMin ? `${u.plotMin}-${u.plotMax}` : "—"}</td>}
-                          <td style={{ padding: "10px 12px", textAlign: "right", color: T.gold, fontWeight: 700 }}>{(u.priceMin / 1000000).toFixed(2)}-{(u.priceMax / 1000000).toFixed(2)}</td>
-                          <td style={{ padding: "10px 12px", textAlign: "right", color: T.textPrimary }}>{u.ppsf}</td>
-                          <td style={{ padding: "10px 12px", textAlign: "right", color: "#10B981", fontWeight: 700 }}>{u.grossYield}%</td>
-                          <td style={{ padding: "10px 12px", textAlign: "right", color: u.available > 0 ? T.white : "#EF4444", fontWeight: 700 }}>{u.available}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                    ))}
+                  </tbody>
+                </table>
               </div>
-            )}
+            </div>
+          )}
 
-            {/* Distances Grid */}
-            {detailModalProject.distances && (
-              <div style={{ marginBottom: 18 }}>
-                <div style={{ fontSize: 12, color: T.gold, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 10 }}>Location & Connectivity</div>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 8 }}>
+          {/* Two-column layout: Location + Payment Plan */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, marginBottom: 24 }}>
+
+            {/* Location & Connectivity */}
+            {p.distances && (
+              <div>
+                <div style={{ fontSize: 12, color: T.gold, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 12 }}>📍 Location & Connectivity</div>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(110px, 1fr))", gap: 8 }}>
                   {[
-                    { icon: "🚇", label: "Metro", val: detailModalProject.distances.metro },
-                    { icon: "🏖️", label: "Beach", val: detailModalProject.distances.beach },
-                    { icon: "🏫", label: "School", val: detailModalProject.distances.school },
-                    { icon: "🏥", label: "Hospital", val: detailModalProject.distances.hospital },
-                    { icon: "🛍️", label: "Mall", val: detailModalProject.distances.mall },
-                    { icon: "✈️", label: "Airport", val: detailModalProject.distances.airport },
-                    { icon: "🏢", label: "DIFC", val: detailModalProject.distances.difc },
-                  ].map((d, i) => (
-                    <div key={i} style={{ padding: 10, background: T.surfaceAlt, borderRadius: 8 }}>
-                      <div style={{ fontSize: 16, marginBottom: 4 }}>{d.icon}</div>
-                      <div style={{ fontSize: 9, color: T.textMuted, textTransform: "uppercase" }}>{d.label}</div>
-                      <div style={{ fontSize: 14, fontWeight: 700, color: T.white }}>{d.val} km</div>
+                    { icon: "🚇", label: "Metro", val: p.distances.metro },
+                    { icon: "🏖️", label: "Beach", val: p.distances.beach },
+                    { icon: "🏫", label: "School", val: p.distances.school },
+                    { icon: "🏥", label: "Hospital", val: p.distances.hospital },
+                    { icon: "🛍️", label: "Mall", val: p.distances.mall },
+                    { icon: "✈️", label: "Airport", val: p.distances.airport },
+                    { icon: "🏢", label: "DIFC", val: p.distances.difc },
+                  ].filter(d => d.val !== undefined).map((d, i) => (
+                    <div key={i} style={{ padding: "12px 10px", background: T.surfaceAlt, borderRadius: 10, textAlign: "center", border: `1px solid ${T.border}` }}>
+                      <div style={{ fontSize: 18, marginBottom: 4 }}>{d.icon}</div>
+                      <div style={{ fontSize: 9, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.4 }}>{d.label}</div>
+                      <div style={{ fontSize: 14, fontWeight: 800, color: T.white, marginTop: 2 }}>{d.val}<span style={{ fontSize: 10, color: T.textMuted, marginLeft: 2 }}>km</span></div>
                     </div>
                   ))}
                 </div>
               </div>
             )}
 
-            {/* Amenities */}
-            {detailModalProject.amenities && (
-              <div style={{ marginBottom: 18 }}>
-                <div style={{ fontSize: 12, color: T.gold, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 10 }}>Amenities</div>
-                <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-                  {detailModalProject.amenities.map((a, i) => (
-                    <span key={i} style={{ fontSize: 11, padding: "5px 12px", borderRadius: 16, background: T.surfaceAlt, color: T.textPrimary, border: `1px solid ${T.border}` }}>{a}</span>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Views */}
-            {detailModalProject.views && (
-              <div style={{ marginBottom: 18 }}>
-                <div style={{ fontSize: 12, color: T.gold, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 10 }}>Views Available</div>
-                <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-                  {detailModalProject.views.map((v, i) => (
-                    <span key={i} style={{ fontSize: 11, padding: "5px 12px", borderRadius: 16, background: "rgba(212,168,67,0.08)", color: T.gold, border: `1px solid ${T.gold}33`, fontWeight: 600 }}>{v}</span>
-                  ))}
-                </div>
-              </div>
-            )}
-
             {/* Payment Plan Visual */}
-            <div style={{ marginBottom: 18 }}>
-              <div style={{ fontSize: 12, color: T.gold, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 10 }}>Payment Plan ({detailModalProject.paymentPlan.label})</div>
-              <div style={{ display: "flex", height: 40, borderRadius: 8, overflow: "hidden", border: `1px solid ${T.border}` }}>
-                <div style={{ width: `${detailModalProject.paymentPlan.dp}%`, background: "#10B981", display: "flex", alignItems: "center", justifyContent: "center", color: T.white, fontSize: 11, fontWeight: 700 }}>
-                  {detailModalProject.paymentPlan.dp}% DP
+            <div>
+              <div style={{ fontSize: 12, color: T.gold, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 12 }}>💰 Payment Plan ({p.paymentPlan.label})</div>
+              <div style={{ display: "flex", height: 56, borderRadius: 10, overflow: "hidden", border: `1px solid ${T.border}`, marginBottom: 10 }}>
+                <div style={{ width: `${p.paymentPlan.dp}%`, background: "#10B981", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", color: T.white, fontSize: 11, fontWeight: 800 }}>
+                  <span>{p.paymentPlan.dp}%</span>
+                  <span style={{ fontSize: 9, opacity: 0.9 }}>Down</span>
                 </div>
-                <div style={{ width: `${detailModalProject.paymentPlan.construction}%`, background: T.gold, display: "flex", alignItems: "center", justifyContent: "center", color: T.dark, fontSize: 11, fontWeight: 700 }}>
-                  {detailModalProject.paymentPlan.construction}% During
+                <div style={{ width: `${p.paymentPlan.construction}%`, background: T.gold, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", color: T.dark, fontSize: 11, fontWeight: 800 }}>
+                  <span>{p.paymentPlan.construction}%</span>
+                  <span style={{ fontSize: 9, opacity: 0.85 }}>During Construction</span>
                 </div>
-                <div style={{ width: `${detailModalProject.paymentPlan.handover}%`, background: "#3B82F6", display: "flex", alignItems: "center", justifyContent: "center", color: T.white, fontSize: 11, fontWeight: 700 }}>
-                  {detailModalProject.paymentPlan.handover}% Handover
+                <div style={{ width: `${p.paymentPlan.handover}%`, background: "#3B82F6", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", color: T.white, fontSize: 11, fontWeight: 800 }}>
+                  <span>{p.paymentPlan.handover}%</span>
+                  <span style={{ fontSize: 9, opacity: 0.9 }}>At Handover</span>
                 </div>
               </div>
-              {detailModalProject.paymentPlan.postHandover > 0 && (
-                <div style={{ marginTop: 6, fontSize: 11, color: T.textMuted }}>+ {detailModalProject.paymentPlan.postHandover} months post-handover plan available</div>
+              {p.paymentPlan.postHandover > 0 && (
+                <div style={{ padding: "8px 12px", background: "rgba(16,185,129,0.08)", borderLeft: `3px solid #10B981`, borderRadius: 6, fontSize: 11, color: T.textPrimary }}>
+                  ⏰ Post-handover plan: {p.paymentPlan.postHandover} months extended payment available
+                </div>
               )}
-            </div>
-
-            {/* Legal & Financial */}
-            <div style={{ marginBottom: 18, padding: 14, background: T.surfaceAlt, borderRadius: 10, display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 12 }}>
-              <div>
-                <div style={{ fontSize: 9, color: T.textMuted, textTransform: "uppercase" }}>RERA Number</div>
-                <div style={{ fontSize: 12, color: T.white, fontWeight: 700, marginTop: 2 }}>{detailModalProject.reraNo}</div>
+              <div style={{ marginTop: 12, padding: "10px 14px", background: T.surfaceAlt, borderRadius: 8, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div>
+                  <div style={{ fontSize: 9, color: T.textMuted, textTransform: "uppercase" }}>EOI Required</div>
+                  <div style={{ fontSize: 14, fontWeight: 800, color: T.gold }}>AED {(p.eoiAmount / 1000).toLocaleString()}K</div>
+                </div>
+                <span style={{ fontSize: 10, padding: "4px 10px", borderRadius: 6, background: p.eoiRefundable ? "rgba(16,185,129,0.15)" : "rgba(239,68,68,0.15)", color: p.eoiRefundable ? "#10B981" : "#EF4444", fontWeight: 700 }}>
+                  {p.eoiRefundable ? "✓ Refundable" : "✗ Non-refundable"}
+                </span>
               </div>
-              <div>
-                <div style={{ fontSize: 9, color: T.textMuted, textTransform: "uppercase" }}>Escrow Bank</div>
-                <div style={{ fontSize: 12, color: T.white, fontWeight: 700, marginTop: 2 }}>{detailModalProject.escrowBank}</div>
-              </div>
-              <div>
-                <div style={{ fontSize: 9, color: T.textMuted, textTransform: "uppercase" }}>EOI Amount</div>
-                <div style={{ fontSize: 12, color: T.white, fontWeight: 700, marginTop: 2 }}>AED {(detailModalProject.eoiAmount / 1000).toFixed(0)}K {detailModalProject.eoiRefundable ? "(refundable)" : "(non-refund)"}</div>
-              </div>
-              <div>
-                <div style={{ fontSize: 9, color: T.textMuted, textTransform: "uppercase" }}>Service Charge</div>
-                <div style={{ fontSize: 12, color: T.white, fontWeight: 700, marginTop: 2 }}>AED {detailModalProject.serviceCharge}/sqft/year</div>
-              </div>
-              <div>
-                <div style={{ fontSize: 9, color: T.textMuted, textTransform: "uppercase" }}>Commission</div>
-                <div style={{ fontSize: 12, color: "#10B981", fontWeight: 700, marginTop: 2 }}>{detailModalProject.commission}%</div>
-              </div>
-              <div>
-                <div style={{ fontSize: 9, color: T.textMuted, textTransform: "uppercase" }}>Handover</div>
-                <div style={{ fontSize: 12, color: T.white, fontWeight: 700, marginTop: 2 }}>{detailModalProject.handover}</div>
-              </div>
-            </div>
-
-            {/* Action Buttons */}
-            <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", paddingTop: 18, borderTop: `1px solid ${T.border}`, flexWrap: "wrap" }}>
-              <button type="button" onClick={() => { handleTabChange && handleTabChange("Mortgage"); setDetailModalProject(null); }}
-                style={{ padding: "10px 18px", background: "rgba(212,168,67,0.1)", border: `1px solid ${T.gold}`, borderRadius: 8, color: T.gold, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>
-                Run Mortgage →
-              </button>
-              <button type="button" onClick={() => { handleTabChange && handleTabChange("Yields"); setDetailModalProject(null); }}
-                style={{ padding: "10px 18px", background: "rgba(212,168,67,0.1)", border: `1px solid ${T.gold}`, borderRadius: 8, color: T.gold, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>
-                Yields Forecast →
-              </button>
-              <button type="button" onClick={() => { handleTabChange && handleTabChange("Projects"); setDetailModalProject(null); }}
-                style={{ padding: "10px 18px", background: "rgba(212,168,67,0.1)", border: `1px solid ${T.gold}`, borderRadius: 8, color: T.gold, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>
-                Browse Catalog →
-              </button>
-              <button type="button" onClick={() => { toggleCompare(detailModalProject.id); }}
-                style={{ padding: "10px 18px", background: T.gold, border: `1px solid ${T.gold}`, borderRadius: 8, color: T.dark, fontSize: 12, fontWeight: 800, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>
-                {compareIds.includes(detailModalProject.id) ? "✓ In Compare" : "+ Add to Compare"}
-              </button>
             </div>
           </div>
+
+          {/* Amenities + Views */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, marginBottom: 24 }}>
+            {p.amenities && p.amenities.length > 0 && (
+              <div>
+                <div style={{ fontSize: 12, color: T.gold, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 12 }}>✨ Amenities</div>
+                <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                  {p.amenities.map((a, i) => (
+                    <span key={i} style={{ fontSize: 11, padding: "6px 12px", borderRadius: 16, background: T.surfaceAlt, color: T.textPrimary, border: `1px solid ${T.border}` }}>{a}</span>
+                  ))}
+                </div>
+              </div>
+            )}
+            {p.views && p.views.length > 0 && (
+              <div>
+                <div style={{ fontSize: 12, color: T.gold, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 12 }}>👁 Views Available</div>
+                <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                  {p.views.map((v, i) => (
+                    <span key={i} style={{ fontSize: 11, padding: "6px 12px", borderRadius: 16, background: "rgba(212,168,67,0.08)", color: T.gold, border: `1px solid ${T.gold}55`, fontWeight: 600 }}>{v}</span>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Legal & Financial Details */}
+          <div style={{ marginBottom: 24 }}>
+            <div style={{ fontSize: 12, color: T.gold, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 12 }}>⚖️ Legal & Financial</div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 10, padding: 16, background: T.surfaceAlt, borderRadius: 12, border: `1px solid ${T.border}` }}>
+              {[
+                { l: "RERA Number", v: p.reraNo, important: true },
+                { l: "Escrow Bank", v: p.escrowBank, important: true },
+                { l: "Total Units", v: p.units },
+                { l: "Service Charge", v: `AED ${p.serviceCharge}/sqft/yr` },
+                { l: "Commission", v: `${p.commission}%`, color: "#10B981" },
+                { l: "Handover", v: p.handover },
+                { l: "Dev On-Time Rate", v: `${p.developerOnTimeRate}%`, color: p.developerOnTimeRate >= 85 ? "#10B981" : "#F59E0B" },
+                { l: "Dev Score", v: `${p.developerScore || "—"}/100` },
+                { l: "Launch Date", v: new Date(p.launchDate).toLocaleDateString("en-AE", { day: "numeric", month: "short", year: "numeric" }) },
+                { l: "EOI Deadline", v: new Date(p.eoiDeadline).toLocaleDateString("en-AE", { day: "numeric", month: "short", year: "numeric" }), color: "#F59E0B" },
+              ].map((field, i) => (
+                <div key={i}>
+                  <div style={{ fontSize: 9, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.4 }}>{field.l}</div>
+                  <div style={{ fontSize: 13, color: field.color || T.white, fontWeight: 700, marginTop: 2 }}>{field.v}</div>
+                </div>
+              ))}
+            </div>
+            <div style={{ marginTop: 10, padding: "8px 14px", background: "rgba(59,130,246,0.06)", borderLeft: `3px solid #3B82F6`, borderRadius: 6, fontSize: 11, color: T.textSecondary }}>
+              💡 Verify the RERA number on the <strong style={{ color: T.white }}>Dubai REST app</strong> before paying any EOI. All escrow accounts are DLD-registered under Law No. 8 of 2007.
+            </div>
+          </div>
+
         </div>
-      )}
+
+        {/* ─── FOOTER ACTIONS ─── */}
+        <div style={{
+          padding: "20px 32px",
+          background: T.surfaceAlt,
+          borderTop: `1px solid ${T.border}`,
+          display: "flex",
+          gap: 10,
+          justifyContent: "flex-end",
+          flexWrap: "wrap",
+        }}>
+          <button type="button" onClick={() => { handleTabChange && handleTabChange("Mortgage"); onClose(); }}
+            style={{ padding: "12px 20px", background: "rgba(212,168,67,0.1)", border: `1px solid ${T.gold}`, borderRadius: 8, color: T.gold, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>
+            Run Mortgage →
+          </button>
+          <button type="button" onClick={() => { handleTabChange && handleTabChange("Yields"); onClose(); }}
+            style={{ padding: "12px 20px", background: "rgba(212,168,67,0.1)", border: `1px solid ${T.gold}`, borderRadius: 8, color: T.gold, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>
+            Yields Forecast →
+          </button>
+          <button type="button" onClick={() => { handleTabChange && handleTabChange("Projects"); onClose(); }}
+            style={{ padding: "12px 20px", background: "rgba(212,168,67,0.1)", border: `1px solid ${T.gold}`, borderRadius: 8, color: T.gold, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>
+            Browse Catalog →
+          </button>
+          <button type="button" onClick={() => toggleCompare(p.id)}
+            style={{ padding: "12px 20px", background: T.gold, border: `1px solid ${T.gold}`, borderRadius: 8, color: T.dark, fontSize: 12, fontWeight: 800, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>
+            {isCompared ? "✓ In Compare List" : "+ Add to Compare"}
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
