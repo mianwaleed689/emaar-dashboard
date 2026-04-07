@@ -45,23 +45,21 @@ function CurrencyTab({ selectedCcy, setSelectedCcy, aedAmount, setAedAmount, sea
   useEffect(() => {
     const fetchRates = async () => {
       try {
-        // Frankfurter API: free, no key, ECB data
-        // Returns: 1 USD = X of each currency
-        // We need to convert to: 1 AED = X of each currency (since 1 USD = 3.6725 AED)
-        const codes = TOP_CURRENCIES.filter(c => c.code !== 'AED' && c.code !== 'USD').map(c => c.code).join(',');
-        const res = await fetch(`https://api.frankfurter.app/latest?from=USD&to=${codes}`);
-        if (!res.ok) throw new Error('Frankfurter API failed');
+        // open.er-api.com: free, no key, CORS-enabled
+        // Returns: 1 AED = X of each currency (already in correct direction!)
+        const res = await fetch('https://open.er-api.com/v6/latest/AED');
+        if (!res.ok) throw new Error('API failed');
         const data = await res.json();
-        if (data && data.rates) {
-          // Frankfurter returns 1 USD = X CURRENCY
-          // We want 1 AED = X CURRENCY
-          // 1 USD = 3.6725 AED, so 1 AED = (1/3.6725) USD = 0.2723 USD
-          // Therefore: 1 AED in CURRENCY = (USD->CURRENCY rate) / 3.6725
-          const aedRates = { USD: 1 / 3.6725 };
-          for (const [code, usdRate] of Object.entries(data.rates)) {
-            aedRates[code] = usdRate / 3.6725;
+        if (data && data.rates && data.result === 'success') {
+          // Filter to only the currencies we display
+          const wantedCodes = TOP_CURRENCIES.map(c => c.code);
+          const filteredRates = {};
+          for (const code of wantedCodes) {
+            if (data.rates[code] !== undefined) {
+              filteredRates[code] = data.rates[code];
+            }
           }
-          setLiveRates(aedRates);
+          setLiveRates(filteredRates);
           setLastUpdated(new Date());
           setFetchStatus('live');
         } else {
