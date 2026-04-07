@@ -1,7 +1,6 @@
 /* eslint-disable */
 /* ═══════════════════════════════════════════════════════════════════
    DXB ANALYTICS — MARKET TAB
-   Extracted from EmaarDashboardV2.jsx
    Dubai macro view — market size, transactions, forecasts, analyst reports
    ═══════════════════════════════════════════════════════════════════ */
 
@@ -9,10 +8,10 @@ import React from "react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area, PieChart, Pie, Cell } from "recharts";
 import { T } from "../data";
 import { SvgIcons } from "../components/Icons";
-import { Section, Chart, CustomTooltip, KPI, ForecastCard, DataBadge, TabSources, LoadingSkeleton } from "../components/SharedUI";
+import { Section, Chart, CustomTooltip, ForecastCard, DataBadge, TabSources } from "../components/SharedUI";
 import SEED_DATA from "../utils/seedData";
 
-function MarketTab({ liveMarketData, allDevelopers, handleTabChange, expandedForecast, setExpandedForecast, user }) {
+function MarketTab({ liveMarketData, allDevelopers, expandedForecast, setExpandedForecast, handleTabChange }) {
 
 
             /* ── Stat Card ── */
@@ -239,7 +238,6 @@ function MarketTab({ liveMarketData, allDevelopers, handleTabChange, expandedFor
                 </div>
 
               </div>
-
             );
 }
 
