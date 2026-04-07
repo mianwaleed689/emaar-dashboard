@@ -45,12 +45,23 @@ function CurrencyTab({ selectedCcy, setSelectedCcy, aedAmount, setAedAmount, sea
   useEffect(() => {
     const fetchRates = async () => {
       try {
-        const codes = TOP_CURRENCIES.map(c => c.code).join(',');
-        const res = await fetch(`https://api.exchangerate.host/latest?base=AED&symbols=${codes}`);
-        if (!res.ok) throw new Error('API failed');
+        // Frankfurter API: free, no key, ECB data
+        // Returns: 1 USD = X of each currency
+        // We need to convert to: 1 AED = X of each currency (since 1 USD = 3.6725 AED)
+        const codes = TOP_CURRENCIES.filter(c => c.code !== 'AED' && c.code !== 'USD').map(c => c.code).join(',');
+        const res = await fetch(`https://api.frankfurter.app/latest?from=USD&to=${codes}`);
+        if (!res.ok) throw new Error('Frankfurter API failed');
         const data = await res.json();
         if (data && data.rates) {
-          setLiveRates(data.rates);
+          // Frankfurter returns 1 USD = X CURRENCY
+          // We want 1 AED = X CURRENCY
+          // 1 USD = 3.6725 AED, so 1 AED = (1/3.6725) USD = 0.2723 USD
+          // Therefore: 1 AED in CURRENCY = (USD->CURRENCY rate) / 3.6725
+          const aedRates = { USD: 1 / 3.6725 };
+          for (const [code, usdRate] of Object.entries(data.rates)) {
+            aedRates[code] = usdRate / 3.6725;
+          }
+          setLiveRates(aedRates);
           setLastUpdated(new Date());
           setFetchStatus('live');
         } else {
@@ -68,15 +79,22 @@ function CurrencyTab({ selectedCcy, setSelectedCcy, aedAmount, setAedAmount, sea
   }, []);
 
   /* Merge live rates into TOP_CURRENCIES (live takes priority, fallback to seed) */
-  const currenciesWithLiveRates = TOP_CURRENCIES.map(c => ({
-    ...c,
-    rate: liveRates?.[c.code] || c.rate,
-    isLive: !!liveRates?.[c.code],
-  }));
+  /* Note: seed `rate` field represents "1 [CURRENCY] = X AED" (e.g., 1 USD = 3.6725 AED) */
+  /* Live rates from API are converted to "1 AED = X CURRENCY" already                    */
+  const currenciesWithLiveRates = TOP_CURRENCIES.map(c => {
+    // If live rate exists, use it directly (already in "1 AED = X CCY" format)
+    // Otherwise convert seed rate "1 CCY = X AED" to "1 AED = X CCY" by inverting
+    const aedToCcy = liveRates?.[c.code] || (1 / c.rate);
+    return {
+      ...c,
+      rate: aedToCcy,
+      isLive: !!liveRates?.[c.code],
+    };
+  });
 
   const selectedRate = currenciesWithLiveRates.find(c => c.code === selectedCcy)?.rate || 1;
-  const convertedAmount = (aedAmount * selectedRate).toLocaleString(undefined, { maximumFractionDigits: 0 });
-  const chartData = (RATE_HISTORY[selectedCcy] || RATE_HISTORY.GBP).map((rate, i) => ({ month: MONTHS[i], rate }));
+  const convertedAmount = (aedAmount * selectedRate).toLocaleString(undefined, { maximumFractionDigits: 2 });
+  const chartData = (RATE_HISTORY[selectedCcy] || RATE_HISTORY.GBP).map((rate, i) => ({ month: MONTHS[i], rate: 1 / rate }));
   const filteredCcys = currenciesWithLiveRates.filter(c =>
     c.name.toLowerCase().includes(searchCcy.toLowerCase()) || c.code.toLowerCase().includes(searchCcy.toLowerCase())
   );
