@@ -8,7 +8,47 @@ import { SvgIcons } from "../components/Icons";
 import { cleanPhone } from "../utils/helpers";
 
 function MyLeadsTab({
-  myLeads, liveLeads, orgRole, userRole,
+  myLeads, liveLeads, orgRole, userRole, orgId, listings,
+  /* search/filters/sort */
+  leadSearch, setLeadSearch,
+  leadStatusFilter, setLeadStatusFilter,
+  leadTypeFilter, setLeadTypeFilter,
+  leadSourceFilter, setLeadSourceFilter,
+  leadBudgetFilter, setLeadBudgetFilter,
+  leadNatFilter, setLeadNatFilter,
+  leadTagFilter, setLeadTagFilter,
+  leadSortBy, setLeadSortBy,
+  /* drawer & selected */
+  selectedLead, setSelectedLead,
+  leadDrawerTab, setLeadDrawerTab,
+  /* add lead form */
+  leadShowAdd, setLeadShowAdd,
+  leadAddName, setLeadAddName,
+  leadAddPhone, setLeadAddPhone,
+  leadAddEmail, setLeadAddEmail,
+  leadAddNat, setLeadAddNat,
+  leadAddLang, setLeadAddLang,
+  leadAddSource, setLeadAddSource,
+  leadAddType, setLeadAddType,
+  leadAddBudget, setLeadAddBudget,
+  leadAddBedrooms, setLeadAddBedrooms,
+  leadAddPurpose, setLeadAddPurpose,
+  leadAddTimeline, setLeadAddTimeline,
+  leadAddStatus, setLeadAddStatus,
+  leadAddComm, setLeadAddComm,
+  leadAddRef, setLeadAddRef,
+  leadAddFollowUp, setLeadAddFollowUp,
+  leadAddSaving, setLeadAddSaving,
+  /* notes & tasks */
+  noteText, setNoteText,
+  noteType, setNoteType,
+  noteLoading, setNoteLoading,
+  taskText, setTaskText,
+  taskDue, setTaskDue,
+  /* modals */
+  showMLAnalytics, setShowMLAnalytics,
+  showMLTemplates, setShowMLTemplates,
+  showQuickCapture, setShowQuickCapture,
 }) {
 
             const mlIsAgent      = orgRole === "agent";

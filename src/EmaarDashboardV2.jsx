@@ -6979,7 +6979,42 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
           {tab === "My Leads" && (
             <MyLeadsTab
               myLeads={myLeads} liveLeads={liveLeads}
-              orgRole={orgRole} userRole={userRole}
+              orgRole={orgRole} userRole={userRole} orgId={orgId} listings={listings}
+              leadSearch={leadSearch} setLeadSearch={setLeadSearch}
+              leadStatusFilter={leadStatusFilter} setLeadStatusFilter={setLeadStatusFilter}
+              leadTypeFilter={leadTypeFilter} setLeadTypeFilter={setLeadTypeFilter}
+              leadSourceFilter={leadSourceFilter} setLeadSourceFilter={setLeadSourceFilter}
+              leadBudgetFilter={leadBudgetFilter} setLeadBudgetFilter={setLeadBudgetFilter}
+              leadNatFilter={leadNatFilter} setLeadNatFilter={setLeadNatFilter}
+              leadTagFilter={leadTagFilter} setLeadTagFilter={setLeadTagFilter}
+              leadSortBy={leadSortBy} setLeadSortBy={setLeadSortBy}
+              selectedLead={selectedLead} setSelectedLead={setSelectedLead}
+              leadDrawerTab={leadDrawerTab} setLeadDrawerTab={setLeadDrawerTab}
+              leadShowAdd={leadShowAdd} setLeadShowAdd={setLeadShowAdd}
+              leadAddName={leadAddName} setLeadAddName={setLeadAddName}
+              leadAddPhone={leadAddPhone} setLeadAddPhone={setLeadAddPhone}
+              leadAddEmail={leadAddEmail} setLeadAddEmail={setLeadAddEmail}
+              leadAddNat={leadAddNat} setLeadAddNat={setLeadAddNat}
+              leadAddLang={leadAddLang} setLeadAddLang={setLeadAddLang}
+              leadAddSource={leadAddSource} setLeadAddSource={setLeadAddSource}
+              leadAddType={leadAddType} setLeadAddType={setLeadAddType}
+              leadAddBudget={leadAddBudget} setLeadAddBudget={setLeadAddBudget}
+              leadAddBedrooms={leadAddBedrooms} setLeadAddBedrooms={setLeadAddBedrooms}
+              leadAddPurpose={leadAddPurpose} setLeadAddPurpose={setLeadAddPurpose}
+              leadAddTimeline={leadAddTimeline} setLeadAddTimeline={setLeadAddTimeline}
+              leadAddStatus={leadAddStatus} setLeadAddStatus={setLeadAddStatus}
+              leadAddComm={leadAddComm} setLeadAddComm={setLeadAddComm}
+              leadAddRef={leadAddRef} setLeadAddRef={setLeadAddRef}
+              leadAddFollowUp={leadAddFollowUp} setLeadAddFollowUp={setLeadAddFollowUp}
+              leadAddSaving={leadAddSaving} setLeadAddSaving={setLeadAddSaving}
+              noteText={noteText} setNoteText={setNoteText}
+              noteType={noteType} setNoteType={setNoteType}
+              noteLoading={noteLoading} setNoteLoading={setNoteLoading}
+              taskText={taskText} setTaskText={setTaskText}
+              taskDue={taskDue} setTaskDue={setTaskDue}
+              showMLAnalytics={showMLAnalytics} setShowMLAnalytics={setShowMLAnalytics}
+              showMLTemplates={showMLTemplates} setShowMLTemplates={setShowMLTemplates}
+              showQuickCapture={showQuickCapture} setShowQuickCapture={setShowQuickCapture}
             />
           )}
           {/* ─── PIPELINE TAB (extracted) ─── */}
