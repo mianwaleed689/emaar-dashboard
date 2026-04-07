@@ -1,0 +1,352 @@
+/* eslint-disable */
+/* AGENCY TAB — Agency profile, team, RERA card, commission splits */
+
+import React from "react";
+import { T } from "../data";
+import { SvgIcons } from "../components/Icons";
+import { cleanPhone } from "../utils/helpers";
+
+function AgencyTab({
+  orgId, orgRole, orgProfile,
+  orgProfileForm, setOrgProfileForm,
+  orgProfileSaving, setOrgProfileSaving,
+  orgProfileSaved, setOrgProfileSaved,
+  reraCard,
+  teamMembers, deals, myLeads,
+  showInviteAgent, setShowInviteAgent,
+  inviteEmail, setInviteEmail,
+  inviteLoading, setInviteLoading,
+  inviteSent, setInviteSent,
+  agentRoleChanging, setAgentRoleChanging,
+  commSplits, setCommSplits,
+  commSaving, setCommSaving,
+}) {
+
+            const isManager = orgRole === "manager";
+            if (!isManager) return (
+              <div style={{ display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", padding:"80px 20px", textAlign:"center" }}>
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke={T.textMuted} strokeWidth="1.5" strokeLinecap="round" style={{ marginBottom:16 }}><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+                <div style={{ fontSize:16, fontWeight:700, color:T.textPrimary, marginBottom:6 }}>Manager access only</div>
+                <div style={{ fontSize:12, color:T.textMuted }}>This section is for agency managers only</div>
+              </div>
+            );
+
+            // Save org profile
+            const saveOrgProfile = async () => {
+              if (!orgId || !orgProfileForm.name.trim()) return;
+              setOrgProfileSaving(true);
+              try {
+                await setDoc(doc(db, "organisations", orgId), {
+                  name:         orgProfileForm.name.trim(),
+                  reraNo:       orgProfileForm.reraNo.trim()       || null,
+                  tradeLicense: orgProfileForm.tradeLicense.trim() || null,
+                  phone:        orgProfileForm.phone.trim()        || null,
+                  ownerEmail:   orgProfileForm.email.trim()        || null,
+                  website:      orgProfileForm.website.trim()      || null,
+                  notes:        orgProfileForm.notes.trim()        || null,
+                  updatedAt:    new Date().toISOString(),
+                }, { merge: true });
+                setOrgProfileSaved(true);
+                setTimeout(() => setOrgProfileSaved(false), 2500);
+              } catch(e) { console.error(e); }
+              setOrgProfileSaving(false);
+            };
+
+            // Save commission split for an agent
+            const saveCommSplit = async (agentUid, pct) => {
+              if (!orgId) return;
+              setCommSaving(s => ({...s, [agentUid]: true}));
+              try {
+                const updated = { ...commSplits, [agentUid]: parseFloat(pct)||50 };
+                await setDoc(doc(db, "organisations", orgId), { commSplits: updated, updatedAt: new Date().toISOString() }, { merge: true });
+                setCommSplits(updated);
+              } catch(e) { console.error(e); }
+              setCommSaving(s => ({...s, [agentUid]: false}));
+            };
+
+            // Change agent role
+            const changeAgentRole = async (agentUid, newRole) => {
+              setAgentRoleChanging(s => ({...s, [agentUid]: true}));
+              try {
+                await setDoc(doc(db, "users", agentUid), { orgRole: newRole, updatedAt: new Date().toISOString() }, { merge: true });
+              } catch(e) { console.error(e); }
+              setAgentRoleChanging(s => ({...s, [agentUid]: false}));
+            };
+
+            // Remove agent from org
+            const removeAgent = async (agentUid) => {
+              if (!window.confirm("Remove this agent from the organisation?")) return;
+              try {
+                await setDoc(doc(db, "users", agentUid), { orgId: null, orgRole: null, updatedAt: new Date().toISOString() }, { merge: true });
+              } catch(e) { console.error(e); }
+            };
+
+            // RERA helpers
+            const reraStatus = (expiry) => {
+              if (!expiry) return { label:"Not set", color:T.textMuted };
+              const days = Math.ceil((new Date(expiry) - new Date()) / (1000*60*60*24));
+              if (days <= 0)  return { label:"Expired",    color:T.red };
+              if (days <= 30) return { label:`${days}d`,   color:"#F97316" };
+              if (days <= 60) return { label:`${days}d`,   color:"#F59E0B" };
+              return { label:"Valid",       color:T.green };
+            };
+
+            const agents = teamMembers.filter(u => u.orgRole === "agent" || u.orgRole === "manager");
+            const plan = orgProfile?.plan || "free";
+            const planColors = { free:T.textMuted, pro:T.teal, enterprise:"#8B5CF6" };
+
+            return (<>
+
+              {/* ── Header ── */}
+              <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:20, flexWrap:"wrap", gap:12 }}>
+                <div>
+                  <h1 style={{ fontFamily:"'Fraunces',serif", fontSize:22, fontWeight:900, color:T.white, margin:0 }}>Agency Hub</h1>
+                  <p style={{ fontSize:12, color:T.textMuted, margin:"4px 0 0" }}>
+                    {orgProfile?.name || "Your Organisation"} ·&nbsp;
+                    <span style={{ color:planColors[plan]||T.textMuted, fontWeight:600, textTransform:"capitalize" }}>{plan} plan</span>
+                    &nbsp;· {agents.length} members
+                  </p>
+                </div>
+              </div>
+
+              {/* ── Top row: Profile + Stats ── */}
+              <div style={{ display:"grid", gridTemplateColumns:"minmax(0,1fr) min(320px,36%)", gap:16, marginBottom:16, alignItems:"start" }}>
+
+                {/* Agency Profile Editor */}
+                <div style={{ background:T.card, border:`1px solid ${T.border}`, borderRadius:14, overflow:"hidden" }}>
+                  <div style={{ padding:"14px 18px", borderBottom:`1px solid ${T.border}`, display:"flex", alignItems:"center", gap:10 }}>
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={T.gold} strokeWidth="2" strokeLinecap="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+                    <div style={{ fontSize:13, fontWeight:700, color:T.white }}>Agency Profile</div>
+                    {orgProfile?.status && (
+                      <span style={{ marginLeft:"auto", fontSize:9, fontWeight:700, padding:"2px 8px", borderRadius:10, background:orgProfile.status==="active"?"rgba(16,185,129,0.12)":"rgba(239,68,68,0.12)", color:orgProfile.status==="active"?T.green:T.red, textTransform:"uppercase" }}>
+                        {orgProfile.status}
+                      </span>
+                    )}
+                  </div>
+                  <div style={{ padding:"18px", display:"grid", gridTemplateColumns:"1fr 1fr", gap:12 }}>
+                    {[
+                      { key:"name",         label:"Agency Name *",        placeholder:"Better Homes Dubai"        },
+                      { key:"reraNo",       label:"RERA Broker Number",   placeholder:"BRN-XXXXX"                 },
+                      { key:"tradeLicense", label:"Trade License",        placeholder:"DED-XXXXXXX"               },
+                      { key:"phone",        label:"Phone",                placeholder:"+971 4 XXX XXXX"           },
+                      { key:"email",        label:"Contact Email",        placeholder:"info@agency.ae"            },
+                      { key:"website",      label:"Website",              placeholder:"www.agency.ae"             },
+                    ].map(({key,label,placeholder}) => (
+                      <div key={key}>
+                        <div style={{ fontSize:10, fontWeight:600, color:T.textMuted, marginBottom:5, letterSpacing:0.3 }}>{label}</div>
+                        <input value={orgProfileForm[key]||""} onChange={e=>setOrgProfileForm(f=>({...f,[key]:e.target.value}))}
+                          placeholder={placeholder}
+                          style={{ width:"100%", padding:"9px 12px", background:T.bg, border:`1px solid rgba(212,168,67,0.15)`, borderRadius:8, color:T.textPrimary, fontSize:12, fontFamily:"'Outfit',sans-serif", outline:"none", boxSizing:"border-box" }}/>
+                      </div>
+                    ))}
+                    <div style={{ gridColumn:"1/-1" }}>
+                      <div style={{ fontSize:10, fontWeight:600, color:T.textMuted, marginBottom:5 }}>Notes</div>
+                      <textarea value={orgProfileForm.notes||""} onChange={e=>setOrgProfileForm(f=>({...f,notes:e.target.value}))} rows={2}
+                        placeholder="Internal notes about this agency..."
+                        style={{ width:"100%", padding:"9px 12px", background:T.bg, border:`1px solid rgba(212,168,67,0.15)`, borderRadius:8, color:T.textPrimary, fontSize:12, fontFamily:"'Outfit',sans-serif", outline:"none", resize:"vertical", boxSizing:"border-box" }}/>
+                    </div>
+                  </div>
+                  <div style={{ padding:"0 18px 18px", display:"flex", justifyContent:"flex-end" }}>
+                    <button type="button" onClick={saveOrgProfile} disabled={orgProfileSaving||!orgProfileForm.name}
+                      style={{ display:"flex", alignItems:"center", gap:8, padding:"9px 20px", borderRadius:8, border:`1px solid ${T.gold}`, background:"rgba(212,168,67,0.1)", color:T.gold, fontSize:12, fontWeight:700, cursor:"pointer", fontFamily:"'Outfit',sans-serif", opacity:(orgProfileSaving||!orgProfileForm.name)?0.5:1 }}>
+                      {orgProfileSaved ? (
+                        <><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="20 6 9 17 4 12"/></svg>Saved</>
+                      ) : orgProfileSaving ? "Saving..." : (
+                        <><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>Save Profile</>
+                      )}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Org stats panel */}
+                <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
+                  {[
+                    { label:"Total Agents",     value:agents.filter(u=>u.orgRole==="agent").length,            color:T.gold    },
+                    { label:"Total Leads",      value:myLeads.length,                                          color:T.teal    },
+                    { label:"Open Deals",       value:deals.filter(d=>d.stage!=="Completed").length,           color:"#8B5CF6" },
+                    { label:"Commission Earned",value:`AED ${Math.round(deals.filter(d=>d.stage==="Completed").reduce((a,d)=>a+(parseFloat(d.commission)||0),0)).toLocaleString()}`, color:"#10B981" },
+                  ].map((s,i) => (
+                    <div key={i} style={{ background:T.card, border:`1px solid ${T.border}`, borderRadius:10, padding:"12px 16px", display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+                      <div style={{ fontSize:11, color:T.textMuted }}>{s.label}</div>
+                      <div style={{ fontSize:16, fontWeight:900, color:s.color, fontFamily:"'Fraunces',serif" }}>{s.value}</div>
+                    </div>
+                  ))}
+                  {/* RERA Summary */}
+                  <div style={{ background:T.card, border:`1px solid ${T.border}`, borderRadius:10, padding:"12px 16px" }}>
+                    <div style={{ fontSize:11, fontWeight:700, color:T.white, marginBottom:8 }}>Team RERA Status</div>
+                    {[
+                      { label:"Valid",      count:agents.filter(u=>{const s=reraStatus(u.reraCard?.expiry); return s.color===T.green;}).length,    color:T.green    },
+                      { label:"Expiring",   count:agents.filter(u=>{const s=reraStatus(u.reraCard?.expiry); return s.color==="amber"||s.color==="#F59E0B"||s.color==="#F97316";}).length, color:"#F59E0B" },
+                      { label:"Expired",    count:agents.filter(u=>{const s=reraStatus(u.reraCard?.expiry); return s.color===T.red;}).length,       color:T.red      },
+                      { label:"Not set",    count:agents.filter(u=>!u.reraCard?.expiry).length,                                                      color:T.textMuted },
+                    ].map(({label,count,color},i) => (
+                      <div key={i} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"5px 0", borderBottom:i<3?`1px solid ${T.border}`:"none" }}>
+                        <span style={{ fontSize:11, color }}>{label}</span>
+                        <span style={{ fontSize:13, fontWeight:700, color }}>{count}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* ── Agent Roster ── */}
+              <div style={{ background:T.card, border:`1px solid ${T.border}`, borderRadius:14, overflow:"hidden" }}>
+                <div style={{ padding:"14px 18px", borderBottom:`1px solid ${T.border}`, display:"flex", alignItems:"center", gap:10 }}>
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={T.teal} strokeWidth="2" strokeLinecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                  <div style={{ fontSize:13, fontWeight:700, color:T.white }}>Agent Roster</div>
+                  <div style={{ marginLeft:"auto", display:"flex", alignItems:"center", gap:8 }}>
+                    <div style={{ fontSize:10, color:T.textMuted }}>{agents.length} members</div>
+                    <button type="button" onClick={()=>{setShowInviteAgent(true);setInviteSent(false);setInviteEmail("");}}
+                      style={{ display:"flex", alignItems:"center", gap:5, padding:"5px 12px", borderRadius:6, border:`1px solid ${T.gold}`, background:"rgba(212,168,67,0.08)", color:T.gold, fontSize:10, fontWeight:700, cursor:"pointer" }}>
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                      Invite Agent
+                    </button>
+                  </div>
+                </div>
+
+                {/* Column headers */}
+                <div style={{ display:"grid", gridTemplateColumns:"minmax(120px,1fr) 90px 110px 110px 110px 75px 36px", minWidth:660, gap:8, padding:"8px 18px", fontSize:9, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.8, borderBottom:`1px solid ${T.border}` }}>
+                  <div>Agent</div><div>Role</div><div>RERA Card</div><div>Expiry</div><div>Comm Split</div><div>Leads</div><div></div>
+                </div>
+
+                {agents.length === 0 ? (
+                  <div style={{ padding:"48px 20px", textAlign:"center" }}>
+                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke={T.textMuted} strokeWidth="1.5" strokeLinecap="round" style={{ marginBottom:10 }}><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+                    <div style={{ fontSize:13, color:T.textMuted }}>No agents yet — ask your admin to assign agents to this organisation</div>
+                  </div>
+                ) : agents.map((agent, i) => {
+                  const agentLeads   = myLeads.filter(l => l.assignedTo === agent.uid).length;
+                  const rStatus      = reraStatus(agent.reraCard?.expiry);
+                  const split        = commSplits[agent.uid] ?? 50;
+                  const isSaving     = commSaving[agent.uid] || false;
+                  const isChanging   = agentRoleChanging[agent.uid] || false;
+
+                  return (
+                    <div key={agent.uid} style={{ display:"grid", gridTemplateColumns:"minmax(120px,1fr) 90px 110px 110px 110px 75px 36px", minWidth:660, gap:8, padding:"13px 18px", alignItems:"center", borderBottom:`1px solid ${T.border}`, background:i%2===0?"transparent":"rgba(255,255,255,0.01)" }}>
+
+                      {/* Agent info */}
+                      <div style={{ display:"flex", alignItems:"center", gap:10, minWidth:0 }}>
+                        <div style={{ width:32, height:32, borderRadius:"50%", background:"rgba(212,168,67,0.1)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:11, fontWeight:700, color:T.gold, flexShrink:0 }}>
+                          {(agent.name||agent.email||"?").slice(0,2).toUpperCase()}
+                        </div>
+                        <div style={{ minWidth:0 }}>
+                          <div style={{ fontSize:12, fontWeight:600, color:T.textPrimary, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{agent.name || agent.email?.split("@")[0] || "Agent"}</div>
+                          <div style={{ fontSize:10, color:T.textMuted, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{agent.email||"—"}</div>
+                        </div>
+                      </div>
+
+                      {/* Role selector */}
+                      <div>
+                        <select value={agent.orgRole||"agent"} onChange={e=>changeAgentRole(agent.uid, e.target.value)} disabled={isChanging}
+                          style={{ width:"100%", padding:"5px 8px", background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:6, color:T.textPrimary, fontSize:11, fontFamily:"'Outfit',sans-serif", cursor:"pointer", outline:"none" }}>
+                          <option value="agent">Agent</option>
+                          <option value="manager">Manager</option>
+                          <option value="viewer">Viewer</option>
+                        </select>
+                      </div>
+
+                      {/* RERA card number */}
+                      <div style={{ fontSize:11, color:T.textSecondary, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>
+                        {agent.reraCard?.number || <span style={{ color:T.textMuted }}>—</span>}
+                      </div>
+
+                      {/* RERA expiry with status */}
+                      <div>
+                        {agent.reraCard?.expiry ? (
+                          <div>
+                            <div style={{ fontSize:11, color:rStatus.color, fontWeight:600 }}>{rStatus.label}</div>
+                            <div style={{ fontSize:9, color:T.textMuted }}>{new Date(agent.reraCard.expiry).toLocaleDateString("en-AE",{day:"2-digit",month:"short",year:"numeric"})}</div>
+                          </div>
+                        ) : (
+                          <span style={{ fontSize:10, color:T.textMuted }}>Not set</span>
+                        )}
+                      </div>
+
+                      {/* Commission split */}
+                      <div style={{ display:"flex", alignItems:"center", gap:5 }}>
+                        <input type="number" min="0" max="100"
+                          value={commSplits[agent.uid] ?? 50}
+                          onChange={e => setCommSplits(s => ({...s, [agent.uid]: e.target.value}))}
+                          style={{ width:46, padding:"5px 6px", background:T.bg, border:`1px solid rgba(212,168,67,0.2)`, borderRadius:6, color:T.gold, fontSize:11, fontFamily:"'Outfit',sans-serif", outline:"none", textAlign:"center" }}/>
+                        <span style={{ fontSize:10, color:T.textMuted }}>%</span>
+                        <button type="button" onClick={()=>saveCommSplit(agent.uid, commSplits[agent.uid]??50)} disabled={isSaving}
+                          style={{ padding:"4px 8px", borderRadius:5, border:`1px solid rgba(212,168,67,0.3)`, background:"rgba(212,168,67,0.08)", color:T.gold, fontSize:9, fontWeight:700, cursor:"pointer", opacity:isSaving?0.5:1 }}>
+                          {isSaving ? "..." : "Save"}
+                        </button>
+                      </div>
+
+                      {/* Lead count */}
+                      <div style={{ fontSize:12, fontWeight:600, color:agentLeads>0?T.textPrimary:T.textMuted, textAlign:"center" }}>
+                        {agentLeads}
+                      </div>
+
+                      {/* Remove */}
+                      <div>
+                        <button type="button" onClick={()=>removeAgent(agent.uid)}
+                          style={{ width:28, height:28, borderRadius:6, border:`1px solid rgba(239,68,68,0.2)`, background:"transparent", color:"rgba(239,68,68,0.5)", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center" }}>
+                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* ── Invite Agent Modal (Session 11) ── */}
+              {showInviteAgent && (
+                <div style={{ position:"fixed", inset:0, background:"rgba(4,9,15,0.85)", zIndex:2000, display:"flex", alignItems:"center", justifyContent:"center", backdropFilter:"blur(8px)" }} onClick={e=>{if(e.target===e.currentTarget)setShowInviteAgent(false);}}>
+                  <div style={{ background:T.surface, borderRadius:14, border:`1px solid ${T.border}`, width:"95%", maxWidth:420 }} onClick={e=>e.stopPropagation()}>
+                    <div style={{ padding:"22px 24px", borderBottom:`1px solid ${T.border}`, display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+                      <div>
+                        <div style={{ fontFamily:"'Fraunces',serif", fontSize:17, fontWeight:900, color:T.gold }}>Invite Agent</div>
+                        <div style={{ fontSize:11, color:T.textMuted, marginTop:2 }}>Generate an invite link to join your agency</div>
+                      </div>
+                      <button type="button" onClick={()=>setShowInviteAgent(false)}
+                        style={{ background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:7, color:T.textMuted, width:30, height:30, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center" }}>
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                      </button>
+                    </div>
+                    <div style={{ padding:"20px 24px" }}>
+                      {inviteSent ? (
+                        <div style={{ textAlign:"center", padding:"12px 0" }}>
+                          <div style={{ width:44, height:44, borderRadius:"50%", background:"rgba(16,185,129,0.1)", border:"2px solid rgba(16,185,129,0.3)", display:"flex", alignItems:"center", justifyContent:"center", margin:"0 auto 12px" }}>
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={T.green} strokeWidth="2.5" strokeLinecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+                          </div>
+                          <div style={{ fontSize:13, fontWeight:700, color:T.green, marginBottom:6 }}>Invite link ready</div>
+                          <div style={{ padding:"10px 14px", background:T.surfaceAlt, borderRadius:8, fontSize:11, color:T.gold, wordBreak:"break-all", marginBottom:12 }}>
+                            {typeof window!=="undefined"?window.location.origin:""}/agency/signup?org={orgId}&email={encodeURIComponent(inviteEmail)}
+                          </div>
+                          <button type="button" onClick={()=>{ if(typeof navigator!=="undefined") navigator.clipboard?.writeText(`${window.location.origin}/agency/signup?org=${orgId}&email=${encodeURIComponent(inviteEmail)}`); }}
+                            style={{ padding:"8px 20px", borderRadius:7, border:`1px solid ${T.gold}`, background:"rgba(212,168,67,0.1)", color:T.gold, fontSize:11, fontWeight:700, cursor:"pointer" }}>
+                            Copy Link
+                          </button>
+                        </div>
+                      ) : (
+                        <>
+                          <div style={{ fontSize:11, fontWeight:600, color:T.textMuted, marginBottom:8 }}>Agent Email Address</div>
+                          <input value={inviteEmail} onChange={e=>setInviteEmail(e.target.value)} placeholder="agent@email.com" type="email"
+                            style={{ width:"100%", padding:"11px 14px", background:T.bg, border:`1px solid rgba(212,168,67,0.15)`, borderRadius:9, color:T.textPrimary, fontSize:13, fontFamily:"'Outfit',sans-serif", outline:"none", marginBottom:14, boxSizing:"border-box" }}/>
+                          <div style={{ padding:"10px 14px", background:"rgba(20,184,166,0.06)", border:"1px solid rgba(20,184,166,0.15)", borderRadius:8, fontSize:11, color:T.textMuted, marginBottom:16, lineHeight:1.5 }}>
+                            Agent signs up at the generated link and is automatically assigned to <strong style={{ color:T.gold }}>{orgProfile?.name}</strong>.
+                          </div>
+                          <div style={{ display:"flex", gap:10, justifyContent:"flex-end" }}>
+                            <button type="button" onClick={()=>setShowInviteAgent(false)}
+                              style={{ padding:"9px 18px", borderRadius:7, border:`1px solid ${T.border}`, background:"transparent", color:T.textMuted, fontSize:12, cursor:"pointer" }}>
+                              Cancel
+                            </button>
+                            <button type="button" disabled={!inviteEmail.trim()||inviteLoading}
+                              onClick={()=>{ setInviteLoading(true); setTimeout(()=>{ setInviteSent(true); setInviteLoading(false); },300); }}
+                              style={{ padding:"9px 20px", borderRadius:7, border:`1px solid ${T.gold}`, background:"rgba(212,168,67,0.1)", color:T.gold, fontSize:12, fontWeight:700, cursor:"pointer", opacity:(!inviteEmail.trim()||inviteLoading)?0.5:1 }}>
+                              {inviteLoading ? "Generating..." : "Generate Link"}
+                            </button>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </>);
+}
+
+export default AgencyTab;
