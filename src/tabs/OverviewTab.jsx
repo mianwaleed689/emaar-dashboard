@@ -1,18 +1,18 @@
 /* eslint-disable */
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-   DXB ANALYTICS â€” OVERVIEW TAB
-   Extracted from EmaarDashboardV2.jsx
-   Bloomberg-style command centre â€” KPIs, market ticker, developer panel
-   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+/* OVERVIEW TAB — Dashboard home with KPIs from all live sources */
 
 import React from "react";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area, LineChart, Line, PieChart, Pie, Cell } from "recharts";
 import { T } from "../data";
 import { SvgIcons } from "../components/Icons";
-import { Section, Chart, CustomTooltip, KPI, ForecastCard, DataBadge, TabSources, LoadingSkeleton } from "../components/SharedUI";
 import SEED_DATA from "../utils/seedData";
 
-function OverviewTab({ liveMarketData, liveDLDVolumes, liveDevHealth, liveMortgageRates, liveYields, allDevelopers, handleTabChange, lastDataSync, gDeveloper, time, aiInsights, SEED_DATA_PROP }) {
+function OverviewTab({
+  liveMarketData, liveDLDVolumes, liveDevHealth, liveMortgageRates, liveYields,
+  allDevelopers, deals, listings, myLeads, myPortfolio, watchlist,
+  aiInsights, gDeveloper, lastDataSync,
+  handleTabChange,
+}) {
 
 
             const OvKPI = ({ label, value, sub, color, icon, onClick, delay }) => (
@@ -21,7 +21,7 @@ function OverviewTab({ liveMarketData, liveDLDVolumes, liveDevHealth, liveMortga
                   <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase" }}>{label}</div>
                   <div style={{ color: color || T.gold, opacity: 0.8 }}>{icon}</div>
                 </div>
-                <div style={{ fontFamily: "'Fraunces', serif", fontSize: 26, fontWeight: 800, color: T.white, lineHeight: 1.1, marginBottom: 6 }}>{value || "â€”"}</div>
+                <div style={{ fontFamily: "'Fraunces', serif", fontSize: 26, fontWeight: 800, color: T.white, lineHeight: 1.1, marginBottom: 6 }}>{value || "—"}</div>
                 {sub && <div style={{ fontSize: 11, color: T.textSecondary }}>{sub}</div>}
               </div>
             );
@@ -43,15 +43,15 @@ function OverviewTab({ liveMarketData, liveDLDVolumes, liveDevHealth, liveMortga
               const live = liveMarketData?.filter?.(d => d.metric && d.value) || [];
               return live.length > 0 ? live : SEED_DATA.overviewKpis;
             })();
-            const getKpi = (metric) => kpis?.find(d => d.metric === metric)?.value || "â€”";
+            const getKpi = (metric) => kpis?.find(d => d.metric === metric)?.value || "—";
             const getKpiChange = (metric) => kpis?.find(d => d.metric === metric)?.change || "";
 
-            // yield data â€” live or seed
+            // yield data — live or seed
             const yieldDisplay = liveYields?.length > 0 ? liveYields
               : SEED_DATA.communities.map(c => ({ community: c.community, tenantProfile: c.tenantProfile, gross: c.grossYield }));
             const sortedYields = [...yieldDisplay].sort((a,b) => (parseFloat(b.grossYield||b.gross)||0) - (parseFloat(a.grossYield||a.gross)||0)).slice(0,6);
 
-            // DLD data â€” live or seed
+            // DLD data — live or seed
             const dldDisplay = liveDLDVolumes?.length > 0 ? liveDLDVolumes : SEED_DATA.dldVolumes;
             const sortedDLD = [...dldDisplay].sort((a,b) => (b.transactions||b.count||0) - (a.transactions||a.count||0)).slice(0,6);
             const dldMax = Math.max(...sortedDLD.map(d => d.transactions||d.count||0), 1);
@@ -64,7 +64,7 @@ function OverviewTab({ liveMarketData, liveDLDVolumes, liveDevHealth, liveMortga
                   <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 14px", borderRadius: 8, background: "rgba(212,168,67,0.06)", border: `1px solid rgba(212,168,67,0.2)`, marginBottom: 12 }}>
                     <span style={{ width: 6, height: 6, borderRadius: "50%", background: T.gold, display: "inline-block" }} />
                     <span style={{ fontSize: 11, color: T.textMuted }}>
-                      <span style={{ color: T.gold, fontWeight: 700 }}>Research-based seed data</span> â€” DLD 2025, Bayut, REIDIN, ValuStrat Â· Replace via Admin â†’ Data Manager
+                      <span style={{ color: T.gold, fontWeight: 700 }}>Research-based seed data</span> — DLD 2025, Bayut, REIDIN, ValuStrat · Replace via Admin → Data Manager
                     </span>
                   </div>
                 )}
@@ -74,8 +74,8 @@ function OverviewTab({ liveMarketData, liveDLDVolumes, liveDevHealth, liveMortga
                   <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                     <span style={{ width: 7, height: 7, borderRadius: "50%", background: T.green, display: "inline-block", animation: "pulse 2s infinite" }} />
                     <span style={{ fontSize: 11, color: T.textSecondary }}>
-                      Live data â€” <span style={{ color: T.gold, fontWeight: 600 }}>DXB Analytics Intelligence Platform</span>
-                      {syncTime && <span style={{ color: T.textMuted }}> Â· Last sync {syncTime}</span>}
+                      Live data — <span style={{ color: T.gold, fontWeight: 600 }}>DXB Analytics Intelligence Platform</span>
+                      {syncTime && <span style={{ color: T.textMuted }}> · Last sync {syncTime}</span>}
                     </span>
                   </div>
                   <div style={{ display: "flex", gap: 8 }}>
@@ -85,7 +85,7 @@ function OverviewTab({ liveMarketData, liveDLDVolumes, liveDevHealth, liveMortga
                 </div>
 
                 {/* 7 KPI Cards */}
-                <OvSection title="Market Pulse" sub="Dubai real estate â€” key indicators" />
+                <OvSection title="Market Pulse" sub="Dubai real estate — key indicators" />
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: 12, marginBottom: 8 }}>
                   <OvKPI delay={1} label="Total Market Value" icon={SvgIcons.TrendingUp({width:16,height:16})}
                     value={getKpi("Total Market Value")}
@@ -95,19 +95,19 @@ function OverviewTab({ liveMarketData, liveDLDVolumes, liveDevHealth, liveMortga
                     value={getKpi("Total Transactions")}
                     sub={getKpiChange("Total Transactions") || "Source: DLD Annual Report 2025"}
                     onClick={() => handleTabChange("DLD Volumes")} />
-                  <OvKPI delay={3} label="EIBOR 3M â€” Live" icon={SvgIcons.Landmark({width:16,height:16})}
-                    value={liveMortgageRates?.[0]?.eibor3m ? liveMortgageRates[0].eibor3m.toFixed(2) + "%" : "â€”"}
-                    sub="Updated daily Â· Central Bank UAE"
+                  <OvKPI delay={3} label="EIBOR 3M — Live" icon={SvgIcons.Landmark({width:16,height:16})}
+                    value={liveMortgageRates?.[0]?.eibor3m ? liveMortgageRates[0].eibor3m.toFixed(2) + "%" : "—"}
+                    sub="Updated daily · Central Bank UAE"
                     color={T.teal} onClick={() => handleTabChange("Mortgage")} />
                   <OvKPI delay={4} label="Active Developers" icon={SvgIcons.Building2({width:16,height:16})}
                     value={allDevelopers?.length > 0 ? allDevelopers.length.toString() : "50+"}
-                    sub="RERA registered Â· DLD approved"
+                    sub="RERA registered · DLD approved"
                     onClick={() => handleTabChange("Developer Health")} />
                   <OvKPI delay={5} label="Avg Gross Yield" icon={SvgIcons.BarChart3({width:16,height:16})}
                     value={liveYields?.length > 0
                       ? (liveYields.reduce((a,b) => a + (parseFloat(b.gross)||0), 0) / liveYields.length).toFixed(1) + "%"
                       : (SEED_DATA.communities.reduce((a,b) => a + (parseFloat(b.grossYield)||0), 0) / SEED_DATA.communities.length).toFixed(1) + "%"}
-                    sub="Across all communities Â· Bayut data"
+                    sub="Across all communities · Bayut data"
                     color={T.green} onClick={() => handleTabChange("Yields")} />
                   <OvKPI delay={6} label="Off-Plan Share" icon={SvgIcons.BarChart2({width:16,height:16})}
                     value={getKpi("Off-Plan Share")}
@@ -121,7 +121,7 @@ function OverviewTab({ liveMarketData, liveDLDVolumes, liveDevHealth, liveMortga
 
                 {/* 3-Column Intelligence Panel */}
                 <OvSection title="Intelligence Panel"
-                  sub="Context-aware â€” updates with your filter selection"
+                  sub="Context-aware — updates with your filter selection"
                   action={
                     <div style={{ fontSize: 10, color: T.textMuted, display: "flex", alignItems: "center", gap: 4 }}>
                       <span style={{ width: 5, height: 5, borderRadius: "50%", background: gDeveloper !== "all" ? T.gold : T.textMuted, display: "inline-block" }} />
@@ -133,11 +133,11 @@ function OverviewTab({ liveMarketData, liveDLDVolumes, liveDevHealth, liveMortga
 
                   {/* Column 1: Top Yield Communities */}
                   <div className="chart-box" style={{ padding: 18 }}>
-                    <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 14 }}>Top Communities â€” Yield</div>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 14 }}>Top Communities — Yield</div>
                     {sortedYields.map((y, i) => (
                       <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "7px 0", borderBottom: i < 5 ? `1px solid ${T.border}` : "none" }}>
                         <div>
-                          <div style={{ fontSize: 12, color: T.white, fontWeight: 500 }}>{y.community || "â€”"}</div>
+                          <div style={{ fontSize: 12, color: T.white, fontWeight: 500 }}>{y.community || "—"}</div>
                           <div style={{ fontSize: 10, color: T.textMuted }}>{y.tenantProfile || "Apartment"}</div>
                         </div>
                         <div style={{ fontFamily: "'Fraunces', serif", fontSize: 16, fontWeight: 700, color: parseFloat(y.grossYield||y.gross||0) >= 7 ? T.green : parseFloat(y.grossYield||y.gross||0) >= 5.5 ? T.gold : T.textSecondary }}>
@@ -146,7 +146,7 @@ function OverviewTab({ liveMarketData, liveDLDVolumes, liveDevHealth, liveMortga
                       </div>
                     ))}
                     <button type="button" onClick={() => handleTabChange("Yields")} style={{ width: "100%", marginTop: 12, padding: "7px 0", background: "rgba(212,168,67,0.06)", border: `1px solid ${T.border}`, borderRadius: 8, color: T.gold, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
-                      View All Yields â†’
+                      View All Yields →
                     </button>
                   </div>
 
@@ -158,7 +158,7 @@ function OverviewTab({ liveMarketData, liveDLDVolumes, liveDevHealth, liveMortga
                       return (
                         <div key={i} style={{ marginBottom: 10 }}>
                           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
-                            <span style={{ fontSize: 11, color: T.textSecondary }}>{d.community || "â€”"}</span>
+                            <span style={{ fontSize: 11, color: T.textSecondary }}>{d.community || "—"}</span>
                             <span style={{ fontSize: 11, color: T.white, fontWeight: 600 }}>{(d.transactions||d.count||0).toLocaleString()}</span>
                           </div>
                           <div style={{ height: 4, borderRadius: 2, background: T.border }}>
@@ -168,7 +168,7 @@ function OverviewTab({ liveMarketData, liveDLDVolumes, liveDevHealth, liveMortga
                       );
                     })}
                     <button type="button" onClick={() => handleTabChange("DLD Volumes")} style={{ width: "100%", marginTop: 12, padding: "7px 0", background: "rgba(212,168,67,0.06)", border: `1px solid ${T.border}`, borderRadius: 8, color: T.gold, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
-                      View DLD Volumes â†’
+                      View DLD Volumes →
                     </button>
                   </div>
 
@@ -184,7 +184,7 @@ function OverviewTab({ liveMarketData, liveDLDVolumes, liveDevHealth, liveMortga
                         : <div style={{ fontSize: 12, color: T.textMuted, lineHeight: 1.7, fontStyle: "italic" }}>AI market analysis generates automatically every 7 days from live DLD and Bayut data.</div>
                       }
                       <div style={{ marginTop: 10, fontSize: 10, color: T.textMuted }}>
-                        Powered by Claude Â· {aiInsights?.length > 0 ? "Updated this week" : "Connect data to activate"}
+                        Powered by Claude · {aiInsights?.length > 0 ? "Updated this week" : "Connect data to activate"}
                       </div>
                     </div>
                     <div className="chart-box" style={{ padding: 18 }}>
@@ -194,21 +194,21 @@ function OverviewTab({ liveMarketData, liveDLDVolumes, liveDevHealth, liveMortga
                             <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "5px 0", borderBottom: i < 3 ? `1px solid ${T.border}` : "none" }}>
                               <span style={{ fontSize: 11, color: T.textSecondary }}>{d.developer || d.name}</span>
                               <span style={{ fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 20, background: (d.score||0) >= 75 ? "rgba(16,185,129,0.15)" : "rgba(212,168,67,0.15)", color: (d.score||0) >= 75 ? T.green : T.gold }}>
-                                {d.score || "â€”"}
+                                {d.score || "—"}
                               </span>
                             </div>
                           ))
-                        : <div style={{ fontSize: 11, color: T.textMuted }}>Health scores load from Admin â†’ Developer Health</div>
+                        : <div style={{ fontSize: 11, color: T.textMuted }}>Health scores load from Admin → Developer Health</div>
                       }
                       <button type="button" onClick={() => handleTabChange("Developer Health")} style={{ width: "100%", marginTop: 10, padding: "7px 0", background: "rgba(212,168,67,0.06)", border: `1px solid ${T.border}`, borderRadius: 8, color: T.gold, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
-                        View All â†’
+                        View All →
                       </button>
                     </div>
                   </div>
                 </div>
 
                 {/* Live Feeds */}
-                <OvSection title="Live Intelligence Feeds" sub="Real-time data streams â€” auto-refreshing" />
+                <OvSection title="Live Intelligence Feeds" sub="Real-time data streams — auto-refreshing" />
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 14, marginBottom: 32 }}>
 
                   {/* Recent DLD */}
@@ -223,10 +223,10 @@ function OverviewTab({ liveMarketData, liveDLDVolumes, liveDevHealth, liveMortga
                     {sortedDLD.slice(0,5).map((tx, i) => (
                       <div key={i} style={{ padding: "8px 0", borderBottom: i < 4 ? `1px solid ${T.border}` : "none" }}>
                         <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 2 }}>
-                          <span style={{ fontSize: 11, color: T.white, fontWeight: 500 }}>{tx.community || "â€”"}</span>
-                          <span style={{ fontSize: 11, color: T.gold, fontWeight: 700 }}>{tx.volume ? "AED " + (tx.volume/1000000000).toFixed(1) + "B" : "â€”"}</span>
+                          <span style={{ fontSize: 11, color: T.white, fontWeight: 500 }}>{tx.community || "—"}</span>
+                          <span style={{ fontSize: 11, color: T.gold, fontWeight: 700 }}>{tx.volume ? "AED " + (tx.volume/1000000000).toFixed(1) + "B" : "—"}</span>
                         </div>
-                        <div style={{ fontSize: 10, color: T.textMuted }}>{tx.type || "Residential"}{"Â·"}{(tx.transactions||tx.count||0).toLocaleString()} deals</div>
+                        <div style={{ fontSize: 10, color: T.textMuted }}>{tx.type || "Residential"}{"·"}{(tx.transactions||tx.count||0).toLocaleString()} deals</div>
                       </div>
                     ))}
                   </div>
@@ -235,19 +235,19 @@ function OverviewTab({ liveMarketData, liveDLDVolumes, liveDevHealth, liveMortga
                   <div className="chart-box" style={{ padding: 18 }}>
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
                       <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, letterSpacing: 0.8, textTransform: "uppercase" }}>Launch Radar</div>
-                      <button type="button" onClick={() => handleTabChange("Launch Calendar")} style={{ fontSize: 10, color: T.gold, background: "none", border: "none", cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>View all â†’</button>
+                      <button type="button" onClick={() => handleTabChange("Launch Calendar")} style={{ fontSize: 10, color: T.gold, background: "none", border: "none", cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>View all →</button>
                     </div>
                     {SEED_DATA.launches.filter(l => l.status === "EOI Open" || l.status === "Upcoming").slice(0,3).map((l, i) => (
                       <div key={i} style={{ padding: "8px 0", borderBottom: i < 2 ? `1px solid ${T.border}` : "none" }}>
                         <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 2 }}>
-                          <span style={{ fontSize: 11, color: T.white, fontWeight: 500 }}>{l.projectName?.split("â€”")[0]?.trim() || l.projectName}</span>
+                          <span style={{ fontSize: 11, color: T.white, fontWeight: 500 }}>{l.projectName?.split("—")[0]?.trim() || l.projectName}</span>
                           <span style={{ fontSize: 9, padding: "1px 6px", borderRadius: 10, background: l.status === "EOI Open" ? "rgba(16,185,129,0.15)" : "rgba(212,168,67,0.1)", color: l.status === "EOI Open" ? T.green : T.gold }}>{l.status}</span>
                         </div>
-                        <div style={{ fontSize: 10, color: T.textMuted }}>{l.developer}{"Â·"}{l.community}</div>
+                        <div style={{ fontSize: 10, color: T.textMuted }}>{l.developer}{"·"}{l.community}</div>
                       </div>
                     ))}
                     <button type="button" onClick={() => handleTabChange("Launch Calendar")} style={{ width: "100%", marginTop: 12, padding: "7px 0", background: "rgba(212,168,67,0.06)", border: `1px solid ${T.border}`, borderRadius: 8, color: T.gold, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
-                      Open Launch Calendar â†’
+                      Open Launch Calendar →
                     </button>
                   </div>
 
@@ -281,7 +281,6 @@ function OverviewTab({ liveMarketData, liveDLDVolumes, liveDevHealth, liveMortga
                 </div>
 
               </div>
-
             );
 }
 
