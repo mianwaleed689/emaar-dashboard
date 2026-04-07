@@ -2466,7 +2466,7 @@ export default function EmaarDashboardV2() {
   const [lcDev, setLcDev] = useState("All");
   const [lcStatus, setLcStatus] = useState("All");
   const [lcType, setLcType] = useState("All");
-  const [lcView, setLcView] = useState("list");
+  const [lcView, setLcView] = useState("newspaper");
 
   /* ─── NEIGHBOURHOODS STATE ─── */
   const [nbhSearch, setNbhSearch] = useState("");

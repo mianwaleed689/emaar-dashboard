@@ -802,6 +802,9 @@ function LaunchCalendarTab({
   const [expandedId, setExpandedId] = useState(null); // for inline bed breakdown
   const [detailModalProject, setDetailModalProject] = useState(null); // for full detail modal
 
+  /* Normalize view: legacy values like "list" should fall back to newspaper */
+  const view = (lcView === "newspaper" || lcView === "calendar" || lcView === "compare") ? lcView : "newspaper";
+
   const launches = useMemo(() => {
     return (liveLaunches && liveLaunches.length > 0) ? liveLaunches : SEED_LAUNCHES;
   }, [liveLaunches]);
@@ -963,10 +966,10 @@ function LaunchCalendarTab({
             <button key={v.key} type="button" onClick={() => setLcView(v.key)}
               style={{
                 padding: "6px 14px",
-                background: lcView === v.key ? "rgba(212,168,67,0.16)" : "rgba(255,255,255,0.04)",
-                border: `1px solid ${lcView === v.key ? T.gold : T.border}`,
+                background: view === v.key ? "rgba(212,168,67,0.16)" : "rgba(255,255,255,0.04)",
+                border: `1px solid ${view === v.key ? T.gold : T.border}`,
                 borderRadius: 8,
-                color: lcView === v.key ? T.gold : T.textMuted,
+                color: view === v.key ? T.gold : T.textMuted,
                 fontSize: 11,
                 fontWeight: 600,
                 cursor: "pointer",
@@ -1020,7 +1023,7 @@ function LaunchCalendarTab({
       </div>
 
       {/* HERO CARD */}
-      {heroLaunch && lcView === "newspaper" && (
+      {heroLaunch && view === "newspaper" && (
         <div style={{ marginBottom: 18, padding: 20, background: `linear-gradient(135deg, ${T.surface}, rgba(212,168,67,0.05))`, border: `2px solid ${T.gold}`, borderRadius: 14, boxShadow: `0 0 30px ${T.gold}22` }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
             <span style={{ width: 8, height: 8, borderRadius: "50%", background: T.gold, display: "inline-block" }} />
@@ -1188,7 +1191,7 @@ function LaunchCalendarTab({
       </div>
 
       {/* MODE 1: NEWSPAPER VIEW */}
-      {lcView === "newspaper" && (
+      {view === "newspaper" && (
         <>
           {Object.entries(grouped).map(([month, items]) => (
             <div key={month} style={{ marginBottom: 24 }}>
@@ -1410,7 +1413,7 @@ function LaunchCalendarTab({
       )}
 
       {/* MODE 2: CALENDAR VIEW */}
-      {lcView === "calendar" && (
+      {view === "calendar" && (
         <div style={{ marginBottom: 20 }}>
           {Object.entries(grouped).map(([month, items]) => {
             const firstLaunch = new Date(items[0].launchDate);
@@ -1477,7 +1480,7 @@ function LaunchCalendarTab({
       )}
 
       {/* MODE 3: COMPARISON TABLE */}
-      {lcView === "compare" && (
+      {view === "compare" && (
         <div style={{ marginBottom: 20 }}>
           {compareIds.length === 0 ? (
             <div style={{ padding: 30, background: T.surface, border: `1px dashed ${T.border}`, borderRadius: 12, textAlign: "center" }}>
