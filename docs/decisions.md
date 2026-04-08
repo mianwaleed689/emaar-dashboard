@@ -98,3 +98,28 @@ What goes on the backlog:
 - Universal useDataSource hook never built. Reasoning above — the work is more useful when the tabs are being rewritten anyway, not as a retrofit on the current versions.
 
 Lesson: Always verify cleanup hypotheses with a fresh grep BEFORE editing. The Session 0 audit was right about most things but wrong about hdv* being dead — it never tested usages, only declarations.
+
+## 2026-04-08 — Session 6 audit: scope locked to projects-only migration
+Decision: Migrate only the project-shaped seed data sources (SEED_PROJECTS, SEED_LAUNCHES, SEED_HANDOVERS) to Firestore in Session 6 implementation. Leave the shared SEED_DATA object (market, communities, dldVolumes, priceHistory, overviewKpis) as static seed data for now.
+
+What was found in the audit:
+- 6 seed declarations exist across the codebase, but most are not project records.
+- The shared utils/seedData.js module is the source of truth for 7 dashboard tabs (DLDVolumes, Market, Mortgage, Neighbourhoods, Overview, PriceHistory, Yields). These hold market statistics, community reference data, DLD volumes, and price history — NOT project records.
+- A duplicate inline SEED_DATA exists in EmaarDashboardV2.jsx line 495, byte-identical to the shared module for the first 30+ lines. Dead code, never imported. Marked for deletion in post-launch backlog.
+- SEED_PROJECTS lives at EmaarDashboardV2.jsx line 2650 and is passed as a prop to ProjectsTab and GoldenVisaTab. This is the actual project array.
+- SEED_LAUNCHES (LaunchCalendarTab line 35) and SEED_HANDOVERS (HandoverTab line 35) are also project-shaped data, just slightly different field conventions.
+
+Reasoning for projects-only scope:
+- Project records are "the brain of the SaaS" — every audience (buyers, agents, banks, brokers, agencies, developers) primarily cares about projects.
+- The Session 4 schema spec only defines a `projects` collection. Migrating market stats / DLD volumes / price history would require extending the schema spec to define new collections (`marketStats`, `dldVolumes`, `priceHistory`, etc.), which is real design work that should not be rushed.
+- Migrating only projects in Session 6 keeps the session finishable in one sitting and unblocks Sessions 7-13 (cloud functions, Data Manager, dashboard wiring) which all depend on real project data being in Firestore.
+- The other seed sources will keep working as-is. The 7 tabs that import SEED_DATA continue to read from utils/seedData.js exactly as they do today. Nothing breaks.
+- Migrating the remaining seed sources becomes Session 19 or 20 work (post-launch polish) after the schema spec is extended.
+
+What this means for the rest of the rebuild:
+- Session 6 implementation (next session) will be: design the field mapping table, write the transformer with dry-run mode, run dry-run, review output, run live-write to Firestore.
+- Sessions 7-10 (cloud functions, Data Manager) operate against the migrated projects collection.
+- Sessions 11-13 (dashboard tab wiring) replace SEED_PROJECTS / SEED_LAUNCHES / SEED_HANDOVERS references with Firestore queries.
+- Tabs that currently read from utils/seedData.js (Market, Overview, etc.) keep working unchanged. No regression.
+
+Document: docs/migration-audit.md captures every detail and is the working spec for Session 6 implementation.

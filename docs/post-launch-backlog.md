@@ -50,3 +50,43 @@ Both modals render from a different "selected handover project" state. Both have
 Action: during Session 17 (perf and code-quality pass), open the Handover tab in dev mode and confirm which modal opens on click. If only one renders, delete the other and its state. If both render in different contexts, rename them so the prefixes are not confusable (handoverDetail* vs handoverConstruction* for example).
 
 Not a launch blocker — the duplicate is internal code mess, not a user-visible bug.
+
+## Migrate non-project seed data to Firestore (Session 19+ work)
+Deferred from Session 6 audit. The following seed data sources were intentionally left out of the projects-only migration and need to be migrated to their own Firestore collections in a later session:
+
+### From utils/seedData.js
+- `SEED_DATA.market` → needs new `marketStats` collection in schema
+- `SEED_DATA.communities` → already defined in schema spec Section 4.2 as `communities`
+- `SEED_DATA.dldVolumes` → needs new `dldVolumes` collection in schema
+- `SEED_DATA.priceHistory` → needs new `priceHistory` collection in schema
+- `SEED_DATA.overviewKpis` → needs new `overviewKpis` collection in schema (or merge into marketStats)
+- Plus any other top-level keys not yet enumerated
+
+Tabs that depend on these: DLDVolumesTab, MarketTab, MortgageTab, NeighbourhoodsTab, OverviewTab, PriceHistoryTab, YieldsTab.
+
+Action when ready:
+1. Extend docs/schema-v1.md to define the new collections (Section 4)
+2. Update firestore.rules to add rules for each new collection
+3. Write a migration script following the same dry-run pattern as Session 6
+4. Wire each affected tab to read from Firestore instead of from the seedData.js import
+5. Delete utils/seedData.js once all 7 tabs are wired
+
+Estimated effort: 1 full session for schema extension + rules, 1 session for migration script, 1 session for tab wiring. Total ~3 sessions in the post-launch polish phase.
+
+## Delete dead inline SEED_DATA in EmaarDashboardV2.jsx
+EmaarDashboardV2.jsx line 495 declares `const SEED_DATA = { ... }` which is byte-for-byte identical to utils/seedData.js for the first 30+ lines. It is dead code — nothing imports from the dashboard's local copy because every tab that needs SEED_DATA imports from utils/seedData.js directly.
+
+The full size of the dead block is unknown but likely 400-500 lines. Removing it would shrink EmaarDashboardV2.jsx significantly and reduce the maintenance burden of keeping two copies in sync (right now, anyone who edits seedData.js has no idea there's a dead duplicate to also edit).
+
+Action when ready:
+1. Confirm via grep that nothing in the dashboard file or anywhere else references the local SEED_DATA via direct property access (e.g. `SEED_DATA.market` referring to the local one rather than an imported one)
+2. Find the closing brace of the inline declaration
+3. Delete lines 495 through closing-brace
+4. Build, verify nothing broke, commit
+
+Estimated effort: 30-45 minutes. Low-risk cleanup, should be done at the same time as Session 17 (performance pass) or whenever someone is touching the dashboard file for another reason.
+
+## GoldenVisaTab SEED_PROJECTS prop transition
+After Session 6 migrates SEED_PROJECTS to Firestore, ProjectsTab will be wired to read from Firestore in Session 11. GoldenVisaTab currently destructures `SEED_PROJECTS` from props at line 12 and uses it as a fallback at line 132. Once both ProjectsTab and GoldenVisaTab are reading from Firestore, the SEED_PROJECTS prop can be removed from the dashboard render and from both tab signatures. Until then, both tabs continue to receive the prop.
+
+Action: cleanup is part of Session 11 (wire ProjectsTab) and Session 12 or 13 (wire GoldenVisaTab). Not a separate task.
