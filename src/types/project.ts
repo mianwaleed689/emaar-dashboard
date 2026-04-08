@@ -1,17 +1,20 @@
 /* ─────────────────────────────────────────────────────────────
-   DXB ANALYTICS — PROJECT TYPES (TypeScript)
+   DXB ANALYTICS — DEVELOPMENT & PROJECT TYPES (TypeScript)
    src/types/project.ts
 
-   TypeScript interface definitions for the project schema.
+   TypeScript interface definitions for the v2 hybrid schema:
+   - Development: the parent collection (one per building/community)
+   - ProjectVariant: the child collection (one per buyable unit variant)
+
    This file is documentation-as-code: even if the rest of the
    project is JavaScript, the .ts file gives editor autocomplete
    and lets you incrementally add type-checking later.
 
-   Locked in Session 4 schema spec (docs/schema-v1.md).
+   Locked in Session 6 schema reopen (docs/schema-v1.md v2).
    Last updated: 8 April 2026
    ───────────────────────────────────────────────────────────── */
 
-// ── Master types ──────────────────────────────────────────────
+// ── Master enum types ─────────────────────────────────────────
 
 export type MasterCategory = "residential" | "commercial" | "industrial" | "land" | "specialty";
 
@@ -27,7 +30,7 @@ export type ConstructionStatus = "pre-launch" | "under-construction" | "complete
 
 export type Emirate = "Dubai" | "Abu Dhabi" | "Sharjah" | "Ajman" | "Umm Al Quwain" | "Ras Al Khaimah" | "Fujairah";
 
-// ── Sub-objects ───────────────────────────────────────────────
+// ── Shared sub-objects ────────────────────────────────────────
 
 export interface Coordinates {
   lat: number;
@@ -52,34 +55,30 @@ export interface FractionalOwnership {
   availableShares: number;
 }
 
-// ── The base project record ───────────────────────────────────
-// This is what every project looks like, regardless of property type.
-// The `details` object holds the type-specific fields.
+// ═══════════════════════════════════════════════════════════════
+// DEVELOPMENT — parent collection (v2)
+// ═══════════════════════════════════════════════════════════════
 
-export interface ProjectBase {
+export interface DevelopmentBase {
   // Identification
   id: string;
   slug: string;
   name: string;
-  developmentId: string;
-  developmentName: string;
+  arabicName?: string;
 
   // Ownership and tenancy
   orgId: string;
   actualOwnerId?: string;
-  listingAgentId?: string;
   visibility: Visibility;
-  createdAt: any; // Firestore Timestamp
+  createdAt: any;
   createdBy: string;
   updatedAt: any;
   updatedBy: string;
-  disclosedAt?: any; // set on first publish, immutable
+  disclosedAt?: any;
   sourceVerified: boolean;
   sourceUrl?: string;
 
-  // Type and category
-  type: string; // one of PROPERTY_TYPE_IDS
-  category: MasterCategory;
+  // Type and category (development-level)
   dldClass: DldClass;
   tenure: Tenure;
   foreignOwnershipAllowed: boolean;
@@ -96,20 +95,10 @@ export interface ProjectBase {
   nearestMetroStation?: string;
   beachAccess: boolean;
 
-  // Pricing (all in AED)
-  priceFromAed: number;
-  priceToAed?: number;
-  pricePerSqftAed?: number;
-  currency: "AED";
-  vatApplicable: boolean;
-  vatRate: number;
-  transferFeesPct: number;
-
-  // Size
-  sizeSqft: number;
-  sizeSqm?: number;
-  plotSizeSqft?: number;
-  builtUpAreaSqft?: number;
+  // Developer
+  developerId: string;
+  developerName: string;
+  developerOnTimeRate?: number;
 
   // Status and timeline
   saleStatus: SaleStatus;
@@ -122,12 +111,7 @@ export interface ProjectBase {
   actualHandover?: any;
   delayMonths?: number;
 
-  // Developer
-  developerId: string;
-  developerName: string;
-  developerOnTimeRate?: number;
-
-  // Regulatory
+  // Regulatory (mandatory for published off-plan)
   reraProjectNumber?: string;
   reraDeveloperNumber?: string;
   trakheesiPermit?: string;
@@ -140,18 +124,6 @@ export interface ProjectBase {
   reraInspectionsFailed?: number;
   dldStarRating?: number;
 
-  // Yield and investment
-  grossYieldPct?: number;
-  netYieldPct?: number;
-  serviceChargePerSqft?: number;
-  expectedAppreciationPct?: number;
-  goldenVisaEligible?: boolean;
-  mortgageEligible?: boolean;
-  maxLtv?: number;
-
-  // Payment plan
-  paymentPlan?: PaymentPlan;
-
   // Media
   coverImageUrl?: string;
   images?: string[];
@@ -160,16 +132,113 @@ export interface ProjectBase {
   videoUrl?: string;
   virtualTourUrl?: string;
 
-  // Tags and search aids
+  // Tags and amenities
   tags?: string[];
   amenities?: string[];
   views?: string[];
   lifestyle?: string[];
 
+  // Aggregates (cloud function maintained)
+  unitVariantCount?: number;
+  bedroomTypes?: string[];
+  priceFromAedMin?: number;
+  priceToAedMax?: number;
+  pricePerSqftAedMin?: number;
+  pricePerSqftAedMax?: number;
+  grossYieldPctMax?: number;
+  grossYieldPctMin?: number;
+  totalUnitsAvailable?: number;
+  lastSyncedAt?: any;
+}
+
+export type DevelopmentCreate = Omit
+  DevelopmentBase,
+  | "id"
+  | "createdAt"
+  | "updatedAt"
+  | "disclosedAt"
+  | "unitVariantCount"
+  | "bedroomTypes"
+  | "priceFromAedMin"
+  | "priceToAedMax"
+  | "pricePerSqftAedMin"
+  | "pricePerSqftAedMax"
+  | "grossYieldPctMax"
+  | "grossYieldPctMin"
+  | "totalUnitsAvailable"
+  | "lastSyncedAt"
+>;
+
+export type DevelopmentUpdate = Partial<Omit<DevelopmentBase, "id" | "createdAt" | "createdBy" | "disclosedAt">>;
+
+// ═══════════════════════════════════════════════════════════════
+// PROJECT VARIANT — child collection (v2)
+// ═══════════════════════════════════════════════════════════════
+
+export interface ProjectVariantBase {
+  // Identification and parent linkage
+  id: string;
+  developmentId: string;
+  slug: string;
+  name: string;
+  variantLabel: string;
+
+  // Ownership
+  orgId: string;
+  visibility: Visibility;
+  createdAt: any;
+  createdBy: string;
+  updatedAt: any;
+  updatedBy: string;
+  disclosedAt?: any;
+
+  // Property type
+  type: string;
+  category: MasterCategory;
+  dldClass: DldClass;
+
+  // Pricing
+  priceFromAed: number;
+  priceToAed?: number;
+  pricePerSqftAed?: number;
+  currency: "AED";
+  vatApplicable: boolean;
+  vatRate: number;
+  transferFeesPct: number;
+
+  // Size
+  sizeSqftMin?: number;
+  sizeSqftMax?: number;
+  sizeSqmMin?: number;
+  sizeSqmMax?: number;
+  plotSizeSqftMin?: number;
+  plotSizeSqftMax?: number;
+  builtUpAreaSqftMin?: number;
+  builtUpAreaSqftMax?: number;
+
+  // Bedroom and unit info (residential variants)
+  bedrooms?: number | null;
+  bedroomLabel?: string;
+  bathrooms?: number;
+  availableUnits?: number;
+  totalUnits?: number;
+  soldUnits?: number;
+
+  // Yield and investment
+  grossYieldPct?: number;
+  netYieldPct?: number;
+  serviceChargePerSqft?: number;
+  goldenVisaEligible?: boolean;
+  mortgageEligible?: boolean;
+  maxLtv?: number;
+
+  // Payment plan
+  paymentPlan?: PaymentPlan;
+
   // Fractional ownership
   fractionalOwnership?: FractionalOwnership;
 
-  // Computed (cloud function maintained — never write directly)
+  // Computed (cloud function maintained)
   investmentScore?: number;
   priceUsd?: number;
   priceEur?: number;
@@ -177,15 +246,32 @@ export interface ProjectBase {
   popularityScore?: number;
   lastSyncedAt?: any;
 
-  // Type-specific fields go here
+  // Denormalized from parent (cloud function maintained — DO NOT write directly)
+  developmentName?: string;
+  developerName?: string;
+  developerId?: string;
+  community?: string;
+  subCommunity?: string;
+  coordinates?: Coordinates;
+  metroDistanceKm?: number;
+  beachAccess?: boolean;
+  tenure?: Tenure;
+  foreignOwnershipAllowed?: boolean;
+  reraProjectNumber?: string;
+  escrowBank?: string;
+  dldStarRating?: number;
+  coverImageUrl?: string;
+  expectedHandover?: any;
+  saleStatus?: SaleStatus;
+  constructionStatus?: ConstructionStatus;
+  constructionPct?: number;
+
+  // Type-specific fields go here (polymorphic by `type`)
   details?: Record<string, any>;
 }
 
-// ── Convenience type for create payloads ──────────────────────
-// When creating a new record, server-managed fields are absent.
-
-export type ProjectCreate = Omit
-  ProjectBase,
+export type ProjectVariantCreate = Omit
+  ProjectVariantBase,
   | "id"
   | "createdAt"
   | "updatedAt"
@@ -196,9 +282,36 @@ export type ProjectCreate = Omit
   | "priceGbp"
   | "popularityScore"
   | "lastSyncedAt"
+  | "developmentName"
+  | "developerName"
+  | "developerId"
+  | "community"
+  | "subCommunity"
+  | "coordinates"
+  | "metroDistanceKm"
+  | "beachAccess"
+  | "tenure"
+  | "foreignOwnershipAllowed"
+  | "reraProjectNumber"
+  | "escrowBank"
+  | "dldStarRating"
+  | "coverImageUrl"
+  | "expectedHandover"
+  | "saleStatus"
+  | "constructionStatus"
+  | "constructionPct"
 >;
 
-// ── Convenience type for update payloads ──────────────────────
-// All fields optional, but disclosedAt cannot be changed once set.
+export type ProjectVariantUpdate = Partial<Omit<ProjectVariantBase, "id" | "createdAt" | "createdBy" | "disclosedAt" | "developmentId">>;
 
-export type ProjectUpdate = Partial<Omit<ProjectBase, "id" | "createdAt" | "createdBy" | "disclosedAt">>;
+// ═══════════════════════════════════════════════════════════════
+// v1 backward-compatibility aliases (deprecated)
+// ═══════════════════════════════════════════════════════════════
+// Session 5B used the name `ProjectBase` for the one-collection design.
+// v2 renames this to `ProjectVariantBase`. These aliases keep any existing
+// imports from breaking during the transition. Remove after Sessions 8-10
+// wire the admin form to the new names.
+
+export type ProjectBase = ProjectVariantBase;
+export type ProjectCreate = ProjectVariantCreate;
+export type ProjectUpdate = ProjectVariantUpdate;

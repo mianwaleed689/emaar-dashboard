@@ -1,30 +1,30 @@
 /* ─────────────────────────────────────────────────────────────
-   DXB ANALYTICS — PROJECT VALIDATION
+   DXB ANALYTICS — PROJECT & DEVELOPMENT VALIDATION
    src/utils/projectValidation.js
 
-   Pure JavaScript validation functions for project records.
+   Pure JavaScript validation for the hybrid two-collection model:
+   - `developments` collection (the parent, one per building/community)
+   - `projects` collection (the child, one per buyable unit variant)
+
    Used by:
    - Admin Data Manager form (before save)
    - Migration scripts (before bulk import)
    - Cloud functions (server-side double-check)
 
-   Returns { valid: boolean, errors: string[] }
-   - valid: true if the record passes all checks
-   - errors: array of human-readable error messages
+   All functions return { valid: boolean, errors: string[] }
 
-   Validation matches the schema spec (docs/schema-v1.md) and
-   the firestore.rules security rules.
+   Matches schema spec docs/schema-v1.md (v2) and firestore.rules.
    ───────────────────────────────────────────────────────────── */
 
 import { isValidPropertyType, MASTER_CATEGORIES } from "./propertyTypes";
 
 // ── Constants from the schema spec ────────────────────────────
-const VALID_VISIBILITY = ["draft", "published", "archived"];
-const VALID_TENURE = ["freehold", "leasehold", "usufruct", "musataha", "grant"];
-const VALID_SALE_STATUS = ["off-plan", "ready", "secondary", "sold-out", "coming-soon"];
-const VALID_CONSTRUCTION_STATUS = ["pre-launch", "under-construction", "completed", "handover-ready"];
-const VALID_DLD_CLASS = ["land", "unit", "villa"];
-const VALID_EMIRATES = ["Dubai", "Abu Dhabi", "Sharjah", "Ajman", "Umm Al Quwain", "Ras Al Khaimah", "Fujairah"];
+export const VALID_VISIBILITY = ["draft", "published", "archived"];
+export const VALID_TENURE = ["freehold", "leasehold", "usufruct", "musataha", "grant"];
+export const VALID_SALE_STATUS = ["off-plan", "ready", "secondary", "sold-out", "coming-soon"];
+export const VALID_CONSTRUCTION_STATUS = ["pre-launch", "under-construction", "completed", "handover-ready"];
+export const VALID_DLD_CLASS = ["land", "unit", "villa"];
+export const VALID_EMIRATES = ["Dubai", "Abu Dhabi", "Sharjah", "Ajman", "Umm Al Quwain", "Ras Al Khaimah", "Fujairah"];
 
 // Dubai geographic bounds (approximate)
 const DUBAI_LAT_MIN = 22.5;
@@ -32,7 +32,7 @@ const DUBAI_LAT_MAX = 26.0;
 const DUBAI_LNG_MIN = 54.5;
 const DUBAI_LNG_MAX = 56.5;
 
-// ── Field-level validators ────────────────────────────────────
+// ── Field-level helpers ───────────────────────────────────────
 
 function isNonEmptyString(v) {
   return typeof v === "string" && v.trim().length > 0;
@@ -59,12 +59,89 @@ function isValidCoordinates(coords) {
   return true;
 }
 
-// ── Main validators ───────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════
+// DEVELOPMENT VALIDATORS (v2 — the parent collection)
+// ═══════════════════════════════════════════════════════════════
 
 /**
- * Validate a project record about to be created (visibility: draft).
- * Less strict than publish validation — only checks the bare minimum
- * needed to save a draft.
+ * Validate a development record about to be created (visibility: draft).
+ * Less strict — just the minimum to save a draft.
+ */
+export function validateDevelopmentDraft(record) {
+  const errors = [];
+
+  if (!isNonEmptyString(record.name)) {
+    errors.push("name is required");
+  }
+  if (!isNonEmptyString(record.orgId)) {
+    errors.push("orgId is required");
+  }
+  if (record.visibility && !VALID_VISIBILITY.includes(record.visibility)) {
+    errors.push(`visibility "${record.visibility}" must be one of: ${VALID_VISIBILITY.join(", ")}`);
+  }
+  if (record.tenure && !VALID_TENURE.includes(record.tenure)) {
+    errors.push(`tenure "${record.tenure}" must be one of: ${VALID_TENURE.join(", ")}`);
+  }
+  if (record.dldClass && !VALID_DLD_CLASS.includes(record.dldClass)) {
+    errors.push(`dldClass "${record.dldClass}" must be one of: ${VALID_DLD_CLASS.join(", ")}`);
+  }
+
+  return { valid: errors.length === 0, errors };
+}
+
+/**
+ * Validate a development record about to be PUBLISHED.
+ * Stricter — every "mandatory for published" field from spec Section 2A.7 must be present.
+ */
+export function validateDevelopmentPublish(record) {
+  const draftResult = validateDevelopmentDraft(record);
+  const errors = [...draftResult.errors];
+
+  if (!isNonEmptyString(record.developerId)) {
+    errors.push("developerId is required for published developments");
+  }
+  if (!isNonEmptyString(record.developerName)) {
+    errors.push("developerName is required for published developments");
+  }
+  if (!isNonEmptyString(record.community)) {
+    errors.push("community is required for published developments");
+  }
+  if (!isValidCoordinates(record.coordinates)) {
+    errors.push("coordinates must be a valid {lat, lng} within Dubai bounds");
+  }
+  if (record.emirate && !VALID_EMIRATES.includes(record.emirate)) {
+    errors.push(`emirate "${record.emirate}" must be one of: ${VALID_EMIRATES.join(", ")}`);
+  }
+  if (record.saleStatus && !VALID_SALE_STATUS.includes(record.saleStatus)) {
+    errors.push(`saleStatus "${record.saleStatus}" must be one of: ${VALID_SALE_STATUS.join(", ")}`);
+  }
+  if (record.constructionStatus && !VALID_CONSTRUCTION_STATUS.includes(record.constructionStatus)) {
+    errors.push(`constructionStatus "${record.constructionStatus}" must be one of: ${VALID_CONSTRUCTION_STATUS.join(", ")}`);
+  }
+
+  // Off-plan developments have strict regulatory requirements
+  if (record.saleStatus === "off-plan") {
+    if (!isNonEmptyString(record.reraProjectNumber)) {
+      errors.push("reraProjectNumber is required for off-plan published developments (Law 13/2008 / Oqood)");
+    }
+    if (!isNonEmptyString(record.escrowAccount)) {
+      errors.push("escrowAccount is required for off-plan published developments");
+    }
+    if (!isNonEmptyString(record.escrowBank)) {
+      errors.push("escrowBank is required for off-plan published developments");
+    }
+  }
+
+  return { valid: errors.length === 0, errors };
+}
+
+// ═══════════════════════════════════════════════════════════════
+// PROJECT VARIANT VALIDATORS (v2 — the child collection)
+// ═══════════════════════════════════════════════════════════════
+
+/**
+ * Validate a project (variant) record about to be created (visibility: draft).
+ * v2 CHANGE: developmentId is now required to link the variant to its parent.
  */
 export function validateProjectDraft(record) {
   const errors = [];
@@ -73,7 +150,7 @@ export function validateProjectDraft(record) {
     errors.push("name is required");
   }
   if (!isNonEmptyString(record.developmentId)) {
-    errors.push("developmentId is required");
+    errors.push("developmentId is required (v2 hybrid model — every project variant must link to a parent development)");
   }
   if (!isNonEmptyString(record.orgId)) {
     errors.push("orgId is required");
@@ -92,75 +169,49 @@ export function validateProjectDraft(record) {
 }
 
 /**
- * Validate a project record about to be PUBLISHED (visibility: published).
- * Stricter — every "mandatory for published" field from Section 2.9 must be present.
+ * Validate a project variant about to be PUBLISHED.
+ * v2: regulatory fields are now on the parent development, not the variant.
+ * The variant only needs pricing, size, and type-specific details.
  */
 export function validateProjectPublish(record) {
-  // Run draft checks first
   const draftResult = validateProjectDraft(record);
   const errors = [...draftResult.errors];
 
-  // Now the publish-specific checks
-  if (!isNonEmptyString(record.developerId)) {
-    errors.push("developerId is required for published records");
-  }
-  if (!isNonEmptyString(record.developerName)) {
-    errors.push("developerName is required for published records");
-  }
-  if (!isNonEmptyString(record.community)) {
-    errors.push("community is required for published records");
-  }
-  if (!isValidCoordinates(record.coordinates)) {
-    errors.push("coordinates must be a valid {lat, lng} within Dubai bounds");
-  }
-  if (record.emirate && !VALID_EMIRATES.includes(record.emirate)) {
-    errors.push(`emirate "${record.emirate}" must be one of: ${VALID_EMIRATES.join(", ")}`);
-  }
   if (!isPositiveNumber(record.priceFromAed)) {
     errors.push("priceFromAed must be a positive number");
   }
-  if (record.priceToAed && !isPositiveNumber(record.priceToAed)) {
+  if (record.priceToAed !== undefined && record.priceToAed !== null && !isPositiveNumber(record.priceToAed)) {
     errors.push("priceToAed (if set) must be a positive number");
   }
   if (record.priceToAed && record.priceFromAed && record.priceToAed < record.priceFromAed) {
     errors.push("priceToAed must be >= priceFromAed");
   }
-  if (!isPositiveNumber(record.sizeSqft)) {
-    errors.push("sizeSqft must be a positive number");
+  if (record.sizeSqftMin !== undefined && !isPositiveNumber(record.sizeSqftMin)) {
+    errors.push("sizeSqftMin (if set) must be a positive number");
   }
-  if (record.tenure && !VALID_TENURE.includes(record.tenure)) {
-    errors.push(`tenure "${record.tenure}" must be one of: ${VALID_TENURE.join(", ")}`);
+  if (record.sizeSqftMax && record.sizeSqftMin && record.sizeSqftMax < record.sizeSqftMin) {
+    errors.push("sizeSqftMax must be >= sizeSqftMin");
   }
   if (record.dldClass && !VALID_DLD_CLASS.includes(record.dldClass)) {
     errors.push(`dldClass "${record.dldClass}" must be one of: ${VALID_DLD_CLASS.join(", ")}`);
   }
-  if (record.saleStatus && !VALID_SALE_STATUS.includes(record.saleStatus)) {
-    errors.push(`saleStatus "${record.saleStatus}" must be one of: ${VALID_SALE_STATUS.join(", ")}`);
-  }
-  if (record.constructionStatus && !VALID_CONSTRUCTION_STATUS.includes(record.constructionStatus)) {
-    errors.push(`constructionStatus "${record.constructionStatus}" must be one of: ${VALID_CONSTRUCTION_STATUS.join(", ")}`);
-  }
 
-  // Off-plan records have stricter regulatory requirements
-  if (record.saleStatus === "off-plan") {
-    if (!isNonEmptyString(record.reraProjectNumber)) {
-      errors.push("reraProjectNumber is required for off-plan published records (Law 13/2008 / Oqood)");
-    }
-    if (!isNonEmptyString(record.escrowAccount)) {
-      errors.push("escrowAccount is required for off-plan published records");
-    }
-    if (!isNonEmptyString(record.escrowBank)) {
-      errors.push("escrowBank is required for off-plan published records");
-    }
+  // Residential variants should have a bedroom label
+  if (record.category === "residential" && !isNonEmptyString(record.bedroomLabel)) {
+    errors.push("bedroomLabel is required for residential project variants (e.g. 'Studio', '2BR', '5BR Villa')");
   }
 
   return { valid: errors.length === 0, errors };
 }
 
+// ═══════════════════════════════════════════════════════════════
+// SHARED VALIDATORS (apply to both developments and projects)
+// ═══════════════════════════════════════════════════════════════
+
 /**
  * Validate that a record update is not trying to change disclosedAt.
- * The Firestore rule enforces this server-side, but we check client-side
- * too so the admin form can show the error before the save attempt.
+ * Applies to both developments and projects.
+ * The Firestore rule enforces this server-side; client-side check is for fast UX feedback.
  */
 export function validateDisclosedAtImmutability(oldRecord, newRecord) {
   const errors = [];
@@ -172,12 +223,13 @@ export function validateDisclosedAtImmutability(oldRecord, newRecord) {
 
 /**
  * Validate visibility transitions.
- * - draft → published: ALLOWED (and triggers disclosedAt assignment server-side)
+ * - draft → published: ALLOWED (triggers disclosedAt assignment server-side)
  * - draft → archived: ALLOWED
  * - published → archived: ALLOWED
- * - published → draft: NOT ALLOWED (once disclosed, must stay disclosed or be archived)
+ * - published → draft: NOT ALLOWED
  * - archived → published: NOT ALLOWED via client (admin Cloud Function only)
  * - archived → draft: NOT ALLOWED via client
+ * Applies to both developments and projects.
  */
 export function validateVisibilityTransition(oldVisibility, newVisibility) {
   const errors = [];
@@ -188,7 +240,7 @@ export function validateVisibilityTransition(oldVisibility, newVisibility) {
   const validTransitions = {
     draft: ["draft", "published", "archived"],
     published: ["published", "archived"],
-    archived: ["archived"], // archived is terminal from client side
+    archived: ["archived"],
   };
   const allowed = validTransitions[oldVisibility] || [];
   if (!allowed.includes(newVisibility)) {
