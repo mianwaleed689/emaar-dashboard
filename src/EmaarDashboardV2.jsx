@@ -13,6 +13,7 @@ import { auth, db } from "./firebase";
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail, sendEmailVerification, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import { collection, getDocs, doc, getDoc, setDoc, updateDoc, deleteDoc, onSnapshot, addDoc, query, where, orderBy, limit } from "firebase/firestore";
 import emailjs from "@emailjs/browser";
+import { safeAsyncWithToast } from "./utils/safeAsync";
 import { T } from "./data";
 import LandingPage from "./LandingPage";
 import RoiCalculator from "./RoiCalculator";
@@ -3254,7 +3255,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
     const updated = isWatched ? watchlist.filter(p => p.id !== project.id) : [...watchlist, { id: project.id, name: project.name, community: project.community, price: project.price, addedAt: new Date().toISOString() }];
     setWatchlist(updated);
     if (auth.currentUser) {
-      try { await setDoc(doc(db, "watchlists", auth.currentUser.uid), { projects: updated, updatedAt: new Date().toISOString() }); } catch (e) {}
+      await safeAsyncWithToast(() => setDoc(doc(db, "watchlists", auth.currentUser.uid), { projects: updated, updatedAt: new Date().toISOString() }), "watchlist-save", notify, "Couldn't save your watchlist — try again");
     }
     notify(isWatched ? `Removed ${project.name} from watchlist` : `⭐ ${project.name} added to watchlist`);
   };
@@ -3264,7 +3265,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
   const saveAlerts = async (alerts) => {
     setMyAlerts(alerts);
     if (auth.currentUser) {
-      try { await setDoc(doc(db, "priceAlerts", auth.currentUser.uid), { alerts, updatedAt: new Date().toISOString() }); } catch(e) {}
+      await safeAsyncWithToast(() => setDoc(doc(db, "priceAlerts", auth.currentUser.uid), { alerts, updatedAt: new Date().toISOString() }), "price-alerts-save", notify, "Couldn't save your price alerts — try again");
     }
   };
 
@@ -4890,7 +4891,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 const newAlert = { ...alertForm, id: Date.now(), createdAt: new Date().toISOString(), active: true };
                 const updated = [...myAlerts, newAlert];
                 setMyAlerts(updated);
-                try { await setDoc(doc(db, "priceAlerts", user), { alerts: updated, updatedAt: new Date().toISOString() }); } catch(e) {}
+                await safeAsyncWithToast(() => setDoc(doc(db, "priceAlerts", user), { alerts: updated, updatedAt: new Date().toISOString() }), "price-alert-add", notify, "Couldn't save your new price alert — try again");
                 setAlertSaving(false);
               }} style={{ width: "100%", padding: "10px 0", background: alertSaving ? T.surfaceAlt : `linear-gradient(135deg, ${T.gold}, #B8912F)`, color: alertSaving ? T.textMuted : T.bg, border: "none", borderRadius: 10, fontWeight: 700, fontSize: 13, cursor: alertSaving ? "default" : "pointer", fontFamily: "'Outfit',sans-serif", transition: "all 0.2s" }}>
                 {alertSaving ? "Saving…" : "+ Create Alert"}
@@ -4910,7 +4911,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 <button type="button" onClick={async () => {
                   const updated = myAlerts.filter((_, j) => j !== i);
                   setMyAlerts(updated);
-                  try { await setDoc(doc(db, "priceAlerts", user), { alerts: updated, updatedAt: new Date().toISOString() }); } catch(e) {}
+                  await safeAsyncWithToast(() => setDoc(doc(db, "priceAlerts", user), { alerts: updated, updatedAt: new Date().toISOString() }), "price-alert-delete", notify, "Couldn't remove the price alert — try again");
                 }} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 16, padding: "4px 6px", borderRadius: 6, transition: "color 0.2s" }} onMouseEnter={e => e.currentTarget.style.color = "#EF4444"} onMouseLeave={e => e.currentTarget.style.color = T.textMuted}>✕</button>
               </div>
             ))}
