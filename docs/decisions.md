@@ -78,3 +78,23 @@ Helpers created:
 Build verified: vite build ✓ 841 modules, 6.56s, no errors. 5 edits applied: 1 import + 4 catches fixed.
 
 Deferred to backlog: Phase A.5 (8 email catches), Phase B (5 lower-priority dashboard catches), Phase C (6 silent-by-design comments), Phase D (~42 admin catches), Phase E (React error boundaries). Reasoning: Phase A is the only part of Session 2 that affects user-visible data integrity. Everything else is real cleanup but not launch-blocking. Better to move forward to schema/foundation work (Sessions 3-9) than to perfect error handling everywhere before doing the database work that matters more for the first agency.
+
+## 2026-04-08 — Session 3 abandoned: original cleanup tasks were misdiagnosed
+Decision: Skip Session 3 entirely and move directly to Session 4 (schema design).
+
+What happened:
+1. The Master Plan listed two Session 3 tasks: add seed data banners to tabs, and delete duplicate hdv* Handover state variables.
+2. User correctly redirected the focus from "fix specific tabs" to "fix the whole SaaS." We pivoted to building a universal useDataSource hook.
+3. During the seed-banner audit, we discovered ProjectsTab is "the brain of the SaaS" — every other tab is a different lens on project data. Cosmetic banner work on ProjectsTab is wasted because Sessions 4-13 will rebuild it as part of the Firestore migration.
+4. Re-scoped Session 3 to "duplicate Handover state cleanup only" as a small tactical win.
+5. Verified the duplicate state hypothesis with a fresh grep — and found the original audit was WRONG. Both hdv* (lines 2520-2526) and hv* (lines 2528-2533) are alive. They drive two DIFFERENT Handover detail modals at lines 3926 (hv*) and 4069 (hdv*). Deleting hdv* would have broken a working modal in production with ~90 lines of UI: construction status, milestones, RERA number, escrow bank, grace period, delay penalty, developer record, share text.
+6. Session 3 has no remaining valid tasks. Abandoning the branch and moving directly to Session 4.
+
+What was created and kept:
+- src/components/SampleDataBanner.jsx — the standalone banner component is still useful and stays in the repo even though we did not wire it into any tabs in Session 3. It will be picked up later as part of Sessions 11-13 (wire tabs to Firestore) when we rewrite each tab to read from real data, and the banner pattern naturally fits there.
+
+What goes on the backlog:
+- Two Handover detail modals at lines 3926 (hv*) and 4069 (hdv*) need investigation. They have confusingly similar prefixes and overlapping field references. They might be (a) two modals shown in different contexts on purpose, (b) one dead modal hidden by routing, or (c) genuine code duplication where one was a draft of the other. Determining which requires running the app, opening the Handover tab, and inspecting the React tree. Not a launch blocker. Will revisit in Session 17 (performance/code-quality pass).
+- Universal useDataSource hook never built. Reasoning above — the work is more useful when the tabs are being rewritten anyway, not as a retrofit on the current versions.
+
+Lesson: Always verify cleanup hypotheses with a fresh grep BEFORE editing. The Session 0 audit was right about most things but wrong about hdv* being dead — it never tested usages, only declarations.

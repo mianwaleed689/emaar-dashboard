@@ -39,3 +39,14 @@ Same three categories. Most of admin's catches are localStorage writes for filte
 Originally part of Session 2 plan. Wrap each top-level tab in src/components/ErrorBoundary.jsx so a crash in one tab doesn't kill the whole app. Skipped because the existing safeAsync helpers cover the most common failure modes (Firestore writes), and a tab crash from a React render error is rare. Worth doing before launch but not blocking.
 
 When to do this: Sessions 2.5 / 2.6 / 2.7 — small, focused follow-ups slotted in between bigger sessions when there is appetite. Total time estimate: 2-3 hours of careful editing across all 5 phases. Each phase is independent and can be done in any order.
+
+## Two Handover detail modals (deferred from Session 3)
+EmaarDashboardV2.jsx has two parallel Handover detail modals:
+- hv* set: state at lines 2528-2533, modal at line 3926. Fields used: status, delayRisk, delayMonths, gracePeriodMonths, escrowPct, inspectionsPassed, inspectionsFailed, developerOnTimeRate, totalUnits, contractedHandover, expectedHandover, reraStatus, lastSiteVisit, milestonesCurrent, milestonesNext.
+- hdv* set: state at lines 2520-2526, modal at line 4069. Fields used: status, delayRisk, expectedDate, lostRentalPerMonth, milestones, reraNo, escrowBank, gracePeriod, delayPenalty, onTimeHistory, notes, source.
+
+Both modals render from a different "selected handover project" state. Both have copy-to-clipboard share buttons that produce different message templates. The two modals likely represent different views or different versions of the same feature. Cannot determine which is actually shown to users without running the dashboard and clicking handover entries.
+
+Action: during Session 17 (perf and code-quality pass), open the Handover tab in dev mode and confirm which modal opens on click. If only one renders, delete the other and its state. If both render in different contexts, rename them so the prefixes are not confusable (handoverDetail* vs handoverConstruction* for example).
+
+Not a launch blocker — the duplicate is internal code mess, not a user-visible bug.
