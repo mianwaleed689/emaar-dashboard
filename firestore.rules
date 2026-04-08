@@ -154,6 +154,32 @@ service cloud.firestore {
         allow update, delete: if false;
       }
     }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // DEVELOPMENTS — Schema v2, Session 6 reopen. Hybrid model parent collection.
+    // - Read: any logged-in non-suspended user
+    // - Create/Update: admin only
+    // - Delete: NO client deletes. Use cloud function with audit reason.
+    // - disclosedAt is immutable once set (legal protection per Decree-Law 25/2025)
+    // - Has child projects linked via developmentId (enforced by cloud function)
+    // ═══════════════════════════════════════════════════════════════════════════
+    match /developments/{developmentId} {
+      allow read:   if isLoggedIn() && notSuspended();
+      allow create: if isAdmin();
+      allow update: if isAdmin() &&
+                       (
+                         !('disclosedAt' in resource.data) ||
+                         request.resource.data.disclosedAt == resource.data.disclosedAt
+                       );
+      allow delete: if false;
+
+      // Per-development audit log (Decree-Law 25/2025 disclosure compliance)
+      match /developmentAuditLog/{auditId} {
+        allow read:   if isAdmin();
+        allow create: if isAdmin() || isLoggedIn();
+        allow update, delete: if false;
+      }
+    }
     match /projectData/{doc}     { allow read: if isLoggedIn() && notSuspended(); allow write: if isAdmin(); }
     match /projectVersions/{doc} { allow read, write: if isAdmin(); }
     match /communityData/{doc}   { allow read: if isLoggedIn() && notSuspended(); allow write: if isAdmin(); }
