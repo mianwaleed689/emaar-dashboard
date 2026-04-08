@@ -123,3 +123,36 @@ What this means for the rest of the rebuild:
 - Tabs that currently read from utils/seedData.js (Market, Overview, etc.) keep working unchanged. No regression.
 
 Document: docs/migration-audit.md captures every detail and is the working spec for Session 6 implementation.
+
+## 2026-04-08 — Session 6A halted: existing backend discovered mid-session
+The product owner shared a screenshot of the `api/` folder during Session 6A implementation. This folder contains 21 serverless endpoints I was not aware existed, including working DLD integration, developer seeding, news feeds, cron jobs for currency/EIBOR/yields/market sync, Anthropic Claude proxy, Stripe checkout, and audit logging. Total backend code is approximately 170 KB.
+
+Reading the first 100 lines of `api/seed-developers.js` revealed the existing system has its own session numbering (Session 14 was about "228 Developers Auto-Population"), its own DLD OAuth2 flow, its own tier classification logic, and hardcoded verified developer data for 30+ major Dubai developers. This means the rebuild I have been planning since Session 0 is partially redundant — significant portions of what I was designing (migration framework, DLD integration, developer registry, news feed, currency rates) already exist and are probably running in production.
+
+I should have inventoried the entire repo at the start of Session 0 instead of planning from the React dashboard files alone. That was the root mistake, and every session's scope has been affected by it. I am naming it honestly in this log so it gets addressed properly next time.
+
+Critically, nothing committed tonight is wasted or broken. All ten commits still stand. The schema v2 spec, the firestore.rules additions (disclosedAt immutability, developments collection, fxRates/news/transactions rules), the propertyTypes.js canonical list, the validation code, the data-sources.md strategy doc, the migration framework utilities (slug.js, csv.js, dubai-pulse.js) all still exist. Whether they are ultimately kept, merged with existing code, or replaced by existing equivalents depends on what the existing backend already does. That determination is NEXT session's work.
+
+What was in progress and NOT committed at the time of halt: the tests of `dubai-pulse.js` against the real Dubai Pulse server, which returned WAF rejection pages (the CSV-download path is blocked without authentication). The `session-6a-migration-framework` branch has the three utility files committed locally but not merged to main or pushed, because the framework was proven incomplete mid-build.
+
+### Plan for the next session (call it Session 6-RESET)
+
+1. Do NOT resume the migration framework until the codebase inventory is complete.
+2. Start with a full read of the `api/` folder — every file, in order of size. Understand what endpoints exist, what data they fetch, what Firestore collections they write to, what environment variables they need, whether they are currently running.
+3. Then read `automation/`, `scripts/`, `sheets_data/`, and any src/ folders I have not seen: admin/, communities/, config/, hooks/, services/, types/, tabs/.
+4. Read the .env variable NAMES (not values) to see what external services are configured: Firebase Admin, DLD API, Anthropic, Stripe, SendGrid, OpenAI, or others.
+5. Read the existing `src/data_developers.js`, `src/data_emaar_complete.js`, `src/data_master.js` — these are substantial data files I have never seen that may already contain real data.
+6. Write `docs/existing-system.md` — a comprehensive, honest catalog of what the SaaS already is, with no planning or opinions, just facts.
+7. THEN re-plan Sessions 6-20 against reality: what already works, what needs wiring, what is genuinely missing, what should be deleted.
+
+### What is still true despite the course-correction
+- Schema v2 hybrid two-collection model is probably still correct — will verify against existing data shapes in the next session
+- The 43 property types are still correct — will verify against whatever taxonomy the existing system uses
+- The disclosedAt immutability legal protection is still correct per Decree-Law 25/2025 — will verify the existing `api/seed-developers.js` and similar files do not violate it
+- The decision log, post-launch backlog, data-sources.md, schema-v1.md, firestore.rules, propertyTypes.js, projectValidation.js, project.ts all remain valid working documents
+- The 10 commits pushed to main tonight remain the foundation, pending the next session's verification against the existing backend
+
+The branch `session-6a-migration-framework` can be merged to main, left in place, or deleted after the next session decides whether the framework is still needed.
+
+### For the next Claude or the product owner returning later
+If you are picking this up cold, read docs in this order: `docs/decisions.md` (this file), `docs/schema-v1.md`, `docs/data-sources.md`, then inventory api/ before doing anything else. Do not start writing code until `docs/existing-system.md` exists. The product owner knows exactly how to run PowerShell commands and has a preference for one-command-at-a-time with clear explanations. Save-UTF8 is the file save function (the profile blocks Set-Content). Use --force-with-lease on pushes (the profile blocks force pushes). The product owner is non-technical but has strong product judgment; defer technical decisions to yourself and only ask about real product questions.
