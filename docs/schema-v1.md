@@ -1,739 +1,388 @@
-# DXB Analytics — Schema Specification v1
-**Status:** Draft for review (Session 4)
+# DXB Analytics — Schema Specification v2 (Hybrid two-collection model)
+**Status:** Draft for review (Session 6 schema reopen)
 **Last updated:** 8 April 2026
-**Author:** Drafted with research from DLD, RERA, Trakheesi, Bayut, Property Finder, Dubizzle, JLL, Knight Frank, CBRE, BSA Law, Lexology (Federal Decree-Law 25/2025 analysis), and Wikipedia (UAE agriculture).
+**Replaces:** Schema v1 (Session 4) — the one-record-per-unit-type model
 
 This document defines what a "property record" is in DXB Analytics. It is the source of truth that the database, the admin Data Manager, every dashboard tab, every API integration, and every news feed will follow.
 
-The spec is written in plain English. Once you approve it, we translate it into Firestore rules and TypeScript types in Session 5.
+## Why v2 supersedes v1
+
+Schema v1 (Session 4) said "one Firestore record per buyable unit type, linked to siblings via shared developmentId string."
+
+When we audited the real seed data in Session 6, we discovered the existing records already use a parent-with-children shape: each project has a `unitBreakdown` array of bedroom-type variants. Whoever wrote the seed data understood that real estate platforms need both a development view (one card per building on the map) and a unit view (one card per buyable thing for buyers searching by bedroom count and price).
+
+v2 makes this explicit by splitting into two collections that work together:
+
+- `developments` — one record per project/building/community
+- `projects` — one record per buyable unit variant within a development
+
+This matches how Property Finder, Bayut, and Dubizzle structure their data internally. It also matches the four explicit requirements from the product owner:
+
+- **Trustworthy:** searches are fast (single-collection queries with indexed fields, no nested-array unrolling)
+- **User-friendly for buyers:** each search result is a card the buyer can directly compare, watchlist, and price-alert
+- **User-friendly for admins:** development info is entered once per project, variants are added with one click each
+- **All the things:** the same shape works for apartments (multiple bedroom variants), warehouses (one variant), land plots (one variant), hotels (room type variants), and every other property type
 
 ## How to read this document
-- **Section 1** is the locked architectural decisions. Everything that is expensive to change later.
-- **Section 2** is the base fields every record has, regardless of property type.
-- **Section 3** is the type-specific `details` fields for each of the 43 property types, grouped by master category.
-- **Section 4** is the related collections (developers, communities, fxRates, news, transactions).
-- **Section 5** is the security rules and validation.
+
+- **Section 1** is the locked architectural decisions. Most are unchanged from v1; the granularity decision in 1.1 is the one that changed.
+- **Section 2A** is the base fields on a development record.
+- **Section 2B** is the base fields on a project record.
+- **Section 2C** is the denormalized fields cloud functions maintain on projects so queries do not need to join.
+- **Section 3** is the type-specific `details` fields per property type — unchanged from v1, applies to projects.
+- **Section 4** is the related collections (developers, communities, fxRates, news, transactions) — unchanged from v1.
+- **Section 5** is the security rules — updated to cover the new developments collection.
 
 ---
 
 ## SECTION 1 — Locked architectural decisions
 
-### 1.1 Record granularity
-**One record per buyable unit type.** "Hills Park 2BR Apartment" is one record. "Hills Park 3BR Apartment" is a separate record. They share a `developmentId` so map views and developer reports can group them.
+### 1.1 Record granularity (CHANGED from v1)
 
-Rationale: Buyers, agents, banks, brokers all search by exact unit specs. Property Finder, Bayut, and DLD's own listing systems use this structure. One-record-per-development would force every search to dig inside nested unit lists, which is slow in Firestore.
+**Two collections: developments and projects.**
 
-### 1.2 Property type coverage — 43 types in 5 master categories
-The complete master list. Every type has a `details` shape in Section 3.
+A `developments` record represents one project/building/community as a whole — Hills Park, Tilal Al Ghaf, ICD Brookfield Place. Holds everything that does not vary by unit type: developer, community, location, regulatory info, escrow, photos, brochure, contracted handover.
 
-**RESIDENTIAL (12):** Apartment, Villa, Townhouse, Penthouse, Duplex, Loft, Hotel Apartment, Branded Residence, Residential Building, Residential Floor, Villa Compound, Compound Villa.
+A `projects` record represents one buyable unit variant within a development — "Hills Park 2BR Apartment", "Tilal Al Ghaf 5BR Villa", "ICD Brookfield 1200sqft Office". Holds the buyable specifics: bedroom count, size range, price range, yield, available count, type-specific `details`. Each project record links to its parent via `developmentId`.
 
-**COMMERCIAL (15):** Office, Retail Shop, Showroom, Business Centre, Co-working Space, Mall Anchor Space, Restaurant / F&B Space, Clinic / Medical Centre, Education Facility, Commercial Villa, Commercial Floor, Commercial Building, Mixed-Use Building, Bulk Sale Unit, Hotel.
+For property types that have only one variant (a single warehouse, a single land plot, a single full hotel), the migration creates one development AND one child project. The "variant" is the thing itself. This keeps the schema uniform: every project has a parent development.
 
-**INDUSTRIAL & LOGISTICS (6):** Warehouse, Cold Storage Warehouse, Light Industrial Building, Factory, Labour Camp / Staff Accommodation, Logistics Centre.
+**Why this and not the v1 design:**
 
-**LAND & PLOTS (6):** Residential Plot, Commercial Plot, Industrial Land, Mixed-Use Plot, Farm / Agricultural Land, Hospitality Plot.
+- Buyer searches are direct queries against `projects` with indexed fields (bedrooms, priceFromAed, grossYieldPct). No need to unroll nested arrays. Fast and accurate.
+- Map view groups by `developmentId` from the development records — one pin per building, automatically.
+- Admins enter regulatory and location info once per development and add variants as they go. No copy-paste. No drift.
+- Cloud functions maintain denormalized fields on projects (developerName, community, coordinates, etc.) so queries get the parent display info without a join.
+- When a development is updated (e.g. RERA suspends the project, escrow funded percentage changes), one write fans out to all child projects via cloud function. One source of truth.
+- Legal disclosure (Decree-Law 25/2025 Article 122) lives on the development record. The development is what was disclosed; the variants are how it was offered. Audit evidence is unambiguous.
 
-**SPECIALTY (4):** Parking Space, Storage Unit, Marina Berth, Land Lease / Long-term Leasehold.
+### 1.2 Property type coverage — 43 types (UNCHANGED from v1)
 
-### 1.3 Multi-currency
-**All prices stored in AED (source of truth), converted on read.** A `fxRates` collection holds a daily snapshot of conversion rates. A scheduled cloud function refreshes it once per day from the UAE Central Bank rate.
+The 43-type list from v1 stays exactly the same. Each project record `type` field is one of these. The full list is in `src/utils/propertyTypes.js` and grouped under five master categories: residential (12), commercial (15), industrial & logistics (6), land & plots (6), specialty (4).
 
-**Initial currencies:** AED, USD, EUR, GBP, INR, CNY, RUB, SAR, JPY, CHF.
+### 1.3 Multi-currency (UNCHANGED from v1)
 
-Adding more later (KRW, AUD, CAD, etc.) is a one-line config change. Never store converted prices on the record itself — that creates stale data.
+All prices stored in AED. Daily fxRates collection. Conversion happens at read time. Initial currencies: AED, USD, EUR, GBP, INR, CNY, RUB, SAR, JPY, CHF.
 
-### 1.4 Multi-tenancy (orgId)
-Every record has an `orgId`. v1 default: `"dxb-analytics"` (the platform-owned dataset). v2 will let agencies write to their own `orgId` and queries will filter by it. Adding this field now costs nothing and prevents a painful migration later.
+### 1.4 Multi-tenancy (UNCHANGED from v1)
 
-### 1.5 Visibility / publishing state
-Three states: `draft`, `published`, `archived`. Records are never deleted, only archived. Deletion is only allowed via an admin "hard delete" that requires a reason and creates an audit log entry.
+Both developments and projects have an `orgId`. v1 default: `dxb-analytics`. v2 will let agencies write to their own orgs.
 
-This is important for legal compliance under Federal Decree-Law 25/2025 Article 122 (effective 1 June 2026), which makes pre-contractual disclosure a binding legal obligation. The archived record becomes evidence in any future dispute.
+### 1.5 Visibility states (UNCHANGED from v1)
 
-### 1.6 Fractional ownership / tokenization
-DLD launched tokenized real estate via PRYPCO in 2025 (the MENA region's first tokenized property platform). Every record has a `fractionalOwnership` object so a property can be sold whole or in fractions:
-- `enabled` — boolean. True if the property is offered as fractional.
-- `totalShares` — number of shares the property is divided into
-- `pricePerShareAed` — AED per share
-- `minimumShares` — minimum purchase
-- `tokenizationProvider` — "PRYPCO" / "Stake" / "SmartCrowd" / null
-- `availableShares` — current count of unsold shares (denormalized, updated by cloud function)
+Three states: draft, published, archived. Records never deleted from client code, only archived. Hard delete is admin-only Cloud Function with audit reason. Applies to both developments and projects.
 
-Adding this in v1 means we never have to migrate.
+### 1.6 Fractional ownership (UNCHANGED from v1)
 
-### 1.7 Decision: status of "data ownership"
-The schema separates "who owns the data" from "who owns the property":
-- `orgId` — which DXB Analytics tenant created and maintains this record
-- `actualOwnerId` (optional) — the actual title-deed owner (a person or company), only set if known
-- `listingAgentId` — the broker / agent currently marketing this property (required for "for sale" / "for rent")
+Lives on the project record (the buyable variant), not on the development. A development might have one variant offered as fractional and another offered as whole-only.
 
-This three-way separation is what lets one platform serve multiple agencies without conflicts and lets a property change agents without changing records.
+### 1.7 Cascade rules (NEW for v2)
+
+When a development is archived, its child projects do NOT get auto-archived. Cloud function shows a warning if an archived development still has published children. Reason: a development might be archived because the developer branding changed, not because the units stopped existing — the children might still be sellable.
+
+When a development denormalized fields change (developerName, community, escrowBank, etc.), a cloud function re-denormalizes those fields onto every child project. This keeps the children display info in sync without requiring a join at read time.
+
+When a development is hard-deleted (via admin Cloud Function), its child projects are also hard-deleted in the same transaction. This requires an admin reason that gets audit-logged for both.
 
 ---
 
-## SECTION 2 — Base fields (every record, every property type)
+## SECTION 2A — Base fields on a development record
 
-These fields exist on every record regardless of property type. The `details` object (Section 3) holds the type-specific fields.
+A `developments` record holds everything that does not vary by buyable variant.
 
-### 2.1 Identification
-- `id` — Firestore document ID (auto-generated). Used in URLs and as the unique key.
-- `slug` — URL-friendly (e.g. "hills-park-2br-apartment-emaar"), generated from name + developer + bedrooms when the record is created.
-- `name` — human-readable project + unit description (e.g. "Hills Park — 2BR Apartment")
-- `developmentId` — links to other records in the same building/community (e.g. "hills-park-emaar"). Multiple unit types in the same development share the same developmentId.
-- `developmentName` — denormalized for fast display (e.g. "Hills Park"). Updated by cloud function.
+### 2A.1 Identification
 
-### 2.2 Ownership and tenancy
-- `orgId` — owning organization. v1 default: "dxb-analytics".
+- `id` — Firestore document ID
+- `slug` — URL-friendly (e.g. "hills-park-emaar-dubai-hills-estate")
+- `name` — human-readable development name (e.g. "Hills Park")
+- `arabicName` — Arabic translation (optional)
+
+### 2A.2 Ownership and tenancy
+
+- `orgId` — owning org. v1 default: "dxb-analytics".
 - `actualOwnerId` — optional, the title-deed owner if known
-- `listingAgentId` — required for sale/rent listings, links to brokers collection
-- `visibility` — "draft" / "published" / "archived"
-- `createdAt` — server timestamp
-- `createdBy` — user ID of the admin who first created it
-- `updatedAt` — server timestamp, refreshed on every write
-- `updatedBy` — user ID of the last editor
-- `disclosedAt` — server timestamp when first set to "published". Cannot be unset. Legal-disclosure timestamp under Decree-Law 25/2025 Article 122.
-- `sourceVerified` — boolean. True only if admin has confirmed against an official source.
-- `sourceUrl` — URL of the source (developer portal, brochure, RERA listing, DLD record)
+- `visibility` — draft / published / archived
+- `createdAt`, `createdBy`, `updatedAt`, `updatedBy` — server timestamps and user IDs
+- `disclosedAt` — server timestamp when first published. Immutable. Legal protection per Decree-Law 25/2025.
+- `sourceVerified` — boolean. True if admin confirmed against an official source.
+- `sourceUrl` — URL of the source
 
-### 2.3 Type and category
-- `type` — one of the 43 from Section 1.2. Determines which `details` shape applies.
-- `category` — "residential" / "commercial" / "industrial" / "land" / "specialty". Computed from type but stored for fast filtering.
-- `dldClass` — DLD's three legal categories: "land" / "unit" / "villa". This is what appears on the actual title deed. Critical for AML and verification.
-- `tenure` — "freehold" / "leasehold" / "usufruct" / "musataha" / "grant" — the legal ownership type
-- `foreignOwnershipAllowed` — boolean. True if non-UAE/GCC nationals can own this property. Critical for international buyers. False for properties outside designated freehold areas.
-- `zoningCode` — Dubai zoning designation (R5, R9, C1, C2, etc. per Local Order No. 2 of 1999). Determines what's legally allowed on the property.
+### 2A.3 Type and category (development-level)
 
-### 2.4 Location
+- `dldClass` — DLD legal title-deed class: "land" / "unit" / "villa". Computed from the dominant child variant type.
+- `tenure` — freehold / leasehold / usufruct / musataha / grant
+- `foreignOwnershipAllowed` — boolean
+- `zoningCode` — Dubai zoning designation per Local Order No. 2 of 1999 (R5, R9, C1, C2, etc.)
+
+### 2A.4 Location
+
 - `country` — "AE" (always for v1)
-- `emirate` — "Dubai" / "Abu Dhabi" / "Sharjah" / "Ajman" / "Umm Al Quwain" / "Ras Al Khaimah" / "Fujairah". v1 launches Dubai-only but field exists for expansion.
-- `community` — Dubai community name. Must match a record in the `communities` collection.
-- `subCommunity` — sub-area within community (optional)
-- `address` — full street address (optional, often empty for off-plan)
-- `coordinates` — { lat, lng } object. Required for published records.
-- `metroDistanceKm` — denormalized, computed by cloud function when coordinates change
-- `nearestMetroStation` — name of nearest station
+- `emirate` — Dubai / Abu Dhabi / Sharjah / etc. (v1 launches Dubai-only)
+- `community` — Dubai community name. Must reference `communities` collection.
+- `subCommunity` — sub-area within community
+- `address` — street address (often empty for off-plan)
+- `coordinates` — { lat, lng } object. Required for published.
+- `metroDistanceKm` — denormalized, computed from coordinates
+- `nearestMetroStation`
 - `beachAccess` — boolean
 
-### 2.5 Pricing (all stored in AED)
-- `priceFromAed` — starting price in AED
-- `priceToAed` — top of range (optional)
-- `pricePerSqftAed` — AED per sqft (stored, not computed)
-- `currency` — always "AED" in v1, field exists for future override
-- `vatApplicable` — boolean. True for commercial / land. False for residential resale.
-- `vatRate` — number (default 5 for VAT-applicable properties)
-- `transferFeesPct` — DLD transfer fee (default 4% of sale price, paid at registration)
+### 2A.5 Developer
 
-### 2.6 Size
-- `sizeSqft` — total area in sqft
-- `sizeSqm` — total area in sqm (computed from sqft)
-- `plotSizeSqft` — for villas/townhouses/land — plot area
-- `builtUpAreaSqft` — for villas/townhouses — actual interior area
+- `developerId` — links to `developers` collection
+- `developerName` — denormalized for fast display
+- `developerOnTimeRate` — denormalized snapshot, updated by cloud function
 
-### 2.7 Status and timeline
-- `saleStatus` — "off-plan" / "ready" / "secondary" / "sold-out" / "coming-soon"
-- `constructionStatus` — "pre-launch" / "under-construction" / "completed" / "handover-ready"
-- `constructionPct` — number 0-100, percent complete (off-plan only)
-- `launchDate` — date sales opened
-- `eoiDeadline` — Expression of Interest deadline (off-plan)
+### 2A.6 Status and timeline (development-level)
+
+- `saleStatus` — off-plan / ready / secondary / sold-out / coming-soon
+- `constructionStatus` — pre-launch / under-construction / completed / handover-ready
+- `constructionPct` — 0-100 percent complete (off-plan only)
+- `launchDate` — when sales opened
+- `eoiDeadline` — Expression of Interest deadline
 - `contractedHandover` — original handover date
 - `expectedHandover` — current expected handover (may differ if delayed)
-- `actualHandover` — handover date for completed projects
+- `actualHandover` — for completed projects
 - `delayMonths` — computed: months between contracted and expected
 
-### 2.8 Developer
-- `developerId` — links to `developers` collection
-- `developerName` — denormalized
-- `developerOnTimeRate` — denormalized (0-100), updated by cloud function
+### 2A.7 Regulatory (mandatory for published off-plan)
 
-### 2.9 Regulatory (mandatory for published off-plan records)
-- `reraProjectNumber` — Oqood number under Law 13/2008. Required to legally market.
-- `reraDeveloperNumber` — RERA developer license number
-- `trakheesiPermit` — Trakheesi marketing permit ID (the permit that allows advertising in Dubai)
+- `reraProjectNumber` — Oqood number under Law 13/2008
+- `reraDeveloperNumber` — RERA developer license
+- `trakheesiPermit` — Trakheesi marketing permit
 - `dldRegistered` — boolean
-- `escrowAccount` — escrow account number where buyer funds are held
-- `escrowBank` — name of the escrow bank
-- `escrowFundedPct` — percentage of construction cost currently funded in escrow
-- `lastReraInspection` — date of last RERA inspection
+- `escrowAccount` — escrow account number
+- `escrowBank` — name of escrow bank
+- `escrowFundedPct` — 0-100 percent funded
+- `lastReraInspection` — date
 - `reraInspectionsPassed` — count
 - `reraInspectionsFailed` — count
-- `dldStarRating` — DLD Building Classification System rating (1-4 stars, plus 4+ for green sustainability). Real DLD data when available.
+- `dldStarRating` — DLD Building Classification (1-4 stars, plus 4+ for green)
 
-### 2.10 Yield and investment
-- `grossYieldPct` — gross rental yield percent
-- `netYieldPct` — net rental yield (after service charges, fees, vacancy)
+### 2A.8 Media (development-level)
+
+- `coverImageUrl` — main hero image
+- `images` — array of URLs, max 20
+- `floorPlanUrl` — overall site/floor plan
+- `brochureUrl` — PDF
+- `videoUrl` — YouTube/Vimeo
+- `virtualTourUrl` — Matterport / 360
+
+### 2A.9 Tags and amenities (development-level)
+
+- `tags` — admin labels
+- `amenities` — standard codes (gym, pool, parking, etc.)
+- `views` — sea, marina, burj, golf, park, city, garden, lagoon
+- `lifestyle` — family, investor, luxury, branded, beachfront, golf, eco, smart-home
+
+### 2A.10 Aggregates (cloud function maintained)
+
+NEVER edit these directly. Cloud function refreshes when child projects change.
+
+- `unitVariantCount` — number of child projects
+- `bedroomTypes` — array of bedroom counts across all variants (e.g. Studio, 1BR, 2BR, 3BR)
+- `priceFromAedMin` — cheapest variant
+- `priceToAedMax` — most expensive variant
+- `pricePerSqftAedMin`, `pricePerSqftAedMax` — range across variants
+- `grossYieldPctMax`, `grossYieldPctMin` — yield range
+- `totalUnitsAvailable` — sum of available counts across variants
+- `lastSyncedAt` — when last refreshed
+
+---
+
+## SECTION 2B — Base fields on a project record
+
+A `projects` record holds the buyable specifics for one variant within a development.
+
+### 2B.1 Identification and parent linkage
+
+- `id` — Firestore document ID
+- `developmentId` — required. References parent development.
+- `slug` — URL-friendly, includes variant info (e.g. "hills-park-emaar-2br-apartment")
+- `name` — human-readable variant name (e.g. "Hills Park — 2BR Apartment")
+- `variantLabel` — short label (e.g. "2BR", "Studio", "5BR Villa", "1200sqft Office")
+
+### 2B.2 Ownership (mostly inherited from parent via denormalization)
+
+- `orgId` — must equal parent orgId (cloud function enforces)
+- `visibility` — independent from parent. A development can be published with some variants in draft.
+- `createdAt`, `createdBy`, `updatedAt`, `updatedBy`
+- `disclosedAt` — set when this specific variant first becomes published
+
+### 2B.3 Property type
+
+- `type` — one of the 43 from `src/utils/propertyTypes.js`. Determines the `details` shape.
+- `category` — residential / commercial / industrial / land / specialty
+- `dldClass` — land / unit / villa (usually inherited from parent but can override)
+
+### 2B.4 Pricing
+
+- `priceFromAed` — starting price for this variant
+- `priceToAed` — top of range
+- `pricePerSqftAed` — stored, not computed
+- `currency` — always "AED"
+- `vatApplicable` — boolean
+- `vatRate` — number (default 5 if applicable)
+- `transferFeesPct` — DLD transfer fee (default 4)
+
+### 2B.5 Size
+
+- `sizeSqftMin`, `sizeSqftMax` — for variants with a size range
+- `sizeSqmMin`, `sizeSqmMax` — computed from sqft
+- `plotSizeSqftMin`, `plotSizeSqftMax` — for villas/townhouses/land
+- `builtUpAreaSqftMin`, `builtUpAreaSqftMax` — for villas/townhouses
+
+### 2B.6 Bedroom and unit info (for residential variants)
+
+- `bedrooms` — number (0 for studio, 1, 2, 3, 4, 5, 6+) or null for non-residential
+- `bedroomLabel` — display string ("Studio", "1BR", "2BR", "5BR Villa")
+- `bathrooms` — number
+- `availableUnits` — count of unsold/unrented units of this variant
+- `totalUnits` — total count of this variant in the development
+- `soldUnits` — totalUnits - availableUnits (can be computed but stored for fast queries)
+
+### 2B.7 Yield and investment (variant-level)
+
+- `grossYieldPct` — gross rental yield for this variant
+- `netYieldPct` — net rental yield
 - `serviceChargePerSqft` — annual service charge in AED per sqft
-- `expectedAppreciationPct` — developer's stated appreciation expectation to handover
-- `goldenVisaEligible` — boolean. True if priceFromAed >= 2,000,000 (current Golden Visa threshold)
-- `mortgageEligible` — boolean. True if banks finance this property type
-- `maxLtv` — max loan-to-value bank will lend on this property (e.g. 80 for first-time UAE resident, 75 for non-resident)
+- `goldenVisaEligible` — boolean. True if priceFromAed >= 2,000,000.
+- `mortgageEligible` — boolean
+- `maxLtv` — max loan-to-value bank will lend
 
-### 2.11 Payment plan
-- `paymentPlan` — object:
-  - `downPaymentPct` — number
-  - `duringConstructionPct` — number
-  - `onHandoverPct` — number
-  - `postHandoverPct` — number
-  - `postHandoverMonths` — number
-  - `label` — human-readable summary, e.g. "20/50/30" or "10/40/50 + 24m PHP"
+### 2B.8 Payment plan
 
-### 2.12 Media
-- `coverImageUrl` — main hero image (Firebase Storage)
-- `images` — array of image URLs, max 20
-- `floorPlanUrl` — floor plan
-- `brochureUrl` — PDF brochure
-- `videoUrl` — YouTube/Vimeo URL
-- `virtualTourUrl` — Matterport / 360 tour
+- `paymentPlan` — same object shape as v1 with fields: downPaymentPct, duringConstructionPct, onHandoverPct, postHandoverPct, postHandoverMonths, label
 
-### 2.13 Tags and search aids
-- `tags` — array of free-form admin labels
-- `amenities` — array of standard amenity codes (gym, pool, parking, etc.)
-- `views` — array (sea, marina, burj-khalifa, golf, park, city, garden, lagoon)
-- `lifestyle` — array of lifestyle codes (family, investor, luxury, branded, beachfront, golf, eco, smart-home)
+### 2B.9 Fractional ownership
 
-### 2.14 Fractional ownership (Section 1.6)
-- `fractionalOwnership` — object as defined in 1.6
+- `fractionalOwnership` — same object shape as v1 with fields: enabled, totalShares, pricePerShareAed, minimumShares, tokenizationProvider, availableShares
 
-### 2.15 Computed / denormalized fields (cloud function maintained)
-NEVER edit directly. A cloud function updates these:
-- `investmentScore` — 0-100, from `src/utils/scoring.js`
-- `priceUsd`, `priceEur`, `priceGbp`, etc. — current converted prices (snapshot)
+### 2B.10 Computed (cloud function maintained)
+
+- `investmentScore` — 0-100 from `src/utils/scoring.js`
+- `priceUsd`, `priceEur`, `priceGbp`, etc. — current converted prices
 - `popularityScore` — derived from search and watchlist activity
-- `lastSyncedAt` — when cloud function last touched this record
+- `lastSyncedAt`
 
-### 2.16 The `details` object
-Type-specific fields. Section 3 defines the shape per type.
+### 2B.11 The `details` object (type-specific)
+
+Same as v1 Section 3. Polymorphic by `type`. An apartment variant has floor, balcony, kitchenType, parkingSpaces, etc. A warehouse variant has ceilingHeightM, loadingDocks, floorLoadKgPerSqm, etc. The full list of 43 type-specific shapes is unchanged from Section 3 of the v1 spec — applies to project variants now instead of standalone records.
+
+---
+
+## SECTION 2C — Denormalized fields on projects (cloud function maintained)
+
+These fields are copied from the parent development onto every child project so search queries against `projects` get the display info without a join. NEVER edit directly. The `onDevelopmentWrite` cloud function refreshes them whenever the parent changes.
+
+- `developmentName` — from parent
+- `developerName` — from parent
+- `developerId` — from parent
+- `community` — from parent
+- `subCommunity` — from parent
+- `coordinates` — from parent
+- `metroDistanceKm` — from parent
+- `beachAccess` — from parent
+- `tenure` — from parent
+- `foreignOwnershipAllowed` — from parent
+- `reraProjectNumber` — from parent
+- `escrowBank` — from parent
+- `dldStarRating` — from parent
+- `coverImageUrl` — from parent (variant cards in search use the parent hero image by default, can be overridden per variant)
+- `expectedHandover` — from parent
+- `saleStatus` — from parent (variants do not have independent sale status)
+- `constructionStatus` — from parent
+- `constructionPct` — from parent
+
+A buyer search like "2BR apartments in Marina under 2M with 7 percent plus yield" runs as a single Firestore query:
+
+    where("type", "==", "apartment")
+    .where("bedrooms", "==", 2)
+    .where("community", "==", "Dubai Marina")
+    .where("priceFromAed", "<=", 2000000)
+    .where("grossYieldPct", ">=", 7)
+
+Single collection. Indexed fields. Fast. The `community` field is denormalized from the parent development so the query does not need to join.
 
 ---
 
 ## SECTION 3 — Type-specific `details` shapes
 
-For each of the 43 property types, here are the fields that go inside the `details` object on top of the base fields. The Data Manager form will dynamically show these fields when the admin picks the type.
+Unchanged from v1 spec. The 43 property types each have a `details` shape that captures the fields specific to that type (e.g. apartment has bedrooms/bathrooms/floor, warehouse has ceilingHeight/loadingDocks). The full Section 3 from v1 applies to project records in v2 — every project record `details` object follows the type-specific shape for its `type` value.
 
-### RESIDENTIAL
-
-**3.1 Apartment**
-- `bedrooms` — number (0 for studio, 1, 2, 3, 4, 5, 6+)
-- `bathrooms` — number
-- `floor` — number (which floor)
-- `totalFloors` — number (height of building)
-- `balcony` — boolean
-- `balconySize` — sqft (optional)
-- `furnished` — "unfurnished" / "semi-furnished" / "fully-furnished"
-- `kitchenType` — "open" / "closed" / "semi-open"
-- `parkingSpaces` — number (allocated parking)
-- `maidsRoom` — boolean
-- `studyRoom` — boolean
-- `storageRoom` — boolean
-- `viewType` — array (sea, marina, burj, park, city, golf, lagoon)
-
-**3.2 Villa**
-- `bedrooms` — number
-- `bathrooms` — number
-- `floors` — number (single-storey, two-storey, etc.)
-- `garage` — number (covered car spaces)
-- `outdoorParking` — number
-- `garden` — boolean
-- `gardenSize` — sqft
-- `privatePool` — boolean
-- `poolType` — "swimming" / "plunge" / "infinity" / null
-- `maidsRoom` — boolean
-- `driverRoom` — boolean
-- `studyRoom` — boolean
-- `majlis` — boolean (formal Arab guest reception room)
-- `barbecueArea` — boolean
-- `furnished` — same enum as Apartment
-
-**3.3 Townhouse**
-- Same as Villa, plus:
-- `clusterPosition` — "end" / "middle" / "corner"
-
-**3.4 Penthouse**
-- Same as Apartment, plus:
-- `privateTerrace` — boolean
-- `terraceSize` — sqft
-- `privatePool` — boolean
-- `privateElevator` — boolean
-- `dualLevel` — boolean
-
-**3.5 Duplex**
-- Same as Apartment, plus:
-- `internalStaircase` — boolean
-- `levels` — number (always 2, but field exists)
-
-**3.6 Loft**
-- Same as Apartment, plus:
-- `ceilingHeightM` — meters
-- `openPlan` — boolean
-
-**3.7 Hotel Apartment**
-- Same as Apartment, plus:
-- `hotelOperator` — string (e.g. "Address", "Marriott", "Rotana")
-- `dailyRateAed` — short-term rate
-- `monthlyRateAed`
-- `housekeepingIncluded` — boolean
-- `restaurantOnSite` — boolean
-- `gymOnSite` — boolean
-- `concierge` — boolean
-- `roomService` — boolean
-
-**3.8 Branded Residence**
-- Same as Apartment/Penthouse, plus:
-- `brandName` — string (Armani, Bvlgari, Cavalli, Versace, Bentley, Six Senses, Mandarin Oriental, etc.)
-- `brandedFeatures` — array (e.g. ["custom-furniture", "branded-amenities", "concierge"])
-- `brandLicensingActive` — boolean
-
-**3.9 Residential Building (whole building sale)**
-- `totalUnits` — number
-- `totalFloors` — number
-- `unitMix` — array of objects: `{ bedrooms, count, sizeSqft }`
-- `currentOccupancy` — percent (0-100)
-- `currentAnnualRentAed` — total annual rent collected
-- `tenancyContractsActive` — number
-- `serviceChargeAnnualAed` — total annual service charge
-- `escrowFunded` — boolean
-
-**3.10 Residential Floor**
-- `floorNumber` — number
-- `totalUnitsOnFloor` — number
-- `unitsConfiguration` — array of objects: `{ unitNumber, bedrooms, sizeSqft }`
-- `commonAreaSize` — sqft
-
-**3.11 Villa Compound**
-- `totalVillas` — number
-- `villaTypes` — array of objects: `{ bedrooms, count, sizeSqft, plotSqft }`
-- `gated` — boolean
-- `securityType` — "24/7" / "daytime" / "none"
-- `commonAmenities` — array (pool, gym, playground, mosque, clubhouse)
-
-**3.12 Compound Villa (one villa within a compound)**
-- Same as Villa, plus:
-- `compoundName` — string
-- `compoundSecurity` — boolean
-- `accessControl` — "card" / "biometric" / "guard" / "open"
-
-### COMMERCIAL
-
-**3.13 Office**
-- `officeGrade` — "A+" / "A" / "A-" / "B+" / "B" / "B-" / "C" (DLD ABC classification)
-- `fitOut` — "shell-and-core" / "fitted" / "furnished"
-- `partitioned` — boolean
-- `partitionsCount` — number
-- `meetingRooms` — number
-- `pantry` — boolean
-- `restrooms` — number
-- `parkingSpaces` — number
-- `floor` — number
-- `viewType` — array
-- `coreToWindowDistance` — meters (deeper offices = lower light quality)
-- `raisedFloor` — boolean (for cabling)
-- `acType` — "central-chilled" / "DX" / "VRV" / "split"
-- `fitOutAllowanceAed` — landlord contribution if any
-- `freeZone` — string (DIFC, DMCC, DAFZA, JAFZA, ADGM) or null
-
-**3.14 Retail Shop**
-- `frontageWidthM` — meters of street frontage
-- `ceilingHeightM` — meters
-- `glassFrontage` — boolean
-- `mezzanine` — boolean
-- `parkingNearby` — boolean
-- `footfallEstimate` — daily pedestrian count (developer-supplied)
-- `mallLocation` — boolean
-- `mallName` — string or null
-- `cornerUnit` — boolean
-- `permittedActivities` — array (food, fashion, electronics, services, etc.)
-- `kitchenLicensable` — boolean
-- `chillerPower` — kW
-- `gracePeriod` — months (free fit-out period)
-
-**3.15 Showroom**
-- Same as Retail Shop, plus:
-- `loadingDoors` — number (for moving large items)
-- `truckAccess` — boolean
-- `displayWindowSize` — sqft
-
-**3.16 Business Centre / 3.17 Co-working Space**
-- `seatingType` — "hot-desk" / "dedicated-desk" / "private-office" / "team-room"
-- `capacity` — number of people
-- `meetingRoomsIncluded` — number per month
-- `internetSpeedMbps` — number
-- `printerIncluded` — boolean
-- `kitchen` — boolean
-- `pricePerDeskMonthlyAed` — number
-- `flexibleTerm` — boolean (month-to-month vs annual)
-
-**3.18 Mall Anchor Space**
-- `mallName` — string
-- `floorLevel` — number
-- `frontageM` — meters
-- `ceilingHeightM` — meters
-- `loadingBays` — number
-- `goodsLift` — boolean
-- `dedicatedParking` — number of spaces
-- `commonAreaContribution` — annual AED
-- `marketingFee` — percent of sales
-- `tradingHours` — string
-
-**3.19 Restaurant / F&B Space**
-- Same as Retail Shop, plus:
-- `kitchenInstalled` — boolean
-- `extractorInstalled` — boolean
-- `gasConnection` — boolean
-- `seatingCapacity` — number
-- `outdoorSeating` — boolean
-- `licensedForAlcohol` — boolean
-- `previousRestaurantFitOut` — boolean (saves a new tenant money)
-
-**3.20 Clinic / Medical Centre**
-- Same as Office, plus:
-- `dohaCertified` — boolean (Dubai Health Authority)
-- `medicalLicenseClass` — "general" / "specialist" / "diagnostic" / "dental"
-- `consultingRooms` — number
-- `treatmentRooms` — number
-- `xrayRoom` — boolean
-- `pharmacyInside` — boolean
-
-**3.21 Education Facility**
-- `educationType` — "nursery" / "primary" / "secondary" / "k-12" / "training" / "language-centre"
-- `khdaApproved` — boolean (Knowledge and Human Development Authority)
-- `classrooms` — number
-- `studentCapacity` — number
-- `playground` — boolean
-- `outdoorAreaSqft` — number
-- `libraries` — number
-- `cafeteria` — boolean
-
-**3.22 Commercial Villa**
-- Same as Villa, plus:
-- `commercialUseApproved` — boolean
-- `permittedUses` — array (clinic, office, school, gallery, etc.)
-- `parkingForVisitors` — number
-
-**3.23 Commercial Floor**
-- Same as Office, plus:
-- `floorPlateSqft` — number (one floor's total area)
-- `divisible` — boolean (can be split into smaller offices)
-
-**3.24 Commercial Building**
-- `totalFloors` — number
-- `totalLeasableSqft` — number
-- `currentOccupancyPct` — number
-- `tenants` — array of objects: `{ name, floor, leaseExpiry }` (anonymized in public listings)
-- `currentAnnualRentAed` — total
-- `passingYieldPct` — actual current yield
-- `mainTenantSector` — "finance" / "tech" / "professional-services" / "mixed"
-- `parkingSpaces` — number
-- `escalators` — number
-- `elevators` — number
-- `lobbyGrade` — "premium" / "standard" / "basic"
-
-**3.25 Mixed-Use Building**
-- Combines Residential Building + Commercial Building details
-- `residentialUnits` — number
-- `commercialUnits` — number
-- `retailUnits` — number
-- `parkingPodium` — boolean
-- `mixRatio` — object: `{ residential, commercial, retail }` as percentages
-
-**3.26 Bulk Sale Unit**
-- `unitsCount` — number
-- `unitMix` — array of objects: `{ bedrooms, count, sizeSqft, priceAedEach }`
-- `discountVsRetailPct` — number
-- `transferType` — "single-deed" / "multiple-deeds"
-
-**3.27 Hotel**
-- `hotelStarRating` — 1-5
-- `totalKeys` — number of rooms
-- `roomTypes` — array of objects: `{ type, count, sizeSqft }`
-- `restaurants` — number
-- `meetingSpaceSqft` — number
-- `pools` — number
-- `spa` — boolean
-- `gym` — boolean
-- `currentAnnualRevenueAed` — number
-- `currentRevPar` — revenue per available room (AED)
-- `currentOccupancyPct` — number
-- `managementCompany` — string (Hilton, Marriott, etc.)
-- `franchiseAgreement` — boolean
-
-### INDUSTRIAL & LOGISTICS
-
-**3.28 Warehouse**
-- `ceilingHeightM` — meters
-- `clearHeightM` — meters (height to lowest obstruction)
-- `loadingDocks` — number
-- `loadingDockType` — "ground-level" / "raised" / "both"
-- `truckAccess` — boolean
-- `truckAccessType` — "container" / "trailer" / "small"
-- `floorLoadKgPerSqm` — number
-- `power` — kW capacity
-- `chiller` — boolean
-- `racking` — boolean
-- `office` — boolean (warehouse with office attached)
-- `officeAreaSqft` — number
-- `mezzanine` — boolean
-- `mezzanineSqft` — number
-- `securityFenced` — boolean
-- `freeZone` — string or null
-
-**3.29 Cold Storage Warehouse**
-- Same as Warehouse, plus:
-- `temperatureRangeC` — object: `{ min, max }`
-- `coldZones` — number
-- `freezerCapacityCubicM` — number
-- `chillerCapacityCubicM` — number
-- `temperatureMonitoring` — boolean
-- `backupPower` — boolean
-
-**3.30 Light Industrial Building**
-- Same as Warehouse, plus:
-- `manufacturingPermitted` — boolean
-- `permittedActivities` — array
-- `noiseLicense` — boolean
-- `wasteDisposalConnected` — boolean
-
-**3.31 Factory**
-- `totalLandSqm` — number
-- `builtUpAreaSqm` — number
-- `productionLines` — number
-- `cranesCapacity` — array of tonnes
-- `chimney` — boolean
-- `effluentTreatment` — boolean
-- `licensedActivities` — array
-- `safetyClass` — "standard" / "high-risk" / "low-risk"
-
-**3.32 Labour Camp / Staff Accommodation**
-- `roomCount` — number
-- `bedCapacity` — number
-- `roomConfiguration` — "shared" / "private" / "mixed"
-- `pricePerBedMonthlyAed` — number
-- `kitchenFacilities` — "shared" / "in-room"
-- `laundry` — boolean
-- `recreationRoom` — boolean
-- `mosque` — boolean
-- `mediCenter` — boolean
-- `transportProvided` — boolean
-- `complianceClass` — "permanent" / "temporary"
-- `r9Approved` — boolean (Dubai zoning)
-
-**3.33 Logistics Centre**
-- Same as Warehouse, plus:
-- `crossDock` — boolean
-- `parcelSortingCapacity` — parcels per hour
-- `truckBays` — number
-- `vanBays` — number
-- `containerYardSqm` — number
-- `securityCertification` — array (e.g. ISO, AEO)
-
-### LAND & PLOTS
-
-**3.34 Residential Plot**
-- `plotSizeSqft` — number
-- `gfa` — sqft (gross floor area allowed by zoning)
-- `floorAreaRatio` — number
-- `maxHeight` — number of floors allowed
-- `setbacks` — object: `{ front, sides, rear }` in meters
-- `cornerPlot` — boolean
-- `infrastructureReady` — boolean (water, power, sewer connected)
-- `requiresFilling` — boolean
-
-**3.35 Commercial Plot**
-- Same as Residential Plot, plus:
-- `permittedUses` — array
-- `parkingRequirementSpaces` — number per sqft
-
-**3.36 Industrial Land**
-- Same as Commercial Plot, plus:
-- `industrialClass` — "light" / "medium" / "heavy"
-- `tradingZone` — string
-
-**3.37 Mixed-Use Plot**
-- Same as Commercial Plot, plus:
-- `permittedMix` — object: `{ residentialPct, commercialPct, retailPct }`
-
-**3.38 Farm / Agricultural Land**
-- `totalAreaSqm` — number
-- `cultivatedAreaSqm` — number
-- `currentCrops` — array of strings
-- `dateTreesCount` — number
-- `wellsCount` — number
-- `irrigationType` — "drip" / "flood" / "sprinkler" / "none"
-- `farmhouseIncluded` — boolean
-- `livestockSheds` — number
-- `electricityConnected` — boolean
-- `waterSource` — "well" / "DEWA" / "tanker" / "none"
-- `agricultureLicensed` — boolean
-
-**3.39 Hospitality Plot**
-- Same as Commercial Plot, plus:
-- `hotelKeysAllowed` — number (max keys per zoning)
-- `beachfront` — boolean
-- `viewQuality` — "premium" / "good" / "standard"
-
-### SPECIALTY
-
-**3.40 Parking Space**
-- `parkingType` — "covered" / "open" / "garage"
-- `floor` — number (basement levels: -1, -2, etc.)
-- `spaceNumber` — string (e.g. "B2-145")
-- `evCharger` — boolean
-- `evChargerKw` — number
-- `pricePerYearAed` — number (rent)
-- `pricePerHourAed` — number (short-term, optional)
-- `dimensionsM` — object: `{ length, width, height }`
-- `accessibleParking` — boolean
-- `linkedToUnit` — string (which apartment it's deeded to, if any)
-
-**3.41 Storage Unit**
-- `storageType` — "personal" / "business" / "wine" / "secure"
-- `sizeSqft` — number
-- `climateControlled` — boolean
-- `temperatureC` — number (if controlled)
-- `humidityControlled` — boolean
-- `accessHours` — "24/7" / "business-hours" / "limited"
-- `accessType` — "drive-up" / "elevator" / "stairs"
-- `securityLevel` — "basic" / "monitored" / "biometric"
-
-**3.42 Marina Berth**
-- `marinaName` — string
-- `berthNumber` — string
-- `lengthM` — meters (max boat length)
-- `beamM` — meters (max boat width)
-- `draftM` — meters (max boat draft)
-- `powerConnection` — boolean
-- `powerAmperage` — number
-- `waterConnection` — boolean
-- `pumpoutFacility` — boolean
-- `wifiIncluded` — boolean
-- `securityType` — "24/7" / "patrolled" / "open"
-- `transferable` — boolean
-
-**3.43 Land Lease / Long-term Leasehold**
-- This is a `tenure` modifier rather than a property type. A record can be `type: "Villa"` with `tenure: "leasehold"` and additional fields:
-- `leaseTermYears` — number
-- `leaseStartDate` — date
-- `leaseExpiryDate` — date
-- `groundRentAedAnnual` — number
-- `escalationClause` — string
-- `renewalRights` — boolean
-- `assignmentRights` — boolean
+Reference: the previous schema-v1.md Section 3 for the full 43-type detail shapes. When Session 8-10 build the Data Manager, the polymorphic form reads the 43 shapes from there.
 
 ---
 
 ## SECTION 4 — Related collections
 
-### 4.1 `developers` collection
-Tracks every developer with reliability metrics. Fields:
-- `id`, `name`, `arabicName`, `licenseNumber`, `establishedYear`
-- `totalProjects`, `completedProjects`, `delayedProjects`, `cancelledProjects`
-- `onTimeRatePct`, `avgDelayMonths`
-- `reraDeveloperNumber`, `dldRegistered`
-- `headquarters`, `phone`, `email`, `website`
-- `logoUrl`
-- `creditRating` — Moody's / Fitch / S&P if rated
-- `legalDisputes` — count of court judgments against the developer
-- `parentCompany`
-- `signatureProjects` — array of project IDs
+Unchanged from v1 spec.
 
-### 4.2 `communities` collection
-Master list of Dubai communities with metrics. Fields:
-- `id`, `name`, `arabicName`, `emirate`
-- `coordinates` — { lat, lng } (centroid)
-- `boundary` — GeoJSON polygon (for map display)
-- `freehold` — boolean
-- `foreignOwnershipAllowed` — boolean
-- `avgPpsf`, `avgRentAnnualAed`, `avgGrossYieldPct`
-- `tenantProfile` — "family" / "young-professional" / "investor" / "expat" / "mixed"
-- `metroAccess` — boolean
-- `nearestMetroStation`
-- `schoolsCount`, `clinicsCount`, `mallsCount`
-- `populationEstimate`
-- `totalUnits` — total units across all developments in this community
+- **`developers`** — every developer with reliability metrics
+- **`communities`** — master list of Dubai communities
+- **`fxRates`** — daily currency conversion snapshots
+- **`news`** — 24/7 news feed
+- **`transactions`** — DLD transaction records
 
-### 4.3 `fxRates` collection
-One document per day. Fields:
-- `date` — YYYY-MM-DD
-- `source` — "UAE Central Bank" / "OANDA" / etc.
-- `rates` — object mapping currency code to AED rate (e.g. `{ USD: 3.6725, EUR: 3.95, GBP: 4.62 }`)
-- `updatedAt`
-
-### 4.4 `news` collection
-Real-time news feed for the 24/7 newspaper view. Fields:
-- `id`, `headline`, `summary`, `body`
-- `category` — "transactions" / "launches" / "regulation" / "developer-news" / "market-data" / "international"
-- `publishedAt`
-- `sourceUrl`, `sourceName`
-- `relatedProjectIds` — array
-- `relatedDeveloperIds` — array
-- `relatedCommunityIds` — array
-- `verified` — boolean
-- `language` — "en" / "ar"
-
-### 4.5 `transactions` collection
-DLD transaction records (live data feed). Fields:
-- `id` (DLD transaction ID)
-- `transactionDate`
-- `type` — "sale" / "rent" / "mortgage"
-- `priceAed`, `pricePerSqftAed`
-- `propertyType`
-- `community`, `building`
-- `sizeSqft`
-- `relatedProjectId` — linked to projects collection if matched
-- `verified` — boolean (matched against DLD source)
+Reference: the previous schema-v1.md Section 4 for full field lists.
 
 ---
 
-## SECTION 5 — Security and validation rules
+## SECTION 5 — Security and validation rules (UPDATED for v2)
 
 ### 5.1 Read access
+
 - Any authenticated user can read records where `visibility == "published"` AND `orgId` is in their accessible orgs list.
+- Applies to both `developments` and `projects` collections.
 - Admins of an org can read all records (any visibility) within their org.
-- Platform super-admins can read all records.
-- Unauthenticated users see only the public landing page snapshot, not raw records.
 
 ### 5.2 Write access
-- Only authenticated admin users can write to projects.
+
+- Only authenticated admin users can write to developments or projects.
 - A user can only write to records where `orgId` matches one of their assigned orgs.
-- The `disclosedAt` field is set automatically by a cloud function when `visibility` first becomes "published". It cannot be modified by client code.
-- The `dldStarRating`, `developerOnTimeRate`, `investmentScore`, `priceUsd` etc. fields are write-only by cloud functions, not by client code. Client writes that touch these fields are rejected.
-- Hard delete is forbidden via client code. Records can only be set to `visibility == "archived"`. Hard delete is admin-only via Cloud Function with audit log.
+- The `disclosedAt` field is set automatically by a cloud function when `visibility` first becomes "published". Cannot be modified by client code. Applies to both collections.
+- Hard delete is forbidden via client code on both collections. Records can only be set to `archived`. Hard delete is admin-only via Cloud Function with audit reason.
+- Denormalized fields on projects (community, developerName, coordinates, etc.) are write-only by cloud functions, not by client code.
 
 ### 5.3 Validation
-- `priceFromAed` must be > 0
-- `coordinates` must have valid lat (22.5 to 26.0 for Dubai range) and lng (54.5 to 56.5)
-- `reraProjectNumber` must match the format DLD uses (validated against a regex)
-- `community` must reference an existing community in the `communities` collection
-- `developerId` must reference an existing developer in the `developers` collection
-- `type` must be one of the 43 from Section 1.2
-- For published records, all "mandatory for published" fields must be present (Section 2.9)
+
+- A project record must reference an existing development via `developmentId`. The cloud function rejects orphan project writes.
+- A development with `visibility == "published"` must have at least one child project (the cloud function flags developments with no children).
+- For published off-plan records, all "mandatory for published" fields (Section 2A.7) must be present on the development.
+- `priceFromAed` must be > 0 on every project.
+- `coordinates` must be within Dubai bounds on the development.
+- `type` must be one of the 43 from the canonical list.
+- `community` must reference an existing community.
+- `developerId` must reference an existing developer.
 
 ### 5.4 Audit
-Every write to a project record creates an entry in a `projectAuditLog` subcollection with:
-- `userId`, `userEmail`, `timestamp`
-- `action` — "create" / "update" / "publish" / "archive" / "delete"
-- `fieldsChanged` — object showing old and new values
-- `ipAddress` (from cloud function context)
-- `reason` — required for archive/delete actions
 
-This is what makes us defensible under Decree-Law 25/2025 disclosure obligations.
+Every write to a development or project creates an entry in a per-record `auditLog` subcollection with userId, timestamp, action, fieldsChanged, ipAddress, and reason (required for archive/delete actions). This is the legal protection under Decree-Law 25/2025 Article 122.
 
 ---
 
-## SECTION 6 — Open questions to confirm
+## What changes from v1 to v2 — summary
 
-These are the calls I made on your behalf where I want explicit approval before locking:
+| Aspect | v1 (Session 4) | v2 (Session 6 reopen) |
+|---|---|---|
+| Collections | One: `projects` | Two: `developments` + `projects` |
+| Granularity | One record per buyable unit type | One development per project, one project per buyable variant within |
+| Regulatory info storage | On every project record | Once on the development, denormalized to children |
+| Map grouping | Required client-side logic by developmentId string | Automatic: one pin per development |
+| Buyer search | Single-collection query | Single-collection query (still!) — denormalized fields make joins unnecessary |
+| Admin form | One form per buyable unit | One development form + variant sub-forms |
+| Migration complexity | Explode each parent into children | Parent + children naturally |
+| Storage cost | Slightly less duplicated data | Slightly more duplicated data (denormalized fields on each child) |
+| Schema spec sections affected | N/A (this is the original) | Section 1.1, Section 2 split into 2A/2B/2C, new Section 1.7 cascade rules, Section 5 minor updates |
 
-1. **43 property types is the right number, not 22.** Confirmed through DLD, Bayut, Property Finder, Dubizzle research. Did I miss any specific Dubai niches you know of (e.g. religious endowment Awqaf properties, fuel station plots, billboards, DEWA substation sites)?
-2. **Multi-emirate field exists from day one** but only Dubai records will be created in v1. Adding Abu Dhabi/Sharjah/etc. is one config change.
-3. **Fractional ownership added in v1** because DLD launched it via PRYPCO in 2025. Adding it now is one field; adding it later is a migration.
-4. **Hard deletes are admin-only Cloud Function calls.** Client code can only archive. This is for legal disclosure compliance.
-5. **The audit log is mandatory.** This is non-negotiable for the legal protection it gives you.
+The 43 property types, multi-currency, multi-tenancy, visibility states, fractional ownership, related collections, and Section 3 type-specific details are all UNCHANGED.
 
 ---
 
-**Next step (Session 5):** Once this spec is approved, we translate it into:
-- `firestore.rules` — the actual security rules file
-- `src/types/project.ts` — TypeScript interfaces for the schema
-- `src/utils/projectValidation.js` — client-side validation matching server-side rules
-- A JSON Schema document for use in admin form generation
-- Migration script to convert the existing seed data into the new shape
+## Open questions to confirm before Session 6 implementation
+
+1. **Variant slug generation:** for a development like "Hills Park" with 3 bedroom variants, the project slugs become "hills-park-1br-apartment", "hills-park-2br-apartment", "hills-park-3br-apartment". Confirm slug format includes the bedroom label.
+2. **Photo override per variant:** the spec says variants inherit `coverImageUrl` from the parent but can override. Confirm this is the intended behavior — some developers do publish a different render for the 1BR vs the 3BR.
+3. **Independent disclosedAt per variant:** the spec says each variant has its own `disclosedAt` set when that specific variant first publishes. Confirm this matches the legal requirement.
+4. **availableUnits source of truth:** the spec stores `availableUnits` on each project variant. Confirm: when a unit is sold, is the admin updating this field directly, or is there a separate `transactions` collection that decrements it via cloud function?
+
+These can all be answered after Session 6 implementation if you want — none of them block the migration script. But flagging them so they do not get forgotten.
