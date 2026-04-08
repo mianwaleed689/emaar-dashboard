@@ -50,3 +50,31 @@ Fix applied:
 Build verified: vite build ✓ 840 modules transformed, 5.18s, no errors.
 
 Pre-existing warnings noted but deferred: Firebase dynamic/static import warning, 3.6MB bundle size (will be addressed in Sessions 15 and 17).
+
+## 2026-04-08 — Session 2A: Critical data-loss catches fixed
+Decision: Created src/utils/safeAsync.js with three helper functions and used safeAsyncWithToast to fix the four worst silent failures in EmaarDashboardV2.jsx.
+
+What was found in the audit:
+- 23 empty catch blocks in EmaarDashboardV2.jsx (more than the original audit's 21)
+- ~42 empty catch blocks in AdminPanel.jsx (more than the original audit's 20)
+- Three real categories: silent-by-design (localStorage, listener cleanup), real bugs (Firestore writes, email sends), and a few in-between cases
+- The Blueprint-era audit numbers were undercounting
+
+What was fixed in Phase A:
+- Line 3258 watchlist-save — user adds to watchlist, Firestore write fails, user sees toast instead of silent loss
+- Line 3268 price-alerts-save — initial price alerts list save
+- Line 4894 price-alert-add — user adds new alert from modal
+- Line 4914 price-alert-delete — user removes alert from modal
+
+What was almost shipped wrong:
+- The first attempt used .NET String.Replace() which is global substring replacement. The 16-space anchor for line 4894 also matched as a substring inside the 18-space line 4914. If saved, it would have replaced BOTH with the price-alert-add code, making the delete operation log/toast wrong. Caught by simulating the edit in memory before saving. Fixed by switching to line-index-based editing.
+- Lesson: never use global substring replace for code edits where similar patterns repeat. Always edit by line index after verifying the line content matches an exact anchor.
+
+Helpers created:
+- safeAsync(fn, context) — log only, returns { ok, data?, error? }
+- safeAsyncWithToast(fn, context, notify, userMessage?) — log + toast, same return shape
+- safeSync(fn, context) — synchronous version for localStorage/sessionStorage
+
+Build verified: vite build ✓ 841 modules, 6.56s, no errors. 5 edits applied: 1 import + 4 catches fixed.
+
+Deferred to backlog: Phase A.5 (8 email catches), Phase B (5 lower-priority dashboard catches), Phase C (6 silent-by-design comments), Phase D (~42 admin catches), Phase E (React error boundaries). Reasoning: Phase A is the only part of Session 2 that affects user-visible data integrity. Everything else is real cleanup but not launch-blocking. Better to move forward to schema/foundation work (Sessions 3-9) than to perfect error handling everywhere before doing the database work that matters more for the first agency.
