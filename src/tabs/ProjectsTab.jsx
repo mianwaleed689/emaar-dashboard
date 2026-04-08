@@ -9,19 +9,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { T } from "../data";
 import { SvgIcons } from "../components/Icons";
 
-/* Score helpers — inlined */
-const calcScore = (p) => {
-  if (p && p.investmentScore) return p.investmentScore;
-  if (!p) return 50;
-  let s = 50;
-  if (p.grossYield >= 8) s += 15; else if (p.grossYield >= 6) s += 10; else if (p.grossYield >= 4) s += 5;
-  if (p.distMetro <= 0.8) s += 10; else if (p.distMetro <= 2) s += 6; else if (p.distMetro <= 5) s += 3;
-  if ((p.developerScore||70) >= 90) s += 8; else if ((p.developerScore||70) >= 80) s += 5;
-  if ((p.constructionPct||0) >= 50) s += 5;
-  return Math.min(99, Math.max(40, s));
-};
-const scoreColor = (s) => s >= 80 ? T.green : s >= 65 ? T.gold : T.red;
-const scoreLabel = (s) => s >= 80 ? "Strong Buy" : s >= 65 ? "Buy" : s >= 50 ? "Hold" : "Caution";
+import { calcScore, scoreColor, scoreLabel } from "../utils/scoring";
 
 const MODES = [
   { key:"Apartment" }, { key:"Villa" }, { key:"Townhouse" },

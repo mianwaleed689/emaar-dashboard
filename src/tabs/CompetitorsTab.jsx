@@ -5,8 +5,8 @@ import React from "react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, RadarChart, Radar, PolarGrid, PolarAngleAxis, Cell } from "recharts";
 import { T } from "../data";
 import { SvgIcons } from "../components/Icons";
+import { scoreColor, scoreLabel } from "../utils/scoring";
 
-const scoreColor = (s) => s >= 80 ? T.green : s >= 65 ? T.gold : T.red;
 
 function CompetitorsTab({
   cptSearch, setCptSearch,
@@ -281,7 +281,6 @@ function CompetitorsTab({
             const devA = COMP_DATA.find(d => d.name === cptDevA) || COMP_DATA[0];
             const devB = COMP_DATA.find(d => d.name === cptDevB) || COMP_DATA[1];
 
-            const scoreColor = s => s>=90?T.green:s>=75?T.gold:s>=60?"#F97316":T.red;
 
             const selSt = {
               background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:8,

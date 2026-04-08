@@ -26,6 +26,7 @@ import React, { useState, useMemo, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from "recharts";
 import { T } from "../data";
+import { scoreColor, scoreLabel } from "../utils/scoring";
 
 /* ═══════════════════════════════════════════════════════════════════
    SEED DATA — Curated launches Q1 2026 → Q4 2027
@@ -940,13 +941,6 @@ function LaunchCalendarTab({
 
   const allDevs = useMemo(() => ["All", ...Array.from(new Set(launches.map(l => l.developer)))], [launches]);
 
-  /* Score color helper */
-  const scoreColor = (s) => {
-    if (s >= 85) return "#10B981";
-    if (s >= 75) return T.gold;
-    if (s >= 65) return "#F59E0B";
-    return "#EF4444";
-  };
 
   return (
     <div style={{ animation: "fadeUp 0.4s ease-out forwards" }}>

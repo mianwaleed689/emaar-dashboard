@@ -2052,19 +2052,6 @@ export default function EmaarDashboardV2() {
   const [phCommunity2, setPhCommunity2] = useState("All");
 
 
-  /* ─── INVESTMENT SCORE CALCULATOR (top level — used by Projects tab and overlay) ─── */
-  const calcScore = (p) => {
-    if (p && p.investmentScore) return p.investmentScore;
-    if (!p) return 50;
-    let s = 50;
-    if (p.grossYield >= 8) s += 15; else if (p.grossYield >= 6) s += 10; else if (p.grossYield >= 4) s += 5;
-    if (p.distMetro <= 0.8) s += 10; else if (p.distMetro <= 2) s += 6; else if (p.distMetro <= 5) s += 3;
-    if ((p.developerScore||70) >= 90) s += 8; else if ((p.developerScore||70) >= 80) s += 5;
-    if ((p.constructionPct||0) >= 50) s += 5;
-    return Math.min(99, Math.max(40, s));
-  };
-  const scoreColor = (s) => s >= 80 ? T.green : s >= 65 ? T.gold : T.red;
-  const scoreLabel = (s) => s >= 80 ? "Strong Buy" : s >= 65 ? "Buy" : s >= 50 ? "Hold" : "Caution";
   /* ─── HANDOVER STATUS + RISK CONFIG — top level (used by tab + overlay) ─── */
   const statusCfg = {
     "On Track": { color: T.green,   bg: "rgba(16,185,129,0.12)",  label: "On Track"  },
@@ -2717,7 +2704,6 @@ export default function EmaarDashboardV2() {
     { id:"p013", tier:2, goldenVisa:true, appreciationToHandover:0, branded:false, velocityScore:0, commission:2.0, type:"Land", developer:"Dubai South", project:"Residential Plot — Phase 3", community:"Dubai South", status:"Ready", handover:"Available Now", beds:[], sizeMin:15000, sizeMax:120000, priceMin:2800000, priceMax:18000000, ppsf:200, paymentPlan:"Cash", postHandover:false, grossYield:0, netYield:0, serviceCharge:0, investmentScore:72, plotType:"Residential", zoning:"R1", permittedFAR:2.5, maxFloors:8, utilitiesConnected:true, roadFrontage:45, titleDeedStatus:"Freehold", gdvEstimate:45000000, distMetro:4, distDIFC:38, distAirport:12, distBeach:35, distMall:6, distSchool:2, distHospital:5, amenities:["Road Access","DEWA Connected","Sewage Connected","Master Plan Community"], reraNo:"0000456789", escrowBank:"N/A", constructionPct:0, developerScore:82, notes:"Dubai South Expo 2020 legacy. Near Al Maktoum Airport expansion. FAR 2.5 allows G+8.", isSeedData:true, source:"Dubai South Official / DLD 2025" },
   ];
 
-  /* calcScore, scoreColor, scoreLabel — defined at top level */
 
   const MODES = [
     { key:"Apartment" }, { key:"Villa" }, { key:"Townhouse" },

@@ -30,3 +30,23 @@ Required environment variables (put these in your local .env file, which is giti
 - VITE_EMAILJS_SERVICE_ID
 - VITE_EMAILJS_TEMPLATE_ID
 - VITE_EMAILJS_PUBLIC_KEY
+
+## 2026-04-08 — Session 1: Unified scoring across all tabs
+Decision: Created src/utils/scoring.js as the single source of truth for investment scoring. All tabs that display scores now import from this file.
+
+What was found:
+- The Blueprint claimed calcScore was used 8 times in the main dashboard file — WRONG. It was dead code, never called.
+- The real bug was that ProjectsTab, LaunchCalendarTab, and CompetitorsTab each had their own local scoring functions with DIFFERENT thresholds. Same project, different color on different tabs.
+- CompetitorsTab even had scoreColor defined TWICE in the same file with different 4-color vs 3-color schemes.
+
+Fix applied:
+- Created src/utils/scoring.js with getScore(p), scoreColor(s), scoreLabel(s), calcScore(p) as the canonical exports. Internal 0-10 math with 5 factors (Yield, Value, Handover, Payment, Golden Visa), wrapped to 0-100 for display.
+- Unified thresholds: 80+ Strong Buy green, 65+ Buy gold, 50+ Hold amber, below Caution red.
+- ProjectsTab: deleted local calcScore/scoreColor/scoreLabel, imported from scoring.js. Visual change: scores now reflect 5-factor math instead of 4-factor.
+- LaunchCalendarTab: deleted local scoreColor (85/75/65 thresholds), imported canonical. Visual change: some badges will shift color to match other tabs.
+- CompetitorsTab: deleted both local scoreColor definitions (80/65 and 90/75/60), imported canonical. Visual change: chart colors unified with rest of app.
+- EmaarDashboardV2.jsx: deleted dead calcScore/scoreColor/scoreLabel block (lines 2055-2067) and stale comment at line 2720. 14 lines of dead code removed.
+
+Build verified: vite build ✓ 840 modules transformed, 5.18s, no errors.
+
+Pre-existing warnings noted but deferred: Firebase dynamic/static import warning, 3.6MB bundle size (will be addressed in Sessions 15 and 17).
