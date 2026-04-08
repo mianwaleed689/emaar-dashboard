@@ -130,7 +130,30 @@ service cloud.firestore {
     // ═══════════════════════════════════════════════════════════════════════
     // MARKET INTELLIGENCE (investor tabs — gated by plan)
     // ═══════════════════════════════════════════════════════════════════════
-    match /projects/{doc}        { allow read: if isLoggedIn() && notSuspended(); allow write: if isAdmin(); }
+    // ═══════════════════════════════════════════════════════════════════════════
+    // PROJECTS — Schema v1, Session 4. Replaces previous single-line rule.
+    // - Read: any logged-in non-suspended user
+    // - Create/Update: admin only
+    // - Delete: NO client deletes. Use cloud function with audit reason.
+    // - disclosedAt is immutable once set (legal protection per Decree-Law 25/2025)
+    // ═══════════════════════════════════════════════════════════════════════════
+    match /projects/{projectId} {
+      allow read:   if isLoggedIn() && notSuspended();
+      allow create: if isAdmin();
+      allow update: if isAdmin() &&
+                       (
+                         !('disclosedAt' in resource.data) ||
+                         request.resource.data.disclosedAt == resource.data.disclosedAt
+                       );
+      allow delete: if false;
+
+      // Per-project audit log (Decree-Law 25/2025 disclosure compliance)
+      match /projectAuditLog/{auditId} {
+        allow read:   if isAdmin();
+        allow create: if isAdmin() || isLoggedIn();
+        allow update, delete: if false;
+      }
+    }
     match /projectData/{doc}     { allow read: if isLoggedIn() && notSuspended(); allow write: if isAdmin(); }
     match /projectVersions/{doc} { allow read, write: if isAdmin(); }
     match /communityData/{doc}   { allow read: if isLoggedIn() && notSuspended(); allow write: if isAdmin(); }
@@ -317,5 +340,29 @@ service cloud.firestore {
     match /supportWorkflowTriggers/{doc}  { allow read, write: if isAdmin(); }
     match /ticketPresence/{doc}           { allow read, write: if isAdmin(); }
 
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // FX RATES — daily currency conversion snapshots (Session 4 schema)
+    // ═══════════════════════════════════════════════════════════════════════════
+    match /fxRates/{date} {
+      allow read:  if true;
+      allow write: if isAdmin();
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // NEWS — 24/7 newspaper feed (Session 4 schema)
+    // ═══════════════════════════════════════════════════════════════════════════
+    match /news/{newsId} {
+      allow read:  if isLoggedIn() && notSuspended();
+      allow write: if isAdmin();
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // TRANSACTIONS — DLD transaction records (Session 4 schema)
+    // ═══════════════════════════════════════════════════════════════════════════
+    match /transactions/{txnId} {
+      allow read:  if isLoggedIn() && notSuspended();
+      allow write: if isAdmin();
+    }
   }
 }
