@@ -11,6 +11,24 @@ import { T } from "../data";
 import { SvgIcons } from "../components/Icons";
 import { Section, Chart, CustomTooltip, DataBadge, TabSources } from "../components/SharedUI";
 import SEED_DATA from "../utils/seedData";
+import { scoreColor, scoreLabel } from "../utils/scoring";
+
+/* Canonical ScoreBadge — uses shared scoring thresholds from src/utils/scoring.js */
+const ScoreBadge = ({ score, size = "sm" }) => {
+  const s = score || 0;
+  const color = scoreColor(s);
+  const label = scoreLabel(s);
+  const dim = size === "lg" ? 44 : 32;
+  const fontSize = size === "lg" ? 13 : 11;
+  return (
+    <div style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+      <div style={{ width: dim, height: dim, borderRadius: "50%", background: `${color}22`, border: `2px solid ${color}`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <span style={{ fontSize, fontWeight: 800, color, fontFamily: "'Fraunces',serif" }}>{score || "—"}</span>
+      </div>
+      {size === "lg" && <div style={{ fontSize: 11, fontWeight: 700, color }}>{label}</div>}
+    </div>
+  );
+};
 
 function NeighbourhoodsTab({ nbhSearch, setNbhSearch, nbhTypeFilter, setNbhTypeFilter, nbhYieldFilter, setNbhYieldFilter, nbhRiskFilter, setNbhRiskFilter, nbhSort, setNbhSort, nbhView, setNbhView, nbhCompare, setNbhCompare, liveNeighbourhoods, liveCommunityROI, liveMarketData, handleTabChange, selectedNbhd, setSelectedNbhd }) {
 
@@ -22,20 +40,6 @@ function NeighbourhoodsTab({ nbhSearch, setNbhSearch, nbhTypeFilter, setNbhTypeF
             const rawNbh = rawNbhFirestore.length > 0 ? rawNbhFirestore : SEED_DATA.communities;
             const nbhIsSeed = rawNbhFirestore.length === 0;
 
-            /* ── Score badge component ── */
-            const ScoreBadge = ({ score, size = "sm" }) => {
-              const color = score >= 75 ? T.green : score >= 50 ? T.gold : score >= 30 ? T.orange : T.red;
-              const bg = score >= 75 ? "rgba(16,185,129,0.12)" : score >= 50 ? "rgba(212,168,67,0.12)" : score >= 30 ? "rgba(245,158,11,0.12)" : "rgba(239,68,68,0.12)";
-              const label = score >= 75 ? "Strong Buy" : score >= 50 ? "Hold" : score >= 30 ? "Caution" : "Avoid";
-              return (
-                <div style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
-                  <div style={{ width: size === "lg" ? 44 : 32, height: size === "lg" ? 44 : 32, borderRadius: "50%", background: bg, border: `2px solid ${color}`, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                    <span style={{ fontSize: size === "lg" ? 13 : 11, fontWeight: 800, color, fontFamily: "'Fraunces',serif" }}>{score || "—"}</span>
-                  </div>
-                  {size === "lg" && <div style={{ fontSize: 11, fontWeight: 700, color }}>{label}</div>}
-                </div>
-              );
-            };
 
             /* ── Metro badge ── */
             const MetroBadge = ({ distance }) => {
