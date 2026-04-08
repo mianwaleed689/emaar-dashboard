@@ -1,80 +1,32 @@
 {
-    "rewrites":  [
-                     {
-                         "destination":  "/index.html",
-                         "source":  "/(.*)"
-                     }
-                 ],
-    "buildCommand":  "vite build",
-    "crons":  [
-                  {
-                      "path":  "/api/cron-currency",
-                      "schedule":  "0 4 * * *"
-                  },
-                  {
-                      "path":  "/api/cron-news",
-                      "schedule":  "30 2 * * *"
-                  },
-                  {
-                      "path":  "/api/cron-eibor",
-                      "schedule":  "0 7 * * 1-5"
-                  },
-                  {
-                      "path":  "/api/cron-dld-daily",
-                      "schedule":  "0 3 * * *"
-                  },
-                  {
-                      "path":  "/api/cron-financials",
-                      "schedule":  "0 5 * * *"
-                  },
-                  {
-                      "path":  "/api/cron-yields",
-                      "schedule":  "0 5 * * *"
-                  },
-                  {
-                      "path":  "/api/cron-scan-launches",
-                      "schedule":  "0 8 * * *"
-                  },
-                  {
-                      "path":  "/api/cron-sync-market",
-                      "schedule":  "0 6 * * *"
-                  },
-                  {
-                      "path":  "/api/weekly-digest",
-                      "schedule":  "0 4 * * 1"
-                  }
-              ],
-    "headers":  [
-                    {
-                        "headers":  [
-                                        {
-                                            "key":  "X-Frame-Options",
-                                            "value":  "SAMEORIGIN"
-                                        },
-                                        {
-                                            "key":  "X-Content-Type-Options",
-                                            "value":  "nosniff"
-                                        },
-                                        {
-                                            "key":  "X-XSS-Protection",
-                                            "value":  "1; mode=block"
-                                        },
-                                        {
-                                            "key":  "Referrer-Policy",
-                                            "value":  "strict-origin-when-cross-origin"
-                                        },
-                                        {
-                                            "key":  "Permissions-Policy",
-                                            "value":  "camera=(), microphone=(), geolocation=(), payment=()"
-                                        },
-                                        {
-                                            "key":  "Strict-Transport-Security",
-                                            "value":  "max-age=31536000; includeSubDomains; preload"
-                                        }
-                                    ],
-                        "source":  "/(.*)"
-                    }
-                ],
-    "outputDirectory":  "dist",
-    "devCommand":  "vite"
+  "rewrites": [
+    { "destination": "/index.html", "source": "/(.*)" }
+  ],
+  "buildCommand": "vite build",
+  "crons": [
+    { "path": "/api/cron?job=currency",       "schedule": "0 4 * * *" },
+    { "path": "/api/cron?job=news",           "schedule": "30 2 * * *" },
+    { "path": "/api/cron?job=eibor",          "schedule": "0 7 * * 1-5" },
+    { "path": "/api/cron?job=dld-daily",      "schedule": "0 3 * * *" },
+    { "path": "/api/cron?job=financials",     "schedule": "0 5 * * *" },
+    { "path": "/api/cron?job=yields",         "schedule": "0 5 * * *" },
+    { "path": "/api/cron?job=scan-launches",  "schedule": "0 8 * * *" },
+    { "path": "/api/cron?job=sync-market",    "schedule": "0 6 * * *" },
+    { "path": "/api/cron?job=weekly-digest",  "schedule": "0 4 * * 1" }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "X-Frame-Options",          "value": "SAMEORIGIN" },
+        { "key": "X-Content-Type-Options",   "value": "nosniff" },
+        { "key": "X-XSS-Protection",         "value": "1; mode=block" },
+        { "key": "Referrer-Policy",          "value": "strict-origin-when-cross-origin" },
+        { "key": "Permissions-Policy",       "value": "camera=(), microphone=(), geolocation=(), payment=()" },
+        { "key": "Strict-Transport-Security","value": "max-age=31536000; includeSubDomains; preload" }
+      ]
+    }
+  ],
+  "outputDirectory": "dist",
+  "devCommand": "vite"
 }

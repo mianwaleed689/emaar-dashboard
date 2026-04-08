@@ -9,18 +9,18 @@
  * Required env vars in Vercel Dashboard → Settings → Environment Variables:
  *   FIREBASE_PROJECT_ID      → your Firebase project ID (e.g. "emaar-dashboard-xyz")
  *   FIREBASE_API_KEY         → your Firebase web API key
- *   EMAILJS_SERVICE_ID       → service_da7nshv
- *   EMAILJS_TEMPLATE_ID      → template_gl1xqhy
- *   EMAILJS_PUBLIC_KEY       → USkwUhp0csGCVDkdQ
- *   CRON_SECRET              → dxb-cron-2026
+ *   EMAILJS_SERVICE_ID       → (set in Vercel)
+ *   EMAILJS_TEMPLATE_ID      → (set in Vercel)
+ *   EMAILJS_PUBLIC_KEY       → (set in Vercel)
+ *   CRON_SECRET              → (set in Vercel)
  */
 
-const CRON_SECRET = process.env.CRON_SECRET || process.env.CRON_SECRET;
+const CRON_SECRET = process.env.CRON_SECRET;
 const FIREBASE_PROJECT_ID = process.env.FIREBASE_PROJECT_ID;
 const FIREBASE_API_KEY = process.env.FIREBASE_API_KEY;
-const EMAILJS_SERVICE_ID = process.env.EMAILJS_SERVICE_ID || "service_da7nshv";
-const EMAILJS_TEMPLATE_ID = process.env.EMAILJS_TEMPLATE_ID || "template_gl1xqhy";
-const EMAILJS_PUBLIC_KEY = process.env.EMAILJS_PUBLIC_KEY || "USkwUhp0csGCVDkdQ";
+const EMAILJS_SERVICE_ID = process.env.EMAILJS_SERVICE_ID;
+const EMAILJS_TEMPLATE_ID = process.env.EMAILJS_TEMPLATE_ID;
+const EMAILJS_PUBLIC_KEY = process.env.EMAILJS_PUBLIC_KEY;
 
 // ─── Firestore REST helpers ────────────────────────────────────────────────
 
