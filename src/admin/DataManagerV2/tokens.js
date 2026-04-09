@@ -12,11 +12,10 @@ export const C = {
   purple: "#8B5CF6", purpleD: "rgba(139,92,246,0.1)",
   cyan: "#06B6D4", cyanD: "rgba(6,182,212,0.1)",
   w: "#F1F5F9", m: "#475569", t2: "#94A3B8",
-  ff: "'"'"'Outfit'"'"',sans-serif",
-  ffH: "'"'"'Fraunces'"'"',serif",
+  ff: `'Outfit',sans-serif`,
+  ffH: `'Fraunces',serif`,
 };
 
-// Reusable button component styles
 export const btnStyles = (variant, disabled = false) => {
   const base = {
     padding: "9px 16px",
@@ -39,7 +38,6 @@ export const btnStyles = (variant, disabled = false) => {
   return variants[variant] || variants.ghost;
 };
 
-// Input styles for forms
 export const inputStyle = {
   width: "100%",
   padding: "10px 12px",
@@ -52,7 +50,6 @@ export const inputStyle = {
   outline: "none",
 };
 
-// Card container
 export const cardStyle = {
   background: C.s1,
   border: `1px solid ${C.border}`,
