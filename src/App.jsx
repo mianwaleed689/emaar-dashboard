@@ -8,6 +8,7 @@ import AdminPanel from "./AdminPanel";
 import ProjectManager from "./ProjectManager";
 import LandingPage from "./LandingPage";
 import AgencySignup from "./AgencySignup";
+import DeveloperPortal from "./DeveloperPortal";
 import Terms from "./Terms";
 import Privacy from "./Privacy";
 import ErrorBoundary from "./ErrorBoundary";
@@ -77,6 +78,7 @@ function App() {
             <Route path="/manage" element={<AuthGuard><ProjectManager /></AuthGuard>} />
             <Route path="/project/:id" element={<ProjectRedirect />} />
             <Route path="/agency/signup" element={<AgencySignup />} />
+          <Route path="/developer" element={<UserGuard><DeveloperPortal /></UserGuard>} />
             <Route path="/terms" element={<Terms />} />
             <Route path="/privacy" element={<Privacy />} />
             <Route path="*" element={<NotFound />} />
