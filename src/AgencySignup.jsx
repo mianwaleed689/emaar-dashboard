@@ -68,8 +68,6 @@ export default function AgencySignup() {
     if (managerForm.password.length < 8) { setError("Password must be at least 8 characters"); return false; }
     if (!/[A-Z]/.test(managerForm.password)) { setError("Password must contain at least one uppercase letter"); return false; }
     if (!/[0-9]/.test(managerForm.password)) { setError("Password must contain at least one number"); return false; }
-    if (!/[A-Z]/.test(managerForm.password)) { setError("Password must contain at least one uppercase letter"); return false; }
-    if (!/[0-9]/.test(managerForm.password)) { setError("Password must contain at least one number"); return false; }
     if (managerForm.password !== managerForm.confirmPassword) { setError("Passwords do not match"); return false; }
     setError(""); return true;
   };
