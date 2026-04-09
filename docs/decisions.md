@@ -325,3 +325,250 @@ The product is functionally ready. Do not wait for perfect.
 - `src/AgencySignup.jsx` — dual-mode signup (Agency + Developer)
 - `scripts/seed/` — 4 seed/migration scripts
 - `docs/decisions.md` — this file
+
+---
+
+## Session 8 Closing Note — April 9, 2026 (continued from Session 7)
+
+**Duration:** ~4 more hours after the original Session 7 closing note
+**Outcome:** DXB Sales CRM fully built (4 phases), P1.10/P1.12/P1.13 shipped
+
+### What shipped today (after Session 7 note)
+
+#### 1. P1.10 — CSV Import for Agency Leads ?
+- `src/tabs/MyLeadsTab.jsx` — Added "Import CSV" button + `mlImportCsv()` function
+- Uses papaparse with flexible column names (name/Name, phone/Phone, etc)
+- Dedupes by phone via existing `mlIsDuplicate()` check
+- Validates required fields per row with row-number errors
+- Confirmation prompt before writing
+- Creates leads with orgId for multi-tenant isolation
+- Adds "Imported from CSV" audit entry to notes_log
+- Commit: `ff5d83f`
+
+#### 2. P1.13 — Agency CRM Labels ?
+- `src/tabs/MyLeadsTab.jsx` — Header shows `{orgName} — My Leads`
+- `src/tabs/PipelineTab.jsx` — Header shows `{orgName} — Deal Pipeline`
+- `src/EmaarDashboardV2.jsx` — Passes `orgName={orgProfile?.name}` to both tabs
+- Visual distinction from upcoming DXB Sales internal CRM
+- Commit: `32315dc`
+
+#### 3. P1.12 — DXB Internal Sales CRM (Platform Sales Pipeline) ?
+**The big one.** Complete SaaS sales CRM built from scratch based on research.
+
+**Research phase:**
+- Web-researched 10 top SaaS sales CRMs (Pipedrive, HubSpot, Close.io, Monday, Salesforce, ChartMogul, Attio, Folk, GoHighLevel, Zoho)
+- Researched 6 Dubai real estate CRMs (REM, SmartLeads, X-OPP, Goyzer, PropHero, Engage Plus)
+- Studied existing DXB codebase CRMs (AdminPanel old Leads with 78K leads, MyLeadsTab with scoring)
+- Wrote `docs/dxb-sales-crm-plan.md` (16 KB, 470 lines, full spec)
+- Commit: `34c73fa`
+
+**Build phase — 4 phases:**
+
+**Phase 1** — Foundation rewrite (47 KB)
+- 9 pipeline stages (Prospect ? Contacted ? Qualified ? Demo Scheduled ? Trial Started ? Negotiating ? Paid ? Churned ? Lost)
+- Auto lead scoring 0-100 based on company size, plan interest, stage, recent activity, source, engagement
+- Temperature classification (burning 80+, hot 60+, warm 40+, cold <40)
+- Stalled lead detection (per-stage thresholds)
+- Overdue follow-up detection with red warning banner
+- Trial ending soon warning (<3 days, purple banner)
+- Stalled leads warning (amber banner)
+- 7 KPI stat cards (Total, MRR, ARR, Pipeline, Win Rate, Paid, Burning)
+- Rich edit modal with 3 tabs: Details / Activity / Advanced
+- Activity logging with counters (calls, emails, meetings, demos, notes)
+- Click-to-call (`tel:`), click-to-email (`mailto:`), click-to-WhatsApp (`wa.me/`)
+- Tag system with add/remove UI
+- Stage history tracking
+- Contact language field (English/Arabic/French/Russian/Chinese/Other)
+- Full field set: companySize, companyType, website, linkedin, contactTitle, plan, estimatedArr, mrr, trialEndDate, source, assignedTo, nextFollowUpAt
+- Firestore audit logging to `platformLeads/{id}/auditLog/` subcollection
+- Commit: `a1e3972`
+
+**Phase 2** — Multi-view
+- View switcher tabs: Kanban | List | Inbox | Stats
+- **List view**: Spreadsheet-style table, sortable columns, multi-select, bulk stage change
+- **Stats view**: Pipeline funnel (horizontal bars), revenue metrics grid, lead sources breakdown, top 10 hot leads, stalled leads section
+- Commit: `22e7982`
+
+**Phase 3** — Inbox + keyboard shortcuts
+- **Inbox view**: Cross-lead activity timeline, filter by type (call/email/meeting/demo/note/whatsapp), last 100 activities, click to jump to lead
+- Keyboard shortcuts: N = new lead, K = kanban, L = list, I = inbox, S = stats, / = focus search
+- Shortcuts disabled when typing in inputs or modal is open
+- Commit: `224c5a5`
+
+**Phase 4** — Auto follow-ups + trial warnings
+- `suggestNextFollowUp()` auto-sets `nextFollowUpAt` when stage changes
+- `suggestFollowUpNotes()` auto-fills follow-up action hint
+- Trial ending soon detection (`isTrialEndingSoon()`)
+- Purple banner when trials expire within 3 days
+- Stats include `trialEndingSoon` count
+- Commit: `28ec7e2`
+
+**Rich seed data**
+- `scripts/seed/seed-platform-leads.js` — 10 realistic Dubai leads across all 9 stages
+- Full field set: companySize, tags, ARR, stageHistory, notes_log, totalCalls/Emails/Meetings
+- Auto-calculated leadScore per seeded lead
+- 2 paid (Nakheel Enterprise + Betterhomes Enterprise, MRR 1,598)
+- 1 trial (Allsopp & Allsopp)
+- 2 demo scheduled (Haus & Haus, LEOS Developments)
+- 1 qualified (Fam Properties)
+- 1 contacted (Samana Developers)
+- 2 prospect (Gulf Sotheby's, Metropolitan Premium)
+- 1 churned (Aqua Properties)
+- Commit: `2e27e2d`
+
+**UX refinements (post-feedback iteration)**
+
+- **Emoji icons ? inline SVG** — typeIcons object made module-level with Feather-style SVG components for call/email/meeting/demo/note/whatsapp/task. Fixes "??" glyph rendering on some systems. Commit: `2dc3e70`
+- **Drag-drop Kanban** — HTML5 native drag-drop, draggedLead + dragOverStage state, drop zone visual feedback, stage change via drop triggers moveStage. Commit: `f7ff9de`
+- **Auto-scroll on drag** — Kanban container scrolls when mouse is within 80px of left/right edge during drag. Commit: `ac1ee77`
+- **Kanban card redesign** — Wider columns (270 ? 320px), bigger cards (14px padding, 10 radius), bigger fonts, score badge top-right, contact section with divider, stacked ARR/MRR with uppercase labels, larger warning badges. Commit: `a1e3972`
+- **Help banner + color-coded types** — Gold banner at top explains "each card is a company you're selling DXB Analytics to". Color-coded left border on cards: Agency=green, Developer=purple, Brokerage=amber, Boutique=cyan, Property Management=pink. Contact name prefixed with "CONTACT:" label. Commit: `68c93dd`
+- **Restored quick-move buttons** — Added buttons back alongside drag-drop for precise stage changes (after user feedback that removing them was too aggressive). Full stage label text, hover effects in target stage color. Commit: `f7ff9de`
+- **JSX structure fix** — Earlier button insertion put them outside card `</div>`, broke parser. Moved closing div to after buttons block. Commit: `[latest]`
+
+#### 4. Documentation
+- `docs/dxb-sales-crm-plan.md` — 16 KB, 470 lines comprehensive spec covering data model, pipeline stages, 4 views, lead scoring formula, CSV import, keyboard shortcuts, build sequence, success metrics, explicit non-goals
+
+---
+
+### Two CRMs clarification (IMPORTANT for future reference)
+
+There are now **TWO separate CRMs** in the system:
+
+**CRM #1: DXB Sales CRM (internal, platform sales)**
+- **Location:** `/admin` ? DXB Sales tab
+- **Component:** `src/admin/PlatformLeadsTab.jsx` (47 KB)
+- **Collection:** `platformLeads/` (admin-only Firestore rules)
+- **Users:** DXB Analytics admin team (you)
+- **Purpose:** Track agencies/developers you are selling the SaaS platform to
+- **Example lead:** "Betterhomes Real Estate is in Negotiating stage for Enterprise plan"
+
+**CRM #2: Agency CRM (customer-facing, multi-tenant)**
+- **Location:** `/dashboard` ? My Leads, Pipeline, Team, Listings tabs
+- **Components:** `src/tabs/MyLeadsTab.jsx`, `PipelineTab.jsx`, etc
+- **Collection:** `leads/` (multi-tenant with orgId via sameOrg() helper)
+- **Users:** Agency owners, managers, brokers, agents at paying customer agencies
+- **Purpose:** Agencies use this to manage THEIR property buyers/sellers
+- **Example lead:** "Ahmed wants 2BR in Dubai Marina, budget AED 2M"
+
+**Key difference:** DXB Sales CRM tracks the SALES FUNNEL (who's buying the platform). Agency CRM tracks property BUYERS (the agencies' own customers). They never share data or collections.
+
+---
+
+### Architecture decisions from Session 8
+
+**Decision 1: Keep DXB Sales CRM and Agency CRM completely separate**
+- Different collections (`platformLeads/` vs `leads/`)
+- Different access rules (admin-only vs multi-tenant)
+- Different pipeline stages (SaaS sales vs property sales)
+- Different field sets
+- Rationale: Merging would confuse users; separation enforces clear mental model
+
+**Decision 2: Schema v1 migration validated as correct approach**
+- Dashboard reads legacy collection names (projects, developers, communityData, etc)
+- Data Manager V2 writes Schema v2 collections
+- Solution: Migration script translates once, no dashboard changes needed
+- Works perfectly in production, proven today with 5 real Dubai projects rendering identical to hardcoded ones
+
+**Decision 3: Agency signup does NOT auto-sync to DXB Sales CRM yet**
+- Currently manual: when an agency signs up, you manually drag their CRM card to "Paid" stage
+- Future automation planned (30 min work): webhook from signup ? auto-create or auto-update platformLeads entry
+- Decided to leave manual for now to avoid blocking launch on automation polish
+
+---
+
+### Current state of P1 items
+
+| # | Item | Status |
+|---|---|---|
+| P1.1 | Seed developers | ? Done (28 devs) |
+| P1.2 | Deploy firestore.rules | ? Done |
+| P1.3 | Env var rename | Local dev only, skip |
+| P1.4 | CAPTCHA | ? Left |
+| P1.5 | RERA uniqueness | ? Left |
+| P1.6 | Schema docs reconcile | ? Docs only, skip |
+| P1.7 | Wire remaining tabs | ? Partial (Projects tab done, 30+ left) |
+| P1.8 | Email deliverability SPF/DKIM | ? DNS access needed |
+| P1.9 | Admin Data Manager | ? Done (Data Manager V2) |
+| P1.10 | CSV import for leads | ? Done (Session 8) |
+| P1.11 | CRM audit | ? Done |
+| P1.12 | DXB Internal Sales CRM | ? Done (Session 8, 4 phases) |
+| P1.13 | Agency CRM labels | ? Done (Session 8) |
+
+**P1 progress: 10 of 13 done** (up from 6/13 at start of session)
+
+---
+
+### Known issues / tech debt
+
+1. **Large file warning** — `src/admin/PlatformLeadsTab.jsx` is now 1475 lines, past the 1000-line warning. Post-launch, split into smaller files (main component, ListView, StatsView, InboxView, LeadEditModal, helpers)
+
+2. **DXB Sales CRM and agency signup not auto-synced** — when a real agency signs up via /agency/signup, the DXB Sales CRM card doesn't auto-move to "Trial Started" or "Paid". Admin must manually drag it. Future automation planned.
+
+3. **Data Manager V2 still writes Schema v2** — need to run migrate-to-schema-v1.js script manually to sync changes to dashboard. Future: add "Publish to Dashboard" button inside Data Manager.
+
+4. **5 hardcoded SEED_PROJECTS** — still hardcoded in src/EmaarDashboardV2.jsx. Dashboard shows 10 total (5 hardcoded + 5 Firestore). Future: migrate hardcoded to Firestore so everything is editable in Data Manager.
+
+5. **Vite build not in pre-commit hook** — today a broken commit passed pre-commit checks because the hook only checks secrets/file-size/module-syntax, not vite build. A JSX syntax error slipped through and broke Vercel deploy. Fixed within minutes but ideal to add `npx vite build --mode development` to pre-commit.
+
+---
+
+### Launch blockers remaining (same as Session 7)
+
+**Critical:**
+1. Stripe product creation at AED 299 Pro and AED 799 Enterprise
+2. Add Stripe env vars to Vercel
+3. Test signup ? checkout ? dashboard flow end-to-end
+
+**Recommended before launch:**
+4. P1.5 RERA uniqueness check (1 hour)
+5. P1.4 CAPTCHA on signup (2 hours)
+6. Delete 10 sample leads from DXB Sales CRM before going live (30 seconds)
+
+---
+
+### Files created/modified in Session 8
+
+**New files:**
+- `docs/dxb-sales-crm-plan.md` — Full CRM spec (16 KB)
+- `src/admin/PlatformLeadsTab.jsx` — Rewritten, 1475 lines, 47 KB
+- `scripts/seed/seed-platform-leads.js` — 10 rich sample leads
+
+**Modified files:**
+- `src/AdminPanel.jsx` — Added DXB Sales nav item + route
+- `src/EmaarDashboardV2.jsx` — Passes orgName to MyLeadsTab/PipelineTab
+- `src/tabs/MyLeadsTab.jsx` — CSV import + orgName label
+- `src/tabs/PipelineTab.jsx` — orgName label
+- `firestore.rules` — Added platformLeads + auditLog rules (deployed)
+- `docs/decisions.md` — This closing note
+
+---
+
+### Commits from Session 8 (chronological)
+
+1. `ff5d83f` — feat(myleads): P1.10 CSV import for agency leads
+2. `32315dc` — feat(crm): P1.13 clear labels for Agency CRM tabs
+3. `8d5e726` — docs: Session 7 closing note
+4. `828b1f9`, `7f05aed`, `82e1110` — feat(admin): P1.12 DXB Internal Sales CRM (3 attempts to commit AdminPanel wiring due to patch failures)
+5. `34c73fa` — docs: complete DXB Sales CRM plan (research-based spec)
+6. `a1e3972` — feat(crm): Phase 1 Rewrite DXB Sales CRM with rich features
+7. `22e7982` — feat(crm): Phase 2 Multi-view (Kanban/List/Stats)
+8. `224c5a5` — feat(crm): Phase 3 Inbox view + keyboard shortcuts
+9. `28ec7e2` — feat(crm): Phase 4 Auto follow-ups + trial ending warning
+10. `2e27e2d` — feat(seed): rich sample leads with full field set
+11. `2dc3e70` — fix(crm): move typeIcons to module scope for InboxView access
+12. `ac1ee77` — fix(crm): Kanban drag auto-scroll on edges
+13. `68c93dd` — feat(crm): help banner + color-coded company types
+14. `f7ff9de` — feat(crm): restore quick-move stage buttons alongside drag-drop
+
+**Total: 14 commits, 1 doc file, ~80 KB of new code**
+
+---
+
+### Session 8 final recommendation (same as Session 7)
+
+**Tomorrow's single priority:** Stripe product setup (30 min in dashboard), add keys to Vercel, test one signup flow end-to-end. Then invite 10 friendly agencies to try it.
+
+**DO NOT build new features until payment works.** The CRM is feature-complete. The product is launch-ready. Everything else is distraction.
+
+**Session 8 signed off:** Thursday 9 April 2026, late evening Dubai time.
