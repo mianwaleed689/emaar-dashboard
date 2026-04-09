@@ -5,6 +5,7 @@ import {
 } from "firebase/firestore";
 import { db } from "../../firebase";
 import { C, cardStyle, btnStyles, inputStyle } from "./tokens";
+import DevelopmentEditModal from "./DevelopmentEditModal";
 
 // Dubai communities - seed list, will be replaced by communities collection fetch later
 const COMMUNITIES = [
@@ -295,7 +296,7 @@ export default function DevelopmentsSection({ currentUserId, currentUserEmail })
 
       {/* Edit/Add modal */}
       {editing !== null && (
-        <EditModal
+        <DevelopmentEditModal
           initial={editing}
           developers={developers}
           onClose={() => setEditing(null)}
@@ -326,139 +327,3 @@ export default function DevelopmentsSection({ currentUserId, currentUserEmail })
   );
 }
 
-// EditModal component - inline for now, can extract later
-function EditModal({ initial, developers, onClose, onSave, saving }) {
-  const [form, setForm] = useState({
-    name: "", community: "", developerId: "", developerName: "",
-    saleStatus: "off-plan", constructionStatus: "pre-launch",
-    visibility: "draft", tenure: "freehold", foreignOwnershipAllowed: true,
-    coordinates: { lat: "", lng: "" },
-    reraProjectNumber: "", escrowBank: "", escrowAccount: "",
-    launchDate: "", expectedHandover: "",
-    coverImageUrl: "",
-    ...initial,
-  });
-
-  function update(field, value) {
-    setForm(f => ({ ...f, [field]: value }));
-  }
-  function updateCoord(key, value) {
-    setForm(f => ({ ...f, coordinates: { ...f.coordinates, [key]: value } }));
-  }
-
-  return (
-    <div style={{
-      position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
-      background: "rgba(0,0,0,0.75)",
-      display: "flex", alignItems: "center", justifyContent: "center",
-      zIndex: 9999, padding: 20,
-    }} onClick={onClose}>
-      <div style={{
-        background: C.s1,
-        border: `1px solid ${C.borderG}`,
-        borderRadius: 12,
-        padding: 28,
-        maxWidth: 800,
-        width: "100%",
-        maxHeight: "90vh",
-        overflow: "auto",
-      }} onClick={e => e.stopPropagation()}>
-        <h3 style={{ margin: "0 0 20px 0", fontSize: 16, color: C.gold, fontFamily: "'Fraunces',serif" }}>
-          {initial.id ? "Edit Development" : "New Development"}
-        </h3>
-
-        <div style={{ display: "grid", gap: 14 }}>
-          {/* Name */}
-          <div>
-            <label style={{ display: "block", fontSize: 10, color: C.t2, marginBottom: 4, textTransform: "uppercase" }}>Name *</label>
-            <input style={inputStyle} value={form.name} onChange={e => update("name", e.target.value)} />
-          </div>
-
-          {/* Developer */}
-          <div>
-            <label style={{ display: "block", fontSize: 10, color: C.t2, marginBottom: 4, textTransform: "uppercase" }}>Developer</label>
-            <select style={inputStyle} value={form.developerId} onChange={e => update("developerId", e.target.value)}>
-              <option value="">-- Select developer --</option>
-              {developers.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
-            </select>
-          </div>
-
-          {/* Community */}
-          <div>
-            <label style={{ display: "block", fontSize: 10, color: C.t2, marginBottom: 4, textTransform: "uppercase" }}>Community</label>
-            <select style={inputStyle} value={form.community} onChange={e => update("community", e.target.value)}>
-              <option value="">-- Select community --</option>
-              {COMMUNITIES.map(c => <option key={c} value={c}>{c}</option>)}
-            </select>
-          </div>
-
-          {/* Status row */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
-            <div>
-              <label style={{ display: "block", fontSize: 10, color: C.t2, marginBottom: 4, textTransform: "uppercase" }}>Sale Status</label>
-              <select style={inputStyle} value={form.saleStatus} onChange={e => update("saleStatus", e.target.value)}>
-                {SALE_STATUS.map(s => <option key={s} value={s}>{s}</option>)}
-              </select>
-            </div>
-            <div>
-              <label style={{ display: "block", fontSize: 10, color: C.t2, marginBottom: 4, textTransform: "uppercase" }}>Construction</label>
-              <select style={inputStyle} value={form.constructionStatus} onChange={e => update("constructionStatus", e.target.value)}>
-                {CONSTRUCTION_STATUS.map(s => <option key={s} value={s}>{s}</option>)}
-              </select>
-            </div>
-            <div>
-              <label style={{ display: "block", fontSize: 10, color: C.t2, marginBottom: 4, textTransform: "uppercase" }}>Visibility</label>
-              <select style={inputStyle} value={form.visibility} onChange={e => update("visibility", e.target.value)}>
-                {VISIBILITY.map(v => <option key={v} value={v}>{v}</option>)}
-              </select>
-            </div>
-          </div>
-
-          {/* Coordinates */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-            <div>
-              <label style={{ display: "block", fontSize: 10, color: C.t2, marginBottom: 4, textTransform: "uppercase" }}>Latitude</label>
-              <input style={inputStyle} type="number" step="0.0001" value={form.coordinates?.lat || ""} onChange={e => updateCoord("lat", parseFloat(e.target.value) || "")} placeholder="25.0" />
-            </div>
-            <div>
-              <label style={{ display: "block", fontSize: 10, color: C.t2, marginBottom: 4, textTransform: "uppercase" }}>Longitude</label>
-              <input style={inputStyle} type="number" step="0.0001" value={form.coordinates?.lng || ""} onChange={e => updateCoord("lng", parseFloat(e.target.value) || "")} placeholder="55.2" />
-            </div>
-          </div>
-
-          {/* RERA */}
-          <div>
-            <label style={{ display: "block", fontSize: 10, color: C.t2, marginBottom: 4, textTransform: "uppercase" }}>RERA Project Number * (required to publish)</label>
-            <input style={inputStyle} value={form.reraProjectNumber} onChange={e => update("reraProjectNumber", e.target.value)} placeholder="e.g. 1234" />
-          </div>
-
-          {/* Dates */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-            <div>
-              <label style={{ display: "block", fontSize: 10, color: C.t2, marginBottom: 4, textTransform: "uppercase" }}>Launch Date</label>
-              <input style={inputStyle} type="date" value={form.launchDate || ""} onChange={e => update("launchDate", e.target.value)} />
-            </div>
-            <div>
-              <label style={{ display: "block", fontSize: 10, color: C.t2, marginBottom: 4, textTransform: "uppercase" }}>Expected Handover</label>
-              <input style={inputStyle} type="date" value={form.expectedHandover || ""} onChange={e => update("expectedHandover", e.target.value)} />
-            </div>
-          </div>
-
-          {/* Cover image */}
-          <div>
-            <label style={{ display: "block", fontSize: 10, color: C.t2, marginBottom: 4, textTransform: "uppercase" }}>Cover Image URL</label>
-            <input style={inputStyle} value={form.coverImageUrl} onChange={e => update("coverImageUrl", e.target.value)} placeholder="https://..." />
-          </div>
-        </div>
-
-        {/* Actions */}
-        <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 24, paddingTop: 20, borderTop: `1px solid ${C.border}` }}>
-          <button style={btnStyles("ghost", saving)} onClick={onClose} disabled={saving}>Cancel</button>
-          <button style={btnStyles("primary", saving)} onClick={() => onSave(form)} disabled={saving}>
-            {saving ? "Saving..." : initial.id ? "Save Changes" : "Create Development"}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
