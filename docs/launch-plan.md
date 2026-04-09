@@ -320,3 +320,161 @@ Pre-launch: P1.9 (Admin Data Manager) and P1.10 (CSV import) only
 Month 1 post-launch: P2.11 (Developer Portal)
 Month 2-3: P2.12 (WhatsApp) and P2.13 (Browser extension)
 Year 1: P2.14 (Open API) if demanded
+
+---
+
+## Two-CRM Architecture (added 2026-04-09)
+
+### The problem
+Currently AdminPanel.jsx contains CRM features and the dashboard (MyLeadsTab, PipelineTab) contains CRM features. This is confusing. They look similar but serve completely different users and workflows.
+
+### The solution: two separate CRMs, same app shell (long-term), separate files (short-term)
+
+**CRM #1 - DXB Internal Sales CRM**
+- Purpose: DXB Analytics team manages OUR sales pipeline (agencies and developers we are selling the platform to)
+- Location: src/admin/ (inside AdminPanel)
+- Access: role=admin only
+- Firestore collection: platformLeads (new, admin-only rules)
+- Pipeline stages: Prospect, Contacted, Demo Scheduled, Trial Started, Paid, Churned
+- Key fields: companyName, contactName, contactEmail, estimatedARR, stage, assignedTo, trialEndDate, mrr, notes
+- Single-tenant (just our team, no orgId isolation)
+- Integrations: Stripe (for MRR tracking)
+
+**CRM #2 - Agency CRM (customer-facing)**
+- Purpose: Agencies manage THEIR own real estate buyers and sellers
+- Location: src/tabs/ (MyLeadsTab, PipelineTab, DealsTab, ListingsTab)
+- Access: role=user + orgRole=manager or agent
+- Firestore collection: leads (already exists with orgId isolation)
+- Pipeline stages: Inquiry, Viewing Scheduled, Offer Made, Negotiation, Closed Won, Closed Lost
+- Key fields: buyerName, budget, propertyType, bedroomCount, preferredCommunities, assignedAgent, stage, notes, orgId
+- Multi-tenant strict orgId isolation via firestore rules sameOrg() helpers
+- Integrations: Bayut, Property Finder, WhatsApp Business for customer messaging
+
+### Rules
+- The two CRMs must NEVER share Firestore collections (different data shapes entirely)
+- Labels in UI must make it obvious which CRM you are in ("DXB Sales" vs "My Agency")
+- Agency users never see DXB Internal CRM
+- Admin users see their own DXB Internal CRM by default, can impersonate an agency for support
+
+### New P1 items (pre-launch: fix what is broken, minimal cleanup)
+
+### P1.11 - Audit existing CRM code for mixing (2 hours)
+- Read src/admin/ CRM-related files and map which ones are for DXB internal vs agency
+- Read src/tabs/MyLeadsTab.jsx, PipelineTab.jsx, any DealsTab, ListingsTab
+- Identify any shared Firestore collections that should be split
+- Document findings in docs/crm-audit.md
+
+### P1.12 - Separate DXB Internal CRM collection (6 hours)
+- Create new platformLeads Firestore collection
+- Add platformLeads rules to firestore.rules (admin-only read and write)
+- Move DXB internal sales pipeline logic to use platformLeads instead of leads
+- Ensure no admin pipeline code reads from or writes to the leads collection (which belongs to agencies)
+- Add clear visual header: "DXB Sales Pipeline" on the admin panel CRM sections
+
+### P1.13 - Add clear labels to Agency CRM (1 hour)
+- MyLeadsTab header: "My Agency - Leads" with current org name shown
+- PipelineTab header: "My Agency - Pipeline" with current org name
+- If admin is impersonating an agency (for support), show a yellow warning banner
+- Make it visually obvious this is the agency-facing CRM, not the platform CRM
+
+### New P2 item (post-launch: proper long-term rebuild)
+
+### P2.15 - Unified app shell with role-based tab rendering (30-40 hours)
+Long-term goal: merge AdminPanel.jsx and EmaarDashboardV2.jsx into ONE React app where:
+- User logs in once
+- System checks their role
+- Sidebar shows different tabs based on role:
+  - role=admin sees: Platform Dashboard, DXB Sales CRM, Agencies, Developers, Data Manager, Audit, Support, Settings
+  - role=user + orgRole=manager sees: Overview, My Leads, Pipeline, Deals, Listings, Team, Settings
+  - role=user + orgRole=agent sees: Overview, My Leads (assigned only), Deals, Listings, Settings
+- Same design system, same components, same URL, same everything
+- One codebase instead of two diverging apps
+- "Impersonate Agency" dropdown for admins doing customer support
+
+Why not pre-launch: this is 30-40 hours of refactoring work. The current two-app setup is ugly but functional. Ship the launch first, do the merge in month 2 post-launch.
+
+This is how Intercom, HubSpot, Stripe, and Salesforce handle multi-role SaaS apps. It is the correct long-term pattern.
+
+### Data Management Architecture (added 2026-04-09)
+
+### Three types of data, three ownership models
+
+**Type 1 - Market data (DLD, EIBOR, currency, yields, news)**
+- Owner: DXB Analytics
+- Source: Cron jobs pulling from official APIs
+- Edit rights: cron jobs + admins only
+- Read rights: all users
+- Status: Already built (9 cron jobs in api/_cron/)
+
+**Type 2 - Project/Development data**
+- Owner: Shared between DXB Analytics and developers
+- Source: DLD + Bayut scraping (auto) + developer claims (manual, verified)
+- Edit rights: Admin pre-populates, developers claim and edit limited fields after RERA verification
+- Read rights: all users (public project info)
+- Model: Claim-and-verify (industry standard, used by Property Finder Pro, Bayut verified)
+- Legal: Original launch price, disclosedAt, unit count are LOCKED per Decree-Law 25/2025
+
+**Type 3 - Agency CRM data (leads, deals, listings, pipeline)**
+- Owner: Each agency owns their own
+- Source: Manual entry + CSV import + future browser extension
+- Edit rights: Only users with matching orgId (multi-tenant isolation)
+- Read rights: Only users in same organisation
+- Status: Multi-tenant isolation already works via firestore.rules sameOrg() helpers
+
+### New P1 items (data)
+
+### P1.9 - Audit and finish Admin Data Manager (10 hours)
+File: src/admin/DataManagerTab.jsx (71.6 KB, already exists)
+- Read the file to assess current state
+- Fix any broken functionality
+- Ensure DXB Analytics admin team can: add projects, edit projects, verify developer claims, bulk import CSV, view audit logs
+- Wire to Firestore developments + projects collections
+- Add cascade rules (deleting a development warns about orphaned projects)
+
+### P1.10 - CSV import for agency leads (4 hours)
+File: src/tabs/MyLeadsTab.jsx
+- Add "Upload CSV" button
+- Parse CSV client-side with papaparse
+- Preview first 10 rows before import
+- Validate required fields (name, email or phone, source)
+- Bulk write to Firestore leads collection with current user orgId
+- Show progress bar for large imports
+- Log import event to auditLog
+
+### New P2 items (data)
+
+### P2.11 - Developer Portal with Claim-and-Verify flow (6 hours)
+- New signup path for developers (reuses AgencySignup.jsx with role=developer)
+- After RERA verification, developer sees dashboard of DLD projects matching their name
+- Click Claim on their projects
+- Admin approves claim in AdminPanel verification queue
+- Once claimed, developer can edit: photos, brochures, floor plans, availability status, payment plan terms
+- Locked fields: original launch price, disclosedAt, unit count (DLD-sourced, legally protected)
+- All edits go through admin review before going live
+- All changes logged to projectAuditLog subcollection
+
+### P2.12 - WhatsApp Business lead capture (3-4 hours)
+- Already stubbed in AdminPanel.jsx lines 4310+ (pre-approved message templates)
+- Wire incoming WhatsApp messages to create leads automatically
+- Map sender number to agency orgId
+- Requires Meta Business verification and webhook setup
+
+### P2.13 - Browser extension for agent lead capture (8-12 hours)
+- Chrome and Firefox extension that captures leads from Bayut and Property Finder inboxes
+- One-click "Save to DXB Analytics" button on listing detail pages
+- Syncs to agent orgId in Firestore
+- Post-launch only
+
+### P2.14 - Open API for enterprise developers (15+ hours)
+- REST API for approved developers to bulk-sync inventory
+- API key generation in admin panel (auditLogApi.js already has the pattern)
+- Webhooks to external CRMs (Salesforce, HubSpot)
+- Rate limiting and tier-based quotas
+- Far-future, only after 10+ enterprise customers request it
+
+### Data quality decisions
+- Agencies CANNOT upload project data (would be gamed for listings)
+- End users (buyers) CANNOT upload anything, read-only
+- Developer edits always go through admin approval for first claim
+- All Type 2 edits go to projectAuditLog for compliance trail
+- Public API delayed until post-launch to reduce support burden
