@@ -139,6 +139,7 @@ export default function DevelopersSection({ currentUserId, currentUserEmail }) {
     } catch (e) {
       notify("Archive failed: " + e.message, "error");
     }
+  }
 
   function toggleSelection(id) { setSelectedIds(p => { const n = new Set(p); if (n.has(id)) n.delete(id); else n.add(id); return n; }); }
   function selectAll() { setSelectedIds(new Set(filtered.map(d => d.id))); }

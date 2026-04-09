@@ -217,6 +217,7 @@ export default function ProjectsSection({ currentUserId, currentUserEmail }) {
       notify("Archive failed: " + e.message, "error");
     }
 
+  }
   // === BULK OPERATIONS ===
   function toggleSelection(id) {
     setSelectedIds(prev => { const n = new Set(prev); if (n.has(id)) n.delete(id); else n.add(id); return n; });
