@@ -329,6 +329,20 @@ service cloud.firestore {
     // ═══════════════════════════════════════════════════════════════════════
     // Developer claim-and-verify flow (P2.11)
     // Developers claim projects they built; admin approves; then they can edit limited fields
+    // DXB Internal Sales CRM (P1.12)
+    // Tracks agencies and developers that DXB Analytics is selling to
+    // Completely separate from the agency CRM leads/ collection
+    match /platformLeads/{leadId} {
+      allow read: if isAdmin();
+      allow create: if isAdmin();
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+      match /auditLog/{logId} {
+        allow read: if isAdmin();
+        allow create: if isAdmin();
+      }
+    }
+
     match /developerClaims/{claimId} {
       allow read: if isLoggedIn() && (isAdmin() || resource.data.developerId == request.auth.uid);
       allow create: if isLoggedIn() && request.resource.data.developerId == request.auth.uid;
