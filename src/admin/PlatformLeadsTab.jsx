@@ -55,6 +55,15 @@ const typeIcons = {
   task:    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>,
 };
 
+// Company type visual config (color + label)
+const TYPE_CONFIG = {
+  "Agency":              { color: "#10B981", label: "Agency",       icon: "A" },
+  "Developer":           { color: "#A855F7", label: "Developer",    icon: "D" },
+  "Brokerage":           { color: "#F59E0B", label: "Brokerage",    icon: "B" },
+  "Boutique":            { color: "#06B6D4", label: "Boutique",     icon: "Bo" },
+  "Property Management": { color: "#EC4899", label: "Prop. Mgmt",   icon: "PM" },
+};
+
 
 // === LEAD SCORING ===
 function calculateLeadScore(lead) {
@@ -464,6 +473,23 @@ export default function PlatformLeadsTab({ currentUserId, currentUserEmail }) {
         </div>
       </div>
 
+      {/* Help banner - what is a lead? */}
+      <div style={{ padding: "12px 16px", background: "rgba(212,168,67,0.06)", border: "1px solid rgba(212,168,67,0.25)", borderRadius: 8, marginBottom: 12, display: "flex", gap: 14, alignItems: "flex-start", fontSize: 11, color: T.textMuted, lineHeight: 1.6 }}>
+        <div style={{ fontSize: 18, lineHeight: 1, color: T.gold }}>ⓘ</div>
+        <div style={{ flex: 1 }}>
+          <div style={{ color: T.white, fontWeight: 700, marginBottom: 4, fontSize: 12 }}>What are these leads?</div>
+          Each card is a <strong style={{ color: T.white }}>company you are selling DXB Analytics to</strong> — an agency, developer, brokerage, or property manager. The contact name inside the card is the decision-maker at that company. Drag cards between columns as deals progress.
+          <div style={{ marginTop: 8, display: "flex", gap: 12, flexWrap: "wrap" }}>
+            {Object.entries(TYPE_CONFIG).map(([k, c]) => (
+              <span key={k} style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 10 }}>
+                <span style={{ width: 10, height: 10, borderRadius: 3, background: c.color }} />
+                <span style={{ color: T.textMuted }}>{c.label}</span>
+              </span>
+            ))}
+          </div>
+        </div>
+      </div>
+
       {/* Warning banners */}
       {stats.overdue > 0 && (
         <div style={{ padding: "10px 14px", background: "rgba(239,68,68,0.08)", border: "1px solid " + T.red + "40", borderRadius: 8, color: T.red, fontSize: 12, fontWeight: 600, marginBottom: 12 }}>
@@ -604,7 +630,7 @@ export default function PlatformLeadsTab({ currentUserId, currentUserEmail }) {
                         <div style={{ fontSize: 14, color: T.white, fontWeight: 700, lineHeight: 1.3, marginBottom: 2 }}>{l.companyName || "(unnamed)"}</div>
                         {l.companyType && (
                           <div style={{ fontSize: 10, color: T.textDim }}>
-                            {l.companyType}{l.companySize ? " · " + l.companySize.replace(/\s*\(.*?\)/, "") : ""}
+                            <span style={{ padding: "2px 8px", background: (TYPE_CONFIG[l.companyType]?.color || T.textMuted) + "20", color: TYPE_CONFIG[l.companyType]?.color || T.textMuted, borderRadius: 4, fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.5 }}>{TYPE_CONFIG[l.companyType]?.label || l.companyType}</span>{l.companySize ? <span style={{ marginLeft: 6, fontSize: 10, color: T.textDim }}>{l.companySize.replace(/\s*\(.*?\)/, "")}</span> : null}
                           </div>
                         )}
                       </div>
@@ -624,7 +650,7 @@ export default function PlatformLeadsTab({ currentUserId, currentUserEmail }) {
                     {/* Contact */}
                     {(l.contactName || l.contactEmail) && (
                       <div style={{ marginBottom: 10, paddingBottom: 10, borderBottom: "1px solid " + T.border }}>
-                        {l.contactName && <div style={{ fontSize: 12, color: T.textMuted, fontWeight: 600 }}>{l.contactName}</div>}
+                        {l.contactName && <div style={{ fontSize: 12, color: T.textMuted, fontWeight: 600 }}><span style={{ fontSize: 9, color: T.textDim, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.5, marginRight: 5 }}>Contact:</span>{l.contactName}</div>}
                         {l.contactEmail && <div style={{ fontSize: 10, color: T.textDim, wordBreak: "break-all" }}>{l.contactEmail}</div>}
                       </div>
                     )}
