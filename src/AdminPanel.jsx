@@ -17344,16 +17344,6 @@ export default function AdminPanel() {
             />
           )}
 
-          {/* ═══════════════════════════════════════
-             DXB SALES TAB (P1.12 - Internal Sales CRM)
-             ═══════════════════════════════════════ */}
-          {tab === "dxbsales" && (
-            <PlatformLeadsTab
-              currentUserId={adminUser?.uid}
-              currentUserEmail={adminUser?.email}
-            />
-          )}
-
 
           {/* ═══════════════════════════════════════════════════════
               LEADS TAB
