@@ -30,7 +30,7 @@ export default function DataManagerV2({ currentUserId = null, currentUserEmail =
         background: "linear-gradient(180deg, " + C.s2 + ", " + C.bg + ")",
       }}>
         <h1 style={{ margin: 0, fontSize: 22, fontFamily: C.ffH, color: C.gold, fontWeight: 600 }}>
-          Data Manager <span style={{ fontSize: 11, color: C.t2, fontWeight: 400 }}>v2</span>
+          Data Manager
         </h1>
         <p style={{ margin: "4px 0 0 0", fontSize: 12, color: C.t2 }}>
           Central command for developments, projects, developers, communities, and compliance

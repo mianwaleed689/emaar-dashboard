@@ -19,7 +19,6 @@ import PricingPlansTab from "./admin/PricingPlansTab";
 import BillingTab from "./admin/BillingTab";
 import ReferralTab from "./admin/ReferralTab";
 import CancellationTab from "./admin/CancellationTab";
-import DataManagerTab from "./admin/DataManagerTab";
 import DataManagerV2 from "./admin/DataManagerV2";
 
 
@@ -15057,7 +15056,6 @@ export default function AdminPanel() {
     { id: "orgs", label: "Organisations", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg> },
     { id: "revenue", label: "Revenue", icon: I.revenue },
     { id: "data", label: "Data Manager", icon: I.data },
-    { id: "data2", label: "Data Manager V2", icon: I.data },
     { id: "leads", label: "Leads", icon: I.leads },
     { id: "campaigns", label: "Campaigns", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg> },
     { id: "notifications", label: "Notifications", icon: I.bell },
@@ -17324,23 +17322,16 @@ export default function AdminPanel() {
              DATA MANAGER TAB (Bloomberg-Level Design)
              ═══════════════════════════════════════ */}
           {tab === "data" && (
-            <DataManagerTab
-              emaarProjects={emaarProjects}
-              T={T}
-              db={db}
-              notify={notify}
-            />
-          )}
-
-          {/* ═══════════════════════════════════════
-             DATA MANAGER V2 (Schema v2, split architecture)
-             ═══════════════════════════════════════ */}
-          {tab === "data2" && (
             <DataManagerV2
               currentUserId={adminUser?.uid}
               currentUserEmail={adminUser?.email}
+
+
+
+
             />
           )}
+
 
           {/* ═══════════════════════════════════════════════════════
               LEADS TAB
