@@ -4,6 +4,7 @@ import OverviewSection from "./OverviewSection";
 import DevelopmentsSection from "./DevelopmentsSection";
 import ProjectsSection from "./ProjectsSection";
 import DevelopersSection from "./DevelopersSection";
+import CommunitiesSection from "./CommunitiesSection";
 
 /**
  * DXB ANALYTICS - DATA MANAGER V2
@@ -18,6 +19,7 @@ export default function DataManagerV2({ currentUserId = null, currentUserEmail =
     { id: "developments", label: "Developments", icon: "◉", color: C.teal },
     { id: "projects",     label: "Projects",     icon: "◈", color: C.blue },
     { id: "developers",   label: "Developers",   icon: "◆", color: C.purple },
+    { id: "communities",  label: "Communities",  icon: "◎", color: C.cyan },
   ];
 
   return (
@@ -31,7 +33,7 @@ export default function DataManagerV2({ currentUserId = null, currentUserEmail =
           Data Manager <span style={{ fontSize: 11, color: C.t2, fontWeight: 400 }}>v2</span>
         </h1>
         <p style={{ margin: "4px 0 0 0", fontSize: 12, color: C.t2 }}>
-          Central command for developments, projects, developers, and compliance
+          Central command for developments, projects, developers, communities, and compliance
         </p>
       </div>
 
@@ -77,6 +79,7 @@ export default function DataManagerV2({ currentUserId = null, currentUserEmail =
           {section === "developments" && <DevelopmentsSection currentUserId={currentUserId} currentUserEmail={currentUserEmail} />}
           {section === "projects" && <ProjectsSection currentUserId={currentUserId} currentUserEmail={currentUserEmail} />}
           {section === "developers" && <DevelopersSection currentUserId={currentUserId} currentUserEmail={currentUserEmail} />}
+          {section === "communities" && <CommunitiesSection currentUserId={currentUserId} currentUserEmail={currentUserEmail} />}
         </main>
       </div>
     </div>
