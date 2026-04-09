@@ -1,110 +1,59 @@
 import React from "react";
 
-const T = { bg: "#04090F", gold: "#D4A843", goldLight: "#E8C96A", textMuted: "#64748B", textSecondary: "#94A3B8", white: "#FFFFFF", surface: "#0A1628", surfaceAlt: "#0D1F35", border: "rgba(212,168,67,0.12)", borderHover: "rgba(212,168,67,0.25)" };
-
-const Section = ({ title, children }) => (
-  <div style={{ marginBottom: 40 }}>
-    <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: 20, fontWeight: 700, color: T.gold, marginBottom: 12, paddingBottom: 8, borderBottom: `1px solid ${T.border}` }}>{title}</h2>
-    <div style={{ fontSize: 14, color: T.textSecondary, lineHeight: 1.9 }}>{children}</div>
-  </div>
-);
-
-const P = ({ children }) => <p style={{ marginBottom: 12 }}>{children}</p>;
-
 export default function Privacy() {
   return (
-    <div style={{ minHeight: "100vh", background: T.bg, fontFamily: "'Outfit', sans-serif" }}>
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700;9..144,900&display=swap');`}</style>
+    <div style={{ maxWidth: 800, margin: "40px auto", padding: "0 20px", fontFamily: "'Outfit',sans-serif", color: "#E2E8F0", background: "#04090F", minHeight: "100vh" }}>
+      <h1 style={{ fontFamily: "'Fraunces',serif", color: "#D4A843" }}>Privacy Policy</h1>
+      <p style={{ color: "#94A3B8", fontSize: 12 }}>Last updated: April 2026</p>
 
-      {/* Header */}
-      <div style={{ borderBottom: `1px solid ${T.border}`, background: T.surface }}>
-        <div style={{ maxWidth: 800, margin: "0 auto", padding: "20px 24px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <a href="/" style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none" }}>
-            <div style={{ width: 32, height: 32, borderRadius: 8, background: `linear-gradient(135deg, ${T.gold}, ${T.goldLight})`, display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={T.bg} strokeWidth="2.5" strokeLinecap="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-            </div>
-            <span style={{ fontFamily: "'Fraunces', serif", fontSize: 15, fontWeight: 700, color: T.white }}>DXB Analytics</span>
-          </a>
-          <a href="/" style={{ fontSize: 13, color: T.textMuted, textDecoration: "none", display: "flex", alignItems: "center", gap: 6 }}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
-            Back
-          </a>
-        </div>
-      </div>
+      <h2>1. Who We Are</h2>
+      <p>DXB RE Analytics Intelligence Platform ("DXB Analytics") is a real estate intelligence service operating in the United Arab Emirates. We are committed to protecting your personal data in accordance with UAE Federal Decree-Law No. 45 of 2021 on Personal Data Protection ("PDPL").</p>
 
-      {/* Content */}
-      <div style={{ maxWidth: 800, margin: "0 auto", padding: "60px 24px 80px" }}>
-        <div style={{ marginBottom: 48 }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: T.gold, letterSpacing: 2, textTransform: "uppercase", marginBottom: 12 }}>Legal</div>
-          <h1 style={{ fontFamily: "'Fraunces', serif", fontSize: 36, fontWeight: 900, color: T.white, marginBottom: 12 }}>Privacy Policy</h1>
-          <p style={{ fontSize: 13, color: T.textMuted }}>Last updated: March 2026 · Effective immediately</p>
-        </div>
+      <h2>2. What Data We Collect</h2>
+      <ul>
+        <li><strong>Account data:</strong> name, email, phone, agency name, RERA number, trade license, role</li>
+        <li><strong>Usage data:</strong> pages visited, features used, login times, IP address</li>
+        <li><strong>CRM data you upload:</strong> leads, deals, listings, contacts</li>
+        <li><strong>Payment data:</strong> handled by Stripe, not stored on our servers</li>
+      </ul>
 
-        <Section title="1. Information We Collect">
-          <P>When you create an account, we collect your name, email address, and account preferences. When you subscribe to a paid plan, payment is processed by Stripe — we do not store your card details.</P>
-          <P>We automatically collect usage data including pages visited, features used, search queries within the Platform, and device/browser information to improve the service.</P>
-        </Section>
+      <h2>3. How We Use Your Data</h2>
+      <p>We use your data to: (a) provide and improve the Service; (b) authenticate and secure your account; (c) send transactional emails (welcome, verification, billing); (d) generate aggregated market insights; (e) comply with legal obligations.</p>
 
-        <Section title="2. How We Use Your Information">
-          <P>We use your information to: provide and improve the Platform; send you account-related emails (receipts, alerts you configure, trial expiry notices); respond to your support requests; and analyse usage patterns to improve features.</P>
-          <P>We do not sell your personal data to third parties. We do not use your data for advertising purposes.</P>
-        </Section>
+      <h2>4. Legal Basis for Processing</h2>
+      <p>Under UAE PDPL, we process your data based on: (a) your consent (signup, marketing); (b) contract performance (service delivery); (c) legal obligation (tax records, regulatory compliance); (d) legitimate interest (fraud prevention, product improvement).</p>
 
-        <Section title="3. Data Storage & Security">
-          <P>Your account data is stored in Google Firebase (Firestore), hosted in Europe West (Belgium). Firebase provides enterprise-grade encryption at rest and in transit.</P>
-          <P>We implement role-based access controls ensuring only you can access your personal data, and only authorised administrators can access aggregate platform data.</P>
-          <P>Despite our best efforts, no system is completely secure. We recommend using a strong, unique password for your account.</P>
-        </Section>
+      <h2>5. Data Sharing</h2>
+      <p>We do not sell your data. We share data only with: (a) trusted service providers (Firebase/Google, Vercel, Stripe, EmailJS) under strict contracts; (b) law enforcement when legally required; (c) in case of business transfer, with notice to you.</p>
 
-        <Section title="4. Third-Party Services">
-          <P>We use the following third-party services to operate the Platform:</P>
-          <P>
-            <strong style={{ color: T.white }}>Firebase (Google)</strong> — authentication and database storage.<br/>
-            <strong style={{ color: T.white }}>Stripe</strong> — payment processing for subscriptions.<br/>
-            <strong style={{ color: T.white }}>Cloudinary</strong> — image hosting for project media.<br/>
-            <strong style={{ color: T.white }}>EmailJS</strong> — transactional email delivery.<br/>
-            <strong style={{ color: T.white }}>Vercel</strong> — platform hosting and deployment.
-          </P>
-          <P>Each of these providers has their own privacy policy governing how they handle data.</P>
-        </Section>
+      <h2>6. Data Retention</h2>
+      <p>Account data is retained for as long as your account is active, plus 2 years after deletion for legal records. CRM data you upload is deleted within 30 days of account termination. Audit logs are retained for 7 years per UAE commercial law.</p>
 
-        <Section title="5. Cookies">
-          <P>We use essential cookies to maintain your login session. We do not use tracking cookies or third-party advertising cookies.</P>
-          <P>Your language preference is stored in your browser's local storage to remember your chosen language between sessions.</P>
-        </Section>
+      <h2>7. Your Rights Under PDPL</h2>
+      <ul>
+        <li>Right to access the personal data we hold about you</li>
+        <li>Right to correct inaccurate data</li>
+        <li>Right to delete your data</li>
+        <li>Right to restrict or object to processing</li>
+        <li>Right to data portability (export in machine-readable format)</li>
+        <li>Right to withdraw consent at any time</li>
+      </ul>
+      <p>To exercise these rights, email <a href="mailto:privacy@dxb-analytics.com" style={{ color: "#D4A843" }}>privacy@dxb-analytics.com</a>. We respond within 30 days as required by PDPL.</p>
 
-        <Section title="6. Your Rights">
-          <P>You have the right to: access the personal data we hold about you; request correction of inaccurate data; request deletion of your account and associated data; and export your data.</P>
-          <P>To exercise any of these rights, contact us at mianwaleed689@gmail.com. We will respond within 30 days.</P>
-        </Section>
+      <h2>8. Data Security</h2>
+      <p>We use industry-standard measures: HTTPS encryption, Firebase Auth, role-based access control, audit logging, and regular security reviews. We notify you of breaches affecting your data within 72 hours as required by PDPL.</p>
 
-        <Section title="7. Data Retention">
-          <P>We retain your account data for as long as your account is active. If you delete your account, we will remove your personal data within 30 days, except where we are required to retain it for legal or financial compliance purposes.</P>
-        </Section>
+      <h2>9. International Transfers</h2>
+      <p>Your data may be processed on servers located outside the UAE (Firebase/Google Cloud, Vercel). These transfers are protected by standard contractual clauses and the providers' compliance with GDPR and equivalent frameworks.</p>
 
-        <Section title="8. Children's Privacy">
-          <P>The Platform is not intended for users under 18 years of age. We do not knowingly collect personal information from minors. If you believe a minor has created an account, please contact us immediately.</P>
-        </Section>
+      <h2>10. Children</h2>
+      <p>The Service is not intended for users under 18. We do not knowingly collect data from minors.</p>
 
-        <Section title="9. Changes to This Policy">
-          <P>We may update this Privacy Policy from time to time. We will notify you of material changes via email. Continued use of the Platform after changes constitutes acceptance of the updated policy.</P>
-        </Section>
+      <h2>11. Changes to This Policy</h2>
+      <p>We may update this Privacy Policy periodically. Material changes will be notified via email.</p>
 
-        <Section title="10. Contact">
-          <P>For privacy-related questions or requests, contact us at: <a href="mailto:mianwaleed689@gmail.com" style={{ color: T.gold }}>mianwaleed689@gmail.com</a></P>
-          <P>The Address Holding, Dubai, UAE.</P>
-        </Section>
-      </div>
-
-      {/* Footer */}
-      <div style={{ borderTop: `1px solid ${T.border}`, padding: "24px", textAlign: "center" }}>
-        <p style={{ fontSize: 12, color: T.textMuted }}>© 2026 DXB Analytics by The Address Holding. Dubai, UAE.</p>
-        <div style={{ display: "flex", justifyContent: "center", gap: 24, marginTop: 8 }}>
-          <a href="/terms" style={{ fontSize: 12, color: T.textMuted, textDecoration: "none" }}>Terms</a>
-          <a href="/privacy" style={{ fontSize: 12, color: T.gold, textDecoration: "none" }}>Privacy</a>
-          <a href="mailto:mianwaleed689@gmail.com" style={{ fontSize: 12, color: T.textMuted, textDecoration: "none" }}>Contact</a>
-        </div>
-      </div>
+      <h2>12. Contact</h2>
+      <p>Privacy questions: <a href="mailto:privacy@dxb-analytics.com" style={{ color: "#D4A843" }}>privacy@dxb-analytics.com</a></p>
     </div>
   );
 }
