@@ -2748,22 +2748,7 @@ export default function EmaarDashboardV2() {
     unsubs.push(onSnapshot(collection(db, "projects"), (snap) => {
       const fsProjects = [];
       snap.forEach(d => {
-        const raw = { ...d.data(), id: d.id, fromFirestore: true };
-        // Schema v2 -> Schema v1 field translation for dashboard compatibility
-        const normalizeType = (t) => {
-          const s = (t || "").toLowerCase();
-          if (s.includes("apartment") || s.includes("studio") || s.includes("penthouse") || s.includes("duplex") || s.includes("loft")) return "Apartment";
-          if (s.includes("villa") && !s.includes("semi")) return "Villa";
-          if (s.includes("semi-detached")) return "Villa";
-          if (s.includes("townhouse")) return "Townhouse";
-          if (s.includes("mansion")) return "Villa";
-          if (s.includes("hotel")) return "Hotel Apartment";
-          if (s.includes("office")) return "Office";
-          if (s.includes("retail") || s.includes("shop")) return "Retail";
-          if (s.includes("warehouse")) return "Warehouse";
-          if (s.includes("land")) return "Land";
-          return "Apartment"; // default
-        };
+        const data = { ...d.data(), id: d.id, fromFirestore: true };
         const data = {
           ...raw,
           // price: use priceFromAed if p.price is missing
