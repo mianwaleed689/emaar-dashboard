@@ -65,7 +65,9 @@ export default function AgencySignup() {
   const validateStep2 = () => {
     if (!managerForm.name.trim())  { setError("Your name is required"); return false; }
     if (!managerForm.email.trim()) { setError("Email is required"); return false; }
-    if (managerForm.password.length < 6) { setError("Password must be at least 6 characters"); return false; }
+    if (managerForm.password.length < 8) { setError("Password must be at least 8 characters"); return false; }
+    if (!/[A-Z]/.test(managerForm.password)) { setError("Password must contain at least one uppercase letter"); return false; }
+    if (!/[0-9]/.test(managerForm.password)) { setError("Password must contain at least one number"); return false; }
     if (managerForm.password !== managerForm.confirmPassword) { setError("Passwords do not match"); return false; }
     setError(""); return true;
   };
