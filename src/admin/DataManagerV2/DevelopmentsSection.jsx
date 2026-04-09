@@ -6,6 +6,8 @@ import {
 import { db } from "../../firebase";
 import { C, cardStyle, btnStyles, inputStyle } from "./tokens";
 import DevelopmentEditModal from "./DevelopmentEditModal";
+import BulkToolbar from "./BulkToolbar";
+import Papa from "papaparse";
 
 // Dubai communities - seed list, will be replaced by communities collection fetch later
 const COMMUNITIES = [
@@ -47,6 +49,7 @@ export default function DevelopmentsSection({ currentUserId, currentUserEmail })
   const [editing, setEditing] = useState(null); // null | {} for new | {id, ...} for edit
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState(null);
+  const [selectedIds, setSelectedIds] = useState(new Set());
 
   useEffect(() => {
     const u1 = onSnapshot(collection(db, "developments"), snap => {
@@ -198,6 +201,170 @@ export default function DevelopmentsSection({ currentUserId, currentUserEmail })
     } catch (e) {
       notify("Archive failed: " + e.message, "error");
     }
+
+  // === BULK OPERATIONS ===
+  function toggleSelection(id) {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  }
+  function selectAll() {
+    setSelectedIds(new Set(filtered.map(d => d.id)));
+  }
+  function clearSelection() {
+    setSelectedIds(new Set());
+  }
+
+  async function bulkArchive() {
+    if (!window.confirm("Archive " + selectedIds.size + " developments?")) return;
+    try {
+      for (const id of selectedIds) {
+        await setDoc(doc(db, "developments", id), {
+          visibility: "archived",
+          updatedAt: serverTimestamp(),
+          updatedBy: currentUserId || "unknown",
+        }, { merge: true });
+        await addDoc(collection(db, "developments", id, "auditLog"), {
+          action: "bulk-archive",
+          userId: currentUserId || "unknown",
+          userEmail: currentUserEmail || "unknown",
+          timestamp: serverTimestamp(),
+        });
+      }
+      notify("Archived " + selectedIds.size + " developments");
+      setSelectedIds(new Set());
+    } catch (e) {
+      notify("Bulk archive failed: " + e.message, "error");
+    }
+  }
+
+  async function bulkChangeVisibility(newVis) {
+    if (!window.confirm("Change " + selectedIds.size + " developments to " + newVis + "?")) return;
+    try {
+      for (const id of selectedIds) {
+        const payload = {
+          visibility: newVis,
+          updatedAt: serverTimestamp(),
+          updatedBy: currentUserId || "unknown",
+        };
+        if (newVis === "published") payload.disclosedAt = serverTimestamp();
+        await setDoc(doc(db, "developments", id), payload, { merge: true });
+        await addDoc(collection(db, "developments", id, "auditLog"), {
+          action: "bulk-visibility-change",
+          newVisibility: newVis,
+          userId: currentUserId || "unknown",
+          userEmail: currentUserEmail || "unknown",
+          timestamp: serverTimestamp(),
+        });
+      }
+      notify("Changed " + selectedIds.size + " developments to " + newVis);
+      setSelectedIds(new Set());
+    } catch (e) {
+      notify("Bulk change failed: " + e.message, "error");
+    }
+  }
+
+  function exportCsv() {
+    const rows = filtered.map(d => ({
+      id: d.id,
+      name: d.name || "",
+      arabicName: d.arabicName || "",
+      developerId: d.developerId || "",
+      developerName: d.developerName || "",
+      community: d.community || "",
+      subCommunity: d.subCommunity || "",
+      saleStatus: d.saleStatus || "",
+      constructionStatus: d.constructionStatus || "",
+      constructionPct: d.constructionPct || 0,
+      visibility: d.visibility || "",
+      tenure: d.tenure || "",
+      latitude: d.coordinates?.lat || "",
+      longitude: d.coordinates?.lng || "",
+      reraProjectNumber: d.reraProjectNumber || "",
+      escrowBank: d.escrowBank || "",
+      escrowFundedPct: d.escrowFundedPct || 0,
+      dldStarRating: d.dldStarRating || 0,
+      launchDate: d.launchDate || "",
+      expectedHandover: d.expectedHandover || "",
+      coverImageUrl: d.coverImageUrl || "",
+    }));
+    const csv = Papa.unparse(rows);
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "developments-" + new Date().toISOString().slice(0,10) + ".csv";
+    a.click();
+    URL.revokeObjectURL(url);
+    notify("Exported " + rows.length + " developments");
+  }
+
+  function importCsv(file) {
+    Papa.parse(file, {
+      header: true,
+      skipEmptyLines: true,
+      complete: async (results) => {
+        const rows = results.data;
+        if (!rows.length) { notify("CSV is empty", "error"); return; }
+        if (!window.confirm("Import " + rows.length + " developments? Rows with matching IDs will be updated, others created as drafts.")) return;
+        try {
+          let created = 0, updated = 0, failed = 0;
+          for (const r of rows) {
+            try {
+              const id = r.id || ((r.name || "").toLowerCase().replace(/[^\w\s-]/g, "").replace(/\s+/g, "-") + "-" + Date.now().toString(36));
+              const payload = {
+                name: r.name || "",
+                arabicName: r.arabicName || "",
+                developerId: r.developerId || "",
+                developerName: r.developerName || "",
+                community: r.community || "",
+                subCommunity: r.subCommunity || "",
+                saleStatus: r.saleStatus || "off-plan",
+                constructionStatus: r.constructionStatus || "pre-launch",
+                constructionPct: parseInt(r.constructionPct) || 0,
+                visibility: r.visibility || "draft",
+                tenure: r.tenure || "freehold",
+                coordinates: {
+                  lat: parseFloat(r.latitude) || null,
+                  lng: parseFloat(r.longitude) || null,
+                },
+                reraProjectNumber: r.reraProjectNumber || "",
+                escrowBank: r.escrowBank || "",
+                escrowFundedPct: parseInt(r.escrowFundedPct) || 0,
+                dldStarRating: parseInt(r.dldStarRating) || 0,
+                launchDate: r.launchDate || "",
+                expectedHandover: r.expectedHandover || "",
+                coverImageUrl: r.coverImageUrl || "",
+                orgId: "dxb-analytics",
+                updatedAt: serverTimestamp(),
+                updatedBy: currentUserId || "unknown",
+              };
+              const isNew = !r.id;
+              if (isNew) { payload.createdAt = serverTimestamp(); payload.createdBy = currentUserId || "unknown"; }
+              await setDoc(doc(db, "developments", id), payload, { merge: true });
+              await addDoc(collection(db, "developments", id, "auditLog"), {
+                action: isNew ? "csv-import-create" : "csv-import-update",
+                userId: currentUserId || "unknown",
+                userEmail: currentUserEmail || "unknown",
+                timestamp: serverTimestamp(),
+                source: "csv-import",
+              });
+              if (isNew) created++; else updated++;
+            } catch (e) {
+              failed++;
+              console.error("Row failed:", r, e);
+            }
+          }
+          notify("Import complete: " + created + " created, " + updated + " updated" + (failed > 0 ? ", " + failed + " failed" : ""));
+        } catch (e) {
+          notify("Import failed: " + e.message, "error");
+        }
+      },
+      error: (e) => notify("CSV parse error: " + e.message, "error"),
+    });
+  }
   }
 
   if (loading) {
@@ -249,6 +416,19 @@ export default function DevelopmentsSection({ currentUserId, currentUserEmail })
         </div>
       </div>
 
+      <BulkToolbar
+        selectedCount={selectedIds.size}
+        totalCount={filtered.length}
+        onSelectAll={selectAll}
+        onClearSelection={clearSelection}
+        onBulkArchive={bulkArchive}
+        onBulkPublish={() => bulkChangeVisibility("published")}
+        onBulkDraft={() => bulkChangeVisibility("draft")}
+        onExportCsv={exportCsv}
+        onImportCsv={importCsv}
+        collectionName="developments"
+      />
+
       {/* List */}
       <div style={{ display: "grid", gap: 10 }}>
         {filtered.length === 0 ? (
@@ -266,6 +446,13 @@ export default function DevelopmentsSection({ currentUserId, currentUserEmail })
               gap: 14,
               cursor: "pointer",
             }} onClick={() => setEditing(d)}>
+              <input
+                type="checkbox"
+                checked={selectedIds.has(d.id)}
+                onClick={e => e.stopPropagation()}
+                onChange={() => toggleSelection(d.id)}
+                style={{ cursor: "pointer", width: 16, height: 16, accentColor: "#D4A843" }}
+              />
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
                   <span style={{ fontSize: 14, color: C.w, fontWeight: 600 }}>{d.name || "(unnamed)"}</span>
