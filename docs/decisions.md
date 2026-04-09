@@ -156,3 +156,91 @@ The branch `session-6a-migration-framework` can be merged to main, left in place
 
 ### For the next Claude or the product owner returning later
 If you are picking this up cold, read docs in this order: `docs/decisions.md` (this file), `docs/schema-v1.md`, `docs/data-sources.md`, then inventory api/ before doing anything else. Do not start writing code until `docs/existing-system.md` exists. The product owner knows exactly how to run PowerShell commands and has a preference for one-command-at-a-time with clear explanations. Save-UTF8 is the file save function (the profile blocks Set-Content). Use --force-with-lease on pushes (the profile blocks force pushes). The product owner is non-technical but has strong product judgment; defer technical decisions to yourself and only ask about real product questions.
+
+## 2026-04-09 — Session 6-RESET: MVP launch-ready
+Massive productive session. Went from "half-deployed backend, blind to codebase" to "full P0 shipped, backend verified live, firestore rules deployed, launch-ready pending Stripe setup."
+
+### What was accomplished
+1. Full codebase inventory completed (finally). Read api/, src/ subfolders, admin/, automation/, scripts/, sheets_data/. Wrote docs/existing-system.md capturing the honest state of everything.
+2. Fixed the .gitignore deployment gap: 10 of 21 api/ files were invisible to git due to a blanket *.js ignore without an api/ exception. Added !api/*.js rule. Commit 3be1288.
+3. Hit Vercel Hobby 12-function limit on first deploy attempt. Consolidated 21 functions into 9 by creating api/cron.js router (routes all 9 cron jobs via ?job=) and api/admin-user.js (merges create/delete user). Moved 9 cron handlers to api/_cron/ (underscore prefix excludes from Vercel function count). Deleted stock.js, rates.js, claude.js (duplicates of proxy.js). Commit cebc19e. Deploy succeeded.
+4. Pre-commit hook caught 4 hardcoded secrets in weekly-digest.js (EmailJS service/template/public key fallbacks + CRON_SECRET fallback). Removed all fallback defaults, forcing env-var-only reads. File fails loudly if env vars missing instead of using stale fallbacks.
+5. Wrote docs/launch-plan.md with P0 (7 items), P1 (11 items), P2 (15 items). Total honest effort revised from 50-65 hours to 28-45 hours.
+6. P0.2: Fixed Stripe pricing. create-checkout.js now reads STRIPE_PRICE_ID_PRO and STRIPE_PRICE_ID_ENTERPRISE from env vars instead of hardcoded placeholders. Comments updated from 99/499 to correct 299/799 AED pricing.
+7. P0.3: Pricing reconciled across AgencySignup.jsx and create-checkout.js (both now consistent at 299/799).
+8. P0.7: Password hardening. Changed from 6 chars minimum to 8 chars + 1 uppercase + 1 number. Updated placeholder text.
+9. P0.4: Email verification on signup. Added sendEmailVerification(cred.user) call after createUserWithEmailAndPassword in AgencySignup.jsx.
+10. P0.5: Terms of Service + Privacy Policy checkbox. Added agreedToTerms state, validation, and checkbox UI to step 2 of signup wizard.
+11. P0.6: Rewrote Terms.jsx and Privacy.jsx with DXB RE Analytics Intelligence Platform branding. Removed all references to "The Address Holding", "Emaar Properties developments", and (personal gmail removed). PDPL-compliant privacy policy with data subject rights section. Deleted unused src/legal/ folder (I accidentally created it before realizing the old files existed at src/ root).
+12. P0.1: Confirmed Vercel env vars. User had 23 vars already set (Firebase, Anthropic, Bayut, CRON_SECRET, Resend, EmailJS VITE_* versions, etc.). Added 3 backend EmailJS vars (EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, EMAILJS_PUBLIC_KEY) for weekly-digest.js. Still missing: STRIPE_SECRET_KEY, STRIPE_PRICE_ID_PRO, STRIPE_PRICE_ID_ENTERPRISE, NEXT_PUBLIC_URL (all only needed once Stripe products are created).
+13. Verified backend actually works. Test curl to /api/cron?job=eibor returned a real response with CRON_SECRET validated, Firebase Admin initialized, Firestore write succeeded. marketData/eibor document confirmed live.
+14. P1.2: Deployed firestore.rules to live Firebase. All 62 collections + tightened rules (disclosedAt immutability, developments collection, projectAuditLog subcollections) are live in production.
+
+### Architectural decisions added to launch-plan.md
+- Two-CRM architecture: DXB Internal Sales CRM (platformLeads collection, admin-only) completely separate from Agency CRM (leads collection, multi-tenant via orgId). Short-term: keep in separate files with clear labels. Long-term P2.15: merge into one app with role-based tab rendering (30-40 hour rebuild, post-launch month 2).
+- Data management: 3 data types (market data owned by us via crons, project data shared with developers via claim-and-verify flow, agency CRM data owned by agencies with strict orgId isolation).
+- Claim-and-verify for developer project updates: developers can edit photos/brochures/payment plans after admin approval, but cannot edit DLD-locked fields (disclosedAt, original price, unit count per Decree-Law 25/2025).
+- Data quality decisions: agencies cannot upload project data (would be gamed), end users read-only, developer edits always go through admin approval for first claim.
+
+### Commits pushed today
+- 3be1288 fix: track 10 previously-ignored api/ files
+- cebc19e refactor: consolidate api/ to fit Vercel Hobby 12-function limit
+- c20f383 docs: add existing-system.md and launch-plan.md
+- fix(stripe): env-var-based price IDs and 299/799 AED pricing
+- fix(signup): harden password to 8+ chars with uppercase and number
+- fix(signup): dedupe password validation lines
+- feat(signup): email verification on agency signup + placeholder update
+- feat(signup): add ToS checkbox state and validation part 1
+- feat(signup): add ToS checkbox UI to step 2
+- 03b21e9 feat(legal): add Terms, Privacy, Cookies, PDPL pages (draft)
+- c2ba48f fix(legal): replace Terms and Privacy with DXB RE Analytics branding
+- 52ce5a5 chore: remove unused src/legal/ folder
+- docs(plan): two-CRM architecture + data management sections
+- docs(plan): P1.9-P1.13 and P2.11-P2.15 items added
+
+### Launch status
+**MVP READY** pending Stripe product creation:
+1. Create Pro product in Stripe Dashboard at AED 299/month recurring
+2. Create Enterprise product in Stripe Dashboard at AED 799/month recurring  
+3. Copy the price IDs to Vercel env vars (STRIPE_PRICE_ID_PRO, STRIPE_PRICE_ID_ENTERPRISE)
+4. Add STRIPE_SECRET_KEY to Vercel env vars
+5. Add NEXT_PUBLIC_URL to Vercel env vars (value: https://emaar-dashboard.vercel.app or custom domain)
+
+After those 5 steps, a private beta with 5-10 friendly agencies can launch.
+
+### What was intentionally NOT done today
+- P0.6 Cookie Policy page and PDPL DPA page (drafted earlier but only Terms and Privacy are wired in the router — App.jsx imports only those two. Cookie and PDPL can be added post-launch.)
+- P1.1 Run seed-developers.js (needs DLD_CLIENT_ID and DLD_CLIENT_SECRET env vars which are not yet set)
+- P1.3 Rename local .env from REACT_APP_* to VITE_* (production works because Vercel has correct VITE_* vars; only local dev is affected)
+- P1.4 Captcha on signup (not critical for private beta)
+- P1.5 RERA uniqueness check (not critical for private beta — admin reviews signups anyway)
+- P1.9 Admin Data Manager audit and finish (10 hours of work, post-launch)
+- P1.10 CSV import for agency leads (post-launch)
+- P1.11 CRM audit (post-launch)
+- All P2 items
+
+### For the next session
+Priority order:
+1. Read src/admin/DataManagerTab.jsx (71.6 KB) and assess current state — this is the admin tool for managing projects
+2. Read existing CRM files for P1.11 audit (MyLeadsTab.jsx, PipelineTab.jsx, admin panel CRM sections)
+3. Write docs/crm-audit.md mapping current state
+4. Plan P1.12 collection split (platformLeads vs leads)
+5. Do the collection split as first code work of next session
+
+Still-open items tracked in docs/launch-plan.md P0/P1/P2 sections.
+
+### Key files created or updated today
+- docs/existing-system.md (inventory, 13.5 KB)
+- docs/launch-plan.md (A-to-Z plan, ~10 KB after appends)
+- api/cron.js (new cron router)
+- api/admin-user.js (new admin user router)
+- api/_cron/ folder (9 handler files moved here)
+- api/create-checkout.js (Stripe pricing fix)
+- src/AgencySignup.jsx (password hardening, email verification, ToS checkbox)
+- src/Terms.jsx (rewritten with DXB RE Analytics branding)
+- src/Privacy.jsx (rewritten, PDPL compliant)
+- firestore.rules (deployed to live Firebase)
+- .gitignore (added !api/*.js exception)
+- vercel.json (updated cron paths to new router)
+
+The product owner asked the right architectural questions throughout: data management strategy, two-CRM separation. Both now captured in launch-plan.md.
