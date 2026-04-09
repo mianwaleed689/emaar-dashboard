@@ -21,6 +21,7 @@ export default function DataManagerV2({ currentUserId = null, currentUserEmail =
     { id: "projects",     label: "Projects",     icon: "◈", color: C.blue },
     { id: "developers",   label: "Developers",   icon: "◆", color: C.purple },
     { id: "communities",  label: "Communities",  icon: "◎", color: C.cyan },
+    { id: "compliance",  label: "Compliance",   icon: "⚖", color: C.red },
   ];
 
   return (
@@ -81,6 +82,7 @@ export default function DataManagerV2({ currentUserId = null, currentUserEmail =
           {section === "projects" && <ProjectsSection currentUserId={currentUserId} currentUserEmail={currentUserEmail} />}
           {section === "developers" && <DevelopersSection currentUserId={currentUserId} currentUserEmail={currentUserEmail} />}
           {section === "communities" && <CommunitiesSection currentUserId={currentUserId} currentUserEmail={currentUserEmail} />}
+          {section === "compliance" && <ComplianceSection />}
         </main>
       </div>
     </div>
