@@ -156,6 +156,21 @@ export default function PlatformLeadsTab({ currentUserId, currentUserEmail }) {
   const [view, setView] = useState("kanban"); // kanban | list | stats
   const [draggedLead, setDraggedLead] = useState(null);
   const [dragOverStage, setDragOverStage] = useState(null);
+  const kanbanScrollRef = useRef(null);
+
+  // Auto-scroll Kanban container when dragging near edges
+  function handleKanbanDragOver(e) {
+    if (!draggedLead || !kanbanScrollRef.current) return;
+    const container = kanbanScrollRef.current;
+    const rect = container.getBoundingClientRect();
+    const edgeSize = 80;
+    const scrollSpeed = 15;
+    if (e.clientX - rect.left < edgeSize) {
+      container.scrollLeft -= scrollSpeed;
+    } else if (rect.right - e.clientX < edgeSize) {
+      container.scrollLeft += scrollSpeed;
+    }
+  }
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -511,7 +526,7 @@ export default function PlatformLeadsTab({ currentUserId, currentUserEmail }) {
 
       {/* Kanban view */}
       {view === "kanban" && (
-      <div style={{ display: "flex", gap: 14, overflow: "auto", paddingBottom: 20, minHeight: 500 }}>
+      <div ref={kanbanScrollRef} onDragOver={handleKanbanDragOver} style={{ display: "flex", gap: 14, overflow: "auto", paddingBottom: 20, minHeight: 500, scrollBehavior: "smooth" }}>
         {STAGES.map(stage => (
           <div
             key={stage.key}
