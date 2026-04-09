@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { createUserWithEmailAndPassword } from "firebase/auth";
+import { createUserWithEmailAndPassword, sendEmailVerification } from "firebase/auth";
 import { doc, setDoc, collection } from "firebase/firestore";
 import { auth, db } from "./firebase";
 
@@ -79,6 +79,7 @@ export default function AgencySignup() {
     try {
       // Create Firebase auth account first (must be authenticated before Firestore writes)
       const cred = await createUserWithEmailAndPassword(auth, managerForm.email.trim(), managerForm.password);
+      await sendEmailVerification(cred.user);
       const uid = cred.user.uid;
 
       // Generate orgId
@@ -219,7 +220,7 @@ export default function AgencySignup() {
                 {[
                   { key:"name",            label:"Your Full Name *",    placeholder:"Ahmed Al-Mansouri",   required:true },
                   { key:"email",           label:"Work Email *",        placeholder:"ahmed@agency.ae",     required:true },
-                  { key:"password",        label:"Password *",          placeholder:"Min 6 characters",    type:"password", required:true },
+                  { key:"password",        label:"Password *",          placeholder:"Min 8 chars, 1 uppercase, 1 number",    type:"password", required:true },
                   { key:"confirmPassword", label:"Confirm Password *",  placeholder:"Repeat password",     type:"password", required:true },
                 ].map(({key,label,placeholder,type,required}) => (
                   <div key={key}>
