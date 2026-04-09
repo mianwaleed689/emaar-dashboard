@@ -1,0 +1,115 @@
+import React, { useState } from "react";
+import { C, btnStyles } from "./tokens";
+import OverviewSection from "./OverviewSection";
+import DevelopmentsSection from "./DevelopmentsSection";
+
+/**
+ * DXB ANALYTICS - DATA MANAGER V2
+ * Central command center for managing all platform data
+ *
+ * Sections:
+ *   1. Overview     - platform-wide stats, health indicators, recent activity
+ *   2. Developments - master-planned communities and buildings (Schema v2)
+ *   3. Projects     - buyable unit variants within developments (coming next)
+ *   4. Developers   - developer registry with reliability metrics (coming next)
+ *
+ * Schema reference: docs/schema-v1.md (v2 hybrid two-collection model)
+ */
+export default function DataManagerV2({ currentUserId = null, currentUserEmail = null }) {
+  const [section, setSection] = useState("overview");
+
+  const nav = [
+    { id: "overview",     label: "Overview",     icon: "⊙", color: C.gold },
+    { id: "developments", label: "Developments", icon: "◉", color: C.teal },
+    { id: "projects",     label: "Projects",     icon: "◈", color: C.blue, disabled: true },
+    { id: "developers",   label: "Developers",   icon: "◆", color: C.purple, disabled: true },
+  ];
+
+  return (
+    <div style={{ background: C.bg, minHeight: "100vh", color: C.w, fontFamily: C.ff }}>
+      {/* Header */}
+      <div style={{
+        padding: "20px 28px",
+        borderBottom: `1px solid ${C.border}`,
+        background: `linear-gradient(180deg, ${C.s2}, ${C.bg})`,
+      }}>
+        <h1 style={{
+          margin: 0,
+          fontSize: 22,
+          fontFamily: C.ffH,
+          color: C.gold,
+          fontWeight: 600,
+        }}>
+          Data Manager <span style={{ fontSize: 11, color: C.t2, fontWeight: 400 }}>v2</span>
+        </h1>
+        <p style={{ margin: "4px 0 0 0", fontSize: 12, color: C.t2 }}>
+          Central command for developments, projects, developers, and compliance
+        </p>
+      </div>
+
+      <div style={{ display: "flex", minHeight: "calc(100vh - 80px)" }}>
+        {/* Left nav */}
+        <nav style={{
+          width: 220,
+          borderRight: `1px solid ${C.border}`,
+          padding: "20px 12px",
+          background: C.s1,
+          flexShrink: 0,
+        }}>
+          {nav.map(n => (
+            <button
+              key={n.id}
+              type="button"
+              disabled={n.disabled}
+              onClick={() => !n.disabled && setSection(n.id)}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 10,
+                width: "100%",
+                padding: "10px 14px",
+                marginBottom: 4,
+                background: section === n.id ? `${n.color}15` : "transparent",
+                border: section === n.id ? `1px solid ${n.color}40` : "1px solid transparent",
+                borderRadius: 8,
+                color: section === n.id ? n.color : (n.disabled ? C.m : C.t2),
+                fontSize: 13,
+                fontFamily: C.ff,
+                fontWeight: section === n.id ? 600 : 400,
+                cursor: n.disabled ? "not-allowed" : "pointer",
+                textAlign: "left",
+                opacity: n.disabled ? 0.4 : 1,
+              }}
+            >
+              <span style={{ fontSize: 16 }}>{n.icon}</span>
+              <span>{n.label}</span>
+              {n.disabled && (
+                <span style={{
+                  marginLeft: "auto",
+                  fontSize: 9,
+                  padding: "2px 6px",
+                  background: C.border,
+                  borderRadius: 4,
+                  color: C.m,
+                }}>SOON</span>
+              )}
+            </button>
+          ))}
+        </nav>
+
+        {/* Content area */}
+        <main style={{ flex: 1, padding: 28, overflow: "auto" }}>
+          {section === "overview" && (
+            <OverviewSection currentUserId={currentUserId} />
+          )}
+          {section === "developments" && (
+            <DevelopmentsSection
+              currentUserId={currentUserId}
+              currentUserEmail={currentUserEmail}
+            />
+          )}
+        </main>
+      </div>
+    </div>
+  );
+}
