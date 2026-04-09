@@ -236,6 +236,12 @@ export default function AgencySignup() {
               </div>
             </div>
           )}
+              <label style={{ display:"flex", alignItems:"flex-start", gap:8, marginTop:14, cursor:"pointer" }}>
+                <input type="checkbox" checked={agreedToTerms} onChange={e=>setAgreedToTerms(e.target.checked)} style={{ marginTop:2, cursor:"pointer" }}/>
+                <span style={{ fontSize:11, color:T.textMuted, lineHeight:1.5 }}>
+                  I agree to the <a href="/terms" target="_blank" style={{ color:T.gold, textDecoration:"none" }}>Terms of Service</a> and <a href="/privacy" target="_blank" style={{ color:T.gold, textDecoration:"none" }}>Privacy Policy</a>
+                </span>
+              </label>
 
           {/* ── STEP 3: Plan Selection ── */}
           {step === 3 && (
