@@ -234,7 +234,6 @@ export default function CommunitiesSection({ currentUserId, currentUserEmail }) 
       error: (e) => notify("CSV parse error: " + e.message, "error"),
     });
   }
-  }
 
   if (loading) return <div style={{ padding: 40, color: C.t2 }}>Loading communities...</div>;
 
