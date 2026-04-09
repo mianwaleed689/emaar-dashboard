@@ -194,9 +194,7 @@ export default function AgencySignup() {
                   color: accountType === "agency" ? "#000" : T.textMuted,
                   border: accountType === "agency" ? "none" : `1px solid ${T.border}`,
                   borderRadius:8, fontSize:12, fontWeight:700, cursor:"pointer",
-                  fontFamily:"
-'Outfit',sans-serif
-",
+                  fontFamily:`'Outfit',sans-serif`,
                 }}>
                   🏢 Real Estate Agency
                   <div style={{ fontSize:10, fontWeight:400, marginTop:3, opacity:0.85 }}>
@@ -209,9 +207,7 @@ export default function AgencySignup() {
                   color: accountType === "developer" ? "#000" : T.textMuted,
                   border: accountType === "developer" ? "none" : `1px solid ${T.border}`,
                   borderRadius:8, fontSize:12, fontWeight:700, cursor:"pointer",
-                  fontFamily:"
-'Outfit',sans-serif
-",
+                  fontFamily:`'Outfit',sans-serif`,
                 }}>
                   🏗️ Developer
                   <div style={{ fontSize:10, fontWeight:400, marginTop:3, opacity:0.85 }}>
