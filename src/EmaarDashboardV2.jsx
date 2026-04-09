@@ -2788,6 +2788,8 @@ export default function EmaarDashboardV2() {
           config: raw.config || raw.variantLabel || raw.type || "",
           beds: raw.beds || (raw.variantLabel ? [raw.variantLabel] : (raw.bedrooms !== undefined ? [raw.bedrooms === 0 ? "Studio" : raw.bedrooms + "BR"] : [])),
           handover: raw.handover || raw.expectedHandover || "",
+          paymentPlan: typeof raw.paymentPlan === "string" ? raw.paymentPlan : (raw.paymentPlan?.label || (raw.paymentPlan?.downPaymentPct ? raw.paymentPlan.downPaymentPct + "/" + (raw.paymentPlan.duringConstructionPct || 0) + "/" + (raw.paymentPlan.onHandoverPct || 0) : "")),
+          payment: typeof raw.paymentPlan === "string" ? raw.paymentPlan : (raw.paymentPlan?.label || ""),
           name: raw.name || raw.developmentName || "",
           project: raw.project || raw.name || "",
           // status
