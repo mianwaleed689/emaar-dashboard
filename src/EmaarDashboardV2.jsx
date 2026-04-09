@@ -2750,6 +2750,20 @@ export default function EmaarDashboardV2() {
       snap.forEach(d => {
         const raw = { ...d.data(), id: d.id, fromFirestore: true };
         // Schema v2 -> Schema v1 field translation for dashboard compatibility
+        const normalizeType = (t) => {
+          const s = (t || "").toLowerCase();
+          if (s.includes("apartment") || s.includes("studio") || s.includes("penthouse") || s.includes("duplex") || s.includes("loft")) return "Apartment";
+          if (s.includes("villa") && !s.includes("semi")) return "Villa";
+          if (s.includes("semi-detached")) return "Villa";
+          if (s.includes("townhouse")) return "Townhouse";
+          if (s.includes("mansion")) return "Villa";
+          if (s.includes("hotel")) return "Hotel Apartment";
+          if (s.includes("office")) return "Office";
+          if (s.includes("retail") || s.includes("shop")) return "Retail";
+          if (s.includes("warehouse")) return "Warehouse";
+          if (s.includes("land")) return "Land";
+          return "Apartment"; // default
+        };
         const data = {
           ...raw,
           // price: use priceFromAed if p.price is missing
@@ -2770,8 +2784,12 @@ export default function EmaarDashboardV2() {
           sizeFrom: raw.sizeFrom || raw.sizeSqftMin || 0,
           sizeTo: raw.sizeTo || raw.sizeSqftMax || 0,
           // type / config
-          type: raw.type || raw.propertyType || "",
+          type: normalizeType(raw.type || raw.propertyType || ""),
           config: raw.config || raw.variantLabel || raw.type || "",
+          beds: raw.beds || (raw.variantLabel ? [raw.variantLabel] : (raw.bedrooms !== undefined ? [raw.bedrooms === 0 ? "Studio" : raw.bedrooms + "BR"] : [])),
+          handover: raw.handover || raw.expectedHandover || "",
+          name: raw.name || raw.developmentName || "",
+          project: raw.project || raw.name || "",
           // status
           status: raw.status || raw.saleStatus || "off-plan",
           // community
