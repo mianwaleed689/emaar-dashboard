@@ -46,6 +46,7 @@ export default function AgencySignup() {
     name:"", email:"", password:"", confirmPassword:"",
   });
   const [selectedPlan, setSelectedPlan] = useState("pro");
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [createdOrg, setCreatedOrg] = useState(null);
 
   const STEPS = [
@@ -69,6 +70,7 @@ export default function AgencySignup() {
     if (!/[A-Z]/.test(managerForm.password)) { setError("Password must contain at least one uppercase letter"); return false; }
     if (!/[0-9]/.test(managerForm.password)) { setError("Password must contain at least one number"); return false; }
     if (managerForm.password !== managerForm.confirmPassword) { setError("Passwords do not match"); return false; }
+    if (!agreedToTerms) { setError("You must agree to the Terms of Service and Privacy Policy"); return false; }
     setError(""); return true;
   };
 
