@@ -224,3 +224,99 @@ Recommendation: Ship P0 plus critical P1 items (1.1, 1.2, 1.3, 1.8). Hold P1.4 t
 8. P0.6 (legal pages) - Claude drafts templates, user reviews, about 3 hours
 9. Full QA pass on signup to approve to login flow, about 1 hour
 10. Private beta launch to 5-10 friendly agencies
+
+---
+
+## Data Management Architecture (added 2026-04-09)
+
+### Three types of data, three ownership models
+
+**Type 1 - Market data (DLD, EIBOR, currency, yields, news)**
+- Owner: DXB Analytics
+- Source: Cron jobs pulling from official APIs
+- Edit rights: cron jobs + admins only
+- Read rights: all users
+- Status: Already built (9 cron jobs in api/_cron/)
+
+**Type 2 - Project/Development data**
+- Owner: Shared between DXB Analytics and developers
+- Source: DLD + Bayut scraping (auto) + developer claims (manual, verified)
+- Edit rights: Admin pre-populates, developers claim and edit limited fields after verification
+- Read rights: all users (public project info)
+- Model: Claim and verify (industry standard, used by Property Finder Pro, Bayut verified)
+- Legal: Original launch price, disclosedAt, unit count are LOCKED per Decree-Law 25/2025
+
+**Type 3 - Agency CRM data (leads, deals, listings, pipeline)**
+- Owner: Each agency owns their own
+- Source: Manual entry + CSV import + future browser extension
+- Edit rights: Only users with matching orgId (multi-tenant isolation)
+- Read rights: Only users in same organisation
+- Status: Multi-tenant isolation already works via firestore.rules sameOrg() helpers
+
+### New P1 items added
+
+### P1.9 - Audit and finish Admin Data Manager (10 hours)
+File: src/admin/DataManagerTab.jsx (71.6 KB, already exists)
+- Read the file to assess current state
+- Fix any broken functionality
+- Ensure DXB Analytics admin team can: add projects, edit projects, verify developer claims, bulk import CSV, view audit logs
+- Wire to Firestore developments + projects collections
+- Add cascade rules (deleting a development warns about orphaned projects)
+
+### P1.10 - CSV import for agency leads (4 hours)
+File: src/tabs/MyLeadsTab.jsx
+- Add "Upload CSV" button in MyLeadsTab
+- Parse CSV client-side with papaparse
+- Preview first 10 rows before import
+- Validate required fields (name, email or phone, source)
+- Bulk write to Firestore leads collection with current users orgId
+- Show progress bar for large imports
+- Log import event to auditLog
+
+### New P2 items added
+
+### P2.11 - Developer Portal with Claim and Verify flow (6 hours)
+- New signup path for developers (reuses AgencySignup.jsx with role=developer)
+- After signup and RERA verification, developer sees dashboard showing projects matching their name from DLD
+- Click Claim on their projects
+- Admin approves claim in AdminPanel verification queue
+- Once claimed, developer can edit: photos, brochures, floor plans, availability status, payment plan terms
+- Locked fields (cannot edit): original launch price, disclosedAt, unit count, DLD-sourced fields
+- All edits go through admin review before going live
+- All changes logged to projectAuditLog subcollection
+
+### P2.12 - WhatsApp Business lead capture (3-4 hours)
+- Already stubbed in AdminPanel.jsx lines 4310+ (pre-approved message templates)
+- Wire incoming WhatsApp messages to create leads automatically
+- Map sender number to agency orgId
+- Requires Meta Business verification and webhook setup
+
+### P2.13 - Browser extension for agent lead capture (8-12 hours)
+- Chrome and Firefox extension that captures leads from Bayut and Property Finder inboxes
+- One-click "Save to DXB Analytics" button on listing detail pages
+- Syncs to agent orgId in Firestore
+- Post-launch only
+
+### P2.14 - Open API for enterprise developers (15+ hours)
+- REST API for approved developers to bulk-sync inventory
+- API key generation in admin panel (auditLogApi.js already has the pattern)
+- Webhooks to external CRMs (Salesforce, HubSpot)
+- Rate limiting and tier-based quotas
+- Far-future, only after 10+ enterprise customers ask for it
+
+### Data quality and governance
+
+Decisions:
+- Agencies CANNOT upload project data (would be gamed for listings)
+- End users (buyers) CANNOT upload anything, read-only only
+- Developer edits always go through admin approval for first claim
+- All Type 2 edits go to projectAuditLog for compliance trail
+- Public API delayed until post-launch to reduce support burden
+- Developer claims require RERA license verification before first edit
+
+### Sequencing
+
+Pre-launch: P1.9 (Admin Data Manager) and P1.10 (CSV import) only
+Month 1 post-launch: P2.11 (Developer Portal)
+Month 2-3: P2.12 (WhatsApp) and P2.13 (Browser extension)
+Year 1: P2.14 (Open API) if demanded
