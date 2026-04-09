@@ -2749,52 +2749,6 @@ export default function EmaarDashboardV2() {
       const fsProjects = [];
       snap.forEach(d => {
         const data = { ...d.data(), id: d.id, fromFirestore: true };
-        const data = {
-          ...raw,
-          // price: use priceFromAed if p.price is missing
-          price: raw.price || raw.priceFromAed || 0,
-          priceFrom: raw.priceFrom || raw.priceFromAed || 0,
-          priceTo: raw.priceTo || raw.priceToAed || 0,
-          // ppsf: use pricePerSqftAed if missing
-          ppsf: raw.ppsf || raw.pricePerSqftAed || 0,
-          ppsfFrom: raw.ppsfFrom || raw.pricePerSqftAed || 0,
-          priceMin: raw.priceMin || raw.priceFromAed || raw.price || 0,
-          priceMax: raw.priceMax || raw.priceToAed || raw.price || 0,
-          sizeMin: raw.sizeMin || raw.sizeSqftMin || 0,
-          sizeMax: raw.sizeMax || raw.sizeSqftMax || 0,
-          grossYield: raw.grossYield || raw.grossYieldPct || 0,
-          // yield: use grossYieldPct if missing
-          gross: raw.gross || raw.grossYieldPct || 0,
-          yield: raw.yield || raw.grossYieldPct || 0,
-          netYield: raw.netYield || raw.netYieldPct || 0,
-          // developer display name
-          dev: raw.dev || raw.developerName || "",
-          developer: raw.developer || raw.developerName || "",
-          // size
-          sizeFrom: raw.sizeFrom || raw.sizeSqftMin || 0,
-          sizeTo: raw.sizeTo || raw.sizeSqftMax || 0,
-          // type / config
-          type: normalizeType(raw.type || raw.propertyType || ""),
-          config: raw.config || raw.variantLabel || raw.type || "",
-          beds: raw.beds || (raw.variantLabel ? [raw.variantLabel] : (raw.bedrooms !== undefined ? [raw.bedrooms === 0 ? "Studio" : raw.bedrooms + "BR"] : [])),
-          handover: raw.handover || raw.expectedHandover || "",
-          paymentPlan: typeof raw.paymentPlan === "string" ? raw.paymentPlan : (raw.paymentPlan?.label || (raw.paymentPlan?.downPaymentPct ? raw.paymentPlan.downPaymentPct + "/" + (raw.paymentPlan.duringConstructionPct || 0) + "/" + (raw.paymentPlan.onHandoverPct || 0) : "")),
-          payment: typeof raw.paymentPlan === "string" ? raw.paymentPlan : (raw.paymentPlan?.label || ""),
-          name: raw.name || raw.developmentName || "",
-          project: raw.project || raw.name || "",
-          // status
-          status: raw.status || raw.saleStatus || "off-plan",
-          // community
-          area: raw.area || raw.community || "",
-          community: raw.community || "",
-          // image
-          img: raw.img || raw.coverImageUrl || "",
-          image: raw.image || raw.coverImageUrl || "",
-          // golden visa flag
-          goldenVisa: raw.goldenVisa || raw.goldenVisaEligible || (raw.priceFromAed >= 2000000),
-          // handover
-          handover: raw.handover || raw.expectedHandover || "",
-        };
         if (data.developerId === "emaar" && baseIds.has(String(data.id?.toString().replace("emaar_", "")))) return;
         if (data.developerId === "emaar" && baseNames.has((data.name || "").toLowerCase().trim())) return;
         if (!baseIds.has(String(data.id))) fsProjects.push(data);
