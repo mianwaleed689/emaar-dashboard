@@ -244,3 +244,84 @@ Still-open items tracked in docs/launch-plan.md P0/P1/P2 sections.
 - vercel.json (updated cron paths to new router)
 
 The product owner asked the right architectural questions throughout: data management strategy, two-CRM separation. Both now captured in launch-plan.md.
+---
+
+## Session 7 Closing Note — April 9, 2026
+
+**Duration:** ~8 hours intensive build
+**Outcome:** Data Manager V2 complete, schema unified, dashboard shows Firestore data
+
+### What landed today
+
+**Data Manager V2 (/admin ? Data Manager):**
+- 7 sections: Overview, Developments, Projects, Developers, Communities, Compliance, Claims
+- Full CRUD on 4 collections with audit logging
+- Bulk operations on all 4 sections: multi-select, archive, publish/draft, CSV export/import (papaparse)
+- Advanced Developments form with 5 tabs (Basic, Location, Regulatory, Media, Amenities)
+- Real-time publish-readiness indicator
+- ~30 commits pushed
+
+**Developer Portal (/developer):**
+- New signup path with "I am a Developer" toggle at step 1
+- Dedicated dashboard for role=developer users
+- Browse unclaimed projects, submit claim with RERA license + evidence URL
+- Admin claim queue in Data Manager ? Claims section
+- One-click approve/reject with audit logging
+- firestore.rules updated with developerClaims collection rules (deployed)
+
+**Schema v1 migration (Option 1 dual-write validated):**
+- Deleted 15 Schema v2 projects
+- Wrote 5 dashboard-native Schema v1 projects with full fields:
+  Emaar Beachfront, Dubai Hills Estate, Sobha Hartland, DAMAC Hills, Bluewaters
+- Each project has 3 unit variants in unitBreakdown array
+- All 30+ dashboard fields populated (velocityScore, distMetro, amenities, etc)
+- Reverted the translation shim in EmaarDashboardV2 (clean architecture)
+
+**Dashboard integration:**
+- Projects tab shows 5 hardcoded + 5 Firestore = 10 total
+- All cards look identical (Schema v1 native format)
+- Comparison modal works across both data sources
+- Villa filter shows DAMAC Hills + Dubai Hills Estate
+- Apartment filter shows Emaar Beachfront, Sobha Hartland, Bluewaters
+
+**Seed data:**
+- 5 developments, 5 projects, 28 developers, 25 communities
+- scripts/seed/migrate-to-schema-v1.js — migration script
+- scripts/seed/seed-communities.js — 25 communities with market data
+- scripts/seed/enrich-developers.js — 20 developers with full data
+
+### Known limitations
+
+1. **Data Manager V2 writes Schema v2 format** — to sync to dashboard, run `node scripts/seed/migrate-to-schema-v1.js` manually. Post-launch task: rewrite save logic to output Schema v1 natively or add "Publish to Dashboard" button.
+
+2. **Remaining 31 dashboard tabs still read legacy collections** — Projects tab proven, others (Market, DLD Volumes, Yields, Handover, etc) still read hardcoded arrays or legacy collections. Each tab needs similar migration when ready.
+
+3. **22 developer drafts unfilled** — boutique/emerging developers not covered by enrichment script. Can be filled via admin UI or CSV import.
+
+### Remaining launch blockers
+
+**Critical (must do before launch):**
+1. Stripe product creation at AED 299 (Pro) and AED 799 (Enterprise)
+2. Add to Vercel env vars: STRIPE_SECRET_KEY, STRIPE_PRICE_ID_PRO, STRIPE_PRICE_ID_ENTERPRISE, NEXT_PUBLIC_URL
+3. Test signup ? checkout ? dashboard flow end-to-end with test card 4242
+
+**Nice-to-have (post-launch):**
+- Media upload to Firebase Storage (drag/drop file upload)
+- Edit permissions for approved developers (limited field editing)
+- DXB Internal Sales CRM (platformLeads Kanban)
+- Fill remaining 22 developer drafts
+- Per-tab Firestore migration (Option 2 progressive migration)
+
+### Launch recommendation
+
+Ship to 10 friendly agencies first. Collect real feedback. Then iterate.
+The product is functionally ready. Do not wait for perfect.
+
+### Files of record
+
+- `src/admin/DataManagerV2/` — 11 files, ~140 KB of admin code
+- `src/DeveloperPortal.jsx` — standalone developer dashboard
+- `src/EmaarDashboardV2.jsx` — 5,440 lines, Firestore integration working
+- `src/AgencySignup.jsx` — dual-mode signup (Agency + Developer)
+- `scripts/seed/` — 4 seed/migration scripts
+- `docs/decisions.md` — this file
