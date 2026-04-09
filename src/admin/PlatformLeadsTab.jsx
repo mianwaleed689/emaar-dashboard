@@ -98,6 +98,36 @@ function isStalled(lead) {
   return daysInStage(lead) > stage.stallDays;
 }
 
+function suggestNextFollowUp(stage) {
+  const now = new Date();
+  const daysToAdd = { prospect: 2, contacted: 2, qualified: 1, demo_scheduled: 1, trial_started: 3, negotiating: 1, paid: 30, churned: 90, lost: 180 };
+  now.setDate(now.getDate() + (daysToAdd[stage] || 2));
+  return now.toISOString().slice(0, 16);
+}
+
+function suggestFollowUpNotes(stage) {
+  const notes = {
+    prospect: "Send first outreach email",
+    contacted: "Follow up on initial outreach",
+    qualified: "Send demo invite and calendar link",
+    demo_scheduled: "Confirm demo attendance",
+    trial_started: "Check trial onboarding progress",
+    negotiating: "Send contract and pricing",
+    paid: "Check customer satisfaction",
+    churned: "Win-back campaign check",
+    lost: "Revisit in 6 months",
+  };
+  return notes[stage] || "";
+}
+
+function isTrialEndingSoon(lead) {
+  if (!lead.trialEndDate || lead.stage !== "trial_started") return false;
+  const end = new Date(lead.trialEndDate).getTime();
+  const now = Date.now();
+  const days = (end - now) / (1000 * 60 * 60 * 24);
+  return days >= 0 && days <= 3;
+}
+
 function isOverdue(lead) {
   if (!lead.nextFollowUpAt) return false;
   const t = lead.nextFollowUpAt?.toMillis ? lead.nextFollowUpAt.toMillis() : new Date(lead.nextFollowUpAt).getTime();
@@ -200,6 +230,7 @@ export default function PlatformLeadsTab({ currentUserId, currentUserEmail }) {
       overdue: overdueLeads.length,
       stalled: stalledLeads.length,
       burning: filtered.filter(l => (l.leadScore || calculateLeadScore(l)) >= 80).length,
+      trialEndingSoon: filtered.filter(isTrialEndingSoon).length,
     };
   }, [filtered]);
 
@@ -263,6 +294,8 @@ export default function PlatformLeadsTab({ currentUserId, currentUserEmail }) {
         updatedAt: serverTimestamp(),
         updatedBy: currentUserId || "unknown",
         lastActivityAt: new Date().toISOString(),
+        nextFollowUpAt: suggestNextFollowUp(newStage),
+        nextFollowUpNotes: suggestFollowUpNotes(newStage),
       }, { merge: true });
       await addDoc(collection(db, "platformLeads", lead.id, "auditLog"), {
         action: "stage-change",
@@ -406,6 +439,11 @@ export default function PlatformLeadsTab({ currentUserId, currentUserEmail }) {
       {stats.overdue > 0 && (
         <div style={{ padding: "10px 14px", background: "rgba(239,68,68,0.08)", border: "1px solid " + T.red + "40", borderRadius: 8, color: T.red, fontSize: 12, fontWeight: 600, marginBottom: 12 }}>
           ⚠ {stats.overdue} lead{stats.overdue > 1 ? "s have" : " has"} overdue follow-ups — review and reschedule
+        </div>
+      )}
+      {stats.trialEndingSoon > 0 && (
+        <div style={{ padding: "10px 14px", background: "rgba(168,85,247,0.08)", border: "1px solid " + T.purple + "40", borderRadius: 8, color: T.purple, fontSize: 12, fontWeight: 600, marginBottom: 12 }}>
+          🎯 {stats.trialEndingSoon} trial{stats.trialEndingSoon > 1 ? "s" : ""} ending within 3 days — convert them before expiry
         </div>
       )}
       {stats.stalled > 0 && (
@@ -1273,12 +1311,12 @@ function InboxView({ leads, onEdit }) {
                   if (lead) onEdit(lead);
                 }} style={{ padding: 12, background: T.bg, border: "1px solid " + T.border, borderRadius: 6, cursor: "pointer" }}>
                   <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
-                    <div style={{ fontSize: 16, lineHeight: 1 }}>{typeIcons[a.type] || "�"}</div>
+                    <div style={{ fontSize: 16, lineHeight: 1 }}>{typeIcons[a.type] || "�"}</div>
                     <div style={{ flex: 1 }}>
                       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4, flexWrap: "wrap", gap: 6 }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
                           <span style={{ fontSize: 12, color: T.white, fontWeight: 600 }}>{a.leadName}</span>
-                          {a.contactName && <span style={{ fontSize: 10, color: T.textMuted }}>� {a.contactName}</span>}
+                          {a.contactName && <span style={{ fontSize: 10, color: T.textMuted }}>� {a.contactName}</span>}
                           {stage && <span style={{ padding: "1px 6px", background: stage.color + "20", border: "1px solid " + stage.color + "40", color: stage.color, borderRadius: 3, fontSize: 8, fontWeight: 700, textTransform: "uppercase" }}>{stage.label}</span>}
                           <span style={{ padding: "1px 6px", background: color + "20", color: color, borderRadius: 3, fontSize: 8, fontWeight: 700, textTransform: "uppercase" }}>{a.type}</span>
                         </div>
