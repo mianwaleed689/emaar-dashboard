@@ -12,7 +12,7 @@ export default function ComplianceSection() {
 
   useEffect(() => {
     // Use collectionGroup to query all auditLog subcollections across all parent docs
-    const q = query(collectionGroup(db, "auditLog"), orderBy("timestamp", "desc"), limit(500));
+    const q = query(collectionGroup(db, "auditLog"), limit(500));
     const u = onSnapshot(q, snap => {
       const arr = [];
       snap.forEach(d => {
@@ -27,6 +27,11 @@ export default function ComplianceSection() {
           parentId,
           ...data,
         });
+      });
+      arr.sort((a, b) => {
+        const at = a.timestamp?.toMillis?.() || 0;
+        const bt = b.timestamp?.toMillis?.() || 0;
+        return bt - at;
       });
       setAudits(arr);
       setLoading(false);
