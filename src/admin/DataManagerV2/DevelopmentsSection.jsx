@@ -202,7 +202,6 @@ export default function DevelopmentsSection({ currentUserId, currentUserEmail })
       notify("Archive failed: " + e.message, "error");
     }
 
-  }
   // === BULK OPERATIONS ===
   function toggleSelection(id) {
     setSelectedIds(prev => {
