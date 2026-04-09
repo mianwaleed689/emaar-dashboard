@@ -4,20 +4,20 @@
 // SETUP (one-time, takes 10 minutes):
 // 1. Go to https://stripe.com → create account → activate UAE payments
 // 2. Go to Stripe Dashboard → Products → Create 2 products:
-//    - "DXB Analytics Pro"        → Price: AED 99/month  (recurring)
-//    - "DXB Analytics Enterprise" → Price: AED 499/month (recurring)
+//    - "DXB Analytics Pro"        -> Price: AED 299/month  (recurring)
+//    - "DXB Analytics Enterprise" -> Price: AED 799/month (recurring)
 // 3. Copy the Price IDs (start with "price_...") into STRIPE_PRICES below
 // 4. In Vercel Dashboard → your project → Settings → Environment Variables → add:
-//    STRIPE_SECRET_KEY  = sk_live_xxxxxxxxxxxx   (from Stripe Dashboard → Developers → API Keys)
+//    STRIPE_SECRET_KEY  = your Stripe live mode secret key (from Stripe Dashboard -> Developers -> API Keys)
 //    NEXT_PUBLIC_URL    = https://emaar-dashboard.vercel.app  (your Vercel URL)
 // 5. Deploy — Stripe will work automatically
 
 const Stripe = require("stripe");
 
-// ─── YOUR STRIPE PRICE IDs ─── (replace with real ones from Stripe Dashboard)
+// Stripe Price IDs read from environment variables (set in Vercel Dashboard)
 const STRIPE_PRICES = {
-  Pro: "price_REPLACE_WITH_PRO_PRICE_ID",           // AED 99/month
-  Enterprise: "price_REPLACE_WITH_ENTERPRISE_PRICE_ID", // AED 499/month
+  Pro:        process.env.STRIPE_PRICE_ID_PRO,         // AED 299/month
+  Enterprise: process.env.STRIPE_PRICE_ID_ENTERPRISE,  // AED 799/month
 };
 
 module.exports = async function handler(req, res) {
@@ -34,7 +34,7 @@ module.exports = async function handler(req, res) {
   }
 
   // Check Stripe key is configured
-  if (!process.env.STRIPE_SECRET_KEY || process.env.STRIPE_SECRET_KEY.includes("REPLACE")) {
+  if (!process.env.STRIPE_SECRET_KEY || !STRIPE_PRICES[plan]) {
     // Stripe not configured yet — return null so frontend falls back to WhatsApp
     return res.status(200).json({ url: null, fallback: "whatsapp" });
   }
