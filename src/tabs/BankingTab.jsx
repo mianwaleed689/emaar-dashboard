@@ -5,7 +5,7 @@ import React from "react";
 import { T } from "../data";
 import { SvgIcons } from "../components/Icons";
 
-function BankingTab({
+function BankingTab({ orgId, userId,
   bankView, setBankView,
   bankSelected, setBankSelected,
   bankPropValue, setBankPropValue,
@@ -895,7 +895,9 @@ function BankingTab({
                                 preferredBank: bankSelected,
                                 eibor3M: 3.593,
                                 source: "Banking Tab — DXB Analytics",
-                                userId: auth.currentUser?.uid || "guest",
+                                userId: userId || "unknown",
+                                orgId: orgId || null,
+                                assignedAgent: userId || null,
                                 createdAt: new Date().toISOString(),
                                 status: "new",
                               });
