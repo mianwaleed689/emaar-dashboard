@@ -125,6 +125,22 @@ export default function PlatformLeadsTab({ currentUserId, currentUserEmail }) {
   const [showImport, setShowImport] = useState(false);
   const [view, setView] = useState("kanban"); // kanban | list | stats
 
+  // Keyboard shortcuts
+  useEffect(() => {
+    function handleKey(e) {
+      if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA" || e.target.tagName === "SELECT") return;
+      if (editing !== null) return;
+      if (e.key === "n" || e.key === "N") { e.preventDefault(); setEditing({}); }
+      else if (e.key === "k" || e.key === "K") { e.preventDefault(); setView("kanban"); }
+      else if (e.key === "l" || e.key === "L") { e.preventDefault(); setView("list"); }
+      else if (e.key === "s" || e.key === "S") { e.preventDefault(); setView("stats"); }
+      else if (e.key === "i" || e.key === "I") { e.preventDefault(); setView("inbox"); }
+      else if (e.key === "/") { e.preventDefault(); document.querySelector('input[placeholder*="Search"]')?.focus(); }
+    }
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [editing]);
+
   useEffect(() => {
     const u = onSnapshot(collection(db, "platformLeads"), snap => {
       const arr = [];
@@ -436,7 +452,7 @@ export default function PlatformLeadsTab({ currentUserId, currentUserEmail }) {
 
       {/* View switcher */}
       <div style={{ display: "flex", gap: 4, marginBottom: 12, borderBottom: "1px solid " + T.border }}>
-        {[{k:"kanban",l:"⊞ Kanban"},{k:"list",l:"≡ List"},{k:"stats",l:"◈ Stats"}].map(v => (
+        {[{k:"kanban",l:"⊞ Kanban"},{k:"list",l:"≡ List"},{k:"inbox",l:"📥 Inbox"},{k:"stats",l:"◈ Stats"}].map(v => (
           <button key={v.k} onClick={() => setView(v.k)} style={{
             padding: "10px 18px",
             background: "transparent",
@@ -539,6 +555,10 @@ export default function PlatformLeadsTab({ currentUserId, currentUserEmail }) {
 
       {/* Stats view */}
       {view === "stats" && <StatsView leads={filtered} stats={stats} />}
+
+      {/* Inbox view */}
+      {view === "inbox" && <InboxView leads={filtered} onEdit={setEditing} />}
+
 
       {editing !== null && (
         <LeadEditModal
@@ -1163,6 +1183,120 @@ function StatsView({ leads, stats }) {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+// === INBOX VIEW ===
+function InboxView({ leads, onEdit }) {
+  const [filterType, setFilterType] = useState("all");
+
+  // Flatten all activities across all leads into one timeline
+  const allActivities = useMemo(() => {
+    const arr = [];
+    leads.forEach(l => {
+      (l.notes_log || []).forEach(n => {
+        arr.push({
+          ...n,
+          leadId: l.id,
+          leadName: l.companyName || "(unnamed)",
+          leadStage: l.stage,
+          contactName: l.contactName || "",
+        });
+      });
+    });
+    arr.sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime());
+    return arr;
+  }, [leads]);
+
+  const filtered = useMemo(() => {
+    if (filterType === "all") return allActivities;
+    return allActivities.filter(a => a.type === filterType);
+  }, [allActivities, filterType]);
+
+  const typeColors = {
+    note: T.textMuted,
+    call: T.blue,
+    email: T.cyan,
+    meeting: T.purple,
+    demo: T.gold,
+    whatsapp: T.green,
+    task: T.amber,
+  };
+
+  const typeIcons = {
+    note: "??",
+    call: "??",
+    email: "?",
+    meeting: "??",
+    demo: "??",
+    whatsapp: "??",
+    task: "?",
+  };
+
+  return (
+    <div>
+      {/* Filter pills */}
+      <div style={{ display: "flex", gap: 6, marginBottom: 14, flexWrap: "wrap" }}>
+        {["all", "call", "email", "meeting", "demo", "note", "whatsapp"].map(t => (
+          <button key={t} onClick={() => setFilterType(t)} style={{
+            padding: "6px 12px",
+            background: filterType === t ? T.gold + "20" : "transparent",
+            border: "1px solid " + (filterType === t ? T.gold : T.border),
+            borderRadius: 4,
+            color: filterType === t ? T.gold : T.textMuted,
+            fontSize: 10,
+            fontWeight: 600,
+            cursor: "pointer",
+            textTransform: "uppercase",
+            fontFamily: "'Outfit',sans-serif",
+          }}>
+            {t === "all" ? "All" : (typeIcons[t] + " " + t)}
+          </button>
+        ))}
+      </div>
+
+      {/* Timeline */}
+      <div style={{ background: T.surface, border: "1px solid " + T.border, borderRadius: 10, padding: 16 }}>
+        {filtered.length === 0 ? (
+          <div style={{ padding: 60, textAlign: "center", color: T.textDim, fontSize: 12 }}>
+            No activities yet. As you log calls, emails, and meetings on your leads, they'll appear here in chronological order.
+          </div>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            {filtered.slice(0, 100).map((a, i) => {
+              const color = typeColors[a.type] || T.textMuted;
+              const stage = STAGES.find(s => s.key === a.leadStage);
+              return (
+                <div key={i} onClick={() => {
+                  const lead = leads.find(l => l.id === a.leadId);
+                  if (lead) onEdit(lead);
+                }} style={{ padding: 12, background: T.bg, border: "1px solid " + T.border, borderRadius: 6, cursor: "pointer" }}>
+                  <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
+                    <div style={{ fontSize: 16, lineHeight: 1 }}>{typeIcons[a.type] || "�"}</div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4, flexWrap: "wrap", gap: 6 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                          <span style={{ fontSize: 12, color: T.white, fontWeight: 600 }}>{a.leadName}</span>
+                          {a.contactName && <span style={{ fontSize: 10, color: T.textMuted }}>� {a.contactName}</span>}
+                          {stage && <span style={{ padding: "1px 6px", background: stage.color + "20", border: "1px solid " + stage.color + "40", color: stage.color, borderRadius: 3, fontSize: 8, fontWeight: 700, textTransform: "uppercase" }}>{stage.label}</span>}
+                          <span style={{ padding: "1px 6px", background: color + "20", color: color, borderRadius: 3, fontSize: 8, fontWeight: 700, textTransform: "uppercase" }}>{a.type}</span>
+                        </div>
+                        <span style={{ fontSize: 9, color: T.textDim }}>{new Date(a.at).toLocaleString()}</span>
+                      </div>
+                      <div style={{ fontSize: 11, color: T.textMuted, lineHeight: 1.5 }}>{a.text}</div>
+                      {a.by && <div style={{ fontSize: 9, color: T.textDim, marginTop: 4 }}>by {a.by}</div>}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+            {filtered.length > 100 && (
+              <div style={{ padding: 12, textAlign: "center", fontSize: 10, color: T.textDim }}>Showing 100 of {filtered.length} activities</div>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
