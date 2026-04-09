@@ -697,7 +697,6 @@ export default function PlatformLeadsTab({ currentUserId, currentUserEmail }) {
                         ))}
                       </div>
                     )}
-                  </div>
                     {/* Quick-move buttons (works without drag) */}
                     <div style={{ display: "flex", gap: 4, marginTop: 10, paddingTop: 10, borderTop: "1px solid " + T.border, flexWrap: "wrap" }} onClick={e => e.stopPropagation()}>
                       {STAGES.filter(s => s.key !== stage.key).map(s => (
@@ -723,6 +722,7 @@ export default function PlatformLeadsTab({ currentUserId, currentUserEmail }) {
                         </button>
                       ))}
                     </div>
+                  </div>
                 );
               })}
             </div>
