@@ -8,7 +8,7 @@ import React from "react";
 import { T } from "../data";
 import { SvgIcons } from "../components/Icons";
 
-function PipelineTab({ deals, dealsLoading, dealForm, setDealForm, dealFormLoading, setDealFormLoading, showNewDeal, setShowNewDeal, selectedDeal, setSelectedDeal, pipelineType, setPipelineType, firebaseUser, orgId, orgRole, userName }) {
+function PipelineTab({ orgName, deals, dealsLoading, dealForm, setDealForm, dealFormLoading, setDealFormLoading, showNewDeal, setShowNewDeal, selectedDeal, setSelectedDeal, pipelineType, setPipelineType, firebaseUser, orgId, orgRole, userName }) {
 
             const isAgent   = orgRole === "agent";
             const isManager = orgRole === "manager";
@@ -107,7 +107,7 @@ function PipelineTab({ deals, dealsLoading, dealForm, setDealForm, dealFormLoadi
               {/* ── Header ── */}
               <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:20, flexWrap:"wrap", gap:12 }}>
                 <div>
-                  <h1 style={{ fontFamily:"'Fraunces',serif", fontSize:22, fontWeight:900, color:T.white, margin:0 }}>Deal Pipeline</h1>
+                  <h1 style={{ fontFamily:"'Fraunces',serif", fontSize:22, fontWeight:900, color:T.white, margin:0 }}>{orgName ? orgName + " — " : "My Agency — "}Deal Pipeline</h1>
                   <p style={{ fontSize:12, color:T.textMuted, margin:"4px 0 0" }}>EOI → Booking → SPA → DLD · Track every deal to close</p>
                 </div>
                 <div style={{ display:"flex", gap:8 }}>

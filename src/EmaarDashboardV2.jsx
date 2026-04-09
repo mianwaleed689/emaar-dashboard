@@ -4484,7 +4484,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
           {tab === "My Leads" && (
             <MyLeadsTab
               myLeads={myLeads} liveLeads={liveLeads}
-              orgRole={orgRole} userRole={userRole} orgId={orgId} listings={listings}
+              orgRole={orgRole} userRole={userRole} orgId={orgId} orgName={orgProfile?.name} listings={listings}
               leadSearch={leadSearch} setLeadSearch={setLeadSearch}
               leadStatusFilter={leadStatusFilter} setLeadStatusFilter={setLeadStatusFilter}
               leadTypeFilter={leadTypeFilter} setLeadTypeFilter={setLeadTypeFilter}
@@ -4531,7 +4531,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               showNewDeal={showNewDeal} setShowNewDeal={setShowNewDeal}
               selectedDeal={selectedDeal} setSelectedDeal={setSelectedDeal}
               pipelineType={pipelineType} setPipelineType={setPipelineType}
-              firebaseUser={firebaseUser} orgId={orgId} orgRole={orgRole} userName={userName}
+              firebaseUser={firebaseUser} orgId={orgId} orgName={orgProfile?.name} orgRole={orgRole} userName={userName}
             />
           )}
 

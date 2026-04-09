@@ -9,7 +9,7 @@ import { cleanPhone } from "../utils/helpers";
 import Papa from "papaparse";
 
 function MyLeadsTab({
-  myLeads, liveLeads, orgRole, userRole, orgId, listings,
+  myLeads, liveLeads, orgRole, userRole, orgId, orgName, listings,
   /* search/filters/sort */
   leadSearch, setLeadSearch,
   leadStatusFilter, setLeadStatusFilter,
@@ -357,7 +357,7 @@ function MyLeadsTab({
                 <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:18,flexWrap:"wrap",gap:10}}>
                   <div>
                     <h1 style={{fontFamily:"'Fraunces',serif",fontSize:22,fontWeight:900,color:T.white,margin:0}}>
-                      {mlIsManager?"Team Leads":"My Leads"}
+                      {orgName ? orgName + " — " : "My Agency — "}{mlIsManager ? "Team Leads" : "My Leads"}
                     </h1>
                     <p style={{fontSize:12,color:T.textMuted,margin:"3px 0 0"}}>
                       {mlFiltered.length} of {mlAllLeads.length} leads · AI scored · WhatsApp ready
