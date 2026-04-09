@@ -18,7 +18,7 @@ const MODES = [
 ];
 
 function ProjectsTab({
-  SEED_PROJECTS, liveProjects,
+  SEED_PROJECTS, liveProjects, extraProjects = [],
   projSearch, setProjSearch,
   projDev, setProjDev,
   projCommunity, setProjCommunity,
@@ -59,7 +59,7 @@ function ProjectsTab({
       {(() => {
 
             /* SEED_PROJECTS — defined at top level */
-            const rawProjects = liveProjects?.length > 0 ? liveProjects : SEED_PROJECTS;
+  const rawProjects = [...SEED_PROJECTS, ...(extraProjects || [])];
 
             const filtered = rawProjects.filter(p => {
               if (p.type !== projMode) return false;
