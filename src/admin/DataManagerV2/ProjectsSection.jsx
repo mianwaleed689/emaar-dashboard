@@ -4,6 +4,8 @@ import {
 } from "firebase/firestore";
 import { db } from "../../firebase";
 import { C, cardStyle, btnStyles, inputStyle } from "./tokens";
+import BulkToolbar from "./BulkToolbar";
+import Papa from "papaparse";
 
 const PROPERTY_TYPES = [
   "Studio Apartment", "1BR Apartment", "2BR Apartment", "3BR Apartment", "4BR Apartment", "5BR+ Apartment",
@@ -45,6 +47,7 @@ export default function ProjectsSection({ currentUserId, currentUserEmail }) {
   const [editing, setEditing] = useState(null);
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState(null);
+  const [selectedIds, setSelectedIds] = useState(new Set());
 
   useEffect(() => {
     const u1 = onSnapshot(collection(db, "projects"), snap => {
@@ -213,6 +216,105 @@ export default function ProjectsSection({ currentUserId, currentUserEmail }) {
     } catch (e) {
       notify("Archive failed: " + e.message, "error");
     }
+
+  // === BULK OPERATIONS ===
+  function toggleSelection(id) {
+    setSelectedIds(prev => { const n = new Set(prev); if (n.has(id)) n.delete(id); else n.add(id); return n; });
+  }
+  function selectAll() { setSelectedIds(new Set(filtered.map(p => p.id))); }
+  function clearSelection() { setSelectedIds(new Set()); }
+
+  async function bulkArchive() {
+    if (!window.confirm("Archive " + selectedIds.size + " projects?")) return;
+    try {
+      for (const id of selectedIds) {
+        await setDoc(doc(db, "projects", id), { visibility: "archived", updatedAt: serverTimestamp(), updatedBy: currentUserId || "unknown" }, { merge: true });
+        await addDoc(collection(db, "projects", id, "auditLog"), { action: "bulk-archive", userId: currentUserId || "unknown", userEmail: currentUserEmail || "unknown", timestamp: serverTimestamp() });
+      }
+      notify("Archived " + selectedIds.size + " projects");
+      setSelectedIds(new Set());
+    } catch (e) { notify("Bulk archive failed: " + e.message, "error"); }
+  }
+
+  async function bulkChangeVisibility(newVis) {
+    if (!window.confirm("Change " + selectedIds.size + " projects to " + newVis + "?")) return;
+    try {
+      for (const id of selectedIds) {
+        const payload = { visibility: newVis, updatedAt: serverTimestamp(), updatedBy: currentUserId || "unknown" };
+        if (newVis === "published") payload.disclosedAt = serverTimestamp();
+        await setDoc(doc(db, "projects", id), payload, { merge: true });
+        await addDoc(collection(db, "projects", id, "auditLog"), { action: "bulk-visibility-change", newVisibility: newVis, userId: currentUserId || "unknown", userEmail: currentUserEmail || "unknown", timestamp: serverTimestamp() });
+      }
+      notify("Changed " + selectedIds.size + " projects to " + newVis);
+      setSelectedIds(new Set());
+    } catch (e) { notify("Bulk change failed: " + e.message, "error"); }
+  }
+
+  function exportCsv() {
+    const rows = filtered.map(p => ({
+      id: p.id, developmentId: p.developmentId || "", developmentName: p.developmentName || "",
+      name: p.name || "", variantLabel: p.variantLabel || "", type: p.type || "",
+      category: p.category || "", visibility: p.visibility || "",
+      priceFromAed: p.priceFromAed || 0, priceToAed: p.priceToAed || 0, pricePerSqftAed: p.pricePerSqftAed || 0,
+      sizeSqftMin: p.sizeSqftMin || 0, sizeSqftMax: p.sizeSqftMax || 0,
+      bedrooms: p.bedrooms || 0, bathrooms: p.bathrooms || 0,
+      availableUnits: p.availableUnits || 0, totalUnits: p.totalUnits || 0,
+      grossYieldPct: p.grossYieldPct || 0, netYieldPct: p.netYieldPct || 0,
+      serviceChargePerSqft: p.serviceChargePerSqft || 0,
+      goldenVisaEligible: p.goldenVisaEligible || false, furnishing: p.furnishing || "",
+    }));
+    const csv = Papa.unparse(rows);
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = "projects-" + new Date().toISOString().slice(0,10) + ".csv"; a.click();
+    URL.revokeObjectURL(url);
+    notify("Exported " + rows.length + " projects");
+  }
+
+  function importCsv(file) {
+    Papa.parse(file, {
+      header: true, skipEmptyLines: true,
+      complete: async (results) => {
+        const rows = results.data;
+        if (!rows.length) { notify("CSV is empty", "error"); return; }
+        if (!window.confirm("Import " + rows.length + " projects?")) return;
+        let created = 0, updated = 0, failed = 0;
+        for (const r of rows) {
+          try {
+            const id = r.id || ((r.name || "").toLowerCase().replace(/[^\w\s-]/g, "").replace(/\s+/g, "-") + "-" + Date.now().toString(36));
+            const parent = developments.find(d => d.id === r.developmentId);
+            if (!parent) { failed++; continue; }
+            const priceFromAed = parseFloat(r.priceFromAed) || 0;
+            const payload = {
+              developmentId: r.developmentId, name: r.name || "", variantLabel: r.variantLabel || "",
+              type: r.type || "1BR Apartment", category: r.category || "residential",
+              visibility: r.visibility || "draft",
+              priceFromAed, priceToAed: parseFloat(r.priceToAed) || 0,
+              pricePerSqftAed: parseFloat(r.pricePerSqftAed) || 0,
+              sizeSqftMin: parseFloat(r.sizeSqftMin) || 0, sizeSqftMax: parseFloat(r.sizeSqftMax) || 0,
+              bedrooms: parseInt(r.bedrooms) || 0, bathrooms: parseInt(r.bathrooms) || 0,
+              availableUnits: parseInt(r.availableUnits) || 0, totalUnits: parseInt(r.totalUnits) || 0,
+              grossYieldPct: parseFloat(r.grossYieldPct) || 0, netYieldPct: parseFloat(r.netYieldPct) || 0,
+              serviceChargePerSqft: parseFloat(r.serviceChargePerSqft) || 0,
+              goldenVisaEligible: priceFromAed >= 2000000,
+              furnishing: r.furnishing || "unfurnished", currency: "AED",
+              developmentName: parent.name, developerId: parent.developerId, developerName: parent.developerName,
+              community: parent.community, coordinates: parent.coordinates,
+              orgId: "dxb-analytics", updatedAt: serverTimestamp(), updatedBy: currentUserId || "unknown",
+            };
+            const isNew = !r.id;
+            if (isNew) { payload.createdAt = serverTimestamp(); payload.createdBy = currentUserId || "unknown"; }
+            await setDoc(doc(db, "projects", id), payload, { merge: true });
+            await addDoc(collection(db, "projects", id, "auditLog"), { action: isNew ? "csv-import-create" : "csv-import-update", userId: currentUserId || "unknown", userEmail: currentUserEmail || "unknown", timestamp: serverTimestamp(), source: "csv-import" });
+            if (isNew) created++; else updated++;
+          } catch (e) { failed++; console.error(r, e); }
+        }
+        notify("Import: " + created + " created, " + updated + " updated" + (failed ? ", " + failed + " failed" : ""));
+      },
+      error: (e) => notify("CSV parse error: " + e.message, "error"),
+    });
+  }
   }
 
   if (loading) return <div style={{ padding: 40, color: C.t2 }}>Loading projects...</div>;
@@ -263,6 +365,19 @@ export default function ProjectsSection({ currentUserId, currentUserEmail }) {
         </div>
       </div>
 
+      <BulkToolbar
+        selectedCount={selectedIds.size}
+        totalCount={filtered.length}
+        onSelectAll={selectAll}
+        onClearSelection={clearSelection}
+        onBulkArchive={bulkArchive}
+        onBulkPublish={() => bulkChangeVisibility("published")}
+        onBulkDraft={() => bulkChangeVisibility("draft")}
+        onExportCsv={exportCsv}
+        onImportCsv={importCsv}
+        collectionName="projects"
+      />
+
       <div style={{ display: "grid", gap: 10 }}>
         {filtered.length === 0 ? (
           <div style={{ ...cardStyle, textAlign: "center", padding: 40, color: C.t2 }}>
@@ -272,6 +387,7 @@ export default function ProjectsSection({ currentUserId, currentUserEmail }) {
           const vColor = p.visibility === "published" ? C.green : p.visibility === "draft" ? C.amber : C.m;
           return (
             <div key={p.id} style={{ ...cardStyle, padding: 14, display: "flex", alignItems: "center", gap: 14, cursor: "pointer" }} onClick={() => setEditing(p)}>
+              <input type="checkbox" checked={selectedIds.has(p.id)} onClick={e => e.stopPropagation()} onChange={() => toggleSelection(p.id)} style={{ cursor: "pointer", width: 16, height: 16, accentColor: "#D4A843" }} />
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
                   <span style={{ fontSize: 14, color: C.w, fontWeight: 600 }}>{p.name || "(unnamed)"}</span>

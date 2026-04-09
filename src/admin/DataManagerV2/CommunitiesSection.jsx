@@ -4,6 +4,8 @@ import {
 } from "firebase/firestore";
 import { db } from "../../firebase";
 import { C, cardStyle, btnStyles, inputStyle } from "./tokens";
+import BulkToolbar from "./BulkToolbar";
+import Papa from "papaparse";
 
 const AREAS = [
   "Downtown", "Business Bay", "New Dubai", "Old Dubai", "Marina", "Dubai South",
@@ -41,6 +43,7 @@ export default function CommunitiesSection({ currentUserId, currentUserEmail }) 
   const [editing, setEditing] = useState(null);
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState(null);
+  const [selectedIds, setSelectedIds] = useState(new Set());
 
   useEffect(() => {
     const u = onSnapshot(collection(db, "communityData"), snap => {
@@ -140,6 +143,96 @@ export default function CommunitiesSection({ currentUserId, currentUserEmail }) 
     } catch (e) {
       notify("Archive failed: " + e.message, "error");
     }
+
+  function toggleSelection(id) { setSelectedIds(p => { const n = new Set(p); if (n.has(id)) n.delete(id); else n.add(id); return n; }); }
+  function selectAll() { setSelectedIds(new Set(filtered.map(c => c.id))); }
+  function clearSelection() { setSelectedIds(new Set()); }
+
+  async function bulkArchive() {
+    if (!window.confirm("Archive " + selectedIds.size + " communities?")) return;
+    try {
+      for (const id of selectedIds) {
+        await setDoc(doc(db, "communityData", id), { visibility: "archived", updatedAt: serverTimestamp(), updatedBy: currentUserId || "unknown" }, { merge: true });
+        await addDoc(collection(db, "communityData", id, "auditLog"), { action: "bulk-archive", userId: currentUserId || "unknown", timestamp: serverTimestamp() });
+      }
+      notify("Archived " + selectedIds.size + " communities"); setSelectedIds(new Set());
+    } catch (e) { notify("Bulk archive failed: " + e.message, "error"); }
+  }
+
+  async function bulkChangeVisibility(newVis) {
+    if (!window.confirm("Change " + selectedIds.size + " communities to " + newVis + "?")) return;
+    try {
+      for (const id of selectedIds) {
+        const payload = { visibility: newVis, updatedAt: serverTimestamp(), updatedBy: currentUserId || "unknown" };
+        if (newVis === "published") payload.disclosedAt = serverTimestamp();
+        await setDoc(doc(db, "communityData", id), payload, { merge: true });
+        await addDoc(collection(db, "communityData", id, "auditLog"), { action: "bulk-visibility-change", newVisibility: newVis, userId: currentUserId || "unknown", timestamp: serverTimestamp() });
+      }
+      notify("Changed " + selectedIds.size + " communities to " + newVis); setSelectedIds(new Set());
+    } catch (e) { notify("Bulk change failed: " + e.message, "error"); }
+  }
+
+  function exportCsv() {
+    const rows = filtered.map(c => ({
+      id: c.id, name: c.name || "", arabicName: c.arabicName || "",
+      area: c.area || "", type: c.type || "", visibility: c.visibility || "",
+      latitude: c.coordinates?.lat || "", longitude: c.coordinates?.lng || "",
+      totalProjects: c.totalProjects || 0, developersActive: c.developersActive || 0,
+      avgPpsf: c.avgPpsf || 0, avgRentPerSqftYr: c.avgRentPerSqftYr || 0,
+      grossYieldPct: c.grossYieldPct || 0, netYieldPct: c.netYieldPct || 0,
+      metroDistanceKm: c.metroDistanceKm || 0, nearestMetroStation: c.nearestMetroStation || "",
+      beachAccess: c.beachAccess || false, golfAccess: c.golfAccess || false, parkAccess: c.parkAccess || false,
+      schoolRating: c.schoolRating || 0, restaurantCount: c.restaurantCount || 0, populationEstimate: c.populationEstimate || 0,
+    }));
+    const csv = Papa.unparse(rows);
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = "communities-" + new Date().toISOString().slice(0,10) + ".csv"; a.click();
+    URL.revokeObjectURL(url);
+    notify("Exported " + rows.length + " communities");
+  }
+
+  function importCsv(file) {
+    Papa.parse(file, {
+      header: true, skipEmptyLines: true,
+      complete: async (results) => {
+        const rows = results.data;
+        if (!rows.length) { notify("CSV is empty", "error"); return; }
+        if (!window.confirm("Import " + rows.length + " communities?")) return;
+        let created = 0, updated = 0, failed = 0;
+        for (const r of rows) {
+          try {
+            const id = r.id || (r.name || "").toLowerCase().replace(/[^\w\s-]/g, "").replace(/\s+/g, "-");
+            const payload = {
+              name: r.name || "", arabicName: r.arabicName || "",
+              area: r.area || "", type: r.type || "Master Community",
+              visibility: r.visibility || "draft",
+              coordinates: { lat: parseFloat(r.latitude) || null, lng: parseFloat(r.longitude) || null },
+              totalProjects: parseInt(r.totalProjects) || 0, developersActive: parseInt(r.developersActive) || 0,
+              avgPpsf: parseFloat(r.avgPpsf) || 0, avgRentPerSqftYr: parseFloat(r.avgRentPerSqftYr) || 0,
+              grossYieldPct: parseFloat(r.grossYieldPct) || 0, netYieldPct: parseFloat(r.netYieldPct) || 0,
+              metroDistanceKm: parseFloat(r.metroDistanceKm) || 0, nearestMetroStation: r.nearestMetroStation || "",
+              beachAccess: r.beachAccess === "true" || r.beachAccess === true,
+              golfAccess: r.golfAccess === "true" || r.golfAccess === true,
+              parkAccess: r.parkAccess === "true" || r.parkAccess === true,
+              schoolRating: parseFloat(r.schoolRating) || 0,
+              restaurantCount: parseInt(r.restaurantCount) || 0,
+              populationEstimate: parseInt(r.populationEstimate) || 0,
+              orgId: "dxb-analytics", updatedAt: serverTimestamp(), updatedBy: currentUserId || "unknown",
+            };
+            const isNew = !r.id;
+            if (isNew) { payload.createdAt = serverTimestamp(); payload.createdBy = currentUserId || "unknown"; }
+            await setDoc(doc(db, "communityData", id), payload, { merge: true });
+            await addDoc(collection(db, "communityData", id, "auditLog"), { action: isNew ? "csv-import-create" : "csv-import-update", userId: currentUserId || "unknown", timestamp: serverTimestamp(), source: "csv-import" });
+            if (isNew) created++; else updated++;
+          } catch (e) { failed++; console.error(r, e); }
+        }
+        notify("Import: " + created + " created, " + updated + " updated" + (failed ? ", " + failed + " failed" : ""));
+      },
+      error: (e) => notify("CSV parse error: " + e.message, "error"),
+    });
+  }
   }
 
   if (loading) return <div style={{ padding: 40, color: C.t2 }}>Loading communities...</div>;
@@ -180,6 +273,19 @@ export default function CommunitiesSection({ currentUserId, currentUserEmail }) 
         </div>
       </div>
 
+      <BulkToolbar
+        selectedCount={selectedIds.size}
+        totalCount={filtered.length}
+        onSelectAll={selectAll}
+        onClearSelection={clearSelection}
+        onBulkArchive={bulkArchive}
+        onBulkPublish={() => bulkChangeVisibility("published")}
+        onBulkDraft={() => bulkChangeVisibility("draft")}
+        onExportCsv={exportCsv}
+        onImportCsv={importCsv}
+        collectionName="communities"
+      />
+
       <div style={{ display: "grid", gap: 10 }}>
         {filtered.length === 0 ? (
           <div style={{ ...cardStyle, textAlign: "center", padding: 40, color: C.t2 }}>
@@ -189,6 +295,7 @@ export default function CommunitiesSection({ currentUserId, currentUserEmail }) 
           const vColor = c.visibility === "published" ? C.green : c.visibility === "draft" ? C.amber : C.m;
           return (
             <div key={c.id} style={{ ...cardStyle, padding: 14, display: "flex", alignItems: "center", gap: 14, cursor: "pointer" }} onClick={() => setEditing(c)}>
+              <input type="checkbox" checked={selectedIds.has(c.id)} onClick={e => e.stopPropagation()} onChange={() => toggleSelection(c.id)} style={{ cursor: "pointer", width: 16, height: 16, accentColor: "#D4A843" }} />
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
                   <span style={{ fontSize: 14, color: C.w, fontWeight: 600 }}>{c.name || "(unnamed)"}</span>

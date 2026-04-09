@@ -4,6 +4,8 @@ import {
 } from "firebase/firestore";
 import { db } from "../../firebase";
 import { C, cardStyle, btnStyles, inputStyle } from "./tokens";
+import BulkToolbar from "./BulkToolbar";
+import Papa from "papaparse";
 
 const TIERS = ["tier-1", "tier-2", "tier-3", "emerging"];
 const VISIBILITY = ["draft", "published", "archived"];
@@ -27,6 +29,7 @@ export default function DevelopersSection({ currentUserId, currentUserEmail }) {
   const [editing, setEditing] = useState(null);
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState(null);
+  const [selectedIds, setSelectedIds] = useState(new Set());
 
   useEffect(() => {
     const u = onSnapshot(collection(db, "developers"), snap => {
@@ -136,6 +139,90 @@ export default function DevelopersSection({ currentUserId, currentUserEmail }) {
     } catch (e) {
       notify("Archive failed: " + e.message, "error");
     }
+
+  function toggleSelection(id) { setSelectedIds(p => { const n = new Set(p); if (n.has(id)) n.delete(id); else n.add(id); return n; }); }
+  function selectAll() { setSelectedIds(new Set(filtered.map(d => d.id))); }
+  function clearSelection() { setSelectedIds(new Set()); }
+
+  async function bulkArchive() {
+    if (!window.confirm("Archive " + selectedIds.size + " developers?")) return;
+    try {
+      for (const id of selectedIds) {
+        await setDoc(doc(db, "developers", id), { visibility: "archived", updatedAt: serverTimestamp(), updatedBy: currentUserId || "unknown" }, { merge: true });
+        await addDoc(collection(db, "developers", id, "auditLog"), { action: "bulk-archive", userId: currentUserId || "unknown", userEmail: currentUserEmail || "unknown", timestamp: serverTimestamp() });
+      }
+      notify("Archived " + selectedIds.size + " developers"); setSelectedIds(new Set());
+    } catch (e) { notify("Bulk archive failed: " + e.message, "error"); }
+  }
+
+  async function bulkChangeVisibility(newVis) {
+    if (!window.confirm("Change " + selectedIds.size + " developers to " + newVis + "?")) return;
+    try {
+      for (const id of selectedIds) {
+        const payload = { visibility: newVis, updatedAt: serverTimestamp(), updatedBy: currentUserId || "unknown" };
+        if (newVis === "published") payload.disclosedAt = serverTimestamp();
+        await setDoc(doc(db, "developers", id), payload, { merge: true });
+        await addDoc(collection(db, "developers", id, "auditLog"), { action: "bulk-visibility-change", newVisibility: newVis, userId: currentUserId || "unknown", userEmail: currentUserEmail || "unknown", timestamp: serverTimestamp() });
+      }
+      notify("Changed " + selectedIds.size + " developers to " + newVis); setSelectedIds(new Set());
+    } catch (e) { notify("Bulk change failed: " + e.message, "error"); }
+  }
+
+  function exportCsv() {
+    const rows = filtered.map(d => ({
+      id: d.id, name: d.name || "", arabicName: d.arabicName || "",
+      reraLicenseNumber: d.reraLicenseNumber || "", founded: d.founded || "",
+      headquarters: d.headquarters || "", website: d.website || "",
+      tier: d.tier || "", visibility: d.visibility || "",
+      onTimeRate: d.onTimeRate || 0, totalProjects: d.totalProjects || 0,
+      completedProjects: d.completedProjects || 0, activeProjects: d.activeProjects || 0,
+      reliabilityScore: d.reliabilityScore || 0, publiclyListed: d.publiclyListed || false,
+      stockTicker: d.stockTicker || "", description: d.description || "",
+    }));
+    const csv = Papa.unparse(rows);
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = "developers-" + new Date().toISOString().slice(0,10) + ".csv"; a.click();
+    URL.revokeObjectURL(url);
+    notify("Exported " + rows.length + " developers");
+  }
+
+  function importCsv(file) {
+    Papa.parse(file, {
+      header: true, skipEmptyLines: true,
+      complete: async (results) => {
+        const rows = results.data;
+        if (!rows.length) { notify("CSV is empty", "error"); return; }
+        if (!window.confirm("Import " + rows.length + " developers?")) return;
+        let created = 0, updated = 0, failed = 0;
+        for (const r of rows) {
+          try {
+            const id = r.id || (r.name || "").toLowerCase().replace(/[^\w\s-]/g, "").replace(/\s+/g, "-");
+            const payload = {
+              name: r.name || "", arabicName: r.arabicName || "",
+              reraLicenseNumber: r.reraLicenseNumber || "", founded: parseInt(r.founded) || null,
+              headquarters: r.headquarters || "", website: r.website || "",
+              tier: r.tier || "tier-2", visibility: r.visibility || "draft",
+              onTimeRate: parseInt(r.onTimeRate) || 0, totalProjects: parseInt(r.totalProjects) || 0,
+              completedProjects: parseInt(r.completedProjects) || 0, activeProjects: parseInt(r.activeProjects) || 0,
+              reliabilityScore: parseInt(r.reliabilityScore) || 0,
+              publiclyListed: r.publiclyListed === "true" || r.publiclyListed === true,
+              stockTicker: r.stockTicker || "", description: r.description || "",
+              orgId: "dxb-analytics", updatedAt: serverTimestamp(), updatedBy: currentUserId || "unknown",
+            };
+            const isNew = !r.id;
+            if (isNew) { payload.createdAt = serverTimestamp(); payload.createdBy = currentUserId || "unknown"; }
+            await setDoc(doc(db, "developers", id), payload, { merge: true });
+            await addDoc(collection(db, "developers", id, "auditLog"), { action: isNew ? "csv-import-create" : "csv-import-update", userId: currentUserId || "unknown", userEmail: currentUserEmail || "unknown", timestamp: serverTimestamp(), source: "csv-import" });
+            if (isNew) created++; else updated++;
+          } catch (e) { failed++; console.error(r, e); }
+        }
+        notify("Import: " + created + " created, " + updated + " updated" + (failed ? ", " + failed + " failed" : ""));
+      },
+      error: (e) => notify("CSV parse error: " + e.message, "error"),
+    });
+  }
   }
 
   if (loading) return <div style={{ padding: 40, color: C.t2 }}>Loading developers...</div>;
@@ -172,6 +259,19 @@ export default function DevelopersSection({ currentUserId, currentUserEmail }) {
         </div>
       </div>
 
+      <BulkToolbar
+        selectedCount={selectedIds.size}
+        totalCount={filtered.length}
+        onSelectAll={selectAll}
+        onClearSelection={clearSelection}
+        onBulkArchive={bulkArchive}
+        onBulkPublish={() => bulkChangeVisibility("published")}
+        onBulkDraft={() => bulkChangeVisibility("draft")}
+        onExportCsv={exportCsv}
+        onImportCsv={importCsv}
+        collectionName="developers"
+      />
+
       <div style={{ display: "grid", gap: 10 }}>
         {filtered.length === 0 ? (
           <div style={{ ...cardStyle, textAlign: "center", padding: 40, color: C.t2 }}>
@@ -184,6 +284,7 @@ export default function DevelopersSection({ currentUserId, currentUserEmail }) {
           const relColor = reliability >= 85 ? C.green : reliability >= 70 ? C.amber : C.red;
           return (
             <div key={d.id} style={{ ...cardStyle, padding: 14, display: "flex", alignItems: "center", gap: 14, cursor: "pointer" }} onClick={() => setEditing(d)}>
+              <input type="checkbox" checked={selectedIds.has(d.id)} onClick={e => e.stopPropagation()} onChange={() => toggleSelection(d.id)} style={{ cursor: "pointer", width: 16, height: 16, accentColor: "#D4A843" }} />
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
                   <span style={{ fontSize: 14, color: C.w, fontWeight: 600 }}>{d.name || "(unnamed)"}</span>
