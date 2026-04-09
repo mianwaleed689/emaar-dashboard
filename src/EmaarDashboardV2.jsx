@@ -2504,6 +2504,8 @@ export default function EmaarDashboardV2() {
   const [selectedProject, setSelectedProject] = useState(null);
   const [projDetailTab, setProjDetailTab] = useState("Overview");
   const [projCompare, setProjCompare] = useState([]);
+  // Sync projCompare -> compareList so the comparison modal sees selections from Projects tab
+  useEffect(() => { setCompareList(projCompare); }, [projCompare]);
   const [showCompare, setShowCompare] = useState(false);
 
 
