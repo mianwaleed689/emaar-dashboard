@@ -4717,7 +4717,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               {compareList.map(p => (
                 <a key={p.id} href={`/project/${p.id}`}
                   style={{ flex: 1, padding: "10px 0", background: "linear-gradient(135deg, rgba(212,168,67,0.15), rgba(212,168,67,0.07))", border: "1px solid rgba(212,168,67,0.3)", borderRadius: 10, color: T.gold, fontSize: 12, fontWeight: 700, textAlign: "center", textDecoration: "none" }}>
-                  \uD83D\uDCC4 {p.name.split(" ").slice(0,2).join(" ")}
+                  \uD83D\uDCC4 {(p.name || p.project || "").split(" ").slice(0,2).join(" ")}
                 </a>
               ))}
             </div>
@@ -4727,7 +4727,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 {compareList.map(p => p.emaarUrl ? (
                   <a key={p.id} href={p.emaarUrl} target="_blank" rel="noopener noreferrer"
                     style={{ flex: 1, padding: "8px 0", background: "rgba(212,168,67,0.08)", border: "1px solid rgba(212,168,67,0.35)", borderRadius: 10, color: T.gold, fontSize: 11, fontWeight: 700, textAlign: "center", textDecoration: "none" }}>
-                    {p.name.split(" ").slice(0,2).join(" ")} ↗ {getLinkDomain(p.emaarUrl)}
+                    {(p.name || p.project || "").split(" ").slice(0,2).join(" ")} ↗ {getLinkDomain(p.emaarUrl)}
                   </a>
                 ) : <div key={p.id} style={{ flex: 1 }} />)}
               </div>
