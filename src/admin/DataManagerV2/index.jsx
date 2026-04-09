@@ -5,6 +5,7 @@ import DevelopmentsSection from "./DevelopmentsSection";
 import ProjectsSection from "./ProjectsSection";
 import DevelopersSection from "./DevelopersSection";
 import CommunitiesSection from "./CommunitiesSection";
+import ComplianceSection from "./ComplianceSection";
 
 /**
  * DXB ANALYTICS - DATA MANAGER V2
