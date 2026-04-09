@@ -39,6 +39,7 @@ export default function AgencySignup() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  const [accountType, setAccountType] = useState("agency"); // "agency" or "developer"
   const [agencyForm, setAgencyForm] = useState({
     name:"", reraNo:"", tradeLicense:"", phone:"", city:"Dubai", website:"",
   });
@@ -50,7 +51,7 @@ export default function AgencySignup() {
   const [createdOrg, setCreatedOrg] = useState(null);
 
   const STEPS = [
-    { n:1, label:"Agency Details" },
+    { n:1, label: accountType === "developer" ? "Developer Details" : "Agency Details" },
     { n:2, label:"Manager Account" },
     { n:3, label:"Select Plan" },
     { n:4, label:"All Done" },
@@ -92,13 +93,13 @@ export default function AgencySignup() {
       await setDoc(doc(db, "users", uid), {
         name:      managerForm.name.trim(),
         email:     managerForm.email.trim(),
-        role:      "user",
+        role:      accountType === "developer" ? "developer" : "user",
         orgRole:   "manager",
         orgId,
         tier:      selectedPlan === "free" ? "free" : "pro_trial",
         trialEnd:  selectedPlan !== "free" ? new Date(Date.now() + 14*24*60*60*1000).toISOString() : null,
         createdAt: now,
-        signupSource: "agency_self_serve",
+        signupSource: accountType === "developer" ? "developer_self_serve" : "agency_self_serve",
       });
 
       // Create organisation doc
@@ -118,7 +119,7 @@ export default function AgencySignup() {
         leadCount:    0,
         createdAt:    now,
         updatedAt:    now,
-        type:         "Agency",
+        type:         accountType === "developer" ? "Developer" : "Agency",
       });
 
       setCreatedOrg({ orgId, name: agencyForm.name.trim() });
@@ -184,12 +185,44 @@ export default function AgencySignup() {
           {/* ── STEP 1: Agency Details ── */}
           {step === 1 && (
             <div style={{ padding:"28px 28px 24px" }}>
-              <div style={{ fontFamily:"'Fraunces',serif", fontSize:20, fontWeight:900, color:T.white, marginBottom:4 }}>Tell us about your agency</div>
-              <div style={{ fontSize:12, color:T.textMuted, marginBottom:24 }}>Your agency profile — you can update this later</div>
+              <div style={{ fontFamily:"'Fraunces',serif", fontSize:20, fontWeight:900, color:T.white, marginBottom:4 }}>Tell us about your {accountType === "developer" ? "company" : "agency"}</div>
+              <div style={{ fontSize:12, color:T.textMuted, marginBottom:18 }}>Your {accountType === "developer" ? "developer" : "agency"} profile — you can update this later</div>
+              <div style={{ display:"flex", gap:10, marginBottom:18 }}>
+                <button type="button" onClick={()=>setAccountType("agency")} style={{
+                  flex:1, padding:"14px 12px",
+                  background: accountType === "agency" ? `linear-gradient(135deg, ${T.gold}, #B8922A)` : T.surfaceAlt,
+                  color: accountType === "agency" ? "#000" : T.textMuted,
+                  border: accountType === "agency" ? "none" : `1px solid ${T.border}`,
+                  borderRadius:8, fontSize:12, fontWeight:700, cursor:"pointer",
+                  fontFamily:"
+'Outfit',sans-serif
+",
+                }}>
+                  🏢 Real Estate Agency
+                  <div style={{ fontSize:10, fontWeight:400, marginTop:3, opacity:0.85 }}>
+                    Broker / agent / brokerage firm
+                  </div>
+                </button>
+                <button type="button" onClick={()=>setAccountType("developer")} style={{
+                  flex:1, padding:"14px 12px",
+                  background: accountType === "developer" ? `linear-gradient(135deg, ${T.gold}, #B8922A)` : T.surfaceAlt,
+                  color: accountType === "developer" ? "#000" : T.textMuted,
+                  border: accountType === "developer" ? "none" : `1px solid ${T.border}`,
+                  borderRadius:8, fontSize:12, fontWeight:700, cursor:"pointer",
+                  fontFamily:"
+'Outfit',sans-serif
+",
+                }}>
+                  🏗️ Developer
+                  <div style={{ fontSize:10, fontWeight:400, marginTop:3, opacity:0.85 }}>
+                    Build & claim your projects
+                  </div>
+                </button>
+              </div>
               <div style={{ display:"flex", flexDirection:"column", gap:14 }}>
                 {[
-                  { key:"name",         label:"Agency Name *",      placeholder:"Better Homes Dubai",    required:true },
-                  { key:"reraNo",       label:"RERA Broker Number", placeholder:"BRN-XXXXX"                            },
+                  { key:"name",         label:(accountType === "developer" ? "Company Name *" : "Agency Name *"),      placeholder:(accountType === "developer" ? "Emaar Properties" : "Better Homes Dubai"),    required:true },
+                  { key:"reraNo",       label:(accountType === "developer" ? "RERA Developer License" : "RERA Broker Number"), placeholder:(accountType === "developer" ? "RERA #XX" : "BRN-XXXXX")                            },
                   { key:"tradeLicense", label:"Trade License No.",  placeholder:"DED-XXXXXXX"                          },
                   { key:"phone",        label:"Phone Number",       placeholder:"+971 4 XXX XXXX"                      },
                   { key:"website",      label:"Website",            placeholder:"www.youragency.ae"                     },
