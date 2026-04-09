@@ -123,6 +123,7 @@ export default function PlatformLeadsTab({ currentUserId, currentUserEmail }) {
   const [filterSource, setFilterSource] = useState("all");
   const [filterOwner, setFilterOwner] = useState("all");
   const [showImport, setShowImport] = useState(false);
+  const [view, setView] = useState("kanban"); // kanban | list | stats
 
   useEffect(() => {
     const u = onSnapshot(collection(db, "platformLeads"), snap => {
@@ -433,7 +434,27 @@ export default function PlatformLeadsTab({ currentUserId, currentUserEmail }) {
         )}
       </div>
 
-      {/* Kanban board */}
+      {/* View switcher */}
+      <div style={{ display: "flex", gap: 4, marginBottom: 12, borderBottom: "1px solid " + T.border }}>
+        {[{k:"kanban",l:"⊞ Kanban"},{k:"list",l:"≡ List"},{k:"stats",l:"◈ Stats"}].map(v => (
+          <button key={v.k} onClick={() => setView(v.k)} style={{
+            padding: "10px 18px",
+            background: "transparent",
+            border: "none",
+            borderBottom: "2px solid " + (view === v.k ? T.gold : "transparent"),
+            color: view === v.k ? T.gold : T.textMuted,
+            fontSize: 11,
+            fontWeight: 700,
+            textTransform: "uppercase",
+            letterSpacing: 0.5,
+            cursor: "pointer",
+            fontFamily: "'Outfit',sans-serif",
+          }}>{v.l}</button>
+        ))}
+      </div>
+
+      {/* Kanban view */}
+      {view === "kanban" && (
       <div style={{ display: "flex", gap: 10, overflow: "auto", paddingBottom: 20 }}>
         {STAGES.map(stage => (
           <div key={stage.key} style={{ flex: "0 0 270px", background: T.surface, border: "1px solid " + T.border, borderRadius: 10, padding: 10 }}>
@@ -510,6 +531,14 @@ export default function PlatformLeadsTab({ currentUserId, currentUserEmail }) {
           </div>
         ))}
       </div>
+
+      )}
+
+      {/* List view */}
+      {view === "list" && <ListView leads={filtered} onEdit={setEditing} onMoveStage={moveStage} />}
+
+      {/* Stats view */}
+      {view === "stats" && <StatsView leads={filtered} stats={stats} />}
 
       {editing !== null && (
         <LeadEditModal
@@ -868,6 +897,272 @@ function LeadEditModal({ initial, onClose, onSave, onDelete, onAddNote, saving }
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+// === LIST VIEW ===
+function ListView({ leads, onEdit, onMoveStage }) {
+  const [sortBy, setSortBy] = useState("leadScore");
+  const [sortDir, setSortDir] = useState("desc");
+  const [selected, setSelected] = useState(new Set());
+
+  const sorted = useMemo(() => {
+    const arr = [...leads];
+    arr.sort((a, b) => {
+      let av = a[sortBy] ?? 0;
+      let bv = b[sortBy] ?? 0;
+      if (sortBy === "leadScore") { av = a.leadScore || calculateLeadScore(a); bv = b.leadScore || calculateLeadScore(b); }
+      if (sortBy === "companyName" || sortBy === "contactName") { av = String(av).toLowerCase(); bv = String(bv).toLowerCase(); }
+      if (av < bv) return sortDir === "asc" ? -1 : 1;
+      if (av > bv) return sortDir === "asc" ? 1 : -1;
+      return 0;
+    });
+    return arr;
+  }, [leads, sortBy, sortDir]);
+
+  function toggleSort(col) {
+    if (sortBy === col) setSortDir(d => d === "asc" ? "desc" : "asc");
+    else { setSortBy(col); setSortDir("desc"); }
+  }
+
+  function toggleSelect(id) {
+    const s = new Set(selected);
+    if (s.has(id)) s.delete(id); else s.add(id);
+    setSelected(s);
+  }
+
+  function toggleSelectAll() {
+    if (selected.size === sorted.length) setSelected(new Set());
+    else setSelected(new Set(sorted.map(l => l.id)));
+  }
+
+  const headerStyle = { padding: "10px 12px", textAlign: "left", fontSize: 10, color: T.textMuted, textTransform: "uppercase", fontWeight: 700, letterSpacing: 0.5, cursor: "pointer", borderBottom: "1px solid " + T.border, background: T.surface };
+  const cellStyle = { padding: "10px 12px", fontSize: 11, color: T.white, borderBottom: "1px solid " + T.border };
+
+  return (
+    <div style={{ background: T.surface, border: "1px solid " + T.border, borderRadius: 10, overflow: "hidden" }}>
+      {selected.size > 0 && (
+        <div style={{ padding: "10px 14px", background: T.gold + "10", borderBottom: "1px solid " + T.gold + "40", display: "flex", gap: 10, alignItems: "center" }}>
+          <span style={{ fontSize: 11, color: T.gold, fontWeight: 600 }}>{selected.size} selected</span>
+          <select onChange={(e) => {
+            if (!e.target.value) return;
+            sorted.filter(l => selected.has(l.id)).forEach(l => onMoveStage(l, e.target.value));
+            setSelected(new Set());
+            e.target.value = "";
+          }} style={{ padding: "5px 8px", background: T.bg, border: "1px solid " + T.border, borderRadius: 4, color: T.white, fontSize: 10, cursor: "pointer" }}>
+            <option value="">Move to stage...</option>
+            {STAGES.map(s => <option key={s.key} value={s.key}>{s.label}</option>)}
+          </select>
+          <button onClick={() => setSelected(new Set())} style={{ padding: "5px 10px", background: "transparent", border: "1px solid " + T.border, borderRadius: 4, color: T.textMuted, fontSize: 10, cursor: "pointer" }}>Clear</button>
+        </div>
+      )}
+      <div style={{ overflowX: "auto" }}>
+        <table style={{ width: "100%", borderCollapse: "collapse", fontFamily: "'Outfit',sans-serif" }}>
+          <thead>
+            <tr>
+              <th style={{ ...headerStyle, width: 30 }}>
+                <input type="checkbox" checked={selected.size === sorted.length && sorted.length > 0} onChange={toggleSelectAll} />
+              </th>
+              <th style={headerStyle} onClick={() => toggleSort("companyName")}>Company {sortBy === "companyName" && (sortDir === "asc" ? "?" : "?")}</th>
+              <th style={headerStyle}>Contact</th>
+              <th style={headerStyle} onClick={() => toggleSort("stage")}>Stage</th>
+              <th style={headerStyle} onClick={() => toggleSort("leadScore")}>Score {sortBy === "leadScore" && (sortDir === "asc" ? "?" : "?")}</th>
+              <th style={headerStyle} onClick={() => toggleSort("estimatedArr")}>ARR {sortBy === "estimatedArr" && (sortDir === "asc" ? "?" : "?")}</th>
+              <th style={headerStyle} onClick={() => toggleSort("mrr")}>MRR {sortBy === "mrr" && (sortDir === "asc" ? "?" : "?")}</th>
+              <th style={headerStyle}>Source</th>
+              <th style={headerStyle}>Owner</th>
+              <th style={headerStyle}>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {sorted.length === 0 ? (
+              <tr><td colSpan={10} style={{ ...cellStyle, textAlign: "center", color: T.textDim, padding: 40 }}>No leads match filters</td></tr>
+            ) : sorted.map(l => {
+              const score = l.leadScore || calculateLeadScore(l);
+              const temp = getTemperature(score);
+              const stage = STAGES.find(s => s.key === l.stage);
+              const stalled = isStalled(l);
+              const overdue = isOverdue(l);
+              return (
+                <tr key={l.id} style={{ cursor: "pointer" }} onClick={() => onEdit(l)}>
+                  <td style={cellStyle} onClick={e => { e.stopPropagation(); toggleSelect(l.id); }}>
+                    <input type="checkbox" checked={selected.has(l.id)} onChange={() => {}} />
+                  </td>
+                  <td style={cellStyle}>
+                    <div style={{ fontWeight: 600 }}>{l.companyName || "(unnamed)"}</div>
+                    {l.companyType && <div style={{ fontSize: 9, color: T.textDim }}>{l.companyType}</div>}
+                  </td>
+                  <td style={cellStyle}>
+                    <div>{l.contactName || "-"}</div>
+                    <div style={{ fontSize: 9, color: T.textDim }}>{l.contactEmail || ""}</div>
+                  </td>
+                  <td style={cellStyle}>
+                    {stage && <span style={{ padding: "2px 8px", background: stage.color + "20", border: "1px solid " + stage.color + "40", color: stage.color, borderRadius: 3, fontSize: 9, fontWeight: 700 }}>{stage.label}</span>}
+                  </td>
+                  <td style={cellStyle}>
+                    <span style={{ padding: "2px 6px", background: temp.color + "20", color: temp.color, borderRadius: 3, fontSize: 10, fontWeight: 700, fontFamily: "monospace" }}>{score}</span>
+                  </td>
+                  <td style={cellStyle}>{formatCurrency(l.estimatedArr)}</td>
+                  <td style={cellStyle}>{formatCurrency(l.mrr)}</td>
+                  <td style={cellStyle}>{l.source || "-"}</td>
+                  <td style={cellStyle}>{l.assignedTo || "-"}</td>
+                  <td style={cellStyle}>
+                    {stalled && <span style={{ fontSize: 8, padding: "1px 4px", background: T.red + "20", color: T.red, borderRadius: 2, marginRight: 4 }}>? stalled</span>}
+                    {overdue && <span style={{ fontSize: 8, padding: "1px 4px", background: T.amber + "20", color: T.amber, borderRadius: 2 }}>? overdue</span>}
+                    {!stalled && !overdue && <span style={{ fontSize: 8, color: T.textDim }}>OK</span>}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+// === STATS VIEW ===
+function StatsView({ leads, stats }) {
+  const stageBreakdown = useMemo(() => {
+    return STAGES.map(s => ({
+      ...s,
+      count: leads.filter(l => l.stage === s.key).length,
+      value: leads.filter(l => l.stage === s.key).reduce((sum, l) => sum + (l.estimatedArr || 0), 0),
+    }));
+  }, [leads]);
+
+  const sourceBreakdown = useMemo(() => {
+    const m = {};
+    leads.forEach(l => {
+      const s = l.source || "Unknown";
+      if (!m[s]) m[s] = { count: 0, value: 0 };
+      m[s].count++;
+      m[s].value += l.estimatedArr || 0;
+    });
+    return Object.entries(m).map(([k, v]) => ({ name: k, ...v })).sort((a, b) => b.count - a.count);
+  }, [leads]);
+
+  const topLeads = useMemo(() => {
+    return [...leads]
+      .map(l => ({ ...l, _score: l.leadScore || calculateLeadScore(l) }))
+      .sort((a, b) => b._score - a._score)
+      .slice(0, 10);
+  }, [leads]);
+
+  const stalledLeads = useMemo(() => {
+    return leads.filter(isStalled).sort((a, b) => daysInStage(b) - daysInStage(a)).slice(0, 10);
+  }, [leads]);
+
+  const maxFunnel = Math.max(...stageBreakdown.map(s => s.count), 1);
+
+  return (
+    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+      {/* Pipeline Funnel */}
+      <div style={{ padding: 18, background: T.surface, border: "1px solid " + T.border, borderRadius: 10 }}>
+        <h3 style={{ margin: "0 0 14px 0", fontSize: 13, color: T.white, fontFamily: "'Fraunces',serif", fontWeight: 700 }}>Pipeline Funnel</h3>
+        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+          {stageBreakdown.map(s => (
+            <div key={s.key}>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 3, fontSize: 10 }}>
+                <span style={{ color: s.color, fontWeight: 700 }}>{s.label}</span>
+                <span style={{ color: T.textMuted }}>{s.count} � {formatCurrency(s.value)}</span>
+              </div>
+              <div style={{ height: 14, background: T.bg, borderRadius: 3, overflow: "hidden" }}>
+                <div style={{ width: (s.count / maxFunnel * 100) + "%", height: "100%", background: s.color, transition: "width 0.3s" }} />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Revenue Metrics */}
+      <div style={{ padding: 18, background: T.surface, border: "1px solid " + T.border, borderRadius: 10 }}>
+        <h3 style={{ margin: "0 0 14px 0", fontSize: 13, color: T.white, fontFamily: "'Fraunces',serif", fontWeight: 700 }}>Revenue Metrics</h3>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+          <div>
+            <div style={{ fontSize: 9, color: T.textMuted, textTransform: "uppercase", fontWeight: 600 }}>Current MRR</div>
+            <div style={{ fontSize: 22, color: T.green, fontWeight: 700, fontFamily: "'Fraunces',serif" }}>{formatCurrency(stats.mrr)}</div>
+          </div>
+          <div>
+            <div style={{ fontSize: 9, color: T.textMuted, textTransform: "uppercase", fontWeight: 600 }}>Projected ARR</div>
+            <div style={{ fontSize: 22, color: T.green, fontWeight: 700, fontFamily: "'Fraunces',serif" }}>{formatCurrency(stats.arr)}</div>
+          </div>
+          <div>
+            <div style={{ fontSize: 9, color: T.textMuted, textTransform: "uppercase", fontWeight: 600 }}>Pipeline Value</div>
+            <div style={{ fontSize: 22, color: T.blue, fontWeight: 700, fontFamily: "'Fraunces',serif" }}>{formatCurrency(stats.pipelineValue)}</div>
+          </div>
+          <div>
+            <div style={{ fontSize: 9, color: T.textMuted, textTransform: "uppercase", fontWeight: 600 }}>Win Rate</div>
+            <div style={{ fontSize: 22, color: stats.winRate >= 30 ? T.green : T.amber, fontWeight: 700, fontFamily: "'Fraunces',serif" }}>{stats.winRate}%</div>
+          </div>
+          <div>
+            <div style={{ fontSize: 9, color: T.textMuted, textTransform: "uppercase", fontWeight: 600 }}>Paid Customers</div>
+            <div style={{ fontSize: 22, color: T.green, fontWeight: 700, fontFamily: "'Fraunces',serif" }}>{stats.paidCount}</div>
+          </div>
+          <div>
+            <div style={{ fontSize: 9, color: T.textMuted, textTransform: "uppercase", fontWeight: 600 }}>Churned</div>
+            <div style={{ fontSize: 22, color: T.red, fontWeight: 700, fontFamily: "'Fraunces',serif" }}>{stats.churnedCount}</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Source breakdown */}
+      <div style={{ padding: 18, background: T.surface, border: "1px solid " + T.border, borderRadius: 10 }}>
+        <h3 style={{ margin: "0 0 14px 0", fontSize: 13, color: T.white, fontFamily: "'Fraunces',serif", fontWeight: 700 }}>Lead Sources</h3>
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          {sourceBreakdown.length === 0 ? (
+            <div style={{ color: T.textDim, fontSize: 11, textAlign: "center", padding: 20 }}>No data yet</div>
+          ) : sourceBreakdown.map(s => (
+            <div key={s.name} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 12px", background: T.bg, borderRadius: 4 }}>
+              <span style={{ fontSize: 11, color: T.white, fontWeight: 600 }}>{s.name}</span>
+              <div style={{ textAlign: "right" }}>
+                <div style={{ fontSize: 11, color: T.gold, fontWeight: 700 }}>{s.count}</div>
+                <div style={{ fontSize: 9, color: T.textDim }}>{formatCurrency(s.value)}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Top leads by score */}
+      <div style={{ padding: 18, background: T.surface, border: "1px solid " + T.border, borderRadius: 10 }}>
+        <h3 style={{ margin: "0 0 14px 0", fontSize: 13, color: T.white, fontFamily: "'Fraunces',serif", fontWeight: 700 }}>?? Top 10 Hot Leads</h3>
+        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+          {topLeads.length === 0 ? (
+            <div style={{ color: T.textDim, fontSize: 11, textAlign: "center", padding: 20 }}>No leads yet</div>
+          ) : topLeads.map((l, i) => {
+            const temp = getTemperature(l._score);
+            return (
+              <div key={l.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px 10px", background: T.bg, borderRadius: 4 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <span style={{ fontSize: 9, color: T.textDim, width: 16, textAlign: "right" }}>{i + 1}.</span>
+                  <div>
+                    <div style={{ fontSize: 11, color: T.white, fontWeight: 600 }}>{l.companyName}</div>
+                    <div style={{ fontSize: 9, color: T.textDim }}>{STAGES.find(s => s.key === l.stage)?.label}</div>
+                  </div>
+                </div>
+                <span style={{ padding: "2px 6px", background: temp.color + "20", color: temp.color, borderRadius: 3, fontSize: 10, fontWeight: 700, fontFamily: "monospace" }}>{l._score}</span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Stalled leads */}
+      {stalledLeads.length > 0 && (
+        <div style={{ gridColumn: "span 2", padding: 18, background: T.surface, border: "1px solid " + T.red + "40", borderRadius: 10 }}>
+          <h3 style={{ margin: "0 0 14px 0", fontSize: 13, color: T.red, fontFamily: "'Fraunces',serif", fontWeight: 700 }}>? Stalled Leads � Need Attention</h3>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: 8 }}>
+            {stalledLeads.map(l => (
+              <div key={l.id} style={{ padding: 10, background: T.bg, border: "1px solid " + T.red + "40", borderRadius: 4 }}>
+                <div style={{ fontSize: 11, color: T.white, fontWeight: 600 }}>{l.companyName}</div>
+                <div style={{ fontSize: 9, color: T.textMuted }}>{STAGES.find(s => s.key === l.stage)?.label} � {daysInStage(l)} days</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
