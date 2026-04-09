@@ -17337,8 +17337,8 @@ export default function AdminPanel() {
              ═══════════════════════════════════════ */}
           {tab === "data2" && (
             <DataManagerV2
-              currentUserId={currentUser?.uid}
-              currentUserEmail={currentUser?.email}
+              currentUserId={adminUser?.uid}
+              currentUserEmail={adminUser?.email}
             />
           )}
 
