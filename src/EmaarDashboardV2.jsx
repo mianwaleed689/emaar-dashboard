@@ -2773,6 +2773,11 @@ export default function EmaarDashboardV2() {
           // ppsf: use pricePerSqftAed if missing
           ppsf: raw.ppsf || raw.pricePerSqftAed || 0,
           ppsfFrom: raw.ppsfFrom || raw.pricePerSqftAed || 0,
+          priceMin: raw.priceMin || raw.priceFromAed || raw.price || 0,
+          priceMax: raw.priceMax || raw.priceToAed || raw.price || 0,
+          sizeMin: raw.sizeMin || raw.sizeSqftMin || 0,
+          sizeMax: raw.sizeMax || raw.sizeSqftMax || 0,
+          grossYield: raw.grossYield || raw.grossYieldPct || 0,
           // yield: use grossYieldPct if missing
           gross: raw.gross || raw.grossYieldPct || 0,
           yield: raw.yield || raw.grossYieldPct || 0,
