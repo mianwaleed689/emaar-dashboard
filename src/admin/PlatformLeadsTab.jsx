@@ -154,6 +154,8 @@ export default function PlatformLeadsTab({ currentUserId, currentUserEmail }) {
   const [filterOwner, setFilterOwner] = useState("all");
   const [showImport, setShowImport] = useState(false);
   const [view, setView] = useState("kanban"); // kanban | list | stats
+  const [draggedLead, setDraggedLead] = useState(null);
+  const [dragOverStage, setDragOverStage] = useState(null);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -509,75 +511,139 @@ export default function PlatformLeadsTab({ currentUserId, currentUserEmail }) {
 
       {/* Kanban view */}
       {view === "kanban" && (
-      <div style={{ display: "flex", gap: 10, overflow: "auto", paddingBottom: 20 }}>
+      <div style={{ display: "flex", gap: 14, overflow: "auto", paddingBottom: 20, minHeight: 500 }}>
         {STAGES.map(stage => (
-          <div key={stage.key} style={{ flex: "0 0 270px", background: T.surface, border: "1px solid " + T.border, borderRadius: 10, padding: 10 }}>
-            <div style={{ marginBottom: 10, paddingBottom: 8, borderBottom: "1px solid " + T.border }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <div style={{ width: 8, height: 8, borderRadius: "50%", background: stage.color }} />
-                <span style={{ fontSize: 11, color: T.white, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.5 }}>{stage.label}</span>
-                <span style={{ marginLeft: "auto", fontSize: 11, color: T.textMuted, fontWeight: 600 }}>{byStage[stage.key].length}</span>
+          <div
+            key={stage.key}
+            onDragOver={e => { e.preventDefault(); setDragOverStage(stage.key); }}
+            onDragLeave={() => setDragOverStage(null)}
+            onDrop={e => {
+              e.preventDefault();
+              if (draggedLead && draggedLead.stage !== stage.key) {
+                moveStage(draggedLead, stage.key);
+              }
+              setDraggedLead(null);
+              setDragOverStage(null);
+            }}
+            style={{
+              flex: "0 0 320px",
+              background: dragOverStage === stage.key ? stage.color + "10" : T.surface,
+              border: "2px solid " + (dragOverStage === stage.key ? stage.color : T.border),
+              borderRadius: 12,
+              padding: 14,
+              transition: "all 0.15s",
+            }}>
+            <div style={{ marginBottom: 14, paddingBottom: 12, borderBottom: "1px solid " + T.border }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <div style={{ width: 10, height: 10, borderRadius: "50%", background: stage.color, boxShadow: "0 0 8px " + stage.color + "80" }} />
+                <span style={{ fontSize: 13, color: T.white, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.8 }}>{stage.label}</span>
+                <span style={{ marginLeft: "auto", fontSize: 13, color: T.textMuted, fontWeight: 700, padding: "2px 10px", background: T.bg, borderRadius: 10 }}>{byStage[stage.key].length}</span>
               </div>
-              <div style={{ fontSize: 10, color: T.textDim, marginTop: 3 }}>{stage.sub}</div>
+              <div style={{ fontSize: 11, color: T.textDim, marginTop: 5 }}>{stage.sub}</div>
             </div>
 
-            <div style={{ display: "flex", flexDirection: "column", gap: 7, maxHeight: 600, overflowY: "auto" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10, maxHeight: 680, overflowY: "auto", paddingRight: 4 }}>
               {byStage[stage.key].length === 0 ? (
-                <div style={{ padding: 14, textAlign: "center", fontSize: 10, color: T.textDim, border: "1px dashed " + T.border, borderRadius: 6 }}>No leads</div>
+                <div style={{ padding: 24, textAlign: "center", fontSize: 11, color: T.textDim, border: "2px dashed " + T.border, borderRadius: 8 }}>
+                  Drop leads here
+                </div>
               ) : byStage[stage.key].map(l => {
                 const score = l.leadScore || calculateLeadScore(l);
                 const temp = getTemperature(score);
                 const days = daysInStage(l);
                 const stalled = isStalled(l);
                 const overdue = isOverdue(l);
+                const isDragging = draggedLead?.id === l.id;
                 return (
-                  <div key={l.id} onClick={() => setEditing(l)} style={{ padding: 9, background: T.surfaceAlt, border: "1px solid " + (stalled ? T.red + "60" : T.border), borderRadius: 6, cursor: "pointer", position: "relative" }}>
-                    {/* Top row: name + score badge */}
-                    <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 6, marginBottom: 4 }}>
-                      <span style={{ fontSize: 12, color: T.white, fontWeight: 600, lineHeight: 1.3 }}>{l.companyName || "(unnamed)"}</span>
-                      <div title={temp.label + " · score " + score} style={{ flexShrink: 0, padding: "1px 5px", background: temp.color + "20", border: "1px solid " + temp.color + "40", borderRadius: 3, fontSize: 9, fontWeight: 700, color: temp.color, fontFamily: "monospace" }}>{score}</div>
+                  <div
+                    key={l.id}
+                    draggable
+                    onDragStart={e => { setDraggedLead(l); e.dataTransfer.effectAllowed = "move"; }}
+                    onDragEnd={() => { setDraggedLead(null); setDragOverStage(null); }}
+                    onClick={() => setEditing(l)}
+                    style={{
+                      padding: 14,
+                      background: T.surfaceAlt,
+                      border: "1px solid " + (stalled ? T.red + "60" : T.border),
+                      borderRadius: 10,
+                      cursor: isDragging ? "grabbing" : "pointer",
+                      opacity: isDragging ? 0.4 : 1,
+                      transition: "all 0.15s",
+                      boxShadow: stalled ? "0 0 0 1px " + T.red + "30" : "none",
+                    }}>
+                    {/* Top row: name + score */}
+                    <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8, marginBottom: 8 }}>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 14, color: T.white, fontWeight: 700, lineHeight: 1.3, marginBottom: 2 }}>{l.companyName || "(unnamed)"}</div>
+                        {l.companyType && (
+                          <div style={{ fontSize: 10, color: T.textDim }}>
+                            {l.companyType}{l.companySize ? " · " + l.companySize.replace(/\s*\(.*?\)/, "") : ""}
+                          </div>
+                        )}
+                      </div>
+                      <div title={temp.label + " lead · score " + score} style={{
+                        flexShrink: 0,
+                        padding: "4px 9px",
+                        background: temp.color + "15",
+                        border: "1px solid " + temp.color + "50",
+                        borderRadius: 6,
+                        fontSize: 12,
+                        fontWeight: 800,
+                        color: temp.color,
+                        fontFamily: "'Fraunces', serif",
+                      }}>{score}</div>
                     </div>
-                    {/* Company type */}
-                    {l.companyType && (
-                      <div style={{ fontSize: 9, color: T.textDim, marginBottom: 4 }}>{l.companyType} {l.companySize ? "· " + l.companySize.replace(/\s*\(.*?\)/, "") : ""}</div>
-                    )}
+
                     {/* Contact */}
-                    <div style={{ fontSize: 10, color: T.textMuted, marginBottom: 5, lineHeight: 1.4 }}>
-                      {l.contactName || "-"}<br/>
-                      {l.contactEmail && <span style={{ fontSize: 9 }}>{l.contactEmail}</span>}
-                    </div>
+                    {(l.contactName || l.contactEmail) && (
+                      <div style={{ marginBottom: 10, paddingBottom: 10, borderBottom: "1px solid " + T.border }}>
+                        {l.contactName && <div style={{ fontSize: 12, color: T.textMuted, fontWeight: 600 }}>{l.contactName}</div>}
+                        {l.contactEmail && <div style={{ fontSize: 10, color: T.textDim, wordBreak: "break-all" }}>{l.contactEmail}</div>}
+                      </div>
+                    )}
+
                     {/* Revenue */}
                     {(l.estimatedArr > 0 || l.mrr > 0) && (
-                      <div style={{ display: "flex", gap: 8, marginBottom: 6, fontSize: 9, fontWeight: 600 }}>
-                        {l.estimatedArr > 0 && <span style={{ color: T.gold }}>ARR {formatCurrency(l.estimatedArr)}</span>}
-                        {l.mrr > 0 && <span style={{ color: T.green }}>MRR {formatCurrency(l.mrr)}</span>}
+                      <div style={{ display: "flex", gap: 10, marginBottom: 10, fontSize: 11, fontWeight: 700 }}>
+                        {l.estimatedArr > 0 && (
+                          <div>
+                            <div style={{ fontSize: 8, color: T.textDim, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 1 }}>ARR</div>
+                            <div style={{ color: T.gold }}>{formatCurrency(l.estimatedArr)}</div>
+                          </div>
+                        )}
+                        {l.mrr > 0 && (
+                          <div>
+                            <div style={{ fontSize: 8, color: T.textDim, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 1 }}>MRR</div>
+                            <div style={{ color: T.green }}>{formatCurrency(l.mrr)}</div>
+                          </div>
+                        )}
                       </div>
                     )}
+
                     {/* Warnings */}
                     {(stalled || overdue) && (
-                      <div style={{ display: "flex", gap: 4, marginBottom: 5, flexWrap: "wrap" }}>
-                        {stalled && <span style={{ fontSize: 8, padding: "1px 4px", background: T.red + "20", color: T.red, borderRadius: 2, fontWeight: 700 }}>⏱ {days}d stalled</span>}
-                        {overdue && <span style={{ fontSize: 8, padding: "1px 4px", background: T.amber + "20", color: T.amber, borderRadius: 2, fontWeight: 700 }}>⚠ overdue</span>}
+                      <div style={{ display: "flex", gap: 5, marginBottom: 10, flexWrap: "wrap" }}>
+                        {stalled && (
+                          <span style={{ fontSize: 10, padding: "3px 8px", background: T.red + "15", color: T.red, borderRadius: 4, fontWeight: 700, border: "1px solid " + T.red + "30" }}>
+                            {days}d stalled
+                          </span>
+                        )}
+                        {overdue && (
+                          <span style={{ fontSize: 10, padding: "3px 8px", background: T.amber + "15", color: T.amber, borderRadius: 4, fontWeight: 700, border: "1px solid " + T.amber + "30" }}>
+                            overdue
+                          </span>
+                        )}
                       </div>
                     )}
+
                     {/* Tags */}
                     {l.tags?.length > 0 && (
-                      <div style={{ display: "flex", gap: 3, marginBottom: 5, flexWrap: "wrap" }}>
-                        {l.tags.slice(0, 3).map(t => (
-                          <span key={t} style={{ fontSize: 8, padding: "1px 4px", background: T.blue + "20", color: T.blue, borderRadius: 2 }}>{t}</span>
+                      <div style={{ display: "flex", gap: 5, flexWrap: "wrap" }}>
+                        {l.tags.slice(0, 4).map(t => (
+                          <span key={t} style={{ fontSize: 10, padding: "2px 7px", background: T.blue + "15", color: T.blue, borderRadius: 4, fontWeight: 600 }}>{t}</span>
                         ))}
                       </div>
                     )}
-                    {/* Move buttons */}
-                    <div style={{ display: "flex", gap: 3, flexWrap: "wrap" }} onClick={e => e.stopPropagation()}>
-                      {STAGES.filter(s => s.key !== stage.key).slice(0, 4).map(s => (
-                        <button key={s.key} onClick={() => moveStage(l, s.key)}
-                          title={"Move to " + s.label}
-                          style={{ padding: "2px 5px", background: "transparent", border: "1px solid " + T.border, borderRadius: 3, color: s.color, fontSize: 8, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
-                          → {s.label.split(" ")[0].slice(0, 5)}
-                        </button>
-                      ))}
-                    </div>
                   </div>
                 );
               })}
@@ -1262,14 +1328,18 @@ function InboxView({ leads, onEdit }) {
     task: T.amber,
   };
 
-  const typeIcons = {
-    note: "??",
-    call: "??",
-    email: "?",
-    meeting: "??",
-    demo: "??",
-    whatsapp: "??",
-    task: "?",
+  const Icon = ({ type, color, size = 14 }) => {
+    const s = { width: size, height: size, stroke: color, fill: "none", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round" };
+    switch (type) {
+      case "call": return <svg viewBox="0 0 24 24" {...s}><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>;
+      case "email": return <svg viewBox="0 0 24 24" {...s}><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>;
+      case "meeting": return <svg viewBox="0 0 24 24" {...s}><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>;
+      case "demo": return <svg viewBox="0 0 24 24" {...s}><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>;
+      case "whatsapp": return <svg viewBox="0 0 24 24" {...s}><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>;
+      case "task": return <svg viewBox="0 0 24 24" {...s}><polyline points="20 6 9 17 4 12"/></svg>;
+      case "note":
+      default: return <svg viewBox="0 0 24 24" {...s}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>;
+    }
   };
 
   return (
@@ -1289,7 +1359,7 @@ function InboxView({ leads, onEdit }) {
             textTransform: "uppercase",
             fontFamily: "'Outfit',sans-serif",
           }}>
-            {t === "all" ? "All" : (typeIcons[t] + " " + t)}
+            {t === "all" ? "All" : (<span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><Icon type={t} color={filterType === t ? T.gold : T.textMuted} size={11} />{t}</span>)}
           </button>
         ))}
       </div>
