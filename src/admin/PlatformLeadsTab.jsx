@@ -698,6 +698,31 @@ export default function PlatformLeadsTab({ currentUserId, currentUserEmail }) {
                       </div>
                     )}
                   </div>
+                    {/* Quick-move buttons (works without drag) */}
+                    <div style={{ display: "flex", gap: 4, marginTop: 10, paddingTop: 10, borderTop: "1px solid " + T.border, flexWrap: "wrap" }} onClick={e => e.stopPropagation()}>
+                      {STAGES.filter(s => s.key !== stage.key).map(s => (
+                        <button
+                          key={s.key}
+                          onClick={() => moveStage(l, s.key)}
+                          title={"Move to " + s.label}
+                          style={{
+                            padding: "4px 8px",
+                            background: "transparent",
+                            border: "1px solid " + T.border,
+                            borderRadius: 4,
+                            color: s.color,
+                            fontSize: 10,
+                            fontWeight: 600,
+                            cursor: "pointer",
+                            fontFamily: "'Outfit',sans-serif",
+                          }}
+                          onMouseEnter={e => { e.currentTarget.style.background = s.color + "15"; e.currentTarget.style.borderColor = s.color + "50"; }}
+                          onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = T.border; }}
+                        >
+                          {s.label}
+                        </button>
+                      ))}
+                    </div>
                 );
               })}
             </div>
