@@ -6,6 +6,7 @@ import ProjectsSection from "./ProjectsSection";
 import DevelopersSection from "./DevelopersSection";
 import CommunitiesSection from "./CommunitiesSection";
 import ComplianceSection from "./ComplianceSection";
+import ClaimsSection from "./ClaimsSection";
 
 /**
  * DXB ANALYTICS - DATA MANAGER V2
@@ -22,6 +23,7 @@ export default function DataManagerV2({ currentUserId = null, currentUserEmail =
     { id: "developers",   label: "Developers",   icon: "◆", color: C.purple },
     { id: "communities",  label: "Communities",  icon: "◎", color: C.cyan },
     { id: "compliance",  label: "Compliance",   icon: "⚖", color: C.red },
+    { id: "claims",      label: "Claims",       icon: "◈", color: C.amber },
   ];
 
   return (
@@ -83,6 +85,7 @@ export default function DataManagerV2({ currentUserId = null, currentUserEmail =
           {section === "developers" && <DevelopersSection currentUserId={currentUserId} currentUserEmail={currentUserEmail} />}
           {section === "communities" && <CommunitiesSection currentUserId={currentUserId} currentUserEmail={currentUserEmail} />}
           {section === "compliance" && <ComplianceSection />}
+          {section === "claims" && <ClaimsSection currentUserId={currentUserId} currentUserEmail={currentUserEmail} />}
         </main>
       </div>
     </div>

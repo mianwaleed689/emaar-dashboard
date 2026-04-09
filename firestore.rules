@@ -327,6 +327,15 @@ service cloud.firestore {
     // ═══════════════════════════════════════════════════════════════════════
     // AUDIT LOG
     // ═══════════════════════════════════════════════════════════════════════
+    // Developer claim-and-verify flow (P2.11)
+    // Developers claim projects they built; admin approves; then they can edit limited fields
+    match /developerClaims/{claimId} {
+      allow read: if isLoggedIn() && (isAdmin() || resource.data.developerId == request.auth.uid);
+      allow create: if isLoggedIn() && request.resource.data.developerId == request.auth.uid;
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
     match /auditLog/{doc} {
       allow read:           if isAdmin();
       allow create:         if isLoggedIn();
