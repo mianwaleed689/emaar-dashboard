@@ -6,6 +6,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { T } from "../data";
 import { SvgIcons } from "../components/Icons";
 import { cleanPhone } from "../utils/helpers";
+import Papa from "papaparse";
 
 function MyLeadsTab({
   myLeads, liveLeads, orgRole, userRole, orgId, listings,
@@ -197,6 +198,71 @@ function MyLeadsTab({
                 setLeadShowAdd(false);
               } catch(e){console.error(e);}
               setLeadAddSaving(false);
+            }
+
+            /* ── CSV Import ── */
+            async function mlImportCsv(file) {
+              if (!file) return;
+              Papa.parse(file, {
+                header: true,
+                skipEmptyLines: true,
+                complete: async (results) => {
+                  const rows = results.data;
+                  if (!rows.length) { alert("CSV is empty"); return; }
+                  const errors = [];
+                  rows.forEach((r, i) => {
+                    if (!r.name && !r.Name) errors.push("Row " + (i + 2) + ": missing name");
+                    if (!r.phone && !r.Phone && !r.email && !r.Email) errors.push("Row " + (i + 2) + ": missing phone or email");
+                  });
+                  if (errors.length > 0) {
+                    alert("Validation failed:\n" + errors.slice(0, 10).join("\n") + (errors.length > 10 ? "\n...and " + (errors.length - 10) + " more" : ""));
+                    return;
+                  }
+                  if (!window.confirm("Import " + rows.length + " leads into your agency CRM?")) return;
+                  let created = 0, duplicates = 0, failed = 0;
+                  const now = new Date().toISOString();
+                  for (const r of rows) {
+                    try {
+                      const phone = (r.phone || r.Phone || "").toString().trim();
+                      const email = (r.email || r.Email || "").toString().trim();
+                      if (phone && mlIsDuplicate(phone)) { duplicates++; continue; }
+                      await addDoc(collection(db, "leads"), {
+                        name: (r.name || r.Name || "").toString().trim(),
+                        phone: phone,
+                        email: email,
+                        budget: parseFloat(r.budget || r.Budget || 0) || 0,
+                        source: (r.source || r.Source || "CSV Import").toString().trim(),
+                        status: (r.status || r.Status || "New").toString().trim(),
+                        type: (r.type || r.Type || "Buy").toString().trim(),
+                        community: (r.community || r.Community || "").toString().trim(),
+                        nationality: (r.nationality || r.Nationality || "").toString().trim(),
+                        language: (r.language || r.Language || "").toString().trim(),
+                        timeline: (r.timeline || r.Timeline || "").toString().trim(),
+                        purpose: (r.purpose || r.Purpose || "").toString().trim(),
+                        bedrooms: (r.bedrooms || r.Bedrooms || "").toString().trim(),
+                        referredBy: (r.referredBy || r.ReferredBy || "").toString().trim(),
+                        followUpDate: (r.followUpDate || r.FollowUpDate || "").toString().trim(),
+                        tags: [],
+                        userId: auth.currentUser?.uid || "",
+                        assignedTo: auth.currentUser?.uid || "",
+                        orgId: orgId || "",
+                        createdAt: now,
+                        updatedAt: now,
+                        notes_log: [{ text: "Imported from CSV", type: "Created", by: auth.currentUser?.email || "", at: now }],
+                      });
+                      created++;
+                    } catch (e) {
+                      console.error("Row import failed:", r, e);
+                      failed++;
+                    }
+                  }
+                  alert("Import complete!\n\n" +
+                        "Created: " + created + "\n" +
+                        "Duplicates skipped: " + duplicates + "\n" +
+                        (failed > 0 ? "Failed: " + failed : ""));
+                },
+                error: (err) => alert("CSV parse error: " + err.message),
+              });
             }
 
             /* ── Add note/activity ── */
@@ -465,6 +531,11 @@ function MyLeadsTab({
                       style={{marginLeft:"auto",padding:"7px 13px",borderRadius:6,border:"none",background:leadShowAdd?"rgba(212,168,67,0.15)":"linear-gradient(135deg,#D4A843,#B8902E)",color:leadShowAdd?"#D4A843":"#0A0E1A",fontSize:12,fontWeight:700,cursor:"pointer"}}>
                       {leadShowAdd?"Cancel":"+ Add Lead"}
                     </button>
+                    <label
+                      style={{marginLeft:8,padding:"7px 13px",borderRadius:6,border:"1px solid "+T.border,background:"transparent",color:T.textMuted,fontSize:11,fontWeight:600,cursor:"pointer",display:"inline-flex",alignItems:"center",gap:6}}>
+                      📥 Import CSV
+                      <input type="file" accept=".csv" style={{display:"none"}} onChange={e => { if (e.target.files[0]) { mlImportCsv(e.target.files[0]); e.target.value = ""; } }} />
+                    </label>
                   </div>
                 </div>
 
