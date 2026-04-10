@@ -4,7 +4,6 @@
   ],
   "buildCommand": "vite build",
   "crons": [
-    { "path": "/api/cron?job=currency",       "schedule": "0 4 * * *" },
 
     { "path": "/api/cron?job=eibor",          "schedule": "0 7 * * 1-5" },
     { "path": "/api/cron?job=dld-daily",      "schedule": "0 3 * * *" },
