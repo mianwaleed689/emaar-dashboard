@@ -4,13 +4,14 @@ import { collection, getDocs, doc, getDoc, setDoc, deleteDoc, onSnapshot, query,
 import { BarChart, Bar, PieChart, Pie, Cell, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from "recharts";
 import { T } from "../theme";
 import emailjs from "@emailjs/browser";
+import { PRICING } from "../config/pricing";
 
 const ForecastingTab = ({ db, T, notify, users }) => {
   const [growthRate, setGrowthRate] = React.useState(10); // % monthly growth
   const [churnRate,  setChurnRate]  = React.useState(5);  // % monthly churn
   const [months,     setMonths]     = React.useState(12); // forecast horizon
 
-  const PRICES = { pro: 99, enterprise: 499 };
+  const PRICES = { pro: PRICING.pro, enterprise: PRICING.enterprise };
   const now = new Date();
 
   // Current MRR
@@ -23,7 +24,7 @@ const ForecastingTab = ({ db, T, notify, users }) => {
   const currentPaid = users.filter(u => u.tier === "pro" || u.tier === "enterprise").length;
   const currentARR  = currentMRR * 12;
 
-  // Forecast model: MRR(t) = MRR(0) × (1 + growth - churn)^t
+  // Forecast model: MRR(t) = MRR(0) Ã— (1 + growth - churn)^t
   const netGrowth = (growthRate - churnRate) / 100;
 
   const forecast = React.useMemo(() => {
@@ -77,7 +78,7 @@ const ForecastingTab = ({ db, T, notify, users }) => {
       {/* Header */}
       <div>
         <h2 style={{ fontFamily: "'Fraunces',serif", fontSize: 26, fontWeight: 800, color: T.gold, marginBottom: 4 }}>Revenue Forecasting</h2>
-        <p style={{ color: T.textMuted, fontSize: 13 }}>MRR growth model · Churn-adjusted ARR · Scenario analysis</p>
+        <p style={{ color: T.textMuted, fontSize: 13 }}>MRR growth model Â· Churn-adjusted ARR Â· Scenario analysis</p>
       </div>
 
       {/* Current state KPIs */}
@@ -86,7 +87,7 @@ const ForecastingTab = ({ db, T, notify, users }) => {
           { label: "Current MRR", value: `AED ${currentMRR.toLocaleString()}`, color: T.gold },
           { label: "Current ARR", value: `AED ${currentARR.toLocaleString()}`, color: T.teal },
           { label: "Paying Users", value: currentPaid, color: T.green },
-          { label: "ARPU", value: currentPaid > 0 ? `AED ${Math.round(currentMRR/currentPaid)}` : "—", color: T.blue },
+          { label: "ARPU", value: currentPaid > 0 ? `AED ${Math.round(currentMRR/currentPaid)}` : "â€”", color: T.blue },
         ].map(k => (
           <div key={k.label} style={{ background: T.surface, borderRadius: 12, border: `1px solid ${T.border}`, padding: "16px 20px" }}>
             <div style={{ fontSize: 10, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 6 }}>{k.label}</div>
@@ -114,7 +115,7 @@ const ForecastingTab = ({ db, T, notify, users }) => {
 
         {/* Chart */}
         <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: "20px 24px" }}>
-          <div style={{ fontFamily: "'Fraunces',serif", fontSize: 15, fontWeight: 700, color: T.white, marginBottom: 16 }}>MRR Forecast — {months} Month Projection</div>
+          <div style={{ fontFamily: "'Fraunces',serif", fontSize: 15, fontWeight: 700, color: T.white, marginBottom: 16 }}>MRR Forecast â€” {months} Month Projection</div>
           <div style={{ display: "flex", alignItems: "flex-end", gap: 4, height: 180, marginBottom: 8 }}>
             {forecast.filter((_, i) => i % Math.max(1, Math.floor(months/12)) === 0 || i === forecast.length - 1).map((f, i, arr) => {
               const h = Math.max((f.mrr / maxMRR) * 160, 4);
@@ -138,7 +139,7 @@ const ForecastingTab = ({ db, T, notify, users }) => {
           {scenarios.map(s => (
             <div key={s.label} style={{ padding: "16px 18px", borderRadius: 12, background: T.surfaceAlt, border: `1px solid ${s.color}33` }}>
               <div style={{ fontSize: 13, fontWeight: 700, color: s.color, marginBottom: 8 }}>{s.label}</div>
-              <div style={{ fontSize: 10, color: T.textMuted, marginBottom: 10 }}>Growth: +{s.growth}% · Churn: {s.churn}% · Net: {s.growth - s.churn > 0 ? "+" : ""}{s.growth - s.churn}%</div>
+              <div style={{ fontSize: 10, color: T.textMuted, marginBottom: 10 }}>Growth: +{s.growth}% Â· Churn: {s.churn}% Â· Net: {s.growth - s.churn > 0 ? "+" : ""}{s.growth - s.churn}%</div>
               <div style={{ fontSize: 20, fontWeight: 800, color: s.color, fontFamily: "'Fraunces',serif" }}>AED {s.mrrIn12.toLocaleString()}</div>
               <div style={{ fontSize: 11, color: T.textMuted }}>MRR in 12 months</div>
               <div style={{ fontSize: 13, fontWeight: 600, color: T.textSecondary, marginTop: 6 }}>ARR: AED {s.arrIn12.toLocaleString()}</div>
@@ -172,10 +173,10 @@ const ForecastingTab = ({ db, T, notify, users }) => {
   );
 };
 
-/* ─── S19: PRICING PLANS EDITOR ──────────────────────────────────────────────
-   Admin edits plan prices/features → saves to Firestore pricingPlans/current
+/* â”€â”€â”€ S19: PRICING PLANS EDITOR â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+   Admin edits plan prices/features â†’ saves to Firestore pricingPlans/current
    Dashboard upgrade modal + landing page read from Firestore automatically
    No code deploy needed for price changes
-────────────────────────────────────────────────────────────────────────── */
+â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 export default ForecastingTab;
