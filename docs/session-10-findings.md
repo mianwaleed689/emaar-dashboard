@@ -1,6 +1,6 @@
 # Session 10 Findings - Cron Disconnects Discovered
 
-## ✅ FIXED in Session 10
+## âœ… FIXED in Session 10
 
 ### Fix #1: Cron-EIBOR wrote to wrong document (commit 5d6271b)
 - Cron wrote: `marketData/eibor`
@@ -15,32 +15,56 @@
 - Fix: Imports added, dedicated `mortgageLeads/` collection, live EIBOR wired
 - Impact: First mortgage leads ever capturable + bank partnership revenue unblocked
 
-## 🟡 KNOWN ISSUES - DEFERRED to Session 11+
+## ðŸŸ¡ KNOWN ISSUES - DEFERRED to Session 11+
 
-### Issue #1: DLD-daily cron data shape mismatch
-- Cron writes: `communityData/{districtCode}` with `{district, areaName, lastTxnCount, avgPpsf, ...}`
-- Cron writes: `marketData/global` with rolling totals
-- Cron writes: `developers/{docId}` with daily txn counts
-- DLD Volumes tab reads: `dldVolumes` collection with `{community, type, transactions, avgPpsf, volume, change}`
-- **Disconnect:** Collection name wrong, field names wrong, schema wrong
-- **Users impact:** DLD Volumes tab shows seed data forever (isSeedData: true flag visible)
-- **Fix complexity:** 2-3 hours - requires district code to community name mapping + change % calculation vs previous month
-- **Priority:** HIGH - this is the DXBiQ-competing tab, needs to show real data at launch
+### Issue #1: DLD-daily cron has limited scope (not a bug - intentional)
+Deeper investigation (Session 10 end) revealed the DLD cron is **not buggy** - it was
+intentionally built narrow. Key findings:
+
+- Cron tracks only 13 Emaar-area communities via COMMUNITY_MAP (lines 50-84 of cron-dld-daily.js):
+  Dubai Hills, Dubai Creek Harbour, Emaar Beachfront, Emaar South, The Valley,
+  Grand Polo Club, Rashid Yachts, The Oasis, Business Bay, The Heights Country Club,
+  Expo Living
+- Line 155 comment confirms: "// Not an Emaar community we track"
+- Data structure: `communityData/{districtCode}` with lastTxnCount, avgPrice, rolling 30d averages
+- Purpose: foundation for Emaar project tracking (Session 13 work)
+
+The DLD Volumes tab seed data expects **15+ communities** including JVC, Dubai Marina,
+Downtown, Palm Jumeirah, Arabian Ranches, Tilal Al Ghaf, Sobha Hartland, etc - most of
+which are not Emaar areas and are deliberately excluded from the existing cron.
+
+**Current state:** DLD Volumes tab shows seed data with `isSeedData: true` flag. Users
+know it's placeholder, not misleading. Not a launch blocker.
+
+### Recommended fix (Session 11 - NOT Session 10):
+**Path B: New dedicated `cron-dld-volumes.js`**
+- Fetches DLD data with wider area filter (all Dubai communities, not just Emaar)
+- Aggregates into the exact schema DLDVolumesTab expects:
+  `{ community, type, transactions, avgPpsf, volume, change }`
+- Writes to `dldVolumes` collection (matches existing listener at EmaarDashboardV2 line 2875)
+- Separate from existing cron-dld-daily.js (leaves Emaar project tracking untouched)
+- Time estimate: 3 hours including testing
+
+**Why NOT Path A (extend existing cron):**
+- Tries to make one cron serve two different purposes (project tracking + city volumes)
+- Would need to redesign COMMUNITY_MAP + add new write + handle change% calculation
+- Risk of breaking existing Emaar project tracking
+- More brittle architecture
 
 ### Issue #2: Other crons unverified
 Still need to check:
-- cron-news.js — does it write to same doc the News tab reads from?
-- cron-financials.js — does it update Financials tab data?
-- cron-yields.js — does it update Yields tab data?
-- cron-scan-launches.js — does it populate Launch Calendar?
-- cron-sync-market.js — market data for Overview/Market tabs?
-- cron-currency.js — currency tab live rates?
-- weekly-digest.js — email digest subscribers?
+- cron-news.js â€” does it write to same doc the News tab reads from?
+- cron-financials.js â€” does it update Financials tab data?
+- cron-yields.js â€” does it update Yields tab data?
+- cron-scan-launches.js â€” does it populate Launch Calendar?
+- cron-sync-market.js â€” market data for Overview/Market tabs?
+- cron-currency.js â€” currency tab live rates?
+- weekly-digest.js â€” email digest subscribers?
 
 **Pattern:** Every cron needs cross-reference verification. The EIBOR + DLD findings suggest there are likely more silent disconnects.
 
 ## Next steps (Session 11 suggestions)
-1. Fix DLD-daily cron → dldVolumes collection (2-3 hours)
+1. Fix DLD-daily cron â†’ dldVolumes collection (2-3 hours)
 2. Audit remaining 7 crons for same pattern (1 hour)
 3. Fix any discovered disconnects (variable time)
 4. Then move to Stripe wiring
