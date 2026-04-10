@@ -11,7 +11,7 @@ const ReferralTab = ({ db, T, notify, users, adminUser }) => {
   const [selectedUser, setSelectedUser] = React.useState(null);
   const [grantLoading, setGrantLoading] = React.useState(false);
   const [stats, setStats] = React.useState({ totalReferrals: 0, totalConversions: 0, totalRewardMonths: 0 });
-  const BASE_URL = "https://emaar-dashboard.vercel.app";
+  const BASE_URL = import.meta.env.VITE_BASE_URL || "https://emaar-dashboard.vercel.app";
 
   // Load all referrals from Firestore
   React.useEffect(() => {
