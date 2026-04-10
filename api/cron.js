@@ -20,7 +20,7 @@
 
 const HANDLERS = {
   currency:       () => require("./_cron/cron-currency.js"),
-  news:           () => require("./_cron/cron-news.js"),
+
   eibor:          () => require("./_cron/cron-eibor.js"),
   "dld-daily":    () => require("./_cron/cron-dld-daily.js"),
   financials:     () => require("./_cron/cron-financials.js"),
