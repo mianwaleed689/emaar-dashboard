@@ -12,7 +12,7 @@ import { SvgIcons } from "../components/Icons";
 import { Section, Chart, CustomTooltip, KPI, ForecastCard, DataBadge, TabSources, LoadingSkeleton } from "../components/SharedUI";
 import SEED_DATA from "../utils/seedData";
 
-function MortgageTab({ liveMortgageRates, liveInvestScores, handleTabChange, mortPrice, setMortPrice, mortDown, setMortDown, mortRate, setMortRate, mortYears, setMortYears, mortType, setMortType, mortProfile, setMortProfile, mortView, setMortView, mortIncome, setMortIncome, invScSearch, setInvScSearch, invScSort, setInvScSort, invScFilter, setInvScFilter, invScView, setInvScView, invScSelected, setInvScSelected }) {
+function MortgageTab({ liveMortgageRates, liveEiborRates, liveInvestScores, handleTabChange, mortPrice, setMortPrice, mortDown, setMortDown, mortRate, setMortRate, mortYears, setMortYears, mortType, setMortType, mortProfile, setMortProfile, mortView, setMortView, mortIncome, setMortIncome, invScSearch, setInvScSearch, invScSort, setInvScSort, invScFilter, setInvScFilter, invScView, setInvScView, invScSelected, setInvScSelected }) {
 
 
             /* ══ BANK DATA — Research-based Apr 2026 ══
@@ -20,9 +20,12 @@ function MortgageTab({ liveMortgageRates, liveInvestScores, handleTabChange, mor
                capitalzone.ae, finnxstar.com
                EIBOR 3-month: 3.593% (Feb 2026, capitalzone.ae)
             ════════════════════════════════════════════ */
-            const EIBOR_3M = 3.593;
-            const EIBOR_6M = 3.676;
-            const EIBOR_1Y = 3.674;
+            /* EIBOR rates: read live from Firestore tabData/eiborRates (admin EIBOR tab), fallback to research values */
+            const EIBOR_3M = parseFloat(liveEiborRates?.["3m"] ?? 3.593);
+            const EIBOR_6M = parseFloat(liveEiborRates?.["6m"] ?? 3.676);
+            const EIBOR_1Y = parseFloat(liveEiborRates?.["1y"] ?? 3.674);
+            const eiborIsLive = !!liveEiborRates?.["3m"];
+            const eiborSource = eiborIsLive ? `Live - ${liveEiborRates?.asOf || "Firestore"}` : "Fallback (Feb 2026)";
 
             const BANKS = [
               { bank:"Emirates NBD",  logo:"\uD83C\uDFE6", fixed1y:3.99, fixed3y:4.25, fixed5y:4.49, variable:EIBOR_3M+1.50, maxLTV:80, minSalary:15000, maxLoan:20000000, processingFee:1.0, islamic:false, salaryTransfer:true,  highlight:true,  note:"Govt-owned. Best for large loans. Salary transfer gets -0.25%." },

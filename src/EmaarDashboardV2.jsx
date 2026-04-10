@@ -2111,6 +2111,7 @@ export default function EmaarDashboardV2() {
   const [liveServiceCharges, setLiveServiceCharges] = useState([]);
   const [liveCompetitors, setLiveCompetitors] = useState([]);
   const [liveMortgageRates, setLiveMortgageRates] = useState([]);
+  const [liveEiborRates, setLiveEiborRates] = useState({});
   const [liveNeighbourhoods, setLiveNeighbourhoods] = useState([]);
   const [liveMarketData, setLiveMarketData] = useState([]);
   const [liveFinancials, setLiveFinancials] = useState([]);
@@ -2898,6 +2899,11 @@ export default function EmaarDashboardV2() {
     unsubs.push(onSnapshot(collection(db, "mortgageRates"), snap => {
       const d = snap.docs.map(x => ({ id:x.id, ...x.data() }));
       if (d.length > 0) setLiveMortgageRates(d);
+    }, () => {}));
+
+    /* EIBOR RATES (live from admin EIBOR tab) */
+    unsubs.push(onSnapshot(doc(db, "tabData", "eiborRates"), snap => {
+      if (snap.exists()) setLiveEiborRates(snap.data());
     }, () => {}));
 
     /* ─── PORTFOLIO (user-specific) ─── */
@@ -4232,7 +4238,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
           {/* ─── MORTGAGE TAB (extracted) ─── */}
           {tab === "Mortgage" && (
             <MortgageTab
-              liveMortgageRates={liveMortgageRates} liveInvestScores={liveInvestScores}
+              liveMortgageRates={liveMortgageRates} liveEiborRates={liveEiborRates} liveInvestScores={liveInvestScores}
               handleTabChange={handleTabChange}
               mortPrice={mortPrice} setMortPrice={setMortPrice}
               mortDown={mortDown} setMortDown={setMortDown}
