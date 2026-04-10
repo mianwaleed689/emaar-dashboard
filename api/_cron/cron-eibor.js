@@ -1,16 +1,16 @@
 /**
- * DXB Analytics — S9 FIX: EIBOR Auto-Fetch
+ * DXB Analytics â€” S9 FIX: EIBOR Auto-Fetch
  * File: api/cron-eibor.js
  *
- * FIX: CBUAE website is JS-rendered — server fetch gets empty HTML.
+ * FIX: CBUAE website is JS-rendered â€” server fetch gets empty HTML.
  * NEW APPROACH: 4 sources tried in order, first success wins:
  *   1. CBUAE JSON endpoint (direct API attempt)
  *   2. CBUAE HTML page scrape (parse table values)
  *   3. Investing.com EIBOR page scrape
  *   4. Hardcoded verified fallback (updated manually each quarter)
  *
- * Schedule: Daily 11:30AM UAE (07:30 UTC) — "30 7 * * *"
- * Iron Rule: NEVER run npx vercel --prod — use git push only
+ * Schedule: Daily 11:30AM UAE (07:30 UTC) â€” "30 7 * * *"
+ * Iron Rule: NEVER run npx vercel --prod â€” use git push only
  */
 
 const { initializeApp, cert, getApps } = require("firebase-admin/app");
@@ -27,7 +27,7 @@ if (!getApps().length) {
 }
 const db = getFirestore();
 
-// ── Verified fallback — updated from CBUAE website March 2026 ────────────────
+// â”€â”€ Verified fallback â€” updated from CBUAE website March 2026 â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Source: https://www.centralbank.ae/en/forex-eibor/eibor-rates/
 const FALLBACK = {
   overnight:   3.3755,
@@ -44,7 +44,7 @@ const HEADERS = {
   "Accept-Language": "en-US,en;q=0.5",
 };
 
-// ── Source 1: CBUAE direct JSON API ──────────────────────────────────────────
+// â”€â”€ Source 1: CBUAE direct JSON API â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 async function tryDirectAPI() {
   const urls = [
     "https://www.centralbank.ae/umbraco/Surface/Eibor/GetEiborData",
@@ -70,7 +70,7 @@ async function tryDirectAPI() {
   return null;
 }
 
-// ── Source 2: CBUAE HTML page — parse table ───────────────────────────────────
+// â”€â”€ Source 2: CBUAE HTML page â€” parse table â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 async function tryCBUAEHTML() {
   try {
     const res = await fetch("https://www.centralbank.ae/en/forex-eibor/eibor-rates/", {
@@ -128,7 +128,7 @@ async function tryCBUAEHTML() {
   return null;
 }
 
-// ── Source 3: Investing.com EIBOR rates page ──────────────────────────────────
+// â”€â”€ Source 3: Investing.com EIBOR rates page â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 async function tryInvestingCom() {
   try {
     const res = await fetch("https://www.investing.com/rates-bonds/uae-interbank-rate", {
@@ -142,7 +142,7 @@ async function tryInvestingCom() {
     if (!res.ok) return null;
     const html = await res.text();
 
-    // Investing.com shows rates in a table — parse 4-decimal numbers in 1-10% range
+    // Investing.com shows rates in a table â€” parse 4-decimal numbers in 1-10% range
     const rateMatches = html.match(/(\d\.\d{2,4})/g) || [];
     const validRates = [...new Set(rateMatches.map(parseFloat))]
       .filter(r => r > 1.5 && r < 8)
@@ -161,7 +161,7 @@ async function tryInvestingCom() {
   return null;
 }
 
-// ── Parse rate rows from JSON ──────────────────────────────────────────────────
+// â”€â”€ Parse rate rows from JSON â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function parseRateRows(rows) {
   const TENOR_MAP = {
     "Overnight": "overnight", "Over Night": "overnight",
@@ -184,7 +184,7 @@ function parseRateRows(rows) {
   return rates;
 }
 
-// ── Check if fallback needs updating (>30 days old) ──────────────────────────
+// â”€â”€ Check if fallback needs updating (>30 days old) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 async function checkFallbackAge() {
   try {
     const snap = await db.collection("marketData").doc("eibor").get();
@@ -196,7 +196,7 @@ async function checkFallbackAge() {
   } catch { return true; }
 }
 
-// ── Main handler ──────────────────────────────────────────────────────────────
+// â”€â”€ Main handler â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 module.exports = async (req, res) => {
   if (req.method !== "GET") return res.status(405).json({ error: "Method not allowed" });
 
@@ -208,9 +208,9 @@ module.exports = async (req, res) => {
 
   const now     = new Date();
   const uaeTime = now.toLocaleString("en-AE", { timeZone: "Asia/Dubai" });
-  console.log(`[S9 EIBOR] triggered — ${uaeTime}`);
+  console.log(`[S9 EIBOR] triggered â€” ${uaeTime}`);
 
-  // Try sources in order — first success wins
+  // Try sources in order â€” first success wins
   let result = null;
   let usedFallback = false;
 
@@ -219,14 +219,14 @@ module.exports = async (req, res) => {
   if (!result) result = await tryInvestingCom();
 
   if (!result) {
-    console.warn("[S9] All sources failed — using hardcoded fallback");
+    console.warn("[S9] All sources failed â€” using hardcoded fallback");
     result = { rates: FALLBACK, source: "Hardcoded fallback (CBUAE Mar 2026)" };
     usedFallback = true;
   }
 
   const { rates, source } = result;
 
-  // Always ensure all 6 tenors present — fill any gaps from fallback
+  // Always ensure all 6 tenors present â€” fill any gaps from fallback
   const finalRates = { ...FALLBACK, ...rates };
 
   const payload = {
@@ -239,9 +239,24 @@ module.exports = async (req, res) => {
     freshness:    { greenDays: 1, yellowDays: 7 },
   };
 
+  // Build admin-compatible payload for tabData/eiborRates
+  // (Mortgage tab reads from this doc via liveEiborRates in EmaarDashboardV2)
+  const tabDataPayload = {
+    "1m":    finalRates.oneMonth,
+    "3m":    finalRates.threeMonth,
+    "6m":    finalRates.sixMonth,
+    "1y":    finalRates.twelveMonth,
+    asOf:    now.toLocaleDateString("en-AE", { day: "numeric", month: "short", year: "numeric" }),
+    source:  source.includes("Hardcoded") ? "Fallback" : "UAE Central Bank",
+    updatedAt: now.toISOString(),
+    updatedBy: "cron",
+  };
+
   try {
     await db.collection("marketData").doc("eibor").set(payload, { merge: true });
-    console.log(`[S9 EIBOR] Firestore updated — source: ${source} ✅`);
+    // Write 2: tabData/eiborRates - the one Mortgage tab actually reads
+    await db.collection("tabData").doc("eiborRates").set(tabDataPayload, { merge: true });
+    console.log(`[S9 EIBOR] Firestore updated â€” source: ${source} âœ…`);
   } catch (err) {
     console.error("[S9 EIBOR] Firestore write failed:", err.message);
     return res.status(500).json({ ok: false, error: err.message });
