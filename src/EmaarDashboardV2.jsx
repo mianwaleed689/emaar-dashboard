@@ -4404,6 +4404,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               mortLeadSubmitting={mortLeadSubmitting} setMortLeadSubmitting={setMortLeadSubmitting}
               mortLeadSubmitted={mortLeadSubmitted} setMortLeadSubmitted={setMortLeadSubmitted}
               orgId={orgId} userId={user?.uid}
+              liveEiborRates={liveEiborRates}
             />
           )}
 

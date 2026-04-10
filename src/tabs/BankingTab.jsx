@@ -4,8 +4,10 @@
 import React from "react";
 import { T } from "../data";
 import { SvgIcons } from "../components/Icons";
+import { db } from "../firebase";
+import { collection, addDoc } from "firebase/firestore";
 
-function BankingTab({ orgId, userId,
+function BankingTab({ orgId, userId, liveEiborRates,
   bankView, setBankView,
   bankSelected, setBankSelected,
   bankPropValue, setBankPropValue,
@@ -68,7 +70,7 @@ function BankingTab({ orgId, userId,
               "6M":  { rate: 3.676, label: "6 Month",  trend: "stable" },
               "1Y":  { rate: 3.674, label: "1 Year",   trend: "stable" },
             };
-            const EIBOR_3M = 3.593;
+            const EIBOR_3M = parseFloat(liveEiborRates?.["3m"] ?? 3.593);
 
             /* ── Historical EIBOR for chart (3M rate) ── */
             const EIBOR_HISTORY = [
@@ -882,7 +884,7 @@ function BankingTab({ orgId, userId,
                             if (!mortLeadName || !mortLeadPhone) return;
                             setMortLeadSubmitting(true);
                             try {
-                              await addDoc(collection(db, "leads"), {
+                              await addDoc(collection(db, "mortgageLeads"), {
                                 type: "mortgage",
                                 name: mortLeadName,
                                 phone: mortLeadPhone,
@@ -893,7 +895,7 @@ function BankingTab({ orgId, userId,
                                 borrowerType: bankType,
                                 purpose: bankPurpose,
                                 preferredBank: bankSelected,
-                                eibor3M: 3.593,
+                                eibor3M: EIBOR_3M,
                                 source: "Banking Tab — DXB Analytics",
                                 userId: userId || "unknown",
                                 orgId: orgId || null,
