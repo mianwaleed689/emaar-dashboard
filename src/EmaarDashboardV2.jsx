@@ -1,10 +1,10 @@
 /* eslint-disable */
-/* Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
+/* ═══════════════════════════════════════════════════════════════════
    DXB ANALYTICS INTELLIGENCE PLATFORM
-   Clean Architecture Ã¢â‚¬â€ Data-Driven, Firestore-Connected
+   Clean Architecture — Data-Driven, Firestore-Connected
    All intelligence tabs: empty state, ready for data import
    CRM tabs: fully functional (Leads, Pipeline, Team, Agency etc)
-   Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â */
+   ═══════════════════════════════════════════════════════════════════ */
 
 import React, { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
@@ -18,7 +18,7 @@ import { T } from "./data";
 import LandingPage from "./LandingPage";
 import RoiCalculator from "./RoiCalculator";
 
-/* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ EXTRACTED TAB COMPONENTS Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+/* ─── EXTRACTED TAB COMPONENTS ─── */
 import CurrencyTab from './tabs/CurrencyTab';
 import LaunchCalendarTab from './tabs/LaunchCalendarTab';
 import CommunityMapTab from './tabs/CommunityMapTab';
@@ -53,9 +53,9 @@ import BankingTab from './tabs/BankingTab';
 import PipelineTab from './tabs/PipelineTab';
 import DevPortalTab from './tabs/DevPortalTab';
 
-/* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ ACTIVE PROJECTS Ã¢â‚¬â€ now Firestore-only Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+/* ─── ACTIVE PROJECTS — now Firestore-only ─── */
 /* Projects load from: Firestore 'projects' collection */
-/* Populated via: Admin Ã¢â€ â€™ Data Manager Ã¢â€ â€™ Import Projects */
+/* Populated via: Admin → Data Manager → Import Projects */
 
 const getLinkDomain = (url) => {
   if (!url) return "Listing";
@@ -65,7 +65,7 @@ const getLinkDomain = (url) => {
   return "Official Listing";
 };
 
-/* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ HANDOVER COUNTDOWN Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+/* ─── HANDOVER COUNTDOWN ─── */
 const getHandoverCountdown = (handover) => {
   if (!handover) return null;
   const match = handover.match(/Q([1-4])\s+(\d{4})/);
@@ -88,26 +88,26 @@ const getHandoverCountdown = (handover) => {
   return { label, color, urgent: diffDays <= 90, months: diffMonths, days: diffDays };
 };
 
-// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ INVESTMENT SCORE (out of 10) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+// ─── INVESTMENT SCORE (out of 10) ─────────────────────────────────────────
 const getInvestmentScore = (p) => {
   let score = 0;
   const breakdown = [];
 
-  // 1. Yield (0Ã¢â‚¬â€œ3 pts)
+  // 1. Yield (0–3 pts)
   const gross = p.gross || p.yield || 0;
   if (gross >= 8)      { score += 3; breakdown.push({ label: "Yield", pts: 3, max: 3, note: gross + "% gross" }); }
   else if (gross >= 6) { score += 2; breakdown.push({ label: "Yield", pts: 2, max: 3, note: gross + "% gross" }); }
   else if (gross >= 4) { score += 1; breakdown.push({ label: "Yield", pts: 1, max: 3, note: gross + "% gross" }); }
   else                 { breakdown.push({ label: "Yield", pts: 0, max: 3, note: gross ? gross + "%" : "No data" }); }
 
-  // 2. Value (PPSF) (0Ã¢â‚¬â€œ2 pts)
+  // 2. Value (PPSF) (0–2 pts)
   const ppsf = p.ppsf || 0;
   if (ppsf > 0 && ppsf <= 1500)       { score += 2; breakdown.push({ label: "Value", pts: 2, max: 2, note: "AED " + ppsf + "/sqft" }); }
   else if (ppsf > 0 && ppsf <= 2200)  { score += 1; breakdown.push({ label: "Value", pts: 1, max: 2, note: "AED " + ppsf + "/sqft" }); }
   else if (ppsf > 0)                  { breakdown.push({ label: "Value", pts: 0, max: 2, note: "AED " + ppsf + "/sqft" }); }
   else                                { breakdown.push({ label: "Value", pts: 0, max: 2, note: "No PPSF" }); }
 
-  // 3. Handover timing (0Ã¢â‚¬â€œ2 pts) Ã¢â‚¬â€ sweet spot is 12Ã¢â‚¬â€œ36 months
+  // 3. Handover timing (0–2 pts) — sweet spot is 12–36 months
   const cd = getHandoverCountdown(p.handover);
   if (cd) {
     if (cd.passed)              { score += 1.5; breakdown.push({ label: "Handover", pts: 1.5, max: 2, note: "Ready now" }); }
@@ -119,7 +119,7 @@ const getInvestmentScore = (p) => {
     breakdown.push({ label: "Handover", pts: 0, max: 2, note: "No date" });
   }
 
-  // 4. Payment plan (0Ã¢â‚¬â€œ2 pts)
+  // 4. Payment plan (0–2 pts)
   const pp = (p.paymentPlan || p.payment || "").toLowerCase();
   if (pp.includes("80/20") || pp.includes("80:20"))       { score += 2;   breakdown.push({ label: "Payment", pts: 2,   max: 2, note: "80/20 plan" }); }
   else if (pp.includes("70/30") || pp.includes("60/40"))  { score += 1.5; breakdown.push({ label: "Payment", pts: 1.5, max: 2, note: pp }); }
@@ -127,7 +127,7 @@ const getInvestmentScore = (p) => {
   else if (pp.length > 0)                                 { score += 0.5; breakdown.push({ label: "Payment", pts: 0.5, max: 2, note: pp }); }
   else                                                    { breakdown.push({ label: "Payment", pts: 0, max: 2, note: "Unknown" }); }
 
-  // 5. Golden Visa eligible (0Ã¢â‚¬â€œ1 pt)
+  // 5. Golden Visa eligible (0–1 pt)
   if (p.price && p.price >= 2000000) {
     score += 1; breakdown.push({ label: "Golden Visa", pts: 1, max: 1, note: "Eligible" });
   } else {
@@ -140,7 +140,7 @@ const getInvestmentScore = (p) => {
   return { score: final, color, label, breakdown };
 };
 
-/* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ ICONS (inline SVG) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+/* ─── ICONS (inline SVG) ─── */
 const Icons = {
   overview: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>,
   financials: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>,
@@ -165,7 +165,7 @@ const Icons = {
 };
 
 
-/* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ GLOBAL FILTER CONFIG Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+/* ─── GLOBAL FILTER CONFIG ─── */
 const PROPERTY_TYPES = [
   {
     group: "Residential",
@@ -191,30 +191,30 @@ const PROPERTY_TYPES = [
   {
     group: "Commercial",
     types: [
-      { value: "office",        label: "Office",          beds: ["< 500 sqft","500Ã¢â‚¬â€œ1K sqft","1KÃ¢â‚¬â€œ2.5K sqft","2.5KÃ¢â‚¬â€œ5K sqft","5K+ sqft","Full Floor","Full Building"] },
-      { value: "retail",        label: "Retail / Shop",   beds: ["< 500 sqft","500Ã¢â‚¬â€œ1K sqft","1KÃ¢â‚¬â€œ2.5K sqft","2.5K+ sqft"] },
-      { value: "showroom",      label: "Showroom",        beds: ["< 2K sqft","2KÃ¢â‚¬â€œ5K sqft","5K+ sqft"] },
-      { value: "warehouse",     label: "Warehouse",       beds: ["< 5K sqft","5KÃ¢â‚¬â€œ10K sqft","10K+ sqft"] },
+      { value: "office",        label: "Office",          beds: ["< 500 sqft","500–1K sqft","1K–2.5K sqft","2.5K–5K sqft","5K+ sqft","Full Floor","Full Building"] },
+      { value: "retail",        label: "Retail / Shop",   beds: ["< 500 sqft","500–1K sqft","1K–2.5K sqft","2.5K+ sqft"] },
+      { value: "showroom",      label: "Showroom",        beds: ["< 2K sqft","2K–5K sqft","5K+ sqft"] },
+      { value: "warehouse",     label: "Warehouse",       beds: ["< 5K sqft","5K–10K sqft","10K+ sqft"] },
       { value: "coworking",     label: "Co-working Space",beds: ["Hot Desk","Dedicated Desk","Private Office","Full Floor"] },
     ]
   },
   {
     group: "Industrial & Land",
     types: [
-      { value: "industrial",    label: "Industrial Unit",    beds: ["< 5K sqft","5KÃ¢â‚¬â€œ20K sqft","20K+ sqft"] },
-      { value: "land_res",      label: "Land Ã¢â‚¬â€ Residential", beds: ["< 5K sqft","5KÃ¢â‚¬â€œ15K sqft","15K+ sqft"] },
-      { value: "land_comm",     label: "Land Ã¢â‚¬â€ Commercial",  beds: ["< 10K sqft","10KÃ¢â‚¬â€œ50K sqft","50K+ sqft"] },
-      { value: "land_mixed",    label: "Mixed Use Plot",     beds: ["< 10K sqft","10KÃ¢â‚¬â€œ50K sqft","50K+ sqft"] },
+      { value: "industrial",    label: "Industrial Unit",    beds: ["< 5K sqft","5K–20K sqft","20K+ sqft"] },
+      { value: "land_res",      label: "Land — Residential", beds: ["< 5K sqft","5K–15K sqft","15K+ sqft"] },
+      { value: "land_comm",     label: "Land — Commercial",  beds: ["< 10K sqft","10K–50K sqft","50K+ sqft"] },
+      { value: "land_mixed",    label: "Mixed Use Plot",     beds: ["< 10K sqft","10K–50K sqft","50K+ sqft"] },
     ]
   },
 ];
 
 const STATUS_OPTIONS = [
   { value: "all",          label: "All Status" },
-  { value: "offplan",      label: "Off-Plan Ã¢â‚¬â€ Under Construction" },
-  { value: "prelaunch",    label: "Off-Plan Ã¢â‚¬â€ Pre-Launch / EOI" },
-  { value: "ready_new",    label: "Ready Ã¢â‚¬â€ New (Primary)" },
-  { value: "secondary",    label: "Ready Ã¢â‚¬â€ Secondary Market" },
+  { value: "offplan",      label: "Off-Plan — Under Construction" },
+  { value: "prelaunch",    label: "Off-Plan — Pre-Launch / EOI" },
+  { value: "ready_new",    label: "Ready — New (Primary)" },
+  { value: "secondary",    label: "Ready — Secondary Market" },
   { value: "handover_now", label: "Handover This Year" },
   { value: "handover_2026",label: "Handover 2026" },
   { value: "handover_2027",label: "Handover 2027+" },
@@ -223,24 +223,24 @@ const STATUS_OPTIONS = [
 const PRICE_PRESETS_APT = [
   { label: "Any Price", min: 0, max: 0 },
   { label: "< 500K", min: 0, max: 500000 },
-  { label: "500KÃ¢â‚¬â€œ1M", min: 500000, max: 1000000 },
-  { label: "1MÃ¢â‚¬â€œ2M", min: 1000000, max: 2000000 },
-  { label: "2MÃ¢â‚¬â€œ5M", min: 2000000, max: 5000000 },
-  { label: "5MÃ¢â‚¬â€œ10M", min: 5000000, max: 10000000 },
+  { label: "500K–1M", min: 500000, max: 1000000 },
+  { label: "1M–2M", min: 1000000, max: 2000000 },
+  { label: "2M–5M", min: 2000000, max: 5000000 },
+  { label: "5M–10M", min: 5000000, max: 10000000 },
   { label: "10M+", min: 10000000, max: 0 },
 ];
 
 const PRICE_PRESETS_VILLA = [
   { label: "Any Price", min: 0, max: 0 },
   { label: "< 2M", min: 0, max: 2000000 },
-  { label: "2MÃ¢â‚¬â€œ5M", min: 2000000, max: 5000000 },
-  { label: "5MÃ¢â‚¬â€œ10M", min: 5000000, max: 10000000 },
-  { label: "10MÃ¢â‚¬â€œ25M", min: 10000000, max: 25000000 },
-  { label: "25MÃ¢â‚¬â€œ50M", min: 25000000, max: 50000000 },
+  { label: "2M–5M", min: 2000000, max: 5000000 },
+  { label: "5M–10M", min: 5000000, max: 10000000 },
+  { label: "10M–25M", min: 10000000, max: 25000000 },
+  { label: "25M–50M", min: 25000000, max: 50000000 },
   { label: "50M+", min: 50000000, max: 0 },
 ];
 
-/* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ SVG ICON HELPER Ã¢â€â‚¬ replaces lucide-react dependency Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+/* ─── SVG ICON HELPER ─ replaces lucide-react dependency ─── */
 const SvgIcons = {
   LayoutDashboard: (p) => <svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={p.strokeWidth||1.5} strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>,
   Globe: (p) => <svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={p.strokeWidth||1.5} strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>,
@@ -280,7 +280,7 @@ const SvgIcons = {
   DollarSign: ({ width=16, height=16, strokeWidth=2, style={} } = {}) => SvgIcons.CreditCard({ width, height, strokeWidth, style }),
 };
 
-/* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ GLOBAL CONTEXT FILTER COMPONENT Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+/* ─── GLOBAL CONTEXT FILTER COMPONENT ─── */
 const GlobalContextFilter = ({
   gDeveloper, setGDeveloperAndReset,
   gCommunity, setGCommunity,
@@ -292,7 +292,7 @@ const GlobalContextFilter = ({
   gPriceMax, setGPriceMax,
   allDevelopers, T,
 }) => {
-  // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ cleanPhone: strips non-digits Ã¢â‚¬â€ NEVER use regex inside JSX Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+  // ─── cleanPhone: strips non-digits — NEVER use regex inside JSX ───
   const cleanPhone = (p) => {
     if (!p) return "";
     let out = "";
@@ -303,7 +303,7 @@ const GlobalContextFilter = ({
     return out;
   };
 
-  // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ csvEsc: CSV-safe quoting Ã¢â‚¬â€ defined here, NOT inside JSX Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+  // ─── csvEsc: CSV-safe quoting — defined here, NOT inside JSX ───
   const csvEsc = (v) => {
     const s = v == null ? "" : String(v);
     let out = "";
@@ -365,7 +365,7 @@ const GlobalContextFilter = ({
       background: `${T.surface}f8`, backdropFilter: "blur(12px)",
       borderBottom: `1px solid ${T.border}`,
     }}>
-      {/* Ã¢â€â‚¬Ã¢â€â‚¬ Compact filter bar Ã¢â€â‚¬Ã¢â€â‚¬ */}
+      {/* ── Compact filter bar ── */}
       <div style={{
         display: "flex", alignItems: "center", gap: 8,
         padding: "8px 20px", flexWrap: "wrap",
@@ -477,7 +477,7 @@ const GlobalContextFilter = ({
         {/* Spacer + data source note */}
         <div style={{ marginLeft: "auto", fontSize: 10, color: T.textMuted, display: "flex", alignItems: "center", gap: 4 }}>
           <span style={{ width: 5, height: 5, borderRadius: "50%", background: T.green, display: "inline-block" }} />
-          Live Ã‚Â· Firestore
+          Live · Firestore
         </div>
       </div>
     </div>
@@ -485,20 +485,20 @@ const GlobalContextFilter = ({
 };
 
 
-/* Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
-   DXB ANALYTICS Ã¢â‚¬â€ RESEARCH-BASED SEED DATA
-   All figures sourced from official publications Ã¢â‚¬â€ listed per dataset
+/* ════════════════════════════════════════════════════════════════
+   DXB ANALYTICS — RESEARCH-BASED SEED DATA
+   All figures sourced from official publications — listed per dataset
    Seed data displays until real Firestore data is imported from Admin
    isSeedData: true flag marks all seed entries for easy identification
-   Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â */
+   ════════════════════════════════════════════════════════════════ */
 
 const SEED_DATA = {
 
-  /* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ MARKET TAB Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+  /* ─── MARKET TAB ───────────────────────────────────────────────
      Sources: DLD Annual Report 2025, DXB Interact Jan 2026,
      Property Monitor DPI Dec 2025, REIDIN Residential Index Dec 2025
      URL: dubailand.gov.ae/en/open-data/research/annual-report-real-estate-sector-performance-2024
-  Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+  ─────────────────────────────────────────────────────────────── */
   market: [
     { metric: "Total Market Value",       value: "AED 682.6B",  change: "+21% YoY",  numericValue: 682.6, isSeedData: true, source: "DLD / DXB Interact Jan 2026" },
     { metric: "Total Transactions",       value: "215,060",     change: "+19% YoY",  numericValue: 215060, isSeedData: true, source: "DLD Annual Report 2025" },
@@ -514,7 +514,7 @@ const SEED_DATA = {
     { metric: "Nationalities",            value: "193+",        isSeedData: true, source: "DLD Investor Base Report 2025" },
     { metric: "Off-Plan Share",           numericValue: 63,     isSeedData: true },
     { metric: "Cash Share",               numericValue: 55,     isSeedData: true, source: "DLD Mortgage Report 2025" },
-    { metric: "Active Developers", value: "50+", change: "RERA registered Ã‚Â· DLD approved", isSeedData: true, source: "RERA Registry 2026" },
+    { metric: "Active Developers", value: "50+", change: "RERA registered · DLD approved", isSeedData: true, source: "RERA Registry 2026" },
     { metric: "REIDIN Growth",      value: "+19.8%", change: "Residential Sales Price Index Dec 2025", isSeedData: true, source: "REIDIN Dec 2025" },
     { metric: "Price Growth YoY",   value: "+19.8%", change: "Dec 2025", isSeedData: true, source: "REIDIN 2025" },
     { metric: "Mortgage Share",           numericValue: 45,     isSeedData: true },
@@ -527,11 +527,11 @@ const SEED_DATA = {
     { year: "2025", value: 919,  type: "annual", isSeedData: true, source: "DLD / DXB Interact Jan 2026" },
   ],
 
-  /* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ DLD VOLUMES TAB Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+  /* ─── DLD VOLUMES TAB ──────────────────────────────────────────
      Sources: DXBAnalytics.com Community Volume Report Feb 2026,
      DLD Direct Database Query, Property Monitor 2025
      URL: dxbanalytics.com/blog/dubai-property-transaction-volume-2026
-  Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+  ─────────────────────────────────────────────────────────────── */
   dldVolumes: [
     { community: "Jumeirah Village Circle",   type: "Apartment", transactions: 18782, avgPpsf: 1180, volume: 9800000000,  change: 17,  isSeedData: true, source: "DXBAnalytics / DLD 2025" },
     { community: "Business Bay",              type: "Apartment", transactions: 12450, avgPpsf: 2050, volume: 14200000000, change: 8,   isSeedData: true, source: "DXBAnalytics / DLD 2025" },
@@ -550,13 +550,13 @@ const SEED_DATA = {
     { community: "Tilal Al Ghaf",             type: "Villa",     transactions: 3600,  avgPpsf: 1650, volume: 5800000000,  change: 52,  isSeedData: true, source: "DXBAnalytics / DLD 2025" },
   ],
 
-  /* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ PRICE HISTORY TAB Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+  /* ─── PRICE HISTORY TAB ────────────────────────────────────────
      Sources: ValuStrat VPI Q4 2025, REIDIN Residential Index Dec 2025,
      Property Monitor DPI 2025, Knight Frank Dubai Residential Q1 2025
      URL: reidin.com | valustrat.com/vpi
-  Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+  ─────────────────────────────────────────────────────────────── */
   priceHistory: [
-    /* 5-year PPSF trend Ã¢â‚¬â€ Dubai overall apartment average */
+    /* 5-year PPSF trend — Dubai overall apartment average */
     { period: "2020", ppsf: 1050, offPlanPpsf: 980,  secondaryPpsf: 1100, type: "priceHistory", isSeedData: true, source: "ValuStrat VPI / REIDIN" },
     { period: "2021", ppsf: 1080, offPlanPpsf: 1020, secondaryPpsf: 1140, type: "priceHistory", isSeedData: true, source: "ValuStrat VPI / REIDIN" },
     { period: "2022", ppsf: 1250, offPlanPpsf: 1180, secondaryPpsf: 1310, type: "priceHistory", isSeedData: true, source: "ValuStrat VPI / REIDIN" },
@@ -572,12 +572,12 @@ const SEED_DATA = {
     { community: "Business Bay",         ppsf: 2050, change6m: 3.1,  change1y: 8.4,  change3y: 29.7, change5y: 58.9, type: "priceHistory", isSeedData: true, source: "REIDIN Dec 2025" },
   ],
 
-  /* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ NEIGHBOURHOODS TAB Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+  /* ─── NEIGHBOURHOODS TAB ───────────────────────────────────────
      Sources: Bayut H1 2025 Sales Report, Knight Frank Dubai 2025,
      RERA Service Charge Index 2025, uaeexperthub.com Dubai Yields 2026,
      Alkira Dubai Investment Guide Feb 2026, RTA Metro Blue Line plans
      URL: bayut.com/mybayut/bayut-h1-2025-dubai-rental-market-report
-  Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+  ─────────────────────────────────────────────────────────────── */
   communities: [
     { community: "Jumeirah Village Circle", avgPpsf: 1180, grossYield: 7.8,  netYield: 6.2, serviceCharge: 14,  metroDistance: 1800, supplyRisk: "Medium", investmentScore: 82, tenantProfile: "Professionals", hasSchool: true,  hasMall: true,  hasBeach: false, hasHospital: false, pipeline2026: 8200,  type: "community", isSeedData: true, source: "Bayut H1 2025 / uaeexperthub.com Jan 2026" },
     { community: "Dubai Marina",            avgPpsf: 2280, grossYield: 6.5,  netYield: 5.0, serviceCharge: 22,  metroDistance: 400,  supplyRisk: "Low",    investmentScore: 78, tenantProfile: "Professionals", hasSchool: false, hasMall: true,  hasBeach: true,  hasHospital: false, pipeline2026: 2800,  type: "community", isSeedData: true, source: "Bayut H1 2025 / Knight Frank Q1 2025" },
@@ -585,50 +585,50 @@ const SEED_DATA = {
     { community: "Downtown Dubai",          avgPpsf: 3100, grossYield: 5.8,  netYield: 4.2, serviceCharge: 35,  metroDistance: 300,  supplyRisk: "Low",    investmentScore: 74, tenantProfile: "Luxury / HNWI", hasSchool: false, hasMall: true,  hasBeach: false, hasHospital: false, pipeline2026: 1800,  type: "community", isSeedData: true, source: "Knight Frank Dubai 2025 / REIDIN" },
     { community: "Dubai Hills Estate",      avgPpsf: 1850, grossYield: 6.2,  netYield: 5.0, serviceCharge: 16,  metroDistance: 3500, supplyRisk: "Medium", investmentScore: 85, tenantProfile: "Families",      hasSchool: true,  hasMall: true,  hasBeach: false, hasHospital: true,  pipeline2026: 6800,  type: "community", isSeedData: true, source: "Knight Frank / Bayut H1 2025" },
     { community: "Palm Jumeirah",           avgPpsf: 4800, grossYield: 5.2,  netYield: 3.8, serviceCharge: 28,  metroDistance: 2200, supplyRisk: "Low",    investmentScore: 76, tenantProfile: "Luxury / HNWI", hasSchool: false, hasMall: true,  hasBeach: true,  hasHospital: false, pipeline2026: 800,   type: "community", isSeedData: true, source: "Knight Frank Dubai 2025" },
-    { community: "Jumeirah Lake Towers",    avgPpsf: 1420, grossYield: 8.1,  netYield: 6.4, serviceCharge: 16,  metroDistance: 350,  supplyRisk: "Low",    investmentScore: 84, tenantProfile: "Professionals", hasSchool: false, hasMall: true,  hasBeach: false, hasHospital: false, pipeline2026: 1200,  type: "community", isSeedData: true, source: "Middle East Insider Apr 2026 Ã¢â‚¬â€ ranked #1 yield+quality" },
+    { community: "Jumeirah Lake Towers",    avgPpsf: 1420, grossYield: 8.1,  netYield: 6.4, serviceCharge: 16,  metroDistance: 350,  supplyRisk: "Low",    investmentScore: 84, tenantProfile: "Professionals", hasSchool: false, hasMall: true,  hasBeach: false, hasHospital: false, pipeline2026: 1200,  type: "community", isSeedData: true, source: "Middle East Insider Apr 2026 — ranked #1 yield+quality" },
     { community: "Arabian Ranches",         avgPpsf: 1380, grossYield: 5.5,  netYield: 4.4, serviceCharge: 8,   metroDistance: 8000, supplyRisk: "Low",    investmentScore: 79, tenantProfile: "Families",      hasSchool: true,  hasMall: false, hasBeach: false, hasHospital: false, pipeline2026: 1400,  type: "community", isSeedData: true, source: "uaeexperthub.com / Bayut 2025" },
-    { community: "International City",      avgPpsf: 580,  grossYield: 9.2,  netYield: 7.8, serviceCharge: 8,   metroDistance: 5500, supplyRisk: "Low",    investmentScore: 71, tenantProfile: "Mixed",         hasSchool: false, hasMall: true,  hasBeach: false, hasHospital: false, pipeline2026: 600,   type: "community", isSeedData: true, source: "Middle East Insider Apr 2026 Ã¢â‚¬â€ 9.2% yield leader" },
+    { community: "International City",      avgPpsf: 580,  grossYield: 9.2,  netYield: 7.8, serviceCharge: 8,   metroDistance: 5500, supplyRisk: "Low",    investmentScore: 71, tenantProfile: "Mixed",         hasSchool: false, hasMall: true,  hasBeach: false, hasHospital: false, pipeline2026: 600,   type: "community", isSeedData: true, source: "Middle East Insider Apr 2026 — 9.2% yield leader" },
     { community: "Dubai Creek Harbour",     avgPpsf: 1620, grossYield: 6.4,  netYield: 5.1, serviceCharge: 14,  metroDistance: 1200, supplyRisk: "Medium", investmentScore: 80, tenantProfile: "Mixed",         hasSchool: false, hasMall: true,  hasBeach: true,  hasHospital: false, pipeline2026: 9200,  type: "community", isSeedData: true, source: "Alkira Dubai Investment Guide Feb 2026" },
     { community: "Al Furjan",               avgPpsf: 1080, grossYield: 8.2,  netYield: 6.8, serviceCharge: 12,  metroDistance: 700,  supplyRisk: "Medium", investmentScore: 77, tenantProfile: "Families",      hasSchool: true,  hasMall: false, hasBeach: false, hasHospital: false, pipeline2026: 3200,  type: "community", isSeedData: true, source: "GuestReady Feb 2026 / Bayut H1 2025" },
-    { community: "Dubai South",             avgPpsf: 850,  grossYield: 8.8,  netYield: 7.2, serviceCharge: 10,  metroDistance: 4000, supplyRisk: "Medium", investmentScore: 73, tenantProfile: "Mixed",         hasSchool: true,  hasMall: false, hasBeach: false, hasHospital: false, pipeline2026: 14000, type: "community", isSeedData: true, source: "uaeexperthub.com Jan 2026 Ã¢â‚¬â€ 7.5-9.5% yield range" },
+    { community: "Dubai South",             avgPpsf: 850,  grossYield: 8.8,  netYield: 7.2, serviceCharge: 10,  metroDistance: 4000, supplyRisk: "Medium", investmentScore: 73, tenantProfile: "Mixed",         hasSchool: true,  hasMall: false, hasBeach: false, hasHospital: false, pipeline2026: 14000, type: "community", isSeedData: true, source: "uaeexperthub.com Jan 2026 — 7.5-9.5% yield range" },
     { community: "Mohammed Bin Rashid City",avgPpsf: 1950, grossYield: 6.1,  netYield: 4.9, serviceCharge: 16,  metroDistance: 2800, supplyRisk: "Medium", investmentScore: 81, tenantProfile: "Families",      hasSchool: true,  hasMall: true,  hasBeach: false, hasHospital: true,  pipeline2026: 8800,  type: "community", isSeedData: true, source: "Knight Frank / Sands of Wealth Jan 2026" },
     { community: "Sobha Hartland",          avgPpsf: 2100, grossYield: 6.0,  netYield: 4.8, serviceCharge: 18,  metroDistance: 2400, supplyRisk: "Low",    investmentScore: 82, tenantProfile: "Luxury / HNWI", hasSchool: true,  hasMall: false, hasBeach: false, hasHospital: false, pipeline2026: 2200,  type: "community", isSeedData: true, source: "Knight Frank Q1 2025 / REIDIN" },
-    { community: "Tilal Al Ghaf",           avgPpsf: 1650, grossYield: 6.8,  netYield: 5.5, serviceCharge: 12,  metroDistance: 5000, supplyRisk: "Low",    investmentScore: 80, tenantProfile: "Families",      hasSchool: true,  hasMall: false, hasBeach: false, hasHospital: false, pipeline2026: 1800,  type: "community", isSeedData: true, source: "DLD 2025 Ã¢â‚¬â€ 52% YoY growth" },
-    { community: "Discovery Gardens",       avgPpsf: 680,  grossYield: 8.5,  netYield: 7.1, serviceCharge: 9,   metroDistance: 600,  supplyRisk: "Low",    investmentScore: 75, tenantProfile: "Professionals", hasSchool: false, hasMall: true,  hasBeach: false, hasHospital: false, pipeline2026: 400,   type: "community", isSeedData: true, source: "Middle East Insider Apr 2026 Ã¢â‚¬â€ 8.5% yield" },
+    { community: "Tilal Al Ghaf",           avgPpsf: 1650, grossYield: 6.8,  netYield: 5.5, serviceCharge: 12,  metroDistance: 5000, supplyRisk: "Low",    investmentScore: 80, tenantProfile: "Families",      hasSchool: true,  hasMall: false, hasBeach: false, hasHospital: false, pipeline2026: 1800,  type: "community", isSeedData: true, source: "DLD 2025 — 52% YoY growth" },
+    { community: "Discovery Gardens",       avgPpsf: 680,  grossYield: 8.5,  netYield: 7.1, serviceCharge: 9,   metroDistance: 600,  supplyRisk: "Low",    investmentScore: 75, tenantProfile: "Professionals", hasSchool: false, hasMall: true,  hasBeach: false, hasHospital: false, pipeline2026: 400,   type: "community", isSeedData: true, source: "Middle East Insider Apr 2026 — 8.5% yield" },
     { community: "Dubai Silicon Oasis",     avgPpsf: 820,  grossYield: 7.5,  netYield: 6.0, serviceCharge: 12,  metroDistance: 4500, supplyRisk: "Low",    investmentScore: 74, tenantProfile: "Professionals", hasSchool: true,  hasMall: true,  hasBeach: false, hasHospital: false, pipeline2026: 2400,  type: "community", isSeedData: true, source: "uaeexperthub.com Jan 2026" },
     { community: "Arjan",                   avgPpsf: 1020, grossYield: 8.0,  netYield: 6.5, serviceCharge: 13,  metroDistance: 1500, supplyRisk: "Medium", investmentScore: 76, tenantProfile: "Professionals", hasSchool: false, hasMall: false, hasBeach: false, hasHospital: false, pipeline2026: 4200,  type: "community", isSeedData: true, source: "GuestReady Feb 2026 / Keyone Q1 2026" },
     { community: "DAMAC Hills 2",           avgPpsf: 780,  grossYield: 7.2,  netYield: 6.0, serviceCharge: 10,  metroDistance: 6000, supplyRisk: "High",   investmentScore: 69, tenantProfile: "Families",      hasSchool: true,  hasMall: true,  hasBeach: false, hasHospital: false, pipeline2026: 16000, type: "community", isSeedData: true, source: "uaeexperthub.com Jan 2026" },
     { community: "Emaar Beachfront",        avgPpsf: 2800, grossYield: 5.8,  netYield: 4.6, serviceCharge: 20,  metroDistance: 800,  supplyRisk: "Low",    investmentScore: 79, tenantProfile: "Luxury / HNWI", hasSchool: false, hasMall: false, hasBeach: true,  hasHospital: false, pipeline2026: 1600,  type: "community", isSeedData: true, source: "Bayut H1 2025 / Driven Properties 2025" },
   ],
 
-  /* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ LAUNCH CALENDAR TAB Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+  /* ─── LAUNCH CALENDAR TAB ──────────────────────────────────────
      Sources: Developer official portals, Bayut Launch Radar 2026,
      Property Finder New Projects, Reelly.ai Launch Calendar
      URL: reelly.ai | bayut.com | propertyfinder.ae
-  Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+  ─────────────────────────────────────────────────────────────── */
   launches: [
-    { projectName: "Emaar Grand Polo Club & Resort Ã¢â‚¬â€ Phase 2", developer: "Emaar", community: "Dubai Investment South", propertyType: "Villa", status: "EOI Open", launchDate: "2026-04-20", startingPrice: 5700000, totalUnits: 420, paymentPlan: "80/20", eoiAmount: 50000, eoiRefundable: true, launchPrice: 4800, currentPrice: 5200, notes: "Emaar's 60M sqft master plan. Polo fields, 7 clubhouses, equestrian estates. Strong appreciation history on Emaar launches.", type: "launch", isSeedData: true, source: "Alkira Dubai Investment Guide Feb 2026" },
-    { projectName: "Dubai Islands Ã¢â‚¬â€ Island B Phase 1", developer: "Nakheel", community: "Dubai Islands", propertyType: "Apartment", status: "EOI Open", launchDate: "2026-04-28", startingPrice: 1200000, totalUnits: 680, paymentPlan: "60/40", eoiAmount: 30000, eoiRefundable: true, notes: "Island B offers more controlled planning vs Island A. 24% price growth in 2025. Beachfront value.", type: "launch", isSeedData: true, source: "Alkira Feb 2026 Ã¢â‚¬â€ Dubai Islands 24% growth 2025" },
-    { projectName: "Sobha Hartland II Ã¢â‚¬â€ The Waterfront", developer: "Sobha Realty", community: "Sobha Hartland", propertyType: "Apartment", status: "Upcoming", launchDate: "2026-05-15", startingPrice: 1800000, totalUnits: 520, paymentPlan: "70/30", eoiAmount: 40000, eoiRefundable: true, notes: "High-rise community with green living concept. Sobha known for quality finishes and delivery track record.", type: "launch", isSeedData: true, source: "Arthur Mackenzy Q3 2025 Report" },
-    { projectName: "The Oasis by Emaar Ã¢â‚¬â€ Phase 11", developer: "Emaar", community: "The Oasis", propertyType: "Villa", status: "Launched", launchDate: "2026-03-10", startingPrice: 6150000, totalUnits: 280, paymentPlan: "80/20 post-handover", eoiAmount: 50000, eoiRefundable: true, launchPrice: 5800, currentPrice: 6300, notes: "10-to-1 scarcity vs Dubai Hills (2,700 units vs 30,000). Lagoon pools, wave pools. Handover Jun 2029.", type: "launch", isSeedData: true, source: "Alkira Feb 2026 Ã¢â‚¬â€ 'Blue Lagoon' exclusivity" },
-    { projectName: "DAMAC Lagoons Ã¢â‚¬â€ Santorini Phase 3", developer: "DAMAC Properties", community: "DAMAC Lagoons", propertyType: "Villa", status: "EOI Closed", launchDate: "2026-03-22", startingPrice: 2200000, totalUnits: 380, paymentPlan: "60/40", eoiAmount: 25000, eoiRefundable: true, notes: "Mediterranean-inspired villas. DAMAC sold out previous phases within hours.", type: "launch", isSeedData: true, source: "Property Finder Launch Radar 2026" },
-    { projectName: "Binghatti Skyrise Ã¢â‚¬â€ Business Bay", developer: "Binghatti", community: "Business Bay", propertyType: "Apartment", status: "Upcoming", launchDate: "2026-05-08", startingPrice: 850000, totalUnits: 720, paymentPlan: "70/30", eoiAmount: 20000, eoiRefundable: true, notes: "Binghatti's signature bold architecture. Business Bay canal views. Target professional renters Ã¢â‚¬â€ strong yield community.", type: "launch", isSeedData: true, source: "Bayut Launch Radar Apr 2026" },
-    { projectName: "Tilal Al Ghaf Ã¢â‚¬â€ Serenity Mansions", developer: "Majid Al Futtaim", community: "Tilal Al Ghaf", propertyType: "Villa", status: "Sold Out", launchDate: "2026-02-18", startingPrice: 8500000, totalUnits: 85, paymentPlan: "50/50", eoiAmount: 100000, eoiRefundable: false, notes: "Ultra-luxury mansions sold out within 48 hours. DLD 2025 shows 52% YoY transaction growth in Tilal Al Ghaf.", type: "launch", isSeedData: true, source: "DLD 2025 / Bayut 2026" },
-    { projectName: "Ellington Ocean House Ã¢â‚¬â€ Dubai Islands", developer: "Ellington Properties", community: "Dubai Islands", propertyType: "Apartment", status: "Upcoming", launchDate: "2026-06-01", startingPrice: 2400000, totalUnits: 180, paymentPlan: "70/30", eoiAmount: 50000, eoiRefundable: true, notes: "Design-forward beachfront living. Ellington known for curated interiors. Limited units.", type: "launch", isSeedData: true, source: "Reelly.ai Launch Calendar Apr 2026" },
+    { projectName: "Emaar Grand Polo Club & Resort — Phase 2", developer: "Emaar", community: "Dubai Investment South", propertyType: "Villa", status: "EOI Open", launchDate: "2026-04-20", startingPrice: 5700000, totalUnits: 420, paymentPlan: "80/20", eoiAmount: 50000, eoiRefundable: true, launchPrice: 4800, currentPrice: 5200, notes: "Emaar's 60M sqft master plan. Polo fields, 7 clubhouses, equestrian estates. Strong appreciation history on Emaar launches.", type: "launch", isSeedData: true, source: "Alkira Dubai Investment Guide Feb 2026" },
+    { projectName: "Dubai Islands — Island B Phase 1", developer: "Nakheel", community: "Dubai Islands", propertyType: "Apartment", status: "EOI Open", launchDate: "2026-04-28", startingPrice: 1200000, totalUnits: 680, paymentPlan: "60/40", eoiAmount: 30000, eoiRefundable: true, notes: "Island B offers more controlled planning vs Island A. 24% price growth in 2025. Beachfront value.", type: "launch", isSeedData: true, source: "Alkira Feb 2026 — Dubai Islands 24% growth 2025" },
+    { projectName: "Sobha Hartland II — The Waterfront", developer: "Sobha Realty", community: "Sobha Hartland", propertyType: "Apartment", status: "Upcoming", launchDate: "2026-05-15", startingPrice: 1800000, totalUnits: 520, paymentPlan: "70/30", eoiAmount: 40000, eoiRefundable: true, notes: "High-rise community with green living concept. Sobha known for quality finishes and delivery track record.", type: "launch", isSeedData: true, source: "Arthur Mackenzy Q3 2025 Report" },
+    { projectName: "The Oasis by Emaar — Phase 11", developer: "Emaar", community: "The Oasis", propertyType: "Villa", status: "Launched", launchDate: "2026-03-10", startingPrice: 6150000, totalUnits: 280, paymentPlan: "80/20 post-handover", eoiAmount: 50000, eoiRefundable: true, launchPrice: 5800, currentPrice: 6300, notes: "10-to-1 scarcity vs Dubai Hills (2,700 units vs 30,000). Lagoon pools, wave pools. Handover Jun 2029.", type: "launch", isSeedData: true, source: "Alkira Feb 2026 — 'Blue Lagoon' exclusivity" },
+    { projectName: "DAMAC Lagoons — Santorini Phase 3", developer: "DAMAC Properties", community: "DAMAC Lagoons", propertyType: "Villa", status: "EOI Closed", launchDate: "2026-03-22", startingPrice: 2200000, totalUnits: 380, paymentPlan: "60/40", eoiAmount: 25000, eoiRefundable: true, notes: "Mediterranean-inspired villas. DAMAC sold out previous phases within hours.", type: "launch", isSeedData: true, source: "Property Finder Launch Radar 2026" },
+    { projectName: "Binghatti Skyrise — Business Bay", developer: "Binghatti", community: "Business Bay", propertyType: "Apartment", status: "Upcoming", launchDate: "2026-05-08", startingPrice: 850000, totalUnits: 720, paymentPlan: "70/30", eoiAmount: 20000, eoiRefundable: true, notes: "Binghatti's signature bold architecture. Business Bay canal views. Target professional renters — strong yield community.", type: "launch", isSeedData: true, source: "Bayut Launch Radar Apr 2026" },
+    { projectName: "Tilal Al Ghaf — Serenity Mansions", developer: "Majid Al Futtaim", community: "Tilal Al Ghaf", propertyType: "Villa", status: "Sold Out", launchDate: "2026-02-18", startingPrice: 8500000, totalUnits: 85, paymentPlan: "50/50", eoiAmount: 100000, eoiRefundable: false, notes: "Ultra-luxury mansions sold out within 48 hours. DLD 2025 shows 52% YoY transaction growth in Tilal Al Ghaf.", type: "launch", isSeedData: true, source: "DLD 2025 / Bayut 2026" },
+    { projectName: "Ellington Ocean House — Dubai Islands", developer: "Ellington Properties", community: "Dubai Islands", propertyType: "Apartment", status: "Upcoming", launchDate: "2026-06-01", startingPrice: 2400000, totalUnits: 180, paymentPlan: "70/30", eoiAmount: 50000, eoiRefundable: true, notes: "Design-forward beachfront living. Ellington known for curated interiors. Limited units.", type: "launch", isSeedData: true, source: "Reelly.ai Launch Calendar Apr 2026" },
   ],
 
-  /* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ OVERVIEW TAB KPIs Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+  /* ─── OVERVIEW TAB KPIs ────────────────────────────────────────
      Sources: Same as Market tab
-  Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+  ─────────────────────────────────────────────────────────────── */
   overviewKpis: [
-    { metric: "Total Market Value",  value: "AED 682.6B",  change: "+21% YoY Ã¢â‚¬â€ Full year 2025",   isSeedData: true, source: "DLD / DXB Interact Jan 2026" },
-    { metric: "Total Transactions",  value: "215,060",      change: "+19% YoY Ã¢â‚¬â€ Sales only",        isSeedData: true, source: "DLD Annual Report 2025" },
-    { metric: "Off-Plan Share",      value: "63%",          change: "+3pp Ã¢â‚¬â€ Off-plan dominated 2025", isSeedData: true, source: "DLD / Property Monitor 2025" },
+    { metric: "Total Market Value",  value: "AED 682.6B",  change: "+21% YoY — Full year 2025",   isSeedData: true, source: "DLD / DXB Interact Jan 2026" },
+    { metric: "Total Transactions",  value: "215,060",      change: "+19% YoY — Sales only",        isSeedData: true, source: "DLD Annual Report 2025" },
+    { metric: "Off-Plan Share",      value: "63%",          change: "+3pp — Off-plan dominated 2025", isSeedData: true, source: "DLD / Property Monitor 2025" },
     { metric: "Units Launched",      value: "131,504",      change: "532 projects by Oct 2025",     isSeedData: true, source: "DLD Oct 2025" },
   ],
 };
 
-/* Seed data source reference Ã¢â‚¬â€ shown in UI */
+/* Seed data source reference — shown in UI */
 const SEED_SOURCE_URL = {
   DLD: "https://dubailand.gov.ae/en/open-data/research/",
   Bayut: "https://www.bayut.com/mybayut/bayut-h1-2025-dubai-rental-market-report/",
@@ -639,7 +639,7 @@ const SEED_SOURCE_URL = {
   DXBAnalytics: "https://www.dxbanalytics.com/blog/dubai-property-transaction-volume-2026",
 };
 
-/* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ TAB GROUPS Ã¢â€â‚¬ 5 sections, 32 tabs in sequence Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+/* ─── TAB GROUPS ─ 5 sections, 32 tabs in sequence ─── */
 const TAB_GROUPS = [
   {
     id: "market",
@@ -718,11 +718,11 @@ const TAB_GROUPS = [
   },
 ];
 
-/* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ Flat TABS for backward compatibility Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+/* ─── Flat TABS for backward compatibility ─── */
 const TABS = TAB_GROUPS.flatMap(g => g.tabs);
 
 
-/* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ STYLES Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+/* ─── STYLES ─── */
 const css = `
   @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700;9..144,900&display=swap');
 
@@ -866,7 +866,7 @@ const css = `
   }
   .mobile-overlay.open { opacity: 1; pointer-events: auto; }
 
-  /* Ã¢â€â‚¬Ã¢â€â‚¬ 768px: Tablet / small laptop Ã¢â€â‚¬Ã¢â€â‚¬ */
+  /* ── 768px: Tablet / small laptop ── */
   @media (max-width: 768px) {
     html { font-size: 13px; }
 
@@ -900,16 +900,16 @@ const css = `
     .filter-scroll::-webkit-scrollbar { display: none; }
     .filter-scroll button { flex-shrink: 0; }
 
-    /* Tables Ã¢â‚¬â€ horizontal scroll with hint arrow */
+    /* Tables — horizontal scroll with hint arrow */
     .table-scroll { overflow-x: auto !important; -webkit-overflow-scrolling: touch; }
-    .table-scroll::after { content: "swipe Ã¢â€ â€™"; position: absolute; right: 8px; top: 12px; color: ${T.gold}; font-size: 10px; opacity: 0.5; pointer-events: none; letter-spacing: 0.5px; }
+    .table-scroll::after { content: "swipe →"; position: absolute; right: 8px; top: 12px; color: ${T.gold}; font-size: 10px; opacity: 0.5; pointer-events: none; letter-spacing: 0.5px; }
     .table-scroll table { min-width: 560px; }
 
     /* Compare bar */
     .compare-bar { padding: 10px 14px !important; flex-direction: column !important; align-items: stretch !important; gap: 8px !important; }
     .compare-bar > div { justify-content: center; flex-wrap: wrap; }
 
-    /* Mortgage calculator 2-col Ã¢â€ â€™ 1-col */
+    /* Mortgage calculator 2-col → 1-col */
     .mortgage-grid { grid-template-columns: 1fr !important; }
 
     /* AI Insights full width cards */
@@ -919,7 +919,7 @@ const css = `
     .alerts-modal { max-width: 100% !important; max-height: 100dvh !important; border-radius: 20px 20px 0 0 !important; position: fixed !important; bottom: 0 !important; top: auto !important; margin: 0 !important; }
   }
 
-  /* Ã¢â€â‚¬Ã¢â€â‚¬ 480px: Mobile phones Ã¢â€â‚¬Ã¢â€â‚¬ */
+  /* ── 480px: Mobile phones ── */
   @media (max-width: 480px) {
     html { font-size: 12px; }
 
@@ -955,18 +955,18 @@ const css = `
     .tab-content-pad { padding-bottom: 80px !important; }
   }
 
-  /* Ã¢â€â‚¬Ã¢â€â‚¬ 360px: Very small phones Ã¢â€â‚¬Ã¢â€â‚¬ */
+  /* ── 360px: Very small phones ── */
   @media (max-width: 360px) {
     .kpi-grid { grid-template-columns: 1fr !important; }
     html { font-size: 11px; }
   }
 
-  /* Ã¢â€â‚¬Ã¢â€â‚¬ Touch improvements Ã¢â€â‚¬Ã¢â€â‚¬ */
+  /* ── Touch improvements ── */
   * { -webkit-tap-highlight-color: transparent; }
   button, a, [role="button"] { touch-action: manipulation; }
   input[type="range"] { height: 32px; }
 
-  /* Ã¢â€â‚¬Ã¢â€â‚¬ Mobile Bottom Nav Bar Ã¢â€â‚¬Ã¢â€â‚¬ */
+  /* ── Mobile Bottom Nav Bar ── */
   @media (max-width: 768px) {
     .mobile-bottom-nav {
       display: flex !important;
@@ -983,7 +983,7 @@ const css = `
   }
 `;
 
-/* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ COMPONENTS Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+/* ─── COMPONENTS ─── */
 
 /* Loading Skeleton for data fetch */
 const LoadingSkeleton = ({ rows = 6, cols = 3 }) => (
@@ -1011,14 +1011,14 @@ const KPI = ({ label, value, sub, icon, delay = 0, onClick }) => {
       style={{ cursor: isClickable ? "pointer" : "default", transition: "transform 0.2s, box-shadow 0.2s, border-color 0.2s", transform: hovered ? "translateY(-3px)" : "none", boxShadow: hovered ? `0 10px 30px rgba(212,168,67,0.2)` : undefined, borderColor: hovered ? T.gold : undefined, position: "relative" }}
     >
       <div style={{ position: "absolute", top: -30, right: -30, width: 80, height: 80, borderRadius: "50%", background: `radial-gradient(circle, ${T.goldGlow} 0%, transparent 70%)` }} />
-      {isClickable && <div style={{ position: "absolute", top: 10, right: 10, fontSize: 14, color: hovered ? T.gold : T.border, transition: "color 0.2s" }}>Ã¢â‚¬Âº</div>}
+      {isClickable && <div style={{ position: "absolute", top: 10, right: 10, fontSize: 14, color: hovered ? T.gold : T.border, transition: "color 0.2s" }}>›</div>}
       <div style={{ fontSize: 10, fontWeight: 600, color: T.textMuted, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 8 }}>{label}</div>
       <div style={{ fontFamily: "'Fraunces', serif", fontSize: 26, fontWeight: 700, color: T.gold, lineHeight: 1.1, marginBottom: 4 }}>{value}</div>
       <div style={{ fontSize: 12, fontWeight: 500, color: T.teal, display: "flex", alignItems: "center", gap: 4 }}>
         {sub?.includes("+") && <span style={{ color: T.green }}>{Icons.up}</span>}
         {sub}
       </div>
-      {isClickable && <div style={{ marginTop: 8, fontSize: 9, color: hovered ? T.gold : T.textMuted, fontWeight: 600, letterSpacing: 0.5, transition: "color 0.2s" }}>{hovered ? "View breakdown Ã¢â€ â€™" : "Click for details"}</div>}
+      {isClickable && <div style={{ marginTop: 8, fontSize: 9, color: hovered ? T.gold : T.textMuted, fontWeight: 600, letterSpacing: 0.5, transition: "color 0.2s" }}>{hovered ? "View breakdown →" : "Click for details"}</div>}
     </div>
   );
 };
@@ -1029,7 +1029,7 @@ const ForecastCard = ({ firm, color, short, forecast, detail, bullets, sourceUrl
     <div className="chart-box" style={{ borderTop: `3px solid ${color}`, cursor: "pointer", transition: "all 0.2s" }} onClick={() => setExpanded(e => !e)}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
         <h4 style={{ color, fontSize: 15, fontWeight: 700, marginBottom: 4, fontFamily: "'Fraunces', serif" }}>{firm}</h4>
-        <span style={{ fontSize: 16, color: T.textMuted, display: "inline-block", transform: expanded ? "rotate(180deg)" : "none", transition: "transform 0.2s" }}>Ã¢Å’â€ž</span>
+        <span style={{ fontSize: 16, color: T.textMuted, display: "inline-block", transform: expanded ? "rotate(180deg)" : "none", transition: "transform 0.2s" }}>⌄</span>
       </div>
       <div style={{ fontSize: 10, fontWeight: 700, color: T.white, background: color + "20", padding: "3px 8px", borderRadius: 5, display: "inline-block", marginBottom: 8 }}>{forecast}</div>
       <p style={{ color: T.textSecondary, fontSize: 12, lineHeight: 1.6 }}>{short}</p>
@@ -1039,11 +1039,11 @@ const ForecastCard = ({ firm, color, short, forecast, detail, bullets, sourceUrl
           <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 5 }}>
             {bullets.map((b, bi) => (
               <li key={bi} style={{ fontSize: 11, color: T.textSecondary, display: "flex", gap: 6, alignItems: "flex-start" }}>
-                <span style={{ color, fontWeight: 700, marginTop: 1 }}>Ã¢â‚¬Âº</span> {b}
+                <span style={{ color, fontWeight: 700, marginTop: 1 }}>›</span> {b}
               </li>
             ))}
           </ul>
-          <a href={sourceUrl} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{ display: "inline-block", marginTop: 10, fontSize: 10, color, fontWeight: 700, textDecoration: "none" }}>Full Report Ã¢â€ â€”</a>
+          <a href={sourceUrl} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{ display: "inline-block", marginTop: 10, fontSize: 10, color, fontWeight: 700, textDecoration: "none" }}>Full Report ↗</a>
         </div>
       )}
       {!expanded && <div style={{ marginTop: 8, fontSize: 10, color: T.textMuted }}>Click to expand full analysis</div>}
@@ -1083,7 +1083,7 @@ const CustomTooltip = ({ active, payload, label }) => {
   );
 };
 
-/* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ LOGIN SCREEN Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+/* ─── LOGIN SCREEN ─── */
 const googleProvider = new GoogleAuthProvider();
 
 const PasswordStrength = ({ password }) => {
@@ -1224,7 +1224,7 @@ const LoginScreen = ({ onLogin, onBack, defaultMode = "login" }) => {
         await emailjs.send(import.meta.env.VITE_EMAILJS_SERVICE_ID, import.meta.env.VITE_EMAILJS_TEMPLATE_ID, {
           user_email: email, user_name: name.trim(),
           project_name: "DXB Analytics Platform",
-          change_type: "Welcome to DXB Analytics! Ã¢â‚¬â€ Please verify your email",
+          change_type: "Welcome to DXB Analytics! — Please verify your email",
           new_value: "Your 7-day Pro Trial is active. Check your inbox to verify your email address.",
           old_value: "New Account",
           updated_at: now.toLocaleDateString("en-AE"),
@@ -1242,7 +1242,7 @@ const LoginScreen = ({ onLogin, onBack, defaultMode = "login" }) => {
     setLoading(false);
   };
 
-  // Ã¢â€â‚¬Ã¢â€â‚¬ Verify Email Screen Ã¢â€â‚¬Ã¢â€â‚¬
+  // ── Verify Email Screen ──
   if (screen === "verify") return (
     <div style={{ minHeight: "100vh", background: T.bg, display: "flex", alignItems: "center", justifyContent: "center" }}>
       <style>{css}</style>
@@ -1265,7 +1265,7 @@ const LoginScreen = ({ onLogin, onBack, defaultMode = "login" }) => {
             ))}
           </div>
           <button type="button" className="login-btn" onClick={() => { setScreen("form"); setMode("login"); setPass(""); setConfirmPass(""); }}>
-            Go to Sign In Ã¢â€ â€™
+            Go to Sign In →
           </button>
           <button type="button" onClick={async () => { try { if (auth.currentUser) { await sendEmailVerification(auth.currentUser); alert("Verification email resent! Check your inbox."); } } catch(e){} }} style={{ display: "block", margin: "12px auto 0", background: "none", border: "none", color: T.gold, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
             Resend verification email
@@ -1275,7 +1275,7 @@ const LoginScreen = ({ onLogin, onBack, defaultMode = "login" }) => {
     </div>
   );
 
-  // Ã¢â€â‚¬Ã¢â€â‚¬ Reset Sent Screen Ã¢â€â‚¬Ã¢â€â‚¬
+  // ── Reset Sent Screen ──
   if (screen === "reset_sent") return (
     <div style={{ minHeight: "100vh", background: T.bg, display: "flex", alignItems: "center", justifyContent: "center" }}>
       <style>{css}</style>
@@ -1295,7 +1295,7 @@ const LoginScreen = ({ onLogin, onBack, defaultMode = "login" }) => {
     </div>
   );
 
-  // Ã¢â€â‚¬Ã¢â€â‚¬ Main Form Ã¢â€â‚¬Ã¢â€â‚¬
+  // ── Main Form ──
   return (
     <div style={{ minHeight: "100vh", background: T.bg, display: "flex", alignItems: "center", justifyContent: "center", position: "relative", overflow: "hidden" }}>
       <style>{css}</style>
@@ -1303,7 +1303,7 @@ const LoginScreen = ({ onLogin, onBack, defaultMode = "login" }) => {
         <button type="button" onClick={onBack} style={{ position: "absolute", top: 24, left: 24, display: "flex", alignItems: "center", gap: 6, background: "none", border: `1px solid ${T.border}`, borderRadius: 8, padding: "8px 16px", color: T.textSecondary, fontSize: 13, fontFamily: "'Outfit', sans-serif", cursor: "pointer", zIndex: 10 }}
           onMouseEnter={e => { e.currentTarget.style.borderColor = T.gold; e.currentTarget.style.color = T.gold; }}
           onMouseLeave={e => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.color = T.textSecondary; }}>
-          Ã¢â€ Â Back to Home
+          ← Back to Home
         </button>
       )}
       <div style={{ position: "absolute", inset: 0, opacity: 0.015, backgroundImage: `radial-gradient(${T.gold} 1px, transparent 1px)`, backgroundSize: "50px 50px" }} />
@@ -1330,7 +1330,7 @@ const LoginScreen = ({ onLogin, onBack, defaultMode = "login" }) => {
             {mode === "login" ? "Welcome back" : "Start your free trial"}
           </h2>
           <p style={{ color: T.textSecondary, fontSize: 13, marginBottom: 20 }}>
-            {mode === "login" ? "Sign in to access your dashboard" : "7 days full Pro access Ã¢â‚¬â€ no credit card required"}
+            {mode === "login" ? "Sign in to access your dashboard" : "7 days full Pro access — no credit card required"}
           </p>
 
           {/* Google Sign-In */}
@@ -1379,7 +1379,7 @@ const LoginScreen = ({ onLogin, onBack, defaultMode = "login" }) => {
             <div>
               <label style={{ fontSize: 11, fontWeight: 600, color: T.textSecondary, textTransform: "uppercase", letterSpacing: 1, display: "block", marginBottom: 6 }}>Password *</label>
               <div style={{ position: "relative" }}>
-                <input className="login-input" type={showPass ? "text" : "password"} placeholder={mode === "signup" ? "Min 8 chars + 1 number" : "Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢"} value={pass} onChange={e => setPass(e.target.value)} onKeyDown={e => e.key === "Enter" && mode === "login" && handleLogin()} style={{ paddingRight: 44 }} />
+                <input className="login-input" type={showPass ? "text" : "password"} placeholder={mode === "signup" ? "Min 8 chars + 1 number" : "••••••••"} value={pass} onChange={e => setPass(e.target.value)} onKeyDown={e => e.key === "Enter" && mode === "login" && handleLogin()} style={{ paddingRight: 44 }} />
                 <button type="button" onClick={() => setShowPass(!showPass)} style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: T.textMuted, padding: 4 }}>
                   {showPass ? Icons.eyeOff : Icons.eye}
                 </button>
@@ -1396,8 +1396,8 @@ const LoginScreen = ({ onLogin, onBack, defaultMode = "login" }) => {
                     {showConfirm ? Icons.eyeOff : Icons.eye}
                   </button>
                 </div>
-                {confirmPass && confirmPass !== pass && <div style={{ fontSize: 10, color: T.red, marginTop: 4 }}>Ã¢Å“â€” Passwords do not match</div>}
-                {confirmPass && confirmPass === pass && <div style={{ fontSize: 10, color: T.green, marginTop: 4 }}>Ã¢Å“â€œ Passwords match</div>}
+                {confirmPass && confirmPass !== pass && <div style={{ fontSize: 10, color: T.red, marginTop: 4 }}>✗ Passwords do not match</div>}
+                {confirmPass && confirmPass === pass && <div style={{ fontSize: 10, color: T.green, marginTop: 4 }}>✓ Passwords match</div>}
               </div>
             )}
 
@@ -1426,14 +1426,14 @@ const LoginScreen = ({ onLogin, onBack, defaultMode = "login" }) => {
                   <span style={{ width: 16, height: 16, border: "2px solid rgba(4,9,15,0.3)", borderTopColor: T.bg, borderRadius: "50%", animation: "spin 0.6s linear infinite", display: "inline-block" }} />
                   {mode === "login" ? "Signing in..." : "Creating account..."}
                 </span>
-              ) : mode === "login" ? "Sign In" : "Start Free Trial Ã¢â€ â€™"}
+              ) : mode === "login" ? "Sign In" : "Start Free Trial →"}
             </button>
 
             {mode === "signup" && (
               <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 12px", background: "rgba(212,168,67,0.06)", borderRadius: 8, border: `1px solid ${T.border}` }}>
-                <span style={{ fontSize: 16 }}>Ã¢Â­Â</span>
+                <span style={{ fontSize: 16 }}>⭐</span>
                 <div style={{ fontSize: 11, color: T.textSecondary, lineHeight: 1.4 }}>
-                  <span style={{ color: T.gold, fontWeight: 600 }}>7-day Pro trial</span> Ã¢â‚¬â€ Full access. No credit card. Cancel anytime.
+                  <span style={{ color: T.gold, fontWeight: 600 }}>7-day Pro trial</span> — Full access. No credit card. Cancel anytime.
                 </div>
               </div>
             )}
@@ -1451,7 +1451,7 @@ const LoginScreen = ({ onLogin, onBack, defaultMode = "login" }) => {
         </div>
 
         <p style={{ textAlign: "center", color: T.textMuted, fontSize: 11, marginTop: 20 }}>
-          \uD83D\uDD12 Secured by Firebase Ã‚Â· SSL Encrypted Ã‚Â· GDPR Compliant
+          \uD83D\uDD12 Secured by Firebase · SSL Encrypted · GDPR Compliant
         </p>
       </div>
     </div>
@@ -1459,7 +1459,7 @@ const LoginScreen = ({ onLogin, onBack, defaultMode = "login" }) => {
 };
 
 
-/* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ PRO GATE OVERLAY Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+/* ─── PRO GATE OVERLAY ─── */
 const ProGate = ({ children, isPro, message = "Upgrade to Pro to unlock this data", onUpgrade, blur = true }) => {
   if (isPro) return children;
   return (
@@ -1474,23 +1474,23 @@ const ProGate = ({ children, isPro, message = "Upgrade to Pro to unlock this dat
           <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 16, lineHeight: 1.6 }}>Join 500+ investors using DXB Analytics Pro to track the Dubai real estate market</div>
           <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 18 }}>
             {["All 48+ active projects", "Full financials & yields", "ROI & mortgage calculator", "Currency converter", "Portfolio tracker"].map((f, i) => (
-              <div key={i} style={{ fontSize: 11, color: T.textSecondary, textAlign: "left", paddingLeft: 4 }}>Ã¢Å“â€œ {f}</div>
+              <div key={i} style={{ fontSize: 11, color: T.textSecondary, textAlign: "left", paddingLeft: 4 }}>✓ {f}</div>
             ))}
           </div>
           <button type="button" onClick={onUpgrade} style={{ width: "100%", padding: "11px 0", background: `linear-gradient(135deg, ${T.gold}, #B8912F)`, color: T.bg, border: "none", borderRadius: 10, fontSize: 13, fontWeight: 800, cursor: "pointer", fontFamily: "'Outfit', sans-serif", letterSpacing: 0.3 }}>
-            Unlock Pro Ã¢â‚¬â€ AED 99/mo Ã¢â€ â€™
+            Unlock Pro — AED 99/mo →
           </button>
-          <div style={{ fontSize: 10, color: T.textMuted, marginTop: 8 }}>7-day money-back guarantee Ã‚Â· Cancel anytime</div>
+          <div style={{ fontSize: 10, color: T.textMuted, marginTop: 8 }}>7-day money-back guarantee · Cancel anytime</div>
         </div>
       </div>
     </div>
   );
 };
 
-/* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ PRO GATE FULL PAGE Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+/* ─── PRO GATE FULL PAGE ─── */
 const ProGateFullPage = ({ tabName, onUpgrade }) => {
   const tabBenefits = {
-    "DXB Estimate":     ["Automated property valuations", "AVM price estimates per unit", "Bayut live listings", "Ã‚Â±15% accuracy model"],
+    "DXB Estimate":     ["Automated property valuations", "AVM price estimates per unit", "Bayut live listings", "±15% accuracy model"],
     "Portfolio":        ["Track your Dubai investments", "ROI calculations", "Portfolio performance chart", "Yield tracking"],
     "Yields":           ["Gross & net yield by community", "STR vs LTR comparison", "Top yielding Dubai areas", "Historical yield trends"],
     "Mortgage":         ["Live EIBOR rates", "UAE bank comparison", "Monthly payment calculator", "Affordability analysis"],
@@ -1522,27 +1522,27 @@ const ProGateFullPage = ({ tabName, onUpgrade }) => {
           ))}
         </div>
         <button type="button" onClick={onUpgrade} style={{ width: "100%", padding: "14px 0", background: `linear-gradient(135deg, ${T.gold}, #B8912F)`, color: T.bg, border: "none", borderRadius: 12, fontSize: 14, fontWeight: 800, cursor: "pointer", fontFamily: "'Outfit', sans-serif", letterSpacing: 0.3, marginBottom: 10 }}>
-          Upgrade to Pro Ã¢â‚¬â€ AED 99/mo Ã¢â€ â€™
+          Upgrade to Pro — AED 99/mo →
         </button>
-        <div style={{ fontSize: 11, color: T.textMuted }}>7-day free trial Ã‚Â· Cancel anytime Ã‚Â· Money-back guarantee</div>
+        <div style={{ fontSize: 11, color: T.textMuted }}>7-day free trial · Cancel anytime · Money-back guarantee</div>
       </div>
     </div>
   );
 };
 
-/* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ UPGRADE MODAL Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+/* ─── UPGRADE MODAL ─── */
 
 
 const UpgradeModal = ({ show, onClose }) => {
   if (!show) return null;
   const plans = [
-    { name: "Pro", price: "99", period: "month", features: ["All Dubai projects Ã¢â‚¬â€ full data", "AI market insights", "Portfolio ROI tracker", "DXB Estimate AVM", "Yield & STR/LTR analysis", "Mortgage calculator", "Price alerts", "PDF export"], popular: true, note: null, cta: "Upgrade to Pro Ã¢â€ â€™" },
-    { name: "Enterprise", price: "499", period: "month", features: ["Everything in Pro", "PDF report generation Ã¢ÂÂ³", "API data access Ã¢ÂÂ³", "Custom dashboards Ã¢ÂÂ³", "Multi-user team accounts Ã¢ÂÂ³", "Developer-level raw data", "Dedicated account manager", "White-label options Ã¢ÂÂ³"], popular: false, note: "Ã¢ÂÂ³ = Launching Q3 2026", cta: "Contact Sales Ã¢â€ â€™" },
+    { name: "Pro", price: "99", period: "month", features: ["All Dubai projects — full data", "AI market insights", "Portfolio ROI tracker", "DXB Estimate AVM", "Yield & STR/LTR analysis", "Mortgage calculator", "Price alerts", "PDF export"], popular: true, note: null, cta: "Upgrade to Pro →" },
+    { name: "Enterprise", price: "499", period: "month", features: ["Everything in Pro", "PDF report generation ⏳", "API data access ⏳", "Custom dashboards ⏳", "Multi-user team accounts ⏳", "Developer-level raw data", "Dedicated account manager", "White-label options ⏳"], popular: false, note: "⏳ = Launching Q3 2026", cta: "Contact Sales →" },
   ];
   return (
     <div style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.92)", zIndex: 3000, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(12px)", padding: 16 }} onClick={onClose}>
       <div className="upgrade-modal" style={{ background: T.surface, borderRadius: 24, border: `1px solid ${T.border}`, width: "95%", maxWidth: 720, padding: 36, position: "relative", boxShadow: "0 40px 100px rgba(0,0,0,0.6)" }} onClick={e => e.stopPropagation()}>
-        <button type="button" onClick={onClose} style={{ position: "absolute", top: 16, right: 16, background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center" }}>Ã¢Å“â€¢</button>
+        <button type="button" onClick={onClose} style={{ position: "absolute", top: 16, right: 16, background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
 
         {/* Header */}
         <div style={{ textAlign: "center", marginBottom: 28 }}>
@@ -1568,7 +1568,7 @@ const UpgradeModal = ({ show, onClose }) => {
         <div className="plans-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 20 }}>
           {plans.map((plan, i) => (
             <div key={i} style={{ background: T.surfaceAlt, borderRadius: 16, padding: 24, border: plan.popular ? `2px solid ${T.gold}` : `1px solid ${T.border}`, position: "relative" }}>
-              {plan.popular && <div style={{ position: "absolute", top: -12, left: "50%", transform: "translateX(-50%)", padding: "4px 16px", borderRadius: 20, background: `linear-gradient(135deg, ${T.gold}, #B8912F)`, color: T.bg, fontSize: 10, fontWeight: 800, letterSpacing: 0.5, whiteSpace: "nowrap" }}>Ã¢Â­Â MOST POPULAR</div>}
+              {plan.popular && <div style={{ position: "absolute", top: -12, left: "50%", transform: "translateX(-50%)", padding: "4px 16px", borderRadius: 20, background: `linear-gradient(135deg, ${T.gold}, #B8912F)`, color: T.bg, fontSize: 10, fontWeight: 800, letterSpacing: 0.5, whiteSpace: "nowrap" }}>⭐ MOST POPULAR</div>}
               <h3 style={{ fontSize: 18, fontWeight: 700, color: T.white, marginBottom: 4, marginTop: plan.popular ? 8 : 0 }}>{plan.name}</h3>
               <div style={{ display: "flex", alignItems: "baseline", gap: 3, marginBottom: 16 }}>
                 <span style={{ fontSize: 11, color: T.textMuted }}>AED</span>
@@ -1577,8 +1577,8 @@ const UpgradeModal = ({ show, onClose }) => {
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 7, marginBottom: 16 }}>
                 {plan.features.map((f, j) => (
-                  <div key={j} style={{ display: "flex", alignItems: "flex-start", gap: 7, fontSize: 12, color: f.includes("Ã¢ÂÂ³") ? T.textMuted : T.textSecondary }}>
-                    <span style={{ color: f.includes("Ã¢ÂÂ³") ? T.textMuted : T.green, fontSize: 11, marginTop: 1, flexShrink: 0 }}>Ã¢Å“â€œ</span>{f}
+                  <div key={j} style={{ display: "flex", alignItems: "flex-start", gap: 7, fontSize: 12, color: f.includes("⏳") ? T.textMuted : T.textSecondary }}>
+                    <span style={{ color: f.includes("⏳") ? T.textMuted : T.green, fontSize: 11, marginTop: 1, flexShrink: 0 }}>✓</span>{f}
                   </div>
                 ))}
               </div>
@@ -1592,7 +1592,7 @@ const UpgradeModal = ({ show, onClose }) => {
         </div>
 
         <div style={{ textAlign: "center", display: "flex", justifyContent: "center", gap: 24, flexWrap: "wrap" }}>
-          {["\uD83D\uDD12 Secure payment", "Ã¢â€ Â© 7-day money-back", "Ã¢Å¡Â¡ Instant access", "Ã¢ÂÅ’ Cancel anytime"].map((t, i) => (
+          {["\uD83D\uDD12 Secure payment", "↩ 7-day money-back", "⚡ Instant access", "❌ Cancel anytime"].map((t, i) => (
             <span key={i} style={{ fontSize: 11, color: T.textMuted }}>{t}</span>
           ))}
         </div>
@@ -1622,25 +1622,25 @@ function useFocusTrap(active) {
 }
 
 
-/* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ COMMUNITY MAP TAB Ã¢â‚¬â€ moved to tabs/CommunityMapTab.jsx Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+/* ─── COMMUNITY MAP TAB — moved to tabs/CommunityMapTab.jsx ─── */
 
 
 
-// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ Tab Data Sources Footer Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
-/* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ DATA BADGE Ã¢â‚¬â€ verified data stamp Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+// ─── Tab Data Sources Footer ────────────────────────────────────────────────
+/* ─── DATA BADGE — verified data stamp ─── */
 
 const DataBadge = ({ source, date, type = "dld" }) => {
   const cfg = {
-    dld:     { label: "DLD Verified",     color: "#10B981", icon: "Ã¢Å“â€œ" },
-    reidin:  { label: "REIDIN Index",     color: "#3B82F6", icon: "Ã¢Å“â€œ" },
-    emaar:   { label: "Emaar IR",         color: "#D4A843", icon: "Ã¢Å“â€œ" },
-    live:    { label: "Live Ã‚Â· Firestore", color: "#10B981", icon: "Ã¢â€”Â" },
-    ai:      { label: "AI Estimate",      color: "#8B5CF6", icon: "Ã¢Å“Â¦" },
-    manual:  { label: "Admin Verified",   color: "#F59E0B", icon: "Ã¢Å“â€œ" },
+    dld:     { label: "DLD Verified",     color: "#10B981", icon: "✓" },
+    reidin:  { label: "REIDIN Index",     color: "#3B82F6", icon: "✓" },
+    emaar:   { label: "Emaar IR",         color: "#D4A843", icon: "✓" },
+    live:    { label: "Live · Firestore", color: "#10B981", icon: "●" },
+    ai:      { label: "AI Estimate",      color: "#8B5CF6", icon: "✦" },
+    manual:  { label: "Admin Verified",   color: "#F59E0B", icon: "✓" },
   };
   const c = cfg[type] || cfg.dld;
   return (
-    <span title={`Source: ${source || c.label}${date ? " Ã‚Â· " + date : ""}`} style={{
+    <span title={`Source: ${source || c.label}${date ? " · " + date : ""}`} style={{
       display: "inline-flex", alignItems: "center", gap: 4,
       fontSize: 9, fontWeight: 700, color: c.color, letterSpacing: 0.5,
       background: c.color + "12", border: `1px solid ${c.color}30`,
@@ -1689,7 +1689,7 @@ const TabSources = ({ sources }) => (
           }}
           onMouseEnter={e => { e.currentTarget.style.color = "#D4A843"; e.currentTarget.style.borderColor = "rgba(212,168,67,0.4)"; }}
           onMouseLeave={e => { e.currentTarget.style.color = "rgba(255,255,255,0.55)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)"; }}
-          >{s.label} Ã¢â€ â€”</a>
+          >{s.label} ↗</a>
         ) : (
           <span key={i} style={{
             fontSize: 10,
@@ -1705,10 +1705,10 @@ const TabSources = ({ sources }) => (
   </div>
 );
 
-/* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+/* ─────────────────────────────────────────────────────────────
    EMPTY STATE COMPONENT
    Shows for all intelligence tabs while awaiting data import
-   Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+   ───────────────────────────────────────────────────────────── */
 const EmptyState = ({ tab, icon, description, adminHint }) => (
   <div style={{
     display: "flex", flexDirection: "column", alignItems: "center",
@@ -1772,130 +1772,130 @@ const EmptyState = ({ tab, icon, description, adminHint }) => (
   </div>
 );
 
-/* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+/* ─────────────────────────────────────────────────────────────
    INTELLIGENCE TAB CONFIGS
    Each tab has its icon, description and admin hint
-   Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+   ───────────────────────────────────────────────────────────── */
 const INTELLIGENCE_TABS = {
   "Overview": {
     icon: "\uD83D\uDCCA",
-    description: "Your Bloomberg-style command centre. Live market ticker, KPI cards, developer intelligence panel, and real-time DLD feed Ã¢â‚¬â€ all connected to your data sources.",
-    adminHint: "Connect data sources from Admin Ã¢â€ â€™ Data Manager Ã¢â€ â€™ Market Data"
+    description: "Your Bloomberg-style command centre. Live market ticker, KPI cards, developer intelligence panel, and real-time DLD feed — all connected to your data sources.",
+    adminHint: "Connect data sources from Admin → Data Manager → Market Data"
   },
   "Financials": {
     icon: "\uD83D\uDCB9",
-    description: "Developer financial intelligence Ã¢â‚¬â€ revenue, net profit, EBITDA, backlog, EPS, DPS Ã¢â‚¬â€ 6-year history charts. Auto-updated from developer IR reports.",
-    adminHint: "Add developer financials from Admin Ã¢â€ â€™ Data Manager Ã¢â€ â€™ Developers"
+    description: "Developer financial intelligence — revenue, net profit, EBITDA, backlog, EPS, DPS — 6-year history charts. Auto-updated from developer IR reports.",
+    adminHint: "Add developer financials from Admin → Data Manager → Developers"
   },
   "Projects": {
-    icon: "\uD83C\uDFD7Ã¯Â¸Â",
-    description: "Browse all projects across all property types Ã¢â‚¬â€ Off-Plan, Residential, Commercial, Secondary Market, Hotel Apartments, Villas, Balcony View Units. Filter, compare, and score every property.",
-    adminHint: "Import projects from Admin Ã¢â€ â€™ Data Manager Ã¢â€ â€™ Projects"
+    icon: "\uD83C\uDFD7️",
+    description: "Browse all projects across all property types — Off-Plan, Residential, Commercial, Secondary Market, Hotel Apartments, Villas, Balcony View Units. Filter, compare, and score every property.",
+    adminHint: "Import projects from Admin → Data Manager → Projects"
   },
   "Handover": {
     icon: "\uD83D\uDCC5",
     description: "Construction timeline tracker. Monitor handover dates, construction progress, and delivery risk for all off-plan projects. Automated countdown alerts.",
-    adminHint: "Add project handover data from Admin Ã¢â€ â€™ Data Manager Ã¢â€ â€™ Projects"
+    adminHint: "Add project handover data from Admin → Data Manager → Projects"
   },
   "Launch Calendar": {
     icon: "\uD83D\uDE80",
     description: "Never miss a launch. Upcoming project launches by developer, EOI status, expected pricing, and past launch performance vs actual prices.",
-    adminHint: "Launch data auto-populates from Bayut API scanner Ã¢â‚¬â€ check Admin Ã¢â€ â€™ Data Health"
+    adminHint: "Launch data auto-populates from Bayut API scanner — check Admin → Data Health"
   },
   "Neighbourhoods": {
-    icon: "\uD83C\uDFD8Ã¯Â¸Â",
-    description: "Community intelligence Ã¢â‚¬â€ average PPSF, yields, schools, hospitals, metro access, lifestyle ratings, supply risk, and demand strength for every Dubai community.",
-    adminHint: "Add community data from Admin Ã¢â€ â€™ Data Manager Ã¢â€ â€™ Communities"
+    icon: "\uD83C\uDFD8️",
+    description: "Community intelligence — average PPSF, yields, schools, hospitals, metro access, lifestyle ratings, supply risk, and demand strength for every Dubai community.",
+    adminHint: "Add community data from Admin → Data Manager → Communities"
   },
   "Service Charges": {
     icon: "\uD83D\uDCCB",
     description: "RERA registered service charge rates per community in AED/sqft/year. Historical trends, net yield impact calculator, and community comparisons.",
-    adminHint: "Add service charge data from Admin Ã¢â€ â€™ Data Manager Ã¢â€ â€™ Communities"
+    adminHint: "Add service charge data from Admin → Data Manager → Communities"
   },
   "STR vs LTR": {
     icon: "\uD83C\uDFE0",
     description: "Short-term Airbnb vs long-term tenancy comparison per community per unit type. Occupancy rates, daily rates, platform fees, management costs, and net income.",
-    adminHint: "STR data connects to Bayut API Ã¢â‚¬â€ configure from Admin Ã¢â€ â€™ Data Health"
+    adminHint: "STR data connects to Bayut API — configure from Admin → Data Health"
   },
   "Developer Health": {
     icon: "\uD83E\uDE7A",
-    description: "Developer health scores Ã¢â‚¬â€ delivery track record, financial strength, project pipeline risk, RERA status, and complaint ratios. 9-factor radar chart.",
-    adminHint: "Add developer profiles from Admin Ã¢â€ â€™ Data Manager Ã¢â€ â€™ Developers"
+    description: "Developer health scores — delivery track record, financial strength, project pipeline risk, RERA status, and complaint ratios. 9-factor radar chart.",
+    adminHint: "Add developer profiles from Admin → Data Manager → Developers"
   },
   "DLD Volumes": {
     icon: "\uD83D\uDCC8",
-    description: "Live DLD transaction data Ã¢â‚¬â€ volume by community, developer, property type, nationality, cash vs mortgage. Monthly trends, price anomaly alerts.",
-    adminHint: "DLD data auto-syncs daily Ã¢â‚¬â€ check Admin Ã¢â€ â€™ Data Health Ã¢â€ â€™ DLD Cron"
+    description: "Live DLD transaction data — volume by community, developer, property type, nationality, cash vs mortgage. Monthly trends, price anomaly alerts.",
+    adminHint: "DLD data auto-syncs daily — check Admin → Data Health → DLD Cron"
   },
   "DXB Estimate": {
     icon: "\uD83D\uDD0D",
     description: "The Zestimate for Dubai. Enter any unit details and get an estimated market value backed by actual DLD transaction comparables.",
-    adminHint: "AVM requires DLD data Ã¢â‚¬â€ check Admin Ã¢â€ â€™ Data Health Ã¢â€ â€™ DLD Cron"
+    adminHint: "AVM requires DLD data — check Admin → Data Health → DLD Cron"
   },
   "Portfolio": {
     icon: "\uD83D\uDCBC",
     description: "Personal investment portfolio tracker. Add your properties, track current market value, unrealised gains, rental income, IRR, and Golden Visa eligibility.",
-    adminHint: "Portfolio reads from live market data Ã¢â‚¬â€ connect DLD and Bayut first"
+    adminHint: "Portfolio reads from live market data — connect DLD and Bayut first"
   },
   "Competitors": {
-    icon: "Ã¢Å¡â€Ã¯Â¸Â",
-    description: "Developer vs developer intelligence Ã¢â‚¬â€ sales volume, delivery record, PPSF comparison, market share, community presence, and branded residence count.",
-    adminHint: "Add developer data from Admin Ã¢â€ â€™ Data Manager Ã¢â€ â€™ Developers"
+    icon: "⚔️",
+    description: "Developer vs developer intelligence — sales volume, delivery record, PPSF comparison, market share, community presence, and branded residence count.",
+    adminHint: "Add developer data from Admin → Data Manager → Developers"
   },
   "Yields": {
     icon: "\uD83D\uDCCA",
     description: "Gross and net rental yields by community and unit type. 5-year historical trend, best yielding communities ranked, and yield vs appreciation tradeoff.",
-    adminHint: "Yield data auto-syncs weekly from Bayut API Ã¢â‚¬â€ check Admin Ã¢â€ â€™ Data Health"
+    adminHint: "Yield data auto-syncs weekly from Bayut API — check Admin → Data Health"
   },
   "Mortgage": {
     icon: "\uD83C\uDFE6",
     description: "Live EIBOR mortgage calculator. Monthly payment, total cost of acquisition (DLD 4%, agency 2%, trustee fees), amortisation schedule, and 5 bank rate comparison.",
-    adminHint: "EIBOR updates daily Ã¢â‚¬â€ check Admin Ã¢â€ â€™ EIBOR Rates"
+    adminHint: "EIBOR updates daily — check Admin → EIBOR Rates"
   },
   "Map": {
-    icon: "\uD83D\uDDFAÃ¯Â¸Â",
+    icon: "\uD83D\uDDFA️",
     description: "Interactive property map with yield heatmap, PPSF heatmap, transaction volume layer, project pins, and community boundaries. Distance rings from key landmarks.",
-    adminHint: "Map renders from project data Ã¢â‚¬â€ import projects first"
+    adminHint: "Map renders from project data — import projects first"
   },
   "Risk": {
-    icon: "Ã¢Å¡Â Ã¯Â¸Â",
+    icon: "⚠️",
     description: "9-factor investment risk scoring per community and project. Supply risk, demand strength, price trajectory, developer quality, regulatory environment.",
     adminHint: "Risk scores calculate automatically from project and market data"
   },
   "Market": {
     icon: "\uD83C\uDF0D",
-    description: "Dubai real estate macro view Ã¢â‚¬â€ total market size, transaction count, off-plan vs secondary split, top developers, international buyer breakdown, and analyst forecasts.",
-    adminHint: "Market data updates from Admin Ã¢â€ â€™ Market Intelligence Ã¢â€ â€™ Update Stats"
+    description: "Dubai real estate macro view — total market size, transaction count, off-plan vs secondary split, top developers, international buyer breakdown, and analyst forecasts.",
+    adminHint: "Market data updates from Admin → Market Intelligence → Update Stats"
   },
   "Currency": {
     icon: "\uD83D\uDCB1",
-    description: "Live AED exchange rates for international buyers Ã¢â‚¬â€ GBP, USD, EUR, RUB, INR, CNY, and more. Property price converter and historical rate chart.",
+    description: "Live AED exchange rates for international buyers — GBP, USD, EUR, RUB, INR, CNY, and more. Property price converter and historical rate chart.",
     adminHint: "Currency rates update automatically via ExchangeRate API"
   },
   "Golden Visa": {
     icon: "\uD83E\uDD47",
     description: "Golden Visa eligibility calculator. Enter property value to check AED 2M minimum, requirements, process steps, and timeline. Auto-checks portfolio eligibility.",
-    adminHint: "Golden Visa rules update from Admin Ã¢â€ â€™ Data Manager Ã¢â€ â€™ Regulations"
+    adminHint: "Golden Visa rules update from Admin → Data Manager → Regulations"
   },
   "Flip": {
     icon: "\uD83D\uDD04",
-    description: "Property flip ROI calculator Ã¢â‚¬â€ purchase price, renovation cost, holding period, selling price. Returns net profit, ROI, annualised return, and optimal hold period.",
-    adminHint: "Flip calculator works with market data Ã¢â‚¬â€ connect DLD and Bayut first"
+    description: "Property flip ROI calculator — purchase price, renovation cost, holding period, selling price. Returns net profit, ROI, annualised return, and optimal hold period.",
+    adminHint: "Flip calculator works with market data — connect DLD and Bayut first"
   },
   "Investment Score": {
-    icon: "Ã¢Â­Â",
-    description: "AI investment scoring for any property Ã¢â‚¬â€ yield potential, location quality, developer health, price vs market, liquidity, handover risk, supply risk. 0-100 score with breakdown.",
-    adminHint: "Investment Score requires project data Ã¢â‚¬â€ import projects first"
+    icon: "⭐",
+    description: "AI investment scoring for any property — yield potential, location quality, developer health, price vs market, liquidity, handover risk, supply risk. 0-100 score with breakdown.",
+    adminHint: "Investment Score requires project data — import projects first"
   },
   "Price History": {
     icon: "\uD83D\uDCC9",
     description: "5-year PPSF trend per community per unit type. Off-plan vs secondary price divergence, correction alerts, and momentum indicators.",
-    adminHint: "Price history syncs from DLD data Ã¢â‚¬â€ check Admin Ã¢â€ â€™ Data Health Ã¢â€ â€™ DLD Cron"
+    adminHint: "Price history syncs from DLD data — check Admin → Data Health → DLD Cron"
   },
 };
 
 
-/* Ã¢â€¢ÂÃ¢â€¢Â TAB ERROR BOUNDARY Ã¢â€¢ÂÃ¢â€¢Â */
+/* ══ TAB ERROR BOUNDARY ══ */
 class TabErrorBoundary extends React.Component {
   constructor(props) { super(props); this.state = { hasError:false, error:null }; }
   static getDerivedStateFromError(e) { return { hasError:true, error:e }; }
@@ -1903,14 +1903,14 @@ class TabErrorBoundary extends React.Component {
   render() {
     if (this.state.hasError) return (
       <div style={{ padding:"60px 24px", textAlign:"center" }}>
-        <div style={{ fontSize:28, marginBottom:12 }}>Ã¢Å¡Â Ã¯Â¸Â</div>
+        <div style={{ fontSize:28, marginBottom:12 }}>⚠️</div>
         <div style={{ fontFamily:"'Fraunces',serif", fontSize:16, fontWeight:700, color:"#EF4444", marginBottom:8 }}>Tab Error</div>
         <div style={{ fontSize:12, color:"#9CA3AF", marginBottom:16 }}>{this.state.error?.message || "Something went wrong in this tab"}</div>
         <button onClick={()=>this.setState({hasError:false,error:null})}
           style={{ padding:"7px 20px", background:"rgba(212,168,67,0.15)", border:"1px solid rgba(212,168,67,0.4)", borderRadius:8, color:"#D4A843", fontSize:12, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>
           Try Again
         </button>
-        <div style={{ fontSize:11, color:"#6B7280", marginTop:10 }}>All other tabs remain accessible Ã¢â‚¬â€ use the sidebar to navigate</div>
+        <div style={{ fontSize:11, color:"#6B7280", marginTop:10 }}>All other tabs remain accessible — use the sidebar to navigate</div>
       </div>
     );
     return this.props.children;
@@ -1948,7 +1948,7 @@ export default function EmaarDashboardV2() {
   const [showNotifications, setShowNotifications] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
 
-  // Price Alerts (old per-project alert modal Ã¢â‚¬â€ kept for project cards)
+  // Price Alerts (old per-project alert modal — kept for project cards)
   const [showSetAlert, setShowSetAlert] = React.useState(null);
   const [selectedNbhd, setSelectedNbhd] = React.useState(null);
   const [devSort, setDevSort] = React.useState("revenue");
@@ -1967,7 +1967,7 @@ export default function EmaarDashboardV2() {
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [onboardingStep, setOnboardingStep] = useState(0);
 
-  /* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ Tab persistence: restore on load + back/forward Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+  /* ─── Tab persistence: restore on load + back/forward ─── */
   useEffect(() => {
     try {
       const stored = localStorage.getItem('dxb_active_tab');
@@ -2024,7 +2024,7 @@ export default function EmaarDashboardV2() {
   const [sidebarSearch, setSidebarSearch] = useState("");
   const toggleGroup = (id) => setGroupCollapsed(prev => ({ ...prev, [id]: !prev[id] }));
 
-  /* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ GLOBAL CONTEXT FILTER STATE Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+  /* ─── GLOBAL CONTEXT FILTER STATE ─── */
   const [gDeveloper, setGDeveloper] = useState("all");
   const [gCommunity, setGCommunity] = useState("all");
   const [gPropertyType, setGPropertyType] = useState("all");
@@ -2035,16 +2035,16 @@ export default function EmaarDashboardV2() {
   const [gPriceMax, setGPriceMax] = useState(0);
   const [gFilterOpen, setGFilterOpen] = useState(false);
 
-  /* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ MARKET TAB STATE Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+  /* ─── MARKET TAB STATE ─── */
   const [expandedForecast, setExpandedForecast] = useState(null);
 
-  /* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ DLD VOLUMES TAB STATE Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+  /* ─── DLD VOLUMES TAB STATE ─── */
   const [dldFilter, setDldFilter] = useState({ community: "All", type: "All", txType: "All", developer: "All", nationality: "All" });
   const [dldSort, setDldSort] = useState("transactions");
   const [dldSearch, setDldSearch] = useState("");
   const [dldView, setDldView] = useState("table");
 
-  /* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ PRICE HISTORY TAB STATE Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+  /* ─── PRICE HISTORY TAB STATE ─── */
   const [phCommunity, setPhCommunity] = useState("All");
   const [phType, setPhType] = useState("Apartment");
   const [phBeds, setPhBeds] = useState("All");
@@ -2053,7 +2053,7 @@ export default function EmaarDashboardV2() {
   const [phCommunity2, setPhCommunity2] = useState("All");
 
 
-  /* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ HANDOVER STATUS + RISK CONFIG Ã¢â‚¬â€ top level (used by tab + overlay) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+  /* ─── HANDOVER STATUS + RISK CONFIG — top level (used by tab + overlay) ─── */
   const statusCfg = {
     "On Track": { color: T.green,   bg: "rgba(16,185,129,0.12)",  label: "On Track"  },
     "Delayed":  { color: "#F97316", bg: "rgba(249,115,22,0.12)",  label: "Delayed"   },
@@ -2091,12 +2091,12 @@ export default function EmaarDashboardV2() {
   const [liveProjects, setLiveProjects] = useState({});
   const [extraProjects, setExtraProjects] = useState([]);
   const [liveYields, setLiveYields] = useState([]);
-  // Ã¢â€â‚¬Ã¢â€â‚¬ Price Alerts Ã¢â€â‚¬Ã¢â€â‚¬
+  // ── Price Alerts ──
   const [showAlerts, setShowAlerts] = useState(false);
   const [myAlerts, setMyAlerts] = useState([]);
   const [alertForm, setAlertForm] = useState({ community: "Dubai Hills Estate", metric: "grossYield", condition: "above", value: "8" });
   const [alertSaving, setAlertSaving] = useState(false);
-  // Ã¢â€â‚¬Ã¢â€â‚¬ AI Insights Ã¢â€â‚¬Ã¢â€â‚¬
+  // ── AI Insights ──
   const [aiInsights, setAiInsights] = useState([]);
   const [insightsLoading, setInsightsLoading] = useState(false);
   const [liveDevHealth, setLiveDevHealth] = useState([]);
@@ -2118,18 +2118,18 @@ export default function EmaarDashboardV2() {
   const [liveCommunityROI, setLiveCommunityROI] = useState({});
   const [liveCommunityIntel, setLiveCommunityIntel] = useState({});
 
-  /* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ MY LEADS STATE (Session 4) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+  /* ─── MY LEADS STATE (Session 4) ─── */
   const [myLeads, setMyLeads] = useState([]);
   const [myLeadsLoading, setMyLeadsLoading] = useState(false);
 
-  /* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ DEAL PIPELINE STATE (Session 5) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+  /* ─── DEAL PIPELINE STATE (Session 5) ─── */
   const [deals, setDeals] = useState([]);
 
-  /* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ MANAGER DASHBOARD STATE (Session 7) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+  /* ─── MANAGER DASHBOARD STATE (Session 7) ─── */
   const [teamMembers, setTeamMembers] = useState([]);
   const [teamMembersLoading, setTeamMembersLoading] = useState(false);
 
-  /* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ AGENCY HUB STATE (Session 8) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+  /* ─── AGENCY HUB STATE (Session 8) ─── */
   const [orgProfile, setOrgProfile] = useState(null);
   const [orgProfileForm, setOrgProfileForm] = useState({ name:"", reraNo:"", tradeLicense:"", phone:"", email:"", website:"", notes:"" });
   const [orgProfileSaving, setOrgProfileSaving] = useState(false);
@@ -2142,7 +2142,7 @@ export default function EmaarDashboardV2() {
   const [inviteLoading, setInviteLoading] = useState(false);
   const [inviteSent, setInviteSent] = useState(false);
 
-  /* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ INTELLIGENCE STATE (Session 12) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+  /* ─── INTELLIGENCE STATE (Session 12) ─── */
   const [compCommunity, setCompCommunity] = useState("Dubai Hills Estate");
   const [compType, setCompType] = useState("Apartment");
   const [compBeds, setCompBeds] = useState("2BR");
@@ -2153,12 +2153,12 @@ export default function EmaarDashboardV2() {
   const [irrServiceCharge, setIrrServiceCharge] = useState("18");
   const [irrMgmtFee, setIrrMgmtFee] = useState("9");
 
-  /* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ DLD LIVE INTELLIGENCE STATE (Session 15) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+  /* ─── DLD LIVE INTELLIGENCE STATE (Session 15) ─── */
   const [dldActiveCommunity, setDldActiveCommunity] = useState("Dubai Hills Estate");
   const [dldLastRefresh, setDldLastRefresh] = useState(new Date());
   const [dldRefreshTick, setDldRefreshTick] = useState(0);
 
-  /* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ BULK IMPORT STATE (Session 16) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+  /* ─── BULK IMPORT STATE (Session 16) ─── */
   const [showBulkImport, setShowBulkImport] = useState(false);
   const [importStep, setImportStep]         = useState(1); // 1=upload, 2=map, 3=preview, 4=done
   const [importRawRows, setImportRawRows]   = useState([]);
@@ -2170,7 +2170,7 @@ export default function EmaarDashboardV2() {
   const [importDone, setImportDone]         = useState({ imported:0, dupes:0, errors:0 });
   const [importLoading, setImportLoading]   = useState(false);
 
-  /* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ DLD AUTO-REFRESH (Session 15) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+  /* ─── DLD AUTO-REFRESH (Session 15) ─── */
   React.useEffect(() => {
     const interval = setInterval(() => {
       setDldLastRefresh(new Date());
@@ -2179,7 +2179,7 @@ export default function EmaarDashboardV2() {
     return () => clearInterval(interval);
   }, []);
 
-  /* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ DEV PORTAL STATE (Session 10) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+  /* ─── DEV PORTAL STATE (Session 10) ─── */
   const [devUnits, setDevUnits] = useState([]);
   const [devUnitsLoading, setDevUnitsLoading] = useState(false);
   const [devEOIs, setDevEOIs] = useState([]);
@@ -2193,7 +2193,7 @@ export default function EmaarDashboardV2() {
   const [unitForm, setUnitForm] = useState({ unitNo:"", type:"Apartment", beds:"1", baths:"1", size:"", price:"", floor:"", view:"", status:"Available" });
   const [unitFormLoading, setUnitFormLoading] = useState(false);
 
-  /* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ LISTINGS STATE (Session 9) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+  /* ─── LISTINGS STATE (Session 9) ─── */
   const [listings, setListings] = useState([]);
   const [listingsLoading, setListingsLoading] = useState(false);
   const [showNewListing, setShowNewListing] = useState(false);
@@ -2208,7 +2208,7 @@ export default function EmaarDashboardV2() {
   const [listingSearch, setListingSearch] = useState("");
   const [publishingId, setPublishingId] = useState(null);
 
-  /* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ COMPLIANCE STATE (Session 6) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+  /* ─── COMPLIANCE STATE (Session 6) ─── */
   const [reraCard, setReraCard] = useState({ number:"", expiry:"", name:"" });
   const [reraCardLoading, setReraCardLoading] = useState(false);
   const [reraCardSaved, setReraCardSaved] = useState(false);
@@ -2246,13 +2246,13 @@ export default function EmaarDashboardV2() {
   const [gvNationality, setGvNationality] = useState("other");
   const [gvSelectedProj, setGvSelectedProj] = useState(null);
 
-  // Load projects from Firestore (runs for ALL users Ã¢â‚¬â€ guests and logged-in)
+  // Load projects from Firestore (runs for ALL users — guests and logged-in)
   const [projectsLoading, setProjectsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  /* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ MY LEADS MISSING STATE (V11) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+  /* ─── MY LEADS MISSING STATE (V11) ─── */
 
-  /* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ V12 NEW STATE Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+  /* ─── V12 NEW STATE ─── */
   const [leadTagFilter, setLeadTagFilter] = useState("all");
   const [showTemplates, setShowTemplates] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState("");
@@ -2266,7 +2266,7 @@ export default function EmaarDashboardV2() {
   const [leadNatFilter, setLeadNatFilter] = useState("all");
 
 
-  /* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ MY LEADS ADDITIONAL STATE Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+  /* ─── MY LEADS ADDITIONAL STATE ─── */
   const [liveLeads, setLiveLeads] = useState([]);
   const [leadShowAdd, setLeadShowAdd] = useState(false);
   const [leadAddName, setLeadAddName] = useState("");
@@ -2294,7 +2294,7 @@ export default function EmaarDashboardV2() {
   const [taskDue, setTaskDue] = useState("");
 
 
-  /* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ COMPETITORS TAB STATE Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+  /* ─── COMPETITORS TAB STATE ─── */
   const [cptView, setCptView] = useState("matrix");
   const [cptDevA, setCptDevA] = useState("Emaar Properties");
   const [cptDevB, setCptDevB] = useState("DAMAC Properties");
@@ -2302,7 +2302,7 @@ export default function EmaarDashboardV2() {
   const [cptSearch, setCptSearch] = useState("");
 
 
-  /* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ MARKETING INTELLIGENCE TAB STATE Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+  /* ─── MARKETING INTELLIGENCE TAB STATE ─── */
   const [mktView, setMktView] = useState("channels");
   const [mktPropType, setMktPropType] = useState("all");
   const [mktBudget, setMktBudget] = useState(10000);
@@ -2316,7 +2316,7 @@ export default function EmaarDashboardV2() {
   const [mktAiLoading, setMktAiLoading] = useState(false);
 
 
-  /* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ MORTGAGE LEAD CAPTURE STATE Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+  /* ─── MORTGAGE LEAD CAPTURE STATE ─── */
   const [mortLeadName, setMortLeadName] = useState("");
   const [mortLeadPhone, setMortLeadPhone] = useState("");
   const [mortLeadEmail, setMortLeadEmail] = useState("");
@@ -2324,7 +2324,7 @@ export default function EmaarDashboardV2() {
   const [mortLeadSubmitting, setMortLeadSubmitting] = useState(false);
 
 
-  /* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ BANKING INTELLIGENCE TAB STATE Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+  /* ─── BANKING INTELLIGENCE TAB STATE ─── */
   const [bankView, setBankView] = useState("compare");
   const [bankType, setBankType] = useState("resident");
   const [bankFinType, setBankFinType] = useState("conventional");
@@ -2337,7 +2337,7 @@ export default function EmaarDashboardV2() {
   const [bankFixedYrs, setBankFixedYrs] = useState(3);
 
 
-  /* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ DEVELOPER HEALTH TAB STATE Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+  /* ─── DEVELOPER HEALTH TAB STATE ─── */
   const [dhView, setDhView] = useState("leaderboard");
   const [dhTier, setDhTier] = useState("All");
   const [dhSort, setDhSort] = useState("score");
@@ -2345,7 +2345,7 @@ export default function EmaarDashboardV2() {
   const [dhSearch, setDhSearch] = useState("");
 
 
-  /* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ FINANCIALS TAB STATE Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+  /* ─── FINANCIALS TAB STATE ─── */
   const [finDeveloper, setFinDeveloper] = useState("Emaar Properties");
   const [finView, setFinView] = useState("overview");
   const [finPeriod, setFinPeriod] = useState("annual");
@@ -2354,7 +2354,7 @@ export default function EmaarDashboardV2() {
   const [finCompareDev, setFinCompareDev] = useState("Aldar Properties");
 
 
-  /* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ RISK TAB STATE Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+  /* ─── RISK TAB STATE ─── */
   const [riskTabView, setRiskTabView] = useState("radar");
   const [riskCommunity2, setRiskCommunity2] = useState("Jumeirah Village Circle");
   const [riskType2, setRiskType2] = useState("Apartment");
@@ -2364,7 +2364,7 @@ export default function EmaarDashboardV2() {
   const [liveInvestScores, setLiveInvestScores] = useState([]);
   const [liveLaunches, setLiveLaunches] = useState([]);
 
-  /* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ GOLDEN VISA TAB STATE Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+  /* ─── GOLDEN VISA TAB STATE ─── */
   const [gvView, setGvView] = useState("checker");
   const [gvMortgage, setGvMortgage] = useState(false);
   const [gvMortgagePaid, setGvMortgagePaid] = useState(2000000);
@@ -2375,7 +2375,7 @@ export default function EmaarDashboardV2() {
 
   const [livePortfolio, setLivePortfolio] = useState([]);
 
-  /* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ DXB ESTIMATE (AVM) STATE Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+  /* ─── DXB ESTIMATE (AVM) STATE ─── */
   const [avmView, setAvmView] = useState("estimate");
   const [avmFloor, setAvmFloor] = useState("mid");
   const [avmView2, setAvmView2] = useState("pool");
@@ -2384,7 +2384,7 @@ export default function EmaarDashboardV2() {
   const [avmRenovated, setAvmRenovated] = useState(false);
   const [avmParking, setAvmParking] = useState(1);
 
-  /* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ PORTFOLIO STATE Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+  /* ─── PORTFOLIO STATE ─── */
   const [portView, setPortView] = useState("overview");
   const [portShowAdd, setPortShowAdd] = useState(false);
   const [portBuyPrice, setPortBuyPrice] = useState(1200000);
@@ -2398,7 +2398,7 @@ export default function EmaarDashboardV2() {
   const [portYear2, setPortYear2] = useState(2022);
 
 
-  /* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ FLIP CALCULATOR ADDITIONAL STATE Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+  /* ─── FLIP CALCULATOR ADDITIONAL STATE ─── */
   const [flpRenovCost, setFlpRenovCost] = useState(80000);
   const [flpAgentBuy, setFlpAgentBuy] = useState(2);
   const [flpAgentSell, setFlpAgentSell] = useState(2);
@@ -2409,7 +2409,7 @@ export default function EmaarDashboardV2() {
   const [flpScenario, setFlpScenario] = useState("base");
 
 
-  /* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ INVESTMENT SCORE TAB STATE Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+  /* ─── INVESTMENT SCORE TAB STATE ─── */
   const [invScView, setInvScView] = useState("community");
   const [invScSort, setInvScSort] = useState("total");
   const [invScFilter, setInvScFilter] = useState("All");
@@ -2417,7 +2417,7 @@ export default function EmaarDashboardV2() {
   const [invScSearch, setInvScSearch] = useState("");
 
 
-  /* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ MORTGAGE TAB STATE Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+  /* ─── MORTGAGE TAB STATE ─── */
   const [mortPrice, setMortPrice] = useState(1500000);
   const [mortDown, setMortDown] = useState(20);
   const [mortRate, setMortRate] = useState(4.25);
@@ -2428,7 +2428,7 @@ export default function EmaarDashboardV2() {
   const [mortIncome, setMortIncome] = useState(30000);
 
 
-  /* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ STR vs LTR TAB STATE Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+  /* ─── STR vs LTR TAB STATE ─── */
   const [strView, setStrView] = useState("comparison");
   const [strCommunity, setStrCommunity] = useState("All");
   const [strBeds, setStrBeds] = useState("1BR");
@@ -2440,7 +2440,7 @@ export default function EmaarDashboardV2() {
   const [strCalcLTR, setStrCalcLTR] = useState(90000);
 
 
-  /* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ YIELDS TAB STATE Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+  /* ─── YIELDS TAB STATE ─── */
   const [yldView, setYldView] = useState("table");
   const [yldType, setYldType] = useState("Apartment");
   const [yldSort, setYldSort] = useState("gross");
@@ -2455,14 +2455,14 @@ export default function EmaarDashboardV2() {
   const [liveYieldsData, setLiveYieldsData] = useState([]);
 
 
-  /* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ LAUNCH CALENDAR STATE Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+  /* ─── LAUNCH CALENDAR STATE ─── */
   const [lcSearch, setLcSearch] = useState("");
   const [lcDev, setLcDev] = useState("All");
   const [lcStatus, setLcStatus] = useState("All");
   const [lcType, setLcType] = useState("All");
   const [lcView, setLcView] = useState("newspaper");
 
-  /* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ NEIGHBOURHOODS STATE Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+  /* ─── NEIGHBOURHOODS STATE ─── */
   const [nbhSearch, setNbhSearch] = useState("");
   const [nbhTypeFilter, setNbhTypeFilter] = useState("All");
   const [nbhYieldFilter, setNbhYieldFilter] = useState("All");
@@ -2471,13 +2471,13 @@ export default function EmaarDashboardV2() {
   const [nbhView, setNbhView] = useState("grid");
   const [nbhCompare, setNbhCompare] = useState([]);
 
-  /* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ CURRENCY STATE Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+  /* ─── CURRENCY STATE ─── */
   const [selectedCcy, setSelectedCcy] = useState("USD");
   const [aedAmount, setAedAmount] = useState(100000);
   const [searchCcy, setSearchCcy] = useState("");
 
 
-  /* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ PROJECTS TAB FILTER STATE Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+  /* ─── PROJECTS TAB FILTER STATE ─── */
   const [projMode, setProjMode] = useState("Apartment");
   const [projView, setProjView] = useState("grid");
   const [projSearch, setProjSearch] = useState("");
@@ -2494,7 +2494,7 @@ export default function EmaarDashboardV2() {
   const [projFurnished, setProjFurnished] = useState(false);
 
 
-  /* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ PROJECT MODAL STATE Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+  /* ─── PROJECT MODAL STATE ─── */
   const [selectedProject, setSelectedProject] = useState(null);
   const [projDetailTab, setProjDetailTab] = useState("Overview");
   const [projCompare, setProjCompare] = useState([]);
@@ -2503,7 +2503,7 @@ export default function EmaarDashboardV2() {
   const [showCompare, setShowCompare] = useState(false);
 
 
-  /* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ SERVICE CHARGES TAB STATE Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+  /* ─── SERVICE CHARGES TAB STATE ─── */
   const [scView, setScView] = useState("table");
   const [scType, setScType] = useState("All");
   const [scSort, setScSort] = useState("rate");
@@ -2511,8 +2511,8 @@ export default function EmaarDashboardV2() {
   const [scCalcSize, setScCalcSize] = useState(1000);
   const [scCalcRate, setScCalcRate] = useState(15);
   const [scCalcRent, setScCalcRent] = useState(90000);
-  /* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ HANDOVER TAB STATE Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
-  /* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ HANDOVER DETAIL VIEW STATE Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+  /* ─── HANDOVER TAB STATE ─── */
+  /* ─── HANDOVER DETAIL VIEW STATE ─── */
   const [hdvFilter, setHdvFilter] = useState("All");
   const [hdvDev, setHdvDev] = useState("All");
   const [hdvCommunity, setHdvCommunity] = useState("All");
@@ -2520,7 +2520,7 @@ export default function EmaarDashboardV2() {
   const [hdvView, setHdvView] = useState("cards");
   const [hdvSearch, setHdvSearch] = useState("");
   const [hdvSelected, setHdvSelected] = useState(null);
-  /* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ HANDOVER TAB STATE Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+  /* ─── HANDOVER TAB STATE ─── */
   const [hvFilter, setHvFilter] = useState("All");
   const [hvSort, setHvSort] = useState("handover");
   const [hvDev, setHvDev] = useState("All");
@@ -2539,7 +2539,7 @@ export default function EmaarDashboardV2() {
     const loadProjects = async () => {
       setProjectsLoading(true);
       try {
-        // Initial projectData load for first paint Ã¢â‚¬â€ onSnapshot takes over immediately
+        // Initial projectData load for first paint — onSnapshot takes over immediately
         const pdSnap = await getDocs(collection(db, "projectData"));
         const overrides = {};
         pdSnap.forEach(d => { overrides[d.id.replace("project_", "")] = d.data(); });
@@ -2555,7 +2555,7 @@ export default function EmaarDashboardV2() {
       } catch (e) { console.log("Firestore not available, using static data"); }
       setProjectsLoading(false);
     };
-    // Ã¢â€â‚¬Ã¢â€â‚¬ Live EMAAR stock price via Yahoo Finance (free, no key) Ã¢â€â‚¬Ã¢â€â‚¬
+    // ── Live EMAAR stock price via Yahoo Finance (free, no key) ──
     const fetchEmaarStock = async () => {
       try {
         const res = await fetch("/api/proxy?service=stock&symbol=EMAAR.DU&range=1d&interval=1d");
@@ -2570,11 +2570,11 @@ export default function EmaarDashboardV2() {
     };
     fetchEmaarStock();
     const stockInterval = setInterval(fetchEmaarStock, 300000);
-    loadProjects(); // Load for everyone Ã¢â‚¬â€ no isLoggedIn gate
+    loadProjects(); // Load for everyone — no isLoggedIn gate
 
     // priceAlerts now live via user onSnapshot listener
 
-    // Ã¢â€â‚¬Ã¢â€â‚¬ AI Insights Ã¢â‚¬â€ generated fresh if not in cache (cache read now via onSnapshot) Ã¢â€â‚¬Ã¢â€â‚¬
+    // ── AI Insights — generated fresh if not in cache (cache read now via onSnapshot) ──
     (async () => {
       try {
         const oneWeekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
@@ -2602,13 +2602,13 @@ export default function EmaarDashboardV2() {
       } catch(e) { setInsightsLoading(false); }
     })();
 
-    // Ã¢â€â‚¬Ã¢â€â‚¬ Load Paddle.js for billing Ã¢â€â‚¬Ã¢â€â‚¬
+    // ── Load Paddle.js for billing ──
     if (!window.Paddle) {
       const script = document.createElement("script");
       script.src = "https://cdn.paddle.com/paddle/v2/paddle.js";
       script.onload = () => {
-        // Ã¢â€â‚¬Ã¢â€â‚¬ PASTE YOUR PADDLE CLIENT TOKEN BELOW Ã¢â€â‚¬Ã¢â€â‚¬
-        // Get it from paddle.com Ã¢â€ â€™ Developer Ã¢â€ â€™ Authentication Ã¢â€ â€™ Client-side token
+        // ── PASTE YOUR PADDLE CLIENT TOKEN BELOW ──
+        // Get it from paddle.com → Developer → Authentication → Client-side token
         const PADDLE_CLIENT_TOKEN = "live_4393f28d4ec943ebe056835651f";
         if (!PADDLE_CLIENT_TOKEN.includes("PASTE")) {
           window.Paddle.Initialize({ token: PADDLE_CLIENT_TOKEN });
@@ -2644,26 +2644,26 @@ export default function EmaarDashboardV2() {
 
 
   const SEED_PROJECTS = [
-    { id:"p001", tier:1, goldenVisa:true, appreciationToHandover:32, branded:false, velocityScore:86, commission:2.0, type:"Apartment", developer:"Emaar", project:"Golf Grand Ã¢â‚¬â€ Phase 2", community:"Dubai Hills Estate", status:"Off-Plan", handover:"Q4 2027", beds:["1BR","2BR","3BR"], sizeMin:748, sizeMax:1842, priceMin:1200000, priceMax:3800000, ppsf:1850,
+    { id:"p001", tier:1, goldenVisa:true, appreciationToHandover:32, branded:false, velocityScore:86, commission:2.0, type:"Apartment", developer:"Emaar", project:"Golf Grand — Phase 2", community:"Dubai Hills Estate", status:"Off-Plan", handover:"Q4 2027", beds:["1BR","2BR","3BR"], sizeMin:748, sizeMax:1842, priceMin:1200000, priceMax:3800000, ppsf:1850,
       unitBreakdown:[
         { type:"1BR", sizeMin:748,  sizeMax:900,  priceMin:1200000, priceMax:1650000, ppsf:1850, grossYield:7.2, available:42 },
         { type:"2BR", sizeMin:1100, sizeMax:1380, priceMin:1980000, priceMax:2550000, ppsf:1800, grossYield:6.8, available:28 },
         { type:"3BR", sizeMin:1600, sizeMax:1842, priceMin:2900000, priceMax:3800000, ppsf:1780, grossYield:6.2, available:14 },
       ], paymentPlan:"80/20", postHandover:false, grossYield:6.8, netYield:5.4, serviceCharge:16, investmentScore:84, distMetro:3.5, distDIFC:12, distAirport:28, distBeach:18, distMall:2.2, distSchool:0.8, distHospital:4, amenities:["Pool","Gym","Golf Course","Kids Area","BBQ","Retail","Cycling Track"], view:["Golf View","Garden View"], reraNo:"0991234567", escrowBank:"Emirates NBD", constructionPct:15, developerScore:92, notes:"Overlooking 18-hole championship golf course. Emaar proven delivery. Strong resale liquidity in Dubai Hills.", isSeedData:true, source:"Emaar Official / Bayut Apr 2026" },
-    { id:"p002", tier:2, goldenVisa:true, appreciationToHandover:22, branded:false, velocityScore:72, commission:3.0, type:"Apartment", developer:"DAMAC Properties", project:"Lagoons Ã¢â‚¬â€ Azure Beach", community:"DAMAC Lagoons", status:"Off-Plan", handover:"Q2 2027", beds:["Studio","1BR","2BR"], sizeMin:420, sizeMax:1240, priceMin:680000, priceMax:2100000, ppsf:1420,
+    { id:"p002", tier:2, goldenVisa:true, appreciationToHandover:22, branded:false, velocityScore:72, commission:3.0, type:"Apartment", developer:"DAMAC Properties", project:"Lagoons — Azure Beach", community:"DAMAC Lagoons", status:"Off-Plan", handover:"Q2 2027", beds:["Studio","1BR","2BR"], sizeMin:420, sizeMax:1240, priceMin:680000, priceMax:2100000, ppsf:1420,
       unitBreakdown:[
         { type:"Studio", sizeMin:420, sizeMax:520,  priceMin:680000,  priceMax:820000,  ppsf:1480, grossYield:8.2, available:60 },
         { type:"1BR",    sizeMin:650, sizeMax:820,  priceMin:950000,  priceMax:1200000, ppsf:1420, grossYield:7.4, available:45 },
         { type:"2BR",    sizeMin:980, sizeMax:1240, priceMin:1550000, priceMax:2100000, ppsf:1380, grossYield:6.8, available:22 },
       ], paymentPlan:"70/30", postHandover:true, grossYield:7.4, netYield:5.9, serviceCharge:14, investmentScore:76, distMetro:5.5, distDIFC:22, distAirport:35, distBeach:25, distMall:3.8, distSchool:1.2, distHospital:6, amenities:["Lagoon Pool","Beach Access","Gym","Waterpark","Restaurants","Kids Club"], view:["Lagoon View","Pool View"], reraNo:"0882345678", escrowBank:"Dubai Islamic Bank", constructionPct:35, developerScore:78, notes:"Mediterranean-inspired community. Private lagoon access. High demand from European buyers.", isSeedData:true, source:"DAMAC Official / PropertyFinder Apr 2026" },
-    { id:"p003", tier:1, goldenVisa:true, appreciationToHandover:33, branded:false, velocityScore:89, commission:2.0, type:"Apartment", developer:"Sobha Realty", project:"Hartland II Ã¢â‚¬â€ Skyvista", community:"Sobha Hartland", status:"Off-Plan", handover:"Q3 2027", beds:["1BR","2BR","3BR","4BR"], sizeMin:780, sizeMax:2800, priceMin:1800000, priceMax:6500000, ppsf:2100,
+    { id:"p003", tier:1, goldenVisa:true, appreciationToHandover:33, branded:false, velocityScore:89, commission:2.0, type:"Apartment", developer:"Sobha Realty", project:"Hartland II — Skyvista", community:"Sobha Hartland", status:"Off-Plan", handover:"Q3 2027", beds:["1BR","2BR","3BR","4BR"], sizeMin:780, sizeMax:2800, priceMin:1800000, priceMax:6500000, ppsf:2100,
       unitBreakdown:[
         { type:"1BR", sizeMin:780,  sizeMax:950,  priceMin:1800000, priceMax:2200000, ppsf:2180, grossYield:6.8, available:38 },
         { type:"2BR", sizeMin:1200, sizeMax:1450, priceMin:2600000, priceMax:3200000, ppsf:2100, grossYield:6.2, available:30 },
         { type:"3BR", sizeMin:1800, sizeMax:2100, priceMin:3800000, priceMax:4600000, ppsf:2050, grossYield:5.8, available:18 },
         { type:"4BR", sizeMin:2400, sizeMax:2800, priceMin:5200000, priceMax:6500000, ppsf:2020, grossYield:5.2, available:8  },
       ], paymentPlan:"70/30", postHandover:false, grossYield:6.2, netYield:4.9, serviceCharge:18, investmentScore:82, distMetro:2.8, distDIFC:8, distAirport:18, distBeach:22, distMall:6, distSchool:0.5, distHospital:3, amenities:["Infinity Pool","Gym","Spa","Concierge","Kids Pool","Retail","Co-working"], view:["Creek View","Burj Khalifa View","City View"], reraNo:"0773456789", escrowBank:"Mashreq Bank", constructionPct:28, developerScore:88, notes:"Sobha known for quality finishes and on-time delivery. Creek views. Walking distance to top schools.", isSeedData:true, source:"Sobha Official / Bayut Apr 2026" },
-    { id:"p004", tier:2, goldenVisa:false, appreciationToHandover:25, branded:false, velocityScore:72, commission:4.0, type:"Apartment", developer:"Binghatti", project:"Skyrise Ã¢â‚¬â€ Business Bay", community:"Business Bay", status:"Off-Plan", handover:"Q1 2027", beds:["Studio","1BR","2BR"], sizeMin:380, sizeMax:1050, priceMin:750000, priceMax:2200000, ppsf:1980,
+    { id:"p004", tier:2, goldenVisa:false, appreciationToHandover:25, branded:false, velocityScore:72, commission:4.0, type:"Apartment", developer:"Binghatti", project:"Skyrise — Business Bay", community:"Business Bay", status:"Off-Plan", handover:"Q1 2027", beds:["Studio","1BR","2BR"], sizeMin:380, sizeMax:1050, priceMin:750000, priceMax:2200000, ppsf:1980,
       unitBreakdown:[
         { type:"Studio", sizeMin:380, sizeMax:480,  priceMin:750000,  priceMax:920000,  ppsf:2050, grossYield:8.8, available:80 },
         { type:"1BR",    sizeMin:620, sizeMax:780,  priceMin:1200000, priceMax:1550000, ppsf:1980, grossYield:7.8, available:55 },
@@ -2676,14 +2676,14 @@ export default function EmaarDashboardV2() {
         { type:"3BR", sizeMin:2200, sizeMax:2800, priceMin:6800000,  priceMax:9000000,  ppsf:2780, grossYield:5.8, available:5  },
         { type:"4BR", sizeMin:3400, sizeMax:4200, priceMin:12000000, priceMax:18000000, ppsf:2700, grossYield:5.2, available:3  },
       ], paymentPlan:"70/30", postHandover:false, grossYield:6.0, netYield:4.6, serviceCharge:20, investmentScore:79, distMetro:1.2, distDIFC:16, distAirport:20, distBeach:0.1, distMall:8, distSchool:4, distHospital:5, amenities:["Beach Access","Infinity Pool","Spa","Gym","Concierge","Yacht Jetty"], view:["Sea View","Beach View","Marina View"], reraNo:"0555678901", escrowBank:"Emirates NBD", constructionPct:78, developerScore:86, notes:"Ellington curated design. Beachfront. Dubai Islands 24% price growth 2025. Near ready.", isSeedData:true, source:"Ellington Official / Alkira Feb 2026" },
-    { id:"p006", tier:1, goldenVisa:true, appreciationToHandover:38, branded:false, velocityScore:88, commission:2.0, type:"Villa", developer:"Emaar", project:"The Oasis Ã¢â‚¬â€ Phase 11", community:"The Oasis", status:"Off-Plan", handover:"Q2 2029", beds:["4BR","5BR","6BR"], sizeMin:5800, sizeMax:14000, priceMin:6150000, priceMax:32000000, ppsf:1480,
+    { id:"p006", tier:1, goldenVisa:true, appreciationToHandover:38, branded:false, velocityScore:88, commission:2.0, type:"Villa", developer:"Emaar", project:"The Oasis — Phase 11", community:"The Oasis", status:"Off-Plan", handover:"Q2 2029", beds:["4BR","5BR","6BR"], sizeMin:5800, sizeMax:14000, priceMin:6150000, priceMax:32000000, ppsf:1480,
       unitBreakdown:[
         { type:"4BR Villa",    sizeMin:5800,  sizeMax:7200,  plotMin:7500,  plotMax:10000, priceMin:6150000,  priceMax:9500000,  ppsf:1520, grossYield:5.2, available:28 },
         { type:"5BR Villa",    sizeMin:7800,  sizeMax:9500,  plotMin:10000, plotMax:14000, priceMin:10500000, priceMax:16000000, ppsf:1490, grossYield:4.8, available:18 },
         { type:"6BR Mansion",  sizeMin:11000, sizeMax:14000, plotMin:16000, plotMax:22000, priceMin:20000000, priceMax:32000000, ppsf:1450, grossYield:4.2, available:8  },
       ], paymentPlan:"80/20", postHandover:false, grossYield:4.8, netYield:3.8, serviceCharge:6, investmentScore:86, plotMin:7500, plotMax:22000, privatePool:true, garage:2, maidRoom:true, distMetro:8, distDIFC:25, distAirport:32, distBeach:28, distMall:6, distSchool:3, distHospital:8, amenities:["Lagoon Pool","Wave Pool","Polo Fields","Equestrian","Golf","Clubhouse","Cycling Tracks"], view:["Lagoon View","Garden View","Golf View"], reraNo:"0446789012", escrowBank:"Emirates NBD", constructionPct:8, developerScore:92, notes:"10:1 scarcity vs Dubai Hills. Emaar ultra-luxury 60M sqft master plan.", isSeedData:true, source:"Emaar Official / Alkira Feb 2026" },
     { id:"p007", tier:1, goldenVisa:true, appreciationToHandover:28, branded:false, velocityScore:100, commission:2.0, type:"Villa", developer:"Majid Al Futtaim", project:"Serenity Mansions", community:"Tilal Al Ghaf", status:"Sold Out", handover:"Q4 2027", beds:["5BR","6BR","7BR"], sizeMin:9500, sizeMax:18000, priceMin:8500000, priceMax:45000000, ppsf:1650, paymentPlan:"50/50", postHandover:false, grossYield:4.2, netYield:3.3, serviceCharge:8, investmentScore:80, privatePool:true, garage:3, maidRoom:true, distMetro:5, distDIFC:20, distAirport:30, distBeach:24, distMall:4, distSchool:1.5, distHospital:6, amenities:["Private Beach","Crystal Lagoon","Tennis","Padel","Golf","Stables"], view:["Lake View","Garden View","Lagoon View"], reraNo:"0337890123", escrowBank:"FAB", constructionPct:62, developerScore:89, notes:"Sold out in 48 hours. Tilal Al Ghaf 52% YoY growth DLD 2025.", isSeedData:true, source:"DLD 2025 / Majid Al Futtaim" },
-    { id:"p008", tier:1, goldenVisa:true, appreciationToHandover:32, branded:false, velocityScore:84, commission:2.0, type:"Townhouse", developer:"Nakheel", project:"Dubai Islands Ã¢â‚¬â€ Cluster B", community:"Dubai Islands", status:"Off-Plan", handover:"Q4 2027", beds:["3BR","4BR"], sizeMin:2200, sizeMax:3800, priceMin:3200000, priceMax:6500000, ppsf:1620,
+    { id:"p008", tier:1, goldenVisa:true, appreciationToHandover:32, branded:false, velocityScore:84, commission:2.0, type:"Townhouse", developer:"Nakheel", project:"Dubai Islands — Cluster B", community:"Dubai Islands", status:"Off-Plan", handover:"Q4 2027", beds:["3BR","4BR"], sizeMin:2200, sizeMax:3800, priceMin:3200000, priceMax:6500000, ppsf:1620,
       unitBreakdown:[
         { type:"3BR TH", sizeMin:2200, sizeMax:2600, plotMin:2800, plotMax:3500, priceMin:3200000, priceMax:4200000, ppsf:1680, grossYield:6.8, available:35 },
         { type:"4BR TH", sizeMin:3000, sizeMax:3800, plotMin:3800, plotMax:5000, priceMin:4800000, priceMax:6500000, ppsf:1580, grossYield:6.1, available:20 },
@@ -2696,9 +2696,9 @@ export default function EmaarDashboardV2() {
         { type:"3BR Suite",  sizeMin:4000, sizeMax:6500, priceMin:35000000, priceMax:65000000, ppsf:4600, grossYield:6.2, available:5  },
       ], paymentPlan:"50/50", postHandover:false, grossYield:7.2, netYield:5.5, serviceCharge:28, investmentScore:77, hotelOperator:"Dorchester Collection", starRating:5, dtcmLicense:true, revenueShare:65, managementFee:15, avgDailyRate:3200, occupancyRate:82, distMetro:2.2, distDIFC:20, distAirport:32, distBeach:0.05, distMall:18, distSchool:8, distHospital:12, amenities:["Private Beach","5-Star Spa","Infinity Pool","Fine Dining","Butler Service","Yacht Jetty"], view:["Sea View","Palm View","Burj Al Arab View"], reraNo:"0119012345", escrowBank:"Emirates NBD", constructionPct:45, developerScore:88, notes:"Managed by Dorchester Collection. 65% revenue to owner. 4 weeks personal use.", isSeedData:true, source:"Omniyat Official / Bayut Apr 2026" },
     { id:"p010", tier:1, goldenVisa:true, appreciationToHandover:0, branded:false, velocityScore:0, commission:5.0, type:"Office", developer:"Brookfield Properties", project:"ICD Brookfield Place", community:"DIFC", status:"Ready", handover:"Available Now", beds:[], sizeMin:1200, sizeMax:45000, priceMin:3500000, priceMax:280000000, ppsf:3200, paymentPlan:"Cash / Mortgage", postHandover:false, grossYield:7.2, netYield:5.8, serviceCharge:38, investmentScore:85, officeGrade:"A", fitOut:"Shell & Core", parking:4, freeZone:true, licenseTypes:["Financial","Professional","Tech"], leedCertified:true, wault:4.2, vacancyRate:0.3, distMetro:0.3, distDIFC:0, distAirport:16, distBeach:18, distMall:8, distSchool:6, distHospital:4, amenities:["Concierge","F&B Ground Floor","Conference Rooms","Gym","EV Charging","24h Security"], reraNo:"0000123456", escrowBank:"N/A", constructionPct:100, developerScore:95, notes:"Grade A DIFC. Near-zero vacancy. Institutional tenant base. LEED Platinum. 30% DIFC growth 2025.", isSeedData:true, source:"DIFC Official / Chestertons Mar 2026" },
-    { id:"p011", tier:1, goldenVisa:true, appreciationToHandover:0, branded:false, velocityScore:0, commission:5.0, type:"Retail", developer:"Meraas", project:"City Walk Ã¢â‚¬â€ Retail Units", community:"City Walk", status:"Ready", handover:"Available Now", beds:[], sizeMin:800, sizeMax:8000, priceMin:2800000, priceMax:42000000, ppsf:3800, paymentPlan:"Cash / Mortgage", postHandover:false, grossYield:8.4, netYield:6.8, serviceCharge:32, investmentScore:82, shopType:"Inline / Corner", frontageMin:8, frontageMax:24, ceilingHeight:4.5, greaseTrap:true, loadingBay:true, signageRights:true, groundFloor:true, dailyFootfall:45000, distMetro:1.8, distDIFC:4, distAirport:18, distBeach:3, distMall:0, distSchool:5, distHospital:4, amenities:["High Footfall","Tourist Zone","Ample Parking","F&B Ready","Flex Fit-Out"], reraNo:"0000234567", escrowBank:"N/A", constructionPct:100, developerScore:90, notes:"City Walk 45K daily visitors. Tourism zone. Strong F&B and lifestyle tenant mix.", isSeedData:true, source:"Meraas Official / Chestertons 2026" },
-    { id:"p012", tier:2, goldenVisa:true, appreciationToHandover:0, branded:false, velocityScore:0, commission:5.0, type:"Warehouse", developer:"DIC Authority", project:"Dubai Industrial City Ã¢â‚¬â€ Unit W7", community:"Dubai Industrial City", status:"Ready", handover:"Available Now", beds:[], sizeMin:10000, sizeMax:80000, priceMin:4500000, priceMax:48000000, ppsf:580, paymentPlan:"Cash / Mortgage", postHandover:false, grossYield:9.8, netYield:8.2, serviceCharge:8, investmentScore:78, warehouseType:"Dry Storage / Light Industrial", clearHeight:12, loadingDocks:8, officeComponent:1800, yardSpace:15000, rollerShutters:6, fireSuppression:true, freeZone:true, occupancyRate:96, distPort:28, distMetro:8, distDIFC:40, distAirport:18, amenities:["24h Access","Security","Heavy Vehicle Access","On-site Management","CCTV"], reraNo:"0000345678", escrowBank:"N/A", constructionPct:100, developerScore:87, notes:"DIC 96% occupancy. E-commerce demand driving rents up 15% YoY. Near Al Maktoum Airport.", isSeedData:true, source:"Dubai Industrial City / Chestertons 2026" },
-    { id:"p013", tier:2, goldenVisa:true, appreciationToHandover:0, branded:false, velocityScore:0, commission:2.0, type:"Land", developer:"Dubai South", project:"Residential Plot Ã¢â‚¬â€ Phase 3", community:"Dubai South", status:"Ready", handover:"Available Now", beds:[], sizeMin:15000, sizeMax:120000, priceMin:2800000, priceMax:18000000, ppsf:200, paymentPlan:"Cash", postHandover:false, grossYield:0, netYield:0, serviceCharge:0, investmentScore:72, plotType:"Residential", zoning:"R1", permittedFAR:2.5, maxFloors:8, utilitiesConnected:true, roadFrontage:45, titleDeedStatus:"Freehold", gdvEstimate:45000000, distMetro:4, distDIFC:38, distAirport:12, distBeach:35, distMall:6, distSchool:2, distHospital:5, amenities:["Road Access","DEWA Connected","Sewage Connected","Master Plan Community"], reraNo:"0000456789", escrowBank:"N/A", constructionPct:0, developerScore:82, notes:"Dubai South Expo 2020 legacy. Near Al Maktoum Airport expansion. FAR 2.5 allows G+8.", isSeedData:true, source:"Dubai South Official / DLD 2025" },
+    { id:"p011", tier:1, goldenVisa:true, appreciationToHandover:0, branded:false, velocityScore:0, commission:5.0, type:"Retail", developer:"Meraas", project:"City Walk — Retail Units", community:"City Walk", status:"Ready", handover:"Available Now", beds:[], sizeMin:800, sizeMax:8000, priceMin:2800000, priceMax:42000000, ppsf:3800, paymentPlan:"Cash / Mortgage", postHandover:false, grossYield:8.4, netYield:6.8, serviceCharge:32, investmentScore:82, shopType:"Inline / Corner", frontageMin:8, frontageMax:24, ceilingHeight:4.5, greaseTrap:true, loadingBay:true, signageRights:true, groundFloor:true, dailyFootfall:45000, distMetro:1.8, distDIFC:4, distAirport:18, distBeach:3, distMall:0, distSchool:5, distHospital:4, amenities:["High Footfall","Tourist Zone","Ample Parking","F&B Ready","Flex Fit-Out"], reraNo:"0000234567", escrowBank:"N/A", constructionPct:100, developerScore:90, notes:"City Walk 45K daily visitors. Tourism zone. Strong F&B and lifestyle tenant mix.", isSeedData:true, source:"Meraas Official / Chestertons 2026" },
+    { id:"p012", tier:2, goldenVisa:true, appreciationToHandover:0, branded:false, velocityScore:0, commission:5.0, type:"Warehouse", developer:"DIC Authority", project:"Dubai Industrial City — Unit W7", community:"Dubai Industrial City", status:"Ready", handover:"Available Now", beds:[], sizeMin:10000, sizeMax:80000, priceMin:4500000, priceMax:48000000, ppsf:580, paymentPlan:"Cash / Mortgage", postHandover:false, grossYield:9.8, netYield:8.2, serviceCharge:8, investmentScore:78, warehouseType:"Dry Storage / Light Industrial", clearHeight:12, loadingDocks:8, officeComponent:1800, yardSpace:15000, rollerShutters:6, fireSuppression:true, freeZone:true, occupancyRate:96, distPort:28, distMetro:8, distDIFC:40, distAirport:18, amenities:["24h Access","Security","Heavy Vehicle Access","On-site Management","CCTV"], reraNo:"0000345678", escrowBank:"N/A", constructionPct:100, developerScore:87, notes:"DIC 96% occupancy. E-commerce demand driving rents up 15% YoY. Near Al Maktoum Airport.", isSeedData:true, source:"Dubai Industrial City / Chestertons 2026" },
+    { id:"p013", tier:2, goldenVisa:true, appreciationToHandover:0, branded:false, velocityScore:0, commission:2.0, type:"Land", developer:"Dubai South", project:"Residential Plot — Phase 3", community:"Dubai South", status:"Ready", handover:"Available Now", beds:[], sizeMin:15000, sizeMax:120000, priceMin:2800000, priceMax:18000000, ppsf:200, paymentPlan:"Cash", postHandover:false, grossYield:0, netYield:0, serviceCharge:0, investmentScore:72, plotType:"Residential", zoning:"R1", permittedFAR:2.5, maxFloors:8, utilitiesConnected:true, roadFrontage:45, titleDeedStatus:"Freehold", gdvEstimate:45000000, distMetro:4, distDIFC:38, distAirport:12, distBeach:35, distMall:6, distSchool:2, distHospital:5, amenities:["Road Access","DEWA Connected","Sewage Connected","Master Plan Community"], reraNo:"0000456789", escrowBank:"N/A", constructionPct:0, developerScore:82, notes:"Dubai South Expo 2020 legacy. Near Al Maktoum Airport expansion. FAR 2.5 allows G+8.", isSeedData:true, source:"Dubai South Official / DLD 2025" },
   ];
 
 
@@ -2717,17 +2717,17 @@ export default function EmaarDashboardV2() {
         return prev.filter(x => x.id !== p.id);
       }
       if (prev.length >= 3) {
-        notify("Ã¢Å¡Â Ã¯Â¸Â Max 3 projects for comparison");
+        notify("⚠️ Max 3 projects for comparison");
         return prev;
       }
-      notify("Ã¢Å“â€¦ Added " + p.name + " to comparison");
+      notify("✅ Added " + p.name + " to comparison");
       return [...prev, p];
     });
   };
 
   // Listen to Firebase auth state + fetch user profile
 
-  // Ã¢â€â‚¬Ã¢â€â‚¬ MASTER LIVE LISTENERS Ã¢â‚¬â€ all Firestore real-time subscriptions Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+  // ── MASTER LIVE LISTENERS — all Firestore real-time subscriptions ──────────
   useEffect(() => {
     const unsubs = [];
 
@@ -2844,50 +2844,50 @@ export default function EmaarDashboardV2() {
     }));
 
     
-    /* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ MARKET DATA Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+    /* ─── MARKET DATA ─── */
     unsubs.push(onSnapshot(collection(db, "marketData"), snap => {
       const d = snap.docs.map(x => ({ id:x.id, ...x.data() }))
                          .filter(x => x.metric && x.value);
       if (d.length > 0) setLiveMarketData(d);
     }, () => {}));
 
-    /* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ HANDOVER Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+    /* ─── HANDOVER ─── */
     unsubs.push(onSnapshot(collection(db, "handover"), snap => {
       const d = snap.docs.map(x => ({ id:x.id, ...x.data() }));
       if (d.length > 0) setLiveHandover(d);
     }, () => {}));
 
-    /* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ SERVICE CHARGES Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+    /* ─── SERVICE CHARGES ─── */
     unsubs.push(onSnapshot(collection(db, "serviceCharges"), snap => {
       const d = snap.docs.map(x => ({ id:x.id, ...x.data() }));
       if (d.length > 0) setLiveServiceCharges(d);
     }, () => {}));
 
-    /* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ DLD VOLUMES Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+    /* ─── DLD VOLUMES ─── */
     unsubs.push(onSnapshot(collection(db, "dldVolumes"), snap => {
       const d = snap.docs.map(x => ({ id:x.id, ...x.data() }));
       if (d.length > 0) setLiveDLDVolumes(d);
     }, () => {}));
 
-    /* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ NEIGHBOURHOODS Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+    /* ─── NEIGHBOURHOODS ─── */
     unsubs.push(onSnapshot(collection(db, "neighbourhoods"), snap => {
       const d = snap.docs.map(x => ({ id:x.id, ...x.data() }));
       if (d.length > 0) setLiveNeighbourhoods(d);
     }, () => {}));
 
-    /* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ STR DATA Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+    /* ─── STR DATA ─── */
     unsubs.push(onSnapshot(collection(db, "strData"), snap => {
       const d = snap.docs.map(x => ({ id:x.id, ...x.data() }));
       if (d.length > 0) setLiveSTRData(d);
     }, () => {}));
 
-    /* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ YIELDS DATA Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+    /* ─── YIELDS DATA ─── */
     unsubs.push(onSnapshot(collection(db, "yieldsData"), snap => {
       const d = snap.docs.map(x => ({ id:x.id, ...x.data() }));
       if (d.length > 0) setLiveYieldsData(d);
     }, () => {}));
 
-    /* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ MORTGAGE RATES Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+    /* ─── MORTGAGE RATES ─── */
     unsubs.push(onSnapshot(collection(db, "mortgageRates"), snap => {
       const d = snap.docs.map(x => ({ id:x.id, ...x.data() }));
       if (d.length > 0) setLiveMortgageRates(d);
@@ -2898,7 +2898,7 @@ export default function EmaarDashboardV2() {
       if (snap.exists()) setLiveEiborRates(snap.data());
     }, () => {}));
 
-    /* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ PORTFOLIO (user-specific) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+    /* ─── PORTFOLIO (user-specific) ─── */
     if (auth.currentUser?.uid) {
       unsubs.push(onSnapshot(
         query(collection(db, "portfolios"), where("userId", "==", auth.currentUser.uid)),
@@ -2909,7 +2909,7 @@ export default function EmaarDashboardV2() {
       ));
     }
 
-    /* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ ALL LEADS (admin/general view) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+    /* ─── ALL LEADS (admin/general view) ─── */
     if (auth.currentUser?.uid) {
       unsubs.push(onSnapshot(
         query(collection(db, "leads"), orderBy("createdAt", "desc"), limit(500)),
@@ -2920,32 +2920,32 @@ export default function EmaarDashboardV2() {
       ));
     }
 
-    /* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ INVEST SCORES Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+    /* ─── INVEST SCORES ─── */
     unsubs.push(onSnapshot(collection(db, "investScores"), snap => {
       const d = snap.docs.map(x => ({ id:x.id, ...x.data() }));
       if (d.length > 0) setLiveInvestScores(d);
     }, () => {}));
 
-    /* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ RISK DATA Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+    /* ─── RISK DATA ─── */
     unsubs.push(onSnapshot(collection(db, "riskData"), snap => {
       const d = snap.docs.map(x => ({ id:x.id, ...x.data() }));
       if (d.length > 0) setLiveRisk(d);
     }, () => {}));
 
 
-    /* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ DEV HEALTH Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+    /* ─── DEV HEALTH ─── */
     unsubs.push(onSnapshot(collection(db, "devHealth"), snap => {
       const d = snap.docs.map(x => ({ id:x.id, ...x.data() }));
       if (d.length > 0) setLiveDevHealth(d);
     }, () => {}));
 
-    /* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ COMPETITORS Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+    /* ─── COMPETITORS ─── */
     unsubs.push(onSnapshot(collection(db, "competitors"), snap => {
       const d = snap.docs.map(x => ({ id:x.id, ...x.data() }));
       if (d.length > 0) setLiveCompetitors(d);
     }, () => {}));
 
-    /* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ LAUNCH CALENDAR Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+    /* ─── LAUNCH CALENDAR ─── */
     unsubs.push(onSnapshot(collection(db, "launches"), snap => {
       const d = snap.docs.map(x => ({ id:x.id, ...x.data() }));
       if (d.length > 0) setLiveLaunches(d);
@@ -2954,7 +2954,7 @@ export default function EmaarDashboardV2() {
 return () => unsubs.forEach(u => { try { u(); } catch {} });
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // USER-SCOPED LIVE LISTENERS Ã¢â‚¬â€ portfolio, watchlist, price alerts
+  // USER-SCOPED LIVE LISTENERS — portfolio, watchlist, price alerts
   useEffect(() => {
     if (!isLoggedIn || !auth.currentUser) return;
     const unsubs = [];
@@ -3022,7 +3022,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                     await emailjs.send(import.meta.env.VITE_EMAILJS_SERVICE_ID, import.meta.env.VITE_EMAILJS_TEMPLATE_ID, {
                       user_email: firebaseUser.email, user_name: data.name || firebaseUser.email.split("@")[0],
                       project_name: "DXB Analytics Platform",
-                      change_type: "Ã¢ÂÂ° Your Pro Trial Has Expired",
+                      change_type: "⏰ Your Pro Trial Has Expired",
                       new_value: "Your 7-day trial has ended. Upgrade now to keep full access to 48+ projects, yield data, ROI tools and more.",
                       old_value: "Pro Trial", updated_at: new Date().toLocaleDateString("en-AE"),
                     }, import.meta.env.VITE_EMAILJS_PUBLIC_KEY);
@@ -3037,8 +3037,8 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                     await emailjs.send(import.meta.env.VITE_EMAILJS_SERVICE_ID, import.meta.env.VITE_EMAILJS_TEMPLATE_ID, {
                       user_email: firebaseUser.email, user_name: data.name || firebaseUser.email.split("@")[0],
                       project_name: "DXB Analytics Platform",
-                      change_type: `Ã¢Å¡Â Ã¯Â¸Â Your Trial Expires in ${daysLeft} Day${daysLeft !== 1 ? "s" : ""}`,
-                      new_value: `Only ${daysLeft} day${daysLeft !== 1 ? "s" : ""} left on your Pro trial. Don't lose access Ã¢â‚¬â€ upgrade now to keep all features.`,
+                      change_type: `⚠️ Your Trial Expires in ${daysLeft} Day${daysLeft !== 1 ? "s" : ""}`,
+                      new_value: `Only ${daysLeft} day${daysLeft !== 1 ? "s" : ""} left on your Pro trial. Don't lose access — upgrade now to keep all features.`,
                       old_value: "Pro Trial Active", updated_at: new Date().toLocaleDateString("en-AE"),
                     }, import.meta.env.VITE_EMAILJS_PUBLIC_KEY);
                     await setDoc(doc(db, "users", firebaseUser.uid), { emailSent_trial3d: true }, { merge: true });
@@ -3052,14 +3052,14 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                       project_name: "DXB Analytics Platform",
                       change_type: "\uD83D\uDEA8 Last Day of Your Pro Trial!",
                       new_value: "Today is your last day. After midnight your account moves to Free and you lose access to 48 projects, community yields, ROI data and PDF reports.",
-                      old_value: "Pro Trial Ã¢â‚¬â€ Final Day", updated_at: new Date().toLocaleDateString("en-AE"),
+                      old_value: "Pro Trial — Final Day", updated_at: new Date().toLocaleDateString("en-AE"),
                     }, import.meta.env.VITE_EMAILJS_PUBLIC_KEY);
                     await setDoc(doc(db, "users", firebaseUser.uid), { emailSent_trial1d: true }, { merge: true });
                   } catch(e) {}
                 }
               }
             }
-            // Admin override Ã¢â‚¬â€ by role field OR by owner email
+            // Admin override — by role field OR by owner email
             if (data.role === "admin" || data.role === "superAdmin" || data.superAdmin === true) tier = "admin";
             setUserTier(tier);
             setUserRole(data.role || "user");
@@ -3068,7 +3068,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
             setDevId(data.devId || null);
             setIsSuspended(!!data.suspended);
           } else {
-            // Existing user without profile (e.g. your admin account) Ã¢â‚¬â€ treat as admin/pro
+            // Existing user without profile (e.g. your admin account) — treat as admin/pro
             setUserTier("admin");
             setUserName("");
           }
@@ -3087,7 +3087,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
     return () => unsubscribe();
   }, []);
 
-  /* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ MY LEADS LISTENER (Session 4) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+  /* ─── MY LEADS LISTENER (Session 4) ─── */
   useEffect(() => {
     if (!isLoggedIn || !firebaseUser) return;
     setMyLeadsLoading(true);
@@ -3112,7 +3112,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
     return () => unsub();
   }, [isLoggedIn, firebaseUser, orgRole, orgId]);
 
-  /* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ DEALS PIPELINE LISTENER (Session 5) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+  /* ─── DEALS PIPELINE LISTENER (Session 5) ─── */
   useEffect(() => {
     if (!isLoggedIn || !firebaseUser) return;
     const isAgent   = orgRole === "agent";
@@ -3134,7 +3134,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
     return () => unsub();
   }, [isLoggedIn, firebaseUser, orgRole, orgId]);
 
-  /* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ TEAM MEMBERS LISTENER (Session 7) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+  /* ─── TEAM MEMBERS LISTENER (Session 7) ─── */
   useEffect(() => {
     if (!isLoggedIn || !firebaseUser || orgRole !== "manager" || !orgId) return;
     setTeamMembersLoading(true);
@@ -3148,7 +3148,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
     return () => unsub();
   }, [isLoggedIn, firebaseUser, orgRole, orgId]);
 
-  /* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ ORG PROFILE LISTENER (Session 8) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+  /* ─── ORG PROFILE LISTENER (Session 8) ─── */
   useEffect(() => {
     if (!isLoggedIn || !firebaseUser || orgRole !== "manager" || !orgId) return;
     const unsub = onSnapshot(doc(db, "organisations", orgId), snap => {
@@ -3171,7 +3171,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
     return () => unsub();
   }, [isLoggedIn, firebaseUser, orgRole, orgId]);
 
-  /* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ LISTINGS LISTENER (Session 9) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+  /* ─── LISTINGS LISTENER (Session 9) ─── */
   useEffect(() => {
     if (!isLoggedIn || !firebaseUser) return;
     const isAgent   = orgRole === "agent";
@@ -3193,7 +3193,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
     return () => unsub();
   }, [isLoggedIn, firebaseUser, orgRole, orgId]);
 
-  /* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ DEV PORTAL LISTENERS (Session 10) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+  /* ─── DEV PORTAL LISTENERS (Session 10) ─── */
   useEffect(() => {
     if (!isLoggedIn || !firebaseUser || userRole !== "developer" || !devId) return;
     // Dev projects from allDevelopers (already loaded)
@@ -3223,7 +3223,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
     return () => { unsubUnits(); unsubEOIs(); };
   }, [isLoggedIn, firebaseUser, userRole, devId, allDevelopers]);
 
-  /* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ RERA CARD READER (Session 6) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+  /* ─── RERA CARD READER (Session 6) ─── */
   useEffect(() => {
     if (!isLoggedIn || !firebaseUser) return;
     const unsub = onSnapshot(doc(db, "users", firebaseUser.uid), snap => {
@@ -3247,9 +3247,9 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
     const updated = isWatched ? watchlist.filter(p => p.id !== project.id) : [...watchlist, { id: project.id, name: project.name, community: project.community, price: project.price, addedAt: new Date().toISOString() }];
     setWatchlist(updated);
     if (auth.currentUser) {
-      await safeAsyncWithToast(() => setDoc(doc(db, "watchlists", auth.currentUser.uid), { projects: updated, updatedAt: new Date().toISOString() }), "watchlist-save", notify, "Couldn't save your watchlist Ã¢â‚¬â€ try again");
+      await safeAsyncWithToast(() => setDoc(doc(db, "watchlists", auth.currentUser.uid), { projects: updated, updatedAt: new Date().toISOString() }), "watchlist-save", notify, "Couldn't save your watchlist — try again");
     }
-    notify(isWatched ? `Removed ${project.name} from watchlist` : `Ã¢Â­Â ${project.name} added to watchlist`);
+    notify(isWatched ? `Removed ${project.name} from watchlist` : `⭐ ${project.name} added to watchlist`);
   };
 
   // Price alerts now live via user onSnapshot listener
@@ -3257,7 +3257,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
   const saveAlerts = async (alerts) => {
     setMyAlerts(alerts);
     if (auth.currentUser) {
-      await safeAsyncWithToast(() => setDoc(doc(db, "priceAlerts", auth.currentUser.uid), { alerts, updatedAt: new Date().toISOString() }), "price-alerts-save", notify, "Couldn't save your price alerts Ã¢â‚¬â€ try again");
+      await safeAsyncWithToast(() => setDoc(doc(db, "priceAlerts", auth.currentUser.uid), { alerts, updatedAt: new Date().toISOString() }), "price-alerts-save", notify, "Couldn't save your price alerts — try again");
     }
   };
 
@@ -3293,7 +3293,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
     }
   }, [myAlerts, activeProjects]);
 
-  // NOTIFICATIONS Ã¢â‚¬â€ live listener so admin messages appear instantly
+  // NOTIFICATIONS — live listener so admin messages appear instantly
   useEffect(() => {
     if (!isLoggedIn || !auth.currentUser) return;
     const uid = auth.currentUser.uid;
@@ -3352,7 +3352,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
     savePortfolio(updated);
     setShowAddPortfolio(null);
     setPortfolioForm({ units: 1, investedAmount: "", purchaseDate: "", unitType: "1BR", notes: "" });
-    notify("Ã¢Å“â€¦ Added to portfolio!");
+    notify("✅ Added to portfolio!");
   };
 
   const removeFromPortfolio = (pid, ut) => {
@@ -3462,12 +3462,12 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
       if (newTier === "pro_trial") { const end = new Date(); end.setDate(end.getDate() + 7); data.trialEnd = end.toISOString(); }
       await setDoc(doc(db, "users", userId), data, { merge: true });
       setAdminUsers(prev => prev.map(u => u.id === userId ? { ...u, tier: newTier, status: newTier } : u));
-      notify(`Ã¢Å“â€¦ ${uName} Ã¢â€ â€™ ${newTier}`);
+      notify(`✅ ${uName} → ${newTier}`);
       // Send tier change confirmation email
       const tierMessages = {
         free: { subject: "Your DXB Analytics plan has changed to Free", body: "Your account has been updated to the Free plan. You have access to 5 featured projects and basic market data." },
         pro_trial: { subject: "Your 7-Day Pro Trial has been activated!", body: "Great news! Your Pro Trial has been activated. You now have full access to 48+ projects, community yields, ROI calculator, PDF reports and all Pro features for 7 days." },
-        pro: { subject: "Welcome to DXB Analytics Pro! Ã¢Â­Â", body: "Your account has been upgraded to the Pro Plan. You now have unlimited access to all 48+ projects, live yield data, ROI analysis, investment reports, and all Pro features." },
+        pro: { subject: "Welcome to DXB Analytics Pro! ⭐", body: "Your account has been upgraded to the Pro Plan. You now have unlimited access to all 48+ projects, live yield data, ROI analysis, investment reports, and all Pro features." },
         enterprise: { subject: "Welcome to DXB Analytics Enterprise! \uD83C\uDFE2", body: "Your account has been upgraded to Enterprise. You have access to all platform features including custom reports, priority support, and full data access." },
       };
       const msg = tierMessages[newTier] || { subject: `Your plan changed to ${newTier}`, body: `Your DXB Analytics plan has been updated to ${newTier}.` };
@@ -3484,7 +3484,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
         } catch(e) {}
       }
     } catch (err) {
-      notify("Ã¢ÂÅ’ Failed to update tier");
+      notify("❌ Failed to update tier");
     }
   };
 
@@ -3519,12 +3519,12 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
       <a href="#main-content" style={{ position: "absolute", top: -40, left: 0, background: T.gold, color: T.bg, padding: "8px 16px", borderRadius: "0 0 8px 0", fontWeight: 700, fontSize: 13, zIndex: 99999, transition: "top 0.2s" }} onFocus={e => e.target.style.top = "0"} onBlur={e => e.target.style.top = "-40px"}>Skip to content</a>
 
       {/* Toast notification */}
-      {toast && <div className="fade-up" style={{ position: "fixed", bottom: 24, right: 24, padding: "12px 24px", borderRadius: 10, background: toast.includes("Ã¢Å“â€¦") ? T.green : toast.includes("Ã¢ÂÅ’") ? T.red : T.gold, color: "#fff", fontWeight: 700, fontSize: 13, zIndex: 9999, boxShadow: "0 12px 40px rgba(0,0,0,0.4)", fontFamily: "'Outfit', sans-serif" }}>{toast}</div>}
+      {toast && <div className="fade-up" style={{ position: "fixed", bottom: 24, right: 24, padding: "12px 24px", borderRadius: 10, background: toast.includes("✅") ? T.green : toast.includes("❌") ? T.red : T.gold, color: "#fff", fontWeight: 700, fontSize: 13, zIndex: 9999, boxShadow: "0 12px 40px rgba(0,0,0,0.4)", fontFamily: "'Outfit', sans-serif" }}>{toast}</div>}
 
       {/* Mobile overlay */}
       <div className={`mobile-overlay ${sidebarOpen ? "open" : ""}`} onClick={() => setSidebarOpen(false)} />
 
-      {/* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ SIDEBAR Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */}
+      {/* ─── SIDEBAR ─── */}
       <aside className={`sidebar ${sidebarOpen ? "open" : ""}`} style={{
         position: "fixed", top: 0, left: 0, bottom: 0, width: 240,
         background: T.surface, borderRight: `1px solid ${T.border}`,
@@ -3616,7 +3616,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 style={{ background: "rgba(212,168,67,0.08)", border: `1px solid rgba(212,168,67,0.2)` }}>
                 {SvgIcons.Settings({ width: 15, height: 15, strokeWidth: 1.5, style: { color: T.gold, flexShrink: 0 } })}
                 <span>Admin Console</span>
-                <span style={{ marginLeft: "auto", fontSize: 9, color: T.textMuted }}>Ã¢â€ â€”</span>
+                <span style={{ marginLeft: "auto", fontSize: 9, color: T.textMuted }}>↗</span>
               </button>
             </div>
           )}
@@ -3636,7 +3636,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               onClick={() => setShowUpgrade(true)}
               style={{ marginBottom: 8, padding: "7px 12px", borderRadius: 8, background: "rgba(59,130,246,0.07)", border: "1px solid rgba(59,130,246,0.15)", textAlign: "center", cursor: "pointer" }}>
               <div style={{ fontSize: 9.5, fontWeight: 700, color: "#60A5FA", letterSpacing: 0.5 }}>FREE PLAN</div>
-              <div style={{ fontSize: 10.5, color: T.textSecondary, marginTop: 1 }}>Upgrade to Pro Ã¢â€ â€™</div>
+              <div style={{ fontSize: 10.5, color: T.textSecondary, marginTop: 1 }}>Upgrade to Pro →</div>
             </div>
           )}
           <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "7px 10px", borderRadius: 10, background: T.surfaceAlt }}>
@@ -3661,21 +3661,21 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
         </div>
       </aside>
 
-      {/* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ FREE TIER BANNER Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */}
+      {/* ─── FREE TIER BANNER ─── */}
       {userTier === "free" && (
         <div className="free-banner" style={{ position: "fixed", top: 60, left: 240, right: 0, zIndex: 60, background: `linear-gradient(90deg, ${T.gold}ee, #B8912Fee)`, padding: "8px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <span style={{ fontSize: 14 }}>\uD83D\uDD12</span>
-            <span style={{ fontSize: 12, fontWeight: 700, color: "#04090F" }}>You're on the Free plan Ã¢â‚¬â€ 12 tabs locked</span>
+            <span style={{ fontSize: 12, fontWeight: 700, color: "#04090F" }}>You're on the Free plan — 12 tabs locked</span>
             <span style={{ fontSize: 11, color: "rgba(4,9,15,0.7)" }}>Upgrade to Pro to unlock DXB Estimate, Yields, Mortgage, Portfolio & more</span>
           </div>
           <button type="button" onClick={() => setShowUpgrade(true)} style={{ padding: "5px 16px", background: "#04090F", color: T.gold, border: "none", borderRadius: 8, fontSize: 11, fontWeight: 800, cursor: "pointer", fontFamily: "'Outfit',sans-serif", whiteSpace: "nowrap" }}>
-            Upgrade Now Ã¢â€ â€™
+            Upgrade Now →
           </button>
         </div>
       )}
 
-      {/* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ TOP BAR Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */}
+      {/* ─── TOP BAR ─── */}
       <header className="top-bar" style={{
         position: "fixed", top: 0, right: 0, left: 240, height: 60,
         background: `${T.surface}ee`, backdropFilter: "blur(16px)",
@@ -3694,7 +3694,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
         </div>
         <div className="header-badges" style={{ display: "flex", gap: 8, alignItems: "center" }}>
           <button type="button" onClick={() => setShowWatchlist(true)} style={{ background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 10, padding: "8px 12px", cursor: "pointer", color: watchlist.length > 0 ? T.gold : T.textSecondary, display: "flex", alignItems: "center", gap: 6, fontSize: 12, fontFamily: "'Outfit',sans-serif" }} title="My Watchlist">
-            Ã¢Ëœâ€¦ {watchlist.length > 0 && <span style={{ fontWeight: 700 }}>{watchlist.length}</span>}
+            ★ {watchlist.length > 0 && <span style={{ fontWeight: 700 }}>{watchlist.length}</span>}
           </button>
           <button type="button" onClick={globalRefresh} disabled={isRefreshing} title="Refresh all data" style={{ background: isRefreshing ? T.surfaceAlt : "rgba(212,168,67,0.08)", border: "1px solid " + (isRefreshing ? T.border : "rgba(212,168,67,0.25)"), borderRadius: 10, padding: "8px 12px", cursor: isRefreshing ? "not-allowed" : "pointer", color: isRefreshing ? T.textMuted : T.gold, display: "flex", alignItems: "center", gap: 6, fontSize: 11, fontWeight: 600, fontFamily: "'Outfit',sans-serif" }}>
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" style={{ animation: isRefreshing ? "spin 1s linear infinite" : "none" }}><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
@@ -3707,7 +3707,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
         </div>
       </header>
 
-      {/* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ GLOBAL CONTEXT FILTER Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */}
+      {/* ─── GLOBAL CONTEXT FILTER ─── */}
       <GlobalContextFilter
         gDeveloper={gDeveloper} setGDeveloperAndReset={setGDeveloperAndReset}
         gCommunity={gCommunity} setGCommunity={setGCommunity}
@@ -3720,7 +3720,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
         allDevelopers={allDevelopers} T={T}
       />
 
-      {/* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ MAIN CONTENT Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */}
+      {/* ─── MAIN CONTENT ─── */}
       <main role="main" id="main-content" className="main-content" style={{ marginLeft: 240, paddingTop: userTier === "free" ? 140 : 100, minHeight: "100vh", overflowX: "hidden" }}>
         {/* Trial / Free tier banner */}
         {userTier === "pro_trial" && trialDaysLeft > 0 && (() => {
@@ -3728,19 +3728,19 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
           const isWarning = trialDaysLeft <= 3;
           const bg = isUrgent ? "rgba(239,68,68,0.1)" : isWarning ? "rgba(245,158,11,0.1)" : "rgba(212,168,67,0.08)";
           const border = isUrgent ? "rgba(239,68,68,0.35)" : isWarning ? "rgba(245,158,11,0.35)" : T.border;
-          const icon = isUrgent ? "\uD83D\uDEA8" : isWarning ? "Ã¢Å¡Â Ã¯Â¸Â" : "Ã¢Â­Â";
+          const icon = isUrgent ? "\uD83D\uDEA8" : isWarning ? "⚠️" : "⭐";
           const label = isUrgent ? "Last day of your trial!" : isWarning ? `Trial ending soon` : "Pro Trial Active";
           const sub = isUrgent
             ? "Your trial expires today. Upgrade now to keep full access."
             : isWarning
-            ? `${trialDaysLeft} days left Ã¢â‚¬â€ don't lose your access to 48+ projects and yield data.`
+            ? `${trialDaysLeft} days left — don't lose your access to 48+ projects and yield data.`
             : `${trialDaysLeft} day${trialDaysLeft !== 1 ? "s" : ""} remaining. Full Pro access active.`;
           return (
             <div style={{ margin: "12px 24px 0", padding: "10px 16px", borderRadius: 10, background: bg, border: `1px solid ${border}`, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <span style={{ fontSize: 16 }}>{icon}</span>
                 <span style={{ fontSize: 13, color: isUrgent ? T.red : isWarning ? T.gold : T.white, fontWeight: 700 }}>{label}</span>
-                <span style={{ fontSize: 12, color: T.textSecondary }}>Ã¢â‚¬â€ {sub}</span>
+                <span style={{ fontSize: 12, color: T.textSecondary }}>— {sub}</span>
               </div>
               <button type="button" onClick={() => setShowUpgrade(true)} style={{ padding: "6px 16px", borderRadius: 6, background: isUrgent ? T.red : T.gold, color: isUrgent ? "#fff" : T.bg, border: "none", fontSize: 12, fontWeight: 700, fontFamily: "'Outfit', sans-serif", cursor: "pointer" }}>
                 {isUrgent ? "\uD83D\uDD25 Upgrade Now" : "Upgrade to Pro"}
@@ -3753,15 +3753,15 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <span style={{ fontSize: 16 }}>\uD83D\uDD12</span>
               <span style={{ fontSize: 13, color: T.white, fontWeight: 600 }}>Free Plan</span>
-              <span style={{ fontSize: 12, color: T.textSecondary }}>Ã¢â‚¬â€ You're seeing limited data. Upgrade to unlock all projects, yields & more.</span>
+              <span style={{ fontSize: 12, color: T.textSecondary }}>— You're seeing limited data. Upgrade to unlock all projects, yields & more.</span>
             </div>
-            <button type="button" onClick={() => setShowUpgrade(true)} style={{ padding: "6px 16px", borderRadius: 6, background: T.gold, color: T.bg, border: "none", fontSize: 12, fontWeight: 700, fontFamily: "'Outfit', sans-serif", cursor: "pointer" }}>Upgrade to Pro Ã¢â‚¬â€ AED 99/mo</button>
+            <button type="button" onClick={() => setShowUpgrade(true)} style={{ padding: "6px 16px", borderRadius: 6, background: T.gold, color: T.bg, border: "none", fontSize: 12, fontWeight: 700, fontFamily: "'Outfit', sans-serif", cursor: "pointer" }}>Upgrade to Pro — AED 99/mo</button>
           </div>
         )}
         <div style={{ padding: `0 24px ${compareList.length > 0 && tab === "Projects" ? "120px" : "60px"}` }}>
           <TabErrorBoundary key={tab}>
 
-          {/* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ OVERVIEW TAB Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */}
+          {/* ─── OVERVIEW TAB ─── */}
           {/* OVERVIEW TAB (extracted) */}
           {tab === "Overview" && (
             <OverviewTab
@@ -3775,8 +3775,8 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
             />
           )}
 
-          {/* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ MARKET TAB Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */}
-          {/* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ MARKET TAB (extracted) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */}
+          {/* ─── MARKET TAB ─── */}
+          {/* ─── MARKET TAB (extracted) ─── */}
           {tab === "Market" && (
             <MarketTab
               liveMarketData={liveMarketData} allDevelopers={allDevelopers}
@@ -3785,8 +3785,8 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
             />
           )}
 
-          {/* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ DLD VOLUMES TAB Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */}
-          {/* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ DLD VOLUMES TAB (extracted) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */}
+          {/* ─── DLD VOLUMES TAB ─── */}
+          {/* ─── DLD VOLUMES TAB (extracted) ─── */}
           {tab === "DLD Volumes" && (
             <DLDVolumesTab
               dldFilter={dldFilter} setDldFilter={setDldFilter}
@@ -3798,8 +3798,8 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
             />
           )}
 
-          {/* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ PRICE HISTORY TAB Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */}
-          {/* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ PRICE HISTORY TAB (extracted) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */}
+          {/* ─── PRICE HISTORY TAB ─── */}
+          {/* ─── PRICE HISTORY TAB (extracted) ─── */}
           {tab === "Price History" && (
             <PriceHistoryTab
               phCommunity={phCommunity} setPhCommunity={setPhCommunity}
@@ -3813,8 +3813,8 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
             />
           )}
 
-          {/* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ NEIGHBOURHOODS TAB Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */}
-          {/* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ NEIGHBOURHOODS TAB (extracted) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */}
+          {/* ─── NEIGHBOURHOODS TAB ─── */}
+          {/* ─── NEIGHBOURHOODS TAB (extracted) ─── */}
           {tab === "Neighbourhoods" && (
             <NeighbourhoodsTab
               nbhSearch={nbhSearch} setNbhSearch={setNbhSearch}
@@ -3832,8 +3832,8 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
             />
           )}
 
-          {/* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ LAUNCH CALENDAR TAB Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */}
-          {/* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ LAUNCH CALENDAR TAB (extracted) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */}
+          {/* ─── LAUNCH CALENDAR TAB ─── */}
+          {/* ─── LAUNCH CALENDAR TAB (extracted) ─── */}
           {tab === "Launch Calendar" && (
             <LaunchCalendarTab
               lcSearch={lcSearch} setLcSearch={setLcSearch}
@@ -3847,8 +3847,8 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
             />
           )}
 
-          {/* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ CURRENCY TAB Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */}
-          {/* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ CURRENCY TAB (extracted) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */}
+          {/* ─── CURRENCY TAB ─── */}
+          {/* ─── CURRENCY TAB (extracted) ─── */}
           {tab === "Currency" && (
             <CurrencyTab
               selectedCcy={selectedCcy} setSelectedCcy={setSelectedCcy}
@@ -3857,7 +3857,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
             />
           )}
 
-          {/* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ PROJECTS TAB Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */}
+          {/* ─── PROJECTS TAB ─── */}
           {/* PROJECTS TAB (extracted, includes detail modal) */}
           {tab === "Projects" && (
             <ProjectsTab
@@ -3883,7 +3883,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
           )}
 
 
-          {/* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ MAP TAB Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */}
+          {/* ─── MAP TAB ─── */}
           {tab === "Map" && (
             <CommunityMapTab
               activeProjects={liveProjects?.length > 0 ? liveProjects : SEED_PROJECTS}
@@ -3896,13 +3896,13 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
 
 
 
-          {/* Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â HANDOVER DETAIL OVERLAY Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â */}
+          {/* ═══ HANDOVER DETAIL OVERLAY ═══ */}
           {hvSelected && (
             <div role="dialog" aria-modal="true" style={{ position:"fixed", inset:0, background:"rgba(4,9,15,0.97)", zIndex:2000, display:"flex", flexDirection:"column", backdropFilter:"blur(8px)" }}>
               {/* Header */}
               <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"16px 24px", borderBottom:`1px solid ${T.border}`, background:T.surface, flexShrink:0 }}>
                 <div>
-                  <div style={{ fontSize:11, fontWeight:700, color:T.textMuted, letterSpacing:0.8, textTransform:"uppercase", marginBottom:3 }}>{hvSelected.developer}{"Ã‚Â·"}{hvSelected.community}</div>
+                  <div style={{ fontSize:11, fontWeight:700, color:T.textMuted, letterSpacing:0.8, textTransform:"uppercase", marginBottom:3 }}>{hvSelected.developer}{"·"}{hvSelected.community}</div>
                   <div style={{ fontFamily:"'Fraunces',serif", fontSize:22, fontWeight:800, color:T.white }}>{hvSelected.project}</div>
                 </div>
                 <div style={{ display:"flex", alignItems:"center", gap:10 }}>
@@ -3910,7 +3910,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                     <div style={{ fontSize:11, color:T.textMuted }}>Construction Progress</div>
                     <div style={{ fontFamily:"'Fraunces',serif", fontSize:28, fontWeight:900, color:hvSelected.status==="On Track"?T.green:hvSelected.status==="Delayed"?"#F97316":T.red }}>{hvSelected.constructionPct}%</div>
                   </div>
-                  <button type="button" onClick={() => setHvSelected(null)} style={{ width:36, height:36, borderRadius:"50%", background:T.surfaceAlt, border:`1px solid ${T.border}`, color:T.white, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", fontSize:18, fontFamily:"'Outfit',sans-serif" }}>Ãƒâ€”</button>
+                  <button type="button" onClick={() => setHvSelected(null)} style={{ width:36, height:36, borderRadius:"50%", background:T.surfaceAlt, border:`1px solid ${T.border}`, color:T.white, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", fontSize:18, fontFamily:"'Outfit',sans-serif" }}>×</button>
                 </div>
               </div>
 
@@ -3924,7 +3924,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                     { label:"Delay",              value:hvSelected.delayMonths>0?"+"+hvSelected.delayMonths+" months":"None", color:hvSelected.delayMonths>0?"#F97316":T.green },
                     { label:"Grace Period",       value:hvSelected.gracePeriodMonths+" months", color:T.white },
                     { label:"Escrow Funded",      value:hvSelected.escrowPct+"%", color:hvSelected.escrowPct>=70?T.green:hvSelected.escrowPct>=40?T.gold:"#F97316" },
-                    { label:"RERA Inspections",   value:hvSelected.inspectionsPassed+"Ã¢Å“â€œ "+hvSelected.inspectionsFailed+"Ã¢Å“â€”", color:hvSelected.inspectionsFailed>0?"#F97316":T.green },
+                    { label:"RERA Inspections",   value:hvSelected.inspectionsPassed+"✓ "+hvSelected.inspectionsFailed+"✗", color:hvSelected.inspectionsFailed>0?"#F97316":T.green },
                     { label:"Developer On-Time",  value:hvSelected.developerOnTimeRate+"%", color:hvSelected.developerOnTimeRate>=85?T.green:hvSelected.developerOnTimeRate>=75?T.gold:T.red },
                     { label:"Total Units",        value:hvSelected.totalUnits.toLocaleString(), color:T.white },
                   ].map((k,i) => (
@@ -3938,7 +3938,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 {/* Milestone Gantt Timeline */}
                 <div className="chart-box" style={{ padding:20, marginBottom:20 }}>
                   <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:4 }}>Construction Milestone Timeline</div>
-                  <div style={{ fontSize:11, color:T.textMuted, marginBottom:20 }}>RERA-verified progress Ã‚Â· Each milestone unlocks escrow disbursement</div>
+                  <div style={{ fontSize:11, color:T.textMuted, marginBottom:20 }}>RERA-verified progress · Each milestone unlocks escrow disbursement</div>
                   
                   {/* Timeline */}
                   <div style={{ position:"relative" }}>
@@ -3954,7 +3954,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                           {/* Timeline line + dot */}
                           <div style={{ display:"flex", flexDirection:"column", alignItems:"center", flexShrink:0, width:20 }}>
                             <div style={{ width:14, height:14, borderRadius:"50%", background:dotColor, border:`2px solid ${dotColor}`, flexShrink:0, display:"flex", alignItems:"center", justifyContent:"center", zIndex:1 }}>
-                              {isPast && <span style={{ fontSize:8, color:"#000", fontWeight:700 }}>Ã¢Å“â€œ</span>}
+                              {isPast && <span style={{ fontSize:8, color:"#000", fontWeight:700 }}>✓</span>}
                               {isCurrent && <span style={{ width:4, height:4, borderRadius:"50%", background:T.gold, display:"block" }} />}
                             </div>
                             {!isLast && <div style={{ width:2, flex:1, minHeight:32, background:lineColor, marginTop:2 }} />}
@@ -3964,7 +3964,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                             <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:4 }}>
                               <div>
                                 <div style={{ fontSize:13, fontWeight:700, color:isPast?T.white:isCurrent?T.gold:T.textMuted }}>{m.name}</div>
-                                {isCurrent && <div style={{ fontSize:10, color:T.gold, fontWeight:700 }}>Ã¢â€ Â CURRENT STAGE</div>}
+                                {isCurrent && <div style={{ fontSize:10, color:T.gold, fontWeight:700 }}>← CURRENT STAGE</div>}
                               </div>
                               <div style={{ textAlign:"right" }}>
                                 <div style={{ fontSize:11, fontWeight:600, color:isPast?T.green:isCurrent?T.gold:T.textMuted }}>{new Date(m.date).toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"})}</div>
@@ -3974,7 +3974,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                             {/* Escrow release indicator */}
                             {m.pct > 0 && (
                               <div style={{ display:"inline-flex", alignItems:"center", gap:4, padding:"2px 8px", borderRadius:6, background:isPast?"rgba(16,185,129,0.1)":"rgba(212,168,67,0.06)", border:`1px solid ${isPast?"rgba(16,185,129,0.3)":"rgba(212,168,67,0.15)"}` }}>
-                                <span style={{ fontSize:9, color:isPast?T.green:T.textMuted }}>Escrow release at {m.pct}% Ã‚Â· {isPast?"Ã¢Å“â€œ Released":"Pending"}</span>
+                                <span style={{ fontSize:9, color:isPast?T.green:T.textMuted }}>Escrow release at {m.pct}% · {isPast?"✓ Released":"Pending"}</span>
                               </div>
                             )}
                           </div>
@@ -3992,11 +3992,11 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                       { label:"RERA Number",     value:hvSelected.reraNo },
                       { label:"Escrow Bank",      value:hvSelected.escrowBank },
                       { label:"RERA Status",      value:hvSelected.reraStatus },
-                      { label:"Last Site Visit",  value:hvSelected.lastSiteVisit ? new Date(hvSelected.lastSiteVisit).toLocaleDateString("en-GB") : "Ã¢â‚¬â€" },
+                      { label:"Last Site Visit",  value:hvSelected.lastSiteVisit ? new Date(hvSelected.lastSiteVisit).toLocaleDateString("en-GB") : "—" },
                     ].map((r,i) => (
                       <div key={i} style={{ display:"flex", justifyContent:"space-between", padding:"6px 0", borderBottom:i<3?`1px solid ${T.border}`:"none" }}>
                         <span style={{ fontSize:11, color:T.textMuted }}>{r.label}</span>
-                        <span style={{ fontSize:11, fontWeight:600, color:T.white }}>{r.value||"Ã¢â‚¬â€"}</span>
+                        <span style={{ fontSize:11, fontWeight:600, color:T.white }}>{r.value||"—"}</span>
                       </div>
                     ))}
                   </div>
@@ -4017,10 +4017,10 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
 
                 {/* Actions */}
                 <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
-                  <button type="button" onClick={() => { setHvSelected(null); handleTabChange("Projects"); }} style={{ padding:"9px 18px", background:`linear-gradient(135deg,${T.gold},#B8922A)`, border:"none", borderRadius:8, color:"#000", fontSize:12, fontWeight:700, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>View Full Project Ã¢â€ â€™</button>
+                  <button type="button" onClick={() => { setHvSelected(null); handleTabChange("Projects"); }} style={{ padding:"9px 18px", background:`linear-gradient(135deg,${T.gold},#B8922A)`, border:"none", borderRadius:8, color:"#000", fontSize:12, fontWeight:700, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>View Full Project →</button>
                   <button type="button" onClick={() => { setHvSelected(null); handleTabChange("My Leads"); }} style={{ padding:"9px 18px", background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:8, color:T.textSecondary, fontSize:12, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>Add to Lead</button>
                   <button type="button" onClick={() => {
-                    const txt = `\uD83C\uDFD7Ã¯Â¸Â HANDOVER UPDATE Ã¢â‚¬â€ ${hvSelected.project}\nÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€Â\n\uD83C\uDFE2 Developer: ${hvSelected.developer}\n\uD83D\uDCCD Community: ${hvSelected.community}\n\n\uD83D\uDCCA CONSTRUCTION STATUS\n   Progress: ${hvSelected.constructionPct}% complete\n   Status: ${hvSelected.status}\n   Current Stage: ${hvSelected.milestonesCurrent}\n   Next Milestone: ${hvSelected.milestonesNext}\n\n\uD83D\uDCC5 HANDOVER DATES\n   Contracted: ${new Date(hvSelected.contractedHandover).toLocaleDateString("en-GB",{month:"long",year:"numeric"})}\n   Expected: ${new Date(hvSelected.expectedHandover).toLocaleDateString("en-GB",{month:"long",year:"numeric"})}\n   Delay: ${hvSelected.delayMonths>0?"+"+hvSelected.delayMonths+" months":"None"}\n\n\uD83D\uDD10 REGULATORY\n   RERA: ${hvSelected.reraNo}\n   Escrow Bank: ${hvSelected.escrowBank}\n   Status: ${hvSelected.reraStatus}\n\nPowered by DXB Analytics Intelligence Platform\nemaar-dashboard.vercel.app`;
+                    const txt = `\uD83C\uDFD7️ HANDOVER UPDATE — ${hvSelected.project}\n━━━━━━━━━━━━━━━━━━━━━━\n\uD83C\uDFE2 Developer: ${hvSelected.developer}\n\uD83D\uDCCD Community: ${hvSelected.community}\n\n\uD83D\uDCCA CONSTRUCTION STATUS\n   Progress: ${hvSelected.constructionPct}% complete\n   Status: ${hvSelected.status}\n   Current Stage: ${hvSelected.milestonesCurrent}\n   Next Milestone: ${hvSelected.milestonesNext}\n\n\uD83D\uDCC5 HANDOVER DATES\n   Contracted: ${new Date(hvSelected.contractedHandover).toLocaleDateString("en-GB",{month:"long",year:"numeric"})}\n   Expected: ${new Date(hvSelected.expectedHandover).toLocaleDateString("en-GB",{month:"long",year:"numeric"})}\n   Delay: ${hvSelected.delayMonths>0?"+"+hvSelected.delayMonths+" months":"None"}\n\n\uD83D\uDD10 REGULATORY\n   RERA: ${hvSelected.reraNo}\n   Escrow Bank: ${hvSelected.escrowBank}\n   Status: ${hvSelected.reraStatus}\n\nPowered by DXB Analytics Intelligence Platform\nemaar-dashboard.vercel.app`;
                     window.open(`https://wa.me/?text=${encodeURIComponent(txt)}`,"_blank");
                   }} style={{ padding:"9px 18px", background:"rgba(37,211,102,0.1)", border:"1px solid rgba(37,211,102,0.3)", borderRadius:8, color:"#25D366", fontSize:12, fontWeight:600, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>
                     Share Update
@@ -4030,8 +4030,8 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
             </div>
           )}
 
-          {/* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ HANDOVER TAB Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */}
-          {/* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ HANDOVER TAB (extracted to tabs/HandoverTab.jsx) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */}
+          {/* ─── HANDOVER TAB ─── */}
+          {/* ─── HANDOVER TAB (extracted to tabs/HandoverTab.jsx) ─── */}
           {tab === "Handover" && (
             <HandoverTab
               liveHandover={liveHandover}
@@ -4039,13 +4039,13 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
             />
           )}
 
-          {/* Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â HANDOVER DETAIL OVERLAY Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â */}
+          {/* ═══ HANDOVER DETAIL OVERLAY ═══ */}
           {hdvSelected && (
             <div role="dialog" aria-modal="true" style={{ position:"fixed", inset:0, background:"rgba(4,9,15,0.97)", zIndex:2000, display:"flex", flexDirection:"column", backdropFilter:"blur(8px)" }}>
               {/* Overlay header */}
               <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"16px 24px", borderBottom:`1px solid ${T.border}`, background:T.surface, flexShrink:0 }}>
                 <div>
-                  <div style={{ fontSize:11, fontWeight:700, color:T.textMuted, letterSpacing:0.8, textTransform:"uppercase", marginBottom:3 }}>{hdvSelected.developer}{"Ã‚Â·"}{hdvSelected.community}</div>
+                  <div style={{ fontSize:11, fontWeight:700, color:T.textMuted, letterSpacing:0.8, textTransform:"uppercase", marginBottom:3 }}>{hdvSelected.developer}{"·"}{hdvSelected.community}</div>
                   <div style={{ fontFamily:"'Fraunces',serif", fontSize:22, fontWeight:800, color:T.white }}>{hdvSelected.project}</div>
                 </div>
                 <div style={{ display:"flex", alignItems:"center", gap:12 }}>
@@ -4054,7 +4054,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                     <div style={{ fontSize:11, color:T.textMuted }}>complete</div>
                   </div>
                   <button type="button" onClick={() => setHdvSelected(null)}
-                    style={{ width:36, height:36, borderRadius:"50%", background:T.surfaceAlt, border:`1px solid ${T.border}`, color:T.white, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", fontSize:18, fontFamily:"'Outfit',sans-serif" }}>Ãƒâ€”</button>
+                    style={{ width:36, height:36, borderRadius:"50%", background:T.surfaceAlt, border:`1px solid ${T.border}`, color:T.white, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", fontSize:18, fontFamily:"'Outfit',sans-serif" }}>×</button>
                 </div>
               </div>
               {/* Overlay content */}
@@ -4075,7 +4075,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 </div>
                 {/* Milestone Gantt */}
                 <div className="chart-box" style={{ padding:20, marginBottom:16 }}>
-                  <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:16 }}>Construction Milestones Ã¢â‚¬â€ RERA Verified</div>
+                  <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:16 }}>Construction Milestones — RERA Verified</div>
                   {(hdvSelected.milestones||[]).map((m,i) => {
                     const isNext = !m.done && (hdvSelected.milestones[i-1]?.done || i===0);
                     return (
@@ -4097,7 +4097,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                         </div>
                         {/* Done badge */}
                         <span style={{ fontSize:10, padding:"2px 7px", borderRadius:6, background:m.done?"rgba(16,185,129,0.15)":isNext?"rgba(212,168,67,0.1)":"transparent", color:m.done?T.green:isNext?T.gold:T.textMuted, fontWeight:700, flexShrink:0, width:60, textAlign:"center" }}>
-                          {m.done?"Ã¢Å“â€œ Done":isNext?"Next Ã¢â€ â€™":"Pending"}
+                          {m.done?"✓ Done":isNext?"Next →":"Pending"}
                         </span>
                       </div>
                     );
@@ -4129,13 +4129,13 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 {/* Quick actions */}
                 <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
                   <button type="button" onClick={() => { setHdvSelected(null); handleTabChange("Projects"); }}
-                    style={{ padding:"9px 18px", background:`linear-gradient(135deg,${T.gold},#B8922A)`, border:"none", borderRadius:8, color:"#000", fontSize:12, fontWeight:700, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>View Project Details Ã¢â€ â€™</button>
+                    style={{ padding:"9px 18px", background:`linear-gradient(135deg,${T.gold},#B8922A)`, border:"none", borderRadius:8, color:"#000", fontSize:12, fontWeight:700, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>View Project Details →</button>
                   <button type="button" onClick={() => { setHdvSelected(null); handleTabChange("Risk"); }}
                     style={{ padding:"9px 18px", background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:8, color:T.textSecondary, fontSize:12, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>Risk Analysis</button>
                   <button type="button" onClick={() => { setHdvSelected(null); handleTabChange("My Leads"); }}
                     style={{ padding:"9px 18px", background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:8, color:T.textSecondary, fontSize:12, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>Add to Lead</button>
                   <button type="button" onClick={() => {
-                    const txt = `\uD83C\uDFD7Ã¯Â¸Â DXB ANALYTICS Ã¢â‚¬â€ HANDOVER UPDATE\nÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€Â\n\uD83D\uDCCC ${hdvSelected.project}\n\uD83C\uDFE2 ${hdvSelected.developer} Ã‚Â· ${hdvSelected.community}\n\n\uD83D\uDCCA STATUS: ${hdvSelected.status}\n\uD83D\uDD27 Construction: ${hdvSelected.constructionPct}% complete\n\uD83D\uDCC5 Expected Handover: ${new Date(hdvSelected.expectedDate).toLocaleDateString("en-GB",{day:"numeric",month:"long",year:"numeric"})}\nÃ¢Å¡Â Ã¯Â¸Â Delay Risk: ${hdvSelected.delayRisk}\n\n\uD83D\uDD10 RERA: ${hdvSelected.reraNo}\n\uD83C\uDFE6 Escrow: ${hdvSelected.escrowBank}\n\uD83D\uDCCB Developer Record: ${hdvSelected.onTimeHistory}\n\nÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€Â\nPowered by DXB Analytics\nemaar-dashboard.vercel.app`;
+                    const txt = `\uD83C\uDFD7️ DXB ANALYTICS — HANDOVER UPDATE\n━━━━━━━━━━━━━━━━━━\n\uD83D\uDCCC ${hdvSelected.project}\n\uD83C\uDFE2 ${hdvSelected.developer} · ${hdvSelected.community}\n\n\uD83D\uDCCA STATUS: ${hdvSelected.status}\n\uD83D\uDD27 Construction: ${hdvSelected.constructionPct}% complete\n\uD83D\uDCC5 Expected Handover: ${new Date(hdvSelected.expectedDate).toLocaleDateString("en-GB",{day:"numeric",month:"long",year:"numeric"})}\n⚠️ Delay Risk: ${hdvSelected.delayRisk}\n\n\uD83D\uDD10 RERA: ${hdvSelected.reraNo}\n\uD83C\uDFE6 Escrow: ${hdvSelected.escrowBank}\n\uD83D\uDCCB Developer Record: ${hdvSelected.onTimeHistory}\n\n━━━━━━━━━━━━━━━━━━\nPowered by DXB Analytics\nemaar-dashboard.vercel.app`;
                     window.open(`https://wa.me/?text=${encodeURIComponent(txt)}`,"_blank");
                   }} style={{ padding:"9px 18px", background:"rgba(37,211,102,0.1)", border:"1px solid rgba(37,211,102,0.3)", borderRadius:8, color:"#25D366", fontSize:12, fontWeight:600, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>
                     Share Handover Update
@@ -4147,8 +4147,8 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
 
 
 
-          {/* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ SERVICE CHARGES TAB Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */}
-          {/* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ SERVICE CHARGES TAB (extracted) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */}
+          {/* ─── SERVICE CHARGES TAB ─── */}
+          {/* ─── SERVICE CHARGES TAB (extracted) ─── */}
           {tab === "Service Charges" && (
             <ServiceChargesTab
               liveServiceCharges={liveServiceCharges}
@@ -4163,8 +4163,8 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
           )}
 
 
-          {/* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ YIELDS TAB Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */}
-          {/* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ YIELDS TAB (extracted) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */}
+          {/* ─── YIELDS TAB ─── */}
+          {/* ─── YIELDS TAB (extracted) ─── */}
           {tab === "Yields" && (
             <YieldsTab
               liveYieldsData={liveYieldsData}
@@ -4182,8 +4182,8 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
           )}
 
 
-          {/* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ STR vs LTR TAB Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */}
-          {/* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ STR vs LTR TAB (extracted) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */}
+          {/* ─── STR vs LTR TAB ─── */}
+          {/* ─── STR vs LTR TAB (extracted) ─── */}
           {tab === "STR vs LTR" && (
             <STRvsLTRTab
               liveSTRData={liveSTRData}
@@ -4200,8 +4200,8 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
           )}
 
 
-          {/* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ MORTGAGE TAB Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */}
-          {/* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ MORTGAGE TAB (extracted) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */}
+          {/* ─── MORTGAGE TAB ─── */}
+          {/* ─── MORTGAGE TAB (extracted) ─── */}
           {tab === "Mortgage" && (
             <MortgageTab
               liveMortgageRates={liveMortgageRates} liveEiborRates={liveEiborRates} liveInvestScores={liveInvestScores}
@@ -4223,8 +4223,8 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
           )}
 
 
-          {/* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ INVESTMENT SCORE TAB Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */}
-          {/* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ INVESTMENT SCORE TAB (extracted) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */}
+          {/* ─── INVESTMENT SCORE TAB ─── */}
+          {/* ─── INVESTMENT SCORE TAB (extracted) ─── */}
           {tab === "Investment Score" && (
             <InvestmentScoreTab
               invScSearch={invScSearch} setInvScSearch={setInvScSearch}
@@ -4238,8 +4238,8 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
           )}
 
 
-          {/* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ FLIP CALCULATOR TAB Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */}
-          {/* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ FLIP TAB (extracted) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */}
+          {/* ─── FLIP CALCULATOR TAB ─── */}
+          {/* ─── FLIP TAB (extracted) ─── */}
           {tab === "Flip" && (
             <FlipTab
               flipBuyPrice={flipBuyPrice} setFlipBuyPrice={setFlipBuyPrice}
@@ -4259,8 +4259,8 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
           )}
 
 
-          {/* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ DXB ESTIMATE TAB Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */}
-          {/* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ DXB ESTIMATE TAB (extracted) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */}
+          {/* ─── DXB ESTIMATE TAB ─── */}
+          {/* ─── DXB ESTIMATE TAB (extracted) ─── */}
           {tab === "DXB Estimate" && (
             <DXBEstimateTab
               avmCommunity={avmCommunity} setAvmCommunity={setAvmCommunity}
@@ -4278,8 +4278,8 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
           )}
 
 
-          {/* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ PORTFOLIO TAB Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */}
-          {/* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ PORTFOLIO TAB (extracted) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */}
+          {/* ─── PORTFOLIO TAB ─── */}
+          {/* ─── PORTFOLIO TAB (extracted) ─── */}
           {tab === "Portfolio" && (
             <PortfolioTab
               portView={portView} setPortView={setPortView}
@@ -4289,8 +4289,8 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
           )}
 
 
-          {/* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ GOLDEN VISA TAB Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */}
-          {/* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ GOLDEN VISA TAB (extracted) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */}
+          {/* ─── GOLDEN VISA TAB ─── */}
+          {/* ─── GOLDEN VISA TAB (extracted) ─── */}
           {tab === "Golden Visa" && (
             <GoldenVisaTab
               gvView={gvView} setGvView={setGvView}
@@ -4307,8 +4307,8 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
           )}
 
 
-          {/* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ RISK TAB Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */}
-          {/* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ RISK TAB (extracted) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */}
+          {/* ─── RISK TAB ─── */}
+          {/* ─── RISK TAB (extracted) ─── */}
           {tab === "Risk" && (
             <RiskTab
               riskTabView={riskTabView} setRiskTabView={setRiskTabView}
@@ -4319,7 +4319,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
           )}
 
 
-          {/* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ FINANCIALS TAB Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */}
+          {/* ─── FINANCIALS TAB ─── */}
           {/* FINANCIALS TAB (extracted) */}
           {tab === "Financials" && (
             <FinancialsTab
@@ -4334,7 +4334,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
           )}
 
 
-          {/* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ DEVELOPER HEALTH TAB Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */}
+          {/* ─── DEVELOPER HEALTH TAB ─── */}
           {/* DEVELOPER HEALTH TAB (extracted) */}
           {tab === "Developer Health" && (
             <DeveloperHealthTab
@@ -4350,7 +4350,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
           )}
 
 
-          {/* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ BANKING INTELLIGENCE TAB Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */}
+          {/* ─── BANKING INTELLIGENCE TAB ─── */}
           {/* BANKING TAB (extracted) */}
           {tab === "Banking" && (
             <BankingTab
@@ -4375,7 +4375,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
           )}
 
 
-          {/* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ MARKETING INTELLIGENCE TAB Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */}
+          {/* ─── MARKETING INTELLIGENCE TAB ─── */}
           {/* MARKETING TAB (extracted) */}
           {tab === "Marketing" && (
             <MarketingTab
@@ -4395,7 +4395,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
           )}
 
 
-          {/* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ COMPETITORS TAB Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */}
+          {/* ─── COMPETITORS TAB ─── */}
           {/* COMPETITORS TAB (extracted) */}
           {tab === "Competitors" && (
             <CompetitorsTab
@@ -4407,11 +4407,11 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
             />
           )}
 
-          {/* Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
-              INTELLIGENCE TABS Ã¢â‚¬â€ Awaiting Data Import
+          {/* ══════════════════════════════════════════════════════════
+              INTELLIGENCE TABS — Awaiting Data Import
               Each tab shows a beautiful empty state with instructions
-              Data connects via Firestore Ã¢â‚¬â€ Admin Ã¢â€ â€™ Data Manager
-          Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â */}
+              Data connects via Firestore — Admin → Data Manager
+          ══════════════════════════════════════════════════════════ */}
 
           {Object.entries(INTELLIGENCE_TABS).map(([tabKey, config]) => (
             tab === tabKey && tabKey !== "Overview" && tabKey !== "Market" && tabKey !== "DLD Volumes" && tabKey !== "Price History" && tabKey !== "Neighbourhoods" && tabKey !== "Launch Calendar" && tabKey !== "Currency" && tabKey !== "Projects" && tabKey !== "Map" && tabKey !== "Handover" && tabKey !== "Service Charges" && tabKey !== "Yields" && tabKey !== "STR vs LTR" && tabKey !== "Mortgage" && tabKey !== "Investment Score" && tabKey !== "Flip" && tabKey !== "DXB Estimate" && tabKey !== "Portfolio" && tabKey !== "Golden Visa" && tabKey !== "Risk" && tabKey !== "Financials" && tabKey !== "Developer Health" && tabKey !== "Banking" && tabKey !== "Marketing" && tabKey !== "Competitors" && (
@@ -4425,7 +4425,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                     <span style={{ fontSize: 11, color: T.textSecondary }}>
                       <span style={{ color: T.gold, fontWeight: 600 }}>DXB Analytics</span>
-                      {" "}{"Ã‚Â·"}{tabKey}
+                      {" "}{"·"}{tabKey}
                     </span>
                   </div>
                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -4450,9 +4450,9 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
             )
           ))}
 
-          {/* Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
-              MY LEADS TAB Ã¢â‚¬â€ Session 4 Ã¢â‚¬â€ Agent CRM Inbox
-          Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â */}
+          {/* ══════════════════════════════════════════════
+              MY LEADS TAB — Session 4 — Agent CRM Inbox
+          ══════════════════════════════════════════════ */}
           {/* MY LEADS TAB (extracted) */}
           {tab === "My Leads" && (
             <MyLeadsTab
@@ -4495,7 +4495,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               showQuickCapture={showQuickCapture} setShowQuickCapture={setShowQuickCapture}
             />
           )}
-          {/* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ PIPELINE TAB (extracted) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */}
+          {/* ─── PIPELINE TAB (extracted) ─── */}
           {tab === "Pipeline" && (
             <PipelineTab
               deals={deals} dealsLoading={dealsLoading}
@@ -4510,11 +4510,11 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
 
 
 
-          {/* Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
-              COMPLIANCE TAB Ã¢â‚¬â€ Session 6
+          {/* ══════════════════════════════════════════════
+              COMPLIANCE TAB — Session 6
               RERA card tracker + WhatsApp templates
-          Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â */}
-          {/* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ COMPLIANCE TAB (extracted) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */}
+          ══════════════════════════════════════════════ */}
+          {/* ─── COMPLIANCE TAB (extracted) ─── */}
           {tab === "Compliance" && (
             <ComplianceTab
               reraCard={reraCard} setReraCard={setReraCard}
@@ -4528,12 +4528,12 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
 
 
 
-          {/* Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
-              TEAM TAB Ã¢â‚¬â€ Session 7 Ã¢â‚¬â€ Agency Manager Dashboard
-              Agent leaderboard Ã‚Â· Source ROI Ã‚Â· Pipeline funnel
-              Overdue follow-ups Ã‚Â· Team KPIs
-          Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â */}
-          {/* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ TEAM TAB (extracted) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */}
+          {/* ══════════════════════════════════════════════
+              TEAM TAB — Session 7 — Agency Manager Dashboard
+              Agent leaderboard · Source ROI · Pipeline funnel
+              Overdue follow-ups · Team KPIs
+          ══════════════════════════════════════════════ */}
+          {/* ─── TEAM TAB (extracted) ─── */}
           {tab === "Team" && (
             <TeamTab
               teamMembers={teamMembers} teamMembersLoading={teamMembersLoading}
@@ -4543,10 +4543,10 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
 
 
 
-          {/* Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
-              AGENCY TAB Ã¢â‚¬â€ Session 8 Ã¢â‚¬â€ Agency Management Hub
-              Profile Ã‚Â· Agent Roster Ã‚Â· RERA Tracker Ã‚Â· Commission
-          Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â */}
+          {/* ══════════════════════════════════════════════
+              AGENCY TAB — Session 8 — Agency Management Hub
+              Profile · Agent Roster · RERA Tracker · Commission
+          ══════════════════════════════════════════════ */}
           {/* AGENCY TAB (extracted) */}
           {tab === "Agency" && (
             <AgencyTab
@@ -4568,10 +4568,10 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
 
 
 
-          {/* Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
-              LISTINGS TAB Ã¢â‚¬â€ Session 9
-              Create Ã‚Â· Trakheesi Ã‚Â· Portal Syndication Ã‚Â· Track
-          Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â */}
+          {/* ══════════════════════════════════════════════
+              LISTINGS TAB — Session 9
+              Create · Trakheesi · Portal Syndication · Track
+          ══════════════════════════════════════════════ */}
           {/* LISTINGS TAB (extracted) */}
           {tab === "Listings" && (
             <ListingsTab
@@ -4589,11 +4589,11 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
 
 
 
-          {/* Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
-              DEV PORTAL TAB Ã¢â‚¬â€ Session 10
-              Unit Inventory Ã‚Â· EOI Pipeline Ã‚Â· Commission Ã‚Â· Assets
-          Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â */}
-          {/* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ DEV PORTAL TAB (extracted) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */}
+          {/* ══════════════════════════════════════════════
+              DEV PORTAL TAB — Session 10
+              Unit Inventory · EOI Pipeline · Commission · Assets
+          ══════════════════════════════════════════════ */}
+          {/* ─── DEV PORTAL TAB (extracted) ─── */}
           {tab === "Dev Portal" && (
             <DevPortalTab
               devId={devId} devProjects={devProjects} selectedDevProject={selectedDevProject}
@@ -4610,10 +4610,10 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
 
 
 
-          {/* Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
-              INTELLIGENCE TAB Ã¢â‚¬â€ Session 12
-              Comparable Sales Ã‚Â· IRR Calculator Ã‚Â· Supply Pipeline
-          Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â */}
+          {/* ══════════════════════════════════════════════
+              INTELLIGENCE TAB — Session 12
+              Comparable Sales · IRR Calculator · Supply Pipeline
+          ══════════════════════════════════════════════ */}
           {/* INTELLIGENCE TAB (extracted) */}
           {tab === "Intelligence" && (
             <IntelligenceTab
@@ -4634,13 +4634,13 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
 
 
 
-      {/* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ COMPARE MODAL Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */}
+      {/* ─── COMPARE MODAL ─── */}
       {showCompare && compareList.length >= 2 && (
         <div role="dialog" aria-modal="true" aria-label="Project comparison" style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.9)", zIndex: 3000, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(8px)" }} onClick={() => setShowCompare(false)}>
           <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.gold}`, width: "95%", maxWidth: 900, maxHeight: "90vh", overflowY: "auto", padding: 28 }} onClick={e => e.stopPropagation()}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-              <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: 22, color: T.gold, margin: 0 }}>Ã¢Å¡â€“Ã¯Â¸Â Project Comparison</h2>
-              <button type="button" onClick={() => setShowCompare(false)} style={{ background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16 }}>Ã¢Å“â€¢</button>
+              <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: 22, color: T.gold, margin: 0 }}>⚖️ Project Comparison</h2>
+              <button type="button" onClick={() => setShowCompare(false)} style={{ background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16 }}>✕</button>
             </div>
 
             <div className="table-scroll" style={{ overflowX: "auto" }}>
@@ -4669,10 +4669,10 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                     { label: "Type", fn: p => p.type },
                     { label: "Payment Plan", fn: p => p.payment || p.paymentPlan || "" },
                     { label: "Tier", fn: p => p.tier },
-                    { label: "Branded", fn: p => p.branded ? `Ã¢Å“â€œ ${p.brand}` : "No" },
-                    { label: "Total Units", fn: p => p.units ? getUnitEntries(p.units).reduce((a,[,u]) => a + u.total, 0) : "Ã¢â‚¬â€" },
-                    { label: "Available", fn: p => p.units ? getUnitEntries(p.units).reduce((a,[,u]) => a + (u.total - u.sold), 0) : "Ã¢â‚¬â€", highlight: true },
-                    { label: "% Sold", fn: p => { if (!p.units) return "Ã¢â‚¬â€"; const entries = getUnitEntries(p.units); const t = entries.reduce((a,[,u]) => a + u.total, 0); const s = entries.reduce((a,[,u]) => a + u.sold, 0); return t > 0 ? `${((s/t)*100).toFixed(0)}%` : "Ã¢â‚¬â€"; } },
+                    { label: "Branded", fn: p => p.branded ? `✓ ${p.brand}` : "No" },
+                    { label: "Total Units", fn: p => p.units ? getUnitEntries(p.units).reduce((a,[,u]) => a + u.total, 0) : "—" },
+                    { label: "Available", fn: p => p.units ? getUnitEntries(p.units).reduce((a,[,u]) => a + (u.total - u.sold), 0) : "—", highlight: true },
+                    { label: "% Sold", fn: p => { if (!p.units) return "—"; const entries = getUnitEntries(p.units); const t = entries.reduce((a,[,u]) => a + u.total, 0); const s = entries.reduce((a,[,u]) => a + u.sold, 0); return t > 0 ? `${((s/t)*100).toFixed(0)}%` : "—"; } },
                   ].map((row, ri) => (
                     <tr key={ri} style={{ borderBottom: `1px solid ${T.border}`, background: row.highlight ? "rgba(212,168,67,0.04)" : "transparent" }}>
                       <td style={{ padding: "10px 16px", color: T.textMuted, fontSize: 11, fontWeight: 600, textTransform: "uppercase" }}>{row.label}</td>
@@ -4700,7 +4700,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 {compareList.map(p => p.emaarUrl ? (
                   <a key={p.id} href={p.emaarUrl} target="_blank" rel="noopener noreferrer"
                     style={{ flex: 1, padding: "8px 0", background: "rgba(212,168,67,0.08)", border: "1px solid rgba(212,168,67,0.35)", borderRadius: 10, color: T.gold, fontSize: 11, fontWeight: 700, textAlign: "center", textDecoration: "none" }}>
-                    {(p.name || p.project || "").split(" ").slice(0,2).join(" ")} Ã¢â€ â€” {getLinkDomain(p.emaarUrl)}
+                    {(p.name || p.project || "").split(" ").slice(0,2).join(" ")} ↗ {getLinkDomain(p.emaarUrl)}
                   </a>
                 ) : <div key={p.id} style={{ flex: 1 }} />)}
               </div>
@@ -4716,10 +4716,10 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
       {/* ADD INVESTMENT MODAL */}
       {showAddPortfolio && <div style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.9)", zIndex: 3000, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(10px)" }} onClick={() => setShowAddPortfolio(null)}>
         <div style={{ background: T.surface, borderRadius: 20, border: `1px solid ${T.border}`, width: "95%", maxWidth: 520, maxHeight: "90vh", overflow: "auto", position: "relative" }} onClick={e => e.stopPropagation()}>
-          <button type="button" onClick={() => setShowAddPortfolio(null)} style={{ position: "absolute", top: 16, right: 16, background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center", zIndex: 5 }}>{"Ã¢Å“â€¢"}</button>
+          <button type="button" onClick={() => setShowAddPortfolio(null)} style={{ position: "absolute", top: 16, right: 16, background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center", zIndex: 5 }}>{"✕"}</button>
           <div style={{ padding: "24px 28px 16px", borderBottom: `1px solid ${T.border}` }}>
             <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: 20, fontWeight: 800, color: T.white }}>{typeof showAddPortfolio === "object" ? "Investment Details" : "Select Project"}</h2>
-            <p style={{ fontSize: 11, color: T.textMuted, marginTop: 4 }}>{typeof showAddPortfolio === "object" ? showAddPortfolio.name + " Ã‚Â· " + showAddPortfolio.community : "Select a project from your portfolio"}</p>
+            <p style={{ fontSize: 11, color: T.textMuted, marginTop: 4 }}>{typeof showAddPortfolio === "object" ? showAddPortfolio.name + " · " + showAddPortfolio.community : "Select a project from your portfolio"}</p>
           </div>
           <div style={{ padding: "16px 28px 28px" }}>
             {showAddPortfolio === true ? <>
@@ -4730,14 +4730,14 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                     <div>
                       <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                         <span style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{p.name}</span>
-                        {p.emaarUrl && <a href={p.emaarUrl} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{ fontSize: 9, color: T.gold, textDecoration: "none", padding: "1px 4px", border: "1px solid rgba(212,168,67,0.3)", borderRadius: 3, fontWeight: 700, flexShrink: 0 }}>Ã¢â€ â€”</a>}
+                        {p.emaarUrl && <a href={p.emaarUrl} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{ fontSize: 9, color: T.gold, textDecoration: "none", padding: "1px 4px", border: "1px solid rgba(212,168,67,0.3)", borderRadius: 3, fontWeight: 700, flexShrink: 0 }}>↗</a>}
                       </div>
-                      <div style={{ fontSize: 10, color: T.textMuted }}>{p.community} Ã‚Â· {p.type} Ã‚Â· {p.beds}</div>
+                      <div style={{ fontSize: 10, color: T.textMuted }}>{p.community} · {p.type} · {p.beds}</div>
                     </div>
                     <div style={{ textAlign: "right" }}>
                       <div style={{ fontSize: 12, fontWeight: 700, color: T.gold }}>AED {p.price ? (p.price/1e6).toFixed(2) + "M" : "TBD"}</div>
                       <div style={{ fontSize: 9, color: T.textMuted }}>{p.handover}</div>
-                      {(() => { const cd = getHandoverCountdown(p.handover); return cd ? <div style={{ fontSize: 9, fontWeight: 700, color: cd.passed ? "#10B981" : cd.color, marginTop: 1 }}>{cd.passed ? "Ã¢Å“â€œ Ready" : "Ã¢ÂÂ± " + cd.label}</div> : null; })()}
+                      {(() => { const cd = getHandoverCountdown(p.handover); return cd ? <div style={{ fontSize: 9, fontWeight: 700, color: cd.passed ? "#10B981" : cd.color, marginTop: 1 }}>{cd.passed ? "✓ Ready" : "⏱ " + cd.label}</div> : null; })()}
                     </div>
                   </div>
                 ))}
@@ -4770,7 +4770,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 </div>
               </div>
               <div style={{ display: "flex", gap: 10 }}>
-                <button type="button" onClick={() => setShowAddPortfolio(true)} style={{ flex: 1, padding: "10px 0", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textSecondary, fontWeight: 600, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>{"Ã¢â€ Â Back"}</button>
+                <button type="button" onClick={() => setShowAddPortfolio(true)} style={{ flex: 1, padding: "10px 0", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textSecondary, fontWeight: 600, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>{"← Back"}</button>
                 <button type="button" onClick={addToPortfolio} style={{ flex: 2, padding: "10px 0", background: `linear-gradient(135deg, ${T.gold}, #B8912F)`, color: T.bg, border: "none", borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>Add to Portfolio</button>
               </div>
             </>}
@@ -4782,11 +4782,11 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
       {showSetAlert && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.9)", zIndex: 3200, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(10px)" }} onClick={() => setShowSetAlert(null)}>
           <div style={{ background: T.surface, borderRadius: 20, border: `1px solid ${T.border}`, width: "min(440px,95vw)", padding: "28px 28px 24px", position: "relative" }} onClick={e => e.stopPropagation()}>
-            <button type="button" onClick={() => setShowSetAlert(null)} style={{ position: "absolute", top: 16, right: 16, background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center" }}>Ãƒâ€”</button>
+            <button type="button" onClick={() => setShowSetAlert(null)} style={{ position: "absolute", top: 16, right: 16, background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center" }}>×</button>
             <div style={{ marginBottom: 20 }}>
               <div style={{ fontSize: 10, color: T.gold, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 6 }}>Price Alert</div>
               <div style={{ fontFamily: "'Fraunces', serif", fontSize: 20, fontWeight: 800, color: T.white }}>{showSetAlert.name}</div>
-              <div style={{ fontSize: 12, color: T.textMuted, marginTop: 3 }}>{showSetAlert.community}{"Ã‚Â·"}{showSetAlert.type}</div>
+              <div style={{ fontSize: 12, color: T.textMuted, marginTop: 3 }}>{showSetAlert.community}{"·"}{showSetAlert.type}</div>
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
               <div>
@@ -4807,7 +4807,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   <div style={{ fontSize: 10, color: T.gold, fontWeight: 700, marginBottom: 6 }}>EXISTING ALERTS</div>
                   {myAlerts.filter(a => a.projectId === showSetAlert.id).map(a => (
                     <div key={a.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 11, color: T.textMuted, marginBottom: 3 }}>
-                      <span>{a.type.replace(/_/g," ")} {a.type.includes("yield") || a.type.includes("construction") ? a.value + "%" : "AED " + (a.value/1e6).toFixed(2) + "M"} {a.triggered ? "Ã¢Å“â€œ Triggered" : "Ã¢ÂÂ³ Watching"}</span>
+                      <span>{a.type.replace(/_/g," ")} {a.type.includes("yield") || a.type.includes("construction") ? a.value + "%" : "AED " + (a.value/1e6).toFixed(2) + "M"} {a.triggered ? "✓ Triggered" : "⏳ Watching"}</span>
                       <button type="button" onClick={() => removeAlert(a.id)} style={{ background: "none", border: "none", color: "rgba(239,68,68,0.6)", cursor: "pointer", fontSize: 12, padding: 0 }}>Remove</button>
                     </div>
                   ))}
@@ -4820,10 +4820,10 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
       )}
 
       {/* CHECKOUT PAYMENT MODAL */}
-      {/* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ PRICE ALERTS MODAL Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */}
+      {/* ─── PRICE ALERTS MODAL ─── */}
       {showAlerts && isLoggedIn && <div role="dialog" aria-modal="true" aria-label="Price Alerts" style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.93)", zIndex: 3200, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(12px)", padding: 16 }} onClick={() => setShowAlerts(false)}>
         <div className="alerts-modal" style={{ background: T.surface, borderRadius: 20, border: `1px solid ${T.border}`, width: "95%", maxWidth: 560, maxHeight: "88vh", overflow: "auto", position: "relative" }} onClick={e => e.stopPropagation()}>
-          <button type="button" onClick={() => setShowAlerts(false)} style={{ position: "absolute", top: 16, right: 16, background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center", zIndex: 5 }}>Ã¢Å“â€¢</button>
+          <button type="button" onClick={() => setShowAlerts(false)} style={{ position: "absolute", top: 16, right: 16, background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center", zIndex: 5 }}>✕</button>
           <div style={{ padding: "28px 28px 20px", borderBottom: `1px solid ${T.border}` }}>
             <div style={{ fontSize: 11, fontWeight: 700, color: T.gold, letterSpacing: 1, textTransform: "uppercase", marginBottom: 6 }}>\uD83D\uDD14 Price Alerts</div>
             <div style={{ fontFamily: "'Fraunces', serif", fontSize: 20, fontWeight: 800, color: T.white }}>Get notified when the market moves</div>
@@ -4867,15 +4867,15 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 const newAlert = { ...alertForm, id: Date.now(), createdAt: new Date().toISOString(), active: true };
                 const updated = [...myAlerts, newAlert];
                 setMyAlerts(updated);
-                await safeAsyncWithToast(() => setDoc(doc(db, "priceAlerts", user), { alerts: updated, updatedAt: new Date().toISOString() }), "price-alert-add", notify, "Couldn't save your new price alert Ã¢â‚¬â€ try again");
+                await safeAsyncWithToast(() => setDoc(doc(db, "priceAlerts", user), { alerts: updated, updatedAt: new Date().toISOString() }), "price-alert-add", notify, "Couldn't save your new price alert — try again");
                 setAlertSaving(false);
               }} style={{ width: "100%", padding: "10px 0", background: alertSaving ? T.surfaceAlt : `linear-gradient(135deg, ${T.gold}, #B8912F)`, color: alertSaving ? T.textMuted : T.bg, border: "none", borderRadius: 10, fontWeight: 700, fontSize: 13, cursor: alertSaving ? "default" : "pointer", fontFamily: "'Outfit',sans-serif", transition: "all 0.2s" }}>
-                {alertSaving ? "SavingÃ¢â‚¬Â¦" : "+ Create Alert"}
+                {alertSaving ? "Saving…" : "+ Create Alert"}
               </button>
             </div>
             {/* Existing alerts */}
             <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>Active Alerts ({myAlerts.filter(a => a.active).length})</div>
-            {myAlerts.length === 0 && <div style={{ textAlign: "center", padding: "24px 0", color: T.textMuted, fontSize: 13 }}>No alerts yet Ã¢â‚¬â€ create your first one above</div>}
+            {myAlerts.length === 0 && <div style={{ textAlign: "center", padding: "24px 0", color: T.textMuted, fontSize: 13 }}>No alerts yet — create your first one above</div>}
             {myAlerts.map((a, i) => (
               <div key={a.id || i} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", background: T.surfaceAlt, borderRadius: 10, border: `1px solid ${T.border}`, marginBottom: 8 }}>
                 <span style={{ fontSize: 18 }}>{a.condition === "above" ? "\uD83D\uDCC8" : "\uD83D\uDCC9"}</span>
@@ -4887,8 +4887,8 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 <button type="button" onClick={async () => {
                   const updated = myAlerts.filter((_, j) => j !== i);
                   setMyAlerts(updated);
-                  await safeAsyncWithToast(() => setDoc(doc(db, "priceAlerts", user), { alerts: updated, updatedAt: new Date().toISOString() }), "price-alert-delete", notify, "Couldn't remove the price alert Ã¢â‚¬â€ try again");
-                }} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 16, padding: "4px 6px", borderRadius: 6, transition: "color 0.2s" }} onMouseEnter={e => e.currentTarget.style.color = "#EF4444"} onMouseLeave={e => e.currentTarget.style.color = T.textMuted}>Ã¢Å“â€¢</button>
+                  await safeAsyncWithToast(() => setDoc(doc(db, "priceAlerts", user), { alerts: updated, updatedAt: new Date().toISOString() }), "price-alert-delete", notify, "Couldn't remove the price alert — try again");
+                }} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 16, padding: "4px 6px", borderRadius: 6, transition: "color 0.2s" }} onMouseEnter={e => e.currentTarget.style.color = "#EF4444"} onMouseLeave={e => e.currentTarget.style.color = T.textMuted}>✕</button>
               </div>
             ))}
             {myAlerts.length > 0 && <div style={{ fontSize: 11, color: T.textMuted, marginTop: 12, textAlign: "center" }}>Alerts checked daily. Email sent to {user}</div>}
@@ -4898,10 +4898,10 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
 
       {showCheckout && <div role="dialog" aria-modal="true" aria-label="Upgrade checkout" style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.95)", zIndex: 3100, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(12px)" }} onClick={() => { setShowCheckout(null); setCheckoutStep(1); }}>
         <div style={{ background: T.surface, borderRadius: 20, border: `1px solid ${T.border}`, width: "95%", maxWidth: 480, position: "relative", overflow: "hidden" }} onClick={e => e.stopPropagation()}>
-          <button type="button" onClick={() => { setShowCheckout(null); setCheckoutStep(1); }} style={{ position: "absolute", top: 16, right: 16, background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center", zIndex: 5 }}>{"Ã¢Å“â€¢"}</button>
+          <button type="button" onClick={() => { setShowCheckout(null); setCheckoutStep(1); }} style={{ position: "absolute", top: 16, right: 16, background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center", zIndex: 5 }}>{"✕"}</button>
           <div style={{ padding: "24px 28px 16px", borderBottom: `1px solid ${T.border}` }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, marginBottom: 16 }}>
-              {[1,2,3].map(s => <React.Fragment key={s}><div style={{ width: 28, height: 28, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, background: checkoutStep >= s ? T.gold : T.surfaceAlt, color: checkoutStep >= s ? T.bg : T.textMuted, border: `1px solid ${checkoutStep >= s ? T.gold : T.border}` }}>{checkoutStep > s ? "Ã¢Å“â€œ" : s}</div>{s < 3 && <div style={{ width: 40, height: 2, background: checkoutStep > s ? T.gold : T.surfaceAlt, borderRadius: 1 }} />}</React.Fragment>)}
+              {[1,2,3].map(s => <React.Fragment key={s}><div style={{ width: 28, height: 28, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, background: checkoutStep >= s ? T.gold : T.surfaceAlt, color: checkoutStep >= s ? T.bg : T.textMuted, border: `1px solid ${checkoutStep >= s ? T.gold : T.border}` }}>{checkoutStep > s ? "✓" : s}</div>{s < 3 && <div style={{ width: 40, height: 2, background: checkoutStep > s ? T.gold : T.surfaceAlt, borderRadius: 1 }} />}</React.Fragment>)}
             </div>
             <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: 20, fontWeight: 800, color: T.white, textAlign: "center" }}>{checkoutStep === 1 ? "Confirm Plan" : checkoutStep === 2 ? "Payment" : "Welcome to Pro!"}</h2>
           </div>
@@ -4910,18 +4910,18 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               <div style={{ padding: 16, borderRadius: 12, background: T.surfaceAlt, border: `2px solid ${T.gold}`, marginBottom: 16 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}><span style={{ fontFamily: "'Fraunces', serif", fontSize: 18, fontWeight: 800, color: T.gold }}>{showCheckout.name} Plan</span><span style={{ fontSize: 10, padding: "3px 10px", borderRadius: 6, background: "rgba(212,168,67,0.12)", color: T.gold }}>SELECTED</span></div>
                 <div style={{ display: "flex", alignItems: "baseline", gap: 3, marginBottom: 12 }}><span style={{ fontSize: 10, color: T.textMuted }}>AED</span><span style={{ fontFamily: "'Fraunces', serif", fontSize: 32, fontWeight: 900, color: T.white }}>{showCheckout.price}</span><span style={{ fontSize: 12, color: T.textMuted }}>/month</span></div>
-                {showCheckout.features.slice(0,5).map((f,j) => <div key={j} style={{ display: "flex", alignItems: "center", gap: 6, padding: "3px 0", fontSize: 12, color: T.textSecondary }}><span style={{ color: T.green }}>{"Ã¢Å“â€œ"}</span>{f}</div>)}
+                {showCheckout.features.slice(0,5).map((f,j) => <div key={j} style={{ display: "flex", alignItems: "center", gap: 6, padding: "3px 0", fontSize: 12, color: T.textSecondary }}><span style={{ color: T.green }}>{"✓"}</span>{f}</div>)}
               </div>
-              <button type="button" onClick={() => setCheckoutStep(2)} style={{ width: "100%", padding: "12px 0", background: `linear-gradient(135deg, ${T.gold}, #B8912F)`, color: T.bg, border: "none", borderRadius: 10, fontWeight: 700, fontSize: 14, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>Continue to Payment Ã¢â€ â€™</button>
+              <button type="button" onClick={() => setCheckoutStep(2)} style={{ width: "100%", padding: "12px 0", background: `linear-gradient(135deg, ${T.gold}, #B8912F)`, color: T.bg, border: "none", borderRadius: 10, fontWeight: 700, fontSize: 14, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>Continue to Payment →</button>
             </>}
             {checkoutStep === 2 && <>
               <div style={{ marginBottom: 12 }}>
                 <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, marginBottom: 12 }}>CHOOSE PAYMENT METHOD</div>
 
                 {/* Stripe Payment Links */}
-                {/* Ã¢â€â‚¬Ã¢â€â‚¬ Paddle Card Payment Ã¢â€â‚¬Ã¢â€â‚¬ */}
+                {/* ── Paddle Card Payment ── */}
                 {(() => {
-                  // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ PADDLE PRICE IDs Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+                  // ─── PADDLE PRICE IDs ─────────────────────────────────
                   // 1. Sign up at paddle.com (free)
                   // 2. Create products: Pro (AED 99/mo), Enterprise (AED 499/mo)
                   // 3. Paste the price IDs below (format: pri_XXXXXXXX)
@@ -4960,7 +4960,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                       <div style={{ fontSize: 24 }}>\uD83D\uDCB3</div>
                       <div style={{ flex: 1 }}>
                         <div style={{ fontSize: 13, fontWeight: 700, color: "#fff" }}>Credit / Debit Card</div>
-                        <div style={{ fontSize: 10, color: T.textMuted }}>Visa Ã‚Â· Mastercard Ã‚Â· Amex Ã‚Â· Apple Pay Ã‚Â· {paddleReady ? "Powered by Paddle" : "Powered by Paddle (setup pending)"}</div>
+                        <div style={{ fontSize: 10, color: T.textMuted }}>Visa · Mastercard · Amex · Apple Pay · {paddleReady ? "Powered by Paddle" : "Powered by Paddle (setup pending)"}</div>
                       </div>
                       <span style={{ fontSize: 9, padding: "3px 10px", borderRadius: 6, background: "rgba(34,197,94,0.12)", color: "#22C55E", fontWeight: 700, border: "1px solid rgba(34,197,94,0.2)" }}>RECOMMENDED</span>
                     </div>
@@ -4972,15 +4972,15 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   <div style={{ fontSize: 24 }}>\uD83D\uDCAC</div>
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: 13, fontWeight: 700, color: "#fff" }}>WhatsApp + Bank Transfer</div>
-                    <div style={{ fontSize: 10, color: T.textMuted }}>Manual Ã¢â‚¬â€ activated within 5 minutes of payment</div>
+                    <div style={{ fontSize: 10, color: T.textMuted }}>Manual — activated within 5 minutes of payment</div>
                   </div>
-                  <span style={{ color: "#25D366", fontSize: 16 }}>Ã¢â€ â€™</span>
+                  <span style={{ color: "#25D366", fontSize: 16 }}>→</span>
                 </div>
 
-                <div style={{ padding: "10px 14px", borderRadius: 8, background: "rgba(212,168,67,0.04)", border: "1px solid rgba(212,168,67,0.1)", fontSize: 11, color: T.textMuted, lineHeight: 1.5, marginBottom: 12 }}>\uD83D\uDD12 All payments secure Ã‚Â· 7-day money-back guarantee</div>
+                <div style={{ padding: "10px 14px", borderRadius: 8, background: "rgba(212,168,67,0.04)", border: "1px solid rgba(212,168,67,0.1)", fontSize: 11, color: T.textMuted, lineHeight: 1.5, marginBottom: 12 }}>\uD83D\uDD12 All payments secure · 7-day money-back guarantee</div>
               </div>
               <div style={{ display: "flex", gap: 10 }}>
-                <button type="button" onClick={() => setCheckoutStep(1)} style={{ width: "100%", padding: "10px 0", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textSecondary, fontWeight: 600, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>Ã¢â€ Â Back</button>
+                <button type="button" onClick={() => setCheckoutStep(1)} style={{ width: "100%", padding: "10px 0", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textSecondary, fontWeight: 600, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>← Back</button>
               </div>
             </>}
             {checkoutStep === 3 && <div style={{ textAlign: "center", padding: "20px 0" }}>
@@ -4998,14 +4998,14 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
         </div>
       </div>}
 
-      {/* Ã¢â€â‚¬Ã¢â€â‚¬ MOBILE BOTTOM NAV BAR Ã¢â€â‚¬Ã¢â€â‚¬ */}
+      {/* ── MOBILE BOTTOM NAV BAR ── */}
       <nav style={{ display: "none" }} className="mobile-bottom-nav" aria-label="Quick navigation">
         {[
-          { key: "Overview", icon: "Ã¢â€”Ë†", label: "Overview" },
-          { key: "Projects", icon: "Ã¢Å Å¾", label: "Projects" },
-          { key: "Yields", icon: "Ã¢â€”Å½", label: "Yields" },
-          { key: "Portfolio", icon: "Ã¢â€”â€°", label: "Portfolio" },
-          { key: "Market", icon: "Ã¢Å Â¿", label: "Market" },
+          { key: "Overview", icon: "◈", label: "Overview" },
+          { key: "Projects", icon: "⊞", label: "Projects" },
+          { key: "Yields", icon: "◎", label: "Yields" },
+          { key: "Portfolio", icon: "◉", label: "Portfolio" },
+          { key: "Market", icon: "⊿", label: "Market" },
         ].map(item => (
           <button key={item.key} type="button" onClick={() => { setTab(item.key); setSidebarOpen(false); }}
             style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 3, background: "none", border: "none", cursor: "pointer", padding: "6px 0", color: tab === item.key ? T.gold : T.textMuted, fontFamily: "'Outfit',sans-serif", transition: "color 0.2s" }}>
@@ -5016,7 +5016,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
         ))}
         <button type="button" onClick={() => setSidebarOpen(s => !s)}
           style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 3, background: "none", border: "none", cursor: "pointer", padding: "6px 0", color: T.textMuted, fontFamily: "'Outfit',sans-serif" }}>
-          <span style={{ fontSize: 18 }}>Ã¢ËœÂ°</span>
+          <span style={{ fontSize: 18 }}>☰</span>
           <span style={{ fontSize: 9, letterSpacing: 0.3 }}>More</span>
         </button>
       </nav>
@@ -5024,14 +5024,14 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
       {/* USER PROFILE MODAL */}
       {showProfile && <div role="dialog" aria-modal="true" aria-label="User profile" style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.9)", zIndex: 3000, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(10px)" }} onClick={() => setShowProfile(false)}>
         <div style={{ background: T.surface, borderRadius: 20, border: `1px solid ${T.border}`, width: "95%", maxWidth: 560, maxHeight: "90vh", overflow: "auto", position: "relative" }} onClick={e => e.stopPropagation()}>
-          <button type="button" onClick={() => setShowProfile(false)} style={{ position: "absolute", top: 16, right: 16, background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center", zIndex: 5 }}>Ã¢Å“â€¢</button>
+          <button type="button" onClick={() => setShowProfile(false)} style={{ position: "absolute", top: 16, right: 16, background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center", zIndex: 5 }}>✕</button>
           <div style={{ padding: "32px 28px 20px", background: `linear-gradient(135deg, rgba(212,168,67,0.08), rgba(14,29,53,0.6))`, borderBottom: `1px solid ${T.border}` }}>
             <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
               <div style={{ width: 56, height: 56, borderRadius: "50%", background: `linear-gradient(135deg, ${T.gold}, #B8912F)`, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: 22, color: T.bg, flexShrink: 0 }}>{user.charAt(0).toUpperCase()}</div>
               <div>
                 <div style={{ fontFamily: "'Fraunces', serif", fontSize: 20, fontWeight: 800, color: T.white }}>{userName || user.split("@")[0]}</div>
                 <div style={{ fontSize: 12, color: T.textSecondary, marginTop: 2 }}>{user}</div>
-                <div style={{ display: "inline-flex", alignItems: "center", gap: 4, marginTop: 6, padding: "3px 10px", borderRadius: 6, background: userTier === "admin" || userTier === "pro" || userTier === "enterprise" ? "rgba(16,185,129,0.12)" : userTier === "pro_trial" ? "rgba(212,168,67,0.12)" : "rgba(59,130,246,0.12)", fontSize: 10, fontWeight: 700, color: userTier === "admin" || userTier === "pro" || userTier === "enterprise" ? T.green : userTier === "pro_trial" ? T.gold : T.blue }}>{userTier === "admin" ? "Ã¢Å¡Â¡ Admin" : userTier === "pro" ? "Ã¢Â­Â Pro Plan" : userTier === "pro_trial" ? `Ã¢Â­Â Pro Trial Ã‚Â· ${trialDaysLeft}d left` : userTier === "enterprise" ? "\uD83C\uDFE2 Enterprise" : "Free Plan"}</div>
+                <div style={{ display: "inline-flex", alignItems: "center", gap: 4, marginTop: 6, padding: "3px 10px", borderRadius: 6, background: userTier === "admin" || userTier === "pro" || userTier === "enterprise" ? "rgba(16,185,129,0.12)" : userTier === "pro_trial" ? "rgba(212,168,67,0.12)" : "rgba(59,130,246,0.12)", fontSize: 10, fontWeight: 700, color: userTier === "admin" || userTier === "pro" || userTier === "enterprise" ? T.green : userTier === "pro_trial" ? T.gold : T.blue }}>{userTier === "admin" ? "⚡ Admin" : userTier === "pro" ? "⭐ Pro Plan" : userTier === "pro_trial" ? `⭐ Pro Trial · ${trialDaysLeft}d left` : userTier === "enterprise" ? "\uD83C\uDFE2 Enterprise" : "Free Plan"}</div>
               </div>
             </div>
           </div>
@@ -5042,7 +5042,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 <div><label style={{ fontSize: 10, color: T.textMuted, fontWeight: 600, display: "block", marginBottom: 4 }}>DISPLAY NAME</label><input type="text" value={profileEdit.name} onChange={e => setProfileEdit({...profileEdit, name: e.target.value})} placeholder="Your name" style={{ width: "100%", padding: "10px 12px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit', sans-serif", outline: "none" }} /></div>
                 <div><label style={{ fontSize: 10, color: T.textMuted, fontWeight: 600, display: "block", marginBottom: 4 }}>EMAIL</label><input type="email" value={user} disabled style={{ width: "100%", padding: "10px 12px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, fontSize: 13, fontFamily: "'Outfit', sans-serif", outline: "none", opacity: 0.6 }} /></div>
               </div>
-              <button type="button" onClick={async () => { if (auth.currentUser && profileEdit.name.trim()) { try { await setDoc(doc(db, "users", auth.currentUser.uid), { name: profileEdit.name.trim() }, { merge: true }); setUserName(profileEdit.name.trim()); setToast("Ã¢Å“â€¦ Profile updated!"); setTimeout(() => setToast(""), 3000); } catch(e) { setToast("Ã¢ÂÅ’ Update failed"); setTimeout(() => setToast(""), 3000); } } }} style={{ marginTop: 10, padding: "8px 20px", background: T.gold, color: T.bg, border: "none", borderRadius: 8, fontWeight: 700, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>Save Changes</button>
+              <button type="button" onClick={async () => { if (auth.currentUser && profileEdit.name.trim()) { try { await setDoc(doc(db, "users", auth.currentUser.uid), { name: profileEdit.name.trim() }, { merge: true }); setUserName(profileEdit.name.trim()); setToast("✅ Profile updated!"); setTimeout(() => setToast(""), 3000); } catch(e) { setToast("❌ Update failed"); setTimeout(() => setToast(""), 3000); } } }} style={{ marginTop: 10, padding: "8px 20px", background: T.gold, color: T.bg, border: "none", borderRadius: 8, fontWeight: 700, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>Save Changes</button>
             </div>
             <div style={{ marginBottom: 20, padding: 16, borderRadius: 12, background: T.surfaceAlt, border: `1px solid ${T.border}` }}>
               <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 12 }}>Subscription</div>
@@ -5051,7 +5051,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 <div><div style={{ fontSize: 10, color: T.textMuted }}>Status</div><div style={{ fontSize: 14, fontWeight: 700, color: userTier === "free" ? T.blue : T.green }}>{userTier === "free" ? "Limited" : "Active"}</div></div>
                 <div><div style={{ fontSize: 10, color: T.textMuted }}>Access</div><div style={{ fontSize: 14, fontWeight: 700, color: T.white }}>{userTier === "free" ? "5 projects" : "All 48"}</div></div>
               </div>
-              {(userTier === "free" || userTier === "pro_trial") && <button type="button" onClick={() => { setShowProfile(false); setShowUpgrade(true); }} style={{ marginTop: 12, width: "100%", padding: "10px 0", background: `linear-gradient(135deg, ${T.gold}, #B8912F)`, color: T.bg, border: "none", borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>{userTier === "pro_trial" ? "Subscribe Before Trial Ends" : "Ã¢Â­Â Upgrade to Pro Ã¢â‚¬â€ AED 99/mo"}</button>}
+              {(userTier === "free" || userTier === "pro_trial") && <button type="button" onClick={() => { setShowProfile(false); setShowUpgrade(true); }} style={{ marginTop: 12, width: "100%", padding: "10px 0", background: `linear-gradient(135deg, ${T.gold}, #B8912F)`, color: T.bg, border: "none", borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>{userTier === "pro_trial" ? "Subscribe Before Trial Ends" : "⭐ Upgrade to Pro — AED 99/mo"}</button>}
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
               <button type="button" onClick={() => { setShowProfile(false); handleTabChange("Portfolio"); }} style={{ padding: "10px 0", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textSecondary, fontWeight: 600, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>\uD83D\uDCCA Portfolio</button>
@@ -5062,11 +5062,11 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
       </div>}
 
 
-      {/* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ KPI DETAIL MODAL Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */}
+      {/* ─── KPI DETAIL MODAL ─── */}
       {selectedKPI && (
         <div role="dialog" aria-modal="true" aria-label={`${selectedKPI?.label} details`} style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.92)", zIndex: 5000, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(10px)", padding: 16 }} onClick={() => setSelectedKPI(null)}>
           <div style={{ background: T.surface, borderRadius: 20, border: `1px solid ${selectedKPI.color || T.gold}`, width: "95%", maxWidth: 640, maxHeight: "88vh", overflowY: "auto", position: "relative", boxShadow: `0 24px 80px rgba(0,0,0,0.6), 0 0 40px ${selectedKPI.color || T.gold}22` }} onClick={e => e.stopPropagation()}>
-            <button type="button" onClick={() => setSelectedKPI(null)} style={{ position: "absolute", top: 16, right: 16, background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16, zIndex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>Ã¢Å“â€¢</button>
+            <button type="button" onClick={() => setSelectedKPI(null)} style={{ position: "absolute", top: 16, right: 16, background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16, zIndex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
             <div style={{ padding: 28 }}>
               <div style={{ marginBottom: 20 }}>
                 <div style={{ fontSize: 10, fontWeight: 600, color: T.textMuted, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 6 }}>{selectedKPI.label}</div>
@@ -5100,7 +5100,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                           return (
                             <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
                               <div style={{ width: "100%", background: isLast ? (selectedKPI.color || T.gold) : T.border, borderRadius: "3px 3px 0 0", height: `${pct}%`, minHeight: 4, position: "relative" }}>
-                                {isLast && <div style={{ position: "absolute", top: -18, left: "50%", transform: "translateX(-50%)", fontSize: 9, color: selectedKPI.color || T.gold, fontWeight: 700, whiteSpace: "nowrap" }}>Ã¢â€“Â² Latest</div>}
+                                {isLast && <div style={{ position: "absolute", top: -18, left: "50%", transform: "translateX(-50%)", fontSize: 9, color: selectedKPI.color || T.gold, fontWeight: 700, whiteSpace: "nowrap" }}>▲ Latest</div>}
                               </div>
                               <div style={{ fontSize: 9, color: T.textMuted }}>{d.y}</div>
                             </div>
@@ -5117,7 +5117,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   <div style={{ fontSize: 11, color: T.textSecondary, marginTop: 2 }}>{selectedKPI.source}</div>
                 </div>
                 {selectedKPI.sourceUrl && selectedKPI.sourceUrl !== "#" && (
-                  <a href={selectedKPI.sourceUrl} target="_blank" rel="noopener noreferrer" style={{ padding: "8px 16px", background: selectedKPI.color || T.gold, color: T.bg, borderRadius: 8, fontSize: 11, fontWeight: 700, textDecoration: "none", fontFamily: "'Outfit', sans-serif" }}>View Source Ã¢â€ â€”</a>
+                  <a href={selectedKPI.sourceUrl} target="_blank" rel="noopener noreferrer" style={{ padding: "8px 16px", background: selectedKPI.color || T.gold, color: T.bg, borderRadius: 8, fontSize: 11, fontWeight: 700, textDecoration: "none", fontFamily: "'Outfit', sans-serif" }}>View Source ↗</a>
                 )}
               </div>
             </div>
@@ -5125,7 +5125,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
         </div>
       )}
 
-      {/* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ NOTIFICATIONS PANEL Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */}
+      {/* ─── NOTIFICATIONS PANEL ─── */}
       {showNotifications && (
         <div style={{ position: "fixed", top: 60, right: 16, width: 360, maxHeight: 480, background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, boxShadow: "0 20px 60px rgba(0,0,0,0.6)", zIndex: 4000, overflow: "hidden", display: "flex", flexDirection: "column" }}>
           <div style={{ padding: "16px 20px", borderBottom: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -5133,7 +5133,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               <div style={{ fontFamily: "'Fraunces',serif", fontSize: 15, fontWeight: 700, color: T.white }}>Notifications</div>
               {unreadCount > 0 && <div style={{ fontSize: 11, color: T.gold }}>{unreadCount} unread</div>}
             </div>
-            <button type="button" onClick={() => setShowNotifications(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 18 }}>Ã¢Å“â€¢</button>
+            <button type="button" onClick={() => setShowNotifications(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 18 }}>✕</button>
           </div>
           <div style={{ overflowY: "auto", flex: 1 }}>
             {isPro && myAlerts.filter(a => !a.triggered).length > 0 && (
@@ -5144,9 +5144,9 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                     <div key={a.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: a.triggered ? "rgba(16,185,129,0.08)" : T.surfaceAlt, borderRadius: 8, padding: "8px 10px", border: `1px solid ${a.triggered ? "rgba(16,185,129,0.2)" : T.border}` }}>
                       <div>
                         <div style={{ fontSize: 11, fontWeight: 600, color: a.triggered ? "#10B981" : T.white }}>{a.projectName}</div>
-                        <div style={{ fontSize: 10, color: T.textMuted }}>{a.type.replace(/_/g," ")} {a.type.includes("yield") || a.type.includes("construction") ? a.value + "%" : "AED " + (a.value/1e6).toFixed(2) + "M"} {a.triggered ? "Ã¢Å“â€œ Triggered" : "Ã¢ÂÂ³ Watching"}</div>
+                        <div style={{ fontSize: 10, color: T.textMuted }}>{a.type.replace(/_/g," ")} {a.type.includes("yield") || a.type.includes("construction") ? a.value + "%" : "AED " + (a.value/1e6).toFixed(2) + "M"} {a.triggered ? "✓ Triggered" : "⏳ Watching"}</div>
                       </div>
-                      <button type="button" onClick={() => removeAlert(a.id)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 16, padding: "0 4px" }}>Ãƒâ€”</button>
+                      <button type="button" onClick={() => removeAlert(a.id)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 16, padding: "0 4px" }}>×</button>
                     </div>
                   ))}
                 </div>
@@ -5177,23 +5177,23 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
         </div>
       )}
 
-      {/* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ WATCHLIST PANEL Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */}
+      {/* ─── WATCHLIST PANEL ─── */}
       {showWatchlist && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.85)", zIndex: 3500, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(8px)" }} onClick={() => setShowWatchlist(false)}>
           <div style={{ background: T.surface, borderRadius: 20, border: `1px solid ${T.border}`, width: "min(640px,95vw)", maxHeight: "80vh", overflow: "hidden", display: "flex", flexDirection: "column" }} onClick={e => e.stopPropagation()}>
             <div style={{ padding: "20px 24px", borderBottom: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <div>
-                <div style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 700, color: T.gold }}>Ã¢Â­Â My Watchlist</div>
+                <div style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 700, color: T.gold }}>⭐ My Watchlist</div>
                 <div style={{ fontSize: 12, color: T.textMuted, marginTop: 2 }}>{watchlist.length} project{watchlist.length !== 1 ? "s" : ""} saved</div>
               </div>
-              <button type="button" onClick={() => setShowWatchlist(false)} style={{ background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16 }}>Ã¢Å“â€¢</button>
+              <button type="button" onClick={() => setShowWatchlist(false)} style={{ background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16 }}>✕</button>
             </div>
             <div style={{ overflowY: "auto", padding: 20, flex: 1 }}>
               {watchlist.length === 0 ? (
                 <div style={{ textAlign: "center", padding: "48px 20px", color: T.textMuted }}>
-                  <div style={{ fontSize: 40, marginBottom: 12 }}>Ã¢Ëœâ€¦</div>
+                  <div style={{ fontSize: 40, marginBottom: 12 }}>★</div>
                   <div style={{ fontSize: 14, color: T.textSecondary, marginBottom: 8 }}>No projects saved yet</div>
-                  <div style={{ fontSize: 12 }}>Click the Ã¢Ëœâ€¦ star on any project card to add it here.</div>
+                  <div style={{ fontSize: 12 }}>Click the ★ star on any project card to add it here.</div>
                 </div>
               ) : (
                 <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
@@ -5213,10 +5213,10 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                             <span style={{ fontSize: 11, color: T.textMuted }}>{w.community}</span>
                             {liveP?.emaarUrl && <a href={liveP.emaarUrl} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{ fontSize: 9, color: T.gold, textDecoration: "none", padding: "1px 5px", border: "1px solid rgba(212,168,67,0.35)", borderRadius: 4, fontWeight: 700 }}>{getLinkLabel(liveP?.emaarUrl)}</a>}
                           </div>
-                          {priceChanged && <div style={{ fontSize: 10, color: liveP.price > w.price ? T.red : T.green, marginTop: 4, fontWeight: 600 }}>{liveP.price > w.price ? "Ã¢â€ â€˜" : "Ã¢â€ â€œ"} Price changed since you saved this</div>}
+                          {priceChanged && <div style={{ fontSize: 10, color: liveP.price > w.price ? T.red : T.green, marginTop: 4, fontWeight: 600 }}>{liveP.price > w.price ? "↑" : "↓"} Price changed since you saved this</div>}
                         </div>
                         <div style={{ textAlign: "right" }}>
-                          <div style={{ fontSize: 13, fontWeight: 700, color: T.gold }}>AED {currentPrice ? (currentPrice / 1e6).toFixed(2) + "M" : "Ã¢â‚¬â€"}</div>
+                          <div style={{ fontSize: 13, fontWeight: 700, color: T.gold }}>AED {currentPrice ? (currentPrice / 1e6).toFixed(2) + "M" : "—"}</div>
                           <div style={{ fontSize: 10, color: T.textMuted, marginTop: 2 }}>Starting from</div>
                         </div>
                         <button type="button" onClick={e => { e.stopPropagation(); toggleWatchlist(w); }} style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 6, color: "#EF4444", padding: "4px 8px", cursor: "pointer", fontSize: 11, flexShrink: 0 }}>Remove</button>
@@ -5230,37 +5230,37 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
         </div>
       )}
 
-      {/* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ ONBOARDING MODAL Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */}
+      {/* ─── ONBOARDING MODAL ─── */}
       {showOnboarding && (() => {
         const steps = [
           {
-            icon: "\uD83C\uDFD9Ã¯Â¸Â",
+            icon: "\uD83C\uDFD9️",
             title: `Welcome to DXB Analytics, ${userName || "Investor"}!`,
             body: "You now have access to Dubai's most comprehensive real estate intelligence platform. Let us show you around in 30 seconds.",
-            cta: "Let's Go Ã¢â€ â€™"
+            cta: "Let's Go →"
           },
           {
             icon: "\uD83D\uDD0D",
             title: "Browse All Projects",
             body: "Go to the Projects tab to explore every active development. Filter by community, tier, handover year, or price range. Click any card for full details, documents, and ROI analysis.",
-            cta: "Next Ã¢â€ â€™"
+            cta: "Next →"
           },
           {
-            icon: "Ã¢Â­Â",
+            icon: "⭐",
             title: "Build Your Watchlist",
-            body: "See the Ã¢Ëœâ€¦ star button on every project card? Click it to save projects you're interested in. Your watchlist syncs across devices.",
-            cta: "Next Ã¢â€ â€™"
+            body: "See the ★ star button on every project card? Click it to save projects you're interested in. Your watchlist syncs across devices.",
+            cta: "Next →"
           },
           {
             icon: "\uD83D\uDCCA",
             title: "Yields, ROI & Mortgage",
             body: "Use the Yields tab for rental returns by community. The Mortgage tab calculates your monthly payment + all UAE transaction costs instantly.",
-            cta: "Next Ã¢â€ â€™"
+            cta: "Next →"
           },
           {
             icon: "\uD83D\uDE80",
             title: "You're All Set!",
-            body: userTier === "free" ? "You're on the Free plan. Upgrade to Pro for compare mode, full project details, PDF reports, and portfolio tracking Ã¢â‚¬â€ from AED 99/month." : "You have full Pro access. Explore everything Ã¢â‚¬â€ compare projects, track your portfolio, and download reports.",
+            body: userTier === "free" ? "You're on the Free plan. Upgrade to Pro for compare mode, full project details, PDF reports, and portfolio tracking — from AED 99/month." : "You have full Pro access. Explore everything — compare projects, track your portfolio, and download reports.",
             cta: userTier === "free" ? "Explore Free Features" : "Start Exploring"
           },
         ];
@@ -5279,7 +5279,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               <p style={{ fontSize: 14, color: T.textSecondary, lineHeight: 1.7, marginBottom: 32 }}>{step.body}</p>
               <div style={{ display: "flex", gap: 10, justifyContent: "center" }}>
                 {onboardingStep > 0 && (
-                  <button type="button" onClick={() => setOnboardingStep(s => s - 1)} style={{ padding: "12px 20px", borderRadius: 10, border: `1px solid ${T.border}`, background: "transparent", color: T.textSecondary, fontSize: 13, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>Ã¢â€ Â Back</button>
+                  <button type="button" onClick={() => setOnboardingStep(s => s - 1)} style={{ padding: "12px 20px", borderRadius: 10, border: `1px solid ${T.border}`, background: "transparent", color: T.textSecondary, fontSize: 13, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>← Back</button>
                 )}
                 <button type="button" onClick={() => { if (onboardingStep < steps.length - 1) { setOnboardingStep(s => s + 1); } else { completeOnboarding(); } }} style={{ padding: "12px 28px", borderRadius: 10, border: "none", background: `linear-gradient(135deg, ${T.gold}, ${T.goldDim})`, color: T.bg, fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
                   {step.cta}
