@@ -18,7 +18,7 @@ function GoldenVisaTab({ gvView, setGvView, gvCategory, setGvCategory, gvNumProp
                Federal Decree-Law No. 14 of 2022
             ════════════════════════════════════ */
 
-            const THRESHOLD = 2000000; // AED 2M as of 2026
+            const THRESHOLD = GOLDEN_VISA_THRESHOLD;
 
             /* ── Eligibility check ── */
             const effectivePropValue = gvMortgage

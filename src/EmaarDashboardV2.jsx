@@ -4329,6 +4329,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               riskTabView={riskTabView} setRiskTabView={setRiskTabView}
               riskCommunity2={riskCommunity2} setRiskCommunity2={setRiskCommunity2}
               riskHorizon={riskHorizon} setRiskHorizon={setRiskHorizon}
+              liveRisk={liveRisk}
               handleTabChange={handleTabChange}
             />
           )}
@@ -4419,6 +4420,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               cptDevB={cptDevB} setCptDevB={setCptDevB}
               cptMetric={cptMetric} setCptMetric={setCptMetric}
               cptView={cptView} setCptView={setCptView}
+              liveCompetitors={liveCompetitors}
             />
           )}
 
