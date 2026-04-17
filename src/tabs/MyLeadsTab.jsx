@@ -6,6 +6,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { T } from "../data";
 import { SvgIcons } from "../components/Icons";
 import { cleanPhone } from "../utils/helpers";
+import { GOLDEN_VISA_THRESHOLD } from "../utils/constants";
 import Papa from "papaparse";
 
 function MyLeadsTab({
@@ -109,7 +110,7 @@ function MyLeadsTab({
               let s=0;
               const b=parseFloat(l.budget||0);
               if(l.phone&&l.email) s+=25; else if(l.phone||l.email) s+=10;
-              if(b>=5000000) s+=20; else if(b>=2000000) s+=15; else if(b>=1000000) s+=10;
+              if(b>=5000000) s+=20; else if(b>=GOLDEN_VISA_THRESHOLD) s+=15; else if(b>=1000000) s+=10;
               const d=(Date.now()-new Date(l.createdAt||Date.now()).getTime())*0.000000011574;
               if(d<1) s+=20; else if(d<3) s+=15; else if(d<7) s+=10;
               const n=(l.notes_log||[]).length; if(n>=3) s+=10; else if(n>=1) s+=5;
@@ -650,7 +651,7 @@ function MyLeadsTab({
                     const name=(l.name||"").trim()||(l.email||"").split("@")[0]||l.phone||"Unnamed";
                     const initials=name.split(" ").map(w=>w[0]||"").join("").slice(0,2).toUpperCase();
                     const budget=parseFloat(l.budget||0);
-                    const isGV=budget>=2000000;
+                    const isGV=budget>=GOLDEN_VISA_THRESHOLD;
                     const ai=mlScore(l);
                     const isUrgent=l.timeline==="Immediate";
                     const isOverdue=(Date.now()-new Date(l.updatedAt||l.createdAt||Date.now()).getTime())*0.000000011574>7&&l.status!=="Won"&&l.status!=="Lost";
@@ -732,7 +733,7 @@ function MyLeadsTab({
                             <div style={{display:"flex",gap:4,marginTop:5,flexWrap:"wrap"}}>
                               {selectedLead.timeline&&<span style={{fontSize:10,padding:"2px 6px",borderRadius:7,background:selectedLead.timeline==="Immediate"?"rgba(239,68,68,0.15)":"rgba(212,168,67,0.1)",color:selectedLead.timeline==="Immediate"?"#EF4444":"#D4A843",fontWeight:600}}>{selectedLead.timeline}</span>}
                               {selectedLead.purpose&&<span style={{fontSize:10,padding:"2px 6px",borderRadius:7,background:"rgba(139,92,246,0.1)",color:"#8B5CF6",fontWeight:600}}>{selectedLead.purpose}</span>}
-                              {parseFloat(selectedLead.budget||0)>=2000000&&<span style={{fontSize:10,padding:"2px 6px",borderRadius:7,background:"rgba(212,168,67,0.1)",color:"#D4A843",fontWeight:700}}>GV Eligible</span>}
+                              {parseFloat(selectedLead.budget||0)>=GOLDEN_VISA_THRESHOLD&&<span style={{fontSize:10,padding:"2px 6px",borderRadius:7,background:"rgba(212,168,67,0.1)",color:"#D4A843",fontWeight:700}}>GV Eligible</span>}
                               {(selectedLead.tags||[]).map((tag,i)=><span key={i} style={{fontSize:10,padding:"2px 6px",borderRadius:7,background:"rgba(20,184,166,0.1)",color:"#14B8A6",fontWeight:600}}>{tag}</span>)}
                             </div>
                           </div>

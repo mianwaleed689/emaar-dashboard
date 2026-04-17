@@ -10,6 +10,7 @@ import { T } from "../data";
 import { SvgIcons } from "../components/Icons";
 
 import { calcScore, scoreColor, scoreLabel } from "../utils/scoring";
+import { GOLDEN_VISA_THRESHOLD } from "../utils/constants";
 
 const MODES = [
   { key:"Apartment" }, { key:"Villa" }, { key:"Townhouse" },
@@ -71,7 +72,7 @@ function ProjectsTab({
               if (projHandover !== "All" && !p.handover?.includes(projHandover)) return false;
               if (projGrade !== "All" && p.officeGrade !== projGrade) return false;
               if (projIntelFilter === "tier1" && p.tier !== 1) return false;
-              if (projIntelFilter === "gv" && !(p.goldenVisa && p.priceMin >= 2000000)) return false;
+              if (projIntelFilter === "gv" && !(p.goldenVisa && p.priceMin >= GOLDEN_VISA_THRESHOLD)) return false;
               if (projIntelFilter === "branded" && !p.branded) return false;
               if (projPriceMin > 0 && p.priceMin < projPriceMin) return false;
               if (projPriceMax > 0 && p.priceMax > projPriceMax) return false;
@@ -133,7 +134,7 @@ function ProjectsTab({
                         <div style={{ display:"flex", gap:5, flexWrap:"wrap", marginTop:6 }}>
                           {p.tier === 1 && <span style={{ fontSize:9, padding:"2px 7px", borderRadius:5, background:"rgba(16,185,129,0.12)", color:"#10B981", fontWeight:700 }}>Tier 1</span>}
                           {p.tier === 2 && <span style={{ fontSize:9, padding:"2px 7px", borderRadius:5, background:"rgba(245,158,11,0.12)", color:"#F59E0B", fontWeight:700 }}>Tier 2</span>}
-                          {p.goldenVisa && p.priceMin >= 2000000 && <span style={{ fontSize:9, padding:"2px 7px", borderRadius:5, background:"rgba(212,168,67,0.15)", color:T.gold, fontWeight:700 }}>★ GV</span>}
+                          {p.goldenVisa && p.priceMin >= GOLDEN_VISA_THRESHOLD && <span style={{ fontSize:9, padding:"2px 7px", borderRadius:5, background:"rgba(212,168,67,0.15)", color:T.gold, fontWeight:700 }}>★ GV</span>}
                           {p.branded && <span style={{ fontSize:9, padding:"2px 7px", borderRadius:5, background:"rgba(139,92,246,0.15)", color:"#A78BFA", fontWeight:700 }}>◆ {p.brandPartner || "Branded"}</span>}
                           {p.appreciationToHandover > 0 && <span style={{ fontSize:9, padding:"2px 7px", borderRadius:5, background:"rgba(212,168,67,0.08)", color:T.gold, fontWeight:700 }}>+{p.appreciationToHandover}% pre→hand</span>}
                           {p.velocityScore > 0 && <span style={{ fontSize:9, padding:"2px 7px", borderRadius:5, background:p.velocityScore >= 80 ? "rgba(16,185,129,0.12)" : "rgba(245,158,11,0.12)", color:p.velocityScore >= 80 ? "#10B981" : "#F59E0B", fontWeight:700 }}>Velocity {p.velocityScore}</span>}
@@ -422,7 +423,7 @@ function ProjectsTab({
                   <div style={{ display:"flex", gap:5, flexWrap:"wrap", marginTop:6 }}>
                     {selectedProject.tier === 1 && <span style={{ fontSize:10, padding:"3px 8px", borderRadius:5, background:"rgba(16,185,129,0.12)", color:"#10B981", fontWeight:700 }}>Tier 1 Developer</span>}
                     {selectedProject.tier === 2 && <span style={{ fontSize:10, padding:"3px 8px", borderRadius:5, background:"rgba(245,158,11,0.12)", color:"#F59E0B", fontWeight:700 }}>Tier 2 Developer</span>}
-                    {selectedProject.goldenVisa && selectedProject.priceMin >= 2000000 && <span style={{ fontSize:10, padding:"3px 8px", borderRadius:5, background:"rgba(212,168,67,0.15)", color:T.gold, fontWeight:700 }}>★ Golden Visa Eligible</span>}
+                    {selectedProject.goldenVisa && selectedProject.priceMin >= GOLDEN_VISA_THRESHOLD && <span style={{ fontSize:10, padding:"3px 8px", borderRadius:5, background:"rgba(212,168,67,0.15)", color:T.gold, fontWeight:700 }}>★ Golden Visa Eligible</span>}
                     {selectedProject.branded && <span style={{ fontSize:10, padding:"3px 8px", borderRadius:5, background:"rgba(139,92,246,0.15)", color:"#A78BFA", fontWeight:700 }}>◆ {selectedProject.brandPartner || "Branded Residence"}</span>}
                     {selectedProject.appreciationToHandover > 0 && <span style={{ fontSize:10, padding:"3px 8px", borderRadius:5, background:"rgba(212,168,67,0.08)", color:T.gold, fontWeight:700 }}>+{selectedProject.appreciationToHandover}% pre→handover</span>}
                     {selectedProject.velocityScore > 0 && <span style={{ fontSize:10, padding:"3px 8px", borderRadius:5, background:selectedProject.velocityScore >= 80 ? "rgba(16,185,129,0.12)" : "rgba(245,158,11,0.12)", color:selectedProject.velocityScore >= 80 ? "#10B981" : "#F59E0B", fontWeight:700 }}>Velocity {selectedProject.velocityScore}/100</span>}

@@ -14,6 +14,7 @@ import { signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthState
 import { collection, getDocs, doc, getDoc, setDoc, updateDoc, deleteDoc, onSnapshot, addDoc, query, where, orderBy, limit } from "firebase/firestore";
 import emailjs from "@emailjs/browser";
 import { safeAsyncWithToast } from "./utils/safeAsync";
+import { GOLDEN_VISA_THRESHOLD } from "./utils/constants";
 import { T } from "./data";
 import LandingPage from "./LandingPage";
 import RoiCalculator from "./RoiCalculator";
@@ -128,7 +129,7 @@ const getInvestmentScore = (p) => {
   else                                                    { breakdown.push({ label: "Payment", pts: 0, max: 2, note: "Unknown" }); }
 
   // 5. Golden Visa eligible (0–1 pt)
-  if (p.price && p.price >= 2000000) {
+  if (p.price && p.price >= GOLDEN_VISA_THRESHOLD) {
     score += 1; breakdown.push({ label: "Golden Visa", pts: 1, max: 1, note: "Eligible" });
   } else {
     breakdown.push({ label: "Golden Visa", pts: 0, max: 1, note: p.price ? "Below 2M" : "No price" });
@@ -451,7 +452,7 @@ const GlobalContextFilter = ({
         </select>
 
         {/* Golden Visa indicator */}
-        {gPriceMin >= 2000000 && (
+        {gPriceMin >= GOLDEN_VISA_THRESHOLD && (
           <div style={{
             padding: "4px 10px", borderRadius: 20, fontSize: 11,
             background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.3)",

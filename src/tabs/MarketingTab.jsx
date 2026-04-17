@@ -4,6 +4,7 @@
 import React from "react";
 import { T } from "../data";
 import { SvgIcons } from "../components/Icons";
+import { GOLDEN_VISA_THRESHOLD } from "../utils/constants";
 
 function MarketingTab({
   deals, listings,
@@ -646,7 +647,7 @@ function MarketingTab({
                         </div>
                       </div>
 
-                      {mktListingPrice >= 2000000 && (
+                      {mktListingPrice >= GOLDEN_VISA_THRESHOLD && (
                         <div style={{ marginTop:10, padding:"8px 12px", background:"rgba(16,185,129,0.06)", borderRadius:8, fontSize:11, color:T.green }}>
                           ✓ AED {(mktListingPrice/1e6).toFixed(2)}M — Golden Visa eligible (AED 2M threshold). Will be included in listing automatically.
                         </div>

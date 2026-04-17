@@ -6,6 +6,7 @@ import { db } from "../../firebase";
 import { C, cardStyle, btnStyles, inputStyle } from "./tokens";
 import BulkToolbar from "./BulkToolbar";
 import Papa from "papaparse";
+import { GOLDEN_VISA_THRESHOLD } from "../../utils/constants";
 
 const PROPERTY_TYPES = [
   "Studio Apartment", "1BR Apartment", "2BR Apartment", "3BR Apartment", "4BR Apartment", "5BR+ Apartment",
@@ -136,7 +137,7 @@ export default function ProjectsSection({ currentUserId, currentUserEmail }) {
       const id = editing.id || slugify((parent.name || "") + "-" + (form.variantLabel || form.name) + "-" + Date.now().toString(36));
 
       // Auto-compute Golden Visa eligibility
-      const goldenVisaEligible = Number(form.priceFromAed || 0) >= 2000000;
+      const goldenVisaEligible = Number(form.priceFromAed || 0) >= GOLDEN_VISA_THRESHOLD;
 
       const payload = {
         ...form,
@@ -298,7 +299,7 @@ export default function ProjectsSection({ currentUserId, currentUserEmail }) {
               availableUnits: parseInt(r.availableUnits) || 0, totalUnits: parseInt(r.totalUnits) || 0,
               grossYieldPct: parseFloat(r.grossYieldPct) || 0, netYieldPct: parseFloat(r.netYieldPct) || 0,
               serviceChargePerSqft: parseFloat(r.serviceChargePerSqft) || 0,
-              goldenVisaEligible: priceFromAed >= 2000000,
+              goldenVisaEligible: priceFromAed >= GOLDEN_VISA_THRESHOLD,
               furnishing: r.furnishing || "unfurnished", currency: "AED",
               developmentName: parent.name, developerId: parent.developerId, developerName: parent.developerName,
               community: parent.community, coordinates: parent.coordinates,
@@ -466,7 +467,7 @@ function ProjEditModal({ initial, developments, onClose, onSave, saving }) {
   }
 
   const parent = developments.find(d => d.id === form.developmentId);
-  const goldenVisa = Number(form.priceFromAed || 0) >= 2000000;
+  const goldenVisa = Number(form.priceFromAed || 0) >= GOLDEN_VISA_THRESHOLD;
 
   return (
     <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.75)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9999, padding: 20 }} onClick={onClose}>

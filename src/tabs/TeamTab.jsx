@@ -8,6 +8,7 @@ import React from "react";
 import { T } from "../data";
 import { SvgIcons } from "../components/Icons";
 import { cleanPhone } from "../utils";
+import { GOLDEN_VISA_THRESHOLD } from "../utils/constants";
 
 function TeamTab({ teamMembers, teamMembersLoading, myLeads, deals, orgRole }) {
 
@@ -112,7 +113,7 @@ function TeamTab({ teamMembers, teamMembersLoading, myLeads, deals, orgRole }) {
                 {/* ── AI Hot Leads Panel (Session 13) ── */}
                 {(() => {
                   const hotLeads = myLeads
-                    .map(l => ({ ...l, aiScore: (() => { const b = parseFloat(l.budget)||0; const age = (Date.now()-new Date(l.createdAt||Date.now()))/86400000; let s=0; if(l.phone&&l.email)s+=25; if(b>=5000000)s+=20;else if(b>=2000000)s+=16;else if(b>0)s+=10; const src={"Property Finder":15,"Bayut":14,"Referral":15,"WhatsApp":10}; s+=(src[l.source]||6); if(age<1)s+=20;else if(age<3)s+=15;else if(age<7)s+=10; return Math.min(100,s); })() }))
+                    .map(l => ({ ...l, aiScore: (() => { const b = parseFloat(l.budget)||0; const age = (Date.now()-new Date(l.createdAt||Date.now()))/86400000; let s=0; if(l.phone&&l.email)s+=25; if(b>=5000000)s+=20;else if(b>=GOLDEN_VISA_THRESHOLD)s+=16;else if(b>0)s+=10; const src={"Property Finder":15,"Bayut":14,"Referral":15,"WhatsApp":10}; s+=(src[l.source]||6); if(age<1)s+=20;else if(age<3)s+=15;else if(age<7)s+=10; return Math.min(100,s); })() }))
                     .filter(l => l.aiScore >= 60 && l.status !== "Won" && l.status !== "Lost" && !l.assignedTo === false)
                     .sort((a,b) => b.aiScore - a.aiScore)
                     .slice(0, 5);

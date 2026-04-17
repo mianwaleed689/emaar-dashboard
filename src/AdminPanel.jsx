@@ -12,6 +12,7 @@ import { emaarProjects, emaarCommunities, emaarYields, communityROI as defaultCo
 import ProjectManager from "./ProjectManager";
 import { useI18n, LANGUAGES } from "./i18n";
 import AdminDataHealth from "./AdminDataHealth";
+import { GOLDEN_VISA_THRESHOLD } from "./utils/constants";
 
 import MarketIntelligenceTab from "./admin/MarketIntelligenceTab";
 import PricingPlansTab from "./admin/PricingPlansTab";
@@ -18061,7 +18062,7 @@ export default function AdminPanel() {
             const overdue  = isOverdue(l);
             const dueToday = isDueToday(l) && !overdue;
             const selected = leadSelectedIds.includes(l.id);
-            const visa     = (parseFloat(l.budget) || 0) >= 2000000;
+            const visa     = (parseFloat(l.budget) || 0) >= GOLDEN_VISA_THRESHOLD;
             const name     = displayName(l);
             const initials = name.split(" ").map(w => w[0]).join("").slice(0,2).toUpperCase();
             const avColors = ["rgba(59,130,246,0.2)","rgba(20,184,166,0.2)","rgba(139,92,246,0.2)","rgba(212,168,67,0.2)","rgba(16,185,129,0.2)"];
