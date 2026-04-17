@@ -14,6 +14,7 @@ import { signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthState
 import { collection, getDocs, doc, getDoc, setDoc, updateDoc, deleteDoc, onSnapshot, addDoc, query, where, orderBy, limit } from "firebase/firestore";
 import emailjs from "@emailjs/browser";
 import { safeAsyncWithToast } from "./utils/safeAsync";
+import { useFilters } from "./hooks/useFilters";
 import { GOLDEN_VISA_THRESHOLD } from "./utils/constants";
 import { T } from "./data";
 import LandingPage from "./LandingPage";
@@ -2026,14 +2027,27 @@ export default function EmaarDashboardV2() {
   const toggleGroup = (id) => setGroupCollapsed(prev => ({ ...prev, [id]: !prev[id] }));
 
   /* ─── GLOBAL CONTEXT FILTER STATE ─── */
-  const [gDeveloper, setGDeveloper] = useState("all");
-  const [gCommunity, setGCommunity] = useState("all");
-  const [gPropertyType, setGPropertyType] = useState("all");
-  const [gSubType, setGSubType] = useState("all");
-  const [gBeds, setGBeds] = useState("all");
-  const [gStatus, setGStatus] = useState("all");
-  const [gPriceMin, setGPriceMin] = useState(0);
-  const [gPriceMax, setGPriceMax] = useState(0);
+  /* Phase 2.3: filters now live in the URL via useFilters().
+     The g* names below are compatibility shims — they read from the URL
+     state and write back to it. All existing code using gDeveloper /
+     setGDeveloper / setGDeveloperAndReset continues to work unchanged. */
+  const { filters: _gf, setFilter: _gSetOne, setFilters: _gSetMany } = useFilters();
+  const gDeveloper   = _gf.developer;
+  const gCommunity   = _gf.community;
+  const gPropertyType = _gf.type;
+  const gSubType     = _gf.subType;
+  const gBeds        = _gf.beds;
+  const gStatus      = _gf.status;
+  const gPriceMin    = Number(_gf.priceMin) || 0;
+  const gPriceMax    = Number(_gf.priceMax) || 0;
+  const setGDeveloper   = (v) => _gSetOne("developer", v);
+  const setGCommunity   = (v) => _gSetOne("community", v);
+  const setGPropertyType = (v) => _gSetOne("type", v);
+  const setGSubType     = (v) => _gSetOne("subType", v);
+  const setGBeds        = (v) => _gSetOne("beds", v);
+  const setGStatus      = (v) => _gSetOne("status", v);
+  const setGPriceMin    = (v) => _gSetOne("priceMin", v);
+  const setGPriceMax    = (v) => _gSetOne("priceMax", v);
   const [gFilterOpen, setGFilterOpen] = useState(false);
 
   /* ─── MARKET TAB STATE ─── */
@@ -2076,8 +2090,10 @@ export default function EmaarDashboardV2() {
   };
 
   /* Reset downstream filters when parent changes */
-  const setGDeveloperAndReset = (v) => { setGDeveloper(v); setGCommunity("all"); };
-  const setGPropertyTypeAndReset = (v) => { setGPropertyType(v); setGSubType("all"); setGBeds("all"); };
+  /* Phase 2.3: use setFilters() to make one atomic URL update instead of
+     two/three separate ones (cleaner history, no in-between render). */
+  const setGDeveloperAndReset = (v) => _gSetMany({ developer: v, community: "all" });
+  const setGPropertyTypeAndReset = (v) => _gSetMany({ type: v, subType: "all", beds: "all" });
   const [time, setTime] = useState(new Date());
   const [authLoading, setAuthLoading] = useState(true);
   const [isSuspended, setIsSuspended] = useState(false);
