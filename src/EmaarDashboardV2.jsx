@@ -2772,25 +2772,45 @@ export default function EmaarDashboardV2() {
       setLiveCommunityIntel(map);
     }));
 
-    // yieldData
-    unsubs.push(onSnapshot(collection(db, "yieldData"), (snap) => {
-      if (!snap.size) return;
-      const yieldOverrides = {};
-      snap.forEach(d => { yieldOverrides[d.id] = d.data(); });
-      // Yields load from Firestore communityData collection
-          setLiveYields([]);
-    }));
-
-    // tabData/yieldData
-    unsubs.push(onSnapshot(doc(db, "tabData", "yieldData"), (snap) => {
-      if (!snap.exists() || !snap.data().rows?.length) return;
-      const mapped = snap.data().rows.map(r => ({
-        label: "Apt", community: r.community,
-        rent: parseFloat(r.avgRent || 0) / 1000, price: 0,
-        gross: parseFloat(r.grossYield || 0), net: parseFloat(r.netYield || 0),
-        demand: r.trend === "rising" ? "V.High" : "High", visa: false
-      }));
-      setLiveYields(mapped);
+    // tabData/yieldSummary (written by cron-yields daily)
+    // Transforms nested per-unit-type yields into flat grossYield for both tabs
+    unsubs.push(onSnapshot(doc(db, "tabData", "yieldSummary"), (snap) => {
+      if (!snap.exists() || !snap.data().communities?.length) return;
+      const communities = snap.data().communities;
+      // Transform for OverviewTab (liveYields): needs { community, gross }
+      const overviewYields = communities.map(c => {
+        const y = c.yields || {};
+        const vals = Object.values(y).filter(v => typeof v === "number" && v > 0);
+        const avgGross = vals.length > 0 ? vals.reduce((a,b) => a+b, 0) / vals.length : 0;
+        return { community: c.community, gross: parseFloat(avgGross.toFixed(1)), district: c.district };
+      }).filter(c => c.gross > 0);
+      setLiveYields(overviewYields);
+      // Transform for YieldsTab (liveYieldsData): needs { community, grossYield, netYield, type, avgRent, avgPrice, ppsf }
+      const yieldsTabData = communities.map(c => {
+        const y = c.yields || {};
+        const r = c.rents || {};
+        const s = c.salePrices || {};
+        const vals = Object.values(y).filter(v => typeof v === "number" && v > 0);
+        const avgGross = vals.length > 0 ? vals.reduce((a,b) => a+b, 0) / vals.length : 0;
+        const avgNet = avgGross > 0 ? avgGross * 0.78 : 0; // ~78% of gross is typical net in Dubai
+        const rentVals = Object.values(r).filter(v => typeof v === "number" && v > 0);
+        const avgRent = rentVals.length > 0 ? Math.round(rentVals.reduce((a,b) => a+b, 0) / rentVals.length) : 0;
+        const priceVals = Object.values(s).filter(v => typeof v === "number" && v > 0);
+        const avgPrice = priceVals.length > 0 ? Math.round(priceVals.reduce((a,b) => a+b, 0) / priceVals.length) : 0;
+        return {
+          id: "y_" + (c.community || "").replace(/\s+/g, "_").toLowerCase(),
+          community: c.community,
+          type: "Apartment",
+          grossYield: parseFloat(avgGross.toFixed(1)),
+          netYield: parseFloat(avgNet.toFixed(1)),
+          avgRent: avgRent,
+          avgPrice: avgPrice,
+          ppsf: avgPrice > 0 ? Math.round(avgPrice / 900) : 0, // ~900 sqft avg
+          district: c.district || c.community,
+          source: c.source || "Bayut API",
+        };
+      }).filter(c => c.grossYield > 0);
+      if (yieldsTabData.length > 0) setLiveYieldsData(yieldsTabData);
     }));
 
     // liveMarketData/latest (written by cron every 6h)
@@ -2881,11 +2901,6 @@ export default function EmaarDashboardV2() {
       if (d.length > 0) setLiveSTRData(d);
     }, () => {}));
 
-    /* ─── YIELDS DATA ─── */
-    unsubs.push(onSnapshot(collection(db, "yieldsData"), snap => {
-      const d = snap.docs.map(x => ({ id:x.id, ...x.data() }));
-      if (d.length > 0) setLiveYieldsData(d);
-    }, () => {}));
 
     /* ─── MORTGAGE RATES ─── */
     unsubs.push(onSnapshot(collection(db, "mortgageRates"), snap => {
