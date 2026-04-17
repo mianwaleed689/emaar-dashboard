@@ -2849,10 +2849,28 @@ export default function EmaarDashboardV2() {
 
     // developers list
     unsubs.push(onSnapshot(collection(db, "developers"), (snap) => {
-      if (!snap.size) return;
+      // Phase 1b.1: show only PUBLISHED developers in the dashboard dropdown.
+      // Drafts stay visible inside Admin → Data Manager → Developers for editing,
+      // but should never leak into the customer-facing filter bar.
+      const tierRank = { "tier-1": 1, "tier-2": 2, "tier-3": 3 };
       const devs = [];
-      snap.forEach(d => devs.push({ id: d.id, ...d.data() }));
-      devs.sort((a, b) => (a.phase || 1) - (b.phase || 1));
+      snap.forEach(d => {
+        const data = d.data();
+        if (data.visibility !== "published") return; // drop drafts/archived
+        devs.push({ id: d.id, ...data });
+      });
+      devs.sort((a, b) => {
+        const ta = tierRank[a.tier] ?? 9;
+        const tb = tierRank[b.tier] ?? 9;
+        if (ta !== tb) return ta - tb;
+        const ra = Number(a.reliability) || 0;
+        const rb = Number(b.reliability) || 0;
+        if (rb !== ra) return rb - ra;
+        const pa = Number(a.totalProjects) || 0;
+        const pb = Number(b.totalProjects) || 0;
+        if (pb !== pa) return pb - pa;
+        return (a.name || "").localeCompare(b.name || "");
+      });
       setAllDevelopers(devs);
     }));
 
