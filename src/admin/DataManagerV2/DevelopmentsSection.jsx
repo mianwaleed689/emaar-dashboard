@@ -26,7 +26,7 @@ const VISIBILITY = ["draft", "published", "archived"];
 const DLD_CLASS = ["land", "unit", "villa"];
 
 // Dubai bounds for coordinate validation
-const DUBAI_BOUNDS = { minLat: 24.79, maxLat: 25.36, minLng: 54.89, maxLng: 55.57 };
+const DUBAI_BOUNDS = { minLat: 24.70, maxLat: 25.42, minLng: 54.85, maxLng: 55.70 };
 
 function slugify(str) {
   return String(str || "")

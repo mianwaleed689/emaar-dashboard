@@ -1,40 +1,105 @@
-import React from "react";
-import { collection, getDocs } from "firebase/firestore";
+import React, { useState, useEffect, useMemo } from "react";
+import { collection, onSnapshot } from "firebase/firestore";
 
+/**
+ * CancellationTab — admin view of user cancellations
+ *
+ * Rewritten (Wave 1.5) to replace the window._cancelLoaded / window._cancelData
+ * globals with proper React state. Uses onSnapshot so the list auto-updates
+ * in real-time when a new cancellation is recorded, without requiring a
+ * browser refresh.
+ */
 export default function CancellationTab({ T, I, db, notify, users }) {
-  if (!window._cancelLoaded) {
-    window._cancelLoaded = true;
-    getDocs(collection(db, "cancellations"))
-      .then(snap => { const list = []; snap.forEach(d => list.push({ id: d.id, ...d.data() })); list.sort((a, b) => new Date(b.cancelledAt||0) - new Date(a.cancelledAt||0)); window._cancelData = list; })
-      .catch(() => { window._cancelData = []; });
-  }
-  const realCancellations = window._cancelData || [];
-  const reasonMap = { too_expensive: { reason: "Too expensive", color: T.red }, not_using: { reason: "Not using enough", color: T.orange }, missing_features: { reason: "Missing features", color: T.purple }, found_alternative: { reason: "Found alternative", color: T.blue }, technical_issues: { reason: "Technical issues", color: T.teal }, other: { reason: "Other", color: T.textMuted } };
-  const reasonCounts = {};
-  realCancellations.forEach(c => { const key = c.reason || "other"; reasonCounts[key] = (reasonCounts[key] || 0) + 1; });
-  const totalReal = realCancellations.length;
-  const reasons = Object.entries(reasonMap).map(([key, meta]) => ({ ...meta, count: reasonCounts[key] || 0, percent: totalReal > 0 ? Math.round(((reasonCounts[key]||0)/totalReal)*100) : 0 })).filter(r => r.count > 0);
-  const now = new Date();
-  const thisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-  const lastMonth = new Date(now.getFullYear(), now.getMonth()-1, 1);
-  const churnedThisMonth = realCancellations.filter(c => new Date(c.cancelledAt||0) >= thisMonth).length;
-  const churnedLastMonth = realCancellations.filter(c => { const d = new Date(c.cancelledAt||0); return d >= lastMonth && d < thisMonth; }).length;
-  const totalPaid = users.filter(u => ["pro","enterprise","pro_trial"].includes(u.tier)).length;
-  const churnRate = totalPaid > 0 ? ((churnedThisMonth/totalPaid)*100).toFixed(1) : 0;
-  const fourteenDaysAgo = new Date(now.getTime() - 14*24*60*60*1000);
-  const atRiskUsers = users.filter(u => { if (!["pro","enterprise"].includes(u.tier)) return false; if (!u.lastLoginAt) return true; return new Date(u.lastLoginAt) < fourteenDaysAgo; });
-  const churnTrend = [];
-  for (let m = 5; m >= 0; m--) {
-    const start = new Date(now.getFullYear(), now.getMonth()-m, 1);
-    const end = new Date(now.getFullYear(), now.getMonth()-m+1, 0, 23, 59, 59);
-    const label = start.toLocaleDateString("en-AE", { month: "short" });
-    const churned = realCancellations.filter(c => { const d = new Date(c.cancelledAt||0); return d >= start && d <= end; }).length;
-    churnTrend.push({ month: label, churned });
-  }
+  const [realCancellations, setRealCancellations] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const unsub = onSnapshot(
+      collection(db, "cancellations"),
+      (snap) => {
+        const list = [];
+        snap.forEach((d) => list.push({ id: d.id, ...d.data() }));
+        list.sort((a, b) => new Date(b.cancelledAt || 0) - new Date(a.cancelledAt || 0));
+        setRealCancellations(list);
+        setLoading(false);
+      },
+      (err) => {
+        console.error("CancellationTab: failed to load cancellations:", err);
+        setRealCancellations([]);
+        setLoading(false);
+      }
+    );
+    return () => { try { unsub(); } catch {} };
+  }, [db]);
+
+  const reasonMap = useMemo(() => ({
+    too_expensive:     { reason: "Too expensive",       color: T.red       },
+    not_using:         { reason: "Not using enough",    color: T.orange    },
+    missing_features:  { reason: "Missing features",    color: T.purple    },
+    found_alternative: { reason: "Found alternative",   color: T.blue      },
+    technical_issues:  { reason: "Technical issues",    color: T.teal      },
+    other:             { reason: "Other",               color: T.textMuted },
+  }), [T]);
+
+  const derived = useMemo(() => {
+    const reasonCounts = {};
+    realCancellations.forEach((c) => {
+      const key = c.reason || "other";
+      reasonCounts[key] = (reasonCounts[key] || 0) + 1;
+    });
+    const totalReal = realCancellations.length;
+    const reasons = Object.entries(reasonMap)
+      .map(([key, meta]) => ({
+        ...meta,
+        count: reasonCounts[key] || 0,
+        percent: totalReal > 0 ? Math.round(((reasonCounts[key] || 0) / totalReal) * 100) : 0,
+      }))
+      .filter((r) => r.count > 0);
+
+    const now = new Date();
+    const thisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const churnedThisMonth = realCancellations.filter(
+      (c) => new Date(c.cancelledAt || 0) >= thisMonth
+    ).length;
+    const churnedLastMonth = realCancellations.filter((c) => {
+      const d = new Date(c.cancelledAt || 0);
+      return d >= lastMonth && d < thisMonth;
+    }).length;
+
+    const totalPaid = users.filter((u) => ["pro", "enterprise", "pro_trial"].includes(u.tier)).length;
+    const churnRate = totalPaid > 0 ? ((churnedThisMonth / totalPaid) * 100).toFixed(1) : 0;
+
+    const fourteenDaysAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
+    const atRiskUsers = users.filter((u) => {
+      if (!["pro", "enterprise"].includes(u.tier)) return false;
+      if (!u.lastLoginAt) return true;
+      return new Date(u.lastLoginAt) < fourteenDaysAgo;
+    });
+
+    const churnTrend = [];
+    for (let m = 5; m >= 0; m--) {
+      const start = new Date(now.getFullYear(), now.getMonth() - m, 1);
+      const end = new Date(now.getFullYear(), now.getMonth() - m + 1, 0, 23, 59, 59);
+      const label = start.toLocaleDateString("en-AE", { month: "short" });
+      const churned = realCancellations.filter((c) => {
+        const d = new Date(c.cancelledAt || 0);
+        return d >= start && d <= end;
+      }).length;
+      churnTrend.push({ month: label, churned });
+    }
+
+    return { reasons, totalReal, churnedThisMonth, churnedLastMonth, churnRate, atRiskUsers, churnTrend };
+  }, [realCancellations, users, reasonMap]);
+
+  const { reasons, totalReal, churnedThisMonth, churnedLastMonth, churnRate, atRiskUsers, churnTrend } = derived;
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       <div className="fade-up" style={{ display: "flex", alignItems: "center", borderRadius: 14, background: T.surface, border: `1px solid ${T.border}`, overflow: "hidden" }}>
-        <button type="button" onClick={() => { window._cancelLoaded = false; window._cancelData = null; notify("Refreshing..."); setTimeout(() => window.location.reload(), 300); }} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, padding: "14px 16px", background: T.goldGlow, border: "none", borderRight: `1px solid ${T.border}`, color: T.gold, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600, flexShrink: 0 }}>{I.refresh}</button>
+        {loading && (
+          <div style={{ fontSize: 11, padding: "14px 16px", background: T.goldGlow, borderRight: `1px solid ${T.border}`, color: T.gold, fontFamily: "'Outfit',sans-serif", fontWeight: 600, flexShrink: 0 }}>Loading…</div>
+        )}
         {[
           { label: "Total Cancellations", value: totalReal, color: T.textSecondary },
           { label: "This Month", value: churnedThisMonth, color: churnedThisMonth > 0 ? T.red : T.green },
