@@ -111,9 +111,7 @@ export const commKeyMap = {
   "Emaar South":              "ES",
   "The Valley":               "TV",
   "Grand Polo Club & Resort":          "GPC",
-  "Grand Polo Club & Resort": "GPC",   // alias
   "Rashid Yachts & Marina":   "RYM",
-  "Rashid Yachts & Marina":            "RYM",   // legacy alias — use canonical above
   "The Oasis":                "TO",
   "Business Bay":             "BB",
   "The Heights CW":           "TH",
@@ -122,12 +120,9 @@ export const commKeyMap = {
   "Downtown":                 "DT",    // alias — always resolve to Downtown Dubai
   "Dubai Marina":             "DM",
   "Arabian Ranches 3":        "AR3",
-  "Mina Rashid":              "RYM",
-  "Rashid Yachts & Marina":   "RYM",   // canonical alias
+  "Mina Rashid":              "MR",
   "Expo City":                "EC",
   "Zabeel":                   "ZB",
-  "Zabeel":                   "ZB",
-  "Expo City":                "EL",    // Expo City = same as Expo Living district
   // DAMAC
   "DAMAC Hills":              "DH",
   "DAMAC Hills 2":            "DH2",
@@ -180,8 +175,6 @@ export const commKeyMap = {
   "Sobha Elwood":             "SE",
   "Sobha Siniya Island":      "SSI",
   "Siniya Island":            "SSI",   // alias
-  // Aldar new communities
-  "Fahid Island":             "FI",
   // Meraas new communities
   "Dubai Design District":    "D3",
   "d3":                       "D3",    // alias
@@ -304,7 +297,7 @@ export const allCommunityCoords = [
   { district:"DT",   name:"Downtown Dubai",           lat:25.1972, lng:55.2744, color:T.gold,    developer:"emaar",    projects:5,  type:"Iconic CBD" },
   { district:"DM",   name:"Dubai Marina",             lat:25.0800, lng:55.1400, color:T.blue,    developer:"emaar",    projects:2,  type:"Waterfront" },
   { district:"AR3",  name:"Arabian Ranches 3",        lat:25.0550, lng:55.2700, color:T.green,   developer:"emaar",    projects:15, type:"Family Villas" },
-  { district:"RYM",  name:"Mina Rashid",               lat:25.2650, lng:55.2850, color:T.cyan,    developer:"emaar",    projects:22, type:"Marina Heritage" },
+  { district:"MR",   name:"Mina Rashid",               lat:25.2670, lng:55.2870, color:T.cyan,    developer:"emaar",    projects:22, type:"Marina Heritage" },
   { district:"EC",   name:"Expo City",                 lat:24.9700, lng:55.1380, color:T.teal,    developer:"emaar",    projects:2,  type:"Expo Legacy" },
   { district:"ZB",   name:"Zabeel",                    lat:25.2050, lng:55.2950, color:T.gold,    developer:"emaar",    projects:1,  type:"Urban Luxury" },
 ];
@@ -330,7 +323,7 @@ export const allCommunities = [
   { id:"DT",   name:"Downtown Dubai",           developer:"emaar",    avgPpsf:3200, avgYield:5.0, district:"DT",  projectCount:5,  location:"Downtown",      type:"Iconic CBD" },
   { id:"DM",   name:"Dubai Marina",             developer:"emaar",    avgPpsf:2400, avgYield:6.0, district:"DM",  projectCount:2,  location:"Marina",        type:"Waterfront" },
   { id:"AR3",  name:"Arabian Ranches 3",        developer:"emaar",    avgPpsf:2000, avgYield:5.0, district:"AR3", projectCount:15, location:"Dubailand",     type:"Family Villas" },
-  { id:"RYM",  name:"Mina Rashid",               developer:"emaar",    avgPpsf:2800, avgYield:5.2, district:"RYM", projectCount:22, location:"Bur Dubai",     type:"Marina Heritage" },
+  { id:"MR",   name:"Mina Rashid",               developer:"emaar",    avgPpsf:2800, avgYield:5.2, district:"MR",  projectCount:22, location:"Bur Dubai",     type:"Marina Heritage" },
   { id:"EC",   name:"Expo City",                 developer:"emaar",    avgPpsf:3000, avgYield:5.5, district:"EC",  projectCount:2,  location:"Dubai South",   type:"Expo Legacy" },
   { id:"ZB",   name:"Zabeel",                    developer:"emaar",    avgPpsf:3500, avgYield:5.0, district:"ZB",  projectCount:1,  location:"Downtown",      type:"Urban Luxury" },
   // ── Other developer communities reserved for future sessions ───────────────
@@ -448,7 +441,7 @@ export const nakheelDeliveryData     = [];
 export const meraasIdentity          = { id:"meraas",     name:"Meraas",               color:"#3B82F6", tier:"T1" };
 export const meraasLive              = {};
 export const meraasProjects          = [];
-export const meerasCommunities       = [];
+export const meraasCommunities       = [];
 export const meraasFinancials        = {};
 export const meraasFinancialHistory  = [];
 export const meraasYields            = [];
@@ -456,11 +449,11 @@ export const meraasRisks             = [];
 export const meraasSegments          = [];
 export const meraasRadar             = [];
 export const meraasHealthScore       = null;
-export const meerasBadges            = [];
-export const meraaseMegaProjects     = [];
+export const meraasBadges            = [];
+export const meraasMegaProjects      = [];
 export const meraasAnnualData        = [];
 export const meraasKeyMetrics        = {};
-export const meerasSalesData         = [];
+export const meraasSalesData         = [];
 export const meraasDeliveryData      = [];
 
 // Binghatti
