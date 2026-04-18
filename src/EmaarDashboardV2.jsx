@@ -285,70 +285,6 @@ const SvgIcons = {
 };
 
 /* ─── GLOBAL CONTEXT FILTER COMPONENT ─── */
-/* Phase 3.14.2: Dependent filters helper — pure function, no React hooks.
-   Returns the 4 derived lists used by the top filter bar. Placed at module
-   scope to avoid any name collision inside GlobalContextFilter. */
-function _dfp_computeDependentLists(_dfp_gDev, _dfp_gCom, _dfp_allDevs, _dfp_liveCom) {
-  var _dfp_commSet = null;
-  if (_dfp_gDev && _dfp_gDev !== "all") {
-    var _dfp_dev = null;
-    var _dfp_key = String(_dfp_gDev).toLowerCase();
-    for (var _dfp_i = 0; _dfp_i < (_dfp_allDevs || []).length; _dfp_i++) {
-      var _dfp_d = _dfp_allDevs[_dfp_i];
-      var _dfp_id = String((_dfp_d && _dfp_d.id) || "").toLowerCase();
-      var _dfp_nm = String((_dfp_d && _dfp_d.name) || "").toLowerCase();
-      if (_dfp_id === _dfp_key || _dfp_nm === _dfp_key) { _dfp_dev = _dfp_d; break; }
-    }
-    if (_dfp_dev && _dfp_dev.communities && _dfp_dev.communities.length > 0) {
-      _dfp_commSet = new Set();
-      for (var _dfp_j = 0; _dfp_j < _dfp_dev.communities.length; _dfp_j++) {
-        _dfp_commSet.add(String(_dfp_dev.communities[_dfp_j]).toLowerCase());
-      }
-    }
-  }
-
-  var _dfp_devSet = null;
-  if (_dfp_gCom && _dfp_gCom !== "all") {
-    var _dfp_needle = String(_dfp_gCom).toLowerCase();
-    _dfp_devSet = new Set();
-    for (var _dfp_k = 0; _dfp_k < (_dfp_allDevs || []).length; _dfp_k++) {
-      var _dfp_dd = _dfp_allDevs[_dfp_k];
-      var _dfp_comms = (_dfp_dd && _dfp_dd.communities) || [];
-      var _dfp_match = false;
-      for (var _dfp_m = 0; _dfp_m < _dfp_comms.length; _dfp_m++) {
-        if (String(_dfp_comms[_dfp_m]).toLowerCase() === _dfp_needle) { _dfp_match = true; break; }
-      }
-      if (_dfp_match) _dfp_devSet.add(String((_dfp_dd && _dfp_dd.id) || "").toLowerCase());
-    }
-    if (_dfp_devSet.size === 0) _dfp_devSet = null;
-  }
-
-  var _dfp_filteredDevs = (_dfp_allDevs || []);
-  if (_dfp_devSet) {
-    _dfp_filteredDevs = [];
-    for (var _dfp_x = 0; _dfp_x < _dfp_allDevs.length; _dfp_x++) {
-      var _dfp_dx = _dfp_allDevs[_dfp_x];
-      if (_dfp_devSet.has(String((_dfp_dx && _dfp_dx.id) || "").toLowerCase())) _dfp_filteredDevs.push(_dfp_dx);
-    }
-  }
-
-  var _dfp_filteredComs = (_dfp_liveCom || []);
-  if (_dfp_commSet) {
-    _dfp_filteredComs = [];
-    for (var _dfp_y = 0; _dfp_y < _dfp_liveCom.length; _dfp_y++) {
-      var _dfp_cy = _dfp_liveCom[_dfp_y];
-      if (_dfp_commSet.has(String((_dfp_cy && _dfp_cy.name) || "").toLowerCase())) _dfp_filteredComs.push(_dfp_cy);
-    }
-  }
-
-  return {
-    commSet: _dfp_commSet,
-    devSet: _dfp_devSet,
-    filteredDevs: _dfp_filteredDevs,
-    filteredComs: _dfp_filteredComs,
-  };
-}
-
 const GlobalContextFilter = ({
   gDeveloper, setGDeveloperAndReset,
   gCommunity, setGCommunity,
@@ -365,10 +301,6 @@ const GlobalContextFilter = ({
   const PROPERTY_TYPES_LIVE = _schema.propertyTypes;
   const STATUS_OPTIONS_LIVE = _schema.statusOptions;
   const PRICE_PRESETS_LIVE = _schema.pricePresets;
-
-  /* Phase 3.14.2: compute dependent filter lists via external helper.
-     Returns { commSet, devSet, filteredDevs, filteredComs }. */
-  const _dfp_lists = _dfp_computeDependentLists(gDeveloper, gCommunity, allDevelopers, liveCommunityList);
 
   // ─── cleanPhone: strips non-digits — NEVER use regex inside JSX ───
   const cleanPhone = (p) => {
@@ -470,8 +402,8 @@ const GlobalContextFilter = ({
           style={gDeveloper !== "all" ? activeSelStyle : selStyle}
         >
           <option value="all">All Developers</option>
-          {_dfp_lists.filteredDevs && _dfp_lists.filteredDevs.length > 0
-            ? _dfp_lists.filteredDevs.map(d => <option key={d.id} value={d.id}>{d.name}</option>)
+          {allDevelopers?.length > 0
+            ? allDevelopers.map(d => <option key={d.id} value={d.id}>{d.name}</option>)
             : ["Emaar","DAMAC","Sobha","Nakheel","Meraas","Aldar","Binghatti","Ellington","Omniyat","Azizi","Danube","Samana","MAG","Imtiaz"].map(n => (
                 <option key={n} value={n.toLowerCase()}>{n}</option>
               ))
@@ -500,9 +432,9 @@ const GlobalContextFilter = ({
           onChange={e => setGCommunity(e.target.value)}
           style={gCommunity !== "all" ? activeSelStyle : selStyle}
         >
-          <option value="all">{_dfp_lists.commSet ? "All (within selected developer)" : "All Communities"}</option>
-          {_dfp_lists.filteredComs && _dfp_lists.filteredComs.length > 0
-            ? _dfp_lists.filteredComs.map(c => (
+          <option value="all">All Communities</option>
+          {liveCommunityList && liveCommunityList.length > 0
+            ? liveCommunityList.map(c => (
                 <option key={c.id} value={c.name}>{c.name}</option>
               ))
             : null}
