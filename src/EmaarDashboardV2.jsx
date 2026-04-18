@@ -302,50 +302,38 @@ const GlobalContextFilter = ({
   const STATUS_OPTIONS_LIVE = _schema.statusOptions;
   const PRICE_PRESETS_LIVE = _schema.pricePresets;
 
-  /* Phase 3.14: Dependent filter derivation.
-     Given the selected developer, what communities are theirs?
-     Given the selected community, which developers have it?
-     Falls back to showing ALL items if no filter is set. */
-  const communitiesForSelectedDeveloper = React.useMemo(() => {
-    if (!gDeveloper || gDeveloper === "all") return null; // null = show all
-    const dev = (allDevelopers || []).find(d =>
-      String(d.id || "").toLowerCase() === String(gDeveloper).toLowerCase() ||
-      String(d.name || "").toLowerCase() === String(gDeveloper).toLowerCase()
+  /* Phase 3.14.1: Dependent filter derivation — plain inline computation.
+     No useMemo; the lists are tiny and recomputing every render is fine. */
+  let communitiesForSelectedDeveloper = null;
+  if (gDeveloper && gDeveloper !== "all") {
+    const __dev = (allDevelopers || []).find(__d =>
+      String(__d.id || "").toLowerCase() === String(gDeveloper).toLowerCase() ||
+      String(__d.name || "").toLowerCase() === String(gDeveloper).toLowerCase()
     );
-    const devCommunities = (dev?.communities || []).map(c => String(c).toLowerCase());
-    if (devCommunities.length === 0) return null; // developer has no mapping, show all
-    return new Set(devCommunities);
-  }, [gDeveloper, allDevelopers]);
+    const __devCommunities = ((__dev && __dev.communities) || []).map(__cc => String(__cc).toLowerCase());
+    if (__devCommunities.length > 0) {
+      communitiesForSelectedDeveloper = new Set(__devCommunities);
+    }
+  }
 
-  const developersForSelectedCommunity = React.useMemo(() => {
-    if (!gCommunity || gCommunity === "all") return null;
-    const needle = String(gCommunity).toLowerCase();
-    const matchingDevIds = new Set();
-    (allDevelopers || []).forEach(d => {
-      const hasCommunity = (d.communities || []).some(c => String(c).toLowerCase() === needle);
-      if (hasCommunity) matchingDevIds.add(String(d.id || "").toLowerCase());
+  let developersForSelectedCommunity = null;
+  if (gCommunity && gCommunity !== "all") {
+    const __needle = String(gCommunity).toLowerCase();
+    const __matching = new Set();
+    (allDevelopers || []).forEach(__d => {
+      const __has = ((__d && __d.communities) || []).some(__cc => String(__cc).toLowerCase() === __needle);
+      if (__has) __matching.add(String(__d.id || "").toLowerCase());
     });
-    if (matchingDevIds.size === 0) return null; // no developer claims this community, show all
-    return matchingDevIds;
-  }, [gCommunity, allDevelopers]);
+    if (__matching.size > 0) developersForSelectedCommunity = __matching;
+  }
 
-  /* Filtered Developer options: if a community is selected, show only
-     developers that have that community. Else show all. */
-  const filteredDevelopers = React.useMemo(() => {
-    if (!developersForSelectedCommunity) return allDevelopers || [];
-    return (allDevelopers || []).filter(d =>
-      developersForSelectedCommunity.has(String(d.id || "").toLowerCase())
-    );
-  }, [allDevelopers, developersForSelectedCommunity]);
+  const filteredDevelopers = developersForSelectedCommunity
+    ? (allDevelopers || []).filter(__d => developersForSelectedCommunity.has(String(__d.id || "").toLowerCase()))
+    : (allDevelopers || []);
 
-  /* Filtered Community options: if a developer is selected, show only
-     communities that are theirs. Else show all from liveCommunityList. */
-  const filteredCommunityList = React.useMemo(() => {
-    if (!communitiesForSelectedDeveloper) return liveCommunityList || [];
-    return (liveCommunityList || []).filter(c =>
-      communitiesForSelectedDeveloper.has(String(c.name || "").toLowerCase())
-    );
-  }, [liveCommunityList, communitiesForSelectedDeveloper]);
+  const filteredCommunityList = communitiesForSelectedDeveloper
+    ? (liveCommunityList || []).filter(__cc => communitiesForSelectedDeveloper.has(String(__cc.name || "").toLowerCase()))
+    : (liveCommunityList || []);
 
   // ─── cleanPhone: strips non-digits — NEVER use regex inside JSX ───
   const cleanPhone = (p) => {
