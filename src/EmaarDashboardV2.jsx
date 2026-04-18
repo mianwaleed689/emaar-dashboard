@@ -3943,6 +3943,8 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               liveCommunityROI={liveCommunityROI}
               setTab={handleTabChange}
               seedCommunities={SEED_DATA.communities}
+              globalFilters={_gf}
+              allDevelopers={allDevelopers}
             />
           )}
 
@@ -4288,6 +4290,8 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               invScView={invScView} setInvScView={setInvScView}
               invScSelected={invScSelected} setInvScSelected={setInvScSelected}
               liveInvestScores={liveInvestScores}
+              globalFilters={_gf}
+              allDevelopers={allDevelopers}
               handleTabChange={handleTabChange}
             />
           )}

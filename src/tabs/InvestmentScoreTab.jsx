@@ -9,7 +9,59 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { T } from "../data";
 import { SvgIcons } from "../components/Icons";
 
-function InvestmentScoreTab({ invScSearch, setInvScSearch, invScSort, setInvScSort, invScFilter, setInvScFilter, invScView, setInvScView, invScSelected, setInvScSelected, liveInvestScores, handleTabChange }) {
+function InvestmentScoreTab({ invScSearch, setInvScSearch, invScSort, setInvScSort, invScFilter, setInvScFilter, invScView, setInvScView, invScSelected, setInvScSelected, liveInvestScores, globalFilters = {}, allDevelopers = [], handleTabChange }) {
+
+  /* Phase 2.4 Batch 4: derive which communities match the global filter */
+  const gfDev = globalFilters?.developer && globalFilters.developer !== "all"
+    ? String(globalFilters.developer).toLowerCase() : null;
+  const gfCommunity = globalFilters?.community && globalFilters.community !== "all"
+    ? String(globalFilters.community).toLowerCase() : null;
+  const gfType = globalFilters?.type && globalFilters.type !== "all"
+    ? String(globalFilters.type).toLowerCase() : null;
+
+  const invScMatchingCommunities = (() => {
+    if (!gfDev && !gfCommunity) return null;
+    let set = null;
+    if (gfDev) {
+      const dev = (allDevelopers || []).find(d =>
+        String(d.id || "").toLowerCase() === gfDev ||
+        String(d.name || "").toLowerCase() === gfDev ||
+        String(d.name || "").toLowerCase().includes(gfDev)
+      );
+      if (dev && Array.isArray(dev.communities) && dev.communities.length > 0) {
+        set = new Set(dev.communities.map(c => String(c).toLowerCase()));
+      } else {
+        set = new Set();
+      }
+    }
+    if (gfCommunity) {
+      if (set) set = new Set([...set].filter(c => c === gfCommunity));
+      else set = new Set([gfCommunity]);
+    }
+    return set;
+  })();
+
+  const invScMatchesGlobalFilter = (row) => {
+    if (!row) return false;
+    if (invScMatchingCommunities) {
+      if (!invScMatchingCommunities.has(String(row.community || "").toLowerCase())) return false;
+    }
+    if (gfType) {
+      const TYPE_LABEL_MAP = {
+        "apartment": "apartment", "villa": "villa", "townhouse": "townhouse",
+        "penthouse": "penthouse", "duplex": "duplex", "garden_home": "garden home",
+        "sky_villa": "sky villa", "hotel_apartment": "hotel apartment",
+        "serviced_apartment": "serviced apartment", "resort_villa": "resort villa",
+        "branded_residence": "branded residence", "office": "office",
+        "retail": "retail", "showroom": "showroom", "warehouse": "warehouse",
+        "co_working_space": "co-working space", "land": "land",
+      };
+      const rowType = String(row.type || "").toLowerCase().trim();
+      const wantedType = TYPE_LABEL_MAP[gfType] || gfType;
+      if (rowType !== wantedType) return false;
+    }
+    return true;
+  };
 
 
             /* ══ RESEARCH-BASED SCORING 2026 ══
@@ -124,7 +176,9 @@ function InvestmentScoreTab({ invScSearch, setInvScSearch, invScSort, setInvScSo
                 note:"Al Maktoum Airport expansion play. 5-10yr horizon. Highest growth potential. Low current liquidity." },
             ];
 
-            const rawScores = liveInvestScores?.length > 0 ? liveInvestScores : SEED_SCORES;
+            const rawScoresUnfiltered = liveInvestScores?.length > 0 ? liveInvestScores : SEED_SCORES;
+            // Phase 2.4 Batch 4: apply top-bar global filter first.
+            const rawScores = rawScoresUnfiltered.filter(invScMatchesGlobalFilter);
 
             /* ── Calculate weighted total score ── */
             const getTotal = (d) => {

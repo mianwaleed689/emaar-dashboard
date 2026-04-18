@@ -12,7 +12,41 @@ import React from "react";
 import { T } from "../data";
 import { COMMUNITY_COORDS, getProjectCoords, getPPSFColor, getVolumeColor } from "../utils/coordinates";
 
-function CommunityMapTab({ activeProjects, liveCommunityROI, setTab, seedCommunities }) {
+function CommunityMapTab({ activeProjects, liveCommunityROI, setTab, seedCommunities, globalFilters = {}, allDevelopers = [] }) {
+
+  /* Phase 2.4 Batch 4: derive which communities match the global filter.
+     Returns a Set of lowercase community names, or null if no global filter. */
+  const gfDev = globalFilters?.developer && globalFilters.developer !== "all"
+    ? String(globalFilters.developer).toLowerCase() : null;
+  const gfCommunity = globalFilters?.community && globalFilters.community !== "all"
+    ? String(globalFilters.community).toLowerCase() : null;
+
+  const mapMatchingCommunities = React.useMemo(() => {
+    if (!gfDev && !gfCommunity) return null;
+    let set = null;
+    if (gfDev) {
+      const dev = (allDevelopers || []).find(d =>
+        String(d.id || "").toLowerCase() === gfDev ||
+        String(d.name || "").toLowerCase() === gfDev ||
+        String(d.name || "").toLowerCase().includes(gfDev)
+      );
+      if (dev && Array.isArray(dev.communities) && dev.communities.length > 0) {
+        set = new Set(dev.communities.map(c => String(c).toLowerCase()));
+      } else {
+        set = new Set();
+      }
+    }
+    if (gfCommunity) {
+      if (set) set = new Set([...set].filter(c => c === gfCommunity));
+      else set = new Set([gfCommunity]);
+    }
+    return set;
+  }, [gfDev, gfCommunity, allDevelopers]);
+
+  const mapMatchesGlobalFilter = (communityName) => {
+    if (!mapMatchingCommunities) return true;
+    return mapMatchingCommunities.has(String(communityName || "").toLowerCase());
+  };
 
   const [filterComm, setFilterComm] = React.useState("All");
   const [filterYield, setFilterYield] = React.useState("All");
@@ -24,9 +58,18 @@ function CommunityMapTab({ activeProjects, liveCommunityROI, setTab, seedCommuni
   const mapInstanceRef = React.useRef(null);
   const markersRef = React.useRef([]);
 
+  // Phase 2.4 Batch 4: filter projects shown on map
+  const filteredActiveProjects = React.useMemo(() => {
+    if (!mapMatchingCommunities) return activeProjects || [];
+    return (activeProjects || []).filter(p => mapMatchesGlobalFilter(p.community));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeProjects, mapMatchingCommunities]);
+
   // Community-level data for heat map layers
-  const communityData = seedCommunities?.length > 0
-    ? Object.fromEntries(seedCommunities.map(c => [
+  // Phase 2.4 Batch 4: pre-filter to communities that match the global filter
+  const filteredSeedCommunities = (seedCommunities || []).filter(c => mapMatchesGlobalFilter(c.community));
+  const communityData = filteredSeedCommunities.length > 0
+    ? Object.fromEntries(filteredSeedCommunities.map(c => [
         c.community,
         {
           coords: COMMUNITY_COORDS[c.community] || [25.1124, 55.2594],
