@@ -228,12 +228,12 @@ function YieldsTab({ liveYieldsData, yldSearch, setYldSearch, yldSort, setYldSor
                 {/* KPIs */}
                 <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(150px,1fr))", gap:10, marginBottom:20 }}>
                   {[
-                    { label:"Avg Gross"+kpiTypeLabel,  value:avgGross+"%",                 color:T.green  },
-                    { label:"Avg Net"+kpiTypeLabel,    value:avgNet+"%",                    color:T.teal   },
-                    { label:"Highest Yield",     value:topYield?.grossYield+"%",            color:T.green  },
-                    { label:"Best Community",    value:topYield?.community.split(" ")[0],   color:T.white  },
-                    { label:"Lowest Yield",      value:lowYield?.grossYield+"%",            color:"#3B82F6"},
-                    { label:"Communities Tracked",value:rawData.length,                     color:T.gold   },
+                    { label:"Avg Gross"+kpiTypeLabel,  value:kpiRows.length ? avgGross+"%" : "—",                                   color:T.green  },
+                    { label:"Avg Net"+kpiTypeLabel,    value:kpiRows.length ? avgNet+"%" : "—",                                     color:T.teal   },
+                    { label:"Highest Yield",     value:topYield ? topYield.grossYield+"%" : "—",                                    color:T.green  },
+                    { label:"Best Community",    value:topYield ? (topYield.community || "").split(" ")[0] : "—",                   color:T.white  },
+                    { label:"Lowest Yield",      value:lowYield ? lowYield.grossYield+"%" : "—",                                    color:"#3B82F6"},
+                    { label:"Communities Tracked",value:filtered.length,                                                             color:T.gold   },
                   ].map((k,i) => (
                     <div key={i} className="kpi-card">
                       <div style={{ fontSize:10, fontWeight:700, color:T.textMuted, letterSpacing:1, textTransform:"uppercase", marginBottom:8 }}>{k.label}</div>
@@ -422,24 +422,56 @@ function YieldsTab({ liveYieldsData, yldSearch, setYldSearch, yldSort, setYldSor
                   </div>
                 )}
 
-                {/* Phase 3.7: Smart empty state when filters yield no results */}
+                {/* Phase 3.8: Smart empty state — aware of global + local filters */}
                 {filtered.length === 0 && (
                   <SmartEmptyState
-                    rowsAll={rawData}
+                    rowsAll={rawDataUnfiltered}
                     filters={{
-                      type: yldType !== "All" ? yldType : "all",
+                      /* Compose standard filter keys the component recognizes.
+                         Local yldType wins over global type for the "type" chip. */
+                      developer: globalFilters?.developer && globalFilters.developer !== "all" ? globalFilters.developer : "all",
+                      community: globalFilters?.community && globalFilters.community !== "all" ? globalFilters.community : "all",
+                      type: yldType !== "All"
+                        ? yldType
+                        : (globalFilters?.type && globalFilters.type !== "all" ? globalFilters.type : "all"),
                     }}
+                    allDevelopers={allDevelopers}
                     entityLabel="yield rows"
                     onRemoveFilter={(key) => {
-                      if (key === "type") setYldType("All");
+                      /* Only yldType is removable inside the tab; globals require top-bar interaction.
+                         Still useful: offers suggestions that reveal which filter combo would work. */
+                      if (key === "type" && yldType !== "All") setYldType("All");
                     }}
                     onClearAll={() => {
-                      setYldType("All");
-                      setYldSearch("");
+                      setYldType("All"); setYldSearch("");
+                      /* Reset global filters via the URL (Phase 2.3's URL-state source of truth). */
+                      try {
+                        const u = new URL(window.location.href);
+                        ["developer","community","type","subType","beds","status","priceMin","priceMax"].forEach(k => u.searchParams.delete(k));
+                        window.history.replaceState({}, "", u.toString());
+                        window.dispatchEvent(new Event("popstate"));
+                      } catch {}
                     }}
                     matchFn={(d, filters) => {
+                      if (!d) return false;
+                      const TYPE_MAP = { apartment:"apartment", villa:"villa", townhouse:"townhouse", penthouse:"penthouse", duplex:"duplex", garden_home:"garden home", sky_villa:"sky villa", hotel_apartment:"hotel apartment", serviced_apartment:"serviced apartment", resort_villa:"resort villa", branded_res:"branded residence" };
                       if (filters.type && filters.type !== "all") {
-                        if (d.type !== filters.type) return false;
+                        // Two cases: (a) local yldType → already canonical label like "Villa"
+                        //            (b) global slug like "duplex" → map to label
+                        const raw = String(filters.type).toLowerCase();
+                        const needed = TYPE_MAP[raw] || raw;
+                        if (String(d.type || "").toLowerCase() !== needed) return false;
+                      }
+                      if (filters.community && filters.community !== "all") {
+                        if (String(d.community || "").toLowerCase() !== String(filters.community).toLowerCase()) return false;
+                      }
+                      if (filters.developer && filters.developer !== "all") {
+                        const dev = (allDevelopers || []).find(x =>
+                          String(x.id || "").toLowerCase() === String(filters.developer).toLowerCase() ||
+                          String(x.name || "").toLowerCase() === String(filters.developer).toLowerCase()
+                        );
+                        const devCommunities = (dev?.communities || []).map(c => String(c).toLowerCase());
+                        if (devCommunities.length > 0 && !devCommunities.includes(String(d.community || "").toLowerCase())) return false;
                       }
                       return true;
                     }}
