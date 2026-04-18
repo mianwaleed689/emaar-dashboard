@@ -44,13 +44,13 @@ function GoldenVisaTab({ gvView, setGvView, gvCategory, setGvCategory, gvNumProp
             const CATEGORIES = [
               {
                 key:"property", icon:"\uD83C\uDFE0", title:"Real Estate Investor",
-                duration:"10 years", renewable:true, threshold:"AED 2M property",
+                duration:"10 years", renewable:true, threshold:`${thresholdLabel} property`,
                 color:T.green, badge:"Most Popular",
                 requirements:[
-                  "Property value ≥ AED 2,000,000 (title deed value)",
+                  `Property value ≥ ${thresholdFull} (title deed value)`,
                   "Single property OR combined multiple properties",
                   "Ready or off-plan from DLD-approved developer",
-                  "Mortgaged property: need bank NOC + AED 2M paid",
+                  `Mortgaged property: need bank NOC + ${thresholdLabel} paid`,
                   "Property must be in applicant's personal name",
                   "Freehold zone — registered with DLD",
                 ],
@@ -127,7 +127,7 @@ function GoldenVisaTab({ gvView, setGvView, gvCategory, setGvCategory, gvNumProp
 
             /* ── Application steps ── */
             const STEPS = [
-              { n:"1", title:"Buy qualifying property", detail:"Purchase property ≥ AED 2M. Get title deed from DLD or Oqood for off-plan. Property must be in freehold zone." },
+              { n:"1", title:"Buy qualifying property", detail:`Purchase property ≥ ${thresholdLabel}. Get title deed from DLD or Oqood for off-plan. Property must be in freehold zone.` },
               { n:"2", title:"DLD property status certificate", detail:"Get official 'Property Status Statement' from Dubai Land Department confirming your ownership and value." },
               { n:"3", title:"Bank NOC (if mortgaged)", detail:"If property is mortgaged, bank must issue NOC confirming they do not object to visa issuance. Includes paid amount + balance." },
               { n:"4", title:"Gather documents", detail:"Passport, title deed/Oqood, personal photo, UAE ID (if any), current visa copy, health insurance." },
@@ -251,7 +251,7 @@ function GoldenVisaTab({ gvView, setGvView, gvCategory, setGvCategory, gvNumProp
                               onClick={()=>setGvOffplan(!gvOffplan)}>
                               <div>
                                 <div style={{ fontSize:12, fontWeight:700, color:T.white }}>Off-Plan Property</div>
-                                <div style={{ fontSize:11, color:T.textMuted }}>Amount paid to developer must be ≥ AED 2M</div>
+                                <div style={{ fontSize:11, color:T.textMuted }}>Amount paid to developer must be ≥ {thresholdLabel}</div>
                               </div>
                               <div style={{ width:36, height:20, borderRadius:10, background:gvOffplan?T.teal:T.border, position:"relative", flexShrink:0 }}>
                                 <div style={{ width:16, height:16, borderRadius:"50%", background:"#fff", position:"absolute", top:2, left:gvOffplan?18:2, transition:"left 0.15s" }} />
@@ -282,7 +282,7 @@ function GoldenVisaTab({ gvView, setGvView, gvCategory, setGvCategory, gvNumProp
                                 </button>
                               ))}
                             </div>
-                            {gvNumProps > 1 && <div style={{ fontSize:11, color:T.textMuted, marginTop:4 }}>Combined title deed values must total ≥ AED 2M. All under same owner's name.</div>}
+                            {gvNumProps > 1 && <div style={{ fontSize:11, color:T.textMuted, marginTop:4 }}>Combined title deed values must total ≥ {thresholdLabel}. All under same owner's name.</div>}
                           </div>
                         </div>
 
@@ -411,7 +411,7 @@ function GoldenVisaTab({ gvView, setGvView, gvCategory, setGvCategory, gvNumProp
                 {gvView === "properties" && (
                   <div style={{ marginBottom:16 }}>
                     <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:4 }}>Properties Qualifying for Golden Visa</div>
-                    <div style={{ fontSize:11, color:T.textMuted, marginBottom:16 }}>Projects priced AED 2M+ in freehold zones · Ready or off-plan · DLD registered</div>
+                    <div style={{ fontSize:11, color:T.textMuted, marginBottom:16 }}>Projects priced {thresholdLabel}+ in freehold zones · Ready or off-plan · DLD registered</div>
                     {nearThreshold.length > 0 ? (
                       <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(280px,1fr))", gap:12 }}>
                         {nearThreshold.map((p,i)=>{
