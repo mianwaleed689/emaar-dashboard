@@ -4229,6 +4229,8 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               yldCalcSize={yldCalcSize} setYldCalcSize={setYldCalcSize}
               yldCalcVacancy={yldCalcVacancy} setYldCalcVacancy={setYldCalcVacancy}
               yldCalcMgmt={yldCalcMgmt} setYldCalcMgmt={setYldCalcMgmt}
+              globalFilters={_gf}
+              allDevelopers={allDevelopers}
             />
           )}
 

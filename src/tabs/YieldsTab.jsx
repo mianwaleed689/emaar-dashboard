@@ -12,7 +12,77 @@ import { SvgIcons } from "../components/Icons";
 import { Section, Chart, CustomTooltip, KPI, ForecastCard, DataBadge, TabSources, LoadingSkeleton } from "../components/SharedUI";
 import SEED_DATA from "../utils/seedData";
 
-function YieldsTab({ liveYieldsData, yldSearch, setYldSearch, yldSort, setYldSort, yldType, setYldType, yldView, setYldView, yldCalcPrice, setYldCalcPrice, yldCalcRent, setYldCalcRent, yldCalcSC, setYldCalcSC, yldCalcSize, setYldCalcSize, yldCalcVacancy, setYldCalcVacancy, yldCalcMgmt, setYldCalcMgmt }) {
+function YieldsTab({ liveYieldsData, yldSearch, setYldSearch, yldSort, setYldSort, yldType, setYldType, yldView, setYldView, yldCalcPrice, setYldCalcPrice, yldCalcRent, setYldCalcRent, yldCalcSC, setYldCalcSC, yldCalcSize, setYldCalcSize, yldCalcVacancy, setYldCalcVacancy, yldCalcMgmt, setYldCalcMgmt, globalFilters = {}, allDevelopers = [] }) {
+
+  /* Phase 2.4 Batch 2: derive which communities match the global filter state.
+     Returns a Set of lowercase community names that match, or null if no
+     filter is active (meaning: show everything). */
+  const gfDev = globalFilters?.developer && globalFilters.developer !== "all"
+    ? String(globalFilters.developer).toLowerCase() : null;
+  const gfCommunity = globalFilters?.community && globalFilters.community !== "all"
+    ? String(globalFilters.community).toLowerCase() : null;
+  const gfType = globalFilters?.type && globalFilters.type !== "all"
+    ? String(globalFilters.type).toLowerCase() : null;
+
+  const yldMatchingCommunities = (() => {
+    if (!gfDev && !gfCommunity) return null; // no filter = show all
+    let set = null;
+    if (gfDev) {
+      const dev = (allDevelopers || []).find(d =>
+        String(d.id || "").toLowerCase() === gfDev ||
+        String(d.name || "").toLowerCase() === gfDev ||
+        String(d.name || "").toLowerCase().includes(gfDev)
+      );
+      if (dev && Array.isArray(dev.communities) && dev.communities.length > 0) {
+        set = new Set(dev.communities.map(c => String(c).toLowerCase()));
+      } else {
+        set = new Set(); // unknown developer or no communities listed → empty
+      }
+    }
+    if (gfCommunity) {
+      if (set) {
+        set = new Set([...set].filter(c => c === gfCommunity));
+      } else {
+        set = new Set([gfCommunity]);
+      }
+    }
+    return set;
+  })();
+
+  /** Returns true if a yield row should be shown given the global filter */
+  const yldMatchesGlobalFilter = (row) => {
+    if (!row) return false;
+    // Community check (developer + community filters)
+    if (yldMatchingCommunities) {
+      if (!yldMatchingCommunities.has(String(row.community || "").toLowerCase())) return false;
+    }
+    // Type check (Apartment / Villa) — map global "villa" to "Villa", etc.
+    if (gfType) {
+      // Global filter types: apartment, villa, townhouse, penthouse...
+      // Yields row types: "Apartment" / "Villa"
+      const rowType = String(row.type || "").toLowerCase();
+      // Treat townhouse, penthouse, duplex as apartment-like; villa/sky_villa/resort_villa as villa
+      const villaTypes = new Set(["villa", "sky_villa", "resort_villa"]);
+      const wantVilla = villaTypes.has(gfType);
+      if (wantVilla && rowType !== "villa") return false;
+      if (!wantVilla && rowType !== "apartment") return false;
+    }
+    return true;
+  };
+
+  // Human-readable label for the active filter, shown in empty state
+  const gfLabel = (() => {
+    const parts = [];
+    if (gfDev) {
+      const dev = (allDevelopers || []).find(d =>
+        String(d.id).toLowerCase() === gfDev
+      );
+      parts.push(dev?.name || gfDev);
+    }
+    if (gfCommunity) parts.push(globalFilters.community);
+    if (gfType) parts.push(globalFilters.type);
+    return parts.join(" · ");
+  })();
 
 
             /* ══ SEED DATA — Research-based 2026 ══
@@ -45,7 +115,9 @@ function YieldsTab({ liveYieldsData, yldSearch, setYldSearch, yldSort, setYldSor
               { id:"y19", community:"Palm Jumeirah",          type:"Villa",     grossYield:4.2, netYield:3.5, avgRent:800000, avgPrice:19048000,ppsf:3800, sc:6,   vacancy:4, trend:"0.0%",  trend3y:"+0.3%", tier:"Villa Yield", badge:"#8B5CF6", beds:{ "4BR":4.3, "5BR":4.1, "6BR+":3.9 }, demand:"Medium",    source:"CBRE / DLD Q1 2026" },
             ];
 
-            const rawData = liveYieldsData?.length > 0 ? liveYieldsData : SEED_YIELDS;
+            const rawDataUnfiltered = liveYieldsData?.length > 0 ? liveYieldsData : SEED_YIELDS;
+            // Phase 2.4 Batch 2: apply top-bar global filters first.
+            const rawData = rawDataUnfiltered.filter(yldMatchesGlobalFilter);
 
             const filtered = rawData.filter(d => {
               if (yldType !== "All" && d.type !== yldType) return false;
