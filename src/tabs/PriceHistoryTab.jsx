@@ -11,6 +11,7 @@ import { T } from "../data";
 import { SvgIcons } from "../components/Icons";
 import { Section, Chart, CustomTooltip, DataBadge, TabSources } from "../components/SharedUI";
 import SEED_DATA from "../utils/seedData";
+import { useFilterSchema } from "../contexts/FilterSchemaContext";
 
 function PriceHistoryTab({ phCommunity, setPhCommunity, phType, setPhType, phBeds, setPhBeds, phView, setPhView, phCompare, setPhCompare, phCommunity2, setPhCommunity2, liveMarketData, globalFilters = {}, handleTabChange }) {
 
@@ -83,7 +84,11 @@ function PriceHistoryTab({ phCommunity, setPhCommunity, phType, setPhType, phBed
               : phCommunity === "All" ? phCommunityData : phCommunityData.filter(d => d.community === phCommunity);
             const communities = ["All", ...new Set(phCommunityData.map(d => d.community).filter(Boolean))];
             const bedOptions = ["All", "Studio", "1 BR", "2 BR", "3 BR", "4 BR", "5 BR+"];
-            const typeOptions = ["Apartment", "Villa", "Townhouse", "Office", "Hotel Apartment"];
+            // Phase 3.4: type options now from live schema (admin-editable)
+            const { allTypeLabels: _schemaTypes } = useFilterSchema();
+            const typeOptions = _schemaTypes && _schemaTypes.length > 0
+              ? _schemaTypes
+              : ["Apartment", "Villa", "Townhouse", "Office", "Hotel Apartment"];
 
             /* ── Filter data ── */
             const filtered = phData.filter(d => {
