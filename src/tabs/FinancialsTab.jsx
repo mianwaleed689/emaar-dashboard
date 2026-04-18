@@ -14,7 +14,23 @@ function FinancialsTab({
   finMetric, setFinMetric,
   finCompare, setFinCompare,
   finCompareDev, setFinCompareDev,
+  globalFilters = {},
 }) {
+
+  /* Phase 2.4 Batch 7: auto-sync finDeveloper with top-bar developer filter */
+  const gfDev = globalFilters?.developer && globalFilters.developer !== "all"
+    ? globalFilters.developer : null;
+  React.useEffect(() => {
+    if (gfDev && finDeveloper !== gfDev) {
+      // Find the developer name/id in allDevelopers and use its canonical id
+      const dev = (allDevelopers || []).find(d =>
+        String(d.id || "").toLowerCase() === String(gfDev).toLowerCase() ||
+        String(d.name || "").toLowerCase() === String(gfDev).toLowerCase() ||
+        String(d.name || "").toLowerCase().includes(String(gfDev).toLowerCase()));
+      if (dev) setFinDeveloper(dev.id || dev.name);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [gfDev]);
 
 
             /* ══════════════════════════════════════════════════════════

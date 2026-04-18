@@ -14,7 +14,25 @@ function CompetitorsTab({
   cptDevB, setCptDevB,
   cptMetric, setCptMetric,
   cptView, setCptView,
+  globalFilters = {},
+  allDevelopers = [],
+  liveCompetitors,
 }) {
+
+  /* Phase 2.4 Batch 7: auto-sync Developer A to top-bar developer filter */
+  const gfDev = globalFilters?.developer && globalFilters.developer !== "all"
+    ? globalFilters.developer : null;
+  React.useEffect(() => {
+    if (gfDev) {
+      const dev = (allDevelopers || []).find(d =>
+        String(d.id || "").toLowerCase() === String(gfDev).toLowerCase() ||
+        String(d.name || "").toLowerCase() === String(gfDev).toLowerCase() ||
+        String(d.name || "").toLowerCase().includes(String(gfDev).toLowerCase()));
+      const target = dev?.name || gfDev;
+      if (target && cptDevA !== target) setCptDevA(target);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [gfDev]);
 
 
             /* ══════════════════════════════════════════════════════════

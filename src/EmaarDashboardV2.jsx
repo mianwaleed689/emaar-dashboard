@@ -3899,6 +3899,8 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               lcView={lcView} setLcView={setLcView}
               liveMarketData={liveMarketData}
               liveLaunches={liveLaunches}
+              globalFilters={_gf}
+              allDevelopers={allDevelopers}
               handleTabChange={handleTabChange}
             />
           )}
@@ -4221,6 +4223,8 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               scCalcSize={scCalcSize} setScCalcSize={setScCalcSize}
               scCalcRate={scCalcRate} setScCalcRate={setScCalcRate}
               scCalcRent={scCalcRent} setScCalcRent={setScCalcRent}
+              globalFilters={_gf}
+              allDevelopers={allDevelopers}
             />
           )}
 
@@ -4260,6 +4264,8 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               strCalcOccupancy={strCalcOccupancy} setStrCalcOccupancy={setStrCalcOccupancy}
               strCalcMgmt={strCalcMgmt} setStrCalcMgmt={setStrCalcMgmt}
               strCalcLTR={strCalcLTR} setStrCalcLTR={setStrCalcLTR}
+              globalFilters={_gf}
+              allDevelopers={allDevelopers}
             />
           )}
 
@@ -4340,6 +4346,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               avmRenovated={avmRenovated} setAvmRenovated={setAvmRenovated}
               avmFurnished={avmFurnished} setAvmFurnished={setAvmFurnished}
               avmParking={avmParking} setAvmParking={setAvmParking}
+              globalFilters={_gf}
             />
           )}
 
@@ -4398,6 +4405,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               finMetric={finMetric} setFinMetric={setFinMetric}
               finCompare={finCompare} setFinCompare={setFinCompare}
               finCompareDev={finCompareDev} setFinCompareDev={setFinCompareDev}
+              globalFilters={_gf}
             />
           )}
 
@@ -4475,6 +4483,8 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               cptMetric={cptMetric} setCptMetric={setCptMetric}
               cptView={cptView} setCptView={setCptView}
               liveCompetitors={liveCompetitors}
+              globalFilters={_gf}
+              allDevelopers={allDevelopers}
             />
           )}
 

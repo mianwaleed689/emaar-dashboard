@@ -9,7 +9,36 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { T } from "../data";
 import { SvgIcons } from "../components/Icons";
 
-function ServiceChargesTab({ liveServiceCharges, scSearch, setScSearch, scSort, setScSort, scType, setScType, scView, setScView, scCalcSize, setScCalcSize, scCalcRate, setScCalcRate, scCalcRent, setScCalcRent }) {
+function ServiceChargesTab({ liveServiceCharges, scSearch, setScSearch, scSort, setScSort, scType, setScType, scView, setScView, scCalcSize, setScCalcSize, scCalcRate, setScCalcRate, scCalcRent, setScCalcRent, globalFilters = {}, allDevelopers = [] }) {
+
+  /* Phase 2.4 Batch 7: derive matching communities from global filter */
+  const gfDev = globalFilters?.developer && globalFilters.developer !== "all"
+    ? String(globalFilters.developer).toLowerCase() : null;
+  const gfCommunity = globalFilters?.community && globalFilters.community !== "all"
+    ? String(globalFilters.community).toLowerCase() : null;
+
+  const scMatchingCommunities = (() => {
+    if (!gfDev && !gfCommunity) return null;
+    let set = null;
+    if (gfDev) {
+      const dev = (allDevelopers || []).find(d =>
+        String(d.id || "").toLowerCase() === gfDev ||
+        String(d.name || "").toLowerCase() === gfDev ||
+        String(d.name || "").toLowerCase().includes(gfDev));
+      if (dev && Array.isArray(dev.communities) && dev.communities.length > 0) {
+        set = new Set(dev.communities.map(c => String(c).toLowerCase()));
+      } else set = new Set();
+    }
+    if (gfCommunity) {
+      if (set) set = new Set([...set].filter(c => c === gfCommunity));
+      else set = new Set([gfCommunity]);
+    }
+    return set;
+  })();
+  const scMatchesGlobalFilter = (c) => {
+    if (!scMatchingCommunities) return true;
+    return scMatchingCommunities.has(String(c || "").toLowerCase());
+  };
 
 
             /* ══ SEED DATA — RERA 2026 Research ══
@@ -44,7 +73,9 @@ function ServiceChargesTab({ liveServiceCharges, scSearch, setScSearch, scSort, 
               { id:"sc23", community:"Palm Jumeirah",         type:"Villa",     rate:6,   rate3yAgo:5,   yoy:8,  tier:"Ultra",     chiller:false, notes:"Frond villas. Very high capital value vs modest service charge.", investGrade:"Good" },
             ];
 
-            const liveData = liveServiceCharges?.length > 0 ? liveServiceCharges : SEED_SC;
+            const liveDataAll = liveServiceCharges?.length > 0 ? liveServiceCharges : SEED_SC;
+            // Phase 2.4 Batch 7: apply top-bar global filter
+            const liveData = liveDataAll.filter(d => scMatchesGlobalFilter(d.community));
 
             // Filters
             const filtered = liveData.filter(d => {

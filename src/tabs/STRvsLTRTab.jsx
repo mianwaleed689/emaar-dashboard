@@ -9,7 +9,34 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { T } from "../data";
 import { SvgIcons } from "../components/Icons";
 
-function STRvsLTRTab({ liveSTRData, strCommunity, setStrCommunity, strBeds, setStrBeds, strView, setStrView, strCalcPrice, setStrCalcPrice, strCalcSize, setStrCalcSize, strCalcNightly, setStrCalcNightly, strCalcOccupancy, setStrCalcOccupancy, strCalcMgmt, setStrCalcMgmt, strCalcLTR, setStrCalcLTR }) {
+function STRvsLTRTab({ liveSTRData, strCommunity, setStrCommunity, strBeds, setStrBeds, strView, setStrView, strCalcPrice, setStrCalcPrice, strCalcSize, setStrCalcSize, strCalcNightly, setStrCalcNightly, strCalcOccupancy, setStrCalcOccupancy, strCalcMgmt, setStrCalcMgmt, strCalcLTR, setStrCalcLTR, globalFilters = {}, allDevelopers = [] }) {
+
+  /* Phase 2.4 Batch 7: sync strCommunity to top-bar community filter.
+     Also derive matcher to narrow rawSTR rows by developer/community. */
+  const gfDev = globalFilters?.developer && globalFilters.developer !== "all"
+    ? String(globalFilters.developer).toLowerCase() : null;
+  const gfCommunity = globalFilters?.community && globalFilters.community !== "all"
+    ? globalFilters.community : null;
+  React.useEffect(() => {
+    if (gfCommunity && strCommunity !== gfCommunity) setStrCommunity(gfCommunity);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [gfCommunity]);
+
+  const strGfDev = gfDev
+    ? (allDevelopers || []).find(d =>
+        String(d.id || "").toLowerCase() === gfDev ||
+        String(d.name || "").toLowerCase() === gfDev ||
+        String(d.name || "").toLowerCase().includes(gfDev))
+    : null;
+  const strGfCommunities = (strGfDev && Array.isArray(strGfDev.communities) && strGfDev.communities.length > 0)
+    ? new Set(strGfDev.communities.map(c => String(c).toLowerCase())) : null;
+  const strMatchesGlobalFilter = (row) => {
+    if (!row) return false;
+    const rowCommunity = String(row.community || "").toLowerCase();
+    if (gfDev && strGfCommunities && !strGfCommunities.has(rowCommunity)) return false;
+    if (gfCommunity && rowCommunity !== String(gfCommunity).toLowerCase()) return false;
+    return true;
+  };
 
 
             /* ══ RESEARCH-BASED SEED DATA 2026 ══
@@ -33,7 +60,9 @@ function STRvsLTRTab({ liveSTRData, strCommunity, setStrCommunity, strBeds, setS
               { id:"s10", community:"Arjan",               strNightly:260,  strOccupancy:60, ltrAnnual:63000,  strGross:7.2,  ltrGross:7.5, strNet:4.8, ltrNet:6.1, beds:"1BR", dtcmAllowed:true,  mgmtFee:18, strCosts:12000, verdict:"LTR",    note:"No tourist demand. LTR clearly wins. Mid-market residents dominate." },
             ];
 
-            const rawSTR = liveSTRData?.length > 0 ? liveSTRData : SEED_STR;
+            const rawSTRAll = liveSTRData?.length > 0 ? liveSTRData : SEED_STR;
+            // Phase 2.4 Batch 7: apply top-bar global filter
+            const rawSTR = rawSTRAll.filter(strMatchesGlobalFilter);
             const filtered = rawSTR.filter(d => {
               if (strCommunity !== "All" && d.community !== strCommunity) return false;
               if (strBeds !== "All" && d.beds !== strBeds) return false;

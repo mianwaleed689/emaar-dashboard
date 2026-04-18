@@ -9,7 +9,15 @@ import React from "react";
 import { T } from "../data";
 import { SvgIcons } from "../components/Icons";
 
-function DXBEstimateTab({ avmCommunity, setAvmCommunity, avmType, setAvmType, avmBeds, setAvmBeds, avmSize, setAvmSize, avmFloor, setAvmFloor, avmView, setAvmView, avmView2, setAvmView2, avmCondition, setAvmCondition, avmRenovated, setAvmRenovated, avmFurnished, setAvmFurnished, avmParking, setAvmParking }) {
+function DXBEstimateTab({ avmCommunity, setAvmCommunity, avmType, setAvmType, avmBeds, setAvmBeds, avmSize, setAvmSize, avmFloor, setAvmFloor, avmView, setAvmView, avmView2, setAvmView2, avmCondition, setAvmCondition, avmRenovated, setAvmRenovated, avmFurnished, setAvmFurnished, avmParking, setAvmParking, globalFilters = {} }) {
+
+  /* Phase 2.4 Batch 7: auto-sync AVM community with top-bar community filter */
+  const gfCommunity = globalFilters?.community && globalFilters.community !== "all"
+    ? globalFilters.community : null;
+  React.useEffect(() => {
+    if (gfCommunity && avmCommunity !== gfCommunity) setAvmCommunity(gfCommunity);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [gfCommunity]);
 
 
             const BASE_PPSF = {

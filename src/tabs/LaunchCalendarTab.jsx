@@ -795,8 +795,40 @@ function LaunchCalendarTab({
   lcView, setLcView,
   liveMarketData,
   liveLaunches,
+  globalFilters = {},
+  allDevelopers = [],
   handleTabChange,
 }) {
+
+  /* Phase 2.4 Batch 7: derive matcher from global filter */
+  const gfDev = globalFilters?.developer && globalFilters.developer !== "all"
+    ? String(globalFilters.developer).toLowerCase() : null;
+  const gfCommunity = globalFilters?.community && globalFilters.community !== "all"
+    ? String(globalFilters.community).toLowerCase() : null;
+  const lcGfDev = gfDev
+    ? (allDevelopers || []).find(d =>
+        String(d.id || "").toLowerCase() === gfDev ||
+        String(d.name || "").toLowerCase() === gfDev ||
+        String(d.name || "").toLowerCase().includes(gfDev))
+    : null;
+  const lcGfDevName = lcGfDev?.name ? String(lcGfDev.name).toLowerCase() : null;
+  const lcGfCommunities = (lcGfDev && Array.isArray(lcGfDev.communities) && lcGfDev.communities.length > 0)
+    ? new Set(lcGfDev.communities.map(c => String(c).toLowerCase())) : null;
+
+  const lcMatchesGlobalFilter = (p) => {
+    if (!p) return false;
+    if (gfDev) {
+      const rowDev = String(p.developer || "").toLowerCase();
+      const rowCommunity = String(p.community || "").toLowerCase();
+      const devMatch = lcGfDevName && rowDev === lcGfDevName;
+      const commMatch = lcGfCommunities && lcGfCommunities.has(rowCommunity);
+      if (!devMatch && !commMatch) return false;
+    }
+    if (gfCommunity) {
+      if (String(p.community || "").toLowerCase() !== gfCommunity) return false;
+    }
+    return true;
+  };
   const [calcBudget, setCalcBudget] = useState(2000000);
   const [compareIds, setCompareIds] = useState([]);
   const [filterChip, setFilterChip] = useState("all");
@@ -808,8 +840,10 @@ function LaunchCalendarTab({
   const view = (lcView === "newspaper" || lcView === "calendar" || lcView === "compare") ? lcView : "newspaper";
 
   const launches = useMemo(() => {
-    return (liveLaunches && liveLaunches.length > 0) ? liveLaunches : SEED_LAUNCHES;
-  }, [liveLaunches]);
+    const src = (liveLaunches && liveLaunches.length > 0) ? liveLaunches : SEED_LAUNCHES;
+    return src.filter(lcMatchesGlobalFilter);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [liveLaunches, gfDev, gfCommunity]);
   const isSeed = !liveLaunches || liveLaunches.length === 0;
 
   const filtered = useMemo(() => {
