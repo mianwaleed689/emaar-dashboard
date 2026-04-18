@@ -14,6 +14,7 @@ import { signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthState
 import { collection, getDocs, doc, getDoc, setDoc, updateDoc, deleteDoc, onSnapshot, addDoc, query, where, orderBy, limit } from "firebase/firestore";
 import emailjs from "@emailjs/browser";
 import { safeAsyncWithToast } from "./utils/safeAsync";
+import { useFilterSchema } from "./contexts/FilterSchemaContext";
 import { useFilters } from "./hooks/useFilters";
 import { GOLDEN_VISA_THRESHOLD } from "./utils/constants";
 import { T } from "./data";
@@ -294,6 +295,12 @@ const GlobalContextFilter = ({
   gPriceMax, setGPriceMax,
   allDevelopers, liveCommunityList = [], T,
 }) => {
+  // Phase 3.3: consume filter schema from admin-editable context
+  const _schema = useFilterSchema();
+  const PROPERTY_TYPES_LIVE = _schema.propertyTypes;
+  const STATUS_OPTIONS_LIVE = _schema.statusOptions;
+  const PRICE_PRESETS_LIVE = _schema.pricePresets;
+
   // ─── cleanPhone: strips non-digits — NEVER use regex inside JSX ───
   const cleanPhone = (p) => {
     if (!p) return "";
@@ -318,13 +325,14 @@ const GlobalContextFilter = ({
 
   const [open, setOpen] = React.useState(false);
 
-  // Get beds options from selected property type
-  const selectedTypeData = PROPERTY_TYPES.flatMap(g => g.types).find(t => t.value === gPropertyType);
+  // Phase 3.3: beds + presets now derive from live schema (admin-editable)
+  const selectedTypeData = PROPERTY_TYPES_LIVE.flatMap(g => g.types || []).find(t => t.value === gPropertyType);
   const bedsOptions = selectedTypeData?.beds || ["Studio","1 BR","2 BR","3 BR","4 BR","5 BR+"];
 
-  // Price presets based on type
+  // Price presets from live schema. Villa/townhouse still use a specific subset
+  // if the user has configured one in admin; otherwise fall back to the live list.
   const isVilla = ["villa","townhouse","sky_villa","resort_villa"].includes(gPropertyType);
-  const pricePresets = isVilla ? PRICE_PRESETS_VILLA : PRICE_PRESETS_APT;
+  const pricePresets = PRICE_PRESETS_LIVE;
 
   // Active filter count
   const activeCount = [
@@ -408,7 +416,7 @@ const GlobalContextFilter = ({
           style={gPropertyType !== "all" ? activeSelStyle : selStyle}
         >
           <option value="all">All Types</option>
-          {PROPERTY_TYPES.map(group => (
+          {PROPERTY_TYPES_LIVE.map(group => (
             <optgroup key={group.group} label={group.group}>
               {group.types.map(t => (
                 <option key={t.value} value={t.value}>{t.label}</option>
@@ -447,7 +455,7 @@ const GlobalContextFilter = ({
           onChange={e => setGStatus(e.target.value)}
           style={gStatus !== "all" ? activeSelStyle : selStyle}
         >
-          {STATUS_OPTIONS.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
+          {STATUS_OPTIONS_LIVE.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
         </select>
 
         {/* Price presets */}
