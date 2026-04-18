@@ -302,6 +302,51 @@ const GlobalContextFilter = ({
   const STATUS_OPTIONS_LIVE = _schema.statusOptions;
   const PRICE_PRESETS_LIVE = _schema.pricePresets;
 
+  /* Phase 3.14: Dependent filter derivation.
+     Given the selected developer, what communities are theirs?
+     Given the selected community, which developers have it?
+     Falls back to showing ALL items if no filter is set. */
+  const communitiesForSelectedDeveloper = React.useMemo(() => {
+    if (!gDeveloper || gDeveloper === "all") return null; // null = show all
+    const dev = (allDevelopers || []).find(d =>
+      String(d.id || "").toLowerCase() === String(gDeveloper).toLowerCase() ||
+      String(d.name || "").toLowerCase() === String(gDeveloper).toLowerCase()
+    );
+    const devCommunities = (dev?.communities || []).map(c => String(c).toLowerCase());
+    if (devCommunities.length === 0) return null; // developer has no mapping, show all
+    return new Set(devCommunities);
+  }, [gDeveloper, allDevelopers]);
+
+  const developersForSelectedCommunity = React.useMemo(() => {
+    if (!gCommunity || gCommunity === "all") return null;
+    const needle = String(gCommunity).toLowerCase();
+    const matchingDevIds = new Set();
+    (allDevelopers || []).forEach(d => {
+      const hasCommunity = (d.communities || []).some(c => String(c).toLowerCase() === needle);
+      if (hasCommunity) matchingDevIds.add(String(d.id || "").toLowerCase());
+    });
+    if (matchingDevIds.size === 0) return null; // no developer claims this community, show all
+    return matchingDevIds;
+  }, [gCommunity, allDevelopers]);
+
+  /* Filtered Developer options: if a community is selected, show only
+     developers that have that community. Else show all. */
+  const filteredDevelopers = React.useMemo(() => {
+    if (!developersForSelectedCommunity) return allDevelopers || [];
+    return (allDevelopers || []).filter(d =>
+      developersForSelectedCommunity.has(String(d.id || "").toLowerCase())
+    );
+  }, [allDevelopers, developersForSelectedCommunity]);
+
+  /* Filtered Community options: if a developer is selected, show only
+     communities that are theirs. Else show all from liveCommunityList. */
+  const filteredCommunityList = React.useMemo(() => {
+    if (!communitiesForSelectedDeveloper) return liveCommunityList || [];
+    return (liveCommunityList || []).filter(c =>
+      communitiesForSelectedDeveloper.has(String(c.name || "").toLowerCase())
+    );
+  }, [liveCommunityList, communitiesForSelectedDeveloper]);
+
   // ─── cleanPhone: strips non-digits — NEVER use regex inside JSX ───
   const cleanPhone = (p) => {
     if (!p) return "";
@@ -402,8 +447,9 @@ const GlobalContextFilter = ({
           style={gDeveloper !== "all" ? activeSelStyle : selStyle}
         >
           <option value="all">All Developers</option>
-          {allDevelopers?.length > 0
-            ? allDevelopers.map(d => <option key={d.id} value={d.id}>{d.name}</option>)
+          {/* Phase 3.14: filteredDevelopers narrows to those having the selected community */}
+          {filteredDevelopers?.length > 0
+            ? filteredDevelopers.map(d => <option key={d.id} value={d.id}>{d.name}</option>)
             : ["Emaar","DAMAC","Sobha","Nakheel","Meraas","Aldar","Binghatti","Ellington","Omniyat","Azizi","Danube","Samana","MAG","Imtiaz"].map(n => (
                 <option key={n} value={n.toLowerCase()}>{n}</option>
               ))
@@ -432,9 +478,12 @@ const GlobalContextFilter = ({
           onChange={e => setGCommunity(e.target.value)}
           style={gCommunity !== "all" ? activeSelStyle : selStyle}
         >
-          <option value="all">All Communities</option>
-          {liveCommunityList && liveCommunityList.length > 0
-            ? liveCommunityList.map(c => (
+          <option value="all">
+            {communitiesForSelectedDeveloper ? "All (within selected developer)" : "All Communities"}
+          </option>
+          {/* Phase 3.14: filteredCommunityList narrows to selected developer's communities */}
+          {filteredCommunityList && filteredCommunityList.length > 0
+            ? filteredCommunityList.map(c => (
                 <option key={c.id} value={c.name}>{c.name}</option>
               ))
             : null}
