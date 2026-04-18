@@ -292,7 +292,7 @@ const GlobalContextFilter = ({
   gStatus, setGStatus,
   gPriceMin, setGPriceMin,
   gPriceMax, setGPriceMax,
-  allDevelopers, T,
+  allDevelopers, liveCommunityList = [], T,
 }) => {
   // ─── cleanPhone: strips non-digits — NEVER use regex inside JSX ───
   const cleanPhone = (p) => {
@@ -415,6 +415,20 @@ const GlobalContextFilter = ({
               ))}
             </optgroup>
           ))}
+        </select>
+
+        {/* Community (Phase 2.4.8) */}
+        <select
+          value={gCommunity}
+          onChange={e => setGCommunity(e.target.value)}
+          style={gCommunity !== "all" ? activeSelStyle : selStyle}
+        >
+          <option value="all">All Communities</option>
+          {liveCommunityList && liveCommunityList.length > 0
+            ? liveCommunityList.map(c => (
+                <option key={c.id} value={c.name}>{c.name}</option>
+              ))
+            : null}
         </select>
 
         {/* Beds / Config */}
@@ -2108,6 +2122,7 @@ export default function EmaarDashboardV2() {
   const [liveProjects, setLiveProjects] = useState({});
   const [extraProjects, setExtraProjects] = useState([]);
   const [liveYields, setLiveYields] = useState([]);
+  const [liveCommunityList, setLiveCommunityList] = useState([]);
   // ── Price Alerts ──
   const [showAlerts, setShowAlerts] = useState(false);
   const [myAlerts, setMyAlerts] = useState([]);
@@ -2864,6 +2879,25 @@ export default function EmaarDashboardV2() {
     }));
 
     // developers list
+    // Phase 2.4.8: Community list for top-bar Community dropdown
+    unsubs.push(onSnapshot(collection(db, "communityData"), (snap) => {
+      const list = [];
+      snap.forEach(d => {
+        const data = d.data();
+        // Only published communities with a human-readable name.
+        // Skip the short-ID cron-yields artefacts (BB, DCH, etc.) which lack visibility.
+        if (data.visibility === "published" && (data.name || data.community)) {
+          list.push({
+            id: d.id,
+            name: data.name || data.community,
+            district: data.district || null,
+          });
+        }
+      });
+      list.sort((a, b) => a.name.localeCompare(b.name));
+      setLiveCommunityList(list);
+    }));
+
     unsubs.push(onSnapshot(collection(db, "developers"), (snap) => {
       // Phase 1b.1: show only PUBLISHED developers in the dashboard dropdown.
       // Drafts stay visible inside Admin → Data Manager → Developers for editing,
@@ -3767,7 +3801,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
         gStatus={gStatus} setGStatus={setGStatus}
         gPriceMin={gPriceMin} setGPriceMin={setGPriceMin}
         gPriceMax={gPriceMax} setGPriceMax={setGPriceMax}
-        allDevelopers={allDevelopers} T={T}
+        allDevelopers={allDevelopers} liveCommunityList={liveCommunityList} T={T}
       />
 
       {/* ─── MAIN CONTENT ─── */}
