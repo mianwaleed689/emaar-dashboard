@@ -140,16 +140,29 @@ export default function FilterSchemaAdminTab({ T, I, notify }) {
     toast("Reverted to last saved");
   };
 
-  const resetToDefaults = () => {
-    if (!window.confirm("Reset ALL filter schema to built-in defaults? Your custom changes will be lost (you can still undo until you Save).")) return;
-    setDraft({
+  const resetToDefaults = async () => {
+    if (!window.confirm("Reset ALL filter schema to built-in defaults? This will publish to Firestore immediately — all users will see the defaults.")) return;
+    const defaults = {
       propertyTypes: PROPERTY_TYPES_DEFAULT,
       statusOptions: STATUS_OPTIONS_DEFAULT,
       pricePresets: PRICE_PRESETS_DEFAULT,
       tierLabels: TIER_LABELS_DEFAULT,
       goldenVisaThreshold: GOLDEN_VISA_THRESHOLD_DEFAULT,
-    });
-    toast("Draft reset to defaults — click Save to publish");
+    };
+    setDraft(defaults);
+    /* Phase 3.11: auto-save to Firestore so Reset actually persists. */
+    if (saving) return;
+    setSaving(true);
+    try {
+      await setDoc(doc(db, "platformSettings", "main"), {
+        filterSchema: defaults,
+        _lastEditedAt: new Date().toISOString(),
+      }, { merge: true });
+      toast("Reset to defaults — published platform-wide");
+    } catch (err) {
+      toast("Reset save failed: " + (err?.message || err));
+    }
+    setSaving(false);
   };
 
   /* ── Styles ── */
