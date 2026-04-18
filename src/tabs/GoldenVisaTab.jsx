@@ -8,6 +8,7 @@ import React from "react";
 import { T } from "../data";
 import { SvgIcons } from "../components/Icons";
 import { GOLDEN_VISA_THRESHOLD } from "../utils/constants";
+import { useFilterSchema } from "../contexts/FilterSchemaContext";
 
 function GoldenVisaTab({ gvView, setGvView, gvCategory, setGvCategory, gvNumProps, setGvNumProps, gvPropPrice, setGvPropPrice, gvMortgage, setGvMortgage, gvOffplan, setGvOffplan, gvOffplanPaid, setGvOffplanPaid, gvMortgagePaid, liveProjects, SEED_PROJECTS, handleTabChange }) {
 
@@ -18,7 +19,15 @@ function GoldenVisaTab({ gvView, setGvView, gvCategory, setGvCategory, gvNumProp
                Federal Decree-Law No. 14 of 2022
             ════════════════════════════════════ */
 
-            const THRESHOLD = GOLDEN_VISA_THRESHOLD;
+            // Phase 3.9: threshold comes from FilterSchemaContext (admin-editable)
+            const _schema = useFilterSchema();
+            const THRESHOLD = _schema.goldenVisaThreshold || GOLDEN_VISA_THRESHOLD;
+            // Human-readable threshold: "AED 2M" / "AED 2.5M" / "AED 3M"
+            const thresholdLabel = THRESHOLD >= 1000000
+              ? `AED ${(THRESHOLD / 1000000).toFixed(THRESHOLD % 1000000 === 0 ? 0 : 1)}M`
+              : `AED ${(THRESHOLD / 1000).toFixed(0)}K`;
+            // Full format e.g. "AED 2,500,000"
+            const thresholdFull = `AED ${THRESHOLD.toLocaleString()}`;
 
             /* ── Eligibility check ── */
             const effectivePropValue = gvMortgage
@@ -151,7 +160,7 @@ function GoldenVisaTab({ gvView, setGvView, gvCategory, setGvCategory, gvNumProp
                 <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"10px 0", marginBottom:16, borderBottom:`1px solid ${T.border}`, flexWrap:"wrap", gap:8 }}>
                   <div>
                     <div style={{ fontFamily:"'Fraunces',serif", fontSize:20, fontWeight:800, color:T.white }}>UAE Golden Visa</div>
-                    <div style={{ fontSize:11, color:T.textMuted, marginTop:3 }}>10-year residency · AED 2M threshold · Family sponsorship · No minimum stay · Official DLD 2026</div>
+                    <div style={{ fontSize:11, color:T.textMuted, marginTop:3 }}>10-year residency · {thresholdLabel} threshold · Family sponsorship · No minimum stay · Official DLD 2026</div>
                   </div>
                   <div style={{ display:"flex", gap:8 }}>
                     {["checker","guide","properties"].map(v=>(
@@ -166,7 +175,7 @@ function GoldenVisaTab({ gvView, setGvView, gvCategory, setGvCategory, gvNumProp
                 {/* Key facts strip */}
                 <div style={{ display:"flex", gap:10, marginBottom:16, flexWrap:"wrap" }}>
                   {[
-                    { label:"Minimum Investment", val:"AED 2M",     color:T.gold,   note:"property value" },
+                    { label:"Minimum Investment", val:thresholdLabel, color:T.gold,   note:"property value" },
                     { label:"Visa Duration",       val:"10 years",  color:T.green,  note:"renewable" },
                     { label:"Minimum Stay",         val:"ZERO",      color:T.green,  note:"live anywhere" },
                     { label:"Sponsor Needed",       val:"NO",        color:T.green,  note:"self-sponsored" },
@@ -287,8 +296,8 @@ function GoldenVisaTab({ gvView, setGvView, gvCategory, setGvCategory, gvNumProp
                             </div>
                             <div style={{ fontSize:13, color:T.textSecondary, marginBottom:12 }}>
                               {eligible
-                                ? `Property value AED ${(effectivePropValue/1e6).toFixed(2)}M meets the AED 2M threshold`
-                                : `Need AED ${(gap/1000).toFixed(0)}K more to reach AED 2M threshold`}
+                                ? `Property value AED ${(effectivePropValue/1e6).toFixed(2)}M meets the ${thresholdLabel} threshold`
+                                : `Need AED ${(gap/1000).toFixed(0)}K more to reach ${thresholdLabel} threshold`}
                             </div>
                             {/* Progress bar */}
                             <div style={{ height:8, borderRadius:4, background:T.border, marginBottom:6 }}>
@@ -297,7 +306,7 @@ function GoldenVisaTab({ gvView, setGvView, gvCategory, setGvCategory, gvNumProp
                             <div style={{ display:"flex", justifyContent:"space-between", fontSize:10, color:T.textMuted }}>
                               <span>AED 0</span>
                               <span style={{ color:eligible?T.green:T.gold, fontWeight:700 }}>AED {(effectivePropValue/1e6).toFixed(2)}M ({pctToThreshold.toFixed(0)}%)</span>
-                              <span>AED 2M ✓</span>
+                              <span>{thresholdLabel} ✓</span>
                             </div>
                           </div>
 
