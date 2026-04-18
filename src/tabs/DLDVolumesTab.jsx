@@ -12,17 +12,68 @@ import { SvgIcons } from "../components/Icons";
 import { Section, Chart, CustomTooltip, DataBadge, TabSources } from "../components/SharedUI";
 import SEED_DATA from "../utils/seedData";
 
-function DLDVolumesTab({ dldFilter, setDldFilter, dldSearch, setDldSearch, dldSort, setDldSort, dldView, setDldView, liveDLDVolumes, handleTabChange }) {
+function DLDVolumesTab({ dldFilter, setDldFilter, dldSearch, setDldSearch, dldSort, setDldSort, dldView, setDldView, liveDLDVolumes, globalFilters = {}, allDevelopers = [], handleTabChange }) {
+
+  /* Phase 2.4 Batch 5: derive matching communities from global filter */
+  const gfDev = globalFilters?.developer && globalFilters.developer !== "all"
+    ? String(globalFilters.developer).toLowerCase() : null;
+  const gfCommunity = globalFilters?.community && globalFilters.community !== "all"
+    ? String(globalFilters.community).toLowerCase() : null;
+  const gfType = globalFilters?.type && globalFilters.type !== "all"
+    ? String(globalFilters.type).toLowerCase() : null;
+
+  const dldGfRecord = gfDev
+    ? (allDevelopers || []).find(d =>
+        String(d.id || "").toLowerCase() === gfDev ||
+        String(d.name || "").toLowerCase() === gfDev ||
+        String(d.name || "").toLowerCase().includes(gfDev)
+      )
+    : null;
+  const dldGfDevName = dldGfRecord?.name ? String(dldGfRecord.name).toLowerCase() : null;
+  const dldGfCommunities = (dldGfRecord && Array.isArray(dldGfRecord.communities) && dldGfRecord.communities.length > 0)
+    ? new Set(dldGfRecord.communities.map(c => String(c).toLowerCase()))
+    : null;
+
+  const dldMatchesGlobalFilter = (d) => {
+    if (!d) return false;
+    if (gfDev) {
+      const rowDev = String(d.developer || "").toLowerCase();
+      const rowCommunity = String(d.community || "").toLowerCase();
+      const devMatch = dldGfDevName && rowDev === dldGfDevName;
+      const communityMatch = dldGfCommunities && dldGfCommunities.has(rowCommunity);
+      if (!devMatch && !communityMatch) return false;
+    }
+    if (gfCommunity) {
+      if (String(d.community || "").toLowerCase() !== gfCommunity) return false;
+    }
+    if (gfType) {
+      const TYPE_LABEL_MAP = {
+        "apartment": "apartment", "villa": "villa", "townhouse": "townhouse",
+        "penthouse": "penthouse", "duplex": "duplex", "garden_home": "garden home",
+        "sky_villa": "sky villa", "hotel_apartment": "hotel apartment",
+        "serviced_apartment": "serviced apartment", "resort_villa": "resort villa",
+        "branded_residence": "branded residence", "office": "office",
+        "retail": "retail", "showroom": "showroom", "warehouse": "warehouse",
+        "co_working_space": "co-working space", "land": "land",
+      };
+      const rowType = String(d.type || "").toLowerCase().trim();
+      const wantedType = TYPE_LABEL_MAP[gfType] || gfType;
+      if (rowType !== wantedType) return false;
+    }
+    return true;
+  };
 
 
             /* ── Local state ── */
             /* state moved to top level */
 
             /* ── Filter data ── */
-            const rawData = (() => {
+            const rawDataUnfiltered = (() => {
               const live = (liveDLDVolumes || []).filter(d => d.community || d.developer || d.type);
               return live.length > 0 ? live : SEED_DATA.dldVolumes;
             })();
+            // Phase 2.4 Batch 5: apply top-bar global filter first.
+            const rawData = rawDataUnfiltered.filter(dldMatchesGlobalFilter);
             const dldIsSeed = !liveDLDVolumes?.length;
             const filtered = rawData.filter(d => {
               if (dldFilter.community !== "All" && d.community !== dldFilter.community) return false;

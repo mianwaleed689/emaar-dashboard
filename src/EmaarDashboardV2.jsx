@@ -3845,6 +3845,8 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               dldSort={dldSort} setDldSort={setDldSort}
               dldView={dldView} setDldView={setDldView}
               liveDLDVolumes={liveDLDVolumes}
+              globalFilters={_gf}
+              allDevelopers={allDevelopers}
               handleTabChange={handleTabChange}
             />
           )}
@@ -3860,6 +3862,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               phCompare={phCompare} setPhCompare={setPhCompare}
               phCommunity2={phCommunity2} setPhCommunity2={setPhCommunity2}
               liveMarketData={liveMarketData}
+              globalFilters={_gf}
               handleTabChange={handleTabChange}
             />
           )}
@@ -3878,6 +3881,8 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               liveNeighbourhoods={liveNeighbourhoods}
               liveCommunityROI={liveCommunityROI}
               liveMarketData={liveMarketData}
+              globalFilters={_gf}
+              allDevelopers={allDevelopers}
               handleTabChange={handleTabChange}
               selectedNbhd={selectedNbhd} setSelectedNbhd={setSelectedNbhd}
             />

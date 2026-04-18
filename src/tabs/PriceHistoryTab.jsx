@@ -12,7 +12,19 @@ import { SvgIcons } from "../components/Icons";
 import { Section, Chart, CustomTooltip, DataBadge, TabSources } from "../components/SharedUI";
 import SEED_DATA from "../utils/seedData";
 
-function PriceHistoryTab({ phCommunity, setPhCommunity, phType, setPhType, phBeds, setPhBeds, phView, setPhView, phCompare, setPhCompare, phCommunity2, setPhCommunity2, liveMarketData, handleTabChange }) {
+function PriceHistoryTab({ phCommunity, setPhCommunity, phType, setPhType, phBeds, setPhBeds, phView, setPhView, phCompare, setPhCompare, phCommunity2, setPhCommunity2, liveMarketData, globalFilters = {}, handleTabChange }) {
+
+  /* Phase 2.4 Batch 5: when the top bar picks a community, sync the tab's
+     own community selector to match. User can still override via the
+     tab's internal dropdown. */
+  const gfCommunity = globalFilters?.community && globalFilters.community !== "all"
+    ? globalFilters.community : null;
+  React.useEffect(() => {
+    if (gfCommunity && phCommunity !== gfCommunity) {
+      setPhCommunity(gfCommunity);
+    }
+  }, [gfCommunity]);
+  // eslint-disable-next-line
 
 
             /* state moved to top level */

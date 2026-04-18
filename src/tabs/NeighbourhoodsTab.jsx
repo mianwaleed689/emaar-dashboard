@@ -30,14 +30,49 @@ const ScoreBadge = ({ score, size = "sm" }) => {
   );
 };
 
-function NeighbourhoodsTab({ nbhSearch, setNbhSearch, nbhTypeFilter, setNbhTypeFilter, nbhYieldFilter, setNbhYieldFilter, nbhRiskFilter, setNbhRiskFilter, nbhSort, setNbhSort, nbhView, setNbhView, nbhCompare, setNbhCompare, liveNeighbourhoods, liveCommunityROI, liveMarketData, handleTabChange, selectedNbhd, setSelectedNbhd }) {
+function NeighbourhoodsTab({ nbhSearch, setNbhSearch, nbhTypeFilter, setNbhTypeFilter, nbhYieldFilter, setNbhYieldFilter, nbhRiskFilter, setNbhRiskFilter, nbhSort, setNbhSort, nbhView, setNbhView, nbhCompare, setNbhCompare, liveNeighbourhoods, liveCommunityROI, liveMarketData, globalFilters = {}, allDevelopers = [], handleTabChange, selectedNbhd, setSelectedNbhd }) {
+
+  /* Phase 2.4 Batch 5: derive matching community set from global filter */
+  const gfDev = globalFilters?.developer && globalFilters.developer !== "all"
+    ? String(globalFilters.developer).toLowerCase() : null;
+  const gfCommunity = globalFilters?.community && globalFilters.community !== "all"
+    ? String(globalFilters.community).toLowerCase() : null;
+
+  const nbhMatchingCommunities = (() => {
+    if (!gfDev && !gfCommunity) return null;
+    let set = null;
+    if (gfDev) {
+      const dev = (allDevelopers || []).find(d =>
+        String(d.id || "").toLowerCase() === gfDev ||
+        String(d.name || "").toLowerCase() === gfDev ||
+        String(d.name || "").toLowerCase().includes(gfDev)
+      );
+      if (dev && Array.isArray(dev.communities) && dev.communities.length > 0) {
+        set = new Set(dev.communities.map(c => String(c).toLowerCase()));
+      } else {
+        set = new Set();
+      }
+    }
+    if (gfCommunity) {
+      if (set) set = new Set([...set].filter(c => c === gfCommunity));
+      else set = new Set([gfCommunity]);
+    }
+    return set;
+  })();
+
+  const nbhMatchesGlobalFilter = (communityName) => {
+    if (!nbhMatchingCommunities) return true;
+    return nbhMatchingCommunities.has(String(communityName || "").toLowerCase());
+  };
 
 
             /* state moved to top level */
 
             /* ── Community data from Firestore ── */
             const rawNbhFirestore = liveMarketData?.filter?.(d => d.type === "community") || [];
-            const rawNbh = rawNbhFirestore.length > 0 ? rawNbhFirestore : SEED_DATA.communities;
+            const rawNbhAll = rawNbhFirestore.length > 0 ? rawNbhFirestore : SEED_DATA.communities;
+            // Phase 2.4 Batch 5: apply top-bar global filter
+            const rawNbh = rawNbhAll.filter(n => nbhMatchesGlobalFilter(n.community));
             const nbhIsSeed = rawNbhFirestore.length === 0;
 
 
