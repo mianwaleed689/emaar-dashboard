@@ -15,6 +15,7 @@ import { collection, getDocs, doc, getDoc, setDoc, updateDoc, deleteDoc, onSnaps
 import emailjs from "@emailjs/browser";
 import { safeAsyncWithToast } from "./utils/safeAsync";
 import { useFilterSchema } from "./contexts/FilterSchemaContext";
+import FilterIndicator from "./components/FilterIndicator";
 import { useFilters } from "./hooks/useFilters";
 import { GOLDEN_VISA_THRESHOLD } from "./utils/constants";
 import { T } from "./data";
@@ -2116,6 +2117,11 @@ export default function EmaarDashboardV2() {
      two/three separate ones (cleaner history, no in-between render). */
   const setGDeveloperAndReset = (v) => _gSetMany({ developer: v, community: "all" });
   const setGPropertyTypeAndReset = (v) => _gSetMany({ type: v, subType: "all", beds: "all" });
+  /* Phase 3.5: centralized reset for FilterIndicator "Clear all" action */
+  const resetAllGlobalFilters = () => _gSetMany({
+    developer: "all", community: "all", type: "all", subType: "all",
+    beds: "all", status: "all", priceMin: 0, priceMax: 0,
+  });
   const [time, setTime] = useState(new Date());
   const [authLoading, setAuthLoading] = useState(true);
   const [isSuspended, setIsSuspended] = useState(false);
@@ -3851,6 +3857,20 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
           </div>
         )}
         <div style={{ padding: `0 24px ${compareList.length > 0 && tab === "Projects" ? "120px" : "60px"}` }}>
+          {/* Phase 3.5: Global Filter Indicator — shows active filters across all tabs */}
+          <FilterIndicator
+            filters={{
+              developer: gDeveloper,
+              community: gCommunity,
+              type: gPropertyType,
+              beds: gBeds,
+              status: gStatus,
+              priceMin: gPriceMin,
+              priceMax: gPriceMax,
+            }}
+            allDevelopers={allDevelopers}
+            onClear={resetAllGlobalFilters}
+          />
           <TabErrorBoundary key={tab}>
 
           {/* ─── OVERVIEW TAB ─── */}
