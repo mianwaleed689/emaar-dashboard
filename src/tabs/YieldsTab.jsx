@@ -56,16 +56,33 @@ function YieldsTab({ liveYieldsData, yldSearch, setYldSearch, yldSort, setYldSor
     if (yldMatchingCommunities) {
       if (!yldMatchingCommunities.has(String(row.community || "").toLowerCase())) return false;
     }
-    // Type check (Apartment / Villa) — map global "villa" to "Villa", etc.
+    // Type check — strict equality. Map global filter slugs (e.g. "hotel_apartment")
+    // to canonical row type strings ("Hotel Apartment") via TYPE_LABEL_MAP.
+    // If user picks a type that doesn't exist in the data (e.g. Penthouse when
+    // yields only contain Apartments + Villas), result is empty — honest.
     if (gfType) {
-      // Global filter types: apartment, villa, townhouse, penthouse...
-      // Yields row types: "Apartment" / "Villa"
-      const rowType = String(row.type || "").toLowerCase();
-      // Treat townhouse, penthouse, duplex as apartment-like; villa/sky_villa/resort_villa as villa
-      const villaTypes = new Set(["villa", "sky_villa", "resort_villa"]);
-      const wantVilla = villaTypes.has(gfType);
-      if (wantVilla && rowType !== "villa") return false;
-      if (!wantVilla && rowType !== "apartment") return false;
+      const TYPE_LABEL_MAP = {
+        "apartment": "apartment",
+        "villa": "villa",
+        "townhouse": "townhouse",
+        "penthouse": "penthouse",
+        "duplex": "duplex",
+        "garden_home": "garden home",
+        "sky_villa": "sky villa",
+        "hotel_apartment": "hotel apartment",
+        "serviced_apartment": "serviced apartment",
+        "resort_villa": "resort villa",
+        "branded_residence": "branded residence",
+        "office": "office",
+        "retail": "retail",
+        "showroom": "showroom",
+        "warehouse": "warehouse",
+        "co_working_space": "co-working space",
+        "land": "land",
+      };
+      const rowType = String(row.type || "").toLowerCase().trim();
+      const wantedType = TYPE_LABEL_MAP[gfType] || gfType;
+      if (rowType !== wantedType) return false;
     }
     return true;
   };
