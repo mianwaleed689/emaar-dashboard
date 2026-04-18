@@ -19,7 +19,7 @@
  *   - Duplicate value prevention on types/statuses
  */
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { doc, getDoc, setDoc, onSnapshot } from "firebase/firestore";
 import { db } from "../firebase";
 import {
@@ -59,6 +59,10 @@ export default function FilterSchemaAdminTab({ T, I, notify }) {
   const [saving, setSaving] = useState(false);
   const [activeSection, setActiveSection] = useState("propertyTypes");
   const [loading, setLoading] = useState(true);
+  /* Phase 3.9.1 fix: use a ref instead of reading stale `lastSaved` from closure.
+     The ref survives the useEffect's [] dep list and reflects the actual
+     current load state. Fixes Reset-to-defaults snap-back bug. */
+  const didInitialLoad = useRef(false);
 
   // Subscribe to Firestore
   useEffect(() => {
@@ -75,8 +79,12 @@ export default function FilterSchemaAdminTab({ T, I, notify }) {
           goldenVisaThreshold: typeof fs.goldenVisaThreshold === "number" ? fs.goldenVisaThreshold : GOLDEN_VISA_THRESHOLD_DEFAULT,
         };
         setLastSaved(resolved);
-        // Only overwrite draft on first load — avoid clobbering user edits
-        setDraft(prev => lastSaved === null ? resolved : prev);
+        /* Only overwrite draft on VERY FIRST load. After that, preserve
+           whatever user has typed/reset locally until they explicitly Save. */
+        if (!didInitialLoad.current) {
+          setDraft(resolved);
+          didInitialLoad.current = true;
+        }
         setLoading(false);
       }, (err) => {
         console.warn("FilterSchemaAdminTab: Firestore error:", err?.message);
