@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import ReactDOM from "react-dom";
 import { auth, db, storage, firebaseConfig } from "./firebase";
+import FilterSchemaAdminTab from "./admin/FilterSchemaAdminTab";
 import { initializeApp, deleteApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import emailjs from "@emailjs/browser";
@@ -14909,6 +14910,7 @@ export default function AdminPanel() {
     { id: "pricing_plans", label: "Pricing Plans", icon: React.createElement("svg", {width:"18",height:"18",viewBox:"0 0 24 24",fill:"none",stroke:"currentColor",strokeWidth:"1.8",strokeLinecap:"round",strokeLinejoin:"round"}, React.createElement("line", {x1:"12",y1:"1",x2:"12",y2:"23"}), React.createElement("path", {d:"M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"})) },
     { id: "market_intelligence", label: "Market Intel", icon: React.createElement("svg", {width:"18",height:"18",viewBox:"0 0 24 24",fill:"none",stroke:"currentColor",strokeWidth:"1.8",strokeLinecap:"round",strokeLinejoin:"round"}, React.createElement("circle", {cx:"12",cy:"12",r:"10"}), React.createElement("line", {x1:"12",y1:"8",x2:"12",y2:"12"}), React.createElement("line", {x1:"12",y1:"16",x2:"12.01",y2:"16"})) },{ id: "tabcontrol", label: "Tab Control", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="4" rx="1"/><rect x="3" y="10" width="18" height="4" rx="1"/><rect x="3" y="17" width="18" height="4" rx="1"/><line x1="7" y1="5" x2="7" y2="5"/><line x1="7" y1="12" x2="7" y2="12"/><line x1="7" y1="19" x2="7" y2="19"/></svg> },
     { id: "platform_settings", label: "Platform Settings", icon: React.createElement("svg", {width:"18",height:"18",viewBox:"0 0 24 24",fill:"none",stroke:"currentColor",strokeWidth:"1.8",strokeLinecap:"round",strokeLinejoin:"round"}, React.createElement("circle", {cx:"12",cy:"12",r:"3"}), React.createElement("path", {d:"M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"})) },
+    { id: "filter_schema", label: "Filter Schema", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg> },
     { id: "analytics", label: "Analytics", icon: I.analytics },
   ];
 
@@ -21919,6 +21921,8 @@ export default function AdminPanel() {
           {tab === "cancellation" && <CancellationTab T={T} I={I} db={db} notify={notify} users={users} />}
           {/* SUPPORT TAB */}
           {tab === "support" && <SupportTab T={T} I={I} db={db} notify={notify} adminUser={adminUser} users={users} setTab={setTab} setPendingOpenUid={setPendingOpenUid} />}
+
+          {tab === "filter_schema" && <FilterSchemaAdminTab T={T} I={I} notify={notify} />}
 
           {tab === "tabcontrol" && (() => {
             /* ═══════════════════════════════════════════════════════════════════
