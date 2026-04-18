@@ -598,49 +598,79 @@ function ProjectsTab({
                       <button type="button" onClick={() => { setSelectedProject(null); handleTabChange("Investment Score"); }} style={{ padding:"9px 18px", background:`linear-gradient(135deg,${T.gold},#B8922A)`, border:"none", borderRadius:8, color:"#000", fontSize:12, fontWeight:700, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>Calculate ROI →</button>
                       <button type="button" onClick={() => { setSelectedProject(null); handleTabChange("Mortgage"); }} style={{ padding:"9px 18px", background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:8, color:T.textSecondary, fontSize:12, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>Mortgage</button>
                       <button type="button" onClick={() => { setSelectedProject(null); handleTabChange("My Leads"); }} style={{ padding:"9px 18px", background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:8, color:T.textSecondary, fontSize:12, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>Add to Lead</button>
-                      <button type="button" onClick={() => {
-                          const score = calcScore(selectedProject);
-                          const units = selectedProject.unitBreakdown?.map(u => `  • ${u.type}: AED ${(u.ppsf||0).toLocaleString()}/sqft | From AED ${(u.priceMin/1000000).toFixed(2)}M | Yield ${u.grossYield||"—"}%`).join("\n") || "";
-                          const dists = [
-                            selectedProject.distMetro != null ? `Metro: ${selectedProject.distMetro}km` : null,
-                            selectedProject.distDIFC != null ? `DIFC: ${selectedProject.distDIFC}km` : null,
-                            selectedProject.distBeach != null && selectedProject.distBeach <= 5 ? `Beach: ${selectedProject.distBeach < 1 ? (selectedProject.distBeach*1000).toFixed(0)+"m" : selectedProject.distBeach+"km"}` : null,
-                            selectedProject.distSchool != null ? `School: ${selectedProject.distSchool}km` : null,
-                          ].filter(Boolean).join(" | ");
-                          const txt = [
-                            "\uD83C\uDFD9️ DXB ANALYTICS — PROPERTY BRIEF",
-                            "━━━━━━━━━━━━━━━━━━━━━━━━",
-                            `\uD83D\uDCCC ${selectedProject.project}`,
-                            `\uD83C\uDFE2 Developer: ${selectedProject.developer}`,
-                            `\uD83D\uDCCD Community: ${selectedProject.community}`,
-                            `\uD83C\uDFE0 Type: ${selectedProject.type}`,
-                            "",
-                            "\uD83D\uDCB0 PRICING",
-                            `   Starting from: AED ${((selectedProject.priceMin||0)/1000000).toFixed(2)}M`,
-                            `   Price per sqft: AED ${(selectedProject.ppsf||0).toLocaleString()}`,
-                            units ? `\n\uD83D\uDCD0 UNIT BREAKDOWN\n${units}` : "",
-                            "",
-                            "\uD83D\uDCCA INVESTMENT",
-                            `   Gross Yield: ${selectedProject.grossYield||"—"}%`,
-                            `   Net Yield: ${selectedProject.netYield||"—"}%`,
-                            `   Payment Plan: ${selectedProject.paymentPlan||"TBC"}`,
-                            `   Post-Handover: ${selectedProject.postHandover?"Yes":"No"}`,
-                            `   Handover: ${selectedProject.handover||"TBC"}`,
-                            `   Investment Score: ${score}/100 — ${score>=80?"Strong Buy":score>=65?"Buy":"Hold"}`,
-                            "",
-                            "\uD83D\uDCCD DISTANCES",
-                            `   ${dists || "See full details"}`,
-                            "",
-                            selectedProject.amenities?.length > 0 ? `✨ AMENITIES\n   ${selectedProject.amenities.slice(0,6).join(" · ")}` : "",
-                            "",
-                            `\uD83D\uDD10 RERA: ${selectedProject.reraNo||"TBC"} | Escrow: ${selectedProject.escrowBank||"TBC"}`,
-                            "",
-                            "━━━━━━━━━━━━━━━━━━━━━━━━",
-                            "Powered by DXB Analytics Intelligence Platform",
-                            "emaar-dashboard.vercel.app",
-                          ].filter(line => line !== "").join("\n");
-                          window.open(`https://wa.me/?text=${encodeURIComponent(txt)}`,"_blank");
-                        }} style={{ padding:"9px 18px", background:"rgba(37,211,102,0.1)", border:"1px solid rgba(37,211,102,0.3)", borderRadius:8, color:"#25D366", fontSize:12, fontWeight:600, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>Share WhatsApp</button>
+                      {(() => {
+                        /* Phase 3.13: build share payload + deep link once, used by WhatsApp / Email / Copy */
+                        const score = calcScore(selectedProject);
+                        const units = selectedProject.unitBreakdown?.map(u => `  • ${u.type}: AED ${(u.ppsf||0).toLocaleString()}/sqft | From AED ${(u.priceMin/1000000).toFixed(2)}M | Yield ${u.grossYield||"—"}%`).join("\n") || "";
+                        const dists = [
+                          selectedProject.distMetro != null ? `Metro: ${selectedProject.distMetro}km` : null,
+                          selectedProject.distDIFC != null ? `DIFC: ${selectedProject.distDIFC}km` : null,
+                          selectedProject.distBeach != null && selectedProject.distBeach <= 5 ? `Beach: ${selectedProject.distBeach < 1 ? (selectedProject.distBeach*1000).toFixed(0)+"m" : selectedProject.distBeach+"km"}` : null,
+                          selectedProject.distSchool != null ? `School: ${selectedProject.distSchool}km` : null,
+                        ].filter(Boolean).join(" | ");
+                        /* Deep link — uses CURRENT origin (works on vercel, cloudflare, localhost, custom domain) */
+                        const origin = (typeof window !== "undefined" && window.location && window.location.origin) ? window.location.origin : "https://emaar-dashboard.vercel.app";
+                        const projectUrl = `${origin}/?project=${encodeURIComponent(selectedProject.id || "")}`;
+                        const txt = [
+                          "\uD83C\uDFD9️ DXB ANALYTICS — PROPERTY BRIEF",
+                          "━━━━━━━━━━━━━━━━━━━━━━━━",
+                          `\uD83D\uDCCC ${selectedProject.project}`,
+                          `\uD83C\uDFE2 Developer: ${selectedProject.developer}`,
+                          `\uD83D\uDCCD Community: ${selectedProject.community}`,
+                          `\uD83C\uDFE0 Type: ${selectedProject.type}`,
+                          "",
+                          "\uD83D\uDCB0 PRICING",
+                          `   Starting from: AED ${((selectedProject.priceMin||0)/1000000).toFixed(2)}M`,
+                          `   Price per sqft: AED ${(selectedProject.ppsf||0).toLocaleString()}`,
+                          units ? `\n\uD83D\uDCD0 UNIT BREAKDOWN\n${units}` : "",
+                          "",
+                          "\uD83D\uDCCA INVESTMENT",
+                          `   Gross Yield: ${selectedProject.grossYield||"—"}%`,
+                          `   Net Yield: ${selectedProject.netYield||"—"}%`,
+                          `   Payment Plan: ${selectedProject.paymentPlan||"TBC"}`,
+                          `   Post-Handover: ${selectedProject.postHandover?"Yes":"No"}`,
+                          `   Handover: ${selectedProject.handover||"TBC"}`,
+                          `   Investment Score: ${score}/100 — ${score>=80?"Strong Buy":score>=65?"Buy":"Hold"}`,
+                          "",
+                          "\uD83D\uDCCD DISTANCES",
+                          `   ${dists || "See full details"}`,
+                          "",
+                          selectedProject.amenities?.length > 0 ? `✨ AMENITIES\n   ${selectedProject.amenities.slice(0,6).join(" · ")}` : "",
+                          "",
+                          `\uD83D\uDD10 RERA: ${selectedProject.reraNo||"TBC"} | Escrow: ${selectedProject.escrowBank||"TBC"}`,
+                          "",
+                          `\uD83D\uDD17 View full details: ${projectUrl}`,
+                          "",
+                          "━━━━━━━━━━━━━━━━━━━━━━━━",
+                          "Powered by DXB Analytics Intelligence Platform",
+                        ].filter(line => line !== "").join("\n");
+
+                        const emailSubject = `Property Brief — ${selectedProject.project} | ${selectedProject.developer}`;
+                        const emailBody = txt;
+                        const btnStyle = (color) => ({ padding:"9px 16px", background:`rgba(${color},0.1)`, border:`1px solid rgba(${color},0.3)`, borderRadius:8, color:`rgb(${color})`, fontSize:12, fontWeight:600, cursor:"pointer", fontFamily:"'Outfit',sans-serif", display:"inline-flex", alignItems:"center", gap:6 });
+                        return (
+                          <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
+                            <button type="button" onClick={() => window.open(`https://wa.me/?text=${encodeURIComponent(txt)}`,"_blank")}
+                              style={btnStyle("37,211,102")} title="Share via WhatsApp">📱 WhatsApp</button>
+                            <button type="button" onClick={() => window.open(`mailto:?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`,"_blank")}
+                              style={btnStyle("59,130,246")} title="Send via Email">✉️ Email</button>
+                            <button type="button" onClick={async () => {
+                              try {
+                                await navigator.clipboard.writeText(projectUrl);
+                                const el = document.activeElement;
+                                const original = el && el.textContent;
+                                if (el && el.textContent != null) { el.textContent = "✓ Copied!"; setTimeout(() => { if (el && original) el.textContent = original; }, 1500); }
+                              } catch {
+                                const ta = document.createElement("textarea");
+                                ta.value = projectUrl; document.body.appendChild(ta); ta.select();
+                                try { document.execCommand("copy"); } catch {}
+                                document.body.removeChild(ta);
+                                alert("Link copied: " + projectUrl);
+                              }
+                            }} style={btnStyle("212,168,67")} title="Copy shareable link">🔗 Copy link</button>
+                          </div>
+                        );
+                      })()}
                     </div>
                   </div>
                 )}
