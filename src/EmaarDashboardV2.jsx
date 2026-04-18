@@ -302,39 +302,6 @@ const GlobalContextFilter = ({
   const STATUS_OPTIONS_LIVE = _schema.statusOptions;
   const PRICE_PRESETS_LIVE = _schema.pricePresets;
 
-  /* Phase 3.14.1: Dependent filter derivation — plain inline computation.
-     No useMemo; the lists are tiny and recomputing every render is fine. */
-  let communitiesForSelectedDeveloper = null;
-  if (gDeveloper && gDeveloper !== "all") {
-    const __dev = (allDevelopers || []).find(__d =>
-      String(__d.id || "").toLowerCase() === String(gDeveloper).toLowerCase() ||
-      String(__d.name || "").toLowerCase() === String(gDeveloper).toLowerCase()
-    );
-    const __devCommunities = ((__dev && __dev.communities) || []).map(__cc => String(__cc).toLowerCase());
-    if (__devCommunities.length > 0) {
-      communitiesForSelectedDeveloper = new Set(__devCommunities);
-    }
-  }
-
-  let developersForSelectedCommunity = null;
-  if (gCommunity && gCommunity !== "all") {
-    const __needle = String(gCommunity).toLowerCase();
-    const __matching = new Set();
-    (allDevelopers || []).forEach(__d => {
-      const __has = ((__d && __d.communities) || []).some(__cc => String(__cc).toLowerCase() === __needle);
-      if (__has) __matching.add(String(__d.id || "").toLowerCase());
-    });
-    if (__matching.size > 0) developersForSelectedCommunity = __matching;
-  }
-
-  const filteredDevelopers = developersForSelectedCommunity
-    ? (allDevelopers || []).filter(__d => developersForSelectedCommunity.has(String(__d.id || "").toLowerCase()))
-    : (allDevelopers || []);
-
-  const filteredCommunityList = communitiesForSelectedDeveloper
-    ? (liveCommunityList || []).filter(__cc => communitiesForSelectedDeveloper.has(String(__cc.name || "").toLowerCase()))
-    : (liveCommunityList || []);
-
   // ─── cleanPhone: strips non-digits — NEVER use regex inside JSX ───
   const cleanPhone = (p) => {
     if (!p) return "";
@@ -435,9 +402,8 @@ const GlobalContextFilter = ({
           style={gDeveloper !== "all" ? activeSelStyle : selStyle}
         >
           <option value="all">All Developers</option>
-          {/* Phase 3.14: filteredDevelopers narrows to those having the selected community */}
-          {filteredDevelopers?.length > 0
-            ? filteredDevelopers.map(d => <option key={d.id} value={d.id}>{d.name}</option>)
+          {allDevelopers?.length > 0
+            ? allDevelopers.map(d => <option key={d.id} value={d.id}>{d.name}</option>)
             : ["Emaar","DAMAC","Sobha","Nakheel","Meraas","Aldar","Binghatti","Ellington","Omniyat","Azizi","Danube","Samana","MAG","Imtiaz"].map(n => (
                 <option key={n} value={n.toLowerCase()}>{n}</option>
               ))
@@ -466,12 +432,9 @@ const GlobalContextFilter = ({
           onChange={e => setGCommunity(e.target.value)}
           style={gCommunity !== "all" ? activeSelStyle : selStyle}
         >
-          <option value="all">
-            {communitiesForSelectedDeveloper ? "All (within selected developer)" : "All Communities"}
-          </option>
-          {/* Phase 3.14: filteredCommunityList narrows to selected developer's communities */}
-          {filteredCommunityList && filteredCommunityList.length > 0
-            ? filteredCommunityList.map(c => (
+          <option value="all">All Communities</option>
+          {liveCommunityList && liveCommunityList.length > 0
+            ? liveCommunityList.map(c => (
                 <option key={c.id} value={c.name}>{c.name}</option>
               ))
             : null}
