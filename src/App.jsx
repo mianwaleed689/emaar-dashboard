@@ -17,6 +17,7 @@ import NotFound from "./NotFound";
 import { I18nProvider } from "./i18n";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "./lib/queryClient";
+import { FilterSchemaProvider } from "./contexts/FilterSchemaContext";
 const Spinner = () => (
   <div style={{ minHeight: "100vh", background: "#04090F", display: "flex", alignItems: "center", justifyContent: "center" }}>
     <div style={{ width: 24, height: 24, border: "2px solid rgba(212,168,67,0.3)", borderTopColor: "#D4A843", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
@@ -73,6 +74,7 @@ function App() {
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
       <I18nProvider>
+          <FilterSchemaProvider>
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<HomeRoute />} />
@@ -87,7 +89,8 @@ function App() {
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
-      </I18nProvider>
+                </FilterSchemaProvider>
+        </I18nProvider>
       </QueryClientProvider>
     </ErrorBoundary>
   );
