@@ -11,8 +11,67 @@ function OverviewTab({
   liveMarketData, liveDLDVolumes, liveDevHealth, liveMortgageRates, liveYields,
   allDevelopers, deals, listings, myLeads, myPortfolio, watchlist,
   aiInsights, gDeveloper, lastDataSync,
+  globalFilters = {},
   handleTabChange,
 }) {
+
+  /* Phase 2.4 Batch 1: derive which communities match the current filters.
+     - If gDeveloper === "all" and no community filter, returns null (no filter).
+     - Otherwise returns a Set of community names that match.
+     - Looking up by developer uses allDevelopers[].communities[] (the array
+       you set on each developer record in Admin → Data Manager → Developers). */
+  const matchingCommunities = (() => {
+    const devFilter = gDeveloper && gDeveloper !== "all" ? String(gDeveloper).toLowerCase() : null;
+    const communityFilter = globalFilters?.community && globalFilters.community !== "all"
+      ? String(globalFilters.community).toLowerCase()
+      : null;
+    if (!devFilter && !communityFilter) return null;
+
+    // Start from all — narrow down
+    let set = null;
+    if (devFilter) {
+      const dev = (allDevelopers || []).find(d =>
+        String(d.id || "").toLowerCase() === devFilter ||
+        String(d.name || "").toLowerCase() === devFilter ||
+        String(d.name || "").toLowerCase().includes(devFilter)
+      );
+      if (dev && Array.isArray(dev.communities) && dev.communities.length > 0) {
+        set = new Set(dev.communities.map(c => String(c).toLowerCase()));
+      } else {
+        // Unknown developer or no communities listed — empty result
+        set = new Set();
+      }
+    }
+    if (communityFilter) {
+      if (set) {
+        // Intersect
+        set = new Set([...set].filter(c => c === communityFilter));
+      } else {
+        set = new Set([communityFilter]);
+      }
+    }
+    return set;
+  })();
+
+  const matchesFilter = (communityName) => {
+    if (!matchingCommunities) return true;
+    return matchingCommunities.has(String(communityName || "").toLowerCase());
+  };
+
+  // Label for filter indicator — e.g. "Emaar Properties · Dubai Marina"
+  const filterLabel = (() => {
+    const parts = [];
+    if (gDeveloper && gDeveloper !== "all") {
+      const dev = (allDevelopers || []).find(d =>
+        String(d.id).toLowerCase() === String(gDeveloper).toLowerCase()
+      );
+      parts.push(dev?.name || gDeveloper);
+    }
+    if (globalFilters?.community && globalFilters.community !== "all") {
+      parts.push(globalFilters.community);
+    }
+    return parts.join(" · ");
+  })();
 
 
             const OvKPI = ({ label, value, sub, color, icon, onClick, delay }) => (
@@ -46,13 +105,15 @@ function OverviewTab({
             const getKpi = (metric) => kpis?.find(d => d.metric === metric)?.value || "—";
             const getKpiChange = (metric) => kpis?.find(d => d.metric === metric)?.change || "";
 
-            // yield data — live or seed
-            const yieldDisplay = liveYields?.length > 0 ? liveYields
+            // yield data — live or seed, then filter by global filter
+            const yieldDisplayRaw = liveYields?.length > 0 ? liveYields
               : SEED_DATA.communities.map(c => ({ community: c.community, tenantProfile: c.tenantProfile, gross: c.grossYield }));
+            const yieldDisplay = yieldDisplayRaw.filter(y => matchesFilter(y.community));
             const sortedYields = [...yieldDisplay].sort((a,b) => (parseFloat(b.grossYield||b.gross)||0) - (parseFloat(a.grossYield||a.gross)||0)).slice(0,6);
 
-            // DLD data — live or seed
-            const dldDisplay = liveDLDVolumes?.length > 0 ? liveDLDVolumes : SEED_DATA.dldVolumes;
+            // DLD data — live or seed, then filter by global filter
+            const dldDisplayRaw = liveDLDVolumes?.length > 0 ? liveDLDVolumes : SEED_DATA.dldVolumes;
+            const dldDisplay = dldDisplayRaw.filter(d => matchesFilter(d.community));
             const sortedDLD = [...dldDisplay].sort((a,b) => (b.transactions||b.count||0) - (a.transactions||a.count||0)).slice(0,6);
             const dldMax = Math.max(...sortedDLD.map(d => d.transactions||d.count||0), 1);
 
@@ -100,8 +161,12 @@ function OverviewTab({
                     sub="Updated daily · Central Bank UAE"
                     color={T.teal} onClick={() => handleTabChange("Mortgage")} />
                   <OvKPI delay={4} label="Active Developers" icon={SvgIcons.Building2({width:16,height:16})}
-                    value={allDevelopers?.length > 0 ? allDevelopers.length.toString() : "50+"}
-                    sub="RERA registered · DLD approved"
+                    value={gDeveloper && gDeveloper !== "all"
+                      ? "1"
+                      : (allDevelopers?.length > 0 ? allDevelopers.length.toString() : "50+")}
+                    sub={gDeveloper && gDeveloper !== "all"
+                      ? ((allDevelopers || []).find(d => String(d.id).toLowerCase() === String(gDeveloper).toLowerCase())?.name || gDeveloper)
+                      : "RERA registered · DLD approved"}
                     onClick={() => handleTabChange("Developer Health")} />
                   <OvKPI delay={5} label="Avg Gross Yield" icon={SvgIcons.BarChart3({width:16,height:16})}
                     value={liveYields?.length > 0
@@ -124,8 +189,8 @@ function OverviewTab({
                   sub="Context-aware — updates with your filter selection"
                   action={
                     <div style={{ fontSize: 10, color: T.textMuted, display: "flex", alignItems: "center", gap: 4 }}>
-                      <span style={{ width: 5, height: 5, borderRadius: "50%", background: gDeveloper !== "all" ? T.gold : T.textMuted, display: "inline-block" }} />
-                      {gDeveloper !== "all" ? "Filtered" : "All Developers"}
+                      <span style={{ width: 5, height: 5, borderRadius: "50%", background: filterLabel ? T.gold : T.textMuted, display: "inline-block" }} />
+                      {filterLabel || "All Developers"}
                     </div>
                   }
                 />

@@ -3821,6 +3821,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               allDevelopers={allDevelopers} deals={deals} listings={listings}
               myLeads={myLeads} myPortfolio={myPortfolio} watchlist={watchlist}
               aiInsights={aiInsights} gDeveloper={gDeveloper} lastDataSync={lastDataSync}
+              globalFilters={_gf}
               handleTabChange={handleTabChange}
             />
           )}
