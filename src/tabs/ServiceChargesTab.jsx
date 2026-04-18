@@ -175,7 +175,7 @@ function ServiceChargesTab({ liveServiceCharges, scSearch, setScSearch, scSort, 
                       <input value={scSearch} onChange={e => setScSearch(e.target.value)} placeholder="Search community..."
                         style={{ ...selSt, paddingLeft:30, paddingRight:10, width:"100%", backgroundImage:"none" }} />
                     </div>
-                    {["All","Apartment","Villa","Office"].map(f => (
+                    {["All", ...Array.from(new Set((liveData || []).map(d => d.type).filter(Boolean))).sort()].map(f => (
                       <button key={f} type="button" onClick={() => setScType(f)}
                         style={{ padding:"6px 14px", background:scType===f?"rgba(212,168,67,0.15)":T.surfaceAlt, border:`1px solid ${scType===f?"rgba(212,168,67,0.4)":T.border}`, borderRadius:8, color:scType===f?T.gold:T.textMuted, fontSize:11, fontWeight:scType===f?700:400, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>
                         {f}

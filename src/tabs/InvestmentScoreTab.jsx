@@ -271,7 +271,7 @@ function InvestmentScoreTab({ invScSearch, setInvScSearch, invScSort, setInvScSo
                       <input value={invScSearch} onChange={e => setInvScSearch(e.target.value)} placeholder="Search community..."
                         style={{ ...selSt, paddingLeft:30, paddingRight:10, width:"100%", backgroundImage:"none" }} />
                     </div>
-                    {["All","Apartment","Villa"].map(f => (
+                    {["All", ...Array.from(new Set((rawScores || []).map(d => d.type).filter(Boolean))).sort()].map(f => (
                       <button key={f} type="button" onClick={() => setInvScFilter(f)}
                         style={{ padding:"6px 14px", background:invScFilter===f?"rgba(212,168,67,0.15)":T.surfaceAlt, border:`1px solid ${invScFilter===f?"rgba(212,168,67,0.4)":T.border}`, borderRadius:8, color:invScFilter===f?T.gold:T.textMuted, fontSize:11, fontWeight:invScFilter===f?700:400, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>
                         {f}

@@ -160,7 +160,7 @@ function IntelligenceTab({
                         <div style={{ fontSize:10, color:T.textMuted, marginBottom:4, fontWeight:600 }}>Type</div>
                         <select value={compType} onChange={e=>{ setCompType(e.target.value); }}
                           style={{ width:"100%", padding:"8px 10px", background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:7, color:T.textPrimary, fontSize:11, fontFamily:"'Outfit',sans-serif", outline:"none", cursor:"pointer" }}>
-                          {["Apartment","Villa"].map(t=><option key={t} value={t}>{t}</option>)}
+                          {["Apartment","Villa","Townhouse","Penthouse","Hotel Apartment"].map(t=><option key={t} value={t}>{t}</option>)}
                         </select>
                       </div>
                       <div>

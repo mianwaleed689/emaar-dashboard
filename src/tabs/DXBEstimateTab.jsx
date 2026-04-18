@@ -114,7 +114,7 @@ function DXBEstimateTab({ avmCommunity, setAvmCommunity, avmType, setAvmType, av
                       <div>
                         <div style={{ fontSize:11,color:T.textMuted,marginBottom:5 }}>Type</div>
                         <select value={avmType} onChange={e=>setAvmType(e.target.value)} style={{ ...selSt,width:"100%" }}>
-                          {["Apartment","Villa","Townhouse","Office"].map(t=><option key={t}>{t}</option>)}
+                          {["Apartment","Villa","Townhouse","Penthouse","Hotel Apartment","Office"].map(t=><option key={t}>{t}</option>)}
                         </select>
                       </div>
                       <div>
