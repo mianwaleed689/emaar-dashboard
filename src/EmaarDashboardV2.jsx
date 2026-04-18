@@ -3929,6 +3929,8 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               selectedProject={selectedProject} setSelectedProject={setSelectedProject}
               projDetailTab={projDetailTab} setProjDetailTab={setProjDetailTab}
               showCompare={showCompare} setShowCompare={setShowCompare}
+              globalFilters={_gf}
+              allDevelopers={allDevelopers}
               handleTabChange={handleTabChange}
             />
           )}

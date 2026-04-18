@@ -36,8 +36,84 @@ function ProjectsTab({
   selectedProject, setSelectedProject,
   projDetailTab, setProjDetailTab,
   showCompare, setShowCompare,
+  globalFilters = {},
+  allDevelopers = [],
   handleTabChange,
 }) {
+
+  /* Phase 2.4 Batch 3: stack the top-bar global filter on top of the
+     existing internal filter system. Both must match for a project to appear.
+
+     Note: the type filter is NOT applied here, because Projects tab already
+     has its own type pills (Apartment/Villa/etc). Users explicitly asked for
+     the internal type pills to stay, so we skip the global type filter to
+     avoid double-filtering. Instead, when the top bar picks a type, we mirror
+     it into projMode (handled at the top bar level). */
+
+  const gfDev = globalFilters?.developer && globalFilters.developer !== "all"
+    ? String(globalFilters.developer).toLowerCase() : null;
+  const gfCommunity = globalFilters?.community && globalFilters.community !== "all"
+    ? String(globalFilters.community).toLowerCase() : null;
+  const gfStatus = globalFilters?.status && globalFilters.status !== "all"
+    ? String(globalFilters.status).toLowerCase() : null;
+  const gfBeds = globalFilters?.beds && globalFilters.beds !== "all"
+    ? String(globalFilters.beds).toLowerCase() : null;
+  const gfPriceMin = Number(globalFilters?.priceMin) || 0;
+  const gfPriceMax = Number(globalFilters?.priceMax) || 0;
+
+  // Find developer by id/name to resolve its communities array
+  const gfDeveloperRecord = gfDev
+    ? (allDevelopers || []).find(d =>
+        String(d.id || "").toLowerCase() === gfDev ||
+        String(d.name || "").toLowerCase() === gfDev ||
+        String(d.name || "").toLowerCase().includes(gfDev)
+      )
+    : null;
+  const gfDeveloperName = gfDeveloperRecord?.name || null;
+  const gfDeveloperCommunities = (gfDeveloperRecord && Array.isArray(gfDeveloperRecord.communities))
+    ? new Set(gfDeveloperRecord.communities.map(c => String(c).toLowerCase()))
+    : null;
+
+  /** Returns true if project passes the global filter (or if no global
+      filter is active) */
+  const projMatchesGlobalFilter = (p) => {
+    if (!p) return false;
+
+    // Developer filter: match on developer name OR the project's community
+    // being in the developer's communities list
+    if (gfDev) {
+      const projDev = String(p.developer || "").toLowerCase();
+      const projCommunity = String(p.community || "").toLowerCase();
+      const developerNameMatches = gfDeveloperName && projDev === String(gfDeveloperName).toLowerCase();
+      const communityBelongsToDeveloper = gfDeveloperCommunities && gfDeveloperCommunities.has(projCommunity);
+      if (!developerNameMatches && !communityBelongsToDeveloper) return false;
+    }
+
+    // Community filter
+    if (gfCommunity) {
+      if (String(p.community || "").toLowerCase() !== gfCommunity) return false;
+    }
+
+    // Status filter (e.g. "offplan", "ready")
+    if (gfStatus) {
+      const ps = String(p.status || "").toLowerCase().replace(/[-\s]/g, "_");
+      const gs = gfStatus.replace(/[-\s]/g, "_");
+      if (ps !== gs) return false;
+    }
+
+    // Beds filter (e.g. "1 BR", "2 BR")
+    if (gfBeds) {
+      const beds = Array.isArray(p.beds) ? p.beds : (p.beds ? [p.beds] : []);
+      if (!beds.some(b => String(b).toLowerCase() === gfBeds)) return false;
+    }
+
+    // Price range — project priceMin must be >= global priceMin,
+    // project priceMax must be <= global priceMax (when set)
+    if (gfPriceMin > 0 && Number(p.priceMin || 0) < gfPriceMin) return false;
+    if (gfPriceMax > 0 && Number(p.priceMax || p.priceMin || 0) > gfPriceMax) return false;
+
+    return true;
+  };
 
   /* Lock body scroll when modal open */
   useEffect(() => {
@@ -63,6 +139,9 @@ function ProjectsTab({
   const rawProjects = [...SEED_PROJECTS, ...(extraProjects || [])];
 
             const filtered = rawProjects.filter(p => {
+              // Phase 2.4 Batch 3: top-bar global filter narrows first,
+              // then the existing internal filters narrow further.
+              if (!projMatchesGlobalFilter(p)) return false;
               if (p.type !== projMode) return false;
               if (projSearch && !JSON.stringify(p).toLowerCase().includes(projSearch.toLowerCase())) return false;
               if (projDev !== "All" && p.developer !== projDev) return false;
