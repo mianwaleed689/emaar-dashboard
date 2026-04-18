@@ -3642,7 +3642,10 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
             </div>
           </div>
           <div style={{ marginTop: 10, fontSize: 11, color: T.textMuted, letterSpacing: 0.2 }}>
-            {allDevelopers?.find(d => d.id === selectedDeveloper)?.name || "Emaar Properties"}
+            {/* Phase 3.10: reflect actual filter state, not hardcoded selectedDeveloper */}
+            {gDeveloper && gDeveloper !== "all"
+              ? (allDevelopers?.find(d => String(d.id).toLowerCase() === String(gDeveloper).toLowerCase() || String(d.name).toLowerCase() === String(gDeveloper).toLowerCase())?.name || gDeveloper)
+              : "Dubai Market Intelligence"}
           </div>
         </div>
 
@@ -3787,7 +3790,16 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
             {sidebarOpen ? SvgIcons.X({ width: 20, height: 20, strokeWidth: 2 }) : SvgIcons.Menu({ width: 20, height: 20, strokeWidth: 2 })}
           </button>
           <div>
-            <h1 style={{ fontSize: 16, fontWeight: 700, color: T.white }}>{allDevelopers?.find(d=>d.id===selectedDeveloper)?.name || "Emaar Properties"} <span style={{ color: T.textMuted, fontWeight: 400, fontSize: 13 }}>PJSC</span></h1>
+            {/* Phase 3.10: header reflects active developer filter, or shows platform name when no filter */}
+            <h1 style={{ fontSize: 16, fontWeight: 700, color: T.white }}>{
+              (() => {
+                if (gDeveloper && gDeveloper !== "all") {
+                  const d = allDevelopers?.find(x => String(x.id).toLowerCase() === String(gDeveloper).toLowerCase() || String(x.name).toLowerCase() === String(gDeveloper).toLowerCase());
+                  return (<>{d?.name || gDeveloper} <span style={{ color: T.textMuted, fontWeight: 400, fontSize: 13 }}>{d?.type || "PJSC"}</span></>);
+                }
+                return (<>Dubai Real Estate <span style={{ color: T.textMuted, fontWeight: 400, fontSize: 13 }}>Market</span></>);
+              })()
+            }</h1>
           </div>
         </div>
         <div className="header-badges" style={{ display: "flex", gap: 8, alignItems: "center" }}>
