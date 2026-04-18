@@ -14,8 +14,31 @@ function DeveloperHealthTab({
   dhView, setDhView,
   dhSelected, setDhSelected,
   setFinDeveloper,
+  globalFilters = {},
+  allDevelopers = [],
   handleTabChange,
 }) {
+
+  /* Phase 2.4 Batch 6: narrow to developer matching global filter */
+  const gfDev = globalFilters?.developer && globalFilters.developer !== "all"
+    ? String(globalFilters.developer).toLowerCase() : null;
+  const dhGfRecord = gfDev
+    ? (allDevelopers || []).find(d =>
+        String(d.id || "").toLowerCase() === gfDev ||
+        String(d.name || "").toLowerCase() === gfDev ||
+        String(d.name || "").toLowerCase().includes(gfDev)
+      )
+    : null;
+  const dhGfDevName = dhGfRecord?.name ? String(dhGfRecord.name).toLowerCase() : null;
+
+  const dhMatchesGlobalFilter = (d) => {
+    if (!gfDev) return true;
+    if (!d) return false;
+    const rowName = String(d.name || "").toLowerCase();
+    if (dhGfDevName) return rowName === dhGfDevName;
+    // Fallback fuzzy match
+    return rowName.includes(gfDev);
+  };
 
 
             /* ══════════════════════════════════════════════════════
@@ -197,9 +220,11 @@ function DeveloperHealthTab({
             const tiers = ["All","Tier 1","Tier 2","Tier 3"];
 
             /* ── live data → seed swap ── */
-            const rawHealth = liveDevHealth?.filter?.(d => d.name && d.score).length > 0
+            const rawHealthAll = liveDevHealth?.filter?.(d => d.name && d.score).length > 0
               ? liveDevHealth.filter(d => d.name && d.score)
               : HEALTH_SCORES;
+            // Phase 2.4 Batch 6: narrow to the globally-filtered developer, if any
+            const rawHealth = rawHealthAll.filter(dhMatchesGlobalFilter);
 
             /* ── Filter + sort ── */
             const filtered = rawHealth

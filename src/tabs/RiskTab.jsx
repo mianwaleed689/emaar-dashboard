@@ -9,7 +9,17 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { T } from "../data";
 import { SvgIcons } from "../components/Icons";
 
-function RiskTab({ riskTabView, setRiskTabView, riskCommunity2, setRiskCommunity2, riskHorizon, setRiskHorizon, handleTabChange }) {
+function RiskTab({ riskTabView, setRiskTabView, riskCommunity2, setRiskCommunity2, riskHorizon, setRiskHorizon, globalFilters = {}, handleTabChange }) {
+
+  /* Phase 2.4 Batch 6: when top bar sets a community, sync tab's selector */
+  const gfCommunity = globalFilters?.community && globalFilters.community !== "all"
+    ? globalFilters.community : null;
+  React.useEffect(() => {
+    if (gfCommunity && riskCommunity2 !== gfCommunity) {
+      setRiskCommunity2(gfCommunity);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [gfCommunity]);
 
 
             /* ══ RESEARCH — Risk Analysis Apr 2026 ══

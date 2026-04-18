@@ -581,7 +581,40 @@ const COMMUNITY_SUPPLY = {
 /* ═══════════════════════════════════════════════════════════════════
    COMPONENT
    ═══════════════════════════════════════════════════════════════════ */
-function HandoverTab({ liveHandover, handleTabChange }) {
+function HandoverTab({ liveHandover, globalFilters = {}, allDevelopers = [], handleTabChange }) {
+
+  /* Phase 2.4 Batch 6: derive matcher from global filter */
+  const gfDev = globalFilters?.developer && globalFilters.developer !== "all"
+    ? String(globalFilters.developer).toLowerCase() : null;
+  const gfCommunity = globalFilters?.community && globalFilters.community !== "all"
+    ? String(globalFilters.community).toLowerCase() : null;
+
+  const hoGfDev = gfDev
+    ? (allDevelopers || []).find(d =>
+        String(d.id || "").toLowerCase() === gfDev ||
+        String(d.name || "").toLowerCase() === gfDev ||
+        String(d.name || "").toLowerCase().includes(gfDev)
+      )
+    : null;
+  const hoGfDevName = hoGfDev?.name ? String(hoGfDev.name).toLowerCase() : null;
+  const hoGfCommunities = (hoGfDev && Array.isArray(hoGfDev.communities) && hoGfDev.communities.length > 0)
+    ? new Set(hoGfDev.communities.map(c => String(c).toLowerCase()))
+    : null;
+
+  const hoMatchesGlobalFilter = (p) => {
+    if (!p) return false;
+    if (gfDev) {
+      const rowDev = String(p.developer || "").toLowerCase();
+      const rowCommunity = String(p.community || "").toLowerCase();
+      const devMatch = hoGfDevName && rowDev === hoGfDevName;
+      const commMatch = hoGfCommunities && hoGfCommunities.has(rowCommunity);
+      if (!devMatch && !commMatch) return false;
+    }
+    if (gfCommunity) {
+      if (String(p.community || "").toLowerCase() !== gfCommunity) return false;
+    }
+    return true;
+  };
   const [view, setView] = useState("cards"); // cards | calendar | risk
   const [search, setSearch] = useState("");
   const [riskFilter, setRiskFilter] = useState("all");
@@ -594,8 +627,11 @@ function HandoverTab({ liveHandover, handleTabChange }) {
 
   /* Use live data if present */
   const projects = useMemo(() => {
-    return (liveHandover && liveHandover.length > 0) ? liveHandover : SEED_HANDOVERS;
-  }, [liveHandover]);
+    const src = (liveHandover && liveHandover.length > 0) ? liveHandover : SEED_HANDOVERS;
+    // Phase 2.4 Batch 6: apply top-bar global filter first.
+    return src.filter(hoMatchesGlobalFilter);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [liveHandover, gfDev, gfCommunity]);
   const isSeed = !liveHandover || liveHandover.length === 0;
 
   /* Filter + sort */

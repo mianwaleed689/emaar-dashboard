@@ -4095,6 +4095,8 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
           {tab === "Handover" && (
             <HandoverTab
               liveHandover={liveHandover}
+              globalFilters={_gf}
+              allDevelopers={allDevelopers}
               handleTabChange={handleTabChange}
             />
           )}
@@ -4379,6 +4381,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               riskCommunity2={riskCommunity2} setRiskCommunity2={setRiskCommunity2}
               riskHorizon={riskHorizon} setRiskHorizon={setRiskHorizon}
               liveRisk={liveRisk}
+              globalFilters={_gf}
               handleTabChange={handleTabChange}
             />
           )}
@@ -4410,6 +4413,8 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               dhView={dhView} setDhView={setDhView}
               dhSelected={dhSelected} setDhSelected={setDhSelected}
               setFinDeveloper={setFinDeveloper}
+              globalFilters={_gf}
+              allDevelopers={allDevelopers}
               handleTabChange={handleTabChange}
             />
           )}
