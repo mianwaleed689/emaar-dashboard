@@ -11,6 +11,7 @@ import { T } from "../data";
 import { SvgIcons } from "../components/Icons";
 import { Section, Chart, CustomTooltip, KPI, ForecastCard, DataBadge, TabSources, LoadingSkeleton } from "../components/SharedUI";
 import SEED_DATA from "../utils/seedData";
+import SmartEmptyState from "../components/SmartEmptyState";
 
 function YieldsTab({ liveYieldsData, yldSearch, setYldSearch, yldSort, setYldSort, yldType, setYldType, yldView, setYldView, yldCalcPrice, setYldCalcPrice, yldCalcRent, setYldCalcRent, yldCalcSC, setYldCalcSC, yldCalcSize, setYldCalcSize, yldCalcVacancy, setYldCalcVacancy, yldCalcMgmt, setYldCalcMgmt, globalFilters = {}, allDevelopers = [] }) {
 
@@ -419,6 +420,31 @@ function YieldsTab({ liveYieldsData, yldSearch, setYldSearch, yldSort, setYldSor
                       ))}
                     </div>
                   </div>
+                )}
+
+                {/* Phase 3.7: Smart empty state when filters yield no results */}
+                {filtered.length === 0 && (
+                  <SmartEmptyState
+                    rowsAll={rawData}
+                    filters={{
+                      type: yldType !== "All" ? yldType : "all",
+                    }}
+                    entityLabel="yield rows"
+                    onRemoveFilter={(key) => {
+                      if (key === "type") setYldType("All");
+                    }}
+                    onClearAll={() => {
+                      setYldType("All");
+                      setYldSearch("");
+                    }}
+                    matchFn={(d, filters) => {
+                      if (filters.type && filters.type !== "all") {
+                        if (d.type !== filters.type) return false;
+                      }
+                      return true;
+                    }}
+                    T={T}
+                  />
                 )}
 
                 {/* Seed notice */}

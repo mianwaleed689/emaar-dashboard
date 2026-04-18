@@ -7,6 +7,7 @@ import React, { useState, useMemo, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from "recharts";
 import { T } from "../data";
+import SmartEmptyState from "../components/SmartEmptyState";
 import { SvgIcons } from "../components/Icons";
 
 import { calcScore, scoreColor, scoreLabel } from "../utils/scoring";
@@ -417,13 +418,49 @@ function ProjectsTab({
                   </div>
                 )}
 
-                {/* Empty state */}
+                {/* Phase 3.7: Smart empty state — suggests which filter to remove */}
                 {filtered.length === 0 && (
-                  <div style={{ textAlign:"center", padding:"60px 24px", background:"rgba(212,168,67,0.03)", borderRadius:12, border:`1px solid ${T.border}` }}>
-                    {SvgIcons.Building2({ width:40, height:40, style:{ color:T.textMuted, marginBottom:14, display:"inline-block" } })}
-                    <div style={{ fontSize:15, fontWeight:700, color:T.white, marginBottom:8 }}>No {projMode} projects match your filters</div>
-                    <div style={{ fontSize:12, color:T.textMuted }}>Try adjusting filters or switching property type</div>
-                  </div>
+                  <SmartEmptyState
+                    rowsAll={rawProjects}
+                    filters={{
+                      type: projMode,
+                      developer: projDev !== "All" ? projDev : "all",
+                      community: projCommunity !== "All" ? projCommunity : "all",
+                      beds: projBeds !== "All" ? projBeds : "all",
+                      status: projStatus !== "All" ? projStatus : "all",
+                      priceMin: projPriceMin || 0,
+                      priceMax: projPriceMax || 0,
+                    }}
+                    entityLabel={projMode + " projects"}
+                    onRemoveFilter={(key) => {
+                      if (key === "developer") setProjDev("All");
+                      else if (key === "community") setProjCommunity("All");
+                      else if (key === "beds") setProjBeds("All");
+                      else if (key === "status") setProjStatus("All");
+                      else if (key === "type") { /* keep — type is projMode, not a removable filter here */ }
+                    }}
+                    onClearAll={() => {
+                      setProjSearch("");
+                      setProjDev("All");
+                      setProjCommunity("All");
+                      setProjBeds("All");
+                      setProjStatus("All");
+                      setProjGrade("All");
+                      setProjHandover("All");
+                      setProjIntelFilter("all");
+                    }}
+                    matchFn={(p, filters) => {
+                      if (p.type !== filters.type) return false;
+                      if (filters.developer !== "all" && p.developer !== filters.developer) return false;
+                      if (filters.community !== "all" && p.community !== filters.community) return false;
+                      if (filters.status !== "all" && p.status !== filters.status) return false;
+                      if (filters.beds !== "all" && p.beds && p.beds.length > 0 && !p.beds.includes(filters.beds)) return false;
+                      if (filters.priceMin > 0 && p.priceMin < filters.priceMin) return false;
+                      if (filters.priceMax > 0 && p.priceMax > filters.priceMax) return false;
+                      return true;
+                    }}
+                    T={T}
+                  />
                 )}
 
                 {/* Grid */}
