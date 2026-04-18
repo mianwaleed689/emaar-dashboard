@@ -167,13 +167,16 @@ function YieldsTab({ liveYieldsData, yldSearch, setYldSearch, yldSort, setYldSor
               return 0;
             });
 
-            /* ── KPIs ── */
-            const apts = rawData.filter(d => d.type === "Apartment");
-            const villas = rawData.filter(d => d.type === "Villa");
-            const avgGross = apts.length ? (apts.reduce((s,d) => s+d.grossYield,0)/apts.length).toFixed(1) : 0;
-            const avgNet   = apts.length ? (apts.reduce((s,d) => s+d.netYield,0)/apts.length).toFixed(1)   : 0;
-            const topYield = [...rawData].sort((a,b) => b.grossYield - a.grossYield)[0];
-            const lowYield = [...rawData].sort((a,b) => a.grossYield - b.grossYield)[0];
+            /* ── KPIs (Phase 2.5.1: compute on filtered set, not just Apartments) ── */
+            // Use 'filtered' rows so KPIs respect both the yldType pill and any
+            // global filter from the top bar. Falls back to rawData if filtered is empty.
+            const kpiRows = filtered.length > 0 ? filtered : rawData;
+            const avgGross = kpiRows.length ? (kpiRows.reduce((s,d) => s+d.grossYield,0)/kpiRows.length).toFixed(1) : 0;
+            const avgNet   = kpiRows.length ? (kpiRows.reduce((s,d) => s+d.netYield,0)/kpiRows.length).toFixed(1)   : 0;
+            const topYield = [...kpiRows].sort((a,b) => b.grossYield - a.grossYield)[0];
+            const lowYield = [...kpiRows].sort((a,b) => a.grossYield - b.grossYield)[0];
+            // Dynamic KPI label — shows the active type filter, or "Overall" when no type filter
+            const kpiTypeLabel = (yldType && yldType !== "All") ? ` (${yldType})` : "";
 
             /* ── Calculator ── */
             const calcGross   = yldCalcRent / yldCalcPrice * 100;
@@ -224,8 +227,8 @@ function YieldsTab({ liveYieldsData, yldSearch, setYldSearch, yldSort, setYldSor
                 {/* KPIs */}
                 <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(150px,1fr))", gap:10, marginBottom:20 }}>
                   {[
-                    { label:"Avg Gross (Apts)",  value:avgGross+"%",                       color:T.green  },
-                    { label:"Avg Net (Apts)",    value:avgNet+"%",                          color:T.teal   },
+                    { label:"Avg Gross"+kpiTypeLabel,  value:avgGross+"%",                 color:T.green  },
+                    { label:"Avg Net"+kpiTypeLabel,    value:avgNet+"%",                    color:T.teal   },
                     { label:"Highest Yield",     value:topYield?.grossYield+"%",            color:T.green  },
                     { label:"Best Community",    value:topYield?.community.split(" ")[0],   color:T.white  },
                     { label:"Lowest Yield",      value:lowYield?.grossYield+"%",            color:"#3B82F6"},
@@ -246,7 +249,7 @@ function YieldsTab({ liveYieldsData, yldSearch, setYldSearch, yldSort, setYldSor
                       <input value={yldSearch} onChange={e => setYldSearch(e.target.value)} placeholder="Search community..."
                         style={{ ...selSt, paddingLeft:30, paddingRight:10, width:"100%", backgroundImage:"none" }} />
                     </div>
-                    {["All","Apartment","Villa"].map(f => (
+                    {["All", ...Array.from(new Set(rawData.map(d => d.type).filter(Boolean))).sort()].map(f => (
                       <button key={f} type="button" onClick={() => setYldType(f)}
                         style={{ padding:"6px 14px", background:yldType===f?"rgba(212,168,67,0.15)":T.surfaceAlt, border:`1px solid ${yldType===f?"rgba(212,168,67,0.4)":T.border}`, borderRadius:8, color:yldType===f?T.gold:T.textMuted, fontSize:11, fontWeight:yldType===f?700:400, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>
                         {f}
