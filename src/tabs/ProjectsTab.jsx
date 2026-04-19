@@ -46,6 +46,9 @@ function ProjectsTab({
 
   /* Session 1: local tier filter state (All / Verified / DLD Registry) */
   const [projTierFilter, setProjTierFilter] = React.useState("All");
+  /* Session 3: lifecycle stage filter + hide-historical toggle */
+  const [projStageFilter, setProjStageFilter] = React.useState("All");
+  const [projShowHistorical, setProjShowHistorical] = React.useState(false);
 
   /* Phase 2.4 Batch 3: stack the top-bar global filter on top of the
      existing internal filter system. Both must match for a project to appear.
@@ -230,6 +233,7 @@ function ProjectsTab({
                   commonRooms: d.commonRooms || null,
                   transactionCount: d.transactionCount || 0,
                   latestTransaction: d.latestTransaction || null,
+                  lifecycleStage: d.lifecycleStage || "historical", /* Session 3 */
                   beds: bedsFromRooms,
                   /* Not curated yet: */
                   amenities: [], unitBreakdown: [], paymentPlan: null, view: [],
@@ -243,6 +247,13 @@ function ProjectsTab({
 
             const filtered = rawProjects.filter(p => {
               const isDldOnly = p.tier === "dld-registry";
+              /* Session 3: lifecycle stage filter */
+              if (isDldOnly) {
+                const stage = p.lifecycleStage || "historical";
+                if (projStageFilter !== "All" && stage !== projStageFilter) return false;
+                /* Default: hide historical unless user opts in or explicitly filters to historical */
+                if (!projShowHistorical && projStageFilter === "All" && stage === "historical") return false;
+              }
               /* Session 1: tier filter takes priority */
               if (projTierFilter === "Verified" && isDldOnly) return false;
               if (projTierFilter === "Registry" && !isDldOnly) return false;
@@ -269,6 +280,14 @@ function ProjectsTab({
               /* Verified always sort before Registry within same criteria */
               const tierDiff = (a.tier === "dld-registry" ? 1 : 0) - (b.tier === "dld-registry" ? 1 : 0);
               if (tierDiff !== 0) return tierDiff;
+              /* Session 3: stage-aware sort for Registry records —
+                 active-resale > under-construction > recently-delivered > announced > historical */
+              if (a.tier === "dld-registry" && b.tier === "dld-registry") {
+                const stageRank = { "active-resale": 1, "under-construction": 2, "recently-delivered": 3, "announced": 4, "historical": 5 };
+                const sa = stageRank[a.lifecycleStage] || 5;
+                const sb = stageRank[b.lifecycleStage] || 5;
+                if (sa !== sb) return sa - sb;
+              }
               if (projSort === "yield") return (b.grossYield||0) - (a.grossYield||0);
               if (projSort === "score") return calcScore(b) - calcScore(a);
               if (projSort === "price_asc") return (a.priceMin||0) - (b.priceMin||0);
@@ -396,6 +415,19 @@ function ProjectsTab({
               );
             };
 
+            /* ── Session 3: Lifecycle stage badge ── */
+            const STAGE_CONFIG = {
+              "active-resale":       { label:"Active Resale",       bg:"rgba(16,185,129,0.12)",  color:"#10B981" },
+              "under-construction":  { label:"Under Construction",  bg:"rgba(59,130,246,0.12)",  color:"#60A5FA" },
+              "recently-delivered":  { label:"Recently Delivered",  bg:"rgba(245,158,11,0.12)",  color:"#F59E0B" },
+              "announced":           { label:"Announced",           bg:"rgba(139,92,246,0.12)",  color:"#A78BFA" },
+              "historical":          { label:"Historical",          bg:"rgba(148,163,184,0.10)", color:T.textMuted },
+            };
+            const StageBadge = ({ stage }) => {
+              const cfg = STAGE_CONFIG[stage] || STAGE_CONFIG["historical"];
+              return <span style={{ fontSize:9, padding:"2px 7px", borderRadius:10, fontWeight:700, letterSpacing:0.4, background:cfg.bg, color:cfg.color, textTransform:"uppercase", whiteSpace:"nowrap" }}>{cfg.label}</span>;
+            };
+
             /* ── Registry card (Tier 3 = DLD-only + transaction-enriched) ── */
             const ProjectCardRegistry = ({ p }) => {
               const hasPricing = p.priceMin && p.priceMax;
@@ -413,8 +445,8 @@ function ProjectsTab({
                     </div>
                     <div style={{ fontFamily:"'Fraunces',serif", fontSize:14, fontWeight:700, color:T.white, marginBottom:6, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{p.project || "—"}</div>
                     <div style={{ display:"flex", gap:5, flexWrap:"wrap", alignItems:"center" }}>
+                      {p.lifecycleStage && <StageBadge stage={p.lifecycleStage} />}
                       <span title={hasEnrichment ? "DLD Registry + transaction data from Dubai Land Department" : "DLD Registry — official government listing. Investment metrics curation pending."} style={{ fontSize:9, padding:"2px 6px", borderRadius:10, fontWeight:700, letterSpacing:0.5, background: hasEnrichment ? "rgba(212,168,67,0.10)" : "rgba(148,163,184,0.10)", color: hasEnrichment ? T.gold : T.textMuted, border:`1px solid ${hasEnrichment ? "rgba(212,168,67,0.25)" : T.border}`, textTransform:"uppercase" }}>{hasEnrichment ? "DLD Data" : "DLD Registry"}</span>
-                      {p.status && p.status !== "Unknown" && <StatusBadge status={p.status} />}
                       {p.handover && <span style={{ fontSize:10, color:T.textMuted }}>{p.handover}</span>}
                       {p.transactionCount > 0 && <span style={{ fontSize:10, color:T.textMuted }}>{p.transactionCount} sales</span>}
                       {p.reraNo && <span style={{ fontSize:10, color:T.textMuted }}>RERA #{p.reraNo}</span>}
@@ -507,6 +539,15 @@ function ProjectsTab({
                       <option value="Verified">Verified Only</option>
                       <option value="Registry">DLD Registry Only</option>
                     </select>
+                    {/* Session 3: lifecycle stage filter */}
+                    <select value={projStageFilter} onChange={e => setProjStageFilter(e.target.value)} style={selSt}>
+                      <option value="All">All Stages</option>
+                      <option value="active-resale">Active Resale</option>
+                      <option value="under-construction">Under Construction</option>
+                      <option value="recently-delivered">Recently Delivered</option>
+                      <option value="announced">Announced</option>
+                      <option value="historical">Historical</option>
+                    </select>
                     <select value={projStatus} onChange={e => setProjStatus(e.target.value)} style={selSt}>
                       {["All","Off-Plan","Ready","Sold Out"].map(s => <option key={s}>{s}</option>)}
                     </select>
@@ -530,8 +571,13 @@ function ProjectsTab({
                       <option value="price_desc">Sort: Price High</option>
                     </select>
                     <span style={{ fontSize:11, color:T.textMuted, marginLeft:"auto" }}>{filtered.length} projects</span>
-                    {(projSearch || projDev !== "All" || projCommunity !== "All" || projStatus !== "All" || projBeds !== "All" || projHandover !== "All" || projTierFilter !== "All") && (
-                      <button type="button" onClick={() => { setProjSearch(""); setProjDev("All"); setProjCommunity("All"); setProjStatus("All"); setProjBeds("All"); setProjHandover("All"); setProjGrade("All"); setProjIntelFilter("all"); setProjTierFilter("All"); }} style={{ background:"none", border:`1px solid ${T.border}`, borderRadius:8, padding:"6px 12px", color:T.textMuted, fontSize:11, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>Clear</button>
+                    {/* Session 3: show-historical toggle */}
+                    <label style={{ display:"flex", alignItems:"center", gap:6, fontSize:11, color:T.textMuted, cursor:"pointer", padding:"6px 10px", background:projShowHistorical?"rgba(212,168,67,0.08)":T.surfaceAlt, border:`1px solid ${projShowHistorical?"rgba(212,168,67,0.30)":T.border}`, borderRadius:8, fontFamily:"'Outfit',sans-serif" }} title="Show projects delivered long ago with no recent transactions">
+                      <input type="checkbox" checked={projShowHistorical} onChange={e => setProjShowHistorical(e.target.checked)} style={{ cursor:"pointer", accentColor:T.gold }} />
+                      <span style={{ color: projShowHistorical ? T.gold : T.textMuted, fontWeight: projShowHistorical ? 700 : 400 }}>Show historical</span>
+                    </label>
+                    {(projSearch || projDev !== "All" || projCommunity !== "All" || projStatus !== "All" || projBeds !== "All" || projHandover !== "All" || projTierFilter !== "All" || projStageFilter !== "All") && (
+                      <button type="button" onClick={() => { setProjSearch(""); setProjDev("All"); setProjCommunity("All"); setProjStatus("All"); setProjBeds("All"); setProjHandover("All"); setProjGrade("All"); setProjIntelFilter("all"); setProjTierFilter("All"); setProjStageFilter("All"); }} style={{ background:"none", border:`1px solid ${T.border}`, borderRadius:8, padding:"6px 12px", color:T.textMuted, fontSize:11, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>Clear</button>
                     )}
                   </div>
                   {/* Intelligence filter chips */}
@@ -730,8 +776,8 @@ function ProjectsTab({
                 </div>
                 <div style={{ fontFamily:"'Fraunces',serif", fontSize:22, fontWeight:800, color:T.white, marginBottom:8, lineHeight:1.2 }}>{selectedProject.project || "—"}</div>
                 <div style={{ display:"flex", gap:6, flexWrap:"wrap", alignItems:"center" }}>
+                  {selectedProject.lifecycleStage && <StageBadge stage={selectedProject.lifecycleStage} />}
                   <span style={{ fontSize:9, padding:"3px 8px", borderRadius:10, fontWeight:700, letterSpacing:0.5, background:(selectedProject.priceMin || selectedProject.ppsf) ? "rgba(212,168,67,0.10)" : "rgba(148,163,184,0.10)", color:(selectedProject.priceMin || selectedProject.ppsf) ? T.gold : T.textMuted, border:`1px solid ${(selectedProject.priceMin || selectedProject.ppsf) ? "rgba(212,168,67,0.25)" : T.border}`, textTransform:"uppercase" }}>{(selectedProject.priceMin || selectedProject.ppsf) ? "DLD + Transaction Data" : "DLD Registry"}</span>
-                  {selectedProject.status && selectedProject.status !== "Unknown" && <StatusBadge status={selectedProject.status} />}
                   {selectedProject.reraNo && <span style={{ fontSize:10, color:T.textMuted }}>RERA #{selectedProject.reraNo}</span>}
                 </div>
               </div>
