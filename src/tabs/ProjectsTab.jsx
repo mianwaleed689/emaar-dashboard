@@ -50,6 +50,19 @@ function ProjectsTab({
   const [projStageFilter, setProjStageFilter] = React.useState("All");
   const [projShowHistorical, setProjShowHistorical] = React.useState(false);
 
+  /* ── Session 3: Lifecycle stage badge (function-scoped so both IIFE and modal can use it) ── */
+  const STAGE_CONFIG = {
+    "active-resale":       { label:"Active Resale",       bg:"rgba(16,185,129,0.12)",  color:"#10B981" },
+    "under-construction":  { label:"Under Construction",  bg:"rgba(59,130,246,0.12)",  color:"#60A5FA" },
+    "recently-delivered":  { label:"Recently Delivered",  bg:"rgba(245,158,11,0.12)",  color:"#F59E0B" },
+    "announced":           { label:"Announced",           bg:"rgba(139,92,246,0.12)",  color:"#A78BFA" },
+    "historical":          { label:"Historical",          bg:"rgba(148,163,184,0.10)", color:T.textMuted },
+  };
+  const StageBadge = ({ stage }) => {
+    const cfg = STAGE_CONFIG[stage] || STAGE_CONFIG["historical"];
+    return <span style={{ fontSize:9, padding:"2px 7px", borderRadius:10, fontWeight:700, letterSpacing:0.4, background:cfg.bg, color:cfg.color, textTransform:"uppercase", whiteSpace:"nowrap" }}>{cfg.label}</span>;
+  };
+
   /* Phase 2.4 Batch 3: stack the top-bar global filter on top of the
      existing internal filter system. Both must match for a project to appear.
 
@@ -413,19 +426,6 @@ function ProjectsTab({
                   </div>
                 </div>
               );
-            };
-
-            /* ── Session 3: Lifecycle stage badge ── */
-            const STAGE_CONFIG = {
-              "active-resale":       { label:"Active Resale",       bg:"rgba(16,185,129,0.12)",  color:"#10B981" },
-              "under-construction":  { label:"Under Construction",  bg:"rgba(59,130,246,0.12)",  color:"#60A5FA" },
-              "recently-delivered":  { label:"Recently Delivered",  bg:"rgba(245,158,11,0.12)",  color:"#F59E0B" },
-              "announced":           { label:"Announced",           bg:"rgba(139,92,246,0.12)",  color:"#A78BFA" },
-              "historical":          { label:"Historical",          bg:"rgba(148,163,184,0.10)", color:T.textMuted },
-            };
-            const StageBadge = ({ stage }) => {
-              const cfg = STAGE_CONFIG[stage] || STAGE_CONFIG["historical"];
-              return <span style={{ fontSize:9, padding:"2px 7px", borderRadius:10, fontWeight:700, letterSpacing:0.4, background:cfg.bg, color:cfg.color, textTransform:"uppercase", whiteSpace:"nowrap" }}>{cfg.label}</span>;
             };
 
             /* ── Registry card (Tier 3 = DLD-only + transaction-enriched) ── */
