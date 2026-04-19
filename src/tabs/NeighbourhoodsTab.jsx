@@ -201,12 +201,12 @@ function NeighbourhoodsTab({ nbhSearch, setNbhSearch, nbhTypeFilter, setNbhTypeF
               backgroundRepeat: "no-repeat", backgroundPosition: "right 8px center",
             };
 
-            /* ── Community card ── */
-            const NbhCard = ({ n }) => {
+            /* ── Community card (Tier 1 = Verified, full metrics) ── */
+            const NbhCardVerified = ({ n }) => {
               const isCompared = nbhCompare.includes(n.community);
-              const isDldOnly = n.tier === "dld-registry";
               return (
-                <div className="chart-box" style={{ padding: 16, position: "relative", transition: "transform 0.15s, box-shadow 0.15s", cursor: "default", borderLeft: isDldOnly ? `3px solid ${T.textMuted}40` : undefined, opacity: isDldOnly ? 0.92 : 1 }}
+                <div className="chart-box" style={{ padding: 16, position: "relative", transition: "transform 0.15s, box-shadow 0.15s", cursor: "pointer" }}
+                  onClick={() => setSelectedNbhd && setSelectedNbhd(n)}
                   onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 8px 32px rgba(0,0,0,0.3)"; }}
                   onMouseLeave={e => { e.currentTarget.style.transform = "none"; e.currentTarget.style.boxShadow = "none"; }}>
 
@@ -215,22 +215,12 @@ function NeighbourhoodsTab({ nbhSearch, setNbhSearch, nbhTypeFilter, setNbhTypeF
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 3, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{n.community || "—"}</div>
                       <div style={{ display: "flex", gap: 5, flexWrap: "wrap", alignItems: "center" }}>
-                        {isDldOnly ? (
-                          <span title="DLD Registry — official government listing. Investment metrics not yet curated." style={{ fontSize: 9, padding: "2px 6px", borderRadius: 10, fontWeight: 700, letterSpacing: 0.5, background: "rgba(148,163,184,0.10)", color: T.textMuted, border: `1px solid ${T.border}`, textTransform: "uppercase" }}>DLD Registry</span>
-                        ) : (
-                          <span title="Verified — full investment intelligence curated by DXB Analytics" style={{ fontSize: 9, padding: "2px 6px", borderRadius: 10, fontWeight: 700, letterSpacing: 0.5, background: "rgba(16,185,129,0.10)", color: T.green, border: "1px solid rgba(16,185,129,0.25)", textTransform: "uppercase" }}>Verified</span>
-                        )}
+                        <span title="Verified — full investment intelligence curated by DXB Analytics" style={{ fontSize: 9, padding: "2px 6px", borderRadius: 10, fontWeight: 700, letterSpacing: 0.5, background: "rgba(16,185,129,0.10)", color: T.green, border: "1px solid rgba(16,185,129,0.25)", textTransform: "uppercase" }}>Verified</span>
                         <MetroBadge distance={n.metroDistance} />
                         <RiskBadge risk={n.supplyRisk} />
                       </div>
                     </div>
-                    {!isDldOnly && <ScoreBadge score={n.investmentScore} />}
-                    {isDldOnly && n.totalProjects != null && (
-                      <div style={{ textAlign: "right" }}>
-                        <div style={{ fontSize: 14, fontWeight: 800, color: T.white, fontFamily: "'Fraunces',serif", lineHeight: 1 }}>{n.totalProjects}</div>
-                        <div style={{ fontSize: 9, fontWeight: 600, color: T.textMuted, letterSpacing: 0.5, textTransform: "uppercase" }}>Projects</div>
-                      </div>
-                    )}
+                    <ScoreBadge score={n.investmentScore} />
                   </div>
 
                   {/* Key metrics grid */}
@@ -292,23 +282,246 @@ function NeighbourhoodsTab({ nbhSearch, setNbhSearch, nbhTypeFilter, setNbhTypeF
 
                   {/* Action buttons */}
                   <div style={{ display: "flex", gap: 6 }}>
-                    <button type="button" onClick={() => handleTabChange("Price History")}
+                    <button type="button" onClick={(e) => { e.stopPropagation(); handleTabChange("Price History"); }}
                       style={{ flex: 1, padding: "6px 0", background: "rgba(212,168,67,0.06)", border: `1px solid ${T.border}`, borderRadius: 7, color: T.gold, fontSize: 10, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
-                      Price History →
+                      Price History
                     </button>
-                    <button type="button" onClick={() => handleTabChange("Yields")}
+                    <button type="button" onClick={(e) => { e.stopPropagation(); handleTabChange("Yields"); }}
                       style={{ flex: 1, padding: "6px 0", background: "rgba(20,184,166,0.06)", border: "1px solid rgba(20,184,166,0.2)", borderRadius: 7, color: T.teal, fontSize: 10, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
-                      Yields →
+                      Yields
                     </button>
                     <button type="button"
-                      onClick={() => setNbhCompare(c => isCompared ? c.filter(x => x !== n.community) : c.length < 2 ? [...c, n.community] : c)}
+                      onClick={(e) => { e.stopPropagation(); setNbhCompare(c => isCompared ? c.filter(x => x !== n.community) : c.length < 2 ? [...c, n.community] : c); }}
                       style={{ padding: "6px 10px", background: isCompared ? "rgba(212,168,67,0.15)" : "transparent", border: `1px solid ${isCompared ? "rgba(212,168,67,0.4)" : T.border}`, borderRadius: 7, color: isCompared ? T.gold : T.textMuted, fontSize: 10, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
-                      {isCompared ? "✓" : "+"}
+                      {isCompared ? "Added" : "Compare"}
                     </button>
                   </div>
                 </div>
               );
             };
+
+            /* ── Registry card (Tier 2 = DLD-only, compact, honest) ── */
+            const NbhCardRegistry = ({ n }) => {
+              return (
+                <div className="chart-box" style={{ padding: "14px 16px", position: "relative", transition: "transform 0.15s, box-shadow 0.15s", cursor: "pointer", borderLeft: `3px solid ${T.border}`, background: "rgba(255,255,255,0.015)", display: "flex", alignItems: "center", gap: 14, minHeight: 88 }}
+                  onClick={() => setSelectedNbhd && setSelectedNbhd(n)}
+                  onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-1px)"; e.currentTarget.style.boxShadow = "0 4px 16px rgba(0,0,0,0.2)"; }}
+                  onMouseLeave={e => { e.currentTarget.style.transform = "none"; e.currentTarget.style.boxShadow = "none"; }}>
+
+                  {/* Left — name + chips */}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 4, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{n.community || "—"}</div>
+                    <div style={{ display: "flex", gap: 5, flexWrap: "wrap", alignItems: "center" }}>
+                      <span title="DLD Registry — official government listing. Investment metrics curation pending." style={{ fontSize: 9, padding: "2px 6px", borderRadius: 10, fontWeight: 700, letterSpacing: 0.5, background: "rgba(148,163,184,0.10)", color: T.textMuted, border: `1px solid ${T.border}`, textTransform: "uppercase" }}>DLD Registry</span>
+                      {n.area && <span style={{ fontSize: 10, color: T.textMuted }}>{n.area}</span>}
+                    </div>
+                  </div>
+
+                  {/* Middle — project counts */}
+                  <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
+                    {n.totalProjects != null && (
+                      <div style={{ textAlign: "center" }}>
+                        <div style={{ fontSize: 18, fontWeight: 800, color: T.white, fontFamily: "'Fraunces',serif", lineHeight: 1 }}>{n.totalProjects}</div>
+                        <div style={{ fontSize: 9, fontWeight: 600, color: T.textMuted, letterSpacing: 0.5, textTransform: "uppercase", marginTop: 2 }}>Projects</div>
+                      </div>
+                    )}
+                    {n.activeProjects != null && n.activeProjects > 0 && (
+                      <div style={{ textAlign: "center" }}>
+                        <div style={{ fontSize: 14, fontWeight: 700, color: T.green, fontFamily: "'Fraunces',serif", lineHeight: 1 }}>{n.activeProjects}</div>
+                        <div style={{ fontSize: 9, fontWeight: 600, color: T.textMuted, letterSpacing: 0.5, textTransform: "uppercase", marginTop: 2 }}>Active</div>
+                      </div>
+                    )}
+                    {n.completedProjects != null && n.completedProjects > 0 && (
+                      <div style={{ textAlign: "center" }}>
+                        <div style={{ fontSize: 14, fontWeight: 700, color: T.textSecondary, fontFamily: "'Fraunces',serif", lineHeight: 1 }}>{n.completedProjects}</div>
+                        <div style={{ fontSize: 9, fontWeight: 600, color: T.textMuted, letterSpacing: 0.5, textTransform: "uppercase", marginTop: 2 }}>Done</div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Right — chevron */}
+                  <div style={{ color: T.textMuted, fontSize: 16, fontFamily: "'Outfit',sans-serif", opacity: 0.5 }}>›</div>
+                </div>
+              );
+            };
+
+            /* ── Detail Drawer (slides in from right when a card is clicked) ──
+               Works for both Tier 1 (Verified) and Tier 2 (DLD Registry) records.
+               Sections auto-hide when data is missing. Fully self-contained.
+            */
+            const NbhDetailDrawer = ({ n, onClose }) => {
+              if (!n) return null;
+              const isDldOnly = n.tier === "dld-registry";
+              const hasInvestment = !isDldOnly && (n.grossYield || n.avgPpsf);
+
+              /* Body scroll lock */
+              React.useEffect(() => {
+                const prev = document.body.style.overflow;
+                document.body.style.overflow = "hidden";
+                const onKey = (e) => { if (e.key === "Escape") onClose(); };
+                window.addEventListener("keydown", onKey);
+                return () => { document.body.style.overflow = prev; window.removeEventListener("keydown", onKey); };
+              }, []);
+
+              const Stat = ({ label, value, color, hint }) => (
+                <div style={{ background: T.surfaceAlt, borderRadius: 10, padding: "12px 14px" }}>
+                  <div style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 6 }}>{label}</div>
+                  <div style={{ fontSize: 20, fontWeight: 700, color: color || T.white, fontFamily: "'Fraunces',serif", lineHeight: 1 }}>{value}</div>
+                  {hint && <div style={{ fontSize: 10, color: T.textMuted, marginTop: 4 }}>{hint}</div>}
+                </div>
+              );
+
+              const SectionTitle = ({ children, accent }) => (
+                <div style={{ fontSize: 11, fontWeight: 700, color: accent || T.gold, letterSpacing: 1, textTransform: "uppercase", marginBottom: 12, marginTop: 24, display: "flex", alignItems: "center", gap: 8 }}>
+                  <span style={{ width: 16, height: 1, background: accent || T.gold }} />{children}
+                </div>
+              );
+
+              return (
+                <React.Fragment>
+                  {/* Backdrop */}
+                  <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.55)", backdropFilter: "blur(2px)", zIndex: 1000, animation: "fadeUp 0.2s ease-out forwards" }} />
+
+                  {/* Drawer */}
+                  <div style={{ position: "fixed", top: 0, right: 0, bottom: 0, width: "min(560px, 100vw)", background: T.surface, borderLeft: `1px solid ${T.border}`, zIndex: 1001, overflowY: "auto", boxShadow: "-20px 0 60px rgba(0,0,0,0.5)", animation: "fadeUp 0.25s ease-out forwards" }}>
+
+                    {/* Sticky header */}
+                    <div style={{ position: "sticky", top: 0, zIndex: 2, background: T.surface, borderBottom: `1px solid ${T.border}`, padding: "18px 24px 14px", display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ display: "flex", gap: 6, alignItems: "center", marginBottom: 6 }}>
+                          {isDldOnly ? (
+                            <span style={{ fontSize: 9, padding: "2px 8px", borderRadius: 10, fontWeight: 700, letterSpacing: 0.5, background: "rgba(148,163,184,0.10)", color: T.textMuted, border: `1px solid ${T.border}`, textTransform: "uppercase" }}>DLD Registry</span>
+                          ) : (
+                            <span style={{ fontSize: 9, padding: "2px 8px", borderRadius: 10, fontWeight: 700, letterSpacing: 0.5, background: "rgba(16,185,129,0.10)", color: T.green, border: "1px solid rgba(16,185,129,0.25)", textTransform: "uppercase" }}>Verified Intelligence</span>
+                          )}
+                          {n.area && <span style={{ fontSize: 11, color: T.textMuted }}>{n.area}</span>}
+                        </div>
+                        <div style={{ fontSize: 22, fontWeight: 800, color: T.white, fontFamily: "'Fraunces',serif", lineHeight: 1.15 }}>{n.community || "—"}</div>
+                        {!isDldOnly && (
+                          <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center", marginTop: 8 }}>
+                            <MetroBadge distance={n.metroDistance} />
+                            <RiskBadge risk={n.supplyRisk} />
+                            {n.tenantProfile && <span style={{ fontSize: 10, padding: "2px 8px", borderRadius: 10, background: "rgba(255,255,255,0.05)", color: T.textMuted, border: `1px solid ${T.border}` }}>{n.tenantProfile}</span>}
+                          </div>
+                        )}
+                      </div>
+                      <button type="button" onClick={onClose}
+                        style={{ width: 32, height: 32, borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.textMuted, fontSize: 18, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontFamily: "'Outfit',sans-serif" }}>×</button>
+                    </div>
+
+                    {/* Body */}
+                    <div style={{ padding: "4px 24px 32px" }}>
+
+                      {/* Score + quick header stats (Verified only) */}
+                      {!isDldOnly && n.investmentScore && (
+                        <div style={{ display: "flex", alignItems: "center", gap: 16, padding: "20px 0", borderBottom: `1px solid ${T.border}` }}>
+                          <ScoreBadge score={n.investmentScore} size="lg" />
+                          <div style={{ flex: 1 }}>
+                            <div style={{ fontSize: 11, color: T.textMuted, letterSpacing: 0.5, textTransform: "uppercase", marginBottom: 2 }}>DXB Investment Score</div>
+                            <div style={{ fontSize: 13, color: T.textSecondary }}>Composite of yield, supply risk, metro access, lifestyle & demand signals</div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* DLD Registry stats */}
+                      {isDldOnly && (
+                        <React.Fragment>
+                          <SectionTitle accent={T.textMuted}>DLD Project Registry</SectionTitle>
+                          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
+                            {n.totalProjects != null && <Stat label="Total" value={n.totalProjects} />}
+                            {n.activeProjects != null && <Stat label="Active" value={n.activeProjects} color={T.green} />}
+                            {n.completedProjects != null && <Stat label="Completed" value={n.completedProjects} color={T.textSecondary} />}
+                          </div>
+                          <div style={{ marginTop: 16, padding: "12px 14px", background: "rgba(148,163,184,0.06)", border: `1px solid ${T.border}`, borderRadius: 10, fontSize: 11, color: T.textMuted, lineHeight: 1.5 }}>
+                            This community is in the official Dubai Land Department registry. Investment metrics (yield, PPSF, service charge, supply risk) will appear here once curation is complete. Data will be enriched using RERA filings, Bayut rental index, and Knight Frank research.
+                          </div>
+                        </React.Fragment>
+                      )}
+
+                      {/* Investment metrics (Verified) */}
+                      {hasInvestment && (
+                        <React.Fragment>
+                          <SectionTitle>Investment Metrics</SectionTitle>
+                          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                            <Stat label="Gross Yield" value={n.grossYield ? parseFloat(n.grossYield).toFixed(1) + "%" : "—"} color={parseFloat(n.grossYield) >= 7 ? T.green : parseFloat(n.grossYield) >= 5 ? T.gold : T.textSecondary} hint="Annual rental / sale price" />
+                            <Stat label="Net Yield" value={n.netYield ? parseFloat(n.netYield).toFixed(1) + "%" : "—"} hint="After service charges" />
+                            <Stat label="Avg PPSF" value={n.avgPpsf ? "AED " + n.avgPpsf.toLocaleString() : "—"} color={T.white} hint="Current sale price/sqft" />
+                            <Stat label="Service Charge" value={n.serviceCharge ? "AED " + n.serviceCharge : "—"} hint="Per sqft annually" />
+                          </div>
+                        </React.Fragment>
+                      )}
+
+                      {/* Pipeline (Verified) */}
+                      {!isDldOnly && n.pipeline2026 && (
+                        <React.Fragment>
+                          <SectionTitle>Supply Pipeline</SectionTitle>
+                          <div style={{ background: T.surfaceAlt, borderRadius: 10, padding: "14px 16px" }}>
+                            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>
+                              <span style={{ fontSize: 11, color: T.textMuted }}>Units delivering in 2026</span>
+                              <span style={{ fontSize: 14, color: T.white, fontWeight: 700, fontFamily: "'Fraunces',serif" }}>{n.pipeline2026?.toLocaleString()}</span>
+                            </div>
+                            <div style={{ height: 6, borderRadius: 3, background: T.border }}>
+                              <div style={{ height: "100%", width: Math.min((n.pipeline2026 / 5000) * 100, 100) + "%", borderRadius: 3, background: n.supplyRisk === "High" ? T.red : n.supplyRisk === "Medium" ? T.gold : T.green, transition: "width 0.3s ease" }} />
+                            </div>
+                            <div style={{ fontSize: 10, color: T.textMuted, marginTop: 8 }}>
+                              Supply risk: <span style={{ color: n.supplyRisk === "High" ? T.red : n.supplyRisk === "Medium" ? T.gold : T.green, fontWeight: 600 }}>{n.supplyRisk || "Unknown"}</span>
+                              {n.supplyRisk === "High" && " — oversupply may pressure yields"}
+                              {n.supplyRisk === "Low" && " — limited new supply supports pricing"}
+                            </div>
+                          </div>
+                        </React.Fragment>
+                      )}
+
+                      {/* Amenities */}
+                      {(n.hasSchool || n.hasHospital || n.hasMall || n.hasBeach || n.tenantProfile) && !isDldOnly && (
+                        <React.Fragment>
+                          <SectionTitle>Lifestyle & Amenities</SectionTitle>
+                          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                            {n.hasSchool && <span style={{ fontSize: 11, padding: "6px 12px", borderRadius: 10, background: "rgba(99,102,241,0.1)", color: "#818CF8", border: "1px solid rgba(99,102,241,0.2)" }}>Schools nearby</span>}
+                            {n.hasHospital && <span style={{ fontSize: 11, padding: "6px 12px", borderRadius: 10, background: "rgba(239,68,68,0.1)", color: T.red, border: "1px solid rgba(239,68,68,0.2)" }}>Hospital access</span>}
+                            {n.hasMall && <span style={{ fontSize: 11, padding: "6px 12px", borderRadius: 10, background: "rgba(212,168,67,0.08)", color: T.gold, border: `1px solid ${T.border}` }}>Retail & malls</span>}
+                            {n.hasBeach && <span style={{ fontSize: 11, padding: "6px 12px", borderRadius: 10, background: "rgba(20,184,166,0.1)", color: T.teal, border: "1px solid rgba(20,184,166,0.2)" }}>Waterfront</span>}
+                          </div>
+                        </React.Fragment>
+                      )}
+
+                      {/* Quick actions */}
+                      <SectionTitle>Actions</SectionTitle>
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                        <button type="button" onClick={() => { handleTabChange("Price History"); onClose(); }}
+                          style={{ padding: "12px 14px", background: "rgba(212,168,67,0.08)", border: `1px solid ${T.border}`, borderRadius: 10, color: T.gold, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif", textAlign: "left" }}>
+                          <div style={{ fontSize: 13, fontWeight: 700 }}>Price History →</div>
+                          <div style={{ fontSize: 10, color: T.textMuted, marginTop: 2 }}>Monthly PPSF trend</div>
+                        </button>
+                        <button type="button" onClick={() => { handleTabChange("Yields"); onClose(); }}
+                          style={{ padding: "12px 14px", background: "rgba(20,184,166,0.08)", border: "1px solid rgba(20,184,166,0.2)", borderRadius: 10, color: T.teal, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif", textAlign: "left" }}>
+                          <div style={{ fontSize: 13, fontWeight: 700 }}>Yield Analysis →</div>
+                          <div style={{ fontSize: 10, color: T.textMuted, marginTop: 2 }}>Rent vs sale comparisons</div>
+                        </button>
+                        <button type="button" onClick={() => { handleTabChange("Map"); onClose(); }}
+                          style={{ padding: "12px 14px", background: "rgba(255,255,255,0.03)", border: `1px solid ${T.border}`, borderRadius: 10, color: T.textSecondary, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif", textAlign: "left" }}>
+                          <div style={{ fontSize: 13, fontWeight: 700 }}>Community Map →</div>
+                          <div style={{ fontSize: 10, color: T.textMuted, marginTop: 2 }}>Geo + transit overlay</div>
+                        </button>
+                        <button type="button" onClick={() => { handleTabChange("Projects"); onClose(); }}
+                          style={{ padding: "12px 14px", background: "rgba(255,255,255,0.03)", border: `1px solid ${T.border}`, borderRadius: 10, color: T.textSecondary, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif", textAlign: "left" }}>
+                          <div style={{ fontSize: 13, fontWeight: 700 }}>Projects →</div>
+                          <div style={{ fontSize: 10, color: T.textMuted, marginTop: 2 }}>All developments in community</div>
+                        </button>
+                      </div>
+
+                      {/* Data provenance */}
+                      <div style={{ marginTop: 24, padding: "12px 14px", background: T.surfaceAlt, borderRadius: 10, fontSize: 10, color: T.textMuted, lineHeight: 1.5 }}>
+                        Sources: Dubai Land Department · RERA Service Charges · Bayut Rental Index · RTA Metro Data · Knight Frank Research
+                      </div>
+                    </div>
+                  </div>
+                </React.Fragment>
+              );
+            };
+
+            /* Unified card chooser */
+            const NbhCard = ({ n }) => n.tier === "dld-registry" ? <NbhCardRegistry n={n} /> : <NbhCardVerified n={n} />;
 
             return (
               <div style={{ animation: "fadeUp 0.4s ease-out forwards" }}>
@@ -449,6 +662,11 @@ function NeighbourhoodsTab({ nbhSearch, setNbhSearch, nbhTypeFilter, setNbhTypeF
                       </div>
                     ))}
                   </div>
+                )}
+
+                {/* Detail drawer */}
+                {selectedNbhd && (
+                  <NbhDetailDrawer n={selectedNbhd} onClose={() => setSelectedNbhd && setSelectedNbhd(null)} />
                 )}
 
                 {/* Sources */}
