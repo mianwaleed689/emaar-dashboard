@@ -2163,6 +2163,7 @@ export default function EmaarDashboardV2() {
   const [tabSettings, setTabSettings] = useState({});
   const [liveCommunityROI, setLiveCommunityROI] = useState({});
   const [liveCommunityIntel, setLiveCommunityIntel] = useState({});
+  const [liveCommunityDataFull, setLiveCommunityDataFull] = useState([]); /* Phase Tier-A */
 
   /* ─── MY LEADS STATE (Session 4) ─── */
   const [myLeads, setMyLeads] = useState([]);
@@ -2896,10 +2897,15 @@ export default function EmaarDashboardV2() {
     // Phase 2.4.8: Community list for top-bar Community dropdown
     unsubs.push(onSnapshot(collection(db, "communityData"), (snap) => {
       const list = [];
+      const fullList = []; /* Phase Tier-A: collect full records for Neighbourhoods tiered display */
       snap.forEach(d => {
         const data = d.data();
-        // Only published communities with a human-readable name.
-        // Skip the short-ID cron-yields artefacts (BB, DCH, etc.) which lack visibility.
+        /* Include EVERY community record (published + draft) with a real name.
+           Consumers filter by visibility/tier at render time. */
+        if ((data.name || data.community) && data.name !== "(unnamed)") {
+          fullList.push({ id: d.id, ...data });
+        }
+        // Dropdown list (published only - customer-facing)
         if (data.visibility === "published" && (data.name || data.community)) {
           list.push({
             id: d.id,
@@ -2909,7 +2915,9 @@ export default function EmaarDashboardV2() {
         }
       });
       list.sort((a, b) => a.name.localeCompare(b.name));
+      fullList.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
       setLiveCommunityList(list);
+      setLiveCommunityDataFull(fullList);
     }));
 
     unsubs.push(onSnapshot(collection(db, "developers"), (snap) => {
@@ -3953,6 +3961,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               nbhView={nbhView} setNbhView={setNbhView}
               nbhCompare={nbhCompare} setNbhCompare={setNbhCompare}
               liveNeighbourhoods={liveNeighbourhoods}
+              liveCommunityDataFull={liveCommunityDataFull}
               liveCommunityROI={liveCommunityROI}
               liveMarketData={liveMarketData}
               globalFilters={_gf}
