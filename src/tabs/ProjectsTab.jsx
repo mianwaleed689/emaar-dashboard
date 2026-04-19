@@ -178,34 +178,66 @@ function ProjectsTab({
 
             /* Normalize Tier 3 DLD records into a project-card-compatible shape.
                DLD gives us: name, community, developer, status, handoverDate, constructionPct, totalUnits, escrowBank, reraNo
-               DLD does NOT give us: beds, prices, yields, amenities, payment plans, PPSF
-               Missing fields stay null/undefined — card handles these gracefully. */
+               DLD transaction-enrichment (Session 2) adds: priceMin, priceMax, avgPpsf, estGrossYield, commonRooms, commonMetro, commonPropertyType, transactionCount, latestTransaction
+               Other fields (amenities, views, payment plans, unit breakdown) require manual curation or brochure enrichment. */
             const tier1SeenKeys = new Set(tier1Raw.map(p => String(p.project || p.name || "").trim().toLowerCase()).filter(Boolean));
             const tier3Raw = (Array.isArray(liveDevelopments) ? liveDevelopments : [])
               .filter(d => {
                 const key = String(d.name || d.project || "").trim().toLowerCase();
                 return key && !tier1SeenKeys.has(key);
               })
-              .map(d => ({
-                id: d.id,
-                project: d.name || d.project || d.projectName,
-                developer: d.developer || d.developerName || "Unknown",
-                community: d.community || d.masterProject || "—",
-                status: d.status === "FINISHED" ? "Ready" : d.status === "NOT_STARTED" ? "Off-Plan" : d.status === "ACTIVE" ? "Off-Plan" : "Unknown",
-                handover: d.handoverDate || d.handoverQuarter || null,
-                constructionPct: d.constructionPct || 0,
-                totalUnits: d.totalUnits || null,
-                escrowBank: d.escrowBank || null,
-                reraNo: d.reraNo || d.projectNumber || null,
-                tier: "dld-registry",
-                type: null, /* DLD does not specify unit type */
-                /* The rest stay null — card shows "—" */
-                beds: [], priceMin: null, priceMax: null, ppsf: null, grossYield: null,
-                amenities: [], unitBreakdown: [], paymentPlan: null, view: [],
-                distMetro: undefined, distBeach: undefined, distDIFC: undefined,
-                goldenVisa: false, branded: false, velocityScore: 0, commission: null,
-                source: d.source || "DLD Registry",
-              }));
+              .map(d => {
+                /* Parse rooms string "1 B/R", "2 B/R", "Studio", "Office" etc → our beds format */
+                const bedsFromRooms = (() => {
+                  if (!d.commonRooms) return [];
+                  const r = String(d.commonRooms).toLowerCase();
+                  if (r.includes("studio")) return ["Studio"];
+                  const m = r.match(/(\d+)\s*b\/?r/);
+                  if (m) return [m[1] + "BR"];
+                  return [];
+                })();
+                /* Derive type from commonPropertyType */
+                const inferType = (() => {
+                  if (!d.commonPropertyType) return null;
+                  const t = String(d.commonPropertyType).toLowerCase();
+                  if (t.includes("villa")) return "Villa";
+                  if (t.includes("townhouse") || t.includes("town house")) return "Townhouse";
+                  if (t.includes("office")) return "Office";
+                  if (t.includes("shop") || t.includes("retail")) return "Retail";
+                  if (t.includes("warehouse")) return "Warehouse";
+                  if (t.includes("land") || t.includes("plot")) return "Land";
+                  return "Apartment"; /* default for "Unit", "Flat", etc */
+                })();
+                return ({
+                  id: d.id,
+                  project: d.name || d.project || d.projectName,
+                  developer: d.developer || d.developerName || "Unknown",
+                  community: d.community || d.masterProject || "—",
+                  status: d.status === "FINISHED" ? "Ready" : d.status === "NOT_STARTED" ? "Off-Plan" : d.status === "ACTIVE" ? "Off-Plan" : "Unknown",
+                  handover: d.handoverDate || d.handoverQuarter || null,
+                  constructionPct: d.constructionPct || 0,
+                  totalUnits: d.totalUnits || null,
+                  escrowBank: d.escrowBank || null,
+                  reraNo: d.reraNo || d.projectNumber || null,
+                  tier: "dld-registry",
+                  type: inferType,
+                  /* Transaction-enriched fields (Session 2): */
+                  priceMin: d.priceMin || null,
+                  priceMax: d.priceMax || null,
+                  ppsf: d.avgPpsf || null,
+                  grossYield: d.estGrossYield || null,
+                  commonMetro: d.commonMetro || null,
+                  commonRooms: d.commonRooms || null,
+                  transactionCount: d.transactionCount || 0,
+                  latestTransaction: d.latestTransaction || null,
+                  beds: bedsFromRooms,
+                  /* Not curated yet: */
+                  amenities: [], unitBreakdown: [], paymentPlan: null, view: [],
+                  distMetro: undefined, distBeach: undefined, distDIFC: undefined,
+                  goldenVisa: false, branded: false, velocityScore: 0, commission: null,
+                  source: d.source || "DLD Registry",
+                });
+              });
 
             const rawProjects = [...tier1Raw, ...tier3Raw];
 
@@ -364,10 +396,12 @@ function ProjectsTab({
               );
             };
 
-            /* ── Registry card (Tier 3 = DLD-only, compact, honest) ── */
+            /* ── Registry card (Tier 3 = DLD-only + transaction-enriched) ── */
             const ProjectCardRegistry = ({ p }) => {
+              const hasPricing = p.priceMin && p.priceMax;
+              const hasEnrichment = hasPricing || p.ppsf || p.grossYield;
               return (
-                <div className="chart-box" style={{ padding:"14px 16px", cursor:"pointer", borderLeft:`3px solid ${T.border}`, background:"rgba(255,255,255,0.015)", display:"flex", alignItems:"center", gap:14, minHeight:100, transition:"transform 0.15s, box-shadow 0.15s" }}
+                <div className="chart-box" style={{ padding:"14px 16px", cursor:"pointer", borderLeft:`3px solid ${hasEnrichment ? "rgba(212,168,67,0.3)" : T.border}`, background:"rgba(255,255,255,0.015)", display:"flex", alignItems:"center", gap:14, minHeight:100, transition:"transform 0.15s, box-shadow 0.15s" }}
                   onClick={() => { setSelectedProject(p); setProjDetailTab("overview"); }}
                   onMouseEnter={e => { e.currentTarget.style.transform="translateY(-1px)"; e.currentTarget.style.boxShadow="0 4px 16px rgba(0,0,0,0.2)"; }}
                   onMouseLeave={e => { e.currentTarget.style.transform="none"; e.currentTarget.style.boxShadow="none"; }}>
@@ -379,22 +413,43 @@ function ProjectsTab({
                     </div>
                     <div style={{ fontFamily:"'Fraunces',serif", fontSize:14, fontWeight:700, color:T.white, marginBottom:6, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{p.project || "—"}</div>
                     <div style={{ display:"flex", gap:5, flexWrap:"wrap", alignItems:"center" }}>
-                      <span title="DLD Registry — official government listing. Investment metrics curation pending." style={{ fontSize:9, padding:"2px 6px", borderRadius:10, fontWeight:700, letterSpacing:0.5, background:"rgba(148,163,184,0.10)", color:T.textMuted, border:`1px solid ${T.border}`, textTransform:"uppercase" }}>DLD Registry</span>
+                      <span title={hasEnrichment ? "DLD Registry + transaction data from Dubai Land Department" : "DLD Registry — official government listing. Investment metrics curation pending."} style={{ fontSize:9, padding:"2px 6px", borderRadius:10, fontWeight:700, letterSpacing:0.5, background: hasEnrichment ? "rgba(212,168,67,0.10)" : "rgba(148,163,184,0.10)", color: hasEnrichment ? T.gold : T.textMuted, border:`1px solid ${hasEnrichment ? "rgba(212,168,67,0.25)" : T.border}`, textTransform:"uppercase" }}>{hasEnrichment ? "DLD Data" : "DLD Registry"}</span>
                       {p.status && p.status !== "Unknown" && <StatusBadge status={p.status} />}
                       {p.handover && <span style={{ fontSize:10, color:T.textMuted }}>{p.handover}</span>}
+                      {p.transactionCount > 0 && <span style={{ fontSize:10, color:T.textMuted }}>{p.transactionCount} sales</span>}
                       {p.reraNo && <span style={{ fontSize:10, color:T.textMuted }}>RERA #{p.reraNo}</span>}
                     </div>
                   </div>
 
-                  {/* Middle — build % + total units */}
-                  <div style={{ display:"flex", gap:16, alignItems:"center" }}>
-                    {p.constructionPct > 0 && (
+                  {/* Middle — enriched metrics if present, else build/units */}
+                  <div style={{ display:"flex", gap:14, alignItems:"center" }}>
+                    {hasPricing && (
+                      <div style={{ textAlign:"center", minWidth:90 }}>
+                        <div style={{ fontFamily:"'Fraunces',serif", fontSize:14, fontWeight:800, color:T.white, lineHeight:1 }}>
+                          AED {(p.priceMin/1e6).toFixed(1)}–{(p.priceMax/1e6).toFixed(1)}M
+                        </div>
+                        <div style={{ fontSize:9, fontWeight:600, color:T.textMuted, letterSpacing:0.5, textTransform:"uppercase", marginTop:2 }}>Price Range</div>
+                      </div>
+                    )}
+                    {p.ppsf > 0 && (
+                      <div style={{ textAlign:"center" }}>
+                        <div style={{ fontFamily:"'Fraunces',serif", fontSize:14, fontWeight:800, color:T.white, lineHeight:1 }}>AED {p.ppsf.toLocaleString()}</div>
+                        <div style={{ fontSize:9, fontWeight:600, color:T.textMuted, letterSpacing:0.5, textTransform:"uppercase", marginTop:2 }}>PPSF</div>
+                      </div>
+                    )}
+                    {p.grossYield > 0 && p.grossYield < 15 && (
+                      <div style={{ textAlign:"center" }}>
+                        <div style={{ fontFamily:"'Fraunces',serif", fontSize:14, fontWeight:800, color:p.grossYield >= 7 ? T.green : T.gold, lineHeight:1 }}>{p.grossYield}%</div>
+                        <div style={{ fontSize:9, fontWeight:600, color:T.textMuted, letterSpacing:0.5, textTransform:"uppercase", marginTop:2 }}>Yield</div>
+                      </div>
+                    )}
+                    {!hasEnrichment && p.constructionPct > 0 && (
                       <div style={{ textAlign:"center" }}>
                         <div style={{ fontFamily:"'Fraunces',serif", fontSize:16, fontWeight:800, color:T.white, lineHeight:1 }}>{p.constructionPct}%</div>
                         <div style={{ fontSize:9, fontWeight:600, color:T.textMuted, letterSpacing:0.5, textTransform:"uppercase", marginTop:2 }}>Built</div>
                       </div>
                     )}
-                    {p.totalUnits != null && p.totalUnits > 0 && (
+                    {!hasEnrichment && p.totalUnits != null && p.totalUnits > 0 && (
                       <div style={{ textAlign:"center" }}>
                         <div style={{ fontFamily:"'Fraunces',serif", fontSize:16, fontWeight:800, color:T.white, lineHeight:1 }}>{p.totalUnits}</div>
                         <div style={{ fontSize:9, fontWeight:600, color:T.textMuted, letterSpacing:0.5, textTransform:"uppercase", marginTop:2 }}>Units</div>
@@ -662,7 +717,123 @@ function ProjectsTab({
             );
       })()}
 
-      {selectedProject && typeof document !== "undefined" && createPortal(
+      {/* ── DLD Registry modal (Session 2: simpler, honest view for tier-3 cards) ── */}
+      {selectedProject && selectedProject.tier === "dld-registry" && typeof document !== "undefined" && createPortal(
+        <div role="dialog" aria-modal="true" onClick={(e) => { if (e.target === e.currentTarget) setSelectedProject(null); }} style={{ position:"fixed", inset:0, background:"rgba(4,9,15,0.97)", zIndex:2000, display:"flex", alignItems:"flex-start", justifyContent:"center", padding:"40px 16px", overflow:"auto", backdropFilter:"blur(8px)" }}>
+          <div style={{ width:"100%", maxWidth:640, background:T.surface, border:`1px solid ${T.border}`, borderRadius:14, overflow:"hidden", boxShadow:"0 24px 80px rgba(0,0,0,0.5)" }}>
+
+            {/* Header */}
+            <div style={{ padding:"20px 24px", borderBottom:`1px solid ${T.border}`, display:"flex", justifyContent:"space-between", alignItems:"flex-start", gap:16 }}>
+              <div style={{ flex:1, minWidth:0 }}>
+                <div style={{ fontSize:10, fontWeight:700, color:T.textMuted, letterSpacing:0.8, textTransform:"uppercase", marginBottom:4 }}>
+                  {selectedProject.developer || "Unknown"}{selectedProject.community && selectedProject.community !== "—" ? " · " + selectedProject.community : ""}
+                </div>
+                <div style={{ fontFamily:"'Fraunces',serif", fontSize:22, fontWeight:800, color:T.white, marginBottom:8, lineHeight:1.2 }}>{selectedProject.project || "—"}</div>
+                <div style={{ display:"flex", gap:6, flexWrap:"wrap", alignItems:"center" }}>
+                  <span style={{ fontSize:9, padding:"3px 8px", borderRadius:10, fontWeight:700, letterSpacing:0.5, background:(selectedProject.priceMin || selectedProject.ppsf) ? "rgba(212,168,67,0.10)" : "rgba(148,163,184,0.10)", color:(selectedProject.priceMin || selectedProject.ppsf) ? T.gold : T.textMuted, border:`1px solid ${(selectedProject.priceMin || selectedProject.ppsf) ? "rgba(212,168,67,0.25)" : T.border}`, textTransform:"uppercase" }}>{(selectedProject.priceMin || selectedProject.ppsf) ? "DLD + Transaction Data" : "DLD Registry"}</span>
+                  {selectedProject.status && selectedProject.status !== "Unknown" && <StatusBadge status={selectedProject.status} />}
+                  {selectedProject.reraNo && <span style={{ fontSize:10, color:T.textMuted }}>RERA #{selectedProject.reraNo}</span>}
+                </div>
+              </div>
+              <button type="button" onClick={() => setSelectedProject(null)} aria-label="Close" style={{ background:"none", border:"none", color:T.textMuted, fontSize:24, cursor:"pointer", lineHeight:1, padding:4 }}>×</button>
+            </div>
+
+            {/* Body: data grid */}
+            <div style={{ padding:"20px 24px" }}>
+
+              {/* Transaction-enriched block (only if present) */}
+              {(selectedProject.priceMin || selectedProject.ppsf || selectedProject.grossYield) && (
+                <div style={{ background:"rgba(212,168,67,0.04)", border:`1px solid rgba(212,168,67,0.15)`, borderRadius:10, padding:"14px 16px", marginBottom:16 }}>
+                  <div style={{ fontSize:10, fontWeight:700, color:T.gold, letterSpacing:0.8, textTransform:"uppercase", marginBottom:10 }}>
+                    Transaction Data · Last {selectedProject.transactionCount || "—"} sales from DLD
+                  </div>
+                  <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:12 }}>
+                    {selectedProject.priceMin && selectedProject.priceMax && (
+                      <div>
+                        <div style={{ fontSize:9, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.6, marginBottom:3 }}>Price Range</div>
+                        <div style={{ fontFamily:"'Fraunces',serif", fontSize:16, fontWeight:800, color:T.white }}>AED {(selectedProject.priceMin/1e6).toFixed(1)}–{(selectedProject.priceMax/1e6).toFixed(1)}M</div>
+                      </div>
+                    )}
+                    {selectedProject.ppsf > 0 && (
+                      <div>
+                        <div style={{ fontSize:9, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.6, marginBottom:3 }}>Avg PPSF</div>
+                        <div style={{ fontFamily:"'Fraunces',serif", fontSize:16, fontWeight:800, color:T.white }}>AED {selectedProject.ppsf.toLocaleString()}</div>
+                      </div>
+                    )}
+                    {selectedProject.grossYield > 0 && selectedProject.grossYield < 15 && (
+                      <div>
+                        <div style={{ fontSize:9, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.6, marginBottom:3 }}>Est. Gross Yield</div>
+                        <div style={{ fontFamily:"'Fraunces',serif", fontSize:16, fontWeight:800, color:selectedProject.grossYield >= 7 ? T.green : T.gold }}>{selectedProject.grossYield}%</div>
+                      </div>
+                    )}
+                  </div>
+                  {selectedProject.latestTransaction && (
+                    <div style={{ fontSize:10, color:T.textMuted, marginTop:10, paddingTop:10, borderTop:`1px solid rgba(212,168,67,0.12)` }}>
+                      Latest recorded sale: <span style={{ color:T.textSecondary, fontWeight:600 }}>{selectedProject.latestTransaction}</span>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Property details grid */}
+              <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12, marginBottom:16 }}>
+                {selectedProject.constructionPct > 0 && (
+                  <div style={{ background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:8, padding:"12px 14px" }}>
+                    <div style={{ fontSize:9, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.6, marginBottom:4 }}>Construction</div>
+                    <div style={{ fontFamily:"'Fraunces',serif", fontSize:18, fontWeight:800, color:T.white }}>{selectedProject.constructionPct}% Built</div>
+                  </div>
+                )}
+                {selectedProject.totalUnits > 0 && (
+                  <div style={{ background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:8, padding:"12px 14px" }}>
+                    <div style={{ fontSize:9, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.6, marginBottom:4 }}>Total Units</div>
+                    <div style={{ fontFamily:"'Fraunces',serif", fontSize:18, fontWeight:800, color:T.white }}>{selectedProject.totalUnits.toLocaleString()}</div>
+                  </div>
+                )}
+                {selectedProject.handover && (
+                  <div style={{ background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:8, padding:"12px 14px" }}>
+                    <div style={{ fontSize:9, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.6, marginBottom:4 }}>Handover</div>
+                    <div style={{ fontFamily:"'Fraunces',serif", fontSize:14, fontWeight:700, color:T.white }}>{selectedProject.handover}</div>
+                  </div>
+                )}
+                {selectedProject.commonRooms && (
+                  <div style={{ background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:8, padding:"12px 14px" }}>
+                    <div style={{ fontSize:9, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.6, marginBottom:4 }}>Most Common Config</div>
+                    <div style={{ fontFamily:"'Fraunces',serif", fontSize:14, fontWeight:700, color:T.white }}>{selectedProject.commonRooms}</div>
+                  </div>
+                )}
+                {selectedProject.commonMetro && (
+                  <div style={{ background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:8, padding:"12px 14px", gridColumn:"span 2" }}>
+                    <div style={{ fontSize:9, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.6, marginBottom:4 }}>Nearest Metro</div>
+                    <div style={{ fontFamily:"'Fraunces',serif", fontSize:14, fontWeight:700, color:T.white }}>{selectedProject.commonMetro}</div>
+                  </div>
+                )}
+              </div>
+
+              {/* Curation notice */}
+              <div style={{ background:"rgba(59,130,246,0.06)", border:`1px solid rgba(59,130,246,0.20)`, borderRadius:8, padding:"12px 14px", marginBottom:16 }}>
+                <div style={{ fontSize:11, color:T.textSecondary, lineHeight:1.6 }}>
+                  <span style={{ color:"#60A5FA", fontWeight:700 }}>◆ DLD Registry Record.</span>{" "}
+                  This project is sourced from the official Dubai Land Department database. Detailed investment metrics (unit breakdown, amenities, payment plans, views) require data curation from the developer portal or brochure.
+                </div>
+              </div>
+
+              {/* Action buttons */}
+              <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
+                <button type="button" onClick={() => handleTabChange("Mortgage")} style={{ flex:1, minWidth:140, padding:"10px 14px", background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:8, color:T.textSecondary, fontSize:12, fontWeight:600, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>Mortgage Calculator</button>
+                <button type="button" onClick={() => handleTabChange("My Leads")} style={{ flex:1, minWidth:140, padding:"10px 14px", background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:8, color:T.textSecondary, fontSize:12, fontWeight:600, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>Add to Leads</button>
+                {selectedProject.reraNo && (
+                  <a href={`https://dubailand.gov.ae/en/eservices/project-status/#!/ProjectStatus`} target="_blank" rel="noopener noreferrer" style={{ flex:1, minWidth:140, padding:"10px 14px", background:"rgba(212,168,67,0.08)", border:`1px solid rgba(212,168,67,0.30)`, borderRadius:8, color:T.gold, fontSize:12, fontWeight:700, cursor:"pointer", fontFamily:"'Outfit',sans-serif", textAlign:"center", textDecoration:"none" }}>View on DLD Portal →</a>
+                )}
+              </div>
+
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* ── Original 6-tab modal (for Verified projects only) ── */}
+      {selectedProject && selectedProject.tier !== "dld-registry" && typeof document !== "undefined" && createPortal(
 <div role="dialog" aria-modal="true" style={{ position:"fixed", inset:0, background:"rgba(4,9,15,0.97)", zIndex:2000, display:"flex", flexDirection:"column", backdropFilter:"blur(8px)" }}>
               <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"16px 24px", borderBottom:`1px solid ${T.border}`, background:T.surface, flexShrink:0 }}>
                 <div>
