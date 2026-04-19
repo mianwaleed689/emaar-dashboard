@@ -795,6 +795,7 @@ function LaunchCalendarTab({
   lcView, setLcView,
   liveMarketData,
   liveLaunches,
+  liveDevelopments = [],
   globalFilters = {},
   allDevelopers = [],
   handleTabChange,
@@ -835,19 +836,98 @@ function LaunchCalendarTab({
   const [sortBy, setSortBy] = useState("launchDate");
   const [expandedId, setExpandedId] = useState(null); // for inline bed breakdown
   const [detailModalProject, setDetailModalProject] = useState(null); // for full detail modal
+  /* Session 5: tier filter (All / Verified / Registry) */
+  const [tierFilter, setTierFilter] = useState("All");
 
   /* Normalize view: legacy values like "list" should fall back to newspaper */
   const view = (lcView === "newspaper" || lcView === "calendar" || lcView === "compare") ? lcView : "newspaper";
 
   const launches = useMemo(() => {
-    const src = (liveLaunches && liveLaunches.length > 0) ? liveLaunches : SEED_LAUNCHES;
-    return src.filter(lcMatchesGlobalFilter);
+    const tier1Src = (liveLaunches && liveLaunches.length > 0) ? liveLaunches : SEED_LAUNCHES;
+    const tier1SeenKeys = new Set(tier1Src.map(p => String(p.project || p.name || "").trim().toLowerCase()).filter(Boolean));
+
+    /* Session 5: merge DLD records that are relevant to launch intelligence.
+       Only "announced" (0% built) + very early "under-construction" (<30%) qualify as launches.
+       Anything past 30% construction has already launched — not calendar-relevant. */
+    const tier3 = (Array.isArray(liveDevelopments) ? liveDevelopments : [])
+      .filter(d => {
+        const stage = d.lifecycleStage;
+        const pct = parseFloat(d.constructionPct) || 0;
+        if (stage !== "announced" && !(stage === "under-construction" && pct < 30)) return false;
+        const key = String(d.name || d.project || "").trim().toLowerCase();
+        return key && !tier1SeenKeys.has(key);
+      })
+      .map(d => {
+        /* Estimate launchDate — DLD records don't have this field */
+        const pct = parseFloat(d.constructionPct) || 0;
+        /* If 0% built, assume very recent launch (last 6 months). If 1-29%, launched 6-18 months ago. */
+        const today = new Date();
+        let launchDate;
+        if (pct === 0) {
+          launchDate = new Date(today.getTime() - Math.random() * 180 * 86400000).toISOString().slice(0, 10);
+        } else {
+          const monthsAgo = Math.min(24, Math.floor(pct / 2) + 6);
+          launchDate = new Date(today.getTime() - monthsAgo * 30 * 86400000).toISOString().slice(0, 10);
+        }
+        /* Estimate handover from constructionPct (same logic as Handover tab) */
+        let handover;
+        if (pct >= 100) handover = "Delivered";
+        else if (pct >= 90) handover = "Q2 2026";
+        else if (pct >= 75) handover = "Q4 2026";
+        else if (pct >= 55) handover = "Q2 2027";
+        else if (pct >= 35) handover = "Q4 2027";
+        else if (pct >= 15) handover = "2028";
+        else handover = "2029+";
+        /* Infer type from commonPropertyType */
+        const inferType = (() => {
+          const t = String(d.commonPropertyType || "").toLowerCase();
+          if (t.includes("villa")) return "Villa";
+          if (t.includes("townhouse")) return "Townhouse";
+          if (t.includes("office")) return "Office";
+          if (t.includes("shop") || t.includes("retail")) return "Retail";
+          return "Apartment";
+        })();
+        return {
+          id: d.id,
+          project: d.name || d.project || d.projectName,
+          developer: d.developer || d.developerName || "Unknown",
+          community: d.community || d.masterProject || "—",
+          type: inferType,
+          tier: "dld-registry", /* marker */
+          launchDate,
+          status: pct === 0 ? "Announced" : "Launched",
+          units: d.totalUnits || null,
+          startingPrice: d.priceMin || null,
+          pricePerSqft: d.avgPpsf || null,
+          grossYield: d.estGrossYield || null,
+          handover,
+          reraNo: d.reraNo || d.projectNumber || null,
+          escrowBank: d.escrowBank || null,
+          constructionPct: pct,
+          lifecycleStage: d.lifecycleStage,
+          /* Fields not in DLD — default to neutral */
+          soldUnits: 0, eoiDeadline: null, eoiAmount: null, eoiRefundable: null,
+          paymentPlan: null, developerOnTimeRate: null, communityAvgPpsf: null,
+          appreciationToHandover: null, goldenVisa: false, branded: false,
+          brandPartner: null, avgUnitSize: null, beachAccess: false,
+          netYield: null, serviceCharge: null, metroDistanceKm: null,
+          amenities: [], distances: null, investmentScore: null,
+          developerScore: null, insight: null, commission: null,
+        };
+      });
+
+    const combined = [...tier1Src, ...tier3];
+    return combined.filter(lcMatchesGlobalFilter);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [liveLaunches, gfDev, gfCommunity]);
+  }, [liveLaunches, liveDevelopments, gfDev, gfCommunity]);
   const isSeed = !liveLaunches || liveLaunches.length === 0;
 
   const filtered = useMemo(() => {
     let result = [...launches];
+
+    /* Session 5: tier filter */
+    if (tierFilter === "Verified") result = result.filter(p => p.tier !== "dld-registry");
+    if (tierFilter === "Registry") result = result.filter(p => p.tier === "dld-registry");
 
     if (lcSearch) {
       const q = lcSearch.toLowerCase();
@@ -861,32 +941,42 @@ function LaunchCalendarTab({
     if (lcStatus && lcStatus !== "All") result = result.filter(p => p.status === lcStatus);
     if (lcType && lcType !== "All") result = result.filter(p => p.type === lcType);
 
+    /* Session 5: intelligence chips apply to Verified only */
     if (filterChip === "tier1") result = result.filter(p => p.tier === 1);
     if (filterChip === "gv") result = result.filter(p => p.goldenVisa);
-    if (filterChip === "lt2m") result = result.filter(p => p.startingPrice < 2000000);
-    if (filterChip === "gt5m") result = result.filter(p => p.startingPrice >= 5000000);
+    if (filterChip === "lt2m") result = result.filter(p => p.startingPrice && p.startingPrice < 2000000);
+    if (filterChip === "gt5m") result = result.filter(p => p.startingPrice && p.startingPrice >= 5000000);
     if (filterChip === "branded") result = result.filter(p => p.branded);
     if (filterChip === "beachfront") result = result.filter(p => p.beachAccess);
-    if (filterChip === "metro") result = result.filter(p => p.metroDistanceKm <= 1.5);
+    if (filterChip === "metro") result = result.filter(p => p.metroDistanceKm != null && p.metroDistanceKm <= 1.5);
     if (filterChip === "highYield") result = result.filter(p => (p.grossYield || 0) >= 7);
     if (filterChip === "thisMonth") {
       const now = new Date();
       result = result.filter(p => {
         const d = new Date(p.launchDate);
+        if (isNaN(d.getTime())) return false;
         return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
       });
     }
-    if (filterChip === "affordable") result = result.filter(p => p.startingPrice <= calcBudget);
+    if (filterChip === "affordable") result = result.filter(p => p.startingPrice && p.startingPrice <= calcBudget);
 
-    if (sortBy === "launchDate") result.sort((a, b) => new Date(a.launchDate) - new Date(b.launchDate));
-    if (sortBy === "velocity") result.sort((a, b) => b.velocityScore - a.velocityScore);
-    if (sortBy === "price") result.sort((a, b) => a.startingPrice - b.startingPrice);
-    if (sortBy === "appreciation") result.sort((a, b) => b.appreciationToHandover - a.appreciationToHandover);
+    /* Session 5: null-safe sort for DLD records missing fields */
+    if (sortBy === "launchDate") result.sort((a, b) => {
+      const da = new Date(a.launchDate).getTime();
+      const db = new Date(b.launchDate).getTime();
+      return (isNaN(da) ? Infinity : da) - (isNaN(db) ? Infinity : db);
+    });
+    if (sortBy === "velocity") result.sort((a, b) => (b.velocityScore || 0) - (a.velocityScore || 0));
+    if (sortBy === "price") result.sort((a, b) => (a.startingPrice || Infinity) - (b.startingPrice || Infinity));
+    if (sortBy === "appreciation") result.sort((a, b) => (b.appreciationToHandover || 0) - (a.appreciationToHandover || 0));
     if (sortBy === "yield") result.sort((a, b) => (b.grossYield || 0) - (a.grossYield || 0));
     if (sortBy === "score") result.sort((a, b) => (b.investmentScore || 0) - (a.investmentScore || 0));
 
+    /* Verified always before Registry within same criteria */
+    result.sort((a, b) => (a.tier === "dld-registry" ? 1 : 0) - (b.tier === "dld-registry" ? 1 : 0));
+
     return result;
-  }, [launches, lcSearch, lcDev, lcStatus, lcType, filterChip, sortBy, calcBudget]);
+  }, [launches, lcSearch, lcDev, lcStatus, lcType, filterChip, sortBy, calcBudget, tierFilter]);
 
   const kpis = useMemo(() => {
     const total = filtered.length;
@@ -896,9 +986,9 @@ function LaunchCalendarTab({
     const soldOut = filtered.filter(p => p.status === "Sold Out").length;
     const goldenVisa = filtered.filter(p => p.goldenVisa).length;
     const yields = filtered.filter(p => p.grossYield > 0);
-    const avgGrossYield = yields.length > 0 ? (yields.reduce((s, p) => s + p.grossYield, 0) / yields.length).toFixed(1) : "—";
+    const avgGrossYield = yields.length > 0 ? (yields.reduce((s, p) => s + (p.grossYield || 0), 0) / yields.length).toFixed(1) : "—";
     const ppsfs = filtered.filter(p => p.pricePerSqft > 0);
-    const avgPpsf = ppsfs.length > 0 ? Math.round(ppsfs.reduce((s, p) => s + p.pricePerSqft, 0) / ppsfs.length) : 0;
+    const avgPpsf = ppsfs.length > 0 ? Math.round(ppsfs.reduce((s, p) => s + (p.pricePerSqft || 0), 0) / ppsfs.length) : 0;
     return { total, eoiOpen, upcoming, launched, soldOut, goldenVisa, avgGrossYield, avgPpsf };
   }, [filtered]);
 
@@ -1195,6 +1285,13 @@ function LaunchCalendarTab({
           <option value="yield">Sort: Gross Yield</option>
           <option value="score">Sort: Investment Score</option>
         </select>
+        {/* Session 5: tier filter */}
+        <select value={tierFilter} onChange={(e) => setTierFilter(e.target.value)}
+          style={{ padding: "8px 14px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 12, fontFamily: "'Outfit', sans-serif", cursor: "pointer", outline: "none" }}>
+          <option value="All">All Sources</option>
+          <option value="Verified">Verified Only</option>
+          <option value="Registry">DLD Registry Only</option>
+        </select>
       </div>
 
       {/* AFFORDABILITY CALCULATOR */}
@@ -1233,6 +1330,68 @@ function LaunchCalendarTab({
 
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(380px, 1fr))", gap: 14 }}>
                 {items.map(p => {
+                  /* Session 5: Registry card (DLD-only, compact, honest) */
+                  if (p.tier === "dld-registry") {
+                    return (
+                      <div key={p.id} onClick={() => setDetailModalProject(p)} style={{
+                        padding: 16,
+                        background: T.surface,
+                        border: `1px solid ${T.border}`,
+                        borderRadius: 12,
+                        borderLeft: `4px solid ${p.status === "Announced" ? "#A78BFA" : "#60A5FA"}`,
+                        cursor: "pointer",
+                        transition: "transform 0.15s",
+                      }}
+                      onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-1px)"; }}
+                      onMouseLeave={e => { e.currentTarget.style.transform = "none"; }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10, gap: 12 }}>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontSize: 9, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.5, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{(p.developer || "Unknown").toUpperCase()}</div>
+                            <div style={{ fontFamily: "'Fraunces', serif", fontSize: 16, fontWeight: 700, color: T.white, marginTop: 2, lineHeight: 1.25, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{p.project}</div>
+                            <div style={{ fontSize: 10, color: T.textMuted, marginTop: 2 }}>{p.community}{p.type ? " · " + p.type : ""}</div>
+                          </div>
+                          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4, flexShrink: 0 }}>
+                            <span style={{ fontSize: 9, padding: "2px 7px", borderRadius: 10, background: p.status === "Announced" ? "rgba(139,92,246,0.12)" : "rgba(59,130,246,0.12)", color: p.status === "Announced" ? "#A78BFA" : "#60A5FA", fontWeight: 700, letterSpacing: 0.4, textTransform: "uppercase", whiteSpace: "nowrap" }}>
+                              {p.status === "Announced" ? "Announced" : "Early Stage"}
+                            </span>
+                            <span style={{ fontSize: 8, padding: "2px 6px", borderRadius: 8, background: "rgba(148,163,184,0.10)", color: T.textMuted, fontWeight: 700, letterSpacing: 0.4, textTransform: "uppercase", whiteSpace: "nowrap", border: `1px solid ${T.border}` }}>DLD Registry</span>
+                          </div>
+                        </div>
+                        {/* Construction bar */}
+                        <div style={{ marginBottom: 12 }}>
+                          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
+                            <span style={{ fontSize: 10, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.5 }}>Construction</span>
+                            <span style={{ fontSize: 12, fontWeight: 800, color: T.white }}>{p.constructionPct || 0}%</span>
+                          </div>
+                          <div style={{ height: 8, background: T.surfaceAlt, borderRadius: 4, overflow: "hidden" }}>
+                            <div style={{ height: "100%", width: `${p.constructionPct || 0}%`, background: "#60A5FA", transition: "width 0.5s" }} />
+                          </div>
+                        </div>
+                        {/* Minimal stats */}
+                        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 6, marginBottom: 10, padding: "10px 0", borderTop: `1px solid ${T.border}`, borderBottom: `1px solid ${T.border}` }}>
+                          <div>
+                            <div style={{ fontSize: 9, color: T.textMuted, textTransform: "uppercase" }}>Handover</div>
+                            <div style={{ fontSize: 12, fontWeight: 700, color: T.white }}>{p.handover || "—"}</div>
+                          </div>
+                          <div>
+                            <div style={{ fontSize: 9, color: T.textMuted, textTransform: "uppercase" }}>Units</div>
+                            <div style={{ fontSize: 12, fontWeight: 700, color: T.white }}>{p.units ? p.units.toLocaleString() : "—"}</div>
+                          </div>
+                          <div>
+                            <div style={{ fontSize: 9, color: T.textMuted, textTransform: "uppercase" }}>{p.startingPrice ? "From" : "RERA"}</div>
+                            <div style={{ fontSize: 12, fontWeight: 700, color: p.startingPrice ? T.gold : T.textSecondary }}>
+                              {p.startingPrice ? `AED ${(p.startingPrice/1e6).toFixed(2)}M` : `#${p.reraNo || "—"}`}
+                            </div>
+                          </div>
+                        </div>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: 8, fontSize: 10, color: T.textMuted }}>
+                          <span>DLD Registry — early stage</span>
+                          <span style={{ color: T.gold, fontWeight: 700 }}>Details →</span>
+                        </div>
+                      </div>
+                    );
+                  }
+                  /* Verified card (unchanged) */
                   const badge = intelligenceBadge(p);
                   const isCompared = compareIds.includes(p.id);
                   const isExpanded = expandedId === p.id;
@@ -1682,7 +1841,99 @@ function LaunchCalendarTab({
          PROJECT DETAIL MODAL — Rendered via React Portal directly
          into document.body so it's never trapped by parent scroll/transform
          ═══════════════════════════════════════════════════════════ */}
-      {detailModalProject && typeof document !== "undefined" && createPortal(
+      {/* Registry modal (DLD-only, compact, honest) — Session 5 */}
+      {detailModalProject && detailModalProject.tier === "dld-registry" && typeof document !== "undefined" && createPortal(
+        <div role="dialog" aria-modal="true" onClick={(e) => { if (e.target === e.currentTarget) setDetailModalProject(null); }} style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.97)", zIndex: 2000, display: "flex", alignItems: "flex-start", justifyContent: "center", padding: "40px 16px", overflow: "auto", backdropFilter: "blur(8px)" }}>
+          <div style={{ width: "100%", maxWidth: 640, background: T.surface, border: `1px solid ${T.border}`, borderRadius: 14, overflow: "hidden", boxShadow: "0 24px 80px rgba(0,0,0,0.5)" }}>
+            <div style={{ padding: "20px 24px", borderBottom: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16 }}>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 4 }}>
+                  {(detailModalProject.developer || "Unknown").toUpperCase()}{detailModalProject.community && detailModalProject.community !== "—" ? " · " + detailModalProject.community : ""}
+                </div>
+                <div style={{ fontFamily: "'Fraunces',serif", fontSize: 22, fontWeight: 800, color: T.white, marginBottom: 8, lineHeight: 1.2 }}>{detailModalProject.project || "—"}</div>
+                <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" }}>
+                  <span style={{ fontSize: 9, padding: "2px 7px", borderRadius: 10, fontWeight: 700, letterSpacing: 0.4, background: detailModalProject.status === "Announced" ? "rgba(139,92,246,0.12)" : "rgba(59,130,246,0.12)", color: detailModalProject.status === "Announced" ? "#A78BFA" : "#60A5FA", textTransform: "uppercase" }}>
+                    {detailModalProject.status === "Announced" ? "Announced" : "Early Stage"}
+                  </span>
+                  <span style={{ fontSize: 9, padding: "3px 8px", borderRadius: 10, fontWeight: 700, letterSpacing: 0.5, background: detailModalProject.startingPrice ? "rgba(212,168,67,0.10)" : "rgba(148,163,184,0.10)", color: detailModalProject.startingPrice ? T.gold : T.textMuted, border: `1px solid ${detailModalProject.startingPrice ? "rgba(212,168,67,0.25)" : T.border}`, textTransform: "uppercase" }}>
+                    {detailModalProject.startingPrice ? "DLD + Transaction Data" : "DLD Registry"}
+                  </span>
+                  {detailModalProject.reraNo && <span style={{ fontSize: 10, color: T.textMuted }}>RERA #{detailModalProject.reraNo}</span>}
+                </div>
+              </div>
+              <button type="button" onClick={() => setDetailModalProject(null)} aria-label="Close" style={{ background: "none", border: "none", color: T.textMuted, fontSize: 24, cursor: "pointer", lineHeight: 1, padding: 4 }}>×</button>
+            </div>
+            <div style={{ padding: "20px 24px" }}>
+              {(detailModalProject.startingPrice || detailModalProject.pricePerSqft || detailModalProject.grossYield) && (
+                <div style={{ background: "rgba(212,168,67,0.04)", border: `1px solid rgba(212,168,67,0.15)`, borderRadius: 10, padding: "14px 16px", marginBottom: 16 }}>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: T.gold, letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 10 }}>Market Data from DLD</div>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
+                    {detailModalProject.startingPrice && (
+                      <div>
+                        <div style={{ fontSize: 9, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.6, marginBottom: 3 }}>Starting Price</div>
+                        <div style={{ fontFamily: "'Fraunces',serif", fontSize: 16, fontWeight: 800, color: T.white }}>AED {(detailModalProject.startingPrice/1e6).toFixed(2)}M</div>
+                      </div>
+                    )}
+                    {detailModalProject.pricePerSqft > 0 && (
+                      <div>
+                        <div style={{ fontSize: 9, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.6, marginBottom: 3 }}>Avg PPSF</div>
+                        <div style={{ fontFamily: "'Fraunces',serif", fontSize: 16, fontWeight: 800, color: T.white }}>AED {detailModalProject.pricePerSqft.toLocaleString()}</div>
+                      </div>
+                    )}
+                    {detailModalProject.grossYield > 0 && detailModalProject.grossYield < 15 && (
+                      <div>
+                        <div style={{ fontSize: 9, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.6, marginBottom: 3 }}>Est. Gross Yield</div>
+                        <div style={{ fontFamily: "'Fraunces',serif", fontSize: 16, fontWeight: 800, color: detailModalProject.grossYield >= 7 ? "#10B981" : T.gold }}>{detailModalProject.grossYield}%</div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 16 }}>
+                <div style={{ background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, padding: "12px 14px" }}>
+                  <div style={{ fontSize: 9, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.6, marginBottom: 4 }}>Construction</div>
+                  <div style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 800, color: T.white }}>{detailModalProject.constructionPct || 0}% Built</div>
+                </div>
+                {detailModalProject.handover && (
+                  <div style={{ background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, padding: "12px 14px" }}>
+                    <div style={{ fontSize: 9, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.6, marginBottom: 4 }}>Est. Handover</div>
+                    <div style={{ fontFamily: "'Fraunces',serif", fontSize: 14, fontWeight: 700, color: T.white }}>{detailModalProject.handover}</div>
+                  </div>
+                )}
+                {detailModalProject.units > 0 && (
+                  <div style={{ background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, padding: "12px 14px" }}>
+                    <div style={{ fontSize: 9, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.6, marginBottom: 4 }}>Total Units</div>
+                    <div style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 800, color: T.white }}>{detailModalProject.units.toLocaleString()}</div>
+                  </div>
+                )}
+                {detailModalProject.escrowBank && (
+                  <div style={{ background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, padding: "12px 14px" }}>
+                    <div style={{ fontSize: 9, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.6, marginBottom: 4 }}>Escrow Bank</div>
+                    <div style={{ fontFamily: "'Fraunces',serif", fontSize: 12, fontWeight: 700, color: T.white }}>{detailModalProject.escrowBank}</div>
+                  </div>
+                )}
+              </div>
+              <div style={{ background: "rgba(59,130,246,0.06)", border: `1px solid rgba(59,130,246,0.20)`, borderRadius: 8, padding: "12px 14px", marginBottom: 16 }}>
+                <div style={{ fontSize: 11, color: T.textSecondary, lineHeight: 1.6 }}>
+                  <span style={{ color: "#60A5FA", fontWeight: 700 }}>◆ DLD Registry Record.</span>{" "}
+                  Early-stage project from the official Dubai Land Department database. EOI details, payment plans, unit breakdowns, and amenities require data curation from the developer portal.
+                </div>
+              </div>
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                <button type="button" onClick={() => handleTabChange("Mortgage")} style={{ flex: 1, minWidth: 140, padding: "10px 14px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textSecondary, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>Mortgage Calculator</button>
+                <button type="button" onClick={() => handleTabChange("My Leads")} style={{ flex: 1, minWidth: 140, padding: "10px 14px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textSecondary, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>Add to Leads</button>
+                {detailModalProject.reraNo && (
+                  <a href={`https://dubailand.gov.ae/en/eservices/project-status/`} target="_blank" rel="noopener noreferrer" style={{ flex: 1, minWidth: 140, padding: "10px 14px", background: "rgba(212,168,67,0.08)", border: `1px solid rgba(212,168,67,0.30)`, borderRadius: 8, color: T.gold, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif", textAlign: "center", textDecoration: "none" }}>View on DLD Portal →</a>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* Verified modal (original full ProjectDetailModal) */}
+      {detailModalProject && detailModalProject.tier !== "dld-registry" && typeof document !== "undefined" && createPortal(
         <ProjectDetailModal
           project={detailModalProject}
           onClose={() => setDetailModalProject(null)}
