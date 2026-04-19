@@ -2164,6 +2164,7 @@ export default function EmaarDashboardV2() {
   const [liveCommunityROI, setLiveCommunityROI] = useState({});
   const [liveCommunityIntel, setLiveCommunityIntel] = useState({});
   const [liveCommunityDataFull, setLiveCommunityDataFull] = useState([]); /* Phase Tier-A */
+  const [liveDevelopments, setLiveDevelopments] = useState([]); /* Session 1: DLD developments for tiered Projects/Handover/LaunchCalendar display */
 
   /* ─── MY LEADS STATE (Session 4) ─── */
   const [myLeads, setMyLeads] = useState([]);
@@ -2944,6 +2945,20 @@ export default function EmaarDashboardV2() {
         return (a.name || "").localeCompare(b.name || "");
       });
       setAllDevelopers(devs);
+    }));
+
+    /* Session 1: developments collection (DLD-imported, 2,798+ records). 
+       Includes published + draft records for ProjectsTab tiered display. 
+       Consumers filter by visibility/tier at render time. */
+    unsubs.push(onSnapshot(collection(db, "developments"), (snap) => {
+      const devs = [];
+      snap.forEach(d => {
+        const data = d.data();
+        if (!data.name && !data.project && !data.projectName) return;
+        devs.push({ id: d.id, ...data });
+      });
+      devs.sort((a, b) => (a.name || a.project || "").localeCompare(b.name || b.project || ""));
+      setLiveDevelopments(devs);
     }));
 
     // aiInsights/latest
@@ -4003,6 +4018,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
           {tab === "Projects" && (
             <ProjectsTab
               SEED_PROJECTS={SEED_PROJECTS} liveProjects={liveProjects} extraProjects={extraProjects}
+              liveDevelopments={liveDevelopments}
               projSearch={projSearch} setProjSearch={setProjSearch}
               projDev={projDev} setProjDev={setProjDev}
               projCommunity={projCommunity} setProjCommunity={setProjCommunity}

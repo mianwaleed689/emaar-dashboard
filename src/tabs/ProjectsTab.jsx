@@ -22,6 +22,7 @@ const MODES = [
 
 function ProjectsTab({
   SEED_PROJECTS, liveProjects, extraProjects = [],
+  liveDevelopments = [],
   projSearch, setProjSearch,
   projDev, setProjDev,
   projCommunity, setProjCommunity,
@@ -42,6 +43,9 @@ function ProjectsTab({
   allDevelopers = [],
   handleTabChange,
 }) {
+
+  /* Session 1: local tier filter state (All / Verified / DLD Registry) */
+  const [projTierFilter, setProjTierFilter] = React.useState("All");
 
   /* Phase 2.4 Batch 3: stack the top-bar global filter on top of the
      existing internal filter system. Both must match for a project to appear.
@@ -161,32 +165,82 @@ function ProjectsTab({
     <>
       {(() => {
 
-            /* SEED_PROJECTS — defined at top level */
-  const rawProjects = [...SEED_PROJECTS, ...(extraProjects || [])];
+            /* ── TIERED DATA ASSEMBLY (Session 1) ──
+               Tier 1 (Verified):   curated SEED + liveProjects + extraProjects (full investment metrics)
+               Tier 3 (DLD Registry): liveDevelopments from Firestore (basic structural data only)
+               Users see Tier 1 first, Tier 3 as directory listings below.
+            */
+            const tier1Raw = [
+              ...(Array.isArray(liveProjects) ? liveProjects : []),
+              ...(SEED_PROJECTS || []),
+              ...(extraProjects || [])
+            ];
+
+            /* Normalize Tier 3 DLD records into a project-card-compatible shape.
+               DLD gives us: name, community, developer, status, handoverDate, constructionPct, totalUnits, escrowBank, reraNo
+               DLD does NOT give us: beds, prices, yields, amenities, payment plans, PPSF
+               Missing fields stay null/undefined — card handles these gracefully. */
+            const tier1SeenKeys = new Set(tier1Raw.map(p => String(p.project || p.name || "").trim().toLowerCase()).filter(Boolean));
+            const tier3Raw = (Array.isArray(liveDevelopments) ? liveDevelopments : [])
+              .filter(d => {
+                const key = String(d.name || d.project || "").trim().toLowerCase();
+                return key && !tier1SeenKeys.has(key);
+              })
+              .map(d => ({
+                id: d.id,
+                project: d.name || d.project || d.projectName,
+                developer: d.developer || d.developerName || "Unknown",
+                community: d.community || d.masterProject || "—",
+                status: d.status === "FINISHED" ? "Ready" : d.status === "NOT_STARTED" ? "Off-Plan" : d.status === "ACTIVE" ? "Off-Plan" : "Unknown",
+                handover: d.handoverDate || d.handoverQuarter || null,
+                constructionPct: d.constructionPct || 0,
+                totalUnits: d.totalUnits || null,
+                escrowBank: d.escrowBank || null,
+                reraNo: d.reraNo || d.projectNumber || null,
+                tier: "dld-registry",
+                type: null, /* DLD does not specify unit type */
+                /* The rest stay null — card shows "—" */
+                beds: [], priceMin: null, priceMax: null, ppsf: null, grossYield: null,
+                amenities: [], unitBreakdown: [], paymentPlan: null, view: [],
+                distMetro: undefined, distBeach: undefined, distDIFC: undefined,
+                goldenVisa: false, branded: false, velocityScore: 0, commission: null,
+                source: d.source || "DLD Registry",
+              }));
+
+            const rawProjects = [...tier1Raw, ...tier3Raw];
 
             const filtered = rawProjects.filter(p => {
+              const isDldOnly = p.tier === "dld-registry";
+              /* Session 1: tier filter takes priority */
+              if (projTierFilter === "Verified" && isDldOnly) return false;
+              if (projTierFilter === "Registry" && !isDldOnly) return false;
               // Phase 2.4 Batch 3: top-bar global filter narrows first,
               // then the existing internal filters narrow further.
               if (!projMatchesGlobalFilter(p)) return false;
-              if (p.type !== projMode) return false;
+              /* Session 1: DLD registry records skip the type filter
+                 (they have no type data). All other type filters still apply. */
+              if (!isDldOnly && p.type !== projMode) return false;
               if (projSearch && !JSON.stringify(p).toLowerCase().includes(projSearch.toLowerCase())) return false;
               if (projDev !== "All" && p.developer !== projDev) return false;
               if (projCommunity !== "All" && p.community !== projCommunity) return false;
               if (projStatus !== "All" && p.status !== projStatus) return false;
-              if (projBeds !== "All" && p.beds && p.beds.length > 0 && !p.beds.includes(projBeds)) return false;
+              if (!isDldOnly && projBeds !== "All" && p.beds && p.beds.length > 0 && !p.beds.includes(projBeds)) return false;
               if (projHandover !== "All" && !p.handover?.includes(projHandover)) return false;
-              if (projGrade !== "All" && p.officeGrade !== projGrade) return false;
-              if (projIntelFilter === "tier1" && p.tier !== 1) return false;
-              if (projIntelFilter === "gv" && !(p.goldenVisa && p.priceMin >= GOLDEN_VISA_THRESHOLD)) return false;
-              if (projIntelFilter === "branded" && !p.branded) return false;
-              if (projPriceMin > 0 && p.priceMin < projPriceMin) return false;
-              if (projPriceMax > 0 && p.priceMax > projPriceMax) return false;
+              if (!isDldOnly && projGrade !== "All" && p.officeGrade !== projGrade) return false;
+              if (!isDldOnly && projIntelFilter === "tier1" && p.tier !== 1) return false;
+              if (!isDldOnly && projIntelFilter === "gv" && !(p.goldenVisa && p.priceMin >= GOLDEN_VISA_THRESHOLD)) return false;
+              if (!isDldOnly && projIntelFilter === "branded" && !p.branded) return false;
+              if (!isDldOnly && projPriceMin > 0 && p.priceMin < projPriceMin) return false;
+              if (!isDldOnly && projPriceMax > 0 && p.priceMax > projPriceMax) return false;
               return true;
             }).sort((a,b) => {
+              /* Verified always sort before Registry within same criteria */
+              const tierDiff = (a.tier === "dld-registry" ? 1 : 0) - (b.tier === "dld-registry" ? 1 : 0);
+              if (tierDiff !== 0) return tierDiff;
               if (projSort === "yield") return (b.grossYield||0) - (a.grossYield||0);
               if (projSort === "score") return calcScore(b) - calcScore(a);
-              if (projSort === "price_asc") return a.priceMin - b.priceMin;
-              if (projSort === "price_desc") return b.priceMin - a.priceMin;
+              if (projSort === "price_asc") return (a.priceMin||0) - (b.priceMin||0);
+              if (projSort === "price_desc") return (b.priceMin||0) - (a.priceMin||0);
               return 0;
             });
 
@@ -195,8 +249,9 @@ function ProjectsTab({
             const avgPpsf = filtered.length > 0 && filtered.some(p=>p.ppsf)
               ? Math.round(filtered.filter(p=>p.ppsf).reduce((a,p) => a + p.ppsf, 0) / filtered.filter(p=>p.ppsf).length) : 0;
 
-            const devOptions = ["All", ...new Set(rawProjects.filter(p=>p.type===projMode).map(p=>p.developer))];
-            const commOptions = ["All", ...new Set(rawProjects.filter(p=>p.type===projMode).map(p=>p.community))];
+            /* Session 1: include DLD registry developers/communities in dropdowns */
+            const devOptions = ["All", ...new Set(rawProjects.filter(p => p.type === projMode || p.tier === "dld-registry").map(p => p.developer).filter(Boolean))].sort();
+            const commOptions = ["All", ...new Set(rawProjects.filter(p => p.type === projMode || p.tier === "dld-registry").map(p => p.community).filter(c => c && c !== "—"))].sort();
 
             const selSt = {
               background: T.surfaceAlt, border: `1px solid ${T.border}`,
@@ -218,7 +273,7 @@ function ProjectsTab({
               </div>
             );
 
-            const ProjectCard = ({ p }) => {
+            const ProjectCardVerified = ({ p }) => {
               const score = calcScore(p);
               const inCompare = projCompare.some(c => c.id === p.id);
               return (
@@ -309,6 +364,53 @@ function ProjectsTab({
               );
             };
 
+            /* ── Registry card (Tier 3 = DLD-only, compact, honest) ── */
+            const ProjectCardRegistry = ({ p }) => {
+              return (
+                <div className="chart-box" style={{ padding:"14px 16px", cursor:"pointer", borderLeft:`3px solid ${T.border}`, background:"rgba(255,255,255,0.015)", display:"flex", alignItems:"center", gap:14, minHeight:100, transition:"transform 0.15s, box-shadow 0.15s" }}
+                  onClick={() => { setSelectedProject(p); setProjDetailTab("overview"); }}
+                  onMouseEnter={e => { e.currentTarget.style.transform="translateY(-1px)"; e.currentTarget.style.boxShadow="0 4px 16px rgba(0,0,0,0.2)"; }}
+                  onMouseLeave={e => { e.currentTarget.style.transform="none"; e.currentTarget.style.boxShadow="none"; }}>
+
+                  {/* Left — name + dev/community + chips */}
+                  <div style={{ flex:1, minWidth:0 }}>
+                    <div style={{ fontSize:10, fontWeight:700, color:T.textMuted, letterSpacing:0.8, textTransform:"uppercase", marginBottom:3, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>
+                      {p.developer || "Unknown"}{p.community && p.community !== "—" ? " · " + p.community : ""}
+                    </div>
+                    <div style={{ fontFamily:"'Fraunces',serif", fontSize:14, fontWeight:700, color:T.white, marginBottom:6, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{p.project || "—"}</div>
+                    <div style={{ display:"flex", gap:5, flexWrap:"wrap", alignItems:"center" }}>
+                      <span title="DLD Registry — official government listing. Investment metrics curation pending." style={{ fontSize:9, padding:"2px 6px", borderRadius:10, fontWeight:700, letterSpacing:0.5, background:"rgba(148,163,184,0.10)", color:T.textMuted, border:`1px solid ${T.border}`, textTransform:"uppercase" }}>DLD Registry</span>
+                      {p.status && p.status !== "Unknown" && <StatusBadge status={p.status} />}
+                      {p.handover && <span style={{ fontSize:10, color:T.textMuted }}>{p.handover}</span>}
+                      {p.reraNo && <span style={{ fontSize:10, color:T.textMuted }}>RERA #{p.reraNo}</span>}
+                    </div>
+                  </div>
+
+                  {/* Middle — build % + total units */}
+                  <div style={{ display:"flex", gap:16, alignItems:"center" }}>
+                    {p.constructionPct > 0 && (
+                      <div style={{ textAlign:"center" }}>
+                        <div style={{ fontFamily:"'Fraunces',serif", fontSize:16, fontWeight:800, color:T.white, lineHeight:1 }}>{p.constructionPct}%</div>
+                        <div style={{ fontSize:9, fontWeight:600, color:T.textMuted, letterSpacing:0.5, textTransform:"uppercase", marginTop:2 }}>Built</div>
+                      </div>
+                    )}
+                    {p.totalUnits != null && p.totalUnits > 0 && (
+                      <div style={{ textAlign:"center" }}>
+                        <div style={{ fontFamily:"'Fraunces',serif", fontSize:16, fontWeight:800, color:T.white, lineHeight:1 }}>{p.totalUnits}</div>
+                        <div style={{ fontSize:9, fontWeight:600, color:T.textMuted, letterSpacing:0.5, textTransform:"uppercase", marginTop:2 }}>Units</div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Right — chevron */}
+                  <div style={{ color:T.textMuted, fontSize:16, fontFamily:"'Outfit',sans-serif", opacity:0.5 }}>›</div>
+                </div>
+              );
+            };
+
+            /* Unified card chooser */
+            const ProjectCard = ({ p }) => p.tier === "dld-registry" ? <ProjectCardRegistry p={p} /> : <ProjectCardVerified p={p} />;
+
             return (
               <div style={{ animation:"fadeUp 0.4s ease-out forwards" }}>
                 {/* Header */}
@@ -344,6 +446,12 @@ function ProjectsTab({
                     </div>
                     <select value={projDev} onChange={e => setProjDev(e.target.value)} style={selSt}>{devOptions.map(d => <option key={d}>{d}</option>)}</select>
                     <select value={projCommunity} onChange={e => setProjCommunity(e.target.value)} style={selSt}>{commOptions.map(c => <option key={c}>{c}</option>)}</select>
+                    {/* Session 1: tier filter */}
+                    <select value={projTierFilter} onChange={e => setProjTierFilter(e.target.value)} style={selSt}>
+                      <option value="All">All Projects</option>
+                      <option value="Verified">Verified Only</option>
+                      <option value="Registry">DLD Registry Only</option>
+                    </select>
                     <select value={projStatus} onChange={e => setProjStatus(e.target.value)} style={selSt}>
                       {["All","Off-Plan","Ready","Sold Out"].map(s => <option key={s}>{s}</option>)}
                     </select>
@@ -367,8 +475,8 @@ function ProjectsTab({
                       <option value="price_desc">Sort: Price High</option>
                     </select>
                     <span style={{ fontSize:11, color:T.textMuted, marginLeft:"auto" }}>{filtered.length} projects</span>
-                    {(projSearch || projDev !== "All" || projCommunity !== "All" || projStatus !== "All" || projBeds !== "All" || projHandover !== "All") && (
-                      <button type="button" onClick={() => { setProjSearch(""); setProjDev("All"); setProjCommunity("All"); setProjStatus("All"); setProjBeds("All"); setProjHandover("All"); setProjGrade("All"); setProjIntelFilter("all"); }} style={{ background:"none", border:`1px solid ${T.border}`, borderRadius:8, padding:"6px 12px", color:T.textMuted, fontSize:11, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>Clear</button>
+                    {(projSearch || projDev !== "All" || projCommunity !== "All" || projStatus !== "All" || projBeds !== "All" || projHandover !== "All" || projTierFilter !== "All") && (
+                      <button type="button" onClick={() => { setProjSearch(""); setProjDev("All"); setProjCommunity("All"); setProjStatus("All"); setProjBeds("All"); setProjHandover("All"); setProjGrade("All"); setProjIntelFilter("all"); setProjTierFilter("All"); }} style={{ background:"none", border:`1px solid ${T.border}`, borderRadius:8, padding:"6px 12px", color:T.textMuted, fontSize:11, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>Clear</button>
                     )}
                   </div>
                   {/* Intelligence filter chips */}
@@ -402,7 +510,7 @@ function ProjectsTab({
                 <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(170px,1fr))", gap:10, marginBottom:20 }}>
                   {[
                     { label:"Projects Found", value:filtered.length.toString(), color:T.white },
-                    { label:"Price Range", value:filtered.length > 0 ? `AED ${(Math.min(...filtered.map(p=>p.priceMin))/1000000).toFixed(1)}M+` : "—", color:T.white },
+                    { label:"Price Range", value:filtered.filter(p=>p.priceMin).length > 0 ? `AED ${(Math.min(...filtered.filter(p=>p.priceMin).map(p=>p.priceMin))/1000000).toFixed(1)}M+` : "—", color:T.white },
                     { label:"Avg Gross Yield", value:avgYield !== "—" ? avgYield + "%" : "—", color:T.green },
                     { label:"Avg PPSF", value:avgPpsf > 0 ? "AED " + avgPpsf.toLocaleString() : "—", color:T.gold },
                   ].map((kpi,i) => (
