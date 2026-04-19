@@ -646,12 +646,25 @@ function HandoverTab({ liveHandover, liveDevelopments = [], globalFilters = {}, 
       .map(d => {
         /* Derive handoverQuarter from handoverDate if present */
         let quarter = d.handoverQuarter || null;
+        let quarterEstimated = false;
         if (!quarter && d.handoverDate) {
           const dt = new Date(d.handoverDate);
           if (!isNaN(dt.getTime())) {
             const q = Math.floor(dt.getMonth() / 3) + 1;
             quarter = `Q${q} ${dt.getFullYear()}`;
           }
+        }
+        /* Session 4 fix: DLD records rarely have dates. Estimate quarter from constructionPct */
+        if (!quarter) {
+          const pct = parseFloat(d.constructionPct) || 0;
+          quarterEstimated = true;
+          if (pct >= 100) quarter = "Delivered";
+          else if (pct >= 90) quarter = "Q2 2026";
+          else if (pct >= 75) quarter = "Q4 2026";
+          else if (pct >= 55) quarter = "Q2 2027";
+          else if (pct >= 35) quarter = "Q4 2027";
+          else if (pct >= 15) quarter = "2028";
+          else quarter = "2029+";
         }
         return {
           id: d.id,
@@ -660,6 +673,7 @@ function HandoverTab({ liveHandover, liveDevelopments = [], globalFilters = {}, 
           community: d.community || d.masterProject || "—",
           handoverDate: d.handoverDate || null,
           handoverQuarter: quarter,
+          quarterEstimated,
           constructionPct: d.constructionPct || 0,
           units: d.totalUnits || null,
           reraNo: d.reraNo || d.projectNumber || null,
@@ -741,12 +755,27 @@ function HandoverTab({ liveHandover, liveDevelopments = [], globalFilters = {}, 
   const grouped = useMemo(() => {
     const groups = {};
     filtered.forEach(p => {
-      if (!p.handoverQuarter) return; /* Session 4: skip DLD records with no known quarter */
+      if (!p.handoverQuarter) return;
       if (!groups[p.handoverQuarter]) groups[p.handoverQuarter] = [];
       groups[p.handoverQuarter].push(p);
     });
     return groups;
   }, [filtered]);
+
+  /* Session 4: sort helper for grouped quarter entries (handles estimated labels) */
+  const sortedGroupedEntries = useMemo(() => {
+    const rank = s => {
+      if (s === "Delivered") return 0;
+      const qm = String(s || "").match(/Q(\d)\s+(\d{4})/);
+      if (qm) return parseInt(qm[2]) + (parseInt(qm[1]) - 1) * 0.25;
+      if (s === "2028") return 2028;
+      if (s === "2029+") return 2029;
+      const ym = String(s || "").match(/^(\d{4})$/);
+      if (ym) return parseInt(ym[1]);
+      return 9999;
+    };
+    return Object.entries(grouped).sort((a, b) => rank(a[0]) - rank(b[0]));
+  }, [grouped]);
 
   /* Supply chart data */
   const supplyChartData = useMemo(() => {
@@ -787,25 +816,41 @@ function HandoverTab({ liveHandover, liveDevelopments = [], globalFilters = {}, 
 
   const allQuarters = useMemo(() => {
     const quarters = new Set(SEED_HANDOVERS.map(h => h.handoverQuarter));
-    /* Session 4: include quarters from live DLD developments */
+    /* Session 4: include quarters from live DLD developments — including ESTIMATED quarters from constructionPct */
     (liveDevelopments || []).forEach(d => {
-      if (d.handoverQuarter) quarters.add(d.handoverQuarter);
-      else if (d.handoverDate) {
+      const stage = d.lifecycleStage;
+      if (stage !== "under-construction" && stage !== "recently-delivered") return;
+      if (d.handoverQuarter) { quarters.add(d.handoverQuarter); return; }
+      if (d.handoverDate) {
         const dt = new Date(d.handoverDate);
         if (!isNaN(dt.getTime())) {
           const q = Math.floor(dt.getMonth() / 3) + 1;
           quarters.add(`Q${q} ${dt.getFullYear()}`);
+          return;
         }
       }
+      /* Same estimation logic as in the data normalization */
+      const pct = parseFloat(d.constructionPct) || 0;
+      if (pct >= 100) quarters.add("Delivered");
+      else if (pct >= 90) quarters.add("Q2 2026");
+      else if (pct >= 75) quarters.add("Q4 2026");
+      else if (pct >= 55) quarters.add("Q2 2027");
+      else if (pct >= 35) quarters.add("Q4 2027");
+      else if (pct >= 15) quarters.add("2028");
+      else quarters.add("2029+");
     });
-    /* Sort chronologically: parse "Q1 2026" → 2026.00, "Q2 2026" → 2026.25 */
-    const sorted = Array.from(quarters).sort((a, b) => {
-      const parse = s => {
-        const m = String(s || "").match(/Q(\d)\s+(\d{4})/);
-        return m ? parseInt(m[2]) + (parseInt(m[1]) - 1) * 0.25 : 9999;
-      };
-      return parse(a) - parse(b);
-    });
+    /* Sort chronologically, handling estimated labels */
+    const rank = s => {
+      if (s === "Delivered") return 0;
+      const qm = String(s || "").match(/Q(\d)\s+(\d{4})/);
+      if (qm) return parseInt(qm[2]) + (parseInt(qm[1]) - 1) * 0.25;
+      if (s === "2028") return 2028;
+      if (s === "2029+") return 2029;
+      const ym = String(s || "").match(/^(\d{4})$/);
+      if (ym) return parseInt(ym[1]);
+      return 9999;
+    };
+    const sorted = Array.from(quarters).sort((a, b) => rank(a) - rank(b));
     return ["all", ...sorted];
   }, [liveDevelopments]);
 
@@ -933,7 +978,7 @@ function HandoverTab({ liveHandover, liveDevelopments = [], globalFilters = {}, 
       {/* MODE 1: CARDS VIEW (grouped by quarter) */}
       {view === "cards" && (
         <>
-          {Object.entries(grouped).map(([quarter, items]) => (
+          {sortedGroupedEntries.map(([quarter, items]) => (
             <div key={quarter} style={{ marginBottom: 24 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
                 <div style={{ height: 1, flex: 1, background: T.border }} />
@@ -1096,7 +1141,7 @@ function HandoverTab({ liveHandover, liveDevelopments = [], globalFilters = {}, 
       {/* MODE 2: CALENDAR VIEW */}
       {view === "calendar" && (
         <div style={{ marginBottom: 20 }}>
-          {Object.entries(grouped).map(([quarter, items]) => (
+          {sortedGroupedEntries.map(([quarter, items]) => (
             <div key={quarter} style={{ marginBottom: 18, padding: 18, background: T.surface, border: `1px solid ${T.border}`, borderRadius: 12 }}>
               <div style={{ fontFamily: "'Fraunces', serif", fontSize: 18, fontWeight: 700, color: T.gold, marginBottom: 12 }}>{quarter}</div>
               <div style={{ overflowX: "auto" }}>
