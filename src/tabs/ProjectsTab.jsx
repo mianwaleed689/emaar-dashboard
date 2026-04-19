@@ -4,6 +4,7 @@
 */
 
 import React, { useState, useMemo, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import { createPortal } from "react-dom";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from "recharts";
 import { T } from "../data";
@@ -131,6 +132,30 @@ function ProjectsTab({
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
   }, [selectedProject, setSelectedProject]);
+
+  /* Phase 3.16: deep-link reader. When user arrives via /project/<id>,
+     App.jsx ProjectRedirect passes location.state.openProjectId.
+     Match against liveProjects + SEED_PROJECTS + extraProjects, auto-open. */
+  const _location = useLocation();
+  useEffect(() => {
+    try {
+      const wantedId = _location && _location.state && _location.state.openProjectId;
+      if (!wantedId) return;
+      if (selectedProject) return;
+      const all = [
+        ...((Array.isArray(liveProjects) ? liveProjects : [])),
+        ...((Array.isArray(SEED_PROJECTS) ? SEED_PROJECTS : [])),
+        ...((Array.isArray(extraProjects) ? extraProjects : [])),
+      ];
+      if (all.length === 0) return;
+      const match = all.find(p => p && String(p.id || "") === String(wantedId));
+      if (match) {
+        setSelectedProject(match);
+        try { window.history.replaceState({}, "", window.location.pathname); } catch {}
+      }
+    } catch {}
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [_location, liveProjects, SEED_PROJECTS, extraProjects]);
 
   return (
     <>
@@ -610,7 +635,8 @@ function ProjectsTab({
                         ].filter(Boolean).join(" | ");
                         /* Deep link — uses CURRENT origin (works on vercel, cloudflare, localhost, custom domain) */
                         const origin = (typeof window !== "undefined" && window.location && window.location.origin) ? window.location.origin : "https://emaar-dashboard.vercel.app";
-                        const projectUrl = `${origin}/?project=${encodeURIComponent(selectedProject.id || "")}`;
+                        /* Phase 3.16: use /project/<id> route */
+                        const projectUrl = `${origin}/project/${encodeURIComponent(selectedProject.id || "")}`;
                         const txt = [
                           "\uD83C\uDFD9️ DXB ANALYTICS — PROPERTY BRIEF",
                           "━━━━━━━━━━━━━━━━━━━━━━━━",
