@@ -654,6 +654,21 @@ function ProjectsTab({
                               style={btnStyle("37,211,102")} title="Share via WhatsApp">📱 WhatsApp</button>
                             <button type="button" onClick={() => window.open(`mailto:?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`,"_blank")}
                               style={btnStyle("59,130,246")} title="Send via Email">✉️ Email</button>
+                            <button type="button" onClick={() => {
+                              /* Phase 3.15: prompt for client phone, open tel: dialer.
+                                 Mobile = opens phone app. Desktop = opens default calling app. */
+                              const raw = window.prompt("Enter client phone number (with country code, e.g. +971501234567):", "+971 ");
+                              if (!raw) return;
+                              /* Strip anything that isn't a digit or leading +. Keep format clean for tel: */
+                              let cleaned = "";
+                              for (let i = 0; i < raw.length; i++) {
+                                const ch = raw[i];
+                                if (ch === "+" && cleaned.length === 0) cleaned += "+";
+                                else if (ch >= "0" && ch <= "9") cleaned += ch;
+                              }
+                              if (cleaned.length < 7) { alert("That doesn't look like a valid phone number. Try again with country code, e.g. +971501234567"); return; }
+                              window.location.href = "tel:" + cleaned;
+                            }} style={btnStyle("139,92,246")} title="Call the client directly">📞 Call</button>
                             <button type="button" onClick={async () => {
                               try {
                                 await navigator.clipboard.writeText(projectUrl);
