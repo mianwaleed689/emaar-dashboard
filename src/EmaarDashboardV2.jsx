@@ -2128,26 +2128,6 @@ export default function EmaarDashboardV2() {
 
   // Set page title
   useEffect(() => { document.title = "DXB Analytics"; }, []);
-
-  /* Phase 3.13.2: deep-link support — if URL has ?project=<id>, open that
-     project's details modal automatically when liveProjects loads.
-     Uses ONLY liveProjects (Firestore) — NOT SEED_PROJECTS, which lives
-     later in function scope and would throw TDZ if referenced here. */
-  useEffect(() => {
-    try {
-      const params = new URLSearchParams(window.location.search);
-      const wantedId = params.get("project");
-      if (!wantedId) return;
-      const list = liveProjects || [];
-      if (list.length === 0) return;
-      const match = list.find(p => String(p.id || "") === wantedId);
-      if (match) {
-        setSelectedProject(match);
-        setTab("Projects");
-      }
-    } catch {}
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [liveProjects]);
   const [projectSearch, setProjectSearch] = useState("");
   const [projectFilter, setProjectFilter] = useState("All");
   const [projectTier, setProjectTier] = useState("All");
