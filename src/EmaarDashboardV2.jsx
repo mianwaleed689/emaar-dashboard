@@ -2128,28 +2128,6 @@ export default function EmaarDashboardV2() {
 
   // Set page title
   useEffect(() => { document.title = "DXB Analytics"; }, []);
-
-  /* Phase 3.13: deep-link support — if URL has ?project=<id>, open that
-     project's details modal automatically after data loads. Runs whenever
-     liveProjects / SEED_PROJECTS become available. */
-  useEffect(() => {
-    try {
-      const params = new URLSearchParams(window.location.search);
-      const wantedId = params.get("project");
-      if (!wantedId) return;
-      const all = [...(liveProjects || []), ...(typeof SEED_PROJECTS !== "undefined" ? SEED_PROJECTS : [])];
-      const match = all.find(p => String(p.id || "") === wantedId);
-      if (match) {
-        setSelectedProject(match);
-        setTab("Projects");
-        /* Leave the param in URL so refresh still works; or uncomment to strip:
-           const url = new URL(window.location.href);
-           url.searchParams.delete("project");
-           window.history.replaceState({}, "", url.toString()); */
-      }
-    } catch {}
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [liveProjects]);
   const [projectSearch, setProjectSearch] = useState("");
   const [projectFilter, setProjectFilter] = useState("All");
   const [projectTier, setProjectTier] = useState("All");
