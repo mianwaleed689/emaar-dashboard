@@ -265,16 +265,19 @@ function ProjectsTab({
     <>
       {(() => {
 
-            /* Phase 4: merge all data sources — SEED (18 Verified) + DLD live (2,780 Registry) + extras */
+            /* Phase 4: merge all data sources — SEED (18 Verified) + DLD live (2,780 Registry) + extras.
+               Guard every spread with Array.isArray to prevent 'not iterable' crashes when props
+               arrive as undefined/null (Firestore still loading). */
             const allSources = [
-              ...SEED_PROJECTS,
-              ...(liveProjects || []),
-              ...(extraProjects || []),
+              ...(Array.isArray(SEED_PROJECTS) ? SEED_PROJECTS : []),
+              ...(Array.isArray(liveProjects) ? liveProjects : []),
+              ...(Array.isArray(extraProjects) ? extraProjects : []),
             ];
             /* De-dupe by id — live version wins over seed if same id */
             const seenIds = new Set();
             const rawProjects = allSources.filter(p => {
-              if (!p || !p.id) return true;
+              if (!p) return false;
+              if (!p.id) return true;
               if (seenIds.has(p.id)) return false;
               seenIds.add(p.id);
               return true;
@@ -306,7 +309,7 @@ function ProjectsTab({
               if (projDev !== "All" && p.developer !== projDev && p.developerName !== projDev) return false;
               if (projCommunity !== "All" && p.community !== projCommunity) return false;
               if (projStatus !== "All" && p.status !== projStatus) return false;
-              if (projBeds !== "All" && p.beds && p.beds.length > 0 && !p.beds.includes(projBeds)) return false;
+              if (projBeds !== "All" && Array.isArray(p.beds) && p.beds.length > 0 && !p.beds.includes(projBeds)) return false;
               if (projHandover !== "All" && !String(p.handover || p.expectedHandover || "").includes(projHandover)) return false;
               if (projGrade !== "All" && p.officeGrade !== projGrade) return false;
               if (projIntelFilter === "tier1" && p.tier !== 1) return false;
@@ -353,7 +356,7 @@ function ProjectsTab({
 
             const ProjectCard = ({ p }) => {
               const score = calcScore(p);
-              const inCompare = projCompare.some(c => c.id === p.id);
+              const inCompare = Array.isArray(projCompare) && projCompare.some(c => c.id === p.id);
               const isDldVerified = String(p.id || "").startsWith("dld-") || p.dldSource;
               return (
                 <div className="chart-box" style={{ padding:0, overflow:"hidden", cursor:"pointer", position:"relative" }}
@@ -379,7 +382,7 @@ function ProjectsTab({
                         <div style={{ display:"flex", gap:6, flexWrap:"wrap", alignItems:"center" }}>
                           <StatusBadge status={p.status || (p.constructionPct >= 100 ? "Ready" : "Off-Plan")} />
                           {(p.handover || p.expectedHandover) && <span style={{ fontSize:10, color:T.textMuted }}>{p.handover || p.expectedHandover}</span>}
-                          {p.beds?.length > 0 && <span style={{ fontSize:10, color:T.textMuted }}>{"·"}{p.beds.join(" / ")}</span>}
+                          {Array.isArray(p.beds) && p.beds.length > 0 && <span style={{ fontSize:10, color:T.textMuted }}>{"·"}{p.beds.join(" / ")}</span>}
                           {(p.reraNo || p.projectNumber) && <span style={{ fontSize:9, color:T.textMuted }}>{"·"}RERA #{p.reraNo || p.projectNumber}</span>}
                         </div>
                         {/* Intelligence badges row */}
@@ -419,7 +422,7 @@ function ProjectsTab({
                       </div>
                     </div>
                     {/* Unit mini-breakdown on card */}
-                    {p.unitBreakdown?.length > 0 && (
+                    {Array.isArray(p.unitBreakdown) && p.unitBreakdown.length > 0 && (
                       <div style={{ display:"flex", gap:6, flexWrap:"wrap", marginBottom:8, padding:"8px 10px", background:T.surfaceAlt, borderRadius:8 }}>
                         {p.unitBreakdown.map((u,i) => (
                           <div key={i} style={{ display:"flex", flexDirection:"column", alignItems:"center", padding:"4px 8px", background:"rgba(212,168,67,0.06)", borderRadius:6, border:`1px solid rgba(212,168,67,0.15)`, minWidth:64 }}>
@@ -437,10 +440,10 @@ function ProjectsTab({
                       {p.constructionPct > 0 && p.status !== "Ready" && <span style={{ fontSize:10, padding:"2px 7px", borderRadius:8, background:"rgba(139,92,246,0.12)", color:"#8B5CF6" }}>{p.constructionPct}% built</span>}
                     </div>
                   </div>
-                  {p.amenities?.length > 0 && (
+                  {Array.isArray(p.amenities) && p.amenities.length > 0 && (
                     <div style={{ padding:"10px 16px", borderBottom:`1px solid ${T.border}`, display:"flex", gap:4, flexWrap:"wrap" }} onClick={() => { setSelectedProject(p); setProjDetailTab("identity"); }}>
                       {p.amenities.slice(0,4).map((a,i) => <span key={i} style={{ fontSize:10, padding:"2px 6px", borderRadius:6, background:T.surfaceAlt, color:T.textMuted }}>{a}</span>)}
-                      {(p.view||[]).slice(0,2).map((v,i) => <span key={"v"+i} style={{ fontSize:10, padding:"2px 6px", borderRadius:6, background:"rgba(20,184,166,0.08)", color:T.teal }}>{v}</span>)}
+                      {(Array.isArray(p.view) ? p.view : []).slice(0,2).map((v,i) => <span key={"v"+i} style={{ fontSize:10, padding:"2px 6px", borderRadius:6, background:"rgba(20,184,166,0.08)", color:T.teal }}>{v}</span>)}
                       {p.amenities.length > 4 && <span style={{ fontSize:10, color:T.textMuted }}>+{p.amenities.length-4}</span>}
                     </div>
                   )}
@@ -611,21 +614,25 @@ function ProjectsTab({
 
                 {/* COMPACT INLINE STATS */}
                 <div style={{ display:"flex", gap:8, flexWrap:"wrap", marginBottom:16, padding:"10px 14px", background:T.surface, border:`1px solid ${T.border}`, borderRadius:10 }}>
-                  {[
-                    { label:"Found", value:filtered.length.toLocaleString(), color:T.white },
-                    { label:"From", value:filtered.length > 0 ? `AED ${(Math.min(...filtered.map(p=>p.priceMin || Infinity))/1000000).toFixed(1)}M` : "—", color:T.gold },
-                    { label:"Avg Yield", value:avgYield !== "—" ? avgYield + "%" : "—", color:T.green },
-                    { label:"Avg PPSF", value:avgPpsf > 0 ? "AED " + avgPpsf.toLocaleString() : "—", color:T.teal },
-                  ].map((kpi,i) => (
+                  {(() => {
+                    const priced = filtered.filter(p => p.priceMin && isFinite(p.priceMin));
+                    const minPrice = priced.length > 0 ? Math.min(...priced.map(p => p.priceMin)) : null;
+                    return [
+                      { label:"Found", value:filtered.length.toLocaleString(), color:T.white },
+                      { label:"From", value:minPrice ? `AED ${(minPrice/1000000).toFixed(1)}M` : "—", color:T.gold },
+                      { label:"Avg Yield", value:avgYield !== "—" ? avgYield + "%" : "—", color:T.green },
+                      { label:"Avg PPSF", value:avgPpsf > 0 ? "AED " + avgPpsf.toLocaleString() : "—", color:T.teal },
+                    ].map((kpi,i) => (
                     <div key={i} style={{ display:"flex", alignItems:"baseline", gap:6, padding:"4px 14px", borderRight:i < 3 ? `1px solid ${T.border}` : "none" }}>
                       <span style={{ fontSize:10, fontWeight:700, color:T.textMuted, letterSpacing:0.5, textTransform:"uppercase" }}>{kpi.label}</span>
                       <span style={{ fontFamily:"'Fraunces',serif", fontSize:17, fontWeight:800, color:kpi.color }}>{kpi.value}</span>
                     </div>
-                  ))}
+                  ));
+                  })()}
                 </div>
 
                 {/* Compare bar */}
-                {projCompare.length > 0 && (
+                {Array.isArray(projCompare) && projCompare.length > 0 && (
                   <div style={{ background:"rgba(212,168,67,0.06)", border:`1px solid rgba(212,168,67,0.2)`, borderRadius:10, padding:"10px 16px", marginBottom:16, display:"flex", alignItems:"center", gap:10, flexWrap:"wrap" }}>
                     <span style={{ fontSize:11, fontWeight:700, color:T.gold }}>Comparing {projCompare.length}/3:</span>
                     {projCompare.map((p,i) => (
