@@ -15,6 +15,7 @@ import { calcScore, scoreColor, scoreLabel } from "../utils/scoring";
 import { GOLDEN_VISA_THRESHOLD } from "../utils/constants";
 
 const MODES = [
+  { key:"All", label:"All Types" },
   { key:"Apartment" }, { key:"Villa" }, { key:"Townhouse" },
   { key:"Hotel Apartment" }, { key:"Office" }, { key:"Retail" },
   { key:"Warehouse" }, { key:"Land" },
@@ -304,8 +305,8 @@ function ProjectsTab({
             const filtered = rawProjects.filter(p => {
               // Global top-bar filters first
               if (!projMatchesGlobalFilter(p)) return false;
-              // Type filter — normalize DLD type values against canonical modes
-              if (normalizeType(p) !== projMode) return false;
+              // Type filter — but skip when 'All' is selected
+              if (projMode !== "All" && normalizeType(p) !== projMode) return false;
               if (projSearch && !JSON.stringify(p).toLowerCase().includes(projSearch.toLowerCase())) return false;
               if (projDev !== "All" && p.developer !== projDev && p.developerName !== projDev) return false;
               if (projCommunity !== "All" && p.community !== projCommunity) return false;
@@ -324,7 +325,17 @@ function ProjectsTab({
               if (projSort === "score") return calcScore(b) - calcScore(a);
               if (projSort === "price_asc") return (a.priceMin || Infinity) - (b.priceMin || Infinity);
               if (projSort === "price_desc") return (b.priceMin || 0) - (a.priceMin || 0);
-              return 0;
+              if (projSort === "alphabetical") return (a.project || a.name || "").localeCompare(b.project || b.name || "");
+              if (projSort === "recent") {
+                const aDate = a.launchDate || a.projectStartDate || "";
+                const bDate = b.launchDate || b.projectStartDate || "";
+                return bDate.localeCompare(aDate);
+              }
+              /* Default 'relevance' — interleave: Research (enriched data) first, DLD second, within each group by score/data completeness */
+              const aIsDld = String(a.id || "").startsWith("dld-") || a.dldSource;
+              const bIsDld = String(b.id || "").startsWith("dld-") || b.dldSource;
+              if (aIsDld !== bIsDld) return aIsDld ? 1 : -1; /* Research first */
+              return calcScore(b) - calcScore(a);
             });
 
             const avgYield = filtered.length > 0 && filtered.some(p => p.grossYield > 0)
@@ -332,8 +343,8 @@ function ProjectsTab({
             const avgPpsf = filtered.length > 0 && filtered.some(p=>p.ppsf)
               ? Math.round(filtered.filter(p=>p.ppsf).reduce((a,p) => a + p.ppsf, 0) / filtered.filter(p=>p.ppsf).length) : 0;
 
-            const devOptions = ["All", ...new Set(rawProjects.filter(p=>normalizeType(p)===projMode).map(p=>p.developer || p.developerName).filter(Boolean))].slice(0, 500);
-            const commOptions = ["All", ...new Set(rawProjects.filter(p=>normalizeType(p)===projMode).map(p=>p.community).filter(Boolean))].slice(0, 500);
+            const devOptions = ["All", ...new Set(rawProjects.filter(p => projMode === "All" || normalizeType(p)===projMode).map(p=>p.developer || p.developerName).filter(Boolean))].slice(0, 500);
+            const commOptions = ["All", ...new Set(rawProjects.filter(p => projMode === "All" || normalizeType(p)===projMode).map(p=>p.community).filter(Boolean))].slice(0, 500);
 
             const selSt = {
               background: T.surfaceAlt, border: `1px solid ${T.border}`,
@@ -349,11 +360,46 @@ function ProjectsTab({
               return <span style={{ fontSize:10, fontWeight:700, padding:"2px 8px", borderRadius:10, background:cfg.bg, color:cfg.color }}>{status}</span>;
             };
 
-            const ScoreCircle = ({ score }) => (
-              <div style={{ width:44, height:44, borderRadius:"50%", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", border:`2px solid ${scoreColor(score)}`, background:`${scoreColor(score)}22`, flexShrink:0 }}>
-                <span style={{ fontFamily:"'Fraunces',serif", fontSize:14, fontWeight:900, color:scoreColor(score), lineHeight:1 }}>{score}</span>
-              </div>
-            );
+            /* DataCompletenessBadge — shows factual data completeness, NOT investment advice.
+               Replaces the old ScoreCircle/scoreLabel which said "Strong Buy/Buy/Hold" =
+               unlicensed investment advice under RERA law. */
+            const DataCompletenessBadge = ({ p }) => {
+              const isDld = String(p.id || "").startsWith("dld-") || p.dldSource;
+              if (isDld) {
+                return (
+                  <div style={{ width:52, height:52, borderRadius:"50%", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", border:`2px solid ${T.teal}`, background:"rgba(20,184,166,0.15)", flexShrink:0 }}>
+                    <span style={{ fontSize:16, color:T.teal, lineHeight:1 }}>✓</span>
+                    <span style={{ fontSize:8, fontWeight:700, color:T.teal, marginTop:2 }}>DLD</span>
+                  </div>
+                );
+              }
+              /* Research-enriched: show data completeness indicator */
+              let completeness = 0;
+              if (p.priceMin) completeness++;
+              if (p.ppsf) completeness++;
+              if (p.grossYield) completeness++;
+              if (p.paymentPlan) completeness++;
+              if (Array.isArray(p.amenities) && p.amenities.length > 0) completeness++;
+              const pct = Math.round(completeness / 5 * 100);
+              return (
+                <div style={{ width:52, height:52, borderRadius:"50%", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", border:`2px solid ${T.gold}`, background:"rgba(212,168,67,0.12)", flexShrink:0 }}>
+                  <span style={{ fontSize:13, fontWeight:900, color:T.gold, lineHeight:1 }}>{pct}%</span>
+                  <span style={{ fontSize:7, fontWeight:700, color:T.gold, marginTop:1, letterSpacing:0.3 }}>DATA</span>
+                </div>
+              );
+            };
+
+            /* Helper — detect fake/placeholder RERA numbers and suppress display */
+            const isValidReraNumber = (num) => {
+              if (!num) return false;
+              const s = String(num).trim();
+              /* Real RERA project numbers are typically 3-5 digits */
+              /* Fake patterns: "0991234567", "0773456789", "1234", "5678" (sequential placeholders) */
+              if (s.length > 6) return false; /* over 6 digits = likely fake */
+              if (/^(\d)\1+$/.test(s)) return false; /* repeating digits */
+              if (/^1234|5678|0000|9999/.test(s)) return false; /* common placeholder patterns */
+              return /^\d{3,6}$/.test(s); /* must be 3-6 digit number */
+            };
 
             const ProjectCard = ({ p }) => {
               const score = calcScore(p);
@@ -384,22 +430,19 @@ function ProjectsTab({
                           <StatusBadge status={p.status || (p.constructionPct >= 100 ? "Ready" : "Off-Plan")} />
                           {(p.handover || p.expectedHandover) && <span style={{ fontSize:10, color:T.textMuted }}>{p.handover || p.expectedHandover}</span>}
                           {Array.isArray(p.beds) && p.beds.length > 0 && <span style={{ fontSize:10, color:T.textMuted }}>{"·"}{p.beds.join(" / ")}</span>}
-                          {(p.reraNo || p.projectNumber) && <span style={{ fontSize:9, color:T.textMuted }}>{"·"}RERA #{p.reraNo || p.projectNumber}</span>}
+                          {isValidReraNumber(p.reraNo || p.projectNumber) && <span style={{ fontSize:9, color:T.teal }}>{"·"}RERA #{p.reraNo || p.projectNumber}</span>}
                         </div>
-                        {/* Intelligence badges row */}
+                        {/* Factual classification badges only — no investment advice */}
                         <div style={{ display:"flex", gap:5, flexWrap:"wrap", marginTop:6 }}>
-                          {p.tier === 1 && <span style={{ fontSize:9, padding:"2px 7px", borderRadius:5, background:"rgba(16,185,129,0.12)", color:"#10B981", fontWeight:700 }}>Tier 1</span>}
-                          {p.tier === 2 && <span style={{ fontSize:9, padding:"2px 7px", borderRadius:5, background:"rgba(245,158,11,0.12)", color:"#F59E0B", fontWeight:700 }}>Tier 2</span>}
-                          {p.goldenVisa && p.priceMin >= GOLDEN_VISA_THRESHOLD && <span style={{ fontSize:9, padding:"2px 7px", borderRadius:5, background:"rgba(212,168,67,0.15)", color:T.gold, fontWeight:700 }}>★ GV</span>}
+                          {p.tier === 1 && <span style={{ fontSize:9, padding:"2px 7px", borderRadius:5, background:"rgba(16,185,129,0.12)", color:"#10B981", fontWeight:700 }}>Tier 1 Developer</span>}
+                          {p.tier === 2 && <span style={{ fontSize:9, padding:"2px 7px", borderRadius:5, background:"rgba(245,158,11,0.12)", color:"#F59E0B", fontWeight:700 }}>Tier 2 Developer</span>}
+                          {p.goldenVisa && p.priceMin >= GOLDEN_VISA_THRESHOLD && <span style={{ fontSize:9, padding:"2px 7px", borderRadius:5, background:"rgba(212,168,67,0.15)", color:T.gold, fontWeight:700 }}>★ Golden Visa Eligible</span>}
                           {p.branded && <span style={{ fontSize:9, padding:"2px 7px", borderRadius:5, background:"rgba(139,92,246,0.15)", color:"#A78BFA", fontWeight:700 }}>◆ {p.brandPartner || "Branded"}</span>}
-                          {p.appreciationToHandover > 0 && <span style={{ fontSize:9, padding:"2px 7px", borderRadius:5, background:"rgba(212,168,67,0.08)", color:T.gold, fontWeight:700 }}>+{p.appreciationToHandover}% pre→hand</span>}
-                          {p.velocityScore > 0 && <span style={{ fontSize:9, padding:"2px 7px", borderRadius:5, background:p.velocityScore >= 80 ? "rgba(16,185,129,0.12)" : "rgba(245,158,11,0.12)", color:p.velocityScore >= 80 ? "#10B981" : "#F59E0B", fontWeight:700 }}>Velocity {p.velocityScore}</span>}
+                          {p.escrowBank && <span style={{ fontSize:9, padding:"2px 7px", borderRadius:5, background:"rgba(20,184,166,0.08)", color:T.teal, fontWeight:700 }}>Escrow ✓</span>}
                         </div>
                       </div>
-                      <div style={{ display:"flex", flexDirection:"column", alignItems:"flex-end", gap:6 }}>
-                        <ScoreCircle score={score} />
-                        <span style={{ fontSize:9, fontWeight:700, color:scoreColor(score) }}>{scoreLabel(score)}</span>
-                        {p.commission && <span style={{ fontSize:9, padding:"2px 6px", borderRadius:6, background:"rgba(16,185,129,0.12)", color:T.green, fontWeight:700 }}>{p.commission}% comm</span>}
+                      <div style={{ display:"flex", flexDirection:"column", alignItems:"flex-end", gap:4 }}>
+                        <DataCompletenessBadge p={p} />
                       </div>
                     </div>
                   </div>
@@ -478,7 +521,7 @@ function ProjectsTab({
                   {MODES.map(m => (
                     <button key={m.key} type="button" onClick={() => { setProjMode(m.key); setProjBeds("All"); setProjDev("All"); setProjCommunity("All"); setProjSearch(""); }}
                       style={{ padding:"6px 14px", background:projMode===m.key?"rgba(212,168,67,0.15)":T.surfaceAlt, border:`1px solid ${projMode===m.key?"rgba(212,168,67,0.5)":T.border}`, borderRadius:20, color:projMode===m.key?T.gold:T.textSecondary, fontSize:12, fontWeight:projMode===m.key?700:400, cursor:"pointer", fontFamily:"'Outfit',sans-serif", transition:"all 0.15s" }}>
-                      {m.key}
+                      {m.label || m.key}
                     </button>
                   ))}
                 </div>
@@ -505,10 +548,12 @@ function ProjectsTab({
 
                     {/* SORT dropdown */}
                     <select value={projSort} onChange={e => setProjSort(e.target.value)} style={selSt} title="Sort order">
-                      <option value="score">↓ Best Match</option>
+                      <option value="score">↓ Relevance</option>
                       <option value="yield">↓ Yield High</option>
-                      <option value="price_asc">↑ Price Low</option>
-                      <option value="price_desc">↓ Price High</option>
+                      <option value="price_asc">↑ Price Low to High</option>
+                      <option value="price_desc">↓ Price High to Low</option>
+                      <option value="alphabetical">A–Z Name</option>
+                      <option value="recent">↓ Recently Launched</option>
                     </select>
 
                     {/* FILTERS toggle button */}
@@ -613,22 +658,28 @@ function ProjectsTab({
                   );
                 })()}
 
-                {/* COMPACT INLINE STATS */}
+                {/* COMPACT INLINE STATS — honest labeling per DLD data subset */}
                 <div style={{ display:"flex", gap:8, flexWrap:"wrap", marginBottom:16, padding:"10px 14px", background:T.surface, border:`1px solid ${T.border}`, borderRadius:10 }}>
                   {(() => {
                     const priced = filtered.filter(p => p.priceMin && isFinite(p.priceMin));
+                    const withYield = filtered.filter(p => p.grossYield > 0);
+                    const withPpsf = filtered.filter(p => p.ppsf > 0);
+                    const withBench = filtered.filter(p => p.communityMedianPPSF);
                     const minPrice = priced.length > 0 ? Math.min(...priced.map(p => p.priceMin)) : null;
                     return [
-                      { label:"Found", value:filtered.length.toLocaleString(), color:T.white },
-                      { label:"From", value:minPrice ? `AED ${(minPrice/1000000).toFixed(1)}M` : "—", color:T.gold },
-                      { label:"Avg Yield", value:avgYield !== "—" ? avgYield + "%" : "—", color:T.green },
-                      { label:"Avg PPSF", value:avgPpsf > 0 ? "AED " + avgPpsf.toLocaleString() : "—", color:T.teal },
+                      { label:"Total", value:filtered.length.toLocaleString(), sub:"projects", color:T.white },
+                      { label:"Priced From", value:minPrice ? `AED ${(minPrice/1000000).toFixed(1)}M` : "—", sub:priced.length > 0 ? `${priced.length} priced` : "0 priced", color:T.gold },
+                      { label:"Avg Yield", value:withYield.length > 0 ? (withYield.reduce((a,p) => a+p.grossYield, 0)/withYield.length).toFixed(1) + "%" : "—", sub:`n=${withYield.length} disclosed`, color:T.green },
+                      { label:"Community PPSF", value:withBench.length > 0 ? "AED " + Math.round(withBench.reduce((a,p) => a+p.communityMedianPPSF, 0)/withBench.length).toLocaleString() : "—", sub:`DLD · n=${withBench.length}`, color:T.teal },
                     ].map((kpi,i) => (
-                    <div key={i} style={{ display:"flex", alignItems:"baseline", gap:6, padding:"4px 14px", borderRight:i < 3 ? `1px solid ${T.border}` : "none" }}>
-                      <span style={{ fontSize:10, fontWeight:700, color:T.textMuted, letterSpacing:0.5, textTransform:"uppercase" }}>{kpi.label}</span>
-                      <span style={{ fontFamily:"'Fraunces',serif", fontSize:17, fontWeight:800, color:kpi.color }}>{kpi.value}</span>
-                    </div>
-                  ));
+                      <div key={i} style={{ display:"flex", flexDirection:"column", padding:"4px 14px", borderRight:i < 3 ? `1px solid ${T.border}` : "none" }}>
+                        <div style={{ display:"flex", alignItems:"baseline", gap:6 }}>
+                          <span style={{ fontSize:10, fontWeight:700, color:T.textMuted, letterSpacing:0.5, textTransform:"uppercase" }}>{kpi.label}</span>
+                          <span style={{ fontFamily:"'Fraunces',serif", fontSize:17, fontWeight:800, color:kpi.color }}>{kpi.value}</span>
+                        </div>
+                        <span style={{ fontSize:9, color:T.textMuted, marginTop:2 }}>{kpi.sub}</span>
+                      </div>
+                    ));
                   })()}
                 </div>
 
@@ -745,7 +796,7 @@ function ProjectsTab({
                           <div style={{ fontSize:12, color:T.textMuted }}>{p.handover||"—"}</div>
                           <div style={{ display:"flex", alignItems:"center", gap:6 }}>
                             <span style={{ fontSize:14, fontWeight:700, color:scoreColor(sc) }}>{sc}</span>
-                            <span style={{ fontSize:10, color:scoreColor(sc) }}>{scoreLabel(sc)}</span>
+                            <span style={{ fontSize:10, color:T.textMuted }}>data score</span>
                           </div>
                         </div>
                       );
@@ -784,14 +835,14 @@ function ProjectsTab({
                 <div>
                   <div style={{ fontSize:11, fontWeight:700, color:T.textMuted, letterSpacing:0.8, textTransform:"uppercase", marginBottom:3 }}>{selectedProject.developer}{"·"}{selectedProject.community}</div>
                   <div style={{ fontFamily:"'Fraunces',serif", fontSize:22, fontWeight:800, color:T.white }}>{selectedProject.project}</div>
-                  {/* Intelligence badges row */}
+                  {/* Factual classification badges only — no investment advice */}
                   <div style={{ display:"flex", gap:5, flexWrap:"wrap", marginTop:6 }}>
                     {selectedProject.tier === 1 && <span style={{ fontSize:10, padding:"3px 8px", borderRadius:5, background:"rgba(16,185,129,0.12)", color:"#10B981", fontWeight:700 }}>Tier 1 Developer</span>}
                     {selectedProject.tier === 2 && <span style={{ fontSize:10, padding:"3px 8px", borderRadius:5, background:"rgba(245,158,11,0.12)", color:"#F59E0B", fontWeight:700 }}>Tier 2 Developer</span>}
                     {selectedProject.goldenVisa && selectedProject.priceMin >= GOLDEN_VISA_THRESHOLD && <span style={{ fontSize:10, padding:"3px 8px", borderRadius:5, background:"rgba(212,168,67,0.15)", color:T.gold, fontWeight:700 }}>★ Golden Visa Eligible</span>}
                     {selectedProject.branded && <span style={{ fontSize:10, padding:"3px 8px", borderRadius:5, background:"rgba(139,92,246,0.15)", color:"#A78BFA", fontWeight:700 }}>◆ {selectedProject.brandPartner || "Branded Residence"}</span>}
-                    {selectedProject.appreciationToHandover > 0 && <span style={{ fontSize:10, padding:"3px 8px", borderRadius:5, background:"rgba(212,168,67,0.08)", color:T.gold, fontWeight:700 }}>+{selectedProject.appreciationToHandover}% pre→handover</span>}
-                    {selectedProject.velocityScore > 0 && <span style={{ fontSize:10, padding:"3px 8px", borderRadius:5, background:selectedProject.velocityScore >= 80 ? "rgba(16,185,129,0.12)" : "rgba(245,158,11,0.12)", color:selectedProject.velocityScore >= 80 ? "#10B981" : "#F59E0B", fontWeight:700 }}>Velocity {selectedProject.velocityScore}/100</span>}
+                    {selectedProject.escrowBank && <span style={{ fontSize:10, padding:"3px 8px", borderRadius:5, background:"rgba(20,184,166,0.1)", color:T.teal, fontWeight:700 }}>Escrow Verified</span>}
+                    {isValidReraNumber(selectedProject.reraNo || selectedProject.projectNumber) && <span style={{ fontSize:10, padding:"3px 8px", borderRadius:5, background:"rgba(20,184,166,0.08)", color:T.teal, fontWeight:700 }}>RERA #{selectedProject.reraNo || selectedProject.projectNumber}</span>}
                   </div>
                 </div>
                 <div style={{ display:"flex", alignItems:"center", gap:10 }}>
