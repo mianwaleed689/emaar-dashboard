@@ -209,14 +209,18 @@ function ProjectsTab({
   const projMatchesGlobalFilter = (p) => {
     if (!p) return false;
 
-    // Developer filter: match on developer name OR the project's community
-    // being in the developer's communities list
+    // Developer filter: match on developer OR developerName OR the project's community
+    // being in the developer's communities list. Lenient matching for DLD records.
     if (gfDev) {
-      const projDev = String(p.developer || "").toLowerCase();
-      const projCommunity = String(p.community || "").toLowerCase();
-      const developerNameMatches = gfDeveloperName && projDev === String(gfDeveloperName).toLowerCase();
-      const communityBelongsToDeveloper = gfDeveloperCommunities && gfDeveloperCommunities.has(projCommunity);
-      if (!developerNameMatches && !communityBelongsToDeveloper) return false;
+      const pDev = String(p.developer || "").toLowerCase();
+      const pDevName = String(p.developerName || "").toLowerCase();
+      const pCommunity = String(p.community || "").toLowerCase();
+      const gfDevName = gfDeveloperName ? String(gfDeveloperName).toLowerCase() : "";
+      const developerMatches =
+        (pDev && (pDev === gfDev || pDev === gfDevName || pDev.includes(gfDev))) ||
+        (pDevName && (pDevName === gfDev || pDevName === gfDevName || pDevName.includes(gfDev)));
+      const communityBelongsToDeveloper = gfDeveloperCommunities && gfDeveloperCommunities.has(pCommunity);
+      if (!developerMatches && !communityBelongsToDeveloper) return false;
     }
 
     // Community filter
@@ -224,9 +228,17 @@ function ProjectsTab({
       if (String(p.community || "").toLowerCase() !== gfCommunity) return false;
     }
 
-    // Status filter (e.g. "offplan", "ready")
+    // Status filter (e.g. "offplan", "ready") — fallback to lifecycleStage for DLD
     if (gfStatus) {
-      const ps = String(p.status || "").toLowerCase().replace(/[-\s]/g, "_");
+      const effectiveStatus = p.status || (
+        p.lifecycleStage === "recently-delivered" || p.constructionPct >= 100 ? "Ready" :
+        p.lifecycleStage === "historical" ? "Ready" :
+        p.lifecycleStage === "under-construction" ? "Off-Plan" :
+        p.lifecycleStage === "announced" ? "Off-Plan" :
+        null
+      );
+      if (!effectiveStatus) return false;
+      const ps = String(effectiveStatus).toLowerCase().replace(/[-\s]/g, "_");
       const gs = gfStatus.replace(/[-\s]/g, "_");
       if (ps !== gs) return false;
     }
@@ -234,13 +246,17 @@ function ProjectsTab({
     // Beds filter (e.g. "1 BR", "2 BR")
     if (gfBeds) {
       const beds = Array.isArray(p.beds) ? p.beds : (p.beds ? [p.beds] : []);
-      if (!beds.some(b => String(b).toLowerCase() === gfBeds)) return false;
+      if (!beds.some(b => {
+        const normBed = String(b).toLowerCase().replace(/\s+/g, "");
+        const normGf = gfBeds.replace(/\s+/g, "");
+        return normBed === normGf;
+      })) return false;
     }
 
-    // Price range — project priceMin must be >= global priceMin,
-    // project priceMax must be <= global priceMax (when set)
-    if (gfPriceMin > 0 && Number(p.priceMin || 0) < gfPriceMin) return false;
-    if (gfPriceMax > 0 && Number(p.priceMax || p.priceMin || 0) > gfPriceMax) return false;
+    // Price range — only apply when project HAS priceMin (DLD records don't).
+    // Records without price pass through unfiltered so user can still browse them.
+    if (gfPriceMin > 0 && p.priceMin && Number(p.priceMin) < gfPriceMin) return false;
+    if (gfPriceMax > 0 && p.priceMax && Number(p.priceMax) > gfPriceMax) return false;
 
     return true;
   };
@@ -624,13 +640,25 @@ function ProjectsTab({
                 {/* ═══ SEARCH + FILTER TOGGLE BAR — world-class minimalist ═══ */}
                 {(() => {
                   const activeFilters = [];
-                  if (projDev !== "All") activeFilters.push({ key:"dev", label:`Developer: ${projDev}`, clear:() => setProjDev("All") });
-                  if (projCommunity !== "All") activeFilters.push({ key:"com", label:`Community: ${projCommunity}`, clear:() => setProjCommunity("All") });
-                  if (projStatus !== "All") activeFilters.push({ key:"sts", label:`Status: ${projStatus}`, clear:() => setProjStatus("All") });
+                  /* GLOBAL FILTERS from top bar — shown here so user sees what's applied */
+                  if (globalFilters?.developer && globalFilters.developer !== "all") {
+                    const devName = (allDevelopers || []).find(d => String(d.id).toLowerCase() === String(globalFilters.developer).toLowerCase())?.name || globalFilters.developer;
+                    activeFilters.push({ key:"gDev", label:`Developer: ${devName}`, global:true, note:"Top bar" });
+                  }
+                  if (globalFilters?.community && globalFilters.community !== "all") activeFilters.push({ key:"gCom", label:`Community: ${globalFilters.community}`, global:true, note:"Top bar" });
+                  if (globalFilters?.status && globalFilters.status !== "all") activeFilters.push({ key:"gSts", label:`Status: ${globalFilters.status}`, global:true, note:"Top bar" });
+                  if (globalFilters?.beds && globalFilters.beds !== "all") activeFilters.push({ key:"gBed", label:`Beds: ${globalFilters.beds}`, global:true, note:"Top bar" });
+                  if (globalFilters?.priceMin > 0 || globalFilters?.priceMax > 0) {
+                    const lbl = globalFilters.priceMin > 0 && globalFilters.priceMax > 0
+                      ? `AED ${(globalFilters.priceMin/1000000).toFixed(1)}M–${(globalFilters.priceMax/1000000).toFixed(1)}M`
+                      : globalFilters.priceMin > 0 ? `From AED ${(globalFilters.priceMin/1000000).toFixed(1)}M`
+                      : `Up to AED ${(globalFilters.priceMax/1000000).toFixed(1)}M`;
+                    activeFilters.push({ key:"gPrice", label:lbl, global:true, note:"Top bar" });
+                  }
+                  /* LOCAL FILTERS (Projects-specific) */
                   if (projLifecycle !== "All") activeFilters.push({ key:"lfc", label:`Stage: ${projLifecycle === "under-construction" ? "Under Construction" : projLifecycle === "recently-delivered" ? "Recently Delivered" : projLifecycle.charAt(0).toUpperCase()+projLifecycle.slice(1)}`, clear:() => setProjLifecycle("All") });
                   if (projConstruction !== "All") activeFilters.push({ key:"cst", label:`Build: ${projConstruction === "100" ? "Completed" : projConstruction + "%"}`, clear:() => setProjConstruction("All") });
                   if (projEscrowBank !== "All") activeFilters.push({ key:"esc", label:`Escrow: ${projEscrowBank}`, clear:() => setProjEscrowBank("All") });
-                  if (projBeds !== "All") activeFilters.push({ key:"bed", label:`Beds: ${projBeds}`, clear:() => setProjBeds("All") });
                   if (projHandover !== "All") activeFilters.push({ key:"hnd", label:`Handover: ${projHandover}`, clear:() => setProjHandover("All") });
                   if (projGrade !== "All") activeFilters.push({ key:"grd", label:`Grade: ${projGrade}`, clear:() => setProjGrade("All") });
                   if (projIntelFilter !== "all") activeFilters.push({ key:"int", label:projIntelFilter === "tier1" ? "Tier 1 Only" : projIntelFilter === "gv" ? "Golden Visa" : projIntelFilter === "branded" ? "Branded Residences" : projIntelFilter, clear:() => setProjIntelFilter("all") });
@@ -685,41 +713,30 @@ function ProjectsTab({
                         </span>
                       )}
                       {activeFilters.map(f => (
-                        <span key={f.key} style={{ fontSize:11, padding:"3px 10px", borderRadius:14, background:"rgba(212,168,67,0.1)", color:T.gold, border:`1px solid rgba(212,168,67,0.25)`, display:"flex", alignItems:"center", gap:6 }}>
-                          {f.label}
-                          <button type="button" onClick={f.clear} style={{ background:"none", border:"none", color:T.gold, cursor:"pointer", fontSize:14, padding:0, lineHeight:1 }}>×</button>
-                        </span>
+                        f.global ? (
+                          <span key={f.key} style={{ fontSize:11, padding:"3px 10px", borderRadius:14, background:"rgba(20,184,166,0.08)", color:T.teal, border:`1px solid rgba(20,184,166,0.25)`, display:"flex", alignItems:"center", gap:6, cursor:"help" }} title="From top filter bar — applies to all tabs">
+                            <span style={{ fontSize:9, opacity:0.7 }}>⇡</span>
+                            {f.label}
+                          </span>
+                        ) : (
+                          <span key={f.key} style={{ fontSize:11, padding:"3px 10px", borderRadius:14, background:"rgba(212,168,67,0.1)", color:T.gold, border:`1px solid rgba(212,168,67,0.25)`, display:"flex", alignItems:"center", gap:6 }}>
+                            {f.label}
+                            <button type="button" onClick={f.clear} style={{ background:"none", border:"none", color:T.gold, cursor:"pointer", fontSize:14, padding:0, lineHeight:1 }}>×</button>
+                          </span>
+                        )
                       ))}
-                      <button type="button" onClick={() => { setProjSearch(""); setProjDev("All"); setProjCommunity("All"); setProjStatus("All"); setProjBeds("All"); setProjHandover("All"); setProjGrade("All"); setProjIntelFilter("all"); setProjLifecycle("All"); setProjEscrowBank("All"); setProjConstruction("All"); }}
-                        style={{ background:"none", border:`1px solid ${T.border}`, borderRadius:12, padding:"3px 10px", color:T.textMuted, fontSize:11, cursor:"pointer", fontFamily:"'Outfit',sans-serif", marginLeft:4 }}>Clear all</button>
+                      <button type="button" onClick={() => { setProjSearch(""); setProjHandover("All"); setProjGrade("All"); setProjIntelFilter("all"); setProjLifecycle("All"); setProjEscrowBank("All"); setProjConstruction("All"); }}
+                        style={{ background:"none", border:`1px solid ${T.border}`, borderRadius:12, padding:"3px 10px", color:T.textMuted, fontSize:11, cursor:"pointer", fontFamily:"'Outfit',sans-serif", marginLeft:4 }} title="Clears Projects-specific filters. Top bar filters stay — use the top bar to clear those.">Clear local</button>
                     </div>
                   )}
 
                   {/* EXPANDED FILTER PANEL — shows when Filters button toggled */}
                   {filtersOpen && (
                     <div style={{ marginTop:12, paddingTop:12, borderTop:`1px solid ${T.border}`, display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(180px, 1fr))", gap:10 }}>
-                      <div>
-                        <label style={{ fontSize:10, color:T.textMuted, fontWeight:700, letterSpacing:0.5, textTransform:"uppercase", marginBottom:4, display:"block" }}>Developer</label>
-                        <select value={projDev} onChange={e => setProjDev(e.target.value)} style={{ ...selSt, width:"100%" }}>{devOptions.map(d => <option key={d}>{d}</option>)}</select>
+                      <div style={{ gridColumn:"1 / -1", padding:"8px 12px", background:"rgba(20,184,166,0.05)", border:`1px solid rgba(20,184,166,0.15)`, borderRadius:8, marginBottom:6 }}>
+                        <div style={{ fontSize:10, color:T.teal, fontWeight:700, letterSpacing:0.5 }}>⓵ PRIMARY FILTERS</div>
+                        <div style={{ fontSize:11, color:T.textMuted, marginTop:3 }}>Developer · Community · Beds · Status · Price are in the top bar above — they apply to all tabs. Filters below are Projects-specific.</div>
                       </div>
-                      <div>
-                        <label style={{ fontSize:10, color:T.textMuted, fontWeight:700, letterSpacing:0.5, textTransform:"uppercase", marginBottom:4, display:"block" }}>Community</label>
-                        <select value={projCommunity} onChange={e => setProjCommunity(e.target.value)} style={{ ...selSt, width:"100%" }}>{commOptions.map(c => <option key={c}>{c}</option>)}</select>
-                      </div>
-                      <div>
-                        <label style={{ fontSize:10, color:T.textMuted, fontWeight:700, letterSpacing:0.5, textTransform:"uppercase", marginBottom:4, display:"block" }}>Sale Status</label>
-                        <select value={projStatus} onChange={e => setProjStatus(e.target.value)} style={{ ...selSt, width:"100%" }}>
-                          {["All","Off-Plan","Ready","Sold Out"].map(s => <option key={s}>{s}</option>)}
-                        </select>
-                      </div>
-                      {["Apartment","Villa","Townhouse","Hotel Apartment"].includes(projMode) && (
-                        <div>
-                          <label style={{ fontSize:10, color:T.textMuted, fontWeight:700, letterSpacing:0.5, textTransform:"uppercase", marginBottom:4, display:"block" }}>Bedrooms</label>
-                          <select value={projBeds} onChange={e => setProjBeds(e.target.value)} style={{ ...selSt, width:"100%" }}>
-                            {["All","Studio","1BR","2BR","3BR","4BR","5BR+"].map(b => <option key={b}>{b}</option>)}
-                          </select>
-                        </div>
-                      )}
                       {projMode === "Office" && (
                         <div>
                           <label style={{ fontSize:10, color:T.textMuted, fontWeight:700, letterSpacing:0.5, textTransform:"uppercase", marginBottom:4, display:"block" }}>Office Grade</label>
@@ -729,12 +746,12 @@ function ProjectsTab({
                         </div>
                       )}
                       <div>
-                        <label style={{ fontSize:10, color:T.textMuted, fontWeight:700, letterSpacing:0.5, textTransform:"uppercase", marginBottom:4, display:"block" }}>Handover</label>
+                        <label style={{ fontSize:10, color:T.textMuted, fontWeight:700, letterSpacing:0.5, textTransform:"uppercase", marginBottom:4, display:"block" }}>Handover Year</label>
                         <select value={projHandover} onChange={e => setProjHandover(e.target.value)} style={{ ...selSt, width:"100%" }}>
                           {["All","2026","2027","2028","2029","Available Now"].map(h => <option key={h}>{h === "All" ? "Any Year" : h}</option>)}
                         </select>
                       </div>
-                      {/* NEW: Lifecycle Stage — 100% DLD coverage, replaces broken Status for DLD records */}
+                      {/* Lifecycle Stage — 100% DLD coverage */}
                       <div>
                         <label style={{ fontSize:10, color:T.textMuted, fontWeight:700, letterSpacing:0.5, textTransform:"uppercase", marginBottom:4, display:"block" }}>Project Stage</label>
                         <select value={projLifecycle} onChange={e => setProjLifecycle(e.target.value)} style={{ ...selSt, width:"100%" }}>
