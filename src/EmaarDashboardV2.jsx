@@ -16,6 +16,7 @@ import emailjs from "@emailjs/browser";
 import { safeAsyncWithToast } from "./utils/safeAsync";
 import { useFilterSchema } from "./contexts/FilterSchemaContext";
 import FilterIndicator from "./components/FilterIndicator";
+import SearchableSelect from "./components/SearchableSelect";
 import { useFilters } from "./hooks/useFilters";
 import { GOLDEN_VISA_THRESHOLD } from "./utils/constants";
 import { T } from "./data";
@@ -652,21 +653,25 @@ const GlobalContextFilter = ({
             boxShadow: "inset 0 1px 0 rgba(255,255,255,0.04), 0 8px 24px rgba(0,0,0,0.2)",
             animation: "slideDown 0.25s cubic-bezier(0.4, 0, 0.2, 1)",
           }}>
-            {/* Developer */}
+            {/* Developer — searchable */}
             <div>
               <label style={{ fontSize: 11, color: T.textMuted, fontWeight: 600, marginBottom: 8, display: "block", fontFamily: "'Outfit', sans-serif" }}>Developer</label>
-              <select value={gDeveloper} onChange={e => setGDeveloperAndReset(e.target.value)} style={{ ...(gDeveloper !== "all" ? activeSelStyle : selStyle), width: "100%" }}>
-                <option value="all">All developers</option>
-                {allDevelopers?.length > 0
-                  ? allDevelopers.map(d => <option key={d.id} value={d.id}>{d.name}</option>)
-                  : ["Emaar","DAMAC","Sobha","Nakheel","Meraas","Aldar","Binghatti","Ellington","Omniyat","Azizi","Danube","Samana","MAG","Imtiaz"].map(n => (
-                      <option key={n} value={n.toLowerCase()}>{n}</option>
-                    ))
-                }
-              </select>
+              <SearchableSelect
+                value={gDeveloper}
+                onChange={v => setGDeveloperAndReset(v)}
+                options={[
+                  { value: "all", label: "All developers" },
+                  ...(allDevelopers?.length > 0
+                    ? allDevelopers.map(d => ({ value: d.id, label: d.name, count: d.projectCount }))
+                    : ["Emaar","DAMAC","Sobha","Nakheel","Meraas","Aldar","Binghatti","Ellington","Omniyat","Azizi","Danube","Samana","MAG","Imtiaz"].map(n => ({ value: n.toLowerCase(), label: n }))
+                  )
+                ]}
+                placeholder="All developers"
+                T={T}
+              />
             </div>
 
-            {/* Property Type */}
+            {/* Property Type — native select OK for 20 options with optgroups */}
             <div>
               <label style={{ fontSize: 11, color: T.textMuted, fontWeight: 600, marginBottom: 8, display: "block", fontFamily: "'Outfit', sans-serif" }}>Property type</label>
               <select value={gPropertyType} onChange={e => setGPropertyTypeAndReset(e.target.value)} style={{ ...(gPropertyType !== "all" ? activeSelStyle : selStyle), width: "100%" }}>
@@ -681,17 +686,21 @@ const GlobalContextFilter = ({
               </select>
             </div>
 
-            {/* Community */}
+            {/* Community — searchable (172 options) */}
             <div>
               <label style={{ fontSize: 11, color: T.textMuted, fontWeight: 600, marginBottom: 8, display: "block", fontFamily: "'Outfit', sans-serif" }}>Community</label>
-              <select value={gCommunity} onChange={e => setGCommunity(e.target.value)} style={{ ...(gCommunity !== "all" ? activeSelStyle : selStyle), width: "100%" }}>
-                <option value="all">All communities</option>
-                {liveCommunityList && liveCommunityList.length > 0
-                  ? liveCommunityList.map(c => (
-                      <option key={c.id} value={c.name}>{c.name}</option>
-                    ))
-                  : null}
-              </select>
+              <SearchableSelect
+                value={gCommunity}
+                onChange={v => setGCommunity(v)}
+                options={[
+                  { value: "all", label: "All communities" },
+                  ...(liveCommunityList && liveCommunityList.length > 0
+                    ? liveCommunityList.map(c => ({ value: c.name, label: c.name, count: c.projectCount }))
+                    : [])
+                ]}
+                placeholder="All communities"
+                T={T}
+              />
             </div>
 
             {/* Bedrooms */}
@@ -986,6 +995,29 @@ const css = `
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { background: rgba(212,168,67,0.2); border-radius: 3px; }
   ::-webkit-scrollbar-thumb:hover { background: rgba(212,168,67,0.35); }
+
+  /* Native select dropdown dark theming — prevents white-background flash on Windows/Linux */
+  select option,
+  select optgroup {
+    background-color: #161a22 !important;
+    color: #ffffff !important;
+    font-family: 'Outfit', sans-serif;
+    padding: 8px 10px;
+  }
+  select optgroup {
+    color: #d4a843 !important;
+    font-weight: 600;
+    font-style: normal;
+  }
+  select option:checked,
+  select option:hover {
+    background-color: rgba(212,168,67,0.18) !important;
+    color: #d4a843 !important;
+  }
+  select:focus {
+    outline: none;
+    border-color: rgba(212,168,67,0.4) !important;
+  }
 
   @keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
 

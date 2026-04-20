@@ -9,6 +9,7 @@ import { createPortal } from "react-dom";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from "recharts";
 import { T } from "../data";
 import SmartEmptyState from "../components/SmartEmptyState";
+import SearchableSelect from "../components/SearchableSelect";
 import { SvgIcons } from "../components/Icons";
 
 import { calcScore, scoreColor, scoreLabel } from "../utils/scoring";
@@ -408,12 +409,30 @@ function ProjectsTab({
 
             const devOptions = ["All", ...new Set(rawProjects.filter(p => projMode === "All" || normalizeType(p)===projMode).map(p=>p.developer || p.developerName).filter(Boolean))].slice(0, 500);
             const commOptions = ["All", ...new Set(rawProjects.filter(p => projMode === "All" || normalizeType(p)===projMode).map(p=>p.community).filter(Boolean))].slice(0, 500);
-            /* NEW: Escrow bank options from data (27 banks in DLD) */
-            const escrowOptions = ["All", ...new Set(rawProjects.map(p => p.escrowBank).filter(Boolean))].sort((a, b) => {
-              if (a === "All") return -1;
-              if (b === "All") return 1;
-              return a.localeCompare(b);
+            /* Escrow bank options with project counts — DLD enriched */
+            const escrowCounts = {};
+            rawProjects.forEach(p => {
+              if (p.escrowBank) escrowCounts[p.escrowBank] = (escrowCounts[p.escrowBank] || 0) + 1;
             });
+            const escrowOptionsData = [
+              { value: "All", label: "Any escrow bank" },
+              ...Object.entries(escrowCounts)
+                .sort((a, b) => b[1] - a[1])  /* sort by count desc */
+                .map(([bank, count]) => ({ value: bank, label: bank, count })),
+            ];
+            /* Legacy string array — kept for backward compat where other code reads it */
+            const escrowOptions = ["All", ...Object.keys(escrowCounts).sort((a, b) => escrowCounts[b] - escrowCounts[a])];
+            /* DYNAMIC HANDOVER YEARS — extract actual years from data, include 2030+ */
+            const handoverYearsFromData = new Set();
+            const currentYear = new Date().getFullYear();
+            rawProjects.forEach(p => {
+              const handoverStr = String(p.handover || p.expectedHandover || p.handoverDate || "");
+              const yearMatch = handoverStr.match(/20\d{2}/);
+              if (yearMatch) handoverYearsFromData.add(yearMatch[0]);
+            });
+            /* Always include current year + next 4 years even if no data, plus any years from data */
+            for (let y = currentYear; y <= currentYear + 4; y++) handoverYearsFromData.add(String(y));
+            const handoverYearsSorted = [...handoverYearsFromData].sort();
 
             const selSt = {
               background: "linear-gradient(145deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%)",
@@ -874,7 +893,9 @@ function ProjectsTab({
                             <div>
                               <label style={{ fontSize:11, color:T.textMuted, fontWeight:600, marginBottom:8, display:"block", fontFamily:"'Outfit',sans-serif" }}>Handover year</label>
                               <select value={projHandover} onChange={e => setProjHandover(e.target.value)} style={{ ...selSt, width:"100%" }}>
-                                {["All","2026","2027","2028","2029","Available Now"].map(h => <option key={h}>{h === "All" ? "Any year" : h}</option>)}
+                                <option value="All">Any year</option>
+                                <option value="Available Now">Available now</option>
+                                {handoverYearsSorted.map(y => <option key={y} value={y}>{y}</option>)}
                               </select>
                             </div>
                             <div>
@@ -900,9 +921,13 @@ function ProjectsTab({
                             </div>
                             <div>
                               <label style={{ fontSize:11, color:T.textMuted, fontWeight:600, marginBottom:8, display:"block", fontFamily:"'Outfit',sans-serif" }}>Escrow bank</label>
-                              <select value={projEscrowBank} onChange={e => setProjEscrowBank(e.target.value)} style={{ ...selSt, width:"100%" }}>
-                                {escrowOptions.map(b => <option key={b} value={b}>{b === "All" ? "Any escrow bank" : b}</option>)}
-                              </select>
+                              <SearchableSelect
+                                value={projEscrowBank}
+                                onChange={v => setProjEscrowBank(v)}
+                                options={escrowOptionsData}
+                                placeholder="Any escrow bank"
+                                T={T}
+                              />
                             </div>
                           </div>
                           <div style={{ marginTop:18, paddingTop:16, borderTop:`1px solid rgba(255,255,255,0.06)` }}>
