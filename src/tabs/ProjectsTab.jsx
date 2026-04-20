@@ -73,10 +73,18 @@ function computeUnitMix(p) {
   }));
 }
 
-/* Community average PPSF — from project's own communityAvgPPSF field if available */
+/* Community average PPSF — prefers DLD-computed median over legacy field */
 function communityBenchmarkPPSF(p) {
-  if (p.communityAvgPPSF) return { value: p.communityAvgPPSF, source:"Computed from DLD Q3 2025 transactions" };
-  return { value: null, source:"Not available — community benchmark pending DLD sync" };
+  if (p.communityMedianPPSF) {
+    return {
+      value: p.communityMedianPPSF,
+      p25: p.communityP25PPSF,
+      p75: p.communityP75PPSF,
+      source: `DLD · ${p.communityTxCount?.toLocaleString() || "N"} transactions · ${p.communityBenchmarkSource || "Recent"}`,
+    };
+  }
+  if (p.communityAvgPPSF) return { value: p.communityAvgPPSF, source:"Legacy estimate" };
+  return { value: null, source:"Not available — DLD benchmark pending" };
 }
 
 /* STR indicator — factual flag only (not a score) */
@@ -257,32 +265,61 @@ function ProjectsTab({
     <>
       {(() => {
 
-            /* SEED_PROJECTS — defined at top level */
-  const rawProjects = [...SEED_PROJECTS, ...(extraProjects || [])];
+            /* Phase 4: merge all data sources — SEED (18 Verified) + DLD live (2,780 Registry) + extras */
+            const allSources = [
+              ...SEED_PROJECTS,
+              ...(liveProjects || []),
+              ...(extraProjects || []),
+            ];
+            /* De-dupe by id — live version wins over seed if same id */
+            const seenIds = new Set();
+            const rawProjects = allSources.filter(p => {
+              if (!p || !p.id) return true;
+              if (seenIds.has(p.id)) return false;
+              seenIds.add(p.id);
+              return true;
+            });
+
+            /* Normalize type field across data sources.
+               DLD records often have dldClass="unit" or propertyType="Flat"
+               Seed records have type="Apartment"/"Villa" etc.
+               Map everything to the 8 canonical types. */
+            const normalizeType = (p) => {
+              if (!p) return "Apartment";
+              const t = String(p.type || p.propertyType || p.dldClass || "").toLowerCase();
+              if (t.includes("villa")) return "Villa";
+              if (t.includes("townhouse") || t.includes("town house")) return "Townhouse";
+              if (t.includes("hotel")) return "Hotel Apartment";
+              if (t.includes("office")) return "Office";
+              if (t.includes("retail") || t.includes("shop")) return "Retail";
+              if (t.includes("warehouse") || t.includes("industrial")) return "Warehouse";
+              if (t.includes("land") || t.includes("plot")) return "Land";
+              return "Apartment"; /* default — most DLD records are unit/flat = apartment */
+            };
 
             const filtered = rawProjects.filter(p => {
-              // Phase 2.4 Batch 3: top-bar global filter narrows first,
-              // then the existing internal filters narrow further.
+              // Global top-bar filters first
               if (!projMatchesGlobalFilter(p)) return false;
-              if (p.type !== projMode) return false;
+              // Type filter — normalize DLD type values against canonical modes
+              if (normalizeType(p) !== projMode) return false;
               if (projSearch && !JSON.stringify(p).toLowerCase().includes(projSearch.toLowerCase())) return false;
-              if (projDev !== "All" && p.developer !== projDev) return false;
+              if (projDev !== "All" && p.developer !== projDev && p.developerName !== projDev) return false;
               if (projCommunity !== "All" && p.community !== projCommunity) return false;
               if (projStatus !== "All" && p.status !== projStatus) return false;
               if (projBeds !== "All" && p.beds && p.beds.length > 0 && !p.beds.includes(projBeds)) return false;
-              if (projHandover !== "All" && !p.handover?.includes(projHandover)) return false;
+              if (projHandover !== "All" && !String(p.handover || p.expectedHandover || "").includes(projHandover)) return false;
               if (projGrade !== "All" && p.officeGrade !== projGrade) return false;
               if (projIntelFilter === "tier1" && p.tier !== 1) return false;
               if (projIntelFilter === "gv" && !(p.goldenVisa && p.priceMin >= GOLDEN_VISA_THRESHOLD)) return false;
               if (projIntelFilter === "branded" && !p.branded) return false;
-              if (projPriceMin > 0 && p.priceMin < projPriceMin) return false;
-              if (projPriceMax > 0 && p.priceMax > projPriceMax) return false;
+              if (projPriceMin > 0 && p.priceMin && p.priceMin < projPriceMin) return false;
+              if (projPriceMax > 0 && p.priceMax && p.priceMax > projPriceMax) return false;
               return true;
             }).sort((a,b) => {
               if (projSort === "yield") return (b.grossYield||0) - (a.grossYield||0);
               if (projSort === "score") return calcScore(b) - calcScore(a);
-              if (projSort === "price_asc") return a.priceMin - b.priceMin;
-              if (projSort === "price_desc") return b.priceMin - a.priceMin;
+              if (projSort === "price_asc") return (a.priceMin || Infinity) - (b.priceMin || Infinity);
+              if (projSort === "price_desc") return (b.priceMin || 0) - (a.priceMin || 0);
               return 0;
             });
 
@@ -291,8 +328,8 @@ function ProjectsTab({
             const avgPpsf = filtered.length > 0 && filtered.some(p=>p.ppsf)
               ? Math.round(filtered.filter(p=>p.ppsf).reduce((a,p) => a + p.ppsf, 0) / filtered.filter(p=>p.ppsf).length) : 0;
 
-            const devOptions = ["All", ...new Set(rawProjects.filter(p=>p.type===projMode).map(p=>p.developer))];
-            const commOptions = ["All", ...new Set(rawProjects.filter(p=>p.type===projMode).map(p=>p.community))];
+            const devOptions = ["All", ...new Set(rawProjects.filter(p=>normalizeType(p)===projMode).map(p=>p.developer || p.developerName).filter(Boolean))].slice(0, 500);
+            const commOptions = ["All", ...new Set(rawProjects.filter(p=>normalizeType(p)===projMode).map(p=>p.community).filter(Boolean))].slice(0, 500);
 
             const selSt = {
               background: T.surfaceAlt, border: `1px solid ${T.border}`,
@@ -317,19 +354,33 @@ function ProjectsTab({
             const ProjectCard = ({ p }) => {
               const score = calcScore(p);
               const inCompare = projCompare.some(c => c.id === p.id);
+              const isDldVerified = String(p.id || "").startsWith("dld-") || p.dldSource;
               return (
-                <div className="chart-box" style={{ padding:0, overflow:"hidden", cursor:"pointer" }}
+                <div className="chart-box" style={{ padding:0, overflow:"hidden", cursor:"pointer", position:"relative" }}
                   onMouseEnter={e => e.currentTarget.style.borderColor="rgba(212,168,67,0.4)"}
                   onMouseLeave={e => e.currentTarget.style.borderColor=T.border}>
+                  {/* DATA SOURCE BADGE — top-right corner */}
+                  <div style={{ position:"absolute", top:10, right:10, zIndex:2 }}>
+                    {isDldVerified ? (
+                      <span style={{ fontSize:9, padding:"3px 8px", borderRadius:5, background:"rgba(20,184,166,0.12)", color:T.teal, fontWeight:700, border:`1px solid rgba(20,184,166,0.3)`, display:"inline-flex", alignItems:"center", gap:4 }}>
+                        ✓ DLD Verified
+                      </span>
+                    ) : (
+                      <span style={{ fontSize:9, padding:"3px 8px", borderRadius:5, background:"rgba(212,168,67,0.08)", color:T.gold, fontWeight:700, border:`1px solid rgba(212,168,67,0.2)`, display:"inline-flex", alignItems:"center", gap:4 }}>
+                        ◆ Research
+                      </span>
+                    )}
+                  </div>
                   <div style={{ padding:"14px 16px", borderBottom:`1px solid ${T.border}` }} onClick={() => { setSelectedProject(p); setProjDetailTab("identity"); }}>
                     <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:8 }}>
-                      <div style={{ flex:1 }}>
-                        <div style={{ fontSize:10, fontWeight:700, color:T.textMuted, letterSpacing:0.8, textTransform:"uppercase", marginBottom:3 }}>{p.developer}{"·"}{p.community}</div>
-                        <div style={{ fontFamily:"'Fraunces',serif", fontSize:15, fontWeight:700, color:T.white, marginBottom:6 }}>{p.project}</div>
+                      <div style={{ flex:1, paddingRight:70 /* room for DLD Verified badge */ }}>
+                        <div style={{ fontSize:10, fontWeight:700, color:T.textMuted, letterSpacing:0.8, textTransform:"uppercase", marginBottom:3 }}>{(p.developer || p.developerName || "Unknown")}{"·"}{p.community || p.area || "—"}</div>
+                        <div style={{ fontFamily:"'Fraunces',serif", fontSize:15, fontWeight:700, color:T.white, marginBottom:6 }}>{p.project || p.name || "—"}</div>
                         <div style={{ display:"flex", gap:6, flexWrap:"wrap", alignItems:"center" }}>
-                          <StatusBadge status={p.status} />
-                          {p.handover && <span style={{ fontSize:10, color:T.textMuted }}>{p.handover}</span>}
+                          <StatusBadge status={p.status || (p.constructionPct >= 100 ? "Ready" : "Off-Plan")} />
+                          {(p.handover || p.expectedHandover) && <span style={{ fontSize:10, color:T.textMuted }}>{p.handover || p.expectedHandover}</span>}
                           {p.beds?.length > 0 && <span style={{ fontSize:10, color:T.textMuted }}>{"·"}{p.beds.join(" / ")}</span>}
+                          {(p.reraNo || p.projectNumber) && <span style={{ fontSize:9, color:T.textMuted }}>{"·"}RERA #{p.reraNo || p.projectNumber}</span>}
                         </div>
                         {/* Intelligence badges row */}
                         <div style={{ display:"flex", gap:5, flexWrap:"wrap", marginTop:6 }}>
@@ -352,19 +403,19 @@ function ProjectsTab({
                     <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr 1fr", gap:8, marginBottom:10 }}>
                       <div>
                         <div style={{ fontSize:9, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.6, marginBottom:2 }}>From</div>
-                        <div style={{ fontSize:13, fontWeight:700, color:T.white }}>{p.priceMin ? "AED " + (p.priceMin/1000000).toFixed(1) + "M" : "TBC"}</div>
+                        <div style={{ fontSize:13, fontWeight:700, color:p.priceMin ? T.white : T.textMuted }}>{p.priceMin ? "AED " + (p.priceMin/1000000).toFixed(1) + "M" : "Inquire"}</div>
                       </div>
                       <div>
                         <div style={{ fontSize:9, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.6, marginBottom:2 }}>PPSF</div>
-                        <div style={{ fontSize:13, fontWeight:700, color:T.white }}>AED {(p.ppsf||0).toLocaleString()}</div>
+                        <div style={{ fontSize:13, fontWeight:700, color:p.ppsf ? T.white : T.textMuted }}>{p.ppsf ? "AED " + p.ppsf.toLocaleString() : "—"}</div>
                       </div>
                       <div>
                         <div style={{ fontSize:9, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.6, marginBottom:2 }}>Yield</div>
-                        <div style={{ fontSize:13, fontWeight:700, color:p.grossYield >= 7 ? T.green : p.grossYield >= 5 ? T.gold : T.textSecondary }}>{p.grossYield ? p.grossYield.toFixed(1) + "%" : "—"}</div>
+                        <div style={{ fontSize:13, fontWeight:700, color:p.grossYield >= 7 ? T.green : p.grossYield >= 5 ? T.gold : T.textMuted }}>{p.grossYield ? p.grossYield.toFixed(1) + "%" : "—"}</div>
                       </div>
                       <div>
-                        <div style={{ fontSize:9, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.6, marginBottom:2 }}>Plan</div>
-                        <div style={{ fontSize:13, fontWeight:700, color:T.white }}>{p.paymentPlan || "TBC"}</div>
+                        <div style={{ fontSize:9, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.6, marginBottom:2 }}>Units</div>
+                        <div style={{ fontSize:13, fontWeight:700, color:T.white }}>{p.totalUnits ? p.totalUnits.toLocaleString() : (p.paymentPlan || "—")}</div>
                       </div>
                     </div>
                     {/* Unit mini-breakdown on card */}
@@ -414,15 +465,12 @@ function ProjectsTab({
                     <div style={{ fontSize:11, color:T.textMuted, marginTop:3 }}>All Dubai property types · Investment intelligence · Full project data</div>
                   </div>
                   <div style={{ display:"flex", gap:8 }}>
-                    {["grid","list"].map(v => (
-                      <button key={v} type="button" onClick={() => setProjView(v)} style={{ padding:"6px 14px", background:projView===v?"rgba(212,168,67,0.15)":T.surfaceAlt, border:`1px solid ${projView===v?"rgba(212,168,67,0.4)":T.border}`, borderRadius:8, color:projView===v?T.gold:T.textMuted, fontSize:11, fontWeight:600, cursor:"pointer", fontFamily:"'Outfit',sans-serif", textTransform:"capitalize" }}>{v}</button>
-                    ))}
                   </div>
                 </div>
 
-                {/* Mode Selector */}
-                <div style={{ display:"flex", gap:8, flexWrap:"wrap", marginBottom:16, padding:"12px 14px", background:T.surface, border:`1px solid ${T.border}`, borderRadius:10 }}>
-                  <span style={{ fontSize:10, fontWeight:700, color:T.textMuted, letterSpacing:0.8, textTransform:"uppercase", alignSelf:"center", marginRight:4 }}>Type:</span>
+                {/* ═══ MODE / TYPE TABS — Primary filter, always visible ═══ */}
+                <div style={{ display:"flex", gap:6, flexWrap:"wrap", marginBottom:14, padding:"10px 14px", background:T.surface, border:`1px solid ${T.border}`, borderRadius:10 }}>
+                  <span style={{ fontSize:10, fontWeight:700, color:T.textMuted, letterSpacing:0.8, textTransform:"uppercase", alignSelf:"center", marginRight:4 }}>Property Type:</span>
                   {MODES.map(m => (
                     <button key={m.key} type="button" onClick={() => { setProjMode(m.key); setProjBeds("All"); setProjDev("All"); setProjCommunity("All"); setProjSearch(""); }}
                       style={{ padding:"6px 14px", background:projMode===m.key?"rgba(212,168,67,0.15)":T.surfaceAlt, border:`1px solid ${projMode===m.key?"rgba(212,168,67,0.5)":T.border}`, borderRadius:20, color:projMode===m.key?T.gold:T.textSecondary, fontSize:12, fontWeight:projMode===m.key?700:400, cursor:"pointer", fontFamily:"'Outfit',sans-serif", transition:"all 0.15s" }}>
@@ -431,80 +479,147 @@ function ProjectsTab({
                   ))}
                 </div>
 
-                {/* Filters */}
-                <div style={{ background:T.surface, border:`1px solid ${T.border}`, borderRadius:10, padding:"12px 14px", marginBottom:16 }}>
-                  <div style={{ display:"flex", gap:8, flexWrap:"wrap", alignItems:"center" }}>
-                    <div style={{ position:"relative", flex:"0 0 200px" }}>
-                      {SvgIcons.Search({ width:13, height:13, style:{ position:"absolute", left:10, top:"50%", transform:"translateY(-50%)", color:T.textMuted, pointerEvents:"none" } })}
-                      <input value={projSearch} onChange={e => setProjSearch(e.target.value)} placeholder="Project, developer, area..." style={{ ...selSt, paddingLeft:30, paddingRight:10, width:"100%", backgroundImage:"none" }} />
+                {/* ═══ SEARCH + FILTER TOGGLE BAR — world-class minimalist ═══ */}
+                {(() => {
+                  const activeFilters = [];
+                  if (projDev !== "All") activeFilters.push({ key:"dev", label:`Developer: ${projDev}`, clear:() => setProjDev("All") });
+                  if (projCommunity !== "All") activeFilters.push({ key:"com", label:`Community: ${projCommunity}`, clear:() => setProjCommunity("All") });
+                  if (projStatus !== "All") activeFilters.push({ key:"sts", label:`Status: ${projStatus}`, clear:() => setProjStatus("All") });
+                  if (projBeds !== "All") activeFilters.push({ key:"bed", label:`Beds: ${projBeds}`, clear:() => setProjBeds("All") });
+                  if (projHandover !== "All") activeFilters.push({ key:"hnd", label:`Handover: ${projHandover}`, clear:() => setProjHandover("All") });
+                  if (projGrade !== "All") activeFilters.push({ key:"grd", label:`Grade: ${projGrade}`, clear:() => setProjGrade("All") });
+                  if (projIntelFilter !== "all") activeFilters.push({ key:"int", label:projIntelFilter === "tier1" ? "Tier 1 Only" : projIntelFilter === "gv" ? "Golden Visa" : projIntelFilter === "branded" ? "Branded Residences" : projIntelFilter, clear:() => setProjIntelFilter("all") });
+                  const anyActive = activeFilters.length > 0 || projSearch;
+                  return (
+                <div style={{ background:T.surface, border:`1px solid ${T.border}`, borderRadius:10, padding:"10px 14px", marginBottom:14 }}>
+                  <div style={{ display:"flex", gap:10, alignItems:"center", flexWrap:"wrap" }}>
+                    {/* SEARCH — primary input, always visible */}
+                    <div style={{ position:"relative", flex:"1 1 260px", minWidth:220 }}>
+                      {SvgIcons.Search({ width:14, height:14, style:{ position:"absolute", left:12, top:"50%", transform:"translateY(-50%)", color:T.textMuted, pointerEvents:"none" } })}
+                      <input value={projSearch} onChange={e => setProjSearch(e.target.value)} placeholder="Search project, developer, or community..." style={{ background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:8, color:T.white, fontFamily:"'Outfit',sans-serif", fontSize:13, padding:"9px 12px 9px 36px", outline:"none", width:"100%" }} />
                     </div>
-                    <select value={projDev} onChange={e => setProjDev(e.target.value)} style={selSt}>{devOptions.map(d => <option key={d}>{d}</option>)}</select>
-                    <select value={projCommunity} onChange={e => setProjCommunity(e.target.value)} style={selSt}>{commOptions.map(c => <option key={c}>{c}</option>)}</select>
-                    <select value={projStatus} onChange={e => setProjStatus(e.target.value)} style={selSt}>
-                      {["All","Off-Plan","Ready","Sold Out"].map(s => <option key={s}>{s}</option>)}
-                    </select>
-                    {["Apartment","Villa","Townhouse","Hotel Apartment"].includes(projMode) && (
-                      <select value={projBeds} onChange={e => setProjBeds(e.target.value)} style={selSt}>
-                        {["All","Studio","1BR","2BR","3BR","4BR","5BR+"].map(b => <option key={b}>{b}</option>)}
-                      </select>
-                    )}
-                    {projMode === "Office" && (
-                      <select value={projGrade} onChange={e => setProjGrade(e.target.value)} style={selSt}>
-                        {["All","A","B","C"].map(g => <option key={g}>{g === "All" ? "All Grades" : "Grade " + g}</option>)}
-                      </select>
-                    )}
-                    <select value={projHandover} onChange={e => setProjHandover(e.target.value)} style={selSt}>
-                      {["All","2026","2027","2028","2029","Available Now"].map(h => <option key={h}>{h === "All" ? "Any Handover" : h}</option>)}
-                    </select>
-                    <select value={projSort} onChange={e => setProjSort(e.target.value)} style={selSt}>
-                      <option value="yield">Sort: Yield High</option>
-                      <option value="score">Sort: Score High</option>
-                      <option value="price_asc">Sort: Price Low</option>
-                      <option value="price_desc">Sort: Price High</option>
-                    </select>
-                    <span style={{ fontSize:11, color:T.textMuted, marginLeft:"auto" }}>{filtered.length} projects</span>
-                    {(projSearch || projDev !== "All" || projCommunity !== "All" || projStatus !== "All" || projBeds !== "All" || projHandover !== "All") && (
-                      <button type="button" onClick={() => { setProjSearch(""); setProjDev("All"); setProjCommunity("All"); setProjStatus("All"); setProjBeds("All"); setProjHandover("All"); setProjGrade("All"); setProjIntelFilter("all"); }} style={{ background:"none", border:`1px solid ${T.border}`, borderRadius:8, padding:"6px 12px", color:T.textMuted, fontSize:11, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>Clear</button>
-                    )}
-                  </div>
-                  {/* Intelligence filter chips */}
-                  <div style={{ display:"flex", gap:6, flexWrap:"wrap", marginTop:10, paddingTop:10, borderTop:`1px solid ${T.border}`, alignItems:"center" }}>
-                    <span style={{ fontSize:10, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.5, marginRight:4, fontWeight:700 }}>Intelligence:</span>
-                    {[
-                      { key:"all",     label:"All Projects" },
-                      { key:"tier1",   label:"⚡ Tier 1 Devs Only" },
-                      { key:"gv",      label:"★ Golden Visa Eligible" },
-                      { key:"branded", label:"◆ Branded Residences" },
-                    ].map(f => (
-                      <button key={f.key} type="button" onClick={() => setProjIntelFilter(f.key)}
-                        style={{
-                          padding:"5px 12px",
-                          background: projIntelFilter === f.key ? T.gold : "rgba(255,255,255,0.04)",
-                          border: `1px solid ${projIntelFilter === f.key ? T.gold : T.border}`,
-                          borderRadius:16,
-                          color: projIntelFilter === f.key ? "#000" : T.textPrimary,
-                          fontSize:10,
-                          fontWeight:700,
-                          cursor:"pointer",
-                          fontFamily:"'Outfit',sans-serif",
-                        }}>
-                        {f.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
 
-                {/* KPI Bar */}
-                <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(170px,1fr))", gap:10, marginBottom:20 }}>
+                    {/* SORT dropdown */}
+                    <select value={projSort} onChange={e => setProjSort(e.target.value)} style={selSt} title="Sort order">
+                      <option value="score">↓ Best Match</option>
+                      <option value="yield">↓ Yield High</option>
+                      <option value="price_asc">↑ Price Low</option>
+                      <option value="price_desc">↓ Price High</option>
+                    </select>
+
+                    {/* FILTERS toggle button */}
+                    <button type="button" onClick={() => setProjView(projView === "filters-open" ? "grid" : "filters-open")}
+                      style={{ padding:"9px 14px", background:projView === "filters-open" ? "rgba(212,168,67,0.15)" : T.surfaceAlt, border:`1px solid ${projView === "filters-open" ? "rgba(212,168,67,0.4)" : T.border}`, borderRadius:8, color:projView === "filters-open" ? T.gold : T.textSecondary, fontSize:12, fontWeight:600, cursor:"pointer", fontFamily:"'Outfit',sans-serif", display:"flex", alignItems:"center", gap:6, whiteSpace:"nowrap" }}>
+                      <span>⚙ Filters</span>
+                      {activeFilters.length > 0 && <span style={{ background:T.gold, color:"#000", padding:"1px 6px", borderRadius:10, fontSize:10, fontWeight:800 }}>{activeFilters.length}</span>}
+                    </button>
+
+                    {/* VIEW toggle */}
+                    <div style={{ display:"flex", gap:4, background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:8, padding:2 }}>
+                      {[{k:"grid",icon:"▦"},{k:"list",icon:"☰"}].map(v => (
+                        <button key={v.k} type="button" onClick={() => setProjView(v.k)} style={{ padding:"5px 10px", background:projView===v.k?"rgba(212,168,67,0.15)":"none", border:"none", borderRadius:6, color:projView===v.k?T.gold:T.textMuted, fontSize:13, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>{v.icon}</button>
+                      ))}
+                    </div>
+
+                    {/* RESULT COUNT */}
+                    <span style={{ fontSize:12, color:T.textMuted, marginLeft:"auto", fontWeight:600 }}>
+                      <span style={{ color:T.gold, fontWeight:800 }}>{filtered.length.toLocaleString()}</span> of {rawProjects.length.toLocaleString()} projects
+                    </span>
+                  </div>
+
+                  {/* ACTIVE FILTER CHIPS */}
+                  {anyActive && (
+                    <div style={{ display:"flex", gap:6, flexWrap:"wrap", marginTop:10, paddingTop:10, borderTop:`1px solid ${T.border}`, alignItems:"center" }}>
+                      <span style={{ fontSize:10, color:T.textMuted, fontWeight:700, letterSpacing:0.5, textTransform:"uppercase" }}>Active:</span>
+                      {projSearch && (
+                        <span style={{ fontSize:11, padding:"3px 10px", borderRadius:14, background:"rgba(20,184,166,0.1)", color:T.teal, border:`1px solid rgba(20,184,166,0.25)`, display:"flex", alignItems:"center", gap:6 }}>
+                          Search: "{projSearch}"
+                          <button type="button" onClick={() => setProjSearch("")} style={{ background:"none", border:"none", color:T.teal, cursor:"pointer", fontSize:14, padding:0, lineHeight:1 }}>×</button>
+                        </span>
+                      )}
+                      {activeFilters.map(f => (
+                        <span key={f.key} style={{ fontSize:11, padding:"3px 10px", borderRadius:14, background:"rgba(212,168,67,0.1)", color:T.gold, border:`1px solid rgba(212,168,67,0.25)`, display:"flex", alignItems:"center", gap:6 }}>
+                          {f.label}
+                          <button type="button" onClick={f.clear} style={{ background:"none", border:"none", color:T.gold, cursor:"pointer", fontSize:14, padding:0, lineHeight:1 }}>×</button>
+                        </span>
+                      ))}
+                      <button type="button" onClick={() => { setProjSearch(""); setProjDev("All"); setProjCommunity("All"); setProjStatus("All"); setProjBeds("All"); setProjHandover("All"); setProjGrade("All"); setProjIntelFilter("all"); }}
+                        style={{ background:"none", border:`1px solid ${T.border}`, borderRadius:12, padding:"3px 10px", color:T.textMuted, fontSize:11, cursor:"pointer", fontFamily:"'Outfit',sans-serif", marginLeft:4 }}>Clear all</button>
+                    </div>
+                  )}
+
+                  {/* EXPANDED FILTER PANEL — shows when Filters button toggled */}
+                  {projView === "filters-open" && (
+                    <div style={{ marginTop:12, paddingTop:12, borderTop:`1px solid ${T.border}`, display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(180px, 1fr))", gap:10 }}>
+                      <div>
+                        <label style={{ fontSize:10, color:T.textMuted, fontWeight:700, letterSpacing:0.5, textTransform:"uppercase", marginBottom:4, display:"block" }}>Developer</label>
+                        <select value={projDev} onChange={e => setProjDev(e.target.value)} style={{ ...selSt, width:"100%" }}>{devOptions.map(d => <option key={d}>{d}</option>)}</select>
+                      </div>
+                      <div>
+                        <label style={{ fontSize:10, color:T.textMuted, fontWeight:700, letterSpacing:0.5, textTransform:"uppercase", marginBottom:4, display:"block" }}>Community</label>
+                        <select value={projCommunity} onChange={e => setProjCommunity(e.target.value)} style={{ ...selSt, width:"100%" }}>{commOptions.map(c => <option key={c}>{c}</option>)}</select>
+                      </div>
+                      <div>
+                        <label style={{ fontSize:10, color:T.textMuted, fontWeight:700, letterSpacing:0.5, textTransform:"uppercase", marginBottom:4, display:"block" }}>Sale Status</label>
+                        <select value={projStatus} onChange={e => setProjStatus(e.target.value)} style={{ ...selSt, width:"100%" }}>
+                          {["All","Off-Plan","Ready","Sold Out"].map(s => <option key={s}>{s}</option>)}
+                        </select>
+                      </div>
+                      {["Apartment","Villa","Townhouse","Hotel Apartment"].includes(projMode) && (
+                        <div>
+                          <label style={{ fontSize:10, color:T.textMuted, fontWeight:700, letterSpacing:0.5, textTransform:"uppercase", marginBottom:4, display:"block" }}>Bedrooms</label>
+                          <select value={projBeds} onChange={e => setProjBeds(e.target.value)} style={{ ...selSt, width:"100%" }}>
+                            {["All","Studio","1BR","2BR","3BR","4BR","5BR+"].map(b => <option key={b}>{b}</option>)}
+                          </select>
+                        </div>
+                      )}
+                      {projMode === "Office" && (
+                        <div>
+                          <label style={{ fontSize:10, color:T.textMuted, fontWeight:700, letterSpacing:0.5, textTransform:"uppercase", marginBottom:4, display:"block" }}>Office Grade</label>
+                          <select value={projGrade} onChange={e => setProjGrade(e.target.value)} style={{ ...selSt, width:"100%" }}>
+                            {["All","A","B","C"].map(g => <option key={g}>{g === "All" ? "All Grades" : "Grade " + g}</option>)}
+                          </select>
+                        </div>
+                      )}
+                      <div>
+                        <label style={{ fontSize:10, color:T.textMuted, fontWeight:700, letterSpacing:0.5, textTransform:"uppercase", marginBottom:4, display:"block" }}>Handover</label>
+                        <select value={projHandover} onChange={e => setProjHandover(e.target.value)} style={{ ...selSt, width:"100%" }}>
+                          {["All","2026","2027","2028","2029","Available Now"].map(h => <option key={h}>{h === "All" ? "Any Year" : h}</option>)}
+                        </select>
+                      </div>
+                      <div style={{ gridColumn:"1 / -1", paddingTop:10, borderTop:`1px solid ${T.border}` }}>
+                        <label style={{ fontSize:10, color:T.textMuted, fontWeight:700, letterSpacing:0.5, textTransform:"uppercase", marginBottom:8, display:"block" }}>Smart Segments</label>
+                        <div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>
+                          {[
+                            { key:"all",     label:"All Projects" },
+                            { key:"tier1",   label:"⚡ Tier 1 Developers" },
+                            { key:"gv",      label:"★ Golden Visa Eligible" },
+                            { key:"branded", label:"◆ Branded Residences" },
+                          ].map(f => (
+                            <button key={f.key} type="button" onClick={() => setProjIntelFilter(f.key)}
+                              style={{ padding:"6px 14px", background:projIntelFilter === f.key ? T.gold : "rgba(255,255,255,0.04)", border:`1px solid ${projIntelFilter === f.key ? T.gold : T.border}`, borderRadius:16, color:projIntelFilter === f.key ? "#000" : T.textSecondary, fontSize:11, fontWeight:700, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>
+                              {f.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+                  );
+                })()}
+
+                {/* COMPACT INLINE STATS */}
+                <div style={{ display:"flex", gap:8, flexWrap:"wrap", marginBottom:16, padding:"10px 14px", background:T.surface, border:`1px solid ${T.border}`, borderRadius:10 }}>
                   {[
-                    { label:"Projects Found", value:filtered.length.toString(), color:T.white },
-                    { label:"Price Range", value:filtered.length > 0 ? `AED ${(Math.min(...filtered.map(p=>p.priceMin))/1000000).toFixed(1)}M+` : "—", color:T.white },
-                    { label:"Avg Gross Yield", value:avgYield !== "—" ? avgYield + "%" : "—", color:T.green },
-                    { label:"Avg PPSF", value:avgPpsf > 0 ? "AED " + avgPpsf.toLocaleString() : "—", color:T.gold },
+                    { label:"Found", value:filtered.length.toLocaleString(), color:T.white },
+                    { label:"From", value:filtered.length > 0 ? `AED ${(Math.min(...filtered.map(p=>p.priceMin || Infinity))/1000000).toFixed(1)}M` : "—", color:T.gold },
+                    { label:"Avg Yield", value:avgYield !== "—" ? avgYield + "%" : "—", color:T.green },
+                    { label:"Avg PPSF", value:avgPpsf > 0 ? "AED " + avgPpsf.toLocaleString() : "—", color:T.teal },
                   ].map((kpi,i) => (
-                    <div key={i} className="kpi-card">
-                      <div style={{ fontSize:10, fontWeight:700, color:T.textMuted, letterSpacing:1, textTransform:"uppercase", marginBottom:8 }}>{kpi.label}</div>
-                      <div style={{ fontFamily:"'Fraunces',serif", fontSize:24, fontWeight:800, color:kpi.color }}>{kpi.value}</div>
+                    <div key={i} style={{ display:"flex", alignItems:"baseline", gap:6, padding:"4px 14px", borderRight:i < 3 ? `1px solid ${T.border}` : "none" }}>
+                      <span style={{ fontSize:10, fontWeight:700, color:T.textMuted, letterSpacing:0.5, textTransform:"uppercase" }}>{kpi.label}</span>
+                      <span style={{ fontFamily:"'Fraunces',serif", fontSize:17, fontWeight:800, color:kpi.color }}>{kpi.value}</span>
                     </div>
                   ))}
                 </div>
@@ -531,13 +646,18 @@ function ProjectsTab({
                   </div>
                 )}
 
-                {/* Seed notice */}
-                {!liveProjects?.length && (
-                  <div style={{ display:"flex", alignItems:"center", gap:8, padding:"8px 14px", borderRadius:8, background:"rgba(212,168,67,0.06)", border:`1px solid rgba(212,168,67,0.2)`, marginBottom:16 }}>
-                    <span style={{ width:6, height:6, borderRadius:"50%", background:T.gold, display:"inline-block" }} />
-                    <span style={{ fontSize:11, color:T.textMuted }}><span style={{ color:T.gold, fontWeight:700 }}>Research-based seed projects</span> — Developer portals, Bayut, PropertyFinder, DLD Apr 2026 · Import via Admin → Data Manager</span>
+                {/* DATA TIER DISCLOSURE — honest two-tier data source labeling */}
+                <div style={{ display:"flex", alignItems:"center", gap:10, padding:"10px 14px", borderRadius:10, background:"rgba(20,184,166,0.04)", border:`1px solid ${T.border}`, marginBottom:14, flexWrap:"wrap" }}>
+                  <div style={{ display:"flex", alignItems:"center", gap:6 }}>
+                    <span style={{ fontSize:12, color:T.teal, fontWeight:800 }}>✓</span>
+                    <span style={{ fontSize:11, color:T.textSecondary }}><strong style={{ color:T.teal }}>DLD-Verified:</strong> Auto-imported from Dubai Land Department registry. Government-backed core data.</span>
                   </div>
-                )}
+                  <div style={{ width:1, height:14, background:T.border, margin:"0 4px" }} />
+                  <div style={{ display:"flex", alignItems:"center", gap:6 }}>
+                    <span style={{ fontSize:12, color:T.gold, fontWeight:800 }}>◆</span>
+                    <span style={{ fontSize:11, color:T.textSecondary }}><strong style={{ color:T.gold }}>Research-Enriched:</strong> Additional details curated from developer portals, Bayut, Property Finder.</span>
+                  </div>
+                </div>
 
                 {/* Phase 3.7: Smart empty state — suggests which filter to remove */}
                 {filtered.length === 0 && (
@@ -934,6 +1054,7 @@ function ProjectsTab({
                       <div className="kpi-card">
                         <div style={{ fontSize:10, fontWeight:700, color:T.textMuted, letterSpacing:1, textTransform:"uppercase", marginBottom:8 }}>Community Benchmark PPSF</div>
                         <div style={{ fontFamily:"'Fraunces',serif", fontSize:24, fontWeight:800, color:bench.value ? T.teal : T.textMuted }}>{bench.value ? "AED " + bench.value.toLocaleString() : "Pending"}</div>
+                        {bench.p25 && bench.p75 && <div style={{ fontSize:10, color:T.textMuted, marginTop:2 }}>Range AED {bench.p25.toLocaleString()}–{bench.p75.toLocaleString()}</div>}
                         <div style={{ fontSize:10, color:T.textMuted, marginTop:4 }}>{bench.source}</div>
                       </div>
                       <div className="kpi-card">
