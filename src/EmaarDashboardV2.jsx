@@ -2986,7 +2986,6 @@ export default function EmaarDashboardV2() {
       tier: 1,                           /* UI field for 'Tier 1 Developer' badge */
       developerTier: "tier-1",
       developerTierLabel: "Tier 1",
-      developerScore: 95,
       developerStock: {
         exchange: "DFM",
         tickerParent: "EMAAR",
@@ -3073,37 +3072,37 @@ export default function EmaarDashboardV2() {
       unitBreakdown: [
         {
           type: "1BR",
-          count: 150,                    /* UI reads u.count for Unit Mix Distribution */
+          count: null,                   /* Mix per BR not publicly disclosed by Emaar */
           sizeMin: 680, sizeMax: 891, sizeMid: 786,
           priceMin: 1360000, priceMax: 1800000, priceMid: 1580000,
-          ppsf: 2010,                    /* 1.58M / 786 = AED 2,010/sqft */
-          grossYield: 6.9,
+          ppsf: 2010,                    /* 1.58M / 786 = AED 2,010/sqft — calculated from verified range */
+          grossYield: 6.9,               /* Community avg */
           features: "Master bedroom ensuite, built-in wardrobe, open-plan kitchen/living, 1-2 balconies",
         },
         {
           type: "2BR",
-          count: 130,
+          count: null,
           sizeMin: 1065, sizeMax: 1665, sizeMid: 1365,
           priceMin: 2130000, priceMax: 3100000, priceMid: 2615000,
-          ppsf: 1916,                    /* 2.615M / 1365 = AED 1,916/sqft */
-          grossYield: 6.5,
+          ppsf: 1916,
+          grossYield: 6.5,               /* Slightly lower than 1BR (standard market pattern) */
           features: "2 bathrooms, laundry room, dining area, up to 2 balconies",
         },
         {
           type: "3BR",
-          count: 43,
+          count: null,
           sizeMin: 1769, sizeMax: 2011, sizeMid: 1890,
           priceMin: 3400000, priceMax: 3800000, priceMid: 3600000,
-          ppsf: 1905,                    /* 3.6M / 1890 = AED 1,905/sqft */
+          ppsf: 1905,
           grossYield: 6.2,
           features: "2 bathrooms, maid's room ensuite, walk-in closets, powder room, laundry, storage, wide balconies",
         },
       ],
 
       /* ─── FINANCIALS ─── */
-      grossYield: 6.9,
-      netYield: 5.7,                     /* 6.9% gross - ~18% deduction for service charges & vacancy */
-      serviceCharge: null,               /* AED/sqft/year — lookup from Emaar annual schedule */
+      grossYield: 6.9,                    /* ✓ Dubai Hills Estate avg (Driven Properties Q1 2025) */
+      netYield: null,                     /* Cannot calculate without real service charge */
+      serviceCharge: null,                /* Not publicly disclosed */
       appreciationToHandover: null,
 
       paymentPlan: "90/10",
@@ -3148,34 +3147,35 @@ export default function EmaarDashboardV2() {
         "Basement Resident Parking",
       ],
 
-      /* ─── LOCATION (simple km fields — UI expects these exact names) ─── */
-      coordinates: { lat: 25.1058, lng: 55.2486 },  /* Approx DHE Golf Grand location */
-      distMetro: 5.5,                    /* km to ONPASSIVE Metro */
-      distDIFC: 18,
-      distAirport: 20,                    /* DXB */
-      distBeach: 12,
-      distMall: 2,                        /* Dubai Hills Mall (within community) */
-      distSchool: 1,                      /* GEMS International */
-      distHospital: 3,                    /* King's College Hospital */
-      distDowntown: 12,
-      distAlKhailRoad: 2,
+      /* ─── LOCATION (null = not verified — use community-level data) ─── */
+      coordinates: null,                  /* Need exact from DLD Mashrooi */
+      distMetro: null,                    /* Approximation removed — need measured data */
+      distDIFC: null,
+      distAirport: null,
+      distBeach: null,
+      distMall: null,
+      distSchool: null,
+      distHospital: null,
+      distDowntown: null,
+      distAlKhailRoad: null,
 
-      nearestMetro: "ONPASSIVE Metro Station",
-      nearestMall: "Dubai Hills Mall (within community, ~3 min drive)",
-      nearestSchools: "GEMS Wellington Academy / International School / New Millennium (all within community)",
-      nearestHospitals: "King's College Hospital London (within community)",
+      /* Named references (verified from Bayut area guide) */
+      nearestMetro: "ONPASSIVE Metro Station (within DHE community)",
+      nearestMall: "Dubai Hills Mall (within DHE community)",
+      nearestSchools: "GEMS Wellington Academy, GEMS International, GEMS New Millennium (all within DHE)",
+      nearestHospitals: "King's College Hospital London (within DHE)",
 
-      /* ─── LEGAL & COMPLIANCE ─── */
-      reraNo: "71494288692",              /* ✓ VERIFIED RERA Project Permit */
+      /* ─── LEGAL & COMPLIANCE (only verified data) ─── */
+      reraNo: "71494288692",              /* ✓ VERIFIED from Property Finder listing */
       reraProjectPermitNumber: "71494288692",
-      reraProjectNumber: "71494288692",   /* UI also reads this */
-      projectNumber: "71494288692",       /* UI also reads this */
+      reraProjectNumber: "71494288692",
+      projectNumber: "71494288692",
       reraRegistered: true,
-      escrowBank: "First Abu Dhabi Bank (FAB)",
-      escrowAccount: "EMAAR-GG-ESC-001",  /* UI needs this for 'DLD-Registered Escrow Active' label */
-      escrowAccountNumber: null,           /* Actual number per SPA */
-      escrowActive: true,
-      dldStatus: "Off-Plan Registered",    /* UI reads dldStatus for DLD Project Status */
+      escrowBank: null,                   /* NOT VERIFIED — lookup required via DLD Mashrooi */
+      escrowAccount: null,                /* NOT VERIFIED */
+      escrowAccountNumber: null,
+      escrowActive: null,                 /* Cannot confirm without DLD data */
+      dldStatus: "Off-Plan (RERA Registered)",
       dldRegistered: true,
       dldProjectStatus: "Off-Plan",
       freehold: true,
@@ -3193,10 +3193,9 @@ export default function EmaarDashboardV2() {
       branded: false,
       brandPartner: null,
 
-      /* ─── INVESTMENT METRICS ─── */
-      investmentScore: 86,
-      velocityScore: 78,
-      commission: 2.0,
+      /* ─── INVESTMENT METRICS (no arbitrary scores) ─── */
+      commission: 2.0,                   /* Standard broker commission — industry norm */
+      /* investmentScore / velocityScore / developerScore removed — they were arbitrary opinions, not data */
 
       /* ─── META ─── */
       featured: true,
