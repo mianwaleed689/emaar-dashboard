@@ -2970,12 +2970,13 @@ export default function EmaarDashboardV2() {
       projectType: "Residential Tower",
       architecture: "L-shaped B+G+P+15+R",
 
-      /* ─── DEVELOPER ─── */
+      /* ─── DEVELOPER (per DLD Mashrooi — project sold by JV entity) ─── */
       developer: "Emaar Properties",
-      developerName: "Emaar Properties",  /* UI reads both */
+      developerName: "Emaar Properties",
       developerAr: "إعمار العقارية",
-      developerEntity: "Emaar Development P.J.S.C.",
+      developerEntity: "Dubai Hills Estate L.L.C",  /* ✓ DLD Mashrooi — actual selling entity (Emaar + Meraas JV) */
       developerParent: "Emaar Properties PJSC",
+      developerGroupEntity: "Emaar Development P.J.S.C.",  /* Parent RERA entity */
       developerReraOfficeNumber: "1211",
       developerFounded: 1997,
       developerFoundedBy: "Mohamed Ali Alabbar",
@@ -3030,35 +3031,40 @@ export default function EmaarDashboardV2() {
       emirate: "Dubai",
       country: "UAE",
 
-      /* ─── STATUS & TIMELINE ─── */
+      /* ─── STATUS & TIMELINE (✓ VERIFIED from DLD Mashrooi) ─── */
       type: "Apartment",
       propertyType: "Apartment",
       propertyCategory: "Residential",
-      status: "Off-Plan",
-      lifecycle: "under-construction",
+      status: "Off-Plan",                    /* Still off-plan for sale (handover pending) */
+      lifecycle: "near-completion",
       lifecycleStage: "under-construction",
-      lifecycleLabel: "Under Construction",
+      lifecycleLabel: "Construction Complete · Handover Pending",
+      registeredDate: "2023-03-31",          /* ✓ DLD Mashrooi */
       launchDate: "2023-04",
-      constructionStart: "2023-08",        /* ✓ Verified from Propsearch */
+      constructionStart: "2023-08-01",       /* ✓ DLD Mashrooi */
       handover: "Q1 2027",
-      handoverDate: "2027-03",
+      handoverDate: "2027-03-31",            /* ✓ DLD Mashrooi */
       handoverMonth: "March 2027",
       expectedHandover: "Q1 2027",
-      contractedHandover: "March 2027",
+      contractedHandover: "31 March 2027",
       actualHandover: null,
-      constructionPct: 72,                  /* ESTIMATE — time elapsed Aug 2023-Apr 2026 = ~32 months of 43 total = 74% */
-      constructionBand: "50-75%",
-      constructionStage: "Superstructure / MEP installation phase",
+      constructionPct: 100,                  /* ✓ DLD Mashrooi: "100% Completed / Finished" */
+      constructionBand: "Completed",
+      constructionStage: "Finished — awaiting handover",
 
-      /* ─── BUILDING SPECS ─── */
-      totalUnits: 323,                    /* ✓ Verified from Emaar/investindxb */
-      totalFloors: 15,                    /* ✓ B+G+P+15+R confirmed */
+      /* ─── BUILDING SPECS (✓ VERIFIED from DLD Mashrooi) ─── */
+      totalUnits: 329,                     /* ✓ DLD: 323 residential + 6 commercial */
+      totalResidentialUnits: 323,          /* ✓ DLD */
+      totalCommercialUnits: 6,             /* ✓ DLD */
+      totalFloors: 15,
       towerCount: 1,
       totalBuildings: 1,
-      plotSize: "≈35,000",                /* ESTIMATE — typical L-shaped 15-storey Emaar tower footprint */
-      builtUpArea: "≈450,000",            /* ESTIMATE — 323 units avg ~1,100 sqft + common areas/parking/podium */
-      totalVillas: 0,                      /* Apartment tower — no villas */
-      totalLands: 0,                       /* No separate land plots */
+      plotSizeSqM: 31421.99,               /* ✓ DLD Mashrooi */
+      plotSize: "338,224",                 /* sqft conversion: 31,421.99 × 10.764 */
+      builtUpArea: null,                   /* Not published by DLD Mashrooi */
+      totalVillas: 0,
+      totalLands: 0,
+      dldProjectNumber: "2599",            /* ✓ DLD Mashrooi */
       parkingType: "Basement resident + visitor public",
 
       /* ─── UNIT MIX (calculated PPSF from verified price/size midpoints) ─── */
@@ -3068,12 +3074,12 @@ export default function EmaarDashboardV2() {
       priceMin: 1360000,
       priceMax: 3800000,
       priceAvg: 2390000,
-      ppsf: 1974,                        /* Weighted avg from unit mix — displays on card */
+      ppsf: 1974,
 
       unitBreakdown: [
         {
           type: "1BR",
-          count: 145,                    /* ~45% — typical Emaar DHE apartment tower mix */
+          count: 129,                    /* ✓ DLD Mashrooi */
           sizeMin: 680, sizeMax: 891, sizeMid: 786,
           priceMin: 1360000, priceMax: 1800000, priceMid: 1580000,
           ppsf: 2010,                    /* Calculated: 1.58M / 786 sqft */
@@ -3082,7 +3088,7 @@ export default function EmaarDashboardV2() {
         },
         {
           type: "2BR",
-          count: 130,                    /* ~40% */
+          count: 159,                    /* ✓ DLD Mashrooi — largest mix */
           sizeMin: 1065, sizeMax: 1665, sizeMid: 1365,
           priceMin: 2130000, priceMax: 3100000, priceMid: 2615000,
           ppsf: 1916,
@@ -3091,12 +3097,21 @@ export default function EmaarDashboardV2() {
         },
         {
           type: "3BR",
-          count: 48,                     /* ~15% */
+          count: 35,                     /* ✓ DLD Mashrooi */
           sizeMin: 1769, sizeMax: 2011, sizeMid: 1890,
           priceMin: 3400000, priceMax: 3800000, priceMid: 3600000,
           ppsf: 1905,
           grossYield: 6.2,
           features: "2 bathrooms, maid's room ensuite, walk-in closets, powder room, laundry, storage, wide balconies",
+        },
+        {
+          type: "Commercial",
+          count: 6,                      /* ✓ DLD Mashrooi */
+          sizeMin: null, sizeMax: null,
+          priceMin: null, priceMax: null,
+          ppsf: null,
+          grossYield: null,
+          features: "Ground floor retail / commercial units (type NA per DLD filing)",
         },
       ],
 
