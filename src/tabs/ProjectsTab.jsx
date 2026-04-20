@@ -449,23 +449,58 @@ function ProjectsTab({
                   <div style={{ padding:"12px 16px", borderBottom:`1px solid ${T.border}` }} onClick={() => { setSelectedProject(p); setProjDetailTab("identity"); }}>
                     <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr 1fr", gap:8, marginBottom:10 }}>
                       <div>
-                        <div style={{ fontSize:9, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.6, marginBottom:2 }}>From</div>
-                        <div style={{ fontSize:13, fontWeight:700, color:p.priceMin ? T.white : T.textMuted }}>{p.priceMin ? "AED " + (p.priceMin/1000000).toFixed(1) + "M" : "Inquire"}</div>
+                        <div style={{ fontSize:9, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.6, marginBottom:2 }}>
+                          {p.priceMin ? "From" : p.communityMedianPrice ? "Community Median" : "From"}
+                        </div>
+                        <div style={{ fontSize:13, fontWeight:700, color:(p.priceMin || p.communityMedianPrice) ? T.white : T.textMuted }}>
+                          {p.priceMin
+                            ? "AED " + (p.priceMin/1000000).toFixed(1) + "M"
+                            : p.communityMedianPrice
+                              ? "AED " + (p.communityMedianPrice/1000000).toFixed(1) + "M"
+                              : "Inquire"}
+                        </div>
                       </div>
                       <div>
-                        <div style={{ fontSize:9, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.6, marginBottom:2 }}>PPSF</div>
-                        <div style={{ fontSize:13, fontWeight:700, color:p.ppsf ? T.white : T.textMuted }}>{p.ppsf ? "AED " + p.ppsf.toLocaleString() : "—"}</div>
+                        <div style={{ fontSize:9, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.6, marginBottom:2 }}>
+                          {p.ppsf ? "PPSF" : p.communityMedianPPSF ? "Community PPSF" : "PPSF"}
+                        </div>
+                        <div style={{ fontSize:13, fontWeight:700, color:(p.ppsf || p.communityMedianPPSF) ? T.white : T.textMuted }}>
+                          {p.ppsf
+                            ? "AED " + p.ppsf.toLocaleString()
+                            : p.communityMedianPPSF
+                              ? "AED " + p.communityMedianPPSF.toLocaleString()
+                              : "—"}
+                        </div>
+                        {!p.ppsf && p.communityMedianPPSF && p.communityTxCount && (
+                          <div style={{ fontSize:8, color:T.teal, marginTop:1 }}>DLD · n={p.communityTxCount}</div>
+                        )}
                       </div>
                       <div>
-                        <div style={{ fontSize:9, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.6, marginBottom:2 }}>Yield</div>
-                        <div style={{ fontSize:13, fontWeight:700, color:p.grossYield >= 7 ? T.green : p.grossYield >= 5 ? T.gold : T.textMuted }}>{p.grossYield ? p.grossYield.toFixed(1) + "%" : "—"}</div>
+                        <div style={{ fontSize:9, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.6, marginBottom:2 }}>
+                          {p.grossYield ? "Yield" : p.totalUnits ? "Total Units" : "Yield"}
+                        </div>
+                        <div style={{ fontSize:13, fontWeight:700, color:p.grossYield >= 7 ? T.green : p.grossYield >= 5 ? T.gold : p.totalUnits ? T.white : T.textMuted }}>
+                          {p.grossYield
+                            ? p.grossYield.toFixed(1) + "%"
+                            : p.totalUnits
+                              ? p.totalUnits.toLocaleString()
+                              : "—"}
+                        </div>
                       </div>
                       <div>
-                        <div style={{ fontSize:9, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.6, marginBottom:2 }}>Units</div>
-                        <div style={{ fontSize:13, fontWeight:700, color:T.white }}>{p.totalUnits ? p.totalUnits.toLocaleString() : (p.paymentPlan || "—")}</div>
+                        <div style={{ fontSize:9, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.6, marginBottom:2 }}>
+                          {p.paymentPlan ? "Payment" : p.constructionPct != null ? "Build" : "Status"}
+                        </div>
+                        <div style={{ fontSize:13, fontWeight:700, color:T.white }}>
+                          {p.paymentPlan
+                            ? p.paymentPlan
+                            : p.constructionPct != null
+                              ? p.constructionPct + "%"
+                              : (p.status || "—")}
+                        </div>
                       </div>
                     </div>
-                    {/* Unit mini-breakdown on card */}
+                    {/* Unit mini-breakdown on card (Research records) */}
                     {Array.isArray(p.unitBreakdown) && p.unitBreakdown.length > 0 && (
                       <div style={{ display:"flex", gap:6, flexWrap:"wrap", marginBottom:8, padding:"8px 10px", background:T.surfaceAlt, borderRadius:8 }}>
                         {p.unitBreakdown.map((u,i) => (
@@ -475,6 +510,25 @@ function ProjectsTab({
                             <span style={{ fontSize:9, color:T.textMuted }}>AED {(u.priceMin/1000000).toFixed(1)}M+</span>
                           </div>
                         ))}
+                      </div>
+                    )}
+                    {/* Community benchmark strip for DLD records (no unit mix but has DLD data) */}
+                    {(!Array.isArray(p.unitBreakdown) || p.unitBreakdown.length === 0) && p.communityMedianPPSF && (
+                      <div style={{ display:"flex", gap:6, marginBottom:8, padding:"8px 10px", background:"rgba(20,184,166,0.05)", borderRadius:8, border:`1px solid rgba(20,184,166,0.15)`, alignItems:"center", justifyContent:"space-between" }}>
+                        <div>
+                          <div style={{ fontSize:9, fontWeight:700, color:T.teal, letterSpacing:0.5 }}>COMMUNITY DLD BENCHMARK</div>
+                          <div style={{ fontSize:10, color:T.textMuted, marginTop:2 }}>{p.community || p.area}</div>
+                        </div>
+                        <div style={{ textAlign:"right" }}>
+                          <div style={{ fontSize:12, color:T.white, fontWeight:700 }}>
+                            AED {p.communityMedianPPSF.toLocaleString()}/sqft
+                          </div>
+                          {p.communityP25PPSF && p.communityP75PPSF && (
+                            <div style={{ fontSize:9, color:T.textMuted, marginTop:1 }}>
+                              25th–75th: {p.communityP25PPSF.toLocaleString()}–{p.communityP75PPSF.toLocaleString()}
+                            </div>
+                          )}
+                        </div>
                       </div>
                     )}
                     <div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>
