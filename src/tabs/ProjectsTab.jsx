@@ -21,6 +21,18 @@ const MODES = [
   { key:"Warehouse" }, { key:"Land" },
 ];
 
+/* Helper — detect fake/placeholder RERA numbers and suppress display.
+   Real RERA project numbers are typically 3-6 digits.
+   Fake patterns: 10+ digit placeholders, repeating digits, sequential like 1234/5678 */
+function isValidReraNumber(num) {
+  if (!num) return false;
+  const s = String(num).trim();
+  if (s.length > 6) return false;
+  if (/^(\d)\1+$/.test(s)) return false;
+  if (/^(1234|5678|0000|9999)/.test(s)) return false;
+  return /^\d{3,6}$/.test(s);
+}
+
 /* ═══════════════════════════════════════════════════════════════════════
    DXB ANALYTICS — DATA PLATFORM LAYER
    ─────────────────────────────────────────────────────────────────────────
@@ -387,18 +399,6 @@ function ProjectsTab({
                   <span style={{ fontSize:7, fontWeight:700, color:T.gold, marginTop:1, letterSpacing:0.3 }}>DATA</span>
                 </div>
               );
-            };
-
-            /* Helper — detect fake/placeholder RERA numbers and suppress display */
-            const isValidReraNumber = (num) => {
-              if (!num) return false;
-              const s = String(num).trim();
-              /* Real RERA project numbers are typically 3-5 digits */
-              /* Fake patterns: "0991234567", "0773456789", "1234", "5678" (sequential placeholders) */
-              if (s.length > 6) return false; /* over 6 digits = likely fake */
-              if (/^(\d)\1+$/.test(s)) return false; /* repeating digits */
-              if (/^1234|5678|0000|9999/.test(s)) return false; /* common placeholder patterns */
-              return /^\d{3,6}$/.test(s); /* must be 3-6 digit number */
             };
 
             const ProjectCard = ({ p }) => {
