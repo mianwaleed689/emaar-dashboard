@@ -192,7 +192,7 @@ function ProjectsTab({
   const gfPriceMin = Number(globalFilters?.priceMin) || 0;
   const gfPriceMax = Number(globalFilters?.priceMax) || 0;
 
-  // Find developer by id/name to resolve its communities array
+  // Find developer by id/name to resolve its child entity names and communities
   const gfDeveloperRecord = gfDev
     ? (allDevelopers || []).find(d =>
         String(d.id || "").toLowerCase() === gfDev ||
@@ -201,6 +201,11 @@ function ProjectsTab({
       )
     : null;
   const gfDeveloperName = gfDeveloperRecord?.name || null;
+  /* Child entity names (for parent-brand grouping): when user picks
+     "DAMAC Properties", match projects whose developer is any DAMAC SPV */
+  const gfDeveloperChildNames = (gfDeveloperRecord && Array.isArray(gfDeveloperRecord._childNames))
+    ? new Set(gfDeveloperRecord._childNames.map(n => String(n).toLowerCase()))
+    : null;
   const gfDeveloperCommunities = (gfDeveloperRecord && Array.isArray(gfDeveloperRecord.communities))
     ? new Set(gfDeveloperRecord.communities.map(c => String(c).toLowerCase()))
     : null;
@@ -210,16 +215,22 @@ function ProjectsTab({
   const projMatchesGlobalFilter = (p) => {
     if (!p) return false;
 
-    // Developer filter: match on developer OR developerName OR the project's community
-    // being in the developer's communities list. Lenient matching for DLD records.
+    // Developer filter: match if project's developer/developerName matches
+    // the selected brand OR any of its child entity names (SPVs).
     if (gfDev) {
       const pDev = String(p.developer || "").toLowerCase();
       const pDevName = String(p.developerName || "").toLowerCase();
       const pCommunity = String(p.community || "").toLowerCase();
       const gfDevName = gfDeveloperName ? String(gfDeveloperName).toLowerCase() : "";
-      const developerMatches =
+
+      /* Match against parent brand name or any child entity name */
+      const matchesChildEntity = gfDeveloperChildNames &&
+        (gfDeveloperChildNames.has(pDev) || gfDeveloperChildNames.has(pDevName));
+
+      const developerMatches = matchesChildEntity ||
         (pDev && (pDev === gfDev || pDev === gfDevName || pDev.includes(gfDev))) ||
         (pDevName && (pDevName === gfDev || pDevName === gfDevName || pDevName.includes(gfDev)));
+
       const communityBelongsToDeveloper = gfDeveloperCommunities && gfDeveloperCommunities.has(pCommunity);
       if (!developerMatches && !communityBelongsToDeveloper) return false;
     }

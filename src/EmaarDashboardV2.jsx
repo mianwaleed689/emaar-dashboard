@@ -3196,25 +3196,82 @@ export default function EmaarDashboardV2() {
     }));
 
     unsubs.push(onSnapshot(collection(db, "developers"), (snap) => {
-      // Phase 1b.1: show only PUBLISHED developers in the dashboard dropdown.
-      // Drafts stay visible inside Admin → Data Manager → Developers for editing,
-      // but should never leak into the customer-facing filter bar.
+      /* Phase 2: GROUP BY PARENT BRAND.
+         The DLD registry lists every SPV/subsidiary separately (e.g., 22 DAMAC
+         entities). Users want to filter by the real company (DAMAC Properties),
+         not by each SPV. So we group by parentBrand field.
+         
+         Only parent brands with active:true OR totalProjects>0 appear in the
+         dropdown — the rest (1,800 registered-only small developers) stay in
+         Firestore for admin/directory use but don't clutter the filter. */
       const tierRank = { "tier-1": 1, "tier-2": 2, "tier-3": 3 };
-      const devs = [];
+      const brandMap = new Map();  /* parentBrand → aggregated record */
+      
       snap.forEach(d => {
         const data = d.data();
-        if (data.visibility !== "published") return; // drop drafts/archived
-        devs.push({ id: d.id, ...data });
+        if (data.visibility !== "published") return;
+        /* Only include developers that are active OR have projects in DLD */
+        const isActive = data.active === true || (Number(data.totalProjects) || 0) > 0;
+        if (!isActive) return;
+        
+        const brand = data.parentBrand || data.name;
+        if (!brand) return;
+        
+        const childName = String(data.name || "").toLowerCase().trim();
+        const existing = brandMap.get(brand);
+        if (!existing) {
+          brandMap.set(brand, {
+            id: data.parentBrand ? brand.toLowerCase().replace(/[^\w]+/g, "-") : d.id,
+            name: brand,
+            parentBrand: brand,
+            totalProjects: Number(data.totalProjects) || 0,
+            tier: data.tier,
+            reliability: data.reliability,
+            classification: data.classification,
+            description: data.description,
+            ceo: data.ceo,
+            founded: data.founded,
+            headquarters: data.headquarters,
+            website: data.website,
+            color: data.color,
+            reraLicenseNumber: data.reraLicenseNumber,
+            nameAr: data.nameAr,
+            communities: Array.isArray(data.communities) ? [...data.communities] : [],
+            /* Track child entities for filter matching */
+            _childNames: childName ? [childName] : [],
+            _entityCount: 1,
+          });
+        } else {
+          existing.totalProjects += Number(data.totalProjects) || 0;
+          existing._entityCount += 1;
+          if (childName && !existing._childNames.includes(childName)) {
+            existing._childNames.push(childName);
+          }
+          if (Array.isArray(data.communities)) {
+            data.communities.forEach(c => {
+              if (!existing.communities.includes(c)) existing.communities.push(c);
+            });
+          }
+          if (!existing.description && data.description) existing.description = data.description;
+          if (!existing.ceo && data.ceo) existing.ceo = data.ceo;
+          if (!existing.founded && data.founded) existing.founded = data.founded;
+          if (!existing.headquarters && data.headquarters) existing.headquarters = data.headquarters;
+          if (!existing.website && data.website) existing.website = data.website;
+          if (!existing.color && data.color) existing.color = data.color;
+          if (!existing.tier && data.tier) existing.tier = data.tier;
+          if ((Number(data.reliability) || 0) > (Number(existing.reliability) || 0)) {
+            existing.reliability = data.reliability;
+          }
+        }
       });
+      
+      const devs = [...brandMap.values()];
       devs.sort((a, b) => {
         const ta = tierRank[a.tier] ?? 9;
         const tb = tierRank[b.tier] ?? 9;
         if (ta !== tb) return ta - tb;
-        const ra = Number(a.reliability) || 0;
-        const rb = Number(b.reliability) || 0;
-        if (rb !== ra) return rb - ra;
-        const pa = Number(a.totalProjects) || 0;
         const pb = Number(b.totalProjects) || 0;
+        const pa = Number(a.totalProjects) || 0;
         if (pb !== pa) return pb - pa;
         return (a.name || "").localeCompare(b.name || "");
       });
