@@ -294,6 +294,7 @@ const GlobalContextFilter = ({
   gStatus, setGStatus,
   gPriceMin, setGPriceMin,
   gPriceMax, setGPriceMax,
+  gSearch, setGSearch,
   allDevelopers, liveCommunityList = [], T,
 }) => {
   // Phase 3.3: consume filter schema from admin-editable context
@@ -376,134 +377,269 @@ const GlobalContextFilter = ({
       background: `${T.surface}f8`, backdropFilter: "blur(12px)",
       borderBottom: `1px solid ${T.border}`,
     }}>
-      {/* ── Compact filter bar ── */}
-      <div style={{
-        display: "flex", alignItems: "center", gap: 8,
-        padding: "8px 20px", flexWrap: "wrap",
-      }}>
-
-        {/* Active badge */}
-        {activeCount > 0 && (
-          <div style={{
-            display: "flex", alignItems: "center", gap: 6,
-            padding: "4px 10px", borderRadius: 20,
-            background: "rgba(212,168,67,0.12)",
-            border: "1px solid rgba(212,168,67,0.3)",
-          }}>
-            <span style={{ width: 6, height: 6, borderRadius: "50%", background: T.gold, display: "inline-block", animation: "pulse 2s infinite" }} />
-            <span style={{ fontSize: 11, color: T.gold, fontWeight: 600 }}>{activeCount} filter{activeCount > 1 ? "s" : ""} active</span>
+      {/* ═══ PROFESSIONAL UNIFIED FILTER BAR ═══
+           Single source of truth: search + filter button + chips + actions.
+           Replaces the old 6-dropdown layout that duplicated per-tab filters. */}
+      <div style={{ padding: "10px 20px" }}>
+        {/* ROW 1 — Search bar + Filters button + Live indicator */}
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          {/* Search — takes most of the space */}
+          <div style={{ position: "relative", flex: 1, maxWidth: 560 }}>
+            <span style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: T.textMuted, pointerEvents: "none", fontSize: 14 }}>🔍</span>
+            <input
+              type="text"
+              placeholder="Search projects, developers, communities..."
+              value={gSearch || ""}
+              onChange={e => setGSearch && setGSearch(e.target.value)}
+              style={{
+                background: T.surfaceAlt,
+                border: `1px solid ${T.border}`,
+                borderRadius: 10,
+                color: T.white,
+                fontFamily: "'Outfit', sans-serif",
+                fontSize: 13,
+                padding: "9px 12px 9px 36px",
+                outline: "none",
+                width: "100%",
+                transition: "border-color 0.15s",
+              }}
+              onFocus={e => e.target.style.borderColor = `rgba(212,168,67,0.4)`}
+              onBlur={e => e.target.style.borderColor = T.border}
+            />
           </div>
-        )}
 
-        {/* Developer */}
-        <select
-          value={gDeveloper}
-          onChange={e => setGDeveloperAndReset(e.target.value)}
-          style={gDeveloper !== "all" ? activeSelStyle : selStyle}
-        >
-          <option value="all">All Developers</option>
-          {allDevelopers?.length > 0
-            ? allDevelopers.map(d => <option key={d.id} value={d.id}>{d.name}</option>)
-            : ["Emaar","DAMAC","Sobha","Nakheel","Meraas","Aldar","Binghatti","Ellington","Omniyat","Azizi","Danube","Samana","MAG","Imtiaz"].map(n => (
-                <option key={n} value={n.toLowerCase()}>{n}</option>
-              ))
-          }
-        </select>
-
-        {/* Property Type */}
-        <select
-          value={gPropertyType}
-          onChange={e => setGPropertyTypeAndReset(e.target.value)}
-          style={gPropertyType !== "all" ? activeSelStyle : selStyle}
-        >
-          <option value="all">All Types</option>
-          {PROPERTY_TYPES_LIVE.map(group => (
-            <optgroup key={group.group} label={group.group}>
-              {group.types.map(t => (
-                <option key={t.value} value={t.value}>{t.label}</option>
-              ))}
-            </optgroup>
-          ))}
-        </select>
-
-        {/* Community (Phase 2.4.8) */}
-        <select
-          value={gCommunity}
-          onChange={e => setGCommunity(e.target.value)}
-          style={gCommunity !== "all" ? activeSelStyle : selStyle}
-        >
-          <option value="all">All Communities</option>
-          {liveCommunityList && liveCommunityList.length > 0
-            ? liveCommunityList.map(c => (
-                <option key={c.id} value={c.name}>{c.name}</option>
-              ))
-            : null}
-        </select>
-
-        {/* Beds / Config */}
-        <select
-          value={gBeds}
-          onChange={e => setGBeds(e.target.value)}
-          style={gBeds !== "all" ? activeSelStyle : selStyle}
-        >
-          <option value="all">All Configs</option>
-          {bedsOptions.map(b => <option key={b} value={b}>{b}</option>)}
-        </select>
-
-        {/* Status */}
-        <select
-          value={gStatus}
-          onChange={e => setGStatus(e.target.value)}
-          style={gStatus !== "all" ? activeSelStyle : selStyle}
-        >
-          {STATUS_OPTIONS_LIVE.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
-        </select>
-
-        {/* Price presets */}
-        <select
-          value={`${gPriceMin}-${gPriceMax}`}
-          onChange={e => {
-            const preset = pricePresets.find(p => `${p.min}-${p.max}` === e.target.value);
-            if (preset) { setGPriceMin(preset.min); setGPriceMax(preset.max); }
-          }}
-          style={(gPriceMin > 0 || gPriceMax > 0) ? activeSelStyle : selStyle}
-        >
-          {pricePresets.map(p => (
-            <option key={`${p.min}-${p.max}`} value={`${p.min}-${p.max}`}>
-              {p.label === "Any" ? "Any Price" : `AED ${p.label}`}
-            </option>
-          ))}
-        </select>
-
-        {/* Golden Visa indicator */}
-        {gPriceMin >= GOLDEN_VISA_THRESHOLD && (
-          <div style={{
-            padding: "4px 10px", borderRadius: 20, fontSize: 11,
-            background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.3)",
-            color: T.green, fontWeight: 600,
-          }}>
-            Golden Visa eligible
-          </div>
-        )}
-
-        {/* Reset */}
-        {activeCount > 0 && (
-          <button type="button" onClick={resetAll} style={{
-            background: "none", border: `1px solid ${T.border}`,
-            borderRadius: 8, padding: "5px 12px", cursor: "pointer",
-            color: T.textMuted, fontSize: 11,
-            fontFamily: "'Outfit', sans-serif",
-            transition: "all 0.15s",
-          }}>
-            Clear all
+          {/* Filters toggle button */}
+          <button
+            type="button"
+            onClick={() => setOpen(!open)}
+            style={{
+              padding: "9px 14px",
+              background: open ? "rgba(212,168,67,0.15)" : T.surfaceAlt,
+              border: `1px solid ${open ? "rgba(212,168,67,0.4)" : T.border}`,
+              borderRadius: 10,
+              color: open ? T.gold : T.textSecondary,
+              fontSize: 12,
+              fontWeight: 600,
+              fontFamily: "'Outfit', sans-serif",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              whiteSpace: "nowrap",
+              transition: "all 0.15s",
+            }}
+          >
+            <span style={{ fontSize: 14 }}>⚙</span>
+            <span>Filters</span>
+            {activeCount > 0 && (
+              <span style={{
+                background: T.gold,
+                color: "#000",
+                padding: "1px 7px",
+                borderRadius: 10,
+                fontSize: 10,
+                fontWeight: 800,
+              }}>{activeCount}</span>
+            )}
           </button>
-        )}
 
-        {/* Spacer + data source note */}
-        <div style={{ marginLeft: "auto", fontSize: 10, color: T.textMuted, display: "flex", alignItems: "center", gap: 4 }}>
-          <span style={{ width: 5, height: 5, borderRadius: "50%", background: T.green, display: "inline-block" }} />
-          Live · Firestore
+          {/* Clear all — only when filters active */}
+          {activeCount > 0 && (
+            <button
+              type="button"
+              onClick={resetAll}
+              style={{
+                background: "none",
+                border: `1px solid ${T.border}`,
+                borderRadius: 10,
+                padding: "9px 12px",
+                color: T.textMuted,
+                fontSize: 12,
+                fontFamily: "'Outfit', sans-serif",
+                cursor: "pointer",
+                whiteSpace: "nowrap",
+                transition: "all 0.15s",
+              }}
+              onMouseEnter={e => { e.currentTarget.style.color = T.red; e.currentTarget.style.borderColor = "rgba(239,68,68,0.3)"; }}
+              onMouseLeave={e => { e.currentTarget.style.color = T.textMuted; e.currentTarget.style.borderColor = T.border; }}
+            >
+              Clear all
+            </button>
+          )}
+
+          {/* Live indicator — right side */}
+          <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 6, fontSize: 11, color: T.textMuted, whiteSpace: "nowrap" }}>
+            <span style={{ width: 6, height: 6, borderRadius: "50%", background: T.green, display: "inline-block", animation: "pulse 2s infinite" }} />
+            Live · Firestore
+          </div>
         </div>
+
+        {/* ROW 2 — Active filter chips (only if any filters active) */}
+        {activeCount > 0 && (() => {
+          /* Build chip list from active filters */
+          const chips = [];
+          if (gDeveloper !== "all") {
+            const dev = (allDevelopers || []).find(d => String(d.id).toLowerCase() === String(gDeveloper).toLowerCase());
+            chips.push({ key: "dev", label: dev?.name || gDeveloper, clear: () => setGDeveloperAndReset("all") });
+          }
+          if (gPropertyType !== "all") {
+            const typeData = PROPERTY_TYPES_LIVE.flatMap(g => g.types || []).find(t => t.value === gPropertyType);
+            chips.push({ key: "type", label: typeData?.label || gPropertyType, clear: () => setGPropertyTypeAndReset("all") });
+          }
+          if (gCommunity !== "all") {
+            chips.push({ key: "com", label: gCommunity, clear: () => setGCommunity("all") });
+          }
+          if (gBeds !== "all") {
+            chips.push({ key: "beds", label: gBeds, clear: () => setGBeds("all") });
+          }
+          if (gStatus !== "all") {
+            const sopt = STATUS_OPTIONS_LIVE.find(s => s.value === gStatus);
+            chips.push({ key: "sts", label: sopt?.label || gStatus, clear: () => setGStatus("all") });
+          }
+          if (gPriceMin > 0 || gPriceMax > 0) {
+            const plabel = gPriceMin > 0 && gPriceMax > 0
+              ? `AED ${(gPriceMin/1000000).toFixed(1)}M–${(gPriceMax/1000000).toFixed(1)}M`
+              : gPriceMin > 0
+                ? `From AED ${(gPriceMin/1000000).toFixed(1)}M`
+                : `Up to AED ${(gPriceMax/1000000).toFixed(1)}M`;
+            chips.push({ key: "price", label: plabel, clear: () => { setGPriceMin(0); setGPriceMax(0); } });
+          }
+          return (
+            <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center", marginTop: 10 }}>
+              <span style={{ fontSize: 10, color: T.textMuted, fontWeight: 700, letterSpacing: 0.5, textTransform: "uppercase", marginRight: 4 }}>Active:</span>
+              {chips.map(c => (
+                <span key={c.key} style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 6,
+                  padding: "4px 11px",
+                  background: "rgba(212,168,67,0.12)",
+                  border: `1px solid rgba(212,168,67,0.3)`,
+                  borderRadius: 14,
+                  color: T.gold,
+                  fontSize: 11,
+                  fontWeight: 600,
+                  fontFamily: "'Outfit', sans-serif",
+                }}>
+                  {c.label}
+                  <button
+                    type="button"
+                    onClick={c.clear}
+                    style={{ background: "none", border: "none", color: T.gold, cursor: "pointer", fontSize: 14, padding: 0, lineHeight: 1, opacity: 0.7 }}
+                    onMouseEnter={e => e.currentTarget.style.opacity = 1}
+                    onMouseLeave={e => e.currentTarget.style.opacity = 0.7}
+                  >×</button>
+                </span>
+              ))}
+              {gPriceMin >= GOLDEN_VISA_THRESHOLD && (
+                <span style={{
+                  padding: "4px 11px",
+                  borderRadius: 14,
+                  fontSize: 11,
+                  background: "rgba(16,185,129,0.12)",
+                  border: "1px solid rgba(16,185,129,0.3)",
+                  color: T.green,
+                  fontWeight: 600,
+                  fontFamily: "'Outfit', sans-serif",
+                }}>
+                  ★ Golden Visa Eligible
+                </span>
+              )}
+            </div>
+          );
+        })()}
+
+        {/* ROW 3 — Expandable filter dropdown panel (only when 'Filters' button is open) */}
+        {open && (
+          <div style={{
+            marginTop: 12,
+            padding: 16,
+            background: T.surface,
+            border: `1px solid ${T.border}`,
+            borderRadius: 12,
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
+            gap: 12,
+          }}>
+            {/* Developer */}
+            <div>
+              <label style={{ fontSize: 10, color: T.textMuted, fontWeight: 700, letterSpacing: 0.5, textTransform: "uppercase", marginBottom: 5, display: "block" }}>Developer</label>
+              <select value={gDeveloper} onChange={e => setGDeveloperAndReset(e.target.value)} style={{ ...selStyle, width: "100%" }}>
+                <option value="all">All Developers</option>
+                {allDevelopers?.length > 0
+                  ? allDevelopers.map(d => <option key={d.id} value={d.id}>{d.name}</option>)
+                  : ["Emaar","DAMAC","Sobha","Nakheel","Meraas","Aldar","Binghatti","Ellington","Omniyat","Azizi","Danube","Samana","MAG","Imtiaz"].map(n => (
+                      <option key={n} value={n.toLowerCase()}>{n}</option>
+                    ))
+                }
+              </select>
+            </div>
+
+            {/* Property Type */}
+            <div>
+              <label style={{ fontSize: 10, color: T.textMuted, fontWeight: 700, letterSpacing: 0.5, textTransform: "uppercase", marginBottom: 5, display: "block" }}>Property Type</label>
+              <select value={gPropertyType} onChange={e => setGPropertyTypeAndReset(e.target.value)} style={{ ...selStyle, width: "100%" }}>
+                <option value="all">All Types</option>
+                {PROPERTY_TYPES_LIVE.map(group => (
+                  <optgroup key={group.group} label={group.group}>
+                    {group.types.map(t => (
+                      <option key={t.value} value={t.value}>{t.label}</option>
+                    ))}
+                  </optgroup>
+                ))}
+              </select>
+            </div>
+
+            {/* Community */}
+            <div>
+              <label style={{ fontSize: 10, color: T.textMuted, fontWeight: 700, letterSpacing: 0.5, textTransform: "uppercase", marginBottom: 5, display: "block" }}>Community</label>
+              <select value={gCommunity} onChange={e => setGCommunity(e.target.value)} style={{ ...selStyle, width: "100%" }}>
+                <option value="all">All Communities</option>
+                {liveCommunityList && liveCommunityList.length > 0
+                  ? liveCommunityList.map(c => (
+                      <option key={c.id} value={c.name}>{c.name}</option>
+                    ))
+                  : null}
+              </select>
+            </div>
+
+            {/* Bedrooms / Config */}
+            <div>
+              <label style={{ fontSize: 10, color: T.textMuted, fontWeight: 700, letterSpacing: 0.5, textTransform: "uppercase", marginBottom: 5, display: "block" }}>Bedrooms</label>
+              <select value={gBeds} onChange={e => setGBeds(e.target.value)} style={{ ...selStyle, width: "100%" }}>
+                <option value="all">All Configs</option>
+                {bedsOptions.map(b => <option key={b} value={b}>{b}</option>)}
+              </select>
+            </div>
+
+            {/* Status */}
+            <div>
+              <label style={{ fontSize: 10, color: T.textMuted, fontWeight: 700, letterSpacing: 0.5, textTransform: "uppercase", marginBottom: 5, display: "block" }}>Sale Status</label>
+              <select value={gStatus} onChange={e => setGStatus(e.target.value)} style={{ ...selStyle, width: "100%" }}>
+                {STATUS_OPTIONS_LIVE.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
+              </select>
+            </div>
+
+            {/* Price */}
+            <div>
+              <label style={{ fontSize: 10, color: T.textMuted, fontWeight: 700, letterSpacing: 0.5, textTransform: "uppercase", marginBottom: 5, display: "block" }}>Price Range</label>
+              <select
+                value={`${gPriceMin}-${gPriceMax}`}
+                onChange={e => {
+                  const preset = pricePresets.find(p => `${p.min}-${p.max}` === e.target.value);
+                  if (preset) { setGPriceMin(preset.min); setGPriceMax(preset.max); }
+                }}
+                style={{ ...selStyle, width: "100%" }}
+              >
+                {pricePresets.map(p => (
+                  <option key={`${p.min}-${p.max}`} value={`${p.min}-${p.max}`}>
+                    {p.label === "Any" ? "Any Price" : `AED ${p.label}`}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -2071,6 +2207,9 @@ export default function EmaarDashboardV2() {
   const setGStatus      = (v) => _gSetOne("status", v);
   const setGPriceMin    = (v) => _gSetOne("priceMin", v);
   const setGPriceMax    = (v) => _gSetOne("priceMax", v);
+  /* Global search — lives in URL too for cross-tab persistence */
+  const gSearch         = _gf.search || "";
+  const setGSearch      = (v) => _gSetOne("search", v);
   const [gFilterOpen, setGFilterOpen] = useState(false);
 
   /* ─── MARKET TAB STATE ─── */
@@ -3847,6 +3986,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
         gStatus={gStatus} setGStatus={setGStatus}
         gPriceMin={gPriceMin} setGPriceMin={setGPriceMin}
         gPriceMax={gPriceMax} setGPriceMax={setGPriceMax}
+        gSearch={gSearch} setGSearch={setGSearch}
         allDevelopers={allDevelopers} liveCommunityList={liveCommunityList} T={T}
       />
 
