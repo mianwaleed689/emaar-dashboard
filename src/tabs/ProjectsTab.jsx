@@ -20,9 +20,104 @@ const MODES = [
   { key:"Warehouse" }, { key:"Land" },
 ];
 
+/* ═══════════════════════════════════════════════════════════════════════
+   DXB ANALYTICS — DATA PLATFORM LAYER
+   ─────────────────────────────────────────────────────────────────────────
+   Legal positioning: This is a DATA AGGREGATION platform, not advice.
+   All data displayed is sourced from Dubai Land Department (DLD) records.
+   No investment recommendations. No BUY/SELL verdicts.
+   For advice, users must consult RERA-licensed consultants.
+   ─────────────────────────────────────────────────────────────────────── */
+
+/* Asset class — descriptive segmentation (like MLS tiers), not a score */
+function describeAssetClass(p) {
+  const ppsf = p.ppsf || 0;
+  if (ppsf >= 3000) return { tier:"Ultra-Luxury Segment", color:"#D4A843" };
+  if (ppsf >= 2000) return { tier:"Luxury Segment", color:"#F59E0B" };
+  if (ppsf >= 1400) return { tier:"Premium Segment", color:"#14B8A6" };
+  if (ppsf >= 900) return { tier:"Mid-Market Segment", color:"#10B981" };
+  if (ppsf > 0) return { tier:"Affordable Segment", color:"#6B7280" };
+  return { tier:"Segment Not Disclosed", color:"#6B7280" };
+}
+
+/* Construction stage — descriptive only, from DLD data */
+function describeMarketStatus(p) {
+  const pct = p.constructionPct || 0;
+  if (p.status === "Sold Out") return { label:"Sold Out (per DLD)", color:"#EF4444" };
+  if (p.lifecycleStage === "launching" || p.lifecycleStage === "announced") return { label:"Recently Launched", color:"#10B981" };
+  if (pct >= 100 || p.status === "Ready") return { label:"Delivered", color:"#14B8A6" };
+  if (pct >= 70) return { label:"Near Completion", color:"#F59E0B" };
+  if (pct > 0) return { label:"Under Construction", color:"#8B5CF6" };
+  return { label:"Off-Plan", color:"#6B7280" };
+}
+
+/* Location advantages — factual tags based on measurable distances */
+function locationTags(p) {
+  const out = [];
+  if (p.distBeach != null && p.distBeach <= 1) out.push({ label:"Waterfront (<1km)", color:"#14B8A6" });
+  if (p.distMetro != null && p.distMetro <= 0.8) out.push({ label:"Metro Walking Distance", color:"#10B981" });
+  if (p.distDIFC != null && p.distDIFC <= 5) out.push({ label:"DIFC Proximity (<5km)", color:"#F59E0B" });
+  if (p.distMall != null && p.distMall <= 1.5) out.push({ label:"Retail Access (<1.5km)", color:"#8B5CF6" });
+  return out;
+}
+
+/* Unit mix percentages — derived from actual unit breakdown data */
+function computeUnitMix(p) {
+  const ub = p.unitBreakdown || [];
+  if (ub.length === 0) return null;
+  const total = ub.reduce((s,u) => s + (u.count || 1), 0);
+  return ub.map(u => ({
+    type: u.type,
+    pct: Math.round((u.count || 1) / total * 100),
+    count: u.count || 1,
+  }));
+}
+
+/* Community average PPSF — from project's own communityAvgPPSF field if available */
+function communityBenchmarkPPSF(p) {
+  if (p.communityAvgPPSF) return { value: p.communityAvgPPSF, source:"Computed from DLD Q3 2025 transactions" };
+  return { value: null, source:"Not available — community benchmark pending DLD sync" };
+}
+
+/* STR indicator — factual flag only (not a score) */
+function strIndicator(p) {
+  const t = (p.type || "").toLowerCase();
+  if (t.includes("hotel")) return { flag:"Hotel Apartment", note:"Designated for short-term rental per developer licensing" };
+  if (p.distBeach != null && p.distBeach <= 2) return { flag:"Tourist Zone", note:"Beach-adjacent micro-location" };
+  if (/marina|downtown|creek|palm|blue ?waters/i.test(p.community || "")) return { flag:"Tourist District", note:"Historically high STR demand" };
+  return { flag:"Residential Primary", note:"Area zoned primarily for long-term residence" };
+}
+
+/* Escrow status — factual DLD data */
+function escrowStatus(p) {
+  if (p.escrowAccount && p.escrowBank) return { verified:true, label:"DLD-Registered Escrow Active" };
+  if (p.escrowBank) return { verified:true, label:"Escrow Bank Verified" };
+  return { verified:false, label:"Escrow Details Pending" };
+}
+
+/* RERA compliance indicator */
+function reraCompliance(p) {
+  if (p.reraNo || p.reraProjectNumber || p.projectNumber) {
+    return { verified:true, number: p.reraNo || p.reraProjectNumber || p.projectNumber };
+  }
+  return { verified:false };
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   LEGAL DISCLAIMER — reusable component
+   ─────────────────────────────────────────────────────────────────────── */
+function LegalNote({ T, compact }) {
+  return (
+    <div style={{ padding:compact ? "8px 12px" : "12px 16px", background:"rgba(107,114,128,0.08)", borderRadius:8, border:`1px solid ${T.border}`, marginTop:12 }}>
+      <div style={{ fontSize:10, color:T.textMuted, lineHeight:1.6 }}>
+        <strong style={{ color:T.textSecondary }}>Data Source:</strong> Dubai Land Department (DLD) public records and project filings. Information is provided for reference only and is not investment advice. For regulated advice, consult a RERA-licensed real estate consultant. DXB Analytics is a data aggregation platform and does not provide investment recommendations.
+      </div>
+    </div>
+  );
+}
+
 function ProjectsTab({
   SEED_PROJECTS, liveProjects, extraProjects = [],
-  liveDevelopments = [],
   projSearch, setProjSearch,
   projDev, setProjDev,
   projCommunity, setProjCommunity,
@@ -43,25 +138,6 @@ function ProjectsTab({
   allDevelopers = [],
   handleTabChange,
 }) {
-
-  /* Session 1: local tier filter state (All / Verified / DLD Registry) */
-  const [projTierFilter, setProjTierFilter] = React.useState("All");
-  /* Session 3: lifecycle stage filter + hide-historical toggle */
-  const [projStageFilter, setProjStageFilter] = React.useState("All");
-  const [projShowHistorical, setProjShowHistorical] = React.useState(false);
-
-  /* ── Session 3: Lifecycle stage badge (function-scoped so both IIFE and modal can use it) ── */
-  const STAGE_CONFIG = {
-    "active-resale":       { label:"Active Resale",       bg:"rgba(16,185,129,0.12)",  color:"#10B981" },
-    "under-construction":  { label:"Under Construction",  bg:"rgba(59,130,246,0.12)",  color:"#60A5FA" },
-    "recently-delivered":  { label:"Recently Delivered",  bg:"rgba(245,158,11,0.12)",  color:"#F59E0B" },
-    "announced":           { label:"Announced",           bg:"rgba(139,92,246,0.12)",  color:"#A78BFA" },
-    "historical":          { label:"Historical",          bg:"rgba(148,163,184,0.10)", color:T.textMuted },
-  };
-  const StageBadge = ({ stage }) => {
-    const cfg = STAGE_CONFIG[stage] || STAGE_CONFIG["historical"];
-    return <span style={{ fontSize:9, padding:"2px 7px", borderRadius:10, fontWeight:700, letterSpacing:0.4, background:cfg.bg, color:cfg.color, textTransform:"uppercase", whiteSpace:"nowrap" }}>{cfg.label}</span>;
-  };
 
   /* Phase 2.4 Batch 3: stack the top-bar global filter on top of the
      existing internal filter system. Both must match for a project to appear.
@@ -181,130 +257,32 @@ function ProjectsTab({
     <>
       {(() => {
 
-            /* ── TIERED DATA ASSEMBLY (Session 1) ──
-               Tier 1 (Verified):   curated SEED + liveProjects + extraProjects (full investment metrics)
-               Tier 3 (DLD Registry): liveDevelopments from Firestore (basic structural data only)
-               Users see Tier 1 first, Tier 3 as directory listings below.
-            */
-            const tier1Raw = [
-              ...(Array.isArray(liveProjects) ? liveProjects : []),
-              ...(SEED_PROJECTS || []),
-              ...(extraProjects || [])
-            ];
-
-            /* Normalize Tier 3 DLD records into a project-card-compatible shape.
-               DLD gives us: name, community, developer, status, handoverDate, constructionPct, totalUnits, escrowBank, reraNo
-               DLD transaction-enrichment (Session 2) adds: priceMin, priceMax, avgPpsf, estGrossYield, commonRooms, commonMetro, commonPropertyType, transactionCount, latestTransaction
-               Other fields (amenities, views, payment plans, unit breakdown) require manual curation or brochure enrichment. */
-            const tier1SeenKeys = new Set(tier1Raw.map(p => String(p.project || p.name || "").trim().toLowerCase()).filter(Boolean));
-            const tier3Raw = (Array.isArray(liveDevelopments) ? liveDevelopments : [])
-              .filter(d => {
-                const key = String(d.name || d.project || "").trim().toLowerCase();
-                return key && !tier1SeenKeys.has(key);
-              })
-              .map(d => {
-                /* Parse rooms string "1 B/R", "2 B/R", "Studio", "Office" etc → our beds format */
-                const bedsFromRooms = (() => {
-                  if (!d.commonRooms) return [];
-                  const r = String(d.commonRooms).toLowerCase();
-                  if (r.includes("studio")) return ["Studio"];
-                  const m = r.match(/(\d+)\s*b\/?r/);
-                  if (m) return [m[1] + "BR"];
-                  return [];
-                })();
-                /* Derive type from commonPropertyType */
-                const inferType = (() => {
-                  if (!d.commonPropertyType) return null;
-                  const t = String(d.commonPropertyType).toLowerCase();
-                  if (t.includes("villa")) return "Villa";
-                  if (t.includes("townhouse") || t.includes("town house")) return "Townhouse";
-                  if (t.includes("office")) return "Office";
-                  if (t.includes("shop") || t.includes("retail")) return "Retail";
-                  if (t.includes("warehouse")) return "Warehouse";
-                  if (t.includes("land") || t.includes("plot")) return "Land";
-                  return "Apartment"; /* default for "Unit", "Flat", etc */
-                })();
-                return ({
-                  id: d.id,
-                  project: d.name || d.project || d.projectName,
-                  developer: d.developer || d.developerName || "Unknown",
-                  community: d.community || d.masterProject || "—",
-                  status: d.status === "FINISHED" ? "Ready" : d.status === "NOT_STARTED" ? "Off-Plan" : d.status === "ACTIVE" ? "Off-Plan" : "Unknown",
-                  handover: d.handoverDate || d.handoverQuarter || null,
-                  constructionPct: d.constructionPct || 0,
-                  totalUnits: d.totalUnits || null,
-                  escrowBank: d.escrowBank || null,
-                  reraNo: d.reraNo || d.projectNumber || null,
-                  tier: "dld-registry",
-                  type: inferType,
-                  /* Transaction-enriched fields (Session 2): */
-                  priceMin: d.priceMin || null,
-                  priceMax: d.priceMax || null,
-                  ppsf: d.avgPpsf || null,
-                  grossYield: d.estGrossYield || null,
-                  commonMetro: d.commonMetro || null,
-                  commonRooms: d.commonRooms || null,
-                  transactionCount: d.transactionCount || 0,
-                  latestTransaction: d.latestTransaction || null,
-                  lifecycleStage: d.lifecycleStage || "historical", /* Session 3 */
-                  beds: bedsFromRooms,
-                  /* Not curated yet: */
-                  amenities: [], unitBreakdown: [], paymentPlan: null, view: [],
-                  distMetro: undefined, distBeach: undefined, distDIFC: undefined,
-                  goldenVisa: false, branded: false, velocityScore: 0, commission: null,
-                  source: d.source || "DLD Registry",
-                });
-              });
-
-            const rawProjects = [...tier1Raw, ...tier3Raw];
+            /* SEED_PROJECTS — defined at top level */
+  const rawProjects = [...SEED_PROJECTS, ...(extraProjects || [])];
 
             const filtered = rawProjects.filter(p => {
-              const isDldOnly = p.tier === "dld-registry";
-              /* Session 3: lifecycle stage filter */
-              if (isDldOnly) {
-                const stage = p.lifecycleStage || "historical";
-                if (projStageFilter !== "All" && stage !== projStageFilter) return false;
-                /* Default: hide historical unless user opts in or explicitly filters to historical */
-                if (!projShowHistorical && projStageFilter === "All" && stage === "historical") return false;
-              }
-              /* Session 1: tier filter takes priority */
-              if (projTierFilter === "Verified" && isDldOnly) return false;
-              if (projTierFilter === "Registry" && !isDldOnly) return false;
               // Phase 2.4 Batch 3: top-bar global filter narrows first,
               // then the existing internal filters narrow further.
               if (!projMatchesGlobalFilter(p)) return false;
-              /* Session 1: DLD registry records skip the type filter
-                 (they have no type data). All other type filters still apply. */
-              if (!isDldOnly && p.type !== projMode) return false;
+              if (p.type !== projMode) return false;
               if (projSearch && !JSON.stringify(p).toLowerCase().includes(projSearch.toLowerCase())) return false;
               if (projDev !== "All" && p.developer !== projDev) return false;
               if (projCommunity !== "All" && p.community !== projCommunity) return false;
               if (projStatus !== "All" && p.status !== projStatus) return false;
-              if (!isDldOnly && projBeds !== "All" && p.beds && p.beds.length > 0 && !p.beds.includes(projBeds)) return false;
+              if (projBeds !== "All" && p.beds && p.beds.length > 0 && !p.beds.includes(projBeds)) return false;
               if (projHandover !== "All" && !p.handover?.includes(projHandover)) return false;
-              if (!isDldOnly && projGrade !== "All" && p.officeGrade !== projGrade) return false;
-              if (!isDldOnly && projIntelFilter === "tier1" && p.tier !== 1) return false;
-              if (!isDldOnly && projIntelFilter === "gv" && !(p.goldenVisa && p.priceMin >= GOLDEN_VISA_THRESHOLD)) return false;
-              if (!isDldOnly && projIntelFilter === "branded" && !p.branded) return false;
-              if (!isDldOnly && projPriceMin > 0 && p.priceMin < projPriceMin) return false;
-              if (!isDldOnly && projPriceMax > 0 && p.priceMax > projPriceMax) return false;
+              if (projGrade !== "All" && p.officeGrade !== projGrade) return false;
+              if (projIntelFilter === "tier1" && p.tier !== 1) return false;
+              if (projIntelFilter === "gv" && !(p.goldenVisa && p.priceMin >= GOLDEN_VISA_THRESHOLD)) return false;
+              if (projIntelFilter === "branded" && !p.branded) return false;
+              if (projPriceMin > 0 && p.priceMin < projPriceMin) return false;
+              if (projPriceMax > 0 && p.priceMax > projPriceMax) return false;
               return true;
             }).sort((a,b) => {
-              /* Verified always sort before Registry within same criteria */
-              const tierDiff = (a.tier === "dld-registry" ? 1 : 0) - (b.tier === "dld-registry" ? 1 : 0);
-              if (tierDiff !== 0) return tierDiff;
-              /* Session 3: stage-aware sort for Registry records —
-                 active-resale > under-construction > recently-delivered > announced > historical */
-              if (a.tier === "dld-registry" && b.tier === "dld-registry") {
-                const stageRank = { "active-resale": 1, "under-construction": 2, "recently-delivered": 3, "announced": 4, "historical": 5 };
-                const sa = stageRank[a.lifecycleStage] || 5;
-                const sb = stageRank[b.lifecycleStage] || 5;
-                if (sa !== sb) return sa - sb;
-              }
               if (projSort === "yield") return (b.grossYield||0) - (a.grossYield||0);
               if (projSort === "score") return calcScore(b) - calcScore(a);
-              if (projSort === "price_asc") return (a.priceMin||0) - (b.priceMin||0);
-              if (projSort === "price_desc") return (b.priceMin||0) - (a.priceMin||0);
+              if (projSort === "price_asc") return a.priceMin - b.priceMin;
+              if (projSort === "price_desc") return b.priceMin - a.priceMin;
               return 0;
             });
 
@@ -313,9 +291,8 @@ function ProjectsTab({
             const avgPpsf = filtered.length > 0 && filtered.some(p=>p.ppsf)
               ? Math.round(filtered.filter(p=>p.ppsf).reduce((a,p) => a + p.ppsf, 0) / filtered.filter(p=>p.ppsf).length) : 0;
 
-            /* Session 1: include DLD registry developers/communities in dropdowns */
-            const devOptions = ["All", ...new Set(rawProjects.filter(p => p.type === projMode || p.tier === "dld-registry").map(p => p.developer).filter(Boolean))].sort();
-            const commOptions = ["All", ...new Set(rawProjects.filter(p => p.type === projMode || p.tier === "dld-registry").map(p => p.community).filter(c => c && c !== "—"))].sort();
+            const devOptions = ["All", ...new Set(rawProjects.filter(p=>p.type===projMode).map(p=>p.developer))];
+            const commOptions = ["All", ...new Set(rawProjects.filter(p=>p.type===projMode).map(p=>p.community))];
 
             const selSt = {
               background: T.surfaceAlt, border: `1px solid ${T.border}`,
@@ -337,14 +314,14 @@ function ProjectsTab({
               </div>
             );
 
-            const ProjectCardVerified = ({ p }) => {
+            const ProjectCard = ({ p }) => {
               const score = calcScore(p);
               const inCompare = projCompare.some(c => c.id === p.id);
               return (
                 <div className="chart-box" style={{ padding:0, overflow:"hidden", cursor:"pointer" }}
                   onMouseEnter={e => e.currentTarget.style.borderColor="rgba(212,168,67,0.4)"}
                   onMouseLeave={e => e.currentTarget.style.borderColor=T.border}>
-                  <div style={{ padding:"14px 16px", borderBottom:`1px solid ${T.border}` }} onClick={() => { setSelectedProject(p); setProjDetailTab("overview"); }}>
+                  <div style={{ padding:"14px 16px", borderBottom:`1px solid ${T.border}` }} onClick={() => { setSelectedProject(p); setProjDetailTab("identity"); }}>
                     <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:8 }}>
                       <div style={{ flex:1 }}>
                         <div style={{ fontSize:10, fontWeight:700, color:T.textMuted, letterSpacing:0.8, textTransform:"uppercase", marginBottom:3 }}>{p.developer}{"·"}{p.community}</div>
@@ -371,7 +348,7 @@ function ProjectsTab({
                       </div>
                     </div>
                   </div>
-                  <div style={{ padding:"12px 16px", borderBottom:`1px solid ${T.border}` }} onClick={() => { setSelectedProject(p); setProjDetailTab("overview"); }}>
+                  <div style={{ padding:"12px 16px", borderBottom:`1px solid ${T.border}` }} onClick={() => { setSelectedProject(p); setProjDetailTab("identity"); }}>
                     <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr 1fr", gap:8, marginBottom:10 }}>
                       <div>
                         <div style={{ fontSize:9, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.6, marginBottom:2 }}>From</div>
@@ -410,7 +387,7 @@ function ProjectsTab({
                     </div>
                   </div>
                   {p.amenities?.length > 0 && (
-                    <div style={{ padding:"10px 16px", borderBottom:`1px solid ${T.border}`, display:"flex", gap:4, flexWrap:"wrap" }} onClick={() => { setSelectedProject(p); setProjDetailTab("overview"); }}>
+                    <div style={{ padding:"10px 16px", borderBottom:`1px solid ${T.border}`, display:"flex", gap:4, flexWrap:"wrap" }} onClick={() => { setSelectedProject(p); setProjDetailTab("identity"); }}>
                       {p.amenities.slice(0,4).map((a,i) => <span key={i} style={{ fontSize:10, padding:"2px 6px", borderRadius:6, background:T.surfaceAlt, color:T.textMuted }}>{a}</span>)}
                       {(p.view||[]).slice(0,2).map((v,i) => <span key={"v"+i} style={{ fontSize:10, padding:"2px 6px", borderRadius:6, background:"rgba(20,184,166,0.08)", color:T.teal }}>{v}</span>)}
                       {p.amenities.length > 4 && <span style={{ fontSize:10, color:T.textMuted }}>+{p.amenities.length-4}</span>}
@@ -422,81 +399,11 @@ function ProjectsTab({
                     {p.status === "Off-Plan" && <button type="button" onClick={() => handleTabChange("Launch Calendar")} style={{ padding:"5px 10px", background:"rgba(212,168,67,0.08)", border:`1px solid ${T.gold}`, borderRadius:7, color:T.gold, fontSize:10, fontWeight:700, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>View Launch →</button>}
                     <button type="button" onClick={() => setProjCompare(prev => inCompare ? prev.filter(c=>c.id!==p.id) : prev.length < 3 ? [...prev,p] : prev)} style={{ padding:"5px 10px", background:inCompare?"rgba(16,185,129,0.12)":T.surfaceAlt, border:`1px solid ${inCompare?T.green:T.border}`, borderRadius:7, color:inCompare?T.green:T.textSecondary, fontSize:10, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>{inCompare?"✓ Compare":"+ Compare"}</button>
                     <button type="button" onClick={() => handleTabChange("My Leads")} style={{ padding:"5px 10px", background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:7, color:T.textSecondary, fontSize:10, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>Add Lead</button>
-                    <button type="button" onClick={() => { setSelectedProject(p); setProjDetailTab("overview"); }} style={{ padding:"5px 10px", background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:7, color:T.textSecondary, fontSize:10, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>Details →</button>
+                    <button type="button" onClick={() => { setSelectedProject(p); setProjDetailTab("identity"); }} style={{ padding:"5px 10px", background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:7, color:T.textSecondary, fontSize:10, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>Details →</button>
                   </div>
                 </div>
               );
             };
-
-            /* ── Registry card (Tier 3 = DLD-only + transaction-enriched) ── */
-            const ProjectCardRegistry = ({ p }) => {
-              const hasPricing = p.priceMin && p.priceMax;
-              const hasEnrichment = hasPricing || p.ppsf || p.grossYield;
-              return (
-                <div className="chart-box" style={{ padding:"14px 16px", cursor:"pointer", borderLeft:`3px solid ${hasEnrichment ? "rgba(212,168,67,0.3)" : T.border}`, background:"rgba(255,255,255,0.015)", display:"flex", alignItems:"center", gap:14, minHeight:100, transition:"transform 0.15s, box-shadow 0.15s" }}
-                  onClick={() => { setSelectedProject(p); setProjDetailTab("overview"); }}
-                  onMouseEnter={e => { e.currentTarget.style.transform="translateY(-1px)"; e.currentTarget.style.boxShadow="0 4px 16px rgba(0,0,0,0.2)"; }}
-                  onMouseLeave={e => { e.currentTarget.style.transform="none"; e.currentTarget.style.boxShadow="none"; }}>
-
-                  {/* Left — name + dev/community + chips */}
-                  <div style={{ flex:1, minWidth:0 }}>
-                    <div style={{ fontSize:10, fontWeight:700, color:T.textMuted, letterSpacing:0.8, textTransform:"uppercase", marginBottom:3, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>
-                      {p.developer || "Unknown"}{p.community && p.community !== "—" ? " · " + p.community : ""}
-                    </div>
-                    <div style={{ fontFamily:"'Fraunces',serif", fontSize:14, fontWeight:700, color:T.white, marginBottom:6, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{p.project || "—"}</div>
-                    <div style={{ display:"flex", gap:5, flexWrap:"wrap", alignItems:"center" }}>
-                      {p.lifecycleStage && <StageBadge stage={p.lifecycleStage} />}
-                      <span title={hasEnrichment ? "DLD Registry + transaction data from Dubai Land Department" : "DLD Registry — official government listing. Investment metrics curation pending."} style={{ fontSize:9, padding:"2px 6px", borderRadius:10, fontWeight:700, letterSpacing:0.5, background: hasEnrichment ? "rgba(212,168,67,0.10)" : "rgba(148,163,184,0.10)", color: hasEnrichment ? T.gold : T.textMuted, border:`1px solid ${hasEnrichment ? "rgba(212,168,67,0.25)" : T.border}`, textTransform:"uppercase" }}>{hasEnrichment ? "DLD Data" : "DLD Registry"}</span>
-                      {p.handover && <span style={{ fontSize:10, color:T.textMuted }}>{p.handover}</span>}
-                      {p.transactionCount > 0 && <span style={{ fontSize:10, color:T.textMuted }}>{p.transactionCount} sales</span>}
-                      {p.reraNo && <span style={{ fontSize:10, color:T.textMuted }}>RERA #{p.reraNo}</span>}
-                    </div>
-                  </div>
-
-                  {/* Middle — enriched metrics if present, else build/units */}
-                  <div style={{ display:"flex", gap:14, alignItems:"center" }}>
-                    {hasPricing && (
-                      <div style={{ textAlign:"center", minWidth:90 }}>
-                        <div style={{ fontFamily:"'Fraunces',serif", fontSize:14, fontWeight:800, color:T.white, lineHeight:1 }}>
-                          AED {(p.priceMin/1e6).toFixed(1)}–{(p.priceMax/1e6).toFixed(1)}M
-                        </div>
-                        <div style={{ fontSize:9, fontWeight:600, color:T.textMuted, letterSpacing:0.5, textTransform:"uppercase", marginTop:2 }}>Price Range</div>
-                      </div>
-                    )}
-                    {p.ppsf > 0 && (
-                      <div style={{ textAlign:"center" }}>
-                        <div style={{ fontFamily:"'Fraunces',serif", fontSize:14, fontWeight:800, color:T.white, lineHeight:1 }}>AED {p.ppsf.toLocaleString()}</div>
-                        <div style={{ fontSize:9, fontWeight:600, color:T.textMuted, letterSpacing:0.5, textTransform:"uppercase", marginTop:2 }}>PPSF</div>
-                      </div>
-                    )}
-                    {p.grossYield > 0 && p.grossYield < 15 && (
-                      <div style={{ textAlign:"center" }}>
-                        <div style={{ fontFamily:"'Fraunces',serif", fontSize:14, fontWeight:800, color:p.grossYield >= 7 ? T.green : T.gold, lineHeight:1 }}>{p.grossYield}%</div>
-                        <div style={{ fontSize:9, fontWeight:600, color:T.textMuted, letterSpacing:0.5, textTransform:"uppercase", marginTop:2 }}>Yield</div>
-                      </div>
-                    )}
-                    {!hasEnrichment && p.constructionPct > 0 && (
-                      <div style={{ textAlign:"center" }}>
-                        <div style={{ fontFamily:"'Fraunces',serif", fontSize:16, fontWeight:800, color:T.white, lineHeight:1 }}>{p.constructionPct}%</div>
-                        <div style={{ fontSize:9, fontWeight:600, color:T.textMuted, letterSpacing:0.5, textTransform:"uppercase", marginTop:2 }}>Built</div>
-                      </div>
-                    )}
-                    {!hasEnrichment && p.totalUnits != null && p.totalUnits > 0 && (
-                      <div style={{ textAlign:"center" }}>
-                        <div style={{ fontFamily:"'Fraunces',serif", fontSize:16, fontWeight:800, color:T.white, lineHeight:1 }}>{p.totalUnits}</div>
-                        <div style={{ fontSize:9, fontWeight:600, color:T.textMuted, letterSpacing:0.5, textTransform:"uppercase", marginTop:2 }}>Units</div>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Right — chevron */}
-                  <div style={{ color:T.textMuted, fontSize:16, fontFamily:"'Outfit',sans-serif", opacity:0.5 }}>›</div>
-                </div>
-              );
-            };
-
-            /* Unified card chooser */
-            const ProjectCard = ({ p }) => p.tier === "dld-registry" ? <ProjectCardRegistry p={p} /> : <ProjectCardVerified p={p} />;
 
             return (
               <div style={{ animation:"fadeUp 0.4s ease-out forwards" }}>
@@ -533,21 +440,6 @@ function ProjectsTab({
                     </div>
                     <select value={projDev} onChange={e => setProjDev(e.target.value)} style={selSt}>{devOptions.map(d => <option key={d}>{d}</option>)}</select>
                     <select value={projCommunity} onChange={e => setProjCommunity(e.target.value)} style={selSt}>{commOptions.map(c => <option key={c}>{c}</option>)}</select>
-                    {/* Session 1: tier filter */}
-                    <select value={projTierFilter} onChange={e => setProjTierFilter(e.target.value)} style={selSt}>
-                      <option value="All">All Projects</option>
-                      <option value="Verified">Verified Only</option>
-                      <option value="Registry">DLD Registry Only</option>
-                    </select>
-                    {/* Session 3: lifecycle stage filter */}
-                    <select value={projStageFilter} onChange={e => setProjStageFilter(e.target.value)} style={selSt}>
-                      <option value="All">All Stages</option>
-                      <option value="active-resale">Active Resale</option>
-                      <option value="under-construction">Under Construction</option>
-                      <option value="recently-delivered">Recently Delivered</option>
-                      <option value="announced">Announced</option>
-                      <option value="historical">Historical</option>
-                    </select>
                     <select value={projStatus} onChange={e => setProjStatus(e.target.value)} style={selSt}>
                       {["All","Off-Plan","Ready","Sold Out"].map(s => <option key={s}>{s}</option>)}
                     </select>
@@ -571,13 +463,8 @@ function ProjectsTab({
                       <option value="price_desc">Sort: Price High</option>
                     </select>
                     <span style={{ fontSize:11, color:T.textMuted, marginLeft:"auto" }}>{filtered.length} projects</span>
-                    {/* Session 3: show-historical toggle */}
-                    <label style={{ display:"flex", alignItems:"center", gap:6, fontSize:11, color:T.textMuted, cursor:"pointer", padding:"6px 10px", background:projShowHistorical?"rgba(212,168,67,0.08)":T.surfaceAlt, border:`1px solid ${projShowHistorical?"rgba(212,168,67,0.30)":T.border}`, borderRadius:8, fontFamily:"'Outfit',sans-serif" }} title="Show projects delivered long ago with no recent transactions">
-                      <input type="checkbox" checked={projShowHistorical} onChange={e => setProjShowHistorical(e.target.checked)} style={{ cursor:"pointer", accentColor:T.gold }} />
-                      <span style={{ color: projShowHistorical ? T.gold : T.textMuted, fontWeight: projShowHistorical ? 700 : 400 }}>Show historical</span>
-                    </label>
-                    {(projSearch || projDev !== "All" || projCommunity !== "All" || projStatus !== "All" || projBeds !== "All" || projHandover !== "All" || projTierFilter !== "All" || projStageFilter !== "All") && (
-                      <button type="button" onClick={() => { setProjSearch(""); setProjDev("All"); setProjCommunity("All"); setProjStatus("All"); setProjBeds("All"); setProjHandover("All"); setProjGrade("All"); setProjIntelFilter("all"); setProjTierFilter("All"); setProjStageFilter("All"); }} style={{ background:"none", border:`1px solid ${T.border}`, borderRadius:8, padding:"6px 12px", color:T.textMuted, fontSize:11, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>Clear</button>
+                    {(projSearch || projDev !== "All" || projCommunity !== "All" || projStatus !== "All" || projBeds !== "All" || projHandover !== "All") && (
+                      <button type="button" onClick={() => { setProjSearch(""); setProjDev("All"); setProjCommunity("All"); setProjStatus("All"); setProjBeds("All"); setProjHandover("All"); setProjGrade("All"); setProjIntelFilter("all"); }} style={{ background:"none", border:`1px solid ${T.border}`, borderRadius:8, padding:"6px 12px", color:T.textMuted, fontSize:11, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>Clear</button>
                     )}
                   </div>
                   {/* Intelligence filter chips */}
@@ -611,7 +498,7 @@ function ProjectsTab({
                 <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(170px,1fr))", gap:10, marginBottom:20 }}>
                   {[
                     { label:"Projects Found", value:filtered.length.toString(), color:T.white },
-                    { label:"Price Range", value:filtered.filter(p=>p.priceMin).length > 0 ? `AED ${(Math.min(...filtered.filter(p=>p.priceMin).map(p=>p.priceMin))/1000000).toFixed(1)}M+` : "—", color:T.white },
+                    { label:"Price Range", value:filtered.length > 0 ? `AED ${(Math.min(...filtered.map(p=>p.priceMin))/1000000).toFixed(1)}M+` : "—", color:T.white },
                     { label:"Avg Gross Yield", value:avgYield !== "—" ? avgYield + "%" : "—", color:T.green },
                     { label:"Avg PPSF", value:avgPpsf > 0 ? "AED " + avgPpsf.toLocaleString() : "—", color:T.gold },
                   ].map((kpi,i) => (
@@ -715,7 +602,7 @@ function ProjectsTab({
                     {filtered.map((p,i) => {
                       const sc = calcScore(p);
                       return (
-                        <div key={p.id||i} onClick={() => { setSelectedProject(p); setProjDetailTab("overview"); }}
+                        <div key={p.id||i} onClick={() => { setSelectedProject(p); setProjDetailTab("identity"); }}
                           style={{ display:"grid", gridTemplateColumns:"2.5fr 1fr 1fr 1fr 1fr 1fr 1.2fr", padding:"12px 16px", borderBottom:i<filtered.length-1?`1px solid ${T.border}`:"none", cursor:"pointer" }}
                           onMouseEnter={e => e.currentTarget.style.background="rgba(212,168,67,0.03)"}
                           onMouseLeave={e => e.currentTarget.style.background="transparent"}>
@@ -763,123 +650,7 @@ function ProjectsTab({
             );
       })()}
 
-      {/* ── DLD Registry modal (Session 2: simpler, honest view for tier-3 cards) ── */}
-      {selectedProject && selectedProject.tier === "dld-registry" && typeof document !== "undefined" && createPortal(
-        <div role="dialog" aria-modal="true" onClick={(e) => { if (e.target === e.currentTarget) setSelectedProject(null); }} style={{ position:"fixed", inset:0, background:"rgba(4,9,15,0.97)", zIndex:2000, display:"flex", alignItems:"flex-start", justifyContent:"center", padding:"40px 16px", overflow:"auto", backdropFilter:"blur(8px)" }}>
-          <div style={{ width:"100%", maxWidth:640, background:T.surface, border:`1px solid ${T.border}`, borderRadius:14, overflow:"hidden", boxShadow:"0 24px 80px rgba(0,0,0,0.5)" }}>
-
-            {/* Header */}
-            <div style={{ padding:"20px 24px", borderBottom:`1px solid ${T.border}`, display:"flex", justifyContent:"space-between", alignItems:"flex-start", gap:16 }}>
-              <div style={{ flex:1, minWidth:0 }}>
-                <div style={{ fontSize:10, fontWeight:700, color:T.textMuted, letterSpacing:0.8, textTransform:"uppercase", marginBottom:4 }}>
-                  {selectedProject.developer || "Unknown"}{selectedProject.community && selectedProject.community !== "—" ? " · " + selectedProject.community : ""}
-                </div>
-                <div style={{ fontFamily:"'Fraunces',serif", fontSize:22, fontWeight:800, color:T.white, marginBottom:8, lineHeight:1.2 }}>{selectedProject.project || "—"}</div>
-                <div style={{ display:"flex", gap:6, flexWrap:"wrap", alignItems:"center" }}>
-                  {selectedProject.lifecycleStage && <StageBadge stage={selectedProject.lifecycleStage} />}
-                  <span style={{ fontSize:9, padding:"3px 8px", borderRadius:10, fontWeight:700, letterSpacing:0.5, background:(selectedProject.priceMin || selectedProject.ppsf) ? "rgba(212,168,67,0.10)" : "rgba(148,163,184,0.10)", color:(selectedProject.priceMin || selectedProject.ppsf) ? T.gold : T.textMuted, border:`1px solid ${(selectedProject.priceMin || selectedProject.ppsf) ? "rgba(212,168,67,0.25)" : T.border}`, textTransform:"uppercase" }}>{(selectedProject.priceMin || selectedProject.ppsf) ? "DLD + Transaction Data" : "DLD Registry"}</span>
-                  {selectedProject.reraNo && <span style={{ fontSize:10, color:T.textMuted }}>RERA #{selectedProject.reraNo}</span>}
-                </div>
-              </div>
-              <button type="button" onClick={() => setSelectedProject(null)} aria-label="Close" style={{ background:"none", border:"none", color:T.textMuted, fontSize:24, cursor:"pointer", lineHeight:1, padding:4 }}>×</button>
-            </div>
-
-            {/* Body: data grid */}
-            <div style={{ padding:"20px 24px" }}>
-
-              {/* Transaction-enriched block (only if present) */}
-              {(selectedProject.priceMin || selectedProject.ppsf || selectedProject.grossYield) && (
-                <div style={{ background:"rgba(212,168,67,0.04)", border:`1px solid rgba(212,168,67,0.15)`, borderRadius:10, padding:"14px 16px", marginBottom:16 }}>
-                  <div style={{ fontSize:10, fontWeight:700, color:T.gold, letterSpacing:0.8, textTransform:"uppercase", marginBottom:10 }}>
-                    Transaction Data · Last {selectedProject.transactionCount || "—"} sales from DLD
-                  </div>
-                  <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:12 }}>
-                    {selectedProject.priceMin && selectedProject.priceMax && (
-                      <div>
-                        <div style={{ fontSize:9, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.6, marginBottom:3 }}>Price Range</div>
-                        <div style={{ fontFamily:"'Fraunces',serif", fontSize:16, fontWeight:800, color:T.white }}>AED {(selectedProject.priceMin/1e6).toFixed(1)}–{(selectedProject.priceMax/1e6).toFixed(1)}M</div>
-                      </div>
-                    )}
-                    {selectedProject.ppsf > 0 && (
-                      <div>
-                        <div style={{ fontSize:9, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.6, marginBottom:3 }}>Avg PPSF</div>
-                        <div style={{ fontFamily:"'Fraunces',serif", fontSize:16, fontWeight:800, color:T.white }}>AED {selectedProject.ppsf.toLocaleString()}</div>
-                      </div>
-                    )}
-                    {selectedProject.grossYield > 0 && selectedProject.grossYield < 15 && (
-                      <div>
-                        <div style={{ fontSize:9, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.6, marginBottom:3 }}>Est. Gross Yield</div>
-                        <div style={{ fontFamily:"'Fraunces',serif", fontSize:16, fontWeight:800, color:selectedProject.grossYield >= 7 ? T.green : T.gold }}>{selectedProject.grossYield}%</div>
-                      </div>
-                    )}
-                  </div>
-                  {selectedProject.latestTransaction && (
-                    <div style={{ fontSize:10, color:T.textMuted, marginTop:10, paddingTop:10, borderTop:`1px solid rgba(212,168,67,0.12)` }}>
-                      Latest recorded sale: <span style={{ color:T.textSecondary, fontWeight:600 }}>{selectedProject.latestTransaction}</span>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Property details grid */}
-              <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12, marginBottom:16 }}>
-                {selectedProject.constructionPct > 0 && (
-                  <div style={{ background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:8, padding:"12px 14px" }}>
-                    <div style={{ fontSize:9, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.6, marginBottom:4 }}>Construction</div>
-                    <div style={{ fontFamily:"'Fraunces',serif", fontSize:18, fontWeight:800, color:T.white }}>{selectedProject.constructionPct}% Built</div>
-                  </div>
-                )}
-                {selectedProject.totalUnits > 0 && (
-                  <div style={{ background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:8, padding:"12px 14px" }}>
-                    <div style={{ fontSize:9, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.6, marginBottom:4 }}>Total Units</div>
-                    <div style={{ fontFamily:"'Fraunces',serif", fontSize:18, fontWeight:800, color:T.white }}>{selectedProject.totalUnits.toLocaleString()}</div>
-                  </div>
-                )}
-                {selectedProject.handover && (
-                  <div style={{ background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:8, padding:"12px 14px" }}>
-                    <div style={{ fontSize:9, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.6, marginBottom:4 }}>Handover</div>
-                    <div style={{ fontFamily:"'Fraunces',serif", fontSize:14, fontWeight:700, color:T.white }}>{selectedProject.handover}</div>
-                  </div>
-                )}
-                {selectedProject.commonRooms && (
-                  <div style={{ background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:8, padding:"12px 14px" }}>
-                    <div style={{ fontSize:9, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.6, marginBottom:4 }}>Most Common Config</div>
-                    <div style={{ fontFamily:"'Fraunces',serif", fontSize:14, fontWeight:700, color:T.white }}>{selectedProject.commonRooms}</div>
-                  </div>
-                )}
-                {selectedProject.commonMetro && (
-                  <div style={{ background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:8, padding:"12px 14px", gridColumn:"span 2" }}>
-                    <div style={{ fontSize:9, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.6, marginBottom:4 }}>Nearest Metro</div>
-                    <div style={{ fontFamily:"'Fraunces',serif", fontSize:14, fontWeight:700, color:T.white }}>{selectedProject.commonMetro}</div>
-                  </div>
-                )}
-              </div>
-
-              {/* Curation notice */}
-              <div style={{ background:"rgba(59,130,246,0.06)", border:`1px solid rgba(59,130,246,0.20)`, borderRadius:8, padding:"12px 14px", marginBottom:16 }}>
-                <div style={{ fontSize:11, color:T.textSecondary, lineHeight:1.6 }}>
-                  <span style={{ color:"#60A5FA", fontWeight:700 }}>◆ DLD Registry Record.</span>{" "}
-                  This project is sourced from the official Dubai Land Department database. Detailed investment metrics (unit breakdown, amenities, payment plans, views) require data curation from the developer portal or brochure.
-                </div>
-              </div>
-
-              {/* Action buttons */}
-              <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
-                <button type="button" onClick={() => handleTabChange("Mortgage")} style={{ flex:1, minWidth:140, padding:"10px 14px", background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:8, color:T.textSecondary, fontSize:12, fontWeight:600, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>Mortgage Calculator</button>
-                <button type="button" onClick={() => handleTabChange("My Leads")} style={{ flex:1, minWidth:140, padding:"10px 14px", background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:8, color:T.textSecondary, fontSize:12, fontWeight:600, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>Add to Leads</button>
-                {selectedProject.reraNo && (
-                  <a href={`https://dubailand.gov.ae/en/eservices/project-status/#!/ProjectStatus`} target="_blank" rel="noopener noreferrer" style={{ flex:1, minWidth:140, padding:"10px 14px", background:"rgba(212,168,67,0.08)", border:`1px solid rgba(212,168,67,0.30)`, borderRadius:8, color:T.gold, fontSize:12, fontWeight:700, cursor:"pointer", fontFamily:"'Outfit',sans-serif", textAlign:"center", textDecoration:"none" }}>View on DLD Portal →</a>
-                )}
-              </div>
-
-            </div>
-          </div>
-        </div>,
-        document.body
-      )}
-
-      {/* ── Original 6-tab modal (for Verified projects only) ── */}
-      {selectedProject && selectedProject.tier !== "dld-registry" && typeof document !== "undefined" && createPortal(
+      {selectedProject && typeof document !== "undefined" && createPortal(
 <div role="dialog" aria-modal="true" style={{ position:"fixed", inset:0, background:"rgba(4,9,15,0.97)", zIndex:2000, display:"flex", flexDirection:"column", backdropFilter:"blur(8px)" }}>
               <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"16px 24px", borderBottom:`1px solid ${T.border}`, background:T.surface, flexShrink:0 }}>
                 <div>
@@ -904,393 +675,489 @@ function ProjectsTab({
                 </div>
               </div>
               <div style={{ display:"flex", borderBottom:`1px solid ${T.border}`, background:T.surface, flexShrink:0, overflowX:"auto" }}>
-                {[{key:"overview",label:"Overview"},{key:"units",label:"Units & Sizes"},{key:"investment",label:"Investment"},{key:"location",label:"Location"},{key:"payment",label:"Payment Plan"},{key:"dld",label:"DLD History"},{key:"developer",label:"Developer"}].map(t => (
+                {[
+                  {key:"identity",label:"Identity"},
+                  {key:"location",label:"Location"},
+                  {key:"scale",label:"Scale & Units"},
+                  {key:"product",label:"Product"},
+                  {key:"pricing",label:"Pricing Data"},
+                  {key:"rental",label:"Rental & Yield"},
+                  {key:"developer",label:"Developer & Compliance"},
+                  {key:"report",label:"Full Report"},
+                ].map(t => (
                   <button key={t.key} type="button" onClick={() => setProjDetailTab(t.key)}
-                    style={{ padding:"12px 18px", background:"none", border:"none", borderBottom:projDetailTab===t.key?`2px solid ${T.gold}`:"2px solid transparent", color:projDetailTab===t.key?T.gold:T.textMuted, fontSize:12, fontWeight:projDetailTab===t.key?700:400, cursor:"pointer", fontFamily:"'Outfit',sans-serif", whiteSpace:"nowrap" }}>
+                    style={{ padding:"12px 16px", background:"none", border:"none", borderBottom:projDetailTab===t.key?`2px solid ${T.gold}`:"2px solid transparent", color:projDetailTab===t.key?T.gold:T.textMuted, fontSize:11, fontWeight:projDetailTab===t.key?700:400, cursor:"pointer", fontFamily:"'Outfit',sans-serif", whiteSpace:"nowrap", letterSpacing:0.3 }}>
                     {t.label}
                   </button>
                 ))}
               </div>
               <div style={{ flex:1, overflowY:"auto", padding:"24px" }}>
-                {projDetailTab === "overview" && (
+                {/* ═══ SECTION 1 · PROJECT IDENTITY ═══ */}
+                {projDetailTab === "identity" && (() => {
+                  const seg = describeAssetClass(selectedProject);
+                  const mkt = describeMarketStatus(selectedProject);
+                  const rera = reraCompliance(selectedProject);
+                  return (
                   <div>
-                    <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit, minmax(160px, 1fr))", gap:12, marginBottom:20 }}>
-                      {[
-                        { label:"Investment Score", value:calcScore(selectedProject).toString(), color:(() => { const s=calcScore(selectedProject); return s>=80?T.green:s>=65?T.gold:T.red; })(), sub:scoreLabel(calcScore(selectedProject)) },
-                        { label:"Gross Yield", value:selectedProject.grossYield?selectedProject.grossYield.toFixed(1)+"%":"—", color:T.green, sub:"Annual return estimate" },
-                        { label:"PPSF", value:selectedProject.ppsf?"AED "+selectedProject.ppsf.toLocaleString():"—", color:T.gold, sub:"Price per sqft" },
-                        { label:"Handover", value:selectedProject.handover||"TBC", color:T.white, sub:"Expected completion" },
-                        ...(selectedProject.appreciationToHandover > 0 ? [{ label:"Pre→Handover", value:"+"+selectedProject.appreciationToHandover+"%", color:T.gold, sub:"Capital appreciation forecast" }] : []),
-                        ...(selectedProject.velocityScore > 0 ? [{ label:"Sales Velocity", value:selectedProject.velocityScore+"/100", color:selectedProject.velocityScore>=80?T.green:selectedProject.velocityScore>=60?T.gold:"#F59E0B", sub:"Launch absorption momentum" }] : []),
-                      ].map((kpi,i) => (
-                        <div key={i} className="kpi-card">
-                          <div style={{ fontSize:10, fontWeight:700, color:T.textMuted, letterSpacing:1, textTransform:"uppercase", marginBottom:8 }}>{kpi.label}</div>
-                          <div style={{ fontFamily:"'Fraunces',serif", fontSize:26, fontWeight:800, color:kpi.color, marginBottom:4 }}>{kpi.value}</div>
-                          <div style={{ fontSize:11, color:T.textMuted }}>{kpi.sub}</div>
+                    <div style={{ padding:"18px 20px", background:`linear-gradient(135deg, rgba(212,168,67,0.08), rgba(20,184,166,0.04))`, border:`1px solid ${T.border}`, borderRadius:14, marginBottom:16 }}>
+                      <div style={{ fontSize:10, fontWeight:700, color:T.textMuted, letterSpacing:1, textTransform:"uppercase", marginBottom:10 }}>Project Identity · Per DLD Registry</div>
+                      <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(200px, 1fr))", gap:14 }}>
+                        <div>
+                          <div style={{ fontSize:10, color:T.textMuted, marginBottom:4 }}>Project Name</div>
+                          <div style={{ fontSize:15, fontWeight:700, color:T.white, fontFamily:"'Fraunces',serif" }}>{selectedProject.project || selectedProject.name || "—"}</div>
                         </div>
-                      ))}
+                        <div>
+                          <div style={{ fontSize:10, color:T.textMuted, marginBottom:4 }}>Developer</div>
+                          <div style={{ fontSize:15, fontWeight:700, color:T.white }}>{selectedProject.developer || "—"}</div>
+                        </div>
+                        <div>
+                          <div style={{ fontSize:10, color:T.textMuted, marginBottom:4 }}>Community</div>
+                          <div style={{ fontSize:15, fontWeight:700, color:T.textSecondary }}>{selectedProject.community || "—"}</div>
+                        </div>
+                        <div>
+                          <div style={{ fontSize:10, color:T.textMuted, marginBottom:4 }}>Property Type</div>
+                          <div style={{ fontSize:15, fontWeight:700, color:T.teal }}>{selectedProject.type || "—"}</div>
+                        </div>
+                        <div>
+                          <div style={{ fontSize:10, color:T.textMuted, marginBottom:4 }}>Market Segment</div>
+                          <div style={{ fontSize:15, fontWeight:700, color:seg.color }}>{seg.tier}</div>
+                        </div>
+                        <div>
+                          <div style={{ fontSize:10, color:T.textMuted, marginBottom:4 }}>Project Stage</div>
+                          <div style={{ fontSize:15, fontWeight:700, color:mkt.color }}>{mkt.label}</div>
+                        </div>
+                        <div>
+                          <div style={{ fontSize:10, color:T.textMuted, marginBottom:4 }}>RERA Number</div>
+                          <div style={{ fontSize:15, fontWeight:700, color:rera.verified ? T.green : T.textMuted }}>{rera.verified ? rera.number : "Pending"}</div>
+                        </div>
+                        <div>
+                          <div style={{ fontSize:10, color:T.textMuted, marginBottom:4 }}>Construction Status</div>
+                          <div style={{ fontSize:15, fontWeight:700, color:T.white }}>{selectedProject.constructionPct != null ? selectedProject.constructionPct + "% complete" : "Not disclosed"}</div>
+                        </div>
+                      </div>
                     </div>
                     {selectedProject.notes && (
-                      <div className="chart-box" style={{ padding:18, marginBottom:16 }}>
-                        <div style={{ fontSize:11, fontWeight:700, color:T.textMuted, letterSpacing:0.8, textTransform:"uppercase", marginBottom:10 }}>Analyst Notes</div>
+                      <div className="chart-box" style={{ padding:18, marginBottom:12 }}>
+                        <div style={{ fontSize:11, fontWeight:700, color:T.textMuted, letterSpacing:0.8, textTransform:"uppercase", marginBottom:10 }}>Project Description</div>
                         <div style={{ fontSize:13, color:T.textSecondary, lineHeight:1.8 }}>{selectedProject.notes}</div>
                       </div>
                     )}
-                    {selectedProject.amenities?.length > 0 && (
-                      <div className="chart-box" style={{ padding:18, marginBottom:16 }}>
-                        <div style={{ fontSize:11, fontWeight:700, color:T.textMuted, letterSpacing:0.8, textTransform:"uppercase", marginBottom:12 }}>All Amenities</div>
-                        <div style={{ display:"flex", flexWrap:"wrap", gap:8 }}>
-                          {selectedProject.amenities.map((a,i) => <span key={i} style={{ fontSize:12, padding:"5px 12px", borderRadius:20, background:T.surfaceAlt, border:`1px solid ${T.border}`, color:T.textSecondary }}>{a}</span>)}
+                    <LegalNote T={T} />
+                  </div>
+                  );
+                })()}
+
+                {/* ═══ SECTION 2 · LOCATION DATA ═══ */}
+                {projDetailTab === "location" && (() => {
+                  const tags = locationTags(selectedProject);
+                  return (
+                  <div>
+                    <div style={{ padding:"16px 20px", background:T.surface, border:`1px solid ${T.border}`, borderRadius:14, marginBottom:16 }}>
+                      <div style={{ fontSize:10, fontWeight:700, color:T.textMuted, letterSpacing:1, textTransform:"uppercase", marginBottom:10 }}>Location Data · Distances Per DLD Filing</div>
+                      <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(200px, 1fr))", gap:12, marginBottom:14 }}>
+                        <div>
+                          <div style={{ fontSize:10, color:T.textMuted, marginBottom:4 }}>Emirate</div>
+                          <div style={{ fontSize:14, fontWeight:700, color:T.white }}>{selectedProject.emirate || "Dubai"}</div>
+                        </div>
+                        <div>
+                          <div style={{ fontSize:10, color:T.textMuted, marginBottom:4 }}>Area</div>
+                          <div style={{ fontSize:14, fontWeight:700, color:T.white }}>{selectedProject.area || selectedProject.community || "—"}</div>
+                        </div>
+                        <div>
+                          <div style={{ fontSize:10, color:T.textMuted, marginBottom:4 }}>Sub-Community</div>
+                          <div style={{ fontSize:14, fontWeight:700, color:T.textSecondary }}>{selectedProject.subCommunity || "—"}</div>
+                        </div>
+                      </div>
+                      {tags.length > 0 && (
+                        <div>
+                          <div style={{ fontSize:10, color:T.textMuted, marginBottom:8, letterSpacing:0.5 }}>LOCATION CHARACTERISTICS</div>
+                          <div style={{ display:"flex", flexWrap:"wrap", gap:6 }}>
+                            {tags.map((a,i) => (
+                              <span key={i} style={{ fontSize:11, padding:"4px 12px", borderRadius:20, background:`${a.color}15`, color:a.color, fontWeight:700, border:`1px solid ${a.color}30` }}>{a.label}</span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                    <div className="chart-box" style={{ padding:18, marginBottom:12 }}>
+                      <div style={{ fontSize:12, fontWeight:700, color:T.white, marginBottom:14 }}>Distance to Key Landmarks</div>
+                      <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(130px,1fr))", gap:10 }}>
+                        {[
+                          { label:"Nearest Metro", val:selectedProject.distMetro, code:"metro" },
+                          { label:"DIFC", val:selectedProject.distDIFC, code:"difc" },
+                          { label:"Airport DXB", val:selectedProject.distAirport, code:"airport" },
+                          { label:"Beach", val:selectedProject.distBeach, code:"beach" },
+                          { label:"Nearest Mall", val:selectedProject.distMall, code:"mall" },
+                          { label:"School", val:selectedProject.distSchool, code:"school" },
+                          { label:"Hospital", val:selectedProject.distHospital, code:"hospital" },
+                        ].map((d,i) => (
+                          <div key={i} style={{ padding:"12px 14px", background:T.surfaceAlt, borderRadius:10, border:`1px solid ${T.border}`, textAlign:"center" }}>
+                            <div style={{ fontSize:10, color:T.textMuted, marginBottom:6 }}>{d.label}</div>
+                            <div style={{ fontFamily:"'Fraunces',serif", fontSize:18, fontWeight:700, color:T.white }}>
+                              {d.val != null ? (d.val < 1 ? (d.val*1000).toFixed(0)+"m" : d.val+"km") : "—"}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    <LegalNote T={T} />
+                  </div>
+                  );
+                })()}
+
+                {/* ═══ SECTION 3 · SCALE & UNITS ═══ */}
+                {projDetailTab === "scale" && (() => {
+                  const mix = computeUnitMix(selectedProject);
+                  return (
+                  <div>
+                    <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(160px, 1fr))", gap:12, marginBottom:16 }}>
+                      {[
+                        { label:"Plot Size", value:selectedProject.plotSize || "—", sub:"sq ft" },
+                        { label:"Built-Up Area", value:selectedProject.builtUpArea || "—", sub:"sq ft" },
+                        { label:"Total Buildings", value:selectedProject.totalBuildings || "—", sub:"per DLD filing" },
+                        { label:"Total Units", value:(selectedProject.totalUnits || 0).toLocaleString(), sub:"registered" },
+                        { label:"Total Villas", value:(selectedProject.totalVillas || 0).toLocaleString(), sub:"if applicable" },
+                        { label:"Total Land Plots", value:(selectedProject.totalLands || 0).toLocaleString(), sub:"if applicable" },
+                      ].map((k,i) => (
+                        <div key={i} className="kpi-card">
+                          <div style={{ fontSize:10, fontWeight:700, color:T.textMuted, letterSpacing:1, textTransform:"uppercase", marginBottom:6 }}>{k.label}</div>
+                          <div style={{ fontFamily:"'Fraunces',serif", fontSize:22, fontWeight:800, color:T.white, marginBottom:2 }}>{k.value}</div>
+                          <div style={{ fontSize:10, color:T.textMuted }}>{k.sub}</div>
+                        </div>
+                      ))}
+                    </div>
+                    {mix && mix.length > 0 && (
+                      <div className="chart-box" style={{ padding:20, marginBottom:12 }}>
+                        <div style={{ fontSize:12, fontWeight:700, color:T.white, marginBottom:14 }}>Unit Mix Distribution</div>
+                        <div style={{ display:"flex", gap:4, height:28, borderRadius:8, overflow:"hidden", marginBottom:12 }}>
+                          {mix.map((u,i) => {
+                            const colors = [T.gold, T.teal, T.green, "#8B5CF6", "#F59E0B"];
+                            return (
+                              <div key={i} style={{ width:`${u.pct}%`, background:colors[i % colors.length], display:"flex", alignItems:"center", justifyContent:"center", fontSize:10, fontWeight:700, color:"#000" }}>
+                                {u.pct >= 8 ? `${u.type} ${u.pct}%` : ""}
+                              </div>
+                            );
+                          })}
+                        </div>
+                        <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(120px, 1fr))", gap:8 }}>
+                          {mix.map((u,i) => (
+                            <div key={i} style={{ padding:"8px 10px", background:T.surfaceAlt, borderRadius:8, textAlign:"center" }}>
+                              <div style={{ fontSize:10, color:T.gold, fontWeight:700 }}>{u.type}</div>
+                              <div style={{ fontSize:13, color:T.white, fontWeight:700 }}>{u.pct}%</div>
+                              <div style={{ fontSize:9, color:T.textMuted }}>{u.count} units</div>
+                            </div>
+                          ))}
                         </div>
                       </div>
                     )}
-                    <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
-                      <button type="button" onClick={() => { setSelectedProject(null); handleTabChange("Investment Score"); }} style={{ padding:"9px 18px", background:`linear-gradient(135deg,${T.gold},#B8922A)`, border:"none", borderRadius:8, color:"#000", fontSize:12, fontWeight:700, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>Calculate ROI →</button>
-                      <button type="button" onClick={() => { setSelectedProject(null); handleTabChange("Mortgage"); }} style={{ padding:"9px 18px", background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:8, color:T.textSecondary, fontSize:12, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>Mortgage</button>
-                      <button type="button" onClick={() => { setSelectedProject(null); handleTabChange("My Leads"); }} style={{ padding:"9px 18px", background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:8, color:T.textSecondary, fontSize:12, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>Add to Lead</button>
-                      {(() => {
-                        /* Phase 3.13: build share payload + deep link once, used by WhatsApp / Email / Copy */
-                        const score = calcScore(selectedProject);
-                        const units = selectedProject.unitBreakdown?.map(u => `  • ${u.type}: AED ${(u.ppsf||0).toLocaleString()}/sqft | From AED ${(u.priceMin/1000000).toFixed(2)}M | Yield ${u.grossYield||"—"}%`).join("\n") || "";
-                        const dists = [
-                          selectedProject.distMetro != null ? `Metro: ${selectedProject.distMetro}km` : null,
-                          selectedProject.distDIFC != null ? `DIFC: ${selectedProject.distDIFC}km` : null,
-                          selectedProject.distBeach != null && selectedProject.distBeach <= 5 ? `Beach: ${selectedProject.distBeach < 1 ? (selectedProject.distBeach*1000).toFixed(0)+"m" : selectedProject.distBeach+"km"}` : null,
-                          selectedProject.distSchool != null ? `School: ${selectedProject.distSchool}km` : null,
-                        ].filter(Boolean).join(" | ");
-                        /* Deep link — uses CURRENT origin (works on vercel, cloudflare, localhost, custom domain) */
-                        const origin = (typeof window !== "undefined" && window.location && window.location.origin) ? window.location.origin : "https://emaar-dashboard.vercel.app";
-                        /* Phase 3.16: use /project/<id> route */
-                        const projectUrl = `${origin}/project/${encodeURIComponent(selectedProject.id || "")}`;
-                        const txt = [
-                          "\uD83C\uDFD9️ DXB ANALYTICS — PROPERTY BRIEF",
-                          "━━━━━━━━━━━━━━━━━━━━━━━━",
-                          `\uD83D\uDCCC ${selectedProject.project}`,
-                          `\uD83C\uDFE2 Developer: ${selectedProject.developer}`,
-                          `\uD83D\uDCCD Community: ${selectedProject.community}`,
-                          `\uD83C\uDFE0 Type: ${selectedProject.type}`,
-                          "",
-                          "\uD83D\uDCB0 PRICING",
-                          `   Starting from: AED ${((selectedProject.priceMin||0)/1000000).toFixed(2)}M`,
-                          `   Price per sqft: AED ${(selectedProject.ppsf||0).toLocaleString()}`,
-                          units ? `\n\uD83D\uDCD0 UNIT BREAKDOWN\n${units}` : "",
-                          "",
-                          "\uD83D\uDCCA INVESTMENT",
-                          `   Gross Yield: ${selectedProject.grossYield||"—"}%`,
-                          `   Net Yield: ${selectedProject.netYield||"—"}%`,
-                          `   Payment Plan: ${selectedProject.paymentPlan||"TBC"}`,
-                          `   Post-Handover: ${selectedProject.postHandover?"Yes":"No"}`,
-                          `   Handover: ${selectedProject.handover||"TBC"}`,
-                          `   Investment Score: ${score}/100 — ${score>=80?"Strong Buy":score>=65?"Buy":"Hold"}`,
-                          "",
-                          "\uD83D\uDCCD DISTANCES",
-                          `   ${dists || "See full details"}`,
-                          "",
-                          selectedProject.amenities?.length > 0 ? `✨ AMENITIES\n   ${selectedProject.amenities.slice(0,6).join(" · ")}` : "",
-                          "",
-                          `\uD83D\uDD10 RERA: ${selectedProject.reraNo||"TBC"} | Escrow: ${selectedProject.escrowBank||"TBC"}`,
-                          "",
-                          `\uD83D\uDD17 View full details: ${projectUrl}`,
-                          "",
-                          "━━━━━━━━━━━━━━━━━━━━━━━━",
-                          "Powered by DXB Analytics Intelligence Platform",
-                        ].filter(line => line !== "").join("\n");
+                    {selectedProject.unitBreakdown?.length > 0 && (
+                      <div className="chart-box" style={{ padding:20, marginBottom:12 }}>
+                        <div style={{ fontSize:12, fontWeight:700, color:T.white, marginBottom:14 }}>Unit Type — Price & PPSF (Developer Disclosed)</div>
+                        <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(200px, 1fr))", gap:10 }}>
+                          {selectedProject.unitBreakdown.map((u,i) => (
+                            <div key={i} style={{ padding:"14px 16px", background:T.surfaceAlt, borderRadius:10, border:`1px solid ${T.border}` }}>
+                              <div style={{ fontSize:11, fontWeight:700, color:T.gold, marginBottom:8 }}>{u.type}</div>
+                              <div style={{ fontSize:11, color:T.textMuted }}>From Price</div>
+                              <div style={{ fontSize:16, fontWeight:700, color:T.white, fontFamily:"'Fraunces',serif", marginBottom:6 }}>AED {(u.priceMin/1000000).toFixed(2)}M</div>
+                              <div style={{ fontSize:11, color:T.textMuted }}>PPSF</div>
+                              <div style={{ fontSize:14, fontWeight:700, color:T.teal }}>AED {(u.ppsf||0).toLocaleString()}/sqft</div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    <LegalNote T={T} />
+                  </div>
+                  );
+                })()}
 
-                        const emailSubject = `Property Brief — ${selectedProject.project} | ${selectedProject.developer}`;
-                        const emailBody = txt;
-                        const btnStyle = (color) => ({ padding:"9px 16px", background:`rgba(${color},0.1)`, border:`1px solid rgba(${color},0.3)`, borderRadius:8, color:`rgb(${color})`, fontSize:12, fontWeight:600, cursor:"pointer", fontFamily:"'Outfit',sans-serif", display:"inline-flex", alignItems:"center", gap:6 });
-                        return (
+                {/* ═══ SECTION 4 · PRODUCT & AMENITIES ═══ */}
+                {projDetailTab === "product" && (
+                  <div>
+                    <div style={{ padding:"14px 20px", background:"rgba(20,184,166,0.05)", border:`1px solid ${T.border}`, borderRadius:10, marginBottom:16 }}>
+                      <div style={{ fontSize:11, color:T.teal, fontWeight:700, letterSpacing:0.5 }}>PRODUCT SPECIFICATION · DEVELOPER DISCLOSED</div>
+                    </div>
+                    <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit, minmax(190px, 1fr))", gap:12, marginBottom:16 }}>
+                      <div className="kpi-card">
+                        <div style={{ fontSize:10, fontWeight:700, color:T.textMuted, letterSpacing:1, textTransform:"uppercase", marginBottom:8 }}>Branded Residence</div>
+                        <div style={{ fontFamily:"'Fraunces',serif", fontSize:18, fontWeight:800, color:selectedProject.branded ? T.gold : T.textSecondary }}>{selectedProject.branded ? (selectedProject.brandPartner || "Yes") : "No"}</div>
+                      </div>
+                      <div className="kpi-card">
+                        <div style={{ fontSize:10, fontWeight:700, color:T.textMuted, letterSpacing:1, textTransform:"uppercase", marginBottom:8 }}>Developer Tier</div>
+                        <div style={{ fontFamily:"'Fraunces',serif", fontSize:18, fontWeight:800, color:selectedProject.tier === 1 ? T.green : selectedProject.tier === 2 ? "#F59E0B" : T.textSecondary }}>{selectedProject.tier ? "Tier " + selectedProject.tier : "Not classified"}</div>
+                      </div>
+                      <div className="kpi-card">
+                        <div style={{ fontSize:10, fontWeight:700, color:T.textMuted, letterSpacing:1, textTransform:"uppercase", marginBottom:8 }}>Golden Visa Eligible</div>
+                        <div style={{ fontFamily:"'Fraunces',serif", fontSize:18, fontWeight:800, color:(selectedProject.goldenVisa && selectedProject.priceMin >= GOLDEN_VISA_THRESHOLD) ? T.gold : T.textSecondary }}>{(selectedProject.goldenVisa && selectedProject.priceMin >= GOLDEN_VISA_THRESHOLD) ? "Yes" : "No"}</div>
+                      </div>
+                      <div className="kpi-card">
+                        <div style={{ fontSize:10, fontWeight:700, color:T.textMuted, letterSpacing:1, textTransform:"uppercase", marginBottom:8 }}>Total Amenities</div>
+                        <div style={{ fontFamily:"'Fraunces',serif", fontSize:22, fontWeight:800, color:T.white }}>{(selectedProject.amenities || []).length}</div>
+                      </div>
+                    </div>
+                    {selectedProject.amenities?.length > 0 && (
+                      <div className="chart-box" style={{ padding:18, marginBottom:12 }}>
+                        <div style={{ fontSize:11, fontWeight:700, color:T.textMuted, letterSpacing:0.8, textTransform:"uppercase", marginBottom:12 }}>Amenities Listed in Developer Filing</div>
+                        <div style={{ display:"flex", flexWrap:"wrap", gap:6 }}>
+                          {selectedProject.amenities.map((a,i) => <span key={i} style={{ fontSize:11, padding:"4px 11px", borderRadius:18, background:T.surfaceAlt, border:`1px solid ${T.border}`, color:T.textSecondary }}>{a}</span>)}
+                        </div>
+                      </div>
+                    )}
+                    {selectedProject.view?.length > 0 && (
+                      <div className="chart-box" style={{ padding:18, marginBottom:12 }}>
+                        <div style={{ fontSize:11, fontWeight:700, color:T.textMuted, letterSpacing:0.8, textTransform:"uppercase", marginBottom:12 }}>Views From Units</div>
+                        <div style={{ display:"flex", flexWrap:"wrap", gap:6 }}>
+                          {selectedProject.view.map((v,i) => <span key={i} style={{ fontSize:11, padding:"4px 12px", borderRadius:18, background:"rgba(212,168,67,0.1)", border:`1px solid rgba(212,168,67,0.25)`, color:T.gold, fontWeight:700 }}>{v}</span>)}
+                        </div>
+                      </div>
+                    )}
+                    <LegalNote T={T} />
+                  </div>
+                )}
+
+                {/* ═══ SECTION 5 · PRICING DATA ═══ */}
+                {projDetailTab === "pricing" && (() => {
+                  const bench = communityBenchmarkPPSF(selectedProject);
+                  return (
+                  <div>
+                    <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit, minmax(180px, 1fr))", gap:12, marginBottom:16 }}>
+                      <div className="kpi-card">
+                        <div style={{ fontSize:10, fontWeight:700, color:T.textMuted, letterSpacing:1, textTransform:"uppercase", marginBottom:8 }}>Starting Price</div>
+                        <div style={{ fontFamily:"'Fraunces',serif", fontSize:24, fontWeight:800, color:T.gold }}>{selectedProject.priceMin ? "AED " + (selectedProject.priceMin/1000000).toFixed(2) + "M" : "Not disclosed"}</div>
+                        <div style={{ fontSize:10, color:T.textMuted, marginTop:4 }}>Per developer pricing sheet</div>
+                      </div>
+                      <div className="kpi-card">
+                        <div style={{ fontSize:10, fontWeight:700, color:T.textMuted, letterSpacing:1, textTransform:"uppercase", marginBottom:8 }}>Price per Sq.ft</div>
+                        <div style={{ fontFamily:"'Fraunces',serif", fontSize:24, fontWeight:800, color:T.white }}>{selectedProject.ppsf ? "AED " + selectedProject.ppsf.toLocaleString() : "—"}</div>
+                        <div style={{ fontSize:10, color:T.textMuted, marginTop:4 }}>PPSF from listings</div>
+                      </div>
+                      <div className="kpi-card">
+                        <div style={{ fontSize:10, fontWeight:700, color:T.textMuted, letterSpacing:1, textTransform:"uppercase", marginBottom:8 }}>Community Benchmark PPSF</div>
+                        <div style={{ fontFamily:"'Fraunces',serif", fontSize:24, fontWeight:800, color:bench.value ? T.teal : T.textMuted }}>{bench.value ? "AED " + bench.value.toLocaleString() : "Pending"}</div>
+                        <div style={{ fontSize:10, color:T.textMuted, marginTop:4 }}>{bench.source}</div>
+                      </div>
+                      <div className="kpi-card">
+                        <div style={{ fontSize:10, fontWeight:700, color:T.textMuted, letterSpacing:1, textTransform:"uppercase", marginBottom:8 }}>Payment Plan</div>
+                        <div style={{ fontFamily:"'Fraunces',serif", fontSize:20, fontWeight:800, color:T.gold }}>{selectedProject.paymentPlan || "—"}</div>
+                        <div style={{ fontSize:10, color:T.textMuted, marginTop:4 }}>During / Post-handover split</div>
+                      </div>
+                    </div>
+                    <div className="chart-box" style={{ padding:20, marginBottom:12 }}>
+                      <div style={{ fontSize:12, fontWeight:700, color:T.white, marginBottom:14 }}>Payment Plan Waterfall</div>
+                      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:12, marginBottom:16 }}>
+                        <div>
+                          <div style={{ fontSize:10, color:T.textMuted, marginBottom:4 }}>Post-Handover Plan</div>
+                          <div style={{ fontSize:18, fontWeight:800, color:selectedProject.postHandover ? T.green : T.textSecondary, fontFamily:"'Fraunces',serif" }}>{selectedProject.postHandover ? "Available" : "Not available"}</div>
+                        </div>
+                        <div>
+                          <div style={{ fontSize:10, color:T.textMuted, marginBottom:4 }}>Escrow Bank</div>
+                          <div style={{ fontSize:14, fontWeight:700, color:T.teal }}>{selectedProject.escrowBank || "—"}</div>
+                        </div>
+                        <div>
+                          <div style={{ fontSize:10, color:T.textMuted, marginBottom:4 }}>Service Charge</div>
+                          <div style={{ fontSize:18, fontWeight:800, color:T.white, fontFamily:"'Fraunces',serif" }}>{selectedProject.serviceCharge ? "AED " + selectedProject.serviceCharge + "/sqft/yr" : "TBC"}</div>
+                        </div>
+                      </div>
+                      {selectedProject.paymentPlan && selectedProject.paymentPlan.includes("/") && !selectedProject.paymentPlan.includes("Cash") && (
+                        <div>
+                          <div style={{ display:"flex", gap:4, height:32, borderRadius:8, overflow:"hidden", marginBottom:8 }}>
+                            <div style={{ width:`${parseInt(selectedProject.paymentPlan.split("/")[0])||60}%`, background:T.gold, display:"flex", alignItems:"center", justifyContent:"center" }}>
+                              <span style={{ fontSize:11, fontWeight:700, color:"#000" }}>{parseInt(selectedProject.paymentPlan.split("/")[0])||60}% During Construction</span>
+                            </div>
+                            <div style={{ width:`${parseInt(selectedProject.paymentPlan.split("/")[1])||40}%`, background:T.teal, display:"flex", alignItems:"center", justifyContent:"center" }}>
+                              <span style={{ fontSize:11, fontWeight:700, color:"#fff" }}>{parseInt(selectedProject.paymentPlan.split("/")[1])||40}% At Handover</span>
+                            </div>
+                          </div>
+                          <div style={{ fontSize:11, color:T.textMuted, lineHeight:1.7 }}>
+                            Worked example — AED {((selectedProject.priceMin||0)/1000000).toFixed(1)}M: Pay AED {((selectedProject.priceMin||0)*(parseInt(selectedProject.paymentPlan.split("/")[0])||60)/100/1000000).toFixed(2)}M during construction, AED {((selectedProject.priceMin||0)*(parseInt(selectedProject.paymentPlan.split("/")[1])||40)/100/1000000).toFixed(2)}M at handover.
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                    <div style={{ padding:"14px 16px", background:"rgba(212,168,67,0.06)", borderRadius:10, border:`1px solid rgba(212,168,67,0.2)`, marginBottom:12 }}>
+                      <div style={{ fontSize:12, color:T.textSecondary, lineHeight:1.8 }}>
+                        <strong style={{ color:T.gold }}>DLD Compliance Note:</strong> All off-plan payments must be made to the DLD-registered escrow account ({selectedProject.escrowBank || "TBC"}). RERA registration: {selectedProject.reraNo || selectedProject.projectNumber || "verify with developer"}. Per DLD Law No. 8 of 2007, never pay cash directly to developer.
+                      </div>
+                    </div>
+                    <LegalNote T={T} />
+                  </div>
+                  );
+                })()}
+
+                {/* ═══ SECTION 6 · RENTAL & YIELD DATA ═══ */}
+                {projDetailTab === "rental" && (() => {
+                  const str = strIndicator(selectedProject);
+                  return (
+                  <div>
+                    <div style={{ padding:"14px 20px", background:"rgba(16,185,129,0.05)", border:`1px solid ${T.border}`, borderRadius:10, marginBottom:16 }}>
+                      <div style={{ fontSize:11, color:T.green, fontWeight:700, letterSpacing:0.5 }}>RENTAL DATA · PER RERA SMART RENTAL INDEX METHODOLOGY</div>
+                    </div>
+                    <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit, minmax(180px, 1fr))", gap:12, marginBottom:16 }}>
+                      <div className="kpi-card">
+                        <div style={{ fontSize:10, fontWeight:700, color:T.textMuted, letterSpacing:1, textTransform:"uppercase", marginBottom:8 }}>Gross Yield</div>
+                        <div style={{ fontFamily:"'Fraunces',serif", fontSize:26, fontWeight:800, color:selectedProject.grossYield >= 7 ? T.green : selectedProject.grossYield >= 5 ? T.gold : T.textSecondary }}>{selectedProject.grossYield ? selectedProject.grossYield.toFixed(1) + "%" : "—"}</div>
+                        <div style={{ fontSize:10, color:T.textMuted }}>Annual rent ÷ purchase price</div>
+                      </div>
+                      <div className="kpi-card">
+                        <div style={{ fontSize:10, fontWeight:700, color:T.textMuted, letterSpacing:1, textTransform:"uppercase", marginBottom:8 }}>Net Yield</div>
+                        <div style={{ fontFamily:"'Fraunces',serif", fontSize:26, fontWeight:800, color:T.teal }}>{selectedProject.netYield ? selectedProject.netYield.toFixed(1) + "%" : "—"}</div>
+                        <div style={{ fontSize:10, color:T.textMuted }}>After service charges</div>
+                      </div>
+                      <div className="kpi-card">
+                        <div style={{ fontSize:10, fontWeight:700, color:T.textMuted, letterSpacing:1, textTransform:"uppercase", marginBottom:8 }}>Rental Use Class</div>
+                        <div style={{ fontFamily:"'Fraunces',serif", fontSize:18, fontWeight:800, color:T.white }}>{str.flag}</div>
+                        <div style={{ fontSize:10, color:T.textMuted }}>{str.note}</div>
+                      </div>
+                      <div className="kpi-card">
+                        <div style={{ fontSize:10, fontWeight:700, color:T.textMuted, letterSpacing:1, textTransform:"uppercase", marginBottom:8 }}>Holiday Home Registration</div>
+                        <div style={{ fontFamily:"'Fraunces',serif", fontSize:18, fontWeight:800, color:str.flag === "Hotel Apartment" ? T.green : T.textSecondary }}>{str.flag === "Hotel Apartment" ? "Pre-approved" : "Owner Applies"}</div>
+                        <div style={{ fontSize:10, color:T.textMuted }}>Per DET licensing</div>
+                      </div>
+                    </div>
+                    <div className="chart-box" style={{ padding:18, marginBottom:12 }}>
+                      <div style={{ fontSize:12, fontWeight:700, color:T.white, marginBottom:10 }}>RERA Smart Rental Index Reference</div>
+                      <div style={{ fontSize:12, color:T.textSecondary, lineHeight:1.8 }}>
+                        The RERA Smart Rental Index is the official tool for all rent increases in Dubai. Rental yields shown are computed from published DLD transaction data and RERA-indexed rental rates. Actual achieved rent depends on unit finishes, floor, view, and market timing. To verify permissible rent for a specific unit, use the official RERA Calculator at <span style={{ color:T.teal }}>dubailand.gov.ae</span> or the Dubai REST app.
+                      </div>
+                    </div>
+                    <LegalNote T={T} />
+                  </div>
+                  );
+                })()}
+
+                {/* ═══ SECTION 7 · DEVELOPER & COMPLIANCE ═══ */}
+                {projDetailTab === "developer" && (() => {
+                  const esc = escrowStatus(selectedProject);
+                  const rera = reraCompliance(selectedProject);
+                  return (
+                  <div>
+                    <div style={{ padding:"18px 20px", background:`linear-gradient(135deg, rgba(212,168,67,0.08), rgba(20,184,166,0.04))`, border:`1px solid ${T.border}`, borderRadius:14, marginBottom:16 }}>
+                      <div style={{ fontSize:11, fontWeight:700, color:T.gold, letterSpacing:1, textTransform:"uppercase", marginBottom:10 }}>Developer & Regulatory Compliance</div>
+                      <div style={{ fontSize:22, fontWeight:800, color:T.white, fontFamily:"'Fraunces',serif", marginBottom:4 }}>{selectedProject.developer || "—"}</div>
+                      {selectedProject.tier && <div style={{ fontSize:12, padding:"3px 10px", borderRadius:6, background:selectedProject.tier === 1 ? "rgba(16,185,129,0.15)" : "rgba(245,158,11,0.15)", color:selectedProject.tier === 1 ? T.green : "#F59E0B", fontWeight:700, display:"inline-block" }}>Tier {selectedProject.tier} Developer</div>}
+                    </div>
+                    <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit, minmax(200px, 1fr))", gap:12, marginBottom:16 }}>
+                      <div className="kpi-card">
+                        <div style={{ fontSize:10, fontWeight:700, color:T.textMuted, letterSpacing:1, textTransform:"uppercase", marginBottom:8 }}>RERA Registered</div>
+                        <div style={{ fontFamily:"'Fraunces',serif", fontSize:18, fontWeight:800, color:rera.verified ? T.green : T.red }}>{rera.verified ? "Verified" : "Not Found"}</div>
+                        <div style={{ fontSize:10, color:T.textMuted }}>{rera.verified ? "#" + rera.number : "Check DLD registry"}</div>
+                      </div>
+                      <div className="kpi-card">
+                        <div style={{ fontSize:10, fontWeight:700, color:T.textMuted, letterSpacing:1, textTransform:"uppercase", marginBottom:8 }}>Escrow Compliance</div>
+                        <div style={{ fontFamily:"'Fraunces',serif", fontSize:18, fontWeight:800, color:esc.verified ? T.green : "#F59E0B" }}>{esc.label}</div>
+                      </div>
+                      <div className="kpi-card">
+                        <div style={{ fontSize:10, fontWeight:700, color:T.textMuted, letterSpacing:1, textTransform:"uppercase", marginBottom:8 }}>Escrow Bank</div>
+                        <div style={{ fontSize:14, fontWeight:700, color:T.teal }}>{selectedProject.escrowBank || "—"}</div>
+                      </div>
+                      <div className="kpi-card">
+                        <div style={{ fontSize:10, fontWeight:700, color:T.textMuted, letterSpacing:1, textTransform:"uppercase", marginBottom:8 }}>DLD Project Status</div>
+                        <div style={{ fontSize:14, fontWeight:700, color:T.white }}>{selectedProject.dldStatus || selectedProject.status || "—"}</div>
+                      </div>
+                    </div>
+                    <div className="chart-box" style={{ padding:18, marginBottom:12 }}>
+                      <div style={{ fontSize:12, fontWeight:700, color:T.white, marginBottom:14 }}>Construction & Delivery Data</div>
+                      <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(140px, 1fr))", gap:10 }}>
+                        <div style={{ padding:"10px 12px", background:T.surfaceAlt, borderRadius:8 }}>
+                          <div style={{ fontSize:10, color:T.textMuted, marginBottom:4 }}>Build Progress</div>
+                          <div style={{ fontSize:16, fontWeight:700, color:T.white }}>{selectedProject.constructionPct != null ? selectedProject.constructionPct + "%" : "—"}</div>
+                        </div>
+                        <div style={{ padding:"10px 12px", background:T.surfaceAlt, borderRadius:8 }}>
+                          <div style={{ fontSize:10, color:T.textMuted, marginBottom:4 }}>Expected Handover</div>
+                          <div style={{ fontSize:16, fontWeight:700, color:T.gold }}>{selectedProject.handover || selectedProject.expectedHandover || "—"}</div>
+                        </div>
+                        <div style={{ padding:"10px 12px", background:T.surfaceAlt, borderRadius:8 }}>
+                          <div style={{ fontSize:10, color:T.textMuted, marginBottom:4 }}>Contracted Handover</div>
+                          <div style={{ fontSize:13, fontWeight:700, color:T.textSecondary }}>{selectedProject.contractedHandover || "—"}</div>
+                        </div>
+                        <div style={{ padding:"10px 12px", background:T.surfaceAlt, borderRadius:8 }}>
+                          <div style={{ fontSize:10, color:T.textMuted, marginBottom:4 }}>Actual Handover</div>
+                          <div style={{ fontSize:13, fontWeight:700, color:T.textSecondary }}>{selectedProject.actualHandover || "Pending"}</div>
+                        </div>
+                      </div>
+                    </div>
+                    <button type="button" onClick={() => { setSelectedProject(null); handleTabChange("Developer Health"); }} style={{ padding:"10px 20px", background:"rgba(212,168,67,0.1)", border:`1px solid ${T.border}`, borderRadius:8, color:T.gold, fontSize:12, cursor:"pointer", fontFamily:"'Outfit',sans-serif", fontWeight:600, marginBottom:12 }}>Full Developer Profile →</button>
+                    <LegalNote T={T} />
+                  </div>
+                  );
+                })()}
+
+                {/* ═══ SECTION 8 · FULL REPORT & SHARE ═══ */}
+                {projDetailTab === "report" && (
+                  <div>
+                    <div style={{ padding:"14px 20px", background:"rgba(139,92,246,0.05)", border:`1px solid ${T.border}`, borderRadius:10, marginBottom:16 }}>
+                      <div style={{ fontSize:11, color:"#A78BFA", fontWeight:700, letterSpacing:0.5 }}>DATA REPORT · SHAREABLE SUMMARY</div>
+                    </div>
+                    <div className="chart-box" style={{ padding:20, marginBottom:16 }}>
+                      <div style={{ fontSize:12, fontWeight:700, color:T.white, marginBottom:14 }}>Project Summary (Factual Data)</div>
+                      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12, fontSize:12, color:T.textSecondary, lineHeight:1.9 }}>
+                        <div><strong style={{ color:T.white }}>Project:</strong> {selectedProject.project || selectedProject.name || "—"}</div>
+                        <div><strong style={{ color:T.white }}>Developer:</strong> {selectedProject.developer || "—"}</div>
+                        <div><strong style={{ color:T.white }}>Community:</strong> {selectedProject.community || "—"}</div>
+                        <div><strong style={{ color:T.white }}>Type:</strong> {selectedProject.type || "—"}</div>
+                        <div><strong style={{ color:T.white }}>Starting Price:</strong> {selectedProject.priceMin ? "AED " + (selectedProject.priceMin/1000000).toFixed(2) + "M" : "TBC"}</div>
+                        <div><strong style={{ color:T.white }}>PPSF:</strong> AED {(selectedProject.ppsf || 0).toLocaleString()}</div>
+                        <div><strong style={{ color:T.white }}>Gross Yield:</strong> {selectedProject.grossYield ? selectedProject.grossYield + "%" : "—"}</div>
+                        <div><strong style={{ color:T.white }}>Payment Plan:</strong> {selectedProject.paymentPlan || "TBC"}</div>
+                        <div><strong style={{ color:T.white }}>Handover:</strong> {selectedProject.handover || "TBC"}</div>
+                        <div><strong style={{ color:T.white }}>RERA #:</strong> {selectedProject.reraNo || selectedProject.projectNumber || "Pending"}</div>
+                        <div><strong style={{ color:T.white }}>Escrow:</strong> {selectedProject.escrowBank || "—"}</div>
+                        <div><strong style={{ color:T.white }}>Build Progress:</strong> {selectedProject.constructionPct != null ? selectedProject.constructionPct + "%" : "—"}</div>
+                      </div>
+                    </div>
+                    {(() => {
+                      const units = selectedProject.unitBreakdown?.map(u => `  • ${u.type}: AED ${(u.ppsf||0).toLocaleString()}/sqft | From AED ${(u.priceMin/1000000).toFixed(2)}M`).join("\n") || "";
+                      const origin = (typeof window !== "undefined" && window.location && window.location.origin) ? window.location.origin : "https://emaar-dashboard.vercel.app";
+                      const projectUrl = `${origin}/project/${encodeURIComponent(selectedProject.id || "")}`;
+                      const txt = [
+                        "🏙️ DXB ANALYTICS — PROPERTY DATA REPORT",
+                        "━━━━━━━━━━━━━━━━━━━━━━━━",
+                        `📌 ${selectedProject.project || selectedProject.name}`,
+                        `🏢 Developer: ${selectedProject.developer}`,
+                        `📍 Community: ${selectedProject.community}`,
+                        `🏠 Type: ${selectedProject.type}`,
+                        "",
+                        "💰 PRICING",
+                        `   Starting: AED ${((selectedProject.priceMin||0)/1000000).toFixed(2)}M`,
+                        `   PPSF: AED ${(selectedProject.ppsf||0).toLocaleString()}`,
+                        units ? `\n📐 UNIT BREAKDOWN\n${units}` : "",
+                        "",
+                        "📊 RENTAL DATA",
+                        `   Gross Yield: ${selectedProject.grossYield||"—"}%`,
+                        `   Payment Plan: ${selectedProject.paymentPlan||"TBC"}`,
+                        `   Handover: ${selectedProject.handover||"TBC"}`,
+                        "",
+                        `🔐 RERA: ${selectedProject.reraNo||selectedProject.projectNumber||"TBC"} | Escrow: ${selectedProject.escrowBank||"TBC"}`,
+                        "",
+                        `🔗 Full report: ${projectUrl}`,
+                        "━━━━━━━━━━━━━━━━━━━━━━━━",
+                        "Data Source: Dubai Land Department (DLD) public records",
+                        "Informational only — not investment advice",
+                        "For regulated advice contact a RERA-licensed consultant",
+                      ].filter(line => line !== "").join("\n");
+                      const emailSubject = `Property Data Report — ${selectedProject.project || selectedProject.name}`;
+                      const btnStyle = (color) => ({ padding:"10px 18px", background:`rgba(${color},0.1)`, border:`1px solid rgba(${color},0.3)`, borderRadius:8, color:`rgb(${color})`, fontSize:12, fontWeight:600, cursor:"pointer", fontFamily:"'Outfit',sans-serif", display:"inline-flex", alignItems:"center", gap:6 });
+                      return (
+                        <div className="chart-box" style={{ padding:18, marginBottom:12 }}>
+                          <div style={{ fontSize:11, fontWeight:700, color:T.textMuted, letterSpacing:0.8, textTransform:"uppercase", marginBottom:12 }}>Share This Data Report</div>
                           <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
-                            <button type="button" onClick={() => window.open(`https://wa.me/?text=${encodeURIComponent(txt)}`,"_blank")}
-                              style={btnStyle("37,211,102")} title="Share via WhatsApp">📱 WhatsApp</button>
-                            <button type="button" onClick={() => window.open(`mailto:?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`,"_blank")}
-                              style={btnStyle("59,130,246")} title="Send via Email">✉️ Email</button>
-                            <button type="button" onClick={() => {
-                              /* Phase 3.15: prompt for client phone, open tel: dialer.
-                                 Mobile = opens phone app. Desktop = opens default calling app. */
-                              const raw = window.prompt("Enter client phone number (with country code, e.g. +971501234567):", "+971 ");
-                              if (!raw) return;
-                              /* Strip anything that isn't a digit or leading +. Keep format clean for tel: */
-                              let cleaned = "";
-                              for (let i = 0; i < raw.length; i++) {
-                                const ch = raw[i];
-                                if (ch === "+" && cleaned.length === 0) cleaned += "+";
-                                else if (ch >= "0" && ch <= "9") cleaned += ch;
-                              }
-                              if (cleaned.length < 7) { alert("That doesn't look like a valid phone number. Try again with country code, e.g. +971501234567"); return; }
-                              window.location.href = "tel:" + cleaned;
-                            }} style={btnStyle("139,92,246")} title="Call the client directly">📞 Call</button>
+                            <button type="button" onClick={() => window.open(`https://wa.me/?text=${encodeURIComponent(txt)}`,"_blank")} style={btnStyle("37,211,102")}>📱 WhatsApp</button>
+                            <button type="button" onClick={() => window.open(`mailto:?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(txt)}`,"_blank")} style={btnStyle("59,130,246")}>✉️ Email</button>
                             <button type="button" onClick={async () => {
                               try {
                                 await navigator.clipboard.writeText(projectUrl);
                                 const el = document.activeElement;
                                 const original = el && el.textContent;
                                 if (el && el.textContent != null) { el.textContent = "✓ Copied!"; setTimeout(() => { if (el && original) el.textContent = original; }, 1500); }
-                              } catch {
-                                const ta = document.createElement("textarea");
-                                ta.value = projectUrl; document.body.appendChild(ta); ta.select();
-                                try { document.execCommand("copy"); } catch {}
-                                document.body.removeChild(ta);
-                                alert("Link copied: " + projectUrl);
-                              }
-                            }} style={btnStyle("212,168,67")} title="Copy shareable link">🔗 Copy link</button>
-                          </div>
-                        );
-                      })()}
-                    </div>
-                  </div>
-                )}
-                {projDetailTab === "units" && (
-                  <div>
-                    {/* Unit Breakdown Table */}
-                    {selectedProject.unitBreakdown?.length > 0 ? (
-                      <div className="chart-box" style={{ padding:20, marginBottom:16 }}>
-                        <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:16 }}>
-                          <div style={{ fontSize:13, fontWeight:700, color:T.white }}>Unit Breakdown — Price & PPSF per Type</div>
-                          <span style={{ fontSize:10, padding:"2px 8px", borderRadius:8, background:"rgba(212,168,67,0.1)", color:T.gold }}>Source: {selectedProject.source || "Developer"}</span>
-                        </div>
-                        {/* Table header */}
-                        <div style={{ display:"grid", gridTemplateColumns:"1fr 1.2fr 1.2fr 1fr 0.8fr 0.8fr 0.8fr", padding:"8px 12px", background:T.surfaceAlt, borderRadius:"8px 8px 0 0", borderBottom:`1px solid ${T.border}` }}>
-                          {["Unit Type","Size Range","Price Range","PPSF","Yield","Avail.",""].map((h,i) => (
-                            <div key={i} style={{ fontSize:10, fontWeight:700, color:T.textMuted, letterSpacing:0.8, textTransform:"uppercase" }}>{h}</div>
-                          ))}
-                        </div>
-                        {/* Table rows */}
-                        {selectedProject.unitBreakdown.map((u, i) => (
-                          <div key={i} style={{ display:"grid", gridTemplateColumns:"1fr 1.2fr 1.2fr 1fr 0.8fr 0.8fr 0.8fr", padding:"12px", borderBottom:i < selectedProject.unitBreakdown.length-1 ? `1px solid ${T.border}` : "none", background:i%2===0?"transparent":"rgba(255,255,255,0.01)", alignItems:"center" }}>
-                            {/* Unit type */}
-                            <div style={{ fontFamily:"'Fraunces',serif", fontSize:14, fontWeight:700, color:T.gold }}>{u.type}</div>
-                            {/* Size range */}
-                            <div>
-                              <div style={{ fontSize:12, color:T.white, fontWeight:600 }}>{(u.sizeMin||0).toLocaleString()} – {(u.sizeMax||0).toLocaleString()}</div>
-                              <div style={{ fontSize:10, color:T.textMuted }}>sqft</div>
-                              {u.plotMin && <div style={{ fontSize:10, color:T.textMuted }}>Plot: {u.plotMin.toLocaleString()}–{(u.plotMax||0).toLocaleString()} sqft</div>}
-                            </div>
-                            {/* Price range */}
-                            <div>
-                              <div style={{ fontSize:12, color:T.white, fontWeight:600 }}>AED {(u.priceMin/1000000).toFixed(2)}M</div>
-                              <div style={{ fontSize:10, color:T.textMuted }}>to AED {(u.priceMax/1000000).toFixed(2)}M</div>
-                            </div>
-                            {/* PPSF */}
-                            <div>
-                              <div style={{ fontSize:13, fontWeight:700, color:T.gold }}>AED {(u.ppsf||0).toLocaleString()}</div>
-                              <div style={{ fontSize:10, color:T.textMuted }}>per sqft</div>
-                            </div>
-                            {/* Yield */}
-                            <div style={{ fontSize:13, fontWeight:700, color:u.grossYield>=7?T.green:u.grossYield>=5?T.gold:T.textSecondary }}>
-                              {u.grossYield?u.grossYield.toFixed(1)+"%":"—"}
-                            </div>
-                            {/* Available units */}
-                            <div style={{ fontSize:13, fontWeight:600, color:u.available<=10?"#EF4444":u.available<=20?T.gold:T.green }}>
-                              {u.available!=null?u.available+" units":"—"}
-                            </div>
-                            {/* Quick actions */}
-                            <div style={{ display:"flex", gap:4 }}>
-                              <button type="button" onClick={() => handleTabChange("Mortgage")} style={{ padding:"4px 8px", background:"rgba(212,168,67,0.08)", border:`1px solid ${T.border}`, borderRadius:6, color:T.gold, fontSize:9, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>Calc</button>
-                            </div>
-                          </div>
-                        ))}
-                        {/* Summary row */}
-                        <div style={{ padding:"10px 12px", background:"rgba(212,168,67,0.06)", borderRadius:"0 0 8px 8px", borderTop:`1px solid rgba(212,168,67,0.2)`, display:"flex", gap:20, flexWrap:"wrap" }}>
-                          <div style={{ fontSize:11, color:T.textMuted }}>
-                            Total available: <span style={{ color:T.white, fontWeight:700 }}>{selectedProject.unitBreakdown.reduce((a,u)=>a+(u.available||0),0)} units</span>
-                          </div>
-                          <div style={{ fontSize:11, color:T.textMuted }}>
-                            Price range: <span style={{ color:T.gold, fontWeight:700 }}>AED {(Math.min(...selectedProject.unitBreakdown.map(u=>u.priceMin))/1000000).toFixed(2)}M – AED {(Math.max(...selectedProject.unitBreakdown.map(u=>u.priceMax))/1000000).toFixed(2)}M</span>
-                          </div>
-                          <div style={{ fontSize:11, color:T.textMuted }}>
-                            PPSF range: <span style={{ color:T.white, fontWeight:700 }}>AED {Math.min(...selectedProject.unitBreakdown.map(u=>u.ppsf||0)).toLocaleString()} – AED {Math.max(...selectedProject.unitBreakdown.map(u=>u.ppsf||0)).toLocaleString()}</span>
-                          </div>
-                          <div style={{ fontSize:11, color:T.textMuted }}>
-                            Best yield: <span style={{ color:T.green, fontWeight:700 }}>{Math.max(...selectedProject.unitBreakdown.map(u=>u.grossYield||0)).toFixed(1)}%</span>
+                              } catch {}
+                            }} style={btnStyle("212,168,67")}>🔗 Copy Link</button>
+                            <button type="button" onClick={() => { setSelectedProject(null); handleTabChange("Mortgage"); }} style={{ padding:"10px 18px", background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:8, color:T.textSecondary, fontSize:12, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>Mortgage Calculator</button>
+                            <button type="button" onClick={() => { setSelectedProject(null); handleTabChange("My Leads"); }} style={{ padding:"10px 18px", background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:8, color:T.textSecondary, fontSize:12, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>Add to Leads</button>
                           </div>
                         </div>
-                      </div>
-                    ) : (
-                      /* Fallback — no unitBreakdown yet */
-                      <div className="chart-box" style={{ padding:20, marginBottom:16 }}>
-                        <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:16 }}>Unit Types & Sizes</div>
-                        {selectedProject.beds?.length > 0 ? (
-                          <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(180px,1fr))", gap:12 }}>
-                            {selectedProject.beds.map((bed,i) => (
-                              <div key={i} style={{ padding:"14px", background:T.surfaceAlt, borderRadius:10, border:`1px solid ${T.border}` }}>
-                                <div style={{ fontFamily:"'Fraunces',serif", fontSize:18, fontWeight:700, color:T.gold, marginBottom:8 }}>{bed}</div>
-                                <div style={{ fontSize:12, color:T.textSecondary }}>Size: {(selectedProject.sizeMin||0).toLocaleString()} – {(selectedProject.sizeMax||0).toLocaleString()} sqft</div>
-                                <div style={{ fontSize:12, color:T.textSecondary }}>PPSF: AED {(selectedProject.ppsf||0).toLocaleString()}</div>
-                                {selectedProject.grossYield > 0 && <div style={{ fontSize:12, color:T.green, marginTop:6 }}>Yield: ~{selectedProject.grossYield.toFixed(1)}%</div>}
-                              </div>
-                            ))}
-                          </div>
-                        ) : (
-                          <div style={{ fontSize:13, color:T.textSecondary }}>Size: {(selectedProject.sizeMin||0).toLocaleString()} – {(selectedProject.sizeMax||0).toLocaleString()} sqft · PPSF: AED {(selectedProject.ppsf||0).toLocaleString()}</div>
-                        )}
-                        <div style={{ marginTop:12, padding:"10px 14px", background:"rgba(212,168,67,0.06)", borderRadius:8, fontSize:11, color:T.textMuted }}>
-                          Add unit breakdown from Admin → Data Manager → Projects → Unit Breakdown
-                        </div>
-                      </div>
-                    )}
-                    {/* Views */}
-                    {selectedProject.view?.length > 0 && (
-                      <div className="chart-box" style={{ padding:18 }}>
-                        <div style={{ fontSize:11, fontWeight:700, color:T.textMuted, letterSpacing:0.8, textTransform:"uppercase", marginBottom:10 }}>Available Views</div>
-                        <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
-                          {selectedProject.view.map((v,i) => <span key={i} style={{ fontSize:12, padding:"5px 14px", borderRadius:20, background:"rgba(212,168,67,0.08)", border:`1px solid rgba(212,168,67,0.2)`, color:T.gold }}>{v}</span>)}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
-                {projDetailTab === "investment" && (
-                  <div>
-                    <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:12, marginBottom:20 }}>
-                      {[
-                        { label:"Gross Yield", value:selectedProject.grossYield?selectedProject.grossYield.toFixed(1)+"%":"—", color:T.green, note:"Annual rent / purchase price" },
-                        { label:"Net Yield", value:selectedProject.netYield?selectedProject.netYield.toFixed(1)+"%":"—", color:T.teal, note:"After service charges" },
-                        { label:"Service Charge", value:selectedProject.serviceCharge?"AED "+selectedProject.serviceCharge+"/sqft/yr":"—", color:T.white, note:"Annual RERA rate" },
-                        { label:"Investment Score", value:calcScore(selectedProject).toString(), color:scoreColor(calcScore(selectedProject)), note:scoreLabel(calcScore(selectedProject)) },
-                        { label:"Developer Score", value:selectedProject.developerScore?selectedProject.developerScore+"/100":"—", color:T.gold, note:"Track record rating" },
-                        { label:"Construction", value:selectedProject.constructionPct!=null?selectedProject.constructionPct+"%":"—", color:T.white, note:"Build progress" },
-                      ].map((item,i) => (
-                        <div key={i} className="kpi-card">
-                          <div style={{ fontSize:10, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:1, marginBottom:8 }}>{item.label}</div>
-                          <div style={{ fontFamily:"'Fraunces',serif", fontSize:24, fontWeight:800, color:item.color, marginBottom:4 }}>{item.value}</div>
-                          <div style={{ fontSize:11, color:T.textMuted }}>{item.note}</div>
-                        </div>
-                      ))}
-                    </div>
-                    <div className="chart-box" style={{ padding:18 }}>
-                      <div style={{ fontSize:12, fontWeight:700, color:T.white, marginBottom:14 }}>Investment Score Breakdown — 7 Factors</div>
-                      {[
-                        { factor:"Yield vs Market Average", score:selectedProject.grossYield>=7?90:selectedProject.grossYield>=5?70:50, weight:"20%" },
-                        { factor:"Location (Metro + DIFC)", score:selectedProject.distMetro<=1?95:selectedProject.distMetro<=3?75:55, weight:"20%" },
-                        { factor:"Developer Track Record", score:selectedProject.developerScore||70, weight:"20%" },
-                        { factor:"Price vs Community PPSF", score:74, weight:"15%" },
-                        { factor:"Market Liquidity (DLD Volume)", score:80, weight:"10%" },
-                        { factor:"Construction Progress", score:Math.min(95,40+(selectedProject.constructionPct||0)), weight:"10%" },
-                        { factor:"2026 Supply Risk", score:68, weight:"5%" },
-                      ].map((f,i) => (
-                        <div key={i} style={{ marginBottom:12 }}>
-                          <div style={{ display:"flex", justifyContent:"space-between", marginBottom:4 }}>
-                            <span style={{ fontSize:12, color:T.textSecondary }}>{f.factor}</span>
-                            <div style={{ display:"flex", gap:10 }}>
-                              <span style={{ fontSize:10, color:T.textMuted }}>{f.weight}</span>
-                              <span style={{ fontSize:12, fontWeight:700, color:f.score>=80?T.green:f.score>=60?T.gold:T.red }}>{f.score}/100</span>
-                            </div>
-                          </div>
-                          <div style={{ height:4, borderRadius:2, background:T.border }}>
-                            <div style={{ height:"100%", width:`${f.score}%`, borderRadius:2, background:f.score>=80?T.green:f.score>=60?T.gold:T.red }} />
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                {projDetailTab === "location" && (
-                  <div>
-                    <div className="chart-box" style={{ padding:20, marginBottom:16 }}>
-                      <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:16 }}>Distance Intelligence</div>
-                      <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(140px,1fr))", gap:10 }}>
-                        {[
-                          { label:"Metro Station", val:selectedProject.distMetro, warn:0.8 },
-                          { label:"DIFC", val:selectedProject.distDIFC },
-                          { label:"Airport (DXB)", val:selectedProject.distAirport },
-                          { label:"Beach", val:selectedProject.distBeach, warn:2 },
-                          { label:"Nearest Mall", val:selectedProject.distMall, warn:3 },
-                          { label:"School", val:selectedProject.distSchool, warn:2 },
-                          { label:"Hospital", val:selectedProject.distHospital, warn:5 },
-                        ].map((d,i) => (
-                          <div key={i} style={{ padding:"12px 14px", background:T.surfaceAlt, borderRadius:10, border:`1px solid ${d.warn&&d.val<=d.warn?"rgba(16,185,129,0.3)":T.border}`, textAlign:"center" }}>
-                            <div style={{ fontSize:10, color:T.textMuted, marginBottom:6 }}>{d.label}</div>
-                            <div style={{ fontFamily:"'Fraunces',serif", fontSize:18, fontWeight:700, color:d.warn&&d.val!=null&&d.val<=d.warn?T.green:T.white }}>
-                              {d.val!=null ? (d.val<1?(d.val*1000).toFixed(0)+"m":d.val+"km") : "—"}
-                            </div>
-                            {d.warn && d.val!=null && d.val<=d.warn && <div style={{ fontSize:9, color:T.green, marginTop:2 }}>Excellent</div>}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                    <div className="chart-box" style={{ padding:18 }}>
-                      <div style={{ fontSize:12, color:T.textSecondary, lineHeight:1.8 }}>
-                        <strong style={{ color:T.white }}>Community:</strong> {selectedProject.community} · <strong style={{ color:T.white }}>Developer:</strong> {selectedProject.developer}
-                        {selectedProject.reraNo && <>{"·"}<strong style={{ color:T.gold }}>RERA:</strong> {selectedProject.reraNo}</>}
-                        {selectedProject.escrowBank && <>{"·"}<strong style={{ color:T.teal }}>Escrow:</strong> {selectedProject.escrowBank}</>}
-                      </div>
-                    </div>
-                  </div>
-                )}
-                {projDetailTab === "payment" && (
-                  <div>
-                    <div className="chart-box" style={{ padding:20, marginBottom:16 }}>
-                      <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:16 }}>Payment Structure</div>
-                      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:12, marginBottom:16 }}>
-                        <div className="kpi-card">
-                          <div style={{ fontSize:10, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:1, marginBottom:8 }}>Payment Plan</div>
-                          <div style={{ fontFamily:"'Fraunces',serif", fontSize:28, fontWeight:800, color:T.gold }}>{selectedProject.paymentPlan||"—"}</div>
-                        </div>
-                        <div className="kpi-card">
-                          <div style={{ fontSize:10, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:1, marginBottom:8 }}>Post Handover</div>
-                          <div style={{ fontFamily:"'Fraunces',serif", fontSize:28, fontWeight:800, color:selectedProject.postHandover?T.green:T.textMuted }}>{selectedProject.postHandover?"Yes":"No"}</div>
-                        </div>
-                        <div className="kpi-card">
-                          <div style={{ fontSize:10, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:1, marginBottom:8 }}>Escrow Bank</div>
-                          <div style={{ fontSize:16, fontWeight:700, color:T.teal }}>{selectedProject.escrowBank||"—"}</div>
-                        </div>
-                      </div>
-                      {selectedProject.paymentPlan && selectedProject.paymentPlan.includes("/") && !selectedProject.paymentPlan.includes("Cash") && (
-                        <div>
-                          <div style={{ display:"flex", gap:4, height:32, borderRadius:8, overflow:"hidden", marginBottom:12 }}>
-                            <div style={{ width:`${parseInt(selectedProject.paymentPlan.split("/")[0])||60}%`, background:T.gold, display:"flex", alignItems:"center", justifyContent:"center" }}>
-                              <span style={{ fontSize:11, fontWeight:700, color:"#000" }}>{parseInt(selectedProject.paymentPlan.split("/")[0])||60}% During</span>
-                            </div>
-                            <div style={{ width:`${parseInt(selectedProject.paymentPlan.split("/")[1])||40}%`, background:T.teal, display:"flex", alignItems:"center", justifyContent:"center" }}>
-                              <span style={{ fontSize:11, fontWeight:700, color:"#fff" }}>{parseInt(selectedProject.paymentPlan.split("/")[1])||40}% Handover</span>
-                            </div>
-                          </div>
-                          <div style={{ fontSize:12, color:T.textMuted, lineHeight:1.8 }}>
-                            On AED {((selectedProject.priceMin||0)/1000000).toFixed(1)}M: Pay AED {((selectedProject.priceMin||0)*(parseInt(selectedProject.paymentPlan.split("/")[0])||60)/100/1000000).toFixed(2)}M during construction, AED {((selectedProject.priceMin||0)*(parseInt(selectedProject.paymentPlan.split("/")[1])||40)/100/1000000).toFixed(2)}M on handover.
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                    <div style={{ padding:"14px 16px", background:"rgba(212,168,67,0.06)", borderRadius:10, border:`1px solid rgba(212,168,67,0.2)` }}>
-                      <div style={{ fontSize:12, color:T.textSecondary, lineHeight:1.8 }}>
-                        <strong style={{ color:T.gold }}>Important:</strong> All off-plan payments must go to the DLD-registered escrow account ({selectedProject.escrowBank||"TBC"}). RERA registration: {selectedProject.reraNo||"verify with developer"}. Never pay cash directly.
-                      </div>
-                    </div>
-                  </div>
-                )}
-                {projDetailTab === "dld" && (
-                  <div className="chart-box" style={{ padding:20 }}>
-                    <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:6 }}>DLD Transaction History</div>
-                    <div style={{ fontSize:12, color:T.textMuted, marginBottom:20 }}>Community: {selectedProject.community}{"·"}{selectedProject.type}</div>
-                    <div style={{ padding:"40px 24px", textAlign:"center", background:T.surfaceAlt, borderRadius:10 }}>
-                      {SvgIcons.Database({ width:32, height:32, style:{ color:T.textMuted, marginBottom:12, display:"inline-block" } })}
-                      <div style={{ fontSize:14, fontWeight:700, color:T.white, marginBottom:8 }}>DLD transaction data syncs daily</div>
-                      <div style={{ fontSize:12, color:T.textMuted, marginBottom:16 }}>Connect DLD feed via Admin → Data Health</div>
-                      <button type="button" onClick={() => { setSelectedProject(null); handleTabChange("DLD Volumes"); }} style={{ padding:"8px 18px", background:"rgba(212,168,67,0.1)", border:`1px solid ${T.border}`, borderRadius:8, color:T.gold, fontSize:12, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>View DLD Volumes →</button>
-                    </div>
-                  </div>
-                )}
-                {projDetailTab === "developer" && (
-                  <div>
-                    <div className="chart-box" style={{ padding:20, marginBottom:16 }}>
-                      <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:16 }}>Developer Profile</div>
-                      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:12, marginBottom:16 }}>
-                        <div className="kpi-card">
-                          <div style={{ fontSize:10, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:1, marginBottom:8 }}>Developer</div>
-                          <div style={{ fontSize:16, fontWeight:700, color:T.white }}>{selectedProject.developer}</div>
-                        </div>
-                        <div className="kpi-card">
-                          <div style={{ fontSize:10, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:1, marginBottom:8 }}>Health Score</div>
-                          <div style={{ fontFamily:"'Fraunces',serif", fontSize:28, fontWeight:800, color:scoreColor(selectedProject.developerScore||75) }}>{selectedProject.developerScore||"—"}</div>
-                        </div>
-                        <div className="kpi-card">
-                          <div style={{ fontSize:10, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:1, marginBottom:8 }}>RERA No</div>
-                          <div style={{ fontSize:14, fontWeight:700, color:T.teal }}>{selectedProject.reraNo||"—"}</div>
-                        </div>
-                      </div>
-                      <button type="button" onClick={() => { setSelectedProject(null); handleTabChange("Developer Health"); }} style={{ padding:"8px 18px", background:"rgba(212,168,67,0.1)", border:`1px solid ${T.border}`, borderRadius:8, color:T.gold, fontSize:12, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>Full Developer Profile →</button>
-                    </div>
+                      );
+                    })()}
+                    <LegalNote T={T} />
                   </div>
                 )}
               </div>
