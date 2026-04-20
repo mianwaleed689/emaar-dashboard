@@ -168,6 +168,8 @@ function ProjectsTab({
   const [projLifecycle, setProjLifecycle] = useState("All");
   const [projEscrowBank, setProjEscrowBank] = useState("All");
   const [projConstruction, setProjConstruction] = useState("All");
+  /* Separate state for filter panel so it doesn't clobber grid/list view mode */
+  const [filtersOpen, setFiltersOpen] = useState(false);
 
   /* Phase 2.4 Batch 3: stack the top-bar global filter on top of the
      existing internal filter system. Both must match for a project to appear.
@@ -653,8 +655,8 @@ function ProjectsTab({
                     </select>
 
                     {/* FILTERS toggle button */}
-                    <button type="button" onClick={() => setProjView(projView === "filters-open" ? "grid" : "filters-open")}
-                      style={{ padding:"9px 14px", background:projView === "filters-open" ? "rgba(212,168,67,0.15)" : T.surfaceAlt, border:`1px solid ${projView === "filters-open" ? "rgba(212,168,67,0.4)" : T.border}`, borderRadius:8, color:projView === "filters-open" ? T.gold : T.textSecondary, fontSize:12, fontWeight:600, cursor:"pointer", fontFamily:"'Outfit',sans-serif", display:"flex", alignItems:"center", gap:6, whiteSpace:"nowrap" }}>
+                    <button type="button" onClick={() => setFiltersOpen(!filtersOpen)}
+                      style={{ padding:"9px 14px", background:filtersOpen ? "rgba(212,168,67,0.15)" : T.surfaceAlt, border:`1px solid ${filtersOpen ? "rgba(212,168,67,0.4)" : T.border}`, borderRadius:8, color:filtersOpen ? T.gold : T.textSecondary, fontSize:12, fontWeight:600, cursor:"pointer", fontFamily:"'Outfit',sans-serif", display:"flex", alignItems:"center", gap:6, whiteSpace:"nowrap" }}>
                       <span>⚙ Filters</span>
                       {activeFilters.length > 0 && <span style={{ background:T.gold, color:"#000", padding:"1px 6px", borderRadius:10, fontSize:10, fontWeight:800 }}>{activeFilters.length}</span>}
                     </button>
@@ -694,7 +696,7 @@ function ProjectsTab({
                   )}
 
                   {/* EXPANDED FILTER PANEL — shows when Filters button toggled */}
-                  {projView === "filters-open" && (
+                  {filtersOpen && (
                     <div style={{ marginTop:12, paddingTop:12, borderTop:`1px solid ${T.border}`, display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(180px, 1fr))", gap:10 }}>
                       <div>
                         <label style={{ fontSize:10, color:T.textMuted, fontWeight:700, letterSpacing:0.5, textTransform:"uppercase", marginBottom:4, display:"block" }}>Developer</label>
@@ -874,6 +876,9 @@ function ProjectsTab({
                       setProjGrade("All");
                       setProjHandover("All");
                       setProjIntelFilter("all");
+                      setProjLifecycle("All");
+                      setProjEscrowBank("All");
+                      setProjConstruction("All");
                     }}
                     matchFn={(p, filters) => {
                       if (p.type !== filters.type) return false;
