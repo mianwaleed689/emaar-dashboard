@@ -160,6 +160,15 @@ function ProjectsTab({
   handleTabChange,
 }) {
 
+  /* NEW FILTERS (v7) — match data reality from audit:
+     - lifecycleStage (100% coverage): Historical / Under Construction / Announced / Recently Delivered
+     - escrowBank (94% coverage): 27 banks, strong trust signal
+     - constructionBand (100% coverage): 0-25% / 25-50% / 50-75% / 75-100% / Completed
+     These are self-contained because they don't need to persist across tabs. */
+  const [projLifecycle, setProjLifecycle] = useState("All");
+  const [projEscrowBank, setProjEscrowBank] = useState("All");
+  const [projConstruction, setProjConstruction] = useState("All");
+
   /* Phase 2.4 Batch 3: stack the top-bar global filter on top of the
      existing internal filter system. Both must match for a project to appear.
 
@@ -322,7 +331,31 @@ function ProjectsTab({
               if (projSearch && !JSON.stringify(p).toLowerCase().includes(projSearch.toLowerCase())) return false;
               if (projDev !== "All" && p.developer !== projDev && p.developerName !== projDev) return false;
               if (projCommunity !== "All" && p.community !== projCommunity) return false;
-              if (projStatus !== "All" && p.status !== projStatus) return false;
+              /* SALE STATUS — fallback to lifecycleStage mapping for DLD records without status */
+              if (projStatus !== "All") {
+                const effectiveStatus = p.status || (
+                  p.lifecycleStage === "recently-delivered" || p.constructionPct >= 100 ? "Ready" :
+                  p.lifecycleStage === "historical" ? "Ready" :
+                  p.lifecycleStage === "under-construction" ? "Off-Plan" :
+                  p.lifecycleStage === "announced" ? "Off-Plan" :
+                  null
+                );
+                if (effectiveStatus !== projStatus) return false;
+              }
+              /* NEW: Lifecycle Stage (100% DLD coverage) */
+              if (projLifecycle !== "All" && p.lifecycleStage !== projLifecycle) return false;
+              /* NEW: Escrow Bank (94% DLD coverage) */
+              if (projEscrowBank !== "All" && p.escrowBank !== projEscrowBank) return false;
+              /* NEW: Construction Progress (100% DLD coverage) */
+              if (projConstruction !== "All") {
+                const pct = p.constructionPct;
+                if (pct == null) return false;
+                if (projConstruction === "0-25" && (pct < 0 || pct >= 25)) return false;
+                if (projConstruction === "25-50" && (pct < 25 || pct >= 50)) return false;
+                if (projConstruction === "50-75" && (pct < 50 || pct >= 75)) return false;
+                if (projConstruction === "75-99" && (pct < 75 || pct >= 100)) return false;
+                if (projConstruction === "100" && pct < 100) return false;
+              }
               if (projBeds !== "All" && Array.isArray(p.beds) && p.beds.length > 0 && !p.beds.includes(projBeds)) return false;
               if (projHandover !== "All" && !String(p.handover || p.expectedHandover || "").includes(projHandover)) return false;
               if (projGrade !== "All" && p.officeGrade !== projGrade) return false;
@@ -357,6 +390,12 @@ function ProjectsTab({
 
             const devOptions = ["All", ...new Set(rawProjects.filter(p => projMode === "All" || normalizeType(p)===projMode).map(p=>p.developer || p.developerName).filter(Boolean))].slice(0, 500);
             const commOptions = ["All", ...new Set(rawProjects.filter(p => projMode === "All" || normalizeType(p)===projMode).map(p=>p.community).filter(Boolean))].slice(0, 500);
+            /* NEW: Escrow bank options from data (27 banks in DLD) */
+            const escrowOptions = ["All", ...new Set(rawProjects.map(p => p.escrowBank).filter(Boolean))].sort((a, b) => {
+              if (a === "All") return -1;
+              if (b === "All") return 1;
+              return a.localeCompare(b);
+            });
 
             const selSt = {
               background: T.surfaceAlt, border: `1px solid ${T.border}`,
@@ -586,6 +625,9 @@ function ProjectsTab({
                   if (projDev !== "All") activeFilters.push({ key:"dev", label:`Developer: ${projDev}`, clear:() => setProjDev("All") });
                   if (projCommunity !== "All") activeFilters.push({ key:"com", label:`Community: ${projCommunity}`, clear:() => setProjCommunity("All") });
                   if (projStatus !== "All") activeFilters.push({ key:"sts", label:`Status: ${projStatus}`, clear:() => setProjStatus("All") });
+                  if (projLifecycle !== "All") activeFilters.push({ key:"lfc", label:`Stage: ${projLifecycle === "under-construction" ? "Under Construction" : projLifecycle === "recently-delivered" ? "Recently Delivered" : projLifecycle.charAt(0).toUpperCase()+projLifecycle.slice(1)}`, clear:() => setProjLifecycle("All") });
+                  if (projConstruction !== "All") activeFilters.push({ key:"cst", label:`Build: ${projConstruction === "100" ? "Completed" : projConstruction + "%"}`, clear:() => setProjConstruction("All") });
+                  if (projEscrowBank !== "All") activeFilters.push({ key:"esc", label:`Escrow: ${projEscrowBank}`, clear:() => setProjEscrowBank("All") });
                   if (projBeds !== "All") activeFilters.push({ key:"bed", label:`Beds: ${projBeds}`, clear:() => setProjBeds("All") });
                   if (projHandover !== "All") activeFilters.push({ key:"hnd", label:`Handover: ${projHandover}`, clear:() => setProjHandover("All") });
                   if (projGrade !== "All") activeFilters.push({ key:"grd", label:`Grade: ${projGrade}`, clear:() => setProjGrade("All") });
@@ -646,7 +688,7 @@ function ProjectsTab({
                           <button type="button" onClick={f.clear} style={{ background:"none", border:"none", color:T.gold, cursor:"pointer", fontSize:14, padding:0, lineHeight:1 }}>×</button>
                         </span>
                       ))}
-                      <button type="button" onClick={() => { setProjSearch(""); setProjDev("All"); setProjCommunity("All"); setProjStatus("All"); setProjBeds("All"); setProjHandover("All"); setProjGrade("All"); setProjIntelFilter("all"); }}
+                      <button type="button" onClick={() => { setProjSearch(""); setProjDev("All"); setProjCommunity("All"); setProjStatus("All"); setProjBeds("All"); setProjHandover("All"); setProjGrade("All"); setProjIntelFilter("all"); setProjLifecycle("All"); setProjEscrowBank("All"); setProjConstruction("All"); }}
                         style={{ background:"none", border:`1px solid ${T.border}`, borderRadius:12, padding:"3px 10px", color:T.textMuted, fontSize:11, cursor:"pointer", fontFamily:"'Outfit',sans-serif", marginLeft:4 }}>Clear all</button>
                     </div>
                   )}
@@ -688,6 +730,36 @@ function ProjectsTab({
                         <label style={{ fontSize:10, color:T.textMuted, fontWeight:700, letterSpacing:0.5, textTransform:"uppercase", marginBottom:4, display:"block" }}>Handover</label>
                         <select value={projHandover} onChange={e => setProjHandover(e.target.value)} style={{ ...selSt, width:"100%" }}>
                           {["All","2026","2027","2028","2029","Available Now"].map(h => <option key={h}>{h === "All" ? "Any Year" : h}</option>)}
+                        </select>
+                      </div>
+                      {/* NEW: Lifecycle Stage — 100% DLD coverage, replaces broken Status for DLD records */}
+                      <div>
+                        <label style={{ fontSize:10, color:T.textMuted, fontWeight:700, letterSpacing:0.5, textTransform:"uppercase", marginBottom:4, display:"block" }}>Project Stage</label>
+                        <select value={projLifecycle} onChange={e => setProjLifecycle(e.target.value)} style={{ ...selSt, width:"100%" }}>
+                          <option value="All">All Stages</option>
+                          <option value="announced">Announced · Pre-Construction</option>
+                          <option value="under-construction">Under Construction</option>
+                          <option value="recently-delivered">Recently Delivered</option>
+                          <option value="historical">Historical · Already Sold</option>
+                        </select>
+                      </div>
+                      {/* NEW: Construction Progress — 100% DLD coverage */}
+                      <div>
+                        <label style={{ fontSize:10, color:T.textMuted, fontWeight:700, letterSpacing:0.5, textTransform:"uppercase", marginBottom:4, display:"block" }}>Construction %</label>
+                        <select value={projConstruction} onChange={e => setProjConstruction(e.target.value)} style={{ ...selSt, width:"100%" }}>
+                          <option value="All">Any Progress</option>
+                          <option value="0-25">0 – 25%</option>
+                          <option value="25-50">25 – 50%</option>
+                          <option value="50-75">50 – 75%</option>
+                          <option value="75-99">75 – 99%</option>
+                          <option value="100">100% Completed</option>
+                        </select>
+                      </div>
+                      {/* NEW: Escrow Bank — 94% DLD coverage, trust signal */}
+                      <div>
+                        <label style={{ fontSize:10, color:T.textMuted, fontWeight:700, letterSpacing:0.5, textTransform:"uppercase", marginBottom:4, display:"block" }}>Escrow Bank</label>
+                        <select value={projEscrowBank} onChange={e => setProjEscrowBank(e.target.value)} style={{ ...selSt, width:"100%" }}>
+                          {escrowOptions.map(b => <option key={b} value={b}>{b === "All" ? "Any Escrow Bank" : b}</option>)}
                         </select>
                       </div>
                       <div style={{ gridColumn:"1 / -1", paddingTop:10, borderTop:`1px solid ${T.border}` }}>
