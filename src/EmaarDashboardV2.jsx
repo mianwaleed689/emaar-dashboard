@@ -391,11 +391,9 @@ const GlobalContextFilter = ({
   return (
     <div style={{
       position: "fixed", top: 60, left: 240, right: 0, zIndex: 45,
-      background: "linear-gradient(180deg, rgba(11,14,20,0.95) 0%, rgba(11,14,20,0.85) 100%)",
-      backdropFilter: "blur(20px) saturate(180%)",
-      WebkitBackdropFilter: "blur(20px) saturate(180%)",
-      borderBottom: `1px solid rgba(255,255,255,0.06)`,
-      boxShadow: "0 1px 20px rgba(0,0,0,0.2)",
+      background: "#0B0E14",
+      borderBottom: `1px solid rgba(255,255,255,0.08)`,
+      boxShadow: "0 4px 24px rgba(0,0,0,0.4)",
     }}>
       {/* ═══ PREMIUM FILTER BAR — world-class SaaS aesthetic ═══ */}
       <div style={{ padding: "14px 24px" }}>
@@ -4396,7 +4394,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
       />
 
       {/* ─── MAIN CONTENT ─── */}
-      <main role="main" id="main-content" className="main-content" style={{ marginLeft: 240, paddingTop: userTier === "free" ? 140 : 100, minHeight: "100vh", overflowX: "hidden" }}>
+      <main role="main" id="main-content" className="main-content" style={{ marginLeft: 240, paddingTop: userTier === "free" ? 210 : 180, minHeight: "100vh", overflowX: "hidden" }}>
         {/* Trial / Free tier banner */}
         {userTier === "pro_trial" && trialDaysLeft > 0 && (() => {
           const isUrgent = trialDaysLeft <= 1;
