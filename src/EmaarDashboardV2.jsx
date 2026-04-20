@@ -2135,6 +2135,7 @@ export default function EmaarDashboardV2() {
   const [projectPriceMax, setProjectPriceMax] = useState(20);
   const [liveProjects, setLiveProjects] = useState({});
   const [extraProjects, setExtraProjects] = useState([]);
+  const [developmentsData, setDevelopmentsData] = useState([]);
   const [liveYields, setLiveYields] = useState([]);
   const [liveCommunityList, setLiveCommunityList] = useState([]);
   // ── Price Alerts ──
@@ -2163,8 +2164,6 @@ export default function EmaarDashboardV2() {
   const [tabSettings, setTabSettings] = useState({});
   const [liveCommunityROI, setLiveCommunityROI] = useState({});
   const [liveCommunityIntel, setLiveCommunityIntel] = useState({});
-  const [liveCommunityDataFull, setLiveCommunityDataFull] = useState([]); /* Phase Tier-A */
-  const [liveDevelopments, setLiveDevelopments] = useState([]); /* Session 1: DLD developments for tiered Projects/Handover/LaunchCalendar display */
 
   /* ─── MY LEADS STATE (Session 4) ─── */
   const [myLeads, setMyLeads] = useState([]);
@@ -2804,6 +2803,25 @@ export default function EmaarDashboardV2() {
       });
     }));
 
+    // developments collection — 2,798 DLD-sourced records (imported via admin)
+    // These populate Projects tab alongside Verified/curated projects
+    unsubs.push(onSnapshot(collection(db, "developments"), (snap) => {
+      const devs = [];
+      snap.forEach(d => {
+        const data = { ...d.data(), id: d.id, fromDLD: true };
+        // Map DLD field names to ProjectsTab expected names for seamless rendering
+        const mapped = {
+          ...data,
+          project: data.project || data.name,                 // ProjectsTab uses .project
+          developer: data.developer || data.developerName,     // some DLD records have developerName
+          status: data.status || (data.constructionPct >= 100 ? "Ready" : data.lifecycleStage === "announced" ? "Off-Plan" : "Off-Plan"),
+          handover: data.handover || data.expectedHandover,
+        };
+        devs.push(mapped);
+      });
+      setDevelopmentsData(devs);
+    }));
+
     // communityROI
     unsubs.push(onSnapshot(collection(db, "communityROI"), (snap) => {
       if (!snap.size) return;
@@ -2898,15 +2916,10 @@ export default function EmaarDashboardV2() {
     // Phase 2.4.8: Community list for top-bar Community dropdown
     unsubs.push(onSnapshot(collection(db, "communityData"), (snap) => {
       const list = [];
-      const fullList = []; /* Phase Tier-A: collect full records for Neighbourhoods tiered display */
       snap.forEach(d => {
         const data = d.data();
-        /* Include EVERY community record (published + draft) with a real name.
-           Consumers filter by visibility/tier at render time. */
-        if ((data.name || data.community) && data.name !== "(unnamed)") {
-          fullList.push({ id: d.id, ...data });
-        }
-        // Dropdown list (published only - customer-facing)
+        // Only published communities with a human-readable name.
+        // Skip the short-ID cron-yields artefacts (BB, DCH, etc.) which lack visibility.
         if (data.visibility === "published" && (data.name || data.community)) {
           list.push({
             id: d.id,
@@ -2916,9 +2929,7 @@ export default function EmaarDashboardV2() {
         }
       });
       list.sort((a, b) => a.name.localeCompare(b.name));
-      fullList.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
       setLiveCommunityList(list);
-      setLiveCommunityDataFull(fullList);
     }));
 
     unsubs.push(onSnapshot(collection(db, "developers"), (snap) => {
@@ -2945,20 +2956,6 @@ export default function EmaarDashboardV2() {
         return (a.name || "").localeCompare(b.name || "");
       });
       setAllDevelopers(devs);
-    }));
-
-    /* Session 1: developments collection (DLD-imported, 2,798+ records). 
-       Includes published + draft records for ProjectsTab tiered display. 
-       Consumers filter by visibility/tier at render time. */
-    unsubs.push(onSnapshot(collection(db, "developments"), (snap) => {
-      const devs = [];
-      snap.forEach(d => {
-        const data = d.data();
-        if (!data.name && !data.project && !data.projectName) return;
-        devs.push({ id: d.id, ...data });
-      });
-      devs.sort((a, b) => (a.name || a.project || "").localeCompare(b.name || b.project || ""));
-      setLiveDevelopments(devs);
     }));
 
     // aiInsights/latest
@@ -3976,7 +3973,6 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               nbhView={nbhView} setNbhView={setNbhView}
               nbhCompare={nbhCompare} setNbhCompare={setNbhCompare}
               liveNeighbourhoods={liveNeighbourhoods}
-              liveCommunityDataFull={liveCommunityDataFull}
               liveCommunityROI={liveCommunityROI}
               liveMarketData={liveMarketData}
               globalFilters={_gf}
@@ -3997,7 +3993,6 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               lcView={lcView} setLcView={setLcView}
               liveMarketData={liveMarketData}
               liveLaunches={liveLaunches}
-              liveDevelopments={liveDevelopments}
               globalFilters={_gf}
               allDevelopers={allDevelopers}
               handleTabChange={handleTabChange}
@@ -4019,7 +4014,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
           {tab === "Projects" && (
             <ProjectsTab
               SEED_PROJECTS={SEED_PROJECTS} liveProjects={liveProjects} extraProjects={extraProjects}
-              liveDevelopments={liveDevelopments}
+              developments={developmentsData}
               projSearch={projSearch} setProjSearch={setProjSearch}
               projDev={projDev} setProjDev={setProjDev}
               projCommunity={projCommunity} setProjCommunity={setProjCommunity}
@@ -4197,7 +4192,6 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
           {tab === "Handover" && (
             <HandoverTab
               liveHandover={liveHandover}
-              liveDevelopments={liveDevelopments}
               globalFilters={_gf}
               allDevelopers={allDevelopers}
               handleTabChange={handleTabChange}

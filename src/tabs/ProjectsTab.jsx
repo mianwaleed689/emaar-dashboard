@@ -125,7 +125,7 @@ function LegalNote({ T, compact }) {
 }
 
 function ProjectsTab({
-  SEED_PROJECTS, liveProjects, extraProjects = [],
+  SEED_PROJECTS, liveProjects, extraProjects = [], developments = [],
   projSearch, setProjSearch,
   projDev, setProjDev,
   projCommunity, setProjCommunity,
@@ -265,11 +265,12 @@ function ProjectsTab({
     <>
       {(() => {
 
-            /* Phase 4: merge all data sources — SEED (18 Verified) + DLD live (2,780 Registry) + extras.
+            /* Phase 4: merge all data sources — SEED (18 Verified) + DLD developments (2,798 Registry) + extras.
                Guard every spread with Array.isArray to prevent 'not iterable' crashes when props
                arrive as undefined/null (Firestore still loading). */
             const allSources = [
               ...(Array.isArray(SEED_PROJECTS) ? SEED_PROJECTS : []),
+              ...(Array.isArray(developments) ? developments : []),
               ...(Array.isArray(liveProjects) ? liveProjects : []),
               ...(Array.isArray(extraProjects) ? extraProjects : []),
             ];
