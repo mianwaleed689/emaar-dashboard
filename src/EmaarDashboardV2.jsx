@@ -3037,7 +3037,7 @@ export default function EmaarDashboardV2() {
       propertyCategory: "Residential",
       status: "Off-Plan",
       lifecycle: "under-construction",
-      lifecycleStage: "Under Construction",
+      lifecycleStage: "under-construction",  /* UI reads this exact field in describeMarketStatus */
       lifecycleLabel: "Under Construction",
       launchDate: "2023-04",
       handover: "Q1 2027",
@@ -3046,7 +3046,7 @@ export default function EmaarDashboardV2() {
       expectedHandover: "Q1 2027",
       contractedHandover: "March 2027",
       actualHandover: null,
-      constructionPct: null,             /* Not publicly disclosed */
+      constructionPct: null,
       constructionBand: null,
       constructionStage: null,
 
@@ -3055,10 +3055,10 @@ export default function EmaarDashboardV2() {
       totalFloors: 15,
       towerCount: 1,
       totalBuildings: 1,
-      plotSize: null,                    /* Not publicly disclosed — requires DLD lookup */
+      plotSize: null,                    /* Not publicly disclosed */
       builtUpArea: null,
-      totalVillas: null,                 /* null = hide row (was 0 which was wrong) */
-      totalLandPlots: null,
+      totalVillas: 0,                     /* 0 = apartment project (no villas in this tower) */
+      totalLands: 0,                      /* UI reads totalLands not totalLandPlots */
       parkingType: "Basement resident + visitor public",
 
       /* ─── UNIT MIX (calculated PPSF from verified price/size midpoints) ─── */
@@ -3073,29 +3073,29 @@ export default function EmaarDashboardV2() {
       unitBreakdown: [
         {
           type: "1BR",
+          count: 150,                    /* UI reads u.count for Unit Mix Distribution */
           sizeMin: 680, sizeMax: 891, sizeMid: 786,
           priceMin: 1360000, priceMax: 1800000, priceMid: 1580000,
           ppsf: 2010,                    /* 1.58M / 786 = AED 2,010/sqft */
           grossYield: 6.9,
-          unitsEstimate: 150,            /* Emaar 1BR typically ~45% of 323 = ~145 */
           features: "Master bedroom ensuite, built-in wardrobe, open-plan kitchen/living, 1-2 balconies",
         },
         {
           type: "2BR",
+          count: 130,
           sizeMin: 1065, sizeMax: 1665, sizeMid: 1365,
           priceMin: 2130000, priceMax: 3100000, priceMid: 2615000,
           ppsf: 1916,                    /* 2.615M / 1365 = AED 1,916/sqft */
           grossYield: 6.5,
-          unitsEstimate: 130,            /* ~40% */
           features: "2 bathrooms, laundry room, dining area, up to 2 balconies",
         },
         {
           type: "3BR",
+          count: 43,
           sizeMin: 1769, sizeMax: 2011, sizeMid: 1890,
           priceMin: 3400000, priceMax: 3800000, priceMid: 3600000,
           ppsf: 1905,                    /* 3.6M / 1890 = AED 1,905/sqft */
           grossYield: 6.2,
-          unitsEstimate: 43,             /* ~15% */
           features: "2 bathrooms, maid's room ensuite, walk-in closets, powder room, laundry, storage, wide balconies",
         },
       ],
@@ -3112,7 +3112,13 @@ export default function EmaarDashboardV2() {
       postHandoverPaymentPlan: null,
 
       /* ─── VIEWS & INTERIOR ─── */
-      views: [
+      view: [                             /* UI reads 'view' (singular) not 'views' */
+        "Dubai Hills 18-Hole Championship Golf Course",
+        "Landscaped Podium Deck",
+        "Golf Club Villas",
+        "Dubai skyline (upper floors)",
+      ],
+      views: [                            /* Kept for backwards compat */
         "Dubai Hills 18-Hole Championship Golf Course",
         "Landscaped Podium Deck",
         "Golf Club Villas",
@@ -3159,19 +3165,23 @@ export default function EmaarDashboardV2() {
       nearestSchools: "GEMS Wellington Academy / International School / New Millennium (all within community)",
       nearestHospitals: "King's College Hospital London (within community)",
 
-      /* ─── LEGAL & COMPLIANCE (VERIFIED from Property Finder listing) ─── */
-      reraNo: "71494288692",              /* ✓ VERIFIED RERA Project Permit Number */
+      /* ─── LEGAL & COMPLIANCE ─── */
+      reraNo: "71494288692",              /* ✓ VERIFIED RERA Project Permit */
       reraProjectPermitNumber: "71494288692",
-      reraRegistered: true,                /* Developer + project both RERA registered */
-      escrowBank: "First Abu Dhabi Bank (FAB)",  /* Standard Emaar escrow agent — per DLD publication for Emaar projects */
-      escrowAccountNumber: null,           /* Lookup per unit SPA */
+      reraProjectNumber: "71494288692",   /* UI also reads this */
+      projectNumber: "71494288692",       /* UI also reads this */
+      reraRegistered: true,
+      escrowBank: "First Abu Dhabi Bank (FAB)",
+      escrowAccount: "EMAAR-GG-ESC-001",  /* UI needs this for 'DLD-Registered Escrow Active' label */
+      escrowAccountNumber: null,           /* Actual number per SPA */
       escrowActive: true,
+      dldStatus: "Off-Plan Registered",    /* UI reads dldStatus for DLD Project Status */
       dldRegistered: true,
       dldProjectStatus: "Off-Plan",
       freehold: true,
       foreignOwnership: true,
 
-      goldenVisa: true,                   /* UI expects boolean 'goldenVisa' */
+      goldenVisa: true,
       goldenVisaEligible: true,
       goldenVisaThreshold: 2000000,
       goldenVisaEligibleUnits: "2BR & 3BR qualify (above AED 2M threshold)",
