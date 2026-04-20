@@ -540,7 +540,7 @@ function ProjectsTab({
                         </div>
                       </div>
                       <div style={{ display:"flex", flexDirection:"column", alignItems:"flex-end", gap:4 }}>
-                        <DataCompletenessBadge p={p} />
+                        {/* Circle badge removed — top-right pill shows data source */}
                       </div>
                     </div>
                   </div>
