@@ -357,68 +357,106 @@ const GlobalContextFilter = ({
     setGPriceMax(0);
   };
 
+  /* ═══ PREMIUM DROPDOWN STYLE — gradient glass surface, subtle shadows ═══ */
   const selStyle = {
-    background: T.surfaceAlt, border: `1px solid ${T.border}`,
-    borderRadius: 8, color: T.white,
-    fontFamily: "'Outfit', sans-serif", fontSize: 12,
-    padding: "6px 10px", outline: "none", cursor: "pointer",
-    appearance: "none", WebkitAppearance: "none",
-    backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E")`,
-    backgroundRepeat: "no-repeat", backgroundPosition: "right 8px center",
-    paddingRight: 26, transition: "border-color 0.2s",
+    background: "linear-gradient(145deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%)",
+    border: `1px solid rgba(255,255,255,0.08)`,
+    borderRadius: 10,
+    color: T.white,
+    fontFamily: "'Outfit', sans-serif",
+    fontSize: 13,
+    fontWeight: 500,
+    padding: "10px 36px 10px 14px",
+    outline: "none",
+    cursor: "pointer",
+    appearance: "none",
+    WebkitAppearance: "none",
+    backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23a0a0a0' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E")`,
+    backgroundRepeat: "no-repeat",
+    backgroundPosition: "right 12px center",
+    boxShadow: "inset 0 1px 0 rgba(255,255,255,0.04), 0 1px 2px rgba(0,0,0,0.2)",
+    transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
   };
 
-  const activeSelStyle = { ...selStyle, borderColor: `rgba(212,168,67,0.5)`, color: T.gold };
+  const activeSelStyle = {
+    ...selStyle,
+    borderColor: `rgba(212,168,67,0.5)`,
+    color: T.gold,
+    boxShadow: "inset 0 1px 0 rgba(255,255,255,0.04), 0 0 0 3px rgba(212,168,67,0.12), 0 1px 2px rgba(0,0,0,0.2)",
+    backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23d4a843' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E")`,
+  };
 
 
   return (
     <div style={{
       position: "fixed", top: 60, left: 240, right: 0, zIndex: 45,
-      background: `${T.surface}f8`, backdropFilter: "blur(12px)",
-      borderBottom: `1px solid ${T.border}`,
+      background: "linear-gradient(180deg, rgba(11,14,20,0.95) 0%, rgba(11,14,20,0.85) 100%)",
+      backdropFilter: "blur(20px) saturate(180%)",
+      WebkitBackdropFilter: "blur(20px) saturate(180%)",
+      borderBottom: `1px solid rgba(255,255,255,0.06)`,
+      boxShadow: "0 1px 20px rgba(0,0,0,0.2)",
     }}>
-      {/* ═══ PROFESSIONAL UNIFIED FILTER BAR ═══
-           Single source of truth: search + filter button + chips + actions.
-           Replaces the old 6-dropdown layout that duplicated per-tab filters. */}
-      <div style={{ padding: "10px 20px" }}>
-        {/* ROW 1 — Search bar + Filters button + Live indicator */}
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          {/* Search — takes most of the space */}
-          <div style={{ position: "relative", flex: 1, maxWidth: 560 }}>
-            <span style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: T.textMuted, pointerEvents: "none", fontSize: 14 }}>🔍</span>
+      {/* ═══ PREMIUM FILTER BAR — world-class SaaS aesthetic ═══ */}
+      <div style={{ padding: "14px 24px" }}>
+        {/* ROW 1 — Search + Filters + Live indicator */}
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          {/* Premium search */}
+          <div style={{ position: "relative", flex: 1, maxWidth: 580 }}>
+            <svg
+              width="16" height="16" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+              style={{
+                position: "absolute", left: 14, top: "50%",
+                transform: "translateY(-50%)", color: T.textMuted,
+                pointerEvents: "none",
+              }}
+            >
+              <circle cx="11" cy="11" r="8" />
+              <path d="m21 21-4.3-4.3" />
+            </svg>
             <input
               type="text"
-              placeholder="Search projects, developers, communities..."
+              placeholder="Search projects, developers, or communities..."
               value={gSearch || ""}
               onChange={e => setGSearch && setGSearch(e.target.value)}
               style={{
-                background: T.surfaceAlt,
-                border: `1px solid ${T.border}`,
-                borderRadius: 10,
+                background: "linear-gradient(145deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%)",
+                border: `1px solid rgba(255,255,255,0.08)`,
+                borderRadius: 12,
                 color: T.white,
                 fontFamily: "'Outfit', sans-serif",
-                fontSize: 13,
-                padding: "9px 12px 9px 36px",
+                fontSize: 14,
+                fontWeight: 500,
+                padding: "12px 16px 12px 42px",
                 outline: "none",
                 width: "100%",
-                transition: "border-color 0.15s",
+                boxShadow: "inset 0 1px 0 rgba(255,255,255,0.04), 0 1px 2px rgba(0,0,0,0.2)",
+                transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
               }}
-              onFocus={e => e.target.style.borderColor = `rgba(212,168,67,0.4)`}
-              onBlur={e => e.target.style.borderColor = T.border}
+              onFocus={e => {
+                e.target.style.borderColor = "rgba(212,168,67,0.4)";
+                e.target.style.boxShadow = "inset 0 1px 0 rgba(255,255,255,0.04), 0 0 0 4px rgba(212,168,67,0.08), 0 1px 2px rgba(0,0,0,0.2)";
+              }}
+              onBlur={e => {
+                e.target.style.borderColor = "rgba(255,255,255,0.08)";
+                e.target.style.boxShadow = "inset 0 1px 0 rgba(255,255,255,0.04), 0 1px 2px rgba(0,0,0,0.2)";
+              }}
             />
           </div>
 
-          {/* Filters toggle button */}
+          {/* Filters button — premium pill style */}
           <button
             type="button"
             onClick={() => setOpen(!open)}
             style={{
-              padding: "9px 14px",
-              background: open ? "rgba(212,168,67,0.15)" : T.surfaceAlt,
-              border: `1px solid ${open ? "rgba(212,168,67,0.4)" : T.border}`,
-              borderRadius: 10,
-              color: open ? T.gold : T.textSecondary,
-              fontSize: 12,
+              padding: "11px 18px",
+              background: open
+                ? "linear-gradient(145deg, rgba(212,168,67,0.18) 0%, rgba(212,168,67,0.10) 100%)"
+                : "linear-gradient(145deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%)",
+              border: `1px solid ${open ? "rgba(212,168,67,0.4)" : "rgba(255,255,255,0.08)"}`,
+              borderRadius: 12,
+              color: open ? T.gold : T.white,
+              fontSize: 13,
               fontWeight: 600,
               fontFamily: "'Outfit', sans-serif",
               cursor: "pointer",
@@ -426,57 +464,97 @@ const GlobalContextFilter = ({
               alignItems: "center",
               gap: 8,
               whiteSpace: "nowrap",
-              transition: "all 0.15s",
+              transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+              boxShadow: open
+                ? "inset 0 1px 0 rgba(255,255,255,0.04), 0 0 0 3px rgba(212,168,67,0.12), 0 1px 2px rgba(0,0,0,0.2)"
+                : "inset 0 1px 0 rgba(255,255,255,0.04), 0 1px 2px rgba(0,0,0,0.2)",
+            }}
+            onMouseEnter={e => {
+              if (!open) e.currentTarget.style.borderColor = "rgba(255,255,255,0.14)";
+            }}
+            onMouseLeave={e => {
+              if (!open) e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)";
             }}
           >
-            <span style={{ fontSize: 14 }}>⚙</span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
+            </svg>
             <span>Filters</span>
             {activeCount > 0 && (
               <span style={{
                 background: T.gold,
                 color: "#000",
-                padding: "1px 7px",
+                padding: "2px 8px",
                 borderRadius: 10,
-                fontSize: 10,
-                fontWeight: 800,
+                fontSize: 11,
+                fontWeight: 700,
+                minWidth: 20,
+                textAlign: "center",
               }}>{activeCount}</span>
             )}
           </button>
 
-          {/* Clear all — only when filters active */}
+          {/* Clear all — subtle, only when needed */}
           {activeCount > 0 && (
             <button
               type="button"
               onClick={resetAll}
               style={{
-                background: "none",
-                border: `1px solid ${T.border}`,
-                borderRadius: 10,
-                padding: "9px 12px",
+                background: "transparent",
+                border: `1px solid rgba(255,255,255,0.08)`,
+                borderRadius: 12,
+                padding: "11px 16px",
                 color: T.textMuted,
-                fontSize: 12,
+                fontSize: 13,
+                fontWeight: 500,
                 fontFamily: "'Outfit', sans-serif",
                 cursor: "pointer",
                 whiteSpace: "nowrap",
-                transition: "all 0.15s",
+                transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
               }}
-              onMouseEnter={e => { e.currentTarget.style.color = T.red; e.currentTarget.style.borderColor = "rgba(239,68,68,0.3)"; }}
-              onMouseLeave={e => { e.currentTarget.style.color = T.textMuted; e.currentTarget.style.borderColor = T.border; }}
+              onMouseEnter={e => {
+                e.currentTarget.style.color = "#ef4444";
+                e.currentTarget.style.borderColor = "rgba(239,68,68,0.3)";
+                e.currentTarget.style.background = "rgba(239,68,68,0.04)";
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.color = T.textMuted;
+                e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)";
+                e.currentTarget.style.background = "transparent";
+              }}
             >
               Clear all
             </button>
           )}
 
-          {/* Live indicator — right side */}
-          <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 6, fontSize: 11, color: T.textMuted, whiteSpace: "nowrap" }}>
-            <span style={{ width: 6, height: 6, borderRadius: "50%", background: T.green, display: "inline-block", animation: "pulse 2s infinite" }} />
-            Live · Firestore
+          {/* Live indicator — right aligned, premium */}
+          <div style={{
+            marginLeft: "auto",
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            padding: "6px 12px",
+            borderRadius: 20,
+            background: "rgba(16,185,129,0.08)",
+            border: "1px solid rgba(16,185,129,0.15)",
+            fontSize: 11,
+            fontWeight: 600,
+            color: T.green,
+            whiteSpace: "nowrap",
+            fontFamily: "'Outfit', sans-serif",
+          }}>
+            <span style={{
+              width: 6, height: 6, borderRadius: "50%",
+              background: T.green,
+              boxShadow: `0 0 8px ${T.green}`,
+              animation: "pulse 2s infinite",
+            }} />
+            Live
           </div>
         </div>
 
-        {/* ROW 2 — Active filter chips (only if any filters active) */}
+        {/* ROW 2 — Active filter chips (premium pill design) */}
         {activeCount > 0 && (() => {
-          /* Build chip list from active filters */
           const chips = [];
           if (gDeveloper !== "all") {
             const dev = (allDevelopers || []).find(d => String(d.id).toLowerCase() === String(gDeveloper).toLowerCase());
@@ -486,12 +564,8 @@ const GlobalContextFilter = ({
             const typeData = PROPERTY_TYPES_LIVE.flatMap(g => g.types || []).find(t => t.value === gPropertyType);
             chips.push({ key: "type", label: typeData?.label || gPropertyType, clear: () => setGPropertyTypeAndReset("all") });
           }
-          if (gCommunity !== "all") {
-            chips.push({ key: "com", label: gCommunity, clear: () => setGCommunity("all") });
-          }
-          if (gBeds !== "all") {
-            chips.push({ key: "beds", label: gBeds, clear: () => setGBeds("all") });
-          }
+          if (gCommunity !== "all") chips.push({ key: "com", label: gCommunity, clear: () => setGCommunity("all") });
+          if (gBeds !== "all") chips.push({ key: "beds", label: gBeds, clear: () => setGBeds("all") });
           if (gStatus !== "all") {
             const sopt = STATUS_OPTIONS_LIVE.find(s => s.value === gStatus);
             chips.push({ key: "sts", label: sopt?.label || gStatus, clear: () => setGStatus("all") });
@@ -505,42 +579,57 @@ const GlobalContextFilter = ({
             chips.push({ key: "price", label: plabel, clear: () => { setGPriceMin(0); setGPriceMax(0); } });
           }
           return (
-            <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center", marginTop: 10 }}>
-              <span style={{ fontSize: 10, color: T.textMuted, fontWeight: 700, letterSpacing: 0.5, textTransform: "uppercase", marginRight: 4 }}>Active:</span>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center", marginTop: 12 }}>
               {chips.map(c => (
                 <span key={c.key} style={{
                   display: "inline-flex",
                   alignItems: "center",
-                  gap: 6,
-                  padding: "4px 11px",
-                  background: "rgba(212,168,67,0.12)",
+                  gap: 8,
+                  padding: "6px 6px 6px 14px",
+                  background: "linear-gradient(145deg, rgba(212,168,67,0.18) 0%, rgba(212,168,67,0.10) 100%)",
                   border: `1px solid rgba(212,168,67,0.3)`,
-                  borderRadius: 14,
+                  borderRadius: 20,
                   color: T.gold,
-                  fontSize: 11,
+                  fontSize: 12,
                   fontWeight: 600,
                   fontFamily: "'Outfit', sans-serif",
+                  boxShadow: "inset 0 1px 0 rgba(255,255,255,0.04), 0 1px 2px rgba(0,0,0,0.1)",
                 }}>
                   {c.label}
                   <button
                     type="button"
                     onClick={c.clear}
-                    style={{ background: "none", border: "none", color: T.gold, cursor: "pointer", fontSize: 14, padding: 0, lineHeight: 1, opacity: 0.7 }}
-                    onMouseEnter={e => e.currentTarget.style.opacity = 1}
-                    onMouseLeave={e => e.currentTarget.style.opacity = 0.7}
+                    style={{
+                      background: "rgba(212,168,67,0.15)",
+                      border: "none",
+                      color: T.gold,
+                      cursor: "pointer",
+                      width: 18, height: 18,
+                      borderRadius: "50%",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      padding: 0,
+                      fontSize: 14,
+                      lineHeight: 1,
+                      transition: "all 0.15s",
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.background = "rgba(212,168,67,0.3)"; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = "rgba(212,168,67,0.15)"; }}
                   >×</button>
                 </span>
               ))}
               {gPriceMin >= GOLDEN_VISA_THRESHOLD && (
                 <span style={{
-                  padding: "4px 11px",
-                  borderRadius: 14,
-                  fontSize: 11,
-                  background: "rgba(16,185,129,0.12)",
+                  padding: "6px 14px",
+                  borderRadius: 20,
+                  fontSize: 12,
+                  background: "linear-gradient(145deg, rgba(16,185,129,0.18) 0%, rgba(16,185,129,0.10) 100%)",
                   border: "1px solid rgba(16,185,129,0.3)",
                   color: T.green,
                   fontWeight: 600,
                   fontFamily: "'Outfit', sans-serif",
+                  boxShadow: "inset 0 1px 0 rgba(255,255,255,0.04), 0 1px 2px rgba(0,0,0,0.1)",
                 }}>
                   ★ Golden Visa Eligible
                 </span>
@@ -549,23 +638,25 @@ const GlobalContextFilter = ({
           );
         })()}
 
-        {/* ROW 3 — Expandable filter dropdown panel (only when 'Filters' button is open) */}
+        {/* ROW 3 — Expandable filter panel (premium card with glass effect) */}
         {open && (
           <div style={{
-            marginTop: 12,
-            padding: 16,
-            background: T.surface,
-            border: `1px solid ${T.border}`,
-            borderRadius: 12,
+            marginTop: 14,
+            padding: 20,
+            background: "linear-gradient(145deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%)",
+            border: `1px solid rgba(255,255,255,0.08)`,
+            borderRadius: 16,
             display: "grid",
             gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
-            gap: 12,
+            gap: 16,
+            boxShadow: "inset 0 1px 0 rgba(255,255,255,0.04), 0 8px 24px rgba(0,0,0,0.2)",
+            animation: "slideDown 0.25s cubic-bezier(0.4, 0, 0.2, 1)",
           }}>
             {/* Developer */}
             <div>
-              <label style={{ fontSize: 10, color: T.textMuted, fontWeight: 700, letterSpacing: 0.5, textTransform: "uppercase", marginBottom: 5, display: "block" }}>Developer</label>
-              <select value={gDeveloper} onChange={e => setGDeveloperAndReset(e.target.value)} style={{ ...selStyle, width: "100%" }}>
-                <option value="all">All Developers</option>
+              <label style={{ fontSize: 11, color: T.textMuted, fontWeight: 600, marginBottom: 8, display: "block", fontFamily: "'Outfit', sans-serif" }}>Developer</label>
+              <select value={gDeveloper} onChange={e => setGDeveloperAndReset(e.target.value)} style={{ ...(gDeveloper !== "all" ? activeSelStyle : selStyle), width: "100%" }}>
+                <option value="all">All developers</option>
                 {allDevelopers?.length > 0
                   ? allDevelopers.map(d => <option key={d.id} value={d.id}>{d.name}</option>)
                   : ["Emaar","DAMAC","Sobha","Nakheel","Meraas","Aldar","Binghatti","Ellington","Omniyat","Azizi","Danube","Samana","MAG","Imtiaz"].map(n => (
@@ -577,9 +668,9 @@ const GlobalContextFilter = ({
 
             {/* Property Type */}
             <div>
-              <label style={{ fontSize: 10, color: T.textMuted, fontWeight: 700, letterSpacing: 0.5, textTransform: "uppercase", marginBottom: 5, display: "block" }}>Property Type</label>
-              <select value={gPropertyType} onChange={e => setGPropertyTypeAndReset(e.target.value)} style={{ ...selStyle, width: "100%" }}>
-                <option value="all">All Types</option>
+              <label style={{ fontSize: 11, color: T.textMuted, fontWeight: 600, marginBottom: 8, display: "block", fontFamily: "'Outfit', sans-serif" }}>Property type</label>
+              <select value={gPropertyType} onChange={e => setGPropertyTypeAndReset(e.target.value)} style={{ ...(gPropertyType !== "all" ? activeSelStyle : selStyle), width: "100%" }}>
+                <option value="all">All types</option>
                 {PROPERTY_TYPES_LIVE.map(group => (
                   <optgroup key={group.group} label={group.group}>
                     {group.types.map(t => (
@@ -592,9 +683,9 @@ const GlobalContextFilter = ({
 
             {/* Community */}
             <div>
-              <label style={{ fontSize: 10, color: T.textMuted, fontWeight: 700, letterSpacing: 0.5, textTransform: "uppercase", marginBottom: 5, display: "block" }}>Community</label>
-              <select value={gCommunity} onChange={e => setGCommunity(e.target.value)} style={{ ...selStyle, width: "100%" }}>
-                <option value="all">All Communities</option>
+              <label style={{ fontSize: 11, color: T.textMuted, fontWeight: 600, marginBottom: 8, display: "block", fontFamily: "'Outfit', sans-serif" }}>Community</label>
+              <select value={gCommunity} onChange={e => setGCommunity(e.target.value)} style={{ ...(gCommunity !== "all" ? activeSelStyle : selStyle), width: "100%" }}>
+                <option value="all">All communities</option>
                 {liveCommunityList && liveCommunityList.length > 0
                   ? liveCommunityList.map(c => (
                       <option key={c.id} value={c.name}>{c.name}</option>
@@ -603,37 +694,37 @@ const GlobalContextFilter = ({
               </select>
             </div>
 
-            {/* Bedrooms / Config */}
+            {/* Bedrooms */}
             <div>
-              <label style={{ fontSize: 10, color: T.textMuted, fontWeight: 700, letterSpacing: 0.5, textTransform: "uppercase", marginBottom: 5, display: "block" }}>Bedrooms</label>
-              <select value={gBeds} onChange={e => setGBeds(e.target.value)} style={{ ...selStyle, width: "100%" }}>
-                <option value="all">All Configs</option>
+              <label style={{ fontSize: 11, color: T.textMuted, fontWeight: 600, marginBottom: 8, display: "block", fontFamily: "'Outfit', sans-serif" }}>Bedrooms</label>
+              <select value={gBeds} onChange={e => setGBeds(e.target.value)} style={{ ...(gBeds !== "all" ? activeSelStyle : selStyle), width: "100%" }}>
+                <option value="all">Any configuration</option>
                 {bedsOptions.map(b => <option key={b} value={b}>{b}</option>)}
               </select>
             </div>
 
             {/* Status */}
             <div>
-              <label style={{ fontSize: 10, color: T.textMuted, fontWeight: 700, letterSpacing: 0.5, textTransform: "uppercase", marginBottom: 5, display: "block" }}>Sale Status</label>
-              <select value={gStatus} onChange={e => setGStatus(e.target.value)} style={{ ...selStyle, width: "100%" }}>
+              <label style={{ fontSize: 11, color: T.textMuted, fontWeight: 600, marginBottom: 8, display: "block", fontFamily: "'Outfit', sans-serif" }}>Sale status</label>
+              <select value={gStatus} onChange={e => setGStatus(e.target.value)} style={{ ...(gStatus !== "all" ? activeSelStyle : selStyle), width: "100%" }}>
                 {STATUS_OPTIONS_LIVE.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
               </select>
             </div>
 
             {/* Price */}
             <div>
-              <label style={{ fontSize: 10, color: T.textMuted, fontWeight: 700, letterSpacing: 0.5, textTransform: "uppercase", marginBottom: 5, display: "block" }}>Price Range</label>
+              <label style={{ fontSize: 11, color: T.textMuted, fontWeight: 600, marginBottom: 8, display: "block", fontFamily: "'Outfit', sans-serif" }}>Price range</label>
               <select
                 value={`${gPriceMin}-${gPriceMax}`}
                 onChange={e => {
                   const preset = pricePresets.find(p => `${p.min}-${p.max}` === e.target.value);
                   if (preset) { setGPriceMin(preset.min); setGPriceMax(preset.max); }
                 }}
-                style={{ ...selStyle, width: "100%" }}
+                style={{ ...((gPriceMin > 0 || gPriceMax > 0) ? activeSelStyle : selStyle), width: "100%" }}
               >
                 {pricePresets.map(p => (
                   <option key={`${p.min}-${p.max}`} value={`${p.min}-${p.max}`}>
-                    {p.label === "Any" ? "Any Price" : `AED ${p.label}`}
+                    {p.label === "Any" ? "Any price" : `AED ${p.label}`}
                   </option>
                 ))}
               </select>
@@ -901,6 +992,7 @@ const css = `
   @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
   @keyframes ping { 0% { transform: scale(1); opacity: 0.6; } 100% { transform: scale(2.4); opacity: 0; } }
   @keyframes slideIn { from { transform: translateX(-100%); } to { transform: translateX(0); } }
+  @keyframes slideDown { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
   @keyframes spin { to { transform: rotate(360deg); } }
 
   .fade-up { animation: fadeUp 0.5s ease-out forwards; opacity: 0; }

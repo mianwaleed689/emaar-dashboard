@@ -416,12 +416,23 @@ function ProjectsTab({
             });
 
             const selSt = {
-              background: T.surfaceAlt, border: `1px solid ${T.border}`,
-              borderRadius: 8, color: T.white, fontFamily:"'Outfit',sans-serif",
-              fontSize: 12, padding:"7px 28px 7px 10px", outline:"none", cursor:"pointer",
-              appearance:"none", WebkitAppearance:"none",
-              backgroundImage:`url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E")`,
-              backgroundRepeat:"no-repeat", backgroundPosition:"right 8px center",
+              background: "linear-gradient(145deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%)",
+              border: `1px solid rgba(255,255,255,0.08)`,
+              borderRadius: 10,
+              color: T.white,
+              fontFamily:"'Outfit',sans-serif",
+              fontSize: 13,
+              fontWeight: 500,
+              padding:"10px 36px 10px 14px",
+              outline:"none",
+              cursor:"pointer",
+              appearance:"none",
+              WebkitAppearance:"none",
+              backgroundImage:`url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23a0a0a0' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E")`,
+              backgroundRepeat:"no-repeat",
+              backgroundPosition:"right 12px center",
+              boxShadow: "inset 0 1px 0 rgba(255,255,255,0.04), 0 1px 2px rgba(0,0,0,0.2)",
+              transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
             };
 
             const StatusBadge = ({ status }) => {
@@ -626,15 +637,49 @@ function ProjectsTab({
                   </div>
                 </div>
 
-                {/* ═══ MODE / TYPE TABS — Primary filter, always visible ═══ */}
-                <div style={{ display:"flex", gap:6, flexWrap:"wrap", marginBottom:14, padding:"10px 14px", background:T.surface, border:`1px solid ${T.border}`, borderRadius:10 }}>
-                  <span style={{ fontSize:10, fontWeight:700, color:T.textMuted, letterSpacing:0.8, textTransform:"uppercase", alignSelf:"center", marginRight:4 }}>Property Type:</span>
-                  {MODES.map(m => (
-                    <button key={m.key} type="button" onClick={() => { setProjMode(m.key); setProjBeds("All"); setProjDev("All"); setProjCommunity("All"); setProjSearch(""); }}
-                      style={{ padding:"6px 14px", background:projMode===m.key?"rgba(212,168,67,0.15)":T.surfaceAlt, border:`1px solid ${projMode===m.key?"rgba(212,168,67,0.5)":T.border}`, borderRadius:20, color:projMode===m.key?T.gold:T.textSecondary, fontSize:12, fontWeight:projMode===m.key?700:400, cursor:"pointer", fontFamily:"'Outfit',sans-serif", transition:"all 0.15s" }}>
-                      {m.label || m.key}
-                    </button>
-                  ))}
+                {/* ═══ PROPERTY TYPE TABS — premium pill design ═══ */}
+                <div style={{
+                  display:"flex", gap:8, flexWrap:"wrap",
+                  marginBottom: 16,
+                  padding: "14px 18px",
+                  background: "linear-gradient(145deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%)",
+                  border: `1px solid rgba(255,255,255,0.08)`,
+                  borderRadius: 16,
+                  boxShadow: "inset 0 1px 0 rgba(255,255,255,0.04), 0 1px 2px rgba(0,0,0,0.1)",
+                  alignItems:"center",
+                }}>
+                  <span style={{ fontSize:11, fontWeight:600, color:T.textMuted, marginRight:6, fontFamily:"'Outfit',sans-serif" }}>Property type</span>
+                  {MODES.map(m => {
+                    const active = projMode===m.key;
+                    return (
+                      <button key={m.key} type="button" onClick={() => { setProjMode(m.key); setProjBeds("All"); setProjDev("All"); setProjCommunity("All"); setProjSearch(""); }}
+                        style={{
+                          padding:"8px 16px",
+                          background: active
+                            ? "linear-gradient(145deg, rgba(212,168,67,0.22) 0%, rgba(212,168,67,0.12) 100%)"
+                            : "transparent",
+                          border:`1px solid ${active ? "rgba(212,168,67,0.4)" : "rgba(255,255,255,0.08)"}`,
+                          borderRadius: 20,
+                          color: active ? T.gold : T.white,
+                          fontSize: 12,
+                          fontWeight: active ? 600 : 500,
+                          cursor:"pointer",
+                          fontFamily:"'Outfit',sans-serif",
+                          boxShadow: active
+                            ? "inset 0 1px 0 rgba(255,255,255,0.04), 0 0 0 3px rgba(212,168,67,0.08)"
+                            : "none",
+                          transition:"all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+                        }}
+                        onMouseEnter={e => {
+                          if (!active) { e.currentTarget.style.background = "rgba(255,255,255,0.04)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.14)"; }
+                        }}
+                        onMouseLeave={e => {
+                          if (!active) { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)"; }
+                        }}>
+                        {m.label || m.key}
+                      </button>
+                    );
+                  })}
                 </div>
 
                 {/* ═══ SEARCH + FILTER TOGGLE BAR — world-class minimalist ═══ */}
@@ -664,137 +709,296 @@ function ProjectsTab({
                   if (projIntelFilter !== "all") activeFilters.push({ key:"int", label:projIntelFilter === "tier1" ? "Tier 1 Only" : projIntelFilter === "gv" ? "Golden Visa" : projIntelFilter === "branded" ? "Branded Residences" : projIntelFilter, clear:() => setProjIntelFilter("all") });
                   const anyActive = activeFilters.length > 0 || projSearch;
                   return (
-                <div style={{ background:T.surface, border:`1px solid ${T.border}`, borderRadius:10, padding:"10px 14px", marginBottom:14 }}>
-                  <div style={{ display:"flex", gap:10, alignItems:"center", flexWrap:"wrap" }}>
-                    {/* SEARCH — primary input, always visible */}
+                <div style={{
+                  background: "linear-gradient(145deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%)",
+                  border: `1px solid rgba(255,255,255,0.08)`,
+                  borderRadius: 16,
+                  padding: "14px 18px",
+                  marginBottom: 16,
+                  boxShadow: "inset 0 1px 0 rgba(255,255,255,0.04), 0 1px 2px rgba(0,0,0,0.1)",
+                }}>
+                  <div style={{ display:"flex", gap:12, alignItems:"center", flexWrap:"wrap" }}>
+                    {/* SEARCH — premium */}
                     <div style={{ position:"relative", flex:"1 1 260px", minWidth:220 }}>
-                      {SvgIcons.Search({ width:14, height:14, style:{ position:"absolute", left:12, top:"50%", transform:"translateY(-50%)", color:T.textMuted, pointerEvents:"none" } })}
-                      <input value={projSearch} onChange={e => setProjSearch(e.target.value)} placeholder="Search project, developer, or community..." style={{ background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:8, color:T.white, fontFamily:"'Outfit',sans-serif", fontSize:13, padding:"9px 12px 9px 36px", outline:"none", width:"100%" }} />
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+                        style={{ position:"absolute", left:14, top:"50%", transform:"translateY(-50%)", color:T.textMuted, pointerEvents:"none" }}>
+                        <circle cx="11" cy="11" r="8" />
+                        <path d="m21 21-4.3-4.3" />
+                      </svg>
+                      <input value={projSearch} onChange={e => setProjSearch(e.target.value)} placeholder="Search project, developer, or community..."
+                        style={{
+                          background: "linear-gradient(145deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%)",
+                          border: `1px solid rgba(255,255,255,0.08)`,
+                          borderRadius: 10,
+                          color: T.white,
+                          fontFamily: "'Outfit',sans-serif",
+                          fontSize: 13,
+                          fontWeight: 500,
+                          padding: "10px 14px 10px 40px",
+                          outline: "none",
+                          width: "100%",
+                          boxShadow: "inset 0 1px 0 rgba(255,255,255,0.04)",
+                          transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+                        }}
+                        onFocus={e => {
+                          e.target.style.borderColor = "rgba(212,168,67,0.4)";
+                          e.target.style.boxShadow = "inset 0 1px 0 rgba(255,255,255,0.04), 0 0 0 3px rgba(212,168,67,0.08)";
+                        }}
+                        onBlur={e => {
+                          e.target.style.borderColor = "rgba(255,255,255,0.08)";
+                          e.target.style.boxShadow = "inset 0 1px 0 rgba(255,255,255,0.04)";
+                        }}
+                      />
                     </div>
 
-                    {/* SORT dropdown */}
+                    {/* SORT dropdown — premium */}
                     <select value={projSort} onChange={e => setProjSort(e.target.value)} style={selSt} title="Sort order">
                       <option value="score">↓ Relevance</option>
-                      <option value="yield">↓ Yield High</option>
-                      <option value="price_asc">↑ Price Low to High</option>
-                      <option value="price_desc">↓ Price High to Low</option>
-                      <option value="alphabetical">A–Z Name</option>
-                      <option value="recent">↓ Recently Launched</option>
+                      <option value="yield">↓ Yield high</option>
+                      <option value="price_asc">↑ Price low to high</option>
+                      <option value="price_desc">↓ Price high to low</option>
+                      <option value="alphabetical">A–Z name</option>
+                      <option value="recent">↓ Recently launched</option>
                     </select>
 
-                    {/* FILTERS toggle button */}
+                    {/* FILTERS toggle — premium pill */}
                     <button type="button" onClick={() => setFiltersOpen(!filtersOpen)}
-                      style={{ padding:"9px 14px", background:filtersOpen ? "rgba(212,168,67,0.15)" : T.surfaceAlt, border:`1px solid ${filtersOpen ? "rgba(212,168,67,0.4)" : T.border}`, borderRadius:8, color:filtersOpen ? T.gold : T.textSecondary, fontSize:12, fontWeight:600, cursor:"pointer", fontFamily:"'Outfit',sans-serif", display:"flex", alignItems:"center", gap:6, whiteSpace:"nowrap" }}>
-                      <span>⚙ Filters</span>
-                      {activeFilters.length > 0 && <span style={{ background:T.gold, color:"#000", padding:"1px 6px", borderRadius:10, fontSize:10, fontWeight:800 }}>{activeFilters.length}</span>}
+                      style={{
+                        padding:"10px 16px",
+                        background: filtersOpen
+                          ? "linear-gradient(145deg, rgba(212,168,67,0.18) 0%, rgba(212,168,67,0.10) 100%)"
+                          : "linear-gradient(145deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%)",
+                        border:`1px solid ${filtersOpen ? "rgba(212,168,67,0.4)" : "rgba(255,255,255,0.08)"}`,
+                        borderRadius: 10,
+                        color: filtersOpen ? T.gold : T.white,
+                        fontSize: 13,
+                        fontWeight: 600,
+                        cursor: "pointer",
+                        fontFamily: "'Outfit',sans-serif",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 8,
+                        whiteSpace: "nowrap",
+                        boxShadow: filtersOpen
+                          ? "inset 0 1px 0 rgba(255,255,255,0.04), 0 0 0 3px rgba(212,168,67,0.08)"
+                          : "inset 0 1px 0 rgba(255,255,255,0.04)",
+                        transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+                      }}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
+                      </svg>
+                      <span>Filters</span>
+                      {activeFilters.length > 0 && <span style={{ background:T.gold, color:"#000", padding:"2px 8px", borderRadius:10, fontSize:11, fontWeight:700 }}>{activeFilters.length}</span>}
                     </button>
 
-                    {/* VIEW toggle */}
-                    <div style={{ display:"flex", gap:4, background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:8, padding:2 }}>
+                    {/* VIEW toggle — premium segmented */}
+                    <div style={{
+                      display:"flex", gap:2,
+                      background: "linear-gradient(145deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%)",
+                      border: `1px solid rgba(255,255,255,0.08)`,
+                      borderRadius: 10,
+                      padding: 3,
+                      boxShadow: "inset 0 1px 0 rgba(255,255,255,0.04)",
+                    }}>
                       {[{k:"grid",icon:"▦"},{k:"list",icon:"☰"}].map(v => (
-                        <button key={v.k} type="button" onClick={() => setProjView(v.k)} style={{ padding:"5px 10px", background:projView===v.k?"rgba(212,168,67,0.15)":"none", border:"none", borderRadius:6, color:projView===v.k?T.gold:T.textMuted, fontSize:13, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>{v.icon}</button>
+                        <button key={v.k} type="button" onClick={() => setProjView(v.k)}
+                          style={{
+                            padding:"6px 12px",
+                            background: projView===v.k ? "rgba(212,168,67,0.18)" : "none",
+                            border: "none",
+                            borderRadius: 7,
+                            color: projView===v.k ? T.gold : T.textMuted,
+                            fontSize: 14,
+                            cursor: "pointer",
+                            fontFamily: "'Outfit',sans-serif",
+                            transition: "all 0.15s",
+                          }}>{v.icon}</button>
                       ))}
                     </div>
 
-                    {/* RESULT COUNT */}
-                    <span style={{ fontSize:12, color:T.textMuted, marginLeft:"auto", fontWeight:600 }}>
-                      <span style={{ color:T.gold, fontWeight:800 }}>{filtered.length.toLocaleString()}</span> of {rawProjects.length.toLocaleString()} projects
+                    {/* RESULT COUNT — refined */}
+                    <span style={{ fontSize:13, color:T.textMuted, marginLeft:"auto", fontWeight:500, fontFamily:"'Outfit',sans-serif" }}>
+                      <span style={{ color:T.gold, fontWeight:700 }}>{filtered.length.toLocaleString()}</span> of {rawProjects.length.toLocaleString()} projects
                     </span>
                   </div>
 
-                  {/* ACTIVE FILTER CHIPS */}
+                  {/* ACTIVE FILTER CHIPS — premium */}
                   {anyActive && (
-                    <div style={{ display:"flex", gap:6, flexWrap:"wrap", marginTop:10, paddingTop:10, borderTop:`1px solid ${T.border}`, alignItems:"center" }}>
-                      <span style={{ fontSize:10, color:T.textMuted, fontWeight:700, letterSpacing:0.5, textTransform:"uppercase" }}>Active:</span>
+                    <div style={{ display:"flex", gap:8, flexWrap:"wrap", marginTop:12, paddingTop:12, borderTop:`1px solid rgba(255,255,255,0.06)`, alignItems:"center" }}>
                       {projSearch && (
-                        <span style={{ fontSize:11, padding:"3px 10px", borderRadius:14, background:"rgba(20,184,166,0.1)", color:T.teal, border:`1px solid rgba(20,184,166,0.25)`, display:"flex", alignItems:"center", gap:6 }}>
+                        <span style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: 8,
+                          padding: "6px 6px 6px 14px",
+                          background: "linear-gradient(145deg, rgba(20,184,166,0.18) 0%, rgba(20,184,166,0.10) 100%)",
+                          border: `1px solid rgba(20,184,166,0.3)`,
+                          borderRadius: 20,
+                          color: T.teal,
+                          fontSize: 12,
+                          fontWeight: 600,
+                          fontFamily: "'Outfit',sans-serif",
+                          boxShadow: "inset 0 1px 0 rgba(255,255,255,0.04)",
+                        }}>
                           Search: "{projSearch}"
-                          <button type="button" onClick={() => setProjSearch("")} style={{ background:"none", border:"none", color:T.teal, cursor:"pointer", fontSize:14, padding:0, lineHeight:1 }}>×</button>
+                          <button type="button" onClick={() => setProjSearch("")} style={{ background:"rgba(20,184,166,0.15)", border:"none", color:T.teal, cursor:"pointer", width:18, height:18, borderRadius:"50%", display:"flex", alignItems:"center", justifyContent:"center", padding:0, fontSize:14, lineHeight:1 }}>×</button>
                         </span>
                       )}
                       {activeFilters.map(f => (
                         f.global ? (
-                          <span key={f.key} style={{ fontSize:11, padding:"3px 10px", borderRadius:14, background:"rgba(20,184,166,0.08)", color:T.teal, border:`1px solid rgba(20,184,166,0.25)`, display:"flex", alignItems:"center", gap:6, cursor:"help" }} title="From top filter bar — applies to all tabs">
-                            <span style={{ fontSize:9, opacity:0.7 }}>⇡</span>
+                          <span key={f.key} title="From top filter bar — applies to all tabs" style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: 6,
+                            padding: "6px 14px",
+                            background: "linear-gradient(145deg, rgba(20,184,166,0.15) 0%, rgba(20,184,166,0.08) 100%)",
+                            border: `1px solid rgba(20,184,166,0.25)`,
+                            borderRadius: 20,
+                            color: T.teal,
+                            fontSize: 12,
+                            fontWeight: 600,
+                            fontFamily: "'Outfit',sans-serif",
+                            cursor: "help",
+                            boxShadow: "inset 0 1px 0 rgba(255,255,255,0.04)",
+                          }}>
+                            <span style={{ fontSize:10, opacity:0.8 }}>⇡</span>
                             {f.label}
                           </span>
                         ) : (
-                          <span key={f.key} style={{ fontSize:11, padding:"3px 10px", borderRadius:14, background:"rgba(212,168,67,0.1)", color:T.gold, border:`1px solid rgba(212,168,67,0.25)`, display:"flex", alignItems:"center", gap:6 }}>
+                          <span key={f.key} style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: 8,
+                            padding: "6px 6px 6px 14px",
+                            background: "linear-gradient(145deg, rgba(212,168,67,0.18) 0%, rgba(212,168,67,0.10) 100%)",
+                            border: `1px solid rgba(212,168,67,0.3)`,
+                            borderRadius: 20,
+                            color: T.gold,
+                            fontSize: 12,
+                            fontWeight: 600,
+                            fontFamily: "'Outfit',sans-serif",
+                            boxShadow: "inset 0 1px 0 rgba(255,255,255,0.04)",
+                          }}>
                             {f.label}
-                            <button type="button" onClick={f.clear} style={{ background:"none", border:"none", color:T.gold, cursor:"pointer", fontSize:14, padding:0, lineHeight:1 }}>×</button>
+                            <button type="button" onClick={f.clear} style={{ background:"rgba(212,168,67,0.15)", border:"none", color:T.gold, cursor:"pointer", width:18, height:18, borderRadius:"50%", display:"flex", alignItems:"center", justifyContent:"center", padding:0, fontSize:14, lineHeight:1 }}>×</button>
                           </span>
                         )
                       ))}
                       <button type="button" onClick={() => { setProjSearch(""); setProjHandover("All"); setProjGrade("All"); setProjIntelFilter("all"); setProjLifecycle("All"); setProjEscrowBank("All"); setProjConstruction("All"); }}
-                        style={{ background:"none", border:`1px solid ${T.border}`, borderRadius:12, padding:"3px 10px", color:T.textMuted, fontSize:11, cursor:"pointer", fontFamily:"'Outfit',sans-serif", marginLeft:4 }} title="Clears Projects-specific filters. Top bar filters stay — use the top bar to clear those.">Clear local</button>
+                        title="Clears Projects-specific filters. Top bar filters stay — use the top bar to clear those."
+                        style={{
+                          background: "transparent",
+                          border: `1px solid rgba(255,255,255,0.08)`,
+                          borderRadius: 20,
+                          padding:"6px 14px",
+                          color: T.textMuted,
+                          fontSize: 12,
+                          fontWeight: 500,
+                          cursor:"pointer",
+                          fontFamily:"'Outfit',sans-serif",
+                          marginLeft:4,
+                          transition: "all 0.15s",
+                        }}
+                        onMouseEnter={e => { e.currentTarget.style.color = "#ef4444"; e.currentTarget.style.borderColor = "rgba(239,68,68,0.3)"; }}
+                        onMouseLeave={e => { e.currentTarget.style.color = T.textMuted; e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)"; }}>
+                        Clear local
+                      </button>
                     </div>
                   )}
 
-                  {/* EXPANDED FILTER PANEL — shows when Filters button toggled */}
+                  {/* EXPANDED FILTER PANEL — premium design */}
                   {filtersOpen && (
-                    <div style={{ marginTop:12, paddingTop:12, borderTop:`1px solid ${T.border}`, display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(180px, 1fr))", gap:10 }}>
-                      <div style={{ gridColumn:"1 / -1", padding:"8px 12px", background:"rgba(20,184,166,0.05)", border:`1px solid rgba(20,184,166,0.15)`, borderRadius:8, marginBottom:6 }}>
-                        <div style={{ fontSize:10, color:T.teal, fontWeight:700, letterSpacing:0.5 }}>⓵ PRIMARY FILTERS</div>
-                        <div style={{ fontSize:11, color:T.textMuted, marginTop:3 }}>Developer · Community · Beds · Status · Price are in the top bar above — they apply to all tabs. Filters below are Projects-specific.</div>
-                      </div>
-                      {projMode === "Office" && (
+                    <div style={{
+                      marginTop: 14,
+                      padding: 20,
+                      background: "linear-gradient(145deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%)",
+                      border: `1px solid rgba(255,255,255,0.08)`,
+                      borderRadius: 16,
+                      boxShadow: "inset 0 1px 0 rgba(255,255,255,0.04), 0 8px 24px rgba(0,0,0,0.2)",
+                    }}>
+                      <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(200px, 1fr))", gap:16 }}>
+                        {projMode === "Office" && (
+                          <div>
+                            <label style={{ fontSize:11, color:T.textMuted, fontWeight:600, marginBottom:8, display:"block", fontFamily:"'Outfit',sans-serif" }}>Office grade</label>
+                            <select value={projGrade} onChange={e => setProjGrade(e.target.value)} style={{ ...selSt, width:"100%" }}>
+                              {["All","A","B","C"].map(g => <option key={g}>{g === "All" ? "All grades" : "Grade " + g}</option>)}
+                            </select>
+                          </div>
+                        )}
                         <div>
-                          <label style={{ fontSize:10, color:T.textMuted, fontWeight:700, letterSpacing:0.5, textTransform:"uppercase", marginBottom:4, display:"block" }}>Office Grade</label>
-                          <select value={projGrade} onChange={e => setProjGrade(e.target.value)} style={{ ...selSt, width:"100%" }}>
-                            {["All","A","B","C"].map(g => <option key={g}>{g === "All" ? "All Grades" : "Grade " + g}</option>)}
+                          <label style={{ fontSize:11, color:T.textMuted, fontWeight:600, marginBottom:8, display:"block", fontFamily:"'Outfit',sans-serif" }}>Handover year</label>
+                          <select value={projHandover} onChange={e => setProjHandover(e.target.value)} style={{ ...selSt, width:"100%" }}>
+                            {["All","2026","2027","2028","2029","Available Now"].map(h => <option key={h}>{h === "All" ? "Any year" : h}</option>)}
                           </select>
                         </div>
-                      )}
-                      <div>
-                        <label style={{ fontSize:10, color:T.textMuted, fontWeight:700, letterSpacing:0.5, textTransform:"uppercase", marginBottom:4, display:"block" }}>Handover Year</label>
-                        <select value={projHandover} onChange={e => setProjHandover(e.target.value)} style={{ ...selSt, width:"100%" }}>
-                          {["All","2026","2027","2028","2029","Available Now"].map(h => <option key={h}>{h === "All" ? "Any Year" : h}</option>)}
-                        </select>
+                        <div>
+                          <label style={{ fontSize:11, color:T.textMuted, fontWeight:600, marginBottom:8, display:"block", fontFamily:"'Outfit',sans-serif" }}>Project stage</label>
+                          <select value={projLifecycle} onChange={e => setProjLifecycle(e.target.value)} style={{ ...selSt, width:"100%" }}>
+                            <option value="All">All stages</option>
+                            <option value="announced">Announced · Pre-construction</option>
+                            <option value="under-construction">Under construction</option>
+                            <option value="recently-delivered">Recently delivered</option>
+                            <option value="historical">Historical · Already sold</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label style={{ fontSize:11, color:T.textMuted, fontWeight:600, marginBottom:8, display:"block", fontFamily:"'Outfit',sans-serif" }}>Construction progress</label>
+                          <select value={projConstruction} onChange={e => setProjConstruction(e.target.value)} style={{ ...selSt, width:"100%" }}>
+                            <option value="All">Any progress</option>
+                            <option value="0-25">0 – 25%</option>
+                            <option value="25-50">25 – 50%</option>
+                            <option value="50-75">50 – 75%</option>
+                            <option value="75-99">75 – 99%</option>
+                            <option value="100">100% Completed</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label style={{ fontSize:11, color:T.textMuted, fontWeight:600, marginBottom:8, display:"block", fontFamily:"'Outfit',sans-serif" }}>Escrow bank</label>
+                          <select value={projEscrowBank} onChange={e => setProjEscrowBank(e.target.value)} style={{ ...selSt, width:"100%" }}>
+                            {escrowOptions.map(b => <option key={b} value={b}>{b === "All" ? "Any escrow bank" : b}</option>)}
+                          </select>
+                        </div>
                       </div>
-                      {/* Lifecycle Stage — 100% DLD coverage */}
-                      <div>
-                        <label style={{ fontSize:10, color:T.textMuted, fontWeight:700, letterSpacing:0.5, textTransform:"uppercase", marginBottom:4, display:"block" }}>Project Stage</label>
-                        <select value={projLifecycle} onChange={e => setProjLifecycle(e.target.value)} style={{ ...selSt, width:"100%" }}>
-                          <option value="All">All Stages</option>
-                          <option value="announced">Announced · Pre-Construction</option>
-                          <option value="under-construction">Under Construction</option>
-                          <option value="recently-delivered">Recently Delivered</option>
-                          <option value="historical">Historical · Already Sold</option>
-                        </select>
-                      </div>
-                      {/* NEW: Construction Progress — 100% DLD coverage */}
-                      <div>
-                        <label style={{ fontSize:10, color:T.textMuted, fontWeight:700, letterSpacing:0.5, textTransform:"uppercase", marginBottom:4, display:"block" }}>Construction %</label>
-                        <select value={projConstruction} onChange={e => setProjConstruction(e.target.value)} style={{ ...selSt, width:"100%" }}>
-                          <option value="All">Any Progress</option>
-                          <option value="0-25">0 – 25%</option>
-                          <option value="25-50">25 – 50%</option>
-                          <option value="50-75">50 – 75%</option>
-                          <option value="75-99">75 – 99%</option>
-                          <option value="100">100% Completed</option>
-                        </select>
-                      </div>
-                      {/* NEW: Escrow Bank — 94% DLD coverage, trust signal */}
-                      <div>
-                        <label style={{ fontSize:10, color:T.textMuted, fontWeight:700, letterSpacing:0.5, textTransform:"uppercase", marginBottom:4, display:"block" }}>Escrow Bank</label>
-                        <select value={projEscrowBank} onChange={e => setProjEscrowBank(e.target.value)} style={{ ...selSt, width:"100%" }}>
-                          {escrowOptions.map(b => <option key={b} value={b}>{b === "All" ? "Any Escrow Bank" : b}</option>)}
-                        </select>
-                      </div>
-                      <div style={{ gridColumn:"1 / -1", paddingTop:10, borderTop:`1px solid ${T.border}` }}>
-                        <label style={{ fontSize:10, color:T.textMuted, fontWeight:700, letterSpacing:0.5, textTransform:"uppercase", marginBottom:8, display:"block" }}>Smart Segments</label>
-                        <div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>
+                      {/* Smart Segments — refined pill buttons */}
+                      <div style={{ marginTop:18, paddingTop:16, borderTop:`1px solid rgba(255,255,255,0.06)` }}>
+                        <div style={{ fontSize:11, color:T.textMuted, fontWeight:600, marginBottom:10, fontFamily:"'Outfit',sans-serif" }}>Smart segments</div>
+                        <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
                           {[
-                            { key:"all",     label:"All Projects" },
-                            { key:"tier1",   label:"⚡ Tier 1 Developers" },
-                            { key:"gv",      label:"★ Golden Visa Eligible" },
-                            { key:"branded", label:"◆ Branded Residences" },
-                          ].map(f => (
-                            <button key={f.key} type="button" onClick={() => setProjIntelFilter(f.key)}
-                              style={{ padding:"6px 14px", background:projIntelFilter === f.key ? T.gold : "rgba(255,255,255,0.04)", border:`1px solid ${projIntelFilter === f.key ? T.gold : T.border}`, borderRadius:16, color:projIntelFilter === f.key ? "#000" : T.textSecondary, fontSize:11, fontWeight:700, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>
-                              {f.label}
-                            </button>
-                          ))}
+                            { key:"all",     label:"All projects" },
+                            { key:"tier1",   label:"⚡ Tier 1 developers" },
+                            { key:"gv",      label:"★ Golden Visa eligible" },
+                            { key:"branded", label:"◆ Branded residences" },
+                          ].map(f => {
+                            const active = projIntelFilter === f.key;
+                            return (
+                              <button key={f.key} type="button" onClick={() => setProjIntelFilter(f.key)}
+                                style={{
+                                  padding:"8px 16px",
+                                  background: active
+                                    ? "linear-gradient(145deg, rgba(212,168,67,0.25) 0%, rgba(212,168,67,0.15) 100%)"
+                                    : "linear-gradient(145deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%)",
+                                  border:`1px solid ${active ? "rgba(212,168,67,0.4)" : "rgba(255,255,255,0.08)"}`,
+                                  borderRadius: 20,
+                                  color: active ? T.gold : T.white,
+                                  fontSize: 12,
+                                  fontWeight: 600,
+                                  cursor:"pointer",
+                                  fontFamily:"'Outfit',sans-serif",
+                                  boxShadow: active
+                                    ? "inset 0 1px 0 rgba(255,255,255,0.04), 0 0 0 3px rgba(212,168,67,0.08)"
+                                    : "inset 0 1px 0 rgba(255,255,255,0.04)",
+                                  transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+                                }}
+                                onMouseEnter={e => {
+                                  if (!active) e.currentTarget.style.borderColor = "rgba(255,255,255,0.14)";
+                                }}
+                                onMouseLeave={e => {
+                                  if (!active) e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)";
+                                }}>
+                                {f.label}
+                              </button>
+                            );
+                          })}
                         </div>
                       </div>
                     </div>
