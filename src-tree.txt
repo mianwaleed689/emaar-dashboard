@@ -1,0 +1,202 @@
+﻿Folder PATH listing
+Volume serial number is 62B9-85AB
+C:\USERS\TAD\EMAAR-DASHBOARD\SRC
+|   AdminDataHealth.jsx
+|   AdminPanel.jsx
+|   AdminPanel.jsx.backup
+|   AgencySignup.jsx
+|   App.jsx
+|   data.js
+|   data_developers.js
+|   data_emaar_complete.js
+|   data_master.js
+|   DeveloperPortal.jsx
+|   dxb-analytics-icon.svg
+|   dxb-analytics-logo.svg
+|   DXBContext.jsx
+|   EmaarDashboardV2.jsx
+|   ErrorBoundary.jsx
+|   firebase.js
+|   i18n.jsx
+|   index.css
+|   index.jsx
+|   LandingPage.jsx
+|   NotFound.jsx
+|   Privacy.jsx
+|   ProjectDetail.jsx
+|   ProjectManager.jsx
+|   reportWebVitals.js
+|   RoiCalculator.jsx
+|   setupTests.js
+|   syncMarket.js
+|   Terms.jsx
+|   theme.js
+|   UserGuard.jsx
+|   
++---admin
+|   |   BillingTab.jsx
+|   |   CancellationTab.jsx
+|   |   DigestTab.jsx
+|   |   EiborRatesPanel.jsx
+|   |   FilterSchemaAdminTab.jsx
+|   |   MarketIntelligenceTab.jsx
+|   |   NotificationsTab.jsx
+|   |   PlatformLeadsTab.jsx
+|   |   PlatformSettingsTab.jsx
+|   |   PricingPlansTab.jsx
+|   |   ReferralTab.jsx
+|   |   SupportTab.jsx
+|   |   UsersTab.jsx
+|   |   
+|   \---DataManagerV2
+|           BulkToolbar.jsx
+|           ClaimsSection.jsx
+|           CommunitiesSection.jsx
+|           ComplianceSection.jsx
+|           DevelopersSection.jsx
+|           DevelopmentEditModal.jsx
+|           DevelopmentsSection.jsx
+|           index.jsx
+|           OverviewSection.jsx
+|           ProjectsSection.jsx
+|           tokens.js
+|           
++---app
+|   \---sync-data
+|           page.js
+|           
++---communities
+|       aldar.communities.js
+|       binghatti.communities.js
+|       damac.communities.js
+|       emaar.communities.js
+|       index (1).js
+|       index.js
+|       meraas.communities.js
+|       nakheel.communities.js
+|       sobha.communities.js
+|       
++---components
+|   |   FilterIndicator.jsx
+|   |   GlobalContextFilter.jsx
+|   |   Icons.jsx
+|   |   index.js
+|   |   LoginScreen.jsx
+|   |   SampleDataBanner.jsx
+|   |   SearchableSelect.jsx
+|   |   SharedUI.jsx
+|   |   SmartEmptyState.jsx
+|   |   TabConfig.js
+|   |   
+|   +---layout
+|   |       .gitkeep
+|   |       
+|   +---shared
+|   |       .gitkeep
+|   |       
+|   \---ui
+|           .gitkeep
+|           
++---config
+|       .gitkeep
+|       pricing.js
+|       tabs.config.js
+|       
++---context
+|       .gitkeep
+|       AuthContext.jsx
+|       DXBContext.jsx
+|       
++---contexts
+|       FilterSchemaContext.jsx
+|       
++---data
+|   \---projects
+|           golf-grand.data.js
+|           
++---hooks
+|       .gitkeep
+|       index.js
+|       useAuth.js
+|       useCommunities.js
+|       useDevelopers.js
+|       useDevelopments.js
+|       useFilters.js
+|       useFirestoreCollection.js
+|       useProjects.js
+|       
++---lib
+|       queryClient.js
+|       
++---services
+|   +---api
+|   |       .gitkeep
+|   |       
+|   +---external
+|   |       .gitkeep
+|   |       
+|   \---firebase
+|           .gitkeep
+|           auth.js
+|           config.js
+|           firestore.js
+|           index.js
+|           
++---styles
+|       global.js
+|       theme.js
+|       
++---tabs
+|       AgencyTab.jsx
+|       BankingTab.jsx
+|       CommunityMapTab.jsx
+|       CompetitorsTab.jsx
+|       ComplianceTab.jsx
+|       CurrencyTab.jsx
+|       DeveloperHealthTab.jsx
+|       DevPortalTab.jsx
+|       DLDVolumesTab.jsx
+|       DXBEstimateTab.jsx
+|       FinancialsTab.jsx
+|       FlipTab.jsx
+|       GoldenVisaTab.jsx
+|       HandoverTab.jsx
+|       index.js
+|       IntelligenceTab.jsx
+|       InvestmentScoreTab.jsx
+|       LaunchCalendarTab.jsx
+|       ListingsTab.jsx
+|       MarketingTab.jsx
+|       MarketTab.jsx
+|       MortgageTab.jsx
+|       MyLeadsTab.jsx
+|       NeighbourhoodsTab.jsx
+|       OverviewTab.jsx
+|       PipelineTab.jsx
+|       PortfolioTab.jsx
+|       PriceHistoryTab.jsx
+|       ProjectsTab.jsx
+|       RiskTab.jsx
+|       ServiceChargesTab.jsx
+|       STRvsLTRTab.jsx
+|       TeamTab.jsx
+|       YieldsTab.jsx
+|       
++---types
+|       project.ts
+|       
+\---utils
+        auditProject.js
+        constants.js
+        coordinates.js
+        dataHelpers.js
+        filterSchemaDefaults.js
+        formatters.js
+        helpers.js
+        index.js
+        projectValidation.js
+        propertyTypes.js
+        safeAsync.js
+        scoring.js
+        seedData.js
+        

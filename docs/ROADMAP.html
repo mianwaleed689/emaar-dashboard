@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DXB Analytics · Architecture Roadmap</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700;9..144,800&family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#04090F;
+  --surface:#0A1628;
+  --surface-alt:#0E1D35;
+  --card:#0D1B30;
+  --border:rgba(212,168,67,0.08);
+  --border-strong:rgba(212,168,67,0.2);
+  --gold:#D4A843;
+  --gold-bright:#E8C96A;
+  --gold-dim:#B8912F;
+  --gold-glow:rgba(212,168,67,0.12);
+  --teal:#00BFA5;
+  --text:#F1F5F9;
+  --text-sec:#94A3B8;
+  --text-muted:#64748B;
+  --red:#EF4444;
+  --amber:#F59E0B;
+  --green:#10B981;
+  --blue:#3B82F6;
+  --purple:#8B5CF6;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;line-height:1.6;-webkit-font-smoothing:antialiased}
+.serif{font-family:'Fraunces',serif}
+.mono{font-family:'JetBrains Mono',monospace}
+
+.shell{max-width:1240px;margin:0 auto;padding:48px 32px 80px}
+
+/* Hero */
+.hero{text-align:center;padding:40px 0 60px;border-bottom:1px solid var(--border);margin-bottom:48px;position:relative}
+.hero::before{content:"";position:absolute;top:0;left:50%;transform:translateX(-50%);width:200px;height:200px;background:radial-gradient(circle,var(--gold-glow) 0%,transparent 70%);pointer-events:none}
+.logo-row{display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:32px;position:relative}
+.logo{width:48px;height:48px;background:linear-gradient(135deg,var(--gold) 0%,#8a5a1f 100%);border-radius:10px;display:grid;place-items:center;font-family:'Fraunces',serif;font-weight:700;color:var(--bg);font-size:22px}
+.brand{font-family:'Fraunces',serif;font-size:22px;font-weight:600;color:var(--gold);letter-spacing:0.02em}
+.brand-sub{font-size:10px;letter-spacing:.3em;color:var(--text-muted);text-transform:uppercase;margin-top:2px}
+
+h1.title{font-family:'Fraunces',serif;font-size:64px;font-weight:500;letter-spacing:-0.03em;line-height:1.05;margin-bottom:16px;background:linear-gradient(135deg,var(--text) 0%,var(--gold) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;position:relative}
+.subtitle{font-size:18px;color:var(--text-sec);max-width:680px;margin:0 auto 24px;position:relative}
+.meta{display:inline-flex;gap:20px;font-size:11px;color:var(--text-muted);letter-spacing:.08em;text-transform:uppercase;padding:10px 24px;background:var(--surface);border:1px solid var(--border);border-radius:999px;position:relative}
+.meta .dot{width:6px;height:6px;background:var(--green);border-radius:50%;display:inline-block;margin-right:6px;box-shadow:0 0 8px var(--green)}
+
+/* TOC */
+.toc{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:24px 28px;margin-bottom:60px}
+.toc-title{font-size:10px;letter-spacing:.22em;color:var(--text-muted);text-transform:uppercase;margin-bottom:16px}
+.toc-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.toc-item{display:flex;align-items:center;gap:12px;padding:10px 14px;background:var(--surface-alt);border:1px solid var(--border);border-radius:8px;text-decoration:none;color:var(--text-sec);font-size:13px;transition:all .2s}
+.toc-item:hover{border-color:var(--gold);color:var(--gold-bright);background:var(--gold-glow)}
+.toc-num{font-family:'Fraunces',serif;font-size:16px;color:var(--gold);font-weight:600;min-width:22px}
+
+/* Section headers */
+.section{margin-bottom:72px;scroll-margin-top:24px}
+.section-head{margin-bottom:32px;padding-bottom:18px;border-bottom:1px solid var(--border);display:flex;align-items:end;justify-content:space-between;gap:24px}
+.section-head-left{display:flex;align-items:baseline;gap:18px}
+.section-num{font-family:'Fraunces',serif;font-size:48px;color:var(--gold);font-weight:500;line-height:1}
+.section-title{font-family:'Fraunces',serif;font-size:36px;font-weight:500;letter-spacing:-0.02em}
+.section-kicker{font-size:11px;letter-spacing:.2em;color:var(--text-muted);text-transform:uppercase}
+
+h3.heading{font-family:'Fraunces',serif;font-size:24px;font-weight:500;margin:40px 0 16px;color:var(--text)}
+h4.subheading{font-family:'Outfit',sans-serif;font-size:14px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--gold);margin:28px 0 14px}
+
+p{color:var(--text-sec);margin-bottom:14px;font-size:15px}
+
+/* Exec summary hero stats */
+.exec-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin:32px 0}
+.stat-cell{background:var(--card);padding:24px 22px}
+.stat-val{font-family:'Fraunces',serif;font-size:48px;font-weight:500;color:var(--gold);line-height:1}
+.stat-lbl{font-size:10px;letter-spacing:.16em;color:var(--text-muted);text-transform:uppercase;margin-top:10px}
+.stat-sub{font-size:11px;color:var(--text-sec);margin-top:4px}
+
+/* Tables */
+.data-table{width:100%;border-collapse:collapse;background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin:20px 0;font-size:13px}
+.data-table th{background:var(--surface-alt);padding:14px 18px;text-align:left;font-size:10px;letter-spacing:.14em;color:var(--text-muted);text-transform:uppercase;font-weight:600;border-bottom:1px solid var(--border)}
+.data-table td{padding:14px 18px;border-bottom:1px solid var(--border);color:var(--text-sec)}
+.data-table tr:last-child td{border-bottom:none}
+.data-table tr:hover td{background:rgba(212,168,67,0.03)}
+.data-table td strong{color:var(--text)}
+
+/* Cards */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:28px;margin-bottom:16px}
+.card-title{font-family:'Fraunces',serif;font-size:20px;font-weight:500;margin-bottom:10px;color:var(--text)}
+.card-kicker{font-size:10px;letter-spacing:.18em;color:var(--gold);text-transform:uppercase;margin-bottom:12px;font-weight:600}
+
+/* Blockers */
+.blocker{background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--red);border-radius:10px;padding:20px 24px;margin-bottom:14px}
+.blocker-label{font-size:10px;letter-spacing:.14em;color:var(--red);text-transform:uppercase;font-weight:600;margin-bottom:6px}
+.blocker-title{font-family:'Fraunces',serif;font-size:20px;font-weight:500;color:var(--text);margin-bottom:10px}
+.blocker-stat{font-family:'JetBrains Mono',monospace;font-size:12px;background:var(--surface-alt);padding:12px 16px;border-radius:6px;color:var(--gold-bright);margin:10px 0;line-height:1.8}
+.blocker p{font-size:13px;color:var(--text-sec);margin-bottom:0}
+
+/* Phases */
+.phase{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:0;margin-bottom:20px;overflow:hidden}
+.phase-head{display:flex;align-items:center;gap:16px;padding:20px 28px;background:linear-gradient(135deg,var(--gold-glow) 0%,transparent 100%);border-bottom:1px solid var(--border)}
+.phase-num{font-family:'Fraunces',serif;font-size:32px;color:var(--gold);font-weight:500;min-width:48px}
+.phase-title-wrap{flex:1}
+.phase-title{font-family:'Fraunces',serif;font-size:22px;font-weight:500;color:var(--text);margin-bottom:2px}
+.phase-time{font-size:11px;color:var(--text-muted);letter-spacing:.1em;text-transform:uppercase}
+.phase-badge{padding:4px 12px;border-radius:6px;font-size:10px;letter-spacing:.12em;font-weight:600;text-transform:uppercase}
+.phase-badge.current{background:rgba(74,222,128,0.1);color:var(--green);border:1px solid rgba(74,222,128,0.25)}
+.phase-badge.next{background:rgba(245,158,11,0.1);color:var(--amber);border:1px solid rgba(245,158,11,0.25)}
+.phase-badge.later{background:var(--surface-alt);color:var(--text-muted);border:1px solid var(--border)}
+.phase-body{padding:24px 28px}
+.phase-goal{font-size:15px;color:var(--text);margin-bottom:18px;padding:14px 18px;background:var(--surface-alt);border-left:3px solid var(--gold);border-radius:6px}
+.phase-goal strong{color:var(--gold-bright)}
+.checklist{list-style:none;padding:0;margin:14px 0}
+.checklist li{display:flex;align-items:flex-start;gap:12px;padding:6px 0;font-size:13px;color:var(--text-sec)}
+.check-box{display:inline-grid;place-items:center;width:18px;height:18px;border:1px solid var(--border-strong);border-radius:4px;margin-top:2px;flex-shrink:0;font-size:11px}
+.check-box.done{background:var(--green);color:var(--bg);border-color:var(--green)}
+.check-box.done::before{content:"✓"}
+
+/* Architecture diagrams */
+.arch{background:var(--bg);border:1px solid var(--border);border-radius:14px;padding:32px;margin:24px 0;overflow-x:auto}
+.arch-title{font-size:11px;letter-spacing:.16em;color:var(--text-muted);text-transform:uppercase;margin-bottom:20px;text-align:center}
+
+.arch-before{display:flex;flex-direction:column;align-items:center;gap:12px}
+.god-component{background:linear-gradient(135deg,rgba(239,68,68,0.08),rgba(239,68,68,0.02));border:2px dashed var(--red);border-radius:12px;padding:24px 32px;width:100%;max-width:620px;text-align:center}
+.god-component .file{font-family:'JetBrains Mono',monospace;font-size:14px;color:var(--red);font-weight:600}
+.god-component .size{font-family:'Fraunces',serif;font-size:28px;color:var(--text);margin:4px 0}
+.god-component .details{font-size:11px;color:var(--text-muted);letter-spacing:.08em;text-transform:uppercase;margin-top:8px}
+.god-component .stats{display:flex;justify-content:center;gap:24px;margin-top:14px;padding-top:14px;border-top:1px solid rgba(239,68,68,0.15);font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-sec)}
+.god-component .stats span{color:var(--amber)}
+.arrow-down{color:var(--text-muted);font-size:20px}
+.tab-fan{display:grid;grid-template-columns:repeat(8,1fr);gap:6px;width:100%;max-width:620px}
+.tab-chip{background:var(--surface-alt);border:1px solid var(--border);border-radius:4px;padding:6px 4px;text-align:center;font-size:9px;font-family:'JetBrains Mono',monospace;color:var(--text-sec)}
+.prop-note{font-size:10px;color:var(--text-muted);margin-top:8px;font-style:italic}
+
+.arch-after{display:grid;grid-template-columns:1fr auto 1fr;gap:24px;align-items:center}
+.shell-box{background:linear-gradient(135deg,rgba(74,222,128,0.08),rgba(74,222,128,0.02));border:2px solid var(--green);border-radius:12px;padding:24px;text-align:center}
+.shell-box .file{font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--green);font-weight:600}
+.shell-box .size{font-family:'Fraunces',serif;font-size:24px;color:var(--text);margin:4px 0}
+.hooks-box{background:var(--surface);border:2px solid var(--gold);border-radius:12px;padding:20px}
+.hooks-box .title{font-size:10px;letter-spacing:.14em;color:var(--gold);text-transform:uppercase;margin-bottom:10px;font-weight:600}
+.hook-item{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-sec);padding:3px 0}
+.link-line{display:flex;flex-direction:column;align-items:center;gap:6px;color:var(--gold);font-size:18px}
+
+/* Code blocks */
+.code{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:16px 20px;margin:14px 0;overflow-x:auto;font-family:'JetBrains Mono',monospace;font-size:12px;line-height:1.7;color:var(--text-sec)}
+.code .k{color:var(--purple)}
+.code .s{color:var(--green)}
+.code .c{color:var(--text-muted);font-style:italic}
+.code .fn{color:var(--teal)}
+.code .v{color:var(--gold-bright)}
+
+/* Risk matrix */
+.risk-table{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+.risk-row{display:grid;grid-template-columns:2fr 1fr 1fr 3fr;gap:1px;background:var(--border);font-size:12px}
+.risk-row.header{font-weight:600;letter-spacing:.1em;text-transform:uppercase;font-size:10px}
+.risk-row>div{background:var(--surface);padding:12px 16px;color:var(--text-sec)}
+.risk-row.header>div{background:var(--surface-alt);color:var(--text-muted)}
+.risk-pill{display:inline-block;padding:3px 10px;border-radius:4px;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.05em}
+.risk-low{background:rgba(74,222,128,0.1);color:var(--green)}
+.risk-med{background:rgba(245,158,11,0.1);color:var(--amber)}
+.risk-high{background:rgba(239,68,68,0.1);color:var(--red)}
+
+/* Quick wins */
+.win-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-top:16px}
+.win-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:18px;text-align:center;position:relative}
+.win-num{font-family:'Fraunces',serif;font-size:32px;font-weight:500;color:var(--gold);line-height:1}
+.win-title{font-size:12px;color:var(--text);font-weight:600;margin:10px 0 4px}
+.win-desc{font-size:11px;color:var(--text-muted);line-height:1.5}
+
+/* Footer */
+.footer{margin-top:80px;padding:32px;background:var(--surface);border:1px solid var(--border);border-radius:14px;text-align:center}
+.footer-brand{font-family:'Fraunces',serif;font-size:16px;color:var(--gold);margin-bottom:8px}
+.footer-meta{font-size:11px;color:var(--text-muted);letter-spacing:.08em}
+
+/* Responsive */
+@media (max-width:900px){
+  .shell{padding:24px 16px}
+  h1.title{font-size:40px}
+  .exec-stats{grid-template-columns:repeat(2,1fr)}
+  .toc-grid,.win-grid{grid-template-columns:1fr 1fr}
+  .arch-after{grid-template-columns:1fr}
+  .tab-fan{grid-template-columns:repeat(4,1fr)}
+  .section-head{flex-direction:column;align-items:flex-start;gap:12px}
+  .section-head-left{flex-direction:column;align-items:flex-start;gap:4px}
+  .section-num{font-size:32px}
+  .section-title{font-size:28px}
+}
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="logo-row">
+      <div class="logo">D</div>
+      <div>
+        <div class="brand">DXB Analytics</div>
+        <div class="brand-sub">Architecture Roadmap</div>
+      </div>
+    </div>
+    <h1 class="title">The path<br>to scale.</h1>
+    <p class="subtitle">From 60% architecturally complete to production-grade data platform, in four non-breaking phases.</p>
+    <div class="meta">
+      <span><span class="dot"></span>Status: Draft</span>
+      <span>21 April 2026</span>
+      <span>Prepared for: TAD / Emaar Dashboard</span>
+    </div>
+  </div>
+
+  <!-- TOC -->
+  <div class="toc">
+    <div class="toc-title">◆ Contents</div>
+    <div class="toc-grid">
+      <a class="toc-item" href="#s1"><span class="toc-num">01</span>Executive Summary</a>
+      <a class="toc-item" href="#s2"><span class="toc-num">02</span>Current State</a>
+      <a class="toc-item" href="#s3"><span class="toc-num">03</span>Migration Phases</a>
+      <a class="toc-item" href="#s4"><span class="toc-num">04</span>Architecture Diagrams</a>
+      <a class="toc-item" href="#s5"><span class="toc-num">05</span>Quick Wins</a>
+      <a class="toc-item" href="#s6"><span class="toc-num">06</span>Risks &amp; Mitigation</a>
+    </div>
+  </div>
+
+  <!-- SECTION 1 : EXECUTIVE SUMMARY -->
+  <div class="section" id="s1">
+    <div class="section-head">
+      <div class="section-head-left">
+        <div class="section-num">01</div>
+        <div>
+          <div class="section-kicker">TL;DR</div>
+          <div class="section-title">Executive Summary</div>
+        </div>
+      </div>
+    </div>
+
+    <p>DXB Analytics is 60% architecturally complete. You've made excellent foundational decisions — modular tabs, Firestore subscriptions, a modern stack, legal-safe positioning — but two issues block scaling to 1000s of projects.</p>
+
+    <div class="exec-stats">
+      <div class="stat-cell">
+        <div class="stat-val">28K</div>
+        <div class="stat-lbl">Lines in 2 shells</div>
+        <div class="stat-sub">6,024 + 22,365</div>
+      </div>
+      <div class="stat-cell">
+        <div class="stat-val">856</div>
+        <div class="stat-lbl">useState hooks</div>
+        <div class="stat-sub">in combined shells</div>
+      </div>
+      <div class="stat-cell">
+        <div class="stat-val">33 + 22</div>
+        <div class="stat-lbl">Tabs to modernize</div>
+        <div class="stat-sub">dashboard + admin</div>
+      </div>
+      <div class="stat-cell">
+        <div class="stat-val">7+</div>
+        <div class="stat-lbl">Data files</div>
+        <div class="stat-sub">need consolidation</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-kicker">The insight</div>
+      <div class="card-title">You already built the target pattern.</div>
+      <p><code style="color:var(--gold-bright)">src/admin/DataManagerV2/</code> is the clean architecture: 100-line router, each section in its own file, each section subscribes directly to Firestore, receives 2 props not 30. The mission isn't to invent something new — it's to finish migrating the rest of the platform to match what you've already proven works.</p>
+    </div>
+  </div>
+
+  <!-- SECTION 2 : CURRENT STATE -->
+  <div class="section" id="s2">
+    <div class="section-head">
+      <div class="section-head-left">
+        <div class="section-num">02</div>
+        <div>
+          <div class="section-kicker">Where you are</div>
+          <div class="section-title">Current State</div>
+        </div>
+      </div>
+    </div>
+
+    <h3 class="heading">What's working ✓</h3>
+    <table class="data-table">
+      <thead><tr><th>Area</th><th>Why it works</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Routing</strong> (App.jsx)</td><td>Clean role-gated routes, small file</td></tr>
+        <tr><td><strong>Auth flow</strong></td><td>Firebase with role-based guards</td></tr>
+        <tr><td><strong>Tab extraction</strong></td><td>33 tabs are individual files, not one blob</td></tr>
+        <tr><td><strong>DataManagerV2</strong></td><td>Proves you know the right pattern</td></tr>
+        <tr><td><strong>Audit infrastructure</strong></td><td>auditLog subcollection, ClaimsSection</td></tr>
+        <tr><td><strong>Legal framing</strong></td><td>"Data platform, not advice" — regulatory-safe</td></tr>
+        <tr><td><strong>Stack</strong></td><td>React 19, Vite, TanStack Query, Firestore</td></tr>
+      </tbody>
+    </table>
+
+    <h3 class="heading">The three blockers</h3>
+
+    <div class="blocker">
+      <div class="blocker-label">Blocker 01 · The Dashboard God Component</div>
+      <div class="blocker-title">EmaarDashboardV2.jsx is a 6,024-line monolith.</div>
+      <div class="blocker-stat">
+        <span style="color:var(--red)">417</span> useState hooks &nbsp;·&nbsp;
+        <span style="color:var(--red)">39</span> onSnapshot subscriptions &nbsp;·&nbsp;
+        <span style="color:var(--red)">33</span> tabs, each receiving 20-50 props
+      </div>
+      <p>Every keystroke in any filter re-renders the whole shell, re-evaluates all 417 state values, and re-passes all props to all 33 tabs. This is why the app feels heavy and why you can't add a tab without editing a massive file.</p>
+    </div>
+
+    <div class="blocker">
+      <div class="blocker-label">Blocker 02 · The Admin Panel is Even Worse</div>
+      <div class="blocker-title">AdminPanel.jsx is 22,365 lines.</div>
+      <div class="blocker-stat">
+        <span style="color:var(--red)">439</span> useState hooks &nbsp;·&nbsp;
+        Theme <span style="color:var(--red)">duplicated inline</span> (should import from theme.js) &nbsp;·&nbsp;
+        Old patterns + DataManagerV2 mixed in same file
+      </div>
+      <p>Same disease, 3.5x the scale. Includes an <code style="color:var(--amber)">AdminPanel.jsx.backup</code> file committed to git — backups belong in git history, not your repo.</p>
+    </div>
+
+    <div class="blocker">
+      <div class="blocker-label">Blocker 03 · Fragmented Data Layer</div>
+      <div class="blocker-title">Seven data files and no single source of truth.</div>
+      <div class="blocker-stat">
+data.js · data_developers.js · data_emaar_complete.js
+data_master.js · communities/*.js · data/projects/ (new)
+      </div>
+      <p>Golf Grand's wrong data sits in data.js line 21 (construction 96%, price 1.53M) while the corrected record sits in data/projects/. Both are imported somewhere. This is bug soil — and it's why one wrong RERA number hid in production for months.</p>
+    </div>
+
+    <h3 class="heading">Tab complexity distribution</h3>
+    <p>Most tabs are reasonable. Only 3-6 are truly problematic — the migration scope is bounded.</p>
+    <table class="data-table">
+      <thead><tr><th>Size Tier</th><th>Count</th><th>Tabs</th></tr></thead>
+      <tbody>
+        <tr><td><strong style="color:var(--red)">Over 1500 lines</strong></td><td>3</td><td>LaunchCalendar (2320), Handover (1795), Projects (1681)</td></tr>
+        <tr><td><strong style="color:var(--amber)">900-1500 lines</strong></td><td>3</td><td>MyLeads (1131), Banking (979), Financials (936)</td></tr>
+        <tr><td><strong style="color:var(--gold)">400-900 lines</strong></td><td>10</td><td>Competitors, Neighbourhoods, Marketing, Intelligence, ...</td></tr>
+        <tr><td><strong style="color:var(--green)">Under 400 lines ✓</strong></td><td>17</td><td>Everything else — already well-sized</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- SECTION 3 : PHASES -->
+  <div class="section" id="s3">
+    <div class="section-head">
+      <div class="section-head-left">
+        <div class="section-num">03</div>
+        <div>
+          <div class="section-kicker">The plan</div>
+          <div class="section-title">Migration Phases</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Phase 0 -->
+    <div class="phase">
+      <div class="phase-head">
+        <div class="phase-num">00</div>
+        <div class="phase-title-wrap">
+          <div class="phase-title">Foundation</div>
+          <div class="phase-time">1-2 days · this week</div>
+        </div>
+        <div class="phase-badge current">◆ Current</div>
+      </div>
+      <div class="phase-body">
+        <div class="phase-goal"><strong>Goal:</strong> Stop the bleeding. One data source. Automated quality checks.</div>
+        <ul class="checklist">
+          <li><span class="check-box done"></span>Create <span class="mono">src/data/projects/</span> folder with one file per project</li>
+          <li><span class="check-box done"></span>Barrel <span class="mono">index.js</span> with allProjects, projectById(), catalogStats</li>
+          <li><span class="check-box done"></span><span class="mono">src/utils/auditProject.js</span> with 11 validation rules</li>
+          <li><span class="check-box done"></span><span class="mono">scripts/audit-projects.js</span> CI-runnable gate</li>
+          <li><span class="check-box"></span>Integrate files into codebase (manual step)</li>
+          <li><span class="check-box"></span>Remove old emaarProjects block from data.js</li>
+          <li><span class="check-box"></span>Audit &amp; delete unused <span class="mono">data_*.js</span> files</li>
+          <li><span class="check-box"></span>Wire <span class="mono">npm run audit:projects</span> into pre-commit</li>
+        </ul>
+        <p style="font-size:12px;color:var(--text-muted);margin-top:14px"><strong style="color:var(--gold)">Success metric:</strong> Pre-commit blocks any push with data errors.</p>
+      </div>
+    </div>
+
+    <!-- Phase 1 -->
+    <div class="phase">
+      <div class="phase-head">
+        <div class="phase-num">01</div>
+        <div class="phase-title-wrap">
+          <div class="phase-title">Extract the Dashboard Shell</div>
+          <div class="phase-time">1 week · after Phase 0</div>
+        </div>
+        <div class="phase-badge next">◆ Next</div>
+      </div>
+      <div class="phase-body">
+        <div class="phase-goal"><strong>Goal:</strong> Shrink EmaarDashboardV2.jsx from 6,024 lines to under 300.</div>
+
+        <h4 class="subheading">Strategy</h4>
+        <p>Move state ownership from shell into tabs using the DataManagerV2 pattern. Each tab becomes responsible for its own Firestore subscriptions via shared hooks.</p>
+
+        <h4 class="subheading">Create shared data hooks (src/hooks/data/)</h4>
+        <div class="code">
+<span class="k">export function</span> <span class="fn">useProjects</span>() {
+  <span class="k">const</span> [data, setData] = <span class="fn">useState</span>([]);
+  <span class="fn">useEffect</span>(() => {
+    <span class="k">const</span> unsub = <span class="fn">onSnapshot</span>(<span class="fn">collection</span>(db, <span class="s">"projects"</span>), snap => {
+      <span class="fn">setData</span>(snap.docs.<span class="fn">map</span>(d => ({ id: d.id, ...d.<span class="fn">data</span>() })));
+    });
+    <span class="k">return</span> () => <span class="fn">unsub</span>();
+  }, []);
+  <span class="k">return</span> { data, loading: data.length === <span class="v">0</span> };
+}
+        </div>
+
+        <h4 class="subheading">Migrate tabs (easiest → hardest)</h4>
+        <ul class="checklist">
+          <li><span class="check-box"></span><strong style="color:var(--text)">Day 1-2:</strong> CurrencyTab, MortgageTab, MarketTab, OverviewTab</li>
+          <li><span class="check-box"></span><strong style="color:var(--text)">Day 3:</strong> YieldsTab, DLDVolumesTab, NeighbourhoodsTab</li>
+          <li><span class="check-box"></span><strong style="color:var(--text)">Day 4-5:</strong> ProjectsTab, HandoverTab</li>
+          <li><span class="check-box"></span><strong style="color:var(--text)">Week 2+:</strong> LaunchCalendarTab (split into 3 components)</li>
+        </ul>
+
+        <p style="font-size:12px;color:var(--text-muted);margin-top:14px"><strong style="color:var(--gold)">Success metric:</strong> EmaarDashboardV2.jsx under 500 lines. No tab receives more than 5 props.</p>
+      </div>
+    </div>
+
+    <!-- Phase 2 -->
+    <div class="phase">
+      <div class="phase-head">
+        <div class="phase-num">02</div>
+        <div class="phase-title-wrap">
+          <div class="phase-title">Migrate Admin Panel</div>
+          <div class="phase-time">1-2 weeks · after Phase 1</div>
+        </div>
+        <div class="phase-badge later">Later</div>
+      </div>
+      <div class="phase-body">
+        <div class="phase-goal"><strong>Goal:</strong> Same treatment for AdminPanel.jsx (22K → 500 lines).</div>
+        <p>Reuse everything from Phase 1 — same hook pattern, same shell, same config. Split by admin function area: User management, Billing, Operations, Content (DataManagerV2 already here ✓), Intelligence.</p>
+        <p style="font-size:12px;color:var(--text-muted);margin-top:14px"><strong style="color:var(--gold)">Success metric:</strong> AdminPanel.jsx under 500 lines. Zero state lives in the shell.</p>
+      </div>
+    </div>
+
+    <!-- Phase 3 -->
+    <div class="phase">
+      <div class="phase-head">
+        <div class="phase-num">03</div>
+        <div class="phase-title-wrap">
+          <div class="phase-title">Data Catalog at Scale</div>
+          <div class="phase-time">2-3 weeks · after Phase 2</div>
+        </div>
+        <div class="phase-badge later">Later</div>
+      </div>
+      <div class="phase-body">
+        <div class="phase-goal"><strong>Goal:</strong> Move from 3 curated projects to a unified catalog of 100-500 verified projects, Firestore-first.</div>
+        <ul class="checklist">
+          <li><span class="check-box"></span>All projects in Firestore; seed files are bootstrap-only</li>
+          <li><span class="check-box"></span>Admin workflow: DataManagerV2 form validates against audit rules live</li>
+          <li><span class="check-box"></span>Auto-enrichment pipeline (DLD + Google Places + transaction data)</li>
+          <li><span class="check-box"></span>CatalogHealth admin section: top offenders, rule violations, stale data</li>
+          <li><span class="check-box"></span>Source attribution per field with confidence scoring</li>
+        </ul>
+        <p style="font-size:12px;color:var(--text-muted);margin-top:14px"><strong style="color:var(--gold)">Success metric:</strong> 100% of published projects have <span class="mono">_audit.dataQuality: "high"</span>.</p>
+      </div>
+    </div>
+
+    <!-- Phase 4 -->
+    <div class="phase">
+      <div class="phase-head">
+        <div class="phase-num">04</div>
+        <div class="phase-title-wrap">
+          <div class="phase-title">Rich Data Layer</div>
+          <div class="phase-time">4-6 weeks · after Phase 3</div>
+        </div>
+        <div class="phase-badge later">Later</div>
+      </div>
+      <div class="phase-body">
+        <div class="phase-goal"><strong>Goal:</strong> Level 3 (validated) → Level 4 (rich). The depth investors actually need.</div>
+
+        <h4 class="subheading">Time-series</h4>
+        <p>Construction % over time · Price history per unit type · Yield trend · Sales velocity</p>
+
+        <h4 class="subheading">Transactions</h4>
+        <p>DLD records per project · Resale listings count · Ejari rental contracts · Days-on-market</p>
+
+        <h4 class="subheading">Connected</h4>
+        <p>Other projects by same contractor · Comparable PPSF in community · Same architect elsewhere</p>
+
+        <h4 class="subheading">Derived signals</h4>
+        <p>Price momentum · Supply pressure · Demand score · Risk flags (delay history, complaints)</p>
+
+        <p style="font-size:12px;color:var(--text-muted);margin-top:14px"><strong style="color:var(--gold)">Success metric:</strong> An investor can make a buy/no-buy decision without leaving the project page.</p>
+      </div>
+    </div>
+
+    <!-- Phase 5 -->
+    <div class="phase">
+      <div class="phase-head">
+        <div class="phase-num">05</div>
+        <div class="phase-title-wrap">
+          <div class="phase-title">Intelligence Layer</div>
+          <div class="phase-time">Ongoing · the moat</div>
+        </div>
+        <div class="phase-badge later">Vision</div>
+      </div>
+      <div class="phase-body">
+        <div class="phase-goal"><strong>Goal:</strong> Turn rich data into insights users can't compute themselves. This is why investors pay.</div>
+        <p style="font-style:italic;color:var(--text);font-size:14px;padding:14px 18px;background:var(--surface-alt);border-radius:6px;border-left:3px solid var(--gold)">"This project's PPSF has decoupled from community by 8% over 3 months — unusual."</p>
+        <p style="font-style:italic;color:var(--text);font-size:14px;padding:14px 18px;background:var(--surface-alt);border-radius:6px;border-left:3px solid var(--gold);margin-top:10px">"Contractor X has 3 projects delivered on time, 2 late. Median delay: 4 months."</p>
+        <p style="font-style:italic;color:var(--text);font-size:14px;padding:14px 18px;background:var(--surface-alt);border-radius:6px;border-left:3px solid var(--gold);margin-top:10px">"5 similar units sold in last 30 days at AED 2,100-2,400 PPSF vs this project's AED 1,974 asking."</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 4 : ARCHITECTURE DIAGRAMS -->
+  <div class="section" id="s4">
+    <div class="section-head">
+      <div class="section-head-left">
+        <div class="section-num">04</div>
+        <div>
+          <div class="section-kicker">Before / After</div>
+          <div class="section-title">Architecture Diagrams</div>
+        </div>
+      </div>
+    </div>
+
+    <h3 class="heading">Before — Current state</h3>
+    <div class="arch">
+      <div class="arch-title">◆ God Component with Prop Drilling</div>
+      <div class="arch-before">
+        <div class="god-component">
+          <div class="file">EmaarDashboardV2.jsx</div>
+          <div class="size">6,024 lines</div>
+          <div class="details">All state · All filters · All Firestore queries · All feature flags</div>
+          <div class="stats">
+            <span>417 useState</span>
+            <span>39 onSnapshot</span>
+            <span>33 tabs rendered</span>
+          </div>
+        </div>
+        <div class="arrow-down">↓</div>
+        <div style="font-size:10px;color:var(--text-muted);letter-spacing:.1em;text-transform:uppercase">Passes 20-50 props to each tab</div>
+        <div class="tab-fan">
+          <div class="tab-chip">Projects</div>
+          <div class="tab-chip">Handover</div>
+          <div class="tab-chip">LaunchCal</div>
+          <div class="tab-chip">MyLeads</div>
+          <div class="tab-chip">Currency</div>
+          <div class="tab-chip">Mortgage</div>
+          <div class="tab-chip">Yields</div>
+          <div class="tab-chip">+26 more</div>
+        </div>
+        <div class="prop-note">Any filter change → full shell re-render → all tabs re-evaluate</div>
+      </div>
+    </div>
+
+    <h3 class="heading">After — Target state</h3>
+    <div class="arch">
+      <div class="arch-title">◆ Thin Shell · Shared Hooks · Self-Contained Tabs</div>
+      <div class="arch-after">
+        <div class="shell-box">
+          <div class="file">Dashboard Shell</div>
+          <div class="size">~300 lines</div>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:8px">Just routing + layout + nav</div>
+        </div>
+        <div class="link-line">
+          <div>◄</div>
+          <div style="font-size:9px;letter-spacing:.12em;color:var(--gold);text-transform:uppercase">Reads</div>
+          <div>►</div>
+        </div>
+        <div class="hooks-box">
+          <div class="title">Shared Data Hooks Layer</div>
+          <div class="hook-item">useProjects()</div>
+          <div class="hook-item">useDevelopers()</div>
+          <div class="hook-item">useYields()</div>
+          <div class="hook-item">useDLDVolumes()</div>
+          <div class="hook-item">useMarketData()</div>
+          <div class="hook-item" style="color:var(--text-muted)">...</div>
+        </div>
+      </div>
+      <div style="margin-top:24px;padding-top:24px;border-top:1px solid var(--border);text-align:center">
+        <div style="font-size:11px;color:var(--text-muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:14px">Each tab subscribes to its own data</div>
+        <div class="tab-fan">
+          <div class="tab-chip" style="color:var(--gold)">Projects</div>
+          <div class="tab-chip" style="color:var(--gold)">Handover</div>
+          <div class="tab-chip" style="color:var(--gold)">LaunchCal</div>
+          <div class="tab-chip" style="color:var(--gold)">MyLeads</div>
+          <div class="tab-chip" style="color:var(--gold)">Currency</div>
+          <div class="tab-chip" style="color:var(--gold)">Mortgage</div>
+          <div class="tab-chip" style="color:var(--gold)">Yields</div>
+          <div class="tab-chip" style="color:var(--gold)">+26 more</div>
+        </div>
+        <div class="prop-note" style="color:var(--green)">✓ Tab change doesn't re-render shell · ✓ Each tab receives 0-3 props · ✓ Easy to add new tab</div>
+      </div>
+    </div>
+
+    <h3 class="heading">Success metrics</h3>
+    <table class="data-table">
+      <thead><tr><th>Metric</th><th>Before</th><th>After Phase 2</th></tr></thead>
+      <tbody>
+        <tr><td>EmaarDashboardV2.jsx size</td><td><span style="color:var(--red)">6,024 lines</span></td><td><strong style="color:var(--green)">&lt; 500 lines</strong></td></tr>
+        <tr><td>AdminPanel.jsx size</td><td><span style="color:var(--red)">22,365 lines</span></td><td><strong style="color:var(--green)">&lt; 500 lines</strong></td></tr>
+        <tr><td>Total useState in shells</td><td><span style="color:var(--red)">856</span></td><td><strong style="color:var(--green)">&lt; 20</strong></td></tr>
+        <tr><td>Props per tab (median)</td><td><span style="color:var(--red)">25-40</span></td><td><strong style="color:var(--green)">0-3</strong></td></tr>
+        <tr><td>Project catalog integrity</td><td><span style="color:var(--red)">Manual</span></td><td><strong style="color:var(--green)">Automated gate</strong></td></tr>
+        <tr><td>Data sources of truth</td><td><span style="color:var(--red)">7+ files</span></td><td><strong style="color:var(--green)">1 (Firestore)</strong></td></tr>
+        <tr><td>Onboarding new developer</td><td><span style="color:var(--red)">Weeks</span></td><td><strong style="color:var(--green)">Days</strong></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- SECTION 5 : QUICK WINS -->
+  <div class="section" id="s5">
+    <div class="section-head">
+      <div class="section-head-left">
+        <div class="section-num">05</div>
+        <div>
+          <div class="section-kicker">This week</div>
+          <div class="section-title">Quick Wins</div>
+        </div>
+      </div>
+    </div>
+
+    <p>Independent of the big migration, five things you can do in under an hour each:</p>
+
+    <div class="win-grid">
+      <div class="win-card">
+        <div class="win-num">01</div>
+        <div class="win-title">Kill the .backup</div>
+        <div class="win-desc">git rm AdminPanel.jsx.backup — backups belong in history not repo</div>
+      </div>
+      <div class="win-card">
+        <div class="win-num">02</div>
+        <div class="win-title">Delete unused data</div>
+        <div class="win-desc">Grep src/ for data_* imports. Delete what nothing uses.</div>
+      </div>
+      <div class="win-card">
+        <div class="win-num">03</div>
+        <div class="win-title">Merge context/ folders</div>
+        <div class="win-desc">You have context/ AND contexts/. Pick one. Move files. Update imports.</div>
+      </div>
+      <div class="win-card">
+        <div class="win-num">04</div>
+        <div class="win-title">Remove empty folders</div>
+        <div class="win-desc">services/api/, components/layout/, etc. — all .gitkeep only. Delete.</div>
+      </div>
+      <div class="win-card">
+        <div class="win-num">05</div>
+        <div class="win-title">Drop react-scripts</div>
+        <div class="win-desc">You use Vite now. Remove react-scripts dependency — 200MB saved.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 6 : RISKS -->
+  <div class="section" id="s6">
+    <div class="section-head">
+      <div class="section-head-left">
+        <div class="section-num">06</div>
+        <div>
+          <div class="section-kicker">What could go wrong</div>
+          <div class="section-title">Risks &amp; Mitigation</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="risk-table">
+      <div class="risk-row header">
+        <div>Risk</div><div>Likely</div><div>Impact</div><div>Mitigation</div>
+      </div>
+      <div class="risk-row">
+        <div><strong>Breaking production during migration</strong></div>
+        <div><span class="risk-pill risk-med">Medium</span></div>
+        <div><span class="risk-pill risk-high">High</span></div>
+        <div>Migrate one tab at a time · preview URL first · smoke-test each phase</div>
+      </div>
+      <div class="risk-row">
+        <div><strong>Firestore rules block new hook patterns</strong></div>
+        <div><span class="risk-pill risk-low">Low</span></div>
+        <div><span class="risk-pill risk-high">High</span></div>
+        <div>Audit rules before Phase 1 · test subscriptions in dev</div>
+      </div>
+      <div class="risk-row">
+        <div><strong>Lost in-progress work</strong></div>
+        <div><span class="risk-pill risk-med">Medium</span></div>
+        <div><span class="risk-pill risk-med">Medium</span></div>
+        <div>Commit after each tab migration · use branches</div>
+      </div>
+      <div class="risk-row">
+        <div><strong>Admin users notice regressions</strong></div>
+        <div><span class="risk-pill risk-med">Medium</span></div>
+        <div><span class="risk-pill risk-med">Medium</span></div>
+        <div>Admin is internal — they'll tell you · keep old AdminPanel.jsx until Phase 2 done</div>
+      </div>
+      <div class="risk-row">
+        <div><strong>Golf Grand fix doesn't propagate</strong></div>
+        <div><span class="risk-pill risk-high">High if missed</span></div>
+        <div><span class="risk-pill risk-med">Medium</span></div>
+        <div>Phase 0 explicitly removes old data.js entry · verify in prod</div>
+      </div>
+      <div class="risk-row">
+        <div><strong>tabs.config.js dedup breaks nav</strong></div>
+        <div><span class="risk-pill risk-low">Low</span></div>
+        <div><span class="risk-pill risk-med">Medium</span></div>
+        <div>Test each nav item after deduping · deploy to preview first</div>
+      </div>
+      <div class="risk-row">
+        <div><strong>Bundle size increases</strong></div>
+        <div><span class="risk-pill risk-low">Low</span></div>
+        <div><span class="risk-pill risk-low">Low</span></div>
+        <div>TanStack Query already handles caching · no new deps</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    <div class="footer-brand">DXB Analytics · Architecture Roadmap</div>
+    <div class="footer-meta">Prepared by Claude · 21 April 2026 · Draft — open for iteration</div>
+  </div>
+
+</div>
+</body>
+</html>
