@@ -127,6 +127,38 @@ service cloud.firestore {
     match /communityROI/{doc}     { allow read: if isAuthed(); allow write: if isAdmin(); }
     match /communityIntel/{doc}   { allow read: if isAuthed(); allow write: if isAdmin(); }
     match /developments/{doc}     { allow read: if isAuthed(); allow write: if isAdmin(); }
+    match /adminAlerts               /{doc} { allow read: if isAuthed(); allow write: if isAdmin(); }
+    match /cancellations             /{doc} { allow read: if isAuthed(); allow write: if isAdmin(); }
+    match /competitors               /{doc} { allow read: if isAuthed(); allow write: if isAdmin(); }
+    match /devHealth                 /{doc} { allow read: if isAuthed(); allow write: if isAdmin(); }
+    match /developerClaims           /{doc} { allow read: if isAuthed(); allow write: if isAdmin(); }
+    match /digestLog                 /{doc} { allow read: if isAuthed(); allow write: if isAdmin(); }
+    match /eiborHistory              /{doc} { allow read: if isAuthed(); allow write: if isAdmin(); }
+    match /handover                  /{doc} { allow read: if isAuthed(); allow write: if isAdmin(); }
+    match /investScores              /{doc} { allow read: if isAuthed(); allow write: if isAdmin(); }
+    match /mortgageRates             /{doc} { allow read: if isAuthed(); allow write: if isAdmin(); }
+    match /notificationTemplates     /{doc} { allow read: if isAuthed(); allow write: if isAdmin(); }
+    match /organisations             /{doc} { allow read: if isAuthed(); allow write: if isAdmin(); }
+    match /payments                  /{doc} { allow read: if isAuthed(); allow write: if isAdmin(); }
+    match /platformLeads             /{doc} { allow read: if isAuthed(); allow write: if isAdmin(); }
+    match /projectData               /{doc} { allow read: if isAuthed(); allow write: if isAdmin(); }
+    match /projectVersions           /{doc} { allow read: if isAuthed(); allow write: if isAdmin(); }
+    match /radarLaunches             /{doc} { allow read: if isAuthed(); allow write: if isAdmin(); }
+    match /referrals                 /{doc} { allow read: if isAuthed(); allow write: if isAdmin(); }
+    match /strData                   /{doc} { allow read: if isAuthed(); allow write: if isAdmin(); }
+    match /supportAgentPermissions   /{doc} { allow read: if isAuthed(); allow write: if isAdmin(); }
+    match /supportAutoAssignRules    /{doc} { allow read: if isAuthed(); allow write: if isAdmin(); }
+    match /supportCSAT               /{doc} { allow read: if isAuthed(); allow write: if isAdmin(); }
+    match /supportCustomFields       /{doc} { allow read: if isAuthed(); allow write: if isAdmin(); }
+    match /supportKnowledgeBase      /{doc} { allow read: if isAuthed(); allow write: if isAdmin(); }
+    match /supportQuickResponses     /{doc} { allow read: if isAuthed(); allow write: if isAdmin(); }
+    match /supportTicketAudit        /{doc} { allow read: if isAuthed(); allow write: if isAdmin(); }
+    match /supportTickets            /{doc} { allow read: if isAuthed(); allow write: if isAdmin(); }
+    match /supportTimeEntries        /{doc} { allow read: if isAuthed(); allow write: if isAdmin(); }
+    match /supportWebhookLogs        /{doc} { allow read: if isAuthed(); allow write: if isAdmin(); }
+    match /supportWebhooks           /{doc} { allow read: if isAuthed(); allow write: if isAdmin(); }
+    match /supportWorkflowTriggers   /{doc} { allow read: if isAuthed(); allow write: if isAdmin(); }
+    match /verifications             /{doc} { allow read: if isAuthed(); allow write: if isAdmin(); }
     match /riskData/{doc}         { allow read: if isAuthed(); allow write: if isAdmin(); }
     match /strLtrData/{doc}       { allow read: if isAuthed(); allow write: if isAdmin(); }
     match /priceHistory/{doc}     { allow read: if isAuthed(); allow write: if isAdmin(); }
