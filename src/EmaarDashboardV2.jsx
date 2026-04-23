@@ -5014,7 +5014,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               gvOffplan={gvOffplan} setGvOffplan={setGvOffplan}
               gvOffplanPaid={gvOffplanPaid} setGvOffplanPaid={setGvOffplanPaid}
               gvMortgagePaid={gvMortgagePaid}
-              liveProjects={liveProjects} SEED_PROJECTS={SEED_PROJECTS}
+              liveProjects={liveProjects} SEED_PROJECTS={[]}
               handleTabChange={handleTabChange}
             />
           )}
