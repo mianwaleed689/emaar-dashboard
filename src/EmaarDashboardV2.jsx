@@ -4487,6 +4487,8 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               globalFilters={_gf}
               allDevelopers={allDevelopers}
               handleTabChange={handleTabChange}
+              watchlist={watchlist}
+              toggleWatchlist={toggleWatchlist}
             />
           )}
 
@@ -4541,6 +4543,8 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               globalFilters={_gf}
               allDevelopers={allDevelopers}
               handleTabChange={handleTabChange}
+              watchlist={watchlist}
+              toggleWatchlist={toggleWatchlist}
             />
           )}
 
@@ -4579,6 +4583,8 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               globalFilters={_gf}
               allDevelopers={allDevelopers}
               handleTabChange={handleTabChange}
+              watchlist={watchlist}
+              toggleWatchlist={toggleWatchlist}
             />
           )}
 
@@ -4740,6 +4746,8 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               globalFilters={_gf}
               allDevelopers={allDevelopers}
               handleTabChange={handleTabChange}
+              watchlist={watchlist}
+              toggleWatchlist={toggleWatchlist}
             />
           )}
 
@@ -4946,6 +4954,8 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               globalFilters={_gf}
               allDevelopers={allDevelopers}
               handleTabChange={handleTabChange}
+              watchlist={watchlist}
+              toggleWatchlist={toggleWatchlist}
             />
           )}
 
@@ -5064,6 +5074,8 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               globalFilters={_gf}
               allDevelopers={allDevelopers}
               handleTabChange={handleTabChange}
+              watchlist={watchlist}
+              toggleWatchlist={toggleWatchlist}
             />
           )}
 

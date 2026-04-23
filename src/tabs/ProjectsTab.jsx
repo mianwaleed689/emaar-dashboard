@@ -159,6 +159,8 @@ function ProjectsTab({
   globalFilters = {},
   allDevelopers = [],
   handleTabChange,
+  watchlist = [],
+  toggleWatchlist,
 }) {
 
   /* NEW FILTERS (v7) — match data reality from audit:
@@ -519,6 +521,28 @@ function ProjectsTab({
                       </span>
                     )}
                   </div>
+                  {/* Watchlist star - top-right below data source badge */}
+                  {toggleWatchlist && (
+                    <button
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); toggleWatchlist(p); }}
+                      title={watchlist.some(w => w.id === p.id) ? "Remove from watchlist" : "Add to watchlist"}
+                      style={{
+                        position:"absolute", top:40, right:12, zIndex:2,
+                        width:28, height:28, borderRadius:"50%",
+                        background: watchlist.some(w => w.id === p.id) ? "rgba(212,168,67,0.18)" : "rgba(255,255,255,0.04)",
+                        border: "1px solid " + (watchlist.some(w => w.id === p.id) ? "rgba(212,168,67,0.5)" : "rgba(255,255,255,0.1)"),
+                        cursor:"pointer",
+                        display:"flex", alignItems:"center", justifyContent:"center",
+                        fontSize:14, color: watchlist.some(w => w.id === p.id) ? T.gold : T.textMuted,
+                        transition: "all 0.15s",
+                      }}
+                      onMouseEnter={(e) => e.currentTarget.style.background = "rgba(212,168,67,0.25)"}
+                      onMouseLeave={(e) => e.currentTarget.style.background = watchlist.some(w => w.id === p.id) ? "rgba(212,168,67,0.18)" : "rgba(255,255,255,0.04)"}
+                    >
+                      {watchlist.some(w => w.id === p.id) ? "$" : "$"}
+                    </button>
+                  )}
                   <div style={{ padding:"14px 16px", borderBottom:`1px solid ${T.border}` }} onClick={() => { setSelectedProject(p); setProjDetailTab("identity"); }}>
                     <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:8 }}>
                       <div style={{ flex:1, paddingRight:70 /* room for DLD Verified badge */ }}>
