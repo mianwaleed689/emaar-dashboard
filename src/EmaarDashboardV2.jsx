@@ -60,7 +60,7 @@ import DevPortalTab from './tabs/DevPortalTab';
 
 /* â”€â”€â”€ ACTIVE PROJECTS â€” now Firestore-only â”€â”€â”€ */
 /* Projects load from: Firestore 'projects' collection */
-/* Populated via: Admin â†’ Data Manager â†’ Import Projects */
+/* Populated via: Admin → Data Manager → Import Projects */
 
 const getLinkDomain = (url) => {
   if (!url) return "Listing";
@@ -98,21 +98,21 @@ const getInvestmentScore = (p) => {
   let score = 0;
   const breakdown = [];
 
-  // 1. Yield (0â€“3 pts)
+  // 1. Yield (0—3 pts)
   const gross = p.gross || p.yield || 0;
   if (gross >= 8)      { score += 3; breakdown.push({ label: "Yield", pts: 3, max: 3, note: gross + "% gross" }); }
   else if (gross >= 6) { score += 2; breakdown.push({ label: "Yield", pts: 2, max: 3, note: gross + "% gross" }); }
   else if (gross >= 4) { score += 1; breakdown.push({ label: "Yield", pts: 1, max: 3, note: gross + "% gross" }); }
   else                 { breakdown.push({ label: "Yield", pts: 0, max: 3, note: gross ? gross + "%" : "No data" }); }
 
-  // 2. Value (PPSF) (0â€“2 pts)
+  // 2. Value (PPSF) (0—2 pts)
   const ppsf = p.ppsf || 0;
   if (ppsf > 0 && ppsf <= 1500)       { score += 2; breakdown.push({ label: "Value", pts: 2, max: 2, note: "AED " + ppsf + "/sqft" }); }
   else if (ppsf > 0 && ppsf <= 2200)  { score += 1; breakdown.push({ label: "Value", pts: 1, max: 2, note: "AED " + ppsf + "/sqft" }); }
   else if (ppsf > 0)                  { breakdown.push({ label: "Value", pts: 0, max: 2, note: "AED " + ppsf + "/sqft" }); }
   else                                { breakdown.push({ label: "Value", pts: 0, max: 2, note: "No PPSF" }); }
 
-  // 3. Handover timing (0â€“2 pts) â€” sweet spot is 12â€“36 months
+  // 3. Handover timing (0—2 pts) â€” sweet spot is 12—36 months
   const cd = getHandoverCountdown(p.handover);
   if (cd) {
     if (cd.passed)              { score += 1.5; breakdown.push({ label: "Handover", pts: 1.5, max: 2, note: "Ready now" }); }
@@ -124,7 +124,7 @@ const getInvestmentScore = (p) => {
     breakdown.push({ label: "Handover", pts: 0, max: 2, note: "No date" });
   }
 
-  // 4. Payment plan (0â€“2 pts)
+  // 4. Payment plan (0—2 pts)
   const pp = (p.paymentPlan || p.payment || "").toLowerCase();
   if (pp.includes("80/20") || pp.includes("80:20"))       { score += 2;   breakdown.push({ label: "Payment", pts: 2,   max: 2, note: "80/20 plan" }); }
   else if (pp.includes("70/30") || pp.includes("60/40"))  { score += 1.5; breakdown.push({ label: "Payment", pts: 1.5, max: 2, note: pp }); }
@@ -132,7 +132,7 @@ const getInvestmentScore = (p) => {
   else if (pp.length > 0)                                 { score += 0.5; breakdown.push({ label: "Payment", pts: 0.5, max: 2, note: pp }); }
   else                                                    { breakdown.push({ label: "Payment", pts: 0, max: 2, note: "Unknown" }); }
 
-  // 5. Golden Visa eligible (0â€“1 pt)
+  // 5. Golden Visa eligible (0—1 pt)
   if (p.price && p.price >= GOLDEN_VISA_THRESHOLD) {
     score += 1; breakdown.push({ label: "Golden Visa", pts: 1, max: 1, note: "Eligible" });
   } else {
@@ -196,20 +196,20 @@ const PROPERTY_TYPES = [
   {
     group: "Commercial",
     types: [
-      { value: "office",        label: "Office",          beds: ["< 500 sqft","500â€“1K sqft","1Kâ€“2.5K sqft","2.5Kâ€“5K sqft","5K+ sqft","Full Floor","Full Building"] },
-      { value: "retail",        label: "Retail / Shop",   beds: ["< 500 sqft","500â€“1K sqft","1Kâ€“2.5K sqft","2.5K+ sqft"] },
-      { value: "showroom",      label: "Showroom",        beds: ["< 2K sqft","2Kâ€“5K sqft","5K+ sqft"] },
-      { value: "warehouse",     label: "Warehouse",       beds: ["< 5K sqft","5Kâ€“10K sqft","10K+ sqft"] },
+      { value: "office",        label: "Office",          beds: ["< 500 sqft","500—1K sqft","1K—2.5K sqft","2.5K—5K sqft","5K+ sqft","Full Floor","Full Building"] },
+      { value: "retail",        label: "Retail / Shop",   beds: ["< 500 sqft","500—1K sqft","1K—2.5K sqft","2.5K+ sqft"] },
+      { value: "showroom",      label: "Showroom",        beds: ["< 2K sqft","2K—5K sqft","5K+ sqft"] },
+      { value: "warehouse",     label: "Warehouse",       beds: ["< 5K sqft","5K—10K sqft","10K+ sqft"] },
       { value: "coworking",     label: "Co-working Space",beds: ["Hot Desk","Dedicated Desk","Private Office","Full Floor"] },
     ]
   },
   {
     group: "Industrial & Land",
     types: [
-      { value: "industrial",    label: "Industrial Unit",    beds: ["< 5K sqft","5Kâ€“20K sqft","20K+ sqft"] },
-      { value: "land_res",      label: "Land â€” Residential", beds: ["< 5K sqft","5Kâ€“15K sqft","15K+ sqft"] },
-      { value: "land_comm",     label: "Land â€” Commercial",  beds: ["< 10K sqft","10Kâ€“50K sqft","50K+ sqft"] },
-      { value: "land_mixed",    label: "Mixed Use Plot",     beds: ["< 10K sqft","10Kâ€“50K sqft","50K+ sqft"] },
+      { value: "industrial",    label: "Industrial Unit",    beds: ["< 5K sqft","5K—20K sqft","20K+ sqft"] },
+      { value: "land_res",      label: "Land â€” Residential", beds: ["< 5K sqft","5K—15K sqft","15K+ sqft"] },
+      { value: "land_comm",     label: "Land â€” Commercial",  beds: ["< 10K sqft","10K—50K sqft","50K+ sqft"] },
+      { value: "land_mixed",    label: "Mixed Use Plot",     beds: ["< 10K sqft","10K—50K sqft","50K+ sqft"] },
     ]
   },
 ];
@@ -228,20 +228,20 @@ const STATUS_OPTIONS = [
 const PRICE_PRESETS_APT = [
   { label: "Any Price", min: 0, max: 0 },
   { label: "< 500K", min: 0, max: 500000 },
-  { label: "500Kâ€“1M", min: 500000, max: 1000000 },
-  { label: "1Mâ€“2M", min: 1000000, max: 2000000 },
-  { label: "2Mâ€“5M", min: 2000000, max: 5000000 },
-  { label: "5Mâ€“10M", min: 5000000, max: 10000000 },
+  { label: "500K—1M", min: 500000, max: 1000000 },
+  { label: "1M—2M", min: 1000000, max: 2000000 },
+  { label: "2M—5M", min: 2000000, max: 5000000 },
+  { label: "5M—10M", min: 5000000, max: 10000000 },
   { label: "10M+", min: 10000000, max: 0 },
 ];
 
 const PRICE_PRESETS_VILLA = [
   { label: "Any Price", min: 0, max: 0 },
   { label: "< 2M", min: 0, max: 2000000 },
-  { label: "2Mâ€“5M", min: 2000000, max: 5000000 },
-  { label: "5Mâ€“10M", min: 5000000, max: 10000000 },
-  { label: "10Mâ€“25M", min: 10000000, max: 25000000 },
-  { label: "25Mâ€“50M", min: 25000000, max: 50000000 },
+  { label: "2M—5M", min: 2000000, max: 5000000 },
+  { label: "5M—10M", min: 5000000, max: 10000000 },
+  { label: "10M—25M", min: 10000000, max: 25000000 },
+  { label: "25M—50M", min: 25000000, max: 50000000 },
   { label: "50M+", min: 50000000, max: 0 },
 ];
 
@@ -571,7 +571,7 @@ const GlobalContextFilter = ({
           }
           if (gPriceMin > 0 || gPriceMax > 0) {
             const plabel = gPriceMin > 0 && gPriceMax > 0
-              ? `AED ${(gPriceMin/1000000).toFixed(1)}Mâ€“${(gPriceMax/1000000).toFixed(1)}M`
+              ? `AED ${(gPriceMin/1000000).toFixed(1)}M—${(gPriceMax/1000000).toFixed(1)}M`
               : gPriceMin > 0
                 ? `From AED ${(gPriceMin/1000000).toFixed(1)}M`
                 : `Up to AED ${(gPriceMax/1000000).toFixed(1)}M`;
@@ -630,7 +630,7 @@ const GlobalContextFilter = ({
                   fontFamily: "'Outfit', sans-serif",
                   boxShadow: "inset 0 1px 0 rgba(255,255,255,0.04), 0 1px 2px rgba(0,0,0,0.1)",
                 }}>
-                  â˜… Golden Visa Eligible
+                  ★ Golden Visa Eligible
                 </span>
               )}
             </div>
@@ -773,7 +773,7 @@ const SEED_DATA = {
     { metric: "Nationalities",            value: "193+",        isSeedData: true, source: "DLD Investor Base Report 2025" },
     { metric: "Off-Plan Share",           numericValue: 63,     isSeedData: true },
     { metric: "Cash Share",               numericValue: 55,     isSeedData: true, source: "DLD Mortgage Report 2025" },
-    { metric: "Active Developers", value: "50+", change: "RERA registered Â· DLD approved", isSeedData: true, source: "RERA Registry 2026" },
+    { metric: "Active Developers", value: "50+", change: "RERA registered · DLD approved", isSeedData: true, source: "RERA Registry 2026" },
     { metric: "REIDIN Growth",      value: "+19.8%", change: "Residential Sales Price Index Dec 2025", isSeedData: true, source: "REIDIN Dec 2025" },
     { metric: "Price Growth YoY",   value: "+19.8%", change: "Dec 2025", isSeedData: true, source: "REIDIN 2025" },
     { metric: "Mortgage Share",           numericValue: 45,     isSeedData: true },
@@ -1185,14 +1185,14 @@ const css = `
 
     /* Tables â€” horizontal scroll with hint arrow */
     .table-scroll { overflow-x: auto !important; -webkit-overflow-scrolling: touch; }
-    .table-scroll::after { content: "swipe â†’"; position: absolute; right: 8px; top: 12px; color: ${T.gold}; font-size: 10px; opacity: 0.5; pointer-events: none; letter-spacing: 0.5px; }
+    .table-scroll::after { content: "swipe →"; position: absolute; right: 8px; top: 12px; color: ${T.gold}; font-size: 10px; opacity: 0.5; pointer-events: none; letter-spacing: 0.5px; }
     .table-scroll table { min-width: 560px; }
 
     /* Compare bar */
     .compare-bar { padding: 10px 14px !important; flex-direction: column !important; align-items: stretch !important; gap: 8px !important; }
     .compare-bar > div { justify-content: center; flex-wrap: wrap; }
 
-    /* Mortgage calculator 2-col â†’ 1-col */
+    /* Mortgage calculator 2-col → 1-col */
     .mortgage-grid { grid-template-columns: 1fr !important; }
 
     /* AI Insights full width cards */
@@ -1301,7 +1301,7 @@ const KPI = ({ label, value, sub, icon, delay = 0, onClick }) => {
         {sub?.includes("+") && <span style={{ color: T.green }}>{Icons.up}</span>}
         {sub}
       </div>
-      {isClickable && <div style={{ marginTop: 8, fontSize: 9, color: hovered ? T.gold : T.textMuted, fontWeight: 600, letterSpacing: 0.5, transition: "color 0.2s" }}>{hovered ? "View breakdown â†’" : "Click for details"}</div>}
+      {isClickable && <div style={{ marginTop: 8, fontSize: 9, color: hovered ? T.gold : T.textMuted, fontWeight: 600, letterSpacing: 0.5, transition: "color 0.2s" }}>{hovered ? "View breakdown →" : "Click for details"}</div>}
     </div>
   );
 };
@@ -1548,7 +1548,7 @@ const LoginScreen = ({ onLogin, onBack, defaultMode = "login" }) => {
             ))}
           </div>
           <button type="button" className="login-btn" onClick={() => { setScreen("form"); setMode("login"); setPass(""); setConfirmPass(""); }}>
-            Go to Sign In â†’
+            Go to Sign In →
           </button>
           <button type="button" onClick={async () => { try { if (auth.currentUser) { await sendEmailVerification(auth.currentUser); alert("Verification email resent! Check your inbox."); } } catch(e){} }} style={{ display: "block", margin: "12px auto 0", background: "none", border: "none", color: T.gold, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
             Resend verification email
@@ -1680,7 +1680,7 @@ const LoginScreen = ({ onLogin, onBack, defaultMode = "login" }) => {
                   </button>
                 </div>
                 {confirmPass && confirmPass !== pass && <div style={{ fontSize: 10, color: T.red, marginTop: 4 }}>âœ— Passwords do not match</div>}
-                {confirmPass && confirmPass === pass && <div style={{ fontSize: 10, color: T.green, marginTop: 4 }}>âœ“ Passwords match</div>}
+                {confirmPass && confirmPass === pass && <div style={{ fontSize: 10, color: T.green, marginTop: 4 }}>✓ Passwords match</div>}
               </div>
             )}
 
@@ -1709,7 +1709,7 @@ const LoginScreen = ({ onLogin, onBack, defaultMode = "login" }) => {
                   <span style={{ width: 16, height: 16, border: "2px solid rgba(4,9,15,0.3)", borderTopColor: T.bg, borderRadius: "50%", animation: "spin 0.6s linear infinite", display: "inline-block" }} />
                   {mode === "login" ? "Signing in..." : "Creating account..."}
                 </span>
-              ) : mode === "login" ? "Sign In" : "Start Free Trial â†’"}
+              ) : mode === "login" ? "Sign In" : "Start Free Trial →"}
             </button>
 
             {mode === "signup" && (
@@ -1734,7 +1734,7 @@ const LoginScreen = ({ onLogin, onBack, defaultMode = "login" }) => {
         </div>
 
         <p style={{ textAlign: "center", color: T.textMuted, fontSize: 11, marginTop: 20 }}>
-          \uD83D\uDD12 Secured by Firebase Â· SSL Encrypted Â· GDPR Compliant
+          \uD83D\uDD12 Secured by Firebase · SSL Encrypted · GDPR Compliant
         </p>
       </div>
     </div>
@@ -1757,13 +1757,13 @@ const ProGate = ({ children, isPro, message = "Upgrade to Pro to unlock this dat
           <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 16, lineHeight: 1.6 }}>Join 500+ investors using DXB Analytics Pro to track the Dubai real estate market</div>
           <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 18 }}>
             {["All 48+ active projects", "Full financials & yields", "ROI & mortgage calculator", "Currency converter", "Portfolio tracker"].map((f, i) => (
-              <div key={i} style={{ fontSize: 11, color: T.textSecondary, textAlign: "left", paddingLeft: 4 }}>âœ“ {f}</div>
+              <div key={i} style={{ fontSize: 11, color: T.textSecondary, textAlign: "left", paddingLeft: 4 }}>✓ {f}</div>
             ))}
           </div>
           <button type="button" onClick={onUpgrade} style={{ width: "100%", padding: "11px 0", background: `linear-gradient(135deg, ${T.gold}, #B8912F)`, color: T.bg, border: "none", borderRadius: 10, fontSize: 13, fontWeight: 800, cursor: "pointer", fontFamily: "'Outfit', sans-serif", letterSpacing: 0.3 }}>
-            Unlock Pro â€” AED 99/mo â†’
+            Unlock Pro â€” AED 99/mo →
           </button>
-          <div style={{ fontSize: 10, color: T.textMuted, marginTop: 8 }}>7-day money-back guarantee Â· Cancel anytime</div>
+          <div style={{ fontSize: 10, color: T.textMuted, marginTop: 8 }}>7-day money-back guarantee · Cancel anytime</div>
         </div>
       </div>
     </div>
@@ -1805,9 +1805,9 @@ const ProGateFullPage = ({ tabName, onUpgrade }) => {
           ))}
         </div>
         <button type="button" onClick={onUpgrade} style={{ width: "100%", padding: "14px 0", background: `linear-gradient(135deg, ${T.gold}, #B8912F)`, color: T.bg, border: "none", borderRadius: 12, fontSize: 14, fontWeight: 800, cursor: "pointer", fontFamily: "'Outfit', sans-serif", letterSpacing: 0.3, marginBottom: 10 }}>
-          Upgrade to Pro â€” AED 99/mo â†’
+          Upgrade to Pro â€” AED 99/mo →
         </button>
-        <div style={{ fontSize: 11, color: T.textMuted }}>7-day free trial Â· Cancel anytime Â· Money-back guarantee</div>
+        <div style={{ fontSize: 11, color: T.textMuted }}>7-day free trial · Cancel anytime · Money-back guarantee</div>
       </div>
     </div>
   );
@@ -1819,8 +1819,8 @@ const ProGateFullPage = ({ tabName, onUpgrade }) => {
 const UpgradeModal = ({ show, onClose }) => {
   if (!show) return null;
   const plans = [
-    { name: "Pro", price: "99", period: "month", features: ["All Dubai projects â€” full data", "AI market insights", "Portfolio ROI tracker", "DXB Estimate AVM", "Yield & STR/LTR analysis", "Mortgage calculator", "Price alerts", "PDF export"], popular: true, note: null, cta: "Upgrade to Pro â†’" },
-    { name: "Enterprise", price: "499", period: "month", features: ["Everything in Pro", "PDF report generation â³", "API data access â³", "Custom dashboards â³", "Multi-user team accounts â³", "Developer-level raw data", "Dedicated account manager", "White-label options â³"], popular: false, note: "â³ = Launching Q3 2026", cta: "Contact Sales â†’" },
+    { name: "Pro", price: "99", period: "month", features: ["All Dubai projects â€” full data", "AI market insights", "Portfolio ROI tracker", "DXB Estimate AVM", "Yield & STR/LTR analysis", "Mortgage calculator", "Price alerts", "PDF export"], popular: true, note: null, cta: "Upgrade to Pro →" },
+    { name: "Enterprise", price: "499", period: "month", features: ["Everything in Pro", "PDF report generation â³", "API data access â³", "Custom dashboards â³", "Multi-user team accounts â³", "Developer-level raw data", "Dedicated account manager", "White-label options â³"], popular: false, note: "â³ = Launching Q3 2026", cta: "Contact Sales →" },
   ];
   return (
     <div style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.92)", zIndex: 3000, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(12px)", padding: 16 }} onClick={onClose}>
@@ -1861,7 +1861,7 @@ const UpgradeModal = ({ show, onClose }) => {
               <div style={{ display: "flex", flexDirection: "column", gap: 7, marginBottom: 16 }}>
                 {plan.features.map((f, j) => (
                   <div key={j} style={{ display: "flex", alignItems: "flex-start", gap: 7, fontSize: 12, color: f.includes("â³") ? T.textMuted : T.textSecondary }}>
-                    <span style={{ color: f.includes("â³") ? T.textMuted : T.green, fontSize: 11, marginTop: 1, flexShrink: 0 }}>âœ“</span>{f}
+                    <span style={{ color: f.includes("â³") ? T.textMuted : T.green, fontSize: 11, marginTop: 1, flexShrink: 0 }}>✓</span>{f}
                   </div>
                 ))}
               </div>
@@ -1914,16 +1914,16 @@ function useFocusTrap(active) {
 
 const DataBadge = ({ source, date, type = "dld" }) => {
   const cfg = {
-    dld:     { label: "DLD Verified",     color: "#10B981", icon: "âœ“" },
-    reidin:  { label: "REIDIN Index",     color: "#3B82F6", icon: "âœ“" },
-    emaar:   { label: "Emaar IR",         color: "#D4A843", icon: "âœ“" },
-    live:    { label: "Live Â· Firestore", color: "#10B981", icon: "â—" },
+    dld:     { label: "DLD Verified",     color: "#10B981", icon: "✓" },
+    reidin:  { label: "REIDIN Index",     color: "#3B82F6", icon: "✓" },
+    emaar:   { label: "Emaar IR",         color: "#D4A843", icon: "✓" },
+    live:    { label: "Live · Firestore", color: "#10B981", icon: "â—" },
     ai:      { label: "AI Estimate",      color: "#8B5CF6", icon: "âœ¦" },
-    manual:  { label: "Admin Verified",   color: "#F59E0B", icon: "âœ“" },
+    manual:  { label: "Admin Verified",   color: "#F59E0B", icon: "✓" },
   };
   const c = cfg[type] || cfg.dld;
   return (
-    <span title={`Source: ${source || c.label}${date ? " Â· " + date : ""}`} style={{
+    <span title={`Source: ${source || c.label}${date ? " · " + date : ""}`} style={{
       display: "inline-flex", alignItems: "center", gap: 4,
       fontSize: 9, fontWeight: 700, color: c.color, letterSpacing: 0.5,
       background: c.color + "12", border: `1px solid ${c.color}30`,
@@ -2063,57 +2063,57 @@ const INTELLIGENCE_TABS = {
   "Overview": {
     icon: "\uD83D\uDCCA",
     description: "Your Bloomberg-style command centre. Live market ticker, KPI cards, developer intelligence panel, and real-time DLD feed â€” all connected to your data sources.",
-    adminHint: "Connect data sources from Admin â†’ Data Manager â†’ Market Data"
+    adminHint: "Connect data sources from Admin → Data Manager → Market Data"
   },
   "Financials": {
     icon: "\uD83D\uDCB9",
     description: "Developer financial intelligence â€” revenue, net profit, EBITDA, backlog, EPS, DPS â€” 6-year history charts. Auto-updated from developer IR reports.",
-    adminHint: "Add developer financials from Admin â†’ Data Manager â†’ Developers"
+    adminHint: "Add developer financials from Admin → Data Manager → Developers"
   },
   "Projects": {
     icon: "\uD83C\uDFD7ï¸",
     description: "Browse all projects across all property types â€” Off-Plan, Residential, Commercial, Secondary Market, Hotel Apartments, Villas, Balcony View Units. Filter, compare, and score every property.",
-    adminHint: "Import projects from Admin â†’ Data Manager â†’ Projects"
+    adminHint: "Import projects from Admin → Data Manager → Projects"
   },
   "Handover": {
     icon: "\uD83D\uDCC5",
     description: "Construction timeline tracker. Monitor handover dates, construction progress, and delivery risk for all off-plan projects. Automated countdown alerts.",
-    adminHint: "Add project handover data from Admin â†’ Data Manager â†’ Projects"
+    adminHint: "Add project handover data from Admin → Data Manager → Projects"
   },
   "Launch Calendar": {
     icon: "\uD83D\uDE80",
     description: "Never miss a launch. Upcoming project launches by developer, EOI status, expected pricing, and past launch performance vs actual prices.",
-    adminHint: "Launch data auto-populates from Bayut API scanner â€” check Admin â†’ Data Health"
+    adminHint: "Launch data auto-populates from Bayut API scanner â€” check Admin → Data Health"
   },
   "Neighbourhoods": {
     icon: "\uD83C\uDFD8ï¸",
     description: "Community intelligence â€” average PPSF, yields, schools, hospitals, metro access, lifestyle ratings, supply risk, and demand strength for every Dubai community.",
-    adminHint: "Add community data from Admin â†’ Data Manager â†’ Communities"
+    adminHint: "Add community data from Admin → Data Manager → Communities"
   },
   "Service Charges": {
     icon: "\uD83D\uDCCB",
     description: "RERA registered service charge rates per community in AED/sqft/year. Historical trends, net yield impact calculator, and community comparisons.",
-    adminHint: "Add service charge data from Admin â†’ Data Manager â†’ Communities"
+    adminHint: "Add service charge data from Admin → Data Manager → Communities"
   },
   "STR vs LTR": {
     icon: "\uD83C\uDFE0",
     description: "Short-term Airbnb vs long-term tenancy comparison per community per unit type. Occupancy rates, daily rates, platform fees, management costs, and net income.",
-    adminHint: "STR data connects to Bayut API â€” configure from Admin â†’ Data Health"
+    adminHint: "STR data connects to Bayut API â€” configure from Admin → Data Health"
   },
   "Developer Health": {
     icon: "\uD83E\uDE7A",
     description: "Developer health scores â€” delivery track record, financial strength, project pipeline risk, RERA status, and complaint ratios. 9-factor radar chart.",
-    adminHint: "Add developer profiles from Admin â†’ Data Manager â†’ Developers"
+    adminHint: "Add developer profiles from Admin → Data Manager → Developers"
   },
   "DLD Volumes": {
     icon: "\uD83D\uDCC8",
     description: "Live DLD transaction data â€” volume by community, developer, property type, nationality, cash vs mortgage. Monthly trends, price anomaly alerts.",
-    adminHint: "DLD data auto-syncs daily â€” check Admin â†’ Data Health â†’ DLD Cron"
+    adminHint: "DLD data auto-syncs daily â€” check Admin → Data Health → DLD Cron"
   },
   "DXB Estimate": {
     icon: "\uD83D\uDD0D",
     description: "The Zestimate for Dubai. Enter any unit details and get an estimated market value backed by actual DLD transaction comparables.",
-    adminHint: "AVM requires DLD data â€” check Admin â†’ Data Health â†’ DLD Cron"
+    adminHint: "AVM requires DLD data â€” check Admin → Data Health → DLD Cron"
   },
   "Portfolio": {
     icon: "\uD83D\uDCBC",
@@ -2123,17 +2123,17 @@ const INTELLIGENCE_TABS = {
   "Competitors": {
     icon: "âš”ï¸",
     description: "Developer vs developer intelligence â€” sales volume, delivery record, PPSF comparison, market share, community presence, and branded residence count.",
-    adminHint: "Add developer data from Admin â†’ Data Manager â†’ Developers"
+    adminHint: "Add developer data from Admin → Data Manager → Developers"
   },
   "Yields": {
     icon: "\uD83D\uDCCA",
     description: "Gross and net rental yields by community and unit type. 5-year historical trend, best yielding communities ranked, and yield vs appreciation tradeoff.",
-    adminHint: "Yield data auto-syncs weekly from Bayut API â€” check Admin â†’ Data Health"
+    adminHint: "Yield data auto-syncs weekly from Bayut API â€” check Admin → Data Health"
   },
   "Mortgage": {
     icon: "\uD83C\uDFE6",
     description: "Live EIBOR mortgage calculator. Monthly payment, total cost of acquisition (DLD 4%, agency 2%, trustee fees), amortisation schedule, and 5 bank rate comparison.",
-    adminHint: "EIBOR updates daily â€” check Admin â†’ EIBOR Rates"
+    adminHint: "EIBOR updates daily â€” check Admin → EIBOR Rates"
   },
   "Map": {
     icon: "\uD83D\uDDFAï¸",
@@ -2148,7 +2148,7 @@ const INTELLIGENCE_TABS = {
   "Market": {
     icon: "\uD83C\uDF0D",
     description: "Dubai real estate macro view â€” total market size, transaction count, off-plan vs secondary split, top developers, international buyer breakdown, and analyst forecasts.",
-    adminHint: "Market data updates from Admin â†’ Market Intelligence â†’ Update Stats"
+    adminHint: "Market data updates from Admin → Market Intelligence → Update Stats"
   },
   "Currency": {
     icon: "\uD83D\uDCB1",
@@ -2158,7 +2158,7 @@ const INTELLIGENCE_TABS = {
   "Golden Visa": {
     icon: "\uD83E\uDD47",
     description: "Golden Visa eligibility calculator. Enter property value to check AED 2M minimum, requirements, process steps, and timeline. Auto-checks portfolio eligibility.",
-    adminHint: "Golden Visa rules update from Admin â†’ Data Manager â†’ Regulations"
+    adminHint: "Golden Visa rules update from Admin → Data Manager → Regulations"
   },
   "Flip": {
     icon: "\uD83D\uDD04",
@@ -2173,7 +2173,7 @@ const INTELLIGENCE_TABS = {
   "Price History": {
     icon: "\uD83D\uDCC9",
     description: "5-year PPSF trend per community per unit type. Off-plan vs secondary price divergence, correction alerts, and momentum indicators.",
-    adminHint: "Price history syncs from DLD data â€” check Admin â†’ Data Health â†’ DLD Cron"
+    adminHint: "Price history syncs from DLD data â€” check Admin → Data Health → DLD Cron"
   },
 };
 
@@ -2917,7 +2917,7 @@ export default function EmaarDashboardV2() {
       script.src = "https://cdn.paddle.com/paddle/v2/paddle.js";
       script.onload = () => {
         // â”€â”€ PASTE YOUR PADDLE CLIENT TOKEN BELOW â”€â”€
-        // Get it from paddle.com â†’ Developer â†’ Authentication â†’ Client-side token
+        // Get it from paddle.com → Developer → Authentication → Client-side token
         const PADDLE_CLIENT_TOKEN = "live_4393f28d4ec943ebe056835651f";
         if (!PADDLE_CLIENT_TOKEN.includes("PASTE")) {
           window.Paddle.Initialize({ token: PADDLE_CLIENT_TOKEN });
@@ -2973,7 +2973,7 @@ export default function EmaarDashboardV2() {
       developer: "Emaar Properties",
       developerName: "Emaar Properties",
       developerAr: "Ø¥Ø¹Ù…Ø§Ø± Ø§Ù„Ø¹Ù‚Ø§Ø±ÙŠØ©",
-      developerEntity: "Dubai Hills Estate L.L.C",  /* âœ“ DLD Mashrooi â€” actual selling entity (Emaar + Meraas JV) */
+      developerEntity: "Dubai Hills Estate L.L.C",  /* ✓ DLD Mashrooi â€” actual selling entity (Emaar + Meraas JV) */
       developerParent: "Emaar Properties PJSC",
       developerGroupEntity: "Emaar Development P.J.S.C.",  /* Parent RERA entity */
       developerReraOfficeNumber: "1211",
@@ -3030,40 +3030,40 @@ export default function EmaarDashboardV2() {
       emirate: "Dubai",
       country: "UAE",
 
-      /* â”€â”€â”€ STATUS & TIMELINE (âœ“ VERIFIED from DLD Mashrooi) â”€â”€â”€ */
+      /* â”€â”€â”€ STATUS & TIMELINE (✓ VERIFIED from DLD Mashrooi) â”€â”€â”€ */
       type: "Apartment",
       propertyType: "Apartment",
       propertyCategory: "Residential",
       status: "Off-Plan",                    /* Still off-plan for sale (handover pending) */
       lifecycle: "near-completion",
       lifecycleStage: "under-construction",
-      lifecycleLabel: "Construction Complete Â· Handover Pending",
-      registeredDate: "2023-03-31",          /* âœ“ DLD Mashrooi */
+      lifecycleLabel: "Construction Complete · Handover Pending",
+      registeredDate: "2023-03-31",          /* ✓ DLD Mashrooi */
       launchDate: "2023-04",
-      constructionStart: "2023-08-01",       /* âœ“ DLD Mashrooi */
+      constructionStart: "2023-08-01",       /* ✓ DLD Mashrooi */
       handover: "Q1 2027",
-      handoverDate: "2027-03-31",            /* âœ“ DLD Mashrooi */
+      handoverDate: "2027-03-31",            /* ✓ DLD Mashrooi */
       handoverMonth: "March 2027",
       expectedHandover: "Q1 2027",
       contractedHandover: "31 March 2027",
       actualHandover: null,
-      constructionPct: 100,                  /* âœ“ DLD Mashrooi: "100% Completed / Finished" */
+      constructionPct: 100,                  /* ✓ DLD Mashrooi: "100% Completed / Finished" */
       constructionBand: "Completed",
       constructionStage: "Finished â€” awaiting handover",
 
-      /* â”€â”€â”€ BUILDING SPECS (âœ“ VERIFIED from DLD Mashrooi) â”€â”€â”€ */
-      totalUnits: 329,                     /* âœ“ DLD: 323 residential + 6 commercial */
-      totalResidentialUnits: 323,          /* âœ“ DLD */
-      totalCommercialUnits: 6,             /* âœ“ DLD */
+      /* â”€â”€â”€ BUILDING SPECS (✓ VERIFIED from DLD Mashrooi) â”€â”€â”€ */
+      totalUnits: 329,                     /* ✓ DLD: 323 residential + 6 commercial */
+      totalResidentialUnits: 323,          /* ✓ DLD */
+      totalCommercialUnits: 6,             /* ✓ DLD */
       totalFloors: 15,
       towerCount: 1,
       totalBuildings: 1,
-      plotSizeSqM: 31421.99,               /* âœ“ DLD Mashrooi */
+      plotSizeSqM: 31421.99,               /* ✓ DLD Mashrooi */
       plotSize: "338,224",                 /* sqft conversion: 31,421.99 Ã— 10.764 */
       builtUpArea: null,                   /* Not published by DLD Mashrooi */
       totalVillas: 0,
       totalLands: 0,
-      dldProjectNumber: "2599",            /* âœ“ DLD Mashrooi */
+      dldProjectNumber: "2599",            /* ✓ DLD Mashrooi */
       parkingType: "Basement resident + visitor public",
 
       /* â”€â”€â”€ UNIT MIX (calculated PPSF from verified price/size midpoints) â”€â”€â”€ */
@@ -3078,7 +3078,7 @@ export default function EmaarDashboardV2() {
       unitBreakdown: [
         {
           type: "1BR",
-          count: 129,                    /* âœ“ DLD Mashrooi */
+          count: 129,                    /* ✓ DLD Mashrooi */
           sizeMin: 680, sizeMax: 891, sizeMid: 786,
           priceMin: 1360000, priceMax: 1800000, priceMid: 1580000,
           ppsf: 2010,                    /* Calculated: 1.58M / 786 sqft */
@@ -3087,7 +3087,7 @@ export default function EmaarDashboardV2() {
         },
         {
           type: "2BR",
-          count: 159,                    /* âœ“ DLD Mashrooi â€” largest mix */
+          count: 159,                    /* ✓ DLD Mashrooi â€” largest mix */
           sizeMin: 1065, sizeMax: 1665, sizeMid: 1365,
           priceMin: 2130000, priceMax: 3100000, priceMid: 2615000,
           ppsf: 1916,
@@ -3096,7 +3096,7 @@ export default function EmaarDashboardV2() {
         },
         {
           type: "3BR",
-          count: 35,                     /* âœ“ DLD Mashrooi */
+          count: 35,                     /* ✓ DLD Mashrooi */
           sizeMin: 1769, sizeMax: 2011, sizeMid: 1890,
           priceMin: 3400000, priceMax: 3800000, priceMid: 3600000,
           ppsf: 1905,
@@ -3105,7 +3105,7 @@ export default function EmaarDashboardV2() {
         },
         {
           type: "Commercial",
-          count: 6,                      /* âœ“ DLD Mashrooi */
+          count: 6,                      /* ✓ DLD Mashrooi */
           sizeMin: null, sizeMax: null,
           priceMin: null, priceMax: null,
           ppsf: null,
@@ -3115,9 +3115,9 @@ export default function EmaarDashboardV2() {
       ],
 
       /* â”€â”€â”€ FINANCIALS â”€â”€â”€ */
-      grossYield: 6.9,                    /* âœ“ Dubai Hills Estate apartment avg â€” Driven Properties Q1 2025 */
-      netYield: 5.2,                      /* âœ“ Calculated: 6.9% gross âˆ’ DHE apartment service charge AED 20/sqft + ~5% vacancy */
-      serviceCharge: 20,                  /* âœ“ Dubai Hills Estate apartment avg AED 20/sqft/yr (Luxury Property 2025) */
+      grossYield: 6.9,                    /* ✓ Dubai Hills Estate apartment avg â€” Driven Properties Q1 2025 */
+      netYield: 5.2,                      /* ✓ Calculated: 6.9% gross âˆ’ DHE apartment service charge AED 20/sqft + ~5% vacancy */
+      serviceCharge: 20,                  /* ✓ Dubai Hills Estate apartment avg AED 20/sqft/yr (Luxury Property 2025) */
       appreciationToHandover: null,       /* Cannot forecast â€” market-dependent */
 
       paymentPlan: "90/10",
@@ -3182,7 +3182,7 @@ export default function EmaarDashboardV2() {
       nearestHospitals: "King's College Hospital London (within DHE)",
 
       /* â”€â”€â”€ LEGAL & COMPLIANCE â”€â”€â”€ */
-      reraNo: "71494288692",              /* âœ“ VERIFIED from Property Finder listing */
+      reraNo: "71494288692",              /* ✓ VERIFIED from Property Finder listing */
       reraProjectPermitNumber: "71494288692",
       reraProjectNumber: "71494288692",
       projectNumber: "71494288692",
@@ -3430,7 +3430,7 @@ export default function EmaarDashboardV2() {
          dropdown â€” the rest (1,800 registered-only small developers) stay in
          Firestore for admin/directory use but don't clutter the filter. */
       const tierRank = { "tier-1": 1, "tier-2": 2, "tier-3": 3 };
-      const brandMap = new Map();  /* parentBrand â†’ aggregated record */
+      const brandMap = new Map();  /* parentBrand → aggregated record */
       
       snap.forEach(d => {
         const data = d.data();
@@ -4124,7 +4124,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
       if (newTier === "pro_trial") { const end = new Date(); end.setDate(end.getDate() + 7); data.trialEnd = end.toISOString(); }
       await setDoc(doc(db, "users", userId), data, { merge: true });
       setAdminUsers(prev => prev.map(u => u.id === userId ? { ...u, tier: newTier, status: newTier } : u));
-      notify(`âœ… ${uName} â†’ ${newTier}`);
+      notify(`âœ… ${uName} → ${newTier}`);
       // Send tier change confirmation email
       const tierMessages = {
         free: { subject: "Your DXB Analytics plan has changed to Free", body: "Your account has been updated to the Free plan. You have access to 5 featured projects and basic market data." },
@@ -4301,7 +4301,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               onClick={() => setShowUpgrade(true)}
               style={{ marginBottom: 8, padding: "7px 12px", borderRadius: 8, background: "rgba(59,130,246,0.07)", border: "1px solid rgba(59,130,246,0.15)", textAlign: "center", cursor: "pointer" }}>
               <div style={{ fontSize: 9.5, fontWeight: 700, color: "#60A5FA", letterSpacing: 0.5 }}>FREE PLAN</div>
-              <div style={{ fontSize: 10.5, color: T.textSecondary, marginTop: 1 }}>Upgrade to Pro â†’</div>
+              <div style={{ fontSize: 10.5, color: T.textSecondary, marginTop: 1 }}>Upgrade to Pro →</div>
             </div>
           )}
           <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "7px 10px", borderRadius: 10, background: T.surfaceAlt }}>
@@ -4335,7 +4335,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
             <span style={{ fontSize: 11, color: "rgba(4,9,15,0.7)" }}>Upgrade to Pro to unlock DXB Estimate, Yields, Mortgage, Portfolio & more</span>
           </div>
           <button type="button" onClick={() => setShowUpgrade(true)} style={{ padding: "5px 16px", background: "#04090F", color: T.gold, border: "none", borderRadius: 8, fontSize: 11, fontWeight: 800, cursor: "pointer", fontFamily: "'Outfit',sans-serif", whiteSpace: "nowrap" }}>
-            Upgrade Now â†’
+            Upgrade Now →
           </button>
         </div>
       )}
@@ -4368,7 +4368,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
         </div>
         <div className="header-badges" style={{ display: "flex", gap: 8, alignItems: "center" }}>
           <button type="button" onClick={() => setShowWatchlist(true)} style={{ background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 10, padding: "8px 12px", cursor: "pointer", color: watchlist.length > 0 ? T.gold : T.textSecondary, display: "flex", alignItems: "center", gap: 6, fontSize: 12, fontFamily: "'Outfit',sans-serif" }} title="My Watchlist">
-            â˜… {watchlist.length > 0 && <span style={{ fontWeight: 700 }}>{watchlist.length}</span>}
+            ★ {watchlist.length > 0 && <span style={{ fontWeight: 700 }}>{watchlist.length}</span>}
           </button>
           <button type="button" onClick={globalRefresh} disabled={isRefreshing} title="Refresh all data" style={{ background: isRefreshing ? T.surfaceAlt : "rgba(212,168,67,0.08)", border: "1px solid " + (isRefreshing ? T.border : "rgba(212,168,67,0.25)"), borderRadius: 10, padding: "8px 12px", cursor: isRefreshing ? "not-allowed" : "pointer", color: isRefreshing ? T.textMuted : T.gold, display: "flex", alignItems: "center", gap: 6, fontSize: 11, fontWeight: 600, fontFamily: "'Outfit',sans-serif" }}>
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" style={{ animation: isRefreshing ? "spin 1s linear infinite" : "none" }}><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
@@ -4604,7 +4604,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               {/* Header */}
               <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"16px 24px", borderBottom:`1px solid ${T.border}`, background:T.surface, flexShrink:0 }}>
                 <div>
-                  <div style={{ fontSize:11, fontWeight:700, color:T.textMuted, letterSpacing:0.8, textTransform:"uppercase", marginBottom:3 }}>{hvSelected.developer}{"Â·"}{hvSelected.community}</div>
+                  <div style={{ fontSize:11, fontWeight:700, color:T.textMuted, letterSpacing:0.8, textTransform:"uppercase", marginBottom:3 }}>{hvSelected.developer}{"·"}{hvSelected.community}</div>
                   <div style={{ fontFamily:"'Fraunces',serif", fontSize:22, fontWeight:800, color:T.white }}>{hvSelected.project}</div>
                 </div>
                 <div style={{ display:"flex", alignItems:"center", gap:10 }}>
@@ -4626,7 +4626,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                     { label:"Delay",              value:hvSelected.delayMonths>0?"+"+hvSelected.delayMonths+" months":"None", color:hvSelected.delayMonths>0?"#F97316":T.green },
                     { label:"Grace Period",       value:hvSelected.gracePeriodMonths+" months", color:T.white },
                     { label:"Escrow Funded",      value:hvSelected.escrowPct+"%", color:hvSelected.escrowPct>=70?T.green:hvSelected.escrowPct>=40?T.gold:"#F97316" },
-                    { label:"RERA Inspections",   value:hvSelected.inspectionsPassed+"âœ“ "+hvSelected.inspectionsFailed+"âœ—", color:hvSelected.inspectionsFailed>0?"#F97316":T.green },
+                    { label:"RERA Inspections",   value:hvSelected.inspectionsPassed+"✓ "+hvSelected.inspectionsFailed+"âœ—", color:hvSelected.inspectionsFailed>0?"#F97316":T.green },
                     { label:"Developer On-Time",  value:hvSelected.developerOnTimeRate+"%", color:hvSelected.developerOnTimeRate>=85?T.green:hvSelected.developerOnTimeRate>=75?T.gold:T.red },
                     { label:"Total Units",        value:hvSelected.totalUnits.toLocaleString(), color:T.white },
                   ].map((k,i) => (
@@ -4640,7 +4640,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 {/* Milestone Gantt Timeline */}
                 <div className="chart-box" style={{ padding:20, marginBottom:20 }}>
                   <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:4 }}>Construction Milestone Timeline</div>
-                  <div style={{ fontSize:11, color:T.textMuted, marginBottom:20 }}>RERA-verified progress Â· Each milestone unlocks escrow disbursement</div>
+                  <div style={{ fontSize:11, color:T.textMuted, marginBottom:20 }}>RERA-verified progress · Each milestone unlocks escrow disbursement</div>
                   
                   {/* Timeline */}
                   <div style={{ position:"relative" }}>
@@ -4656,7 +4656,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                           {/* Timeline line + dot */}
                           <div style={{ display:"flex", flexDirection:"column", alignItems:"center", flexShrink:0, width:20 }}>
                             <div style={{ width:14, height:14, borderRadius:"50%", background:dotColor, border:`2px solid ${dotColor}`, flexShrink:0, display:"flex", alignItems:"center", justifyContent:"center", zIndex:1 }}>
-                              {isPast && <span style={{ fontSize:8, color:"#000", fontWeight:700 }}>âœ“</span>}
+                              {isPast && <span style={{ fontSize:8, color:"#000", fontWeight:700 }}>✓</span>}
                               {isCurrent && <span style={{ width:4, height:4, borderRadius:"50%", background:T.gold, display:"block" }} />}
                             </div>
                             {!isLast && <div style={{ width:2, flex:1, minHeight:32, background:lineColor, marginTop:2 }} />}
@@ -4676,7 +4676,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                             {/* Escrow release indicator */}
                             {m.pct > 0 && (
                               <div style={{ display:"inline-flex", alignItems:"center", gap:4, padding:"2px 8px", borderRadius:6, background:isPast?"rgba(16,185,129,0.1)":"rgba(212,168,67,0.06)", border:`1px solid ${isPast?"rgba(16,185,129,0.3)":"rgba(212,168,67,0.15)"}` }}>
-                                <span style={{ fontSize:9, color:isPast?T.green:T.textMuted }}>Escrow release at {m.pct}% Â· {isPast?"âœ“ Released":"Pending"}</span>
+                                <span style={{ fontSize:9, color:isPast?T.green:T.textMuted }}>Escrow release at {m.pct}% · {isPast?"✓ Released":"Pending"}</span>
                               </div>
                             )}
                           </div>
@@ -4719,7 +4719,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
 
                 {/* Actions */}
                 <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
-                  <button type="button" onClick={() => { setHvSelected(null); handleTabChange("Projects"); }} style={{ padding:"9px 18px", background:`linear-gradient(135deg,${T.gold},#B8922A)`, border:"none", borderRadius:8, color:"#000", fontSize:12, fontWeight:700, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>View Full Project â†’</button>
+                  <button type="button" onClick={() => { setHvSelected(null); handleTabChange("Projects"); }} style={{ padding:"9px 18px", background:`linear-gradient(135deg,${T.gold},#B8922A)`, border:"none", borderRadius:8, color:"#000", fontSize:12, fontWeight:700, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>View Full Project →</button>
                   <button type="button" onClick={() => { setHvSelected(null); handleTabChange("My Leads"); }} style={{ padding:"9px 18px", background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:8, color:T.textSecondary, fontSize:12, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>Add to Lead</button>
                   <button type="button" onClick={() => {
                     const txt = `\uD83C\uDFD7ï¸ HANDOVER UPDATE â€” ${hvSelected.project}\nâ”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n\uD83C\uDFE2 Developer: ${hvSelected.developer}\n\uD83D\uDCCD Community: ${hvSelected.community}\n\n\uD83D\uDCCA CONSTRUCTION STATUS\n   Progress: ${hvSelected.constructionPct}% complete\n   Status: ${hvSelected.status}\n   Current Stage: ${hvSelected.milestonesCurrent}\n   Next Milestone: ${hvSelected.milestonesNext}\n\n\uD83D\uDCC5 HANDOVER DATES\n   Contracted: ${new Date(hvSelected.contractedHandover).toLocaleDateString("en-GB",{month:"long",year:"numeric"})}\n   Expected: ${new Date(hvSelected.expectedHandover).toLocaleDateString("en-GB",{month:"long",year:"numeric"})}\n   Delay: ${hvSelected.delayMonths>0?"+"+hvSelected.delayMonths+" months":"None"}\n\n\uD83D\uDD10 REGULATORY\n   RERA: ${hvSelected.reraNo}\n   Escrow Bank: ${hvSelected.escrowBank}\n   Status: ${hvSelected.reraStatus}\n\nPowered by DXB Analytics Intelligence Platform\nemaar-dashboard.vercel.app`;
@@ -4749,7 +4749,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               {/* Overlay header */}
               <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"16px 24px", borderBottom:`1px solid ${T.border}`, background:T.surface, flexShrink:0 }}>
                 <div>
-                  <div style={{ fontSize:11, fontWeight:700, color:T.textMuted, letterSpacing:0.8, textTransform:"uppercase", marginBottom:3 }}>{hdvSelected.developer}{"Â·"}{hdvSelected.community}</div>
+                  <div style={{ fontSize:11, fontWeight:700, color:T.textMuted, letterSpacing:0.8, textTransform:"uppercase", marginBottom:3 }}>{hdvSelected.developer}{"·"}{hdvSelected.community}</div>
                   <div style={{ fontFamily:"'Fraunces',serif", fontSize:22, fontWeight:800, color:T.white }}>{hdvSelected.project}</div>
                 </div>
                 <div style={{ display:"flex", alignItems:"center", gap:12 }}>
@@ -4801,7 +4801,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                         </div>
                         {/* Done badge */}
                         <span style={{ fontSize:10, padding:"2px 7px", borderRadius:6, background:m.done?"rgba(16,185,129,0.15)":isNext?"rgba(212,168,67,0.1)":"transparent", color:m.done?T.green:isNext?T.gold:T.textMuted, fontWeight:700, flexShrink:0, width:60, textAlign:"center" }}>
-                          {m.done?"âœ“ Done":isNext?"Next â†’":"Pending"}
+                          {m.done?"✓ Done":isNext?"Next →":"Pending"}
                         </span>
                       </div>
                     );
@@ -4833,13 +4833,13 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 {/* Quick actions */}
                 <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
                   <button type="button" onClick={() => { setHdvSelected(null); handleTabChange("Projects"); }}
-                    style={{ padding:"9px 18px", background:`linear-gradient(135deg,${T.gold},#B8922A)`, border:"none", borderRadius:8, color:"#000", fontSize:12, fontWeight:700, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>View Project Details â†’</button>
+                    style={{ padding:"9px 18px", background:`linear-gradient(135deg,${T.gold},#B8922A)`, border:"none", borderRadius:8, color:"#000", fontSize:12, fontWeight:700, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>View Project Details →</button>
                   <button type="button" onClick={() => { setHdvSelected(null); handleTabChange("Risk"); }}
                     style={{ padding:"9px 18px", background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:8, color:T.textSecondary, fontSize:12, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>Risk Analysis</button>
                   <button type="button" onClick={() => { setHdvSelected(null); handleTabChange("My Leads"); }}
                     style={{ padding:"9px 18px", background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:8, color:T.textSecondary, fontSize:12, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>Add to Lead</button>
                   <button type="button" onClick={() => {
-                    const txt = `\uD83C\uDFD7ï¸ DXB ANALYTICS â€” HANDOVER UPDATE\nâ”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n\uD83D\uDCCC ${hdvSelected.project}\n\uD83C\uDFE2 ${hdvSelected.developer} Â· ${hdvSelected.community}\n\n\uD83D\uDCCA STATUS: ${hdvSelected.status}\n\uD83D\uDD27 Construction: ${hdvSelected.constructionPct}% complete\n\uD83D\uDCC5 Expected Handover: ${new Date(hdvSelected.expectedDate).toLocaleDateString("en-GB",{day:"numeric",month:"long",year:"numeric"})}\nâš ï¸ Delay Risk: ${hdvSelected.delayRisk}\n\n\uD83D\uDD10 RERA: ${hdvSelected.reraNo}\n\uD83C\uDFE6 Escrow: ${hdvSelected.escrowBank}\n\uD83D\uDCCB Developer Record: ${hdvSelected.onTimeHistory}\n\nâ”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\nPowered by DXB Analytics\nemaar-dashboard.vercel.app`;
+                    const txt = `\uD83C\uDFD7ï¸ DXB ANALYTICS â€” HANDOVER UPDATE\nâ”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n\uD83D\uDCCC ${hdvSelected.project}\n\uD83C\uDFE2 ${hdvSelected.developer} · ${hdvSelected.community}\n\n\uD83D\uDCCA STATUS: ${hdvSelected.status}\n\uD83D\uDD27 Construction: ${hdvSelected.constructionPct}% complete\n\uD83D\uDCC5 Expected Handover: ${new Date(hdvSelected.expectedDate).toLocaleDateString("en-GB",{day:"numeric",month:"long",year:"numeric"})}\nâš ï¸ Delay Risk: ${hdvSelected.delayRisk}\n\n\uD83D\uDD10 RERA: ${hdvSelected.reraNo}\n\uD83C\uDFE6 Escrow: ${hdvSelected.escrowBank}\n\uD83D\uDCCB Developer Record: ${hdvSelected.onTimeHistory}\n\nâ”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\nPowered by DXB Analytics\nemaar-dashboard.vercel.app`;
                     window.open(`https://wa.me/?text=${encodeURIComponent(txt)}`,"_blank");
                   }} style={{ padding:"9px 18px", background:"rgba(37,211,102,0.1)", border:"1px solid rgba(37,211,102,0.3)", borderRadius:8, color:"#25D366", fontSize:12, fontWeight:600, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>
                     Share Handover Update
@@ -5131,7 +5131,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
           {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
               INTELLIGENCE TABS â€” Awaiting Data Import
               Each tab shows a beautiful empty state with instructions
-              Data connects via Firestore â€” Admin â†’ Data Manager
+              Data connects via Firestore â€” Admin → Data Manager
           â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
 
           {Object.entries(INTELLIGENCE_TABS).map(([tabKey, config]) => (
@@ -5146,7 +5146,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                     <span style={{ fontSize: 11, color: T.textSecondary }}>
                       <span style={{ color: T.gold, fontWeight: 600 }}>DXB Analytics</span>
-                      {" "}{"Â·"}{tabKey}
+                      {" "}{"·"}{tabKey}
                     </span>
                   </div>
                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -5251,8 +5251,8 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
 
           {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
               TEAM TAB â€” Session 7 â€” Agency Manager Dashboard
-              Agent leaderboard Â· Source ROI Â· Pipeline funnel
-              Overdue follow-ups Â· Team KPIs
+              Agent leaderboard · Source ROI · Pipeline funnel
+              Overdue follow-ups · Team KPIs
           â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
           {/* â”€â”€â”€ TEAM TAB (extracted) â”€â”€â”€ */}
           {tab === "Team" && (
@@ -5266,7 +5266,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
 
           {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
               AGENCY TAB â€” Session 8 â€” Agency Management Hub
-              Profile Â· Agent Roster Â· RERA Tracker Â· Commission
+              Profile · Agent Roster · RERA Tracker · Commission
           â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
           {/* AGENCY TAB (extracted) */}
           {tab === "Agency" && (
@@ -5291,7 +5291,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
 
           {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
               LISTINGS TAB â€” Session 9
-              Create Â· Trakheesi Â· Portal Syndication Â· Track
+              Create · Trakheesi · Portal Syndication · Track
           â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
           {/* LISTINGS TAB (extracted) */}
           {tab === "Listings" && (
@@ -5312,7 +5312,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
 
           {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
               DEV PORTAL TAB â€” Session 10
-              Unit Inventory Â· EOI Pipeline Â· Commission Â· Assets
+              Unit Inventory · EOI Pipeline · Commission · Assets
           â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
           {/* â”€â”€â”€ DEV PORTAL TAB (extracted) â”€â”€â”€ */}
           {tab === "Dev Portal" && (
@@ -5333,7 +5333,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
 
           {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
               INTELLIGENCE TAB â€” Session 12
-              Comparable Sales Â· IRR Calculator Â· Supply Pipeline
+              Comparable Sales · IRR Calculator · Supply Pipeline
           â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
           {/* INTELLIGENCE TAB (extracted) */}
           {tab === "Intelligence" && (
@@ -5390,7 +5390,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                     { label: "Type", fn: p => p.type },
                     { label: "Payment Plan", fn: p => p.payment || p.paymentPlan || "" },
                     { label: "Tier", fn: p => p.tier },
-                    { label: "Branded", fn: p => p.branded ? `âœ“ ${p.brand}` : "No" },
+                    { label: "Branded", fn: p => p.branded ? `✓ ${p.brand}` : "No" },
                     { label: "Total Units", fn: p => p.units ? getUnitEntries(p.units).reduce((a,[,u]) => a + u.total, 0) : "â€”" },
                     { label: "Available", fn: p => p.units ? getUnitEntries(p.units).reduce((a,[,u]) => a + (u.total - u.sold), 0) : "â€”", highlight: true },
                     { label: "% Sold", fn: p => { if (!p.units) return "â€”"; const entries = getUnitEntries(p.units); const t = entries.reduce((a,[,u]) => a + u.total, 0); const s = entries.reduce((a,[,u]) => a + u.sold, 0); return t > 0 ? `${((s/t)*100).toFixed(0)}%` : "â€”"; } },
@@ -5440,7 +5440,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
           <button type="button" onClick={() => setShowAddPortfolio(null)} style={{ position: "absolute", top: 16, right: 16, background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center", zIndex: 5 }}>{"âœ•"}</button>
           <div style={{ padding: "24px 28px 16px", borderBottom: `1px solid ${T.border}` }}>
             <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: 20, fontWeight: 800, color: T.white }}>{typeof showAddPortfolio === "object" ? "Investment Details" : "Select Project"}</h2>
-            <p style={{ fontSize: 11, color: T.textMuted, marginTop: 4 }}>{typeof showAddPortfolio === "object" ? showAddPortfolio.name + " Â· " + showAddPortfolio.community : "Select a project from your portfolio"}</p>
+            <p style={{ fontSize: 11, color: T.textMuted, marginTop: 4 }}>{typeof showAddPortfolio === "object" ? showAddPortfolio.name + " · " + showAddPortfolio.community : "Select a project from your portfolio"}</p>
           </div>
           <div style={{ padding: "16px 28px 28px" }}>
             {showAddPortfolio === true ? <>
@@ -5453,12 +5453,12 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                         <span style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{p.name}</span>
                         {p.emaarUrl && <a href={p.emaarUrl} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{ fontSize: 9, color: T.gold, textDecoration: "none", padding: "1px 4px", border: "1px solid rgba(212,168,67,0.3)", borderRadius: 3, fontWeight: 700, flexShrink: 0 }}>â†—</a>}
                       </div>
-                      <div style={{ fontSize: 10, color: T.textMuted }}>{p.community} Â· {p.type} Â· {p.beds}</div>
+                      <div style={{ fontSize: 10, color: T.textMuted }}>{p.community} · {p.type} · {p.beds}</div>
                     </div>
                     <div style={{ textAlign: "right" }}>
                       <div style={{ fontSize: 12, fontWeight: 700, color: T.gold }}>AED {p.price ? (p.price/1e6).toFixed(2) + "M" : "TBD"}</div>
                       <div style={{ fontSize: 9, color: T.textMuted }}>{p.handover}</div>
-                      {(() => { const cd = getHandoverCountdown(p.handover); return cd ? <div style={{ fontSize: 9, fontWeight: 700, color: cd.passed ? "#10B981" : cd.color, marginTop: 1 }}>{cd.passed ? "âœ“ Ready" : "â± " + cd.label}</div> : null; })()}
+                      {(() => { const cd = getHandoverCountdown(p.handover); return cd ? <div style={{ fontSize: 9, fontWeight: 700, color: cd.passed ? "#10B981" : cd.color, marginTop: 1 }}>{cd.passed ? "✓ Ready" : "â± " + cd.label}</div> : null; })()}
                     </div>
                   </div>
                 ))}
@@ -5507,7 +5507,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
             <div style={{ marginBottom: 20 }}>
               <div style={{ fontSize: 10, color: T.gold, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 6 }}>Price Alert</div>
               <div style={{ fontFamily: "'Fraunces', serif", fontSize: 20, fontWeight: 800, color: T.white }}>{showSetAlert.name}</div>
-              <div style={{ fontSize: 12, color: T.textMuted, marginTop: 3 }}>{showSetAlert.community}{"Â·"}{showSetAlert.type}</div>
+              <div style={{ fontSize: 12, color: T.textMuted, marginTop: 3 }}>{showSetAlert.community}{"·"}{showSetAlert.type}</div>
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
               <div>
@@ -5528,7 +5528,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                   <div style={{ fontSize: 10, color: T.gold, fontWeight: 700, marginBottom: 6 }}>EXISTING ALERTS</div>
                   {myAlerts.filter(a => a.projectId === showSetAlert.id).map(a => (
                     <div key={a.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 11, color: T.textMuted, marginBottom: 3 }}>
-                      <span>{a.type.replace(/_/g," ")} {a.type.includes("yield") || a.type.includes("construction") ? a.value + "%" : "AED " + (a.value/1e6).toFixed(2) + "M"} {a.triggered ? "âœ“ Triggered" : "â³ Watching"}</span>
+                      <span>{a.type.replace(/_/g," ")} {a.type.includes("yield") || a.type.includes("construction") ? a.value + "%" : "AED " + (a.value/1e6).toFixed(2) + "M"} {a.triggered ? "✓ Triggered" : "â³ Watching"}</span>
                       <button type="button" onClick={() => removeAlert(a.id)} style={{ background: "none", border: "none", color: "rgba(239,68,68,0.6)", cursor: "pointer", fontSize: 12, padding: 0 }}>Remove</button>
                     </div>
                   ))}
@@ -5622,7 +5622,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
           <button type="button" onClick={() => { setShowCheckout(null); setCheckoutStep(1); }} style={{ position: "absolute", top: 16, right: 16, background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center", zIndex: 5 }}>{"âœ•"}</button>
           <div style={{ padding: "24px 28px 16px", borderBottom: `1px solid ${T.border}` }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, marginBottom: 16 }}>
-              {[1,2,3].map(s => <React.Fragment key={s}><div style={{ width: 28, height: 28, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, background: checkoutStep >= s ? T.gold : T.surfaceAlt, color: checkoutStep >= s ? T.bg : T.textMuted, border: `1px solid ${checkoutStep >= s ? T.gold : T.border}` }}>{checkoutStep > s ? "âœ“" : s}</div>{s < 3 && <div style={{ width: 40, height: 2, background: checkoutStep > s ? T.gold : T.surfaceAlt, borderRadius: 1 }} />}</React.Fragment>)}
+              {[1,2,3].map(s => <React.Fragment key={s}><div style={{ width: 28, height: 28, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, background: checkoutStep >= s ? T.gold : T.surfaceAlt, color: checkoutStep >= s ? T.bg : T.textMuted, border: `1px solid ${checkoutStep >= s ? T.gold : T.border}` }}>{checkoutStep > s ? "✓" : s}</div>{s < 3 && <div style={{ width: 40, height: 2, background: checkoutStep > s ? T.gold : T.surfaceAlt, borderRadius: 1 }} />}</React.Fragment>)}
             </div>
             <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: 20, fontWeight: 800, color: T.white, textAlign: "center" }}>{checkoutStep === 1 ? "Confirm Plan" : checkoutStep === 2 ? "Payment" : "Welcome to Pro!"}</h2>
           </div>
@@ -5631,9 +5631,9 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               <div style={{ padding: 16, borderRadius: 12, background: T.surfaceAlt, border: `2px solid ${T.gold}`, marginBottom: 16 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}><span style={{ fontFamily: "'Fraunces', serif", fontSize: 18, fontWeight: 800, color: T.gold }}>{showCheckout.name} Plan</span><span style={{ fontSize: 10, padding: "3px 10px", borderRadius: 6, background: "rgba(212,168,67,0.12)", color: T.gold }}>SELECTED</span></div>
                 <div style={{ display: "flex", alignItems: "baseline", gap: 3, marginBottom: 12 }}><span style={{ fontSize: 10, color: T.textMuted }}>AED</span><span style={{ fontFamily: "'Fraunces', serif", fontSize: 32, fontWeight: 900, color: T.white }}>{showCheckout.price}</span><span style={{ fontSize: 12, color: T.textMuted }}>/month</span></div>
-                {showCheckout.features.slice(0,5).map((f,j) => <div key={j} style={{ display: "flex", alignItems: "center", gap: 6, padding: "3px 0", fontSize: 12, color: T.textSecondary }}><span style={{ color: T.green }}>{"âœ“"}</span>{f}</div>)}
+                {showCheckout.features.slice(0,5).map((f,j) => <div key={j} style={{ display: "flex", alignItems: "center", gap: 6, padding: "3px 0", fontSize: 12, color: T.textSecondary }}><span style={{ color: T.green }}>{"✓"}</span>{f}</div>)}
               </div>
-              <button type="button" onClick={() => setCheckoutStep(2)} style={{ width: "100%", padding: "12px 0", background: `linear-gradient(135deg, ${T.gold}, #B8912F)`, color: T.bg, border: "none", borderRadius: 10, fontWeight: 700, fontSize: 14, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>Continue to Payment â†’</button>
+              <button type="button" onClick={() => setCheckoutStep(2)} style={{ width: "100%", padding: "12px 0", background: `linear-gradient(135deg, ${T.gold}, #B8912F)`, color: T.bg, border: "none", borderRadius: 10, fontWeight: 700, fontSize: 14, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>Continue to Payment →</button>
             </>}
             {checkoutStep === 2 && <>
               <div style={{ marginBottom: 12 }}>
@@ -5681,7 +5681,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                       <div style={{ fontSize: 24 }}>\uD83D\uDCB3</div>
                       <div style={{ flex: 1 }}>
                         <div style={{ fontSize: 13, fontWeight: 700, color: "#fff" }}>Credit / Debit Card</div>
-                        <div style={{ fontSize: 10, color: T.textMuted }}>Visa Â· Mastercard Â· Amex Â· Apple Pay Â· {paddleReady ? "Powered by Paddle" : "Powered by Paddle (setup pending)"}</div>
+                        <div style={{ fontSize: 10, color: T.textMuted }}>Visa · Mastercard · Amex · Apple Pay · {paddleReady ? "Powered by Paddle" : "Powered by Paddle (setup pending)"}</div>
                       </div>
                       <span style={{ fontSize: 9, padding: "3px 10px", borderRadius: 6, background: "rgba(34,197,94,0.12)", color: "#22C55E", fontWeight: 700, border: "1px solid rgba(34,197,94,0.2)" }}>RECOMMENDED</span>
                     </div>
@@ -5695,10 +5695,10 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                     <div style={{ fontSize: 13, fontWeight: 700, color: "#fff" }}>WhatsApp + Bank Transfer</div>
                     <div style={{ fontSize: 10, color: T.textMuted }}>Manual â€” activated within 5 minutes of payment</div>
                   </div>
-                  <span style={{ color: "#25D366", fontSize: 16 }}>â†’</span>
+                  <span style={{ color: "#25D366", fontSize: 16 }}>→</span>
                 </div>
 
-                <div style={{ padding: "10px 14px", borderRadius: 8, background: "rgba(212,168,67,0.04)", border: "1px solid rgba(212,168,67,0.1)", fontSize: 11, color: T.textMuted, lineHeight: 1.5, marginBottom: 12 }}>\uD83D\uDD12 All payments secure Â· 7-day money-back guarantee</div>
+                <div style={{ padding: "10px 14px", borderRadius: 8, background: "rgba(212,168,67,0.04)", border: "1px solid rgba(212,168,67,0.1)", fontSize: 11, color: T.textMuted, lineHeight: 1.5, marginBottom: 12 }}>\uD83D\uDD12 All payments secure · 7-day money-back guarantee</div>
               </div>
               <div style={{ display: "flex", gap: 10 }}>
                 <button type="button" onClick={() => setCheckoutStep(1)} style={{ width: "100%", padding: "10px 0", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textSecondary, fontWeight: 600, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>â† Back</button>
@@ -5752,7 +5752,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               <div>
                 <div style={{ fontFamily: "'Fraunces', serif", fontSize: 20, fontWeight: 800, color: T.white }}>{userName || user.split("@")[0]}</div>
                 <div style={{ fontSize: 12, color: T.textSecondary, marginTop: 2 }}>{user}</div>
-                <div style={{ display: "inline-flex", alignItems: "center", gap: 4, marginTop: 6, padding: "3px 10px", borderRadius: 6, background: userTier === "admin" || userTier === "pro" || userTier === "enterprise" ? "rgba(16,185,129,0.12)" : userTier === "pro_trial" ? "rgba(212,168,67,0.12)" : "rgba(59,130,246,0.12)", fontSize: 10, fontWeight: 700, color: userTier === "admin" || userTier === "pro" || userTier === "enterprise" ? T.green : userTier === "pro_trial" ? T.gold : T.blue }}>{userTier === "admin" ? "âš¡ Admin" : userTier === "pro" ? "â­ Pro Plan" : userTier === "pro_trial" ? `â­ Pro Trial Â· ${trialDaysLeft}d left` : userTier === "enterprise" ? "\uD83C\uDFE2 Enterprise" : "Free Plan"}</div>
+                <div style={{ display: "inline-flex", alignItems: "center", gap: 4, marginTop: 6, padding: "3px 10px", borderRadius: 6, background: userTier === "admin" || userTier === "pro" || userTier === "enterprise" ? "rgba(16,185,129,0.12)" : userTier === "pro_trial" ? "rgba(212,168,67,0.12)" : "rgba(59,130,246,0.12)", fontSize: 10, fontWeight: 700, color: userTier === "admin" || userTier === "pro" || userTier === "enterprise" ? T.green : userTier === "pro_trial" ? T.gold : T.blue }}>{userTier === "admin" ? "âš¡ Admin" : userTier === "pro" ? "â­ Pro Plan" : userTier === "pro_trial" ? `â­ Pro Trial · ${trialDaysLeft}d left` : userTier === "enterprise" ? "\uD83C\uDFE2 Enterprise" : "Free Plan"}</div>
               </div>
             </div>
           </div>
@@ -5865,7 +5865,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                     <div key={a.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: a.triggered ? "rgba(16,185,129,0.08)" : T.surfaceAlt, borderRadius: 8, padding: "8px 10px", border: `1px solid ${a.triggered ? "rgba(16,185,129,0.2)" : T.border}` }}>
                       <div>
                         <div style={{ fontSize: 11, fontWeight: 600, color: a.triggered ? "#10B981" : T.white }}>{a.projectName}</div>
-                        <div style={{ fontSize: 10, color: T.textMuted }}>{a.type.replace(/_/g," ")} {a.type.includes("yield") || a.type.includes("construction") ? a.value + "%" : "AED " + (a.value/1e6).toFixed(2) + "M"} {a.triggered ? "âœ“ Triggered" : "â³ Watching"}</div>
+                        <div style={{ fontSize: 10, color: T.textMuted }}>{a.type.replace(/_/g," ")} {a.type.includes("yield") || a.type.includes("construction") ? a.value + "%" : "AED " + (a.value/1e6).toFixed(2) + "M"} {a.triggered ? "✓ Triggered" : "â³ Watching"}</div>
                       </div>
                       <button type="button" onClick={() => removeAlert(a.id)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 16, padding: "0 4px" }}>Ã—</button>
                     </div>
@@ -5912,9 +5912,9 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
             <div style={{ overflowY: "auto", padding: 20, flex: 1 }}>
               {watchlist.length === 0 ? (
                 <div style={{ textAlign: "center", padding: "48px 20px", color: T.textMuted }}>
-                  <div style={{ fontSize: 40, marginBottom: 12 }}>â˜…</div>
+                  <div style={{ fontSize: 40, marginBottom: 12 }}>★</div>
                   <div style={{ fontSize: 14, color: T.textSecondary, marginBottom: 8 }}>No projects saved yet</div>
-                  <div style={{ fontSize: 12 }}>Click the â˜… star on any project card to add it here.</div>
+                  <div style={{ fontSize: 12 }}>Click the ★ star on any project card to add it here.</div>
                 </div>
               ) : (
                 <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
@@ -5958,25 +5958,25 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
             icon: "\uD83C\uDFD9ï¸",
             title: `Welcome to DXB Analytics, ${userName || "Investor"}!`,
             body: "You now have access to Dubai's most comprehensive real estate intelligence platform. Let us show you around in 30 seconds.",
-            cta: "Let's Go â†’"
+            cta: "Let's Go →"
           },
           {
             icon: "\uD83D\uDD0D",
             title: "Browse All Projects",
             body: "Go to the Projects tab to explore every active development. Filter by community, tier, handover year, or price range. Click any card for full details, documents, and ROI analysis.",
-            cta: "Next â†’"
+            cta: "Next →"
           },
           {
             icon: "â­",
             title: "Build Your Watchlist",
-            body: "See the â˜… star button on every project card? Click it to save projects you're interested in. Your watchlist syncs across devices.",
-            cta: "Next â†’"
+            body: "See the ★ star button on every project card? Click it to save projects you're interested in. Your watchlist syncs across devices.",
+            cta: "Next →"
           },
           {
             icon: "\uD83D\uDCCA",
             title: "Yields, ROI & Mortgage",
             body: "Use the Yields tab for rental returns by community. The Mortgage tab calculates your monthly payment + all UAE transaction costs instantly.",
-            cta: "Next â†’"
+            cta: "Next →"
           },
           {
             icon: "\uD83D\uDE80",
