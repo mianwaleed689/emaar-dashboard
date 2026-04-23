@@ -4556,7 +4556,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
           {/* PROJECTS TAB (extracted, includes detail modal) */}
           {tab === "Projects" && (
             <ProjectsTab
-              SEED_PROJECTS={SEED_PROJECTS} liveProjects={liveProjects} extraProjects={extraProjects}
+              SEED_PROJECTS={[]} liveProjects={liveProjects} extraProjects={extraProjects}
               developments={developmentsData}
               projSearch={projSearch} setProjSearch={setProjSearch}
               projDev={projDev} setProjDev={setProjDev}
