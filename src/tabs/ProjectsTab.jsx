@@ -552,7 +552,7 @@ function ProjectsTab({
                           <StatusBadge status={p.status || (p.constructionPct >= 100 ? "Ready" : "Off-Plan")} />
                           {(p.handover || p.expectedHandover) && <span style={{ fontSize:10, color:T.textMuted }}>{p.handover || p.expectedHandover}</span>}
                           {Array.isArray(p.beds) && p.beds.length > 0 && <span style={{ fontSize:10, color:T.textMuted }}>{"·"}{p.beds.join(" / ")}</span>}
-                          {isValidReraNumber(p.reraNo || p.projectNumber) && <span style={{ fontSize:9, color:T.teal }}>{"·"}RERA #{p.reraNo || p.projectNumber}</span>}
+                          {isValidReraNumber(p.reraNo || p.projectNumber) && <span style={{ fontSize:9, color:T.teal }}>{"·"}DLD #{p.reraNo || p.projectNumber}</span>}
                         </div>
                         {/* Factual classification badges only — no investment advice */}
                         <div style={{ display:"flex", gap:5, flexWrap:"wrap", marginTop:6 }}>
@@ -1226,7 +1226,7 @@ function ProjectsTab({
                     {selectedProject.goldenVisa && selectedProject.priceMin >= GOLDEN_VISA_THRESHOLD && <span style={{ fontSize:10, padding:"3px 8px", borderRadius:5, background:"rgba(212,168,67,0.15)", color:T.gold, fontWeight:700 }}>★ Golden Visa Eligible</span>}
                     {selectedProject.branded && <span style={{ fontSize:10, padding:"3px 8px", borderRadius:5, background:"rgba(139,92,246,0.15)", color:"#A78BFA", fontWeight:700 }}>◆ {selectedProject.brandPartner || "Branded Residence"}</span>}
                     {selectedProject.escrowBank && <span style={{ fontSize:10, padding:"3px 8px", borderRadius:5, background:"rgba(20,184,166,0.1)", color:T.teal, fontWeight:700 }}>Escrow Verified</span>}
-                    {isValidReraNumber(selectedProject.reraNo || selectedProject.projectNumber) && <span style={{ fontSize:10, padding:"3px 8px", borderRadius:5, background:"rgba(20,184,166,0.08)", color:T.teal, fontWeight:700 }}>RERA #{selectedProject.reraNo || selectedProject.projectNumber}</span>}
+                    {isValidReraNumber(selectedProject.reraNo || selectedProject.projectNumber) && <span style={{ fontSize:10, padding:"3px 8px", borderRadius:5, background:"rgba(20,184,166,0.08)", color:T.teal, fontWeight:700 }}>DLD #{selectedProject.reraNo || selectedProject.projectNumber}</span>}
                   </div>
                 </div>
                 <div style={{ display:"flex", alignItems:"center", gap:10 }}>
@@ -1342,27 +1342,98 @@ function ProjectsTab({
                         </div>
                       )}
                     </div>
+                    {/* SECTION 1: Drive Times - to key Dubai destinations */}
                     <div className="chart-box" style={{ padding:18, marginBottom:12 }}>
-                      <div style={{ fontSize:12, fontWeight:700, color:T.white, marginBottom:14 }}>Distance to Key Landmarks</div>
-                      <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(130px,1fr))", gap:10 }}>
+                      <div style={{ fontSize:12, fontWeight:700, color:T.white, marginBottom:14 }}>Drive Times to Key Destinations</div>
+                      <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(150px,1fr))", gap:10 }}>
                         {[
-                          { label:"Nearest Metro", val:selectedProject.distMetro, code:"metro" },
-                          { label:"DIFC", val:selectedProject.distDIFC, code:"difc" },
-                          { label:"Airport DXB", val:selectedProject.distAirport, code:"airport" },
-                          { label:"Beach", val:selectedProject.distBeach, code:"beach" },
-                          { label:"Nearest Mall", val:selectedProject.distMall, code:"mall", insideLabel:selectedProject.distMallLabel },
-                          { label:"School", val:selectedProject.distSchool, code:"school", insideLabel:selectedProject.distSchoolLabel },
-                          { label:"Hospital", val:selectedProject.distHospital, code:"hospital", insideLabel:selectedProject.distHospitalLabel },
+                          { label:"Downtown Dubai", val:selectedProject.distDowntownDubaiMin, unit:"min" },
+                          { label:"Dubai Marina", val:selectedProject.distDubaiMarinaMin, unit:"min" },
+                          { label:"DXB Airport", val:selectedProject.distDubaiAirportMin, unit:"min" },
+                          { label:"Mall of Emirates", val:selectedProject.distMallOfEmiratesMin, unit:"min" },
+                          { label:"Business Bay / DIFC", val:selectedProject.distBusinessBayMin, unit:"min" },
+                          { label:"Al Maktoum (DWC)", val:selectedProject.distDwcAirportMin, unit:"min" },
                         ].map((d,i) => (
-                          <div key={i} style={{ padding:"12px 14px", background:T.surfaceAlt, borderRadius:10, border:`1px solid ${T.border}`, textAlign:"center" }}>
-                            <div style={{ fontSize:10, color:T.textMuted, marginBottom:6 }}>{d.label}</div>
-                            <div style={{ fontFamily:"'Fraunces',serif", fontSize:18, fontWeight:700, color:T.white }}>
-                              {d.val === 0 && d.insideLabel ? d.insideLabel : d.val != null ? (d.val < 1 ? (d.val*1000).toFixed(0)+"m" : d.val+"km") : "—"}
+                          d.val != null && (
+                            <div key={i} style={{ padding:"14px 14px", background:T.surfaceAlt, borderRadius:10, border:`1px solid ${T.border}` }}>
+                              <div style={{ fontSize:10, color:T.textMuted, marginBottom:6, letterSpacing:0.3, textTransform:"uppercase" }}>{d.label}</div>
+                              <div style={{ fontFamily:"'Fraunces',serif", fontSize:22, fontWeight:800, color:T.white }}>
+                                {d.val}<span style={{ fontSize:12, color:T.textMuted, marginLeft:3, fontWeight:500 }}>{d.unit}</span>
+                              </div>
                             </div>
-                          </div>
+                          )
                         ))}
                       </div>
                     </div>
+
+                    {/* SECTION 2: Inside the Community - what's within walking distance */}
+                    <div className="chart-box" style={{ padding:18, marginBottom:12 }}>
+                      <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:12 }}>
+                        <div style={{ fontSize:12, fontWeight:700, color:T.white }}>Inside Dubai Hills Estate</div>
+                        <span style={{ fontSize:10, padding:"2px 8px", borderRadius:4, background:"rgba(16,185,129,0.1)", color:T.green, fontWeight:700 }}>WALKING DISTANCE</span>
+                      </div>
+                      <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(220px,1fr))", gap:10 }}>
+                        {selectedProject.communityGolfCourse && (
+                          <div style={{ padding:"12px 14px", background:T.surfaceAlt, borderRadius:10, border:`1px solid ${T.border}` }}>
+                            <div style={{ fontSize:10, color:T.textMuted, marginBottom:3 }}>Golf Course</div>
+                            <div style={{ fontSize:13, fontWeight:700, color:T.white }}>Dubai Hills Golf Club</div>
+                            <div style={{ fontSize:10, color:T.textMuted }}>18-hole championship course</div>
+                          </div>
+                        )}
+                        {selectedProject.distMallLabel && (
+                          <div style={{ padding:"12px 14px", background:T.surfaceAlt, borderRadius:10, border:`1px solid ${T.border}` }}>
+                            <div style={{ fontSize:10, color:T.textMuted, marginBottom:3 }}>Shopping Mall</div>
+                            <div style={{ fontSize:13, fontWeight:700, color:T.white }}>Dubai Hills Mall</div>
+                            <div style={{ fontSize:10, color:T.textMuted }}>650+ outlets · 2M sqft GLA</div>
+                          </div>
+                        )}
+                        {selectedProject.distSchoolLabel && (
+                          <div style={{ padding:"12px 14px", background:T.surfaceAlt, borderRadius:10, border:`1px solid ${T.border}` }}>
+                            <div style={{ fontSize:10, color:T.textMuted, marginBottom:3 }}>Schools</div>
+                            <div style={{ fontSize:13, fontWeight:700, color:T.white }}>GEMS Academies</div>
+                            <div style={{ fontSize:10, color:T.textMuted }}>Wellington · New Millennium · International</div>
+                          </div>
+                        )}
+                        {selectedProject.distHospitalLabel && (
+                          <div style={{ padding:"12px 14px", background:T.surfaceAlt, borderRadius:10, border:`1px solid ${T.border}` }}>
+                            <div style={{ fontSize:10, color:T.textMuted, marginBottom:3 }}>Healthcare</div>
+                            <div style={{ fontSize:13, fontWeight:700, color:T.white }}>King's College Hospital London</div>
+                            <div style={{ fontSize:10, color:T.textMuted }}>Inside community</div>
+                          </div>
+                        )}
+                        <div style={{ padding:"12px 14px", background:T.surfaceAlt, borderRadius:10, border:`1px solid ${T.border}` }}>
+                          <div style={{ fontSize:10, color:T.textMuted, marginBottom:3 }}>Parks & Recreation</div>
+                          <div style={{ fontSize:13, fontWeight:700, color:T.white }}>Dubai Hills Park</div>
+                          <div style={{ fontSize:10, color:T.textMuted }}>180,000 sqm · 54 km bicycle path</div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* SECTION 3: Road Network */}
+                    {Array.isArray(selectedProject.mainRoads) && selectedProject.mainRoads.length > 0 && (
+                      <div className="chart-box" style={{ padding:18, marginBottom:12 }}>
+                        <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:12 }}>
+                          <div style={{ fontSize:12, fontWeight:700, color:T.white }}>Road Network & Connectivity</div>
+                          <span style={{ fontSize:10, padding:"2px 8px", borderRadius:4, background:"rgba(212,168,67,0.1)", color:T.gold, fontWeight:700 }}>{selectedProject.mainRoads.length} ROADS</span>
+                        </div>
+                        <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(260px,1fr))", gap:8 }}>
+                          {selectedProject.mainRoads.map((r, i) => (
+                            <div key={i} style={{ padding:"11px 13px", background:T.surfaceAlt, borderRadius:8, border:`1px solid ${T.border}`, display:"flex", alignItems:"center", gap:10 }}>
+                              {r.code && (
+                                <span style={{ fontSize:10, fontFamily:"'Outfit',sans-serif", fontWeight:800, padding:"3px 7px", borderRadius:4, background:"rgba(212,168,67,0.12)", color:T.gold, letterSpacing:0.5, minWidth:38, textAlign:"center" }}>{r.code}</span>
+                              )}
+                              <div style={{ flex:1, minWidth:0 }}>
+                                <div style={{ fontSize:12, fontWeight:700, color:T.white, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{r.name}</div>
+                                <div style={{ fontSize:9, color:T.textMuted, marginTop:1 }}>{r.role}</div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                        <div style={{ fontSize:10, color:T.textMuted, marginTop:10, fontStyle:"italic" }}>
+                          Primary access: {selectedProject.primaryRoadAccess || "Al Khail Road (E44)"}
+                        </div>
+                      </div>
+                    )}
                     <LegalNote T={T} />
                   </div>
                   );
