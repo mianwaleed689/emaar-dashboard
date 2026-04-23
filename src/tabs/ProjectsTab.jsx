@@ -1157,7 +1157,7 @@ function ProjectsTab({
                           </div>
                           <div style={{ display:"flex", alignItems:"center", gap:5 }}>
                             <span style={{ fontSize:15, fontWeight:700, color:scoreColor(sc), ...tnum }}>{sc}</span>
-                            <span style={{ fontSize:9, color:T.textMuted, letterSpacing:0.3 }}>/ 100</span>
+                            <span style={{ fontSize:9, color:T.textMuted, letterSpacing:0.3 }}> / 100</span>
                           </div>
                         </div>
                       );
