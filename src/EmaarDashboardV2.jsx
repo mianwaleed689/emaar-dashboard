@@ -3278,6 +3278,8 @@ export default function EmaarDashboardV2() {
       const fsProjects = [];
       snap.forEach(d => {
         const data = { ...d.data(), id: d.id, fromFirestore: true };
+        /* Skip archived projects (reset 2026-04-23) */
+        if (data.archived === true) return;
         if (data.developerId === "emaar" && baseIds.has(String(data.id?.toString().replace("emaar_", "")))) return;
         if (data.developerId === "emaar" && baseNames.has((data.name || "").toLowerCase().trim())) return;
         if (!baseIds.has(String(data.id))) fsProjects.push(data);
