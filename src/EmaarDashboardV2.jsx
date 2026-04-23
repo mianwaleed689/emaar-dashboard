@@ -3433,6 +3433,8 @@ export default function EmaarDashboardV2() {
       snap.forEach(d => {
         const data = d.data();
         if (data.visibility !== "published") return;
+        /* Skip merged duplicates from cleanup script */
+        if (data.merged === true) return;
         /* Only include developers that are active OR have projects in DLD */
         const isActive = data.active === true || (Number(data.totalProjects) || 0) > 0;
         if (!isActive) return;
