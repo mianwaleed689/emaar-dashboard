@@ -1347,12 +1347,12 @@ function ProjectsTab({
                       <div style={{ fontSize:12, fontWeight:700, color:T.white, marginBottom:14 }}>Drive Times to Key Destinations</div>
                       <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(150px,1fr))", gap:10 }}>
                         {[
-                          { label:"Downtown Dubai", val:selectedProject.distDowntownDubaiMin, unit:"min" },
-                          { label:"Dubai Marina", val:selectedProject.distDubaiMarinaMin, unit:"min" },
-                          { label:"DXB Airport", val:selectedProject.distDubaiAirportMin, unit:"min" },
-                          { label:"Mall of Emirates", val:selectedProject.distMallOfEmiratesMin, unit:"min" },
-                          { label:"Business Bay / DIFC", val:selectedProject.distBusinessBayMin, unit:"min" },
-                          { label:"Al Maktoum (DWC)", val:selectedProject.distDwcAirportMin, unit:"min" },
+                          { label:"Downtown Dubai", val:selectedProject.distDowntownDubaiMin, range:selectedProject.distDowntownDubaiMinRange, unit:"min" },
+                          { label:"Dubai Marina", val:selectedProject.distDubaiMarinaMin, range:selectedProject.distDubaiMarinaMinRange, unit:"min" },
+                          { label:"DXB Airport", val:selectedProject.distDubaiAirportMin, range:selectedProject.distDubaiAirportMinRange, unit:"min" },
+                          { label:"Mall of Emirates", val:selectedProject.distMallOfEmiratesMin, range:selectedProject.distMallOfEmiratesMinRange, unit:"min" },
+                          { label:"Business Bay / DIFC", val:selectedProject.distBusinessBayMin, range:selectedProject.distBusinessBayMinRange, unit:"min" },
+                          { label:"Al Maktoum (DWC)", val:selectedProject.distDwcAirportMin, range:selectedProject.distDwcAirportMinRange, unit:"min" },
                         ].map((d,i) => (
                           d.val != null && (
                             <div key={i} style={{ padding:"14px 14px", background:T.surfaceAlt, borderRadius:10, border:`1px solid ${T.border}` }}>
