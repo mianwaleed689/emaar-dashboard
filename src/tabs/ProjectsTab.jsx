@@ -540,7 +540,7 @@ function ProjectsTab({
                       onMouseEnter={(e) => e.currentTarget.style.background = "rgba(212,168,67,0.25)"}
                       onMouseLeave={(e) => e.currentTarget.style.background = watchlist.some(w => w.id === p.id) ? "rgba(212,168,67,0.18)" : "rgba(255,255,255,0.04)"}
                     >
-                      {watchlist.some(w => w.id === p.id) ? "$" : "$"}
+                      {watchlist.some(w => w.id === p.id) ? "★" : "☆"}
                     </button>
                   )}
                   <div style={{ padding:"14px 16px", borderBottom:`1px solid ${T.border}` }} onClick={() => { setSelectedProject(p); setProjDetailTab("identity"); }}>

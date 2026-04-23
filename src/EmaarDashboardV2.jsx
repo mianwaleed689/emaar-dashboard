@@ -3906,7 +3906,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
   const toggleWatchlist = async (project) => {
     if (!isLoggedIn) { setShowLogin("login"); return; }
     const isWatched = watchlist.find(p => p.id === project.id);
-    const updated = isWatched ? watchlist.filter(p => p.id !== project.id) : [...watchlist, { id: project.id, name: project.name, community: project.community, price: project.price, addedAt: new Date().toISOString() }];
+    const updated = isWatched ? watchlist.filter(p => p.id !== project.id) : [...watchlist, { id: project.id, name: project.name || project.project, community: project.community || project.area, priceMin: project.priceMin || project.price, grossYield: project.grossYield, addedAt: new Date().toISOString() }];
     setWatchlist(updated);
     if (auth.currentUser) {
       await safeAsyncWithToast(() => setDoc(doc(db, "watchlists", auth.currentUser.uid), { projects: updated, updatedAt: new Date().toISOString() }), "watchlist-save", notify, "Couldn't save your watchlist â€” try again");
@@ -5932,7 +5932,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
                 <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                   {watchlist.map((w, i) => {
                     const liveP = activeProjects.find(p => p.id === w.id);
-                    const currentPrice = liveP?.price || w.price;
+                    const currentPrice = liveP?.priceMin || liveP?.price || w.priceMin || w.price;
                     const priceChanged = liveP && w.price && liveP.price !== w.price;
                     return (
                       <div key={w.id} style={{ background: T.card, borderRadius: 12, border: `1px solid ${T.border}`, padding: "14px 16px", display: "flex", alignItems: "center", gap: 14, cursor: "pointer", transition: "all 0.2s" }}
