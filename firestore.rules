@@ -126,6 +126,7 @@ service cloud.firestore {
     match /communities/{doc}      { allow read: if isAuthed(); allow write: if isAdmin(); }
     match /communityROI/{doc}     { allow read: if isAuthed(); allow write: if isAdmin(); }
     match /communityIntel/{doc}   { allow read: if isAuthed(); allow write: if isAdmin(); }
+    match /developments/{doc}     { allow read: if isAuthed(); allow write: if isAdmin(); }
     match /riskData/{doc}         { allow read: if isAuthed(); allow write: if isAdmin(); }
     match /strLtrData/{doc}       { allow read: if isAuthed(); allow write: if isAdmin(); }
     match /priceHistory/{doc}     { allow read: if isAuthed(); allow write: if isAdmin(); }
