@@ -1295,7 +1295,7 @@ function ProjectsTab({
                         </div>
                         <div>
                           <div style={{ fontSize:10, color:T.textMuted, marginBottom:4 }}>Construction Status</div>
-                          <div style={{ fontSize:15, fontWeight:700, color:T.white }}>{selectedProject.constructionPct != null ? selectedProject.constructionPct + "% complete" : "Not disclosed"}</div>
+                          <div style={{ fontSize:15, fontWeight:700, color:T.white }}>{selectedProject.constructionPct != null ? (selectedProject.constructionPct + "% complete" + (selectedProject.constructionPctIsEstimate ? " (est.)" : "")) : "Not disclosed"}</div>
                         </div>
                       </div>
                     </div>
@@ -1350,14 +1350,14 @@ function ProjectsTab({
                           { label:"DIFC", val:selectedProject.distDIFC, code:"difc" },
                           { label:"Airport DXB", val:selectedProject.distAirport, code:"airport" },
                           { label:"Beach", val:selectedProject.distBeach, code:"beach" },
-                          { label:"Nearest Mall", val:selectedProject.distMall, code:"mall" },
-                          { label:"School", val:selectedProject.distSchool, code:"school" },
-                          { label:"Hospital", val:selectedProject.distHospital, code:"hospital" },
+                          { label:"Nearest Mall", val:selectedProject.distMall, code:"mall", insideLabel:selectedProject.distMallLabel },
+                          { label:"School", val:selectedProject.distSchool, code:"school", insideLabel:selectedProject.distSchoolLabel },
+                          { label:"Hospital", val:selectedProject.distHospital, code:"hospital", insideLabel:selectedProject.distHospitalLabel },
                         ].map((d,i) => (
                           <div key={i} style={{ padding:"12px 14px", background:T.surfaceAlt, borderRadius:10, border:`1px solid ${T.border}`, textAlign:"center" }}>
                             <div style={{ fontSize:10, color:T.textMuted, marginBottom:6 }}>{d.label}</div>
                             <div style={{ fontFamily:"'Fraunces',serif", fontSize:18, fontWeight:700, color:T.white }}>
-                              {d.val != null ? (d.val < 1 ? (d.val*1000).toFixed(0)+"m" : d.val+"km") : "—"}
+                              {d.val === 0 && d.insideLabel ? d.insideLabel : d.val != null ? (d.val < 1 ? (d.val*1000).toFixed(0)+"m" : d.val+"km") : "—"}
                             </div>
                           </div>
                         ))}
@@ -1559,7 +1559,7 @@ function ProjectsTab({
                     <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit, minmax(180px, 1fr))", gap:12, marginBottom:16 }}>
                       <div className="kpi-card">
                         <div style={{ fontSize:10, fontWeight:700, color:T.textMuted, letterSpacing:1, textTransform:"uppercase", marginBottom:8 }}>Gross Yield</div>
-                        <div style={{ fontFamily:"'Fraunces',serif", fontSize:26, fontWeight:800, color:selectedProject.grossYield >= 7 ? T.green : selectedProject.grossYield >= 5 ? T.gold : T.textSecondary }}>{selectedProject.grossYield ? selectedProject.grossYield.toFixed(1) + "%" : "—"}</div>
+                        <div style={{ fontFamily:"'Fraunces',serif", fontSize:26, fontWeight:800, color:selectedProject.grossYield >= 7 ? T.green : selectedProject.grossYield >= 5 ? T.gold : T.textSecondary }}>{selectedProject.grossYield ? (selectedProject.grossYield.toFixed(1) + "%" + (selectedProject.grossYieldIsEstimate ? " (est.)" : "")) : "—"}</div>
                         <div style={{ fontSize:10, color:T.textMuted }}>Annual rent ÷ purchase price</div>
                       </div>
                       <div className="kpi-card">
@@ -1715,9 +1715,9 @@ function ProjectsTab({
                         <div><strong style={{ color:T.white }}>Gross Yield:</strong> {selectedProject.grossYield ? selectedProject.grossYield + "%" : "—"}</div>
                         <div><strong style={{ color:T.white }}>Payment Plan:</strong> {selectedProject.paymentPlan || "TBC"}</div>
                         <div><strong style={{ color:T.white }}>Handover:</strong> {selectedProject.handover || "TBC"}</div>
-                        <div><strong style={{ color:T.white }}>RERA #:</strong> {selectedProject.reraNo || selectedProject.projectNumber || "Pending"}</div>
+                        <div><strong style={{ color:T.white }}>DLD Project #:</strong> {selectedProject.reraNo || selectedProject.projectNumber || "Pending"}</div>
                         <div><strong style={{ color:T.white }}>Escrow:</strong> {selectedProject.escrowBank || "—"}</div>
-                        <div><strong style={{ color:T.white }}>Build Progress:</strong> {selectedProject.constructionPct != null ? selectedProject.constructionPct + "%" : "—"}</div>
+                        <div><strong style={{ color:T.white }}>Build Progress:</strong> {selectedProject.constructionPct != null ? (selectedProject.constructionPct + "%" + (selectedProject.constructionPctIsEstimate ? " (est.)" : "")) : "—"}</div>
                       </div>
                     </div>
                     {(() => {
