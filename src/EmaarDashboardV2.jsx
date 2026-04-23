@@ -3400,13 +3400,13 @@ export default function EmaarDashboardV2() {
 
     // developers list
     // Phase 2.4.8: Community list for top-bar Community dropdown
-    unsubs.push(onSnapshot(collection(db, "communityData"), (snap) => {
+    unsubs.push(onSnapshot(collection(db, "communities"), (snap) => {
       const list = [];
       snap.forEach(d => {
         const data = d.data();
         // Only published communities with a human-readable name.
         // Skip the short-ID cron-yields artefacts (BB, DCH, etc.) which lack visibility.
-        if (data.visibility === "published" && (data.name || data.community)) {
+        if (data.visibility === "published" && data.verified === true && (data.name || data.community)) {
           list.push({
             id: d.id,
             name: data.name || data.community,
@@ -3433,11 +3433,8 @@ export default function EmaarDashboardV2() {
       snap.forEach(d => {
         const data = d.data();
         if (data.visibility !== "published") return;
-        /* Skip merged duplicates from cleanup script */
-        if (data.merged === true) return;
-        /* Only include developers that are active OR have projects in DLD */
-        const isActive = data.active === true || (Number(data.totalProjects) || 0) > 0;
-        if (!isActive) return;
+        /* Verified developers only (tier-classified, active, not-merged) */
+        if (data.verified !== true) return;
         
         const brand = data.parentBrand || data.name;
         if (!brand) return;
