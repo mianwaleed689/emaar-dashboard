@@ -800,17 +800,18 @@ function ProjectsTab({
                    Category → Type → Configuration → Price → More Filters
                    ═════════════════════════════════════════════════════════ */}
                 <div style={{
-                  display:"grid",
-                  gridTemplateColumns:"1.3fr 1.3fr 1fr 1fr 1.1fr",
-                  gap:10,
+                  display:"flex",
+                  flexWrap:"wrap",
+                  gap:12,
                   marginBottom: 12,
                   padding:"16px 18px",
                   background:"linear-gradient(145deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%)",
                   border:`1px solid rgba(255,255,255,0.06)`,
                   borderRadius:14,
+                  alignItems:"flex-end",
                 }}>
                   {/* Property Category */}
-                  <div>
+                  <div style={{ flex:"1 1 180px", minWidth:160 }}>
                     <div style={{ fontSize:10, color:T.textMuted, marginBottom:6, letterSpacing:0.5, textTransform:"uppercase", fontFamily:"'Outfit',sans-serif", fontWeight:600 }}>Property Category</div>
                     <select
                       value={projCategory}
@@ -838,7 +839,7 @@ function ProjectsTab({
                   </div>
 
                   {/* Property Type - depends on Category */}
-                  <div>
+                  <div style={{ flex:"1 1 180px", minWidth:160 }}>
                     <div style={{ fontSize:10, color:T.textMuted, marginBottom:6, letterSpacing:0.5, textTransform:"uppercase", fontFamily:"'Outfit',sans-serif", fontWeight:600 }}>Property Type</div>
                     <select
                       value={projMode}
@@ -864,7 +865,7 @@ function ProjectsTab({
 
                   {/* Configuration — HIDDEN when not applicable */}
                   {shouldShowConfiguration(projCategory, projMode) ? (
-                    <div>
+                    <div style={{ flex:"1 1 140px", minWidth:120 }}>
                       <div style={{ fontSize:10, color:T.textMuted, marginBottom:6, letterSpacing:0.5, textTransform:"uppercase", fontFamily:"'Outfit',sans-serif", fontWeight:600 }}>Configuration</div>
                       <select
                         value={projBeds}
@@ -884,10 +885,10 @@ function ProjectsTab({
                         ))}
                       </select>
                     </div>
-                  ) : <div />}
+                  ) : null}
 
                   {/* Price Range */}
-                  <div>
+                  <div style={{ flex:"1 1 140px", minWidth:130 }}>
                     <div style={{ fontSize:10, color:T.textMuted, marginBottom:6, letterSpacing:0.5, textTransform:"uppercase", fontFamily:"'Outfit',sans-serif", fontWeight:600 }}>Price Range</div>
                     <select
                       value={projPriceMin + "-" + projPriceMax}
@@ -916,7 +917,7 @@ function ProjectsTab({
                   </div>
 
                   {/* More Filters button */}
-                  <div>
+                  <div style={{ flex:"0 0 150px" }}>
                     <div style={{ fontSize:10, color:"transparent", marginBottom:6 }}>&nbsp;</div>
                     <button
                       type="button"
