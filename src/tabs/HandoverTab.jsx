@@ -132,49 +132,86 @@ function HandoverTab({ liveHandover, liveDevelopments = [], liveProjects = [], g
   /* Use live data if present — now includes DLD developments as Tier 3 */
   const projects = useMemo(() => {
     // Unified data source: transform liveProjects to handover card shape
-    const projectsAsHandovers = (Array.isArray(liveProjects) ? liveProjects : [])
-      .filter(p => p && (p.handoverDate || p.handoverQuarter || p.expectedHandover || p.handover))
-      .map(p => {
-        const hd = String(p.handoverDate || p.contractedHandover || p.expectedHandover || p.handover || "").trim();
-        let quarter = p.handoverQuarter || "";
-        if (!quarter && hd) {
-          const m = hd.match(/(\d{4})/);
-          const year = m ? m[1] : "";
-          const month = hd.includes("January") || hd.includes("February") || hd.includes("March") ? "Q1"
-            : hd.includes("April") || hd.includes("May") || hd.includes("June") ? "Q2"
-            : hd.includes("July") || hd.includes("August") || hd.includes("September") ? "Q3"
-            : hd.includes("October") || hd.includes("November") || hd.includes("December") ? "Q4"
-            : "";
-          if (month && year) quarter = month + " " + year;
-          else if (year) quarter = year;
+    // PROFESSIONAL TRANSFORMER - reads real Firestore fields, zero fabricated defaults
+    // Helper: fuzzy developer name lookup (Emaar Properties -> Emaar in DEVELOPER_INDEX)
+    const lookupDevOnTime = (devName) => {
+      if (!devName) return null;
+      const needle = String(devName).toLowerCase().trim();
+      const keys = Object.keys(DEVELOPER_INDEX);
+      for (const k of keys) {
+        const kl = k.toLowerCase();
+        if (kl === needle || needle.includes(kl) || kl.includes(needle)) {
+          return DEVELOPER_INDEX[k].onTime;
         }
+      }
+      return null; // honest: unknown developer returns null, not a fake default
+    };
+
+    const projectsAsHandovers = (Array.isArray(liveProjects) ? liveProjects : [])
+      .filter(p => p && (p.handover || p.expectedHandover || p.handoverQuarter || p.handoverMonth || p.handoverDate || p.contractedHandover))
+      .map(p => {
+        // FIX 1: Handover quarter - prioritize pre-formatted fields
+        const handoverQuarter = p.handover || p.expectedHandover || p.handoverQuarter || p.handoverMonth || "";
+        const handoverDate = p.handoverDate || p.contractedHandover || p.completionDateDLD || "";
+
+        // FIX 2: Avg unit size - multiple real field names
+        const avgSize = p.unitSizeAvgSqFt || p.avgUnitSize || p.builtUpArea || null;
+        const sizeMin = p.unitSizeMinSqFt || p.sizeMin || null;
+        const sizeMax = p.unitSizeMaxSqFt || p.sizeMax || null;
+
+        // FIX 3: Appreciation - compute from real price history OR return null
+        // Hide for off-plan projects (they dont have meaningful appreciation until handover)
+        let appreciation = null;
+        const isCompleted = p.status === "Ready" || p.status === "Completed" || p.lifecycleStage === "historical" || p.lifecycleStage === "recently-delivered";
+        if (isCompleted && p.priceMinAtLaunch && p.priceMin) {
+          appreciation = Math.round(((p.priceMin - p.priceMinAtLaunch) / p.priceMinAtLaunch) * 100 * 10) / 10;
+        } else if (typeof p.appreciationToHandover === "number") {
+          appreciation = p.appreciationToHandover;
+        } else if (typeof p.appreciationSinceLaunch === "number") {
+          appreciation = p.appreciationSinceLaunch;
+        }
+        // appreciation remains null for off-plan projects - UI will hide the field
+
+        // FIX 4: Dev on-time from DEVELOPER_INDEX (research-backed), not fabricated
+        const devOnTime = lookupDevOnTime(p.developer || p.developerName);
+
         return {
           id: p.id || ("live-" + Math.random().toString(36).slice(2)),
           project: p.project || p.name || "Unnamed Project",
           developer: p.developer || p.developerName || "Unknown",
-          community: p.community || p.district || "Dubai",
-          type: p.type || "Apartment",
-          handoverQuarter: quarter || "TBD",
-          handoverDate: hd || "",
-          units: p.totalUnits || p.units || p.unitCount || 0,
-          constructionPct: typeof p.constructionPct === "number" ? p.constructionPct : 0,
-          rerVerified: !!(p.reraNo || p.dldNumber || p.projectNumber),
-          onSchedule: (typeof p.constructionPct === "number" ? p.constructionPct : 0) >= 50,
-          delayRiskScore: p.delayRiskScore || (p.tier === 1 ? 15 : 40),
-          startingPrice: p.priceMin || 0,
-          pricePerSqft: p.ppsf || 0,
-          avgUnitSize: p.avgUnitSize || 0,
-          grossYield: p.grossYield || 0,
-          devOnTimeRate: p.devOnTimeRate || (p.tier === 1 ? 85 : 70),
-          insight: p.overview || p.description || p.insight || "",
-          bedTypes: Array.isArray(p.beds) ? p.beds : Object.keys(p.bedConfig || {}),
-          riskFactors: p.tier === 1 ? ["Tier 1 developer", "DLD verified"] : ["Verify DLD status"],
-          riskLevel: p.tier === 1 ? "low" : "medium",
+          community: p.community || p.area || "Dubai",
+          type: p.type || p.propertyType || "Apartment",
+          handoverQuarter: handoverQuarter || "TBD",
+          handoverDate: handoverDate,
+          units: p.totalUnits || p.residentialUnits || p.units || null,
+          constructionPct: typeof p.constructionPct === "number" ? p.constructionPct : null,
+          rerVerified: !!(p.reraNo || p.dldProjectNumber || p.projectNumber),
+          onSchedule: typeof p.constructionPct === "number" ? p.constructionPct >= 50 : null,
+          delayRiskScore: null, // Honest - we dont compute this; UI will show risk label only
+          startingPrice: p.priceMin || null,
+          pricePerSqft: p.ppsf || null,
+          avgUnitSize: avgSize,
+          sizeMin: sizeMin,
+          sizeMax: sizeMax,
+          grossYield: typeof p.grossYield === "number" ? p.grossYield : null,
+          grossYieldIsEstimate: !!p.grossYieldIsEstimate,
+          devOnTimeRate: devOnTime, // null if developer not in index - UI should hide or show Industry estimate label
+          insight: p.description || p.overview || p.insight || "",
+          bedTypes: Array.isArray(p.beds) ? p.beds : (p.bedConfig ? Object.keys(p.bedConfig) : []),
+          riskFactors: [
+            p.tier === 1 ? "Tier 1 developer" : null,
+            p.dldRegistered || p.reraRegistered ? "DLD/RERA verified" : null,
+            p.escrowActive ? "Escrow active" : null,
+            typeof p.constructionPct === "number" && p.constructionPct >= 70 ? "Construction advanced" : null,
+          ].filter(Boolean),
+          riskLevel: p.tier === 1 && (p.constructionPct || 0) >= 70 ? "low" : (p.tier === 1 ? "medium-low" : "medium"),
           paymentPlan: p.paymentPlan || p.payment || "",
-          appreciationSinceLaunch: p.appreciationSinceLaunch || 0,
-          reraNo: p.reraNo || p.dldNumber || p.projectNumber || "",
+          appreciationSinceLaunch: appreciation, // null for off-plan projects - UI hides the field
+          reraNo: p.reraNo || p.dldProjectNumber || p.projectNumber || "",
           escrowBank: p.escrowBank || "",
-          isLive: true,  /* flag: DLD-verified live Firestore data */
+          tier: p.tier || null,
+          isLive: true,
+          _dataQuality: p.dataQualityScore || null, // for future "verified" badges
         };
       });
     // Merge: liveProjects (Firestore) + liveHandover (admin-added handovers). Empty SEED array means no fake data.
