@@ -22,6 +22,62 @@ const MODES = [
   { key:"Warehouse" }, { key:"Land" },
 ];
 
+/* ===============================================================
+   3-LAYER FILTER ARCHITECTURE
+   ---------------------------------------------------------------
+   Layer 1: Property Category (user-facing, 4 options)
+   Layer 2: Display Type (user-facing, ~12 options grouped by Category)
+   Layer 3: Internal Types (backend-only, 47+ fine-grained variants)
+
+   When a user picks a Display Type like "Apartment", the filter
+   expands to match ALL internal types that belong to that display
+   type: Apartment matches Apartment, Studio Apartment, Duplex,
+   Penthouse, Loft, Serviced Apartment in the data.
+
+   This mirrors how Bayut, Property Finder, Rightmove, Zillow work.
+   =============================================================== */
+
+const CATEGORY_TO_DISPLAY = {
+  "All":          [],
+  "Residential":  ["Apartment", "Villa", "Townhouse", "Hotel Apartment"],
+  "Commercial":   ["Office", "Retail", "Warehouse"],
+  "Industrial":   ["Industrial Unit", "Industrial Land"],
+  "Land":         ["Residential Plot", "Commercial Plot", "Mixed-Use Plot"],
+};
+
+const DISPLAY_TO_INTERNAL = {
+  "Apartment":        ["Apartment", "Studio Apartment", "Duplex", "Penthouse", "Loft", "Serviced Apartment"],
+  "Villa":            ["Villa", "Semi-Detached Villa", "Independent Villa", "Sky Villa", "Villa Compound"],
+  "Townhouse":        ["Townhouse", "Row House"],
+  "Hotel Apartment":  ["Hotel Apartment", "Hotel Room", "Branded Residence"],
+  "Office":           ["Office", "Business Center", "Co-working Space"],
+  "Retail":           ["Retail", "Shop", "Showroom", "F&B"],
+  "Warehouse":        ["Warehouse", "Storage Facility", "Logistics Hub"],
+  "Industrial Unit":  ["Factory", "Staff Accommodation", "Workshop", "Industrial Unit"],
+  "Industrial Land":  ["Industrial Plot", "Industrial Land"],
+  "Residential Plot": ["Residential Plot", "Residential Land", "G+1 Plot", "G+2 Plot"],
+  "Commercial Plot":  ["Commercial Plot", "Commercial Land"],
+  "Mixed-Use Plot":   ["Mixed-Use Plot", "Mixed-Use Land"],
+};
+
+const UNIT_BASED_RESIDENTIAL = ["Apartment", "Villa", "Townhouse", "Hotel Apartment"];
+const BED_OPTIONS = ["All", "Studio", "1 BR", "2 BR", "3 BR", "4+ BR"];
+const PROJECT_STAGES = ["All", "Off-Plan", "Under Construction", "Ready", "Completed"];
+const BUILD_PCT_BUCKETS = ["0-25", "26-50", "51-75", "76-99"];
+
+function getInternalTypes(displayType) {
+  if (!displayType || displayType === "All") return null;
+  return DISPLAY_TO_INTERNAL[displayType] || [displayType];
+}
+
+function getDisplayTypesForCategory(category) {
+  return CATEGORY_TO_DISPLAY[category] || [];
+}
+
+function shouldShowConfiguration(category, displayType) {
+  return category === "Residential" && UNIT_BASED_RESIDENTIAL.includes(displayType);
+}
+
 /* Helper — detect fake/placeholder RERA numbers and suppress display.
    Real RERA project numbers are typically 3-6 digits.
    Fake patterns: 10+ digit placeholders, repeating digits, sequential like 1234/5678 */
