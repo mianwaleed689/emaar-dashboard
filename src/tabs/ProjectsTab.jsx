@@ -964,6 +964,21 @@ function ProjectsTab({
                   if (projHandover !== "All") activeFilters.push({ key:"hnd", label:`Handover ${projHandover}`, clear:() => setProjHandover("All") });
                   if (projGrade !== "All") activeFilters.push({ key:"grd", label:`Grade ${projGrade}`, clear:() => setProjGrade("All") });
                   if (projIntelFilter !== "all") activeFilters.push({ key:"int", label:projIntelFilter === "tier1" ? "Tier 1 only" : projIntelFilter === "gv" ? "Golden Visa" : projIntelFilter === "branded" ? "Branded residences" : projIntelFilter, clear:() => setProjIntelFilter("all") });
+                  // NEW FILTER SYSTEM chips
+                  if (projCategory !== "All") activeFilters.push({ key:"cat", label:projCategory, clear:() => { setProjCategory("All"); setProjMode("All"); setProjBeds("All"); } });
+                  if (projMode !== "All") activeFilters.push({ key:"typ", label:projMode, clear:() => { setProjMode("All"); setProjBeds("All"); } });
+                  if (projBeds !== "All") activeFilters.push({ key:"bed", label:projBeds, clear:() => setProjBeds("All") });
+                  if (projPriceMin > 0 || (projPriceMax > 0 && projPriceMax < 999999999)) {
+                    const toM = n => (n/1000000).toFixed(n >= 10000000 ? 0 : 1) + "M";
+                    const priceLabel = projPriceMin > 0 && projPriceMax < 999999999
+                      ? `AED ${toM(projPriceMin)}-${toM(projPriceMax)}`
+                      : projPriceMin > 0 ? `From AED ${toM(projPriceMin)}`
+                      : `Up to AED ${toM(projPriceMax)}`;
+                    activeFilters.push({ key:"prc", label:priceLabel, clear:() => { if(setProjPriceMin) setProjPriceMin(0); if(setProjPriceMax) setProjPriceMax(999999999); } });
+                  }
+                  if (projDev !== "All") activeFilters.push({ key:"dev", label:projDev, clear:() => setProjDev("All") });
+                  if (projCommunity !== "All") activeFilters.push({ key:"com", label:projCommunity, clear:() => setProjCommunity("All") });
+                  if (projStatus !== "All") activeFilters.push({ key:"sts", label:projStatus, clear:() => setProjStatus("All") });
                   const localActiveCount = activeFilters.filter(f => !f.global).length;
                   const anyActive = activeFilters.length > 0;
                   return (
@@ -1063,7 +1078,7 @@ function ProjectsTab({
                             )
                           ))}
                           {localActiveCount > 0 && (
-                            <button type="button" onClick={() => { setProjHandover("All"); setProjGrade("All"); setProjIntelFilter("all"); setProjLifecycle("All"); setProjEscrowBank("All"); setProjConstruction("All"); }}
+                            <button type="button" onClick={() => { setProjHandover("All"); setProjGrade("All"); setProjIntelFilter("all"); setProjLifecycle("All"); setProjEscrowBank("All"); setProjConstruction("All"); setProjCategory("All"); setProjMode("All"); setProjBeds("All"); setProjDev("All"); setProjCommunity("All"); setProjStatus("All"); setProjSearch(""); if(setProjPriceMin) setProjPriceMin(0); if(setProjPriceMax) setProjPriceMax(999999999); }}
                               title="Clear Projects-specific filters"
                               style={{
                                 background: "transparent",
