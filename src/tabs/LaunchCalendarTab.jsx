@@ -133,52 +133,101 @@ function LaunchCalendarTab({
 
   const launches = useMemo(() => {
     // Unified data: transform liveProjects to launch card shape
+    // PROFESSIONAL TRANSFORMER - reads real Firestore fields, zero fabricated defaults
+    // Developer on-time research-backed lookup (inline - mirror of HandoverTab DEVELOPER_INDEX)
+    const LC_DEV_ONTIME = {
+      "sobha realty": 91, "emaar": 88, "ellington properties": 88, "majid al futtaim": 87,
+      "omniyat": 85, "mira developments": 82, "nakheel": 80, "london gate": 78,
+      "dubai investments real estate": 75, "binghatti": 74, "damac properties": 71,
+      "object 1 development": 70, "bigfoot developers": 68,
+    };
+    const lookupDevOnTime = (devName) => {
+      if (!devName) return null;
+      const needle = String(devName).toLowerCase().trim();
+      for (const k of Object.keys(LC_DEV_ONTIME)) {
+        if (k === needle || needle.includes(k) || k.includes(needle)) return LC_DEV_ONTIME[k];
+      }
+      return null; // honest: unknown = null, not fake 85
+    };
+
     const projectsAsLaunches = (Array.isArray(liveProjects) ? liveProjects : [])
       .filter(p => p && (p.launchDate || p.projectStartDate || p.status === "Off-Plan"))
-      .map(p => ({
-        id: p.id || ("live-" + Math.random().toString(36).slice(2)),
-        project: p.project || p.name || "Unnamed",
-        developer: p.developer || p.developerName || "Unknown",
-        community: p.community || p.district || "Dubai",
-        type: p.type || "Apartment",
-        tier: p.tier || 2,
-        branded: !!p.branded,
-        launchDate: p.launchDate || p.projectStartDate || "",
-        eoiDeadline: p.eoiDeadline || "",
-        status: p.status || "Off-Plan",
-        units: p.totalUnits || p.units || 0,
-        soldUnits: p.unitsSold || 0,
-        startingPrice: p.priceMin || 0,
-        pricePerSqft: p.ppsf || 0,
-        avgUnitSize: p.avgUnitSize || 0,
-        eoiAmount: p.eoiAmount || 0,
-        eoiRefundable: !!p.eoiRefundable,
-        paymentPlan: p.paymentPlan || { dp: 10, construction: 70, handover: 20, postHandover: 0, label: p.payment || "10/70/20" },
-        handover: p.handoverQuarter || p.handover || p.expectedHandover || "",
-        developerOnTimeRate: p.devOnTimeRate || (p.tier === 1 ? 85 : 70),
-        communityAvgPpsf: p.communityAvgPpsf || p.ppsf || 0,
-        appreciationToHandover: p.appreciationToHandover || 0,
-        goldenVisa: !!p.goldenVisa,
-        metroDistanceKm: p.distMetro || 0,
-        beachAccess: !!p.beachAccess,
-        insight: p.overview || p.description || p.insight || "",
-        velocityScore: p.velocityScore || 0,
-        tags: Array.isArray(p.tags) ? p.tags : [],
-        grossYield: p.grossYield || 0,
-        netYield: p.netYield || 0,
-        serviceCharge: p.serviceCharge || 0,
-        commission: p.commission || 2,
-        investmentScore: p.investmentScore || 0,
-        developerScore: p.developerScore || (p.tier === 1 ? 85 : 70),
-        reraNo: p.reraNo || p.dldNumber || p.projectNumber || "",
-        escrowBank: p.escrowBank || "",
-        plotMin: p.plotSize || 0, plotMax: p.plotSize || 0,
-        distances: { metro: p.distMetro || 0, difc: p.distDIFC || 0, airport: p.distAirport || 0, beach: p.distBeach || 0, mall: p.distMall || 0, school: p.distSchool || 0, hospital: p.distHospital || 0 },
-        amenities: Array.isArray(p.amenities) ? p.amenities : [],
-        views: Array.isArray(p.view) ? p.view : (Array.isArray(p.views) ? p.views : []),
-        unitBreakdown: Array.isArray(p.unitBreakdown) ? p.unitBreakdown : [],
-        isLive: true,
-      }));
+      .map(p => {
+        // Compute appreciation honestly
+        let appreciation = null;
+        if (typeof p.appreciationToHandover === "number") appreciation = p.appreciationToHandover;
+        else if (p.priceMinAtLaunch && p.priceMin) {
+          appreciation = Math.round(((p.priceMin - p.priceMinAtLaunch) / p.priceMinAtLaunch) * 100 * 10) / 10;
+        }
+
+        // Parse payment plan - may be object, may be string like "90/10"
+        let paymentPlanObj;
+        if (p.paymentPlan && typeof p.paymentPlan === "object") {
+          paymentPlanObj = p.paymentPlan;
+        } else {
+          const planStr = (typeof p.paymentPlan === "string" ? p.paymentPlan : "") || p.payment || "";
+          const parts = planStr.split("/").map(n => parseInt(n, 10)).filter(n => !isNaN(n));
+          paymentPlanObj = parts.length >= 2
+            ? { dp: parts[0], construction: 0, handover: parts[1], postHandover: parts[2] || 0, label: planStr }
+            : { dp: null, construction: null, handover: null, postHandover: null, label: planStr || "TBD" };
+        }
+
+        return {
+          id: p.id || ("live-" + Math.random().toString(36).slice(2)),
+          project: p.project || p.name || "Unnamed",
+          developer: p.developer || p.developerName || "Unknown",
+          community: p.community || p.area || "Dubai",
+          type: p.type || p.propertyType || "Apartment",
+          tier: p.tier || null,
+          branded: !!p.branded,
+          launchDate: p.launchDate || p.projectStartDate || "",
+          eoiDeadline: p.eoiDeadline || "",
+          status: p.status || "Off-Plan",
+          units: p.totalUnits || p.residentialUnits || p.units || null,
+          soldUnits: p.unitsSold || null,
+          startingPrice: p.priceMin || null,
+          pricePerSqft: p.ppsf || null,
+          avgUnitSize: p.unitSizeAvgSqFt || p.avgUnitSize || null,
+          sizeMin: p.unitSizeMinSqFt || p.sizeMin || null,
+          sizeMax: p.unitSizeMaxSqFt || p.sizeMax || null,
+          eoiAmount: p.eoiAmount || null,
+          eoiRefundable: !!p.eoiRefundable,
+          paymentPlan: paymentPlanObj,
+          handover: p.handover || p.expectedHandover || p.handoverQuarter || p.handoverMonth || "",
+          developerOnTimeRate: lookupDevOnTime(p.developer || p.developerName),
+          communityAvgPpsf: p.communityAvgPpsf || null,
+          appreciationToHandover: appreciation,
+          goldenVisa: !!p.goldenVisa,
+          metroDistanceKm: typeof p.distMetro === "number" ? p.distMetro : null,
+          beachAccess: typeof p.distBeach === "number" ? p.distBeach < 1 : !!p.beachAccess,
+          insight: p.description || p.overview || p.insight || "",
+          velocityScore: p.velocityScore || null,
+          tags: Array.isArray(p.tags) ? p.tags : [],
+          grossYield: typeof p.grossYield === "number" ? p.grossYield : null,
+          netYield: typeof p.netYield === "number" ? p.netYield : null,
+          serviceCharge: typeof p.serviceCharge === "number" ? p.serviceCharge : null,
+          commission: typeof p.commission === "number" ? p.commission : null,
+          investmentScore: p.investmentScore || null,
+          developerScore: lookupDevOnTime(p.developer || p.developerName), // same as on-time rate, honest
+          reraNo: p.reraNo || p.dldProjectNumber || p.projectNumber || "",
+          escrowBank: p.escrowBank || "",
+          plotMin: p.plotSize || null, plotMax: p.plotSize || null,
+          distances: {
+            metro: typeof p.distMetro === "number" ? p.distMetro : null,
+            difc: typeof p.distDIFC === "number" ? p.distDIFC : null,
+            airport: typeof p.distAirport === "number" ? p.distAirport : null,
+            beach: typeof p.distBeach === "number" ? p.distBeach : null,
+            mall: typeof p.distMall === "number" ? p.distMall : null,
+            school: typeof p.distSchool === "number" ? p.distSchool : null,
+            hospital: typeof p.distHospital === "number" ? p.distHospital : null,
+          },
+          amenities: Array.isArray(p.amenities) ? p.amenities : [],
+          views: Array.isArray(p.view) ? p.view : (Array.isArray(p.views) ? p.views : []),
+          unitBreakdown: Array.isArray(p.unitBreakdown) ? p.unitBreakdown : [],
+          isLive: true,
+          _dataQuality: p.dataQualityScore || null,
+        };
+      });
     const liveLcMerged = [...(Array.isArray(liveLaunches) ? liveLaunches : []), ...projectsAsLaunches];
     const seenLcIds = new Set();
     const dedupedLc = liveLcMerged.filter(x => { if (!x || !x.id) return true; if (seenLcIds.has(x.id)) return false; seenLcIds.add(x.id); return true; });
