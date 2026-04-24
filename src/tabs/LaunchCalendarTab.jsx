@@ -859,7 +859,7 @@ function LaunchCalendarTab({
                                 {p.unitBreakdown.map((u, i) => (
                                   <tr key={i} style={{ borderBottom: `1px solid ${T.border}` }}>
                                     <td style={{ padding: "5px 6px", color: T.white, fontWeight: 600 }}>{u.type}</td>
-                                    <td style={{ padding: "5px 6px", textAlign: "right", color: T.textPrimary }}>{u.sizeMin}-{u.sizeMax}</td>
+                                    <td style={{ padding: "5px 6px", textAlign: "right", color: T.textPrimary }}>{u.sizeMin ? (u.sizeMin + "-" + (u.sizeMax || u.sizeMin)) : "TBD"}</td>
                                     <td style={{ padding: "5px 6px", textAlign: "right", color: T.gold, fontWeight: 700 }}>{(u.priceMin / 1000000).toFixed(2)}-{(u.priceMax / 1000000).toFixed(2)}M</td>
                                     <td style={{ padding: "5px 6px", textAlign: "right", color: T.textPrimary }}>{u.ppsf}</td>
                                     <td style={{ padding: "5px 6px", textAlign: "right", color: "#10B981", fontWeight: 700 }}>{u.grossYield}%</td>
@@ -1216,7 +1216,7 @@ function LaunchCalendarTab({
                     {detailModalProject.pricePerSqft > 0 && (
                       <div>
                         <div style={{ fontSize: 9, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.6, marginBottom: 3 }}>Avg PPSF</div>
-                        <div style={{ fontFamily: "'Fraunces',serif", fontSize: 16, fontWeight: 800, color: T.white }}>AED {detailModalProject.pricePerSqft.toLocaleString()}</div>
+                        <div style={{ fontFamily: "'Fraunces',serif", fontSize: 16, fontWeight: 800, color: T.white }}>AED {(detailModalProject.pricePerSqft || 0).toLocaleString()}</div>
                       </div>
                     )}
                     {detailModalProject.grossYield > 0 && detailModalProject.grossYield < 15 && (
@@ -1242,7 +1242,7 @@ function LaunchCalendarTab({
                 {detailModalProject.units > 0 && (
                   <div style={{ background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, padding: "12px 14px" }}>
                     <div style={{ fontSize: 9, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.6, marginBottom: 4 }}>Total Units</div>
-                    <div style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 800, color: T.white }}>{detailModalProject.units.toLocaleString()}</div>
+                    <div style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 800, color: T.white }}>{(detailModalProject.units || 0).toLocaleString()}</div>
                   </div>
                 )}
                 {detailModalProject.escrowBank && (
@@ -1485,10 +1485,10 @@ function ProjectDetailModal({ project, onClose, statusColor, scoreColor, intelli
                     {p.unitBreakdown.map((u, i) => (
                       <tr key={i} style={{ borderBottom: i < p.unitBreakdown.length - 1 ? `1px solid ${T.border}` : "none" }}>
                         <td style={{ padding: "14px 16px", color: T.white, fontWeight: 700 }}>{u.type}</td>
-                        <td style={{ padding: "14px 16px", textAlign: "right", color: T.textPrimary }}>{u.sizeMin.toLocaleString()} – {u.sizeMax.toLocaleString()}</td>
-                        {p.unitBreakdown.some(x => x.plotMin) && <td style={{ padding: "14px 16px", textAlign: "right", color: T.textPrimary }}>{u.plotMin ? `${u.plotMin.toLocaleString()} – ${u.plotMax.toLocaleString()}` : "—"}</td>}
+                        <td style={{ padding: "14px 16px", textAlign: "right", color: T.textPrimary }}>{u.sizeMin ? (u.sizeMin.toLocaleString() + " to " + (u.sizeMax || u.sizeMin).toLocaleString()) : "TBD"}</td>
+                        {p.unitBreakdown.some(x => x.plotMin) && <td style={{ padding: "14px 16px", textAlign: "right", color: T.textPrimary }}>{u.plotMin ? `${u.plotMin.toLocaleString()} to ${(u.plotMax || u.plotMin).toLocaleString()}` : "—"}</td>}
                         <td style={{ padding: "14px 16px", textAlign: "right", color: T.gold, fontWeight: 700 }}>{(u.priceMin / 1000000).toFixed(2)} – {(u.priceMax / 1000000).toFixed(2)}</td>
-                        <td style={{ padding: "14px 16px", textAlign: "right", color: T.textPrimary }}>{u.ppsf.toLocaleString()}</td>
+                        <td style={{ padding: "14px 16px", textAlign: "right", color: T.textPrimary }}>{(u.ppsf || 0).toLocaleString()}</td>
                         <td style={{ padding: "14px 16px", textAlign: "right", color: "#10B981", fontWeight: 700 }}>{u.grossYield}%</td>
                         <td style={{ padding: "14px 16px", textAlign: "right" }}>
                           <span style={{
@@ -1562,7 +1562,7 @@ function ProjectDetailModal({ project, onClose, statusColor, scoreColor, intelli
               <div style={{ marginTop: 12, padding: "10px 14px", background: T.surfaceAlt, borderRadius: 8, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <div>
                   <div style={{ fontSize: 9, color: T.textMuted, textTransform: "uppercase" }}>EOI Required</div>
-                  <div style={{ fontSize: 14, fontWeight: 800, color: T.gold }}>AED {(p.eoiAmount / 1000).toLocaleString()}K</div>
+                  <div style={{ fontSize: 14, fontWeight: 800, color: T.gold }}>AED {((p.eoiAmount || 0) / 1000).toLocaleString()}K</div>
                 </div>
                 <span style={{ fontSize: 10, padding: "4px 10px", borderRadius: 6, background: p.eoiRefundable ? "rgba(16,185,129,0.15)" : "rgba(239,68,68,0.15)", color: p.eoiRefundable ? "#10B981" : "#EF4444", fontWeight: 700 }}>
                   {p.eoiRefundable ? "✓ Refundable" : "✗ Non-refundable"}
