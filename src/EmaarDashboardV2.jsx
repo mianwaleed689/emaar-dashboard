@@ -4381,19 +4381,6 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
         </div>
       </header>
 
-      {/* â”€â”€â”€ GLOBAL CONTEXT FILTER â”€â”€â”€ */}
-      <GlobalContextFilter
-        gDeveloper={gDeveloper} setGDeveloperAndReset={setGDeveloperAndReset}
-        gCommunity={gCommunity} setGCommunity={setGCommunity}
-        gPropertyType={gPropertyType} setGPropertyTypeAndReset={setGPropertyTypeAndReset}
-        gSubType={gSubType} setGSubType={setGSubType}
-        gBeds={gBeds} setGBeds={setGBeds}
-        gStatus={gStatus} setGStatus={setGStatus}
-        gPriceMin={gPriceMin} setGPriceMin={setGPriceMin}
-        gPriceMax={gPriceMax} setGPriceMax={setGPriceMax}
-        gSearch={gSearch} setGSearch={setGSearch}
-        allDevelopers={allDevelopers} liveCommunityList={liveCommunityList} T={T}
-      />
 
       {/* â”€â”€â”€ MAIN CONTENT â”€â”€â”€ */}
       <main role="main" id="main-content" className="main-content" style={{ marginLeft: 240, paddingTop: userTier === "free" ? 210 : 180, minHeight: "100vh", overflowX: "hidden" }}>
@@ -4434,20 +4421,6 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
           </div>
         )}
         <div style={{ padding: `0 24px ${compareList.length > 0 && tab === "Projects" ? "120px" : "60px"}` }}>
-          {/* Phase 3.5: Global Filter Indicator â€” shows active filters across all tabs */}
-          <FilterIndicator
-            filters={{
-              developer: gDeveloper,
-              community: gCommunity,
-              type: gPropertyType,
-              beds: gBeds,
-              status: gStatus,
-              priceMin: gPriceMin,
-              priceMax: gPriceMax,
-            }}
-            allDevelopers={allDevelopers}
-            onClear={resetAllGlobalFilters}
-          />
           <TabErrorBoundary key={tab}>
 
           {/* â”€â”€â”€ OVERVIEW TAB â”€â”€â”€ */}
