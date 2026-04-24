@@ -4733,6 +4733,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
           {tab === "Handover" && (
             <HandoverTab
               liveHandover={liveHandover}
+              liveProjects={liveProjects}
               globalFilters={_gf}
               allDevelopers={allDevelopers}
               handleTabChange={handleTabChange}
