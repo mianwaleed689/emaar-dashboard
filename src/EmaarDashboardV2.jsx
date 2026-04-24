@@ -2794,6 +2794,11 @@ export default function EmaarDashboardV2() {
   const [projCommunity, setProjCommunity] = useState("All");
   const [projStatus, setProjStatus] = useState("All");
   const [projBeds, setProjBeds] = useState("All");
+  // NEW FILTER SYSTEM state (per finalized filter spec)
+  const [projCategory, setProjCategory] = useState("All");
+  const [projBuildPct, setProjBuildPct] = useState("All");
+  const [projEscrow, setProjEscrow] = useState("All");
+  const [showMoreFilters, setShowMoreFilters] = useState(false);
   const [projPriceMin, setProjPriceMin] = useState(0);
   const [projPriceMax, setProjPriceMax] = useState(999999999);
   const [projHandover, setProjHandover] = useState("All");
