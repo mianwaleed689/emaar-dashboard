@@ -748,49 +748,7 @@ function ProjectsTab({
                 </div>
 
                 {/* ═══ PROPERTY TYPE TABS — premium pill design ═══ */}
-                <div style={{
-                  display:"flex", gap:8, flexWrap:"wrap",
-                  marginBottom: 16,
-                  padding: "14px 18px",
-                  background: "linear-gradient(145deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%)",
-                  border: `1px solid rgba(255,255,255,0.08)`,
-                  borderRadius: 16,
-                  boxShadow: "inset 0 1px 0 rgba(255,255,255,0.04), 0 1px 2px rgba(0,0,0,0.1)",
-                  alignItems:"center",
-                }}>
-                  <span style={{ fontSize:11, fontWeight:600, color:T.textMuted, marginRight:6, fontFamily:"'Outfit',sans-serif" }}>Property type</span>
-                  {MODES.map(m => {
-                    const active = projMode===m.key;
-                    return (
-                      <button key={m.key} type="button" onClick={() => { setProjMode(m.key); setProjBeds("All"); setProjDev("All"); setProjCommunity("All"); setProjSearch(""); }}
-                        style={{
-                          padding:"8px 16px",
-                          background: active
-                            ? "linear-gradient(145deg, rgba(212,168,67,0.22) 0%, rgba(212,168,67,0.12) 100%)"
-                            : "transparent",
-                          border:`1px solid ${active ? "rgba(212,168,67,0.4)" : "rgba(255,255,255,0.08)"}`,
-                          borderRadius: 20,
-                          color: active ? T.gold : T.white,
-                          fontSize: 12,
-                          fontWeight: active ? 600 : 500,
-                          cursor:"pointer",
-                          fontFamily:"'Outfit',sans-serif",
-                          boxShadow: active
-                            ? "inset 0 1px 0 rgba(255,255,255,0.04), 0 0 0 3px rgba(212,168,67,0.08)"
-                            : "none",
-                          transition:"all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
-                        }}
-                        onMouseEnter={e => {
-                          if (!active) { e.currentTarget.style.background = "rgba(255,255,255,0.04)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.14)"; }
-                        }}
-                        onMouseLeave={e => {
-                          if (!active) { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)"; }
-                        }}>
-                        {m.label || m.key}
-                      </button>
-                    );
-                  })}
-                </div>
+
 
                 {/* ═══ PROJECTS CONTROL BAR — clean unified design, no duplicate search ═══ */}
                 {(() => {
@@ -830,34 +788,7 @@ function ProjectsTab({
                         borderRadius: 16,
                         boxShadow: "inset 0 1px 0 rgba(255,255,255,0.04)",
                       }}>
-                        <button type="button" onClick={() => setFiltersOpen(!filtersOpen)}
-                          style={{
-                            padding:"9px 16px",
-                            background: filtersOpen
-                              ? "linear-gradient(145deg, rgba(212,168,67,0.2) 0%, rgba(212,168,67,0.10) 100%)"
-                              : "linear-gradient(145deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%)",
-                            border:`1px solid ${filtersOpen ? "rgba(212,168,67,0.4)" : "rgba(255,255,255,0.1)"}`,
-                            borderRadius: 10,
-                            color: filtersOpen ? T.gold : T.white,
-                            fontSize: 13, fontWeight: 600,
-                            cursor: "pointer",
-                            fontFamily: "'Outfit',sans-serif",
-                            display: "flex", alignItems: "center", gap: 8,
-                            whiteSpace: "nowrap",
-                            boxShadow: filtersOpen ? "0 0 0 3px rgba(212,168,67,0.08)" : "none",
-                            transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
-                          }}>
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <line x1="21" y1="4" x2="14" y2="4" /><line x1="10" y1="4" x2="3" y2="4" />
-                            <line x1="21" y1="12" x2="12" y2="12" /><line x1="8" y1="12" x2="3" y2="12" />
-                            <line x1="21" y1="20" x2="16" y2="20" /><line x1="12" y1="20" x2="3" y2="20" />
-                            <line x1="14" y1="2" x2="14" y2="6" /><line x1="8" y1="10" x2="8" y2="14" /><line x1="16" y1="18" x2="16" y2="22" />
-                          </svg>
-                          <span>Project filters</span>
-                          {localActiveCount > 0 && (
-                            <span style={{ background:T.gold, color:"#000", padding:"2px 8px", borderRadius:10, fontSize:11, fontWeight:700 }}>{localActiveCount}</span>
-                          )}
-                        </button>
+
 
                         <select value={projSort} onChange={e => setProjSort(e.target.value)} style={selSt} title="Sort order">
                           <option value="score">Relevance</option>
@@ -963,104 +894,7 @@ function ProjectsTab({
                         </div>
                       )}
 
-                      {filtersOpen && (
-                        <div style={{
-                          marginBottom: 16,
-                          padding: 20,
-                          background: "linear-gradient(145deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%)",
-                          border: `1px solid rgba(255,255,255,0.08)`,
-                          borderRadius: 16,
-                          boxShadow: "inset 0 1px 0 rgba(255,255,255,0.04), 0 8px 24px rgba(0,0,0,0.2)",
-                        }}>
-                          <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(200px, 1fr))", gap:16 }}>
-                            {projMode === "Office" && (
-                              <div>
-                                <label style={{ fontSize:11, color:T.textMuted, fontWeight:600, marginBottom:8, display:"block", fontFamily:"'Outfit',sans-serif" }}>Office grade</label>
-                                <select value={projGrade} onChange={e => setProjGrade(e.target.value)} style={{ ...selSt, width:"100%" }}>
-                                  {["All","A","B","C"].map(g => <option key={g}>{g === "All" ? "All grades" : "Grade " + g}</option>)}
-                                </select>
-                              </div>
-                            )}
-                            <div>
-                              <label style={{ fontSize:11, color:T.textMuted, fontWeight:600, marginBottom:8, display:"block", fontFamily:"'Outfit',sans-serif" }}>Handover year</label>
-                              <select value={projHandover} onChange={e => setProjHandover(e.target.value)} style={{ ...selSt, width:"100%" }}>
-                                <option value="All">Any year</option>
-                                <option value="Available Now">Available now</option>
-                                {handoverYearsSorted.map(y => <option key={y} value={y}>{y}</option>)}
-                              </select>
-                            </div>
-                            <div>
-                              <label style={{ fontSize:11, color:T.textMuted, fontWeight:600, marginBottom:8, display:"block", fontFamily:"'Outfit',sans-serif" }}>Project stage</label>
-                              <select value={projLifecycle} onChange={e => setProjLifecycle(e.target.value)} style={{ ...selSt, width:"100%" }}>
-                                <option value="All">All stages</option>
-                                <option value="announced">Announced · Pre-construction</option>
-                                <option value="under-construction">Under construction</option>
-                                <option value="recently-delivered">Recently delivered</option>
-                                <option value="historical">Historical · Already sold</option>
-                              </select>
-                            </div>
-                            <div>
-                              <label style={{ fontSize:11, color:T.textMuted, fontWeight:600, marginBottom:8, display:"block", fontFamily:"'Outfit',sans-serif" }}>Construction progress</label>
-                              <select value={projConstruction} onChange={e => setProjConstruction(e.target.value)} style={{ ...selSt, width:"100%" }}>
-                                <option value="All">Any progress</option>
-                                <option value="0-25">0 – 25%</option>
-                                <option value="25-50">25 – 50%</option>
-                                <option value="50-75">50 – 75%</option>
-                                <option value="75-99">75 – 99%</option>
-                                <option value="100">100% Completed</option>
-                              </select>
-                            </div>
-                            <div>
-                              <label style={{ fontSize:11, color:T.textMuted, fontWeight:600, marginBottom:8, display:"block", fontFamily:"'Outfit',sans-serif" }}>Escrow bank</label>
-                              <SearchableSelect
-                                value={projEscrowBank}
-                                onChange={v => setProjEscrowBank(v)}
-                                options={escrowOptionsData}
-                                placeholder="Any escrow bank"
-                                T={T}
-                              />
-                            </div>
-                          </div>
-                          <div style={{ marginTop:18, paddingTop:16, borderTop:`1px solid rgba(255,255,255,0.06)` }}>
-                            <div style={{ fontSize:11, color:T.textMuted, fontWeight:600, marginBottom:10, fontFamily:"'Outfit',sans-serif" }}>Smart segments</div>
-                            <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
-                              {[
-                                { key:"all",     label:"All projects" },
-                                { key:"tier1",   label:"⚡ Tier 1 developers" },
-                                { key:"gv",      label:"★ Golden Visa eligible" },
-                                { key:"branded", label:"◆ Branded residences" },
-                              ].map(f => {
-                                const active = projIntelFilter === f.key;
-                                return (
-                                  <button key={f.key} type="button" onClick={() => setProjIntelFilter(f.key)}
-                                    style={{
-                                      padding:"8px 16px",
-                                      background: active
-                                        ? "linear-gradient(145deg, rgba(212,168,67,0.25) 0%, rgba(212,168,67,0.15) 100%)"
-                                        : "transparent",
-                                      border:`1px solid ${active ? "rgba(212,168,67,0.4)" : "rgba(255,255,255,0.1)"}`,
-                                      borderRadius: 20,
-                                      color: active ? T.gold : T.white,
-                                      fontSize: 12,
-                                      fontWeight: active ? 600 : 500,
-                                      cursor:"pointer",
-                                      fontFamily:"'Outfit',sans-serif",
-                                      transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
-                                    }}
-                                    onMouseEnter={e => {
-                                      if (!active) { e.currentTarget.style.background = "rgba(255,255,255,0.04)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.2)"; }
-                                    }}
-                                    onMouseLeave={e => {
-                                      if (!active) { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)"; }
-                                    }}>
-                                    {f.label}
-                                  </button>
-                                );
-                              })}
-                            </div>
-                          </div>
-                        </div>
-                      )}
+
                     </>
                   );
                 })()}
