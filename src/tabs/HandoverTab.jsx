@@ -133,10 +133,25 @@ function HandoverTab({ liveHandover, liveDevelopments = [], liveProjects = [], g
   const projects = useMemo(() => {
     // Unified data source: transform liveProjects to handover card shape
     // PROFESSIONAL TRANSFORMER - reads real Firestore fields, zero fabricated defaults
-    // Helper: fuzzy developer name lookup (Emaar Properties -> Emaar in DEVELOPER_INDEX)
+    // Developer on-time lookup - uses REAL 30+ developer registry from props
+    // Scales automatically: add developer to ALL_DUBAI_DEVELOPERS and it appears here
+    // Fallback: inline DEVELOPER_INDEX (hardcoded 13 entries) for backwards compat
     const lookupDevOnTime = (devName) => {
       if (!devName) return null;
       const needle = String(devName).toLowerCase().trim();
+      // Primary: look up in allDevelopers prop (30+ entries from Firestore/registry)
+      if (Array.isArray(allDevelopers) && allDevelopers.length > 0) {
+        const dev = allDevelopers.find(d => {
+          const dn = String(d.name || "").toLowerCase();
+          const di = String(d.id || "").toLowerCase();
+          return dn === needle || di === needle ||
+                 (dn && (needle.includes(dn) || dn.includes(needle))) ||
+                 (di && (needle.includes(di) || di.includes(needle)));
+        });
+        if (dev && typeof dev.deliveryRecord === "number") return dev.deliveryRecord;
+        if (dev && typeof dev.onTime === "number") return dev.onTime;
+      }
+      // Fallback: inline DEVELOPER_INDEX for rare cases where registry unavailable
       const keys = Object.keys(DEVELOPER_INDEX);
       for (const k of keys) {
         const kl = k.toLowerCase();
@@ -144,7 +159,7 @@ function HandoverTab({ liveHandover, liveDevelopments = [], liveProjects = [], g
           return DEVELOPER_INDEX[k].onTime;
         }
       }
-      return null; // honest: unknown developer returns null, not a fake default
+      return null; // honest: unknown developer -> null, UI hides field
     };
 
     const projectsAsHandovers = (Array.isArray(liveProjects) ? liveProjects : [])
