@@ -371,7 +371,22 @@ function HandoverTab({ liveHandover, liveDevelopments = [], liveProjects = [], g
   };
 
   const allQuarters = useMemo(() => {
-    const quarters = new Set(tier1Src.map(h => h.handoverQuarter).filter(Boolean));
+    // Derive quarters from the same sources used by the main useMemo above
+    const projectsQuarters = (Array.isArray(liveProjects) ? liveProjects : [])
+      .map(p => {
+        if (p.handoverQuarter) return p.handoverQuarter;
+        const hd = String(p.handoverDate || p.contractedHandover || p.expectedHandover || p.handover || "");
+        const m = hd.match(/(\d{4})/);
+        const year = m ? m[1] : "";
+        const q = hd.includes("January") || hd.includes("February") || hd.includes("March") ? "Q1"
+          : hd.includes("April") || hd.includes("May") || hd.includes("June") ? "Q2"
+          : hd.includes("July") || hd.includes("August") || hd.includes("September") ? "Q3"
+          : hd.includes("October") || hd.includes("November") || hd.includes("December") ? "Q4"
+          : "";
+        return (q && year) ? (q + " " + year) : year;
+      }).filter(Boolean);
+    const launchQuarters = (Array.isArray(liveHandover) ? liveHandover : []).map(h => h.handoverQuarter).filter(Boolean);
+    const quarters = new Set([...projectsQuarters, ...launchQuarters]);
     /* Session 4: include quarters from live DLD developments — including ESTIMATED quarters from constructionPct */
     (liveDevelopments || []).forEach(d => {
       const stage = d.lifecycleStage;
