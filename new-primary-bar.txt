@@ -1,0 +1,146 @@
+
+
+                {/* ═════════════════════════════════════════════════════════
+                   NEW PRIMARY FILTER BAR — 3-Layer Architecture
+                   Category → Type → Configuration → Price → More Filters
+                   ═════════════════════════════════════════════════════════ */}
+                <div style={{
+                  display:"grid",
+                  gridTemplateColumns:"1.3fr 1.3fr 1fr 1fr 1.1fr",
+                  gap:10,
+                  marginBottom: 12,
+                  padding:"16px 18px",
+                  background:"linear-gradient(145deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%)",
+                  border:`1px solid rgba(255,255,255,0.06)`,
+                  borderRadius:14,
+                }}>
+                  {/* Property Category */}
+                  <div>
+                    <div style={{ fontSize:10, color:T.textMuted, marginBottom:6, letterSpacing:0.5, textTransform:"uppercase", fontFamily:"'Outfit',sans-serif", fontWeight:600 }}>Property Category</div>
+                    <select
+                      value={projCategory}
+                      onChange={e => {
+                        setProjCategory(e.target.value);
+                        setProjMode("All");
+                        setProjBeds("All");
+                      }}
+                      style={{
+                        width:"100%", padding:"10px 12px",
+                        background:"rgba(255,255,255,0.04)",
+                        border:`1px solid ${projCategory !== "All" ? "rgba(212,168,67,0.4)" : "rgba(255,255,255,0.08)"}`,
+                        borderRadius:8,
+                        color: projCategory !== "All" ? T.gold : T.white,
+                        fontSize:13, fontWeight: projCategory !== "All" ? 600 : 500,
+                        fontFamily:"'Outfit',sans-serif",
+                        cursor:"pointer",
+                      }}>
+                      <option value="All">All Categories</option>
+                      <option value="Residential">Residential</option>
+                      <option value="Commercial">Commercial</option>
+                      <option value="Industrial">Industrial</option>
+                      <option value="Land">Land</option>
+                    </select>
+                  </div>
+
+                  {/* Property Type - depends on Category */}
+                  <div>
+                    <div style={{ fontSize:10, color:T.textMuted, marginBottom:6, letterSpacing:0.5, textTransform:"uppercase", fontFamily:"'Outfit',sans-serif", fontWeight:600 }}>Property Type</div>
+                    <select
+                      value={projMode}
+                      onChange={e => { setProjMode(e.target.value); setProjBeds("All"); }}
+                      disabled={projCategory === "All"}
+                      style={{
+                        width:"100%", padding:"10px 12px",
+                        background:"rgba(255,255,255,0.04)",
+                        border:`1px solid ${projMode !== "All" && projCategory !== "All" ? "rgba(212,168,67,0.4)" : "rgba(255,255,255,0.08)"}`,
+                        borderRadius:8,
+                        color: projCategory === "All" ? T.textMuted : (projMode !== "All" ? T.gold : T.white),
+                        fontSize:13, fontWeight: projMode !== "All" ? 600 : 500,
+                        fontFamily:"'Outfit',sans-serif",
+                        cursor: projCategory === "All" ? "not-allowed" : "pointer",
+                        opacity: projCategory === "All" ? 0.5 : 1,
+                      }}>
+                      <option value="All">{projCategory === "All" ? "Select category first" : `All ${projCategory} Types`}</option>
+                      {getDisplayTypesForCategory(projCategory).map(type => (
+                        <option key={type} value={type}>{type}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Configuration — HIDDEN when not applicable */}
+                  {shouldShowConfiguration(projCategory, projMode) ? (
+                    <div>
+                      <div style={{ fontSize:10, color:T.textMuted, marginBottom:6, letterSpacing:0.5, textTransform:"uppercase", fontFamily:"'Outfit',sans-serif", fontWeight:600 }}>Configuration</div>
+                      <select
+                        value={projBeds}
+                        onChange={e => setProjBeds(e.target.value)}
+                        style={{
+                          width:"100%", padding:"10px 12px",
+                          background:"rgba(255,255,255,0.04)",
+                          border:`1px solid ${projBeds !== "All" ? "rgba(212,168,67,0.4)" : "rgba(255,255,255,0.08)"}`,
+                          borderRadius:8,
+                          color: projBeds !== "All" ? T.gold : T.white,
+                          fontSize:13, fontWeight: projBeds !== "All" ? 600 : 500,
+                          fontFamily:"'Outfit',sans-serif",
+                          cursor:"pointer",
+                        }}>
+                        <option value="All">Any Beds</option>
+                        <option value="Studio">Studio</option>
+                        <option value="1 BR">1 BR</option>
+                        <option value="2 BR">2 BR</option>
+                        <option value="3 BR">3 BR</option>
+                        <option value="4+ BR">4+ BR</option>
+                      </select>
+                    </div>
+                  ) : <div />}
+
+                  {/* Price Range */}
+                  <div>
+                    <div style={{ fontSize:10, color:T.textMuted, marginBottom:6, letterSpacing:0.5, textTransform:"uppercase", fontFamily:"'Outfit',sans-serif", fontWeight:600 }}>Price Range</div>
+                    <select
+                      value={projPriceMin + "-" + projPriceMax}
+                      onChange={e => {
+                        const [mn, mx] = e.target.value.split("-").map(Number);
+                        if (typeof setProjPriceMin === "function") setProjPriceMin(mn);
+                        if (typeof setProjPriceMax === "function") setProjPriceMax(mx);
+                      }}
+                      style={{
+                        width:"100%", padding:"10px 12px",
+                        background:"rgba(255,255,255,0.04)",
+                        border:`1px solid ${(projPriceMin > 0 || (projPriceMax > 0 && projPriceMax < 999999999)) ? "rgba(212,168,67,0.4)" : "rgba(255,255,255,0.08)"}`,
+                        borderRadius:8,
+                        color:T.white,
+                        fontSize:13, fontWeight:500,
+                        fontFamily:"'Outfit',sans-serif",
+                        cursor:"pointer",
+                      }}>
+                      <option value="0-999999999">Any Price</option>
+                      <option value="0-1000000">Under AED 1M</option>
+                      <option value="1000000-2000000">AED 1M — 2M</option>
+                      <option value="2000000-5000000">AED 2M — 5M</option>
+                      <option value="5000000-10000000">AED 5M — 10M</option>
+                      <option value="10000000-999999999">AED 10M+</option>
+                    </select>
+                  </div>
+
+                  {/* More Filters button */}
+                  <div>
+                    <div style={{ fontSize:10, color:"transparent", marginBottom:6 }}>&nbsp;</div>
+                    <button
+                      type="button"
+                      onClick={() => setShowMoreFilters(!showMoreFilters)}
+                      style={{
+                        width:"100%", padding:"10px 14px",
+                        background: showMoreFilters ? "rgba(212,168,67,0.18)" : "rgba(212,168,67,0.08)",
+                        border:`1px solid rgba(212,168,67,0.4)`,
+                        borderRadius:8,
+                        color:T.gold,
+                        fontSize:13, fontWeight:600,
+                        fontFamily:"'Outfit',sans-serif",
+                        cursor:"pointer",
+                        display:"flex", alignItems:"center", justifyContent:"center", gap:6,
+                      }}>
+                      More Filters {showMoreFilters ? "▴" : "▾"}
+                    </button>
+                  </div>
+                </div>

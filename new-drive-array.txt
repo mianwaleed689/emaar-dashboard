@@ -1,0 +1,8 @@
+                        {[
+                          { label:"Downtown Dubai", val:selectedProject.distDowntownDubaiMin, range:selectedProject.distDowntownDubaiMinRange, unit:"min" },
+                          { label:"Dubai Marina", val:selectedProject.distDubaiMarinaMin, range:selectedProject.distDubaiMarinaMinRange, unit:"min" },
+                          { label:"DXB Airport", val:selectedProject.distDubaiAirportMin, range:selectedProject.distDubaiAirportMinRange, unit:"min" },
+                          { label:"Mall of Emirates", val:selectedProject.distMallOfEmiratesMin, range:selectedProject.distMallOfEmiratesMinRange, unit:"min" },
+                          { label:"Business Bay / DIFC", val:selectedProject.distBusinessBayMin, range:selectedProject.distBusinessBayMinRange, unit:"min" },
+                          { label:"Al Maktoum (DWC)", val:selectedProject.distDwcAirportMin, range:selectedProject.distDwcAirportMinRange, unit:"min" },
+                        ].map((d,i) => (

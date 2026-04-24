@@ -1,0 +1,156 @@
+
+
+                {/* ═════════════════════════════════════════════════════════
+                   MORE FILTERS PANEL — slides down when button clicked
+                   Two sections: Refine By (gold) + Project Details (teal)
+                   ═════════════════════════════════════════════════════════ */}
+                {showMoreFilters && (
+                  <div style={{
+                    marginBottom: 14,
+                    padding: 20,
+                    background: "linear-gradient(145deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%)",
+                    border: `1px solid rgba(255,255,255,0.06)`,
+                    borderRadius: 14,
+                    animation: "slideDown 0.25s cubic-bezier(0.4, 0, 0.2, 1)",
+                  }}>
+                    {/* REFINE BY section (gold) */}
+                    <div style={{ marginBottom: 18 }}>
+                      <div style={{
+                        fontSize: 10, color: T.gold, fontWeight: 700,
+                        letterSpacing: 1.2, textTransform: "uppercase",
+                        marginBottom: 10, fontFamily: "'Outfit',sans-serif",
+                        display: "flex", alignItems: "center", gap: 6,
+                      }}>
+                        <span style={{ width: 12, height: 2, background: T.gold, borderRadius: 1 }}></span>
+                        Refine By
+                      </div>
+                      <div style={{
+                        display: "grid",
+                        gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+                        gap: 12,
+                      }}>
+                        <div>
+                          <div style={{ fontSize: 10, color: T.textMuted, marginBottom: 6, letterSpacing: 0.5, textTransform: "uppercase", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>Developer</div>
+                          <select value={projDev} onChange={e => setProjDev(e.target.value)} style={{
+                            width: "100%", padding: "10px 12px",
+                            background: "rgba(255,255,255,0.04)",
+                            border: `1px solid ${projDev !== "All" ? "rgba(212,168,67,0.4)" : "rgba(255,255,255,0.08)"}`,
+                            borderRadius: 8,
+                            color: projDev !== "All" ? T.gold : T.white,
+                            fontSize: 13, fontWeight: projDev !== "All" ? 600 : 500,
+                            fontFamily: "'Outfit',sans-serif", cursor: "pointer",
+                          }}>
+                            {(devOptions || ["All"]).map(d => (
+                              <option key={d} value={d}>{d === "All" ? "All Developers" : d}</option>
+                            ))}
+                          </select>
+                        </div>
+                        <div>
+                          <div style={{ fontSize: 10, color: T.textMuted, marginBottom: 6, letterSpacing: 0.5, textTransform: "uppercase", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>Community</div>
+                          <select value={projCommunity} onChange={e => setProjCommunity(e.target.value)} style={{
+                            width: "100%", padding: "10px 12px",
+                            background: "rgba(255,255,255,0.04)",
+                            border: `1px solid ${projCommunity !== "All" ? "rgba(212,168,67,0.4)" : "rgba(255,255,255,0.08)"}`,
+                            borderRadius: 8,
+                            color: projCommunity !== "All" ? T.gold : T.white,
+                            fontSize: 13, fontWeight: projCommunity !== "All" ? 600 : 500,
+                            fontFamily: "'Outfit',sans-serif", cursor: "pointer",
+                          }}>
+                            {(commOptions || ["All"]).map(c => (
+                              <option key={c} value={c}>{c === "All" ? "All Communities" : c}</option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* PROJECT DETAILS section (teal) */}
+                    <div style={{ paddingTop: 16, borderTop: `1px solid rgba(255,255,255,0.06)` }}>
+                      <div style={{
+                        fontSize: 10, color: T.teal, fontWeight: 700,
+                        letterSpacing: 1.2, textTransform: "uppercase",
+                        marginBottom: 10, fontFamily: "'Outfit',sans-serif",
+                        display: "flex", alignItems: "center", gap: 6,
+                      }}>
+                        <span style={{ width: 12, height: 2, background: T.teal, borderRadius: 1 }}></span>
+                        Project Details
+                      </div>
+                      <div style={{
+                        display: "grid",
+                        gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+                        gap: 12,
+                      }}>
+                        <div>
+                          <div style={{ fontSize: 10, color: T.textMuted, marginBottom: 6, letterSpacing: 0.5, textTransform: "uppercase", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>Project Stage</div>
+                          <select value={projLifecycle} onChange={e => setProjLifecycle(e.target.value)} style={{
+                            width: "100%", padding: "10px 12px",
+                            background: "rgba(255,255,255,0.04)",
+                            border: `1px solid ${projLifecycle !== "All" ? "rgba(20,184,166,0.4)" : "rgba(255,255,255,0.08)"}`,
+                            borderRadius: 8,
+                            color: projLifecycle !== "All" ? T.teal : T.white,
+                            fontSize: 13, fontWeight: projLifecycle !== "All" ? 600 : 500,
+                            fontFamily: "'Outfit',sans-serif", cursor: "pointer",
+                          }}>
+                            <option value="All">All Stages</option>
+                            <option value="announced">Announced / Pre-Launch</option>
+                            <option value="under-construction">Under Construction</option>
+                            <option value="recently-delivered">Recently Delivered</option>
+                            <option value="historical">Historical / Completed</option>
+                          </select>
+                        </div>
+                        <div>
+                          <div style={{ fontSize: 10, color: T.textMuted, marginBottom: 6, letterSpacing: 0.5, textTransform: "uppercase", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>Handover Year</div>
+                          <select value={projHandover} onChange={e => setProjHandover(e.target.value)} style={{
+                            width: "100%", padding: "10px 12px",
+                            background: "rgba(255,255,255,0.04)",
+                            border: `1px solid ${projHandover !== "All" ? "rgba(20,184,166,0.4)" : "rgba(255,255,255,0.08)"}`,
+                            borderRadius: 8,
+                            color: projHandover !== "All" ? T.teal : T.white,
+                            fontSize: 13, fontWeight: projHandover !== "All" ? 600 : 500,
+                            fontFamily: "'Outfit',sans-serif", cursor: "pointer",
+                          }}>
+                            <option value="All">Any Year</option>
+                            {Array.from({length: 20}, (_, i) => 2026 + i).map(y => (
+                              <option key={y} value={String(y)}>{y}</option>
+                            ))}
+                          </select>
+                        </div>
+                        <div>
+                          <div style={{ fontSize: 10, color: T.textMuted, marginBottom: 6, letterSpacing: 0.5, textTransform: "uppercase", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>Build Progress</div>
+                          <select value={projConstruction} onChange={e => setProjConstruction(e.target.value)} style={{
+                            width: "100%", padding: "10px 12px",
+                            background: "rgba(255,255,255,0.04)",
+                            border: `1px solid ${projConstruction !== "All" ? "rgba(20,184,166,0.4)" : "rgba(255,255,255,0.08)"}`,
+                            borderRadius: 8,
+                            color: projConstruction !== "All" ? T.teal : T.white,
+                            fontSize: 13, fontWeight: projConstruction !== "All" ? 600 : 500,
+                            fontFamily: "'Outfit',sans-serif", cursor: "pointer",
+                          }}>
+                            <option value="All">Any Progress</option>
+                            <option value="0-25">0 - 25%</option>
+                            <option value="25-50">25 - 50%</option>
+                            <option value="50-75">50 - 75%</option>
+                            <option value="75-99">75 - 99%</option>
+                            <option value="100">100% Complete</option>
+                          </select>
+                        </div>
+                        <div>
+                          <div style={{ fontSize: 10, color: T.textMuted, marginBottom: 6, letterSpacing: 0.5, textTransform: "uppercase", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>Escrow Bank</div>
+                          <select value={projEscrowBank} onChange={e => setProjEscrowBank(e.target.value)} style={{
+                            width: "100%", padding: "10px 12px",
+                            background: "rgba(255,255,255,0.04)",
+                            border: `1px solid ${projEscrowBank !== "All" ? "rgba(20,184,166,0.4)" : "rgba(255,255,255,0.08)"}`,
+                            borderRadius: 8,
+                            color: projEscrowBank !== "All" ? T.teal : T.white,
+                            fontSize: 13, fontWeight: projEscrowBank !== "All" ? 600 : 500,
+                            fontFamily: "'Outfit',sans-serif", cursor: "pointer",
+                          }}>
+                            {(escrowOptions || ["All"]).map(b => (
+                              <option key={b} value={b}>{b === "All" ? "Any Bank" : b}</option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}

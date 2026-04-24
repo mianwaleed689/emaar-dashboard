@@ -1,0 +1,64 @@
+                {/* List - upgraded: 9 cols, build % bar, badges, color-coded handover */}
+                {filtered.length > 0 && projView === "list" && (
+                  <div style={{ background:T.surface, border:`1px solid ${T.border}`, borderRadius:12, overflow:"hidden", marginBottom:20 }}>
+                    <div style={{ display:"grid", gridTemplateColumns:"2.2fr 1.3fr 0.9fr 0.9fr 0.8fr 0.9fr 1fr 1fr 0.9fr", padding:"10px 14px", background:T.surfaceAlt, borderBottom:`1px solid ${T.border}`, gap:8 }}>
+                      {["Project","Developer","From","PPSF","Yield","Plan","Handover","Build %","Score"].map((h,i) => (
+                        <div key={i} style={{ fontSize:10, fontWeight:700, color:T.textMuted, letterSpacing:0.8, textTransform:"uppercase" }}>{h}</div>
+                      ))}
+                    </div>
+                    {filtered.map((p,i) => {
+                      const sc = calcScore(p);
+                      const tnum = { fontFeatureSettings: "'tnum'" };
+                      const hoStr = String(p.handover || p.expectedHandover || "");
+                      const hoYear = parseInt((hoStr.match(/\d{4}/) || [])[0] || "0");
+                      const nowYear = new Date().getFullYear();
+                      const hoColor = (!hoStr || hoStr.toLowerCase().includes("ready") || p.status === "Ready") ? T.teal
+                                     : hoYear && hoYear <= nowYear + 1 ? T.gold
+                                     : hoYear && hoYear <= nowYear + 2 ? T.textSecondary
+                                     : T.textMuted;
+                      const yieldBg = p.grossYield >= 7 ? "rgba(16,185,129,0.08)" : p.grossYield >= 5 ? "rgba(212,168,67,0.06)" : "transparent";
+                      const yieldColor = p.grossYield >= 7 ? T.green : p.grossYield >= 5 ? T.gold : T.textSecondary;
+                      const buildPct = p.constructionPct != null ? p.constructionPct : null;
+                      const buildColor = buildPct >= 100 ? T.green : buildPct >= 75 ? T.gold : buildPct >= 25 ? T.teal : T.textMuted;
+                      return (
+                        <div key={p.id||i} onClick={() => { setSelectedProject(p); setProjDetailTab("identity"); }}
+                          style={{ display:"grid", gridTemplateColumns:"2.2fr 1.3fr 0.9fr 0.9fr 0.8fr 0.9fr 1fr 1fr 0.9fr", padding:"12px 14px", borderBottom:i<filtered.length-1?`1px solid ${T.border}`:"none", cursor:"pointer", alignItems:"center", gap:8, transition:"background 0.15s" }}
+                          onMouseEnter={e => e.currentTarget.style.background="rgba(212,168,67,0.06)"}
+                          onMouseLeave={e => e.currentTarget.style.background="transparent"}>
+                          <div style={{ minWidth:0 }}>
+                            <div style={{ display:"flex", alignItems:"center", gap:6, marginBottom:2 }}>
+                              <div style={{ fontSize:13, fontWeight:600, color:T.white, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{p.project || p.name}</div>
+                              {p.verified && <span title="Verified" style={{ fontSize:9, color:T.green, fontWeight:700 }}>{"\u2713"}</span>}
+                              {p.dataQuality === "research-verified" && <span title="Research-enriched" style={{ fontSize:9, color:T.gold }}>{"\u25C6"}</span>}
+                              {p.tier === 1 && <span title="Tier 1 developer" style={{ fontSize:8, padding:"1px 5px", borderRadius:4, background:"rgba(16,185,129,0.12)", color:T.green, fontWeight:700 }}>T1</span>}
+                              {p.goldenVisa && p.priceMin >= GOLDEN_VISA_THRESHOLD && <span title="Golden Visa eligible" style={{ fontSize:9, color:T.gold }}>{"\u2605"}</span>}
+                            </div>
+                            <div style={{ fontSize:11, color:T.textMuted, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{p.community || p.area || "-"}</div>
+                          </div>
+                          <div style={{ fontSize:12, color:T.textSecondary, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{p.developer || p.developerName || "-"}</div>
+                          <div style={{ fontSize:13, color:T.white, fontWeight:600, ...tnum }}>{p.priceMin ? "AED " + (p.priceMin/1000000).toFixed(1) + "M" : "-"}</div>
+                          <div style={{ fontSize:13, color:T.gold, fontWeight:600, ...tnum }}>{p.ppsf ? (p.ppsf).toLocaleString() : "-"}</div>
+                          <div style={{ fontSize:13, fontWeight:700, color:yieldColor, background:yieldBg, padding:"3px 8px", borderRadius:6, textAlign:"center", ...tnum }}>{p.grossYield ? p.grossYield.toFixed(1)+"%" : "-"}</div>
+                          <div style={{ fontSize:12, color:T.textSecondary, ...tnum }}>{p.paymentPlan || "-"}</div>
+                          <div style={{ fontSize:12, color:hoColor, fontWeight:hoColor===T.gold||hoColor===T.teal?700:500 }}>{hoStr || "-"}</div>
+                          <div>
+                            {buildPct != null ? (
+                              <>
+                                <div style={{ fontSize:11, color:buildColor, fontWeight:700, marginBottom:3, ...tnum }}>{buildPct}%</div>
+                                <div style={{ height:4, background:T.surfaceAlt, borderRadius:2, overflow:"hidden" }}>
+                                  <div style={{ width:buildPct+"%", height:"100%", background:buildColor, transition:"width 0.3s" }} />
+                                </div>
+                              </>
+                            ) : (
+                              <div style={{ fontSize:11, color:T.textMuted }}>-</div>
+                            )}
+                          </div>
+                          <div style={{ display:"flex", alignItems:"center", gap:5 }}>
+                            <span style={{ fontSize:15, fontWeight:700, color:scoreColor(sc), ...tnum }}>{sc}</span>
+                            <span style={{ fontSize:9, color:T.textMuted, letterSpacing:0.3 }}>/ 100</span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}

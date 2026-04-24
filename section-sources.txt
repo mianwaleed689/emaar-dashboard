@@ -1,0 +1,41 @@
+                {/* SOURCES FOOTER - verified data attribution */}
+                {Array.isArray(selectedProject.sources) && selectedProject.sources.length > 0 && (
+                  <div className="chart-box" style={{ padding:18, marginTop:16, background:"rgba(20,184,166,0.03)", border:`1px solid rgba(20,184,166,0.15)` }}>
+                    <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:12 }}>
+                      <div style={{ fontSize:11, fontWeight:700, color:T.teal, letterSpacing:0.8, textTransform:"uppercase" }}>Verified Sources</div>
+                      <span style={{ fontSize:10, padding:"2px 8px", borderRadius:4, background:"rgba(20,184,166,0.12)", color:T.teal, fontWeight:700 }}>
+                        {selectedProject.sources.length} sources
+                      </span>
+                      {selectedProject.dataQualityScore && (
+                        <span style={{ fontSize:10, color:T.textMuted, marginLeft:"auto" }}>
+                          Data quality: <strong style={{ color:T.green }}>{selectedProject.dataQualityScore}/100</strong>
+                        </span>
+                      )}
+                    </div>
+                    <div style={{ fontSize:11, color:T.textMuted, marginBottom:10, lineHeight:1.5 }}>
+                      Every data point in this report is traceable to one or more authoritative sources. Click any source below to verify.
+                    </div>
+                    <div style={{ display:"flex", flexWrap:"wrap", gap:6 }}>
+                      {selectedProject.sources.map((src, idx) => (
+                        <a key={idx} href={src.url} target="_blank" rel="noopener noreferrer"
+                          title={(src.covers || "") + " (verified " + (src.verifiedAt || "") + ")"}
+                          style={{
+                            fontSize:10, padding:"5px 10px", borderRadius:6,
+                            background: src.tier === "primary" ? "rgba(16,185,129,0.08)" : "rgba(212,168,67,0.06)",
+                            color: src.tier === "primary" ? T.green : T.gold,
+                            border: src.tier === "primary" ? "1px solid rgba(16,185,129,0.2)" : "1px solid rgba(212,168,67,0.15)",
+                            fontWeight:600, textDecoration:"none", cursor:"pointer",
+                            display:"inline-flex", alignItems:"center", gap:4,
+                          }}>
+                          <span style={{ fontSize:8 }}>{src.tier === "primary" ? "\u25C6" : "\u00B7"}</span>
+                          {src.name}
+                        </a>
+                      ))}
+                    </div>
+                    {selectedProject.verificationAuditorNote && (
+                      <div style={{ fontSize:10, color:T.textMuted, marginTop:10, fontStyle:"italic", lineHeight:1.5, borderTop:`1px solid ${T.border}`, paddingTop:10 }}>
+                        {selectedProject.verificationAuditorNote}
+                      </div>
+                    )}
+                  </div>
+                )}
