@@ -441,7 +441,8 @@ function ProjectsTab({
               // Global top-bar filters first
               if (!projMatchesGlobalFilter(p)) return false;
               // Type filter — but skip when 'All' is selected
-              if (projMode !== "All" && normalizeType(p) !== projMode) return false;
+              if (projCategory && projCategory !== "All") { const dts = getDisplayTypesForCategory(projCategory); if (dts.length > 0 && !dts.includes(normalizeType(p))) return false; }
+              if (projMode !== "All") { const its = getInternalTypes(projMode); if (its && its.length > 0) { const raw = String(p.type || p.propertyType || p.dldClass || "").toLowerCase(); const canon = normalizeType(p); if (!its.some(t => raw.includes(t.toLowerCase()) || t === canon)) return false; } else if (normalizeType(p) !== projMode) { return false; } }
               if (projSearch && !JSON.stringify(p).toLowerCase().includes(projSearch.toLowerCase())) return false;
               if (projDev !== "All" && p.developer !== projDev && p.developerName !== projDev) return false;
               if (projCommunity !== "All" && p.community !== projCommunity) return false;
@@ -470,7 +471,7 @@ function ProjectsTab({
                 if (projConstruction === "75-99" && (pct < 75 || pct >= 100)) return false;
                 if (projConstruction === "100" && pct < 100) return false;
               }
-              if (projBeds !== "All" && Array.isArray(p.beds) && p.beds.length > 0 && !p.beds.includes(projBeds)) return false;
+              if (projBeds !== "All") { const bedKey = projBeds.replace(" BR", "BR").replace("+", "").trim(); if (Array.isArray(p.beds) && p.beds.length > 0) { if (!p.beds.includes(projBeds) && !p.beds.includes(bedKey)) return false; } else if (p.bedConfig && typeof p.bedConfig === "object") { const c = p.bedConfig[bedKey] || p.bedConfig[projBeds]; if (!c || c === 0) return false; } else if (Array.isArray(p.unitBreakdown)) { const hit = p.unitBreakdown.find(u => String(u.type || "").replace(" ", "").toUpperCase() === bedKey.toUpperCase()); if (!hit || !hit.count) return false; } }
               if (projHandover !== "All" && !String(p.handover || p.expectedHandover || "").includes(projHandover)) return false;
               if (projGrade !== "All" && p.officeGrade !== projGrade) return false;
               if (projIntelFilter === "tier1" && p.tier !== 1) return false;
