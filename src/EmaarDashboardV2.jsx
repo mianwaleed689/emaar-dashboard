@@ -4462,6 +4462,10 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               handleTabChange={handleTabChange}
               watchlist={watchlist}
               toggleWatchlist={toggleWatchlist}
+              projCategory={projCategory} setProjCategory={setProjCategory}
+              projBuildPct={projBuildPct} setProjBuildPct={setProjBuildPct}
+              projEscrow={projEscrow} setProjEscrow={setProjEscrow}
+              showMoreFilters={showMoreFilters} setShowMoreFilters={setShowMoreFilters}
             />
           )}
 
@@ -4518,6 +4522,10 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               handleTabChange={handleTabChange}
               watchlist={watchlist}
               toggleWatchlist={toggleWatchlist}
+              projCategory={projCategory} setProjCategory={setProjCategory}
+              projBuildPct={projBuildPct} setProjBuildPct={setProjBuildPct}
+              projEscrow={projEscrow} setProjEscrow={setProjEscrow}
+              showMoreFilters={showMoreFilters} setShowMoreFilters={setShowMoreFilters}
             />
           )}
 
@@ -4547,7 +4555,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               projGrade={projGrade} setProjGrade={setProjGrade}
               projMode={projMode} setProjMode={setProjMode}
               projView={projView} setProjView={setProjView}
-              projPriceMin={projPriceMin} projPriceMax={projPriceMax}
+              projPriceMin={projPriceMin} setProjPriceMin={setProjPriceMin} projPriceMax={projPriceMax} setProjPriceMax={setProjPriceMax}
               projCompare={projCompare} setProjCompare={setProjCompare}
               projIntelFilter={projIntelFilter} setProjIntelFilter={setProjIntelFilter}
               selectedProject={selectedProject} setSelectedProject={setSelectedProject}
@@ -4558,6 +4566,10 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               handleTabChange={handleTabChange}
               watchlist={watchlist}
               toggleWatchlist={toggleWatchlist}
+              projCategory={projCategory} setProjCategory={setProjCategory}
+              projBuildPct={projBuildPct} setProjBuildPct={setProjBuildPct}
+              projEscrow={projEscrow} setProjEscrow={setProjEscrow}
+              showMoreFilters={showMoreFilters} setShowMoreFilters={setShowMoreFilters}
             />
           )}
 
@@ -4721,6 +4733,10 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               handleTabChange={handleTabChange}
               watchlist={watchlist}
               toggleWatchlist={toggleWatchlist}
+              projCategory={projCategory} setProjCategory={setProjCategory}
+              projBuildPct={projBuildPct} setProjBuildPct={setProjBuildPct}
+              projEscrow={projEscrow} setProjEscrow={setProjEscrow}
+              showMoreFilters={showMoreFilters} setShowMoreFilters={setShowMoreFilters}
             />
           )}
 
@@ -4929,6 +4945,10 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               handleTabChange={handleTabChange}
               watchlist={watchlist}
               toggleWatchlist={toggleWatchlist}
+              projCategory={projCategory} setProjCategory={setProjCategory}
+              projBuildPct={projBuildPct} setProjBuildPct={setProjBuildPct}
+              projEscrow={projEscrow} setProjEscrow={setProjEscrow}
+              showMoreFilters={showMoreFilters} setShowMoreFilters={setShowMoreFilters}
             />
           )}
 
@@ -5049,6 +5069,10 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               handleTabChange={handleTabChange}
               watchlist={watchlist}
               toggleWatchlist={toggleWatchlist}
+              projCategory={projCategory} setProjCategory={setProjCategory}
+              projBuildPct={projBuildPct} setProjBuildPct={setProjBuildPct}
+              projEscrow={projEscrow} setProjEscrow={setProjEscrow}
+              showMoreFilters={showMoreFilters} setShowMoreFilters={setShowMoreFilters}
             />
           )}
 
