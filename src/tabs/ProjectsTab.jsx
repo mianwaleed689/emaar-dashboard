@@ -61,7 +61,28 @@ const DISPLAY_TO_INTERNAL = {
 };
 
 const UNIT_BASED_RESIDENTIAL = ["Apartment", "Villa", "Townhouse", "Hotel Apartment"];
-const BED_OPTIONS = ["All", "Studio", "1 BR", "2 BR", "3 BR", "4+ BR"];
+
+/* Type-aware bedroom ranges - Bloomberg-tier contextual filtering.
+   Each property type shows only realistic configurations:
+   - Apartment/Penthouse max at 5+ BR (rare above that)
+   - Villa goes to 7+ BR (luxury market 8-10+ BR bundled)
+   - Townhouse caps at 5+ BR
+   - Hotel Apartment caps at 3 BR
+*/
+const BED_OPTIONS_BY_TYPE = {
+  "Apartment":       ["All", "Studio", "1 BR", "2 BR", "3 BR", "4 BR", "5+ BR"],
+  "Villa":           ["All", "2 BR", "3 BR", "4 BR", "5 BR", "6 BR", "7+ BR"],
+  "Townhouse":       ["All", "2 BR", "3 BR", "4 BR", "5+ BR"],
+  "Hotel Apartment": ["All", "Studio", "1 BR", "2 BR", "3 BR"],
+};
+
+/* Helper: get the appropriate bed options array for the selected display type */
+function getBedOptionsForType(displayType) {
+  return BED_OPTIONS_BY_TYPE[displayType] || ["All"];
+}
+
+/* Kept for backward compatibility if any other code imports it */
+const BED_OPTIONS = ["All", "Studio", "1 BR", "2 BR", "3 BR", "4 BR", "5 BR", "6 BR", "7+ BR"];
 const PROJECT_STAGES = ["All", "Off-Plan", "Under Construction", "Ready", "Completed"];
 const BUILD_PCT_BUCKETS = ["0-25", "26-50", "51-75", "76-99"];
 
@@ -836,12 +857,9 @@ function ProjectsTab({
                           fontFamily:"'Outfit',sans-serif",
                           cursor:"pointer",
                         }}>
-                        <option value="All">Any Beds</option>
-                        <option value="Studio">Studio</option>
-                        <option value="1 BR">1 BR</option>
-                        <option value="2 BR">2 BR</option>
-                        <option value="3 BR">3 BR</option>
-                        <option value="4+ BR">4+ BR</option>
+                        {getBedOptionsForType(projMode).map(bed => (
+                          <option key={bed} value={bed}>{bed === "All" ? "Any Beds" : bed}</option>
+                        ))}
                       </select>
                     </div>
                   ) : <div />}
