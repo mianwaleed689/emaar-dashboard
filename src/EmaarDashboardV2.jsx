@@ -4522,7 +4522,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               lcView={lcView} setLcView={setLcView}
               liveMarketData={liveMarketData}
               liveLaunches={liveLaunches}
-              liveProjects={liveProjects}
+              liveProjects={Array.isArray(extraProjects) ? extraProjects : []}
               globalFilters={_gf}
               allDevelopers={allDevelopers}
               handleTabChange={handleTabChange}
@@ -4734,7 +4734,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
           {tab === "Handover" && (
             <HandoverTab
               liveHandover={liveHandover}
-              liveProjects={liveProjects}
+              liveProjects={Array.isArray(extraProjects) ? extraProjects : []}
               globalFilters={_gf}
               allDevelopers={allDevelopers}
               handleTabChange={handleTabChange}
