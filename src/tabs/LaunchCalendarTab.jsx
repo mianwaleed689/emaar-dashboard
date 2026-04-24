@@ -134,8 +134,10 @@ function LaunchCalendarTab({
   const launches = useMemo(() => {
     // Unified data: transform liveProjects to launch card shape
     // PROFESSIONAL TRANSFORMER - reads real Firestore fields, zero fabricated defaults
-    // Developer on-time research-backed lookup (inline - mirror of HandoverTab DEVELOPER_INDEX)
-    const LC_DEV_ONTIME = {
+    // Developer on-time lookup - uses REAL 30+ developer registry from props
+    // Scales automatically: add developer to ALL_DUBAI_DEVELOPERS and it appears here
+    // Fallback: hardcoded 13 entries for backwards compat if registry unavailable
+    const LC_DEV_ONTIME_FALLBACK = {
       "sobha realty": 91, "emaar": 88, "ellington properties": 88, "majid al futtaim": 87,
       "omniyat": 85, "mira developments": 82, "nakheel": 80, "london gate": 78,
       "dubai investments real estate": 75, "binghatti": 74, "damac properties": 71,
@@ -144,10 +146,23 @@ function LaunchCalendarTab({
     const lookupDevOnTime = (devName) => {
       if (!devName) return null;
       const needle = String(devName).toLowerCase().trim();
-      for (const k of Object.keys(LC_DEV_ONTIME)) {
-        if (k === needle || needle.includes(k) || k.includes(needle)) return LC_DEV_ONTIME[k];
+      // Primary: look up in allDevelopers prop (30+ entries from registry)
+      if (Array.isArray(allDevelopers) && allDevelopers.length > 0) {
+        const dev = allDevelopers.find(d => {
+          const dn = String(d.name || "").toLowerCase();
+          const di = String(d.id || "").toLowerCase();
+          return dn === needle || di === needle ||
+                 (dn && (needle.includes(dn) || dn.includes(needle))) ||
+                 (di && (needle.includes(di) || di.includes(needle)));
+        });
+        if (dev && typeof dev.deliveryRecord === "number") return dev.deliveryRecord;
+        if (dev && typeof dev.onTime === "number") return dev.onTime;
       }
-      return null; // honest: unknown = null, not fake 85
+      // Fallback: inline map for rare cases where registry empty
+      for (const k of Object.keys(LC_DEV_ONTIME_FALLBACK)) {
+        if (k === needle || needle.includes(k) || k.includes(needle)) return LC_DEV_ONTIME_FALLBACK[k];
+      }
+      return null; // honest: unknown -> null, UI hides field
     };
 
     const projectsAsLaunches = (Array.isArray(liveProjects) ? liveProjects : [])
