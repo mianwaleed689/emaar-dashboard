@@ -4522,6 +4522,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               lcView={lcView} setLcView={setLcView}
               liveMarketData={liveMarketData}
               liveLaunches={liveLaunches}
+              liveProjects={liveProjects}
               globalFilters={_gf}
               allDevelopers={allDevelopers}
               handleTabChange={handleTabChange}
