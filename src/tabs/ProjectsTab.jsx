@@ -477,8 +477,29 @@ function ProjectsTab({
               if (projIntelFilter === "tier1" && p.tier !== 1) return false;
               if (projIntelFilter === "gv" && !(p.goldenVisa && p.priceMin >= GOLDEN_VISA_THRESHOLD)) return false;
               if (projIntelFilter === "branded" && !p.branded) return false;
-              if (projPriceMin > 0 && p.priceMin && p.priceMin < projPriceMin) return false;
-              if (projPriceMax > 0 && p.priceMax && p.priceMax > projPriceMax) return false;
+              // PRICE FILTER - range overlap + bed-aware
+              if (projPriceMin > 0 || (projPriceMax > 0 && projPriceMax < 999999999)) {
+                const userMin = projPriceMin || 0;
+                const userMax = (projPriceMax && projPriceMax < 999999999) ? projPriceMax : Infinity;
+                let matched = false;
+                if (projBeds !== "All" && Array.isArray(p.unitBreakdown) && p.unitBreakdown.length > 0) {
+                  const bedKey = projBeds.replace(" BR", "BR").replace("+", "").trim();
+                  const unit = p.unitBreakdown.find(u => String(u.type || "").replace(" ", "").toUpperCase() === bedKey.toUpperCase());
+                  if (unit) {
+                    const unitPrice = unit.priceMin || unit.priceFrom || 0;
+                    if (unitPrice >= userMin && unitPrice <= userMax) matched = true;
+                  } else {
+                    const pMin = p.priceMin || 0;
+                    const pMax = p.priceMax || Infinity;
+                    if (pMax >= userMin && pMin <= userMax) matched = true;
+                  }
+                } else {
+                  const pMin = p.priceMin || 0;
+                  const pMax = p.priceMax || Infinity;
+                  if (pMax >= userMin && pMin <= userMax) matched = true;
+                }
+                if (!matched) return false;
+              }
               return true;
             }).sort((a,b) => {
               if (projSort === "yield") return (b.grossYield||0) - (a.grossYield||0);
