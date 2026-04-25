@@ -3,7 +3,7 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // ── HELPERS ──────────────────────────────────────────────
+    // â”€â”€ HELPERS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     function isAuthed() {
       return request.auth != null;
     }
@@ -32,7 +32,7 @@ service cloud.firestore {
       return isAuthed() && uid() == assignedTo;
     }
 
-    // ── USERS ────────────────────────────────────────────────
+    // â”€â”€ USERS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     match /users/{userId} {
       allow read: if isAuthed() && (
         uid() == userId ||
@@ -43,7 +43,7 @@ service cloud.firestore {
       allow create: if isAuthed();
     }
 
-    // ── LEADS ─────────────────────────────────────────────────
+    // â”€â”€ LEADS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     match /leads/{leadId} {
       allow read: if isAuthed() && (
         isSuperAdmin() ||
@@ -65,7 +65,7 @@ service cloud.firestore {
       );
     }
 
-    // ── DEALS ────────────────────────────────────────────────
+    // â”€â”€ DEALS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     match /deals/{dealId} {
       allow read: if isAuthed() && (
         isSuperAdmin() ||
@@ -79,7 +79,7 @@ service cloud.firestore {
       );
     }
 
-    // ── LISTINGS ─────────────────────────────────────────────
+    // â”€â”€ LISTINGS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     match /listings/{listingId} {
       allow read: if isAuthed() && (isSuperAdmin() || isSameOrg(resource.data.orgId));
       allow write: if isAuthed() && (
@@ -89,19 +89,19 @@ service cloud.firestore {
       );
     }
 
-    // ── ORGS ─────────────────────────────────────────────────
+    // â”€â”€ ORGS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     match /orgs/{orgId} {
       allow read: if isAuthed() && (isSuperAdmin() || userOrgId() == orgId);
       allow write: if isSuperAdmin();
     }
 
-    // ── PORTFOLIOS ───────────────────────────────────────────
+    // â”€â”€ PORTFOLIOS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     match /portfolios/{userId} {
       allow read, write: if isAuthed() && uid() == userId;
       allow read: if isSuperAdmin();
     }
 
-    // ── MORTGAGE LEADS ───────────────────────────────────────
+    // â”€â”€ MORTGAGE LEADS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     match /mortgageLeads/{leadId} {
       allow read: if isAuthed() && (
         isSuperAdmin() || isSameOrg(resource.data.orgId) || resource.data.userId == uid()
@@ -110,7 +110,7 @@ service cloud.firestore {
       allow update: if isAuthed() && (isSuperAdmin() || resource.data.userId == uid());
     }
 
-    // ── PUBLIC READ-ONLY DATA (all authenticated users) ──────
+    // â”€â”€ PUBLIC READ-ONLY DATA (all authenticated users) â”€â”€â”€â”€â”€â”€
     match /projects/{doc}         { allow read: if isAuthed(); allow write: if isAdmin(); }
     match /liveMarketData/{doc}   { allow read: if isAuthed(); allow write: if isAdmin(); }
     match /dldVolumes/{doc}       { allow read: if isAuthed(); allow write: if isAdmin(); }
@@ -167,14 +167,15 @@ service cloud.firestore {
     match /platformSettings/{doc} { allow read: if isAuthed(); allow write: if isAdmin(); }
     match /marketData/{doc}       { allow read: if isAuthed(); allow write: if isAdmin(); }
     match /devUnits/{doc}         { allow read: if isAuthed(); allow write: if isAdmin(); }
+    match /legal_citations/{doc}  { allow read: if true; allow write: if isAdmin(); }
 
-    // ── ADMIN ONLY ───────────────────────────────────────────
+    // â”€â”€ ADMIN ONLY â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     match /adminSettings/{doc}  { allow read, write: if isAdmin(); }
     match /auditLog/{doc}       { allow read: if isAdmin(); allow create: if isAuthed(); }
     match /cronLogs/{doc}       { allow read: if isAdmin(); allow write: if false; }
     match /subscriptions/{uid}  { allow read: if isAuthed() && (uid() == uid || isAdmin()); allow write: if isAdmin(); }
 
-    // ── COMPLIANCE ───────────────────────────────────────────
+    // â”€â”€ COMPLIANCE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     match /compliance/{doc} {
       allow read: if isAuthed() && (isSuperAdmin() || isSameOrg(resource.data.orgId));
       allow write: if isManager();
@@ -184,13 +185,13 @@ service cloud.firestore {
       allow write: if isManager();
     }
 
-    // ── DEV EOIs ─────────────────────────────────────────────
+    // â”€â”€ DEV EOIs â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     match /devEOIs/{doc} {
       allow read: if isAuthed() && (isSuperAdmin() || isSameOrg(resource.data.orgId));
       allow write: if isAuthed();
     }
 
-    // ── NOTIFICATIONS ────────────────────────────────────────
+    // â”€â”€ NOTIFICATIONS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     match /notifications/{doc} {
       allow read: if isAuthed() && resource.data.userId == uid();
       allow write: if isAuthed() && (isSuperAdmin() || resource.data.userId == uid());
