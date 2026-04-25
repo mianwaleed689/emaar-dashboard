@@ -1,4 +1,4 @@
-﻿/**
+/**
  * DXB ANALYTICS — UNIFIED CONTEXT
  * src/context/DXBContext.jsx
  *
@@ -40,8 +40,8 @@ import {
   topDevelopers, emaarRisks, dubaiMarket, communityIntel, communityROI,
   allProjects, allDevelopers as allDevelopersStatic, allCommunities,
   allCommunityCoords, getProjectsByDeveloper, developerById, getDistrictCode,
-} from "../data_master";
-import { allDevelopers as dldDevelopers, allProjectsDLD } from "../data_developers";
+} from "../data/data_master";
+import { allDevelopers as dldDevelopers, allProjectsDLD } from "../data/data_developers";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // CONTEXT CREATION

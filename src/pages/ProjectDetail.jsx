@@ -1,17 +1,17 @@
 /* eslint-disable */
-/* â”€â”€â”€ DXB ANALYTICS â€” PROJECT DETAIL PAGE (S31 Redesign) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-   Tabbed layout Â· Send to Client Â· Dark theme Â· Gold buttons
-   â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ DXB ANALYTICS ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â PROJECT DETAIL PAGE (S31 Redesign) ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
+   Tabbed layout Ãƒâ€šÃ‚Â· Send to Client Ãƒâ€šÃ‚Â· Dark theme Ãƒâ€šÃ‚Â· Gold buttons
+   ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ */
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { auth, db } from "../firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import { doc, getDoc, onSnapshot } from "firebase/firestore";
-import { T, emaarProjects, communityIntel, communityROI } from "./data";
+import { T, emaarProjects, communityIntel, communityROI } from "../data";
 import RoiCalculator from "./RoiCalculator";
 
-/* â”€â”€â”€ HELPERS â”€â”€â”€ */
+/* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ HELPERS ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ */
 const getLinkDomain = (url) => {
   if (!url) return "Official Listing";
   if (url.includes("propertyfinder.ae")) return "PropertyFinder";
@@ -19,8 +19,8 @@ const getLinkDomain = (url) => {
   if (url.includes("bayut.com")) return "Bayut";
   return "Official Listing";
 };
-const fmtM   = (v) => v ? `AED ${(v/1_000_000).toFixed(2)}M` : "â€”";
-const fmtNum = (v) => v ? `AED ${Number(v).toLocaleString()}` : "â€”";
+const fmtM   = (v) => v ? `AED ${(v/1_000_000).toFixed(2)}M` : "ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â";
+const fmtNum = (v) => v ? `AED ${Number(v).toLocaleString()}` : "ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â";
 
 const getHandoverCountdown = (handover) => {
   if (!handover) return null;
@@ -49,7 +49,7 @@ const getUnitEntries = (units) => {
   return Object.entries(units).filter(([,d])=>d&&d.total>0);
 };
 
-/* â”€â”€â”€ CSS â”€â”€â”€ */
+/* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ CSS ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ */
 const css = `
   @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Fraunces:opsz,wght@9..144,700;9..144,900&display=swap');
   *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
@@ -82,14 +82,14 @@ const css = `
   }
 `;
 
-/* â”€â”€â”€ SECTION TITLE â”€â”€â”€ */
+/* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ SECTION TITLE ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ */
 const SecTitle = ({ children }) => (
   <div style={{ fontSize:10, fontWeight:700, color:T.gold, letterSpacing:1.5, textTransform:"uppercase", marginBottom:16 }}>
     {children}
   </div>
 );
 
-/* â”€â”€â”€ PRO GATE â”€â”€â”€ */
+/* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ PRO GATE ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ */
 const ProGate = ({ isPro, onUpgrade, children }) => {
   if (isPro) return children;
   return (
@@ -100,7 +100,7 @@ const ProGate = ({ isPro, onUpgrade, children }) => {
           <div style={{ fontFamily:"'Fraunces',serif", fontSize:16, fontWeight:800, color:T.white, marginBottom:6 }}>Pro Feature</div>
           <div style={{ fontSize:12, color:T.textMuted, marginBottom:16, lineHeight:1.6 }}>Unlock location intelligence, yield data, and ROI analytics.</div>
           <button onClick={onUpgrade} style={{ width:"100%", padding:"10px 0", background:"#D4A843", color:"#04090F", border:"2px solid #D4A843", borderRadius:9, fontSize:13, fontWeight:800, cursor:"pointer", fontFamily:"'Outfit',sans-serif", outline:"none", boxShadow:"none" }}>
-            Unlock Pro â€” AED 99/mo â†’
+            Unlock Pro ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â AED 99/mo ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢
           </button>
         </div>
       </div>
@@ -108,14 +108,14 @@ const ProGate = ({ isPro, onUpgrade, children }) => {
   );
 };
 
-/* â”€â”€â”€ SEND TO CLIENT MODAL â”€â”€â”€ */
+/* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ SEND TO CLIENT MODAL ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ */
 const SendModal = ({ project, roi, onClose }) => {
   const [copied, setCopied] = useState(false);
   const gross   = roi?.grossYield?.apt1 || roi?.grossYield?.th || roi?.grossYield?.villa || 0;
   const appr5   = roi?.appreciation5yr || 0;
   const projUrl = typeof window !== "undefined" ? window.location.href : "";
-  const subject = `${project?.name} â€” Investment Opportunity | DXB Analytics`;
-  const body = `Hi,\n\nI wanted to share an exciting investment opportunity with you:\n\nðŸ™ï¸ Project: ${project?.name}\nðŸ“ Community: ${project?.community} Â· ${project?.district}\nðŸ  Type: ${project?.type}${project?.beds ? " | "+project.beds+" BR" : ""}\nðŸ’° Starting From: ${fmtM(project?.price)}\nðŸ“… Handover: ${project?.handover || "â€”"}\nðŸ’³ Payment Plan: ${project?.payment || "â€”"}${gross ? "\nðŸ“ˆ Est. Gross Yield: "+gross+"%" : ""}${appr5 ? "\nðŸ“Š 5-Year Appreciation: +"+appr5+"%" : ""}${roi?.goldenVisa ? "\nâœ… Golden Visa Eligible" : ""}\n\nView full details & ROI analysis:\n${projUrl}\n\nPowered by DXB Analytics â€” Dubai's Real Estate Intelligence Platform.\n\nBest regards`;
+  const subject = `${project?.name} ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Investment Opportunity | DXB Analytics`;
+  const body = `Hi,\n\nI wanted to share an exciting investment opportunity with you:\n\nÃƒÂ°Ã…Â¸Ã‚ÂÃ¢â€žÂ¢ÃƒÂ¯Ã‚Â¸Ã‚Â Project: ${project?.name}\nÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‚Â Community: ${project?.community} Ãƒâ€šÃ‚Â· ${project?.district}\nÃƒÂ°Ã…Â¸Ã‚ÂÃ‚Â  Type: ${project?.type}${project?.beds ? " | "+project.beds+" BR" : ""}\nÃƒÂ°Ã…Â¸Ã¢â‚¬â„¢Ã‚Â° Starting From: ${fmtM(project?.price)}\nÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã¢â‚¬Â¦ Handover: ${project?.handover || "ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â"}\nÃƒÂ°Ã…Â¸Ã¢â‚¬â„¢Ã‚Â³ Payment Plan: ${project?.payment || "ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â"}${gross ? "\nÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‹â€  Est. Gross Yield: "+gross+"%" : ""}${appr5 ? "\nÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã…Â  5-Year Appreciation: +"+appr5+"%" : ""}${roi?.goldenVisa ? "\nÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Golden Visa Eligible" : ""}\n\nView full details & ROI analysis:\n${projUrl}\n\nPowered by DXB Analytics ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Dubai's Real Estate Intelligence Platform.\n\nBest regards`;
   const mailtoLink = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
   const handleCopy = () => { navigator.clipboard.writeText(body).then(() => { setCopied(true); setTimeout(()=>setCopied(false),2000); }); };
   return (
@@ -124,9 +124,9 @@ const SendModal = ({ project, roi, onClose }) => {
         <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:20 }}>
           <div>
             <div style={{ fontFamily:"'Fraunces',serif", fontSize:20, fontWeight:800, color:T.white, marginBottom:3 }}>Send to Client</div>
-            <div style={{ fontSize:12, color:T.textMuted }}>{project?.name} Â· {project?.community}</div>
+            <div style={{ fontSize:12, color:T.textMuted }}>{project?.name} Ãƒâ€šÃ‚Â· {project?.community}</div>
           </div>
-          <button onClick={onClose} style={{ width:32, height:32, borderRadius:8, border:`1px solid #1E293B`, background:"#111827", color:T.textMuted, cursor:"pointer", fontSize:18, display:"flex", alignItems:"center", justifyContent:"center" }}>Ã—</button>
+          <button onClick={onClose} style={{ width:32, height:32, borderRadius:8, border:`1px solid #1E293B`, background:"#111827", color:T.textMuted, cursor:"pointer", fontSize:18, display:"flex", alignItems:"center", justifyContent:"center" }}>ÃƒÆ’Ã¢â‚¬â€</button>
         </div>
         <div style={{ background:T.bg, borderRadius:10, border:`1px solid #1E293B`, padding:16, marginBottom:20, maxHeight:220, overflowY:"auto" }}>
           <div style={{ fontSize:10, fontWeight:700, color:T.gold, letterSpacing:1, textTransform:"uppercase", marginBottom:8 }}>Email Preview</div>
@@ -139,7 +139,7 @@ const SendModal = ({ project, roi, onClose }) => {
             Open in Email Client
           </a>
           <button onClick={handleCopy} style={{ display:"flex", alignItems:"center", justifyContent:"center", gap:8, padding:"11px", borderRadius:10, background:"transparent", border:"2px solid #D4A843", color:"#D4A843", fontWeight:600, fontSize:13, cursor:"pointer", fontFamily:"'Outfit',sans-serif", outline:"none", boxShadow:"none", lineHeight:1 }}>
-            {copied ? "âœ“ Copied!" : "Copy Email Text"}
+            {copied ? "ÃƒÂ¢Ã…â€œÃ¢â‚¬Å“ Copied!" : "Copy Email Text"}
           </button>
         </div>
       </div>
@@ -147,7 +147,7 @@ const SendModal = ({ project, roi, onClose }) => {
   );
 };
 
-/* â”€â”€â”€ OVERVIEW TAB â”€â”€â”€ */
+/* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ OVERVIEW TAB ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ */
 const OverviewTab = ({ project, ci, roi, gross, net, appr5 }) => (
   <div style={{ animation:"fadeUp 0.3s ease-out both" }}>
     <div className="pd-details-grid" style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16, marginBottom:16 }}>
@@ -155,12 +155,12 @@ const OverviewTab = ({ project, ci, roi, gross, net, appr5 }) => (
         <SecTitle>Project Details</SecTitle>
         {[
           { label:"From Price",   value:project.price ? fmtM(project.price) : "TBD", color:T.gold },
-          { label:"Price / sqft", value:project.ppsf ? `AED ${project.ppsf.toLocaleString()}` : "â€”" },
-          { label:"Size Range",   value:project.sizeFrom ? `${project.sizeFrom.toLocaleString()} â€“ ${(project.sizeTo||"").toLocaleString()} sqft` : "â€”" },
-          { label:"Bedrooms",     value:project.beds ? project.beds+" BR" : "â€”" },
-          { label:"Type",         value:project.type || "â€”" },
-          { label:"Payment Plan", value:project.payment || "â€”", color:T.teal },
-          { label:"Tier",         value:project.tier || "â€”" },
+          { label:"Price / sqft", value:project.ppsf ? `AED ${project.ppsf.toLocaleString()}` : "ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â" },
+          { label:"Size Range",   value:project.sizeFrom ? `${project.sizeFrom.toLocaleString()} ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“ ${(project.sizeTo||"").toLocaleString()} sqft` : "ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â" },
+          { label:"Bedrooms",     value:project.beds ? project.beds+" BR" : "ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â" },
+          { label:"Type",         value:project.type || "ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â" },
+          { label:"Payment Plan", value:project.payment || "ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â", color:T.teal },
+          { label:"Tier",         value:project.tier || "ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â" },
           { label:"Developer",    value:project.developer || "Emaar Properties" },
         ].map((r,i) => (
           <div className="pd-row" key={i}>
@@ -172,14 +172,14 @@ const OverviewTab = ({ project, ci, roi, gross, net, appr5 }) => (
       <div className="pd-card" style={{ marginBottom:0 }}>
         <SecTitle>Investment Profile</SecTitle>
         {[
-          { label:"Est. Gross Yield",   value:gross ? `${gross}%` : "â€”",                                  color:T.green },
-          { label:"Net Yield",          value:net   ? `${net}%` : "â€”",                                    color:T.teal },
-          { label:"5-yr Appreciation",  value:appr5 ? `+${appr5}%` : "â€”",                                 color:T.green },
-          { label:"Annual YoY",         value:roi?.appreciationYoY ? `+${roi.appreciationYoY}%` : "â€”",    color:T.green },
-          { label:"Golden Visa",        value:price >= 2000000 ? "Eligible âœ“" : "Not Eligible (< AED 2M)",  color:price >= 2000000 ? T.green : T.red },
-          { label:"Risk Level",         value:roi?.riskLevel || "â€”",                                       color:roi?.riskLevel==="Low" ? T.green : roi?.riskLevel==="High" ? T.red : T.gold },
-          { label:"Occupancy",          value:roi?.occupancy ? roi.occupancy+"%" : "â€”" },
-          { label:"Est. Annual Rent",   value:roi?.estRent?.apt1 ? fmtNum(roi.estRent.apt1) : "â€”",        color:T.teal },
+          { label:"Est. Gross Yield",   value:gross ? `${gross}%` : "ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â",                                  color:T.green },
+          { label:"Net Yield",          value:net   ? `${net}%` : "ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â",                                    color:T.teal },
+          { label:"5-yr Appreciation",  value:appr5 ? `+${appr5}%` : "ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â",                                 color:T.green },
+          { label:"Annual YoY",         value:roi?.appreciationYoY ? `+${roi.appreciationYoY}%` : "ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â",    color:T.green },
+          { label:"Golden Visa",        value:price >= 2000000 ? "Eligible ÃƒÂ¢Ã…â€œÃ¢â‚¬Å“" : "Not Eligible (< AED 2M)",  color:price >= 2000000 ? T.green : T.red },
+          { label:"Risk Level",         value:roi?.riskLevel || "ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â",                                       color:roi?.riskLevel==="Low" ? T.green : roi?.riskLevel==="High" ? T.red : T.gold },
+          { label:"Occupancy",          value:roi?.occupancy ? roi.occupancy+"%" : "ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â" },
+          { label:"Est. Annual Rent",   value:roi?.estRent?.apt1 ? fmtNum(roi.estRent.apt1) : "ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â",        color:T.teal },
         ].map((r,i) => (
           <div className="pd-row" key={i}>
             <span className="pd-row-label">{r.label}</span>
@@ -210,7 +210,7 @@ const OverviewTab = ({ project, ci, roi, gross, net, appr5 }) => (
   </div>
 );
 
-/* â”€â”€â”€ PRICING TAB â”€â”€â”€ */
+/* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ PRICING TAB ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ */
 const PricingTab = ({ project }) => {
   const unitEntries = getUnitEntries(project.units);
   const breakdown   = project.unitBreakdown || [];
@@ -226,8 +226,8 @@ const PricingTab = ({ project }) => {
         </div>
         <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:10 }}>
           {[
-            { label:"HANDOVER",     value:project.handover||"â€”" },
-            { label:"PAYMENT PLAN", value:project.payment||"â€”",  color:T.teal },
+            { label:"HANDOVER",     value:project.handover||"ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â" },
+            { label:"PAYMENT PLAN", value:project.payment||"ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â",  color:T.teal },
             { label:"CONSTRUCTION", value:(project.construction||0)+"%", color:constructionColor(project.construction||0) },
           ].map((s,i) => (
             <div key={i} style={{ background:"#111827", borderRadius:10, padding:"14px 12px", textAlign:"center" }}>
@@ -248,9 +248,9 @@ const PricingTab = ({ project }) => {
             return (
               <div key={i} className="pd-unit-row" style={{ background:i%2===0?"transparent":"rgba(14,29,53,0.4)" }}>
                 <span style={{ fontWeight:700, color:T.white }}>{isBreakdown ? u.type : u.type}</span>
-                <span style={{ color:T.textSecondary }}>{isBreakdown && u.sizeFrom ? `${u.sizeFrom.toLocaleString()} â€“ ${u.sizeTo?.toLocaleString()}` : "â€”"}</span>
-                <span style={{ fontWeight:800, color:T.gold, fontFamily:"'Fraunces',serif" }}>{isBreakdown && u.price ? fmtM(u.price) : project.price ? fmtM(project.price) : "â€”"}</span>
-                <span style={{ color:T.textMuted }}>{project.ppsf ? `AED ${project.ppsf.toLocaleString()}` : "â€”"}</span>
+                <span style={{ color:T.textSecondary }}>{isBreakdown && u.sizeFrom ? `${u.sizeFrom.toLocaleString()} ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“ ${u.sizeTo?.toLocaleString()}` : "ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â"}</span>
+                <span style={{ fontWeight:800, color:T.gold, fontFamily:"'Fraunces',serif" }}>{isBreakdown && u.price ? fmtM(u.price) : project.price ? fmtM(project.price) : "ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â"}</span>
+                <span style={{ color:T.textMuted }}>{project.ppsf ? `AED ${project.ppsf.toLocaleString()}` : "ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â"}</span>
               </div>
             );
           })}
@@ -274,7 +274,7 @@ const PricingTab = ({ project }) => {
   );
 };
 
-/* â”€â”€â”€ LOCATION TAB â”€â”€â”€ */
+/* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ LOCATION TAB ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ */
 const LocationTab = ({ project, ci, isPro, onUpgrade }) => (
   <div style={{ animation:"fadeUp 0.3s ease-out both" }}>
     <ProGate isPro={isPro} onUpgrade={onUpgrade}>
@@ -325,7 +325,7 @@ const LocationTab = ({ project, ci, isPro, onUpgrade }) => (
   </div>
 );
 
-/* â”€â”€â”€ ROI TAB â”€â”€â”€ */
+/* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ ROI TAB ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ */
 const ROITab = ({ project, roi, gross, net, appr5, price, isPro, onUpgrade }) => {
   const annualRent = roi?.estRent?.apt1 || roi?.estRent?.th || roi?.estRent?.villa || 0;
   const projValue  = price > 0 ? price*(1+appr5/100) : 0;
@@ -362,14 +362,14 @@ const ROITab = ({ project, roi, gross, net, appr5, price, isPro, onUpgrade }) =>
                 </div>}
                 <div style={{ background:"#111827", borderRadius:10, padding:"14px 12px", textAlign:"center" }}>
                   <div style={{ fontSize:9, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.5, marginBottom:6, fontWeight:700 }}>Golden Visa</div>
-                  <div style={{ fontFamily:"'Fraunces',serif", fontSize:15, fontWeight:900, color:price>=2000000?T.green:"#EF4444" }}>{price>=2000000?"âœ“ Eligible":"Not Eligible"}</div>
+                  <div style={{ fontFamily:"'Fraunces',serif", fontSize:15, fontWeight:900, color:price>=2000000?T.green:"#EF4444" }}>{price>=2000000?"ÃƒÂ¢Ã…â€œÃ¢â‚¬Å“ Eligible":"Not Eligible"}</div>
                   <div style={{ fontSize:10, color:T.textMuted, marginTop:4 }}>{price>=2000000?"Min. AED 2M threshold met":"Below AED 2M threshold"}</div>
                 </div>
               </div>
               {(roi.riskLevel||roi.occupancy) && (
                 <div style={{ marginTop:12, fontSize:12, color:T.textMuted }}>
                   {roi.riskLevel && <>Risk: <span style={{ color:roi.riskLevel==="Low"?T.green:roi.riskLevel==="High"?T.red:T.gold, fontWeight:600 }}>{roi.riskLevel}</span></>}
-                  {roi.occupancy && <> Â· Occupancy: <span style={{ color:T.white, fontWeight:600 }}>{roi.occupancy}%</span></>}
+                  {roi.occupancy && <> Ãƒâ€šÃ‚Â· Occupancy: <span style={{ color:T.white, fontWeight:600 }}>{roi.occupancy}%</span></>}
                 </div>
               )}
             </div>
@@ -388,9 +388,9 @@ const ROITab = ({ project, roi, gross, net, appr5, price, isPro, onUpgrade }) =>
   );
 };
 
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+/* ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
    MAIN COMPONENT
-â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â */
 export default function ProjectDetail() {
   const { id }       = useParams();
   const navigate     = useNavigate();
@@ -431,7 +431,7 @@ export default function ProjectDetail() {
     return () => unsub();
   }, []);
 
-  useEffect(() => { if (project) document.title = `${project.name} â€” DXB Analytics`; }, [project]);
+  useEffect(() => { if (project) document.title = `${project.name} ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â DXB Analytics`; }, [project]);
 
   const ci    = project ? (communityIntel[project.community]||null) : null;
   const roi   = project ? (communityROI[project.community]||null)   : null;
@@ -450,7 +450,7 @@ export default function ProjectDetail() {
       <style>{css}</style>
       <h1 style={{ fontFamily:"'Fraunces',serif", fontSize:28, color:T.white, marginBottom:8 }}>Project Not Found</h1>
       <p style={{ color:T.textMuted, marginBottom:24 }}>ID #{id} doesn't match any project.</p>
-      <Link to="/" style={{ display:"inline-flex", alignItems:"center", padding:"12px 28px", background:"#D4A843", color:"#04090F", border:"2px solid #D4A843", borderRadius:10, fontWeight:700, textDecoration:"none", fontSize:14 }}>â† Back to Dashboard</Link>
+      <Link to="/" style={{ display:"inline-flex", alignItems:"center", padding:"12px 28px", background:"#D4A843", color:"#04090F", border:"2px solid #D4A843", borderRadius:10, fontWeight:700, textDecoration:"none", fontSize:14 }}>ÃƒÂ¢Ã¢â‚¬Â Ã‚Â Back to Dashboard</Link>
     </div>
   );
   if (!project) return (
@@ -479,9 +479,9 @@ export default function ProjectDetail() {
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="15 18 9 12 15 6"/></svg>
           Back to Projects
         </Link>
-        <span style={{ color:"#1E293B" }}>Â·</span>
+        <span style={{ color:"#1E293B" }}>Ãƒâ€šÃ‚Â·</span>
         <span style={{ color:T.textMuted }}>{project.community}</span>
-        <span style={{ color:"#1E293B" }}>Â·</span>
+        <span style={{ color:"#1E293B" }}>Ãƒâ€šÃ‚Â·</span>
         <span style={{ color:T.textMuted }}>{project.type}</span>
       </nav>
 
@@ -513,7 +513,7 @@ export default function ProjectDetail() {
             </div>
             <h1 style={{ fontFamily:"'Fraunces',serif", fontSize:38, fontWeight:900, color:T.white, lineHeight:1.1, marginBottom:6 }}>{project.name}</h1>
             {ci?.tagline && <p style={{ color:T.teal, fontSize:13, fontStyle:"italic", marginBottom:8 }}>{ci.tagline}</p>}
-            <p style={{ color:T.textMuted, fontSize:14 }}>{project.community} Â· {project.type}{project.beds?` Â· ${project.beds} BR`:""}</p>
+            <p style={{ color:T.textMuted, fontSize:14 }}>{project.community} Ãƒâ€šÃ‚Â· {project.type}{project.beds?` Ãƒâ€šÃ‚Â· ${project.beds} BR`:""}</p>
           </div>
 
           {/* CONSTRUCTION CARD */}
@@ -529,45 +529,45 @@ export default function ProjectDetail() {
             <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12 }}>
               <div>
                 <div style={{ fontSize:9, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.5, marginBottom:4 }}>Handover</div>
-                <div style={{ fontSize:15, fontWeight:700, color:T.white }}>{project.handover||"â€”"}</div>
+                <div style={{ fontSize:15, fontWeight:700, color:T.white }}>{project.handover||"ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â"}</div>
                 {cd && <div style={{ fontSize:10, fontWeight:700, color:cd.color, marginTop:2 }}>{cd.label}</div>}
               </div>
               <div>
                 <div style={{ fontSize:9, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.5, marginBottom:4 }}>Payment</div>
-                <div style={{ fontSize:15, fontWeight:700, color:T.teal }}>{project.payment||"â€”"}</div>
+                <div style={{ fontSize:15, fontWeight:700, color:T.teal }}>{project.payment||"ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â"}</div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* ACTION BAR â€” all inline styles, no className dependency */}
+        {/* ACTION BAR ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â all inline styles, no className dependency */}
         <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:22, padding:"14px 18px", background:"#0A1628", border:"1px solid #1E293B", borderRadius:12, flexWrap:"wrap" }}>
           <span style={{ fontSize:12, color:"#94A3B8", marginRight:4 }}>Share:</span>
-          {/* Send to Client â€” solid gold fill */}
+          {/* Send to Client ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â solid gold fill */}
           <button onClick={()=>setShowSendModal(true)} style={{ display:"inline-flex", alignItems:"center", gap:7, padding:"10px 20px", background:"#D4A843", color:"#04090F", border:"2px solid #D4A843", borderRadius:9, fontSize:13, fontWeight:700, cursor:"pointer", whiteSpace:"nowrap", fontFamily:"'Outfit',sans-serif", outline:"none", boxShadow:"none", lineHeight:1 }}>
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
             Send to Client
           </button>
-          {/* Copy Link â€” solid gold fill */}
+          {/* Copy Link ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â solid gold fill */}
           <button onClick={handleCopyLink} style={{ display:"inline-flex", alignItems:"center", gap:7, padding:"10px 18px", background:"#D4A843", color:"#04090F", border:"2px solid #D4A843", borderRadius:9, fontSize:13, fontWeight:700, cursor:"pointer", whiteSpace:"nowrap", fontFamily:"'Outfit',sans-serif", outline:"none", boxShadow:"none", lineHeight:1 }}>
             {copiedLink
               ? <><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg> Copied!</>
               : <><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copy Link</>
             }
           </button>
-          {/* WhatsApp â€” solid gold fill */}
-          <button onClick={()=>{ const msg=encodeURIComponent(`${project.name} â€” ${fmtM(price)} | ${project.handover}\n${window.location.href}`); window.open(`https://wa.me/?text=${msg}`,"_blank"); }} style={{ display:"inline-flex", alignItems:"center", gap:7, padding:"10px 18px", background:"#D4A843", color:"#04090F", border:"2px solid #D4A843", borderRadius:9, fontSize:13, fontWeight:700, cursor:"pointer", whiteSpace:"nowrap", fontFamily:"'Outfit',sans-serif", outline:"none", boxShadow:"none", lineHeight:1 }}>
+          {/* WhatsApp ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â solid gold fill */}
+          <button onClick={()=>{ const msg=encodeURIComponent(`${project.name} ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â ${fmtM(price)} | ${project.handover}\n${window.location.href}`); window.open(`https://wa.me/?text=${msg}`,"_blank"); }} style={{ display:"inline-flex", alignItems:"center", gap:7, padding:"10px 18px", background:"#D4A843", color:"#04090F", border:"2px solid #D4A843", borderRadius:9, fontSize:13, fontWeight:700, cursor:"pointer", whiteSpace:"nowrap", fontFamily:"'Outfit',sans-serif", outline:"none", boxShadow:"none", lineHeight:1 }}>
             WhatsApp
           </button>
           <div style={{ flex:1 }} />
           {project.emaarUrl && (
             <a href={project.emaarUrl} target="_blank" rel="noopener noreferrer" style={{ display:"inline-flex", alignItems:"center", gap:7, padding:"10px 18px", background:"#D4A843", color:"#04090F", border:"2px solid #D4A843", borderRadius:9, fontSize:13, fontWeight:700, cursor:"pointer", whiteSpace:"nowrap", fontFamily:"'Outfit',sans-serif", textDecoration:"none", lineHeight:1 }}>
-              View on {getLinkDomain(project.emaarUrl)} â†—
+              View on {getLinkDomain(project.emaarUrl)} ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â€
             </a>
           )}
         </div>
 
-        {/* TABS â€” full gold box on active */}
+        {/* TABS ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â full gold box on active */}
         <div style={{ borderBottom:"1px solid #1E293B", marginBottom:22, display:"flex", gap:6, overflowX:"auto" }}>
           {TABS.map(t => (
             <button key={t.id} onClick={()=>setActiveTab(t.id)} style={{ padding:"8px 20px", background:activeTab===t.id?"#D4A843":"transparent", border:activeTab===t.id?"2px solid #D4A843":"2px solid #1E293B", borderRadius:activeTab===t.id?8:8, fontSize:13, fontWeight:activeTab===t.id?700:600, cursor:"pointer", color:activeTab===t.id?"#04090F":"#64748B", fontFamily:"'Outfit',sans-serif", whiteSpace:"nowrap", outline:"none", boxShadow:"none", lineHeight:1, marginBottom:8 }}>
@@ -592,12 +592,12 @@ export default function ProjectDetail() {
                 onMouseEnter={e=>e.currentTarget.style.borderColor=T.gold+"44"}
                 onMouseLeave={e=>e.currentTarget.style.borderColor="#1E293B"}>
                 <span style={{ fontSize:13, color:T.white, fontWeight:600, marginBottom:4 }}>{p.name}</span>
-                <span style={{ fontSize:13, color:T.gold, fontWeight:700 }}>{p.price?fmtM(p.price):"â€”"}</span>
-                <span style={{ fontSize:11, color:T.textMuted, marginTop:2 }}>{p.handover} Â· {p.status}</span>
+                <span style={{ fontSize:13, color:T.gold, fontWeight:700 }}>{p.price?fmtM(p.price):"ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â"}</span>
+                <span style={{ fontSize:11, color:T.textMuted, marginTop:2 }}>{p.handover} Ãƒâ€šÃ‚Â· {p.status}</span>
               </Link>
             ))}
           </div>
-          <Link to="/" style={{ display:"block", textAlign:"center", marginTop:14, fontSize:12, color:T.gold, textDecoration:"none", fontWeight:600 }}>View All Projects â†’</Link>
+          <Link to="/" style={{ display:"block", textAlign:"center", marginTop:14, fontSize:12, color:T.gold, textDecoration:"none", fontWeight:600 }}>View All Projects ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢</Link>
         </div>
 
         {/* DISCLAIMER */}

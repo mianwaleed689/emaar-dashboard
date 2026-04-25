@@ -1,5 +1,5 @@
 "use client";
-import { getDubaiPulseData } from "../../syncMarket";
+import { getDubaiPulseData } from "../../services/syncMarket";
 
 export default function SyncPage() {
   return (

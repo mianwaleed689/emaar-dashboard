@@ -1,5 +1,5 @@
-﻿/**
- * DXB ANALYTICS — MASTER DATA FILE
+/**
+ * DXB ANALYTICS â€” MASTER DATA FILE
  * src/data_master.js
  *
  * THE SINGLE SOURCE OF TRUTH for all developers, projects, and communities.
@@ -9,21 +9,21 @@
  *   2. Exports unified allProjects[], allDevelopers[], allCommunities[]
  *   3. Exports developer lookup helpers
  *   4. Exports extended communityCoords[] covering all 7 developers
- *   5. Exports the community→district bridge (commKeyMap)
+ *   5. Exports the communityâ†’district bridge (commKeyMap)
  *
  * Usage in dashboard:
  *   import { allProjects, allDevelopers, allCommunities, getProjectsByDeveloper, getCommunityData } from "./data_master";
  *
  * Iron Rule: NEVER import directly from individual data_*.js files in components.
- *            Always import from data_master.js — this is the only door.
+ *            Always import from data_master.js â€” this is the only door.
  *
- * Iron Rule: NEVER run npx vercel --prod — use git push only
+ * Iron Rule: NEVER run npx vercel --prod â€” use git push only
  */
 
-// ── Re-export T theme ────────────────────────────────────────────────────────
+// â”€â”€ Re-export T theme â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export { T } from "./theme";
 
-// ── Government Portal Links ───────────────────────────────────────────────────
+// â”€â”€ Government Portal Links â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export const GOVT_PORTALS = {
   dldDubai:         "https://dubailand.gov.ae",
   oqoodRegistry:    "https://oqood.dubailand.gov.ae",
@@ -36,27 +36,27 @@ export const GOVT_PORTALS = {
 };
 import { T } from "./theme";
 
-// ── Import Emaar developer identity + live stats ─────────────────────────────
+// â”€â”€ Import Emaar developer identity + live stats â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export * from "./data_emaar_complete";
 
-// ── Import Emaar project array ────────────────────────────────────────────────
+// â”€â”€ Import Emaar project array â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 import { emaarProjectsComplete }  from "./data_emaar_complete";
 
-// ── Emaar community array is exported directly from data_emaar_complete ──────
+// â”€â”€ Emaar community array is exported directly from data_emaar_complete â”€â”€â”€â”€â”€â”€
 
-// ── Emaar live stats imported via data_emaar_complete above ──────────────────
+// â”€â”€ Emaar live stats imported via data_emaar_complete above â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 // Also keep backward compat for existing imports of emaarProjects
 export { emaarProjectsComplete as emaarProjects } from "./data_emaar_complete";
 
-// ── Keep all data.js exports for backward compatibility ───────────────────────
+// â”€â”€ Keep all data.js exports for backward compatibility â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // (financials, communityROI, topDevelopers, emaarRisks, dubaiMarket etc)
-export * from "./data";
+export * from "./index";
 
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // SECTION 1: DEVELOPER REGISTRY
 // The definitive list of all 7 developers with live stats
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export const allDevelopers = [
   {
@@ -77,31 +77,31 @@ export const allDevelopers = [
     dataFile:     "data_emaar_complete",
   },
 ];
-// ── Other developers will be added back in future sessions ───────────────────
+// â”€â”€ Other developers will be added back in future sessions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-// Quick lookup: developerId → developer object
+// Quick lookup: developerId â†’ developer object
 export const developerById = Object.fromEntries(
   (allDevelopers || []).filter(d => d && d.id).map(d => [d.id, d])
 );
 
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // SECTION 2: UNIFIED PROJECT REGISTRY
 // All 303 projects across all 7 developers in one array
 // Each project guaranteed to have: id, developerId, name, community,
 //   district, type, beds, status, handover, price, ppsf, payment,
 //   construction, branded, brand, tier, source, confidence
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export const allProjects = [
   ...emaarProjectsComplete.map(p => ({ ...p, developerId: "emaar" })),
   // Other developers will be added back in future sessions
 ];
 
-// ─────────────────────────────────────────────────────────────────────────────
-// SECTION 3: COMMUNITY → DISTRICT CODE BRIDGE
-// Maps community full name → Firestore district key
-// Used to connect projects → communityData/{district} → liveMarketData
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// SECTION 3: COMMUNITY â†’ DISTRICT CODE BRIDGE
+// Maps community full name â†’ Firestore district key
+// Used to connect projects â†’ communityData/{district} â†’ liveMarketData
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export const commKeyMap = {
   // Emaar
@@ -117,7 +117,7 @@ export const commKeyMap = {
   "The Heights CW":           "TH",
   "Expo Living":              "EL",
   "Downtown Dubai":           "DT",
-  "Downtown":                 "DT",    // alias — always resolve to Downtown Dubai
+  "Downtown":                 "DT",    // alias â€” always resolve to Downtown Dubai
   "Dubai Marina":             "DM",
   "Arabian Ranches 3":        "AR3",
   "Mina Rashid":              "MR",
@@ -130,7 +130,7 @@ export const commKeyMap = {
   "DAMAC Islands":            "DI2",
   "DAMAC Islands 2":          "DI2",
   "DAMAC Riverside":          "DRP",
-  "DAMAC Sun City" /* Limited verification — monitor official launch */:           "DSC",
+  "DAMAC Sun City" /* Limited verification â€” monitor official launch */:           "DSC",
   "Dubai Maritime City":      "DMC",
   "Dubai Harbour":            "DHR",
   // Sobha
@@ -191,9 +191,9 @@ export function getDistrictCode(communityName = "") {
     || null;
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // SECTION 4: HELPER FUNCTIONS
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 // Get all projects for a specific developer
 export function getProjectsByDeveloper(developerId) {
@@ -238,7 +238,7 @@ export function toFirestoreProject(project) {
     name:           project.name,
     community:      project.community,
     communityId:    project.communityId || getDistrictCode(project.community) || null,
-    district:       project.district || getDistrictCode(project.community) || "—",
+    district:       project.district || getDistrictCode(project.community) || "â€”",
     emirate:        project.emirate || "Dubai",
     type:           project.type,
     beds:           project.beds,
@@ -251,11 +251,11 @@ export function toFirestoreProject(project) {
     sizeFrom:       project.sizeFrom || 0,
     sizeTo:         project.sizeTo || 0,
     ppsf:           project.ppsf || 0,
-    payment:        project.payment || "—",
+    payment:        project.payment || "â€”",
     construction:   project.construction || 0,
     branded:        project.branded || false,
-    brand:          project.brand || "—",
-    tier:           project.tier || "—",
+    brand:          project.brand || "â€”",
+    tier:           project.tier || "â€”",
     source:         project.source || "DXB Analytics",
     confidence:     project.confidence || "VERIFIED",
     unitBreakdown:  project.unitBreakdown || [],
@@ -275,14 +275,14 @@ export function toFirestoreProject(project) {
   };
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // SECTION 5: EXTENDED COMMUNITY COORDINATES
 // All developers' communities with map pins
 // Extends the Emaar-only communityCoords from data.js
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export const allCommunityCoords = [
-  // ── EMAAR ──────────────────────────────────────────────────────────────────
+  // â”€â”€ EMAAR â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   { district:"DHE",  name:"Dubai Hills Estate",       lat:25.1267, lng:55.2367, color:T.gold,    developer:"emaar",    projects:34, type:"Master Community" },
   { district:"DCH",  name:"Dubai Creek Harbour",      lat:25.2048, lng:55.3480, color:T.blue,    developer:"emaar",    projects:35, type:"Waterfront" },
   { district:"EBF",  name:"Emaar Beachfront",         lat:25.0785, lng:55.1330, color:T.gold,    developer:"emaar",    projects:11, type:"Beachfront Island" },
@@ -302,13 +302,13 @@ export const allCommunityCoords = [
   { district:"ZB",   name:"Zabeel",                    lat:25.2050, lng:55.2950, color:T.gold,    developer:"emaar",    projects:1,  type:"Urban Luxury" },
 ];
 
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // SECTION 6: UNIFIED COMMUNITY LIST
 // For the Communities tab and the developer switcher community filter
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export const allCommunities = [
-  // ── EMAAR ──────────────────────────────────────────────────────────────────
+  // â”€â”€ EMAAR â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   { id:"DHE",  name:"Dubai Hills Estate",       developer:"emaar",    avgPpsf:2400, avgYield:5.8, district:"DHE", projectCount:34, location:"New Dubai",     type:"Master Community" },
   { id:"DCH",  name:"Dubai Creek Harbour",      developer:"emaar",    avgPpsf:2500, avgYield:5.5, district:"DCH", projectCount:35, location:"Old Dubai",     type:"Waterfront" },
   { id:"EBF",  name:"Emaar Beachfront",         developer:"emaar",    avgPpsf:4250, avgYield:5.6, district:"EBF", projectCount:11, location:"Dubai Harbour", type:"Beachfront Island" },
@@ -326,36 +326,36 @@ export const allCommunities = [
   { id:"MR",   name:"Mina Rashid",               developer:"emaar",    avgPpsf:2800, avgYield:5.2, district:"MR",  projectCount:22, location:"Bur Dubai",     type:"Marina Heritage" },
   { id:"EC",   name:"Expo City",                 developer:"emaar",    avgPpsf:3000, avgYield:5.5, district:"EC",  projectCount:2,  location:"Dubai South",   type:"Expo Legacy" },
   { id:"ZB",   name:"Zabeel",                    developer:"emaar",    avgPpsf:3500, avgYield:5.0, district:"ZB",  projectCount:1,  location:"Downtown",      type:"Urban Luxury" },
-  // ── Other developer communities reserved for future sessions ───────────────
+  // â”€â”€ Other developer communities reserved for future sessions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 ];
 
-// Quick lookup: district code → community object
+// Quick lookup: district code â†’ community object
 export const communityByDistrict = Object.fromEntries(
   (allCommunities||[]).filter(c=>c&&c.id).map(c => [c.id, c])
 );
 
-// Quick lookup: community name → community object (handles aliases)
+// Quick lookup: community name â†’ community object (handles aliases)
 export function getCommunityData(communityName) {
   const distCode = getDistrictCode(communityName);
   if (distCode) return communityByDistrict[distCode] || null;
   return allCommunities.find(c => c.name === communityName) || null;
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // SECTION 7: FIRESTORE SEEDER PAYLOAD
-// Call this once from Admin Panel → Data Manager → Seed Projects
+// Call this once from Admin Panel â†’ Data Manager â†’ Seed Projects
 // Writes all 303 projects to Firestore projects/{id}
 // After seeding, Admin Panel can CRUD any project from any developer
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export function getAllProjectsForFirestore() {
   return allProjects.map(toFirestoreProject);
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // SECTION 8: PROJECT STATS SUMMARY
 // Pre-computed counts for dashboard KPIs
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export const projectStats = {
   total:           allProjects.length,
@@ -375,10 +375,10 @@ export const projectStats = {
 };
 
 
-// ─────────────────────────────────────────────────────────────────────────────
-// STUB EXPORTS — Placeholder exports for developer data not yet implemented
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// STUB EXPORTS â€” Placeholder exports for developer data not yet implemented
 // These prevent import errors in EmaarDashboardV2.jsx
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 // DAMAC
 export const damacIdentity           = { id:"damac",      name:"DAMAC Properties",    color:"#E84393", tier:"T1" };
