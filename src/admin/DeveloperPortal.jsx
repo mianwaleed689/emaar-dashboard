@@ -4,8 +4,8 @@ import { onAuthStateChanged, signOut } from "firebase/auth";
 import {
   collection, doc, getDoc, onSnapshot, addDoc, serverTimestamp, query, where
 } from "firebase/firestore";
-import { auth, db } from "./firebase";
-import { T } from "./data";
+import { auth, db } from "../firebase";
+import { T } from "../data";
 
 /**
  * Developer Portal
@@ -149,7 +149,7 @@ export default function DeveloperPortal() {
         <div>
           <h1 style={{ margin: 0, fontSize: 22, fontFamily: "'Fraunces',serif", color: T.gold, fontWeight: 600 }}>Developer Portal</h1>
           <p style={{ margin: "4px 0 0 0", fontSize: 12, color: T.textMuted }}>
-            Welcome, {userDoc?.name || user?.email} · {myDevelopments.length} verified development{myDevelopments.length !== 1 ? "s" : ""}
+            Welcome, {userDoc?.name || user?.email} Ã‚Â· {myDevelopments.length} verified development{myDevelopments.length !== 1 ? "s" : ""}
           </p>
         </div>
         <button onClick={() => signOut(auth).then(() => navigate("/"))} style={{ padding: "8px 16px", background: "transparent", border: "1px solid " + T.border, borderRadius: 8, color: T.textMuted, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
@@ -173,10 +173,10 @@ export default function DeveloperPortal() {
             <div style={{ display: "grid", gap: 10 }}>
               {myDevelopments.map(d => (
                 <div key={d.id} style={{ padding: 14, background: T.surface, border: "1px solid " + T.green + "40", borderRadius: 10, display: "flex", alignItems: "center", gap: 14 }}>
-                  <span style={{ fontSize: 18, color: T.green }}>✓</span>
+                  <span style={{ fontSize: 18, color: T.green }}>Ã¢Å“â€œ</span>
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: 14, color: T.white, fontWeight: 600 }}>{d.name}</div>
-                    <div style={{ fontSize: 11, color: T.textMuted }}>{d.community} · {d.saleStatus} · RERA #{d.reraProjectNumber || "-"}</div>
+                    <div style={{ fontSize: 11, color: T.textMuted }}>{d.community} Ã‚Â· {d.saleStatus} Ã‚Â· RERA #{d.reraProjectNumber || "-"}</div>
                   </div>
                   <span style={{ fontSize: 10, padding: "4px 10px", background: T.green + "20", color: T.green, borderRadius: 4, fontWeight: 600 }}>VERIFIED</span>
                 </div>
@@ -238,7 +238,7 @@ export default function DeveloperPortal() {
                     <div style={{ flex: 1 }}>
                       <div style={{ fontSize: 14, color: T.white, fontWeight: 600 }}>{d.name}</div>
                       <div style={{ fontSize: 11, color: T.textMuted }}>
-                        {d.community || "-"} · Currently listed as: {d.developerName || "unknown"} · RERA #{d.reraProjectNumber || "-"}
+                        {d.community || "-"} Ã‚Â· Currently listed as: {d.developerName || "unknown"} Ã‚Â· RERA #{d.reraProjectNumber || "-"}
                       </div>
                     </div>
                     {alreadyClaimed ? (

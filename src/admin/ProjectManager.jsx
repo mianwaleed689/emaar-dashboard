@@ -1,13 +1,13 @@
-/* ═══════════════════════════════════════════════════════════════
-   DXB ANALYTICS — PROJECT MANAGER
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   DXB ANALYTICS â€” PROJECT MANAGER
    Matching dashboard design DNA: sidebar, KPI cards, sections
-   ═══════════════════════════════════════════════════════════════ */
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 import React, { useState, useEffect } from "react";
-import { auth, db } from "./firebase";
+import { auth, db } from "../firebase";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import { collection, getDocs, doc, getDoc, setDoc } from "firebase/firestore";
 
-/* ─── THEME (exact dashboard match) ─── */
+/* â”€â”€â”€ THEME (exact dashboard match) â”€â”€â”€ */
 const T = {
   bg: "#04090F", surface: "#0A1628", surfaceAlt: "#0E1D35", card: "#0D1B30",
   gold: "#D4A843", goldLight: "#E8C96A", goldDim: "#B8912F", goldGlow: "rgba(212,168,67,0.12)",
@@ -17,7 +17,7 @@ const T = {
   red: "#EF4444", green: "#10B981", blue: "#3B82F6", purple: "#8B5CF6",
 };
 
-/* ─── ICONS (matching dashboard SVG style) ─── */
+/* â”€â”€â”€ ICONS (matching dashboard SVG style) â”€â”€â”€ */
 const I = {
   search: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>,
   grid: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>,
@@ -33,7 +33,7 @@ const I = {
   bell: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>,
 };
 
-/* ─── CSS (exactly matching main dashboard design DNA) ─── */
+/* â”€â”€â”€ CSS (exactly matching main dashboard design DNA) â”€â”€â”€ */
 const css = `
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700;9..144,900&display=swap');
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -158,7 +158,7 @@ select option { background: ${T.surface}; color: ${T.textPrimary}; }
 }
 `;
 
-/* ─── SAFE FIRESTORE DATA ─── */
+/* â”€â”€â”€ SAFE FIRESTORE DATA â”€â”€â”€ */
 function plainify(obj) {
   if (obj === null || obj === undefined) return "";
   if (typeof obj === "string" || typeof obj === "number" || typeof obj === "boolean") return obj;
@@ -168,10 +168,10 @@ function plainify(obj) {
   return String(obj);
 }
 
-/* ═══════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    MAIN COMPONENT
-   ═══════════════════════════════════════ */
-/* ─── REUSABLE COMPONENTS (outside component to prevent re-mount on state change) ─── */
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+/* â”€â”€â”€ REUSABLE COMPONENTS (outside component to prevent re-mount on state change) â”€â”€â”€ */
 const inputStyle = {
   width: "100%", padding: "11px 14px", background: T.bg, border: `1px solid ${T.border}`,
   borderRadius: 10, color: T.textPrimary, fontSize: 13, fontFamily: "'Outfit',sans-serif",
@@ -254,7 +254,7 @@ export default function ProjectManager({ embedded = false }) {
   }, [hasChanges]);
   const [activeSection, setActiveSection] = useState("basic");
 
-  /* ─── AUTH ─── */
+  /* â”€â”€â”€ AUTH â”€â”€â”€ */
   useEffect(() => {
     if (embedded) { setLoading(false); return; }
     const unsub = onAuthStateChanged(auth, async (u) => {
@@ -271,7 +271,7 @@ export default function ProjectManager({ embedded = false }) {
     return () => unsub();
   }, [embedded]);
 
-  /* ─── FETCH PROJECTS ─── */
+  /* â”€â”€â”€ FETCH PROJECTS â”€â”€â”€ */
   useEffect(() => {
     if (!isAdmin) return;
     (async () => {
@@ -285,7 +285,7 @@ export default function ProjectManager({ embedded = false }) {
     })();
   }, [isAdmin]);
 
-  /* ─── PROJECT SELECTION ─── */
+  /* â”€â”€â”€ PROJECT SELECTION â”€â”€â”€ */
   function handleSelect(id) {
     if (hasChanges && !window.confirm("You have unsaved changes. Discard them?")) return;
     setSelectedId(id);
@@ -305,16 +305,16 @@ export default function ProjectManager({ embedded = false }) {
     });
   }
 
-  /* ─── FORM HELPERS ─── */
+  /* â”€â”€â”€ FORM HELPERS â”€â”€â”€ */
   function set(key, val) { setForm(prev => ({ ...prev, [key]: val })); setHasChanges(true); }
   function setUnit(i, key, val) {
     setForm(prev => { const u = [...prev.units]; u[i] = { ...u[i], [key]: val }; return { ...prev, units: u }; });
     setHasChanges(true);
   }
   function addUnit() { setForm(prev => ({ ...prev, units: [...prev.units, { type: "1BR", available: 0, total: 0 }] })); setHasChanges(true); }
-  function removeUnit(i) { if (!window.confirm(`⚠️ REMOVE UNIT TYPE\n\nUnit: ${form.units[i]?.type || "Unit"} (${form.units[i]?.total || 0} total)\n\nThis will:\n• Remove this unit type from the project\n• Total and available counts will be lost\n• Save the project to apply changes\n\nContinue?`)) return; setForm(prev => ({ ...prev, units: prev.units.filter((_, x) => x !== i) })); setHasChanges(true); }
+  function removeUnit(i) { if (!window.confirm(`âš ï¸ REMOVE UNIT TYPE\n\nUnit: ${form.units[i]?.type || "Unit"} (${form.units[i]?.total || 0} total)\n\nThis will:\nâ€¢ Remove this unit type from the project\nâ€¢ Total and available counts will be lost\nâ€¢ Save the project to apply changes\n\nContinue?`)) return; setForm(prev => ({ ...prev, units: prev.units.filter((_, x) => x !== i) })); setHasChanges(true); }
 
-  /* ─── SAVE ─── */
+  /* â”€â”€â”€ SAVE â”€â”€â”€ */
   async function handleSave() {
     if (!form || !selectedId) return;
     setSaving(true);
@@ -324,14 +324,14 @@ export default function ProjectManager({ embedded = false }) {
       await setDoc(doc(db, "projectData", selectedId), data, { merge: true });
       setProjects(prev => prev.map(p => p.id === selectedId ? { ...p, ...data } : p));
       setHasChanges(false);
-      notify("✅ Project saved successfully!");
-    } catch (e) { notify("❌ Error: " + e.message); }
+      notify("âœ… Project saved successfully!");
+    } catch (e) { notify("âŒ Error: " + e.message); }
     setSaving(false);
   }
 
   function notify(msg) { setToast(msg); setTimeout(() => setToast(""), 3000); }
 
-  /* ─── FILTERS ─── */
+  /* â”€â”€â”€ FILTERS â”€â”€â”€ */
   const communities = [...new Set(projects.map(p => p.community))].filter(Boolean).sort();
   const filtered = projects.filter(p => {
     const ms = !search || (p.name || "").toLowerCase().includes(search.toLowerCase()) || (p.community || "").toLowerCase().includes(search.toLowerCase());
@@ -339,14 +339,14 @@ export default function ProjectManager({ embedded = false }) {
     return ms && mc;
   });
 
-  /* ─── STATS ─── */
+  /* â”€â”€â”€ STATS â”€â”€â”€ */
   const totalUnits = projects.reduce((s, p) => s + (Array.isArray(p.units) ? p.units.reduce((a, u) => a + (Number(u.total) || 0), 0) : 0), 0);
   const availUnits = projects.reduce((s, p) => s + (Array.isArray(p.units) ? p.units.reduce((a, u) => a + (Number(u.available) || 0), 0) : 0), 0);
   const avgProgress = projects.length > 0 ? Math.round(projects.reduce((s, p) => s + (Number(p.constructionProgress) || 0), 0) / projects.length) : 0;
   const progress = form ? (Number(form.constructionProgress) || 0) : 0;
   const progressColor = progress >= 80 ? T.green : progress >= 40 ? T.gold : T.textMuted;
 
-  /* ─── EDITOR SECTIONS NAV ─── */
+  /* â”€â”€â”€ EDITOR SECTIONS NAV â”€â”€â”€ */
   const SECTIONS = [
     { id: "basic", label: "Basic Info", icon: I.building },
     { id: "pricing", label: "Pricing", icon: I.dollar },
@@ -355,7 +355,7 @@ export default function ProjectManager({ embedded = false }) {
     { id: "location", label: "Location", icon: I.mapPin },
   ];
 
-  /* ─── LOADING ─── */
+  /* â”€â”€â”€ LOADING â”€â”€â”€ */
   if (loading) return (
     <div style={{ minHeight: "100vh", background: T.bg, display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 16 }}>
       <style>{css}</style>
@@ -377,15 +377,15 @@ export default function ProjectManager({ embedded = false }) {
       </svg>
       <h1 style={{ fontFamily: "'Fraunces',serif", fontSize: 24, fontWeight: 800, color: T.white }}>Admin Access Required</h1>
       <p style={{ color: T.textSecondary, fontSize: 13 }}>You don't have permission to access this page.</p>
-      <a href="/" style={{ color: T.gold, fontSize: 13, textDecoration: "none", padding: "10px 24px", border: `1px solid ${T.gold}`, borderRadius: 10, fontWeight: 600, transition: "all 0.2s" }}>← Back to Dashboard</a>
+      <a href="/" style={{ color: T.gold, fontSize: 13, textDecoration: "none", padding: "10px 24px", border: `1px solid ${T.gold}`, borderRadius: 10, fontWeight: 600, transition: "all 0.2s" }}>â† Back to Dashboard</a>
     </div>
   );
 
-  /* ─── RENDER (components defined at module level above) ─── */
+  /* â”€â”€â”€ RENDER (components defined at module level above) â”€â”€â”€ */
 
-  /* ═══════════════════════════════════════
+  /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
      EMBEDDED MODE (inside AdminPanel tab)
-     ═══════════════════════════════════════ */
+     â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
   if (embedded) {
     return (
       <div style={{ fontFamily: "'Outfit',sans-serif", color: T.textPrimary }}>
@@ -442,7 +442,7 @@ export default function ProjectManager({ embedded = false }) {
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
                 <div>
                   <h2 style={{ fontSize: 16, fontWeight: 700, color: T.white }}>{form.name || "Untitled"}</h2>
-                  <p style={{ fontSize: 10, color: T.textMuted }}>{form.community} · <span style={{ color: form.status === "Under Construction" ? T.green : T.blue }}>{form.status}</span></p>
+                  <p style={{ fontSize: 10, color: T.textMuted }}>{form.community} Â· <span style={{ color: form.status === "Under Construction" ? T.green : T.blue }}>{form.status}</span></p>
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                   {hasChanges && <div style={{ display: "flex", alignItems: "center", gap: 4, padding: "4px 10px", borderRadius: 8, background: T.surfaceAlt, border: `1px solid ${T.gold}30` }}><div style={{ width: 5, height: 5, borderRadius: "50%", background: T.gold }} /><span style={{ fontSize: 10, fontWeight: 600, color: T.gold }}>Unsaved</span></div>}
@@ -466,7 +466,7 @@ export default function ProjectManager({ embedded = false }) {
                 </div>
               </div>
             ) : (
-              /* Edit form — reuse the section nav + form from main render */
+              /* Edit form â€” reuse the section nav + form from main render */
               <div>
                 <div style={{ display: "flex", gap: 4, marginBottom: 16, flexWrap: "wrap" }}>
                   {[{ id: "basic", label: "Basic Info" }, { id: "pricing", label: "Pricing" }, { id: "units", label: "Units" }, { id: "location", label: "Location" }, { id: "media", label: "Media" }, { id: "contact", label: "Contact" }].map(s => (
@@ -513,7 +513,7 @@ export default function ProjectManager({ embedded = false }) {
                         <Select label={i === 0 ? "Type" : ""} value={u.type || ""} onChange={v => { const arr = [...form.units]; arr[i] = { ...arr[i], type: v }; set("units", arr); }} options={["Studio", "1BR", "2BR", "3BR", "4BR", "5BR", "Penthouse", "Duplex", "Villa", "Townhouse"]} />
                         <Input label={i === 0 ? "Total" : ""} value={u.total || ""} onChange={v => { const arr = [...form.units]; arr[i] = { ...arr[i], total: Number(v) }; set("units", arr); }} type="number" />
                         <Input label={i === 0 ? "Available" : ""} value={u.available || ""} onChange={v => { const arr = [...form.units]; arr[i] = { ...arr[i], available: Number(v) }; set("units", arr); }} type="number" />
-                        <button type="button" onClick={() => { const u = form.units[i]; if (!window.confirm(`⚠️ REMOVE UNIT TYPE\n\nUnit: ${u?.type || "Unit"} (${u?.total || 0} total)\n\nThis will remove this unit type. Save to apply.\n\nContinue?`)) return; const arr = form.units.filter((_, j) => j !== i); set("units", arr); }} style={{ padding: "6px 8px", background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 6, color: "#EF4444", cursor: "pointer", fontSize: 10 }}>{I.trash}</button>
+                        <button type="button" onClick={() => { const u = form.units[i]; if (!window.confirm(`âš ï¸ REMOVE UNIT TYPE\n\nUnit: ${u?.type || "Unit"} (${u?.total || 0} total)\n\nThis will remove this unit type. Save to apply.\n\nContinue?`)) return; const arr = form.units.filter((_, j) => j !== i); set("units", arr); }} style={{ padding: "6px 8px", background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 6, color: "#EF4444", cursor: "pointer", fontSize: 10 }}>{I.trash}</button>
                       </div>
                     ))}
                   </Section>
@@ -563,20 +563,20 @@ export default function ProjectManager({ embedded = false }) {
     );
   }
 
-  /* ═══════════════════════════════════════
+  /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
      FULL PAGE RENDER (standalone /manage)
-     ═══════════════════════════════════════ */
+     â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
   return (
     <div style={{ minHeight: "100vh", background: T.bg, fontFamily: "'Outfit',sans-serif", color: T.textPrimary }}>
       <style>{css}</style>
 
       {/* Toast */}
-      {toast && <div key={toast} className="toast-notify" style={{ position: "fixed", bottom: 24, right: 24, padding: "12px 24px", borderRadius: 10, background: toast.includes("✅") ? T.green : T.red, color: T.white, fontWeight: 700, fontSize: 13, zIndex: 9999, boxShadow: "0 12px 40px rgba(0,0,0,0.4)" }}>{toast}</div>}
+      {toast && <div key={toast} className="toast-notify" style={{ position: "fixed", bottom: 24, right: 24, padding: "12px 24px", borderRadius: 10, background: toast.includes("âœ…") ? T.green : T.red, color: T.white, fontWeight: 700, fontSize: 13, zIndex: 9999, boxShadow: "0 12px 40px rgba(0,0,0,0.4)" }}>{toast}</div>}
 
       {/* Mobile overlay */}
       <div className={`mobile-overlay ${sidebarOpen ? "open" : ""}`} onClick={() => setSidebarOpen(false)} />
 
-      {/* ─── LEFT SIDEBAR ─── */}
+      {/* â”€â”€â”€ LEFT SIDEBAR â”€â”€â”€ */}
       <aside className={`pm-sidebar ${sidebarOpen ? "open" : ""}`} style={{ position: "fixed", top: 0, left: 0, bottom: 0, width: 240, background: T.surface, borderRight: `1px solid ${T.border}`, display: "flex", flexDirection: "column", zIndex: 100, transition: "transform 0.3s ease" }}>
         {/* Logo */}
         <div style={{ padding: "24px 20px 20px", borderBottom: `1px solid ${T.border}` }}>
@@ -687,7 +687,7 @@ export default function ProjectManager({ embedded = false }) {
         </div>
       </aside>
 
-      {/* ─── MAIN CONTENT ─── */}
+      {/* â”€â”€â”€ MAIN CONTENT â”€â”€â”€ */}
       <main className="pm-main" style={{ marginLeft: 240, minHeight: "100vh" }}>
         {/* Top bar (matching dashboard) */}
         <header className="pm-topbar pm-header" style={{ position: "sticky", top: 0, zIndex: 20, height: 60, background: `${T.surface}ee`, backdropFilter: "blur(16px)", borderBottom: `1px solid ${T.border}`, padding: "0 28px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
@@ -705,7 +705,7 @@ export default function ProjectManager({ embedded = false }) {
                 {form ? form.name || "Untitled" : "Project Manager"}
               </h1>
               <p style={{ fontSize: 10, color: T.textMuted, letterSpacing: 1 }}>
-                {form ? <>{form.community} · <span style={{ color: form.status === "Under Construction" ? T.green : T.blue }}>{form.status}</span></> : `${projects.length} projects · ${new Date().toLocaleDateString("en-AE", { day: "numeric", month: "short", year: "numeric" })}`}
+                {form ? <>{form.community} Â· <span style={{ color: form.status === "Under Construction" ? T.green : T.blue }}>{form.status}</span></> : `${projects.length} projects Â· ${new Date().toLocaleDateString("en-AE", { day: "numeric", month: "short", year: "numeric" })}`}
               </p>
             </div>
           </div>
@@ -731,12 +731,12 @@ export default function ProjectManager({ embedded = false }) {
 
         <div style={{ padding: "28px 28px 60px" }}>
           {!form ? (
-            /* ─── NO PROJECT SELECTED ─── */
+            /* â”€â”€â”€ NO PROJECT SELECTED â”€â”€â”€ */
             <>
-              <Section title="Project Portfolio" sub={`${projects.length} Emaar projects · ${communities.length} communities · Select to edit`}>
+              <Section title="Project Portfolio" sub={`${projects.length} Emaar projects Â· ${communities.length} communities Â· Select to edit`}>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
-                  <KPI label="Total Projects" value={projects.length} sub={`${projects.filter(p => p.status === "Under Construction").length} building · ${projects.filter(p => p.status === "Off-Plan").length} off-plan`} delay={1} />
-                  <KPI label="Communities" value={communities.length} sub={communities.slice(0, 3).join(" · ") + (communities.length > 3 ? ` +${communities.length - 3}` : "")} delay={2} />
+                  <KPI label="Total Projects" value={projects.length} sub={`${projects.filter(p => p.status === "Under Construction").length} building Â· ${projects.filter(p => p.status === "Off-Plan").length} off-plan`} delay={1} />
+                  <KPI label="Communities" value={communities.length} sub={communities.slice(0, 3).join(" Â· ") + (communities.length > 3 ? ` +${communities.length - 3}` : "")} delay={2} />
                   <KPI label="Total Units" value={totalUnits.toLocaleString()} sub={`${availUnits.toLocaleString()} available`} color={T.teal} delay={3} />
                   <KPI label="Avg Construction" value={`${avgProgress}%`} sub="Weighted average progress" color={avgProgress >= 50 ? T.green : T.gold} delay={4} />
                 </div>
@@ -746,12 +746,12 @@ export default function ProjectManager({ embedded = false }) {
                 <div style={{ marginBottom: 16, color: T.gold, opacity: 0.6 }}><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg></div>
                 <h2 style={{ fontFamily: "'Fraunces',serif", fontSize: 24, fontWeight: 700, color: T.white, marginBottom: 8 }}>Select a Project</h2>
                 <p style={{ color: T.textSecondary, fontSize: 13, maxWidth: 420, margin: "0 auto", lineHeight: 1.6 }}>
-                  Click any project from the sidebar to edit its details — pricing, units, status, contact info, and location data.
+                  Click any project from the sidebar to edit its details â€” pricing, units, status, contact info, and location data.
                 </p>
               </div>
             </>
           ) : (
-            /* ─── PROJECT EDITOR ─── */
+            /* â”€â”€â”€ PROJECT EDITOR â”€â”€â”€ */
             <div className="slide-right">
               {/* Project Header */}
               <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 24, paddingBottom: 20, borderBottom: `1px solid ${T.border}` }}>
@@ -761,7 +761,7 @@ export default function ProjectManager({ embedded = false }) {
                 <div style={{ flex: 1 }}>
                   <h1 style={{ fontFamily: "'Fraunces',serif", fontSize: 26, fontWeight: 900, color: T.white, lineHeight: 1.1 }}>{form.name || "Untitled"}</h1>
                   <p style={{ color: T.textMuted, fontSize: 12, marginTop: 3 }}>
-                    {form.community} · <span style={{ color: T.textSecondary }}>{form.status}</span> · <span style={{ fontSize: 10 }}>ID: {selectedId}</span>
+                    {form.community} Â· <span style={{ color: T.textSecondary }}>{form.status}</span> Â· <span style={{ fontSize: 10 }}>ID: {selectedId}</span>
                   </p>
                   {/* Construction bar */}
                   <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 8 }}>
@@ -787,7 +787,7 @@ export default function ProjectManager({ embedded = false }) {
                 ))}
               </div>
 
-              {/* ─── BASIC INFO ─── */}
+              {/* â”€â”€â”€ BASIC INFO â”€â”€â”€ */}
               {activeSection === "basic" && (
                 <Section title="Basic Information" sub="Project identity and classification">
                   <div className="chart-box" style={{ padding: 24 }}>
@@ -795,7 +795,7 @@ export default function ProjectManager({ embedded = false }) {
                       <Input label="Project Name" value={form.name} onChange={v => set("name", v)} />
                       <Input label="Community" value={form.community} onChange={v => set("community", v)} />
                       <Select label="Status" value={form.status} onChange={v => set("status", v)} options={["Off-Plan", "Under Construction", "Ready", "Sold Out", "Launching"]} />
-                      <Input label="Property Type" value={form.type} onChange={v => set("type", v)} placeholder="e.g. Apartments · 1-3 BR" />
+                      <Input label="Property Type" value={form.type} onChange={v => set("type", v)} placeholder="e.g. Apartments Â· 1-3 BR" />
                       <Select label="Segment" value={form.segment} onChange={v => set("segment", v)} options={["Affordable", "Mid-Market", "Mid-Premium", "Premium", "Ultra-Premium", "Luxury", "Luxury Branded", "Ultra-Lux Branded", "Ultra-Luxury"]} />
                       <Input label="Branded" value={form.branded} onChange={v => set("branded", v)} placeholder="Address, Vida, etc." />
                     </div>
@@ -803,7 +803,7 @@ export default function ProjectManager({ embedded = false }) {
                 </Section>
               )}
 
-              {/* ─── PRICING ─── */}
+              {/* â”€â”€â”€ PRICING â”€â”€â”€ */}
               {activeSection === "pricing" && (
                 <Section title="Pricing & Handover" sub="Financial details and timeline">
                   <div className="chart-box" style={{ padding: 24 }}>
@@ -819,7 +819,7 @@ export default function ProjectManager({ embedded = false }) {
                 </Section>
               )}
 
-              {/* ─── UNITS ─── */}
+              {/* â”€â”€â”€ UNITS â”€â”€â”€ */}
               {activeSection === "units" && (
                 <Section title="Unit Inventory" sub="Manage unit types, availability, and totals" action={
                   <button type="button" onClick={addUnit} style={{
@@ -889,7 +889,7 @@ export default function ProjectManager({ embedded = false }) {
                 </Section>
               )}
 
-              {/* ─── CONTACT ─── */}
+              {/* â”€â”€â”€ CONTACT â”€â”€â”€ */}
               {activeSection === "contact" && (
                 <Section title="Contact & Media" sub="Inquiry channels and project assets">
                   <div className="chart-box" style={{ padding: 24 }}>
@@ -911,7 +911,7 @@ export default function ProjectManager({ embedded = false }) {
                 </Section>
               )}
 
-              {/* ─── LOCATION ─── */}
+              {/* â”€â”€â”€ LOCATION â”€â”€â”€ */}
               {activeSection === "location" && (
                 <Section title="Location Data" sub="Geographic coordinates and area info">
                   <div className="chart-box" style={{ padding: 24 }}>
