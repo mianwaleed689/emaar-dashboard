@@ -1,355 +1,423 @@
 /* eslint-disable */
-/* OVERVIEW TAB — Dashboard home with KPIs from all live sources */
+/* DXB ANALYTICS - OVERVIEW TAB (World Class + Role Intelligence) - Session 7 April 2026 */
 
-import React from "react";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area, LineChart, Line, PieChart, Pie, Cell } from "recharts";
+import React, { useState, useMemo, useEffect } from "react";
 import { T } from "../data";
 import { SvgIcons } from "../components/Icons";
 import { useOverviewKpis, useMarketKpis } from "../hooks/useMarketMetrics";
 
+// Role-aware content
+const ROLES = [
+  { key: "Investor", icon: "📈", color: "#D4A843", desc: "Yield · ROI · Market timing" },
+  { key: "Agent", icon: "🏡", color: "#63B3ED", desc: "Listings · Leads · Volume" },
+  { key: "Developer", icon: "🏗", color: "#FC8181", desc: "Pipeline · Supply · Launches" },
+  { key: "Buyer", icon: "🔑", color: "#68D391", desc: "Pricing · Mortgage · Value" },
+];
+
+const ROLE_BRIEFING = {
+  Investor: {
+    color: "#D4A843",
+    headline: "Market is in month 57 of its longest ever growth cycle.",
+    signals: [
+      { icon: "✅", text: "Avg yield 6.55% — 3x London, 1.5x New York. Zero tax advantage compounds annually." },
+      { icon: "✅", text: "Q1 2026: AED 252B (+31% YoY). Value growth outpacing volume — market maturing, not crashing." },
+      { icon: "⚠️", text: "Supply risk: ~98K units forecast 2026. JVC, Business Bay, Dubai South face price pressure." },
+      { icon: "💡", text: "Best entry window: Palm, DIFC, Creek Harbour — supply-constrained, price support likely." },
+    ],
+    actions: [
+      { label: "Find highest-yield communities", tab: "Yields", icon: "💰" },
+      { label: "Check supply risk by community", tab: "Risk", icon: "⚠️" },
+      { label: "Calculate your ROI", tab: "DXB Estimate", icon: "🎯" },
+      { label: "Zero-tax advantage vs London/NY", tab: "Market", icon: "📊" },
+    ],
+  },
+  Agent: {
+    color: "#63B3ED",
+    headline: "270,000+ transactions in 2025. Q1 2026 already at 60,303.",
+    signals: [
+      { icon: "✅", text: "JVC: 18,782 transactions — most active community. List here for fastest turnover." },
+      { icon: "✅", text: "72% of all deals in AED 500K–3M range. Anchor your pitch at this price point." },
+      { icon: "⚠️", text: "Off-plan now 70-80% of market. If you are not selling off-plan, you are missing the majority." },
+      { icon: "💡", text: "Villa share growing: 7.9% in 2024 → 13.5% in Q1 2026. Upskill in villa communities." },
+    ],
+    actions: [
+      { label: "Browse off-plan projects", tab: "Projects", icon: "🏗" },
+      { label: "Top volume communities", tab: "DLD Volumes", icon: "📋" },
+      { label: "Check upcoming launches", tab: "Launch Calendar", icon: "🗓" },
+      { label: "Community intelligence", tab: "Neighbourhoods", icon: "🏘" },
+    ],
+  },
+  Developer: {
+    color: "#FC8181",
+    headline: "228 developers active in 2025. Market getting crowded.",
+    signals: [
+      { icon: "✅", text: "Off-plan PPSF premium: AED 2,149 vs AED 1,663 ready — 29% developer advantage on launches." },
+      { icon: "✅", text: "Only 46% of units delivered on time in 2025. Differentiate on delivery credibility." },
+      { icon: "⚠️", text: "366K units in pipeline to 2028. Absorption risk is real in mid-tier communities." },
+      { icon: "💡", text: "Golden Visa at AED 2M drives demand. Launch at this threshold to capture investor base." },
+    ],
+    actions: [
+      { label: "Competitor launches", tab: "Competitors", icon: "🥊" },
+      { label: "Supply pipeline risk", tab: "Risk", icon: "⚠️" },
+      { label: "Developer health scores", tab: "Developer Health", icon: "🏢" },
+      { label: "Bank financing options", tab: "Banking", icon: "🏛" },
+    ],
+  },
+  Buyer: {
+    color: "#68D391",
+    headline: "Q1 2026 avg PPSF: AED 1,759. Prices rising but still below London/NY.",
+    signals: [
+      { icon: "✅", text: "EIBOR 3.59% — best mortgage rates since 2021. Fixed 3-year from 3.85% (Capital Zone Apr 2026)." },
+      { icon: "✅", text: "AED 500K–3M range: 72% of all deals — strongest resale liquidity if you need to exit." },
+      { icon: "⚠️", text: "72% of scheduled units are overdue on delivery. Vet developer track record before off-plan." },
+      { icon: "💡", text: "AED 2M+ qualifies you for a 10-year Golden Visa. Strong residency anchor for families." },
+    ],
+    actions: [
+      { label: "Estimate property value", tab: "DXB Estimate", icon: "🎯" },
+      { label: "Calculate mortgage", tab: "Mortgage", icon: "🏦" },
+      { label: "Community comparison", tab: "Neighbourhoods", icon: "🏘" },
+      { label: "Golden Visa eligibility", tab: "Golden Visa", icon: "🛂" },
+    ],
+  },
+};
+
+const TAB_NAV = [
+  { section: "Market Intelligence", color: "#D4A843", tabs: [
+    { name: "Market", desc: "Dubai macro: AED 917B 2025 · +31% Q1 2026 · ValuStrat · REIDIN", icon: "📊" },
+    { name: "DLD Volumes", desc: "Transaction volumes by community · off-plan vs secondary", icon: "📋" },
+    { name: "Price History", desc: "PPSF trends 2020-2026 · ValuStrat VPI · momentum", icon: "📈" },
+    { name: "Neighbourhoods", desc: "152 communities · yields · metro · schools · supply risk", icon: "🏘" },
+    { name: "Launch Calendar", desc: "Upcoming off-plan launches · EOI open · pipeline", icon: "🗓" },
+    { name: "Currency", desc: "AED vs major currencies · live exchange rates", icon: "💱" },
+  ]},
+  { section: "Property Explorer", color: "#63B3ED", tabs: [
+    { name: "Projects", desc: "Off-plan database · payment plans · handover dates", icon: "🏗" },
+    { name: "Map", desc: "Community map · yield heat · PPSF · volume layers", icon: "🗺" },
+    { name: "Handover", desc: "Project completion tracker · DLD timeline", icon: "🔑" },
+    { name: "Service Charges", desc: "RERA service charge rates · by community · per sqft", icon: "📄" },
+  ]},
+  { section: "Investment Tools", color: "#68D391", tabs: [
+    { name: "Yields", desc: "Gross/net yield by community · top performers · Bayut data", icon: "💰" },
+    { name: "STR vs LTR", desc: "Short-term vs long-term rental comparison", icon: "⚖️" },
+    { name: "Mortgage", desc: "UAE bank rates · EIBOR 3.59% · repayment calculator", icon: "🏦" },
+    { name: "Investment Score", desc: "DXB Analytics composite score · 99 communities ranked", icon: "⭐" },
+    { name: "Flip", desc: "Off-plan flip calculator · resale premium · costs", icon: "🔄" },
+    { name: "DXB Estimate", desc: "AVM valuation · 3-method cross-check · DLD PPSF", icon: "🎯" },
+    { name: "Portfolio", desc: "Track your properties · ROI · equity · rental income", icon: "📁" },
+    { name: "Golden Visa", desc: "AED 2M threshold checker · 10-year residency", icon: "🛂" },
+    { name: "Risk", desc: "Supply risk · price cycle · community risk radar", icon: "⚠️" },
+  ]},
+  { section: "Developer Intelligence", color: "#FC8181", tabs: [
+    { name: "Financials", desc: "Developer P&L · Emaar vs DAMAC vs Sobha", icon: "📉" },
+    { name: "Developer Health", desc: "DXB composite score · delivery rate · strength", icon: "🏢" },
+    { name: "Competitors", desc: "Market share · launches · pricing positioning", icon: "🥊" },
+    { name: "Banking", desc: "UAE bank comparison · mortgage products · LTV", icon: "🏛" },
+  ]},
+  { section: "CRM & Agency", color: "#9F7AEA", tabs: [
+    { name: "My Leads", desc: "Lead pipeline · follow-ups · conversion tracking", icon: "👥" },
+    { name: "Pipeline", desc: "Deal stages · commission tracker · forecast", icon: "🎰" },
+    { name: "Listings", desc: "Your active listings · performance · conversion", icon: "📌" },
+    { name: "Marketing", desc: "Lead generation · channel performance · AI copy", icon: "📢" },
+    { name: "Team", desc: "Agent performance · leaderboard · org management", icon: "🤝" },
+    { name: "Agency", desc: "Org profile · RERA card · commission splits", icon: "🏬" },
+  ]},
+];
+
+const Signal = ({ label, value, color }) => (
+  <div style={{ display:"flex", alignItems:"center", gap:6, padding:"4px 10px", borderRadius:20, background:(color||"#D4A843")+"15", border:"1px solid "+(color||"#D4A843")+"30" }}>
+    <span style={{ fontSize:9, color:color||"#D4A843" }}>●</span>
+    <span style={{ fontSize:10, color:T.textSecondary }}>{label}</span>
+    <span style={{ fontSize:10, fontWeight:700, color:color||"#D4A843" }}>{value}</span>
+  </div>
+);
+
+const QuickStat = ({ label, value, change, note, color, onClick }) => (
+  <div onClick={onClick} style={{ background:"rgba(255,255,255,0.03)", border:"1px solid "+T.border, borderRadius:10, padding:"12px 14px", cursor:onClick?"pointer":"default", transition:"border-color 0.15s" }}
+    onMouseEnter={e => onClick&&(e.currentTarget.style.borderColor=(color||T.gold)+"60")}
+    onMouseLeave={e => onClick&&(e.currentTarget.style.borderColor=T.border)}
+  >
+    <div style={{ fontSize:10, color:T.textMuted, fontWeight:700, textTransform:"uppercase", letterSpacing:0.8, marginBottom:7 }}>{label}</div>
+    <div style={{ fontFamily:"'Fraunces',serif", fontSize:18, fontWeight:800, color:color||T.white, lineHeight:1.1, marginBottom:4 }}>{value||"—"}</div>
+    {change&&<div style={{ fontSize:10, color:T.green }}>{change}</div>}
+    {note&&<div style={{ fontSize:10, color:T.textMuted, marginTop:3 }}>{note}</div>}
+  </div>
+);
+
+const ActivityItem = ({ icon, label, count, color, onClick }) => (
+  <div onClick={onClick} style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"10px 12px", borderRadius:8, background:T.surfaceAlt, cursor:onClick?"pointer":"default", marginBottom:8, transition:"background 0.15s" }}
+    onMouseEnter={e => onClick&&(e.currentTarget.style.background="rgba(255,255,255,0.05)")}
+    onMouseLeave={e => onClick&&(e.currentTarget.style.background=T.surfaceAlt)}
+  >
+    <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+      <span style={{ fontSize:14 }}>{icon}</span>
+      <span style={{ fontSize:12, color:T.textSecondary }}>{label}</span>
+    </div>
+    <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+      <span style={{ fontFamily:"'Fraunces',serif", fontSize:16, fontWeight:800, color:count>0?color||T.gold:T.textMuted }}>{count}</span>
+      {onClick&&<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={T.textMuted} strokeWidth="2"><polyline points="9 18 15 12 9 6"/></svg>}
+    </div>
+  </div>
+);
+
 function OverviewTab({
   liveMarketData, liveDLDVolumes, liveDevHealth, liveMortgageRates, liveYields,
   allDevelopers, deals, listings, myLeads, myPortfolio, watchlist,
-  aiInsights, gDeveloper, lastDataSync,
-  globalFilters = {},
-  handleTabChange,
+  aiInsights, gDeveloper, lastDataSync, globalFilters={}, handleTabChange,
 }) {
+  const [role, setRole] = useState(() => { try { return localStorage.getItem("dxb_role")||"Investor"; } catch(e) { return "Investor"; } });
+  const [navExpanded, setNavExpanded] = useState(null);
+  const { data: firestoreOverviewKpis=[] } = useOverviewKpis();
+  const { data: firestoreMarketKpis=[] } = useMarketKpis();
 
-  /* Phase 2.4 Batch 1: derive which communities match the current filters.
-     - If gDeveloper === "all" and no community filter, returns null (no filter).
-     - Otherwise returns a Set of community names that match.
-     - Looking up by developer uses allDevelopers[].communities[] (the array
-       you set on each developer record in Admin → Data Manager → Developers). */
-  const matchingCommunities = (() => {
-    const devFilter = gDeveloper && gDeveloper !== "all" ? String(gDeveloper).toLowerCase() : null;
-    const communityFilter = globalFilters?.community && globalFilters.community !== "all"
-      ? String(globalFilters.community).toLowerCase()
-      : null;
-    if (!devFilter && !communityFilter) return null;
+  useEffect(() => { try { localStorage.setItem("dxb_role", role); } catch(e) {} }, [role]);
 
-    // Start from all — narrow down
-    let set = null;
-    if (devFilter) {
-      const dev = (allDevelopers || []).find(d =>
-        String(d.id || "").toLowerCase() === devFilter ||
-        String(d.name || "").toLowerCase() === devFilter ||
-        String(d.name || "").toLowerCase().includes(devFilter)
-      );
-      if (dev && Array.isArray(dev.communities) && dev.communities.length > 0) {
-        set = new Set(dev.communities.map(c => String(c).toLowerCase()));
-      } else {
-        // Unknown developer or no communities listed — empty result
-        set = new Set();
-      }
-    }
-    if (communityFilter) {
-      if (set) {
-        // Intersect
-        set = new Set([...set].filter(c => c === communityFilter));
-      } else {
-        set = new Set([communityFilter]);
-      }
-    }
-    return set;
-  })();
+  const syncTime = lastDataSync ? lastDataSync.toLocaleTimeString("en-AE",{hour:"2-digit",minute:"2-digit"}) : null;
+  const allKpis = useMemo(() => {
+    const live=(liveMarketData||[]).filter(d=>d.metric&&d.value);
+    return live.length>0?live:firestoreOverviewKpis.length>0?firestoreOverviewKpis:firestoreMarketKpis;
+  },[liveMarketData,firestoreOverviewKpis,firestoreMarketKpis]);
 
-  const matchesFilter = (communityName) => {
-    if (!matchingCommunities) return true;
-    return matchingCommunities.has(String(communityName || "").toLowerCase());
-  };
+  const eibor3m=liveMortgageRates?.[0]?.eibor3m;
+  const eiborDisplay=eibor3m?eibor3m.toFixed(2)+"%":"3.59%";
+  const leadsCount=myLeads?.length||0;
+  const dealsCount=deals?.length||0;
+  const listingsCount=listings?.length||0;
+  const portfolioCount=myPortfolio?.length||0;
+  const watchlistCount=watchlist?.length||0;
+  const devFilterLabel=gDeveloper&&gDeveloper!=="all"?(allDevelopers||[]).find(d=>String(d.id).toLowerCase()===String(gDeveloper).toLowerCase())?.name||gDeveloper:null;
+  const briefing=ROLE_BRIEFING[role];
+  const roleObj=ROLES.find(r=>r.key===role);
 
-  // Label for filter indicator — e.g. "Emaar Properties · Dubai Marina"
-  const filterLabel = (() => {
-    const parts = [];
-    if (gDeveloper && gDeveloper !== "all") {
-      const dev = (allDevelopers || []).find(d =>
-        String(d.id).toLowerCase() === String(gDeveloper).toLowerCase()
-      );
-      parts.push(dev?.name || gDeveloper);
-    }
-    if (globalFilters?.community && globalFilters.community !== "all") {
-      parts.push(globalFilters.community);
-    }
-    return parts.join(" · ");
-  })();
+  return (
+    <div style={{ paddingTop:4, paddingBottom:60 }}>
 
+      {/* LIVE MARKET BANNER */}
+      <div style={{ background:"linear-gradient(135deg,rgba(212,168,67,0.08) 0%,rgba(99,179,237,0.04) 100%)", border:"1px solid rgba(212,168,67,0.2)", borderRadius:14, padding:"16px 20px", marginBottom:20 }}>
+        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", flexWrap:"wrap", gap:12, marginBottom:12 }}>
+          <div>
+            <div style={{ fontFamily:"'Fraunces',serif", fontSize:18, fontWeight:800, color:T.white, marginBottom:4 }}>Dubai Real Estate · April 2026</div>
+            <div style={{ fontSize:11, color:T.textSecondary }}>Q1 2026: AED 252B total transactions · +31% YoY · 60,303 deals · Month 57 of growth cycle</div>
+          </div>
+          <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+            <div style={{ width:6, height:6, borderRadius:"50%", background:T.green, animation:"pulse 2s infinite" }} />
+            <span style={{ fontSize:10, color:T.textMuted }}>{syncTime?"Synced "+syncTime:"Live · DXB Analytics"}</span>
+            {devFilterLabel&&<span style={{ fontSize:10, padding:"2px 8px", borderRadius:10, background:"rgba(212,168,67,0.1)", color:T.gold, border:"1px solid rgba(212,168,67,0.2)" }}>{devFilterLabel}</span>}
+          </div>
+        </div>
+        <div style={{ display:"flex", flexWrap:"wrap", gap:8 }}>
+          <Signal label="Q1 2026" value="AED 252B" color={T.gold} />
+          <Signal label="YoY Growth" value="+31%" color={T.green} />
+          <Signal label="Off-Plan" value="70-80%" color={T.gold} />
+          <Signal label="Avg PPSF" value="AED 1,759" color="#63B3ED" />
+          <Signal label="EIBOR 3M" value={eiborDisplay} color="#9F7AEA" />
+          <Signal label="Health" value="72/100 Growing" color={T.green} />
+          <Signal label="Cycle" value="Month 57" color={T.gold} />
+        </div>
+      </div>
 
-  const { data: firestoreOverviewKpis = [] } = useOverviewKpis();
-  const { data: firestoreMarketKpis = [] } = useMarketKpis();
+      {/* ROLE SELECTOR */}
+      <div style={{ marginBottom:16 }}>
+        <div style={{ fontSize:11, color:T.textMuted, fontWeight:700, marginBottom:8 }}>I AM A... <span style={{ color:T.textMuted, fontWeight:400 }}>(personalises your dashboard)</span></div>
+        <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
+          {ROLES.map(r=>(
+            <button key={r.key} type="button" onClick={()=>setRole(r.key)} style={{ padding:"8px 16px", borderRadius:20, fontSize:12, fontWeight:700, cursor:"pointer", fontFamily:"'Outfit',sans-serif", transition:"all 0.2s", background:role===r.key?r.color+"20":T.surfaceAlt, border:"1px solid "+(role===r.key?r.color:T.border), color:role===r.key?r.color:T.textSecondary, display:"flex", alignItems:"center", gap:6 }}>
+              <span>{r.icon}</span><span>{r.key}</span>
+            </button>
+          ))}
+        </div>
+      </div>
 
-            const OvKPI = ({ label, value, sub, color, icon, onClick, delay }) => (
-              <div className={`kpi-card fade-up delay-${delay||1}`} onClick={onClick} style={{ cursor: onClick ? "pointer" : "default" }}>
-                <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 12 }}>
-                  <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase" }}>{label}</div>
-                  <div style={{ color: color || T.gold, opacity: 0.8 }}>{icon}</div>
-                </div>
-                <div style={{ fontFamily: "'Fraunces', serif", fontSize: 26, fontWeight: 800, color: T.white, lineHeight: 1.1, marginBottom: 6 }}>{value || "—"}</div>
-                {sub && <div style={{ fontSize: 11, color: T.textSecondary }}>{sub}</div>}
+      {/* ROLE BRIEFING CARD */}
+      <div style={{ background:"rgba(255,255,255,0.02)", border:"1px solid "+briefing.color+"30", borderLeft:"3px solid "+briefing.color, borderRadius:12, padding:"18px 20px", marginBottom:24 }}>
+        <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:12, fontFamily:"'Fraunces',serif" }}>
+          {roleObj?.icon} {briefing.headline}
+        </div>
+        <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(280px,1fr))", gap:8, marginBottom:14 }}>
+          {briefing.signals.map((s,i)=>(
+            <div key={i} style={{ display:"flex", gap:8, fontSize:11, color:T.textSecondary, lineHeight:1.6 }}>
+              <span style={{ flexShrink:0 }}>{s.icon}</span>
+              <span>{s.text}</span>
+            </div>
+          ))}
+        </div>
+        <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
+          {briefing.actions.map((a,i)=>(
+            <button key={i} type="button" onClick={()=>handleTabChange?.(a.tab)} style={{ padding:"7px 14px", borderRadius:20, fontSize:11, fontWeight:600, cursor:"pointer", fontFamily:"'Outfit',sans-serif", background:"rgba(255,255,255,0.04)", border:"1px solid "+T.border, color:briefing.color, display:"flex", alignItems:"center", gap:6, transition:"border-color 0.15s" }}
+              onMouseEnter={e=>(e.currentTarget.style.borderColor=briefing.color+"60")}
+              onMouseLeave={e=>(e.currentTarget.style.borderColor=T.border)}
+            >
+              <span>{a.icon}</span><span>{a.label} →</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* WORKSPACE + MARKET PULSE */}
+      <div style={{ display:"grid", gridTemplateColumns:"280px 1fr", gap:16, marginBottom:24 }}>
+        <div style={{ background:"rgba(255,255,255,0.02)", border:"1px solid "+T.border, borderRadius:12, padding:"18px" }}>
+          <div style={{ fontSize:11, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.8, marginBottom:14 }}>Your Workspace</div>
+          <ActivityItem icon="👥" label="Active Leads" count={leadsCount} color="#63B3ED" onClick={()=>handleTabChange?.("My Leads")} />
+          <ActivityItem icon="🤝" label="Active Deals" count={dealsCount} color={T.gold} onClick={()=>handleTabChange?.("Pipeline")} />
+          <ActivityItem icon="📌" label="My Listings" count={listingsCount} color={T.green} onClick={()=>handleTabChange?.("Listings")} />
+          <ActivityItem icon="🏠" label="Portfolio" count={portfolioCount} color="#FC8181" onClick={()=>handleTabChange?.("Portfolio")} />
+          <ActivityItem icon="⭐" label="Watchlist" count={watchlistCount} color="#9F7AEA" />
+          {leadsCount===0&&dealsCount===0&&listingsCount===0&&(
+            <div style={{ marginTop:12, padding:"12px 14px", background:"rgba(212,168,67,0.05)", borderRadius:8, border:"1px solid rgba(212,168,67,0.1)" }}>
+              <div style={{ fontSize:11, color:T.textMuted, lineHeight:1.6 }}>
+                <span style={{ color:T.gold, fontWeight:700 }}>Get started:</span> Add your first lead in My Leads, create a listing, or track a deal in Pipeline.
               </div>
-            );
+            </div>
+          )}
+        </div>
+        <div>
+          <div style={{ fontSize:11, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.8, marginBottom:12 }}>Market Pulse — FY2025 · Q1 2026 Update</div>
+          <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(155px,1fr))", gap:10 }}>
+            <QuickStat label="Total Market Value" value="AED 917B" change="+20% YoY · DLD 2025" note="Q1 2026: AED 252B (+31%)" color={T.gold} onClick={()=>handleTabChange?.("Market")} />
+            <QuickStat label="Total Transactions" value="270,000+" change="+20% YoY · DLD 2025" note="Q1 2026: 60,303 (+6%)" onClick={()=>handleTabChange?.("DLD Volumes")} />
+            <QuickStat label="Avg PPSF" value="AED 1,863" change="+6% YoY · FY2025" note="Q1 2026: AED 1,759 (+12.5%)" color="#63B3ED" onClick={()=>handleTabChange?.("Price History")} />
+            <QuickStat label="Avg Gross Yield" value="6.55%" change="Apts 7.03% · Villas 4.63%" note="REIDIN Dec 2025" color={T.green} onClick={()=>handleTabChange?.("Yields")} />
+            <QuickStat label="EIBOR 3M" value={eiborDisplay} change="Falling · Fed easing" note="CBUAE · Mortgage: ~4-5%" color="#9F7AEA" onClick={()=>handleTabChange?.("Mortgage")} />
+            <QuickStat label="Off-Plan Share" value="65-80%" change="Q1 2026: 70-80%" note="FY2025: 65% · Growing" onClick={()=>handleTabChange?.("Projects")} />
+            <QuickStat label="Active Developers" value="228" change="+40% from 163 in 2024" note="RERA registered · DLD" onClick={()=>handleTabChange?.("Developer Health")} />
+            <QuickStat label="Units Launched" value="131,504" change="By Oct 2025 · DLD" note="~98K units forecast 2026" onClick={()=>handleTabChange?.("Launch Calendar")} />
+          </div>
+        </div>
+      </div>
 
-            const OvSection = ({ title, sub, action }) => (
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14, marginTop: 28 }}>
-                <div>
-                  <div style={{ fontFamily: "'Fraunces', serif", fontSize: 16, fontWeight: 700, color: T.white }}>{title}</div>
-                  {sub && <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>{sub}</div>}
+      {/* INTELLIGENCE PANEL */}
+      <div style={{ fontSize:11, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.8, marginBottom:12 }}>Intelligence Panel — {devFilterLabel||"All Dubai"}</div>
+      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:14, marginBottom:24 }}>
+        <div style={{ background:"rgba(255,255,255,0.02)", border:"1px solid "+T.border, borderRadius:12, padding:"16px 18px" }}>
+          <div style={{ fontSize:11, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.8, marginBottom:12 }}>Top Communities — Yield</div>
+          {(liveYields?.length>0?[...liveYields].sort((a,b)=>(parseFloat(b.gross)||0)-(parseFloat(a.gross)||0)).slice(0,6):[
+            {community:"International City",gross:"9.2",tenantProfile:"Mixed"},
+            {community:"Dubai South",gross:"8.8",tenantProfile:"Mixed"},
+            {community:"Discovery Gardens",gross:"8.5",tenantProfile:"Professionals"},
+            {community:"Al Furjan",gross:"8.2",tenantProfile:"Families"},
+            {community:"JLT",gross:"8.1",tenantProfile:"Professionals"},
+            {community:"JVC",gross:"7.8",tenantProfile:"Professionals"},
+          ]).map((y,i)=>(
+            <div key={i} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"6px 0", borderBottom:i<5?"1px solid "+T.border:"none" }}>
+              <div><div style={{ fontSize:12, color:T.white }}>{y.community}</div><div style={{ fontSize:10, color:T.textMuted }}>{y.tenantProfile||"Apartment"}</div></div>
+              <div style={{ fontFamily:"'Fraunces',serif", fontSize:15, fontWeight:700, color:parseFloat(y.gross)>=7?T.green:T.gold }}>{parseFloat(y.gross||0).toFixed(1)}%</div>
+            </div>
+          ))}
+          {!liveYields?.length&&<div style={{ fontSize:10, color:T.textMuted, marginTop:6, fontStyle:"italic" }}>Research data · REIDIN Dec 2025</div>}
+          <button type="button" onClick={()=>handleTabChange?.("Yields")} style={{ width:"100%", marginTop:12, padding:"7px 0", background:"rgba(212,168,67,0.06)", border:"1px solid "+T.border, borderRadius:8, color:T.gold, fontSize:11, fontWeight:600, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>View All Yields →</button>
+        </div>
+        <div style={{ background:"rgba(255,255,255,0.02)", border:"1px solid "+T.border, borderRadius:12, padding:"16px 18px" }}>
+          <div style={{ fontSize:11, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.8, marginBottom:12 }}>DLD Transaction Volume</div>
+          {(()=>{
+            const data=liveDLDVolumes?.length>0?liveDLDVolumes:[
+              {community:"JVC",transactions:18782},{community:"Business Bay",transactions:12450},
+              {community:"Dubai Marina",transactions:11200},{community:"Downtown Dubai",transactions:8900},
+              {community:"Dubai Hills Estate",transactions:8200},{community:"Sobha Hartland",transactions:6800},
+            ];
+            const sorted=[...data].sort((a,b)=>(b.transactions||0)-(a.transactions||0)).slice(0,6);
+            const max=sorted[0]?.transactions||1;
+            return sorted.map((d,i)=>(
+              <div key={i} style={{ marginBottom:10 }}>
+                <div style={{ display:"flex", justifyContent:"space-between", marginBottom:4 }}>
+                  <span style={{ fontSize:11, color:T.textSecondary }}>{d.community}</span>
+                  <span style={{ fontSize:11, color:T.white, fontWeight:600 }}>{(d.transactions||0).toLocaleString()}</span>
                 </div>
-                {action}
+                <div style={{ height:4, borderRadius:2, background:T.border }}>
+                  <div style={{ height:"100%", width:Math.round((d.transactions/max)*100)+"%", borderRadius:2, background:"linear-gradient(90deg,"+T.gold+",#63B3ED)", transition:"width 0.8s" }} />
+                </div>
               </div>
-            );
-
-            const syncTime = lastDataSync ? lastDataSync.toLocaleTimeString("en-AE", { hour: "2-digit", minute: "2-digit" }) : null;
-            const isSeed = !liveMarketData?.length;
-            const kpis = (() => {
-              // Only use liveMarketData if it contains metric/value formatted docs
-              const live = liveMarketData?.filter?.(d => d.metric && d.value) || [];
-              return live.length > 0 ? live : firestoreOverviewKpis;
-            })();
-            const getKpi = (metric) => kpis?.find(d => d.metric === metric)?.value || "—";
-            const getKpiChange = (metric) => kpis?.find(d => d.metric === metric)?.change || "";
-
-            // yield data — live or seed, then filter by global filter
-            const yieldDisplayRaw = liveYields?.length > 0 ? liveYields
-              : [];  // Session 6: communities now from Firestore via liveYields prop
-            const yieldDisplay = yieldDisplayRaw.filter(y => matchesFilter(y.community));
-            const sortedYields = [...yieldDisplay].sort((a,b) => (parseFloat(b.grossYield||b.gross)||0) - (parseFloat(a.grossYield||a.gross)||0)).slice(0,6);
-
-            // DLD data — live or seed, then filter by global filter
-            const dldDisplayRaw = liveDLDVolumes?.length > 0 ? liveDLDVolumes : [];  // Session 8: dldVolumes migration pending
-            const dldDisplay = dldDisplayRaw.filter(d => matchesFilter(d.community));
-            const sortedDLD = [...dldDisplay].sort((a,b) => (b.transactions||b.count||0) - (a.transactions||a.count||0)).slice(0,6);
-            const dldMax = Math.max(...sortedDLD.map(d => d.transactions||d.count||0), 1);
-
-            return (
-              <div style={{ paddingTop: 8 }}>
-
-                {/* Seed data notice */}
-                {isSeed && (
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 14px", borderRadius: 8, background: "rgba(212,168,67,0.06)", border: `1px solid rgba(212,168,67,0.2)`, marginBottom: 12 }}>
-                    <span style={{ width: 6, height: 6, borderRadius: "50%", background: T.gold, display: "inline-block" }} />
-                    <span style={{ fontSize: 11, color: T.textMuted }}>
-                      <span style={{ color: T.gold, fontWeight: 700 }}>Research-based seed data</span> — DLD 2025, Bayut, REIDIN, ValuStrat · Replace via Admin → Data Manager
-                    </span>
+            ));
+          })()}
+          {!liveDLDVolumes?.length&&<div style={{ fontSize:10, color:T.textMuted, marginTop:4, fontStyle:"italic" }}>DXB Analytics · DLD 2025</div>}
+          <button type="button" onClick={()=>handleTabChange?.("DLD Volumes")} style={{ width:"100%", marginTop:12, padding:"7px 0", background:"rgba(212,168,67,0.06)", border:"1px solid "+T.border, borderRadius:8, color:T.gold, fontSize:11, fontWeight:600, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>View DLD Volumes →</button>
+        </div>
+        <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
+          <div style={{ background:"rgba(255,255,255,0.02)", border:"1px solid "+T.border, borderRadius:12, padding:"16px 18px", flex:1 }}>
+            <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:10 }}>
+              <div style={{ width:6, height:6, borderRadius:"50%", background:T.gold, animation:"pulse 2s infinite" }} />
+              <span style={{ fontSize:11, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.8 }}>AI Market Insight</span>
+            </div>
+            {aiInsights?.length>0
+              ?<div style={{ fontSize:12, color:T.textSecondary, lineHeight:1.7 }}>{aiInsights[0]?.text||aiInsights[0]}</div>
+              :<div style={{ fontSize:11, color:T.textSecondary, lineHeight:1.7 }}><span style={{ color:T.gold, fontWeight:700 }}>Q1 2026 signal:</span> AED 252B in Q1 despite regional uncertainty. Off-plan deepened to 80%+. Value (+31%) outpacing volume (+6%) — market maturing, not crashing. Buyers more selective on developer track record.</div>
+            }
+            <div style={{ marginTop:10, fontSize:10, color:T.textMuted }}>{aiInsights?.length>0?"Powered by Claude · Updated this week":"Research · DLD Q1 2026 · Edwards & Towers"}</div>
+          </div>
+          <div style={{ background:"rgba(255,255,255,0.02)", border:"1px solid "+T.border, borderRadius:12, padding:"16px 18px" }}>
+            <div style={{ fontSize:11, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.8, marginBottom:10 }}>Developer Health</div>
+            {liveDevHealth?.length>0
+              ?[...liveDevHealth].slice(0,4).map((d,i)=>(
+                  <div key={i} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"5px 0", borderBottom:i<3?"1px solid "+T.border:"none" }}>
+                    <span style={{ fontSize:11, color:T.textSecondary }}>{d.developer||d.name}</span>
+                    <span style={{ fontSize:11, fontWeight:700, padding:"2px 8px", borderRadius:20, background:(d.score||0)>=75?"rgba(104,211,145,0.15)":"rgba(212,168,67,0.15)", color:(d.score||0)>=75?T.green:T.gold }}>{d.score||"—"}</span>
                   </div>
-                )}
+                ))
+              :<div style={{ fontSize:11, color:T.textMuted }}>Health scores load from Admin → Developer Health</div>
+            }
+            <button type="button" onClick={()=>handleTabChange?.("Developer Health")} style={{ width:"100%", marginTop:10, padding:"6px 0", background:"rgba(212,168,67,0.06)", border:"1px solid "+T.border, borderRadius:8, color:T.gold, fontSize:11, fontWeight:600, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>View All →</button>
+          </div>
+        </div>
+      </div>
 
-                {/* Verified bar */}
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0", marginBottom: 20, borderBottom: `1px solid ${T.border}`, flexWrap: "wrap", gap: 8 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                    <span style={{ width: 7, height: 7, borderRadius: "50%", background: T.green, display: "inline-block", animation: "pulse 2s infinite" }} />
-                    <span style={{ fontSize: 11, color: T.textSecondary }}>
-                      Live data — <span style={{ color: T.gold, fontWeight: 600 }}>DXB Analytics Intelligence Platform</span>
-                      {syncTime && <span style={{ color: T.textMuted }}> · Last sync {syncTime}</span>}
-                    </span>
-                  </div>
-                  <div style={{ display: "flex", gap: 8 }}>
-                    <span style={{ fontSize: 10, padding: "3px 10px", borderRadius: 20, background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.2)", color: T.green }}>DLD Official</span>
-                    <span style={{ fontSize: 10, padding: "3px 10px", borderRadius: 20, background: "rgba(212,168,67,0.08)", border: `1px solid ${T.border}`, color: T.textMuted }}>RERA Verified</span>
-                  </div>
-                </div>
-
-                {/* 7 KPI Cards */}
-                <OvSection title="Market Pulse" sub="Dubai real estate — key indicators" />
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: 12, marginBottom: 8 }}>
-                  <OvKPI delay={1} label="Total Market Value" icon={SvgIcons.TrendingUp({width:16,height:16})}
-                    value={getKpi("Total Market Value")}
-                    sub={getKpiChange("Total Market Value") || "Source: DLD 2025"}
-                    onClick={() => handleTabChange("Market")} />
-                  <OvKPI delay={2} label="DLD Transactions" icon={SvgIcons.Database({width:16,height:16})}
-                    value={getKpi("Total Transactions")}
-                    sub={getKpiChange("Total Transactions") || "Source: DLD Annual Report 2025"}
-                    onClick={() => handleTabChange("DLD Volumes")} />
-                  <OvKPI delay={3} label="EIBOR 3M — Live" icon={SvgIcons.Landmark({width:16,height:16})}
-                    value={liveMortgageRates?.[0]?.eibor3m ? liveMortgageRates[0].eibor3m.toFixed(2) + "%" : "—"}
-                    sub="Updated daily · Central Bank UAE"
-                    color={T.teal} onClick={() => handleTabChange("Mortgage")} />
-                  <OvKPI delay={4} label="Active Developers" icon={SvgIcons.Building2({width:16,height:16})}
-                    value={gDeveloper && gDeveloper !== "all"
-                      ? "1"
-                      : (allDevelopers?.length > 0 ? allDevelopers.length.toString() : "50+")}
-                    sub={gDeveloper && gDeveloper !== "all"
-                      ? ((allDevelopers || []).find(d => String(d.id).toLowerCase() === String(gDeveloper).toLowerCase())?.name || gDeveloper)
-                      : "RERA registered · DLD approved"}
-                    onClick={() => handleTabChange("Developer Health")} />
-                  <OvKPI delay={5} label="Avg Gross Yield" icon={SvgIcons.BarChart3({width:16,height:16})}
-                    value={liveYields?.length > 0
-                      ? (liveYields.reduce((a,b) => a + (parseFloat(b.gross)||0), 0) / liveYields.length).toFixed(1) + "%"
-                      : ""}  /* Session 8: live avg yield pending */
-                    sub="Across all communities · Bayut data"
-                    color={T.green} onClick={() => handleTabChange("Yields")} />
-                  <OvKPI delay={6} label="Off-Plan Share" icon={SvgIcons.BarChart2({width:16,height:16})}
-                    value={getKpi("Off-Plan Share")}
-                    sub="Of total DLD transactions"
-                    onClick={() => handleTabChange("Projects")} />
-                  <OvKPI delay={7} label="Units Launched" icon={SvgIcons.Activity({width:16,height:16})}
-                    value={getKpi("Units Launched")}
-                    sub={getKpiChange("Units Launched") || "Source: DLD Oct 2025"}
-                    onClick={() => handleTabChange("Launch Calendar")} />
-                </div>
-
-                {/* 3-Column Intelligence Panel */}
-                <OvSection title="Intelligence Panel"
-                  sub="Context-aware — updates with your filter selection"
-                  action={
-                    <div style={{ fontSize: 10, color: T.textMuted, display: "flex", alignItems: "center", gap: 4 }}>
-                      <span style={{ width: 5, height: 5, borderRadius: "50%", background: filterLabel ? T.gold : T.textMuted, display: "inline-block" }} />
-                      {filterLabel || "All Developers"}
-                    </div>
-                  }
-                />
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 14, marginBottom: 8 }}>
-
-                  {/* Column 1: Top Yield Communities */}
-                  <div className="chart-box" style={{ padding: 18 }}>
-                    <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 14 }}>Top Communities — Yield</div>
-                    {sortedYields.map((y, i) => (
-                      <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "7px 0", borderBottom: i < 5 ? `1px solid ${T.border}` : "none" }}>
-                        <div>
-                          <div style={{ fontSize: 12, color: T.white, fontWeight: 500 }}>{y.community || "—"}</div>
-                          <div style={{ fontSize: 10, color: T.textMuted }}>{y.tenantProfile || "Apartment"}</div>
-                        </div>
-                        <div style={{ fontFamily: "'Fraunces', serif", fontSize: 16, fontWeight: 700, color: parseFloat(y.grossYield||y.gross||0) >= 7 ? T.green : parseFloat(y.grossYield||y.gross||0) >= 5.5 ? T.gold : T.textSecondary }}>
-                          {parseFloat(y.grossYield||y.gross||0).toFixed(1)}%
-                        </div>
-                      </div>
-                    ))}
-                    <button type="button" onClick={() => handleTabChange("Yields")} style={{ width: "100%", marginTop: 12, padding: "7px 0", background: "rgba(212,168,67,0.06)", border: `1px solid ${T.border}`, borderRadius: 8, color: T.gold, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
-                      View All Yields →
-                    </button>
-                  </div>
-
-                  {/* Column 2: DLD Volume */}
-                  <div className="chart-box" style={{ padding: 18 }}>
-                    <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 14 }}>DLD Transaction Volume</div>
-                    {sortedDLD.map((d, i) => {
-                      const pct = Math.round(((d.transactions||d.count||0) / dldMax) * 100);
-                      return (
-                        <div key={i} style={{ marginBottom: 10 }}>
-                          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
-                            <span style={{ fontSize: 11, color: T.textSecondary }}>{d.community || "—"}</span>
-                            <span style={{ fontSize: 11, color: T.white, fontWeight: 600 }}>{(d.transactions||d.count||0).toLocaleString()}</span>
-                          </div>
-                          <div style={{ height: 4, borderRadius: 2, background: T.border }}>
-                            <div style={{ height: "100%", width: `${pct}%`, borderRadius: 2, background: `linear-gradient(90deg, ${T.gold}, ${T.teal})`, transition: "width 0.8s ease" }} />
-                          </div>
-                        </div>
-                      );
-                    })}
-                    <button type="button" onClick={() => handleTabChange("DLD Volumes")} style={{ width: "100%", marginTop: 12, padding: "7px 0", background: "rgba(212,168,67,0.06)", border: `1px solid ${T.border}`, borderRadius: 8, color: T.gold, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
-                      View DLD Volumes →
-                    </button>
-                  </div>
-
-                  {/* Column 3: AI Insight + Dev Health */}
-                  <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-                    <div className="chart-box" style={{ padding: 18, flex: 1 }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
-                        <div style={{ width: 6, height: 6, borderRadius: "50%", background: T.gold, animation: "pulse 2s infinite" }} />
-                        <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, letterSpacing: 0.8, textTransform: "uppercase" }}>AI Market Insight</div>
-                      </div>
-                      {aiInsights?.length > 0
-                        ? <div style={{ fontSize: 12, color: T.textSecondary, lineHeight: 1.7 }}>{aiInsights[0]?.text || aiInsights[0]}</div>
-                        : <div style={{ fontSize: 12, color: T.textMuted, lineHeight: 1.7, fontStyle: "italic" }}>AI market analysis generates automatically every 7 days from live DLD and Bayut data.</div>
-                      }
-                      <div style={{ marginTop: 10, fontSize: 10, color: T.textMuted }}>
-                        Powered by Claude · {aiInsights?.length > 0 ? "Updated this week" : "Connect data to activate"}
-                      </div>
-                    </div>
-                    <div className="chart-box" style={{ padding: 18 }}>
-                      <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 12 }}>Developer Health</div>
-                      {liveDevHealth?.length > 0
-                        ? [...liveDevHealth].slice(0,4).map((d, i) => (
-                            <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "5px 0", borderBottom: i < 3 ? `1px solid ${T.border}` : "none" }}>
-                              <span style={{ fontSize: 11, color: T.textSecondary }}>{d.developer || d.name}</span>
-                              <span style={{ fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 20, background: (d.score||0) >= 75 ? "rgba(16,185,129,0.15)" : "rgba(212,168,67,0.15)", color: (d.score||0) >= 75 ? T.green : T.gold }}>
-                                {d.score || "—"}
-                              </span>
-                            </div>
-                          ))
-                        : <div style={{ fontSize: 11, color: T.textMuted }}>Health scores load from Admin → Developer Health</div>
-                      }
-                      <button type="button" onClick={() => handleTabChange("Developer Health")} style={{ width: "100%", marginTop: 10, padding: "7px 0", background: "rgba(212,168,67,0.06)", border: `1px solid ${T.border}`, borderRadius: 8, color: T.gold, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
-                        View All →
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Live Feeds */}
-                <OvSection title="Live Intelligence Feeds" sub="Real-time data streams — auto-refreshing" />
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 14, marginBottom: 32 }}>
-
-                  {/* Recent DLD */}
-                  <div className="chart-box" style={{ padding: 18 }}>
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
-                      <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, letterSpacing: 0.8, textTransform: "uppercase" }}>Recent DLD</div>
-                      <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                        <span style={{ width: 5, height: 5, borderRadius: "50%", background: T.green, animation: "pulse 2s infinite", display: "inline-block" }} />
-                        <span style={{ fontSize: 9, color: T.textMuted }}>Live</span>
-                      </div>
-                    </div>
-                    {sortedDLD.slice(0,5).map((tx, i) => (
-                      <div key={i} style={{ padding: "8px 0", borderBottom: i < 4 ? `1px solid ${T.border}` : "none" }}>
-                        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 2 }}>
-                          <span style={{ fontSize: 11, color: T.white, fontWeight: 500 }}>{tx.community || "—"}</span>
-                          <span style={{ fontSize: 11, color: T.gold, fontWeight: 700 }}>{tx.volume ? "AED " + (tx.volume/1000000000).toFixed(1) + "B" : "—"}</span>
-                        </div>
-                        <div style={{ fontSize: 10, color: T.textMuted }}>{tx.type || "Residential"}{"·"}{(tx.transactions||tx.count||0).toLocaleString()} deals</div>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Launch Radar */}
-                  <div className="chart-box" style={{ padding: 18 }}>
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
-                      <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, letterSpacing: 0.8, textTransform: "uppercase" }}>Launch Radar</div>
-                      <button type="button" onClick={() => handleTabChange("Launch Calendar")} style={{ fontSize: 10, color: T.gold, background: "none", border: "none", cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>View all →</button>
-                    </div>
-                    {[].map((l, i) => (  /* Session 8: launches migration pending */
-                      <div key={i} style={{ padding: "8px 0", borderBottom: i < 2 ? `1px solid ${T.border}` : "none" }}>
-                        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 2 }}>
-                          <span style={{ fontSize: 11, color: T.white, fontWeight: 500 }}>{l.projectName?.split("—")[0]?.trim() || l.projectName}</span>
-                          <span style={{ fontSize: 9, padding: "1px 6px", borderRadius: 10, background: l.status === "EOI Open" ? "rgba(16,185,129,0.15)" : "rgba(212,168,67,0.1)", color: l.status === "EOI Open" ? T.green : T.gold }}>{l.status}</span>
-                        </div>
-                        <div style={{ fontSize: 10, color: T.textMuted }}>{l.developer}{"·"}{l.community}</div>
-                      </div>
-                    ))}
-                    <button type="button" onClick={() => handleTabChange("Launch Calendar")} style={{ width: "100%", marginTop: 12, padding: "7px 0", background: "rgba(212,168,67,0.06)", border: `1px solid ${T.border}`, borderRadius: 8, color: T.gold, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
-                      Open Launch Calendar →
-                    </button>
-                  </div>
-
-                  {/* Platform Activity */}
-                  <div className="chart-box" style={{ padding: 18 }}>
-                    <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 14 }}>Platform Activity</div>
-                    {[
-                      { label: "Active Leads",   value: myLeads?.length || 0,     icon: SvgIcons.Users({width:14,height:14}),    tab: "My Leads",  color: T.blue },
-                      { label: "My Listings",    value: listings?.length || 0,    icon: SvgIcons.Building({width:14,height:14}), tab: "Listings",  color: T.gold },
-                      { label: "Portfolio Items",value: myPortfolio?.length || 0, icon: SvgIcons.Briefcase({width:14,height:14}),tab: "Portfolio", color: T.green },
-                      { label: "Watchlist",      value: watchlist?.length || 0,   icon: SvgIcons.Star({width:14,height:14}),     tab: null,        color: T.textSecondary },
-                    ].map((item, i) => (
-                      <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 10px", borderRadius: 8, background: T.surfaceAlt, cursor: item.tab ? "pointer" : "default", marginBottom: 8 }}
-                        onClick={() => item.tab && handleTabChange(item.tab)}>
-                        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                          <span style={{ color: item.color }}>{item.icon}</span>
-                          <span style={{ fontSize: 12, color: T.textSecondary }}>{item.label}</span>
-                        </div>
-                        <span style={{ fontSize: 14, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>{item.value}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Sources footer */}
-                <div style={{ paddingBottom: 16, paddingTop: 4, borderTop: `1px solid ${T.border}`, display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
-                  <span style={{ fontSize: 10, color: T.textMuted }}>Sources:</span>
-                  {["Dubai Land Department", "RERA", "Bayut API", "ValuStrat", "REIDIN", "Claude AI"].map((s, i) => (
-                    <span key={i} style={{ fontSize: 10, color: T.textMuted, padding: "2px 8px", borderRadius: 10, border: `1px solid ${T.border}`, background: T.surfaceAlt }}>{s}</span>
-                  ))}
-                </div>
-
+      {/* PLATFORM NAVIGATOR */}
+      <div style={{ fontSize:11, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.8, marginBottom:12 }}>Platform Navigator — All 33 Modules</div>
+      <div style={{ display:"flex", flexDirection:"column", gap:10, marginBottom:24 }}>
+        {TAB_NAV.map(section=>(
+          <div key={section.section}>
+            <div onClick={()=>setNavExpanded(navExpanded===section.section?null:section.section)}
+              style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"10px 14px", background:"rgba(255,255,255,0.02)", border:"1px solid "+T.border, borderRadius:navExpanded===section.section?"10px 10px 0 0":10, cursor:"pointer" }}
+              onMouseEnter={e=>(e.currentTarget.style.background="rgba(255,255,255,0.04)")}
+              onMouseLeave={e=>(e.currentTarget.style.background="rgba(255,255,255,0.02)")}
+            >
+              <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+                <div style={{ width:8, height:8, borderRadius:2, background:section.color }} />
+                <span style={{ fontSize:12, fontWeight:700, color:T.white }}>{section.section}</span>
+                <span style={{ fontSize:10, color:T.textMuted }}>· {section.tabs.length} modules</span>
               </div>
-            );
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={T.textMuted} strokeWidth="2"><polyline points={navExpanded===section.section?"18 15 12 9 6 15":"6 9 12 15 18 15"} /></svg>
+            </div>
+            {navExpanded===section.section&&(
+              <div style={{ border:"1px solid "+T.border, borderTop:"none", borderRadius:"0 0 10px 10px", padding:"8px", display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(200px,1fr))", gap:6 }}>
+                {section.tabs.map(tab=>(
+                  <div key={tab.name} onClick={()=>handleTabChange?.(tab.name)}
+                    style={{ display:"flex", alignItems:"flex-start", gap:10, padding:"10px 12px", borderRadius:8, cursor:"pointer" }}
+                    onMouseEnter={e=>(e.currentTarget.style.background="rgba(255,255,255,0.04)")}
+                    onMouseLeave={e=>(e.currentTarget.style.background="transparent")}
+                  >
+                    <span style={{ fontSize:16, flexShrink:0, marginTop:1 }}>{tab.icon}</span>
+                    <div>
+                      <div style={{ fontSize:12, fontWeight:600, color:T.white, marginBottom:2 }}>{tab.name}</div>
+                      <div style={{ fontSize:10, color:T.textMuted, lineHeight:1.4 }}>{tab.desc}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+
+      {/* FOOTER */}
+      <div style={{ paddingTop:16, borderTop:"1px solid "+T.border, display:"flex", flexWrap:"wrap", gap:8, alignItems:"center", justifyContent:"space-between" }}>
+        <div style={{ display:"flex", flexWrap:"wrap", gap:6, alignItems:"center" }}>
+          <span style={{ fontSize:10, color:T.textMuted }}>Sources:</span>
+          {[
+            {label:"DLD Q1 2026",url:"https://mediaoffice.ae/en/news/2026/april/09-04/dubai-real-estate-transactions-surge-31-to-reach-aed252-billion-in-q1-2026"},
+            {label:"DLD FY2025",url:"https://mediaoffice.ae/en/news/2026/january/12-01/dubais-real-estate-market-records-new-historic-milestone"},
+            {label:"REIDIN Dec 2025",url:"https://reidin.com"},
+            {label:"CBUAE EIBOR",url:"https://www.centralbank.ae/en/forex-eibor/eibor-rates/"},
+            {label:"Edwards & Towers Q1 2026",url:"https://edwardsandtowers.com/dubai-real-estate-market-q1-2026-analysis/"},
+            {label:"Capital Zone Apr 2026",url:"https://www.capitalzone.ae/mortgage-rates-today-in-the-uae/"},
+          ].map(s=>(
+            <a key={s.label} href={s.url} target="_blank" rel="noopener noreferrer" style={{ textDecoration:"none" }}>
+              <span style={{ fontSize:10, color:T.textMuted, padding:"2px 8px", borderRadius:10, border:"1px solid "+T.border, background:T.surfaceAlt, cursor:"pointer" }}>{s.label}</span>
+            </a>
+          ))}
+        </div>
+        <div style={{ fontSize:10, color:T.textMuted }}>Session 7 · April 2026 · DXB Analytics</div>
+      </div>
+
+    </div>
+  );
 }
 
 export default OverviewTab;
