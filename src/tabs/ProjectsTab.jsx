@@ -14,6 +14,7 @@ import { SvgIcons } from "../components/Icons";
 
 import { calcScore, scoreColor, scoreLabel } from "../utils/scoring";
 import { GOLDEN_VISA_THRESHOLD } from "../utils/constants";
+import { useUserFacingCommunities } from "../lib/communities";
 
 const MODES = [
   { key:"All", label:"All Types" },
@@ -244,6 +245,9 @@ function ProjectsTab({
   projEscrow = "All", setProjEscrow = () => {},
   showMoreFilters = false, setShowMoreFilters = () => {},
 }) {
+  // Single source of truth for community data (Session 5 unification)
+  const { data: allCommunitiesFromDb = [] } = useUserFacingCommunities();
+
 
   /* NEW FILTERS (v7) — match data reality from audit:
      - lifecycleStage (100% coverage): Historical / Under Construction / Announced / Recently Delivered
@@ -525,7 +529,11 @@ function ProjectsTab({
               ? Math.round(filtered.filter(p=>p.ppsf).reduce((a,p) => a + p.ppsf, 0) / filtered.filter(p=>p.ppsf).length) : 0;
 
             const devOptions = ["All", ...new Set(rawProjects.filter(p => projMode === "All" || normalizeType(p)===projMode).map(p=>p.developer || p.developerName).filter(Boolean))].slice(0, 500);
-            const commOptions = ["All", ...new Set(rawProjects.filter(p => projMode === "All" || normalizeType(p)===projMode).map(p=>p.community).filter(Boolean))].slice(0, 500);
+            // commOptions: full Firestore community list (user-facing only) merged with project-derived names
+            // Session 5: data source = communities collection via useUserFacingCommunities hook
+            const commNamesFromDb = (allCommunitiesFromDb || []).map(c => c.name).filter(Boolean);
+            const commNamesFromProjects = rawProjects.filter(p => projMode === "All" || normalizeType(p)===projMode).map(p=>p.community).filter(Boolean);
+            const commOptions = ["All", ...new Set([...commNamesFromDb, ...commNamesFromProjects])].slice(0, 500);
             /* Escrow bank options with project counts — DLD enriched */
             const escrowCounts = {};
             rawProjects.forEach(p => {

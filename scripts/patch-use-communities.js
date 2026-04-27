@@ -1,4 +1,7 @@
-/**
+const fs = require('fs');
+const path = 'src/hooks/useCommunities.js';
+
+const newContent = `/**
  * useCommunities — returns user-facing communities from Firestore
  * src/hooks/useCommunities.js
  *
@@ -42,3 +45,8 @@ export function useCommunities({ onlyPublished = true, includeAllTiers = false }
 }
 
 export default useCommunities;
+`;
+
+fs.writeFileSync(path, newContent, 'utf8');
+console.log('Updated: ' + path);
+console.log('Length: ' + newContent.length + ' chars');

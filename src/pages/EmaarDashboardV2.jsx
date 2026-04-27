@@ -3409,17 +3409,19 @@ export default function EmaarDashboardV2() {
     // Phase 2.4.8: Community list for top-bar Community dropdown
     unsubs.push(onSnapshot(collection(db, "communities"), (snap) => {
       const list = [];
+      const USER_FACING = new Set(["consumer-community", "master-community", "sub-community"]);
       snap.forEach(d => {
         const data = d.data();
-        // Only published communities with a human-readable name.
-        // Skip the short-ID cron-yields artefacts (BB, DCH, etc.) which lack visibility.
-        if (data.visibility === "published" && data.verified === true && (data.name || data.community)) {
-          list.push({
-            id: d.id,
-            name: data.name || data.community,
-            district: data.district || null,
-          });
-        }
+        if (!USER_FACING.has(data.displayCategory)) return;
+        if (data.visibility === "archived") return;
+        if (!data.name && !data.community) return;
+        list.push({
+          id: d.id,
+          name: data.name || data.community,
+          district: data.district || null,
+          displayCategory: data.displayCategory,
+          parentCommunity: data.parentCommunity || null,
+        });
       });
       list.sort((a, b) => a.name.localeCompare(b.name));
       setLiveCommunityList(list);
