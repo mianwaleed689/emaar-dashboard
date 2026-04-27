@@ -11,3 +11,4 @@ export { useDevelopers } from "./useDevelopers";
 export { useDevelopments } from "./useDevelopments";
 export { useCommunities } from "./useCommunities";
 export { useProjects } from "./useProjects";
+export * from "./useMarketMetrics";

@@ -5,7 +5,7 @@ import React from "react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area, LineChart, Line, PieChart, Pie, Cell } from "recharts";
 import { T } from "../data";
 import { SvgIcons } from "../components/Icons";
-import SEED_DATA from "../utils/seedData";
+import { useOverviewKpis, useMarketKpis } from "../hooks/useMarketMetrics";
 
 function OverviewTab({
   liveMarketData, liveDLDVolumes, liveDevHealth, liveMortgageRates, liveYields,
@@ -74,6 +74,9 @@ function OverviewTab({
   })();
 
 
+  const { data: firestoreOverviewKpis = [] } = useOverviewKpis();
+  const { data: firestoreMarketKpis = [] } = useMarketKpis();
+
             const OvKPI = ({ label, value, sub, color, icon, onClick, delay }) => (
               <div className={`kpi-card fade-up delay-${delay||1}`} onClick={onClick} style={{ cursor: onClick ? "pointer" : "default" }}>
                 <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 12 }}>
@@ -100,19 +103,19 @@ function OverviewTab({
             const kpis = (() => {
               // Only use liveMarketData if it contains metric/value formatted docs
               const live = liveMarketData?.filter?.(d => d.metric && d.value) || [];
-              return live.length > 0 ? live : SEED_DATA.overviewKpis;
+              return live.length > 0 ? live : firestoreOverviewKpis;
             })();
             const getKpi = (metric) => kpis?.find(d => d.metric === metric)?.value || "—";
             const getKpiChange = (metric) => kpis?.find(d => d.metric === metric)?.change || "";
 
             // yield data — live or seed, then filter by global filter
             const yieldDisplayRaw = liveYields?.length > 0 ? liveYields
-              : SEED_DATA.communities.map(c => ({ community: c.community, tenantProfile: c.tenantProfile, gross: c.grossYield }));
+              : [];  // Session 6: communities now from Firestore via liveYields prop
             const yieldDisplay = yieldDisplayRaw.filter(y => matchesFilter(y.community));
             const sortedYields = [...yieldDisplay].sort((a,b) => (parseFloat(b.grossYield||b.gross)||0) - (parseFloat(a.grossYield||a.gross)||0)).slice(0,6);
 
             // DLD data — live or seed, then filter by global filter
-            const dldDisplayRaw = liveDLDVolumes?.length > 0 ? liveDLDVolumes : SEED_DATA.dldVolumes;
+            const dldDisplayRaw = liveDLDVolumes?.length > 0 ? liveDLDVolumes : [];  // Session 8: dldVolumes migration pending
             const dldDisplay = dldDisplayRaw.filter(d => matchesFilter(d.community));
             const sortedDLD = [...dldDisplay].sort((a,b) => (b.transactions||b.count||0) - (a.transactions||a.count||0)).slice(0,6);
             const dldMax = Math.max(...sortedDLD.map(d => d.transactions||d.count||0), 1);
@@ -171,7 +174,7 @@ function OverviewTab({
                   <OvKPI delay={5} label="Avg Gross Yield" icon={SvgIcons.BarChart3({width:16,height:16})}
                     value={liveYields?.length > 0
                       ? (liveYields.reduce((a,b) => a + (parseFloat(b.gross)||0), 0) / liveYields.length).toFixed(1) + "%"
-                      : (SEED_DATA.communities.reduce((a,b) => a + (parseFloat(b.grossYield)||0), 0) / SEED_DATA.communities.length).toFixed(1) + "%"}
+                      : ""}  /* Session 8: live avg yield pending */
                     sub="Across all communities · Bayut data"
                     color={T.green} onClick={() => handleTabChange("Yields")} />
                   <OvKPI delay={6} label="Off-Plan Share" icon={SvgIcons.BarChart2({width:16,height:16})}
@@ -302,7 +305,7 @@ function OverviewTab({
                       <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, letterSpacing: 0.8, textTransform: "uppercase" }}>Launch Radar</div>
                       <button type="button" onClick={() => handleTabChange("Launch Calendar")} style={{ fontSize: 10, color: T.gold, background: "none", border: "none", cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>View all →</button>
                     </div>
-                    {SEED_DATA.launches.filter(l => l.status === "EOI Open" || l.status === "Upcoming").slice(0,3).map((l, i) => (
+                    {[].map((l, i) => (  /* Session 8: launches migration pending */
                       <div key={i} style={{ padding: "8px 0", borderBottom: i < 2 ? `1px solid ${T.border}` : "none" }}>
                         <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 2 }}>
                           <span style={{ fontSize: 11, color: T.white, fontWeight: 500 }}>{l.projectName?.split("—")[0]?.trim() || l.projectName}</span>

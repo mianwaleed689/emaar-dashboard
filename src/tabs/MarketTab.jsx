@@ -9,7 +9,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { T } from "../data";
 import { SvgIcons } from "../components/Icons";
 import { Section, Chart, CustomTooltip, ForecastCard, DataBadge, TabSources } from "../components/SharedUI";
-import SEED_DATA from "../utils/seedData";
+import { useMarketKpis, useMarketChart } from "../hooks/useMarketMetrics";
 
 function MarketTab({ liveMarketData, allDevelopers, expandedForecast, setExpandedForecast, handleTabChange }) {
 
@@ -43,10 +43,13 @@ function MarketTab({ liveMarketData, allDevelopers, expandedForecast, setExpande
               );
             };
 
+  const { data: firestoreKpis = [] } = useMarketKpis();
+  const { data: firestoreChart = [] } = useMarketChart();
+
             /* ── Live market stats from Firestore ── */
             const stats = (() => {
               const live = (liveMarketData || []).filter(d => d.metric && d.value);
-              return live.length > 0 ? live : SEED_DATA.market;
+              return live.length > 0 ? live : firestoreKpis;
             })();
             const mktIsSeed = liveMarketData?.length === 0;
             const getStat = (metric) => {
@@ -56,7 +59,7 @@ function MarketTab({ liveMarketData, allDevelopers, expandedForecast, setExpande
               return stats.find(s => s.metric && s.metric.toLowerCase().includes(lower));
             };
             // Chart data — filter only year-based entries for bar chart
-            const chartData = stats.filter(d => d.year && d.type === "annual")
+            const chartData = (firestoreChart.length > 0 ? firestoreChart : stats.filter(d => d.year && d.type === "annual"))
               .sort((a,b) => parseInt(a.year) - parseInt(b.year))
               .map(d => ({ year: String(d.year), value: parseFloat(d.value) || 0 }));
 
