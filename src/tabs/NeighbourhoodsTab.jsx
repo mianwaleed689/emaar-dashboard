@@ -10,7 +10,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { T } from "../data";
 import { SvgIcons } from "../components/Icons";
 import { Section, Chart, CustomTooltip, DataBadge, TabSources } from "../components/SharedUI";
-import SEED_DATA from "../utils/seedData";
+import { useUserFacingCommunities } from "../lib/communities";
 import { scoreColor, scoreLabel } from "../utils/scoring";
 
 /* Canonical ScoreBadge — uses shared scoring thresholds from src/utils/scoring.js */
@@ -31,6 +31,8 @@ const ScoreBadge = ({ score, size = "sm" }) => {
 };
 
 function NeighbourhoodsTab({ nbhSearch, setNbhSearch, nbhTypeFilter, setNbhTypeFilter, nbhYieldFilter, setNbhYieldFilter, nbhRiskFilter, setNbhRiskFilter, nbhSort, setNbhSort, nbhView, setNbhView, nbhCompare, setNbhCompare, liveNeighbourhoods, liveCommunityDataFull = [], liveCommunityROI, liveMarketData, globalFilters = {}, allDevelopers = [], handleTabChange, selectedNbhd, setSelectedNbhd }) {
+
+  const { data: firestoreCommunities = [] } = useUserFacingCommunities();
 
   /* Phase Tier-A: local tier filter (Verified / DLD Registry / All) */
   const [nbhTierFilter, setNbhTierFilter] = useState("All");
@@ -83,7 +85,7 @@ function NeighbourhoodsTab({ nbhSearch, setNbhSearch, nbhTypeFilter, setNbhTypeF
                  - Communities in Tier 2 only (no Tier 1 match) get tier:"dld-registry"
             */
             const rawNbhFirestore = liveMarketData?.filter?.(d => d.type === "community") || [];
-            const tier1Raw = rawNbhFirestore.length > 0 ? rawNbhFirestore : SEED_DATA.communities;
+            const tier1Raw = rawNbhFirestore.length > 0 ? rawNbhFirestore : firestoreCommunities;
             const tier2Raw = Array.isArray(liveCommunityDataFull) ? liveCommunityDataFull : [];
 
             /* Build a lookup of Tier 2 records by lowercased name, for enrichment + orphan detection */

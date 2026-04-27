@@ -22,6 +22,7 @@ import { GOLDEN_VISA_THRESHOLD } from "../utils/constants";
 import { T } from "../data";
 import LandingPage from "./LandingPage";
 import RoiCalculator from "../components/RoiCalculator";
+import { useUserFacingCommunities } from "../lib/communities";
 
 /* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ EXTRACTED TAB COMPONENTS Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
 import CurrencyTab from '../tabs/CurrencyTab';
@@ -2313,6 +2314,7 @@ export default function EmaarDashboardV2() {
      state and write back to it. All existing code using gDeveloper /
      setGDeveloper / setGDeveloperAndReset continues to work unchanged. */
   const { filters: _gf, setFilter: _gSetOne, setFilters: _gSetMany } = useFilters();
+  const { data: firestoreCommunities = [] } = useUserFacingCommunities();
   const gDeveloper   = _gf.developer;
   const gCommunity   = _gf.community;
   const gPropertyType = _gf.type;
@@ -4588,7 +4590,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               activeProjects={liveProjects?.length > 0 ? liveProjects : SEED_PROJECTS}
               liveCommunityROI={liveCommunityROI}
               setTab={handleTabChange}
-              seedCommunities={SEED_DATA.communities}
+              seedCommunities={firestoreCommunities}
               globalFilters={_gf}
               allDevelopers={allDevelopers}
             />

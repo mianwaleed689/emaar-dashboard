@@ -10,7 +10,7 @@
 
 import React from "react";
 import { T } from "../data";
-import { COMMUNITY_COORDS, getProjectCoords, getPPSFColor, getVolumeColor } from "../utils/coordinates";
+import { getProjectCoords, getPPSFColor, getVolumeColor } from "../utils/coordinates";
 
 function CommunityMapTab({ activeProjects, liveCommunityROI, setTab, seedCommunities, globalFilters = {}, allDevelopers = [] }) {
 
@@ -72,13 +72,13 @@ function CommunityMapTab({ activeProjects, liveCommunityROI, setTab, seedCommuni
     ? Object.fromEntries(filteredSeedCommunities.map(c => [
         c.community,
         {
-          coords: COMMUNITY_COORDS[c.community] || [25.1124, 55.2594],
-          ppsf: c.avgPpsf || 1500,
-          volume: Math.round((c.grossYield || 6) * 1000),
-          yoy: c.grossYield >= 8 ? 45 : c.grossYield >= 7 ? 30 : c.grossYield >= 6 ? 20 : 12,
-          radius: Math.max(600, Math.min(1800, (c.avgPpsf || 1500) / 2)),
-          grossYield: c.grossYield,
-          netYield: c.netYield,
+          coords: (c.coordinates?.lat && c.coordinates?.lng) ? [c.coordinates.lat, c.coordinates.lng] : [25.1124, 55.2594],
+          ppsf: parseFloat(c.avgPpsf) || 1500,
+          volume: Math.round((parseFloat(c.grossYield) || 6) * 1000),
+          yoy: parseFloat(c.grossYield) >= 8 ? 45 : parseFloat(c.grossYield) >= 7 ? 30 : parseFloat(c.grossYield) >= 6 ? 20 : 12,
+          radius: Math.max(600, Math.min(1800, (parseFloat(c.avgPpsf) || 1500) / 2)),
+          grossYield: parseFloat(c.grossYield) || 0,
+          netYield: parseFloat(c.netYield) || 0,
           serviceCharge: c.serviceCharge,
           supplyRisk: c.supplyRisk,
           investmentScore: c.investmentScore,

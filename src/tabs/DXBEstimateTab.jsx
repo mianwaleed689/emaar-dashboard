@@ -8,6 +8,7 @@
 import React from "react";
 import { T } from "../data";
 import { SvgIcons } from "../components/Icons";
+import { useUserFacingCommunities } from "../lib/communities";
 
 function DXBEstimateTab({ avmCommunity, setAvmCommunity, avmType, setAvmType, avmBeds, setAvmBeds, avmSize, setAvmSize, avmFloor, setAvmFloor, avmView, setAvmView, avmView2, setAvmView2, avmCondition, setAvmCondition, avmRenovated, setAvmRenovated, avmFurnished, setAvmFurnished, avmParking, setAvmParking, globalFilters = {} }) {
 
@@ -19,6 +20,8 @@ function DXBEstimateTab({ avmCommunity, setAvmCommunity, avmType, setAvmType, av
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [gfCommunity]);
 
+
+  const { data: firestoreCommunities = [] } = useUserFacingCommunities();
 
             const BASE_PPSF = {
               "Downtown Dubai":      { Apartment: { Studio:3400,"1BR":3100,"2BR":2900,"3BR":2700 } },
@@ -45,7 +48,8 @@ function DXBEstimateTab({ avmCommunity, setAvmCommunity, avmType, setAvmType, av
             const VIEW_ADJ   = { courtyard:-0.02, garden:0, pool:0, city:0.04, park:0.03, sea:0.10, burj:0.12 };
             const COND_ADJ   = { poor:-0.10, fair:-0.05, good:0, excellent:0.05, brandnew:0.08 };
 
-            const communityData = BASE_PPSF[avmCommunity] || {};
+            const fsComm = firestoreCommunities.find(c => c.name === avmCommunity);
+            const communityData = BASE_PPSF[avmCommunity] || (fsComm?.avgPpsf ? { Apartment: { "1BR": fsComm.avgPpsf } } : {});
             const typeData      = communityData[avmType] || {};
             const basePPSF      = typeof typeData === "object" ? (typeData[avmBeds] || Object.values(typeData)[0] || 1500) : (typeData || 1500);
 
@@ -83,7 +87,9 @@ function DXBEstimateTab({ avmCommunity, setAvmCommunity, avmType, setAvmType, av
             const confidence = comps.length >= 5 ? "High" : comps.length >= 3 ? "Medium" : "Low";
             const confColor  = confidence==="High"?T.green:confidence==="Medium"?T.gold:T.red;
 
-            const communities2 = Object.keys(BASE_PPSF);
+            const communities2 = firestoreCommunities.length > 0
+              ? firestoreCommunities.map(c => c.name)
+              : Object.keys(BASE_PPSF);
             const selSt = { background:T.surfaceAlt,border:`1px solid ${T.border}`,borderRadius:8,color:T.white,fontFamily:"'Outfit',sans-serif",fontSize:12,padding:"7px 28px 7px 10px",outline:"none",cursor:"pointer",appearance:"none",WebkitAppearance:"none",backgroundImage:`url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E")`,backgroundRepeat:"no-repeat",backgroundPosition:"right 8px center" };
 
             return (
