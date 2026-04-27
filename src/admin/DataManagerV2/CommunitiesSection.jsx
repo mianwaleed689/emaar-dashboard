@@ -46,7 +46,7 @@ export default function CommunitiesSection({ currentUserId, currentUserEmail }) 
   const [selectedIds, setSelectedIds] = useState(new Set());
 
   useEffect(() => {
-    const u = onSnapshot(collection(db, "communityData"), snap => {
+    const u = onSnapshot(collection(db, "communities"), snap => {
       const arr = [];
       snap.forEach(d => arr.push({ id: d.id, ...d.data() }));
       setItems(arr);
@@ -108,8 +108,8 @@ export default function CommunitiesSection({ currentUserId, currentUserEmail }) 
         payload.disclosedAt = serverTimestamp();
       }
 
-      await setDoc(doc(db, "communityData", id), payload, { merge: true });
-      await addDoc(collection(db, "communityData", id, "auditLog"), {
+      await setDoc(doc(db, "communities", id), payload, { merge: true });
+      await addDoc(collection(db, "communities", id, "auditLog"), {
         action: isNew ? "create" : "update",
         userId: currentUserId || "unknown",
         userEmail: currentUserEmail || "unknown",
@@ -129,12 +129,12 @@ export default function CommunitiesSection({ currentUserId, currentUserEmail }) 
   async function archive(item) {
     if (!window.confirm("Archive " + item.name + "?")) return;
     try {
-      await setDoc(doc(db, "communityData", item.id), {
+      await setDoc(doc(db, "communities", item.id), {
         visibility: "archived",
         updatedAt: serverTimestamp(),
         updatedBy: currentUserId || "unknown",
       }, { merge: true });
-      await addDoc(collection(db, "communityData", item.id, "auditLog"), {
+      await addDoc(collection(db, "communities", item.id, "auditLog"), {
         action: "archive",
         userId: currentUserId || "unknown",
         timestamp: serverTimestamp(),
@@ -153,8 +153,8 @@ export default function CommunitiesSection({ currentUserId, currentUserEmail }) 
     if (!window.confirm("Archive " + selectedIds.size + " communities?")) return;
     try {
       for (const id of selectedIds) {
-        await setDoc(doc(db, "communityData", id), { visibility: "archived", updatedAt: serverTimestamp(), updatedBy: currentUserId || "unknown" }, { merge: true });
-        await addDoc(collection(db, "communityData", id, "auditLog"), { action: "bulk-archive", userId: currentUserId || "unknown", timestamp: serverTimestamp() });
+        await setDoc(doc(db, "communities", id), { visibility: "archived", updatedAt: serverTimestamp(), updatedBy: currentUserId || "unknown" }, { merge: true });
+        await addDoc(collection(db, "communities", id, "auditLog"), { action: "bulk-archive", userId: currentUserId || "unknown", timestamp: serverTimestamp() });
       }
       notify("Archived " + selectedIds.size + " communities"); setSelectedIds(new Set());
     } catch (e) { notify("Bulk archive failed: " + e.message, "error"); }
@@ -166,8 +166,8 @@ export default function CommunitiesSection({ currentUserId, currentUserEmail }) 
       for (const id of selectedIds) {
         const payload = { visibility: newVis, updatedAt: serverTimestamp(), updatedBy: currentUserId || "unknown" };
         if (newVis === "published") payload.disclosedAt = serverTimestamp();
-        await setDoc(doc(db, "communityData", id), payload, { merge: true });
-        await addDoc(collection(db, "communityData", id, "auditLog"), { action: "bulk-visibility-change", newVisibility: newVis, userId: currentUserId || "unknown", timestamp: serverTimestamp() });
+        await setDoc(doc(db, "communities", id), payload, { merge: true });
+        await addDoc(collection(db, "communities", id, "auditLog"), { action: "bulk-visibility-change", newVisibility: newVis, userId: currentUserId || "unknown", timestamp: serverTimestamp() });
       }
       notify("Changed " + selectedIds.size + " communities to " + newVis); setSelectedIds(new Set());
     } catch (e) { notify("Bulk change failed: " + e.message, "error"); }
@@ -224,8 +224,8 @@ export default function CommunitiesSection({ currentUserId, currentUserEmail }) 
             };
             const isNew = !r.id;
             if (isNew) { payload.createdAt = serverTimestamp(); payload.createdBy = currentUserId || "unknown"; }
-            await setDoc(doc(db, "communityData", id), payload, { merge: true });
-            await addDoc(collection(db, "communityData", id, "auditLog"), { action: isNew ? "csv-import-create" : "csv-import-update", userId: currentUserId || "unknown", timestamp: serverTimestamp(), source: "csv-import" });
+            await setDoc(doc(db, "communities", id), payload, { merge: true });
+            await addDoc(collection(db, "communities", id, "auditLog"), { action: isNew ? "csv-import-create" : "csv-import-update", userId: currentUserId || "unknown", timestamp: serverTimestamp(), source: "csv-import" });
             if (isNew) created++; else updated++;
           } catch (e) { failed++; console.error(r, e); }
         }
@@ -304,10 +304,10 @@ export default function CommunitiesSection({ currentUserId, currentUserEmail }) 
                 </div>
                 <div style={{ fontSize: 11, color: C.t2, display: "flex", gap: 14, flexWrap: "wrap" }}>
                   <span>{c.area || "no area"}</span>
-                  <span>· {c.totalProjects || 0} projects</span>
-                  {c.avgPpsf > 0 && <span>· AED {formatAed(c.avgPpsf)}/sqft</span>}
-                  {c.grossYieldPct > 0 && <span>· {c.grossYieldPct}% yield</span>}
-                  {c.metroDistanceKm != null && <span>· {c.metroDistanceKm}km to metro</span>}
+                  <span>Â· {c.totalProjects || 0} projects</span>
+                  {c.avgPpsf > 0 && <span>Â· AED {formatAed(c.avgPpsf)}/sqft</span>}
+                  {c.grossYieldPct > 0 && <span>Â· {c.grossYieldPct}% yield</span>}
+                  {c.metroDistanceKm != null && <span>Â· {c.metroDistanceKm}km to metro</span>}
                 </div>
               </div>
               <div style={{ display: "flex", gap: 6 }} onClick={e => e.stopPropagation()}>
