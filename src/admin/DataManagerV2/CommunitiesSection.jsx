@@ -11,10 +11,11 @@ import Papa from "papaparse";
 // CONSTANTS
 // ============================================================================
 
-const AREAS = [
-  "Downtown", "Business Bay", "New Dubai", "Old Dubai", "Marina", "Dubai South",
-  "Dubailand", "MBR City", "Bur Dubai", "Deira", "Dubai Harbour", "DIP", "JLT",
-  "Expo City", "Waterfront", "CBD", "Suburban",
+// AREAS dropdown is now derived dynamically from community data via dynamicAreas useMemo
+// Old hardcoded list kept here as fallback only if data is empty
+const FALLBACK_AREAS = [
+  "Bur Dubai", "Deira", "New Dubai", "Dubai South", "Dubailand",
+  "Hatta", "Jebel Ali", "MBR City", "Trade Center", "Dubai Marina",
 ];
 
 const TYPES = [
@@ -156,6 +157,16 @@ export default function CommunitiesSection({ currentUserId, currentUserEmail }) 
       if (it.visibility === "archived") c.archived++;
     });
     return c;
+  }, [items]);
+
+  // Distinct area values derived from data (no more hardcoded list)
+  const dynamicAreas = useMemo(() => {
+    const set = new Set();
+    items.forEach(c => {
+      if (c.area && c.area.trim()) set.add(c.area.trim());
+    });
+    const arr = [...set].sort();
+    return arr.length > 0 ? arr : FALLBACK_AREAS;
   }, [items]);
 
   // ──────────────────────────────────────────────────────────────────────────
@@ -582,7 +593,7 @@ export default function CommunitiesSection({ currentUserId, currentUserEmail }) 
           </select>
           <select value={fArea} onChange={e => setFArea(e.target.value)} style={inputStyle}>
             <option value="All">All Areas</option>
-            {AREAS.map(a => <option key={a} value={a}>{a}</option>)}
+            {dynamicAreas.map(a => <option key={a} value={a}>{a}</option>)}
           </select>
           <select value={sortBy} onChange={e => setSortBy(e.target.value)} style={inputStyle}>
             <option value="name">Sort: Name</option>
@@ -693,6 +704,7 @@ export default function CommunitiesSection({ currentUserId, currentUserEmail }) 
         <CommEditModal
           initial={editing}
           allItems={items}
+          availableAreas={dynamicAreas}
           onClose={() => setEditing(null)}
           onSave={save}
           saving={saving}
@@ -1056,7 +1068,7 @@ function ConfirmDialog({ title, message, confirmLabel, confirmStyle, onConfirm, 
 // EDIT MODAL
 // ============================================================================
 
-function CommEditModal({ initial, allItems, onClose, onSave, saving }) {
+function CommEditModal({ initial, allItems, availableAreas, onClose, onSave, saving }) {
   const [form, setForm] = useState({
     name: "", arabicName: "",
     displayCategory: "consumer-community",
@@ -1240,7 +1252,7 @@ function CommEditModal({ initial, allItems, onClose, onSave, saving }) {
               <label style={lblStyle}>Area</label>
               <select style={inputStyle} value={form.area} onChange={e => update("area", e.target.value)}>
                 <option value="">-- Select area --</option>
-                {AREAS.map(a => <option key={a} value={a}>{a}</option>)}
+                {(availableAreas || FALLBACK_AREAS).map(a => <option key={a} value={a}>{a}</option>)}
               </select>
             </div>
             <div>
