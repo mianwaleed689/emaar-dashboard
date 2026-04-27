@@ -2411,6 +2411,7 @@ export default function EmaarDashboardV2() {
   const [insightsLoading, setInsightsLoading] = useState(false);
   const [liveDevHealth, setLiveDevHealth] = useState([]);
   const [liveDLDVolumes, setLiveDLDVolumes] = useState([]);
+  const [livePriceHistory, setLivePriceHistory] = useState([]);
   const [liveSTRData, setLiveSTRData] = useState([]);
   const [liveServiceCharges, setLiveServiceCharges] = useState([]);
   const [liveCompetitors, setLiveCompetitors] = useState([]);
@@ -3545,6 +3546,12 @@ export default function EmaarDashboardV2() {
       if (d.length > 0) setLiveDLDVolumes(d);
     }, () => {}));
 
+    /* --- PRICE HISTORY --- */
+    unsubs.push(onSnapshot(collection(db, "priceHistory"), snap => {
+      const d = snap.docs.map(x => ({ id:x.id, ...x.data() }));
+      if (d.length > 0) setLivePriceHistory(d);
+    }, () => {}));
+
     /* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ NEIGHBOURHOODS Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
     unsubs.push(onSnapshot(collection(db, "neighbourhoods"), snap => {
       const d = snap.docs.map(x => ({ id:x.id, ...x.data() }));
@@ -4488,7 +4495,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               phView={phView} setPhView={setPhView}
               phCompare={phCompare} setPhCompare={setPhCompare}
               phCommunity2={phCommunity2} setPhCommunity2={setPhCommunity2}
-              liveMarketData={liveMarketData}
+              livePriceHistory={livePriceHistory}
               globalFilters={_gf}
               handleTabChange={handleTabChange}
             />

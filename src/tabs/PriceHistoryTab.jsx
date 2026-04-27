@@ -13,7 +13,7 @@ import { Section, Chart, CustomTooltip, DataBadge, TabSources } from "../compone
 import SEED_DATA from "../utils/seedData";
 import { useFilterSchema } from "../contexts/FilterSchemaContext";
 
-function PriceHistoryTab({ phCommunity, setPhCommunity, phType, setPhType, phBeds, setPhBeds, phView, setPhView, phCompare, setPhCompare, phCommunity2, setPhCommunity2, liveMarketData, globalFilters = {}, handleTabChange }) {
+function PriceHistoryTab({ phCommunity, setPhCommunity, phType, setPhType, phBeds, setPhBeds, phView, setPhView, phCompare, setPhCompare, phCommunity2, setPhCommunity2, liveMarketData, livePriceHistory, globalFilters = {}, handleTabChange }) {
 
   /* Phase 2.4 Batch 5: when the top bar picks a community, sync the tab's
      own community selector to match. User can still override via the
@@ -31,8 +31,9 @@ function PriceHistoryTab({ phCommunity, setPhCommunity, phType, setPhType, phBed
             /* state moved to top level */
 
             /* ── Data from Firestore priceHistory collection ── */
+  const phFromFirestore = (livePriceHistory || []).filter(d => d.type === "annual" || d.type === "quarterly" || d.type === "monthly");
             const phRaw = liveMarketData?.filter?.(d => d.type === "priceHistory") || [];
-            const phData = phRaw.length > 0 ? phRaw : SEED_DATA.priceHistory;
+  const phData = phFromFirestore.length > 0 ? phFromFirestore : phRaw.length > 0 ? phRaw : SEED_DATA.priceHistory;
             const phIsSeed = phRaw.length === 0;
             // Separate year trend data from community data
             // Base chart data — year-level trend
