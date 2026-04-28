@@ -1,1131 +1,998 @@
 /* eslint-disable */
-/* MY LEADS TAB — Lead capture, scoring, follow-ups */
+/*
+  DXB Analytics — MY LEADS TAB
+  Session 11 — 4-Level Role-Aware CRM
+  Owner / Director / Manager / Agent
+  April 2026
+*/
 
-import React from "react";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from "recharts";
+import React, { useState, useMemo, useCallback, useEffect } from "react";
+import { collection, doc, addDoc, updateDoc, serverTimestamp, query, where, getDocs, arrayUnion } from "firebase/firestore";
+import { db, auth } from "../firebase";
 import { T } from "../data";
-import { SvgIcons } from "../components/Icons";
-import { cleanPhone } from "../utils/helpers";
 import { GOLDEN_VISA_THRESHOLD } from "../utils/constants";
 import Papa from "papaparse";
 
-function MyLeadsTab({
-  myLeads, liveLeads, orgRole, userRole, orgId, orgName, listings,
-  /* search/filters/sort */
-  leadSearch, setLeadSearch,
-  leadStatusFilter, setLeadStatusFilter,
-  leadTypeFilter, setLeadTypeFilter,
-  leadSourceFilter, setLeadSourceFilter,
-  leadBudgetFilter, setLeadBudgetFilter,
-  leadNatFilter, setLeadNatFilter,
-  leadTagFilter, setLeadTagFilter,
-  leadSortBy, setLeadSortBy,
-  /* drawer & selected */
-  selectedLead, setSelectedLead,
-  leadDrawerTab, setLeadDrawerTab,
-  /* add lead form */
-  leadShowAdd, setLeadShowAdd,
-  leadAddName, setLeadAddName,
-  leadAddPhone, setLeadAddPhone,
-  leadAddEmail, setLeadAddEmail,
-  leadAddNat, setLeadAddNat,
-  leadAddLang, setLeadAddLang,
-  leadAddSource, setLeadAddSource,
-  leadAddType, setLeadAddType,
-  leadAddBudget, setLeadAddBudget,
-  leadAddBedrooms, setLeadAddBedrooms,
-  leadAddPurpose, setLeadAddPurpose,
-  leadAddTimeline, setLeadAddTimeline,
-  leadAddStatus, setLeadAddStatus,
-  leadAddComm, setLeadAddComm,
-  leadAddRef, setLeadAddRef,
-  leadAddFollowUp, setLeadAddFollowUp,
-  leadAddSaving, setLeadAddSaving,
-  /* notes & tasks */
-  noteText, setNoteText,
-  noteType, setNoteType,
-  noteLoading, setNoteLoading,
-  taskText, setTaskText,
-  taskDue, setTaskDue,
-  /* modals */
-  showMLAnalytics, setShowMLAnalytics,
-  showMLTemplates, setShowMLTemplates,
-  showQuickCapture, setShowQuickCapture,
-}) {
+// ─── PIPELINE ────────────────────────────────────────────────
+const PIPELINE = [
+  { key:"Hot Case",        color:"#EF4444", bg:"rgba(239,68,68,0.1)" },
+  { key:"New Lead",        color:"#3B82F6", bg:"rgba(59,130,246,0.1)" },
+  { key:"Potential",       color:"#10B981", bg:"rgba(16,185,129,0.1)" },
+  { key:"No Answer",       color:"#F59E0B", bg:"rgba(245,158,11,0.1)" },
+  { key:"Low Budget",      color:"#8B5CF6", bg:"rgba(139,92,246,0.1)" },
+  { key:"Non Potential",   color:"#6B7280", bg:"rgba(107,114,128,0.1)" },
+  { key:"Whats app",       color:"#25D366", bg:"rgba(37,211,102,0.1)" },
+  { key:"Resale/buy/Rent", color:"#14B8A6", bg:"rgba(20,184,166,0.1)" },
+  { key:"EOI",             color:"#D4A843", bg:"rgba(212,168,67,0.1)" },
+  { key:"Closed Deal",     color:"#10B981", bg:"rgba(16,185,129,0.15)" },
+  { key:"Closed Outside",  color:"#EF4444", bg:"rgba(239,68,68,0.08)" },
+];
 
-            const mlIsAgent      = orgRole === "agent";
-            const mlIsManager    = orgRole === "manager";
-            const mlIsSuperAdmin = userRole === "admin" || userRole === "superAdmin";
-            const mlCanSee       = mlIsAgent || mlIsManager || mlIsSuperAdmin;
-            const mlAllLeads     = mlIsSuperAdmin ? (liveLeads||[])
-              : (mlIsAgent||mlIsManager) ? (myLeads||[])
-              : (liveLeads||[]).filter(l => !auth.currentUser?.uid || l.userId === auth.currentUser.uid);
+const SRC_COLOR = {
+  "Property Finder":"#00C08B","Bayut":"#FF6B35","Dubizzle":"#E8003D",
+  "Meta/Facebook":"#1877F2","Instagram":"#E1306C","WhatsApp":"#25D366",
+  "Google Ads":"#4285F4","Referral":"#8B5CF6","Website":"#14B8A6",
+  "Cold Call":"#F59E0B","TikTok":"#FF0050","LinkedIn":"#0A66C2",
+  "Email Campaign":"#EA4335","Walk In":"#6B7280","Manual":"#94A3B8",
+};
 
-            /* ── Status config ── */
-            const ML_ST = {
-              "New":       {color:"#3B82F6",bg:"rgba(59,130,246,0.12)",label:"New"},
-              "Contacted": {color:"#F59E0B",bg:"rgba(245,158,11,0.12)",label:"Contacted"},
-              "Viewing":   {color:"#8B5CF6",bg:"rgba(139,92,246,0.12)",label:"Viewing"},
-              "Offer":     {color:"#14B8A6",bg:"rgba(20,184,166,0.12)",label:"Offer"},
-              "Won":       {color:"#10B981",bg:"rgba(16,185,129,0.12)",label:"Won"},
-              "Lost":      {color:"#EF4444",bg:"rgba(239,68,68,0.12)",label:"Lost"},
-            };
-            /* ── Source colors ── */
-            const ML_SRC = {
-              "Property Finder":"#00C08B","Bayut":"#FF6B35","Dubizzle":"#E8003D",
-              "Meta/Facebook":"#1877F2","Instagram":"#E1306C","WhatsApp":"#25D366",
-              "Google Ads":"#4285F4","Referral":"#8B5CF6","Website":"#14B8A6",
-              "Cold Call":"#F59E0B","Manual":"#94A3B8",
-            };
-            const ML_NATS = ["Indian","British","Russian","Chinese","French","Pakistani","Saudi","Egyptian","German","American","Italian","Canadian","Australian","Japanese","Korean","Emirati","Filipino","Lebanese","Jordanian","Other"];
-            const ML_LANGS = ["Arabic","English","Russian","Mandarin","French","Hindi","Urdu","Filipino","German","Italian","Japanese","Korean"];
-            const ML_TAGS_OPTIONS = ["VIP","Cash Buyer","Urgent","Investor","GCC National","Mortgage","Off-Plan","Ready","End User","Flipper","Developer Contact","Returning Client"];
-            const ML_BEST_TIME = {
-              "Property Finder":"Evening 6-9pm","Bayut":"Evening 6-9pm","Dubizzle":"Evening 6-8pm",
-              "WhatsApp":"Morning 9-11am","Instagram":"Afternoon 2-5pm","Meta/Facebook":"Afternoon 2-5pm",
-              "Google Ads":"Morning 10am-12pm","Referral":"Anytime","Cold Call":"Morning 9-11am",
-              "Website":"Morning 9-11am","Manual":"Anytime",
-            };
-            const ML_WA_TEMPLATES = [
-              {label:"First Contact",   body:"Hello {name}, I came across your property enquiry. I am {agent} from The Address Holding. We have excellent options matching your requirements in Dubai. When would be a good time to connect?"},
-              {label:"Follow Up",       body:"Hello {name}, just following up on your property search. We have new listings matching your budget. Would you like to schedule a viewing this week?"},
-              {label:"Viewing Confirm", body:"Hello {name}, confirming your property viewing scheduled for {date}. Please let me know if you need to reschedule. Looking forward to meeting you!"},
-              {label:"Offer Made",      body:"Hello {name}, great news! We have submitted your offer. Our team is working to get you the best deal. I will update you as soon as we hear back."},
-              {label:"Golden Visa",     body:"Hello {name}, based on your budget you qualify for UAE Golden Visa (AED 2M+ investment). This gives you 10-year residency. Shall I send you more details?"},
-              {label:"Market Update",   body:"Hello {name}, quick update — prices in your preferred area have moved. I have great options within your budget. Shall we connect?"},
-            ];
-            const ML_EMAIL_TEMPLATES = [
-              {label:"Introduction", subject:"Property Investment Opportunities in Dubai", body:"Dear {name},\n\nThank you for your interest in Dubai real estate. I am {agent} from The Address Holding.\n\nI have identified several properties matching your criteria and would love to schedule a call.\n\nBest regards,\n{agent}"},
-              {label:"Property Match", subject:"Properties Matching Your Requirements", body:"Dear {name},\n\nI have shortlisted properties matching:\n- Budget: AED {budget}\n- Area: {community}\n- Type: {type}\n\nAvailable for a viewing at your convenience.\n\nBest regards,\n{agent}"},
-              {label:"Follow Up", subject:"Following Up - Your Dubai Property Search", body:"Dear {name},\n\nFollowing up on your property enquiry. The Dubai market is moving quickly.\n\nShall we schedule a call this week?\n\nBest regards,\n{agent}"},
-            ];
+const LEAD_SOURCES   = Object.keys(SRC_COLOR);
+const SERVICE_TYPES  = ["Buyer","Seller","Tenant","Investor"];
+const REQUEST_TYPES  = ["Off-Plan","Ready","Resale","Rental","Investment","Commercial"];
+const CHANNELS       = ["WhatsApp","Phone Call","Email","In Person","Video Call","Social DM"];
+const NATS           = ["Indian","British","Russian","Chinese","French","Pakistani","Saudi","Egyptian","German","American","Italian","Canadian","Australian","Japanese","Korean","Emirati","Filipino","Lebanese","Jordanian","Other"];
+const TIMELINES      = ["Immediate","1-3 months","3-6 months","6-12 months","Just browsing"];
+const NOTE_TYPES     = ["Note","Call","Email","WhatsApp","Viewing","Offer","Follow Up","Status Update"];
+const GV_MIN         = typeof GOLDEN_VISA_THRESHOLD !== "undefined" ? GOLDEN_VISA_THRESHOLD : 2000000;
 
-            /* ── Helpers ── */
-            const clnPhone = (p) => { if(!p) return ""; let o=""; for(let i=0;i<p.length;i++){const c=p.charCodeAt(i);if(c>=48&&c<=57)o+=p[i];} return o; };
-            const fmtB = (b) => { const n=parseFloat(b||0); if(n===0) return "—"; if(n>=1000000) return "AED "+(n*0.000001).toFixed(1)+"M"; return "AED "+n.toLocaleString(); };
-            const escCSV = (v) => { const s=String(v==null?"":v); return '"'+s.replace(/"/g,'""')+'"'; };
+const WA_TEMPLATES = [
+  { label:"First Contact",   body:"Hello {name}, I came across your enquiry. I am {agent} from {org}. We have excellent options matching your requirements in Dubai. When would be a good time to connect?" },
+  { label:"Follow Up",       body:"Hello {name}, following up on your property search. We have new listings matching your budget. Would you like to schedule a viewing this week?" },
+  { label:"Viewing Confirm", body:"Hello {name}, confirming your property viewing. Please let me know if you need to reschedule. Looking forward to meeting you!" },
+  { label:"Offer Made",      body:"Hello {name}, great news! We have submitted your offer. I will update you as soon as we hear back." },
+  { label:"Golden Visa",     body:"Hello {name}, based on your budget you qualify for UAE Golden Visa (AED 2M+ investment). This gives you 10-year residency. Shall I send details?" },
+  { label:"Market Update",   body:"Hello {name}, prices in your preferred area have moved. I have great options within your budget. Shall we connect?" },
+  { label:"EOI Follow Up",   body:"Hello {name}, thank you for your Expression of Interest. We have reviewed your request and have excellent options. When can we connect?" },
+];
 
-            /* ── AI Score (6-factor engine) ── */
-            function mlScore(l) {
-              let s=0;
-              const b=parseFloat(l.budget||0);
-              if(l.phone&&l.email) s+=25; else if(l.phone||l.email) s+=10;
-              if(b>=5000000) s+=20; else if(b>=GOLDEN_VISA_THRESHOLD) s+=15; else if(b>=1000000) s+=10;
-              const d=(Date.now()-new Date(l.createdAt||Date.now()).getTime())*0.000000011574;
-              if(d<1) s+=20; else if(d<3) s+=15; else if(d<7) s+=10;
-              const n=(l.notes_log||[]).length; if(n>=3) s+=10; else if(n>=1) s+=5;
-              if(l.timeline==="Immediate") s+=15; else if(l.timeline==="1-3 months") s+=10;
-              if(l.nationality) s+=5;
-              const score = Math.min(100, s);
-              return {score, color:score>=70?"#10B981":score>=40?"#D4A843":"#EF4444", label:score>=70?"Hot":score>=40?"Warm":"Cold"};
-            }
+// ─── HELPERS ─────────────────────────────────────────────────
+const clnPhone  = p => String(p||"").replace(/[^0-9]/g,"");
+const maskPhone = p => { if(!p) return "—"; const c=clnPhone(p); if(c.length<6) return p; return c.slice(0,3)+"••••••"+c.slice(-2); };
+const fmtB      = b => { const n=parseFloat(b||0); if(!n) return "—"; return n>=1e6?"AED "+(n/1e6).toFixed(1)+"M":"AED "+n.toLocaleString(); };
+const fmtD      = d => { if(!d) return "—"; try { return new Date(d).toLocaleDateString("en-AE",{day:"2-digit",month:"short",year:"2-digit"}); } catch(e){return "—";} };
+const daysAgo   = d => !d ? 999 : Math.floor((Date.now()-new Date(d).getTime())/86400000);
+const escCSV    = v => '"'+String(v==null?"":v).replace(/"/g,'""')+'"';
 
-            /* ── Duplicate check ── */
-            function mlIsDuplicate(phone) {
-              if(!phone) return false;
-              const clean = clnPhone(phone);
-              return mlAllLeads.some(l => clnPhone(l.phone) === clean);
-            }
-
-            /* ── Filtered & sorted leads ── */
-            const mlFiltered = (() => {
-              let a = mlAllLeads;
-              if(leadStatusFilter!=="all") a=a.filter(l=>(l.status||"New")===leadStatusFilter);
-              if(leadSourceFilter!=="all") a=a.filter(l=>l.source===leadSourceFilter);
-              if(leadNatFilter!=="all") a=a.filter(l=>(l.nationality||"")===leadNatFilter);
-              if(leadBudgetFilter!=="all") a=a.filter(l=>{
-                const b=parseFloat(l.budget||0);
-                if(leadBudgetFilter==="under1m") return b<1000000;
-                if(leadBudgetFilter==="1to3m") return b>=1000000&&b<3000000;
-                if(leadBudgetFilter==="3to5m") return b>=3000000&&b<5000000;
-                if(leadBudgetFilter==="5to10m") return b>=5000000&&b<10000000;
-                if(leadBudgetFilter==="above10m") return b>=10000000;
-                return true;
-              });
-              if(leadTypeFilter!=="all") a=a.filter(l=>(l.type||"Buy")===leadTypeFilter);
-              if(leadTagFilter!=="all") a=a.filter(l=>(l.timeline||"")===leadTagFilter);
-              if(leadSearch.trim()){
-                const q=leadSearch.trim().toLowerCase();
-                a=a.filter(l=>(l.name||"").toLowerCase().includes(q)||(l.phone||"").includes(q)||(l.email||"").toLowerCase().includes(q)||(l.community||"").toLowerCase().includes(q));
-              }
-              if(leadSortBy==="score") a=[...a].sort((a,b)=>mlScore(b).score-mlScore(a).score);
-              else if(leadSortBy==="budget") a=[...a].sort((a,b)=>parseFloat(b.budget||0)-parseFloat(a.budget||0));
-              else if(leadSortBy==="name") a=[...a].sort((a,b)=>(a.name||"").localeCompare(b.name||""));
-              else a=[...a].sort((a,b)=>new Date(b.createdAt||0)-new Date(a.createdAt||0));
-              return a;
-            })();
-
-            /* ── KPIs ── */
-            const mlTotalVal  = mlAllLeads.reduce((s,l)=>s+parseFloat(l.budget||0),0);
-            const mlNewToday  = mlAllLeads.filter(l=>{const d=new Date(l.createdAt||0),n=new Date();return d.getDate()===n.getDate()&&d.getMonth()===n.getMonth();}).length;
-            const mlWon       = mlAllLeads.filter(l=>l.status==="Won");
-            const mlHot       = mlAllLeads.filter(l=>mlScore(l).score>=70&&l.status!=="Won"&&l.status!=="Lost");
-            const mlStale     = mlAllLeads.filter(l=>{
-              if(l.status==="Won"||l.status==="Lost") return false;
-              return (Date.now()-new Date(l.updatedAt||l.createdAt||Date.now()).getTime())*0.000000011574>7;
-            });
-
-            /* ── Source analytics ── */
-            const mlSrcStats = (() => {
-              const stats={};
-              mlAllLeads.forEach(l=>{const src=l.source||"Manual";if(!stats[src])stats[src]={total:0,won:0};stats[src].total++;if(l.status==="Won")stats[src].won++;});
-              return Object.entries(stats).map(([src,d])=>({src,total:d.total,won:d.won,rate:d.total>0?Math.round(d.won*100/d.total):0})).sort((a,b)=>b.total-a.total);
-            })();
-
-            /* ── Save lead ── */
-            async function mlSave() {
-              if(!leadAddName||!leadAddPhone) return;
-              if(mlIsDuplicate(leadAddPhone)){if(!window.confirm("A lead with this phone already exists. Add anyway?")) return;}
-              setLeadAddSaving(true);
-              try {
-                await addDoc(collection(db,"leads"),{
-                  name:leadAddName,phone:leadAddPhone,email:leadAddEmail,
-                  budget:parseFloat(leadAddBudget)||0,source:leadAddSource,
-                  status:leadAddStatus,type:leadAddType,community:leadAddComm,
-                  nationality:leadAddNat||"",language:leadAddLang||"",
-                  timeline:leadAddTimeline||"",purpose:leadAddPurpose||"",
-                  bedrooms:leadAddBedrooms||"",referredBy:leadAddRef||"",
-                  followUpDate:leadAddFollowUp||"",tags:[],
-                  userId:auth.currentUser?.uid||"",assignedTo:auth.currentUser?.uid||"",
-                  orgId:orgId||"",createdAt:new Date().toISOString(),
-                  updatedAt:new Date().toISOString(),
-                  notes_log:[{text:"Lead created",type:"Created",by:auth.currentUser?.email||"",at:new Date().toISOString()}],
-                });
-                setLeadAddName("");setLeadAddPhone("");setLeadAddEmail("");
-                setLeadAddBudget("");setLeadAddComm("");setLeadAddNat("");
-                setLeadAddLang("");setLeadAddTimeline("");setLeadAddPurpose("");
-                setLeadAddBedrooms("");setLeadAddRef("");setLeadAddFollowUp("");
-                setLeadAddSource("Manual");setLeadAddStatus("New");setLeadAddType("Buy");
-                setLeadShowAdd(false);
-              } catch(e){console.error(e);}
-              setLeadAddSaving(false);
-            }
-
-            /* ── CSV Import ── */
-            async function mlImportCsv(file) {
-              if (!file) return;
-              Papa.parse(file, {
-                header: true,
-                skipEmptyLines: true,
-                complete: async (results) => {
-                  const rows = results.data;
-                  if (!rows.length) { alert("CSV is empty"); return; }
-                  const errors = [];
-                  rows.forEach((r, i) => {
-                    if (!r.name && !r.Name) errors.push("Row " + (i + 2) + ": missing name");
-                    if (!r.phone && !r.Phone && !r.email && !r.Email) errors.push("Row " + (i + 2) + ": missing phone or email");
-                  });
-                  if (errors.length > 0) {
-                    alert("Validation failed:\n" + errors.slice(0, 10).join("\n") + (errors.length > 10 ? "\n...and " + (errors.length - 10) + " more" : ""));
-                    return;
-                  }
-                  if (!window.confirm("Import " + rows.length + " leads into your agency CRM?")) return;
-                  let created = 0, duplicates = 0, failed = 0;
-                  const now = new Date().toISOString();
-                  for (const r of rows) {
-                    try {
-                      const phone = (r.phone || r.Phone || "").toString().trim();
-                      const email = (r.email || r.Email || "").toString().trim();
-                      if (phone && mlIsDuplicate(phone)) { duplicates++; continue; }
-                      await addDoc(collection(db, "leads"), {
-                        name: (r.name || r.Name || "").toString().trim(),
-                        phone: phone,
-                        email: email,
-                        budget: parseFloat(r.budget || r.Budget || 0) || 0,
-                        source: (r.source || r.Source || "CSV Import").toString().trim(),
-                        status: (r.status || r.Status || "New").toString().trim(),
-                        type: (r.type || r.Type || "Buy").toString().trim(),
-                        community: (r.community || r.Community || "").toString().trim(),
-                        nationality: (r.nationality || r.Nationality || "").toString().trim(),
-                        language: (r.language || r.Language || "").toString().trim(),
-                        timeline: (r.timeline || r.Timeline || "").toString().trim(),
-                        purpose: (r.purpose || r.Purpose || "").toString().trim(),
-                        bedrooms: (r.bedrooms || r.Bedrooms || "").toString().trim(),
-                        referredBy: (r.referredBy || r.ReferredBy || "").toString().trim(),
-                        followUpDate: (r.followUpDate || r.FollowUpDate || "").toString().trim(),
-                        tags: [],
-                        userId: auth.currentUser?.uid || "",
-                        assignedTo: auth.currentUser?.uid || "",
-                        orgId: orgId || "",
-                        createdAt: now,
-                        updatedAt: now,
-                        notes_log: [{ text: "Imported from CSV", type: "Created", by: auth.currentUser?.email || "", at: now }],
-                      });
-                      created++;
-                    } catch (e) {
-                      console.error("Row import failed:", r, e);
-                      failed++;
-                    }
-                  }
-                  alert("Import complete!\n\n" +
-                        "Created: " + created + "\n" +
-                        "Duplicates skipped: " + duplicates + "\n" +
-                        (failed > 0 ? "Failed: " + failed : ""));
-                },
-                error: (err) => alert("CSV parse error: " + err.message),
-              });
-            }
-
-            /* ── Add note/activity ── */
-            async function mlNote(id) {
-              if(!noteText.trim()) return;
-              setNoteLoading(true);
-              try {
-                const entry={text:noteText,type:noteType,by:auth.currentUser?.email||"",at:new Date().toISOString()};
-                await updateDoc(doc(db,"leads",id),{notes_log:arrayUnion(entry),updatedAt:new Date().toISOString()});
-                setNoteText("");
-                if(selectedLead&&selectedLead.id===id) setSelectedLead({...selectedLead,notes_log:[...(selectedLead.notes_log||[]),entry]});
-              } catch(e){console.error(e);}
-              setNoteLoading(false);
-            }
-
-            /* ── Change status ── */
-            async function mlStatus(id,st) {
-              try {
-                const entry={text:"Status changed to "+st,type:"Status Change",by:auth.currentUser?.email||"agent",at:new Date().toISOString()};
-                const upd={status:st,updatedAt:new Date().toISOString(),notes_log:arrayUnion(entry)};
-                if(st==="Won") upd.wonAt=new Date().toISOString();
-                await updateDoc(doc(db,"leads",id),upd);
-                if(selectedLead&&selectedLead.id===id) setSelectedLead({...selectedLead,status:st,notes_log:[...(selectedLead.notes_log||[]),entry]});
-              } catch(e){console.error(e);}
-            }
-
-            /* ── Toggle tag ── */
-            async function mlToggleTag(id,tag,currentTags) {
-              const tags=currentTags||[];
-              const newTags=tags.includes(tag)?tags.filter(t=>t!==tag):[...tags,tag];
-              try {
-                await updateDoc(doc(db,"leads",id),{tags:newTags,updatedAt:new Date().toISOString()});
-                if(selectedLead&&selectedLead.id===id) setSelectedLead({...selectedLead,tags:newTags});
-              } catch(e){console.error(e);}
-            }
-
-            /* ── Save deal value ── */
-            async function mlSaveDeal(id,val) {
-              try {
-                await updateDoc(doc(db,"leads",id),{dealValue:parseFloat(val)||0,updatedAt:new Date().toISOString()});
-                if(selectedLead&&selectedLead.id===id) setSelectedLead({...selectedLead,dealValue:parseFloat(val)||0});
-              } catch(e){console.error(e);}
-            }
-
-            /* ── Export CSV ── */
-            function mlExportCSV() {
-              const h=["Name","Phone","Email","Budget","Status","Source","Nationality","Language","Timeline","Purpose","Bedrooms","Community","Type","Tags","Referred By","Follow Up","AI Score","Created","Deal Value"];
-              const r=mlFiltered.map(l=>[
-                l.name||"",l.phone||"",l.email||"",l.budget||"",l.status||"New",
-                l.source||"",l.nationality||"",l.language||"",l.timeline||"",
-                l.purpose||"",l.bedrooms||"",l.community||"",l.type||"Buy",
-                (l.tags||[]).join("; "),l.referredBy||"",l.followUpDate||"",
-                mlScore(l).score,
-                l.createdAt?new Date(l.createdAt).toLocaleDateString("en-GB"):"",
-                l.dealValue||"",
-              ].map(v=>escCSV(v)));
-              const csv=[h.join(","),...r.map(x=>x.join(","))].join(String.fromCharCode(10));
-              const b=new Blob([csv],{type:"text/csv"});
-              const u=URL.createObjectURL(b);
-              const a=document.createElement("a");
-              a.href=u;a.download="DXB_Leads_"+new Date().toISOString().slice(0,10)+".csv";a.click();URL.revokeObjectURL(u);
-            }
-
-            /* ── Bulk WhatsApp ── */
-            function mlBulkWA() {
-              const withPhone=mlFiltered.filter(l=>l.phone);
-              if(withPhone.length===0){alert("No leads with phone numbers in current filter.");return;}
-              setShowMLTemplates(true);
-            }
-            function mlSendWATemplate(tmpl) {
-              const withPhone=mlFiltered.filter(l=>l.phone).slice(0,1);
-              const agent=auth.currentUser?.email?.split("@")[0]||"Agent";
-              const lead=withPhone[0];
-              if(!lead) return;
-              const msg=tmpl.body.replace("{name}",lead.name||"").replace("{agent}",agent).replace("{budget}",fmtB(lead.budget)).replace("{community}",lead.community||"Dubai").replace("{type}",lead.type||"property").replace("{date}","the scheduled time");
-              window.open("https://wa.me/"+clnPhone(lead.phone)+"?text="+encodeURIComponent(msg),"_blank");
-              setShowMLTemplates(false);
-            }
-
-            if(!mlCanSee) return (
-              <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",height:400,gap:16}}>
-                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke={T.textMuted} strokeWidth="1.5" strokeLinecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
-                <div style={{fontSize:16,fontWeight:700,color:T.textPrimary}}>Leads not enabled for your role</div>
-                <div style={{fontSize:12,color:T.textMuted}}>Contact your agency manager</div>
-              </div>
-            );
-
-            return (
-              <div style={{padding:"0 0 60px"}}>
-
-                {/* ── HEADER ── */}
-                <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:18,flexWrap:"wrap",gap:10}}>
-                  <div>
-                    <h1 style={{fontFamily:"'Fraunces',serif",fontSize:22,fontWeight:900,color:T.white,margin:0}}>
-                      {orgName ? orgName + " — " : "My Agency — "}{mlIsManager ? "Team Leads" : "My Leads"}
-                    </h1>
-                    <p style={{fontSize:12,color:T.textMuted,margin:"3px 0 0"}}>
-                      {mlFiltered.length} of {mlAllLeads.length} leads · AI scored · WhatsApp ready
-                    </p>
-                  </div>
-                  <div style={{display:"flex",gap:7,flexWrap:"wrap"}}>
-                    <button type="button" onClick={()=>setShowMLAnalytics(v=>!v)}
-                      style={{padding:"7px 12px",borderRadius:7,border:"1px solid "+T.border,background:showMLAnalytics?"rgba(212,168,67,0.1)":"transparent",color:showMLAnalytics?"#D4A843":T.textSecondary,fontSize:12,fontWeight:600,cursor:"pointer"}}>
-                      Analytics
-                    </button>
-                    <button type="button" onClick={mlExportCSV}
-                      style={{padding:"7px 12px",borderRadius:7,border:"1px solid "+T.border,background:"transparent",color:T.textSecondary,fontSize:12,fontWeight:600,cursor:"pointer"}}>
-                      Export CSV
-                    </button>
-                    <button type="button" onClick={mlBulkWA}
-                      style={{padding:"7px 12px",borderRadius:7,border:"1px solid rgba(37,211,102,0.3)",background:"rgba(37,211,102,0.08)",color:"#25D366",fontSize:12,fontWeight:600,cursor:"pointer"}}>
-                      Bulk WA
-                    </button>
-                    <button type="button" onClick={()=>setShowQuickCapture(true)}
-                      style={{padding:"8px 16px",borderRadius:8,border:"none",background:"linear-gradient(135deg,#D4A843,#B8902E)",color:"#0A0E1A",fontSize:13,fontWeight:700,cursor:"pointer"}}>
-                      + Quick Capture
-                    </button>
-                  </div>
-                </div>
-
-                {/* ── 5 KPI CARDS ── */}
-                <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:9,marginBottom:14}}>
-                  {[
-                    {label:"Total",      value:String(mlAllLeads.length),  color:"#D4A843"},
-                    {label:"New Today",  value:String(mlNewToday),         color:"#0EA5E9"},
-                    {label:"Hot Leads",  value:String(mlHot.length),       color:"#10B981"},
-                    {label:"Won",        value:String(mlWon.length),       color:"#10B981"},
-                    {label:"Pipeline",   value:mlTotalVal>=1000000000?"AED "+(mlTotalVal*0.000000001).toFixed(1)+"B":"AED "+(mlTotalVal*0.000001).toFixed(1)+"M", color:"#D4A843"},
-                  ].map((k,i)=>(
-                    <div key={i} style={{background:T.card,border:"1px solid "+T.border,borderRadius:10,padding:"11px 13px",position:"relative",overflow:"hidden"}}>
-                      <div style={{position:"absolute",top:0,left:0,right:0,height:2,background:k.color,opacity:0.8}}/>
-                      <div style={{fontSize:10,fontWeight:700,color:T.textMuted,textTransform:"uppercase",letterSpacing:0.7,marginBottom:3}}>{k.label}</div>
-                      <div style={{fontSize:20,fontWeight:900,color:k.color,fontFamily:"'Fraunces',serif"}}>{k.value}</div>
-                    </div>
-                  ))}
-                </div>
-
-                {/* ── SOURCE ANALYTICS PANEL ── */}
-                {showMLAnalytics && (
-                  <div style={{background:T.card,border:"1px solid "+T.border,borderRadius:10,padding:"14px 16px",marginBottom:12}}>
-                    <div style={{fontSize:12,fontWeight:700,color:T.white,marginBottom:10}}>Source Performance — Conversion Rate by Channel</div>
-                    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(140px,1fr))",gap:8}}>
-                      {mlSrcStats.slice(0,8).map((s,i)=>(
-                        <div key={i} style={{background:T.surfaceAlt,borderRadius:7,padding:"9px 11px"}}>
-                          <div style={{fontSize:11,fontWeight:700,color:ML_SRC[s.src]||T.textMuted,marginBottom:5,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{s.src}</div>
-                          <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-end"}}>
-                            <div>
-                              <div style={{fontSize:17,fontWeight:900,color:T.white,fontFamily:"'Fraunces',serif",lineHeight:1}}>{s.total}</div>
-                              <div style={{fontSize:9,color:T.textMuted}}>leads</div>
-                            </div>
-                            <div style={{textAlign:"right"}}>
-                              <div style={{fontSize:15,fontWeight:900,color:s.rate>=10?"#10B981":s.rate>=5?"#D4A843":"#EF4444",fontFamily:"'Fraunces',serif",lineHeight:1}}>{s.rate}%</div>
-                              <div style={{fontSize:9,color:T.textMuted}}>won</div>
-                            </div>
-                          </div>
-                          <div style={{height:2,background:T.border,borderRadius:1,marginTop:6,overflow:"hidden"}}>
-                            <div style={{height:"100%",width:Math.min(s.total,100)+"%",background:ML_SRC[s.src]||"#D4A843",borderRadius:1,opacity:0.6}}/>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* ── STALE LEADS ALERT ── */}
-                {mlStale.length>0 && (() => {
-                  const named=mlStale.filter(l=>l.name&&l.name.trim()&&l.name!=="Unnamed");
-                  return (
-                    <div style={{padding:"7px 12px",background:"rgba(239,68,68,0.06)",border:"1px solid rgba(239,68,68,0.15)",borderRadius:7,marginBottom:10,display:"flex",alignItems:"center",gap:10}}>
-                      <div style={{width:5,height:5,borderRadius:"50%",background:"#EF4444",flexShrink:0}}/>
-                      <div style={{flex:1,fontSize:11,color:"#EF4444"}}>
-                        {named.length>0
-                          ? named.slice(0,2).map(l=>l.name).join(", ")+(mlStale.length>2?" + "+(mlStale.length-2)+" more":"")+" — 7+ days no contact"
-                          : mlStale.length+" leads need follow-up — 7+ days no contact"}
-                      </div>
-                      <button type="button" onClick={()=>setLeadSortBy("date")}
-                        style={{padding:"2px 9px",background:"transparent",border:"1px solid rgba(239,68,68,0.3)",borderRadius:4,color:"#EF4444",fontSize:10,cursor:"pointer"}}>View</button>
-                    </div>
-                  );
-                })()}
-
-                {/* ── SMART FILTER PILLS ── */}
-                <div style={{display:"flex",gap:6,marginBottom:10,flexWrap:"wrap"}}>
-                  {[
-                    {label:"Hot Leads",   fn:()=>{setLeadSortBy("score");setLeadStatusFilter("all");}},
-                    {label:"Immediate",   fn:()=>{setLeadTagFilter("Immediate");}},
-                    {label:"GV Eligible", fn:()=>{setLeadBudgetFilter("above10m");}},
-                    {label:"Indian",      fn:()=>{setLeadNatFilter("Indian");}},
-                    {label:"Russian",     fn:()=>{setLeadNatFilter("Russian");}},
-                    {label:"Won Deals",   fn:()=>{setLeadStatusFilter("Won");}},
-                    {label:"Lost Leads",  fn:()=>{setLeadStatusFilter("Lost");}},
-                  ].map((f,i)=>(
-                    <button key={i} type="button" onClick={f.fn}
-                      style={{padding:"4px 10px",borderRadius:14,border:"1px solid "+T.border,background:"transparent",color:T.textMuted,fontSize:11,cursor:"pointer",transition:"all 0.15s"}}
-                      onMouseEnter={e=>{e.currentTarget.style.background="rgba(212,168,67,0.1)";e.currentTarget.style.color="#D4A843";e.currentTarget.style.borderColor="rgba(212,168,67,0.3)";}}
-                      onMouseLeave={e=>{e.currentTarget.style.background="transparent";e.currentTarget.style.color=T.textMuted;e.currentTarget.style.borderColor=T.border;}}>
-                      {f.label}
-                    </button>
-                  ))}
-                </div>
-
-                {/* ── FILTER BAR ── */}
-                <div style={{background:T.surfaceAlt,border:"1px solid "+T.border,borderRadius:10,padding:"10px 12px",marginBottom:12}}>
-                  <div style={{display:"flex",gap:7,flexWrap:"wrap",alignItems:"center",marginBottom:7}}>
-                    <div style={{position:"relative",flex:"2 1 170px"}}>
-                      <svg style={{position:"absolute",left:8,top:"50%",transform:"translateY(-50%)"}} width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={T.textMuted} strokeWidth="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                      <input value={leadSearch} onChange={e=>setLeadSearch(e.target.value)} placeholder="Search name, phone, area..."
-                        style={{width:"100%",padding:"7px 8px 7px 27px",background:T.surface,border:"1px solid "+T.border,borderRadius:6,color:T.textPrimary,fontSize:12,outline:"none",boxSizing:"border-box"}}/>
-                    </div>
-                    <select value={leadSortBy} onChange={e=>setLeadSortBy(e.target.value)}
-                      style={{flex:"1 1 90px",padding:"7px 8px",background:T.surface,border:"1px solid "+T.border,borderRadius:6,color:T.textPrimary,fontSize:12,outline:"none"}}>
-                      <option value="date">Latest</option>
-                      <option value="score">AI Score</option>
-                      <option value="budget">Budget</option>
-                      <option value="name">Name A-Z</option>
-                    </select>
-                    <select value={leadStatusFilter} onChange={e=>setLeadStatusFilter(e.target.value)}
-                      style={{flex:"1 1 90px",padding:"7px 8px",background:T.surface,border:"1px solid "+T.border,borderRadius:6,color:T.textPrimary,fontSize:12,outline:"none"}}>
-                      <option value="all">All Status</option>
-                      {Object.entries(ML_ST).map(([k,v])=><option key={k} value={k}>{v.label}</option>)}
-                    </select>
-                    <select value={leadSourceFilter} onChange={e=>setLeadSourceFilter(e.target.value)}
-                      style={{flex:"1 1 105px",padding:"7px 8px",background:T.surface,border:"1px solid "+T.border,borderRadius:6,color:T.textPrimary,fontSize:12,outline:"none"}}>
-                      <option value="all">All Sources</option>
-                      {Object.keys(ML_SRC).map(s=><option key={s} value={s}>{s}</option>)}
-                    </select>
-                    <select value={leadNatFilter} onChange={e=>setLeadNatFilter(e.target.value)}
-                      style={{flex:"1 1 120px",padding:"7px 8px",background:T.surface,border:"1px solid "+T.border,borderRadius:6,color:T.textPrimary,fontSize:12,outline:"none"}}>
-                      <option value="all">All Nationalities</option>
-                      {ML_NATS.map(n=><option key={n} value={n}>{n}</option>)}
-                    </select>
-                  </div>
-                  <div style={{display:"flex",gap:7,flexWrap:"wrap",alignItems:"center"}}>
-                    <select value={leadBudgetFilter} onChange={e=>setLeadBudgetFilter(e.target.value)}
-                      style={{flex:"1 1 105px",padding:"7px 8px",background:T.surface,border:"1px solid "+T.border,borderRadius:6,color:T.textPrimary,fontSize:12,outline:"none"}}>
-                      <option value="all">All Budgets</option>
-                      <option value="under1m">Under 1M</option>
-                      <option value="1to3m">1M – 3M</option>
-                      <option value="3to5m">3M – 5M</option>
-                      <option value="5to10m">5M – 10M</option>
-                      <option value="above10m">10M+</option>
-                    </select>
-                    <select value={leadTypeFilter} onChange={e=>setLeadTypeFilter(e.target.value)}
-                      style={{flex:"1 1 90px",padding:"7px 8px",background:T.surface,border:"1px solid "+T.border,borderRadius:6,color:T.textPrimary,fontSize:12,outline:"none"}}>
-                      <option value="all">All Types</option>
-                      <option value="Buy">Buy</option>
-                      <option value="Rent">Rent</option>
-                      <option value="Off-Plan">Off-Plan</option>
-                      <option value="Invest">Invest</option>
-                    </select>
-                    <select value={leadTagFilter} onChange={e=>setLeadTagFilter(e.target.value)}
-                      style={{flex:"1 1 110px",padding:"7px 8px",background:T.surface,border:"1px solid "+T.border,borderRadius:6,color:T.textPrimary,fontSize:12,outline:"none"}}>
-                      <option value="all">All Timelines</option>
-                      <option value="Immediate">Immediate</option>
-                      <option value="1-3 months">1-3 Months</option>
-                      <option value="3-6 months">3-6 Months</option>
-                      <option value="6-12 months">6-12 Months</option>
-                      <option value="Just browsing">Just Browsing</option>
-                    </select>
-                    <button type="button"
-                      onClick={()=>{setLeadSearch("");setLeadStatusFilter("all");setLeadSourceFilter("all");setLeadNatFilter("all");setLeadBudgetFilter("all");setLeadTypeFilter("all");setLeadTagFilter("all");setLeadSortBy("date");}}
-                      style={{padding:"7px 11px",borderRadius:6,border:"1px solid "+T.border,background:"transparent",color:T.textMuted,fontSize:11,cursor:"pointer"}}>
-                      Reset
-                    </button>
-                    <button type="button" onClick={()=>setLeadShowAdd(v=>!v)}
-                      style={{marginLeft:"auto",padding:"7px 13px",borderRadius:6,border:"none",background:leadShowAdd?"rgba(212,168,67,0.15)":"linear-gradient(135deg,#D4A843,#B8902E)",color:leadShowAdd?"#D4A843":"#0A0E1A",fontSize:12,fontWeight:700,cursor:"pointer"}}>
-                      {leadShowAdd?"Cancel":"+ Add Lead"}
-                    </button>
-                    <label
-                      style={{marginLeft:8,padding:"7px 13px",borderRadius:6,border:"1px solid "+T.border,background:"transparent",color:T.textMuted,fontSize:11,fontWeight:600,cursor:"pointer",display:"inline-flex",alignItems:"center",gap:6}}>
-                      📥 Import CSV
-                      <input type="file" accept=".csv" style={{display:"none"}} onChange={e => { if (e.target.files[0]) { mlImportCsv(e.target.files[0]); e.target.value = ""; } }} />
-                    </label>
-                  </div>
-                </div>
-
-                {/* ── ADD LEAD FORM ── */}
-                {leadShowAdd && (
-                  <div style={{padding:"16px 18px",background:"rgba(212,168,67,0.04)",border:"1px solid rgba(212,168,67,0.2)",borderRadius:10,marginBottom:12}}>
-                    <div style={{fontSize:13,fontWeight:700,color:T.white,marginBottom:12}}>Add New Lead</div>
-                    {leadAddPhone && mlIsDuplicate(leadAddPhone) && (
-                      <div style={{padding:"6px 10px",background:"rgba(239,68,68,0.1)",border:"1px solid rgba(239,68,68,0.2)",borderRadius:6,marginBottom:10,fontSize:11,color:"#EF4444"}}>
-                        Duplicate detected — a lead with this phone number already exists
-                      </div>
-                    )}
-                    <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:9,marginBottom:9}}>
-                      {[
-                        {label:"Full Name *",val:leadAddName,set:setLeadAddName,ph:"Client name"},
-                        {label:"Phone *",val:leadAddPhone,set:setLeadAddPhone,ph:"+971 50 XXX XXXX"},
-                        {label:"Email",val:leadAddEmail,set:setLeadAddEmail,ph:"email@example.com"},
-                        {label:"Budget (AED)",val:leadAddBudget,set:setLeadAddBudget,ph:"e.g. 2000000"},
-                        {label:"Community",val:leadAddComm,set:setLeadAddComm,ph:"e.g. Dubai Hills"},
-                        {label:"Bedrooms",val:leadAddBedrooms||"",set:setLeadAddBedrooms,ph:"e.g. 2"},
-                        {label:"Referred By",val:leadAddRef||"",set:setLeadAddRef,ph:"Who referred"},
-                        {label:"Follow Up Date",val:leadAddFollowUp||"",set:setLeadAddFollowUp,ph:"",type:"date"},
-                      ].map((f,i)=>(
-                        <div key={i}>
-                          <div style={{fontSize:10,color:T.textMuted,marginBottom:3}}>{f.label}</div>
-                          <input type={f.type||"text"} value={f.val} onChange={e=>f.set(e.target.value)} placeholder={f.ph}
-                            style={{width:"100%",padding:"7px 9px",background:T.surfaceAlt,border:"1px solid "+(f.label.includes("*")&&!f.val?"rgba(239,68,68,0.4)":T.border),borderRadius:6,color:T.textPrimary,fontSize:12,outline:"none",boxSizing:"border-box"}}/>
-                        </div>
-                      ))}
-                    </div>
-                    <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:9,marginBottom:9}}>
-                      <div>
-                        <div style={{fontSize:10,color:T.textMuted,marginBottom:3}}>Nationality</div>
-                        <select value={leadAddNat||""} onChange={e=>setLeadAddNat(e.target.value)} style={{width:"100%",padding:"7px 9px",background:T.surfaceAlt,border:"1px solid "+T.border,borderRadius:6,color:T.textPrimary,fontSize:12,outline:"none"}}>
-                          <option value="">Select...</option>{ML_NATS.map(n=><option key={n} value={n}>{n}</option>)}
-                        </select>
-                      </div>
-                      <div>
-                        <div style={{fontSize:10,color:T.textMuted,marginBottom:3}}>Language</div>
-                        <select value={leadAddLang||""} onChange={e=>setLeadAddLang(e.target.value)} style={{width:"100%",padding:"7px 9px",background:T.surfaceAlt,border:"1px solid "+T.border,borderRadius:6,color:T.textPrimary,fontSize:12,outline:"none"}}>
-                          <option value="">Select...</option>{ML_LANGS.map(l=><option key={l} value={l}>{l}</option>)}
-                        </select>
-                      </div>
-                      <div>
-                        <div style={{fontSize:10,color:T.textMuted,marginBottom:3}}>Timeline</div>
-                        <select value={leadAddTimeline||""} onChange={e=>setLeadAddTimeline(e.target.value)} style={{width:"100%",padding:"7px 9px",background:T.surfaceAlt,border:"1px solid "+T.border,borderRadius:6,color:T.textPrimary,fontSize:12,outline:"none"}}>
-                          <option value="">Select...</option>
-                          <option value="Immediate">Immediate</option>
-                          <option value="1-3 months">1-3 Months</option>
-                          <option value="3-6 months">3-6 Months</option>
-                          <option value="6-12 months">6-12 Months</option>
-                          <option value="Just browsing">Just Browsing</option>
-                        </select>
-                      </div>
-                      <div>
-                        <div style={{fontSize:10,color:T.textMuted,marginBottom:3}}>Purpose</div>
-                        <select value={leadAddPurpose||""} onChange={e=>setLeadAddPurpose(e.target.value)} style={{width:"100%",padding:"7px 9px",background:T.surfaceAlt,border:"1px solid "+T.border,borderRadius:6,color:T.textPrimary,fontSize:12,outline:"none"}}>
-                          <option value="">Select...</option>
-                          <option value="Live-in">Live-in</option>
-                          <option value="Investment">Investment</option>
-                          <option value="Rental income">Rental Income</option>
-                          <option value="Golden Visa">Golden Visa</option>
-                        </select>
-                      </div>
-                    </div>
-                    <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr) auto",gap:9,alignItems:"end"}}>
-                      <div>
-                        <div style={{fontSize:10,color:T.textMuted,marginBottom:3}}>Source</div>
-                        <select value={leadAddSource} onChange={e=>setLeadAddSource(e.target.value)} style={{width:"100%",padding:"7px 9px",background:T.surfaceAlt,border:"1px solid "+T.border,borderRadius:6,color:T.textPrimary,fontSize:12,outline:"none"}}>
-                          {Object.keys(ML_SRC).map(s=><option key={s} value={s}>{s}</option>)}
-                        </select>
-                      </div>
-                      <div>
-                        <div style={{fontSize:10,color:T.textMuted,marginBottom:3}}>Status</div>
-                        <select value={leadAddStatus} onChange={e=>setLeadAddStatus(e.target.value)} style={{width:"100%",padding:"7px 9px",background:T.surfaceAlt,border:"1px solid "+T.border,borderRadius:6,color:T.textPrimary,fontSize:12,outline:"none"}}>
-                          {Object.entries(ML_ST).map(([k,v])=><option key={k} value={k}>{v.label}</option>)}
-                        </select>
-                      </div>
-                      <div>
-                        <div style={{fontSize:10,color:T.textMuted,marginBottom:3}}>Type</div>
-                        <select value={leadAddType} onChange={e=>setLeadAddType(e.target.value)} style={{width:"100%",padding:"7px 9px",background:T.surfaceAlt,border:"1px solid "+T.border,borderRadius:6,color:T.textPrimary,fontSize:12,outline:"none"}}>
-                          {["Buy","Rent","Off-Plan","Invest"].map(t=><option key={t} value={t}>{t}</option>)}
-                        </select>
-                      </div>
-                      <button type="button" onClick={mlSave} disabled={leadAddSaving}
-                        style={{padding:"8px 20px",background:(!leadAddName||!leadAddPhone||leadAddSaving)?"rgba(212,168,67,0.3)":"linear-gradient(135deg,#D4A843,#B8902E)",color:"#0A0E1A",borderRadius:6,border:"none",fontSize:13,fontWeight:700,cursor:"pointer",whiteSpace:"nowrap"}}>
-                        {leadAddSaving?"Saving...":"Save Lead"}
-                      </button>
-                    </div>
-                  </div>
-                )}
-
-                {/* ── LEAD TABLE ── */}
-                <div style={{background:T.card,border:"1px solid "+T.border,borderRadius:10,overflow:"hidden"}}>
-                  <div style={{display:"grid",gridTemplateColumns:"minmax(175px,1fr) 55px 88px 110px 55px 100px 78px 90px",gap:7,padding:"8px 12px",background:T.surfaceAlt,borderBottom:"1px solid "+T.border}}>
-                    {["Lead","Score","Status","Source","Type","Budget","Date","Actions"].map((h,i)=>(
-                      <div key={i} style={{fontSize:10,fontWeight:700,color:T.textMuted,textTransform:"uppercase",letterSpacing:0.5}}>{h}</div>
-                    ))}
-                  </div>
-
-                  {mlFiltered.length===0 && (
-                    <div style={{padding:"40px 24px",textAlign:"center"}}>
-                      <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke={T.textMuted} strokeWidth="1.5" strokeLinecap="round" style={{marginBottom:10}}><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
-                      <div style={{fontSize:14,fontWeight:600,color:T.textPrimary,marginBottom:4}}>No leads found</div>
-                      <div style={{fontSize:12,color:T.textMuted}}>Adjust filters or add a new lead</div>
-                    </div>
-                  )}
-
-                  {mlFiltered.map((l,idx)=>{
-                    const sc=ML_ST[l.status||"New"]||ML_ST["New"];
-                    const srcC=ML_SRC[l.source]||"#94A3B8";
-                    const name=(l.name||"").trim()||(l.email||"").split("@")[0]||l.phone||"Unnamed";
-                    const initials=name.split(" ").map(w=>w[0]||"").join("").slice(0,2).toUpperCase();
-                    const budget=parseFloat(l.budget||0);
-                    const isGV=budget>=GOLDEN_VISA_THRESHOLD;
-                    const ai=mlScore(l);
-                    const isUrgent=l.timeline==="Immediate";
-                    const isOverdue=(Date.now()-new Date(l.updatedAt||l.createdAt||Date.now()).getTime())*0.000000011574>7&&l.status!=="Won"&&l.status!=="Lost";
-                    return (
-                      <div key={l.id||idx}
-                        onClick={()=>{setSelectedLead(l);setLeadDrawerTab("details");}}
-                        onMouseEnter={e=>e.currentTarget.style.background="rgba(212,168,67,0.03)"}
-                        onMouseLeave={e=>e.currentTarget.style.background=isOverdue?"rgba(239,68,68,0.02)":"transparent"}
-                        style={{display:"grid",gridTemplateColumns:"minmax(175px,1fr) 55px 88px 110px 55px 100px 78px 90px",gap:7,padding:"9px 12px",alignItems:"center",borderBottom:"1px solid "+T.border,cursor:"pointer",transition:"background 0.12s",background:isOverdue?"rgba(239,68,68,0.02)":"transparent"}}>
-
-                        <div style={{display:"flex",alignItems:"center",gap:9,minWidth:0}}>
-                          <div style={{width:33,height:33,borderRadius:"50%",background:"rgba(212,168,67,0.12)",border:"1px solid rgba(212,168,67,0.2)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:700,color:"#D4A843",flexShrink:0,position:"relative"}}>
-                            {initials}
-                            {l.nationality&&<span style={{position:"absolute",bottom:-3,right:-3,fontSize:7,lineHeight:1,background:"rgba(10,14,26,0.95)",border:"1px solid rgba(212,168,67,0.3)",borderRadius:3,padding:"1px 3px",color:"#D4A843",fontWeight:700}}>{l.nationality.slice(0,2).toUpperCase()}</span>}
-                          </div>
-                          <div style={{minWidth:0}}>
-                            <div style={{display:"flex",gap:4,alignItems:"center"}}>
-                              <span style={{fontSize:13,fontWeight:600,color:T.textPrimary,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",maxWidth:130}}>{name}</span>
-                              {isGV&&<span style={{fontSize:8,padding:"1px 4px",borderRadius:3,background:"rgba(212,168,67,0.15)",color:"#D4A843",fontWeight:700,flexShrink:0}}>GV</span>}
-                              {isUrgent&&<span style={{fontSize:8,padding:"1px 4px",borderRadius:3,background:"rgba(239,68,68,0.15)",color:"#EF4444",fontWeight:700,flexShrink:0}}>NOW</span>}
-                              {isOverdue&&<span style={{fontSize:8,padding:"1px 4px",borderRadius:3,background:"rgba(239,68,68,0.1)",color:"#EF4444",fontWeight:700,flexShrink:0}}>STALE</span>}
-                            </div>
-                            <div style={{fontSize:11,color:T.textMuted,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{l.phone||l.email||l.community||"—"}</div>
-                          </div>
-                        </div>
-
-                        <div style={{textAlign:"center"}}>
-                          <div style={{fontSize:13,fontWeight:900,color:ai.color,fontFamily:"'Fraunces',serif",lineHeight:1}}>{ai.score}</div>
-                          <div style={{fontSize:8,fontWeight:700,color:ai.color}}>{ai.label}</div>
-                        </div>
-
-                        <div><span style={{display:"inline-block",padding:"3px 7px",borderRadius:5,fontSize:10,fontWeight:600,background:sc.bg,color:sc.color}}>{sc.label}</span></div>
-
-                        <div><span style={{display:"inline-block",padding:"3px 7px",borderRadius:4,fontSize:10,fontWeight:600,background:srcC+"1A",color:srcC,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",maxWidth:105}}>{(l.source||"Manual").length>14?(l.source||"Manual").slice(0,14)+"…":(l.source||"Manual")}</span></div>
-
-                        <div style={{fontSize:11,color:T.textMuted}}>{l.type||"Buy"}</div>
-
-                        <div style={{fontSize:12,fontWeight:700,color:isGV?"#D4A843":T.textPrimary}}>{fmtB(l.budget)}</div>
-
-                        <div>
-                          <div style={{fontSize:11,color:T.textMuted}}>{l.createdAt?new Date(l.createdAt).toLocaleDateString("en-AE",{day:"2-digit",month:"short"}):("—")}</div>
-                          {l.followUpDate&&<div style={{fontSize:9,color:"#D4A843"}}>FU: {l.followUpDate}</div>}
-                        </div>
-
-                        <div onClick={e=>e.stopPropagation()} style={{display:"flex",gap:3}}>
-                          {l.phone&&<a href={"https://wa.me/"+clnPhone(l.phone)} target="_blank" rel="noopener noreferrer" style={{display:"flex",alignItems:"center",justifyContent:"center",width:25,height:25,borderRadius:5,border:"1px solid rgba(37,211,102,0.3)",background:"rgba(37,211,102,0.08)",color:"#25D366",textDecoration:"none"}}><svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/></svg></a>}
-                          {l.email&&<a href={"mailto:"+l.email} style={{display:"flex",alignItems:"center",justifyContent:"center",width:25,height:25,borderRadius:5,border:"1px solid rgba(59,130,246,0.3)",background:"rgba(59,130,246,0.08)",color:"#3B82F6",textDecoration:"none"}}><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></a>}
-                          {l.phone&&<a href={"tel:"+l.phone} style={{display:"flex",alignItems:"center",justifyContent:"center",width:25,height:25,borderRadius:5,border:"1px solid rgba(16,185,129,0.3)",background:"rgba(16,185,129,0.08)",color:"#10B981",textDecoration:"none"}}><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 2.18h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 9.91a16 16 0 0 0 6.08 6.08l.91-.91a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7a2 2 0 0 1 1.72 2.02z"/></svg></a>}
-                        </div>
-                      </div>
-                    );
-                  })}
-
-                  {mlFiltered.length>0&&(
-                    <div style={{padding:"8px 12px",borderTop:"1px solid "+T.border,fontSize:11,color:T.textMuted,display:"flex",justifyContent:"space-between"}}>
-                      <span>{mlFiltered.length} of {mlAllLeads.length} leads shown</span>
-                      <span>{mlWon.length} Won · {mlAllLeads.filter(l=>l.status==="Lost").length} Lost · {fmtB(mlTotalVal)} total pipeline</span>
-                    </div>
-                  )}
-                </div>
-
-                {/* ── LEAD DRAWER ── */}
-                {selectedLead&&(
-                  <div style={{position:"fixed",inset:0,zIndex:1500,display:"flex"}} onClick={e=>{if(e.target===e.currentTarget)setSelectedLead(null);}}>
-                    <div style={{flex:1,background:"rgba(0,0,0,0.5)"}} onClick={()=>setSelectedLead(null)}/>
-                    <div style={{width:500,background:T.bg,borderLeft:"1px solid "+T.border,display:"flex",flexDirection:"column"}}>
-
-                      {/* Drawer header */}
-                      <div style={{padding:"16px 18px 0",borderBottom:"1px solid "+T.border,flexShrink:0}}>
-                        <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",marginBottom:8}}>
-                          <div style={{flex:1,minWidth:0}}>
-                            <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:3}}>
-                              {selectedLead.nationality&&<span style={{fontSize:10,padding:"1px 5px",borderRadius:3,background:"rgba(212,168,67,0.15)",color:"#D4A843",fontWeight:700,flexShrink:0}}>{selectedLead.nationality.slice(0,2).toUpperCase()}</span>}
-                              <span style={{fontSize:16,fontWeight:700,color:T.white,fontFamily:"'Fraunces',serif",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{selectedLead.name||"Unnamed Lead"}</span>
-                            </div>
-                            <div style={{fontSize:11,color:T.textMuted}}>
-                              {[selectedLead.nationality,selectedLead.language,selectedLead.community].filter(Boolean).join(" · ")}
-                            </div>
-                            <div style={{display:"flex",gap:4,marginTop:5,flexWrap:"wrap"}}>
-                              {selectedLead.timeline&&<span style={{fontSize:10,padding:"2px 6px",borderRadius:7,background:selectedLead.timeline==="Immediate"?"rgba(239,68,68,0.15)":"rgba(212,168,67,0.1)",color:selectedLead.timeline==="Immediate"?"#EF4444":"#D4A843",fontWeight:600}}>{selectedLead.timeline}</span>}
-                              {selectedLead.purpose&&<span style={{fontSize:10,padding:"2px 6px",borderRadius:7,background:"rgba(139,92,246,0.1)",color:"#8B5CF6",fontWeight:600}}>{selectedLead.purpose}</span>}
-                              {parseFloat(selectedLead.budget||0)>=GOLDEN_VISA_THRESHOLD&&<span style={{fontSize:10,padding:"2px 6px",borderRadius:7,background:"rgba(212,168,67,0.1)",color:"#D4A843",fontWeight:700}}>GV Eligible</span>}
-                              {(selectedLead.tags||[]).map((tag,i)=><span key={i} style={{fontSize:10,padding:"2px 6px",borderRadius:7,background:"rgba(20,184,166,0.1)",color:"#14B8A6",fontWeight:600}}>{tag}</span>)}
-                            </div>
-                          </div>
-                          <button type="button" onClick={()=>setSelectedLead(null)}
-                            style={{background:T.surfaceAlt,border:"1px solid "+T.border,borderRadius:6,color:T.textMuted,width:26,height:26,cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,marginLeft:8}}>
-                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                          </button>
-                        </div>
-
-                        {/* Status buttons */}
-                        <div style={{display:"flex",gap:4,marginBottom:8,flexWrap:"wrap"}}>
-                          {Object.entries(ML_ST).map(([k,v])=>(
-                            <button key={k} type="button" onClick={()=>mlStatus(selectedLead.id,k)}
-                              style={{padding:"2px 8px",borderRadius:12,fontSize:10,fontWeight:700,cursor:"pointer",border:"1px solid "+(selectedLead.status===k?v.color:T.border),background:selectedLead.status===k?v.bg:"transparent",color:selectedLead.status===k?v.color:T.textMuted}}>
-                              {v.label}
-                            </button>
-                          ))}
-                        </div>
-
-                        {/* Drawer tabs */}
-                        <div style={{display:"flex",gap:0}}>
-                          {["details","notes","tasks","activity","tags","docs"].map(t=>(
-                            <button key={t} type="button" onClick={()=>setLeadDrawerTab(t)}
-                              style={{padding:"6px 11px",fontSize:11,fontWeight:600,border:"none",background:"transparent",color:leadDrawerTab===t?"#D4A843":T.textMuted,borderBottom:"2px solid "+(leadDrawerTab===t?"#D4A843":"transparent"),cursor:"pointer",textTransform:"capitalize"}}>
-                              {t}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* Drawer body */}
-                      <div style={{flex:1,padding:"14px 16px",overflowY:"auto"}}>
-
-                        {/* DETAILS TAB */}
-                        {leadDrawerTab==="details"&&(()=>{
-                          const ai=mlScore(selectedLead);
-                          const bt=ML_BEST_TIME[selectedLead.source]||"Anytime";
-                          return (
-                            <div>
-                              {/* AI Score */}
-                              <div style={{background:"rgba(212,168,67,0.06)",border:"1px solid rgba(212,168,67,0.15)",borderRadius:8,padding:"10px 12px",marginBottom:10}}>
-                                <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:6}}>
-                                  <div style={{fontSize:24,fontWeight:900,color:ai.color,fontFamily:"'Fraunces',serif",lineHeight:1}}>{ai.score}</div>
-                                  <div style={{flex:1}}>
-                                    <div style={{fontSize:11,fontWeight:700,color:ai.color}}>{ai.label} Lead</div>
-                                    <div style={{height:3,background:T.border,borderRadius:2,marginTop:3,overflow:"hidden"}}>
-                                      <div style={{height:"100%",width:ai.score+"%",background:ai.color,borderRadius:2}}/>
-                                    </div>
-                                  </div>
-                                </div>
-                                <div style={{fontSize:10,color:T.textMuted}}>Best time to contact: <span style={{color:"#D4A843",fontWeight:600}}>{bt}</span></div>
-                              </div>
-
-                              {/* Deal value for Won leads */}
-                              {selectedLead.status==="Won"&&(
-                                <div style={{background:"rgba(16,185,129,0.07)",border:"1px solid rgba(16,185,129,0.2)",borderRadius:8,padding:"10px 12px",marginBottom:10}}>
-                                  <div style={{fontSize:11,fontWeight:700,color:"#10B981",marginBottom:6}}>Deal Value</div>
-                                  <div style={{display:"flex",gap:7,alignItems:"center"}}>
-                                    <input defaultValue={selectedLead.dealValue||""} placeholder="Enter deal value (AED)" id="dealValueInput"
-                                      style={{flex:1,padding:"6px 9px",background:T.surfaceAlt,border:"1px solid "+T.border,borderRadius:6,color:T.textPrimary,fontSize:12,outline:"none"}}/>
-                                    <button type="button" onClick={()=>{const v=document.getElementById("dealValueInput").value;mlSaveDeal(selectedLead.id,v);}}
-                                      style={{padding:"6px 12px",background:"#10B981",color:"#fff",border:"none",borderRadius:6,fontSize:11,fontWeight:700,cursor:"pointer"}}>Save</button>
-                                  </div>
-                                  {selectedLead.dealValue&&<div style={{fontSize:10,color:"#10B981",marginTop:5}}>{fmtB(selectedLead.dealValue)} · Est. commission {fmtB(parseFloat(selectedLead.dealValue)*0.02)}</div>}
-                                </div>
-                              )}
-
-                              {/* Details grid */}
-                              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:7,marginBottom:10}}>
-                                {[
-                                  {label:"Budget",      value:fmtB(selectedLead.budget)},
-                                  {label:"Source",      value:selectedLead.source||"—"},
-                                  {label:"Nationality", value:selectedLead.nationality||"—"},
-                                  {label:"Language",    value:selectedLead.language||"—"},
-                                  {label:"Timeline",    value:selectedLead.timeline||"—"},
-                                  {label:"Purpose",     value:selectedLead.purpose||"—"},
-                                  {label:"Type",        value:selectedLead.type||"—"},
-                                  {label:"Bedrooms",    value:selectedLead.bedrooms||"—"},
-                                  {label:"Community",   value:selectedLead.community||"—"},
-                                  {label:"Referred By", value:selectedLead.referredBy||"—"},
-                                  {label:"Follow Up",   value:selectedLead.followUpDate||"—"},
-                                  {label:"Created",     value:selectedLead.createdAt?new Date(selectedLead.createdAt).toLocaleDateString("en-AE"):"—"},
-                                ].map((item,i)=>(
-                                  <div key={i} style={{background:T.surfaceAlt,borderRadius:6,padding:"7px 10px"}}>
-                                    <div style={{fontSize:9,color:T.textMuted,marginBottom:2}}>{item.label}</div>
-                                    <div style={{fontSize:12,fontWeight:600,color:T.textPrimary}}>{item.value}</div>
-                                  </div>
-                                ))}
-                              </div>
-
-                              {/* Contact buttons */}
-                              <div style={{display:"flex",gap:6}}>
-                                {selectedLead.phone&&<a href={"https://wa.me/"+clnPhone(selectedLead.phone)} target="_blank" rel="noopener noreferrer" style={{flex:1,display:"flex",alignItems:"center",justifyContent:"center",gap:5,padding:"8px",borderRadius:7,background:"rgba(37,211,102,0.08)",border:"1px solid rgba(37,211,102,0.25)",color:"#25D366",textDecoration:"none",fontSize:11,fontWeight:600}}>WhatsApp</a>}
-                                {selectedLead.email&&<a href={"mailto:"+selectedLead.email} style={{flex:1,display:"flex",alignItems:"center",justifyContent:"center",gap:5,padding:"8px",borderRadius:7,background:"rgba(59,130,246,0.08)",border:"1px solid rgba(59,130,246,0.25)",color:"#3B82F6",textDecoration:"none",fontSize:11,fontWeight:600}}>Email</a>}
-                                {selectedLead.phone&&<a href={"tel:"+selectedLead.phone} style={{flex:1,display:"flex",alignItems:"center",justifyContent:"center",gap:5,padding:"8px",borderRadius:7,background:"rgba(16,185,129,0.08)",border:"1px solid rgba(16,185,129,0.25)",color:"#10B981",textDecoration:"none",fontSize:11,fontWeight:600}}>Call</a>}
-                              </div>
-                            </div>
-                          );
-                        })()}
-
-                        {/* NOTES TAB */}
-                        {leadDrawerTab==="notes"&&(
-                          <div>
-                            <div style={{fontSize:11,fontWeight:700,color:T.textSecondary,marginBottom:6}}>WhatsApp Templates</div>
-                            <div style={{display:"flex",gap:5,flexWrap:"wrap",marginBottom:10}}>
-                              {ML_WA_TEMPLATES.map((tmpl,i)=>(
-                                <button key={i} type="button"
-                                  onClick={()=>{
-                                    const agent=auth.currentUser?.email?.split("@")[0]||"Agent";
-                                    const msg=tmpl.body.replace("{name}",selectedLead.name||"").replace("{agent}",agent).replace("{budget}",fmtB(selectedLead.budget)).replace("{community}",selectedLead.community||"Dubai").replace("{type}",selectedLead.type||"property").replace("{date}","the scheduled time");
-                                    if(selectedLead.phone) window.open("https://wa.me/"+clnPhone(selectedLead.phone)+"?text="+encodeURIComponent(msg),"_blank");
-                                  }}
-                                  style={{padding:"3px 9px",borderRadius:5,border:"1px solid rgba(37,211,102,0.3)",background:"rgba(37,211,102,0.06)",color:"#25D366",fontSize:10,fontWeight:600,cursor:"pointer"}}>
-                                  {tmpl.label}
-                                </button>
-                              ))}
-                            </div>
-                            <div style={{fontSize:11,fontWeight:700,color:T.textSecondary,marginBottom:6}}>Email Templates</div>
-                            <div style={{display:"flex",gap:5,flexWrap:"wrap",marginBottom:12}}>
-                              {ML_EMAIL_TEMPLATES.map((tmpl,i)=>(
-                                <button key={i} type="button"
-                                  onClick={()=>{
-                                    const agent=auth.currentUser?.email?.split("@")[0]||"Agent";
-                                    const body=tmpl.body.replace("{name}",selectedLead.name||"").replace("{agent}",agent).replace("{budget}",fmtB(selectedLead.budget)).replace("{community}",selectedLead.community||"Dubai").replace("{type}",selectedLead.type||"property");
-                                    if(selectedLead.email) window.location.href="mailto:"+selectedLead.email+"?subject="+encodeURIComponent(tmpl.subject)+"&body="+encodeURIComponent(body);
-                                  }}
-                                  style={{padding:"3px 9px",borderRadius:5,border:"1px solid rgba(59,130,246,0.3)",background:"rgba(59,130,246,0.06)",color:"#3B82F6",fontSize:10,fontWeight:600,cursor:"pointer"}}>
-                                  {tmpl.label}
-                                </button>
-                              ))}
-                            </div>
-                            <div style={{display:"flex",gap:6,marginBottom:10}}>
-                              <select value={noteType} onChange={e=>setNoteType(e.target.value)}
-                                style={{padding:"7px 8px",background:T.surfaceAlt,border:"1px solid "+T.border,borderRadius:6,color:T.textPrimary,fontSize:11,outline:"none"}}>
-                                {["Call","WhatsApp","Email","Meeting","Site Visit","Note"].map(t=><option key={t} value={t}>{t}</option>)}
-                              </select>
-                              <input value={noteText} onChange={e=>setNoteText(e.target.value)} placeholder="Add note..." onKeyDown={e=>{if(e.key==="Enter")mlNote(selectedLead.id);}}
-                                style={{flex:1,padding:"7px 9px",background:T.surfaceAlt,border:"1px solid "+T.border,borderRadius:6,color:T.textPrimary,fontSize:12,outline:"none"}}/>
-                              <button type="button" onClick={()=>mlNote(selectedLead.id)} disabled={noteLoading}
-                                style={{padding:"7px 11px",borderRadius:6,border:"none",background:"#D4A843",color:"#0A0E1A",fontSize:11,fontWeight:700,cursor:"pointer"}}>{noteLoading?"...":"Add"}</button>
-                            </div>
-                            {(selectedLead.notes_log||[]).filter(n=>n.type!=="Status Change"&&n.type!=="Created").length===0&&<div style={{textAlign:"center",padding:"24px",color:T.textMuted,fontSize:12}}>No notes yet</div>}
-                            {[...(selectedLead.notes_log||[])].filter(n=>n.type!=="Status Change"&&n.type!=="Created").reverse().map((n,i)=>(
-                              <div key={i} style={{padding:"8px 10px",background:T.surfaceAlt,borderRadius:6,marginBottom:6,borderLeft:"2px solid #D4A843"}}>
-                                <div style={{display:"flex",justifyContent:"space-between",marginBottom:2}}>
-                                  <span style={{fontSize:10,fontWeight:700,color:"#D4A843"}}>{n.type||"Note"}</span>
-                                  <span style={{fontSize:9,color:T.textMuted}}>{n.at?new Date(n.at).toLocaleDateString("en-AE",{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"}):""}</span>
-                                </div>
-                                <div style={{fontSize:12,color:T.textPrimary}}>{n.text}</div>
-                                <div style={{fontSize:9,color:T.textMuted,marginTop:2}}>{n.by||""}</div>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-
-                        {/* TASKS TAB */}
-                        {leadDrawerTab==="tasks"&&(
-                          <div>
-                            <div style={{display:"flex",gap:6,marginBottom:10}}>
-                              <input value={taskText} onChange={e=>setTaskText(e.target.value)} placeholder="Task description..."
-                                style={{flex:1,padding:"7px 9px",background:T.surfaceAlt,border:"1px solid "+T.border,borderRadius:6,color:T.textPrimary,fontSize:12,outline:"none"}}/>
-                              <input type="date" value={taskDue} onChange={e=>setTaskDue(e.target.value)}
-                                style={{padding:"7px 8px",background:T.surfaceAlt,border:"1px solid "+T.border,borderRadius:6,color:T.textPrimary,fontSize:12,outline:"none"}}/>
-                              <button type="button" onClick={async()=>{
-                                if(!taskText.trim()) return;
-                                try{
-                                  const e={text:"Task: "+taskText,type:"Task",due:taskDue,by:auth.currentUser?.email||"",at:new Date().toISOString()};
-                                  await updateDoc(doc(db,"leads",selectedLead.id),{notes_log:arrayUnion(e),updatedAt:new Date().toISOString()});
-                                  setTaskText("");setTaskDue("");
-                                  if(selectedLead) setSelectedLead({...selectedLead,notes_log:[...(selectedLead.notes_log||[]),e]});
-                                }catch(e){console.error(e);}
-                              }} style={{padding:"7px 11px",borderRadius:6,border:"none",background:"#D4A843",color:"#0A0E1A",fontSize:11,fontWeight:700,cursor:"pointer"}}>Add</button>
-                            </div>
-                            {(selectedLead.notes_log||[]).filter(n=>n.type==="Task").length===0&&<div style={{textAlign:"center",padding:"24px",color:T.textMuted,fontSize:12}}>No tasks yet. Add one above.</div>}
-                            {(selectedLead.notes_log||[]).filter(n=>n.type==="Task").reverse().map((n,i)=>{
-                              const isOverdueTask=n.due&&new Date(n.due)<new Date();
-                              return (
-                                <div key={i} style={{padding:"8px 10px",background:T.surfaceAlt,borderRadius:6,marginBottom:6,borderLeft:"2px solid "+(isOverdueTask?"#EF4444":"#8B5CF6")}}>
-                                  <div style={{fontSize:12,color:T.textPrimary,marginBottom:2}}>{n.text.replace("Task: ","")}</div>
-                                  {n.due&&<div style={{fontSize:10,color:isOverdueTask?"#EF4444":"#D4A843",fontWeight:600}}>Due: {n.due}{isOverdueTask?" — OVERDUE":""}</div>}
-                                  <div style={{fontSize:9,color:T.textMuted,marginTop:2}}>{n.by||""}</div>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        )}
-
-                        {/* ACTIVITY TAB */}
-                        {leadDrawerTab==="activity"&&(
-                          <div>
-                            <div style={{display:"flex",gap:6,marginBottom:12}}>
-                              <select value={noteType} onChange={e=>setNoteType(e.target.value)}
-                                style={{padding:"6px 8px",background:T.surfaceAlt,border:"1px solid "+T.border,borderRadius:6,color:T.textPrimary,fontSize:11,outline:"none"}}>
-                                {["Call","WhatsApp","Email","Meeting","Site Visit","Note"].map(t=><option key={t} value={t}>{t}</option>)}
-                              </select>
-                              <input value={noteText} onChange={e=>setNoteText(e.target.value)} placeholder="Log activity..." onKeyDown={e=>{if(e.key==="Enter")mlNote(selectedLead.id);}}
-                                style={{flex:1,padding:"6px 9px",background:T.surfaceAlt,border:"1px solid "+T.border,borderRadius:6,color:T.textPrimary,fontSize:12,outline:"none"}}/>
-                              <button type="button" onClick={()=>mlNote(selectedLead.id)} disabled={noteLoading}
-                                style={{padding:"6px 11px",borderRadius:6,border:"none",background:"#D4A843",color:"#0A0E1A",fontSize:11,fontWeight:700,cursor:"pointer"}}>{noteLoading?"...":"Log"}</button>
-                            </div>
-                            {/* Timeline */}
-                            <div style={{position:"relative"}}>
-                              <div style={{position:"absolute",left:13,top:0,bottom:0,width:1,background:T.border}}/>
-                              <div style={{display:"flex",gap:10,marginBottom:10,position:"relative"}}>
-                                <div style={{width:27,height:27,borderRadius:"50%",background:"rgba(212,168,67,0.15)",border:"2px solid #D4A843",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,zIndex:1,fontSize:9,color:"#D4A843",fontWeight:700}}>CR</div>
-                                <div style={{flex:1,background:T.surfaceAlt,borderRadius:7,padding:"7px 10px",border:"1px solid "+T.border}}>
-                                  <div style={{display:"flex",justifyContent:"space-between"}}>
-                                    <span style={{fontSize:10,fontWeight:700,color:"#D4A843"}}>Lead Created</span>
-                                    <span style={{fontSize:9,color:T.textMuted}}>{selectedLead.createdAt?new Date(selectedLead.createdAt).toLocaleDateString("en-AE",{day:"2-digit",month:"short",year:"numeric"}):""}</span>
-                                  </div>
-                                  <div style={{fontSize:11,color:T.textMuted,marginTop:2}}>{selectedLead.source||"Manual"} · {fmtB(selectedLead.budget)}</div>
-                                </div>
-                              </div>
-                              {(selectedLead.notes_log||[]).length===0&&<div style={{paddingLeft:37,fontSize:11,color:T.textMuted}}>No activities yet. Log a call, WhatsApp, or note above.</div>}
-                              {[...(selectedLead.notes_log||[])].sort((a,b)=>new Date(a.at||0)-new Date(b.at||0)).map((n,i)=>{
-                                const tc={"Call":"#10B981","WhatsApp":"#25D366","Email":"#3B82F6","Meeting":"#8B5CF6","Site Visit":"#F59E0B","Task":"#D4A843","Note":"#94A3B8","Status Change":"#14B8A6","Created":"#D4A843"};
-                                const ti={"Call":"C","WhatsApp":"W","Email":"E","Meeting":"M","Site Visit":"S","Task":"T","Note":"N","Status Change":"ST","Created":"CR"};
-                                const c=tc[n.type]||"#94A3B8";
-                                return (
-                                  <div key={i} style={{display:"flex",gap:10,marginBottom:8,position:"relative"}}>
-                                    <div style={{width:27,height:27,borderRadius:"50%",background:c+"18",border:"1px solid "+c+"40",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,zIndex:1,fontSize:8,fontWeight:700,color:c}}>{ti[n.type]||"N"}</div>
-                                    <div style={{flex:1,background:T.surfaceAlt,borderRadius:7,padding:"7px 10px",border:"1px solid "+T.border}}>
-                                      <div style={{display:"flex",justifyContent:"space-between",marginBottom:2}}>
-                                        <span style={{fontSize:10,fontWeight:700,color:c}}>{n.type||"Note"}</span>
-                                        <span style={{fontSize:9,color:T.textMuted}}>{n.at?new Date(n.at).toLocaleDateString("en-AE",{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"}):""}</span>
-                                      </div>
-                                      <div style={{fontSize:11,color:T.textPrimary}}>{n.text}</div>
-                                      {n.due&&<div style={{fontSize:9,color:"#D4A843",marginTop:2}}>Due: {n.due}</div>}
-                                      <div style={{fontSize:9,color:T.textMuted,marginTop:2}}>{n.by||""}</div>
-                                    </div>
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          </div>
-                        )}
-
-                        {/* TAGS TAB */}
-                        {leadDrawerTab==="tags"&&(
-                          <div>
-                            <div style={{fontSize:12,fontWeight:700,color:T.white,marginBottom:10}}>Custom Tags</div>
-                            <div style={{display:"flex",gap:7,flexWrap:"wrap",marginBottom:14}}>
-                              {ML_TAGS_OPTIONS.map((tag,i)=>{
-                                const active=(selectedLead.tags||[]).includes(tag);
-                                return (
-                                  <button key={i} type="button" onClick={()=>mlToggleTag(selectedLead.id,tag,selectedLead.tags)}
-                                    style={{padding:"5px 12px",borderRadius:14,fontSize:11,fontWeight:600,cursor:"pointer",border:"1px solid "+(active?"#14B8A6":T.border),background:active?"rgba(20,184,166,0.12)":"transparent",color:active?"#14B8A6":T.textMuted}}>
-                                    {tag}
-                                  </button>
-                                );
-                              })}
-                            </div>
-                            {(selectedLead.tags||[]).length>0?(
-                              <div>
-                                <div style={{fontSize:11,color:T.textMuted,marginBottom:6}}>Active tags:</div>
-                                <div style={{display:"flex",gap:5,flexWrap:"wrap"}}>
-                                  {(selectedLead.tags||[]).map((tag,i)=>(
-                                    <span key={i} style={{fontSize:11,padding:"3px 10px",borderRadius:12,background:"rgba(20,184,166,0.12)",border:"1px solid rgba(20,184,166,0.3)",color:"#14B8A6",fontWeight:600}}>{tag}</span>
-                                  ))}
-                                </div>
-                              </div>
-                            ):(
-                              <div style={{textAlign:"center",padding:"20px",color:T.textMuted,fontSize:12}}>No tags yet — click above to add</div>
-                            )}
-                          </div>
-                        )}
-
-                        {/* DOCS TAB */}
-                        {leadDrawerTab==="docs"&&(
-                          <div>
-                            <div style={{padding:"16px",textAlign:"center",background:T.surfaceAlt,borderRadius:8,border:"2px dashed "+T.border,marginBottom:10}}>
-                              <div style={{fontSize:12,fontWeight:600,color:T.textPrimary,marginBottom:3}}>Upload Documents</div>
-                              <div style={{fontSize:10,color:T.textMuted,marginBottom:10}}>Passport · Visa · Emirates ID · Proof of Funds</div>
-                              <input type="file" accept=".pdf,.jpg,.jpeg,.png" multiple id="docUpload"
-                                onChange={async(e)=>{
-                                  const files=Array.from(e.target.files||[]);
-                                  if(!files.length) return;
-                                  const entries=files.map(f=>({name:f.name,uploadedAt:new Date().toISOString(),by:auth.currentUser?.email||"",size:f.size}));
-                                  try{
-                                    await updateDoc(doc(db,"leads",selectedLead.id),{documents:arrayUnion(...entries),updatedAt:new Date().toISOString()});
-                                    setSelectedLead({...selectedLead,documents:[...(selectedLead.documents||[]),...entries]});
-                                  }catch(err){console.error(err);}
-                                }}
-                                style={{display:"none"}}/>
-                              <label htmlFor="docUpload" style={{display:"inline-block",padding:"7px 16px",background:"rgba(212,168,67,0.12)",border:"1px solid rgba(212,168,67,0.25)",borderRadius:6,color:"#D4A843",fontSize:11,fontWeight:600,cursor:"pointer"}}>Choose Files</label>
-                            </div>
-                            {(selectedLead.documents||[]).length===0&&<div style={{textAlign:"center",color:T.textMuted,fontSize:11,padding:"12px 0"}}>No documents uploaded yet</div>}
-                            {(selectedLead.documents||[]).map((d,i)=>(
-                              <div key={i} style={{display:"flex",alignItems:"center",gap:9,padding:"7px 10px",background:T.surfaceAlt,borderRadius:6,marginBottom:6}}>
-                                <div style={{width:26,height:26,borderRadius:4,background:"rgba(212,168,67,0.1)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
-                                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#D4A843" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                                </div>
-                                <div style={{flex:1,minWidth:0}}>
-                                  <div style={{fontSize:11,fontWeight:600,color:T.textPrimary,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{d.name||d}</div>
-                                  <div style={{fontSize:9,color:T.textMuted}}>{d.uploadedAt?new Date(d.uploadedAt).toLocaleDateString("en-AE"):""} {d.by||""}</div>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* ── QUICK CAPTURE MODAL ── */}
-                {showQuickCapture&&(
-                  <div style={{position:"fixed",inset:0,background:"rgba(4,9,15,0.85)",zIndex:2000,display:"flex",alignItems:"center",justifyContent:"center"}} onClick={e=>{if(e.target===e.currentTarget)setShowQuickCapture(false);}}>
-                    <div style={{background:T.surface,borderRadius:12,border:"1px solid "+T.border,width:"95%",maxWidth:480,padding:"20px"}} onClick={e=>e.stopPropagation()}>
-                      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
-                        <div style={{fontFamily:"'Fraunces',serif",fontSize:15,fontWeight:900,color:T.white}}>Quick Lead Capture</div>
-                        <button type="button" onClick={()=>setShowQuickCapture(false)} style={{background:T.surfaceAlt,border:"1px solid "+T.border,borderRadius:6,color:T.textMuted,width:26,height:26,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>
-                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                        </button>
-                      </div>
-                      {leadAddPhone&&mlIsDuplicate(leadAddPhone)&&(
-                        <div style={{padding:"5px 9px",background:"rgba(239,68,68,0.1)",border:"1px solid rgba(239,68,68,0.2)",borderRadius:5,marginBottom:8,fontSize:10,color:"#EF4444"}}>Duplicate: phone already exists</div>
-                      )}
-                      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:9,marginBottom:9}}>
-                        {[
-                          {label:"Full Name *",val:leadAddName,set:setLeadAddName,ph:"Client name",type:"text"},
-                          {label:"Phone *",val:leadAddPhone,set:setLeadAddPhone,ph:"+971 50 XXX XXXX",type:"tel"},
-                          {label:"Email",val:leadAddEmail,set:setLeadAddEmail,ph:"email@example.com",type:"email"},
-                          {label:"Budget (AED)",val:leadAddBudget,set:setLeadAddBudget,ph:"e.g. 2000000",type:"number"},
-                        ].map((f,i)=>(
-                          <div key={i}>
-                            <div style={{fontSize:10,color:T.textMuted,marginBottom:3}}>{f.label}</div>
-                            <input type={f.type} value={f.val} onChange={e=>f.set(e.target.value)} placeholder={f.ph}
-                              style={{width:"100%",padding:"7px 9px",background:T.surfaceAlt,border:"1px solid "+T.border,borderRadius:6,color:T.textPrimary,fontSize:12,outline:"none",boxSizing:"border-box"}}/>
-                          </div>
-                        ))}
-                      </div>
-                      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:9,marginBottom:12}}>
-                        <div>
-                          <div style={{fontSize:10,color:T.textMuted,marginBottom:3}}>Nationality</div>
-                          <select value={leadAddNat||""} onChange={e=>setLeadAddNat(e.target.value)} style={{width:"100%",padding:"7px 8px",background:T.surfaceAlt,border:"1px solid "+T.border,borderRadius:6,color:T.textPrimary,fontSize:11,outline:"none"}}>
-                            <option value="">Select...</option>{ML_NATS.map(n=><option key={n} value={n}>{n}</option>)}
-                          </select>
-                        </div>
-                        <div>
-                          <div style={{fontSize:10,color:T.textMuted,marginBottom:3}}>Source</div>
-                          <select value={leadAddSource} onChange={e=>setLeadAddSource(e.target.value)} style={{width:"100%",padding:"7px 8px",background:T.surfaceAlt,border:"1px solid "+T.border,borderRadius:6,color:T.textPrimary,fontSize:11,outline:"none"}}>
-                            {Object.keys(ML_SRC).map(s=><option key={s} value={s}>{s}</option>)}
-                          </select>
-                        </div>
-                        <div>
-                          <div style={{fontSize:10,color:T.textMuted,marginBottom:3}}>Timeline</div>
-                          <select value={leadAddTimeline||""} onChange={e=>setLeadAddTimeline(e.target.value)} style={{width:"100%",padding:"7px 8px",background:T.surfaceAlt,border:"1px solid "+T.border,borderRadius:6,color:T.textPrimary,fontSize:11,outline:"none"}}>
-                            <option value="">Select...</option>
-                            <option value="Immediate">Immediate</option>
-                            <option value="1-3 months">1-3 Months</option>
-                            <option value="3-6 months">3-6 Months</option>
-                            <option value="6-12 months">6-12 Months</option>
-                            <option value="Just browsing">Just Browsing</option>
-                          </select>
-                        </div>
-                      </div>
-                      <button type="button" onClick={async()=>{await mlSave();setShowQuickCapture(false);}} disabled={leadAddSaving}
-                        style={{width:"100%",padding:"10px",borderRadius:7,border:"none",background:"linear-gradient(135deg,#D4A843,#B8902E)",color:"#0A0E1A",fontSize:13,fontWeight:700,cursor:"pointer"}}>
-                        {leadAddSaving?"Saving...":"Save Lead"}
-                      </button>
-                    </div>
-                  </div>
-                )}
-
-                {/* ── BULK WA TEMPLATES MODAL ── */}
-                {showMLTemplates&&(
-                  <div style={{position:"fixed",inset:0,background:"rgba(4,9,15,0.85)",zIndex:2100,display:"flex",alignItems:"center",justifyContent:"center"}} onClick={e=>{if(e.target===e.currentTarget)setShowMLTemplates(false);}}>
-                    <div style={{background:T.surface,borderRadius:12,border:"1px solid "+T.border,width:"95%",maxWidth:500,padding:"20px"}} onClick={e=>e.stopPropagation()}>
-                      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
-                        <div style={{fontFamily:"'Fraunces',serif",fontSize:14,fontWeight:900,color:T.white}}>Bulk WhatsApp — {mlFiltered.filter(l=>l.phone).length} leads with phone</div>
-                        <button type="button" onClick={()=>setShowMLTemplates(false)} style={{background:T.surfaceAlt,border:"1px solid "+T.border,borderRadius:6,color:T.textMuted,width:26,height:26,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>
-                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                        </button>
-                      </div>
-                      <div style={{fontSize:11,color:T.textMuted,marginBottom:12}}>Select a template — opens WhatsApp pre-filled for the first lead in your filter.</div>
-                      <div style={{display:"flex",flexDirection:"column",gap:8}}>
-                        {ML_WA_TEMPLATES.map((tmpl,i)=>(
-                          <button key={i} type="button" onClick={()=>mlSendWATemplate(tmpl)}
-                            style={{padding:"10px 12px",borderRadius:7,border:"1px solid rgba(37,211,102,0.25)",background:"rgba(37,211,102,0.06)",textAlign:"left",cursor:"pointer"}}>
-                            <div style={{fontSize:12,fontWeight:700,color:"#25D366",marginBottom:3}}>{tmpl.label}</div>
-                            <div style={{fontSize:10,color:T.textMuted,lineHeight:1.4}}>{tmpl.body.slice(0,80)}...</div>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-              </div>
-            );
+function aiScore(l) {
+  let s=0;
+  if(l.phone&&l.email) s+=25; else if(l.phone||l.email) s+=10;
+  const b=parseFloat(l.budget||0);
+  if(b>=5000000) s+=20; else if(b>=GV_MIN) s+=15; else if(b>=1000000) s+=10;
+  const d=daysAgo(l.createdAt); if(d<1) s+=20; else if(d<3) s+=15; else if(d<7) s+=10;
+  const n=(l.notes_log||[]).length; if(n>=3) s+=10; else if(n>=1) s+=5;
+  if(l.timeline==="Immediate") s+=15; else if(l.timeline==="1-3 months") s+=10;
+  if(l.nationality) s+=5;
+  return { score:Math.min(100,s), color:s>=70?"#10B981":s>=40?"#D4A843":"#EF4444", label:s>=70?"Hot":s>=40?"Warm":"Cold" };
 }
 
-export default MyLeadsTab;
+// ─── ATOMS ───────────────────────────────────────────────────
+const PBadge = ({status}) => {
+  const p=PIPELINE.find(x=>x.key===status)||PIPELINE[1];
+  return <span style={{fontSize:10,padding:"2px 8px",borderRadius:10,background:p.bg,color:p.color,fontWeight:700,whiteSpace:"nowrap"}}>{status||"New Lead"}</span>;
+};
+
+const ScoreBar = ({lead}) => {
+  const sc=aiScore(lead);
+  return <div style={{display:"flex",alignItems:"center",gap:4}}>
+    <div style={{width:32,height:3,borderRadius:2,background:"rgba(255,255,255,0.08)",overflow:"hidden"}}>
+      <div style={{height:"100%",width:sc.score+"%",background:sc.color,borderRadius:2}}/>
+    </div>
+    <span style={{fontSize:9,color:sc.color,fontWeight:700}}>{sc.label}</span>
+  </div>;
+};
+
+const EyePhone = ({phone}) => {
+  const [show,setShow]=useState(false);
+  return <span style={{display:"inline-flex",alignItems:"center",gap:4}}>
+    <span style={{fontSize:11,color:T.textSecondary,fontFamily:"monospace"}}>{show?phone:maskPhone(phone)}</span>
+    <button type="button" onClick={e=>{e.stopPropagation();setShow(v=>!v);}} style={{background:"none",border:"none",cursor:"pointer",color:T.textMuted,padding:"1px 3px",display:"inline-flex"}}>
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">{show?<><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></>:<><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></>}</svg>
+    </button>
+  </span>;
+};
+
+const Lbl = ({children}) => <div style={{fontSize:10,color:T.textMuted,marginBottom:4,fontWeight:600,textTransform:"uppercase",letterSpacing:0.5}}>{children}</div>;
+const Inp = ({value,onChange,placeholder,type="text",disabled=false}) => (
+  <input type={type} value={value||""} onChange={e=>onChange(e.target.value)} placeholder={placeholder} disabled={disabled}
+    style={{width:"100%",padding:"8px 10px",background:disabled?"rgba(255,255,255,0.02)":"rgba(255,255,255,0.04)",border:"1px solid "+T.border,borderRadius:7,color:T.white,fontSize:12,outline:"none",boxSizing:"border-box",fontFamily:"'Outfit',sans-serif"}}/>
+);
+const Sel = ({value,onChange,children,disabled=false}) => (
+  <select value={value||""} onChange={e=>onChange(e.target.value)} disabled={disabled}
+    style={{width:"100%",padding:"8px 10px",background:disabled?"rgba(255,255,255,0.02)":"rgba(255,255,255,0.04)",border:"1px solid "+T.border,borderRadius:7,color:T.white,fontSize:12,outline:"none",fontFamily:"'Outfit',sans-serif"}}>
+    {children}
+  </select>
+);
+
+const Section = ({icon,title,sub,color,open,onToggle,children}) => (
+  <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid "+T.border,borderRadius:10,marginBottom:10,overflow:"hidden"}}>
+    <div style={{padding:"11px 14px",display:"flex",alignItems:"center",gap:10,cursor:"pointer",borderBottom:open?"1px solid "+T.border:"none"}} onClick={onToggle}>
+      <div style={{width:28,height:28,borderRadius:6,background:color+"18",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+        <span style={{fontSize:14}}>{icon}</span>
+      </div>
+      <div style={{flex:1}}>
+        <div style={{fontSize:12,fontWeight:700,color:T.white}}>{title}</div>
+        {sub&&<div style={{fontSize:10,color:T.textMuted,marginTop:1}}>{sub}</div>}
+      </div>
+      <div style={{color:T.textMuted,fontSize:12,transition:"transform 0.2s",transform:open?"rotate(90deg)":"none"}}>▶</div>
+    </div>
+    {open&&<div style={{padding:"14px"}}>{children}</div>}
+  </div>
+);
+
+// ═══════════════════════════════════════════════════════════════
+// MAIN COMPONENT
+// ═══════════════════════════════════════════════════════════════
+export default function MyLeadsTab({
+  myLeads=[], orgRole, userRole, orgId, orgName,
+  listings=[], teamMembers=[], firebaseUser,
+  leadSortBy, setLeadSortBy,
+  selectedLead, setSelectedLead,
+  handleTabChange,
+}) {
+
+  // ── Role resolution ──────────────────────────────────────────
+  const isSuperAdmin = userRole==="superAdmin"||userRole==="admin";
+  const isOwner      = orgRole==="owner";
+  const isDirector   = orgRole==="director";
+  const isManager    = orgRole==="manager";
+  const isAgent      = orgRole==="agent";
+  const canManage    = isSuperAdmin||isOwner||isDirector||isManager;
+  const canSee       = canManage||isAgent;
+  const currentUid   = firebaseUser?.uid||auth?.currentUser?.uid||"";
+  const currentEmail = firebaseUser?.email||auth?.currentUser?.email||"";
+
+  // ── State ────────────────────────────────────────────────────
+  const [smartView,    setSmartView]   = useState("all");
+  const [activeStage,  setActiveStage] = useState("all");
+  const [view,         setView]        = useState("table");
+  const [showAdd,      setShowAdd]     = useState(false);
+  const [showWA,       setShowWA]      = useState(false);
+  const [showAssign,   setShowAssign]  = useState(null);
+  const [drawerTab,    setDrawerTab]   = useState("profile");
+  const [aiSearch,     setAiSearch]    = useState("");
+  const [filterSource, setFilterSource]= useState("all");
+  const [filterBudget, setFilterBudget]= useState("all");
+  const [filterService,setFilterService]=useState("all");
+  const [filterAgent,  setFilterAgent] = useState("all");
+  const [filterManager,setFilterManager]=useState("all");
+  const [toast,        setToast]       = useState(null);
+  const [saving,       setSaving]      = useState(false);
+  const [noteText2,    setNoteText2]   = useState("");
+  const [noteType2,    setNoteType2]   = useState("Note");
+  const [savingNote,   setSavingNote]  = useState(false);
+  const [openSec,      setOpenSec]     = useState({contact:true,request:true,agent:false,extra:false});
+
+  const EMPTY={name:"",phone:"",email:"",budget:"",requestType:"",serviceType:"Buyer",
+    project:"",source:"Manual",channel:"WhatsApp",campaign:"",status:"New Lead",
+    nationality:"",language:"",timeline:"",community:"",bedrooms:"",comment:"",
+    agentId:"",agentName:"",adName:"",adAccount:""};
+  const [form,setForm]=useState(EMPTY);
+  const F=(k,v)=>setForm(p=>({...p,[k]:v}));
+
+  // ── Derived lists ────────────────────────────────────────────
+  const agents = useMemo(()=>(
+    (teamMembers||[]).filter(m=>m.orgRole==="agent"||m.role==="agent")
+  ),[teamMembers]);
+
+  const managers = useMemo(()=>(
+    (teamMembers||[]).filter(m=>m.orgRole==="manager"||m.orgRole==="director"||m.orgRole==="owner")
+  ),[teamMembers]);
+
+  // ── Toast ────────────────────────────────────────────────────
+  const notify = useCallback((msg,type="success")=>{
+    setToast({msg,type});
+    setTimeout(()=>setToast(null),3000);
+  },[]);
+
+  // ── Counts ───────────────────────────────────────────────────
+  const stageCounts = useMemo(()=>{
+    const c={};
+    PIPELINE.forEach(p=>{c[p.key]=(myLeads||[]).filter(l=>(l.status||"New Lead")===p.key).length;});
+    return c;
+  },[myLeads]);
+
+  // ── Smart view filter ────────────────────────────────────────
+  const smartFiltered = useMemo(()=>{
+    let a=[...(myLeads||[])];
+    if(smartView==="today")       a=a.filter(l=>daysAgo(l.createdAt)<1);
+    if(smartView==="my_leads")    a=a.filter(l=>l.assignedTo===currentUid||l.createdBy===currentUid);
+    if(smartView==="hot")         a=a.filter(l=>aiScore(l).score>=70);
+    if(smartView==="stale")       a=a.filter(l=>!["Closed Deal","Closed Outside"].includes(l.status)&&daysAgo(l.updatedAt||l.createdAt)>7);
+    if(smartView==="overdue")     a=a.filter(l=>l.followUpDate&&new Date(l.followUpDate)<new Date()&&!["Closed Deal","Closed Outside"].includes(l.status));
+    if(smartView==="uncontacted") a=a.filter(l=>!(l.notes_log||[]).some(n=>["Call","WhatsApp","Email"].includes(n.type)));
+    if(smartView==="unassigned")  a=a.filter(l=>!l.assignedTo||l.assignedTo==="");
+    if(smartView==="golden_visa") a=a.filter(l=>parseFloat(l.budget||0)>=GV_MIN);
+    return a;
+  },[myLeads,smartView,currentUid]);
+
+  // ── Main filter ──────────────────────────────────────────────
+  const filtered = useMemo(()=>{
+    let a=[...smartFiltered];
+    if(activeStage!=="all")  a=a.filter(l=>(l.status||"New Lead")===activeStage);
+    if(filterAgent!=="all")  a=a.filter(l=>l.assignedTo===filterAgent);
+    if(filterManager!=="all") a=a.filter(l=>l.managerId===filterManager);
+    if(filterService!=="all") a=a.filter(l=>(l.serviceType||l.type||"")===filterService);
+    if(filterSource!=="all")  a=a.filter(l=>l.source===filterSource);
+    if(filterBudget!=="all"){
+      const b=l=>parseFloat(l.budget||0);
+      if(filterBudget==="under1m")  a=a.filter(l=>b(l)<1e6);
+      if(filterBudget==="1to3m")    a=a.filter(l=>b(l)>=1e6&&b(l)<3e6);
+      if(filterBudget==="3to5m")    a=a.filter(l=>b(l)>=3e6&&b(l)<5e6);
+      if(filterBudget==="5to10m")   a=a.filter(l=>b(l)>=5e6&&b(l)<1e7);
+      if(filterBudget==="above10m") a=a.filter(l=>b(l)>=1e7);
+    }
+    if(aiSearch.trim()){
+      const q=aiSearch.trim().toLowerCase();
+      a=a.filter(l=>(l.name||"").toLowerCase().includes(q)||(l.phone||"").includes(q)||(l.email||"").toLowerCase().includes(q)||(l.community||"").toLowerCase().includes(q)||(l.assignedToName||"").toLowerCase().includes(q));
+    }
+    const sorted=[...a];
+    if(leadSortBy==="score")   sorted.sort((a,b)=>aiScore(b).score-aiScore(a).score);
+    else if(leadSortBy==="budget") sorted.sort((a,b)=>parseFloat(b.budget||0)-parseFloat(a.budget||0));
+    else if(leadSortBy==="name")   sorted.sort((a,b)=>(a.name||"").localeCompare(b.name||""));
+    else sorted.sort((a,b)=>new Date(b.createdAt||0)-new Date(a.createdAt||0));
+    return sorted;
+  },[smartFiltered,activeStage,filterAgent,filterManager,filterService,filterSource,filterBudget,aiSearch,leadSortBy]);
+
+  // ── KPIs ─────────────────────────────────────────────────────
+  const allLeads  = myLeads||[];
+  const kTotal    = allLeads.length;
+  const kToday    = allLeads.filter(l=>daysAgo(l.createdAt)<1).length;
+  const kHot      = allLeads.filter(l=>aiScore(l).score>=70&&!["Closed Deal","Closed Outside"].includes(l.status)).length;
+  const kClosed   = allLeads.filter(l=>l.status==="Closed Deal").length;
+  const kStale    = allLeads.filter(l=>!["Closed Deal","Closed Outside","Non Potential"].includes(l.status)&&daysAgo(l.updatedAt||l.createdAt)>7).length;
+  const kPipeline = allLeads.reduce((s,l)=>s+parseFloat(l.budget||0),0);
+  const kUnassigned = allLeads.filter(l=>!l.assignedTo).length;
+  const kConvRate = kTotal>0?Math.round((kClosed/kTotal)*100):0;
+
+  // ── Agent performance (manager/owner/director) ───────────────
+  const agentPerf = useMemo(()=>{
+    if(!canManage) return [];
+    return agents.map(agent=>{
+      const uid=agent.uid||agent.id;
+      const aLeads=allLeads.filter(l=>l.assignedTo===uid);
+      const closed=aLeads.filter(l=>l.status==="Closed Deal").length;
+      const hot=aLeads.filter(l=>aiScore(l).score>=70).length;
+      const stale=aLeads.filter(l=>!["Closed Deal","Closed Outside"].includes(l.status)&&daysAgo(l.updatedAt||l.createdAt)>7).length;
+      const conv=aLeads.length>0?((closed/aLeads.length)*100).toFixed(1):"0.0";
+      const pipeline=aLeads.reduce((s,l)=>s+parseFloat(l.budget||0),0);
+      const lastAct=aLeads.reduce((latest,l)=>{const d=new Date(l.updatedAt||l.createdAt||0);return d>latest?d:latest;},new Date(0));
+      return {...agent,total:aLeads.length,closed,hot,stale,conv,pipeline,lastActive:lastAct.getTime()>0?lastAct:null};
+    }).sort((a,b)=>b.closed-a.closed);
+  },[agents,allLeads,canManage]);
+
+  // ── Leaderboard (owner view) — ranked by combined score ──────
+  const leaderboard = useMemo(()=>{
+    if(!isOwner&&!isSuperAdmin) return [];
+    return [...agentPerf].map(a=>{
+      const convScore  = parseFloat(a.conv||0);
+      const pipeScore  = Math.min(a.pipeline/1000000,50); // cap at 50M
+      const combined   = (a.closed*10)+(convScore*2)+(pipeScore*0.5);
+      return {...a,combined:Math.round(combined)};
+    }).sort((a,b)=>b.combined-a.combined);
+  },[agentPerf,isOwner,isSuperAdmin]);
+
+  // ── Source stats ─────────────────────────────────────────────
+  const srcStats = useMemo(()=>{
+    const m={};
+    allLeads.forEach(l=>{const s=l.source||"Manual";if(!m[s])m[s]={t:0,c:0};m[s].t++;if(l.status==="Closed Deal")m[s].c++;});
+    return Object.entries(m).map(([s,d])=>({src:s,total:d.t,closed:d.c,rate:d.t>0?Math.round(d.c*100/d.t):0})).sort((a,b)=>b.total-a.total);
+  },[allLeads]);
+
+  // ── Property matching ────────────────────────────────────────
+  const matched = useMemo(()=>{
+    if(!selectedLead||!listings) return [];
+    const b=parseFloat(selectedLead.budget||0);
+    return (listings||[]).filter(l=>{
+      const lp=parseFloat(l.price||l.priceMin||0);
+      return (b>0?lp<=b*1.25&&lp>=b*0.6:true)&&(selectedLead.community?(l.community||"").toLowerCase().includes((selectedLead.community||"").toLowerCase()):true);
+    }).slice(0,4);
+  },[selectedLead,listings]);
+
+  // ── Save lead ────────────────────────────────────────────────
+  const saveLead = useCallback(async()=>{
+    if(!form.name||!form.phone){notify("Name and phone are required","error");return;}
+    setSaving(true);
+    try{
+      const agentId   = form.agentId||(isAgent?currentUid:"");
+      const agentName = form.agentName||(isAgent?(firebaseUser?.displayName||currentEmail):"");
+      await addDoc(collection(db,"leads"),{
+        name:form.name.trim(),phone:form.phone.trim(),email:form.email.trim(),
+        budget:parseFloat(form.budget)||0,
+        requestType:form.requestType,serviceType:form.serviceType,type:form.serviceType,
+        project:form.project,source:form.source,channel:form.channel,
+        campaign:form.campaign,adName:form.adName,adAccount:form.adAccount,
+        status:form.status||"New Lead",
+        nationality:form.nationality,language:form.language,
+        timeline:form.timeline,community:form.community,
+        bedrooms:form.bedrooms,comment:form.comment,
+        assignedTo:agentId,assignedToName:agentName,
+        orgId:orgId||"",
+        createdBy:currentUid,
+        createdAt:new Date().toISOString(),
+        updatedAt:new Date().toISOString(),
+        tags:[],
+        notes_log:[{text:"Lead created",type:"Note",by:currentEmail,at:new Date().toISOString()}],
+      });
+      setForm(EMPTY);setShowAdd(false);notify("Lead saved successfully");
+    }catch(e){console.error(e);notify("Save failed: "+e.message,"error");}
+    setSaving(false);
+  },[form,isAgent,currentUid,currentEmail,orgId,notify]);
+
+  // ── Update status ────────────────────────────────────────────
+  const updateStatus = useCallback(async(leadId,newStatus)=>{
+    try{
+      const entry={text:"Status changed to "+newStatus,type:"Status Update",by:currentEmail,at:new Date().toISOString()};
+      await updateDoc(doc(db,"leads",leadId),{status:newStatus,updatedAt:new Date().toISOString(),notes_log:arrayUnion(entry)});
+      if(selectedLead?.id===leadId) setSelectedLead(l=>({...l,status:newStatus,notes_log:[...(l.notes_log||[]),entry]}));
+      notify("Status updated");
+    }catch(e){notify("Update failed","error");}
+  },[currentEmail,selectedLead,setSelectedLead,notify]);
+
+  // ── Assign lead ──────────────────────────────────────────────
+  const assignLead = useCallback(async(leadId,agent)=>{
+    try{
+      const entry={text:"Lead assigned to "+agent.name,type:"Note",by:currentEmail,at:new Date().toISOString()};
+      await updateDoc(doc(db,"leads",leadId),{
+        assignedTo:agent.uid||agent.id,assignedToName:agent.name,
+        updatedAt:new Date().toISOString(),notes_log:arrayUnion(entry),
+      });
+      if(selectedLead?.id===leadId) setSelectedLead(l=>({...l,assignedTo:agent.uid||agent.id,assignedToName:agent.name}));
+      setShowAssign(null);notify("Lead assigned to "+agent.name);
+    }catch(e){notify("Assign failed","error");}
+  },[currentEmail,selectedLead,setSelectedLead,notify]);
+
+  // ── Add note ─────────────────────────────────────────────────
+  const addNote = useCallback(async(leadId)=>{
+    if(!noteText2.trim()) return;
+    setSavingNote(true);
+    try{
+      const entry={text:noteText2.trim(),type:noteType2,by:currentEmail,at:new Date().toISOString()};
+      await updateDoc(doc(db,"leads",leadId),{notes_log:arrayUnion(entry),updatedAt:new Date().toISOString()});
+      if(selectedLead?.id===leadId) setSelectedLead(l=>({...l,notes_log:[...(l.notes_log||[]),entry]}));
+      setNoteText2("");notify("Note added");
+    }catch(e){notify("Note failed","error");}
+    setSavingNote(false);
+  },[noteText2,noteType2,currentEmail,selectedLead,setSelectedLead,notify]);
+
+  // ── Export CSV ───────────────────────────────────────────────
+  const exportCSV = useCallback(()=>{
+    const h=["ID","Name","Phone","Email","Budget","Service","Request","Status","Source","Channel","AD Name","AD Account","Nationality","Community","Timeline","Agent","Score","Created","Updated"];
+    const rows=filtered.map(l=>[l.id||"",l.name||"",l.phone||"",l.email||"",l.budget||"",l.serviceType||l.type||"",l.requestType||"",l.status||"",l.source||"",l.channel||"",l.adName||"",l.adAccount||"",l.nationality||"",l.community||"",l.timeline||"",l.assignedToName||"",aiScore(l).score,l.createdAt?new Date(l.createdAt).toLocaleDateString("en-GB"):"",l.updatedAt?new Date(l.updatedAt).toLocaleDateString("en-GB"):""].map(v=>escCSV(v)));
+    const csv=[h.join(","),...rows.map(r=>r.join(","))].join("\n");
+    const blob=new Blob([csv],{type:"text/csv"});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement("a");
+    a.href=url;a.download="DXB_Leads_"+new Date().toISOString().slice(0,10)+".csv";a.click();URL.revokeObjectURL(url);
+  },[filtered]);
+
+  // ── Send WA ──────────────────────────────────────────────────
+  const sendWA = useCallback((tmpl,lead)=>{
+    if(!lead?.phone) return;
+    const msg=tmpl.body
+      .replace("{name}",lead.name||"")
+      .replace("{agent}",firebaseUser?.displayName||"Agent")
+      .replace("{org}",orgName||"DXB Analytics");
+    window.open("https://wa.me/"+clnPhone(lead.phone)+"?text="+encodeURIComponent(msg),"_blank");
+    setShowWA(false);
+  },[orgName,firebaseUser]);
+
+  // ── Access guard ─────────────────────────────────────────────
+  if(!canSee) return (
+    <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",height:400,gap:12,textAlign:"center"}}>
+      <div style={{fontSize:36}}>🔒</div>
+      <div style={{fontSize:16,fontWeight:700,color:T.white}}>CRM Access Required</div>
+      <div style={{fontSize:12,color:T.textMuted,maxWidth:300}}>Your account does not have CRM access. Contact your administrator.</div>
+    </div>
+  );
+
+  return (
+    <div style={{paddingBottom:80}}>
+
+      {/* ══ SMART VIEW TABS ══════════════════════════════════════ */}
+      <div style={{display:"flex",gap:0,borderBottom:"1px solid "+T.border,overflowX:"auto",paddingLeft:4}}>
+        {[
+          {k:"all",         l:"All"},
+          {k:"today",       l:"Today"},
+          {k:"my_leads",    l:"My Leads"},
+          {k:"uncontacted", l:"Uncontacted"},
+          {k:"hot",         l:"Hot"},
+          {k:"stale",       l:"Stale"},
+          {k:"overdue",     l:"Overdue"},
+          ...(canManage?[{k:"unassigned",l:"Unassigned"}]:[]),
+          {k:"golden_visa", l:"Golden Visa"},
+        ].map(v=>{
+          const active=smartView===v.k;
+          return <button key={v.k} type="button" onClick={()=>{setSmartView(v.k);setActiveStage("all");}}
+            style={{padding:"10px 14px",border:"none",borderBottom:active?"2px solid "+T.gold:"2px solid transparent",background:"transparent",color:active?T.white:T.textMuted,fontSize:12,fontWeight:active?600:400,cursor:"pointer",whiteSpace:"nowrap",fontFamily:"'Outfit',sans-serif",transition:"color 0.15s"}}>
+            {v.l}{v.k==="unassigned"&&kUnassigned>0?<span style={{marginLeft:5,fontSize:10,background:"rgba(239,68,68,0.15)",color:"#EF4444",padding:"1px 5px",borderRadius:8}}>{kUnassigned}</span>:null}
+          </button>;
+        })}
+      </div>
+
+      {/* ══ TOOLBAR ══════════════════════════════════════════════ */}
+      <div style={{display:"flex",alignItems:"center",gap:10,padding:"10px 4px",borderBottom:"1px solid "+T.border,flexWrap:"wrap"}}>
+        <div style={{display:"flex",alignItems:"center",gap:8}}>
+          <span style={{fontSize:13,fontWeight:700,color:T.white}}>{orgName||"Leads"}</span>
+          <span style={{fontSize:13,color:T.textMuted,fontWeight:700}}>{kTotal.toLocaleString()}</span>
+        </div>
+        <div style={{flex:"1 1 240px",display:"flex",alignItems:"center",gap:8,padding:"6px 12px",background:"rgba(255,255,255,0.03)",border:"1px solid "+(aiSearch?T.gold:T.border),borderRadius:8,cursor:"text"}} onClick={()=>document.getElementById("crm-search")?.focus()}>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={T.textMuted} strokeWidth="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input id="crm-search" value={aiSearch} onChange={e=>setAiSearch(e.target.value)} placeholder="Search name, phone, agent, area..."
+            style={{flex:1,background:"none",border:"none",outline:"none",color:T.white,fontSize:12,fontFamily:"'Outfit',sans-serif"}}/>
+          {aiSearch&&<button type="button" onClick={()=>setAiSearch("")} style={{background:"none",border:"none",color:T.textMuted,cursor:"pointer",fontSize:14}}>×</button>}
+        </div>
+        <div style={{display:"flex",gap:2,background:"rgba(255,255,255,0.03)",border:"1px solid "+T.border,borderRadius:7,padding:2,marginLeft:"auto"}}>
+          {[{k:"table",icon:"⊟"},{k:"kanban",icon:"⊞"},{k:"analytics",icon:"⊕"}].map(v=>(
+            <button key={v.k} type="button" onClick={()=>setView(v.k)} style={{padding:"5px 10px",borderRadius:5,border:view===v.k?"1px solid "+T.gold:"1px solid transparent",background:view===v.k?"rgba(212,168,67,0.15)":"transparent",color:view===v.k?T.gold:T.textMuted,cursor:"pointer",fontSize:13}}>{v.icon}</button>
+          ))}
+        </div>
+        <button type="button" onClick={exportCSV} style={{padding:"6px 11px",borderRadius:7,border:"1px solid "+T.border,background:"transparent",color:T.textSecondary,fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"'Outfit',sans-serif"}}>Export</button>
+        <button type="button" onClick={()=>setShowWA(true)} style={{padding:"6px 11px",borderRadius:7,border:"1px solid rgba(37,211,102,0.3)",background:"rgba(37,211,102,0.07)",color:"#25D366",fontSize:11,fontWeight:600,cursor:"pointer"}}>Bulk WA</button>
+        <button type="button" onClick={()=>setShowAdd(true)} style={{padding:"7px 16px",borderRadius:7,border:"none",background:"linear-gradient(135deg,#D4A843,#B8902E)",color:"#0A0E1A",fontSize:12,fontWeight:700,cursor:"pointer",display:"flex",alignItems:"center",gap:5}}>
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Add
+        </button>
+      </div>
+
+      {/* ══ PIPELINE PILLS ═══════════════════════════════════════ */}
+      <div style={{display:"flex",gap:0,borderBottom:"1px solid "+T.border,overflowX:"auto",paddingLeft:4,background:"rgba(255,255,255,0.01)"}}>
+        <button type="button" onClick={()=>setActiveStage("all")} style={{padding:"7px 12px",border:"none",borderBottom:activeStage==="all"?"2px solid "+T.gold:"2px solid transparent",background:"transparent",color:activeStage==="all"?T.white:T.textMuted,fontSize:11,fontWeight:activeStage==="all"?600:400,cursor:"pointer",whiteSpace:"nowrap",fontFamily:"'Outfit',sans-serif"}}>All</button>
+        {PIPELINE.map(p=>{
+          const count=stageCounts[p.key]||0;
+          const active=activeStage===p.key;
+          return <button key={p.key} type="button" onClick={()=>setActiveStage(active?"all":p.key)}
+            style={{padding:"7px 12px",border:"none",borderBottom:active?"2px solid "+p.color:"2px solid transparent",background:"transparent",color:active?p.color:T.textMuted,fontSize:11,fontWeight:active?600:400,cursor:"pointer",whiteSpace:"nowrap",fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",gap:5}}>
+            <span style={{width:6,height:6,borderRadius:"50%",background:p.color,display:"inline-block"}}/>
+            {p.key} <span style={{fontSize:10,color:active?p.color:T.textMuted}}>{count}</span>
+          </button>;
+        })}
+      </div>
+
+      {/* ══ FILTER ROW ════════════════════════════════════════════ */}
+      <div style={{display:"flex",gap:8,padding:"8px 4px",borderBottom:"1px solid "+T.border,flexWrap:"wrap",alignItems:"center",background:"rgba(255,255,255,0.01)"}}>
+        {(isOwner||isDirector||isSuperAdmin)&&managers.length>0&&(
+          <select value={filterManager} onChange={e=>setFilterManager(e.target.value)} style={{padding:"5px 8px",background:"rgba(255,255,255,0.04)",border:"1px solid "+(filterManager!=="all"?T.gold:T.border),borderRadius:6,color:T.textSecondary,fontSize:11,outline:"none",fontFamily:"'Outfit',sans-serif"}}>
+            <option value="all">All Managers</option>
+            {managers.map(m=><option key={m.uid||m.id} value={m.uid||m.id}>{m.name}</option>)}
+          </select>
+        )}
+        {canManage&&agents.length>0&&(
+          <select value={filterAgent} onChange={e=>setFilterAgent(e.target.value)} style={{padding:"5px 8px",background:"rgba(255,255,255,0.04)",border:"1px solid "+(filterAgent!=="all"?T.gold:T.border),borderRadius:6,color:T.textSecondary,fontSize:11,outline:"none",fontFamily:"'Outfit',sans-serif"}}>
+            <option value="all">All Agents</option>
+            {agents.map(a=><option key={a.uid||a.id} value={a.uid||a.id}>{a.name}</option>)}
+          </select>
+        )}
+        <select value={filterService} onChange={e=>setFilterService(e.target.value)} style={{padding:"5px 8px",background:"rgba(255,255,255,0.04)",border:"1px solid "+T.border,borderRadius:6,color:T.textSecondary,fontSize:11,outline:"none",fontFamily:"'Outfit',sans-serif"}}>
+          <option value="all">All Types</option>
+          {SERVICE_TYPES.map(t=><option key={t} value={t}>{t}</option>)}
+        </select>
+        <select value={filterSource} onChange={e=>setFilterSource(e.target.value)} style={{padding:"5px 8px",background:"rgba(255,255,255,0.04)",border:"1px solid "+T.border,borderRadius:6,color:T.textSecondary,fontSize:11,outline:"none",fontFamily:"'Outfit',sans-serif"}}>
+          <option value="all">All Sources</option>
+          {LEAD_SOURCES.map(s=><option key={s} value={s}>{s}</option>)}
+        </select>
+        <select value={filterBudget} onChange={e=>setFilterBudget(e.target.value)} style={{padding:"5px 8px",background:"rgba(255,255,255,0.04)",border:"1px solid "+T.border,borderRadius:6,color:T.textSecondary,fontSize:11,outline:"none",fontFamily:"'Outfit',sans-serif"}}>
+          <option value="all">All Budgets</option>
+          <option value="under1m">Under AED 1M</option>
+          <option value="1to3m">AED 1M - 3M</option>
+          <option value="3to5m">AED 3M - 5M</option>
+          <option value="5to10m">AED 5M - 10M</option>
+          <option value="above10m">Above AED 10M</option>
+        </select>
+        <select value={leadSortBy||"date"} onChange={e=>setLeadSortBy&&setLeadSortBy(e.target.value)} style={{padding:"5px 8px",background:"rgba(255,255,255,0.04)",border:"1px solid "+T.border,borderRadius:6,color:T.textSecondary,fontSize:11,outline:"none",fontFamily:"'Outfit',sans-serif"}}>
+          <option value="date">Latest First</option>
+          <option value="score">AI Score</option>
+          <option value="budget">Budget High-Low</option>
+          <option value="name">Name A-Z</option>
+        </select>
+        {(aiSearch||activeStage!=="all"||filterAgent!=="all"||filterManager!=="all"||filterService!=="all"||filterSource!=="all"||filterBudget!=="all")&&(
+          <div style={{display:"flex",gap:6,alignItems:"center",marginLeft:"auto",flexWrap:"wrap"}}>
+            {activeStage!=="all"&&<span style={{fontSize:10,padding:"2px 8px",borderRadius:10,background:"rgba(212,168,67,0.15)",color:T.gold,cursor:"pointer"}} onClick={()=>setActiveStage("all")}>{activeStage} ×</span>}
+            {filterAgent!=="all"&&<span style={{fontSize:10,padding:"2px 8px",borderRadius:10,background:"rgba(139,92,246,0.15)",color:"#8B5CF6",cursor:"pointer"}} onClick={()=>setFilterAgent("all")}>{agents.find(a=>(a.uid||a.id)===filterAgent)?.name||"Agent"} ×</span>}
+            {filterManager!=="all"&&<span style={{fontSize:10,padding:"2px 8px",borderRadius:10,background:"rgba(59,130,246,0.15)",color:"#3B82F6",cursor:"pointer"}} onClick={()=>setFilterManager("all")}>{managers.find(m=>(m.uid||m.id)===filterManager)?.name||"Manager"} ×</span>}
+            <button type="button" onClick={()=>{setAiSearch("");setActiveStage("all");setFilterAgent("all");setFilterManager("all");setFilterService("all");setFilterSource("all");setFilterBudget("all");}} style={{fontSize:10,padding:"2px 10px",borderRadius:10,background:"rgba(252,129,129,0.1)",border:"1px solid rgba(252,129,129,0.3)",color:"#FC8181",cursor:"pointer",fontFamily:"'Outfit',sans-serif"}}>Clear all</button>
+            <span style={{fontSize:10,color:T.textMuted}}>{filtered.length} results</span>
+          </div>
+        )}
+      </div>
+
+      {/* ══ MAIN CONTENT ══════════════════════════════════════════ */}
+      <div style={{display:"grid",gridTemplateColumns:selectedLead?"1fr 360px":"1fr",gap:0,alignItems:"start"}}>
+
+        {/* ── TABLE VIEW ── */}
+        {view==="table"&&(
+          <div>
+            <div style={{display:"grid",gridTemplateColumns:"72px 2fr 110px 130px 110px 130px 140px 48px",padding:"8px 4px",borderBottom:"1px solid "+T.border,background:"rgba(255,255,255,0.02)"}}>
+              {["ID","NAME","STATUS","BUDGET","SERVICE","SOURCE","AGENT",""].map((h,i)=>(
+                <div key={i} style={{fontSize:9,fontWeight:700,color:T.textMuted,textTransform:"uppercase",letterSpacing:0.7,paddingLeft:i===0?4:0}}>{h}</div>
+              ))}
+            </div>
+            {allLeads.length===0&&(
+              <div style={{padding:"80px 20px",textAlign:"center"}}>
+                <div style={{fontSize:40,marginBottom:12}}>📋</div>
+                <div style={{fontSize:16,fontWeight:700,color:T.white,marginBottom:6}}>No leads yet</div>
+                <div style={{fontSize:12,color:T.textMuted,marginBottom:16}}>Add your first lead to start managing your pipeline</div>
+                <button type="button" onClick={()=>setShowAdd(true)} style={{padding:"10px 24px",borderRadius:8,border:"none",background:"linear-gradient(135deg,#D4A843,#B8902E)",color:"#0A0E1A",fontSize:13,fontWeight:700,cursor:"pointer"}}>+ Add First Lead</button>
+              </div>
+            )}
+            {filtered.length===0&&allLeads.length>0&&<div style={{padding:"40px 20px",textAlign:"center",color:T.textMuted,fontSize:13}}>No leads match your current filters</div>}
+            {filtered.map((lead,i)=>{
+              const sc=aiScore(lead);
+              const stale=!["Closed Deal","Closed Outside","Non Potential"].includes(lead.status)&&daysAgo(lead.updatedAt||lead.createdAt)>7;
+              const isSel=selectedLead?.id===lead.id;
+              const isGV=parseFloat(lead.budget||0)>=GV_MIN;
+              return (
+                <div key={lead.id||i} onClick={()=>setSelectedLead(isSel?null:lead)}
+                  style={{display:"grid",gridTemplateColumns:"72px 2fr 110px 130px 110px 130px 140px 48px",padding:"11px 4px",borderBottom:"1px solid "+T.border+"40",cursor:"pointer",background:isSel?"rgba(212,168,67,0.04)":"transparent",transition:"background 0.1s",borderLeft:isSel?"3px solid "+T.gold:"3px solid transparent"}}
+                  onMouseEnter={e=>!isSel&&(e.currentTarget.style.background="rgba(255,255,255,0.02)")}
+                  onMouseLeave={e=>!isSel&&(e.currentTarget.style.background="transparent")}
+                >
+                  <div style={{display:"flex",alignItems:"center",gap:4,paddingLeft:4}}>
+                    <div style={{width:7,height:7,borderRadius:"50%",background:sc.color,flexShrink:0}}/>
+                    <span style={{fontSize:10,color:T.textMuted}}>#{(lead.id||"").slice(-4)||String(i+1).padStart(4,"0")}</span>
+                  </div>
+                  <div style={{display:"flex",alignItems:"center",gap:6}}>
+                    <div style={{width:22,height:22,borderRadius:"50%",background:"rgba(255,255,255,0.07)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,fontSize:10,fontWeight:700,color:T.textMuted}}>{(lead.name||"?")[0].toUpperCase()}</div>
+                    <div>
+                      <div style={{display:"flex",alignItems:"center",gap:4}}>
+                        <span style={{fontSize:12,fontWeight:500,color:T.white}}>{lead.name||"Unnamed"}</span>
+                      </div>
+                      <div style={{display:"flex",gap:4,marginTop:1}}>
+                        <ScoreBar lead={lead}/>
+                        {isGV&&<span style={{fontSize:9,color:T.gold}}>🏆GV</span>}
+                        {stale&&<span style={{fontSize:9,color:"#EF4444"}}>⏰Stale</span>}
+                      </div>
+                    </div>
+                  </div>
+                  <div style={{alignSelf:"center"}}><PBadge status={lead.status||"New Lead"}/></div>
+                  <div style={{fontSize:12,fontWeight:700,color:T.gold,alignSelf:"center"}}>{fmtB(lead.budget)}</div>
+                  <div style={{fontSize:11,color:lead.serviceType||lead.type?"#A78BFA":T.textMuted,alignSelf:"center",fontWeight:lead.serviceType||lead.type?600:400}}>{lead.serviceType||lead.type||"—"}</div>
+                  <div style={{display:"flex",alignItems:"center",gap:4,alignSelf:"center"}}>
+                    <div style={{width:6,height:6,borderRadius:"50%",background:SRC_COLOR[lead.source]||"#94A3B8",flexShrink:0}}/>
+                    <span style={{fontSize:10,color:T.textMuted}}>{lead.source||"—"}</span>
+                  </div>
+                  <div style={{alignSelf:"center"}}>
+                    {lead.assignedToName
+                      ?<span style={{fontSize:10,color:"#8B5CF6",fontWeight:600,background:"rgba(139,92,246,0.1)",padding:"2px 7px",borderRadius:8}}>{lead.assignedToName}</span>
+                      :canManage
+                        ?<button type="button" onClick={e=>{e.stopPropagation();setShowAssign(lead);}} style={{fontSize:10,color:T.textMuted,background:"rgba(255,255,255,0.05)",border:"1px dashed "+T.border,padding:"2px 7px",borderRadius:8,cursor:"pointer",fontFamily:"'Outfit',sans-serif"}}>+ Assign</button>
+                        :<span style={{fontSize:10,color:T.textMuted}}>—</span>
+                    }
+                  </div>
+                  <div style={{display:"flex",alignItems:"center",justifyContent:"center"}}>
+                    {lead.phone&&<a href={"https://wa.me/"+clnPhone(lead.phone)} target="_blank" rel="noopener noreferrer" onClick={e=>e.stopPropagation()} style={{padding:"3px 6px",borderRadius:5,background:"rgba(37,211,102,0.1)",border:"1px solid rgba(37,211,102,0.2)",textDecoration:"none",fontSize:9,color:"#25D366",fontWeight:700}}>WA</a>}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* ── KANBAN VIEW ── */}
+        {view==="kanban"&&(
+          <div style={{overflowX:"auto",padding:"12px 0"}}>
+            <div style={{display:"flex",gap:10,minWidth:"max-content",alignItems:"start"}}>
+              {PIPELINE.map(p=>{
+                const cols=filtered.filter(l=>(l.status||"New Lead")===p.key);
+                return (
+                  <div key={p.key} style={{width:210,flexShrink:0}}>
+                    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:7,padding:"7px 10px",background:p.bg,borderRadius:7,border:"1px solid "+p.color+"25"}}>
+                      <div style={{display:"flex",alignItems:"center",gap:5}}>
+                        <div style={{width:7,height:7,borderRadius:"50%",background:p.color}}/>
+                        <span style={{fontSize:11,fontWeight:600,color:p.color}}>{p.key}</span>
+                      </div>
+                      <span style={{fontSize:10,color:p.color,background:p.color+"15",padding:"1px 6px",borderRadius:8}}>{cols.length}</span>
+                    </div>
+                    <div style={{display:"flex",flexDirection:"column",gap:5,maxHeight:540,overflowY:"auto"}}>
+                      {cols.map((lead,i)=>{
+                        const sc=aiScore(lead);
+                        const stale=daysAgo(lead.updatedAt||lead.createdAt)>7;
+                        return (
+                          <div key={lead.id||i} onClick={()=>setSelectedLead(selectedLead?.id===lead.id?null:lead)}
+                            style={{background:"rgba(255,255,255,0.03)",border:"1px solid "+(stale?"rgba(239,68,68,0.2)":T.border),borderRadius:8,padding:"9px 10px",cursor:"pointer"}}
+                            onMouseEnter={e=>(e.currentTarget.style.borderColor=p.color+"50")}
+                            onMouseLeave={e=>(e.currentTarget.style.borderColor=stale?"rgba(239,68,68,0.2)":T.border)}
+                          >
+                            <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
+                              <span style={{fontSize:11,fontWeight:500,color:T.white,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",flex:1}}>{lead.name||"Unnamed"}</span>
+                              <div style={{width:6,height:6,borderRadius:"50%",background:sc.color,flexShrink:0,marginTop:3}}/>
+                            </div>
+                            <div style={{fontSize:11,fontWeight:700,color:T.gold,marginBottom:4}}>{fmtB(lead.budget)}</div>
+                            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                              <span style={{fontSize:9,color:SRC_COLOR[lead.source]||T.textMuted}}>{lead.source||"Manual"}</span>
+                              {stale&&<span style={{fontSize:9,color:"#EF4444"}}>Stale</span>}
+                            </div>
+                            {lead.assignedToName&&<div style={{fontSize:9,color:"#8B5CF6",marginTop:3,fontWeight:600}}>{lead.assignedToName}</div>}
+                          </div>
+                        );
+                      })}
+                      {cols.length===0&&<div style={{padding:"14px",textAlign:"center",color:T.textMuted,fontSize:10,border:"1px dashed "+T.border+"50",borderRadius:7}}>No leads</div>}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* ── ANALYTICS VIEW ── */}
+        {view==="analytics"&&(
+          <div style={{padding:"14px 4px",display:"flex",flexDirection:"column",gap:14}}>
+
+            {/* KPI Cards */}
+            <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(130px,1fr))",gap:8}}>
+              {[
+                {l:"Total Leads",  v:kTotal,   c:T.gold},
+                {l:"New Today",    v:kToday,   c:"#0EA5E9"},
+                {l:"Hot Leads",    v:kHot,     c:"#10B981"},
+                {l:"Closed Deals", v:kClosed,  c:"#10B981"},
+                {l:"Stale 7d+",    v:kStale,   c:"#EF4444"},
+                {l:"Conv. Rate",   v:kConvRate+"%",c:kConvRate>=10?"#10B981":kConvRate>=5?"#D4A843":"#EF4444"},
+                {l:"Pipeline",     v:kPipeline>=1e9?"AED "+(kPipeline/1e9).toFixed(1)+"B":kPipeline>=1e6?"AED "+(kPipeline/1e6).toFixed(1)+"M":"AED "+kPipeline.toLocaleString(),c:T.gold},
+              ].map((k,i)=>(
+                <div key={i} style={{background:"rgba(255,255,255,0.03)",border:"1px solid "+T.border,borderRadius:9,padding:"10px 12px",position:"relative",overflow:"hidden"}}>
+                  <div style={{position:"absolute",top:0,left:0,right:0,height:2,background:k.c,opacity:0.8}}/>
+                  <div style={{fontSize:9,fontWeight:700,color:T.textMuted,textTransform:"uppercase",letterSpacing:0.7,marginBottom:3}}>{k.l}</div>
+                  <div style={{fontSize:20,fontWeight:900,color:k.c,fontFamily:"'Fraunces',serif"}}>{k.v}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* ── OWNER LEADERBOARD ── */}
+            {(isOwner||isSuperAdmin)&&leaderboard.length>0&&(
+              <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid "+T.gold+"40",borderRadius:12,overflow:"hidden"}}>
+                <div style={{padding:"14px 16px",borderBottom:"1px solid "+T.border,background:"rgba(212,168,67,0.05)",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                  <div>
+                    <div style={{fontSize:13,fontWeight:700,color:T.gold}}>🏆 Agent Leaderboard</div>
+                    <div style={{fontSize:11,color:T.textMuted,marginTop:2}}>Ranked by closed deals · conversion rate · pipeline value</div>
+                  </div>
+                  <div style={{fontSize:11,color:T.textMuted}}>{agents.length} agents</div>
+                </div>
+                <div style={{display:"grid",gridTemplateColumns:"32px 2fr 1fr 1fr 1fr 1fr 1fr",padding:"8px 16px",background:"rgba(255,255,255,0.02)",borderBottom:"1px solid "+T.border}}>
+                  {["#","Agent","Leads","Closed","Conv%","Pipeline","Score"].map((h,i)=>(
+                    <div key={i} style={{fontSize:9,fontWeight:700,color:T.textMuted,textTransform:"uppercase",letterSpacing:0.7}}>{h}</div>
+                  ))}
+                </div>
+                {leaderboard.slice(0,10).map((agent,i)=>(
+                  <div key={agent.uid||agent.id||i}
+                    style={{display:"grid",gridTemplateColumns:"32px 2fr 1fr 1fr 1fr 1fr 1fr",padding:"12px 16px",borderBottom:i<leaderboard.length-1?"1px solid "+T.border+"40":"none",background:i===0?"rgba(212,168,67,0.03)":i===1?"rgba(212,168,67,0.015)":"transparent"}}
+                    onMouseEnter={e=>(e.currentTarget.style.background="rgba(255,255,255,0.02)")}
+                    onMouseLeave={e=>(e.currentTarget.style.background=i===0?"rgba(212,168,67,0.03)":i===1?"rgba(212,168,67,0.015)":"transparent")}
+                  >
+                    <div style={{fontSize:12,fontWeight:700,color:i===0?"#F59E0B":i===1?"#94A3B8":i===2?"#B97333":T.textMuted,alignSelf:"center"}}>{i+1}</div>
+                    <div>
+                      <div style={{fontSize:12,fontWeight:600,color:T.white}}>{agent.name||"Agent"}</div>
+                      <div style={{fontSize:10,color:T.textMuted}}>{agent.email||""}</div>
+                    </div>
+                    <div style={{fontSize:13,fontWeight:700,color:T.gold,alignSelf:"center"}}>{agent.total}</div>
+                    <div style={{fontSize:13,color:"#10B981",fontWeight:700,alignSelf:"center"}}>{agent.closed}</div>
+                    <div style={{fontSize:13,color:parseFloat(agent.conv)>=10?"#10B981":parseFloat(agent.conv)>=5?"#D4A843":"#EF4444",fontWeight:700,alignSelf:"center"}}>{agent.conv}%</div>
+                    <div style={{fontSize:11,color:T.gold,fontWeight:600,alignSelf:"center"}}>{agent.pipeline>=1e6?"AED "+(agent.pipeline/1e6).toFixed(1)+"M":"AED "+agent.pipeline.toLocaleString()}</div>
+                    <div style={{fontSize:13,color:T.gold,fontWeight:900,alignSelf:"center",fontFamily:"'Fraunces',serif"}}>{agent.combined}</div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* ── AGENT PERFORMANCE TABLE (manager/director) ── */}
+            {(isManager||isDirector)&&agentPerf.length>0&&(
+              <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid "+T.border,borderRadius:12,overflow:"hidden"}}>
+                <div style={{padding:"14px 16px",borderBottom:"1px solid "+T.border,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                  <div style={{fontSize:13,fontWeight:700,color:T.white}}>Agent Performance</div>
+                  <div style={{fontSize:11,color:T.textMuted}}>{agents.length} agents · {allLeads.length} leads</div>
+                </div>
+                <div style={{display:"grid",gridTemplateColumns:"2fr 1fr 1fr 1fr 1fr 1fr 1fr",padding:"8px 16px",background:"rgba(255,255,255,0.02)",borderBottom:"1px solid "+T.border}}>
+                  {["Agent","Leads","Hot","Closed","Conv%","Stale","Last Active"].map((h,i)=>(
+                    <div key={i} style={{fontSize:9,fontWeight:700,color:T.textMuted,textTransform:"uppercase",letterSpacing:0.7}}>{h}</div>
+                  ))}
+                </div>
+                {agentPerf.map((agent,i)=>(
+                  <div key={agent.uid||agent.id||i}
+                    style={{display:"grid",gridTemplateColumns:"2fr 1fr 1fr 1fr 1fr 1fr 1fr",padding:"12px 16px",borderBottom:i<agentPerf.length-1?"1px solid "+T.border+"40":"none",cursor:"pointer"}}
+                    onMouseEnter={e=>(e.currentTarget.style.background="rgba(255,255,255,0.02)")}
+                    onMouseLeave={e=>(e.currentTarget.style.background="transparent")}
+                    onClick={()=>setFilterAgent(agent.uid||agent.id||"all")}
+                  >
+                    <div>
+                      <div style={{fontSize:12,fontWeight:600,color:T.white}}>{agent.name||"Agent"}</div>
+                      <div style={{fontSize:10,color:T.textMuted}}>{agent.email||""}</div>
+                    </div>
+                    <div style={{fontSize:13,fontWeight:700,color:T.gold,alignSelf:"center"}}>{agent.total}</div>
+                    <div style={{fontSize:13,color:"#10B981",fontWeight:600,alignSelf:"center"}}>{agent.hot}</div>
+                    <div style={{fontSize:13,color:"#10B981",fontWeight:700,alignSelf:"center"}}>{agent.closed}</div>
+                    <div style={{fontSize:13,color:parseFloat(agent.conv)>=10?"#10B981":parseFloat(agent.conv)>=5?"#D4A843":"#EF4444",fontWeight:700,alignSelf:"center"}}>{agent.conv}%</div>
+                    <div style={{fontSize:13,color:agent.stale>0?"#EF4444":T.textMuted,fontWeight:agent.stale>0?700:400,alignSelf:"center"}}>{agent.stale}</div>
+                    <div style={{fontSize:11,color:T.textMuted,alignSelf:"center"}}>{agent.lastActive?fmtD(agent.lastActive):"Never"}</div>
+                  </div>
+                ))}
+                {agentPerf.length===0&&<div style={{padding:"20px",textAlign:"center",color:T.textMuted,fontSize:12}}>No agents in your team yet</div>}
+              </div>
+            )}
+
+            {/* Source Performance */}
+            <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid "+T.border,borderRadius:12,padding:"16px"}}>
+              <div style={{fontSize:13,fontWeight:700,color:T.white,marginBottom:14}}>Source Performance</div>
+              <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(130px,1fr))",gap:8}}>
+                {srcStats.slice(0,8).map((s,i)=>(
+                  <div key={i} style={{background:"rgba(255,255,255,0.03)",borderRadius:8,padding:"10px"}}>
+                    <div style={{fontSize:11,fontWeight:700,color:SRC_COLOR[s.src]||T.textMuted,marginBottom:5,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{s.src}</div>
+                    <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-end"}}>
+                      <div><div style={{fontSize:18,fontWeight:900,color:T.white,fontFamily:"'Fraunces',serif",lineHeight:1}}>{s.total}</div><div style={{fontSize:9,color:T.textMuted}}>leads</div></div>
+                      <div style={{textAlign:"right"}}><div style={{fontSize:14,fontWeight:900,color:s.rate>=10?"#10B981":s.rate>=5?"#D4A843":"#EF4444",fontFamily:"'Fraunces',serif",lineHeight:1}}>{s.rate}%</div><div style={{fontSize:9,color:T.textMuted}}>closed</div></div>
+                    </div>
+                    <div style={{height:2,background:T.border,borderRadius:1,marginTop:7}}><div style={{height:"100%",width:Math.min(s.total,100)+"%",background:SRC_COLOR[s.src]||T.gold,borderRadius:1,opacity:0.7}}/></div>
+                  </div>
+                ))}
+                {srcStats.length===0&&<div style={{color:T.textMuted,fontSize:12,padding:"20px",textAlign:"center"}}>No source data yet</div>}
+              </div>
+            </div>
+
+            {/* Pipeline Distribution */}
+            <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid "+T.border,borderRadius:12,padding:"16px"}}>
+              <div style={{fontSize:13,fontWeight:700,color:T.white,marginBottom:14}}>Pipeline Distribution</div>
+              {PIPELINE.map(p=>{
+                const count=allLeads.filter(l=>(l.status||"New Lead")===p.key).length;
+                const pct=allLeads.length>0?Math.round(count*100/allLeads.length):0;
+                return(
+                  <div key={p.key} style={{marginBottom:8}}>
+                    <div style={{display:"flex",justifyContent:"space-between",marginBottom:3}}>
+                      <div style={{display:"flex",alignItems:"center",gap:6}}><div style={{width:6,height:6,borderRadius:"50%",background:p.color}}/><span style={{fontSize:11,color:T.textSecondary}}>{p.key}</span></div>
+                      <span style={{fontSize:11,fontWeight:700,color:p.color}}>{count} <span style={{color:T.textMuted,fontWeight:400}}>({pct}%)</span></span>
+                    </div>
+                    <div style={{height:4,borderRadius:2,background:"rgba(255,255,255,0.05)"}}><div style={{height:"100%",width:pct+"%",borderRadius:2,background:p.color,opacity:0.85,transition:"width 0.8s"}}/></div>
+                  </div>
+                );
+              })}
+            </div>
+
+          </div>
+        )}
+
+        {/* ══ LEAD DETAIL DRAWER ════════════════════════════════════ */}
+        {selectedLead&&(
+          <div style={{background:"rgba(255,255,255,0.02)",borderLeft:"1px solid "+T.border,display:"flex",flexDirection:"column",maxHeight:"calc(100vh - 160px)",position:"sticky",top:0,overflowY:"auto"}}>
+            <div style={{padding:"13px 15px",borderBottom:"1px solid "+T.border,background:"rgba(255,255,255,0.02)"}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:7}}>
+                <div style={{display:"flex",alignItems:"center",gap:8}}>
+                  <div style={{width:30,height:30,borderRadius:"50%",background:"rgba(255,255,255,0.07)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,fontSize:12,fontWeight:700,color:T.textMuted}}>{(selectedLead.name||"?")[0].toUpperCase()}</div>
+                  <div>
+                    <div style={{fontSize:14,fontWeight:700,color:T.white}}>{selectedLead.name||"Unnamed"}</div>
+                    <PBadge status={selectedLead.status||"New Lead"}/>
+                  </div>
+                </div>
+                <button type="button" onClick={()=>setSelectedLead(null)} style={{background:"none",border:"none",color:T.textMuted,cursor:"pointer",fontSize:18}}>×</button>
+              </div>
+              <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+                {selectedLead.phone&&<a href={"https://wa.me/"+clnPhone(selectedLead.phone)} target="_blank" rel="noopener noreferrer" style={{fontSize:10,padding:"4px 10px",borderRadius:7,background:"rgba(37,211,102,0.1)",border:"1px solid rgba(37,211,102,0.25)",color:"#25D366",textDecoration:"none",fontWeight:600}}>WhatsApp</a>}
+                {selectedLead.phone&&<a href={"tel:"+selectedLead.phone} style={{fontSize:10,padding:"4px 10px",borderRadius:7,background:"rgba(99,179,237,0.1)",border:"1px solid rgba(99,179,237,0.25)",color:"#63B3ED",textDecoration:"none",fontWeight:600}}>Call</a>}
+                {canManage&&<button type="button" onClick={()=>setShowAssign(selectedLead)} style={{fontSize:10,padding:"4px 10px",borderRadius:7,background:"rgba(139,92,246,0.1)",border:"1px solid rgba(139,92,246,0.3)",color:"#8B5CF6",cursor:"pointer",fontFamily:"'Outfit',sans-serif",fontWeight:600}}>Reassign</button>}
+                {parseFloat(selectedLead.budget||0)>=GV_MIN&&<span style={{fontSize:10,padding:"4px 8px",borderRadius:7,background:"rgba(212,168,67,0.15)",color:T.gold,fontWeight:700}}>🏆 Golden Visa</span>}
+              </div>
+              <div style={{marginTop:8}}>
+                <div style={{fontSize:9,color:T.textMuted,marginBottom:4,fontWeight:700,textTransform:"uppercase",letterSpacing:0.5}}>Change Status</div>
+                <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>
+                  {PIPELINE.map(p=>(
+                    <button key={p.key} type="button" onClick={()=>updateStatus(selectedLead.id,p.key)}
+                      style={{fontSize:9,padding:"3px 7px",borderRadius:8,border:"1px solid "+((selectedLead.status||"New Lead")===p.key?p.color:T.border),background:(selectedLead.status||"New Lead")===p.key?p.bg:"transparent",color:(selectedLead.status||"New Lead")===p.key?p.color:T.textMuted,cursor:"pointer",fontWeight:(selectedLead.status||"New Lead")===p.key?700:400,fontFamily:"'Outfit',sans-serif"}}>
+                      {p.key}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+            <div style={{display:"flex",borderBottom:"1px solid "+T.border}}>
+              {[{k:"profile",l:"Profile"},{k:"activity",l:"Activity"},{k:"match",l:"Matches"}].map(t=>(
+                <button key={t.k} type="button" onClick={()=>setDrawerTab(t.k)} style={{flex:1,padding:"8px 0",border:"none",borderBottom:drawerTab===t.k?"2px solid "+T.gold:"2px solid transparent",background:"transparent",color:drawerTab===t.k?T.gold:T.textMuted,fontSize:11,fontWeight:drawerTab===t.k?600:400,cursor:"pointer",fontFamily:"'Outfit',sans-serif"}}>{t.l}</button>
+              ))}
+            </div>
+            <div style={{padding:"13px 15px",flex:1}}>
+              {drawerTab==="profile"&&(()=>{
+                const sc=aiScore(selectedLead);
+                return (
+                  <div>
+                    <div style={{padding:"9px 12px",borderRadius:8,background:sc.color+"0E",border:"1px solid "+sc.color+"25",marginBottom:12,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                      <div>
+                        <div style={{fontSize:9,color:T.textMuted,fontWeight:700,textTransform:"uppercase",letterSpacing:0.7,marginBottom:2}}>AI LEAD SCORE</div>
+                        <div style={{fontFamily:"'Fraunces',serif",fontSize:18,fontWeight:800,color:sc.color}}>{sc.score}/100 — {sc.label}</div>
+                      </div>
+                      <div style={{width:38,height:38,borderRadius:"50%",border:"2px solid "+sc.color,display:"flex",alignItems:"center",justifyContent:"center",background:sc.color+"12",flexShrink:0}}>
+                        <span style={{fontSize:12,fontWeight:800,color:sc.color,fontFamily:"'Fraunces',serif"}}>{sc.score}</span>
+                      </div>
+                    </div>
+                    {[
+                      {label:"Phone",       value:selectedLead.phone,   link:"tel:"+selectedLead.phone},
+                      {label:"WhatsApp",    value:selectedLead.phone?"Open":null, link:selectedLead.phone?"https://wa.me/"+clnPhone(selectedLead.phone):null, ext:true},
+                      {label:"Email",       value:selectedLead.email,   link:selectedLead.email?"mailto:"+selectedLead.email:null},
+                      {label:"Budget",      value:fmtB(selectedLead.budget)},
+                      {label:"Service",     value:selectedLead.serviceType||selectedLead.type||"—"},
+                      {label:"Request",     value:selectedLead.requestType||"—"},
+                      {label:"Project",     value:selectedLead.project||"—"},
+                      {label:"Source",      value:selectedLead.source||"—"},
+                      {label:"Channel",     value:selectedLead.channel||"—"},
+                      {label:"Campaign",    value:selectedLead.campaign||"—"},
+                      {label:"AD Name",     value:selectedLead.adName||"—"},
+                      {label:"AD Account",  value:selectedLead.adAccount||"—"},
+                      {label:"Nationality", value:selectedLead.nationality||"—"},
+                      {label:"Community",   value:selectedLead.community||"—"},
+                      {label:"Timeline",    value:selectedLead.timeline||"—"},
+                      {label:"Assigned To", value:selectedLead.assignedToName||"Unassigned",color:"#8B5CF6"},
+                      {label:"Added",       value:fmtD(selectedLead.createdAt)},
+                    ].map((f,i)=>(
+                      <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"5px 0",borderBottom:"1px solid "+T.border+"30"}}>
+                        <span style={{fontSize:11,color:T.textMuted,flexShrink:0}}>{f.label}</span>
+                        {f.link
+                          ?<a href={f.link} target={f.ext?"_blank":"_self"} rel="noopener noreferrer" style={{fontSize:11,color:T.gold,fontWeight:600,textDecoration:"none"}}>{f.value}</a>
+                          :<span style={{fontSize:11,color:f.color||T.white,fontWeight:600,textAlign:"right",maxWidth:160,overflow:"hidden",textOverflow:"ellipsis"}}>{f.value||"—"}</span>
+                        }
+                      </div>
+                    ))}
+                    {selectedLead.comment&&<div style={{marginTop:9,padding:"8px 10px",background:"rgba(255,255,255,0.03)",borderRadius:7,fontSize:11,color:T.textSecondary,lineHeight:1.6}}><div style={{fontSize:9,color:T.textMuted,marginBottom:3,fontWeight:700,textTransform:"uppercase",letterSpacing:0.5}}>Comment</div>{selectedLead.comment}</div>}
+                  </div>
+                );
+              })()}
+              {drawerTab==="activity"&&(
+                <div>
+                  <div style={{display:"flex",flexDirection:"column",gap:6,marginBottom:12,maxHeight:260,overflowY:"auto"}}>
+                    {(selectedLead.notes_log||[]).length===0&&<div style={{padding:"20px",textAlign:"center",color:T.textMuted,fontSize:11}}>No activity yet</div>}
+                    {[...(selectedLead.notes_log||[])].reverse().map((n,i)=>(
+                      <div key={i} style={{padding:"7px 10px",background:"rgba(255,255,255,0.03)",borderRadius:7,borderLeft:"2px solid "+T.gold}}>
+                        <div style={{fontSize:11,color:T.white,marginBottom:2}}>{n.text}</div>
+                        <div style={{fontSize:9,color:T.textMuted}}>{n.type||"Note"} · {n.by||"Agent"} · {fmtD(n.at)}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <div style={{borderTop:"1px solid "+T.border,paddingTop:10}}>
+                    <select value={noteType2} onChange={e=>setNoteType2(e.target.value)} style={{width:"100%",padding:"6px 8px",background:"rgba(255,255,255,0.04)",border:"1px solid "+T.border,borderRadius:6,color:T.textSecondary,fontSize:11,outline:"none",marginBottom:6,fontFamily:"'Outfit',sans-serif"}}>
+                      {NOTE_TYPES.map(t=><option key={t} value={t}>{t}</option>)}
+                    </select>
+                    <textarea value={noteText2} onChange={e=>setNoteText2(e.target.value)} placeholder="Add activity note..." rows={3} style={{width:"100%",padding:"7px 9px",background:"rgba(255,255,255,0.04)",border:"1px solid "+T.border,borderRadius:6,color:T.white,fontSize:12,outline:"none",resize:"none",boxSizing:"border-box",marginBottom:7,fontFamily:"'Outfit',sans-serif"}}/>
+                    <button type="button" onClick={()=>addNote(selectedLead.id)} disabled={!noteText2.trim()||savingNote} style={{width:"100%",padding:"7px",borderRadius:6,border:"none",background:!noteText2.trim()?"rgba(212,168,67,0.2)":"rgba(212,168,67,0.9)",color:"#0A0E1A",fontSize:12,fontWeight:700,cursor:!noteText2.trim()?"not-allowed":"pointer",fontFamily:"'Outfit',sans-serif"}}>{savingNote?"Saving...":"Save Note"}</button>
+                  </div>
+                </div>
+              )}
+              {drawerTab==="match"&&(
+                <div>
+                  <div style={{fontSize:11,color:T.textMuted,marginBottom:10}}>{matched.length>0?"Properties matching budget + area:":"No listings match yet."}</div>
+                  {matched.map((l,i)=>(
+                    <div key={i} style={{padding:"9px 11px",background:"rgba(255,255,255,0.03)",borderRadius:7,marginBottom:7,border:"1px solid "+T.border}}>
+                      <div style={{fontSize:12,fontWeight:600,color:T.white,marginBottom:3}}>{l.title||l.name||"Property"}</div>
+                      <div style={{display:"flex",justifyContent:"space-between"}}><span style={{fontSize:11,color:T.textMuted}}>{l.community||""}</span><span style={{fontSize:12,fontWeight:700,color:T.gold}}>{fmtB(l.price||l.priceMin)}</span></div>
+                    </div>
+                  ))}
+                  {matched.length===0&&<button type="button" onClick={()=>handleTabChange?.("Projects")} style={{width:"100%",padding:"8px",borderRadius:7,border:"1px solid "+T.border,background:"rgba(212,168,67,0.06)",color:T.gold,fontSize:11,cursor:"pointer",fontFamily:"'Outfit',sans-serif"}}>Browse Projects →</button>}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* ══ ADD LEAD MODAL ═══════════════════════════════════════ */}
+      {showAdd&&(
+        <div style={{position:"fixed",inset:0,background:"rgba(4,9,15,0.9)",zIndex:2000,display:"flex",alignItems:"center",justifyContent:"center",padding:20}} onClick={e=>{if(e.target===e.currentTarget)setShowAdd(false);}}>
+          <div style={{background:"#0D1117",borderRadius:14,border:"1px solid "+T.border,width:"100%",maxWidth:620,maxHeight:"92vh",overflowY:"auto"}} onClick={e=>e.stopPropagation()}>
+            <div style={{padding:"15px 20px",borderBottom:"1px solid "+T.border,display:"flex",justifyContent:"space-between",alignItems:"center",position:"sticky",top:0,background:"#0D1117",zIndex:1}}>
+              <div style={{fontFamily:"'Fraunces',serif",fontSize:15,fontWeight:900,color:T.white}}>Add New Lead</div>
+              <button type="button" onClick={()=>setShowAdd(false)} style={{background:"rgba(255,255,255,0.06)",border:"1px solid "+T.border,borderRadius:7,color:T.textMuted,width:28,height:28,cursor:"pointer",fontSize:16,display:"flex",alignItems:"center",justifyContent:"center"}}>×</button>
+            </div>
+            <div style={{padding:20}}>
+              <div style={{marginBottom:10}}>
+                <div style={{fontSize:11,fontWeight:700,color:T.white,marginBottom:10,paddingBottom:6,borderBottom:"1px solid "+T.border}}>Contact Information</div>
+                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+                  <div><Lbl>Full Name *</Lbl><Inp value={form.name} onChange={v=>F("name",v)} placeholder="Client full name"/></div>
+                  <div><Lbl>Phone *</Lbl><Inp value={form.phone} onChange={v=>F("phone",v)} placeholder="+971 50 XXX XXXX" type="tel"/></div>
+                  <div><Lbl>Email</Lbl><Inp value={form.email} onChange={v=>F("email",v)} placeholder="email@example.com" type="email"/></div>
+                  <div><Lbl>Budget (AED)</Lbl><Inp value={form.budget} onChange={v=>F("budget",v)} placeholder="e.g. 2000000" type="number"/></div>
+                </div>
+              </div>
+              <Section icon="📋" title="Request Information" sub="Project and classification details" color="#818CF8" open={openSec.request} onToggle={()=>setOpenSec(s=>({...s,request:!s.request}))}>
+                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+                  <div><Lbl>Request Type</Lbl><Sel value={form.requestType} onChange={v=>F("requestType",v)}><option value="">Select...</option>{REQUEST_TYPES.map(t=><option key={t} value={t}>{t}</option>)}</Sel></div>
+                  <div><Lbl>Service Type</Lbl><Sel value={form.serviceType} onChange={v=>F("serviceType",v)}><option value="">Select...</option>{SERVICE_TYPES.map(t=><option key={t} value={t}>{t}</option>)}</Sel></div>
+                  <div style={{gridColumn:"1/-1"}}><Lbl>Project</Lbl><Inp value={form.project} onChange={v=>F("project",v)} placeholder="Project name"/></div>
+                  <div><Lbl>Lead Source</Lbl><Sel value={form.source} onChange={v=>F("source",v)}><option value="">Select...</option>{LEAD_SOURCES.map(s=><option key={s} value={s}>{s}</option>)}</Sel></div>
+                  <div><Lbl>Channel</Lbl><Sel value={form.channel} onChange={v=>F("channel",v)}><option value="">Select...</option>{CHANNELS.map(c=><option key={c} value={c}>{c}</option>)}</Sel></div>
+                  <div style={{gridColumn:"1/-1"}}><Lbl>Campaign</Lbl><Inp value={form.campaign} onChange={v=>F("campaign",v)} placeholder="Campaign name"/></div>
+                  <div><Lbl>AD Name</Lbl><Inp value={form.adName} onChange={v=>F("adName",v)} placeholder="Ad name"/></div>
+                  <div><Lbl>AD Account</Lbl><Inp value={form.adAccount} onChange={v=>F("adAccount",v)} placeholder="Ad account"/></div>
+                  <div style={{gridColumn:"1/-1"}}><Lbl>Comment</Lbl><textarea value={form.comment} onChange={e=>F("comment",e.target.value)} placeholder="Additional notes..." rows={3} style={{width:"100%",padding:"8px 10px",background:"rgba(255,255,255,0.04)",border:"1px solid "+T.border,borderRadius:7,color:T.white,fontSize:12,outline:"none",resize:"none",boxSizing:"border-box",fontFamily:"'Outfit',sans-serif"}}/></div>
+                </div>
+              </Section>
+              <Section icon="👤" title="Agent Information" sub="Assign to a sales agent" color="#FB923C" open={openSec.agent} onToggle={()=>setOpenSec(s=>({...s,agent:!s.agent}))}>
+                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+                  <div>
+                    <Lbl>Assign To Agent</Lbl>
+                    <Sel value={form.agentId} onChange={v=>{const agent=agents.find(a=>(a.uid||a.id)===v);F("agentId",v);if(agent)F("agentName",agent.name);}}>
+                      <option value="">Unassigned</option>
+                      {isAgent&&<option value={currentUid}>Myself</option>}
+                      {agents.filter(a=>(a.uid||a.id)!==currentUid).map(a=><option key={a.uid||a.id} value={a.uid||a.id}>{a.name}</option>)}
+                    </Sel>
+                  </div>
+                  <div><Lbl>Pipeline Status</Lbl><Sel value={form.status} onChange={v=>F("status",v)}>{PIPELINE.map(p=><option key={p.key} value={p.key}>{p.key}</option>)}</Sel></div>
+                </div>
+              </Section>
+              <Section icon="📍" title="Additional Details" sub="Community, nationality, timeline" color="#10B981" open={openSec.extra} onToggle={()=>setOpenSec(s=>({...s,extra:!s.extra}))}>
+                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10}}>
+                  <div><Lbl>Nationality</Lbl><Sel value={form.nationality} onChange={v=>F("nationality",v)}><option value="">Select...</option>{NATS.map(n=><option key={n} value={n}>{n}</option>)}</Sel></div>
+                  <div><Lbl>Community</Lbl><Inp value={form.community} onChange={v=>F("community",v)} placeholder="e.g. Dubai Marina"/></div>
+                  <div><Lbl>Timeline</Lbl><Sel value={form.timeline} onChange={v=>F("timeline",v)}><option value="">Select...</option>{TIMELINES.map(t=><option key={t} value={t}>{t}</option>)}</Sel></div>
+                </div>
+              </Section>
+              <button type="button" disabled={!form.name||!form.phone||saving} onClick={saveLead}
+                style={{width:"100%",padding:"12px",borderRadius:8,border:"none",background:(!form.name||!form.phone)?"rgba(212,168,67,0.3)":"linear-gradient(135deg,#D4A843,#B8902E)",color:"#0A0E1A",fontSize:14,fontWeight:700,cursor:(!form.name||!form.phone)?"not-allowed":"pointer",fontFamily:"'Outfit',sans-serif"}}>
+                {saving?"Saving...":"Save Lead"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ══ ASSIGN MODAL ════════════════════════════════════════ */}
+      {showAssign&&(
+        <div style={{position:"fixed",inset:0,background:"rgba(4,9,15,0.88)",zIndex:2100,display:"flex",alignItems:"center",justifyContent:"center",padding:20}} onClick={e=>{if(e.target===e.currentTarget)setShowAssign(null);}}>
+          <div style={{background:"#0D1117",borderRadius:14,border:"1px solid "+T.border,width:"100%",maxWidth:400,padding:22}} onClick={e=>e.stopPropagation()}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
+              <div>
+                <div style={{fontFamily:"'Fraunces',serif",fontSize:15,fontWeight:900,color:T.white}}>Assign Lead</div>
+                <div style={{fontSize:11,color:T.textMuted,marginTop:2}}>{showAssign.name||"Lead"}</div>
+              </div>
+              <button type="button" onClick={()=>setShowAssign(null)} style={{background:"rgba(255,255,255,0.06)",border:"1px solid "+T.border,borderRadius:7,color:T.textMuted,width:28,height:28,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16}}>×</button>
+            </div>
+            {agents.length===0&&<div style={{padding:"20px",textAlign:"center",color:T.textMuted,fontSize:12}}>No agents in your team yet. Create agents from the Team tab.</div>}
+            <div style={{display:"flex",flexDirection:"column",gap:8}}>
+              {agents.map(agent=>(
+                <button key={agent.uid||agent.id} type="button" onClick={()=>assignLead(showAssign.id,agent)}
+                  style={{padding:"12px 14px",borderRadius:9,border:"1px solid "+(showAssign.assignedTo===(agent.uid||agent.id)?"#8B5CF6":T.border),background:showAssign.assignedTo===(agent.uid||agent.id)?"rgba(139,92,246,0.1)":"rgba(255,255,255,0.03)",textAlign:"left",cursor:"pointer",display:"flex",alignItems:"center",gap:12}}
+                  onMouseEnter={e=>(e.currentTarget.style.background="rgba(139,92,246,0.1)")}
+                  onMouseLeave={e=>(e.currentTarget.style.background=showAssign.assignedTo===(agent.uid||agent.id)?"rgba(139,92,246,0.1)":"rgba(255,255,255,0.03)")}
+                >
+                  <div style={{width:34,height:34,borderRadius:"50%",background:"rgba(139,92,246,0.15)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,fontWeight:700,color:"#8B5CF6",flexShrink:0}}>{(agent.name||"A")[0].toUpperCase()}</div>
+                  <div>
+                    <div style={{fontSize:13,fontWeight:600,color:T.white}}>{agent.name||"Agent"}</div>
+                    <div style={{fontSize:10,color:T.textMuted}}>{agent.email||""}</div>
+                  </div>
+                  {showAssign.assignedTo===(agent.uid||agent.id)&&<span style={{marginLeft:"auto",fontSize:10,color:"#8B5CF6",fontWeight:700}}>Current</span>}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ══ WA TEMPLATES MODAL ══════════════════════════════════ */}
+      {showWA&&(
+        <div style={{position:"fixed",inset:0,background:"rgba(4,9,15,0.9)",zIndex:2100,display:"flex",alignItems:"center",justifyContent:"center",padding:20}} onClick={e=>{if(e.target===e.currentTarget)setShowWA(false);}}>
+          <div style={{background:"#0D1117",borderRadius:14,border:"1px solid "+T.border,width:"100%",maxWidth:480,padding:22}} onClick={e=>e.stopPropagation()}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
+              <div>
+                <div style={{fontFamily:"'Fraunces',serif",fontSize:15,fontWeight:900,color:T.white}}>WhatsApp Templates</div>
+                <div style={{fontSize:11,color:T.textMuted,marginTop:2}}>{filtered.filter(l=>l.phone).length} leads with phone</div>
+              </div>
+              <button type="button" onClick={()=>setShowWA(false)} style={{background:"rgba(255,255,255,0.06)",border:"1px solid "+T.border,borderRadius:7,color:T.textMuted,width:28,height:28,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16}}>×</button>
+            </div>
+            <div style={{display:"flex",flexDirection:"column",gap:7}}>
+              {WA_TEMPLATES.map((tmpl,i)=>(
+                <button key={i} type="button" onClick={()=>{const lead=selectedLead||filtered.find(l=>l.phone);if(lead)sendWA(tmpl,lead);else{notify("No leads with phone","error");setShowWA(false);}}} style={{padding:"11px 13px",borderRadius:8,border:"1px solid rgba(37,211,102,0.2)",background:"rgba(37,211,102,0.04)",textAlign:"left",cursor:"pointer"}} onMouseEnter={e=>(e.currentTarget.style.background="rgba(37,211,102,0.1)")} onMouseLeave={e=>(e.currentTarget.style.background="rgba(37,211,102,0.04)")}>
+                  <div style={{fontSize:12,fontWeight:700,color:"#25D366",marginBottom:3}}>{tmpl.label}</div>
+                  <div style={{fontSize:10,color:T.textMuted,lineHeight:1.5}}>{tmpl.body.slice(0,100)}...</div>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ══ TOAST ══════════════════════════════════════════════════ */}
+      {toast&&<div style={{position:"fixed",bottom:24,right:24,padding:"11px 18px",background:toast.type==="error"?"rgba(239,68,68,0.15)":"rgba(16,185,129,0.15)",border:"1px solid "+(toast.type==="error"?"#EF4444":"#10B981"),borderRadius:9,color:toast.type==="error"?"#EF4444":"#10B981",fontSize:12,fontWeight:600,zIndex:9999,boxShadow:"0 8px 32px rgba(0,0,0,0.4)"}}>{toast.msg}</div>}
+
+    </div>
+  );
+}

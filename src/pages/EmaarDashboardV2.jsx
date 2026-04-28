@@ -3587,58 +3587,7 @@ export default function EmaarDashboardV2() {
       ));
     }
 
-    /* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ ALL LEADS (admin/general view) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
-    if (auth.currentUser?.uid) {
-      unsubs.push(onSnapshot(
-        query(collection(db, "leads"), orderBy("createdAt", "desc"), limit(500)),
-        snap => {
-          const d = snap.docs.map(x => ({ id:x.id, ...x.data() }));
-          setLiveLeads(d);
-        }, () => {}
-      ));
-    }
-
-    /* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ INVEST SCORES Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
-    unsubs.push(onSnapshot(collection(db, "investScores"), snap => {
-      const d = snap.docs.map(x => ({ id:x.id, ...x.data() }));
-      if (d.length > 0) setLiveInvestScores(d);
-    }, () => {}));
-
-    /* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ RISK DATA Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
-    unsubs.push(onSnapshot(collection(db, "riskData"), snap => {
-      const d = snap.docs.map(x => ({ id:x.id, ...x.data() }));
-      if (d.length > 0) setLiveRisk(d);
-    }, () => {}));
-
-
-    /* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ DEV HEALTH Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
-    unsubs.push(onSnapshot(collection(db, "devHealth"), snap => {
-      const d = snap.docs.map(x => ({ id:x.id, ...x.data() }));
-      if (d.length > 0) setLiveDevHealth(d);
-    }, () => {}));
-
-    /* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ COMPETITORS Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
-    unsubs.push(onSnapshot(collection(db, "competitors"), snap => {
-      const d = snap.docs.map(x => ({ id:x.id, ...x.data() }));
-      if (d.length > 0) setLiveCompetitors(d);
-    }, () => {}));
-
-    /* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ LAUNCH CALENDAR Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
-    unsubs.push(onSnapshot(collection(db, "launches"), snap => {
-      const d = snap.docs.map(x => ({ id:x.id, ...x.data() }));
-      if (d.length > 0) setLiveLaunches(d);
-    }, () => {}));
-
-return () => unsubs.forEach(u => { try { u(); } catch {} });
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // USER-SCOPED LIVE LISTENERS Ã¢â‚¬â€ portfolio, watchlist, price alerts
-  useEffect(() => {
-    if (!isLoggedIn || !auth.currentUser) return;
-    const unsubs = [];
-    unsubs.push(onSnapshot(doc(db, "portfolios", auth.currentUser.uid), (snap) => {
-      if (snap.exists()) setMyPortfolio(snap.data().holdings || []);
-    }));
+    ;
     unsubs.push(onSnapshot(doc(db, "watchlists", auth.currentUser.uid), (snap) => {
       if (snap.exists()) setWatchlist(snap.data().projects || []);
     }));
@@ -3769,18 +3718,33 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
   useEffect(() => {
     if (!isLoggedIn || !firebaseUser) return;
     setMyLeadsLoading(true);
-    // Agents see only their assigned leads; admins/managers see all org leads
-    const isAgent = orgRole === "agent";
-    const isManager = orgRole === "manager";
+
+    const role     = userRole  || "user";
+    const oRole    = orgRole   || "";
+    const uid      = firebaseUser.uid;
+    const isSuperAdmin = role === "superAdmin" || role === "admin";
+    const isOwner      = oRole === "owner";
+    const isDirector   = oRole === "director";
+    const isManager    = oRole === "manager";
+    const isAgent      = oRole === "agent";
+
     let leadsQuery;
-    if (isAgent) {
-      leadsQuery = query(collection(db, "leads"), where("assignedTo", "==", firebaseUser.uid), orderBy("createdAt", "desc"), limit(200));
-    } else if (isManager && orgId) {
+
+    if (isSuperAdmin) {
+      // SuperAdmin sees all leads across all orgs (admin analytics only  no privacy breach)
+      leadsQuery = query(collection(db, "leads"), orderBy("createdAt", "desc"), limit(500));
+    } else if ((isOwner || isDirector || isManager) && orgId) {
+      // Owner, Director, Manager: see all leads in their org
       leadsQuery = query(collection(db, "leads"), where("orgId", "==", orgId), orderBy("createdAt", "desc"), limit(500));
+    } else if (isAgent) {
+      // Agent: sees only their assigned leads
+      leadsQuery = query(collection(db, "leads"), where("assignedTo", "==", uid), orderBy("createdAt", "desc"), limit(200));
     } else {
+      // Regular platform user  no CRM access
       setMyLeadsLoading(false);
-      return; // regular users don't see leads tab
+      return;
     }
+
     const unsub = onSnapshot(leadsQuery, (snap) => {
       const list = [];
       snap.forEach(d => list.push({ id: d.id, ...d.data() }));
@@ -3788,7 +3752,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
       setMyLeadsLoading(false);
     }, (err) => { console.warn("[Leads]", err); setMyLeadsLoading(false); });
     return () => unsub();
-  }, [isLoggedIn, firebaseUser, orgRole, orgId]);
+  }, [isLoggedIn, firebaseUser, orgRole, userRole, orgId]);
 
   /* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ DEALS PIPELINE LISTENER (Session 5) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
   useEffect(() => {
@@ -3814,7 +3778,8 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
 
   /* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ TEAM MEMBERS LISTENER (Session 7) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
   useEffect(() => {
-    if (!isLoggedIn || !firebaseUser || orgRole !== "manager" || !orgId) return;
+    const canSeeTeam = orgRole === "owner" || orgRole === "director" || orgRole === "manager";
+    if (!isLoggedIn || !firebaseUser || !canSeeTeam || !orgId) return;
     setTeamMembersLoading(true);
     const q = query(collection(db, "users"), where("orgId", "==", orgId));
     const unsub = onSnapshot(q, snap => {
@@ -5204,7 +5169,7 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
           {/* MY LEADS TAB (extracted) */}
           {tab === "My Leads" && (
             <MyLeadsTab
-              myLeads={myLeads} liveLeads={liveLeads}
+              myLeads={myLeads}
               orgRole={orgRole} userRole={userRole} orgId={orgId} orgName={orgProfile?.name} listings={listings}
               leadSearch={leadSearch} setLeadSearch={setLeadSearch}
               leadStatusFilter={leadStatusFilter} setLeadStatusFilter={setLeadStatusFilter}
@@ -5241,6 +5206,8 @@ return () => unsubs.forEach(u => { try { u(); } catch {} });
               showMLAnalytics={showMLAnalytics} setShowMLAnalytics={setShowMLAnalytics}
               showMLTemplates={showMLTemplates} setShowMLTemplates={setShowMLTemplates}
               showQuickCapture={showQuickCapture} setShowQuickCapture={setShowQuickCapture}
+              teamMembers={teamMembers}
+              firebaseUser={firebaseUser}
             />
           )}
           {/* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ PIPELINE TAB (extracted) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */}
