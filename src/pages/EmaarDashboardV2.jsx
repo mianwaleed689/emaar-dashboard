@@ -5279,7 +5279,7 @@ export default function EmaarDashboardV2() {
           {tab === "Team" && (
             <TeamTab
               teamMembers={teamMembers} teamMembersLoading={teamMembersLoading}
-              myLeads={myLeads} deals={deals} orgRole={orgRole}
+              myLeads={myLeads} deals={deals} orgRole={orgRole} userRole={userRole}
               orgId={orgId} firebaseUser={firebaseUser}
               orgName={orgProfile?.name}
             />

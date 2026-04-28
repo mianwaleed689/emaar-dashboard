@@ -21,9 +21,9 @@ const SOURCE_COLORS = {
 
 const fmtB = v => { const n=parseFloat(v||0); if(!n) return "—"; return n>=1e6?"AED "+(n/1e6).toFixed(1)+"M":"AED "+n.toLocaleString(); };
 
-export default function TeamTab({ teamMembers=[], teamMembersLoading, myLeads=[], deals=[], orgRole, orgId, firebaseUser, orgName }) {
+export default function TeamTab({ teamMembers=[], teamMembersLoading, myLeads=[], deals=[], orgRole, userRole, orgId, firebaseUser, orgName }) {
 
-  const canManage = orgRole==="owner"||orgRole==="director"||orgRole==="manager";
+  const canManage = orgRole==="owner"||orgRole==="director"||orgRole==="manager"||userRole==="superAdmin"||userRole==="admin";
   if (!canManage) return (
     <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"80px 20px",textAlign:"center"}}>
       <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke={T.textMuted} strokeWidth="1.5" strokeLinecap="round" style={{marginBottom:16}}><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
