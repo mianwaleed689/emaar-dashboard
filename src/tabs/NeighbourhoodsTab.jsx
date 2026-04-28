@@ -1,7 +1,7 @@
 /* eslint-disable */
 /*
-  DXB ANALYTICS â NEIGHBOURHOODS TAB
-  Session 14 â World Class
+  DXB ANALYTICS  NEIGHBOURHOODS TAB
+  Session 14  World Class
   Data source: projects collection (11 verified Emaar communities)
   Real yields, distances, metro, amenities
 */
@@ -10,16 +10,16 @@ import React, { useState, useMemo } from "react";
 import { T } from "../data";
 import { scoreColor, scoreLabel } from "../utils/scoring";
 
-const fmt  = n => n!=null ? n : "â";
-const fmtY = n => n ? parseFloat(n).toFixed(1)+"%" : "â";
-const fmtP = n => n ? "AED "+Math.round(n).toLocaleString() : "â";
-const fmtD = n => n!=null ? parseFloat(n).toFixed(1)+" km" : "â";
-const fmtSC= n => n ? "AED "+n+"/sqft/yr" : "â";
+const fmt  = n => n!=null ? n : "";
+const fmtY = n => n ? parseFloat(n).toFixed(1)+"%" : "";
+const fmtP = n => n ? "AED "+Math.round(n).toLocaleString() : "";
+const fmtD = n => n!=null ? parseFloat(n).toFixed(1)+" km" : "";
+const fmtSC= n => n ? "AED "+n+"/sqft/yr" : "";
 
 const RISK_COLOR = { Low:"#10B981", "Low-Medium":"#84CC16", Medium:"#F59E0B", "Medium-High":"#FB923C", High:"#EF4444", Unknown:"#94A3B8" };
 
 const ScoreBadge = ({score,size="sm"}) => {
-  if(!score) return <span style={{fontSize:11,color:"#94A3B8"}}>â</span>;
+  if(!score) return <span style={{fontSize:11,color:"#94A3B8"}}></span>;
   const color = scoreColor(score);
   const dim = size==="lg"?48:34;
   return (
@@ -41,7 +41,7 @@ const MetroBadge = ({dist,name}) => {
   return <Chip label={label} color={color}/>;
 };
 
-// ââ Community Card ââââââââââââââââââââââââââââââââââââââââââââ
+//  Community Card 
 const CommunityCard = ({n, selected, onSelect, onCompare, isCompared}) => {
   const isDLD = n.tier === "dld-registry";
   const riskColor = RISK_COLOR[n.supplyRisk||"Unknown"];
@@ -62,9 +62,9 @@ const CommunityCard = ({n, selected, onSelect, onCompare, isCompared}) => {
         <div style={{flex:1,minWidth:0}}>
           <div style={{fontSize:14,fontWeight:700,color:T.white,marginBottom:4,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{n.community}</div>
           <div style={{display:"flex",gap:5,flexWrap:"wrap"}}>
-            <Chip label="â Verified" color="#10B981"/>
+            <Chip label=" Verified" color="#10B981"/>
             <MetroBadge dist={n.distMetro} name={n.nearestMetro}/>
-            {n.hasBeach&&<Chip label="ð Waterfront" color="#06B6D4"/>}
+            {n.hasBeach&&<Chip label=" Waterfront" color="#06B6D4"/>}
             {n.goldenVisa&&<Chip label="Golden Visa" color={T.gold}/>}
           </div>
         </div>
@@ -88,11 +88,11 @@ const CommunityCard = ({n, selected, onSelect, onCompare, isCompared}) => {
 
       {/* Distances */}
       <div style={{display:"flex",gap:10,marginBottom:12,flexWrap:"wrap"}}>
-        {n.distMetro&&<div style={{fontSize:10,color:"#94A3B8"}}><span style={{color:"#10B981"}}>ð</span> {fmtD(n.distMetro)}</div>}
-        {n.distMall&&<div style={{fontSize:10,color:"#94A3B8"}}><span style={{color:T.gold}}>ð</span> {fmtD(n.distMall)}</div>}
-        {n.distBeach!=null&&parseFloat(n.distBeach)<50&&<div style={{fontSize:10,color:"#94A3B8"}}><span style={{color:"#06B6D4"}}>ð</span> {fmtD(n.distBeach)}</div>}
-        {n.distSchool&&<div style={{fontSize:10,color:"#94A3B8"}}><span style={{color:"#8B5CF6"}}>ð«</span> {fmtD(n.distSchool)}</div>}
-        {n.distAirport&&<div style={{fontSize:10,color:"#94A3B8"}}><span style={{color:"#F59E0B"}}>âï¸</span> {fmtD(n.distAirport)}</div>}
+        {n.distMetro&&<div style={{fontSize:10,color:"#94A3B8"}}><span style={{color:"#10B981"}}></span> {fmtD(n.distMetro)}</div>}
+        {n.distMall&&<div style={{fontSize:10,color:"#94A3B8"}}><span style={{color:T.gold}}></span> {fmtD(n.distMall)}</div>}
+        {n.distBeach!=null&&parseFloat(n.distBeach)<50&&<div style={{fontSize:10,color:"#94A3B8"}}><span style={{color:"#06B6D4"}}></span> {fmtD(n.distBeach)}</div>}
+        {n.distSchool&&<div style={{fontSize:10,color:"#94A3B8"}}><span style={{color:"#8B5CF6"}}></span> {fmtD(n.distSchool)}</div>}
+        {n.distAirport&&<div style={{fontSize:10,color:"#94A3B8"}}><span style={{color:"#F59E0B"}}></span> {fmtD(n.distAirport)}</div>}
       </div>
 
       {/* Supply risk + projects */}
@@ -105,7 +105,7 @@ const CommunityCard = ({n, selected, onSelect, onCompare, isCompared}) => {
           <span style={{fontSize:10,color:"#64748B"}}>{n.totalProjects} projects</span>
           <button type="button" onClick={e=>{e.stopPropagation();onCompare(n.community);}}
             style={{padding:"3px 10px",borderRadius:8,border:"1px solid "+(isCompared?T.gold:T.border),background:isCompared?"rgba(212,168,67,0.15)":"transparent",color:isCompared?T.gold:"#94A3B8",fontSize:10,fontWeight:600,cursor:"pointer",fontFamily:"'Outfit',sans-serif"}}>
-            {isCompared?"â Added":"Compare"}
+            {isCompared?" Added":"Compare"}
           </button>
         </div>
       </div>
@@ -113,7 +113,7 @@ const CommunityCard = ({n, selected, onSelect, onCompare, isCompared}) => {
   );
 };
 
-// ââ Detail Drawer ââââââââââââââââââââââââââââââââââââââââââââââ
+//  Detail Drawer 
 const DetailDrawer = ({n, onClose, handleTabChange}) => {
   const [drawerTab, setDrawerTab] = useState("overview");
   if(!n) return null;
@@ -147,16 +147,16 @@ const DetailDrawer = ({n, onClose, handleTabChange}) => {
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
             <div>
               <div style={{display:"flex",gap:6,alignItems:"center",marginBottom:6}}>
-                <Chip label="â Verified" color="#10B981"/>
+                <Chip label=" Verified" color="#10B981"/>
                 {n.goldenVisa&&<Chip label="Golden Visa" color={T.gold}/>}
-                {n.hasBeach&&<Chip label="ð Waterfront" color="#06B6D4"/>}
+                {n.hasBeach&&<Chip label=" Waterfront" color="#06B6D4"/>}
               </div>
               <div style={{fontSize:20,fontWeight:700,color:T.white,fontFamily:"'Fraunces',serif"}}>{n.community}</div>
-              <div style={{fontSize:12,color:"#94A3B8",marginTop:3}}>{n.totalProjects} Emaar projects Â· {n.nearestMetro||"Dubai"}</div>
+              <div style={{fontSize:12,color:"#94A3B8",marginTop:3}}>{n.totalProjects} Emaar projects  {n.nearestMetro||"Dubai"}</div>
             </div>
             <div style={{display:"flex",alignItems:"center",gap:12}}>
               <ScoreBadge score={n.investmentScore} size="lg"/>
-              <button type="button" onClick={onClose} style={{background:"rgba(255,255,255,0.06)",border:"1px solid "+T.border,borderRadius:8,color:"#94A3B8",width:32,height:32,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",fontSize:18}}>Ã</button>
+              <button type="button" onClick={onClose} style={{background:"rgba(255,255,255,0.06)",border:"1px solid "+T.border,borderRadius:8,color:"#94A3B8",width:32,height:32,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",fontSize:18}}></button>
             </div>
           </div>
           {/* Drawer tabs */}
@@ -178,11 +178,11 @@ const DetailDrawer = ({n, onClose, handleTabChange}) => {
                 <Stat label="Gross Yield"   value={fmtY(n.grossYield)}  color={yieldColor}/>
                 <Stat label="Net Yield"     value={fmtY(n.netYield)}    color="#CBD5E1"/>
                 <Stat label="Service Charge" value={fmtSC(n.serviceCharge)} color="#94A3B8" hint="Per sqft per year"/>
-                <Stat label="Supply Risk"   value={n.supplyRisk||"â"}   color={riskColor}/>
+                <Stat label="Supply Risk"   value={n.supplyRisk||""}   color={riskColor}/>
               </div>
               {n.nearestMetro&&(
                 <div style={{padding:"12px 14px",background:"rgba(16,185,129,0.06)",border:"1px solid rgba(16,185,129,0.2)",borderRadius:10,marginBottom:12,display:"flex",alignItems:"center",gap:10}}>
-                  <span style={{fontSize:20}}>ð</span>
+                  <span style={{fontSize:20}}></span>
                   <div>
                     <div style={{fontSize:12,fontWeight:600,color:T.white}}>{n.nearestMetro}</div>
                     <div style={{fontSize:11,color:"#94A3B8"}}>{fmtD(n.distMetro)} away</div>
@@ -190,14 +190,14 @@ const DetailDrawer = ({n, onClose, handleTabChange}) => {
                 </div>
               )}
               <div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:16}}>
-                {n.hasBeach&&<Chip label="ð Waterfront" color="#06B6D4"/>}
-                {n.hasSchool&&<Chip label="ð« School nearby" color="#8B5CF6"/>}
-                {n.hasHospital&&<Chip label="ð¥ Hospital nearby" color="#EF4444"/>}
-                {n.hasMall&&<Chip label="ð Mall nearby" color={T.gold}/>}
-                {n.hasMetro&&<Chip label="ð Metro nearby" color="#10B981"/>}
-                {n.hasVilla&&<Chip label="ð¡ Villas" color="#F59E0B"/>}
-                {n.hasApt&&<Chip label="ð¢ Apartments" color="#3B82F6"/>}
-                {n.goldenVisa&&<Chip label="ð Golden Visa eligible" color={T.gold}/>}
+                {n.hasBeach&&<Chip label=" Waterfront" color="#06B6D4"/>}
+                {n.hasSchool&&<Chip label=" School nearby" color="#8B5CF6"/>}
+                {n.hasHospital&&<Chip label=" Hospital nearby" color="#EF4444"/>}
+                {n.hasMall&&<Chip label=" Mall nearby" color={T.gold}/>}
+                {n.hasMetro&&<Chip label=" Metro nearby" color="#10B981"/>}
+                {n.hasVilla&&<Chip label=" Villas" color="#F59E0B"/>}
+                {n.hasApt&&<Chip label=" Apartments" color="#3B82F6"/>}
+                {n.goldenVisa&&<Chip label=" Golden Visa eligible" color={T.gold}/>}
               </div>
               <div style={{display:"flex",gap:8}}>
                 <button type="button" onClick={()=>handleTabChange?.("Yields")}
@@ -258,18 +258,18 @@ const DetailDrawer = ({n, onClose, handleTabChange}) => {
               )}
               <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
                 {[
-                  {icon:"ð",label:"Metro",       value:fmtD(n.distMetro),    color:"#10B981"},
-                  {icon:"ð",label:"Mall",        value:fmtD(n.distMall),     color:T.gold},
-                  {icon:"ð",label:"Beach",       value:fmtD(n.distBeach),    color:"#06B6D4"},
-                  {icon:"ð«",label:"School",      value:fmtD(n.distSchool),   color:"#8B5CF6"},
-                  {icon:"ð¥",label:"Hospital",    value:fmtD(n.distHospital), color:"#EF4444"},
-                  {icon:"âï¸",label:"Airport",     value:fmtD(n.distAirport),  color:"#F59E0B"},
+                  {icon:"",label:"Metro",       value:fmtD(n.distMetro),    color:"#10B981"},
+                  {icon:"",label:"Mall",        value:fmtD(n.distMall),     color:T.gold},
+                  {icon:"",label:"Beach",       value:fmtD(n.distBeach),    color:"#06B6D4"},
+                  {icon:"",label:"School",      value:fmtD(n.distSchool),   color:"#8B5CF6"},
+                  {icon:"",label:"Hospital",    value:fmtD(n.distHospital), color:"#EF4444"},
+                  {icon:"",label:"Airport",     value:fmtD(n.distAirport),  color:"#F59E0B"},
                 ].map((r,i)=>(
                   <div key={i} style={{background:"rgba(255,255,255,0.03)",borderRadius:10,padding:"12px 14px",display:"flex",alignItems:"center",gap:10}}>
                     <span style={{fontSize:22}}>{r.icon}</span>
                     <div>
                       <div style={{fontSize:9,fontWeight:700,color:"#64748B",textTransform:"uppercase",letterSpacing:0.7}}>{r.label}</div>
-                      <div style={{fontSize:15,fontWeight:700,color:r.value==="â"?"#64748B":r.color,fontFamily:"'Fraunces',serif"}}>{r.value}</div>
+                      <div style={{fontSize:15,fontWeight:700,color:r.value===""?"#64748B":r.color,fontFamily:"'Fraunces',serif"}}>{r.value}</div>
                     </div>
                   </div>
                 ))}
@@ -290,7 +290,7 @@ const DetailDrawer = ({n, onClose, handleTabChange}) => {
               </div>
               <button type="button" onClick={()=>handleTabChange?.("Projects")}
                 style={{width:"100%",padding:"10px",borderRadius:8,border:"1px solid "+T.border,background:"rgba(212,168,67,0.06)",color:T.gold,fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"'Outfit',sans-serif"}}>
-                Browse {n.community} Projects â
+                Browse {n.community} Projects 
               </button>
             </div>
           )}
@@ -300,22 +300,22 @@ const DetailDrawer = ({n, onClose, handleTabChange}) => {
   );
 };
 
-// ââ Compare Panel ââââââââââââââââââââââââââââââââââââââââââââââ
+//  Compare Panel 
 const ComparePanel = ({communities, data, onRemove}) => {
   if(communities.length < 2) return null;
   const items = communities.map(c => data.find(n=>n.community===c)).filter(Boolean);
   if(items.length < 2) return null;
   const rows = [
-    {label:"Investment Score", key:"investmentScore",  fmt:v=>v||"â"},
+    {label:"Investment Score", key:"investmentScore",  fmt:v=>v||""},
     {label:"Gross Yield",      key:"grossYield",       fmt:fmtY},
     {label:"Net Yield",        key:"netYield",         fmt:fmtY},
     {label:"Avg PPSF",         key:"avgPpsf",          fmt:fmtP},
-    {label:"Service Charge",   key:"serviceCharge",    fmt:n=>n?"AED "+n+"/sqft":"â"},
+    {label:"Service Charge",   key:"serviceCharge",    fmt:n=>n?"AED "+n+"/sqft":""},
     {label:"Metro Distance",   key:"distMetro",        fmt:fmtD},
     {label:"Beach Distance",   key:"distBeach",        fmt:fmtD},
-    {label:"Supply Risk",      key:"supplyRisk",       fmt:v=>v||"â"},
-    {label:"Total Projects",   key:"totalProjects",    fmt:v=>v||"â"},
-    {label:"Golden Visa",      key:"goldenVisa",       fmt:v=>v?"â Yes":"â"},
+    {label:"Supply Risk",      key:"supplyRisk",       fmt:v=>v||""},
+    {label:"Total Projects",   key:"totalProjects",    fmt:v=>v||""},
+    {label:"Golden Visa",      key:"goldenVisa",       fmt:v=>v?" Yes":""},
   ];
 
   return (
@@ -326,7 +326,7 @@ const ComparePanel = ({communities, data, onRemove}) => {
           {items.map(n=>(
             <span key={n.community} style={{fontSize:11,padding:"3px 10px",borderRadius:20,background:"rgba(212,168,67,0.15)",color:T.gold,display:"flex",alignItems:"center",gap:6}}>
               {n.community}
-              <button type="button" onClick={()=>onRemove(n.community)} style={{background:"none",border:"none",color:"#94A3B8",cursor:"pointer",fontSize:14,lineHeight:1,padding:0}}>Ã</button>
+              <button type="button" onClick={()=>onRemove(n.community)} style={{background:"none",border:"none",color:"#94A3B8",cursor:"pointer",fontSize:14,lineHeight:1,padding:0}}></button>
             </span>
           ))}
         </div>
@@ -357,9 +357,9 @@ const ComparePanel = ({communities, data, onRemove}) => {
   );
 };
 
-// âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// 
 // MAIN COMPONENT
-// âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// 
 export default function NeighbourhoodsTab({
   liveNeighbourhoods=[], handleTabChange,
   selectedNbhd, setSelectedNbhd,
@@ -398,19 +398,19 @@ export default function NeighbourhoodsTab({
   return (
     <div style={{paddingBottom:60}}>
 
-      {/* ââ HEADER ââââââââââââââââââââââââââââââââââââââââââââââ */}
+      {/*  HEADER  */}
       <div style={{marginBottom:20}}>
         <h2 style={{margin:0,fontSize:20,fontWeight:900,color:T.white,fontFamily:"'Fraunces',serif"}}>Neighbourhoods</h2>
-        <p style={{margin:"4px 0 0",fontSize:12,color:"#94A3B8"}}>{liveNeighbourhoods.length} verified Emaar communities Â· Real yields, distances, investment scores</p>
+        <p style={{margin:"4px 0 0",fontSize:12,color:"#94A3B8"}}>{liveNeighbourhoods.length} verified Emaar communities  Real yields, distances, investment scores</p>
       </div>
 
-      {/* ââ HIGHLIGHT CARDS ââââââââââââââââââââââââââââââââââââââ */}
+      {/*  HIGHLIGHT CARDS  */}
       {liveNeighbourhoods.length>0&&(
         <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:12,marginBottom:20}}>
           {[
-            {label:"Highest Yield",   icon:"ð", comm:topYield,  value:topYield?fmtY(topYield.grossYield):"â", color:"#10B981"},
-            {label:"Top Rated",       icon:"â­", comm:topScore,  value:topScore?"Score "+topScore.investmentScore:"â", color:T.gold},
-            {label:"Most Projects",   icon:"ð", comm:mostProj,  value:mostProj?mostProj.totalProjects+" projects":"â", color:"#3B82F6"},
+            {label:"Highest Yield",   icon:"", comm:topYield,  value:topYield?fmtY(topYield.grossYield):"", color:"#10B981"},
+            {label:"Top Rated",       icon:"", comm:topScore,  value:topScore?"Score "+topScore.investmentScore:"", color:T.gold},
+            {label:"Most Projects",   icon:"", comm:mostProj,  value:mostProj?mostProj.totalProjects+" projects":"", color:"#3B82F6"},
           ].map((h,i)=>(
             <div key={i} onClick={()=>h.comm&&setSelectedNbhd(h.comm)}
               style={{background:"rgba(255,255,255,0.02)",border:"1px solid "+T.border,borderRadius:12,padding:"14px 16px",cursor:h.comm?"pointer":"default",position:"relative",overflow:"hidden"}}
@@ -420,23 +420,23 @@ export default function NeighbourhoodsTab({
               <div style={{position:"absolute",top:0,left:0,right:0,height:2,background:h.color,opacity:0.8}}/>
               <div style={{fontSize:9,fontWeight:700,color:"#64748B",textTransform:"uppercase",letterSpacing:0.8,marginBottom:4}}>{h.icon} {h.label}</div>
               <div style={{fontSize:16,fontWeight:900,color:h.color,fontFamily:"'Fraunces',serif",marginBottom:2}}>{h.value}</div>
-              <div style={{fontSize:11,color:"#94A3B8",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{h.comm?.community||"â"}</div>
+              <div style={{fontSize:11,color:"#94A3B8",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{h.comm?.community||""}</div>
             </div>
           ))}
         </div>
       )}
 
-      {/* ââ TOOLBAR ââââââââââââââââââââââââââââââââââââââââââââââ */}
+      {/*  TOOLBAR  */}
       <div style={{display:"flex",gap:10,alignItems:"center",marginBottom:16,flexWrap:"wrap"}}>
         <div style={{flex:"1 1 240px",display:"flex",alignItems:"center",gap:8,padding:"7px 12px",background:"rgba(255,255,255,0.03)",border:"1px solid "+(search?T.gold:T.border),borderRadius:8}}>
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" strokeWidth="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
           <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search community..."
             style={{flex:1,background:"none",border:"none",outline:"none",color:T.white,fontSize:12,fontFamily:"'Outfit',sans-serif"}}/>
-          {search&&<button type="button" onClick={()=>setSearch("")} style={{background:"none",border:"none",color:"#94A3B8",cursor:"pointer",fontSize:14}}>Ã</button>}
+          {search&&<button type="button" onClick={()=>setSearch("")} style={{background:"none",border:"none",color:"#94A3B8",cursor:"pointer",fontSize:14}}></button>}
         </div>
         <select value={tierFilter} onChange={e=>setTierFilter(e.target.value)} style={selStyle}>
           <option value="all">All Communities</option>
-          <option value="verified">✓ Verified (Emaar)</option>
+          <option value="verified"> Verified (Emaar)</option>
           <option value="dld-registry">DLD Registry</option>
         </select>
         <select value={sortBy} onChange={e=>setSortBy(e.target.value)} style={selStyle}>
@@ -447,7 +447,7 @@ export default function NeighbourhoodsTab({
           <option value="name">Sort: A-Z</option>
         </select>
         <div style={{display:"flex",gap:2,background:"rgba(255,255,255,0.03)",border:"1px solid "+T.border,borderRadius:7,padding:2}}>
-          {[{k:"grid",icon:"â"},{k:"table",icon:"â"}].map(v=>(
+          {[{k:"grid",icon:""},{k:"table",icon:""}].map(v=>(
             <button key={v.k} type="button" onClick={()=>setView(v.k)}
               style={{padding:"5px 10px",borderRadius:5,border:view===v.k?"1px solid "+T.gold:"1px solid transparent",background:view===v.k?"rgba(212,168,67,0.15)":"transparent",color:view===v.k?T.gold:"#94A3B8",cursor:"pointer",fontSize:13}}>
               {v.icon}
@@ -457,15 +457,15 @@ export default function NeighbourhoodsTab({
         <span style={{fontSize:11,color:"#94A3B8"}}>{filtered.length} communities</span>
       </div>
 
-      {/* ââ COMPARE PANEL ââââââââââââââââââââââââââââââââââââââââ */}
+      {/*  COMPARE PANEL  */}
       {compare.length>=2&&<ComparePanel communities={compare} data={liveNeighbourhoods} onRemove={c=>setCompare(p=>p.filter(x=>x!==c))}/>}
       {compare.length===1&&(
         <div style={{padding:"10px 16px",background:"rgba(212,168,67,0.06)",border:"1px solid rgba(212,168,67,0.2)",borderRadius:10,marginBottom:12,fontSize:11,color:T.gold}}>
-          â {compare[0]} selected Â· Pick one more community to compare
+           {compare[0]} selected  Pick one more community to compare
         </div>
       )}
 
-      {/* ââ EMPTY STATE ââââââââââââââââââââââââââââââââââââââââââ */}
+      {/*  EMPTY STATE  */}
       {liveNeighbourhoods.length===0&&(
         <div style={{padding:"60px 20px",textAlign:"center"}}>
           <div style={{fontSize:40,marginBottom:12}}>[ ]</div>
@@ -474,7 +474,7 @@ export default function NeighbourhoodsTab({
         </div>
       )}
 
-      {/* ââ GRID VIEW ââââââââââââââââââââââââââââââââââââââââââââ */}
+      {/*  GRID VIEW  */}
       {view==="grid"&&filtered.length>0&&(
         <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(300px,1fr))",gap:14}}>
           {filtered.map((n,i)=>(
@@ -488,7 +488,7 @@ export default function NeighbourhoodsTab({
         </div>
       )}
 
-      {/* ââ TABLE VIEW âââââââââââââââââââââââââââââââââââââââââââ */}
+      {/*  TABLE VIEW  */}
       {view==="table"&&filtered.length>0&&(
         <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid "+T.border,borderRadius:14,overflow:"hidden"}}>
           <div style={{overflowX:"auto"}}>
@@ -511,10 +511,10 @@ export default function NeighbourhoodsTab({
                 <div style={{fontSize:12,fontWeight:700,color:parseFloat(n.grossYield||0)>=7?"#10B981":parseFloat(n.grossYield||0)>=6?"#84CC16":T.gold,textAlign:"center"}}>{fmtY(n.grossYield)}</div>
                 <div style={{fontSize:12,color:"#CBD5E1",textAlign:"center"}}>{fmtY(n.netYield)}</div>
                 <div style={{fontSize:12,color:T.gold,textAlign:"center"}}>{fmtP(n.avgPpsf)}</div>
-                <div style={{fontSize:11,color:"#94A3B8",textAlign:"center"}}>{n.serviceCharge?"AED "+n.serviceCharge:"â"}</div>
+                <div style={{fontSize:11,color:"#94A3B8",textAlign:"center"}}>{n.serviceCharge?"AED "+n.serviceCharge:""}</div>
                 <div style={{fontSize:11,color:"#94A3B8",textAlign:"center"}}>{fmtD(n.distMetro)}</div>
                 <div style={{textAlign:"center"}}>
-                  <span style={{fontSize:10,padding:"2px 7px",borderRadius:6,background:RISK_COLOR[n.supplyRisk||"Unknown"]+"18",color:RISK_COLOR[n.supplyRisk||"Unknown"],fontWeight:600}}>{n.supplyRisk||"â"}</span>
+                  <span style={{fontSize:10,padding:"2px 7px",borderRadius:6,background:RISK_COLOR[n.supplyRisk||"Unknown"]+"18",color:RISK_COLOR[n.supplyRisk||"Unknown"],fontWeight:600}}>{n.supplyRisk||""}</span>
                 </div>
               </div>
             ))}
@@ -522,12 +522,12 @@ export default function NeighbourhoodsTab({
         </div>
       )}
 
-      {/* ââ DETAIL DRAWER ââââââââââââââââââââââââââââââââââââââââ */}
+      {/*  DETAIL DRAWER  */}
       {selectedNbhd&&(
         <DetailDrawer n={selectedNbhd} onClose={()=>setSelectedNbhd(null)} handleTabChange={handleTabChange}/>
       )}
 
-      {/* ââ SOURCES ââââââââââââââââââââââââââââââââââââââââââââââ */}
+      {/*  SOURCES  */}
       <div style={{marginTop:24,paddingTop:12,borderTop:"1px solid "+T.border,display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
         <span style={{fontSize:10,color:"#64748B"}}>Sources:</span>
         {["Emaar Projects Database","Dubai Land Department","RERA Service Charges","RTA Metro Data"].map((s,i)=>(
