@@ -42,6 +42,7 @@ const ScoreBadge = ({score,size="sm"}) => {
 //  COMMUNITY CARD 
 const CommunityCard = ({n,selected,onSelect,onCompare,isCompared}) => {
   const isDLD    = n.tier==="dld-registry";
+  const isArea   = n.tier==="area-data";
   const riskColor= RISK_COLOR[n.supplyRisk||"Unknown"];
   const grossY   = parseFloat(n.grossYield||0);
   const yColor   = grossY>=7?"#10B981":grossY>=6?"#84CC16":grossY>=5?T.gold:"#94A3B8";
@@ -71,7 +72,7 @@ const CommunityCard = ({n,selected,onSelect,onCompare,isCompared}) => {
 
       {/* Metrics */}
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6,marginBottom:10}}>
-        {(isDLD ? [
+        {(n.tier==="dld-registry" ? [
           {label:"Median PPSF",  value:fmtP(n.avgPpsf),         color:T.gold},
           {label:"Transactions", value:n.totalTransactions||"", color:"#94A3B8"},
         ] : [
@@ -472,7 +473,7 @@ export default function NeighbourhoodsTab({liveNeighbourhoods=[],handleTabChange
       <div style={{marginBottom:16}}>
         <h2 style={{margin:0,fontSize:20,fontWeight:900,color:T.white,fontFamily:"'Fraunces',serif"}}>Neighbourhoods</h2>
         <p style={{margin:"4px 0 0",fontSize:12,color:"#94A3B8"}}>
-          {verified.length} verified  {liveNeighbourhoods.filter(n=>n.tier==="dld-registry").length} DLD registry  {liveNeighbourhoods.length} total  Google Maps verified distances
+          {liveNeighbourhoods.filter(n=>n.tier==="verified").length} verified · {liveNeighbourhoods.filter(n=>n.tier==="area-data").length} area data · {liveNeighbourhoods.filter(n=>n.tier==="dld-registry").length} DLD only · {liveNeighbourhoods.length} total
         </p>
       </div>
 
