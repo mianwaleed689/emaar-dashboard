@@ -1,0 +1,266 @@
+[
+  {
+    "slug": "yas-island",
+    "lat": 24.4882,
+    "lng": 54.6026,
+    "sourceFile": "aldar.communities.js"
+  },
+  {
+    "slug": "saadiyat-island",
+    "lat": 24.542,
+    "lng": 54.4336,
+    "sourceFile": "aldar.communities.js"
+  },
+  {
+    "slug": "al-reem-island",
+    "lat": 24.4966,
+    "lng": 54.3908,
+    "sourceFile": "aldar.communities.js"
+  },
+  {
+    "slug": "haven-dubai",
+    "lat": 25.07,
+    "lng": 55.4,
+    "sourceFile": "aldar.communities.js"
+  },
+  {
+    "slug": "fahid-island",
+    "lat": 24.42,
+    "lng": 54.4,
+    "sourceFile": "aldar.communities.js"
+  },
+  {
+    "slug": "binghatti-business-bay",
+    "lat": 25.187,
+    "lng": 55.256,
+    "sourceFile": "binghatti.communities.js"
+  },
+  {
+    "slug": "binghatti-jvc",
+    "lat": 25.0617,
+    "lng": 55.2088,
+    "sourceFile": "binghatti.communities.js"
+  },
+  {
+    "slug": "damac-hills",
+    "lat": 25.0272,
+    "lng": 55.2696,
+    "sourceFile": "damac.communities.js"
+  },
+  {
+    "slug": "damac-hills-2",
+    "lat": 24.971,
+    "lng": 55.322,
+    "sourceFile": "damac.communities.js"
+  },
+  {
+    "slug": "damac-lagoons",
+    "lat": 25.01,
+    "lng": 55.24,
+    "sourceFile": "damac.communities.js"
+  },
+  {
+    "slug": "damac-islands",
+    "lat": 24.995,
+    "lng": 55.26,
+    "sourceFile": "damac.communities.js"
+  },
+  {
+    "slug": "damac-riverside",
+    "lat": 24.985,
+    "lng": 55.095,
+    "sourceFile": "damac.communities.js"
+  },
+  {
+    "slug": "damac-sun-city",
+    "lat": 25.025,
+    "lng": 55.31,
+    "sourceFile": "damac.communities.js"
+  },
+  {
+    "slug": "dubai-hills-estate",
+    "lat": 25.1124,
+    "lng": 55.24,
+    "sourceFile": "emaar.communities.js"
+  },
+  {
+    "slug": "dubai-creek-harbour",
+    "lat": 25.1979,
+    "lng": 55.3529,
+    "sourceFile": "emaar.communities.js"
+  },
+  {
+    "slug": "emaar-beachfront",
+    "lat": 25.087,
+    "lng": 55.139,
+    "sourceFile": "emaar.communities.js"
+  },
+  {
+    "slug": "emaar-south",
+    "lat": 24.9964,
+    "lng": 55.1649,
+    "sourceFile": "emaar.communities.js"
+  },
+  {
+    "slug": "the-valley",
+    "lat": 25.0657,
+    "lng": 55.4459,
+    "sourceFile": "emaar.communities.js"
+  },
+  {
+    "slug": "grand-polo-club",
+    "lat": 24.9731,
+    "lng": 55.1089,
+    "sourceFile": "emaar.communities.js"
+  },
+  {
+    "slug": "rashid-yachts-marina",
+    "lat": 25.2436,
+    "lng": 55.28,
+    "sourceFile": "emaar.communities.js"
+  },
+  {
+    "slug": "the-oasis",
+    "lat": 24.98,
+    "lng": 55.12,
+    "sourceFile": "emaar.communities.js"
+  },
+  {
+    "slug": "the-heights-cw",
+    "lat": 24.965,
+    "lng": 55.115,
+    "sourceFile": "emaar.communities.js"
+  },
+  {
+    "slug": "expo-living",
+    "lat": 24.9674,
+    "lng": 55.1507,
+    "sourceFile": "emaar.communities.js"
+  },
+  {
+    "slug": "downtown-dubai",
+    "lat": 25.1972,
+    "lng": 55.2744,
+    "sourceFile": "emaar.communities.js"
+  },
+  {
+    "slug": "business-bay",
+    "lat": 25.1855,
+    "lng": 55.2624,
+    "sourceFile": "emaar.communities.js"
+  },
+  {
+    "slug": "arabian-ranches",
+    "lat": 25.0548,
+    "lng": 55.2694,
+    "sourceFile": "emaar.communities.js"
+  },
+  {
+    "slug": "city-walk",
+    "lat": 25.2003,
+    "lng": 55.2456,
+    "sourceFile": "meraas.communities.js"
+  },
+  {
+    "slug": "bluewaters-island",
+    "lat": 25.077,
+    "lng": 55.121,
+    "sourceFile": "meraas.communities.js"
+  },
+  {
+    "slug": "port-de-la-mer",
+    "lat": 25.2278,
+    "lng": 55.2621,
+    "sourceFile": "meraas.communities.js"
+  },
+  {
+    "slug": "madinat-jumeirah-living",
+    "lat": 25.1419,
+    "lng": 55.1855,
+    "sourceFile": "meraas.communities.js"
+  },
+  {
+    "slug": "jumeira-bay",
+    "lat": 25.22,
+    "lng": 55.235,
+    "sourceFile": "meraas.communities.js"
+  },
+  {
+    "slug": "the-acres",
+    "lat": 25.04,
+    "lng": 55.36,
+    "sourceFile": "meraas.communities.js"
+  },
+  {
+    "slug": "dubai-design-district",
+    "lat": 25.1862,
+    "lng": 55.253,
+    "sourceFile": "meraas.communities.js"
+  },
+  {
+    "slug": "palm-jumeirah",
+    "lat": 25.1124,
+    "lng": 55.139,
+    "sourceFile": "nakheel.communities.js"
+  },
+  {
+    "slug": "palm-jebel-ali",
+    "lat": 24.9748,
+    "lng": 55.0274,
+    "sourceFile": "nakheel.communities.js"
+  },
+  {
+    "slug": "dubai-islands",
+    "lat": 25.3056,
+    "lng": 55.3408,
+    "sourceFile": "nakheel.communities.js"
+  },
+  {
+    "slug": "jumeirah-village-circle",
+    "lat": 25.0617,
+    "lng": 55.2088,
+    "sourceFile": "nakheel.communities.js"
+  },
+  {
+    "slug": "al-furjan",
+    "lat": 25.0287,
+    "lng": 55.1288,
+    "sourceFile": "nakheel.communities.js"
+  },
+  {
+    "slug": "sobha-hartland",
+    "lat": 25.1889,
+    "lng": 55.3394,
+    "sourceFile": "sobha.communities.js"
+  },
+  {
+    "slug": "sobha-hartland-2",
+    "lat": 25.182,
+    "lng": 55.345,
+    "sourceFile": "sobha.communities.js"
+  },
+  {
+    "slug": "sobha-seahaven",
+    "lat": 25.098,
+    "lng": 55.155,
+    "sourceFile": "sobha.communities.js"
+  },
+  {
+    "slug": "sobha-one",
+    "lat": 25.176,
+    "lng": 55.353,
+    "sourceFile": "sobha.communities.js"
+  },
+  {
+    "slug": "sobha-elwood",
+    "lat": 25.062,
+    "lng": 55.38,
+    "sourceFile": "sobha.communities.js"
+  },
+  {
+    "slug": "sobha-siniya-island",
+    "lat": 25.5697,
+    "lng": 55.5672,
+    "sourceFile": "sobha.communities.js"
+  }
+]

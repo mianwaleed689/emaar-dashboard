@@ -1,0 +1,58 @@
+[
+  {
+    "docId": "arabian-ranches",
+    "docName": "Arabian Ranches",
+    "lat": 25.0548,
+    "lng": 55.2694,
+    "sourceSlug": "arabian-ranches",
+    "sourceFile": "emaar.communities.js"
+  },
+  {
+    "docId": "bluewaters",
+    "docName": "Bluewaters Island",
+    "lat": 25.077,
+    "lng": 55.121,
+    "sourceSlug": "bluewaters-island",
+    "sourceFile": "meraas.communities.js"
+  },
+  {
+    "docId": "dubai-islands",
+    "docName": "Dubai Islands",
+    "lat": 25.3056,
+    "lng": 55.3408,
+    "sourceSlug": "dubai-islands",
+    "sourceFile": "nakheel.communities.js"
+  },
+  {
+    "docId": "jumeirah-bay",
+    "docName": "Jumeira Bay",
+    "lat": 25.22,
+    "lng": 55.235,
+    "sourceSlug": "jumeira-bay",
+    "sourceFile": "meraas.communities.js"
+  },
+  {
+    "docId": "jumeirah-village-circle",
+    "docName": "Jumeirah Village Circle",
+    "lat": 25.0617,
+    "lng": 55.2088,
+    "sourceSlug": "jumeirah-village-circle",
+    "sourceFile": "nakheel.communities.js"
+  },
+  {
+    "docId": "madinat-jumeirah-living",
+    "docName": "Madinat Jumeirah Living",
+    "lat": 25.1419,
+    "lng": 55.1855,
+    "sourceSlug": "madinat-jumeirah-living",
+    "sourceFile": "meraas.communities.js"
+  },
+  {
+    "docId": "port-de-la-mer",
+    "docName": "Port de La Mer",
+    "lat": 25.2278,
+    "lng": 55.2621,
+    "sourceSlug": "port-de-la-mer",
+    "sourceFile": "meraas.communities.js"
+  }
+]

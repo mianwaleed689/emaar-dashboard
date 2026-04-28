@@ -1,0 +1,5638 @@
+[
+  {
+    "id": "800-villas",
+    "area": "Wadi Al Safa 7",
+    "totalVillas": 1530,
+    "updatedBy": "dld-import-script",
+    "hasCoordinates": false,
+    "coordinates": {
+      "lng": null,
+      "lat": null
+    },
+    "dldSource": "Real_Estate_Projects_2026-04-19.csv",
+    "source": "dld-auto",
+    "type": "Master Community",
+    "activeProjects": 0,
+    "orgId": "dxb-analytics",
+    "completedProjects": 3,
+    "totalUnits": 0,
+    "totalBuildings": 0,
+    "arabicName": "800 فيلا",
+    "createdAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "totalProjects": 3,
+    "createdBy": "dld-import-script",
+    "name": "800 Villas",
+    "updatedAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "_autoPublishedBy": "fix-filter-coverage",
+    "visibility": "published",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z"
+  },
+  {
+    "id": "BB",
+    "usedFallback": true,
+    "locationId": null,
+    "district": "BB",
+    "yields": {},
+    "community": "Business Bay",
+    "rents": {},
+    "_autoPublishedBy": "fix-filter-coverage",
+    "visibility": "published",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z",
+    "updatedAt": "2026-04-25T05:50:42.326Z"
+  },
+  {
+    "id": "DCH",
+    "usedFallback": true,
+    "locationId": null,
+    "district": "DCH",
+    "yields": {},
+    "community": "Dubai Creek Harbour",
+    "rents": {},
+    "_autoPublishedBy": "fix-filter-coverage",
+    "visibility": "published",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z",
+    "updatedAt": "2026-04-25T05:50:40.302Z"
+  },
+  {
+    "id": "DHE",
+    "usedFallback": true,
+    "locationId": null,
+    "district": "DHE",
+    "yields": {},
+    "community": "Dubai Hills Estate",
+    "rents": {},
+    "_autoPublishedBy": "fix-filter-coverage",
+    "visibility": "published",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z",
+    "updatedAt": "2026-04-25T05:50:40.230Z"
+  },
+  {
+    "id": "EBF",
+    "usedFallback": true,
+    "locationId": null,
+    "district": "EBF",
+    "yields": {},
+    "community": "Emaar Beachfront",
+    "rents": {},
+    "_autoPublishedBy": "fix-filter-coverage",
+    "visibility": "published",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z",
+    "updatedAt": "2026-04-25T05:50:40.232Z"
+  },
+  {
+    "id": "EL",
+    "usedFallback": true,
+    "locationId": null,
+    "district": "EL",
+    "yields": {},
+    "community": "Expo Living",
+    "rents": {},
+    "_autoPublishedBy": "fix-filter-coverage",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z",
+    "_hiddenBy": "enforce-dld-only-filters",
+    "visibility": "hidden",
+    "_hiddenAt": "2026-04-20T10:57:05.313Z",
+    "_hiddenReason": "not in DLD",
+    "updatedAt": "2026-04-25T05:50:43.377Z"
+  },
+  {
+    "id": "ES",
+    "usedFallback": true,
+    "locationId": null,
+    "district": "ES",
+    "yields": {},
+    "community": "Emaar South",
+    "rents": {},
+    "_autoPublishedBy": "fix-filter-coverage",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z",
+    "_hiddenBy": "enforce-dld-only-filters",
+    "visibility": "hidden",
+    "_hiddenAt": "2026-04-20T10:57:05.313Z",
+    "_hiddenReason": "not in DLD",
+    "updatedAt": "2026-04-25T05:50:41.316Z"
+  },
+  {
+    "id": "GPC",
+    "usedFallback": true,
+    "locationId": null,
+    "district": "GPC",
+    "yields": {},
+    "community": "Grand Polo Club",
+    "rents": {},
+    "_autoPublishedBy": "fix-filter-coverage",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z",
+    "_hiddenBy": "enforce-dld-only-filters",
+    "visibility": "hidden",
+    "_hiddenAt": "2026-04-20T10:57:05.313Z",
+    "_hiddenReason": "not in DLD",
+    "updatedAt": "2026-04-25T05:50:41.312Z"
+  },
+  {
+    "id": "RYM",
+    "usedFallback": true,
+    "locationId": null,
+    "district": "RYM",
+    "yields": {},
+    "community": "Rashid Yachts & Marina",
+    "rents": {},
+    "_autoPublishedBy": "fix-filter-coverage",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z",
+    "_hiddenBy": "enforce-dld-only-filters",
+    "visibility": "hidden",
+    "_hiddenAt": "2026-04-20T10:57:05.313Z",
+    "_hiddenReason": "not in DLD",
+    "updatedAt": "2026-04-25T05:50:42.329Z"
+  },
+  {
+    "id": "TH",
+    "usedFallback": true,
+    "locationId": null,
+    "district": "TH",
+    "yields": {},
+    "community": "The Heights CW",
+    "rents": {},
+    "_autoPublishedBy": "fix-filter-coverage",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z",
+    "_hiddenBy": "enforce-dld-only-filters",
+    "visibility": "hidden",
+    "_hiddenAt": "2026-04-20T10:57:05.313Z",
+    "_hiddenReason": "not in DLD",
+    "updatedAt": "2026-04-25T05:50:43.492Z"
+  },
+  {
+    "id": "TO",
+    "usedFallback": true,
+    "locationId": null,
+    "district": "TO",
+    "yields": {},
+    "community": "The Oasis",
+    "rents": {},
+    "_autoPublishedBy": "fix-filter-coverage",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z",
+    "_hiddenBy": "enforce-dld-only-filters",
+    "visibility": "hidden",
+    "_hiddenAt": "2026-04-20T10:57:05.313Z",
+    "_hiddenReason": "not in DLD",
+    "updatedAt": "2026-04-25T05:50:42.361Z"
+  },
+  {
+    "id": "TV",
+    "usedFallback": true,
+    "locationId": null,
+    "district": "TV",
+    "yields": {},
+    "community": "The Valley",
+    "rents": {},
+    "_autoPublishedBy": "fix-filter-coverage",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z",
+    "_hiddenBy": "enforce-dld-only-filters",
+    "visibility": "hidden",
+    "_hiddenAt": "2026-04-20T10:57:05.313Z",
+    "_hiddenReason": "not in DLD",
+    "updatedAt": "2026-04-25T05:50:41.311Z"
+  },
+  {
+    "id": "al-barari",
+    "area": "Wadi Al Safa 3",
+    "totalVillas": 0,
+    "updatedBy": "dld-import-script",
+    "hasCoordinates": true,
+    "coordinates": {
+      "lng": 55.3,
+      "lat": 25.09
+    },
+    "dldSource": "Real_Estate_Projects_2026-04-19.csv",
+    "source": "dld-auto",
+    "type": "Master Community",
+    "activeProjects": 0,
+    "orgId": "dxb-analytics",
+    "completedProjects": 2,
+    "totalUnits": 0,
+    "totalBuildings": 0,
+    "arabicName": "البراري",
+    "createdAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "totalProjects": 3,
+    "createdBy": "dld-import-script",
+    "name": "Al Barari",
+    "updatedAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "_autoPublishedBy": "fix-filter-coverage",
+    "visibility": "published",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z"
+  },
+  {
+    "id": "al-barsha-first",
+    "name": "Al Barsha First",
+    "slug": "al-barsha-first",
+    "visibility": "published",
+    "totalProjects": 1,
+    "source": "auto-created-from-dld",
+    "_autoCreatedAt": "2026-04-20T10:54:11.694Z",
+    "_autoCreatedBy": "fix-filter-coverage"
+  },
+  {
+    "id": "al-barsha-south-fifth",
+    "name": "Al Barsha South Fifth",
+    "slug": "al-barsha-south-fifth",
+    "visibility": "published",
+    "totalProjects": 4,
+    "source": "auto-created-from-dld",
+    "_autoCreatedAt": "2026-04-20T10:54:11.694Z",
+    "_autoCreatedBy": "fix-filter-coverage"
+  },
+  {
+    "id": "al-barsha-south-fourth",
+    "name": "Al Barsha South Fourth",
+    "slug": "al-barsha-south-fourth",
+    "visibility": "published",
+    "totalProjects": 1,
+    "source": "auto-created-from-dld",
+    "_autoCreatedAt": "2026-04-20T10:54:11.694Z",
+    "_autoCreatedBy": "fix-filter-coverage"
+  },
+  {
+    "id": "al-barshaa-south-third",
+    "name": "Al Barshaa South Third",
+    "slug": "al-barshaa-south-third",
+    "visibility": "published",
+    "totalProjects": 1,
+    "source": "auto-created-from-dld",
+    "_autoCreatedAt": "2026-04-20T10:54:11.694Z",
+    "_autoCreatedBy": "fix-filter-coverage"
+  },
+  {
+    "id": "al-furjan",
+    "nearestMetroStation": "Discovery Gardens",
+    "description": "Nakheel community with villas, townhouses, and apartments near Ibn Battuta Mall.",
+    "populationEstimate": 32000,
+    "restaurantCount": 85,
+    "type": "Mid-rise Mixed",
+    "orgId": "dxb-analytics",
+    "schoolRating": 7.3,
+    "arabicName": "الفرجان",
+    "grossYieldPct": 6.9,
+    "metroDistanceKm": 0.8,
+    "createdAt": {
+      "_seconds": 1775721699,
+      "_nanoseconds": 750000000
+    },
+    "totalProjects": 58,
+    "disclosedAt": {
+      "_seconds": 1775721699,
+      "_nanoseconds": 750000000
+    },
+    "slug": "al-furjan",
+    "updatedAt": {
+      "_seconds": 1775721699,
+      "_nanoseconds": 750000000
+    },
+    "area": "New Dubai",
+    "netYieldPct": 5.4,
+    "updatedBy": "seed-script",
+    "visibility": "published",
+    "coordinates": {
+      "lng": 55.1433,
+      "lat": 25.0303
+    },
+    "avgPpsf": 1050,
+    "parkAccess": true,
+    "developersActive": 14,
+    "createdBy": "seed-script",
+    "name": "Al Furjan",
+    "beachAccess": false,
+    "avgRentPerSqftYr": 72
+  },
+  {
+    "id": "al-goze-fourth",
+    "name": "Al Goze Fourth",
+    "slug": "al-goze-fourth",
+    "visibility": "published",
+    "totalProjects": 1,
+    "source": "auto-created-from-dld",
+    "_autoCreatedAt": "2026-04-20T10:54:11.694Z",
+    "_autoCreatedBy": "fix-filter-coverage"
+  },
+  {
+    "id": "al-hebiah-fifth",
+    "name": "Al Hebiah Fifth",
+    "slug": "al-hebiah-fifth",
+    "visibility": "published",
+    "totalProjects": 22,
+    "source": "auto-created-from-dld",
+    "_autoCreatedAt": "2026-04-20T10:54:11.694Z",
+    "_autoCreatedBy": "fix-filter-coverage"
+  },
+  {
+    "id": "al-merkadh",
+    "name": "Al Merkadh",
+    "slug": "al-merkadh",
+    "visibility": "published",
+    "totalProjects": 2,
+    "source": "auto-created-from-dld",
+    "_autoCreatedAt": "2026-04-20T10:54:11.694Z",
+    "_autoCreatedBy": "fix-filter-coverage"
+  },
+  {
+    "id": "al-thanayah-fourth",
+    "name": "Al Thanayah Fourth",
+    "slug": "al-thanayah-fourth",
+    "visibility": "published",
+    "totalProjects": 1,
+    "source": "auto-created-from-dld",
+    "_autoCreatedAt": "2026-04-20T10:54:11.694Z",
+    "_autoCreatedBy": "fix-filter-coverage"
+  },
+  {
+    "id": "al-thanyah-fifth",
+    "name": "Al Thanyah Fifth",
+    "slug": "al-thanyah-fifth",
+    "visibility": "published",
+    "totalProjects": 1,
+    "source": "auto-created-from-dld",
+    "_autoCreatedAt": "2026-04-20T10:54:11.694Z",
+    "_autoCreatedBy": "fix-filter-coverage"
+  },
+  {
+    "id": "al-thanyah-third",
+    "name": "Al Thanyah Third",
+    "slug": "al-thanyah-third",
+    "visibility": "published",
+    "totalProjects": 2,
+    "source": "auto-created-from-dld",
+    "_autoCreatedAt": "2026-04-20T10:54:11.694Z",
+    "_autoCreatedBy": "fix-filter-coverage"
+  },
+  {
+    "id": "al-wasl",
+    "name": "Al Wasl",
+    "slug": "al-wasl",
+    "visibility": "published",
+    "totalProjects": 2,
+    "source": "auto-created-from-dld",
+    "_autoCreatedAt": "2026-04-20T10:54:11.694Z",
+    "_autoCreatedBy": "fix-filter-coverage"
+  },
+  {
+    "id": "al-yelayiss-1",
+    "name": "Al Yelayiss 1",
+    "slug": "al-yelayiss-1",
+    "visibility": "published",
+    "totalProjects": 27,
+    "source": "auto-created-from-dld",
+    "_autoCreatedAt": "2026-04-20T10:54:11.694Z",
+    "_autoCreatedBy": "fix-filter-coverage"
+  },
+  {
+    "id": "al-yelayiss-2",
+    "name": "Al Yelayiss 2",
+    "slug": "al-yelayiss-2",
+    "visibility": "published",
+    "totalProjects": 1,
+    "source": "auto-created-from-dld",
+    "_autoCreatedAt": "2026-04-20T10:54:11.694Z",
+    "_autoCreatedBy": "fix-filter-coverage"
+  },
+  {
+    "id": "al-yelayiss-4",
+    "name": "Al Yelayiss 4",
+    "slug": "al-yelayiss-4",
+    "visibility": "published",
+    "totalProjects": 1,
+    "source": "auto-created-from-dld",
+    "_autoCreatedAt": "2026-04-20T10:54:11.694Z",
+    "_autoCreatedBy": "fix-filter-coverage"
+  },
+  {
+    "id": "al-yufrah-1",
+    "name": "Al Yufrah 1",
+    "slug": "al-yufrah-1",
+    "visibility": "published",
+    "totalProjects": 24,
+    "source": "auto-created-from-dld",
+    "_autoCreatedAt": "2026-04-20T10:54:11.694Z",
+    "_autoCreatedBy": "fix-filter-coverage"
+  },
+  {
+    "id": "arabian-ranches---1",
+    "area": "Wadi Al Safa 6",
+    "totalVillas": 61,
+    "updatedBy": "dld-import-script",
+    "hasCoordinates": true,
+    "coordinates": {
+      "lng": 55.2699,
+      "lat": 25.0517
+    },
+    "dldSource": "Real_Estate_Projects_2026-04-19.csv",
+    "source": "dld-auto",
+    "type": "Master Community",
+    "activeProjects": 0,
+    "orgId": "dxb-analytics",
+    "completedProjects": 3,
+    "totalUnits": 0,
+    "totalBuildings": 0,
+    "arabicName": "المرابع العربية - 1",
+    "createdAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "totalProjects": 3,
+    "createdBy": "dld-import-script",
+    "name": "Arabian Ranches - 1",
+    "updatedAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "_autoPublishedBy": "fix-filter-coverage",
+    "visibility": "published",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z"
+  },
+  {
+    "id": "arabian-ranches---golf-homes",
+    "area": "Wadi Al Safa 6",
+    "totalVillas": 1,
+    "updatedBy": "dld-import-script",
+    "hasCoordinates": true,
+    "coordinates": {
+      "lng": 55.2699,
+      "lat": 25.0517
+    },
+    "dldSource": "Real_Estate_Projects_2026-04-19.csv",
+    "source": "dld-auto",
+    "type": "Master Community",
+    "activeProjects": 0,
+    "orgId": "dxb-analytics",
+    "completedProjects": 1,
+    "totalUnits": 0,
+    "totalBuildings": 0,
+    "arabicName": "المرابع العربية - غولف هومز",
+    "createdAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "totalProjects": 1,
+    "createdBy": "dld-import-script",
+    "name": "Arabian Ranches - Golf Homes",
+    "updatedAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "_autoPublishedBy": "fix-filter-coverage",
+    "visibility": "published",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z"
+  },
+  {
+    "id": "arabian-ranches---polo-homes",
+    "area": "Al Hebiah Second",
+    "totalVillas": 0,
+    "updatedBy": "dld-import-script",
+    "hasCoordinates": true,
+    "coordinates": {
+      "lng": 55.2699,
+      "lat": 25.0517
+    },
+    "dldSource": "Real_Estate_Projects_2026-04-19.csv",
+    "source": "dld-auto",
+    "type": "Master Community",
+    "activeProjects": 0,
+    "orgId": "dxb-analytics",
+    "completedProjects": 1,
+    "totalUnits": 0,
+    "totalBuildings": 0,
+    "arabicName": "المرابع العربية - بولو هومز",
+    "createdAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "totalProjects": 1,
+    "createdBy": "dld-import-script",
+    "name": "Arabian Ranches - Polo Homes",
+    "updatedAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "_autoPublishedBy": "fix-filter-coverage",
+    "visibility": "published",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z"
+  },
+  {
+    "id": "arabian-ranches-3",
+    "nearestMetroStation": "None",
+    "description": "Emaar's third phase of the family villa community with lagoons and retail districts.",
+    "populationEstimate": 15000,
+    "restaurantCount": 45,
+    "type": "Family Villas",
+    "orgId": "dxb-analytics",
+    "schoolRating": 8.8,
+    "arabicName": "المرابع العربية 3",
+    "grossYieldPct": 6.5,
+    "metroDistanceKm": 12,
+    "createdAt": {
+      "_seconds": 1775721696,
+      "_nanoseconds": 368000000
+    },
+    "totalProjects": 18,
+    "disclosedAt": {
+      "_seconds": 1775721696,
+      "_nanoseconds": 368000000
+    },
+    "slug": "arabian-ranches-3",
+    "updatedAt": {
+      "_seconds": 1775721696,
+      "_nanoseconds": 368000000
+    },
+    "area": "Dubailand",
+    "netYieldPct": 5.1,
+    "updatedBy": "seed-script",
+    "coordinates": {
+      "lng": 55.2625,
+      "lat": 25.0381
+    },
+    "avgPpsf": 1300,
+    "parkAccess": true,
+    "developersActive": 1,
+    "createdBy": "seed-script",
+    "name": "Arabian Ranches 3",
+    "beachAccess": false,
+    "avgRentPerSqftYr": 85,
+    "_hiddenBy": "enforce-dld-only-filters",
+    "visibility": "hidden",
+    "_hiddenAt": "2026-04-20T10:57:05.313Z",
+    "_hiddenReason": "not in DLD"
+  },
+  {
+    "id": "arabian-ranches-ii",
+    "area": "Wadi Al Safa 7",
+    "totalVillas": 1,
+    "updatedBy": "dld-import-script",
+    "hasCoordinates": true,
+    "coordinates": {
+      "lng": 55.28,
+      "lat": 25.03
+    },
+    "dldSource": "Real_Estate_Projects_2026-04-19.csv",
+    "source": "dld-auto",
+    "type": "Master Community",
+    "activeProjects": 0,
+    "orgId": "dxb-analytics",
+    "completedProjects": 1,
+    "totalUnits": 0,
+    "totalBuildings": 0,
+    "arabicName": "المرابع العربية - 2",
+    "createdAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "totalProjects": 1,
+    "createdBy": "dld-import-script",
+    "name": "Arabian Ranches II",
+    "updatedAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "_autoPublishedBy": "fix-filter-coverage",
+    "visibility": "published",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z"
+  },
+  {
+    "id": "arabian-ranches-ii---azalea",
+    "area": "Wadi Al Safa 7",
+    "totalVillas": 103,
+    "updatedBy": "dld-import-script",
+    "hasCoordinates": true,
+    "coordinates": {
+      "lng": 55.2699,
+      "lat": 25.0517
+    },
+    "dldSource": "Real_Estate_Projects_2026-04-19.csv",
+    "source": "dld-auto",
+    "type": "Master Community",
+    "activeProjects": 0,
+    "orgId": "dxb-analytics",
+    "completedProjects": 1,
+    "totalUnits": 0,
+    "totalBuildings": 0,
+    "arabicName": "المرابع العربية 2 - ازاليا",
+    "createdAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "totalProjects": 1,
+    "createdBy": "dld-import-script",
+    "name": "Arabian Ranches II - AZALEA",
+    "updatedAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "_autoPublishedBy": "fix-filter-coverage",
+    "visibility": "published",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z"
+  },
+  {
+    "id": "arabian-ranches-ii---camelia",
+    "area": "Wadi Al Safa 7",
+    "totalVillas": 258,
+    "updatedBy": "dld-import-script",
+    "hasCoordinates": true,
+    "coordinates": {
+      "lng": 55.2699,
+      "lat": 25.0517
+    },
+    "dldSource": "Real_Estate_Projects_2026-04-19.csv",
+    "source": "dld-auto",
+    "type": "Master Community",
+    "activeProjects": 0,
+    "orgId": "dxb-analytics",
+    "completedProjects": 1,
+    "totalUnits": 0,
+    "totalBuildings": 0,
+    "arabicName": "المرابع العربية 2 - كاميليا",
+    "createdAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "totalProjects": 1,
+    "createdBy": "dld-import-script",
+    "name": "Arabian Ranches II - Camelia",
+    "updatedAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "_autoPublishedBy": "fix-filter-coverage",
+    "visibility": "published",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z"
+  },
+  {
+    "id": "arabian-ranches-ii---dhalia",
+    "area": "Wadi Al Safa 7",
+    "totalVillas": 168,
+    "updatedBy": "dld-import-script",
+    "hasCoordinates": true,
+    "coordinates": {
+      "lng": 55.2699,
+      "lat": 25.0517
+    },
+    "dldSource": "Real_Estate_Projects_2026-04-19.csv",
+    "source": "dld-auto",
+    "type": "Master Community",
+    "activeProjects": 0,
+    "orgId": "dxb-analytics",
+    "completedProjects": 1,
+    "totalUnits": 0,
+    "totalBuildings": 0,
+    "arabicName": "المرابع العربية 2 - داهليا",
+    "createdAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "totalProjects": 1,
+    "createdBy": "dld-import-script",
+    "name": "Arabian Ranches II - Dhalia",
+    "updatedAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "_autoPublishedBy": "fix-filter-coverage",
+    "visibility": "published",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z"
+  },
+  {
+    "id": "arabian-ranches-ii---lila",
+    "area": "Wadi Al Safa 7",
+    "totalVillas": 0,
+    "updatedBy": "dld-import-script",
+    "hasCoordinates": true,
+    "coordinates": {
+      "lng": 55.2699,
+      "lat": 25.0517
+    },
+    "dldSource": "Real_Estate_Projects_2026-04-19.csv",
+    "source": "dld-auto",
+    "type": "Master Community",
+    "activeProjects": 0,
+    "orgId": "dxb-analytics",
+    "completedProjects": 1,
+    "totalUnits": 0,
+    "totalBuildings": 0,
+    "arabicName": "المرابع العربية 2 - ليلا",
+    "createdAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "totalProjects": 1,
+    "createdBy": "dld-import-script",
+    "name": "Arabian Ranches II - LILA",
+    "updatedAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "_autoPublishedBy": "fix-filter-coverage",
+    "visibility": "published",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z"
+  },
+  {
+    "id": "arabian-ranches-ii---palma",
+    "area": "Wadi Al Safa 7",
+    "totalVillas": 0,
+    "updatedBy": "dld-import-script",
+    "hasCoordinates": true,
+    "coordinates": {
+      "lng": 55.2699,
+      "lat": 25.0517
+    },
+    "dldSource": "Real_Estate_Projects_2026-04-19.csv",
+    "source": "dld-auto",
+    "type": "Master Community",
+    "activeProjects": 0,
+    "orgId": "dxb-analytics",
+    "completedProjects": 1,
+    "totalUnits": 0,
+    "totalBuildings": 0,
+    "arabicName": "المرابع العربية 2 - بالما",
+    "createdAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "totalProjects": 1,
+    "createdBy": "dld-import-script",
+    "name": "Arabian Ranches II - PALMA",
+    "updatedAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "_autoPublishedBy": "fix-filter-coverage",
+    "visibility": "published",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z"
+  },
+  {
+    "id": "arabian-ranches-ii---rasha",
+    "area": "Wadi Al Safa 7",
+    "totalVillas": 1,
+    "updatedBy": "dld-import-script",
+    "hasCoordinates": true,
+    "coordinates": {
+      "lng": 55.2699,
+      "lat": 25.0517
+    },
+    "dldSource": "Real_Estate_Projects_2026-04-19.csv",
+    "source": "dld-auto",
+    "type": "Master Community",
+    "activeProjects": 0,
+    "orgId": "dxb-analytics",
+    "completedProjects": 1,
+    "totalUnits": 0,
+    "totalBuildings": 0,
+    "arabicName": "المرابع العربية - رشا",
+    "createdAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "totalProjects": 1,
+    "createdBy": "dld-import-script",
+    "name": "Arabian Ranches II - RASHA",
+    "updatedAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "_autoPublishedBy": "fix-filter-coverage",
+    "visibility": "published",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z"
+  },
+  {
+    "id": "arabian-ranches-ii---reem-community",
+    "area": "Wadi Al Safa 7",
+    "totalVillas": 216,
+    "updatedBy": "dld-import-script",
+    "hasCoordinates": true,
+    "coordinates": {
+      "lng": 55.2699,
+      "lat": 25.0517
+    },
+    "dldSource": "Real_Estate_Projects_2026-04-19.csv",
+    "source": "dld-auto",
+    "type": "Master Community",
+    "activeProjects": 0,
+    "orgId": "dxb-analytics",
+    "completedProjects": 1,
+    "totalUnits": 0,
+    "totalBuildings": 0,
+    "arabicName": "المرابع العربية 2 - ريم كموينتي",
+    "createdAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "totalProjects": 1,
+    "createdBy": "dld-import-script",
+    "name": "Arabian Ranches II - Reem Community",
+    "updatedAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "_autoPublishedBy": "fix-filter-coverage",
+    "visibility": "published",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z"
+  },
+  {
+    "id": "arabian-ranches-ii---rosa",
+    "area": "Wadi Al Safa 7",
+    "totalVillas": 0,
+    "updatedBy": "dld-import-script",
+    "hasCoordinates": true,
+    "coordinates": {
+      "lng": 55.2699,
+      "lat": 25.0517
+    },
+    "dldSource": "Real_Estate_Projects_2026-04-19.csv",
+    "source": "dld-auto",
+    "type": "Master Community",
+    "activeProjects": 0,
+    "orgId": "dxb-analytics",
+    "completedProjects": 1,
+    "totalUnits": 0,
+    "totalBuildings": 0,
+    "arabicName": "المرابع العربية - روزا",
+    "createdAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "totalProjects": 1,
+    "createdBy": "dld-import-script",
+    "name": "Arabian Ranches II - ROSA",
+    "updatedAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "_autoPublishedBy": "fix-filter-coverage",
+    "visibility": "published",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z"
+  },
+  {
+    "id": "arabian-ranches-ii---samara",
+    "area": "Wadi Al Safa 7",
+    "totalVillas": 0,
+    "updatedBy": "dld-import-script",
+    "hasCoordinates": true,
+    "coordinates": {
+      "lng": 55.2699,
+      "lat": 25.0517
+    },
+    "dldSource": "Real_Estate_Projects_2026-04-19.csv",
+    "source": "dld-auto",
+    "type": "Master Community",
+    "activeProjects": 0,
+    "orgId": "dxb-analytics",
+    "completedProjects": 1,
+    "totalUnits": 0,
+    "totalBuildings": 2,
+    "arabicName": "المرابع العربية 2 - سمارا",
+    "createdAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "totalProjects": 1,
+    "createdBy": "dld-import-script",
+    "name": "Arabian Ranches II - SAMARA",
+    "updatedAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "_autoPublishedBy": "fix-filter-coverage",
+    "visibility": "published",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z"
+  },
+  {
+    "id": "arabian-ranches-ii---yasmin",
+    "area": "Wadi Al Safa 7",
+    "totalVillas": 0,
+    "updatedBy": "dld-import-script",
+    "hasCoordinates": true,
+    "coordinates": {
+      "lng": 55.2699,
+      "lat": 25.0517
+    },
+    "dldSource": "Real_Estate_Projects_2026-04-19.csv",
+    "source": "dld-auto",
+    "type": "Master Community",
+    "activeProjects": 0,
+    "orgId": "dxb-analytics",
+    "completedProjects": 1,
+    "totalUnits": 0,
+    "totalBuildings": 0,
+    "arabicName": "المرابع العربية - ياسمين",
+    "createdAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "totalProjects": 1,
+    "createdBy": "dld-import-script",
+    "name": "Arabian Ranches II - YASMIN",
+    "updatedAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "_autoPublishedBy": "fix-filter-coverage",
+    "visibility": "published",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z"
+  },
+  {
+    "id": "arjan",
+    "area": "Al Barshaa South Third",
+    "totalVillas": 0,
+    "updatedBy": "dld-import-script",
+    "hasCoordinates": true,
+    "coordinates": {
+      "lng": 55.2178,
+      "lat": 25.0552
+    },
+    "dldSource": "Real_Estate_Projects_2026-04-19.csv",
+    "source": "dld-auto",
+    "type": "Master Community",
+    "activeProjects": 32,
+    "orgId": "dxb-analytics",
+    "completedProjects": 38,
+    "totalUnits": 20792,
+    "totalBuildings": 104,
+    "arabicName": "أرجان",
+    "createdAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "totalProjects": 77,
+    "createdBy": "dld-import-script",
+    "name": "Arjan",
+    "updatedAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "_autoPublishedBy": "fix-filter-coverage",
+    "visibility": "published",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z"
+  },
+  {
+    "id": "badra",
+    "area": "Hessyan First",
+    "totalVillas": 0,
+    "updatedBy": "dld-import-script",
+    "hasCoordinates": false,
+    "coordinates": {
+      "lng": null,
+      "lat": null
+    },
+    "dldSource": "Real_Estate_Projects_2026-04-19.csv",
+    "source": "dld-auto",
+    "type": "Master Community",
+    "activeProjects": 0,
+    "orgId": "dxb-analytics",
+    "completedProjects": 1,
+    "totalUnits": 448,
+    "totalBuildings": 8,
+    "arabicName": "بدرة",
+    "createdAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "totalProjects": 1,
+    "createdBy": "dld-import-script",
+    "name": "Badra",
+    "updatedAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "_autoPublishedBy": "fix-filter-coverage",
+    "visibility": "published",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z"
+  },
+  {
+    "id": "barsha-heights",
+    "area": "Al Thanyah First",
+    "totalVillas": 1,
+    "updatedBy": "dld-import-script",
+    "hasCoordinates": true,
+    "coordinates": {
+      "lng": 55.185,
+      "lat": 25.105
+    },
+    "dldSource": "Real_Estate_Projects_2026-04-19.csv",
+    "source": "dld-auto",
+    "type": "Master Community",
+    "activeProjects": 1,
+    "orgId": "dxb-analytics",
+    "completedProjects": 12,
+    "totalUnits": 3728,
+    "totalBuildings": 15,
+    "arabicName": "مرتفعات برشا",
+    "createdAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "totalProjects": 15,
+    "createdBy": "dld-import-script",
+    "name": "Barsha Heights",
+    "updatedAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "_autoPublishedBy": "fix-filter-coverage",
+    "visibility": "published",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z"
+  },
+  {
+    "id": "bluewaters",
+    "name": "Bluewaters",
+    "slug": "bluewaters",
+    "visibility": "published",
+    "totalProjects": 1,
+    "source": "auto-created-from-dld",
+    "_autoCreatedAt": "2026-04-20T10:54:11.694Z",
+    "_autoCreatedBy": "fix-filter-coverage"
+  },
+  {
+    "id": "bluewaters-island",
+    "nearestMetroStation": "JBR 1",
+    "description": "Man-made island home to Ain Dubai (world's tallest observation wheel) and luxury residences.",
+    "populationEstimate": 8000,
+    "restaurantCount": 95,
+    "type": "Beachfront",
+    "orgId": "dxb-analytics",
+    "schoolRating": 7.5,
+    "arabicName": "جزيرة بلوواترز",
+    "grossYieldPct": 5.6,
+    "metroDistanceKm": 1.8,
+    "createdAt": {
+      "_seconds": 1775721698,
+      "_nanoseconds": 506000000
+    },
+    "totalProjects": 6,
+    "disclosedAt": {
+      "_seconds": 1775721698,
+      "_nanoseconds": 506000000
+    },
+    "slug": "bluewaters-island",
+    "updatedAt": {
+      "_seconds": 1775721698,
+      "_nanoseconds": 506000000
+    },
+    "area": "Waterfront",
+    "netYieldPct": 4.3,
+    "updatedBy": "seed-script",
+    "visibility": "published",
+    "coordinates": {
+      "lng": 55.1238,
+      "lat": 25.079
+    },
+    "avgPpsf": 3100,
+    "parkAccess": true,
+    "developersActive": 1,
+    "createdBy": "seed-script",
+    "name": "Bluewaters Island",
+    "beachAccess": true,
+    "avgRentPerSqftYr": 175
+  },
+  {
+    "id": "bukadra",
+    "name": "Bukadra",
+    "slug": "bukadra",
+    "visibility": "published",
+    "totalProjects": 15,
+    "source": "auto-created-from-dld",
+    "_autoCreatedAt": "2026-04-20T10:54:11.694Z",
+    "_autoCreatedBy": "fix-filter-coverage"
+  },
+  {
+    "id": "burj-khalifa",
+    "area": "Burj Khalifa",
+    "totalVillas": 0,
+    "updatedBy": "dld-import-script",
+    "hasCoordinates": false,
+    "coordinates": {
+      "lng": null,
+      "lat": null
+    },
+    "dldSource": "Real_Estate_Projects_2026-04-19.csv",
+    "source": "dld-auto",
+    "type": "Master Community",
+    "activeProjects": 0,
+    "orgId": "dxb-analytics",
+    "completedProjects": 1,
+    "totalUnits": 28,
+    "totalBuildings": 2,
+    "arabicName": "برج خليفة",
+    "createdAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "totalProjects": 1,
+    "createdBy": "dld-import-script",
+    "name": "Burj Khalifa",
+    "updatedAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "_autoPublishedBy": "fix-filter-coverage",
+    "visibility": "published",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z"
+  },
+  {
+    "id": "business-bay",
+    "nearestMetroStation": "Business Bay",
+    "description": "Dubai's central business district along the canal, blending office towers and residential high-rises.",
+    "populationEstimate": 42000,
+    "restaurantCount": 280,
+    "type": "Mixed-Use",
+    "orgId": "dxb-analytics",
+    "schoolRating": 7.5,
+    "arabicName": "الخليج التجاري",
+    "grossYieldPct": 6.4,
+    "metroDistanceKm": 0.4,
+    "createdAt": {
+      "_seconds": 1775721693,
+      "_nanoseconds": 851000000
+    },
+    "totalProjects": 110,
+    "disclosedAt": {
+      "_seconds": 1775721693,
+      "_nanoseconds": 851000000
+    },
+    "slug": "business-bay",
+    "updatedAt": {
+      "_seconds": 1775721693,
+      "_nanoseconds": 851000000
+    },
+    "area": "CBD",
+    "netYieldPct": 5,
+    "updatedBy": "seed-script",
+    "visibility": "published",
+    "coordinates": {
+      "lng": 55.2648,
+      "lat": 25.1866
+    },
+    "avgPpsf": 1650,
+    "parkAccess": true,
+    "developersActive": 22,
+    "createdBy": "seed-script",
+    "name": "Business Bay",
+    "beachAccess": false,
+    "avgRentPerSqftYr": 105
+  },
+  {
+    "id": "business-park",
+    "area": "Zaabeel Second",
+    "totalVillas": 0,
+    "updatedBy": "dld-import-script",
+    "hasCoordinates": true,
+    "coordinates": {
+      "lng": 55.2719,
+      "lat": 25.1854
+    },
+    "dldSource": "Real_Estate_Projects_2026-04-19.csv",
+    "source": "dld-auto",
+    "type": "Master Community",
+    "activeProjects": 1,
+    "orgId": "dxb-analytics",
+    "completedProjects": 0,
+    "totalUnits": 838,
+    "totalBuildings": 4,
+    "arabicName": "بزنس بارك",
+    "createdAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "totalProjects": 2,
+    "createdBy": "dld-import-script",
+    "name": "Business Park",
+    "updatedAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "_autoPublishedBy": "fix-filter-coverage",
+    "visibility": "published",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z"
+  },
+  {
+    "id": "city-of-arabia",
+    "area": "Wadi Al Safa 4",
+    "totalVillas": 79,
+    "updatedBy": "dld-import-script",
+    "hasCoordinates": true,
+    "coordinates": {
+      "lng": 55.23,
+      "lat": 25.04
+    },
+    "dldSource": "Real_Estate_Projects_2026-04-19.csv",
+    "source": "dld-auto",
+    "type": "Master Community",
+    "activeProjects": 1,
+    "orgId": "dxb-analytics",
+    "completedProjects": 1,
+    "totalUnits": 10225,
+    "totalBuildings": 16,
+    "arabicName": "ستي اوف ارابيا",
+    "createdAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "totalProjects": 12,
+    "createdBy": "dld-import-script",
+    "name": "City Of Arabia",
+    "updatedAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "_autoPublishedBy": "fix-filter-coverage",
+    "visibility": "published",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z"
+  },
+  {
+    "id": "city-walk",
+    "nearestMetroStation": "World Trade Centre",
+    "description": "Meraas open-air lifestyle district blending apartments, retail, dining, and entertainment.",
+    "populationEstimate": 11000,
+    "restaurantCount": 180,
+    "type": "Mixed-Use",
+    "orgId": "dxb-analytics",
+    "schoolRating": 8,
+    "arabicName": "سيتي ووك",
+    "grossYieldPct": 6,
+    "metroDistanceKm": 1.5,
+    "createdAt": {
+      "_seconds": 1775721698,
+      "_nanoseconds": 815000000
+    },
+    "totalProjects": 18,
+    "disclosedAt": {
+      "_seconds": 1775721698,
+      "_nanoseconds": 815000000
+    },
+    "slug": "city-walk",
+    "updatedAt": {
+      "_seconds": 1775721698,
+      "_nanoseconds": 815000000
+    },
+    "area": "New Dubai",
+    "netYieldPct": 4.7,
+    "updatedBy": "seed-script",
+    "visibility": "published",
+    "coordinates": {
+      "lng": 55.2625,
+      "lat": 25.2055
+    },
+    "avgPpsf": 2100,
+    "parkAccess": true,
+    "developersActive": 2,
+    "createdBy": "seed-script",
+    "name": "City Walk",
+    "beachAccess": false,
+    "avgRentPerSqftYr": 125
+  },
+  {
+    "id": "damac-hills",
+    "nearestMetroStation": "None",
+    "description": "42 million sqft community centered around Trump International Golf Club Dubai.",
+    "populationEstimate": 20000,
+    "restaurantCount": 55,
+    "type": "Golf",
+    "orgId": "dxb-analytics",
+    "schoolRating": 7.6,
+    "arabicName": "داماك هيلز",
+    "grossYieldPct": 6.5,
+    "metroDistanceKm": 12.5,
+    "createdAt": {
+      "_seconds": 1775721697,
+      "_nanoseconds": 594000000
+    },
+    "totalProjects": 45,
+    "golfAccess": true,
+    "disclosedAt": {
+      "_seconds": 1775721697,
+      "_nanoseconds": 594000000
+    },
+    "slug": "damac-hills",
+    "updatedAt": {
+      "_seconds": 1775721697,
+      "_nanoseconds": 594000000
+    },
+    "area": "Dubailand",
+    "netYieldPct": 5.1,
+    "updatedBy": "seed-script",
+    "visibility": "published",
+    "coordinates": {
+      "lng": 55.2608,
+      "lat": 25.0258
+    },
+    "avgPpsf": 1150,
+    "parkAccess": true,
+    "developersActive": 3,
+    "createdBy": "seed-script",
+    "name": "DAMAC Hills",
+    "beachAccess": false,
+    "avgRentPerSqftYr": 75
+  },
+  {
+    "id": "damac-hills-2",
+    "nearestMetroStation": "None",
+    "description": "Affordable sister community to DAMAC Hills with villas, water attractions, and sports facilities.",
+    "populationEstimate": 14000,
+    "restaurantCount": 30,
+    "type": "Family Villas",
+    "orgId": "dxb-analytics",
+    "schoolRating": 7,
+    "arabicName": "داماك هيلز 2",
+    "grossYieldPct": 6.8,
+    "metroDistanceKm": 15,
+    "createdAt": {
+      "_seconds": 1775721697,
+      "_nanoseconds": 894000000
+    },
+    "totalProjects": 38,
+    "disclosedAt": {
+      "_seconds": 1775721697,
+      "_nanoseconds": 894000000
+    },
+    "slug": "damac-hills-2",
+    "updatedAt": {
+      "_seconds": 1775721697,
+      "_nanoseconds": 894000000
+    },
+    "area": "Dubailand",
+    "netYieldPct": 5.3,
+    "updatedBy": "seed-script",
+    "visibility": "published",
+    "coordinates": {
+      "lng": 55.2858,
+      "lat": 24.9983
+    },
+    "avgPpsf": 850,
+    "parkAccess": true,
+    "developersActive": 1,
+    "createdBy": "seed-script",
+    "name": "DAMAC Hills 2",
+    "beachAccess": false,
+    "avgRentPerSqftYr": 58
+  },
+  {
+    "id": "damac-lagoons",
+    "area": "Al Hebiah Fifth",
+    "totalVillas": 0,
+    "updatedBy": "dld-import-script",
+    "hasCoordinates": true,
+    "coordinates": {
+      "lng": 55.23,
+      "lat": 25
+    },
+    "dldSource": "Real_Estate_Projects_2026-04-19.csv",
+    "source": "dld-auto",
+    "type": "Master Community",
+    "activeProjects": 10,
+    "orgId": "dxb-analytics",
+    "completedProjects": 1,
+    "totalUnits": 0,
+    "totalBuildings": 0,
+    "arabicName": "داماك لاغون",
+    "createdAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "totalProjects": 11,
+    "createdBy": "dld-import-script",
+    "name": "DAMAC Lagoons",
+    "updatedAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "_autoPublishedBy": "fix-filter-coverage",
+    "visibility": "published",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z"
+  },
+  {
+    "id": "discovery-gardens",
+    "area": "Jabal Ali First",
+    "totalVillas": 0,
+    "updatedBy": "dld-import-script",
+    "hasCoordinates": true,
+    "coordinates": {
+      "lng": 55.1318,
+      "lat": 25.0366
+    },
+    "dldSource": "Real_Estate_Projects_2026-04-19.csv",
+    "source": "dld-auto",
+    "type": "Master Community",
+    "activeProjects": 7,
+    "orgId": "dxb-analytics",
+    "completedProjects": 0,
+    "totalUnits": 1959,
+    "totalBuildings": 10,
+    "arabicName": "الحدائق المكتشفة",
+    "createdAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "totalProjects": 9,
+    "createdBy": "dld-import-script",
+    "name": "Discovery Gardens",
+    "updatedAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "_autoPublishedBy": "fix-filter-coverage",
+    "visibility": "published",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z"
+  },
+  {
+    "id": "dmcc-ez1",
+    "area": "Al Thanyah Fifth",
+    "totalVillas": 0,
+    "updatedBy": "dld-import-script",
+    "hasCoordinates": false,
+    "coordinates": {
+      "lng": null,
+      "lat": null
+    },
+    "dldSource": "Real_Estate_Projects_2026-04-19.csv",
+    "source": "dld-auto",
+    "type": "Master Community",
+    "activeProjects": 2,
+    "orgId": "dxb-analytics",
+    "completedProjects": 0,
+    "totalUnits": 797,
+    "totalBuildings": 3,
+    "arabicName": "مركز دبي للسلع المتعددة - المرحلة الاولى",
+    "createdAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "totalProjects": 2,
+    "createdBy": "dld-import-script",
+    "name": "DMCC-EZ1",
+    "updatedAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "_autoPublishedBy": "fix-filter-coverage",
+    "visibility": "published",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z"
+  },
+  {
+    "id": "dmcc-ez2",
+    "area": "Jabal Ali First",
+    "totalVillas": 0,
+    "updatedBy": "dld-import-script",
+    "hasCoordinates": false,
+    "coordinates": {
+      "lng": null,
+      "lat": null
+    },
+    "dldSource": "Real_Estate_Projects_2026-04-19.csv",
+    "source": "dld-auto",
+    "type": "Master Community",
+    "activeProjects": 0,
+    "orgId": "dxb-analytics",
+    "completedProjects": 1,
+    "totalUnits": 5686,
+    "totalBuildings": 7,
+    "arabicName": "مركز دبي للسلع المتعددة - المرحلة الثانية",
+    "createdAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "totalProjects": 3,
+    "createdBy": "dld-import-script",
+    "name": "DMCC-EZ2",
+    "updatedAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "_autoPublishedBy": "fix-filter-coverage",
+    "visibility": "published",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z"
+  },
+  {
+    "id": "down-town-jabal-ali",
+    "area": "Jabal Ali Industrial Second",
+    "totalVillas": 0,
+    "updatedBy": "dld-import-script",
+    "hasCoordinates": false,
+    "coordinates": {
+      "lng": null,
+      "lat": null
+    },
+    "dldSource": "Real_Estate_Projects_2026-04-19.csv",
+    "source": "dld-auto",
+    "type": "Master Community",
+    "activeProjects": 1,
+    "orgId": "dxb-analytics",
+    "completedProjects": 3,
+    "totalUnits": 3865,
+    "totalBuildings": 10,
+    "arabicName": "دون تاون جبل علي",
+    "createdAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "totalProjects": 9,
+    "createdBy": "dld-import-script",
+    "name": "Down Town Jabal Ali",
+    "updatedAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "_autoPublishedBy": "fix-filter-coverage",
+    "visibility": "published",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z"
+  },
+  {
+    "id": "downtown-dubai",
+    "nearestMetroStation": "Burj Khalifa/Dubai Mall",
+    "description": "Home to Burj Khalifa, Dubai Mall, and Dubai Fountain. The most iconic address in the city.",
+    "populationEstimate": 18000,
+    "restaurantCount": 450,
+    "type": "Ultra-Luxury",
+    "orgId": "dxb-analytics",
+    "schoolRating": 8.2,
+    "arabicName": "وسط مدينة دبي",
+    "grossYieldPct": 6,
+    "metroDistanceKm": 0.3,
+    "createdAt": {
+      "_seconds": 1775721692,
+      "_nanoseconds": 325000000
+    },
+    "totalProjects": 85,
+    "disclosedAt": {
+      "_seconds": 1775721692,
+      "_nanoseconds": 325000000
+    },
+    "slug": "downtown-dubai",
+    "updatedAt": {
+      "_seconds": 1775721692,
+      "_nanoseconds": 325000000
+    },
+    "area": "Downtown",
+    "netYieldPct": 4.7,
+    "updatedBy": "seed-script",
+    "visibility": "published",
+    "coordinates": {
+      "lng": 55.2744,
+      "lat": 25.1972
+    },
+    "avgPpsf": 2400,
+    "parkAccess": true,
+    "developersActive": 12,
+    "createdBy": "seed-script",
+    "name": "Downtown Dubai",
+    "beachAccess": false,
+    "avgRentPerSqftYr": 145
+  },
+  {
+    "id": "dubai-creek-harbour",
+    "nearestMetroStation": "Deira City Centre",
+    "description": "Emaar's flagship waterfront district with Dubai Creek Tower and mixed-use developments.",
+    "populationEstimate": 18000,
+    "restaurantCount": 85,
+    "type": "Waterfront",
+    "orgId": "dxb-analytics",
+    "schoolRating": 7.9,
+    "arabicName": "خور دبي",
+    "grossYieldPct": 5.8,
+    "metroDistanceKm": 2,
+    "createdAt": {
+      "_seconds": 1775721694,
+      "_nanoseconds": 795000000
+    },
+    "totalProjects": 42,
+    "disclosedAt": {
+      "_seconds": 1775721694,
+      "_nanoseconds": 795000000
+    },
+    "slug": "dubai-creek-harbour",
+    "updatedAt": {
+      "_seconds": 1775721694,
+      "_nanoseconds": 795000000
+    },
+    "area": "Waterfront",
+    "netYieldPct": 4.5,
+    "updatedBy": "seed-script",
+    "visibility": "published",
+    "coordinates": {
+      "lng": 55.3378,
+      "lat": 25.1983
+    },
+    "avgPpsf": 1900,
+    "parkAccess": true,
+    "developersActive": 5,
+    "createdBy": "seed-script",
+    "name": "Dubai Creek Harbour",
+    "beachAccess": false,
+    "avgRentPerSqftYr": 110
+  },
+  {
+    "id": "dubai-harbour",
+    "area": "Marsa Dubai",
+    "totalVillas": 0,
+    "updatedBy": "dld-import-script",
+    "hasCoordinates": true,
+    "coordinates": {
+      "lng": 55.13,
+      "lat": 25.08
+    },
+    "dldSource": "Real_Estate_Projects_2026-04-19.csv",
+    "source": "dld-auto",
+    "type": "Master Community",
+    "activeProjects": 11,
+    "orgId": "dxb-analytics",
+    "completedProjects": 6,
+    "totalUnits": 9305,
+    "totalBuildings": 44,
+    "arabicName": "دبي هاربر",
+    "createdAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "totalProjects": 19,
+    "createdBy": "dld-import-script",
+    "name": "Dubai Harbour",
+    "updatedAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "_autoPublishedBy": "fix-filter-coverage",
+    "visibility": "published",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z"
+  },
+  {
+    "id": "dubai-health-care-city-phase-1",
+    "area": "Um Hurair Second",
+    "totalVillas": 0,
+    "updatedBy": "dld-import-script",
+    "hasCoordinates": false,
+    "coordinates": {
+      "lng": null,
+      "lat": null
+    },
+    "dldSource": "Real_Estate_Projects_2026-04-19.csv",
+    "source": "dld-auto",
+    "type": "Master Community",
+    "activeProjects": 0,
+    "orgId": "dxb-analytics",
+    "completedProjects": 1,
+    "totalUnits": 215,
+    "totalBuildings": 4,
+    "arabicName": "مدينة دبي الطبية المرحلة الاولى",
+    "createdAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "totalProjects": 4,
+    "createdBy": "dld-import-script",
+    "name": "Dubai Health Care City Phase 1",
+    "updatedAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "_autoPublishedBy": "fix-filter-coverage",
+    "visibility": "published",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z"
+  },
+  {
+    "id": "dubai-health-care-city-phase-2",
+    "area": "Al Jadaf",
+    "totalVillas": 0,
+    "updatedBy": "dld-import-script",
+    "hasCoordinates": false,
+    "coordinates": {
+      "lng": null,
+      "lat": null
+    },
+    "dldSource": "Real_Estate_Projects_2026-04-19.csv",
+    "source": "dld-auto",
+    "type": "Master Community",
+    "activeProjects": 5,
+    "orgId": "dxb-analytics",
+    "completedProjects": 8,
+    "totalUnits": 5441,
+    "totalBuildings": 23,
+    "arabicName": "مدينة دبي الطبية المرحلة الثانية",
+    "createdAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "totalProjects": 15,
+    "createdBy": "dld-import-script",
+    "name": "Dubai Health Care City Phase 2",
+    "updatedAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "_autoPublishedBy": "fix-filter-coverage",
+    "visibility": "published",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z"
+  },
+  {
+    "id": "dubai-hills",
+    "area": "Hadaeq Sheikh Mohammed Bin Rashid",
+    "totalVillas": 646,
+    "updatedBy": "dld-import-script",
+    "hasCoordinates": true,
+    "coordinates": {
+      "lng": 55.2594,
+      "lat": 25.1124
+    },
+    "dldSource": "Real_Estate_Projects_2026-04-19.csv",
+    "source": "dld-auto",
+    "type": "Master Community",
+    "activeProjects": 3,
+    "orgId": "dxb-analytics",
+    "completedProjects": 2,
+    "totalUnits": 0,
+    "totalBuildings": 5,
+    "arabicName": "دبي هيليز",
+    "createdAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "totalProjects": 5,
+    "createdBy": "dld-import-script",
+    "name": "DUBAI HILLS",
+    "updatedAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "_autoPublishedBy": "fix-filter-coverage",
+    "visibility": "published",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z"
+  },
+  {
+    "id": "dubai-hills---club-villas",
+    "area": "Hadaeq Sheikh Mohammed Bin Rashid",
+    "totalVillas": 150,
+    "updatedBy": "dld-import-script",
+    "hasCoordinates": true,
+    "coordinates": {
+      "lng": 55.2594,
+      "lat": 25.1124
+    },
+    "dldSource": "Real_Estate_Projects_2026-04-19.csv",
+    "source": "dld-auto",
+    "type": "Master Community",
+    "activeProjects": 0,
+    "orgId": "dxb-analytics",
+    "completedProjects": 1,
+    "totalUnits": 0,
+    "totalBuildings": 0,
+    "arabicName": "دبي هيليز - كلوب فيلاز",
+    "createdAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "totalProjects": 1,
+    "createdBy": "dld-import-script",
+    "name": "DUBAI HILLS - CLUB VILLAS",
+    "updatedAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "_autoPublishedBy": "fix-filter-coverage",
+    "visibility": "published",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z"
+  },
+  {
+    "id": "dubai-hills---fairway-vistas",
+    "area": "Hadaeq Sheikh Mohammed Bin Rashid",
+    "totalVillas": 0,
+    "updatedBy": "dld-import-script",
+    "hasCoordinates": true,
+    "coordinates": {
+      "lng": 55.257,
+      "lat": 25.11
+    },
+    "dldSource": "Real_Estate_Projects_2026-04-19.csv",
+    "source": "dld-auto",
+    "type": "Master Community",
+    "activeProjects": 0,
+    "orgId": "dxb-analytics",
+    "completedProjects": 1,
+    "totalUnits": 0,
+    "totalBuildings": 0,
+    "arabicName": "دبي هيليز - فايرويز فيستا",
+    "createdAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "totalProjects": 1,
+    "createdBy": "dld-import-script",
+    "name": "DUBAI HILLS - FAIRWAY VISTAS",
+    "updatedAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "_autoPublishedBy": "fix-filter-coverage",
+    "visibility": "published",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z"
+  },
+  {
+    "id": "dubai-hills---golf-grove",
+    "area": "Hadaeq Sheikh Mohammed Bin Rashid",
+    "totalVillas": 166,
+    "updatedBy": "dld-import-script",
+    "hasCoordinates": true,
+    "coordinates": {
+      "lng": 55.255,
+      "lat": 25.108
+    },
+    "dldSource": "Real_Estate_Projects_2026-04-19.csv",
+    "source": "dld-auto",
+    "type": "Master Community",
+    "activeProjects": 0,
+    "orgId": "dxb-analytics",
+    "completedProjects": 1,
+    "totalUnits": 0,
+    "totalBuildings": 0,
+    "arabicName": "دبي هيليز - غولف جروف",
+    "createdAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "totalProjects": 1,
+    "createdBy": "dld-import-script",
+    "name": "DUBAI HILLS - GOLF GROVE",
+    "updatedAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "_autoPublishedBy": "fix-filter-coverage",
+    "visibility": "published",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z"
+  },
+  {
+    "id": "dubai-hills---golf-place",
+    "area": "Hadaeq Sheikh Mohammed Bin Rashid",
+    "totalVillas": 0,
+    "updatedBy": "dld-import-script",
+    "hasCoordinates": true,
+    "coordinates": {
+      "lng": 55.262,
+      "lat": 25.106
+    },
+    "dldSource": "Real_Estate_Projects_2026-04-19.csv",
+    "source": "dld-auto",
+    "type": "Master Community",
+    "activeProjects": 0,
+    "orgId": "dxb-analytics",
+    "completedProjects": 1,
+    "totalUnits": 0,
+    "totalBuildings": 0,
+    "arabicName": "دبي هيليز - غولف بليس",
+    "createdAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "totalProjects": 1,
+    "createdBy": "dld-import-script",
+    "name": "DUBAI HILLS - GOLF PLACE",
+    "updatedAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "_autoPublishedBy": "fix-filter-coverage",
+    "visibility": "published",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z"
+  },
+  {
+    "id": "dubai-hills---golf-terraces",
+    "area": "Hadaeq Sheikh Mohammed Bin Rashid",
+    "totalVillas": 0,
+    "updatedBy": "dld-import-script",
+    "hasCoordinates": true,
+    "coordinates": {
+      "lng": 55.254,
+      "lat": 25.109
+    },
+    "dldSource": "Real_Estate_Projects_2026-04-19.csv",
+    "source": "dld-auto",
+    "type": "Master Community",
+    "activeProjects": 0,
+    "orgId": "dxb-analytics",
+    "completedProjects": 1,
+    "totalUnits": 0,
+    "totalBuildings": 0,
+    "arabicName": "دبي هيليز - غولف تيراس",
+    "createdAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "totalProjects": 1,
+    "createdBy": "dld-import-script",
+    "name": "DUBAI HILLS - GOLF TERRACES",
+    "updatedAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "_autoPublishedBy": "fix-filter-coverage",
+    "visibility": "published",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z"
+  },
+  {
+    "id": "dubai-hills---maple-3",
+    "area": "Hadaeq Sheikh Mohammed Bin Rashid",
+    "totalVillas": 562,
+    "updatedBy": "dld-import-script",
+    "hasCoordinates": true,
+    "coordinates": {
+      "lng": 55.26,
+      "lat": 25.113
+    },
+    "dldSource": "Real_Estate_Projects_2026-04-19.csv",
+    "source": "dld-auto",
+    "type": "Master Community",
+    "activeProjects": 0,
+    "orgId": "dxb-analytics",
+    "completedProjects": 1,
+    "totalUnits": 0,
+    "totalBuildings": 0,
+    "arabicName": "دبي هيليز - مابل 3",
+    "createdAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "totalProjects": 1,
+    "createdBy": "dld-import-script",
+    "name": "DUBAI HILLS - MAPLE 3",
+    "updatedAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "_autoPublishedBy": "fix-filter-coverage",
+    "visibility": "published",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z"
+  },
+  {
+    "id": "dubai-hills---palm-hills",
+    "area": "Hadaeq Sheikh Mohammed Bin Rashid",
+    "totalVillas": 0,
+    "updatedBy": "dld-import-script",
+    "hasCoordinates": true,
+    "coordinates": {
+      "lng": 55.258,
+      "lat": 25.114
+    },
+    "dldSource": "Real_Estate_Projects_2026-04-19.csv",
+    "source": "dld-auto",
+    "type": "Master Community",
+    "activeProjects": 0,
+    "orgId": "dxb-analytics",
+    "completedProjects": 1,
+    "totalUnits": 0,
+    "totalBuildings": 0,
+    "arabicName": "دبي هيليز - ‮ بالم هيليز",
+    "createdAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "totalProjects": 1,
+    "createdBy": "dld-import-script",
+    "name": "DUBAI HILLS - PALM HILLS",
+    "updatedAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "_autoPublishedBy": "fix-filter-coverage",
+    "visibility": "published",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z"
+  },
+  {
+    "id": "dubai-hills---parkway-vistas",
+    "area": "Hadaeq Sheikh Mohammed Bin Rashid",
+    "totalVillas": 0,
+    "updatedBy": "dld-import-script",
+    "hasCoordinates": true,
+    "coordinates": {
+      "lng": 55.256,
+      "lat": 25.111
+    },
+    "dldSource": "Real_Estate_Projects_2026-04-19.csv",
+    "source": "dld-auto",
+    "type": "Master Community",
+    "activeProjects": 0,
+    "orgId": "dxb-analytics",
+    "completedProjects": 1,
+    "totalUnits": 0,
+    "totalBuildings": 0,
+    "arabicName": "دبي هيليز - بارك واي فيستا",
+    "createdAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "totalProjects": 1,
+    "createdBy": "dld-import-script",
+    "name": "DUBAI HILLS - PARKWAY VISTAS",
+    "updatedAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "_autoPublishedBy": "fix-filter-coverage",
+    "visibility": "published",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z"
+  },
+  {
+    "id": "dubai-hills---sidra-1",
+    "area": "Hadaeq Sheikh Mohammed Bin Rashid",
+    "totalVillas": 461,
+    "updatedBy": "dld-import-script",
+    "hasCoordinates": true,
+    "coordinates": {
+      "lng": 55.2585,
+      "lat": 25.1105
+    },
+    "dldSource": "Real_Estate_Projects_2026-04-19.csv",
+    "source": "dld-auto",
+    "type": "Master Community",
+    "activeProjects": 0,
+    "orgId": "dxb-analytics",
+    "completedProjects": 1,
+    "totalUnits": 0,
+    "totalBuildings": 0,
+    "arabicName": "دبي هيليز - سيدرا 1",
+    "createdAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "totalProjects": 1,
+    "createdBy": "dld-import-script",
+    "name": "DUBAI HILLS - SIDRA 1",
+    "updatedAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "_autoPublishedBy": "fix-filter-coverage",
+    "visibility": "published",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z"
+  },
+  {
+    "id": "dubai-hills---sidra-2",
+    "area": "Hadaeq Sheikh Mohammed Bin Rashid",
+    "totalVillas": 0,
+    "updatedBy": "dld-import-script",
+    "hasCoordinates": true,
+    "coordinates": {
+      "lng": 55.259,
+      "lat": 25.1108
+    },
+    "dldSource": "Real_Estate_Projects_2026-04-19.csv",
+    "source": "dld-auto",
+    "type": "Master Community",
+    "activeProjects": 0,
+    "orgId": "dxb-analytics",
+    "completedProjects": 1,
+    "totalUnits": 0,
+    "totalBuildings": 0,
+    "arabicName": "دبي هيليز - سيدرا 2",
+    "createdAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "totalProjects": 1,
+    "createdBy": "dld-import-script",
+    "name": "DUBAI HILLS - SIDRA 2",
+    "updatedAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "_autoPublishedBy": "fix-filter-coverage",
+    "visibility": "published",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z"
+  },
+  {
+    "id": "dubai-hills---sidra-3",
+    "area": "Hadaeq Sheikh Mohammed Bin Rashid",
+    "totalVillas": 1,
+    "updatedBy": "dld-import-script",
+    "hasCoordinates": true,
+    "coordinates": {
+      "lng": 55.2595,
+      "lat": 25.1112
+    },
+    "dldSource": "Real_Estate_Projects_2026-04-19.csv",
+    "source": "dld-auto",
+    "type": "Master Community",
+    "activeProjects": 0,
+    "orgId": "dxb-analytics",
+    "completedProjects": 1,
+    "totalUnits": 0,
+    "totalBuildings": 0,
+    "arabicName": "دبي هيليز - سيدرا 3",
+    "createdAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "totalProjects": 1,
+    "createdBy": "dld-import-script",
+    "name": "DUBAI HILLS - SIDRA 3",
+    "updatedAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "_autoPublishedBy": "fix-filter-coverage",
+    "visibility": "published",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z"
+  },
+  {
+    "id": "dubai-hills-estate",
+    "nearestMetroStation": "Noor Bank",
+    "description": "Emaar's 2700-acre community built around an 18-hole championship golf course with Dubai Hills Mall.",
+    "populationEstimate": 35000,
+    "restaurantCount": 120,
+    "type": "Master Community",
+    "orgId": "dxb-analytics",
+    "schoolRating": 8.5,
+    "arabicName": "تلال دبي",
+    "grossYieldPct": 5.9,
+    "metroDistanceKm": 5.8,
+    "createdAt": {
+      "_seconds": 1775721694,
+      "_nanoseconds": 485000000
+    },
+    "totalProjects": 58,
+    "golfAccess": true,
+    "disclosedAt": {
+      "_seconds": 1775721694,
+      "_nanoseconds": 485000000
+    },
+    "slug": "dubai-hills-estate",
+    "updatedAt": {
+      "_seconds": 1775721694,
+      "_nanoseconds": 485000000
+    },
+    "area": "New Dubai",
+    "netYieldPct": 4.6,
+    "updatedBy": "seed-script",
+    "visibility": "published",
+    "coordinates": {
+      "lng": 55.2513,
+      "lat": 25.1089
+    },
+    "avgPpsf": 1550,
+    "parkAccess": true,
+    "developersActive": 8,
+    "createdBy": "seed-script",
+    "name": "Dubai Hills Estate",
+    "beachAccess": false,
+    "avgRentPerSqftYr": 92
+  },
+  {
+    "id": "dubai-international-financial-center",
+    "area": "Zaabeel Second",
+    "totalVillas": 0,
+    "updatedBy": "dld-import-script",
+    "hasCoordinates": true,
+    "coordinates": {
+      "lng": 55.28,
+      "lat": 25.21
+    },
+    "dldSource": "Real_Estate_Projects_2026-04-19.csv",
+    "source": "dld-auto",
+    "type": "Master Community",
+    "activeProjects": 0,
+    "orgId": "dxb-analytics",
+    "completedProjects": 0,
+    "totalUnits": 546,
+    "totalBuildings": 2,
+    "arabicName": "مركز دبي المالي الدولي",
+    "createdAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "totalProjects": 1,
+    "createdBy": "dld-import-script",
+    "name": "Dubai International Financial Center",
+    "updatedAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "_autoPublishedBy": "fix-filter-coverage",
+    "visibility": "published",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z"
+  },
+  {
+    "id": "dubai-investment-park-first",
+    "area": "Dubai Investment Park First",
+    "totalVillas": 1892,
+    "updatedBy": "dld-import-script",
+    "hasCoordinates": true,
+    "coordinates": {
+      "lng": 55.18,
+      "lat": 24.99
+    },
+    "dldSource": "Real_Estate_Projects_2026-04-19.csv",
+    "source": "dld-auto",
+    "type": "Master Community",
+    "activeProjects": 8,
+    "orgId": "dxb-analytics",
+    "completedProjects": 2,
+    "totalUnits": 3593,
+    "totalBuildings": 24,
+    "arabicName": "مجمع دبي للاستثمار الاول",
+    "createdAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "totalProjects": 14,
+    "createdBy": "dld-import-script",
+    "name": "Dubai Investment Park First",
+    "updatedAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "_autoPublishedBy": "fix-filter-coverage",
+    "visibility": "published",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z"
+  },
+  {
+    "id": "dubai-investment-park-second",
+    "area": "Dubai Investment Park Second",
+    "totalVillas": 0,
+    "updatedBy": "dld-import-script",
+    "hasCoordinates": true,
+    "coordinates": {
+      "lng": 55.185,
+      "lat": 24.985
+    },
+    "dldSource": "Real_Estate_Projects_2026-04-19.csv",
+    "source": "dld-auto",
+    "type": "Master Community",
+    "activeProjects": 0,
+    "orgId": "dxb-analytics",
+    "completedProjects": 3,
+    "totalUnits": 1524,
+    "totalBuildings": 24,
+    "arabicName": "مجمع دبي للاستثمار الثاني",
+    "createdAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "totalProjects": 3,
+    "createdBy": "dld-import-script",
+    "name": "Dubai Investment Park Second",
+    "updatedAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "_autoPublishedBy": "fix-filter-coverage",
+    "visibility": "published",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z"
+  },
+  {
+    "id": "dubai-land-residence-complex",
+    "area": "Wadi Al Safa 5",
+    "totalVillas": 0,
+    "updatedBy": "dld-import-script",
+    "hasCoordinates": true,
+    "coordinates": {
+      "lng": 55.32,
+      "lat": 25.05
+    },
+    "dldSource": "Real_Estate_Projects_2026-04-19.csv",
+    "source": "dld-auto",
+    "type": "Master Community",
+    "activeProjects": 28,
+    "orgId": "dxb-analytics",
+    "completedProjects": 22,
+    "totalUnits": 22186,
+    "totalBuildings": 90,
+    "arabicName": "مجمع دبي لاند السكني",
+    "createdAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "totalProjects": 94,
+    "createdBy": "dld-import-script",
+    "name": "Dubai Land Residence Complex",
+    "updatedAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "_autoPublishedBy": "fix-filter-coverage",
+    "visibility": "published",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z"
+  },
+  {
+    "id": "dubai-life-style-city",
+    "area": "Wadi Al Safa 7",
+    "totalVillas": 0,
+    "updatedBy": "dld-import-script",
+    "hasCoordinates": false,
+    "coordinates": {
+      "lng": null,
+      "lat": null
+    },
+    "dldSource": "Real_Estate_Projects_2026-04-19.csv",
+    "source": "dld-auto",
+    "type": "Master Community",
+    "activeProjects": 0,
+    "orgId": "dxb-analytics",
+    "completedProjects": 0,
+    "totalUnits": 473,
+    "totalBuildings": 9,
+    "arabicName": "دبي لايف ستايل ستي",
+    "createdAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "totalProjects": 1,
+    "createdBy": "dld-import-script",
+    "name": "Dubai Life Style City",
+    "updatedAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "_autoPublishedBy": "fix-filter-coverage",
+    "visibility": "published",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z"
+  },
+  {
+    "id": "dubai-marina",
+    "nearestMetroStation": "DMCC",
+    "description": "Man-made canal city with stunning waterfront towers, JBR beach, and vibrant nightlife.",
+    "populationEstimate": 55000,
+    "restaurantCount": 380,
+    "type": "Waterfront",
+    "orgId": "dxb-analytics",
+    "schoolRating": 7.8,
+    "arabicName": "دبي مارينا",
+    "grossYieldPct": 6.2,
+    "metroDistanceKm": 0.5,
+    "createdAt": {
+      "_seconds": 1775721693,
+      "_nanoseconds": 91000000
+    },
+    "totalProjects": 92,
+    "disclosedAt": {
+      "_seconds": 1775721693,
+      "_nanoseconds": 91000000
+    },
+    "slug": "dubai-marina",
+    "updatedAt": {
+      "_seconds": 1775721693,
+      "_nanoseconds": 91000000
+    },
+    "area": "Marina",
+    "netYieldPct": 4.9,
+    "updatedBy": "seed-script",
+    "visibility": "published",
+    "coordinates": {
+      "lng": 55.1403,
+      "lat": 25.0805
+    },
+    "avgPpsf": 1850,
+    "parkAccess": true,
+    "developersActive": 18,
+    "createdBy": "seed-script",
+    "name": "Dubai Marina",
+    "beachAccess": true,
+    "avgRentPerSqftYr": 115
+  },
+  {
+    "id": "dubai-maritime-city",
+    "area": "Madinat Dubai Almelaheyah",
+    "totalVillas": 0,
+    "updatedBy": "dld-import-script",
+    "hasCoordinates": true,
+    "coordinates": {
+      "lng": 55.27,
+      "lat": 25.25
+    },
+    "dldSource": "Real_Estate_Projects_2026-04-19.csv",
+    "source": "dld-auto",
+    "type": "Master Community",
+    "activeProjects": 14,
+    "orgId": "dxb-analytics",
+    "completedProjects": 1,
+    "totalUnits": 10414,
+    "totalBuildings": 32,
+    "arabicName": "مدينة دبي الملاحية",
+    "createdAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "totalProjects": 25,
+    "createdBy": "dld-import-script",
+    "name": "Dubai Maritime City",
+    "updatedAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "_autoPublishedBy": "fix-filter-coverage",
+    "visibility": "published",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z"
+  },
+  {
+    "id": "dubai-science-park",
+    "area": "Al Barshaa South Second",
+    "totalVillas": 0,
+    "updatedBy": "dld-import-script",
+    "hasCoordinates": true,
+    "coordinates": {
+      "lng": 55.2,
+      "lat": 25.06
+    },
+    "dldSource": "Real_Estate_Projects_2026-04-19.csv",
+    "source": "dld-auto",
+    "type": "Master Community",
+    "activeProjects": 6,
+    "orgId": "dxb-analytics",
+    "completedProjects": 4,
+    "totalUnits": 11210,
+    "totalBuildings": 22,
+    "arabicName": "حديقة دبي للعلوم",
+    "createdAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "totalProjects": 16,
+    "createdBy": "dld-import-script",
+    "name": "Dubai Science Park",
+    "updatedAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "_autoPublishedBy": "fix-filter-coverage",
+    "visibility": "published",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z"
+  },
+  {
+    "id": "dubai-south",
+    "nearestMetroStation": "Expo 2020",
+    "description": "Aviation-themed master community near Al Maktoum Airport and Expo City with mixed residential districts.",
+    "populationEstimate": 25000,
+    "restaurantCount": 60,
+    "type": "Master Community",
+    "orgId": "dxb-analytics",
+    "schoolRating": 7.5,
+    "arabicName": "دبي الجنوب",
+    "grossYieldPct": 6.8,
+    "metroDistanceKm": 1.5,
+    "createdAt": {
+      "_seconds": 1775721700,
+      "_nanoseconds": 357000000
+    },
+    "totalProjects": 52,
+    "disclosedAt": {
+      "_seconds": 1775721700,
+      "_nanoseconds": 357000000
+    },
+    "slug": "dubai-south",
+    "updatedAt": {
+      "_seconds": 1775721700,
+      "_nanoseconds": 357000000
+    },
+    "area": "Dubai South",
+    "netYieldPct": 5.3,
+    "updatedBy": "seed-script",
+    "coordinates": {
+      "lng": 55.1639,
+      "lat": 24.8942
+    },
+    "avgPpsf": 950,
+    "parkAccess": true,
+    "developersActive": 12,
+    "createdBy": "seed-script",
+    "name": "Dubai South",
+    "beachAccess": false,
+    "avgRentPerSqftYr": 65,
+    "_hiddenBy": "enforce-dld-only-filters",
+    "visibility": "hidden",
+    "_hiddenAt": "2026-04-20T10:57:05.313Z",
+    "_hiddenReason": "not in DLD"
+  },
+  {
+    "id": "dubai-south-residential-district",
+    "area": "Madinat Al Mataar",
+    "totalVillas": 2004,
+    "updatedBy": "dld-import-script",
+    "hasCoordinates": true,
+    "coordinates": {
+      "lng": 55.1615,
+      "lat": 24.8972
+    },
+    "dldSource": "Real_Estate_Projects_2026-04-19.csv",
+    "source": "dld-auto",
+    "type": "Master Community",
+    "activeProjects": 14,
+    "orgId": "dxb-analytics",
+    "completedProjects": 19,
+    "totalUnits": 7694,
+    "totalBuildings": 120,
+    "arabicName": "المدينة السكنية بدبي الجنوب",
+    "createdAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "totalProjects": 70,
+    "createdBy": "dld-import-script",
+    "name": "Dubai South Residential District",
+    "updatedAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "_autoPublishedBy": "fix-filter-coverage",
+    "visibility": "published",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z"
+  },
+  {
+    "id": "dubai-sports-city",
+    "area": "Al Hebiah Fourth",
+    "totalVillas": 68,
+    "updatedBy": "dld-import-script",
+    "hasCoordinates": true,
+    "coordinates": {
+      "lng": 55.23,
+      "lat": 25.04
+    },
+    "dldSource": "Real_Estate_Projects_2026-04-19.csv",
+    "source": "dld-auto",
+    "type": "Master Community",
+    "activeProjects": 18,
+    "orgId": "dxb-analytics",
+    "completedProjects": 61,
+    "totalUnits": 21134,
+    "totalBuildings": 95,
+    "arabicName": "مدينة دبي الرياضية",
+    "createdAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "totalProjects": 88,
+    "createdBy": "dld-import-script",
+    "name": "Dubai Sports City",
+    "updatedAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "_autoPublishedBy": "fix-filter-coverage",
+    "visibility": "published",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z"
+  },
+  {
+    "id": "dubai-studio-city",
+    "area": "Al Hebiah Second",
+    "totalVillas": 0,
+    "updatedBy": "dld-import-script",
+    "hasCoordinates": true,
+    "coordinates": {
+      "lng": 55.225,
+      "lat": 25.04
+    },
+    "dldSource": "Real_Estate_Projects_2026-04-19.csv",
+    "source": "dld-auto",
+    "type": "Master Community",
+    "activeProjects": 10,
+    "orgId": "dxb-analytics",
+    "completedProjects": 7,
+    "totalUnits": 5042,
+    "totalBuildings": 24,
+    "arabicName": "مدينة دبي للستديو",
+    "createdAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "totalProjects": 18,
+    "createdBy": "dld-import-script",
+    "name": "Dubai Studio City",
+    "updatedAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "_autoPublishedBy": "fix-filter-coverage",
+    "visibility": "published",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z"
+  },
+  {
+    "id": "dubai-water-canal",
+    "area": "Al Wasl / Jumeirah Second",
+    "totalVillas": 0,
+    "updatedBy": "dld-import-script",
+    "hasCoordinates": true,
+    "coordinates": {
+      "lng": 55.27,
+      "lat": 25.195
+    },
+    "dldSource": "Real_Estate_Projects_2026-04-19.csv",
+    "source": "dld-auto",
+    "type": "Master Community",
+    "activeProjects": 9,
+    "orgId": "dxb-analytics",
+    "completedProjects": 6,
+    "totalUnits": 3077,
+    "totalBuildings": 38,
+    "arabicName": "قناة دبي المائية",
+    "createdAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "totalProjects": 18,
+    "createdBy": "dld-import-script",
+    "name": "Dubai Water Canal",
+    "updatedAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "_autoPublishedBy": "fix-filter-coverage",
+    "visibility": "published",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z"
+  },
+  {
+    "id": "dubai-world-central",
+    "area": "Madinat Al Mataar",
+    "totalVillas": 6419,
+    "updatedBy": "dld-import-script",
+    "hasCoordinates": true,
+    "coordinates": {
+      "lng": 55.1615,
+      "lat": 24.8972
+    },
+    "dldSource": "Real_Estate_Projects_2026-04-19.csv",
+    "source": "dld-auto",
+    "type": "Master Community",
+    "activeProjects": 28,
+    "orgId": "dxb-analytics",
+    "completedProjects": 12,
+    "totalUnits": 28024,
+    "totalBuildings": 265,
+    "arabicName": "دبي ورلد سنترال",
+    "createdAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "totalProjects": 67,
+    "createdBy": "dld-import-script",
+    "name": "Dubai World Central",
+    "updatedAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "_autoPublishedBy": "fix-filter-coverage",
+    "visibility": "published",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z"
+  },
+  {
+    "id": "dubiotech",
+    "area": "Al Barshaa South Second",
+    "totalVillas": 0,
+    "updatedBy": "dld-import-script",
+    "hasCoordinates": false,
+    "coordinates": {
+      "lng": null,
+      "lat": null
+    },
+    "dldSource": "Real_Estate_Projects_2026-04-19.csv",
+    "source": "dld-auto",
+    "type": "Master Community",
+    "activeProjects": 0,
+    "orgId": "dxb-analytics",
+    "completedProjects": 2,
+    "totalUnits": 0,
+    "totalBuildings": 0,
+    "arabicName": "دبيوتك",
+    "createdAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "totalProjects": 2,
+    "createdBy": "dld-import-script",
+    "name": "Dubiotech",
+    "updatedAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "_autoPublishedBy": "fix-filter-coverage",
+    "visibility": "published",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z"
+  },
+  {
+    "id": "emaar-beachfront",
+    "nearestMetroStation": "Al Sufouh Tram",
+    "description": "Exclusive island in Dubai Harbour with ultra-luxury beachfront towers and private beach.",
+    "populationEstimate": 12000,
+    "restaurantCount": 75,
+    "type": "Beachfront",
+    "orgId": "dxb-analytics",
+    "schoolRating": 8,
+    "arabicName": "اعمار بيتش فرونت",
+    "grossYieldPct": 5.8,
+    "metroDistanceKm": 2.4,
+    "createdAt": {
+      "_seconds": 1775721695,
+      "_nanoseconds": 131000000
+    },
+    "totalProjects": 27,
+    "disclosedAt": {
+      "_seconds": 1775721695,
+      "_nanoseconds": 131000000
+    },
+    "slug": "emaar-beachfront",
+    "updatedAt": {
+      "_seconds": 1775721695,
+      "_nanoseconds": 131000000
+    },
+    "area": "Dubai Harbour",
+    "netYieldPct": 4.5,
+    "updatedBy": "seed-script",
+    "visibility": "published",
+    "coordinates": {
+      "lng": 55.1364,
+      "lat": 25.0921
+    },
+    "avgPpsf": 3200,
+    "parkAccess": true,
+    "developersActive": 1,
+    "createdBy": "seed-script",
+    "name": "Emaar Beachfront",
+    "beachAccess": true,
+    "avgRentPerSqftYr": 185
+  },
+  {
+    "id": "emaar-south",
+    "nearestMetroStation": "Expo 2020",
+    "description": "Golf-centered community near Al Maktoum Airport and Expo City, mixing villas and apartments.",
+    "populationEstimate": 18000,
+    "restaurantCount": 65,
+    "type": "Master Community",
+    "orgId": "dxb-analytics",
+    "schoolRating": 7.8,
+    "arabicName": "اعمار الجنوب",
+    "grossYieldPct": 6.7,
+    "metroDistanceKm": 2.5,
+    "createdAt": {
+      "_seconds": 1775721696,
+      "_nanoseconds": 659000000
+    },
+    "totalProjects": 32,
+    "golfAccess": true,
+    "disclosedAt": {
+      "_seconds": 1775721696,
+      "_nanoseconds": 659000000
+    },
+    "slug": "emaar-south",
+    "updatedAt": {
+      "_seconds": 1775721696,
+      "_nanoseconds": 659000000
+    },
+    "area": "Dubai South",
+    "netYieldPct": 5.2,
+    "updatedBy": "seed-script",
+    "coordinates": {
+      "lng": 55.1633,
+      "lat": 24.8894
+    },
+    "avgPpsf": 1200,
+    "parkAccess": true,
+    "developersActive": 3,
+    "createdBy": "seed-script",
+    "name": "Emaar South",
+    "beachAccess": false,
+    "avgRentPerSqftYr": 80,
+    "_hiddenBy": "enforce-dld-only-filters",
+    "visibility": "hidden",
+    "_hiddenAt": "2026-04-20T10:57:05.313Z",
+    "_hiddenReason": "not in DLD"
+  },
+  {
+    "id": "emirates-hills",
+    "area": "Al Thanayah Fourth",
+    "totalVillas": 26,
+    "updatedBy": "dld-import-script",
+    "hasCoordinates": true,
+    "coordinates": {
+      "lng": 55.17,
+      "lat": 25.06
+    },
+    "dldSource": "Real_Estate_Projects_2026-04-19.csv",
+    "source": "dld-auto",
+    "type": "Master Community",
+    "activeProjects": 0,
+    "orgId": "dxb-analytics",
+    "completedProjects": 1,
+    "totalUnits": 0,
+    "totalBuildings": 2,
+    "arabicName": "تلال الامارات",
+    "createdAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "totalProjects": 1,
+    "createdBy": "dld-import-script",
+    "name": "Emirates Hills",
+    "updatedAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "_autoPublishedBy": "fix-filter-coverage",
+    "visibility": "published",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z"
+  },
+  {
+    "id": "expo-city",
+    "nearestMetroStation": "Expo 2020",
+    "description": "Expo 2020 legacy area being transformed into a sustainable smart city with Expo City Residences.",
+    "populationEstimate": 8000,
+    "restaurantCount": 40,
+    "type": "Mixed-Use",
+    "orgId": "dxb-analytics",
+    "schoolRating": 7.8,
+    "arabicName": "اكسبو سيتي دبي",
+    "grossYieldPct": 6.3,
+    "metroDistanceKm": 0.5,
+    "createdAt": {
+      "_seconds": 1775721700,
+      "_nanoseconds": 669000000
+    },
+    "totalProjects": 12,
+    "disclosedAt": {
+      "_seconds": 1775721700,
+      "_nanoseconds": 669000000
+    },
+    "slug": "expo-city",
+    "updatedAt": {
+      "_seconds": 1775721700,
+      "_nanoseconds": 669000000
+    },
+    "area": "Expo City",
+    "netYieldPct": 4.9,
+    "updatedBy": "seed-script",
+    "coordinates": {
+      "lng": 55.1531,
+      "lat": 24.9608
+    },
+    "avgPpsf": 1300,
+    "parkAccess": true,
+    "developersActive": 2,
+    "createdBy": "seed-script",
+    "name": "Expo City Dubai",
+    "beachAccess": false,
+    "avgRentPerSqftYr": 82,
+    "_hiddenBy": "enforce-dld-only-filters",
+    "visibility": "hidden",
+    "_hiddenAt": "2026-04-20T10:57:05.313Z",
+    "_hiddenReason": "not in DLD"
+  },
+  {
+    "id": "falcon-city",
+    "area": "Wadi Al Safa 2",
+    "totalVillas": 1,
+    "updatedBy": "dld-import-script",
+    "hasCoordinates": true,
+    "coordinates": {
+      "lng": 55.35,
+      "lat": 25.06
+    },
+    "dldSource": "Real_Estate_Projects_2026-04-19.csv",
+    "source": "dld-auto",
+    "type": "Master Community",
+    "activeProjects": 0,
+    "orgId": "dxb-analytics",
+    "completedProjects": 3,
+    "totalUnits": 2172,
+    "totalBuildings": 8,
+    "arabicName": "فالكون ستي",
+    "createdAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "totalProjects": 5,
+    "createdBy": "dld-import-script",
+    "name": "Falcon City",
+    "updatedAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "_autoPublishedBy": "fix-filter-coverage",
+    "visibility": "published",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z"
+  },
+  {
+    "id": "ghadeer-al-tair",
+    "name": "Ghadeer Al tair",
+    "slug": "ghadeer-al-tair",
+    "visibility": "published",
+    "totalProjects": 2,
+    "source": "auto-created-from-dld",
+    "_autoCreatedAt": "2026-04-20T10:54:11.694Z",
+    "_autoCreatedBy": "fix-filter-coverage"
+  },
+  {
+    "id": "hadaeq-sheikh-mohammed-bin-rashid",
+    "name": "Hadaeq Sheikh Mohammed Bin Rashid",
+    "slug": "hadaeq-sheikh-mohammed-bin-rashid",
+    "visibility": "published",
+    "totalProjects": 1,
+    "source": "auto-created-from-dld",
+    "_autoCreatedAt": "2026-04-20T10:54:11.694Z",
+    "_autoCreatedBy": "fix-filter-coverage"
+  },
+  {
+    "id": "hadaeq-sheikh-mohammed-bin-rashid---disrict-7",
+    "area": "Hadaeq Sheikh Mohammed Bin Rashid",
+    "totalVillas": 787,
+    "updatedBy": "dld-import-script",
+    "hasCoordinates": false,
+    "coordinates": {
+      "lng": null,
+      "lat": null
+    },
+    "dldSource": "Real_Estate_Projects_2026-04-19.csv",
+    "source": "dld-auto",
+    "type": "Master Community",
+    "activeProjects": 1,
+    "orgId": "dxb-analytics",
+    "completedProjects": 1,
+    "totalUnits": 1455,
+    "totalBuildings": 14,
+    "arabicName": "حدائق الشيخ محمد بن راشد - ديستركت 7",
+    "createdAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "totalProjects": 2,
+    "createdBy": "dld-import-script",
+    "name": "HADAEQ SHEIKH MOHAMMED BIN RASHID - DISRICT 7",
+    "updatedAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "_autoPublishedBy": "fix-filter-coverage",
+    "visibility": "published",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z"
+  },
+  {
+    "id": "international-city-phase-1",
+    "area": "Al Warsan First",
+    "totalVillas": 0,
+    "updatedBy": "dld-import-script",
+    "hasCoordinates": true,
+    "coordinates": {
+      "lng": 55.4121,
+      "lat": 25.1621
+    },
+    "dldSource": "Real_Estate_Projects_2026-04-19.csv",
+    "source": "dld-auto",
+    "type": "Master Community",
+    "activeProjects": 1,
+    "orgId": "dxb-analytics",
+    "completedProjects": 20,
+    "totalUnits": 7560,
+    "totalBuildings": 129,
+    "arabicName": "المدينة العالمية - المرحلة الاولى",
+    "createdAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "totalProjects": 25,
+    "createdBy": "dld-import-script",
+    "name": "International City Phase 1",
+    "updatedAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "_autoPublishedBy": "fix-filter-coverage",
+    "visibility": "published",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z"
+  },
+  {
+    "id": "international-city-phase-3",
+    "area": "Warsan Fourth",
+    "totalVillas": 0,
+    "updatedBy": "dld-import-script",
+    "hasCoordinates": true,
+    "coordinates": {
+      "lng": 55.42,
+      "lat": 25.165
+    },
+    "dldSource": "Real_Estate_Projects_2026-04-19.csv",
+    "source": "dld-auto",
+    "type": "Master Community",
+    "activeProjects": 12,
+    "orgId": "dxb-analytics",
+    "completedProjects": 15,
+    "totalUnits": 3713,
+    "totalBuildings": 40,
+    "arabicName": "المدينة العالمية - المرحلة الثالثة",
+    "createdAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "totalProjects": 45,
+    "createdBy": "dld-import-script",
+    "name": "International City Phase 3",
+    "updatedAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "_autoPublishedBy": "fix-filter-coverage",
+    "visibility": "published",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z"
+  },
+  {
+    "id": "international-media-production-zone",
+    "area": "Me'Aisem First",
+    "totalVillas": 0,
+    "updatedBy": "dld-import-script",
+    "hasCoordinates": false,
+    "coordinates": {
+      "lng": null,
+      "lat": null
+    },
+    "dldSource": "Real_Estate_Projects_2026-04-19.csv",
+    "source": "dld-auto",
+    "type": "Master Community",
+    "activeProjects": 7,
+    "orgId": "dxb-analytics",
+    "completedProjects": 12,
+    "totalUnits": 14507,
+    "totalBuildings": 59,
+    "arabicName": "المنطقة العالمية للإنتاج الإعلامي",
+    "createdAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "totalProjects": 31,
+    "createdBy": "dld-import-script",
+    "name": "International Media Production Zone",
+    "updatedAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "_autoPublishedBy": "fix-filter-coverage",
+    "visibility": "published",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z"
+  },
+  {
+    "id": "jabal-ali-village",
+    "area": "Jabal Ali First",
+    "totalVillas": 0,
+    "updatedBy": "dld-import-script",
+    "hasCoordinates": false,
+    "coordinates": {
+      "lng": null,
+      "lat": null
+    },
+    "dldSource": "Real_Estate_Projects_2026-04-19.csv",
+    "source": "dld-auto",
+    "type": "Master Community",
+    "activeProjects": 4,
+    "orgId": "dxb-analytics",
+    "completedProjects": 0,
+    "totalUnits": 0,
+    "totalBuildings": 0,
+    "arabicName": "قرية جبل علي",
+    "createdAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "totalProjects": 4,
+    "createdBy": "dld-import-script",
+    "name": "Jabal Ali Village",
+    "updatedAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "_autoPublishedBy": "fix-filter-coverage",
+    "visibility": "published",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z"
+  },
+  {
+    "id": "jabel-ali-hills",
+    "area": "Saih Shuaib 1",
+    "totalVillas": 0,
+    "updatedBy": "dld-import-script",
+    "hasCoordinates": false,
+    "coordinates": {
+      "lng": null,
+      "lat": null
+    },
+    "dldSource": "Real_Estate_Projects_2026-04-19.csv",
+    "source": "dld-auto",
+    "type": "Master Community",
+    "activeProjects": 0,
+    "orgId": "dxb-analytics",
+    "completedProjects": 0,
+    "totalUnits": 0,
+    "totalBuildings": 0,
+    "arabicName": "جبل علي هيلز",
+    "createdAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "totalProjects": 1,
+    "createdBy": "dld-import-script",
+    "name": "JABEL ALI HILLS",
+    "updatedAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "_autoPublishedBy": "fix-filter-coverage",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z",
+    "_hiddenBy": "enforce-dld-only-filters",
+    "visibility": "hidden",
+    "_hiddenAt": "2026-04-20T10:57:05.313Z",
+    "_hiddenReason": "not in DLD"
+  },
+  {
+    "id": "jaddaf-waterfront",
+    "area": "Al Jadaf",
+    "totalVillas": 0,
+    "updatedBy": "dld-import-script",
+    "hasCoordinates": true,
+    "coordinates": {
+      "lng": 55.325,
+      "lat": 25.21
+    },
+    "dldSource": "Real_Estate_Projects_2026-04-19.csv",
+    "source": "dld-auto",
+    "type": "Master Community",
+    "activeProjects": 8,
+    "orgId": "dxb-analytics",
+    "completedProjects": 12,
+    "totalUnits": 4242,
+    "totalBuildings": 27,
+    "arabicName": "جداف الواجهة المائية",
+    "createdAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "totalProjects": 26,
+    "createdBy": "dld-import-script",
+    "name": "Jaddaf Waterfront",
+    "updatedAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "_autoPublishedBy": "fix-filter-coverage",
+    "visibility": "published",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z"
+  },
+  {
+    "id": "jumeira-bay",
+    "area": "Island 2",
+    "totalVillas": 68,
+    "updatedBy": "dld-import-script",
+    "hasCoordinates": true,
+    "coordinates": {
+      "lng": 55.235,
+      "lat": 25.195
+    },
+    "dldSource": "Real_Estate_Projects_2026-04-19.csv",
+    "source": "dld-auto",
+    "type": "Master Community",
+    "activeProjects": 1,
+    "orgId": "dxb-analytics",
+    "completedProjects": 4,
+    "totalUnits": 212,
+    "totalBuildings": 7,
+    "arabicName": "جميرا باي",
+    "createdAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "totalProjects": 5,
+    "createdBy": "dld-import-script",
+    "name": "Jumeira Bay",
+    "updatedAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "_autoPublishedBy": "fix-filter-coverage",
+    "visibility": "published",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z"
+  },
+  {
+    "id": "jumeirah-garden-city",
+    "area": "Al Satwa",
+    "totalVillas": 0,
+    "updatedBy": "dld-import-script",
+    "hasCoordinates": true,
+    "coordinates": {
+      "lng": 55.27,
+      "lat": 25.22
+    },
+    "dldSource": "Real_Estate_Projects_2026-04-19.csv",
+    "source": "dld-auto",
+    "type": "Master Community",
+    "activeProjects": 16,
+    "orgId": "dxb-analytics",
+    "completedProjects": 1,
+    "totalUnits": 3060,
+    "totalBuildings": 33,
+    "arabicName": "جميرا جاردن سيتي",
+    "createdAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "totalProjects": 36,
+    "createdBy": "dld-import-script",
+    "name": "Jumeirah Garden City",
+    "updatedAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "_autoPublishedBy": "fix-filter-coverage",
+    "visibility": "published",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z"
+  },
+  {
+    "id": "jumeirah-golf-estates",
+    "area": "Me'Aisem First",
+    "totalVillas": 556,
+    "updatedBy": "dld-import-script",
+    "hasCoordinates": true,
+    "coordinates": {
+      "lng": 55.17,
+      "lat": 25.03
+    },
+    "dldSource": "Real_Estate_Projects_2026-04-19.csv",
+    "source": "dld-auto",
+    "type": "Master Community",
+    "activeProjects": 3,
+    "orgId": "dxb-analytics",
+    "completedProjects": 21,
+    "totalUnits": 589,
+    "totalBuildings": 7,
+    "arabicName": "جميرا غولف للعقارات",
+    "createdAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "totalProjects": 27,
+    "createdBy": "dld-import-script",
+    "name": "Jumeirah Golf Estates",
+    "updatedAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "_autoPublishedBy": "fix-filter-coverage",
+    "visibility": "published",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z"
+  },
+  {
+    "id": "jumeirah-golf-estates---phase-b",
+    "area": "Me'Aisem First",
+    "totalVillas": 0,
+    "updatedBy": "dld-import-script",
+    "hasCoordinates": true,
+    "coordinates": {
+      "lng": 55.17,
+      "lat": 25.03
+    },
+    "dldSource": "Real_Estate_Projects_2026-04-19.csv",
+    "source": "dld-auto",
+    "type": "Master Community",
+    "activeProjects": 0,
+    "orgId": "dxb-analytics",
+    "completedProjects": 0,
+    "totalUnits": 0,
+    "totalBuildings": 0,
+    "arabicName": "جميرا غولف للعقارات - مرحلة بي",
+    "createdAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "totalProjects": 2,
+    "createdBy": "dld-import-script",
+    "name": "Jumeirah Golf Estates - Phase B",
+    "updatedAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "_autoPublishedBy": "fix-filter-coverage",
+    "visibility": "published",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z"
+  },
+  {
+    "id": "jumeirah-islands",
+    "area": "Al Thanyah Fifth",
+    "totalVillas": 780,
+    "updatedBy": "dld-import-script",
+    "hasCoordinates": true,
+    "coordinates": {
+      "lng": 55.15,
+      "lat": 25.055
+    },
+    "dldSource": "Real_Estate_Projects_2026-04-19.csv",
+    "source": "dld-auto",
+    "type": "Master Community",
+    "activeProjects": 8,
+    "orgId": "dxb-analytics",
+    "completedProjects": 5,
+    "totalUnits": 9115,
+    "totalBuildings": 26,
+    "arabicName": "جزر جميرا",
+    "createdAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "totalProjects": 17,
+    "createdBy": "dld-import-script",
+    "name": "Jumeirah Islands",
+    "updatedAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "_autoPublishedBy": "fix-filter-coverage",
+    "visibility": "published",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z"
+  },
+  {
+    "id": "jumeirah-lakes-towers",
+    "area": "Al Thanyah Fifth",
+    "totalVillas": 0,
+    "updatedBy": "dld-import-script",
+    "hasCoordinates": true,
+    "coordinates": {
+      "lng": 55.1478,
+      "lat": 25.0699
+    },
+    "dldSource": "Real_Estate_Projects_2026-04-19.csv",
+    "source": "dld-auto",
+    "type": "Master Community",
+    "activeProjects": 7,
+    "orgId": "dxb-analytics",
+    "completedProjects": 47,
+    "totalUnits": 21944,
+    "totalBuildings": 54,
+    "arabicName": "ابراج بحيرات الجميرا",
+    "createdAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "totalProjects": 55,
+    "createdBy": "dld-import-script",
+    "name": "Jumeirah Lakes Towers",
+    "updatedAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "_autoPublishedBy": "fix-filter-coverage",
+    "visibility": "published",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z"
+  },
+  {
+    "id": "jumeirah-park",
+    "area": "Al Thanyah Fifth",
+    "totalVillas": 2602,
+    "updatedBy": "dld-import-script",
+    "hasCoordinates": true,
+    "coordinates": {
+      "lng": 55.155,
+      "lat": 25.05
+    },
+    "dldSource": "Real_Estate_Projects_2026-04-19.csv",
+    "source": "dld-auto",
+    "type": "Master Community",
+    "activeProjects": 1,
+    "orgId": "dxb-analytics",
+    "completedProjects": 6,
+    "totalUnits": 0,
+    "totalBuildings": 1,
+    "arabicName": "جميرا بارك",
+    "createdAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "totalProjects": 8,
+    "createdBy": "dld-import-script",
+    "name": "Jumeirah Park",
+    "updatedAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "_autoPublishedBy": "fix-filter-coverage",
+    "visibility": "published",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z"
+  },
+  {
+    "id": "jumeirah-second",
+    "name": "Jumeirah Second",
+    "slug": "jumeirah-second",
+    "visibility": "published",
+    "totalProjects": 4,
+    "source": "auto-created-from-dld",
+    "_autoCreatedAt": "2026-04-20T10:54:11.694Z",
+    "_autoCreatedBy": "fix-filter-coverage"
+  },
+  {
+    "id": "jumeriah-beach-residence---jbr",
+    "area": "Marsa Dubai",
+    "totalVillas": 0,
+    "updatedBy": "dld-import-script",
+    "hasCoordinates": false,
+    "coordinates": {
+      "lng": null,
+      "lat": null
+    },
+    "dldSource": "Real_Estate_Projects_2026-04-19.csv",
+    "source": "dld-auto",
+    "type": "Master Community",
+    "activeProjects": 0,
+    "orgId": "dxb-analytics",
+    "completedProjects": 3,
+    "totalUnits": 1343,
+    "totalBuildings": 5,
+    "arabicName": "جميرا بيتش ريزيدنس  - الجيه بي آر",
+    "createdAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "totalProjects": 3,
+    "createdBy": "dld-import-script",
+    "name": "Jumeriah Beach Residence  - JBR",
+    "updatedAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "_autoPublishedBy": "fix-filter-coverage",
+    "visibility": "published",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z"
+  },
+  {
+    "id": "jvc",
+    "nearestMetroStation": "None",
+    "description": "Family-friendly community with mid-rise apartments and townhouses. Most affordable premium location.",
+    "populationEstimate": 70000,
+    "restaurantCount": 260,
+    "type": "Mid-rise Mixed",
+    "orgId": "dxb-analytics",
+    "schoolRating": 7.2,
+    "arabicName": "قرية جميرا سركل",
+    "grossYieldPct": 7.1,
+    "metroDistanceKm": 8.5,
+    "createdAt": {
+      "_seconds": 1775721695,
+      "_nanoseconds": 743000000
+    },
+    "totalProjects": 185,
+    "disclosedAt": {
+      "_seconds": 1775721695,
+      "_nanoseconds": 743000000
+    },
+    "slug": "jvc",
+    "updatedAt": {
+      "_seconds": 1775721695,
+      "_nanoseconds": 743000000
+    },
+    "area": "New Dubai",
+    "netYieldPct": 5.6,
+    "updatedBy": "seed-script",
+    "visibility": "published",
+    "coordinates": {
+      "lng": 55.2081,
+      "lat": 25.059
+    },
+    "avgPpsf": 1100,
+    "parkAccess": true,
+    "developersActive": 42,
+    "createdBy": "seed-script",
+    "name": "Jumeirah Village Circle",
+    "beachAccess": false,
+    "avgRentPerSqftYr": 78
+  },
+  {
+    "id": "jvt",
+    "nearestMetroStation": "None",
+    "description": "Sister community to JVC with more villas and townhouses, focused on family living.",
+    "populationEstimate": 22000,
+    "restaurantCount": 85,
+    "type": "Family Villas",
+    "orgId": "dxb-analytics",
+    "schoolRating": 7,
+    "arabicName": "قرية جميرا تراينجل",
+    "grossYieldPct": 6.9,
+    "metroDistanceKm": 9,
+    "createdAt": {
+      "_seconds": 1775721696,
+      "_nanoseconds": 60000000
+    },
+    "totalProjects": 42,
+    "disclosedAt": {
+      "_seconds": 1775721696,
+      "_nanoseconds": 60000000
+    },
+    "slug": "jvt",
+    "updatedAt": {
+      "_seconds": 1775721696,
+      "_nanoseconds": 60000000
+    },
+    "area": "New Dubai",
+    "netYieldPct": 5.4,
+    "updatedBy": "seed-script",
+    "visibility": "published",
+    "coordinates": {
+      "lng": 55.2033,
+      "lat": 25.0517
+    },
+    "avgPpsf": 1050,
+    "parkAccess": true,
+    "developersActive": 12,
+    "createdBy": "seed-script",
+    "name": "Jumeirah Village Triangle",
+    "beachAccess": false,
+    "avgRentPerSqftYr": 72
+  },
+  {
+    "id": "la-mer",
+    "area": "Jumeirah First",
+    "totalVillas": 147,
+    "updatedBy": "dld-import-script",
+    "hasCoordinates": true,
+    "coordinates": {
+      "lng": 55.25,
+      "lat": 25.215
+    },
+    "dldSource": "Real_Estate_Projects_2026-04-19.csv",
+    "source": "dld-auto",
+    "type": "Master Community",
+    "activeProjects": 1,
+    "orgId": "dxb-analytics",
+    "completedProjects": 8,
+    "totalUnits": 1612,
+    "totalBuildings": 29,
+    "arabicName": "لامير",
+    "createdAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "totalProjects": 14,
+    "createdBy": "dld-import-script",
+    "name": "LA MER",
+    "updatedAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "_autoPublishedBy": "fix-filter-coverage",
+    "visibility": "published",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z"
+  },
+  {
+    "id": "lakes---deema-1",
+    "area": "Al Thanyah Third",
+    "totalVillas": 65,
+    "updatedBy": "dld-import-script",
+    "hasCoordinates": false,
+    "coordinates": {
+      "lng": null,
+      "lat": null
+    },
+    "dldSource": "Real_Estate_Projects_2026-04-19.csv",
+    "source": "dld-auto",
+    "type": "Master Community",
+    "activeProjects": 0,
+    "orgId": "dxb-analytics",
+    "completedProjects": 1,
+    "totalUnits": 0,
+    "totalBuildings": 0,
+    "arabicName": "البحيرات - ديما 1",
+    "createdAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "totalProjects": 1,
+    "createdBy": "dld-import-script",
+    "name": "Lakes - Deema 1",
+    "updatedAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "_autoPublishedBy": "fix-filter-coverage",
+    "visibility": "published",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z"
+  },
+  {
+    "id": "lakes---deema-2",
+    "area": "Al Thanyah Third",
+    "totalVillas": 50,
+    "updatedBy": "dld-import-script",
+    "hasCoordinates": false,
+    "coordinates": {
+      "lng": null,
+      "lat": null
+    },
+    "dldSource": "Real_Estate_Projects_2026-04-19.csv",
+    "source": "dld-auto",
+    "type": "Master Community",
+    "activeProjects": 0,
+    "orgId": "dxb-analytics",
+    "completedProjects": 1,
+    "totalUnits": 0,
+    "totalBuildings": 0,
+    "arabicName": "البحيرات - ديما 2",
+    "createdAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "totalProjects": 1,
+    "createdBy": "dld-import-script",
+    "name": "Lakes - Deema 2",
+    "updatedAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "_autoPublishedBy": "fix-filter-coverage",
+    "visibility": "published",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z"
+  },
+  {
+    "id": "lakes---deema-3",
+    "area": "Al Thanyah Third",
+    "totalVillas": 53,
+    "updatedBy": "dld-import-script",
+    "hasCoordinates": false,
+    "coordinates": {
+      "lng": null,
+      "lat": null
+    },
+    "dldSource": "Real_Estate_Projects_2026-04-19.csv",
+    "source": "dld-auto",
+    "type": "Master Community",
+    "activeProjects": 0,
+    "orgId": "dxb-analytics",
+    "completedProjects": 1,
+    "totalUnits": 0,
+    "totalBuildings": 0,
+    "arabicName": "البحيرات -  ديما 3",
+    "createdAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "totalProjects": 1,
+    "createdBy": "dld-import-script",
+    "name": "Lakes - Deema 3",
+    "updatedAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "_autoPublishedBy": "fix-filter-coverage",
+    "visibility": "published",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z"
+  },
+  {
+    "id": "lakes---deema-4",
+    "area": "Al Thanyah Third",
+    "totalVillas": 56,
+    "updatedBy": "dld-import-script",
+    "hasCoordinates": false,
+    "coordinates": {
+      "lng": null,
+      "lat": null
+    },
+    "dldSource": "Real_Estate_Projects_2026-04-19.csv",
+    "source": "dld-auto",
+    "type": "Master Community",
+    "activeProjects": 0,
+    "orgId": "dxb-analytics",
+    "completedProjects": 1,
+    "totalUnits": 0,
+    "totalBuildings": 0,
+    "arabicName": "البحيرات - ديما 4",
+    "createdAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "totalProjects": 1,
+    "createdBy": "dld-import-script",
+    "name": "Lakes - Deema 4",
+    "updatedAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "_autoPublishedBy": "fix-filter-coverage",
+    "visibility": "published",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z"
+  },
+  {
+    "id": "lakes---ghadeer",
+    "area": "Al Thanyah Third",
+    "totalVillas": 138,
+    "updatedBy": "dld-import-script",
+    "hasCoordinates": false,
+    "coordinates": {
+      "lng": null,
+      "lat": null
+    },
+    "dldSource": "Real_Estate_Projects_2026-04-19.csv",
+    "source": "dld-auto",
+    "type": "Master Community",
+    "activeProjects": 0,
+    "orgId": "dxb-analytics",
+    "completedProjects": 1,
+    "totalUnits": 0,
+    "totalBuildings": 0,
+    "arabicName": "البحيرات - غدير",
+    "createdAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "totalProjects": 1,
+    "createdBy": "dld-import-script",
+    "name": "Lakes - Ghadeer",
+    "updatedAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "_autoPublishedBy": "fix-filter-coverage",
+    "visibility": "published",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z"
+  },
+  {
+    "id": "living-legends",
+    "area": "Wadi Al Safa 3",
+    "totalVillas": 90,
+    "updatedBy": "dld-import-script",
+    "hasCoordinates": true,
+    "coordinates": {
+      "lng": 55.31,
+      "lat": 25.04
+    },
+    "dldSource": "Real_Estate_Projects_2026-04-19.csv",
+    "source": "dld-auto",
+    "type": "Master Community",
+    "activeProjects": 4,
+    "orgId": "dxb-analytics",
+    "completedProjects": 6,
+    "totalUnits": 2196,
+    "totalBuildings": 12,
+    "arabicName": "مجمع الأساطير الحية السكني",
+    "createdAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "totalProjects": 12,
+    "createdBy": "dld-import-script",
+    "name": "Living Legends",
+    "updatedAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "_autoPublishedBy": "fix-filter-coverage",
+    "visibility": "published",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z"
+  },
+  {
+    "id": "liwan1",
+    "area": "Wadi Al Safa 2",
+    "totalVillas": 30,
+    "updatedBy": "dld-import-script",
+    "hasCoordinates": true,
+    "coordinates": {
+      "lng": 55.31,
+      "lat": 25.05
+    },
+    "dldSource": "Real_Estate_Projects_2026-04-19.csv",
+    "source": "dld-auto",
+    "type": "Master Community",
+    "activeProjects": 3,
+    "orgId": "dxb-analytics",
+    "completedProjects": 54,
+    "totalUnits": 6264,
+    "totalBuildings": 59,
+    "arabicName": "ليوان 1",
+    "createdAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "totalProjects": 64,
+    "createdBy": "dld-import-script",
+    "name": "Liwan1",
+    "updatedAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "_autoPublishedBy": "fix-filter-coverage",
+    "visibility": "published",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z"
+  },
+  {
+    "id": "liwan2",
+    "area": "Wadi Al Safa 2",
+    "totalVillas": 0,
+    "updatedBy": "dld-import-script",
+    "hasCoordinates": true,
+    "coordinates": {
+      "lng": 55.315,
+      "lat": 25.052
+    },
+    "dldSource": "Real_Estate_Projects_2026-04-19.csv",
+    "source": "dld-auto",
+    "type": "Master Community",
+    "activeProjects": 1,
+    "orgId": "dxb-analytics",
+    "completedProjects": 0,
+    "totalUnits": 46,
+    "totalBuildings": 2,
+    "arabicName": "ليوان 2",
+    "createdAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "totalProjects": 3,
+    "createdBy": "dld-import-script",
+    "name": "Liwan2",
+    "updatedAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "_autoPublishedBy": "fix-filter-coverage",
+    "visibility": "published",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z"
+  },
+  {
+    "id": "majan",
+    "area": "Wadi Al Safa 3",
+    "totalVillas": 0,
+    "updatedBy": "dld-import-script",
+    "hasCoordinates": true,
+    "coordinates": {
+      "lng": 55.3,
+      "lat": 25.04
+    },
+    "dldSource": "Real_Estate_Projects_2026-04-19.csv",
+    "source": "dld-auto",
+    "type": "Master Community",
+    "activeProjects": 18,
+    "orgId": "dxb-analytics",
+    "completedProjects": 9,
+    "totalUnits": 8416,
+    "totalBuildings": 41,
+    "arabicName": "ماجان",
+    "createdAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "totalProjects": 46,
+    "createdBy": "dld-import-script",
+    "name": "Majan",
+    "updatedAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "_autoPublishedBy": "fix-filter-coverage",
+    "visibility": "published",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z"
+  },
+  {
+    "id": "marsa-dubai",
+    "name": "Marsa Dubai",
+    "slug": "marsa-dubai",
+    "visibility": "published",
+    "totalProjects": 4,
+    "source": "auto-created-from-dld",
+    "_autoCreatedAt": "2026-04-20T10:54:11.694Z",
+    "_autoCreatedBy": "fix-filter-coverage"
+  },
+  {
+    "id": "mbr-city",
+    "nearestMetroStation": "Business Bay",
+    "description": "Mohammed Bin Rashid City — a vast master-planned community with Meydan racecourse and lagoons.",
+    "populationEstimate": 28000,
+    "restaurantCount": 180,
+    "type": "Master Community",
+    "orgId": "dxb-analytics",
+    "schoolRating": 8.1,
+    "arabicName": "مدينة محمد بن راشد",
+    "grossYieldPct": 5.9,
+    "metroDistanceKm": 4.2,
+    "createdAt": {
+      "_seconds": 1775721695,
+      "_nanoseconds": 436000000
+    },
+    "totalProjects": 120,
+    "disclosedAt": {
+      "_seconds": 1775721695,
+      "_nanoseconds": 436000000
+    },
+    "slug": "mbr-city",
+    "updatedAt": {
+      "_seconds": 1775721695,
+      "_nanoseconds": 436000000
+    },
+    "area": "MBR City",
+    "netYieldPct": 4.6,
+    "updatedBy": "seed-script",
+    "visibility": "published",
+    "coordinates": {
+      "lng": 55.3212,
+      "lat": 25.1789
+    },
+    "avgPpsf": 1700,
+    "parkAccess": true,
+    "developersActive": 28,
+    "createdBy": "seed-script",
+    "name": "MBR City",
+    "beachAccess": false,
+    "avgRentPerSqftYr": 100
+  },
+  {
+    "id": "meaisem-second",
+    "name": "Me'Aisem Second",
+    "slug": "meaisem-second",
+    "visibility": "published",
+    "totalProjects": 7,
+    "source": "auto-created-from-dld",
+    "_autoCreatedAt": "2026-04-20T10:54:11.694Z",
+    "_autoCreatedBy": "fix-filter-coverage"
+  },
+  {
+    "id": "meydan",
+    "nearestMetroStation": "Business Bay",
+    "description": "Home to Meydan Racecourse and luxury villa communities with horse-racing heritage.",
+    "populationEstimate": 18000,
+    "restaurantCount": 75,
+    "type": "Luxury Villas",
+    "orgId": "dxb-analytics",
+    "schoolRating": 7.8,
+    "arabicName": "ميدان",
+    "grossYieldPct": 6.1,
+    "metroDistanceKm": 4.5,
+    "createdAt": {
+      "_seconds": 1775721700,
+      "_nanoseconds": 49000000
+    },
+    "totalProjects": 42,
+    "disclosedAt": {
+      "_seconds": 1775721700,
+      "_nanoseconds": 49000000
+    },
+    "slug": "meydan",
+    "updatedAt": {
+      "_seconds": 1775721700,
+      "_nanoseconds": 49000000
+    },
+    "area": "MBR City",
+    "netYieldPct": 4.7,
+    "updatedBy": "seed-script",
+    "coordinates": {
+      "lng": 55.3019,
+      "lat": 25.1572
+    },
+    "avgPpsf": 1450,
+    "parkAccess": true,
+    "developersActive": 8,
+    "createdBy": "seed-script",
+    "name": "Meydan",
+    "beachAccess": false,
+    "avgRentPerSqftYr": 88,
+    "_hiddenBy": "enforce-dld-only-filters",
+    "visibility": "hidden",
+    "_hiddenAt": "2026-04-20T10:57:05.313Z",
+    "_hiddenReason": "not in DLD"
+  },
+  {
+    "id": "meydan-one-community",
+    "area": "Al Merkadh",
+    "totalVillas": 0,
+    "updatedBy": "dld-import-script",
+    "hasCoordinates": true,
+    "coordinates": {
+      "lng": 55.3,
+      "lat": 25.17
+    },
+    "dldSource": "Real_Estate_Projects_2026-04-19.csv",
+    "source": "dld-auto",
+    "type": "Master Community",
+    "activeProjects": 13,
+    "orgId": "dxb-analytics",
+    "completedProjects": 55,
+    "totalUnits": 14133,
+    "totalBuildings": 75,
+    "arabicName": "مجمع ميدان ون",
+    "createdAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "totalProjects": 71,
+    "createdBy": "dld-import-script",
+    "name": "Meydan One Community",
+    "updatedAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "_autoPublishedBy": "fix-filter-coverage",
+    "visibility": "published",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z"
+  },
+  {
+    "id": "meydan-racecourse-community",
+    "area": "Nad Al Shiba First",
+    "totalVillas": 306,
+    "updatedBy": "dld-import-script",
+    "hasCoordinates": true,
+    "coordinates": {
+      "lng": 55.299,
+      "lat": 25.168
+    },
+    "dldSource": "Real_Estate_Projects_2026-04-19.csv",
+    "source": "dld-auto",
+    "type": "Master Community",
+    "activeProjects": 4,
+    "orgId": "dxb-analytics",
+    "completedProjects": 13,
+    "totalUnits": 2564,
+    "totalBuildings": 52,
+    "arabicName": "مجمع مضمار ميدان",
+    "createdAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "totalProjects": 24,
+    "createdBy": "dld-import-script",
+    "name": "Meydan Racecourse Community",
+    "updatedAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "_autoPublishedBy": "fix-filter-coverage",
+    "visibility": "published",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z"
+  },
+  {
+    "id": "mina-rashid",
+    "nearestMetroStation": "Al Ghubaiba",
+    "description": "Heritage port area being transformed into a luxury marina destination with Sirius Star residences.",
+    "populationEstimate": 9000,
+    "restaurantCount": 55,
+    "type": "Waterfront",
+    "orgId": "dxb-analytics",
+    "schoolRating": 7.2,
+    "arabicName": "ميناء راشد",
+    "grossYieldPct": 5.8,
+    "metroDistanceKm": 1.2,
+    "createdAt": {
+      "_seconds": 1775721699,
+      "_nanoseconds": 141000000
+    },
+    "totalProjects": 14,
+    "disclosedAt": {
+      "_seconds": 1775721699,
+      "_nanoseconds": 141000000
+    },
+    "slug": "mina-rashid",
+    "updatedAt": {
+      "_seconds": 1775721699,
+      "_nanoseconds": 141000000
+    },
+    "area": "Bur Dubai",
+    "netYieldPct": 4.5,
+    "updatedBy": "seed-script",
+    "visibility": "published",
+    "coordinates": {
+      "lng": 55.2864,
+      "lat": 25.2569
+    },
+    "avgPpsf": 1750,
+    "parkAccess": true,
+    "developersActive": 2,
+    "createdBy": "seed-script",
+    "name": "Mina Rashid",
+    "beachAccess": false,
+    "avgRentPerSqftYr": 100
+  },
+  {
+    "id": "mirdif",
+    "name": "Mirdif",
+    "slug": "mirdif",
+    "visibility": "published",
+    "totalProjects": 4,
+    "source": "auto-created-from-dld",
+    "_autoCreatedAt": "2026-04-20T10:54:11.694Z",
+    "_autoCreatedBy": "fix-filter-coverage"
+  },
+  {
+    "id": "mohammed-bin-rashid-al-maktoum-city--district--1-community",
+    "area": "Al Merkadh",
+    "totalVillas": 0,
+    "updatedBy": "dld-import-script",
+    "hasCoordinates": false,
+    "coordinates": {
+      "lng": null,
+      "lat": null
+    },
+    "dldSource": "Real_Estate_Projects_2026-04-19.csv",
+    "source": "dld-auto",
+    "type": "Master Community",
+    "activeProjects": 1,
+    "orgId": "dxb-analytics",
+    "completedProjects": 33,
+    "totalUnits": 2135,
+    "totalBuildings": 33,
+    "arabicName": "مجمع مدينة الشيخ محمد بن راشد آل مكتوم - ديستريكت -1",
+    "createdAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "totalProjects": 35,
+    "createdBy": "dld-import-script",
+    "name": "Mohammed Bin Rashid AL Maktoum City -District -1 Community",
+    "updatedAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "_autoPublishedBy": "fix-filter-coverage",
+    "visibility": "published",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z"
+  },
+  {
+    "id": "mohammed-bin-rashid-al-maktoum-district-11",
+    "area": "Wadi Al Safa 3",
+    "totalVillas": 2047,
+    "updatedBy": "dld-import-script",
+    "hasCoordinates": false,
+    "coordinates": {
+      "lng": null,
+      "lat": null
+    },
+    "dldSource": "Real_Estate_Projects_2026-04-19.csv",
+    "source": "dld-auto",
+    "type": "Master Community",
+    "activeProjects": 16,
+    "orgId": "dxb-analytics",
+    "completedProjects": 1,
+    "totalUnits": 2016,
+    "totalBuildings": 29,
+    "arabicName": "مدينة محمد بن راشد آل مكتوم – ديستركت 11",
+    "createdAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "totalProjects": 36,
+    "createdBy": "dld-import-script",
+    "name": "Mohammed Bin Rashid AL Maktoum District 11",
+    "updatedAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "_autoPublishedBy": "fix-filter-coverage",
+    "visibility": "published",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z"
+  },
+  {
+    "id": "motor-city",
+    "area": "Al Hebiah First",
+    "totalVillas": 232,
+    "updatedBy": "dld-import-script",
+    "hasCoordinates": true,
+    "coordinates": {
+      "lng": 55.238,
+      "lat": 25.052
+    },
+    "dldSource": "Real_Estate_Projects_2026-04-19.csv",
+    "source": "dld-auto",
+    "type": "Master Community",
+    "activeProjects": 4,
+    "orgId": "dxb-analytics",
+    "completedProjects": 6,
+    "totalUnits": 10341,
+    "totalBuildings": 33,
+    "arabicName": "موتور ستي",
+    "createdAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "totalProjects": 18,
+    "createdBy": "dld-import-script",
+    "name": "Motor City",
+    "updatedAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "_autoPublishedBy": "fix-filter-coverage",
+    "visibility": "published",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z"
+  },
+  {
+    "id": "mudon",
+    "area": "Al Hebiah Sixth",
+    "totalVillas": 2343,
+    "updatedBy": "dld-import-script",
+    "hasCoordinates": true,
+    "coordinates": {
+      "lng": 55.25,
+      "lat": 25.02
+    },
+    "dldSource": "Real_Estate_Projects_2026-04-19.csv",
+    "source": "dld-auto",
+    "type": "Master Community",
+    "activeProjects": 5,
+    "orgId": "dxb-analytics",
+    "completedProjects": 9,
+    "totalUnits": 181,
+    "totalBuildings": 1,
+    "arabicName": "مدن",
+    "createdAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "totalProjects": 14,
+    "createdBy": "dld-import-script",
+    "name": "Mudon",
+    "updatedAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "_autoPublishedBy": "fix-filter-coverage",
+    "visibility": "published",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z"
+  },
+  {
+    "id": "nad-al-sheba-gardens",
+    "area": "Nad Al Shiba First",
+    "totalVillas": 911,
+    "updatedBy": "dld-import-script",
+    "hasCoordinates": true,
+    "coordinates": {
+      "lng": 55.31,
+      "lat": 25.16
+    },
+    "dldSource": "Real_Estate_Projects_2026-04-19.csv",
+    "source": "dld-auto",
+    "type": "Master Community",
+    "activeProjects": 9,
+    "orgId": "dxb-analytics",
+    "completedProjects": 1,
+    "totalUnits": 312,
+    "totalBuildings": 6,
+    "arabicName": "ند الشبا جاردنز",
+    "createdAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "totalProjects": 14,
+    "createdBy": "dld-import-script",
+    "name": "Nad Al Sheba Gardens",
+    "updatedAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "_autoPublishedBy": "fix-filter-coverage",
+    "visibility": "published",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z"
+  },
+  {
+    "id": "nad-al-shiba-first",
+    "name": "Nad Al Shiba First",
+    "slug": "nad-al-shiba-first",
+    "visibility": "published",
+    "totalProjects": 3,
+    "source": "auto-created-from-dld",
+    "_autoCreatedAt": "2026-04-20T10:54:11.694Z",
+    "_autoCreatedBy": "fix-filter-coverage"
+  },
+  {
+    "id": "palm-deira",
+    "area": "Palm Deira",
+    "totalVillas": 0,
+    "updatedBy": "dld-import-script",
+    "hasCoordinates": true,
+    "coordinates": {
+      "lng": 55.33,
+      "lat": 25.29
+    },
+    "dldSource": "Real_Estate_Projects_2026-04-19.csv",
+    "source": "dld-auto",
+    "type": "Master Community",
+    "activeProjects": 30,
+    "orgId": "dxb-analytics",
+    "completedProjects": 0,
+    "totalUnits": 9198,
+    "totalBuildings": 116,
+    "arabicName": "نخلة ديرة",
+    "createdAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "totalProjects": 103,
+    "createdBy": "dld-import-script",
+    "name": "Palm Deira",
+    "updatedAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "_autoPublishedBy": "fix-filter-coverage",
+    "visibility": "published",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z"
+  },
+  {
+    "id": "palm-jabal-ali",
+    "area": "Palm Jabal Ali",
+    "totalVillas": 0,
+    "updatedBy": "dld-import-script",
+    "hasCoordinates": true,
+    "coordinates": {
+      "lng": 55.02,
+      "lat": 25.01
+    },
+    "dldSource": "Real_Estate_Projects_2026-04-19.csv",
+    "source": "dld-auto",
+    "type": "Master Community",
+    "activeProjects": 9,
+    "orgId": "dxb-analytics",
+    "completedProjects": 0,
+    "totalUnits": 0,
+    "totalBuildings": 0,
+    "arabicName": "نخلة جبل علي",
+    "createdAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "totalProjects": 20,
+    "createdBy": "dld-import-script",
+    "name": "Palm Jabal Ali",
+    "updatedAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "_autoPublishedBy": "fix-filter-coverage",
+    "visibility": "published",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z"
+  },
+  {
+    "id": "palm-jumeirah",
+    "nearestMetroStation": "Palm Jumeirah Tram",
+    "description": "The world's largest man-made island, shaped like a palm tree with luxury villas and beachfront towers.",
+    "populationEstimate": 25000,
+    "restaurantCount": 220,
+    "type": "Beachfront",
+    "orgId": "dxb-analytics",
+    "schoolRating": 8,
+    "arabicName": "نخلة جميرا",
+    "grossYieldPct": 5.9,
+    "metroDistanceKm": 3.5,
+    "createdAt": {
+      "_seconds": 1775721694,
+      "_nanoseconds": 184000000
+    },
+    "totalProjects": 68,
+    "disclosedAt": {
+      "_seconds": 1775721694,
+      "_nanoseconds": 184000000
+    },
+    "slug": "palm-jumeirah",
+    "updatedAt": {
+      "_seconds": 1775721694,
+      "_nanoseconds": 184000000
+    },
+    "area": "Waterfront",
+    "netYieldPct": 4.6,
+    "updatedBy": "seed-script",
+    "visibility": "published",
+    "coordinates": {
+      "lng": 55.139,
+      "lat": 25.1124
+    },
+    "avgPpsf": 2800,
+    "parkAccess": true,
+    "developersActive": 15,
+    "createdBy": "seed-script",
+    "name": "Palm Jumeirah",
+    "beachAccess": true,
+    "avgRentPerSqftYr": 165
+  },
+  {
+    "id": "pearl-jumeira",
+    "area": "Jumeirah First",
+    "totalVillas": 0,
+    "updatedBy": "dld-import-script",
+    "hasCoordinates": true,
+    "coordinates": {
+      "lng": 55.21,
+      "lat": 25.19
+    },
+    "dldSource": "Real_Estate_Projects_2026-04-19.csv",
+    "source": "dld-auto",
+    "type": "Master Community",
+    "activeProjects": 0,
+    "orgId": "dxb-analytics",
+    "completedProjects": 1,
+    "totalUnits": 65,
+    "totalBuildings": 3,
+    "arabicName": "لؤلؤة الجميرا",
+    "createdAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "totalProjects": 1,
+    "createdBy": "dld-import-script",
+    "name": "Pearl Jumeira",
+    "updatedAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "_autoPublishedBy": "fix-filter-coverage",
+    "visibility": "published",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z"
+  },
+  {
+    "id": "ras-al-khor-industrial-first",
+    "name": "Ras Al Khor Industrial First",
+    "slug": "ras-al-khor-industrial-first",
+    "visibility": "published",
+    "totalProjects": 3,
+    "source": "auto-created-from-dld",
+    "_autoCreatedAt": "2026-04-20T10:54:11.694Z",
+    "_autoCreatedBy": "fix-filter-coverage"
+  },
+  {
+    "id": "remraam",
+    "area": "Al Hebiah Fifth",
+    "totalVillas": 0,
+    "updatedBy": "dld-import-script",
+    "hasCoordinates": true,
+    "coordinates": {
+      "lng": 55.26,
+      "lat": 24.99
+    },
+    "dldSource": "Real_Estate_Projects_2026-04-19.csv",
+    "source": "dld-auto",
+    "type": "Master Community",
+    "activeProjects": 0,
+    "orgId": "dxb-analytics",
+    "completedProjects": 2,
+    "totalUnits": 11799,
+    "totalBuildings": 211,
+    "arabicName": "رمرام",
+    "createdAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "totalProjects": 2,
+    "createdBy": "dld-import-script",
+    "name": "Remraam",
+    "updatedAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "_autoPublishedBy": "fix-filter-coverage",
+    "visibility": "published",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z"
+  },
+  {
+    "id": "rukan",
+    "area": "Wadi Al Safa 7",
+    "totalVillas": 1138,
+    "updatedBy": "dld-import-script",
+    "hasCoordinates": true,
+    "coordinates": {
+      "lng": 55.37,
+      "lat": 24.95
+    },
+    "dldSource": "Real_Estate_Projects_2026-04-19.csv",
+    "source": "dld-auto",
+    "type": "Master Community",
+    "activeProjects": 1,
+    "orgId": "dxb-analytics",
+    "completedProjects": 3,
+    "totalUnits": 774,
+    "totalBuildings": 4,
+    "arabicName": "ركان",
+    "createdAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "totalProjects": 4,
+    "createdBy": "dld-import-script",
+    "name": "Rukan",
+    "updatedAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "_autoPublishedBy": "fix-filter-coverage",
+    "visibility": "published",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z"
+  },
+  {
+    "id": "saih-shuaib-2",
+    "name": "Saih Shuaib 2",
+    "slug": "saih-shuaib-2",
+    "visibility": "published",
+    "totalProjects": 12,
+    "source": "auto-created-from-dld",
+    "_autoCreatedAt": "2026-04-20T10:54:11.694Z",
+    "_autoCreatedBy": "fix-filter-coverage"
+  },
+  {
+    "id": "sama-al-jadaf",
+    "area": "Al Jadaf",
+    "totalVillas": 0,
+    "updatedBy": "dld-import-script",
+    "hasCoordinates": false,
+    "coordinates": {
+      "lng": null,
+      "lat": null
+    },
+    "dldSource": "Real_Estate_Projects_2026-04-19.csv",
+    "source": "dld-auto",
+    "type": "Master Community",
+    "activeProjects": 0,
+    "orgId": "dxb-analytics",
+    "completedProjects": 0,
+    "totalUnits": 0,
+    "totalBuildings": 0,
+    "arabicName": "سما الجداف",
+    "createdAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "totalProjects": 1,
+    "createdBy": "dld-import-script",
+    "name": "Sama Al Jadaf",
+    "updatedAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "_autoPublishedBy": "fix-filter-coverage",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z",
+    "_hiddenBy": "enforce-dld-only-filters",
+    "visibility": "hidden",
+    "_hiddenAt": "2026-04-20T10:57:05.313Z",
+    "_hiddenReason": "not in DLD"
+  },
+  {
+    "id": "silicon-oasis",
+    "area": "Nadd Hessa",
+    "totalVillas": 0,
+    "updatedBy": "dld-import-script",
+    "hasCoordinates": true,
+    "coordinates": {
+      "lng": 55.3796,
+      "lat": 25.1175
+    },
+    "dldSource": "Real_Estate_Projects_2026-04-19.csv",
+    "source": "dld-auto",
+    "type": "Master Community",
+    "activeProjects": 6,
+    "orgId": "dxb-analytics",
+    "completedProjects": 59,
+    "totalUnits": 14956,
+    "totalBuildings": 85,
+    "arabicName": "واحة السيليكون",
+    "createdAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "totalProjects": 72,
+    "createdBy": "dld-import-script",
+    "name": "Silicon Oasis",
+    "updatedAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "_autoPublishedBy": "fix-filter-coverage",
+    "visibility": "published",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z"
+  },
+  {
+    "id": "site-a",
+    "area": "Al Safouh Second",
+    "totalVillas": 0,
+    "updatedBy": "dld-import-script",
+    "hasCoordinates": false,
+    "coordinates": {
+      "lng": null,
+      "lat": null
+    },
+    "dldSource": "Real_Estate_Projects_2026-04-19.csv",
+    "source": "dld-auto",
+    "type": "Master Community",
+    "activeProjects": 3,
+    "orgId": "dxb-analytics",
+    "completedProjects": 1,
+    "totalUnits": 1243,
+    "totalBuildings": 4,
+    "arabicName": "الموقع أ",
+    "createdAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "totalProjects": 4,
+    "createdBy": "dld-import-script",
+    "name": "Site A",
+    "updatedAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "_autoPublishedBy": "fix-filter-coverage",
+    "visibility": "published",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z"
+  },
+  {
+    "id": "sobha-hartland",
+    "area": "Al Merkadh",
+    "totalVillas": 27,
+    "updatedBy": "dld-import-script",
+    "hasCoordinates": true,
+    "coordinates": {
+      "lng": 55.3427,
+      "lat": 25.1825
+    },
+    "dldSource": "Real_Estate_Projects_2026-04-19.csv",
+    "source": "dld-auto",
+    "type": "Master Community",
+    "activeProjects": 5,
+    "orgId": "dxb-analytics",
+    "completedProjects": 20,
+    "totalUnits": 10493,
+    "totalBuildings": 35,
+    "arabicName": "شوبها هارتلاند",
+    "createdAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "totalProjects": 25,
+    "createdBy": "dld-import-script",
+    "name": "SOBHA HARTLAND",
+    "updatedAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "_autoPublishedBy": "fix-filter-coverage",
+    "visibility": "published",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z"
+  },
+  {
+    "id": "springs---1",
+    "area": "Al Thanayah Fourth",
+    "totalVillas": 1370,
+    "updatedBy": "dld-import-script",
+    "hasCoordinates": false,
+    "coordinates": {
+      "lng": null,
+      "lat": null
+    },
+    "dldSource": "Real_Estate_Projects_2026-04-19.csv",
+    "source": "dld-auto",
+    "type": "Master Community",
+    "activeProjects": 0,
+    "orgId": "dxb-analytics",
+    "completedProjects": 3,
+    "totalUnits": 0,
+    "totalBuildings": 0,
+    "arabicName": "الينابيع - 1",
+    "createdAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "totalProjects": 3,
+    "createdBy": "dld-import-script",
+    "name": "Springs - 1",
+    "updatedAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "_autoPublishedBy": "fix-filter-coverage",
+    "visibility": "published",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z"
+  },
+  {
+    "id": "springs---2",
+    "area": "Al Thanayah Fourth",
+    "totalVillas": 948,
+    "updatedBy": "dld-import-script",
+    "hasCoordinates": false,
+    "coordinates": {
+      "lng": null,
+      "lat": null
+    },
+    "dldSource": "Real_Estate_Projects_2026-04-19.csv",
+    "source": "dld-auto",
+    "type": "Master Community",
+    "activeProjects": 0,
+    "orgId": "dxb-analytics",
+    "completedProjects": 3,
+    "totalUnits": 0,
+    "totalBuildings": 0,
+    "arabicName": "الينابيع - 2",
+    "createdAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "totalProjects": 3,
+    "createdBy": "dld-import-script",
+    "name": "Springs - 2",
+    "updatedAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "_autoPublishedBy": "fix-filter-coverage",
+    "visibility": "published",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z"
+  },
+  {
+    "id": "springs---3",
+    "area": "Al Thanayah Fourth",
+    "totalVillas": 572,
+    "updatedBy": "dld-import-script",
+    "hasCoordinates": false,
+    "coordinates": {
+      "lng": null,
+      "lat": null
+    },
+    "dldSource": "Real_Estate_Projects_2026-04-19.csv",
+    "source": "dld-auto",
+    "type": "Master Community",
+    "activeProjects": 0,
+    "orgId": "dxb-analytics",
+    "completedProjects": 2,
+    "totalUnits": 0,
+    "totalBuildings": 0,
+    "arabicName": "الينابيع - 3",
+    "createdAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "totalProjects": 2,
+    "createdBy": "dld-import-script",
+    "name": "Springs - 3",
+    "updatedAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "_autoPublishedBy": "fix-filter-coverage",
+    "visibility": "published",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z"
+  },
+  {
+    "id": "springs---4",
+    "area": "Al Thanayah Fourth",
+    "totalVillas": 469,
+    "updatedBy": "dld-import-script",
+    "hasCoordinates": false,
+    "coordinates": {
+      "lng": null,
+      "lat": null
+    },
+    "dldSource": "Real_Estate_Projects_2026-04-19.csv",
+    "source": "dld-auto",
+    "type": "Master Community",
+    "activeProjects": 0,
+    "orgId": "dxb-analytics",
+    "completedProjects": 2,
+    "totalUnits": 0,
+    "totalBuildings": 0,
+    "arabicName": "الينابيع - 4",
+    "createdAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "totalProjects": 2,
+    "createdBy": "dld-import-script",
+    "name": "Springs - 4",
+    "updatedAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "_autoPublishedBy": "fix-filter-coverage",
+    "visibility": "published",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z"
+  },
+  {
+    "id": "springs---5",
+    "area": "Al Thanayah Fourth",
+    "totalVillas": 320,
+    "updatedBy": "dld-import-script",
+    "hasCoordinates": false,
+    "coordinates": {
+      "lng": null,
+      "lat": null
+    },
+    "dldSource": "Real_Estate_Projects_2026-04-19.csv",
+    "source": "dld-auto",
+    "type": "Master Community",
+    "activeProjects": 0,
+    "orgId": "dxb-analytics",
+    "completedProjects": 1,
+    "totalUnits": 0,
+    "totalBuildings": 0,
+    "arabicName": "الينابيع - 5",
+    "createdAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "totalProjects": 1,
+    "createdBy": "dld-import-script",
+    "name": "Springs - 5",
+    "updatedAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "_autoPublishedBy": "fix-filter-coverage",
+    "visibility": "published",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z"
+  },
+  {
+    "id": "springs---6",
+    "area": "Al Thanayah Fourth",
+    "totalVillas": 450,
+    "updatedBy": "dld-import-script",
+    "hasCoordinates": false,
+    "coordinates": {
+      "lng": null,
+      "lat": null
+    },
+    "dldSource": "Real_Estate_Projects_2026-04-19.csv",
+    "source": "dld-auto",
+    "type": "Master Community",
+    "activeProjects": 0,
+    "orgId": "dxb-analytics",
+    "completedProjects": 1,
+    "totalUnits": 0,
+    "totalBuildings": 0,
+    "arabicName": "الينابيع - 6",
+    "createdAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "totalProjects": 1,
+    "createdBy": "dld-import-script",
+    "name": "Springs - 6",
+    "updatedAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "_autoPublishedBy": "fix-filter-coverage",
+    "visibility": "published",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z"
+  },
+  {
+    "id": "springs---7",
+    "area": "Al Thanayah Fourth",
+    "totalVillas": 484,
+    "updatedBy": "dld-import-script",
+    "hasCoordinates": false,
+    "coordinates": {
+      "lng": null,
+      "lat": null
+    },
+    "dldSource": "Real_Estate_Projects_2026-04-19.csv",
+    "source": "dld-auto",
+    "type": "Master Community",
+    "activeProjects": 0,
+    "orgId": "dxb-analytics",
+    "completedProjects": 1,
+    "totalUnits": 0,
+    "totalBuildings": 0,
+    "arabicName": "الينابيع - 7 ايه وبي",
+    "createdAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "totalProjects": 1,
+    "createdBy": "dld-import-script",
+    "name": "Springs - 7",
+    "updatedAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "_autoPublishedBy": "fix-filter-coverage",
+    "visibility": "published",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z"
+  },
+  {
+    "id": "sufouh-gardens",
+    "area": "Al Safouh First",
+    "totalVillas": 0,
+    "updatedBy": "dld-import-script",
+    "hasCoordinates": false,
+    "coordinates": {
+      "lng": null,
+      "lat": null
+    },
+    "dldSource": "Real_Estate_Projects_2026-04-19.csv",
+    "source": "dld-auto",
+    "type": "Master Community",
+    "activeProjects": 1,
+    "orgId": "dxb-analytics",
+    "completedProjects": 5,
+    "totalUnits": 844,
+    "totalBuildings": 6,
+    "arabicName": "حدائق الصفوح",
+    "createdAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "totalProjects": 6,
+    "createdBy": "dld-import-script",
+    "name": "Sufouh Gardens",
+    "updatedAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "_autoPublishedBy": "fix-filter-coverage",
+    "visibility": "published",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z"
+  },
+  {
+    "id": "tecom-site-b",
+    "area": "Al Safouh First",
+    "totalVillas": 57,
+    "updatedBy": "dld-import-script",
+    "hasCoordinates": false,
+    "coordinates": {
+      "lng": null,
+      "lat": null
+    },
+    "dldSource": "Real_Estate_Projects_2026-04-19.csv",
+    "source": "dld-auto",
+    "type": "Master Community",
+    "activeProjects": 0,
+    "orgId": "dxb-analytics",
+    "completedProjects": 1,
+    "totalUnits": 0,
+    "totalBuildings": 0,
+    "arabicName": "تيكوم سايت بي",
+    "createdAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "totalProjects": 1,
+    "createdBy": "dld-import-script",
+    "name": "TECOM Site B",
+    "updatedAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "_autoPublishedBy": "fix-filter-coverage",
+    "visibility": "published",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z"
+  },
+  {
+    "id": "tecom-site-d",
+    "area": "Marsa Dubai",
+    "totalVillas": 0,
+    "updatedBy": "dld-import-script",
+    "hasCoordinates": false,
+    "coordinates": {
+      "lng": null,
+      "lat": null
+    },
+    "dldSource": "Real_Estate_Projects_2026-04-19.csv",
+    "source": "dld-auto",
+    "type": "Master Community",
+    "activeProjects": 1,
+    "orgId": "dxb-analytics",
+    "completedProjects": 0,
+    "totalUnits": 771,
+    "totalBuildings": 1,
+    "arabicName": "تيكوم سايت د",
+    "createdAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "totalProjects": 1,
+    "createdBy": "dld-import-script",
+    "name": "TECOM Site D",
+    "updatedAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "_autoPublishedBy": "fix-filter-coverage",
+    "visibility": "published",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z"
+  },
+  {
+    "id": "the-greens",
+    "area": "Al Thanyah Third",
+    "totalVillas": 0,
+    "updatedBy": "dld-import-script",
+    "hasCoordinates": true,
+    "coordinates": {
+      "lng": 55.17,
+      "lat": 25.09
+    },
+    "dldSource": "Real_Estate_Projects_2026-04-19.csv",
+    "source": "dld-auto",
+    "type": "Master Community",
+    "activeProjects": 1,
+    "orgId": "dxb-analytics",
+    "completedProjects": 4,
+    "totalUnits": 1612,
+    "totalBuildings": 9,
+    "arabicName": "الروضة",
+    "createdAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "totalProjects": 5,
+    "createdBy": "dld-import-script",
+    "name": "The Greens",
+    "updatedAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "_autoPublishedBy": "fix-filter-coverage",
+    "visibility": "published",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z"
+  },
+  {
+    "id": "the-oasis",
+    "nearestMetroStation": "None",
+    "description": "Emaar's ultra-luxury mansion community in Dubailand with a water theme across 100 million sqft.",
+    "populationEstimate": 5000,
+    "restaurantCount": 15,
+    "type": "Ultra-Luxury",
+    "orgId": "dxb-analytics",
+    "schoolRating": 8,
+    "arabicName": "الواحة",
+    "grossYieldPct": 5.9,
+    "metroDistanceKm": 14,
+    "createdAt": {
+      "_seconds": 1775721697,
+      "_nanoseconds": 298000000
+    },
+    "totalProjects": 8,
+    "disclosedAt": {
+      "_seconds": 1775721697,
+      "_nanoseconds": 298000000
+    },
+    "slug": "the-oasis",
+    "updatedAt": {
+      "_seconds": 1775721697,
+      "_nanoseconds": 298000000
+    },
+    "area": "Dubailand",
+    "netYieldPct": 4.5,
+    "updatedBy": "seed-script",
+    "coordinates": {
+      "lng": 55.3478,
+      "lat": 25.0458
+    },
+    "avgPpsf": 2200,
+    "parkAccess": true,
+    "developersActive": 1,
+    "createdBy": "seed-script",
+    "name": "The Oasis",
+    "beachAccess": false,
+    "avgRentPerSqftYr": 130,
+    "_hiddenBy": "enforce-dld-only-filters",
+    "visibility": "hidden",
+    "_hiddenAt": "2026-04-20T10:57:05.313Z",
+    "_hiddenReason": "not in DLD"
+  },
+  {
+    "id": "the-palmarosa",
+    "area": "Wadi Al Safa 7",
+    "totalVillas": 282,
+    "updatedBy": "dld-import-script",
+    "hasCoordinates": false,
+    "coordinates": {
+      "lng": null,
+      "lat": null
+    },
+    "dldSource": "Real_Estate_Projects_2026-04-19.csv",
+    "source": "dld-auto",
+    "type": "Master Community",
+    "activeProjects": 1,
+    "orgId": "dxb-analytics",
+    "completedProjects": 0,
+    "totalUnits": 11,
+    "totalBuildings": 11,
+    "arabicName": "ذا بالماروزا",
+    "createdAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "totalProjects": 1,
+    "createdBy": "dld-import-script",
+    "name": "The Palmarosa",
+    "updatedAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "_autoPublishedBy": "fix-filter-coverage",
+    "visibility": "published",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z"
+  },
+  {
+    "id": "the-sustainable-city",
+    "area": "Wadi Al Safa 7",
+    "totalVillas": 498,
+    "updatedBy": "dld-import-script",
+    "hasCoordinates": true,
+    "coordinates": {
+      "lng": 55.26,
+      "lat": 24.97
+    },
+    "dldSource": "Real_Estate_Projects_2026-04-19.csv",
+    "source": "dld-auto",
+    "type": "Master Community",
+    "activeProjects": 0,
+    "orgId": "dxb-analytics",
+    "completedProjects": 1,
+    "totalUnits": 0,
+    "totalBuildings": 7,
+    "arabicName": "ذا ساستينبل ستي",
+    "createdAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "totalProjects": 1,
+    "createdBy": "dld-import-script",
+    "name": "THE SUSTAINABLE CITY",
+    "updatedAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "_autoPublishedBy": "fix-filter-coverage",
+    "visibility": "published",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z"
+  },
+  {
+    "id": "the-valley",
+    "nearestMetroStation": "None",
+    "description": "Emaar's suburban villa community with townhouses, parks, and retail in Dubailand.",
+    "populationEstimate": 12000,
+    "restaurantCount": 35,
+    "type": "Family Villas",
+    "orgId": "dxb-analytics",
+    "schoolRating": 7.5,
+    "arabicName": "الوادي",
+    "grossYieldPct": 6.3,
+    "metroDistanceKm": 18,
+    "createdAt": {
+      "_seconds": 1775721696,
+      "_nanoseconds": 979000000
+    },
+    "totalProjects": 24,
+    "disclosedAt": {
+      "_seconds": 1775721696,
+      "_nanoseconds": 979000000
+    },
+    "slug": "the-valley",
+    "updatedAt": {
+      "_seconds": 1775721696,
+      "_nanoseconds": 979000000
+    },
+    "area": "Dubailand",
+    "netYieldPct": 4.9,
+    "updatedBy": "seed-script",
+    "coordinates": {
+      "lng": 55.4389,
+      "lat": 25.0122
+    },
+    "avgPpsf": 1150,
+    "parkAccess": true,
+    "developersActive": 1,
+    "createdBy": "seed-script",
+    "name": "The Valley",
+    "beachAccess": false,
+    "avgRentPerSqftYr": 72,
+    "_hiddenBy": "enforce-dld-only-filters",
+    "visibility": "hidden",
+    "_hiddenAt": "2026-04-20T10:57:05.313Z",
+    "_hiddenReason": "not in DLD"
+  },
+  {
+    "id": "the-villa",
+    "area": "Wadi Al Safa 5",
+    "totalVillas": 1,
+    "updatedBy": "dld-import-script",
+    "hasCoordinates": true,
+    "coordinates": {
+      "lng": 55.31,
+      "lat": 24.98
+    },
+    "dldSource": "Real_Estate_Projects_2026-04-19.csv",
+    "source": "dld-auto",
+    "type": "Master Community",
+    "activeProjects": 1,
+    "orgId": "dxb-analytics",
+    "completedProjects": 1,
+    "totalUnits": 0,
+    "totalBuildings": 1,
+    "arabicName": "ذا فيلا",
+    "createdAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "totalProjects": 2,
+    "createdBy": "dld-import-script",
+    "name": "The Villa",
+    "updatedAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "_autoPublishedBy": "fix-filter-coverage",
+    "visibility": "published",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z"
+  },
+  {
+    "id": "the-world",
+    "area": "World Islands",
+    "totalVillas": 94,
+    "updatedBy": "dld-import-script",
+    "hasCoordinates": false,
+    "coordinates": {
+      "lng": null,
+      "lat": null
+    },
+    "dldSource": "Real_Estate_Projects_2026-04-19.csv",
+    "source": "dld-auto",
+    "type": "Master Community",
+    "activeProjects": 7,
+    "orgId": "dxb-analytics",
+    "completedProjects": 0,
+    "totalUnits": 1622,
+    "totalBuildings": 7,
+    "arabicName": "جزر العالم",
+    "createdAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "totalProjects": 9,
+    "createdBy": "dld-import-script",
+    "name": "The World",
+    "updatedAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "_autoPublishedBy": "fix-filter-coverage",
+    "visibility": "published",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z"
+  },
+  {
+    "id": "tilal-al-ghaf",
+    "nearestMetroStation": "None",
+    "description": "Majid Al Futtaim development with lagoons, a recreational crystal lagoon, and luxury villas.",
+    "populationEstimate": 15000,
+    "restaurantCount": 40,
+    "type": "Luxury Villas",
+    "orgId": "dxb-analytics",
+    "schoolRating": 8.3,
+    "arabicName": "تلال الغاف",
+    "grossYieldPct": 6.1,
+    "metroDistanceKm": 11,
+    "createdAt": {
+      "_seconds": 1775721698,
+      "_nanoseconds": 199000000
+    },
+    "totalProjects": 22,
+    "disclosedAt": {
+      "_seconds": 1775721698,
+      "_nanoseconds": 199000000
+    },
+    "slug": "tilal-al-ghaf",
+    "updatedAt": {
+      "_seconds": 1775721698,
+      "_nanoseconds": 199000000
+    },
+    "area": "Dubailand",
+    "netYieldPct": 4.7,
+    "updatedBy": "seed-script",
+    "visibility": "published",
+    "coordinates": {
+      "lng": 55.2053,
+      "lat": 25.0219
+    },
+    "avgPpsf": 1550,
+    "parkAccess": true,
+    "developersActive": 2,
+    "createdBy": "seed-script",
+    "name": "Tilal Al Ghaf",
+    "beachAccess": false,
+    "avgRentPerSqftYr": 95
+  },
+  {
+    "id": "town-square",
+    "nearestMetroStation": "None",
+    "description": "Nshama's community-focused family development with townhouses, apartments, and central park.",
+    "populationEstimate": 28000,
+    "restaurantCount": 45,
+    "orgId": "dxb-analytics",
+    "schoolRating": 7.4,
+    "grossYieldPct": 7.3,
+    "metroDistanceKm": 18,
+    "disclosedAt": {
+      "_seconds": 1775721699,
+      "_nanoseconds": 445000000
+    },
+    "slug": "town-square",
+    "netYieldPct": 5.7,
+    "avgPpsf": 850,
+    "parkAccess": true,
+    "developersActive": 1,
+    "beachAccess": false,
+    "avgRentPerSqftYr": 62,
+    "area": "Al Yelayiss 2",
+    "totalVillas": 3790,
+    "updatedBy": "dld-import-script",
+    "hasCoordinates": true,
+    "coordinates": {
+      "lng": 55.28,
+      "lat": 25
+    },
+    "dldSource": "Real_Estate_Projects_2026-04-19.csv",
+    "source": "dld-auto",
+    "type": "Master Community",
+    "activeProjects": 10,
+    "completedProjects": 18,
+    "totalUnits": 10355,
+    "totalBuildings": 56,
+    "arabicName": "تاون سكوير",
+    "createdAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "totalProjects": 41,
+    "createdBy": "dld-import-script",
+    "name": "TOWN SQUARE",
+    "updatedAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "_autoPublishedBy": "fix-filter-coverage",
+    "visibility": "published",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z"
+  },
+  {
+    "id": "trade-center-first",
+    "name": "Trade Center First",
+    "slug": "trade-center-first",
+    "visibility": "published",
+    "totalProjects": 3,
+    "source": "auto-created-from-dld",
+    "_autoCreatedAt": "2026-04-20T10:54:11.694Z",
+    "_autoCreatedBy": "fix-filter-coverage"
+  },
+  {
+    "id": "trade-center-second",
+    "name": "Trade Center Second",
+    "slug": "trade-center-second",
+    "visibility": "published",
+    "totalProjects": 1,
+    "source": "auto-created-from-dld",
+    "_autoCreatedAt": "2026-04-20T10:54:11.694Z",
+    "_autoCreatedBy": "fix-filter-coverage"
+  },
+  {
+    "id": "um-suqaim-third",
+    "name": "Um Suqaim Third",
+    "slug": "um-suqaim-third",
+    "visibility": "published",
+    "totalProjects": 11,
+    "source": "auto-created-from-dld",
+    "_autoCreatedAt": "2026-04-20T10:54:11.694Z",
+    "_autoCreatedBy": "fix-filter-coverage"
+  },
+  {
+    "id": "uptown-mirdif",
+    "area": "Mirdif",
+    "totalVillas": 0,
+    "updatedBy": "dld-import-script",
+    "hasCoordinates": false,
+    "coordinates": {
+      "lng": null,
+      "lat": null
+    },
+    "dldSource": "Real_Estate_Projects_2026-04-19.csv",
+    "source": "dld-auto",
+    "type": "Master Community",
+    "activeProjects": 0,
+    "orgId": "dxb-analytics",
+    "completedProjects": 1,
+    "totalUnits": 146,
+    "totalBuildings": 1,
+    "arabicName": "اب تاون مردف",
+    "createdAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "totalProjects": 1,
+    "createdBy": "dld-import-script",
+    "name": "Uptown Mirdif",
+    "updatedAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "_autoPublishedBy": "fix-filter-coverage",
+    "visibility": "published",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z"
+  },
+  {
+    "id": "veneto",
+    "area": "Hessyan First",
+    "totalVillas": 0,
+    "updatedBy": "dld-import-script",
+    "hasCoordinates": false,
+    "coordinates": {
+      "lng": null,
+      "lat": null
+    },
+    "dldSource": "Real_Estate_Projects_2026-04-19.csv",
+    "source": "dld-auto",
+    "type": "Master Community",
+    "activeProjects": 0,
+    "orgId": "dxb-analytics",
+    "completedProjects": 1,
+    "totalUnits": 0,
+    "totalBuildings": 0,
+    "arabicName": "فينيتو",
+    "createdAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "totalProjects": 1,
+    "createdBy": "dld-import-script",
+    "name": "Veneto",
+    "updatedAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "_autoPublishedBy": "fix-filter-coverage",
+    "visibility": "published",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z"
+  },
+  {
+    "id": "wadi-al-safa-2",
+    "name": "Wadi Al Safa 2",
+    "slug": "wadi-al-safa-2",
+    "visibility": "published",
+    "totalProjects": 2,
+    "source": "auto-created-from-dld",
+    "_autoCreatedAt": "2026-04-20T10:54:11.694Z",
+    "_autoCreatedBy": "fix-filter-coverage"
+  },
+  {
+    "id": "wadi-al-safa-3",
+    "name": "Wadi Al Safa 3",
+    "slug": "wadi-al-safa-3",
+    "visibility": "published",
+    "totalProjects": 6,
+    "source": "auto-created-from-dld",
+    "_autoCreatedAt": "2026-04-20T10:54:11.694Z",
+    "_autoCreatedBy": "fix-filter-coverage"
+  },
+  {
+    "id": "wadi-al-safa-4",
+    "name": "Wadi Al Safa 4",
+    "slug": "wadi-al-safa-4",
+    "visibility": "published",
+    "totalProjects": 9,
+    "source": "auto-created-from-dld",
+    "_autoCreatedAt": "2026-04-20T10:54:11.694Z",
+    "_autoCreatedBy": "fix-filter-coverage"
+  },
+  {
+    "id": "wadi-al-safa-5",
+    "name": "Wadi Al Safa 5",
+    "slug": "wadi-al-safa-5",
+    "visibility": "published",
+    "totalProjects": 42,
+    "source": "auto-created-from-dld",
+    "_autoCreatedAt": "2026-04-20T10:54:11.694Z",
+    "_autoCreatedBy": "fix-filter-coverage"
+  },
+  {
+    "id": "wadi-al-safa-6",
+    "name": "Wadi Al Safa 6",
+    "slug": "wadi-al-safa-6",
+    "visibility": "published",
+    "totalProjects": 3,
+    "source": "auto-created-from-dld",
+    "_autoCreatedAt": "2026-04-20T10:54:11.694Z",
+    "_autoCreatedBy": "fix-filter-coverage"
+  },
+  {
+    "id": "wadi-al-safa-7",
+    "name": "Wadi Al Safa 7",
+    "slug": "wadi-al-safa-7",
+    "visibility": "published",
+    "totalProjects": 4,
+    "source": "auto-created-from-dld",
+    "_autoCreatedAt": "2026-04-20T10:54:11.694Z",
+    "_autoCreatedBy": "fix-filter-coverage"
+  },
+  {
+    "id": "warsan-first-development",
+    "area": "Al Warsan First",
+    "totalVillas": 0,
+    "updatedBy": "dld-import-script",
+    "hasCoordinates": false,
+    "coordinates": {
+      "lng": null,
+      "lat": null
+    },
+    "dldSource": "Real_Estate_Projects_2026-04-19.csv",
+    "source": "dld-auto",
+    "type": "Master Community",
+    "activeProjects": 1,
+    "orgId": "dxb-analytics",
+    "completedProjects": 1,
+    "totalUnits": 809,
+    "totalBuildings": 6,
+    "arabicName": "ورسان الأولى للتطوير",
+    "createdAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "totalProjects": 6,
+    "createdBy": "dld-import-script",
+    "name": "WARSAN FIRST DEVELOPMENT",
+    "updatedAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "_autoPublishedBy": "fix-filter-coverage",
+    "visibility": "published",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z"
+  },
+  {
+    "id": "wasl-1",
+    "area": "Al Kifaf",
+    "totalVillas": 0,
+    "updatedBy": "dld-import-script",
+    "hasCoordinates": false,
+    "coordinates": {
+      "lng": null,
+      "lat": null
+    },
+    "dldSource": "Real_Estate_Projects_2026-04-19.csv",
+    "source": "dld-auto",
+    "type": "Master Community",
+    "activeProjects": 2,
+    "orgId": "dxb-analytics",
+    "completedProjects": 2,
+    "totalUnits": 3284,
+    "totalBuildings": 11,
+    "arabicName": "وصل 1",
+    "createdAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "totalProjects": 5,
+    "createdBy": "dld-import-script",
+    "name": "Wasl 1",
+    "updatedAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "_autoPublishedBy": "fix-filter-coverage",
+    "visibility": "published",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z"
+  },
+  {
+    "id": "wasl-gate",
+    "area": "Jabal Ali First",
+    "totalVillas": 0,
+    "updatedBy": "dld-import-script",
+    "hasCoordinates": false,
+    "coordinates": {
+      "lng": null,
+      "lat": null
+    },
+    "dldSource": "Real_Estate_Projects_2026-04-19.csv",
+    "source": "dld-auto",
+    "type": "Master Community",
+    "activeProjects": 7,
+    "orgId": "dxb-analytics",
+    "completedProjects": 3,
+    "totalUnits": 4230,
+    "totalBuildings": 28,
+    "arabicName": "وصل جيت",
+    "createdAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "totalProjects": 16,
+    "createdBy": "dld-import-script",
+    "name": "Wasl Gate",
+    "updatedAt": {
+      "_seconds": 1776563275,
+      "_nanoseconds": 339000000
+    },
+    "_autoPublishedBy": "fix-filter-coverage",
+    "visibility": "published",
+    "_autoPublishedAt": "2026-04-20T10:54:11.694Z"
+  },
+  {
+    "id": "zaabeel-first",
+    "name": "Zaabeel First",
+    "slug": "zaabeel-first",
+    "visibility": "published",
+    "totalProjects": 2,
+    "source": "auto-created-from-dld",
+    "_autoCreatedAt": "2026-04-20T10:54:11.694Z",
+    "_autoCreatedBy": "fix-filter-coverage"
+  },
+  {
+    "id": "zaabeel-second",
+    "name": "Zaabeel Second",
+    "slug": "zaabeel-second",
+    "visibility": "published",
+    "totalProjects": 5,
+    "source": "auto-created-from-dld",
+    "_autoCreatedAt": "2026-04-20T10:54:11.694Z",
+    "_autoCreatedBy": "fix-filter-coverage"
+  }
+]
