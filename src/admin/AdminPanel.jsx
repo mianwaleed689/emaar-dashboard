@@ -13047,6 +13047,8 @@ export default function AdminPanel() {
   };
 
   const fetchLeads = useCallback(async (forceRefresh = false) => {
+    // DISABLED: SuperAdmin cannot see agency leads  privacy rule
+    setLeadsLoading(false); setLeads([]); return;
     setLeadsLoading(true);
     try {
       const cacheKey = "dxb_leads_v6";
@@ -14897,7 +14899,7 @@ export default function AdminPanel() {
     { id: "revenue", label: "Revenue", icon: I.revenue },
     { id: "data", label: "Data Manager", icon: I.data },
     { id: "dxbsales", label: "DXB Sales", icon: I.data },
-    { id: "leads", label: "Leads", icon: I.leads },
+    // { id: "leads", label: "Leads", icon: I.leads }, // REMOVED  superAdmin uses dashboard CRM
     { id: "notifications", label: "Notifications", icon: I.bell },
     { id: "digest", label: "Email Digest", icon: I.bell },
     { id: "eibor", label: "EIBOR Rates", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg> },
