@@ -43,6 +43,7 @@ import PortfolioTab from '../tabs/PortfolioTab';
 import InvestmentScoreTab from '../tabs/InvestmentScoreTab';
 import ComplianceTab from '../tabs/ComplianceTab';
 import TeamTab from '../tabs/TeamTab';
+import WelcomeScreen from '../components/WelcomeScreen';
 import HandoverTab from '../tabs/HandoverTab';
 import MarketTab from '../tabs/MarketTab';
 import OverviewTab from '../tabs/OverviewTab';
@@ -2387,6 +2388,8 @@ export default function EmaarDashboardV2() {
   });
   const [time, setTime] = useState(new Date());
   const [authLoading, setAuthLoading] = useState(true);
+  const [showWelcome, setShowWelcome] = useState(false);
+  const [managerName, setManagerName] = useState("");
   const [isSuspended, setIsSuspended] = useState(false);
 
   // Set page title
@@ -3692,6 +3695,17 @@ export default function EmaarDashboardV2() {
             setUserRole(data.role || "user");
             setOrgId(data.orgId || null);
             setOrgRole(data.orgRole || null);
+            // Show welcome screen for first-time agents
+            if (!data.onboardingComplete && data.orgRole === "agent") {
+              setShowWelcome(true);
+            }
+            // Fetch manager name if agent
+            if (data.managerId) {
+              try {
+                const mgrDoc = await getDoc(doc(db, "users", data.managerId));
+                if (mgrDoc.exists()) setManagerName(mgrDoc.data().name || "");
+              } catch(e) {}
+            }
             setDevId(data.devId || null);
             setIsSuspended(!!data.suspended);
           } else {
@@ -4064,6 +4078,19 @@ export default function EmaarDashboardV2() {
 
   if (!isLoggedIn) {
     return <LoginScreen onLogin={() => {}} onBack={() => setShowLogin(false)} defaultMode={showLogin === "signup" ? "signup" : "login"} />;
+  }
+
+  // Welcome screen  first login only for agents
+  if (showWelcome) {
+    return (
+      <WelcomeScreen
+        userName={userName}
+        orgName={orgProfile?.name || ""}
+        managerName={managerName}
+        userId={firebaseUser?.uid}
+        onDismiss={() => setShowWelcome(false)}
+      />
+    );
   }
 
   if (!fetchAdminUsersRef.current) {
@@ -5253,6 +5280,8 @@ export default function EmaarDashboardV2() {
             <TeamTab
               teamMembers={teamMembers} teamMembersLoading={teamMembersLoading}
               myLeads={myLeads} deals={deals} orgRole={orgRole}
+              orgId={orgId} firebaseUser={firebaseUser}
+              orgName={orgProfile?.name}
             />
           )}
 
