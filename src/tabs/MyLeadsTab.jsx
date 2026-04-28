@@ -1,7 +1,7 @@
 /* eslint-disable */
 /*
-  DXB Analytics — MY LEADS TAB
-  Session 11 — 4-Level Role-Aware CRM
+  DXB Analytics â MY LEADS TAB
+  Session 11 â 4-Level Role-Aware CRM
   Owner / Director / Manager / Agent
   April 2026
 */
@@ -12,8 +12,10 @@ import { db, auth } from "../firebase";
 import { T } from "../data";
 import { GOLDEN_VISA_THRESHOLD } from "../utils/constants";
 import Papa from "papaparse";
+import PhoneInput from "../components/PhoneInput";
+import NationalitySelect from "../components/NationalitySelect";
 
-// ─── PIPELINE ────────────────────────────────────────────────
+// âââ PIPELINE ââââââââââââââââââââââââââââââââââââââââââââââââ
 const PIPELINE = [
   { key:"Hot Case",        color:"#EF4444", bg:"rgba(239,68,68,0.1)" },
   { key:"New Lead",        color:"#3B82F6", bg:"rgba(59,130,246,0.1)" },
@@ -55,11 +57,11 @@ const WA_TEMPLATES = [
   { label:"EOI Follow Up",   body:"Hello {name}, thank you for your Expression of Interest. We have reviewed your request and have excellent options. When can we connect?" },
 ];
 
-// ─── HELPERS ─────────────────────────────────────────────────
+// âââ HELPERS âââââââââââââââââââââââââââââââââââââââââââââââââ
 const clnPhone  = p => String(p||"").replace(/[^0-9]/g,"");
-const maskPhone = p => { if(!p) return "—"; const c=clnPhone(p); if(c.length<6) return p; return c.slice(0,3)+"••••••"+c.slice(-2); };
-const fmtB      = b => { const n=parseFloat(b||0); if(!n) return "—"; return n>=1e6?"AED "+(n/1e6).toFixed(1)+"M":"AED "+n.toLocaleString(); };
-const fmtD      = d => { if(!d) return "—"; try { return new Date(d).toLocaleDateString("en-AE",{day:"2-digit",month:"short",year:"2-digit"}); } catch(e){return "—";} };
+const maskPhone = p => { if(!p) return "â"; const c=clnPhone(p); if(c.length<6) return p; return c.slice(0,3)+"â¢â¢â¢â¢â¢â¢"+c.slice(-2); };
+const fmtB      = b => { const n=parseFloat(b||0); if(!n) return "â"; return n>=1e6?"AED "+(n/1e6).toFixed(1)+"M":"AED "+n.toLocaleString(); };
+const fmtD      = d => { if(!d) return "â"; try { return new Date(d).toLocaleDateString("en-AE",{day:"2-digit",month:"short",year:"2-digit"}); } catch(e){return "â";} };
 const daysAgo   = d => !d ? 999 : Math.floor((Date.now()-new Date(d).getTime())/86400000);
 const escCSV    = v => '"'+String(v==null?"":v).replace(/"/g,'""')+'"';
 
@@ -75,7 +77,7 @@ function aiScore(l) {
   return { score:Math.min(100,s), color:s>=70?"#10B981":s>=40?"#D4A843":"#EF4444", label:s>=70?"Hot":s>=40?"Warm":"Cold" };
 }
 
-// ─── ATOMS ───────────────────────────────────────────────────
+// âââ ATOMS âââââââââââââââââââââââââââââââââââââââââââââââââââ
 const PBadge = ({status}) => {
   const p=PIPELINE.find(x=>x.key===status)||PIPELINE[1];
   return <span style={{fontSize:10,padding:"2px 8px",borderRadius:10,background:p.bg,color:p.color,fontWeight:700,whiteSpace:"nowrap"}}>{status||"New Lead"}</span>;
@@ -123,15 +125,15 @@ const Section = ({icon,title,sub,color,open,onToggle,children}) => (
         <div style={{fontSize:12,fontWeight:700,color:T.white}}>{title}</div>
         {sub&&<div style={{fontSize:10,color:T.textMuted,marginTop:1}}>{sub}</div>}
       </div>
-      <div style={{color:T.textMuted,fontSize:12,transition:"transform 0.2s",transform:open?"rotate(90deg)":"none"}}>▶</div>
+      <div style={{color:T.textMuted,fontSize:12,transition:"transform 0.2s",transform:open?"rotate(90deg)":"none"}}>â¶</div>
     </div>
     {open&&<div style={{padding:"14px"}}>{children}</div>}
   </div>
 );
 
-// ═══════════════════════════════════════════════════════════════
+// âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 // MAIN COMPONENT
-// ═══════════════════════════════════════════════════════════════
+// âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 export default function MyLeadsTab({
   myLeads=[], orgRole, userRole, orgId, orgName,
   listings=[], teamMembers=[], firebaseUser,
@@ -140,7 +142,7 @@ export default function MyLeadsTab({
   handleTabChange,
 }) {
 
-  // ── Role resolution ──────────────────────────────────────────
+  // ââ Role resolution ââââââââââââââââââââââââââââââââââââââââââ
   const isSuperAdmin = userRole==="superAdmin"||userRole==="admin";
   const isOwner      = orgRole==="owner";
   const isDirector   = orgRole==="director";
@@ -151,7 +153,7 @@ export default function MyLeadsTab({
   const currentUid   = firebaseUser?.uid||auth?.currentUser?.uid||"";
   const currentEmail = firebaseUser?.email||auth?.currentUser?.email||"";
 
-  // ── State ────────────────────────────────────────────────────
+  // ââ State ââââââââââââââââââââââââââââââââââââââââââââââââââââ
   const [smartView,    setSmartView]   = useState("all");
   const [activeStage,  setActiveStage] = useState("all");
   const [view,         setView]        = useState("table");
@@ -179,7 +181,7 @@ export default function MyLeadsTab({
   const [form,setForm]=useState(EMPTY);
   const F=(k,v)=>setForm(p=>({...p,[k]:v}));
 
-  // ── Derived lists ────────────────────────────────────────────
+  // ââ Derived lists ââââââââââââââââââââââââââââââââââââââââââââ
   const agents = useMemo(()=>(
     (teamMembers||[]).filter(m=>m.orgRole==="agent"||m.role==="agent")
   ),[teamMembers]);
@@ -188,20 +190,20 @@ export default function MyLeadsTab({
     (teamMembers||[]).filter(m=>m.orgRole==="manager"||m.orgRole==="director"||m.orgRole==="owner")
   ),[teamMembers]);
 
-  // ── Toast ────────────────────────────────────────────────────
+  // ââ Toast ââââââââââââââââââââââââââââââââââââââââââââââââââââ
   const notify = useCallback((msg,type="success")=>{
     setToast({msg,type});
     setTimeout(()=>setToast(null),3000);
   },[]);
 
-  // ── Counts ───────────────────────────────────────────────────
+  // ââ Counts âââââââââââââââââââââââââââââââââââââââââââââââââââ
   const stageCounts = useMemo(()=>{
     const c={};
     PIPELINE.forEach(p=>{c[p.key]=(myLeads||[]).filter(l=>(l.status||"New Lead")===p.key).length;});
     return c;
   },[myLeads]);
 
-  // ── Smart view filter ────────────────────────────────────────
+  // ââ Smart view filter ââââââââââââââââââââââââââââââââââââââââ
   const smartFiltered = useMemo(()=>{
     let a=[...(myLeads||[])];
     if(smartView==="today")       a=a.filter(l=>daysAgo(l.createdAt)<1);
@@ -215,7 +217,7 @@ export default function MyLeadsTab({
     return a;
   },[myLeads,smartView,currentUid]);
 
-  // ── Main filter ──────────────────────────────────────────────
+  // ââ Main filter ââââââââââââââââââââââââââââââââââââââââââââââ
   const filtered = useMemo(()=>{
     let a=[...smartFiltered];
     if(activeStage!=="all")  a=a.filter(l=>(l.status||"New Lead")===activeStage);
@@ -243,7 +245,7 @@ export default function MyLeadsTab({
     return sorted;
   },[smartFiltered,activeStage,filterAgent,filterManager,filterService,filterSource,filterBudget,aiSearch,leadSortBy]);
 
-  // ── KPIs ─────────────────────────────────────────────────────
+  // ââ KPIs âââââââââââââââââââââââââââââââââââââââââââââââââââââ
   const allLeads  = myLeads||[];
   const kTotal    = allLeads.length;
   const kToday    = allLeads.filter(l=>daysAgo(l.createdAt)<1).length;
@@ -254,7 +256,7 @@ export default function MyLeadsTab({
   const kUnassigned = allLeads.filter(l=>!l.assignedTo).length;
   const kConvRate = kTotal>0?Math.round((kClosed/kTotal)*100):0;
 
-  // ── Agent performance (manager/owner/director) ───────────────
+  // ââ Agent performance (manager/owner/director) âââââââââââââââ
   const agentPerf = useMemo(()=>{
     if(!canManage) return [];
     return agents.map(agent=>{
@@ -270,7 +272,7 @@ export default function MyLeadsTab({
     }).sort((a,b)=>b.closed-a.closed);
   },[agents,allLeads,canManage]);
 
-  // ── Leaderboard (owner view) — ranked by combined score ──────
+  // ââ Leaderboard (owner view) â ranked by combined score ââââââ
   const leaderboard = useMemo(()=>{
     if(!isOwner&&!isSuperAdmin) return [];
     return [...agentPerf].map(a=>{
@@ -281,14 +283,14 @@ export default function MyLeadsTab({
     }).sort((a,b)=>b.combined-a.combined);
   },[agentPerf,isOwner,isSuperAdmin]);
 
-  // ── Source stats ─────────────────────────────────────────────
+  // ââ Source stats âââââââââââââââââââââââââââââââââââââââââââââ
   const srcStats = useMemo(()=>{
     const m={};
     allLeads.forEach(l=>{const s=l.source||"Manual";if(!m[s])m[s]={t:0,c:0};m[s].t++;if(l.status==="Closed Deal")m[s].c++;});
     return Object.entries(m).map(([s,d])=>({src:s,total:d.t,closed:d.c,rate:d.t>0?Math.round(d.c*100/d.t):0})).sort((a,b)=>b.total-a.total);
   },[allLeads]);
 
-  // ── Property matching ────────────────────────────────────────
+  // ââ Property matching ââââââââââââââââââââââââââââââââââââââââ
   const matched = useMemo(()=>{
     if(!selectedLead||!listings) return [];
     const b=parseFloat(selectedLead.budget||0);
@@ -298,7 +300,7 @@ export default function MyLeadsTab({
     }).slice(0,4);
   },[selectedLead,listings]);
 
-  // ── Save lead ────────────────────────────────────────────────
+  // ââ Save lead ââââââââââââââââââââââââââââââââââââââââââââââââ
   const saveLead = useCallback(async()=>{
     if(!form.name||!form.phone){notify("Name and phone are required","error");return;}
     setSaving(true);
@@ -328,7 +330,7 @@ export default function MyLeadsTab({
     setSaving(false);
   },[form,isAgent,currentUid,currentEmail,orgId,notify]);
 
-  // ── Update status ────────────────────────────────────────────
+  // ââ Update status ââââââââââââââââââââââââââââââââââââââââââââ
   const updateStatus = useCallback(async(leadId,newStatus)=>{
     try{
       const entry={text:"Status changed to "+newStatus,type:"Status Update",by:currentEmail,at:new Date().toISOString()};
@@ -338,7 +340,7 @@ export default function MyLeadsTab({
     }catch(e){notify("Update failed","error");}
   },[currentEmail,selectedLead,setSelectedLead,notify]);
 
-  // ── Assign lead ──────────────────────────────────────────────
+  // ââ Assign lead ââââââââââââââââââââââââââââââââââââââââââââââ
   const assignLead = useCallback(async(leadId,agent)=>{
     try{
       const entry={text:"Lead assigned to "+agent.name,type:"Note",by:currentEmail,at:new Date().toISOString()};
@@ -351,7 +353,7 @@ export default function MyLeadsTab({
     }catch(e){notify("Assign failed","error");}
   },[currentEmail,selectedLead,setSelectedLead,notify]);
 
-  // ── Add note ─────────────────────────────────────────────────
+  // ââ Add note âââââââââââââââââââââââââââââââââââââââââââââââââ
   const addNote = useCallback(async(leadId)=>{
     if(!noteText2.trim()) return;
     setSavingNote(true);
@@ -364,7 +366,7 @@ export default function MyLeadsTab({
     setSavingNote(false);
   },[noteText2,noteType2,currentEmail,selectedLead,setSelectedLead,notify]);
 
-  // ── Export CSV ───────────────────────────────────────────────
+  // ââ Export CSV âââââââââââââââââââââââââââââââââââââââââââââââ
   const exportCSV = useCallback(()=>{
     const h=["ID","Name","Phone","Email","Budget","Service","Request","Status","Source","Channel","AD Name","AD Account","Nationality","Community","Timeline","Agent","Score","Created","Updated"];
     const rows=filtered.map(l=>[l.id||"",l.name||"",l.phone||"",l.email||"",l.budget||"",l.serviceType||l.type||"",l.requestType||"",l.status||"",l.source||"",l.channel||"",l.adName||"",l.adAccount||"",l.nationality||"",l.community||"",l.timeline||"",l.assignedToName||"",aiScore(l).score,l.createdAt?new Date(l.createdAt).toLocaleDateString("en-GB"):"",l.updatedAt?new Date(l.updatedAt).toLocaleDateString("en-GB"):""].map(v=>escCSV(v)));
@@ -375,7 +377,7 @@ export default function MyLeadsTab({
     a.href=url;a.download="DXB_Leads_"+new Date().toISOString().slice(0,10)+".csv";a.click();URL.revokeObjectURL(url);
   },[filtered]);
 
-  // ── Send WA ──────────────────────────────────────────────────
+  // ââ Send WA ââââââââââââââââââââââââââââââââââââââââââââââââââ
   const sendWA = useCallback((tmpl,lead)=>{
     if(!lead?.phone) return;
     const msg=tmpl.body
@@ -386,10 +388,10 @@ export default function MyLeadsTab({
     setShowWA(false);
   },[orgName,firebaseUser]);
 
-  // ── Access guard ─────────────────────────────────────────────
+  // ââ Access guard âââââââââââââââââââââââââââââââââââââââââââââ
   if(!canSee) return (
     <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",height:400,gap:12,textAlign:"center"}}>
-      <div style={{fontSize:36}}>🔒</div>
+      <div style={{fontSize:36}}>ð</div>
       <div style={{fontSize:16,fontWeight:700,color:T.white}}>CRM Access Required</div>
       <div style={{fontSize:12,color:T.textMuted,maxWidth:300}}>Your account does not have CRM access. Contact your administrator.</div>
     </div>
@@ -398,7 +400,7 @@ export default function MyLeadsTab({
   return (
     <div style={{paddingBottom:80}}>
 
-      {/* ══ SMART VIEW TABS ══════════════════════════════════════ */}
+      {/* ââ SMART VIEW TABS ââââââââââââââââââââââââââââââââââââââ */}
       <div style={{display:"flex",gap:0,borderBottom:"1px solid "+T.border,overflowX:"auto",paddingLeft:4}}>
         {[
           {k:"all",         l:"All"},
@@ -419,7 +421,7 @@ export default function MyLeadsTab({
         })}
       </div>
 
-      {/* ══ TOOLBAR ══════════════════════════════════════════════ */}
+      {/* ââ TOOLBAR ââââââââââââââââââââââââââââââââââââââââââââââ */}
       <div style={{display:"flex",alignItems:"center",gap:10,padding:"10px 4px",borderBottom:"1px solid "+T.border,flexWrap:"wrap"}}>
         <div style={{display:"flex",alignItems:"center",gap:8}}>
           <span style={{fontSize:13,fontWeight:700,color:T.white}}>{orgName||"Leads"}</span>
@@ -429,10 +431,10 @@ export default function MyLeadsTab({
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={T.textMuted} strokeWidth="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
           <input id="crm-search" value={aiSearch} onChange={e=>setAiSearch(e.target.value)} placeholder="Search name, phone, agent, area..."
             style={{flex:1,background:"none",border:"none",outline:"none",color:T.white,fontSize:12,fontFamily:"'Outfit',sans-serif"}}/>
-          {aiSearch&&<button type="button" onClick={()=>setAiSearch("")} style={{background:"none",border:"none",color:T.textMuted,cursor:"pointer",fontSize:14}}>×</button>}
+          {aiSearch&&<button type="button" onClick={()=>setAiSearch("")} style={{background:"none",border:"none",color:T.textMuted,cursor:"pointer",fontSize:14}}>Ã</button>}
         </div>
         <div style={{display:"flex",gap:2,background:"rgba(255,255,255,0.03)",border:"1px solid "+T.border,borderRadius:7,padding:2,marginLeft:"auto"}}>
-          {[{k:"table",icon:"⊟"},{k:"kanban",icon:"⊞"},{k:"analytics",icon:"⊕"}].map(v=>(
+          {[{k:"table",icon:"â"},{k:"kanban",icon:"â"},{k:"analytics",icon:"â"}].map(v=>(
             <button key={v.k} type="button" onClick={()=>setView(v.k)} style={{padding:"5px 10px",borderRadius:5,border:view===v.k?"1px solid "+T.gold:"1px solid transparent",background:view===v.k?"rgba(212,168,67,0.15)":"transparent",color:view===v.k?T.gold:T.textMuted,cursor:"pointer",fontSize:13}}>{v.icon}</button>
           ))}
         </div>
@@ -443,7 +445,7 @@ export default function MyLeadsTab({
         </button>
       </div>
 
-      {/* ══ PIPELINE PILLS ═══════════════════════════════════════ */}
+      {/* ââ PIPELINE PILLS âââââââââââââââââââââââââââââââââââââââ */}
       <div style={{display:"flex",gap:0,borderBottom:"1px solid "+T.border,overflowX:"auto",paddingLeft:4,background:"rgba(255,255,255,0.01)"}}>
         <button type="button" onClick={()=>setActiveStage("all")} style={{padding:"7px 12px",border:"none",borderBottom:activeStage==="all"?"2px solid "+T.gold:"2px solid transparent",background:"transparent",color:activeStage==="all"?T.white:T.textMuted,fontSize:11,fontWeight:activeStage==="all"?600:400,cursor:"pointer",whiteSpace:"nowrap",fontFamily:"'Outfit',sans-serif"}}>All</button>
         {PIPELINE.map(p=>{
@@ -457,7 +459,7 @@ export default function MyLeadsTab({
         })}
       </div>
 
-      {/* ══ FILTER ROW ════════════════════════════════════════════ */}
+      {/* ââ FILTER ROW ââââââââââââââââââââââââââââââââââââââââââââ */}
       <div style={{display:"flex",gap:8,padding:"8px 4px",borderBottom:"1px solid "+T.border,flexWrap:"wrap",alignItems:"center",background:"rgba(255,255,255,0.01)"}}>
         {(isOwner||isDirector||isSuperAdmin)&&managers.length>0&&(
           <select value={filterManager} onChange={e=>setFilterManager(e.target.value)} style={{padding:"5px 8px",background:"rgba(255,255,255,0.04)",border:"1px solid "+(filterManager!=="all"?T.gold:T.border),borderRadius:6,color:T.textSecondary,fontSize:11,outline:"none",fontFamily:"'Outfit',sans-serif"}}>
@@ -495,19 +497,19 @@ export default function MyLeadsTab({
         </select>
         {(aiSearch||activeStage!=="all"||filterAgent!=="all"||filterManager!=="all"||filterService!=="all"||filterSource!=="all"||filterBudget!=="all")&&(
           <div style={{display:"flex",gap:6,alignItems:"center",marginLeft:"auto",flexWrap:"wrap"}}>
-            {activeStage!=="all"&&<span style={{fontSize:10,padding:"2px 8px",borderRadius:10,background:"rgba(212,168,67,0.15)",color:T.gold,cursor:"pointer"}} onClick={()=>setActiveStage("all")}>{activeStage} ×</span>}
-            {filterAgent!=="all"&&<span style={{fontSize:10,padding:"2px 8px",borderRadius:10,background:"rgba(139,92,246,0.15)",color:"#8B5CF6",cursor:"pointer"}} onClick={()=>setFilterAgent("all")}>{agents.find(a=>(a.uid||a.id)===filterAgent)?.name||"Agent"} ×</span>}
-            {filterManager!=="all"&&<span style={{fontSize:10,padding:"2px 8px",borderRadius:10,background:"rgba(59,130,246,0.15)",color:"#3B82F6",cursor:"pointer"}} onClick={()=>setFilterManager("all")}>{managers.find(m=>(m.uid||m.id)===filterManager)?.name||"Manager"} ×</span>}
+            {activeStage!=="all"&&<span style={{fontSize:10,padding:"2px 8px",borderRadius:10,background:"rgba(212,168,67,0.15)",color:T.gold,cursor:"pointer"}} onClick={()=>setActiveStage("all")}>{activeStage} Ã</span>}
+            {filterAgent!=="all"&&<span style={{fontSize:10,padding:"2px 8px",borderRadius:10,background:"rgba(139,92,246,0.15)",color:"#8B5CF6",cursor:"pointer"}} onClick={()=>setFilterAgent("all")}>{agents.find(a=>(a.uid||a.id)===filterAgent)?.name||"Agent"} Ã</span>}
+            {filterManager!=="all"&&<span style={{fontSize:10,padding:"2px 8px",borderRadius:10,background:"rgba(59,130,246,0.15)",color:"#3B82F6",cursor:"pointer"}} onClick={()=>setFilterManager("all")}>{managers.find(m=>(m.uid||m.id)===filterManager)?.name||"Manager"} Ã</span>}
             <button type="button" onClick={()=>{setAiSearch("");setActiveStage("all");setFilterAgent("all");setFilterManager("all");setFilterService("all");setFilterSource("all");setFilterBudget("all");}} style={{fontSize:10,padding:"2px 10px",borderRadius:10,background:"rgba(252,129,129,0.1)",border:"1px solid rgba(252,129,129,0.3)",color:"#FC8181",cursor:"pointer",fontFamily:"'Outfit',sans-serif"}}>Clear all</button>
             <span style={{fontSize:10,color:T.textMuted}}>{filtered.length} results</span>
           </div>
         )}
       </div>
 
-      {/* ══ MAIN CONTENT ══════════════════════════════════════════ */}
+      {/* ââ MAIN CONTENT ââââââââââââââââââââââââââââââââââââââââââ */}
       <div style={{display:"grid",gridTemplateColumns:selectedLead?"1fr 360px":"1fr",gap:0,alignItems:"start"}}>
 
-        {/* ── TABLE VIEW ── */}
+        {/* ââ TABLE VIEW ââ */}
         {view==="table"&&(
           <div>
             <div style={{display:"grid",gridTemplateColumns:"72px 2fr 110px 130px 110px 130px 140px 48px",padding:"8px 4px",borderBottom:"1px solid "+T.border,background:"rgba(255,255,255,0.02)"}}>
@@ -517,7 +519,7 @@ export default function MyLeadsTab({
             </div>
             {allLeads.length===0&&(
               <div style={{padding:"80px 20px",textAlign:"center"}}>
-                <div style={{fontSize:40,marginBottom:12}}>📋</div>
+                <div style={{fontSize:40,marginBottom:12}}>ð</div>
                 <div style={{fontSize:16,fontWeight:700,color:T.white,marginBottom:6}}>No leads yet</div>
                 <div style={{fontSize:12,color:T.textMuted,marginBottom:16}}>Add your first lead to start managing your pipeline</div>
                 <button type="button" onClick={()=>setShowAdd(true)} style={{padding:"10px 24px",borderRadius:8,border:"none",background:"linear-gradient(135deg,#D4A843,#B8902E)",color:"#0A0E1A",fontSize:13,fontWeight:700,cursor:"pointer"}}>+ Add First Lead</button>
@@ -547,24 +549,24 @@ export default function MyLeadsTab({
                       </div>
                       <div style={{display:"flex",gap:4,marginTop:1}}>
                         <ScoreBar lead={lead}/>
-                        {isGV&&<span style={{fontSize:9,color:T.gold}}>🏆GV</span>}
-                        {stale&&<span style={{fontSize:9,color:"#EF4444"}}>⏰Stale</span>}
+                        {isGV&&<span style={{fontSize:9,color:T.gold}}>ðGV</span>}
+                        {stale&&<span style={{fontSize:9,color:"#EF4444"}}>â°Stale</span>}
                       </div>
                     </div>
                   </div>
                   <div style={{alignSelf:"center"}}><PBadge status={lead.status||"New Lead"}/></div>
                   <div style={{fontSize:12,fontWeight:700,color:T.gold,alignSelf:"center"}}>{fmtB(lead.budget)}</div>
-                  <div style={{fontSize:11,color:lead.serviceType||lead.type?"#A78BFA":T.textMuted,alignSelf:"center",fontWeight:lead.serviceType||lead.type?600:400}}>{lead.serviceType||lead.type||"—"}</div>
+                  <div style={{fontSize:11,color:lead.serviceType||lead.type?"#A78BFA":T.textMuted,alignSelf:"center",fontWeight:lead.serviceType||lead.type?600:400}}>{lead.serviceType||lead.type||"â"}</div>
                   <div style={{display:"flex",alignItems:"center",gap:4,alignSelf:"center"}}>
                     <div style={{width:6,height:6,borderRadius:"50%",background:SRC_COLOR[lead.source]||"#94A3B8",flexShrink:0}}/>
-                    <span style={{fontSize:10,color:T.textMuted}}>{lead.source||"—"}</span>
+                    <span style={{fontSize:10,color:T.textMuted}}>{lead.source||"â"}</span>
                   </div>
                   <div style={{alignSelf:"center"}}>
                     {lead.assignedToName
                       ?<span style={{fontSize:10,color:"#8B5CF6",fontWeight:600,background:"rgba(139,92,246,0.1)",padding:"2px 7px",borderRadius:8}}>{lead.assignedToName}</span>
                       :canManage
                         ?<button type="button" onClick={e=>{e.stopPropagation();setShowAssign(lead);}} style={{fontSize:10,color:T.textMuted,background:"rgba(255,255,255,0.05)",border:"1px dashed "+T.border,padding:"2px 7px",borderRadius:8,cursor:"pointer",fontFamily:"'Outfit',sans-serif"}}>+ Assign</button>
-                        :<span style={{fontSize:10,color:T.textMuted}}>—</span>
+                        :<span style={{fontSize:10,color:T.textMuted}}>â</span>
                     }
                   </div>
                   <div style={{display:"flex",alignItems:"center",justifyContent:"center"}}>
@@ -576,7 +578,7 @@ export default function MyLeadsTab({
           </div>
         )}
 
-        {/* ── KANBAN VIEW ── */}
+        {/* ââ KANBAN VIEW ââ */}
         {view==="kanban"&&(
           <div style={{overflowX:"auto",padding:"12px 0"}}>
             <div style={{display:"flex",gap:10,minWidth:"max-content",alignItems:"start"}}>
@@ -623,7 +625,7 @@ export default function MyLeadsTab({
           </div>
         )}
 
-        {/* ── ANALYTICS VIEW ── */}
+        {/* ââ ANALYTICS VIEW ââ */}
         {view==="analytics"&&(
           <div style={{padding:"14px 4px",display:"flex",flexDirection:"column",gap:14}}>
 
@@ -646,13 +648,13 @@ export default function MyLeadsTab({
               ))}
             </div>
 
-            {/* ── OWNER LEADERBOARD ── */}
+            {/* ââ OWNER LEADERBOARD ââ */}
             {(isOwner||isSuperAdmin)&&leaderboard.length>0&&(
               <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid "+T.gold+"40",borderRadius:12,overflow:"hidden"}}>
                 <div style={{padding:"14px 16px",borderBottom:"1px solid "+T.border,background:"rgba(212,168,67,0.05)",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
                   <div>
-                    <div style={{fontSize:13,fontWeight:700,color:T.gold}}>🏆 Agent Leaderboard</div>
-                    <div style={{fontSize:11,color:T.textMuted,marginTop:2}}>Ranked by closed deals · conversion rate · pipeline value</div>
+                    <div style={{fontSize:13,fontWeight:700,color:T.gold}}>ð Agent Leaderboard</div>
+                    <div style={{fontSize:11,color:T.textMuted,marginTop:2}}>Ranked by closed deals Â· conversion rate Â· pipeline value</div>
                   </div>
                   <div style={{fontSize:11,color:T.textMuted}}>{agents.length} agents</div>
                 </div>
@@ -682,12 +684,12 @@ export default function MyLeadsTab({
               </div>
             )}
 
-            {/* ── AGENT PERFORMANCE TABLE (manager/director) ── */}
+            {/* ââ AGENT PERFORMANCE TABLE (manager/director) ââ */}
             {(isManager||isDirector)&&agentPerf.length>0&&(
               <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid "+T.border,borderRadius:12,overflow:"hidden"}}>
                 <div style={{padding:"14px 16px",borderBottom:"1px solid "+T.border,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
                   <div style={{fontSize:13,fontWeight:700,color:T.white}}>Agent Performance</div>
-                  <div style={{fontSize:11,color:T.textMuted}}>{agents.length} agents · {allLeads.length} leads</div>
+                  <div style={{fontSize:11,color:T.textMuted}}>{agents.length} agents Â· {allLeads.length} leads</div>
                 </div>
                 <div style={{display:"grid",gridTemplateColumns:"2fr 1fr 1fr 1fr 1fr 1fr 1fr",padding:"8px 16px",background:"rgba(255,255,255,0.02)",borderBottom:"1px solid "+T.border}}>
                   {["Agent","Leads","Hot","Closed","Conv%","Stale","Last Active"].map((h,i)=>(
@@ -756,7 +758,7 @@ export default function MyLeadsTab({
           </div>
         )}
 
-        {/* ══ LEAD DETAIL DRAWER ════════════════════════════════════ */}
+        {/* ââ LEAD DETAIL DRAWER ââââââââââââââââââââââââââââââââââââ */}
         {selectedLead&&(
           <div style={{background:"rgba(255,255,255,0.02)",borderLeft:"1px solid "+T.border,display:"flex",flexDirection:"column",maxHeight:"calc(100vh - 160px)",position:"sticky",top:0,overflowY:"auto"}}>
             <div style={{padding:"13px 15px",borderBottom:"1px solid "+T.border,background:"rgba(255,255,255,0.02)"}}>
@@ -768,13 +770,13 @@ export default function MyLeadsTab({
                     <PBadge status={selectedLead.status||"New Lead"}/>
                   </div>
                 </div>
-                <button type="button" onClick={()=>setSelectedLead(null)} style={{background:"none",border:"none",color:T.textMuted,cursor:"pointer",fontSize:18}}>×</button>
+                <button type="button" onClick={()=>setSelectedLead(null)} style={{background:"none",border:"none",color:T.textMuted,cursor:"pointer",fontSize:18}}>Ã</button>
               </div>
               <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
                 {selectedLead.phone&&<a href={"https://wa.me/"+clnPhone(selectedLead.phone)} target="_blank" rel="noopener noreferrer" style={{fontSize:10,padding:"4px 10px",borderRadius:7,background:"rgba(37,211,102,0.1)",border:"1px solid rgba(37,211,102,0.25)",color:"#25D366",textDecoration:"none",fontWeight:600}}>WhatsApp</a>}
                 {selectedLead.phone&&<a href={"tel:"+selectedLead.phone} style={{fontSize:10,padding:"4px 10px",borderRadius:7,background:"rgba(99,179,237,0.1)",border:"1px solid rgba(99,179,237,0.25)",color:"#63B3ED",textDecoration:"none",fontWeight:600}}>Call</a>}
                 {canManage&&<button type="button" onClick={()=>setShowAssign(selectedLead)} style={{fontSize:10,padding:"4px 10px",borderRadius:7,background:"rgba(139,92,246,0.1)",border:"1px solid rgba(139,92,246,0.3)",color:"#8B5CF6",cursor:"pointer",fontFamily:"'Outfit',sans-serif",fontWeight:600}}>Reassign</button>}
-                {parseFloat(selectedLead.budget||0)>=GV_MIN&&<span style={{fontSize:10,padding:"4px 8px",borderRadius:7,background:"rgba(212,168,67,0.15)",color:T.gold,fontWeight:700}}>🏆 Golden Visa</span>}
+                {parseFloat(selectedLead.budget||0)>=GV_MIN&&<span style={{fontSize:10,padding:"4px 8px",borderRadius:7,background:"rgba(212,168,67,0.15)",color:T.gold,fontWeight:700}}>ð Golden Visa</span>}
               </div>
               <div style={{marginTop:8}}>
                 <div style={{fontSize:9,color:T.textMuted,marginBottom:4,fontWeight:700,textTransform:"uppercase",letterSpacing:0.5}}>Change Status</div>
@@ -801,7 +803,7 @@ export default function MyLeadsTab({
                     <div style={{padding:"9px 12px",borderRadius:8,background:sc.color+"0E",border:"1px solid "+sc.color+"25",marginBottom:12,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
                       <div>
                         <div style={{fontSize:9,color:T.textMuted,fontWeight:700,textTransform:"uppercase",letterSpacing:0.7,marginBottom:2}}>AI LEAD SCORE</div>
-                        <div style={{fontFamily:"'Fraunces',serif",fontSize:18,fontWeight:800,color:sc.color}}>{sc.score}/100 — {sc.label}</div>
+                        <div style={{fontFamily:"'Fraunces',serif",fontSize:18,fontWeight:800,color:sc.color}}>{sc.score}/100 â {sc.label}</div>
                       </div>
                       <div style={{width:38,height:38,borderRadius:"50%",border:"2px solid "+sc.color,display:"flex",alignItems:"center",justifyContent:"center",background:sc.color+"12",flexShrink:0}}>
                         <span style={{fontSize:12,fontWeight:800,color:sc.color,fontFamily:"'Fraunces',serif"}}>{sc.score}</span>
@@ -812,17 +814,17 @@ export default function MyLeadsTab({
                       {label:"WhatsApp",    value:selectedLead.phone?"Open":null, link:selectedLead.phone?"https://wa.me/"+clnPhone(selectedLead.phone):null, ext:true},
                       {label:"Email",       value:selectedLead.email,   link:selectedLead.email?"mailto:"+selectedLead.email:null},
                       {label:"Budget",      value:fmtB(selectedLead.budget)},
-                      {label:"Service",     value:selectedLead.serviceType||selectedLead.type||"—"},
-                      {label:"Request",     value:selectedLead.requestType||"—"},
-                      {label:"Project",     value:selectedLead.project||"—"},
-                      {label:"Source",      value:selectedLead.source||"—"},
-                      {label:"Channel",     value:selectedLead.channel||"—"},
-                      {label:"Campaign",    value:selectedLead.campaign||"—"},
-                      {label:"AD Name",     value:selectedLead.adName||"—"},
-                      {label:"AD Account",  value:selectedLead.adAccount||"—"},
-                      {label:"Nationality", value:selectedLead.nationality||"—"},
-                      {label:"Community",   value:selectedLead.community||"—"},
-                      {label:"Timeline",    value:selectedLead.timeline||"—"},
+                      {label:"Service",     value:selectedLead.serviceType||selectedLead.type||"â"},
+                      {label:"Request",     value:selectedLead.requestType||"â"},
+                      {label:"Project",     value:selectedLead.project||"â"},
+                      {label:"Source",      value:selectedLead.source||"â"},
+                      {label:"Channel",     value:selectedLead.channel||"â"},
+                      {label:"Campaign",    value:selectedLead.campaign||"â"},
+                      {label:"AD Name",     value:selectedLead.adName||"â"},
+                      {label:"AD Account",  value:selectedLead.adAccount||"â"},
+                      {label:"Nationality", value:selectedLead.nationality||"â"},
+                      {label:"Community",   value:selectedLead.community||"â"},
+                      {label:"Timeline",    value:selectedLead.timeline||"â"},
                       {label:"Assigned To", value:selectedLead.assignedToName||"Unassigned",color:"#8B5CF6"},
                       {label:"Added",       value:fmtD(selectedLead.createdAt)},
                     ].map((f,i)=>(
@@ -830,7 +832,7 @@ export default function MyLeadsTab({
                         <span style={{fontSize:11,color:T.textMuted,flexShrink:0}}>{f.label}</span>
                         {f.link
                           ?<a href={f.link} target={f.ext?"_blank":"_self"} rel="noopener noreferrer" style={{fontSize:11,color:T.gold,fontWeight:600,textDecoration:"none"}}>{f.value}</a>
-                          :<span style={{fontSize:11,color:f.color||T.white,fontWeight:600,textAlign:"right",maxWidth:160,overflow:"hidden",textOverflow:"ellipsis"}}>{f.value||"—"}</span>
+                          :<span style={{fontSize:11,color:f.color||T.white,fontWeight:600,textAlign:"right",maxWidth:160,overflow:"hidden",textOverflow:"ellipsis"}}>{f.value||"â"}</span>
                         }
                       </div>
                     ))}
@@ -845,7 +847,7 @@ export default function MyLeadsTab({
                     {[...(selectedLead.notes_log||[])].reverse().map((n,i)=>(
                       <div key={i} style={{padding:"7px 10px",background:"rgba(255,255,255,0.03)",borderRadius:7,borderLeft:"2px solid "+T.gold}}>
                         <div style={{fontSize:11,color:T.white,marginBottom:2}}>{n.text}</div>
-                        <div style={{fontSize:9,color:T.textMuted}}>{n.type||"Note"} · {n.by||"Agent"} · {fmtD(n.at)}</div>
+                        <div style={{fontSize:9,color:T.textMuted}}>{n.type||"Note"} Â· {n.by||"Agent"} Â· {fmtD(n.at)}</div>
                       </div>
                     ))}
                   </div>
@@ -867,7 +869,7 @@ export default function MyLeadsTab({
                       <div style={{display:"flex",justifyContent:"space-between"}}><span style={{fontSize:11,color:T.textMuted}}>{l.community||""}</span><span style={{fontSize:12,fontWeight:700,color:T.gold}}>{fmtB(l.price||l.priceMin)}</span></div>
                     </div>
                   ))}
-                  {matched.length===0&&<button type="button" onClick={()=>handleTabChange?.("Projects")} style={{width:"100%",padding:"8px",borderRadius:7,border:"1px solid "+T.border,background:"rgba(212,168,67,0.06)",color:T.gold,fontSize:11,cursor:"pointer",fontFamily:"'Outfit',sans-serif"}}>Browse Projects →</button>}
+                  {matched.length===0&&<button type="button" onClick={()=>handleTabChange?.("Projects")} style={{width:"100%",padding:"8px",borderRadius:7,border:"1px solid "+T.border,background:"rgba(212,168,67,0.06)",color:T.gold,fontSize:11,cursor:"pointer",fontFamily:"'Outfit',sans-serif"}}>Browse Projects â</button>}
                 </div>
               )}
             </div>
@@ -875,25 +877,25 @@ export default function MyLeadsTab({
         )}
       </div>
 
-      {/* ══ ADD LEAD MODAL ═══════════════════════════════════════ */}
+      {/* ââ ADD LEAD MODAL âââââââââââââââââââââââââââââââââââââââ */}
       {showAdd&&(
         <div style={{position:"fixed",inset:0,background:"rgba(4,9,15,0.9)",zIndex:2000,display:"flex",alignItems:"center",justifyContent:"center",padding:20}} onClick={e=>{if(e.target===e.currentTarget)setShowAdd(false);}}>
           <div style={{background:"#0D1117",borderRadius:14,border:"1px solid "+T.border,width:"100%",maxWidth:620,maxHeight:"92vh",overflowY:"auto"}} onClick={e=>e.stopPropagation()}>
             <div style={{padding:"15px 20px",borderBottom:"1px solid "+T.border,display:"flex",justifyContent:"space-between",alignItems:"center",position:"sticky",top:0,background:"#0D1117",zIndex:1}}>
               <div style={{fontFamily:"'Fraunces',serif",fontSize:15,fontWeight:900,color:T.white}}>Add New Lead</div>
-              <button type="button" onClick={()=>setShowAdd(false)} style={{background:"rgba(255,255,255,0.06)",border:"1px solid "+T.border,borderRadius:7,color:T.textMuted,width:28,height:28,cursor:"pointer",fontSize:16,display:"flex",alignItems:"center",justifyContent:"center"}}>×</button>
+              <button type="button" onClick={()=>setShowAdd(false)} style={{background:"rgba(255,255,255,0.06)",border:"1px solid "+T.border,borderRadius:7,color:T.textMuted,width:28,height:28,cursor:"pointer",fontSize:16,display:"flex",alignItems:"center",justifyContent:"center"}}>Ã</button>
             </div>
             <div style={{padding:20}}>
               <div style={{marginBottom:10}}>
                 <div style={{fontSize:11,fontWeight:700,color:T.white,marginBottom:10,paddingBottom:6,borderBottom:"1px solid "+T.border}}>Contact Information</div>
                 <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
                   <div><Lbl>Full Name *</Lbl><Inp value={form.name} onChange={v=>F("name",v)} placeholder="Client full name"/></div>
-                  <div><Lbl>Phone *</Lbl><Inp value={form.phone} onChange={v=>F("phone",v)} placeholder="+971 50 XXX XXXX" type="tel"/></div>
+                  <div><Lbl>Phone *</Lbl><PhoneInput value={form.phone} onChange={v=>F("phone",v)} /></div>
                   <div><Lbl>Email</Lbl><Inp value={form.email} onChange={v=>F("email",v)} placeholder="email@example.com" type="email"/></div>
                   <div><Lbl>Budget (AED)</Lbl><Inp value={form.budget} onChange={v=>F("budget",v)} placeholder="e.g. 2000000" type="number"/></div>
                 </div>
               </div>
-              <Section icon="📋" title="Request Information" sub="Project and classification details" color="#818CF8" open={openSec.request} onToggle={()=>setOpenSec(s=>({...s,request:!s.request}))}>
+              <Section icon="ð" title="Request Information" sub="Project and classification details" color="#818CF8" open={openSec.request} onToggle={()=>setOpenSec(s=>({...s,request:!s.request}))}>
                 <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
                   <div><Lbl>Request Type</Lbl><Sel value={form.requestType} onChange={v=>F("requestType",v)}><option value="">Select...</option>{REQUEST_TYPES.map(t=><option key={t} value={t}>{t}</option>)}</Sel></div>
                   <div><Lbl>Service Type</Lbl><Sel value={form.serviceType} onChange={v=>F("serviceType",v)}><option value="">Select...</option>{SERVICE_TYPES.map(t=><option key={t} value={t}>{t}</option>)}</Sel></div>
@@ -906,7 +908,7 @@ export default function MyLeadsTab({
                   <div style={{gridColumn:"1/-1"}}><Lbl>Comment</Lbl><textarea value={form.comment} onChange={e=>F("comment",e.target.value)} placeholder="Additional notes..." rows={3} style={{width:"100%",padding:"8px 10px",background:"rgba(255,255,255,0.04)",border:"1px solid "+T.border,borderRadius:7,color:T.white,fontSize:12,outline:"none",resize:"none",boxSizing:"border-box",fontFamily:"'Outfit',sans-serif"}}/></div>
                 </div>
               </Section>
-              <Section icon="👤" title="Agent Information" sub="Assign to a sales agent" color="#FB923C" open={openSec.agent} onToggle={()=>setOpenSec(s=>({...s,agent:!s.agent}))}>
+              <Section icon="ð¤" title="Agent Information" sub="Assign to a sales agent" color="#FB923C" open={openSec.agent} onToggle={()=>setOpenSec(s=>({...s,agent:!s.agent}))}>
                 <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
                   <div>
                     <Lbl>Assign To Agent</Lbl>
@@ -919,9 +921,9 @@ export default function MyLeadsTab({
                   <div><Lbl>Pipeline Status</Lbl><Sel value={form.status} onChange={v=>F("status",v)}>{PIPELINE.map(p=><option key={p.key} value={p.key}>{p.key}</option>)}</Sel></div>
                 </div>
               </Section>
-              <Section icon="📍" title="Additional Details" sub="Community, nationality, timeline" color="#10B981" open={openSec.extra} onToggle={()=>setOpenSec(s=>({...s,extra:!s.extra}))}>
+              <Section icon="ð" title="Additional Details" sub="Community, nationality, timeline" color="#10B981" open={openSec.extra} onToggle={()=>setOpenSec(s=>({...s,extra:!s.extra}))}>
                 <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10}}>
-                  <div><Lbl>Nationality</Lbl><Sel value={form.nationality} onChange={v=>F("nationality",v)}><option value="">Select...</option>{NATS.map(n=><option key={n} value={n}>{n}</option>)}</Sel></div>
+                  <div><Lbl>Nationality</Lbl><NationalitySelect value={form.nationality} onChange={v=>F("nationality",v)} /></div>
                   <div><Lbl>Community</Lbl><Inp value={form.community} onChange={v=>F("community",v)} placeholder="e.g. Dubai Marina"/></div>
                   <div><Lbl>Timeline</Lbl><Sel value={form.timeline} onChange={v=>F("timeline",v)}><option value="">Select...</option>{TIMELINES.map(t=><option key={t} value={t}>{t}</option>)}</Sel></div>
                 </div>
@@ -935,7 +937,7 @@ export default function MyLeadsTab({
         </div>
       )}
 
-      {/* ══ ASSIGN MODAL ════════════════════════════════════════ */}
+      {/* ââ ASSIGN MODAL ââââââââââââââââââââââââââââââââââââââââ */}
       {showAssign&&(
         <div style={{position:"fixed",inset:0,background:"rgba(4,9,15,0.88)",zIndex:2100,display:"flex",alignItems:"center",justifyContent:"center",padding:20}} onClick={e=>{if(e.target===e.currentTarget)setShowAssign(null);}}>
           <div style={{background:"#0D1117",borderRadius:14,border:"1px solid "+T.border,width:"100%",maxWidth:400,padding:22}} onClick={e=>e.stopPropagation()}>
@@ -944,7 +946,7 @@ export default function MyLeadsTab({
                 <div style={{fontFamily:"'Fraunces',serif",fontSize:15,fontWeight:900,color:T.white}}>Assign Lead</div>
                 <div style={{fontSize:11,color:T.textMuted,marginTop:2}}>{showAssign.name||"Lead"}</div>
               </div>
-              <button type="button" onClick={()=>setShowAssign(null)} style={{background:"rgba(255,255,255,0.06)",border:"1px solid "+T.border,borderRadius:7,color:T.textMuted,width:28,height:28,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16}}>×</button>
+              <button type="button" onClick={()=>setShowAssign(null)} style={{background:"rgba(255,255,255,0.06)",border:"1px solid "+T.border,borderRadius:7,color:T.textMuted,width:28,height:28,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16}}>Ã</button>
             </div>
             {agents.length===0&&<div style={{padding:"20px",textAlign:"center",color:T.textMuted,fontSize:12}}>No agents in your team yet. Create agents from the Team tab.</div>}
             <div style={{display:"flex",flexDirection:"column",gap:8}}>
@@ -967,7 +969,7 @@ export default function MyLeadsTab({
         </div>
       )}
 
-      {/* ══ WA TEMPLATES MODAL ══════════════════════════════════ */}
+      {/* ââ WA TEMPLATES MODAL ââââââââââââââââââââââââââââââââââ */}
       {showWA&&(
         <div style={{position:"fixed",inset:0,background:"rgba(4,9,15,0.9)",zIndex:2100,display:"flex",alignItems:"center",justifyContent:"center",padding:20}} onClick={e=>{if(e.target===e.currentTarget)setShowWA(false);}}>
           <div style={{background:"#0D1117",borderRadius:14,border:"1px solid "+T.border,width:"100%",maxWidth:480,padding:22}} onClick={e=>e.stopPropagation()}>
@@ -976,7 +978,7 @@ export default function MyLeadsTab({
                 <div style={{fontFamily:"'Fraunces',serif",fontSize:15,fontWeight:900,color:T.white}}>WhatsApp Templates</div>
                 <div style={{fontSize:11,color:T.textMuted,marginTop:2}}>{filtered.filter(l=>l.phone).length} leads with phone</div>
               </div>
-              <button type="button" onClick={()=>setShowWA(false)} style={{background:"rgba(255,255,255,0.06)",border:"1px solid "+T.border,borderRadius:7,color:T.textMuted,width:28,height:28,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16}}>×</button>
+              <button type="button" onClick={()=>setShowWA(false)} style={{background:"rgba(255,255,255,0.06)",border:"1px solid "+T.border,borderRadius:7,color:T.textMuted,width:28,height:28,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16}}>Ã</button>
             </div>
             <div style={{display:"flex",flexDirection:"column",gap:7}}>
               {WA_TEMPLATES.map((tmpl,i)=>(
@@ -990,7 +992,7 @@ export default function MyLeadsTab({
         </div>
       )}
 
-      {/* ══ TOAST ══════════════════════════════════════════════════ */}
+      {/* ââ TOAST ââââââââââââââââââââââââââââââââââââââââââââââââââ */}
       {toast&&<div style={{position:"fixed",bottom:24,right:24,padding:"11px 18px",background:toast.type==="error"?"rgba(239,68,68,0.15)":"rgba(16,185,129,0.15)",border:"1px solid "+(toast.type==="error"?"#EF4444":"#10B981"),borderRadius:9,color:toast.type==="error"?"#EF4444":"#10B981",fontSize:12,fontWeight:600,zIndex:9999,boxShadow:"0 8px 32px rgba(0,0,0,0.4)"}}>{toast.msg}</div>}
 
     </div>
