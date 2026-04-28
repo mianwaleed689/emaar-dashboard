@@ -507,22 +507,22 @@ export default function NeighbourhoodsTab({liveNeighbourhoods=[],handleTabChange
           {search&&<button type="button" onClick={()=>setSearch("")} style={{background:"none",border:"none",color:"#94A3B8",cursor:"pointer",fontSize:14}}></button>}
         </div>
         <select value={tierFilter} onChange={e=>setTierFilter(e.target.value)} style={selStyle}>
-          <option value="all">All Communities</option>
+          <option value="all">All Areas</option>
           <option value="verified"> Verified</option>
           <option value="dld-registry">DLD Registry</option>
         </select>
         <select value={yieldFilter} onChange={e=>setYieldFilter(e.target.value)} style={selStyle}>
-          <option value="all">All Yields</option>
-          <option value="7+">7%+ High Yield</option>
-          <option value="6+">6%+ Good Yield</option>
-          <option value="5+">5%+ Mid Yield</option>
+          <option value="all">Any Yield</option>
+          <option value="7+">7%+ Yield</option>
+          <option value="6+">6%+ Yield</option>
+          <option value="5+">5%+ Yield</option>
         </select>
         <select value={sortBy} onChange={e=>setSortBy(e.target.value)} style={selStyle}>
-          <option value="score">Sort: Score</option>
-          <option value="yield">Sort: Yield</option>
-          <option value="ppsf">Sort: PPSF</option>
-          <option value="airport">Sort: Near Airport</option>
-          <option value="name">Sort: AZ</option>
+          <option value="score">Best Score</option>
+          <option value="yield">Highest Yield</option>
+          <option value="ppsf">Highest PPSF</option>
+          <option value="airport">Near Airport</option>
+          <option value="name">Sort: A-Z</option>
         </select>
         <div style={{display:"flex",gap:2,background:"rgba(255,255,255,0.03)",border:"1px solid "+T.border,borderRadius:7,padding:2}}>
           {[{k:"grid",icon:""},{k:"table",icon:""}].map(v=>(
@@ -536,10 +536,10 @@ export default function NeighbourhoodsTab({liveNeighbourhoods=[],handleTabChange
 
       {/*  FILTER PILLS  */}
       <div style={{display:"flex",gap:6,marginBottom:14,flexWrap:"wrap",alignItems:"center"}}>
-        <FilterBtn active={metroFilter}  onClick={()=>setMetroFilter(v=>!v)}  label=" Metro"/>
-        <FilterBtn active={beachFilter}  onClick={()=>setBeachFilter(v=>!v)}  label=" Beach"/>
-        <FilterBtn active={sportsFilter} onClick={()=>setSportsFilter(v=>!v)} label=" Sports"/>
-        <FilterBtn active={gvFilter}     onClick={()=>setGvFilter(v=>!v)}     label=" Golden Visa"/>
+        <FilterBtn active={metroFilter}  onClick={()=>setMetroFilter(v=>!v)}  label="Metro"/>
+        <FilterBtn active={beachFilter}  onClick={()=>setBeachFilter(v=>!v)}  label="Beach"/>
+        <FilterBtn active={sportsFilter} onClick={()=>setSportsFilter(v=>!v)} label="Sports"/>
+        <FilterBtn active={gvFilter}     onClick={()=>setGvFilter(v=>!v)}     label="Golden Visa"/>
         {(metroFilter||beachFilter||sportsFilter||gvFilter||tierFilter!=="all"||yieldFilter!=="all"||search)&&(
           <button type="button" onClick={()=>{setMetroFilter(false);setBeachFilter(false);setSportsFilter(false);setGvFilter(false);setTierFilter("all");setYieldFilter("all");setSearch("");}}
             style={{fontSize:10,padding:"4px 10px",borderRadius:8,border:"1px solid rgba(239,68,68,0.3)",background:"rgba(239,68,68,0.08)",color:"#EF4444",cursor:"pointer",fontFamily:"'Outfit',sans-serif"}}>Clear all</button>
