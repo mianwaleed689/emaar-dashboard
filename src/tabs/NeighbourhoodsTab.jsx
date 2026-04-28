@@ -65,7 +65,7 @@ const CommunityCard = ({n, selected, onSelect, onCompare, isCompared}) => {
             <Chip label="â Verified" color="#10B981"/>
             <MetroBadge dist={n.distMetro} name={n.nearestMetro}/>
             {n.hasBeach&&<Chip label="ð Waterfront" color="#06B6D4"/>}
-            {n.goldenVisa&&<Chip label="ð Golden Visa" color={T.gold}/>}
+            {n.goldenVisa&&<Chip label="Golden Visa" color={T.gold}/>}
           </div>
         </div>
         <ScoreBadge score={n.investmentScore}/>
@@ -148,7 +148,7 @@ const DetailDrawer = ({n, onClose, handleTabChange}) => {
             <div>
               <div style={{display:"flex",gap:6,alignItems:"center",marginBottom:6}}>
                 <Chip label="â Verified" color="#10B981"/>
-                {n.goldenVisa&&<Chip label="ð Golden Visa" color={T.gold}/>}
+                {n.goldenVisa&&<Chip label="Golden Visa" color={T.gold}/>}
                 {n.hasBeach&&<Chip label="ð Waterfront" color="#06B6D4"/>}
               </div>
               <div style={{fontSize:20,fontWeight:700,color:T.white,fontFamily:"'Fraunces',serif"}}>{n.community}</div>
@@ -201,9 +201,9 @@ const DetailDrawer = ({n, onClose, handleTabChange}) => {
               </div>
               <div style={{display:"flex",gap:8}}>
                 <button type="button" onClick={()=>handleTabChange?.("Yields")}
-                  style={{flex:1,padding:"9px",borderRadius:8,border:"1px solid "+T.border,background:"rgba(20,184,166,0.06)",color:"#14B8A6",fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"'Outfit',sans-serif"}}>View Yields â</button>
+                  style={{flex:1,padding:"9px",borderRadius:8,border:"1px solid "+T.border,background:"rgba(20,184,166,0.06)",color:"#14B8A6",fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"'Outfit',sans-serif"}}>View Yields -></button>
                 <button type="button" onClick={()=>handleTabChange?.("Price History")}
-                  style={{flex:1,padding:"9px",borderRadius:8,border:"1px solid "+T.border,background:"rgba(212,168,67,0.06)",color:T.gold,fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"'Outfit',sans-serif"}}>Price History â</button>
+                  style={{flex:1,padding:"9px",borderRadius:8,border:"1px solid "+T.border,background:"rgba(212,168,67,0.06)",color:T.gold,fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"'Outfit',sans-serif"}}>Price History -></button>
               </div>
             </div>
           )}
@@ -220,7 +220,7 @@ const DetailDrawer = ({n, onClose, handleTabChange}) => {
               </div>
               {n.goldenVisa&&(
                 <div style={{padding:"12px 14px",background:"rgba(212,168,67,0.08)",border:"1px solid rgba(212,168,67,0.3)",borderRadius:10,marginBottom:12}}>
-                  <div style={{fontSize:12,fontWeight:700,color:T.gold,marginBottom:4}}>ð UAE Golden Visa Eligible</div>
+                  <div style={{fontSize:12,fontWeight:700,color:T.gold,marginBottom:4}}>UAE Golden Visa Eligible</div>
                   <div style={{fontSize:11,color:"#94A3B8",lineHeight:1.6}}>Properties in this community qualify for 10-year UAE Golden Visa with AED 2M+ investment.</div>
                 </div>
               )}
@@ -444,7 +444,7 @@ export default function NeighbourhoodsTab({
           <option value="yield">Sort: Highest Yield</option>
           <option value="ppsf">Sort: Highest PPSF</option>
           <option value="projects">Sort: Most Projects</option>
-          <option value="name">Sort: AâZ</option>
+          <option value="name">Sort: A-Z</option>
         </select>
         <div style={{display:"flex",gap:2,background:"rgba(255,255,255,0.03)",border:"1px solid "+T.border,borderRadius:7,padding:2}}>
           {[{k:"grid",icon:"â"},{k:"table",icon:"â"}].map(v=>(
@@ -468,7 +468,7 @@ export default function NeighbourhoodsTab({
       {/* ââ EMPTY STATE ââââââââââââââââââââââââââââââââââââââââââ */}
       {liveNeighbourhoods.length===0&&(
         <div style={{padding:"60px 20px",textAlign:"center"}}>
-          <div style={{fontSize:40,marginBottom:12}}>ð</div>
+          <div style={{fontSize:40,marginBottom:12}}>[ ]</div>
           <div style={{fontSize:16,fontWeight:700,color:T.white,marginBottom:6}}>No community data yet</div>
           <div style={{fontSize:12,color:"#94A3B8"}}>Community intelligence will appear here once projects are configured</div>
         </div>
