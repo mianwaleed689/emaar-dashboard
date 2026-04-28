@@ -473,7 +473,7 @@ export default function NeighbourhoodsTab({liveNeighbourhoods=[],handleTabChange
       <div style={{marginBottom:16}}>
         <h2 style={{margin:0,fontSize:20,fontWeight:900,color:T.white,fontFamily:"'Fraunces',serif"}}>Neighbourhoods</h2>
         <p style={{margin:"4px 0 0",fontSize:12,color:"#94A3B8"}}>
-          {liveNeighbourhoods.filter(n=>n.tier==="verified").length} verified · {liveNeighbourhoods.filter(n=>n.tier==="area-data").length} area data · {liveNeighbourhoods.filter(n=>n.tier==="dld-registry").length} DLD only · {liveNeighbourhoods.length} total
+          {liveNeighbourhoods.filter(n=>n.tier==="verified").length} verified  {liveNeighbourhoods.filter(n=>n.tier==="area-data").length} area data  {liveNeighbourhoods.filter(n=>n.tier==="dld-registry").length} DLD only  {liveNeighbourhoods.length} total
         </p>
       </div>
 
