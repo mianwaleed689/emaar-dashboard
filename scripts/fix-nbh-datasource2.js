@@ -1,19 +1,57 @@
 const fs = require("fs");
-let src = fs.readFileSync("src/tabs/NeighbourhoodsTab.jsx", "latin1");
+let src = fs.readFileSync("src/pages/EmaarDashboardV2.jsx", "latin1");
 
-const old = "            const rawNbhFirestore = liveMarketData?.filter?.(d => d.type === \"community\") || [];\r\n            const tier1Raw = rawNbhFirestore.length > 0 ? rawNbhFirestore : firestoreCommunities;\r\n            const tier2Raw = Array.isArray(liveCommunityDataFull) ? liveCommunityDataFull : [];";
+// Remove the bad insertion
+src = src.replace(
+`/* marketData handled by collection listener, not tabData doc */
+// neighbourhoodScores — load from collection (259 docs)
+unsubs.push(onSnapshot(collection(db, "neighbourhoodScores"), (snap) => {
+  const rows = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  if (rows.length > 0) setLiveNeighbourhoods(rows);
+}));`,
+`/* marketData handled by collection listener, not tabData doc */`
+);
 
-const neww = "            // Use neighbourhoodScores as primary source\r\n            const rawNbhFirestore = (Array.isArray(liveNeighbourhoods) && liveNeighbourhoods.length > 0)\r\n              ? liveNeighbourhoods\r\n              : liveMarketData?.filter?.(d => d.type === \"community\") || [];\r\n            const tier1Raw = rawNbhFirestore.length > 0 ? rawNbhFirestore : firestoreCommunities;\r\n            const tier2Raw = Array.isArray(liveCommunityDataFull) ? liveCommunityDataFull : [];";
+// Find the closing of the tabKeys forEach block and insert after it
+const TARGET = `tabKeys.forEach(({ key, setter }) => {
+unsubs.push(onSnapshot(doc(db, "tabData", key), (snap) => {
+if (snap.exists() && snap.data().rows?.length > 0) setter(snap.data().rows);
+}));
+});`;
 
-if (src.includes(old)) {
-  src = src.replace(old, neww);
-  console.log("Fixed — liveNeighbourhoods now primary source");
+const REPLACEMENT = `tabKeys.forEach(({ key, setter }) => {
+unsubs.push(onSnapshot(doc(db, "tabData", key), (snap) => {
+if (snap.exists() && snap.data().rows?.length > 0) setter(snap.data().rows);
+}));
+});
+
+// neighbourhoodScores — direct collection listener (259 docs)
+unsubs.push(onSnapshot(collection(db, "neighbourhoodScores"), (snap) => {
+  const rows = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  if (rows.length > 0) setLiveNeighbourhoods(rows);
+}));`;
+
+if (src.includes(TARGET)) {
+  src = src.replace(TARGET, REPLACEMENT);
+  console.log("Inserted collection listener after tabKeys forEach");
 } else {
-  console.log("Still not matching — checking char by char...");
-  const idx = src.indexOf("const rawNbhFirestore");
-  console.log("Found at char:", idx);
-  console.log("Exact:", JSON.stringify(src.substring(idx, idx+120)));
+  console.log("TARGET not found — trying alternate approach");
+  // Try finding by line pattern
+  const lines = src.split("\n");
+  const idx = lines.findIndex(l => l.includes("platformSettings") && l.includes("tabs") && l.includes("onSnapshot"));
+  if (idx > -1) {
+    lines.splice(idx, 0, 
+      "",
+      "// neighbourhoodScores — direct collection listener (259 docs)",
+      "unsubs.push(onSnapshot(collection(db, \"neighbourhoodScores\"), (snap) => {",
+      "  const rows = snap.docs.map(d => ({ id: d.id, ...d.data() }));",
+      "  if (rows.length > 0) setLiveNeighbourhoods(rows);",
+      "}));",
+      ""
+    );
+    src = lines.join("\n");
+    console.log("Inserted at line", idx);
+  }
 }
 
-fs.writeFileSync("src/tabs/NeighbourhoodsTab.jsx", src, "latin1");
-console.log("Written");
+fs.writeFileSync("src/pages/EmaarDashboardV2.jsx", src, "latin1");

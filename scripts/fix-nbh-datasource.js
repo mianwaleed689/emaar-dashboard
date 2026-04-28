@@ -1,37 +1,22 @@
 const fs = require("fs");
-let src = fs.readFileSync("src/tabs/NeighbourhoodsTab.jsx", "latin1");
+let src = fs.readFileSync("src/pages/EmaarDashboardV2.jsx", "latin1");
 
-// Fix the data assembly — use liveNeighbourhoods as primary source
-const oldAssembly = `const rawNbhFirestore = liveMarketData?.filter?.(d => d.type === "community") || [];
-  const tier1Raw = rawNbhFirestore.length > 0 ? rawNbhFirestore : firestoreCommunities;
-  const tier2Raw = Array.isArray(liveCommunityDataFull) ? liveCommunityDataFull : [];`;
+// Replace the tabData/neighbourhoodScores listener with a direct collection listener
+const OLD = `{ key: "neighbourhoodScores",setter: setLiveNeighbourhoods },`;
+const NEW = `/* neighbourhoodScores loaded separately from collection below */`;
 
-const newAssembly = `// Use neighbourhoodScores (seeded) as primary source
-  const rawNbhFirestore = Array.isArray(liveNeighbourhoods) && liveNeighbourhoods.length > 0
-    ? liveNeighbourhoods
-    : liveMarketData?.filter?.(d => d.type === "community") || [];
-  const tier1Raw = rawNbhFirestore.length > 0 ? rawNbhFirestore : firestoreCommunities;
-  const tier2Raw = Array.isArray(liveCommunityDataFull) ? liveCommunityDataFull : [];`;
+src = src.replace(OLD, NEW);
 
-if (src.includes(oldAssembly)) {
-  src = src.replace(oldAssembly, newAssembly);
-  console.log("Data assembly fixed — liveNeighbourhoods now primary source");
-} else {
-  console.log("Pattern not found — searching...");
-  const idx = src.indexOf("rawNbhFirestore");
-  console.log("Found at line:", src.substring(0,idx).split("\n").length);
-}
+// Now find where the tabKeys forEach ends and add the collection listener after it
+const INSERT_AFTER = `/* marketData handled by collection listener, not tabData doc */`;
+const COLLECTION_LISTENER = `/* marketData handled by collection listener, not tabData doc */
+// neighbourhoodScores — load from collection (259 docs)
+unsubs.push(onSnapshot(collection(db, "neighbourhoodScores"), (snap) => {
+  const rows = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  if (rows.length > 0) setLiveNeighbourhoods(rows);
+}));`;
 
-// Also add liveNeighbourhoods to function props if not there
-if (!src.includes("liveNeighbourhoods")) {
-  src = src.replace(
-    "liveMarketData,",
-    "liveNeighbourhoods, liveMarketData,"
-  );
-  console.log("liveNeighbourhoods added to props");
-} else {
-  console.log("liveNeighbourhoods already in props");
-}
+src = src.replace(INSERT_AFTER, COLLECTION_LISTENER);
 
-fs.writeFileSync("src/tabs/NeighbourhoodsTab.jsx", src, "latin1");
-console.log("Written");
+fs.writeFileSync("src/pages/EmaarDashboardV2.jsx", src, "latin1");
+console.log("Fixed — now reads from neighbourhoodScores collection directly");

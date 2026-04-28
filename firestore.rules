@@ -3,13 +3,9 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // â”€â”€ HELPERS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-    function isAuthed() {
-      return request.auth != null;
-    }
-    function uid() {
-      return request.auth.uid;
-    }
+    // ── HELPERS ──────────────────────────────────────────────────
+    function isAuthed() { return request.auth != null; }
+    function uid() { return request.auth.uid; }
     function getUserData() {
       return get(/databases/$(database)/documents/users/$(uid())).data;
     }
@@ -20,19 +16,26 @@ service cloud.firestore {
       return isAuthed() && (getUserData().role == 'superAdmin' || getUserData().role == 'admin');
     }
     function isManager() {
-      return isAuthed() && (getUserData().role == 'manager' || isAdmin());
+      return isAuthed() && (getUserData().orgRole == 'manager' || isAdmin());
     }
-    function userOrgId() {
-      return getUserData().orgId;
+    function isAgent() {
+      return isAuthed() && getUserData().orgRole == 'agent';
     }
-    function isSameOrg(orgId) {
-      return isAuthed() && userOrgId() == orgId;
-    }
-    function isAssignedAgent(assignedTo) {
-      return isAuthed() && uid() == assignedTo;
+    function userOrgId() { return getUserData().orgId; }
+    function isSameOrg(orgId) { return isAuthed() && userOrgId() == orgId; }
+    function isAssignedAgent(assignedTo) { return isAuthed() && uid() == assignedTo; }
+    function hasCRM() {
+      return isAuthed() && (
+        getUserData().crmPlan == 'crm_free' ||
+        getUserData().crmPlan == 'crm_pro' ||
+        getUserData().crmPlan == 'crm_enterprise' ||
+        getUserData().orgRole == 'manager' ||
+        getUserData().orgRole == 'agent' ||
+        isAdmin()
+      );
     }
 
-    // â”€â”€ USERS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── USERS ────────────────────────────────────────────────────
     match /users/{userId} {
       allow read: if isAuthed() && (
         uid() == userId ||
@@ -43,18 +46,40 @@ service cloud.firestore {
       allow create: if isAuthed();
     }
 
-    // â”€â”€ LEADS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── ORGANISATIONS ─────────────────────────────────────────────
+    match /organisations/{orgId} {
+      allow read: if isAuthed() && (isSuperAdmin() || userOrgId() == orgId);
+      allow create: if isAuthed();
+      allow update: if isAuthed() && (isSuperAdmin() || (isManager() && userOrgId() == orgId));
+      allow delete: if isSuperAdmin();
+
+      // Members subcollection
+      match /members/{memberId} {
+        allow read: if isAuthed() && (isSuperAdmin() || userOrgId() == orgId);
+        allow write: if isAuthed() && (isSuperAdmin() || (isManager() && userOrgId() == orgId));
+      }
+
+      // Invitations subcollection
+      match /invitations/{inviteId} {
+        allow read: if isAuthed() && (isSuperAdmin() || userOrgId() == orgId);
+        allow create: if isAuthed() && (isSuperAdmin() || (isManager() && userOrgId() == orgId));
+        allow update: if isAuthed();
+        allow delete: if isAuthed() && (isSuperAdmin() || (isManager() && userOrgId() == orgId));
+      }
+    }
+
+    // ── LEADS ─────────────────────────────────────────────────────
     match /leads/{leadId} {
-      allow read: if isAuthed() && (
+      allow read: if isAuthed() && hasCRM() && (
         isSuperAdmin() ||
         (isManager() && isSameOrg(resource.data.orgId)) ||
         isAssignedAgent(resource.data.assignedTo) ||
         resource.data.createdBy == uid()
       );
-      allow create: if isAuthed() && (
+      allow create: if isAuthed() && hasCRM() && (
         isSuperAdmin() || isSameOrg(request.resource.data.orgId)
       );
-      allow update: if isAuthed() && (
+      allow update: if isAuthed() && hasCRM() && (
         isSuperAdmin() ||
         (isManager() && isSameOrg(resource.data.orgId)) ||
         isAssignedAgent(resource.data.assignedTo)
@@ -63,9 +88,20 @@ service cloud.firestore {
         isSuperAdmin() ||
         (isManager() && isSameOrg(resource.data.orgId))
       );
+
+      // Lead activity log subcollection
+      match /activity/{activityId} {
+        allow read: if isAuthed() && hasCRM() && (
+          isSuperAdmin() ||
+          (isManager() && isSameOrg(get(/databases/$(database)/documents/leads/$(leadId)).data.orgId)) ||
+          isAssignedAgent(get(/databases/$(database)/documents/leads/$(leadId)).data.assignedTo)
+        );
+        allow create: if isAuthed() && hasCRM();
+        allow update, delete: if isSuperAdmin();
+      }
     }
 
-    // â”€â”€ DEALS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── DEALS ────────────────────────────────────────────────────
     match /deals/{dealId} {
       allow read: if isAuthed() && (
         isSuperAdmin() ||
@@ -79,7 +115,7 @@ service cloud.firestore {
       );
     }
 
-    // â”€â”€ LISTINGS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── LISTINGS ─────────────────────────────────────────────────
     match /listings/{listingId} {
       allow read: if isAuthed() && (isSuperAdmin() || isSameOrg(resource.data.orgId));
       allow write: if isAuthed() && (
@@ -89,19 +125,13 @@ service cloud.firestore {
       );
     }
 
-    // â”€â”€ ORGS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-    match /orgs/{orgId} {
-      allow read: if isAuthed() && (isSuperAdmin() || userOrgId() == orgId);
-      allow write: if isSuperAdmin();
-    }
-
-    // â”€â”€ PORTFOLIOS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── PORTFOLIOS ───────────────────────────────────────────────
     match /portfolios/{userId} {
       allow read, write: if isAuthed() && uid() == userId;
       allow read: if isSuperAdmin();
     }
 
-    // â”€â”€ MORTGAGE LEADS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── MORTGAGE LEADS ───────────────────────────────────────────
     match /mortgageLeads/{leadId} {
       allow read: if isAuthed() && (
         isSuperAdmin() || isSameOrg(resource.data.orgId) || resource.data.userId == uid()
@@ -110,7 +140,29 @@ service cloud.firestore {
       allow update: if isAuthed() && (isSuperAdmin() || resource.data.userId == uid());
     }
 
-    // â”€â”€ PUBLIC READ-ONLY DATA (all authenticated users) â”€â”€â”€â”€â”€â”€
+    // ── COMPLIANCE ───────────────────────────────────────────────
+    match /compliance/{doc} {
+      allow read: if isAuthed() && (isSuperAdmin() || isSameOrg(resource.data.orgId));
+      allow write: if isManager();
+    }
+    match /reraCards/{doc} {
+      allow read: if isAuthed() && (isSuperAdmin() || isSameOrg(resource.data.orgId));
+      allow write: if isManager();
+    }
+
+    // ── DEV EOIs ─────────────────────────────────────────────────
+    match /devEOIs/{doc} {
+      allow read: if isAuthed() && (isSuperAdmin() || isSameOrg(resource.data.orgId));
+      allow write: if isAuthed();
+    }
+
+    // ── NOTIFICATIONS ────────────────────────────────────────────
+    match /notifications/{doc} {
+      allow read: if isAuthed() && resource.data.userId == uid();
+      allow write: if isAuthed() && (isSuperAdmin() || resource.data.userId == uid());
+    }
+
+    // ── PUBLIC READ-ONLY DATA (all authenticated users) ──────────
     match /projects/{doc}         { allow read: if isAuthed(); allow write: if isAdmin(); }
     match /liveMarketData/{doc}   { allow read: if isAuthed(); allow write: if isAdmin(); }
     match /dldVolumes/{doc}       { allow read: if isAuthed(); allow write: if isAdmin(); }
@@ -127,38 +179,38 @@ service cloud.firestore {
     match /communityROI/{doc}     { allow read: if isAuthed(); allow write: if isAdmin(); }
     match /communityIntel/{doc}   { allow read: if isAuthed(); allow write: if isAdmin(); }
     match /developments/{doc}     { allow read: if isAuthed(); allow write: if isAdmin(); }
-    match /adminAlerts/{doc} { allow read: if isAuthed(); allow write: if isAdmin(); }
-    match /cancellations/{doc} { allow read: if isAuthed(); allow write: if isAdmin(); }
-    match /competitors/{doc} { allow read: if isAuthed(); allow write: if isAdmin(); }
-    match /devHealth/{doc} { allow read: if isAuthed(); allow write: if isAdmin(); }
-    match /developerClaims/{doc} { allow read: if isAuthed(); allow write: if isAdmin(); }
-    match /digestLog/{doc} { allow read: if isAuthed(); allow write: if isAdmin(); }
-    match /eiborHistory/{doc} { allow read: if isAuthed(); allow write: if isAdmin(); }
-    match /handover/{doc} { allow read: if isAuthed(); allow write: if isAdmin(); }
-    match /investScores/{doc} { allow read: if isAuthed(); allow write: if isAdmin(); }
-    match /mortgageRates/{doc} { allow read: if isAuthed(); allow write: if isAdmin(); }
+    match /adminAlerts/{doc}      { allow read: if isAuthed(); allow write: if isAdmin(); }
+    match /cancellations/{doc}    { allow read: if isAuthed(); allow write: if isAdmin(); }
+    match /competitors/{doc}      { allow read: if isAuthed(); allow write: if isAdmin(); }
+    match /devHealth/{doc}        { allow read: if isAuthed(); allow write: if isAdmin(); }
+    match /developerClaims/{doc}  { allow read: if isAuthed(); allow write: if isAdmin(); }
+    match /digestLog/{doc}        { allow read: if isAuthed(); allow write: if isAdmin(); }
+    match /eiborHistory/{doc}     { allow read: if isAuthed(); allow write: if isAdmin(); }
+    match /handover/{doc}         { allow read: if isAuthed(); allow write: if isAdmin(); }
+    match /investScores/{doc}     { allow read: if isAuthed(); allow write: if isAdmin(); }
+    match /mortgageRates/{doc}    { allow read: if isAuthed(); allow write: if isAdmin(); }
     match /notificationTemplates/{doc} { allow read: if isAuthed(); allow write: if isAdmin(); }
-    match /organisations/{doc} { allow read: if isAuthed(); allow write: if isAdmin(); }
-    match /payments/{doc} { allow read: if isAuthed(); allow write: if isAdmin(); }
-    match /platformLeads/{doc} { allow read: if isAuthed(); allow write: if isAdmin(); }
-    match /projectData/{doc} { allow read: if isAuthed(); allow write: if isAdmin(); }
-    match /projectVersions/{doc} { allow read: if isAuthed(); allow write: if isAdmin(); }
-    match /radarLaunches/{doc} { allow read: if isAuthed(); allow write: if isAdmin(); }
-    match /referrals/{doc} { allow read: if isAuthed(); allow write: if isAdmin(); }
-    match /strData/{doc} { allow read: if isAuthed(); allow write: if isAdmin(); }
-    match /supportAgentPermissions/{doc} { allow read: if isAuthed(); allow write: if isAdmin(); }
-    match /supportAutoAssignRules/{doc} { allow read: if isAuthed(); allow write: if isAdmin(); }
-    match /supportCSAT/{doc} { allow read: if isAuthed(); allow write: if isAdmin(); }
-    match /supportCustomFields/{doc} { allow read: if isAuthed(); allow write: if isAdmin(); }
-    match /supportKnowledgeBase/{doc} { allow read: if isAuthed(); allow write: if isAdmin(); }
-    match /supportQuickResponses/{doc} { allow read: if isAuthed(); allow write: if isAdmin(); }
-    match /supportTicketAudit/{doc} { allow read: if isAuthed(); allow write: if isAdmin(); }
-    match /supportTickets/{doc} { allow read: if isAuthed(); allow write: if isAdmin(); }
-    match /supportTimeEntries/{doc} { allow read: if isAuthed(); allow write: if isAdmin(); }
-    match /supportWebhookLogs/{doc} { allow read: if isAuthed(); allow write: if isAdmin(); }
-    match /supportWebhooks/{doc} { allow read: if isAuthed(); allow write: if isAdmin(); }
-    match /supportWorkflowTriggers/{doc} { allow read: if isAuthed(); allow write: if isAdmin(); }
-    match /verifications/{doc} { allow read: if isAuthed(); allow write: if isAdmin(); }
+    match /organisations/{doc}    { allow read: if isAuthed(); allow write: if isAdmin(); }
+    match /payments/{doc}         { allow read: if isAuthed(); allow write: if isAdmin(); }
+    match /platformLeads/{doc}    { allow read: if isAuthed(); allow write: if isAdmin(); }
+    match /projectData/{doc}      { allow read: if isAuthed(); allow write: if isAdmin(); }
+    match /projectVersions/{doc}  { allow read: if isAuthed(); allow write: if isAdmin(); }
+    match /radarLaunches/{doc}    { allow read: if isAuthed(); allow write: if isAdmin(); }
+    match /referrals/{doc}        { allow read: if isAuthed(); allow write: if isAdmin(); }
+    match /strData/{doc}          { allow read: if isAuthed(); allow write: if isAdmin(); }
+    match /supportAgentPermissions/{doc}  { allow read: if isAuthed(); allow write: if isAdmin(); }
+    match /supportAutoAssignRules/{doc}   { allow read: if isAuthed(); allow write: if isAdmin(); }
+    match /supportCSAT/{doc}              { allow read: if isAuthed(); allow write: if isAdmin(); }
+    match /supportCustomFields/{doc}      { allow read: if isAuthed(); allow write: if isAdmin(); }
+    match /supportKnowledgeBase/{doc}     { allow read: if isAuthed(); allow write: if isAdmin(); }
+    match /supportQuickResponses/{doc}    { allow read: if isAuthed(); allow write: if isAdmin(); }
+    match /supportTicketAudit/{doc}       { allow read: if isAuthed(); allow write: if isAdmin(); }
+    match /supportTickets/{doc}           { allow read: if isAuthed(); allow write: if isAdmin(); }
+    match /supportTimeEntries/{doc}       { allow read: if isAuthed(); allow write: if isAdmin(); }
+    match /supportWebhookLogs/{doc}       { allow read: if isAuthed(); allow write: if isAdmin(); }
+    match /supportWebhooks/{doc}          { allow read: if isAuthed(); allow write: if isAdmin(); }
+    match /supportWorkflowTriggers/{doc}  { allow read: if isAuthed(); allow write: if isAdmin(); }
+    match /verifications/{doc}    { allow read: if isAuthed(); allow write: if isAdmin(); }
     match /riskData/{doc}         { allow read: if isAuthed(); allow write: if isAdmin(); }
     match /strLtrData/{doc}       { allow read: if isAuthed(); allow write: if isAdmin(); }
     match /priceHistory/{doc}     { allow read: if isAuthed(); allow write: if isAdmin(); }
@@ -167,34 +219,16 @@ service cloud.firestore {
     match /platformSettings/{doc} { allow read: if isAuthed(); allow write: if isAdmin(); }
     match /marketData/{doc}       { allow read: if isAuthed(); allow write: if isAdmin(); }
     match /devUnits/{doc}         { allow read: if isAuthed(); allow write: if isAdmin(); }
-    match /legal_citations/{doc}  { allow read: if true; allow write: if isAdmin(); }
+    match /marketMetrics/{doc}    { allow read: if isAuthed(); allow write: if isAdmin(); }
+    match /legal_citations/{doc}  { allow read: if true;       allow write: if isAdmin(); }
 
-    // â”€â”€ ADMIN ONLY â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── ADMIN ONLY ───────────────────────────────────────────────
     match /adminSettings/{doc}  { allow read, write: if isAdmin(); }
     match /auditLog/{doc}       { allow read: if isAdmin(); allow create: if isAuthed(); }
     match /cronLogs/{doc}       { allow read: if isAdmin(); allow write: if false; }
-    match /subscriptions/{uid}  { allow read: if isAuthed() && (uid() == uid || isAdmin()); allow write: if isAdmin(); }
-
-    // â”€â”€ COMPLIANCE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-    match /compliance/{doc} {
-      allow read: if isAuthed() && (isSuperAdmin() || isSameOrg(resource.data.orgId));
-      allow write: if isManager();
-    }
-    match /reraCards/{doc} {
-      allow read: if isAuthed() && (isSuperAdmin() || isSameOrg(resource.data.orgId));
-      allow write: if isManager();
-    }
-
-    // â”€â”€ DEV EOIs â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-    match /devEOIs/{doc} {
-      allow read: if isAuthed() && (isSuperAdmin() || isSameOrg(resource.data.orgId));
-      allow write: if isAuthed();
-    }
-
-    // â”€â”€ NOTIFICATIONS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-    match /notifications/{doc} {
-      allow read: if isAuthed() && resource.data.userId == uid();
-      allow write: if isAuthed() && (isSuperAdmin() || resource.data.userId == uid());
+    match /subscriptions/{uid}  {
+      allow read: if isAuthed() && (uid() == uid || isAdmin());
+      allow write: if isAdmin();
     }
   }
 }
