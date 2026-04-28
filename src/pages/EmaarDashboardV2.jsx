@@ -3396,8 +3396,8 @@ export default function EmaarDashboardV2() {
       { key: "serviceCharges",     setter: setLiveServiceCharges },
       { key: "competitorData",     setter: setLiveCompetitors },
       { key: "mortgageRates",      setter: setLiveMortgageRates },
-      { key: "neighbourhoodScores",setter: setLiveNeighbourhoods },
-      /* marketData handled by collection listener, not tabData doc */
+      { key: "neighbourhoodScores", setter: setLiveNeighbourhoods },
+// neighbourhoodScores  load from collection (259 docs)
       { key: "riskFactors",        setter: setLiveRisk },
     ];
     tabKeys.forEach(({ key, setter }) => {
@@ -3406,7 +3406,16 @@ export default function EmaarDashboardV2() {
       }));
     });
 
+    // neighbourhoodScores  direct collection listener (259 docs)
+    unsubs.push(onSnapshot(collection(db, "neighbourhoodScores"), (snap) => {
+      const rows = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      if (rows.length > 0) setLiveNeighbourhoods(rows);
+    }));
+
     // platformSettings/tabs (which tabs are on/off)
+
+// neighbourhoodScores  direct collection listener (259 docs)
+
     unsubs.push(onSnapshot(doc(db, "platformSettings", "tabs"), (snap) => {
       if (snap.exists()) setTabSettings(snap.data());
     }));
@@ -4497,18 +4506,7 @@ export default function EmaarDashboardV2() {
           {/* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ NEIGHBOURHOODS TAB (extracted) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */}
           {tab === "Neighbourhoods" && (
             <NeighbourhoodsTab
-              nbhSearch={nbhSearch} setNbhSearch={setNbhSearch}
-              nbhTypeFilter={nbhTypeFilter} setNbhTypeFilter={setNbhTypeFilter}
-              nbhYieldFilter={nbhYieldFilter} setNbhYieldFilter={setNbhYieldFilter}
-              nbhRiskFilter={nbhRiskFilter} setNbhRiskFilter={setNbhRiskFilter}
-              nbhSort={nbhSort} setNbhSort={setNbhSort}
-              nbhView={nbhView} setNbhView={setNbhView}
-              nbhCompare={nbhCompare} setNbhCompare={setNbhCompare}
               liveNeighbourhoods={liveNeighbourhoods}
-              liveCommunityROI={liveCommunityROI}
-              liveMarketData={liveMarketData}
-              globalFilters={_gf}
-              allDevelopers={allDevelopers}
               handleTabChange={handleTabChange}
               selectedNbhd={selectedNbhd} setSelectedNbhd={setSelectedNbhd}
             />
