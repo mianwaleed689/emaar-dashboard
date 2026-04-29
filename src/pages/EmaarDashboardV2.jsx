@@ -4452,6 +4452,7 @@ export default function EmaarDashboardV2() {
               liveYields={liveYields}
               allDevelopers={allDevelopers} deals={deals} listings={listings}
               myLeads={myLeads} myPortfolio={myPortfolio} watchlist={watchlist}
+              liveNeighbourhoods={liveNeighbourhoods}
               aiInsights={aiInsights} gDeveloper={gDeveloper} lastDataSync={lastDataSync}
               globalFilters={_gf}
               handleTabChange={handleTabChange}
@@ -4499,6 +4500,7 @@ export default function EmaarDashboardV2() {
               phView={phView} setPhView={setPhView}
               phCompare={phCompare} setPhCompare={setPhCompare}
               phCommunity2={phCommunity2} setPhCommunity2={setPhCommunity2}
+              liveNeighbourhoods={liveNeighbourhoods}
               livePriceHistory={livePriceHistory}
               globalFilters={_gf}
               handleTabChange={handleTabChange}

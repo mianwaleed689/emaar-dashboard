@@ -13,7 +13,7 @@ import { Section, Chart, CustomTooltip, DataBadge, TabSources } from "../compone
 import SEED_DATA from "../utils/seedData";
 import { useFilterSchema } from "../contexts/FilterSchemaContext";
 
-function PriceHistoryTab({ phCommunity, setPhCommunity, phType, setPhType, phBeds, setPhBeds, phView, setPhView, phCompare, setPhCompare, phCommunity2, setPhCommunity2, liveMarketData, livePriceHistory, globalFilters = {}, handleTabChange }) {
+function PriceHistoryTab({ liveNeighbourhoods=[], phCommunity, setPhCommunity, phType, setPhType, phBeds, setPhBeds, phView, setPhView, phCompare, setPhCompare, phCommunity2, setPhCommunity2, liveMarketData, livePriceHistory, globalFilters = {}, handleTabChange }) {
 
   /* Phase 2.4 Batch 5: when the top bar picks a community, sync the tab's
      own community selector to match. User can still override via the

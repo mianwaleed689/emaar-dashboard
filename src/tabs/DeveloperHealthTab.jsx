@@ -6,7 +6,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { T } from "../data";
 import { SvgIcons } from "../components/Icons";
 
-function DeveloperHealthTab({
+function DeveloperHealthTab({ liveNeighbourhoods=[],
   liveDevHealth,
   dhSearch, setDhSearch,
   dhTier, setDhTier,

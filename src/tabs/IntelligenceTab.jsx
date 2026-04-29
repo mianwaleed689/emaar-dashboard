@@ -6,7 +6,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { T } from "../data";
 import { SvgIcons } from "../components/Icons";
 
-function IntelligenceTab({
+function IntelligenceTab({ liveNeighbourhoods=[],
   compType, setCompType,
   compCommunity, setCompCommunity,
   compBeds, setCompBeds,

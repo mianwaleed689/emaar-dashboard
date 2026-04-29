@@ -6,7 +6,7 @@ import { T } from "../data";
 import { SvgIcons } from "../components/Icons";
 import { GOLDEN_VISA_THRESHOLD } from "../utils/constants";
 
-function MarketingTab({
+function MarketingTab({ liveNeighbourhoods=[],
   deals, listings,
   mktView, setMktView,
   mktPropType, setMktPropType,

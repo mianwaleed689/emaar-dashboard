@@ -163,8 +163,15 @@ const SH = ({ title, sub, right }) => (
 );
 
 // ── Main component ────────────────────────────────────────────────
-function MarketTab({ liveMarketData, allDevelopers, expandedForecast, setExpandedForecast, handleTabChange }) {
+function MarketTab({ liveNeighbourhoods=[], liveMarketData, allDevelopers, expandedForecast, setExpandedForecast, handleTabChange }) {
   const [audience, setAudience] = useState("Investor");
+
+  const nbhdMap = React.useMemo(()=>{
+    const m={};
+    (liveNeighbourhoods||[]).forEach(n=>{if(n.community)m[n.community.toLowerCase()]=n;});
+    return m;
+  },[liveNeighbourhoods]);
+  const getNbhd = c => nbhdMap[(c||"").toLowerCase()]||null;
   const [chartMetric, setChartMetric] = useState("Transactions (K)");
   const [selectedYear, setSelectedYear] = useState(null);
   const [taxAmount, setTaxAmount] = useState(2000000);
