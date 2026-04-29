@@ -155,7 +155,7 @@ function locationTags(p) {
 
 /* Unit mix percentages â€” derived from actual unit breakdown data */
 function computeUnitMix(p) {
-  const ub = Array.isArray(p.unitBreakdown) ? p.unitBreakdown : Object.entries(p.unitBreakdown||{}).map(([type,count])=>({type,count}));
+  const ub = p.unitBreakdown || [];
   if (ub.length === 0) return null;
   const total = ub.reduce((s,u) => s + (u.count || 1), 0);
   return ub.map(u => ({
@@ -793,13 +793,13 @@ function ProjectsTab({
                       </div>
                     </div>
                     {/* Unit mini-breakdown on card (Research records) */}
-                    {p.unitBreakdown && Object.keys(p.unitBreakdown||{}).length > 0 && (
+                    {Array.isArray(p.unitBreakdown) && p.unitBreakdown.length > 0 && (
                       <div style={{ display:"flex", gap:6, flexWrap:"wrap", marginBottom:8, padding:"8px 10px", background:T.surfaceAlt, borderRadius:8 }}>
-                        {Object.entries(p.unitBreakdown||{}).map(([uType,uCount],i) => (
+                        {p.unitBreakdown.map((u,i) => (
                           <div key={i} style={{ display:"flex", flexDirection:"column", alignItems:"center", padding:"4px 8px", background:"rgba(212,168,67,0.06)", borderRadius:6, border:`1px solid rgba(212,168,67,0.15)`, minWidth:64 }}>
-                            <span style={{ fontSize:9, fontWeight:700, color:T.gold }}>{uType}</span>
-                            <span style={{ fontSize:10, color:T.white, fontWeight:600 }}>AED {uCount}</span>
-                            <span style={{ fontSize:9, color:T.textMuted }}>AED units</span>
+                            <span style={{ fontSize:9, fontWeight:700, color:T.gold }}>{u.type}</span>
+                            <span style={{ fontSize:10, color:T.white, fontWeight:600 }}>AED {(u.ppsf||0).toLocaleString()}</span>
+                            <span style={{ fontSize:9, color:T.textMuted }}>AED {(u.priceMin/1000000).toFixed(1)}M+</span>
                           </div>
                         ))}
                       </div>
