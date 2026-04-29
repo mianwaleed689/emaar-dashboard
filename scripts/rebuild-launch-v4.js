@@ -1,4 +1,6 @@
-/* eslint-disable */
+const fs = require("fs");
+
+const tab = `/* eslint-disable */
 /* DXB ANALYTICS - LAUNCH CALENDAR TAB - Session 16 World Class v4
    Rich project cards matching Neighbourhoods tab style */
 
@@ -96,7 +98,7 @@ const ProjectCard = ({p, nbhd, selected, onSelect}) => {
 
       {/* Footer */}
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-        <div style={{fontSize:10,color:"#94A3B8",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",flex:1}}>{p.developer}  {p.community}</div>
+        <div style={{fontSize:10,color:"#94A3B8",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",flex:1}}>{p.developer} · {p.community}</div>
         {nbhd?.supplyRisk&&(
           <span style={{fontSize:9,padding:"1px 6px",borderRadius:4,background:nbhd.supplyRisk==="Low"?"rgba(16,185,129,0.1)":"rgba(245,158,11,0.1)",color:nbhd.supplyRisk==="Low"?"#10B981":"#F59E0B",fontWeight:600,flexShrink:0,marginLeft:6}}>{nbhd.supplyRisk} Risk</span>
         )}
@@ -199,7 +201,7 @@ export default function LaunchCalendarTab({
         <div style={{marginBottom:12}}>
           <h2 style={{margin:0,fontSize:20,fontWeight:900,color:T.white,fontFamily:"'Fraunces',serif"}}>Launch Calendar</h2>
           <p style={{margin:"4px 0 0",fontSize:12,color:"#94A3B8"}}>
-            {allProjects.length.toLocaleString()} active projects  {totalUnits.toLocaleString()} total units  DLD + Emaar data
+            {allProjects.length.toLocaleString()} active projects · {totalUnits.toLocaleString()} total units · DLD + Emaar data
           </p>
         </div>
 
@@ -300,7 +302,7 @@ export default function LaunchCalendarTab({
                     <div style={{width:3,height:40,borderRadius:2,background:lcColor,flexShrink:0}}/>
                     <div style={{flex:1,minWidth:0}}>
                       <div style={{fontSize:12,fontWeight:700,color:T.white,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{p.name}</div>
-                      <div style={{fontSize:10,color:"#94A3B8",marginTop:2}}>{p.developer}  {p.community}</div>
+                      <div style={{fontSize:10,color:"#94A3B8",marginTop:2}}>{p.developer} · {p.community}</div>
                     </div>
                     <div style={{display:"flex",gap:10,alignItems:"center",flexShrink:0}}>
                       {nbhd?.grossYield&&<span style={{fontSize:11,fontWeight:700,color:"#10B981"}}>{parseFloat(nbhd.grossYield).toFixed(1)}%</span>}
@@ -392,7 +394,7 @@ export default function LaunchCalendarTab({
                 <div>
                   <div style={{background:"rgba(212,168,67,0.06)",border:"1px solid rgba(212,168,67,0.2)",borderRadius:10,padding:"12px",marginBottom:12}}>
                     <div style={{fontSize:14,fontWeight:700,color:T.white,fontFamily:"'Fraunces',serif",marginBottom:2}}>{nbhd.community}</div>
-                    <div style={{fontSize:10,color:"#94A3B8"}}>Score {nbhd.investmentScore||"--"}/100  {nbhd.supplyRisk||"--"} Risk</div>
+                    <div style={{fontSize:10,color:"#94A3B8"}}>Score {nbhd.investmentScore||"--"}/100 · {nbhd.supplyRisk||"--"} Risk</div>
                   </div>
                   <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:12}}>
                     {[
@@ -483,4 +485,8 @@ export default function LaunchCalendarTab({
       )}
     </div>
   );
-}
+}`;
+
+const clean = tab.replace(/[^\x00-\x7F]/g,"");
+fs.writeFileSync("src/tabs/LaunchCalendarTab.jsx", clean, "utf8");
+console.log("Done. Lines:", clean.split("\n").length, "Non-ASCII:", (clean.match(/[^\x00-\x7F]/g)||[]).length);
