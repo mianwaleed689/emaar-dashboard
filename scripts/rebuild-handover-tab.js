@@ -1,6 +1,8 @@
-/* eslint-disable */
+const fs = require("fs");
+
+const tab = `/* eslint-disable */
 /* DXB ANALYTICS - HANDOVER TAB - Session 16 World Class Rebuild
-   1,265 projects with handover dates  construction tracking */
+   1,265 projects with handover dates — construction tracking */
 
 import React, { useState, useMemo } from "react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
@@ -116,7 +118,7 @@ export default function HandoverTab({
         <div style={{marginBottom:12}}>
           <h2 style={{margin:0,fontSize:20,fontWeight:900,color:T.white,fontFamily:"'Fraunces',serif"}}>Handover Tracker</h2>
           <p style={{margin:"4px 0 0",fontSize:12,color:"#94A3B8"}}>
-            {allProjects.length.toLocaleString()} projects with handover dates  {totalUnits.toLocaleString()} total units  Avg construction: {avgPct}%
+            {allProjects.length.toLocaleString()} projects with handover dates · {totalUnits.toLocaleString()} total units · Avg construction: {avgPct}%
           </p>
         </div>
 
@@ -196,7 +198,7 @@ export default function HandoverTab({
                 <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:8}}>
                   <div style={{flex:1,minWidth:0}}>
                     <div style={{fontSize:13,fontWeight:700,color:T.white,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{p.name}</div>
-                    <div style={{fontSize:11,color:"#94A3B8",marginTop:2}}>{p.developer}  {p.community}</div>
+                    <div style={{fontSize:11,color:"#94A3B8",marginTop:2}}>{p.developer} · {p.community}</div>
                   </div>
                   <div style={{display:"flex",gap:6,alignItems:"center",flexShrink:0,marginLeft:8}}>
                     <span style={{fontSize:11,fontWeight:700,color:T.gold}}>{p.handoverQuarter}</span>
@@ -230,7 +232,7 @@ export default function HandoverTab({
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
               <div style={{flex:1,minWidth:0}}>
                 <div style={{fontSize:15,fontWeight:800,color:T.white,fontFamily:"'Fraunces',serif",marginBottom:3,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{selected.name}</div>
-                <div style={{fontSize:11,color:"#94A3B8"}}>{selected.community}  {selected.handoverQuarter}</div>
+                <div style={{fontSize:11,color:"#94A3B8"}}>{selected.community} · {selected.handoverQuarter}</div>
               </div>
               <button type="button" onClick={()=>setSelected(null)} style={{background:"rgba(255,255,255,0.06)",border:"1px solid "+T.border,borderRadius:7,color:"#94A3B8",width:28,height:28,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,flexShrink:0,marginLeft:8}}>x</button>
             </div>
@@ -291,7 +293,7 @@ export default function HandoverTab({
                 <div>
                   <div style={{background:"rgba(212,168,67,0.06)",border:"1px solid rgba(212,168,67,0.2)",borderRadius:10,padding:"12px",marginBottom:12}}>
                     <div style={{fontSize:14,fontWeight:700,color:T.white,fontFamily:"'Fraunces',serif",marginBottom:2}}>{nbhd.community}</div>
-                    <div style={{fontSize:10,color:"#94A3B8"}}>Score: {nbhd.investmentScore||"--"}/100  {nbhd.supplyRisk||"--"} Supply Risk</div>
+                    <div style={{fontSize:10,color:"#94A3B8"}}>Score: {nbhd.investmentScore||"--"}/100 · {nbhd.supplyRisk||"--"} Supply Risk</div>
                   </div>
                   <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:12}}>
                     {[
@@ -363,4 +365,8 @@ export default function HandoverTab({
       )}
     </div>
   );
-}
+}`;
+
+const clean = tab.replace(/[^\x00-\x7F]/g,"");
+fs.writeFileSync("src/tabs/HandoverTab.jsx", clean, "utf8");
+console.log("Done. Lines:", clean.split("\n").length, "Non-ASCII:", (clean.match(/[^\x00-\x7F]/g)||[]).length);
