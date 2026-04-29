@@ -541,11 +541,10 @@ function ProjectsTab({
                   })
                   .map(d => d.name)
                 ]
-              : ["All", ...new Set(rawProjects.filter(p => projMode === "All" || normalizeType(p)===projMode).map(p=>p.developer || p.developerName).filter(Boolean))].slice(0, 500);
+              : ["All", ...new Set(rawProjects.filter(p => projMode === "All" || normalizeType(p)===projMode).map(p=>p.developer||"").filter(Boolean))];
             // commOptions: tier-organized community list (Session 5 hierarchy)
             // Pulls from Firestore via useUserFacingCommunities, groups by displayCategory.
             // Sub-communities show parent prefix (e.g. "Dubai Hills Estate > Maple 1").
-            )];
             const dbByName = new Map();
             (allCommunitiesFromDb || []).forEach(c => { if (c.name) dbByName.set(c.name, c); });
             const projectNames = new Set(rawProjects.filter(p => projMode === "All" || normalizeType(p)===projMode).map(p=>p.community).filter(Boolean));
