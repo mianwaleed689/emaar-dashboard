@@ -1,4 +1,6 @@
-/* eslint-disable */
+const fs = require("fs");
+
+const tab = `/* eslint-disable */
 /* DXB ANALYTICS - LAUNCH CALENDAR TAB - Session 16 World Class Rebuild
    1,515 active projects from DLD + Emaar
    5 drawer tabs: Overview, Community Intel, Units, Developer, Timeline */
@@ -91,7 +93,7 @@ export default function LaunchCalendarTab({
   const nearComp       = allProjects.filter(p=>p.lifecycle==="near-completion").length;
   const withHandover   = allProjects.filter(p=>p.handoverQuarter).length;
 
-  // Chart  handover by quarter
+  // Chart — handover by quarter
   const handoverChart = useMemo(()=>{
     const qCount={};
     allProjects.filter(p=>p.handoverQuarter).forEach(p=>{
@@ -116,14 +118,14 @@ export default function LaunchCalendarTab({
   return (
     <div style={{display:"flex",gap:16,height:"calc(100vh - 140px)",paddingBottom:20}}>
       
-      {/* LEFT  Project List */}
+      {/* LEFT — Project List */}
       <div style={{flex:1,display:"flex",flexDirection:"column",minWidth:0}}>
         
         {/* Header */}
         <div style={{marginBottom:12}}>
           <h2 style={{margin:0,fontSize:20,fontWeight:900,color:T.white,fontFamily:"'Fraunces',serif"}}>Launch Calendar</h2>
           <p style={{margin:"4px 0 0",fontSize:12,color:"#94A3B8"}}>
-            {allProjects.length.toLocaleString()} active projects  {totalUnits.toLocaleString()} total units  {withHandover.toLocaleString()} with handover dates
+            {allProjects.length.toLocaleString()} active projects · {totalUnits.toLocaleString()} total units · {withHandover.toLocaleString()} with handover dates
           </p>
         </div>
 
@@ -201,7 +203,7 @@ export default function LaunchCalendarTab({
                 <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:6}}>
                   <div style={{flex:1,minWidth:0,paddingLeft:8}}>
                     <div style={{fontSize:13,fontWeight:700,color:T.white,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{p.name}</div>
-                    <div style={{fontSize:11,color:"#94A3B8",marginTop:2}}>{p.developer}  {p.community}</div>
+                    <div style={{fontSize:11,color:"#94A3B8",marginTop:2}}>{p.developer} · {p.community}</div>
                   </div>
                   <div style={{display:"flex",gap:6,alignItems:"center",flexShrink:0,marginLeft:8}}>
                     <span style={{fontSize:9,padding:"2px 7px",borderRadius:4,background:lcColor+"20",color:lcColor,fontWeight:600}}>{LIFECYCLE_LABEL(p.lifecycle)}</span>
@@ -233,7 +235,7 @@ export default function LaunchCalendarTab({
         </div>
       </div>
 
-      {/* RIGHT  Project Detail Drawer */}
+      {/* RIGHT — Project Detail Drawer */}
       {selected&&(
         <div style={{width:340,display:"flex",flexDirection:"column",background:"rgba(255,255,255,0.02)",border:"1px solid "+T.border,borderRadius:14,overflow:"hidden",flexShrink:0}}>
           
@@ -318,7 +320,7 @@ export default function LaunchCalendarTab({
                 <div>
                   <div style={{background:"rgba(212,168,67,0.06)",border:"1px solid rgba(212,168,67,0.2)",borderRadius:10,padding:"12px",marginBottom:12}}>
                     <div style={{fontSize:14,fontWeight:700,color:T.white,fontFamily:"'Fraunces',serif",marginBottom:2}}>{nbhd.community}</div>
-                    <div style={{fontSize:10,color:"#94A3B8"}}>{nbhd.tier==="verified"?"Verified Data":"Area Data"}  Score {nbhd.investmentScore||"--"}/100</div>
+                    <div style={{fontSize:10,color:"#94A3B8"}}>{nbhd.tier==="verified"?"Verified Data":"Area Data"} · Score {nbhd.investmentScore||"--"}/100</div>
                   </div>
                   <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:12}}>
                     {[
@@ -440,4 +442,8 @@ export default function LaunchCalendarTab({
       )}
     </div>
   );
-}
+}`;
+
+const clean = tab.replace(/[^\x00-\x7F]/g,"");
+fs.writeFileSync("src/tabs/LaunchCalendarTab.jsx", clean, "utf8");
+console.log("Done. Lines:", clean.split("\n").length, "Non-ASCII:", (clean.match(/[^\x00-\x7F]/g)||[]).length);
