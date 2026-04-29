@@ -1,4 +1,6 @@
-/* eslint-disable */
+const fs = require("fs");
+
+const mapTab = `/* eslint-disable */
 /* DXB ANALYTICS - MAP TAB - Session 16 World Class Rebuild
    Interactive map showing all 259 communities + 94 projects
    Leaflet + CARTO dark tiles */
@@ -102,30 +104,30 @@ export default function CommunityMapTab({
         });
 
         // Popup with community data
-        const popup = `<div style="font-family:'Outfit',sans-serif;min-width:220px;padding:4px">
-          <div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:6px">${n.community}</div>
+        const popup = \`<div style="font-family:'Outfit',sans-serif;min-width:220px;padding:4px">
+          <div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:6px">\${n.community}</div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px">
             <div style="background:rgba(255,255,255,0.05);border-radius:6px;padding:6px 8px">
               <div style="font-size:9px;color:#64748B;text-transform:uppercase">Gross Yield</div>
-              <div style="font-size:14px;font-weight:700;color:${color}">${y?y.toFixed(1)+"%":"--"}</div>
+              <div style="font-size:14px;font-weight:700;color:\${color}">\${y?y.toFixed(1)+"%":"--"}</div>
             </div>
             <div style="background:rgba(255,255,255,0.05);border-radius:6px;padding:6px 8px">
               <div style="font-size:9px;color:#64748B;text-transform:uppercase">Score</div>
-              <div style="font-size:14px;font-weight:700;color:#D4A843">${n.investmentScore||"--"}</div>
+              <div style="font-size:14px;font-weight:700;color:#D4A843">\${n.investmentScore||"--"}</div>
             </div>
             <div style="background:rgba(255,255,255,0.05);border-radius:6px;padding:6px 8px">
               <div style="font-size:9px;color:#64748B;text-transform:uppercase">Avg PPSF</div>
-              <div style="font-size:13px;font-weight:600;color:#D4A843">AED ${n.avgPpsf?Math.round(n.avgPpsf).toLocaleString():"--"}</div>
+              <div style="font-size:13px;font-weight:600;color:#D4A843">AED \${n.avgPpsf?Math.round(n.avgPpsf).toLocaleString():"--"}</div>
             </div>
             <div style="background:rgba(255,255,255,0.05);border-radius:6px;padding:6px 8px">
               <div style="font-size:9px;color:#64748B;text-transform:uppercase">Risk</div>
-              <div style="font-size:13px;font-weight:600;color:${n.supplyRisk==="Low"?"#10B981":"#F59E0B"}">${n.supplyRisk||"--"}</div>
+              <div style="font-size:13px;font-weight:600;color:\${n.supplyRisk==="Low"?"#10B981":"#F59E0B"}">\${n.supplyRisk||"--"}</div>
             </div>
           </div>
-          ${n.nearestMetro?`<div style="font-size:10px;color:#94A3B8;margin-bottom:4px">Metro: ${n.nearestMetro} (${n.distMetro}km)</div>`:""}
-          ${n.nearestMall?`<div style="font-size:10px;color:#94A3B8;margin-bottom:4px">Mall: ${n.nearestMall} (${n.distMall}km)</div>`:""}
-          <div style="font-size:9px;color:#64748B;margin-top:6px">${n.tier==="verified"?"Verified Data":"Area Data"}</div>
-        </div>`;
+          \${n.nearestMetro?\`<div style="font-size:10px;color:#94A3B8;margin-bottom:4px">Metro: \${n.nearestMetro} (\${n.distMetro}km)</div>\`:""}
+          \${n.nearestMall?\`<div style="font-size:10px;color:#94A3B8;margin-bottom:4px">Mall: \${n.nearestMall} (\${n.distMall}km)</div>\`:""}
+          <div style="font-size:9px;color:#64748B;margin-top:6px">\${n.tier==="verified"?"Verified Data":"Area Data"}</div>
+        </div>\`;
 
         circle.bindPopup(popup, {
           className:"dxb-popup",
@@ -150,13 +152,13 @@ export default function CommunityMapTab({
           weight:1.5, fillOpacity:0.9
         });
 
-        const popup = `<div style="font-family:'Outfit',sans-serif;min-width:200px;padding:4px">
-          <div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:4px">${p.name||"Project"}</div>
-          <div style="font-size:11px;color:#94A3B8;margin-bottom:6px">${p.community||""}  ${p.developer||""}</div>
-          ${p.priceMin?`<div style="font-size:12px;color:#D4A843;font-weight:600">From AED ${Math.round(p.priceMin).toLocaleString()}</div>`:""}
-          ${p.handoverQuarter?`<div style="font-size:10px;color:#94A3B8;margin-top:4px">Handover: ${p.handoverQuarter}</div>`:""}
-          ${nbhd?`<div style="font-size:10px;color:#10B981;margin-top:4px">Community yield: ${nbhd.grossYield}%</div>`:""}
-        </div>`;
+        const popup = \`<div style="font-family:'Outfit',sans-serif;min-width:200px;padding:4px">
+          <div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:4px">\${p.name||"Project"}</div>
+          <div style="font-size:11px;color:#94A3B8;margin-bottom:6px">\${p.community||""} · \${p.developer||""}</div>
+          \${p.priceMin?\`<div style="font-size:12px;color:#D4A843;font-weight:600">From AED \${Math.round(p.priceMin).toLocaleString()}</div>\`:""}
+          \${p.handoverQuarter?\`<div style="font-size:10px;color:#94A3B8;margin-top:4px">Handover: \${p.handoverQuarter}</div>\`:""}
+          \${nbhd?\`<div style="font-size:10px;color:#10B981;margin-top:4px">Community yield: \${nbhd.grossYield}%</div>\`:""}
+        </div>\`;
 
         marker.bindPopup(popup,{className:"dxb-popup",maxWidth:260});
         marker.addTo(map);
@@ -170,18 +172,18 @@ export default function CommunityMapTab({
         const intensity = Math.min(n.avgPpsf/5000, 1);
         const r = Math.floor(255*intensity);
         const g = Math.floor(100*(1-intensity));
-        const color = `rgb(${r},${g},50)`;
+        const color = \`rgb(\${r},\${g},50)\`;
         const size = 8 + intensity*20;
 
         const circle = L.circleMarker([n.lat,n.lng],{
           radius:size, fillColor:color, color:"transparent",
           weight:0, fillOpacity:0.5
         });
-        circle.bindPopup(`<div style="font-family:'Outfit',sans-serif;padding:4px">
-          <div style="font-size:13px;font-weight:700;color:#fff">${n.community}</div>
-          <div style="font-size:12px;color:#D4A843;font-weight:600">AED ${Math.round(n.avgPpsf).toLocaleString()}/sqft</div>
-          ${n.dldTransactions?`<div style="font-size:10px;color:#94A3B8">${n.dldTransactions.toLocaleString()} DLD transactions</div>`:""}
-        </div>`,{className:"dxb-popup"});
+        circle.bindPopup(\`<div style="font-family:'Outfit',sans-serif;padding:4px">
+          <div style="font-size:13px;font-weight:700;color:#fff">\${n.community}</div>
+          <div style="font-size:12px;color:#D4A843;font-weight:600">AED \${Math.round(n.avgPpsf).toLocaleString()}/sqft</div>
+          \${n.dldTransactions?\`<div style="font-size:10px;color:#94A3B8">\${n.dldTransactions.toLocaleString()} DLD transactions</div>\`:""}
+        </div>\`,{className:"dxb-popup"});
         circle.addTo(map);
         markersRef.current.push(circle);
       });
@@ -217,7 +219,7 @@ export default function CommunityMapTab({
           ))}
         </div>
 
-        {/* Yield filter  only for communities layer */}
+        {/* Yield filter — only for communities layer */}
         {mapLayer==="communities"&&(
           <div style={{display:"flex",gap:2,background:"rgba(255,255,255,0.03)",border:"1px solid "+T.border,borderRadius:8,padding:3}}>
             {YIELD_FILTERS.map(f=>(
@@ -258,7 +260,7 @@ export default function CommunityMapTab({
             </div>
           )}
           <div ref={mapRef} style={{width:"100%",height:"100%"}}/>
-          <style>{`.dxb-popup .leaflet-popup-content-wrapper{background:#0D1821;border:1px solid rgba(212,168,67,0.3);border-radius:10px;color:#fff;box-shadow:0 8px 32px rgba(0,0,0,0.5)}.dxb-popup .leaflet-popup-tip{background:#0D1821}.dxb-popup .leaflet-popup-close-button{color:#94A3B8!important}`}</style>
+          <style>{\`.dxb-popup .leaflet-popup-content-wrapper{background:#0D1821;border:1px solid rgba(212,168,67,0.3);border-radius:10px;color:#fff;box-shadow:0 8px 32px rgba(0,0,0,0.5)}.dxb-popup .leaflet-popup-tip{background:#0D1821}.dxb-popup .leaflet-popup-close-button{color:#94A3B8!important}\`}</style>
         </div>
 
         {/* Sidebar */}
@@ -335,4 +337,8 @@ export default function CommunityMapTab({
       </div>
     </div>
   );
-}
+}`;
+
+const clean = mapTab.replace(/[^\x00-\x7F]/g,"");
+fs.writeFileSync("src/tabs/CommunityMapTab.jsx", clean, "utf8");
+console.log("Done. Lines:", clean.split("\n").length, "Non-ASCII:", (clean.match(/[^\x00-\x7F]/g)||[]).length);
