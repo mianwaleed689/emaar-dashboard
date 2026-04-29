@@ -1,34 +1,36 @@
-﻿# DXB ANALYTICS - SESSION 16 HANDOFF
+﻿# DXB ANALYTICS - SESSION 16 FINAL HANDOFF
 Generated: 2026-04-29
 
-## COMPLETED THIS SESSION
+## PLATFORM STATS
+Projects:     1,663 total | 1,515 active | 148 archived
+Developers:   2,034 in Firestore (verified+published)
+Communities:  259 neighbourhoodScores + 62 communityLookup
+Tabs:         25/33 connected to community data
 
-### Projects:
-- 1,663 total projects (94 Emaar + 1,569 DLD)
-- 1,515 active, 148 archived (pre-2025)
-- 1,265 with handover dates
-- 1,276 off-plan
-- All Arabic names cleaned
-- All Arabic developer/bank names translated to English
+## SESSION 16 COMPLETED
 
-### Tabs World Class Rebuilt:
-- LaunchCalendarTab  — 1,515 projects, 5 drawer tabs, handover chart
-- HandoverTab        — 1,265 projects, construction tracking, buyer rights
+### Data:
+- 1,569 DLD projects imported and cleaned
+- All Arabic names translated to English
+- 12 clean developer names on projects
+- 30 major developers seeded to developers collection
+- 62 branded communities seeded to communityLookup
+- Community names remapped from DLD zones to branded names
+- Projects tab developer filter now uses allDevelopers (2034)
 
-### Tab Connections: 25/33
+### Tabs World Class:
+- LaunchCalendarTab  — rich cards like Neighbourhoods
+- HandoverTab        — construction tracking + buyer rights
+- CommunityMapTab    — 259 communities, UAE view
 
-### Community Sync:
-- npm run sync:communities
-- 50 communities updated with real project supply risk
-
-## PLATFORM STATS:
-Projects:    1,663 | Active: 1,515 | Emaar: 94 | DLD: 1,514
-Communities: 259   | Verified: 71  | Area Data: 188
-Tabs:        25/33 connected to community data
+### Fixes:
+- Handover + Launch Calendar get all projects (live + extra)
+- Developer filter uses Firestore allDevelopers collection
+- Community sync updated with real project supply risk
 
 ## SESSION 17 PRIORITIES:
-1. Admin Community Data Editor
-2. Cloud Function auto-sync on project write
-3. Portfolio tab world class rebuild
-4. Pipeline tab world class rebuild
-5. Listings tab world class rebuild
+1. Verify developer filter works in Projects tab
+2. Community filter — wire communityLookup to Projects
+3. Admin Community Data Editor
+4. Portfolio tab world class rebuild  
+5. Cloud Function auto-sync on project write
