@@ -1846,7 +1846,7 @@ function ProjectsTab({
                             <div key={i} style={{ padding:"14px 16px", background:T.surfaceAlt, borderRadius:10, border:`1px solid ${T.border}` }}>
                               <div style={{ fontSize:11, fontWeight:700, color:T.gold, marginBottom:8 }}>{type}</div>
                               <div style={{ fontSize:11, color:T.textMuted }}>From Price</div>
-                              <div style={{ fontSize:16, fontWeight:700, color:T.white, fontFamily:"'Fraunces',serif", marginBottom:6 }}>AED {({count} units</div>
+                              <div style={{ fontSize:16, fontWeight:700, color:T.white, fontFamily:"'Fraunces',serif", marginBottom:6 }}>{count} units</div>
                               <div style={{ fontSize:11, color:T.textMuted }}>PPSF</div>
                               <div style={{ fontSize:14, fontWeight:700, color:T.teal }}>{Math.round(count/(selectedProject.totalUnits||1)*100)}% of total</div>
                             </div>

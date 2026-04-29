@@ -4445,14 +4445,14 @@ export default function EmaarDashboardV2() {
           {tab === "Overview" && (
             <OverviewTab
               liveNeighbourhoods={liveNeighbourhoods}
-              liveMarketData={liveMarketData} liveNeighbourhoods={liveNeighbourhoods}
+              liveMarketData={liveMarketData}
               liveDLDVolumes={liveDLDVolumes}
               liveDevHealth={liveDevHealth} liveMortgageRates={liveMortgageRates}
-              liveNeighbourhoods={liveNeighbourhoods}
+
               liveYields={liveYields}
               allDevelopers={allDevelopers} deals={deals} listings={listings}
               myLeads={myLeads} myPortfolio={myPortfolio} watchlist={watchlist}
-              liveNeighbourhoods={liveNeighbourhoods}
+
               aiInsights={aiInsights} gDeveloper={gDeveloper} lastDataSync={lastDataSync}
               globalFilters={_gf}
               handleTabChange={handleTabChange}
@@ -4532,10 +4532,10 @@ export default function EmaarDashboardV2() {
               lcView={lcView} setLcView={setLcView}
               liveMarketData={liveMarketData}
               liveLaunches={liveLaunches}
-              liveProjects={Array.isArray(extraProjects) ? extraProjects : []}
+
               globalFilters={_gf}
               allDevelopers={allDevelopers}
-              handleTabChange={handleTabChange}
+
               watchlist={watchlist}
               toggleWatchlist={toggleWatchlist}
               projCategory={projCategory} setProjCategory={setProjCategory}
