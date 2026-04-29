@@ -4905,6 +4905,8 @@ export default function EmaarDashboardV2() {
           {tab === "STR vs LTR" && (
             <STRvsLTRTab
               liveSTRData={liveSTRData}
+              liveNeighbourhoods={liveNeighbourhoods}
+              handleTabChange={handleTabChange}
               strCommunity={strCommunity} setStrCommunity={setStrCommunity}
               strBeds={strBeds} setStrBeds={setStrBeds}
               strView={strView} setStrView={setStrView}

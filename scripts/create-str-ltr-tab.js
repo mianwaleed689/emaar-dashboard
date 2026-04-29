@@ -1,4 +1,6 @@
-/* eslint-disable */
+const fs = require("fs");
+
+const strLtr = `/* eslint-disable */
 /* DXB ANALYTICS - STR vs LTR TAB - Session 15
    Short Term Rental vs Long Term Rental comparison by community */
 
@@ -9,7 +11,7 @@ import { T } from "../data";
 const fmtP = n => n ? "AED "+Math.round(n).toLocaleString() : "--";
 const fmtY = n => n ? parseFloat(n).toFixed(1)+"%" : "--";
 
-// STR premium by community type  research based
+// STR premium by community type — research based
 // Source: GuestReady 2025, Airbnb Dubai data, DTCM reports
 const STR_PREMIUM = {
   "Dubai Marina":          1.8,  "Downtown Dubai":        1.9,
@@ -79,7 +81,7 @@ export default function STRvsLTRTab({ liveNeighbourhoods=[], handleTabChange, gl
       <div style={{marginBottom:16}}>
         <h2 style={{margin:0,fontSize:20,fontWeight:900,color:T.white,fontFamily:"'Fraunces',serif"}}>STR vs LTR</h2>
         <p style={{margin:"4px 0 0",fontSize:12,color:"#94A3B8"}}>
-          Short Term vs Long Term rental comparison  {enriched.length} communities  Sources: GuestReady 2025, DTCM, Bayut
+          Short Term vs Long Term rental comparison · {enriched.length} communities · Sources: GuestReady 2025, DTCM, Bayut
         </p>
       </div>
 
@@ -235,4 +237,9 @@ export default function STRvsLTRTab({ liveNeighbourhoods=[], handleTabChange, gl
       </div>
     </div>
   );
-}
+}`;
+
+// Strip non-ASCII
+const clean = strLtr.replace(/[^\x00-\x7F]/g,"");
+fs.writeFileSync("src/tabs/STRvsLTRTab.jsx", clean, "utf8");
+console.log("STRvsLTRTab created. Lines:", clean.split("\n").length, "Non-ASCII:", (clean.match(/[^\x00-\x7F]/g)||[]).length);
