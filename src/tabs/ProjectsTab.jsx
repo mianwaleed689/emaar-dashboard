@@ -1822,7 +1822,7 @@ function ProjectsTab({
                             const colors = [T.gold, T.teal, T.green, "#8B5CF6", "#F59E0B"];
                             return (
                               <div key={i} style={{ width:`${u.pct}%`, background:colors[i % colors.length], display:"flex", alignItems:"center", justifyContent:"center", fontSize:10, fontWeight:700, color:"#000" }}>
-                                {u.pct >= 8 ? `${type} ${u.pct}%` : ""}
+                {u.pct >= 8 ? (u.type + " " + u.pct + "%") : ""}
                               </div>
                             );
                           })}
@@ -1830,7 +1830,7 @@ function ProjectsTab({
                         <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(120px, 1fr))", gap:8 }}>
                           {mix.map((u,i) => (
                             <div key={i} style={{ padding:"8px 10px", background:T.surfaceAlt, borderRadius:8, textAlign:"center" }}>
-                              <div style={{ fontSize:10, color:T.gold, fontWeight:700 }}>{type}</div>
+                              <div style={{ fontSize:10, color:T.gold, fontWeight:700 }}>{u.type}</div>
                               <div style={{ fontSize:13, color:T.white, fontWeight:700 }}>{u.pct}%</div>
                               <div style={{ fontSize:9, color:T.textMuted }}>{u.count} units</div>
                             </div>

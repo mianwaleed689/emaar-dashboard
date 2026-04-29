@@ -151,7 +151,7 @@ export default function CommunityMapTab({
       // Show all projects as pins
       (activeProjects||[]).forEach(p=>{
         const coords = getProjectCoords(p);
-        if(!coords) return;
+        if(!coords || !coords[0] || !coords[1]) return;
         const nbhd = nbhdMap[p.community];
         const y = nbhd?.grossYield||p.grossYield||0;
         const color = YIELD_COLOR(y);
