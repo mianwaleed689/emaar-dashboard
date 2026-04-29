@@ -5050,6 +5050,7 @@ export default function EmaarDashboardV2() {
           {/* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ RISK TAB (extracted) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */}
           {tab === "Risk" && (
             <RiskTab
+              liveNeighbourhoods={liveNeighbourhoods}
               riskTabView={riskTabView} setRiskTabView={setRiskTabView}
               riskCommunity2={riskCommunity2} setRiskCommunity2={setRiskCommunity2}
               riskHorizon={riskHorizon} setRiskHorizon={setRiskHorizon}

@@ -9,11 +9,30 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { T } from "../data";
 import { SvgIcons } from "../components/Icons";
 
-function RiskTab({ riskTabView, setRiskTabView, riskCommunity2, setRiskCommunity2, riskHorizon, setRiskHorizon, globalFilters = {}, handleTabChange }) {
+function RiskTab({ liveNeighbourhoods=[], riskTabView, setRiskTabView, riskCommunity2, setRiskCommunity2, riskHorizon, setRiskHorizon, globalFilters = {}, handleTabChange }) {
 
   /* Phase 2.4 Batch 6: when top bar sets a community, sync tab's selector */
   const gfCommunity = globalFilters?.community && globalFilters.community !== "all"
     ? globalFilters.community : null;
+  // Real community risk data from neighbourhoodScores
+  const communityRiskMap = React.useMemo(() => {
+    const map = {};
+    (liveNeighbourhoods||[]).forEach(n => {
+      map[n.community] = {
+        supplyRisk:     n.supplyRisk || "Unknown",
+        investScore:    n.investmentScore || 0,
+        grossYield:     parseFloat(n.grossYield||0),
+        dldTransactions:n.dldTransactions || 0,
+        liquidity:      n.liquidity || "Unknown",
+        avgPpsf:        n.avgPpsf || 0,
+        goldenVisa:     n.goldenVisa || false,
+      };
+    });
+    return map;
+  }, [liveNeighbourhoods]);
+
+  const getRealRisk = (community) => communityRiskMap[community] || null;
+  
   React.useEffect(() => {
     if (gfCommunity && riskCommunity2 !== gfCommunity) {
       setRiskCommunity2(gfCommunity);
