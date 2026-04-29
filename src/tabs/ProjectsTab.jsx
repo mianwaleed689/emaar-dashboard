@@ -246,6 +246,18 @@ function ProjectsTab({
   projEscrow = "All", setProjEscrow = () => {},
   showMoreFilters = false, setShowMoreFilters = () => {},
 }) {
+
+  //    Community intelligence                                           
+  const _commMap = React.useMemo(()=>{
+    const m={};
+    (liveNeighbourhoods||[]).forEach(n=>{ if(n.community) m[n.community.toLowerCase()]=n; });
+    return m;
+  },[liveNeighbourhoods]);
+  const getCommunityData = React.useCallback((p)=>
+    _commMap[(p?.community||"").toLowerCase()]||null
+  ,[_commMap]);
+  //                                                                      
+
   const [devSearch,    setDevSearch]    = React.useState("");
   const [showDevDrop,  setShowDevDrop]  = React.useState(false);
   const [commSearch2,  setCommSearch2]  = React.useState("");
