@@ -529,10 +529,23 @@ function ProjectsTab({
             const avgPpsf = filtered.length > 0 && filtered.some(p=>p.ppsf)
               ? Math.round(filtered.filter(p=>p.ppsf).reduce((a,p) => a + p.ppsf, 0) / filtered.filter(p=>p.ppsf).length) : 0;
 
-            const devOptions = ["All", ...new Set(rawProjects.filter(p => projMode === "All" || normalizeType(p)===projMode).map(p=>p.developer || p.developerName).filter(Boolean))].slice(0, 500);
+            // Use allDevelopers from Firestore for complete developer list
+            const devOptions = allDevelopers && allDevelopers.length > 0
+              ? ["All", ...allDevelopers
+                  .filter(d => d.name && d.verified !== false)
+                  .sort((a,b) => {
+                    const ta = a.tier===1?0:a.tier===2?1:a.tier===3?2:3;
+                    const tb = b.tier===1?0:b.tier===2?1:b.tier===3?2:3;
+                    if(ta!==tb) return ta-tb;
+                    return (b.totalProjects||0)-(a.totalProjects||0);
+                  })
+                  .map(d => d.name)
+                ]
+              : ["All", ...new Set(rawProjects.filter(p => projMode === "All" || normalizeType(p)===projMode).map(p=>p.developer || p.developerName).filter(Boolean))].slice(0, 500);
             // commOptions: tier-organized community list (Session 5 hierarchy)
             // Pulls from Firestore via useUserFacingCommunities, groups by displayCategory.
             // Sub-communities show parent prefix (e.g. "Dubai Hills Estate > Maple 1").
+            )];
             const dbByName = new Map();
             (allCommunitiesFromDb || []).forEach(c => { if (c.name) dbByName.set(c.name, c); });
             const projectNames = new Set(rawProjects.filter(p => projMode === "All" || normalizeType(p)===projMode).map(p=>p.community).filter(Boolean));
