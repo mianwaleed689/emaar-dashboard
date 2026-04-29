@@ -4936,7 +4936,6 @@ export default function EmaarDashboardV2() {
               mortIncome={mortIncome} setMortIncome={setMortIncome}
               invScSearch={invScSearch} setInvScSearch={setInvScSearch}
               liveNeighbourhoods={liveNeighbourhoods}
-              handleTabChange={handleTabChange}
               invScSort={invScSort} setInvScSort={setInvScSort}
               invScFilter={invScFilter} setInvScFilter={setInvScFilter}
               invScView={invScView} setInvScView={setInvScView}
@@ -5029,7 +5028,6 @@ export default function EmaarDashboardV2() {
             <GoldenVisaTab
               gvView={gvView} setGvView={setGvView}
               liveNeighbourhoods={liveNeighbourhoods}
-              handleTabChange={handleTabChange}
               gvCategory={gvCategory} setGvCategory={setGvCategory}
               gvNumProps={gvNumProps} setGvNumProps={setGvNumProps}
               gvPropPrice={gvPropPrice} setGvPropPrice={setGvPropPrice}
