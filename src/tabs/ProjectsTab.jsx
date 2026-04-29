@@ -16,7 +16,21 @@ import { calcScore, scoreColor, scoreLabel } from "../utils/scoring";
 import { GOLDEN_VISA_THRESHOLD } from "../utils/constants";
 import { useUserFacingCommunities } from "../lib/communities";
 
-const MODES = [
+// Community intelligence lookup
+  const communityMap = React.useMemo(() => {
+    const map = {};
+    (liveNeighbourhoods||[]).forEach(n => {
+      if(n.community) map[n.community.toLowerCase()] = n;
+    });
+    return map;
+  }, [liveNeighbourhoods]);
+
+  const getCommunityData = (project) => {
+    const key = (project?.community||"").toLowerCase();
+    return communityMap[key] || null;
+  };
+
+  const MODES = [
   { key:"All", label:"All Types" },
   { key:"Apartment" }, { key:"Villa" }, { key:"Townhouse" },
   { key:"Hotel Apartment" }, { key:"Office" }, { key:"Retail" },
