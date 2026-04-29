@@ -4586,6 +4586,7 @@ export default function EmaarDashboardV2() {
               projBuildPct={projBuildPct} setProjBuildPct={setProjBuildPct}
               projEscrow={projEscrow} setProjEscrow={setProjEscrow}
               showMoreFilters={showMoreFilters} setShowMoreFilters={setShowMoreFilters}
+              liveNeighbourhoods={liveNeighbourhoods}
             />
           )}
 
