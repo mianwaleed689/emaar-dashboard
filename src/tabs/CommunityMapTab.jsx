@@ -12,7 +12,7 @@ import React from "react";
 import { T } from "../data";
 import { getProjectCoords, getPPSFColor, getVolumeColor } from "../utils/coordinates";
 
-function CommunityMapTab({ activeProjects, liveCommunityROI, setTab, seedCommunities, globalFilters = {}, allDevelopers = [] }) {
+function CommunityMapTab({ activeProjects, liveCommunityROI, setTab, seedCommunities, liveNeighbourhoods=[], globalFilters = {}, allDevelopers = [] }) {
 
   /* Phase 2.4 Batch 4: derive which communities match the global filter.
      Returns a Set of lowercase community names, or null if no global filter. */
@@ -53,6 +53,17 @@ function CommunityMapTab({ activeProjects, liveCommunityROI, setTab, seedCommuni
   const [mapLoaded, setMapLoaded] = React.useState(false);
   const [selectedProject, setSelectedProjectMap] = React.useState(null);
   const [mapLayer, setMapLayer] = React.useState("yield");
+  
+  // Community intelligence lookup from neighbourhoodScores
+  const nbhdMap = React.useMemo(() => {
+    const map = {};
+    (liveNeighbourhoods||[]).forEach(n => {
+      if(n.community) map[n.community.toLowerCase()] = n;
+    });
+    return map;
+  }, [liveNeighbourhoods]);
+  
+  const getNbhd = (communityName) => nbhdMap[(communityName||"").toLowerCase()] || null;
   const heatLayersRef = React.useRef([]);
   const mapRef = React.useRef(null);
   const mapInstanceRef = React.useRef(null);
@@ -110,6 +121,7 @@ function CommunityMapTab({ activeProjects, liveCommunityROI, setTab, seedCommuni
   const getYield = (project) => {
     if (project.grossYield) return project.grossYield;
     const roi = (liveCommunityROI && liveCommunityROI[project.community]) || {};
+      const nbhd = getNbhd(project.community);
     const y = roi.grossYield;
     if (!y) return 6.5;
     if (typeof y === "object") return parseFloat(y.apt1 || y.apt2 || Object.values(y)[0]) || 6.5;

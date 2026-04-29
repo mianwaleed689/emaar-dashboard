@@ -4588,6 +4588,7 @@ export default function EmaarDashboardV2() {
               activeProjects={liveProjects?.length > 0 ? liveProjects : SEED_PROJECTS}
               liveCommunityROI={liveCommunityROI}
               setTab={handleTabChange}
+              liveNeighbourhoods={liveNeighbourhoods}
               seedCommunities={firestoreCommunities}
               globalFilters={_gf}
               allDevelopers={allDevelopers}

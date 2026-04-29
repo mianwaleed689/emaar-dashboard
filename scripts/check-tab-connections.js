@@ -2,7 +2,7 @@ const fs = require("fs");
 const tabs = [
   "OverviewTab","MarketTab","DLDVolumesTab","PriceHistoryTab","NeighbourhoodsTab",
   "LaunchCalendarTab","ProjectsTab","MapTab","HandoverTab","ServiceChargesTab",
-  "YieldsTab","STRLTRTab","MortgageTab","InvestmentScoreTab","FlipTab",
+  "YieldsTab","STRvsLTRTab","MortgageTab","InvestmentScoreTab","FlipTab",
   "GoldenVisaTab","DXBEstimateTab","PortfolioTab","MyLeadsTab","TeamTab",
   "PipelineTab","ListingsTab","AgencyTab","ComplianceTab","BankingTab",
   "CurrencyTab","CompetitorsTab","RiskTab","FinancialsTab","DevPortalTab",
