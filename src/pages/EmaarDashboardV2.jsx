@@ -4444,7 +4444,8 @@ export default function EmaarDashboardV2() {
           {/* OVERVIEW TAB (extracted) */}
           {tab === "Overview" && (
             <OverviewTab
-              liveMarketData={liveMarketData} liveDLDVolumes={liveDLDVolumes}
+              liveMarketData={liveMarketData} liveNeighbourhoods={liveNeighbourhoods}
+              liveDLDVolumes={liveDLDVolumes}
               liveDevHealth={liveDevHealth} liveMortgageRates={liveMortgageRates}
               liveNeighbourhoods={liveNeighbourhoods}
               liveYields={liveYields}

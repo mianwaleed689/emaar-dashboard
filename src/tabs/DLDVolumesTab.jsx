@@ -74,7 +74,7 @@ const FilterPill = ({ label, active, color, onClick }) => (
   </button>
 );
 
-function DLDVolumesTab({ dldFilter, setDldFilter, dldSearch, setDldSearch, dldSort, setDldSort, dldView, setDldView, liveDLDVolumes, globalFilters, allDevelopers, handleTabChange }) {
+function DLDVolumesTab({ liveNeighbourhoods=[], dldFilter, setDldFilter, dldSearch, setDldSearch, dldSort, setDldSort, dldView, setDldView, liveDLDVolumes, globalFilters, allDevelopers, handleTabChange }) {
   const [sortBy, setSortBy] = useState("transactions");
   const [filterSector, setFilterSector] = useState("All");
   const [filterType, setFilterType] = useState("All");
