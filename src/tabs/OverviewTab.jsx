@@ -159,7 +159,7 @@ const ActivityItem = ({ icon, label, count, color, onClick }) => (
   </div>
 );
 
-function OverviewTab({ liveNeighbourhoods=[], liveNeighbourhoods=[],
+function OverviewTab({ liveNeighbourhoods=[],
   liveMarketData, liveDLDVolumes, liveDevHealth, liveMortgageRates, liveYields,
   allDevelopers, deals, listings, myLeads, myPortfolio, watchlist,
   aiInsights, gDeveloper, lastDataSync, globalFilters={}, handleTabChange,
