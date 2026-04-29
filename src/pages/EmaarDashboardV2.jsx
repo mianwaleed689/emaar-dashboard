@@ -4522,6 +4522,7 @@ export default function EmaarDashboardV2() {
           {tab === "Launch Calendar" && (
             <LaunchCalendarTab
               liveNeighbourhoods={liveNeighbourhoods}
+              liveProjects={[...(Array.isArray(liveProjects)?liveProjects:[]),...(Array.isArray(extraProjects)?extraProjects:[])]}
               lcSearch={lcSearch} setLcSearch={setLcSearch}
               lcDev={lcDev} setLcDev={setLcDev}
               lcStatus={lcStatus} setLcStatus={setLcStatus}
@@ -4743,7 +4744,7 @@ export default function EmaarDashboardV2() {
             <HandoverTab
               liveNeighbourhoods={liveNeighbourhoods}
               liveHandover={liveHandover}
-              liveProjects={Array.isArray(extraProjects) ? extraProjects : []}
+              liveProjects={[...(Array.isArray(liveProjects)?liveProjects:[]),...(Array.isArray(extraProjects)?extraProjects:[])]}
               globalFilters={_gf}
               allDevelopers={allDevelopers}
               handleTabChange={handleTabChange}
