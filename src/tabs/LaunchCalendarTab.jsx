@@ -1,5 +1,5 @@
 /* eslint-disable */
-/* DXB ANALYTICS - LAUNCH CALENDAR TAB - Session 16 World Class Rebuild
+/* DXB ANALYTICS - LAUNCH CALENDAR TAB - Session 16 World Class Rebuild v3
    1,515 active projects from DLD + Emaar
    5 drawer tabs: Overview, Community Intel, Units, Developer, Timeline */
 
