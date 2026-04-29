@@ -165,7 +165,7 @@ export default function CommunityMapTab({
         const units = p.unitBreakdown?Object.entries(p.unitBreakdown).map(([k,v])=>v+"\xd7"+k).join(" "):"";
         const popup = `<div style="font-family:'Outfit',sans-serif;min-width:220px;padding:4px">
           <div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:2px">${p.name||"Project"}</div>
-          <div style="font-size:10px;color:#94A3B8;margin-bottom:6px">${p.developer||""} \u00b7 ${p.community||""}</div>
+          <div style="font-size:10px;color:#94A3B8;margin-bottom:6px">${p.developerActual||p.developer||""} \u00b7 ${p.community||""}</div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:6px">
             ${p.priceMin?`<div style="background:rgba(212,168,67,0.08);border-radius:4px;padding:4px 6px"><div style="font-size:9px;color:#64748B">FROM</div><div style="font-size:12px;color:#D4A843;font-weight:600">AED ${(p.priceMin/1e6).toFixed(1)}M</div></div>`:""}
             ${p.grossYield?`<div style="background:rgba(16,185,129,0.08);border-radius:4px;padding:4px 6px"><div style="font-size:9px;color:#64748B">YIELD</div><div style="font-size:12px;color:#10B981;font-weight:600">${p.grossYield}%</div></div>`:""}
