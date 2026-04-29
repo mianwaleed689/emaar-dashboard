@@ -27,7 +27,7 @@ if (!fs.existsSync(DATA_FILE)) {
 }
 
 const MASHROOI = JSON.parse(fs.readFileSync(DATA_FILE, "utf8"));
-const successful = Object.entries(MASHROOI).filter(([,v]) => v.success);
+const successful = Object.entries(MASHROOI).filter(([,v]) => v && v.nameEn && !v.noMatch);
 console.log(`📂 Loaded ${successful.length} successful lookups from mashrooi-names.json`);
 
 function isNumberedName(name) {
@@ -49,7 +49,7 @@ async function main() {
     if (!num) { skipped++; continue; }
 
     const m = MASHROOI[num];
-    if (!m || !m.success) { skipped++; continue; }
+    if (!m || !m.nameEn || m.noMatch) { skipped++; continue; }
 
     matched++;
     const u = {};
