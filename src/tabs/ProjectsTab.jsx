@@ -1623,14 +1623,20 @@ function ProjectsTab({
                           <div style={{ fontSize:10, color:T.textMuted, marginBottom:4 }}>Project Name</div>
                           <div style={{ fontSize:15, fontWeight:700, color:T.white, fontFamily:"'Fraunces',serif" }}>{selectedProject.project || selectedProject.name || "ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â"}</div>
                         </div>
-                        <div>
-                          <div style={{ fontSize:10, color:T.textMuted, marginBottom:4 }}>Developer</div>
-                          <div style={{ fontSize:15, fontWeight:700, color:T.white }}>{selectedProject.developer || "ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â"}</div>
-                        </div>
-                        <div>
-                          <div style={{ fontSize:10, color:T.textMuted, marginBottom:4 }}>Community</div>
-                          <div style={{ fontSize:15, fontWeight:700, color:T.textSecondary }}>{selectedProject.community || "ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â"}</div>
-                        </div>
+                <div>
+                  <div style={{ fontSize:10, color:T.textMuted, marginBottom:4 }}>Project Developer</div>
+                  <div style={{ fontSize:15, fontWeight:700, color:T.white }}>{selectedProject.developerActual || selectedProject.developer || "?"}</div>
+                  {selectedProject.developerActual && selectedProject.developer && selectedProject.developerActual !== selectedProject.developer && (
+                    <div style={{ fontSize:10, color:T.textMuted, marginTop:3 }}>Master Developer: {selectedProject.developer}</div>
+                  )}
+                </div>
+                <div>
+                  <div style={{ fontSize:10, color:T.textMuted, marginBottom:4 }}>Community</div>
+                  <div style={{ fontSize:15, fontWeight:700, color:T.textSecondary }}>{selectedProject.community || "?"}</div>
+                  {selectedProject.masterCommunity && selectedProject.masterCommunity !== selectedProject.community && (
+                    <div style={{ fontSize:10, color:T.textMuted, marginTop:3 }}>Master Community: {selectedProject.masterCommunity}</div>
+                  )}
+                </div>
                         <div>
                           <div style={{ fontSize:10, color:T.textMuted, marginBottom:4 }}>Property Type</div>
                           <div style={{ fontSize:15, fontWeight:700, color:T.teal }}>{selectedProject.type || "ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â"}</div>
