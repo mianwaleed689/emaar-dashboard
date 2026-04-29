@@ -4879,6 +4879,8 @@ export default function EmaarDashboardV2() {
           {tab === "Yields" && (
             <YieldsTab
               liveYieldsData={liveYieldsData}
+              liveNeighbourhoods={liveNeighbourhoods}
+              handleTabChange={handleTabChange}
               yldSearch={yldSearch} setYldSearch={setYldSearch}
               yldSort={yldSort} setYldSort={setYldSort}
               yldType={yldType} setYldType={setYldType}
