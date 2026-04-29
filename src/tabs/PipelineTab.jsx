@@ -8,7 +8,7 @@ import React from "react";
 import { T } from "../data";
 import { SvgIcons } from "../components/Icons";
 
-function PipelineTab({ orgName, deals, dealsLoading, dealForm, setDealForm, dealFormLoading, setDealFormLoading, showNewDeal, setShowNewDeal, selectedDeal, setSelectedDeal, pipelineType, setPipelineType, firebaseUser, orgId, orgRole, userName }) {
+function PipelineTab({ liveNeighbourhoods=[], orgName, deals, dealsLoading, dealForm, setDealForm, dealFormLoading, setDealFormLoading, showNewDeal, setShowNewDeal, selectedDeal, setSelectedDeal, pipelineType, setPipelineType, firebaseUser, orgId, orgRole, userName }) {
 
             const isAgent   = orgRole === "agent";
             const isManager = orgRole === "manager";

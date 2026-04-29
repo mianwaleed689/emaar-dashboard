@@ -9,7 +9,7 @@ import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Toolti
 import { T } from "../data";
 import { SvgIcons } from "../components/Icons";
 
-function PortfolioTab({ portView, setPortView, portShowAdd, setPortShowAdd, livePortfolio, user }) {
+function PortfolioTab({ liveNeighbourhoods=[], portView, setPortView, portShowAdd, setPortShowAdd, livePortfolio, user }) {
 
 
             /* ══ PORTFOLIO TRACKER

@@ -5,7 +5,7 @@ import React from "react";
 import { T } from "../data";
 import { SvgIcons } from "../components/Icons";
 
-function ListingsTab({
+function ListingsTab({ liveNeighbourhoods=[],
   listings, listingsLoading,
   listingForm, setListingForm,
   listingFormLoading, setListingFormLoading,

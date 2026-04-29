@@ -5130,6 +5130,7 @@ export default function EmaarDashboardV2() {
           {/* MARKETING TAB (extracted) */}
           {tab === "Marketing" && (
             <MarketingTab
+              liveNeighbourhoods={liveNeighbourhoods}
               deals={deals} listings={listings}
               mktView={mktView} setMktView={setMktView}
               mktPropType={mktPropType} setMktPropType={setMktPropType}
