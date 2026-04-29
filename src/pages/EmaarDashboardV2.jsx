@@ -4861,6 +4861,8 @@ export default function EmaarDashboardV2() {
           {tab === "Service Charges" && (
             <ServiceChargesTab
               liveServiceCharges={liveServiceCharges}
+              liveNeighbourhoods={liveNeighbourhoods}
+              handleTabChange={handleTabChange}
               scSearch={scSearch} setScSearch={setScSearch}
               scSort={scSort} setScSort={setScSort}
               scType={scType} setScType={setScType}
@@ -4932,6 +4934,8 @@ export default function EmaarDashboardV2() {
               mortView={mortView} setMortView={setMortView}
               mortIncome={mortIncome} setMortIncome={setMortIncome}
               invScSearch={invScSearch} setInvScSearch={setInvScSearch}
+              liveNeighbourhoods={liveNeighbourhoods}
+              handleTabChange={handleTabChange}
               invScSort={invScSort} setInvScSort={setInvScSort}
               invScFilter={invScFilter} setInvScFilter={setInvScFilter}
               invScView={invScView} setInvScView={setInvScView}
@@ -4988,7 +4992,9 @@ export default function EmaarDashboardV2() {
           {/* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ DXB ESTIMATE TAB (extracted) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */}
           {tab === "DXB Estimate" && (
             <DXBEstimateTab
-              avmCommunity={avmCommunity} setAvmCommunity={setAvmCommunity}
+              avmCommunity={avmCommunity}
+              liveNeighbourhoods={liveNeighbourhoods}
+              handleTabChange={handleTabChange} setAvmCommunity={setAvmCommunity}
               avmType={avmType} setAvmType={setAvmType}
               avmBeds={avmBeds} setAvmBeds={setAvmBeds}
               avmSize={avmSize} setAvmSize={setAvmSize}
@@ -5020,6 +5026,8 @@ export default function EmaarDashboardV2() {
           {tab === "Golden Visa" && (
             <GoldenVisaTab
               gvView={gvView} setGvView={setGvView}
+              liveNeighbourhoods={liveNeighbourhoods}
+              handleTabChange={handleTabChange}
               gvCategory={gvCategory} setGvCategory={setGvCategory}
               gvNumProps={gvNumProps} setGvNumProps={setGvNumProps}
               gvPropPrice={gvPropPrice} setGvPropPrice={setGvPropPrice}

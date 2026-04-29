@@ -1,379 +1,140 @@
 /* eslint-disable */
-/* ═══════════════════════════════════════════════════════════════════
-   DXB ANALYTICS — SERVICE CHARGES TAB
-   Service charges per sqft by community + ROI calculator
-   ═══════════════════════════════════════════════════════════════════ */
+/* DXB ANALYTICS - SERVICE CHARGES TAB - Session 15
+   Real service charge data from neighbourhoodScores */
 
-import React from "react";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import React, { useState, useMemo } from "react";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from "recharts";
 import { T } from "../data";
-import { SvgIcons } from "../components/Icons";
 
-function ServiceChargesTab({ liveServiceCharges, scSearch, setScSearch, scSort, setScSort, scType, setScType, scView, setScView, scCalcSize, setScCalcSize, scCalcRate, setScCalcRate, scCalcRent, setScCalcRent, globalFilters = {}, allDevelopers = [] }) {
+const fmtP = n => n ? "AED "+Math.round(n).toLocaleString() : "--";
+const fmtY = n => n ? parseFloat(n).toFixed(1)+"%" : "--";
 
-  /* Phase 2.4 Batch 7: derive matching communities from global filter */
-  const gfDev = globalFilters?.developer && globalFilters.developer !== "all"
-    ? String(globalFilters.developer).toLowerCase() : null;
-  const gfCommunity = globalFilters?.community && globalFilters.community !== "all"
-    ? String(globalFilters.community).toLowerCase() : null;
+export default function ServiceChargesTab({ liveNeighbourhoods=[], handleTabChange, globalFilters={} }) {
+  const [search, setSearch] = useState("");
+  const [sortBy, setSortBy] = useState("rate");
+  const [selected, setSelected] = useState(null);
 
-  const scMatchingCommunities = (() => {
-    if (!gfDev && !gfCommunity) return null;
-    let set = null;
-    if (gfDev) {
-      const dev = (allDevelopers || []).find(d =>
-        String(d.id || "").toLowerCase() === gfDev ||
-        String(d.name || "").toLowerCase() === gfDev ||
-        String(d.name || "").toLowerCase().includes(gfDev));
-      if (dev && Array.isArray(dev.communities) && dev.communities.length > 0) {
-        set = new Set(dev.communities.map(c => String(c).toLowerCase()));
-      } else set = new Set();
-    }
-    if (gfCommunity) {
-      if (set) set = new Set([...set].filter(c => c === gfCommunity));
-      else set = new Set([gfCommunity]);
-    }
-    return set;
-  })();
-  const scMatchesGlobalFilter = (c) => {
-    if (!scMatchingCommunities) return true;
-    return scMatchingCommunities.has(String(c || "").toLowerCase());
-  };
+  const withSC = useMemo(() =>
+    liveNeighbourhoods.filter(n => n.serviceCharge > 0)
+  , [liveNeighbourhoods]);
 
+  const filtered = useMemo(() => {
+    let a = [...withSC];
+    if(search.trim()) a = a.filter(n=>(n.community||"").toLowerCase().includes(search.toLowerCase()));
+    a.sort((x,y)=>{
+      if(sortBy==="rate")    return (x.serviceCharge||0)-(y.serviceCharge||0);
+      if(sortBy==="rate_desc")return (y.serviceCharge||0)-(x.serviceCharge||0);
+      if(sortBy==="yield")   return parseFloat(y.grossYield||0)-parseFloat(x.grossYield||0);
+      if(sortBy==="name")    return (x.community||"").localeCompare(y.community||"");
+      return 0;
+    });
+    return a;
+  }, [withSC,search,sortBy]);
 
-            /* ══ SEED DATA — RERA 2026 Research ══
-               Source: DLD Service Charge Index, RERA Mollak 2026
-               realestateclubdubai.com, drivenproperties.com, luxuryproperty.com
-            ══════════════════════════════════════ */
-            const SEED_SC = [
-              /* ─── APARTMENTS ─── */
-              { id:"sc01", community:"International City",    type:"Apartment", rate:6,   rate3yAgo:5,   yoy:5,  tier:"Budget",    chiller:false, notes:"Lowest in Dubai. Basic facilities. High yield offset by low charges.", investGrade:"Excellent" },
-              { id:"sc02", community:"Discovery Gardens",     type:"Apartment", rate:8,   rate3yAgo:7,   yoy:5,  tier:"Budget",    chiller:false, notes:"Well managed. Good value for money. Consistent OA management.", investGrade:"Excellent" },
-              { id:"sc03", community:"Jumeirah Village Circle",type:"Apartment", rate:12,  rate3yAgo:10,  yoy:8,  tier:"Mid-Range", chiller:false, notes:"Growing community. Rates rising with new amenities. 18,000+ transactions 2025.", investGrade:"Good" },
-              { id:"sc04", community:"Dubai Silicon Oasis",   type:"Apartment", rate:11,  rate3yAgo:9,   yoy:8,  tier:"Mid-Range", chiller:false, notes:"Tech hub. Stable OA management. Good yield after charges.", investGrade:"Good" },
-              { id:"sc05", community:"DAMAC Hills 2",         type:"Apartment", rate:10,  rate3yAgo:8,   yoy:10, tier:"Mid-Range", chiller:false, notes:"Newer community. Charges expected to rise as amenities complete.", investGrade:"Good" },
-              { id:"sc06", community:"Arjan",                 type:"Apartment", rate:13,  rate3yAgo:11,  yoy:9,  tier:"Mid-Range", chiller:false, notes:"Close to Miracle Garden. Mid-tier management quality.", investGrade:"Good" },
-              { id:"sc07", community:"Al Furjan",             type:"Apartment", rate:14,  rate3yAgo:12,  yoy:7,  tier:"Mid-Range", chiller:false, notes:"Metro access. Good OA. Charges stable relative to yield.", investGrade:"Good" },
-              { id:"sc08", community:"Jumeirah Lake Towers",  type:"Apartment", rate:16,  rate3yAgo:14,  yoy:7,  tier:"Mid-Range", chiller:true,  notes:"Chiller included. Very liquid market. Strong rental demand.", investGrade:"Good" },
-              { id:"sc09", community:"Business Bay",          type:"Apartment", rate:18,  rate3yAgo:15,  yoy:10, tier:"Mid-Range", chiller:true,  notes:"Canal views command premium. Chiller extra in some towers.", investGrade:"Average" },
-              { id:"sc10", community:"Dubai Marina",          type:"Apartment", rate:18,  rate3yAgo:15,  yoy:8,  tier:"Mid-Range", chiller:true,  notes:"Premium waterfront. District cooling in most towers.", investGrade:"Average" },
-              { id:"sc11", community:"Dubai Creek Harbour",   type:"Apartment", rate:16,  rate3yAgo:13,  yoy:10, tier:"Mid-Range", chiller:false, notes:"Newer community rising fast. Emaar managed — professional OA.", investGrade:"Good" },
-              { id:"sc12", community:"Sobha Hartland",        type:"Apartment", rate:18,  rate3yAgo:15,  yoy:8,  tier:"Premium",   chiller:false, notes:"Sobha self-managed. High quality finish = higher charge.", investGrade:"Average" },
-              { id:"sc13", community:"Dubai Hills Estate",    type:"Apartment", rate:16,  rate3yAgo:14,  yoy:7,  tier:"Premium",   chiller:false, notes:"Emaar managed. Golf views add premium. Good OA track record.", investGrade:"Good" },
-              { id:"sc14", community:"Mohammed Bin Rashid City",type:"Apartment",rate:20, rate3yAgo:16,  yoy:12, tier:"Premium",   chiller:false, notes:"Upscale community. Rising charges as more amenities complete.", investGrade:"Average" },
-              { id:"sc15", community:"Downtown Dubai",        type:"Apartment", rate:28,  rate3yAgo:24,  yoy:8,  tier:"Premium",   chiller:true,  notes:"District cooling mandatory. Burj Khalifa AED 68/sqft. Highest charges.", investGrade:"Poor" },
-              { id:"sc16", community:"Palm Jumeirah",         type:"Apartment", rate:32,  rate3yAgo:28,  yoy:7,  tier:"Ultra",     chiller:true,  notes:"Luxury managed. Very high charges vs yield — for lifestyle buyers.", investGrade:"Poor" },
-              { id:"sc17", community:"Emaar Beachfront",      type:"Apartment", rate:20,  rate3yAgo:16,  yoy:11, tier:"Premium",   chiller:false, notes:"Beachfront premium. Emaar managed. Charges rising with popularity.", investGrade:"Average" },
-              /* ─── VILLAS ─── */
-              { id:"sc18", community:"Arabian Ranches",       type:"Villa",     rate:4.5, rate3yAgo:3.8, yoy:8,  tier:"Mid-Range", chiller:false, notes:"Established community. Low charges = excellent yield impact for villas.", investGrade:"Excellent" },
-              { id:"sc19", community:"Dubai Hills Estate",    type:"Villa",     rate:5,   rate3yAgo:4.2, yoy:8,  tier:"Mid-Range", chiller:false, notes:"Golf community. Park access. Good OA quality.", investGrade:"Excellent" },
-              { id:"sc20", community:"Tilal Al Ghaf",         type:"Villa",     rate:5.5, rate3yAgo:4,   yoy:15, tier:"Mid-Range", chiller:false, notes:"Newer community. Charges rising but still excellent value.", investGrade:"Good" },
-              { id:"sc21", community:"DAMAC Hills 2",         type:"Villa",     rate:3.5, rate3yAgo:3,   yoy:8,  tier:"Budget",    chiller:false, notes:"Most affordable villa charges in Dubai. Excellent for yield.", investGrade:"Excellent" },
-              { id:"sc22", community:"The Oasis",             type:"Villa",     rate:6,   rate3yAgo:0,   yoy:0,  tier:"Premium",   chiller:false, notes:"New launch — estimated based on Emaar premium communities.", investGrade:"Good" },
-              { id:"sc23", community:"Palm Jumeirah",         type:"Villa",     rate:6,   rate3yAgo:5,   yoy:8,  tier:"Ultra",     chiller:false, notes:"Frond villas. Very high capital value vs modest service charge.", investGrade:"Good" },
-            ];
+  const avgRate = withSC.length ? Math.round(withSC.reduce((s,n)=>s+(n.serviceCharge||0),0)/withSC.length) : 0;
+  const lowestSC = [...withSC].sort((a,b)=>(a.serviceCharge||0)-(b.serviceCharge||0))[0];
+  const highestSC= [...withSC].sort((a,b)=>(b.serviceCharge||0)-(a.serviceCharge||0))[0];
 
-            const liveDataAll = liveServiceCharges?.length > 0 ? liveServiceCharges : SEED_SC;
-            // Phase 2.4 Batch 7: apply top-bar global filter
-            const liveData = liveDataAll.filter(d => scMatchesGlobalFilter(d.community));
+  const chartData = filtered.slice(0,15).map(n=>({
+    name: (n.community||"").length>12?(n.community||"").substring(0,12)+"...":n.community,
+    rate: n.serviceCharge||0,
+    fill: (n.serviceCharge||0)<=12?"#10B981":(n.serviceCharge||0)<=20?"#D4A843":"#EF4444",
+  }));
 
-            // Filters
-            const filtered = liveData.filter(d => {
-              if (scType !== "All" && d.type !== scType) return false;
-              if (scSearch && !JSON.stringify(d).toLowerCase().includes(scSearch.toLowerCase())) return false;
-              return true;
-            }).sort((a,b) => {
-              if (scSort === "rate")         return b.rate - a.rate;
-              if (scSort === "rate_asc")     return a.rate - b.rate;
-              if (scSort === "community")    return a.community.localeCompare(b.community);
-              if (scSort === "yoy")          return b.yoy - a.yoy;
-              return 0;
-            });
+  const selStyle = {padding:"6px 10px",background:"rgba(255,255,255,0.04)",border:"1px solid "+T.border,borderRadius:7,color:"#CBD5E1",fontSize:11,outline:"none",fontFamily:"'Outfit',sans-serif"};
 
-            // KPIs
-            const avgRate     = filtered.length > 0 ? (filtered.reduce((a,d) => a + d.rate, 0) / filtered.length).toFixed(1) : 0;
-            const highest     = filtered.reduce((a,d) => d.rate > (a?.rate||0) ? d : a, null);
-            const lowest      = filtered.reduce((a,d) => d.rate < (a?.rate||999) ? d : a, null);
-            const avgYoY      = filtered.length > 0 ? (filtered.filter(d=>d.yoy>0).reduce((a,d) => a + d.yoy, 0) / filtered.filter(d=>d.yoy>0).length).toFixed(1) : 0;
-            const withChiller = filtered.filter(d => d.chiller).length;
+  return (
+    <div style={{paddingBottom:60}}>
+      <div style={{marginBottom:16}}>
+        <h2 style={{margin:0,fontSize:20,fontWeight:900,color:T.white,fontFamily:"'Fraunces',serif"}}>Service Charges</h2>
+        <p style={{margin:"4px 0 0",fontSize:12,color:"#94A3B8"}}>
+          {withSC.length} communities  Dubai average AED {avgRate}/sqft/yr  Source: RERA Mollak system
+        </p>
+      </div>
 
-            // Grade colours
-            const gradeCfg = {
-              "Excellent": { color: T.green,   bg: "rgba(16,185,129,0.12)"  },
-              "Good":      { color: T.gold,    bg: "rgba(212,168,67,0.12)"  },
-              "Average":   { color: "#F97316", bg: "rgba(249,115,22,0.12)"  },
-              "Poor":      { color: T.red,     bg: "rgba(239,68,68,0.12)"   },
-            };
-            const tierColor = { "Budget":"#10B981","Mid-Range":"#D4A843","Premium":"#F97316","Ultra":"#EF4444" };
+      <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12,marginBottom:16}}>
+        {[
+          {label:"Dubai Average",  value:"AED "+avgRate+"/sqft",   color:T.gold},
+          {label:"Lowest Rate",    value:lowestSC?"AED "+lowestSC.serviceCharge+"/sqft":"--", color:"#10B981", hint:lowestSC?.community},
+          {label:"Highest Rate",   value:highestSC?"AED "+highestSC.serviceCharge+"/sqft":"--", color:"#EF4444", hint:highestSC?.community},
+          {label:"Below AED 12",   value:withSC.filter(n=>n.serviceCharge<=12).length+" areas", color:"#10B981", hint:"Low cost communities"},
+        ].map((k,i)=>(
+          <div key={i} style={{background:"rgba(255,255,255,0.02)",border:"1px solid "+T.border,borderRadius:12,padding:"14px 16px",position:"relative",overflow:"hidden"}}>
+            <div style={{position:"absolute",top:0,left:0,right:0,height:2,background:k.color}}/>
+            <div style={{fontSize:9,fontWeight:700,color:"#64748B",textTransform:"uppercase",letterSpacing:0.8,marginBottom:4}}>{k.label}</div>
+            <div style={{fontSize:16,fontWeight:900,color:k.color,fontFamily:"'Fraunces',serif"}}>{k.value}</div>
+            {k.hint&&<div style={{fontSize:10,color:"#64748B",marginTop:2}}>{k.hint}</div>}
+          </div>
+        ))}
+      </div>
 
-            // Calculator
-            const calcAnnual  = scCalcSize * scCalcRate;
-            const calcMonthly = Math.round(calcAnnual / 12);
-            const calcNetRent = scCalcRent - calcAnnual;
-            const calcGrossYield = scCalcRent > 0 ? ((scCalcRent / (scCalcSize * 1500)) * 100).toFixed(1) : 0;
-            const calcNetYield   = scCalcRent > 0 ? ((calcNetRent / (scCalcSize * 1500)) * 100).toFixed(1) : 0;
-            const calcImpact     = scCalcRent > 0 ? ((calcAnnual / scCalcRent) * 100).toFixed(1) : 0;
+      {chartData.length>0&&(
+        <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid "+T.border,borderRadius:12,padding:"16px",marginBottom:16}}>
+          <div style={{fontSize:12,fontWeight:700,color:T.white,marginBottom:12}}>Service Charge by Community (AED/sqft/yr)</div>
+          <ResponsiveContainer width="100%" height={180}>
+            <BarChart data={chartData} margin={{top:5,right:10,left:-10,bottom:35}}>
+              <CartesianGrid strokeDasharray="3 3" stroke={T.border} vertical={false}/>
+              <XAxis dataKey="name" tick={{fontSize:8,fill:"#64748B"}} angle={-35} textAnchor="end"/>
+              <YAxis tick={{fontSize:9,fill:"#64748B"}}/>
+              <Tooltip contentStyle={{background:T.surface,border:"1px solid "+T.border,borderRadius:8,fontSize:11}} formatter={v=>["AED "+v+"/sqft/yr","Service Charge"]}/>
+              <ReferenceLine y={avgRate} stroke="#D4A843" strokeDasharray="4 4" label={{value:"Avg",fill:"#D4A843",fontSize:9}}/>
+              <Bar dataKey="rate" radius={[3,3,0,0]}>
+                {chartData.map((d,i)=>(<cell key={i} fill={d.fill}/>))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      )}
 
-            const selSt = {
-              background: T.surfaceAlt, border: `1px solid ${T.border}`,
-              borderRadius: 8, color: T.white, fontFamily:"'Outfit',sans-serif",
-              fontSize: 12, padding:"7px 28px 7px 10px", outline:"none", cursor:"pointer",
-              appearance:"none", WebkitAppearance:"none",
-              backgroundImage:`url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E")`,
-              backgroundRepeat:"no-repeat", backgroundPosition:"right 8px center",
-            };
+      <div style={{display:"flex",gap:8,alignItems:"center",marginBottom:14,flexWrap:"wrap"}}>
+        <div style={{flex:"1 1 200px",display:"flex",alignItems:"center",gap:8,padding:"7px 12px",background:"rgba(255,255,255,0.03)",border:"1px solid "+(search?T.gold:T.border),borderRadius:8}}>
+          <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search community..." style={{flex:1,background:"none",border:"none",outline:"none",color:T.white,fontSize:12,fontFamily:"'Outfit',sans-serif"}}/>
+          {search&&<button type="button" onClick={()=>setSearch("")} style={{background:"none",border:"none",color:"#94A3B8",cursor:"pointer",fontSize:14}}>x</button>}
+        </div>
+        <select value={sortBy} onChange={e=>setSortBy(e.target.value)} style={selStyle}>
+          <option value="rate">Lowest Rate First</option>
+          <option value="rate_desc">Highest Rate First</option>
+          <option value="yield">Highest Yield</option>
+          <option value="name">A - Z</option>
+        </select>
+        <span style={{fontSize:11,color:"#94A3B8"}}>{filtered.length} communities</span>
+      </div>
 
-            return (
-              <div style={{ animation:"fadeUp 0.4s ease-out forwards" }}>
+      <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid "+T.border,borderRadius:14,overflow:"hidden"}}>
+        <div style={{display:"grid",gridTemplateColumns:"28px 2fr 90px 80px 80px 80px",padding:"10px 16px",fontSize:9,fontWeight:700,color:"#64748B",textTransform:"uppercase",letterSpacing:0.8,borderBottom:"1px solid "+T.border,background:"rgba(255,255,255,0.02)"}}>
+          {["#","Community","Svc Charge","Gross Yield","Net Yield","PPSF"].map((h,i)=>(
+            <div key={i} style={{textAlign:i>1?"center":"left"}}>{h}</div>
+          ))}
+        </div>
+        {filtered.slice(0,100).map((n,i)=>(
+          <div key={n.community||i} onClick={()=>setSelected(selected?.community===n.community?null:n)}
+            style={{display:"grid",gridTemplateColumns:"28px 2fr 90px 80px 80px 80px",padding:"11px 16px",alignItems:"center",borderBottom:i<filtered.length-1?"1px solid "+T.border+"30":"none",cursor:"pointer",background:selected?.community===n.community?"rgba(212,168,67,0.04)":"transparent"}}
+            onMouseEnter={e=>e.currentTarget.style.background="rgba(212,168,67,0.03)"}
+            onMouseLeave={e=>e.currentTarget.style.background=selected?.community===n.community?"rgba(212,168,67,0.04)":"transparent"}
+          >
+            <div style={{fontSize:10,color:"#64748B"}}>{i+1}</div>
+            <div>
+              <div style={{fontSize:12,fontWeight:600,color:T.white}}>{n.community}</div>
+              <div style={{fontSize:10,color:"#64748B"}}>{n.tier==="verified"?"Verified":n.tier==="area-data"?"Area Data":"DLD"}</div>
+            </div>
+            <div style={{textAlign:"center"}}>
+              <span style={{fontSize:12,fontWeight:700,color:(n.serviceCharge||0)<=12?"#10B981":(n.serviceCharge||0)<=20?"#D4A843":"#EF4444",fontFamily:"'Fraunces',serif"}}>AED {n.serviceCharge}</span>
+              <div style={{fontSize:9,color:"#64748B"}}>per sqft/yr</div>
+            </div>
+            <div style={{textAlign:"center",fontSize:12,fontWeight:700,color:"#10B981"}}>{fmtY(n.grossYield)}</div>
+            <div style={{textAlign:"center",fontSize:12,color:"#CBD5E1"}}>{fmtY(n.netYield)}</div>
+            <div style={{textAlign:"center",fontSize:11,color:T.gold}}>{n.avgPpsf?"AED "+Math.round(n.avgPpsf).toLocaleString():"--"}</div>
+          </div>
+        ))}
+      </div>
 
-                {/* Header */}
-                <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"10px 0", marginBottom:16, borderBottom:`1px solid ${T.border}`, flexWrap:"wrap", gap:8 }}>
-                  <div>
-                    <div style={{ fontFamily:"'Fraunces',serif", fontSize:20, fontWeight:800, color:T.white }}>Service Charge Intelligence</div>
-                    <div style={{ fontSize:11, color:T.textMuted, marginTop:3 }}>RERA-regulated rates · Mollak system · Yield impact analysis · 2026 data</div>
-                  </div>
-                  <div style={{ display:"flex", gap:8 }}>
-                    {["table","chart","calculator"].map(v => (
-                      <button key={v} type="button" onClick={() => setScView(v)}
-                        style={{ padding:"6px 14px", background:scView===v?"rgba(212,168,67,0.15)":T.surfaceAlt, border:`1px solid ${scView===v?"rgba(212,168,67,0.4)":T.border}`, borderRadius:8, color:scView===v?T.gold:T.textMuted, fontSize:11, fontWeight:600, cursor:"pointer", fontFamily:"'Outfit',sans-serif", textTransform:"capitalize" }}>
-                        {v}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Alert banner */}
-                <div style={{ padding:"10px 16px", background:"rgba(249,115,22,0.06)", border:"1px solid rgba(249,115,22,0.25)", borderRadius:10, marginBottom:16, display:"flex", alignItems:"center", gap:10 }}>
-                  {SvgIcons.TrendingUp({ width:14, height:14, style:{ color:"#F97316", flexShrink:0 } })}
-                  <span style={{ fontSize:12, color:T.textSecondary }}>
-                    <span style={{ color:"#F97316", fontWeight:700 }}>5–10% increase forecast for 2026</span> — RERA Mollak data. Inflation, aging infrastructure, sustainability mandates driving rises. Service charges consume <strong style={{ color:T.white }}>15–25% of gross rental income</strong>. Factor into your yield calculations.
-                  </span>
-                </div>
-
-                {/* KPIs */}
-                <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(150px,1fr))", gap:10, marginBottom:20 }}>
-                  {[
-                    { label:"Communities",      value:filtered.length,                  color:T.white   },
-                    { label:"Avg Rate (AED/sqft)",value:"AED " + avgRate,               color:T.gold    },
-                    { label:"Avg YoY Increase", value:avgYoY + "%",                    color:"#F97316" },
-                    { label:"Highest Rate",     value:highest ? "AED " + highest.rate : "—", color:T.red  },
-                    { label:"Lowest Rate",      value:lowest  ? "AED " + lowest.rate  : "—", color:T.green },
-                    { label:"Chiller Included", value:withChiller + " communities",    color:T.teal    },
-                  ].map((k,i) => (
-                    <div key={i} className="kpi-card">
-                      <div style={{ fontSize:10, fontWeight:700, color:T.textMuted, letterSpacing:1, textTransform:"uppercase", marginBottom:8 }}>{k.label}</div>
-                      <div style={{ fontFamily:"'Fraunces',serif", fontSize:22, fontWeight:800, color:k.color }}>{k.value}</div>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Filters */}
-                <div style={{ background:T.surface, border:`1px solid ${T.border}`, borderRadius:10, padding:"12px 14px", marginBottom:16 }}>
-                  <div style={{ display:"flex", gap:8, flexWrap:"wrap", alignItems:"center" }}>
-                    <div style={{ position:"relative", flex:"0 0 200px" }}>
-                      {SvgIcons.Search({ width:13, height:13, style:{ position:"absolute", left:10, top:"50%", transform:"translateY(-50%)", color:T.textMuted, pointerEvents:"none" } })}
-                      <input value={scSearch} onChange={e => setScSearch(e.target.value)} placeholder="Search community..."
-                        style={{ ...selSt, paddingLeft:30, paddingRight:10, width:"100%", backgroundImage:"none" }} />
-                    </div>
-                    {["All", ...Array.from(new Set((liveData || []).map(d => d.type).filter(Boolean))).sort()].map(f => (
-                      <button key={f} type="button" onClick={() => setScType(f)}
-                        style={{ padding:"6px 14px", background:scType===f?"rgba(212,168,67,0.15)":T.surfaceAlt, border:`1px solid ${scType===f?"rgba(212,168,67,0.4)":T.border}`, borderRadius:8, color:scType===f?T.gold:T.textMuted, fontSize:11, fontWeight:scType===f?700:400, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>
-                        {f}
-                      </button>
-                    ))}
-                    <select value={scSort} onChange={e => setScSort(e.target.value)} style={{ ...selSt, marginLeft:"auto" }}>
-                      <option value="rate">Sort: Highest Rate</option>
-                      <option value="rate_asc">Sort: Lowest Rate</option>
-                      <option value="yoy">Sort: Highest YoY</option>
-                      <option value="community">Sort: Community A-Z</option>
-                    </select>
-                    <span style={{ fontSize:11, color:T.textMuted }}>{filtered.length} communities</span>
-                  </div>
-                </div>
-
-                {/* TABLE VIEW */}
-                {scView === "table" && (
-                  <div style={{ background:T.surface, border:`1px solid ${T.border}`, borderRadius:12, overflow:"hidden", marginBottom:20 }}>
-                    <div style={{ display:"grid", gridTemplateColumns:"2fr 1fr 0.8fr 0.8fr 0.8fr 1fr 1.2fr", padding:"10px 16px", background:T.surfaceAlt, borderBottom:`1px solid ${T.border}` }}>
-                      {["Community","Type","AED/sqft","3Y Ago","YoY","Chiller","Invest Grade"].map((h,i) => (
-                        <div key={i} style={{ fontSize:10, fontWeight:700, color:T.textMuted, letterSpacing:0.8, textTransform:"uppercase" }}>{h}</div>
-                      ))}
-                    </div>
-                    {filtered.map((d,i) => {
-                      const grade = gradeCfg[d.investGrade] || gradeCfg["Average"];
-                      return (
-                        <div key={d.id} style={{ display:"grid", gridTemplateColumns:"2fr 1fr 0.8fr 0.8fr 0.8fr 1fr 1.2fr", padding:"12px 16px", borderBottom:i<filtered.length-1?`1px solid ${T.border}`:"none", background:i%2===0?"transparent":"rgba(255,255,255,0.01)", alignItems:"center" }}
-                          onMouseEnter={e => e.currentTarget.style.background="rgba(212,168,67,0.03)"}
-                          onMouseLeave={e => e.currentTarget.style.background=i%2===0?"transparent":"rgba(255,255,255,0.01)"}>
-                          <div>
-                            <div style={{ fontSize:13, fontWeight:600, color:T.white }}>{d.community}</div>
-                            <div style={{ fontSize:10, color:T.textMuted, marginTop:1 }}>{d.notes?.substring(0,50)}...</div>
-                          </div>
-                          <div><span style={{ fontSize:10, padding:"2px 7px", borderRadius:6, background:tierColor[d.tier]+"22", color:tierColor[d.tier], fontWeight:700 }}>{d.tier}</span></div>
-                          <div style={{ fontFamily:"'Fraunces',serif", fontSize:16, fontWeight:800, color:d.rate >= 25 ? T.red : d.rate >= 15 ? "#F97316" : d.rate >= 10 ? T.gold : T.green }}>
-                            {d.rate}
-                          </div>
-                          <div style={{ fontSize:12, color:T.textMuted }}>AED {d.rate3yAgo}</div>
-                          <div>
-                            <span style={{ fontSize:11, fontWeight:700, color:d.yoy >= 10 ? T.red : d.yoy >= 6 ? "#F97316" : T.gold }}>
-                              ↑ {d.yoy}%
-                            </span>
-                          </div>
-                          <div>
-                            {d.chiller
-                              ? <span style={{ fontSize:10, padding:"2px 7px", borderRadius:6, background:"rgba(20,184,166,0.12)", color:T.teal, fontWeight:700 }}>Included</span>
-                              : <span style={{ fontSize:10, color:T.textMuted }}>Separate</span>
-                            }
-                          </div>
-                          <div><span style={{ fontSize:11, padding:"3px 10px", borderRadius:10, background:grade.bg, color:grade.color, fontWeight:700 }}>{d.investGrade}</span></div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-
-                {/* CHART VIEW — Rate comparison bar chart */}
-                {scView === "chart" && (
-                  <div className="chart-box" style={{ padding:20, marginBottom:20 }}>
-                    <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:4 }}>Service Charge by Community — AED per sqft per year</div>
-                    <div style={{ fontSize:11, color:T.textMuted, marginBottom:20 }}>RERA Mollak 2026 approved rates · Lower is better for investors</div>
-                    <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
-                      {filtered.slice(0,15).map((d,i) => {
-                        const maxRate = Math.max(...filtered.map(x=>x.rate));
-                        const barPct = (d.rate / maxRate) * 100;
-                        const grade = gradeCfg[d.investGrade] || gradeCfg["Average"];
-                        return (
-                          <div key={i} style={{ display:"flex", alignItems:"center", gap:12 }}>
-                            <div style={{ fontSize:11, color:T.textSecondary, minWidth:160, textAlign:"right" }}>{d.community}</div>
-                            <div style={{ flex:1, height:24, borderRadius:4, background:T.border, overflow:"hidden", position:"relative" }}>
-                              <div style={{ height:"100%", width:`${barPct}%`, background:d.rate>=25?T.red:d.rate>=15?"#F97316":d.rate>=10?T.gold:T.green, borderRadius:4, transition:"width 0.4s ease", display:"flex", alignItems:"center", paddingLeft:8 }}>
-                                <span style={{ fontSize:10, fontWeight:700, color:"#000", whiteSpace:"nowrap" }}>AED {d.rate}/sqft</span>
-                              </div>
-                            </div>
-                            <span style={{ fontSize:11, padding:"2px 8px", borderRadius:8, background:grade.bg, color:grade.color, fontWeight:700, minWidth:70, textAlign:"center" }}>{d.investGrade}</span>
-                          </div>
-                        );
-                      })}
-                    </div>
-                    {/* Legend */}
-                    <div style={{ display:"flex", gap:16, marginTop:16, flexWrap:"wrap" }}>
-                      {[["#10B981","AED <10 — Excellent"],["#D4A843","AED 10-15 — Good"],["#F97316","AED 15-25 — Average"],["#EF4444","AED 25+ — Poor"]].map(([c,l],i) => (
-                        <div key={i} style={{ display:"flex", alignItems:"center", gap:5 }}>
-                          <div style={{ width:10, height:10, borderRadius:2, background:c }} />
-                          <span style={{ fontSize:10, color:T.textMuted }}>{l}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* CALCULATOR VIEW */}
-                {scView === "calculator" && (
-                  <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16, marginBottom:20 }}>
-                    {/* Input */}
-                    <div className="chart-box" style={{ padding:24 }}>
-                      <div style={{ fontFamily:"'Fraunces',serif", fontSize:14, fontWeight:700, color:T.white, marginBottom:4 }}>Service Charge Calculator</div>
-                      <div style={{ fontSize:11, color:T.textMuted, marginBottom:20 }}>Calculate yield impact of service charges on your property</div>
-                      {[
-                        { label:"Property Size (sqft)", value:scCalcSize, min:200, max:10000, step:50, setter:setScCalcSize, format:v=>v.toLocaleString()+" sqft" },
-                        { label:"Service Charge Rate (AED/sqft/yr)", value:scCalcRate, min:2, max:70, step:0.5, setter:setScCalcRate, format:v=>"AED "+v+"/sqft" },
-                        { label:"Annual Rent (AED)", value:scCalcRent, min:20000, max:500000, step:5000, setter:setScCalcRent, format:v=>"AED "+v.toLocaleString() },
-                      ].map((f,i) => (
-                        <div key={i} style={{ marginBottom:18 }}>
-                          <div style={{ display:"flex", justifyContent:"space-between", marginBottom:6 }}>
-                            <span style={{ fontSize:11, color:T.textMuted }}>{f.label}</span>
-                            <span style={{ fontSize:12, fontWeight:700, color:T.gold }}>{f.format(f.value)}</span>
-                          </div>
-                          <input type="range" min={f.min} max={f.max} step={f.step} value={f.value}
-                            onChange={e => f.setter(Number(e.target.value))}
-                            style={{ width:"100%", accentColor:T.gold, cursor:"pointer" }} />
-                          <div style={{ display:"flex", justifyContent:"space-between" }}>
-                            <span style={{ fontSize:9, color:T.textMuted }}>{f.format(f.min)}</span>
-                            <span style={{ fontSize:9, color:T.textMuted }}>{f.format(f.max)}</span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                    {/* Result */}
-                    <div className="chart-box" style={{ padding:24 }}>
-                      <div style={{ fontFamily:"'Fraunces',serif", fontSize:14, fontWeight:700, color:T.white, marginBottom:20 }}>Your Annual Service Charge Cost</div>
-                      {[
-                        { label:"Annual Service Charge",  value:"AED " + calcAnnual.toLocaleString(),   color:T.red,  note:"Paid to OA annually" },
-                        { label:"Monthly Equivalent",     value:"AED " + calcMonthly.toLocaleString(),  color:"#F97316", note:"For budgeting" },
-                        { label:"Annual Rent Income",     value:"AED " + scCalcRent.toLocaleString(),   color:T.white, note:"Gross" },
-                        { label:"Net Rent After Charges", value:"AED " + calcNetRent.toLocaleString(),  color:calcNetRent > 0 ? T.green : T.red, note:"After service charge deducted" },
-                      ].map((r,i) => (
-                        <div key={i} style={{ display:"flex", justifyContent:"space-between", padding:"10px 0", borderBottom:i<3?`1px solid ${T.border}`:"none" }}>
-                          <div>
-                            <div style={{ fontSize:12, color:T.textMuted }}>{r.label}</div>
-                            <div style={{ fontSize:10, color:T.textMuted, opacity:0.7 }}>{r.note}</div>
-                          </div>
-                          <div style={{ fontFamily:"'Fraunces',serif", fontSize:16, fontWeight:800, color:r.color }}>{r.value}</div>
-                        </div>
-                      ))}
-                      {/* Yield impact */}
-                      <div style={{ marginTop:16, padding:"14px 16px", background:`linear-gradient(135deg, ${T.red}11, ${T.red}05)`, borderRadius:10, border:`1px solid ${T.red}33` }}>
-                        <div style={{ fontSize:11, color:T.textMuted, marginBottom:8 }}>Yield Impact Summary</div>
-                        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:8 }}>
-                          <div style={{ textAlign:"center" }}>
-                            <div style={{ fontSize:9, color:T.textMuted, marginBottom:3 }}>GROSS YIELD</div>
-                            <div style={{ fontFamily:"'Fraunces',serif", fontSize:18, fontWeight:800, color:T.gold }}>{calcGrossYield}%</div>
-                          </div>
-                          <div style={{ textAlign:"center" }}>
-                            <div style={{ fontSize:9, color:T.textMuted, marginBottom:3 }}>NET YIELD</div>
-                            <div style={{ fontFamily:"'Fraunces',serif", fontSize:18, fontWeight:800, color:T.green }}>{calcNetYield}%</div>
-                          </div>
-                          <div style={{ textAlign:"center" }}>
-                            <div style={{ fontSize:9, color:T.textMuted, marginBottom:3 }}>SC EATS</div>
-                            <div style={{ fontFamily:"'Fraunces',serif", fontSize:18, fontWeight:800, color:T.red }}>{calcImpact}%</div>
-                            <div style={{ fontSize:9, color:T.textMuted }}>of rent</div>
-                          </div>
-                        </div>
-                      </div>
-                      <div style={{ marginTop:12, fontSize:11, color:T.textMuted, lineHeight:1.7 }}>
-                        Based on avg PPSF of AED 1,500/sqft. Assumes 100% occupancy. Real net yield also affected by vacancy, insurance, maintenance.
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Info box */}
-                <div className="chart-box" style={{ padding:18, marginBottom:16 }}>
-                  <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:12 }}>RERA Service Charge Framework — Key Facts</div>
-                  <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(240px,1fr))", gap:10 }}>
-                    {[
-                      { icon:"\uD83C\uDFDB", title:"RERA Mollak System", desc:"All OA budgets submitted and approved via Mollak. 1,240+ buildings, AED 4B processed annually. Cannot charge above approved rate." },
-                      { icon:"\uD83D\uDCCA", title:"DLD Service Charge Index", desc:"Public database on DLD website. Check any building's RERA-approved rate vs what you're being charged." },
-                      { icon:"\uD83D\uDCC8", title:"5-10% Rise in 2026", desc:"DEWA tariffs rising. Aging buildings need more maintenance. Sustainability mandates add cost. Budget for increases." },
-                      { icon:"❄", title:"Chiller (District Cooling)", desc:"Downtown, Dubai Marina, Palm — extra AED 2,000-6,000/yr NOT included in standard service charge. Ask before buying." },
-                    ].map((f,i) => (
-                      <div key={i} style={{ padding:"12px 14px", background:T.surfaceAlt, borderRadius:10, border:`1px solid ${T.border}` }}>
-                        <div style={{ fontSize:16, marginBottom:5 }}>{f.icon}</div>
-                        <div style={{ fontSize:12, fontWeight:700, color:T.white, marginBottom:4 }}>{f.title}</div>
-                        <div style={{ fontSize:11, color:T.textSecondary, lineHeight:1.7 }}>{f.desc}</div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Seed notice */}
-                {!liveServiceCharges?.length && (
-                  <div style={{ display:"flex", alignItems:"center", gap:8, padding:"8px 14px", borderRadius:8, background:"rgba(212,168,67,0.06)", border:`1px solid rgba(212,168,67,0.2)`, marginBottom:12 }}>
-                    <span style={{ width:6, height:6, borderRadius:"50%", background:T.gold, display:"inline-block" }} />
-                    <span style={{ fontSize:11, color:T.textMuted }}><span style={{ color:T.gold, fontWeight:700 }}>RERA 2026 reference data</span> — DLD Mollak, luxuryproperty.com, realestateclubdubai.com · Import live data via Admin → Data Manager</span>
-                  </div>
-                )}
-
-                {/* Sources */}
-                <div style={{ paddingTop:12, borderTop:`1px solid ${T.border}`, display:"flex", gap:8, flexWrap:"wrap", alignItems:"center" }}>
-                  <span style={{ fontSize:10, color:T.textMuted }}>Sources:</span>
-                  {["RERA Mollak 2026","DLD Service Charge Index","luxuryproperty.com","realestateclubdubai.com","drivenproperties.com"].map((s,i) => (
-                    <span key={i} style={{ fontSize:10, color:T.textMuted, padding:"2px 8px", borderRadius:10, border:`1px solid ${T.border}`, background:T.surfaceAlt }}>{s}</span>
-                  ))}
-                </div>
-
-              </div>
-            );
+      <div style={{marginTop:16,padding:"12px 16px",background:"rgba(255,255,255,0.02)",border:"1px solid "+T.border,borderRadius:10}}>
+        <div style={{fontSize:11,fontWeight:600,color:T.white,marginBottom:8}}>How Service Charges Affect Your Net Yield</div>
+        <div style={{fontSize:11,color:"#94A3B8",lineHeight:1.7}}>
+          Service charges directly reduce your net yield. A property with 7% gross yield and AED 15/sqft service charge on a 1,000 sqft unit costs AED 15,000/year  reducing net yield by approximately 1-1.5%. 
+          Lower service charge communities like Discovery Gardens (AED 8-10/sqft) maximize net returns for yield investors.
+        </div>
+      </div>
+    </div>
+  );
 }
-
-export default ServiceChargesTab;
