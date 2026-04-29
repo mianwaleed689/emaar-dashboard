@@ -161,12 +161,21 @@ export default function CommunityMapTab({
           weight:1.5, fillOpacity:0.9
         });
 
-        const popup = `<div style="font-family:'Outfit',sans-serif;min-width:200px;padding:4px">
-          <div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:4px">${p.name||"Project"}</div>
-          <div style="font-size:11px;color:#94A3B8;margin-bottom:6px">${p.community||""}  ${p.developer||""}</div>
-          ${p.priceMin?`<div style="font-size:12px;color:#D4A843;font-weight:600">From AED ${Math.round(p.priceMin).toLocaleString()}</div>`:""}
-          ${p.handoverQuarter?`<div style="font-size:10px;color:#94A3B8;margin-top:4px">Handover: ${p.handoverQuarter}</div>`:""}
-          ${nbhd?`<div style="font-size:10px;color:#10B981;margin-top:4px">Community yield: ${nbhd.grossYield}%</div>`:""}
+        const beds = Array.isArray(p.beds)&&p.beds.length?p.beds.join(", "):"";
+        const units = p.unitBreakdown?Object.entries(p.unitBreakdown).map(([k,v])=>v+"\xd7"+k).join(" "):"";
+        const popup = `<div style="font-family:'Outfit',sans-serif;min-width:220px;padding:4px">
+          <div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:2px">${p.name||"Project"}</div>
+          <div style="font-size:10px;color:#94A3B8;margin-bottom:6px">${p.developer||""} \u00b7 ${p.community||""}</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:6px">
+            ${p.priceMin?`<div style="background:rgba(212,168,67,0.08);border-radius:4px;padding:4px 6px"><div style="font-size:9px;color:#64748B">FROM</div><div style="font-size:12px;color:#D4A843;font-weight:600">AED ${(p.priceMin/1e6).toFixed(1)}M</div></div>`:""}
+            ${p.grossYield?`<div style="background:rgba(16,185,129,0.08);border-radius:4px;padding:4px 6px"><div style="font-size:9px;color:#64748B">YIELD</div><div style="font-size:12px;color:#10B981;font-weight:600">${p.grossYield}%</div></div>`:""}
+            ${p.totalFloors?`<div style="background:rgba(255,255,255,0.04);border-radius:4px;padding:4px 6px"><div style="font-size:9px;color:#64748B">FLOORS</div><div style="font-size:12px;color:#fff;font-weight:600">${p.totalFloors}</div></div>`:""}
+            ${p.constructionPct!=null?`<div style="background:rgba(255,255,255,0.04);border-radius:4px;padding:4px 6px"><div style="font-size:9px;color:#64748B">BUILT</div><div style="font-size:12px;color:#fff;font-weight:600">${Math.round(p.constructionPct)}%</div></div>`:""}
+          </div>
+          ${units?`<div style="font-size:10px;color:#94A3B8;margin-bottom:3px">${units}</div>`:""}
+          ${beds?`<div style="font-size:10px;color:#94A3B8;margin-bottom:3px">Beds: ${beds}</div>`:""}
+          ${p.handoverQuarter?`<div style="font-size:10px;color:#63B3ED;margin-top:2px">Handover: ${p.handoverQuarter}</div>`:""}
+          ${p.paymentPlan?`<div style="font-size:10px;color:#94A3B8">Payment: ${p.paymentPlan}</div>`:""}
         </div>`;
 
         marker.bindPopup(popup,{className:"dxb-popup",maxWidth:260});
@@ -201,7 +210,8 @@ export default function CommunityMapTab({
   },[mapReady, mapLayer, filterYield, commWithCoords, activeProjects, nbhdMap]);
 
   const LAYERS = [
-    {k:"communities", label:"All Communities"},
+    {k:"communities", label:"Communities"},
+    {k:"projects",    label:"All Projects"},
     {k:"heatmap",     label:"PPSF Heatmap"},
   ];
 
