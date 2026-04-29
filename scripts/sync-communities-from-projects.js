@@ -84,8 +84,8 @@ async function syncCommunitiesFromProjects() {
       totalProjects,
       offplanCount,
       readyCount,
-      hasVilla:    hasVilla || nbhd.hasVilla,
-      hasApt:      hasApt || nbhd.hasApt,
+      hasVilla:    hasVilla || nbhd.hasVilla || false,
+      hasApt:      hasApt || nbhd.hasApt || false,
       supplyRisk,
       goldenVisa,
       updatedAt:   new Date().toISOString(),
@@ -99,8 +99,8 @@ async function syncCommunitiesFromProjects() {
       updates.avgPpsf = Math.round(existingPpsf * 0.7 + projectPpsf * 0.3);
     }
 
-    if (priceMin) updates.priceMin = priceMin;
-    if (priceMax) updates.priceMax = priceMax;
+    if (priceMin && priceMin > 0) updates.priceMin = priceMin;
+    if (priceMax && priceMax > 0) updates.priceMax = priceMax;
 
     // Recalculate investment score
     const grossY = parseFloat(nbhd.grossYield || 0);
