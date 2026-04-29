@@ -82,7 +82,7 @@ const COMMUNITY_SUPPLY = {
 /* ═══════════════════════════════════════════════════════════════════
    COMPONENT
    ═══════════════════════════════════════════════════════════════════ */
-function HandoverTab({ liveHandover, liveDevelopments = [], liveProjects = [], globalFilters = {}, allDevelopers = [], handleTabChange }) {
+function HandoverTab({ liveNeighbourhoods=[], liveHandover, liveDevelopments = [], liveProjects = [], globalFilters = {}, allDevelopers = [], handleTabChange }) {
 
   /* Phase 2.4 Batch 6: derive matcher from global filter */
   const gfDev = globalFilters?.developer && globalFilters.developer !== "all"
@@ -117,6 +117,13 @@ function HandoverTab({ liveHandover, liveDevelopments = [], liveProjects = [], g
     return true;
   };
   const [view, setView] = useState("cards"); // cards | calendar | risk
+
+  const nbhdMap = React.useMemo(()=>{
+    const m={};
+    (liveNeighbourhoods||[]).forEach(n=>{if(n.community)m[n.community.toLowerCase()]=n;});
+    return m;
+  },[liveNeighbourhoods]);
+  const getNbhd = c => nbhdMap[(c||"").toLowerCase()]||null;
   const [search, setSearch] = useState("");
   const [riskFilter, setRiskFilter] = useState("all");
   const [quarterFilter, setQuarterFilter] = useState("all");

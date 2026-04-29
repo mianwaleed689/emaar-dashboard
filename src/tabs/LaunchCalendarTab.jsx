@@ -75,7 +75,7 @@ const COMMUNITY_SUPPLY = {
 /* ═══════════════════════════════════════════════════════════════════
    COMPONENT
    ═══════════════════════════════════════════════════════════════════ */
-function LaunchCalendarTab({
+function LaunchCalendarTab({ liveNeighbourhoods=[],
   lcSearch, setLcSearch,
   lcDev, setLcDev,
   lcStatus, setLcStatus,
@@ -120,6 +120,13 @@ function LaunchCalendarTab({
     return true;
   };
   const [calcBudget, setCalcBudget] = useState(2000000);
+
+  const nbhdMap = React.useMemo(()=>{
+    const m={};
+    (liveNeighbourhoods||[]).forEach(n=>{if(n.community)m[n.community.toLowerCase()]=n;});
+    return m;
+  },[liveNeighbourhoods]);
+  const getNbhd = c => nbhdMap[(c||"").toLowerCase()]||null;
   const [compareIds, setCompareIds] = useState([]);
   const [filterChip, setFilterChip] = useState("all");
   const [sortBy, setSortBy] = useState("launchDate");
