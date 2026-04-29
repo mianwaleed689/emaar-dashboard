@@ -4522,7 +4522,9 @@ export default function EmaarDashboardV2() {
           {tab === "Launch Calendar" && (
             <LaunchCalendarTab
               liveNeighbourhoods={liveNeighbourhoods}
-              liveProjects={[...(Array.isArray(liveProjects)?liveProjects:[]),...(Array.isArray(extraProjects)?extraProjects:[])]}
+              liveProjects={liveProjects}
+              extraProjects={extraProjects}
+              handleTabChange={handleTabChange}
               lcSearch={lcSearch} setLcSearch={setLcSearch}
               lcDev={lcDev} setLcDev={setLcDev}
               lcStatus={lcStatus} setLcStatus={setLcStatus}
