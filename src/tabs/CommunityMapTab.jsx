@@ -46,6 +46,17 @@ export default function CommunityMapTab({
     (liveNeighbourhoods||[]).filter(n=>n.lat&&n.lng)
   ,[liveNeighbourhoods]);
 
+  // Project count per community
+  const projByComm = React.useMemo(()=>{
+    const m={};
+    (activeProjects||[]).forEach(p=>{
+      const c=(p.community||"").toLowerCase();
+      if(!m[c]) m[c]=[];
+      m[c].push(p);
+    });
+    return m;
+  },[activeProjects]);
+
   // Load Leaflet
   React.useEffect(()=>{
     if(!document.getElementById("leaflet-css")) {
@@ -190,8 +201,7 @@ export default function CommunityMapTab({
   },[mapReady, mapLayer, filterYield, commWithCoords, activeProjects, nbhdMap]);
 
   const LAYERS = [
-    {k:"communities", label:"Communities (259)"},
-    {k:"projects",    label:"Projects (94)"},
+    {k:"communities", label:"All Communities"},
     {k:"heatmap",     label:"PPSF Heatmap"},
   ];
 
@@ -243,7 +253,7 @@ export default function CommunityMapTab({
             </div>
           ))}
           <span style={{fontSize:11,color:"#94A3B8",marginLeft:8}}>
-            {mapLayer==="communities"?commWithCoords.length+" communities":activeProjects.length+" projects"}
+            {commWithCoords.length+" communities"}
           </span>
         </div>
       </div>
@@ -293,12 +303,10 @@ export default function CommunityMapTab({
           ):(
             <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid "+T.border,borderRadius:12,padding:"14px"}}>
               <div style={{fontSize:12,fontWeight:600,color:T.white,marginBottom:8}}>
-                {mapLayer==="communities"?"259 Communities":"94 Projects"}
+                {commWithCoords.length} Communities
               </div>
               <div style={{fontSize:11,color:"#94A3B8",lineHeight:1.6}}>
-                {mapLayer==="communities"
-                  ? "Click any circle to see community yield, PPSF, score and facilities."
-                  : "Click any pin to see project details and community context."}
+                "Click any circle to see community yield, PPSF, score, facilities and projects."
               </div>
               <div style={{marginTop:10,display:"flex",flexDirection:"column",gap:4}}>
                 {mapLayer==="communities"&&[
