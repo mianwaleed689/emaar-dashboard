@@ -1,9 +1,9 @@
 /* eslint-disable */
-/* ═══════════════════════════════════════════════════════════════════
-   DXB ANALYTICS — FLIP TAB
+/* 
+   DXB ANALYTICS  FLIP TAB
    Extracted from EmaarDashboardV2.jsx
    Property flip ROI calculator with mortgage scenarios
-   ═══════════════════════════════════════════════════════════════════ */
+    */
 
 import React from "react";
 import { T } from "../data";
@@ -12,32 +12,32 @@ import { SvgIcons } from "../components/Icons";
 function FlipTab({ flipBuyPrice, setFlipBuyPrice, flipSellPrice, setFlipSellPrice, flipHoldYears, setFlipHoldYears, flipIncludeRental, setFlipIncludeRental, flipRentalYield, setFlipRentalYield, flpRenovCost, setFlpRenovCost, flpAgentBuy, setFlpAgentBuy, flpAgentSell, setFlpAgentSell, flpMortgage, setFlpMortgage, flpMortgageRate, setFlpMortgageRate, flpLTV, setFlpLTV, flpView, setFlpView, flpScenario, setFlpScenario }) {
 
 
-            /* ══ RESEARCH NOTES ══
+            /*  RESEARCH NOTES 
                Dubai flip market 2026: Buy-renovate-sell or off-plan flip
                DLD 4% on buy + 4% on sell (if resell before registration = NOC)
                Off-plan flip: sell before completion (requires developer NOC)
-               Ready flip: buy → renovate → sell
+               Ready flip: buy  renovate  sell
                Renovation costs: AED 80-200/sqft for mid-range, 200-400 for premium
                Typical hold: 6-24 months for ready flip, 12-36 for off-plan
                Capital gains tax: ZERO in Dubai
                Typical net profit: 8-25% on well-chosen properties
-            ══════════════════════════════════════════════════════════ */
+             */
 
-            /* ── All inputs come from existing flipBuyPrice etc
-               + new flp* state for renovation/costs ── */
+            /*  All inputs come from existing flipBuyPrice etc
+               + new flp* state for renovation/costs  */
             const buyPrice     = flipBuyPrice;
             const sellPrice    = flipSellPrice;
             const holdYears    = flipHoldYears;
             const rentalYield  = flipRentalYield;
             const inclRental   = flipIncludeRental;
 
-            /* ── Acquisition costs ── */
+            /*  Acquisition costs  */
             const dldBuy       = buyPrice * 0.04;
             const agentBuy     = buyPrice * (flpAgentBuy / 100);
             const regFee       = 4000;
             const totalAcqCost = dldBuy + agentBuy + regFee;
 
-            /* ── Mortgage costs (if leveraged) ── */
+            /*  Mortgage costs (if leveraged)  */
             const loanAmt      = flpMortgage ? buyPrice * (flpLTV / 100) : 0;
             const mortMonthly  = flpMortgage && loanAmt > 0
               ? loanAmt * ((flpMortgageRate/100/12) * Math.pow(1+flpMortgageRate/100/12, holdYears*12)) / (Math.pow(1+flpMortgageRate/100/12, holdYears*12) - 1)
@@ -46,23 +46,23 @@ function FlipTab({ flipBuyPrice, setFlipBuyPrice, flipSellPrice, setFlipSellPric
             const mortInterest  = totalMortCost - loanAmt;
             const equityIn      = flpMortgage ? buyPrice - loanAmt : buyPrice;
 
-            /* ── Holding costs ── */
+            /*  Holding costs  */
             const scPerYear    = buyPrice * 0.01; // ~1% service charge estimate
             const totalSC      = scPerYear * holdYears;
 
-            /* ── Rental income during hold ── */
+            /*  Rental income during hold  */
             const annualRental = inclRental ? buyPrice * (rentalYield / 100) : 0;
             const totalRental  = annualRental * holdYears;
 
-            /* ── Renovation ── */
+            /*  Renovation  */
             const renovCost    = flpRenovCost;
 
-            /* ── Disposal costs ── */
+            /*  Disposal costs  */
             const dldSell      = sellPrice * 0.04;
             const agentSell    = sellPrice * (flpAgentSell / 100);
             const totalDispose = dldSell + agentSell;
 
-            /* ── P&L ── */
+            /*  P&L  */
             const totalIn      = buyPrice + totalAcqCost + renovCost + totalSC + (flpMortgage ? mortInterest : 0);
             const totalOut     = sellPrice + totalRental;
             const netProfit    = sellPrice + totalRental - totalIn;
@@ -72,7 +72,7 @@ function FlipTab({ flipBuyPrice, setFlipBuyPrice, flipSellPrice, setFlipSellPric
             const cashIn       = flpMortgage ? equityIn + totalAcqCost + renovCost + totalSC : buyPrice + totalAcqCost + renovCost + totalSC;
             const cashROI      = cashIn > 0 ? (netProfit / cashIn * 100) : 0;
 
-            /* ── Scenarios ── */
+            /*  Scenarios  */
             const scenarios = {
               bear:  { sellMulti: 0.90, note: "Market softens 10%. Common in oversupplied areas." },
               base:  { sellMulti: 1.00, note: "Sell at planned price. Realistic in established communities." },
@@ -98,7 +98,7 @@ function FlipTab({ flipBuyPrice, setFlipBuyPrice, flipSellPrice, setFlipSellPric
                 <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"10px 0", marginBottom:16, borderBottom:`1px solid ${T.border}`, flexWrap:"wrap", gap:8 }}>
                   <div>
                     <div style={{ fontFamily:"'Fraunces',serif", fontSize:20, fontWeight:800, color:T.white }}>Flip Calculator</div>
-                    <div style={{ fontSize:11, color:T.textMuted, marginTop:3 }}>Buy · Renovate · Sell · ROI · DLD costs · Mortgage leverage · Scenario analysis</div>
+                    <div style={{ fontSize:11, color:T.textMuted, marginTop:3 }}>Buy  Renovate  Sell  ROI  DLD costs  Mortgage leverage  Scenario analysis</div>
                   </div>
                   <div style={{ display:"flex", gap:8 }}>
                     {["calculator","guide"].map(v => (
@@ -117,7 +117,7 @@ function FlipTab({ flipBuyPrice, setFlipBuyPrice, flipSellPrice, setFlipSellPric
                     { label:"DLD on Buy",         val:"4%",      color:"#F97316", note:"of purchase price" },
                     { label:"DLD on Sell",        val:"4%",      color:"#F97316", note:"of sale price" },
                     { label:"Agent (Buy+Sell)",   val:"2%+2%",   color:T.textMuted, note:"negotiable" },
-                    { label:"Typical Net ROI",    val:"8–25%",   color:T.gold,   note:"well-chosen flip" },
+                    { label:"Typical Net ROI",    val:"825%",   color:T.gold,   note:"well-chosen flip" },
                     { label:"Off-Plan Flip",      val:"NOC req", color:T.teal,   note:"developer permission" },
                   ].map((e,i) => (
                     <div key={i} style={{ padding:"8px 14px", background:T.surface, border:`1px solid ${T.border}`, borderRadius:8, textAlign:"center", flex:"1 1 80px" }}>
@@ -131,7 +131,7 @@ function FlipTab({ flipBuyPrice, setFlipBuyPrice, flipSellPrice, setFlipSellPric
                 {flpView === "calculator" && (
                   <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16, marginBottom:16 }}>
 
-                    {/* Left — Inputs */}
+                    {/* Left  Inputs */}
                     <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
                       {/* Main sliders */}
                       <div className="chart-box" style={{ padding:22 }}>
@@ -229,7 +229,7 @@ function FlipTab({ flipBuyPrice, setFlipBuyPrice, flipSellPrice, setFlipSellPric
                       </div>
                     </div>
 
-                    {/* Right — Results */}
+                    {/* Right  Results */}
                     <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
 
                       {/* Scenario selector */}
@@ -250,15 +250,15 @@ function FlipTab({ flipBuyPrice, setFlipBuyPrice, flipSellPrice, setFlipSellPric
                       {/* Net profit hero */}
                       <div style={{ padding:"22px", background:netProfit>0?"linear-gradient(135deg,rgba(16,185,129,0.12),rgba(16,185,129,0.04))":"linear-gradient(135deg,rgba(239,68,68,0.12),rgba(239,68,68,0.04))", border:`1px solid ${netProfit>0?"rgba(16,185,129,0.3)":"rgba(239,68,68,0.3)"}`, borderRadius:14, textAlign:"center" }}>
                         <div style={{ fontSize:11, fontWeight:700, color:T.textMuted, letterSpacing:1, textTransform:"uppercase", marginBottom:8 }}>
-                          {flpScenario !== "base" ? `${flpScenario.toUpperCase()} SCENARIO — ` : ""}Net Profit
+                          {flpScenario !== "base" ? `${flpScenario.toUpperCase()} SCENARIO  ` : ""}Net Profit
                         </div>
                         <div style={{ fontFamily:"'Fraunces',serif", fontSize:38, fontWeight:900, color:scenProfit>0?T.green:T.red, lineHeight:1 }}>
                           {scenProfit>=0?"+":" "}AED {Math.abs(Math.round(scenProfit)).toLocaleString()}
                         </div>
                         <div style={{ fontSize:12, color:T.textMuted, marginTop:8 }}>
-                          {flpScenario!=="base" && <span>Sell at AED {Math.round(scenSell).toLocaleString()} · </span>}
+                          {flpScenario!=="base" && <span>Sell at AED {Math.round(scenSell).toLocaleString()}  </span>}
                           ROI: <span style={{ color:scenROI>0?T.green:T.red, fontWeight:700 }}>{scenROI.toFixed(1)}%</span>
-                          {holdYears > 0 && <span style={{ color:T.textMuted }}>{"·"}{(((Math.pow(1+scenROI/100,1/holdYears)-1)*100)).toFixed(1)}% p.a.</span>}
+                          {holdYears > 0 && <span style={{ color:T.textMuted }}>{""}{(((Math.pow(1+scenROI/100,1/holdYears)-1)*100)).toFixed(1)}% p.a.</span>}
                         </div>
                         {scenProfit !== netProfit && (
                           <div style={{ marginTop:6, fontSize:11, color:T.textMuted }}>vs Base: {netProfit>0?"+":""}{Math.round(scenProfit-netProfit).toLocaleString()} AED</div>
@@ -315,7 +315,7 @@ function FlipTab({ flipBuyPrice, setFlipBuyPrice, flipSellPrice, setFlipSellPric
 
                       {/* DLD warning */}
                       <div style={{ padding:"12px 14px", background:"rgba(249,115,22,0.06)", border:"1px solid rgba(249,115,22,0.25)", borderRadius:10 }}>
-                        <div style={{ fontSize:11, fontWeight:700, color:"#F97316", marginBottom:4 }}>⚠ DLD Cost Reality Check</div>
+                        <div style={{ fontSize:11, fontWeight:700, color:"#F97316", marginBottom:4 }}> DLD Cost Reality Check</div>
                         <div style={{ fontSize:11, color:T.textSecondary, lineHeight:1.7 }}>
                           DLD fees total <strong style={{ color:T.white }}>AED {Math.round(dldBuy+dldSell).toLocaleString()}</strong> (4% buy + 4% sell).
                           Your property must appreciate <strong style={{ color:T.white }}>{(((dldBuy+dldSell+renovCost+agentBuy+agentSell)/buyPrice)*100).toFixed(1)}%</strong> just to break even before profit.
@@ -333,7 +333,7 @@ function FlipTab({ flipBuyPrice, setFlipBuyPrice, flipSellPrice, setFlipSellPric
                       <div style={{ fontFamily:"'Fraunces',serif", fontSize:13, fontWeight:700, color:T.white, marginBottom:16 }}>Ready Property Flip</div>
                       {[
                         { step:"1", title:"Find undervalued ready unit", detail:"Distressed sellers, divorce sales, estate sales, motivated sellers. Look for properties 10-15% below market." },
-                        { step:"2", title:"Negotiate + buy quickly", detail:"Cash buyers close in 2-3 weeks. Get pre-approved mortgage for speed. Don't over-negotiate — speed beats price." },
+                        { step:"2", title:"Negotiate + buy quickly", detail:"Cash buyers close in 2-3 weeks. Get pre-approved mortgage for speed. Don't over-negotiate  speed beats price." },
                         { step:"3", title:"Renovate strategically", detail:"Kitchen + bathrooms = 80% of value add. Budget AED 80-150/sqft for mid-range. Don't over-renovate for the area." },
                         { step:"4", title:"Rent while waiting (optional)", detail:"Furnished short-term rental during renovation period. 6-8% yield offsets holding costs." },
                         { step:"5", title:"Market and sell", detail:"Professional photography, Bayut + PF listings. Target 3-6 months to sell. Price 5-8% above similar units." },

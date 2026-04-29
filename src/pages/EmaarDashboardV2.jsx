@@ -4446,6 +4446,7 @@ export default function EmaarDashboardV2() {
             <OverviewTab
               liveMarketData={liveMarketData} liveDLDVolumes={liveDLDVolumes}
               liveDevHealth={liveDevHealth} liveMortgageRates={liveMortgageRates}
+              liveNeighbourhoods={liveNeighbourhoods}
               liveYields={liveYields}
               allDevelopers={allDevelopers} deals={deals} listings={listings}
               myLeads={myLeads} myPortfolio={myPortfolio} watchlist={watchlist}
@@ -4971,7 +4972,8 @@ export default function EmaarDashboardV2() {
           {/* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ FLIP TAB (extracted) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */}
           {tab === "Flip" && (
             <FlipTab
-              flipBuyPrice={flipBuyPrice} setFlipBuyPrice={setFlipBuyPrice}
+              flipBuyPrice={flipBuyPrice}
+              liveNeighbourhoods={liveNeighbourhoods} setFlipBuyPrice={setFlipBuyPrice}
               flipSellPrice={flipSellPrice} setFlipSellPrice={setFlipSellPrice}
               flipHoldYears={flipHoldYears} setFlipHoldYears={setFlipHoldYears}
               flipIncludeRental={flipIncludeRental} setFlipIncludeRental={setFlipIncludeRental}
