@@ -246,6 +246,10 @@ function ProjectsTab({
   projEscrow = "All", setProjEscrow = () => {},
   showMoreFilters = false, setShowMoreFilters = () => {},
 }) {
+  const [devSearch,    setDevSearch]    = React.useState("");
+  const [showDevDrop,  setShowDevDrop]  = React.useState(false);
+  const [commSearch2,  setCommSearch2]  = React.useState("");
+  const [showCommDrop, setShowCommDrop] = React.useState(false);
   // Single source of truth for community data (Session 5 unification)
   const { data: allCommunitiesFromDb = [] } = useUserFacingCommunities();
 
