@@ -1,68 +1,29 @@
-// scripts/audit-all-tabs.js
-// Scans every tab file in src/tabs/ to map what data sources it uses.
-// Output: per-tab breakdown of Firestore reads, hook usage, hardcoded SEED_DATA references.
-
 const fs = require("fs");
-const path = require("path");
+const dash = fs.readFileSync("src/pages/EmaarDashboardV2.jsx","latin1");
 
-const tabs = fs.readdirSync("src/tabs").filter(f => f.endsWith(".jsx"));
+const tabs = [
+  "Overview","Market","DLD Volumes","Price History","Neighbourhoods",
+  "Launch Calendar","Projects","Map","Handover","Service Charges",
+  "Yields","STR vs LTR","Mortgage","Investment Score","Flip",
+  "Golden Visa","DXB Estimate","Portfolio","My Leads","Team",
+  "Pipeline","Listings","Agency","Compliance","Banking",
+  "Currency","Competitors","Risk","Financials","Dev Portal",
+  "Developer Health","Intelligence","Marketing"
+];
 
-console.log("TAB DATA SOURCE AUDIT (" + tabs.length + " tabs)");
-console.log("=".repeat(80));
-console.log("");
-
-const results = tabs.map(tab => {
-  const filepath = "src/tabs/" + tab;
-  const text = fs.readFileSync(filepath, "utf8");
-  const lines = text.split("\n");
-
-  return {
-    tab: tab.replace(".jsx", ""),
-    lines: lines.length,
-    seedData: (text.match(/SEED_DATA\.\w+/g) || []).length,
-    seedDataTypes: [...new Set((text.match(/SEED_DATA\.(\w+)/g) || []).map(s => s.replace("SEED_DATA.", "")))],
-    firestoreReads: (text.match(/collection\(db,/g) || []).length,
-    useHooks: [...new Set((text.match(/use(Communities|Developers|Projects|Developments|Yields|UserFacingCommunities|AllCommunities|ConsumerCommunities)\b/g) || []))],
-    useUserFacing: text.includes("useUserFacingCommunities"),
-    hardcodedConstants: (text.match(/^const [A-Z_]+\s*=\s*[\[{]/gm) || []).length,
-    rawProjectsRefs: (text.match(/rawProjects/g) || []).length,
-    hardcodedCommunities: (text.match(/COMMUNITY_COORDS|BASE_PPSF/g) || []).length,
-  };
-});
-
-const usingFirestore = results.filter(r => r.firestoreReads > 0 || r.useHooks.length > 0);
-const usingSeedData  = results.filter(r => r.seedData > 0);
-const usingBoth      = results.filter(r => (r.firestoreReads > 0 || r.useHooks.length > 0) && r.seedData > 0);
-const usingNeither   = results.filter(r => r.firestoreReads === 0 && r.useHooks.length === 0 && r.seedData === 0);
-const onlyProps      = usingNeither.filter(r => r.rawProjectsRefs > 0 || r.hardcodedConstants > 0);
-
-console.log("SUMMARY:");
-console.log("  Total tabs:                          " + results.length);
-console.log("  Using Firestore (collection or hook): " + usingFirestore.length);
-console.log("  Using SEED_DATA hardcoded:           " + usingSeedData.length);
-console.log("  Using both (mixed sources):          " + usingBoth.length);
-console.log("  Using neither (props/constants only): " + usingNeither.length);
-console.log("");
-
-console.log("PER-TAB BREAKDOWN (sorted by SEED_DATA usage, highest first):");
-console.log("");
-
-const sorted = [...results].sort((a, b) => b.seedData - a.seedData);
-sorted.forEach(r => {
-  const sources = [];
-  if (r.firestoreReads > 0) sources.push("FS:" + r.firestoreReads);
-  if (r.useHooks.length > 0) sources.push("hooks:" + r.useHooks.join("+"));
-  if (r.seedData > 0) sources.push("SEED:" + r.seedData + "(" + r.seedDataTypes.join(",") + ")");
-  if (r.rawProjectsRefs > 0) sources.push("rawProj:" + r.rawProjectsRefs);
-  if (r.hardcodedCommunities > 0) sources.push("hardcoded:" + r.hardcodedCommunities);
-  const status = sources.length ? sources.join(" | ") : "(props only)";
-  console.log("  " + r.tab.padEnd(28) + " " + status);
-});
-
-console.log("");
-console.log("=".repeat(80));
-console.log("MIGRATION PRIORITY (worst offenders first):");
-console.log("=".repeat(80));
-sorted.filter(r => r.seedData > 5 || r.hardcodedCommunities > 0).forEach((r, i) => {
-  console.log((i + 1) + ". " + r.tab + " — SEED:" + r.seedData + " hardcoded:" + r.hardcodedCommunities);
+tabs.forEach(tab => {
+  const file = "src/tabs/"+tab.replace(/ /g,"")+"Tab.jsx";
+  const altFile = tab==="Map"?"src/tabs/CommunityMapTab.jsx":
+                  tab==="STR vs LTR"?"src/tabs/STRvsLTRTab.jsx":file;
+  try {
+    const src = fs.readFileSync(altFile,"latin1");
+    const lines = src.split("\n").length;
+    const hasSeed = src.includes("SEED_") || src.includes("seed_");
+    const hasReal = src.includes("liveNeighbourhoods")||src.includes("liveProjects")||src.includes("liveDLD");
+    const hasEmpty = src.includes("coming soon")||src.includes("Coming Soon")||src.includes("placeholder");
+    const status = hasEmpty?"PLACEHOLDER":hasSeed&&!hasReal?"SEED DATA":hasReal?"HAS REAL DATA":"UNKNOWN";
+    console.log(tab.padEnd(20), lines+"L", status.padEnd(15));
+  } catch(e) {
+    console.log(tab.padEnd(20), "FILE MISSING");
+  }
 });
