@@ -9,7 +9,7 @@ import React from "react";
 import { T } from "../data";
 import { SvgIcons } from "../components/Icons";
 
-function FlipTab({ flipBuyPrice, setFlipBuyPrice, flipSellPrice, setFlipSellPrice, flipHoldYears, setFlipHoldYears, flipIncludeRental, setFlipIncludeRental, flipRentalYield, setFlipRentalYield, flpRenovCost, setFlpRenovCost, flpAgentBuy, setFlpAgentBuy, flpAgentSell, setFlpAgentSell, flpMortgage, setFlpMortgage, flpMortgageRate, setFlpMortgageRate, flpLTV, setFlpLTV, flpView, setFlpView, flpScenario, setFlpScenario }) {
+function FlipTab({ liveNeighbourhoods=[], flipBuyPrice, setFlipBuyPrice, flipSellPrice, setFlipSellPrice, flipHoldYears, setFlipHoldYears, flipIncludeRental, setFlipIncludeRental, flipRentalYield, setFlipRentalYield, flpRenovCost, setFlpRenovCost, flpAgentBuy, setFlpAgentBuy, flpAgentSell, setFlpAgentSell, flpMortgage, setFlpMortgage, flpMortgageRate, setFlpMortgageRate, flpLTV, setFlpLTV, flpView, setFlpView, flpScenario, setFlpScenario }) {
 
 
             /*  RESEARCH NOTES 
@@ -25,7 +25,16 @@ function FlipTab({ flipBuyPrice, setFlipBuyPrice, flipSellPrice, setFlipSellPric
 
             /*  All inputs come from existing flipBuyPrice etc
                + new flp* state for renovation/costs  */
-            const buyPrice     = flipBuyPrice;
+            
+  const [flipCommSearch, setFlipCommSearch] = React.useState("");
+  const [flipComm, setFlipComm] = React.useState(null);
+  const flipCommSuggestions = React.useMemo(() => {
+    if(!flipCommSearch.trim()) return [];
+    return (liveNeighbourhoods||[])
+      .filter(n=>n.avgPpsf>0&&(n.community||"").toLowerCase().includes(flipCommSearch.toLowerCase()))
+      .slice(0,5);
+  }, [liveNeighbourhoods, flipCommSearch]);
+  const buyPrice = flipBuyPrice;
             const sellPrice    = flipSellPrice;
             const holdYears    = flipHoldYears;
             const rentalYield  = flipRentalYield;
@@ -137,7 +146,37 @@ function FlipTab({ flipBuyPrice, setFlipBuyPrice, flipSellPrice, setFlipSellPric
                       <div className="chart-box" style={{ padding:22 }}>
                         <div style={{ fontFamily:"'Fraunces',serif", fontSize:13, fontWeight:700, color:T.white, marginBottom:16 }}>Deal Parameters</div>
                         {[
-                          { label:"Buy Price (AED)",          val:flipBuyPrice,    min:300000,  max:15000000, step:50000,  set:setFlipBuyPrice,    fmt:v=>v>=1e6?"AED "+(v/1e6).toFixed(2)+"M":"AED "+(v/1000).toFixed(0)+"K" },
+                          
+              <div style={{marginBottom:14,padding:"12px",background:"rgba(212,168,67,0.04)",border:"1px solid rgba(212,168,67,0.2)",borderRadius:10}}>
+                <div style={{fontSize:10,fontWeight:700,color:T.gold,letterSpacing:0.8,textTransform:"uppercase",marginBottom:8}}>Auto-fill from Community Data</div>
+                <div style={{position:"relative"}}>
+                  <input value={flipCommSearch} onChange={e=>{setFlipCommSearch(e.target.value);setFlipComm(null);}}
+                    placeholder="Search community to auto-fill prices..."
+                    style={{width:"100%",padding:"8px 12px",background:"rgba(255,255,255,0.04)",border:"1px solid "+T.border,borderRadius:7,color:T.white,fontSize:12,outline:"none",fontFamily:"'Outfit',sans-serif",boxSizing:"border-box"}}/>
+                  {flipCommSuggestions.length>0&&!flipComm&&(
+                    <div style={{position:"absolute",top:"100%",left:0,right:0,background:"#1a1f2e",border:"1px solid "+T.border,borderRadius:8,zIndex:10}}>
+                      {flipCommSuggestions.map(n=>(
+                        <div key={n.community} onClick={()=>{
+                          setFlipComm(n);
+                          setFlipCommSearch(n.community);
+                          const buyP = Math.round((n.avgPpsf||1500)*750/50000)*50000;
+                          setFlipBuyPrice(buyP);
+                          setFlipSellPrice(Math.round(buyP*1.15/50000)*50000);
+                        }}
+                          style={{padding:"9px 12px",cursor:"pointer",fontSize:11,color:T.white,borderBottom:"1px solid "+T.border+"20"}}
+                          onMouseEnter={e=>e.currentTarget.style.background="rgba(212,168,67,0.08)"}
+                          onMouseLeave={e=>e.currentTarget.style.background="transparent"}
+                        >
+                          <span style={{fontWeight:600}}>{n.community}</span>
+                          <span style={{color:"#64748B",marginLeft:8}}>AED {Math.round(n.avgPpsf).toLocaleString()}/sqft · Score {n.investmentScore}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                {flipComm&&<div style={{marginTop:6,fontSize:10,color:"#94A3B8"}}>{flipComm.community} · {flipComm.grossYield}% yield · {flipComm.supplyRisk} risk</div>}
+              </div>
+              { label:"Buy Price (AED)",          val:flipBuyPrice,    min:300000,  max:15000000, step:50000,  set:setFlipBuyPrice,    fmt:v=>v>=1e6?"AED "+(v/1e6).toFixed(2)+"M":"AED "+(v/1000).toFixed(0)+"K" },
                           { label:"Target Sell Price (AED)",  val:flipSellPrice,   min:300000,  max:20000000, step:50000,  set:setFlipSellPrice,   fmt:v=>v>=1e6?"AED "+(v/1e6).toFixed(2)+"M":"AED "+(v/1000).toFixed(0)+"K" },
                           { label:"Renovation Budget (AED)",  val:flpRenovCost,    min:0,       max:1000000,  step:5000,   set:setFlpRenovCost,    fmt:v=>"AED "+(v/1000).toFixed(0)+"K" },
                           { label:"Hold Period (months)",     val:flipHoldYears*12,min:1,        max:60,       step:1,      set:v=>setFlipHoldYears(v/12), fmt:v=>v+" months" },
