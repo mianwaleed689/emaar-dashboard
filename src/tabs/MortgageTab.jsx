@@ -1,9 +1,9 @@
 /* eslint-disable */
-/* 
-   DXB ANALYTICS  MORTGAGE TAB
+/* ═══════════════════════════════════════════════════════════════════
+   DXB ANALYTICS — MORTGAGE TAB
    Extracted from EmaarDashboardV2.jsx
    EIBOR mortgage calculator, bank comparison, amortisation schedule
-    */
+   ═══════════════════════════════════════════════════════════════════ */
 
 import React from "react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from "recharts";
@@ -12,14 +12,14 @@ import { SvgIcons } from "../components/Icons";
 import { Section, Chart, CustomTooltip, KPI, ForecastCard, DataBadge, TabSources, LoadingSkeleton } from "../components/SharedUI";
 import SEED_DATA from "../utils/seedData";
 
-function MortgageTab({ liveMortgageRates, liveEiborRates, liveInvestScores, handleTabChange, liveNeighbourhoods=[], mortPrice, setMortPrice, mortDown, setMortDown, mortRate, setMortRate, mortYears, setMortYears, mortType, setMortType, mortProfile, setMortProfile, mortView, setMortView, mortIncome, setMortIncome, invScSearch, setInvScSearch, invScSort, setInvScSort, invScFilter, setInvScFilter, invScView, setInvScView, invScSelected, setInvScSelected }) {
+function MortgageTab({ liveNeighbourhoods=[], liveMortgageRates, liveEiborRates, liveInvestScores, handleTabChange, mortPrice, setMortPrice, mortDown, setMortDown, mortRate, setMortRate, mortYears, setMortYears, mortType, setMortType, mortProfile, setMortProfile, mortView, setMortView, mortIncome, setMortIncome, invScSearch, setInvScSearch, invScSort, setInvScSort, invScFilter, setInvScFilter, invScView, setInvScView, invScSelected, setInvScSelected }) {
 
 
-            /*  BANK DATA  Research-based Apr 2026 
+            /* ══ BANK DATA — Research-based Apr 2026 ══
                Sources: ricadimortgages.com, realestateclubdubai.com,
                capitalzone.ae, finnxstar.com
                EIBOR 3-month: 3.593% (Feb 2026, capitalzone.ae)
-             */
+            ════════════════════════════════════════════ */
             /* EIBOR rates: read live from Firestore tabData/eiborRates (admin EIBOR tab), fallback to research values */
             const EIBOR_3M = parseFloat(liveEiborRates?.["3m"] ?? 3.593);
             const EIBOR_6M = parseFloat(liveEiborRates?.["6m"] ?? 3.676);
@@ -36,7 +36,7 @@ function MortgageTab({ liveMortgageRates, liveEiborRates, liveInvestScores, hand
               { bank:"HSBC UAE",      logo:"\uD83C\uDFE6", fixed1y:4.09, fixed3y:4.34, fixed5y:4.59, variable:EIBOR_3M+1.60, maxLTV:80, minSalary:15000, maxLoan:15000000, processingFee:1.0, islamic:false, salaryTransfer:false, highlight:false, note:"Global bank. Good for international income documentation. Non-resident friendly." },
             ];
 
-            /*  LTV Rules (UAE Central Bank)  */
+            /* ── LTV Rules (UAE Central Bank) ── */
             const LTV_RULES = {
               expat:       { under5m: 80, over5m: 65, nonResident: 60 },
               uae_national:{ under5m: 85, over5m: 70, nonResident: 85 },
@@ -44,21 +44,16 @@ function MortgageTab({ liveMortgageRates, liveEiborRates, liveInvestScores, hand
             };
 
             const profileRule = LTV_RULES[mortProfile] || LTV_RULES.expat;
-            
-  // Community PPSF lookup
-  const [commSearch, setCommSearch] = React.useState("");
-  const [selectedComm, setSelectedComm] = React.useState(null);
-  const commSuggestions = React.useMemo(() => {
-    if(!commSearch.trim()) return [];
-    return (liveNeighbourhoods||[])
-      .filter(n=>n.avgPpsf>0&&(n.community||"").toLowerCase().includes(commSearch.toLowerCase()))
-      .slice(0,6);
-  }, [liveNeighbourhoods, commSearch]);
-
+            const [commSearch, setCommSearch] = React.useState("");
+  const [selComm, setSelComm] = React.useState(null);
+  const commHints = React.useMemo(()=>{
+    if(!commSearch.trim()||commSearch.length<2) return [];
+    return (liveNeighbourhoods||[]).filter(n=>n.avgPpsf>0&&(n.community||"").toLowerCase().includes(commSearch.toLowerCase())).slice(0,5);
+  },[liveNeighbourhoods,commSearch]);
   const maxLTV = mortPrice > 5000000 ? profileRule.over5m : profileRule.under5m;
             const minDown = 100 - maxLTV;
 
-            /*  Calculator  */
+            /* ── Calculator ── */
             const loanAmount    = mortPrice * ((100 - mortDown) / 100);
             const downPayment   = mortPrice * (mortDown / 100);
             const annualRate    = mortRate / 100;
@@ -72,7 +67,7 @@ function MortgageTab({ liveMortgageRates, liveEiborRates, liveInvestScores, hand
             const maxAfford     = mortIncome * 0.50 * 12 / annualRate * (1 - Math.pow(1 + monthlyRate, -numPayments)); // DBR 50%
             const dbr           = (monthlyPayment / mortIncome) * 100;
 
-            /*  Buying cost breakdown  */
+            /* ── Buying cost breakdown ── */
             const dldFee        = mortPrice * 0.04;
             const agencyFee     = mortPrice * 0.02;
             const mortReg       = loanAmount * 0.0025;
@@ -81,7 +76,7 @@ function MortgageTab({ liveMortgageRates, liveEiborRates, liveInvestScores, hand
             const totalBuyCosts = dldFee + agencyFee + mortReg + valuationFee + processingFee;
             const totalCashNeeded = downPayment + totalBuyCosts;
 
-            /*  Rate for selected type  */
+            /* ── Rate for selected type ── */
             const getRateForType = (bank) => {
               if (mortType === "fixed1") return bank.fixed1y;
               if (mortType === "fixed3") return bank.fixed3y;
@@ -105,7 +100,7 @@ function MortgageTab({ liveMortgageRates, liveEiborRates, liveInvestScores, hand
                 <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"10px 0", marginBottom:16, borderBottom:`1px solid ${T.border}`, flexWrap:"wrap", gap:8 }}>
                   <div>
                     <div style={{ fontFamily:"'Fraunces',serif", fontSize:20, fontWeight:800, color:T.white }}>Mortgage Intelligence</div>
-                    <div style={{ fontSize:11, color:T.textMuted, marginTop:3 }}>Live EIBOR  6 bank comparison  LTV rules  Monthly payment  Total cost of buying</div>
+                    <div style={{ fontSize:11, color:T.textMuted, marginTop:3 }}>Live EIBOR · 6 bank comparison · LTV rules · Monthly payment · Total cost of buying</div>
                   </div>
                   <div style={{ display:"flex", gap:8 }}>
                     {["calculator","banks"].map(v => (
@@ -142,7 +137,7 @@ function MortgageTab({ liveMortgageRates, liveEiborRates, liveInvestScores, hand
                       {/* Inputs */}
                       <div className="chart-box" style={{ padding:24 }}>
                         <div style={{ fontFamily:"'Fraunces',serif", fontSize:14, fontWeight:700, color:T.white, marginBottom:4 }}>Your Mortgage</div>
-                        <div style={{ fontSize:11, color:T.textMuted, marginBottom:20 }}>Based on UAE Central Bank rules  Apr 2026</div>
+                        <div style={{ fontSize:11, color:T.textMuted, marginBottom:20 }}>Based on UAE Central Bank rules · Apr 2026</div>
 
                         {/* Profile selector */}
                         <div style={{ marginBottom:16 }}>
@@ -182,45 +177,8 @@ function MortgageTab({ liveMortgageRates, liveEiborRates, liveInvestScores, hand
 
                         {/* Sliders */}
                         {[
-                          
-              {/* Community Quick Fill */}
-              <div style={{marginBottom:16,padding:"14px",background:"rgba(212,168,67,0.04)",border:"1px solid rgba(212,168,67,0.2)",borderRadius:10}}>
-                <div style={{fontSize:10,fontWeight:700,color:T.gold,letterSpacing:0.8,textTransform:"uppercase",marginBottom:8}}>Quick Fill from Community Data</div>
-                <div style={{position:"relative"}}>
-                  <input value={commSearch} onChange={e=>{setCommSearch(e.target.value);setSelectedComm(null);}}
-                    placeholder="Type community name to auto-fill price..."
-                    style={{width:"100%",padding:"8px 12px",background:"rgba(255,255,255,0.04)",border:"1px solid "+T.border,borderRadius:7,color:T.white,fontSize:12,outline:"none",fontFamily:"'Outfit',sans-serif",boxSizing:"border-box"}}/>
-                  {commSuggestions.length>0&&!selectedComm&&(
-                    <div style={{position:"absolute",top:"100%",left:0,right:0,background:"#1a1f2e",border:"1px solid "+T.border,borderRadius:8,zIndex:10,maxHeight:200,overflowY:"auto"}}>
-                      {commSuggestions.map(n=>(
-                        <div key={n.community} onClick={()=>{
-                          setSelectedComm(n);
-                          setCommSearch(n.community);
-                          // Auto-fill price based on community PPSF * typical 1BR size (750 sqft)
-                          const typicalPrice = Math.round((n.avgPpsf||1500)*750/50000)*50000;
-                          setMortPrice(typicalPrice);
-                        }}
-                          style={{padding:"10px 14px",cursor:"pointer",fontSize:12,color:T.white,borderBottom:"1px solid "+T.border+"30"}}
-                          onMouseEnter={e=>e.currentTarget.style.background="rgba(212,168,67,0.08)"}
-                          onMouseLeave={e=>e.currentTarget.style.background="transparent"}
-                        >
-                          <div style={{fontWeight:600}}>{n.community}</div>
-                          <div style={{fontSize:10,color:"#64748B"}}>AED {Math.round(n.avgPpsf).toLocaleString()}/sqft  {n.grossYield}% yield  typical 1BR ~AED {Math.round((n.avgPpsf||1500)*750/50000*50000).toLocaleString()}</div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-                {selectedComm&&(
-                  <div style={{marginTop:8,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                    <div style={{fontSize:11,color:"#94A3B8"}}>
-                      {selectedComm.community}  AED {Math.round(selectedComm.avgPpsf).toLocaleString()}/sqft  {selectedComm.grossYield}% yield
-                    </div>
-                    <button type="button" onClick={()=>{setSelectedComm(null);setCommSearch("");}} style={{background:"none",border:"none",color:"#64748B",cursor:"pointer",fontSize:12}}>x</button>
-                  </div>
-                )}
-              </div>
-              { label:"Property Price (AED)",  val:mortPrice,  min:400000,   max:20000000, step:50000,  set:setMortPrice,  fmt:v=>v>=1000000?"AED "+(v/1000000).toFixed(2)+"M":"AED "+(v/1000).toFixed(0)+"K" },
+                          ...([selComm&&{label:"COMMUNITY PPSF",val:Math.round((selComm.avgPpsf||1500)*750),min:400000,max:20000000,step:50000,set:setMortPrice,fmt:v=>"AED "+v.toLocaleString()}].filter(Boolean)),
+                          { label:"Property Price (AED)",  val:mortPrice,  min:400000,   max:20000000, step:50000,  set:setMortPrice,  fmt:v=>v>=1000000?"AED "+(v/1000000).toFixed(2)+"M":"AED "+(v/1000).toFixed(0)+"K" },
                           { label:`Down Payment (${mortDown}% = AED ${Math.round(downPayment/1000)}K)`, val:mortDown, min:minDown, max:50, step:1, set:setMortDown, fmt:v=>v+"%" },
                           { label:"Interest Rate (%)",      val:mortRate,   min:2.5,      max:8,        step:0.05,   set:setMortRate,   fmt:v=>v.toFixed(2)+"%" },
                           { label:"Loan Tenure (Years)",    val:mortYears,  min:5,        max:25,       step:1,      set:setMortYears,  fmt:v=>v+"yrs" },
@@ -246,12 +204,12 @@ function MortgageTab({ liveMortgageRates, liveEiborRates, liveInvestScores, hand
                           <div style={{ fontFamily:"'Fraunces',serif", fontSize:42, fontWeight:900, color:T.gold, lineHeight:1 }}>
                             AED {Math.round(monthlyPayment).toLocaleString()}
                           </div>
-                          <div style={{ fontSize:12, color:T.textMuted, marginTop:8 }}>{mortYears} years  {mortRate}%  AED {(loanAmount/1000000).toFixed(2)}M loan</div>
+                          <div style={{ fontSize:12, color:T.textMuted, marginTop:8 }}>{mortYears} years · {mortRate}% · AED {(loanAmount/1000000).toFixed(2)}M loan</div>
                           {/* DBR indicator */}
                           <div style={{ marginTop:16, padding:"10px 14px", background:dbr<=50?"rgba(16,185,129,0.1)":"rgba(239,68,68,0.1)", borderRadius:8, border:`1px solid ${dbr<=50?T.green:T.red}30` }}>
                             <div style={{ display:"flex", justifyContent:"space-between", marginBottom:4 }}>
                               <span style={{ fontSize:11, color:T.textMuted }}>Debt Burden Ratio</span>
-                              <span style={{ fontSize:12, fontWeight:700, color:dbr<=50?T.green:T.red }}>{dbr.toFixed(1)}% {dbr<=50?" Eligible":" Exceeds 50% cap"}</span>
+                              <span style={{ fontSize:12, fontWeight:700, color:dbr<=50?T.green:T.red }}>{dbr.toFixed(1)}% {dbr<=50?"✅ Eligible":"❌ Exceeds 50% cap"}</span>
                             </div>
                             <div style={{ height:6, borderRadius:3, background:T.border }}>
                               <div style={{ height:"100%", width:`${Math.min(dbr,100)}%`, background:dbr<=50?T.green:T.red, borderRadius:3 }} />
@@ -311,7 +269,7 @@ function MortgageTab({ liveMortgageRates, liveEiborRates, liveInvestScores, hand
                           { profile:"Non-Resident",     under5m:"60% LTV (40% down)", over5m:"50% LTV (50% down)", color:"#3B82F6"},
                           { profile:"Max Tenure",        under5m:"25 years",           over5m:"Age cap: 70 yrs",    color:T.teal   },
                           { profile:"DBR Cap",           under5m:"50% of gross salary",over5m:"All loans combined", color:"#F97316"},
-                          { profile:"Min Salary",        under5m:"AED 10,00015,000",  over5m:"Varies by bank",     color:T.textMuted },
+                          { profile:"Min Salary",        under5m:"AED 10,000–15,000",  over5m:"Varies by bank",     color:T.textMuted },
                         ].map((r,i) => (
                           <div key={i} style={{ padding:"12px 14px", background:T.surfaceAlt, borderRadius:10, border:`1px solid ${T.border}` }}>
                             <div style={{ fontSize:11, fontWeight:700, color:r.color, marginBottom:6 }}>{r.profile}</div>
@@ -358,7 +316,7 @@ function MortgageTab({ liveMortgageRates, liveEiborRates, liveInvestScores, hand
                             <div style={{ padding:"14px 16px", borderBottom:`1px solid ${T.border}` }}>
                               <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start" }}>
                                 <div>
-                                  {isBest && <div style={{ fontSize:9, fontWeight:700, color:T.gold, letterSpacing:0.8, marginBottom:3 }}> BEST RATE</div>}
+                                  {isBest && <div style={{ fontSize:9, fontWeight:700, color:T.gold, letterSpacing:0.8, marginBottom:3 }}>★ BEST RATE</div>}
                                   <div style={{ fontSize:15, fontWeight:700, color:T.white }}>{bank.bank}</div>
                                   <div style={{ display:"flex", gap:6, marginTop:4 }}>
                                     {bank.islamic && <span style={{ fontSize:9, padding:"2px 6px", borderRadius:4, background:"rgba(139,92,246,0.15)", color:"#8B5CF6", fontWeight:700 }}>Islamic</span>}
