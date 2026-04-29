@@ -1,5 +1,5 @@
 /* eslint-disable */
-/* DXB ANALYTICS - MAP TAB - Session 16 World Class Rebuild
+/* DXB ANALYTICS - MAP TAB - Session 16 v2 World Class Rebuild
    Interactive map showing all 259 communities + 94 projects
    Leaflet + CARTO dark tiles */
 
