@@ -28,7 +28,9 @@
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "predeploy": "cross-env DISABLE_ESLINT_PLUGIN=true react-scripts build",
-    "deploy": "gh-pages -d build"
+    "deploy": "gh-pages -d build",
+    "sync:communities": "node scripts/sync-communities-from-projects.js",
+    "sync:all": "npm run sync:communities"
   },
   "eslintConfig": {
     "extends": [
