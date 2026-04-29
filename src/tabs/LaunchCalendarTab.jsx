@@ -38,10 +38,11 @@ export default function LaunchCalendarTab({
   const [drawerTab, setDrawerTab] = useState("overview");
 
   // Merge all projects
-  const allProjects = useMemo(()=>[
-    ...(liveProjects||[]),
-    ...(extraProjects||[]),
-  ].filter(p=>!p.archived),[liveProjects,extraProjects]);
+  const allProjects = useMemo(()=>
+    [...(liveProjects||[]),...(extraProjects||[])]
+    .filter(p=>!p.archived)
+    .filter((p,i,arr)=>arr.findIndex(x=>x.id===p.id||x.name===p.name)===i)
+  ,[liveProjects,extraProjects]);
 
   // Community lookup
   const nbhdMap = useMemo(()=>{
