@@ -158,8 +158,8 @@ service cloud.firestore {
 
     // ── NOTIFICATIONS ────────────────────────────────────────────
     match /notifications/{doc} {
-      allow read: if isAuthed() && resource.data.userId == uid();
-      allow write: if isAuthed() && (isSuperAdmin() || resource.data.userId == uid());
+      allow read: if isAuthed() && (resource.data.userId == uid() || resource.data.userId == "all");
+      allow write: if isAuthed() && (isSuperAdmin() || resource.data.userId == uid() || resource.data.userId == "all");
     }
 
     // ── PUBLIC READ-ONLY DATA (all authenticated users) ──────────
