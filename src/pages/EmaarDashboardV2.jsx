@@ -4594,7 +4594,7 @@ export default function EmaarDashboardV2() {
           {/* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ MAP TAB Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */}
           {tab === "Map" && (
             <CommunityMapTab
-              activeProjects={liveProjects?.length > 0 ? liveProjects : SEED_PROJECTS}
+activeProjects={extraProjects?.length > 0 ? extraProjects : []}
               liveCommunityROI={liveCommunityROI}
               setTab={handleTabChange}
               liveNeighbourhoods={liveNeighbourhoods}

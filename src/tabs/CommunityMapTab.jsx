@@ -115,7 +115,7 @@ export default function CommunityMapTab({
     if(!leafletReady||!mapRef.current||mapInstanceRef.current) return;
     const L = window.L;
     const map = L.map(mapRef.current,{
-      center:[25.08,55.18], zoom:11, minZoom:8, maxZoom:18, zoomControl:true,
+      center:[25.1,55.2], zoom:11, minZoom:8, maxZoom:18, zoomControl:true,
     });
     L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",{
       attribution:"CARTO", maxZoom:19, subdomains:"abcd"
