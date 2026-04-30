@@ -107,6 +107,8 @@ export default function CommunityMapTab({
         const color = YIELD_COLOR(y);
         const size  = n.tier==="verified"?14:10;
 
+        if(!n.lat||!n.lng||isNaN(n.lat)||isNaN(n.lng)) return;
+        if(!n.lat||!n.lng) return;
         const circle = L.circleMarker([n.lat,n.lng],{
           radius:size, fillColor:color, color:"rgba(0,0,0,0.3)",
           weight:1, fillOpacity:0.85
