@@ -156,7 +156,7 @@ export default function CommunityMapTab({
         const y = nbhd?.grossYield||p.grossYield||0;
         const color = YIELD_COLOR(y);
 
-        const marker = L.circleMarker([coords.lat,coords.lng],{
+        const marker = L.circleMarker([coords[0]||coords.lat, coords[1]||coords.lng],{
           radius:8, fillColor:color, color:"#fff",
           weight:1.5, fillOpacity:0.9
         });
