@@ -795,11 +795,11 @@ function ProjectsTab({
                     {/* Unit mini-breakdown on card (Research records) */}
                     {Array.isArray(p.unitBreakdown) && p.unitBreakdown.length > 0 && (
                       <div style={{ display:"flex", gap:6, flexWrap:"wrap", marginBottom:8, padding:"8px 10px", background:T.surfaceAlt, borderRadius:8 }}>
-                        {p.unitBreakdown.map((u,i) => (
+                        {Object.entries(p.unitBreakdown||{}).map(([uType,uCount],i) => (
                           <div key={i} style={{ display:"flex", flexDirection:"column", alignItems:"center", padding:"4px 8px", background:"rgba(212,168,67,0.06)", borderRadius:6, border:`1px solid rgba(212,168,67,0.15)`, minWidth:64 }}>
-                            <span style={{ fontSize:9, fontWeight:700, color:T.gold }}>{u.type}</span>
-                            <span style={{ fontSize:10, color:T.white, fontWeight:600 }}>AED {(u.ppsf||0).toLocaleString()}</span>
-                            <span style={{ fontSize:9, color:T.textMuted }}>AED {(u.priceMin/1000000).toFixed(1)}M+</span>
+                            <span style={{ fontSize:9, fontWeight:700, color:T.gold }}>{uType}</span>
+                            <span style={{ fontSize:10, color:T.white, fontWeight:600 }}>AED {(0||0).toLocaleString()}</span>
+                            <span style={{ fontSize:9, color:T.textMuted }}>AED {(0/1000000).toFixed(1)}M+</span>
                           </div>
                         ))}
                       </div>
@@ -1834,7 +1834,7 @@ function ProjectsTab({
                             const colors = [T.gold, T.teal, T.green, "#8B5CF6", "#F59E0B"];
                             return (
                               <div key={i} style={{ width:`${u.pct}%`, background:colors[i % colors.length], display:"flex", alignItems:"center", justifyContent:"center", fontSize:10, fontWeight:700, color:"#000" }}>
-                                {u.pct >= 8 ? `${u.type} ${u.pct}%` : ""}
+                                {u.pct >= 8 ? `${uType} ${u.pct}%` : ""}
                               </div>
                             );
                           })}
@@ -1842,9 +1842,9 @@ function ProjectsTab({
                         <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(120px, 1fr))", gap:8 }}>
                           {mix.map((u,i) => (
                             <div key={i} style={{ padding:"8px 10px", background:T.surfaceAlt, borderRadius:8, textAlign:"center" }}>
-                              <div style={{ fontSize:10, color:T.gold, fontWeight:700 }}>{u.type}</div>
+                              <div style={{ fontSize:10, color:T.gold, fontWeight:700 }}>{uType}</div>
                               <div style={{ fontSize:13, color:T.white, fontWeight:700 }}>{u.pct}%</div>
-                              <div style={{ fontSize:9, color:T.textMuted }}>{u.count} units</div>
+                              <div style={{ fontSize:9, color:T.textMuted }}>{uCount} units</div>
                             </div>
                           ))}
                         </div>
@@ -1854,13 +1854,13 @@ function ProjectsTab({
                       <div className="chart-box" style={{ padding:20, marginBottom:12 }}>
                         <div style={{ fontSize:12, fontWeight:700, color:T.white, marginBottom:14 }}>Unit Type â€” Price & PPSF (Developer Disclosed)</div>
                         <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(200px, 1fr))", gap:10 }}>
-                          {selectedProject.unitBreakdown.map((u,i) => (
+                          {Object.entries(selectedProject.unitBreakdown||{}).map(([uType,uCount],i) => (
                             <div key={i} style={{ padding:"14px 16px", background:T.surfaceAlt, borderRadius:10, border:`1px solid ${T.border}` }}>
-                              <div style={{ fontSize:11, fontWeight:700, color:T.gold, marginBottom:8 }}>{u.type}</div>
+                              <div style={{ fontSize:11, fontWeight:700, color:T.gold, marginBottom:8 }}>{uType}</div>
                               <div style={{ fontSize:11, color:T.textMuted }}>From Price</div>
-                              <div style={{ fontSize:16, fontWeight:700, color:T.white, fontFamily:"'Fraunces',serif", marginBottom:6 }}>AED {(u.priceMin/1000000).toFixed(2)}M</div>
+                              <div style={{ fontSize:16, fontWeight:700, color:T.white, fontFamily:"'Fraunces',serif", marginBottom:6 }}>AED {(0/1000000).toFixed(2)}M</div>
                               <div style={{ fontSize:11, color:T.textMuted }}>PPSF</div>
-                              <div style={{ fontSize:14, fontWeight:700, color:T.teal }}>AED {(u.ppsf||0).toLocaleString()}/sqft</div>
+                              <div style={{ fontSize:14, fontWeight:700, color:T.teal }}>AED {(0||0).toLocaleString()}/sqft</div>
                             </div>
                           ))}
                         </div>
@@ -2266,7 +2266,7 @@ function ProjectsTab({
                       </div>
                     </div>
                     {(() => {
-                      const units = selectedProject.unitBreakdown?.map(u => `  â€¢ ${u.type}: AED ${(u.ppsf||0).toLocaleString()}/sqft | From AED ${(u.priceMin/1000000).toFixed(2)}M`).join("\n") || "";
+        const units = p.unitBreakdown && typeof p.unitBreakdown === "object" ? Object.entries(p.unitBreakdown).map(([type,count]) => type + ": " + count + " units").join(", ") : "";
                       const origin = (typeof window !== "undefined" && window.location && window.location.origin) ? window.location.origin : "https://emaar-dashboard.vercel.app";
                       const projectUrl = `${origin}/project/${encodeURIComponent(selectedProject.id || "")}`;
                       const txt = [
