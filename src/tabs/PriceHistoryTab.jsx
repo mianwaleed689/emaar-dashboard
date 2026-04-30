@@ -75,8 +75,6 @@ function PriceHistoryTab({ liveNeighbourhoods=[], phCommunity, setPhCommunity, p
                 return { period: yr, ppsf };
               });
             };
-              });
-            };
 
             // Final chart data — with ppsf2 if compare mode on
             const phChartData = phCompare

@@ -1,0 +1,10 @@
+const fs=require('fs');
+const b64=fs.readFileSync('scripts/dld-content.b64','utf8');
+const code=Buffer.from(b64,'base64').toString('utf8');
+const rows=fs.readFileSync('src/tabs/ProjectsTab.jsx','utf8').split('\n');
+const q=String.fromCharCode(34);
+const idx=rows.findIndex(l=>l.includes('projDetailTab==='+q+'report'+q+')||l.includes('projDetailTab === '+q+'report'+q+')'));
+console.log('inserting before line:',idx+1);
+rows.splice(idx,0,code);
+fs.writeFileSync('src/tabs/ProjectsTab.jsx',rows.join('\n'),'utf8');
+console.log('Done');

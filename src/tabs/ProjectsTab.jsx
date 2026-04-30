@@ -1600,7 +1600,7 @@ function ProjectsTab({
                   {key:"rental",label:"Rental & Yield"},
                   {key:"developer",label:"Developer & Compliance"},
                   {key:"community",label:"Community Intel"},
-                  {key:"report",label:"Full Report"},
+                  {key:"report",label:"Full Report"},{key:"dldSales",label:"DLD Sales"},
                 ].map(t => (
                   <button key={t.key} type="button" onClick={() => setProjDetailTab(t.key)}
                     style={{ padding:"12px 16px", background:"none", border:"none", borderBottom:projDetailTab===t.key?`2px solid ${T.gold}`:"2px solid transparent", color:projDetailTab===t.key?T.gold:T.textMuted, fontSize:11, fontWeight:projDetailTab===t.key?700:400, cursor:"pointer", fontFamily:"'Outfit',sans-serif", whiteSpace:"nowrap", letterSpacing:0.3 }}>
