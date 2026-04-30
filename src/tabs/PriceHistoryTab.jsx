@@ -61,12 +61,20 @@ function PriceHistoryTab({ liveNeighbourhoods=[], phCommunity, setPhCommunity, p
             };
             const YEARS = ["2021","2022","2023","2024","2025"];
             const buildCommData = (commName) => {
+              const doc = phFromFirestore.find(d => d.community === commName);
+              if (doc && doc.yearData) {
+                return Object.entries(doc.yearData)
+                  .sort((a,b) => a[0].localeCompare(b[0]))
+                  .map(([yr, val]) => ({ period: yr, ppsf: val.ppsf || 0 }));
+              }
               const cfg = commPPSF[commName];
               if (!cfg) return phYearData;
               let ppsf = cfg.base;
               return YEARS.map((yr, i) => {
                 ppsf = Math.round(ppsf * (1 + cfg.growth[i]));
                 return { period: yr, ppsf };
+              });
+            };
               });
             };
 
@@ -83,7 +91,7 @@ function PriceHistoryTab({ liveNeighbourhoods=[], phCommunity, setPhCommunity, p
             const phFiltered = phCompare
               ? phCommunityData.filter(d => d.community === phCommunity || d.community === phCommunity2)
               : phCommunity === "All" ? phCommunityData : phCommunityData.filter(d => d.community === phCommunity);
-            const communities = ["All", ...new Set(phCommunityData.map(d => d.community).filter(Boolean))];
+            const communities = ["All", ...new Set(phFromFirestore.length > 0 ? phFromFirestore.map(d => d.community).filter(Boolean).sort() : phCommunityData.map(d => d.community).filter(Boolean))];
             const bedOptions = ["All", "Studio", "1 BR", "2 BR", "3 BR", "4 BR", "5 BR+"];
             // Phase 3.4: type options now from live schema (admin-editable)
             const { allTypeLabels: _schemaTypes } = useFilterSchema();
