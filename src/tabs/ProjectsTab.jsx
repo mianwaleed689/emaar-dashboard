@@ -323,7 +323,7 @@ function ProjectsTab({
     // Developer filter: match if project's developer/developerName matches
     // the selected brand OR any of its child entity names (SPVs).
     if (gfDev) {
-      const pDev = String(p.developer || "").toLowerCase();
+  const pDev = String(p.developerActual || p.developer || "").toLowerCase();
       const pDevName = String(p.developerName || "").toLowerCase();
       const pCommunity = String(p.community || "").toLowerCase();
       const gfDevName = gfDeveloperName ? String(gfDeveloperName).toLowerCase() : "";
@@ -557,7 +557,7 @@ function ProjectsTab({
                   })
                   .map(d => d.name)
                 ]
-              : ["All", ...new Set(rawProjects.filter(p => projMode === "All" || normalizeType(p)===projMode).map(p=>p.developer||"").filter(Boolean))];
+              : (() => { const filtered2 = rawProjects.filter(p => projMode === "All" || normalizeType(p)===projMode); const devCount = {}; filtered2.forEach(p => { const d = p.developerActual||p.developer||""; if(d) devCount[d]=(devCount[d]||0)+1; }); return ["All", ...Object.entries(devCount).filter(([d,n])=>n>=2).sort((a,b)=>b[1]-a[1]).map(([d])=>d)]; })()
             // commOptions: tier-organized community list (Session 5 hierarchy)
             // Pulls from Firestore via useUserFacingCommunities, groups by displayCategory.
             // Sub-communities show parent prefix (e.g. "Dubai Hills Estate > Maple 1").
