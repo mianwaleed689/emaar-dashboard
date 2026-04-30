@@ -121,7 +121,7 @@ export default function LaunchCalendarTab({
   // Merge + deduplicate
   const allProjects = useMemo(()=>{
     const seen = new Set();
-    return [...(liveProjects||[]),...(extraProjects||[])]
+    return [...(Array.isArray(liveProjects)?liveProjects:Object.values(liveProjects||{})),...(Array.isArray(extraProjects)?extraProjects:Object.values(extraProjects||{}))]
       .filter(p=>!p.archived)
       .filter(p=>{
         const key = p.id||p.name;
