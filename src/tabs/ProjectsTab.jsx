@@ -155,7 +155,7 @@ function locationTags(p) {
 
 /* Unit mix percentages â€” derived from actual unit breakdown data */
 function computeUnitMix(p) {
-  const ub = p.unitBreakdown || [];
+const ub = Array.isArray(p.unitBreakdown) ? p.unitBreakdown : Object.entries(p.unitBreakdown||{}).map(([type,count])=>({type,count:Number(count)||1}));
   if (ub.length === 0) return null;
   const total = ub.reduce((s,u) => s + (u.count || 1), 0);
   return ub.map(u => ({
