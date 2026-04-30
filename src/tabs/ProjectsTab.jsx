@@ -716,7 +716,7 @@ function ProjectsTab({
                   <div style={{ padding:"14px 16px", borderBottom:`1px solid ${T.border}` }} onClick={() => { setSelectedProject(p); setProjDetailTab("identity"); }}>
                     <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:8 }}>
                       <div style={{ flex:1, paddingRight:70 /* room for DLD Verified badge */ }}>
-                        <div style={{ fontSize:10, fontWeight:700, color:T.textMuted, letterSpacing:0.8, textTransform:"uppercase", marginBottom:3 }}>{(p.developer || p.developerName || "Unknown")}{"Â·"}{p.community || p.area || "â€”"}</div>
+                        <div style={{ fontSize:10, fontWeight:700, color:T.textMuted, letterSpacing:0.8, textTransform:"uppercase", marginBottom:3 }}>{(p.developerActual || p.developer || p.developerName || "Unknown")}{" · "}{p.community || p.area || "—"}{p.masterCommunity && p.masterCommunity !== p.community ? " — " + p.masterCommunity : ""}</div>
                         <div style={{ fontFamily:"'Fraunces',serif", fontSize:15, fontWeight:700, color:T.white, marginBottom:6 }}>{p.project || p.name || "â€”"}</div>
                         <div style={{ display:"flex", gap:6, flexWrap:"wrap", alignItems:"center" }}>
                           <StatusBadge status={p.status || (p.constructionPct >= 100 ? "Ready" : "Off-Plan")} />
@@ -1570,7 +1570,7 @@ function ProjectsTab({
 <div role="dialog" aria-modal="true" style={{ position:"fixed", inset:0, background:"rgba(4,9,15,0.97)", zIndex:2000, display:"flex", flexDirection:"column", backdropFilter:"blur(8px)" }}>
               <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"16px 24px", borderBottom:`1px solid ${T.border}`, background:T.surface, flexShrink:0 }}>
                 <div>
-                  <div style={{ fontSize:11, fontWeight:700, color:T.textMuted, letterSpacing:0.8, textTransform:"uppercase", marginBottom:3 }}>{selectedProject.developer}{"Â·"}{selectedProject.community}</div>
+                  <div style={{ fontSize:11, fontWeight:700, color:T.textMuted, letterSpacing:0.8, textTransform:"uppercase", marginBottom:3 }}>{(selectedProject.developerActual || selectedProject.developer)}{" · "}{selectedProject.community || ""}{selectedProject.masterCommunity && selectedProject.masterCommunity !== selectedProject.community ? " — " + selectedProject.masterCommunity : ""}</div>
                   <div style={{ fontFamily:"'Fraunces',serif", fontSize:22, fontWeight:800, color:T.white }}>{selectedProject.project}</div>
                   {/* Factual classification badges only â€” no investment advice */}
                   <div style={{ display:"flex", gap:5, flexWrap:"wrap", marginTop:6 }}>
