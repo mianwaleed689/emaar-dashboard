@@ -221,6 +221,7 @@ service cloud.firestore {
     match /marketData/{doc}       { allow read: if isAuthed(); allow write: if isAdmin(); }
     match /devUnits/{doc}         { allow read: if isAuthed(); allow write: if isAdmin(); }
     match /marketMetrics/{doc}    { allow read: if isAuthed(); allow write: if isAdmin(); }
+    match /transactions/{doc}     { allow read: if isAuthed(); allow write: if isAdmin(); }
     match /legal_citations/{doc}  { allow read: if true;       allow write: if isAdmin(); }
 
     // ── ADMIN ONLY ───────────────────────────────────────────────
