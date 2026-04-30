@@ -2266,7 +2266,7 @@ function ProjectsTab({
                       </div>
                     </div>
                     {(() => {
-        const units = p.unitBreakdown && typeof p.unitBreakdown === "object" ? Object.entries(p.unitBreakdown).map(([type,count]) => type + ": " + count + " units").join(", ") : "";
+        const units = selectedProject.unitBreakdown && typeof selectedProject.unitBreakdown === "object" ? Object.entries(selectedProject.unitBreakdown).map(([type,count]) => type + ": " + count + " units").join(", ") : "";
                       const origin = (typeof window !== "undefined" && window.location && window.location.origin) ? window.location.origin : "https://emaar-dashboard.vercel.app";
                       const projectUrl = `${origin}/project/${encodeURIComponent(selectedProject.id || "")}`;
                       const txt = [
