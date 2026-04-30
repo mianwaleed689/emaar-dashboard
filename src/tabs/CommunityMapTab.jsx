@@ -53,10 +53,9 @@ export default function CommunityMapTab({
   // Projects with real verified Dubai GPS only
   const projectsWithGPS = React.useMemo(()=>
     (activeProjects||[]).filter(p=>{
-      const lat = parseFloat(p.lat);
-      const lng = parseFloat(p.lng);
-      return p.lat && p.lng && !isNaN(lat) && !isNaN(lng) &&
-             lat > 24.5 && lat < 25.5 && lng > 54.5 && lng < 56;
+      const lat = parseFloat(p.lat||p.coordinates&&p.coordinates.lat||0);
+      const lng = parseFloat(p.lng||p.coordinates&&p.coordinates.lng||0);
+      return lat > 24.5 && lat < 25.5 && lng > 54.5 && lng < 56;
     })
   ,[activeProjects]);
 
@@ -178,7 +177,7 @@ export default function CommunityMapTab({
       });
 
       filteredProjects.forEach(p=>{
-        const lat=parseFloat(p.lat), lng=parseFloat(p.lng);
+        const lat=parseFloat(p.lat||p.coordinates&&p.coordinates.lat||0), lng=parseFloat(p.lng||p.coordinates&&p.coordinates.lng||0);
         const color = YIELD_COLOR(p.grossYield||0);
         const icon = L.divIcon({
           html:`<div style="width:12px;height:12px;border-radius:50%;background:${color};border:2px solid rgba(255,255,255,0.8);box-shadow:0 0 4px rgba(0,0,0,0.5)"></div>`,
