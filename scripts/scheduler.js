@@ -24,6 +24,12 @@ cron.schedule("25 9 * * *", ()=>runScript("Sync Notifications","sync-notificatio
 // Daily 1:30 PM Dubai (9:30 AM UTC) - new launches
 cron.schedule("30 9 * * *", ()=>runScript("New Launches","detect-new-launches.js"), {timezone:"UTC"});
 
+// Daily 1:45 PM Dubai (9:45 AM UTC) - fetch latest DLD transactions
+cron.schedule("45 9 * * *", ()=>runScript("DLD Transactions","fetch-dld-transactions.js"), {timezone:"UTC"});
+// Daily 1:55 PM Dubai (9:55 AM UTC) - aggregate volumes
+cron.schedule("55 9 * * *", ()=>runScript("Aggregate DLD Volumes","aggregate-dld-volumes.js"), {timezone:"UTC"});
+// Daily 2:00 PM Dubai (10:00 AM UTC) - aggregate price history
+cron.schedule("0 10 * * *", ()=>runScript("Aggregate Price History","aggregate-price-history.js"), {timezone:"UTC"});
 // Sunday 1:00 PM Dubai (9:00 AM UTC) - full detail refresh
 cron.schedule("0 9 * * 0", ()=>runScript("Full Detail Refresh","scrape-mashrooi-details.js"), {timezone:"UTC"});
 
