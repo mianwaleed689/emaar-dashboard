@@ -881,7 +881,7 @@ function ProjectsTab({
 
                 {/* â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚
                    NEW PRIMARY FILTER BAR ‚€� 3-Layer Architecture
-                   Category €€™ Type €€™ Configuration €€™ Price €€™ More Filters
+                   Category → Type → Configuration → Price → More Filters
                    â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚ */}
                 <div style={{
                   display:"flex",
@@ -1017,7 +1017,7 @@ function ProjectsTab({
                         cursor:"pointer",
                         display:"flex", alignItems:"center", justifyContent:"center", gap:6,
                       }}>
-                      More Filters {showMoreFilters ? "â‚€�´" : "â‚€�¾"}
+                      More Filters {showMoreFilters ? "▲" : "▼"}
                     </button>
                   </div>
                 </div>
