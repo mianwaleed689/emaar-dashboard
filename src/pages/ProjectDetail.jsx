@@ -1,7 +1,7 @@
 /* eslint-disable */
-/* ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ DXB ANALYTICS ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â PROJECT DETAIL PAGE (S31 Redesign) ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬
-   Tabbed layout ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚· Send to Client ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚· Dark theme ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚· Gold buttons
-   ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ */
+/* ����Ң��a���Ң���a������Ң��a���Ң���a������Ң��a���Ң���a�� DXB ANALYTICS ����Ң���a��Ң��a��� PROJECT DETAIL PAGE (S31 Redesign) ����Ң��a���Ң���a������Ң��a���Ң���a������Ң��a���Ң���a������Ң��a���Ң���a������Ң��a���Ң���a������Ң��a���Ң���a������Ң��a���Ң���a������Ң��a���Ң���a������Ң��a���Ң���a������Ң��a���Ң���a������Ң��a���Ң���a������Ң��a���Ң���a������Ң��a���Ң���a������Ң��a���Ң���a������Ң��a���Ң���a������Ң��a���Ң���a������Ң��a���Ң���a������Ң��a���Ң���a������Ң��a���Ң���a������Ң��a���Ң���a������Ң��a���Ң���a������Ң��a���Ң���a��
+   Tabbed layout �����a��a�� Send to Client �����a��a�� Dark theme �����a��a�� Gold buttons
+   ����Ң��a���Ң���a������Ң��a���Ң���a������Ң��a���Ң���a������Ң��a���Ң���a������Ң��a���Ң���a������Ң��a���Ң���a������Ң��a���Ң���a������Ң��a���Ң���a������Ң��a���Ң���a������Ң��a���Ң���a������Ң��a���Ң���a������Ң��a���Ң���a������Ң��a���Ң���a������Ң��a���Ң���a������Ң��a���Ң���a������Ң��a���Ң���a������Ң��a���Ң���a������Ң��a���Ң���a������Ң��a���Ң���a������Ң��a���Ң���a������Ң��a���Ң���a������Ң��a���Ң���a������Ң��a���Ң���a������Ң��a���Ң���a������Ң��a���Ң���a������Ң��a���Ң���a������Ң��a���Ң���a������Ң��a���Ң���a������Ң��a���Ң���a������Ң��a���Ң���a������Ң��a���Ң���a������Ң��a���Ң���a������Ң��a���Ң���a������Ң��a���Ң���a������Ң��a���Ң���a������Ң��a���Ң���a������Ң��a���Ң���a������Ң��a���Ң���a������Ң��a���Ң���a������Ң��a���Ң���a������Ң��a���Ң���a������Ң��a���Ң���a������Ң��a���Ң���a������Ң��a���Ң���a������Ң��a���Ң���a������Ң��a���Ң���a������Ң��a���Ң���a������Ң��a���Ң���a������Ң��a���Ң���a������Ң��a���Ң���a������Ң��a���Ң���a������Ң��a���Ң���a������Ң��a���Ң���a������Ң��a���Ң���a������Ң��a���Ң���a������Ң��a���Ң���a������Ң��a���Ң���a������Ң��a���Ң���a������Ң��a���Ң���a������Ң��a���Ң���a������Ң��a���Ң���a������Ң��a���Ң���a������Ң��a���Ң���a������Ң��a���Ң���a������Ң��a���Ң���a������Ң��a���Ң���a������Ң��a���Ң���a������Ң��a���Ң���a������Ң��a���Ң���a������Ң��a���Ң���a������Ң��a���Ң���a������Ң��a���Ң���a������Ң��a���Ң���a������Ң��a���Ң���a������Ң��a���Ң���a�� */
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
@@ -11,7 +11,7 @@ import { doc, getDoc, onSnapshot } from "firebase/firestore";
 import { T, emaarProjects, communityIntel, communityROI } from "../data";
 import RoiCalculator from "./RoiCalculator";
 
-/* ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ HELPERS ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ */
+/* ����Ң��a���Ң���a������Ң��a���Ң���a������Ң��a���Ң���a�� HELPERS ����Ң��a���Ң���a������Ң��a���Ң���a������Ң��a���Ң���a�� */
 const getLinkDomain = (url) => {
   if (!url) return "Official Listing";
   if (url.includes("propertyfinder.ae")) return "PropertyFinder";
@@ -19,8 +19,8 @@ const getLinkDomain = (url) => {
   if (url.includes("bayut.com")) return "Bayut";
   return "Official Listing";
 };
-const fmtM   = (v) => v ? `AED ${(v/1_000_000).toFixed(2)}M` : "ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â";
-const fmtNum = (v) => v ? `AED ${Number(v).toLocaleString()}` : "ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â";
+const fmtM   = (v) => v ? `AED ${(v/1_000_000).toFixed(2)}M` : "����Ң���a��Ң��a���";
+const fmtNum = (v) => v ? `AED ${Number(v).toLocaleString()}` : "����Ң���a��Ң��a���";
 
 const getHandoverCountdown = (handover) => {
   if (!handover) return null;
@@ -49,7 +49,7 @@ const getUnitEntries = (units) => {
   return Object.entries(units).filter(([,d])=>d&&d.total>0);
 };
 
-/* ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ CSS ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ */
+/* ����Ң��a���Ң���a������Ң��a���Ң���a������Ң��a���Ң���a�� CSS ����Ң��a���Ң���a������Ң��a���Ң���a������Ң��a���Ң���a�� */
 const css = `
   @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Fraunces:opsz,wght@9..144,700;9..144,900&display=swap');
   *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
@@ -82,14 +82,14 @@ const css = `
   }
 `;
 
-/* ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ SECTION TITLE ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ */
+/* ����Ң��a���Ң���a������Ң��a���Ң���a������Ң��a���Ң���a�� SECTION TITLE ����Ң��a���Ң���a������Ң��a���Ң���a������Ң��a���Ң���a�� */
 const SecTitle = ({ children }) => (
   <div style={{ fontSize:10, fontWeight:700, color:T.gold, letterSpacing:1.5, textTransform:"uppercase", marginBottom:16 }}>
     {children}
   </div>
 );
 
-/* ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ PRO GATE ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ */
+/* ����Ң��a���Ң���a������Ң��a���Ң���a������Ң��a���Ң���a�� PRO GATE ����Ң��a���Ң���a������Ң��a���Ң���a������Ң��a���Ң���a�� */
 const ProGate = ({ isPro, onUpgrade, children }) => {
   if (isPro) return children;
   return (
@@ -100,7 +100,7 @@ const ProGate = ({ isPro, onUpgrade, children }) => {
           <div style={{ fontFamily:"'Fraunces',serif", fontSize:16, fontWeight:800, color:T.white, marginBottom:6 }}>Pro Feature</div>
           <div style={{ fontSize:12, color:T.textMuted, marginBottom:16, lineHeight:1.6 }}>Unlock location intelligence, yield data, and ROI analytics.</div>
           <button onClick={onUpgrade} style={{ width:"100%", padding:"10px 0", background:"#D4A843", color:"#04090F", border:"2px solid #D4A843", borderRadius:9, fontSize:13, fontWeight:800, cursor:"pointer", fontFamily:"'Outfit',sans-serif", outline:"none", boxShadow:"none" }}>
-            Unlock Pro ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â AED 99/mo ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢
+            Unlock Pro ����Ң���a��Ң��a��� AED 99/mo ����Ң��a���Ң��a���~�
           </button>
         </div>
       </div>
@@ -108,14 +108,14 @@ const ProGate = ({ isPro, onUpgrade, children }) => {
   );
 };
 
-/* ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ SEND TO CLIENT MODAL ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ */
+/* ����Ң��a���Ң���a������Ң��a���Ң���a������Ң��a���Ң���a�� SEND TO CLIENT MODAL ����Ң��a���Ң���a������Ң��a���Ң���a������Ң��a���Ң���a�� */
 const SendModal = ({ project, roi, onClose }) => {
   const [copied, setCopied] = useState(false);
   const gross   = roi?.grossYield?.apt1 || roi?.grossYield?.th || roi?.grossYield?.villa || 0;
   const appr5   = roi?.appreciation5yr || 0;
   const projUrl = typeof window !== "undefined" ? window.location.href : "";
-  const subject = `${project?.name} ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â Investment Opportunity | DXB Analytics`;
-  const body = `Hi,\n\nI wanted to share an exciting investment opportunity with you:\n\nÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸Ãƒâ€šÃ‚ÂÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã‚Â¯Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚Â Project: ${project?.name}\nÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒâ€šÃ‚Â Community: ${project?.community} ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚· ${project?.district}\nÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸Ãƒâ€šÃ‚ÂÃƒâ€šÃ‚Â  Type: ${project?.type}${project?.beds ? " | "+project.beds+" BR" : ""}\nÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢Ãƒâ€šÃ‚Â° Starting From: ${fmtM(project?.price)}\nÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ Handover: ${project?.handover || "ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â"}\nÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢Ãƒâ€šÃ‚Â³ Payment Plan: ${project?.payment || "ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â"}${gross ? "\nÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒâ€¹– Est. Gross Yield: "+gross+"%" : ""}${appr5 ? "\nÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒâ€¦Ã‚Â  5-Year Appreciation: +"+appr5+"%" : ""}${roi?.goldenVisa ? "\nÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ Golden Visa Eligible" : ""}\n\nView full details & ROI analysis:\n${projUrl}\n\nPowered by DXB Analytics ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â Dubai's Real Estate Intelligence Platform.\n\nBest regards`;
+  const subject = `${project?.name} ����Ң���a��Ң��a��� Investment Opportunity | DXB Analytics`;
+  const body = `Hi,\n\nI wanted to share an exciting investment opportunity with you:\n\n�����&����a��Ң���~��������a����a�� Project: ${project?.name}\n�����&��Ң��a��&�S��a�� Community: ${project?.community} �����a��a�� ${project?.district}\n�����&����a����a�� Type: ${project?.type}${project?.beds ? " | "+project.beds+" BR" : ""}\n�����&��Ң��a���~���a�� Starting From: ${fmtM(project?.price)}\n�����&��Ң��a��&�SҢ��a��� Handover: ${project?.handover || "����Ң���a��Ң��a���"}\n�����&��Ң��a���~���a�� Payment Plan: ${project?.payment || "����Ң���a��Ң��a���"}${gross ? "\n�����&��Ң��a��&�S�9 Est. Gross Yield: "+gross+"%" : ""}${appr5 ? "\n�����&��Ң��a��&�S�&�� 5-Year Appreciation: +"+appr5+"%" : ""}${roi?.goldenVisa ? "\n�����&����Ң��a��� Golden Visa Eligible" : ""}\n\nView full details & ROI analysis:\n${projUrl}\n\nPowered by DXB Analytics ����Ң���a��Ң��a��� Dubai's Real Estate Intelligence Platform.\n\nBest regards`;
   const mailtoLink = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
   const handleCopy = () => { navigator.clipboard.writeText(body).then(() => { setCopied(true); setTimeout(()=>setCopied(false),2000); }); };
   return (
@@ -124,9 +124,9 @@ const SendModal = ({ project, roi, onClose }) => {
         <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:20 }}>
           <div>
             <div style={{ fontFamily:"'Fraunces',serif", fontSize:20, fontWeight:800, color:T.white, marginBottom:3 }}>Send to Client</div>
-            <div style={{ fontSize:12, color:T.textMuted }}>{project?.name} ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚· {project?.community}</div>
+            <div style={{ fontSize:12, color:T.textMuted }}>{project?.name} �����a��a�� {project?.community}</div>
           </div>
-          <button onClick={onClose} style={{ width:32, height:32, borderRadius:8, border:`1px solid #1E293B`, background:"#111827", color:T.textMuted, cursor:"pointer", fontSize:18, display:"flex", alignItems:"center", justifyContent:"center" }}>ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â</button>
+          <button onClick={onClose} style={{ width:32, height:32, borderRadius:8, border:`1px solid #1E293B`, background:"#111827", color:T.textMuted, cursor:"pointer", fontSize:18, display:"flex", alignItems:"center", justifyContent:"center" }}>��� �"Ң��a�����</button>
         </div>
         <div style={{ background:T.bg, borderRadius:10, border:`1px solid #1E293B`, padding:16, marginBottom:20, maxHeight:220, overflowY:"auto" }}>
           <div style={{ fontSize:10, fontWeight:700, color:T.gold, letterSpacing:1, textTransform:"uppercase", marginBottom:8 }}>Email Preview</div>
@@ -139,7 +139,7 @@ const SendModal = ({ project, roi, onClose }) => {
             Open in Email Client
           </a>
           <button onClick={handleCopy} style={{ display:"flex", alignItems:"center", justifyContent:"center", gap:8, padding:"11px", borderRadius:10, background:"transparent", border:"2px solid #D4A843", color:"#D4A843", fontWeight:600, fontSize:13, cursor:"pointer", fontFamily:"'Outfit',sans-serif", outline:"none", boxShadow:"none", lineHeight:1 }}>
-            {copied ? "ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œ Copied!" : "Copy Email Text"}
+            {copied ? "�����&����Ң��a��&�S Copied!" : "Copy Email Text"}
           </button>
         </div>
       </div>
@@ -147,7 +147,7 @@ const SendModal = ({ project, roi, onClose }) => {
   );
 };
 
-/* ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ OVERVIEW TAB ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ */
+/* ����Ң��a���Ң���a������Ң��a���Ң���a������Ң��a���Ң���a�� OVERVIEW TAB ����Ң��a���Ң���a������Ң��a���Ң���a������Ң��a���Ң���a�� */
 const OverviewTab = ({ project, ci, roi, gross, net, appr5 }) => (
   <div style={{ animation:"fadeUp 0.3s ease-out both" }}>
     <div className="pd-details-grid" style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16, marginBottom:16 }}>
@@ -155,12 +155,12 @@ const OverviewTab = ({ project, ci, roi, gross, net, appr5 }) => (
         <SecTitle>Project Details</SecTitle>
         {[
           { label:"From Price",   value:project.price ? fmtM(project.price) : "TBD", color:T.gold },
-          { label:"Price / sqft", value:project.ppsf ? `AED ${project.ppsf.toLocaleString()}` : "ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â" },
-          { label:"Size Range",   value:project.sizeFrom ? `${project.sizeFrom.toLocaleString()} ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œ ${(project.sizeTo||"").toLocaleString()} sqft` : "ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â" },
-          { label:"Bedrooms",     value:project.beds ? project.beds+" BR" : "ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â" },
-          { label:"Type",         value:project.type || "ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â" },
-          { label:"Payment Plan", value:project.payment || "ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â", color:T.teal },
-          { label:"Tier",         value:project.tier || "ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â" },
+          { label:"Price / sqft", value:project.ppsf ? `AED ${project.ppsf.toLocaleString()}` : "����Ң���a��Ң��a���" },
+          { label:"Size Range",   value:project.sizeFrom ? `${project.sizeFrom.toLocaleString()} ����Ң���a��Ң��a��&�S ${(project.sizeTo||"").toLocaleString()} sqft` : "����Ң���a��Ң��a���" },
+          { label:"Bedrooms",     value:project.beds ? project.beds+" BR" : "����Ң���a��Ң��a���" },
+          { label:"Type",         value:project.type || "����Ң���a��Ң��a���" },
+          { label:"Payment Plan", value:project.payment || "����Ң���a��Ң��a���", color:T.teal },
+          { label:"Tier",         value:project.tier || "����Ң���a��Ң��a���" },
           { label:"Developer",    value:project.developerActual || project.developer || "Emaar Properties" },
         ].map((r,i) => (
           <div className="pd-row" key={i}>
@@ -172,14 +172,14 @@ const OverviewTab = ({ project, ci, roi, gross, net, appr5 }) => (
       <div className="pd-card" style={{ marginBottom:0 }}>
         <SecTitle>Investment Profile</SecTitle>
         {[
-          { label:"Est. Gross Yield",   value:gross ? `${gross}%` : "ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â",                                  color:T.green },
-          { label:"Net Yield",          value:net   ? `${net}%` : "ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â",                                    color:T.teal },
-          { label:"5-yr Appreciation",  value:appr5 ? `+${appr5}%` : "ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â",                                 color:T.green },
-          { label:"Annual YoY",         value:roi?.appreciationYoY ? `+${roi.appreciationYoY}%` : "ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â",    color:T.green },
-          { label:"Golden Visa",        value:price >= 2000000 ? "Eligible ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œ" : "Not Eligible (< AED 2M)",  color:price >= 2000000 ? T.green : T.red },
-          { label:"Risk Level",         value:roi?.riskLevel || "ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â",                                       color:roi?.riskLevel==="Low" ? T.green : roi?.riskLevel==="High" ? T.red : T.gold },
-          { label:"Occupancy",          value:roi?.occupancy ? roi.occupancy+"%" : "ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â" },
-          { label:"Est. Annual Rent",   value:roi?.estRent?.apt1 ? fmtNum(roi.estRent.apt1) : "ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â",        color:T.teal },
+          { label:"Est. Gross Yield",   value:gross ? `${gross}%` : "����Ң���a��Ң��a���",                                  color:T.green },
+          { label:"Net Yield",          value:net   ? `${net}%` : "����Ң���a��Ң��a���",                                    color:T.teal },
+          { label:"5-yr Appreciation",  value:appr5 ? `+${appr5}%` : "����Ң���a��Ң��a���",                                 color:T.green },
+          { label:"Annual YoY",         value:roi?.appreciationYoY ? `+${roi.appreciationYoY}%` : "����Ң���a��Ң��a���",    color:T.green },
+          { label:"Golden Visa",        value:price >= 2000000 ? "Eligible �����&����Ң��a��&�S" : "Not Eligible (< AED 2M)",  color:price >= 2000000 ? T.green : T.red },
+          { label:"Risk Level",         value:roi?.riskLevel || "����Ң���a��Ң��a���",                                       color:roi?.riskLevel==="Low" ? T.green : roi?.riskLevel==="High" ? T.red : T.gold },
+          { label:"Occupancy",          value:roi?.occupancy ? roi.occupancy+"%" : "����Ң���a��Ң��a���" },
+          { label:"Est. Annual Rent",   value:roi?.estRent?.apt1 ? fmtNum(roi.estRent.apt1) : "����Ң���a��Ң��a���",        color:T.teal },
         ].map((r,i) => (
           <div className="pd-row" key={i}>
             <span className="pd-row-label">{r.label}</span>
@@ -210,7 +210,7 @@ const OverviewTab = ({ project, ci, roi, gross, net, appr5 }) => (
   </div>
 );
 
-/* ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ PRICING TAB ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ */
+/* ����Ң��a���Ң���a������Ң��a���Ң���a������Ң��a���Ң���a�� PRICING TAB ����Ң��a���Ң���a������Ң��a���Ң���a������Ң��a���Ң���a�� */
 const PricingTab = ({ project }) => {
   const unitEntries = getUnitEntries(project.units);
   const breakdown   = project.unitBreakdown || [];
@@ -226,8 +226,8 @@ const PricingTab = ({ project }) => {
         </div>
         <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:10 }}>
           {[
-            { label:"HANDOVER",     value:project.handover||"ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â" },
-            { label:"PAYMENT PLAN", value:project.payment||"ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â",  color:T.teal },
+            { label:"HANDOVER",     value:project.handover||"����Ң���a��Ң��a���" },
+            { label:"PAYMENT PLAN", value:project.payment||"����Ң���a��Ң��a���",  color:T.teal },
             { label:"CONSTRUCTION", value:(project.construction||0)+"%", color:constructionColor(project.construction||0) },
           ].map((s,i) => (
             <div key={i} style={{ background:"#111827", borderRadius:10, padding:"14px 12px", textAlign:"center" }}>
@@ -248,9 +248,9 @@ const PricingTab = ({ project }) => {
             return (
               <div key={i} className="pd-unit-row" style={{ background:i%2===0?"transparent":"rgba(14,29,53,0.4)" }}>
                 <span style={{ fontWeight:700, color:T.white }}>{isBreakdown ? u.type : u.type}</span>
-                <span style={{ color:T.textSecondary }}>{isBreakdown && u.sizeFrom ? `${u.sizeFrom.toLocaleString()} ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œ ${u.sizeTo?.toLocaleString()}` : "ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â"}</span>
-                <span style={{ fontWeight:800, color:T.gold, fontFamily:"'Fraunces',serif" }}>{isBreakdown && u.price ? fmtM(u.price) : project.price ? fmtM(project.price) : "ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â"}</span>
-                <span style={{ color:T.textMuted }}>{project.ppsf ? `AED ${project.ppsf.toLocaleString()}` : "ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â"}</span>
+                <span style={{ color:T.textSecondary }}>{isBreakdown && u.sizeFrom ? `${u.sizeFrom.toLocaleString()} ����Ң���a��Ң��a��&�S ${u.sizeTo?.toLocaleString()}` : "����Ң���a��Ң��a���"}</span>
+                <span style={{ fontWeight:800, color:T.gold, fontFamily:"'Fraunces',serif" }}>{isBreakdown && u.price ? fmtM(u.price) : project.price ? fmtM(project.price) : "����Ң���a��Ң��a���"}</span>
+                <span style={{ color:T.textMuted }}>{project.ppsf ? `AED ${project.ppsf.toLocaleString()}` : "����Ң���a��Ң��a���"}</span>
               </div>
             );
           })}
@@ -274,7 +274,7 @@ const PricingTab = ({ project }) => {
   );
 };
 
-/* ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ LOCATION TAB ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ */
+/* ����Ң��a���Ң���a������Ң��a���Ң���a������Ң��a���Ң���a�� LOCATION TAB ����Ң��a���Ң���a������Ң��a���Ң���a������Ң��a���Ң���a�� */
 const LocationTab = ({ project, ci, isPro, onUpgrade }) => (
   <div style={{ animation:"fadeUp 0.3s ease-out both" }}>
     <ProGate isPro={isPro} onUpgrade={onUpgrade}>
@@ -325,7 +325,7 @@ const LocationTab = ({ project, ci, isPro, onUpgrade }) => (
   </div>
 );
 
-/* ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ ROI TAB ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ */
+/* ����Ң��a���Ң���a������Ң��a���Ң���a������Ң��a���Ң���a�� ROI TAB ����Ң��a���Ң���a������Ң��a���Ң���a������Ң��a���Ң���a�� */
 const ROITab = ({ project, roi, gross, net, appr5, price, isPro, onUpgrade }) => {
   const annualRent = roi?.estRent?.apt1 || roi?.estRent?.th || roi?.estRent?.villa || 0;
   const projValue  = price > 0 ? price*(1+appr5/100) : 0;
@@ -362,14 +362,14 @@ const ROITab = ({ project, roi, gross, net, appr5, price, isPro, onUpgrade }) =>
                 </div>}
                 <div style={{ background:"#111827", borderRadius:10, padding:"14px 12px", textAlign:"center" }}>
                   <div style={{ fontSize:9, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.5, marginBottom:6, fontWeight:700 }}>Golden Visa</div>
-                  <div style={{ fontFamily:"'Fraunces',serif", fontSize:15, fontWeight:900, color:price>=2000000?T.green:"#EF4444" }}>{price>=2000000?"ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œ Eligible":"Not Eligible"}</div>
+                  <div style={{ fontFamily:"'Fraunces',serif", fontSize:15, fontWeight:900, color:price>=2000000?T.green:"#EF4444" }}>{price>=2000000?"�����&����Ң��a��&�S Eligible":"Not Eligible"}</div>
                   <div style={{ fontSize:10, color:T.textMuted, marginTop:4 }}>{price>=2000000?"Min. AED 2M threshold met":"Below AED 2M threshold"}</div>
                 </div>
               </div>
               {(roi.riskLevel||roi.occupancy) && (
                 <div style={{ marginTop:12, fontSize:12, color:T.textMuted }}>
                   {roi.riskLevel && <>Risk: <span style={{ color:roi.riskLevel==="Low"?T.green:roi.riskLevel==="High"?T.red:T.gold, fontWeight:600 }}>{roi.riskLevel}</span></>}
-                  {roi.occupancy && <> ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚· Occupancy: <span style={{ color:T.white, fontWeight:600 }}>{roi.occupancy}%</span></>}
+                  {roi.occupancy && <> �����a��a�� Occupancy: <span style={{ color:T.white, fontWeight:600 }}>{roi.occupancy}%</span></>}
                 </div>
               )}
             </div>
@@ -388,9 +388,9 @@ const ROITab = ({ project, roi, gross, net, appr5, price, isPro, onUpgrade }) =>
   );
 };
 
-/* ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚Â
+/* ����Ң��a�����a������Ң��a�����a������Ң��a�����a������Ң��a�����a������Ң��a�����a������Ң��a�����a������Ң��a�����a������Ң��a�����a������Ң��a�����a������Ң��a�����a������Ң��a�����a������Ң��a�����a������Ң��a�����a������Ң��a�����a������Ң��a�����a������Ң��a�����a������Ң��a�����a������Ң��a�����a������Ң��a�����a������Ң��a�����a������Ң��a�����a������Ң��a�����a������Ң��a�����a������Ң��a�����a������Ң��a�����a������Ң��a�����a������Ң��a�����a������Ң��a�����a������Ң��a�����a������Ң��a�����a������Ң��a�����a������Ң��a�����a������Ң��a�����a������Ң��a�����a������Ң��a�����a������Ң��a�����a������Ң��a�����a������Ң��a�����a������Ң��a�����a������Ң��a�����a������Ң��a�����a������Ң��a�����a������Ң��a�����a������Ң��a�����a������Ң��a�����a������Ң��a�����a������Ң��a�����a������Ң��a�����a������Ң��a�����a������Ң��a�����a������Ң��a�����a������Ң��a�����a������Ң��a�����a������Ң��a�����a������Ң��a�����a��
    MAIN COMPONENT
-ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚Â */
+����Ң��a�����a������Ң��a�����a������Ң��a�����a������Ң��a�����a������Ң��a�����a������Ң��a�����a������Ң��a�����a������Ң��a�����a������Ң��a�����a������Ң��a�����a������Ң��a�����a������Ң��a�����a������Ң��a�����a������Ң��a�����a������Ң��a�����a������Ң��a�����a������Ң��a�����a������Ң��a�����a������Ң��a�����a������Ң��a�����a������Ң��a�����a������Ң��a�����a������Ң��a�����a������Ң��a�����a������Ң��a�����a������Ң��a�����a������Ң��a�����a������Ң��a�����a������Ң��a�����a������Ң��a�����a������Ң��a�����a������Ң��a�����a������Ң��a�����a������Ң��a�����a������Ң��a�����a������Ң��a�����a������Ң��a�����a������Ң��a�����a������Ң��a�����a������Ң��a�����a������Ң��a�����a������Ң��a�����a������Ң��a�����a������Ң��a�����a������Ң��a�����a������Ң��a�����a������Ң��a�����a������Ң��a�����a������Ң��a�����a������Ң��a�����a������Ң��a�����a������Ң��a�����a������Ң��a�����a������Ң��a�����a������Ң��a�����a�� */
 export default function ProjectDetail() {
   const { id }       = useParams();
   const navigate     = useNavigate();
@@ -431,7 +431,7 @@ export default function ProjectDetail() {
     return () => unsub();
   }, []);
 
-  useEffect(() => { if (project) document.title = `${project.name} ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â DXB Analytics`; }, [project]);
+  useEffect(() => { if (project) document.title = `${project.name} ����Ң���a��Ң��a��� DXB Analytics`; }, [project]);
 
   const ci    = project ? (communityIntel[project.community]||null) : null;
   const roi   = project ? (communityROI[project.community]||null)   : null;
@@ -450,7 +450,7 @@ export default function ProjectDetail() {
       <style>{css}</style>
       <h1 style={{ fontFamily:"'Fraunces',serif", fontSize:28, color:T.white, marginBottom:8 }}>Project Not Found</h1>
       <p style={{ color:T.textMuted, marginBottom:24 }}>ID #{id} doesn't match any project.</p>
-      <Link to="/" style={{ display:"inline-flex", alignItems:"center", padding:"12px 28px", background:"#D4A843", color:"#04090F", border:"2px solid #D4A843", borderRadius:10, fontWeight:700, textDecoration:"none", fontSize:14 }}>ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â Ãƒâ€šÃ‚Â Back to Dashboard</Link>
+      <Link to="/" style={{ display:"inline-flex", alignItems:"center", padding:"12px 28px", background:"#D4A843", color:"#04090F", border:"2px solid #D4A843", borderRadius:10, fontWeight:700, textDecoration:"none", fontSize:14 }}>����Ң��a�����a�� Back to Dashboard</Link>
     </div>
   );
   if (!project) return (
@@ -479,9 +479,9 @@ export default function ProjectDetail() {
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="15 18 9 12 15 6"/></svg>
           Back to Projects
         </Link>
-        <span style={{ color:"#1E293B" }}>ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚·</span>
+        <span style={{ color:"#1E293B" }}>�����a��a��</span>
         <span style={{ color:T.textMuted }}>{project.community}</span>
-        <span style={{ color:"#1E293B" }}>ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚·</span>
+        <span style={{ color:"#1E293B" }}>�����a��a��</span>
         <span style={{ color:T.textMuted }}>{project.type}</span>
       </nav>
 
@@ -513,7 +513,7 @@ export default function ProjectDetail() {
             </div>
             <h1 style={{ fontFamily:"'Fraunces',serif", fontSize:38, fontWeight:900, color:T.white, lineHeight:1.1, marginBottom:6 }}>{project.name}</h1>
             {ci?.tagline && <p style={{ color:T.teal, fontSize:13, fontStyle:"italic", marginBottom:8 }}>{ci.tagline}</p>}
-            <p style={{ color:T.textMuted, fontSize:14 }}>{project.community} ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚· {project.type}{project.beds?` ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚· ${project.beds} BR`:""}</p>
+            <p style={{ color:T.textMuted, fontSize:14 }}>{project.community} �����a��a�� {project.type}{project.beds?` �����a��a�� ${project.beds} BR`:""}</p>
           </div>
 
           {/* CONSTRUCTION CARD */}
@@ -529,45 +529,45 @@ export default function ProjectDetail() {
             <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12 }}>
               <div>
                 <div style={{ fontSize:9, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.5, marginBottom:4 }}>Handover</div>
-                <div style={{ fontSize:15, fontWeight:700, color:T.white }}>{project.handover||"ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â"}</div>
+                <div style={{ fontSize:15, fontWeight:700, color:T.white }}>{project.handover||"����Ң���a��Ң��a���"}</div>
                 {cd && <div style={{ fontSize:10, fontWeight:700, color:cd.color, marginTop:2 }}>{cd.label}</div>}
               </div>
               <div>
                 <div style={{ fontSize:9, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.5, marginBottom:4 }}>Payment</div>
-                <div style={{ fontSize:15, fontWeight:700, color:T.teal }}>{project.payment||"ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â"}</div>
+                <div style={{ fontSize:15, fontWeight:700, color:T.teal }}>{project.payment||"����Ң���a��Ң��a���"}</div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* ACTION BAR ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â all inline styles, no className dependency */}
+        {/* ACTION BAR ����Ң���a��Ң��a��� all inline styles, no className dependency */}
         <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:22, padding:"14px 18px", background:"#0A1628", border:"1px solid #1E293B", borderRadius:12, flexWrap:"wrap" }}>
           <span style={{ fontSize:12, color:"#94A3B8", marginRight:4 }}>Share:</span>
-          {/* Send to Client ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â solid gold fill */}
+          {/* Send to Client ����Ң���a��Ң��a��� solid gold fill */}
           <button onClick={()=>setShowSendModal(true)} style={{ display:"inline-flex", alignItems:"center", gap:7, padding:"10px 20px", background:"#D4A843", color:"#04090F", border:"2px solid #D4A843", borderRadius:9, fontSize:13, fontWeight:700, cursor:"pointer", whiteSpace:"nowrap", fontFamily:"'Outfit',sans-serif", outline:"none", boxShadow:"none", lineHeight:1 }}>
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
             Send to Client
           </button>
-          {/* Copy Link ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â solid gold fill */}
+          {/* Copy Link ����Ң���a��Ң��a��� solid gold fill */}
           <button onClick={handleCopyLink} style={{ display:"inline-flex", alignItems:"center", gap:7, padding:"10px 18px", background:"#D4A843", color:"#04090F", border:"2px solid #D4A843", borderRadius:9, fontSize:13, fontWeight:700, cursor:"pointer", whiteSpace:"nowrap", fontFamily:"'Outfit',sans-serif", outline:"none", boxShadow:"none", lineHeight:1 }}>
             {copiedLink
               ? <><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg> Copied!</>
               : <><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copy Link</>
             }
           </button>
-          {/* WhatsApp ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â solid gold fill */}
-          <button onClick={()=>{ const msg=encodeURIComponent(`${project.name} ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ${fmtM(price)} | ${project.handover}\n${window.location.href}`); window.open(`https://wa.me/?text=${msg}`,"_blank"); }} style={{ display:"inline-flex", alignItems:"center", gap:7, padding:"10px 18px", background:"#D4A843", color:"#04090F", border:"2px solid #D4A843", borderRadius:9, fontSize:13, fontWeight:700, cursor:"pointer", whiteSpace:"nowrap", fontFamily:"'Outfit',sans-serif", outline:"none", boxShadow:"none", lineHeight:1 }}>
+          {/* WhatsApp ����Ң���a��Ң��a��� solid gold fill */}
+          <button onClick={()=>{ const msg=encodeURIComponent(`${project.name} ����Ң���a��Ң��a��� ${fmtM(price)} | ${project.handover}\n${window.location.href}`); window.open(`https://wa.me/?text=${msg}`,"_blank"); }} style={{ display:"inline-flex", alignItems:"center", gap:7, padding:"10px 18px", background:"#D4A843", color:"#04090F", border:"2px solid #D4A843", borderRadius:9, fontSize:13, fontWeight:700, cursor:"pointer", whiteSpace:"nowrap", fontFamily:"'Outfit',sans-serif", outline:"none", boxShadow:"none", lineHeight:1 }}>
             WhatsApp
           </button>
           <div style={{ flex:1 }} />
           {project.emaarUrl && (
             <a href={project.emaarUrl} target="_blank" rel="noopener noreferrer" style={{ display:"inline-flex", alignItems:"center", gap:7, padding:"10px 18px", background:"#D4A843", color:"#04090F", border:"2px solid #D4A843", borderRadius:9, fontSize:13, fontWeight:700, cursor:"pointer", whiteSpace:"nowrap", fontFamily:"'Outfit',sans-serif", textDecoration:"none", lineHeight:1 }}>
-              View on {getLinkDomain(project.emaarUrl)} ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â
+              View on {getLinkDomain(project.emaarUrl)} ����Ң��a���Ң��a�����
             </a>
           )}
         </div>
 
-        {/* TABS ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â full gold box on active */}
+        {/* TABS ����Ң���a��Ң��a��� full gold box on active */}
         <div style={{ borderBottom:"1px solid #1E293B", marginBottom:22, display:"flex", gap:6, overflowX:"auto" }}>
           {TABS.map(t => (
             <button key={t.id} onClick={()=>setActiveTab(t.id)} style={{ padding:"8px 20px", background:activeTab===t.id?"#D4A843":"transparent", border:activeTab===t.id?"2px solid #D4A843":"2px solid #1E293B", borderRadius:activeTab===t.id?8:8, fontSize:13, fontWeight:activeTab===t.id?700:600, cursor:"pointer", color:activeTab===t.id?"#04090F":"#64748B", fontFamily:"'Outfit',sans-serif", whiteSpace:"nowrap", outline:"none", boxShadow:"none", lineHeight:1, marginBottom:8 }}>
@@ -592,12 +592,12 @@ export default function ProjectDetail() {
                 onMouseEnter={e=>e.currentTarget.style.borderColor=T.gold+"44"}
                 onMouseLeave={e=>e.currentTarget.style.borderColor="#1E293B"}>
                 <span style={{ fontSize:13, color:T.white, fontWeight:600, marginBottom:4 }}>{p.name}</span>
-                <span style={{ fontSize:13, color:T.gold, fontWeight:700 }}>{p.price?fmtM(p.price):"ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â"}</span>
-                <span style={{ fontSize:11, color:T.textMuted, marginTop:2 }}>{p.handover} ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚· {p.status}</span>
+                <span style={{ fontSize:13, color:T.gold, fontWeight:700 }}>{p.price?fmtM(p.price):"����Ң���a��Ң��a���"}</span>
+                <span style={{ fontSize:11, color:T.textMuted, marginTop:2 }}>{p.handover} �����a��a�� {p.status}</span>
               </Link>
             ))}
           </div>
-          <Link to="/" style={{ display:"block", textAlign:"center", marginTop:14, fontSize:12, color:T.gold, textDecoration:"none", fontWeight:600 }}>View All Projects ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢</Link>
+          <Link to="/" style={{ display:"block", textAlign:"center", marginTop:14, fontSize:12, color:T.gold, textDecoration:"none", fontWeight:600 }}>View All Projects ����Ң��a���Ң��a���~�</Link>
         </div>
 
         {/* DISCLAIMER */}
