@@ -1,3 +1,4 @@
+function DLDSalesPanel({selectedProject,T}){const community=selectedProject.masterProject||selectedProject.community||"";const projName=(selectedProject.name||selectedProject.project||"").toUpperCase();const projPPSF=selectedProject.ppsf||0;const [dldTx,setDldTx]=React.useState([]);const [txLoading,setTxLoading]=React.useState(true);const [txMode,setTxMode]=React.useState("community");const [filterBeds,setFilterBeds]=React.useState("All");React.useEffect(()=>{setDldTx([]);setTxLoading(true);if(!community){setTxLoading(false);return;}import("firebase/firestore").then(({collection,query,where,orderBy,limit,getDocs,getFirestore})=>{const fdb=getFirestore();const txq=query(collection(fdb,"transactions"),where("masterProject","==",community),where("transGroup","==","Sales"),orderBy("date","desc"),limit(50));getDocs(txq).then(snap=>{const all=snap.docs.map(d=>d.data());const bMatch=all.filter(t=>(t.projectName||"").toUpperCase().includes(projName.substring(0,8)));const isExact=bMatch.length>=3;setDldTx(isExact?bMatch:all);setTxMode(isExact?"building":"community");setTxLoading(false);}).catch(()=>setTxLoading(false));});},[community]);const filtered=filterBeds==="All"?dldTx:dldTx.filter(t=>t.rooms===filterBeds);const avgPpsf=filtered.length>0?Math.round(filtered.reduce((s,t)=>s+(t.ppsf||0)/10.764,0)/filtered.length):0;const avgPrice=filtered.length>0?filtered.reduce((s,t)=>s+(t.price||0),0)/filtered.length:0;const ppsfDiff=projPPSF>0&&avgPpsf>0?Math.round(((projPPSF-avgPpsf)/avgPpsf)*100):null;const beds=["All",...new Set(dldTx.map(t=>t.rooms).filter(Boolean))].sort();return(<div style={{paddingBottom:20}}><div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10,marginBottom:16}}>{[{label:"Transactions",value:String(filtered.length)+(txMode==="building"?" building":" area"),color:T.gold},{label:"Avg Price",value:avgPrice>0?"AED "+(avgPrice/1e6).toFixed(2)+"M":"N/A",color:"#63B3ED"},{label:"Avg PPSF",value:avgPpsf>0?"AED "+avgPpsf.toLocaleString():"N/A",color:T.gold},{label:"vs Project",value:ppsfDiff!==null?(ppsfDiff>0?"+"+String(ppsfDiff)+"%":String(ppsfDiff)+"%"):"N/A",color:ppsfDiff===null?T.textMuted:ppsfDiff>0?"#FC8181":"#68D391"}].map((k,i)=>(<div key={i} style={{background:"rgba(255,255,255,0.03)",border:"1px solid "+T.border,borderRadius:10,padding:"12px 14px"}}><div style={{fontSize:9,color:T.textMuted,fontWeight:700,textTransform:"uppercase",letterSpacing:0.8,marginBottom:4}}>{k.label}</div><div style={{fontSize:15,fontWeight:800,color:k.color,fontFamily:"Fraunces,serif"}}>{k.value}</div></div>))}</div>{ppsfDiff!==null&&<div style={{marginBottom:14,padding:"10px 14px",borderRadius:8,background:ppsfDiff>10?"rgba(252,129,129,0.08)":ppsfDiff<-10?"rgba(104,211,145,0.08)":"rgba(212,168,67,0.06)",border:"1px solid "+(ppsfDiff>10?"rgba(252,129,129,0.25)":ppsfDiff<-10?"rgba(104,211,145,0.25)":"rgba(212,168,67,0.2)")}}><span style={{fontSize:11,fontWeight:700,color:ppsfDiff>10?"#FC8181":ppsfDiff<-10?"#68D391":T.gold}}>{ppsfDiff>10?"Priced "+String(ppsfDiff)+"% above comparable sales":ppsfDiff<-10?"Priced "+String(Math.abs(ppsfDiff))+"% below comparable sales":"Priced in line with market"}</span></div>}<div style={{display:"flex",gap:6,marginBottom:12,alignItems:"center",flexWrap:"wrap"}}><span style={{fontSize:10,color:T.textMuted,fontWeight:700}}>Beds:</span>{beds.map(b=><button key={b} type="button" onClick={()=>setFilterBeds(b)} style={{padding:"3px 10px",borderRadius:16,fontSize:10,cursor:"pointer",background:filterBeds===b?"rgba(212,168,67,0.15)":"rgba(255,255,255,0.04)",border:"1px solid "+(filterBeds===b?T.gold:T.border),color:filterBeds===b?T.gold:T.textMuted,fontFamily:"Outfit,sans-serif"}}>{b}</button>)}<span style={{marginLeft:"auto",fontSize:10,color:txMode==="building"?"#68D391":T.gold}}>{txMode==="building"?"Building data":"Community data"}</span></div>{txLoading&&<div style={{padding:40,textAlign:"center",color:T.textMuted,fontSize:12}}>Loading DLD transactions...</div>}{!txLoading&&filtered.length===0&&<div style={{padding:40,textAlign:"center",color:T.textMuted,fontSize:12}}>No transactions found</div>}{!txLoading&&filtered.length>0&&<div style={{border:"1px solid "+T.border,borderRadius:10,overflow:"hidden"}}><div style={{display:"grid",gridTemplateColumns:"1.2fr 1fr 1fr 0.8fr 0.8fr 2fr",padding:"8px 16px",background:"rgba(255,255,255,0.03)",borderBottom:"1px solid "+T.border}}>{["Date","Price","PPSF/sqft","Beds","Type","Building"].map(h=><div key={h} style={{fontSize:9,fontWeight:700,color:T.textMuted,textTransform:"uppercase",letterSpacing:0.8}}>{h}</div>)}</div>{filtered.slice(0,20).map((tx,i)=>{const ppsf=Math.round((tx.ppsf||0)/10.764);const ppsfColor=projPPSF>0?(ppsf>projPPSF*1.1?"#FC8181":ppsf<projPPSF*0.9?"#68D391":T.textSecondary):T.textSecondary;return(<div key={i} style={{display:"grid",gridTemplateColumns:"1.2fr 1fr 1fr 0.8fr 0.8fr 2fr",padding:"9px 16px",borderBottom:i<filtered.slice(0,20).length-1?"1px solid rgba(255,255,255,0.03)":"none"}} onMouseEnter={e=>e.currentTarget.style.background="rgba(255,255,255,0.02)"} onMouseLeave={e=>e.currentTarget.style.background="transparent"}><div style={{fontSize:11,color:T.textSecondary}}>{tx.date?tx.date.substring(0,10):""}</div><div style={{fontSize:12,fontWeight:700,color:T.gold}}>{tx.price?"AED "+(tx.price/1e6).toFixed(2)+"M":""}</div><div style={{fontSize:12,fontWeight:600,color:ppsfColor}}>{ppsf>0?"AED "+ppsf.toLocaleString():""}</div><div style={{fontSize:11,color:T.textSecondary}}>{tx.rooms||""}</div><div style={{fontSize:11,color:T.textSecondary}}>{tx.propertySubType||""}</div><div style={{fontSize:10,color:T.textMuted,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{tx.buildingName||tx.projectName||""}</div></div>);})}</div>}<div style={{marginTop:12,fontSize:10,color:T.textMuted,display:"flex",justifyContent:"space-between"}}><span>Source: Dubai Land Department</span><span>Green PPSF = below project price, Red = above</span></div></div>);}
 /* eslint-disable */
 /* PROJECTS TAB â€” Master catalog of all Dubai property projects
    Includes detail modal (rendered via React Portal for safety)
@@ -1600,7 +1601,7 @@ function ProjectsTab({
                   {key:"rental",label:"Rental & Yield"},
                   {key:"developer",label:"Developer & Compliance"},
                   {key:"community",label:"Community Intel"},
-                  {key:"report",label:"Full Report"},{key:"dldSales",label:"DLD Sales"},{key:"dldSales",label:"DLD Sales"},
+                  {key:"report",label:"Full Report"},{key:"dldSales",label:"DLD Sales"},
                 ].map(t => (
                   <button key={t.key} type="button" onClick={() => setProjDetailTab(t.key)}
                     style={{ padding:"12px 16px", background:"none", border:"none", borderBottom:projDetailTab===t.key?`2px solid ${T.gold}`:"2px solid transparent", color:projDetailTab===t.key?T.gold:T.textMuted, fontSize:11, fontWeight:projDetailTab===t.key?700:400, cursor:"pointer", fontFamily:"'Outfit',sans-serif", whiteSpace:"nowrap", letterSpacing:0.3 }}>
@@ -2243,28 +2244,6 @@ function ProjectsTab({
                   </div>
                 );
               })()}
-{projDetailTab==="dldSales"&&(()=>{
-const community=selectedProject.masterProject||selectedProject.community||"";
-const [dldTx,setDldTx]=React.useState([]);
-const [txLoading,setTxLoading]=React.useState(true);
-React.useEffect(()=>{setDldTx([]);setTxLoading(true);if(!community){setTxLoading(false);return;}
-import("firebase/firestore").then(({collection,query,where,orderBy,limit,getDocs,getFirestore})=>{
-const fdb=getFirestore();
-const txq=query(collection(fdb,"transactions"),where("masterProject","==",community),where("transGroup","==","Sales"),orderBy("date","desc"),limit(50));
-getDocs(txq).then(snap=>{const all=snap.docs.map(d=>d.data());const buildingMatch=all.filter(t=>(t.projectName||"").toUpperCase().includes(projectName.substring(0,10)));const isExact=buildingMatch.length>=3;setDldTx(isExact?buildingMatch:all);setTxMode(isExact?"building":"community");setTxLoading(false);}).catch(()=>setTxLoading(false));
-});},[community]);
-return(<div>
-<div style={{padding:"14px 20px",background:"rgba(212,168,67,0.05)",border:"1px solid rgba(212,168,67,0.15)",borderRadius:10,marginBottom:16}}>
-<div style={{fontSize:11,color:T.gold,fontWeight:700}}>COMPARABLE SALES · DLD</div>
-<div style={{fontSize:11,color:T.textMuted}}>{community}</div></div>
-{txLoading&&<div style={{padding:20,color:T.textMuted}}>Loading...</div>}
-{!txLoading&&dldTx.length===0&&<div style={{padding:20,color:T.textMuted}}>No transactions found for {community}</div>}
-{!txLoading&&dldTx.length>0&&(<div style={{border:"1px solid "+T.border,borderRadius:10,overflow:"hidden"}}>
-<div style={{display:"grid",gridTemplateColumns:"1.5fr 1fr 1fr 1fr 1fr",padding:"8px 14px",background:"rgba(255,255,255,0.03)",borderBottom:"1px solid "+T.border}}>
-{["Date","Price","PPSF","Beds","Type"].map(h=><div key={h} style={{fontSize:10,fontWeight:700,color:T.textMuted,textTransform:"uppercase"}}>{h}</div>)}</div>
-{dldTx.map((tx,i)=>(<div key={i} style={{display:"grid",gridTemplateColumns:"1.5fr 1fr 1fr 1fr 1fr",padding:"10px 14px",borderBottom:i<dldTx.length-1?"1px solid rgba(255,255,255,0.04)":"none"}}><div style={{fontSize:11,color:T.textSecondary}}>{tx.date?tx.date.substring(0,10):""}</div><div style={{fontSize:11,fontWeight:700,color:T.gold}}>{tx.price?"AED "+(tx.price/1e6).toFixed(2)+"M":""}</div><div style={{fontSize:11,color:T.textSecondary}}>{tx.ppsf?"AED "+Math.round(tx.ppsf/10.764).toLocaleString():""}</div><div style={{fontSize:11,color:T.textSecondary}}>{tx.rooms||""}</div><div style={{fontSize:11,color:T.textSecondary}}>{tx.propertySubType||""}</div></div>))}</div>)}
-</div>);
-})()}
 {projDetailTab==="dldSales"&&<DLDSalesPanel selectedProject={selectedProject} T={T}/>}
 {projDetailTab === "report" && (
                   <div>
@@ -2351,42 +2330,4 @@ return(<div>
   );
 }
 
-function DLDSalesPanel({selectedProject,T}){
-  const community=selectedProject.masterProject||selectedProject.community||"";
-  const projectName=(selectedProject.name||selectedProject.project||"").toUpperCase();
-  const [dldTx,setDldTx]=React.useState([]);
-  const [txLoading,setTxLoading]=React.useState(true);
-  const [txMode,setTxMode]=React.useState("community");
-  React.useEffect(()=>{
-    setDldTx([]);setTxLoading(true);
-    if(!community){setTxLoading(false);return;}
-    import("firebase/firestore").then(({collection,query,where,orderBy,limit,getDocs,getFirestore})=>{
-      const fdb=getFirestore();
-      const txq=query(collection(fdb,"transactions"),where("masterProject","==",community),where("transGroup","==","Sales"),orderBy("date","desc"),limit(10));
-      getDocs(txq).then(snap=>{setDldTx(snap.docs.map(d=>d.data()));setTxLoading(false);}).catch(()=>setTxLoading(false));
-    });
-  },[community]);
-  return(<div>
-    <div style={{padding:"14px 20px",background:"rgba(212,168,67,0.05)",border:"1px solid rgba(212,168,67,0.15)",borderRadius:10,marginBottom:16}}>
-      <div style={{fontSize:11,color:T.gold,fontWeight:700}}>COMPARABLE SALES · DLD REGISTERED</div>
-      <div style={{fontSize:11,color:T.textMuted,marginTop:3,display:"flex",alignItems:"center",gap:8}}><span>{community}</span><span style={{fontSize:9,padding:"2px 7px",borderRadius:8,background:txMode==="building"?"rgba(104,211,145,0.15)":"rgba(212,168,67,0.15)",color:txMode==="building"?"#68D391":T.gold,fontWeight:700}}>{txMode==="building"?"BUILDING MATCH":"COMMUNITY DATA"}</span></div>
-    </div>
-    {txLoading&&<div style={{padding:20,color:T.textMuted,fontSize:12}}>Loading DLD transactions...</div>}
-    {!txLoading&&dldTx.length===0&&<div style={{padding:20,color:T.textMuted,fontSize:12}}>No DLD transactions found for {community}</div>}
-    {!txLoading&&dldTx.length>0&&(<div style={{border:"1px solid "+T.border,borderRadius:10,overflow:"hidden"}}>
-      <div style={{display:"grid",gridTemplateColumns:"1.5fr 1fr 1fr 1fr 1fr",padding:"8px 14px",background:"rgba(255,255,255,0.03)",borderBottom:"1px solid "+T.border}}>
-        {["Date","Price","PPSF/sqft","Beds","Type"].map(h=><div key={h} style={{fontSize:10,fontWeight:700,color:T.textMuted,textTransform:"uppercase"}}>{h}</div>)}
-      </div>
-      {dldTx.map((tx,i)=>(
-        <div key={i} style={{display:"grid",gridTemplateColumns:"1.5fr 1fr 1fr 1fr 1fr",padding:"10px 14px",borderBottom:i<dldTx.length-1?"1px solid rgba(255,255,255,0.04)":"none"}}>
-          <div style={{fontSize:11,color:T.textSecondary}}>{tx.date?tx.date.substring(0,10):""}</div>
-          <div style={{fontSize:11,fontWeight:700,color:T.gold}}>{tx.price?"AED "+(tx.price/1e6).toFixed(2)+"M":""}</div>
-          <div style={{fontSize:11,color:T.textSecondary}}>{tx.ppsf?"AED "+Math.round(tx.ppsf/10.764).toLocaleString():""}</div>
-          <div style={{fontSize:11,color:T.textSecondary}}>{tx.rooms||""}</div>
-          <div style={{fontSize:11,color:T.textSecondary}}>{tx.propertySubType||""}</div>
-        </div>
-      ))}
-    </div>)}
-  </div>);
-}
 export default ProjectsTab;

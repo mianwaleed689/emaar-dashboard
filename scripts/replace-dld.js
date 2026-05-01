@@ -1,0 +1,13 @@
+const fs=require('fs');
+const q=String.fromCharCode(34);
+const comp=Buffer.from(fs.readFileSync('scripts/dld-comp.b64','utf8'),'base64').toString('utf8');
+let c=fs.readFileSync('src/tabs/ProjectsTab.jsx','utf8');
+const start=c.indexOf('{'+q+'projDetailTab'+q+' === '+q+'dldSales'+q+'}');
+console.log('start:',start);
+const end=c.indexOf('{'+q+'projDetailTab === '+q+'report'+q+' && (');
+console.log('end:',end);
+const newCode='{'+q+'projDetailTab==='+q+'dldSales'+q+'&&<DLDSalesPanel selectedProject={selectedProject} T={T}/>'+q+'}'+'\n'+comp+'\n';
+c=c.substring(0,start)+newCode+c.substring(end);
+fs.writeFileSync('src/tabs/ProjectsTab.jsx',c,'utf8');
+console.log('Done. DLDSalesPanel:',c.includes('DLDSalesPanel'));
+console.log('dldSales count:',(c.match(/dldSales/g)||[]).length);
