@@ -632,7 +632,7 @@ const GlobalContextFilter = ({
                   fontFamily: "'Outfit', sans-serif",
                   boxShadow: "inset 0 1px 0 rgba(255,255,255,0.04), 0 1px 2px rgba(0,0,0,0.1)",
                 }}>
-                  →œ�€� Golden Visa Eligible
+                  ★ Golden Visa Eligible
                 </span>
               )}
             </div>
@@ -4387,7 +4387,7 @@ export default function EmaarDashboardV2() {
         </div>
         <div className="header-badges" style={{ display: "flex", gap: 8, alignItems: "center" }}>
           <button type="button" onClick={() => setShowWatchlist(true)} style={{ background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 10, padding: "8px 12px", cursor: "pointer", color: watchlist.length > 0 ? T.gold : T.textSecondary, display: "flex", alignItems: "center", gap: 6, fontSize: 12, fontFamily: "'Outfit',sans-serif" }} title="My Watchlist">
-            →œ�€� {watchlist.length > 0 && <span style={{ fontWeight: 700 }}>{watchlist.length}</span>}
+            ★ {watchlist.length > 0 && <span style={{ fontWeight: 700 }}>{watchlist.length}</span>}
           </button>
           <button type="button" onClick={globalRefresh} disabled={isRefreshing} title="Refresh all data" style={{ background: isRefreshing ? T.surfaceAlt : "rgba(212,168,67,0.08)", border: "1px solid " + (isRefreshing ? T.border : "rgba(212,168,67,0.25)"), borderRadius: 10, padding: "8px 12px", cursor: isRefreshing ? "not-allowed" : "pointer", color: isRefreshing ? T.textMuted : T.gold, display: "flex", alignItems: "center", gap: 6, fontSize: 11, fontWeight: 600, fontFamily: "'Outfit',sans-serif" }}>
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" style={{ animation: isRefreshing ? "spin 1s linear infinite" : "none" }}><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
@@ -5960,9 +5960,9 @@ activeProjects={extraProjects?.length > 0 ? extraProjects : []}
             <div style={{ overflowY: "auto", padding: 20, flex: 1 }}>
               {watchlist.length === 0 ? (
                 <div style={{ textAlign: "center", padding: "48px 20px", color: T.textMuted }}>
-                  <div style={{ fontSize: 40, marginBottom: 12 }}>→œ�€�</div>
+                  <div style={{ fontSize: 40, marginBottom: 12 }}>★</div>
                   <div style={{ fontSize: 14, color: T.textSecondary, marginBottom: 8 }}>No projects saved yet</div>
-                  <div style={{ fontSize: 12 }}>Click the →œ�€� star on any project card to add it here.</div>
+                  <div style={{ fontSize: 12 }}>Click the ★ star on any project card to add it here.</div>
                 </div>
               ) : (
                 <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
@@ -6017,7 +6017,7 @@ activeProjects={extraProjects?.length > 0 ? extraProjects : []}
           {
             icon: "â­",
             title: "Build Your Watchlist",
-            body: "See the →œ�€� star button on every project card? Click it to save projects you're interested in. Your watchlist syncs across devices.",
+            body: "See the ★ star button on every project card? Click it to save projects you're interested in. Your watchlist syncs across devices.",
             cta: "Next �†’"
           },
           {
