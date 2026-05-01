@@ -30,6 +30,8 @@ cron.schedule("45 9 * * *", ()=>runScript("DLD Transactions","fetch-dld-transact
 cron.schedule("55 9 * * *", ()=>runScript("Aggregate DLD Volumes","aggregate-dld-volumes.js"), {timezone:"UTC"});
 // Daily 2:00 PM Dubai (10:00 AM UTC) - aggregate price history
 cron.schedule("0 10 * * *", ()=>runScript("Aggregate Price History","aggregate-price-history.js"), {timezone:"UTC"});
+// Friday 2:35 PM Dubai (10:35 AM UTC) - aggregate yields to dashboard
+cron.schedule("35 10 * * 5", ()=>runScript("Aggregate Yields","aggregate-yields.js"), {timezone:"UTC"});
 // Friday 2:30 PM Dubai (10:30 AM UTC) - yield calculations
 cron.schedule("30 10 * * 5", ()=>runScript("Yield Calculator","fetch-rental-benchmarks.js"), {timezone:"UTC"});
 // Sunday 1:00 PM Dubai (9:00 AM UTC) - full detail refresh
