@@ -1,6 +1,6 @@
 function DLDSalesPanel({selectedProject,T}){const community=selectedProject.masterProject||selectedProject.community||"";const projName=(selectedProject.name||selectedProject.project||"").toUpperCase();const projPPSF=selectedProject.ppsf||0;const [dldTx,setDldTx]=React.useState([]);const [txLoading,setTxLoading]=React.useState(true);const [txMode,setTxMode]=React.useState("community");const [filterBeds,setFilterBeds]=React.useState("All");React.useEffect(()=>{setDldTx([]);setTxLoading(true);if(!community){setTxLoading(false);return;}import("firebase/firestore").then(({collection,query,where,orderBy,limit,getDocs,getFirestore})=>{const fdb=getFirestore();const txq=query(collection(fdb,"transactions"),where("masterProject","==",community),where("transGroup","==","Sales"),orderBy("date","desc"),limit(50));getDocs(txq).then(snap=>{const all=snap.docs.map(d=>d.data());const bMatch=all.filter(t=>(t.projectName||"").toUpperCase().includes(projName.substring(0,8)));const isExact=bMatch.length>=3;setDldTx(isExact?bMatch:all);setTxMode(isExact?"building":"community");setTxLoading(false);}).catch(()=>setTxLoading(false));});},[community]);const filtered=filterBeds==="All"?dldTx:dldTx.filter(t=>t.rooms===filterBeds);const avgPpsf=filtered.length>0?Math.round(filtered.reduce((s,t)=>s+(t.ppsf||0)/10.764,0)/filtered.length):0;const avgPrice=filtered.length>0?filtered.reduce((s,t)=>s+(t.price||0),0)/filtered.length:0;const ppsfDiff=projPPSF>0&&avgPpsf>0?Math.round(((projPPSF-avgPpsf)/avgPpsf)*100):null;const beds=["All",...new Set(dldTx.map(t=>t.rooms).filter(Boolean))].sort();return(<div style={{paddingBottom:20}}><div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10,marginBottom:16}}>{[{label:"Transactions",value:String(filtered.length)+(txMode==="building"?" building":" area"),color:T.gold},{label:"Avg Price",value:avgPrice>0?"AED "+(avgPrice/1e6).toFixed(2)+"M":"N/A",color:"#63B3ED"},{label:"Avg PPSF",value:avgPpsf>0?"AED "+avgPpsf.toLocaleString():"N/A",color:T.gold},{label:"vs Project",value:ppsfDiff!==null?(ppsfDiff>0?"+"+String(ppsfDiff)+"%":String(ppsfDiff)+"%"):"N/A",color:ppsfDiff===null?T.textMuted:ppsfDiff>0?"#FC8181":"#68D391"}].map((k,i)=>(<div key={i} style={{background:"rgba(255,255,255,0.03)",border:"1px solid "+T.border,borderRadius:10,padding:"12px 14px"}}><div style={{fontSize:9,color:T.textMuted,fontWeight:700,textTransform:"uppercase",letterSpacing:0.8,marginBottom:4}}>{k.label}</div><div style={{fontSize:15,fontWeight:800,color:k.color,fontFamily:"Fraunces,serif"}}>{k.value}</div></div>))}</div>{ppsfDiff!==null&&<div style={{marginBottom:14,padding:"10px 14px",borderRadius:8,background:ppsfDiff>10?"rgba(252,129,129,0.08)":ppsfDiff<-10?"rgba(104,211,145,0.08)":"rgba(212,168,67,0.06)",border:"1px solid "+(ppsfDiff>10?"rgba(252,129,129,0.25)":ppsfDiff<-10?"rgba(104,211,145,0.25)":"rgba(212,168,67,0.2)")}}><span style={{fontSize:11,fontWeight:700,color:ppsfDiff>10?"#FC8181":ppsfDiff<-10?"#68D391":T.gold}}>{ppsfDiff>10?"Priced "+String(ppsfDiff)+"% above comparable sales":ppsfDiff<-10?"Priced "+String(Math.abs(ppsfDiff))+"% below comparable sales":"Priced in line with market"}</span></div>}<div style={{display:"flex",gap:6,marginBottom:12,alignItems:"center",flexWrap:"wrap"}}><span style={{fontSize:10,color:T.textMuted,fontWeight:700}}>Beds:</span>{beds.map(b=><button key={b} type="button" onClick={()=>setFilterBeds(b)} style={{padding:"3px 10px",borderRadius:16,fontSize:10,cursor:"pointer",background:filterBeds===b?"rgba(212,168,67,0.15)":"rgba(255,255,255,0.04)",border:"1px solid "+(filterBeds===b?T.gold:T.border),color:filterBeds===b?T.gold:T.textMuted,fontFamily:"Outfit,sans-serif"}}>{b}</button>)}<span style={{marginLeft:"auto",fontSize:10,color:txMode==="building"?"#68D391":T.gold}}>{txMode==="building"?"Building data":"Community data"}</span></div>{txLoading&&<div style={{padding:40,textAlign:"center",color:T.textMuted,fontSize:12}}>Loading DLD transactions...</div>}{!txLoading&&filtered.length===0&&<div style={{padding:40,textAlign:"center",color:T.textMuted,fontSize:12}}>No transactions found</div>}{!txLoading&&filtered.length>0&&<div style={{border:"1px solid "+T.border,borderRadius:10,overflow:"hidden"}}><div style={{display:"grid",gridTemplateColumns:"1.2fr 1fr 1fr 0.8fr 0.8fr 2fr",padding:"8px 16px",background:"rgba(255,255,255,0.03)",borderBottom:"1px solid "+T.border}}>{["Date","Price","PPSF/sqft","Beds","Type","Building"].map(h=><div key={h} style={{fontSize:9,fontWeight:700,color:T.textMuted,textTransform:"uppercase",letterSpacing:0.8}}>{h}</div>)}</div>{filtered.slice(0,20).map((tx,i)=>{const ppsf=Math.round((tx.ppsf||0)/10.764);const ppsfColor=projPPSF>0?(ppsf>projPPSF*1.1?"#FC8181":ppsf<projPPSF*0.9?"#68D391":T.textSecondary):T.textSecondary;return(<div key={i} style={{display:"grid",gridTemplateColumns:"1.2fr 1fr 1fr 0.8fr 0.8fr 2fr",padding:"9px 16px",borderBottom:i<filtered.slice(0,20).length-1?"1px solid rgba(255,255,255,0.03)":"none"}} onMouseEnter={e=>e.currentTarget.style.background="rgba(255,255,255,0.02)"} onMouseLeave={e=>e.currentTarget.style.background="transparent"}><div style={{fontSize:11,color:T.textSecondary}}>{tx.date?tx.date.substring(0,10):""}</div><div style={{fontSize:12,fontWeight:700,color:T.gold}}>{tx.price?"AED "+(tx.price/1e6).toFixed(2)+"M":""}</div><div style={{fontSize:12,fontWeight:600,color:ppsfColor}}>{ppsf>0?"AED "+ppsf.toLocaleString():""}</div><div style={{fontSize:11,color:T.textSecondary}}>{tx.rooms||""}</div><div style={{fontSize:11,color:T.textSecondary}}>{tx.propertySubType||""}</div><div style={{fontSize:10,color:T.textMuted,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{tx.buildingName||tx.projectName||""}</div></div>);})}</div>}<div style={{marginTop:12,fontSize:10,color:T.textMuted,display:"flex",justifyContent:"space-between"}}><span>Source: Dubai Land Department</span><span>Green PPSF = below project price, Red = above</span></div></div>);}
 /* eslint-disable */
-/* PROJECTS TAB â€” Master catalog of all Dubai property projects
+/* PROJECTS TAB — Master catalog of all Dubai property projects
    Includes detail modal (rendered via React Portal for safety)
 */
 
@@ -101,7 +101,7 @@ function shouldShowConfiguration(category, displayType) {
   return category === "Residential" && UNIT_BASED_RESIDENTIAL.includes(displayType);
 }
 
-/* Helper â€” detect fake/placeholder RERA numbers and suppress display.
+/* Helper — detect fake/placeholder RERA numbers and suppress display.
    Real RERA project numbers are typically 3-6 digits.
    Fake patterns: 10+ digit placeholders, repeating digits, sequential like 1234/5678 */
 function isValidReraNumber(num) {
@@ -114,7 +114,7 @@ function isValidReraNumber(num) {
 }
 
 /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-   DXB ANALYTICS â€” DATA PLATFORM LAYER
+   DXB ANALYTICS — DATA PLATFORM LAYER
    â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
    Legal positioning: This is a DATA AGGREGATION platform, not advice.
    All data displayed is sourced from Dubai Land Department (DLD) records.
@@ -122,7 +122,7 @@ function isValidReraNumber(num) {
    For advice, users must consult RERA-licensed consultants.
    â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
-/* Asset class â€” descriptive segmentation (like MLS tiers), not a score */
+/* Asset class — descriptive segmentation (like MLS tiers), not a score */
 function describeAssetClass(p) {
   const ppsf = p.ppsf || 0;
   if (ppsf >= 3000) return { tier:"Ultra-Luxury Segment", color:"#D4A843" };
@@ -133,7 +133,7 @@ function describeAssetClass(p) {
   return { tier:"Segment Not Disclosed", color:"#6B7280" };
 }
 
-/* Construction stage â€” descriptive only, from DLD data */
+/* Construction stage — descriptive only, from DLD data */
 function describeMarketStatus(p) {
   const pct = p.constructionPct || 0;
   if (p.status === "Sold Out") return { label:"Sold Out (per DLD)", color:"#EF4444" };
@@ -144,7 +144,7 @@ function describeMarketStatus(p) {
   return { label:"Off-Plan", color:"#6B7280" };
 }
 
-/* Location advantages â€” factual tags based on measurable distances */
+/* Location advantages — factual tags based on measurable distances */
 function locationTags(p) {
   const out = [];
   if (p.distBeach != null && p.distBeach <= 1) out.push({ label:"Waterfront (<1km)", color:"#14B8A6" });
@@ -154,7 +154,7 @@ function locationTags(p) {
   return out;
 }
 
-/* Unit mix percentages â€” derived from actual unit breakdown data */
+/* Unit mix percentages — derived from actual unit breakdown data */
 function computeUnitMix(p) {
 const ub = Array.isArray(p.unitBreakdown) ? p.unitBreakdown : Object.entries(p.unitBreakdown||{}).map(([type,count])=>({type,count:Number(count)||1}));
   if (ub.length === 0) return null;
@@ -166,7 +166,7 @@ const ub = Array.isArray(p.unitBreakdown) ? p.unitBreakdown : Object.entries(p.u
   }));
 }
 
-/* Community average PPSF â€” prefers DLD-computed median over legacy field */
+/* Community average PPSF — prefers DLD-computed median over legacy field */
 function communityBenchmarkPPSF(p) {
   if (p.communityMedianPPSF) {
     return {
@@ -177,10 +177,10 @@ function communityBenchmarkPPSF(p) {
     };
   }
   if (p.communityAvgPPSF) return { value: p.communityAvgPPSF, source:"Legacy estimate" };
-  return { value: null, source:"Not available â€” DLD benchmark pending" };
+  return { value: null, source:"Not available — DLD benchmark pending" };
 }
 
-/* STR indicator â€” factual flag only (not a score) */
+/* STR indicator — factual flag only (not a score) */
 function strIndicator(p) {
   const t = (p.type || "").toLowerCase();
   if (t.includes("hotel")) return { flag:"Hotel Apartment", note:"Designated for short-term rental per developer licensing" };
@@ -189,7 +189,7 @@ function strIndicator(p) {
   return { flag:"Residential Primary", note:"Area zoned primarily for long-term residence" };
 }
 
-/* Escrow status â€” factual DLD data */
+/* Escrow status — factual DLD data */
 function escrowStatus(p) {
   if (p.escrowAccount && p.escrowBank) return { verified:true, label:"DLD-Registered Escrow Active" };
   if (p.escrowBank) return { verified:true, label:"Escrow Bank Verified" };
@@ -205,7 +205,7 @@ function reraCompliance(p) {
 }
 
 /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-   LEGAL DISCLAIMER â€” reusable component
+   LEGAL DISCLAIMER — reusable component
    â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 function LegalNote({ T, compact }) {
   return (
@@ -267,7 +267,7 @@ function ProjectsTab({
   const { data: allCommunitiesFromDb = [] } = useUserFacingCommunities();
 
 
-  /* NEW FILTERS (v7) â€” match data reality from audit:
+  /* NEW FILTERS (v7) — match data reality from audit:
      - lifecycleStage (100% coverage): Historical / Under Construction / Announced / Recently Delivered
      - escrowBank (94% coverage): 27 banks, strong trust signal
      - constructionBand (100% coverage): 0-25% / 25-50% / 50-75% / 75-100% / Completed
@@ -346,7 +346,7 @@ function ProjectsTab({
       if (String(p.community || "").toLowerCase() !== gfCommunity) return false;
     }
 
-    // Status filter (e.g. "offplan", "ready") â€” fallback to lifecycleStage for DLD
+    // Status filter (e.g. "offplan", "ready") — fallback to lifecycleStage for DLD
     if (gfStatus) {
       const effectiveStatus = p.status || (
         p.lifecycleStage === "recently-delivered" || p.constructionPct >= 100 ? "Ready" :
@@ -371,7 +371,7 @@ function ProjectsTab({
       })) return false;
     }
 
-    // Price range â€” only apply when project HAS priceMin (DLD records don't).
+    // Price range — only apply when project HAS priceMin (DLD records don't).
     // Records without price pass through unfiltered so user can still browse them.
     if (gfPriceMin > 0 && p.priceMin && Number(p.priceMin) < gfPriceMin) return false;
     if (gfPriceMax > 0 && p.priceMax && Number(p.priceMax) > gfPriceMax) return false;
@@ -423,7 +423,7 @@ function ProjectsTab({
     <>
       {(() => {
 
-            /* Phase 4: merge all data sources â€” SEED (18 Verified) + DLD developments (2,798 Registry) + extras.
+            /* Phase 4: merge all data sources — SEED (18 Verified) + DLD developments (2,798 Registry) + extras.
                Guard every spread with Array.isArray to prevent 'not iterable' crashes when props
                arrive as undefined/null (Firestore still loading). */
             const allSources = [
@@ -432,7 +432,7 @@ function ProjectsTab({
               ...(Array.isArray(liveProjects) ? liveProjects : []),
               ...(Array.isArray(extraProjects) ? extraProjects : []),
             ];
-            /* De-dupe by id â€” live version wins over seed if same id */
+            /* De-dupe by id — live version wins over seed if same id */
             const seenIds = new Set();
             const rawProjects = allSources.filter(p => {
               if (!p) return false;
@@ -456,19 +456,19 @@ function ProjectsTab({
               if (t.includes("retail") || t.includes("shop")) return "Retail";
               if (t.includes("warehouse") || t.includes("industrial")) return "Warehouse";
               if (t.includes("land") || t.includes("plot")) return "Land";
-              return "Apartment"; /* default â€” most DLD records are unit/flat = apartment */
+              return "Apartment"; /* default — most DLD records are unit/flat = apartment */
             };
 
             const filtered = rawProjects.filter(p => {
               // Global top-bar filters first
               if (!projMatchesGlobalFilter(p)) return false;
-              // Type filter â€” but skip when 'All' is selected
+              // Type filter — but skip when 'All' is selected
               if (projCategory && projCategory !== "All") { const dts = getDisplayTypesForCategory(projCategory); if (dts.length > 0 && !dts.includes(normalizeType(p))) return false; }
               if (projMode !== "All") { const its = getInternalTypes(projMode); if (its && its.length > 0) { const raw = String(p.type || p.propertyType || p.dldClass || "").toLowerCase(); const canon = normalizeType(p); if (!its.some(t => raw.includes(t.toLowerCase()) || t === canon)) return false; } else if (normalizeType(p) !== projMode) { return false; } }
               if (projSearch && !JSON.stringify(p).toLowerCase().includes(projSearch.toLowerCase())) return false;
               if (projDev !== "All" && p.developer !== projDev && p.developerName !== projDev) return false;
               if (projCommunity !== "All" && p.community !== projCommunity) return false;
-              /* SALE STATUS â€” fallback to lifecycleStage mapping for DLD records without status */
+              /* SALE STATUS — fallback to lifecycleStage mapping for DLD records without status */
               if (projStatus !== "All") {
                 const effectiveStatus = p.status || (
                   p.lifecycleStage === "recently-delivered" || p.constructionPct >= 100 ? "Ready" :
@@ -534,7 +534,7 @@ function ProjectsTab({
                 const bDate = b.launchDate || b.projectStartDate || "";
                 return bDate.localeCompare(aDate);
               }
-              /* Default 'relevance' â€” interleave: Research (enriched data) first, DLD second, within each group by score/data completeness */
+              /* Default 'relevance' — interleave: Research (enriched data) first, DLD second, within each group by score/data completeness */
               const aIsDld = String(a.id || "").startsWith("dld-") || a.dldSource;
               const bIsDld = String(b.id || "").startsWith("dld-") || b.dldSource;
               if (aIsDld !== bIsDld) return aIsDld ? 1 : -1; /* Research first */
@@ -542,7 +542,7 @@ function ProjectsTab({
             });
 
             const avgYield = filtered.length > 0 && filtered.some(p => p.grossYield > 0)
-              ? (filtered.filter(p=>p.grossYield>0).reduce((a,p) => a + p.grossYield, 0) / filtered.filter(p=>p.grossYield>0).length).toFixed(1) : "â€”";
+              ? (filtered.filter(p=>p.grossYield>0).reduce((a,p) => a + p.grossYield, 0) / filtered.filter(p=>p.grossYield>0).length).toFixed(1) : "—";
             const avgPpsf = filtered.length > 0 && filtered.some(p=>p.ppsf)
               ? Math.round(filtered.filter(p=>p.ppsf).reduce((a,p) => a + p.ppsf, 0) / filtered.filter(p=>p.ppsf).length) : 0;
 
@@ -593,7 +593,7 @@ function ProjectsTab({
             };
             // Legacy flat array kept for backward compat
             const commOptions = ["All", ...enrichedComms.map(c => c.value)].slice(0, 500);
-            /* Escrow bank options with project counts â€” DLD enriched */
+            /* Escrow bank options with project counts — DLD enriched */
             const escrowCounts = {};
             rawProjects.forEach(p => {
               if (p.escrowBank) escrowCounts[p.escrowBank] = (escrowCounts[p.escrowBank] || 0) + 1;
@@ -604,9 +604,9 @@ function ProjectsTab({
                 .sort((a, b) => b[1] - a[1])  /* sort by count desc */
                 .map(([bank, count]) => ({ value: bank, label: bank, count })),
             ];
-            /* Legacy string array â€” kept for backward compat where other code reads it */
+            /* Legacy string array — kept for backward compat where other code reads it */
             const escrowOptions = ["All", ...Object.keys(escrowCounts).sort((a, b) => escrowCounts[b] - escrowCounts[a])];
-            /* DYNAMIC HANDOVER YEARS â€” extract actual years from data, include 2030+ */
+            /* DYNAMIC HANDOVER YEARS — extract actual years from data, include 2030+ */
             const handoverYearsFromData = new Set();
             const currentYear = new Date().getFullYear();
             rawProjects.forEach(p => {
@@ -643,7 +643,7 @@ function ProjectsTab({
               return <span style={{ fontSize:10, fontWeight:700, padding:"2px 8px", borderRadius:10, background:cfg.bg, color:cfg.color }}>{status}</span>;
             };
 
-            /* DataCompletenessBadge â€” shows factual data completeness, NOT investment advice.
+            /* DataCompletenessBadge — shows factual data completeness, NOT investment advice.
                Replaces the old ScoreCircle/scoreLabel which said "Strong Buy/Buy/Hold" =
                unlicensed investment advice under RERA law. */
             const DataCompletenessBadge = ({ p }) => {
@@ -680,7 +680,7 @@ function ProjectsTab({
                 <div className="chart-box" style={{ padding:0, overflow:"hidden", cursor:"pointer", position:"relative" }}
                   onMouseEnter={e => e.currentTarget.style.borderColor="rgba(212,168,67,0.4)"}
                   onMouseLeave={e => e.currentTarget.style.borderColor=T.border}>
-                  {/* DATA SOURCE BADGE â€” top-right corner */}
+                  {/* DATA SOURCE BADGE — top-right corner */}
                   <div style={{ position:"absolute", top:10, right:10, zIndex:2 }}>
                     {isDldVerified ? (
                       <span style={{ fontSize:9, padding:"3px 8px", borderRadius:5, background:"rgba(20,184,166,0.12)", color:T.teal, fontWeight:700, border:`1px solid rgba(20,184,166,0.3)`, display:"inline-flex", alignItems:"center", gap:4 }}>
@@ -688,7 +688,7 @@ function ProjectsTab({
                       </span>
                     ) : (
                       <span style={{ fontSize:9, padding:"3px 8px", borderRadius:5, background:"rgba(212,168,67,0.08)", color:T.gold, fontWeight:700, border:`1px solid rgba(212,168,67,0.2)`, display:"inline-flex", alignItems:"center", gap:4 }}>
-                        â—† Research
+                        ◆ Research
                       </span>
                     )}
                   </div>
@@ -718,24 +718,24 @@ function ProjectsTab({
                     <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:8 }}>
                       <div style={{ flex:1, paddingRight:70 /* room for DLD Verified badge */ }}>
                         <div style={{ fontSize:10, fontWeight:700, color:T.textMuted, letterSpacing:0.8, textTransform:"uppercase", marginBottom:3 }}>{(p.developerActual || p.developer || p.developerName || "Unknown")}{" · "}{p.community || p.area || "—"}{p.masterCommunity && p.masterCommunity !== p.community ? " — " + p.masterCommunity : ""}</div>
-                        <div style={{ fontFamily:"'Fraunces',serif", fontSize:15, fontWeight:700, color:T.white, marginBottom:6 }}>{p.project || p.name || "â€”"}</div>
+                        <div style={{ fontFamily:"'Fraunces',serif", fontSize:15, fontWeight:700, color:T.white, marginBottom:6 }}>{p.project || p.name || "—"}</div>
                         <div style={{ display:"flex", gap:6, flexWrap:"wrap", alignItems:"center" }}>
                           <StatusBadge status={p.status || (p.constructionPct >= 100 ? "Ready" : "Off-Plan")} />
                           {(p.handover || p.expectedHandover) && <span style={{ fontSize:10, color:T.textMuted }}>{p.handover || p.expectedHandover}</span>}
                           {Array.isArray(p.beds) && p.beds.length > 0 && <span style={{ fontSize:10, color:T.textMuted }}>{"·"}{p.beds.join(" / ")}</span>}
                           {isValidReraNumber(p.reraNo || p.projectNumber) && <span style={{ fontSize:9, color:T.teal }}>{"·"}DLD #{p.reraNo || p.projectNumber}</span>}
                         </div>
-                        {/* Factual classification badges only â€” no investment advice */}
+                        {/* Factual classification badges only — no investment advice */}
                         <div style={{ display:"flex", gap:5, flexWrap:"wrap", marginTop:6 }}>
                           {p.tier === 1 && <span style={{ fontSize:9, padding:"2px 7px", borderRadius:5, background:"rgba(16,185,129,0.12)", color:"#10B981", fontWeight:700 }}>Tier 1 Developer</span>}
                           {p.tier === 2 && <span style={{ fontSize:9, padding:"2px 7px", borderRadius:5, background:"rgba(245,158,11,0.12)", color:"#F59E0B", fontWeight:700 }}>Tier 2 Developer</span>}
                           {p.goldenVisa && p.priceMin >= GOLDEN_VISA_THRESHOLD && <span style={{ fontSize:9, padding:"2px 7px", borderRadius:5, background:"rgba(212,168,67,0.15)", color:T.gold, fontWeight:700 }}>â˜… Golden Visa Eligible</span>}
-                          {p.branded && <span style={{ fontSize:9, padding:"2px 7px", borderRadius:5, background:"rgba(139,92,246,0.15)", color:"#A78BFA", fontWeight:700 }}>â—† {p.brandPartner || "Branded"}</span>}
+                          {p.branded && <span style={{ fontSize:9, padding:"2px 7px", borderRadius:5, background:"rgba(139,92,246,0.15)", color:"#A78BFA", fontWeight:700 }}>◆ {p.brandPartner || "Branded"}</span>}
                           {p.escrowBank && <span style={{ fontSize:9, padding:"2px 7px", borderRadius:5, background:"rgba(20,184,166,0.08)", color:T.teal, fontWeight:700 }}>Escrow âœ“</span>}
                         </div>
                       </div>
                       <div style={{ display:"flex", flexDirection:"column", alignItems:"flex-end", gap:4 }}>
-                        {/* Circle badge removed â€” top-right pill shows data source */}
+                        {/* Circle badge removed — top-right pill shows data source */}
                       </div>
                     </div>
                   </div>
@@ -762,7 +762,7 @@ function ProjectsTab({
                             ? "AED " + p.ppsf.toLocaleString()
                             : p.communityMedianPPSF
                               ? "AED " + p.communityMedianPPSF.toLocaleString()
-                              : "â€”"}
+                              : "—"}
                         </div>
                         {!p.ppsf && p.communityMedianPPSF && p.communityTxCount && (
                           <div style={{ fontSize:8, color:T.teal, marginTop:1 }}>DLD · n={p.communityTxCount}</div>
@@ -777,7 +777,7 @@ function ProjectsTab({
                             ? p.grossYield.toFixed(1) + "%"
                             : p.totalUnits
                               ? p.totalUnits.toLocaleString()
-                              : "â€”"}
+                              : "—"}
                         </div>
                       </div>
                       <div>
@@ -789,7 +789,7 @@ function ProjectsTab({
                             ? p.paymentPlan
                             : p.constructionPct != null
                               ? p.constructionPct + "%"
-                              : (p.status || "â€”")}
+                              : (p.status || "—")}
                         </div>
                       </div>
                     </div>
@@ -833,7 +833,7 @@ function ProjectsTab({
                           </div>
                           {p.communityP25PPSF && p.communityP75PPSF && (
                             <div style={{ fontSize:9, color:T.textMuted, marginTop:1 }}>
-                              25thâ€“75th: {p.communityP25PPSF.toLocaleString()}â€“{p.communityP75PPSF.toLocaleString()}
+                              25th–75th: {p.communityP25PPSF.toLocaleString()}–{p.communityP75PPSF.toLocaleString()}
                             </div>
                           )}
                         </div>
@@ -878,7 +878,7 @@ function ProjectsTab({
                 </div>
 
                 {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-                   NEW PRIMARY FILTER BAR â€” 3-Layer Architecture
+                   NEW PRIMARY FILTER BAR — 3-Layer Architecture
                    Category → Type → Configuration → Price → More Filters
                    â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
                 <div style={{
@@ -945,7 +945,7 @@ function ProjectsTab({
                     </select>
                   </div>
 
-                  {/* Configuration â€” HIDDEN when not applicable */}
+                  {/* Configuration — HIDDEN when not applicable */}
                   {shouldShowConfiguration(projCategory, projMode) ? (
                     <div style={{ flex:"1 1 140px", minWidth:120 }}>
                       <div style={{ fontSize:10, color:T.textMuted, marginBottom:6, letterSpacing:0.5, textTransform:"uppercase", fontFamily:"'Outfit',sans-serif", fontWeight:600 }}>Configuration</div>
@@ -991,9 +991,9 @@ function ProjectsTab({
                       }}>
                       <option value="0-999999999">Any Price</option>
                       <option value="0-1000000">Under AED 1M</option>
-                      <option value="1000000-2000000">AED 1M â€” 2M</option>
-                      <option value="2000000-5000000">AED 2M â€” 5M</option>
-                      <option value="5000000-10000000">AED 5M â€” 10M</option>
+                      <option value="1000000-2000000">AED 1M — 2M</option>
+                      <option value="2000000-5000000">AED 2M — 5M</option>
+                      <option value="5000000-10000000">AED 5M — 10M</option>
                       <option value="10000000-999999999">AED 10M+</option>
                     </select>
                   </div>
@@ -1021,7 +1021,7 @@ function ProjectsTab({
                 </div>
 
                 {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-                   MORE FILTERS PANEL â€” slides down when button clicked
+                   MORE FILTERS PANEL — slides down when button clicked
                    Two sections: Refine By (gold) + Project Details (teal)
                    â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
                 {showMoreFilters && (
@@ -1196,13 +1196,13 @@ function ProjectsTab({
                     </div>
                   </div>
                 )}
-                {/* â•â•â• PROPERTY TYPE TABS â€” premium pill design â•â•â• */}
+                {/* â•â•â• PROPERTY TYPE TABS — premium pill design â•â•â• */}
 
 
-                {/* â•â•â• PROJECTS CONTROL BAR â€” clean unified design, no duplicate search â•â•â• */}
+                {/* â•â•â• PROJECTS CONTROL BAR — clean unified design, no duplicate search â•â•â• */}
                 {(() => {
                   const activeFilters = [];
-                  /* GLOBAL FILTERS from top bar â€” shown as chips so user sees what's applied */
+                  /* GLOBAL FILTERS from top bar — shown as chips so user sees what's applied */
                   if (globalFilters?.developer && globalFilters.developer !== "all") {
                     const devName = (allDevelopers || []).find(d => String(d.id).toLowerCase() === String(globalFilters.developer).toLowerCase())?.name || globalFilters.developer;
                     activeFilters.push({ key:"gDev", label:devName, global:true });
@@ -1212,7 +1212,7 @@ function ProjectsTab({
                   if (globalFilters?.beds && globalFilters.beds !== "all") activeFilters.push({ key:"gBed", label:globalFilters.beds, global:true });
                   if (globalFilters?.priceMin > 0 || globalFilters?.priceMax > 0) {
                     const lbl = globalFilters.priceMin > 0 && globalFilters.priceMax > 0
-                      ? `AED ${(globalFilters.priceMin/1000000).toFixed(1)}Mâ€“${(globalFilters.priceMax/1000000).toFixed(1)}M`
+                      ? `AED ${(globalFilters.priceMin/1000000).toFixed(1)}M–${(globalFilters.priceMax/1000000).toFixed(1)}M`
                       : globalFilters.priceMin > 0 ? `From AED ${(globalFilters.priceMin/1000000).toFixed(1)}M`
                       : `Up to AED ${(globalFilters.priceMax/1000000).toFixed(1)}M`;
                     activeFilters.push({ key:"gPrice", label:lbl, global:true });
@@ -1242,7 +1242,7 @@ function ProjectsTab({
                   const anyActive = activeFilters.length > 0;
                   return (
                     <>
-                      {/* CONTROL BAR â€” single row */}
+                      {/* CONTROL BAR — single row */}
                       <div style={{
                         display:"flex", alignItems:"center", gap:12, flexWrap:"wrap",
                         marginBottom: anyActive ? 10 : 16,
@@ -1259,7 +1259,7 @@ function ProjectsTab({
                           <option value="yield">Yield: high to low</option>
                           <option value="price_asc">Price: low to high</option>
                           <option value="price_desc">Price: high to low</option>
-                          <option value="alphabetical">Name: Aâ€“Z</option>
+                          <option value="alphabetical">Name: A–Z</option>
                           <option value="recent">Recently launched</option>
                         </select>
 
@@ -1363,7 +1363,7 @@ function ProjectsTab({
                   );
                 })()}
 
-                {/* COMPACT INLINE STATS â€” honest labeling per DLD data subset */}
+                {/* COMPACT INLINE STATS — honest labeling per DLD data subset */}
                 <div style={{ display:"flex", gap:8, flexWrap:"wrap", marginBottom:16, padding:"10px 14px", background:T.surface, border:`1px solid ${T.border}`, borderRadius:10 }}>
                   {(() => {
                     const priced = filtered.filter(p => p.priceMin && isFinite(p.priceMin));
@@ -1373,9 +1373,9 @@ function ProjectsTab({
                     const minPrice = priced.length > 0 ? Math.min(...priced.map(p => p.priceMin)) : null;
                     return [
                       { label:"Total", value:filtered.length.toLocaleString(), sub:"projects", color:T.white },
-                      { label:"Priced From", value:minPrice ? `AED ${(minPrice/1000000).toFixed(1)}M` : "â€”", sub:priced.length > 0 ? `${priced.length} priced` : "0 priced", color:T.gold },
-                      { label:"Avg Yield", value:withYield.length > 0 ? (withYield.reduce((a,p) => a+p.grossYield, 0)/withYield.length).toFixed(1) + "%" : "â€”", sub:`n=${withYield.length} disclosed`, color:T.green },
-                      { label:"Community PPSF", value:withBench.length > 0 ? "AED " + Math.round(withBench.reduce((a,p) => a+p.communityMedianPPSF, 0)/withBench.length).toLocaleString() : "â€”", sub:`DLD · n=${withBench.length}`, color:T.teal },
+                      { label:"Priced From", value:minPrice ? `AED ${(minPrice/1000000).toFixed(1)}M` : "—", sub:priced.length > 0 ? `${priced.length} priced` : "0 priced", color:T.gold },
+                      { label:"Avg Yield", value:withYield.length > 0 ? (withYield.reduce((a,p) => a+p.grossYield, 0)/withYield.length).toFixed(1) + "%" : "—", sub:`n=${withYield.length} disclosed`, color:T.green },
+                      { label:"Community PPSF", value:withBench.length > 0 ? "AED " + Math.round(withBench.reduce((a,p) => a+p.communityMedianPPSF, 0)/withBench.length).toLocaleString() : "—", sub:`DLD · n=${withBench.length}`, color:T.teal },
                     ].map((kpi,i) => (
                       <div key={i} style={{ display:"flex", flexDirection:"column", padding:"4px 14px", borderRight:i < 3 ? `1px solid ${T.border}` : "none" }}>
                         <div style={{ display:"flex", alignItems:"baseline", gap:6 }}>
@@ -1410,7 +1410,7 @@ function ProjectsTab({
                   </div>
                 )}
 
-                {/* DATA TIER DISCLOSURE â€” honest two-tier data source labeling */}
+                {/* DATA TIER DISCLOSURE — honest two-tier data source labeling */}
                 <div style={{ display:"flex", alignItems:"center", gap:10, padding:"10px 14px", borderRadius:10, background:"rgba(20,184,166,0.04)", border:`1px solid ${T.border}`, marginBottom:14, flexWrap:"wrap" }}>
                   <div style={{ display:"flex", alignItems:"center", gap:6 }}>
                     <span style={{ fontSize:12, color:T.teal, fontWeight:800 }}>âœ“</span>
@@ -1418,12 +1418,12 @@ function ProjectsTab({
                   </div>
                   <div style={{ width:1, height:14, background:T.border, margin:"0 4px" }} />
                   <div style={{ display:"flex", alignItems:"center", gap:6 }}>
-                    <span style={{ fontSize:12, color:T.gold, fontWeight:800 }}>â—†</span>
+                    <span style={{ fontSize:12, color:T.gold, fontWeight:800 }}>◆</span>
                     <span style={{ fontSize:11, color:T.textSecondary }}><strong style={{ color:T.gold }}>Research-Enriched:</strong> Additional details curated from developer portals, Bayut, Property Finder.</span>
                   </div>
                 </div>
 
-                {/* Phase 3.7: Smart empty state â€” suggests which filter to remove */}
+                {/* Phase 3.7: Smart empty state — suggests which filter to remove */}
                 {filtered.length === 0 && (
                   <SmartEmptyState
                     rowsAll={rawProjects}
@@ -1442,7 +1442,7 @@ function ProjectsTab({
                       else if (key === "community") setProjCommunity("All");
                       else if (key === "beds") setProjBeds("All");
                       else if (key === "status") setProjStatus("All");
-                      else if (key === "type") { /* keep â€” type is projMode, not a removable filter here */ }
+                      else if (key === "type") { /* keep — type is projMode, not a removable filter here */ }
                     }}
                     onClearAll={() => {
                       setProjSearch("");
@@ -1573,12 +1573,12 @@ function ProjectsTab({
                 <div>
                   <div style={{ fontSize:11, fontWeight:700, color:T.textMuted, letterSpacing:0.8, textTransform:"uppercase", marginBottom:3 }}>{(selectedProject.developerActual || selectedProject.developer)}{" · "}{selectedProject.community || ""}{selectedProject.masterCommunity && selectedProject.masterCommunity !== selectedProject.community ? " — " + selectedProject.masterCommunity : ""}</div>
                   <div style={{ fontFamily:"'Fraunces',serif", fontSize:22, fontWeight:800, color:T.white }}>{selectedProject.project}</div>
-                  {/* Factual classification badges only â€” no investment advice */}
+                  {/* Factual classification badges only — no investment advice */}
                   <div style={{ display:"flex", gap:5, flexWrap:"wrap", marginTop:6 }}>
                     {selectedProject.tier === 1 && <span style={{ fontSize:10, padding:"3px 8px", borderRadius:5, background:"rgba(16,185,129,0.12)", color:"#10B981", fontWeight:700 }}>Tier 1 Developer</span>}
                     {selectedProject.tier === 2 && <span style={{ fontSize:10, padding:"3px 8px", borderRadius:5, background:"rgba(245,158,11,0.12)", color:"#F59E0B", fontWeight:700 }}>Tier 2 Developer</span>}
                     {selectedProject.goldenVisa && selectedProject.priceMin >= GOLDEN_VISA_THRESHOLD && <span style={{ fontSize:10, padding:"3px 8px", borderRadius:5, background:"rgba(212,168,67,0.15)", color:T.gold, fontWeight:700 }}>â˜… Golden Visa Eligible</span>}
-                    {selectedProject.branded && <span style={{ fontSize:10, padding:"3px 8px", borderRadius:5, background:"rgba(139,92,246,0.15)", color:"#A78BFA", fontWeight:700 }}>â—† {selectedProject.brandPartner || "Branded Residence"}</span>}
+                    {selectedProject.branded && <span style={{ fontSize:10, padding:"3px 8px", borderRadius:5, background:"rgba(139,92,246,0.15)", color:"#A78BFA", fontWeight:700 }}>◆ {selectedProject.brandPartner || "Branded Residence"}</span>}
                     {selectedProject.escrowBank && <span style={{ fontSize:10, padding:"3px 8px", borderRadius:5, background:"rgba(20,184,166,0.1)", color:T.teal, fontWeight:700 }}>Escrow Verified</span>}
                     {isValidReraNumber(selectedProject.reraNo || selectedProject.projectNumber) && <span style={{ fontSize:10, padding:"3px 8px", borderRadius:5, background:"rgba(20,184,166,0.08)", color:T.teal, fontWeight:700 }}>DLD #{selectedProject.reraNo || selectedProject.projectNumber}</span>}
                   </div>
@@ -1622,7 +1622,7 @@ function ProjectsTab({
                       <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(200px, 1fr))", gap:14 }}>
                         <div>
                           <div style={{ fontSize:10, color:T.textMuted, marginBottom:4 }}>Project Name</div>
-                          <div style={{ fontSize:15, fontWeight:700, color:T.white, fontFamily:"'Fraunces',serif" }}>{selectedProject.project || selectedProject.name || "â€”"}</div>
+                          <div style={{ fontSize:15, fontWeight:700, color:T.white, fontFamily:"'Fraunces',serif" }}>{selectedProject.project || selectedProject.name || "—"}</div>
                         </div>
                 <div>
                   <div style={{ fontSize:10, color:T.textMuted, marginBottom:4 }}>Project Developer</div>
@@ -1646,7 +1646,7 @@ function ProjectsTab({
                 </div>
                         <div>
                           <div style={{ fontSize:10, color:T.textMuted, marginBottom:4 }}>Property Type</div>
-                          <div style={{ fontSize:15, fontWeight:700, color:T.teal }}>{selectedProject.type || "â€”"}</div>
+                          <div style={{ fontSize:15, fontWeight:700, color:T.teal }}>{selectedProject.type || "—"}</div>
                         </div>
                         <div>
                           <div style={{ fontSize:10, color:T.textMuted, marginBottom:4 }}>Market Segment</div>
@@ -1691,11 +1691,11 @@ function ProjectsTab({
                         </div>
                         <div>
                           <div style={{ fontSize:10, color:T.textMuted, marginBottom:4 }}>Area</div>
-                          <div style={{ fontSize:14, fontWeight:700, color:T.white }}>{selectedProject.area || selectedProject.community || "â€”"}</div>
+                          <div style={{ fontSize:14, fontWeight:700, color:T.white }}>{selectedProject.area || selectedProject.community || "—"}</div>
                         </div>
                         <div>
                           <div style={{ fontSize:10, color:T.textMuted, marginBottom:4 }}>Sub-Community</div>
-                          <div style={{ fontSize:14, fontWeight:700, color:T.textSecondary }}>{selectedProject.subCommunity || "â€”"}</div>
+                          <div style={{ fontSize:14, fontWeight:700, color:T.textSecondary }}>{selectedProject.subCommunity || "—"}</div>
                         </div>
                       </div>
                       {tags.length > 0 && (
@@ -1813,9 +1813,9 @@ function ProjectsTab({
                   <div>
                     <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(160px, 1fr))", gap:12, marginBottom:16 }}>
                       {[
-                        { label:"Plot Size", value:selectedProject.plotSize || "â€”", sub:"sq ft" },
-                        { label:"Built-Up Area", value:selectedProject.builtUpArea || "â€”", sub:"sq ft" },
-                        { label:"Total Buildings", value:selectedProject.totalBuildings || "â€”", sub:"per DLD filing" },
+                        { label:"Plot Size", value:selectedProject.plotSize || "—", sub:"sq ft" },
+                        { label:"Built-Up Area", value:selectedProject.builtUpArea || "—", sub:"sq ft" },
+                        { label:"Total Buildings", value:selectedProject.totalBuildings || "—", sub:"per DLD filing" },
                         { label:"Total Units", value:(selectedProject.totalUnits || 0).toLocaleString(), sub:"registered" },
                         { label:"Total Villas", value:(selectedProject.totalVillas || 0).toLocaleString(), sub:"if applicable" },
                         { label:"Total Land Plots", value:(selectedProject.totalLands || 0).toLocaleString(), sub:"if applicable" },
@@ -1853,7 +1853,7 @@ function ProjectsTab({
                     )}
                     {selectedProject.unitBreakdown?.length > 0 && (
                       <div className="chart-box" style={{ padding:20, marginBottom:12 }}>
-                        <div style={{ fontSize:12, fontWeight:700, color:T.white, marginBottom:14 }}>Unit Type â€” Price & PPSF (Developer Disclosed)</div>
+                        <div style={{ fontSize:12, fontWeight:700, color:T.white, marginBottom:14 }}>Unit Type — Price & PPSF (Developer Disclosed)</div>
                         <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(200px, 1fr))", gap:10 }}>
                           {Object.entries(selectedProject.unitBreakdown||{}).map(([uType,uCount],i) => (
                             <div key={i} style={{ padding:"14px 16px", background:T.surfaceAlt, borderRadius:10, border:`1px solid ${T.border}` }}>
@@ -1929,18 +1929,18 @@ function ProjectsTab({
                       </div>
                       <div className="kpi-card">
                         <div style={{ fontSize:10, fontWeight:700, color:T.textMuted, letterSpacing:1, textTransform:"uppercase", marginBottom:8 }}>Price per Sq.ft</div>
-                        <div style={{ fontFamily:"'Fraunces',serif", fontSize:24, fontWeight:800, color:T.white }}>{selectedProject.ppsf ? "AED " + selectedProject.ppsf.toLocaleString() : "â€”"}</div>
+                        <div style={{ fontFamily:"'Fraunces',serif", fontSize:24, fontWeight:800, color:T.white }}>{selectedProject.ppsf ? "AED " + selectedProject.ppsf.toLocaleString() : "—"}</div>
                         <div style={{ fontSize:10, color:T.textMuted, marginTop:4 }}>PPSF from listings</div>
                       </div>
                       <div className="kpi-card">
                         <div style={{ fontSize:10, fontWeight:700, color:T.textMuted, letterSpacing:1, textTransform:"uppercase", marginBottom:8 }}>Community Benchmark PPSF</div>
                         <div style={{ fontFamily:"'Fraunces',serif", fontSize:24, fontWeight:800, color:bench.value ? T.teal : T.textMuted }}>{bench.value ? "AED " + bench.value.toLocaleString() : "Pending"}</div>
-                        {bench.p25 && bench.p75 && <div style={{ fontSize:10, color:T.textMuted, marginTop:2 }}>Range AED {bench.p25.toLocaleString()}â€“{bench.p75.toLocaleString()}</div>}
+                        {bench.p25 && bench.p75 && <div style={{ fontSize:10, color:T.textMuted, marginTop:2 }}>Range AED {bench.p25.toLocaleString()}–{bench.p75.toLocaleString()}</div>}
                         <div style={{ fontSize:10, color:T.textMuted, marginTop:4 }}>{bench.source}</div>
                       </div>
                       <div className="kpi-card">
                         <div style={{ fontSize:10, fontWeight:700, color:T.textMuted, letterSpacing:1, textTransform:"uppercase", marginBottom:8 }}>Payment Plan</div>
-                        <div style={{ fontFamily:"'Fraunces',serif", fontSize:20, fontWeight:800, color:T.gold }}>{selectedProject.paymentPlan || "â€”"}</div>
+                        <div style={{ fontFamily:"'Fraunces',serif", fontSize:20, fontWeight:800, color:T.gold }}>{selectedProject.paymentPlan || "—"}</div>
                         <div style={{ fontSize:10, color:T.textMuted, marginTop:4 }}>During / Post-handover split</div>
                       </div>
                     </div>
@@ -1953,7 +1953,7 @@ function ProjectsTab({
                         </div>
                         <div>
                           <div style={{ fontSize:10, color:T.textMuted, marginBottom:4 }}>Escrow Bank</div>
-                          <div style={{ fontSize:14, fontWeight:700, color:T.teal }}>{selectedProject.escrowBank || "â€”"}</div>
+                          <div style={{ fontSize:14, fontWeight:700, color:T.teal }}>{selectedProject.escrowBank || "—"}</div>
                         </div>
                         <div>
                           <div style={{ fontSize:10, color:T.textMuted, marginBottom:4 }}>Service Charge</div>
@@ -1971,7 +1971,7 @@ function ProjectsTab({
                             </div>
                           </div>
                           <div style={{ fontSize:11, color:T.textMuted, lineHeight:1.7 }}>
-                            Worked example â€” AED {((selectedProject.priceMin||0)/1000000).toFixed(1)}M: Pay AED {((selectedProject.priceMin||0)*(parseInt(selectedProject.paymentPlan.split("/")[0])||60)/100/1000000).toFixed(2)}M during construction, AED {((selectedProject.priceMin||0)*(parseInt(selectedProject.paymentPlan.split("/")[1])||40)/100/1000000).toFixed(2)}M at handover.
+                            Worked example — AED {((selectedProject.priceMin||0)/1000000).toFixed(1)}M: Pay AED {((selectedProject.priceMin||0)*(parseInt(selectedProject.paymentPlan.split("/")[0])||60)/100/1000000).toFixed(2)}M during construction, AED {((selectedProject.priceMin||0)*(parseInt(selectedProject.paymentPlan.split("/")[1])||40)/100/1000000).toFixed(2)}M at handover.
                           </div>
                         </div>
                       )}
@@ -1997,12 +1997,12 @@ function ProjectsTab({
                     <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit, minmax(180px, 1fr))", gap:12, marginBottom:16 }}>
                       <div className="kpi-card">
                         <div style={{ fontSize:10, fontWeight:700, color:T.textMuted, letterSpacing:1, textTransform:"uppercase", marginBottom:8 }}>Gross Yield</div>
-                        <div style={{ fontFamily:"'Fraunces',serif", fontSize:26, fontWeight:800, color:selectedProject.grossYield >= 7 ? T.green : selectedProject.grossYield >= 5 ? T.gold : T.textSecondary }}>{selectedProject.grossYield ? (selectedProject.grossYield.toFixed(1) + "%" + (selectedProject.grossYieldIsEstimate ? " (est.)" : "")) : "â€”"}</div>
+                        <div style={{ fontFamily:"'Fraunces',serif", fontSize:26, fontWeight:800, color:selectedProject.grossYield >= 7 ? T.green : selectedProject.grossYield >= 5 ? T.gold : T.textSecondary }}>{selectedProject.grossYield ? (selectedProject.grossYield.toFixed(1) + "%" + (selectedProject.grossYieldIsEstimate ? " (est.)" : "")) : "—"}</div>
                         <div style={{ fontSize:10, color:T.textMuted }}>Annual rent ÷ purchase price</div>
                       </div>
                       <div className="kpi-card">
                         <div style={{ fontSize:10, fontWeight:700, color:T.textMuted, letterSpacing:1, textTransform:"uppercase", marginBottom:8 }}>Net Yield</div>
-                        <div style={{ fontFamily:"'Fraunces',serif", fontSize:26, fontWeight:800, color:T.teal }}>{selectedProject.netYield ? selectedProject.netYield.toFixed(1) + "%" : "â€”"}</div>
+                        <div style={{ fontFamily:"'Fraunces',serif", fontSize:26, fontWeight:800, color:T.teal }}>{selectedProject.netYield ? selectedProject.netYield.toFixed(1) + "%" : "—"}</div>
                         <div style={{ fontSize:10, color:T.textMuted }}>After service charges</div>
                       </div>
                       <div className="kpi-card">
@@ -2035,7 +2035,7 @@ function ProjectsTab({
                   <div>
                     <div style={{ padding:"18px 20px", background:`linear-gradient(135deg, rgba(212,168,67,0.08), rgba(20,184,166,0.04))`, border:`1px solid ${T.border}`, borderRadius:14, marginBottom:16 }}>
                       <div style={{ fontSize:11, fontWeight:700, color:T.gold, letterSpacing:1, textTransform:"uppercase", marginBottom:10 }}>Developer & Regulatory Compliance</div>
-                      <div style={{ fontSize:22, fontWeight:800, color:T.white, fontFamily:"'Fraunces',serif", marginBottom:4 }}>{selectedProject.developer || "â€”"}</div>
+                      <div style={{ fontSize:22, fontWeight:800, color:T.white, fontFamily:"'Fraunces',serif", marginBottom:4 }}>{selectedProject.developer || "—"}</div>
                       {selectedProject.tier && <div style={{ fontSize:12, padding:"3px 10px", borderRadius:6, background:selectedProject.tier === 1 ? "rgba(16,185,129,0.15)" : "rgba(245,158,11,0.15)", color:selectedProject.tier === 1 ? T.green : "#F59E0B", fontWeight:700, display:"inline-block" }}>Tier {selectedProject.tier} Developer</div>}
                     </div>
                     <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit, minmax(200px, 1fr))", gap:12, marginBottom:16 }}>
@@ -2050,11 +2050,11 @@ function ProjectsTab({
                       </div>
                       <div className="kpi-card">
                         <div style={{ fontSize:10, fontWeight:700, color:T.textMuted, letterSpacing:1, textTransform:"uppercase", marginBottom:8 }}>Escrow Bank</div>
-                        <div style={{ fontSize:14, fontWeight:700, color:T.teal }}>{selectedProject.escrowBank || "â€”"}</div>
+                        <div style={{ fontSize:14, fontWeight:700, color:T.teal }}>{selectedProject.escrowBank || "—"}</div>
                       </div>
                       <div className="kpi-card">
                         <div style={{ fontSize:10, fontWeight:700, color:T.textMuted, letterSpacing:1, textTransform:"uppercase", marginBottom:8 }}>DLD Project Status</div>
-                        <div style={{ fontSize:14, fontWeight:700, color:T.white }}>{selectedProject.dldStatus || selectedProject.status || "â€”"}</div>
+                        <div style={{ fontSize:14, fontWeight:700, color:T.white }}>{selectedProject.dldStatus || selectedProject.status || "—"}</div>
                       </div>
                     </div>
                     <div className="chart-box" style={{ padding:18, marginBottom:12 }}>
@@ -2062,15 +2062,15 @@ function ProjectsTab({
                       <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(140px, 1fr))", gap:10 }}>
                         <div style={{ padding:"10px 12px", background:T.surfaceAlt, borderRadius:8 }}>
                           <div style={{ fontSize:10, color:T.textMuted, marginBottom:4 }}>Build Progress</div>
-                          <div style={{ fontSize:16, fontWeight:700, color:T.white }}>{selectedProject.constructionPct != null ? selectedProject.constructionPct + "%" : "â€”"}</div>
+                          <div style={{ fontSize:16, fontWeight:700, color:T.white }}>{selectedProject.constructionPct != null ? selectedProject.constructionPct + "%" : "—"}</div>
                         </div>
                         <div style={{ padding:"10px 12px", background:T.surfaceAlt, borderRadius:8 }}>
                           <div style={{ fontSize:10, color:T.textMuted, marginBottom:4 }}>Expected Handover</div>
-                          <div style={{ fontSize:16, fontWeight:700, color:T.gold }}>{selectedProject.handover || selectedProject.expectedHandover || "â€”"}</div>
+                          <div style={{ fontSize:16, fontWeight:700, color:T.gold }}>{selectedProject.handover || selectedProject.expectedHandover || "—"}</div>
                         </div>
                         <div style={{ padding:"10px 12px", background:T.surfaceAlt, borderRadius:8 }}>
                           <div style={{ fontSize:10, color:T.textMuted, marginBottom:4 }}>Contracted Handover</div>
-                          <div style={{ fontSize:13, fontWeight:700, color:T.textSecondary }}>{selectedProject.contractedHandover || "â€”"}</div>
+                          <div style={{ fontSize:13, fontWeight:700, color:T.textSecondary }}>{selectedProject.contractedHandover || "—"}</div>
                         </div>
                         <div style={{ padding:"10px 12px", background:T.surfaceAlt, borderRadius:8 }}>
                           <div style={{ fontSize:10, color:T.textMuted, marginBottom:4 }}>Actual Handover</div>
@@ -2253,18 +2253,18 @@ function ProjectsTab({
                     <div className="chart-box" style={{ padding:20, marginBottom:16 }}>
                       <div style={{ fontSize:12, fontWeight:700, color:T.white, marginBottom:14 }}>Project Summary (Factual Data)</div>
                       <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12, fontSize:12, color:T.textSecondary, lineHeight:1.9 }}>
-                        <div><strong style={{ color:T.white }}>Project:</strong> {selectedProject.project || selectedProject.name || "â€”"}</div>
-                        <div><strong style={{ color:T.white }}>Developer:</strong> {selectedProject.developer || "â€”"}</div>
-                        <div><strong style={{ color:T.white }}>Community:</strong> {selectedProject.community || "â€”"}</div>
-                        <div><strong style={{ color:T.white }}>Type:</strong> {selectedProject.type || "â€”"}</div>
+                        <div><strong style={{ color:T.white }}>Project:</strong> {selectedProject.project || selectedProject.name || "—"}</div>
+                        <div><strong style={{ color:T.white }}>Developer:</strong> {selectedProject.developer || "—"}</div>
+                        <div><strong style={{ color:T.white }}>Community:</strong> {selectedProject.community || "—"}</div>
+                        <div><strong style={{ color:T.white }}>Type:</strong> {selectedProject.type || "—"}</div>
                         <div><strong style={{ color:T.white }}>Starting Price:</strong> {selectedProject.priceMin ? "AED " + (selectedProject.priceMin/1000000).toFixed(2) + "M" : "TBC"}</div>
                         <div><strong style={{ color:T.white }}>PPSF:</strong> AED {(selectedProject.ppsf || 0).toLocaleString()}</div>
-                        <div><strong style={{ color:T.white }}>Gross Yield:</strong> {selectedProject.grossYield ? selectedProject.grossYield + "%" : "â€”"}</div>
+                        <div><strong style={{ color:T.white }}>Gross Yield:</strong> {selectedProject.grossYield ? selectedProject.grossYield + "%" : "—"}</div>
                         <div><strong style={{ color:T.white }}>Payment Plan:</strong> {selectedProject.paymentPlan || "TBC"}</div>
                         <div><strong style={{ color:T.white }}>Handover:</strong> {selectedProject.handover || "TBC"}</div>
                         <div><strong style={{ color:T.white }}>DLD Project #:</strong> {selectedProject.reraNo || selectedProject.projectNumber || "Pending"}</div>
-                        <div><strong style={{ color:T.white }}>Escrow:</strong> {selectedProject.escrowBank || "â€”"}</div>
-                        <div><strong style={{ color:T.white }}>Build Progress:</strong> {selectedProject.constructionPct != null ? (selectedProject.constructionPct + "%" + (selectedProject.constructionPctIsEstimate ? " (est.)" : "")) : "â€”"}</div>
+                        <div><strong style={{ color:T.white }}>Escrow:</strong> {selectedProject.escrowBank || "—"}</div>
+                        <div><strong style={{ color:T.white }}>Build Progress:</strong> {selectedProject.constructionPct != null ? (selectedProject.constructionPct + "%" + (selectedProject.constructionPctIsEstimate ? " (est.)" : "")) : "—"}</div>
                       </div>
                     </div>
                     {(() => {
@@ -2272,7 +2272,7 @@ function ProjectsTab({
                       const origin = (typeof window !== "undefined" && window.location && window.location.origin) ? window.location.origin : "https://emaar-dashboard.vercel.app";
                       const projectUrl = `${origin}/project/${encodeURIComponent(selectedProject.id || "")}`;
                       const txt = [
-                        "ðŸ™ï¸ DXB ANALYTICS â€” PROPERTY DATA REPORT",
+                        "ðŸ™ï¸ DXB ANALYTICS — PROPERTY DATA REPORT",
                         "â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”",
                         `ðŸ“Œ ${selectedProject.project || selectedProject.name}`,
                         `ðŸ¢ Developer: ${selectedProject.developer}`,
@@ -2285,7 +2285,7 @@ function ProjectsTab({
                         units ? `\nðŸ“ UNIT BREAKDOWN\n${units}` : "",
                         "",
                         "ðŸ“Š RENTAL DATA",
-                        `   Gross Yield: ${selectedProject.grossYield||"â€”"}%`,
+                        `   Gross Yield: ${selectedProject.grossYield||"—"}%`,
                         `   Payment Plan: ${selectedProject.paymentPlan||"TBC"}`,
                         `   Handover: ${selectedProject.handover||"TBC"}`,
                         "",
@@ -2294,10 +2294,10 @@ function ProjectsTab({
                         `ðŸ”— Full report: ${projectUrl}`,
                         "â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”",
                         "Data Source: Dubai Land Department (DLD) public records",
-                        "Informational only â€” not investment advice",
+                        "Informational only — not investment advice",
                         "For regulated advice contact a RERA-licensed consultant",
                       ].filter(line => line !== "").join("\n");
-                      const emailSubject = `Property Data Report â€” ${selectedProject.project || selectedProject.name}`;
+                      const emailSubject = `Property Data Report — ${selectedProject.project || selectedProject.name}`;
                       const btnStyle = (color) => ({ padding:"10px 18px", background:`rgba(${color},0.1)`, border:`1px solid rgba(${color},0.3)`, borderRadius:8, color:`rgb(${color})`, fontSize:12, fontWeight:600, cursor:"pointer", fontFamily:"'Outfit',sans-serif", display:"inline-flex", alignItems:"center", gap:6 });
                       return (
                         <div className="chart-box" style={{ padding:18, marginBottom:12 }}>

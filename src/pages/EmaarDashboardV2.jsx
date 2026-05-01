@@ -100,21 +100,21 @@ const getInvestmentScore = (p) => {
   let score = 0;
   const breakdown = [];
 
-  // 1. Yield (0â€”3 pts)
+  // 1. Yield (0—3 pts)
   const gross = p.gross || p.yield || 0;
   if (gross >= 8)      { score += 3; breakdown.push({ label: "Yield", pts: 3, max: 3, note: gross + "% gross" }); }
   else if (gross >= 6) { score += 2; breakdown.push({ label: "Yield", pts: 2, max: 3, note: gross + "% gross" }); }
   else if (gross >= 4) { score += 1; breakdown.push({ label: "Yield", pts: 1, max: 3, note: gross + "% gross" }); }
   else                 { breakdown.push({ label: "Yield", pts: 0, max: 3, note: gross ? gross + "%" : "No data" }); }
 
-  // 2. Value (PPSF) (0â€”2 pts)
+  // 2. Value (PPSF) (0—2 pts)
   const ppsf = p.ppsf || 0;
   if (ppsf > 0 && ppsf <= 1500)       { score += 2; breakdown.push({ label: "Value", pts: 2, max: 2, note: "AED " + ppsf + "/sqft" }); }
   else if (ppsf > 0 && ppsf <= 2200)  { score += 1; breakdown.push({ label: "Value", pts: 1, max: 2, note: "AED " + ppsf + "/sqft" }); }
   else if (ppsf > 0)                  { breakdown.push({ label: "Value", pts: 0, max: 2, note: "AED " + ppsf + "/sqft" }); }
   else                                { breakdown.push({ label: "Value", pts: 0, max: 2, note: "No PPSF" }); }
 
-  // 3. Handover timing (0â€”2 pts) — sweet spot is 12â€”36 months
+  // 3. Handover timing (0—2 pts) — sweet spot is 12—36 months
   const cd = getHandoverCountdown(p.handover);
   if (cd) {
     if (cd.passed)              { score += 1.5; breakdown.push({ label: "Handover", pts: 1.5, max: 2, note: "Ready now" }); }
@@ -126,7 +126,7 @@ const getInvestmentScore = (p) => {
     breakdown.push({ label: "Handover", pts: 0, max: 2, note: "No date" });
   }
 
-  // 4. Payment plan (0â€”2 pts)
+  // 4. Payment plan (0—2 pts)
   const pp = (p.paymentPlan || p.payment || "").toLowerCase();
   if (pp.includes("80/20") || pp.includes("80:20"))       { score += 2;   breakdown.push({ label: "Payment", pts: 2,   max: 2, note: "80/20 plan" }); }
   else if (pp.includes("70/30") || pp.includes("60/40"))  { score += 1.5; breakdown.push({ label: "Payment", pts: 1.5, max: 2, note: pp }); }
@@ -134,7 +134,7 @@ const getInvestmentScore = (p) => {
   else if (pp.length > 0)                                 { score += 0.5; breakdown.push({ label: "Payment", pts: 0.5, max: 2, note: pp }); }
   else                                                    { breakdown.push({ label: "Payment", pts: 0, max: 2, note: "Unknown" }); }
 
-  // 5. Golden Visa eligible (0â€”1 pt)
+  // 5. Golden Visa eligible (0—1 pt)
   if (p.price && p.price >= GOLDEN_VISA_THRESHOLD) {
     score += 1; breakdown.push({ label: "Golden Visa", pts: 1, max: 1, note: "Eligible" });
   } else {
@@ -198,20 +198,20 @@ const PROPERTY_TYPES = [
   {
     group: "Commercial",
     types: [
-      { value: "office",        label: "Office",          beds: ["< 500 sqft","500â€”1K sqft","1Kâ€”2.5K sqft","2.5Kâ€”5K sqft","5K+ sqft","Full Floor","Full Building"] },
-      { value: "retail",        label: "Retail / Shop",   beds: ["< 500 sqft","500â€”1K sqft","1Kâ€”2.5K sqft","2.5K+ sqft"] },
-      { value: "showroom",      label: "Showroom",        beds: ["< 2K sqft","2Kâ€”5K sqft","5K+ sqft"] },
-      { value: "warehouse",     label: "Warehouse",       beds: ["< 5K sqft","5Kâ€”10K sqft","10K+ sqft"] },
+      { value: "office",        label: "Office",          beds: ["< 500 sqft","500—1K sqft","1K—2.5K sqft","2.5K—5K sqft","5K+ sqft","Full Floor","Full Building"] },
+      { value: "retail",        label: "Retail / Shop",   beds: ["< 500 sqft","500—1K sqft","1K—2.5K sqft","2.5K+ sqft"] },
+      { value: "showroom",      label: "Showroom",        beds: ["< 2K sqft","2K—5K sqft","5K+ sqft"] },
+      { value: "warehouse",     label: "Warehouse",       beds: ["< 5K sqft","5K—10K sqft","10K+ sqft"] },
       { value: "coworking",     label: "Co-working Space",beds: ["Hot Desk","Dedicated Desk","Private Office","Full Floor"] },
     ]
   },
   {
     group: "Industrial & Land",
     types: [
-      { value: "industrial",    label: "Industrial Unit",    beds: ["< 5K sqft","5Kâ€”20K sqft","20K+ sqft"] },
-      { value: "land_res",      label: "Land — Residential", beds: ["< 5K sqft","5Kâ€”15K sqft","15K+ sqft"] },
-      { value: "land_comm",     label: "Land — Commercial",  beds: ["< 10K sqft","10Kâ€”50K sqft","50K+ sqft"] },
-      { value: "land_mixed",    label: "Mixed Use Plot",     beds: ["< 10K sqft","10Kâ€”50K sqft","50K+ sqft"] },
+      { value: "industrial",    label: "Industrial Unit",    beds: ["< 5K sqft","5K—20K sqft","20K+ sqft"] },
+      { value: "land_res",      label: "Land — Residential", beds: ["< 5K sqft","5K—15K sqft","15K+ sqft"] },
+      { value: "land_comm",     label: "Land — Commercial",  beds: ["< 10K sqft","10K—50K sqft","50K+ sqft"] },
+      { value: "land_mixed",    label: "Mixed Use Plot",     beds: ["< 10K sqft","10K—50K sqft","50K+ sqft"] },
     ]
   },
 ];
@@ -230,20 +230,20 @@ const STATUS_OPTIONS = [
 const PRICE_PRESETS_APT = [
   { label: "Any Price", min: 0, max: 0 },
   { label: "< 500K", min: 0, max: 500000 },
-  { label: "500Kâ€”1M", min: 500000, max: 1000000 },
-  { label: "1Mâ€”2M", min: 1000000, max: 2000000 },
-  { label: "2Mâ€”5M", min: 2000000, max: 5000000 },
-  { label: "5Mâ€”10M", min: 5000000, max: 10000000 },
+  { label: "500K—1M", min: 500000, max: 1000000 },
+  { label: "1M—2M", min: 1000000, max: 2000000 },
+  { label: "2M—5M", min: 2000000, max: 5000000 },
+  { label: "5M—10M", min: 5000000, max: 10000000 },
   { label: "10M+", min: 10000000, max: 0 },
 ];
 
 const PRICE_PRESETS_VILLA = [
   { label: "Any Price", min: 0, max: 0 },
   { label: "< 2M", min: 0, max: 2000000 },
-  { label: "2Mâ€”5M", min: 2000000, max: 5000000 },
-  { label: "5Mâ€”10M", min: 5000000, max: 10000000 },
-  { label: "10Mâ€”25M", min: 10000000, max: 25000000 },
-  { label: "25Mâ€”50M", min: 25000000, max: 50000000 },
+  { label: "2M—5M", min: 2000000, max: 5000000 },
+  { label: "5M—10M", min: 5000000, max: 10000000 },
+  { label: "10M—25M", min: 10000000, max: 25000000 },
+  { label: "25M—50M", min: 25000000, max: 50000000 },
   { label: "50M+", min: 50000000, max: 0 },
 ];
 
@@ -573,7 +573,7 @@ const GlobalContextFilter = ({
           }
           if (gPriceMin > 0 || gPriceMax > 0) {
             const plabel = gPriceMin > 0 && gPriceMax > 0
-              ? `AED ${(gPriceMin/1000000).toFixed(1)}Mâ€”${(gPriceMax/1000000).toFixed(1)}M`
+              ? `AED ${(gPriceMin/1000000).toFixed(1)}M—${(gPriceMax/1000000).toFixed(1)}M`
               : gPriceMin > 0
                 ? `From AED ${(gPriceMin/1000000).toFixed(1)}M`
                 : `Up to AED ${(gPriceMax/1000000).toFixed(1)}M`;
@@ -617,7 +617,7 @@ const GlobalContextFilter = ({
                     }}
                     onMouseEnter={e => { e.currentTarget.style.background = "rgba(212,168,67,0.3)"; }}
                     onMouseLeave={e => { e.currentTarget.style.background = "rgba(212,168,67,0.15)"; }}
-                  >Ãƒâ€”</button>
+                  >Ãƒ—</button>
                 </span>
               ))}
               {gPriceMin >= GOLDEN_VISA_THRESHOLD && (
@@ -1328,7 +1328,7 @@ const ForecastCard = ({ firm, color, short, forecast, detail, bullets, sourceUrl
               </li>
             ))}
           </ul>
-          <a href={sourceUrl} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{ display: "inline-block", marginTop: 10, fontSize: 10, color, fontWeight: 700, textDecoration: "none" }}>Full Report Ã¢â€ â€”</a>
+          <a href={sourceUrl} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{ display: "inline-block", marginTop: 10, fontSize: 10, color, fontWeight: 700, textDecoration: "none" }}>Full Report Ã¢â€ —</a>
         </div>
       )}
       {!expanded && <div style={{ marginTop: 8, fontSize: 10, color: T.textMuted }}>Click to expand full analysis</div>}
@@ -1681,7 +1681,7 @@ const LoginScreen = ({ onLogin, onBack, defaultMode = "login" }) => {
                     {showConfirm ? Icons.eyeOff : Icons.eye}
                   </button>
                 </div>
-                {confirmPass && confirmPass !== pass && <div style={{ fontSize: 10, color: T.red, marginTop: 4 }}>Ã¢Å“â€” Passwords do not match</div>}
+                {confirmPass && confirmPass !== pass && <div style={{ fontSize: 10, color: T.red, marginTop: 4 }}>Ã¢Å“— Passwords do not match</div>}
                 {confirmPass && confirmPass === pass && <div style={{ fontSize: 10, color: T.green, marginTop: 4 }}>âœ“ Passwords match</div>}
               </div>
             )}
@@ -1919,7 +1919,7 @@ const DataBadge = ({ source, date, type = "dld" }) => {
     dld:     { label: "DLD Verified",     color: "#10B981", icon: "âœ“" },
     reidin:  { label: "REIDIN Index",     color: "#3B82F6", icon: "âœ“" },
     emaar:   { label: "Emaar IR",         color: "#D4A843", icon: "âœ“" },
-    live:    { label: "Live · Firestore", color: "#10B981", icon: "Ã¢â€”Â" },
+    live:    { label: "Live · Firestore", color: "#10B981", icon: "Ã¢—Â" },
     ai:      { label: "AI Estimate",      color: "#8B5CF6", icon: "Ã¢Å“Â¦" },
     manual:  { label: "Admin Verified",   color: "#F59E0B", icon: "âœ“" },
   };
@@ -1974,7 +1974,7 @@ const TabSources = ({ sources }) => (
           }}
           onMouseEnter={e => { e.currentTarget.style.color = "#D4A843"; e.currentTarget.style.borderColor = "rgba(212,168,67,0.4)"; }}
           onMouseLeave={e => { e.currentTarget.style.color = "rgba(255,255,255,0.55)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)"; }}
-          >{s.label} Ã¢â€ â€”</a>
+          >{s.label} Ã¢â€ —</a>
         ) : (
           <span key={i} style={{
             fontSize: 10,
@@ -3072,7 +3072,7 @@ export default function EmaarDashboardV2() {
       towerCount: 1,
       totalBuildings: 1,
       plotSizeSqM: 31421.99,               /* âœ“ DLD Mashrooi */
-      plotSize: "338,224",                 /* sqft conversion: 31,421.99 Ãƒâ€” 10.764 */
+      plotSize: "338,224",                 /* sqft conversion: 31,421.99 Ãƒ— 10.764 */
       builtUpArea: null,                   /* Not published by DLD Mashrooi */
       totalVillas: 0,
       totalLands: 0,
@@ -4300,7 +4300,7 @@ export default function EmaarDashboardV2() {
                 style={{ background: "rgba(212,168,67,0.08)", border: `1px solid rgba(212,168,67,0.2)` }}>
                 {SvgIcons.Settings({ width: 15, height: 15, strokeWidth: 1.5, style: { color: T.gold, flexShrink: 0 } })}
                 <span>Admin Console</span>
-                <span style={{ marginLeft: "auto", fontSize: 9, color: T.textMuted }}>Ã¢â€ â€”</span>
+                <span style={{ marginLeft: "auto", fontSize: 9, color: T.textMuted }}>Ã¢â€ —</span>
               </button>
             </div>
           )}
@@ -4623,7 +4623,7 @@ activeProjects={extraProjects?.length > 0 ? extraProjects : []}
                     <div style={{ fontSize:11, color:T.textMuted }}>Construction Progress</div>
                     <div style={{ fontFamily:"'Fraunces',serif", fontSize:28, fontWeight:900, color:hvSelected.status==="On Track"?T.green:hvSelected.status==="Delayed"?"#F97316":T.red }}>{hvSelected.constructionPct}%</div>
                   </div>
-                  <button type="button" onClick={() => setHvSelected(null)} style={{ width:36, height:36, borderRadius:"50%", background:T.surfaceAlt, border:`1px solid ${T.border}`, color:T.white, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", fontSize:18, fontFamily:"'Outfit',sans-serif" }}>Ãƒâ€”</button>
+                  <button type="button" onClick={() => setHvSelected(null)} style={{ width:36, height:36, borderRadius:"50%", background:T.surfaceAlt, border:`1px solid ${T.border}`, color:T.white, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", fontSize:18, fontFamily:"'Outfit',sans-serif" }}>Ãƒ—</button>
                 </div>
               </div>
 
@@ -4637,7 +4637,7 @@ activeProjects={extraProjects?.length > 0 ? extraProjects : []}
                     { label:"Delay",              value:hvSelected.delayMonths>0?"+"+hvSelected.delayMonths+" months":"None", color:hvSelected.delayMonths>0?"#F97316":T.green },
                     { label:"Grace Period",       value:hvSelected.gracePeriodMonths+" months", color:T.white },
                     { label:"Escrow Funded",      value:hvSelected.escrowPct+"%", color:hvSelected.escrowPct>=70?T.green:hvSelected.escrowPct>=40?T.gold:"#F97316" },
-                    { label:"RERA Inspections",   value:hvSelected.inspectionsPassed+"âœ“ "+hvSelected.inspectionsFailed+"Ã¢Å“â€”", color:hvSelected.inspectionsFailed>0?"#F97316":T.green },
+                    { label:"RERA Inspections",   value:hvSelected.inspectionsPassed+"âœ“ "+hvSelected.inspectionsFailed+"Ã¢Å“—", color:hvSelected.inspectionsFailed>0?"#F97316":T.green },
                     { label:"Developer On-Time",  value:hvSelected.developerOnTimeRate+"%", color:hvSelected.developerOnTimeRate>=85?T.green:hvSelected.developerOnTimeRate>=75?T.gold:T.red },
                     { label:"Total Units",        value:hvSelected.totalUnits.toLocaleString(), color:T.white },
                   ].map((k,i) => (
@@ -4777,7 +4777,7 @@ activeProjects={extraProjects?.length > 0 ? extraProjects : []}
                     <div style={{ fontSize:11, color:T.textMuted }}>complete</div>
                   </div>
                   <button type="button" onClick={() => setHdvSelected(null)}
-                    style={{ width:36, height:36, borderRadius:"50%", background:T.surfaceAlt, border:`1px solid ${T.border}`, color:T.white, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", fontSize:18, fontFamily:"'Outfit',sans-serif" }}>Ãƒâ€”</button>
+                    style={{ width:36, height:36, borderRadius:"50%", background:T.surfaceAlt, border:`1px solid ${T.border}`, color:T.white, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", fontSize:18, fontFamily:"'Outfit',sans-serif" }}>Ãƒ—</button>
                 </div>
               </div>
               {/* Overlay content */}
@@ -5408,7 +5408,7 @@ activeProjects={extraProjects?.length > 0 ? extraProjects : []}
         <div role="dialog" aria-modal="true" aria-label="Project comparison" style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.9)", zIndex: 3000, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(8px)" }} onClick={() => setShowCompare(false)}>
           <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.gold}`, width: "95%", maxWidth: 900, maxHeight: "90vh", overflowY: "auto", padding: 28 }} onClick={e => e.stopPropagation()}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-              <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: 22, color: T.gold, margin: 0 }}>Ã¢Å¡â€“️ Project Comparison</h2>
+              <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: 22, color: T.gold, margin: 0 }}>Ã¢Å¡–️ Project Comparison</h2>
               <button type="button" onClick={() => setShowCompare(false)} style={{ background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16 }}>Ã¢Å“â€¢</button>
             </div>
 
@@ -5469,7 +5469,7 @@ activeProjects={extraProjects?.length > 0 ? extraProjects : []}
                 {compareList.map(p => p.emaarUrl ? (
                   <a key={p.id} href={p.emaarUrl} target="_blank" rel="noopener noreferrer"
                     style={{ flex: 1, padding: "8px 0", background: "rgba(212,168,67,0.08)", border: "1px solid rgba(212,168,67,0.35)", borderRadius: 10, color: T.gold, fontSize: 11, fontWeight: 700, textAlign: "center", textDecoration: "none" }}>
-                    {(p.name || p.project || "").split(" ").slice(0,2).join(" ")} Ã¢â€ â€” {getLinkDomain(p.emaarUrl)}
+                    {(p.name || p.project || "").split(" ").slice(0,2).join(" ")} Ã¢â€ — {getLinkDomain(p.emaarUrl)}
                   </a>
                 ) : <div key={p.id} style={{ flex: 1 }} />)}
               </div>
@@ -5499,7 +5499,7 @@ activeProjects={extraProjects?.length > 0 ? extraProjects : []}
                     <div>
                       <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                         <span style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{p.name}</span>
-                        {p.emaarUrl && <a href={p.emaarUrl} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{ fontSize: 9, color: T.gold, textDecoration: "none", padding: "1px 4px", border: "1px solid rgba(212,168,67,0.3)", borderRadius: 3, fontWeight: 700, flexShrink: 0 }}>Ã¢â€ â€”</a>}
+                        {p.emaarUrl && <a href={p.emaarUrl} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{ fontSize: 9, color: T.gold, textDecoration: "none", padding: "1px 4px", border: "1px solid rgba(212,168,67,0.3)", borderRadius: 3, fontWeight: 700, flexShrink: 0 }}>Ã¢â€ —</a>}
                       </div>
                       <div style={{ fontSize: 10, color: T.textMuted }}>{p.community} · {p.type} · {p.beds}</div>
                     </div>
@@ -5551,7 +5551,7 @@ activeProjects={extraProjects?.length > 0 ? extraProjects : []}
       {showSetAlert && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.9)", zIndex: 3200, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(10px)" }} onClick={() => setShowSetAlert(null)}>
           <div style={{ background: T.surface, borderRadius: 20, border: `1px solid ${T.border}`, width: "min(440px,95vw)", padding: "28px 28px 24px", position: "relative" }} onClick={e => e.stopPropagation()}>
-            <button type="button" onClick={() => setShowSetAlert(null)} style={{ position: "absolute", top: 16, right: 16, background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center" }}>Ãƒâ€”</button>
+            <button type="button" onClick={() => setShowSetAlert(null)} style={{ position: "absolute", top: 16, right: 16, background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center" }}>Ãƒ—</button>
             <div style={{ marginBottom: 20 }}>
               <div style={{ fontSize: 10, color: T.gold, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 6 }}>Price Alert</div>
               <div style={{ fontFamily: "'Fraunces', serif", fontSize: 20, fontWeight: 800, color: T.white }}>{showSetAlert.name}</div>
@@ -5770,10 +5770,10 @@ activeProjects={extraProjects?.length > 0 ? extraProjects : []}
       {/* Ã¢â€â‚¬Ã¢â€â‚¬ MOBILE BOTTOM NAV BAR Ã¢â€â‚¬Ã¢â€â‚¬ */}
       <nav style={{ display: "none" }} className="mobile-bottom-nav" aria-label="Quick navigation">
         {[
-          { key: "Overview", icon: "Ã¢â€”Ë†", label: "Overview" },
+          { key: "Overview", icon: "Ã¢—Ë†", label: "Overview" },
           { key: "Projects", icon: "Ã¢Å Å¾", label: "Projects" },
-          { key: "Yields", icon: "Ã¢â€”Å½", label: "Yields" },
-          { key: "Portfolio", icon: "Ã¢â€”â€°", label: "Portfolio" },
+          { key: "Yields", icon: "Ã¢—Å½", label: "Yields" },
+          { key: "Portfolio", icon: "Ã¢—â€°", label: "Portfolio" },
           { key: "Market", icon: "Ã¢Å Â¿", label: "Market" },
         ].map(item => (
           <button key={item.key} type="button" onClick={() => { setTab(item.key); setSidebarOpen(false); }}
@@ -5869,7 +5869,7 @@ activeProjects={extraProjects?.length > 0 ? extraProjects : []}
                           return (
                             <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
                               <div style={{ width: "100%", background: isLast ? (selectedKPI.color || T.gold) : T.border, borderRadius: "3px 3px 0 0", height: `${pct}%`, minHeight: 4, position: "relative" }}>
-                                {isLast && <div style={{ position: "absolute", top: -18, left: "50%", transform: "translateX(-50%)", fontSize: 9, color: selectedKPI.color || T.gold, fontWeight: 700, whiteSpace: "nowrap" }}>Ã¢â€“Â² Latest</div>}
+                                {isLast && <div style={{ position: "absolute", top: -18, left: "50%", transform: "translateX(-50%)", fontSize: 9, color: selectedKPI.color || T.gold, fontWeight: 700, whiteSpace: "nowrap" }}>Ã¢–Â² Latest</div>}
                               </div>
                               <div style={{ fontSize: 9, color: T.textMuted }}>{d.y}</div>
                             </div>
@@ -5886,7 +5886,7 @@ activeProjects={extraProjects?.length > 0 ? extraProjects : []}
                   <div style={{ fontSize: 11, color: T.textSecondary, marginTop: 2 }}>{selectedKPI.source}</div>
                 </div>
                 {selectedKPI.sourceUrl && selectedKPI.sourceUrl !== "#" && (
-                  <a href={selectedKPI.sourceUrl} target="_blank" rel="noopener noreferrer" style={{ padding: "8px 16px", background: selectedKPI.color || T.gold, color: T.bg, borderRadius: 8, fontSize: 11, fontWeight: 700, textDecoration: "none", fontFamily: "'Outfit', sans-serif" }}>View Source Ã¢â€ â€”</a>
+                  <a href={selectedKPI.sourceUrl} target="_blank" rel="noopener noreferrer" style={{ padding: "8px 16px", background: selectedKPI.color || T.gold, color: T.bg, borderRadius: 8, fontSize: 11, fontWeight: 700, textDecoration: "none", fontFamily: "'Outfit', sans-serif" }}>View Source Ã¢â€ —</a>
                 )}
               </div>
             </div>
@@ -5915,7 +5915,7 @@ activeProjects={extraProjects?.length > 0 ? extraProjects : []}
                         <div style={{ fontSize: 11, fontWeight: 600, color: a.triggered ? "#10B981" : T.white }}>{a.projectName}</div>
                         <div style={{ fontSize: 10, color: T.textMuted }}>{a.type.replace(/_/g," ")} {a.type.includes("yield") || a.type.includes("construction") ? a.value + "%" : "AED " + (a.value/1e6).toFixed(2) + "M"} {a.triggered ? "âœ“ Triggered" : "Ã¢ÂÂ³ Watching"}</div>
                       </div>
-                      <button type="button" onClick={() => removeAlert(a.id)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 16, padding: "0 4px" }}>Ãƒâ€”</button>
+                      <button type="button" onClick={() => removeAlert(a.id)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 16, padding: "0 4px" }}>Ãƒ—</button>
                     </div>
                   ))}
                 </div>
