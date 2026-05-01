@@ -1,11 +1,11 @@
 /**
- * DXB Analytics — Theme
+ * DXB Analytics �€” Theme
  * File: src/theme.js
  *
- * S16: Extracted from data.js — single source of truth for all colors/tokens.
+ * S16: Extracted from data.js �€” single source of truth for all colors/tokens.
  * Import: import { T } from "./theme";
  *
- * Iron Rule: NEVER run npx vercel --prod — use git push only
+ * Iron Rule: NEVER run npx vercel --prod �€” use git push only
  */
 
 export const T = {
@@ -17,7 +17,7 @@ export const T = {
   cardHover:    "#112240",
   navy:         "#0B1F3F",
 
-  // Gold — primary brand colour
+  // Gold �€” primary brand colour
   gold:         "#D4A843",
   goldLight:    "#E8C96A",
   goldGlow:     "rgba(212,168,67,0.15)",

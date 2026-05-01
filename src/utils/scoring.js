@@ -1,22 +1,22 @@
-/* ─────────────────────────────────────────────────────────────
-   DXB ANALYTICS — DATA COMPLETENESS SCORING
+/* �”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€
+   DXB ANALYTICS �€” DATA COMPLETENESS SCORING
    src/utils/scoring.js
    
    IMPORTANT: This file previously contained investment scoring
    with "Strong Buy/Buy/Hold/Caution" labels. That has been REMOVED
    because unlicensed investment advice violates UAE RERA law.
    
-   This version measures DATA QUALITY ONLY — what percentage of
+   This version measures DATA QUALITY ONLY �€” what percentage of
    verifiable project fields are filled in from authoritative
    sources (DLD Mashrooi, RERA, developer filings).
    
-   A high score means "we have lots of data" — NOT "good investment".
-   ───────────────────────────────────────────────────────────── */
+   A high score means "we have lots of data" �€” NOT "good investment".
+   �”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€ */
 
 /* Fields we consider for data completeness.
    Weighted by importance to the user's decision-making. */
 const DATA_FIELDS = [
-  /* CORE IDENTITY (25 points) — must-have basics */
+  /* CORE IDENTITY (25 points) �€” must-have basics */
   { field: "project",           weight: 3, check: (p) => !!(p.project || p.name || p.projectName) },
   { field: "developer",         weight: 3, check: (p) => !!(p.developer || p.developerName) },
   { field: "community",         weight: 3, check: (p) => !!(p.community || p.area) },
@@ -68,7 +68,7 @@ const DATA_FIELDS = [
   { field: "registeredDate",    weight: 1, check: (p) => !!p.registeredDate },
   { field: "expectedHandover",  weight: 2, check: (p) => !!(p.expectedHandover || p.handover) },
 
-  /* QUALITATIVE DATA (5 points) — nice-to-have */
+  /* QUALITATIVE DATA (5 points) �€” nice-to-have */
   { field: "amenities",         weight: 2, check: (p) => Array.isArray(p.amenities) && p.amenities.length >= 3 },
   { field: "view",              weight: 1, check: (p) => Array.isArray(p.view) && p.view.length > 0 },
   { field: "interiorFinish",    weight: 1, check: (p) => !!p.interiorFinish },
@@ -78,7 +78,7 @@ const DATA_FIELDS = [
 /* Total possible = sum of all weights */
 const MAX_SCORE = DATA_FIELDS.reduce((s, f) => s + f.weight, 0);
 
-/* ── Internal: compute data completeness 0-100 ── */
+/* �”€�”€ Internal: compute data completeness 0-100 �”€�”€ */
 function computeDataCompleteness(p) {
   if (!p) return { score: 0, filled: 0, total: DATA_FIELDS.length, breakdown: [] };
 
@@ -99,15 +99,15 @@ function computeDataCompleteness(p) {
   return { score, filled, total: DATA_FIELDS.length, breakdown };
 }
 
-/* ── Color ranges — based on how complete the data is ── */
+/* �”€�”€ Color ranges �€” based on how complete the data is �”€�”€ */
 export const scoreColor = (s) => {
-  if (s >= 85) return "#10B981"; // green — high-quality data
-  if (s >= 65) return "#D4A843"; // gold — good coverage
-  if (s >= 40) return "#F59E0B"; // amber — partial data
-  return "#6B7280";              // grey — minimal data
+  if (s >= 85) return "#10B981"; // green �€” high-quality data
+  if (s >= 65) return "#D4A843"; // gold �€” good coverage
+  if (s >= 40) return "#F59E0B"; // amber �€” partial data
+  return "#6B7280";              // grey �€” minimal data
 };
 
-/* ── Data quality labels (NOT investment labels) ── */
+/* �”€�”€ Data quality labels (NOT investment labels) �”€�”€ */
 export const scoreLabel = (s) => {
   if (s >= 85) return "Complete Data";
   if (s >= 65) return "Mostly Complete";
@@ -115,7 +115,7 @@ export const scoreLabel = (s) => {
   return "Minimal Data";
 };
 
-/* ── Public API ── */
+/* �”€�”€ Public API �”€�”€ */
 export function getScore(p) {
   const result = computeDataCompleteness(p);
   return {
@@ -128,10 +128,10 @@ export function getScore(p) {
   };
 }
 
-/* ── Convenience: just the number ── */
+/* �”€�”€ Convenience: just the number �”€�”€ */
 export const calcScore = (p) => getScore(p).score;
 
-/* ── DEPRECATED (kept for compatibility but does nothing special) ── */
+/* �”€�”€ DEPRECATED (kept for compatibility but does nothing special) �”€�”€ */
 export function getInvestmentScoreInternal() {
   /* Returns empty breakdown. Investment scoring removed for RERA compliance. */
   return { raw: 0, breakdown: [] };

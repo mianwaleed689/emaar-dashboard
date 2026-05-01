@@ -1,14 +1,14 @@
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-   DXB ANALYTICS â€” COORDINATES
+/* ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢
+   DXB ANALYTICS ââ‚¬â€ COORDINATES
    Extracted from EmaarDashboardV2.jsx
    Single source of truth for all Dubai community + project coords
-   Previously duplicated in 3 places â€” now deduplicated
-   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+   Previously duplicated in 3 places ââ‚¬â€ now deduplicated
+   ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ */
 
-/* â”€â”€â”€ DEFAULT FALLBACK (Downtown Dubai center) â”€â”€â”€ */
+/* ââ€â‚¬ââ€â‚¬ââ€â‚¬ DEFAULT FALLBACK (Downtown Dubai center) ââ€â‚¬ââ€â‚¬ââ€â‚¬ */
 export const DEFAULT_COORDS = [25.1972, 55.2744];
 
-/* â”€â”€â”€ 20 SEED COMMUNITIES â€” accurate Dubai coordinates â”€â”€â”€ */
+/* ââ€â‚¬ââ€â‚¬ââ€â‚¬ 20 SEED COMMUNITIES ââ‚¬â€ accurate Dubai coordinates ââ€â‚¬ââ€â‚¬ââ€â‚¬ */
 export const COMMUNITY_COORDS = {
   "Jumeirah Village Circle":    [25.0607, 55.2088],
   "JVC":                        [25.0607, 55.2088],
@@ -37,7 +37,7 @@ export const COMMUNITY_COORDS = {
   "Emaar Beachfront":           [25.0882, 55.1385],
 };
 
-/* â”€â”€â”€ EXTENDED COMMUNITIES â€” all other Dubai areas â”€â”€â”€ */
+/* ââ€â‚¬ââ€â‚¬ââ€â‚¬ EXTENDED COMMUNITIES ââ‚¬â€ all other Dubai areas ââ€â‚¬ââ€â‚¬ââ€â‚¬ */
 export const EXTENDED_COMMUNITY_COORDS = {
   "DIFC":                       [25.2100, 55.2800],
   "City Walk":                  [25.2000, 55.2550],
@@ -87,13 +87,13 @@ export const EXTENDED_COMMUNITY_COORDS = {
   "Madinat Jumeirah":           [25.1400, 55.1850],
 };
 
-/* â”€â”€â”€ ALL COMMUNITIES â€” merged lookup â”€â”€â”€ */
+/* ââ€â‚¬ââ€â‚¬ââ€â‚¬ ALL COMMUNITIES ââ‚¬â€ merged lookup ââ€â‚¬ââ€â‚¬ââ€â‚¬ */
 export const ALL_COMMUNITY_COORDS = {
   ...COMMUNITY_COORDS,
   ...EXTENDED_COMMUNITY_COORDS,
 };
 
-/* â”€â”€â”€ PROJECT-LEVEL COORDINATES â”€â”€â”€ */
+/* ââ€â‚¬ââ€â‚¬ââ€â‚¬ PROJECT-LEVEL COORDINATES ââ€â‚¬ââ€â‚¬ââ€â‚¬ */
 export const PROJECT_COORDS = {
   "Creek Waters": [25.1876, 55.3344], "Creek Waters 2": [25.1890, 55.3360],
   "Creek Horizon": [25.1860, 55.3320], "Creek Beach": [25.1920, 55.3380],
@@ -121,7 +121,7 @@ export const PROJECT_COORDS = {
   "Park Lane": [25.1110, 55.2580], "Golf Place": [25.1060, 55.2620],
 };
 
-/* â”€â”€â”€ COORDINATE RESOLVER â€” single function to get coords for any project â”€â”€â”€ */
+/* ââ€â‚¬ââ€â‚¬ââ€â‚¬ COORDINATE RESOLVER ââ‚¬â€ single function to get coords for any project ââ€â‚¬ââ€â‚¬ââ€â‚¬ */
 export const getProjectCoords = (project) => {
   // 1. Direct lat/lng on project
   if (project.lat && project.lng) return [project.lat, project.lng];
@@ -142,12 +142,12 @@ export const getProjectCoords = (project) => {
   );
   if (partialMatch) return partialMatch[1];
 
-  // 5. Default â€” Downtown Dubai center
-  console.warn("DXB Map: No coords for", project.community, "â€” using Downtown default");
+  // 5. Default ââ‚¬â€ Downtown Dubai center
+  console.warn("DXB Map: No coords for", project.community, "ââ‚¬â€ using Downtown default");
   return DEFAULT_COORDS;
 };
 
-/* â”€â”€â”€ MAP LAYER HELPERS â”€â”€â”€ */
+/* ââ€â‚¬ââ€â‚¬ââ€â‚¬ MAP LAYER HELPERS ââ€â‚¬ââ€â‚¬ââ€â‚¬ */
 export const getPPSFColor = (ppsf) => {
   if (ppsf >= 3500) return "#F59E0B";
   if (ppsf >= 2500) return "#D4A843";

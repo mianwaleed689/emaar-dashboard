@@ -1,6 +1,6 @@
 /* eslint-disable */
 /*
-  DXB ANALYTICS — SMART PHONE INPUT
+  DXB ANALYTICS �€” SMART PHONE INPUT
   Country code selector with flag + dial code + number input
   Used by: Add Lead form, Create Agent form
 */

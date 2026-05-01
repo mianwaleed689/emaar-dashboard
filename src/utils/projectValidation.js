@@ -1,5 +1,5 @@
-/* в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
-   DXB ANALYTICS вЂ” PROJECT & DEVELOPMENT VALIDATION
+/* ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬
+   DXB ANALYTICS вв‚¬вЂќ PROJECT & DEVELOPMENT VALIDATION
    src/utils/projectValidation.js
 
    Pure JavaScript validation for the hybrid two-collection model:
@@ -14,11 +14,11 @@
    All functions return { valid: boolean, errors: string[] }
 
    Matches schema spec docs/schema-v1.md (v2) and firestore.rules.
-   в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ */
+   ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ */
 
 import { isValidPropertyType, MASTER_CATEGORIES } from "./propertyTypes";
 
-// в”Ђв”Ђ Constants from the schema spec в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
+// ввЂќв‚¬ввЂќв‚¬ Constants from the schema spec ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬
 export const VALID_VISIBILITY = ["draft", "published", "archived"];
 export const VALID_TENURE = ["freehold", "leasehold", "usufruct", "musataha", "grant"];
 export const VALID_SALE_STATUS = ["off-plan", "ready", "secondary", "sold-out", "coming-soon"];
@@ -32,7 +32,7 @@ const DUBAI_LAT_MAX = 26.0;
 const DUBAI_LNG_MIN = 54.5;
 const DUBAI_LNG_MAX = 56.5;
 
-// в”Ђв”Ђ Field-level helpers в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
+// ввЂќв‚¬ввЂќв‚¬ Field-level helpers ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬
 
 function isNonEmptyString(v) {
   return typeof v === "string" && v.trim().length > 0;
@@ -59,13 +59,13 @@ function isValidCoordinates(coords) {
   return true;
 }
 
-// в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ
-// DEVELOPMENT VALIDATORS (v2 вЂ” the parent collection)
-// в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ
+// ввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђ
+// DEVELOPMENT VALIDATORS (v2 вв‚¬вЂќ the parent collection)
+// ввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђ
 
 /**
  * Validate a development record about to be created (visibility: draft).
- * Less strict вЂ” just the minimum to save a draft.
+ * Less strict вв‚¬вЂќ just the minimum to save a draft.
  */
 export function validateDevelopmentDraft(record) {
   const errors = [];
@@ -91,7 +91,7 @@ export function validateDevelopmentDraft(record) {
 
 /**
  * Validate a development record about to be PUBLISHED.
- * Stricter вЂ” every "mandatory for published" field from spec Section 2A.7 must be present.
+ * Stricter вв‚¬вЂќ every "mandatory for published" field from spec Section 2A.7 must be present.
  */
 export function validateDevelopmentPublish(record) {
   const draftResult = validateDevelopmentDraft(record);
@@ -135,9 +135,9 @@ export function validateDevelopmentPublish(record) {
   return { valid: errors.length === 0, errors };
 }
 
-// в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ
-// PROJECT VARIANT VALIDATORS (v2 вЂ” the child collection)
-// в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ
+// ввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђ
+// PROJECT VARIANT VALIDATORS (v2 вв‚¬вЂќ the child collection)
+// ввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђ
 
 /**
  * Validate a project (variant) record about to be created (visibility: draft).
@@ -150,7 +150,7 @@ export function validateProjectDraft(record) {
     errors.push("name is required");
   }
   if (!isNonEmptyString(record.developmentId)) {
-    errors.push("developmentId is required (v2 hybrid model вЂ” every project variant must link to a parent development)");
+    errors.push("developmentId is required (v2 hybrid model вв‚¬вЂќ every project variant must link to a parent development)");
   }
   if (!isNonEmptyString(record.orgId)) {
     errors.push("orgId is required");
@@ -204,9 +204,9 @@ export function validateProjectPublish(record) {
   return { valid: errors.length === 0, errors };
 }
 
-// в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ
+// ввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђ
 // SHARED VALIDATORS (apply to both developments and projects)
-// в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ
+// ввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђ
 
 /**
  * Validate that a record update is not trying to change disclosedAt.
@@ -223,12 +223,12 @@ export function validateDisclosedAtImmutability(oldRecord, newRecord) {
 
 /**
  * Validate visibility transitions.
- * - draft в†’ published: ALLOWED (triggers disclosedAt assignment server-side)
- * - draft в†’ archived: ALLOWED
- * - published в†’ archived: ALLOWED
- * - published в†’ draft: NOT ALLOWED
- * - archived в†’ published: NOT ALLOWED via client (admin Cloud Function only)
- * - archived в†’ draft: NOT ALLOWED via client
+ * - draft в†вЂ™ published: ALLOWED (triggers disclosedAt assignment server-side)
+ * - draft в†вЂ™ archived: ALLOWED
+ * - published в†вЂ™ archived: ALLOWED
+ * - published в†вЂ™ draft: NOT ALLOWED
+ * - archived в†вЂ™ published: NOT ALLOWED via client (admin Cloud Function only)
+ * - archived в†вЂ™ draft: NOT ALLOWED via client
  * Applies to both developments and projects.
  */
 export function validateVisibilityTransition(oldVisibility, newVisibility) {

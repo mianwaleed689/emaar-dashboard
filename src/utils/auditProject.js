@@ -1,6 +1,6 @@
-/* в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ
-   DXB ANALYTICS вЂ” PROJECT DATA AUDIT HELPER
-   в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
+/* ввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђ
+   DXB ANALYTICS вв‚¬вЂќ PROJECT DATA AUDIT HELPER
+   ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬
    Auto-flags common data errors across your project catalog.
    Runs in milliseconds per project. Scales to 1000s.
 
@@ -9,18 +9,18 @@
 
      // Single project
      const issues = auditProject(projectRecord);
-     // в†’ [{ severity: "error", field: "status", msg: "..." }, ...]
+     // в†вЂ™ [{ severity: "error", field: "status", msg: "..." }, ...]
 
      // Entire catalog
      const report = auditCatalog(SEED_PROJECTS);
-     // в†’ { totalProjects, byRaised, topIssues, perProject }
+     // в†вЂ™ { totalProjects, byRaised, topIssues, perProject }
 
    WHY THIS MATTERS AT SCALE:
      - Catches Golf Grand-style errors (invalid RERA, stage mismatches,
        Golden Visa flag wrong) BEFORE they hit production
      - Runs as a pre-commit hook or CI step
      - Prioritizes which projects need manual review
-   в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ */
+   ввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђ */
 
 const GOLDEN_VISA_THRESHOLD = 2000000;
 const COMMUNITY_YIELD_BENCHMARK = {
@@ -32,10 +32,10 @@ const COMMUNITY_YIELD_BENCHMARK = {
   "Palm Jumeirah": 5.0,
 };
 
-/* в•ђв•ђв•ђ INDIVIDUAL AUDIT RULES в•ђв•ђв•ђ */
+/* ввЂўђввЂўђввЂўђ INDIVIDUAL AUDIT RULES ввЂўђввЂўђввЂўђ */
 
 const RULES = [
-  /* в”Ђв”Ђв”Ђ RERA format в”Ђв”Ђв”Ђ */
+  /* ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ RERA format ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ */
   {
     id: "rera-format",
     severity: "error",
@@ -43,14 +43,14 @@ const RULES = [
       const num = p.reraNo || p.projectNumber;
       if (!num) return null;
       const s = String(num).trim();
-      if (s.length > 6) return `RERA number "${s}" is ${s.length} digits вЂ” real RERA project numbers are 3-6 digits. Likely a DLD unit/listing ID.`;
-      if (/^(\d)\1+$/.test(s)) return `RERA number "${s}" contains only repeating digits вЂ” likely placeholder.`;
+      if (s.length > 6) return `RERA number "${s}" is ${s.length} digits вв‚¬вЂќ real RERA project numbers are 3-6 digits. Likely a DLD unit/listing ID.`;
+      if (/^(\d)\1+$/.test(s)) return `RERA number "${s}" contains only repeating digits вв‚¬вЂќ likely placeholder.`;
       if (/^(1234|5678|0000|9999)/.test(s)) return `RERA number "${s}" looks like a test placeholder.`;
       return null;
     },
   },
 
-  /* в”Ђв”Ђв”Ђ Status vs construction % mismatch в”Ђв”Ђв”Ђ */
+  /* ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ Status vs construction % mismatch ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ */
   {
     id: "status-vs-pct",
     severity: "error",
@@ -69,7 +69,7 @@ const RULES = [
     },
   },
 
-  /* в”Ђв”Ђв”Ђ Lifecycle vs construction % mismatch в”Ђв”Ђв”Ђ */
+  /* ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ Lifecycle vs construction % mismatch ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ */
   {
     id: "lifecycle-mismatch",
     severity: "warning",
@@ -84,7 +84,7 @@ const RULES = [
     },
   },
 
-  /* в”Ђв”Ђв”Ђ Golden Visa eligibility check в”Ђв”Ђв”Ђ */
+  /* ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ Golden Visa eligibility check ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ */
   {
     id: "golden-visa-wrong",
     severity: "warning",
@@ -92,7 +92,7 @@ const RULES = [
       if (p.priceMin >= GOLDEN_VISA_THRESHOLD && p.goldenVisa === false) {
         return `priceMin is AED ${(p.priceMin / 1000000).toFixed(2)}M (в‰Ґ threshold) but goldenVisa=false. Should be true.`;
       }
-      /* Partial вЂ” 1BR below threshold, larger units above */
+      /* Partial вв‚¬вЂќ 1BR below threshold, larger units above */
       if (p.unitBreakdown?.length > 0) {
         const someAbove = p.unitBreakdown.some(u => (u.priceFrom || 0) >= GOLDEN_VISA_THRESHOLD);
         if (someAbove && p.goldenVisa === false) {
@@ -103,7 +103,7 @@ const RULES = [
     },
   },
 
-  /* в”Ђв”Ђв”Ђ Yield sanity vs community benchmark в”Ђв”Ђв”Ђ */
+  /* ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ Yield sanity vs community benchmark ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ */
   {
     id: "yield-outlier",
     severity: "warning",
@@ -118,7 +118,7 @@ const RULES = [
     },
   },
 
-  /* в”Ђв”Ђв”Ђ Unit breakdown totals vs totalUnits в”Ђв”Ђв”Ђ */
+  /* ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ Unit breakdown totals vs totalUnits ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ */
   {
     id: "unit-count-mismatch",
     severity: "warning",
@@ -132,7 +132,7 @@ const RULES = [
     },
   },
 
-  /* в”Ђв”Ђв”Ђ PPSF vs priceMin/sqft sanity в”Ђв”Ђв”Ђ */
+  /* ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ PPSF vs priceMin/sqft sanity ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ */
   {
     id: "ppsf-sanity",
     severity: "info",
@@ -151,7 +151,7 @@ const RULES = [
     },
   },
 
-  /* в”Ђв”Ђв”Ђ Payment plan label sanity в”Ђв”Ђв”Ђ */
+  /* ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ Payment plan label sanity ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ */
   {
     id: "payment-plan-format",
     severity: "info",
@@ -167,7 +167,7 @@ const RULES = [
     },
   },
 
-  /* в”Ђв”Ђв”Ђ Required fields в”Ђв”Ђв”Ђ */
+  /* ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ Required fields ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ */
   {
     id: "missing-core-fields",
     severity: "error",
@@ -179,20 +179,20 @@ const RULES = [
     },
   },
 
-  /* в”Ђв”Ђв”Ђ Data staleness в”Ђв”Ђв”Ђ */
+  /* ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ Data staleness ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ */
   {
     id: "stale-data",
     severity: "info",
     check: (p) => {
       const verified = p._audit?.lastVerified;
-      if (!verified) return `No _audit.lastVerified timestamp вЂ” verification status unknown.`;
+      if (!verified) return `No _audit.lastVerified timestamp вв‚¬вЂќ verification status unknown.`;
       const days = (Date.now() - new Date(verified)) / 86400000;
-      if (days > 180) return `Data last verified ${Math.round(days)} days ago вЂ” consider re-verifying.`;
+      if (days > 180) return `Data last verified ${Math.round(days)} days ago вв‚¬вЂќ consider re-verifying.`;
       return null;
     },
   },
 
-  /* в”Ђв”Ђв”Ђ Distance range sanity в”Ђв”Ђв”Ђ */
+  /* ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ Distance range sanity ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ */
   {
     id: "distance-sanity",
     severity: "warning",
@@ -203,7 +203,7 @@ const RULES = [
       ];
       for (const [field, max] of checks) {
         if (p[field] != null && (p[field] < 0 || p[field] > max)) {
-          return `${field}=${p[field]}km is outside plausible range (0вЂ“${max}km).`;
+          return `${field}=${p[field]}km is outside plausible range (0вв‚¬вЂњ${max}km).`;
         }
       }
       return null;
@@ -211,7 +211,7 @@ const RULES = [
   },
 ];
 
-/* в•ђв•ђв•ђ PUBLIC API в•ђв•ђв•ђ */
+/* ввЂўђввЂўђввЂўђ PUBLIC API ввЂўђввЂўђввЂўђ */
 
 /**
  * Audit a single project record. Returns array of issues.
@@ -262,7 +262,7 @@ export function auditCatalog(projects) {
     });
   });
 
-  /* Top offenders вЂ” sorted by error count descending */
+  /* Top offenders вв‚¬вЂќ sorted by error count descending */
   report.topOffenders = Object.entries(report.perProject)
     .map(([id, issues]) => ({
       id,
@@ -281,7 +281,7 @@ export function auditCatalog(projects) {
  * @param {object} report
  */
 export function printAuditReport(report) {
-  console.log(`\nв”Ѓв”Ѓв”Ѓ DXB ANALYTICS вЂ” CATALOG AUDIT в”Ѓв”Ѓв”Ѓ`);
+  console.log(`\nввЂќЃввЂќЃввЂќЃ DXB ANALYTICS вв‚¬вЂќ CATALOG AUDIT ввЂќЃввЂќЃввЂќЃ`);
   console.log(`Audited: ${report.totalProjects} projects at ${report.auditedAt}`);
   console.log(`Clean: ${report.cleanProjects} (${((report.cleanProjects / report.totalProjects) * 100).toFixed(1)}%)`);
   console.log(`\nIssues by severity:`);
@@ -297,7 +297,7 @@ export function printAuditReport(report) {
   report.topOffenders.slice(0, 10).forEach(o => {
     console.log(`  ${o.id.padEnd(40)} E:${o.errorCount} W:${o.warningCount}`);
   });
-  console.log(`в”Ѓв”Ѓв”Ѓв”Ѓв”Ѓв”Ѓв”Ѓв”Ѓв”Ѓв”Ѓв”Ѓв”Ѓв”Ѓв”Ѓв”Ѓв”Ѓв”Ѓв”Ѓв”Ѓв”Ѓв”Ѓв”Ѓв”Ѓв”Ѓв”Ѓв”Ѓв”Ѓв”Ѓв”Ѓв”Ѓв”Ѓв”Ѓв”Ѓв”Ѓв”Ѓв”Ѓ\n`);
+  console.log(`ввЂќЃввЂќЃввЂќЃввЂќЃввЂќЃввЂќЃввЂќЃввЂќЃввЂќЃввЂќЃввЂќЃввЂќЃввЂќЃввЂќЃввЂќЃввЂќЃввЂќЃввЂќЃввЂќЃввЂќЃввЂќЃввЂќЃввЂќЃввЂќЃввЂќЃввЂќЃввЂќЃввЂќЃввЂќЃввЂќЃввЂќЃввЂќЃввЂќЃввЂќЃввЂќЃввЂќЃ\n`);
 }
 
 export default { auditProject, auditCatalog, printAuditReport };

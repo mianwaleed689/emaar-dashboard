@@ -1,6 +1,6 @@
 /* eslint-disable */
 /**
- * DXB Analytics — Platform Settings
+ * DXB Analytics �€” Platform Settings
  * src/admin/PlatformSettingsTab.jsx
  *
  * Admin CRUD for platform-wide configuration:
@@ -14,7 +14,7 @@
  * How to use:
  *   1. Admin opens this tab
  *   2. Edit types/statuses/tiers in the forms
- *   3. Click "Save Changes" — writes to Firestore
+ *   3. Click "Save Changes" �€” writes to Firestore
  *   4. Dashboard tabs listen to the same doc and re-render
  */
 
@@ -43,9 +43,9 @@ const DEFAULT_SETTINGS = {
     enabled: true,
   })),
   developerTiers: [
-    { id: "T1", label: "Tier 1 — Top 5 by sales",  description: "Emaar, DAMAC, Nakheel, Sobha, Meraas, Aldar, Dubai Properties" },
-    { id: "T2", label: "Tier 2 — Mid-market",       description: "Established brand, credible delivery history, lower volume than T1" },
-    { id: "T3", label: "Tier 3 — Emerging / Boutique", description: "New or specialist developer; fewer completed projects" },
+    { id: "T1", label: "Tier 1 �€” Top 5 by sales",  description: "Emaar, DAMAC, Nakheel, Sobha, Meraas, Aldar, Dubai Properties" },
+    { id: "T2", label: "Tier 2 �€” Mid-market",       description: "Established brand, credible delivery history, lower volume than T1" },
+    { id: "T3", label: "Tier 3 �€” Emerging / Boutique", description: "New or specialist developer; fewer completed projects" },
   ],
   globalFilters: {
     defaultTabFilters: ["developer", "propertyType", "configs", "status", "price"],
@@ -140,7 +140,7 @@ export default function PlatformSettingsTab({ T, db, notify, adminUser }) {
   if (loading || !settings) {
     return (
       <div style={{ padding: 40, textAlign: "center", color: T.textMuted }}>
-        <div style={{ fontSize: 14 }}>Loading platform settings…</div>
+        <div style={{ fontSize: 14 }}>Loading platform settings�€�</div>
       </div>
     );
   }
@@ -167,7 +167,7 @@ export default function PlatformSettingsTab({ T, db, notify, adminUser }) {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-      {/* ── Header ─────────────────────────────────────────────────────── */}
+      {/* �”€�”€ Header �”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€ */}
       <div style={{ ...cardStyle, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <div>
           <div style={{ fontSize: 18, fontWeight: 800, color: T.white, fontFamily: "'Fraunces', serif" }}>
@@ -207,12 +207,12 @@ export default function PlatformSettingsTab({ T, db, notify, adminUser }) {
               opacity: saving ? 0.6 : 1,
             }}
           >
-            {saving ? "Saving…" : dirty ? "Save Changes" : "Saved ✓"}
+            {saving ? "Saving�€�" : dirty ? "Save Changes" : "Saved �“"}
           </button>
         </div>
       </div>
 
-      {/* ── Section tabs ───────────────────────────────────────────────── */}
+      {/* �”€�”€ Section tabs �”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€ */}
       <div style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 14, padding: "0 20px", display: "flex", gap: 8 }}>
         {[
           { id: "propertyTypes", label: "Property Types" },
@@ -231,7 +231,7 @@ export default function PlatformSettingsTab({ T, db, notify, adminUser }) {
         ))}
       </div>
 
-      {/* ── PROPERTY TYPES section ─────────────────────────────────────── */}
+      {/* �”€�”€ PROPERTY TYPES section �”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€ */}
       {activeSection === "propertyTypes" && (
         <div style={cardStyle}>
           <div style={{ fontSize: 14, fontWeight: 700, color: T.white, marginBottom: 4 }}>Property Types</div>
@@ -246,7 +246,7 @@ export default function PlatformSettingsTab({ T, db, notify, adminUser }) {
         </div>
       )}
 
-      {/* ── STATUS OPTIONS section ─────────────────────────────────────── */}
+      {/* �”€�”€ STATUS OPTIONS section �”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€ */}
       {activeSection === "statusOptions" && (
         <div style={cardStyle}>
           <div style={{ fontSize: 14, fontWeight: 700, color: T.white, marginBottom: 4 }}>Status Options</div>
@@ -261,7 +261,7 @@ export default function PlatformSettingsTab({ T, db, notify, adminUser }) {
         </div>
       )}
 
-      {/* ── DEVELOPER TIERS section ────────────────────────────────────── */}
+      {/* �”€�”€ DEVELOPER TIERS section �”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€ */}
       {activeSection === "developerTiers" && (
         <div style={cardStyle}>
           <div style={{ fontSize: 14, fontWeight: 700, color: T.white, marginBottom: 4 }}>Developer Tiers</div>
@@ -276,7 +276,7 @@ export default function PlatformSettingsTab({ T, db, notify, adminUser }) {
         </div>
       )}
 
-      {/* ── GLOBAL FILTERS section ─────────────────────────────────────── */}
+      {/* �”€�”€ GLOBAL FILTERS section �”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€ */}
       {activeSection === "globalFilters" && (
         <div style={cardStyle}>
           <div style={{ fontSize: 14, fontWeight: 700, color: T.white, marginBottom: 4 }}>Filter Config</div>
@@ -294,7 +294,7 @@ export default function PlatformSettingsTab({ T, db, notify, adminUser }) {
   );
 }
 
-/* ───────────────────────── Sub-editors ──────────────────────────────────── */
+/* �”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€ Sub-editors �”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€ */
 
 function PropertyTypesEditor({ types, T, onChange }) {
   const [newTypeLabel, setNewTypeLabel] = useState("");
@@ -361,7 +361,7 @@ function PropertyTypesEditor({ types, T, onChange }) {
                     <div style={{ fontSize: 12, fontWeight: 600, color: T.white, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{t.label}</div>
                     <div style={{ fontSize: 9, color: T.textMuted }}>{t.id} · {(t.beds || []).length} bed options</div>
                   </div>
-                  <button type="button" onClick={() => remove(t.id)} style={{ background: "transparent", border: "none", color: T.red, cursor: "pointer", fontSize: 14, padding: 4 }}>×</button>
+                  <button type="button" onClick={() => remove(t.id)} style={{ background: "transparent", border: "none", color: T.red, cursor: "pointer", fontSize: 14, padding: 4 }}>�—</button>
                 </div>
               ))}
             </div>
@@ -410,7 +410,7 @@ function StatusOptionsEditor({ statuses, T, onChange }) {
               <div style={{ fontSize: 12, fontWeight: 600, color: T.white, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.label}</div>
               <div style={{ fontSize: 9, color: T.textMuted }}>{s.id}</div>
             </div>
-            <button type="button" onClick={() => remove(s.id)} style={{ background: "transparent", border: "none", color: T.red, cursor: "pointer", fontSize: 14, padding: 4 }}>×</button>
+            <button type="button" onClick={() => remove(s.id)} style={{ background: "transparent", border: "none", color: T.red, cursor: "pointer", fontSize: 14, padding: 4 }}>�—</button>
           </div>
         ))}
       </div>

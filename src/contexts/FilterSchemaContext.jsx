@@ -1,6 +1,6 @@
 /* eslint-disable */
 /**
- * DXB Analytics — FilterSchemaContext
+ * DXB Analytics �€” FilterSchemaContext
  * =====================================
  *
  * Single source of truth for filter options platform-wide.
@@ -75,7 +75,7 @@ export function FilterSchemaProvider({ children }) {
     const allTypeValues = schema.propertyTypes
       .flatMap(g => g.types || [])
       .map(t => t.value);
-    // Type value → label map (for filter matching with mixed casing)
+    // Type value �’ label map (for filter matching with mixed casing)
     const typeLabelByValue = {};
     const typeValueByLabel = {};
     schema.propertyTypes.forEach(g => {
@@ -108,7 +108,7 @@ export function FilterSchemaProvider({ children }) {
 export function useFilterSchema() {
   const ctx = useContext(FilterSchemaContext);
   if (!ctx) {
-    // Graceful fallback — if a component is rendered outside the provider,
+    // Graceful fallback �€” if a component is rendered outside the provider,
     // return defaults rather than throwing.
     return {
       propertyTypes: PROPERTY_TYPES_DEFAULT,

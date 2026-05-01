@@ -1,5 +1,5 @@
 /**
- * DXB Analytics — TanStack Query client (singleton)
+ * DXB Analytics �€” TanStack Query client (singleton)
  * src/lib/queryClient.js
  *
  * The single QueryClient instance used throughout the app. Imported by App.jsx
@@ -10,7 +10,7 @@
  * just let React Query handle caching + deduplication.
  *
  * If you need different defaults for a specific query, pass them as options
- * to useQuery directly — they override the defaults below.
+ * to useQuery directly �€” they override the defaults below.
  */
 
 import { QueryClient } from "@tanstack/react-query";
@@ -30,7 +30,7 @@ export const queryClient = new QueryClient({
       retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 10000),
     },
     mutations: {
-      // Mutations (writes) — retry once, fail fast if still broken
+      // Mutations (writes) �€” retry once, fail fast if still broken
       retry: 1,
     },
   },

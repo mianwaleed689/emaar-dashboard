@@ -1,5 +1,5 @@
 /* eslint-disable */
-/* COMPETITORS TAB ‚Äî Side-by-side developer comparison */
+/* COMPETITORS TAB ‚‚Ç¨‚Äù Side-by-side developer comparison */
 
 import React from "react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, RadarChart, Radar, PolarGrid, PolarAngleAxis, Cell } from "recharts";
@@ -35,34 +35,34 @@ function CompetitorsTab({
   }, [gfDev]);
 
 
-            /* ‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê
-               COMPETITORS ‚Äî Developer vs Developer Intelligence
+            /* ‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê
+               COMPETITORS ‚‚Ç¨‚Äù Developer vs Developer Intelligence
                Sources: DLD 2025 data, mieyaruae.com Q3 2025 report,
                dubaipropertyinsight.com, takayamotorcity.com Feb 2026,
                prelaunch.ae delivery tracker, prophero.net
 
                Sales 2025 YTD (Jan-Aug, mieyaruae.com Oct 2025):
-                 Emaar: AED 51B (~10,000 transactions) ‚Äî #1 by wide margin
-                 DAMAC: AED 24B (~9,000 transactions) ‚Äî #2
-                 Nakheel: AED 13B ‚Äî #3
-                 Sobha: AED 13B ‚Äî #4
-                 Meraas: AED 10B ‚Äî #5
-                 Binghatti: AED 9B ‚Äî #6
-                 Aldar: AED 8B ‚Äî #7
+                 Emaar: AED 51B (~10,000 transactions) ‚‚Ç¨‚Äù #1 by wide margin
+                 DAMAC: AED 24B (~9,000 transactions) ‚‚Ç¨‚Äù #2
+                 Nakheel: AED 13B ‚‚Ç¨‚Äù #3
+                 Sobha: AED 13B ‚‚Ç¨‚Äù #4
+                 Meraas: AED 10B ‚‚Ç¨‚Äù #5
+                 Binghatti: AED 9B ‚‚Ç¨‚Äù #6
+                 Aldar: AED 8B ‚‚Ç¨‚Äù #7
 
                Delivery track record (prelaunch.ae Dec 2025):
-                 Emaar: 95%+ on time ‚Äî industry best
-                 Sobha: 91% ‚Äî in-house construction advantage
-                 Nakheel: 88% ‚Äî government backing
-                 Danube: 88% ‚Äî best in affordable segment
-                 Ellington: 90% ‚Äî boutique discipline
-                 DAMAC: 82% ‚Äî complex branded projects
-                 Azizi: 80% ‚Äî high volume, improving
-                 Binghatti: 78% ‚Äî rapid expansion risk
+                 Emaar: 95%+ on time ‚‚Ç¨‚Äù industry best
+                 Sobha: 91% ‚‚Ç¨‚Äù in-house construction advantage
+                 Nakheel: 88% ‚‚Ç¨‚Äù government backing
+                 Danube: 88% ‚‚Ç¨‚Äù best in affordable segment
+                 Ellington: 90% ‚‚Ç¨‚Äù boutique discipline
+                 DAMAC: 82% ‚‚Ç¨‚Äù complex branded projects
+                 Azizi: 80% ‚‚Ç¨‚Äù high volume, improving
+                 Binghatti: 78% ‚‚Ç¨‚Äù rapid expansion risk
 
                S&P Rating: Emaar upgraded to BBB+ in 2025
                Off-plan market share 2025: 60%+ of all transactions
-            ‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê */
+            ‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê */
 
             const COMP_DATA = [
               {
@@ -85,10 +85,10 @@ function CompetitorsTab({
                   creditRating:"BBB+ (S&P 2025)",
                   offPlanShare:"72% of sales",
                   grossYield:"5-7%",
-                  capitalAppreciation:"Strong ‚Äî established communities",
+                  capitalAppreciation:"Strong ‚‚Ç¨‚Äù established communities",
                 },
                 strengths:["#1 developer 3 consecutive years","BBB+ credit rating","95%+ on-time delivery","140,000+ units delivered lifetime","Burj Khalifa / Dubai Mall brand"],
-                weaknesses:["Premium pricing ‚Äî lowest entry yields","High competition for their units","Slower payment plans vs private devs"],
+                weaknesses:["Premium pricing ‚‚Ç¨‚Äù lowest entry yields","High competition for their units","Slower payment plans vs private devs"],
                 bestFor:"Long-term capital appreciation, brand prestige, end-users",
               },
               {
@@ -108,13 +108,13 @@ function CompetitorsTab({
                   segments:["Branded luxury","Villa communities","Hospitality"],
                   communities:["DAMAC Hills","DAMAC Hills 2","DAMAC Lagoons","DAMAC Islands","Business Bay towers"],
                   paymentPlans:"Flexible 80/20, post-handover",
-                  creditRating:"Private ‚Äî $5B cash",
+                  creditRating:"Private ‚‚Ç¨‚Äù $5B cash",
                   offPlanShare:"78% of sales",
                   grossYield:"6-8% (short-term rental focus)",
-                  capitalAppreciation:"Moderate ‚Äî depends on brand appeal",
+                  capitalAppreciation:"Moderate ‚‚Ç¨‚Äù depends on brand appeal",
                 },
                 strengths:["$5B cash reserves","Luxury brand partnerships (Versace, Cavalli, Bugatti)","Strong marketing engine","Flexible payment plans"],
-                weaknesses:["Delisted from DFM 2022 ‚Äî limited transparency","82% delivery rate ‚Äî below Tier 1","Bond stress signals Mar 2026 ‚Äî monitor","Investor-heavy, less end-user demand"],
+                weaknesses:["Delisted from DFM 2022 ‚‚Ç¨‚Äù limited transparency","82% delivery rate ‚‚Ç¨‚Äù below Tier 1","Bond stress signals Mar 2026 ‚‚Ç¨‚Äù monitor","Investor-heavy, less end-user demand"],
                 bestFor:"STR/luxury investors, buyers seeking branded residences",
               },
               {
@@ -134,13 +134,13 @@ function CompetitorsTab({
                   segments:["Premium residential","Waterfront","Integrated communities"],
                   communities:["Sobha Hartland I","Sobha Hartland II","Sobha Seahaven","Sobha One"],
                   paymentPlans:"60/40, construction-linked",
-                  creditRating:"Private ‚Äî strong balance sheet",
+                  creditRating:"Private ‚‚Ç¨‚Äù strong balance sheet",
                   offPlanShare:"75% of sales",
                   grossYield:"5.5-7.5%",
-                  capitalAppreciation:"Strong ‚Äî premium quality commands premium",
+                  capitalAppreciation:"Strong ‚‚Ç¨‚Äù premium quality commands premium",
                 },
                 strengths:["In-house construction = best quality control","91% on-time delivery","No reliance on subcontractors","Premium finishes at consistent standard","Strong FDI buyer base (Indian HNW)"],
-                weaknesses:["Community concentration (Hartland/MBR City)","Private ‚Äî limited financial disclosure","Higher PSF than comparable developers","Slower sales cadence than Emaar/DAMAC"],
+                weaknesses:["Community concentration (Hartland/MBR City)","Private ‚‚Ç¨‚Äù limited financial disclosure","Higher PSF than comparable developers","Slower sales cadence than Emaar/DAMAC"],
                 bestFor:"Quality-focused buyers, long-term hold, Indian HNW investors",
               },
               {
@@ -160,13 +160,13 @@ function CompetitorsTab({
                   segments:["Waterfront villas","Island communities","Luxury towers"],
                   communities:["Palm Jumeirah","Palm Jebel Ali","Dubai Islands","The World","Deira Islands"],
                   paymentPlans:"Government-backed, conservative plans",
-                  creditRating:"Government backed ‚Äî zero default risk",
+                  creditRating:"Government backed ‚‚Ç¨‚Äù zero default risk",
                   offPlanShare:"65% of sales",
                   grossYield:"5-7% (Palm premium)",
-                  capitalAppreciation:"Exceptional ‚Äî finite island supply",
+                  capitalAppreciation:"Exceptional ‚‚Ç¨‚Äù finite island supply",
                 },
-                strengths:["Government backing = zero default risk","Finite waterfront supply ‚Äî impossible to replicate","Palm Jumeirah global brand recognition","Luxury segment #1 (AED 16.9B >AED15M properties 2025)","Dubai Holding integration (Meraas, Jumeirah Group)"],
-                weaknesses:["Very high price points ‚Äî limited buyer pool","Large project complexity = delivery timeline risk","Limited affordable offering","Island infrastructure complexity"],
+                strengths:["Government backing = zero default risk","Finite waterfront supply ‚‚Ç¨‚Äù impossible to replicate","Palm Jumeirah global brand recognition","Luxury segment #1 (AED 16.9B >AED15M properties 2025)","Dubai Holding integration (Meraas, Jumeirah Group)"],
+                weaknesses:["Very high price points ‚‚Ç¨‚Äù limited buyer pool","Large project complexity = delivery timeline risk","Limited affordable offering","Island infrastructure complexity"],
                 bestFor:"Ultra-HNW buyers, capital preservation, waterfront luxury",
               },
               {
@@ -185,14 +185,14 @@ function CompetitorsTab({
                   minPrice:"AED 1.5M", maxPrice:"AED 50M+",
                   segments:["Lifestyle communities","Retail-integrated living","Urban destinations"],
                   communities:["Nad Al Sheba Gardens","City Walk Residences","Bluewaters Island","La Mer","Jumeirah Residences"],
-                  paymentPlans:"Government conservative ‚Äî less flexible",
-                  creditRating:"Government backed ‚Äî Dubai Holding",
+                  paymentPlans:"Government conservative ‚‚Ç¨‚Äù less flexible",
+                  creditRating:"Government backed ‚‚Ç¨‚Äù Dubai Holding",
                   offPlanShare:"70% of sales",
                   grossYield:"5-6.5%",
-                  capitalAppreciation:"Strong ‚Äî iconic lifestyle brand",
+                  capitalAppreciation:"Strong ‚‚Ç¨‚Äù iconic lifestyle brand",
                 },
-                strengths:["City Walk, La Mer, Bluewaters ‚Äî iconic lifestyle brand","Government backing","Nad Al Sheba fastest-selling villa 2025","AED 8.4M avg transaction ‚Äî premium positioning","Meraas lifestyle retail drives property value"],
-                weaknesses:["Very high avg price ‚Äî limited buyer pool","Government conservative structure = less innovation","Limited affordable product","Strong competition from Emaar on lifestyle"],
+                strengths:["City Walk, La Mer, Bluewaters ‚‚Ç¨‚Äù iconic lifestyle brand","Government backing","Nad Al Sheba fastest-selling villa 2025","AED 8.4M avg transaction ‚‚Ç¨‚Äù premium positioning","Meraas lifestyle retail drives property value"],
+                weaknesses:["Very high avg price ‚‚Ç¨‚Äù limited buyer pool","Government conservative structure = less innovation","Limited affordable product","Strong competition from Emaar on lifestyle"],
                 bestFor:"Lifestyle-focused luxury buyers, GCC HNW, weekend home buyers",
               },
               {
@@ -211,15 +211,15 @@ function CompetitorsTab({
                   minPrice:"AED 400K", maxPrice:"AED 5M",
                   segments:["Mid-market apartments","Branded luxury (Jacob & Co, Bugatti)","Investment units"],
                   communities:["Business Bay","JVC","Silicon Oasis","Downtown","Al Jaddaf"],
-                  paymentPlans:"50/50, 1% monthly ‚Äî very flexible",
-                  creditRating:"Private ‚Äî bond stress signals Mar 2026",
+                  paymentPlans:"50/50, 1% monthly ‚‚Ç¨‚Äù very flexible",
+                  creditRating:"Private ‚‚Ç¨‚Äù bond stress signals Mar 2026",
                   offPlanShare:"90% of sales",
-                  grossYield:"8-10% ‚Äî highest in mid-market",
-                  capitalAppreciation:"Moderate ‚Äî volume play, less brand premium",
+                  grossYield:"8-10% ‚‚Ç¨‚Äù highest in mid-market",
+                  capitalAppreciation:"Moderate ‚‚Ç¨‚Äù volume play, less brand premium",
                 },
                 strengths:["Highest gross yield in mid-market (8-10%)","Lowest entry price point AED 400K","60+ completed projects track record","Fastest growing developer 2024-2025","Unique architectural designs drive demand"],
-                weaknesses:["Bond stress signals reported Mar 2026 ‚Äî HIGH RISK","78% delivery rate ‚Äî below average","High leverage historically","Rapid expansion pace ‚Äî execution risk","Private ‚Äî very limited financial transparency"],
-                bestFor:"Yield-focused investors, entry-level buyers ‚Äî monitor financial health",
+                weaknesses:["Bond stress signals reported Mar 2026 ‚‚Ç¨‚Äù HIGH RISK","78% delivery rate ‚‚Ç¨‚Äù below average","High leverage historically","Rapid expansion pace ‚‚Ç¨‚Äù execution risk","Private ‚‚Ç¨‚Äù very limited financial transparency"],
+                bestFor:"Yield-focused investors, entry-level buyers ‚‚Ç¨‚Äù monitor financial health",
               },
               {
                 name:"Danube Properties",
@@ -238,13 +238,13 @@ function CompetitorsTab({
                   segments:["Affordable luxury","Mid-market apartments","1% monthly payment pioneer"],
                   communities:["JVC","Arjan","Business Bay","Al Furjan"],
                   paymentPlans:"1% monthly (industry pioneer), 50/50, post-handover",
-                  creditRating:"Private ‚Äî Danube Group backing",
+                  creditRating:"Private ‚‚Ç¨‚Äù Danube Group backing",
                   offPlanShare:"85% of sales",
-                  grossYield:"8-10% ‚Äî JVC/Arjan segment",
-                  capitalAppreciation:"Moderate ‚Äî affordable segment entry",
+                  grossYield:"8-10% ‚‚Ç¨‚Äù JVC/Arjan segment",
+                  capitalAppreciation:"Moderate ‚‚Ç¨‚Äù affordable segment entry",
                 },
-                strengths:["Best delivery record in affordable segment (88%)","Pioneer of 1% monthly payment ‚Äî copied industry-wide","Danube Group material cost advantage","Lowest entry prices AED 350K","Strong tenant demand = low vacancy"],
-                weaknesses:["Small team relative to pipeline","Private ‚Äî no financial disclosures","Affordable segment = thin margins","Limited luxury product","Community concentration JVC/Arjan"],
+                strengths:["Best delivery record in affordable segment (88%)","Pioneer of 1% monthly payment ‚‚Ç¨‚Äù copied industry-wide","Danube Group material cost advantage","Lowest entry prices AED 350K","Strong tenant demand = low vacancy"],
+                weaknesses:["Small team relative to pipeline","Private ‚‚Ç¨‚Äù no financial disclosures","Affordable segment = thin margins","Limited luxury product","Community concentration JVC/Arjan"],
                 bestFor:"First-time investors, yield maximisers, budget-conscious buyers",
               },
               {
@@ -263,19 +263,19 @@ function CompetitorsTab({
                   minPrice:"AED 600K", maxPrice:"AED 8M",
                   segments:["Design-led mid-premium","Boutique apartments","JVC + Business Bay specialist"],
                   communities:["JVC","Business Bay","Palm Jumeirah","Downtown"],
-                  paymentPlans:"60/40, 70/30 ‚Äî construction linked",
-                  creditRating:"Private ‚Äî lowest D/E ratio in segment",
+                  paymentPlans:"60/40, 70/30 ‚‚Ç¨‚Äù construction linked",
+                  creditRating:"Private ‚‚Ç¨‚Äù lowest D/E ratio in segment",
                   offPlanShare:"80% of sales",
-                  grossYield:"7-9% ‚Äî premium finish drives premium rent",
-                  capitalAppreciation:"Strong ‚Äî design premium commands resale premium",
+                  grossYield:"7-9% ‚‚Ç¨‚Äù premium finish drives premium rent",
+                  capitalAppreciation:"Strong ‚‚Ç¨‚Äù design premium commands resale premium",
                 },
-                strengths:["Highest finish quality per AED in mid-market","90% delivery rate","Lowest D/E ratio (0.38x) ‚Äî most conservative","Strong resale premiums vs area average","Design-led = tenant quality above segment avg"],
-                weaknesses:["Low volume ‚Äî can't compete on scale","Private ‚Äî no financial disclosures","Small pipeline relative to demand","Limited community diversity","JVC oversupply risk affects all JVC developers"],
+                strengths:["Highest finish quality per AED in mid-market","90% delivery rate","Lowest D/E ratio (0.38x) ‚‚Ç¨‚Äù most conservative","Strong resale premiums vs area average","Design-led = tenant quality above segment avg"],
+                weaknesses:["Low volume ‚‚Ç¨‚Äù can't compete on scale","Private ‚‚Ç¨‚Äù no financial disclosures","Small pipeline relative to demand","Limited community diversity","JVC oversupply risk affects all JVC developers"],
                 bestFor:"Quality buyers, design-conscious investors, strong resale strategy",
               },
             ];
 
-            /* ‚îÄ‚îÄ Scoring metric labels ‚îÄ‚îÄ */
+            /* ‚‚Äù‚Ç¨‚‚Äù‚Ç¨ Scoring metric labels ‚‚Äù‚Ç¨‚‚Äù‚Ç¨ */
             const METRICS = [
               {key:"overall",         label:"Overall Score",        icon:"‚≠ê"},
               {key:"salesVolume",     label:"Sales Volume",         icon:"\uD83D\uDCCA"},
@@ -291,7 +291,7 @@ function CompetitorsTab({
 
             const selMetric = METRICS.find(m => m.key === cptMetric) || METRICS[0];
 
-            /* ‚îÄ‚îÄ Sort by selected metric ‚îÄ‚îÄ */
+            /* ‚‚Äù‚Ç¨‚‚Äù‚Ç¨ Sort by selected metric ‚‚Äù‚Ç¨‚‚Äù‚Ç¨ */
             const sorted = [...COMP_DATA]
               .filter(d => !cptSearch || d.name.toLowerCase().includes(cptSearch.toLowerCase()))
               .sort((a,b) => (b.scores[cptMetric]||0) - (a.scores[cptMetric]||0));
@@ -312,7 +312,7 @@ function CompetitorsTab({
             return (
               <div style={{ animation:"fadeUp 0.4s ease-out forwards" }}>
 
-                {/* ‚îÄ‚îÄ HEADER ‚îÄ‚îÄ */}
+                {/* ‚‚Äù‚Ç¨‚‚Äù‚Ç¨ HEADER ‚‚Äù‚Ç¨‚‚Äù‚Ç¨ */}
                 <div style={{ display:"flex", alignItems:"flex-start", justifyContent:"space-between", padding:"10px 0", marginBottom:16, borderBottom:`1px solid ${T.border}`, flexWrap:"wrap", gap:10 }}>
                   <div>
                     <div style={{ fontFamily:"'Fraunces',serif", fontSize:20, fontWeight:800, color:T.white }}>Developer Competitors</div>
@@ -328,7 +328,7 @@ function CompetitorsTab({
                   </div>
                 </div>
 
-                {/* ‚ïê‚ïê MARKET MATRIX VIEW ‚ïê‚ïê */}
+                {/* ‚‚Ä¢ê‚‚Ä¢ê MARKET MATRIX VIEW ‚‚Ä¢ê‚‚Ä¢ê */}
                 {cptView === "matrix" && (
                   <>
                     {/* Metric selector + search */}
@@ -380,14 +380,14 @@ function CompetitorsTab({
 
                     {/* Key insight */}
                     <div style={{ padding:"12px 16px", background:"rgba(212,168,67,0.06)", border:"1px solid rgba(212,168,67,0.2)", borderRadius:10, fontSize:11, color:T.textSecondary, lineHeight:1.8 }}>
-                      <strong style={{ color:T.gold }}>Market insight 2025:</strong> Emaar dominates with AED 51B sales (Jan-Aug) ‚Äî nearly double DAMAC in second place at AED 24B.
-                      Off-plan share exceeded 60% of all Dubai transactions. Emaar upgraded to BBB+ by S&P ‚Äî only UAE developer with investment-grade credit rating.
-                      Binghatti's AED 26B full-year 2025 sales were extraordinary ‚Äî but monitor bond stress signals reported Mar 2026.
+                      <strong style={{ color:T.gold }}>Market insight 2025:</strong> Emaar dominates with AED 51B sales (Jan-Aug) ‚‚Ç¨‚Äù nearly double DAMAC in second place at AED 24B.
+                      Off-plan share exceeded 60% of all Dubai transactions. Emaar upgraded to BBB+ by S&P ‚‚Ç¨‚Äù only UAE developer with investment-grade credit rating.
+                      Binghatti's AED 26B full-year 2025 sales were extraordinary ‚‚Ç¨‚Äù but monitor bond stress signals reported Mar 2026.
                     </div>
                   </>
                 )}
 
-                {/* ‚ïê‚ïê HEAD TO HEAD VIEW ‚ïê‚ïê */}
+                {/* ‚‚Ä¢ê‚‚Ä¢ê HEAD TO HEAD VIEW ‚‚Ä¢ê‚‚Ä¢ê */}
                 {cptView === "headToHead" && (
                   <>
                     {/* Selector */}
@@ -471,7 +471,7 @@ function CompetitorsTab({
                   </>
                 )}
 
-                {/* ‚ïê‚ïê DETAIL VIEW ‚ïê‚ïê */}
+                {/* ‚‚Ä¢ê‚‚Ä¢ê DETAIL VIEW ‚‚Ä¢ê‚‚Ä¢ê */}
                 {cptView === "detail" && (
                   <>
                     <div style={{ display:"flex", gap:8, marginBottom:16 }}>
@@ -484,7 +484,7 @@ function CompetitorsTab({
                       </button>
                       <button type="button" onClick={()=>{ setCptDevB(devA.name==="DAMAC Properties"?"Emaar Properties":"DAMAC Properties"); setCptView("headToHead"); }}
                         style={{ padding:"6px 14px", background:"rgba(212,168,67,0.1)", border:"1px solid rgba(212,168,67,0.3)", borderRadius:8, color:T.gold, fontSize:11, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>
-                        Compare ‚Üí
+                        Compare ‚Ü‚Äô
                       </button>
                     </div>
 
@@ -542,7 +542,7 @@ function CompetitorsTab({
                         <div style={{ fontSize:12, fontWeight:700, color:T.white, marginBottom:10 }}>Strengths</div>
                         {devA.strengths.map((s,i)=>(
                           <div key={i} style={{ display:"flex", gap:8, padding:"5px 0", borderBottom:i<devA.strengths.length-1?`1px solid ${T.border}`:"none" }}>
-                            <span style={{ color:T.green }}>‚úì</span>
+                            <span style={{ color:T.green }}>‚ú‚Äú</span>
                             <span style={{ fontSize:11, color:T.textSecondary, lineHeight:1.6 }}>{s}</span>
                           </div>
                         ))}
@@ -574,10 +574,10 @@ function CompetitorsTab({
                   </>
                 )}
 
-                {/* ‚ïê‚ïê SCORE RADAR VIEW ‚ïê‚ïê */}
+                {/* ‚‚Ä¢ê‚‚Ä¢ê SCORE RADAR VIEW ‚‚Ä¢ê‚‚Ä¢ê */}
                 {cptView === "radar" && (
                   <div style={{ marginBottom:16 }}>
-                    <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:4 }}>Score Radar ‚Äî All Developers</div>
+                    <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:4 }}>Score Radar ‚‚Ç¨‚Äù All Developers</div>
                     <div style={{ fontSize:11, color:T.textMuted, marginBottom:16 }}>Each factor scored 0-100 ¬∑ Higher = better ¬∑ Click developer to see detail</div>
                     <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(200px,1fr))", gap:10 }}>
                       {COMP_DATA.map((d,i)=>(
@@ -611,7 +611,7 @@ function CompetitorsTab({
                   </div>
                 )}
 
-                {/* ‚îÄ‚îÄ SOURCE FOOTER ‚îÄ‚îÄ */}
+                {/* ‚‚Äù‚Ç¨‚‚Äù‚Ç¨ SOURCE FOOTER ‚‚Äù‚Ç¨‚‚Äù‚Ç¨ */}
                 <div style={{ paddingTop:12, borderTop:`1px solid ${T.border}`, display:"flex", gap:8, flexWrap:"wrap", alignItems:"center" }}>
                   <span style={{ fontSize:10, color:T.textMuted }}>Sources:</span>
                   {["DLD 2025 Transaction Data","mieyaruae.com Q3 2025 Report","dubaipropertyinsight.com","prelaunch.ae Dec 2025","takayamotorcity.com Feb 2026","prophero.net Jan 2026","S&P BBB+ Emaar 2025"].map((s,i)=>(

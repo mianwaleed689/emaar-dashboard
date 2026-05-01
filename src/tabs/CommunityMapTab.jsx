@@ -148,11 +148,11 @@ export default function CommunityMapTab({
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px">
             <div style="background:rgba(16,185,129,0.08);border-radius:6px;padding:6px 8px">
               <div style="font-size:9px;color:#64748B;margin-bottom:2px">GROSS YIELD</div>
-              <div style="font-size:15px;font-weight:700;color:#10B981">${n.grossYield||"—"}%</div>
+              <div style="font-size:15px;font-weight:700;color:#10B981">${n.grossYield||"�€”"}%</div>
             </div>
             <div style="background:rgba(212,168,67,0.08);border-radius:6px;padding:6px 8px">
               <div style="font-size:9px;color:#64748B;margin-bottom:2px">AVG PPSF</div>
-              <div style="font-size:15px;font-weight:700;color:#D4A843">AED ${n.avgPpsf?Math.round(n.avgPpsf).toLocaleString():"—"}</div>
+              <div style="font-size:15px;font-weight:700;color:#D4A843">AED ${n.avgPpsf?Math.round(n.avgPpsf).toLocaleString():"�€”"}</div>
             </div>
           </div>
           ${n.score?`<div style="font-size:10px;color:#94A3B8">DXB Score: ${n.score}</div>`:""}
@@ -186,7 +186,7 @@ export default function CommunityMapTab({
         const marker = L.marker([lat,lng],{icon});
         const dev = p.developerActual||p.developer||"";
         const comm = p.community||"";
-        const masterComm = p.masterCommunity&&p.masterCommunity!==comm?` — ${p.masterCommunity}`:"";
+        const masterComm = p.masterCommunity&&p.masterCommunity!==comm?` �€” ${p.masterCommunity}`:"";
         marker.bindPopup(`<div style="font-family:'Outfit',sans-serif;min-width:230px;padding:4px">
           <div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:2px">${p.name||"Project"}</div>
           <div style="font-size:10px;color:#94A3B8;margin-bottom:8px">${dev} · ${comm}${masterComm}</div>
@@ -290,7 +290,7 @@ export default function CommunityMapTab({
       {/* Map + Sidebar */}
       <div style={{display:"flex",flex:1,gap:12,minHeight:0}}>
 
-        {/* Map — 70% */}
+        {/* Map �€” 70% */}
         <div style={{flex:"0 0 70%",position:"relative",borderRadius:12,overflow:"hidden",border:`1px solid ${T.border}`}}>
           <div ref={mapRef} style={{width:"100%",height:"100%"}}/>
           {!leafletReady&&(
@@ -300,7 +300,7 @@ export default function CommunityMapTab({
           )}
         </div>
 
-        {/* Sidebar — 30% */}
+        {/* Sidebar �€” 30% */}
         <div style={{flex:"0 0 30%",overflowY:"auto",display:"flex",flexDirection:"column",gap:8}}>
 
           {selected ? (
@@ -311,7 +311,7 @@ export default function CommunityMapTab({
                   {selected.type==="project"?"Selected Project":"Community Detail"}
                 </div>
                 <button type="button" onClick={()=>setSelected(null)}
-                  style={{background:"none",border:"none",color:T.textMuted,cursor:"pointer",fontSize:18,padding:"0 4px",lineHeight:1}}>×</button>
+                  style={{background:"none",border:"none",color:T.textMuted,cursor:"pointer",fontSize:18,padding:"0 4px",lineHeight:1}}>�—</button>
               </div>
 
               {selected.type==="project" ? (
@@ -319,7 +319,7 @@ export default function CommunityMapTab({
                   {/* Developer hierarchy */}
                   <div style={{marginBottom:12}}>
                     <div style={{fontSize:10,color:T.textMuted,marginBottom:2,textTransform:"uppercase",letterSpacing:0.8}}>Project Developer</div>
-                    <div style={{fontSize:14,fontWeight:700,color:T.white}}>{selected.developerActual||selected.developer||"—"}</div>
+                    <div style={{fontSize:14,fontWeight:700,color:T.white}}>{selected.developerActual||selected.developer||"�€”"}</div>
                     {selected.masterDeveloper&&selected.masterDeveloper!==(selected.developerActual||selected.developer)&&(
                       <div style={{display:"flex",alignItems:"center",gap:6,marginTop:4}}>
                         <span style={{fontSize:9,fontWeight:700,color:T.gold,background:"rgba(212,168,67,0.12)",padding:"2px 6px",borderRadius:4}}>LAND OWNER</span>
@@ -333,7 +333,7 @@ export default function CommunityMapTab({
 
                   {/* Community hierarchy */}
                   <div style={{marginBottom:12}}>
-                    <div style={{fontSize:12,color:T.textSecondary}}>{selected.community||"—"}</div>
+                    <div style={{fontSize:12,color:T.textSecondary}}>{selected.community||"�€”"}</div>
                     {selected.masterCommunity&&selected.masterCommunity!==selected.community&&(
                       <div style={{display:"flex",alignItems:"center",gap:6,marginTop:3}}>
                         <span style={{fontSize:9,fontWeight:700,color:"#63B3ED",background:"rgba(99,179,237,0.1)",padding:"2px 6px",borderRadius:4}}>MASTER ZONE</span>

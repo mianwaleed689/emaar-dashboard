@@ -21,17 +21,17 @@ const SECTOR_COLORS = {
 };
 
 const FALLBACK_DATA = [
-  { community: "Jumeirah Village Circle", transactions: 18782, value: 15.99, avgPpsf: 1485, offPlanPct: 72, yoyGrowth: 17.2, type: "Apartment", sector: "New Dubai", note: "Most liquid community — 1,500+ tx/month. Exit in days." },
-  { community: "Dubai South",             transactions: 17097, value: 9.8,   avgPpsf: 1050, offPlanPct: 85, yoyGrowth: 25.4, type: "Mixed",     sector: "Dubai South", note: "Airport corridor — fastest growing 2025. Al Maktoum expansion catalyst." },
+  { community: "Jumeirah Village Circle", transactions: 18782, value: 15.99, avgPpsf: 1485, offPlanPct: 72, yoyGrowth: 17.2, type: "Apartment", sector: "New Dubai", note: "Most liquid community �€” 1,500+ tx/month. Exit in days." },
+  { community: "Dubai South",             transactions: 17097, value: 9.8,   avgPpsf: 1050, offPlanPct: 85, yoyGrowth: 25.4, type: "Mixed",     sector: "Dubai South", note: "Airport corridor �€” fastest growing 2025. Al Maktoum expansion catalyst." },
   { community: "Business Bay",            transactions: 12450, value: 27.05, avgPpsf: 2306, offPlanPct: 77, yoyGrowth: 8.4,  type: "Apartment", sector: "Trade Center", note: "Value leader H1 2025 AED 22.5B. Binghatti Skyrise trilogy top project." },
-  { community: "Dubai Marina",            transactions: 11200, value: 32.13, avgPpsf: 2188, offPlanPct: 45, yoyGrowth: 9.8,  type: "Apartment", sector: "New Dubai", note: "Value leader H1 2025 AED 25.1B — luxury investor hub. Top STR community." },
+  { community: "Dubai Marina",            transactions: 11200, value: 32.13, avgPpsf: 2188, offPlanPct: 45, yoyGrowth: 9.8,  type: "Apartment", sector: "New Dubai", note: "Value leader H1 2025 AED 25.1B �€” luxury investor hub. Top STR community." },
   { community: "Downtown Dubai",          transactions: 8900,  value: 24.5,  avgPpsf: 2750, offPlanPct: 48, yoyGrowth: 12.3, type: "Apartment", sector: "Trade Center", note: "Emaar flagship. AED 17.1B in H1 2025. Burj Khalifa views command premium." },
   { community: "Dubai Hills Estate",      transactions: 8200,  value: 22.4,  avgPpsf: 2100, offPlanPct: 55, yoyGrowth: 22.1, type: "Mixed",     sector: "MBR City", note: "Top luxury villa destination. Dubai Hills Mall catalyst." },
   { community: "DAMAC Hills 2",           transactions: 7800,  value: 7.4,   avgPpsf: 950,  offPlanPct: 80, yoyGrowth: 11.3, type: "Villa",     sector: "Dubailand", note: "Most popular affordable villa 2025. Water features + amenities." },
   { community: "Sobha Hartland",          transactions: 6800,  value: 19.7,  avgPpsf: 2750, offPlanPct: 68, yoyGrowth: 18.4, type: "Mixed",     sector: "MBR City", note: "Crystal lagoon masterplan. Sobha Hartland 2 phase expanding." },
-  { community: "Jumeirah Lake Towers",    transactions: 6100,  value: 8.9,   avgPpsf: 1650, offPlanPct: 42, yoyGrowth: 7.1,  type: "Apartment", sector: "New Dubai", note: "Established community with 79 towers — strong rental demand." },
+  { community: "Jumeirah Lake Towers",    transactions: 6100,  value: 8.9,   avgPpsf: 1650, offPlanPct: 42, yoyGrowth: 7.1,  type: "Apartment", sector: "New Dubai", note: "Established community with 79 towers �€” strong rental demand." },
   { community: "Dubai Creek Harbour",     transactions: 5800,  value: 13.2,  avgPpsf: 2280, offPlanPct: 82, yoyGrowth: 19.6, type: "Apartment", sector: "MBR City", note: "Blue Line Metro catalyst. +15-25% PPSF growth. Emaar masterplan." },
-  { community: "Palm Jumeirah",           transactions: 5400,  value: 28.9,  avgPpsf: 3500, offPlanPct: 15, yoyGrowth: 14.8, type: "Mixed",     sector: "New Dubai", note: "Highest avg PPSF AED 3,500. Supply-constrained — strong price support." },
+  { community: "Palm Jumeirah",           transactions: 5400,  value: 28.9,  avgPpsf: 3500, offPlanPct: 15, yoyGrowth: 14.8, type: "Mixed",     sector: "New Dubai", note: "Highest avg PPSF AED 3,500. Supply-constrained �€” strong price support." },
   { community: "Al Furjan",               transactions: 5200,  value: 6.65,  avgPpsf: 1280, offPlanPct: 65, yoyGrowth: 16.4, type: "Villa",     sector: "Jebel Ali", note: "Most popular mid-tier villa H1 2025 per Bayut." },
   { community: "Wadi Al Safa 5",          transactions: 4800,  value: 15.3,  avgPpsf: 1420, offPlanPct: 78, yoyGrowth: 14.2, type: "Mixed",     sector: "Dubailand", note: "Top 3 by volume H1 2025 per DLD official." },
   { community: "Arabian Ranches 3",       transactions: 4100,  value: 6.48,  avgPpsf: 1580, offPlanPct: 71, yoyGrowth: 27.8, type: "Villa",     sector: "Dubailand", note: "Caya and Bliss handovers drove surge. Bayut 2025 top villa." },
@@ -174,7 +174,7 @@ function DLDVolumesTab({ liveNeighbourhoods=[], dldFilter, setDldFilter, dldSear
           <div key={i} style={{ display:"flex", alignItems:"center", gap:5 }}>
             <div style={{ width:8, height:8, borderRadius:"50%", background:x.c }} />
             <span style={{ fontSize:10, color:T.textSecondary }}>{x.l}</span>
-            <span style={{ fontSize:10, color:T.textMuted }}>— {x.d}</span>
+            <span style={{ fontSize:10, color:T.textMuted }}>�€” {x.d}</span>
           </div>
         ))}
         <div style={{ fontSize:10, color:T.textMuted, marginLeft:"auto" }}>Source: DXB Analytics DLD database March 2026</div>
@@ -294,7 +294,7 @@ function DLDVolumesTab({ liveNeighbourhoods=[], dldFilter, setDldFilter, dldSear
                         <div style={{ height:"100%", width:(row.offPlanPct||0)+"%", borderRadius:2, background:T.green }} />
                       </div>
                     </div>
-                    <div style={{ fontSize:12, color:(row.yoyGrowth||0)>=15?T.green:(row.yoyGrowth||0)>=8?T.gold:T.textMuted, fontWeight:600 }}>{row.yoyGrowth?"+"+row.yoyGrowth+"%":"—"}</div>
+                    <div style={{ fontSize:12, color:(row.yoyGrowth||0)>=15?T.green:(row.yoyGrowth||0)>=8?T.gold:T.textMuted, fontWeight:600 }}>{row.yoyGrowth?"+"+row.yoyGrowth+"%":"�€”"}</div>
                     <div style={{ display:"flex", alignItems:"center", gap:5 }}>
                       <div style={{ width:7, height:7, borderRadius:"50%", background:liq.color }} />
                       <span style={{ fontSize:10, color:liq.color, fontWeight:600 }}>{liq.label}</span>
@@ -351,7 +351,7 @@ function DLDVolumesTab({ liveNeighbourhoods=[], dldFilter, setDldFilter, dldSear
               { label:"Total Value", value:"AED "+(selectedData.value||0).toFixed(1)+"B", color:"#63B3ED" },
               { label:"Avg PPSF", value:"AED "+(selectedData.avgPpsf||0).toLocaleString(), color:T.textSecondary },
               { label:"Off-Plan Share", value:(selectedData.offPlanPct||0)+"%", color:selectedData.offPlanPct>=70?T.green:T.textSecondary },
-              { label:"YoY Price Growth", value:selectedData.yoyGrowth?"+"+selectedData.yoyGrowth+"%":"—", color:(selectedData.yoyGrowth||0)>=15?T.green:T.gold },
+              { label:"YoY Price Growth", value:selectedData.yoyGrowth?"+"+selectedData.yoyGrowth+"%":"�€”", color:(selectedData.yoyGrowth||0)>=15?T.green:T.gold },
             ].map((m,i) => (
               <div key={i} style={{ display:"flex", justifyContent:"space-between", padding:"7px 0", borderBottom:i<4?"1px solid "+T.border+"60":"none" }}>
                 <span style={{ fontSize:11, color:T.textMuted }}>{m.label}</span>

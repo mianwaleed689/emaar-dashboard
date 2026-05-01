@@ -1,5 +1,5 @@
 /**
- * DXB ANALYTICS — UNIFIED COMMUNITIES INDEX
+ * DXB ANALYTICS �€” UNIFIED COMMUNITIES INDEX
  * All 40 communities across 7 developers
  * Single source of truth for all community data
  * 
@@ -17,7 +17,7 @@ import { meraasCommunitites }   from "./meraas.communities";
 import { aldarCommunities }     from "./aldar.communities";
 import { binghattiCommunities } from "./binghatti.communities";
 
-// ─── UNIFIED ALL COMMUNITIES ─────────────────────────────────────────────────
+// �”€�”€�”€ UNIFIED ALL COMMUNITIES �”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€
 export const allCommunities = [
   ...emaarCommunities,
   ...damacCommunities,
@@ -28,7 +28,7 @@ export const allCommunities = [
   ...binghattiCommunities,
 ];
 
-// ─── HELPER FUNCTIONS ─────────────────────────────────────────────────────────
+// �”€�”€�”€ HELPER FUNCTIONS �”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€
 
 /** Get a single community by ID */
 export const getCommunityById = (id) =>

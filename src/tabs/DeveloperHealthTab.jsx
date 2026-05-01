@@ -1,5 +1,5 @@
 /* eslint-disable */
-/* DEVELOPER HEALTH TAB â€” Developer scoring & financial health */
+/* DEVELOPER HEALTH TAB ââ‚¬â€ Developer scoring & financial health */
 
 import React from "react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Cell } from "recharts";
@@ -41,25 +41,25 @@ function DeveloperHealthTab({ liveNeighbourhoods=[],
   };
 
 
-            /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-               DEVELOPER HEALTH â€” 9-Factor Scoring Model
+            /* ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢
+               DEVELOPER HEALTH ââ‚¬â€ 9-Factor Scoring Model
                Sources: DLD transaction data, RERA registry,
                DXBinteract, Arabian Business, company disclosures
                
                9 Factors (total 100 pts):
-               1. Sales Velocity       (15pts) â€” DLD monthly transactions
-               2. Delivery Track Record(20pts) â€” on-time %, completed projects
-               3. Financial Strength   (20pts) â€” revenue, cash, debt
-               4. Project Pipeline     (10pts) â€” active launches, backlog
-               5. Market Reputation    (10pts) â€” buyer reviews, complaints
-               6. RERA Compliance      (10pts) â€” violations, escrow status
-               7. DLD Transaction Rank (5pts)  â€” market share rank
-               8. Pricing Stability    (5pts)  â€” PPSF consistency
-               9. Buyer Nationality Mix(5pts)  â€” diversification
-            â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+               1. Sales Velocity       (15pts) ââ‚¬â€ DLD monthly transactions
+               2. Delivery Track Record(20pts) ââ‚¬â€ on-time %, completed projects
+               3. Financial Strength   (20pts) ââ‚¬â€ revenue, cash, debt
+               4. Project Pipeline     (10pts) ââ‚¬â€ active launches, backlog
+               5. Market Reputation    (10pts) ââ‚¬â€ buyer reviews, complaints
+               6. RERA Compliance      (10pts) ââ‚¬â€ violations, escrow status
+               7. DLD Transaction Rank (5pts)  ââ‚¬â€ market share rank
+               8. Pricing Stability    (5pts)  ââ‚¬â€ PPSF consistency
+               9. Buyer Nationality Mix(5pts)  ââ‚¬â€ diversification
+            ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ */
 
             const HEALTH_SCORES = [
-              /* â”€â”€â”€ TIER 1: MARKET LEADERS â”€â”€â”€ */
+              /* ââ€â‚¬ââ€â‚¬ââ€â‚¬ TIER 1: MARKET LEADERS ââ€â‚¬ââ€â‚¬ââ€â‚¬ */
               {
                 name:"Emaar Properties", tier:"Tier 1", color:"#D4A843",
                 score:94, grade:"A+",
@@ -67,7 +67,7 @@ function DeveloperHealthTab({ liveNeighbourhoods=[],
                 badges:["DFM Listed","Market Leader","On-Time Delivery","Golden Visa Projects"],
                 dldRank:1, marketShare:"14.4%", avgPPSF:2415, transactions2024:19515,
                 salesAED:"AED 70B (2024)", deliveryRate:"95%", activeProjects:62,
-                summary:"Undisputed market leader. Highest delivery rate. DFM listed â€” full transparency. 60+ active project launches in 2024.",
+                summary:"Undisputed market leader. Highest delivery rate. DFM listed ââ‚¬â€ full transparency. 60+ active project launches in 2024.",
               },
               {
                 name:"Aldar Properties", tier:"Tier 1", color:"#10B981",
@@ -106,7 +106,7 @@ function DeveloperHealthTab({ liveNeighbourhoods=[],
                 summary:"#1 in Dubai luxury segment (>AED 15M) in 2025 with AED 16.9B. Palm Jumeirah global brand. Government backing = zero default risk.",
               },
 
-              /* â”€â”€â”€ TIER 2: STRONG PERFORMERS â”€â”€â”€ */
+              /* ââ€â‚¬ââ€â‚¬ââ€â‚¬ TIER 2: STRONG PERFORMERS ââ€â‚¬ââ€â‚¬ââ€â‚¬ */
               {
                 name:"Meraas", tier:"Tier 2", color:"#EC4899",
                 score:80, grade:"B+",
@@ -123,7 +123,7 @@ function DeveloperHealthTab({ liveNeighbourhoods=[],
                 badges:["Fastest Growing","Iconic Architecture","60+ Projects","Bond Watch âš "],
                 dldRank:3, marketShare:"6.2%", avgPPSF:1460, transactions2024:11200,
                 salesAED:"AED 14B (2024) / AED 26B 2025", deliveryRate:"78%", activeProjects:42,
-                summary:"Fastest growing private developer. 2025 sales AED 26B â€” extraordinary growth. Bond stress signals Mar 2026 require monitoring.",
+                summary:"Fastest growing private developer. 2025 sales AED 26B ââ‚¬â€ extraordinary growth. Bond stress signals Mar 2026 require monitoring.",
               },
               {
                 name:"Azizi Developments", tier:"Tier 2", color:"#6366F1",
@@ -153,7 +153,7 @@ function DeveloperHealthTab({ liveNeighbourhoods=[],
                 summary:"Highest design standard per AED. Premium finishes above competitors at same price. Strong resale premiums. Lowest D/E ratio (0.38x).",
               },
 
-              /* â”€â”€â”€ TIER 3: MID-MARKET â”€â”€â”€ */
+              /* ââ€â‚¬ââ€â‚¬ââ€â‚¬ TIER 3: MID-MARKET ââ€â‚¬ââ€â‚¬ââ€â‚¬ */
               {
                 name:"Samana Developers", tier:"Tier 3", color:"#6B7280",
                 score:65, grade:"B-",
@@ -188,7 +188,7 @@ function DeveloperHealthTab({ liveNeighbourhoods=[],
                 badges:["Mid-Market","JVC Focus","Private"],
                 dldRank:8, marketShare:"2.0%", avgPPSF:1300, transactions2024:3800,
                 salesAED:"AED 4.9B (2024)", deliveryRate:"74%", activeProjects:18,
-                summary:"Mid-market affordable developer. JVC + Business Bay projects. Private â€” limited disclosures. Improving delivery consistency.",
+                summary:"Mid-market affordable developer. JVC + Business Bay projects. Private ââ‚¬â€ limited disclosures. Improving delivery consistency.",
               },
               {
                 name:"Imtiaz Developments", tier:"Tier 3", color:"#6B7280",
@@ -219,14 +219,14 @@ function DeveloperHealthTab({ liveNeighbourhoods=[],
 
             const tiers = ["All","Tier 1","Tier 2","Tier 3"];
 
-            /* â”€â”€ live data â†’ seed swap â”€â”€ */
+            /* ââ€â‚¬ââ€â‚¬ live data â†â€™ seed swap ââ€â‚¬ââ€â‚¬ */
             const rawHealthAll = liveDevHealth?.filter?.(d => d.name && d.score).length > 0
               ? liveDevHealth.filter(d => d.name && d.score)
               : HEALTH_SCORES;
             // Phase 2.4 Batch 6: narrow to the globally-filtered developer, if any
             const rawHealth = rawHealthAll.filter(dhMatchesGlobalFilter);
 
-            /* â”€â”€ Filter + sort â”€â”€ */
+            /* ââ€â‚¬ââ€â‚¬ Filter + sort ââ€â‚¬ââ€â‚¬ */
             const filtered = rawHealth
               .filter(d => dhTier === "All" || d.tier === dhTier)
               .filter(d => !dhSearch || d.name.toLowerCase().includes(dhSearch.toLowerCase()))
@@ -256,7 +256,7 @@ function DeveloperHealthTab({ liveNeighbourhoods=[],
                 <div style={{ display:"flex", alignItems:"flex-start", justifyContent:"space-between", padding:"10px 0", marginBottom:16, borderBottom:`1px solid ${T.border}`, flexWrap:"wrap", gap:8 }}>
                   <div>
                     <div style={{ fontFamily:"'Fraunces',serif", fontSize:20, fontWeight:800, color:T.white }}>Developer Health</div>
-                    <div style={{ fontSize:11, color:T.textMuted, marginTop:3 }}>9-factor scoring Â· 15 developers ranked Â· DLD + RERA + IR data Â· {rawHealth === HEALTH_SCORES ? "Seed data â€” upload via Admin" : "Live Firestore data"}</div>
+                    <div style={{ fontSize:11, color:T.textMuted, marginTop:3 }}>9-factor scoring Â· 15 developers ranked Â· DLD + RERA + IR data Â· {rawHealth === HEALTH_SCORES ? "Seed data ââ‚¬â€ upload via Admin" : "Live Firestore data"}</div>
                   </div>
                   <div style={{ display:"flex", gap:8 }}>
                     {["leaderboard","detail","compare"].map(v=>(
@@ -341,7 +341,7 @@ function DeveloperHealthTab({ liveNeighbourhoods=[],
                           {d.tier}
                         </div>
                         {/* Status arrow */}
-                        <div style={{ fontSize:11, color:T.textMuted }}>View detail â†’</div>
+                        <div style={{ fontSize:11, color:T.textMuted }}>View detail â†â€™</div>
                       </div>
                     ))}
                   </div>
@@ -361,7 +361,7 @@ function DeveloperHealthTab({ liveNeighbourhoods=[],
                       </button>
                       <button type="button" onClick={()=>handleTabChange("Financials")}
                         style={{ padding:"6px 14px", background:"rgba(212,168,67,0.1)", border:"1px solid rgba(212,168,67,0.3)", borderRadius:8, color:T.gold, fontSize:11, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>
-                        View Financials â†’
+                        View Financials â†â€™
                       </button>
                     </div>
 
@@ -433,11 +433,11 @@ function DeveloperHealthTab({ liveNeighbourhoods=[],
                           <div style={{ marginTop:14, display:"flex", gap:8 }}>
                             <button type="button" onClick={()=>{ setFinDeveloper(selected.name); handleTabChange("Financials"); }}
                               style={{ flex:1, padding:"8px 0", background:`linear-gradient(135deg,${T.gold},#B8922A)`, border:"none", borderRadius:8, color:"#000", fontSize:11, fontWeight:700, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>
-                              View Financials â†’
+                              View Financials â†â€™
                             </button>
                             <button type="button" onClick={()=>{ setFinDeveloper(selected.name); handleTabChange("Risk"); }}
                               style={{ flex:1, padding:"8px 0", background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:8, color:T.white, fontSize:11, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>
-                              View Risk â†’
+                              View Risk â†â€™
                             </button>
                           </div>
                         </div>

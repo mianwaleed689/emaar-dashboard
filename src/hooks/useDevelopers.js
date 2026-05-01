@@ -1,5 +1,5 @@
 /**
- * useDevelopers — returns all developers from Firestore
+ * useDevelopers �€” returns all developers from Firestore
  * src/hooks/useDevelopers.js
  *
  * Example:

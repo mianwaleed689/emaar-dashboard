@@ -1,8 +1,8 @@
 /* eslint-disable */
-/* в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ
-   DXB ANALYTICS вЂ” PIPELINE TAB
+/* ввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђ
+   DXB ANALYTICS вв‚¬вЂќ PIPELINE TAB
    Sales pipeline / deal management for agency CRM
-   в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ */
+   ввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђ */
 
 import React from "react";
 import { T } from "../data";
@@ -104,11 +104,11 @@ function PipelineTab({ liveNeighbourhoods=[], orgName, deals, dealsLoading, deal
 
             return (<>
 
-              {/* в”Ђв”Ђ Header в”Ђв”Ђ */}
+              {/* ввЂќв‚¬ввЂќв‚¬ Header ввЂќв‚¬ввЂќв‚¬ */}
               <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:20, flexWrap:"wrap", gap:12 }}>
                 <div>
-                  <h1 style={{ fontFamily:"'Fraunces',serif", fontSize:22, fontWeight:900, color:T.white, margin:0 }}>{orgName ? orgName + " вЂ” " : "My Agency вЂ” "}Deal Pipeline</h1>
-                  <p style={{ fontSize:12, color:T.textMuted, margin:"4px 0 0" }}>EOI в†’ Booking в†’ SPA в†’ DLD В· Track every deal to close</p>
+                  <h1 style={{ fontFamily:"'Fraunces',serif", fontSize:22, fontWeight:900, color:T.white, margin:0 }}>{orgName ? orgName + " вв‚¬вЂќ " : "My Agency вв‚¬вЂќ "}Deal Pipeline</h1>
+                  <p style={{ fontSize:12, color:T.textMuted, margin:"4px 0 0" }}>EOI в†вЂ™ Booking в†вЂ™ SPA в†вЂ™ DLD В· Track every deal to close</p>
                 </div>
                 <div style={{ display:"flex", gap:8 }}>
                   {/* Type filter */}
@@ -128,7 +128,7 @@ function PipelineTab({ liveNeighbourhoods=[], orgName, deals, dealsLoading, deal
                 </div>
               </div>
 
-              {/* в”Ђв”Ђ KPI Bar в”Ђв”Ђ */}
+              {/* ввЂќв‚¬ввЂќв‚¬ KPI Bar ввЂќв‚¬ввЂќв‚¬ */}
               <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:10, marginBottom:20 }}>
                 {[
                   { label:"Active Deals",    value:filteredDeals.filter(d=>d.stage!=="Completed").length, color:T.gold,   icon:<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><rect x="3" y="3" width="4" height="18" rx="1"/><rect x="10" y="3" width="4" height="12" rx="1"/><rect x="17" y="3" width="4" height="15" rx="1"/></svg> },
@@ -147,7 +147,7 @@ function PipelineTab({ liveNeighbourhoods=[], orgName, deals, dealsLoading, deal
                 ))}
               </div>
 
-              {/* в”Ђв”Ђ Stage Progress Bar в”Ђв”Ђ */}
+              {/* ввЂќв‚¬ввЂќв‚¬ Stage Progress Bar ввЂќв‚¬ввЂќв‚¬ */}
               <div style={{ overflowX:"auto", marginBottom:20 }}>
                 <div style={{ display:"grid", gridTemplateColumns:`repeat(${STAGES.length},minmax(200px,1fr))`, borderRadius:10, overflow:"hidden", border:`1px solid ${T.border}`, minWidth:700 }}>
                 {STAGES.map((s,i) => {
@@ -164,7 +164,7 @@ function PipelineTab({ liveNeighbourhoods=[], orgName, deals, dealsLoading, deal
                 </div>
               </div>
 
-              {/* в”Ђв”Ђ Kanban Board в”Ђв”Ђ */}
+              {/* ввЂќв‚¬ввЂќв‚¬ Kanban Board ввЂќв‚¬ввЂќв‚¬ */}
               {dealsLoading ? (
                 <div style={{ display:"flex", alignItems:"center", justifyContent:"center", padding:"60px 0", gap:10 }}>
                   <div style={{ width:20, height:20, border:`2px solid ${T.gold}30`, borderTopColor:T.gold, borderRadius:"50%", animation:"spin 0.7s linear infinite" }}/>
@@ -241,7 +241,7 @@ function PipelineTab({ liveNeighbourhoods=[], orgName, deals, dealsLoading, deal
                 </div>
               )}
 
-              {/* в”Ђв”Ђ Deal Detail Drawer в”Ђв”Ђ */}
+              {/* ввЂќв‚¬ввЂќв‚¬ Deal Detail Drawer ввЂќв‚¬ввЂќв‚¬ */}
               {selectedDeal && (
                 <div style={{ position:"fixed", inset:0, zIndex:1500, display:"flex" }} onClick={e=>{if(e.target===e.currentTarget)setSelectedDeal(null);}}>
                   <div style={{ flex:1, background:"rgba(0,0,0,0.5)", backdropFilter:"blur(4px)" }} onClick={()=>setSelectedDeal(null)}/>
@@ -294,7 +294,7 @@ function PipelineTab({ liveNeighbourhoods=[], orgName, deals, dealsLoading, deal
                           <div>
                             <div style={{ fontSize:10, color:T.textMuted, marginBottom:5 }}>Deal Price (AED)</div>
                             <div style={{ fontSize:18, fontWeight:900, color:T.gold, fontFamily:"'Fraunces',serif" }}>
-                              {selectedDeal.price>0?`${(parseFloat(selectedDeal.price)/1e6).toFixed(2)}M`:"вЂ”"}
+                              {selectedDeal.price>0?`${(parseFloat(selectedDeal.price)/1e6).toFixed(2)}M`:"вв‚¬вЂќ"}
                             </div>
                           </div>
                           <div>
@@ -357,14 +357,14 @@ function PipelineTab({ liveNeighbourhoods=[], orgName, deals, dealsLoading, deal
                 </div>
               )}
 
-              {/* в”Ђв”Ђ New Deal Modal в”Ђв”Ђ */}
+              {/* ввЂќв‚¬ввЂќв‚¬ New Deal Modal ввЂќв‚¬ввЂќв‚¬ */}
               {showNewDeal && (
                 <div style={{ position:"fixed", inset:0, background:"rgba(4,9,15,0.85)", zIndex:2000, display:"flex", alignItems:"center", justifyContent:"center", backdropFilter:"blur(8px)" }} onClick={e=>{if(e.target===e.currentTarget)setShowNewDeal(false);}}>
                   <div style={{ background:T.surface, borderRadius:16, border:`1px solid ${T.border}`, width:"95%", maxWidth:520, maxHeight:"90vh", overflowY:"auto" }} onClick={e=>e.stopPropagation()}>
                     <div style={{ padding:"22px 24px", borderBottom:`1px solid ${T.border}`, display:"flex", justifyContent:"space-between", alignItems:"center" }}>
                       <div>
                         <div style={{ fontFamily:"'Fraunces',serif", fontSize:18, fontWeight:900, color:T.gold }}>New Deal</div>
-                        <div style={{ fontSize:11, color:T.textMuted, marginTop:2 }}>Start at EOI stage вЂ” advance as the deal progresses</div>
+                        <div style={{ fontSize:11, color:T.textMuted, marginTop:2 }}>Start at EOI stage вв‚¬вЂќ advance as the deal progresses</div>
                       </div>
                       <button type="button" onClick={()=>setShowNewDeal(false)}
                         style={{ background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:8, color:T.textMuted, width:32, height:32, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center" }}>

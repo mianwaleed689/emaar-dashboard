@@ -1,10 +1,10 @@
 /**
- * useDevelopments — returns master communities/developments from Firestore
+ * useDevelopments �€” returns master communities/developments from Firestore
  * src/hooks/useDevelopments.js
  *
  * "Developments" in this codebase means master communities like Dubai Hills
- * Estate, DAMAC Hills, Emaar Beachfront — the level ABOVE individual project
- * variants. Edited in Admin → Data Manager → Developments.
+ * Estate, DAMAC Hills, Emaar Beachfront �€” the level ABOVE individual project
+ * variants. Edited in Admin �’ Data Manager �’ Developments.
  *
  * Example:
  *   const { data: developments } = useDevelopments();

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { collection, onSnapshot } from "firebase/firestore";
 
 /**
- * CancellationTab ‚Äî admin view of user cancellations
+ * CancellationTab ‚‚Ç¨‚Äù admin view of user cancellations
  *
  * Rewritten (Wave 1.5) to replace the window._cancelLoaded / window._cancelData
  * globals with proper React state. Uses onSnapshot so the list auto-updates
@@ -98,7 +98,7 @@ export default function CancellationTab({ T, I, db, notify, users }) {
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       <div className="fade-up" style={{ display: "flex", alignItems: "center", borderRadius: 14, background: T.surface, border: `1px solid ${T.border}`, overflow: "hidden" }}>
         {loading && (
-          <div style={{ fontSize: 11, padding: "14px 16px", background: T.goldGlow, borderRight: `1px solid ${T.border}`, color: T.gold, fontFamily: "'Outfit',sans-serif", fontWeight: 600, flexShrink: 0 }}>Loading‚Ä¶</div>
+          <div style={{ fontSize: 11, padding: "14px 16px", background: T.goldGlow, borderRight: `1px solid ${T.border}`, color: T.gold, fontFamily: "'Outfit',sans-serif", fontWeight: 600, flexShrink: 0 }}>Loading‚‚Ç¨¶</div>
         )}
         {[
           { label: "Total Cancellations", value: totalReal, color: T.textSecondary },
@@ -115,7 +115,7 @@ export default function CancellationTab({ T, I, db, notify, users }) {
       </div>
       {totalReal === 0 ? (
         <div style={{ padding: 48, textAlign: "center", background: T.surface, borderRadius: 14, border: `1px solid ${T.border}` }}>
-          <div style={{ fontSize: 48, marginBottom: 16 }}>‚úÖ</div>
+          <div style={{ fontSize: 48, marginBottom: 16 }}>‚ú‚Ä¶</div>
           <div style={{ fontSize: 18, fontWeight: 700, color: T.green, marginBottom: 8 }}>No Cancellations Yet</div>
           <div style={{ fontSize: 13, color: T.textMuted, lineHeight: 1.6, maxWidth: 400, margin: "0 auto" }}>When users cancel their subscription via the profile modal, their exit survey responses will appear here automatically.</div>
           {atRiskUsers.length > 0 && <div style={{ marginTop: 20, padding: "12px 20px", background: T.surfaceAlt, borderRadius: 10, border: `1px solid ${T.border}`, display: "inline-block", fontSize: 12, color: T.textSecondary }}>At-risk paid users with no login in 14+ days: <strong style={{ color: T.orange }}>{atRiskUsers.length}</strong></div>}

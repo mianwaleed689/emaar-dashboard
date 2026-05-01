@@ -126,10 +126,10 @@ function EiborRatesPanel({ db, T, I, notify }) {
       <div className="fade-up" style={{ display: "flex", alignItems: "center", gap: 0, borderRadius: 14, background: T.surface, border: `1px solid ${T.border}`, overflow: "hidden" }}>
         <button type="button" onClick={fetchEibor} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, padding: "14px 16px", background: "rgba(212,168,67,0.06)", border: "none", borderRight: `1px solid ${T.border}`, color: T.gold, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600, flexShrink: 0 }}>{I?.refresh || "\u21BB"}</button>
         {[
-          { label: "1M EIBOR", value: eiborCurrent?.["1m"] ? `${parseFloat(eiborCurrent["1m"]).toFixed(3)}%` : "—", color: T.blue },
-          { label: "3M EIBOR", value: eiborCurrent?.["3m"] ? `${parseFloat(eiborCurrent["3m"]).toFixed(3)}%` : "—", color: T.gold, primary: true },
-          { label: "6M EIBOR", value: eiborCurrent?.["6m"] ? `${parseFloat(eiborCurrent["6m"]).toFixed(3)}%` : "—", color: T.teal },
-          { label: "1Y EIBOR", value: eiborCurrent?.["1y"] ? `${parseFloat(eiborCurrent["1y"]).toFixed(3)}%` : "—", color: T.purple },
+          { label: "1M EIBOR", value: eiborCurrent?.["1m"] ? `${parseFloat(eiborCurrent["1m"]).toFixed(3)}%` : "�€”", color: T.blue },
+          { label: "3M EIBOR", value: eiborCurrent?.["3m"] ? `${parseFloat(eiborCurrent["3m"]).toFixed(3)}%` : "�€”", color: T.gold, primary: true },
+          { label: "6M EIBOR", value: eiborCurrent?.["6m"] ? `${parseFloat(eiborCurrent["6m"]).toFixed(3)}%` : "�€”", color: T.teal },
+          { label: "1Y EIBOR", value: eiborCurrent?.["1y"] ? `${parseFloat(eiborCurrent["1y"]).toFixed(3)}%` : "�€”", color: T.purple },
         ].map((item, i) => (
           <div key={i} style={{ display: "flex", flexDirection: "column", padding: "10px 20px", borderRight: `1px solid ${T.border}`, flexShrink: 0, background: item.primary ? "rgba(212,168,67,0.04)" : "transparent" }}>
             <span style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1 }}>{item.label}</span>
@@ -137,7 +137,7 @@ function EiborRatesPanel({ db, T, I, notify }) {
           </div>
         ))}
         <div style={{ marginLeft: "auto", padding: "10px 16px", display: "flex", gap: 8 }}>
-          <button type="button" onClick={() => setEiborCompareMode(!eiborCompareMode)} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, padding: "8px 14px", borderRadius: 8, border: `1px solid ${eiborCompareMode ? T.blue : T.border}`, background: eiborCompareMode ? `${T.blue}15` : "transparent", color: eiborCompareMode ? T.blue : T.textMuted, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>{eiborCompareMode ? "✔ Compare" : "Compare"}</button>
+          <button type="button" onClick={() => setEiborCompareMode(!eiborCompareMode)} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, padding: "8px 14px", borderRadius: 8, border: `1px solid ${eiborCompareMode ? T.blue : T.border}`, background: eiborCompareMode ? `${T.blue}15` : "transparent", color: eiborCompareMode ? T.blue : T.textMuted, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>{eiborCompareMode ? "�” Compare" : "Compare"}</button>
           <button type="button" onClick={pushRateUpdate} disabled={!eiborCurrent} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, padding: "8px 14px", borderRadius: 8, border: `1px solid ${T.teal}`, background: "rgba(20,184,166,0.08)", color: T.teal, cursor: eiborCurrent ? "pointer" : "not-allowed", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>Push to Users</button>
         </div>
       </div>
@@ -196,7 +196,7 @@ function EiborRatesPanel({ db, T, I, notify }) {
         <div className="fade-up" style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 14, padding: "20px 24px" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
             <div>
-              <div style={{ fontSize: 11, color: T.green, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1 }}>Live Rates — {eiborCurrent.asOf}</div>
+              <div style={{ fontSize: 11, color: T.green, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1 }}>Live Rates �€” {eiborCurrent.asOf}</div>
               <div style={{ fontSize: 10, color: T.textMuted }}>Source: {eiborCurrent.source || "UAE Central Bank"}</div>
             </div>
             <a href="https://www.centralbank.ae/en/forex-eibor/eibor-rates/" target="_blank" rel="noopener noreferrer" style={{ fontSize: 11, color: T.gold, textDecoration: "none" }}>View Source \u2197</a>
@@ -233,7 +233,7 @@ function EiborRatesPanel({ db, T, I, notify }) {
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
             <div>
               <div style={{ fontFamily: "'Fraunces',serif", fontSize: 16, fontWeight: 700, color: T.white }}>Rate History</div>
-              <div style={{ fontSize: 11, color: T.textMuted }}>All 4 tenors over time — color coded</div>
+              <div style={{ fontSize: 11, color: T.textMuted }}>All 4 tenors over time �€” color coded</div>
             </div>
             <div style={{ display: "flex", gap: 12 }}>
               {[{ label: "1M", color: T.blue }, { label: "3M", color: T.gold }, { label: "6M", color: T.teal }, { label: "1Y", color: T.purple }].map(l => (
@@ -420,17 +420,17 @@ function EiborRatesPanel({ db, T, I, notify }) {
                   const change = h.previousRates ? parseFloat(h["3m"]) - parseFloat(h.previousRates["3m"]) : null;
                   return (
                     <tr key={h.id} style={{ borderBottom: `1px solid ${T.border}` }}>
-                      <td style={{ padding: "10px 14px", color: T.textSecondary }}>{h.asOf || (h.updatedAt ? new Date(h.updatedAt).toLocaleDateString("en-AE", { day: "numeric", month: "short" }) : "—")}</td>
-                      <td style={{ padding: "10px 14px", color: T.blue }}>{h["1m"] ? `${parseFloat(h["1m"]).toFixed(3)}%` : "—"}</td>
-                      <td style={{ padding: "10px 14px", color: T.gold, fontWeight: 600 }}>{h["3m"] ? `${parseFloat(h["3m"]).toFixed(3)}%` : "—"}</td>
-                      <td style={{ padding: "10px 14px", color: T.teal }}>{h["6m"] ? `${parseFloat(h["6m"]).toFixed(3)}%` : "—"}</td>
-                      <td style={{ padding: "10px 14px", color: T.purple }}>{h["1y"] ? `${parseFloat(h["1y"]).toFixed(3)}%` : "—"}</td>
+                      <td style={{ padding: "10px 14px", color: T.textSecondary }}>{h.asOf || (h.updatedAt ? new Date(h.updatedAt).toLocaleDateString("en-AE", { day: "numeric", month: "short" }) : "�€”")}</td>
+                      <td style={{ padding: "10px 14px", color: T.blue }}>{h["1m"] ? `${parseFloat(h["1m"]).toFixed(3)}%` : "�€”"}</td>
+                      <td style={{ padding: "10px 14px", color: T.gold, fontWeight: 600 }}>{h["3m"] ? `${parseFloat(h["3m"]).toFixed(3)}%` : "�€”"}</td>
+                      <td style={{ padding: "10px 14px", color: T.teal }}>{h["6m"] ? `${parseFloat(h["6m"]).toFixed(3)}%` : "�€”"}</td>
+                      <td style={{ padding: "10px 14px", color: T.purple }}>{h["1y"] ? `${parseFloat(h["1y"]).toFixed(3)}%` : "�€”"}</td>
                       <td style={{ padding: "10px 14px" }}>
                         {change !== null ? (
                           <span style={{ color: change > 0 ? T.red : change < 0 ? T.green : T.textMuted, fontWeight: 600 }}>
                             {change > 0 ? "+" : ""}{change.toFixed(3)}%
                           </span>
-                        ) : "—"}
+                        ) : "�€”"}
                       </td>
                       <td style={{ padding: "10px 14px", color: T.textMuted }}>{h.updatedBy || "admin"}</td>
                     </tr>
@@ -448,11 +448,11 @@ function EiborRatesPanel({ db, T, I, notify }) {
 
 
 /* ======================================================
-   USERS TAB COMPONENT — Professional SaaS User Management
+   USERS TAB COMPONENT �€” Professional SaaS User Management
    Full rebuild: all 36 audit issues resolved
 ====================================================== */
 
-/* ─── PROFILE DRAWER (top-level component — stable reference, portal to root) ─── */
+/* �”€�”€�”€ PROFILE DRAWER (top-level component �€” stable reference, portal to root) �”€�”€�”€ */
 const EditIcon = () => (
   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>

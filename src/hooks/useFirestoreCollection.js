@@ -1,9 +1,9 @@
 /**
- * DXB Analytics — useFirestoreCollection (internal base hook)
+ * DXB Analytics �€” useFirestoreCollection (internal base hook)
  * src/hooks/useFirestoreCollection.js
  *
  * Generic hook that wraps a Firestore collection subscription in TanStack Query.
- * Not intended for direct use in components — the typed wrappers below
+ * Not intended for direct use in components �€” the typed wrappers below
  * (useDevelopers, useProjects, etc.) call this internally.
  *
  * Behavior:

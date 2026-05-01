@@ -1,5 +1,5 @@
 /**
- * useFilters — URL-based global filter state
+ * useFilters �€” URL-based global filter state
  * src/hooks/useFilters.js
  *
  * All dashboard filter state lives in the URL query string. Every tab
@@ -28,7 +28,7 @@ import { useSearchParams } from "react-router-dom";
 import { useCallback, useMemo } from "react";
 
 /**
- * Default (unfiltered) values. Keep stable — changing these breaks saved
+ * Default (unfiltered) values. Keep stable �€” changing these breaks saved
  * bookmarks.
  */
 const DEFAULTS = Object.freeze({
@@ -91,7 +91,7 @@ function isDefault(key, value) {
 export function useFilters() {
   const [searchParams, setSearchParams] = useSearchParams();
 
-  // Build filters object from current URL (memoized — only re-derives when
+  // Build filters object from current URL (memoized �€” only re-derives when
   // the query string actually changes)
   const filters = useMemo(() => {
     const out = {};
@@ -101,7 +101,7 @@ export function useFilters() {
     return out;
   }, [searchParams]);
 
-  // Count of filters currently in non-default state — drives the "N filters
+  // Count of filters currently in non-default state �€” drives the "N filters
   // active" badge in the top bar.
   const activeCount = useMemo(() => {
     let count = 0;
@@ -135,7 +135,7 @@ export function useFilters() {
     [setSearchParams]
   );
 
-  /** Update several filters at once — one URL update, one re-render */
+  /** Update several filters at once �€” one URL update, one re-render */
   const setFilters = useCallback(
     (patch) => {
       setSearchParams(
@@ -158,7 +158,7 @@ export function useFilters() {
     [setSearchParams]
   );
 
-  /** Clear every filter — single URL update */
+  /** Clear every filter �€” single URL update */
   const resetAll = useCallback(() => {
     setSearchParams(
       (prev) => {
@@ -229,7 +229,7 @@ export function applyFiltersToProjects(projects, filters) {
       if (!hy || String(hy) !== String(f.year)) return false;
     }
 
-    // Price range — project's priceMin must be >= filter priceMin (if set)
+    // Price range �€” project's priceMin must be >= filter priceMin (if set)
     // AND project's priceMin must be <= filter priceMax (if set)
     const projectPrice = Number(p.priceMin ?? p.price ?? 0);
     if (f.priceMin && Number(f.priceMin) > 0 && projectPrice < Number(f.priceMin)) return false;

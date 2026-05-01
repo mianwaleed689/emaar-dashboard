@@ -1,6 +1,6 @@
 /* eslint-disable */
 /*
-  DXB ANALYTICS — NATIONALITY SELECT
+  DXB ANALYTICS �€” NATIONALITY SELECT
   Searchable dropdown with flag + nationality
   Used by: Add Lead form
 */

@@ -397,7 +397,7 @@ export default function ProjectsSection({ currentUserId, currentUserEmail }) {
                   )}
                   <span style={{ fontSize: 9, padding: "2px 8px", background: vColor + "20", color: vColor, borderRadius: 4, textTransform: "uppercase", letterSpacing: 0.5 }}>{p.visibility || "draft"}</span>
                   {p.goldenVisaEligible && (
-                    <span style={{ fontSize: 9, padding: "2px 8px", background: C.goldD, color: C.gold, borderRadius: 4, fontWeight: 600 }}>★ GOLDEN VISA</span>
+                    <span style={{ fontSize: 9, padding: "2px 8px", background: C.goldD, color: C.gold, borderRadius: 4, fontWeight: 600 }}>�… GOLDEN VISA</span>
                   )}
                 </div>
                 <div style={{ fontSize: 11, color: C.t2, display: "flex", gap: 14, flexWrap: "wrap" }}>
@@ -475,7 +475,7 @@ function ProjEditModal({ initial, developments, onClose, onSave, saving }) {
         <h3 style={{ margin: "0 0 20px 0", fontSize: 16, color: C.gold, fontFamily: "'Fraunces',serif" }}>
           {initial.id ? "Edit Project Variant" : "New Project Variant"}
           {goldenVisa && (
-            <span style={{ marginLeft: 12, fontSize: 10, padding: "3px 8px", background: C.goldD, color: C.gold, borderRadius: 4, fontWeight: 600 }}>★ GOLDEN VISA ELIGIBLE</span>
+            <span style={{ marginLeft: 12, fontSize: 10, padding: "3px 8px", background: C.goldD, color: C.gold, borderRadius: 4, fontWeight: 600 }}>�… GOLDEN VISA ELIGIBLE</span>
           )}
         </h3>
 

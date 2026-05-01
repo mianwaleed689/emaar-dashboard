@@ -1,8 +1,8 @@
 /* eslint-disable */
-/* ‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê
-   DXB ANALYTICS ‚Äî PORTFOLIO TAB
+/* ‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê
+   DXB ANALYTICS ‚‚Ç¨‚Äù PORTFOLIO TAB
    Personal property portfolio tracker
-   ‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê */
+   ‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê */
 
 import React from "react";
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
@@ -12,7 +12,7 @@ import { SvgIcons } from "../components/Icons";
 function PortfolioTab({ liveNeighbourhoods=[], portView, setPortView, portShowAdd, setPortShowAdd, livePortfolio, user }) {
 
 
-            /* ‚ïê‚ïê PORTFOLIO TRACKER
+            /* ‚‚Ä¢ê‚‚Ä¢ê PORTFOLIO TRACKER
                Tracks user's Dubai property portfolio:
                - Total portfolio value vs cost
                - Unrealised gain/loss per property
@@ -21,9 +21,9 @@ function PortfolioTab({ liveNeighbourhoods=[], portView, setPortView, portShowAd
                - IRR calculator
                - Wealth growth chart
                Data: stored in Firestore under user's profile
-            ‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê */
+            ‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê */
 
-            /* Seed portfolio ‚Äî replaced by Firestore on login */
+            /* Seed portfolio ‚‚Ç¨‚Äù replaced by Firestore on login */
             const SEED_PORTFOLIO = [
               { id:"p01", name:"Marina Heights 1BR", community:"Dubai Marina",   type:"Apartment", beds:"1BR", size:850,  buyPrice:1100000, currentVal:1380000, buyYear:2022, annualRent:78000,  sc:16000, mortgage:660000, mortRate:4.25, status:"Ready",   isSeed:true },
               { id:"p02", name:"JVC Studio",          community:"Jumeirah Village Circle", type:"Apartment", beds:"Studio", size:480, buyPrice:580000, currentVal:695000, buyYear:2023, annualRent:50000, sc:9000, mortgage:0, mortRate:0, status:"Ready", isSeed:true },
@@ -33,7 +33,7 @@ function PortfolioTab({ liveNeighbourhoods=[], portView, setPortView, portShowAd
             const portfolio = livePortfolio?.length > 0 ? livePortfolio : SEED_PORTFOLIO;
             const isSeed    = !(livePortfolio?.length > 0);
 
-            /* ‚îÄ‚îÄ Portfolio KPIs ‚îÄ‚îÄ */
+            /* ‚‚Äù‚Ç¨‚‚Äù‚Ç¨ Portfolio KPIs ‚‚Äù‚Ç¨‚‚Äù‚Ç¨ */
             const totalCost    = portfolio.reduce((s,p) => s + p.buyPrice, 0);
             const totalVal     = portfolio.reduce((s,p) => s + p.currentVal, 0);
             const totalGain    = totalVal - totalCost;
@@ -46,7 +46,7 @@ function PortfolioTab({ liveNeighbourhoods=[], portView, setPortView, portShowAd
             const grossYieldPort = totalVal > 0 ? (totalRent/totalVal*100) : 0;
             const netYieldPort   = totalVal > 0 ? (netRent/totalVal*100) : 0;
 
-            /* ‚îÄ‚îÄ IRR calculation (simplified) ‚îÄ‚îÄ */
+            /* ‚‚Äù‚Ç¨‚‚Äù‚Ç¨ IRR calculation (simplified) ‚‚Äù‚Ç¨‚‚Äù‚Ç¨ */
             const avgHoldYears = portfolio.length > 0
               ? portfolio.reduce((s,p) => s + (2026 - p.buyYear), 0) / portfolio.length : 1;
             const totalReturn  = totalGain + (netRent * avgHoldYears);
@@ -77,7 +77,7 @@ function PortfolioTab({ liveNeighbourhoods=[], portView, setPortView, portShowAd
                 {isSeed && (
                   <div style={{ padding:"10px 16px",background:"rgba(212,168,67,0.06)",border:"1px solid rgba(212,168,67,0.2)",borderRadius:10,marginBottom:16,display:"flex",alignItems:"center",gap:10 }}>
                     <span style={{ width:6,height:6,borderRadius:"50%",background:T.gold,display:"inline-block" }} />
-                    <span style={{ fontSize:12,color:T.textMuted }}><span style={{ color:T.gold,fontWeight:700 }}>Sample portfolio</span> ‚Äî Add your real properties below. Data saves to your Firebase account and syncs across devices.</span>
+                    <span style={{ fontSize:12,color:T.textMuted }}><span style={{ color:T.gold,fontWeight:700 }}>Sample portfolio</span> ‚‚Ç¨‚Äù Add your real properties below. Data saves to your Firebase account and syncs across devices.</span>
                   </div>
                 )}
 
@@ -241,7 +241,7 @@ function PortfolioTab({ liveNeighbourhoods=[], portView, setPortView, portShowAd
                         </div>
                       ))}
                       <div style={{ marginTop:12,padding:"10px 12px",background:"rgba(212,168,67,0.06)",borderRadius:8,fontSize:11,color:T.textMuted,lineHeight:1.7 }}>
-                        Dubai zero tax means your gross IRR IS your net IRR ‚Äî no income tax, no capital gains tax deducted.
+                        Dubai zero tax means your gross IRR IS your net IRR ‚‚Ç¨‚Äù no income tax, no capital gains tax deducted.
                       </div>
                     </div>
                   </div>

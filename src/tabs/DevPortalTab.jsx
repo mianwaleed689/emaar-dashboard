@@ -1,8 +1,8 @@
 /* eslint-disable */
-/* в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ
-   DXB ANALYTICS вЂ” DEV PORTAL TAB
-   Developer admin portal вЂ” manage units, EOIs, commissions
-   в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ */
+/* ввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђ
+   DXB ANALYTICS вв‚¬вЂќ DEV PORTAL TAB
+   Developer admin portal вв‚¬вЂќ manage units, EOIs, commissions
+   ввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђ */
 
 import React from "react";
 import { T } from "../data";
@@ -105,11 +105,11 @@ function DevPortalTab({ devId, devProjects, selectedDevProject, devUnits, devUni
 
             return (<>
 
-              {/* в”Ђв”Ђ Header в”Ђв”Ђ */}
+              {/* ввЂќв‚¬ввЂќв‚¬ Header ввЂќв‚¬ввЂќв‚¬ */}
               <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:20, flexWrap:"wrap", gap:12 }}>
                 <div>
                   <h1 style={{ fontFamily:"'Fraunces',serif", fontSize:22, fontWeight:900, color:T.white, margin:0 }}>
-                    {devName} вЂ” Developer Portal
+                    {devName} вв‚¬вЂќ Developer Portal
                   </h1>
                   <p style={{ fontSize:12, color:T.textMuted, margin:"4px 0 0" }}>
                     Unit inventory В· EOI pipeline В· Commission config В· Marketing hub
@@ -122,7 +122,7 @@ function DevPortalTab({ devId, devProjects, selectedDevProject, devUnits, devUni
                 </button>
               </div>
 
-              {/* в”Ђв”Ђ KPI Bar в”Ђв”Ђ */}
+              {/* ввЂќв‚¬ввЂќв‚¬ KPI Bar ввЂќв‚¬ввЂќв‚¬ */}
               <div style={{ display:"grid", gridTemplateColumns:"repeat(5,1fr)", gap:10, marginBottom:20 }}>
                 {[
                   { label:"Total Units",    value:devUnits.length, color:T.gold,    icon:<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg> },
@@ -142,10 +142,10 @@ function DevPortalTab({ devId, devProjects, selectedDevProject, devUnits, devUni
                 ))}
               </div>
 
-              {/* в”Ђв”Ђ Main grid: Units + EOI Pipeline в”Ђв”Ђ */}
+              {/* ввЂќв‚¬ввЂќв‚¬ Main grid: Units + EOI Pipeline ввЂќв‚¬ввЂќв‚¬ */}
               <div style={{ display:"grid", gridTemplateColumns:"minmax(0,1fr) min(380px,38%)", gap:16, marginBottom:16, alignItems:"start" }}>
 
-                {/* в”Ђв”Ђ Unit Inventory в”Ђв”Ђ */}
+                {/* ввЂќв‚¬ввЂќв‚¬ Unit Inventory ввЂќв‚¬ввЂќв‚¬ */}
                 <div style={{ background:T.card, border:`1px solid ${T.border}`, borderRadius:14, overflow:"hidden" }}>
                   <div style={{ padding:"14px 18px", borderBottom:`1px solid ${T.border}`, display:"flex", alignItems:"center", gap:10 }}>
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={T.gold} strokeWidth="2" strokeLinecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
@@ -170,7 +170,7 @@ function DevPortalTab({ devId, devProjects, selectedDevProject, devUnits, devUni
                   ) : filteredUnits.length === 0 ? (
                     <div style={{ padding:"48px 20px", textAlign:"center" }}>
                       <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke={T.textMuted} strokeWidth="1.5" strokeLinecap="round" style={{ marginBottom:10 }}><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
-                      <div style={{ fontSize:13, color:T.textMuted }}>No units yet вЂ” click Add Unit to start building inventory</div>
+                      <div style={{ fontSize:13, color:T.textMuted }}>No units yet вв‚¬вЂќ click Add Unit to start building inventory</div>
                     </div>
                   ) : filteredUnits.map((unit, i) => {
                     const sc = UNIT_STATUS[unit.status||"Available"] || UNIT_STATUS.Available;
@@ -181,10 +181,10 @@ function DevPortalTab({ devId, devProjects, selectedDevProject, devUnits, devUni
                           <div style={{ fontSize:11, fontWeight:600, color:T.textPrimary }}>{unit.type}</div>
                           {unit.view && <div style={{ fontSize:10, color:T.textMuted }}>{unit.view}</div>}
                         </div>
-                        <div style={{ fontSize:11, color:T.textSecondary, textAlign:"center" }}>{unit.beds > 0 ? `${unit.beds} BR` : "вЂ”"}</div>
-                        <div style={{ fontSize:11, color:T.textSecondary, textAlign:"center" }}>{unit.size > 0 ? `${unit.size.toLocaleString()}` : "вЂ”"}</div>
-                        <div style={{ fontSize:11, color:T.textSecondary, textAlign:"center" }}>{unit.floor > 0 ? `Floor ${unit.floor}` : "вЂ”"}</div>
-                        <div style={{ fontSize:11, fontWeight:700, color:T.gold }}>{unit.price > 0 ? `${(parseFloat(unit.price)/1e6).toFixed(2)}M` : "вЂ”"}</div>
+                        <div style={{ fontSize:11, color:T.textSecondary, textAlign:"center" }}>{unit.beds > 0 ? `${unit.beds} BR` : "вв‚¬вЂќ"}</div>
+                        <div style={{ fontSize:11, color:T.textSecondary, textAlign:"center" }}>{unit.size > 0 ? `${unit.size.toLocaleString()}` : "вв‚¬вЂќ"}</div>
+                        <div style={{ fontSize:11, color:T.textSecondary, textAlign:"center" }}>{unit.floor > 0 ? `Floor ${unit.floor}` : "вв‚¬вЂќ"}</div>
+                        <div style={{ fontSize:11, fontWeight:700, color:T.gold }}>{unit.price > 0 ? `${(parseFloat(unit.price)/1e6).toFixed(2)}M` : "вв‚¬вЂќ"}</div>
                         <div>
                           <select value={unit.status||"Available"} onChange={e=>updateUnitStatus(unit.id, e.target.value)}
                             style={{ padding:"4px 6px", background:sc.bg, border:`1px solid ${sc.color}40`, borderRadius:5, color:sc.color, fontSize:10, fontWeight:700, cursor:"pointer", fontFamily:"'Outfit',sans-serif", outline:"none" }}>
@@ -196,7 +196,7 @@ function DevPortalTab({ devId, devProjects, selectedDevProject, devUnits, devUni
                   })}
                 </div>
 
-                {/* в”Ђв”Ђ EOI Pipeline в”Ђв”Ђ */}
+                {/* ввЂќв‚¬ввЂќв‚¬ EOI Pipeline ввЂќв‚¬ввЂќв‚¬ */}
                 <div style={{ background:T.card, border:`1px solid ${T.border}`, borderRadius:14, overflow:"hidden" }}>
                   <div style={{ padding:"14px 18px", borderBottom:`1px solid ${T.border}`, display:"flex", alignItems:"center", gap:10 }}>
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={T.teal} strokeWidth="2" strokeLinecap="round"><rect x="3" y="3" width="4" height="18" rx="1"/><rect x="10" y="3" width="4" height="12" rx="1"/><rect x="17" y="3" width="4" height="15" rx="1"/></svg>
@@ -238,7 +238,7 @@ function DevPortalTab({ devId, devProjects, selectedDevProject, devUnits, devUni
                 </div>
               </div>
 
-              {/* в”Ђв”Ђ Bottom row: Commission Config + Marketing Hub в”Ђв”Ђ */}
+              {/* ввЂќв‚¬ввЂќв‚¬ Bottom row: Commission Config + Marketing Hub ввЂќв‚¬ввЂќв‚¬ */}
               <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16 }}>
 
                 {/* Commission Config */}
@@ -313,7 +313,7 @@ function DevPortalTab({ devId, devProjects, selectedDevProject, devUnits, devUni
                 </div>
               </div>
 
-              {/* в”Ђв”Ђ Add Unit Modal в”Ђв”Ђ */}
+              {/* ввЂќв‚¬ввЂќв‚¬ Add Unit Modal ввЂќв‚¬ввЂќв‚¬ */}
               {showAddUnit && (
                 <div style={{ position:"fixed", inset:0, background:"rgba(4,9,15,0.85)", zIndex:2000, display:"flex", alignItems:"center", justifyContent:"center", backdropFilter:"blur(8px)" }} onClick={e=>{if(e.target===e.currentTarget)setShowAddUnit(false);}}>
                   <div style={{ background:T.surface, borderRadius:16, border:`1px solid ${T.border}`, width:"95%", maxWidth:500, maxHeight:"90vh", overflowY:"auto" }} onClick={e=>e.stopPropagation()}>

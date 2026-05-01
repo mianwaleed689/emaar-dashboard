@@ -1,6 +1,6 @@
 /* eslint-disable */
 /*
-  DXB ANALYTICS — MARKET TAB (World Class Rebuild)
+  DXB ANALYTICS �€” MARKET TAB (World Class Rebuild)
   Session 7 · April 2026
   Audience: Investors · Agents · Developers · Buyers
   Data: Firestore marketMetrics + research-backed static globals
@@ -15,7 +15,7 @@ import {
 import { T } from "../data";
 import { useMarketKpis, useMarketChart } from "../hooks/useMarketMetrics";
 
-// ── Year annotations ─────────────────────────────────────────────
+// �”€�”€ Year annotations �”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€
 const YEAR_META = {
   "2020": { label: "COVID-19", sub: "V-shaped recovery · 51K deals · AED 175B", color: "#FC8181" },
   "2021": { label: "Post-Covid Boom", sub: "Expo 2020 effect · 84K deals · AED 300B · +72%", color: "#F6AD55" },
@@ -26,7 +26,7 @@ const YEAR_META = {
   "2026 YTD": { label: "Jan 2026 Only", sub: "16,919 deals · AED 1,976 avg PPSF · on pace", color: "rgba(212,168,67,0.4)" },
 };
 
-// ── Global city comparison data ───────────────────────────────────
+// �”€�”€ Global city comparison data �”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€
 const GLOBAL_COMPARE = [
   { city: "Dubai", flag: "🇦🇪", yield: 6.55, ppsf: 438, taxRate: 0, priceGrowth: 19.8, color: T?.gold || "#D4A843" },
   { city: "London", flag: "🇬🇧", yield: 2.4, ppsf: 1420, taxRate: 25, priceGrowth: 1.6, color: "#63B3ED" },
@@ -35,75 +35,75 @@ const GLOBAL_COMPARE = [
   { city: "Paris", flag: "🇫🇷", yield: 3.8, ppsf: 1100, taxRate: 30, priceGrowth: 2.1, color: "#9F7AEA" },
 ];
 
-// ── Market health score calculator ───────────────────────────────
+// �”€�”€ Market health score calculator �”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€
 // Based on: price cycle length, YoY growth, supply pipeline risk, analyst consensus
 // Scale: 0-100 · <30 distressed · 30-50 cooling · 50-70 stable · 70-85 growing · 85-100 peak
-const HEALTH_SCORE = 72; // Growing — month 56+ cycle, strong fundamentals, supply risk emerging
+const HEALTH_SCORE = 72; // Growing �€” month 56+ cycle, strong fundamentals, supply risk emerging
 const HEALTH_LABEL = "Growing";
 const HEALTH_COLOR = "#68D391";
 const HEALTH_DESC = "Month 56+ of longest growth cycle. Strong fundamentals with emerging supply risk in 2026. Analysts forecast 1-8% growth. Ideal entry window for long-term investors.";
 
-// ── Audience content ──────────────────────────────────────────────
+// �”€�”€ Audience content �”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€
 const AUDIENCES = ["Investor", "Agent", "Developer", "Buyer"];
 const AUDIENCE_INSIGHTS = {
   Investor: {
-    icon: "📈", color: "#D4A843",
-    headline: "Dubai yields 6.55% — nearly 3x London, 1.5x New York. Zero tax.",
+    icon: "�“�", color: "#D4A843",
+    headline: "Dubai yields 6.55% �€” nearly 3x London, 1.5x New York. Zero tax.",
     points: [
-      "AED 1M invested in Dubai: ~AED 65,500/yr rental income — keep 100% (zero tax)",
-      "Same AED 1M in London: ~AED 24,000/yr — keep ~AED 18,000 after UK tax",
-      "Price growth +19.8% (ValuStrat 2025) — moderating to 5-8% in 2026 (C&W Core)",
-      "87% cash transactions — no systemic mortgage leverage risk in the market",
-      "193,100 active investors — largest DLD investor base in history",
+      "AED 1M invested in Dubai: ~AED 65,500/yr rental income �€” keep 100% (zero tax)",
+      "Same AED 1M in London: ~AED 24,000/yr �€” keep ~AED 18,000 after UK tax",
+      "Price growth +19.8% (ValuStrat 2025) �€” moderating to 5-8% in 2026 (C&W Core)",
+      "87% cash transactions �€” no systemic mortgage leverage risk in the market",
+      "193,100 active investors �€” largest DLD investor base in history",
     ],
-    cta: "→ See Yields tab for community-level ROI · DXB Estimate for valuation",
+    cta: "�’ See Yields tab for community-level ROI · DXB Estimate for valuation",
   },
   Agent: {
     icon: "🏡", color: "#63B3ED",
-    headline: "270,000+ transactions in 2025 — 5th consecutive record year.",
+    headline: "270,000+ transactions in 2025 �€” 5th consecutive record year.",
     points: [
-      "72% of deals in AED 500K–3M range — anchor your pitch here (BetterHomes FY2025)",
+      "72% of deals in AED 500K�€“3M range �€” anchor your pitch here (BetterHomes FY2025)",
       "Apartments: 83% of all deals · Studios and 1BR lead volume in JVC, Business Bay",
-      "Buyer leads up 33% YoY — demand outpacing supply in established communities",
+      "Buyer leads up 33% YoY �€” demand outpacing supply in established communities",
       "Top areas by volume: JVC, Business Bay, Wadi Al Safa 5, Dubai South, Dubai Marina",
-      "Off-plan 65% of market — payment plans are the #1 conversion tool",
+      "Off-plan 65% of market �€” payment plans are the #1 conversion tool",
     ],
-    cta: "→ See Neighbourhoods tab for community intelligence · Projects for off-plan inventory",
+    cta: "�’ See Neighbourhoods tab for community intelligence · Projects for off-plan inventory",
   },
   Developer: {
-    icon: "🏗️", color: "#FC8181",
-    headline: "228 developers active in 2025 — up 40% from 163 in 2024.",
+    icon: "�—️", color: "#FC8181",
+    headline: "228 developers active in 2025 �€” up 40% from 163 in 2024.",
     points: [
-      "131,504 units launched by Oct 2025 — Q4 was strongest quarter ever",
-      "~98K units forecast for delivery in 2026 — absorption risk in JVC, Bus. Bay, Dubai South",
-      "Off-plan PPSF premium: AED 2,149 vs AED 1,663 for ready — 29% developer advantage",
-      "Delivery rate: only 46% on-time in 2025 — contractor capacity is the bottleneck",
-      "Golden Visa eligibility at AED 2M drives high-end demand — launch at this price point",
+      "131,504 units launched by Oct 2025 �€” Q4 was strongest quarter ever",
+      "~98K units forecast for delivery in 2026 �€” absorption risk in JVC, Bus. Bay, Dubai South",
+      "Off-plan PPSF premium: AED 2,149 vs AED 1,663 for ready �€” 29% developer advantage",
+      "Delivery rate: only 46% on-time in 2025 �€” contractor capacity is the bottleneck",
+      "Golden Visa eligibility at AED 2M drives high-end demand �€” launch at this price point",
     ],
-    cta: "→ See Developer Health tab for competitive positioning",
+    cta: "�’ See Developer Health tab for competitive positioning",
   },
   Buyer: {
-    icon: "🔑", color: "#68D391",
-    headline: "Is now a good time to buy? Yes — but be selective about location.",
+    icon: "�”‘", color: "#68D391",
+    headline: "Is now a good time to buy? Yes �€” but be selective about location.",
     points: [
-      "Avg PPSF AED 1,863 (2025) → AED 1,976 in Jan 2026 — prices still rising",
-      "AED 500K–3M: 72% of all deals — strong demand = strong resale liquidity",
-      "Knight Frank forecasts +3% prime / +1% mainstream for 2026 — sustainable",
-      "Mortgage activity up 22.5% YoY — banks competing for your business",
+      "Avg PPSF AED 1,863 (2025) �’ AED 1,976 in Jan 2026 �€” prices still rising",
+      "AED 500K�€“3M: 72% of all deals �€” strong demand = strong resale liquidity",
+      "Knight Frank forecasts +3% prime / +1% mainstream for 2026 �€” sustainable",
+      "Mortgage activity up 22.5% YoY �€” banks competing for your business",
       "Golden Visa: AED 2M+ property = 10-year renewable residency, no sponsor needed",
     ],
-    cta: "→ See DXB Estimate for property valuation · Mortgage tab for financing",
+    cta: "�’ See DXB Estimate for property valuation · Mortgage tab for financing",
   },
 };
 
-// ── Chart metric options ──────────────────────────────────────────
+// �”€�”€ Chart metric options �”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€
 const CHART_METRICS = [
   { key: "Transactions (K)", label: "Transactions", unit: "K deals", color: T?.gold || "#D4A843" },
   { key: "Value (AED B)", label: "Value", unit: "AED B", color: "#63B3ED" },
   { key: "Avg PPSF", label: "Avg PPSF", unit: "AED/sqft", color: "#68D391" },
 ];
 
-// ── Custom chart tooltip ──────────────────────────────────────────
+// �”€�”€ Custom chart tooltip �”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€
 const ChartTooltip = ({ active, payload, label, metric }) => {
   if (!active || !payload?.length) return null;
   const meta = YEAR_META[label] || {};
@@ -122,7 +122,7 @@ const ChartTooltip = ({ active, payload, label, metric }) => {
   );
 };
 
-// ── Stat bar ──────────────────────────────────────────────────────
+// �”€�”€ Stat bar �”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€
 const StatBar = ({ label, value, pct, color, note }) => (
   <div style={{ marginBottom: 14 }}>
     <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 5 }}>
@@ -136,14 +136,14 @@ const StatBar = ({ label, value, pct, color, note }) => (
   </div>
 );
 
-// ── KPI card ──────────────────────────────────────────────────────
+// �”€�”€ KPI card �”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€
 const KpiCard = ({ label, value, change, note, color, onClick }) => (
   <div onClick={onClick} style={{ background: "rgba(255,255,255,0.03)", border: "1px solid " + (T?.border || "#222"), borderRadius: 12, padding: "14px 16px", cursor: onClick ? "pointer" : "default", transition: "border-color 0.2s" }}
     onMouseEnter={e => onClick && (e.currentTarget.style.borderColor = (T?.gold || "#D4A843") + "60")}
     onMouseLeave={e => onClick && (e.currentTarget.style.borderColor = T?.border || "#222")}
   >
     <div style={{ fontSize: 10, fontWeight: 700, color: T?.textMuted || "#666", letterSpacing: 1, textTransform: "uppercase", marginBottom: 8 }}>{label}</div>
-    <div style={{ fontFamily: "'Fraunces',serif", fontSize: 20, fontWeight: 800, color: color || T?.white || "#fff", lineHeight: 1.1, marginBottom: 5 }}>{value || "—"}</div>
+    <div style={{ fontFamily: "'Fraunces',serif", fontSize: 20, fontWeight: 800, color: color || T?.white || "#fff", lineHeight: 1.1, marginBottom: 5 }}>{value || "�€”"}</div>
     {change && <div style={{ fontSize: 11, color: T?.green || "#68D391", display: "flex", alignItems: "center", gap: 3 }}>
       <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="18 15 12 9 6 15"/></svg>{change}
     </div>}
@@ -151,7 +151,7 @@ const KpiCard = ({ label, value, change, note, color, onClick }) => (
   </div>
 );
 
-// ── Section heading ───────────────────────────────────────────────
+// �”€�”€ Section heading �”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€
 const SH = ({ title, sub, right }) => (
   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 14, marginTop: 32 }}>
     <div>
@@ -162,7 +162,7 @@ const SH = ({ title, sub, right }) => (
   </div>
 );
 
-// ── Main component ────────────────────────────────────────────────
+// �”€�”€ Main component �”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€
 function MarketTab({ liveNeighbourhoods=[], liveMarketData, allDevelopers, expandedForecast, setExpandedForecast, handleTabChange }) {
   const [audience, setAudience] = useState("Investor");
 
@@ -212,7 +212,7 @@ function MarketTab({ liveNeighbourhoods=[], liveMarketData, allDevelopers, expan
   return (
     <div style={{ animation: "fadeUp 0.4s ease-out forwards", paddingBottom: 60 }}>
 
-      {/* ── Header ─────────────────────────────────────────────── */}
+      {/* �”€�”€ Header �”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€ */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", padding: "10px 0", marginBottom: 20, borderBottom: "1px solid " + (T?.border || "#222"), flexWrap: "wrap", gap: 12 }}>
         <div>
           <div style={{ fontSize: 20, fontWeight: 800, color: T?.white || "#fff", fontFamily: "'Fraunces',serif" }}>Dubai Real Estate Market</div>
@@ -221,7 +221,7 @@ function MarketTab({ liveNeighbourhoods=[], liveMarketData, allDevelopers, expan
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <div style={{ textAlign: "right" }}>
             <div style={{ fontSize: 10, color: T?.textMuted || "#666", marginBottom: 3 }}>Market Health</div>
-            <div style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 800, color: HEALTH_COLOR }}>{HEALTH_SCORE}/100 — {HEALTH_LABEL}</div>
+            <div style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 800, color: HEALTH_COLOR }}>{HEALTH_SCORE}/100 �€” {HEALTH_LABEL}</div>
           </div>
           <div style={{ width: 48, height: 48, borderRadius: "50%", border: "3px solid " + HEALTH_COLOR, display: "flex", alignItems: "center", justifyContent: "center", background: HEALTH_COLOR + "15" }}>
             <span style={{ fontSize: 18, fontWeight: 800, color: HEALTH_COLOR, fontFamily: "'Fraunces',serif" }}>{HEALTH_SCORE}</span>
@@ -229,7 +229,7 @@ function MarketTab({ liveNeighbourhoods=[], liveMarketData, allDevelopers, expan
         </div>
       </div>
 
-      {/* ── Audience toggle ────────────────────────────────────── */}
+      {/* �”€�”€ Audience toggle �”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€ */}
       <div style={{ marginBottom: 20 }}>
         <div style={{ fontSize: 11, color: T?.textMuted || "#666", marginBottom: 8, fontWeight: 600 }}>I AM A...</div>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
@@ -245,7 +245,7 @@ function MarketTab({ liveNeighbourhoods=[], liveMarketData, allDevelopers, expan
         </div>
       </div>
 
-      {/* ── Audience insight card ──────────────────────────────── */}
+      {/* �”€�”€ Audience insight card �”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€ */}
       <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid " + insight.color + "30", borderLeft: "3px solid " + insight.color, borderRadius: 12, padding: "18px 20px", marginBottom: 28 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
           <span style={{ fontSize: 20 }}>{insight.icon}</span>
@@ -262,7 +262,7 @@ function MarketTab({ liveNeighbourhoods=[], liveMarketData, allDevelopers, expan
         <div style={{ fontSize: 11, color: insight.color, fontWeight: 600 }}>{insight.cta}</div>
       </div>
 
-      {/* ── 2025 Market Scorecard ──────────────────────────────── */}
+      {/* �”€�”€ 2025 Market Scorecard �”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€ */}
       <SH title="2025 Market Scorecard" sub="Full year · Dubai Land Department official data · January 2026" />
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(160px,1fr))", gap: 10, marginBottom: 8 }}>
         <KpiCard label="Total Market Value" value={getStat("Total Market Value")?.value} change={getStat("Total Market Value")?.change} note="Sales + mortgages + gifts" onClick={() => handleTabChange?.("DLD Volumes")} />
@@ -279,7 +279,7 @@ function MarketTab({ liveNeighbourhoods=[], liveMarketData, allDevelopers, expan
         <KpiCard label="Units Launched" value={getStat("Units Launched")?.value} change={getStat("Units Launched")?.change} note="By Oct 2025 · DLD" />
       </div>
 
-      {/* ── Post-Covid Recovery Chart ──────────────────────────── */}
+      {/* �”€�”€ Post-Covid Recovery Chart �”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€ */}
       <SH
         title="Dubai's Post-Covid Recovery Story"
         sub="Click any bar to see that year's full story · DLD Official Annual Reports"
@@ -337,7 +337,7 @@ function MarketTab({ liveNeighbourhoods=[], liveMarketData, allDevelopers, expan
           <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid " + selectedYearMeta.color + "40", borderRadius: 12, padding: "20px", animation: "fadeUp 0.3s ease-out" }}>
             <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 12 }}>
               <div style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 800, color: selectedYearMeta.color }}>{selectedYear}</div>
-              <button type="button" onClick={() => setSelectedYear(null)} style={{ background: "none", border: "none", color: T?.textMuted || "#666", cursor: "pointer", fontSize: 16 }}>×</button>
+              <button type="button" onClick={() => setSelectedYear(null)} style={{ background: "none", border: "none", color: T?.textMuted || "#666", cursor: "pointer", fontSize: 16 }}>�—</button>
             </div>
             <div style={{ fontSize: 13, fontWeight: 700, color: T?.white || "#fff", marginBottom: 6 }}>{selectedYearMeta.label}</div>
             <div style={{ fontSize: 11, color: T?.textSecondary || "#aaa", lineHeight: 1.7, marginBottom: 16 }}>{selectedYearMeta.sub}</div>
@@ -365,7 +365,7 @@ function MarketTab({ liveNeighbourhoods=[], liveMarketData, allDevelopers, expan
         )}
       </div>
 
-      {/* ── Global Comparison ─────────────────────────────────── */}
+      {/* �”€�”€ Global Comparison �”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€ */}
       <SH title="Dubai vs The World" sub="Why global investors choose Dubai · Gross yield · PPSF · Tax · Price growth 2025 · Sources: BetterHomes, Arabian Business, Red Horizon 2025" />
       <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid " + (T?.border || "#222"), borderRadius: 12, padding: "20px", marginBottom: 24, overflowX: "auto" }}>
         <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 600 }}>
@@ -401,7 +401,7 @@ function MarketTab({ liveNeighbourhoods=[], liveMarketData, allDevelopers, expan
                     <span style={{ fontSize: 13, color: isDubai ? T?.green || "#68D391" : T?.textSecondary || "#aaa", fontWeight: isDubai ? 700 : 400 }}>${city.ppsf.toLocaleString()}</span>
                   </td>
                   <td style={{ padding: "12px 12px", borderBottom: "1px solid " + (T?.border || "#222") + "80" }}>
-                    <span style={{ fontSize: 13, fontWeight: 700, color: city.taxRate === 0 ? T?.green || "#68D391" : "#FC8181" }}>{city.taxRate === 0 ? "Zero ✓" : city.taxRate + "%"}</span>
+                    <span style={{ fontSize: 13, fontWeight: 700, color: city.taxRate === 0 ? T?.green || "#68D391" : "#FC8181" }}>{city.taxRate === 0 ? "Zero �“" : city.taxRate + "%"}</span>
                   </td>
                   <td style={{ padding: "12px 12px", borderBottom: "1px solid " + (T?.border || "#222") + "80" }}>
                     <span style={{ fontSize: 13, fontWeight: 700, color: city.priceGrowth > 10 ? T?.gold || "#D4A843" : city.priceGrowth > 5 ? T?.green || "#68D391" : T?.textMuted || "#666" }}>+{city.priceGrowth}%</span>
@@ -419,7 +419,7 @@ function MarketTab({ liveNeighbourhoods=[], liveMarketData, allDevelopers, expan
         <div style={{ marginTop: 12, fontSize: 10, color: T?.textMuted || "#666" }}>Sources: BetterHomes ROI Comparison Feb 2026 · Arabian Business Nov 2024 · Red Horizon Dec 2025 · Global Property Guide Nov 2025</div>
       </div>
 
-      {/* ── Tax advantage calculator ───────────────────────────── */}
+      {/* �”€�”€ Tax advantage calculator �”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€ */}
       <SH title="Zero-Tax Advantage Calculator" sub="How much more you keep in Dubai vs other cities · Adjust investment amount" />
       <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid " + (T?.border || "#222"), borderRadius: 12, padding: "20px", marginBottom: 24 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 20, flexWrap: "wrap" }}>
@@ -453,38 +453,38 @@ function MarketTab({ liveNeighbourhoods=[], liveMarketData, allDevelopers, expan
           <div style={{ fontSize: 12, color: T?.textSecondary || "#aaa" }}>10-year advantage over London (compounded, reinvested):</div>
           <div style={{ fontFamily: "'Fraunces',serif", fontSize: 22, fontWeight: 800, color: T?.gold || "#D4A843" }}>+AED {Math.round(tenYearAdvantage).toLocaleString()}</div>
         </div>
-        <div style={{ fontSize: 10, color: T?.textMuted || "#666", marginTop: 10 }}>Illustrative only. Assumes stable yield, no vacancies. Actual returns vary. Consult a financial advisor. Tax rates are illustrative averages — actual tax depends on residency status.</div>
+        <div style={{ fontSize: 10, color: T?.textMuted || "#666", marginTop: 10 }}>Illustrative only. Assumes stable yield, no vacancies. Actual returns vary. Consult a financial advisor. Tax rates are illustrative averages �€” actual tax depends on residency status.</div>
       </div>
 
-      {/* ── Market Composition + Who's Buying ─────────────────── */}
+      {/* �”€�”€ Market Composition + Who's Buying �”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€ */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 8 }}>
         <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid " + (T?.border || "#222"), borderRadius: 12, padding: "20px" }}>
           <SH title="Market Composition" sub="DLD 2025 · BetterHomes FY2025" />
-          <StatBar label="Off-Plan Sales" value="65%" pct={65} color={T?.gold || "#D4A843"} note="Up from 40% in 2020 — payment plans drive adoption" />
+          <StatBar label="Off-Plan Sales" value="65%" pct={65} color={T?.gold || "#D4A843"} note="Up from 40% in 2020 �€” payment plans drive adoption" />
           <StatBar label="Secondary / Ready" value="35%" pct={35} color="#63B3ED" />
           <StatBar label="Cash Transactions" value="87%" pct={87} color={T?.green || "#68D391"} note="No systemic leverage risk · Knight Frank Q1-Q3 2025" />
-          <StatBar label="Mortgage-Backed" value="13%" pct={13} color="#9F7AEA" note="Rising — 50,974 deals +22.5% YoY" />
+          <StatBar label="Mortgage-Backed" value="13%" pct={13} color="#9F7AEA" note="Rising �€” 50,974 deals +22.5% YoY" />
         </div>
         <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid " + (T?.border || "#222"), borderRadius: 12, padding: "20px" }}>
           <SH title="Who's Buying" sub="BetterHomes FY2025 · DLD 2025" />
           <StatBar label="Apartments (83% of all deals)" value="83%" pct={83} color={T?.gold || "#D4A843"} note="Studios + 1BR lead volume · JVC, Business Bay, Dubai Marina" />
           <StatBar label="Villas & Townhouses" value="8%" pct={8} color="#63B3ED" note="Dubai Hills, Tilal Al Ghaf, Arabian Ranches" />
-          <StatBar label="AED 500K–3M (72% of deals)" value="72%" pct={72} color={T?.green || "#68D391"} note="Sweet spot — highest liquidity and resale velocity" />
-          <StatBar label="AED 3M–10M" value="20%" pct={20} color="#F6AD55" />
-          <StatBar label="AED 10M+ ultra-luxury" value="8%" pct={8} color="#9F7AEA" note="Palm, DIFC, Emirates Hills — HNWI driven" />
+          <StatBar label="AED 500K�€“3M (72% of deals)" value="72%" pct={72} color={T?.green || "#68D391"} note="Sweet spot �€” highest liquidity and resale velocity" />
+          <StatBar label="AED 3M�€“10M" value="20%" pct={20} color="#F6AD55" />
+          <StatBar label="AED 10M+ ultra-luxury" value="8%" pct={8} color="#9F7AEA" note="Palm, DIFC, Emirates Hills �€” HNWI driven" />
           <div style={{ fontSize: 10, color: T?.textMuted || "#666", marginTop: 8 }}>Residents: 56.6% · Top nationalities: Indians, UK, Russians, Europeans, GCC</div>
         </div>
       </div>
 
-      {/* ── Supply Pipeline Risk ───────────────────────────────── */}
-      <SH title="Supply Pipeline — Know the Risk" sub="2026 delivery forecast · Knight Frank / BetterHomes / Cavendish Maxwell Q3 2025" />
+      {/* �”€�”€ Supply Pipeline Risk �”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€ */}
+      <SH title="Supply Pipeline �€” Know the Risk" sub="2026 delivery forecast · Knight Frank / BetterHomes / Cavendish Maxwell Q3 2025" />
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(190px,1fr))", gap: 10, marginBottom: 24 }}>
         {[
           { label: "Units Forecast 2026", value: "~98K", note: "BetterHomes FY2025", risk: "medium" },
           { label: "Pipeline to 2028", value: "~366K", note: "Cavendish Maxwell Q3 2025", risk: "high" },
-          { label: "2025 Delivery Rate", value: "46%", note: "Only 46% on-time — contractor capacity crunch (Knight Frank)", risk: "low" },
-          { label: "High Supply Risk", value: "JVC · Bus.Bay · Dubai South", note: "Price pressure expected 2026–2027", risk: "high" },
-          { label: "Supply Constrained", value: "Palm · DIFC · Creek Harbour", note: "Limited new inventory — price support likely", risk: "low" },
+          { label: "2025 Delivery Rate", value: "46%", note: "Only 46% on-time �€” contractor capacity crunch (Knight Frank)", risk: "low" },
+          { label: "High Supply Risk", value: "JVC · Bus.Bay · Dubai South", note: "Price pressure expected 2026�€“2027", risk: "high" },
+          { label: "Supply Constrained", value: "Palm · DIFC · Creek Harbour", note: "Limited new inventory �€” price support likely", risk: "low" },
           { label: "Price Cycle Length", value: "56+ months", note: "Longest unbroken growth cycle in DLD history", risk: "medium" },
         ].map((item, i) => (
           <div key={i} style={{
@@ -493,7 +493,7 @@ function MarketTab({ liveNeighbourhoods=[], liveMarketData, allDevelopers, expan
             borderRadius: 10, padding: "12px 14px",
           }}>
             <div style={{ fontSize: 9, fontWeight: 700, color: item.risk === "high" ? "#FC8181" : item.risk === "low" ? "#68D391" : T?.textMuted || "#666", textTransform: "uppercase", letterSpacing: 1, marginBottom: 6 }}>
-              {item.risk === "high" ? "⚠ HIGH RISK" : item.risk === "low" ? "✓ SAFE" : "~ MODERATE"} · {item.label}
+              {item.risk === "high" ? "⚠ HIGH RISK" : item.risk === "low" ? "�“ SAFE" : "~ MODERATE"} · {item.label}
             </div>
             <div style={{ fontFamily: "'Fraunces',serif", fontSize: 16, fontWeight: 800, color: item.risk === "high" ? "#FC8181" : item.risk === "low" ? "#68D391" : T?.white || "#fff", marginBottom: 5 }}>{item.value}</div>
             <div style={{ fontSize: 10, color: T?.textMuted || "#666", lineHeight: 1.5 }}>{item.note}</div>
@@ -501,13 +501,13 @@ function MarketTab({ liveNeighbourhoods=[], liveMarketData, allDevelopers, expan
         ))}
       </div>
 
-      {/* ── 2026 Analyst Forecasts ─────────────────────────────── */}
+      {/* �”€�”€ 2026 Analyst Forecasts �”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€ */}
       <SH title="2026 Analyst Forecasts" sub="Click to expand · Knight Frank · Cushman & Wakefield Core · Fitch Ratings" />
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(270px,1fr))", gap: 12, marginBottom: 28 }}>
         {[
-          { firm: "Knight Frank", color: "#D4A843", forecast: "+3% prime / +1% mainstream", detail: "Faisal Durrani (Head of Research, MENA): 'Following a multi-year upswing, gradual easing in price growth is a natural characteristic of a maturing cycle.' Continued HNWI demand. Supply risk monitored — 46% delivery rate in 2025. Source: Knight Frank Dubai Residential Market Review Q3 2025." },
-          { firm: "Cushman & Wakefield Core", color: "#48BB78", forecast: "5–8% appreciation", detail: "Prathyusha Gurrapu (Head of Research): 'Price appreciation to moderate to mid-single-digit levels in 2026.' Market transitioning to sustainable phase. Strong demand from population growth continues. Source: C&W Core Year-End 2025 Outlook." },
-          { firm: "Fitch Ratings", color: "#9F7AEA", forecast: "Stable / Watch", detail: "Stable outlook on fundamentals. Notes supply pipeline risk in 2026–2027 with ~120K units expected. Key risk: if absorption doesn't keep pace, price correction possible in mid-tier communities. Golden Visa and population growth provide downside protection. Source: Fitch UAE Real Estate Watch 2025." },
+          { firm: "Knight Frank", color: "#D4A843", forecast: "+3% prime / +1% mainstream", detail: "Faisal Durrani (Head of Research, MENA): 'Following a multi-year upswing, gradual easing in price growth is a natural characteristic of a maturing cycle.' Continued HNWI demand. Supply risk monitored �€” 46% delivery rate in 2025. Source: Knight Frank Dubai Residential Market Review Q3 2025." },
+          { firm: "Cushman & Wakefield Core", color: "#48BB78", forecast: "5�€“8% appreciation", detail: "Prathyusha Gurrapu (Head of Research): 'Price appreciation to moderate to mid-single-digit levels in 2026.' Market transitioning to sustainable phase. Strong demand from population growth continues. Source: C&W Core Year-End 2025 Outlook." },
+          { firm: "Fitch Ratings", color: "#9F7AEA", forecast: "Stable / Watch", detail: "Stable outlook on fundamentals. Notes supply pipeline risk in 2026�€“2027 with ~120K units expected. Key risk: if absorption doesn't keep pace, price correction possible in mid-tier communities. Golden Visa and population growth provide downside protection. Source: Fitch UAE Real Estate Watch 2025." },
         ].map(f => {
           const isExp = expandedForecast === f.firm;
           return (
@@ -523,26 +523,26 @@ function MarketTab({ liveNeighbourhoods=[], liveMarketData, allDevelopers, expan
         })}
       </div>
 
-      {/* ── Sources panel ──────────────────────────────────────── */}
+      {/* �”€�”€ Sources panel �”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€ */}
       <div style={{ paddingTop: 20, borderTop: "1px solid " + (T?.border || "#222") }}>
-        <div style={{ fontSize: 11, fontWeight: 700, color: T?.textSecondary || "#aaa", marginBottom: 12, letterSpacing: 1, textTransform: "uppercase" }}>Primary Sources — Click to Verify</div>
+        <div style={{ fontSize: 11, fontWeight: 700, color: T?.textSecondary || "#aaa", marginBottom: 12, letterSpacing: 1, textTransform: "uppercase" }}>Primary Sources �€” Click to Verify</div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(280px,1fr))", gap: 8 }}>
           {[
-            { name: "DLD Full Year 2025 — Dubai Media Office", desc: "270,000+ transactions · AED 917B · investor base 193,100", url: "https://mediaoffice.ae/en/news/2026/january/12-01/dubais-real-estate-market-records-new-historic-milestone", tag: "DLD Official" },
-            { name: "DLD — AED 761B in 2024", desc: "226,000 transactions · AED 761B · +36% volume YoY", url: "https://dubailand.gov.ae/en/news-media/dubai-s-real-estate-sector-records-aed761-billion-in-transactions-in-2024", tag: "DLD Official" },
-            { name: "Gulf News — Dubai closes 2025 at AED 682.5B", desc: "214,912 sales transactions · Q4 monthly records", url: "https://gulfnews.com/business/property/dubai-property-market-closes-2025-with-record-dh6825-billion-in-sales-1.500396068", tag: "Gulf News" },
+            { name: "DLD Full Year 2025 �€” Dubai Media Office", desc: "270,000+ transactions · AED 917B · investor base 193,100", url: "https://mediaoffice.ae/en/news/2026/january/12-01/dubais-real-estate-market-records-new-historic-milestone", tag: "DLD Official" },
+            { name: "DLD �€” AED 761B in 2024", desc: "226,000 transactions · AED 761B · +36% volume YoY", url: "https://dubailand.gov.ae/en/news-media/dubai-s-real-estate-sector-records-aed761-billion-in-transactions-in-2024", tag: "DLD Official" },
+            { name: "Gulf News �€” Dubai closes 2025 at AED 682.5B", desc: "214,912 sales transactions · Q4 monthly records", url: "https://gulfnews.com/business/property/dubai-property-market-closes-2025-with-record-dh6825-billion-in-sales-1.500396068", tag: "Gulf News" },
             { name: "ValuStrat VPI December 2025", desc: "AED 1,689/sqft citywide · +19.8% YoY · Villas +25.5%", url: "https://valustrat.com/products/vpi-dubai-residential-capital-values-december-2025", tag: "ValuStrat" },
-            { name: "REIDIN — UAE Residential Price Report", desc: "+12.88% YoY Dec 2025 · Villas +15.16% · Yield 6.55%", url: "https://reidin.com", tag: "REIDIN" },
-            { name: "Knight Frank — Dubai Residential Q3 2025", desc: "+10% YoY values · 46% delivery rate · 2026: +3%/+1%", url: "https://www.knightfrank.ae/newsroom/article/2025/11/dubai-residential-market-review-q3-2025", tag: "Knight Frank" },
-            { name: "BetterHomes — Dubai Residential FY2025", desc: "Off-plan 65% · 132,000 off-plan deals · AED 248B apts", url: "https://www.constructionweekonline.com/analysis/dubai-off-plan-sales-2025", tag: "BetterHomes" },
-            { name: "Cavendish Maxwell — Q3 2025", desc: "~98K units 2026 · 366K through 2028 · off-plan 76%", url: "https://cavendishmaxwell.com/insights/market-reports/residential/dubai-residential-market-performance-q3-2025", tag: "Cavendish Maxwell" },
-            { name: "BetterHomes — Dubai vs Global ROI Feb 2026", desc: "Dubai 7% yield vs London 2.4% vs New York 4.2%", url: "https://www.bhomes.com/en/blog/betterinformed/dubai-vs-other-global-real-estate-hubs-which-offers-better-roi", tag: "BetterHomes" },
-            { name: "Arabian Business — Dubai outperforms London/NY", desc: "7% yield vs 2.4% London · 4.2% NY · price growth comparison", url: "https://www.arabianbusiness.com/industries/real-estate/dubai-real-estate-outperforms-london-and-new-york-with-superior-7-investment-yields-and-double-digit-price-increases", tag: "Arabian Business" },
-            { name: "DXB Analytics — Dubai Price Index 2026", desc: "FY2025: AED 1,863 avg PPSF · Jan 2026: AED 1,976", url: "https://www.dxbanalytics.com/blog/dubai-property-price-index-2026", tag: "DXB Analytics" },
-            { name: "DLD 2021 Annual — Post-Covid Boom", desc: "84,196 transactions · AED 300B · +72% value YoY", url: "https://dubailand.gov.ae/en/news-media/dld-2021-achieved-exceptional-results-that-will-contribute-to-enabling-the-real-estate-sector-s-journey-towards-the-next-50-years/", tag: "DLD 2021" },
-            { name: "UAE Moments — 2022 Record Year", desc: "122,658 transactions · AED 528B · first half-trillion year", url: "https://www.uaemoments.com/amp/dubais-real-estate-transactions-hit-a-record-high-in-2022-553424.html", tag: "DLD 2022" },
-            { name: "The National — 2023 Record", desc: "166,400 transactions · AED 634B · +36% volume YoY", url: "https://www.thenationalnews.com/business/property/2024/02/07/dubais-real-estate-transactions-surge-17-to-record-16-million-in-2023/", tag: "DLD 2023" },
-            { name: "Red Horizon — Dubai Yield vs Global 2025", desc: "Dubai 6.7-6.9% vs London 2.5-4% vs NY 3-5% vs Singapore 2.5-3.5%", url: "https://redhorizondxb.com/2025/12/29/property-rental-yield-calculator-dubai-areas-ranked-by-roi-2025/", tag: "Red Horizon" },
+            { name: "REIDIN �€” UAE Residential Price Report", desc: "+12.88% YoY Dec 2025 · Villas +15.16% · Yield 6.55%", url: "https://reidin.com", tag: "REIDIN" },
+            { name: "Knight Frank �€” Dubai Residential Q3 2025", desc: "+10% YoY values · 46% delivery rate · 2026: +3%/+1%", url: "https://www.knightfrank.ae/newsroom/article/2025/11/dubai-residential-market-review-q3-2025", tag: "Knight Frank" },
+            { name: "BetterHomes �€” Dubai Residential FY2025", desc: "Off-plan 65% · 132,000 off-plan deals · AED 248B apts", url: "https://www.constructionweekonline.com/analysis/dubai-off-plan-sales-2025", tag: "BetterHomes" },
+            { name: "Cavendish Maxwell �€” Q3 2025", desc: "~98K units 2026 · 366K through 2028 · off-plan 76%", url: "https://cavendishmaxwell.com/insights/market-reports/residential/dubai-residential-market-performance-q3-2025", tag: "Cavendish Maxwell" },
+            { name: "BetterHomes �€” Dubai vs Global ROI Feb 2026", desc: "Dubai 7% yield vs London 2.4% vs New York 4.2%", url: "https://www.bhomes.com/en/blog/betterinformed/dubai-vs-other-global-real-estate-hubs-which-offers-better-roi", tag: "BetterHomes" },
+            { name: "Arabian Business �€” Dubai outperforms London/NY", desc: "7% yield vs 2.4% London · 4.2% NY · price growth comparison", url: "https://www.arabianbusiness.com/industries/real-estate/dubai-real-estate-outperforms-london-and-new-york-with-superior-7-investment-yields-and-double-digit-price-increases", tag: "Arabian Business" },
+            { name: "DXB Analytics �€” Dubai Price Index 2026", desc: "FY2025: AED 1,863 avg PPSF · Jan 2026: AED 1,976", url: "https://www.dxbanalytics.com/blog/dubai-property-price-index-2026", tag: "DXB Analytics" },
+            { name: "DLD 2021 Annual �€” Post-Covid Boom", desc: "84,196 transactions · AED 300B · +72% value YoY", url: "https://dubailand.gov.ae/en/news-media/dld-2021-achieved-exceptional-results-that-will-contribute-to-enabling-the-real-estate-sector-s-journey-towards-the-next-50-years/", tag: "DLD 2021" },
+            { name: "UAE Moments �€” 2022 Record Year", desc: "122,658 transactions · AED 528B · first half-trillion year", url: "https://www.uaemoments.com/amp/dubais-real-estate-transactions-hit-a-record-high-in-2022-553424.html", tag: "DLD 2022" },
+            { name: "The National �€” 2023 Record", desc: "166,400 transactions · AED 634B · +36% volume YoY", url: "https://www.thenationalnews.com/business/property/2024/02/07/dubais-real-estate-transactions-surge-17-to-record-16-million-in-2023/", tag: "DLD 2023" },
+            { name: "Red Horizon �€” Dubai Yield vs Global 2025", desc: "Dubai 6.7-6.9% vs London 2.5-4% vs NY 3-5% vs Singapore 2.5-3.5%", url: "https://redhorizondxb.com/2025/12/29/property-rental-yield-calculator-dubai-areas-ranked-by-roi-2025/", tag: "Red Horizon" },
           ].map(src => (
             <a key={src.name} href={src.url} target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none" }}>
               <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid " + (T?.border || "#222"), borderRadius: 10, padding: "10px 12px", cursor: "pointer" }}
@@ -554,7 +554,7 @@ function MarketTab({ liveNeighbourhoods=[], liveMarketData, allDevelopers, expan
                   <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 8, background: "rgba(212,168,67,0.1)", color: T?.gold || "#D4A843", whiteSpace: "nowrap", flexShrink: 0 }}>{src.tag}</span>
                 </div>
                 <div style={{ fontSize: 10, color: T?.textMuted || "#666", marginBottom: 4 }}>{src.desc}</div>
-                <div style={{ fontSize: 10, color: T?.gold || "#D4A843" }}>Open source →</div>
+                <div style={{ fontSize: 10, color: T?.gold || "#D4A843" }}>Open source �’</div>
               </div>
             </a>
           ))}

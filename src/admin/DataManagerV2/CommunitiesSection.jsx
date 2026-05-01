@@ -27,10 +27,10 @@ const TYPES = [
 const VISIBILITY = ["draft", "published", "archived"];
 
 const DISPLAY_CATEGORIES = {
-  "consumer-community": { label: "Consumer", color: C.green, icon: "Ⓒ" },
-  "master-community":   { label: "Master",   color: C.purple, icon: "Ⓜ" },
-  "sub-community":      { label: "Sub",      color: C.cyan,   icon: "Ⓢ" },
-  "cadastral-district": { label: "Cadastral", color: C.amber, icon: "Ⓓ" },
+  "consumer-community": { label: "Consumer", color: C.green, icon: "�’�" },
+  "master-community":   { label: "Master",   color: C.purple, icon: "�“‚" },
+  "sub-community":      { label: "Sub",      color: C.cyan,   icon: "�“�" },
+  "cadastral-district": { label: "Cadastral", color: C.amber, icon: "�’�" },
   "duplicate-merge":    { label: "Duplicate", color: C.red,   icon: "⚠" },
 };
 
@@ -72,7 +72,7 @@ function computeQuality(c) {
   };
 }
 
-// Status badge config — color + icon + text (accessibility)
+// Status badge config �€” color + icon + text (accessibility)
 function statusConfig(c) {
   if (c.displayCategory === "cadastral-district") {
     return { color: C.amber, bg: C.amberD, icon: "🏛", label: "CADASTRAL" };
@@ -81,12 +81,12 @@ function statusConfig(c) {
     return { color: C.red, bg: C.redD, icon: "⚠", label: "DUPLICATE" };
   }
   if (c.visibility === "archived") {
-    return { color: C.m, bg: "rgba(71,85,105,0.15)", icon: "📦", label: "ARCHIVED" };
+    return { color: C.m, bg: "rgba(71,85,105,0.15)", icon: "�“�", label: "ARCHIVED" };
   }
   if (c.visibility === "draft") {
-    return { color: C.amber, bg: C.amberD, icon: "📝", label: "DRAFT" };
+    return { color: C.amber, bg: C.amberD, icon: "�“�", label: "DRAFT" };
   }
-  return { color: C.green, bg: C.greenD, icon: "✓", label: "PUBLISHED" };
+  return { color: C.green, bg: C.greenD, icon: "�“", label: "PUBLISHED" };
 }
 
 // Fuzzy similarity check for duplicate prevention
@@ -141,9 +141,9 @@ export default function CommunitiesSection({ currentUserId, currentUserEmail }) 
     setTimeout(() => setToast(null), 3500);
   }
 
-  // ──────────────────────────────────────────────────────────────────────────
-  // CATEGORY COUNTS — for header display
-  // ──────────────────────────────────────────────────────────────────────────
+  // �”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€
+  // CATEGORY COUNTS �€” for header display
+  // �”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€
   const counts = useMemo(() => {
     const c = { consumer: 0, master: 0, sub: 0, cadastral: 0, duplicates: 0,
                 drafts: 0, archived: 0, total: items.length };
@@ -169,9 +169,9 @@ export default function CommunitiesSection({ currentUserId, currentUserEmail }) 
     return arr.length > 0 ? arr : FALLBACK_AREAS;
   }, [items]);
 
-  // ──────────────────────────────────────────────────────────────────────────
-  // FILTERING — applies search, category filter, area, cadastral toggle
-  // ──────────────────────────────────────────────────────────────────────────
+  // �”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€
+  // FILTERING �€” applies search, category filter, area, cadastral toggle
+  // �”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€
   const filtered = useMemo(() => {
     let r = [...items];
 
@@ -231,9 +231,9 @@ export default function CommunitiesSection({ currentUserId, currentUserEmail }) 
     return r;
   }, [items, search, fCategory, fArea, showCadastral, sortBy]);
 
-  // ──────────────────────────────────────────────────────────────────────────
-  // HIERARCHY — group sub-communities under their parents
-  // ──────────────────────────────────────────────────────────────────────────
+  // �”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€
+  // HIERARCHY �€” group sub-communities under their parents
+  // �”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€
   const hierarchical = useMemo(() => {
     const filteredIds = new Set(filtered.map(c => c.id));
     const childrenByParent = {};
@@ -244,7 +244,7 @@ export default function CommunitiesSection({ currentUserId, currentUserEmail }) 
       }
     });
 
-    // If searching, flatten — show all matching items at top level
+    // If searching, flatten �€” show all matching items at top level
     if (search) {
       return { topLevel: filtered, children: childrenByParent, flatten: true };
     }
@@ -274,9 +274,9 @@ export default function CommunitiesSection({ currentUserId, currentUserEmail }) 
     });
   }
 
-  // ──────────────────────────────────────────────────────────────────────────
+  // �”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€
   // SAVE / ARCHIVE
-  // ──────────────────────────────────────────────────────────────────────────
+  // �”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€
   async function save(form) {
     setSaving(true);
     try {
@@ -364,9 +364,9 @@ export default function CommunitiesSection({ currentUserId, currentUserEmail }) 
     });
   }
 
-  // ──────────────────────────────────────────────────────────────────────────
+  // �”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€
   // SELECTION
-  // ──────────────────────────────────────────────────────────────────────────
+  // �”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€
   function toggleSelection(id) {
     setSelectedIds(p => {
       const n = new Set(p);
@@ -390,9 +390,9 @@ export default function CommunitiesSection({ currentUserId, currentUserEmail }) 
     else selectAll();
   }
 
-  // ──────────────────────────────────────────────────────────────────────────
+  // �”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€
   // BULK ACTIONS
-  // ──────────────────────────────────────────────────────────────────────────
+  // �”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€
   async function bulkArchive() {
     setConfirmDialog({
       title: "Archive " + selectedIds.size + " communities?",
@@ -456,9 +456,9 @@ export default function CommunitiesSection({ currentUserId, currentUserEmail }) 
     });
   }
 
-  // ──────────────────────────────────────────────────────────────────────────
+  // �”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€
   // CSV EXPORT/IMPORT
-  // ──────────────────────────────────────────────────────────────────────────
+  // �”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€
   function exportCsv() {
     const rows = filtered.map(c => ({
       id: c.id,
@@ -546,9 +546,9 @@ export default function CommunitiesSection({ currentUserId, currentUserEmail }) 
     });
   }
 
-  // ──────────────────────────────────────────────────────────────────────────
+  // �”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€
   // RENDER
-  // ──────────────────────────────────────────────────────────────────────────
+  // �”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€
   if (loading) {
     return <div style={{ padding: 40, color: C.t2 }}>Loading communities...</div>;
   }
@@ -794,7 +794,7 @@ function CommunityRow({
               width: 16,
             }}
           >
-            {isExpanded ? "▼" : "▶"}
+            {isExpanded ? "�–�" : "�–�"}
           </button>
         )}
         {!hasChildren && !flatten && <div style={{ width: 16 }} />}
@@ -860,7 +860,7 @@ function CommunityRow({
                 background: C.redD, color: C.red,
                 borderRadius: 4,
               }}>
-                → {c.mergedInto}
+                �’ {c.mergedInto}
               </span>
             )}
           </div>
@@ -880,7 +880,7 @@ function CommunityRow({
           </div>
         </div>
 
-        {/* Action buttons (always visible — research showed hover-only is unreliable on mobile) */}
+        {/* Action buttons (always visible �€” research showed hover-only is unreliable on mobile) */}
         <div style={{ display: "flex", gap: 6 }} onClick={e => e.stopPropagation()}>
           <button style={{ ...btnStyles("ghost"), padding: "6px 12px" }} onClick={onEdit}>Edit</button>
           {!isCadastral && c.visibility !== "archived" && (
@@ -945,7 +945,7 @@ function DuplicatesView({ duplicates, allItems }) {
   if (duplicates.length === 0) {
     return (
       <div style={{ ...cardStyle, textAlign: "center", padding: 40, color: C.t2 }}>
-        No duplicates pending merge. ✓
+        No duplicates pending merge. �“
       </div>
     );
   }
@@ -986,7 +986,7 @@ function DuplicatesView({ duplicates, allItems }) {
               </div>
 
               {/* Arrow */}
-              <div style={{ fontSize: 20, color: C.gold }}>→</div>
+              <div style={{ fontSize: 20, color: C.gold }}>�’</div>
 
               {/* Canonical (will be kept) */}
               <div>
@@ -1146,7 +1146,7 @@ function CommEditModal({ initial, allItems, availableAreas, onClose, onSave, sav
 
         <div style={{ display: "grid", gap: 14 }}>
 
-          {/* ─── BASICS ─── */}
+          {/* �”€�”€�”€ BASICS �”€�”€�”€ */}
           <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 10 }}>
             <div>
               <label style={lblStyle}>Name *</label>
@@ -1172,7 +1172,7 @@ function CommEditModal({ initial, allItems, availableAreas, onClose, onSave, sav
                   <button onClick={() => removeAlias(a)} style={{
                     background: "transparent", border: "none", color: C.teal,
                     cursor: "pointer", padding: 0, fontSize: 12, lineHeight: 1
-                  }}>×</button>
+                  }}>�—</button>
                 </span>
               ))}
             </div>
@@ -1188,7 +1188,7 @@ function CommEditModal({ initial, allItems, availableAreas, onClose, onSave, sav
             </div>
           </div>
 
-          {/* ─── CLASSIFICATION (NEW) ─── */}
+          {/* �”€�”€�”€ CLASSIFICATION (NEW) �”€�”€�”€ */}
           <div style={{ padding: 14, background: C.s2, borderRadius: 8 }}>
             <div style={{ fontSize: 11, color: C.gold, fontWeight: 600, marginBottom: 10, textTransform: "uppercase", letterSpacing: 0.5 }}>
               Classification
@@ -1246,7 +1246,7 @@ function CommEditModal({ initial, allItems, availableAreas, onClose, onSave, sav
             )}
           </div>
 
-          {/* ─── LOCATION ─── */}
+          {/* �”€�”€�”€ LOCATION �”€�”€�”€ */}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
             <div>
               <label style={lblStyle}>Area</label>
@@ -1284,7 +1284,7 @@ function CommEditModal({ initial, allItems, availableAreas, onClose, onSave, sav
             </div>
           </div>
 
-          {/* ─── DESCRIPTION ─── */}
+          {/* �”€�”€�”€ DESCRIPTION �”€�”€�”€ */}
           <div>
             <label style={lblStyle}>Description</label>
             <textarea
@@ -1294,7 +1294,7 @@ function CommEditModal({ initial, allItems, availableAreas, onClose, onSave, sav
             />
           </div>
 
-          {/* ─── MARKET STATS ─── */}
+          {/* �”€�”€�”€ MARKET STATS �”€�”€�”€ */}
           <div style={{ padding: 14, background: C.s2, borderRadius: 8 }}>
             <div style={{ fontSize: 11, color: C.gold, fontWeight: 600, marginBottom: 10, textTransform: "uppercase", letterSpacing: 0.5 }}>
               Market Stats
@@ -1323,7 +1323,7 @@ function CommEditModal({ initial, allItems, availableAreas, onClose, onSave, sav
             </div>
           </div>
 
-          {/* ─── COUNTS ─── */}
+          {/* �”€�”€�”€ COUNTS �”€�”€�”€ */}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 10 }}>
             <div>
               <label style={lblStyle}>Total Projects</label>
@@ -1347,7 +1347,7 @@ function CommEditModal({ initial, allItems, availableAreas, onClose, onSave, sav
             </div>
           </div>
 
-          {/* ─── TRANSIT ─── */}
+          {/* �”€�”€�”€ TRANSIT �”€�”€�”€ */}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr 1fr", gap: 10 }}>
             <div>
               <label style={lblStyle}>Metro Dist (km)</label>

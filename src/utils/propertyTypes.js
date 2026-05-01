@@ -1,5 +1,5 @@
-/* ─────────────────────────────────────────────────────────────
-   DXB ANALYTICS — PROPERTY TYPES (canonical)
+/* �”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€
+   DXB ANALYTICS �€” PROPERTY TYPES (canonical)
    src/utils/propertyTypes.js
 
    The single source of truth for what property types exist in
@@ -8,7 +8,7 @@
 
    Locked in Session 4 schema spec (docs/schema-v1.md).
    Last updated: 8 April 2026
-   ───────────────────────────────────────────────────────────── */
+   �”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€ */
 
 // All 43 property types, grouped by master category.
 // Each entry has:

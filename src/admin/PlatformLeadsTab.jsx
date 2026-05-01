@@ -1,8 +1,8 @@
 /* eslint-disable */
 /*
-  DXB ANALYTICS — PLATFORM ANALYTICS
-  Session 13 — Replaces PlatformLeadsTab B2B CRM
-  Shows aggregate platform metrics — NO individual agency lead data
+  DXB ANALYTICS �€” PLATFORM ANALYTICS
+  Session 13 �€” Replaces PlatformLeadsTab B2B CRM
+  Shows aggregate platform metrics �€” NO individual agency lead data
   Admin only
 */
 
@@ -27,7 +27,7 @@ const T = {
 };
 
 const fmtCur = n => { if(!n) return "AED 0"; if(n>=1e6) return "AED "+(n/1e6).toFixed(1)+"M"; if(n>=1e3) return "AED "+(n/1e3).toFixed(0)+"K"; return "AED "+n.toLocaleString(); };
-const fmtDate = d => { if(!d) return "—"; try { return new Date(d).toLocaleDateString("en-AE",{day:"2-digit",month:"short",year:"numeric"}); } catch(e){return "—";} };
+const fmtDate = d => { if(!d) return "�€”"; try { return new Date(d).toLocaleDateString("en-AE",{day:"2-digit",month:"short",year:"numeric"}); } catch(e){return "�€”";} };
 const daysAgo = d => !d?999:Math.floor((Date.now()-new Date(d).getTime())/86400000);
 
 const PLAN_PRICE = 299; // AED per month
@@ -59,7 +59,7 @@ export default function PlatformLeadsTab() {
     return () => unsubs.forEach(u=>u());
   },[]);
 
-  // ── Derived metrics ────────────────────────────────────────
+  // �”€�”€ Derived metrics �”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€
   const cutoff = useMemo(()=>{ const d=new Date(); if(period==="30") d.setDate(d.getDate()-30); else if(period==="7") d.setDate(d.getDate()-7); else return null; return d; },[period]);
 
   const filtered = useMemo(()=>cutoff?orgs.filter(o=>new Date(o.createdAt)>=cutoff):orgs,[orgs,cutoff]);
@@ -116,7 +116,7 @@ export default function PlatformLeadsTab() {
   return (
     <div style={{padding:"20px 28px 60px",background:T.bg,minHeight:"100vh",fontFamily:"'Outfit',sans-serif"}}>
 
-      {/* ── Header ── */}
+      {/* �”€�”€ Header �”€�”€ */}
       <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:24,flexWrap:"wrap",gap:10}}>
         <div>
           <h1 style={{margin:0,fontSize:24,color:T.gold,fontFamily:"'Fraunces',serif",fontWeight:700}}>Platform Analytics</h1>
@@ -132,7 +132,7 @@ export default function PlatformLeadsTab() {
         </div>
       </div>
 
-      {/* ── KPI Row ── */}
+      {/* �”€�”€ KPI Row �”€�”€ */}
       <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(160px,1fr))",gap:12,marginBottom:24}}>
         <KPICard label="Total Agencies"  value={totalOrgs}        sub={pendingOrgs+" pending approval"} color={T.gold}/>
         <KPICard label="Active Paid"     value={activeOrgs}       sub={"AED "+PLAN_PRICE+"/mo each"}    color={T.green}/>
@@ -142,7 +142,7 @@ export default function PlatformLeadsTab() {
         <KPICard label="Suspended"       value={suspendedOrgs}    sub={suspended+" users suspended"}    color={suspendedOrgs>0?T.red:T.textMuted}/>
       </div>
 
-      {/* ── Main grid ── */}
+      {/* �”€�”€ Main grid �”€�”€ */}
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16,marginBottom:16}}>
 
         {/* Monthly signups chart */}
@@ -183,7 +183,7 @@ export default function PlatformLeadsTab() {
         </div>
       </div>
 
-      {/* ── Bottom row ── */}
+      {/* �”€�”€ Bottom row �”€�”€ */}
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:16,marginBottom:16}}>
 
         {/* City breakdown */}
@@ -248,7 +248,7 @@ export default function PlatformLeadsTab() {
         </div>
       </div>
 
-      {/* ── Agencies table ── */}
+      {/* �”€�”€ Agencies table �”€�”€ */}
       <div style={{background:T.surface,border:"1px solid "+T.border,borderRadius:12,overflow:"hidden"}}>
         <div style={{padding:"14px 18px",borderBottom:"1px solid "+T.border,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
           <div style={{fontSize:13,fontWeight:700,color:T.white}}>All agencies</div>
@@ -267,7 +267,7 @@ export default function PlatformLeadsTab() {
               </div>
               <div style={{fontSize:11,color:TYPE_COLORS[org.type]||T.textMuted,fontWeight:600}}>{org.type||"Agency"}</div>
               <div style={{fontSize:11,color:T.textMuted}}>{org.city||"Dubai"}</div>
-              <div style={{fontSize:11,color:T.textMuted,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{org.ownerEmail||"—"}</div>
+              <div style={{fontSize:11,color:T.textMuted,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{org.ownerEmail||"�€”"}</div>
               <div style={{fontSize:11,color:T.textMuted}}>{fmtDate(org.createdAt)}</div>
               <div>
                 <span style={{fontSize:10,padding:"3px 8px",borderRadius:8,fontWeight:700,

@@ -1,16 +1,16 @@
-/* ─── DXB ANALYTICS — DATA HELPERS ────────────────────────────────────────
+/* �”€�”€�”€ DXB ANALYTICS �€” DATA HELPERS �”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€
    Resolves the 3-source community data conflict and provides
    shared calculation utilities used across the platform.
 
    Import: import { getMergedCommunity, isGoldenVisaEligible } from './utils/dataHelpers';
-   ─────────────────────────────────────────────────────────────────────────── */
+   �”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€ */
 
 import { emaarCommunities, communityROI, communityIntel } from "../data";
 
 /**
  * Merge community data from all three static sources.
  * Merge order (later overwrites earlier):
- *   emaarCommunities base → communityROI → communityIntel → firestoreData (wins)
+ *   emaarCommunities base �’ communityROI �’ communityIntel �’ firestoreData (wins)
  *
  * @param {string} communityName - e.g. "Dubai Hills Estate"
  * @param {object|null} firestoreData - live data from Firestore admin edits (optional)
@@ -24,7 +24,7 @@ export const getMergedCommunity = (communityName, firestoreData = null) => {
     (c) => c.name?.toLowerCase() === communityName.toLowerCase()
   ) || {};
 
-  // 2. ROI data — handle edge case where value might be nested object
+  // 2. ROI data �€” handle edge case where value might be nested object
   const rawRoi = communityROI[communityName];
   const roi = rawRoi
     ? typeof rawRoi === "object" && !Array.isArray(rawRoi)
@@ -35,7 +35,7 @@ export const getMergedCommunity = (communityName, firestoreData = null) => {
   // 3. Intel data
   const intel = communityIntel[communityName] || {};
 
-  // 4. Merge — Firestore data always wins
+  // 4. Merge �€” Firestore data always wins
   return {
     ...base,
     ...roi,
@@ -106,11 +106,11 @@ export const getDaysToHandover = (handover) => {
 /**
  * Format days to handover as a human-readable string.
  * @param {string} handover
- * @returns {string} e.g. "487 days" | "Handed Over" | "—"
+ * @returns {string} e.g. "487 days" | "Handed Over" | "�€”"
  */
 export const formatHandoverCountdown = (handover) => {
   const days = getDaysToHandover(handover);
-  if (days === null) return "—";
+  if (days === null) return "�€”";
   if (days < 0) return "Handed Over";
   if (days === 0) return "Today";
   if (days < 30) return `${days} days`;

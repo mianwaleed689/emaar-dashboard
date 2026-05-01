@@ -54,7 +54,7 @@ const BillingTab = ({ db, T, notify, users, adminUser }) => {
     };
   }, [users]);
 
-  // MRR projection — last 6 months + 3 projected
+  // MRR projection �€” last 6 months + 3 projected
   const mrrHistory = React.useMemo(() => {
     const months = [];
     for (let m = 5; m >= 0; m--) {
@@ -78,7 +78,7 @@ const BillingTab = ({ db, T, notify, users, adminUser }) => {
     return months;
   }, [payments, mrr]);
 
-  // Upcoming renewals — users whose subscription expires in 7 days
+  // Upcoming renewals �€” users whose subscription expires in 7 days
   const upcomingRenewals = React.useMemo(() => {
     return users.filter(u => {
       if (!u.subscriptionExpiry || u.tier === "free") return false;
@@ -98,7 +98,7 @@ const BillingTab = ({ db, T, notify, users, adminUser }) => {
     [payments]
   );
 
-  // Churn predictor — paid users inactive 14+ days + expiring soon
+  // Churn predictor �€” paid users inactive 14+ days + expiring soon
   const churnRisk = React.useMemo(() => {
     return users.filter(u => {
       if (u.tier === "free" || u.tier === "pro_trial") return false;
@@ -119,13 +119,13 @@ const BillingTab = ({ db, T, notify, users, adminUser }) => {
   const generateInvoice = (payment, user) => {
     const inv = {
       invoiceNo:   `INV-${payment.id?.slice(-8).toUpperCase() || "000000"}`,
-      date:        payment.createdAt ? new Date(payment.createdAt).toLocaleDateString("en-AE") : "—",
-      dueDate:     payment.createdAt ? new Date(new Date(payment.createdAt).getTime() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString("en-AE") : "—",
-      customer:    user?.email || payment.userEmail || "—",
+      date:        payment.createdAt ? new Date(payment.createdAt).toLocaleDateString("en-AE") : "�€”",
+      dueDate:     payment.createdAt ? new Date(new Date(payment.createdAt).getTime() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString("en-AE") : "�€”",
+      customer:    user?.email || payment.userEmail || "�€”",
       plan:        payment.plan || payment.tier || "Pro",
       amount:      payment.amount || PRICES[payment.tier] || 99,
       status:      payment.status || "succeeded",
-      stripeId:    payment.stripePaymentId || payment.stripeId || "—",
+      stripeId:    payment.stripePaymentId || payment.stripeId || "�€”",
     };
     const html = `<!DOCTYPE html><html><head><title>${inv.invoiceNo}</title>
     <style>body{font-family:Arial,sans-serif;max-width:700px;margin:40px auto;color:#1E293B}
@@ -153,7 +153,7 @@ const BillingTab = ({ db, T, notify, users, adminUser }) => {
     setTimeout(() => w.print(), 500);
   };
 
-  // Retry failed payment — mark as retry_requested in Firestore
+  // Retry failed payment �€” mark as retry_requested in Firestore
   const retryPayment = async (payment) => {
     setRetryLoading(payment.id);
     try {
@@ -163,11 +163,11 @@ const BillingTab = ({ db, T, notify, users, adminUser }) => {
         retryRequestedBy: adminUser?.email,
       });
       await addDoc(collection(db, "adminAlerts"), {
-        message: `🔄 Payment retry requested for ${payment.userEmail || "user"} — AED ${payment.amount || 0}`,
+        message: `�”� Payment retry requested for ${payment.userEmail || "user"} �€” AED ${payment.amount || 0}`,
         type: "payment_retry", severity: "warning", read: false,
         createdAt: new Date().toISOString(), source: "admin/billing",
       });
-      notify("✅ Retry flagged — contact user to update payment method", "success");
+      notify("�… Retry flagged �€” contact user to update payment method", "success");
     } catch(e) {
       notify("❌ " + e.message, "error");
     } finally { setRetryLoading(null); }
@@ -205,7 +205,7 @@ const BillingTab = ({ db, T, notify, users, adminUser }) => {
           )}
           {upcomingRenewals.length > 0 && (
             <span style={{ fontSize: 11, padding: "4px 12px", borderRadius: 8, background: "rgba(212,168,67,0.1)", color: T.gold, fontWeight: 700, border: `1px solid ${T.gold}33` }}>
-              🔔 {upcomingRenewals.length} Renewal{upcomingRenewals.length > 1 ? "s" : ""} due
+              �”” {upcomingRenewals.length} Renewal{upcomingRenewals.length > 1 ? "s" : ""} due
             </span>
           )}
         </div>
@@ -221,13 +221,13 @@ const BillingTab = ({ db, T, notify, users, adminUser }) => {
 
       {/* Sub-tabs */}
       <div style={{ display: "flex", gap: 8 }}>
-        <SubTab id="overview"  label="📊 Revenue Overview" />
-        <SubTab id="payments"  label="💳 Payment History" />
-        <SubTab id="renewals"  label={`🔔 Renewals (${upcomingRenewals.length})`} />
+        <SubTab id="overview"  label="�“� Revenue Overview" />
+        <SubTab id="payments"  label="�’� Payment History" />
+        <SubTab id="renewals"  label={`�”” Renewals (${upcomingRenewals.length})`} />
         <SubTab id="churn"     label={`⚠️ Churn Risk (${churnRisk.length})`} />
       </div>
 
-      {/* ── OVERVIEW TAB ── */}
+      {/* �”€�”€ OVERVIEW TAB �”€�”€ */}
       {tab === "overview" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
 
@@ -267,7 +267,7 @@ const BillingTab = ({ db, T, notify, users, adminUser }) => {
                   <div style={{ flex: 1, fontSize: 13, color: T.white }}>{p.label}</div>
                   <div style={{ fontSize: 12, color: T.textMuted }}>{p.users} users</div>
                   <div style={{ fontSize: 13, fontWeight: 700, color: p.color, width: 90, textAlign: "right" }}>
-                    {p.rev > 0 ? `AED ${p.rev.toLocaleString()}` : "—"}
+                    {p.rev > 0 ? `AED ${p.rev.toLocaleString()}` : "�€”"}
                   </div>
                 </div>
               ))}
@@ -281,9 +281,9 @@ const BillingTab = ({ db, T, notify, users, adminUser }) => {
               <div style={{ fontFamily: "'Fraunces',serif", fontSize: 15, fontWeight: 700, color: T.white, marginBottom: 14 }}>Key Metrics</div>
               {[
                 { label: "Annual Recurring Revenue", value: `AED ${arr.toLocaleString()}`, color: T.gold },
-                { label: "Avg Revenue Per User", value: breakdown.pro + breakdown.ent > 0 ? `AED ${Math.round(mrr / (breakdown.pro + breakdown.ent))}` : "—", color: T.teal },
-                { label: "Trial → Paid Conv. Rate", value: users.filter(u => u.tier === "pro_trial").length > 0 ? `${Math.round((breakdown.pro / (breakdown.pro + users.filter(u=>u.tier==="pro_trial").length)) * 100)}%` : "—", color: T.green },
-                { label: "Paying User %", value: users.length > 0 ? `${Math.round(((breakdown.pro + breakdown.ent) / users.length) * 100)}%` : "—", color: T.blue },
+                { label: "Avg Revenue Per User", value: breakdown.pro + breakdown.ent > 0 ? `AED ${Math.round(mrr / (breakdown.pro + breakdown.ent))}` : "�€”", color: T.teal },
+                { label: "Trial �’ Paid Conv. Rate", value: users.filter(u => u.tier === "pro_trial").length > 0 ? `${Math.round((breakdown.pro / (breakdown.pro + users.filter(u=>u.tier==="pro_trial").length)) * 100)}%` : "�€”", color: T.green },
+                { label: "Paying User %", value: users.length > 0 ? `${Math.round(((breakdown.pro + breakdown.ent) / users.length) * 100)}%` : "�€”", color: T.blue },
                 { label: "Failed Payments", value: `${failedPayments.length}`, color: failedPayments.length > 0 ? T.red : T.green },
                 { label: "Churn Risk Users", value: `${churnRisk.length}`, color: churnRisk.length > 0 ? T.orange : T.green },
               ].map(m => (
@@ -297,7 +297,7 @@ const BillingTab = ({ db, T, notify, users, adminUser }) => {
         </div>
       )}
 
-      {/* ── PAYMENT HISTORY TAB ── */}
+      {/* �”€�”€ PAYMENT HISTORY TAB �”€�”€ */}
       {tab === "payments" && (
         <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: "20px 24px" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
@@ -308,7 +308,7 @@ const BillingTab = ({ db, T, notify, users, adminUser }) => {
             <div style={{ color: T.textMuted, fontSize: 13, padding: "20px 0" }}>Loading payments...</div>
           ) : payments.length === 0 ? (
             <div style={{ color: T.textMuted, fontSize: 13, textAlign: "center", padding: "40px 0" }}>
-              <div style={{ fontSize: 32, marginBottom: 8 }}>💳</div>
+              <div style={{ fontSize: 32, marginBottom: 8 }}>�’�</div>
               <div>No payment records yet</div>
               <div style={{ fontSize: 11, marginTop: 4 }}>Payments appear here when written to Firestore <code style={{ color: T.teal }}>payments/</code> collection by your Stripe webhook</div>
             </div>
@@ -323,11 +323,11 @@ const BillingTab = ({ db, T, notify, users, adminUser }) => {
                 const user = users.find(u => u.uid === p.userId || u.email === p.userEmail);
                 return (
                   <div key={p.id} style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr 1fr", gap: 8, padding: "10px 12px", borderRadius: 8, background: T.surfaceAlt, border: `1px solid ${p.status === "failed" ? T.red + "33" : T.border}`, alignItems: "center" }}>
-                    <div style={{ fontSize: 12, color: T.white, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.userEmail || user?.email || "—"}</div>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: T.gold }}>AED {p.amount || PRICES[p.tier] || "—"}</div>
+                    <div style={{ fontSize: 12, color: T.white, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.userEmail || user?.email || "�€”"}</div>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: T.gold }}>AED {p.amount || PRICES[p.tier] || "�€”"}</div>
                     <div style={{ fontSize: 11, color: T.textSecondary }}>{p.plan || p.tier || "Pro"}</div>
-                    <div><span style={{ fontSize: 10, fontWeight: 700, color: statusColor, padding: "2px 8px", borderRadius: 6, background: statusColor + "12", border: `1px solid ${statusColor}33` }}>{p.status || "—"}</span></div>
-                    <div style={{ fontSize: 11, color: T.textMuted }}>{p.createdAt ? new Date(p.createdAt).toLocaleDateString("en-AE") : "—"}</div>
+                    <div><span style={{ fontSize: 10, fontWeight: 700, color: statusColor, padding: "2px 8px", borderRadius: 6, background: statusColor + "12", border: `1px solid ${statusColor}33` }}>{p.status || "�€”"}</span></div>
+                    <div style={{ fontSize: 11, color: T.textMuted }}>{p.createdAt ? new Date(p.createdAt).toLocaleDateString("en-AE") : "�€”"}</div>
                     <div style={{ display: "flex", gap: 6 }}>
                       <button type="button" onClick={() => generateInvoice(p, user)}
                         style={{ fontSize: 10, padding: "4px 10px", borderRadius: 6, background: "rgba(212,168,67,0.1)", border: `1px solid ${T.gold}44`, color: T.gold, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>
@@ -348,11 +348,11 @@ const BillingTab = ({ db, T, notify, users, adminUser }) => {
         </div>
       )}
 
-      {/* ── RENEWALS TAB ── */}
+      {/* �”€�”€ RENEWALS TAB �”€�”€ */}
       {tab === "renewals" && (
         <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: "20px 24px" }}>
-          <div style={{ fontFamily: "'Fraunces',serif", fontSize: 16, fontWeight: 700, color: T.white, marginBottom: 4 }}>Upcoming Renewals — Next 7 Days</div>
-          <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 16 }}>Users whose subscription expires within 7 days — reach out proactively to reduce churn</div>
+          <div style={{ fontFamily: "'Fraunces',serif", fontSize: 16, fontWeight: 700, color: T.white, marginBottom: 4 }}>Upcoming Renewals �€” Next 7 Days</div>
+          <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 16 }}>Users whose subscription expires within 7 days �€” reach out proactively to reduce churn</div>
           {upcomingRenewals.length === 0 ? (
             <div style={{ color: T.textMuted, fontSize: 13, textAlign: "center", padding: "40px 0" }}>
               <div style={{ fontSize: 32, marginBottom: 8 }}>🎉</div>
@@ -375,7 +375,7 @@ const BillingTab = ({ db, T, notify, users, adminUser }) => {
                   </div>
                   <div style={{ fontSize: 14, fontWeight: 700, color: T.green, flexShrink: 0 }}>AED {u.renewalAmount}</div>
                   <button type="button"
-                    onClick={() => { notify(`📧 Send renewal reminder to ${u.email}`, "info"); }}
+                    onClick={() => { notify(`�“� Send renewal reminder to ${u.email}`, "info"); }}
                     style={{ padding: "7px 14px", background: "rgba(212,168,67,0.1)", border: `1px solid ${T.gold}44`, borderRadius: 8, color: T.gold, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif", flexShrink: 0 }}>
                     Remind
                   </button>
@@ -386,14 +386,14 @@ const BillingTab = ({ db, T, notify, users, adminUser }) => {
         </div>
       )}
 
-      {/* ── CHURN RISK TAB ── */}
+      {/* �”€�”€ CHURN RISK TAB �”€�”€ */}
       {tab === "churn" && (
         <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: "20px 24px" }}>
           <div style={{ fontFamily: "'Fraunces',serif", fontSize: 16, fontWeight: 700, color: T.white, marginBottom: 4 }}>Churn Risk Predictor</div>
-          <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 16 }}>Paid users inactive 14+ days AND subscription expiring within 30 days — highest churn probability</div>
+          <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 16 }}>Paid users inactive 14+ days AND subscription expiring within 30 days �€” highest churn probability</div>
           {churnRisk.length === 0 ? (
             <div style={{ color: T.textMuted, fontSize: 13, textAlign: "center", padding: "40px 0" }}>
-              <div style={{ fontSize: 32, marginBottom: 8 }}>✅</div>
+              <div style={{ fontSize: 32, marginBottom: 8 }}>�…</div>
               No high-risk churn users detected
             </div>
           ) : (
@@ -416,7 +416,7 @@ const BillingTab = ({ db, T, notify, users, adminUser }) => {
                   </div>
                   <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
                     <button type="button"
-                      onClick={() => notify(`📧 Win-back email queued for ${u.email}`, "info")}
+                      onClick={() => notify(`�“� Win-back email queued for ${u.email}`, "info")}
                       style={{ padding: "7px 14px", background: "rgba(212,168,67,0.1)", border: `1px solid ${T.gold}44`, borderRadius: 8, color: T.gold, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
                       Win-back
                     </button>
@@ -437,14 +437,14 @@ const BillingTab = ({ db, T, notify, users, adminUser }) => {
   );
 };
 
-/* ─── S17: REFERRAL PROGRAM ─────────────────────────────────────────────────
+/* �”€�”€�”€ S17: REFERRAL PROGRAM �”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€
    Admin tab "referral":
    - Referral link generator per user
-   - Track clicks → signups → conversions
+   - Track clicks �’ signups �’ conversions
    - Referrer gets 1 month free per paid conversion
    - Referral leaderboard
    - Firestore referrals collection
    - Email trigger on successful referral
-────────────────────────────────────────────────────────────────────────── */
+�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€ */
 
 export default BillingTab;

@@ -1,8 +1,8 @@
 /* eslint-disable */
-/* ‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê
-   DXB ANALYTICS ‚Äî RISK TAB
+/* ‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê
+   DXB ANALYTICS ‚‚Ç¨‚Äù RISK TAB
    Community-level investment risk assessment
-   ‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê */
+   ‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê */
 
 import React from "react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis } from "recharts";
@@ -41,20 +41,20 @@ function RiskTab({ liveNeighbourhoods=[], riskTabView, setRiskTabView, riskCommu
   }, [gfCommunity]);
 
 
-            /* ‚ïê‚ïê RESEARCH ‚Äî Risk Analysis Apr 2026 ‚ïê‚ïê
+            /* ‚‚Ä¢ê‚‚Ä¢ê RESEARCH ‚‚Ç¨‚Äù Risk Analysis Apr 2026 ‚‚Ä¢ê‚‚Ä¢ê
                Sources: Fitch Ratings (15% correction forecast), Goldman Sachs
                (51% transaction drop Mar 2026), DFM index -21% post Feb 28
                mitchellscommercialrealty.com, 1tab.co, lionandland.com
                87% cash transactions (Fitch) | RERA escrow protections
                9 risk factors: Supply, Geopolitical, Developer, Liquidity,
                Vacancy, Currency, Regulatory, Construction, Market Cycle
-            ‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê */
+            ‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê */
 
             const RISK_FACTORS = [
               { key:"supply",       label:"Supply Oversupply",   weight:20, icon:"\uD83C\uDFD7",
                 desc:"210,000 units planned 2026. JVC alone: 16,852 units 2025-27. Mid-market most exposed.",
                 communityScores:{ "Jumeirah Village Circle":72, "Business Bay":78, "Dubai Marina":20, "Downtown Dubai":18, "Dubai Hills Estate":25, "Palm Jumeirah":15, "International City":55, "Dubai South":60 } },
-              { key:"geopolitical", label:"Geopolitical Risk",   weight:18, icon:"‚öî",
+              { key:"geopolitical", label:"Geopolitical Risk",   weight:18, icon:"‚ö‚Äù",
                 desc:"Iran-US conflict. DFM -21% post Feb 28. Transaction freeze 48-72hrs. Physical prices -3% YoY mid-Mar 2026.",
                 communityScores:{ "Jumeirah Village Circle":45, "Business Bay":45, "Dubai Marina":40, "Downtown Dubai":38, "Dubai Hills Estate":35, "Palm Jumeirah":35, "International City":55, "Dubai South":50 } },
               { key:"developer",    label:"Developer Default",   weight:15, icon:"\uD83C\uDFE2",
@@ -80,7 +80,7 @@ function RiskTab({ liveNeighbourhoods=[], riskTabView, setRiskTabView, riskCommu
                 communityScores:{ "Jumeirah Village Circle":55, "Business Bay":48, "Dubai Marina":35, "Downtown Dubai":30, "Dubai Hills Estate":38, "Palm Jumeirah":28, "International City":45, "Dubai South":42 } },
             ];
 
-            /* ‚îÄ‚îÄ Community risk profiles ‚îÄ‚îÄ */
+            /* ‚‚Äù‚Ç¨‚‚Äù‚Ç¨ Community risk profiles ‚‚Äù‚Ç¨‚‚Äù‚Ç¨ */
             const COMMUNITY_RISK = {
               "Jumeirah Village Circle": { grade:"B+", label:"Moderate Risk", color:"#F97316", score:48, segment:"Mid-market apartment", note:"Highest supply pipeline in Dubai. Strong yield but correction risk elevated in 2026." },
               "Business Bay":            { grade:"B+", label:"Moderate Risk", color:"#F97316", score:42, segment:"Urban apartment/office", note:"Corporate demand strong but highest new supply pipeline. Watch absorption carefully." },
@@ -89,13 +89,13 @@ function RiskTab({ liveNeighbourhoods=[], riskTabView, setRiskTabView, riskCommu
               "Dubai Hills Estate":      { grade:"A-", label:"Low-Moderate",  color:T.gold,   score:30, segment:"Family villa/apt", note:"Emaar quality + management. Strong end-user demand. Family community insulated from speculation." },
               "Palm Jumeirah":           { grade:"A",  label:"Low Risk",      color:T.green,  score:26, segment:"Luxury apartment/villa", note:"Finite supply. Global recognition. Ultra-HNW buyer base less sensitive to market cycles." },
               "International City":      { grade:"C+", label:"Higher Risk",   color:T.red,    score:58, segment:"Budget apartment", note:"High supply, high tenant turnover. Strong yield but vulnerable to correction and vacancy." },
-              "Dubai South":             { grade:"B",  label:"Moderate-High", color:"#F97316", score:52, segment:"Emerging market", note:"Long-term upside from AMI Airport. High current risk ‚Äî not for short-term investors." },
+              "Dubai South":             { grade:"B",  label:"Moderate-High", color:"#F97316", score:52, segment:"Emerging market", note:"Long-term upside from AMI Airport. High current risk ‚‚Ç¨‚Äù not for short-term investors." },
             };
 
             const comm = riskCommunity2;
             const commRisk = COMMUNITY_RISK[comm] || COMMUNITY_RISK["Dubai Marina"];
 
-            /* ‚îÄ‚îÄ Overall risk score for selected community ‚îÄ‚îÄ */
+            /* ‚‚Äù‚Ç¨‚‚Äù‚Ç¨ Overall risk score for selected community ‚‚Äù‚Ç¨‚‚Äù‚Ç¨ */
             const communityRiskScore = Math.round(
               RISK_FACTORS.reduce((sum, f) => {
                 const s = f.communityScores[comm] || 30;
@@ -103,7 +103,7 @@ function RiskTab({ liveNeighbourhoods=[], riskTabView, setRiskTabView, riskCommu
               }, 0)
             );
 
-            /* ‚îÄ‚îÄ Horizon adjustment ‚îÄ‚îÄ */
+            /* ‚‚Äù‚Ç¨‚‚Äù‚Ç¨ Horizon adjustment ‚‚Äù‚Ç¨‚‚Äù‚Ç¨ */
             const horizonAdj = { short:-12, medium:0, long:10 };
             const adjScore = Math.max(5, Math.min(95, communityRiskScore + (horizonAdj[riskHorizon]||0)));
 
@@ -172,7 +172,7 @@ function RiskTab({ liveNeighbourhoods=[], riskTabView, setRiskTabView, riskCommu
                       {/* Risk score card */}
                       <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
                         <div style={{ padding:"24px", background:`linear-gradient(135deg,${riskGrade.color}14,${riskGrade.color}04)`, border:`1px solid ${riskGrade.color}40`, borderRadius:14, textAlign:"center" }}>
-                          <div style={{ fontSize:11, color:T.textMuted, textTransform:"uppercase", letterSpacing:1, marginBottom:6 }}>Risk Score ‚Äî {comm.split(" ").slice(0,2).join(" ")}</div>
+                          <div style={{ fontSize:11, color:T.textMuted, textTransform:"uppercase", letterSpacing:1, marginBottom:6 }}>Risk Score ‚‚Ç¨‚Äù {comm.split(" ").slice(0,2).join(" ")}</div>
                           <div style={{ fontFamily:"'Fraunces',serif", fontSize:52, fontWeight:900, color:riskGrade.color, lineHeight:1 }}>{adjScore}</div>
                           <div style={{ fontSize:14, fontWeight:700, color:riskGrade.color, marginTop:6 }}>{riskGrade.label}</div>
                           <div style={{ fontSize:12, color:T.textMuted, marginTop:4 }}>Investment Grade: <strong style={{ color:riskGrade.color }}>{riskGrade.grade}</strong>{"¬∑"}{riskHorizon} horizon</div>
@@ -195,14 +195,14 @@ function RiskTab({ liveNeighbourhoods=[], riskTabView, setRiskTabView, riskCommu
                           <div style={{ fontSize:12, color:T.textSecondary, lineHeight:1.7, marginBottom:12 }}>{commRisk.note}</div>
                           <button type="button" onClick={()=>handleTabChange("Investment Score")}
                             style={{ width:"100%", padding:"8px 0", background:`linear-gradient(135deg,${T.gold},#B8922A)`, border:"none", borderRadius:8, color:"#000", fontSize:11, fontWeight:700, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>
-                            View Investment Score ‚Üí
+                            View Investment Score ‚Ü‚Äô
                           </button>
                         </div>
                       </div>
 
                       {/* Factor breakdown */}
                       <div className="chart-box" style={{ padding:20 }}>
-                        <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:4 }}>Risk Factors ‚Äî {comm.split(" ").slice(0,2).join(" ")}</div>
+                        <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:4 }}>Risk Factors ‚‚Ç¨‚Äù {comm.split(" ").slice(0,2).join(" ")}</div>
                         <div style={{ fontSize:11, color:T.textMuted, marginBottom:16 }}>Higher score = higher risk ¬∑ Weighted by importance</div>
                         {RISK_FACTORS.map((f,i)=>{
                           const score = f.communityScores[comm] || 30;
@@ -264,7 +264,7 @@ function RiskTab({ liveNeighbourhoods=[], riskTabView, setRiskTabView, riskCommu
                     {/* Scenario analysis */}
                     <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:12, marginBottom:16 }}>
                       {[
-                        { scenario:"De-escalation by Q2 2026", prob:"50%", impact:"Flat to -5% physical prices. Rapid sentiment recovery. Transaction volumes normalize.", color:T.green, icon:"‚úÖ" },
+                        { scenario:"De-escalation by Q2 2026", prob:"50%", impact:"Flat to -5% physical prices. Rapid sentiment recovery. Transaction volumes normalize.", color:T.green, icon:"‚ú‚Ä¶" },
                         { scenario:"Prolonged conflict (base)", prob:"35%", impact:"10-15% correction mid-market. Off-plan slowdown. Supply headwind compounds.", color:"#F97316", icon:"‚ö†" },
                         { scenario:"Major escalation",          prob:"15%", impact:"20%+ correction possible (Citi). Population growth 1% vs 4%. Multi-year recovery.", color:T.red, icon:"‚ùå" },
                       ].map((s,i)=>(

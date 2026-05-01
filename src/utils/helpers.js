@@ -1,12 +1,12 @@
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-   DXB ANALYTICS â€” UTILITY FUNCTIONS
+/* ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢
+   DXB ANALYTICS ââ‚¬â€ UTILITY FUNCTIONS
    Extracted from EmaarDashboardV2.jsx
    Investment score, handover countdown, link helpers
-   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+   ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ */
 
 import { GOLDEN_VISA_THRESHOLD, MS_PER_DAY, APPROX_DAYS_PER_MONTH } from './constants';
 
-/* â”€â”€â”€ LINK DOMAIN HELPER â”€â”€â”€ */
+/* ââ€â‚¬ââ€â‚¬ââ€â‚¬ LINK DOMAIN HELPER ââ€â‚¬ââ€â‚¬ââ€â‚¬ */
 export const getLinkDomain = (url) => {
   if (!url) return "Listing";
   if (url.includes("propertyfinder.ae")) return "PropertyFinder.ae";
@@ -15,7 +15,7 @@ export const getLinkDomain = (url) => {
   return "Official Listing";
 };
 
-/* â”€â”€â”€ HANDOVER COUNTDOWN â”€â”€â”€ */
+/* ââ€â‚¬ââ€â‚¬ââ€â‚¬ HANDOVER COUNTDOWN ââ€â‚¬ââ€â‚¬ââ€â‚¬ */
 export const getHandoverCountdown = (handover) => {
   if (!handover) return null;
   const match = handover.match(/Q([1-4])\s+(\d{4})/);
@@ -38,26 +38,26 @@ export const getHandoverCountdown = (handover) => {
   return { label, color, urgent: diffDays <= 90, months: diffMonths, days: diffDays };
 };
 
-/* â”€â”€â”€ INVESTMENT SCORE (out of 10) â”€â”€â”€ */
+/* ââ€â‚¬ââ€â‚¬ââ€â‚¬ INVESTMENT SCORE (out of 10) ââ€â‚¬ââ€â‚¬ââ€â‚¬ */
 export const getInvestmentScore = (p) => {
   let score = 0;
   const breakdown = [];
 
-  // 1. Yield (0â€“3 pts)
+  // 1. Yield (0ââ‚¬â€œ3 pts)
   const gross = p.gross || p.yield || 0;
   if (gross >= 8)      { score += 3; breakdown.push({ label: "Yield", pts: 3, max: 3, note: gross + "% gross" }); }
   else if (gross >= 6) { score += 2; breakdown.push({ label: "Yield", pts: 2, max: 3, note: gross + "% gross" }); }
   else if (gross >= 4) { score += 1; breakdown.push({ label: "Yield", pts: 1, max: 3, note: gross + "% gross" }); }
   else                 { breakdown.push({ label: "Yield", pts: 0, max: 3, note: gross ? gross + "%" : "No data" }); }
 
-  // 2. Value (PPSF) (0â€“2 pts)
+  // 2. Value (PPSF) (0ââ‚¬â€œ2 pts)
   const ppsf = p.ppsf || 0;
   if (ppsf > 0 && ppsf <= 1500)       { score += 2; breakdown.push({ label: "Value", pts: 2, max: 2, note: "AED " + ppsf + "/sqft" }); }
   else if (ppsf > 0 && ppsf <= 2200)  { score += 1; breakdown.push({ label: "Value", pts: 1, max: 2, note: "AED " + ppsf + "/sqft" }); }
   else if (ppsf > 0)                  { breakdown.push({ label: "Value", pts: 0, max: 2, note: "AED " + ppsf + "/sqft" }); }
   else                                { breakdown.push({ label: "Value", pts: 0, max: 2, note: "No PPSF" }); }
 
-  // 3. Handover timing (0â€“2 pts) â€” sweet spot is 12â€“36 months
+  // 3. Handover timing (0ââ‚¬â€œ2 pts) ââ‚¬â€ sweet spot is 12ââ‚¬â€œ36 months
   const cd = getHandoverCountdown(p.handover);
   if (cd) {
     if (cd.passed)              { score += 1.5; breakdown.push({ label: "Handover", pts: 1.5, max: 2, note: "Ready now" }); }
@@ -69,7 +69,7 @@ export const getInvestmentScore = (p) => {
     breakdown.push({ label: "Handover", pts: 0, max: 2, note: "No date" });
   }
 
-  // 4. Payment plan (0â€“2 pts)
+  // 4. Payment plan (0ââ‚¬â€œ2 pts)
   const pp = (p.paymentPlan || p.payment || "").toLowerCase();
   if (pp.includes("80/20") || pp.includes("80:20"))       { score += 2;   breakdown.push({ label: "Payment", pts: 2,   max: 2, note: "80/20 plan" }); }
   else if (pp.includes("70/30") || pp.includes("60/40"))  { score += 1.5; breakdown.push({ label: "Payment", pts: 1.5, max: 2, note: pp }); }
@@ -77,7 +77,7 @@ export const getInvestmentScore = (p) => {
   else if (pp.length > 0)                                 { score += 0.5; breakdown.push({ label: "Payment", pts: 0.5, max: 2, note: pp }); }
   else                                                    { breakdown.push({ label: "Payment", pts: 0, max: 2, note: "Unknown" }); }
 
-  // 5. Golden Visa eligible (0â€“1 pt)
+  // 5. Golden Visa eligible (0ââ‚¬â€œ1 pt)
   if (p.price && p.price >= GOLDEN_VISA_THRESHOLD) {
     score += 1; breakdown.push({ label: "Golden Visa", pts: 1, max: 1, note: "Eligible" });
   } else {
@@ -90,7 +90,7 @@ export const getInvestmentScore = (p) => {
   return { score: final, color, label, breakdown };
 };
 
-/* â”€â”€â”€ QUICK INVESTMENT SCORE (used by Projects tab) â”€â”€â”€ */
+/* ââ€â‚¬ââ€â‚¬ââ€â‚¬ QUICK INVESTMENT SCORE (used by Projects tab) ââ€â‚¬ââ€â‚¬ââ€â‚¬ */
 export const calcQuickScore = (p) => {
   if (p && p.investmentScore) return p.investmentScore;
   if (!p) return 50;
@@ -105,7 +105,7 @@ export const calcQuickScore = (p) => {
 export const scoreColor = (s, T) => s >= 80 ? T.green : s >= 65 ? T.gold : T.red;
 export const scoreLabel = (s) => s >= 80 ? "Strong Buy" : s >= 65 ? "Buy" : s >= 50 ? "Hold" : "Caution";
 
-/* â”€â”€â”€ PHONE CLEANER â€” strips non-digits â”€â”€â”€ */
+/* ââ€â‚¬ââ€â‚¬ââ€â‚¬ PHONE CLEANER ââ‚¬â€ strips non-digits ââ€â‚¬ââ€â‚¬ââ€â‚¬ */
 export const cleanPhone = (p) => {
   if (!p) return "";
   let out = "";
@@ -116,7 +116,7 @@ export const cleanPhone = (p) => {
   return out;
 };
 
-/* â”€â”€â”€ CSV ESCAPE â€” safe quoting â”€â”€â”€ */
+/* ââ€â‚¬ââ€â‚¬ââ€â‚¬ CSV ESCAPE ââ‚¬â€ safe quoting ââ€â‚¬ââ€â‚¬ââ€â‚¬ */
 export const csvEsc = (v) => {
   const s = v == null ? "" : String(v);
   let out = "";

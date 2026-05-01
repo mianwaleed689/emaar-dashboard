@@ -1,9 +1,9 @@
 /* eslint-disable */
-/* в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ
-   DXB ANALYTICS вЂ” CURRENCY TAB
+/* ввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђ
+   DXB ANALYTICS вв‚¬вЂќ CURRENCY TAB
    Extracted from EmaarDashboardV2.jsx (lines 5966-6168)
    AED exchange rates, property price converter, 12-month trend chart
-   в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ */
+   ввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђ */
 
 import React, { useState, useEffect } from "react";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
@@ -11,12 +11,12 @@ import { T } from "../data";
 import { SvgIcons } from "../components/Icons";
 import { GOLDEN_VISA_THRESHOLD } from "../utils/constants";
 
-/* в”Ђв”Ђ Top currencies for Dubai international buyers (FALLBACK rates) в”Ђв”Ђ */
+/* ввЂќв‚¬ввЂќв‚¬ Top currencies for Dubai international buyers (FALLBACK rates) ввЂќв‚¬ввЂќв‚¬ */
 const TOP_CURRENCIES = [
   { code: "USD", name: "US Dollar",        flag: "рџ‡єрџ‡ё", rate: 3.6725, change: 0.0,   buyers: "Americas" },
   { code: "GBP", name: "British Pound",    flag: "рџ‡¬рџ‡§", rate: 4.6420, change: +0.8,  buyers: "UK" },
   { code: "EUR", name: "Euro",             flag: "рџ‡Єрџ‡є", rate: 3.9850, change: -0.3,  buyers: "Europe" },
-  { code: "INR", name: "Indian Rupee",     flag: "рџ‡®рџ‡і", rate: 0.0441, change: -0.2,  buyers: "India вЂ” #1 buyer nation" },
+  { code: "INR", name: "Indian Rupee",     flag: "рџ‡®рџ‡і", rate: 0.0441, change: -0.2,  buyers: "India вв‚¬вЂќ #1 buyer nation" },
   { code: "RUB", name: "Russian Ruble",    flag: "рџ‡·рџ‡є", rate: 0.0401, change: +1.2,  buyers: "Russia" },
   { code: "CNY", name: "Chinese Yuan",     flag: "рџ‡Ёрџ‡і", rate: 0.5062, change: +0.1,  buyers: "China" },
   { code: "PKR", name: "Pakistani Rupee",  flag: "рџ‡µрџ‡°", rate: 0.0131, change: -0.5,  buyers: "Pakistan" },
@@ -27,7 +27,7 @@ const TOP_CURRENCIES = [
   { code: "JPY", name: "Japanese Yen",     flag: "рџ‡Їрџ‡µ", rate: 0.0245, change: -0.8,  buyers: "Japan" },
 ];
 
-/* в”Ђв”Ђ 12-month historical data (seed) в”Ђв”Ђ */
+/* ввЂќв‚¬ввЂќв‚¬ 12-month historical data (seed) ввЂќв‚¬ввЂќв‚¬ */
 const RATE_HISTORY = {
   GBP: [4.51, 4.53, 4.58, 4.60, 4.62, 4.59, 4.55, 4.57, 4.61, 4.63, 4.64, 4.642],
   EUR: [3.97, 3.99, 4.01, 3.98, 3.96, 3.94, 3.92, 3.95, 3.97, 3.99, 3.98, 3.985],
@@ -37,7 +37,7 @@ const RATE_HISTORY = {
 const MONTHS = ["May","Jun","Jul","Aug","Sep","Oct","Nov","Dec","Jan","Feb","Mar","Apr"];
 
 function CurrencyTab({ selectedCcy, setSelectedCcy, aedAmount, setAedAmount, searchCcy, setSearchCcy }) {
-  /* в”Ђв”Ђв”Ђ LIVE RATES from exchangerate.host (free, UAE Central Bank source) в”Ђв”Ђв”Ђ */
+  /* ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ LIVE RATES from exchangerate.host (free, UAE Central Bank source) ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ */
   const [liveRates, setLiveRates] = useState(null);
   const [lastUpdated, setLastUpdated] = useState(null);
   const [fetchStatus, setFetchStatus] = useState('loading'); // loading | live | fallback
@@ -132,7 +132,7 @@ function CurrencyTab({ selectedCcy, setSelectedCcy, aedAmount, setAedAmount, sea
       {/* AED peg info */}
       <div style={{ background: "rgba(212,168,67,0.06)", border: "1px solid rgba(212,168,67,0.2)", borderRadius: 10, padding: "10px 16px", marginBottom: 20, display: "flex", alignItems: "center", gap: 10 }}>
         {SvgIcons.Landmark({ width: 16, height: 16, style: { color: T.gold, flexShrink: 0 } })}
-        <span style={{ fontSize: 12, color: T.textSecondary }}><span style={{ color: T.gold, fontWeight: 700 }}>AED is pegged to USD at 3.6725</span> вЂ” fixed since 1997 by UAE Central Bank. AED/USD rate never changes. All other pairs fluctuate vs USD.</span>
+        <span style={{ fontSize: 12, color: T.textSecondary }}><span style={{ color: T.gold, fontWeight: 700 }}>AED is pegged to USD at 3.6725</span> вв‚¬вЂќ fixed since 1997 by UAE Central Bank. AED/USD rate never changes. All other pairs fluctuate vs USD.</span>
       </div>
 
       {/* 2-column: Converter + Chart */}
@@ -177,8 +177,8 @@ function CurrencyTab({ selectedCcy, setSelectedCcy, aedAmount, setAedAmount, sea
         {/* 12-month chart */}
         <div className="chart-box" style={{ padding: 20 }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
-            <div style={{ fontFamily: "'Fraunces', serif", fontSize: 14, fontWeight: 700, color: T.white }}>AED/{selectedCcy} вЂ” 12 Month Trend</div>
-            <span style={{ fontSize: 10, color: T.textMuted }}>Apr 2025 вЂ“ Apr 2026</span>
+            <div style={{ fontFamily: "'Fraunces', serif", fontSize: 14, fontWeight: 700, color: T.white }}>AED/{selectedCcy} вв‚¬вЂќ 12 Month Trend</div>
+            <span style={{ fontSize: 10, color: T.textMuted }}>Apr 2025 вв‚¬вЂњ Apr 2026</span>
           </div>
           <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 16 }}>Exchange rate per 1 AED В· UAE Central Bank data</div>
           <ResponsiveContainer width="100%" height={220}>

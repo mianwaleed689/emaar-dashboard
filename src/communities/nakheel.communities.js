@@ -1,5 +1,5 @@
 /**
- * DXB ANALYTICS — NAKHEEL COMMUNITIES
+ * DXB ANALYTICS �€” NAKHEEL COMMUNITIES
  * 4 communities | Research: March 2026
  */
 
@@ -15,7 +15,7 @@ export const nakheelCommunities = [
     parentGroup: "Dubai Holding",
     districtCode: "PJ",
     overview: "Palm Jumeirah is the world's most famous man-made island, developed by Nakheel from 2001. Shaped like a palm tree with a trunk, 16 fronds and a crescent, it adds 78km to Dubai's coastline and spans 5.72 sqkm. Home to luxury villas, branded apartments, iconic hotels and world-class retail, it remains Dubai's most prestigious ultra-luxury address.",
-    type: "Iconic Man-Made Island — Ultra-Luxury Freehold",
+    type: "Iconic Man-Made Island �€” Ultra-Luxury Freehold",
     status: "Established",
     launched: 2001,
     location: {
@@ -77,7 +77,7 @@ export const nakheelCommunities = [
     schools: ["Dubai British School (15 min)", "Raffles International School (15 min)"],
     healthcare: ["Mediclinic Meadows (15 min)", "Saudi German Hospital (20 min)"],
     transport: [
-      "Monorail (Palm Jumeirah ↔ mainland Gateway station)",
+      "Monorail (Palm Jumeirah �” mainland Gateway station)",
       "Tram connection to Dubai Marina",
       "Sheikh Zayed Road via tunnel",
       "Water taxi services",
@@ -98,7 +98,7 @@ export const nakheelCommunities = [
     developer: "nakheel",
     districtCode: "PJA",
     overview: "Palm Jebel Ali is Nakheel's revived ultra-luxury waterfront development, 5x larger than Palm Jumeirah, featuring exclusive beachfront villas on 16 fronds. Relaunched in 2023 after a 15-year hiatus, it targets UHNW buyers seeking the most exclusive waterfront living in Dubai with private beaches for every villa.",
-    type: "Mega Island — Ultra-Luxury Beachfront Villas",
+    type: "Mega Island �€” Ultra-Luxury Beachfront Villas",
     status: "Under Development",
     launched: 2023,
     location: {
@@ -125,8 +125,8 @@ export const nakheelCommunities = [
       avgYield: 4.5,
       aptYield: 0,
       villaYield: 4.5,
-      yoyGrowth: "N/A — under development",
-      capitalGrowth: "Ultra-high potential — limited supply",
+      yoyGrowth: "N/A �€” under development",
+      capitalGrowth: "Ultra-high potential �€” limited supply",
       investmentRating: "A+",
       goldenVisa: true,
     },
@@ -185,7 +185,7 @@ export const nakheelCommunities = [
       aptYield: 7.0,
       villaYield: 6.0,
       yoyGrowth: "+20% (2024-2025)",
-      capitalGrowth: "Strong growth — emerging premium area",
+      capitalGrowth: "Strong growth �€” emerging premium area",
       investmentRating: "B+",
       goldenVisa: true,
     },
@@ -215,7 +215,7 @@ export const nakheelCommunities = [
     developer: "nakheel",
     districtCode: "JVC",
     overview: "Jumeirah Village Circle (JVC) is Nakheel's master-planned affordable residential community between Al Khail Road and Sheikh Mohammed Bin Zayed Road. Known for the highest rental yields in Dubai (7-8.15%), over 30 landscaped parks, family-friendly amenities and excellent connectivity, it is Dubai's most popular community for first-time buyers and investors.",
-    type: "Master Residential Community — Affordable / Mid-Market",
+    type: "Master Residential Community �€” Affordable / Mid-Market",
     status: "Established",
     launched: 2005,
     location: {
@@ -226,7 +226,7 @@ export const nakheelCommunities = [
       toDowntown: "20 min",
       toAirport: "25 min",
       toMarina: "15 min",
-      nearestMetro: "No direct metro — J01 bus route available",
+      nearestMetro: "No direct metro �€” J01 bus route available",
       highways: ["Al Khail Road (E44)", "Sheikh Mohammed Bin Zayed Road (E311)", "Hessa Street (D61)"],
     },
     sizeSqFt: 870000000,
@@ -284,8 +284,8 @@ export const nakheelCommunities = [
     parentGroup: "Dubai Holding",
     emirate: "Dubai",
     districtCode: "AF",
-    overview: "Al Furjan is a 560+ hectare master community by Nakheel in Jebel Ali, Dubai, developed from 2006 and completed 2013. Meaning 'a collection of homes' or 'small village' in Arabic, it houses 4,000+ villas, townhouses and apartments across 16 sub-communities linked by 30 green parks and walkways. Al Furjan Metro Station (Route 2020 Red Line) gives direct metro access — making it one of Dubai's most connected affordable villa communities.",
-    type: "Master Community — Family Villas, Townhouses & Apartments",
+    overview: "Al Furjan is a 560+ hectare master community by Nakheel in Jebel Ali, Dubai, developed from 2006 and completed 2013. Meaning 'a collection of homes' or 'small village' in Arabic, it houses 4,000+ villas, townhouses and apartments across 16 sub-communities linked by 30 green parks and walkways. Al Furjan Metro Station (Route 2020 Red Line) gives direct metro access �€” making it one of Dubai's most connected affordable villa communities.",
+    type: "Master Community �€” Family Villas, Townhouses & Apartments",
     status: "Established",
     launched: 2006,
     location: {
@@ -296,7 +296,7 @@ export const nakheelCommunities = [
       toDowntown: "30 min",
       toAirport: "30 min",
       toMarina: "15 min",
-      nearestMetro: "Al Furjan Metro Station (Route 2020 Red Line — within community)",
+      nearestMetro: "Al Furjan Metro Station (Route 2020 Red Line �€” within community)",
       highways: ["Sheikh Mohammed Bin Zayed Road (E311)", "Sheikh Zayed Road (E11)", "Al Yalayis Street"],
     },
     sizeSqFt: 603000000,
@@ -319,7 +319,7 @@ export const nakheelCommunities = [
     },
     unitTypes: ["Studio", "1BR", "2BR", "3BR", "3BR Townhouse", "4BR Townhouse", "4BR Villa", "5BR Villa", "6BR Villa"],
     amenities: [
-      "Al Furjan Metro Station (Route 2020 — within community)",
+      "Al Furjan Metro Station (Route 2020 �€” within community)",
       "Al Furjan Pavilion (Spinneys, 24 shops, 10 F&B outlets)",
       "Al Furjan Clubhouse (pool, gym, restaurant)",
       "Al Furjan West Pavilion (Geant, pharmacy, F&B)",
@@ -343,7 +343,7 @@ export const nakheelCommunities = [
     schools: ["JSS International School (10 min)", "Dubai British School (20 min)", "The Winchester School (15 min)"],
     healthcare: ["Mediclinic Ibn Battuta (10 min)", "NMC Medical Centre Al Furjan (within community)"],
     transport: [
-      "Al Furjan Metro Station (Route 2020 Red Line — within community, 3 min walk)",
+      "Al Furjan Metro Station (Route 2020 Red Line �€” within community, 3 min walk)",
       "Sheikh Mohammed Bin Zayed Road (E311)",
       "Sheikh Zayed Road (E11)",
       "Ibn Battuta Mall 5 min",

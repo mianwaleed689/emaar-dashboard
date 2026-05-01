@@ -1,5 +1,5 @@
 /**
- * DXB Analytics — S15: Admin Data Health Dashboard
+ * DXB Analytics �€” S15: Admin Data Health Dashboard
  * File: src/AdminDataHealth.jsx
  *
  * INSTRUCTIONS FOR ADDING TO AdminPanel.jsx:
@@ -14,7 +14,7 @@
  * - All data feeds shown: last fetch time, next run, status (green/yellow/red)
  * - Force-refresh button for each feed
  * - Alert log (failed fetches, anomalies from adminAlerts)
- * - Market Data Editor — admin updates globalMarket fields
+ * - Market Data Editor �€” admin updates globalMarket fields
  * - ValuStrat / Knight Frank update form
  * - The nerve centre of the live data platform
  *
@@ -22,7 +22,7 @@
  * - Mortgage tab EIBOR path fixed in EmaarDashboardV2.jsx
  * - Admin news pin/unpin UI built here
  *
- * Iron Rule: NEVER run npx vercel --prod — use git push only
+ * Iron Rule: NEVER run npx vercel --prod �€” use git push only
  */
 
 import React, { useState, useEffect, useCallback } from "react";
@@ -31,31 +31,31 @@ import {
   onSnapshot, query, orderBy, limit, serverTimestamp
 } from "firebase/firestore";
 
-// ── Cron feed definitions — matches vercel.json schedules ──────────────────
+// �”€�”€ Cron feed definitions �€” matches vercel.json schedules �”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€
 const CRON_FEEDS = [
   {
     id:        "eibor",
     name:      "EIBOR Rates",
-    icon:      "📊",
+    icon:      "�“�",
     firestorePath: { collection: "marketData", doc: "eibor" },
     schedule:  "Daily 11:30 AM UAE",
     cronExpr:  "30 7 * * *",
     endpoint:  "/api/cron-eibor",
     greenDays: 1,
     yellowDays:7,
-    description: "CBUAE EIBOR rates (overnight → 12M) — 4-source waterfall",
+    description: "CBUAE EIBOR rates (overnight �’ 12M) �€” 4-source waterfall",
   },
   {
     id:        "news",
     name:      "News Feed",
-    icon:      "📰",
+    icon:      "�“�",
     firestorePath: { collection: "tabData", doc: "news" },
     schedule:  "Daily 6:30 AM UAE",
     cronExpr:  "30 2 * * *",
     endpoint:  "/api/cron-news",
     greenDays: 1,
     yellowDays:3,
-    description: "6 RSS sources — Arabian Business, PropertyNews.ae, Gulf Business, Gulf News, The National, Khaleej Times",
+    description: "6 RSS sources �€” Arabian Business, PropertyNews.ae, Gulf Business, Gulf News, The National, Khaleej Times",
   },
   {
     id:        "yields",
@@ -67,39 +67,39 @@ const CRON_FEEDS = [
     endpoint:  "/api/cron-yields",
     greenDays: 7,
     yellowDays:14,
-    description: "Bayut API — 11 Emaar communities × 4 unit types → gross yield",
+    description: "Bayut API �€” 11 Emaar communities �— 4 unit types �’ gross yield",
   },
   {
     id:        "financials",
     name:      "Developer Financials",
-    icon:      "💹",
+    icon:      "�’�",
     firestorePath: { collection: "developers", doc: "emaar" },
     schedule:  "Sunday 8:00 AM UAE",
     cronExpr:  "0 4 * * 0",
     endpoint:  "/api/cron-financials",
     greenDays: 7,
     yellowDays:30,
-    description: "Yahoo Finance — EMAAR.AE + EMAARDEV.AE — 4-method fallback",
+    description: "Yahoo Finance �€” EMAAR.AE + EMAARDEV.AE �€” 4-method fallback",
   },
   {
     id:        "dld",
     name:      "DLD Transactions",
-    icon:      "🏗️",
+    icon:      "�—️",
     firestorePath: { collection: "marketData", doc: "global" },
     schedule:  "Daily 7:00 AM UAE",
     cronExpr:  "0 3 * * *",
     endpoint:  "/api/cron-dld-daily",
     greenDays: 1,
     yellowDays:7,
-    description: "Dubai Pulse DLD API — daily transactions → communityData + marketData/global",
+    description: "Dubai Pulse DLD API �€” daily transactions �’ communityData + marketData/global",
     pending:   true,
     pendingReason: "DLD API keys pending from dubaipulse.gov.ae",
   },
 ];
 
-// ── Global market fields for editor ───────────────────────────────────────
+// �”€�”€ Global market fields for editor �”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€
 const GLOBAL_MARKET_FIELDS = [
-  { key: "totalMarketValue",  label: "Total Market Value",  placeholder: "e.g. AED 682.5B",  hint: "DLD annual — update Jan each year" },
+  { key: "totalMarketValue",  label: "Total Market Value",  placeholder: "e.g. AED 682.5B",  hint: "DLD annual �€” update Jan each year" },
   { key: "totalTransactions", label: "Total Transactions",  placeholder: "e.g. 214,912",      hint: "DLD annual" },
   { key: "avgPpsf",           label: "Avg Price per sqft",  placeholder: "e.g. AED 1,689",    hint: "ValuStrat monthly VPI" },
   { key: "avgPpsfYoy",        label: "PPSF YoY Change",     placeholder: "e.g. +19.8%",       hint: "ValuStrat YoY" },
@@ -107,7 +107,7 @@ const GLOBAL_MARKET_FIELDS = [
   { key: "offPlanShare",      label: "Off-Plan Share",       placeholder: "e.g. 60%+",         hint: "DLD annual" },
   { key: "topBuyer",          label: "Top Buyer Nationality",placeholder: "e.g. Indian (22%)", hint: "DLD annual" },
   { key: "cashBuyerPct",      label: "Cash Buyer %",         placeholder: "e.g. 87",           hint: "DLD annual" },
-  { key: "avgGrossYield",     label: "City Avg Gross Yield", placeholder: "e.g. 6.9",          hint: "REIDIN/Bayut — monthly" },
+  { key: "avgGrossYield",     label: "City Avg Gross Yield", placeholder: "e.g. 6.9",          hint: "REIDIN/Bayut �€” monthly" },
   { key: "period",            label: "Data Period",          placeholder: "e.g. FY 2025",      hint: "Update when data changes" },
 ];
 
@@ -123,7 +123,7 @@ const KNIGHT_FRANK_FIELDS = [
   { key: "kfReportDate",   label: "KF Report Date",      placeholder: "e.g. Q4 2025" },
 ];
 
-// ── Helpers ────────────────────────────────────────────────────────────────
+// �”€�”€ Helpers �”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€
 function timeAgo(isoStr) {
   if (!isoStr) return "Never";
   const diff = Date.now() - new Date(isoStr).getTime();
@@ -156,7 +156,7 @@ function StatusDot({ status }) {
   );
 }
 
-// ── Main Component ─────────────────────────────────────────────────────────
+// �”€�”€ Main Component �”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€
 export default function AdminDataHealth({ db, T }) {
   const [feedData,      setFeedData]      = useState({});
   const [alerts,        setAlerts]        = useState([]);
@@ -169,7 +169,7 @@ export default function AdminDataHealth({ db, T }) {
   const [newsArticles,  setNewsArticles]  = useState([]);
   const [activeSection, setActiveSection] = useState("feeds");
 
-  // ── Load all feed statuses from Firestore ────────────────────────────────
+  // �”€�”€ Load all feed statuses from Firestore �”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€
   const loadFeedData = useCallback(async () => {
     const results = {};
     await Promise.all(CRON_FEEDS.map(async (feed) => {
@@ -181,7 +181,7 @@ export default function AdminDataHealth({ db, T }) {
     setFeedData(results);
   }, [db]);
 
-  // ── Load market global data ───────────────────────────────────────────────
+  // �”€�”€ Load market global data �”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€
   const loadGlobalMarket = useCallback(async () => {
     try {
       const snap = await getDoc(doc(db, "marketData", "global"));
@@ -203,7 +203,7 @@ export default function AdminDataHealth({ db, T }) {
     } catch {}
   }, [db]);
 
-  // ── Live alerts from Firestore ───────────────────────────────────────────
+  // �”€�”€ Live alerts from Firestore �”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€
   useEffect(() => {
     loadFeedData();
     loadGlobalMarket();
@@ -223,7 +223,7 @@ export default function AdminDataHealth({ db, T }) {
     return () => { unsub(); unsubNews(); };
   }, [db, loadFeedData, loadGlobalMarket]);
 
-  // ── Force refresh a cron ─────────────────────────────────────────────────
+  // �”€�”€ Force refresh a cron �”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€
   const forceRefresh = async (feed) => {
     if (feed.pending) return;
     setRefreshing(p => ({ ...p, [feed.id]: true }));
@@ -235,7 +235,7 @@ export default function AdminDataHealth({ db, T }) {
       const json = await res.json();
       console.log(`[S15] ${feed.name} refresh:`, json);
       setTimeout(() => loadFeedData(), 2000);
-      setSaveStatus(p => ({ ...p, [feed.id + "_refresh"]: json.ok ? "✅ Refreshed" : "⚠️ Partial" }));
+      setSaveStatus(p => ({ ...p, [feed.id + "_refresh"]: json.ok ? "�… Refreshed" : "⚠️ Partial" }));
       setTimeout(() => setSaveStatus(p => ({ ...p, [feed.id + "_refresh"]: "" })), 4000);
     } catch (err) {
       setSaveStatus(p => ({ ...p, [feed.id + "_refresh"]: "❌ Failed" }));
@@ -244,7 +244,7 @@ export default function AdminDataHealth({ db, T }) {
     setRefreshing(p => ({ ...p, [feed.id]: false }));
   };
 
-  // ── Save global market data ──────────────────────────────────────────────
+  // �”€�”€ Save global market data �”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€
   const saveGlobal = async (fields, editObj, section) => {
     setSaveStatus(p => ({ ...p, [section]: "saving" }));
     try {
@@ -262,7 +262,7 @@ export default function AdminDataHealth({ db, T }) {
     }
   };
 
-  // ── Pin/unpin news article ────────────────────────────────────────────────
+  // �”€�”€ Pin/unpin news article �”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€
   const togglePin = async (articleId) => {
     const updated = newsArticles.map(a =>
       a.id === articleId ? { ...a, pinned: !a.pinned } : a
@@ -273,14 +273,14 @@ export default function AdminDataHealth({ db, T }) {
     } catch {}
   };
 
-  // ── Mark alert as read ────────────────────────────────────────────────────
+  // �”€�”€ Mark alert as read �”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€
   const markAlertRead = async (alertId) => {
     try {
       await updateDoc(doc(db, "adminAlerts", alertId), { read: true });
     } catch {}
   };
 
-  // ── Styles ────────────────────────────────────────────────────────────────
+  // �”€�”€ Styles �”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€
   const S = {
     wrap:      { padding: "0 0 60px 0" },
     sectionNav: {
@@ -354,7 +354,7 @@ export default function AdminDataHealth({ db, T }) {
 
   const unreadAlerts = alerts.filter(a => !a.read);
 
-  // ── Render ────────────────────────────────────────────────────────────────
+  // �”€�”€ Render �”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€
   return (
     <div style={S.wrap}>
       {/* Header */}
@@ -363,7 +363,7 @@ export default function AdminDataHealth({ db, T }) {
           Data Health Dashboard
         </div>
         <div style={{ fontSize: 13, color: "#64748B" }}>
-          Nerve centre of the DXB Analytics live data platform — feed statuses, market data editor, alert log.
+          Nerve centre of the DXB Analytics live data platform �€” feed statuses, market data editor, alert log.
         </div>
         {unreadAlerts.length > 0 && (
           <div style={{ marginTop: 12, padding: "8px 14px", background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 8, fontSize: 13, color: "#EF4444", fontWeight: 600 }}>
@@ -375,11 +375,11 @@ export default function AdminDataHealth({ db, T }) {
       {/* Section Nav */}
       <div style={S.sectionNav}>
         {[
-          { key: "feeds",    label: "📡 Data Feeds" },
+          { key: "feeds",    label: "�“� Data Feeds" },
           { key: "market",   label: "✏️ Market Data Editor" },
-          { key: "external", label: "📋 ValuStrat / KF" },
-          { key: "alerts",   label: `🔔 Alerts${unreadAlerts.length ? ` (${unreadAlerts.length})` : ""}` },
-          { key: "news",     label: "📰 News Pin/Unpin" },
+          { key: "external", label: "�“� ValuStrat / KF" },
+          { key: "alerts",   label: `�”” Alerts${unreadAlerts.length ? ` (${unreadAlerts.length})` : ""}` },
+          { key: "news",     label: "�“� News Pin/Unpin" },
         ].map(s => (
           <button key={s.key} style={S.navBtn(activeSection === s.key)} onClick={() => setActiveSection(s.key)}>
             {s.label}
@@ -387,10 +387,10 @@ export default function AdminDataHealth({ db, T }) {
         ))}
       </div>
 
-      {/* ── SECTION: DATA FEEDS ── */}
+      {/* �”€�”€ SECTION: DATA FEEDS �”€�”€ */}
       {activeSection === "feeds" && (
         <div>
-          <div style={S.sectionTitle}>Live Data Feeds — {CRON_FEEDS.length} configured</div>
+          <div style={S.sectionTitle}>Live Data Feeds �€” {CRON_FEEDS.length} configured</div>
           {CRON_FEEDS.map(feed => {
             const data    = feedData[feed.id];
             const updated = data?.updatedAt || data?.lastFetched || data?.updatedAtUAE;
@@ -441,7 +441,7 @@ export default function AdminDataHealth({ db, T }) {
                     )}
                     {feed.id === "news" && data?.rows && (
                       <div style={{ fontSize: 11, color: "#94A3B8", marginTop: 4 }}>
-                        {data.rows.length} articles · Top: {data.rows[0]?.headline?.slice(0, 60)}…
+                        {data.rows.length} articles · Top: {data.rows[0]?.headline?.slice(0, 60)}�€�
                       </div>
                     )}
                     {feed.id === "financials" && data && (
@@ -458,7 +458,7 @@ export default function AdminDataHealth({ db, T }) {
                       onClick={() => forceRefresh(feed)}
                       disabled={feed.pending || refreshing[feed.id]}
                     >
-                      {refreshing[feed.id] ? "⏳ Running…" : feed.pending ? "⏳ Pending" : "▶ Refresh Now"}
+                      {refreshing[feed.id] ? "⏳ Running�€�" : feed.pending ? "⏳ Pending" : "�–� Refresh Now"}
                     </button>
                     {saveStatus[feed.id + "_refresh"] && (
                       <span style={{ fontSize: 11, color: "#10B981" }}>{saveStatus[feed.id + "_refresh"]}</span>
@@ -471,12 +471,12 @@ export default function AdminDataHealth({ db, T }) {
 
           {/* Cron schedule summary */}
           <div style={{ ...S.card, marginTop: 8 }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: "#D4A843", marginBottom: 12 }}>📅 Vercel Cron Schedule (UTC)</div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: "#D4A843", marginBottom: 12 }}>�“… Vercel Cron Schedule (UTC)</div>
             <div style={{ fontFamily: "monospace", fontSize: 12, color: "#94A3B8", lineHeight: 2 }}>
               {CRON_FEEDS.map(f => (
                 <div key={f.id}>
                   <span style={{ color: "#D4A843", minWidth: 140, display: "inline-block" }}>{f.cronExpr}</span>
-                  <span style={{ color: "#64748B" }}>→ </span>
+                  <span style={{ color: "#64748B" }}>�’ </span>
                   <span style={{ color: "#E2E8F0" }}>{f.endpoint}</span>
                   <span style={{ color: "#64748B" }}> ({f.schedule})</span>
                   {f.pending && <span style={{ color: "#F59E0B" }}> ⏳</span>}
@@ -487,10 +487,10 @@ export default function AdminDataHealth({ db, T }) {
         </div>
       )}
 
-      {/* ── SECTION: MARKET DATA EDITOR ── */}
+      {/* �”€�”€ SECTION: MARKET DATA EDITOR �”€�”€ */}
       {activeSection === "market" && (
         <div>
-          <div style={S.sectionTitle}>Market Data Editor — marketData/global</div>
+          <div style={S.sectionTitle}>Market Data Editor �€” marketData/global</div>
           <div style={{ ...S.card, marginBottom: 16 }}>
             <div style={{ fontSize: 12, color: "#64748B", marginBottom: 16, padding: "8px 12px", background: "rgba(212,168,67,0.06)", borderRadius: 8, borderLeft: "3px solid #D4A843" }}>
               ℹ️ These fields are read by the Overview, Market, and DLD Volumes tabs. Update DLD figures annually (January), ValuStrat monthly, PPSF as needed.
@@ -515,7 +515,7 @@ export default function AdminDataHealth({ db, T }) {
                 style={S.saveBtn(saveStatus.global)}
                 onClick={() => saveGlobal(GLOBAL_MARKET_FIELDS, editGlobal, "global")}
               >
-                {saveStatus.global === "saving" ? "Saving…" : saveStatus.global === "saved" ? "✅ Saved to Firestore" : "💾 Save Market Data"}
+                {saveStatus.global === "saving" ? "Saving�€�" : saveStatus.global === "saved" ? "�… Saved to Firestore" : "�’� Save Market Data"}
               </button>
               <button
                 style={{ ...S.saveBtn(""), background: "rgba(255,255,255,0.04)", color: "#64748B" }}
@@ -528,10 +528,10 @@ export default function AdminDataHealth({ db, T }) {
         </div>
       )}
 
-      {/* ── SECTION: EXTERNAL REPORTS ── */}
+      {/* �”€�”€ SECTION: EXTERNAL REPORTS �”€�”€ */}
       {activeSection === "external" && (
         <div>
-          <div style={S.sectionTitle}>External Report Data — ValuStrat & Knight Frank</div>
+          <div style={S.sectionTitle}>External Report Data �€” ValuStrat & Knight Frank</div>
           <div style={{ fontSize: 12, color: "#64748B", marginBottom: 16 }}>
             Read these reports monthly/quarterly and enter the values below. Takes 2 minutes.
           </div>
@@ -539,10 +539,10 @@ export default function AdminDataHealth({ db, T }) {
           {/* ValuStrat */}
           <div style={S.card}>
             <div style={{ fontSize: 14, fontWeight: 700, color: "#fff", marginBottom: 4 }}>
-              ValuStrat VPI — Monthly
+              ValuStrat VPI �€” Monthly
             </div>
             <div style={{ fontSize: 12, color: "#64748B", marginBottom: 14 }}>
-              Source: <a href="https://valustrat.com" target="_blank" rel="noopener noreferrer" style={{ color: "#D4A843" }}>valustrat.com</a> → UAE Real Estate Reports → Dubai Residential Capital Values
+              Source: <a href="https://valustrat.com" target="_blank" rel="noopener noreferrer" style={{ color: "#D4A843" }}>valustrat.com</a> �’ UAE Real Estate Reports �’ Dubai Residential Capital Values
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
               {VALUSTRAT_FIELDS.map(f => (
@@ -559,7 +559,7 @@ export default function AdminDataHealth({ db, T }) {
             </div>
             <div style={{ marginTop: 14, display: "flex", gap: 10, alignItems: "center" }}>
               <button style={S.saveBtn(saveStatus.valustrat)} onClick={() => saveGlobal(VALUSTRAT_FIELDS, editValuStrat, "valustrat")}>
-                {saveStatus.valustrat === "saved" ? "✅ Saved" : "💾 Save ValuStrat"}
+                {saveStatus.valustrat === "saved" ? "�… Saved" : "�’� Save ValuStrat"}
               </button>
             </div>
           </div>
@@ -567,10 +567,10 @@ export default function AdminDataHealth({ db, T }) {
           {/* Knight Frank */}
           <div style={S.card}>
             <div style={{ fontSize: 14, fontWeight: 700, color: "#fff", marginBottom: 4 }}>
-              Knight Frank — Quarterly
+              Knight Frank �€” Quarterly
             </div>
             <div style={{ fontSize: 12, color: "#64748B", marginBottom: 14 }}>
-              Source: <a href="https://knightfrank.ae" target="_blank" rel="noopener noreferrer" style={{ color: "#D4A843" }}>knightfrank.ae</a> → Insights → Dubai Residential Market Update
+              Source: <a href="https://knightfrank.ae" target="_blank" rel="noopener noreferrer" style={{ color: "#D4A843" }}>knightfrank.ae</a> �’ Insights �’ Dubai Residential Market Update
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
               {KNIGHT_FRANK_FIELDS.map(f => (
@@ -587,20 +587,20 @@ export default function AdminDataHealth({ db, T }) {
             </div>
             <div style={{ marginTop: 14 }}>
               <button style={S.saveBtn(saveStatus.kf)} onClick={() => saveGlobal(KNIGHT_FRANK_FIELDS, editKF, "kf")}>
-                {saveStatus.kf === "saved" ? "✅ Saved" : "💾 Save Knight Frank"}
+                {saveStatus.kf === "saved" ? "�… Saved" : "�’� Save Knight Frank"}
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* ── SECTION: ALERTS ── */}
+      {/* �”€�”€ SECTION: ALERTS �”€�”€ */}
       {activeSection === "alerts" && (
         <div>
-          <div style={S.sectionTitle}>Alert Log — adminAlerts collection</div>
+          <div style={S.sectionTitle}>Alert Log �€” adminAlerts collection</div>
           {alerts.length === 0 && (
             <div style={{ ...S.card, textAlign: "center", color: "#64748B", padding: 40 }}>
-              ✅ No alerts. All systems operational.
+              �… No alerts. All systems operational.
             </div>
           )}
           {alerts.map(alert => (
@@ -610,7 +610,7 @@ export default function AdminDataHealth({ db, T }) {
               borderColor: alert.read ? "rgba(255,255,255,0.05)" : "rgba(212,168,67,0.15)",
             }}>
               <div style={{ fontSize: 20, flexShrink: 0 }}>
-                {alert.severity === "error" ? "🔴" : alert.severity === "warning" ? "🟡" : "🟢"}
+                {alert.severity === "error" ? "�”�" : alert.severity === "warning" ? "🟡" : "🟢"}
               </div>
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: 13, fontWeight: 600, color: alert.read ? "#94A3B8" : "#fff", marginBottom: 2 }}>
@@ -621,7 +621,7 @@ export default function AdminDataHealth({ db, T }) {
                 </div>
                 {alert.data && (
                   <div style={{ fontSize: 11, color: "#64748B", marginTop: 4, fontFamily: "monospace" }}>
-                    {JSON.stringify(alert.data).slice(0, 120)}…
+                    {JSON.stringify(alert.data).slice(0, 120)}�€�
                   </div>
                 )}
               </div>
@@ -638,10 +638,10 @@ export default function AdminDataHealth({ db, T }) {
         </div>
       )}
 
-      {/* ── SECTION: NEWS PIN/UNPIN ── */}
+      {/* �”€�”€ SECTION: NEWS PIN/UNPIN �”€�”€ */}
       {activeSection === "news" && (
         <div>
-          <div style={S.sectionTitle}>News Pin/Unpin — tabData/news</div>
+          <div style={S.sectionTitle}>News Pin/Unpin �€” tabData/news</div>
           <div style={{ fontSize: 12, color: "#64748B", marginBottom: 16 }}>
             Pinned stories always appear at the top of the Overview news section regardless of relevance score.
           </div>
@@ -658,7 +658,7 @@ export default function AdminDataHealth({ db, T }) {
             }}>
               <div style={{ flex: 1 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-                  {article.pinned && <span style={{ fontSize: 10, fontWeight: 700, color: "#D4A843", background: "rgba(212,168,67,0.12)", padding: "2px 6px", borderRadius: 4 }}>📌 PINNED</span>}
+                  {article.pinned && <span style={{ fontSize: 10, fontWeight: 700, color: "#D4A843", background: "rgba(212,168,67,0.12)", padding: "2px 6px", borderRadius: 4 }}>�“� PINNED</span>}
                   <span style={{
                     fontSize: 10, fontWeight: 600, padding: "2px 6px", borderRadius: 4,
                     background: (article.color || "#94A3B8") + "20", color: article.color || "#94A3B8",
@@ -672,7 +672,7 @@ export default function AdminDataHealth({ db, T }) {
                 </div>
               </div>
               <button style={S.pinBtn(article.pinned)} onClick={() => togglePin(article.id)}>
-                {article.pinned ? "📌 Unpin" : "📍 Pin"}
+                {article.pinned ? "�“� Unpin" : "�“� Pin"}
               </button>
             </div>
           ))}

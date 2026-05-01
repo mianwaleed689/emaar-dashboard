@@ -66,7 +66,7 @@ const ReferralTab = ({ db, T, notify, users, adminUser }) => {
         type: "referral_reward", severity: "info", read: false,
         createdAt: new Date().toISOString(), source: "admin/referral",
       });
-      notify("✅ 1 month free granted to " + (referral.referrerEmail || "referrer"), "success");
+      notify("�… 1 month free granted to " + (referral.referrerEmail || "referrer"), "success");
     } catch(e) {
       notify("❌ Failed: " + e.message, "error");
     } finally { setGrantLoading(false); }
@@ -85,13 +85,13 @@ const ReferralTab = ({ db, T, notify, users, adminUser }) => {
         createdAt:     new Date().toISOString(),
         source:        "admin_manual",
       });
-      notify("✅ Referral conversion recorded", "success");
+      notify("�… Referral conversion recorded", "success");
     } catch(e) {
       notify("❌ " + e.message, "error");
     }
   };
 
-  // Leaderboard — group by referrer
+  // Leaderboard �€” group by referrer
   const leaderboard = React.useMemo(() => {
     const map = {};
     referrals.forEach(r => {
@@ -120,9 +120,9 @@ const ReferralTab = ({ db, T, notify, users, adminUser }) => {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
         <div>
           <h2 style={{ fontFamily: "'Fraunces',serif", fontSize: 26, fontWeight: 800, color: T.gold, marginBottom: 4 }}>Referral Program</h2>
-          <p style={{ color: T.textMuted, fontSize: 13 }}>Users share their link → friend signs up → converts to paid → referrer gets 1 month free</p>
+          <p style={{ color: T.textMuted, fontSize: 13 }}>Users share their link �’ friend signs up �’ converts to paid �’ referrer gets 1 month free</p>
         </div>
-        <div style={{ fontSize: 9, padding: "4px 12px", borderRadius: 8, background: "rgba(16,185,129,0.12)", color: T.green, fontWeight: 700, border: `1px solid rgba(16,185,129,0.2)` }}>● LIVE · Firestore</div>
+        <div style={{ fontSize: 9, padding: "4px 12px", borderRadius: 8, background: "rgba(16,185,129,0.12)", color: T.green, fontWeight: 700, border: `1px solid rgba(16,185,129,0.2)` }}>�—� LIVE · Firestore</div>
       </div>
 
       {/* KPI Cards */}
@@ -130,7 +130,7 @@ const ReferralTab = ({ db, T, notify, users, adminUser }) => {
         <Card label="Total Referrals" value={stats.totalReferrals} color={T.blue} sub="All time" />
         <Card label="Conversions" value={stats.totalConversions} color={T.green} sub="Paid upgrades" />
         <Card label="Rewards Granted" value={stats.totalRewardMonths} color={T.gold} sub="Free months given" />
-        <Card label="Conversion Rate" value={stats.totalReferrals > 0 ? Math.round((stats.totalConversions / stats.totalReferrals) * 100) + "%" : "—"} color={T.teal} sub="Referral → paid" />
+        <Card label="Conversion Rate" value={stats.totalReferrals > 0 ? Math.round((stats.totalConversions / stats.totalReferrals) * 100) + "%" : "�€”"} color={T.teal} sub="Referral �’ paid" />
       </div>
 
       {/* User Referral Link Generator */}
@@ -142,7 +142,7 @@ const ReferralTab = ({ db, T, notify, users, adminUser }) => {
             onChange={e => setSelectedUser(users.find(u => (u.uid || u.id) === e.target.value) || null)}
             style={{ flex: 1, minWidth: 220, padding: "10px 14px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif" }}
           >
-            <option value="">— Select a user —</option>
+            <option value="">�€” Select a user �€”</option>
             {users.filter(u => u.email).map(u => (
               <option key={u.uid || u.id} value={u.uid || u.id}>{u.email} ({u.tier || "free"})</option>
             ))}
@@ -152,7 +152,7 @@ const ReferralTab = ({ db, T, notify, users, adminUser }) => {
               <span style={{ fontSize: 12, color: T.textMuted, flexShrink: 0 }}>Link:</span>
               <span style={{ fontSize: 12, color: T.teal, flex: 1, fontFamily: "monospace", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{getReferralLink(selectedUser)}</span>
               <button type="button"
-                onClick={() => { navigator.clipboard.writeText(getReferralLink(selectedUser)); notify("✅ Copied to clipboard", "success"); }}
+                onClick={() => { navigator.clipboard.writeText(getReferralLink(selectedUser)); notify("�… Copied to clipboard", "success"); }}
                 style={{ padding: "6px 14px", background: T.goldGlow, border: `1px solid ${T.gold}`, borderRadius: 6, color: T.gold, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif", flexShrink: 0 }}>
                 Copy
               </button>
@@ -178,7 +178,7 @@ const ReferralTab = ({ db, T, notify, users, adminUser }) => {
           {loading ? (
             <div style={{ color: T.textMuted, fontSize: 13 }}>Loading...</div>
           ) : leaderboard.length === 0 ? (
-            <div style={{ color: T.textMuted, fontSize: 13, textAlign: "center", padding: "20px 0" }}>No referrals yet — share referral links with your users to get started</div>
+            <div style={{ color: T.textMuted, fontSize: 13, textAlign: "center", padding: "20px 0" }}>No referrals yet �€” share referral links with your users to get started</div>
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               {leaderboard.map((r, i) => (
@@ -211,14 +211,14 @@ const ReferralTab = ({ db, T, notify, users, adminUser }) => {
             <div style={{ display: "flex", flexDirection: "column", gap: 6, maxHeight: 340, overflowY: "auto" }}>
               {referrals.slice(0, 20).map(r => {
                 const statusColor = r.status === "converted" ? T.green : r.status === "signup" ? T.blue : T.textMuted;
-                const statusLabel = r.status === "converted" ? "Converted ✓" : r.status === "signup" ? "Signed Up" : "Clicked";
+                const statusLabel = r.status === "converted" ? "Converted �“" : r.status === "signup" ? "Signed Up" : "Clicked";
                 return (
                   <div key={r.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 10px", borderRadius: 8, background: T.surfaceAlt, border: `1px solid ${T.border}` }}>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 11, fontWeight: 600, color: T.white, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                        {r.referrerEmail || "Unknown"} → {r.convertedEmail || r.signupEmail || "—"}
+                        {r.referrerEmail || "Unknown"} �’ {r.convertedEmail || r.signupEmail || "�€”"}
                       </div>
-                      <div style={{ fontSize: 10, color: T.textMuted }}>{r.createdAt ? new Date(r.createdAt).toLocaleDateString("en-AE") : "—"}</div>
+                      <div style={{ fontSize: 10, color: T.textMuted }}>{r.createdAt ? new Date(r.createdAt).toLocaleDateString("en-AE") : "�€”"}</div>
                     </div>
                     <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
                       <span style={{ fontSize: 10, fontWeight: 700, color: statusColor, padding: "2px 8px", borderRadius: 6, background: statusColor + "12", border: `1px solid ${statusColor}33` }}>{statusLabel}</span>
@@ -241,7 +241,7 @@ const ReferralTab = ({ db, T, notify, users, adminUser }) => {
       {/* Manual conversion logger */}
       <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: "20px 24px" }}>
         <div style={{ fontFamily: "'Fraunces',serif", fontSize: 16, fontWeight: 700, color: T.white, marginBottom: 4 }}>Log Manual Conversion</div>
-        <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 14 }}>When a referral converts via Stripe or manually — log it here to trigger the reward</div>
+        <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 14 }}>When a referral converts via Stripe or manually �€” log it here to trigger the reward</div>
         <ManualConversionForm users={users} T={T} onSubmit={createReferral} notify={notify} />
       </div>
 
@@ -251,9 +251,9 @@ const ReferralTab = ({ db, T, notify, users, adminUser }) => {
         <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
           {[
             ["1. Share", "User copies their referral link from their dashboard widget and shares it", T.blue],
-            ["2. Click", "Friend clicks the link — a referral record is created in Firestore automatically", T.teal],
-            ["3. Convert", "Friend signs up and upgrades to Pro — status updates to 'converted'", T.green],
-            ["4. Reward", "Admin clicks 'Grant Month' — referrer gets 1 month free added to their subscription", T.gold],
+            ["2. Click", "Friend clicks the link �€” a referral record is created in Firestore automatically", T.teal],
+            ["3. Convert", "Friend signs up and upgrades to Pro �€” status updates to 'converted'", T.green],
+            ["4. Reward", "Admin clicks 'Grant Month' �€” referrer gets 1 month free added to their subscription", T.gold],
           ].map(([step, desc, color]) => (
             <div key={step} style={{ padding: "14px 16px", borderRadius: 10, background: T.surfaceAlt, border: `1px solid ${color}33` }}>
               <div style={{ fontSize: 13, fontWeight: 700, color, marginBottom: 6 }}>{step}</div>
@@ -267,7 +267,7 @@ const ReferralTab = ({ db, T, notify, users, adminUser }) => {
   );
 };
 
-/* ─── Manual Conversion Form ────────────────────────────────────────────── */
+/* �”€�”€�”€ Manual Conversion Form �”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€ */
 const ManualConversionForm = ({ users, T, onSubmit, notify }) => {
   const [referrer, setReferrer] = React.useState("");
   const [convertedEmail, setConvertedEmail] = React.useState("");
@@ -288,7 +288,7 @@ const ManualConversionForm = ({ users, T, onSubmit, notify }) => {
         <label style={{ fontSize: 10, color: T.textMuted, fontWeight: 700, textTransform: "uppercase" }}>Referrer (who shared the link)</label>
         <select value={referrer} onChange={e => setReferrer(e.target.value)}
           style={{ padding: "10px 14px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif" }}>
-          <option value="">— Select referrer —</option>
+          <option value="">�€” Select referrer �€”</option>
           {users.filter(u => u.email).map(u => <option key={u.uid || u.id} value={u.uid || u.id}>{u.email}</option>)}
         </select>
       </div>
@@ -305,11 +305,11 @@ const ManualConversionForm = ({ users, T, onSubmit, notify }) => {
   );
 };
 
-/* ─── MARKET DATA EDITOR — S15 GAP FIX ─────────────────────────────────────
+/* �”€�”€�”€ MARKET DATA EDITOR �€” S15 GAP FIX �”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€
    Admin form to update marketData/global in Firestore.
    Covers: ValuStrat/Knight Frank figures, DLD totals, PPSF, YoY growth.
    Renders below AdminDataHealth in the data_health tab.
-────────────────────────────────────────────────────────────────────────── */
+�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€ */
 const MarketDataEditor = ({ db, T, notify }) => {
   const [loading, setLoading] = React.useState(true);
   const [saving, setSaving] = React.useState(false);
@@ -351,7 +351,7 @@ const MarketDataEditor = ({ db, T, notify }) => {
         source: form.source,
       };
       await setDoc(doc(db, "marketData", "global"), payload, { merge: true });
-      notify("✅ Market data updated — dashboard will refresh within 30 seconds", "success");
+      notify("�… Market data updated �€” dashboard will refresh within 30 seconds", "success");
     } catch(e) {
       notify("❌ Save failed: " + e.message, "error");
     } finally { setSaving(false); }
@@ -379,7 +379,7 @@ const MarketDataEditor = ({ db, T, notify }) => {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
         <div>
           <div style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 800, color: T.gold }}>Market Data Editor</div>
-          <div style={{ fontSize: 12, color: T.textMuted, marginTop: 2 }}>Update marketData/global — ValuStrat · Knight Frank · DLD official figures</div>
+          <div style={{ fontSize: 12, color: T.textMuted, marginTop: 2 }}>Update marketData/global �€” ValuStrat · Knight Frank · DLD official figures</div>
         </div>
         <span style={{ fontSize: 9, padding: "3px 10px", borderRadius: 8, background: "rgba(212,168,67,0.1)", color: T.gold, fontWeight: 700, border: `1px solid ${T.border}` }}>ADMIN ONLY</span>
       </div>
@@ -411,13 +411,13 @@ const MarketDataEditor = ({ db, T, notify }) => {
         disabled={saving}
         style={{ padding: "12px 28px", background: saving ? T.surfaceAlt : `linear-gradient(135deg, ${T.gold}, #B8912F)`, color: saving ? T.textMuted : T.bg, border: "none", borderRadius: 10, fontWeight: 700, fontSize: 14, cursor: saving ? "not-allowed" : "pointer", fontFamily: "'Outfit',sans-serif" }}
       >
-        {saving ? "Saving..." : "💾 Save to Firestore"}
+        {saving ? "Saving..." : "�’� Save to Firestore"}
       </button>
     </div>
   );
 };
 
-/* ─── ICONS (matching dashboard SVG style) ─── */
+/* �”€�”€�”€ ICONS (matching dashboard SVG style) �”€�”€�”€ */
 const I = {
   overview: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>,
   users: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>,
@@ -447,7 +447,7 @@ const I = {
   target: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>,
 };
 
-/* ─── CSS (exactly matching main dashboard design DNA) ─── */
+/* �”€�”€�”€ CSS (exactly matching main dashboard design DNA) �”€�”€�”€ */
 const css = `
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700;9..144,900&display=swap');
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -591,6 +591,6 @@ select option { background: ${T.surface}; color: ${T.textPrimary}; }
 
 `;
 
-/* ─── CUSTOM TOOLTIP (matching dashboard) ─── */
+/* �”€�”€�”€ CUSTOM TOOLTIP (matching dashboard) �”€�”€�”€ */
 
 export default ReferralTab;

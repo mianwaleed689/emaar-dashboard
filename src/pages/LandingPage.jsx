@@ -1,11 +1,11 @@
 /* eslint-disable */
-/* Ã¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢Â
-   DXB ANALYTICS ââ‚¬â€ WORLD-CLASS LANDING PAGE
+/* Ã¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½Â
+   DXB ANALYTICS ï¿½ââ€š¬ââ‚¬ WORLD-CLASS LANDING PAGE
    Research: Linear, Superhuman, Stripe, Vercel, Notion, Bloomberg Terminal
    Design: Bento Grid Â· Glassmorphism Â· Dark Luxury Â· Gold Accent
    2026 Best Practices: Centered hero Â· Single CTA Â· Bento features Â·
    Animated stats Â· Role selector Â· SVG icons Â· Micro-interactions
-   Ã¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢Â */
+   Ã¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½Â */
 import React, { useState, useEffect, useRef } from "react";
 import { db } from "../firebase";
 import { doc, onSnapshot } from "firebase/firestore";
@@ -180,7 +180,7 @@ body{background:#04090F;color:#E2E8F0;font-family:'Outfit',sans-serif;overflow-x
 }
 `;
 
-/* Ã¢ââ‚¬ââ€š¬Ã¢ââ‚¬ââ€š¬ SVG ICON LIBRARY Ã¢ââ‚¬ââ€š¬Ã¢ââ‚¬ââ€š¬ */
+/* Ã¢ï¿½ââ€š¬ï¿½ï¿½ââ‚¬šï¿½Ã¢ï¿½ââ€š¬ï¿½ï¿½ââ‚¬šï¿½ SVG ICON LIBRARY Ã¢ï¿½ââ€š¬ï¿½ï¿½ââ‚¬šï¿½Ã¢ï¿½ââ€š¬ï¿½ï¿½ââ‚¬šï¿½ */
 const IC = {
   check:  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10B981" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>,
   close:  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#EF4444" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>,
@@ -217,7 +217,7 @@ const ROLES = {
     wins: [
       "Full project financials, yields, and risk scores in one tap",
       "Send polished comparison reports to clients via WhatsApp instantly",
-      "Never be caught off guard ââ‚¬â€ price/sqft, handover, yield always ready",
+      "Never be caught off guard ï¿½ââ€š¬ââ‚¬ price/sqft, handover, yield always ready",
     ],
     metric: "2+ hours saved per client",
     color: "#D4A843",
@@ -228,8 +228,8 @@ const ROLES = {
     gain: "Verify any deal in 30 seconds with DLD-verified data.",
     wins: [
       "Compare 3 projects side-by-side with verified yield and risk data",
-      "See actual DLD transaction history ââ‚¬â€ not marketing material",
-      "Calculate exact ROI: long-term hold, Airbnb, or flip ââ‚¬â€ before committing",
+      "See actual DLD transaction history ï¿½ââ€š¬ââ‚¬ not marketing material",
+      "Calculate exact ROI: long-term hold, Airbnb, or flip ï¿½ââ€š¬ââ‚¬ before committing",
     ],
     metric: "Verify before you commit",
     color: "#14B8A6",
@@ -239,7 +239,7 @@ const ROLES = {
     pain: "Your team wastes hours every week on scattered, inconsistent data",
     gain: "Standardize your entire team on verified intelligence.",
     wins: [
-      "Every agent researches the same way ââ‚¬â€ consistent, fast, professional",
+      "Every agent researches the same way ï¿½ââ€š¬ââ‚¬ consistent, fast, professional",
       "Win more pitches with institutional-quality analysis",
       "Track market movements days before your competitors notice them",
     ],
@@ -249,13 +249,13 @@ const ROLES = {
 };
 
 const FAQS = [
-  ["Is there a free trial?", "Yes ââ‚¬â€ every new account gets a 7-day Pro trial automatically. No credit card needed. Full access to all 23 tools and 208+ projects from day one."],
-  ["Which developers are covered?", "7 major developers are live: Emaar (208 projects), DAMAC, Sobha, Nakheel, Meraas, Binghatti, and Aldar ââ‚¬â€ across 13 Dubai communities. Phase 2 adds 3 more developers in Q3 2026."],
-  ["How is the data verified?", "Every data point is sourced from official materials ââ‚¬â€ developer annual reports, DLD transaction records, UAE Central Bank EIBOR rates ââ‚¬â€ and each has its source displayed. We cross-reference with DXBinteract, ValuStrat, and Knight Frank."],
+  ["Is there a free trial?", "Yes ï¿½ââ€š¬ââ‚¬ every new account gets a 7-day Pro trial automatically. No credit card needed. Full access to all 23 tools and 208+ projects from day one."],
+  ["Which developers are covered?", "7 major developers are live: Emaar (208 projects), DAMAC, Sobha, Nakheel, Meraas, Binghatti, and Aldar ï¿½ââ€š¬ââ‚¬ across 13 Dubai communities. Phase 2 adds 3 more developers in Q3 2026."],
+  ["How is the data verified?", "Every data point is sourced from official materials ï¿½ââ€š¬ââ‚¬ developer annual reports, DLD transaction records, UAE Central Bank EIBOR rates ï¿½ââ€š¬ââ‚¬ and each has its source displayed. We cross-reference with DXBinteract, ValuStrat, and Knight Frank."],
   ["How often does data update?", "Financial data updates within 24 hours of official developer releases. Project prices and handover dates are manually verified monthly. EIBOR rates update daily."],
-  ["What makes this different from Bayut?", "Bayut has listings. DXB Analytics has intelligence. We provide 6 years of developer financials, 9-factor risk assessment, 3 ROI models, and live EIBOR mortgage calculations ââ‚¬â€ none of which any listing portal offers."],
+  ["What makes this different from Bayut?", "Bayut has listings. DXB Analytics has intelligence. We provide 6 years of developer financials, 9-factor risk assessment, 3 ROI models, and live EIBOR mortgage calculations ï¿½ââ€š¬ââ‚¬ none of which any listing portal offers."],
   ["Can I cancel anytime?", "Yes. No contracts, no cancellation fees. Cancel from your account settings and keep access until your billing period ends."],
-  ["Do you support Arabic?", "Yes ââ‚¬â€ Arabic and 19 other languages including Urdu, Hindi, Chinese, Russian, and French. Switch instantly from the navigation bar."],
+  ["Do you support Arabic?", "Yes ï¿½ââ€š¬ââ‚¬ Arabic and 19 other languages including Urdu, Hindi, Chinese, Russian, and French. Switch instantly from the navigation bar."],
 ];
 
 export default function LandingPage({ onLoginClick, onSignUpClick }) {
@@ -309,7 +309,7 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
     <div style={{ background: "#04090F", color: "#E2E8F0", fontFamily: "'Outfit',sans-serif" }}>
       <style>{css}</style>
 
-      {/* Ã¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢Â STICKY CTA BAR Ã¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢Â */}
+      {/* Ã¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½Â STICKY CTA BAR Ã¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½Â */}
       <div className={`sticky-cta${showSticky ? " visible" : ""}`}>
         <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
           <DXBLogo size={24}/>
@@ -326,7 +326,7 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
         </div>
       </div>
 
-      {/* Ã¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢Â NAVBAR Ã¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢Â */}
+      {/* Ã¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½Â NAVBAR Ã¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½Â */}
       <nav className="lp-nav" style={{
         position: "fixed", top: 0, left: 0, right: 0, zIndex: 500,
         padding: "0 48px", height: 64,
@@ -354,7 +354,7 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
         </div>
       </nav>
 
-      {/* Ã¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢Â HERO Ã¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢Â */}
+      {/* Ã¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½Â HERO Ã¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½Â */}
       <section className="lp-section" style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "140px 48px 80px", position: "relative", overflow: "hidden", textAlign: "center" }}>
         {/* Background grid */}
         <div style={{ position: "absolute", inset: 0, backgroundImage: "linear-gradient(rgba(212,168,67,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(212,168,67,.025) 1px,transparent 1px)", backgroundSize: "80px 80px", pointerEvents: "none" }}/>
@@ -366,10 +366,10 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
           {/* Live badge */}
           <div className="au" style={{ animationDelay: "0s", display: "inline-flex", alignItems: "center", gap: 8, padding: "6px 18px", borderRadius: 24, background: "rgba(16,185,129,.07)", border: "1px solid rgba(16,185,129,.2)", marginBottom: 36 }}>
             <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#10B981", display: "inline-block", animation: "pulse 2s infinite" }}/>
-            <span style={{ fontSize: 10, fontWeight: 700, color: "#10B981", letterSpacing: 2 }}>LIVE ââ‚¬â€ DUBAI REAL ESTATE INTELLIGENCE</span>
+            <span style={{ fontSize: 10, fontWeight: 700, color: "#10B981", letterSpacing: 2 }}>LIVE ï¿½ââ€š¬ââ‚¬ DUBAI REAL ESTATE INTELLIGENCE</span>
           </div>
 
-          {/* Hero headline ââ‚¬â€ Superhuman model: quantified outcome */}
+          {/* Hero headline ï¿½ââ€š¬ââ‚¬ Superhuman model: quantified outcome */}
           <h1 className="au hero-h1" style={{ animationDelay: ".05s", fontFamily: "'Fraunces',serif", fontSize: 68, fontWeight: 900, lineHeight: 1.04, letterSpacing: "-2.5px", marginBottom: 26 }}>
             <span style={{ color: "#F1F5F9", display: "block" }}>Your next deal is already</span>
             <span className="gold-text" style={{ display: "block" }}>in the data.</span>
@@ -377,13 +377,13 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
 
           {/* Sub */}
           <p className="au" style={{ animationDelay: ".1s", fontSize: 19, color: "#94A3B8", lineHeight: 1.75, maxWidth: 620, margin: "0 auto 44px" }}>
-            Dubai's most complete real estate intelligence platform ââ‚¬â€ used by agents, investors, and brokerages who refuse to guess. 208 projects, 7 developers, live DLD data.
+            Dubai's most complete real estate intelligence platform ï¿½ââ€š¬ââ‚¬ used by agents, investors, and brokerages who refuse to guess. 208 projects, 7 developers, live DLD data.
           </p>
 
-          {/* Single primary CTA ââ‚¬â€ Stripe/Linear model */}
+          {/* Single primary CTA ï¿½ââ€š¬ââ‚¬ Stripe/Linear model */}
           <div className="au hero-btns" style={{ animationDelay: ".15s", display: "flex", gap: 14, justifyContent: "center", marginBottom: 20, flexWrap: "wrap" }}>
             <button onClick={onSignUpClick} className="cta" style={{ padding: "19px 52px", fontSize: 17, gap: 12 }}>
-              Start Free ââ‚¬â€ No Card Needed
+              Start Free ï¿½ââ€š¬ââ‚¬ No Card Needed
               <span style={{ display: "inline-flex" }}>{IC.arrow}</span>
             </button>
             <button onClick={onLoginClick} className="ghost" style={{ padding: "18px 32px", fontSize: 16 }}>
@@ -395,7 +395,7 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
             7-day Pro trial Â· Cancel anytime Â· {stats.users}+ professionals already inside
           </p>
 
-          {/* Trust logos ââ‚¬â€ immediately below CTA (proven best practice) */}
+          {/* Trust logos ï¿½ââ€š¬ââ‚¬ immediately below CTA (proven best practice) */}
           <div className="au" style={{ animationDelay: ".25s", marginTop: 56, paddingTop: 44, borderTop: "1px solid rgba(212,168,67,.08)" }}>
             <p style={{ fontSize: 10, color: "#334155", letterSpacing: 2.5, textTransform: "uppercase", marginBottom: 20 }}>Data Verified By</p>
             <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap" }}>
@@ -517,7 +517,7 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
                     </div>
                     <div style={{ background: "rgba(212,168,67,.04)", borderRadius: 8, border: "1px solid rgba(212,168,67,.12)", padding: "8px 10px" }}>
                       <div style={{ fontSize: 8, color: "#475569", lineHeight: 1.55 }}>
-                        <span style={{ color: "#D4A843", fontWeight: 700 }}>Ã¢Åâ€œÂ¦ AI: </span>
+                        <span style={{ color: "#D4A843", fontWeight: 700 }}>Ã¢ï¿½ââ‚¬œÂ¦ AI: </span>
                         Backlog AED 155B = 3-4yr revenue visibility. Strongest GCC coverage ratio.
                       </div>
                     </div>
@@ -554,7 +554,7 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
         </div>
       </section>
 
-      {/* Ã¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢Â TICKER Ã¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢Â */}
+      {/* Ã¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½Â TICKER Ã¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½Â */}
       <div style={{ borderTop: "1px solid rgba(212,168,67,.08)", borderBottom: "1px solid rgba(212,168,67,.08)", background: "#080F1C", padding: "13px 0", overflow: "hidden" }}>
         <div className="ticker-track">
           {[...Array(2)].map((_,ri) => (
@@ -570,14 +570,14 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
         </div>
       </div>
 
-      {/* Ã¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢Â ROLE-BASED VALUE PROP Ã¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢Â */}
+      {/* Ã¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½Â ROLE-BASED VALUE PROP Ã¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½Â */}
       <section className="lp-section" style={{ padding: "100px 48px", background: "linear-gradient(180deg,#04090F,#060F1E 30%,#060F1E 70%,#04090F)" }}>
         <div style={{ maxWidth: 1000, margin: "0 auto" }}>
           <div style={{ textAlign: "center", marginBottom: 48 }}>
             <SectionTag text="Built For You"/>
             <H2>Stop guessing.<br/>Start knowing.</H2>
             <p style={{ fontSize: 16, color: "#64748B", marginTop: 16, maxWidth: 500, margin: "16px auto 28px" }}>
-              Different professionals, same problem ââ‚¬â€ scattered, unverified data.
+              Different professionals, same problem ï¿½ââ€š¬ââ‚¬ scattered, unverified data.
             </p>
             <div style={{ display: "flex", gap: 8, justifyContent: "center", flexWrap: "wrap" }}>
               {Object.entries(ROLES).map(([k,v]) => (
@@ -624,13 +624,13 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
 
           <div style={{ textAlign: "center", marginTop: 44 }}>
             <button onClick={onSignUpClick} className="cta" style={{ padding: "16px 44px", fontSize: 15 }}>
-              Start Free ââ‚¬â€ No Card Needed
+              Start Free ï¿½ââ€š¬ââ‚¬ No Card Needed
             </button>
           </div>
         </div>
       </section>
 
-      {/* Ã¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢Â BENTO FEATURES Ã¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢Â */}
+      {/* Ã¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½Â BENTO FEATURES Ã¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½Â */}
       <section id="features" className="lp-section" style={{ padding: "100px 48px" }}>
         <div style={{ maxWidth: 1100, margin: "0 auto" }}>
           <div style={{ textAlign: "center", marginBottom: 60 }}>
@@ -641,13 +641,13 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
             </p>
           </div>
 
-          {/* Bento grid ââ‚¬â€ Apple/Linear style */}
+          {/* Bento grid ï¿½ââ€š¬ââ‚¬ Apple/Linear style */}
           <div className="bento-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 16 }}>
             {/* Large card spanning 2 cols */}
             <div className="bento" style={{ gridColumn: "span 2" }}>
-              <div style={{ fontSize: 10, fontWeight: 700, color: "#D4A843", letterSpacing: 2, textTransform: "uppercase", marginBottom: 16 }}>01 ââ‚¬â€ Developer Financials</div>
+              <div style={{ fontSize: 10, fontWeight: 700, color: "#D4A843", letterSpacing: 2, textTransform: "uppercase", marginBottom: 16 }}>01 ï¿½ââ€š¬ââ‚¬ Developer Financials</div>
               <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 24, fontWeight: 900, color: "#F1F5F9", marginBottom: 14, lineHeight: 1.2 }}>6 years of financial data, sourced directly from annual reports</h3>
-              <p style={{ fontSize: 13, color: "#64748B", lineHeight: 1.7, maxWidth: 480 }}>Revenue, net profit, EPS, revenue backlog, gross margin ââ‚¬â€ cross-referenced with DXBinteract and DLD for Emaar, DAMAC, Sobha, Nakheel, Meraas, Binghatti, and Aldar.</p>
+              <p style={{ fontSize: 13, color: "#64748B", lineHeight: 1.7, maxWidth: 480 }}>Revenue, net profit, EPS, revenue backlog, gross margin ï¿½ââ€š¬ââ‚¬ cross-referenced with DXBinteract and DLD for Emaar, DAMAC, Sobha, Nakheel, Meraas, Binghatti, and Aldar.</p>
               <div style={{ display: "flex", gap: 10, marginTop: 20, flexWrap: "wrap" }}>
                 {[["AED 80.4B","Emaar Sales 2025"],["AED 155B","Revenue Backlog"],["57.5%","Gross Margin"]].map(([v,l]) => (
                   <div key={l} style={{ padding: "8px 16px", background: "rgba(212,168,67,.06)", border: "1px solid rgba(212,168,67,.12)", borderRadius: 10 }}>
@@ -660,7 +660,7 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
 
             {/* Right tall card */}
             <div className="bento" style={{ background: "rgba(16,185,129,.04)", borderColor: "rgba(16,185,129,.15)" }}>
-              <div style={{ fontSize: 10, fontWeight: 700, color: "#10B981", letterSpacing: 2, textTransform: "uppercase", marginBottom: 16 }}>02 ââ‚¬â€ Risk Assessment</div>
+              <div style={{ fontSize: 10, fontWeight: 700, color: "#10B981", letterSpacing: 2, textTransform: "uppercase", marginBottom: 16 }}>02 ï¿½ââ€š¬ââ‚¬ Risk Assessment</div>
               <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 20, fontWeight: 900, color: "#F1F5F9", marginBottom: 14, lineHeight: 1.2 }}>9-Factor Risk Matrix</h3>
               <p style={{ fontSize: 12, color: "#64748B", lineHeight: 1.65 }}>Quantified score per project: market, regulatory, supply, liquidity, construction, handover, legal, developer health, demand.</p>
               <div style={{ marginTop: 20 }}>
@@ -678,7 +678,7 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
               </div>
             </div>
 
-            {/* Bottom row ââ‚¬â€ 3 equal cards */}
+            {/* Bottom row ï¿½ââ€š¬ââ‚¬ 3 equal cards */}
             {[
               { n: "03", title: "Project Intelligence", desc: "208+ projects with price/sqft, payment plan, construction %, and handover timeline.", accent: "#8B5CF6" },
               { n: "04", title: "Yield & ROI Calculator", desc: "Gross/net yields by community. Three ROI models: long-term, Airbnb, or flip.", accent: "#14B8A6" },
@@ -693,13 +693,13 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
 
             {/* Wide card */}
             <div className="bento" style={{ gridColumn: "span 2", background: "rgba(59,130,246,.03)", borderColor: "rgba(59,130,246,.15)" }}>
-              <div style={{ fontSize: 10, fontWeight: 700, color: "#3B82F6", letterSpacing: 2, textTransform: "uppercase", marginBottom: 14 }}>06 ââ‚¬â€ 3-Project Comparison</div>
+              <div style={{ fontSize: 10, fontWeight: 700, color: "#3B82F6", letterSpacing: 2, textTransform: "uppercase", marginBottom: 14 }}>06 ï¿½ââ€š¬ââ‚¬ 3-Project Comparison</div>
               <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 20, fontWeight: 900, color: "#F1F5F9", marginBottom: 14 }}>Side-by-side intelligence. Share via WhatsApp in one tap.</h3>
               <p style={{ fontSize: 13, color: "#64748B", lineHeight: 1.7, maxWidth: 480 }}>Compare any 3 projects on price, yield, risk score, handover, payment plan, and ROI. Built for agents who need to close on the spot.</p>
             </div>
 
             <div className="bento" style={{ background: "rgba(139,92,246,.04)", borderColor: "rgba(139,92,246,.15)" }}>
-              <div style={{ fontSize: 10, fontWeight: 700, color: "#8B5CF6", letterSpacing: 2, textTransform: "uppercase", marginBottom: 14 }}>07 ââ‚¬â€ Golden Visa</div>
+              <div style={{ fontSize: 10, fontWeight: 700, color: "#8B5CF6", letterSpacing: 2, textTransform: "uppercase", marginBottom: 14 }}>07 ï¿½ââ€š¬ââ‚¬ Golden Visa</div>
               <h3 style={{ fontSize: 16, fontWeight: 700, color: "#F1F5F9", marginBottom: 10 }}>Auto-flag AED 2M+ projects</h3>
               <p style={{ fontSize: 12, color: "#64748B", lineHeight: 1.65 }}>Instantly surface all projects eligible for UAE 10-year Golden Visa residency.</p>
             </div>
@@ -707,7 +707,7 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
         </div>
       </section>
 
-      {/* Ã¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢Â 23 TOOLS Ã¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢Â */}
+      {/* Ã¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½Â 23 TOOLS Ã¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½Â */}
       <section id="tools" className="lp-section" style={{ padding: "80px 48px", background: "linear-gradient(180deg,#04090F,#060F1E 20%,#060F1E 80%,#04090F)" }}>
         <div style={{ maxWidth: 1040, margin: "0 auto" }}>
           <div style={{ textAlign: "center", marginBottom: 52 }}>
@@ -734,7 +734,7 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
         </div>
       </section>
 
-      {/* Ã¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢Â COMPARISON TABLE Ã¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢Â */}
+      {/* Ã¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½Â COMPARISON TABLE Ã¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½Â */}
       <section className="lp-section" style={{ padding: "80px 48px" }}>
         <div style={{ maxWidth: 900, margin: "0 auto" }}>
           <div style={{ textAlign: "center", marginBottom: 52 }}>
@@ -772,7 +772,7 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
                     <td style={{ padding: "12px 22px", fontSize: 13, color: "#64748B" }}>{f}</td>
                     {v.map((val,j) => (
                       <td key={j} style={{ padding: "12px 22px", textAlign: "center", fontSize: 13, background: j===2?"rgba(212,168,67,.02)":"transparent", borderLeft: "1px solid rgba(212,168,67,.05)", color: j===2?(val==="No"?"#334155":"#D4A843"):(val==="Yes"?"#10B981":val==="No"?"#1E293B":"#94A3B8"), fontWeight: j===2?600:400 }}>
-                        {val==="Yes"?<span style={{ color: j===2?"#D4A843":"#10B981", fontWeight: 700 }}>Ã¢Åâ€œââ‚¬Å“</span>:val==="No"?<span style={{ color: "#1E293B" }}>ââ‚¬â€</span>:val}
+                        {val==="Yes"?<span style={{ color: j===2?"#D4A843":"#10B981", fontWeight: 700 }}>Ã¢ï¿½ââ‚¬œï¿½ââ€š¬Åâ€œ</span>:val==="No"?<span style={{ color: "#1E293B" }}>ï¿½ââ€š¬ââ‚¬</span>:val}
                       </td>
                     ))}
                   </tr>
@@ -783,7 +783,7 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
         </div>
       </section>
 
-      {/* Ã¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢Â PRICING Ã¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢Â */}
+      {/* Ã¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½Â PRICING Ã¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½Â */}
       <section id="pricing" className="lp-section" style={{ padding: "100px 48px", background: "linear-gradient(180deg,#04090F,#060F1E 20%,#060F1E 80%,#04090F)" }}>
         <div style={{ maxWidth: 1080, margin: "0 auto" }}>
           <div style={{ textAlign: "center", marginBottom: 52 }}>
@@ -836,8 +836,8 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
                 <span className="gold-text" style={{ fontFamily: "'Fraunces',serif", fontSize: 56, fontWeight: 900, lineHeight: 1 }}>{proPrice}</span>
                 <span style={{ fontSize: 12, color: "#334155" }}>/month</span>
               </div>
-              {annual && <p style={{ fontSize: 11, color: "#10B981", marginBottom: 28 }}>Billed AED {proPrice*12}/year ââ‚¬â€ save AED {(99-proPrice)*12}</p>}
-              {["All 208+ projects ââ‚¬â€ full intelligence","Developer financials 6 years","Rental yields & 3 ROI models","Risk assessment (9 factors)","3-project comparison tool","Mortgage & flip calculators","Portfolio tracker + price alerts","WhatsApp share ââ‚¬â€ any project","All 23 dashboard tools","Arabic + 19 languages","Priority support"].map((f,i) => (
+              {annual && <p style={{ fontSize: 11, color: "#10B981", marginBottom: 28 }}>Billed AED {proPrice*12}/year ï¿½ââ€š¬ââ‚¬ save AED {(99-proPrice)*12}</p>}
+              {["All 208+ projects ï¿½ââ€š¬ââ‚¬ full intelligence","Developer financials 6 years","Rental yields & 3 ROI models","Risk assessment (9 factors)","3-project comparison tool","Mortgage & flip calculators","Portfolio tracker + price alerts","WhatsApp share ï¿½ââ€š¬ââ‚¬ any project","All 23 dashboard tools","Arabic + 19 languages","Priority support"].map((f,i) => (
                 <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "5px 0", fontSize: 13, color: "#94A3B8" }}>
                   <span style={{ flexShrink: 0 }}>{IC.check}</span>{f}
                 </div>
@@ -888,7 +888,7 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
         </div>
       </section>
 
-      {/* Ã¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢Â TESTIMONIALS Ã¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢Â */}
+      {/* Ã¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½Â TESTIMONIALS Ã¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½Â */}
       <section className="lp-section" style={{ padding: "100px 48px" }}>
         <div style={{ maxWidth: 1100, margin: "0 auto" }}>
           <div style={{ textAlign: "center", marginBottom: 56 }}>
@@ -897,9 +897,9 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
           </div>
           <div className="three-col" style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 20 }}>
             {[
-              { q:"My clients used to ask about yields and I had to go away and research. Now I pull up DXB Analytics in the meeting ââ‚¬â€ gross yield, net yield, risk score, 5-year ROI on the spot. It completely changed how I close deals.", name:"Ahmed Al Rashidi",role:"Senior Consultant Â· Emaar Specialist",co:"JVC & Dubai Hills",init:"AA",c:"#D4A843",stat:"3 extra deals last quarter" },
-              { q:"As a UK-based investor making AED 3M decisions, I needed verified data. The EIBOR mortgage calculator alone saved me from a bad purchase ââ‚¬â€ exact monthly payment vs rental income before committing.", name:"James Whitfield",role:"Property Investor",co:"London to Dubai Â· AED 4M portfolio",init:"JW",c:"#14B8A6",stat:"Avoided a costly mistake" },
-              { q:"I manage 12 agents. We standardized on DXB Analytics. The comparison tool is a game changer ââ‚¬â€ agents send full project breakdowns via WhatsApp in one tap. Research time went from 3 hours to 20 minutes.", name:"Fatima Al Zaabi",role:"Brokerage Manager",co:"Team of 12 Â· Marina & Downtown",init:"FA",c:"#8B5CF6",stat:"80% faster research" },
+              { q:"My clients used to ask about yields and I had to go away and research. Now I pull up DXB Analytics in the meeting ï¿½ââ€š¬ââ‚¬ gross yield, net yield, risk score, 5-year ROI on the spot. It completely changed how I close deals.", name:"Ahmed Al Rashidi",role:"Senior Consultant Â· Emaar Specialist",co:"JVC & Dubai Hills",init:"AA",c:"#D4A843",stat:"3 extra deals last quarter" },
+              { q:"As a UK-based investor making AED 3M decisions, I needed verified data. The EIBOR mortgage calculator alone saved me from a bad purchase ï¿½ââ€š¬ââ‚¬ exact monthly payment vs rental income before committing.", name:"James Whitfield",role:"Property Investor",co:"London to Dubai Â· AED 4M portfolio",init:"JW",c:"#14B8A6",stat:"Avoided a costly mistake" },
+              { q:"I manage 12 agents. We standardized on DXB Analytics. The comparison tool is a game changer ï¿½ââ€š¬ââ‚¬ agents send full project breakdowns via WhatsApp in one tap. Research time went from 3 hours to 20 minutes.", name:"Fatima Al Zaabi",role:"Brokerage Manager",co:"Team of 12 Â· Marina & Downtown",init:"FA",c:"#8B5CF6",stat:"80% faster research" },
             ].map((t,i) => (
               <div key={i} className="bento" style={{ display: "flex", flexDirection: "column", gap: 16 }}>
                 <div style={{ display: "flex", gap: 3 }}>{[...Array(5)].map((_,j) => <span key={j} style={{ display: "inline-flex" }}>{IC.star}</span>)}</div>
@@ -919,7 +919,7 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
         </div>
       </section>
 
-      {/* Ã¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢Â ROADMAP Ã¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢Â */}
+      {/* Ã¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½Â ROADMAP Ã¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½Â */}
       <section className="lp-section" style={{ padding: "80px 48px", background: "linear-gradient(180deg,#04090F,#060F1E 20%,#060F1E 80%,#04090F)" }}>
         <div style={{ maxWidth: 940, margin: "0 auto" }}>
           <div style={{ textAlign: "center", marginBottom: 52 }}>
@@ -928,9 +928,9 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
           </div>
           <div className="three-col" style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 20 }}>
             {[
-              { phase:"Phase 1",status:"LIVE NOW",c:"#10B981",title:"Dubai ââ‚¬â€ 7 Developers",desc:"208 Emaar + DAMAC, Sobha, Nakheel, Meraas, Binghatti, Aldar ââ‚¬â€ full financials, yields, risk, ROI.",bg:"rgba(16,185,129,.04)" },
-              { phase:"Phase 2",status:"Q3 2026",c:"#D4A843",title:"Dubai ââ‚¬â€ Top 10 Developers",desc:"Azizi, Tiger, Danube, Reportage + more ââ‚¬â€ same intelligence depth, same verified quality.",bg:"rgba(212,168,67,.04)" },
-              { phase:"Phase 3",status:"2027",c:"#3B82F6",title:"Full GCC Coverage",desc:"All 228+ Dubai developers, Abu Dhabi, Saudi Arabia ââ‚¬â€ every transaction, live DLD feeds.",bg:"rgba(59,130,246,.04)" },
+              { phase:"Phase 1",status:"LIVE NOW",c:"#10B981",title:"Dubai ï¿½ââ€š¬ââ‚¬ 7 Developers",desc:"208 Emaar + DAMAC, Sobha, Nakheel, Meraas, Binghatti, Aldar ï¿½ââ€š¬ââ‚¬ full financials, yields, risk, ROI.",bg:"rgba(16,185,129,.04)" },
+              { phase:"Phase 2",status:"Q3 2026",c:"#D4A843",title:"Dubai ï¿½ââ€š¬ââ‚¬ Top 10 Developers",desc:"Azizi, Tiger, Danube, Reportage + more ï¿½ââ€š¬ââ‚¬ same intelligence depth, same verified quality.",bg:"rgba(212,168,67,.04)" },
+              { phase:"Phase 3",status:"2027",c:"#3B82F6",title:"Full GCC Coverage",desc:"All 228+ Dubai developers, Abu Dhabi, Saudi Arabia ï¿½ââ€š¬ââ‚¬ every transaction, live DLD feeds.",bg:"rgba(59,130,246,.04)" },
             ].map((item,i) => (
               <div key={i} style={{ background: item.bg, borderRadius: 18, padding: 30, border: "1px solid rgba(212,168,67,.07)" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 18 }}>
@@ -945,7 +945,7 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
         </div>
       </section>
 
-      {/* Ã¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢Â FAQ Ã¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢Â */}
+      {/* Ã¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½Â FAQ Ã¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½Â */}
       <section id="faq" className="lp-section" style={{ padding: "100px 48px" }}>
         <div style={{ maxWidth: 720, margin: "0 auto" }}>
           <div style={{ textAlign: "center", marginBottom: 52 }}>
@@ -968,7 +968,7 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
         </div>
       </section>
 
-      {/* Ã¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢Â FINAL CTA Ã¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢Â */}
+      {/* Ã¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½Â FINAL CTA Ã¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½Â */}
       <section className="lp-section" style={{ padding: "120px 48px", textAlign: "center", position: "relative", overflow: "hidden" }}>
         <div style={{ position: "absolute", top: "-15%", left: "50%", transform: "translateX(-50%)", width: 1000, height: 800, borderRadius: "50%", background: "radial-gradient(ellipse,rgba(212,168,67,.08) 0%,transparent 60%)", pointerEvents: "none" }}/>
         <div style={{ position: "absolute", inset: 0, backgroundImage: "linear-gradient(rgba(212,168,67,.02) 1px,transparent 1px),linear-gradient(90deg,rgba(212,168,67,.02) 1px,transparent 1px)", backgroundSize: "80px 80px", pointerEvents: "none" }}/>
@@ -998,7 +998,7 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
         </div>
       </section>
 
-      {/* Ã¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢Â FOOTER Ã¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢ÂÃ¢ââ‚¬¢Â */}
+      {/* Ã¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½Â FOOTER Ã¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½ÂÃ¢ï¿½ââ€š¬ï¿½Â */}
       <footer style={{ padding: "40px 48px", borderTop: "1px solid rgba(212,168,67,.08)", background: "#080F1C" }}>
         <div style={{ maxWidth: 1100, margin: "0 auto" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 20, marginBottom: 24 }}>
@@ -1014,7 +1014,7 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
           </div>
           <div style={{ borderTop: "1px solid rgba(212,168,67,.06)", paddingTop: 18, textAlign: "center" }}>
             <p style={{ fontSize: 11, color: "#334155", lineHeight: 1.7 }}>
-              Â© 2026 DXB Analytics Â· Dubai, UAE Â· For informational purposes only ââ‚¬â€ not financial or investment advice<br/>
+              Â© 2026 DXB Analytics Â· Dubai, UAE Â· For informational purposes only ï¿½ââ€š¬ââ‚¬ not financial or investment advice<br/>
               Data sourced from DLD, developer IR reports, Knight Frank, ValuStrat, UAE Central Bank
             </p>
           </div>

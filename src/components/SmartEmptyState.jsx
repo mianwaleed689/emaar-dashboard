@@ -1,6 +1,6 @@
 /* eslint-disable */
 /**
- * DXB Analytics — SmartEmptyState
+ * DXB Analytics �€” SmartEmptyState
  * ==================================
  *
  * A smart "no results" component that understands WHY the data is empty
@@ -8,17 +8,17 @@
  *
  * Four scenarios handled:
  *
- *   1. LOADING — data is still being fetched
+ *   1. LOADING �€” data is still being fetched
  *        Shows: loading spinner
  *
- *   2. ERROR — data fetch failed
+ *   2. ERROR �€” data fetch failed
  *        Shows: error message + Retry button
  *
- *   3. NO_DATA_YET — no filters active, but underlying dataset is empty
- *        Shows: "Market data for this view is still being compiled —
+ *   3. NO_DATA_YET �€” no filters active, but underlying dataset is empty
+ *        Shows: "Market data for this view is still being compiled �€”
  *                check back soon" + optional "Request this data" action
  *
- *   4. FILTER_MISMATCH — filters active, no matches
+ *   4. FILTER_MISMATCH �€” filters active, no matches
  *        Shows: active filter chips + suggestions to remove one filter
  *                at a time + "Clear all filters" escape
  *
@@ -37,9 +37,9 @@
  *   />
  *
  * If state="auto" (default), the component infers the state from props:
- *   - If rowsAll is null/undefined → loading
- *   - If rowsAll is [] and no filters active → no_data_yet
- *   - If rowsAll has items but filter combo returns 0 → filter_mismatch
+ *   - If rowsAll is null/undefined �’ loading
+ *   - If rowsAll is [] and no filters active �’ no_data_yet
+ *   - If rowsAll has items but filter combo returns 0 �’ filter_mismatch
  */
 
 import React, { useMemo } from "react";
@@ -104,7 +104,7 @@ export default function SmartEmptyState({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters, allDevelopers, schema]);
 
-  // ─── Infer state if auto ─────────────────────────────────────────────
+  // �”€�”€�”€ Infer state if auto �”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€
   let resolvedState = state;
   if (state === "auto") {
     if (rowsAll === null || rowsAll === undefined) {
@@ -118,7 +118,7 @@ export default function SmartEmptyState({
     }
   }
 
-  // ─── Shared card wrapper ─────────────────────────────────────────────
+  // �”€�”€�”€ Shared card wrapper �”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€
   const cardStyle = {
     padding: "32px 24px",
     background: "rgba(212,168,67,0.03)",
@@ -128,7 +128,7 @@ export default function SmartEmptyState({
     textAlign: "center",
   };
 
-  // ─── STATE: loading ──────────────────────────────────────────────────
+  // �”€�”€�”€ STATE: loading �”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€
   if (resolvedState === "loading") {
     return (
       <div style={cardStyle}>
@@ -140,7 +140,7 @@ export default function SmartEmptyState({
         }} />
         <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
         <div style={{ fontSize: 14, fontWeight: 600, color: colors.white, marginBottom: 4 }}>
-          Loading {entityLabel}…
+          Loading {entityLabel}�€�
         </div>
         <div style={{ fontSize: 12, color: colors.textMuted }}>
           Fetching latest data from Firestore
@@ -149,7 +149,7 @@ export default function SmartEmptyState({
     );
   }
 
-  // ─── STATE: error ────────────────────────────────────────────────────
+  // �”€�”€�”€ STATE: error �”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€
   if (resolvedState === "error") {
     return (
       <div style={cardStyle}>
@@ -180,17 +180,17 @@ export default function SmartEmptyState({
     );
   }
 
-  // ─── STATE: no_data_yet (no filters, dataset is empty) ───────────────
+  // �”€�”€�”€ STATE: no_data_yet (no filters, dataset is empty) �”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€
   if (resolvedState === "no_data_yet") {
     return (
       <div style={cardStyle}>
-        <div style={{ fontSize: 36, marginBottom: 10 }}>📊</div>
+        <div style={{ fontSize: 36, marginBottom: 10 }}>�“�</div>
         <div style={{ fontSize: 15, fontWeight: 700, color: colors.white, marginBottom: 6 }}>
           Market data for this view is being compiled
         </div>
         <div style={{ fontSize: 12, color: colors.textSecondary, maxWidth: 480, margin: "0 auto 8px" }}>
           We're actively adding {entityLabel} data from DLD, Bayut, Knight Frank, and developer reports.
-          Check back in a few days — you can also set up an alert.
+          Check back in a few days �€” you can also set up an alert.
         </div>
         <div style={{ fontSize: 11, color: colors.textMuted, marginTop: 12 }}>
           Covered communities grow weekly as we parse new data sources.
@@ -199,7 +199,7 @@ export default function SmartEmptyState({
     );
   }
 
-  // ─── STATE: filter_mismatch (active filters + zero matches) ──────────
+  // �”€�”€�”€ STATE: filter_mismatch (active filters + zero matches) �”€�”€�”€�”€�”€�”€�”€�”€�”€�”€
   // Compute suggestions: for each active filter, how many rows match WITHOUT it
   const suggestions = (!matchFn || activeFilters.length === 0 || !rowsAll || rowsAll.length === 0)
     ? []
@@ -222,7 +222,7 @@ export default function SmartEmptyState({
     <div style={{ ...cardStyle, textAlign: "left", padding: "28px 24px" }}>
       {/* Header */}
       <div style={{ textAlign: "center", marginBottom: 20 }}>
-        <div style={{ fontSize: 32, marginBottom: 8 }}>🔍</div>
+        <div style={{ fontSize: 32, marginBottom: 8 }}>�”�</div>
         <div style={{ fontSize: 16, fontWeight: 700, color: colors.white, marginBottom: 6 }}>
           No {entityLabel} match your current filters
         </div>
@@ -263,7 +263,7 @@ export default function SmartEmptyState({
                 onMouseOver={e => { e.currentTarget.style.borderColor = colors.gold; e.currentTarget.style.background = "rgba(212,168,67,0.05)"; }}
                 onMouseOut={e => { e.currentTarget.style.borderColor = colors.border; e.currentTarget.style.background = colors.surfaceAlt; }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                  <span style={{ color: colors.textMuted, fontSize: 14 }}>×</span>
+                  <span style={{ color: colors.textMuted, fontSize: 14 }}>�—</span>
                   <span style={{ fontSize: 13, fontWeight: 600 }}>Remove {s.label}</span>
                 </div>
                 <span style={{

@@ -118,7 +118,7 @@ export default function OverviewSection({ currentUserId }) {
                 borderRadius: 6,
               }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                  <span style={{ color, fontSize: 14 }}>{h.severity === "ok" ? "✓" : h.severity === "warn" ? "⚠" : "✕"}</span>
+                  <span style={{ color, fontSize: 14 }}>{h.severity === "ok" ? "�“" : h.severity === "warn" ? "⚠" : "�•"}</span>
                   <span style={{ fontSize: 12, color: C.w }}>{h.label}</span>
                 </div>
                 <span style={{ fontSize: 13, color, fontWeight: 700 }}>{h.count}</span>
@@ -130,7 +130,7 @@ export default function OverviewSection({ currentUserId }) {
 
       {devs.length === 0 && (
         <div style={{ ...cardStyle, marginTop: 16, textAlign: "center", padding: 40 }}>
-          <div style={{ fontSize: 32, marginBottom: 12 }}>◉</div>
+          <div style={{ fontSize: 32, marginBottom: 12 }}>�—�</div>
           <div style={{ fontSize: 14, color: C.w, marginBottom: 4, fontWeight: 600 }}>No developments yet</div>
           <div style={{ fontSize: 12, color: C.t2 }}>
             Go to the <strong style={{ color: C.teal }}>Developments</strong> tab to add your first one

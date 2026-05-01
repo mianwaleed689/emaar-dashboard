@@ -1,5 +1,5 @@
 /* eslint-disable */
-/* MARKETING TAB ‚Äî AI marketing copy generator + listing templates */
+/* MARKETING TAB ‚‚Ç¨‚Äù AI marketing copy generator + listing templates */
 
 import React from "react";
 import { T } from "../data";
@@ -22,51 +22,51 @@ function MarketingTab({ liveNeighbourhoods=[],
 }) {
 
 
-            /* ‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê
-               MARKETING INTELLIGENCE ‚Äî Research Sources (Apr 2026)
+            /* ‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê
+               MARKETING INTELLIGENCE ‚‚Ç¨‚Äù Research Sources (Apr 2026)
 
                CPL BENCHMARKS (theprimeads.com + Dubai-specific research):
-                 Google Search Ads: AED 450‚Äì900 per lead (high intent)
-                 Meta (Facebook/Instagram): AED 30‚Äì300 per lead
-                 Property Portal (Bayut/PF): AED 50‚Äì200 per lead
-                 TikTok: AED 20‚Äì150 per lead (growing fast)
-                 LinkedIn: AED 200‚Äì800 per lead (B2B, HNW)
-                 Cold calling: AED 5‚Äì15 (time cost)
-                 Off-plan specific: AED 30‚Äì120 per qualified lead
-                 WhatsApp broadcast: AED 1‚Äì10 per message
+                 Google Search Ads: AED 450‚‚Ç¨‚Äú900 per lead (high intent)
+                 Meta (Facebook/Instagram): AED 30‚‚Ç¨‚Äú300 per lead
+                 Property Portal (Bayut/PF): AED 50‚‚Ç¨‚Äú200 per lead
+                 TikTok: AED 20‚‚Ç¨‚Äú150 per lead (growing fast)
+                 LinkedIn: AED 200‚‚Ç¨‚Äú800 per lead (B2B, HNW)
+                 Cold calling: AED 5‚‚Ç¨‚Äú15 (time cost)
+                 Off-plan specific: AED 30‚‚Ç¨‚Äú120 per qualified lead
+                 WhatsApp broadcast: AED 1‚‚Ç¨‚Äú10 per message
 
                PORTAL COMPARISON (brightsanddesigns.com Nov 2025):
-                 Property Finder: AED 60K spend ‚Üí 120 leads/mo, 5% conversion
+                 Property Finder: AED 60K spend ‚Ü‚Äô 120 leads/mo, 5% conversion
                    = 6 sales. Best for luxury/premium.
-                 Bayut: AED 45K spend ‚Üí 180 leads/mo, 2% conversion
+                 Bayut: AED 45K spend ‚Ü‚Äô 180 leads/mo, 2% conversion
                    = 3-4 sales. Best for mid-market volume.
                  Dubizzle: Budget segment, rentals, lower CPL
 
                BUYER NATIONALITY DATA (DLD 2025, keltandcorealty.com):
-                 1. India ‚Äî 22% of foreign buyers (4th consecutive year #1)
+                 1. India ‚‚Ç¨‚Äù 22% of foreign buyers (4th consecutive year #1)
                     Platform: Meta (Facebook/Instagram), WhatsApp, Google
-                    Budget: AED 500K‚Äì3M, strong off-plan demand
-                 2. UK ‚Äî 17% of foreign buyers (12% of all transactions 2024)
+                    Budget: AED 500K‚‚Ç¨‚Äú3M, strong off-plan demand
+                 2. UK ‚‚Ç¨‚Äù 17% of foreign buyers (12% of all transactions 2024)
                     Platform: Property Finder, Google, Instagram
-                    Budget: AED 1.5M‚Äì5M+, ready premium preferred
-                 3. Russia ‚Äî 9% of transactions
+                    Budget: AED 1.5M‚‚Ç¨‚Äú5M+, ready premium preferred
+                 3. Russia ‚‚Ç¨‚Äù 9% of transactions
                     Platform: Instagram, Telegram, targeted in-person
-                    Budget: AED 2M‚Äì15M, luxury focus
-                 4. China ‚Äî 13-14% of transactions (AED 2B invested 2024)
+                    Budget: AED 2M‚‚Ç¨‚Äú15M, luxury focus
+                 4. China ‚‚Ç¨‚Äù 13-14% of transactions (AED 2B invested 2024)
                     Platform: Douyin (TikTok), WeChat, Weibo
-                    Budget: AED 1.5M‚Äì5M+, Business Bay/Creek Harbour
-                 5. France ‚Äî 7% of transactions
+                    Budget: AED 1.5M‚‚Ç¨‚Äú5M+, Business Bay/Creek Harbour
+                 5. France ‚‚Ç¨‚Äù 7% of transactions
                     Platform: Meta, LinkedIn, francophones
-                    Budget: AED 1.5M‚Äì3M, branded residences
-                 6. Italy ‚Äî Top 3 European buyer
+                    Budget: AED 1.5M‚‚Ç¨‚Äú3M, branded residences
+                 6. Italy ‚‚Ç¨‚Äù Top 3 European buyer
                     Platform: Meta, Instagram, luxury focus
-                 7. Pakistan ‚Äî AED 11B total ownership in Dubai
+                 7. Pakistan ‚‚Ç¨‚Äù AED 11B total ownership in Dubai
                     Platform: WhatsApp, Facebook, off-plan focus
-                 8. Saudi Arabia ‚Äî Holiday homes, Palm/Emaar Beachfront
+                 8. Saudi Arabia ‚‚Ç¨‚Äù Holiday homes, Palm/Emaar Beachfront
                     Platform: Snapchat, Meta, Arabic targeting
-                 9. Egypt ‚Äî Fast growing
+                 9. Egypt ‚‚Ç¨‚Äù Fast growing
                     Platform: Facebook, TikTok Arabic
-                10. Germany/Austria ‚Äî Growing segment, ESG-focused
+                10. Germany/Austria ‚‚Ç¨‚Äù Growing segment, ESG-focused
                     Platform: Google, LinkedIn
 
                COMMISSION RATES (Dubai standard):
@@ -86,9 +86,9 @@ function MarketingTab({ liveNeighbourhoods=[],
                RERA COMPLIANCE: Trakheesi permit required for all listings
                Sources: theprimeads.com, brightsanddesigns.com Nov 2025,
                DLD 2025 nationality data, campaignme.com, keltandcorealty.com
-            ‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê */
+            ‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê */
 
-            /* ‚îÄ‚îÄ Channel data ‚îÄ‚îÄ */
+            /* ‚‚Äù‚Ç¨‚‚Äù‚Ç¨ Channel data ‚‚Äù‚Ç¨‚‚Äù‚Ç¨ */
             const CHANNELS = [
               {
                 name:"Google Search Ads", icon:"G",
@@ -99,7 +99,7 @@ function MarketingTab({ liveNeighbourhoods=[],
                 offPlan:false, luxury:true, midMarket:true, affordable:false,
                 setup:"AED 5,000+ per campaign",
                 monthlyMin:5000,
-                tip:"Target keywords like 'buy apartment Dubai Marina' ‚Äî CPC AED 8-25. Add negative keywords weekly. Separate campaigns by community.",
+                tip:"Target keywords like 'buy apartment Dubai Marina' ‚‚Ç¨‚Äù CPC AED 8-25. Add negative keywords weekly. Separate campaigns by community.",
                 platforms:["Google Search","Google Display","YouTube"],
               },
               {
@@ -111,7 +111,7 @@ function MarketingTab({ liveNeighbourhoods=[],
                 offPlan:true, luxury:false, midMarket:true, affordable:true,
                 setup:"AED 3,000+ per month minimum",
                 monthlyMin:3000,
-                tip:"Use Lead Ads (native forms) for off-plan. Carousel format for multi-unit projects. Retarget website visitors ‚Äî 3-5x better ROAS.",
+                tip:"Use Lead Ads (native forms) for off-plan. Carousel format for multi-unit projects. Retarget website visitors ‚‚Ç¨‚Äù 3-5x better ROAS.",
                 platforms:["Facebook","Instagram","WhatsApp","Messenger"],
               },
               {
@@ -169,7 +169,7 @@ function MarketingTab({ liveNeighbourhoods=[],
                 convRate:8.0, leadQuality:85,
                 bestFor:"Existing database, referrals, payment plan follow-up",
                 offPlan:true, luxury:false, midMarket:true, affordable:true,
-                setup:"WhatsApp Business API ‚Äî AED 500-2,000 setup",
+                setup:"WhatsApp Business API ‚‚Ç¨‚Äù AED 500-2,000 setup",
                 monthlyMin:500,
                 tip:"Highest conversion rate of any channel. Response time under 5 minutes = 100x more likely to convert. Use templates for off-plan launches. Arabic + English.",
                 platforms:["WhatsApp Business","WhatsApp API"],
@@ -188,11 +188,11 @@ function MarketingTab({ liveNeighbourhoods=[],
               },
             ];
 
-            /* ‚îÄ‚îÄ Nationality targeting data ‚îÄ‚îÄ */
+            /* ‚‚Äù‚Ç¨‚‚Äù‚Ç¨ Nationality targeting data ‚‚Äù‚Ç¨‚‚Äù‚Ç¨ */
             const NATIONALITIES = [
               {
                 flag:"\uD83C\uDDEE\uD83C\uDDF3", name:"Indian", share:"22%", rank:1,
-                budget:"AED 500K‚Äì3M", type:"Off-plan + Mid-market",
+                budget:"AED 500K‚‚Ç¨‚Äú3M", type:"Off-plan + Mid-market",
                 platforms:["Meta (Facebook/Instagram)","WhatsApp","Google"],
                 communities:["JVC","Dubai South","International City","Business Bay"],
                 language:"English + Hindi",
@@ -201,7 +201,7 @@ function MarketingTab({ liveNeighbourhoods=[],
               },
               {
                 flag:"\uD83C\uDDEC\uD83C\uDDE7", name:"British", share:"17%", rank:2,
-                budget:"AED 1.5M‚Äì5M+", type:"Ready premium",
+                budget:"AED 1.5M‚‚Ç¨‚Äú5M+", type:"Ready premium",
                 platforms:["Property Finder","Google","Instagram"],
                 communities:["Dubai Marina","Downtown","Palm Jumeirah","Dubai Hills"],
                 language:"English",
@@ -210,7 +210,7 @@ function MarketingTab({ liveNeighbourhoods=[],
               },
               {
                 flag:"\uD83C\uDDF7\uD83C\uDDFA", name:"Russian", share:"9%", rank:3,
-                budget:"AED 2M‚Äì15M+", type:"Luxury/Ultra-luxury",
+                budget:"AED 2M‚‚Ç¨‚Äú15M+", type:"Luxury/Ultra-luxury",
                 platforms:["Instagram","Telegram","In-person events"],
                 communities:["Palm Jumeirah","Emirates Hills","Downtown","Business Bay"],
                 language:"Russian",
@@ -219,16 +219,16 @@ function MarketingTab({ liveNeighbourhoods=[],
               },
               {
                 flag:"\uD83C\uDDE8\uD83C\uDDF3", name:"Chinese", share:"13-14%", rank:4,
-                budget:"AED 1.5M‚Äì5M+", type:"Luxury + Business Bay",
+                budget:"AED 1.5M‚‚Ç¨‚Äú5M+", type:"Luxury + Business Bay",
                 platforms:["Douyin (TikTok China)","WeChat","Weibo"],
                 communities:["Business Bay","Dubai Creek Harbour","Downtown","JVC"],
                 language:"Mandarin",
-                tip:"80% of China's top 200 developers on Douyin. WeChat property groups extremely active. AED 2B invested in 2024. Mandarin-speaking agent is essential ‚Äî not optional.",
+                tip:"80% of China's top 200 developers on Douyin. WeChat property groups extremely active. AED 2B invested in 2024. Mandarin-speaking agent is essential ‚‚Ç¨‚Äù not optional.",
                 color:"#E53935",
               },
               {
                 flag:"\uD83C\uDDEB\uD83C\uDDF7", name:"French", share:"7%", rank:5,
-                budget:"AED 1.5M‚Äì3M", type:"Branded residences",
+                budget:"AED 1.5M‚‚Ç¨‚Äú3M", type:"Branded residences",
                 platforms:["Meta","LinkedIn","SmartLeads CRM"],
                 communities:["Downtown","Dubai Marina","Bluewaters","City Walk"],
                 language:"French",
@@ -237,25 +237,25 @@ function MarketingTab({ liveNeighbourhoods=[],
               },
               {
                 flag:"\uD83C\uDDF5\uD83C\uDDF0", name:"Pakistani", share:"8%", rank:6,
-                budget:"AED 300K‚Äì2M", type:"Off-plan + Affordable",
+                budget:"AED 300K‚‚Ç¨‚Äú2M", type:"Off-plan + Affordable",
                 platforms:["WhatsApp","Facebook","Off-plan events"],
                 communities:["International City","JVC","Dubai South","Al Furjan"],
                 language:"Urdu + English",
-                tip:"AED 11B total ownership in Dubai. Strong community networks on WhatsApp. Off-plan at AED 500K‚Äì1.5M is sweet spot. Sharjah spillover to Dubai common.",
+                tip:"AED 11B total ownership in Dubai. Strong community networks on WhatsApp. Off-plan at AED 500K‚‚Ç¨‚Äú1.5M is sweet spot. Sharjah spillover to Dubai common.",
                 color:"#1B5E20",
               },
               {
                 flag:"\uD83C\uDDF8\uD83C\uDDE6", name:"Saudi", share:"5%", rank:7,
-                budget:"AED 3M‚Äì20M+", type:"Holiday homes + Villas",
+                budget:"AED 3M‚‚Ç¨‚Äú20M+", type:"Holiday homes + Villas",
                 platforms:["Snapchat","Meta","Arabic Google"],
                 communities:["Palm Jumeirah","Emaar Beachfront","Dubai Hills","JBR"],
                 language:"Arabic",
-                tip:"Holiday home and villa dominant. Snapchat #1 for Saudi audience. Privacy key ‚Äî gated communities preferred. Weekend visits from KSA = high conversion for ready homes.",
+                tip:"Holiday home and villa dominant. Snapchat #1 for Saudi audience. Privacy key ‚‚Ç¨‚Äù gated communities preferred. Weekend visits from KSA = high conversion for ready homes.",
                 color:"#1B5E20",
               },
               {
                 flag:"\uD83C\uDDEA\uD83C\uDDEC", name:"Egyptian", share:"4%", rank:8,
-                budget:"AED 500K‚Äì2M", type:"Mid-market + Off-plan",
+                budget:"AED 500K‚‚Ç¨‚Äú2M", type:"Mid-market + Off-plan",
                 platforms:["Facebook","TikTok Arabic","WhatsApp"],
                 communities:["JVC","Business Bay","Dubai South","Silicon Oasis"],
                 language:"Arabic + English",
@@ -266,7 +266,7 @@ function MarketingTab({ liveNeighbourhoods=[],
 
             const selNat = NATIONALITIES.find(n => n.name === mktNationality) || NATIONALITIES[0];
 
-            /* ‚îÄ‚îÄ ROI Calculator ‚îÄ‚îÄ */
+            /* ‚‚Äù‚Ç¨‚‚Äù‚Ç¨ ROI Calculator ‚‚Äù‚Ç¨‚‚Äù‚Ç¨ */
             const budgetPerChannel = mktBudget;
             const bestChannel = CHANNELS.reduce((a,b) => a.cplAvg < b.cplAvg ? a : b);
             const calcROI = (ch) => {
@@ -277,7 +277,7 @@ function MarketingTab({ liveNeighbourhoods=[],
               return { leads, deals, commission, roi: roi.toFixed(0) };
             };
 
-            /* ‚îÄ‚îÄ AI Listing Generator ‚îÄ‚îÄ */
+            /* ‚‚Äù‚Ç¨‚‚Äù‚Ç¨ AI Listing Generator ‚‚Äù‚Ç¨‚‚Äù‚Ç¨ */
             const generateListing = async () => {
               if (!mktListingComm) return;
               setMktAiLoading(true);
@@ -316,7 +316,7 @@ function MarketingTab({ liveNeighbourhoods=[],
             return (
               <div style={{ animation:"fadeUp 0.4s ease-out forwards" }}>
 
-                {/* ‚îÄ‚îÄ HEADER ‚îÄ‚îÄ */}
+                {/* ‚‚Äù‚Ç¨‚‚Äù‚Ç¨ HEADER ‚‚Äù‚Ç¨‚‚Äù‚Ç¨ */}
                 <div style={{ display:"flex", alignItems:"flex-start", justifyContent:"space-between", padding:"10px 0", marginBottom:16, borderBottom:`1px solid ${T.border}`, flexWrap:"wrap", gap:10 }}>
                   <div>
                     <div style={{ fontFamily:"'Fraunces',serif", fontSize:20, fontWeight:800, color:T.white }}>Marketing Intelligence</div>
@@ -334,7 +334,7 @@ function MarketingTab({ liveNeighbourhoods=[],
                   </div>
                 </div>
 
-                {/* ‚ïê‚ïê CHANNEL INTELLIGENCE VIEW ‚ïê‚ïê */}
+                {/* ‚‚Ä¢ê‚‚Ä¢ê CHANNEL INTELLIGENCE VIEW ‚‚Ä¢ê‚‚Ä¢ê */}
                 {mktView === "channels" && (
                   <>
                     {/* Property type filter */}
@@ -430,7 +430,7 @@ function MarketingTab({ liveNeighbourhoods=[],
                   </>
                 )}
 
-                {/* ‚ïê‚ïê BUYER NATIONALITY TARGETING VIEW ‚ïê‚ïê */}
+                {/* ‚‚Ä¢ê‚‚Ä¢ê BUYER NATIONALITY TARGETING VIEW ‚‚Ä¢ê‚‚Ä¢ê */}
                 {mktView === "nationality" && (
                   <>
                     <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:4 }}>Buyer Nationality Intelligence</div>
@@ -511,7 +511,7 @@ function MarketingTab({ liveNeighbourhoods=[],
                   </>
                 )}
 
-                {/* ‚ïê‚ïê ROI CALCULATOR VIEW ‚ïê‚ïê */}
+                {/* ‚‚Ä¢ê‚‚Ä¢ê ROI CALCULATOR VIEW ‚‚Ä¢ê‚‚Ä¢ê */}
                 {mktView === "roi" && (
                   <div style={{ marginBottom:16 }}>
                     <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:4 }}>Marketing ROI Calculator</div>
@@ -595,7 +595,7 @@ function MarketingTab({ liveNeighbourhoods=[],
                   </div>
                 )}
 
-                {/* ‚ïê‚ïê AI LISTING GENERATOR VIEW ‚ïê‚ïê */}
+                {/* ‚‚Ä¢ê‚‚Ä¢ê AI LISTING GENERATOR VIEW ‚‚Ä¢ê‚‚Ä¢ê */}
                 {mktView === "listing" && (
                   <div style={{ marginBottom:16 }}>
                     <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:4 }}>AI Listing Generator</div>
@@ -649,7 +649,7 @@ function MarketingTab({ liveNeighbourhoods=[],
 
                       {mktListingPrice >= GOLDEN_VISA_THRESHOLD && (
                         <div style={{ marginTop:10, padding:"8px 12px", background:"rgba(16,185,129,0.06)", borderRadius:8, fontSize:11, color:T.green }}>
-                          ‚úì AED {(mktListingPrice/1e6).toFixed(2)}M ‚Äî Golden Visa eligible (AED 2M threshold). Will be included in listing automatically.
+                          ‚ú‚Äú AED {(mktListingPrice/1e6).toFixed(2)}M ‚‚Ç¨‚Äù Golden Visa eligible (AED 2M threshold). Will be included in listing automatically.
                         </div>
                       )}
 
@@ -697,7 +697,7 @@ function MarketingTab({ liveNeighbourhoods=[],
                   </div>
                 )}
 
-                {/* ‚îÄ‚îÄ SOURCE FOOTER ‚îÄ‚îÄ */}
+                {/* ‚‚Äù‚Ç¨‚‚Äù‚Ç¨ SOURCE FOOTER ‚‚Äù‚Ç¨‚‚Äù‚Ç¨ */}
                 <div style={{ paddingTop:12, borderTop:`1px solid ${T.border}`, display:"flex", gap:8, flexWrap:"wrap", alignItems:"center" }}>
                   <span style={{ fontSize:10, color:T.textMuted }}>Sources:</span>
                   {["theprimeads.com 2026","DLD 2025 Nationality Data","brightsanddesigns.com Nov 2025","campaignme.com","ninjasofts.com","keltandcorealty.com Feb 2026","dubaipropertyinsight.com","WordStream 2025"].map((s,i)=>(

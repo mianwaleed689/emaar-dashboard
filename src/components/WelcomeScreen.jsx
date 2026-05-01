@@ -1,7 +1,7 @@
 /* eslint-disable */
 /*
-  DXB ANALYTICS вЂ” WELCOME SCREEN
-  Session 12 вЂ” First login only
+  DXB ANALYTICS вв‚¬вЂќ WELCOME SCREEN
+  Session 12 вв‚¬вЂќ First login only
   Tips: WhatsApp, Email, Call
 */
 
@@ -28,22 +28,22 @@ export default function WelcomeScreen({ userName, orgName, managerName, userId, 
 
   const TIPS = [
     {
-      icon: "рџ’¬",
+      icon: "рџвЂ™¬",
       color: "#25D366",
       title: "WhatsApp your leads instantly",
       body: "Every lead has a WhatsApp button. Click it to open a pre-written message. Always log the conversation in the activity tab after.",
     },
     {
-      icon: "рџ“§",
+      icon: "рџвЂњ§",
       color: "#3B82F6",
       title: "Email leads directly from the platform",
       body: "Tap the email link on any lead to open your email client with the lead's address pre-filled. Keep your communication in one place.",
     },
     {
-      icon: "рџ“ћ",
+      icon: "рџвЂњћ",
       color: "#10B981",
       title: "Call and log every conversation",
-      body: "Use the Call button to dial directly. After every call, add a note in the Activity tab вЂ” your manager can see your progress in real time.",
+      body: "Use the Call button to dial directly. After every call, add a note in the Activity tab вв‚¬вЂќ your manager can see your progress in real time.",
     },
   ];
 
@@ -75,7 +75,7 @@ export default function WelcomeScreen({ userName, orgName, managerName, userId, 
           borderBottom: "1px solid rgba(212,168,67,0.15)",
           textAlign: "center",
         }}>
-          <div style={{ fontSize: 40, marginBottom: 12 }}>рџ‘‹</div>
+          <div style={{ fontSize: 40, marginBottom: 12 }}>рџвЂ‹</div>
           <div style={{
             fontFamily: "'Fraunces', serif",
             fontSize: 22,

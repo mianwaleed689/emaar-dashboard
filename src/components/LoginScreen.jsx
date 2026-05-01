@@ -1,9 +1,9 @@
 /* eslint-disable */
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-   DXB ANALYTICS â€” LOGIN SCREEN
+/* ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢
+   DXB ANALYTICS ââ‚¬â€ LOGIN SCREEN
    Extracted from EmaarDashboardV2.jsx
    Full auth flow: login, signup, Google OAuth, verify email, reset password
-   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+   ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ */
 
 import React, { useState } from "react";
 import { auth, db } from "../firebase";
@@ -118,7 +118,7 @@ const LoginScreen = ({ onLogin, onBack, defaultMode = "login" }) => {
         const emailjs = await import("@emailjs/browser");
         await emailjs.send(import.meta.env.VITE_EMAILJS_SERVICE_ID, import.meta.env.VITE_EMAILJS_TEMPLATE_ID, {
           user_email: email, user_name: name.trim(),
-          project_name: "DXB Analytics Platform", change_type: "Welcome to DXB Analytics! â€” Please verify your email",
+          project_name: "DXB Analytics Platform", change_type: "Welcome to DXB Analytics! ââ‚¬â€ Please verify your email",
           new_value: "Your 7-day Pro Trial is active. Check your inbox to verify your email address.",
           old_value: "New Account", updated_at: now.toLocaleDateString("en-AE"),
         }, import.meta.env.VITE_EMAILJS_PUBLIC_KEY);
@@ -135,13 +135,13 @@ const LoginScreen = ({ onLogin, onBack, defaultMode = "login" }) => {
     setLoading(false);
   };
 
-  // â”€â”€ Verify Email Screen â”€â”€
+  // ââ€â‚¬ââ€â‚¬ Verify Email Screen ââ€â‚¬ââ€â‚¬
   if (screen === "verify") return (
     <div style={{ minHeight: "100vh", background: T.bg, display: "flex", alignItems: "center", justifyContent: "center" }}>
       <style>{css}</style>
       <div className="fade-up" style={{ width: "100%", maxWidth: 440, padding: "0 20px", textAlign: "center" }}>
         <div style={{ background: T.surface, border: "1px solid rgba(16,185,129,0.3)", borderRadius: 20, padding: 40 }}>
-          <div style={{ fontSize: 56, marginBottom: 16 }}>ğŸ“§</div>
+          <div style={{ fontSize: 56, marginBottom: 16 }}>ğŸâ€œ§</div>
           <h2 style={{ fontFamily: "'Fraunces',serif", fontSize: 22, fontWeight: 800, color: T.white, marginBottom: 10 }}>Check your inbox</h2>
           <p style={{ color: T.textSecondary, fontSize: 13, lineHeight: 1.7, marginBottom: 8 }}>
             We sent a verification link to <span style={{ color: T.gold, fontWeight: 600 }}>{email}</span>
@@ -157,20 +157,20 @@ const LoginScreen = ({ onLogin, onBack, defaultMode = "login" }) => {
               </div>
             ))}
           </div>
-          <button type="button" className="login-btn" onClick={() => { setScreen("form"); setMode("login"); setPass(""); setConfirmPass(""); }}>Go to Sign In â†’</button>
+          <button type="button" className="login-btn" onClick={() => { setScreen("form"); setMode("login"); setPass(""); setConfirmPass(""); }}>Go to Sign In â†â€™</button>
           <button type="button" onClick={async () => { try { if (auth.currentUser) { await sendEmailVerification(auth.currentUser); alert("Verification email resent! Check your inbox."); } } catch(e){} }} style={{ display: "block", margin: "12px auto 0", background: "none", border: "none", color: T.gold, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>Resend verification email</button>
         </div>
       </div>
     </div>
   );
 
-  // â”€â”€ Reset Sent Screen â”€â”€
+  // ââ€â‚¬ââ€â‚¬ Reset Sent Screen ââ€â‚¬ââ€â‚¬
   if (screen === "reset_sent") return (
     <div style={{ minHeight: "100vh", background: T.bg, display: "flex", alignItems: "center", justifyContent: "center" }}>
       <style>{css}</style>
       <div className="fade-up" style={{ width: "100%", maxWidth: 440, padding: "0 20px", textAlign: "center" }}>
         <div style={{ background: T.surface, border: "1px solid rgba(212,168,67,0.3)", borderRadius: 20, padding: 40 }}>
-          <div style={{ fontSize: 56, marginBottom: 16 }}>ğŸ”‘</div>
+          <div style={{ fontSize: 56, marginBottom: 16 }}>ğŸâ€â€˜</div>
           <h2 style={{ fontFamily: "'Fraunces',serif", fontSize: 22, fontWeight: 800, color: T.white, marginBottom: 10 }}>Password Reset Sent</h2>
           <p style={{ color: T.textSecondary, fontSize: 13, lineHeight: 1.7, marginBottom: 8 }}>
             We sent a reset link to <span style={{ color: T.gold, fontWeight: 600 }}>{email}</span>
@@ -184,7 +184,7 @@ const LoginScreen = ({ onLogin, onBack, defaultMode = "login" }) => {
     </div>
   );
 
-  // â”€â”€ Main Form â”€â”€
+  // ââ€â‚¬ââ€â‚¬ Main Form ââ€â‚¬ââ€â‚¬
   return (
     <div style={{ minHeight: "100vh", background: T.bg, display: "flex", alignItems: "center", justifyContent: "center", position: "relative", overflow: "hidden" }}>
       <style>{css}</style>
@@ -219,7 +219,7 @@ const LoginScreen = ({ onLogin, onBack, defaultMode = "login" }) => {
             {mode === "login" ? "Welcome back" : "Start your free trial"}
           </h2>
           <p style={{ color: T.textSecondary, fontSize: 13, marginBottom: 20 }}>
-            {mode === "login" ? "Sign in to access your dashboard" : "7 days full Pro access â€” no credit card required"}
+            {mode === "login" ? "Sign in to access your dashboard" : "7 days full Pro access ââ‚¬â€ no credit card required"}
           </p>
 
           {/* Google Sign-In */}
@@ -268,7 +268,7 @@ const LoginScreen = ({ onLogin, onBack, defaultMode = "login" }) => {
             <div>
               <label style={{ fontSize: 11, fontWeight: 600, color: T.textSecondary, textTransform: "uppercase", letterSpacing: 1, display: "block", marginBottom: 6 }}>Password *</label>
               <div style={{ position: "relative" }}>
-                <input className="login-input" type={showPass ? "text" : "password"} placeholder={mode === "signup" ? "Min 8 chars + 1 number" : "â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"} value={pass} onChange={e => setPass(e.target.value)} onKeyDown={e => e.key === "Enter" && mode === "login" && handleLogin()} style={{ paddingRight: 44 }} />
+                <input className="login-input" type={showPass ? "text" : "password"} placeholder={mode === "signup" ? "Min 8 chars + 1 number" : "ââ‚¬¢ââ‚¬¢ââ‚¬¢ââ‚¬¢ââ‚¬¢ââ‚¬¢ââ‚¬¢ââ‚¬¢"} value={pass} onChange={e => setPass(e.target.value)} onKeyDown={e => e.key === "Enter" && mode === "login" && handleLogin()} style={{ paddingRight: 44 }} />
                 <button type="button" onClick={() => setShowPass(!showPass)} style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: T.textMuted, padding: 4 }}>
                   {showPass ? Icons.eyeOff : Icons.eye}
                 </button>
@@ -285,8 +285,8 @@ const LoginScreen = ({ onLogin, onBack, defaultMode = "login" }) => {
                     {showConfirm ? Icons.eyeOff : Icons.eye}
                   </button>
                 </div>
-                {confirmPass && confirmPass !== pass && <div style={{ fontSize: 10, color: T.red, marginTop: 4 }}>âœ— Passwords do not match</div>}
-                {confirmPass && confirmPass === pass && <div style={{ fontSize: 10, color: T.green, marginTop: 4 }}>âœ“ Passwords match</div>}
+                {confirmPass && confirmPass !== pass && <div style={{ fontSize: 10, color: T.red, marginTop: 4 }}>âœâ€” Passwords do not match</div>}
+                {confirmPass && confirmPass === pass && <div style={{ fontSize: 10, color: T.green, marginTop: 4 }}>âœâ€œ Passwords match</div>}
               </div>
             )}
 
@@ -315,14 +315,14 @@ const LoginScreen = ({ onLogin, onBack, defaultMode = "login" }) => {
                   <span style={{ width: 16, height: 16, border: "2px solid rgba(4,9,15,0.3)", borderTopColor: T.bg, borderRadius: "50%", animation: "spin 0.6s linear infinite", display: "inline-block" }} />
                   {mode === "login" ? "Signing in..." : "Creating account..."}
                 </span>
-              ) : mode === "login" ? "Sign In" : "Start Free Trial â†’"}
+              ) : mode === "login" ? "Sign In" : "Start Free Trial â†â€™"}
             </button>
 
             {mode === "signup" && (
               <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 12px", background: "rgba(212,168,67,0.06)", borderRadius: 8, border: `1px solid ${T.border}` }}>
                 <span style={{ fontSize: 16 }}>â­</span>
                 <div style={{ fontSize: 11, color: T.textSecondary, lineHeight: 1.4 }}>
-                  <span style={{ color: T.gold, fontWeight: 600 }}>7-day Pro trial</span> â€” Full access. No credit card. Cancel anytime.
+                  <span style={{ color: T.gold, fontWeight: 600 }}>7-day Pro trial</span> ââ‚¬â€ Full access. No credit card. Cancel anytime.
                 </div>
               </div>
             )}
@@ -340,7 +340,7 @@ const LoginScreen = ({ onLogin, onBack, defaultMode = "login" }) => {
         </div>
 
         <p style={{ textAlign: "center", color: T.textMuted, fontSize: 11, marginTop: 20 }}>
-          ğŸ”’ Secured by Firebase Â· SSL Encrypted Â· GDPR Compliant
+          ğŸâ€â€™ Secured by Firebase Â· SSL Encrypted Â· GDPR Compliant
         </p>
       </div>
     </div>

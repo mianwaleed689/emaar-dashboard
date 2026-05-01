@@ -1,5 +1,5 @@
 
-// ── OFFICIAL LINKS ────────────────────────────────────────────────────
+// �”€�”€ OFFICIAL LINKS �”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€
 export const emaarOfficialLinks = {
   developerWebsite: "https://properties.emaar.com/en/",
   communitiesPage: "https://www.emaar.com/en/our-communities/",
@@ -9,7 +9,7 @@ export const emaarOfficialLinks = {
 };
 
 /**
- * DXB ANALYTICS — EMAAR COMMUNITIES
+ * DXB ANALYTICS �€” EMAAR COMMUNITIES
  * 13 communities | Research: March 2026
  * Sources: Emaar IR, DLD, Bayut, Knight Frank, ValuStrat, propsearch.ae
  */
@@ -22,10 +22,10 @@ export const emaarCommunities = [
     name: "Dubai Hills Estate",
     developer: "emaar",
     codev: "meraas",
-    codevNote: "Joint venture: Emaar Properties × Meraas Holding",
+    codevNote: "Joint venture: Emaar Properties �— Meraas Holding",
     districtCode: "DHE",
-    overview: "Dubai Hills Estate is a joint venture between Emaar Properties and Meraas Holding — Emaar's flagship 2,700-acre master-planned community in MBR City, developed as a joint venture with Meraas Holding. Known as 'The Green Heart of Dubai', it features an 18-hole championship golf course, Dubai Hills Mall, 28 sub-communities and 22,000+ residences across apartments, townhouses and villas.",
-    type: "Master Community — Golf, Mixed Use",
+    overview: "Dubai Hills Estate is a joint venture between Emaar Properties and Meraas Holding �€” Emaar's flagship 2,700-acre master-planned community in MBR City, developed as a joint venture with Meraas Holding. Known as 'The Green Heart of Dubai', it features an 18-hole championship golf course, Dubai Hills Mall, 28 sub-communities and 22,000+ residences across apartments, townhouses and villas.",
+    type: "Master Community �€” Golf, Mixed Use",
     status: "Established",
     launched: 2014,
     location: {
@@ -36,7 +36,7 @@ export const emaarCommunities = [
       toDowntown: "15 min",
       toAirport: "20 min",
       toMarina: "15 min",
-      nearestMetro: "Mall of Emirates (20 min drive) — future metro planned",
+      nearestMetro: "Mall of Emirates (20 min drive) �€” future metro planned",
       highways: ["Al Khail Road (E44)", "Sheikh Mohammed Bin Zayed Road (E311)", "Umm Suqeim Street (D63)"],
     },
     sizeSqFt: 480000000,
@@ -90,9 +90,9 @@ export const emaarCommunities = [
       "Dubai Hills Hospital",
     ],
     transport: [
-      "Al Khail Road (E44) — direct access",
+      "Al Khail Road (E44) �€” direct access",
       "Sheikh Mohammed Bin Zayed Road (E311)",
-      "No metro currently — nearest Mall of Emirates (20 min)",
+      "No metro currently �€” nearest Mall of Emirates (20 min)",
       "Future metro station planned per Dubai 2040 Urban Plan",
     ],
     hotels: ["Address Dubai Hills", "Vida Dubai Hills"],
@@ -108,7 +108,7 @@ export const emaarCommunities = [
     districtCode: "DCH",
     overview: "Dubai Creek Harbour is Emaar's 6-million-sqft waterfront mega-project located 10 minutes from Downtown Dubai, adjacent to the Ras Al Khor Wildlife Sanctuary. Featuring Dubai Creek Tower, 700m private beach, 4km waterfront promenade and Creek Marina, it is designed to house 650,000+ residents across multiple districts.",
     type: "Master Waterfront Community",
-    status: "Active — Multiple phases",
+    status: "Active �€” Multiple phases",
     launched: 2016,
     location: {
       area: "Ras Al Khor, Dubai",
@@ -118,7 +118,7 @@ export const emaarCommunities = [
       toDowntown: "10-12 min",
       toAirport: "15-20 min",
       toMarina: "25 min",
-      nearestMetro: "Blue Line Metro station — upcoming (major infrastructure)",
+      nearestMetro: "Blue Line Metro station �€” upcoming (major infrastructure)",
       highways: ["Ras Al Khor Road (E44)", "Dubai-Al Ain Road (E66)"],
     },
     sizeSqFt: 55000000,
@@ -135,7 +135,7 @@ export const emaarCommunities = [
       aptYield: 6.0,
       villaYield: 5.0,
       yoyGrowth: "+15% (2024-2025)",
-      capitalGrowth: "AED 1,600 psf (2018) → AED 2,600 psf (2025) → AED 5,000 est. 2028",
+      capitalGrowth: "AED 1,600 psf (2018) �’ AED 2,600 psf (2025) �’ AED 5,000 est. 2028",
       investmentRating: "A",
       goldenVisa: true,
     },
@@ -170,7 +170,7 @@ export const emaarCommunities = [
     ],
     transport: [
       "Ras Al Khor Road (E44)",
-      "Blue Line Metro station — upcoming (transforms connectivity)",
+      "Blue Line Metro station �€” upcoming (transforms connectivity)",
       "Dubai International Airport 15-20 min",
     ],
     hotels: ["Address Harbour Point", "Vida Creek Harbour", "Palace Residences Creek Harbour"],
@@ -185,7 +185,7 @@ export const emaarCommunities = [
     developer: "emaar",
     districtCode: "EBF",
     overview: "Emaar Beachfront is an exclusive gated island community at Dubai Harbour, located between Dubai Marina and Palm Jumeirah. With 1.5km of private beachfront, 27 residential towers offering 10,000 units, and a 13,000 sqm retail mall, it is one of Dubai's most prestigious waterfront addresses.",
-    type: "Beachfront Island Community — Gated",
+    type: "Beachfront Island Community �€” Gated",
     status: "Active",
     launched: 2018,
     location: {
@@ -226,7 +226,7 @@ export const emaarCommunities = [
       "Infinity pools per tower",
       "Fully equipped gyms",
       "Concierge services",
-      "24/7 security — gated community",
+      "24/7 security �€” gated community",
       "Direct sea views",
       "Waterfront promenade",
     ],
@@ -238,7 +238,7 @@ export const emaarCommunities = [
     schools: ["Dubai British School (15 min)", "GEMS Wellington (20 min)"],
     healthcare: ["Mediclinic Marina (10 min)", "American Hospital Dubai Marina (12 min)"],
     transport: [
-      "Sheikh Zayed Road (E11) — direct access",
+      "Sheikh Zayed Road (E11) �€” direct access",
       "Dubai Marina Tram (10 min)",
       "DAMAC Properties Metro (10 min drive)",
     ],
@@ -254,7 +254,7 @@ export const emaarCommunities = [
     developer: "emaar",
     districtCode: "ES",
     overview: "Emaar South is a 7,000-acre master-planned community in Dubai South, located adjacent to Al Maktoum International Airport and the legacy of Expo City Dubai. Offering affordable entry points with strong rental yields, it features an 18-hole championship golf course and is positioned as Dubai's next major growth corridor.",
-    type: "Master Community — Golf, Affordable",
+    type: "Master Community �€” Golf, Affordable",
     status: "Active",
     launched: 2016,
     location: {
@@ -322,7 +322,7 @@ export const emaarCommunities = [
     developer: "emaar",
     districtCode: "TV",
     overview: "The Valley is a 4,000-acre family-oriented master community on Al Ain Road (E66) in Dubailand. Featuring townhouses and villas surrounded by lush greenery, golden beaches, sports courts and community retail, it has delivered exceptional capital appreciation of nearly 100% since launch and is among Dubai's fastest-growing residential destinations.",
-    type: "Master Community — Family Townhouses & Villas",
+    type: "Master Community �€” Family Townhouses & Villas",
     status: "Active",
     launched: 2019,
     location: {
@@ -333,7 +333,7 @@ export const emaarCommunities = [
       toDowntown: "35 min",
       toAirport: "30 min",
       toMarina: "40 min",
-      nearestMetro: "No metro — private vehicle required",
+      nearestMetro: "No metro �€” private vehicle required",
       highways: ["Al Ain Road (E66)", "Dubai-Al Ain Road"],
     },
     sizeSqFt: 174000000,
@@ -374,7 +374,7 @@ export const emaarCommunities = [
     schools: ["Fairgreen International School (20 min)", "GEMS Heritage Indian School (25 min)"],
     healthcare: ["Mediclinic Parkview (30 min)", "NMC Royal Hospital (30 min)"],
     transport: [
-      "Al Ain Road (E66) — direct access",
+      "Al Ain Road (E66) �€” direct access",
       "Dubai-Al Ain Road",
       "Private vehicle essential",
     ],
@@ -390,7 +390,7 @@ export const emaarCommunities = [
     developer: "emaar",
     districtCode: "GPC",
     overview: "Grand Polo Club & Resort is Emaar's newest ultra-luxury master community launched April 2025, spanning 5.54 million sqm in Dubai Investment Park 2. Centred around three polo fields, private stables and a riding school, it comprises 22 villa communities with 6,661 residences. Located 5 minutes from Al Maktoum International Airport with ROI projections of 9-10%.",
-    type: "Ultra-Luxury Master Community — Equestrian",
+    type: "Ultra-Luxury Master Community �€” Equestrian",
     status: "Under Development",
     launched: 2025,
     location: {
@@ -417,8 +417,8 @@ export const emaarCommunities = [
       avgYield: 9.5,
       aptYield: 0,
       villaYield: 9.5,
-      yoyGrowth: "N/A — new launch",
-      capitalGrowth: "Early stage — high appreciation expected",
+      yoyGrowth: "N/A �€” new launch",
+      capitalGrowth: "Early stage �€” high appreciation expected",
       investmentRating: "A",
       goldenVisa: true,
     },
@@ -443,7 +443,7 @@ export const emaarCommunities = [
     schools: ["Greenfield International School (10 min)", "International School of Choueifat (10 min)"],
     healthcare: ["NMC Royal Hospital (10 min)", "Paradise Plus Poly Clinic (nearby)"],
     transport: [
-      "Expo Road — direct access",
+      "Expo Road �€” direct access",
       "Emirates Road (E611)",
       "Al Maktoum International Airport 5 min",
     ],
@@ -554,8 +554,8 @@ export const emaarCommunities = [
       avgYield: 4.0,
       aptYield: 0,
       villaYield: 4.0,
-      yoyGrowth: "N/A — under development",
-      capitalGrowth: "High potential — UHNW segment",
+      yoyGrowth: "N/A �€” under development",
+      capitalGrowth: "High potential �€” UHNW segment",
       investmentRating: "A",
       goldenVisa: true,
     },
@@ -571,7 +571,7 @@ export const emaarCommunities = [
       "24/7 security",
       "Smart home technology",
     ],
-    subCommunities: ["Oasis Palace", "The Oasis Villas — multiple phases"],
+    subCommunities: ["Oasis Palace", "The Oasis Villas �€” multiple phases"],
     schools: ["Greenfield International (15 min)", "GEMS Wellington (25 min)"],
     healthcare: ["NMC Royal Hospital (15 min)"],
     transport: [
@@ -618,8 +618,8 @@ export const emaarCommunities = [
       avgYield: 6.0,
       aptYield: 0,
       villaYield: 6.0,
-      yoyGrowth: "N/A — new launch",
-      capitalGrowth: "Early stage — strong growth expected",
+      yoyGrowth: "N/A �€” new launch",
+      capitalGrowth: "Early stage �€” strong growth expected",
       investmentRating: "B+",
       goldenVisa: true,
     },
@@ -651,7 +651,7 @@ export const emaarCommunities = [
     developer: "emaar",
     districtCode: "EL",
     overview: "Expo Living is Emaar's residential community built on the legacy of Expo 2020 Dubai within Expo City Dubai. Offering affordable apartments with access to Expo City's world-class infrastructure, entertainment venues and green spaces, it targets value-seeking buyers and investors looking for strong rental yields near Al Maktoum International Airport.",
-    type: "Mixed Community — Expo City Legacy",
+    type: "Mixed Community �€” Expo City Legacy",
     status: "Active",
     launched: 2022,
     location: {
@@ -662,7 +662,7 @@ export const emaarCommunities = [
       toDowntown: "35 min",
       toAirport: "10 min (DWC)",
       toMarina: "25 min",
-      nearestMetro: "Route 2020 Metro — Expo City station (direct)",
+      nearestMetro: "Route 2020 Metro �€” Expo City station (direct)",
       highways: ["Sheikh Mohammed Bin Zayed Road (E311)", "Expo Road"],
     },
     sizeSqFt: 130000000,
@@ -679,7 +679,7 @@ export const emaarCommunities = [
       aptYield: 7.5,
       villaYield: 0,
       yoyGrowth: "+15% (2024-2025)",
-      capitalGrowth: "Emerging — high growth potential",
+      capitalGrowth: "Emerging �€” high growth potential",
       investmentRating: "B",
       goldenVisa: false,
     },
@@ -687,7 +687,7 @@ export const emaarCommunities = [
     amenities: [
       "Access to Expo City Dubai venues",
       "Al Wasl Plaza",
-      "Terra — The Sustainability Pavilion",
+      "Terra �€” The Sustainability Pavilion",
       "Multiple parks and green spaces",
       "Community pools",
       "Fitness centres",
@@ -698,11 +698,11 @@ export const emaarCommunities = [
     schools: ["GEMS Wellington (20 min)", "Bright Riders School (15 min)"],
     healthcare: ["Mediclinic Parkview (20 min)", "NMC Royal (15 min)"],
     transport: [
-      "Route 2020 Metro — Expo City station (direct access)",
+      "Route 2020 Metro �€” Expo City station (direct access)",
       "Sheikh Mohammed Bin Zayed Road (E311)",
       "Al Maktoum International Airport 10 min",
     ],
-    hotels: ["Expo City Hotels — multiple 4-5 star options"],
+    hotels: ["Expo City Hotels �€” multiple 4-5 star options"],
     confidence: "VERIFIED",
     lastUpdated: "2026-03",
   },
@@ -713,7 +713,7 @@ export const emaarCommunities = [
     name: "Downtown Dubai",
     developer: "emaar",
     districtCode: "DT",
-    overview: "Downtown Dubai is Emaar's most iconic master community — home to Burj Khalifa, The Dubai Mall and Dubai Fountain. A global landmark and prime investment destination, it offers luxury apartments, branded residences and penthouses with world-class amenities, unmatched connectivity and consistently strong rental demand from tourists, executives and UHNW residents.",
+    overview: "Downtown Dubai is Emaar's most iconic master community �€” home to Burj Khalifa, The Dubai Mall and Dubai Fountain. A global landmark and prime investment destination, it offers luxury apartments, branded residences and penthouses with world-class amenities, unmatched connectivity and consistently strong rental demand from tourists, executives and UHNW residents.",
     type: "Iconic Urban Luxury Community",
     status: "Established",
     launched: 2004,
@@ -748,7 +748,7 @@ export const emaarCommunities = [
     },
     unitTypes: ["1BR", "2BR", "3BR", "4BR", "Penthouse", "Branded Residence"],
     amenities: [
-      "Burj Khalifa (828m — world's tallest)",
+      "Burj Khalifa (828m �€” world's tallest)",
       "The Dubai Mall (1,300+ stores)",
       "Dubai Fountain (world's largest)",
       "Dubai Opera",
@@ -784,7 +784,7 @@ export const emaarCommunities = [
     developer: "emaar",
     districtCode: "BB",
     overview: "Business Bay is Dubai's premier mixed-use district along the Dubai Canal, adjacent to Downtown Dubai. Spanning 46.9 million sqft, it combines residential towers, commercial offices and waterfront living. Emaar's Palace Downtown and branded residences anchor the premium end of this high-yield investment district.",
-    type: "Urban Mixed-Use — Canal Waterfront",
+    type: "Urban Mixed-Use �€” Canal Waterfront",
     status: "Established",
     launched: 2003,
     location: {
@@ -835,7 +835,7 @@ export const emaarCommunities = [
     schools: ["Jumeirah English Speaking School (10 min)", "GEMS Wellington (15 min)"],
     healthcare: ["Mediclinic City Hospital (10 min)", "American Hospital (15 min)"],
     transport: [
-      "Business Bay Metro (Red Line — direct)",
+      "Business Bay Metro (Red Line �€” direct)",
       "Sheikh Zayed Road (E11)",
       "Al Khail Road (E44)",
       "Water bus on Dubai Canal",
@@ -852,7 +852,7 @@ export const emaarCommunities = [
     developer: "emaar",
     districtCode: "AR",
     overview: "Arabian Ranches is Emaar's flagship villa community in Dubailand, spanning three phases across a golf course setting. Known for its suburban family lifestyle, Arabian Ranches offers 4-6BR villas and townhouses with excellent schools, retail and recreational facilities. Phase 3 (Arabian Ranches 3) is currently active with strong capital appreciation.",
-    type: "Villa Community — Family, Golf",
+    type: "Villa Community �€” Family, Golf",
     status: "Active (Phase 3 ongoing)",
     launched: 2004,
     location: {
@@ -863,7 +863,7 @@ export const emaarCommunities = [
       toDowntown: "30 min",
       toAirport: "30 min",
       toMarina: "30 min",
-      nearestMetro: "No metro — private vehicle required",
+      nearestMetro: "No metro �€” private vehicle required",
       highways: ["Sheikh Mohammed Bin Zayed Road (E311)", "Hessa Street (D61)"],
     },
     sizeSqFt: 270000000,
@@ -913,7 +913,7 @@ export const emaarCommunities = [
     lastUpdated: "2026-03",
   },
 
-  // ── THE GREENS & VIEWS ────────────────────────────────────────────────
+  // �”€�”€ THE GREENS & VIEWS �”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€
   {
     id: "the-greens-views",
     name: "The Greens & Views",
@@ -931,14 +931,14 @@ export const emaarCommunities = [
     lifestyle: "Mature, established, family-friendly, urban convenience",
     famousFor: "Lakeside promenades, The Greens Souk, Emirates Golf Club views, proximity to Dubai Internet City and Media City",
     masterDev: "Emaar Properties",
-    status: "Completed — Established Community",
+    status: "Completed �€” Established Community",
     totalArea: "2.5 million sqft",
     units: { apartments: 4000, townhouses: 200, villas: 0, total: 4200 },
     priceRange: { apt: { from: 700000, to: 3500000 }, th: { from: 1800000, to: 4000000 } },
     ppsf: { min: 1100, avg: 1450, max: 1900 },
     avgYield: "6.8%",
     aptYield: "7.1%",
-    villaYield: "—",
+    villaYield: "�€”",
     serviceCharge: { avg: 14, currency: "AED/sqft/yr", source: "DLD Mollak" },
     amenities: [
       { icon: "🏊", label: "Swimming Pools", items: "Multiple pools across complexes" },
@@ -946,7 +946,7 @@ export const emaarCommunities = [
       { icon: "🛍️", label: "The Greens Souk", items: "Boutique cafés, supermarkets, salons, artisan shops" },
       { icon: "🌿", label: "Green Spaces", items: "Lakeside promenades, dog park, BBQ areas, The Backyard" },
       { icon: "⛳", label: "Golf", items: "Emirates Golf Club adjacent" },
-      { icon: "🔒", label: "Security", items: "24/7 security, CCTV all complexes" },
+      { icon: "�”’", label: "Security", items: "24/7 security, CCTV all complexes" },
     ],
     keyAmenities: [
       { icon: "🏌️", label: "Emirates Golf Club", items: "Championship golf course adjacent" },
@@ -969,7 +969,7 @@ export const emaarCommunities = [
     source: "properties.emaar.com/en/our-communities/the-greens-and-views/ [PF area data]",
   },
 
-  // ── EMIRATES LIVING ──────────────────────────────────────────────────
+  // �”€�”€ EMIRATES LIVING �”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€
   {
     id: "emirates-living",
     name: "Emirates Living",
@@ -985,9 +985,9 @@ export const emaarCommunities = [
     overview: "Emaar's first and most prestigious master-planned residential ecosystem in Dubai. Encompasses Emirates Hills (Dubai's Beverly Hills), The Meadows, The Springs, The Lakes, The Views, and The Greens. Established 1999-2006. Known for exclusivity, lush landscaping, and golf course living.",
     tagline: "Dubai's most established luxury suburban ecosystem",
     lifestyle: "Ultra-luxury gated living, family-oriented, golf course views, serene environment",
-    famousFor: "Emirates Hills — Dubai's most exclusive villa community, home to royalty and business leaders. Championship golf. Lakes and green boulevards.",
+    famousFor: "Emirates Hills �€” Dubai's most exclusive villa community, home to royalty and business leaders. Championship golf. Lakes and green boulevards.",
     masterDev: "Emaar Properties",
-    status: "Completed — Established Community",
+    status: "Completed �€” Established Community",
     totalArea: "25 million sqft",
     units: { apartments: 6000, townhouses: 4000, villas: 2500, total: 12500 },
     priceRange: { apt: { from: 800000, to: 5000000 }, th: { from: 2000000, to: 8000000 }, villa: { from: 5000000, to: 150000000 } },
@@ -997,12 +997,12 @@ export const emaarCommunities = [
     villaYield: "4.3%",
     serviceCharge: { avg: 15, currency: "AED/sqft/yr", note: "Emirates Hills AED 1.53/sqft DLD official", source: "DLD Mollak" },
     amenities: [
-      { icon: "⛳", label: "Golf", items: "Emirates Golf Club — 2 championship courses (Majlis & Faldo)" },
+      { icon: "⛳", label: "Golf", items: "Emirates Golf Club �€” 2 championship courses (Majlis & Faldo)" },
       { icon: "🏊", label: "Community Pools", items: "Pools in every sub-community" },
       { icon: "🌳", label: "Lakes & Parks", items: "Multiple lakes, green boulevards, walking trails" },
       { icon: "🏫", label: "Education", items: "Emirates International School, Dubai British School" },
       { icon: "🏥", label: "Healthcare", items: "King's College Hospital, Mediclinic" },
-      { icon: "🔒", label: "Security", items: "Gated communities, 24/7 security per cluster" },
+      { icon: "�”’", label: "Security", items: "Gated communities, 24/7 security per cluster" },
     ],
     keyAmenities: [
       { icon: "⛳", label: "Emirates Golf Club", items: "2 world-class courses, Majlis (Ryder Cup venue)" },
@@ -1025,7 +1025,7 @@ export const emaarCommunities = [
     source: "ecm.ae/en/communities/emirates-living/ [Bayut area guide] [DLD Mollak AED 1.53/sqft]",
   },
 
-  // ── ADDRESS RESIDENCES ZABEEL ────────────────────────────────────────
+  // �”€�”€ ADDRESS RESIDENCES ZABEEL �”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€
   {
     id: "address-residences-zabeel",
     name: "Address Residences Zabeel",
@@ -1039,31 +1039,31 @@ export const emaarCommunities = [
     nearestMetro: "World Trade Centre Metro (5 min drive)",
     landmarks: ["Dubai World Trade Centre", "Zabeel Park", "Dubai Frame", "DIFC", "Downtown Dubai"],
     overview: "Ultra-luxury branded residences by Emaar under the Address Hotels + Resorts brand, located in the prestigious Zabeel area. Connected to Dubai World Trade Centre and Zabeel Park. Premium 1-4BR apartments and penthouses with full hotel services.",
-    tagline: "Branded luxury in the heart of Zabeel — Address Hotels lifestyle",
+    tagline: "Branded luxury in the heart of Zabeel �€” Address Hotels lifestyle",
     lifestyle: "Urban luxury, branded residences, hotel services, business district living",
     famousFor: "Address Hotels branded services, Zabeel Park views, DWTC connectivity, full hotel amenities",
     masterDev: "Emaar Properties",
-    status: "Active — Off-Plan Launches",
+    status: "Active �€” Off-Plan Launches",
     units: { apartments: 800, townhouses: 0, villas: 0, total: 800 },
     priceRange: { apt: { from: 2500000, to: 25000000 } },
     ppsf: { min: 2200, avg: 3000, max: 5000 },
     avgYield: "5.8%",
     aptYield: "5.8%",
-    villaYield: "—",
+    villaYield: "�€”",
     serviceCharge: { avg: 28, currency: "AED/sqft/yr", source: "DLD Mollak estimate" },
     amenities: [
       { icon: "🏨", label: "Address Hotel Services", items: "Concierge, room service, valet, housekeeping" },
       { icon: "🏊", label: "Infinity Pool", items: "Rooftop pool with city views" },
-      { icon: "💆", label: "Spa & Wellness", items: "Full spa, fitness centre, wellness facilities" },
+      { icon: "�’�", label: "Spa & Wellness", items: "Full spa, fitness centre, wellness facilities" },
       { icon: "🍽️", label: "F&B", items: "Multiple restaurants and lounges" },
-      { icon: "🌳", label: "Zabeel Park", items: "Dubai's largest park — adjacent" },
+      { icon: "🌳", label: "Zabeel Park", items: "Dubai's largest park �€” adjacent" },
       { icon: "🏢", label: "DWTC", items: "Dubai World Trade Centre walking distance" },
     ],
     keyAmenities: [
       { icon: "🏨", label: "Address Branded", items: "Full 5-star hotel services for residents" },
-      { icon: "🌳", label: "Zabeel Park", items: "125 hectares — Dubai Frame, BBQ areas, lake" },
-      { icon: "💼", label: "DIFC Access", items: "DIFC financial district 5 min drive" },
-      { icon: "🏙️", label: "Downtown Views", items: "Burj Khalifa and Downtown skyline views" },
+      { icon: "🌳", label: "Zabeel Park", items: "125 hectares �€” Dubai Frame, BBQ areas, lake" },
+      { icon: "�’�", label: "DIFC Access", items: "DIFC financial district 5 min drive" },
+      { icon: "�™️", label: "Downtown Views", items: "Burj Khalifa and Downtown skyline views" },
     ],
     distances: [
       { dest: "Downtown Dubai", km: 3, min: 5 },
@@ -1080,9 +1080,9 @@ export const emaarCommunities = [
     source: "properties.emaar.com/en/latest-launches/ [Address Residences Zabeel confirmed]",
   },
 
-  // ── ARABIAN RANCHES (ORIGINAL) ───────────────────────────────────────
+  // �”€�”€ ARABIAN RANCHES (ORIGINAL) �”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€
 
-  // ── DUBAI MANSIONS ──────────────────────────────────────────────────
+  // �”€�”€ DUBAI MANSIONS �”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€
   {
     id: "dubai-mansions",
     name: "Dubai Mansions",
@@ -1093,23 +1093,23 @@ export const emaarCommunities = [
     subType: "Ultra-Luxury Mansions",
     location: { lat: 25.0980, lng: 55.2200, area: "Adjacent to Dubai Hills Estate" },
     highways: ["Al Khail Road (E44)", "Sheikh Mohammed Bin Zayed Road (E311)"],
-    nearestMetro: "N/A — ultra-luxury private enclave",
+    nearestMetro: "N/A �€” ultra-luxury private enclave",
     landmarks: ["Dubai Hills Estate", "Dubai Hills Mall", "Dubai Hills Golf Club", "King's College Hospital"],
     overview: "Emaar's newest and most exclusive ultra-luxury community announced September 2025. Adjacent to Dubai Hills Estate, featuring a limited collection of ultra-luxury mansions in 10,000, 15,000, or 20,000 sqft. Part of the wider Emaar Estate master destination. Designed for ultra-high-net-worth individuals globally.",
-    tagline: "Dubai's most exclusive new address — ultra-luxury mansions adjacent to Dubai Hills",
+    tagline: "Dubai's most exclusive new address �€” ultra-luxury mansions adjacent to Dubai Hills",
     lifestyle: "Ultra-private, ultra-luxury, global HNWI clientele, bespoke architecture",
     famousFor: "Limited collection of 10K-20K sqft mansions, bespoke haute-couture architecture, complete privacy and prestige",
     masterDev: "Emaar Properties",
-    status: "Announced — Upcoming Launch",
+    status: "Announced �€” Upcoming Launch",
     units: { apartments: 0, townhouses: 0, villas: 0, mansions: 100, total: 100 },
     priceRange: { villa: { from: 50000000, to: 300000000 } },
     ppsf: { min: 4000, avg: 6000, max: 15000 },
     avgYield: "3.5%",
-    aptYield: "—",
+    aptYield: "�€”",
     villaYield: "3.5%",
     serviceCharge: { avg: 30, currency: "AED/sqft/yr", source: "Estimated" },
     amenities: [
-      { icon: "🔒", label: "Private Enclave", items: "Fully gated ultra-private community" },
+      { icon: "�”’", label: "Private Enclave", items: "Fully gated ultra-private community" },
       { icon: "⛳", label: "Golf Access", items: "Dubai Hills Golf Club adjacent" },
       { icon: "🏥", label: "Healthcare", items: "King's College Hospital Dubai adjacent" },
       { icon: "🛍️", label: "Retail", items: "Dubai Hills Mall 5 min drive" },
@@ -1117,7 +1117,7 @@ export const emaarCommunities = [
       { icon: "🌳", label: "Landscaping", items: "World-class immersive landscaping, private gardens" },
     ],
     keyAmenities: [
-      { icon: "🏰", label: "Ultra-Luxury Mansions", items: "10,000–20,000 sqft bespoke residences" },
+      { icon: "🏰", label: "Ultra-Luxury Mansions", items: "10,000�€“20,000 sqft bespoke residences" },
       { icon: "⛳", label: "Dubai Hills Golf", items: "Championship 18-hole Trump golf course adjacent" },
       { icon: "🏥", label: "King's College", items: "World-class hospital 5 min" },
       { icon: "🛍️", label: "Dubai Hills Mall", items: "Premium retail and dining 5 min" },
@@ -1137,7 +1137,7 @@ export const emaarCommunities = [
     source: "properties.emaar.com/en/press-release-listing/emaar-to-reveal-its-iconic-ultra-luxury-address-dubai-mansions/ [Sep 2025 official press release]",
   },
 
-  // ── ARABIAN RANCHES III ──────────────────────────────────────────────
+  // �”€�”€ ARABIAN RANCHES III �”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€
   {
     id: "arabian-ranches-3",
     name: "Arabian Ranches III",
@@ -1148,20 +1148,20 @@ export const emaarCommunities = [
     subType: "Villas / Townhouses",
     location: { lat: 25.0480, lng: 55.2681, area: "Dubailand" },
     highways: ["Emirates Road (E611)", "Sheikh Mohammed Bin Zayed Road (E311)"],
-    nearestMetro: "No metro — car dependent",
+    nearestMetro: "No metro �€” car dependent",
     landmarks: ["Arabian Ranches Golf Club", "Dubai Polo Club", "Global Village", "IMG Worlds of Adventure"],
     overview: "The third and latest phase of Emaar's iconic Arabian Ranches master community. Launched 2020, with active off-plan projects including Raya and Caya. Features 3-5 bedroom villas and townhouses with club amenities, sports facilities, and retail. Strong family demand.",
-    tagline: "The new generation of Arabian Ranches — vibrant family community",
+    tagline: "The new generation of Arabian Ranches �€” vibrant family community",
     lifestyle: "Family suburban, active lifestyle, sports facilities, community events",
     famousFor: "Raya and Caya villa collections, The Club with pool and sports facilities, family-oriented community events",
     masterDev: "Emaar Properties",
-    status: "Active — Off-Plan Launches",
+    status: "Active �€” Off-Plan Launches",
     totalArea: "7 million sqft",
     units: { apartments: 0, townhouses: 3000, villas: 1500, total: 4500 },
     priceRange: { th: { from: 2000000, to: 5000000 }, villa: { from: 3000000, to: 8000000 } },
     ppsf: { min: 950, avg: 1250, max: 1800 },
     avgYield: "5.8%",
-    aptYield: "—",
+    aptYield: "�€”",
     villaYield: "5.8%",
     serviceCharge: { avg: 12, currency: "AED/sqft/yr", source: "DLD Mollak" },
     amenities: [
@@ -1170,11 +1170,11 @@ export const emaarCommunities = [
       { icon: "🛍️", label: "Retail", items: "Community retail centre, supermarket" },
       { icon: "🌳", label: "Parks", items: "Linear park, green open spaces" },
       { icon: "⛳", label: "Golf Access", items: "Arabian Ranches Golf Club adjacent" },
-      { icon: "🔒", label: "Security", items: "Gated community, 24/7 security" },
+      { icon: "�”’", label: "Security", items: "Gated community, 24/7 security" },
     ],
     keyAmenities: [
       { icon: "🏊", label: "The Club", items: "Resort-style community hub with pools and sports" },
-      { icon: "⛳", label: "Golf Club", items: "Arabian Ranches Golf Club — 18 holes" },
+      { icon: "⛳", label: "Golf Club", items: "Arabian Ranches Golf Club �€” 18 holes" },
       { icon: "🎡", label: "IMG Worlds", items: "IMG Worlds of Adventure 10 min" },
       { icon: "🌍", label: "Global Village", items: "Global Village 8 min drive" },
     ],

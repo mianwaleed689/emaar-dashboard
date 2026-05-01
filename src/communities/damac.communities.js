@@ -1,5 +1,5 @@
 
-// ── OFFICIAL LINKS ────────────────────────────────────────────────────
+// �”€�”€ OFFICIAL LINKS �”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€
 export const damacOfficialLinks = {
   developerWebsite: "https://www.damacproperties.com/en/",
   communitiesPage: "https://www.damacproperties.com/en/communities/",
@@ -9,7 +9,7 @@ export const damacOfficialLinks = {
 };
 
 /**
- * DXB ANALYTICS — DAMAC COMMUNITIES
+ * DXB ANALYTICS �€” DAMAC COMMUNITIES
  * 5 communities | Research: March 2026
  * Sources: DAMAC IR, DLD, Bayut, propsearch.ae, Knight Frank
  */
@@ -23,7 +23,7 @@ export const damacCommunities = [
     developer: "damac",
     districtCode: "DH",
     overview: "DAMAC Hills (formerly Akoya) is DAMAC's flagship 42-million-sqft master community in Dubailand, centred around the Trump International Golf Club Dubai. Home to 14,044 units across apartments, townhouses and villas, it offers a world-class lifestyle with Malibu Bay Waterpark, Akoya Park and the iconic Akoya Drive retail boulevard.",
-    type: "Master Community — Golf, Mixed Use",
+    type: "Master Community �€” Golf, Mixed Use",
     status: "Established",
     launched: 2013,
     location: {
@@ -34,7 +34,7 @@ export const damacCommunities = [
       toDowntown: "30 min",
       toAirport: "35 min",
       toMarina: "30 min",
-      nearestMetro: "No metro — private vehicle required",
+      nearestMetro: "No metro �€” private vehicle required",
       highways: ["Umm Suqeim Road (D63)", "Hessa Street (D61)", "Al Qudra Road"],
     },
     sizeSqFt: 42000000,
@@ -101,8 +101,8 @@ export const damacCommunities = [
     developer: "damac",
     districtCode: "DH2",
     overview: "DAMAC Hills 2 (formerly Akoya Oxygen) is a 55-million-sqft eco-inspired master community in south Dubailand featuring 30+ residential clusters and 5 themed districts. Built around a Tiger Woods Golf Course Design with Malibu Bay Wave Pool, butterfly garden, floating cinema and 50+ lifestyle amenities, it is one of Dubai's most amenity-rich communities.",
-    type: "Master Community — Golf, Wellness, Eco",
-    status: "Active — Phase delivery ongoing",
+    type: "Master Community �€” Golf, Wellness, Eco",
+    status: "Active �€” Phase delivery ongoing",
     launched: 2014,
     location: {
       area: "Al Yufrah 1, Dubailand (south Dubai)",
@@ -112,7 +112,7 @@ export const damacCommunities = [
       toDowntown: "40-45 min",
       toAirport: "40 min",
       toMarina: "40 min",
-      nearestMetro: "No metro — private vehicle required",
+      nearestMetro: "No metro �€” private vehicle required",
       highways: ["Al Qudra Road", "Hessa Street (D61)"],
     },
     sizeSqFt: 55000000,
@@ -173,7 +173,7 @@ export const damacCommunities = [
     transport: [
       "Al Qudra Road",
       "Hessa Street (D61)",
-      "Private vehicle essential — ~40 min from city centre",
+      "Private vehicle essential �€” ~40 min from city centre",
     ],
     hotels: ["DAMAC Hills 2 Hotel (Edge by Rotana, 3-star)"],
     confidence: "VERIFIED",
@@ -187,8 +187,8 @@ export const damacCommunities = [
     developer: "damac",
     districtCode: "DL",
     overview: "DAMAC Lagoons is a 45-million-sqft Mediterranean-themed waterfront master community in Dubailand, located opposite DAMAC Hills on Hessa Street. Divided into 12 themed clusters inspired by iconic Mediterranean destinations (Venice, Santorini, Costa Brava, Morocco etc), it features crystal lagoons, sandy beaches and Mediterranean architecture.",
-    type: "Master Community — Mediterranean Waterfront",
-    status: "Active — Multiple phases delivering",
+    type: "Master Community �€” Mediterranean Waterfront",
+    status: "Active �€” Multiple phases delivering",
     launched: 2021,
     location: {
       area: "Hessa Street, opposite DAMAC Hills, Dubailand",
@@ -198,7 +198,7 @@ export const damacCommunities = [
       toDowntown: "30 min",
       toAirport: "35 min",
       toMarina: "25 min",
-      nearestMetro: "No metro — private vehicle required",
+      nearestMetro: "No metro �€” private vehicle required",
       highways: ["Hessa Street (D61)", "Sheikh Zayed Bin Hamdan Al Nahyan Street"],
     },
     sizeSqFt: 45000000,
@@ -278,7 +278,7 @@ export const damacCommunities = [
       toDowntown: "35 min",
       toAirport: "35 min",
       toMarina: "30 min",
-      nearestMetro: "No metro — private vehicle required",
+      nearestMetro: "No metro �€” private vehicle required",
       highways: ["Hessa Street (D61)", "Al Qudra Road"],
     },
     sizeSqFt: 25000000,
@@ -294,8 +294,8 @@ export const damacCommunities = [
       avgYield: 6.5,
       aptYield: 0,
       villaYield: 6.5,
-      yoyGrowth: "N/A — recent launch",
-      capitalGrowth: "Early stage — strong appreciation expected",
+      yoyGrowth: "N/A �€” recent launch",
+      capitalGrowth: "Early stage �€” strong appreciation expected",
       investmentRating: "A",
       goldenVisa: true,
     },
@@ -317,7 +317,7 @@ export const damacCommunities = [
     ],
     subCommunities: [
       "Multiple island-themed clusters",
-      "Islands 2 — 5 themed zones (2030)",
+      "Islands 2 �€” 5 themed zones (2030)",
     ],
     schools: ["GEMS Metropole (20 min)", "Dove Green Private School (15 min)"],
     healthcare: ["Mediclinic Parkview (30 min)"],
@@ -338,8 +338,8 @@ export const damacCommunities = [
     name: "DAMAC Riverside",
     developer: "damac",
     districtCode: "DR",
-    overview: "DAMAC Riverside is a premium waterfront master community in Dubai Investment Park 2 (DIP2), spanning 250 acres. Inspired by the world's great cities — Rome, Paris, London, Amsterdam and New York — it offers 4,000+ units across studios, 1-2BR apartments and 4-5BR townhouses. Two lifestyle zones, the Water Vein and Green Vein, feature floating cinemas, hydroponic farms, zen spas and a floating opera. Handover expected March 2029.",
-    type: "Waterfront Master Community — Family",
+    overview: "DAMAC Riverside is a premium waterfront master community in Dubai Investment Park 2 (DIP2), spanning 250 acres. Inspired by the world's great cities �€” Rome, Paris, London, Amsterdam and New York �€” it offers 4,000+ units across studios, 1-2BR apartments and 4-5BR townhouses. Two lifestyle zones, the Water Vein and Green Vein, feature floating cinemas, hydroponic farms, zen spas and a floating opera. Handover expected March 2029.",
+    type: "Waterfront Master Community �€” Family",
     status: "Under Development",
     launched: 2024,
     location: {
@@ -350,7 +350,7 @@ export const damacCommunities = [
       toDowntown: "40 min",
       toAirport: "10 min (DWC)",
       toMarina: "25 min",
-      nearestMetro: "Dubai Investment Park Metro (nearby) — future expansion",
+      nearestMetro: "Dubai Investment Park Metro (nearby) �€” future expansion",
       highways: ["Sheikh Mohammed Bin Zayed Road (E311)", "Emirates Road (E611)", "Jebel Ali Al Hibab Road"],
     },
     sizeSqFt: 10890000,
@@ -366,8 +366,8 @@ export const damacCommunities = [
       avgYield: 5.5,
       aptYield: 6.0,
       villaYield: 0,
-      yoyGrowth: "N/A — under development",
-      capitalGrowth: "Strong expected — DIP2 growth corridor",
+      yoyGrowth: "N/A �€” under development",
+      capitalGrowth: "Strong expected �€” DIP2 growth corridor",
       investmentRating: "B+",
       goldenVisa: true,
     },
@@ -418,7 +418,7 @@ export const damacCommunities = [
     name: "DAMAC Sun City",
     developer: "damac",
     districtCode: "DSC",
-    overview: "DAMAC Sun City is DAMAC Properties' fifth master community in Dubailand, launched October 2024 adjacent to Meraas Cherrywoods. A wellness-focused community offering 4 and 5-bedroom townhouses with nature-inspired design — forest hiking trails, outdoor sunrise gym, monkey bar arena, camping areas and outdoor yoga. 749 units total, handover March 2028.",
+    overview: "DAMAC Sun City is DAMAC Properties' fifth master community in Dubailand, launched October 2024 adjacent to Meraas Cherrywoods. A wellness-focused community offering 4 and 5-bedroom townhouses with nature-inspired design �€” forest hiking trails, outdoor sunrise gym, monkey bar arena, camping areas and outdoor yoga. 749 units total, handover March 2028.",
     type: "Wellness Townhouse Community",
     status: "Under Development",
     launched: 2024,
@@ -430,7 +430,7 @@ export const damacCommunities = [
       toDowntown: "35 min",
       toAirport: "35 min",
       toMarina: "30 min",
-      nearestMetro: "No metro — private vehicle required",
+      nearestMetro: "No metro �€” private vehicle required",
       highways: ["Emirates Road (E611)", "Al Ain Road (E66)", "Sheikh Mohammed Bin Zayed Road (E311)"],
     },
     sizeSqFt: 0,
@@ -446,7 +446,7 @@ export const damacCommunities = [
       avgYield: 5.5,
       aptYield: 0,
       villaYield: 5.5,
-      yoyGrowth: "N/A — under development",
+      yoyGrowth: "N/A �€” under development",
       capitalGrowth: "Estimated 20-25% by handover (2028)",
       investmentRating: "B+",
       goldenVisa: true,

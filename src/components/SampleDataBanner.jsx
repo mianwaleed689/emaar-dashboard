@@ -1,10 +1,10 @@
-/* ─────────────────────────────────────────────────────────────
-   DXB ANALYTICS — SAMPLE DATA BANNER
+/* �”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€
+   DXB ANALYTICS �€” SAMPLE DATA BANNER
    src/components/SampleDataBanner.jsx
 
    A small yellow warning bar that appears above tab content when
    the tab is showing hardcoded seed data instead of live Firestore
-   data. This is a credibility safeguard — users should never be
+   data. This is a credibility safeguard �€” users should never be
    confused about whether they are looking at real or placeholder
    information.
 
@@ -15,15 +15,15 @@
    - source (optional): name of the tab or data source. Defaults to
      just "Sample data" if not provided.
    - message (optional): override the default message entirely.
-   ───────────────────────────────────────────────────────────── */
+   �”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€ */
 
 import React from "react";
 
 export default function SampleDataBanner({ source, message }) {
   const text = message
     || (source
-        ? `${source} is showing sample data — live data will appear once projects are added in admin`
-        : "Showing sample data — live data will appear once projects are added in admin");
+        ? `${source} is showing sample data �€” live data will appear once projects are added in admin`
+        : "Showing sample data �€” live data will appear once projects are added in admin");
 
   return (
     <div
