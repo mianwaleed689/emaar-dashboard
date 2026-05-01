@@ -653,7 +653,7 @@ function ProjectsTab({
               if (isDld) {
                 return (
                   <div style={{ width:52, height:52, borderRadius:"50%", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", border:`2px solid ${T.teal}`, background:"rgba(20,184,166,0.15)", flexShrink:0 }}>
-                    <span style={{ fontSize:16, color:T.teal, lineHeight:1 }}>→‚“</span>
+                    <span style={{ fontSize:16, color:T.teal, lineHeight:1 }}◆span>
                     <span style={{ fontSize:8, fontWeight:700, color:T.teal, marginTop:2 }}>DLD</span>
                   </div>
                 );
@@ -713,7 +713,7 @@ function ProjectsTab({
                       onMouseEnter={(e) => e.currentTarget.style.background = "rgba(212,168,67,0.25)"}
                       onMouseLeave={(e) => e.currentTarget.style.background = watchlist.some(w => w.id === p.id) ? "rgba(212,168,67,0.18)" : "rgba(255,255,255,0.04)"}
                     >
-                      {watchlist.some(w => w.id === p.id) ? "â“‚" : "â“‚"}
+                      {watchlist.some(w => w.id === p.id) ? "★" : "☆"}
                     </button>
                   )}
                   <div style={{ padding:"14px 16px", borderBottom:`1px solid ${T.border}` }} onClick={() => { setSelectedProject(p); setProjDetailTab("identity"); }}>
@@ -731,8 +731,8 @@ function ProjectsTab({
                         <div style={{ display:"flex", gap:5, flexWrap:"wrap", marginTop:6 }}>
                           {p.tier === 1 && <span style={{ fontSize:9, padding:"2px 7px", borderRadius:5, background:"rgba(16,185,129,0.12)", color:"#10B981", fontWeight:700 }}>Tier 1 Developer</span>}
                           {p.tier === 2 && <span style={{ fontSize:9, padding:"2px 7px", borderRadius:5, background:"rgba(245,158,11,0.12)", color:"#F59E0B", fontWeight:700 }}>Tier 2 Developer</span>}
-                          {p.goldenVisa && p.priceMin >= GOLDEN_VISA_THRESHOLD && <span style={{ fontSize:9, padding:"2px 7px", borderRadius:5, background:"rgba(212,168,67,0.15)", color:T.gold, fontWeight:700 }}>â“‚ Golden Visa Eligible</span>}
-                          {p.branded && <span style={{ fontSize:9, padding:"2px 7px", borderRadius:5, background:"rgba(139,92,246,0.15)", color:"#A78BFA", fontWeight:700 }}>€”�€� {p.brandPartner || "Branded"}</span>}
+                          {p.goldenVisa && p.priceMin >= GOLDEN_VISA_THRESHOLD && <span style={{ fontSize:9, padding:"2px 7px", borderRadius:5, background:"rgba(212,168,67,0.15)", color:T.gold, fontWeight:700 }}>🎫 Golden Visa Eligible</span>}
+                          {p.branded && <span style={{ fontSize:9, padding:"2px 7px", borderRadius:5, background:"rgba(139,92,246,0.15)", color:"#A78BFA", fontWeight:700 }}>◆ {p.brandPartner || "Branded"}</span>}
                           {p.escrowBank && <span style={{ fontSize:9, padding:"2px 7px", borderRadius:5, background:"rgba(20,184,166,0.08)", color:T.teal, fontWeight:700 }}>Escrow Verified</span>}
                         </div>
                       </div>
@@ -1420,7 +1420,7 @@ function ProjectsTab({
                   </div>
                   <div style={{ width:1, height:14, background:T.border, margin:"0 4px" }} />
                   <div style={{ display:"flex", alignItems:"center", gap:6 }}>
-                    <span style={{ fontSize:12, color:T.gold, fontWeight:800 }}>€”�€�</span>
+                    <span style={{ fontSize:12, color:T.gold, fontWeight:800 }}>◆</span>
                     <span style={{ fontSize:11, color:T.textSecondary }}><strong style={{ color:T.gold }}>Research-Enriched:</strong> Additional details curated from developer portals, Bayut, Property Finder.</span>
                   </div>
                 </div>
