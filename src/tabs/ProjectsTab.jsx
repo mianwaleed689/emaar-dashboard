@@ -1,13 +1,13 @@
-function DLDSalesPanel({selectedProject,T}){const community=selectedProject.masterProject||selectedProject.community||"";const projName=(selectedProject.name||selectedProject.project||"").toUpperCase();const projPPSF=selectedProject.ppsf||0;const [dldTx,setDldTx]=React.useState([]);const [txLoading,setTxLoading]=React.useState(true);const [txMode,setTxMode]=React.useState("community");const [filterBeds,setFilterBeds]=React.useState("All");React.useEffect(()=>{setDldTx([]);setTxLoading(true);if(!community){setTxLoading(false);return;}import("firebase/firestore").then(({collection,query,where,orderBy,limit,getDocs,getFirestore})=>{const fdb=getFirestore();const txq=query(collection(fdb,"transactions"),where("masterProject","==",community),where("transGroup","==","Sales"),orderBy("date","desc"),limit(50));getDocs(txq).then(snap=>{const all=snap.docs.map(d=>d.data());const bMatch=all.filter(t=>(t.projectName||"").toUpperCase().includes(projName.substring(0,8)));const isExact=bMatch.length>=3;setDldTx(isExact?bMatch:all);setTxMode(isExact?"building":"community");setTxLoading(false);}).catch(()=>setTxLoading(false));});},[community]);const filtered=filterBeds==="All"?dldTx:dldTx.filter(t=>t.rooms===filterBeds);const avgPpsf=filtered.length>0?Math.round(filtered.reduce((s,t)=>s+(t.ppsf||0)/10.764,0)/filtered.length):0;const avgPrice=filtered.length>0?filtered.reduce((s,t)=>s+(t.price||0),0)/filtered.length:0;const ppsfDiff=projPPSF>0&&avgPpsf>0?Math.round(((projPPSF-avgPpsf)/avgPpsf)*100):null;const beds=["All",...new Set(dldTx.map(t=>t.rooms).filter(Boolean))].sort();return(<div style={{paddingBottom:20}}><div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10,marginBottom:16}}>{[{label:"Transactions",value:String(filtered.length)+(txMode==="building"?" building":" area"),color:T.gold},{label:"Avg Price",value:avgPrice>0?"AED "+(avgPrice/1e6).toFixed(2)+"M":"N/A",color:"#63B3ED"},{label:"Avg PPSF",value:avgPpsf>0?"AED "+avgPpsf.toLocaleString():"N/A",color:T.gold},{label:"vs Project",value:ppsfDiff!==null?(ppsfDiff>0?"+"+String(ppsfDiff)+"%":String(ppsfDiff)+"%"):"N/A",color:ppsfDiff===null?T.textMuted:ppsfDiff>0?"#FC8181":"#68D391"}].map((k,i)=>(<div key={i} style={{background:"rgba(255,255,255,0.03)",border:"1px solid "+T.border,borderRadius:10,padding:"12px 14px"}}><div style={{fontSize:9,color:T.textMuted,fontWeight:700,textTransform:"uppercase",letterSpacing:0.8,marginBottom:4}}>{k.label}</div><div style={{fontSize:15,fontWeight:800,color:k.color,fontFamily:"Fraunces,serif"}}>{k.value}</div></div>))}</div>{ppsfDiff!==null&&<div style={{marginBottom:14,padding:"10px 14px",borderRadius:8,background:ppsfDiff>10?"rgba(252,129,129,0.08)":ppsfDiff<-10?"rgba(104,211,145,0.08)":"rgba(212,168,67,0.06)",border:"1px solid "+(ppsfDiff>10?"rgba(252,129,129,0.25)":ppsfDiff<-10?"rgba(104,211,145,0.25)":"rgba(212,168,67,0.2)")}}><span style={{fontSize:11,fontWeight:700,color:ppsfDiff>10?"#FC8181":ppsfDiff<-10?"#68D391":T.gold}}>{ppsfDiff>10?"Priced "+String(ppsfDiff)+"% above comparable sales":ppsfDiff<-10?"Priced "+String(Math.abs(ppsfDiff))+"% below comparable sales":"Priced in line with market"}</span></div>}<div style={{display:"flex",gap:6,marginBottom:12,alignItems:"center",flexWrap:"wrap"}}><span style={{fontSize:10,color:T.textMuted,fontWeight:700}}>Beds:</span>{beds.map(b=><button key={b} type="button" onClick={()=>setFilterBeds(b)} style={{padding:"3px 10px",borderRadius:16,fontSize:10,cursor:"pointer",background:filterBeds===b?"rgba(212,168,67,0.15)":"rgba(255,255,255,0.04)",border:"1px solid "+(filterBeds===b?T.gold:T.border),color:filterBeds===b?T.gold:T.textMuted,fontFamily:"Outfit,sans-serif"}}>{b}</button>)}<span style={{marginLeft:"auto",fontSize:10,color:txMode==="building"?"#68D391":T.gold}}>{txMode==="building"?"Building data":"Community data"}</span></div>{txLoading&&<div style={{padding:40,textAlign:"center",color:T.textMuted,fontSize:12}}>Loading DLD transactions...</div>}{!txLoading&&filtered.length===0&&<div style={{padding:40,textAlign:"center",color:T.textMuted,fontSize:12}}>No transactions found</div>}{!txLoading&&filtered.length>0&&<div style={{border:"1px solid "+T.border,borderRadius:10,overflow:"hidden"}}><div style={{display:"grid",gridTemplateColumns:"1.2fr 1fr 1fr 0.8fr 0.8fr 2fr",padding:"8px 16px",background:"rgba(255,255,255,0.03)",borderBottom:"1px solid "+T.border}}>{["Date","Price","PPSF/sqft","Beds","Type","Building"].map(h=><div key={h} style={{fontSize:9,fontWeight:700,color:T.textMuted,textTransform:"uppercase",letterSpacing:0.8}}>{h}</div>)}</div>{filtered.slice(0,20).map((tx,i)=>{const ppsf=Math.round((tx.ppsf||0)/10.764);const ppsfColor=projPPSF>0?(ppsf>projPPSF*1.1?"#FC8181":ppsf<projPPSF*0.9?"#68D391":T.textSecondary):T.textSecondary;return(<div key={i} style={{display:"grid",gridTemplateColumns:"1.2fr 1fr 1fr 0.8fr 0.8fr 2fr",padding:"9px 16px",borderBottom:i<filtered.slice(0,20).length-1?"1px solid rgba(255,255,255,0.03)":"none"}} onMouseEnter={e=>e.currentTarget.style.background="rgba(255,255,255,0.02)"} onMouseLeave={e=>e.currentTarget.style.background="transparent"}><div style={{fontSize:11,color:T.textSecondary}}>{tx.date?tx.date.substring(0,10):""}</div><div style={{fontSize:12,fontWeight:700,color:T.gold}}>{tx.price?"AED "+(tx.price/1e6).toFixed(2)+"M":""}</div><div style={{fontSize:12,fontWeight:600,color:ppsfColor}}>{ppsf>0?"AED "+ppsf.toLocaleString():""}</div><div style={{fontSize:11,color:T.textSecondary}}>{tx.rooms||""}</div><div style={{fontSize:11,color:T.textSecondary}}>{tx.propertySubType||""}</div><div style={{fontSize:10,color:T.textMuted,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{tx.buildingName||tx.projectName||""}</div></div>);})}</div>}<div style={{marginTop:12,fontSize:10,color:T.textMuted,display:"flex",justifyContent:"space-between"}}><span>Source: Dubai Land Department</span><span>Green PPSF = below project price, Red = above</span></div></div>);}
+function DLDSalesPanel({selectedProject — }){const community=selectedProject.masterProject||selectedProject.community||"";const projName=(selectedProject.name||selectedProject.project||"").toUpperCase();const projPPSF=selectedProject.ppsf||0;const [dldTx,setDldTx]=React.useState([]);const [txLoading,setTxLoading]=React.useState(true);const [txMode,setTxMode]=React.useState("community");const [filterBeds,setFilterBeds]=React.useState("All");React.useEffect(()=>{setDldTx([]);setTxLoading(true);if(!community){setTxLoading(false);return;}import("firebase/firestore").then(({collection,query,where,orderBy,limit,getDocs,getFirestore})=>{const fdb=getFirestore();const txq=query(collection(fdb,"transactions"),where("masterProject","==",community),where("transGroup","==","Sales"),orderBy("date","desc"),limit(50));getDocs(txq).then(snap=>{const all=snap.docs.map(d=>d.data());const bMatch=all.filter(t=>(t.projectName||"").toUpperCase().includes(projName.substring(0,8)));const isExact=bMatch.length>=3;setDldTx(isExact?bMatch:all);setTxMode(isExact?"building":"community");setTxLoading(false);}).catch(()=>setTxLoading(false));});},[community]);const filtered=filterBeds==="All"?dldTx:dldTx.filter(t=>t.rooms===filterBeds);const avgPpsf=filtered.length>0?Math.round(filtered.reduce((s,t)=>s+(t.ppsf||0)/10.764,0)/filtered.length):0;const avgPrice=filtered.length>0?filtered.reduce((s,t)=>s+(t.price||0),0)/filtered.length:0;const ppsfDiff=projPPSF>0&&avgPpsf>0?Math.round(((projPPSF-avgPpsf)/avgPpsf)*100):null;const beds=["All",...new Set(dldTx.map(t=>t.rooms).filter(Boolean))].sort();return(<div style={{paddingBottom:20}}><div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10,marginBottom:16}}>{[{label:"Transactions",value:String(filtered.length)+(txMode==="building"?" building":" area"),color:T.gold},{label:"Avg Price",value:avgPrice>0?"AED "+(avgPrice/1e6).toFixed(2)+"M":"N/A",color:"#63B3ED"},{label:"Avg PPSF",value:avgPpsf>0?"AED "+avgPpsf.toLocaleString():"N/A",color:T.gold},{label:"vs Project",value:ppsfDiff!==null?(ppsfDiff>0?"+"+String(ppsfDiff)+"%":String(ppsfDiff)+"%"):"N/A",color:ppsfDiff===null?T.textMuted:ppsfDiff>0?"#FC8181":"#68D391"}].map((k,i)=>(<div key={i} style={{background:"rgba(255,255,255,0.03)",border:"1px solid "+T.border,borderRadius:10,padding:"12px 14px"}}><div style={{fontSize:9,color:T.textMuted,fontWeight:700,textTransform:"uppercase",letterSpacing:0.8,marginBottom:4}}>{k.label}</div><div style={{fontSize:15,fontWeight:800,color:k.color,fontFamily:"Fraunces,serif"}}>{k.value}</div></div>))}</div>{ppsfDiff!==null&&<div style={{marginBottom:14,padding:"10px 14px",borderRadius:8,background:ppsfDiff>10?"rgba(252,129,129,0.08)":ppsfDiff<-10?"rgba(104,211,145,0.08)":"rgba(212,168,67,0.06)",border:"1px solid "+(ppsfDiff>10?"rgba(252,129,129,0.25)":ppsfDiff<-10?"rgba(104,211,145,0.25)":"rgba(212,168,67,0.2)")}}><span style={{fontSize:11,fontWeight:700,color:ppsfDiff>10?"#FC8181":ppsfDiff<-10?"#68D391":T.gold}}>{ppsfDiff>10?"Priced "+String(ppsfDiff)+"% above comparable sales":ppsfDiff<-10?"Priced "+String(Math.abs(ppsfDiff))+"% below comparable sales":"Priced in line with market"}</span></div>}<div style={{display:"flex",gap:6,marginBottom:12,alignItems:"center",flexWrap:"wrap"}}><span style={{fontSize:10,color:T.textMuted,fontWeight:700}}>Beds:</span>{beds.map(b=><button key={b} type="button" onClick={()=>setFilterBeds(b)} style={{padding:"3px 10px",borderRadius:16,fontSize:10,cursor:"pointer",background:filterBeds===b?"rgba(212,168,67,0.15)":"rgba(255,255,255,0.04)",border:"1px solid "+(filterBeds===b?T.gold:T.border),color:filterBeds===b?T.gold:T.textMuted,fontFamily:"Outfit,sans-serif"}}>{b}</button>)}<span style={{marginLeft:"auto",fontSize:10,color:txMode==="building"?"#68D391":T.gold}}>{txMode==="building"?"Building data":"Community data"}</span></div>{txLoading&&<div style={{padding:40,textAlign:"center",color:T.textMuted,fontSize:12}}>Loading DLD transactions...</div>}{!txLoading&&filtered.length===0&&<div style={{padding:40,textAlign:"center",color:T.textMuted,fontSize:12}}>No transactions found</div>}{!txLoading&&filtered.length>0&&<div style={{border:"1px solid "+T.border,borderRadius:10,overflow:"hidden"}}><div style={{display:"grid",gridTemplateColumns:"1.2fr 1fr 1fr 0.8fr 0.8fr 2fr",padding:"8px 16px",background:"rgba(255,255,255,0.03)",borderBottom:"1px solid "+T.border}}>{["Date","Price","PPSF/sqft","Beds","Type","Building"].map(h=><div key={h} style={{fontSize:9,fontWeight:700,color:T.textMuted,textTransform:"uppercase",letterSpacing:0.8}}>{h}</div>)}</div>{filtered.slice(0,20).map((tx,i)=>{const ppsf=Math.round((tx.ppsf||0)/10.764);const ppsfColor=projPPSF>0?(ppsf>projPPSF*1.1?"#FC8181":ppsf<projPPSF*0.9?"#68D391":T.textSecondary):T.textSecondary;return(<div key={i} style={{display:"grid",gridTemplateColumns:"1.2fr 1fr 1fr 0.8fr 0.8fr 2fr",padding:"9px 16px",borderBottom:i<filtered.slice(0,20).length-1?"1px solid rgba(255,255,255,0.03)":"none"}} onMouseEnter={e=>e.currentTarget.style.background="rgba(255,255,255,0.02)"} onMouseLeave={e=>e.currentTarget.style.background="transparent"}><div style={{fontSize:11,color:T.textSecondary}}>{tx.date?tx.date.substring(0,10):""}</div><div style={{fontSize:12,fontWeight:700,color:T.gold}}>{tx.price?"AED "+(tx.price/1e6).toFixed(2)+"M":""}</div><div style={{fontSize:12,fontWeight:600,color:ppsfColor}}>{ppsf>0?"AED "+ppsf.toLocaleString():""}</div><div style={{fontSize:11,color:T.textSecondary}}>{tx.rooms||""}</div><div style={{fontSize:11,color:T.textSecondary}}>{tx.propertySubType||""}</div><div style={{fontSize:10,color:T.textMuted,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{tx.buildingName||tx.projectName||""}</div></div>);})}</div>}<div style={{marginTop:12,fontSize:10,color:T.textMuted,display:"flex",justifyContent:"space-between"}}><span>Source: Dubai Land Department</span><span>Green PPSF = below project price — ed = above</span></div></div>);}
 /* eslint-disable */
-/* PROJECTS TAB ‚€� Master catalog of all Dubai property projects
+/* PROJECTS TAB ‚ — aster catalog of all Dubai property projects
    Includes detail modal (rendered via React Portal for safety)
 */
 
 import React, { useState, useMemo, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { createPortal } from "react-dom";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from "recharts";
+import { BarChart — ar — Axis — Axis — artesianGrid — ooltip — esponsiveContainer — ell } from "recharts";
 import { T } from "../data";
 import SmartEmptyState from "../components/SmartEmptyState";
 import SearchableSelect from "../components/SearchableSelect";
@@ -33,10 +33,9 @@ const MODES = [
 
    When a user picks a Display Type like "Apartment", the filter
    expands to match ALL internal types that belong to that display
-   type: Apartment matches Apartment, Studio Apartment, Duplex,
-   Penthouse, Loft, Serviced Apartment in the data.
+   type: Apartment matches Apartment — tudio Apartment — uplex — enthouse — oft — erviced Apartment in the data.
 
-   This mirrors how Bayut, Property Finder, Rightmove, Zillow work.
+   This mirrors how Bayut — roperty Finder — ightmove — illow work.
    =============================================================== */
 
 const CATEGORY_TO_DISPLAY = {
@@ -114,9 +113,8 @@ function isValidReraNumber(num) {
 }
 
 /* â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚
-   DXB ANALYTICS ‚€� DATA PLATFORM LAYER
-   â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€
-   Legal positioning: This is a DATA AGGREGATION platform, not advice.
+   DXB ANALYTICS ‚ — ATA PLATFORM LAYER
+   â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚€â‚ — egal positioning: This is a DATA AGGREGATION platform, not advice.
    All data displayed is sourced from Dubai Land Department (DLD) records.
    No investment recommendations. No BUY/SELL verdicts.
    For advice, users must consult RERA-licensed consultants.
@@ -177,7 +175,7 @@ function communityBenchmarkPPSF(p) {
     };
   }
   if (p.communityAvgPPSF) return { value: p.communityAvgPPSF, source:"Legacy estimate" };
-  return { value: null, source:"Not available ‚€� DLD benchmark pending" };
+  return { value: null, source:"Not available ‚ — LD benchmark pending" };
 }
 
 /* STR indicator ‚€� factual flag only (not a score) */
@@ -395,8 +393,7 @@ function ProjectsTab({
     return () => window.removeEventListener("keydown", handler);
   }, [selectedProject, setSelectedProject]);
 
-  /* Phase 3.16: deep-link reader. When user arrives via /project/<id>,
-     App.jsx ProjectRedirect passes location.state.openProjectId.
+  /* Phase 3.16: deep-link reader. When user arrives via /project/<id> — pp.jsx ProjectRedirect passes location.state.openProjectId.
      Match against liveProjects + SEED_PROJECTS + extraProjects, auto-open. */
   const _location = useLocation();
   useEffect(() => {
@@ -417,13 +414,13 @@ function ProjectsTab({
       }
     } catch {}
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [_location, liveProjects, SEED_PROJECTS, extraProjects]);
+  }, [_location, liveProjects — EED_PROJECTS, extraProjects]);
 
   return (
     <>
       {(() => {
 
-            /* Phase 4: merge all data sources ‚€� SEED (18 Verified) + DLD developments (2,798 Registry) + extras.
+            /* Phase 4: merge all data sources ‚ — EED (18 Verified) + DLD developments (2,798 Registry) + extras.
                Guard every spread with Array.isArray to prevent 'not iterable' crashes when props
                arrive as undefined/null (Firestore still loading). */
             const allSources = [
@@ -534,7 +531,7 @@ function ProjectsTab({
                 const bDate = b.launchDate || b.projectStartDate || "";
                 return bDate.localeCompare(aDate);
               }
-              /* Default 'relevance' ‚€� interleave: Research (enriched data) first, DLD second, within each group by score/data completeness */
+              /* Default 'relevance' ‚€� interleave: Research (enriched data) first — LD second, within each group by score/data completeness */
               const aIsDld = String(a.id || "").startsWith("dld-") || a.dldSource;
               const bIsDld = String(b.id || "").startsWith("dld-") || b.dldSource;
               if (aIsDld !== bIsDld) return aIsDld ? 1 : -1; /* Research first */
@@ -593,7 +590,7 @@ function ProjectsTab({
             };
             // Legacy flat array kept for backward compat
             const commOptions = ["All", ...enrichedComms.map(c => c.value)].slice(0, 500);
-            /* Escrow bank options with project counts ‚€� DLD enriched */
+            /* Escrow bank options with project counts ‚ — LD enriched */
             const escrowCounts = {};
             rawProjects.forEach(p => {
               if (p.escrowBank) escrowCounts[p.escrowBank] = (escrowCounts[p.escrowBank] || 0) + 1;
@@ -629,8 +626,7 @@ function ProjectsTab({
               padding:"10px 36px 10px 14px",
               outline:"none",
               cursor:"pointer",
-              appearance:"none",
-              WebkitAppearance:"none",
+              appearance:"none" — ebkitAppearance:"none",
               backgroundImage:`url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23a0a0a0' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E")`,
               backgroundRepeat:"no-repeat",
               backgroundPosition:"right 12px center",
@@ -643,7 +639,7 @@ function ProjectsTab({
               return <span style={{ fontSize:10, fontWeight:700, padding:"2px 8px", borderRadius:10, background:cfg.bg, color:cfg.color }}>{status}</span>;
             };
 
-            /* DataCompletenessBadge ‚€� shows factual data completeness, NOT investment advice.
+            /* DataCompletenessBadge ‚€� shows factual data completeness — OT investment advice.
                Replaces the old ScoreCircle/scoreLabel which said "Strong Buy/Buy/Hold" =
                unlicensed investment advice under RERA law. */
             const DataCompletenessBadge = ({ p }) => {
@@ -683,12 +679,10 @@ function ProjectsTab({
                   {/* DATA SOURCE BADGE ‚€� top-right corner */}
                   <div style={{ position:"absolute", top:10, right:10, zIndex:2 }}>
                     {isDldVerified ? (
-                      <span style={{ fontSize:9, padding:"3px 8px", borderRadius:5, background:"rgba(20,184,166,0.12)", color:T.teal, fontWeight:700, border:`1px solid rgba(20,184,166,0.3)`, display:"inline-flex", alignItems:"center", gap:4 }}>
-                        ◆ DLD Verified
+                      <span style={{ fontSize:9, padding:"3px 8px", borderRadius:5, background:"rgba(20,184,166,0.12)", color:T.teal, fontWeight:700, border:`1px solid rgba(20,184,166,0.3)`, display:"inline-flex", alignItems:"center", gap:4 }}> — LD Verified
                       </span>
                     ) : (
-                      <span style={{ fontSize:9, padding:"3px 8px", borderRadius:5, background:"rgba(212,168,67,0.08)", color:T.gold, fontWeight:700, border:`1px solid rgba(212,168,67,0.2)`, display:"inline-flex", alignItems:"center", gap:4 }}>
-                        ◆ Research
+                      <span style={{ fontSize:9, padding:"3px 8px", borderRadius:5, background:"rgba(212,168,67,0.08)", color:T.gold, fontWeight:700, border:`1px solid rgba(212,168,67,0.2)`, display:"inline-flex", alignItems:"center", gap:4 }}> — esearch
                       </span>
                     )}
                   </div>
@@ -731,7 +725,7 @@ function ProjectsTab({
                           {p.tier === 2 && <span style={{ fontSize:9, padding:"2px 7px", borderRadius:5, background:"rgba(245,158,11,0.12)", color:"#F59E0B", fontWeight:700 }}>Tier 2 Developer</span>}
                           {p.goldenVisa && p.priceMin >= GOLDEN_VISA_THRESHOLD && <span style={{ fontSize:9, padding:"2px 7px", borderRadius:5, background:"rgba(212,168,67,0.15)", color:T.gold, fontWeight:700 }}>â“‚ Golden Visa Eligible</span>}
                           {p.branded && <span style={{ fontSize:9, padding:"2px 7px", borderRadius:5, background:"rgba(139,92,246,0.15)", color:"#A78BFA", fontWeight:700 }}>€”�€� {p.brandPartner || "Branded"}</span>}
-                          {p.escrowBank && <span style={{ fontSize:9, padding:"2px 7px", borderRadius:5, background:"rgba(20,184,166,0.08)", color:T.teal, fontWeight:700 }}>Escrow →‚“</span>}
+                          {p.escrowBank && <span style={{ fontSize:9, padding:"2px 7px", borderRadius:5, background:"rgba(20,184,166,0.08)", color:T.teal, fontWeight:700 }}>Escrow Verified</span>}
                         </div>
                       </div>
                       <div style={{ display:"flex", flexDirection:"column", alignItems:"flex-end", gap:4 }}>
@@ -945,7 +939,7 @@ function ProjectsTab({
                     </select>
                   </div>
 
-                  {/* Configuration ‚€� HIDDEN when not applicable */}
+                  {/* Configuration ‚ — IDDEN when not applicable */}
                   {shouldShowConfiguration(projCategory, projMode) ? (
                     <div style={{ flex:"1 1 140px", minWidth:120 }}>
                       <div style={{ fontSize:10, color:T.textMuted, marginBottom:6, letterSpacing:0.5, textTransform:"uppercase", fontFamily:"'Outfit',sans-serif", fontWeight:600 }}>Configuration</div>
@@ -1177,7 +1171,7 @@ function ProjectsTab({
                           </select>
                         </div>
                         <div>
-                          <div style={{ fontSize: 10, color: T.textMuted, marginBottom: 6, letterSpacing: 0.5, textTransform: "uppercase", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>Escrow Bank</div>
+                          <div style={{ fontSize: 10, color: T.textMuted, marginBottom: 6, letterSpacing: 0.5, textTransform: "uppercase", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>Escrow Verified</div>
                           <select value={projEscrowBank} onChange={e => setProjEscrowBank(e.target.value)} style={{
                             width: "100%", padding: "10px 12px",
                             background: "rgba(255,255,255,0.04)",
@@ -1259,7 +1253,7 @@ function ProjectsTab({
                           <option value="yield">Yield: high to low</option>
                           <option value="price_asc">Price: low to high</option>
                           <option value="price_desc">Price: high to low</option>
-                          <option value="alphabetical">Name: A‚€�Z</option>
+                          <option value="alphabetical">Name: A‚ — </option>
                           <option value="recent">Recently launched</option>
                         </select>
 
@@ -1419,7 +1413,7 @@ function ProjectsTab({
                   <div style={{ width:1, height:14, background:T.border, margin:"0 4px" }} />
                   <div style={{ display:"flex", alignItems:"center", gap:6 }}>
                     <span style={{ fontSize:12, color:T.gold, fontWeight:800 }}>€”�€�</span>
-                    <span style={{ fontSize:11, color:T.textSecondary }}><strong style={{ color:T.gold }}>Research-Enriched:</strong> Additional details curated from developer portals, Bayut, Property Finder.</span>
+                    <span style={{ fontSize:11, color:T.textSecondary }}><strong style={{ color:T.gold }}>Research-Enriched:</strong> Additional details curated from developer portals — ayut — roperty Finder.</span>
                   </div>
                 </div>
 
@@ -1832,7 +1826,7 @@ function ProjectsTab({
                         <div style={{ fontSize:12, fontWeight:700, color:T.white, marginBottom:14 }}>Unit Mix Distribution</div>
                         <div style={{ display:"flex", gap:4, height:28, borderRadius:8, overflow:"hidden", marginBottom:12 }}>
                           {mix.map((u,i) => {
-                            const colors = [T.gold, T.teal, T.green, "#8B5CF6", "#F59E0B"];
+                            const colors = [T.gold — .teal — .green, "#8B5CF6", "#F59E0B"];
                             return (
                               <div key={i} style={{ width:`${u.pct}%`, background:colors[i % colors.length], display:"flex", alignItems:"center", justifyContent:"center", fontSize:10, fontWeight:700, color:"#000" }}>
                                 {u.pct >= 8 ? `${u.type} ${u.pct}%` : ""}
@@ -1853,7 +1847,7 @@ function ProjectsTab({
                     )}
                     {selectedProject.unitBreakdown?.length > 0 && (
                       <div className="chart-box" style={{ padding:20, marginBottom:12 }}>
-                        <div style={{ fontSize:12, fontWeight:700, color:T.white, marginBottom:14 }}>Unit Type ‚€� Price & PPSF (Developer Disclosed)</div>
+                        <div style={{ fontSize:12, fontWeight:700, color:T.white, marginBottom:14 }}>Unit Type ‚ — rice & PPSF (Developer Disclosed)</div>
                         <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(200px, 1fr))", gap:10 }}>
                           {Object.entries(selectedProject.unitBreakdown||{}).map(([uType,uCount],i) => (
                             <div key={i} style={{ padding:"14px 16px", background:T.surfaceAlt, borderRadius:10, border:`1px solid ${T.border}` }}>
@@ -1952,7 +1946,7 @@ function ProjectsTab({
                           <div style={{ fontSize:18, fontWeight:800, color:selectedProject.postHandover ? T.green : T.textSecondary, fontFamily:"'Fraunces',serif" }}>{selectedProject.postHandover ? "Available" : "Not available"}</div>
                         </div>
                         <div>
-                          <div style={{ fontSize:10, color:T.textMuted, marginBottom:4 }}>Escrow Bank</div>
+                          <div style={{ fontSize:10, color:T.textMuted, marginBottom:4 }}>Escrow Verified</div>
                           <div style={{ fontSize:14, fontWeight:700, color:T.teal }}>{selectedProject.escrowBank || "‚€�"}</div>
                         </div>
                         <div>
@@ -1971,7 +1965,7 @@ function ProjectsTab({
                             </div>
                           </div>
                           <div style={{ fontSize:11, color:T.textMuted, lineHeight:1.7 }}>
-                            Worked example ‚€� AED {((selectedProject.priceMin||0)/1000000).toFixed(1)}M: Pay AED {((selectedProject.priceMin||0)*(parseInt(selectedProject.paymentPlan.split("/")[0])||60)/100/1000000).toFixed(2)}M during construction, AED {((selectedProject.priceMin||0)*(parseInt(selectedProject.paymentPlan.split("/")[1])||40)/100/1000000).toFixed(2)}M at handover.
+                            Worked example ‚ — ED {((selectedProject.priceMin||0)/1000000).toFixed(1)}M: Pay AED {((selectedProject.priceMin||0)*(parseInt(selectedProject.paymentPlan.split("/")[0])||60)/100/1000000).toFixed(2)}M during construction — ED {((selectedProject.priceMin||0)*(parseInt(selectedProject.paymentPlan.split("/")[1])||40)/100/1000000).toFixed(2)}M at handover.
                           </div>
                         </div>
                       )}
@@ -2045,11 +2039,11 @@ function ProjectsTab({
                         <div style={{ fontSize:10, color:T.textMuted }}>{rera.verified ? "#" + rera.number : "Check DLD registry"}</div>
                       </div>
                       <div className="kpi-card">
-                        <div style={{ fontSize:10, fontWeight:700, color:T.textMuted, letterSpacing:1, textTransform:"uppercase", marginBottom:8 }}>Escrow Compliance</div>
+                        <div style={{ fontSize:10, fontWeight:700, color:T.textMuted, letterSpacing:1, textTransform:"uppercase", marginBottom:8 }}>Escrow Verified</div>
                         <div style={{ fontFamily:"'Fraunces',serif", fontSize:18, fontWeight:800, color:esc.verified ? T.green : "#F59E0B" }}>{esc.label}</div>
                       </div>
                       <div className="kpi-card">
-                        <div style={{ fontSize:10, fontWeight:700, color:T.textMuted, letterSpacing:1, textTransform:"uppercase", marginBottom:8 }}>Escrow Bank</div>
+                        <div style={{ fontSize:10, fontWeight:700, color:T.textMuted, letterSpacing:1, textTransform:"uppercase", marginBottom:8 }}>Escrow Verified</div>
                         <div style={{ fontSize:14, fontWeight:700, color:T.teal }}>{selectedProject.escrowBank || "‚€�"}</div>
                       </div>
                       <div className="kpi-card">
@@ -2272,7 +2266,7 @@ function ProjectsTab({
                       const origin = (typeof window !== "undefined" && window.location && window.location.origin) ? window.location.origin : "https://emaar-dashboard.vercel.app";
                       const projectUrl = `${origin}/project/${encodeURIComponent(selectedProject.id || "")}`;
                       const txt = [
-                        "ðŸ€ï¸ DXB ANALYTICS ‚€� PROPERTY DATA REPORT",
+                        "ðŸ€ï¸ DXB ANALYTICS ‚ — ROPERTY DATA REPORT",
                         "â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚",
                         `ðŸ‚“€™ ${selectedProject.project || selectedProject.name}`,
                         `ðŸ¢ Developer: ${selectedProject.developer}`,
@@ -2291,7 +2285,7 @@ function ProjectsTab({
                         "",
                         `ðŸ‚ RERA: ${selectedProject.reraNo||selectedProject.projectNumber||"TBC"} | Escrow: ${selectedProject.escrowBank||"TBC"}`,
                         "",
-                        `ðŸ‚‚€� Full report: ${projectUrl}`,
+                        `ðŸ‚‚ — ull report: ${projectUrl}`,
                         "â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚",
                         "Data Source: Dubai Land Department (DLD) public records",
                         "Informational only ‚€� not investment advice",
@@ -2310,9 +2304,9 @@ function ProjectsTab({
                                 await navigator.clipboard.writeText(projectUrl);
                                 const el = document.activeElement;
                                 const original = el && el.textContent;
-                                if (el && el.textContent != null) { el.textContent = "→‚“ Copied!"; setTimeout(() => { if (el && original) el.textContent = original; }, 1500); }
+                                if (el && el.textContent != null) { el.textContent = "→‚ — opied!"; setTimeout(() => { if (el && original) el.textContent = original; }, 1500); }
                               } catch {}
-                            }} style={btnStyle("212,168,67")}>ðŸ‚‚€� Copy Link</button>
+                            }} style={btnStyle("212,168,67")}>ðŸ‚‚ — opy Link</button>
                             <button type="button" onClick={() => { setSelectedProject(null); handleTabChange("Mortgage"); }} style={{ padding:"10px 18px", background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:8, color:T.textSecondary, fontSize:12, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>Mortgage Calculator</button>
                             <button type="button" onClick={() => { setSelectedProject(null); handleTabChange("My Leads"); }} style={{ padding:"10px 18px", background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:8, color:T.textSecondary, fontSize:12, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>Add to Leads</button>
                           </div>
