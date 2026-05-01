@@ -277,6 +277,8 @@ function ProjectsTab({
   const [projConstruction, setProjConstruction] = useState("All");
   /* Separate state for filter panel so it doesn't clobber grid/list view mode */
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [projectPage, setProjectPage] = useState(1);
+  const PROJECTS_PER_PAGE = 30;
 
   /* Phase 2.4 Batch 3: stack the top-bar global filter on top of the
      existing internal filter system. Both must match for a project to appear.
