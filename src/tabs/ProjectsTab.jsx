@@ -2250,8 +2250,8 @@ const [txLoading,setTxLoading]=React.useState(true);
 React.useEffect(()=>{setDldTx([]);setTxLoading(true);if(!community){setTxLoading(false);return;}
 import("firebase/firestore").then(({collection,query,where,orderBy,limit,getDocs,getFirestore})=>{
 const fdb=getFirestore();
-const txq=query(collection(fdb,"transactions"),where("masterProject","==",community),where("transGroup","==","Sales"),orderBy("date","desc"),limit(10));
-getDocs(txq).then(snap=>{setDldTx(snap.docs.map(d=>d.data()));setTxLoading(false);}).catch(()=>setTxLoading(false));
+const txq=query(collection(fdb,"transactions"),where("masterProject","==",community),where("transGroup","==","Sales"),orderBy("date","desc"),limit(50));
+getDocs(txq).then(snap=>{const all=snap.docs.map(d=>d.data());const buildingMatch=all.filter(t=>(t.projectName||"").toUpperCase().includes(projectName.substring(0,10)));setDldTx(buildingMatch.length>=3?buildingMatch:all);setTxLoading(false);}).catch(()=>setTxLoading(false));
 });},[community]);
 return(<div>
 <div style={{padding:"14px 20px",background:"rgba(212,168,67,0.05)",border:"1px solid rgba(212,168,67,0.15)",borderRadius:10,marginBottom:16}}>
@@ -2353,6 +2353,7 @@ return(<div>
 
 function DLDSalesPanel({selectedProject,T}){
   const community=selectedProject.masterProject||selectedProject.community||"";
+  const projectName=(selectedProject.name||selectedProject.project||"").toUpperCase();
   const [dldTx,setDldTx]=React.useState([]);
   const [txLoading,setTxLoading]=React.useState(true);
   React.useEffect(()=>{
