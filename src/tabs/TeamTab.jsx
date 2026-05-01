@@ -1,7 +1,7 @@
 /* eslint-disable */
 /*
-  DXB ANALYTICS — TEAM TAB
-  Session 12 — Agent Account Creation + Deactivation
+  DXB ANALYTICS Ã¢ÂÂ TEAM TAB
+  Session 12 Ã¢ÂÂ Agent Account Creation + Deactivation
   Manager creates agents directly from dashboard
 */
 
@@ -21,7 +21,7 @@ const SOURCE_COLORS = {
   "Website":"#14B8A6","Manual":"#94A3B8","Cold Call":"#F59E0B","Email":"#6366F1"
 };
 
-const fmtB = v => { const n=parseFloat(v||0); if(!n) return "—"; return n>=1e6?"AED "+(n/1e6).toFixed(1)+"M":"AED "+n.toLocaleString(); };
+const fmtB = v => { const n=parseFloat(v||0); if(!n) return "Ã¢ÂÂ"; return n>=1e6?"AED "+(n/1e6).toFixed(1)+"M":"AED "+n.toLocaleString(); };
 
 export default function TeamTab({ teamMembers=[], teamMembersLoading, myLeads=[], deals=[], orgRole, userRole, orgId, firebaseUser, orgName }) {
 
@@ -34,7 +34,7 @@ export default function TeamTab({ teamMembers=[], teamMembersLoading, myLeads=[]
     </div>
   );
 
-  // ── State ──────────────────────────────────────────────────
+  // Ã¢ÂÂÃ¢ÂÂ State Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
   const [showCreate,  setShowCreate]  = useState(false);
   const [showDeact,   setShowDeact]   = useState(null);  // agent being deactivated
   const [toast,       setToast]       = useState(null);
@@ -48,7 +48,7 @@ export default function TeamTab({ teamMembers=[], teamMembersLoading, myLeads=[]
     setTimeout(()=>setToast(null),3500);
   };
 
-  // ── Create agent account ───────────────────────────────────
+  // Ã¢ÂÂÃ¢ÂÂ Create agent account Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
   const createAgent = async () => {
     if(!form.name.trim())    { notify("Agent name is required","error"); return; }
     if(!form.email.trim())   { notify("Email is required","error"); return; }
@@ -60,7 +60,7 @@ export default function TeamTab({ teamMembers=[], teamMembersLoading, myLeads=[]
       // Save current manager session before creating new user
       const managerEmail    = firebaseUser?.email || "";
       const managerUid      = firebaseUser?.uid   || "";
-      const managerPassword = null; // we don't have it — use Admin SDK in production
+      const managerPassword = null; // we don't have it Ã¢ÂÂ use Admin SDK in production
 
       // Create Firebase Auth account
       const cred = await createUserWithEmailAndPassword(auth, form.email.trim(), form.password);
@@ -110,7 +110,7 @@ export default function TeamTab({ teamMembers=[], teamMembersLoading, myLeads=[]
     setCreating(false);
   };
 
-  // ── Deactivate agent ───────────────────────────────────────
+  // Ã¢ÂÂÃ¢ÂÂ Deactivate agent Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
   const deactivateAgent = async (agent) => {
     setDeacting(true);
     try {
@@ -146,7 +146,7 @@ export default function TeamTab({ teamMembers=[], teamMembersLoading, myLeads=[]
           previousAgentDays: daysAssigned,
         };
         const entry = {
-          text: "Lead returned to pool — previously assigned to "+
+          text: "Lead returned to pool Ã¢ÂÂ previously assigned to "+
                 (agent.name||agent.email||"Agent")+
                 " for "+daysAssigned+" days",
           type: "Note",
@@ -172,7 +172,7 @@ export default function TeamTab({ teamMembers=[], teamMembersLoading, myLeads=[]
     setDeacting(false);
   };
 
-  // ── Reactivate agent ───────────────────────────────────────
+  // Ã¢ÂÂÃ¢ÂÂ Reactivate agent Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
   const reactivateAgent = async (agent) => {
     try {
       await updateDoc(doc(db,"users",agent.uid||agent.id),{
@@ -184,7 +184,7 @@ export default function TeamTab({ teamMembers=[], teamMembersLoading, myLeads=[]
     } catch(e) { notify("Reactivation failed","error"); }
   };
 
-  // ── Derived metrics ────────────────────────────────────────
+  // Ã¢ÂÂÃ¢ÂÂ Derived metrics Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
   const agents   = teamMembers.filter(u=>u.orgRole==="agent"||u.role==="agent");
   const weekAgo  = new Date(Date.now()-7*24*60*60*1000);
 
@@ -218,12 +218,12 @@ export default function TeamTab({ teamMembers=[], teamMembersLoading, myLeads=[]
   return (
     <div style={{paddingBottom:60}}>
 
-      {/* ══ HEADER ══════════════════════════════════════════════ */}
+      {/* Ã¢ÂÂÃ¢ÂÂ HEADER Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ */}
       <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:20,flexWrap:"wrap",gap:12}}>
         <div>
           <h1 style={{fontFamily:"'Fraunces',serif",fontSize:22,fontWeight:900,color:T.white,margin:0}}>Team Dashboard</h1>
           <p style={{fontSize:12,color:T.textMuted,margin:"4px 0 0"}}>
-            {agents.length} agents �� {teamLeads} leads �� {teamDeals} deals �� Live
+            {agents.length} agents Ã· {teamLeads} leads Ã· {teamDeals} deals Ã· Live
           </p>
         </div>
         <button type="button" onClick={()=>setShowCreate(true)}
@@ -233,7 +233,7 @@ export default function TeamTab({ teamMembers=[], teamMembersLoading, myLeads=[]
         </button>
       </div>
 
-      {/* ══ KPI BAR ══════════════════════════════════════════════ */}
+      {/* Ã¢ÂÂÃ¢ÂÂ KPI BAR Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ */}
       <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:10,marginBottom:20}}>
         {[
           {label:"Total Leads",    value:teamLeads,   color:T.gold},
@@ -250,7 +250,7 @@ export default function TeamTab({ teamMembers=[], teamMembersLoading, myLeads=[]
         ))}
       </div>
 
-      {/* ══ AGENT TABLE ══════════════════════════════════════════ */}
+      {/* Ã¢ÂÂÃ¢ÂÂ AGENT TABLE Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ */}
       <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid "+T.border,borderRadius:14,overflow:"hidden",marginBottom:16}}>
         <div style={{padding:"14px 18px",borderBottom:"1px solid "+T.border,display:"flex",alignItems:"center",justifyContent:"space-between"}}>
           <div style={{fontSize:13,fontWeight:700,color:T.white}}>Agent Roster</div>
@@ -323,7 +323,7 @@ export default function TeamTab({ teamMembers=[], teamMembersLoading, myLeads=[]
         </div>
       </div>
 
-      {/* ══ BOTTOM ROW ════════════════════════════════════════════ */}
+      {/* Ã¢ÂÂÃ¢ÂÂ BOTTOM ROW Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ */}
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16}}>
 
         {/* Source ROI */}
@@ -368,7 +368,7 @@ export default function TeamTab({ teamMembers=[], teamMembersLoading, myLeads=[]
                 <div key={l.id||i} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"11px 18px",borderBottom:i<teamOverdue.length-1?"1px solid "+T.border:""}}>
                   <div style={{flex:1,minWidth:0}}>
                     <div style={{fontSize:12,fontWeight:600,color:T.white,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{l.name||l.phone||"Unnamed"}</div>
-                    <div style={{fontSize:10,color:T.textMuted,marginTop:2}}>{agent?(agent.name||agent.email?.split("@")[0]):"Unassigned"}{l.source?" �� "+l.source:""}</div>
+                    <div style={{fontSize:10,color:T.textMuted,marginTop:2}}>{agent?(agent.name||agent.email?.split("@")[0]):"Unassigned"}{l.source?" Ã· "+l.source:""}</div>
                   </div>
                   <div style={{display:"flex",alignItems:"center",gap:8,flexShrink:0}}>
                     <span style={{fontSize:10,fontWeight:700,padding:"3px 8px",borderRadius:5,background:"rgba(239,68,68,0.1)",color:"#EF4444"}}>{days}d ago</span>
@@ -383,7 +383,7 @@ export default function TeamTab({ teamMembers=[], teamMembersLoading, myLeads=[]
         </div>
       </div>
 
-      {/* ══ CREATE AGENT MODAL ════════════════════════════════════ */}
+      {/* Ã¢ÂÂÃ¢ÂÂ CREATE AGENT MODAL Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ */}
       {showCreate&&(
         <div style={{position:"fixed",inset:0,background:"rgba(4,9,15,0.9)",zIndex:2000,display:"flex",alignItems:"center",justifyContent:"center",padding:20}} onClick={e=>{if(e.target===e.currentTarget)setShowCreate(false);}}>
           <div style={{background:"#0D1117",borderRadius:14,border:"1px solid rgba(212,168,67,0.3)",width:"100%",maxWidth:440,padding:24}} onClick={e=>e.stopPropagation()}>
@@ -392,7 +392,7 @@ export default function TeamTab({ teamMembers=[], teamMembersLoading, myLeads=[]
                 <div style={{fontFamily:"'Fraunces',serif",fontSize:16,fontWeight:900,color:T.white}}>Create Agent Account</div>
                 <div style={{fontSize:11,color:T.textMuted,marginTop:3}}>Agent will receive login credentials by email</div>
               </div>
-              <button type="button" onClick={()=>setShowCreate(false)} style={{background:"rgba(255,255,255,0.06)",border:"1px solid "+T.border,borderRadius:7,color:T.textMuted,width:28,height:28,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16}}>×</button>
+              <button type="button" onClick={()=>setShowCreate(false)} style={{background:"rgba(255,255,255,0.06)",border:"1px solid "+T.border,borderRadius:7,color:T.textMuted,width:28,height:28,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16}}>ÃÂ</button>
             </div>
             <div style={{display:"flex",flexDirection:"column",gap:12}}>
               {[
@@ -425,7 +425,7 @@ export default function TeamTab({ teamMembers=[], teamMembersLoading, myLeads=[]
         </div>
       )}
 
-      {/* ══ DEACTIVATE CONFIRM MODAL ═════════════════════════════ */}
+      {/* Ã¢ÂÂÃ¢ÂÂ DEACTIVATE CONFIRM MODAL Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ */}
       {showDeact&&(
         <div style={{position:"fixed",inset:0,background:"rgba(4,9,15,0.9)",zIndex:2000,display:"flex",alignItems:"center",justifyContent:"center",padding:20}} onClick={e=>{if(e.target===e.currentTarget)setShowDeact(null);}}>
           <div style={{background:"#0D1117",borderRadius:14,border:"1px solid rgba(239,68,68,0.3)",width:"100%",maxWidth:400,padding:24}} onClick={e=>e.stopPropagation()}>
@@ -434,11 +434,11 @@ export default function TeamTab({ teamMembers=[], teamMembersLoading, myLeads=[]
             <div style={{padding:"12px 14px",background:"rgba(239,68,68,0.06)",border:"1px solid rgba(239,68,68,0.2)",borderRadius:9,marginBottom:20}}>
               <div style={{fontSize:12,color:T.white,fontWeight:600,marginBottom:6}}>What happens:</div>
               <div style={{fontSize:11,color:T.textMuted,lineHeight:1.7}}>
-                • Account will be suspended (not deleted)<br/>
-                • All assigned leads return to your unassigned pool<br/>
-                • Each lead will show tag: "Previously: {showDeact.name||"Agent"}"<br/>
-                • Full activity history is preserved<br/>
-                • You can reactivate this agent at any time
+                Ã¢ÂÂ¢ Account will be suspended (not deleted)<br/>
+                Ã¢ÂÂ¢ All assigned leads return to your unassigned pool<br/>
+                Ã¢ÂÂ¢ Each lead will show tag: "Previously: {showDeact.name||"Agent"}"<br/>
+                Ã¢ÂÂ¢ Full activity history is preserved<br/>
+                Ã¢ÂÂ¢ You can reactivate this agent at any time
               </div>
             </div>
             <div style={{display:"flex",gap:10}}>
@@ -452,7 +452,7 @@ export default function TeamTab({ teamMembers=[], teamMembersLoading, myLeads=[]
         </div>
       )}
 
-      {/* ══ TOAST ════════════════════════════════════════════════ */}
+      {/* Ã¢ÂÂÃ¢ÂÂ TOAST Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ */}
       {toast&&<div style={{position:"fixed",bottom:24,right:24,padding:"11px 18px",background:toast.type==="error"?"rgba(239,68,68,0.15)":"rgba(16,185,129,0.15)",border:"1px solid "+(toast.type==="error"?"#EF4444":"#10B981"),borderRadius:9,color:toast.type==="error"?"#EF4444":"#10B981",fontSize:12,fontWeight:600,zIndex:9999,boxShadow:"0 8px 32px rgba(0,0,0,0.4)"}}>{toast.msg}</div>}
 
     </div>
