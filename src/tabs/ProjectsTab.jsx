@@ -2251,7 +2251,7 @@ React.useEffect(()=>{setDldTx([]);setTxLoading(true);if(!community){setTxLoading
 import("firebase/firestore").then(({collection,query,where,orderBy,limit,getDocs,getFirestore})=>{
 const fdb=getFirestore();
 const txq=query(collection(fdb,"transactions"),where("masterProject","==",community),where("transGroup","==","Sales"),orderBy("date","desc"),limit(50));
-getDocs(txq).then(snap=>{const all=snap.docs.map(d=>d.data());const buildingMatch=all.filter(t=>(t.projectName||"").toUpperCase().includes(projectName.substring(0,10)));setDldTx(buildingMatch.length>=3?buildingMatch:all);setTxLoading(false);}).catch(()=>setTxLoading(false));
+getDocs(txq).then(snap=>{const all=snap.docs.map(d=>d.data());const buildingMatch=all.filter(t=>(t.projectName||"").toUpperCase().includes(projectName.substring(0,10)));const isExact=buildingMatch.length>=3;setDldTx(isExact?buildingMatch:all);setTxMode(isExact?"building":"community");setTxLoading(false);}).catch(()=>setTxLoading(false));
 });},[community]);
 return(<div>
 <div style={{padding:"14px 20px",background:"rgba(212,168,67,0.05)",border:"1px solid rgba(212,168,67,0.15)",borderRadius:10,marginBottom:16}}>
@@ -2356,6 +2356,7 @@ function DLDSalesPanel({selectedProject,T}){
   const projectName=(selectedProject.name||selectedProject.project||"").toUpperCase();
   const [dldTx,setDldTx]=React.useState([]);
   const [txLoading,setTxLoading]=React.useState(true);
+  const [txMode,setTxMode]=React.useState("community");
   React.useEffect(()=>{
     setDldTx([]);setTxLoading(true);
     if(!community){setTxLoading(false);return;}
@@ -2368,7 +2369,7 @@ function DLDSalesPanel({selectedProject,T}){
   return(<div>
     <div style={{padding:"14px 20px",background:"rgba(212,168,67,0.05)",border:"1px solid rgba(212,168,67,0.15)",borderRadius:10,marginBottom:16}}>
       <div style={{fontSize:11,color:T.gold,fontWeight:700}}>COMPARABLE SALES · DLD REGISTERED</div>
-      <div style={{fontSize:11,color:T.textMuted,marginTop:3}}>{community}</div>
+      <div style={{fontSize:11,color:T.textMuted,marginTop:3,display:"flex",alignItems:"center",gap:8}}><span>{community}</span><span style={{fontSize:9,padding:"2px 7px",borderRadius:8,background:txMode==="building"?"rgba(104,211,145,0.15)":"rgba(212,168,67,0.15)",color:txMode==="building"?"#68D391":T.gold,fontWeight:700}}>{txMode==="building"?"BUILDING MATCH":"COMMUNITY DATA"}</span></div>
     </div>
     {txLoading&&<div style={{padding:20,color:T.textMuted,fontSize:12}}>Loading DLD transactions...</div>}
     {!txLoading&&dldTx.length===0&&<div style={{padding:20,color:T.textMuted,fontSize:12}}>No DLD transactions found for {community}</div>}
