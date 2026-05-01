@@ -62,7 +62,7 @@ import DevPortalTab from '../tabs/DevPortalTab';
 
 /* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ ACTIVE PROJECTS — now Firestore-only Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
 /* Projects load from: Firestore 'projects' collection */
-/* Populated via: Admin â†’ Data Manager â†’ Import Projects */
+/* Populated via: Admin → Data Manager → Import Projects */
 
 const getLinkDomain = (url) => {
   if (!url) return "Listing";
@@ -1187,14 +1187,14 @@ const css = `
 
     /* Tables — horizontal scroll with hint arrow */
     .table-scroll { overflow-x: auto !important; -webkit-overflow-scrolling: touch; }
-    .table-scroll::after { content: "swipe â†’"; position: absolute; right: 8px; top: 12px; color: ${T.gold}; font-size: 10px; opacity: 0.5; pointer-events: none; letter-spacing: 0.5px; }
+    .table-scroll::after { content: "swipe →"; position: absolute; right: 8px; top: 12px; color: ${T.gold}; font-size: 10px; opacity: 0.5; pointer-events: none; letter-spacing: 0.5px; }
     .table-scroll table { min-width: 560px; }
 
     /* Compare bar */
     .compare-bar { padding: 10px 14px !important; flex-direction: column !important; align-items: stretch !important; gap: 8px !important; }
     .compare-bar > div { justify-content: center; flex-wrap: wrap; }
 
-    /* Mortgage calculator 2-col â†’ 1-col */
+    /* Mortgage calculator 2-col → 1-col */
     .mortgage-grid { grid-template-columns: 1fr !important; }
 
     /* AI Insights full width cards */
@@ -1303,7 +1303,7 @@ const KPI = ({ label, value, sub, icon, delay = 0, onClick }) => {
         {sub?.includes("+") && <span style={{ color: T.green }}>{Icons.up}</span>}
         {sub}
       </div>
-      {isClickable && <div style={{ marginTop: 8, fontSize: 9, color: hovered ? T.gold : T.textMuted, fontWeight: 600, letterSpacing: 0.5, transition: "color 0.2s" }}>{hovered ? "View breakdown â†’" : "Click for details"}</div>}
+      {isClickable && <div style={{ marginTop: 8, fontSize: 9, color: hovered ? T.gold : T.textMuted, fontWeight: 600, letterSpacing: 0.5, transition: "color 0.2s" }}>{hovered ? "View breakdown →" : "Click for details"}</div>}
     </div>
   );
 };
@@ -1550,7 +1550,7 @@ const LoginScreen = ({ onLogin, onBack, defaultMode = "login" }) => {
             ))}
           </div>
           <button type="button" className="login-btn" onClick={() => { setScreen("form"); setMode("login"); setPass(""); setConfirmPass(""); }}>
-            Go to Sign In â†’
+            Go to Sign In →
           </button>
           <button type="button" onClick={async () => { try { if (auth.currentUser) { await sendEmailVerification(auth.currentUser); alert("Verification email resent! Check your inbox."); } } catch(e){} }} style={{ display: "block", margin: "12px auto 0", background: "none", border: "none", color: T.gold, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
             Resend verification email
@@ -1711,7 +1711,7 @@ const LoginScreen = ({ onLogin, onBack, defaultMode = "login" }) => {
                   <span style={{ width: 16, height: 16, border: "2px solid rgba(4,9,15,0.3)", borderTopColor: T.bg, borderRadius: "50%", animation: "spin 0.6s linear infinite", display: "inline-block" }} />
                   {mode === "login" ? "Signing in..." : "Creating account..."}
                 </span>
-              ) : mode === "login" ? "Sign In" : "Start Free Trial â†’"}
+              ) : mode === "login" ? "Sign In" : "Start Free Trial →"}
             </button>
 
             {mode === "signup" && (
@@ -1763,7 +1763,7 @@ const ProGate = ({ children, isPro, message = "Upgrade to Pro to unlock this dat
             ))}
           </div>
           <button type="button" onClick={onUpgrade} style={{ width: "100%", padding: "11px 0", background: `linear-gradient(135deg, ${T.gold}, #B8912F)`, color: T.bg, border: "none", borderRadius: 10, fontSize: 13, fontWeight: 800, cursor: "pointer", fontFamily: "'Outfit', sans-serif", letterSpacing: 0.3 }}>
-            Unlock Pro — AED 99/mo â†’
+            Unlock Pro — AED 99/mo →
           </button>
           <div style={{ fontSize: 10, color: T.textMuted, marginTop: 8 }}>7-day money-back guarantee · Cancel anytime</div>
         </div>
@@ -1807,7 +1807,7 @@ const ProGateFullPage = ({ tabName, onUpgrade }) => {
           ))}
         </div>
         <button type="button" onClick={onUpgrade} style={{ width: "100%", padding: "14px 0", background: `linear-gradient(135deg, ${T.gold}, #B8912F)`, color: T.bg, border: "none", borderRadius: 12, fontSize: 14, fontWeight: 800, cursor: "pointer", fontFamily: "'Outfit', sans-serif", letterSpacing: 0.3, marginBottom: 10 }}>
-          Upgrade to Pro — AED 99/mo â†’
+          Upgrade to Pro — AED 99/mo →
         </button>
         <div style={{ fontSize: 11, color: T.textMuted }}>7-day free trial · Cancel anytime · Money-back guarantee</div>
       </div>
@@ -1821,8 +1821,8 @@ const ProGateFullPage = ({ tabName, onUpgrade }) => {
 const UpgradeModal = ({ show, onClose }) => {
   if (!show) return null;
   const plans = [
-    { name: "Pro", price: "99", period: "month", features: ["All Dubai projects — full data", "AI market insights", "Portfolio ROI tracker", "DXB Estimate AVM", "Yield & STR/LTR analysis", "Mortgage calculator", "Price alerts", "PDF export"], popular: true, note: null, cta: "Upgrade to Pro â†’" },
-    { name: "Enterprise", price: "499", period: "month", features: ["Everything in Pro", "PDF report generation Ã¢ÂÂ³", "API data access Ã¢ÂÂ³", "Custom dashboards Ã¢ÂÂ³", "Multi-user team accounts Ã¢ÂÂ³", "Developer-level raw data", "Dedicated account manager", "White-label options Ã¢ÂÂ³"], popular: false, note: "Ã¢ÂÂ³ = Launching Q3 2026", cta: "Contact Sales â†’" },
+    { name: "Pro", price: "99", period: "month", features: ["All Dubai projects — full data", "AI market insights", "Portfolio ROI tracker", "DXB Estimate AVM", "Yield & STR/LTR analysis", "Mortgage calculator", "Price alerts", "PDF export"], popular: true, note: null, cta: "Upgrade to Pro →" },
+    { name: "Enterprise", price: "499", period: "month", features: ["Everything in Pro", "PDF report generation Ã¢ÂÂ³", "API data access Ã¢ÂÂ³", "Custom dashboards Ã¢ÂÂ³", "Multi-user team accounts Ã¢ÂÂ³", "Developer-level raw data", "Dedicated account manager", "White-label options Ã¢ÂÂ³"], popular: false, note: "Ã¢ÂÂ³ = Launching Q3 2026", cta: "Contact Sales →" },
   ];
   return (
     <div style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.92)", zIndex: 3000, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(12px)", padding: 16 }} onClick={onClose}>
@@ -2065,57 +2065,57 @@ const INTELLIGENCE_TABS = {
   "Overview": {
     icon: "\uD83D\uDCCA",
     description: "Your Bloomberg-style command centre. Live market ticker, KPI cards, developer intelligence panel, and real-time DLD feed — all connected to your data sources.",
-    adminHint: "Connect data sources from Admin â†’ Data Manager â†’ Market Data"
+    adminHint: "Connect data sources from Admin → Data Manager → Market Data"
   },
   "Financials": {
     icon: "\uD83D\uDCB9",
     description: "Developer financial intelligence — revenue, net profit, EBITDA, backlog, EPS, DPS — 6-year history charts. Auto-updated from developer IR reports.",
-    adminHint: "Add developer financials from Admin â†’ Data Manager â†’ Developers"
+    adminHint: "Add developer financials from Admin → Data Manager → Developers"
   },
   "Projects": {
     icon: "\uD83C\uDFD7️",
     description: "Browse all projects across all property types — Off-Plan, Residential, Commercial, Secondary Market, Hotel Apartments, Villas, Balcony View Units. Filter, compare, and score every property.",
-    adminHint: "Import projects from Admin â†’ Data Manager â†’ Projects"
+    adminHint: "Import projects from Admin → Data Manager → Projects"
   },
   "Handover": {
     icon: "\uD83D\uDCC5",
     description: "Construction timeline tracker. Monitor handover dates, construction progress, and delivery risk for all off-plan projects. Automated countdown alerts.",
-    adminHint: "Add project handover data from Admin â†’ Data Manager â†’ Projects"
+    adminHint: "Add project handover data from Admin → Data Manager → Projects"
   },
   "Launch Calendar": {
     icon: "\uD83D\uDE80",
     description: "Never miss a launch. Upcoming project launches by developer, EOI status, expected pricing, and past launch performance vs actual prices.",
-    adminHint: "Launch data auto-populates from Bayut API scanner — check Admin â†’ Data Health"
+    adminHint: "Launch data auto-populates from Bayut API scanner — check Admin → Data Health"
   },
   "Neighbourhoods": {
     icon: "\uD83C\uDFD8️",
     description: "Community intelligence — average PPSF, yields, schools, hospitals, metro access, lifestyle ratings, supply risk, and demand strength for every Dubai community.",
-    adminHint: "Add community data from Admin â†’ Data Manager â†’ Communities"
+    adminHint: "Add community data from Admin → Data Manager → Communities"
   },
   "Service Charges": {
     icon: "\uD83D\uDCCB",
     description: "RERA registered service charge rates per community in AED/sqft/year. Historical trends, net yield impact calculator, and community comparisons.",
-    adminHint: "Add service charge data from Admin â†’ Data Manager â†’ Communities"
+    adminHint: "Add service charge data from Admin → Data Manager → Communities"
   },
   "STR vs LTR": {
     icon: "\uD83C\uDFE0",
     description: "Short-term Airbnb vs long-term tenancy comparison per community per unit type. Occupancy rates, daily rates, platform fees, management costs, and net income.",
-    adminHint: "STR data connects to Bayut API — configure from Admin â†’ Data Health"
+    adminHint: "STR data connects to Bayut API — configure from Admin → Data Health"
   },
   "Developer Health": {
     icon: "\uD83E\uDE7A",
     description: "Developer health scores — delivery track record, financial strength, project pipeline risk, RERA status, and complaint ratios. 9-factor radar chart.",
-    adminHint: "Add developer profiles from Admin â†’ Data Manager â†’ Developers"
+    adminHint: "Add developer profiles from Admin → Data Manager → Developers"
   },
   "DLD Volumes": {
     icon: "\uD83D\uDCC8",
     description: "Live DLD transaction data — volume by community, developer, property type, nationality, cash vs mortgage. Monthly trends, price anomaly alerts.",
-    adminHint: "DLD data auto-syncs daily — check Admin â†’ Data Health â†’ DLD Cron"
+    adminHint: "DLD data auto-syncs daily — check Admin → Data Health → DLD Cron"
   },
   "DXB Estimate": {
     icon: "\uD83D\uDD0D",
     description: "The Zestimate for Dubai. Enter any unit details and get an estimated market value backed by actual DLD transaction comparables.",
-    adminHint: "AVM requires DLD data — check Admin â†’ Data Health â†’ DLD Cron"
+    adminHint: "AVM requires DLD data — check Admin → Data Health → DLD Cron"
   },
   "Portfolio": {
     icon: "\uD83D\uDCBC",
@@ -2125,17 +2125,17 @@ const INTELLIGENCE_TABS = {
   "Competitors": {
     icon: "Ã¢Å¡â€️",
     description: "Developer vs developer intelligence — sales volume, delivery record, PPSF comparison, market share, community presence, and branded residence count.",
-    adminHint: "Add developer data from Admin â†’ Data Manager â†’ Developers"
+    adminHint: "Add developer data from Admin → Data Manager → Developers"
   },
   "Yields": {
     icon: "\uD83D\uDCCA",
     description: "Gross and net rental yields by community and unit type. 5-year historical trend, best yielding communities ranked, and yield vs appreciation tradeoff.",
-    adminHint: "Yield data auto-syncs weekly from Bayut API — check Admin â†’ Data Health"
+    adminHint: "Yield data auto-syncs weekly from Bayut API — check Admin → Data Health"
   },
   "Mortgage": {
     icon: "\uD83C\uDFE6",
     description: "Live EIBOR mortgage calculator. Monthly payment, total cost of acquisition (DLD 4%, agency 2%, trustee fees), amortisation schedule, and 5 bank rate comparison.",
-    adminHint: "EIBOR updates daily — check Admin â†’ EIBOR Rates"
+    adminHint: "EIBOR updates daily — check Admin → EIBOR Rates"
   },
   "Map": {
     icon: "\uD83D\uDDFA️",
@@ -2150,7 +2150,7 @@ const INTELLIGENCE_TABS = {
   "Market": {
     icon: "\uD83C\uDF0D",
     description: "Dubai real estate macro view — total market size, transaction count, off-plan vs secondary split, top developers, international buyer breakdown, and analyst forecasts.",
-    adminHint: "Market data updates from Admin â†’ Market Intelligence â†’ Update Stats"
+    adminHint: "Market data updates from Admin → Market Intelligence → Update Stats"
   },
   "Currency": {
     icon: "\uD83D\uDCB1",
@@ -2160,7 +2160,7 @@ const INTELLIGENCE_TABS = {
   "Golden Visa": {
     icon: "\uD83E\uDD47",
     description: "Golden Visa eligibility calculator. Enter property value to check AED 2M minimum, requirements, process steps, and timeline. Auto-checks portfolio eligibility.",
-    adminHint: "Golden Visa rules update from Admin â†’ Data Manager â†’ Regulations"
+    adminHint: "Golden Visa rules update from Admin → Data Manager → Regulations"
   },
   "Flip": {
     icon: "\uD83D\uDD04",
@@ -2175,7 +2175,7 @@ const INTELLIGENCE_TABS = {
   "Price History": {
     icon: "\uD83D\uDCC9",
     description: "5-year PPSF trend per community per unit type. Off-plan vs secondary price divergence, correction alerts, and momentum indicators.",
-    adminHint: "Price history syncs from DLD data — check Admin â†’ Data Health â†’ DLD Cron"
+    adminHint: "Price history syncs from DLD data — check Admin → Data Health → DLD Cron"
   },
 };
 
@@ -2930,7 +2930,7 @@ export default function EmaarDashboardV2() {
       script.src = "https://cdn.paddle.com/paddle/v2/paddle.js";
       script.onload = () => {
         // Ã¢â€â‚¬Ã¢â€â‚¬ PASTE YOUR PADDLE CLIENT TOKEN BELOW Ã¢â€â‚¬Ã¢â€â‚¬
-        // Get it from paddle.com â†’ Developer â†’ Authentication â†’ Client-side token
+        // Get it from paddle.com → Developer → Authentication → Client-side token
         const PADDLE_CLIENT_TOKEN = "live_4393f28d4ec943ebe056835651f";
         if (!PADDLE_CLIENT_TOKEN.includes("PASTE")) {
           window.Paddle.Initialize({ token: PADDLE_CLIENT_TOKEN });
@@ -3454,7 +3454,7 @@ export default function EmaarDashboardV2() {
          dropdown — the rest (1,800 registered-only small developers) stay in
          Firestore for admin/directory use but don't clutter the filter. */
       const tierRank = { "tier-1": 1, "tier-2": 2, "tier-3": 3 };
-      const brandMap = new Map();  /* parentBrand â†’ aggregated record */
+      const brandMap = new Map();  /* parentBrand → aggregated record */
       
       snap.forEach(d => {
         const data = d.data();
@@ -4143,7 +4143,7 @@ export default function EmaarDashboardV2() {
       if (newTier === "pro_trial") { const end = new Date(); end.setDate(end.getDate() + 7); data.trialEnd = end.toISOString(); }
       await setDoc(doc(db, "users", userId), data, { merge: true });
       setAdminUsers(prev => prev.map(u => u.id === userId ? { ...u, tier: newTier, status: newTier } : u));
-      notify(`Ã¢Å“â€¦ ${uName} â†’ ${newTier}`);
+      notify(`Ã¢Å“â€¦ ${uName} → ${newTier}`);
       // Send tier change confirmation email
       const tierMessages = {
         free: { subject: "Your DXB Analytics plan has changed to Free", body: "Your account has been updated to the Free plan. You have access to 5 featured projects and basic market data." },
@@ -4320,7 +4320,7 @@ export default function EmaarDashboardV2() {
               onClick={() => setShowUpgrade(true)}
               style={{ marginBottom: 8, padding: "7px 12px", borderRadius: 8, background: "rgba(59,130,246,0.07)", border: "1px solid rgba(59,130,246,0.15)", textAlign: "center", cursor: "pointer" }}>
               <div style={{ fontSize: 9.5, fontWeight: 700, color: "#60A5FA", letterSpacing: 0.5 }}>FREE PLAN</div>
-              <div style={{ fontSize: 10.5, color: T.textSecondary, marginTop: 1 }}>Upgrade to Pro â†’</div>
+              <div style={{ fontSize: 10.5, color: T.textSecondary, marginTop: 1 }}>Upgrade to Pro →</div>
             </div>
           )}
           <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "7px 10px", borderRadius: 10, background: T.surfaceAlt }}>
@@ -4354,7 +4354,7 @@ export default function EmaarDashboardV2() {
             <span style={{ fontSize: 11, color: "rgba(4,9,15,0.7)" }}>Upgrade to Pro to unlock DXB Estimate, Yields, Mortgage, Portfolio & more</span>
           </div>
           <button type="button" onClick={() => setShowUpgrade(true)} style={{ padding: "5px 16px", background: "#04090F", color: T.gold, border: "none", borderRadius: 8, fontSize: 11, fontWeight: 800, cursor: "pointer", fontFamily: "'Outfit',sans-serif", whiteSpace: "nowrap" }}>
-            Upgrade Now â†’
+            Upgrade Now →
           </button>
         </div>
       )}
@@ -4730,7 +4730,7 @@ activeProjects={extraProjects?.length > 0 ? extraProjects : []}
 
                 {/* Actions */}
                 <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
-                  <button type="button" onClick={() => { setHvSelected(null); handleTabChange("Projects"); }} style={{ padding:"9px 18px", background:`linear-gradient(135deg,${T.gold},#B8922A)`, border:"none", borderRadius:8, color:"#000", fontSize:12, fontWeight:700, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>View Full Project â†’</button>
+                  <button type="button" onClick={() => { setHvSelected(null); handleTabChange("Projects"); }} style={{ padding:"9px 18px", background:`linear-gradient(135deg,${T.gold},#B8922A)`, border:"none", borderRadius:8, color:"#000", fontSize:12, fontWeight:700, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>View Full Project →</button>
                   <button type="button" onClick={() => { setHvSelected(null); handleTabChange("My Leads"); }} style={{ padding:"9px 18px", background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:8, color:T.textSecondary, fontSize:12, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>Add to Lead</button>
                   <button type="button" onClick={() => {
                     const txt = `\uD83C\uDFD7️ HANDOVER UPDATE — ${hvSelected.project}\n\n\uD83C\uDFE2 Developer: ${hvSelected.developer}\n\uD83D\uDCCD Community: ${hvSelected.community}\n\n\uD83D\uDCCA CONSTRUCTION STATUS\n   Progress: ${hvSelected.constructionPct}% complete\n   Status: ${hvSelected.status}\n   Current Stage: ${hvSelected.milestonesCurrent}\n   Next Milestone: ${hvSelected.milestonesNext}\n\n\uD83D\uDCC5 HANDOVER DATES\n   Contracted: ${new Date(hvSelected.contractedHandover).toLocaleDateString("en-GB",{month:"long",year:"numeric"})}\n   Expected: ${new Date(hvSelected.expectedHandover).toLocaleDateString("en-GB",{month:"long",year:"numeric"})}\n   Delay: ${hvSelected.delayMonths>0?"+"+hvSelected.delayMonths+" months":"None"}\n\n\uD83D\uDD10 REGULATORY\n   RERA: ${hvSelected.reraNo}\n   Escrow Bank: ${hvSelected.escrowBank}\n   Status: ${hvSelected.reraStatus}\n\nPowered by DXB Analytics Intelligence Platform\nemaar-dashboard.vercel.app`;
@@ -4820,7 +4820,7 @@ activeProjects={extraProjects?.length > 0 ? extraProjects : []}
                         </div>
                         {/* Done badge */}
                         <span style={{ fontSize:10, padding:"2px 7px", borderRadius:6, background:m.done?"rgba(16,185,129,0.15)":isNext?"rgba(212,168,67,0.1)":"transparent", color:m.done?T.green:isNext?T.gold:T.textMuted, fontWeight:700, flexShrink:0, width:60, textAlign:"center" }}>
-                          {m.done?"âœ“ Done":isNext?"Next â†’":"Pending"}
+                          {m.done?"âœ“ Done":isNext?"Next →":"Pending"}
                         </span>
                       </div>
                     );
@@ -4852,7 +4852,7 @@ activeProjects={extraProjects?.length > 0 ? extraProjects : []}
                 {/* Quick actions */}
                 <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
                   <button type="button" onClick={() => { setHdvSelected(null); handleTabChange("Projects"); }}
-                    style={{ padding:"9px 18px", background:`linear-gradient(135deg,${T.gold},#B8922A)`, border:"none", borderRadius:8, color:"#000", fontSize:12, fontWeight:700, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>View Project Details â†’</button>
+                    style={{ padding:"9px 18px", background:`linear-gradient(135deg,${T.gold},#B8922A)`, border:"none", borderRadius:8, color:"#000", fontSize:12, fontWeight:700, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>View Project Details →</button>
                   <button type="button" onClick={() => { setHdvSelected(null); handleTabChange("Risk"); }}
                     style={{ padding:"9px 18px", background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:8, color:T.textSecondary, fontSize:12, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>Risk Analysis</button>
                   <button type="button" onClick={() => { setHdvSelected(null); handleTabChange("My Leads"); }}
@@ -5175,7 +5175,7 @@ activeProjects={extraProjects?.length > 0 ? extraProjects : []}
           {/* Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
               INTELLIGENCE TABS — Awaiting Data Import
               Each tab shows a beautiful empty state with instructions
-              Data connects via Firestore — Admin â†’ Data Manager
+              Data connects via Firestore — Admin → Data Manager
           Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â */}
 
           {Object.entries(INTELLIGENCE_TABS).map(([tabKey, config]) => (
@@ -5681,7 +5681,7 @@ activeProjects={extraProjects?.length > 0 ? extraProjects : []}
                 <div style={{ display: "flex", alignItems: "baseline", gap: 3, marginBottom: 12 }}><span style={{ fontSize: 10, color: T.textMuted }}>AED</span><span style={{ fontFamily: "'Fraunces', serif", fontSize: 32, fontWeight: 900, color: T.white }}>{showCheckout.price}</span><span style={{ fontSize: 12, color: T.textMuted }}>/month</span></div>
                 {showCheckout.features.slice(0,5).map((f,j) => <div key={j} style={{ display: "flex", alignItems: "center", gap: 6, padding: "3px 0", fontSize: 12, color: T.textSecondary }}><span style={{ color: T.green }}>{"âœ“"}</span>{f}</div>)}
               </div>
-              <button type="button" onClick={() => setCheckoutStep(2)} style={{ width: "100%", padding: "12px 0", background: `linear-gradient(135deg, ${T.gold}, #B8912F)`, color: T.bg, border: "none", borderRadius: 10, fontWeight: 700, fontSize: 14, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>Continue to Payment â†’</button>
+              <button type="button" onClick={() => setCheckoutStep(2)} style={{ width: "100%", padding: "12px 0", background: `linear-gradient(135deg, ${T.gold}, #B8912F)`, color: T.bg, border: "none", borderRadius: 10, fontWeight: 700, fontSize: 14, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>Continue to Payment →</button>
             </>}
             {checkoutStep === 2 && <>
               <div style={{ marginBottom: 12 }}>
@@ -5743,7 +5743,7 @@ activeProjects={extraProjects?.length > 0 ? extraProjects : []}
                     <div style={{ fontSize: 13, fontWeight: 700, color: "#fff" }}>WhatsApp + Bank Transfer</div>
                     <div style={{ fontSize: 10, color: T.textMuted }}>Manual — activated within 5 minutes of payment</div>
                   </div>
-                  <span style={{ color: "#25D366", fontSize: 16 }}>â†’</span>
+                  <span style={{ color: "#25D366", fontSize: 16 }}>→</span>
                 </div>
 
                 <div style={{ padding: "10px 14px", borderRadius: 8, background: "rgba(212,168,67,0.04)", border: "1px solid rgba(212,168,67,0.1)", fontSize: 11, color: T.textMuted, lineHeight: 1.5, marginBottom: 12 }}>\uD83D\uDD12 All payments secure · 7-day money-back guarantee</div>
@@ -6006,25 +6006,25 @@ activeProjects={extraProjects?.length > 0 ? extraProjects : []}
             icon: "\uD83C\uDFD9️",
             title: `Welcome to DXB Analytics, ${userName || "Investor"}!`,
             body: "You now have access to Dubai's most comprehensive real estate intelligence platform. Let us show you around in 30 seconds.",
-            cta: "Let's Go â†’"
+            cta: "Let's Go →"
           },
           {
             icon: "\uD83D\uDD0D",
             title: "Browse All Projects",
             body: "Go to the Projects tab to explore every active development. Filter by community, tier, handover year, or price range. Click any card for full details, documents, and ROI analysis.",
-            cta: "Next â†’"
+            cta: "Next →"
           },
           {
             icon: "â­",
             title: "Build Your Watchlist",
             body: "See the â˜… star button on every project card? Click it to save projects you're interested in. Your watchlist syncs across devices.",
-            cta: "Next â†’"
+            cta: "Next →"
           },
           {
             icon: "\uD83D\uDCCA",
             title: "Yields, ROI & Mortgage",
             body: "Use the Yields tab for rental returns by community. The Mortgage tab calculates your monthly payment + all UAE transaction costs instantly.",
-            cta: "Next â†’"
+            cta: "Next →"
           },
           {
             icon: "\uD83D\uDE80",

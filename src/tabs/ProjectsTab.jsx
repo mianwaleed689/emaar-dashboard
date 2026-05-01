@@ -173,7 +173,7 @@ function communityBenchmarkPPSF(p) {
       value: p.communityMedianPPSF,
       p25: p.communityP25PPSF,
       p75: p.communityP75PPSF,
-      source: `DLD Â· ${p.communityTxCount?.toLocaleString() || "N"} transactions Â· ${p.communityBenchmarkSource || "Recent"}`,
+      source: `DLD · ${p.communityTxCount?.toLocaleString() || "N"} transactions · ${p.communityBenchmarkSource || "Recent"}`,
     };
   }
   if (p.communityAvgPPSF) return { value: p.communityAvgPPSF, source:"Legacy estimate" };
@@ -722,8 +722,8 @@ function ProjectsTab({
                         <div style={{ display:"flex", gap:6, flexWrap:"wrap", alignItems:"center" }}>
                           <StatusBadge status={p.status || (p.constructionPct >= 100 ? "Ready" : "Off-Plan")} />
                           {(p.handover || p.expectedHandover) && <span style={{ fontSize:10, color:T.textMuted }}>{p.handover || p.expectedHandover}</span>}
-                          {Array.isArray(p.beds) && p.beds.length > 0 && <span style={{ fontSize:10, color:T.textMuted }}>{"Â·"}{p.beds.join(" / ")}</span>}
-                          {isValidReraNumber(p.reraNo || p.projectNumber) && <span style={{ fontSize:9, color:T.teal }}>{"Â·"}DLD #{p.reraNo || p.projectNumber}</span>}
+                          {Array.isArray(p.beds) && p.beds.length > 0 && <span style={{ fontSize:10, color:T.textMuted }}>{"·"}{p.beds.join(" / ")}</span>}
+                          {isValidReraNumber(p.reraNo || p.projectNumber) && <span style={{ fontSize:9, color:T.teal }}>{"·"}DLD #{p.reraNo || p.projectNumber}</span>}
                         </div>
                         {/* Factual classification badges only â€” no investment advice */}
                         <div style={{ display:"flex", gap:5, flexWrap:"wrap", marginTop:6 }}>
@@ -765,7 +765,7 @@ function ProjectsTab({
                               : "â€”"}
                         </div>
                         {!p.ppsf && p.communityMedianPPSF && p.communityTxCount && (
-                          <div style={{ fontSize:8, color:T.teal, marginTop:1 }}>DLD Â· n={p.communityTxCount}</div>
+                          <div style={{ fontSize:8, color:T.teal, marginTop:1 }}>DLD · n={p.communityTxCount}</div>
                         )}
                       </div>
                       <div>
@@ -854,12 +854,12 @@ function ProjectsTab({
                     </div>
                   )}
                   <div style={{ padding:"10px 12px", display:"flex", gap:6, flexWrap:"wrap" }}>
-                    <button type="button" onClick={() => handleTabChange("Investment Score")} style={{ padding:"5px 10px", background:"rgba(212,168,67,0.08)", border:`1px solid ${T.border}`, borderRadius:7, color:T.gold, fontSize:10, fontWeight:700, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>ROI â†’</button>
+                    <button type="button" onClick={() => handleTabChange("Investment Score")} style={{ padding:"5px 10px", background:"rgba(212,168,67,0.08)", border:`1px solid ${T.border}`, borderRadius:7, color:T.gold, fontSize:10, fontWeight:700, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>ROI →</button>
                     <button type="button" onClick={() => handleTabChange("Mortgage")} style={{ padding:"5px 10px", background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:7, color:T.textSecondary, fontSize:10, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>Mortgage</button>
-                    {p.status === "Off-Plan" && <button type="button" onClick={() => handleTabChange("Launch Calendar")} style={{ padding:"5px 10px", background:"rgba(212,168,67,0.08)", border:`1px solid ${T.gold}`, borderRadius:7, color:T.gold, fontSize:10, fontWeight:700, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>View Launch â†’</button>}
+                    {p.status === "Off-Plan" && <button type="button" onClick={() => handleTabChange("Launch Calendar")} style={{ padding:"5px 10px", background:"rgba(212,168,67,0.08)", border:`1px solid ${T.gold}`, borderRadius:7, color:T.gold, fontSize:10, fontWeight:700, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>View Launch →</button>}
                     <button type="button" onClick={() => setProjCompare(prev => inCompare ? prev.filter(c=>c.id!==p.id) : prev.length < 3 ? [...prev,p] : prev)} style={{ padding:"5px 10px", background:inCompare?"rgba(16,185,129,0.12)":T.surfaceAlt, border:`1px solid ${inCompare?T.green:T.border}`, borderRadius:7, color:inCompare?T.green:T.textSecondary, fontSize:10, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>{inCompare?"âœ“ Compare":"+ Compare"}</button>
                     <button type="button" onClick={() => handleTabChange("My Leads")} style={{ padding:"5px 10px", background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:7, color:T.textSecondary, fontSize:10, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>Add Lead</button>
-                    <button type="button" onClick={() => { setSelectedProject(p); setProjDetailTab("identity"); }} style={{ padding:"5px 10px", background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:7, color:T.textSecondary, fontSize:10, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>Details â†’</button>
+                    <button type="button" onClick={() => { setSelectedProject(p); setProjDetailTab("identity"); }} style={{ padding:"5px 10px", background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:7, color:T.textSecondary, fontSize:10, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>Details →</button>
                   </div>
                 </div>
               );
@@ -871,7 +871,7 @@ function ProjectsTab({
                 <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"10px 0", marginBottom:16, borderBottom:`1px solid ${T.border}`, flexWrap:"wrap", gap:8 }}>
                   <div>
                     <div style={{ fontFamily:"'Fraunces',serif", fontSize:20, fontWeight:800, color:T.white }}>Project Explorer</div>
-                    <div style={{ fontSize:11, color:T.textMuted, marginTop:3 }}>All Dubai property types Â· Investment intelligence Â· Full project data</div>
+                    <div style={{ fontSize:11, color:T.textMuted, marginTop:3 }}>All Dubai property types · Investment intelligence · Full project data</div>
                   </div>
                   <div style={{ display:"flex", gap:8 }}>
                   </div>
@@ -879,7 +879,7 @@ function ProjectsTab({
 
                 {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
                    NEW PRIMARY FILTER BAR â€” 3-Layer Architecture
-                   Category â†’ Type â†’ Configuration â†’ Price â†’ More Filters
+                   Category → Type → Configuration → Price → More Filters
                    â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
                 <div style={{
                   display:"flex",
@@ -1094,7 +1094,7 @@ function ProjectsTab({
                                 <div style={{overflowY:"auto",flex:1}}>
                                   {[{value:"All",label:"All Communities"},...(commOptionsByTier.consumer||[]),...(commOptionsByTier.master||[]),...(commOptionsByTier.sub||[]),...(commOptionsByTier.other||[])].filter(c=>c.value==="All"||c.label.toLowerCase().includes(commSearch2.toLowerCase())).slice(0,40).map(c=>(
                                     <div key={c.value} onClick={()=>{setProjCommunity(c.value);setShowCommDrop(false);setCommSearch2("");}} style={{padding:"9px 12px",cursor:"pointer",fontSize:12,color:c.value===projCommunity?T.gold:"#CBD5E1",background:c.value===projCommunity?"rgba(212,168,67,0.08)":"transparent",fontFamily:"'Outfit',sans-serif"}} onMouseEnter={e=>e.currentTarget.style.background="rgba(212,168,67,0.06)"} onMouseLeave={e=>e.currentTarget.style.background=c.value===projCommunity?"rgba(212,168,67,0.08)":"transparent"}>
-                                      {c.label}{c.projectCount>0?` Â· ${c.projectCount}`:""}
+                                      {c.label}{c.projectCount>0?` · ${c.projectCount}`:""}
                                     </div>
                                   ))}
                                 </div>
@@ -1375,7 +1375,7 @@ function ProjectsTab({
                       { label:"Total", value:filtered.length.toLocaleString(), sub:"projects", color:T.white },
                       { label:"Priced From", value:minPrice ? `AED ${(minPrice/1000000).toFixed(1)}M` : "â€”", sub:priced.length > 0 ? `${priced.length} priced` : "0 priced", color:T.gold },
                       { label:"Avg Yield", value:withYield.length > 0 ? (withYield.reduce((a,p) => a+p.grossYield, 0)/withYield.length).toFixed(1) + "%" : "â€”", sub:`n=${withYield.length} disclosed`, color:T.green },
-                      { label:"Community PPSF", value:withBench.length > 0 ? "AED " + Math.round(withBench.reduce((a,p) => a+p.communityMedianPPSF, 0)/withBench.length).toLocaleString() : "â€”", sub:`DLD Â· n=${withBench.length}`, color:T.teal },
+                      { label:"Community PPSF", value:withBench.length > 0 ? "AED " + Math.round(withBench.reduce((a,p) => a+p.communityMedianPPSF, 0)/withBench.length).toLocaleString() : "â€”", sub:`DLD · n=${withBench.length}`, color:T.teal },
                     ].map((kpi,i) => (
                       <div key={i} style={{ display:"flex", flexDirection:"column", padding:"4px 14px", borderRight:i < 3 ? `1px solid ${T.border}` : "none" }}>
                         <div style={{ display:"flex", alignItems:"baseline", gap:6 }}>
@@ -1402,7 +1402,7 @@ function ProjectsTab({
                       {projCompare.length >= 2 && (
                         <button type="button" onClick={() => setShowCompare(true)}
                           style={{ padding:"7px 16px", background:`linear-gradient(135deg, ${T.gold}, #B8922A)`, border:"none", borderRadius:8, color:"#000", fontSize:12, fontWeight:700, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>
-                          View Comparison â†’
+                          View Comparison →
                         </button>
                       )}
                       <button type="button" onClick={() => setProjCompare([])} style={{ background:"none", border:`1px solid ${T.border}`, borderRadius:8, padding:"5px 10px", color:T.textMuted, fontSize:11, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>Clear</button>
@@ -1545,10 +1545,10 @@ function ProjectsTab({
                 {/* Cross-tab nav */}
                 <div style={{ display:"flex", gap:8, marginBottom:14, flexWrap:"wrap" }}>
                   {[
-                    { label:"Dev Portal â†’", tab:"Dev Portal" },
-                    { label:"Launch Calendar â†’", tab:"Launch Calendar" },
-                    { label:"Yields â†’", tab:"Yields" },
-                    { label:"DLD Volumes â†’", tab:"DLD Volumes" },
+                    { label:"Dev Portal →", tab:"Dev Portal" },
+                    { label:"Launch Calendar →", tab:"Launch Calendar" },
+                    { label:"Yields →", tab:"Yields" },
+                    { label:"DLD Volumes →", tab:"DLD Volumes" },
                   ].map((n,i) => (
                     <button key={i} type="button" onClick={() => handleTabChange(n.tab)}
                       style={{ padding:"6px 14px", background:"rgba(212,168,67,0.06)", border:`1px solid ${T.border}`, borderRadius:8, color:T.gold, fontSize:11, fontWeight:600, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>
@@ -1610,7 +1610,7 @@ function ProjectsTab({
                 ))}
               </div>
               <div style={{ flex:1, overflowY:"auto", padding:"24px" }}>
-                {/* â•â•â• SECTION 1 Â· PROJECT IDENTITY â•â•â• */}
+                {/* â•â•â• SECTION 1 · PROJECT IDENTITY â•â•â• */}
                 {projDetailTab === "identity" && (() => {
                   const seg = describeAssetClass(selectedProject);
                   const mkt = describeMarketStatus(selectedProject);
@@ -1618,7 +1618,7 @@ function ProjectsTab({
                   return (
                   <div>
                     <div style={{ padding:"18px 20px", background:`linear-gradient(135deg, rgba(212,168,67,0.08), rgba(20,184,166,0.04))`, border:`1px solid ${T.border}`, borderRadius:14, marginBottom:16 }}>
-                      <div style={{ fontSize:10, fontWeight:700, color:T.textMuted, letterSpacing:1, textTransform:"uppercase", marginBottom:10 }}>Project Identity Â· Per DLD Registry</div>
+                      <div style={{ fontSize:10, fontWeight:700, color:T.textMuted, letterSpacing:1, textTransform:"uppercase", marginBottom:10 }}>Project Identity · Per DLD Registry</div>
                       <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(200px, 1fr))", gap:14 }}>
                         <div>
                           <div style={{ fontSize:10, color:T.textMuted, marginBottom:4 }}>Project Name</div>
@@ -1677,13 +1677,13 @@ function ProjectsTab({
                   );
                 })()}
 
-                {/* â•â•â• SECTION 2 Â· LOCATION DATA â•â•â• */}
+                {/* â•â•â• SECTION 2 · LOCATION DATA â•â•â• */}
                 {projDetailTab === "location" && (() => {
                   const tags = locationTags(selectedProject);
                   return (
                   <div>
                     <div style={{ padding:"16px 20px", background:T.surface, border:`1px solid ${T.border}`, borderRadius:14, marginBottom:16 }}>
-                      <div style={{ fontSize:10, fontWeight:700, color:T.textMuted, letterSpacing:1, textTransform:"uppercase", marginBottom:10 }}>Location Data Â· Distances Per DLD Filing</div>
+                      <div style={{ fontSize:10, fontWeight:700, color:T.textMuted, letterSpacing:1, textTransform:"uppercase", marginBottom:10 }}>Location Data · Distances Per DLD Filing</div>
                       <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(200px, 1fr))", gap:12, marginBottom:14 }}>
                         <div>
                           <div style={{ fontSize:10, color:T.textMuted, marginBottom:4 }}>Emirate</div>
@@ -1751,14 +1751,14 @@ function ProjectsTab({
                           <div style={{ padding:"12px 14px", background:T.surfaceAlt, borderRadius:10, border:`1px solid ${T.border}` }}>
                             <div style={{ fontSize:10, color:T.textMuted, marginBottom:3 }}>Shopping Mall</div>
                             <div style={{ fontSize:13, fontWeight:700, color:T.white }}>Dubai Hills Mall</div>
-                            <div style={{ fontSize:10, color:T.textMuted }}>650+ outlets Â· 2M sqft GLA</div>
+                            <div style={{ fontSize:10, color:T.textMuted }}>650+ outlets · 2M sqft GLA</div>
                           </div>
                         )}
                         {selectedProject.distSchoolLabel && (
                           <div style={{ padding:"12px 14px", background:T.surfaceAlt, borderRadius:10, border:`1px solid ${T.border}` }}>
                             <div style={{ fontSize:10, color:T.textMuted, marginBottom:3 }}>Schools</div>
                             <div style={{ fontSize:13, fontWeight:700, color:T.white }}>GEMS Academies</div>
-                            <div style={{ fontSize:10, color:T.textMuted }}>Wellington Â· New Millennium Â· International</div>
+                            <div style={{ fontSize:10, color:T.textMuted }}>Wellington · New Millennium · International</div>
                           </div>
                         )}
                         {selectedProject.distHospitalLabel && (
@@ -1771,7 +1771,7 @@ function ProjectsTab({
                         <div style={{ padding:"12px 14px", background:T.surfaceAlt, borderRadius:10, border:`1px solid ${T.border}` }}>
                           <div style={{ fontSize:10, color:T.textMuted, marginBottom:3 }}>Parks & Recreation</div>
                           <div style={{ fontSize:13, fontWeight:700, color:T.white }}>Dubai Hills Park</div>
-                          <div style={{ fontSize:10, color:T.textMuted }}>180,000 sqm Â· 54 km bicycle path</div>
+                          <div style={{ fontSize:10, color:T.textMuted }}>180,000 sqm · 54 km bicycle path</div>
                         </div>
                       </div>
                     </div>
@@ -1806,7 +1806,7 @@ function ProjectsTab({
                   );
                 })()}
 
-                {/* â•â•â• SECTION 3 Â· SCALE & UNITS â•â•â• */}
+                {/* â•â•â• SECTION 3 · SCALE & UNITS â•â•â• */}
                 {projDetailTab === "scale" && (() => {
                   const mix = computeUnitMix(selectedProject);
                   return (
@@ -1872,11 +1872,11 @@ function ProjectsTab({
                   );
                 })()}
 
-                {/* â•â•â• SECTION 4 Â· PRODUCT & AMENITIES â•â•â• */}
+                {/* â•â•â• SECTION 4 · PRODUCT & AMENITIES â•â•â• */}
                 {projDetailTab === "product" && (
                   <div>
                     <div style={{ padding:"14px 20px", background:"rgba(20,184,166,0.05)", border:`1px solid ${T.border}`, borderRadius:10, marginBottom:16 }}>
-                      <div style={{ fontSize:11, color:T.teal, fontWeight:700, letterSpacing:0.5 }}>PRODUCT SPECIFICATION Â· DEVELOPER DISCLOSED</div>
+                      <div style={{ fontSize:11, color:T.teal, fontWeight:700, letterSpacing:0.5 }}>PRODUCT SPECIFICATION · DEVELOPER DISCLOSED</div>
                     </div>
                     <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit, minmax(190px, 1fr))", gap:12, marginBottom:16 }}>
                       <div className="kpi-card">
@@ -1916,7 +1916,7 @@ function ProjectsTab({
                   </div>
                 )}
 
-                {/* â•â•â• SECTION 5 Â· PRICING DATA â•â•â• */}
+                {/* â•â•â• SECTION 5 · PRICING DATA â•â•â• */}
                 {projDetailTab === "pricing" && (() => {
                   const bench = communityBenchmarkPPSF(selectedProject);
                   return (
@@ -1986,19 +1986,19 @@ function ProjectsTab({
                   );
                 })()}
 
-                {/* â•â•â• SECTION 6 Â· RENTAL & YIELD DATA â•â•â• */}
+                {/* â•â•â• SECTION 6 · RENTAL & YIELD DATA â•â•â• */}
                 {projDetailTab === "rental" && (() => {
                   const str = strIndicator(selectedProject);
                   return (
                   <div>
                     <div style={{ padding:"14px 20px", background:"rgba(16,185,129,0.05)", border:`1px solid ${T.border}`, borderRadius:10, marginBottom:16 }}>
-                      <div style={{ fontSize:11, color:T.green, fontWeight:700, letterSpacing:0.5 }}>RENTAL DATA Â· PER RERA SMART RENTAL INDEX METHODOLOGY</div>
+                      <div style={{ fontSize:11, color:T.green, fontWeight:700, letterSpacing:0.5 }}>RENTAL DATA · PER RERA SMART RENTAL INDEX METHODOLOGY</div>
                     </div>
                     <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit, minmax(180px, 1fr))", gap:12, marginBottom:16 }}>
                       <div className="kpi-card">
                         <div style={{ fontSize:10, fontWeight:700, color:T.textMuted, letterSpacing:1, textTransform:"uppercase", marginBottom:8 }}>Gross Yield</div>
                         <div style={{ fontFamily:"'Fraunces',serif", fontSize:26, fontWeight:800, color:selectedProject.grossYield >= 7 ? T.green : selectedProject.grossYield >= 5 ? T.gold : T.textSecondary }}>{selectedProject.grossYield ? (selectedProject.grossYield.toFixed(1) + "%" + (selectedProject.grossYieldIsEstimate ? " (est.)" : "")) : "â€”"}</div>
-                        <div style={{ fontSize:10, color:T.textMuted }}>Annual rent Ã· purchase price</div>
+                        <div style={{ fontSize:10, color:T.textMuted }}>Annual rent ÷ purchase price</div>
                       </div>
                       <div className="kpi-card">
                         <div style={{ fontSize:10, fontWeight:700, color:T.textMuted, letterSpacing:1, textTransform:"uppercase", marginBottom:8 }}>Net Yield</div>
@@ -2027,7 +2027,7 @@ function ProjectsTab({
                   );
                 })()}
 
-                {/* â•â•â• SECTION 7 Â· DEVELOPER & COMPLIANCE â•â•â• */}
+                {/* â•â•â• SECTION 7 · DEVELOPER & COMPLIANCE â•â•â• */}
                 {projDetailTab === "developer" && (() => {
                   const esc = escrowStatus(selectedProject);
                   const rera = reraCompliance(selectedProject);
@@ -2129,13 +2129,13 @@ function ProjectsTab({
                     )}
                   </div>
                 )}
-                    <button type="button" onClick={() => { setSelectedProject(null); handleTabChange("Developer Health"); }}$ style={{ padding:"10px 20px", background:"rgba(212,168,67,0.1)", border:`1px solid ${T.border}`, borderRadius:8, color:T.gold, fontSize:12, cursor:"pointer", fontFamily:"'Outfit',sans-serif", fontWeight:600, marginBottom:12 }}>Full Developer Profile â†’</button>
+                    <button type="button" onClick={() => { setSelectedProject(null); handleTabChange("Developer Health"); }}$ style={{ padding:"10px 20px", background:"rgba(212,168,67,0.1)", border:`1px solid ${T.border}`, borderRadius:8, color:T.gold, fontSize:12, cursor:"pointer", fontFamily:"'Outfit',sans-serif", fontWeight:600, marginBottom:12 }}>Full Developer Profile →</button>
                     <LegalNote T={T} />
                   </div>
                   );
                 })()}
 
-                {/* â•â•â• SECTION 8 Â· FULL REPORT & SHARE â•â•â• */}
+                {/* â•â•â• SECTION 8 · FULL REPORT & SHARE â•â•â• */}
                 
               {projDetailTab === "community" && (() => {
                 const cn = getCommunityData(selectedProject);
@@ -2248,7 +2248,7 @@ function ProjectsTab({
 {projDetailTab === "report" && (
                   <div>
                     <div style={{ padding:"14px 20px", background:"rgba(139,92,246,0.05)", border:`1px solid ${T.border}`, borderRadius:10, marginBottom:16 }}>
-                      <div style={{ fontSize:11, color:"#A78BFA", fontWeight:700, letterSpacing:0.5 }}>DATA REPORT Â· SHAREABLE SUMMARY</div>
+                      <div style={{ fontSize:11, color:"#A78BFA", fontWeight:700, letterSpacing:0.5 }}>DATA REPORT · SHAREABLE SUMMARY</div>
                     </div>
                     <div className="chart-box" style={{ padding:20, marginBottom:16 }}>
                       <div style={{ fontSize:12, fontWeight:700, color:T.white, marginBottom:14 }}>Project Summary (Factual Data)</div>
