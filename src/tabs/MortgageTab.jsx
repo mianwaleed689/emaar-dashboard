@@ -1,9 +1,9 @@
 /* eslint-disable */
-/* ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢
-   DXB ANALYTICS ââ‚¬â€ MORTGAGE TAB
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   DXB ANALYTICS â€” MORTGAGE TAB
    Extracted from EmaarDashboardV2.jsx
    EIBOR mortgage calculator, bank comparison, amortisation schedule
-   ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ */
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 
 import React from "react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from "recharts";
@@ -15,11 +15,11 @@ import SEED_DATA from "../utils/seedData";
 function MortgageTab({ liveNeighbourhoods=[], liveMortgageRates, liveEiborRates, liveInvestScores, handleTabChange, mortPrice, setMortPrice, mortDown, setMortDown, mortRate, setMortRate, mortYears, setMortYears, mortType, setMortType, mortProfile, setMortProfile, mortView, setMortView, mortIncome, setMortIncome, invScSearch, setInvScSearch, invScSort, setInvScSort, invScFilter, setInvScFilter, invScView, setInvScView, invScSelected, setInvScSelected }) {
 
 
-            /* ââ€¢ââ€¢ BANK DATA ââ‚¬â€ Research-based Apr 2026 ââ€¢ââ€¢
+            /* â•â• BANK DATA â€” Research-based Apr 2026 â•â•
                Sources: ricadimortgages.com, realestateclubdubai.com,
                capitalzone.ae, finnxstar.com
                EIBOR 3-month: 3.593% (Feb 2026, capitalzone.ae)
-            ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ */
+            â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
             /* EIBOR rates: read live from Firestore tabData/eiborRates (admin EIBOR tab), fallback to research values */
             const EIBOR_3M = parseFloat(liveEiborRates?.["3m"] ?? 3.593);
             const EIBOR_6M = parseFloat(liveEiborRates?.["6m"] ?? 3.676);
@@ -36,7 +36,7 @@ function MortgageTab({ liveNeighbourhoods=[], liveMortgageRates, liveEiborRates,
               { bank:"HSBC UAE",      logo:"\uD83C\uDFE6", fixed1y:4.09, fixed3y:4.34, fixed5y:4.59, variable:EIBOR_3M+1.60, maxLTV:80, minSalary:15000, maxLoan:15000000, processingFee:1.0, islamic:false, salaryTransfer:false, highlight:false, note:"Global bank. Good for international income documentation. Non-resident friendly." },
             ];
 
-            /* ââ€â‚¬ââ€â‚¬ LTV Rules (UAE Central Bank) ââ€â‚¬ââ€â‚¬ */
+            /* â”€â”€ LTV Rules (UAE Central Bank) â”€â”€ */
             const LTV_RULES = {
               expat:       { under5m: 80, over5m: 65, nonResident: 60 },
               uae_national:{ under5m: 85, over5m: 70, nonResident: 85 },
@@ -53,7 +53,7 @@ function MortgageTab({ liveNeighbourhoods=[], liveMortgageRates, liveEiborRates,
   const maxLTV = mortPrice > 5000000 ? profileRule.over5m : profileRule.under5m;
             const minDown = 100 - maxLTV;
 
-            /* ââ€â‚¬ââ€â‚¬ Calculator ââ€â‚¬ââ€â‚¬ */
+            /* â”€â”€ Calculator â”€â”€ */
             const loanAmount    = mortPrice * ((100 - mortDown) / 100);
             const downPayment   = mortPrice * (mortDown / 100);
             const annualRate    = mortRate / 100;
@@ -67,7 +67,7 @@ function MortgageTab({ liveNeighbourhoods=[], liveMortgageRates, liveEiborRates,
             const maxAfford     = mortIncome * 0.50 * 12 / annualRate * (1 - Math.pow(1 + monthlyRate, -numPayments)); // DBR 50%
             const dbr           = (monthlyPayment / mortIncome) * 100;
 
-            /* ââ€â‚¬ââ€â‚¬ Buying cost breakdown ââ€â‚¬ââ€â‚¬ */
+            /* â”€â”€ Buying cost breakdown â”€â”€ */
             const dldFee        = mortPrice * 0.04;
             const agencyFee     = mortPrice * 0.02;
             const mortReg       = loanAmount * 0.0025;
@@ -76,7 +76,7 @@ function MortgageTab({ liveNeighbourhoods=[], liveMortgageRates, liveEiborRates,
             const totalBuyCosts = dldFee + agencyFee + mortReg + valuationFee + processingFee;
             const totalCashNeeded = downPayment + totalBuyCosts;
 
-            /* ââ€â‚¬ââ€â‚¬ Rate for selected type ââ€â‚¬ââ€â‚¬ */
+            /* â”€â”€ Rate for selected type â”€â”€ */
             const getRateForType = (bank) => {
               if (mortType === "fixed1") return bank.fixed1y;
               if (mortType === "fixed3") return bank.fixed3y;
@@ -209,7 +209,7 @@ function MortgageTab({ liveNeighbourhoods=[], liveMortgageRates, liveEiborRates,
                           <div style={{ marginTop:16, padding:"10px 14px", background:dbr<=50?"rgba(16,185,129,0.1)":"rgba(239,68,68,0.1)", borderRadius:8, border:`1px solid ${dbr<=50?T.green:T.red}30` }}>
                             <div style={{ display:"flex", justifyContent:"space-between", marginBottom:4 }}>
                               <span style={{ fontSize:11, color:T.textMuted }}>Debt Burden Ratio</span>
-                              <span style={{ fontSize:12, fontWeight:700, color:dbr<=50?T.green:T.red }}>{dbr.toFixed(1)}% {dbr<=50?"âœâ€¦ Eligible":"âŒ Exceeds 50% cap"}</span>
+                              <span style={{ fontSize:12, fontWeight:700, color:dbr<=50?T.green:T.red }}>{dbr.toFixed(1)}% {dbr<=50?"âœ… Eligible":"âŒ Exceeds 50% cap"}</span>
                             </div>
                             <div style={{ height:6, borderRadius:3, background:T.border }}>
                               <div style={{ height:"100%", width:`${Math.min(dbr,100)}%`, background:dbr<=50?T.green:T.red, borderRadius:3 }} />
@@ -269,7 +269,7 @@ function MortgageTab({ liveNeighbourhoods=[], liveMortgageRates, liveEiborRates,
                           { profile:"Non-Resident",     under5m:"60% LTV (40% down)", over5m:"50% LTV (50% down)", color:"#3B82F6"},
                           { profile:"Max Tenure",        under5m:"25 years",           over5m:"Age cap: 70 yrs",    color:T.teal   },
                           { profile:"DBR Cap",           under5m:"50% of gross salary",over5m:"All loans combined", color:"#F97316"},
-                          { profile:"Min Salary",        under5m:"AED 10,000ââ‚¬â€œ15,000",  over5m:"Varies by bank",     color:T.textMuted },
+                          { profile:"Min Salary",        under5m:"AED 10,000â€“15,000",  over5m:"Varies by bank",     color:T.textMuted },
                         ].map((r,i) => (
                           <div key={i} style={{ padding:"12px 14px", background:T.surfaceAlt, borderRadius:10, border:`1px solid ${T.border}` }}>
                             <div style={{ fontSize:11, fontWeight:700, color:r.color, marginBottom:6 }}>{r.profile}</div>
@@ -316,7 +316,7 @@ function MortgageTab({ liveNeighbourhoods=[], liveMortgageRates, liveEiborRates,
                             <div style={{ padding:"14px 16px", borderBottom:`1px solid ${T.border}` }}>
                               <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start" }}>
                                 <div>
-                                  {isBest && <div style={{ fontSize:9, fontWeight:700, color:T.gold, letterSpacing:0.8, marginBottom:3 }}>â˜â€¦ BEST RATE</div>}
+                                  {isBest && <div style={{ fontSize:9, fontWeight:700, color:T.gold, letterSpacing:0.8, marginBottom:3 }}>â˜… BEST RATE</div>}
                                   <div style={{ fontSize:15, fontWeight:700, color:T.white }}>{bank.bank}</div>
                                   <div style={{ display:"flex", gap:6, marginTop:4 }}>
                                     {bank.islamic && <span style={{ fontSize:9, padding:"2px 6px", borderRadius:4, background:"rgba(139,92,246,0.15)", color:"#8B5CF6", fontWeight:700 }}>Islamic</span>}

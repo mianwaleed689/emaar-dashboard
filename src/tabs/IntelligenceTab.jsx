@@ -1,5 +1,5 @@
 /* eslint-disable */
-/* INTELLIGENCE TAB вв‚¬вЂќ Comparative analytics + IRR calculator */
+/* INTELLIGENCE TAB вЂ” Comparative analytics + IRR calculator */
 
 import React from "react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area, LineChart, Line, Cell } from "recharts";
@@ -22,7 +22,7 @@ function IntelligenceTab({ liveNeighbourhoods=[],
 }) {
 
 
-            // ввЂќв‚¬ввЂќв‚¬ AVM / Comps data (DLD-calibrated) ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬
+            // в”Ђв”Ђ AVM / Comps data (DLD-calibrated) в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
             const AVM_DATA = {
               "Dubai Hills Estate":      { apt: { "Studio": { ppsf:1680, rent:55 }, "1BR": { ppsf:1820, rent:80 }, "2BR": { ppsf:2050, rent:125 }, "3BR": { ppsf:2300, rent:180 } }, villa: { "3BR": { ppsf:1450, rent:180 }, "4BR": { ppsf:1550, rent:240 }, "5BR": { ppsf:1700, rent:320 } } },
               "Dubai Creek Harbour":     { apt: { "Studio": { ppsf:1600, rent:52 }, "1BR": { ppsf:1750, rent:78 }, "2BR": { ppsf:1950, rent:118 }, "3BR": { ppsf:2200, rent:170 } }, villa: null },
@@ -57,7 +57,7 @@ function IntelligenceTab({ liveNeighbourhoods=[],
               { community:"Emaar Beachfront",    risk:"Low",    reason:"Limited permits. Beachfront scarcity premium maintained.",     color:T.green   },
             ];
 
-            // ввЂќв‚¬ввЂќв‚¬ Comps engine ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬
+            // в”Ђв”Ђ Comps engine в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
             const communities = Object.keys(AVM_DATA);
             const commData = AVM_DATA[compCommunity];
             const typeMap = compType === "Villa" ? commData?.villa : commData?.apt;
@@ -88,7 +88,7 @@ function IntelligenceTab({ liveNeighbourhoods=[],
             const avgPpsf = comps.length ? Math.round(comps.reduce((a,c) => a+c.ppsf, 0) / comps.length) : 0;
             const avgPrice = comps.length ? Math.round(comps.reduce((a,c) => a+c.price, 0) / comps.length) : 0;
 
-            // ввЂќв‚¬ввЂќв‚¬ IRR Calculator ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬
+            // в”Ђв”Ђ IRR Calculator в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
             const price     = parseFloat(irrPrice)      || 2000000;
             const rent      = parseFloat(irrRent)       || 120000;
             const holdYrs   = parseInt(irrHoldYears)    || 5;
@@ -131,16 +131,16 @@ function IntelligenceTab({ liveNeighbourhoods=[],
 
             return (<>
 
-              {/* ввЂќв‚¬ввЂќв‚¬ Header ввЂќв‚¬ввЂќв‚¬ */}
+              {/* в”Ђв”Ђ Header в”Ђв”Ђ */}
               <div style={{ marginBottom:20 }}>
                 <h1 style={{ fontFamily:"'Fraunces',serif", fontSize:22, fontWeight:900, color:T.white, margin:0 }}>Transaction Intelligence</h1>
                 <p style={{ fontSize:12, color:T.textMuted, margin:"4px 0 0" }}>Comparable sales В· IRR calculator В· Supply pipeline risk</p>
               </div>
 
-              {/* ввЂќв‚¬ввЂќв‚¬ Top row: Comps + IRR ввЂќв‚¬ввЂќв‚¬ */}
+              {/* в”Ђв”Ђ Top row: Comps + IRR в”Ђв”Ђ */}
               <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16, marginBottom:16 }}>
 
-                {/* ввЂќв‚¬ввЂќв‚¬ Comparable Sales Engine ввЂќв‚¬ввЂќв‚¬ */}
+                {/* в”Ђв”Ђ Comparable Sales Engine в”Ђв”Ђ */}
                 <div style={{ background:T.card, border:`1px solid ${T.border}`, borderRadius:14, overflow:"hidden" }}>
                   <div style={{ padding:"14px 18px", borderBottom:`1px solid ${T.border}`, display:"flex", alignItems:"center", gap:10 }}>
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={T.gold} strokeWidth="2" strokeLinecap="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
@@ -213,7 +213,7 @@ function IntelligenceTab({ liveNeighbourhoods=[],
                   </div>
                 </div>
 
-                {/* ввЂќв‚¬ввЂќв‚¬ IRR Calculator ввЂќв‚¬ввЂќв‚¬ */}
+                {/* в”Ђв”Ђ IRR Calculator в”Ђв”Ђ */}
                 <div style={{ background:T.card, border:`1px solid ${T.border}`, borderRadius:14, overflow:"hidden" }}>
                   <div style={{ padding:"14px 18px", borderBottom:`1px solid ${T.border}`, display:"flex", alignItems:"center", gap:10 }}>
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={T.teal} strokeWidth="2" strokeLinecap="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
@@ -274,12 +274,12 @@ function IntelligenceTab({ liveNeighbourhoods=[],
                 </div>
               </div>
 
-              {/* ввЂќв‚¬ввЂќв‚¬ Supply Pipeline ввЂќв‚¬ввЂќв‚¬ */}
+              {/* в”Ђв”Ђ Supply Pipeline в”Ђв”Ђ */}
               <div style={{ background:T.card, border:`1px solid ${T.border}`, borderRadius:14, overflow:"hidden", marginBottom:16 }}>
                 <div style={{ padding:"14px 18px", borderBottom:`1px solid ${T.border}`, display:"flex", alignItems:"center", justifyContent:"space-between" }}>
                   <div style={{ display:"flex", alignItems:"center", gap:10 }}>
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" style={{ color:"#8B5CF6" }}><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
-                    <div style={{ fontSize:13, fontWeight:700, color:T.white }}>Dubai Supply Pipeline 2025вв‚¬вЂњ2028</div>
+                    <div style={{ fontSize:13, fontWeight:700, color:T.white }}>Dubai Supply Pipeline 2025вЂ“2028</div>
                   </div>
                   <div style={{ fontSize:10, color:T.textMuted }}>Source: DLD В· Property Monitor В· Reidin 2025</div>
                 </div>
@@ -290,7 +290,7 @@ function IntelligenceTab({ liveNeighbourhoods=[],
                       const maxUnits = 140000;
                       return (
                         <div key={year} style={{ textAlign:"center" }}>
-                          <div style={{ fontSize:11, fontWeight:700, color:highlight?"#F59E0B":T.textMuted, marginBottom:8 }}>{year}{highlight&&<span style={{ marginLeft:4, fontSize:9, color:"#F59E0B" }}>ввЂ“¶ NOW</span>}</div>
+                          <div style={{ fontSize:11, fontWeight:700, color:highlight?"#F59E0B":T.textMuted, marginBottom:8 }}>{year}{highlight&&<span style={{ marginLeft:4, fontSize:9, color:"#F59E0B" }}>в–¶ NOW</span>}</div>
                           <div style={{ height:120, display:"flex", alignItems:"flex-end", justifyContent:"center", gap:4, marginBottom:8 }}>
                             <div style={{ flex:1, background:"rgba(59,130,246,0.7)", borderRadius:"4px 4px 0 0", height:`${(offplan/maxUnits)*100}%`, transition:"height 0.4s", position:"relative" }}>
                               <div style={{ position:"absolute", top:-16, left:"50%", transform:"translateX(-50%)", fontSize:9, color:"#3B82F6", fontWeight:700, whiteSpace:"nowrap" }}>{(offplan/1000).toFixed(0)}K</div>
@@ -313,12 +313,12 @@ function IntelligenceTab({ liveNeighbourhoods=[],
                         <span style={{ fontSize:10, color:T.textMuted }}>{label}</span>
                       </div>
                     ))}
-                    <div style={{ marginLeft:"auto", fontSize:10, color:T.textMuted }}>366K+ units scheduled 2025вв‚¬вЂњ2028</div>
+                    <div style={{ marginLeft:"auto", fontSize:10, color:T.textMuted }}>366K+ units scheduled 2025вЂ“2028</div>
                   </div>
                 </div>
               </div>
 
-              {/* ввЂќв‚¬ввЂќв‚¬ Supply Risk by Community ввЂќв‚¬ввЂќв‚¬ */}
+              {/* в”Ђв”Ђ Supply Risk by Community в”Ђв”Ђ */}
               <div style={{ background:T.card, border:`1px solid ${T.border}`, borderRadius:14, overflow:"hidden" }}>
                 <div style={{ padding:"14px 18px", borderBottom:`1px solid ${T.border}`, display:"flex", alignItems:"center", gap:10 }}>
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={T.red} strokeWidth="2" strokeLinecap="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
@@ -343,9 +343,9 @@ function IntelligenceTab({ liveNeighbourhoods=[],
                 </div>
               </div>
             
-              {/* ввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђ
+              {/* в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ
                   SESSION 15 - DLD LIVE TRANSACTION INTELLIGENCE
-              ввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђ */}
+              в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ */}
 
               {/* DLD Header */}
               <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:16, marginTop:8, flexWrap:"wrap", gap:8 }}>
@@ -434,7 +434,7 @@ function IntelligenceTab({ liveNeighbourhoods=[],
                         <div style={{ background:T.card, border:`1px solid ${T.border}`, borderRadius:14, overflow:"hidden" }}>
                           <div style={{ padding:"12px 16px", borderBottom:`1px solid ${T.border}`, display:"flex", alignItems:"center", justifyContent:"space-between" }}>
                             <div style={{ fontSize:13, fontWeight:700, color:T.white }}>Price/sqft Trend - {dldActiveCommunity}</div>
-                            <div style={{ fontSize:11, fontWeight:700, color:tUp?"#10B981":T.red }}>{tUp?"ввЂ“І":"ввЂ“ј"} {tChange}% (6M)</div>
+                            <div style={{ fontSize:11, fontWeight:700, color:tUp?"#10B981":T.red }}>{tUp?"в–І":"в–ј"} {tChange}% (6M)</div>
                           </div>
                           <div style={{ padding:"16px" }}>
                             <div style={{ display:"flex", alignItems:"flex-end", gap:6, height:80, marginBottom:8 }}>

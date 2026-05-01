@@ -7,7 +7,7 @@ import emailjs from "@emailjs/browser";
 
 function NotificationsTab({ T, notify, adminUser, I, users, db }) {
   const [notifSubTab, setNotifSubTab] = React.useState("compose");
-  const [notifForm, setNotifForm] = React.useState({ title: "", message: "", icon: "�””", type: "info", link: "" });
+  const [notifForm, setNotifForm] = React.useState({ title: "", message: "", icon: "🔔", type: "info", link: "" });
   const [notifSending, setNotifSending] = React.useState(false);
   const [sentNotifs, setSentNotifs] = React.useState([]);
   const [templates, setTemplates] = React.useState([]);
@@ -31,7 +31,7 @@ function NotificationsTab({ T, notify, adminUser, I, users, db }) {
   const [emailTargetTier, setEmailTargetTier] = React.useState("pro");
   const [scheduledNotifs, setScheduledNotifs] = React.useState([]);
 
-  const ICONS = ["�””", "�“�", "🎯", "⚠️", "🏆", "🌟", "�“�", "�”�", "�…", "�“�", "�”‘", "🎁"];
+  const ICONS = ["🔔", "📣", "🎯", "⚠️", "🏆", "🌟", "📈", "🔇", "✅", "📊", "🔑", "🎁"];
   const TYPES = [
     { id: "info",    label: "Info",    color: T.blue   || "#3B82F6" },
     { id: "success", label: "Success", color: T.green  || "#10B981" },
@@ -98,7 +98,7 @@ function NotificationsTab({ T, notify, adminUser, I, users, db }) {
       }
       setLastResult({ success: true, sent, failed, total: targetUsers.length, durationMs: Date.now() - startTime, scheduled: !!scheduledFor, scheduledFor });
       notify(scheduledFor ? `Scheduled for ${new Date(scheduledFor).toLocaleString("en-AE")}` : `Sent to ${sent} users!`);
-      setNotifForm({ title: "", message: "", icon: "�””", type: "info", link: "" });
+      setNotifForm({ title: "", message: "", icon: "🔔", type: "info", link: "" });
       setScheduleEnabled(false); setScheduleDate("");
       fetchNotifications();
     } catch (e) {
@@ -124,7 +124,7 @@ function NotificationsTab({ T, notify, adminUser, I, users, db }) {
   };
 
   const loadTemplate = (t) => {
-    setNotifForm({ title: t.title || "", message: t.message || "", icon: t.icon || "�””", type: t.type || "info", link: t.link || "" });
+    setNotifForm({ title: t.title || "", message: t.message || "", icon: t.icon || "🔔", type: t.type || "info", link: t.link || "" });
     setNotifSubTab("compose");
     notify(`Loaded: ${t.name}`);
   };
@@ -143,10 +143,10 @@ function NotificationsTab({ T, notify, adminUser, I, users, db }) {
   };
 
   const resendNotification = async (n) => {
-    setNotifForm({ title: n.title, message: n.message, icon: n.icon || "�””", type: n.type || "info", link: n.link || "" });
+    setNotifForm({ title: n.title, message: n.message, icon: n.icon || "🔔", type: n.type || "info", link: n.link || "" });
     setTargetType("user"); setTargetUserId(n.userId);
     setNotifSubTab("compose");
-    notify("Loaded for resend �€” adjust and hit Send");
+    notify("Loaded for resend — adjust and hit Send");
   };
 
   const cancelScheduled = async (id) => {
@@ -218,10 +218,10 @@ function NotificationsTab({ T, notify, adminUser, I, users, db }) {
 
   const SUBTABS = [
     { id: "compose",   label: "Compose",                icon: "✏️" },
-    { id: "email",     label: "Email Blast",            icon: "�“�" },
+    { id: "email",     label: "Email Blast",            icon: "📧" },
     { id: "scheduled", label: `Scheduled (${stats.scheduled})`, icon: "⏰" },
-    { id: "templates", label: `Templates (${templates.length})`, icon: "�“�" },
-    { id: "history",   label: `History (${sentNotifs.length})`,  icon: "�“�" },
+    { id: "templates", label: `Templates (${templates.length})`, icon: "📋" },
+    { id: "history",   label: `History (${sentNotifs.length})`,  icon: "📜" },
   ];
 
   return (
@@ -259,7 +259,7 @@ function NotificationsTab({ T, notify, adminUser, I, users, db }) {
         ))}
       </div>
 
-      {/* �”€�”€ COMPOSE TAB �”€�”€ */}
+      {/* ── COMPOSE TAB ── */}
       {notifSubTab === "compose" && (
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
           {/* Left: Form */}
@@ -310,7 +310,7 @@ function NotificationsTab({ T, notify, adminUser, I, users, db }) {
                 </div>
               )}
               <div style={{ fontSize: 11, color: blue, marginTop: 10, fontWeight: 600 }}>
-                �’ {targetUsers.length} recipient{targetUsers.length !== 1 ? "s" : ""} selected
+                → {targetUsers.length} recipient{targetUsers.length !== 1 ? "s" : ""} selected
               </div>
             </div>
 
@@ -392,7 +392,7 @@ function NotificationsTab({ T, notify, adminUser, I, users, db }) {
             {/* Send Button */}
             <button type="button" onClick={sendNotification} disabled={notifSending || targetUsers.length === 0}
               style={{ padding: "16px 28px", background: notifSending ? surfAlt : `linear-gradient(135deg,${gold},${gold}cc)`, border: "none", borderRadius: 12, color: bg, fontSize: 14, fontWeight: 700, cursor: notifSending || targetUsers.length === 0 ? "not-allowed" : "pointer", opacity: targetUsers.length === 0 ? 0.5 : 1 }}>
-              {notifSending ? "Sending..." : scheduleEnabled ? `⏰ Schedule �’ ${targetUsers.length} user${targetUsers.length !== 1 ? "s" : ""}` : `Send Now �’ ${targetUsers.length} user${targetUsers.length !== 1 ? "s" : ""}`}
+              {notifSending ? "Sending..." : scheduleEnabled ? `⏰ Schedule → ${targetUsers.length} user${targetUsers.length !== 1 ? "s" : ""}` : `Send Now → ${targetUsers.length} user${targetUsers.length !== 1 ? "s" : ""}`}
             </button>
 
             {lastResult && (
@@ -400,8 +400,8 @@ function NotificationsTab({ T, notify, adminUser, I, users, db }) {
                 <div style={{ fontSize: 13, color: lastResult.success ? green : red, fontWeight: 700 }}>
                   {lastResult.success
                     ? lastResult.scheduled
-                      ? `⏰ Scheduled for ${new Date(lastResult.scheduledFor).toLocaleString("en-AE")} �€” ${lastResult.sent} users`
-                      : `�” Sent to ${lastResult.sent}/${lastResult.total} users in ${(lastResult.durationMs / 1000).toFixed(1)}s`
+                      ? `⏰ Scheduled for ${new Date(lastResult.scheduledFor).toLocaleString("en-AE")} — ${lastResult.sent} users`
+                      : `✔ Sent to ${lastResult.sent}/${lastResult.total} users in ${(lastResult.durationMs / 1000).toFixed(1)}s`
                     : `✘ Failed: ${lastResult.error}`}
                 </div>
                 {lastResult.failed > 0 && <div style={{ fontSize: 11, color: orange, marginTop: 4 }}>{lastResult.failed} failed to send</div>}
@@ -421,7 +421,7 @@ function NotificationsTab({ T, notify, adminUser, I, users, db }) {
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: 14, fontWeight: 700, color: white, marginBottom: 4 }}>{notifForm.title || "Notification Title"}</div>
                     <div style={{ fontSize: 12, color: textSec, lineHeight: 1.5 }}>{notifForm.message || "Your notification message will appear here..."}</div>
-                    {notifForm.link && <div style={{ marginTop: 8, fontSize: 11, color: blue }}>�”— {notifForm.link}</div>}
+                    {notifForm.link && <div style={{ marginTop: 8, fontSize: 11, color: blue }}>🔗 {notifForm.link}</div>}
                     <div style={{ marginTop: 10, fontSize: 10, color: textMuted }}>Just now · {notifForm.type}</div>
                   </div>
                 </div>
@@ -440,7 +440,7 @@ function NotificationsTab({ T, notify, adminUser, I, users, db }) {
                       style={{ padding: "10px 14px", borderRadius: 8, border: `1px solid ${border}`, background: surfAlt, color: white, fontSize: 12, cursor: "pointer", display: "flex", alignItems: "center", gap: 10, textAlign: "left" }}
                       onMouseEnter={e => e.currentTarget.style.borderColor = gold}
                       onMouseLeave={e => e.currentTarget.style.borderColor = border}>
-                      <span style={{ fontSize: 18 }}>{t.icon || "�“�"}</span>
+                      <span style={{ fontSize: 18 }}>{t.icon || "📋"}</span>
                       <div>
                         <div style={{ fontSize: 12, fontWeight: 600, color: white }}>{t.name}</div>
                         <div style={{ fontSize: 10, color: textMuted }}>{t.title}</div>
@@ -454,7 +454,7 @@ function NotificationsTab({ T, notify, adminUser, I, users, db }) {
         </div>
       )}
 
-      {/* �”€�”€ EMAIL BLAST TAB �”€�”€ */}
+      {/* ── EMAIL BLAST TAB ── */}
       {notifSubTab === "email" && (
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
@@ -479,12 +479,12 @@ function NotificationsTab({ T, notify, adminUser, I, users, db }) {
                 </div>
               )}
               <div style={{ fontSize: 11, color: blue, marginTop: 10, fontWeight: 600 }}>
-                �’ {getTargetUsers(emailTargetType, emailTargetTier).length} recipients
+                → {getTargetUsers(emailTargetType, emailTargetTier).length} recipients
               </div>
             </div>
 
             <div style={{ background: surf, borderRadius: 14, border: `1px solid ${border}`, padding: 20 }}>
-              <div style={{ fontSize: 12, fontWeight: 700, color: gold, marginBottom: 14 }}>�“� Email Content</div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: gold, marginBottom: 14 }}>📧 Email Content</div>
               <div style={{ marginBottom: 14 }}>
                 <label style={{ fontSize: 10, color: textMuted, display: "block", marginBottom: 6 }}>Preheader (preview text)</label>
                 <input value={emailForm.preheader} onChange={e => setEmailForm(p => ({ ...p, preheader: e.target.value }))} placeholder="Short preview shown in inbox..."
@@ -501,11 +501,11 @@ function NotificationsTab({ T, notify, adminUser, I, users, db }) {
                   style={{ width: "100%", padding: "10px 12px", background: surfAlt, border: `1px solid ${border}`, borderRadius: 8, color: white, fontSize: 12, resize: "vertical", lineHeight: 1.6, boxSizing: "border-box" }} />
               </div>
               <div style={{ padding: "10px 14px", background: `${orange}15`, borderRadius: 8, border: `1px solid ${orange}40`, marginBottom: 14 }}>
-                <div style={{ fontSize: 10, color: orange, fontWeight: 600 }}>⚠️ Note: Using EmailJS �€” max ~200 emails/month on free plan. Upgrade at emailjs.com for higher volume.</div>
+                <div style={{ fontSize: 10, color: orange, fontWeight: 600 }}>⚠️ Note: Using EmailJS — max ~200 emails/month on free plan. Upgrade at emailjs.com for higher volume.</div>
               </div>
               <button type="button" onClick={sendEmail} disabled={emailSending}
                 style={{ width: "100%", padding: "14px", background: emailSending ? surfAlt : `linear-gradient(135deg,${blue},${purple})`, border: "none", borderRadius: 10, color: white, fontSize: 14, fontWeight: 700, cursor: emailSending ? "not-allowed" : "pointer" }}>
-                {emailSending ? "Sending emails..." : `�“� Send Email to ${getTargetUsers(emailTargetType, emailTargetTier).length} Users`}
+                {emailSending ? "Sending emails..." : `📧 Send Email to ${getTargetUsers(emailTargetType, emailTargetTier).length} Users`}
               </button>
             </div>
           </div>
@@ -535,7 +535,7 @@ function NotificationsTab({ T, notify, adminUser, I, users, db }) {
         </div>
       )}
 
-      {/* �”€�”€ SCHEDULED TAB �”€�”€ */}
+      {/* ── SCHEDULED TAB ── */}
       {notifSubTab === "scheduled" && (
         <div style={{ background: surf, borderRadius: 14, border: `1px solid ${border}`, overflow: "hidden" }}>
           <div style={{ padding: "16px 20px", borderBottom: `1px solid ${border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -559,7 +559,7 @@ function NotificationsTab({ T, notify, adminUser, I, users, db }) {
               {scheduledNotifs.map(n => (
                 <div key={n.id} style={{ padding: "16px 20px", borderBottom: `1px solid ${border}`, display: "flex", alignItems: "center", gap: 14 }}>
                   <div style={{ width: 40, height: 40, borderRadius: 10, background: `${typeColor(n.type)}22`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, flexShrink: 0 }}>
-                    {n.icon || "�””"}
+                    {n.icon || "🔔"}
                   </div>
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: 13, fontWeight: 600, color: white }}>{n.title}</div>
@@ -579,7 +579,7 @@ function NotificationsTab({ T, notify, adminUser, I, users, db }) {
         </div>
       )}
 
-      {/* �”€�”€ TEMPLATES TAB �”€�”€ */}
+      {/* ── TEMPLATES TAB ── */}
       {notifSubTab === "templates" && (
         <div style={{ background: surf, borderRadius: 14, border: `1px solid ${border}`, overflow: "hidden" }}>
           <div style={{ padding: "16px 20px", borderBottom: `1px solid ${border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -587,14 +587,14 @@ function NotificationsTab({ T, notify, adminUser, I, users, db }) {
               <div style={{ fontSize: 14, fontWeight: 700, color: white }}>Notification Templates</div>
               <div style={{ fontSize: 11, color: textMuted }}>{templates.length} templates saved</div>
             </div>
-            <button type="button" onClick={() => { setNotifForm({ title: "", message: "", icon: "�””", type: "info", link: "" }); setNotifSubTab("compose"); setShowTemplateModal(true); }}
+            <button type="button" onClick={() => { setNotifForm({ title: "", message: "", icon: "🔔", type: "info", link: "" }); setNotifSubTab("compose"); setShowTemplateModal(true); }}
               style={{ padding: "8px 16px", borderRadius: 8, border: "none", background: gold, color: bg, fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
               + New Template
             </button>
           </div>
           {templates.length === 0 ? (
             <div style={{ padding: 60, textAlign: "center", color: textMuted }}>
-              <div style={{ fontSize: 40, marginBottom: 12 }}>�“�</div>
+              <div style={{ fontSize: 40, marginBottom: 12 }}>📋</div>
               <div style={{ fontSize: 14, fontWeight: 600, color: textSec }}>No templates yet</div>
               <div style={{ fontSize: 12 }}>Compose a notification then save it as a template</div>
             </div>
@@ -604,7 +604,7 @@ function NotificationsTab({ T, notify, adminUser, I, users, db }) {
                 <div key={t.id} style={{ background: surfAlt, borderRadius: 12, border: `1px solid ${border}`, padding: 16 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                      <span style={{ fontSize: 24 }}>{t.icon || "�“�"}</span>
+                      <span style={{ fontSize: 24 }}>{t.icon || "📋"}</span>
                       <div>
                         <div style={{ fontSize: 14, fontWeight: 700, color: white }}>{t.name}</div>
                         <div style={{ fontSize: 10, color: textMuted }}>{t.type || "info"}</div>
@@ -624,7 +624,7 @@ function NotificationsTab({ T, notify, adminUser, I, users, db }) {
         </div>
       )}
 
-      {/* �”€�”€ HISTORY TAB �”€�”€ */}
+      {/* ── HISTORY TAB ── */}
       {notifSubTab === "history" && (
         <div style={{ background: surf, borderRadius: 14, border: `1px solid ${border}`, overflow: "hidden" }}>
           <div style={{ padding: "16px 20px", borderBottom: `1px solid ${border}`, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 10 }}>
@@ -655,7 +655,7 @@ function NotificationsTab({ T, notify, adminUser, I, users, db }) {
           </div>
           {filteredHistory.length === 0 ? (
             <div style={{ padding: 60, textAlign: "center", color: textMuted }}>
-              <div style={{ fontSize: 40, marginBottom: 12 }}>�“�</div>
+              <div style={{ fontSize: 40, marginBottom: 12 }}>📡</div>
               <div style={{ fontSize: 14, fontWeight: 600, color: textSec }}>No notifications found</div>
             </div>
           ) : (
@@ -669,7 +669,7 @@ function NotificationsTab({ T, notify, adminUser, I, users, db }) {
                     else setSelectedNotifs(p => p.filter(id => id !== n.id));
                   }} style={{ cursor: "pointer" }} />
                   <div style={{ width: 36, height: 36, borderRadius: 8, background: `${typeColor(n.type)}22`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, flexShrink: 0 }}>
-                    {n.icon || "�””"}
+                    {n.icon || "🔔"}
                   </div>
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: 13, fontWeight: 600, color: white, marginBottom: 2 }}>{n.title}</div>
@@ -723,7 +723,7 @@ function NotificationsTab({ T, notify, adminUser, I, users, db }) {
 
 
 /* ===================================================================
-   TAB 11: EMAIL DIGEST COMPONENT �€” PRO LEVEL
+   TAB 11: EMAIL DIGEST COMPONENT — PRO LEVEL
    Schedule, preview, send, track. EmailJS bulk send.
 =================================================================== */
 

@@ -1,5 +1,5 @@
 /* eslint-disable */
-/* FINANCIALS TAB ‚‚Ç¨‚Äù Developer financial deep-dive with charts */
+/* FINANCIALS TAB ‚Äî Developer financial deep-dive with charts */
 
 import React from "react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area, LineChart, Line, Cell, ComposedChart } from "recharts";
@@ -33,8 +33,8 @@ function FinancialsTab({
   }, [gfDev]);
 
 
-            /* ‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê
-               FINANCIALS TAB ‚‚Ç¨‚Äù Developer Intelligence
+            /* ‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê
+               FINANCIALS TAB ‚Äî Developer Intelligence
                Sources: Official Investor Relations, DFM Filings, Annual Reports
                
                Emaar Properties (DFM: EMAAR):
@@ -59,7 +59,7 @@ function FinancialsTab({
                  - Delisted from DFM Feb 2022 (taken private)
                
                Sources: Official IR pages, DFM filings, AGBI, Emaar.com
-            ‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê */
+            ‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê */
 
             const DEVELOPERS_FIN = {
               "Emaar Properties": {
@@ -98,14 +98,14 @@ function FinancialsTab({
                   "9M 2025: Property sales AED 61B (+22%)",
                   "9M 2025: Net Profit AED 9.8B (+49% YoY)",
                   "62 new project launches in UAE in 2024",
-                  "Grand Polo Club unveiled ‚‚Ç¨‚Äù new flagship masterplan",
+                  "Grand Polo Club unveiled ‚Äî new flagship masterplan",
                 ],
                 risks: [
                   "Supply pipeline concentration in mid-market",
                   "Geopolitical risk (Iran-US conflict impact)",
                   "Off-plan delivery execution risk at scale",
                 ],
-                source: "Emaar IR ‚‚Ç¨‚Äù properties.emaar.com | Feb 2025 FY results",
+                source: "Emaar IR ‚Äî properties.emaar.com | Feb 2025 FY results",
               },
 
               "Aldar Properties": {
@@ -138,10 +138,10 @@ function FinancialsTab({
                   { name: "Other / JVs",                 pct: 8,  color: "#F97316" },
                 ],
                 highlights: [
-                  "FY2024: Revenue AED 15.7B (+90% YoY) ‚‚Ç¨‚Äù record",
+                  "FY2024: Revenue AED 15.7B (+90% YoY) ‚Äî record",
                   "FY2024: Sales AED 33.6B (+20%), Backlog AED 54.6B (record)",
-                  "Net profit near AED 7B ‚‚Ç¨‚Äù approaching Emaar level",
-                  "AUM AED 42B ‚‚Ç¨‚Äù significant investment portfolio",
+                  "Net profit near AED 7B ‚Äî approaching Emaar level",
+                  "AUM AED 42B ‚Äî significant investment portfolio",
                   "Dubai commercial expansion: AED 1.8B office tower",
                   "International: SODIC (Egypt) + London Square (UK)",
                 ],
@@ -150,7 +150,7 @@ function FinancialsTab({
                   "International execution risk (Egypt/UK)",
                   "Leverage creep as develop-to-hold pipeline grows",
                 ],
-                source: "Aldar IR ‚‚Ç¨‚Äù aldar.com/en/news-and-media | Feb 2025 FY results",
+                source: "Aldar IR ‚Äî aldar.com/en/news-and-media | Feb 2025 FY results",
               },
 
               "DAMAC Properties": {
@@ -183,18 +183,18 @@ function FinancialsTab({
                 ],
                 highlights: [
                   "FY2024: Revenue AED 9.8B (+15% forecast growth 2025)",
-                  "~$5B cash on hand (2024) ‚‚Ç¨‚Äù zero debt strategy",
-                  "Delisted DFM Feb 2022 ‚‚Ç¨‚Äù fully private",
+                  "~$5B cash on hand (2024) ‚Äî zero debt strategy",
+                  "Delisted DFM Feb 2022 ‚Äî fully private",
                   "Chelsea FC front-of-shirt sponsor 2025",
                   "Trump-branded projects driving luxury demand",
-                  "DAMAC Lagoons ‚‚Ç¨‚Äù fastest-selling community 2024",
+                  "DAMAC Lagoons ‚Äî fastest-selling community 2024",
                 ],
                 risks: [
-                  "Private ‚‚Ç¨‚Äù limited financial transparency",
+                  "Private ‚Äî limited financial transparency",
                   "Heavy dependence on branded/luxury segment",
                   "Bond distress signals (>1000bps spread) reported Mar 2026",
                 ],
-                source: "DAMAC IR ‚‚Ç¨‚Äù damacproperties.com | Various sources 2024-2025",
+                source: "DAMAC IR ‚Äî damacproperties.com | Various sources 2024-2025",
               },
 
               "Sobha Realty": {
@@ -225,19 +225,19 @@ function FinancialsTab({
                   { name: "Oman / International",   pct: 14, color: "#3B82F6" },
                 ],
                 highlights: [
-                  "FY2024: Sales ~AED 17B ‚‚Ç¨‚Äù strong FDI buyer base",
+                  "FY2024: Sales ~AED 17B ‚Äî strong FDI buyer base",
                   "In-house construction = quality control advantage",
-                  "Sobha Hartland 2 launched ‚‚Ç¨‚Äù new Meydan masterplan",
+                  "Sobha Hartland 2 launched ‚Äî new Meydan masterplan",
                   "Revenue backlog ~AED 30B supports 3yr revenue visibility",
                   "Strong Indian diaspora + GCC HNW buyer base",
                   "PPSF premium: AED 2,100-2,200/sqft (above market avg)",
                 ],
                 risks: [
-                  "Private ‚‚Ç¨‚Äù limited public disclosures",
+                  "Private ‚Äî limited public disclosures",
                   "Single-developer, single-community concentration",
                   "Delivery execution at Hartland 2 scale",
                 ],
-                source: "Sobha Realty IR ‚‚Ç¨‚Äù sobharealty.com | Various 2024-2025",
+                source: "Sobha Realty IR ‚Äî sobharealty.com | Various 2024-2025",
               },
 
               "Nakheel": {
@@ -265,13 +265,13 @@ function FinancialsTab({
                 ],
                 highlights:[
                   "2024: Sales AED 20B+, Nakheel #1 in Dubai luxury segment",
-                  "2025: AED 16.9B in high-end segment (>AED 15M) ‚‚Ç¨‚Äù #1 market leader",
-                  "Palm Jumeirah ‚‚Ç¨‚Äù global icon, 672 luxury transactions 2025",
-                  "Dubai Islands ‚‚Ç¨‚Äù major new masterplan, multiple phases launching",
+                  "2025: AED 16.9B in high-end segment (>AED 15M) ‚Äî #1 market leader",
+                  "Palm Jumeirah ‚Äî global icon, 672 luxury transactions 2025",
+                  "Dubai Islands ‚Äî major new masterplan, multiple phases launching",
                   "Integrated into Dubai Holding (Mar 2024) alongside Meraas",
                   "DLD 2024: 3,248 transactions, AED 5.82B apartments only",
                 ],
-                risks:["Part of Dubai Holding ‚‚Ç¨‚Äù limited standalone disclosures","Supply concentration in luxury waterfront","Long development cycles for island projects"],
+                risks:["Part of Dubai Holding ‚Äî limited standalone disclosures","Supply concentration in luxury waterfront","Long development cycles for island projects"],
                 source:"Dubai Holding / DLD data / Arabian Business 2025",
               },
 
@@ -300,13 +300,13 @@ function FinancialsTab({
                 ],
                 highlights:[
                   "2025: AED 10B sales Jan-Aug (1,188 transactions, avg AED 8.4M)",
-                  "Nad Al Sheba Gardens Phase 10 ‚‚Ç¨‚Äù fastest-selling villa launch 2025",
-                  "City Walk, La Mer, Bluewaters ‚‚Ç¨‚Äù iconic lifestyle destinations",
-                  "Asora Bay Residences at La Mer Peninsula ‚‚Ç¨‚Äù premium waterfront",
-                  "Jumeirah Residences Emirates Towers ‚‚Ç¨‚Äù DIFC branded address",
+                  "Nad Al Sheba Gardens Phase 10 ‚Äî fastest-selling villa launch 2025",
+                  "City Walk, La Mer, Bluewaters ‚Äî iconic lifestyle destinations",
+                  "Asora Bay Residences at La Mer Peninsula ‚Äî premium waterfront",
+                  "Jumeirah Residences Emirates Towers ‚Äî DIFC branded address",
                   "Part of Dubai Holding alongside Nakheel, Jumeirah Group",
                 ],
-                risks:["Private ‚‚Ç¨‚Äù Dubai Holding subsidiary, no standalone reports","Lifestyle retail exposure (mall vacancy risk)","High avg sale price limits buyer pool"],
+                risks:["Private ‚Äî Dubai Holding subsidiary, no standalone reports","Lifestyle retail exposure (mall vacancy risk)","High avg sale price limits buyer pool"],
                 source:"Dubai Holding / Provident Estate / DLD data 2025",
               },
 
@@ -335,13 +335,13 @@ function FinancialsTab({
                 ],
                 highlights:[
                   "2024: Revenue AED 6.3B (+18% forecast for 2025)",
-                  "2025: AED 26B total sales (The National, Jan 2026 ‚‚Ç¨‚Äù chairman statement)",
+                  "2025: AED 26B total sales (The National, Jan 2026 ‚Äî chairman statement)",
                   "Q1 2026: 2,426 transactions, AED 3.5B (avg AED 1.46M/unit)",
-                  "60+ completed projects ‚‚Ç¨‚Äù strong delivery track record",
+                  "60+ completed projects ‚Äî strong delivery track record",
                   "Bugatti Residences + Jacob & Co = highest-profile branded play",
-                  "Bond stress signals >1000bps (Mar 2026) ‚‚Ç¨‚Äù monitor carefully",
+                  "Bond stress signals >1000bps (Mar 2026) ‚Äî monitor carefully",
                 ],
-                risks:["Bond distress signals reported Mar 2026 ‚‚Ç¨‚Äù Omniyat/Binghatti group","High leverage historically (D/E 0.75x)","Rapid expansion pace ‚‚Ç¨‚Äù execution risk","Private ‚‚Ç¨‚Äù limited financial transparency"],
+                risks:["Bond distress signals reported Mar 2026 ‚Äî Omniyat/Binghatti group","High leverage historically (D/E 0.75x)","Rapid expansion pace ‚Äî execution risk","Private ‚Äî limited financial transparency"],
                 source:"The National Jan 2026 / DLD Q1 2026 / timehomesrealestate.com",
               },
 
@@ -369,14 +369,14 @@ function FinancialsTab({
                   {name:"Commercial", pct:10, color:"#6B7280"},
                 ],
                 highlights:[
-                  "2024: Revenue exceeding AED 10B ‚‚Ç¨‚Äù 10,229 units sold",
-                  "19 projects delivered in 2024 ‚‚Ç¨‚Äù strong execution record",
-                  "Azizi Venice ‚‚Ç¨‚Äù Dubai South flagship, integrated resort concept",
-                  "Burj Azizi ‚‚Ç¨‚Äù world's 2nd tallest building under development",
-                  "Q1 2026: AED 905M sales (880K‚‚Ç¨‚Äú905M range, DLD data)",
-                  "Entry prices from AED 400K ‚‚Ç¨‚Äù accessible investor segment",
+                  "2024: Revenue exceeding AED 10B ‚Äî 10,229 units sold",
+                  "19 projects delivered in 2024 ‚Äî strong execution record",
+                  "Azizi Venice ‚Äî Dubai South flagship, integrated resort concept",
+                  "Burj Azizi ‚Äî world's 2nd tallest building under development",
+                  "Q1 2026: AED 905M sales (880K‚Äì905M range, DLD data)",
+                  "Entry prices from AED 400K ‚Äî accessible investor segment",
                 ],
-                risks:["Private ‚‚Ç¨‚Äù limited financial disclosures","Dubai South concentration risk","High unit volume = execution complexity","Burj Azizi scale delivery risk"],
+                risks:["Private ‚Äî limited financial disclosures","Dubai South concentration risk","High unit volume = execution complexity","Burj Azizi scale delivery risk"],
                 source:"takayamotorcity.com / DLD 2024 data / primocapital.ae",
               },
 
@@ -405,13 +405,13 @@ function FinancialsTab({
                 ],
                 highlights:[
                   "2024: AED 8.5B sales, AED 9.42B apartments 2024 (DLD)",
-                  "2024: 6,334 transactions at AED 1.48M avg ‚‚Ç¨‚Äù volume leader",
+                  "2024: 6,334 transactions at AED 1.48M avg ‚Äî volume leader",
                   "Aug 2025: 2,500 transactions, AED 4.1B (Provident data)",
-                  "Pioneer of 1% monthly payment ‚‚Ç¨‚Äù copied industry-wide",
-                  "Part of Danube Group ‚‚Ç¨‚Äù backward integration in materials",
-                  "On-time delivery reputation ‚‚Ç¨‚Äù minor delays but always completes",
+                  "Pioneer of 1% monthly payment ‚Äî copied industry-wide",
+                  "Part of Danube Group ‚Äî backward integration in materials",
+                  "On-time delivery reputation ‚Äî minor delays but always completes",
                 ],
-                risks:["Private ‚‚Ç¨‚Äù no standalone financial reports","Affordable segment = thin margins","Buyer reliance on extended payment plans","Volume dependence"],
+                risks:["Private ‚Äî no standalone financial reports","Affordable segment = thin margins","Buyer reliance on extended payment plans","Volume dependence"],
                 source:"primocapital.ae / Provident Estate / DLD 2024",
               },
 
@@ -439,13 +439,13 @@ function FinancialsTab({
                 ],
                 highlights:[
                   "2024: AED 6.81B sales, 2,871 transactions (DLD apartments data)",
-                  "AED 2.37M avg price, AED 2,009/sqft ‚‚Ç¨‚Äù mid-premium positioning",
+                  "AED 2.37M avg price, AED 2,009/sqft ‚Äî mid-premium positioning",
                   "Q1 2026: AED 2.48B sales, 1,084 transactions",
                   "Design-led: exceeds competitors on finish quality at same price",
-                  "Strong tenant demand ‚‚Ç¨‚Äù premium rents vs area avg",
+                  "Strong tenant demand ‚Äî premium rents vs area avg",
                   "Lowest D/E ratio of private developers (0.38x)",
                 ],
-                risks:["Private ‚‚Ç¨‚Äù no financial disclosures","Low volume limits economies of scale","Design-led = higher COGS vs competitors","Small team relative to pipeline"],
+                risks:["Private ‚Äî no financial disclosures","Low volume limits economies of scale","Design-led = higher COGS vs competitors","Small team relative to pipeline"],
                 source:"primocapital.ae / timehomesrealestate.com / DLD 2024",
               },
             };
@@ -454,7 +454,7 @@ function FinancialsTab({
             const rawData = finPeriod === "annual" ? devData.annualData : devData.quarterly;
             const compareData = DEVELOPERS_FIN[finCompareDev];
 
-            /* ‚‚Äù‚Ç¨‚‚Äù‚Ç¨ Chart helpers ‚‚Äù‚Ç¨‚‚Äù‚Ç¨ */
+            /* ‚îÄ‚îÄ Chart helpers ‚îÄ‚îÄ */
             const getMetricVal = (d) => {
               switch(finMetric) {
                 case "revenue":    return d.revenue;
@@ -492,7 +492,7 @@ function FinancialsTab({
                 <div style={{ fontSize:13, color:T.textMuted, marginBottom:20 }}>Financial data not yet available for this developer.</div>
                 <div style={{ padding:"16px 20px", background:"rgba(212,168,67,0.06)", border:"1px solid rgba(212,168,67,0.2)", borderRadius:12, maxWidth:420, margin:"0 auto", fontSize:12, color:T.textSecondary, lineHeight:1.9 }}>
                   <div style={{ fontWeight:700, color:T.gold, marginBottom:6 }}>How to add data</div>
-                  Admin ‚Ü‚Äô Data Manager ‚Ü‚Äô Upload financial data for this developer.<br/>
+                  Admin ‚Üí Data Manager ‚Üí Upload financial data for this developer.<br/>
                   Data appears instantly via Firestore live sync.
                 </div>
                 <button type="button" onClick={()=>setFinDeveloper("Emaar Properties")}
@@ -505,7 +505,7 @@ function FinancialsTab({
             return (
               <div style={{ animation:"fadeUp 0.4s ease-out forwards" }}>
 
-                {/* ‚‚Äù‚Ç¨‚‚Äù‚Ç¨ HEADER ‚‚Äù‚Ç¨‚‚Äù‚Ç¨ */}
+                {/* ‚îÄ‚îÄ HEADER ‚îÄ‚îÄ */}
                 <div style={{ display:"flex", alignItems:"flex-start", justifyContent:"space-between", padding:"10px 0", marginBottom:16, borderBottom:`1px solid ${T.border}`, flexWrap:"wrap", gap:12 }}>
                   <div>
                     <div style={{ fontFamily:"'Fraunces',serif", fontSize:20, fontWeight:800, color:T.white }}>Developer Financials</div>
@@ -523,10 +523,10 @@ function FinancialsTab({
                   </div>
                 </div>
 
-                {/* ‚‚Äù‚Ç¨‚‚Äù‚Ç¨ DEVELOPER SELECTOR + CONTROLS ‚‚Äù‚Ç¨‚‚Äù‚Ç¨ */}
+                {/* ‚îÄ‚îÄ DEVELOPER SELECTOR + CONTROLS ‚îÄ‚îÄ */}
                 <div style={{ background:T.surface, border:`1px solid ${T.border}`, borderRadius:12, padding:"14px 16px", marginBottom:16 }}>
                   <div style={{ display:"flex", gap:10, flexWrap:"wrap", alignItems:"center" }}>
-                    {/* Developer pills ‚‚Ç¨‚Äù detailed data available */}
+                    {/* Developer pills ‚Äî detailed data available */}
                     <div style={{ display:"flex", gap:6, flexWrap:"wrap", flex:1 }}>
                       {developers.map(dev=>{
                         const d = DEVELOPERS_FIN[dev];
@@ -564,7 +564,7 @@ function FinancialsTab({
                   </div>
                 </div>
 
-                {/* ‚‚Äù‚Ç¨‚‚Äù‚Ç¨ OVERVIEW VIEW ‚‚Äù‚Ç¨‚‚Äù‚Ç¨ */}
+                {/* ‚îÄ‚îÄ OVERVIEW VIEW ‚îÄ‚îÄ */}
                 {finView === "overview" && (
                   <>
                     {/* Developer identity card */}
@@ -574,7 +574,7 @@ function FinancialsTab({
                           <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:6 }}>
                             <div style={{ fontFamily:"'Fraunces',serif", fontSize:18, fontWeight:800, color:T.white }}>{finDeveloper}</div>
                             {devData.listed
-                              ? <span style={{ fontSize:10, padding:"2px 8px", borderRadius:6, background:T.green+"22", color:T.green, fontWeight:700 }}>{devData.exchange}: {devData.ticker} ‚ú‚Äú Listed</span>
+                              ? <span style={{ fontSize:10, padding:"2px 8px", borderRadius:6, background:T.green+"22", color:T.green, fontWeight:700 }}>{devData.exchange}: {devData.ticker} ‚úì Listed</span>
                               : <span style={{ fontSize:10, padding:"2px 8px", borderRadius:6, background:"rgba(139,92,246,0.15)", color:"#8B5CF6", fontWeight:700 }}>Private Co.</span>
                             }
                           </div>
@@ -629,13 +629,13 @@ function FinancialsTab({
                         return (
                           <div key={i} style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr 1fr 1fr 1fr 1fr", padding:"11px 16px", borderBottom:i<devData.annualData.length-1?`1px solid ${T.border}`:"none", background:isLatest?"rgba(212,168,67,0.03)":"transparent", alignItems:"center" }}>
                             <div style={{ fontFamily:"'Fraunces',serif", fontSize:13, fontWeight:700, color:isLatest?T.gold:T.white }}>{d.year}</div>
-                            <div style={{ fontSize:13, fontWeight:600, color:T.white }}>{d.revenue ? d.revenue.toFixed(1) : "‚‚Ç¨‚Äù"}</div>
-                            <div style={{ fontSize:13, fontWeight:600, color:d.netProfit > 0 ? T.green : d.netProfit < 0 ? T.red : T.textMuted }}>{d.netProfit !== null ? d.netProfit.toFixed(1) : "‚‚Ç¨‚Äù"}</div>
-                            <div style={{ fontSize:13, color:T.white }}>{d.sales ? d.sales.toFixed(1) : "‚‚Ç¨‚Äù"}</div>
-                            <div style={{ fontSize:13, color:T.teal }}>{d.backlog ? d.backlog.toFixed(1) : "‚‚Ç¨‚Äù"}</div>
-                            <div style={{ fontSize:13, color:T.textMuted }}>{d.ebitda ? d.ebitda.toFixed(1) : "‚‚Ç¨‚Äù"}</div>
+                            <div style={{ fontSize:13, fontWeight:600, color:T.white }}>{d.revenue ? d.revenue.toFixed(1) : "‚Äî"}</div>
+                            <div style={{ fontSize:13, fontWeight:600, color:d.netProfit > 0 ? T.green : d.netProfit < 0 ? T.red : T.textMuted }}>{d.netProfit !== null ? d.netProfit.toFixed(1) : "‚Äî"}</div>
+                            <div style={{ fontSize:13, color:T.white }}>{d.sales ? d.sales.toFixed(1) : "‚Äî"}</div>
+                            <div style={{ fontSize:13, color:T.teal }}>{d.backlog ? d.backlog.toFixed(1) : "‚Äî"}</div>
+                            <div style={{ fontSize:13, color:T.textMuted }}>{d.ebitda ? d.ebitda.toFixed(1) : "‚Äî"}</div>
                             <div style={{ fontSize:12, fontWeight:700, color:revGrowth > 0 ? T.green : revGrowth < 0 ? T.red : T.textMuted }}>
-                              {revGrowth !== null ? (revGrowth > 0 ? "+" : "") + revGrowth.toFixed(0) + "%" : "‚‚Ç¨‚Äù"}
+                              {revGrowth !== null ? (revGrowth > 0 ? "+" : "") + revGrowth.toFixed(0) + "%" : "‚Äî"}
                             </div>
                           </div>
                         );
@@ -648,7 +648,7 @@ function FinancialsTab({
                         <div style={{ fontSize:12, fontWeight:700, color:T.white, marginBottom:12 }}>Key Highlights</div>
                         {devData.highlights.map((h,i)=>(
                           <div key={i} style={{ display:"flex", gap:8, padding:"5px 0", borderBottom:i<devData.highlights.length-1?`1px solid ${T.border}`:"none" }}>
-                            <span style={{ color:T.green, flexShrink:0 }}>‚ú‚Äú</span>
+                            <span style={{ color:T.green, flexShrink:0 }}>‚úì</span>
                             <span style={{ fontSize:11, color:T.textSecondary, lineHeight:1.6 }}>{h}</span>
                           </div>
                         ))}
@@ -681,7 +681,7 @@ function FinancialsTab({
                   </>
                 )}
 
-                {/* ‚‚Äù‚Ç¨‚‚Äù‚Ç¨ CHARTS VIEW ‚‚Äù‚Ç¨‚‚Äù‚Ç¨ */}
+                {/* ‚îÄ‚îÄ CHARTS VIEW ‚îÄ‚îÄ */}
                 {finView === "charts" && (
                   <>
                     {/* Metric selector */}
@@ -796,12 +796,12 @@ function FinancialsTab({
                   </>
                 )}
 
-                {/* ‚‚Äù‚Ç¨‚‚Äù‚Ç¨ SEGMENTS VIEW ‚‚Äù‚Ç¨‚‚Äù‚Ç¨ */}
+                {/* ‚îÄ‚îÄ SEGMENTS VIEW ‚îÄ‚îÄ */}
                 {finView === "segments" && (
                   <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16, marginBottom:16 }}>
                     <div className="chart-box" style={{ padding:20 }}>
                       <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:4 }}>Revenue Segments</div>
-                      <div style={{ fontSize:11, color:T.textMuted, marginBottom:20 }}>Business unit contribution ‚‚Ç¨‚Äù FY2024</div>
+                      <div style={{ fontSize:11, color:T.textMuted, marginBottom:20 }}>Business unit contribution ‚Äî FY2024</div>
                       {devData.segments.map((s,i)=>(
                         <div key={i} style={{ marginBottom:14 }}>
                           <div style={{ display:"flex", justifyContent:"space-between", marginBottom:4 }}>
@@ -820,15 +820,15 @@ function FinancialsTab({
 
                     <div className="chart-box" style={{ padding:20 }}>
                       <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:16 }}>Backlog vs Revenue</div>
-                      <div style={{ fontSize:11, color:T.textMuted, marginBottom:16 }}>Revenue visibility ratio ‚‚Ç¨‚Äù backlog √∑ annual revenue</div>
+                      <div style={{ fontSize:11, color:T.textMuted, marginBottom:16 }}>Revenue visibility ratio ‚Äî backlog √∑ annual revenue</div>
                       {devData.annualData.map((d,i)=>{
-                        const ratio = d.revenue > 0 ? (d.backlog / d.revenue).toFixed(1) : "‚‚Ç¨‚Äù";
+                        const ratio = d.revenue > 0 ? (d.backlog / d.revenue).toFixed(1) : "‚Äî";
                         const isLatest = i === devData.annualData.length - 1;
                         return (
                           <div key={i} style={{ display:"flex", justifyContent:"space-between", padding:"7px 0", borderBottom:i<devData.annualData.length-1?`1px solid ${T.border}`:"none" }}>
                             <span style={{ fontSize:12, color:isLatest?T.white:T.textMuted, fontWeight:isLatest?700:400 }}>{d.year}</span>
                             <div style={{ display:"flex", gap:16 }}>
-                              <span style={{ fontSize:12, color:T.teal }}>{d.backlog ? "AED "+d.backlog+"B" : "‚‚Ç¨‚Äù"}</span>
+                              <span style={{ fontSize:12, color:T.teal }}>{d.backlog ? "AED "+d.backlog+"B" : "‚Äî"}</span>
                               <span style={{ fontSize:12, fontWeight:700, color:isLatest?T.gold:T.textMuted }}>{ratio}x coverage</span>
                             </div>
                           </div>
@@ -837,18 +837,18 @@ function FinancialsTab({
                       <div style={{ marginTop:12, padding:"10px 12px", background:"rgba(212,168,67,0.06)", borderRadius:8, fontSize:11, color:T.textSecondary, lineHeight:1.7 }}>
                         Backlog √∑ Revenue = years of revenue visibility. Higher = more predictable future income.
                         {devData.annualData[4].backlog && devData.annualData[4].revenue ?
-                          ` ${finDeveloper.split(" ")[0]} current: ${(devData.annualData[4].backlog/devData.annualData[4].revenue).toFixed(1)}x ‚‚Ç¨‚Äù ${(devData.annualData[4].backlog/devData.annualData[4].revenue) > 3 ? "Excellent visibility" : "Good visibility"}.` : ""
+                          ` ${finDeveloper.split(" ")[0]} current: ${(devData.annualData[4].backlog/devData.annualData[4].revenue).toFixed(1)}x ‚Äî ${(devData.annualData[4].backlog/devData.annualData[4].revenue) > 3 ? "Excellent visibility" : "Good visibility"}.` : ""
                         }
                       </div>
                     </div>
                   </div>
                 )}
 
-                {/* ‚‚Äù‚Ç¨‚‚Äù‚Ç¨ DEEP DIVE VIEW ‚‚Äù‚Ç¨‚‚Äù‚Ç¨ */}
+                {/* ‚îÄ‚îÄ DEEP DIVE VIEW ‚îÄ‚îÄ */}
                 {finView === "deep" && (
                   <div style={{ marginBottom:16 }}>
                     {/* All 4 developers side by side comparison */}
-                    <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:4 }}>All Developers ‚‚Ç¨‚Äù FY2024 Comparison</div>
+                    <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:4 }}>All Developers ‚Äî FY2024 Comparison</div>
                     <div style={{ fontSize:11, color:T.textMuted, marginBottom:16 }}>Official annual results ¬∑ Click developer to explore</div>
                     <div style={{ background:T.surface, border:`1px solid ${T.border}`, borderRadius:12, overflow:"hidden", marginBottom:16 }}>
                       <div style={{ display:"grid", gridTemplateColumns:"1.8fr 1fr 1fr 1fr 1fr 1fr 1fr", padding:"10px 16px", background:T.surfaceAlt, borderBottom:`1px solid ${T.border}` }}>
@@ -859,7 +859,7 @@ function FinancialsTab({
                       {developers.map((dev,i)=>{
                         const d = DEVELOPERS_FIN[dev];
                         const fy24 = d.annualData[4];
-                        const margin = fy24.revenue > 0 ? (fy24.netProfit / fy24.revenue * 100).toFixed(0) : "‚‚Ç¨‚Äù";
+                        const margin = fy24.revenue > 0 ? (fy24.netProfit / fy24.revenue * 100).toFixed(0) : "‚Äî";
                         const isActive = dev === finDeveloper;
                         return (
                           <div key={i} style={{ display:"grid", gridTemplateColumns:"1.8fr 1fr 1fr 1fr 1fr 1fr 1fr", padding:"12px 16px", borderBottom:i<developers.length-1?`1px solid ${T.border}`:"none", cursor:"pointer", background:isActive?"rgba(212,168,67,0.04)":"transparent" }}
@@ -878,7 +878,7 @@ function FinancialsTab({
                             <div style={{ fontSize:13, color:T.gold }}>AED {fy24.sales}B</div>
                             <div style={{ fontSize:13, color:T.teal }}>AED {fy24.backlog}B</div>
                             <div style={{ fontSize:13, color:margin > 30 ? T.green : T.gold }}>{margin}%</div>
-                            <div style={{ fontSize:11, color:d.listed ? T.green : T.textMuted }}>{d.listed ? `‚ú‚Äú ${d.exchange}` : "Private"}</div>
+                            <div style={{ fontSize:11, color:d.listed ? T.green : T.textMuted }}>{d.listed ? `‚úì ${d.exchange}` : "Private"}</div>
                           </div>
                         );
                       })}
@@ -921,7 +921,7 @@ function FinancialsTab({
                   </div>
                 )}
 
-                {/* ‚‚Äù‚Ç¨‚‚Äù‚Ç¨ SOURCE FOOTER ‚‚Äù‚Ç¨‚‚Äù‚Ç¨ */}
+                {/* ‚îÄ‚îÄ SOURCE FOOTER ‚îÄ‚îÄ */}
                 <div style={{ paddingTop:12, borderTop:`1px solid ${T.border}`, display:"flex", gap:8, flexWrap:"wrap", alignItems:"center" }}>
                   <span style={{ fontSize:10, color:T.textMuted }}>Sources:</span>
                   {["Emaar Properties IR (emaar.com)","Aldar Properties IR (aldar.com)","DAMAC IR","Sobha Realty IR","DFM Official Filings","ADX Filings","AGBI","Official Annual Reports 2024-2025"].map((s,i)=>(

@@ -1,10 +1,10 @@
 /**
- * useCommunities �€” returns user-facing communities from Firestore
+ * useCommunities — returns user-facing communities from Firestore
  * src/hooks/useCommunities.js
  *
  * Reads from the unified "communities" collection (post Phase A1 / Sessions 2-4.5).
  * Returns Tier A (consumer), Tier B (master), and Tier C (sub-community) docs.
- * Hides Tier D cadastral districts (DLD admin codes �€” not user-facing) and any
+ * Hides Tier D cadastral districts (DLD admin codes — not user-facing) and any
  * duplicate-merge docs by default.
  *
  * Schema source of truth: COMMUNITIES_TAXONOMY_RESEARCH.md

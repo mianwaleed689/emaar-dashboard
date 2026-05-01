@@ -8,10 +8,10 @@ import { useOverviewKpis, useMarketKpis } from "../hooks/useMarketMetrics";
 
 // Role-aware content
 const ROLES = [
-  { key: "Investor", icon: "�“�", color: "#D4A843", desc: "Yield · ROI · Market timing" },
+  { key: "Investor", icon: "📈", color: "#D4A843", desc: "Yield · ROI · Market timing" },
   { key: "Agent", icon: "🏡", color: "#63B3ED", desc: "Listings · Leads · Volume" },
-  { key: "Developer", icon: "�—", color: "#FC8181", desc: "Pipeline · Supply · Launches" },
-  { key: "Buyer", icon: "�”‘", color: "#68D391", desc: "Pricing · Mortgage · Value" },
+  { key: "Developer", icon: "🏗", color: "#FC8181", desc: "Pipeline · Supply · Launches" },
+  { key: "Buyer", icon: "🔑", color: "#68D391", desc: "Pricing · Mortgage · Value" },
 ];
 
 const ROLE_BRIEFING = {
@@ -19,31 +19,31 @@ const ROLE_BRIEFING = {
     color: "#D4A843",
     headline: "Market is in month 57 of its longest ever growth cycle.",
     signals: [
-      { icon: "�…", text: "Avg yield 6.55% �€” 3x London, 1.5x New York. Zero tax advantage compounds annually." },
-      { icon: "�…", text: "Q1 2026: AED 252B (+31% YoY). Value growth outpacing volume �€” market maturing, not crashing." },
+      { icon: "✅", text: "Avg yield 6.55% — 3x London, 1.5x New York. Zero tax advantage compounds annually." },
+      { icon: "✅", text: "Q1 2026: AED 252B (+31% YoY). Value growth outpacing volume — market maturing, not crashing." },
       { icon: "⚠️", text: "Supply risk: ~98K units forecast 2026. JVC, Business Bay, Dubai South face price pressure." },
-      { icon: "�’�", text: "Best entry window: Palm, DIFC, Creek Harbour �€” supply-constrained, price support likely." },
+      { icon: "💡", text: "Best entry window: Palm, DIFC, Creek Harbour — supply-constrained, price support likely." },
     ],
     actions: [
-      { label: "Find highest-yield communities", tab: "Yields", icon: "�’�" },
+      { label: "Find highest-yield communities", tab: "Yields", icon: "💰" },
       { label: "Check supply risk by community", tab: "Risk", icon: "⚠️" },
       { label: "Calculate your ROI", tab: "DXB Estimate", icon: "🎯" },
-      { label: "Zero-tax advantage vs London/NY", tab: "Market", icon: "�“�" },
+      { label: "Zero-tax advantage vs London/NY", tab: "Market", icon: "📊" },
     ],
   },
   Agent: {
     color: "#63B3ED",
     headline: "270,000+ transactions in 2025. Q1 2026 already at 60,303.",
     signals: [
-      { icon: "�…", text: "JVC: 18,782 transactions �€” most active community. List here for fastest turnover." },
-      { icon: "�…", text: "72% of all deals in AED 500K�€“3M range. Anchor your pitch at this price point." },
+      { icon: "✅", text: "JVC: 18,782 transactions — most active community. List here for fastest turnover." },
+      { icon: "✅", text: "72% of all deals in AED 500K–3M range. Anchor your pitch at this price point." },
       { icon: "⚠️", text: "Off-plan now 70-80% of market. If you are not selling off-plan, you are missing the majority." },
-      { icon: "�’�", text: "Villa share growing: 7.9% in 2024 �’ 13.5% in Q1 2026. Upskill in villa communities." },
+      { icon: "💡", text: "Villa share growing: 7.9% in 2024 → 13.5% in Q1 2026. Upskill in villa communities." },
     ],
     actions: [
-      { label: "Browse off-plan projects", tab: "Projects", icon: "�—" },
-      { label: "Top volume communities", tab: "DLD Volumes", icon: "�“�" },
-      { label: "Check upcoming launches", tab: "Launch Calendar", icon: "�—“" },
+      { label: "Browse off-plan projects", tab: "Projects", icon: "🏗" },
+      { label: "Top volume communities", tab: "DLD Volumes", icon: "📋" },
+      { label: "Check upcoming launches", tab: "Launch Calendar", icon: "🗓" },
       { label: "Community intelligence", tab: "Neighbourhoods", icon: "🏘" },
     ],
   },
@@ -51,10 +51,10 @@ const ROLE_BRIEFING = {
     color: "#FC8181",
     headline: "228 developers active in 2025. Market getting crowded.",
     signals: [
-      { icon: "�…", text: "Off-plan PPSF premium: AED 2,149 vs AED 1,663 ready �€” 29% developer advantage on launches." },
-      { icon: "�…", text: "Only 46% of units delivered on time in 2025. Differentiate on delivery credibility." },
+      { icon: "✅", text: "Off-plan PPSF premium: AED 2,149 vs AED 1,663 ready — 29% developer advantage on launches." },
+      { icon: "✅", text: "Only 46% of units delivered on time in 2025. Differentiate on delivery credibility." },
       { icon: "⚠️", text: "366K units in pipeline to 2028. Absorption risk is real in mid-tier communities." },
-      { icon: "�’�", text: "Golden Visa at AED 2M drives demand. Launch at this threshold to capture investor base." },
+      { icon: "💡", text: "Golden Visa at AED 2M drives demand. Launch at this threshold to capture investor base." },
     ],
     actions: [
       { label: "Competitor launches", tab: "Competitors", icon: "🥊" },
@@ -67,57 +67,57 @@ const ROLE_BRIEFING = {
     color: "#68D391",
     headline: "Q1 2026 avg PPSF: AED 1,759. Prices rising but still below London/NY.",
     signals: [
-      { icon: "�…", text: "EIBOR 3.59% �€” best mortgage rates since 2021. Fixed 3-year from 3.85% (Capital Zone Apr 2026)." },
-      { icon: "�…", text: "AED 500K�€“3M range: 72% of all deals �€” strongest resale liquidity if you need to exit." },
+      { icon: "✅", text: "EIBOR 3.59% — best mortgage rates since 2021. Fixed 3-year from 3.85% (Capital Zone Apr 2026)." },
+      { icon: "✅", text: "AED 500K–3M range: 72% of all deals — strongest resale liquidity if you need to exit." },
       { icon: "⚠️", text: "72% of scheduled units are overdue on delivery. Vet developer track record before off-plan." },
-      { icon: "�’�", text: "AED 2M+ qualifies you for a 10-year Golden Visa. Strong residency anchor for families." },
+      { icon: "💡", text: "AED 2M+ qualifies you for a 10-year Golden Visa. Strong residency anchor for families." },
     ],
     actions: [
       { label: "Estimate property value", tab: "DXB Estimate", icon: "🎯" },
       { label: "Calculate mortgage", tab: "Mortgage", icon: "🏦" },
       { label: "Community comparison", tab: "Neighbourhoods", icon: "🏘" },
-      { label: "Golden Visa eligibility", tab: "Golden Visa", icon: "�‚" },
+      { label: "Golden Visa eligibility", tab: "Golden Visa", icon: "🛂" },
     ],
   },
 };
 
 const TAB_NAV = [
   { section: "Market Intelligence", color: "#D4A843", tabs: [
-    { name: "Market", desc: "Dubai macro: AED 917B 2025 · +31% Q1 2026 · ValuStrat · REIDIN", icon: "�“�" },
-    { name: "DLD Volumes", desc: "Transaction volumes by community · off-plan vs secondary", icon: "�“�" },
-    { name: "Price History", desc: "PPSF trends 2020-2026 · ValuStrat VPI · momentum", icon: "�“�" },
+    { name: "Market", desc: "Dubai macro: AED 917B 2025 · +31% Q1 2026 · ValuStrat · REIDIN", icon: "📊" },
+    { name: "DLD Volumes", desc: "Transaction volumes by community · off-plan vs secondary", icon: "📋" },
+    { name: "Price History", desc: "PPSF trends 2020-2026 · ValuStrat VPI · momentum", icon: "📈" },
     { name: "Neighbourhoods", desc: "152 communities · yields · metro · schools · supply risk", icon: "🏘" },
-    { name: "Launch Calendar", desc: "Upcoming off-plan launches · EOI open · pipeline", icon: "�—“" },
-    { name: "Currency", desc: "AED vs major currencies · live exchange rates", icon: "�’�" },
+    { name: "Launch Calendar", desc: "Upcoming off-plan launches · EOI open · pipeline", icon: "🗓" },
+    { name: "Currency", desc: "AED vs major currencies · live exchange rates", icon: "💱" },
   ]},
   { section: "Property Explorer", color: "#63B3ED", tabs: [
-    { name: "Projects", desc: "Off-plan database · payment plans · handover dates", icon: "�—" },
-    { name: "Map", desc: "Community map · yield heat · PPSF · volume layers", icon: "�—�" },
-    { name: "Handover", desc: "Project completion tracker · DLD timeline", icon: "�”‘" },
-    { name: "Service Charges", desc: "RERA service charge rates · by community · per sqft", icon: "�“�" },
+    { name: "Projects", desc: "Off-plan database · payment plans · handover dates", icon: "🏗" },
+    { name: "Map", desc: "Community map · yield heat · PPSF · volume layers", icon: "🗺" },
+    { name: "Handover", desc: "Project completion tracker · DLD timeline", icon: "🔑" },
+    { name: "Service Charges", desc: "RERA service charge rates · by community · per sqft", icon: "📄" },
   ]},
   { section: "Investment Tools", color: "#68D391", tabs: [
-    { name: "Yields", desc: "Gross/net yield by community · top performers · Bayut data", icon: "�’�" },
-    { name: "STR vs LTR", desc: "Short-term vs long-term rental comparison", icon: "�–️" },
+    { name: "Yields", desc: "Gross/net yield by community · top performers · Bayut data", icon: "💰" },
+    { name: "STR vs LTR", desc: "Short-term vs long-term rental comparison", icon: "⚖️" },
     { name: "Mortgage", desc: "UAE bank rates · EIBOR 3.59% · repayment calculator", icon: "🏦" },
     { name: "Investment Score", desc: "DXB Analytics composite score · 99 communities ranked", icon: "⭐" },
-    { name: "Flip", desc: "Off-plan flip calculator · resale premium · costs", icon: "�”�" },
+    { name: "Flip", desc: "Off-plan flip calculator · resale premium · costs", icon: "🔄" },
     { name: "DXB Estimate", desc: "AVM valuation · 3-method cross-check · DLD PPSF", icon: "🎯" },
-    { name: "Portfolio", desc: "Track your properties · ROI · equity · rental income", icon: "�“�" },
-    { name: "Golden Visa", desc: "AED 2M threshold checker · 10-year residency", icon: "�‚" },
+    { name: "Portfolio", desc: "Track your properties · ROI · equity · rental income", icon: "📁" },
+    { name: "Golden Visa", desc: "AED 2M threshold checker · 10-year residency", icon: "🛂" },
     { name: "Risk", desc: "Supply risk · price cycle · community risk radar", icon: "⚠️" },
   ]},
   { section: "Developer Intelligence", color: "#FC8181", tabs: [
-    { name: "Financials", desc: "Developer P&L · Emaar vs DAMAC vs Sobha", icon: "�“�" },
+    { name: "Financials", desc: "Developer P&L · Emaar vs DAMAC vs Sobha", icon: "📉" },
     { name: "Developer Health", desc: "DXB composite score · delivery rate · strength", icon: "🏢" },
     { name: "Competitors", desc: "Market share · launches · pricing positioning", icon: "🥊" },
     { name: "Banking", desc: "UAE bank comparison · mortgage products · LTV", icon: "🏛" },
   ]},
   { section: "CRM & Agency", color: "#9F7AEA", tabs: [
-    { name: "My Leads", desc: "Lead pipeline · follow-ups · conversion tracking", icon: "�‘�" },
+    { name: "My Leads", desc: "Lead pipeline · follow-ups · conversion tracking", icon: "👥" },
     { name: "Pipeline", desc: "Deal stages · commission tracker · forecast", icon: "🎰" },
-    { name: "Listings", desc: "Your active listings · performance · conversion", icon: "�“�" },
-    { name: "Marketing", desc: "Lead generation · channel performance · AI copy", icon: "�“�" },
+    { name: "Listings", desc: "Your active listings · performance · conversion", icon: "📌" },
+    { name: "Marketing", desc: "Lead generation · channel performance · AI copy", icon: "📢" },
     { name: "Team", desc: "Agent performance · leaderboard · org management", icon: "🤝" },
     { name: "Agency", desc: "Org profile · RERA card · commission splits", icon: "🏬" },
   ]},
@@ -125,7 +125,7 @@ const TAB_NAV = [
 
 const Signal = ({ label, value, color }) => (
   <div style={{ display:"flex", alignItems:"center", gap:6, padding:"4px 10px", borderRadius:20, background:(color||"#D4A843")+"15", border:"1px solid "+(color||"#D4A843")+"30" }}>
-    <span style={{ fontSize:9, color:color||"#D4A843" }}>�—�</span>
+    <span style={{ fontSize:9, color:color||"#D4A843" }}>●</span>
     <span style={{ fontSize:10, color:T.textSecondary }}>{label}</span>
     <span style={{ fontSize:10, fontWeight:700, color:color||"#D4A843" }}>{value}</span>
   </div>
@@ -137,7 +137,7 @@ const QuickStat = ({ label, value, change, note, color, onClick }) => (
     onMouseLeave={e => onClick&&(e.currentTarget.style.borderColor=T.border)}
   >
     <div style={{ fontSize:10, color:T.textMuted, fontWeight:700, textTransform:"uppercase", letterSpacing:0.8, marginBottom:7 }}>{label}</div>
-    <div style={{ fontFamily:"'Fraunces',serif", fontSize:18, fontWeight:800, color:color||T.white, lineHeight:1.1, marginBottom:4 }}>{value||"�€”"}</div>
+    <div style={{ fontFamily:"'Fraunces',serif", fontSize:18, fontWeight:800, color:color||T.white, lineHeight:1.1, marginBottom:4 }}>{value||"—"}</div>
     {change&&<div style={{ fontSize:10, color:T.green }}>{change}</div>}
     {note&&<div style={{ fontSize:10, color:T.textMuted, marginTop:3 }}>{note}</div>}
   </div>
@@ -246,7 +246,7 @@ function OverviewTab({ liveNeighbourhoods=[],
               onMouseEnter={e=>(e.currentTarget.style.borderColor=briefing.color+"60")}
               onMouseLeave={e=>(e.currentTarget.style.borderColor=T.border)}
             >
-              <span>{a.icon}</span><span>{a.label} �’</span>
+              <span>{a.icon}</span><span>{a.label} →</span>
             </button>
           ))}
         </div>
@@ -256,9 +256,9 @@ function OverviewTab({ liveNeighbourhoods=[],
       <div style={{ display:"grid", gridTemplateColumns:"280px 1fr", gap:16, marginBottom:24 }}>
         <div style={{ background:"rgba(255,255,255,0.02)", border:"1px solid "+T.border, borderRadius:12, padding:"18px" }}>
           <div style={{ fontSize:11, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.8, marginBottom:14 }}>Your Workspace</div>
-          <ActivityItem icon="�‘�" label="Active Leads" count={leadsCount} color="#63B3ED" onClick={()=>handleTabChange?.("My Leads")} />
+          <ActivityItem icon="👥" label="Active Leads" count={leadsCount} color="#63B3ED" onClick={()=>handleTabChange?.("My Leads")} />
           <ActivityItem icon="🤝" label="Active Deals" count={dealsCount} color={T.gold} onClick={()=>handleTabChange?.("Pipeline")} />
-          <ActivityItem icon="�“�" label="My Listings" count={listingsCount} color={T.green} onClick={()=>handleTabChange?.("Listings")} />
+          <ActivityItem icon="📌" label="My Listings" count={listingsCount} color={T.green} onClick={()=>handleTabChange?.("Listings")} />
           <ActivityItem icon="🏠" label="Portfolio" count={portfolioCount} color="#FC8181" onClick={()=>handleTabChange?.("Portfolio")} />
           <ActivityItem icon="⭐" label="Watchlist" count={watchlistCount} color="#9F7AEA" />
           {leadsCount===0&&dealsCount===0&&listingsCount===0&&(
@@ -270,7 +270,7 @@ function OverviewTab({ liveNeighbourhoods=[],
           )}
         </div>
         <div>
-          <div style={{ fontSize:11, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.8, marginBottom:12 }}>Market Pulse �€” FY2025 · Q1 2026 Update</div>
+          <div style={{ fontSize:11, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.8, marginBottom:12 }}>Market Pulse — FY2025 · Q1 2026 Update</div>
           <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(155px,1fr))", gap:10 }}>
             <QuickStat label="Total Market Value" value="AED 917B" change="+20% YoY · DLD 2025" note="Q1 2026: AED 252B (+31%)" color={T.gold} onClick={()=>handleTabChange?.("Market")} />
             <QuickStat label="Total Transactions" value="270,000+" change="+20% YoY · DLD 2025" note="Q1 2026: 60,303 (+6%)" onClick={()=>handleTabChange?.("DLD Volumes")} />
@@ -285,10 +285,10 @@ function OverviewTab({ liveNeighbourhoods=[],
       </div>
 
       {/* INTELLIGENCE PANEL */}
-      <div style={{ fontSize:11, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.8, marginBottom:12 }}>Intelligence Panel �€” {devFilterLabel||"All Dubai"}</div>
+      <div style={{ fontSize:11, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.8, marginBottom:12 }}>Intelligence Panel — {devFilterLabel||"All Dubai"}</div>
       <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:14, marginBottom:24 }}>
         <div style={{ background:"rgba(255,255,255,0.02)", border:"1px solid "+T.border, borderRadius:12, padding:"16px 18px" }}>
-          <div style={{ fontSize:11, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.8, marginBottom:12 }}>Top Communities �€” Yield</div>
+          <div style={{ fontSize:11, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.8, marginBottom:12 }}>Top Communities — Yield</div>
           {(liveYields?.length>0?[...liveYields].sort((a,b)=>(parseFloat(b.gross)||0)-(parseFloat(a.gross)||0)).slice(0,6):[
             {community:"International City",gross:"9.2",tenantProfile:"Mixed"},
             {community:"Dubai South",gross:"8.8",tenantProfile:"Mixed"},
@@ -309,7 +309,7 @@ function OverviewTab({ liveNeighbourhoods=[],
           <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid "+T.border,borderRadius:12,padding:"16px",marginBottom:16}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
               <div style={{fontSize:13,fontWeight:700,color:T.white}}>Top Investment Communities</div>
-              <button type="button" onClick={()=>handleTabChange?.("Neighbourhoods")} style={{fontSize:10,color:T.gold,background:"none",border:"none",cursor:"pointer",fontFamily:"'Outfit',sans-serif"}}>View all 259 �’</button>
+              <button type="button" onClick={()=>handleTabChange?.("Neighbourhoods")} style={{fontSize:10,color:T.gold,background:"none",border:"none",cursor:"pointer",fontFamily:"'Outfit',sans-serif"}}>View all 259 →</button>
             </div>
             <div style={{display:"flex",flexDirection:"column",gap:6}}>
               {[...liveNeighbourhoods].filter(n=>n.grossYield>0).sort((a,b)=>(b.investmentScore||0)-(a.investmentScore||0)).slice(0,5).map((n,i)=>(
@@ -342,7 +342,7 @@ function OverviewTab({ liveNeighbourhoods=[],
           <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid "+T.border,borderRadius:12,padding:"16px",marginBottom:16}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
               <div style={{fontSize:13,fontWeight:700,color:T.white}}>Top Investment Communities</div>
-              <button type="button" onClick={()=>handleTabChange?.("Neighbourhoods")} style={{fontSize:10,color:T.gold,background:"none",border:"none",cursor:"pointer",fontFamily:"'Outfit',sans-serif"}}>View all 259 �’</button>
+              <button type="button" onClick={()=>handleTabChange?.("Neighbourhoods")} style={{fontSize:10,color:T.gold,background:"none",border:"none",cursor:"pointer",fontFamily:"'Outfit',sans-serif"}}>View all 259 →</button>
             </div>
             <div style={{display:"flex",flexDirection:"column",gap:6}}>
               {[...liveNeighbourhoods].filter(n=>n.grossYield>0).sort((a,b)=>(b.investmentScore||0)-(a.investmentScore||0)).slice(0,5).map((n,i)=>(
@@ -369,7 +369,7 @@ function OverviewTab({ liveNeighbourhoods=[],
             </div>
           </div>
         )}
-        <button type="button" onClick={()=>handleTabChange?.("Yields")} style={{ width:"100%", marginTop:12, padding:"7px 0", background:"rgba(212,168,67,0.06)", border:"1px solid "+T.border, borderRadius:8, color:T.gold, fontSize:11, fontWeight:600, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>View All Yields �’</button>
+        <button type="button" onClick={()=>handleTabChange?.("Yields")} style={{ width:"100%", marginTop:12, padding:"7px 0", background:"rgba(212,168,67,0.06)", border:"1px solid "+T.border, borderRadius:8, color:T.gold, fontSize:11, fontWeight:600, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>View All Yields →</button>
         </div>
         <div style={{ background:"rgba(255,255,255,0.02)", border:"1px solid "+T.border, borderRadius:12, padding:"16px 18px" }}>
           <div style={{ fontSize:11, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.8, marginBottom:12 }}>DLD Transaction Volume</div>
@@ -394,7 +394,7 @@ function OverviewTab({ liveNeighbourhoods=[],
             ));
           })()}
           {!liveDLDVolumes?.length&&<div style={{ fontSize:10, color:T.textMuted, marginTop:4, fontStyle:"italic" }}>DXB Analytics · DLD 2025</div>}
-          <button type="button" onClick={()=>handleTabChange?.("DLD Volumes")} style={{ width:"100%", marginTop:12, padding:"7px 0", background:"rgba(212,168,67,0.06)", border:"1px solid "+T.border, borderRadius:8, color:T.gold, fontSize:11, fontWeight:600, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>View DLD Volumes �’</button>
+          <button type="button" onClick={()=>handleTabChange?.("DLD Volumes")} style={{ width:"100%", marginTop:12, padding:"7px 0", background:"rgba(212,168,67,0.06)", border:"1px solid "+T.border, borderRadius:8, color:T.gold, fontSize:11, fontWeight:600, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>View DLD Volumes →</button>
         </div>
         <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
           <div style={{ background:"rgba(255,255,255,0.02)", border:"1px solid "+T.border, borderRadius:12, padding:"16px 18px", flex:1 }}>
@@ -404,7 +404,7 @@ function OverviewTab({ liveNeighbourhoods=[],
             </div>
             {aiInsights?.length>0
               ?<div style={{ fontSize:12, color:T.textSecondary, lineHeight:1.7 }}>{aiInsights[0]?.text||aiInsights[0]}</div>
-              :<div style={{ fontSize:11, color:T.textSecondary, lineHeight:1.7 }}><span style={{ color:T.gold, fontWeight:700 }}>Q1 2026 signal:</span> AED 252B in Q1 despite regional uncertainty. Off-plan deepened to 80%+. Value (+31%) outpacing volume (+6%) �€” market maturing, not crashing. Buyers more selective on developer track record.</div>
+              :<div style={{ fontSize:11, color:T.textSecondary, lineHeight:1.7 }}><span style={{ color:T.gold, fontWeight:700 }}>Q1 2026 signal:</span> AED 252B in Q1 despite regional uncertainty. Off-plan deepened to 80%+. Value (+31%) outpacing volume (+6%) — market maturing, not crashing. Buyers more selective on developer track record.</div>
             }
             <div style={{ marginTop:10, fontSize:10, color:T.textMuted }}>{aiInsights?.length>0?"Powered by Claude · Updated this week":"Research · DLD Q1 2026 · Edwards & Towers"}</div>
           </div>
@@ -414,18 +414,18 @@ function OverviewTab({ liveNeighbourhoods=[],
               ?[...liveDevHealth].slice(0,4).map((d,i)=>(
                   <div key={i} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"5px 0", borderBottom:i<3?"1px solid "+T.border:"none" }}>
                     <span style={{ fontSize:11, color:T.textSecondary }}>{d.developer||d.name}</span>
-                    <span style={{ fontSize:11, fontWeight:700, padding:"2px 8px", borderRadius:20, background:(d.score||0)>=75?"rgba(104,211,145,0.15)":"rgba(212,168,67,0.15)", color:(d.score||0)>=75?T.green:T.gold }}>{d.score||"�€”"}</span>
+                    <span style={{ fontSize:11, fontWeight:700, padding:"2px 8px", borderRadius:20, background:(d.score||0)>=75?"rgba(104,211,145,0.15)":"rgba(212,168,67,0.15)", color:(d.score||0)>=75?T.green:T.gold }}>{d.score||"—"}</span>
                   </div>
                 ))
-              :<div style={{ fontSize:11, color:T.textMuted }}>Health scores load from Admin �’ Developer Health</div>
+              :<div style={{ fontSize:11, color:T.textMuted }}>Health scores load from Admin → Developer Health</div>
             }
-            <button type="button" onClick={()=>handleTabChange?.("Developer Health")} style={{ width:"100%", marginTop:10, padding:"6px 0", background:"rgba(212,168,67,0.06)", border:"1px solid "+T.border, borderRadius:8, color:T.gold, fontSize:11, fontWeight:600, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>View All �’</button>
+            <button type="button" onClick={()=>handleTabChange?.("Developer Health")} style={{ width:"100%", marginTop:10, padding:"6px 0", background:"rgba(212,168,67,0.06)", border:"1px solid "+T.border, borderRadius:8, color:T.gold, fontSize:11, fontWeight:600, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>View All →</button>
           </div>
         </div>
       </div>
 
       {/* PLATFORM NAVIGATOR */}
-      <div style={{ fontSize:11, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.8, marginBottom:12 }}>Platform Navigator �€” All 33 Modules</div>
+      <div style={{ fontSize:11, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.8, marginBottom:12 }}>Platform Navigator — All 33 Modules</div>
       <div style={{ display:"flex", flexDirection:"column", gap:10, marginBottom:24 }}>
         {TAB_NAV.map(section=>(
           <div key={section.section}>

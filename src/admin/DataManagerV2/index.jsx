@@ -17,13 +17,13 @@ export default function DataManagerV2({ currentUserId = null, currentUserEmail =
   const [section, setSection] = useState("overview");
 
   const nav = [
-    { id: "overview",     label: "Overview",     icon: "âŠâ„¢", color: C.gold },
-    { id: "developments", label: "Developments", icon: "ââ€”‰", color: C.teal },
-    { id: "projects",     label: "Projects",     icon: "ââ€”ˆ", color: C.blue },
-    { id: "developers",   label: "Developers",   icon: "ââ€”†", color: C.purple },
-    { id: "communities",  label: "Communities",  icon: "ââ€”Ž", color: C.cyan },
-    { id: "compliance",  label: "Compliance",   icon: "âšâ€“", color: C.red },
-    { id: "claims",      label: "Claims",       icon: "ââ€”ˆ", color: C.amber },
+    { id: "overview",     label: "Overview",     icon: "âŠ™", color: C.gold },
+    { id: "developments", label: "Developments", icon: "â—‰", color: C.teal },
+    { id: "projects",     label: "Projects",     icon: "â—ˆ", color: C.blue },
+    { id: "developers",   label: "Developers",   icon: "â—†", color: C.purple },
+    { id: "communities",  label: "Communities",  icon: "â—Ž", color: C.cyan },
+    { id: "compliance",  label: "Compliance",   icon: "âš–", color: C.red },
+    { id: "claims",      label: "Claims",       icon: "â—ˆ", color: C.amber },
   ];
 
   return (

@@ -1,5 +1,5 @@
 /**
- * DXB ANALYTICS �€” PROJECT CONTEXT SYSTEM
+ * DXB ANALYTICS — PROJECT CONTEXT SYSTEM
  * =========================================
  * File: src/utils/projectContext.js
  *
@@ -21,7 +21,7 @@
 
 import { BASE_PROJECT } from '../data/dubai_complete_foundation';
 
-// �”€�”€�”€ TAB KEY MAP �”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€
+// ─── TAB KEY MAP ─────────────────────────────────────────────────────────────
 // Maps tab IDs used in EmaarDashboardV2 to connection keys in BASE_PROJECT
 export const TAB_KEY_MAP = {
   'Handover':         'handover',
@@ -45,7 +45,7 @@ export const TAB_KEY_MAP = {
   'Launch Calendar':  'launch_calendar',
 };
 
-// �”€�”€�”€ NAVIGATION FUNCTION �”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€
+// ─── NAVIGATION FUNCTION ─────────────────────────────────────────────────────
 /**
  * Navigate to a tab with the project pre-loaded.
  * 
@@ -72,7 +72,7 @@ export function navigateToTab(tabName, project, handleTabChange, setProjectConte
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-// �”€�”€�”€ CONTEXT READER �”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€
+// ─── CONTEXT READER ──────────────────────────────────────────────────────────
 /**
  * Get the pre-fill data for a specific tab based on active project.
  * 
@@ -88,7 +88,7 @@ export function getTabPrefill(tabKey, project = BASE_PROJECT) {
   return connections[tabKey] || null;
 }
 
-// �”€�”€�”€ PROJECT CARD ACTIONS �”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€
+// ─── PROJECT CARD ACTIONS ────────────────────────────────────────────────────
 /**
  * All action buttons that appear on every project card.
  * Each defines: label, tab to navigate to, icon, color
@@ -120,7 +120,7 @@ export const PROJECT_CARD_ACTIONS = [
   { key: 'portfolio',   label: 'Add to Portfolio', tab: 'Portfolio',        color: '#D4A843', description: 'Add to your portfolio tracker'         },
 ];
 
-// �”€�”€�”€ THE BUTTON STRIP COMPONENT �”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€
+// ─── THE BUTTON STRIP COMPONENT ──────────────────────────────────────────────
 /**
  * React component: renders the action button strip on project cards.
  * Primary actions (most used) shown inline, secondary in a "More" dropdown.

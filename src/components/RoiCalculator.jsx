@@ -66,7 +66,7 @@ export default function RoiCalculator({ project, roi, T }) {
         </div>
       </div>
       <div style={{ background: colors.surface, borderRadius: 10, padding: 14, border: '1px solid rgba(59,130,246,0.15)' }}>
-        <div style={{ fontSize: 10, color: colors.blue, fontWeight: 700, letterSpacing: 1, textTransform: 'uppercase', marginBottom: 10 }}>Results �€” {years}-Year Projection</div>
+        <div style={{ fontSize: 10, color: colors.blue, fontWeight: 700, letterSpacing: 1, textTransform: 'uppercase', marginBottom: 10 }}>Results — {years}-Year Projection</div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginBottom: 10 }}>
           {[
             { label: 'Down Payment', value: fmt(downPayment), color: colors.textPrimary },

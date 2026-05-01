@@ -1,6 +1,6 @@
 /* eslint-disable */
 /**
- * DXB Analytics �€” Filter Indicator Banner
+ * DXB Analytics — Filter Indicator Banner
  * =========================================
  *
  * Shown at the top of every tab when any filter is active. Tells the user:
@@ -68,7 +68,7 @@ export default function FilterIndicator({
                    : n >= 1000    ? (n / 1000).toFixed(0) + "K"
                    : String(n || "");
     let priceLabel;
-    if (filters.priceMin > 0 && filters.priceMax > 0) priceLabel = `AED ${fmt(filters.priceMin)}�€“${fmt(filters.priceMax)}`;
+    if (filters.priceMin > 0 && filters.priceMax > 0) priceLabel = `AED ${fmt(filters.priceMin)}–${fmt(filters.priceMax)}`;
     else if (filters.priceMin > 0) priceLabel = `AED ${fmt(filters.priceMin)}+`;
     else                            priceLabel = `up to AED ${fmt(filters.priceMax)}`;
     chips.push({ label: priceLabel, kind: "price" });

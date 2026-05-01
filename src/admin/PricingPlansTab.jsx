@@ -8,8 +8,8 @@ import emailjs from "@emailjs/browser";
 
 const PricingPlansTab = ({ db, T, notify }) => {
   const DEFAULT_PLANS = [
-    { name: "Pro", price: String(PRICING.pro), period: "month", features: ["48 Emaar projects �€” full data", "AI market insights", "Portfolio ROI tracker", "DXB Estimate AVM", "Yield & STR/LTR analysis", "Mortgage calculator", "Price alerts", "PDF export"], popular: true, note: null, cta: "Upgrade to Pro �’", stripeId: "" },
-    { name: "Enterprise", price: String(PRICING.enterprise), period: "month", features: ["Everything in Pro", "PDF report generation ⏳", "API data access ⏳", "Custom dashboards ⏳", "Multi-user team accounts ⏳", "Developer-level raw data", "Dedicated account manager", "White-label options ⏳"], popular: false, note: "⏳ = Launching Q3 2026", cta: "Contact Sales �’", stripeId: "" },
+    { name: "Pro", price: String(PRICING.pro), period: "month", features: ["48 Emaar projects — full data", "AI market insights", "Portfolio ROI tracker", "DXB Estimate AVM", "Yield & STR/LTR analysis", "Mortgage calculator", "Price alerts", "PDF export"], popular: true, note: null, cta: "Upgrade to Pro →", stripeId: "" },
+    { name: "Enterprise", price: String(PRICING.enterprise), period: "month", features: ["Everything in Pro", "PDF report generation ⏳", "API data access ⏳", "Custom dashboards ⏳", "Multi-user team accounts ⏳", "Developer-level raw data", "Dedicated account manager", "White-label options ⏳"], popular: false, note: "⏳ = Launching Q3 2026", cta: "Contact Sales →", stripeId: "" },
   ];
 
   const [plans, setPlans]       = React.useState(DEFAULT_PLANS);
@@ -35,7 +35,7 @@ const PricingPlansTab = ({ db, T, notify }) => {
         updatedBy: "admin",
       });
       setLastSaved(new Date().toLocaleString("en-AE", { timeZone: "Asia/Dubai" }));
-      notify("�… Pricing plans saved �€” upgrade modal and landing page updated instantly", "success");
+      notify("✅ Pricing plans saved — upgrade modal and landing page updated instantly", "success");
     } catch(e) {
       notify("❌ Save failed: " + e.message, "error");
     } finally { setSaving(false); }
@@ -66,13 +66,13 @@ const PricingPlansTab = ({ db, T, notify }) => {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 12 }}>
         <div>
           <h2 style={{ fontFamily: "'Fraunces',serif", fontSize: 26, fontWeight: 800, color: T.gold, marginBottom: 4 }}>Pricing Plan Editor</h2>
-          <p style={{ color: T.textMuted, fontSize: 13 }}>Changes save to Firestore instantly �€” upgrade modal + landing page update automatically. No code deploy needed.</p>
+          <p style={{ color: T.textMuted, fontSize: 13 }}>Changes save to Firestore instantly — upgrade modal + landing page update automatically. No code deploy needed.</p>
         </div>
         <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-          {lastSaved && <span style={{ fontSize: 11, color: T.green }}>�… Saved {lastSaved}</span>}
+          {lastSaved && <span style={{ fontSize: 11, color: T.green }}>✅ Saved {lastSaved}</span>}
           <button type="button" onClick={handleSave} disabled={saving}
             style={{ padding: "10px 24px", background: saving ? T.surfaceAlt : `linear-gradient(135deg,${T.gold},#B8912F)`, color: saving ? T.textMuted : T.bg, border: "none", borderRadius: 10, fontWeight: 700, fontSize: 14, cursor: saving ? "not-allowed" : "pointer", fontFamily: "'Outfit',sans-serif" }}>
-            {saving ? "Saving..." : "�’� Save & Publish"}
+            {saving ? "Saving..." : "💾 Save & Publish"}
           </button>
         </div>
       </div>
@@ -87,7 +87,7 @@ const PricingPlansTab = ({ db, T, notify }) => {
         {plans.map((p, i) => (
           <button key={i} type="button" onClick={() => setEditIdx(i)}
             style={{ padding: "8px 20px", borderRadius: 8, border: `1px solid ${editIdx === i ? T.gold : T.border}`, background: editIdx === i ? "rgba(212,168,67,0.1)" : T.surfaceAlt, color: editIdx === i ? T.gold : T.textMuted, fontSize: 13, fontWeight: editIdx === i ? 700 : 400, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
-            {p.name} �€” AED {p.price}/mo
+            {p.name} — AED {p.price}/mo
           </button>
         ))}
       </div>
@@ -96,7 +96,7 @@ const PricingPlansTab = ({ db, T, notify }) => {
       {plans[editIdx] && (
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
 
-          {/* Left �€” edit form */}
+          {/* Left — edit form */}
           <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: "20px 24px", display: "flex", flexDirection: "column", gap: 14 }}>
             <div style={{ fontFamily: "'Fraunces',serif", fontSize: 15, fontWeight: 700, color: T.white }}>Edit {plans[editIdx].name} Plan</div>
 
@@ -122,7 +122,7 @@ const PricingPlansTab = ({ db, T, notify }) => {
             </label>
           </div>
 
-          {/* Right �€” features editor */}
+          {/* Right — features editor */}
           <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: "20px 24px" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
               <div style={{ fontFamily: "'Fraunces',serif", fontSize: 15, fontWeight: 700, color: T.white }}>Features ({plans[editIdx].features?.length || 0})</div>
@@ -138,7 +138,7 @@ const PricingPlansTab = ({ db, T, notify }) => {
                     style={{ flex: 1, padding: "8px 10px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 6, color: T.white, fontSize: 12, fontFamily: "'Outfit',sans-serif", outline: "none" }} />
                   <button type="button" onClick={() => removeFeature(editIdx, j)}
                     style={{ width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(239,68,68,0.1)", border: `1px solid ${T.red}33`, borderRadius: 6, color: T.red, cursor: "pointer", fontSize: 14, flexShrink: 0 }}>
-                    �—
+                    ×
                   </button>
                 </div>
               ))}
@@ -150,7 +150,7 @@ const PricingPlansTab = ({ db, T, notify }) => {
 
       {/* Live preview */}
       <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: "20px 24px" }}>
-        <div style={{ fontFamily: "'Fraunces',serif", fontSize: 15, fontWeight: 700, color: T.white, marginBottom: 14 }}>Live Preview �€” Upgrade Modal</div>
+        <div style={{ fontFamily: "'Fraunces',serif", fontSize: 15, fontWeight: 700, color: T.white, marginBottom: 14 }}>Live Preview — Upgrade Modal</div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12 }}>
           {plans.map((p, i) => (
             <div key={i} style={{ padding: "20px", borderRadius: 14, background: T.surfaceAlt, border: `2px solid ${p.popular ? T.gold : T.border}`, position: "relative" }}>
@@ -159,21 +159,21 @@ const PricingPlansTab = ({ db, T, notify }) => {
               <div style={{ fontFamily: "'Fraunces',serif", fontSize: 28, fontWeight: 900, color: p.popular ? T.gold : T.white }}>AED {p.price}<span style={{ fontSize: 13, color: T.textMuted, fontFamily: "'Outfit',sans-serif", fontWeight: 400 }}>/mo</span></div>
               {p.note && <div style={{ fontSize: 10, color: T.textMuted, marginBottom: 8 }}>{p.note}</div>}
               <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 4 }}>
-                {(p.features || []).slice(0, 5).map((f, j) => <div key={j} style={{ fontSize: 11, color: T.textSecondary }}>�“ {f}</div>)}
+                {(p.features || []).slice(0, 5).map((f, j) => <div key={j} style={{ fontSize: 11, color: T.textSecondary }}>✓ {f}</div>)}
                 {(p.features || []).length > 5 && <div style={{ fontSize: 11, color: T.textMuted }}>+{p.features.length - 5} more...</div>}
               </div>
               <div style={{ marginTop: 12, padding: "8px 0", background: p.popular ? T.gold : T.surfaceAlt, borderRadius: 8, textAlign: "center", fontSize: 12, fontWeight: 700, color: p.popular ? T.bg : T.textMuted, border: p.popular ? "none" : `1px solid ${T.border}` }}>{p.cta}</div>
             </div>
           ))}
         </div>
-        <div style={{ marginTop: 12, fontSize: 11, color: T.textMuted }}>�’� This preview matches exactly what users see in the upgrade modal. Save to publish changes instantly.</div>
+        <div style={{ marginTop: 12, fontSize: 11, color: T.textMuted }}>💡 This preview matches exactly what users see in the upgrade modal. Save to publish changes instantly.</div>
       </div>
 
     </div>
   );
 };
 
-/* �”€�”€�”€ S18: BILLING & INVOICE ENGINE �”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€
+/* ─── S18: BILLING & INVOICE ENGINE ─────────────────────────────────────────
    Admin tab "billing":
    - Per-user billing history from Firestore payments collection
    - Invoice PDF generation per payment
@@ -182,6 +182,6 @@ const PricingPlansTab = ({ db, T, notify }) => {
    - Revenue breakdown by plan (free/pro/enterprise)
    - MRR chart with 3-month projections
    - Churn predictor (inactive users nearing billing cycle end)
-�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€ */
+────────────────────────────────────────────────────────────────────────── */
 
 export default PricingPlansTab;

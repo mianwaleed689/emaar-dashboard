@@ -1,12 +1,12 @@
-/* ввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђ
+/* в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ
    GOLF GRAND В· Emaar Properties В· Dubai Hills Estate
-   ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬
+   в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
    Last verified: 2026-04-21
    Audit status: CORRECTED (10 fixes applied vs original data.js record)
-   ввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђ */
+   в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ */
 
 const project = {
-  /* ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ IDENTITY ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ */
+  /* в”Ђв”Ђв”Ђ IDENTITY в”Ђв”Ђв”Ђ */
   id: "emaar-golf-grand",
   project: "Golf Grand",
   name: "Golf Grand",
@@ -21,17 +21,17 @@ const project = {
   type: "Apartment",
   tier: 1,
 
-  /* ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ STATUS & LIFECYCLE ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ */
+  /* в”Ђв”Ђв”Ђ STATUS & LIFECYCLE в”Ђв”Ђв”Ђ */
   status: "Off-Plan",
   lifecycleStage: "under-construction",
   constructionPct: 65,
   dldStatus: "Off-Plan (RERA Registered)",
 
-  /* ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ RERA ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ */
+  /* в”Ђв”Ђв”Ђ RERA в”Ђв”Ђв”Ђ */
   reraNo: null,
   projectNumber: null,
 
-  /* ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ PRICING ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ */
+  /* в”Ђв”Ђв”Ђ PRICING в”Ђв”Ђв”Ђ */
   priceMin: 1400000,
   priceMax: 3400000,
   price: 1400000,
@@ -39,14 +39,14 @@ const project = {
   communityMedianPPSF: 2388,
   communityBenchmarkSource: "DHE 2025 avg",
 
-  /* ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ YIELD ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ */
+  /* в”Ђв”Ђв”Ђ YIELD в”Ђв”Ђв”Ђ */
   grossYield: 6.4,
   netYield: 5.0,
   rentalClass: "Residential Primary",
   gross: 6.4,
   yield: 6.4,
 
-  /* ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ SCALE ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ */
+  /* в”Ђв”Ђв”Ђ SCALE в”Ђв”Ђв”Ђ */
   plotSize: 338224,
   builtUpArea: null,
   totalBuildings: 1,
@@ -58,7 +58,7 @@ const project = {
   sizeFrom: 680,
   sizeTo: 2011,
 
-  /* ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ UNIT BREAKDOWN ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ */
+  /* в”Ђв”Ђв”Ђ UNIT BREAKDOWN в”Ђв”Ђв”Ђ */
   unitBreakdown: [
     { type: "1BR", count: 129, priceFrom: 1400000, ppsf: 2010, sqftMin: 680, sqftMax: 750 },
     { type: "2BR", count: 159, priceFrom: 2130000, ppsf: 1916, sqftMin: 1065, sqftMax: 1300 },
@@ -67,7 +67,7 @@ const project = {
   ],
   beds: ["1 BR", "2 BR", "3 BR"],
 
-  /* ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ LOCATION ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ */
+  /* в”Ђв”Ђв”Ђ LOCATION в”Ђв”Ђв”Ђ */
   distMetro: 8,
   distDIFC: 15,
   distAirport: 24,
@@ -82,40 +82,40 @@ const project = {
     { name: "King's School Al Barsha", distKm: 2.1, rating: "Outstanding" },
   ],
 
-  /* ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ PRODUCT ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ */
+  /* в”Ђв”Ђв”Ђ PRODUCT в”Ђв”Ђв”Ђ */
   goldenVisa: true,
   branded: false,
   brandPartner: null,
-  brand: "вв‚¬вЂќ",
+  brand: "вЂ”",
 
-  /* ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ PAYMENT ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ */
+  /* в”Ђв”Ђв”Ђ PAYMENT в”Ђв”Ђв”Ђ */
   paymentPlan: "10 / 80 / 10",
   payment: "10/80/10",
   paymentWaterfall: [
     { phase: "Down Payment", pct: 10, when: "At booking", instalments: 1 },
-    { phase: "During Construction", pct: 80, when: "Milestones 2вв‚¬вЂњ8", instalments: 7 },
+    { phase: "During Construction", pct: 80, when: "Milestones 2вЂ“8", instalments: 7 },
     { phase: "At Handover", pct: 10, when: "Q1 2027", instalments: 1 },
   ],
   postHandover: null,
   serviceCharge: 20,
 
-  /* ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ HANDOVER ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ */
+  /* в”Ђв”Ђв”Ђ HANDOVER в”Ђв”Ђв”Ђ */
   handover: "Q1 2027",
   expectedHandover: "Q1 2027",
   contractedHandover: "2027-03-31",
   actualHandover: null,
   constructionStart: "2023-08-01",
 
-  /* ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ ESCROW ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ */
+  /* в”Ђв”Ђв”Ђ ESCROW в”Ђв”Ђв”Ђ */
   escrowBank: "Verify via DLD Mashrooi",
   escrowAccount: null,
 
-  /* ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ CONSTRUCTION TEAM ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ */
+  /* в”Ђв”Ђв”Ђ CONSTRUCTION TEAM в”Ђв”Ђв”Ђ */
   architect: "Dubai Consultants",
   mainContractor: "Transemirates Contracting",
   foundationContractor: "Rabat Foundation",
 
-  /* ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ AMENITIES ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ */
+  /* в”Ђв”Ђв”Ђ AMENITIES в”Ђв”Ђв”Ђ */
   amenities: [
     "Infinity Swimming Pool", "Pool Deck", "State-of-the-art Fitness Centre",
     "Yoga Studio", "Kids Play Area", "Splash Pads", "Rooftop Lounge",
@@ -130,13 +130,13 @@ const project = {
     "Dubai Skyline (upper floors)",
   ],
 
-  /* ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ LINKS ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ */
+  /* в”Ђв”Ђв”Ђ LINKS в”Ђв”Ђв”Ђ */
   emaarUrl: "https://www.propertyfinder.ae/en/new-projects/emaar-properties/golf-grand",
 
-  /* ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ DESCRIPTION ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ */
-  notes: "17-storey tower by Emaar Properties. Construction commenced Aug 2023 by Transemirates Contracting with Dubai Consultants as architect. Units 680вв‚¬вЂњ2,011 sqft. Golf-front location; project PPSF sits ~17% below community average.",
+  /* в”Ђв”Ђв”Ђ DESCRIPTION в”Ђв”Ђв”Ђ */
+  notes: "17-storey tower by Emaar Properties. Construction commenced Aug 2023 by Transemirates Contracting with Dubai Consultants as architect. Units 680вЂ“2,011 sqft. Golf-front location; project PPSF sits ~17% below community average.",
 
-  /* ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ AUDIT METADATA ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ */
+  /* в”Ђв”Ђв”Ђ AUDIT METADATA в”Ђв”Ђв”Ђ */
   _audit: {
     lastVerified: "2026-04-21",
     dataQuality: "high",
@@ -149,7 +149,7 @@ const project = {
       "RERA Smart Rental Index",
     ],
     flags: [
-      { field: "reraNo", status: "pending", note: "Prior value 71494288692 invalid вв‚¬вЂќ true RERA number not confirmed" },
+      { field: "reraNo", status: "pending", note: "Prior value 71494288692 invalid вЂ” true RERA number not confirmed" },
       { field: "escrowBank", status: "pending", note: "Confirm via DLD Mashrooi app" },
       { field: "grossYield", status: "estimate", note: "1BR avg; 2/3BR lower" },
     ],

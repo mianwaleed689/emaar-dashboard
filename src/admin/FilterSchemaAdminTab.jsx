@@ -141,7 +141,7 @@ export default function FilterSchemaAdminTab({ T, I, notify }) {
   };
 
   const resetToDefaults = async () => {
-    if (!window.confirm("Reset ALL filter schema to built-in defaults? This will publish to Firestore immediately �€” all users will see the defaults.")) return;
+    if (!window.confirm("Reset ALL filter schema to built-in defaults? This will publish to Firestore immediately — all users will see the defaults.")) return;
     const defaults = {
       propertyTypes: PROPERTY_TYPES_DEFAULT,
       statusOptions: STATUS_OPTIONS_DEFAULT,
@@ -158,14 +158,14 @@ export default function FilterSchemaAdminTab({ T, I, notify }) {
         filterSchema: defaults,
         _lastEditedAt: new Date().toISOString(),
       }, { merge: true });
-      toast("Reset to defaults �€” published platform-wide");
+      toast("Reset to defaults — published platform-wide");
     } catch (err) {
       toast("Reset save failed: " + (err?.message || err));
     }
     setSaving(false);
   };
 
-  /* �”€�”€ Styles �”€�”€ */
+  /* ── Styles ── */
   const card = { background: colors.surface, border: `1px solid ${colors.border}`, borderRadius: 12, padding: 20 };
   const input = { background: colors.surfaceAlt, border: `1px solid ${colors.border}`, borderRadius: 6, color: colors.white, padding: "6px 10px", fontSize: 12, fontFamily: "'Outfit',sans-serif" };
   const btn = (variant) => ({
@@ -179,7 +179,7 @@ export default function FilterSchemaAdminTab({ T, I, notify }) {
   if (loading) {
     return (
       <div style={{ padding: 40, textAlign: "center", color: colors.textMuted }}>
-        Loading filter schema�€�
+        Loading filter schema…
       </div>
     );
   }
@@ -192,14 +192,14 @@ export default function FilterSchemaAdminTab({ T, I, notify }) {
           <div style={{ fontFamily: "'Fraunces',serif", fontSize: 24, fontWeight: 800, color: colors.white }}>Filter Schema</div>
           <div style={{ fontSize: 12, color: colors.textMuted, marginTop: 4, maxWidth: 700 }}>
             Canonical list of property types, statuses, price presets, and thresholds that every tab reads from.
-            Changes publish to Firestore instantly �€” users see them on their next data refresh (no deploy).
+            Changes publish to Firestore instantly — users see them on their next data refresh (no deploy).
           </div>
         </div>
         <div style={{ display: "flex", gap: 10 }}>
           <button type="button" onClick={resetToDefaults} style={btn("danger")}>Reset to defaults</button>
           <button type="button" onClick={reset} disabled={!hasChanges} style={{ ...btn(), opacity: hasChanges ? 1 : 0.4 }}>Undo changes</button>
           <button type="button" onClick={save} disabled={!hasChanges || saving} style={{ ...btn("primary"), opacity: (hasChanges && !saving) ? 1 : 0.5 }}>
-            {saving ? "Saving�€�" : hasChanges ? "Save & publish" : "Saved"}
+            {saving ? "Saving…" : hasChanges ? "Save & publish" : "Saved"}
           </button>
         </div>
       </div>
@@ -253,7 +253,7 @@ export default function FilterSchemaAdminTab({ T, I, notify }) {
                     onChange={e => setDraft(d => ({ ...d, propertyTypes: d.propertyTypes.map((g, i) => i === gi ? { ...g, types: g.types.map((t, j) => j === ti ? { ...t, beds: e.target.value.split(",").map(s => s.trim()).filter(Boolean) } : t) } : g) }))}
                     style={input} />
                   <button type="button" style={{ ...btn("danger"), padding: "6px 10px" }}
-                    onClick={() => setDraft(d => ({ ...d, propertyTypes: d.propertyTypes.map((g, i) => i === gi ? { ...g, types: g.types.filter((_, j) => j !== ti) } : g) }))}>�—</button>
+                    onClick={() => setDraft(d => ({ ...d, propertyTypes: d.propertyTypes.map((g, i) => i === gi ? { ...g, types: g.types.filter((_, j) => j !== ti) } : g) }))}>×</button>
                 </div>
               ))}
               <button type="button" style={{ ...btn(), marginTop: 6, fontSize: 11 }}
@@ -282,7 +282,7 @@ export default function FilterSchemaAdminTab({ T, I, notify }) {
                 onChange={e => setDraft(d => ({ ...d, statusOptions: d.statusOptions.map((x, j) => j === i ? { ...x, label: e.target.value } : x) }))}
                 style={input} />
               <button type="button" style={{ ...btn("danger"), padding: "6px 10px" }}
-                onClick={() => setDraft(d => ({ ...d, statusOptions: d.statusOptions.filter((_, j) => j !== i) }))}>�—</button>
+                onClick={() => setDraft(d => ({ ...d, statusOptions: d.statusOptions.filter((_, j) => j !== i) }))}>×</button>
             </div>
           ))}
           <button type="button" style={{ ...btn(), marginTop: 6 }}
@@ -311,7 +311,7 @@ export default function FilterSchemaAdminTab({ T, I, notify }) {
                 onChange={e => setDraft(d => ({ ...d, pricePresets: d.pricePresets.map((x, j) => j === i ? { ...x, max: parseFloat(e.target.value) || 0 } : x) }))}
                 style={input} />
               <button type="button" style={{ ...btn("danger"), padding: "6px 10px" }}
-                onClick={() => setDraft(d => ({ ...d, pricePresets: d.pricePresets.filter((_, j) => j !== i) }))}>�—</button>
+                onClick={() => setDraft(d => ({ ...d, pricePresets: d.pricePresets.filter((_, j) => j !== i) }))}>×</button>
             </div>
           ))}
           <button type="button" style={{ ...btn(), marginTop: 6 }}
@@ -343,7 +343,7 @@ export default function FilterSchemaAdminTab({ T, I, notify }) {
           <div style={{ fontSize: 14, fontWeight: 700, color: colors.white, marginBottom: 8 }}>Golden Visa Threshold</div>
           <div style={{ fontSize: 11, color: colors.textMuted, marginBottom: 16, maxWidth: 600 }}>
             Minimum AED purchase value that qualifies for a 10-year UAE Golden Visa. Current official value (Jan 2022 onwards): AED 2,000,000.
-            Update here if UAE government changes the threshold �€” platform will reflect instantly.
+            Update here if UAE government changes the threshold — platform will reflect instantly.
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <span style={{ fontSize: 20, fontWeight: 700, color: colors.gold }}>AED</span>
@@ -360,7 +360,7 @@ export default function FilterSchemaAdminTab({ T, I, notify }) {
       {/* Footer info */}
       <div style={{ marginTop: 20, padding: "10px 14px", background: colors.surfaceAlt, borderRadius: 8, fontSize: 11, color: colors.textMuted }}>
         <strong style={{ color: colors.gold }}>Tip:</strong> Edits here are local until you click Save & publish.
-        After saving, all users see the new schema instantly �€” their dropdowns, pills, and filters update without a reload.
+        After saving, all users see the new schema instantly — their dropdowns, pills, and filters update without a reload.
       </div>
     </div>
   );

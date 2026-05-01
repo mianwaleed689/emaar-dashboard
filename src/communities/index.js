@@ -1,11 +1,11 @@
 /**
- * DXB ANALYTICS �€” UNIFIED COMMUNITIES INDEX
+ * DXB ANALYTICS — UNIFIED COMMUNITIES INDEX
  * 46 communities across 7 developers
  * Deep Audit verified: March 31, 2026
  * Sources: Property Finder UAE, Bayut, Official Developer IRs
  *
  * FIXES APPLIED:
- * FIX 1: DAMAC Bay removed �€” DAMAC Riverside + DAMAC Sun City added
+ * FIX 1: DAMAC Bay removed — DAMAC Riverside + DAMAC Sun City added
  * FIX 2: emirate field on all communities
  * FIX 3: Dubai Hills Estate codev: "meraas" (JV attribution)
  * FIX 4: Nakheel + Meraas parentGroup: "Dubai Holding"

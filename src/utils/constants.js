@@ -1,10 +1,10 @@
-/* ввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђ
-   DXB ANALYTICS вв‚¬вЂќ CONSTANTS & CONFIG
+/* в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ
+   DXB ANALYTICS вЂ” CONSTANTS & CONFIG
    Extracted from EmaarDashboardV2.jsx
    All filter configs, property types, status options, price presets
-   ввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђ */
+   в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ */
 
-/* ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ PROPERTY TYPE CONFIG ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ */
+/* в”Ђв”Ђв”Ђ PROPERTY TYPE CONFIG в”Ђв”Ђв”Ђ */
 export const PROPERTY_TYPES = [
   {
     group: "Residential",
@@ -30,58 +30,58 @@ export const PROPERTY_TYPES = [
   {
     group: "Commercial",
     types: [
-      { value: "office",        label: "Office",          beds: ["< 500 sqft","500вв‚¬вЂњ1K sqft","1Kвв‚¬вЂњ2.5K sqft","2.5Kвв‚¬вЂњ5K sqft","5K+ sqft","Full Floor","Full Building"] },
-      { value: "retail",        label: "Retail / Shop",   beds: ["< 500 sqft","500вв‚¬вЂњ1K sqft","1Kвв‚¬вЂњ2.5K sqft","2.5K+ sqft"] },
-      { value: "showroom",      label: "Showroom",        beds: ["< 2K sqft","2Kвв‚¬вЂњ5K sqft","5K+ sqft"] },
-      { value: "warehouse",     label: "Warehouse",       beds: ["< 5K sqft","5Kвв‚¬вЂњ10K sqft","10K+ sqft"] },
+      { value: "office",        label: "Office",          beds: ["< 500 sqft","500вЂ“1K sqft","1KвЂ“2.5K sqft","2.5KвЂ“5K sqft","5K+ sqft","Full Floor","Full Building"] },
+      { value: "retail",        label: "Retail / Shop",   beds: ["< 500 sqft","500вЂ“1K sqft","1KвЂ“2.5K sqft","2.5K+ sqft"] },
+      { value: "showroom",      label: "Showroom",        beds: ["< 2K sqft","2KвЂ“5K sqft","5K+ sqft"] },
+      { value: "warehouse",     label: "Warehouse",       beds: ["< 5K sqft","5KвЂ“10K sqft","10K+ sqft"] },
       { value: "coworking",     label: "Co-working Space",beds: ["Hot Desk","Dedicated Desk","Private Office","Full Floor"] },
     ]
   },
   {
     group: "Industrial & Land",
     types: [
-      { value: "industrial",    label: "Industrial Unit",    beds: ["< 5K sqft","5Kвв‚¬вЂњ20K sqft","20K+ sqft"] },
-      { value: "land_res",      label: "Land вв‚¬вЂќ Residential", beds: ["< 5K sqft","5Kвв‚¬вЂњ15K sqft","15K+ sqft"] },
-      { value: "land_comm",     label: "Land вв‚¬вЂќ Commercial",  beds: ["< 10K sqft","10Kвв‚¬вЂњ50K sqft","50K+ sqft"] },
-      { value: "land_mixed",    label: "Mixed Use Plot",     beds: ["< 10K sqft","10Kвв‚¬вЂњ50K sqft","50K+ sqft"] },
+      { value: "industrial",    label: "Industrial Unit",    beds: ["< 5K sqft","5KвЂ“20K sqft","20K+ sqft"] },
+      { value: "land_res",      label: "Land вЂ” Residential", beds: ["< 5K sqft","5KвЂ“15K sqft","15K+ sqft"] },
+      { value: "land_comm",     label: "Land вЂ” Commercial",  beds: ["< 10K sqft","10KвЂ“50K sqft","50K+ sqft"] },
+      { value: "land_mixed",    label: "Mixed Use Plot",     beds: ["< 10K sqft","10KвЂ“50K sqft","50K+ sqft"] },
     ]
   },
 ];
 
-/* ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ STATUS OPTIONS ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ */
+/* в”Ђв”Ђв”Ђ STATUS OPTIONS в”Ђв”Ђв”Ђ */
 export const STATUS_OPTIONS = [
   { value: "all",          label: "All Status" },
-  { value: "offplan",      label: "Off-Plan вв‚¬вЂќ Under Construction" },
-  { value: "prelaunch",    label: "Off-Plan вв‚¬вЂќ Pre-Launch / EOI" },
-  { value: "ready_new",    label: "Ready вв‚¬вЂќ New (Primary)" },
-  { value: "secondary",    label: "Ready вв‚¬вЂќ Secondary Market" },
+  { value: "offplan",      label: "Off-Plan вЂ” Under Construction" },
+  { value: "prelaunch",    label: "Off-Plan вЂ” Pre-Launch / EOI" },
+  { value: "ready_new",    label: "Ready вЂ” New (Primary)" },
+  { value: "secondary",    label: "Ready вЂ” Secondary Market" },
   { value: "handover_now", label: "Handover This Year" },
   { value: "handover_2026",label: "Handover 2026" },
   { value: "handover_2027",label: "Handover 2027+" },
 ];
 
-/* ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ PRICE PRESETS ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ */
+/* в”Ђв”Ђв”Ђ PRICE PRESETS в”Ђв”Ђв”Ђ */
 export const PRICE_PRESETS_APT = [
   { label: "Any Price", min: 0, max: 0 },
   { label: "< 500K", min: 0, max: 500000 },
-  { label: "500Kвв‚¬вЂњ1M", min: 500000, max: 1000000 },
-  { label: "1Mвв‚¬вЂњ2M", min: 1000000, max: 2000000 },
-  { label: "2Mвв‚¬вЂњ5M", min: 2000000, max: 5000000 },
-  { label: "5Mвв‚¬вЂњ10M", min: 5000000, max: 10000000 },
+  { label: "500KвЂ“1M", min: 500000, max: 1000000 },
+  { label: "1MвЂ“2M", min: 1000000, max: 2000000 },
+  { label: "2MвЂ“5M", min: 2000000, max: 5000000 },
+  { label: "5MвЂ“10M", min: 5000000, max: 10000000 },
   { label: "10M+", min: 10000000, max: 0 },
 ];
 
 export const PRICE_PRESETS_VILLA = [
   { label: "Any Price", min: 0, max: 0 },
   { label: "< 2M", min: 0, max: 2000000 },
-  { label: "2Mвв‚¬вЂњ5M", min: 2000000, max: 5000000 },
-  { label: "5Mвв‚¬вЂњ10M", min: 5000000, max: 10000000 },
-  { label: "10Mвв‚¬вЂњ25M", min: 10000000, max: 25000000 },
-  { label: "25Mвв‚¬вЂњ50M", min: 25000000, max: 50000000 },
+  { label: "2MвЂ“5M", min: 2000000, max: 5000000 },
+  { label: "5MвЂ“10M", min: 5000000, max: 10000000 },
+  { label: "10MвЂ“25M", min: 10000000, max: 25000000 },
+  { label: "25MвЂ“50M", min: 25000000, max: 50000000 },
   { label: "50M+", min: 50000000, max: 0 },
 ];
 
-/* ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ MAGIC NUMBERS в†вЂ™ NAMED CONSTANTS ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ */
+/* в”Ђв”Ђв”Ђ MAGIC NUMBERS в†’ NAMED CONSTANTS в”Ђв”Ђв”Ђ */
 export const TRIAL_DURATION_DAYS = 7;
 export const TRIAL_DURATION_MS = TRIAL_DURATION_DAYS * 24 * 60 * 60 * 1000;
 export const GOLDEN_VISA_THRESHOLD = 2000000;
@@ -92,7 +92,7 @@ export const DLD_REFRESH_INTERVAL_MS = 60000; // 60 seconds
 export const MS_PER_DAY = 1000 * 60 * 60 * 24;
 export const APPROX_DAYS_PER_MONTH = 30.44;
 
-/* ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ TIER CONFIG ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ */
+/* в”Ђв”Ђв”Ђ TIER CONFIG в”Ђв”Ђв”Ђ */
 export const TIER_ORDER = { free: 0, pro: 1, enterprise: 2 };
 
 export const TIER_MESSAGES = {
@@ -114,7 +114,7 @@ export const TIER_MESSAGES = {
   },
 };
 
-/* ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ HANDOVER STATUS + RISK CONFIG ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ */
+/* в”Ђв”Ђв”Ђ HANDOVER STATUS + RISK CONFIG в”Ђв”Ђв”Ђ */
 export const STATUS_CFG = {
   "On Track": { color: "#10B981", bg: "rgba(16,185,129,0.12)",  label: "On Track"  },
   "Delayed":  { color: "#F97316", bg: "rgba(249,115,22,0.12)",  label: "Delayed"   },
@@ -136,7 +136,7 @@ export const RISK_CFG = {
   "Early Stage":  { color: "#8B5CF6", dot: "#8B5CF6", bg: "rgba(139,92,246,0.12)", label: "Early Stage"  },
 };
 
-/* ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ SEED DATA SOURCE URLS ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ */
+/* в”Ђв”Ђв”Ђ SEED DATA SOURCE URLS в”Ђв”Ђв”Ђ */
 export const SEED_SOURCE_URL = {
   DLD: "https://dubailand.gov.ae/en/open-data/research/",
   Bayut: "https://www.bayut.com/mybayut/bayut-h1-2025-dubai-rental-market-report/",
@@ -147,7 +147,7 @@ export const SEED_SOURCE_URL = {
   DXBAnalytics: "https://www.dxbanalytics.com/blog/dubai-property-transaction-volume-2026",
 };
 
-/* ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ PRO GATE TAB BENEFITS ввЂќв‚¬ввЂќв‚¬ввЂќв‚¬ */
+/* в”Ђв”Ђв”Ђ PRO GATE TAB BENEFITS в”Ђв”Ђв”Ђ */
 export const TAB_BENEFITS = {
   "DXB Estimate":     ["Automated property valuations", "AVM price estimates per unit", "Bayut live listings", "В±15% accuracy model"],
   "Portfolio":        ["Track your Dubai investments", "ROI calculations", "Portfolio performance chart", "Yield tracking"],

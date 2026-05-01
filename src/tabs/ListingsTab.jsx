@@ -1,5 +1,5 @@
 /* eslint-disable */
-/* LISTINGS TAB �€” Property listings CRM */
+/* LISTINGS TAB — Property listings CRM */
 
 import React from "react";
 import { T } from "../data";
@@ -128,7 +128,7 @@ function ListingsTab({ liveNeighbourhoods=[],
 
             return (<>
 
-              {/* �”€�”€ Header �”€�”€ */}
+              {/* ── Header ── */}
               <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:20, flexWrap:"wrap", gap:12 }}>
                 <div>
                   <h1 style={{ fontFamily:"'Fraunces',serif", fontSize:22, fontWeight:900, color:T.white, margin:0 }}>Listings</h1>
@@ -141,7 +141,7 @@ function ListingsTab({ liveNeighbourhoods=[],
                 </button>
               </div>
 
-              {/* �”€�”€ KPI Bar �”€�”€ */}
+              {/* ── KPI Bar ── */}
               <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:10, marginBottom:20 }}>
                 {[
                   { label:"Total Listings",  value:listings.length,   color:T.gold,    icon:<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg> },
@@ -160,7 +160,7 @@ function ListingsTab({ liveNeighbourhoods=[],
                 ))}
               </div>
 
-              {/* �”€�”€ Filters �”€�”€ */}
+              {/* ── Filters ── */}
               <div style={{ display:"flex", gap:8, marginBottom:16, flexWrap:"wrap", alignItems:"center" }}>
                 <div style={{ display:"flex", background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:8, overflow:"hidden" }}>
                   {[["all","All"],["Available","Available"],["Reserved","Reserved"],["Sold","Sold"]].map(([v,l])=>(
@@ -178,7 +178,7 @@ function ListingsTab({ liveNeighbourhoods=[],
                 <div style={{ marginLeft:"auto", fontSize:11, color:T.textMuted }}>{filtered.length} of {listings.length}</div>
               </div>
 
-              {/* �”€�”€ Listings Grid �”€�”€ */}
+              {/* ── Listings Grid ── */}
               {listingsLoading ? (
                 <div style={{ display:"flex", alignItems:"center", justifyContent:"center", padding:"60px 0", gap:10 }}>
                   <div style={{ width:20, height:20, border:`2px solid ${T.gold}30`, borderTopColor:T.gold, borderRadius:"50%", animation:"spin 0.7s linear infinite" }}/>
@@ -315,7 +315,7 @@ function ListingsTab({ liveNeighbourhoods=[],
                 </div>
               )}
 
-              {/* �”€�”€ Listing Detail Drawer �”€�”€ */}
+              {/* ── Listing Detail Drawer ── */}
               {selectedListing && (
                 <div style={{ position:"fixed", inset:0, zIndex:1500, display:"flex" }} onClick={e=>{if(e.target===e.currentTarget)setSelectedListing(null);}}>
                   <div style={{ flex:1, background:"rgba(0,0,0,0.5)", backdropFilter:"blur(4px)" }} onClick={()=>setSelectedListing(null)}/>
@@ -385,7 +385,7 @@ function ListingsTab({ liveNeighbourhoods=[],
                                 <button type="button"
                                   onClick={()=>{ window.open(portal.url,"_blank"); markPublished(selectedListing.id, portal.key); }}
                                   style={{ padding:"5px 12px", borderRadius:6, border:`1px solid ${portal.color}40`, background:isPublished?`${portal.color}15`:"transparent", color:portal.color, fontSize:10, fontWeight:700, cursor:"pointer" }}>
-                                  {isPublished ? "Republish" : "Publish �’"}
+                                  {isPublished ? "Republish" : "Publish →"}
                                 </button>
                               </div>
                             );
@@ -408,14 +408,14 @@ function ListingsTab({ liveNeighbourhoods=[],
                 </div>
               )}
 
-              {/* �”€�”€ New Listing Modal �”€�”€ */}
+              {/* ── New Listing Modal ── */}
               {showNewListing && (
                 <div style={{ position:"fixed", inset:0, background:"rgba(4,9,15,0.85)", zIndex:2000, display:"flex", alignItems:"center", justifyContent:"center", backdropFilter:"blur(8px)" }} onClick={e=>{if(e.target===e.currentTarget)setShowNewListing(false);}}>
                   <div style={{ background:T.surface, borderRadius:16, border:`1px solid ${T.border}`, width:"95%", maxWidth:600, maxHeight:"90vh", overflowY:"auto" }} onClick={e=>e.stopPropagation()}>
                     <div style={{ padding:"22px 24px", borderBottom:`1px solid ${T.border}`, display:"flex", justifyContent:"space-between", alignItems:"center" }}>
                       <div>
                         <div style={{ fontFamily:"'Fraunces',serif", fontSize:18, fontWeight:900, color:T.gold }}>New Listing</div>
-                        <div style={{ fontSize:11, color:T.textMuted, marginTop:2 }}>All DLD required fields �€” get your Trakheesi permit before listing</div>
+                        <div style={{ fontSize:11, color:T.textMuted, marginTop:2 }}>All DLD required fields — get your Trakheesi permit before listing</div>
                       </div>
                       <button type="button" onClick={()=>setShowNewListing(false)}
                         style={{ background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:8, color:T.textMuted, width:32, height:32, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center" }}>

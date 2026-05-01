@@ -1,5 +1,5 @@
 /**
- * DXB ANALYTICS �€” BINGHATTI COMMUNITIES
+ * DXB ANALYTICS — BINGHATTI COMMUNITIES
  * 2 communities | Research: March 2026
  */
 
@@ -8,12 +8,12 @@ export const binghattiCommunities = [
     id: "binghatti-business-bay",
     emirate: "Dubai",
     communityType: "portfolio",
-    portfolioNote: "Binghatti builds individual towers in city districts �€” not a master community developer. These are project clusters by area.",
+    portfolioNote: "Binghatti builds individual towers in city districts — not a master community developer. These are project clusters by area.",
     name: "Business Bay (Binghatti)",
     developer: "binghatti",
     districtCode: "BBB",
     overview: "Binghatti's Business Bay portfolio represents Dubai's most architecturally distinctive branded luxury towers along the Dubai Canal. From the ultra-exclusive Bugatti Residences to the iconic Burj Binghatti Jacob & Co Residence, these developments target UHNW buyers and investors seeking one-of-a-kind branded living at Dubai's most central address.",
-    type: "Urban Ultra-Luxury �€” Branded Architecture",
+    type: "Urban Ultra-Luxury — Branded Architecture",
     status: "Active",
     launched: 2015,
     location: {
@@ -24,7 +24,7 @@ export const binghattiCommunities = [
       toDowntown: "5 min",
       toAirport: "15 min",
       toMarina: "20 min",
-      nearestMetro: "Business Bay Metro (Red Line �€” direct)",
+      nearestMetro: "Business Bay Metro (Red Line — direct)",
       highways: ["Sheikh Zayed Road (E11)", "Al Khail Road (E44)", "Financial Centre Road"],
     },
     sizeSqFt: 0,
@@ -72,7 +72,7 @@ export const binghattiCommunities = [
     schools: ["Jumeirah English Speaking School (10 min)", "GEMS Wellington (15 min)"],
     healthcare: ["Mediclinic City Hospital (10 min)", "American Hospital (15 min)"],
     transport: [
-      "Business Bay Metro (Red Line �€” direct)",
+      "Business Bay Metro (Red Line — direct)",
       "Sheikh Zayed Road (E11)",
       "Water bus on Dubai Canal",
       "Taxis readily available",
@@ -86,13 +86,13 @@ export const binghattiCommunities = [
     id: "binghatti-jvc",
     emirate: "Dubai",
     communityType: "portfolio",
-    portfolioNote: "Binghatti builds individual towers in JVC �€” not a master community. 20+ completed towers in JVC district.",
+    portfolioNote: "Binghatti builds individual towers in JVC — not a master community. 20+ completed towers in JVC district.",
     name: "JVC (Binghatti)",
     developer: "binghatti",
     districtCode: "BJVC",
-    overview: "Binghatti's Jumeirah Village Circle (JVC) portfolio is the largest single-developer collection in Dubai's highest-yielding community. With 20+ completed projects and multiple under construction, Binghatti dominates JVC with studio-3BR apartments featuring bold geometric architecture, resort-style amenities and prices from AED 550K �€” making it Dubai's most accessible luxury investment.",
-    type: "Affordable Luxury Apartments �€” Highest Yield in Dubai",
-    status: "Active �€” Multiple projects",
+    overview: "Binghatti's Jumeirah Village Circle (JVC) portfolio is the largest single-developer collection in Dubai's highest-yielding community. With 20+ completed projects and multiple under construction, Binghatti dominates JVC with studio-3BR apartments featuring bold geometric architecture, resort-style amenities and prices from AED 550K — making it Dubai's most accessible luxury investment.",
+    type: "Affordable Luxury Apartments — Highest Yield in Dubai",
+    status: "Active — Multiple projects",
     launched: 2015,
     location: {
       area: "Jumeirah Village Circle (JVC), Dubai",
@@ -102,7 +102,7 @@ export const binghattiCommunities = [
       toDowntown: "20 min",
       toAirport: "25 min",
       toMarina: "15 min",
-      nearestMetro: "No direct metro �€” J01 bus + taxis",
+      nearestMetro: "No direct metro — J01 bus + taxis",
       highways: ["Al Khail Road (E44)", "Sheikh Mohammed Bin Zayed Road (E311)"],
     },
     sizeSqFt: 0,

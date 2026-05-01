@@ -23,14 +23,14 @@
 
 import { useFirestoreCollection } from "../hooks/useFirestoreCollection";
 
-// User-facing tiers �€” what end users should see
+// User-facing tiers — what end users should see
 export const USER_FACING_CATEGORIES = new Set([
   "consumer-community",
   "master-community",
   "sub-community",
 ]);
 
-// Hidden tiers �€” admin only
+// Hidden tiers — admin only
 export const HIDDEN_CATEGORIES = new Set([
   "cadastral-district",
   "duplicate-merge",
@@ -50,7 +50,7 @@ export function isUserFacing(doc) {
 
 /**
  * Hook: returns user-facing communities (Tier A/B/C).
- * Use this in 90% of cases �€” anywhere users see a list of communities.
+ * Use this in 90% of cases — anywhere users see a list of communities.
  *
  * @returns {{ data: Array, isLoading: boolean }}
  */

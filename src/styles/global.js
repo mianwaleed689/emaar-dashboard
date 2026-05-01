@@ -1,9 +1,9 @@
-/* ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢
-   DXB ANALYTICS ââ‚¬â€ GLOBAL STYLES
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   DXB ANALYTICS â€” GLOBAL STYLES
    Extracted from EmaarDashboardV2.jsx
-   CSS string builder ââ‚¬â€ takes theme object T as parameter
+   CSS string builder â€” takes theme object T as parameter
    Includes: base, components, sidebar, login, responsive, touch, mobile nav
-   ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ */
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 
 export const buildGlobalCSS = (T) => `
   @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700;9..144,900&display=swap');
@@ -148,7 +148,7 @@ export const buildGlobalCSS = (T) => `
   }
   .mobile-overlay.open { opacity: 1; pointer-events: auto; }
 
-  /* ââ€â‚¬ââ€â‚¬ 768px: Tablet / small laptop ââ€â‚¬ââ€â‚¬ */
+  /* â”€â”€ 768px: Tablet / small laptop â”€â”€ */
   @media (max-width: 768px) {
     html { font-size: 13px; }
 
@@ -182,16 +182,16 @@ export const buildGlobalCSS = (T) => `
     .filter-scroll::-webkit-scrollbar { display: none; }
     .filter-scroll button { flex-shrink: 0; }
 
-    /* Tables ââ‚¬â€ horizontal scroll with hint arrow */
+    /* Tables â€” horizontal scroll with hint arrow */
     .table-scroll { overflow-x: auto !important; -webkit-overflow-scrolling: touch; }
-    .table-scroll::after { content: "swipe â†â€™"; position: absolute; right: 8px; top: 12px; color: ${T.gold}; font-size: 10px; opacity: 0.5; pointer-events: none; letter-spacing: 0.5px; }
+    .table-scroll::after { content: "swipe â†’"; position: absolute; right: 8px; top: 12px; color: ${T.gold}; font-size: 10px; opacity: 0.5; pointer-events: none; letter-spacing: 0.5px; }
     .table-scroll table { min-width: 560px; }
 
     /* Compare bar */
     .compare-bar { padding: 10px 14px !important; flex-direction: column !important; align-items: stretch !important; gap: 8px !important; }
     .compare-bar > div { justify-content: center; flex-wrap: wrap; }
 
-    /* Mortgage calculator 2-col â†â€™ 1-col */
+    /* Mortgage calculator 2-col â†’ 1-col */
     .mortgage-grid { grid-template-columns: 1fr !important; }
 
     /* AI Insights full width cards */
@@ -201,7 +201,7 @@ export const buildGlobalCSS = (T) => `
     .alerts-modal { max-width: 100% !important; max-height: 100dvh !important; border-radius: 20px 20px 0 0 !important; position: fixed !important; bottom: 0 !important; top: auto !important; margin: 0 !important; }
   }
 
-  /* ââ€â‚¬ââ€â‚¬ 480px: Mobile phones ââ€â‚¬ââ€â‚¬ */
+  /* â”€â”€ 480px: Mobile phones â”€â”€ */
   @media (max-width: 480px) {
     html { font-size: 12px; }
 
@@ -237,18 +237,18 @@ export const buildGlobalCSS = (T) => `
     .tab-content-pad { padding-bottom: 80px !important; }
   }
 
-  /* ââ€â‚¬ââ€â‚¬ 360px: Very small phones ââ€â‚¬ââ€â‚¬ */
+  /* â”€â”€ 360px: Very small phones â”€â”€ */
   @media (max-width: 360px) {
     .kpi-grid { grid-template-columns: 1fr !important; }
     html { font-size: 11px; }
   }
 
-  /* ââ€â‚¬ââ€â‚¬ Touch improvements ââ€â‚¬ââ€â‚¬ */
+  /* â”€â”€ Touch improvements â”€â”€ */
   * { -webkit-tap-highlight-color: transparent; }
   button, a, [role="button"] { touch-action: manipulation; }
   input[type="range"] { height: 32px; }
 
-  /* ââ€â‚¬ââ€â‚¬ Mobile Bottom Nav Bar ââ€â‚¬ââ€â‚¬ */
+  /* â”€â”€ Mobile Bottom Nav Bar â”€â”€ */
   @media (max-width: 768px) {
     .mobile-bottom-nav {
       display: flex !important;

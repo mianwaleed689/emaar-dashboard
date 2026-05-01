@@ -17,7 +17,7 @@ function DigestTab({ users, db, notify, adminUser, T, I }) {
     greeting: "Hi {{name}},",
     intro: "Here's your weekly update on Dubai's real estate market.",
     sections: ["market_pulse", "top_yields", "handovers", "golden_visa", "cta"],
-    cta: "View Full Dashboard â†â€™",
+    cta: "View Full Dashboard â†’",
     footer: "You're receiving this because you're a Pro subscriber."
   });
   const [previewMode, setPreviewMode] = useState(false);
@@ -40,13 +40,13 @@ function DigestTab({ users, db, notify, adminUser, T, I }) {
   })();
 
   const sectionMeta = {
-    market_pulse: { label: "Market Pulse", desc: "Revenue, profit, backlog from Emaar", icon: "ğŸâ€œˆ", color: T.gold },
-    top_yields: { label: "Top 5 Yields", desc: "Highest rental yield projects", icon: "ğŸâ€œŠ", color: T.green },
-    handovers: { label: "Upcoming Handovers", desc: "Projects handing over in 6 months", icon: "ââ‚¬¢", color: T.teal },
-    golden_visa: { label: "Golden Visa Projects", desc: "2M+ AED eligible properties", icon: "ââ‚¬¢", color: "#F59E0B" },
-    new_launches: { label: "New Launches", desc: "Recently announced projects", icon: "ğŸâ€‡", color: T.purple },
+    market_pulse: { label: "Market Pulse", desc: "Revenue, profit, backlog from Emaar", icon: "ğŸ“ˆ", color: T.gold },
+    top_yields: { label: "Top 5 Yields", desc: "Highest rental yield projects", icon: "ğŸ“Š", color: T.green },
+    handovers: { label: "Upcoming Handovers", desc: "Projects handing over in 6 months", icon: "â€¢", color: T.teal },
+    golden_visa: { label: "Golden Visa Projects", desc: "2M+ AED eligible properties", icon: "â€¢", color: "#F59E0B" },
+    new_launches: { label: "New Launches", desc: "Recently announced projects", icon: "ğŸ”‡", color: T.purple },
     price_changes: { label: "Price Movements", desc: "Notable price changes this week", icon: "ğŸ†", color: T.blue },
-    cta: { label: "Call to Action", desc: "Link back to dashboard", icon: "ğŸâ€”â„¢", color: T.gold },
+    cta: { label: "Call to Action", desc: "Link back to dashboard", icon: "ğŸ—™", color: T.gold },
   };
 
   useEffect(() => {
@@ -175,21 +175,21 @@ ${digestTemplate.footer}`,
         await emailjs.send(import.meta.env.VITE_EMAILJS_SERVICE_ID, import.meta.env.VITE_EMAILJS_TEMPLATE_ID, {
           user_email: u.email,
           to_name: name,
-          subject: "Dubai RE market moved this week ââ‚¬â€ your data is waiting",
+          subject: "Dubai RE market moved this week â€” your data is waiting",
           message: `Hi ${name},
 
 We noticed you haven't logged in to DXB Analytics in a while.
 
 Here's what happened in Dubai real estate this week:
-ââ‚¬¢ Dubai off-plan market up 44% YoY in Creek Harbour
-ââ‚¬¢ EIBOR holding at 3.47% ââ‚¬â€ mortgage rates stable
-ââ‚¬¢ 3 new project launches this month
+â€¢ Dubai off-plan market up 44% YoY in Creek Harbour
+â€¢ EIBOR holding at 3.47% â€” mortgage rates stable
+â€¢ 3 new project launches this month
 
 Your dashboard is waiting with the latest data.
 
 https://dxbanalytics.com
 
-ââ‚¬â€ DXB Analytics Team
+â€” DXB Analytics Team
 
 Unsubscribe: mailto:admin@dxbanalytics.com?subject=Unsubscribe`,
           project_name: "DXB Analytics",
@@ -225,7 +225,7 @@ Unsubscribe: mailto:admin@dxbanalytics.com?subject=Unsubscribe`,
           </div>
         ))}
         <div style={{ marginLeft: "auto", padding: "10px 16px", display: "flex", gap: 8 }}>
-          <button type="button" onClick={() => setPreviewMode(!previewMode)} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, padding: "8px 14px", borderRadius: 8, border: `1px solid ${previewMode ? T.purple : T.border}`, background: previewMode ? `${T.purple}15` : "transparent", color: previewMode ? T.purple : T.textMuted, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>{previewMode ? "âœâ€ Preview" : "Preview"}</button>
+          <button type="button" onClick={() => setPreviewMode(!previewMode)} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, padding: "8px 14px", borderRadius: 8, border: `1px solid ${previewMode ? T.purple : T.border}`, background: previewMode ? `${T.purple}15` : "transparent", color: previewMode ? T.purple : T.textMuted, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>{previewMode ? "âœ” Preview" : "Preview"}</button>
         </div>
       </div>
 
@@ -233,7 +233,7 @@ Unsubscribe: mailto:admin@dxbanalytics.com?subject=Unsubscribe`,
       <div style={{ display: "flex", gap: 8 }}>
         {[
           { id: "compose", label: "Compose & Send", icon: "" },
-          { id: "history", label: `History (${digestLog.length})`, icon: "ğŸâ€œ‹" },
+          { id: "history", label: `History (${digestLog.length})`, icon: "ğŸ“‹" },
           { id: "settings", label: "Settings", icon: "" },
         ].map(t => (
           <button key={t.id} type="button" onClick={() => setDigestSubTab(t.id)}
@@ -312,7 +312,7 @@ Unsubscribe: mailto:admin@dxbanalytics.com?subject=Unsubscribe`,
                   <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, marginBottom: 8 }}>SECTIONS INCLUDED</div>
                   <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                     {digestTemplate.sections.map((sec, i) => {
-                      const meta = sectionMeta[sec] || { label: sec, icon: "ğŸâ€œ„", color: T.textMuted };
+                      const meta = sectionMeta[sec] || { label: sec, icon: "ğŸ“„", color: T.textMuted };
                       return (
                         <div key={sec} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 12px", background: T.surfaceAlt, borderRadius: 8, border: `1px solid ${T.border}` }}>
                           <span style={{ fontSize: 14 }}>{meta.icon}</span>
@@ -345,19 +345,19 @@ Unsubscribe: mailto:admin@dxbanalytics.com?subject=Unsubscribe`,
             <div style={{ display: "flex", gap: 10 }}>
               <button type="button" onClick={sendDigest} disabled={sending || segmentUsers.length === 0}
                 style={{ flex: 1, padding: "16px 28px", background: sending ? T.surfaceAlt : `linear-gradient(135deg,${T.gold},#B8912F)`, border: "none", borderRadius: 12, color: sending ? T.textMuted : T.bg, fontWeight: 800, fontSize: 16, cursor: sending || segmentUsers.length === 0 ? "not-allowed" : "pointer", fontFamily: "'Outfit',sans-serif", display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}>
-                {sending ? "Sending..." : `Send Digest â†â€™ ${segmentUsers.length} users`}
+                {sending ? "Sending..." : `Send Digest â†’ ${segmentUsers.length} users`}
               </button>
               <button type="button" onClick={sendReengagement} disabled={sending}
                 style={{ padding: "16px 20px", background: "rgba(59,130,246,.1)", border: "1px solid rgba(59,130,246,.3)", borderRadius: 12, color: T.blue, fontWeight: 700, fontSize: 13, cursor: sending ? "not-allowed" : "pointer", fontFamily: "'Outfit',sans-serif", whiteSpace: "nowrap" }}
                 title="Send to users inactive 7+ days">
-                ğŸâ€ Re-engage (7d)
+                ğŸ” Re-engage (7d)
               </button>
             </div>
 
             {lastResult && (
               <div style={{ padding: "14px 18px", borderRadius: 10, background: lastResult.success ? "rgba(16,185,129,0.08)" : "rgba(239,68,68,0.08)", border: `1px solid ${lastResult.success ? "rgba(16,185,129,0.2)" : "rgba(239,68,68,0.2)"}` }}>
                 <div style={{ fontSize: 13, color: lastResult.success ? T.green : T.red, fontWeight: 700 }}>
-                  {lastResult.success ? `âœâ€ Sent to ${lastResult.sent}/${lastResult.total} users` : ` Error: ${lastResult.error}`}
+                  {lastResult.success ? `âœ” Sent to ${lastResult.sent}/${lastResult.total} users` : ` Error: ${lastResult.error}`}
                   {lastResult.failed > 0 && <span style={{ color: T.orange }}> Â· {lastResult.failed} failed</span>}
                 </div>
               </div>
@@ -378,7 +378,7 @@ Unsubscribe: mailto:admin@dxbanalytics.com?subject=Unsubscribe`,
                   <div style={{ fontSize: 13, color: T.textSecondary, lineHeight: 1.6 }}>{digestTemplate.intro}</div>
                 </div>
                 {digestTemplate.sections.map((sec, i) => {
-                  const meta = sectionMeta[sec] || { label: sec, icon: "ğŸâ€œ„", color: T.textMuted };
+                  const meta = sectionMeta[sec] || { label: sec, icon: "ğŸ“„", color: T.textMuted };
                   return (
                     <div key={sec} style={{ padding: "12px 0", borderBottom: i < digestTemplate.sections.length - 1 ? `1px solid ${T.border}` : "none" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
@@ -410,7 +410,7 @@ Unsubscribe: mailto:admin@dxbanalytics.com?subject=Unsubscribe`,
           </div>
           {digestLog.length === 0 ? (
             <div style={{ padding: 60, textAlign: "center", color: T.textMuted }}>
-              <div style={{ fontSize: 32, marginBottom: 12 }}>ğŸâ€œ¡</div>
+              <div style={{ fontSize: 32, marginBottom: 12 }}>ğŸ“¡</div>
               <div style={{ fontSize: 14, fontWeight: 600, color: T.textSecondary }}>No digests sent yet</div>
               <div style={{ fontSize: 12 }}>Go to Compose tab to send your first digest</div>
             </div>
@@ -419,7 +419,7 @@ Unsubscribe: mailto:admin@dxbanalytics.com?subject=Unsubscribe`,
               {digestLog.map((log, i) => (
                 <div key={log.id} style={{ padding: "14px 20px", borderBottom: `1px solid ${T.border}`, display: "flex", alignItems: "center", gap: 16 }}>
                   <div style={{ width: 40, height: 40, borderRadius: "50%", background: log.failed > 0 ? `${T.orange}20` : `${T.green}20`, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                    <span style={{ fontSize: 18 }}>{log.failed > 0 ? "âš¡" : "âœâ€"}</span>
+                    <span style={{ fontSize: 18 }}>{log.failed > 0 ? "âš¡" : "âœ”"}</span>
                   </div>
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: 13, fontWeight: 600, color: T.white, marginBottom: 2 }}>
@@ -427,11 +427,11 @@ Unsubscribe: mailto:admin@dxbanalytics.com?subject=Unsubscribe`,
                       {log.failed > 0 && <span style={{ color: T.orange }}> Â· {log.failed} failed</span>}
                     </div>
                     <div style={{ fontSize: 11, color: T.textMuted }}>
-                      {log.sentAt ? new Date(log.sentAt).toLocaleString("en-AE", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "ââ‚¬â€"} Â· by {log.sentBy || "admin"} Â· Segment: {log.segment || "all"}
+                      {log.sentAt ? new Date(log.sentAt).toLocaleString("en-AE", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "â€”"} Â· by {log.sentBy || "admin"} Â· Segment: {log.segment || "all"}
                     </div>
                   </div>
                   <div style={{ textAlign: "right" }}>
-                    <div style={{ fontSize: 10, color: T.textMuted }}>{log.durationMs ? `${(log.durationMs / 1000).toFixed(1)}s` : "ââ‚¬â€"}</div>
+                    <div style={{ fontSize: 10, color: T.textMuted }}>{log.durationMs ? `${(log.durationMs / 1000).toFixed(1)}s` : "â€”"}</div>
                   </div>
                 </div>
               ))}

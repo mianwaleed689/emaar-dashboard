@@ -1,6 +1,6 @@
 /* eslint-disable */
 /*
-  DXB ANALYTICS �€” COUNTRY DATA
+  DXB ANALYTICS — COUNTRY DATA
   195 countries with flag emoji, dial code, nationality
   Used by: Create Agent form, Add Lead form
 */

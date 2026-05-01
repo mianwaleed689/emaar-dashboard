@@ -1,8 +1,8 @@
 /* eslint-disable */
-/* ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢
-   DXB ANALYTICS ââ‚¬â€ COMPLIANCE TAB
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   DXB ANALYTICS â€” COMPLIANCE TAB
    RERA card management, WhatsApp template
-   ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ââ€¢ */
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 
 import React from "react";
 import { T } from "../data";
@@ -36,7 +36,7 @@ function ComplianceTab({ reraCard, setReraCard, reraCardLoading, setReraCardLoad
               followup: { label:"Follow-Up",    text:(name)=>`Hi${name?" "+name:""},\n\nJust following up on our previous conversation about Dubai properties. I have some exciting new listings that match your criteria.\n\nWould you be available for a quick call this week?\n\nLooking forward to hearing from you.` },
               match:    { label:"Property Match",text:(name)=>`Hi${name?" "+name:""},\n\nGreat news! I've found a property that matches exactly what you're looking for.\n\nI'll send you the full details shortly. Would you like to schedule a viewing?\n\nBest regards` },
               meeting:  { label:"Meeting Request",text:(name)=>`Hello${name?" "+name:""},\n\nI'd like to schedule a meeting to discuss your property requirements in detail and show you some exclusive listings.\n\nAre you free for a 30-minute call this week? Please let me know your preferred time.\n\nThank you` },
-              gv:       { label:"Golden Visa",  text:(name)=>`Hi${name?" "+name:""},\n\nDid you know that purchasing a property above AED 2 Million in Dubai qualifies you for a 10-year UAE Golden Visa?\n\nI have some excellent options in this range ââ‚¬â€ would you like me to share the details?\n\nBest regards` },
+              gv:       { label:"Golden Visa",  text:(name)=>`Hi${name?" "+name:""},\n\nDid you know that purchasing a property above AED 2 Million in Dubai qualifies you for a 10-year UAE Golden Visa?\n\nI have some excellent options in this range â€” would you like me to share the details?\n\nBest regards` },
             };
 
             // Save RERA card
@@ -61,7 +61,7 @@ function ComplianceTab({ reraCard, setReraCard, reraCardLoading, setReraCardLoad
 
               <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16, alignItems:"start" }}>
 
-                {/* ââ€â‚¬ââ€â‚¬ Left column ââ€â‚¬ââ€â‚¬ */}
+                {/* â”€â”€ Left column â”€â”€ */}
                 <div style={{ display:"flex", flexDirection:"column", gap:16 }}>
 
                   {/* RERA Card Status */}
@@ -79,7 +79,7 @@ function ComplianceTab({ reraCard, setReraCard, reraCardLoading, setReraCardLoad
                           <div style={{ fontSize:12, fontWeight:700, color:sc.color }}>{sc.label}</div>
                           {daysLeft !== null && (
                             <div style={{ fontSize:11, color:T.textMuted, marginTop:2 }}>
-                              {daysLeft <= 0 ? "Your RERA card has expired ââ‚¬â€ renew immediately" : `${daysLeft} days remaining until expiry`}
+                              {daysLeft <= 0 ? "Your RERA card has expired â€” renew immediately" : `${daysLeft} days remaining until expiry`}
                             </div>
                           )}
                         </div>
@@ -147,7 +147,7 @@ function ComplianceTab({ reraCard, setReraCard, reraCardLoading, setReraCardLoad
                   )}
                 </div>
 
-                {/* ââ€â‚¬ââ€â‚¬ Right column ââ€â‚¬ââ€â‚¬ */}
+                {/* â”€â”€ Right column â”€â”€ */}
                 <div style={{ display:"flex", flexDirection:"column", gap:16 }}>
 
                   {/* WhatsApp Message Templates */}
@@ -205,11 +205,11 @@ function ComplianceTab({ reraCard, setReraCard, reraCardLoading, setReraCardLoad
                   <div style={{ background:T.card, border:`1px solid ${T.border}`, borderRadius:14, padding:"16px 18px" }}>
                     <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:12 }}>Official Regulatory Links</div>
                     {[
-                      { label:"RERA ââ‚¬â€ Real Estate Regulatory Agency",   url:"https://www.dubailand.gov.ae/en/eservices/real-estate-broker-registration/" },
-                      { label:"DLD ââ‚¬â€ Dubai Land Department",            url:"https://dubailand.gov.ae"                },
-                      { label:"Trakheesi ââ‚¬â€ Permit System",              url:"https://www.dubailand.gov.ae/en/eservices/trakheesi/" },
-                      { label:"DTCM ââ‚¬â€ Holiday Home Permits",            url:"https://dtcm.gov.ae"                     },
-                      { label:"ICP ââ‚¬â€ Visa & Golden Visa",               url:"https://icp.gov.ae"                      },
+                      { label:"RERA â€” Real Estate Regulatory Agency",   url:"https://www.dubailand.gov.ae/en/eservices/real-estate-broker-registration/" },
+                      { label:"DLD â€” Dubai Land Department",            url:"https://dubailand.gov.ae"                },
+                      { label:"Trakheesi â€” Permit System",              url:"https://www.dubailand.gov.ae/en/eservices/trakheesi/" },
+                      { label:"DTCM â€” Holiday Home Permits",            url:"https://dtcm.gov.ae"                     },
+                      { label:"ICP â€” Visa & Golden Visa",               url:"https://icp.gov.ae"                      },
                     ].map(({label,url},i)=>(
                       <a key={i} href={url} target="_blank" rel="noopener noreferrer"
                         style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"9px 0", borderBottom:i<4?`1px solid ${T.border}`:"none", textDecoration:"none" }}>

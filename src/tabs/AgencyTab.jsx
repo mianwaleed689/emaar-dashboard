@@ -1,5 +1,5 @@
 /* eslint-disable */
-/* AGENCY TAB �€” Agency profile, team, RERA card, commission splits */
+/* AGENCY TAB — Agency profile, team, RERA card, commission splits */
 
 import React from "react";
 import { T } from "../data";
@@ -97,7 +97,7 @@ function AgencyTab({
 
             return (<>
 
-              {/* �”€�”€ Header �”€�”€ */}
+              {/* ── Header ── */}
               <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:20, flexWrap:"wrap", gap:12 }}>
                 <div>
                   <h1 style={{ fontFamily:"'Fraunces',serif", fontSize:22, fontWeight:900, color:T.white, margin:0 }}>Agency Hub</h1>
@@ -109,7 +109,7 @@ function AgencyTab({
                 </div>
               </div>
 
-              {/* �”€�”€ Top row: Profile + Stats �”€�”€ */}
+              {/* ── Top row: Profile + Stats ── */}
               <div style={{ display:"grid", gridTemplateColumns:"minmax(0,1fr) min(320px,36%)", gap:16, marginBottom:16, alignItems:"start" }}>
 
                 {/* Agency Profile Editor */}
@@ -189,7 +189,7 @@ function AgencyTab({
                 </div>
               </div>
 
-              {/* �”€�”€ Agent Roster �”€�”€ */}
+              {/* ── Agent Roster ── */}
               <div style={{ background:T.card, border:`1px solid ${T.border}`, borderRadius:14, overflow:"hidden" }}>
                 <div style={{ padding:"14px 18px", borderBottom:`1px solid ${T.border}`, display:"flex", alignItems:"center", gap:10 }}>
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={T.teal} strokeWidth="2" strokeLinecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
@@ -212,7 +212,7 @@ function AgencyTab({
                 {agents.length === 0 ? (
                   <div style={{ padding:"48px 20px", textAlign:"center" }}>
                     <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke={T.textMuted} strokeWidth="1.5" strokeLinecap="round" style={{ marginBottom:10 }}><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
-                    <div style={{ fontSize:13, color:T.textMuted }}>No agents yet �€” ask your admin to assign agents to this organisation</div>
+                    <div style={{ fontSize:13, color:T.textMuted }}>No agents yet — ask your admin to assign agents to this organisation</div>
                   </div>
                 ) : agents.map((agent, i) => {
                   const agentLeads   = myLeads.filter(l => l.assignedTo === agent.uid).length;
@@ -231,7 +231,7 @@ function AgencyTab({
                         </div>
                         <div style={{ minWidth:0 }}>
                           <div style={{ fontSize:12, fontWeight:600, color:T.textPrimary, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{agent.name || agent.email?.split("@")[0] || "Agent"}</div>
-                          <div style={{ fontSize:10, color:T.textMuted, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{agent.email||"�€”"}</div>
+                          <div style={{ fontSize:10, color:T.textMuted, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{agent.email||"—"}</div>
                         </div>
                       </div>
 
@@ -247,7 +247,7 @@ function AgencyTab({
 
                       {/* RERA card number */}
                       <div style={{ fontSize:11, color:T.textSecondary, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>
-                        {agent.reraCard?.number || <span style={{ color:T.textMuted }}>�€”</span>}
+                        {agent.reraCard?.number || <span style={{ color:T.textMuted }}>—</span>}
                       </div>
 
                       {/* RERA expiry with status */}
@@ -292,7 +292,7 @@ function AgencyTab({
                 })}
               </div>
 
-              {/* �”€�”€ Invite Agent Modal (Session 11) �”€�”€ */}
+              {/* ── Invite Agent Modal (Session 11) ── */}
               {showInviteAgent && (
                 <div style={{ position:"fixed", inset:0, background:"rgba(4,9,15,0.85)", zIndex:2000, display:"flex", alignItems:"center", justifyContent:"center", backdropFilter:"blur(8px)" }} onClick={e=>{if(e.target===e.currentTarget)setShowInviteAgent(false);}}>
                   <div style={{ background:T.surface, borderRadius:14, border:`1px solid ${T.border}`, width:"95%", maxWidth:420 }} onClick={e=>e.stopPropagation()}>

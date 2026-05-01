@@ -1,5 +1,5 @@
 
-// �”€�”€ OFFICIAL LINKS �”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€
+// ── OFFICIAL LINKS ────────────────────────────────────────────────────
 export const meraasOfficialLinks = {
   developerWebsite: "https://meraas.com/en/",
   communitiesPage: "https://meraas.com/en/en/communities/",
@@ -9,7 +9,7 @@ export const meraasOfficialLinks = {
 };
 
 /**
- * DXB ANALYTICS �€” MERAAS COMMUNITIES
+ * DXB ANALYTICS — MERAAS COMMUNITIES
  * 5 communities | Research: March 2026
  */
 
@@ -26,7 +26,7 @@ export const meraasCommunitites = [
     parentGroup: "Dubai Holding",
     districtCode: "CW",
     overview: "City Walk is Meraas's flagship urban lifestyle community in the heart of Dubai, located between Sheikh Zayed Road and Jumeirah Beach. A walkable open-air destination combining luxury apartments, high-end retail (300+ brands), fine dining, cinemas, art galleries and Central Park, it redefines urban living in Dubai for sophisticated residents and investors.",
-    type: "Urban Lifestyle Community �€” Walkable",
+    type: "Urban Lifestyle Community — Walkable",
     status: "Established + Active new phases",
     launched: 2014,
     location: {
@@ -100,7 +100,7 @@ export const meraasCommunitites = [
     developer: "meraas",
     districtCode: "BW",
     overview: "Bluewaters Island is Meraas's iconic AED 6-billion man-made island located approximately 800 metres off JBR, accessible via a 265-meter pedestrian bridge. Home to Ain Dubai (world's largest observation wheel), 200+ F&B outlets, Banyan Tree Dubai resort and Bluewaters Residences, it is one of Dubai's most unique luxury lifestyle destinations with limited supply.",
-    type: "Luxury Island Lifestyle �€” Waterfront",
+    type: "Luxury Island Lifestyle — Waterfront",
     status: "Established (completed 2018)",
     launched: 2013,
     location: {
@@ -165,7 +165,7 @@ export const meraasCommunitites = [
     developer: "meraas",
     districtCode: "PM",
     overview: "Port de La Mer is the first freehold community in Jumeirah, developed by Meraas on the La Mer beachfront. A Mediterranean-inspired waterfront destination with direct beach access, marina and resort lifestyle, it offers premium apartments and townhouses in one of Dubai's most prestigious and historically exclusive neighbourhoods.",
-    type: "Mediterranean Waterfront �€” First Freehold in Jumeirah",
+    type: "Mediterranean Waterfront — First Freehold in Jumeirah",
     status: "Active",
     launched: 2017,
     location: {
@@ -228,7 +228,7 @@ export const meraasCommunitites = [
     developer: "meraas",
     districtCode: "MJL",
     overview: "Madinat Jumeirah Living (MJL) is the first freehold community in Umm Suqeim, developed by Dubai Holding (Meraas), directly across from the iconic Burj Al Arab. A pedestrian-friendly neighbourhood with limited car access, lush landscaped parks, palm-fringed pools and retail, it offers 1-4BR apartments and penthouses with Burj Al Arab views.",
-    type: "Residential Lifestyle �€” Pedestrian-Friendly",
+    type: "Residential Lifestyle — Pedestrian-Friendly",
     status: "Active",
     launched: 2018,
     location: {
@@ -296,7 +296,7 @@ export const meraasCommunitites = [
     developer: "meraas",
     districtCode: "JB",
     overview: "Jumeira Bay Island is Meraas's ultra-exclusive private island shaped like a seahorse off the coast of Jumeirah, reserved entirely for ultra-high-net-worth residents. Home to the world-famous Bulgari Resort and Residences, it offers 1-9BR branded residences with the most exclusive address in Dubai at prices starting from AED 63M.",
-    type: "Ultra-Luxury Private Island �€” Trophy Asset",
+    type: "Ultra-Luxury Private Island — Trophy Asset",
     status: "Active (mostly sold out)",
     launched: 2014,
     location: {
@@ -307,7 +307,7 @@ export const meraasCommunitites = [
       toDowntown: "15 min",
       toAirport: "20 min",
       toMarina: "15 min",
-      nearestMetro: "Private �€” helicopter/boat/car access",
+      nearestMetro: "Private — helicopter/boat/car access",
       highways: ["Private bridge from Jumeirah Road"],
     },
     sizeSqFt: 0,
@@ -324,7 +324,7 @@ export const meraasCommunitites = [
       aptYield: 3.5,
       villaYield: 3.0,
       yoyGrowth: "+20% (2024-2025)",
-      capitalGrowth: "Trophy asset �€” ultra-limited supply",
+      capitalGrowth: "Trophy asset — ultra-limited supply",
       investmentRating: "A+",
       goldenVisa: true,
     },
@@ -333,7 +333,7 @@ export const meraasCommunitites = [
       "Bulgari Resort Dubai (ultra-luxury hotel)",
       "Private beach",
       "Bulgari Marina & Yacht Club",
-      "Fine dining �€” La Spiaggia, Il Ristorante",
+      "Fine dining — La Spiaggia, Il Ristorante",
       "Bulgari Spa",
       "Infinity pools",
       "Tennis courts",
@@ -357,7 +357,7 @@ export const meraasCommunitites = [
     emirate: "Dubai",
     districtCode: "TA",
     overview: "The Acres is Meraas's premier standalone villa community in Dubailand, spanning 108.85 hectares in Wadi Al Safa 7, adjacent to the Plantation Equestrian & Polo Club. With 1,199 villas across 3-7BR configurations, it is nature-led living built around swimmable lagoons, 2-minute-walk parks and pedestrian-priority streets. LEED v4.1 certified. Handover Q4 2027. AED 2B construction awarded to UNEC.",
-    type: "Luxury Villa Community �€” Nature-Led",
+    type: "Luxury Villa Community — Nature-Led",
     status: "Under Development",
     launched: 2023,
     location: {
@@ -368,7 +368,7 @@ export const meraasCommunitites = [
       toDowntown: "25 min",
       toAirport: "30 min",
       toMarina: "30 min",
-      nearestMetro: "No metro �€” private vehicle required",
+      nearestMetro: "No metro — private vehicle required",
       highways: ["Sheikh Zayed Bin Hamdan Al Nahyan Street", "Emirates Road (E611)", "Latifa Bin Hamdan Road"],
     },
     sizeSqFt: 117130000,
@@ -384,8 +384,8 @@ export const meraasCommunitites = [
       avgYield: 5.5,
       aptYield: 0,
       villaYield: 5.5,
-      yoyGrowth: "N/A �€” under development (Q4 2027)",
-      capitalGrowth: "Strong expected �€” premium Dubailand location",
+      yoyGrowth: "N/A — under development (Q4 2027)",
+      capitalGrowth: "Strong expected — premium Dubailand location",
       investmentRating: "A",
       goldenVisa: true,
     },
@@ -415,17 +415,17 @@ export const meraasCommunitites = [
       "LEED v4.1 Cities certification",
     ],
     subCommunities: [
-      "The Acres Phase 1 �€” 642 villas (3-5BR, outer park loops)",
-      "The Acres Phase 2 �€” 3-5BR villas (June 2024 launch)",
-      "The Acres Phase 3 �€” final phase",
-      "The Acres Estates �€” 5-7BR ultra-luxury (inner park loops)",
+      "The Acres Phase 1 — 642 villas (3-5BR, outer park loops)",
+      "The Acres Phase 2 — 3-5BR villas (June 2024 launch)",
+      "The Acres Phase 3 — final phase",
+      "The Acres Estates — 5-7BR ultra-luxury (inner park loops)",
     ],
     schools: ["Fairgreen International School (nearby)", "GEMS Wellington (20 min)"],
     healthcare: ["Mediclinic Parkview (25 min)", "NMC Royal Hospital (25 min)"],
     transport: [
       "Sheikh Zayed Bin Hamdan Al Nahyan Street",
       "Emirates Road (E611)",
-      "Sheikh Mohammed Bin Zayed Road (E311) �€” 5 min",
+      "Sheikh Mohammed Bin Zayed Road (E311) — 5 min",
       "Global Village 10 min",
       "Dubai Hills Mall 15 min",
       "Downtown Dubai 25 min",
@@ -441,8 +441,8 @@ export const meraasCommunitites = [
     developer: "meraas",
     emirate: "Dubai",
     districtCode: "D3",
-    overview: "Dubai Design District (d3) is a Meraas-developed creative hub along the Dubai Water Canal in Al Quoz, home to 500+ design, fashion and creative brands. Residential launches include Atelis (AED 2.1M, Q3 2029) and Design Quarter Tower A (AED 1.87M, Q1 2027) �€” offering canal-facing apartments and sky-villas in a vibrant creative-commercial destination.",
-    type: "Creative Hub Mixed-Use �€” Residential + Commercial",
+    overview: "Dubai Design District (d3) is a Meraas-developed creative hub along the Dubai Water Canal in Al Quoz, home to 500+ design, fashion and creative brands. Residential launches include Atelis (AED 2.1M, Q3 2029) and Design Quarter Tower A (AED 1.87M, Q1 2027) — offering canal-facing apartments and sky-villas in a vibrant creative-commercial destination.",
+    type: "Creative Hub Mixed-Use — Residential + Commercial",
     status: "Active",
     launched: 2015,
     location: {
@@ -469,8 +469,8 @@ export const meraasCommunitites = [
       avgYield: 6.5,
       aptYield: 6.5,
       villaYield: 0,
-      yoyGrowth: "Off-plan �€” strong demand from creative/design community",
-      capitalGrowth: "Strong �€” proximity to Downtown + canal views",
+      yoyGrowth: "Off-plan — strong demand from creative/design community",
+      capitalGrowth: "Strong — proximity to Downtown + canal views",
       investmentRating: "A",
       goldenVisa: true,
     },
@@ -490,9 +490,9 @@ export const meraasCommunitites = [
       { name: "Design Quarter Tower A", type: "Canal-view apartments", price: "AED 1,870,000", payment: "60/40", handover: "Q1 2027", verified: "Bayut Official" },
     ],
     subCommunities: [
-      "Design Quarter �€” residential towers",
-      "Creative Hub �€” commercial/studio",
-      "Canal Walk �€” promenade retail",
+      "Design Quarter — residential towers",
+      "Creative Hub — commercial/studio",
+      "Canal Walk — promenade retail",
     ],
     schools: ["GEMS Wellington Business Bay (15 min)"],
     healthcare: ["Mediclinic City Hospital (15 min)"],

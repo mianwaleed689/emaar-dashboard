@@ -1,17 +1,17 @@
 /* eslint-disable */
-/* ввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђ
-   SearchableSelect вв‚¬вЂќ premium custom dropdown for large option lists
+/* в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ
+   SearchableSelect вЂ” premium custom dropdown for large option lists
    Replaces native HTML <select> when you have 20+ options.
    
    Features:
    - Type to search (substring match on label)
-   - Keyboard nav: в†вЂ/в†вЂњ to move, вЏЋ to select, вђ› to close
+   - Keyboard nav: в†‘/в†“ to move, вЏЋ to select, вђ› to close
    - Optional count badges per option (e.g. "Dubai Marina В· 68")
    - Dark theme matching the rest of the app
    - Portal rendering so dropdown escapes overflow clipping
    - Click-outside to close
    - Sentence case throughout
-   ввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђввЂўђ */
+   в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ */
 
 import React, { useState, useRef, useEffect, useMemo } from "react";
 import { createPortal } from "react-dom";
@@ -94,7 +94,7 @@ export default function SearchableSelect({
 
   const isActive = value && value !== "all" && value !== "All";
 
-  /* Trigger button styling вв‚¬вЂќ premium pill */
+  /* Trigger button styling вЂ” premium pill */
   const triggerStyle = {
     width,
     background: "linear-gradient(145deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%)",
@@ -222,7 +222,7 @@ export default function SearchableSelect({
                   type="button"
                   onClick={() => { setSearch(""); searchRef.current?.focus(); }}
                   style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", padding: 0, fontSize: 14 }}
-                >ГвЂ”</button>
+                >Г—</button>
               )}
             </div>
           </div>
@@ -295,7 +295,7 @@ export default function SearchableSelect({
             alignItems: "center",
           }}>
             <span>{filtered.length} {filtered.length === 1 ? "match" : "matches"}</span>
-            <span style={{ opacity: 0.6 }}>в†вЂв†вЂњ nav В· вЏЋ select В· вђ› close</span>
+            <span style={{ opacity: 0.6 }}>в†‘в†“ nav В· вЏЋ select В· вђ› close</span>
           </div>
         </div>,
         document.body

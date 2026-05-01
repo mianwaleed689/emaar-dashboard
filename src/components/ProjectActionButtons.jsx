@@ -1,5 +1,5 @@
 /**
- * DXB ANALYTICS �€” ONE PROJECT FLOW
+ * DXB ANALYTICS — ONE PROJECT FLOW
  * ==================================
  * File: src/components/ProjectActionButtons.jsx
  *
@@ -34,7 +34,7 @@
 import React, { useState } from 'react';
 import { T } from '../data';
 
-// �”€�”€�”€ EXACT TAB NAMES used in EmaarDashboardV2 tab routing �”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€
+// ─── EXACT TAB NAMES used in EmaarDashboardV2 tab routing ───────────────────
 // These must match exactly what handleTabChange expects
 const TAB_ROUTES = {
   handover:        'Handover',
@@ -56,14 +56,14 @@ const TAB_ROUTES = {
   launch_calendar: 'Launch Calendar',
 };
 
-// �”€�”€�”€ ACTION DEFINITIONS �”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€
+// ─── ACTION DEFINITIONS ──────────────────────────────────────────────────────
 const ACTIONS = [
-  // PRIMARY �€” always visible on card
+  // PRIMARY — always visible on card
   { key:'handover',        label:'Handover',        tabKey:'handover',        color:'#10B981', primary:true  },
   { key:'mortgage',        label:'Mortgage',        tabKey:'banking',         color:'#3B82F6', primary:true  },
   { key:'roi',             label:'ROI Score',       tabKey:'investment_score',color:'#D4A843', primary:true  },
   { key:'add_lead',        label:'Add Lead',        tabKey:'leads',           color:'#14B8A6', primary:true  },
-  // SECONDARY �€” shown in "More �–�" dropdown
+  // SECONDARY — shown in "More ▾" dropdown
   { key:'yields',          label:'Yields',          tabKey:'yields',          color:'#8B5CF6', primary:false },
   { key:'map',             label:'Map View',        tabKey:'map',             color:'#0EA5E9', primary:false },
   { key:'developer',       label:'Developer',       tabKey:'developer',       color:'#F59E0B', primary:false },
@@ -75,7 +75,7 @@ const ACTIONS = [
   { key:'portfolio',       label:'+ Portfolio',     tabKey:'portfolio',       color:'#D4A843', primary:false },
 ];
 
-// �”€�”€�”€ MAIN COMPONENT �”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€
+// ─── MAIN COMPONENT ──────────────────────────────────────────────────────────
 export default function ProjectActionButtons({ project, handleTabChange, setProjectContext, compact = false }) {
   const [showMore, setShowMore] = useState(false);
 
@@ -118,7 +118,7 @@ export default function ProjectActionButtons({ project, handleTabChange, setProj
             onMouseEnter={e => { e.currentTarget.style.background = `${action.color}22`; e.currentTarget.style.borderColor = `${action.color}55`; }}
             onMouseLeave={e => { e.currentTarget.style.background = `${action.color}12`; e.currentTarget.style.borderColor = `${action.color}33`; }}
           >
-            {action.label} �’
+            {action.label} →
           </button>
         ))}
       </div>
@@ -165,7 +165,7 @@ export default function ProjectActionButtons({ project, handleTabChange, setProj
             }}
           >
             <span>{action.label}</span>
-            <span style={{ fontSize:10, opacity:0.7 }}>�’</span>
+            <span style={{ fontSize:10, opacity:0.7 }}>→</span>
           </button>
         ))}
 
@@ -185,7 +185,7 @@ export default function ProjectActionButtons({ project, handleTabChange, setProj
             transition:'all 0.2s',
           }}
         >
-          More {showMore ? '�–�' : '�–�'}
+          More {showMore ? '▲' : '▼'}
         </button>
       </div>
 
@@ -228,7 +228,7 @@ export default function ProjectActionButtons({ project, handleTabChange, setProj
               onMouseEnter={e => { e.currentTarget.style.background = `${action.color}20`; }}
               onMouseLeave={e => { e.currentTarget.style.background = `${action.color}10`; }}
             >
-              {action.label} �’
+              {action.label} →
             </button>
           ))}
         </div>

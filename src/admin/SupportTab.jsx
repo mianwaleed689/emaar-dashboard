@@ -113,7 +113,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
     enabled: true,
     autoAccept: false,
     maxConcurrent: 3,
-    welcomeMessage: "Hi! ââ‚¬¢ How can we help you today?",
+    welcomeMessage: "Hi! â€¢ How can we help you today?",
     offlineMessage: "We're currently offline. Leave a message and we'll get back to you!",
     widgetColor: "#D4A843",
     widgetPosition: "right"
@@ -202,11 +202,11 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
   // Categories and statuses
   const categories = [
     { id: "bug", label: "Bug Report", color: T.red, icon: "ğŸ‰¢" },
-    { id: "data", label: "Data Question", color: T.orange, icon: "ğŸâ€œˆ" },
+    { id: "data", label: "Data Question", color: T.orange, icon: "ğŸ“ˆ" },
     { id: "feature", label: "Feature Request", color: T.purple, icon: "âœ¿" },
-    { id: "billing", label: "Billing Query", color: T.green, icon: "ââ‚¬¢" },
-    { id: "account", label: "Account Issue", color: T.blue, icon: "ââ‚¬¢" },
-    { id: "other", label: "Other", color: T.textMuted, icon: "ââ‚¬¢" },
+    { id: "billing", label: "Billing Query", color: T.green, icon: "â€¢" },
+    { id: "account", label: "Account Issue", color: T.blue, icon: "â€¢" },
+    { id: "other", label: "Other", color: T.textMuted, icon: "â€¢" },
   ];
 
   const statuses = {
@@ -302,7 +302,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
         ]);
         // Default sample workflows
         setWorkflowTriggers([
-          { id: "wf_1", name: "Resolved â†â€™ Add Tag", trigger: "status_change", triggerValue: "resolved", actions: [{ type: "add_tag", value: "resolved" }], enabled: true },
+          { id: "wf_1", name: "Resolved â†’ Add Tag", trigger: "status_change", triggerValue: "resolved", actions: [{ type: "add_tag", value: "resolved" }], enabled: true },
           { id: "wf_2", name: "VIP Auto-Priority", trigger: "tier_is", triggerValue: "enterprise", actions: [{ type: "set_priority", value: "high" }, { type: "add_tag", value: "vip" }], enabled: true },
         ]);
         // Default sample CSAT
@@ -1174,7 +1174,7 @@ DXB Analytics Support`,
       if (isInternalNote) {
         // Add to internal notes as attachment
         const newNote = {
-          text: `ğŸâ€œ„ Attached file: ${file.name}`,
+          text: `ğŸ“„ Attached file: ${file.name}`,
           by: adminUser?.email || "admin",
           at: new Date().toISOString(),
           attachment
@@ -1187,7 +1187,7 @@ DXB Analytics Support`,
         // Add to public messages
         const newMessage = {
           from: "admin",
-          text: `ğŸâ€œ„ Attached file: ${file.name}`,
+          text: `ğŸ“„ Attached file: ${file.name}`,
           at: new Date().toISOString(),
           by: adminUser?.email || "admin",
           attachment
@@ -1307,7 +1307,7 @@ DXB Analytics Support`,
   const insertTemplate = (text) => { setTicketReply(text); setShowTemplates(false); };
   const insertNoteTemplate = (text) => { setInternalNote(text); };
   const timeAgo = (date) => {
-    if (!date) return "ââ‚¬â€";
+    if (!date) return "â€”";
     const seconds = Math.floor((now.getTime() - new Date(date).getTime()) / 1000);
     if (seconds < 60) return "Just now";
     const minutes = Math.floor(seconds / 60);
@@ -1511,12 +1511,12 @@ DXB Analytics Support`,
 
   // Phase 8B: Webhook Functions
   const webhookEvents = [
-    { id: "ticket_created", label: "Ticket Created", icon: "ââ‚¬¢" },
+    { id: "ticket_created", label: "Ticket Created", icon: "â€¢" },
     { id: "ticket_resolved", label: "Ticket Resolved", icon: "" },
-    { id: "ticket_assigned", label: "Ticket Assigned", icon: "ââ‚¬¢" },
-    { id: "sla_breach", label: "SLA Breached", icon: "ââ€“â€˜" },
-    { id: "reply_sent", label: "Reply Sent", icon: "ğŸâ€™¼" },
-    { id: "priority_changed", label: "Priority Changed", icon: "ââ‚¬¢" },
+    { id: "ticket_assigned", label: "Ticket Assigned", icon: "â€¢" },
+    { id: "sla_breach", label: "SLA Breached", icon: "â–‘" },
+    { id: "reply_sent", label: "Reply Sent", icon: "ğŸ’¼" },
+    { id: "priority_changed", label: "Priority Changed", icon: "â€¢" },
   ];
 
   const saveWebhook = async () => {
@@ -2151,7 +2151,7 @@ DXB Analytics Support`,
             autoAssignedBy: rule.name,
             internalNotes: [
               ...(ticket.internalNotes || []),
-              { text: `ğŸâ€˜› Auto-assigned to ${rule.assignToName} by rule: "${rule.name}"`, by: "System", at: new Date().toISOString(), isSystem: true }
+              { text: `ğŸ‘› Auto-assigned to ${rule.assignToName} by rule: "${rule.name}"`, by: "System", at: new Date().toISOString(), isSystem: true }
             ],
             updatedAt: new Date().toISOString()
           };
@@ -2320,7 +2320,7 @@ DXB Analytics Support`,
             if (action.value === "resolved") updates.resolvedAt = new Date().toISOString();
             break;
           case "add_note":
-            newNotes.push({ text: `ğŸâ€˜› ${action.value}`, by: "System", at: new Date().toISOString(), isSystem: true });
+            newNotes.push({ text: `ğŸ‘› ${action.value}`, by: "System", at: new Date().toISOString(), isSystem: true });
             break;
           case "send_notification":
             // Would integrate with notification system
@@ -2373,11 +2373,11 @@ DXB Analytics Support`,
 
   // Phase 5B: KB Categories
   const kbCategories = [
-    { id: "getting-started", label: "Getting Started", icon: "ğŸâ€‡" },
-    { id: "billing", label: "Billing & Payments", icon: "ââ‚¬¢" },
-    { id: "technical", label: "Technical Issues", icon: "ââ‚¬¢" },
+    { id: "getting-started", label: "Getting Started", icon: "ğŸ”‡" },
+    { id: "billing", label: "Billing & Payments", icon: "â€¢" },
+    { id: "technical", label: "Technical Issues", icon: "â€¢" },
     { id: "features", label: "Features & Usage", icon: "âœ¿" },
-    { id: "account", label: "Account & Security", icon: "ğŸâ€”‰" },
+    { id: "account", label: "Account & Security", icon: "ğŸ—‰" },
   ];
 
   const qrCategories = [
@@ -2573,10 +2573,10 @@ DXB Analytics Support`,
     };
     
     // Determine sentiment
-    if (scores.urgent >= 3) return { sentiment: "urgent", emoji: "ââ‚¬¢", color: T.red, label: "Urgent", pulse: true };
-    if (scores.frustrated >= 3) return { sentiment: "frustrated", emoji: "ââ‚¬¢", color: T.red, label: "Frustrated" };
-    if (scores.concerned >= 2) return { sentiment: "concerned", emoji: "ââ‚¬¢", color: T.orange, label: "Concerned" };
-    if (scores.positive >= 2) return { sentiment: "positive", emoji: "ââ‚¬¢", color: T.green, label: "Positive" };
+    if (scores.urgent >= 3) return { sentiment: "urgent", emoji: "â€¢", color: T.red, label: "Urgent", pulse: true };
+    if (scores.frustrated >= 3) return { sentiment: "frustrated", emoji: "â€¢", color: T.red, label: "Frustrated" };
+    if (scores.concerned >= 2) return { sentiment: "concerned", emoji: "â€¢", color: T.orange, label: "Concerned" };
+    if (scores.positive >= 2) return { sentiment: "positive", emoji: "â€¢", color: T.green, label: "Positive" };
     
     return { sentiment: "neutral", emoji: "ğŸŸ‰", color: T.textMuted, label: "Neutral" };
   };
@@ -2962,7 +2962,7 @@ ${adminUser?.displayName || "Support Team"}`
         <button type="button" onClick={() => { setTicketsLoading(true); setTimeout(() => setTicketsLoading(false), 500); notify("Tickets refreshed"); }} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, padding: "14px 16px", background: T.goldGlow, border: "none", borderRight: `1px solid ${T.border}`, color: T.gold, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600, flexShrink: 0 }}>{I.refresh}</button>
         {[
           { label: "Open Tickets", value: openTickets.length, color: openTickets.length > 0 ? T.orange : T.green },
-          { label: "Avg Response", value: avgResponseHrs !== null ? `${avgResponseHrs}h` : "ââ‚¬â€", color: avgResponseHrs !== null && avgResponseHrs > 24 ? T.red : T.green },
+          { label: "Avg Response", value: avgResponseHrs !== null ? `${avgResponseHrs}h` : "â€”", color: avgResponseHrs !== null && avgResponseHrs > 24 ? T.red : T.green },
           { label: "Resolved Today", value: resolvedToday, color: T.green },
           { label: "SLA Breached", value: slaBreached.length, color: slaBreached.length > 0 ? T.red : T.green },
           { label: "Unassigned", value: unassignedCount, color: unassignedCount > 0 ? T.orange : T.green },
@@ -2976,9 +2976,9 @@ ${adminUser?.displayName || "Support Team"}`
         {/* Channel indicators */}
         <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "10px 16px", marginLeft: "auto" }}>
           <span style={{ fontSize: 9, color: T.textMuted }}>Channels:</span>
-          <span style={{ fontSize: 10, padding: "3px 6px", borderRadius: 4, background: `${T.blue}20`, color: T.blue }}>ğŸâ€œº {tickets.filter(t => !t.channel || t.channel === "email").length}</span>
-          <span style={{ fontSize: 10, padding: "3px 6px", borderRadius: 4, background: `${T.green}20`, color: T.green }}>ğŸâ€™¼ {liveChats.filter(c => c.status === "active").length + tickets.filter(t => t.channel === "chat").length}</span>
-          <span style={{ fontSize: 10, padding: "3px 6px", borderRadius: 4, background: "#25D36620", color: "#25D366" }}>ğŸâ€œ± {whatsappConversations.filter(c => c.status === "active").length + tickets.filter(t => t.channel === "whatsapp").length}</span>
+          <span style={{ fontSize: 10, padding: "3px 6px", borderRadius: 4, background: `${T.blue}20`, color: T.blue }}>ğŸ“º {tickets.filter(t => !t.channel || t.channel === "email").length}</span>
+          <span style={{ fontSize: 10, padding: "3px 6px", borderRadius: 4, background: `${T.green}20`, color: T.green }}>ğŸ’¼ {liveChats.filter(c => c.status === "active").length + tickets.filter(t => t.channel === "chat").length}</span>
+          <span style={{ fontSize: 10, padding: "3px 6px", borderRadius: 4, background: "#25D36620", color: "#25D366" }}>ğŸ“± {whatsappConversations.filter(c => c.status === "active").length + tickets.filter(t => t.channel === "whatsapp").length}</span>
         </div>
       </div>
 
@@ -2989,12 +2989,12 @@ ${adminUser?.displayName || "Support Team"}`
             { id: "open", label: `Open (${tickets.filter(t => t.status === "open" || t.status === "in_progress").length})` },
             { id: "resolved", label: `Resolved (${tickets.filter(t => t.status === "resolved" || t.status === "closed").length})` },
             { id: "all", label: `All (${tickets.length})` },
-            { id: "livechat", label: `ğŸâ€™¼ Live Chat${liveChats.filter(c => c.status === "active").length > 0 ? ` (${liveChats.filter(c => c.status === "active").length})` : ""}` },
-            { id: "whatsapp", label: `ğŸâ€œ± WhatsApp${whatsappConversations.filter(c => c.status === "active").length > 0 ? ` (${whatsappConversations.filter(c => c.status === "active").length})` : ""}` },
-            { id: "analytics", label: "ğŸâ€œˆ Analytics" },
-            { id: "kb", label: "ğŸâ€œ¬ KB & Tools" },
-            { id: "timetrack", label: `ââ€“â€™ï¸ Time${activeTimer ? " ââ‚¬¢" : ""}` },
-            { id: "auditlog", label: "ğŸâ€œ‹ Audit" },
+            { id: "livechat", label: `ğŸ’¼ Live Chat${liveChats.filter(c => c.status === "active").length > 0 ? ` (${liveChats.filter(c => c.status === "active").length})` : ""}` },
+            { id: "whatsapp", label: `ğŸ“± WhatsApp${whatsappConversations.filter(c => c.status === "active").length > 0 ? ` (${whatsappConversations.filter(c => c.status === "active").length})` : ""}` },
+            { id: "analytics", label: "ğŸ“ˆ Analytics" },
+            { id: "kb", label: "ğŸ“¬ KB & Tools" },
+            { id: "timetrack", label: `â–’ï¸ Time${activeTimer ? " â€¢" : ""}` },
+            { id: "auditlog", label: "ğŸ“‹ Audit" },
             { id: "settings", label: " Settings" },
           ].map(t => (
             <button key={t.id} type="button" onClick={() => setSupportSubTab(t.id)}
@@ -3017,10 +3017,10 @@ ${adminUser?.displayName || "Support Team"}`
           <select value={channelFilter} onChange={e => setChannelFilter(e.target.value)}
             style={{ padding: "8px 10px", borderRadius: 8, border: `1px solid ${channelFilter !== "all" ? "#25D366" : T.border}`, background: T.surfaceAlt, color: channelFilter !== "all" ? "#25D366" : T.white, fontSize: 11, fontFamily: "'Outfit',sans-serif", cursor: "pointer" }}>
             <option value="all">All Channels</option>
-            <option value="email">ğŸâ€œº Email</option>
-            <option value="chat">ğŸâ€™¼ Live Chat</option>
-            <option value="whatsapp">ğŸâ€œ± WhatsApp</option>
-            <option value="phone">ğŸâ€œ§ Phone</option>
+            <option value="email">ğŸ“º Email</option>
+            <option value="chat">ğŸ’¼ Live Chat</option>
+            <option value="whatsapp">ğŸ“± WhatsApp</option>
+            <option value="phone">ğŸ“§ Phone</option>
           </select>
           <select value={ticketFilter} onChange={e => setTicketFilter(e.target.value)}
             style={{ padding: "8px 10px", borderRadius: 8, border: `1px solid ${T.border}`, background: T.surfaceAlt, color: T.white, fontSize: 11, fontFamily: "'Outfit',sans-serif", cursor: "pointer" }}>
@@ -3030,27 +3030,27 @@ ${adminUser?.displayName || "Support Team"}`
           <select value={ticketPriorityFilter} onChange={e => setTicketPriorityFilter(e.target.value)}
             style={{ padding: "8px 10px", borderRadius: 8, border: `1px solid ${T.border}`, background: T.surfaceAlt, color: T.white, fontSize: 11, fontFamily: "'Outfit',sans-serif", cursor: "pointer" }}>
             <option value="all">All Priorities</option>
-            <option value="urgent">ââ‚¬¢ Urgent</option>
-            <option value="high">ââ‚¬¢ High</option>
+            <option value="urgent">â€¢ Urgent</option>
+            <option value="high">â€¢ High</option>
             <option value="normal"> Normal</option>
           </select>
           <select value={tagFilter} onChange={e => setTagFilter(e.target.value)}
             style={{ padding: "8px 10px", borderRadius: 8, border: `1px solid ${tagFilter !== "all" ? T.teal : T.border}`, background: T.surfaceAlt, color: tagFilter !== "all" ? T.teal : T.white, fontSize: 11, fontFamily: "'Outfit',sans-serif", cursor: "pointer" }}>
             <option value="all">All Tags</option>
-            {availableTags.map(t => <option key={t.id} value={t.id}>ââ‚¬¢ {t.label}</option>)}
+            {availableTags.map(t => <option key={t.id} value={t.id}>â€¢ {t.label}</option>)}
           </select>
           <select value={assignmentFilter} onChange={e => setAssignmentFilter(e.target.value)}
             style={{ padding: "8px 10px", borderRadius: 8, border: `1px solid ${assignmentFilter !== "all" ? T.purple : T.border}`, background: T.surfaceAlt, color: assignmentFilter !== "all" ? T.purple : T.white, fontSize: 11, fontFamily: "'Outfit',sans-serif", cursor: "pointer" }}>
             <option value="all">All Agents</option>
-            <option value="unassigned">ââ‚¬¢ Unassigned</option>
-            {assignableAgents.filter(a => a.id !== "unassigned").map(a => <option key={a.id} value={a.id}>ââ‚¬¢ {a.name}</option>)}
+            <option value="unassigned">â€¢ Unassigned</option>
+            {assignableAgents.filter(a => a.id !== "unassigned").map(a => <option key={a.id} value={a.id}>â€¢ {a.name}</option>)}
           </select>
           {/* Custom Field Filter */}
           {customFields.length > 0 && (
             <select value={customFieldFilter.fieldId} onChange={e => setCustomFieldFilter({ fieldId: e.target.value, value: "" })}
               style={{ padding: "8px 10px", borderRadius: 8, border: `1px solid ${customFieldFilter.fieldId ? T.cyan : T.border}`, background: T.surfaceAlt, color: customFieldFilter.fieldId ? T.cyan : T.white, fontSize: 11, fontFamily: "'Outfit',sans-serif", cursor: "pointer" }}>
               <option value="">Custom Field...</option>
-              {customFields.map(f => <option key={f.id} value={f.id}>ğŸâ€œ‹ {f.name}</option>)}
+              {customFields.map(f => <option key={f.id} value={f.id}>ğŸ“‹ {f.name}</option>)}
             </select>
           )}
           {customFieldFilter.fieldId && (
@@ -3065,12 +3065,12 @@ ${adminUser?.displayName || "Support Team"}`
           <button type="button" onClick={() => setShowAutoAssignModal(true)}
             style={{ padding: "8px 10px", borderRadius: 8, border: `1px solid ${autoAssignRules.filter(r => r.enabled).length > 0 ? T.green : T.border}`, background: autoAssignRules.filter(r => r.enabled).length > 0 ? `${T.green}15` : "transparent", color: autoAssignRules.filter(r => r.enabled).length > 0 ? T.green : T.textMuted, fontSize: 11, cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}
             title="Auto-Assign Rules">
-            ğŸâ€˜› {autoAssignRules.filter(r => r.enabled).length > 0 && <span style={{ fontSize: 9 }}>{autoAssignRules.filter(r => r.enabled).length}</span>}
+            ğŸ‘› {autoAssignRules.filter(r => r.enabled).length > 0 && <span style={{ fontSize: 9 }}>{autoAssignRules.filter(r => r.enabled).length}</span>}
           </button>
           <button type="button" onClick={() => setShowSlaModal(true)}
             style={{ padding: "8px 10px", borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.textMuted, fontSize: 11, cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}
             title="SLA Settings">
-            ââ€“â€™ï¸
+            â–’ï¸
           </button>
           <button type="button" onClick={() => setShowWorkflowModal(true)}
             style={{ padding: "8px 10px", borderRadius: 8, border: `1px solid ${workflowTriggers.filter(w => w.enabled).length > 0 ? T.purple : T.border}`, background: workflowTriggers.filter(w => w.enabled).length > 0 ? `${T.purple}15` : "transparent", color: workflowTriggers.filter(w => w.enabled).length > 0 ? T.purple : T.textMuted, fontSize: 11, cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}
@@ -3106,7 +3106,7 @@ ${adminUser?.displayName || "Support Team"}`
                 <span style={{ fontSize: 32, fontWeight: 900, color: T.white, fontFamily: "'Fraunces',serif" }}>{analytics.total}</span>
                 {analytics.volumeChange !== 0 && (
                   <span style={{ fontSize: 12, fontWeight: 600, color: analytics.volumeChange > 0 ? T.red : T.green }}>
-                    {analytics.volumeChange > 0 ? "â†" : "â†â€˜"} {Math.abs(analytics.volumeChange)}%
+                    {analytics.volumeChange > 0 ? "â†" : "â†‘"} {Math.abs(analytics.volumeChange)}%
                   </span>
                 )}
               </div>
@@ -3116,7 +3116,7 @@ ${adminUser?.displayName || "Support Team"}`
               <div style={{ fontSize: 10, color: T.textMuted, fontWeight: 600, textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>Avg Resolution</div>
               <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
                 <span style={{ fontSize: 32, fontWeight: 900, color: analytics.avgResolutionHrs && analytics.avgResolutionHrs > slaSettings.defaultHours ? T.red : T.green, fontFamily: "'Fraunces',serif" }}>
-                  {analytics.avgResolutionHrs ? `${analytics.avgResolutionHrs}h` : "ââ‚¬â€"}
+                  {analytics.avgResolutionHrs ? `${analytics.avgResolutionHrs}h` : "â€”"}
                 </span>
               </div>
               <div style={{ fontSize: 10, color: T.textMuted }}>SLA target: {slaSettings.defaultHours}h</div>
@@ -3129,7 +3129,7 @@ ${adminUser?.displayName || "Support Team"}`
                 </span>
                 {analytics.slaChange !== 0 && (
                   <span style={{ fontSize: 12, fontWeight: 600, color: analytics.slaChange > 0 ? T.green : T.red }}>
-                    {analytics.slaChange > 0 ? "â†" : "â†â€˜"} {Math.abs(analytics.slaChange)}%
+                    {analytics.slaChange > 0 ? "â†" : "â†‘"} {Math.abs(analytics.slaChange)}%
                   </span>
                 )}
               </div>
@@ -3148,7 +3148,7 @@ ${adminUser?.displayName || "Support Team"}`
           <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 16 }}>
             {/* Ticket Volume Chart */}
             <div style={{ padding: 20, background: T.surface, borderRadius: 14, border: `1px solid ${T.border}` }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 16 }}>ğŸâ€œŠ Ticket Volume</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 16 }}>ğŸ“Š Ticket Volume</div>
               <div style={{ height: 200 }}>
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={analytics.dailyVolume.slice(-14)} margin={{ top: 5, right: 5, bottom: 5, left: 0 }}>
@@ -3188,7 +3188,7 @@ ${adminUser?.displayName || "Support Team"}`
 
             {/* Category Breakdown */}
             <div style={{ padding: 20, background: T.surface, borderRadius: 14, border: `1px solid ${T.border}` }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 16 }}>ğŸâ€œˆ By Category</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 16 }}>ğŸ“ˆ By Category</div>
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 {analytics.categoryBreakdown.slice(0, 6).map(cat => (
                   <div key={cat.id}>
@@ -3212,7 +3212,7 @@ ${adminUser?.displayName || "Support Team"}`
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16 }}>
             {/* Priority Breakdown */}
             <div style={{ padding: 20, background: T.surface, borderRadius: 14, border: `1px solid ${T.border}` }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 16 }}>ââ‚¬¢ By Priority</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 16 }}>â€¢ By Priority</div>
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 {analytics.priorityBreakdown.map(p => (
                   <div key={p.id}>
@@ -3230,7 +3230,7 @@ ${adminUser?.displayName || "Support Team"}`
 
             {/* Status Breakdown */}
             <div style={{ padding: 20, background: T.surface, borderRadius: 14, border: `1px solid ${T.border}` }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 16 }}>ğŸâ€œ‹ By Status</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 16 }}>ğŸ“‹ By Status</div>
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 {analytics.statusBreakdown.map(s => (
                   <div key={s.id}>
@@ -3248,7 +3248,7 @@ ${adminUser?.displayName || "Support Team"}`
 
             {/* Resolution Time Buckets */}
             <div style={{ padding: 20, background: T.surface, borderRadius: 14, border: `1px solid ${T.border}` }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 16 }}>ââ€“â€™ï¸ Resolution Time</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 16 }}>â–’ï¸ Resolution Time</div>
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 {analytics.resolutionBuckets.map((b, idx) => (
                   <div key={idx}>
@@ -3268,7 +3268,7 @@ ${adminUser?.displayName || "Support Team"}`
           {/* Agent Performance Table */}
           <div style={{ padding: 20, background: T.surface, borderRadius: 14, border: `1px solid ${T.border}` }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: T.white }}>ââ‚¬¢ Agent Performance</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: T.white }}>â€¢ Agent Performance</div>
               <div style={{ fontSize: 10, color: T.textMuted }}>Last {analyticsRange === "7d" ? "7 days" : analyticsRange === "30d" ? "30 days" : "90 days"}</div>
             </div>
             {analytics.agentPerformance.length === 0 ? (
@@ -3296,7 +3296,7 @@ ${adminUser?.displayName || "Support Team"}`
                           <div>
                             <div style={{ fontWeight: 600, color: T.white }}>{agent.name}</div>
                             {idx === 0 && analytics.agentPerformance.length > 1 && (
-                              <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: `${T.gold}20`, color: T.gold }}>ââ‚¬¢ Top Performer</span>
+                              <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: `${T.gold}20`, color: T.gold }}>â€¢ Top Performer</span>
                             )}
                           </div>
                         </td>
@@ -3311,7 +3311,7 @@ ${adminUser?.displayName || "Support Team"}`
                           </div>
                         </td>
                         <td style={{ textAlign: "center", padding: "12px", color: agent.avgResolution && agent.avgResolution > slaSettings.defaultHours ? T.red : T.textSecondary }}>
-                          {agent.avgResolution ? `${agent.avgResolution}h` : "ââ‚¬â€"}
+                          {agent.avgResolution ? `${agent.avgResolution}h` : "â€”"}
                         </td>
                         <td style={{ textAlign: "center", padding: "12px" }}>
                           <span style={{ padding: "4px 10px", borderRadius: 6, background: agent.slaPercent >= 85 ? `${T.green}20` : agent.slaPercent >= 70 ? `${T.orange}20` : `${T.red}20`, color: agent.slaPercent >= 85 ? T.green : agent.slaPercent >= 70 ? T.orange : T.red, fontWeight: 700, fontSize: 11 }}>
@@ -3330,7 +3330,7 @@ ${adminUser?.displayName || "Support Team"}`
           <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 16 }}>
             {/* SLA Trend Chart */}
             <div style={{ padding: 20, background: T.surface, borderRadius: 14, border: `1px solid ${T.border}` }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 16 }}>ğŸâ€œŠ SLA Compliance Trend</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 16 }}>ğŸ“Š SLA Compliance Trend</div>
               <div style={{ height: 180 }}>
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={analytics.slaTrend} margin={{ top: 5, right: 5, bottom: 5, left: 0 }}>
@@ -3401,7 +3401,7 @@ ${adminUser?.displayName || "Support Team"}`
 
           {/* CSAT Section Header */}
           <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 8 }}>
-            <div style={{ fontSize: 16, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>ââ‚¬¢ Customer Satisfaction</div>
+            <div style={{ fontSize: 16, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>â€¢ Customer Satisfaction</div>
             <div style={{ flex: 1, height: 1, background: T.border }} />
           </div>
 
@@ -3411,11 +3411,11 @@ ${adminUser?.displayName || "Support Team"}`
               <div style={{ fontSize: 10, color: T.textMuted, fontWeight: 600, textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>Avg CSAT Score</div>
               <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
                 <span style={{ fontSize: 32, fontWeight: 900, color: analytics.avgCsat && analytics.avgCsat >= 4 ? T.green : analytics.avgCsat && analytics.avgCsat >= 3 ? T.orange : T.red, fontFamily: "'Fraunces',serif" }}>
-                  {analytics.avgCsat ? `${analytics.avgCsat}` : "ââ‚¬â€"}
+                  {analytics.avgCsat ? `${analytics.avgCsat}` : "â€”"}
                 </span>
                 {analytics.csatChange !== 0 && (
                   <span style={{ fontSize: 12, fontWeight: 600, color: analytics.csatChange > 0 ? T.green : T.red }}>
-                    {analytics.csatChange > 0 ? "â†" : "â†â€˜"} {Math.abs(analytics.csatChange)}
+                    {analytics.csatChange > 0 ? "â†" : "â†‘"} {Math.abs(analytics.csatChange)}
                   </span>
                 )}
               </div>
@@ -3454,7 +3454,7 @@ ${adminUser?.displayName || "Support Team"}`
           <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 16 }}>
             {/* CSAT Trend */}
             <div style={{ padding: 20, background: T.surface, borderRadius: 14, border: `1px solid ${T.border}` }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 16 }}>ğŸâ€œŠ CSAT Trend</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 16 }}>ğŸ“Š CSAT Trend</div>
               <div style={{ height: 180 }}>
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={analytics.csatTrend.filter(d => d.avgRating !== null)} margin={{ top: 5, right: 5, bottom: 5, left: 0 }}>
@@ -3511,7 +3511,7 @@ ${adminUser?.displayName || "Support Team"}`
           {/* Agent CSAT Scores */}
           <div style={{ padding: 20, background: T.surface, borderRadius: 14, border: `1px solid ${T.border}` }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: T.white }}>ââ‚¬¢ Agent CSAT Scores</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: T.white }}>â€¢ Agent CSAT Scores</div>
               <div style={{ fontSize: 10, color: T.textMuted }}>Based on customer feedback</div>
             </div>
             {analytics.agentCsat.length === 0 ? (
@@ -3571,7 +3571,7 @@ ${adminUser?.displayName || "Support Team"}`
 
           {/* Recent Feedback */}
           <div style={{ padding: 20, background: T.surface, borderRadius: 14, border: `1px solid ${T.border}` }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 16 }}>ğŸâ€™¼ Recent Feedback</div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 16 }}>ğŸ’¼ Recent Feedback</div>
             {analytics.recentFeedback.length === 0 ? (
               <div style={{ padding: 30, textAlign: "center", color: T.textMuted, fontSize: 12 }}>No feedback with comments yet</div>
             ) : (
@@ -3589,7 +3589,7 @@ ${adminUser?.displayName || "Support Team"}`
                     </div>
                     <p style={{ margin: 0, fontSize: 12, color: T.textSecondary, lineHeight: 1.5 }}>"{feedback.comment}"</p>
                     <div style={{ marginTop: 8, fontSize: 10, color: T.textMuted }}>
-                      Agent: <span style={{ color: T.purple }}>{feedback.agentName || "ââ‚¬â€"}</span>
+                      Agent: <span style={{ color: T.purple }}>{feedback.agentName || "â€”"}</span>
                     </div>
                   </div>
                 ))}
@@ -3615,7 +3615,7 @@ ${adminUser?.displayName || "Support Team"}`
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
               <button type="button" onClick={() => setShowWidgetPreview(true)}
                 style={{ padding: "8px 14px", borderRadius: 6, border: `1px solid ${T.teal}40`, background: `${T.teal}10`, color: T.teal, fontSize: 11, fontWeight: 600, cursor: "pointer" }}>
-                ââ‚¬¢ Widget Preview
+                â€¢ Widget Preview
               </button>
               <button type="button" onClick={() => setShowChatSettings(true)}
                 style={{ padding: "8px 14px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.surfaceAlt, color: T.textSecondary, fontSize: 11, fontWeight: 600, cursor: "pointer" }}>
@@ -3627,11 +3627,11 @@ ${adminUser?.displayName || "Support Team"}`
           {/* Chat Stats */}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 12 }}>
             {[
-              { label: "Active Chats", value: liveChats.filter(c => c.status === "active").length, color: T.green, icon: "ğŸâ€™¼" },
+              { label: "Active Chats", value: liveChats.filter(c => c.status === "active").length, color: T.green, icon: "ğŸ’¼" },
               { label: "In Queue", value: chatQueue.length, color: chatQueue.length > 0 ? T.orange : T.textMuted, icon: "" },
-              { label: "Handled Today", value: liveChats.filter(c => c.status === "ended").length, color: T.teal, icon: "âœâ€" },
-              { label: "Avg Wait", value: chatQueue.length > 0 ? `${Math.round(chatQueue.reduce((a, c) => a + (Date.now() - new Date(c.queuedAt).getTime()) / 1000, 0) / chatQueue.length / 60)}m` : "ââ‚¬â€", color: T.textSecondary, icon: "ââ€“â€™ï¸" },
-              { label: "Avg Duration", value: liveChats.filter(c => c.duration).length > 0 ? `${Math.round(liveChats.filter(c => c.duration).reduce((a, c) => a + c.duration, 0) / liveChats.filter(c => c.duration).length / 60)}m` : "ââ‚¬â€", color: T.textSecondary, icon: "ğŸâ€œˆ" },
+              { label: "Handled Today", value: liveChats.filter(c => c.status === "ended").length, color: T.teal, icon: "âœ”" },
+              { label: "Avg Wait", value: chatQueue.length > 0 ? `${Math.round(chatQueue.reduce((a, c) => a + (Date.now() - new Date(c.queuedAt).getTime()) / 1000, 0) / chatQueue.length / 60)}m` : "â€”", color: T.textSecondary, icon: "â–’ï¸" },
+              { label: "Avg Duration", value: liveChats.filter(c => c.duration).length > 0 ? `${Math.round(liveChats.filter(c => c.duration).reduce((a, c) => a + c.duration, 0) / liveChats.filter(c => c.duration).length / 60)}m` : "â€”", color: T.textSecondary, icon: "ğŸ“ˆ" },
             ].map((stat, i) => (
               <div key={i} style={{ padding: 16, background: T.surface, borderRadius: 10, border: `1px solid ${T.border}`, textAlign: "center" }}>
                 <div style={{ fontSize: 20, marginBottom: 4 }}>{stat.icon}</div>
@@ -3769,7 +3769,7 @@ ${adminUser?.displayName || "Support Team"}`
                       </div>
                       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                         <div style={{ fontSize: 12, color: T.textMuted, fontFamily: "'Fraunces',serif" }}>
-                          ââ‚¬¢ {durMins}:{durSecs.toString().padStart(2, "0")}
+                          â€¢ {durMins}:{durSecs.toString().padStart(2, "0")}
                         </div>
                         <button type="button" onClick={() => setActiveChatId(null)}
                           style={{ padding: "4px 8px", borderRadius: 4, border: `1px solid ${T.border}`, background: "transparent", color: T.textMuted, fontSize: 10, cursor: "pointer" }}>
@@ -3800,7 +3800,7 @@ ${adminUser?.displayName || "Support Team"}`
                           } catch (e) { notify("Error: " + e.message); }
                         }}
                           style={{ padding: "6px 10px", borderRadius: 5, border: `1px solid ${T.teal}40`, background: `${T.teal}10`, color: T.teal, fontSize: 10, fontWeight: 600, cursor: "pointer" }}>
-                          ğŸâ€œº Convert to Ticket
+                          ğŸ“º Convert to Ticket
                         </button>
                         <button type="button" onClick={() => {
                           setLiveChats(prev => prev.map(c => c.id === chat.id ? { ...c, status: "ended", endedAt: new Date().toISOString(), duration: chatDuration } : c));
@@ -3856,7 +3856,7 @@ ${adminUser?.displayName || "Support Team"}`
                         setLiveChats(prev => prev.map(c => c.id === chat.id ? { ...c, messages: [...(c.messages || []), { from: "visitor", text: reply, at: new Date().toISOString() }] } : c));
                       }}
                         style={{ width: "100%", padding: "6px 12px", borderRadius: 5, border: `1px dashed ${T.border}`, background: "transparent", color: T.textMuted, fontSize: 10, cursor: "pointer" }}>
-                        ğŸâ€™¼ Simulate Visitor Reply (Demo)
+                        ğŸ’¼ Simulate Visitor Reply (Demo)
                       </button>
                     </div>
                   </div>
@@ -3867,7 +3867,7 @@ ${adminUser?.displayName || "Support Team"}`
               <div style={{ padding: 16, background: T.surface, borderRadius: 12, border: `1px solid ${T.border}` }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <span style={{ fontSize: 14, fontWeight: 700, color: T.white }}>ââ‚¬¢ Active Chats</span>
+                    <span style={{ fontSize: 14, fontWeight: 700, color: T.white }}>â€¢ Active Chats</span>
                     {liveChats.filter(c => c.status === "active").length > 0 && (
                       <span style={{ padding: "2px 8px", borderRadius: 10, background: `${T.green}20`, color: T.green, fontSize: 11, fontWeight: 600 }}>{liveChats.filter(c => c.status === "active").length} live</span>
                     )}
@@ -3876,7 +3876,7 @@ ${adminUser?.displayName || "Support Team"}`
                 
                 {liveChats.filter(c => c.status === "active").length === 0 ? (
                   <div style={{ padding: 30, textAlign: "center", color: T.textMuted }}>
-                    <div style={{ fontSize: 28, marginBottom: 8 }}>ğŸâ€™¼</div>
+                    <div style={{ fontSize: 28, marginBottom: 8 }}>ğŸ’¼</div>
                     <div style={{ fontSize: 12 }}>No active chats</div>
                     <div style={{ fontSize: 11, color: T.textMuted, marginTop: 4 }}>Accept a visitor from the queue to start</div>
                   </div>
@@ -3914,7 +3914,7 @@ ${adminUser?.displayName || "Support Team"}`
                           )}
                           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                             <span style={{ fontSize: 10, color: T.textMuted }}>{chat.messages?.length || 0} messages</span>
-                            <span style={{ fontSize: 10, color: T.green }}>Click to open â†â€™</span>
+                            <span style={{ fontSize: 10, color: T.green }}>Click to open â†’</span>
                           </div>
                         </div>
                       );
@@ -3933,9 +3933,9 @@ ${adminUser?.displayName || "Support Team"}`
                             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                               <span style={{ fontSize: 12, fontWeight: 500, color: T.textSecondary }}>{chat.visitorName}</span>
                               <span style={{ fontSize: 10, color: T.textMuted }}>{chat.messages?.length || 0} msgs</span>
-                              {chat.convertedToTicket && <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: `${T.teal}20`, color: T.teal }}>â†â€™ Ticket</span>}
+                              {chat.convertedToTicket && <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: `${T.teal}20`, color: T.teal }}>â†’ Ticket</span>}
                             </div>
-                            <span style={{ fontSize: 10, color: T.textMuted }}>{chat.duration ? `${Math.floor(chat.duration / 60)}m ${chat.duration % 60}s` : "ââ‚¬â€"}</span>
+                            <span style={{ fontSize: 10, color: T.textMuted }}>{chat.duration ? `${Math.floor(chat.duration / 60)}m ${chat.duration % 60}s` : "â€”"}</span>
                           </div>
                         </div>
                       ))}
@@ -3948,7 +3948,7 @@ ${adminUser?.displayName || "Support Team"}`
 
           {/* Embed Code Section */}
           <div style={{ padding: 16, background: T.surface, borderRadius: 12, border: `1px solid ${T.border}` }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 12 }}>ğŸâ€”â„¢ Widget Embed Code</div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 12 }}>ğŸ—™ Widget Embed Code</div>
             <div style={{ padding: 12, background: T.bg, borderRadius: 8, fontFamily: "monospace", fontSize: 11, color: T.teal, lineHeight: 1.6, overflow: "auto" }}>
               {`<script src="https://chat.dxbanalytics.com/widget.js"></script>
 <script>
@@ -3969,7 +3969,7 @@ ${adminUser?.displayName || "Support Team"}`
   });
 </script>`); notify("Embed code copied!"); }}
               style={{ marginTop: 10, padding: "8px 16px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.surfaceAlt, color: T.textSecondary, fontSize: 11, fontWeight: 600, cursor: "pointer" }}>
-              ğŸâ€œ‹ Copy Code
+              ğŸ“‹ Copy Code
             </button>
           </div>
         </div>
@@ -3981,19 +3981,19 @@ ${adminUser?.displayName || "Support Team"}`
             <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <div style={{ width: 36, height: 36, borderRadius: "50%", background: "#25D366", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <span style={{ fontSize: 18 }}>ğŸâ€œ±</span>
+                  <span style={{ fontSize: 18 }}>ğŸ“±</span>
                 </div>
                 <div>
                   <div style={{ fontSize: 14, fontWeight: 700, color: T.white }}>WhatsApp Business</div>
                   <div style={{ fontSize: 11, color: T.textMuted }}>+971 4 XXX XXXX</div>
                 </div>
               </div>
-              <span style={{ fontSize: 10, padding: "4px 10px", borderRadius: 6, background: "#25D36620", color: "#25D366", fontWeight: 600 }}>âœâ€ Connected</span>
+              <span style={{ fontSize: 10, padding: "4px 10px", borderRadius: 6, background: "#25D36620", color: "#25D366", fontWeight: 600 }}>âœ” Connected</span>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
               <button type="button" onClick={() => setShowWhatsappTemplates(true)}
                 style={{ padding: "8px 14px", borderRadius: 6, border: `1px solid #25D36640`, background: "#25D36610", color: "#25D366", fontSize: 11, fontWeight: 600, cursor: "pointer" }}>
-                ââ‚¬¢ Message Templates
+                â€¢ Message Templates
               </button>
             </div>
           </div>
@@ -4001,11 +4001,11 @@ ${adminUser?.displayName || "Support Team"}`
           {/* WhatsApp Stats */}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 12 }}>
             {[
-              { label: "Active", value: whatsappConversations.filter(c => c.status === "active").length, color: "#25D366", icon: "ğŸâ€™¼" },
-              { label: "Unread", value: whatsappConversations.filter(c => !c.responded && c.status === "active").length, color: T.orange, icon: "ğŸâ€â€" },
-              { label: "Today", value: whatsappConversations.filter(c => new Date(c.createdAt) > new Date(Date.now() - 86400000)).length, color: T.teal, icon: "ğŸâ€œˆ" },
-              { label: "Converted", value: whatsappConversations.filter(c => c.convertedToTicket).length, color: T.purple, icon: "ââ‚¬¢" },
-              { label: "Avg Response", value: "~5m", color: T.textSecondary, icon: "ââ€“â€™ï¸" },
+              { label: "Active", value: whatsappConversations.filter(c => c.status === "active").length, color: "#25D366", icon: "ğŸ’¼" },
+              { label: "Unread", value: whatsappConversations.filter(c => !c.responded && c.status === "active").length, color: T.orange, icon: "ğŸ””" },
+              { label: "Today", value: whatsappConversations.filter(c => new Date(c.createdAt) > new Date(Date.now() - 86400000)).length, color: T.teal, icon: "ğŸ“ˆ" },
+              { label: "Converted", value: whatsappConversations.filter(c => c.convertedToTicket).length, color: T.purple, icon: "â€¢" },
+              { label: "Avg Response", value: "~5m", color: T.textSecondary, icon: "â–’ï¸" },
             ].map((stat, i) => (
               <div key={i} style={{ padding: 16, background: T.surface, borderRadius: 10, border: `1px solid ${T.border}`, textAlign: "center" }}>
                 <div style={{ fontSize: 20, marginBottom: 4 }}>{stat.icon}</div>
@@ -4020,7 +4020,7 @@ ${adminUser?.displayName || "Support Team"}`
             <div style={{ padding: 16, background: T.surface, borderRadius: 12, border: `1px solid ${T.border}` }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <span style={{ fontSize: 14, fontWeight: 700, color: T.white }}>ğŸâ€œ± Conversations</span>
+                  <span style={{ fontSize: 14, fontWeight: 700, color: T.white }}>ğŸ“± Conversations</span>
                   {whatsappConversations.filter(c => c.status === "active").length > 0 && (
                     <span style={{ padding: "2px 8px", borderRadius: 10, background: "#25D36620", color: "#25D366", fontSize: 11, fontWeight: 600 }}>{whatsappConversations.filter(c => c.status === "active").length}</span>
                   )}
@@ -4029,7 +4029,7 @@ ${adminUser?.displayName || "Support Team"}`
               
               {whatsappConversations.length === 0 ? (
                 <div style={{ padding: 30, textAlign: "center", color: T.textMuted }}>
-                  <div style={{ fontSize: 28, marginBottom: 8 }}>ğŸâ€œ±</div>
+                  <div style={{ fontSize: 28, marginBottom: 8 }}>ğŸ“±</div>
                   <div style={{ fontSize: 12 }}>No WhatsApp conversations</div>
                   <div style={{ fontSize: 11, color: T.textMuted, marginTop: 4 }}>Messages will appear here when customers contact you</div>
                 </div>
@@ -4064,7 +4064,7 @@ ${adminUser?.displayName || "Support Team"}`
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                           <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: `${T.gold}20`, color: T.gold, textTransform: "uppercase" }}>{conv.customerTier || "free"}</span>
                           {windowRemaining > 0 ? (
-                            <span style={{ fontSize: 9, color: windowRemaining < 4 ? T.orange : T.textMuted }}>ââ€“â€™ï¸ {Math.round(windowRemaining)}h window</span>
+                            <span style={{ fontSize: 9, color: windowRemaining < 4 ? T.orange : T.textMuted }}>â–’ï¸ {Math.round(windowRemaining)}h window</span>
                           ) : (
                             <span style={{ fontSize: 9, color: T.red }}>âš¡ï¸ Window expired</span>
                           )}
@@ -4164,7 +4164,7 @@ ${adminUser?.displayName || "Support Team"}`
                         } catch (e) { notify("Error: " + e.message); }
                       }}
                         style={{ padding: "6px 10px", borderRadius: 5, border: `1px solid ${T.teal}40`, background: `${T.teal}10`, color: T.teal, fontSize: 10, fontWeight: 600, cursor: "pointer" }}>
-                        ââ‚¬¢ Convert to Ticket
+                        â€¢ Convert to Ticket
                       </button>
                     </div>
                   </div>
@@ -4180,7 +4180,7 @@ ${adminUser?.displayName || "Support Team"}`
                           <span style={{ fontSize: 9, color: "#667781" }}>
                             {new Date(msg.at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                           </span>
-                          {msg.from === "agent" && <span style={{ fontSize: 9, color: "#53BDEB" }}>âœâ€âœâ€</span>}
+                          {msg.from === "agent" && <span style={{ fontSize: 9, color: "#53BDEB" }}>âœ”âœ”</span>}
                         </div>
                       </div>
                     ))}
@@ -4200,7 +4200,7 @@ ${adminUser?.displayName || "Support Team"}`
                     <div style={{ display: "flex", gap: 10 }}>
                       <button type="button" onClick={() => setShowWhatsappTemplates(true)}
                         style={{ padding: "10px 14px", borderRadius: 8, border: `1px solid #25D36640`, background: "#25D36610", color: "#25D366", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
-                        ââ‚¬¢ Templates
+                        â€¢ Templates
                       </button>
                       <input value={whatsappMessage} onChange={e => setWhatsappMessage(e.target.value)}
                         onKeyDown={e => {
@@ -4232,7 +4232,7 @@ ${adminUser?.displayName || "Support Team"}`
                       setWhatsappConversations(prev => prev.map(c => c.id === conv.id ? { ...c, messages: [...(c.messages || []), { from: "customer", text: reply, at: new Date().toISOString() }], lastCustomerMessage: new Date().toISOString(), responded: false } : c));
                     }}
                       style={{ width: "100%", padding: "6px 12px", borderRadius: 5, border: `1px dashed ${T.border}`, background: "transparent", color: T.textMuted, fontSize: 10, cursor: "pointer" }}>
-                      ğŸâ€œ± Simulate Customer Reply (Demo)
+                      ğŸ“± Simulate Customer Reply (Demo)
                     </button>
                   </div>
                 </div>
@@ -4244,7 +4244,7 @@ ${adminUser?.displayName || "Support Team"}`
           <div style={{ padding: 16, background: T.surface, borderRadius: 12, border: `1px solid ${T.border}` }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
               <div>
-                <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 8 }}>ğŸâ€œ± WhatsApp Business API</div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 8 }}>ğŸ“± WhatsApp Business API</div>
                 <div style={{ fontSize: 11, color: T.textMuted, lineHeight: 1.6 }}>
                   Connected via Meta Business API. Messages from customers open a 24-hour free-form messaging window.<br />
                   Outside this window, you must use pre-approved message templates.
@@ -4255,7 +4255,7 @@ ${adminUser?.displayName || "Support Team"}`
                    API Settings
                 </button>
                 <button type="button" style={{ padding: "8px 14px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.surfaceAlt, color: T.textSecondary, fontSize: 11, fontWeight: 600, cursor: "pointer" }}>
-                  ğŸâ€œˆ Delivery Reports
+                  ğŸ“ˆ Delivery Reports
                 </button>
               </div>
             </div>
@@ -4267,17 +4267,17 @@ ${adminUser?.displayName || "Support Team"}`
           {/* KB Categories */}
           {(() => {
             const kbCategories = [
-              { id: "getting-started", label: "Getting Started", icon: "ğŸâ€‡" },
-              { id: "billing", label: "Billing & Payments", icon: "ââ‚¬¢" },
-              { id: "technical", label: "Technical Issues", icon: "ââ‚¬¢" },
+              { id: "getting-started", label: "Getting Started", icon: "ğŸ”‡" },
+              { id: "billing", label: "Billing & Payments", icon: "â€¢" },
+              { id: "technical", label: "Technical Issues", icon: "â€¢" },
               { id: "features", label: "Features & How-To", icon: "" },
-              { id: "account", label: "Account Management", icon: "ââ‚¬¢" },
+              { id: "account", label: "Account Management", icon: "â€¢" },
             ];
             
             const qrCategories = [
-              { id: "general", label: "General", icon: "ğŸâ€™¼" },
-              { id: "technical", label: "Technical", icon: "ââ‚¬¢" },
-              { id: "billing", label: "Billing", icon: "ââ‚¬¢" },
+              { id: "general", label: "General", icon: "ğŸ’¼" },
+              { id: "technical", label: "Technical", icon: "â€¢" },
+              { id: "billing", label: "Billing", icon: "â€¢" },
             ];
             
             const filteredArticles = kbArticles.filter(a => {
@@ -4300,7 +4300,7 @@ ${adminUser?.displayName || "Support Team"}`
                 <div style={{ padding: 20, background: T.surface, borderRadius: 14, border: `1px solid ${T.border}` }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
                     <div style={{ fontSize: 15, fontWeight: 700, color: T.white, display: "flex", alignItems: "center", gap: 8 }}>
-                      ğŸâ€œ¬ Knowledge Base
+                      ğŸ“¬ Knowledge Base
                       <span style={{ fontSize: 10, padding: "3px 8px", borderRadius: 4, background: `${T.teal}20`, color: T.teal }}>{kbArticles.length} articles</span>
                     </div>
                     <button type="button" onClick={() => { setEditingArticle(null); setArticleForm({ title: "", content: "", category: "getting-started", tags: "" }); setShowKbModal(true); }}
@@ -4332,7 +4332,7 @@ ${adminUser?.displayName || "Support Team"}`
                         <span style={{ fontSize: 10, padding: "3px 8px", borderRadius: 4, background: `${T.teal}20`, color: T.teal }}>
                           {kbCategories.find(c => c.id === viewingArticle.category)?.icon} {kbCategories.find(c => c.id === viewingArticle.category)?.label}
                         </span>
-                        <span style={{ fontSize: 10, color: T.textMuted }}>ââ‚¬¢ {viewingArticle.views || 0} views</span>
+                        <span style={{ fontSize: 10, color: T.textMuted }}>â€¢ {viewingArticle.views || 0} views</span>
                         <span style={{ fontSize: 10, color: T.textMuted }}>ğŸŒ {viewingArticle.helpful || 0} helpful</span>
                       </div>
                       <div style={{ fontSize: 13, color: T.textSecondary, lineHeight: 1.8, whiteSpace: "pre-wrap" }}>{viewingArticle.content}</div>
@@ -4346,7 +4346,7 @@ ${adminUser?.displayName || "Support Team"}`
                       <div style={{ marginTop: 20, display: "flex", gap: 10 }}>
                         <button type="button" onClick={() => { setEditingArticle(viewingArticle); setArticleForm({ title: viewingArticle.title, content: viewingArticle.content, category: viewingArticle.category, tags: (viewingArticle.tags || []).join(", ") }); setShowKbModal(true); }}
                           style={{ padding: "8px 16px", borderRadius: 6, border: `1px solid ${T.border}`, background: "transparent", color: T.textMuted, fontSize: 11, cursor: "pointer" }}>
-                          âœâ€¦ï¸ Edit
+                          âœ…ï¸ Edit
                         </button>
                         <button type="button" onClick={async () => {
                           if (!window.confirm("Delete this article?")) return;
@@ -4358,7 +4358,7 @@ ${adminUser?.displayName || "Support Team"}`
                           } catch (e) { notify("Error: " + e.message); }
                         }}
                           style={{ padding: "8px 16px", borderRadius: 6, border: `1px solid ${T.red}40`, background: `${T.red}10`, color: T.red, fontSize: 11, cursor: "pointer" }}>
-                          ğŸâ„¢ï¸ Delete
+                          ğŸ™ï¸ Delete
                         </button>
                       </div>
                     </div>
@@ -4367,7 +4367,7 @@ ${adminUser?.displayName || "Support Team"}`
                     <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                       {articlesByCategory.length === 0 ? (
                         <div style={{ padding: 30, textAlign: "center", color: T.textMuted }}>
-                          <div style={{ fontSize: 24, marginBottom: 8 }}>ğŸâ€œ¬</div>
+                          <div style={{ fontSize: 24, marginBottom: 8 }}>ğŸ“¬</div>
                           <div style={{ fontSize: 12 }}>No articles found. Create your first article!</div>
                         </div>
                       ) : (
@@ -4378,7 +4378,7 @@ ${adminUser?.displayName || "Support Team"}`
                               <span style={{ fontSize: 13, fontWeight: 600, color: T.white }}>
                                 {cat.icon} {cat.label} <span style={{ fontSize: 11, color: T.textMuted, fontWeight: 400 }}>({cat.articles.length})</span>
                               </span>
-                              <span style={{ color: T.textMuted, fontSize: 12 }}>{expandedKbCategory === cat.id ? "ââ€”¼" : "ââ€“¶"}</span>
+                              <span style={{ color: T.textMuted, fontSize: 12 }}>{expandedKbCategory === cat.id ? "â—¼" : "â–¶"}</span>
                             </button>
                             {expandedKbCategory === cat.id && (
                               <div style={{ padding: "0 16px 16px" }}>
@@ -4389,7 +4389,7 @@ ${adminUser?.displayName || "Support Team"}`
                                     onMouseLeave={e => e.currentTarget.style.borderColor = T.border}>
                                     <div style={{ fontSize: 13, fontWeight: 500, color: T.white, marginBottom: 4 }}>{article.title}</div>
                                     <div style={{ display: "flex", gap: 12, fontSize: 10, color: T.textMuted }}>
-                                      <span>ââ‚¬¢ {article.views || 0}</span>
+                                      <span>â€¢ {article.views || 0}</span>
                                       <span>ğŸŒ {article.helpful || 0}</span>
                                     </div>
                                   </div>
@@ -4549,7 +4549,7 @@ ${adminUser?.displayName || "Support Team"}`
           <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
             <button type="button" onClick={() => setShowTimeEntryModal(true)}
               style={{ padding: "10px 16px", borderRadius: 8, border: "none", background: T.gold, color: T.bg, fontSize: 12, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
-              ğŸâ€œŒ Manual Entry
+              ğŸ“Œ Manual Entry
             </button>
             <div style={{ flex: 1 }} />
             <div style={{ fontSize: 11, color: T.textMuted }}>
@@ -4560,7 +4560,7 @@ ${adminUser?.displayName || "Support Team"}`
           {/* Agent Time Breakdown */}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: 20 }}>
             <div style={{ background: T.surface, borderRadius: 12, border: `1px solid ${T.border}`, padding: 16 }}>
-              <div style={{ fontSize: 12, fontWeight: 700, color: T.white, marginBottom: 16 }}>ââ‚¬¢ Agent Breakdown</div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: T.white, marginBottom: 16 }}>â€¢ Agent Breakdown</div>
               {getAgentTimeStats().length === 0 ? (
                 <div style={{ padding: 20, textAlign: "center", color: T.textMuted, fontSize: 12 }}>No time logged yet</div>
               ) : (
@@ -4587,7 +4587,7 @@ ${adminUser?.displayName || "Support Team"}`
             {/* Recent Time Entries */}
             <div style={{ background: T.surface, borderRadius: 12, border: `1px solid ${T.border}`, overflow: "hidden" }}>
               <div style={{ padding: 16, borderBottom: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <div style={{ fontSize: 12, fontWeight: 700, color: T.white }}>ââ‚¬¢ Recent Time Entries</div>
+                <div style={{ fontSize: 12, fontWeight: 700, color: T.white }}>â€¢ Recent Time Entries</div>
                 <div style={{ fontSize: 10, color: T.textMuted }}>{timeEntries.length} total</div>
               </div>
               <div style={{ maxHeight: 350, overflowY: "auto" }}>
@@ -4603,7 +4603,7 @@ ${adminUser?.displayName || "Support Team"}`
                           {ticket?.subject || entry.ticketId}
                         </div>
                         <div style={{ fontSize: 10, color: T.textMuted, marginTop: 2 }}>
-                          {entry.agentName} ââ‚¬¢ {entry.notes} ââ‚¬¢ {timeAgo(entry.createdAt)}
+                          {entry.agentName} â€¢ {entry.notes} â€¢ {timeAgo(entry.createdAt)}
                         </div>
                       </div>
                       <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
@@ -4614,7 +4614,7 @@ ${adminUser?.displayName || "Support Team"}`
                 })}
                 {timeEntries.length === 0 && (
                   <div style={{ padding: 40, textAlign: "center", color: T.textMuted }}>
-                    <div style={{ fontSize: 24, marginBottom: 8 }}>ââ€“â€™ï¸</div>
+                    <div style={{ fontSize: 24, marginBottom: 8 }}>â–’ï¸</div>
                     <div style={{ fontSize: 12 }}>No time entries yet</div>
                   </div>
                 )}
@@ -4687,7 +4687,7 @@ ${adminUser?.displayName || "Support Team"}`
           {/* Audit Log Table */}
           <div style={{ background: T.surface, borderRadius: 12, border: `1px solid ${T.border}`, overflow: "hidden" }}>
             <div style={{ padding: 16, borderBottom: `1px solid ${T.border}` }}>
-              <div style={{ fontSize: 12, fontWeight: 700, color: T.white }}>ğŸâ€œ‹ Ticket Audit Trail</div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: T.white }}>ğŸ“‹ Ticket Audit Trail</div>
             </div>
             <div style={{ maxHeight: 500, overflowY: "auto" }}>
               {ticketAuditLogs.filter(l => {
@@ -4703,16 +4703,16 @@ ${adminUser?.displayName || "Support Team"}`
                     {/* Action Icon */}
                     <div style={{ width: 32, height: 32, borderRadius: 8, background: `${getAuditActionColor(log.action)}20`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                       <span style={{ fontSize: 12 }}>
-                        {log.action === "created" ? "ââ‚¬¢" :
-                         log.action === "status_change" ? "ğŸâ€”„" :
-                         log.action === "assigned" ? "ââ‚¬¢" :
-                         log.action === "reply_sent" ? "ğŸâ€™¼" :
-                         log.action === "note_added" ? "ğŸâ€œ" :
-                         log.action === "tag_added" ? "ââ‚¬¢" :
-                         log.action === "tag_removed" ? "ââ‚¬¢" :
-                         log.action === "time_logged" ? "ââ€“â€™ï¸" :
-                         log.action === "escalated" ? "ğŸâ€¥" :
-                         log.action === "merged" ? "ğŸâ€”â„¢" : "ğŸâ€œ‹"}
+                        {log.action === "created" ? "â€¢" :
+                         log.action === "status_change" ? "ğŸ—„" :
+                         log.action === "assigned" ? "â€¢" :
+                         log.action === "reply_sent" ? "ğŸ’¼" :
+                         log.action === "note_added" ? "ğŸ“" :
+                         log.action === "tag_added" ? "â€¢" :
+                         log.action === "tag_removed" ? "â€¢" :
+                         log.action === "time_logged" ? "â–’ï¸" :
+                         log.action === "escalated" ? "ğŸ”¥" :
+                         log.action === "merged" ? "ğŸ—™" : "ğŸ“‹"}
                       </span>
                     </div>
                     
@@ -4732,7 +4732,7 @@ ${adminUser?.displayName || "Support Team"}`
                       {log.details && (
                         <div style={{ fontSize: 10, color: T.textMuted, marginTop: 4 }}>
                           {log.action === "status_change" && log.details.from && log.details.to && (
-                            <span>{log.details.from} â†â€™ {log.details.to}</span>
+                            <span>{log.details.from} â†’ {log.details.to}</span>
                           )}
                           {log.action === "assigned" && log.details.to && (
                             <span>Assigned to: {log.details.to}</span>
@@ -4759,14 +4759,14 @@ ${adminUser?.displayName || "Support Team"}`
                       if (t) { setTicketDrawer(t); setSupportSubTab("all"); }
                     }}
                       style={{ padding: "6px 10px", borderRadius: 6, border: `1px solid ${T.border}`, background: "transparent", color: T.textMuted, fontSize: 10, cursor: "pointer" }}>
-                      View â†â€™
+                      View â†’
                     </button>
                   </div>
                 );
               })}
               {ticketAuditLogs.length === 0 && (
                 <div style={{ padding: 60, textAlign: "center", color: T.textMuted }}>
-                  <div style={{ fontSize: 32, marginBottom: 12 }}>ğŸâ€œ‹</div>
+                  <div style={{ fontSize: 32, marginBottom: 12 }}>ğŸ“‹</div>
                   <div style={{ fontSize: 14, fontWeight: 600, color: T.textSecondary }}>No audit logs yet</div>
                   <div style={{ fontSize: 12 }}>Actions will be logged as you work on tickets</div>
                 </div>
@@ -4781,15 +4781,15 @@ ${adminUser?.displayName || "Support Team"}`
           <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
             <button type="button" onClick={() => setShowExportModal(true)}
               style={{ padding: "10px 16px", borderRadius: 8, border: "none", background: T.teal, color: T.bg, fontSize: 12, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
-              ğŸâ€œâ€˜ Export Tickets
+              ğŸ“‘ Export Tickets
             </button>
             <button type="button" onClick={exportTimeEntries}
               style={{ padding: "10px 16px", borderRadius: 8, border: `1px solid ${T.gold}`, background: "transparent", color: T.gold, fontSize: 12, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
-              ââ€“â€™ï¸ Export Time
+              â–’ï¸ Export Time
             </button>
             <button type="button" onClick={exportAuditLogs}
               style={{ padding: "10px 16px", borderRadius: 8, border: `1px solid ${T.purple}`, background: "transparent", color: T.purple, fontSize: 12, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
-              ğŸâ€œ‹ Export Audit Logs
+              ğŸ“‹ Export Audit Logs
             </button>
           </div>
 
@@ -4798,7 +4798,7 @@ ${adminUser?.displayName || "Support Team"}`
             <div style={{ background: T.surface, borderRadius: 12, border: `1px solid ${T.border}`, overflow: "hidden" }}>
               <div style={{ padding: 16, borderBottom: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <div>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: T.white }}>ğŸâ€”â„¢ Webhooks</div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: T.white }}>ğŸ—™ Webhooks</div>
                   <div style={{ fontSize: 10, color: T.textMuted, marginTop: 2 }}>Send events to external services</div>
                 </div>
                 <button type="button" onClick={() => { setEditingWebhook(null); setWebhookForm({ name: "", url: "", events: ["ticket_created"], enabled: true, secret: "" }); setShowWebhookModal(true); }}
@@ -4809,7 +4809,7 @@ ${adminUser?.displayName || "Support Team"}`
               <div style={{ maxHeight: 280, overflowY: "auto" }}>
                 {webhooks.length === 0 ? (
                   <div style={{ padding: 40, textAlign: "center", color: T.textMuted }}>
-                    <div style={{ fontSize: 24, marginBottom: 8 }}>ğŸâ€”â„¢</div>
+                    <div style={{ fontSize: 24, marginBottom: 8 }}>ğŸ—™</div>
                     <div style={{ fontSize: 12 }}>No webhooks configured</div>
                   </div>
                 ) : (
@@ -4836,7 +4836,7 @@ ${adminUser?.displayName || "Support Team"}`
                         </button>
                         <button type="button" onClick={() => deleteWebhook(webhook.id)}
                           style={{ padding: "4px 8px", borderRadius: 4, border: `1px solid ${T.red}30`, background: "transparent", color: T.red, fontSize: 9, cursor: "pointer" }}>
-                          Ãâ€”
+                          Ã—
                         </button>
                       </div>
                     </div>
@@ -4849,7 +4849,7 @@ ${adminUser?.displayName || "Support Team"}`
             <div style={{ background: T.surface, borderRadius: 12, border: `1px solid ${T.border}`, overflow: "hidden" }}>
               <div style={{ padding: 16, borderBottom: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <div>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: T.white }}>ğŸâ€”‰ Agent Permissions</div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: T.white }}>ğŸ—‰ Agent Permissions</div>
                   <div style={{ fontSize: 10, color: T.textMuted, marginTop: 2 }}>Role-based access control</div>
                 </div>
                 <button type="button" onClick={() => { setEditingPermission(null); setPermissionForm({ agentId: "", role: "agent" }); setShowPermissionsModal(true); }}
@@ -4860,7 +4860,7 @@ ${adminUser?.displayName || "Support Team"}`
               <div style={{ maxHeight: 280, overflowY: "auto" }}>
                 {agentPermissions.length === 0 ? (
                   <div style={{ padding: 40, textAlign: "center", color: T.textMuted }}>
-                    <div style={{ fontSize: 24, marginBottom: 8 }}>ğŸâ€”‰</div>
+                    <div style={{ fontSize: 24, marginBottom: 8 }}>ğŸ—‰</div>
                     <div style={{ fontSize: 12 }}>No permissions configured</div>
                   </div>
                 ) : (
@@ -4884,7 +4884,7 @@ ${adminUser?.displayName || "Support Team"}`
                         </button>
                         <button type="button" onClick={() => deletePermission(perm.id)}
                           style={{ padding: "4px 8px", borderRadius: 4, border: `1px solid ${T.red}30`, background: "transparent", color: T.red, fontSize: 9, cursor: "pointer" }}>
-                          Ãâ€”
+                          Ã—
                         </button>
                       </div>
                     );
@@ -4897,7 +4897,7 @@ ${adminUser?.displayName || "Support Team"}`
           {/* Webhook Logs */}
           <div style={{ background: T.surface, borderRadius: 12, border: `1px solid ${T.border}`, overflow: "hidden" }}>
             <div style={{ padding: 16, borderBottom: `1px solid ${T.border}` }}>
-              <div style={{ fontSize: 14, fontWeight: 700, color: T.white }}>ğŸâ€œœ Webhook Logs</div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: T.white }}>ğŸ“œ Webhook Logs</div>
               <div style={{ fontSize: 10, color: T.textMuted, marginTop: 2 }}>Recent webhook delivery attempts</div>
             </div>
             <div style={{ maxHeight: 250, overflowY: "auto" }}>
@@ -4911,7 +4911,7 @@ ${adminUser?.displayName || "Support Team"}`
                     <div style={{ width: 8, height: 8, borderRadius: "50%", background: log.status === "success" ? T.green : T.red }} />
                     <div style={{ flex: 1 }}>
                       <div style={{ fontSize: 11, color: T.white }}>{log.webhookName}</div>
-                      <div style={{ fontSize: 10, color: T.textMuted }}>{log.event} ââ‚¬¢ {log.statusCode}</div>
+                      <div style={{ fontSize: 10, color: T.textMuted }}>{log.event} â€¢ {log.statusCode}</div>
                     </div>
                     <span style={{ fontSize: 9, padding: "2px 8px", borderRadius: 4, background: log.status === "success" ? `${T.green}20` : `${T.red}20`, color: log.status === "success" ? T.green : T.red }}>
                       {log.status}
@@ -4925,7 +4925,7 @@ ${adminUser?.displayName || "Support Team"}`
 
           {/* Role Descriptions */}
           <div style={{ background: T.surface, borderRadius: 12, border: `1px solid ${T.border}`, padding: 16 }}>
-            <div style={{ fontSize: 12, fontWeight: 700, color: T.white, marginBottom: 12 }}>ğŸâ€œ› Role Permissions</div>
+            <div style={{ fontSize: 12, fontWeight: 700, color: T.white, marginBottom: 12 }}>ğŸ“› Role Permissions</div>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
               {permissionRoles.map(role => (
                 <div key={role.id} style={{ padding: 12, background: `${role.color}10`, borderRadius: 8, border: `1px solid ${role.color}30` }}>
@@ -4945,7 +4945,7 @@ ${adminUser?.displayName || "Support Team"}`
           </div>
         ) : filteredTickets.length === 0 ? (
           <div style={{ padding: 60, textAlign: "center", color: T.textMuted }}>
-            <div style={{ fontSize: 32, marginBottom: 12 }}>ğŸâ€œ¡</div>
+            <div style={{ fontSize: 32, marginBottom: 12 }}>ğŸ“¡</div>
             <div style={{ fontSize: 14, fontWeight: 600, color: T.textSecondary }}>No tickets found</div>
             <div style={{ fontSize: 12 }}>{supportSubTab === "open" ? "All caught up!" : "Try adjusting your filters"}</div>
           </div>
@@ -4969,13 +4969,13 @@ ${adminUser?.displayName || "Support Team"}`
                     <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4, flexWrap: "wrap" }}>
                       <span style={{ fontSize: 13, fontWeight: 600, color: T.white, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{ticket.subject}</span>
                       {sentiment.sentiment !== "neutral" && <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: `${sentiment.color}20`, color: sentiment.color, fontWeight: 600 }}>{sentiment.emoji}</span>}
-                      {ticket.channel && ticket.channel !== "email" && <span style={{ fontSize: 8, padding: "2px 6px", borderRadius: 4, background: ticket.channel === "chat" ? `${T.green}20` : ticket.channel === "whatsapp" ? "#25D36620" : `${T.purple}20`, color: ticket.channel === "chat" ? T.green : ticket.channel === "whatsapp" ? "#25D366" : T.purple, fontWeight: 600 }}>{ticket.channel === "chat" ? "ğŸâ€™¼ CHAT" : ticket.channel === "whatsapp" ? "ğŸâ€œ± WA" : "ğŸâ€œ§ CALL"}</span>}
-                      {slaInfo.status === "breached" && <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: `${T.red}20`, color: T.red, fontWeight: 600 }}>ââ€“â€˜ SLA {slaInfo.percent}%</span>}
+                      {ticket.channel && ticket.channel !== "email" && <span style={{ fontSize: 8, padding: "2px 6px", borderRadius: 4, background: ticket.channel === "chat" ? `${T.green}20` : ticket.channel === "whatsapp" ? "#25D36620" : `${T.purple}20`, color: ticket.channel === "chat" ? T.green : ticket.channel === "whatsapp" ? "#25D366" : T.purple, fontWeight: 600 }}>{ticket.channel === "chat" ? "ğŸ’¼ CHAT" : ticket.channel === "whatsapp" ? "ğŸ“± WA" : "ğŸ“§ CALL"}</span>}
+                      {slaInfo.status === "breached" && <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: `${T.red}20`, color: T.red, fontWeight: 600 }}>â–‘ SLA {slaInfo.percent}%</span>}
                       {slaInfo.status === "warning" && <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: `${T.orange}20`, color: T.orange, fontWeight: 600 }}>âš¡ï¸ {slaInfo.percent}%</span>}
-                      {ticket.autoAssignedBy && <span style={{ fontSize: 8, padding: "2px 6px", borderRadius: 4, background: `${T.green}20`, color: T.green, fontWeight: 600 }}>ğŸâ€˜› Auto</span>}
+                      {ticket.autoAssignedBy && <span style={{ fontSize: 8, padding: "2px 6px", borderRadius: 4, background: `${T.green}20`, color: T.green, fontWeight: 600 }}>ğŸ‘› Auto</span>}
                       {ticket.autoEscalated && <span style={{ fontSize: 8, padding: "2px 6px", borderRadius: 4, background: `${T.red}20`, color: T.red, fontWeight: 600 }}>âš¡ Escalated</span>}
                       {ticket.mergedInto && <span style={{ fontSize: 8, padding: "2px 6px", borderRadius: 4, background: `${T.textMuted}20`, color: T.textMuted, fontWeight: 600 }}> MERGED</span>}
-                      {(ticket.linkedTickets || []).length > 0 && !ticket.mergedInto && <span style={{ fontSize: 8, padding: "2px 6px", borderRadius: 4, background: `${T.teal}20`, color: T.teal, fontWeight: 600 }}>ğŸâ€”â„¢ {ticket.linkedTickets.length}</span>}
+                      {(ticket.linkedTickets || []).length > 0 && !ticket.mergedInto && <span style={{ fontSize: 8, padding: "2px 6px", borderRadius: 4, background: `${T.teal}20`, color: T.teal, fontWeight: 600 }}>ğŸ—™ {ticket.linkedTickets.length}</span>}
                       {ticketTags.slice(0, 2).map(tagId => {
                         const tag = availableTags.find(t => t.id === tagId);
                         return tag ? <span key={tagId} style={{ fontSize: 8, padding: "2px 6px", borderRadius: 4, background: `${tag.color}20`, color: tag.color, fontWeight: 600 }}>{tag.label}</span> : null;
@@ -4988,7 +4988,7 @@ ${adminUser?.displayName || "Support Team"}`
                       <span style={{ padding: "2px 6px", borderRadius: 4, background: `${cat.color}20`, color: cat.color, fontSize: 10 }}>{cat.icon} {cat.label}</span>
                       <span>Â·</span>
                       <span>{timeAgo(ticket.createdAt)}</span>
-                      {ticket.assignedTo && <><span>Â·</span><span style={{ color: T.purple }}>ââ‚¬¢ {ticket.assignedToName || "Assigned"}</span></>}
+                      {ticket.assignedTo && <><span>Â·</span><span style={{ color: T.purple }}>â€¢ {ticket.assignedToName || "Assigned"}</span></>}
                       {/* SLA Progress Bar */}
                       {slaInfo.status !== "resolved" && (
                         <>
@@ -5030,7 +5030,7 @@ ${adminUser?.displayName || "Support Team"}`
                   ))}
                 </div>
                 <span style={{ fontSize: 11, color: T.purple, fontWeight: 500 }}>
-                  ââ‚¬¢ {viewingAdmins.map(a => a.name).join(", ")} {viewingAdmins.length === 1 ? "is" : "are"} also viewing this ticket
+                  â€¢ {viewingAdmins.map(a => a.name).join(", ")} {viewingAdmins.length === 1 ? "is" : "are"} also viewing this ticket
                 </span>
               </div>
             )}
@@ -5041,7 +5041,7 @@ ${adminUser?.displayName || "Support Team"}`
                 <div style={{ flex: 1 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6, flexWrap: "wrap" }}>
                     <span style={{ fontSize: 10, padding: "3px 8px", borderRadius: 4, background: `${(categories.find(c => c.id === ticketDrawer.category) || categories[5]).color}20`, color: (categories.find(c => c.id === ticketDrawer.category) || categories[5]).color }}>{(categories.find(c => c.id === ticketDrawer.category) || categories[5]).icon} {(categories.find(c => c.id === ticketDrawer.category) || categories[5]).label}</span>
-                    {isSlaBreached(ticketDrawer) && <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: `${T.red}20`, color: T.red, fontWeight: 600 }}>ââ€“â€˜ SLA Breached</span>}
+                    {isSlaBreached(ticketDrawer) && <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: `${T.red}20`, color: T.red, fontWeight: 600 }}>â–‘ SLA Breached</span>}
                     {/* Sentiment Badge */}
                     {(() => {
                       const sentiment = analyzeSentiment(ticketDrawer);
@@ -5057,9 +5057,9 @@ ${adminUser?.displayName || "Support Team"}`
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                   <button type="button" onClick={() => setShowAiPanel(!showAiPanel)}
                     style={{ padding: "6px 10px", borderRadius: 6, border: `1px solid ${showAiPanel ? T.teal : T.border}`, background: showAiPanel ? `${T.teal}15` : "transparent", color: showAiPanel ? T.teal : T.textMuted, fontSize: 10, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}>
-                    ğŸâ€˜› AI
+                    ğŸ‘› AI
                   </button>
-                  <button type="button" onClick={() => setTicketDrawer(null)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 24, lineHeight: 1 }}>Ãâ€”</button>
+                  <button type="button" onClick={() => setTicketDrawer(null)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 24, lineHeight: 1 }}>Ã—</button>
                 </div>
               </div>
               
@@ -5080,8 +5080,8 @@ ${adminUser?.displayName || "Support Team"}`
                 </select>
                 <select value={ticketDrawer.assignedTo || "unassigned"} onChange={e => { const agent = assignableAgents.find(a => a.id === e.target.value); assignTicket(ticketDrawer.id, e.target.value, agent?.name || ""); }}
                   style={{ padding: "6px 12px", borderRadius: 6, border: `1px solid ${ticketDrawer.assignedTo ? T.purple : T.border}40`, background: ticketDrawer.assignedTo ? `${T.purple}20` : T.surfaceAlt, color: ticketDrawer.assignedTo ? T.purple : T.textMuted, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
-                  <option value="unassigned">ââ‚¬¢ Unassigned</option>
-                  {assignableAgents.filter(a => a.id !== "unassigned").map(a => <option key={a.id} value={a.id}>ââ‚¬¢ {a.name}</option>)}
+                  <option value="unassigned">â€¢ Unassigned</option>
+                  {assignableAgents.filter(a => a.id !== "unassigned").map(a => <option key={a.id} value={a.id}>â€¢ {a.name}</option>)}
                 </select>
               </div>
 
@@ -5093,7 +5093,7 @@ ${adminUser?.displayName || "Support Team"}`
                   return tag ? (
                     <span key={tagId} style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 10, padding: "3px 8px", borderRadius: 4, background: `${tag.color}20`, color: tag.color, fontWeight: 600 }}>
                       {tag.label}
-                      <button type="button" onClick={() => removeTag(ticketDrawer.id, tagId)} style={{ background: "none", border: "none", color: tag.color, cursor: "pointer", fontSize: 12, lineHeight: 1, padding: 0 }}>Ãâ€”</button>
+                      <button type="button" onClick={() => removeTag(ticketDrawer.id, tagId)} style={{ background: "none", border: "none", color: tag.color, cursor: "pointer", fontSize: 12, lineHeight: 1, padding: 0 }}>Ã—</button>
                     </span>
                   ) : null;
                 })}
@@ -5108,11 +5108,11 @@ ${adminUser?.displayName || "Support Team"}`
               <div style={{ marginTop: 12, display: "flex", gap: 8, flexWrap: "wrap" }}>
                 <button type="button" onClick={() => setShowMergeModal(true)}
                   style={{ padding: "5px 10px", borderRadius: 5, border: `1px solid ${T.border}`, background: "transparent", color: T.textMuted, fontSize: 10, fontWeight: 500, cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}>
-                  ââ‚¬¢ Merge Ticket
+                  â€¢ Merge Ticket
                 </button>
                 <button type="button" onClick={() => setShowLinkModal(true)}
                   style={{ padding: "5px 10px", borderRadius: 5, border: `1px solid ${T.border}`, background: "transparent", color: T.textMuted, fontSize: 10, fontWeight: 500, cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}>
-                  ğŸâ€”â„¢ Link Related
+                  ğŸ—™ Link Related
                 </button>
                 {ticketDrawer.mergedInto && (
                   <span style={{ fontSize: 10, color: T.textMuted, fontStyle: "italic" }}>
@@ -5125,7 +5125,7 @@ ${adminUser?.displayName || "Support Team"}`
               {(ticketDrawer.linkedTickets || []).length > 0 && (
                 <div style={{ marginTop: 12, padding: "10px 12px", background: `${T.teal}08`, borderRadius: 8, border: `1px solid ${T.teal}20` }}>
                   <div style={{ fontSize: 10, fontWeight: 600, color: T.teal, marginBottom: 8, display: "flex", alignItems: "center", gap: 4 }}>
-                    ğŸâ€”â„¢ Linked Tickets ({ticketDrawer.linkedTickets.length})
+                    ğŸ—™ Linked Tickets ({ticketDrawer.linkedTickets.length})
                   </div>
                   <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                     {ticketDrawer.linkedTickets.map((link, i) => (
@@ -5145,7 +5145,7 @@ ${adminUser?.displayName || "Support Team"}`
                         {link.type !== "merged" && (
                           <button type="button" onClick={() => unlinkTicket(link.id)}
                             style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 12, padding: 2 }}>
-                            Ãâ€”
+                            Ã—
                           </button>
                         )}
                       </div>
@@ -5158,7 +5158,7 @@ ${adminUser?.displayName || "Support Team"}`
               <div style={{ marginTop: 12, padding: "10px 12px", background: `${T.gold}08`, borderRadius: 8, border: `1px solid ${T.gold}20` }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
                   <div style={{ fontSize: 10, fontWeight: 600, color: T.gold, display: "flex", alignItems: "center", gap: 4 }}>
-                    ââ€“â€™ï¸ Time Tracking
+                    â–’ï¸ Time Tracking
                   </div>
                   <div style={{ fontSize: 11, fontWeight: 700, color: T.white }}>
                     Total: {getTicketTimeTotal(ticketDrawer.id)}m
@@ -5178,7 +5178,7 @@ ${adminUser?.displayName || "Support Team"}`
                 ) : (
                   <button type="button" onClick={() => startTimer(ticketDrawer.id)} disabled={activeTimer !== null}
                     style={{ width: "100%", padding: "8px 12px", borderRadius: 6, border: `1px solid ${activeTimer ? T.border : T.gold}`, background: activeTimer ? "transparent" : `${T.gold}15`, color: activeTimer ? T.textMuted : T.gold, fontSize: 11, fontWeight: 600, cursor: activeTimer ? "not-allowed" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
-                    ââ€“¶ï¸ {activeTimer ? "Timer running on another ticket" : "Start Timer"}
+                    â–¶ï¸ {activeTimer ? "Timer running on another ticket" : "Start Timer"}
                   </button>
                 )}
                 
@@ -5190,7 +5190,7 @@ ${adminUser?.displayName || "Support Team"}`
                         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                           <span style={{ fontSize: 11, fontWeight: 600, color: entry.billable ? T.green : T.textMuted }}>{entry.duration}m</span>
                           <span style={{ fontSize: 10, color: T.textSecondary }}>{entry.agentName}</span>
-                          {entry.notes && <span style={{ fontSize: 9, color: T.textMuted }}>ââ‚¬¢ {entry.notes.slice(0, 20)}</span>}
+                          {entry.notes && <span style={{ fontSize: 9, color: T.textMuted }}>â€¢ {entry.notes.slice(0, 20)}</span>}
                         </div>
                         <span style={{ fontSize: 9, color: T.textMuted }}>{timeAgo(entry.createdAt)}</span>
                       </div>
@@ -5203,7 +5203,7 @@ ${adminUser?.displayName || "Support Team"}`
               {customFields.length > 0 && (
                 <div style={{ marginTop: 12, padding: "10px 12px", background: `${T.cyan}08`, borderRadius: 8, border: `1px solid ${T.cyan}20` }}>
                   <div style={{ fontSize: 10, fontWeight: 600, color: T.cyan, marginBottom: 10, display: "flex", alignItems: "center", gap: 4 }}>
-                    ğŸâ€œ‹ Custom Fields
+                    ğŸ“‹ Custom Fields
                   </div>
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
                     {customFields.map(field => {
@@ -5272,7 +5272,7 @@ ${adminUser?.displayName || "Support Team"}`
                 <div style={{ padding: "12px 24px", background: `${T.gold}08`, borderBottom: `1px solid ${T.gold}20` }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                      <span style={{ fontSize: 11, fontWeight: 600, color: T.gold }}>ââ‚¬¢ Customer Satisfaction</span>
+                      <span style={{ fontSize: 11, fontWeight: 600, color: T.gold }}>â€¢ Customer Satisfaction</span>
                       {ticketCsat ? (
                         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                           <span style={{ fontSize: 14, color: ticketCsat.rating >= 4 ? T.green : ticketCsat.rating >= 3 ? T.orange : T.red }}>
@@ -5305,7 +5305,7 @@ ${adminUser?.displayName || "Support Team"}`
               <div style={{ padding: "16px 24px", background: `${T.teal}08`, borderBottom: `1px solid ${T.teal}20` }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <span style={{ fontSize: 12, fontWeight: 700, color: T.teal }}>ğŸâ€˜› AI Insights</span>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: T.teal }}>ğŸ‘› AI Insights</span>
                     {summaryLoading && <span style={{ fontSize: 10, color: T.textMuted }}>Analyzing...</span>}
                   </div>
                   <button type="button" onClick={() => generateAiSummary(ticketDrawer)} disabled={summaryLoading}
@@ -5348,7 +5348,7 @@ ${adminUser?.displayName || "Support Team"}`
                               {aiPriority.recommended}
                             </div>
                             <div style={{ fontSize: 10, color: T.textMuted }}>
-                              {aiPriority.reasons.slice(0, 2).join(" ââ‚¬¢ ")}
+                              {aiPriority.reasons.slice(0, 2).join(" â€¢ ")}
                             </div>
                           </div>
                           {needsChange && aiPriority.recommended !== "normal" && (
@@ -5376,7 +5376,7 @@ ${adminUser?.displayName || "Support Team"}`
                         <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
                           {ticketSummary.keyPoints.map((point, i) => (
                             <div key={i} style={{ fontSize: 11, color: T.textSecondary, display: "flex", alignItems: "flex-start", gap: 6 }}>
-                              <span style={{ color: T.teal }}>ââ‚¬¢</span> {point}
+                              <span style={{ color: T.teal }}>â€¢</span> {point}
                             </div>
                           ))}
                         </div>
@@ -5406,7 +5406,7 @@ ${adminUser?.displayName || "Support Team"}`
                   </div>
                 ) : (
                   <div style={{ padding: 16, background: T.surface, borderRadius: 8, textAlign: "center" }}>
-                    <div style={{ fontSize: 11, color: T.teal }}>ğŸâ€”„ Analyzing ticket content...</div>
+                    <div style={{ fontSize: 11, color: T.teal }}>ğŸ—„ Analyzing ticket content...</div>
                   </div>
                 )}
                 
@@ -5414,8 +5414,8 @@ ${adminUser?.displayName || "Support Team"}`
                 <div style={{ marginTop: 12 }}>
                   <button type="button" onClick={() => { if (!showSimilarTickets) updateSimilarTickets(ticketDrawer); setShowSimilarTickets(!showSimilarTickets); }}
                     style={{ width: "100%", padding: "10px 14px", borderRadius: 8, border: `1px solid ${T.border}`, background: showSimilarTickets ? T.surface : "transparent", color: T.textSecondary, fontSize: 11, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                    <span>ğŸâ€”â„¢ Similar Resolved Tickets {similarTickets.length > 0 && `(${similarTickets.length})`}</span>
-                    <span style={{ fontSize: 10, color: T.textMuted }}>{showSimilarTickets ? "" : "ââ€”¼"}</span>
+                    <span>ğŸ—™ Similar Resolved Tickets {similarTickets.length > 0 && `(${similarTickets.length})`}</span>
+                    <span style={{ fontSize: 10, color: T.textMuted }}>{showSimilarTickets ? "" : "â—¼"}</span>
                   </button>
                   
                   {showSimilarTickets && (
@@ -5434,7 +5434,7 @@ ${adminUser?.displayName || "Support Team"}`
                                   {sim.subject}
                                 </div>
                                 <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
-                                  <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: `${T.green}20`, color: T.green }}>âœâ€ Resolved</span>
+                                  <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: `${T.green}20`, color: T.green }}>âœ” Resolved</span>
                                   <span style={{ fontSize: 9, color: T.textMuted }}>{timeAgo(sim.resolvedAt || sim.updatedAt)}</span>
                                 </div>
                               </div>
@@ -5451,7 +5451,7 @@ ${adminUser?.displayName || "Support Team"}`
                                 </div>
                               )}
                               <div style={{ marginTop: 8, display: "flex", justifyContent: "flex-end" }}>
-                                <span style={{ fontSize: 9, color: T.teal }}>Click to view full ticket â†â€™</span>
+                                <span style={{ fontSize: 9, color: T.teal }}>Click to view full ticket â†’</span>
                               </div>
                             </div>
                           ))}
@@ -5482,7 +5482,7 @@ ${adminUser?.displayName || "Support Team"}`
                               </a>
                             ) : (
                               <a href={msg.attachment.url} target="_blank" rel="noopener noreferrer" style={{ display: "flex", alignItems: "center", gap: 8, color: msg.from === "admin" ? T.bg : T.teal, textDecoration: "none" }}>
-                                <span style={{ fontSize: 20 }}>ğŸâ€œ„</span>
+                                <span style={{ fontSize: 20 }}>ğŸ“„</span>
                                 <div>
                                   <div style={{ fontSize: 12, fontWeight: 600 }}>{msg.attachment.name}</div>
                                   <div style={{ fontSize: 10, opacity: 0.7 }}>{(msg.attachment.size / 1024).toFixed(1)} KB</div>
@@ -5506,7 +5506,7 @@ ${adminUser?.displayName || "Support Team"}`
               {(ticketDrawer.internalNotes?.length > 0 || true) && (
                 <div style={{ padding: "16px 24px", background: `${T.orange}08`, borderTop: `1px dashed ${T.orange}30` }}>
                   <div style={{ fontSize: 10, fontWeight: 700, color: T.orange, textTransform: "uppercase", letterSpacing: 1, marginBottom: 12, display: "flex", alignItems: "center", gap: 6 }}>
-                    ğŸâ€” Internal Notes <span style={{ fontWeight: 400, color: T.textMuted }}>(hidden from customer)</span>
+                    ğŸ— Internal Notes <span style={{ fontWeight: 400, color: T.textMuted }}>(hidden from customer)</span>
                   </div>
                   <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                     {(ticketDrawer.internalNotes || []).map((note, i) => (
@@ -5521,7 +5521,7 @@ ${adminUser?.displayName || "Support Team"}`
                               </a>
                             ) : (
                               <a href={note.attachment.url} target="_blank" rel="noopener noreferrer" style={{ display: "flex", alignItems: "center", gap: 8, color: T.teal, textDecoration: "none" }}>
-                                <span style={{ fontSize: 18 }}>ğŸâ€œ„</span>
+                                <span style={{ fontSize: 18 }}>ğŸ“„</span>
                                 <div>
                                   <div style={{ fontSize: 11, fontWeight: 600 }}>{note.attachment.name}</div>
                                   <div style={{ fontSize: 9, color: T.textMuted }}>{(note.attachment.size / 1024).toFixed(1)} KB</div>
@@ -5556,16 +5556,16 @@ ${adminUser?.displayName || "Support Team"}`
                 <div style={{ display: "flex", gap: 8, marginBottom: 12, alignItems: "center" }}>
                   <button type="button" onClick={() => setReplyMode("reply")}
                     style={{ padding: "6px 14px", borderRadius: 6, border: `1px solid ${replyMode === "reply" ? T.gold : T.border}`, background: replyMode === "reply" ? T.goldGlow : "transparent", color: replyMode === "reply" ? T.gold : T.textMuted, fontSize: 11, fontWeight: 600, cursor: "pointer" }}>
-                    ğŸâ€™¼ Reply to Customer
+                    ğŸ’¼ Reply to Customer
                   </button>
                   <button type="button" onClick={() => setReplyMode("note")}
                     style={{ padding: "6px 14px", borderRadius: 6, border: `1px solid ${replyMode === "note" ? T.orange : T.border}`, background: replyMode === "note" ? `${T.orange}15` : "transparent", color: replyMode === "note" ? T.orange : T.textMuted, fontSize: 11, fontWeight: 600, cursor: "pointer" }}>
-                    ğŸâ€” Internal Note
+                    ğŸ— Internal Note
                   </button>
                   <div style={{ flex: 1 }} />
                   <button type="button" onClick={() => fileInputRef.current?.click()} disabled={uploading}
                     style={{ padding: "6px 12px", borderRadius: 6, border: `1px solid ${T.border}`, background: "transparent", color: uploading ? T.textMuted : T.teal, fontSize: 11, fontWeight: 600, cursor: uploading ? "not-allowed" : "pointer", display: "flex", alignItems: "center", gap: 4 }}>
-                    {uploading ? " Uploading..." : "ğŸâ€œ„ Attach File"}
+                    {uploading ? " Uploading..." : "ğŸ“„ Attach File"}
                   </button>
                 </div>
 
@@ -5575,7 +5575,7 @@ ${adminUser?.displayName || "Support Team"}`
                       <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 8 }}>
                         <button type="button" onClick={() => setShowTemplates(!showTemplates)}
                           style={{ fontSize: 10, color: T.teal, background: "none", border: "none", cursor: "pointer", textDecoration: "underline" }}>
-                          {showTemplates ? "Hide Templates" : "ââ‚¬¢ Quick Templates"}
+                          {showTemplates ? "Hide Templates" : "â€¢ Quick Templates"}
                         </button>
                         <button type="button" onClick={() => { if (suggestedReplies.length === 0) generateSmartReplies(ticketDrawer); }}
                           style={{ fontSize: 10, color: T.purple, background: "none", border: "none", cursor: "pointer", textDecoration: suggestedReplies.length > 0 ? "none" : "underline", display: "flex", alignItems: "center", gap: 4 }}>
@@ -5620,7 +5620,7 @@ ${adminUser?.displayName || "Support Team"}`
                                   {reply.preview}
                                 </div>
                                 <div style={{ marginTop: 6, display: "flex", justifyContent: "flex-end" }}>
-                                  <span style={{ fontSize: 9, color: T.purple }}>Click to use â†â€™</span>
+                                  <span style={{ fontSize: 9, color: T.purple }}>Click to use â†’</span>
                                 </div>
                               </div>
                             ))}
@@ -5750,7 +5750,7 @@ ${adminUser?.displayName || "Support Team"}`
                   {ticketDrawer.status !== "resolved" && (
                     <button type="button" onClick={() => updateTicketStatus(ticketDrawer.id, "resolved")}
                       style={{ padding: "6px 12px", borderRadius: 6, border: `1px solid ${T.green}`, background: `${T.green}10`, color: T.green, fontSize: 10, fontWeight: 600, cursor: "pointer" }}>
-                      âœâ€ Mark Resolved
+                      âœ” Mark Resolved
                     </button>
                   )}
                   {ticketDrawer.status === "resolved" && (
@@ -5780,8 +5780,8 @@ ${adminUser?.displayName || "Support Team"}`
         <div style={{ position: "fixed", inset: 0, zIndex: 9000, background: "rgba(4,9,15,0.9)", display: "flex", alignItems: "center", justifyContent: "center" }} onClick={() => setShowMergeModal(false)}>
           <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.gold}30`, padding: 24, width: "100%", maxWidth: 480, maxHeight: "80vh", overflow: "auto" }} onClick={e => e.stopPropagation()}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-              <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>ââ‚¬¢ Merge Ticket</h3>
-              <button type="button" onClick={() => setShowMergeModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>Ãâ€”</button>
+              <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>â€¢ Merge Ticket</h3>
+              <button type="button" onClick={() => setShowMergeModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>Ã—</button>
             </div>
             
             <div style={{ padding: 12, background: `${T.orange}15`, borderRadius: 8, marginBottom: 16 }}>
@@ -5795,7 +5795,7 @@ ${adminUser?.displayName || "Support Team"}`
               <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 6 }}>Current Ticket:</div>
               <div style={{ padding: 12, background: T.surfaceAlt, borderRadius: 8, border: `1px solid ${T.border}` }}>
                 <div style={{ fontSize: 13, fontWeight: 600, color: T.white, marginBottom: 4 }}>{ticketDrawer.subject}</div>
-                <div style={{ fontSize: 11, color: T.textMuted }}>{ticketDrawer.userEmail} ââ‚¬¢ {(ticketDrawer.messages || []).length} messages</div>
+                <div style={{ fontSize: 11, color: T.textMuted }}>{ticketDrawer.userEmail} â€¢ {(ticketDrawer.messages || []).length} messages</div>
               </div>
             </div>
             
@@ -5810,7 +5810,7 @@ ${adminUser?.displayName || "Support Team"}`
               </select>
               {mergeTargetId && (
                 <div style={{ marginTop: 10, padding: 10, background: `${T.green}10`, borderRadius: 6, border: `1px solid ${T.green}30` }}>
-                  <div style={{ fontSize: 11, color: T.green }}>âœâ€ Messages and notes will be combined into this ticket</div>
+                  <div style={{ fontSize: 11, color: T.green }}>âœ” Messages and notes will be combined into this ticket</div>
                 </div>
               )}
             </div>
@@ -5822,7 +5822,7 @@ ${adminUser?.displayName || "Support Team"}`
               </button>
               <button type="button" onClick={mergeTickets} disabled={!mergeTargetId || merging}
                 style={{ flex: 1, padding: "12px 16px", borderRadius: 8, border: "none", background: !mergeTargetId || merging ? T.border : T.orange, color: T.bg, fontSize: 13, fontWeight: 700, cursor: !mergeTargetId || merging ? "not-allowed" : "pointer" }}>
-                {merging ? "Merging..." : "ââ‚¬¢ Merge Tickets"}
+                {merging ? "Merging..." : "â€¢ Merge Tickets"}
               </button>
             </div>
           </div>
@@ -5834,8 +5834,8 @@ ${adminUser?.displayName || "Support Team"}`
         <div style={{ position: "fixed", inset: 0, zIndex: 9000, background: "rgba(4,9,15,0.9)", display: "flex", alignItems: "center", justifyContent: "center" }} onClick={() => setShowLinkModal(false)}>
           <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.gold}30`, padding: 24, width: "100%", maxWidth: 480, maxHeight: "80vh", overflow: "auto" }} onClick={e => e.stopPropagation()}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-              <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>ğŸâ€”â„¢ Link Related Ticket</h3>
-              <button type="button" onClick={() => setShowLinkModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>Ãâ€”</button>
+              <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>ğŸ—™ Link Related Ticket</h3>
+              <button type="button" onClick={() => setShowLinkModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>Ã—</button>
             </div>
             
             <div style={{ padding: 12, background: `${T.teal}15`, borderRadius: 8, marginBottom: 16 }}>
@@ -5869,7 +5869,7 @@ ${adminUser?.displayName || "Support Team"}`
               </button>
               <button type="button" onClick={linkTicket} disabled={!linkTargetId || linking}
                 style={{ flex: 1, padding: "12px 16px", borderRadius: 8, border: "none", background: !linkTargetId || linking ? T.border : T.teal, color: T.bg, fontSize: 13, fontWeight: 700, cursor: !linkTargetId || linking ? "not-allowed" : "pointer" }}>
-                {linking ? "Linking..." : "ğŸâ€”â„¢ Link Tickets"}
+                {linking ? "Linking..." : "ğŸ—™ Link Tickets"}
               </button>
             </div>
           </div>
@@ -5882,7 +5882,7 @@ ${adminUser?.displayName || "Support Team"}`
           <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.gold}30`, padding: 24, width: "100%", maxWidth: 560, maxHeight: "85vh", overflow: "auto" }} onClick={e => e.stopPropagation()}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
               <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}> Manage Custom Fields</h3>
-              <button type="button" onClick={() => setShowFieldsModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>Ãâ€”</button>
+              <button type="button" onClick={() => setShowFieldsModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>Ã—</button>
             </div>
             
             <div style={{ padding: 12, background: `${T.cyan}15`, borderRadius: 8, marginBottom: 20 }}>
@@ -5894,7 +5894,7 @@ ${adminUser?.displayName || "Support Team"}`
             {/* Add/Edit Field Form */}
             <div style={{ padding: 16, background: T.surfaceAlt, borderRadius: 10, marginBottom: 20 }}>
               <div style={{ fontSize: 12, fontWeight: 600, color: T.white, marginBottom: 12 }}>
-                {editingField ? "âœâ€¦ï¸ Edit Field" : "ğŸâ€œŒ Add New Field"}
+                {editingField ? "âœ…ï¸ Edit Field" : "ğŸ“Œ Add New Field"}
               </div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
                 <div style={{ gridColumn: "span 2" }}>
@@ -5946,7 +5946,7 @@ ${adminUser?.displayName || "Support Team"}`
             {/* Existing Fields List */}
             <div>
               <div style={{ fontSize: 12, fontWeight: 600, color: T.white, marginBottom: 12 }}>
-                ğŸâ€œ‹ Existing Fields ({customFields.length})
+                ğŸ“‹ Existing Fields ({customFields.length})
               </div>
               {customFields.length === 0 ? (
                 <div style={{ padding: 20, textAlign: "center", color: T.textMuted, fontSize: 12 }}>
@@ -5958,7 +5958,7 @@ ${adminUser?.displayName || "Support Team"}`
                     <div key={field.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 14px", background: T.surfaceAlt, borderRadius: 8, border: `1px solid ${T.border}` }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                         <span style={{ fontSize: 18 }}>
-                          {field.type === "dropdown" ? "ğŸâ€œ‹" : field.type === "date" ? "ğŸâ€œâ‚¬" : field.type === "number" ? "ğŸâ€”â€œ" : field.type === "checkbox" ? "âš ï¸" : "ââ‚¬¢"}
+                          {field.type === "dropdown" ? "ğŸ“‹" : field.type === "date" ? "ğŸ“€" : field.type === "number" ? "ğŸ—“" : field.type === "checkbox" ? "âš ï¸" : "â€¢"}
                         </span>
                         <div>
                           <div style={{ fontSize: 13, fontWeight: 600, color: T.white, display: "flex", alignItems: "center", gap: 6 }}>
@@ -5967,7 +5967,7 @@ ${adminUser?.displayName || "Support Team"}`
                           </div>
                           <div style={{ fontSize: 10, color: T.textMuted }}>
                             {field.type.charAt(0).toUpperCase() + field.type.slice(1)}
-                            {field.type === "dropdown" && field.options?.length > 0 && ` ââ‚¬¢ ${field.options.length} options`}
+                            {field.type === "dropdown" && field.options?.length > 0 && ` â€¢ ${field.options.length} options`}
                           </div>
                         </div>
                       </div>
@@ -5995,20 +5995,20 @@ ${adminUser?.displayName || "Support Team"}`
         <div style={{ position: "fixed", inset: 0, zIndex: 9000, background: "rgba(4,9,15,0.9)", display: "flex", alignItems: "center", justifyContent: "center" }} onClick={() => setShowAutoAssignModal(false)}>
           <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.gold}30`, padding: 24, width: "100%", maxWidth: 600, maxHeight: "85vh", overflow: "auto" }} onClick={e => e.stopPropagation()}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-              <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>ğŸâ€˜› Auto-Assign Rules</h3>
-              <button type="button" onClick={() => setShowAutoAssignModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>Ãâ€”</button>
+              <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>ğŸ‘› Auto-Assign Rules</h3>
+              <button type="button" onClick={() => setShowAutoAssignModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>Ã—</button>
             </div>
             
             <div style={{ padding: 12, background: `${T.green}15`, borderRadius: 8, marginBottom: 20 }}>
               <div style={{ fontSize: 12, color: T.textSecondary, lineHeight: 1.5 }}>
-                Create rules to automatically assign tickets based on category, priority, user tier, or keywords. Rules are applied in order ââ‚¬â€ first match wins.
+                Create rules to automatically assign tickets based on category, priority, user tier, or keywords. Rules are applied in order â€” first match wins.
               </div>
             </div>
             
             {/* Add/Edit Rule Form */}
             <div style={{ padding: 16, background: T.surfaceAlt, borderRadius: 10, marginBottom: 20 }}>
               <div style={{ fontSize: 12, fontWeight: 600, color: T.white, marginBottom: 12 }}>
-                {editingRule ? "âœâ€¦ï¸ Edit Rule" : "ğŸâ€œŒ Add New Rule"}
+                {editingRule ? "âœ…ï¸ Edit Rule" : "ğŸ“Œ Add New Rule"}
               </div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
                 <div style={{ gridColumn: "span 2" }}>
@@ -6041,7 +6041,7 @@ ${adminUser?.displayName || "Support Team"}`
                   <select value={newRuleForm.assignTo} onChange={e => setNewRuleForm(prev => ({ ...prev, assignTo: e.target.value }))}
                     style={{ width: "100%", padding: "10px 12px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.bg, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif" }}>
                     <option value="">Select agent...</option>
-                    {assignableAgents.filter(a => a.id !== "unassigned").map(a => <option key={a.id} value={a.id}>ââ‚¬¢ {a.name}</option>)}
+                    {assignableAgents.filter(a => a.id !== "unassigned").map(a => <option key={a.id} value={a.id}>â€¢ {a.name}</option>)}
                   </select>
                 </div>
                 <div style={{ gridColumn: "span 2", display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 8 }}>
@@ -6069,7 +6069,7 @@ ${adminUser?.displayName || "Support Team"}`
             {/* Existing Rules List */}
             <div>
               <div style={{ fontSize: 12, fontWeight: 600, color: T.white, marginBottom: 12 }}>
-                ğŸâ€œ‹ Active Rules ({autoAssignRules.length})
+                ğŸ“‹ Active Rules ({autoAssignRules.length})
               </div>
               {autoAssignRules.length === 0 ? (
                 <div style={{ padding: 20, textAlign: "center", color: T.textMuted, fontSize: 12 }}>
@@ -6087,7 +6087,7 @@ ${adminUser?.displayName || "Support Team"}`
                             {!rule.enabled && <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: `${T.textMuted}20`, color: T.textMuted }}>DISABLED</span>}
                           </div>
                           <div style={{ fontSize: 10, color: T.textMuted }}>
-                            If <span style={{ color: T.cyan }}>{rule.condition}</span> = <span style={{ color: T.gold }}>{rule.conditionValue}</span> â†â€™ assign to <span style={{ color: T.purple }}>{rule.assignToName}</span>
+                            If <span style={{ color: T.cyan }}>{rule.condition}</span> = <span style={{ color: T.gold }}>{rule.conditionValue}</span> â†’ assign to <span style={{ color: T.purple }}>{rule.assignToName}</span>
                           </div>
                         </div>
                       </div>
@@ -6141,8 +6141,8 @@ ${adminUser?.displayName || "Support Team"}`
         <div style={{ position: "fixed", inset: 0, zIndex: 9000, background: "rgba(4,9,15,0.9)", display: "flex", alignItems: "center", justifyContent: "center" }} onClick={() => setShowSlaModal(false)}>
           <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.gold}30`, padding: 24, width: "100%", maxWidth: 500, maxHeight: "85vh", overflow: "auto" }} onClick={e => e.stopPropagation()}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-              <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>ââ€“â€™ï¸ SLA Settings</h3>
-              <button type="button" onClick={() => setShowSlaModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>Ãâ€”</button>
+              <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>â–’ï¸ SLA Settings</h3>
+              <button type="button" onClick={() => setShowSlaModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>Ã—</button>
             </div>
             
             <div style={{ padding: 12, background: `${T.orange}15`, borderRadius: 8, marginBottom: 20 }}>
@@ -6186,7 +6186,7 @@ ${adminUser?.displayName || "Support Team"}`
                       }}
                         style={{ width: "100%", padding: "10px 12px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.bg, color: T.white, fontSize: 12, fontFamily: "'Outfit',sans-serif" }}>
                         <option value="">Select manager...</option>
-                        {assignableAgents.filter(a => a.id !== "unassigned").map(a => <option key={a.id} value={a.id}>ââ‚¬¢ {a.name}</option>)}
+                        {assignableAgents.filter(a => a.id !== "unassigned").map(a => <option key={a.id} value={a.id}>â€¢ {a.name}</option>)}
                       </select>
                     </div>
                     
@@ -6207,7 +6207,7 @@ ${adminUser?.displayName || "Support Team"}`
               
               {/* SLA Preview */}
               <div style={{ padding: 16, background: `${T.blue}10`, borderRadius: 10, border: `1px solid ${T.blue}30` }}>
-                <div style={{ fontSize: 11, fontWeight: 600, color: T.blue, marginBottom: 8 }}>ğŸâ€œˆ SLA Timeline Preview</div>
+                <div style={{ fontSize: 11, fontWeight: 600, color: T.blue, marginBottom: 8 }}>ğŸ“ˆ SLA Timeline Preview</div>
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                   <div style={{ flex: 1, height: 8, background: T.border, borderRadius: 4, overflow: "hidden", position: "relative" }}>
                     <div style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: `${slaSettings.warningPercent}%`, background: T.green, borderRadius: 4 }} />
@@ -6242,25 +6242,25 @@ ${adminUser?.displayName || "Support Team"}`
           <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.gold}30`, padding: 24, width: "100%", maxWidth: 650, maxHeight: "90vh", overflow: "auto" }} onClick={e => e.stopPropagation()}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
               <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>âš¡ Workflow Triggers</h3>
-              <button type="button" onClick={() => setShowWorkflowModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>Ãâ€”</button>
+              <button type="button" onClick={() => setShowWorkflowModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>Ã—</button>
             </div>
             
             <div style={{ padding: 12, background: `${T.purple}15`, borderRadius: 8, marginBottom: 20 }}>
               <div style={{ fontSize: 12, color: T.textSecondary, lineHeight: 1.5 }}>
-                Create automated workflows that trigger actions when certain conditions are met. Example: When status changes to "resolved" â†â€™ add "resolved" tag.
+                Create automated workflows that trigger actions when certain conditions are met. Example: When status changes to "resolved" â†’ add "resolved" tag.
               </div>
             </div>
             
             {/* Add/Edit Workflow Form */}
             <div style={{ padding: 16, background: T.surfaceAlt, borderRadius: 10, marginBottom: 20 }}>
               <div style={{ fontSize: 12, fontWeight: 600, color: T.white, marginBottom: 12 }}>
-                {editingWorkflow ? "âœâ€¦ï¸ Edit Workflow" : "ğŸâ€œŒ Create Workflow"}
+                {editingWorkflow ? "âœ…ï¸ Edit Workflow" : "ğŸ“Œ Create Workflow"}
               </div>
               
               {/* Workflow Name */}
               <div style={{ marginBottom: 12 }}>
                 <label style={{ fontSize: 10, color: T.textMuted, marginBottom: 4, display: "block" }}>Workflow Name</label>
-                <input value={newWorkflowForm.name} onChange={e => setNewWorkflowForm(prev => ({ ...prev, name: e.target.value }))} placeholder="e.g. Resolved â†â€™ Add Tag..."
+                <input value={newWorkflowForm.name} onChange={e => setNewWorkflowForm(prev => ({ ...prev, name: e.target.value }))} placeholder="e.g. Resolved â†’ Add Tag..."
                   style={{ width: "100%", padding: "10px 12px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.bg, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif", boxSizing: "border-box" }} />
               </div>
               
@@ -6337,7 +6337,7 @@ ${adminUser?.displayName || "Support Team"}`
                       {newWorkflowForm.actions.length > 1 && (
                         <button type="button" onClick={() => removeWorkflowAction(idx)}
                           style={{ padding: "6px 10px", borderRadius: 4, border: `1px solid ${T.red}40`, background: `${T.red}10`, color: T.red, fontSize: 12, cursor: "pointer" }}>
-                          Ãâ€”
+                          Ã—
                         </button>
                       )}
                     </div>
@@ -6370,7 +6370,7 @@ ${adminUser?.displayName || "Support Team"}`
             {/* Existing Workflows List */}
             <div>
               <div style={{ fontSize: 12, fontWeight: 600, color: T.white, marginBottom: 12 }}>
-                ğŸâ€œ‹ Active Workflows ({workflowTriggers.length})
+                ğŸ“‹ Active Workflows ({workflowTriggers.length})
               </div>
               {workflowTriggers.length === 0 ? (
                 <div style={{ padding: 20, textAlign: "center", color: T.textMuted, fontSize: 12 }}>
@@ -6409,7 +6409,7 @@ ${adminUser?.displayName || "Support Team"}`
                       <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                         {(wf.actions || []).map((action, aIdx) => (
                           <span key={aIdx} style={{ fontSize: 10, padding: "4px 8px", borderRadius: 4, background: `${T.purple}20`, color: T.purple }}>
-                            {actionOptions.find(a => a.id === action.type)?.label || action.type}: {action.value || "ââ‚¬â€"}
+                            {actionOptions.find(a => a.id === action.type)?.label || action.type}: {action.value || "â€”"}
                           </span>
                         ))}
                       </div>
@@ -6427,8 +6427,8 @@ ${adminUser?.displayName || "Support Team"}`
         <div style={{ position: "fixed", inset: 0, zIndex: 9100, background: "rgba(4,9,15,0.9)", display: "flex", alignItems: "center", justifyContent: "center" }} onClick={() => setShowCsatModal(false)}>
           <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.gold}30`, padding: 24, width: "100%", maxWidth: 420 }} onClick={e => e.stopPropagation()}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-              <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>ââ‚¬¢ Add CSAT Rating</h3>
-              <button type="button" onClick={() => setShowCsatModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>Ãâ€”</button>
+              <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>â€¢ Add CSAT Rating</h3>
+              <button type="button" onClick={() => setShowCsatModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>Ã—</button>
             </div>
             
             <div style={{ padding: 12, background: `${T.gold}10`, borderRadius: 8, marginBottom: 20 }}>
@@ -6507,9 +6507,9 @@ ${adminUser?.displayName || "Support Team"}`
           <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.gold}30`, padding: 24, width: "100%", maxWidth: 600, maxHeight: "90vh", overflow: "auto" }} onClick={e => e.stopPropagation()}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
               <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>
-                {editingArticle ? "âœâ€¦ï¸ Edit Article" : "ğŸâ€œ¬ New Article"}
+                {editingArticle ? "âœ…ï¸ Edit Article" : "ğŸ“¬ New Article"}
               </h3>
-              <button type="button" onClick={() => setShowKbModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>Ãâ€”</button>
+              <button type="button" onClick={() => setShowKbModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>Ã—</button>
             </div>
             
             <div style={{ marginBottom: 16 }}>
@@ -6524,11 +6524,11 @@ ${adminUser?.displayName || "Support Team"}`
                 <label style={{ fontSize: 11, color: T.textMuted, marginBottom: 6, display: "block" }}>Category</label>
                 <select value={articleForm.category} onChange={e => setArticleForm(prev => ({ ...prev, category: e.target.value }))}
                   style={{ width: "100%", padding: "12px 14px", borderRadius: 8, border: `1px solid ${T.border}`, background: T.bg, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif" }}>
-                  <option value="getting-started">ğŸâ€‡ Getting Started</option>
-                  <option value="billing">ââ‚¬¢ Billing & Payments</option>
-                  <option value="technical">ââ‚¬¢ Technical Issues</option>
+                  <option value="getting-started">ğŸ”‡ Getting Started</option>
+                  <option value="billing">â€¢ Billing & Payments</option>
+                  <option value="technical">â€¢ Technical Issues</option>
                   <option value="features"> Features & How-To</option>
-                  <option value="account">ââ‚¬¢ Account Management</option>
+                  <option value="account">â€¢ Account Management</option>
                 </select>
               </div>
               <div>
@@ -6602,9 +6602,9 @@ ${adminUser?.displayName || "Support Team"}`
           <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.gold}30`, padding: 24, width: "100%", maxWidth: 550, maxHeight: "90vh", overflow: "auto" }} onClick={e => e.stopPropagation()}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
               <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>
-                {editingQuickResponse ? "âœâ€¦ï¸ Edit Quick Response" : "âš¡ New Quick Response"}
+                {editingQuickResponse ? "âœ…ï¸ Edit Quick Response" : "âš¡ New Quick Response"}
               </h3>
-              <button type="button" onClick={() => setShowQuickResponseModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>Ãâ€”</button>
+              <button type="button" onClick={() => setShowQuickResponseModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>Ã—</button>
             </div>
             
             <div style={{ padding: 12, background: `${T.purple}10`, borderRadius: 8, marginBottom: 16 }}>
@@ -6632,9 +6632,9 @@ ${adminUser?.displayName || "Support Team"}`
               <label style={{ fontSize: 11, color: T.textMuted, marginBottom: 6, display: "block" }}>Category</label>
               <select value={quickResponseForm.category} onChange={e => setQuickResponseForm(prev => ({ ...prev, category: e.target.value }))}
                 style={{ width: "100%", padding: "12px 14px", borderRadius: 8, border: `1px solid ${T.border}`, background: T.bg, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif" }}>
-                <option value="general">ğŸâ€™¼ General</option>
-                <option value="technical">ââ‚¬¢ Technical</option>
-                <option value="billing">ââ‚¬¢ Billing</option>
+                <option value="general">ğŸ’¼ General</option>
+                <option value="technical">â€¢ Technical</option>
+                <option value="billing">â€¢ Billing</option>
               </select>
             </div>
             
@@ -6703,7 +6703,7 @@ Thank you for contacting us..."
               <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>
                  Live Chat Settings
               </h3>
-              <button type="button" onClick={() => setShowChatSettings(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>Ãâ€”</button>
+              <button type="button" onClick={() => setShowChatSettings(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>Ã—</button>
             </div>
             
             <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
@@ -6791,9 +6791,9 @@ Thank you for contacting us..."
           <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.gold}30`, padding: 24, width: "100%", maxWidth: 400 }} onClick={e => e.stopPropagation()}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
               <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>
-                ââ‚¬¢ Widget Preview
+                â€¢ Widget Preview
               </h3>
-              <button type="button" onClick={() => setShowWidgetPreview(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>Ãâ€”</button>
+              <button type="button" onClick={() => setShowWidgetPreview(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>Ã—</button>
             </div>
             
             <div style={{ background: "#f5f5f5", borderRadius: 12, padding: 20, display: "flex", justifyContent: chatSettings.widgetPosition === "right" ? "flex-end" : "flex-start" }}>
@@ -6802,12 +6802,12 @@ Thank you for contacting us..."
                 {/* Chat Header */}
                 <div style={{ background: chatSettings.widgetColor, borderRadius: "12px 12px 0 0", padding: 16, color: T.white }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                    <div style={{ width: 40, height: 40, borderRadius: "50%", background: "rgba(255,255,255,0.2)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>ğŸâ€™¼</div>
+                    <div style={{ width: 40, height: 40, borderRadius: "50%", background: "rgba(255,255,255,0.2)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>ğŸ’¼</div>
                     <div>
                       <div style={{ fontWeight: 700, fontSize: 14 }}>DXB Analytics</div>
                       <div style={{ fontSize: 11, opacity: 0.9, display: "flex", alignItems: "center", gap: 4 }}>
                         <span style={{ width: 6, height: 6, borderRadius: "50%", background: agentOnline ? "#4ADE80" : "#EF4444" }} />
-                        {agentOnline ? "Online ââ‚¬¢ ~2 min" : "Offline"}
+                        {agentOnline ? "Online â€¢ ~2 min" : "Offline"}
                       </div>
                     </div>
                   </div>
@@ -6849,7 +6849,7 @@ Thank you for contacting us..."
           <div style={{ background: T.surface, borderRadius: 16, border: `1px solid #25D36630`, padding: 24, width: "100%", maxWidth: 550, maxHeight: "90vh", overflow: "auto" }} onClick={e => e.stopPropagation()}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <span style={{ fontSize: 24 }}>ğŸâ€œ±</span>
+                <span style={{ fontSize: 24 }}>ğŸ“±</span>
                 <div>
                   <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>
                     WhatsApp Message Templates
@@ -6857,7 +6857,7 @@ Thank you for contacting us..."
                   <div style={{ fontSize: 11, color: T.textMuted }}>Pre-approved templates for out-of-window messaging</div>
                 </div>
               </div>
-              <button type="button" onClick={() => setShowWhatsappTemplates(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>Ãâ€”</button>
+              <button type="button" onClick={() => setShowWhatsappTemplates(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>Ã—</button>
             </div>
             
             <div style={{ padding: 12, background: `${T.teal}10`, borderRadius: 8, marginBottom: 16, display: "flex", alignItems: "flex-start", gap: 10 }}>
@@ -6888,14 +6888,14 @@ Thank you for contacting us..."
                     onMouseLeave={e => e.currentTarget.style.borderColor = T.border}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
                       <span style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{template.name}</span>
-                      <span style={{ fontSize: 9, padding: "3px 8px", borderRadius: 4, background: "#25D36620", color: "#25D366" }}>âœâ€ Approved</span>
+                      <span style={{ fontSize: 9, padding: "3px 8px", borderRadius: 4, background: "#25D36620", color: "#25D366" }}>âœ” Approved</span>
                     </div>
                     <div style={{ fontSize: 12, color: T.textSecondary, lineHeight: 1.5, padding: 10, background: T.surface, borderRadius: 6, borderLeft: `3px solid #25D366` }}>
                       {previewContent}
                     </div>
                     {activeConv && (
                       <div style={{ marginTop: 8, display: "flex", justifyContent: "flex-end" }}>
-                        <span style={{ fontSize: 10, color: "#25D366" }}>Click to send â†â€™</span>
+                        <span style={{ fontSize: 10, color: "#25D366" }}>Click to send â†’</span>
                       </div>
                     )}
                   </div>
@@ -6904,7 +6904,7 @@ Thank you for contacting us..."
             </div>
             
             <div style={{ marginTop: 20, padding: 12, background: T.surfaceAlt, borderRadius: 8 }}>
-              <div style={{ fontSize: 11, fontWeight: 600, color: T.textMuted, marginBottom: 6 }}>ââ‚¬¢ Create Custom Template</div>
+              <div style={{ fontSize: 11, fontWeight: 600, color: T.textMuted, marginBottom: 6 }}>â€¢ Create Custom Template</div>
               <div style={{ fontSize: 10, color: T.textMuted, lineHeight: 1.5 }}>
                 Custom templates must be submitted to Meta for approval. This process typically takes 24-48 hours.
               </div>
@@ -6921,8 +6921,8 @@ Thank you for contacting us..."
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 10000 }}>
           <div style={{ width: 440, background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, overflow: "hidden" }}>
             <div style={{ padding: "16px 20px", borderBottom: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <div style={{ fontSize: 14, fontWeight: 700, color: T.white }}>ââ€“â€™ï¸ Add Manual Time Entry</div>
-              <button type="button" onClick={() => setShowTimeEntryModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>Ãâ€”</button>
+              <div style={{ fontSize: 14, fontWeight: 700, color: T.white }}>â–’ï¸ Add Manual Time Entry</div>
+              <button type="button" onClick={() => setShowTimeEntryModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>Ã—</button>
             </div>
             
             <div style={{ padding: 20 }}>
@@ -6985,8 +6985,8 @@ Thank you for contacting us..."
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 10000 }}>
           <div style={{ width: 500, background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, overflow: "hidden" }}>
             <div style={{ padding: "16px 20px", borderBottom: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <div style={{ fontSize: 14, fontWeight: 700, color: T.white }}>ğŸâ€”â„¢ {editingWebhook ? "Edit Webhook" : "Add Webhook"}</div>
-              <button type="button" onClick={() => setShowWebhookModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>Ãâ€”</button>
+              <div style={{ fontSize: 14, fontWeight: 700, color: T.white }}>ğŸ—™ {editingWebhook ? "Edit Webhook" : "Add Webhook"}</div>
+              <button type="button" onClick={() => setShowWebhookModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>Ã—</button>
             </div>
             
             <div style={{ padding: 20 }}>
@@ -7054,8 +7054,8 @@ Thank you for contacting us..."
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 10000 }}>
           <div style={{ width: 460, background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, overflow: "hidden" }}>
             <div style={{ padding: "16px 20px", borderBottom: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <div style={{ fontSize: 14, fontWeight: 700, color: T.white }}>ğŸâ€œâ€˜ Export Tickets</div>
-              <button type="button" onClick={() => setShowExportModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>Ãâ€”</button>
+              <div style={{ fontSize: 14, fontWeight: 700, color: T.white }}>ğŸ“‘ Export Tickets</div>
+              <button type="button" onClick={() => setShowExportModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>Ã—</button>
             </div>
             
             <div style={{ padding: 20 }}>
@@ -7100,15 +7100,15 @@ Thank you for contacting us..."
                 <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                   <label style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }}>
                     <input type="checkbox" checked={exportConfig.includeMessages} onChange={e => setExportConfig(prev => ({ ...prev, includeMessages: e.target.checked }))} style={{ width: 16, height: 16, accentColor: T.teal }} />
-                    <span style={{ fontSize: 12, color: T.textSecondary }}>ğŸâ€™¼ Messages</span>
+                    <span style={{ fontSize: 12, color: T.textSecondary }}>ğŸ’¼ Messages</span>
                   </label>
                   <label style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }}>
                     <input type="checkbox" checked={exportConfig.includeNotes} onChange={e => setExportConfig(prev => ({ ...prev, includeNotes: e.target.checked }))} style={{ width: 16, height: 16, accentColor: T.orange }} />
-                    <span style={{ fontSize: 12, color: T.textSecondary }}>ğŸâ€œ Internal Notes</span>
+                    <span style={{ fontSize: 12, color: T.textSecondary }}>ğŸ“ Internal Notes</span>
                   </label>
                   <label style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }}>
                     <input type="checkbox" checked={exportConfig.includeTime} onChange={e => setExportConfig(prev => ({ ...prev, includeTime: e.target.checked }))} style={{ width: 16, height: 16, accentColor: T.gold }} />
-                    <span style={{ fontSize: 12, color: T.textSecondary }}>ââ€“â€™ï¸ Time Entries</span>
+                    <span style={{ fontSize: 12, color: T.textSecondary }}>â–’ï¸ Time Entries</span>
                   </label>
                 </div>
               </div>
@@ -7133,8 +7133,8 @@ Thank you for contacting us..."
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 10000 }}>
           <div style={{ width: 420, background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, overflow: "hidden" }}>
             <div style={{ padding: "16px 20px", borderBottom: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <div style={{ fontSize: 14, fontWeight: 700, color: T.white }}>ğŸâ€”‰ {editingPermission ? "Edit Permission" : "Add Permission"}</div>
-              <button type="button" onClick={() => setShowPermissionsModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>Ãâ€”</button>
+              <div style={{ fontSize: 14, fontWeight: 700, color: T.white }}>ğŸ—‰ {editingPermission ? "Edit Permission" : "Add Permission"}</div>
+              <button type="button" onClick={() => setShowPermissionsModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>Ã—</button>
             </div>
             
             <div style={{ padding: 20 }}>
@@ -7184,9 +7184,9 @@ Thank you for contacting us..."
     </div>
   );
 }
-/* ââ€â‚¬ââ€â‚¬ââ€â‚¬ NOTIFICATIONS TAB COMPONENT ââ€â‚¬ââ€â‚¬ââ€â‚¬ */
+/* â”€â”€â”€ NOTIFICATIONS TAB COMPONENT â”€â”€â”€ */
 /* ========================================
-   TAB 12: NOTIFICATIONS ââ‚¬â€ PRO LEVEL
+   TAB 12: NOTIFICATIONS â€” PRO LEVEL
    Broadcast, Schedule, Email, Analytics
 ======================================== */
 

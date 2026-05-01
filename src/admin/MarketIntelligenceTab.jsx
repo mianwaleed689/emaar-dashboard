@@ -28,14 +28,14 @@ const MarketIntelligenceTab = ({ db, T, notify, users }) => {
       if (snap.exists()) setEiborData(snap.data());
     }));
 
-    // eiborHistory �€” last 30 days
+    // eiborHistory — last 30 days
     getDocs(query(collection(db, "eiborHistory"), orderBy("fetchedAt", "desc"), limit(30))).then(snap => {
       const list = [];
       snap.forEach(d => list.push({ id: d.id, ...d.data() }));
       setEiborHistory(list.reverse());
     }).catch(() => {});
 
-    // adminAlerts �€” last 20
+    // adminAlerts — last 20
     unsubs.push(onSnapshot(
       query(collection(db, "adminAlerts"), orderBy("createdAt", "desc"), limit(20)),
       snap => {
@@ -47,14 +47,14 @@ const MarketIntelligenceTab = ({ db, T, notify, users }) => {
       () => setLoading(false)
     ));
 
-    // communityData �€” all communities
+    // communityData — all communities
     getDocs(collection(db, "communityData")).then(snap => {
       const list = [];
       snap.forEach(d => list.push({ id: d.id, ...d.data() }));
       setCommunities(list.sort((a, b) => (b.transactionCount30d || 0) - (a.transactionCount30d || 0)));
     }).catch(() => {});
 
-    // developers �€” for launch alerts
+    // developers — for launch alerts
     getDocs(query(collection(db, "developers"), orderBy("seededAt", "desc"), limit(20))).then(snap => {
       const list = [];
       snap.forEach(d => list.push({ id: d.id, ...d.data() }));
@@ -66,10 +66,10 @@ const MarketIntelligenceTab = ({ db, T, notify, users }) => {
 
   // Data feed statuses
   const FEEDS = [
-    { name: "EIBOR Rates",       key: "eibor",       icon: "�“�", schedule: "Daily 11:30AM UAE", lastUpdate: eiborData?.updatedAt,    status: eiborData ? "live" : "no_data",    value: eiborData ? `3M: ${eiborData.threeMonth || eiborData["3m"] || "�€”"}%` : "�€”" },
-    { name: "Market Data",       key: "global",      icon: "�™️", schedule: "Admin updated",     lastUpdate: marketGlobal?.updatedAt, status: marketGlobal ? "live" : "no_data", value: marketGlobal ? marketGlobal.totalMarketValue || "�€”" : "�€”" },
-    { name: "DLD Transactions",  key: "dld",         icon: "�“�", schedule: "Daily 7AM UAE",     lastUpdate: marketGlobal?.dldUpdatedAt, status: marketGlobal?.lastDLDFetchDate ? "live" : "pending", value: marketGlobal?.lastDLDTxnCount ? `${marketGlobal.lastDLDTxnCount} txns` : "Pending API keys" },
-    { name: "Developer Registry",key: "developers",  icon: "�—️", schedule: "One-time seeded",   lastUpdate: developers[0]?.seededAt, status: developers.length > 0 ? "live" : "no_data", value: `${developers.length} developers` },
+    { name: "EIBOR Rates",       key: "eibor",       icon: "📈", schedule: "Daily 11:30AM UAE", lastUpdate: eiborData?.updatedAt,    status: eiborData ? "live" : "no_data",    value: eiborData ? `3M: ${eiborData.threeMonth || eiborData["3m"] || "—"}%` : "—" },
+    { name: "Market Data",       key: "global",      icon: "🏙️", schedule: "Admin updated",     lastUpdate: marketGlobal?.updatedAt, status: marketGlobal ? "live" : "no_data", value: marketGlobal ? marketGlobal.totalMarketValue || "—" : "—" },
+    { name: "DLD Transactions",  key: "dld",         icon: "📋", schedule: "Daily 7AM UAE",     lastUpdate: marketGlobal?.dldUpdatedAt, status: marketGlobal?.lastDLDFetchDate ? "live" : "pending", value: marketGlobal?.lastDLDTxnCount ? `${marketGlobal.lastDLDTxnCount} txns` : "Pending API keys" },
+    { name: "Developer Registry",key: "developers",  icon: "🏗️", schedule: "One-time seeded",   lastUpdate: developers[0]?.seededAt, status: developers.length > 0 ? "live" : "no_data", value: `${developers.length} developers` },
   ];
 
   const statusColor = (s) => s === "live" ? T.green : s === "pending" ? T.orange : T.textMuted;
@@ -100,16 +100,16 @@ const MarketIntelligenceTab = ({ db, T, notify, users }) => {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
         <div>
           <h2 style={{ fontFamily: "'Fraunces',serif", fontSize: 26, fontWeight: 800, color: T.gold, marginBottom: 4 }}>Market Intelligence</h2>
-          <p style={{ color: T.textMuted, fontSize: 13 }}>Admin Bloomberg Terminal �€” live data feeds · DLD anomalies · EIBOR trend · Developer alerts</p>
+          <p style={{ color: T.textMuted, fontSize: 13 }}>Admin Bloomberg Terminal — live data feeds · DLD anomalies · EIBOR trend · Developer alerts</p>
         </div>
         <div style={{ fontSize: 12, color: T.green, fontWeight: 700, padding: "4px 12px", borderRadius: 8, background: "rgba(16,185,129,0.1)", border: `1px solid rgba(16,185,129,0.2)` }}>
-          �—� LIVE · {new Date().toLocaleString("en-AE", { timeZone: "Asia/Dubai", hour: "2-digit", minute: "2-digit" })} UAE
+          ● LIVE · {new Date().toLocaleString("en-AE", { timeZone: "Asia/Dubai", hour: "2-digit", minute: "2-digit" })} UAE
         </div>
       </div>
 
       {/* Data Feed Statuses */}
       <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: "20px 24px" }}>
-        <div style={{ fontFamily: "'Fraunces',serif", fontSize: 15, fontWeight: 700, color: T.white, marginBottom: 14 }}>�“� Data Feed Status</div>
+        <div style={{ fontFamily: "'Fraunces',serif", fontSize: 15, fontWeight: 700, color: T.white, marginBottom: 14 }}>📡 Data Feed Status</div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: 10 }}>
           {FEEDS.map(f => (
             <div key={f.key} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 16px", borderRadius: 10, background: T.surfaceAlt, border: `1px solid ${statusColor(f.status)}22` }}>
@@ -132,7 +132,7 @@ const MarketIntelligenceTab = ({ db, T, notify, users }) => {
 
         {/* EIBOR Trend */}
         <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: "20px 24px" }}>
-          <div style={{ fontFamily: "'Fraunces',serif", fontSize: 15, fontWeight: 700, color: T.white, marginBottom: 4 }}>�“� EIBOR Trend �€” Last 30 Days</div>
+          <div style={{ fontFamily: "'Fraunces',serif", fontSize: 15, fontWeight: 700, color: T.white, marginBottom: 4 }}>📈 EIBOR Trend — Last 30 Days</div>
           <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 14 }}>3-Month rate · UAE Central Bank</div>
 
           {/* Current rates */}
@@ -145,7 +145,7 @@ const MarketIntelligenceTab = ({ db, T, notify, users }) => {
             ].map(r => (
               <div key={r.key} style={{ textAlign: "center", padding: "8px", background: T.surfaceAlt, borderRadius: 8, border: `1px solid ${T.border}` }}>
                 <div style={{ fontSize: 9, color: T.textMuted, textTransform: "uppercase", marginBottom: 3 }}>{r.label}</div>
-                <div style={{ fontSize: 14, fontWeight: 800, color: T.gold, fontFamily: "'Fraunces',serif" }}>{eiborData?.[r.key] || eiborData?.[r.key.replace("Month","m").replace("oneM","1m").replace("threeM","3m").replace("twelveM","12m").replace("overnight","on")] || "�€”"}%</div>
+                <div style={{ fontSize: 14, fontWeight: 800, color: T.gold, fontFamily: "'Fraunces',serif" }}>{eiborData?.[r.key] || eiborData?.[r.key.replace("Month","m").replace("oneM","1m").replace("threeM","3m").replace("twelveM","12m").replace("overnight","on")] || "—"}%</div>
               </div>
             ))}
           </div>
@@ -174,7 +174,7 @@ const MarketIntelligenceTab = ({ db, T, notify, users }) => {
 
         {/* Top Communities by Volume */}
         <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: "20px 24px" }}>
-          <div style={{ fontFamily: "'Fraunces',serif", fontSize: 15, fontWeight: 700, color: T.white, marginBottom: 4 }}>�™️ Top Communities �€” Transaction Volume</div>
+          <div style={{ fontFamily: "'Fraunces',serif", fontSize: 15, fontWeight: 700, color: T.white, marginBottom: 4 }}>🏙️ Top Communities — Transaction Volume</div>
           <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 14 }}>30-day rolling count · DLD data</div>
           {communities.length === 0 ? (
             <div style={{ color: T.textMuted, fontSize: 12, textAlign: "center", padding: "20px 0" }}>
@@ -233,7 +233,7 @@ const MarketIntelligenceTab = ({ db, T, notify, users }) => {
             <div style={{ color: T.textMuted, fontSize: 12 }}>Loading...</div>
           ) : alerts.length === 0 ? (
             <div style={{ color: T.textMuted, fontSize: 12, textAlign: "center", padding: "20px 0" }}>
-              <div style={{ fontSize: 24, marginBottom: 6 }}>�…</div>
+              <div style={{ fontSize: 24, marginBottom: 6 }}>✅</div>
               No anomalies detected
             </div>
           ) : (
@@ -256,9 +256,9 @@ const MarketIntelligenceTab = ({ db, T, notify, users }) => {
           )}
         </div>
 
-        {/* Developer Registry �€” Launch Alerts */}
+        {/* Developer Registry — Launch Alerts */}
         <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: "20px 24px" }}>
-          <div style={{ fontFamily: "'Fraunces',serif", fontSize: 15, fontWeight: 700, color: T.white, marginBottom: 4 }}>�—️ Developer Registry �€” {developers.length} Registered</div>
+          <div style={{ fontFamily: "'Fraunces',serif", fontSize: 15, fontWeight: 700, color: T.white, marginBottom: 4 }}>🏗️ Developer Registry — {developers.length} Registered</div>
           <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 14 }}>Latest developer registrations · DLD seeded data</div>
           <div style={{ display: "flex", flexDirection: "column", gap: 6, maxHeight: 300, overflowY: "auto" }}>
             {developers.slice(0, 12).map((d, i) => (
@@ -282,8 +282,8 @@ const MarketIntelligenceTab = ({ db, T, notify, users }) => {
   );
 };
 
-/* �”€�”€�”€ S19: REVENUE FORECASTING TAB �”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€
+/* ─── S19: REVENUE FORECASTING TAB ──────────────────────────────────────────
    MRR forecast model · Churn-adjusted ARR · Growth scenario modelling
-�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€ */
+────────────────────────────────────────────────────────────────────────── */
 
 export default MarketIntelligenceTab;

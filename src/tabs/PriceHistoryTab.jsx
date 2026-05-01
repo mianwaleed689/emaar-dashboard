@@ -1,9 +1,9 @@
 /* eslint-disable */
-/* ‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê
-   DXB ANALYTICS ‚‚Ç¨‚Äù PRICE HISTORY TAB
+/* ‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê
+   DXB ANALYTICS ‚Äî PRICE HISTORY TAB
    Extracted from EmaarDashboardV2.jsx
    5-year PPSF trends, community momentum, off-plan vs secondary
-   ‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê */
+   ‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê */
 
 import React from "react";
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area, Legend } from "recharts";
@@ -30,13 +30,13 @@ function PriceHistoryTab({ liveNeighbourhoods=[], phCommunity, setPhCommunity, p
 
             /* state moved to top level */
 
-            /* ‚‚Äù‚Ç¨‚‚Äù‚Ç¨ Data from Firestore priceHistory collection ‚‚Äù‚Ç¨‚‚Äù‚Ç¨ */
+            /* ‚îÄ‚îÄ Data from Firestore priceHistory collection ‚îÄ‚îÄ */
   const phFromFirestore = (livePriceHistory || []).filter(d => d.type === "annual" || d.type === "quarterly" || d.type === "monthly");
             const phRaw = liveMarketData?.filter?.(d => d.type === "priceHistory") || [];
   const phData = phFromFirestore.length > 0 ? phFromFirestore : phRaw.length > 0 ? phRaw : SEED_DATA.priceHistory;
             const phIsSeed = phRaw.length === 0;
             // Separate year trend data from community data
-            // Base chart data ‚‚Ç¨‚Äù year-level trend
+            // Base chart data ‚Äî year-level trend
             const phYearData = phData
               .filter(d => d.period && !d.community)
               .sort((a,b) => parseInt(a.period) - parseInt(b.period))
@@ -76,7 +76,7 @@ function PriceHistoryTab({ liveNeighbourhoods=[], phCommunity, setPhCommunity, p
               });
             };
 
-            // Final chart data ‚‚Ç¨‚Äù with ppsf2 if compare mode on
+            // Final chart data ‚Äî with ppsf2 if compare mode on
             const phChartData = phCompare
               ? (() => {
                   const d1 = buildCommData(phCommunity === "All" ? "Downtown Dubai" : phCommunity);
@@ -97,7 +97,7 @@ function PriceHistoryTab({ liveNeighbourhoods=[], phCommunity, setPhCommunity, p
               ? _schemaTypes
               : ["Apartment", "Villa", "Townhouse", "Office", "Hotel Apartment"];
 
-            /* ‚‚Äù‚Ç¨‚‚Äù‚Ç¨ Filter data ‚‚Äù‚Ç¨‚‚Äù‚Ç¨ */
+            /* ‚îÄ‚îÄ Filter data ‚îÄ‚îÄ */
             const filtered = phData.filter(d => {
               if (phCommunity !== "All" && d.community !== phCommunity) return false;
               if (phType !== "All" && d.type !== phType) return false;
@@ -114,7 +114,7 @@ function PriceHistoryTab({ liveNeighbourhoods=[], phCommunity, setPhCommunity, p
               backgroundRepeat: "no-repeat", backgroundPosition: "right 8px center",
             };
 
-            /* ‚‚Äù‚Ç¨‚‚Äù‚Ç¨ Momentum badge ‚‚Äù‚Ç¨‚‚Äù‚Ç¨ */
+            /* ‚îÄ‚îÄ Momentum badge ‚îÄ‚îÄ */
             const MomentumBadge = ({ change }) => {
               if (!change) return null;
               const positive = change > 0;
@@ -153,7 +153,7 @@ function PriceHistoryTab({ liveNeighbourhoods=[], phCommunity, setPhCommunity, p
                   </div>
                 </div>
 
-                {/* ‚‚Äù‚Ç¨‚‚Äù‚Ç¨ Smart Filters ‚‚Äù‚Ç¨‚‚Äù‚Ç¨ */}
+                {/* ‚îÄ‚îÄ Smart Filters ‚îÄ‚îÄ */}
                 <div style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 12, padding: "14px 16px", marginBottom: 20 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
                     <span style={{ fontSize: 11, fontWeight: 600, color: T.textMuted }}>Compare:</span>
@@ -181,7 +181,7 @@ function PriceHistoryTab({ liveNeighbourhoods=[], phCommunity, setPhCommunity, p
                   </div>
                 </div>
 
-                {/* ‚‚Äù‚Ç¨‚‚Äù‚Ç¨ No data state ‚‚Äù‚Ç¨‚‚Äù‚Ç¨ */}
+                {/* ‚îÄ‚îÄ No data state ‚îÄ‚îÄ */}
                 {phCommunityData.length === 0 && phChartData.length === 0 && (
                   <div style={{ background: "rgba(212,168,67,0.05)", border: `1px solid rgba(212,168,67,0.15)`, borderRadius: 12, padding: "48px 24px", textAlign: "center", marginBottom: 20 }}>
                     <div style={{ marginBottom: 14 }}>
@@ -189,11 +189,11 @@ function PriceHistoryTab({ liveNeighbourhoods=[], phCommunity, setPhCommunity, p
                     </div>
                     <div style={{ fontSize: 16, fontWeight: 700, color: T.white, marginBottom: 8 }}>Price history not yet imported</div>
                     <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 4 }}>Historical PPSF data loads from DLD transaction records</div>
-                    <div style={{ fontSize: 11, color: T.textMuted, opacity: 0.7 }}>Check Admin ‚Ü‚Äô Data Health ‚Ü‚Äô DLD Cron to verify sync status</div>
+                    <div style={{ fontSize: 11, color: T.textMuted, opacity: 0.7 }}>Check Admin ‚Üí Data Health ‚Üí DLD Cron to verify sync status</div>
                   </div>
                 )}
 
-                {/* ‚‚Äù‚Ç¨‚‚Äù‚Ç¨ Chart View ‚‚Äù‚Ç¨‚‚Äù‚Ç¨ */}
+                {/* ‚îÄ‚îÄ Chart View ‚îÄ‚îÄ */}
                 {/* Compare result banner */}
                 {phCompare && phCommunity !== "All" && phCommunity2 !== "All" && (() => {
                   const d1 = Object.entries(commPPSF||{}).find(([k]) => k===phCommunity);
@@ -226,7 +226,7 @@ function PriceHistoryTab({ liveNeighbourhoods=[], phCommunity, setPhCommunity, p
                     <div className="chart-box">
                       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
                         <div>
-                          <div style={{ fontSize: 13, fontWeight: 700, color: T.white }}>Price Per Sqft ‚‚Ç¨‚Äù Historical Trend</div>
+                          <div style={{ fontSize: 13, fontWeight: 700, color: T.white }}>Price Per Sqft ‚Äî Historical Trend</div>
                           <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>AED/sqft ¬∑ DLD registered transactions</div>
                         </div>
                         <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
@@ -270,7 +270,7 @@ function PriceHistoryTab({ liveNeighbourhoods=[], phCommunity, setPhCommunity, p
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
                       <div className="chart-box">
                         <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 4 }}>Off-Plan vs Secondary</div>
-                        <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 16 }}>Price divergence ‚‚Ç¨‚Äù same community</div>
+                        <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 16 }}>Price divergence ‚Äî same community</div>
                         <ResponsiveContainer width="100%" height={180}>
                           <LineChart data={phChartData.slice(0, 12)}>
                             <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
@@ -291,7 +291,7 @@ function PriceHistoryTab({ liveNeighbourhoods=[], phCommunity, setPhCommunity, p
                         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                           {phCommunityData.slice(0, 6).map((d, i) => (
                             <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                              <span style={{ fontSize: 12, color: T.textSecondary }}>{d.community || "‚‚Ç¨‚Äù"}</span>
+                              <span style={{ fontSize: 12, color: T.textSecondary }}>{d.community || "‚Äî"}</span>
                               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                                 <span style={{ fontSize: 12, color: T.white, fontWeight: 600 }}>AED {(d.ppsf || 0).toLocaleString()}</span>
                                 <MomentumBadge change={d.change6m ?? d.change1y ?? d.change ?? null} />
@@ -304,7 +304,7 @@ function PriceHistoryTab({ liveNeighbourhoods=[], phCommunity, setPhCommunity, p
                   </div>
                 )}
 
-                {/* ‚‚Äù‚Ç¨‚‚Äù‚Ç¨ Table View ‚‚Äù‚Ç¨‚‚Äù‚Ç¨ */}
+                {/* ‚îÄ‚îÄ Table View ‚îÄ‚îÄ */}
                 {phView === "table" && phCommunityData.length > 0 && (
                   <div style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 12, overflow: "hidden", marginBottom: 20 }}>
                     <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr 1fr 1fr", padding: "10px 16px", background: T.surfaceAlt, borderBottom: `1px solid ${T.border}` }}>
@@ -316,9 +316,9 @@ function PriceHistoryTab({ liveNeighbourhoods=[], phCommunity, setPhCommunity, p
                       <div key={i} style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr 1fr 1fr", padding: "10px 16px", borderBottom: i < phData.length - 1 ? `1px solid ${T.border}` : "none", background: i % 2 === 0 ? "transparent" : "rgba(255,255,255,0.01)" }}
                         onMouseEnter={e => e.currentTarget.style.background = "rgba(212,168,67,0.04)"}
                         onMouseLeave={e => e.currentTarget.style.background = i % 2 === 0 ? "transparent" : "rgba(255,255,255,0.01)"}>
-                        <div style={{ fontSize: 13, color: T.white, fontWeight: 500 }}>{row.community || "‚‚Ç¨‚Äù"}</div>
+                        <div style={{ fontSize: 13, color: T.white, fontWeight: 500 }}>{row.community || "‚Äî"}</div>
                         <div style={{ fontSize: 12, color: T.textSecondary }}>{row.type || "Apt"}</div>
-                        <div style={{ fontSize: 12, color: T.textSecondary }}>{row.beds || "‚‚Ç¨‚Äù"}</div>
+                        <div style={{ fontSize: 12, color: T.textSecondary }}>{row.beds || "‚Äî"}</div>
                         <div style={{ fontSize: 13, color: T.gold, fontWeight: 600 }}>AED {(row.ppsf || 0).toLocaleString()}</div>
                         <div><MomentumBadge change={row.change1y} /></div>
                         <div><MomentumBadge change={row.change3y} /></div>
@@ -328,12 +328,12 @@ function PriceHistoryTab({ liveNeighbourhoods=[], phCommunity, setPhCommunity, p
                   </div>
                 )}
 
-                {/* Correction alert banner ‚‚Ç¨‚Äù shows if any community has negative 6M momentum */}
+                {/* Correction alert banner ‚Äî shows if any community has negative 6M momentum */}
                 {phData.some(d => d.change6m < -5) && (
                   <div style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 10, padding: "12px 16px", marginBottom: 16, display: "flex", alignItems: "center", gap: 10 }}>
                     {SvgIcons.AlertTriangle({ width: 16, height: 16, style: { color: T.red, flexShrink: 0 } })}
                     <div style={{ fontSize: 12, color: T.textSecondary }}>
-                      <span style={{ color: T.red, fontWeight: 700 }}>Price correction detected</span> ‚‚Ç¨‚Äù Some communities showing &gt;5% decline over 6 months. Review before recommending to clients.
+                      <span style={{ color: T.red, fontWeight: 700 }}>Price correction detected</span> ‚Äî Some communities showing &gt;5% decline over 6 months. Review before recommending to clients.
                     </div>
                   </div>
                 )}
@@ -341,9 +341,9 @@ function PriceHistoryTab({ liveNeighbourhoods=[], phCommunity, setPhCommunity, p
                 {/* Quick nav */}
                 <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
                   {[
-                    { label: "DLD Volumes ‚Ü‚Äô", tab: "DLD Volumes" },
-                    { label: "Yields ‚Ü‚Äô", tab: "Yields" },
-                    { label: "Neighbourhoods ‚Ü‚Äô", tab: "Neighbourhoods" },
+                    { label: "DLD Volumes ‚Üí", tab: "DLD Volumes" },
+                    { label: "Yields ‚Üí", tab: "Yields" },
+                    { label: "Neighbourhoods ‚Üí", tab: "Neighbourhoods" },
                   ].map((n,i) => (
                     <button key={i} type="button" onClick={() => handleTabChange(n.tab)}
                       style={{ padding: "6px 14px", background: "rgba(212,168,67,0.06)", border: `1px solid ${T.border}`, borderRadius: 8, color: T.gold, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>

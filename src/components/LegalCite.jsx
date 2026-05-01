@@ -31,7 +31,7 @@ export default function LegalCite({
   const { citation, loading, error } = useLegalCitation(id);
 
   if (loading) {
-    return <span className={`legal-cite legal-cite--loading ${className}`}>‚‚Ç¨¶</span>;
+    return <span className={`legal-cite legal-cite--loading ${className}`}>‚Ä¶</span>;
   }
 
   if (error || !citation) {

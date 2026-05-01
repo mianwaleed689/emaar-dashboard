@@ -1,6 +1,6 @@
 function DLDSalesPanel({selectedProject,T}){const community=selectedProject.masterProject||selectedProject.community||"";const projName=(selectedProject.name||selectedProject.project||"").toUpperCase();const projPPSF=selectedProject.ppsf||0;const [dldTx,setDldTx]=React.useState([]);const [txLoading,setTxLoading]=React.useState(true);const [txMode,setTxMode]=React.useState("community");const [filterBeds,setFilterBeds]=React.useState("All");React.useEffect(()=>{setDldTx([]);setTxLoading(true);if(!community){setTxLoading(false);return;}import("firebase/firestore").then(({collection,query,where,orderBy,limit,getDocs,getFirestore})=>{const fdb=getFirestore();const txq=query(collection(fdb,"transactions"),where("masterProject","==",community),where("transGroup","==","Sales"),orderBy("date","desc"),limit(50));getDocs(txq).then(snap=>{const all=snap.docs.map(d=>d.data());const bMatch=all.filter(t=>(t.projectName||"").toUpperCase().includes(projName.substring(0,8)));const isExact=bMatch.length>=3;setDldTx(isExact?bMatch:all);setTxMode(isExact?"building":"community");setTxLoading(false);}).catch(()=>setTxLoading(false));});},[community]);const filtered=filterBeds==="All"?dldTx:dldTx.filter(t=>t.rooms===filterBeds);const avgPpsf=filtered.length>0?Math.round(filtered.reduce((s,t)=>s+(t.ppsf||0)/10.764,0)/filtered.length):0;const avgPrice=filtered.length>0?filtered.reduce((s,t)=>s+(t.price||0),0)/filtered.length:0;const ppsfDiff=projPPSF>0&&avgPpsf>0?Math.round(((projPPSF-avgPpsf)/avgPpsf)*100):null;const beds=["All",...new Set(dldTx.map(t=>t.rooms).filter(Boolean))].sort();return(<div style={{paddingBottom:20}}><div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10,marginBottom:16}}>{[{label:"Transactions",value:String(filtered.length)+(txMode==="building"?" building":" area"),color:T.gold},{label:"Avg Price",value:avgPrice>0?"AED "+(avgPrice/1e6).toFixed(2)+"M":"N/A",color:"#63B3ED"},{label:"Avg PPSF",value:avgPpsf>0?"AED "+avgPpsf.toLocaleString():"N/A",color:T.gold},{label:"vs Project",value:ppsfDiff!==null?(ppsfDiff>0?"+"+String(ppsfDiff)+"%":String(ppsfDiff)+"%"):"N/A",color:ppsfDiff===null?T.textMuted:ppsfDiff>0?"#FC8181":"#68D391"}].map((k,i)=>(<div key={i} style={{background:"rgba(255,255,255,0.03)",border:"1px solid "+T.border,borderRadius:10,padding:"12px 14px"}}><div style={{fontSize:9,color:T.textMuted,fontWeight:700,textTransform:"uppercase",letterSpacing:0.8,marginBottom:4}}>{k.label}</div><div style={{fontSize:15,fontWeight:800,color:k.color,fontFamily:"Fraunces,serif"}}>{k.value}</div></div>))}</div>{ppsfDiff!==null&&<div style={{marginBottom:14,padding:"10px 14px",borderRadius:8,background:ppsfDiff>10?"rgba(252,129,129,0.08)":ppsfDiff<-10?"rgba(104,211,145,0.08)":"rgba(212,168,67,0.06)",border:"1px solid "+(ppsfDiff>10?"rgba(252,129,129,0.25)":ppsfDiff<-10?"rgba(104,211,145,0.25)":"rgba(212,168,67,0.2)")}}><span style={{fontSize:11,fontWeight:700,color:ppsfDiff>10?"#FC8181":ppsfDiff<-10?"#68D391":T.gold}}>{ppsfDiff>10?"Priced "+String(ppsfDiff)+"% above comparable sales":ppsfDiff<-10?"Priced "+String(Math.abs(ppsfDiff))+"% below comparable sales":"Priced in line with market"}</span></div>}<div style={{display:"flex",gap:6,marginBottom:12,alignItems:"center",flexWrap:"wrap"}}><span style={{fontSize:10,color:T.textMuted,fontWeight:700}}>Beds:</span>{beds.map(b=><button key={b} type="button" onClick={()=>setFilterBeds(b)} style={{padding:"3px 10px",borderRadius:16,fontSize:10,cursor:"pointer",background:filterBeds===b?"rgba(212,168,67,0.15)":"rgba(255,255,255,0.04)",border:"1px solid "+(filterBeds===b?T.gold:T.border),color:filterBeds===b?T.gold:T.textMuted,fontFamily:"Outfit,sans-serif"}}>{b}</button>)}<span style={{marginLeft:"auto",fontSize:10,color:txMode==="building"?"#68D391":T.gold}}>{txMode==="building"?"Building data":"Community data"}</span></div>{txLoading&&<div style={{padding:40,textAlign:"center",color:T.textMuted,fontSize:12}}>Loading DLD transactions...</div>}{!txLoading&&filtered.length===0&&<div style={{padding:40,textAlign:"center",color:T.textMuted,fontSize:12}}>No transactions found</div>}{!txLoading&&filtered.length>0&&<div style={{border:"1px solid "+T.border,borderRadius:10,overflow:"hidden"}}><div style={{display:"grid",gridTemplateColumns:"1.2fr 1fr 1fr 0.8fr 0.8fr 2fr",padding:"8px 16px",background:"rgba(255,255,255,0.03)",borderBottom:"1px solid "+T.border}}>{["Date","Price","PPSF/sqft","Beds","Type","Building"].map(h=><div key={h} style={{fontSize:9,fontWeight:700,color:T.textMuted,textTransform:"uppercase",letterSpacing:0.8}}>{h}</div>)}</div>{filtered.slice(0,20).map((tx,i)=>{const ppsf=Math.round((tx.ppsf||0)/10.764);const ppsfColor=projPPSF>0?(ppsf>projPPSF*1.1?"#FC8181":ppsf<projPPSF*0.9?"#68D391":T.textSecondary):T.textSecondary;return(<div key={i} style={{display:"grid",gridTemplateColumns:"1.2fr 1fr 1fr 0.8fr 0.8fr 2fr",padding:"9px 16px",borderBottom:i<filtered.slice(0,20).length-1?"1px solid rgba(255,255,255,0.03)":"none"}} onMouseEnter={e=>e.currentTarget.style.background="rgba(255,255,255,0.02)"} onMouseLeave={e=>e.currentTarget.style.background="transparent"}><div style={{fontSize:11,color:T.textSecondary}}>{tx.date?tx.date.substring(0,10):""}</div><div style={{fontSize:12,fontWeight:700,color:T.gold}}>{tx.price?"AED "+(tx.price/1e6).toFixed(2)+"M":""}</div><div style={{fontSize:12,fontWeight:600,color:ppsfColor}}>{ppsf>0?"AED "+ppsf.toLocaleString():""}</div><div style={{fontSize:11,color:T.textSecondary}}>{tx.rooms||""}</div><div style={{fontSize:11,color:T.textSecondary}}>{tx.propertySubType||""}</div><div style={{fontSize:10,color:T.textMuted,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{tx.buildingName||tx.projectName||""}</div></div>);})}</div>}<div style={{marginTop:12,fontSize:10,color:T.textMuted,display:"flex",justifyContent:"space-between"}}><span>Source: Dubai Land Department</span><span>Green PPSF = below project price, Red = above</span></div></div>);}
 /* eslint-disable */
-/* PROJECTS TAB я┐╜я┐╜ттВмЪя┐╜я┐╜ттАЪмя┐╜ Master catalog of all Dubai property projects
+/* PROJECTS TAB я┐╜ттАЪмттВмЭ Master catalog of all Dubai property projects
    Includes detail modal (rendered via React Portal for safety)
 */
 
@@ -101,7 +101,7 @@ function shouldShowConfiguration(category, displayType) {
   return category === "Residential" && UNIT_BASED_RESIDENTIAL.includes(displayType);
 }
 
-/* Helper я┐╜я┐╜ттВмЪя┐╜я┐╜ттАЪмя┐╜ detect fake/placeholder RERA numbers and suppress display.
+/* Helper я┐╜ттАЪмттВмЭ detect fake/placeholder RERA numbers and suppress display.
    Real RERA project numbers are typically 3-6 digits.
    Fake patterns: 10+ digit placeholders, repeating digits, sequential like 1234/5678 */
 function isValidReraNumber(num) {
@@ -113,16 +113,16 @@ function isValidReraNumber(num) {
   return /^\d{3,6}$/.test(s);
 }
 
-/* ├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р
-   DXB ANALYTICS я┐╜я┐╜ттВмЪя┐╜я┐╜ттАЪмя┐╜ DATA PLATFORM LAYER
-   ├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜
+/* ├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р
+   DXB ANALYTICS я┐╜ттАЪмттВмЭ DATA PLATFORM LAYER
+   ├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜
    Legal positioning: This is a DATA AGGREGATION platform, not advice.
    All data displayed is sourced from Dubai Land Department (DLD) records.
    No investment recommendations. No BUY/SELL verdicts.
    For advice, users must consult RERA-licensed consultants.
-   ├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜ */
+   ├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜ */
 
-/* Asset class я┐╜я┐╜ттВмЪя┐╜я┐╜ттАЪмя┐╜ descriptive segmentation (like MLS tiers), not a score */
+/* Asset class я┐╜ттАЪмттВмЭ descriptive segmentation (like MLS tiers), not a score */
 function describeAssetClass(p) {
   const ppsf = p.ppsf || 0;
   if (ppsf >= 3000) return { tier:"Ultra-Luxury Segment", color:"#D4A843" };
@@ -133,7 +133,7 @@ function describeAssetClass(p) {
   return { tier:"Segment Not Disclosed", color:"#6B7280" };
 }
 
-/* Construction stage я┐╜я┐╜ттВмЪя┐╜я┐╜ттАЪмя┐╜ descriptive only, from DLD data */
+/* Construction stage я┐╜ттАЪмттВмЭ descriptive only, from DLD data */
 function describeMarketStatus(p) {
   const pct = p.constructionPct || 0;
   if (p.status === "Sold Out") return { label:"Sold Out (per DLD)", color:"#EF4444" };
@@ -144,7 +144,7 @@ function describeMarketStatus(p) {
   return { label:"Off-Plan", color:"#6B7280" };
 }
 
-/* Location advantages я┐╜я┐╜ттВмЪя┐╜я┐╜ттАЪмя┐╜ factual tags based on measurable distances */
+/* Location advantages я┐╜ттАЪмттВмЭ factual tags based on measurable distances */
 function locationTags(p) {
   const out = [];
   if (p.distBeach != null && p.distBeach <= 1) out.push({ label:"Waterfront (<1km)", color:"#14B8A6" });
@@ -154,7 +154,7 @@ function locationTags(p) {
   return out;
 }
 
-/* Unit mix percentages я┐╜я┐╜ттВмЪя┐╜я┐╜ттАЪмя┐╜ derived from actual unit breakdown data */
+/* Unit mix percentages я┐╜ттАЪмттВмЭ derived from actual unit breakdown data */
 function computeUnitMix(p) {
 const ub = Array.isArray(p.unitBreakdown) ? p.unitBreakdown : Object.entries(p.unitBreakdown||{}).map(([type,count])=>({type,count:Number(count)||1}));
   if (ub.length === 0) return null;
@@ -166,7 +166,7 @@ const ub = Array.isArray(p.unitBreakdown) ? p.unitBreakdown : Object.entries(p.u
   }));
 }
 
-/* Community average PPSF я┐╜я┐╜ттВмЪя┐╜я┐╜ттАЪмя┐╜ prefers DLD-computed median over legacy field */
+/* Community average PPSF я┐╜ттАЪмттВмЭ prefers DLD-computed median over legacy field */
 function communityBenchmarkPPSF(p) {
   if (p.communityMedianPPSF) {
     return {
@@ -177,10 +177,10 @@ function communityBenchmarkPPSF(p) {
     };
   }
   if (p.communityAvgPPSF) return { value: p.communityAvgPPSF, source:"Legacy estimate" };
-  return { value: null, source:"Not available я┐╜я┐╜ттВмЪя┐╜я┐╜ттАЪмя┐╜ DLD benchmark pending" };
+  return { value: null, source:"Not available я┐╜ттАЪмттВмЭ DLD benchmark pending" };
 }
 
-/* STR indicator я┐╜я┐╜ттВмЪя┐╜я┐╜ттАЪмя┐╜ factual flag only (not a score) */
+/* STR indicator я┐╜ттАЪмттВмЭ factual flag only (not a score) */
 function strIndicator(p) {
   const t = (p.type || "").toLowerCase();
   if (t.includes("hotel")) return { flag:"Hotel Apartment", note:"Designated for short-term rental per developer licensing" };
@@ -189,7 +189,7 @@ function strIndicator(p) {
   return { flag:"Residential Primary", note:"Area zoned primarily for long-term residence" };
 }
 
-/* Escrow status я┐╜я┐╜ттВмЪя┐╜я┐╜ттАЪмя┐╜ factual DLD data */
+/* Escrow status я┐╜ттАЪмттВмЭ factual DLD data */
 function escrowStatus(p) {
   if (p.escrowAccount && p.escrowBank) return { verified:true, label:"DLD-Registered Escrow Active" };
   if (p.escrowBank) return { verified:true, label:"Escrow Bank Verified" };
@@ -204,9 +204,9 @@ function reraCompliance(p) {
   return { verified:false };
 }
 
-/* ├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р
-   LEGAL DISCLAIMER я┐╜я┐╜ттВмЪя┐╜я┐╜ттАЪмя┐╜ reusable component
-   ├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜├вя┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттАЪмя┐╜я┐╜ */
+/* ├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р
+   LEGAL DISCLAIMER я┐╜ттАЪмттВмЭ reusable component
+   ├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜├вя┐╜ттАЪмя┐╜я┐╜ттВмЪя┐╜ */
 function LegalNote({ T, compact }) {
   return (
     <div style={{ padding:compact ? "8px 12px" : "12px 16px", background:"rgba(107,114,128,0.08)", borderRadius:8, border:`1px solid ${T.border}`, marginTop:12 }}>
@@ -267,7 +267,7 @@ function ProjectsTab({
   const { data: allCommunitiesFromDb = [] } = useUserFacingCommunities();
 
 
-  /* NEW FILTERS (v7) я┐╜я┐╜ттВмЪя┐╜я┐╜ттАЪмя┐╜ match data reality from audit:
+  /* NEW FILTERS (v7) я┐╜ттАЪмттВмЭ match data reality from audit:
      - lifecycleStage (100% coverage): Historical / Under Construction / Announced / Recently Delivered
      - escrowBank (94% coverage): 27 banks, strong trust signal
      - constructionBand (100% coverage): 0-25% / 25-50% / 50-75% / 75-100% / Completed
@@ -346,7 +346,7 @@ function ProjectsTab({
       if (String(p.community || "").toLowerCase() !== gfCommunity) return false;
     }
 
-    // Status filter (e.g. "offplan", "ready") я┐╜я┐╜ттВмЪя┐╜я┐╜ттАЪмя┐╜ fallback to lifecycleStage for DLD
+    // Status filter (e.g. "offplan", "ready") я┐╜ттАЪмттВмЭ fallback to lifecycleStage for DLD
     if (gfStatus) {
       const effectiveStatus = p.status || (
         p.lifecycleStage === "recently-delivered" || p.constructionPct >= 100 ? "Ready" :
@@ -371,7 +371,7 @@ function ProjectsTab({
       })) return false;
     }
 
-    // Price range я┐╜я┐╜ттВмЪя┐╜я┐╜ттАЪмя┐╜ only apply when project HAS priceMin (DLD records don't).
+    // Price range я┐╜ттАЪмттВмЭ only apply when project HAS priceMin (DLD records don't).
     // Records without price pass through unfiltered so user can still browse them.
     if (gfPriceMin > 0 && p.priceMin && Number(p.priceMin) < gfPriceMin) return false;
     if (gfPriceMax > 0 && p.priceMax && Number(p.priceMax) > gfPriceMax) return false;
@@ -423,7 +423,7 @@ function ProjectsTab({
     <>
       {(() => {
 
-            /* Phase 4: merge all data sources я┐╜я┐╜ттВмЪя┐╜я┐╜ттАЪмя┐╜ SEED (18 Verified) + DLD developments (2,798 Registry) + extras.
+            /* Phase 4: merge all data sources я┐╜ттАЪмттВмЭ SEED (18 Verified) + DLD developments (2,798 Registry) + extras.
                Guard every spread with Array.isArray to prevent 'not iterable' crashes when props
                arrive as undefined/null (Firestore still loading). */
             const allSources = [
@@ -432,7 +432,7 @@ function ProjectsTab({
               ...(Array.isArray(liveProjects) ? liveProjects : []),
               ...(Array.isArray(extraProjects) ? extraProjects : []),
             ];
-            /* De-dupe by id я┐╜я┐╜ттВмЪя┐╜я┐╜ттАЪмя┐╜ live version wins over seed if same id */
+            /* De-dupe by id я┐╜ттАЪмттВмЭ live version wins over seed if same id */
             const seenIds = new Set();
             const rawProjects = allSources.filter(p => {
               if (!p) return false;
@@ -456,19 +456,19 @@ function ProjectsTab({
               if (t.includes("retail") || t.includes("shop")) return "Retail";
               if (t.includes("warehouse") || t.includes("industrial")) return "Warehouse";
               if (t.includes("land") || t.includes("plot")) return "Land";
-              return "Apartment"; /* default я┐╜я┐╜ттВмЪя┐╜я┐╜ттАЪмя┐╜ most DLD records are unit/flat = apartment */
+              return "Apartment"; /* default я┐╜ттАЪмттВмЭ most DLD records are unit/flat = apartment */
             };
 
             const filtered = rawProjects.filter(p => {
               // Global top-bar filters first
               if (!projMatchesGlobalFilter(p)) return false;
-              // Type filter я┐╜я┐╜ттВмЪя┐╜я┐╜ттАЪмя┐╜ but skip when 'All' is selected
+              // Type filter я┐╜ттАЪмттВмЭ but skip when 'All' is selected
               if (projCategory && projCategory !== "All") { const dts = getDisplayTypesForCategory(projCategory); if (dts.length > 0 && !dts.includes(normalizeType(p))) return false; }
               if (projMode !== "All") { const its = getInternalTypes(projMode); if (its && its.length > 0) { const raw = String(p.type || p.propertyType || p.dldClass || "").toLowerCase(); const canon = normalizeType(p); if (!its.some(t => raw.includes(t.toLowerCase()) || t === canon)) return false; } else if (normalizeType(p) !== projMode) { return false; } }
               if (projSearch && !JSON.stringify(p).toLowerCase().includes(projSearch.toLowerCase())) return false;
               if (projDev !== "All" && p.developer !== projDev && p.developerName !== projDev) return false;
               if (projCommunity !== "All" && p.community !== projCommunity) return false;
-              /* SALE STATUS я┐╜я┐╜ттВмЪя┐╜я┐╜ттАЪмя┐╜ fallback to lifecycleStage mapping for DLD records without status */
+              /* SALE STATUS я┐╜ттАЪмттВмЭ fallback to lifecycleStage mapping for DLD records without status */
               if (projStatus !== "All") {
                 const effectiveStatus = p.status || (
                   p.lifecycleStage === "recently-delivered" || p.constructionPct >= 100 ? "Ready" :
@@ -534,7 +534,7 @@ function ProjectsTab({
                 const bDate = b.launchDate || b.projectStartDate || "";
                 return bDate.localeCompare(aDate);
               }
-              /* Default 'relevance' я┐╜я┐╜ттВмЪя┐╜я┐╜ттАЪмя┐╜ interleave: Research (enriched data) first, DLD second, within each group by score/data completeness */
+              /* Default 'relevance' я┐╜ттАЪмттВмЭ interleave: Research (enriched data) first, DLD second, within each group by score/data completeness */
               const aIsDld = String(a.id || "").startsWith("dld-") || a.dldSource;
               const bIsDld = String(b.id || "").startsWith("dld-") || b.dldSource;
               if (aIsDld !== bIsDld) return aIsDld ? 1 : -1; /* Research first */
@@ -542,7 +542,7 @@ function ProjectsTab({
             });
 
             const avgYield = filtered.length > 0 && filtered.some(p => p.grossYield > 0)
-              ? (filtered.filter(p=>p.grossYield>0).reduce((a,p) => a + p.grossYield, 0) / filtered.filter(p=>p.grossYield>0).length).toFixed(1) : "я┐╜я┐╜ттВмЪя┐╜я┐╜ттАЪмя┐╜";
+              ? (filtered.filter(p=>p.grossYield>0).reduce((a,p) => a + p.grossYield, 0) / filtered.filter(p=>p.grossYield>0).length).toFixed(1) : "я┐╜ттАЪмттВмЭ";
             const avgPpsf = filtered.length > 0 && filtered.some(p=>p.ppsf)
               ? Math.round(filtered.filter(p=>p.ppsf).reduce((a,p) => a + p.ppsf, 0) / filtered.filter(p=>p.ppsf).length) : 0;
 
@@ -593,7 +593,7 @@ function ProjectsTab({
             };
             // Legacy flat array kept for backward compat
             const commOptions = ["All", ...enrichedComms.map(c => c.value)].slice(0, 500);
-            /* Escrow bank options with project counts я┐╜я┐╜ттВмЪя┐╜я┐╜ттАЪмя┐╜ DLD enriched */
+            /* Escrow bank options with project counts я┐╜ттАЪмттВмЭ DLD enriched */
             const escrowCounts = {};
             rawProjects.forEach(p => {
               if (p.escrowBank) escrowCounts[p.escrowBank] = (escrowCounts[p.escrowBank] || 0) + 1;
@@ -604,9 +604,9 @@ function ProjectsTab({
                 .sort((a, b) => b[1] - a[1])  /* sort by count desc */
                 .map(([bank, count]) => ({ value: bank, label: bank, count })),
             ];
-            /* Legacy string array я┐╜я┐╜ттВмЪя┐╜я┐╜ттАЪмя┐╜ kept for backward compat where other code reads it */
+            /* Legacy string array я┐╜ттАЪмттВмЭ kept for backward compat where other code reads it */
             const escrowOptions = ["All", ...Object.keys(escrowCounts).sort((a, b) => escrowCounts[b] - escrowCounts[a])];
-            /* DYNAMIC HANDOVER YEARS я┐╜я┐╜ттВмЪя┐╜я┐╜ттАЪмя┐╜ extract actual years from data, include 2030+ */
+            /* DYNAMIC HANDOVER YEARS я┐╜ттАЪмттВмЭ extract actual years from data, include 2030+ */
             const handoverYearsFromData = new Set();
             const currentYear = new Date().getFullYear();
             rawProjects.forEach(p => {
@@ -643,7 +643,7 @@ function ProjectsTab({
               return <span style={{ fontSize:10, fontWeight:700, padding:"2px 8px", borderRadius:10, background:cfg.bg, color:cfg.color }}>{status}</span>;
             };
 
-            /* DataCompletenessBadge я┐╜я┐╜ттВмЪя┐╜я┐╜ттАЪмя┐╜ shows factual data completeness, NOT investment advice.
+            /* DataCompletenessBadge я┐╜ттАЪмттВмЭ shows factual data completeness, NOT investment advice.
                Replaces the old ScoreCircle/scoreLabel which said "Strong Buy/Buy/Hold" =
                unlicensed investment advice under RERA law. */
             const DataCompletenessBadge = ({ p }) => {
@@ -651,7 +651,7 @@ function ProjectsTab({
               if (isDld) {
                 return (
                   <div style={{ width:52, height:52, borderRadius:"50%", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", border:`2px solid ${T.teal}`, background:"rgba(20,184,166,0.15)", flexShrink:0 }}>
-                    <span style={{ fontSize:16, color:T.teal, lineHeight:1 }}>├вя┐╜я┐╜ттАЪмя┐╜я┐╜я┐╜ттВмЪя┐╜я┐╜ттВмЬ</span>
+                    <span style={{ fontSize:16, color:T.teal, lineHeight:1 }}>├вя┐╜ттВмЬя┐╜ттАЪм┼тАЬ</span>
                     <span style={{ fontSize:8, fontWeight:700, color:T.teal, marginTop:2 }}>DLD</span>
                   </div>
                 );
@@ -680,15 +680,15 @@ function ProjectsTab({
                 <div className="chart-box" style={{ padding:0, overflow:"hidden", cursor:"pointer", position:"relative" }}
                   onMouseEnter={e => e.currentTarget.style.borderColor="rgba(212,168,67,0.4)"}
                   onMouseLeave={e => e.currentTarget.style.borderColor=T.border}>
-                  {/* DATA SOURCE BADGE я┐╜я┐╜ттВмЪя┐╜я┐╜ттАЪмя┐╜ top-right corner */}
+                  {/* DATA SOURCE BADGE я┐╜ттАЪмттВмЭ top-right corner */}
                   <div style={{ position:"absolute", top:10, right:10, zIndex:2 }}>
                     {isDldVerified ? (
                       <span style={{ fontSize:9, padding:"3px 8px", borderRadius:5, background:"rgba(20,184,166,0.12)", color:T.teal, fontWeight:700, border:`1px solid rgba(20,184,166,0.3)`, display:"inline-flex", alignItems:"center", gap:4 }}>
-                        ├вя┐╜я┐╜ттАЪмя┐╜я┐╜я┐╜ттВмЪя┐╜я┐╜ттВмЬ DLD Verified
+                        ├вя┐╜ттВмЬя┐╜ттАЪм┼тАЬ DLD Verified
                       </span>
                     ) : (
                       <span style={{ fontSize:9, padding:"3px 8px", borderRadius:5, background:"rgba(212,168,67,0.08)", color:T.gold, fontWeight:700, border:`1px solid rgba(212,168,67,0.2)`, display:"inline-flex", alignItems:"center", gap:4 }}>
-                        я┐╜я┐╜ттАЪмттВмЭя┐╜ттАЪмя┐╜ Research
+                        я┐╜ттВмтАЭттВма Research
                       </span>
                     )}
                   </div>
@@ -711,31 +711,31 @@ function ProjectsTab({
                       onMouseEnter={(e) => e.currentTarget.style.background = "rgba(212,168,67,0.25)"}
                       onMouseLeave={(e) => e.currentTarget.style.background = watchlist.some(w => w.id === p.id) ? "rgba(212,168,67,0.18)" : "rgba(255,255,255,0.04)"}
                     >
-                      {watchlist.some(w => w.id === p.id) ? "├вя┐╜я┐╜ттВмЬя┐╜я┐╜ттВмЪя┐╜я┐╜" : "├вя┐╜я┐╜ттВмЬя┐╜я┐╜ттВмЪя┐╜я┐╜"}
+                      {watchlist.some(w => w.id === p.id) ? "├вя┐╜┼тАЬя┐╜ттАЪмя┐╜" : "├вя┐╜┼тАЬя┐╜ттАЪмя┐╜"}
                     </button>
                   )}
                   <div style={{ padding:"14px 16px", borderBottom:`1px solid ${T.border}` }} onClick={() => { setSelectedProject(p); setProjDetailTab("identity"); }}>
                     <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:8 }}>
                       <div style={{ flex:1, paddingRight:70 /* room for DLD Verified badge */ }}>
-                        <div style={{ fontSize:10, fontWeight:700, color:T.textMuted, letterSpacing:0.8, textTransform:"uppercase", marginBottom:3 }}>{(p.developerActual || p.developer || p.developerName || "Unknown")}{" ┬╖ "}{p.community || p.area || "я┐╜я┐╜ттВмЪя┐╜я┐╜ттАЪмя┐╜"}{p.masterCommunity && p.masterCommunity !== p.community ? " я┐╜я┐╜ттВмЪя┐╜я┐╜ттАЪмя┐╜ " + p.masterCommunity : ""}</div>
-                        <div style={{ fontFamily:"'Fraunces',serif", fontSize:15, fontWeight:700, color:T.white, marginBottom:6 }}>{p.project || p.name || "я┐╜я┐╜ттВмЪя┐╜я┐╜ттАЪмя┐╜"}</div>
+                        <div style={{ fontSize:10, fontWeight:700, color:T.textMuted, letterSpacing:0.8, textTransform:"uppercase", marginBottom:3 }}>{(p.developerActual || p.developer || p.developerName || "Unknown")}{" ┬╖ "}{p.community || p.area || "я┐╜ттАЪмттВмЭ"}{p.masterCommunity && p.masterCommunity !== p.community ? " я┐╜ттАЪмттВмЭ " + p.masterCommunity : ""}</div>
+                        <div style={{ fontFamily:"'Fraunces',serif", fontSize:15, fontWeight:700, color:T.white, marginBottom:6 }}>{p.project || p.name || "я┐╜ттАЪмттВмЭ"}</div>
                         <div style={{ display:"flex", gap:6, flexWrap:"wrap", alignItems:"center" }}>
                           <StatusBadge status={p.status || (p.constructionPct >= 100 ? "Ready" : "Off-Plan")} />
                           {(p.handover || p.expectedHandover) && <span style={{ fontSize:10, color:T.textMuted }}>{p.handover || p.expectedHandover}</span>}
                           {Array.isArray(p.beds) && p.beds.length > 0 && <span style={{ fontSize:10, color:T.textMuted }}>{"┬╖"}{p.beds.join(" / ")}</span>}
                           {isValidReraNumber(p.reraNo || p.projectNumber) && <span style={{ fontSize:9, color:T.teal }}>{"┬╖"}DLD #{p.reraNo || p.projectNumber}</span>}
                         </div>
-                        {/* Factual classification badges only я┐╜я┐╜ттВмЪя┐╜я┐╜ттАЪмя┐╜ no investment advice */}
+                        {/* Factual classification badges only я┐╜ттАЪмттВмЭ no investment advice */}
                         <div style={{ display:"flex", gap:5, flexWrap:"wrap", marginTop:6 }}>
                           {p.tier === 1 && <span style={{ fontSize:9, padding:"2px 7px", borderRadius:5, background:"rgba(16,185,129,0.12)", color:"#10B981", fontWeight:700 }}>Tier 1 Developer</span>}
                           {p.tier === 2 && <span style={{ fontSize:9, padding:"2px 7px", borderRadius:5, background:"rgba(245,158,11,0.12)", color:"#F59E0B", fontWeight:700 }}>Tier 2 Developer</span>}
-                          {p.goldenVisa && p.priceMin >= GOLDEN_VISA_THRESHOLD && <span style={{ fontSize:9, padding:"2px 7px", borderRadius:5, background:"rgba(212,168,67,0.15)", color:T.gold, fontWeight:700 }}>├вя┐╜я┐╜ттВмЬя┐╜я┐╜ттВмЪя┐╜я┐╜ Golden Visa Eligible</span>}
-                          {p.branded && <span style={{ fontSize:9, padding:"2px 7px", borderRadius:5, background:"rgba(139,92,246,0.15)", color:"#A78BFA", fontWeight:700 }}>я┐╜я┐╜ттАЪмттВмЭя┐╜ттАЪмя┐╜ {p.brandPartner || "Branded"}</span>}
-                          {p.escrowBank && <span style={{ fontSize:9, padding:"2px 7px", borderRadius:5, background:"rgba(20,184,166,0.08)", color:T.teal, fontWeight:700 }}>Escrow ├вя┐╜я┐╜ттАЪмя┐╜я┐╜я┐╜ттВмЪя┐╜я┐╜ттВмЬ</span>}
+                          {p.goldenVisa && p.priceMin >= GOLDEN_VISA_THRESHOLD && <span style={{ fontSize:9, padding:"2px 7px", borderRadius:5, background:"rgba(212,168,67,0.15)", color:T.gold, fontWeight:700 }}>├вя┐╜┼тАЬя┐╜ттАЪмя┐╜ Golden Visa Eligible</span>}
+                          {p.branded && <span style={{ fontSize:9, padding:"2px 7px", borderRadius:5, background:"rgba(139,92,246,0.15)", color:"#A78BFA", fontWeight:700 }}>я┐╜ттВмтАЭттВма {p.brandPartner || "Branded"}</span>}
+                          {p.escrowBank && <span style={{ fontSize:9, padding:"2px 7px", borderRadius:5, background:"rgba(20,184,166,0.08)", color:T.teal, fontWeight:700 }}>Escrow ├вя┐╜ттВмЬя┐╜ттАЪм┼тАЬ</span>}
                         </div>
                       </div>
                       <div style={{ display:"flex", flexDirection:"column", alignItems:"flex-end", gap:4 }}>
-                        {/* Circle badge removed я┐╜я┐╜ттВмЪя┐╜я┐╜ттАЪмя┐╜ top-right pill shows data source */}
+                        {/* Circle badge removed я┐╜ттАЪмттВмЭ top-right pill shows data source */}
                       </div>
                     </div>
                   </div>
@@ -762,7 +762,7 @@ function ProjectsTab({
                             ? "AED " + p.ppsf.toLocaleString()
                             : p.communityMedianPPSF
                               ? "AED " + p.communityMedianPPSF.toLocaleString()
-                              : "я┐╜я┐╜ттВмЪя┐╜я┐╜ттАЪмя┐╜"}
+                              : "я┐╜ттАЪмттВмЭ"}
                         </div>
                         {!p.ppsf && p.communityMedianPPSF && p.communityTxCount && (
                           <div style={{ fontSize:8, color:T.teal, marginTop:1 }}>DLD ┬╖ n={p.communityTxCount}</div>
@@ -777,7 +777,7 @@ function ProjectsTab({
                             ? p.grossYield.toFixed(1) + "%"
                             : p.totalUnits
                               ? p.totalUnits.toLocaleString()
-                              : "я┐╜я┐╜ттВмЪя┐╜я┐╜ттАЪмя┐╜"}
+                              : "я┐╜ттАЪмттВмЭ"}
                         </div>
                       </div>
                       <div>
@@ -789,7 +789,7 @@ function ProjectsTab({
                             ? p.paymentPlan
                             : p.constructionPct != null
                               ? p.constructionPct + "%"
-                              : (p.status || "я┐╜я┐╜ттВмЪя┐╜я┐╜ттАЪмя┐╜")}
+                              : (p.status || "я┐╜ттАЪмттВмЭ")}
                         </div>
                       </div>
                     </div>
@@ -833,14 +833,14 @@ function ProjectsTab({
                           </div>
                           {p.communityP25PPSF && p.communityP75PPSF && (
                             <div style={{ fontSize:9, color:T.textMuted, marginTop:1 }}>
-                              25thя┐╜я┐╜ттВмЪя┐╜я┐╜ттАЪмя┐╜75th: {p.communityP25PPSF.toLocaleString()}я┐╜я┐╜ттВмЪя┐╜я┐╜ттАЪмя┐╜{p.communityP75PPSF.toLocaleString()}
+                              25thя┐╜ттАЪмттВмЬ75th: {p.communityP25PPSF.toLocaleString()}я┐╜ттАЪмттВмЬ{p.communityP75PPSF.toLocaleString()}
                             </div>
                           )}
                         </div>
                       </div>
                     )}
                     <div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>
-                      {typeof p.distMetro === "number" && p.distMetro > 0 && <span style={{ fontSize:10, padding:"2px 7px", borderRadius:8, background:p.distMetro <= 0.8 ? "rgba(16,185,129,0.15)" : T.surfaceAlt, color:p.distMetro <= 0.8 ? T.green : T.textMuted }}>Metro {p.distMetro <= 0.8 ? "├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬д800m" : p.distMetro + "km"}</span>}
+                      {typeof p.distMetro === "number" && p.distMetro > 0 && <span style={{ fontSize:10, padding:"2px 7px", borderRadius:8, background:p.distMetro <= 0.8 ? "rgba(16,185,129,0.15)" : T.surfaceAlt, color:p.distMetro <= 0.8 ? T.green : T.textMuted }}>Metro {p.distMetro <= 0.8 ? "├вя┐╜ттАЪмя┐╜┬д800m" : p.distMetro + "km"}</span>}
                       {typeof p.distBeach === "number" && p.distBeach > 0 && p.distBeach <= 2 && <span style={{ fontSize:10, padding:"2px 7px", borderRadius:8, background:"rgba(20,184,166,0.12)", color:T.teal }}>Beach {p.distBeach < 1 ? (p.distBeach*1000).toFixed(0)+"m" : p.distBeach+"km"}</span>}
                       {typeof p.distDIFC === "number" && p.distDIFC > 0 && <span style={{ fontSize:10, padding:"2px 7px", borderRadius:8, background:T.surfaceAlt, color:T.textMuted }}>DIFC {p.distDIFC}km</span>}
                       {p.constructionPct > 0 && p.status !== "Ready" && <span style={{ fontSize:10, padding:"2px 7px", borderRadius:8, background:"rgba(139,92,246,0.12)", color:"#8B5CF6" }}>{p.constructionPct}% built</span>}
@@ -854,12 +854,12 @@ function ProjectsTab({
                     </div>
                   )}
                   <div style={{ padding:"10px 12px", display:"flex", gap:6, flexWrap:"wrap" }}>
-                    <button type="button" onClick={() => handleTabChange("Investment Score")} style={{ padding:"5px 10px", background:"rgba(212,168,67,0.08)", border:`1px solid ${T.border}`, borderRadius:7, color:T.gold, fontSize:10, fontWeight:700, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>ROI я┐╜я┐╜ттАЪмя┐╜я┐╜ттАЪмтДв</button>
+                    <button type="button" onClick={() => handleTabChange("Investment Score")} style={{ padding:"5px 10px", background:"rgba(212,168,67,0.08)", border:`1px solid ${T.border}`, borderRadius:7, color:T.gold, fontSize:10, fontWeight:700, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>ROI я┐╜ттВматтВмтДв</button>
                     <button type="button" onClick={() => handleTabChange("Mortgage")} style={{ padding:"5px 10px", background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:7, color:T.textSecondary, fontSize:10, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>Mortgage</button>
-                    {p.status === "Off-Plan" && <button type="button" onClick={() => handleTabChange("Launch Calendar")} style={{ padding:"5px 10px", background:"rgba(212,168,67,0.08)", border:`1px solid ${T.gold}`, borderRadius:7, color:T.gold, fontSize:10, fontWeight:700, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>View Launch я┐╜я┐╜ттАЪмя┐╜я┐╜ттАЪмтДв</button>}
-                    <button type="button" onClick={() => setProjCompare(prev => inCompare ? prev.filter(c=>c.id!==p.id) : prev.length < 3 ? [...prev,p] : prev)} style={{ padding:"5px 10px", background:inCompare?"rgba(16,185,129,0.12)":T.surfaceAlt, border:`1px solid ${inCompare?T.green:T.border}`, borderRadius:7, color:inCompare?T.green:T.textSecondary, fontSize:10, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>{inCompare?"├вя┐╜я┐╜ттАЪмя┐╜я┐╜я┐╜ттВмЪя┐╜я┐╜ттВмЬ Compare":"+ Compare"}</button>
+                    {p.status === "Off-Plan" && <button type="button" onClick={() => handleTabChange("Launch Calendar")} style={{ padding:"5px 10px", background:"rgba(212,168,67,0.08)", border:`1px solid ${T.gold}`, borderRadius:7, color:T.gold, fontSize:10, fontWeight:700, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>View Launch я┐╜ттВматтВмтДв</button>}
+                    <button type="button" onClick={() => setProjCompare(prev => inCompare ? prev.filter(c=>c.id!==p.id) : prev.length < 3 ? [...prev,p] : prev)} style={{ padding:"5px 10px", background:inCompare?"rgba(16,185,129,0.12)":T.surfaceAlt, border:`1px solid ${inCompare?T.green:T.border}`, borderRadius:7, color:inCompare?T.green:T.textSecondary, fontSize:10, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>{inCompare?"├вя┐╜ттВмЬя┐╜ттАЪм┼тАЬ Compare":"+ Compare"}</button>
                     <button type="button" onClick={() => handleTabChange("My Leads")} style={{ padding:"5px 10px", background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:7, color:T.textSecondary, fontSize:10, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>Add Lead</button>
-                    <button type="button" onClick={() => { setSelectedProject(p); setProjDetailTab("identity"); }} style={{ padding:"5px 10px", background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:7, color:T.textSecondary, fontSize:10, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>Details я┐╜я┐╜ттАЪмя┐╜я┐╜ттАЪмтДв</button>
+                    <button type="button" onClick={() => { setSelectedProject(p); setProjDetailTab("identity"); }} style={{ padding:"5px 10px", background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:7, color:T.textSecondary, fontSize:10, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>Details я┐╜ттВматтВмтДв</button>
                   </div>
                 </div>
               );
@@ -877,10 +877,10 @@ function ProjectsTab({
                   </div>
                 </div>
 
-                {/* ├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р
-                   NEW PRIMARY FILTER BAR я┐╜я┐╜ттВмЪя┐╜я┐╜ттАЪмя┐╜ 3-Layer Architecture
-                   Category я┐╜я┐╜ттАЪмя┐╜я┐╜ттАЪмтДв Type я┐╜я┐╜ттАЪмя┐╜я┐╜ттАЪмтДв Configuration я┐╜я┐╜ттАЪмя┐╜я┐╜ттАЪмтДв Price я┐╜я┐╜ттАЪмя┐╜я┐╜ттАЪмтДв More Filters
-                   ├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р */}
+                {/* ├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р
+                   NEW PRIMARY FILTER BAR я┐╜ттАЪмттВмЭ 3-Layer Architecture
+                   Category я┐╜ттВматтВмтДв Type я┐╜ттВматтВмтДв Configuration я┐╜ттВматтВмтДв Price я┐╜ттВматтВмтДв More Filters
+                   ├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р */}
                 <div style={{
                   display:"flex",
                   flexWrap:"wrap",
@@ -945,7 +945,7 @@ function ProjectsTab({
                     </select>
                   </div>
 
-                  {/* Configuration я┐╜я┐╜ттВмЪя┐╜я┐╜ттАЪмя┐╜ HIDDEN when not applicable */}
+                  {/* Configuration я┐╜ттАЪмттВмЭ HIDDEN when not applicable */}
                   {shouldShowConfiguration(projCategory, projMode) ? (
                     <div style={{ flex:"1 1 140px", minWidth:120 }}>
                       <div style={{ fontSize:10, color:T.textMuted, marginBottom:6, letterSpacing:0.5, textTransform:"uppercase", fontFamily:"'Outfit',sans-serif", fontWeight:600 }}>Configuration</div>
@@ -991,9 +991,9 @@ function ProjectsTab({
                       }}>
                       <option value="0-999999999">Any Price</option>
                       <option value="0-1000000">Under AED 1M</option>
-                      <option value="1000000-2000000">AED 1M я┐╜я┐╜ттВмЪя┐╜я┐╜ттАЪмя┐╜ 2M</option>
-                      <option value="2000000-5000000">AED 2M я┐╜я┐╜ттВмЪя┐╜я┐╜ттАЪмя┐╜ 5M</option>
-                      <option value="5000000-10000000">AED 5M я┐╜я┐╜ттВмЪя┐╜я┐╜ттАЪмя┐╜ 10M</option>
+                      <option value="1000000-2000000">AED 1M я┐╜ттАЪмттВмЭ 2M</option>
+                      <option value="2000000-5000000">AED 2M я┐╜ттАЪмттВмЭ 5M</option>
+                      <option value="5000000-10000000">AED 5M я┐╜ттАЪмттВмЭ 10M</option>
                       <option value="10000000-999999999">AED 10M+</option>
                     </select>
                   </div>
@@ -1015,15 +1015,15 @@ function ProjectsTab({
                         cursor:"pointer",
                         display:"flex", alignItems:"center", justifyContent:"center", gap:6,
                       }}>
-                      More Filters {showMoreFilters ? "├вя┐╜я┐╜ттВмЪя┐╜я┐╜ттАЪмя┐╜┬┤" : "├вя┐╜я┐╜ттВмЪя┐╜я┐╜ттАЪмя┐╜┬╛"}
+                      More Filters {showMoreFilters ? "├вя┐╜ттАЪмттВмЬ┬┤" : "├вя┐╜ттАЪмттВмЬ┬╛"}
                     </button>
                   </div>
                 </div>
 
-                {/* ├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р
-                   MORE FILTERS PANEL я┐╜я┐╜ттВмЪя┐╜я┐╜ттАЪмя┐╜ slides down when button clicked
+                {/* ├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р
+                   MORE FILTERS PANEL я┐╜ттАЪмттВмЭ slides down when button clicked
                    Two sections: Refine By (gold) + Project Details (teal)
-                   ├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р */}
+                   ├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р */}
                 {showMoreFilters && (
                   <div style={{
                     marginBottom: 14,
@@ -1196,13 +1196,13 @@ function ProjectsTab({
                     </div>
                   </div>
                 )}
-                {/* ├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р PROPERTY TYPE TABS я┐╜я┐╜ттВмЪя┐╜я┐╜ттАЪмя┐╜ premium pill design ├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р */}
+                {/* ├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р PROPERTY TYPE TABS я┐╜ттАЪмттВмЭ premium pill design ├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р */}
 
 
-                {/* ├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р PROJECTS CONTROL BAR я┐╜я┐╜ттВмЪя┐╜я┐╜ттАЪмя┐╜ clean unified design, no duplicate search ├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р */}
+                {/* ├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р PROJECTS CONTROL BAR я┐╜ттАЪмттВмЭ clean unified design, no duplicate search ├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р */}
                 {(() => {
                   const activeFilters = [];
-                  /* GLOBAL FILTERS from top bar я┐╜я┐╜ттВмЪя┐╜я┐╜ттАЪмя┐╜ shown as chips so user sees what's applied */
+                  /* GLOBAL FILTERS from top bar я┐╜ттАЪмттВмЭ shown as chips so user sees what's applied */
                   if (globalFilters?.developer && globalFilters.developer !== "all") {
                     const devName = (allDevelopers || []).find(d => String(d.id).toLowerCase() === String(globalFilters.developer).toLowerCase())?.name || globalFilters.developer;
                     activeFilters.push({ key:"gDev", label:devName, global:true });
@@ -1212,7 +1212,7 @@ function ProjectsTab({
                   if (globalFilters?.beds && globalFilters.beds !== "all") activeFilters.push({ key:"gBed", label:globalFilters.beds, global:true });
                   if (globalFilters?.priceMin > 0 || globalFilters?.priceMax > 0) {
                     const lbl = globalFilters.priceMin > 0 && globalFilters.priceMax > 0
-                      ? `AED ${(globalFilters.priceMin/1000000).toFixed(1)}Mя┐╜я┐╜ттВмЪя┐╜я┐╜ттАЪмя┐╜${(globalFilters.priceMax/1000000).toFixed(1)}M`
+                      ? `AED ${(globalFilters.priceMin/1000000).toFixed(1)}Mя┐╜ттАЪмттВмЬ${(globalFilters.priceMax/1000000).toFixed(1)}M`
                       : globalFilters.priceMin > 0 ? `From AED ${(globalFilters.priceMin/1000000).toFixed(1)}M`
                       : `Up to AED ${(globalFilters.priceMax/1000000).toFixed(1)}M`;
                     activeFilters.push({ key:"gPrice", label:lbl, global:true });
@@ -1242,7 +1242,7 @@ function ProjectsTab({
                   const anyActive = activeFilters.length > 0;
                   return (
                     <>
-                      {/* CONTROL BAR я┐╜я┐╜ттВмЪя┐╜я┐╜ттАЪмя┐╜ single row */}
+                      {/* CONTROL BAR я┐╜ттАЪмттВмЭ single row */}
                       <div style={{
                         display:"flex", alignItems:"center", gap:12, flexWrap:"wrap",
                         marginBottom: anyActive ? 10 : 16,
@@ -1259,7 +1259,7 @@ function ProjectsTab({
                           <option value="yield">Yield: high to low</option>
                           <option value="price_asc">Price: low to high</option>
                           <option value="price_desc">Price: high to low</option>
-                          <option value="alphabetical">Name: Aя┐╜я┐╜ттВмЪя┐╜я┐╜ттАЪмя┐╜Z</option>
+                          <option value="alphabetical">Name: Aя┐╜ттАЪмттВмЬZ</option>
                           <option value="recent">Recently launched</option>
                         </select>
 
@@ -1332,7 +1332,7 @@ function ProjectsTab({
                                   width: 18, height: 18, borderRadius: "50%",
                                   display: "flex", alignItems: "center", justifyContent: "center",
                                   padding: 0, fontSize: 14, lineHeight: 1,
-                                }}>я┐╜я┐╜ттВмтДвя┐╜я┐╜ттВмЪя┐╜я┐╜ттАЪмя┐╜</button>
+                                }}>я┐╜╞тАЩя┐╜ттАЪмттВмЭ</button>
                               </span>
                             )
                           ))}
@@ -1363,7 +1363,7 @@ function ProjectsTab({
                   );
                 })()}
 
-                {/* COMPACT INLINE STATS я┐╜я┐╜ттВмЪя┐╜я┐╜ттАЪмя┐╜ honest labeling per DLD data subset */}
+                {/* COMPACT INLINE STATS я┐╜ттАЪмттВмЭ honest labeling per DLD data subset */}
                 <div style={{ display:"flex", gap:8, flexWrap:"wrap", marginBottom:16, padding:"10px 14px", background:T.surface, border:`1px solid ${T.border}`, borderRadius:10 }}>
                   {(() => {
                     const priced = filtered.filter(p => p.priceMin && isFinite(p.priceMin));
@@ -1373,9 +1373,9 @@ function ProjectsTab({
                     const minPrice = priced.length > 0 ? Math.min(...priced.map(p => p.priceMin)) : null;
                     return [
                       { label:"Total", value:filtered.length.toLocaleString(), sub:"projects", color:T.white },
-                      { label:"Priced From", value:minPrice ? `AED ${(minPrice/1000000).toFixed(1)}M` : "я┐╜я┐╜ттВмЪя┐╜я┐╜ттАЪмя┐╜", sub:priced.length > 0 ? `${priced.length} priced` : "0 priced", color:T.gold },
-                      { label:"Avg Yield", value:withYield.length > 0 ? (withYield.reduce((a,p) => a+p.grossYield, 0)/withYield.length).toFixed(1) + "%" : "я┐╜я┐╜ттВмЪя┐╜я┐╜ттАЪмя┐╜", sub:`n=${withYield.length} disclosed`, color:T.green },
-                      { label:"Community PPSF", value:withBench.length > 0 ? "AED " + Math.round(withBench.reduce((a,p) => a+p.communityMedianPPSF, 0)/withBench.length).toLocaleString() : "я┐╜я┐╜ттВмЪя┐╜я┐╜ттАЪмя┐╜", sub:`DLD ┬╖ n=${withBench.length}`, color:T.teal },
+                      { label:"Priced From", value:minPrice ? `AED ${(minPrice/1000000).toFixed(1)}M` : "я┐╜ттАЪмттВмЭ", sub:priced.length > 0 ? `${priced.length} priced` : "0 priced", color:T.gold },
+                      { label:"Avg Yield", value:withYield.length > 0 ? (withYield.reduce((a,p) => a+p.grossYield, 0)/withYield.length).toFixed(1) + "%" : "я┐╜ттАЪмттВмЭ", sub:`n=${withYield.length} disclosed`, color:T.green },
+                      { label:"Community PPSF", value:withBench.length > 0 ? "AED " + Math.round(withBench.reduce((a,p) => a+p.communityMedianPPSF, 0)/withBench.length).toLocaleString() : "я┐╜ттАЪмттВмЭ", sub:`DLD ┬╖ n=${withBench.length}`, color:T.teal },
                     ].map((kpi,i) => (
                       <div key={i} style={{ display:"flex", flexDirection:"column", padding:"4px 14px", borderRight:i < 3 ? `1px solid ${T.border}` : "none" }}>
                         <div style={{ display:"flex", alignItems:"baseline", gap:6 }}>
@@ -1395,14 +1395,14 @@ function ProjectsTab({
                     {projCompare.map((p,i) => (
                       <span key={i} style={{ fontSize:11, padding:"3px 10px", borderRadius:10, background:"rgba(212,168,67,0.1)", color:T.white, display:"flex", alignItems:"center", gap:6 }}>
                         {p.project?.substring(0,20)}
-                        <button type="button" onClick={() => setProjCompare(prev => prev.filter(c=>c.id!==p.id))} style={{ background:"none", border:"none", color:T.textMuted, cursor:"pointer", fontSize:12, padding:0 }}>я┐╜я┐╜ттВмтДвя┐╜я┐╜ттВмЪя┐╜я┐╜ттАЪмя┐╜</button>
+                        <button type="button" onClick={() => setProjCompare(prev => prev.filter(c=>c.id!==p.id))} style={{ background:"none", border:"none", color:T.textMuted, cursor:"pointer", fontSize:12, padding:0 }}>я┐╜╞тАЩя┐╜ттАЪмттВмЭ</button>
                       </span>
                     ))}
                     <div style={{ display:"flex", gap:8, marginLeft:"auto" }}>
                       {projCompare.length >= 2 && (
                         <button type="button" onClick={() => setShowCompare(true)}
                           style={{ padding:"7px 16px", background:`linear-gradient(135deg, ${T.gold}, #B8922A)`, border:"none", borderRadius:8, color:"#000", fontSize:12, fontWeight:700, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>
-                          View Comparison я┐╜я┐╜ттАЪмя┐╜я┐╜ттАЪмтДв
+                          View Comparison я┐╜ттВматтВмтДв
                         </button>
                       )}
                       <button type="button" onClick={() => setProjCompare([])} style={{ background:"none", border:`1px solid ${T.border}`, borderRadius:8, padding:"5px 10px", color:T.textMuted, fontSize:11, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>Clear</button>
@@ -1410,20 +1410,20 @@ function ProjectsTab({
                   </div>
                 )}
 
-                {/* DATA TIER DISCLOSURE я┐╜я┐╜ттВмЪя┐╜я┐╜ттАЪмя┐╜ honest two-tier data source labeling */}
+                {/* DATA TIER DISCLOSURE я┐╜ттАЪмттВмЭ honest two-tier data source labeling */}
                 <div style={{ display:"flex", alignItems:"center", gap:10, padding:"10px 14px", borderRadius:10, background:"rgba(20,184,166,0.04)", border:`1px solid ${T.border}`, marginBottom:14, flexWrap:"wrap" }}>
                   <div style={{ display:"flex", alignItems:"center", gap:6 }}>
-                    <span style={{ fontSize:12, color:T.teal, fontWeight:800 }}>├вя┐╜я┐╜ттАЪмя┐╜я┐╜я┐╜ттВмЪя┐╜я┐╜ттВмЬ</span>
+                    <span style={{ fontSize:12, color:T.teal, fontWeight:800 }}>├вя┐╜ттВмЬя┐╜ттАЪм┼тАЬ</span>
                     <span style={{ fontSize:11, color:T.textSecondary }}><strong style={{ color:T.teal }}>DLD-Verified:</strong> Auto-imported from Dubai Land Department registry. Government-backed core data.</span>
                   </div>
                   <div style={{ width:1, height:14, background:T.border, margin:"0 4px" }} />
                   <div style={{ display:"flex", alignItems:"center", gap:6 }}>
-                    <span style={{ fontSize:12, color:T.gold, fontWeight:800 }}>я┐╜я┐╜ттАЪмттВмЭя┐╜ттАЪмя┐╜</span>
+                    <span style={{ fontSize:12, color:T.gold, fontWeight:800 }}>я┐╜ттВмтАЭттВма</span>
                     <span style={{ fontSize:11, color:T.textSecondary }}><strong style={{ color:T.gold }}>Research-Enriched:</strong> Additional details curated from developer portals, Bayut, Property Finder.</span>
                   </div>
                 </div>
 
-                {/* Phase 3.7: Smart empty state я┐╜я┐╜ттВмЪя┐╜я┐╜ттАЪмя┐╜ suggests which filter to remove */}
+                {/* Phase 3.7: Smart empty state я┐╜ттАЪмттВмЭ suggests which filter to remove */}
                 {filtered.length === 0 && (
                   <SmartEmptyState
                     rowsAll={rawProjects}
@@ -1442,7 +1442,7 @@ function ProjectsTab({
                       else if (key === "community") setProjCommunity("All");
                       else if (key === "beds") setProjBeds("All");
                       else if (key === "status") setProjStatus("All");
-                      else if (key === "type") { /* keep я┐╜я┐╜ттВмЪя┐╜я┐╜ттАЪмя┐╜ type is projMode, not a removable filter here */ }
+                      else if (key === "type") { /* keep я┐╜ттАЪмттВмЭ type is projMode, not a removable filter here */ }
                     }}
                     onClearAll={() => {
                       setProjSearch("");
@@ -1545,10 +1545,10 @@ function ProjectsTab({
                 {/* Cross-tab nav */}
                 <div style={{ display:"flex", gap:8, marginBottom:14, flexWrap:"wrap" }}>
                   {[
-                    { label:"Dev Portal я┐╜я┐╜ттАЪмя┐╜я┐╜ттАЪмтДв", tab:"Dev Portal" },
-                    { label:"Launch Calendar я┐╜я┐╜ттАЪмя┐╜я┐╜ттАЪмтДв", tab:"Launch Calendar" },
-                    { label:"Yields я┐╜я┐╜ттАЪмя┐╜я┐╜ттАЪмтДв", tab:"Yields" },
-                    { label:"DLD Volumes я┐╜я┐╜ттАЪмя┐╜я┐╜ттАЪмтДв", tab:"DLD Volumes" },
+                    { label:"Dev Portal я┐╜ттВматтВмтДв", tab:"Dev Portal" },
+                    { label:"Launch Calendar я┐╜ттВматтВмтДв", tab:"Launch Calendar" },
+                    { label:"Yields я┐╜ттВматтВмтДв", tab:"Yields" },
+                    { label:"DLD Volumes я┐╜ттВматтВмтДв", tab:"DLD Volumes" },
                   ].map((n,i) => (
                     <button key={i} type="button" onClick={() => handleTabChange(n.tab)}
                       style={{ padding:"6px 14px", background:"rgba(212,168,67,0.06)", border:`1px solid ${T.border}`, borderRadius:8, color:T.gold, fontSize:11, fontWeight:600, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>
@@ -1571,14 +1571,14 @@ function ProjectsTab({
 <div role="dialog" aria-modal="true" style={{ position:"fixed", inset:0, background:"rgba(4,9,15,0.97)", zIndex:2000, display:"flex", flexDirection:"column", backdropFilter:"blur(8px)" }}>
               <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"16px 24px", borderBottom:`1px solid ${T.border}`, background:T.surface, flexShrink:0 }}>
                 <div>
-                  <div style={{ fontSize:11, fontWeight:700, color:T.textMuted, letterSpacing:0.8, textTransform:"uppercase", marginBottom:3 }}>{(selectedProject.developerActual || selectedProject.developer)}{" ┬╖ "}{selectedProject.community || ""}{selectedProject.masterCommunity && selectedProject.masterCommunity !== selectedProject.community ? " я┐╜я┐╜ттВмЪя┐╜я┐╜ттАЪмя┐╜ " + selectedProject.masterCommunity : ""}</div>
+                  <div style={{ fontSize:11, fontWeight:700, color:T.textMuted, letterSpacing:0.8, textTransform:"uppercase", marginBottom:3 }}>{(selectedProject.developerActual || selectedProject.developer)}{" ┬╖ "}{selectedProject.community || ""}{selectedProject.masterCommunity && selectedProject.masterCommunity !== selectedProject.community ? " я┐╜ттАЪмттВмЭ " + selectedProject.masterCommunity : ""}</div>
                   <div style={{ fontFamily:"'Fraunces',serif", fontSize:22, fontWeight:800, color:T.white }}>{selectedProject.project}</div>
-                  {/* Factual classification badges only я┐╜я┐╜ттВмЪя┐╜я┐╜ттАЪмя┐╜ no investment advice */}
+                  {/* Factual classification badges only я┐╜ттАЪмттВмЭ no investment advice */}
                   <div style={{ display:"flex", gap:5, flexWrap:"wrap", marginTop:6 }}>
                     {selectedProject.tier === 1 && <span style={{ fontSize:10, padding:"3px 8px", borderRadius:5, background:"rgba(16,185,129,0.12)", color:"#10B981", fontWeight:700 }}>Tier 1 Developer</span>}
                     {selectedProject.tier === 2 && <span style={{ fontSize:10, padding:"3px 8px", borderRadius:5, background:"rgba(245,158,11,0.12)", color:"#F59E0B", fontWeight:700 }}>Tier 2 Developer</span>}
-                    {selectedProject.goldenVisa && selectedProject.priceMin >= GOLDEN_VISA_THRESHOLD && <span style={{ fontSize:10, padding:"3px 8px", borderRadius:5, background:"rgba(212,168,67,0.15)", color:T.gold, fontWeight:700 }}>├вя┐╜я┐╜ттВмЬя┐╜я┐╜ттВмЪя┐╜я┐╜ Golden Visa Eligible</span>}
-                    {selectedProject.branded && <span style={{ fontSize:10, padding:"3px 8px", borderRadius:5, background:"rgba(139,92,246,0.15)", color:"#A78BFA", fontWeight:700 }}>я┐╜я┐╜ттАЪмттВмЭя┐╜ттАЪмя┐╜ {selectedProject.brandPartner || "Branded Residence"}</span>}
+                    {selectedProject.goldenVisa && selectedProject.priceMin >= GOLDEN_VISA_THRESHOLD && <span style={{ fontSize:10, padding:"3px 8px", borderRadius:5, background:"rgba(212,168,67,0.15)", color:T.gold, fontWeight:700 }}>├вя┐╜┼тАЬя┐╜ттАЪмя┐╜ Golden Visa Eligible</span>}
+                    {selectedProject.branded && <span style={{ fontSize:10, padding:"3px 8px", borderRadius:5, background:"rgba(139,92,246,0.15)", color:"#A78BFA", fontWeight:700 }}>я┐╜ттВмтАЭттВма {selectedProject.brandPartner || "Branded Residence"}</span>}
                     {selectedProject.escrowBank && <span style={{ fontSize:10, padding:"3px 8px", borderRadius:5, background:"rgba(20,184,166,0.1)", color:T.teal, fontWeight:700 }}>Escrow Verified</span>}
                     {isValidReraNumber(selectedProject.reraNo || selectedProject.projectNumber) && <span style={{ fontSize:10, padding:"3px 8px", borderRadius:5, background:"rgba(20,184,166,0.08)", color:T.teal, fontWeight:700 }}>DLD #{selectedProject.reraNo || selectedProject.projectNumber}</span>}
                   </div>
@@ -1588,7 +1588,7 @@ function ProjectsTab({
                     <div style={{ fontSize:22, fontWeight:800, color:T.gold, fontFamily:"'Fraunces',serif" }}>{selectedProject.priceMin ? "AED " + (selectedProject.priceMin/1000000).toFixed(1) + "M" : "TBC"}</div>
                     <div style={{ fontSize:11, color:T.textMuted }}>starting price</div>
                   </div>
-                  <button type="button" onClick={() => setSelectedProject(null)} style={{ width:36, height:36, borderRadius:"50%", background:T.surfaceAlt, border:`1px solid ${T.border}`, color:T.white, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", fontSize:18, fontFamily:"'Outfit',sans-serif" }}>я┐╜я┐╜ттВмтДвя┐╜я┐╜ттВмЪя┐╜я┐╜ттАЪмя┐╜</button>
+                  <button type="button" onClick={() => setSelectedProject(null)} style={{ width:36, height:36, borderRadius:"50%", background:T.surfaceAlt, border:`1px solid ${T.border}`, color:T.white, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", fontSize:18, fontFamily:"'Outfit',sans-serif" }}>я┐╜╞тАЩя┐╜ттАЪмттВмЭ</button>
                 </div>
               </div>
               <div style={{ display:"flex", borderBottom:`1px solid ${T.border}`, background:T.surface, flexShrink:0, overflowX:"auto" }}>
@@ -1610,7 +1610,7 @@ function ProjectsTab({
                 ))}
               </div>
               <div style={{ flex:1, overflowY:"auto", padding:"24px" }}>
-                {/* ├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р SECTION 1 ┬╖ PROJECT IDENTITY ├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р */}
+                {/* ├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р SECTION 1 ┬╖ PROJECT IDENTITY ├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р */}
                 {projDetailTab === "identity" && (() => {
                   const seg = describeAssetClass(selectedProject);
                   const mkt = describeMarketStatus(selectedProject);
@@ -1622,11 +1622,11 @@ function ProjectsTab({
                       <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(200px, 1fr))", gap:14 }}>
                         <div>
                           <div style={{ fontSize:10, color:T.textMuted, marginBottom:4 }}>Project Name</div>
-                          <div style={{ fontSize:15, fontWeight:700, color:T.white, fontFamily:"'Fraunces',serif" }}>{selectedProject.project || selectedProject.name || "я┐╜я┐╜ттВмЪя┐╜я┐╜ттАЪмя┐╜"}</div>
+                          <div style={{ fontSize:15, fontWeight:700, color:T.white, fontFamily:"'Fraunces',serif" }}>{selectedProject.project || selectedProject.name || "я┐╜ттАЪмттВмЭ"}</div>
                         </div>
                 <div>
                   <div style={{ fontSize:10, color:T.textMuted, marginBottom:4 }}>Project Developer</div>
-                  <div style={{ fontSize:15, fontWeight:700, color:T.white }}>{selectedProject.developerActual || selectedProject.developer || "я┐╜я┐╜ттВмЪя┐╜я┐╜ттАЪмя┐╜"}</div>
+                  <div style={{ fontSize:15, fontWeight:700, color:T.white }}>{selectedProject.developerActual || selectedProject.developer || "я┐╜ттАЪмттВмЭ"}</div>
                   {selectedProject.masterDeveloper && selectedProject.masterDeveloper !== selectedProject.developerActual && selectedProject.masterDeveloper !== selectedProject.developer && (
                     <div style={{ fontSize:10, color:T.textMuted, marginTop:3, display:"flex", alignItems:"center", gap:4 }}>
                       <span style={{ color:T.gold, fontSize:9 }}>LAND OWNER</span>
@@ -1636,7 +1636,7 @@ function ProjectsTab({
                 </div>
                 <div>
                   <div style={{ fontSize:10, color:T.textMuted, marginBottom:4 }}>Community</div>
-                  <div style={{ fontSize:15, fontWeight:700, color:T.textSecondary }}>{selectedProject.community || "я┐╜я┐╜ттВмЪя┐╜я┐╜ттАЪмя┐╜"}</div>
+                  <div style={{ fontSize:15, fontWeight:700, color:T.textSecondary }}>{selectedProject.community || "я┐╜ттАЪмттВмЭ"}</div>
                   {selectedProject.masterCommunity && selectedProject.masterCommunity !== selectedProject.community && (
                     <div style={{ fontSize:10, color:T.textMuted, marginTop:3, display:"flex", alignItems:"center", gap:4 }}>
                       <span style={{ color:T.teal, fontSize:9 }}>MASTER ZONE</span>
@@ -1646,7 +1646,7 @@ function ProjectsTab({
                 </div>
                         <div>
                           <div style={{ fontSize:10, color:T.textMuted, marginBottom:4 }}>Property Type</div>
-                          <div style={{ fontSize:15, fontWeight:700, color:T.teal }}>{selectedProject.type || "я┐╜я┐╜ттВмЪя┐╜я┐╜ттАЪмя┐╜"}</div>
+                          <div style={{ fontSize:15, fontWeight:700, color:T.teal }}>{selectedProject.type || "я┐╜ттАЪмттВмЭ"}</div>
                         </div>
                         <div>
                           <div style={{ fontSize:10, color:T.textMuted, marginBottom:4 }}>Market Segment</div>
@@ -1677,7 +1677,7 @@ function ProjectsTab({
                   );
                 })()}
 
-                {/* ├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р SECTION 2 ┬╖ LOCATION DATA ├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р */}
+                {/* ├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р SECTION 2 ┬╖ LOCATION DATA ├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р */}
                 {projDetailTab === "location" && (() => {
                   const tags = locationTags(selectedProject);
                   return (
@@ -1691,11 +1691,11 @@ function ProjectsTab({
                         </div>
                         <div>
                           <div style={{ fontSize:10, color:T.textMuted, marginBottom:4 }}>Area</div>
-                          <div style={{ fontSize:14, fontWeight:700, color:T.white }}>{selectedProject.area || selectedProject.community || "я┐╜я┐╜ттВмЪя┐╜я┐╜ттАЪмя┐╜"}</div>
+                          <div style={{ fontSize:14, fontWeight:700, color:T.white }}>{selectedProject.area || selectedProject.community || "я┐╜ттАЪмттВмЭ"}</div>
                         </div>
                         <div>
                           <div style={{ fontSize:10, color:T.textMuted, marginBottom:4 }}>Sub-Community</div>
-                          <div style={{ fontSize:14, fontWeight:700, color:T.textSecondary }}>{selectedProject.subCommunity || "я┐╜я┐╜ттВмЪя┐╜я┐╜ттАЪмя┐╜"}</div>
+                          <div style={{ fontSize:14, fontWeight:700, color:T.textSecondary }}>{selectedProject.subCommunity || "я┐╜ттАЪмттВмЭ"}</div>
                         </div>
                       </div>
                       {tags.length > 0 && (
@@ -1806,16 +1806,16 @@ function ProjectsTab({
                   );
                 })()}
 
-                {/* ├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р SECTION 3 ┬╖ SCALE & UNITS ├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р */}
+                {/* ├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р SECTION 3 ┬╖ SCALE & UNITS ├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р */}
                 {projDetailTab === "scale" && (() => {
                   const mix = computeUnitMix(selectedProject);
                   return (
                   <div>
                     <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(160px, 1fr))", gap:12, marginBottom:16 }}>
                       {[
-                        { label:"Plot Size", value:selectedProject.plotSize || "я┐╜я┐╜ттВмЪя┐╜я┐╜ттАЪмя┐╜", sub:"sq ft" },
-                        { label:"Built-Up Area", value:selectedProject.builtUpArea || "я┐╜я┐╜ттВмЪя┐╜я┐╜ттАЪмя┐╜", sub:"sq ft" },
-                        { label:"Total Buildings", value:selectedProject.totalBuildings || "я┐╜я┐╜ттВмЪя┐╜я┐╜ттАЪмя┐╜", sub:"per DLD filing" },
+                        { label:"Plot Size", value:selectedProject.plotSize || "я┐╜ттАЪмттВмЭ", sub:"sq ft" },
+                        { label:"Built-Up Area", value:selectedProject.builtUpArea || "я┐╜ттАЪмттВмЭ", sub:"sq ft" },
+                        { label:"Total Buildings", value:selectedProject.totalBuildings || "я┐╜ттАЪмттВмЭ", sub:"per DLD filing" },
                         { label:"Total Units", value:(selectedProject.totalUnits || 0).toLocaleString(), sub:"registered" },
                         { label:"Total Villas", value:(selectedProject.totalVillas || 0).toLocaleString(), sub:"if applicable" },
                         { label:"Total Land Plots", value:(selectedProject.totalLands || 0).toLocaleString(), sub:"if applicable" },
@@ -1853,7 +1853,7 @@ function ProjectsTab({
                     )}
                     {selectedProject.unitBreakdown?.length > 0 && (
                       <div className="chart-box" style={{ padding:20, marginBottom:12 }}>
-                        <div style={{ fontSize:12, fontWeight:700, color:T.white, marginBottom:14 }}>Unit Type я┐╜я┐╜ттВмЪя┐╜я┐╜ттАЪмя┐╜ Price & PPSF (Developer Disclosed)</div>
+                        <div style={{ fontSize:12, fontWeight:700, color:T.white, marginBottom:14 }}>Unit Type я┐╜ттАЪмттВмЭ Price & PPSF (Developer Disclosed)</div>
                         <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(200px, 1fr))", gap:10 }}>
                           {Object.entries(selectedProject.unitBreakdown||{}).map(([uType,uCount],i) => (
                             <div key={i} style={{ padding:"14px 16px", background:T.surfaceAlt, borderRadius:10, border:`1px solid ${T.border}` }}>
@@ -1872,7 +1872,7 @@ function ProjectsTab({
                   );
                 })()}
 
-                {/* ├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р SECTION 4 ┬╖ PRODUCT & AMENITIES ├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р */}
+                {/* ├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р SECTION 4 ┬╖ PRODUCT & AMENITIES ├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р */}
                 {projDetailTab === "product" && (
                   <div>
                     <div style={{ padding:"14px 20px", background:"rgba(20,184,166,0.05)", border:`1px solid ${T.border}`, borderRadius:10, marginBottom:16 }}>
@@ -1916,7 +1916,7 @@ function ProjectsTab({
                   </div>
                 )}
 
-                {/* ├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р SECTION 5 ┬╖ PRICING DATA ├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р */}
+                {/* ├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р SECTION 5 ┬╖ PRICING DATA ├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р */}
                 {projDetailTab === "pricing" && (() => {
                   const bench = communityBenchmarkPPSF(selectedProject);
                   return (
@@ -1929,18 +1929,18 @@ function ProjectsTab({
                       </div>
                       <div className="kpi-card">
                         <div style={{ fontSize:10, fontWeight:700, color:T.textMuted, letterSpacing:1, textTransform:"uppercase", marginBottom:8 }}>Price per Sq.ft</div>
-                        <div style={{ fontFamily:"'Fraunces',serif", fontSize:24, fontWeight:800, color:T.white }}>{selectedProject.ppsf ? "AED " + selectedProject.ppsf.toLocaleString() : "я┐╜я┐╜ттВмЪя┐╜я┐╜ттАЪмя┐╜"}</div>
+                        <div style={{ fontFamily:"'Fraunces',serif", fontSize:24, fontWeight:800, color:T.white }}>{selectedProject.ppsf ? "AED " + selectedProject.ppsf.toLocaleString() : "я┐╜ттАЪмттВмЭ"}</div>
                         <div style={{ fontSize:10, color:T.textMuted, marginTop:4 }}>PPSF from listings</div>
                       </div>
                       <div className="kpi-card">
                         <div style={{ fontSize:10, fontWeight:700, color:T.textMuted, letterSpacing:1, textTransform:"uppercase", marginBottom:8 }}>Community Benchmark PPSF</div>
                         <div style={{ fontFamily:"'Fraunces',serif", fontSize:24, fontWeight:800, color:bench.value ? T.teal : T.textMuted }}>{bench.value ? "AED " + bench.value.toLocaleString() : "Pending"}</div>
-                        {bench.p25 && bench.p75 && <div style={{ fontSize:10, color:T.textMuted, marginTop:2 }}>Range AED {bench.p25.toLocaleString()}я┐╜я┐╜ттВмЪя┐╜я┐╜ттАЪмя┐╜{bench.p75.toLocaleString()}</div>}
+                        {bench.p25 && bench.p75 && <div style={{ fontSize:10, color:T.textMuted, marginTop:2 }}>Range AED {bench.p25.toLocaleString()}я┐╜ттАЪмттВмЬ{bench.p75.toLocaleString()}</div>}
                         <div style={{ fontSize:10, color:T.textMuted, marginTop:4 }}>{bench.source}</div>
                       </div>
                       <div className="kpi-card">
                         <div style={{ fontSize:10, fontWeight:700, color:T.textMuted, letterSpacing:1, textTransform:"uppercase", marginBottom:8 }}>Payment Plan</div>
-                        <div style={{ fontFamily:"'Fraunces',serif", fontSize:20, fontWeight:800, color:T.gold }}>{selectedProject.paymentPlan || "я┐╜я┐╜ттВмЪя┐╜я┐╜ттАЪмя┐╜"}</div>
+                        <div style={{ fontFamily:"'Fraunces',serif", fontSize:20, fontWeight:800, color:T.gold }}>{selectedProject.paymentPlan || "я┐╜ттАЪмттВмЭ"}</div>
                         <div style={{ fontSize:10, color:T.textMuted, marginTop:4 }}>During / Post-handover split</div>
                       </div>
                     </div>
@@ -1953,7 +1953,7 @@ function ProjectsTab({
                         </div>
                         <div>
                           <div style={{ fontSize:10, color:T.textMuted, marginBottom:4 }}>Escrow Bank</div>
-                          <div style={{ fontSize:14, fontWeight:700, color:T.teal }}>{selectedProject.escrowBank || "я┐╜я┐╜ттВмЪя┐╜я┐╜ттАЪмя┐╜"}</div>
+                          <div style={{ fontSize:14, fontWeight:700, color:T.teal }}>{selectedProject.escrowBank || "я┐╜ттАЪмттВмЭ"}</div>
                         </div>
                         <div>
                           <div style={{ fontSize:10, color:T.textMuted, marginBottom:4 }}>Service Charge</div>
@@ -1971,7 +1971,7 @@ function ProjectsTab({
                             </div>
                           </div>
                           <div style={{ fontSize:11, color:T.textMuted, lineHeight:1.7 }}>
-                            Worked example я┐╜я┐╜ттВмЪя┐╜я┐╜ттАЪмя┐╜ AED {((selectedProject.priceMin||0)/1000000).toFixed(1)}M: Pay AED {((selectedProject.priceMin||0)*(parseInt(selectedProject.paymentPlan.split("/")[0])||60)/100/1000000).toFixed(2)}M during construction, AED {((selectedProject.priceMin||0)*(parseInt(selectedProject.paymentPlan.split("/")[1])||40)/100/1000000).toFixed(2)}M at handover.
+                            Worked example я┐╜ттАЪмттВмЭ AED {((selectedProject.priceMin||0)/1000000).toFixed(1)}M: Pay AED {((selectedProject.priceMin||0)*(parseInt(selectedProject.paymentPlan.split("/")[0])||60)/100/1000000).toFixed(2)}M during construction, AED {((selectedProject.priceMin||0)*(parseInt(selectedProject.paymentPlan.split("/")[1])||40)/100/1000000).toFixed(2)}M at handover.
                           </div>
                         </div>
                       )}
@@ -1986,7 +1986,7 @@ function ProjectsTab({
                   );
                 })()}
 
-                {/* ├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р SECTION 6 ┬╖ RENTAL & YIELD DATA ├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р */}
+                {/* ├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р SECTION 6 ┬╖ RENTAL & YIELD DATA ├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р */}
                 {projDetailTab === "rental" && (() => {
                   const str = strIndicator(selectedProject);
                   return (
@@ -1997,12 +1997,12 @@ function ProjectsTab({
                     <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit, minmax(180px, 1fr))", gap:12, marginBottom:16 }}>
                       <div className="kpi-card">
                         <div style={{ fontSize:10, fontWeight:700, color:T.textMuted, letterSpacing:1, textTransform:"uppercase", marginBottom:8 }}>Gross Yield</div>
-                        <div style={{ fontFamily:"'Fraunces',serif", fontSize:26, fontWeight:800, color:selectedProject.grossYield >= 7 ? T.green : selectedProject.grossYield >= 5 ? T.gold : T.textSecondary }}>{selectedProject.grossYield ? (selectedProject.grossYield.toFixed(1) + "%" + (selectedProject.grossYieldIsEstimate ? " (est.)" : "")) : "я┐╜я┐╜ттВмЪя┐╜я┐╜ттАЪмя┐╜"}</div>
+                        <div style={{ fontFamily:"'Fraunces',serif", fontSize:26, fontWeight:800, color:selectedProject.grossYield >= 7 ? T.green : selectedProject.grossYield >= 5 ? T.gold : T.textSecondary }}>{selectedProject.grossYield ? (selectedProject.grossYield.toFixed(1) + "%" + (selectedProject.grossYieldIsEstimate ? " (est.)" : "")) : "я┐╜ттАЪмттВмЭ"}</div>
                         <div style={{ fontSize:10, color:T.textMuted }}>Annual rent ├╖ purchase price</div>
                       </div>
                       <div className="kpi-card">
                         <div style={{ fontSize:10, fontWeight:700, color:T.textMuted, letterSpacing:1, textTransform:"uppercase", marginBottom:8 }}>Net Yield</div>
-                        <div style={{ fontFamily:"'Fraunces',serif", fontSize:26, fontWeight:800, color:T.teal }}>{selectedProject.netYield ? selectedProject.netYield.toFixed(1) + "%" : "я┐╜я┐╜ттВмЪя┐╜я┐╜ттАЪмя┐╜"}</div>
+                        <div style={{ fontFamily:"'Fraunces',serif", fontSize:26, fontWeight:800, color:T.teal }}>{selectedProject.netYield ? selectedProject.netYield.toFixed(1) + "%" : "я┐╜ттАЪмттВмЭ"}</div>
                         <div style={{ fontSize:10, color:T.textMuted }}>After service charges</div>
                       </div>
                       <div className="kpi-card">
@@ -2027,7 +2027,7 @@ function ProjectsTab({
                   );
                 })()}
 
-                {/* ├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р SECTION 7 ┬╖ DEVELOPER & COMPLIANCE ├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р */}
+                {/* ├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р SECTION 7 ┬╖ DEVELOPER & COMPLIANCE ├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р */}
                 {projDetailTab === "developer" && (() => {
                   const esc = escrowStatus(selectedProject);
                   const rera = reraCompliance(selectedProject);
@@ -2035,7 +2035,7 @@ function ProjectsTab({
                   <div>
                     <div style={{ padding:"18px 20px", background:`linear-gradient(135deg, rgba(212,168,67,0.08), rgba(20,184,166,0.04))`, border:`1px solid ${T.border}`, borderRadius:14, marginBottom:16 }}>
                       <div style={{ fontSize:11, fontWeight:700, color:T.gold, letterSpacing:1, textTransform:"uppercase", marginBottom:10 }}>Developer & Regulatory Compliance</div>
-                      <div style={{ fontSize:22, fontWeight:800, color:T.white, fontFamily:"'Fraunces',serif", marginBottom:4 }}>{selectedProject.developer || "я┐╜я┐╜ттВмЪя┐╜я┐╜ттАЪмя┐╜"}</div>
+                      <div style={{ fontSize:22, fontWeight:800, color:T.white, fontFamily:"'Fraunces',serif", marginBottom:4 }}>{selectedProject.developer || "я┐╜ттАЪмттВмЭ"}</div>
                       {selectedProject.tier && <div style={{ fontSize:12, padding:"3px 10px", borderRadius:6, background:selectedProject.tier === 1 ? "rgba(16,185,129,0.15)" : "rgba(245,158,11,0.15)", color:selectedProject.tier === 1 ? T.green : "#F59E0B", fontWeight:700, display:"inline-block" }}>Tier {selectedProject.tier} Developer</div>}
                     </div>
                     <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit, minmax(200px, 1fr))", gap:12, marginBottom:16 }}>
@@ -2050,11 +2050,11 @@ function ProjectsTab({
                       </div>
                       <div className="kpi-card">
                         <div style={{ fontSize:10, fontWeight:700, color:T.textMuted, letterSpacing:1, textTransform:"uppercase", marginBottom:8 }}>Escrow Bank</div>
-                        <div style={{ fontSize:14, fontWeight:700, color:T.teal }}>{selectedProject.escrowBank || "я┐╜я┐╜ттВмЪя┐╜я┐╜ттАЪмя┐╜"}</div>
+                        <div style={{ fontSize:14, fontWeight:700, color:T.teal }}>{selectedProject.escrowBank || "я┐╜ттАЪмттВмЭ"}</div>
                       </div>
                       <div className="kpi-card">
                         <div style={{ fontSize:10, fontWeight:700, color:T.textMuted, letterSpacing:1, textTransform:"uppercase", marginBottom:8 }}>DLD Project Status</div>
-                        <div style={{ fontSize:14, fontWeight:700, color:T.white }}>{selectedProject.dldStatus || selectedProject.status || "я┐╜я┐╜ттВмЪя┐╜я┐╜ттАЪмя┐╜"}</div>
+                        <div style={{ fontSize:14, fontWeight:700, color:T.white }}>{selectedProject.dldStatus || selectedProject.status || "я┐╜ттАЪмттВмЭ"}</div>
                       </div>
                     </div>
                     <div className="chart-box" style={{ padding:18, marginBottom:12 }}>
@@ -2062,15 +2062,15 @@ function ProjectsTab({
                       <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(140px, 1fr))", gap:10 }}>
                         <div style={{ padding:"10px 12px", background:T.surfaceAlt, borderRadius:8 }}>
                           <div style={{ fontSize:10, color:T.textMuted, marginBottom:4 }}>Build Progress</div>
-                          <div style={{ fontSize:16, fontWeight:700, color:T.white }}>{selectedProject.constructionPct != null ? selectedProject.constructionPct + "%" : "я┐╜я┐╜ттВмЪя┐╜я┐╜ттАЪмя┐╜"}</div>
+                          <div style={{ fontSize:16, fontWeight:700, color:T.white }}>{selectedProject.constructionPct != null ? selectedProject.constructionPct + "%" : "я┐╜ттАЪмттВмЭ"}</div>
                         </div>
                         <div style={{ padding:"10px 12px", background:T.surfaceAlt, borderRadius:8 }}>
                           <div style={{ fontSize:10, color:T.textMuted, marginBottom:4 }}>Expected Handover</div>
-                          <div style={{ fontSize:16, fontWeight:700, color:T.gold }}>{selectedProject.handover || selectedProject.expectedHandover || "я┐╜я┐╜ттВмЪя┐╜я┐╜ттАЪмя┐╜"}</div>
+                          <div style={{ fontSize:16, fontWeight:700, color:T.gold }}>{selectedProject.handover || selectedProject.expectedHandover || "я┐╜ттАЪмттВмЭ"}</div>
                         </div>
                         <div style={{ padding:"10px 12px", background:T.surfaceAlt, borderRadius:8 }}>
                           <div style={{ fontSize:10, color:T.textMuted, marginBottom:4 }}>Contracted Handover</div>
-                          <div style={{ fontSize:13, fontWeight:700, color:T.textSecondary }}>{selectedProject.contractedHandover || "я┐╜я┐╜ттВмЪя┐╜я┐╜ттАЪмя┐╜"}</div>
+                          <div style={{ fontSize:13, fontWeight:700, color:T.textSecondary }}>{selectedProject.contractedHandover || "я┐╜ттАЪмттВмЭ"}</div>
                         </div>
                         <div style={{ padding:"10px 12px", background:T.surfaceAlt, borderRadius:8 }}>
                           <div style={{ fontSize:10, color:T.textMuted, marginBottom:4 }}>Actual Handover</div>
@@ -2129,13 +2129,13 @@ function ProjectsTab({
                     )}
                   </div>
                 )}
-                    <button type="button" onClick={() => { setSelectedProject(null); handleTabChange("Developer Health"); }}$ style={{ padding:"10px 20px", background:"rgba(212,168,67,0.1)", border:`1px solid ${T.border}`, borderRadius:8, color:T.gold, fontSize:12, cursor:"pointer", fontFamily:"'Outfit',sans-serif", fontWeight:600, marginBottom:12 }}>Full Developer Profile я┐╜я┐╜ттАЪмя┐╜я┐╜ттАЪмтДв</button>
+                    <button type="button" onClick={() => { setSelectedProject(null); handleTabChange("Developer Health"); }}$ style={{ padding:"10px 20px", background:"rgba(212,168,67,0.1)", border:`1px solid ${T.border}`, borderRadius:8, color:T.gold, fontSize:12, cursor:"pointer", fontFamily:"'Outfit',sans-serif", fontWeight:600, marginBottom:12 }}>Full Developer Profile я┐╜ттВматтВмтДв</button>
                     <LegalNote T={T} />
                   </div>
                   );
                 })()}
 
-                {/* ├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р SECTION 8 ┬╖ FULL REPORT & SHARE ├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Р */}
+                {/* ├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р SECTION 8 ┬╖ FULL REPORT & SHARE ├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р├вя┐╜ттАЪмя┐╜┬Р */}
                 
               {projDetailTab === "community" && (() => {
                 const cn = getCommunityData(selectedProject);
@@ -2253,18 +2253,18 @@ function ProjectsTab({
                     <div className="chart-box" style={{ padding:20, marginBottom:16 }}>
                       <div style={{ fontSize:12, fontWeight:700, color:T.white, marginBottom:14 }}>Project Summary (Factual Data)</div>
                       <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12, fontSize:12, color:T.textSecondary, lineHeight:1.9 }}>
-                        <div><strong style={{ color:T.white }}>Project:</strong> {selectedProject.project || selectedProject.name || "я┐╜я┐╜ттВмЪя┐╜я┐╜ттАЪмя┐╜"}</div>
-                        <div><strong style={{ color:T.white }}>Developer:</strong> {selectedProject.developer || "я┐╜я┐╜ттВмЪя┐╜я┐╜ттАЪмя┐╜"}</div>
-                        <div><strong style={{ color:T.white }}>Community:</strong> {selectedProject.community || "я┐╜я┐╜ттВмЪя┐╜я┐╜ттАЪмя┐╜"}</div>
-                        <div><strong style={{ color:T.white }}>Type:</strong> {selectedProject.type || "я┐╜я┐╜ттВмЪя┐╜я┐╜ттАЪмя┐╜"}</div>
+                        <div><strong style={{ color:T.white }}>Project:</strong> {selectedProject.project || selectedProject.name || "я┐╜ттАЪмттВмЭ"}</div>
+                        <div><strong style={{ color:T.white }}>Developer:</strong> {selectedProject.developer || "я┐╜ттАЪмттВмЭ"}</div>
+                        <div><strong style={{ color:T.white }}>Community:</strong> {selectedProject.community || "я┐╜ттАЪмттВмЭ"}</div>
+                        <div><strong style={{ color:T.white }}>Type:</strong> {selectedProject.type || "я┐╜ттАЪмттВмЭ"}</div>
                         <div><strong style={{ color:T.white }}>Starting Price:</strong> {selectedProject.priceMin ? "AED " + (selectedProject.priceMin/1000000).toFixed(2) + "M" : "TBC"}</div>
                         <div><strong style={{ color:T.white }}>PPSF:</strong> AED {(selectedProject.ppsf || 0).toLocaleString()}</div>
-                        <div><strong style={{ color:T.white }}>Gross Yield:</strong> {selectedProject.grossYield ? selectedProject.grossYield + "%" : "я┐╜я┐╜ттВмЪя┐╜я┐╜ттАЪмя┐╜"}</div>
+                        <div><strong style={{ color:T.white }}>Gross Yield:</strong> {selectedProject.grossYield ? selectedProject.grossYield + "%" : "я┐╜ттАЪмттВмЭ"}</div>
                         <div><strong style={{ color:T.white }}>Payment Plan:</strong> {selectedProject.paymentPlan || "TBC"}</div>
                         <div><strong style={{ color:T.white }}>Handover:</strong> {selectedProject.handover || "TBC"}</div>
                         <div><strong style={{ color:T.white }}>DLD Project #:</strong> {selectedProject.reraNo || selectedProject.projectNumber || "Pending"}</div>
-                        <div><strong style={{ color:T.white }}>Escrow:</strong> {selectedProject.escrowBank || "я┐╜я┐╜ттВмЪя┐╜я┐╜ттАЪмя┐╜"}</div>
-                        <div><strong style={{ color:T.white }}>Build Progress:</strong> {selectedProject.constructionPct != null ? (selectedProject.constructionPct + "%" + (selectedProject.constructionPctIsEstimate ? " (est.)" : "")) : "я┐╜я┐╜ттВмЪя┐╜я┐╜ттАЪмя┐╜"}</div>
+                        <div><strong style={{ color:T.white }}>Escrow:</strong> {selectedProject.escrowBank || "я┐╜ттАЪмттВмЭ"}</div>
+                        <div><strong style={{ color:T.white }}>Build Progress:</strong> {selectedProject.constructionPct != null ? (selectedProject.constructionPct + "%" + (selectedProject.constructionPctIsEstimate ? " (est.)" : "")) : "я┐╜ттАЪмттВмЭ"}</div>
                       </div>
                     </div>
                     {(() => {
@@ -2272,47 +2272,47 @@ function ProjectsTab({
                       const origin = (typeof window !== "undefined" && window.location && window.location.origin) ? window.location.origin : "https://emaar-dashboard.vercel.app";
                       const projectUrl = `${origin}/project/${encodeURIComponent(selectedProject.id || "")}`;
                       const txt = [
-                        "├░┼╕┬Пя┐╜я┐╜ттАЪмя┐╜я┐╜├п┬╕┬П DXB ANALYTICS я┐╜я┐╜ттВмЪя┐╜я┐╜ттАЪмя┐╜ PROPERTY DATA REPORT",
-                        "├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Б├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Б├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Б├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Б├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Б├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Б├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Б├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Б├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Б├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Б├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Б├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Б├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Б├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Б├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Б├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Б├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Б├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Б├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Б├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Б├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Б├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Б├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Б├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Б",
-                        `├░┼╕я┐╜я┐╜ттВмЪя┐╜я┐╜ттВмЬя┐╜я┐╜ттАЪмтДв ${selectedProject.project || selectedProject.name}`,
+                        "├░┼╕┬Пя┐╜ттВмЮя┐╜├п┬╕┬П DXB ANALYTICS я┐╜ттАЪмттВмЭ PROPERTY DATA REPORT",
+                        "├вя┐╜ттАЪмя┐╜┬Б├вя┐╜ттАЪмя┐╜┬Б├вя┐╜ттАЪмя┐╜┬Б├вя┐╜ттАЪмя┐╜┬Б├вя┐╜ттАЪмя┐╜┬Б├вя┐╜ттАЪмя┐╜┬Б├вя┐╜ттАЪмя┐╜┬Б├вя┐╜ттАЪмя┐╜┬Б├вя┐╜ттАЪмя┐╜┬Б├вя┐╜ттАЪмя┐╜┬Б├вя┐╜ттАЪмя┐╜┬Б├вя┐╜ттАЪмя┐╜┬Б├вя┐╜ттАЪмя┐╜┬Б├вя┐╜ттАЪмя┐╜┬Б├вя┐╜ттАЪмя┐╜┬Б├вя┐╜ттАЪмя┐╜┬Б├вя┐╜ттАЪмя┐╜┬Б├вя┐╜ттАЪмя┐╜┬Б├вя┐╜ттАЪмя┐╜┬Б├вя┐╜ттАЪмя┐╜┬Б├вя┐╜ттАЪмя┐╜┬Б├вя┐╜ттАЪмя┐╜┬Б├вя┐╜ттАЪмя┐╜┬Б├вя┐╜ттАЪмя┐╜┬Б",
+                        `├░┼╕я┐╜ттАЪм┼тАЬя┐╜ттВмтДв ${selectedProject.project || selectedProject.name}`,
                         `├░┼╕┬П┬в Developer: ${selectedProject.developer}`,
-                        `├░┼╕я┐╜я┐╜ттВмЪя┐╜я┐╜ттВмЬ┬Н Community: ${selectedProject.community}`,
+                        `├░┼╕я┐╜ттАЪм┼тАЬ┬Н Community: ${selectedProject.community}`,
                         `├░┼╕┬П┬а Type: ${selectedProject.type}`,
                         "",
-                        "├░┼╕я┐╜я┐╜ттВмЪя┐╜тДв┬░ PRICING",
+                        "├░┼╕я┐╜ттАЪмтДв┬░ PRICING",
                         `   Starting: AED ${((selectedProject.priceMin||0)/1000000).toFixed(2)}M`,
                         `   PPSF: AED ${(selectedProject.ppsf||0).toLocaleString()}`,
-                        units ? `\n├░┼╕я┐╜я┐╜ттВмЪя┐╜я┐╜ттВмЬ┬Р UNIT BREAKDOWN\n${units}` : "",
+                        units ? `\n├░┼╕я┐╜ттАЪм┼тАЬ┬Р UNIT BREAKDOWN\n${units}` : "",
                         "",
-                        "├░┼╕я┐╜я┐╜ттВмЪя┐╜я┐╜ттВмЬ┼а RENTAL DATA",
-                        `   Gross Yield: ${selectedProject.grossYield||"я┐╜я┐╜ттВмЪя┐╜я┐╜ттАЪмя┐╜"}%`,
+                        "├░┼╕я┐╜ттАЪм┼тАЬ┼а RENTAL DATA",
+                        `   Gross Yield: ${selectedProject.grossYield||"я┐╜ттАЪмттВмЭ"}%`,
                         `   Payment Plan: ${selectedProject.paymentPlan||"TBC"}`,
                         `   Handover: ${selectedProject.handover||"TBC"}`,
                         "",
-                        `├░┼╕я┐╜я┐╜ттВмЪя┐╜я┐╜┬Р RERA: ${selectedProject.reraNo||selectedProject.projectNumber||"TBC"} | Escrow: ${selectedProject.escrowBank||"TBC"}`,
+                        `├░┼╕я┐╜ттАЪмя┐╜┬Р RERA: ${selectedProject.reraNo||selectedProject.projectNumber||"TBC"} | Escrow: ${selectedProject.escrowBank||"TBC"}`,
                         "",
-                        `├░┼╕я┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттВмЪя┐╜я┐╜ттАЪмя┐╜ Full report: ${projectUrl}`,
-                        "├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Б├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Б├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Б├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Б├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Б├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Б├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Б├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Б├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Б├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Б├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Б├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Б├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Б├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Б├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Б├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Б├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Б├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Б├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Б├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Б├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Б├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Б├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Б├вя┐╜я┐╜ттВмЪя┐╜я┐╜┬Б",
+                        `├░┼╕я┐╜ттАЪмя┐╜я┐╜ттАЪмттВмЭ Full report: ${projectUrl}`,
+                        "├вя┐╜ттАЪмя┐╜┬Б├вя┐╜ттАЪмя┐╜┬Б├вя┐╜ттАЪмя┐╜┬Б├вя┐╜ттАЪмя┐╜┬Б├вя┐╜ттАЪмя┐╜┬Б├вя┐╜ттАЪмя┐╜┬Б├вя┐╜ттАЪмя┐╜┬Б├вя┐╜ттАЪмя┐╜┬Б├вя┐╜ттАЪмя┐╜┬Б├вя┐╜ттАЪмя┐╜┬Б├вя┐╜ттАЪмя┐╜┬Б├вя┐╜ттАЪмя┐╜┬Б├вя┐╜ттАЪмя┐╜┬Б├вя┐╜ттАЪмя┐╜┬Б├вя┐╜ттАЪмя┐╜┬Б├вя┐╜ттАЪмя┐╜┬Б├вя┐╜ттАЪмя┐╜┬Б├вя┐╜ттАЪмя┐╜┬Б├вя┐╜ттАЪмя┐╜┬Б├вя┐╜ттАЪмя┐╜┬Б├вя┐╜ттАЪмя┐╜┬Б├вя┐╜ттАЪмя┐╜┬Б├вя┐╜ттАЪмя┐╜┬Б├вя┐╜ттАЪмя┐╜┬Б",
                         "Data Source: Dubai Land Department (DLD) public records",
-                        "Informational only я┐╜я┐╜ттВмЪя┐╜я┐╜ттАЪмя┐╜ not investment advice",
+                        "Informational only я┐╜ттАЪмттВмЭ not investment advice",
                         "For regulated advice contact a RERA-licensed consultant",
                       ].filter(line => line !== "").join("\n");
-                      const emailSubject = `Property Data Report я┐╜я┐╜ттВмЪя┐╜я┐╜ттАЪмя┐╜ ${selectedProject.project || selectedProject.name}`;
+                      const emailSubject = `Property Data Report я┐╜ттАЪмттВмЭ ${selectedProject.project || selectedProject.name}`;
                       const btnStyle = (color) => ({ padding:"10px 18px", background:`rgba(${color},0.1)`, border:`1px solid rgba(${color},0.3)`, borderRadius:8, color:`rgb(${color})`, fontSize:12, fontWeight:600, cursor:"pointer", fontFamily:"'Outfit',sans-serif", display:"inline-flex", alignItems:"center", gap:6 });
                       return (
                         <div className="chart-box" style={{ padding:18, marginBottom:12 }}>
                           <div style={{ fontSize:11, fontWeight:700, color:T.textMuted, letterSpacing:0.8, textTransform:"uppercase", marginBottom:12 }}>Share This Data Report</div>
                           <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
-                            <button type="button" onClick={() => window.open(`https://wa.me/?text=${encodeURIComponent(txt)}`,"_blank")} style={btnStyle("37,211,102")}>├░┼╕я┐╜я┐╜ттВмЪя┐╜я┐╜ттВмЬ┬▒ WhatsApp</button>
-                            <button type="button" onClick={() => window.open(`mailto:?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(txt)}`,"_blank")} style={btnStyle("59,130,246")}>├вя┐╜я┐╜ттАЪмя┐╜я┐╜я┐╜ттВмЪя┐╜я┐╜├п┬╕┬П Email</button>
+                            <button type="button" onClick={() => window.open(`https://wa.me/?text=${encodeURIComponent(txt)}`,"_blank")} style={btnStyle("37,211,102")}>├░┼╕я┐╜ттАЪм┼тАЬ┬▒ WhatsApp</button>
+                            <button type="button" onClick={() => window.open(`mailto:?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(txt)}`,"_blank")} style={btnStyle("59,130,246")}>├вя┐╜ттВмЬя┐╜ттАЪмя┐╜├п┬╕┬П Email</button>
                             <button type="button" onClick={async () => {
                               try {
                                 await navigator.clipboard.writeText(projectUrl);
                                 const el = document.activeElement;
                                 const original = el && el.textContent;
-                                if (el && el.textContent != null) { el.textContent = "├вя┐╜я┐╜ттАЪмя┐╜я┐╜я┐╜ттВмЪя┐╜я┐╜ттВмЬ Copied!"; setTimeout(() => { if (el && original) el.textContent = original; }, 1500); }
+                                if (el && el.textContent != null) { el.textContent = "├вя┐╜ттВмЬя┐╜ттАЪм┼тАЬ Copied!"; setTimeout(() => { if (el && original) el.textContent = original; }, 1500); }
                               } catch {}
-                            }} style={btnStyle("212,168,67")}>├░┼╕я┐╜я┐╜ттВмЪя┐╜я┐╜я┐╜я┐╜ттВмЪя┐╜я┐╜ттАЪмя┐╜ Copy Link</button>
+                            }} style={btnStyle("212,168,67")}>├░┼╕я┐╜ттАЪмя┐╜я┐╜ттАЪмттВмЭ Copy Link</button>
                             <button type="button" onClick={() => { setSelectedProject(null); handleTabChange("Mortgage"); }} style={{ padding:"10px 18px", background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:8, color:T.textSecondary, fontSize:12, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>Mortgage Calculator</button>
                             <button type="button" onClick={() => { setSelectedProject(null); handleTabChange("My Leads"); }} style={{ padding:"10px 18px", background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:8, color:T.textSecondary, fontSize:12, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>Add to Leads</button>
                           </div>

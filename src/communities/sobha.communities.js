@@ -1,5 +1,5 @@
 
-// �”€�”€ OFFICIAL LINKS �”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€
+// ── OFFICIAL LINKS ────────────────────────────────────────────────────
 export const sobhaOfficialLinks = {
   developerWebsite: "https://sobharealty.com/",
   communitiesPage: "https://sobharealty.com/communities/",
@@ -9,7 +9,7 @@ export const sobhaOfficialLinks = {
 };
 
 /**
- * DXB ANALYTICS �€” SOBHA COMMUNITIES
+ * DXB ANALYTICS — SOBHA COMMUNITIES
  * 4 communities | Research: March 2026
  */
 
@@ -22,7 +22,7 @@ export const sobhaCommunities = [
     districtCode: "SH",
     overview: "Sobha Hartland is an 8-million-sqft luxury waterfront community in MBR City along the Dubai Water Canal, 3km from Downtown Dubai. Built entirely by Sobha with in-house construction (no subcontractors), it features a 22-hectare green belt covering one-third of the community, two international schools and world-class amenities.",
     type: "Luxury Waterfront Mixed Community",
-    status: "Established �€” largely complete",
+    status: "Established — largely complete",
     launched: 2015,
     location: {
       area: "Mohammed Bin Rashid City (MBR City), Dubai",
@@ -32,7 +32,7 @@ export const sobhaCommunities = [
       toDowntown: "10 min",
       toAirport: "25 min",
       toMarina: "25 min",
-      nearestMetro: "Business Bay Metro (10 min drive) �€” Green Line by 2030",
+      nearestMetro: "Business Bay Metro (10 min drive) — Green Line by 2030",
       highways: ["Ras Al Khor Road (E44)", "Dubai-Al Ain Road (E66)"],
     },
     sizeSqFt: 8000000,
@@ -124,7 +124,7 @@ export const sobhaCommunities = [
       aptYield: 6.5,
       villaYield: 5.5,
       yoyGrowth: "+18% (2024-2025)",
-      capitalGrowth: "Strong �€” new launch appreciation",
+      capitalGrowth: "Strong — new launch appreciation",
       investmentRating: "A",
       goldenVisa: true,
     },
@@ -154,7 +154,7 @@ export const sobhaCommunities = [
     developer: "sobha",
     districtCode: "SS",
     overview: "Sobha Seahaven is a 60-storey ultra-luxury high-rise located at the crossroads of Palm Jumeirah, Sheikh Zayed Road and Dubai Internet City. Offering 41 stories of superlative residences with panoramic Arabian Gulf views, it represents Sobha's flagship branded residential tower targeting UHNW buyers and investors.",
-    type: "Ultra-Luxury High-Rise �€” Waterfront",
+    type: "Ultra-Luxury High-Rise — Waterfront",
     status: "Active",
     launched: 2022,
     location: {
@@ -182,7 +182,7 @@ export const sobhaCommunities = [
       aptYield: 5.5,
       villaYield: 0,
       yoyGrowth: "+20% (2024-2025)",
-      capitalGrowth: "Strong �€” premium location",
+      capitalGrowth: "Strong — premium location",
       investmentRating: "A",
       goldenVisa: true,
     },
@@ -269,7 +269,7 @@ export const sobhaCommunities = [
     developer: "sobha",
     emirate: "Dubai",
     districtCode: "SE",
-    overview: "Sobha Elwood is a nature-inspired luxury villa community on Al Ain Road (E66), Dubailand, by Sobha Realty. Offering 4, 5 and 6-bedroom independent villas and mansions (plot sizes 6,190�€“8,719 sqft, BUA 4,958�€“7,186 sqft), it is Sobha's answer to the rising demand for large-format villa living outside MBR City. Handover: December 2027. DIFFERENT from Sobha Hartland �€” separate location, separate masterplan.",
+    overview: "Sobha Elwood is a nature-inspired luxury villa community on Al Ain Road (E66), Dubailand, by Sobha Realty. Offering 4, 5 and 6-bedroom independent villas and mansions (plot sizes 6,190–8,719 sqft, BUA 4,958–7,186 sqft), it is Sobha's answer to the rising demand for large-format villa living outside MBR City. Handover: December 2027. DIFFERENT from Sobha Hartland — separate location, separate masterplan.",
     type: "Luxury Villa Community",
     status: "Under Development",
     launched: 2023,
@@ -281,7 +281,7 @@ export const sobhaCommunities = [
       toDowntown: "30 min",
       toAirport: "35 min",
       toMarina: "35 min",
-      nearestMetro: "No metro �€” private vehicle required",
+      nearestMetro: "No metro — private vehicle required",
       highways: ["Al Ain Road (E66)", "Sheikh Mohammed Bin Zayed Road (E311)"],
     },
     sizeSqFt: 6500000,
@@ -297,16 +297,16 @@ export const sobhaCommunities = [
       avgYield: 5.2,
       aptYield: 0,
       villaYield: 5.2,
-      yoyGrowth: "Off-plan �€” not yet trading",
-      capitalGrowth: "Strong �€” limited supply large villas Al Ain Rd corridor",
+      yoyGrowth: "Off-plan — not yet trading",
+      capitalGrowth: "Strong — limited supply large villas Al Ain Rd corridor",
       investmentRating: "A",
       goldenVisa: true,
     },
     unitTypes: ["4BR Villa", "5BR Villa", "6BR Villa/Mansion"],
     unitDetails: [
-      { type: "4BR Villa", priceFrom: 7930000, sizeSqFt: "4,958�€“5,200", plotSqFt: "6,190�€“6,800" },
-      { type: "5BR Villa", priceFrom: 9280000, sizeSqFt: "5,800�€“6,500", plotSqFt: "7,200�€“8,000" },
-      { type: "6BR Villa/Mansion", priceFrom: 11500000, sizeSqFt: "6,800�€“7,186", plotSqFt: "8,100�€“8,719" },
+      { type: "4BR Villa", priceFrom: 7930000, sizeSqFt: "4,958–5,200", plotSqFt: "6,190–6,800" },
+      { type: "5BR Villa", priceFrom: 9280000, sizeSqFt: "5,800–6,500", plotSqFt: "7,200–8,000" },
+      { type: "6BR Villa/Mansion", priceFrom: 11500000, sizeSqFt: "6,800–7,186", plotSqFt: "8,100–8,719" },
     ],
     paymentPlan: "60/40 (10% down payment)",
     amenities: [
@@ -321,8 +321,8 @@ export const sobhaCommunities = [
       "24hr security",
     ],
     subCommunities: [
-      "Elwood Phase 1 �€” 4-5BR villas",
-      "Elwood Phase 2 �€” 5-6BR mansions",
+      "Elwood Phase 1 — 4-5BR villas",
+      "Elwood Phase 2 — 5-6BR mansions",
     ],
     schools: ["GEMS FirstPoint (30 min)", "Ranches Primary School (25 min)"],
     healthcare: ["Mediclinic Parkview (25 min)"],
@@ -335,7 +335,7 @@ export const sobhaCommunities = [
     confidence: "VERIFIED",
     source: "Bayut + Sobha Official + squareyards.ae",
     lastUpdated: "2026-03",
-    note: "SEPARATE from Sobha Hartland �€” different location (Dubailand Al Ain Rd vs MBR City). Do NOT merge.",
+    note: "SEPARATE from Sobha Hartland — different location (Dubailand Al Ain Rd vs MBR City). Do NOT merge.",
   },
 
   {
@@ -345,7 +345,7 @@ export const sobhaCommunities = [
     emirate: "UAQ",
     districtCode: "SSI",
     overview: "Sobha Siniya Island is an ultra-luxury beachfront development on a natural mangrove island in Umm Al Quwain (UAQ), NOT Dubai. This distinction is critical for compliance and investor disclosure. The island offers 4-5BR beachfront villas and select apartments in a pristine mangrove ecosystem with private beaches, lagoons and UAE's first island nature reserve. AED 5B contributed to Sobha's FY2025 sales (official). Part of Sobha's AED 30B FY2025 record.",
-    type: "Island Beachfront Community �€” UAQ Emirate",
+    type: "Island Beachfront Community — UAQ Emirate",
     status: "Under Development",
     launched: 2023,
     location: {
@@ -356,7 +356,7 @@ export const sobhaCommunities = [
       toDowntown: "1 hour (Dubai)",
       toAirport: "75 min (DXB)",
       toMarina: "65 min",
-      nearestMetro: "No metro �€” private vehicle required",
+      nearestMetro: "No metro — private vehicle required",
       highways: ["E11 (Sheikh Zayed Road)", "Emirates Road (E611)"],
     },
     sizeSqFt: 43000000,
@@ -372,8 +372,8 @@ export const sobhaCommunities = [
       avgYield: 6.0,
       aptYield: 6.5,
       villaYield: 5.5,
-      yoyGrowth: "Off-plan �€” UAQ market growing",
-      capitalGrowth: "High �€” unique island setting, limited supply",
+      yoyGrowth: "Off-plan — UAQ market growing",
+      capitalGrowth: "High — unique island setting, limited supply",
       investmentRating: "A-",
       goldenVisa: true,
     },
@@ -402,7 +402,7 @@ export const sobhaCommunities = [
     confidence: "VERIFIED",
     source: "Sobha Official + Provident Estate + Bayut",
     lastUpdated: "2026-03",
-    importantNote: "EMIRATE: UAQ (Umm Al Quwain) �€” NOT DUBAI. Must display UAQ flag and UAQ regulations.",
+    importantNote: "EMIRATE: UAQ (Umm Al Quwain) — NOT DUBAI. Must display UAQ flag and UAQ regulations.",
     salesContribution: "AED 5B contributed to Sobha FY2025 AED 30B total (official Jan 2026)",
   },
 

@@ -296,7 +296,7 @@ export default function DevelopmentEditModal({ initial, developers, onClose, onS
                 <div style={{ marginLeft: "auto" }}>
                   <label style={{ ...labelStyle, display: "inline-block", marginRight: 8 }}>DLD Stars</label>
                   <select style={{ ...inputStyle, width: 80, display: "inline-block" }} value={form.dldStarRating} onChange={e => update("dldStarRating", parseInt(e.target.value) || 0)}>
-                    {DLD_STAR.map(s => <option key={s} value={s}>{s === 0 ? "-" : "�…".repeat(s)}</option>)}
+                    {DLD_STAR.map(s => <option key={s} value={s}>{s === 0 ? "-" : "★".repeat(s)}</option>)}
                   </select>
                 </div>
               </div>
@@ -391,7 +391,7 @@ export default function DevelopmentEditModal({ initial, developers, onClose, onS
                     const on = (form.amenities || []).includes(a);
                     return (
                       <button key={a} type="button" onClick={() => toggleArr("amenities", a)} style={{ padding: "6px 12px", background: on ? C.tealD : C.s2, color: on ? C.teal : C.t2, border: "1px solid " + (on ? C.teal : C.border), borderRadius: 16, fontSize: 11, cursor: "pointer", fontFamily: C.ff }}>
-                        {on ? "�“ " : ""}{a}
+                        {on ? "✓ " : ""}{a}
                       </button>
                     );
                   })}
@@ -405,7 +405,7 @@ export default function DevelopmentEditModal({ initial, developers, onClose, onS
                     const on = (form.views || []).includes(v);
                     return (
                       <button key={v} type="button" onClick={() => toggleArr("views", v)} style={{ padding: "6px 12px", background: on ? C.blueD : C.s2, color: on ? C.blue : C.t2, border: "1px solid " + (on ? C.blue : C.border), borderRadius: 16, fontSize: 11, cursor: "pointer", fontFamily: C.ff }}>
-                        {on ? "�“ " : ""}{v}
+                        {on ? "✓ " : ""}{v}
                       </button>
                     );
                   })}
@@ -419,7 +419,7 @@ export default function DevelopmentEditModal({ initial, developers, onClose, onS
                     const on = (form.lifestyle || []).includes(l);
                     return (
                       <button key={l} type="button" onClick={() => toggleArr("lifestyle", l)} style={{ padding: "6px 12px", background: on ? C.goldD : C.s2, color: on ? C.gold : C.t2, border: "1px solid " + (on ? C.gold : C.border), borderRadius: 16, fontSize: 11, cursor: "pointer", fontFamily: C.ff }}>
-                        {on ? "�“ " : ""}{l}
+                        {on ? "✓ " : ""}{l}
                       </button>
                     );
                   })}

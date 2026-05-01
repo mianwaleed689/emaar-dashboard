@@ -1,5 +1,5 @@
 /* eslint-disable */
-/* BANKING TAB ‚‚Ç¨‚Äù Mortgage products, bank comparison, mortgage lead capture */
+/* BANKING TAB ‚Äî Mortgage products, bank comparison, mortgage lead capture */
 
 import React from "react";
 import { T } from "../data";
@@ -26,10 +26,10 @@ function BankingTab({ orgId, userId, liveEiborRates,
 }) {
 
 
-            /* ‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê
-               BANKING INTELLIGENCE ‚‚Ç¨‚Äù Research Sources (Apr 2026)
+            /* ‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê
+               BANKING INTELLIGENCE ‚Äî Research Sources (Apr 2026)
                
-               EIBOR (UAE Central Bank ‚‚Ç¨‚Äù centralbank.ae/en/forex-eibor):
+               EIBOR (UAE Central Bank ‚Äî centralbank.ae/en/forex-eibor):
                  27 Feb 2026: 1M=3.635% | 3M=3.593% | 6M=3.676% | 1Y=3.674%
                
                UAE Central Bank LTV Rules (rulebook.centralbank.ae):
@@ -39,9 +39,9 @@ function BankingTab({ orgId, userId, liveEiborRates,
                  Expats resident first home ‚â§AED 5M: max 80% LTV (20% down)
                  Expats resident first home >AED 5M: max 70% LTV (30% down)
                  Expats 2nd/investment: max 60% LTV (40% down)
-                 Off-plan ALL buyers: max 50% LTV (50% down) ‚‚Ç¨‚Äù CBUAE mandatory
+                 Off-plan ALL buyers: max 50% LTV (50% down) ‚Äî CBUAE mandatory
                  Non-residents: max 50-65% LTV (35-50% down)
-                 DBR cap: 50% of gross monthly salary ‚‚Ç¨‚Äù all loans combined
+                 DBR cap: 50% of gross monthly salary ‚Äî all loans combined
                  Max term: 25 years | Age at maturity: max 65 (expat), 70 (national)
                
                Bank Rates (multiple sources, Jan-Apr 2026):
@@ -52,7 +52,7 @@ function BankingTab({ orgId, userId, liveEiborRates,
                  HSBC: Fixed 4.30% (3yr). EIBOR variable. Valuation fee AED 2,625. Min AED 40K Premier
                  DIB (Islamic): Profit 3.75-4.50%. Murabaha/Ijara. Processing 1% of finance
                  RAKBank: Fixed rate + EIBOR variable. 20% min DP. 1-25yr term
-                 Standard Chartered: Fixed 4.10% (5yr fixed ‚‚Ç¨‚Äù most stable). Min AED 15K
+                 Standard Chartered: Fixed 4.10% (5yr fixed ‚Äî most stable). Min AED 15K
                
                Fees confirmed (multiple sources):
                  Processing fee: 0.5-1% of loan amount (varies by bank)
@@ -61,9 +61,9 @@ function BankingTab({ orgId, userId, liveEiborRates,
                  Early settlement: 1% of outstanding (capped by CBUAE regulation)
                  DLD transfer fee: 4% of property value (all buyers)
                  Insurance (mandatory): Life + property insurance
-            ‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê */
+            ‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê */
 
-            /* ‚‚Äù‚Ç¨‚‚Äù‚Ç¨ EIBOR data (Feb 27, 2026 ‚‚Ç¨‚Äù UAE Central Bank) ‚‚Äù‚Ç¨‚‚Äù‚Ç¨ */
+            /* ‚îÄ‚îÄ EIBOR data (Feb 27, 2026 ‚Äî UAE Central Bank) ‚îÄ‚îÄ */
             const EIBOR = {
               "1M":  { rate: 3.635, label: "1 Month",  trend: "down" },
               "3M":  { rate: 3.593, label: "3 Month",  trend: "down" },
@@ -72,7 +72,7 @@ function BankingTab({ orgId, userId, liveEiborRates,
             };
             const EIBOR_3M = parseFloat(liveEiborRates?.["3m"] ?? 3.593);
 
-            /* ‚‚Äù‚Ç¨‚‚Äù‚Ç¨ Historical EIBOR for chart (3M rate) ‚‚Äù‚Ç¨‚‚Äù‚Ç¨ */
+            /* ‚îÄ‚îÄ Historical EIBOR for chart (3M rate) ‚îÄ‚îÄ */
             const EIBOR_HISTORY = [
               { period:"Jan 22", rate:0.51  },
               { period:"Jul 22", rate:2.80  },
@@ -85,7 +85,7 @@ function BankingTab({ orgId, userId, liveEiborRates,
               { period:"Feb 26", rate:3.593 },
             ];
 
-            /* ‚‚Äù‚Ç¨‚‚Äù‚Ç¨ LTV rules (UAE Central Bank official) ‚‚Äù‚Ç¨‚‚Äù‚Ç¨ */
+            /* ‚îÄ‚îÄ LTV rules (UAE Central Bank official) ‚îÄ‚îÄ */
             const LTV_RULES = {
               national: {
                 firstHome_under5M:  85, firstHome_over5M:  75,
@@ -101,7 +101,7 @@ function BankingTab({ orgId, userId, liveEiborRates,
               },
             };
 
-            /* ‚‚Äù‚Ç¨‚‚Äù‚Ç¨ 8 Banks with full data ‚‚Äù‚Ç¨‚‚Äù‚Ç¨ */
+            /* ‚îÄ‚îÄ 8 Banks with full data ‚îÄ‚îÄ */
             const BANKS = [
               {
                 name: "Emirates NBD",
@@ -122,7 +122,7 @@ function BankingTab({ orgId, userId, liveEiborRates,
                 salaryTransferDiscount: 0.25,
                 islamicOption: true,
                 strengths: ["Largest UAE bank","Digital-first process","Broadest nationality acceptance","Expat + non-resident specialist"],
-                bestFor: "All profiles ‚‚Ç¨‚Äù especially expats and non-residents",
+                bestFor: "All profiles ‚Äî especially expats and non-residents",
                 processingTime: "2-5 days pre-approval, 4-6 weeks full",
                 websiteUrl: "emiratesnbd.com",
               },
@@ -226,7 +226,7 @@ function BankingTab({ orgId, userId, liveEiborRates,
                 listed: true,
                 fixedRate1yr: 3.75, fixedRate3yr: 4.00, fixedRate5yr: 4.50,
                 variableMargin: 1.80,
-                minSalary: 7000,   // Lowest min salary ‚‚Ç¨‚Äù DIB confirmed
+                minSalary: 7000,   // Lowest min salary ‚Äî DIB confirmed
                 maxLTV_resident: 80, maxLTV_nonResident: 65,
                 processingFee: 1.0,  // Ijarah 1% processing fee (DIB confirmed)
                 valuationFee: 2500,
@@ -290,13 +290,13 @@ function BankingTab({ orgId, userId, liveEiborRates,
               },
             ];
 
-            /* ‚‚Äù‚Ç¨‚‚Äù‚Ç¨ Calculator logic ‚‚Äù‚Ç¨‚‚Äù‚Ç¨ */
+            /* ‚îÄ‚îÄ Calculator logic ‚îÄ‚îÄ */
             const propVal     = bankPropValue;
             const isNational  = bankType === "national";
             const isResident  = bankType === "resident";
             const isNonRes    = bankType === "nonResident";
 
-            /* ‚‚Äù‚Ç¨‚‚Äù‚Ç¨ Determine max LTV from CBUAE rules ‚‚Äù‚Ç¨‚‚Äù‚Ç¨ */
+            /* ‚îÄ‚îÄ Determine max LTV from CBUAE rules ‚îÄ‚îÄ */
             const getLTV = () => {
               const rules = isNational ? LTV_RULES.national
                           : isResident ? LTV_RULES.resident
@@ -312,14 +312,14 @@ function BankingTab({ orgId, userId, liveEiborRates,
             const downPayment  = propVal - loanAmount;
             const downPct      = 100 - effectiveLTV;
 
-            /* ‚‚Äù‚Ç¨‚‚Äù‚Ç¨ Selected bank rate ‚‚Äù‚Ç¨‚‚Äù‚Ç¨ */
+            /* ‚îÄ‚îÄ Selected bank rate ‚îÄ‚îÄ */
             const selBank = BANKS.find(b => b.name === bankSelected) || BANKS[0];
             const fixedRate = bankFixedYrs === 1 ? selBank.fixedRate1yr
                             : bankFixedYrs === 3 ? selBank.fixedRate3yr
                             : selBank.fixedRate5yr;
             const varRate   = EIBOR_3M + selBank.variableMargin;
 
-            /* ‚‚Äù‚Ç¨‚‚Äù‚Ç¨ Monthly payment calculator ‚‚Äù‚Ç¨‚‚Äù‚Ç¨ */
+            /* ‚îÄ‚îÄ Monthly payment calculator ‚îÄ‚îÄ */
             const calcMonthly = (principal, annualRate, termYrs) => {
               const r = annualRate / 100 / 12;
               const n = termYrs * 12;
@@ -332,7 +332,7 @@ function BankingTab({ orgId, userId, liveEiborRates,
             const totalInterestFixed = monthlyFixed * bankTerm * 12 - loanAmount;
             const totalInterestVar   = monthlyVar   * bankTerm * 12 - loanAmount;
 
-            /* ‚‚Äù‚Ç¨‚‚Äù‚Ç¨ DBR check ‚‚Äù‚Ç¨‚‚Äù‚Ç¨ */
+            /* ‚îÄ‚îÄ DBR check ‚îÄ‚îÄ */
             const dbr          = bankSalary > 0 ? (monthlyFixed / bankSalary * 100) : 0;
             const dbrOk        = dbr <= 50;
             const maxLoan_dbr  = bankSalary * 0.50;  // max monthly payment from DBR
@@ -342,13 +342,13 @@ function BankingTab({ orgId, userId, liveEiborRates,
                 : 0
               : 0;
 
-            /* ‚‚Äù‚Ç¨‚‚Äù‚Ç¨ Fees breakdown ‚‚Äù‚Ç¨‚‚Äù‚Ç¨ */
+            /* ‚îÄ‚îÄ Fees breakdown ‚îÄ‚îÄ */
             const processingFeeAmt = loanAmount * selBank.processingFee / 100;
             const mortgageReg      = loanAmount * 0.0025 + 290;  // 0.25% + AED 290
             const dldTransfer      = propVal * 0.04;              // 4% DLD fee
             const totalFees        = processingFeeAmt + selBank.valuationFee + mortgageReg + dldTransfer;
 
-            /* ‚‚Äù‚Ç¨‚‚Äù‚Ç¨ Filtered banks ‚‚Äù‚Ç¨‚‚Äù‚Ç¨ */
+            /* ‚îÄ‚îÄ Filtered banks ‚îÄ‚îÄ */
             const filteredBanks = BANKS.filter(b => {
               if (bankFinType === "islamic" && !b.islamicOnly) return false;
               if (bankFinType === "conventional" && b.islamicOnly) return false;
@@ -370,7 +370,7 @@ function BankingTab({ orgId, userId, liveEiborRates,
             return (
               <div style={{ animation:"fadeUp 0.4s ease-out forwards" }}>
 
-                {/* ‚‚Äù‚Ç¨‚‚Äù‚Ç¨ HEADER ‚‚Äù‚Ç¨‚‚Äù‚Ç¨ */}
+                {/* ‚îÄ‚îÄ HEADER ‚îÄ‚îÄ */}
                 <div style={{ display:"flex", alignItems:"flex-start", justifyContent:"space-between", padding:"10px 0", marginBottom:16, borderBottom:`1px solid ${T.border}`, flexWrap:"wrap", gap:10 }}>
                   <div>
                     <div style={{ fontFamily:"'Fraunces',serif", fontSize:20, fontWeight:800, color:T.white }}>Banking Intelligence</div>
@@ -388,13 +388,13 @@ function BankingTab({ orgId, userId, liveEiborRates,
                   </div>
                 </div>
 
-                {/* ‚‚Äù‚Ç¨‚‚Äù‚Ç¨ EIBOR strip ‚‚Äù‚Ç¨‚‚Äù‚Ç¨ */}
+                {/* ‚îÄ‚îÄ EIBOR strip ‚îÄ‚îÄ */}
                 <div style={{ display:"flex", gap:8, marginBottom:16, flexWrap:"wrap" }}>
                   {Object.entries(EIBOR).map(([key, e])=>(
                     <div key={key} style={{ flex:"1 1 80px", padding:"10px 14px", background:T.surface, border:`1px solid ${T.border}`, borderRadius:10, textAlign:"center" }}>
                       <div style={{ fontSize:9, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.8, marginBottom:4 }}>EIBOR {e.label}</div>
                       <div style={{ fontFamily:"'Fraunces',serif", fontSize:20, fontWeight:900, color:T.gold }}>{e.rate.toFixed(3)}%</div>
-                      <div style={{ fontSize:10, color:e.trend==="down"?T.green:e.trend==="up"?T.red:T.textMuted }}>{e.trend==="down"?"‚Ü‚Äú Falling":e.trend==="up"?"‚Ü‚Äò Rising":"‚Ü‚Äô Stable"}</div>
+                      <div style={{ fontSize:10, color:e.trend==="down"?T.green:e.trend==="up"?T.red:T.textMuted }}>{e.trend==="down"?"‚Üì Falling":e.trend==="up"?"‚Üë Rising":"‚Üí Stable"}</div>
                     </div>
                   ))}
                   <div style={{ flex:"1 1 120px", padding:"10px 14px", background:"rgba(212,168,67,0.06)", border:"1px solid rgba(212,168,67,0.2)", borderRadius:10, display:"flex", flexDirection:"column", justifyContent:"center" }}>
@@ -405,7 +405,7 @@ function BankingTab({ orgId, userId, liveEiborRates,
                   </div>
                 </div>
 
-                {/* ‚‚Ä¢ê‚‚Ä¢ê BANK COMPARISON VIEW ‚‚Ä¢ê‚‚Ä¢ê */}
+                {/* ‚ïê‚ïê BANK COMPARISON VIEW ‚ïê‚ïê */}
                 {bankView === "compare" && (
                   <>
                     {/* Filters */}
@@ -442,11 +442,11 @@ function BankingTab({ orgId, userId, liveEiborRates,
                     {/* LTV info banner */}
                     <div style={{ padding:"10px 16px", background:"rgba(212,168,67,0.06)", border:"1px solid rgba(212,168,67,0.2)", borderRadius:10, marginBottom:14, fontSize:11, color:T.textSecondary, lineHeight:1.8 }}>
                       <strong style={{ color:T.gold }}>CBUAE LTV Rule for your profile ({bankType}, {bankPurpose}):</strong>{" "}
-                      {bankType==="national" && bankPurpose==="firstHome" && "UAE National First Home ‚‚Ç¨‚Äù Max 85% LTV (‚â§AED 5M) / 75% LTV (>AED 5M). Down payment from 15%."}
-                      {bankType==="resident" && bankPurpose==="firstHome" && "Expat Resident First Home ‚‚Ç¨‚Äù Max 80% LTV (‚â§AED 5M) / 70% LTV (>AED 5M). Down payment from 20%."}
-                      {bankType==="nonResident" && bankPurpose==="firstHome" && "Non-Resident ‚‚Ç¨‚Äù Max 65% LTV. Down payment minimum 35%. Limited bank options."}
-                      {bankPurpose==="investment" && "Investment/2nd Property ‚‚Ç¨‚Äù Max 65% (National) / 60% (Expat). Down payment 35-40%."}
-                      {bankPurpose==="offPlan" && "Off-Plan ALL buyers ‚‚Ç¨‚Äù Mandatory Max 50% LTV regardless of nationality. 50% down payment required. CBUAE regulation."}
+                      {bankType==="national" && bankPurpose==="firstHome" && "UAE National First Home ‚Äî Max 85% LTV (‚â§AED 5M) / 75% LTV (>AED 5M). Down payment from 15%."}
+                      {bankType==="resident" && bankPurpose==="firstHome" && "Expat Resident First Home ‚Äî Max 80% LTV (‚â§AED 5M) / 70% LTV (>AED 5M). Down payment from 20%."}
+                      {bankType==="nonResident" && bankPurpose==="firstHome" && "Non-Resident ‚Äî Max 65% LTV. Down payment minimum 35%. Limited bank options."}
+                      {bankPurpose==="investment" && "Investment/2nd Property ‚Äî Max 65% (National) / 60% (Expat). Down payment 35-40%."}
+                      {bankPurpose==="offPlan" && "Off-Plan ALL buyers ‚Äî Mandatory Max 50% LTV regardless of nationality. 50% down payment required. CBUAE regulation."}
                       {" | DBR cap: 50% of gross salary | Max term: 25 years"}
                     </div>
 
@@ -473,8 +473,8 @@ function BankingTab({ orgId, userId, liveEiborRates,
                                 <div style={{ fontSize:13, fontWeight:600, color:T.white }}>{b.name}</div>
                                 <div style={{ display:"flex", gap:4, marginTop:2 }}>
                                   {b.islamicOnly && <span style={{ fontSize:9, padding:"1px 5px", borderRadius:4, background:"rgba(139,92,246,0.15)", color:"#8B5CF6" }}>Islamic</span>}
-                                  {b.nonResident && <span style={{ fontSize:9, padding:"1px 5px", borderRadius:4, background:"rgba(16,185,129,0.1)", color:T.green }}>Non-Res ‚ú‚Äú</span>}
-                                  {b.offPlan && <span style={{ fontSize:9, padding:"1px 5px", borderRadius:4, background:"rgba(212,168,67,0.1)", color:T.gold }}>Off-Plan ‚ú‚Äú</span>}
+                                  {b.nonResident && <span style={{ fontSize:9, padding:"1px 5px", borderRadius:4, background:"rgba(16,185,129,0.1)", color:T.green }}>Non-Res ‚úì</span>}
+                                  {b.offPlan && <span style={{ fontSize:9, padding:"1px 5px", borderRadius:4, background:"rgba(212,168,67,0.1)", color:T.gold }}>Off-Plan ‚úì</span>}
                                 </div>
                               </div>
                             </div>
@@ -498,12 +498,12 @@ function BankingTab({ orgId, userId, liveEiborRates,
                       <div className="chart-box" style={{ padding:18 }}>
                         <div style={{ fontSize:12, fontWeight:700, color:T.white, marginBottom:12 }}>Standard Fees (AED)</div>
                         {[
-                          { item:"Processing fee", val:"0.5‚‚Ç¨‚Äú1.0% of loan" },
-                          { item:"Property valuation", val:"AED 2,500‚‚Ç¨‚Äú3,000" },
+                          { item:"Processing fee", val:"0.5‚Äì1.0% of loan" },
+                          { item:"Property valuation", val:"AED 2,500‚Äì3,000" },
                           { item:"Mortgage registration (DLD)", val:"0.25% + AED 290" },
                           { item:"DLD transfer fee", val:"4% of property value" },
-                          { item:"Life insurance (mandatory)", val:"0.3‚‚Ç¨‚Äú0.6% p.a." },
-                          { item:"Property insurance", val:"AED 800‚‚Ç¨‚Äú2,000/yr" },
+                          { item:"Life insurance (mandatory)", val:"0.3‚Äì0.6% p.a." },
+                          { item:"Property insurance", val:"AED 800‚Äì2,000/yr" },
                           { item:"Early settlement cap", val:"1% of outstanding (CBUAE max)" },
                         ].map((f,i)=>(
                           <div key={i} style={{ display:"flex", justifyContent:"space-between", padding:"6px 0", borderBottom:i<6?`1px solid ${T.border}`:"none" }}>
@@ -515,11 +515,11 @@ function BankingTab({ orgId, userId, liveEiborRates,
                       <div className="chart-box" style={{ padding:18 }}>
                         <div style={{ fontSize:12, fontWeight:700, color:T.white, marginBottom:12 }}>Process Timeline</div>
                         {[
-                          { step:"Pre-approval / MIP",       time:"2‚‚Ç¨‚Äú5 days",   color:T.green  },
-                          { step:"Property valuation",       time:"3‚‚Ç¨‚Äú7 days",   color:T.gold   },
-                          { step:"Final offer letter",       time:"7‚‚Ç¨‚Äú14 days",  color:T.gold   },
-                          { step:"Mortgage disbursement",    time:"3‚‚Ç¨‚Äú7 days",   color:"#F97316"},
-                          { step:"Total end-to-end",         time:"4‚‚Ç¨‚Äú6 weeks",  color:T.teal   },
+                          { step:"Pre-approval / MIP",       time:"2‚Äì5 days",   color:T.green  },
+                          { step:"Property valuation",       time:"3‚Äì7 days",   color:T.gold   },
+                          { step:"Final offer letter",       time:"7‚Äì14 days",  color:T.gold   },
+                          { step:"Mortgage disbursement",    time:"3‚Äì7 days",   color:"#F97316"},
+                          { step:"Total end-to-end",         time:"4‚Äì6 weeks",  color:T.teal   },
                         ].map((s,i)=>(
                           <div key={i} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"7px 0", borderBottom:i<4?`1px solid ${T.border}`:"none" }}>
                             <span style={{ fontSize:11, color:T.textSecondary }}>{s.step}</span>
@@ -534,11 +534,11 @@ function BankingTab({ orgId, userId, liveEiborRates,
                   </>
                 )}
 
-                {/* ‚‚Ä¢ê‚‚Ä¢ê EIBOR TRACKER VIEW ‚‚Ä¢ê‚‚Ä¢ê */}
+                {/* ‚ïê‚ïê EIBOR TRACKER VIEW ‚ïê‚ïê */}
                 {bankView === "eibor" && (
                   <div style={{ marginBottom:16 }}>
                     <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:4 }}>EIBOR Historical Trend (3-Month Rate)</div>
-                    <div style={{ fontSize:11, color:T.textMuted, marginBottom:20 }}>UAE Central Bank ¬∑ Jan 2022 ‚‚Ç¨‚Äú Feb 2026 ¬∑ Rate peaked at 5.28% (Jul 2023) ¬∑ Now at 3.593% and falling</div>
+                    <div style={{ fontSize:11, color:T.textMuted, marginBottom:20 }}>UAE Central Bank ¬∑ Jan 2022 ‚Äì Feb 2026 ¬∑ Rate peaked at 5.28% (Jul 2023) ¬∑ Now at 3.593% and falling</div>
                     <div className="chart-box" style={{ padding:20, marginBottom:16 }}>
                       <div style={{ display:"flex", gap:6, alignItems:"flex-end", height:180 }}>
                         {EIBOR_HISTORY.map((e,i)=>{
@@ -561,8 +561,8 @@ function BankingTab({ orgId, userId, liveEiborRates,
                     </div>
                     <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:12 }}>
                       {[
-                        { title:"EIBOR peaked at", val:"5.28%", sub:"July 2023 ‚‚Ç¨‚Äù highest in 15yrs", color:T.red },
-                        { title:"Current 3M EIBOR", val:"3.593%", sub:"27 Feb 2026 ‚‚Ç¨‚Äù UAE Central Bank", color:T.green },
+                        { title:"EIBOR peaked at", val:"5.28%", sub:"July 2023 ‚Äî highest in 15yrs", color:T.red },
+                        { title:"Current 3M EIBOR", val:"3.593%", sub:"27 Feb 2026 ‚Äî UAE Central Bank", color:T.green },
                         { title:"Effect on variable rate", val:`~${(EIBOR_3M+1.85).toFixed(2)}%`, sub:"At typical EIBOR+1.85% margin", color:T.gold },
                       ].map((c,i)=>(
                         <div key={i} className="chart-box" style={{ padding:16, textAlign:"center" }}>
@@ -573,12 +573,12 @@ function BankingTab({ orgId, userId, liveEiborRates,
                       ))}
                     </div>
                     <div style={{ marginTop:12, padding:"12px 16px", background:"rgba(16,185,129,0.06)", border:"1px solid rgba(16,185,129,0.2)", borderRadius:10, fontSize:11, color:T.textSecondary, lineHeight:1.8 }}>
-                      <strong style={{ color:T.green }}>Broker insight:</strong> EIBOR has fallen from the 5.28% peak (Jul 2023) to 3.593% today ‚‚Ç¨‚Äù a 1.69% drop. A borrower on EIBOR+2% variable rate has seen their effective rate fall from ~7.3% to ~5.6%. Variable rate is currently 0.5-1% cheaper than fixed rates. If you expect EIBOR to continue falling (Fed rate cuts), variable makes sense. For stability, 3yr fixed is the current sweet spot.
+                      <strong style={{ color:T.green }}>Broker insight:</strong> EIBOR has fallen from the 5.28% peak (Jul 2023) to 3.593% today ‚Äî a 1.69% drop. A borrower on EIBOR+2% variable rate has seen their effective rate fall from ~7.3% to ~5.6%. Variable rate is currently 0.5-1% cheaper than fixed rates. If you expect EIBOR to continue falling (Fed rate cuts), variable makes sense. For stability, 3yr fixed is the current sweet spot.
                     </div>
                   </div>
                 )}
 
-                {/* ‚‚Ä¢ê‚‚Ä¢ê CALCULATOR VIEW ‚‚Ä¢ê‚‚Ä¢ê */}
+                {/* ‚ïê‚ïê CALCULATOR VIEW ‚ïê‚ïê */}
                 {bankView === "calculator" && (
                   <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16, marginBottom:16 }}>
                     {/* Inputs */}
@@ -696,7 +696,7 @@ function BankingTab({ orgId, userId, liveEiborRates,
                       <div style={{ padding:"14px 16px", background:dbrOk?"rgba(16,185,129,0.06)":"rgba(239,68,68,0.06)", border:`1px solid ${dbrOk?"rgba(16,185,129,0.25)":"rgba(239,68,68,0.25)"}`, borderRadius:10 }}>
                         <div style={{ display:"flex", justifyContent:"space-between", marginBottom:6 }}>
                           <span style={{ fontSize:12, fontWeight:700, color:dbrOk?T.green:T.red }}>
-                            {dbrOk?"‚ú‚Äú DBR check passed":"‚ú‚Äî DBR exceeded ‚‚Ç¨‚Äù reduce loan or increase salary"}
+                            {dbrOk?"‚úì DBR check passed":"‚úó DBR exceeded ‚Äî reduce loan or increase salary"}
                           </span>
                           <span style={{ fontSize:13, fontWeight:800, color:dbrOk?T.green:T.red }}>{dbr.toFixed(1)}% / 50%</span>
                         </div>
@@ -747,7 +747,7 @@ function BankingTab({ orgId, userId, liveEiborRates,
                   </div>
                 )}
 
-                {/* ‚‚Ä¢ê‚‚Ä¢ê ELIGIBILITY VIEW ‚‚Ä¢ê‚‚Ä¢ê */}
+                {/* ‚ïê‚ïê ELIGIBILITY VIEW ‚ïê‚ïê */}
                 {bankView === "eligibility" && (
                   <div style={{ marginBottom:16 }}>
                     <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:4 }}>Bank Eligibility Checker</div>
@@ -756,7 +756,7 @@ function BankingTab({ orgId, userId, liveEiborRates,
                     {/* CBUAE LTV table */}
                     <div style={{ background:T.surface, border:`1px solid ${T.border}`, borderRadius:12, overflow:"hidden", marginBottom:16 }}>
                       <div style={{ padding:"12px 16px", background:T.surfaceAlt, borderBottom:`1px solid ${T.border}`, fontSize:12, fontWeight:700, color:T.white }}>
-                        CBUAE Mortgage LTV Rules (Official ‚‚Ç¨‚Äù centralbank.ae/en/rulebook)
+                        CBUAE Mortgage LTV Rules (Official ‚Äî centralbank.ae/en/rulebook)
                       </div>
                       <div style={{ display:"grid", gridTemplateColumns:"1.5fr 1fr 1fr 1fr 1fr", padding:"9px 16px", background:T.surfaceAlt, borderBottom:`1px solid ${T.border}` }}>
                         {["Category","1st Home ‚â§AED 5M","1st Home >AED 5M","2nd/Investment","Off-Plan"].map((h,i)=>(
@@ -790,7 +790,7 @@ function BankingTab({ orgId, userId, liveEiborRates,
                                 <span style={{ fontSize:13, fontWeight:600, color:T.white }}>{b.name}</span>
                               </div>
                               <span style={{ fontSize:11, padding:"2px 8px", borderRadius:6, background:eligible?"rgba(16,185,129,0.12)":"rgba(239,68,68,0.12)", color:eligible?T.green:T.red, fontWeight:700 }}>
-                                {eligible?"‚ú‚Äú Eligible":"‚ú‚Äî Check"}
+                                {eligible?"‚úì Eligible":"‚úó Check"}
                               </span>
                             </div>
                             {!eligible && (
@@ -810,13 +810,13 @@ function BankingTab({ orgId, userId, liveEiborRates,
                   </div>
                 )}
 
-                {/* ‚‚Äù‚Ç¨‚‚Äù‚Ç¨ MORTGAGE LEAD CAPTURE FORM ‚‚Äù‚Ç¨‚‚Äù‚Ç¨ */}
+                {/* ‚îÄ‚îÄ MORTGAGE LEAD CAPTURE FORM ‚îÄ‚îÄ */}
                 <div style={{ padding:"20px 22px", background:"linear-gradient(135deg,rgba(212,168,67,0.08),rgba(212,168,67,0.02))", border:"1px solid rgba(212,168,67,0.25)", borderRadius:14, marginBottom:16 }}>
                   <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", flexWrap:"wrap", gap:12, marginBottom:16 }}>
                     <div>
                       <div style={{ fontFamily:"'Fraunces',serif", fontSize:16, fontWeight:800, color:T.white, marginBottom:4 }}>Get a Free Personalised Mortgage Quote</div>
                       <div style={{ fontSize:12, color:T.textSecondary, lineHeight:1.7 }}>
-                        Our RERA-licensed broker partners compare all 8 banks for you ‚‚Ç¨‚Äù free of charge.<br/>
+                        Our RERA-licensed broker partners compare all 8 banks for you ‚Äî free of charge.<br/>
                         They call you within 2 hours and find the best rate for your exact profile.
                       </div>
                     </div>
@@ -829,11 +829,11 @@ function BankingTab({ orgId, userId, liveEiborRates,
 
                   {mortLeadSubmitted ? (
                     <div style={{ textAlign:"center", padding:"20px 0" }}>
-                      <div style={{ fontSize:28, marginBottom:8 }}>‚ú‚Ä¶</div>
+                      <div style={{ fontSize:28, marginBottom:8 }}>‚úÖ</div>
                       <div style={{ fontFamily:"'Fraunces',serif", fontSize:16, fontWeight:700, color:T.green, marginBottom:6 }}>Request Received!</div>
                       <div style={{ fontSize:12, color:T.textSecondary, lineHeight:1.7 }}>
                         Our mortgage specialist will call you within 2 hours.<br/>
-                        They will compare all 8 banks and find your best rate ‚‚Ç¨‚Äù completely free.
+                        They will compare all 8 banks and find your best rate ‚Äî completely free.
                       </div>
                       <button type="button" onClick={()=>{ setMortLeadSubmitted(false); setMortLeadName(""); setMortLeadPhone(""); setMortLeadEmail(""); }}
                         style={{ marginTop:14, padding:"6px 18px", background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:8, color:T.textMuted, fontSize:11, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>
@@ -896,7 +896,7 @@ function BankingTab({ orgId, userId, liveEiborRates,
                                 purpose: bankPurpose,
                                 preferredBank: bankSelected,
                                 eibor3M: EIBOR_3M,
-                                source: "Banking Tab ‚‚Ç¨‚Äù DXB Analytics",
+                                source: "Banking Tab ‚Äî DXB Analytics",
                                 userId: userId || "unknown",
                                 orgId: orgId || null,
                                 assignedAgent: userId || null,
@@ -910,7 +910,7 @@ function BankingTab({ orgId, userId, liveEiborRates,
                             setMortLeadSubmitting(false);
                           }}
                           style={{ padding:"9px 22px", background:(!mortLeadName||!mortLeadPhone)?T.surfaceAlt:`linear-gradient(135deg,${T.gold},#B8922A)`, border:"none", borderRadius:8, color:(!mortLeadName||!mortLeadPhone)?T.textMuted:"#000", fontSize:12, fontWeight:700, cursor:(!mortLeadName||!mortLeadPhone)?"not-allowed":"pointer", fontFamily:"'Outfit',sans-serif", whiteSpace:"nowrap" }}>
-                          {mortLeadSubmitting ? "Sending..." : "Get Free Quote ‚Ü‚Äô"}
+                          {mortLeadSubmitting ? "Sending..." : "Get Free Quote ‚Üí"}
                         </button>
                       </div>
 
@@ -923,7 +923,7 @@ function BankingTab({ orgId, userId, liveEiborRates,
                           "RERA-licensed advisors",
                         ].map((b,i)=>(
                           <div key={i} style={{ display:"flex", alignItems:"center", gap:5, fontSize:11, color:T.textSecondary }}>
-                            <span style={{ color:T.green }}>‚ú‚Äú</span> {b}
+                            <span style={{ color:T.green }}>‚úì</span> {b}
                           </div>
                         ))}
                       </div>
@@ -941,7 +941,7 @@ function BankingTab({ orgId, userId, liveEiborRates,
                   )}
                 </div>
 
-                {/* ‚‚Äù‚Ç¨‚‚Äù‚Ç¨ APPLY BUTTONS ‚‚Äù‚Ç¨‚‚Äù‚Ç¨ */}
+                {/* ‚îÄ‚îÄ APPLY BUTTONS ‚îÄ‚îÄ */}
                 <div style={{ marginBottom:16 }}>
                   <div style={{ fontSize:12, fontWeight:700, color:T.white, marginBottom:10 }}>Apply directly at each bank</div>
                   <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
@@ -957,17 +957,17 @@ function BankingTab({ orgId, userId, liveEiborRates,
                     ].map((b,i)=>(
                       <a key={i} href={b.url} target="_blank" rel="noopener noreferrer"
                         style={{ padding:"7px 14px", background:b.color+"18", border:`1px solid ${b.color}40`, borderRadius:8, color:b.color, fontSize:11, fontWeight:600, cursor:"pointer", fontFamily:"'Outfit',sans-serif", textDecoration:"none", display:"inline-block" }}>
-                        Apply at {b.name} ‚Ü‚Äô
+                        Apply at {b.name} ‚Üí
                       </a>
                     ))}
                   </div>
-                  <div style={{ fontSize:10, color:T.textMuted, marginTop:6 }}>Links go directly to each bank's official mortgage application page. DXB Analytics is not a lender ‚‚Ç¨‚Äù we help you compare and connect.</div>
+                  <div style={{ fontSize:10, color:T.textMuted, marginTop:6 }}>Links go directly to each bank's official mortgage application page. DXB Analytics is not a lender ‚Äî we help you compare and connect.</div>
                 </div>
 
-                {/* ‚‚Äù‚Ç¨‚‚Äù‚Ç¨ SOURCE FOOTER ‚‚Äù‚Ç¨‚‚Äù‚Ç¨ */}
+                {/* ‚îÄ‚îÄ SOURCE FOOTER ‚îÄ‚îÄ */}
                 <div style={{ paddingTop:12, borderTop:`1px solid ${T.border}`, display:"flex", gap:8, flexWrap:"wrap", alignItems:"center" }}>
                   <span style={{ fontSize:10, color:T.textMuted }}>Sources:</span>
-                  {["UAE Central Bank (centralbank.ae) (centralbank.ae)","CBUAE Rulebook ‚‚Ç¨‚Äù Mortgage Regulations","Emirates NBD IR","ADCB","FAB (bankfab.com)","Mashreq","HSBC UAE","DIB","RAKBank","Standard Chartered","realestateclubdubai.com Apr 2026"].map((s,i)=>(
+                  {["UAE Central Bank (centralbank.ae) (centralbank.ae)","CBUAE Rulebook ‚Äî Mortgage Regulations","Emirates NBD IR","ADCB","FAB (bankfab.com)","Mashreq","HSBC UAE","DIB","RAKBank","Standard Chartered","realestateclubdubai.com Apr 2026"].map((s,i)=>(
                     <span key={i} style={{ fontSize:10, color:T.textMuted, padding:"2px 8px", borderRadius:10, border:`1px solid ${T.border}`, background:T.surfaceAlt }}>{s}</span>
                   ))}
                 </div>

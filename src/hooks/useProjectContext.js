@@ -1,5 +1,5 @@
 /**
- * DXB ANALYTICS �€” useProjectContext HOOK
+ * DXB ANALYTICS — useProjectContext HOOK
  * ========================================
  * File: src/hooks/useProjectContext.js
  *
@@ -31,7 +31,7 @@
  *         {hasContext && (
  *           <div style={contextBannerStyle}>
  *             Showing data for: {project.name}
- *             <button onClick={clearContext}>�• Clear</button>
+ *             <button onClick={clearContext}>✕ Clear</button>
  *           </div>
  *         )}
  *         ...rest of tab...
@@ -73,7 +73,7 @@ export function useProjectContext(projectContext, tabKey) {
 }
 
 /**
- * Context banner component �€” shown at top of tab when project context is active
+ * Context banner component — shown at top of tab when project context is active
  * Matches DXB Analytics gold theme exactly
  *
  * USAGE:
@@ -116,7 +116,7 @@ export function ProjectContextBanner({ project, tabKey, onClear }) {
           </span>
           {connection?.description && (
             <span style={{ fontSize:11, color:'#64748B', marginLeft:8 }}>
-              �€” {connection.description}
+              — {connection.description}
             </span>
           )}
         </div>
@@ -142,7 +142,7 @@ export function ProjectContextBanner({ project, tabKey, onClear }) {
           onMouseLeave={e => e.currentTarget.style.color = '#64748B'}
           title="Clear project context"
         >
-          �•
+          ✕
         </button>
       </div>
     </div>
@@ -156,7 +156,7 @@ export function ProjectContextBanner({ project, tabKey, onClear }) {
  * Copy this into your EmaarDashboardV2.jsx:
  */
 export const STATE_DECLARATIONS = `
-  // Project context �€” set when user clicks action button on a project card
+  // Project context — set when user clicks action button on a project card
   // All destination tabs read from this to know what project to show
   const [projectContext, setProjectContext] = useState(null);
 `;

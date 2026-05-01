@@ -93,17 +93,17 @@ export default function BulkToolbar({
       <div style={{ display: "flex", gap: 6 }}>
         {onBulkPublish && (
           <button style={{ ...btnStyles("teal"), padding: "6px 12px", fontSize: 11 }} onClick={onBulkPublish}>
-            �“ Publish {selectedCount}
+            ✓ Publish {selectedCount}
           </button>
         )}
         {onBulkDraft && (
           <button style={{ ...btnStyles("ghost"), padding: "6px 12px", fontSize: 11 }} onClick={onBulkDraft}>
-            �—� Move to Draft
+            ◷ Move to Draft
           </button>
         )}
         {onBulkArchive && (
           <button style={{ ...btnStyles("red"), padding: "6px 12px", fontSize: 11 }} onClick={onBulkArchive}>
-            �• Archive {selectedCount}
+            ✕ Archive {selectedCount}
           </button>
         )}
       </div>
@@ -111,7 +111,7 @@ export default function BulkToolbar({
   );
 }
 
-// �”€�”€�”€ CSV parser (simple, handles quotes and commas in values) �”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€
+// ─── CSV parser (simple, handles quotes and commas in values) ───────────────
 function parseCsv(text) {
   const lines = text.split(/\r?\n/).filter(l => l.trim().length > 0);
   if (lines.length === 0) return [];
@@ -153,14 +153,14 @@ function parseCsv(text) {
   return rows;
 }
 
-// �”€�”€�”€ CSV builder (escapes values with commas/quotes/newlines) �”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€�”€
+// ─── CSV builder (escapes values with commas/quotes/newlines) ───────────────
 export function toCsv(rows, columns) {
   if (!rows || rows.length === 0) return "";
 
   const escape = (val) => {
     if (val === null || val === undefined) return "";
     let s = String(val);
-    // If it contains comma, quote, or newline �€” wrap in quotes and escape internal quotes
+    // If it contains comma, quote, or newline — wrap in quotes and escape internal quotes
     if (s.includes(",") || s.includes('"') || s.includes("\n")) {
       s = '"' + s.replace(/"/g, '""') + '"';
     }

@@ -189,8 +189,8 @@ export default function ClaimsSection({ currentUserId, currentUserEmail }) {
                 </div>
                 {claim.status === "pending" && (
                   <div style={{ display: "flex", gap: 6 }}>
-                    <button style={{ ...btnStyles("teal"), padding: "8px 14px" }} onClick={() => approve(claim)}>�“ Approve</button>
-                    <button style={{ ...btnStyles("red"), padding: "8px 14px" }} onClick={() => reject(claim)}>�• Reject</button>
+                    <button style={{ ...btnStyles("teal"), padding: "8px 14px" }} onClick={() => approve(claim)}>✓ Approve</button>
+                    <button style={{ ...btnStyles("red"), padding: "8px 14px" }} onClick={() => reject(claim)}>✕ Reject</button>
                   </div>
                 )}
               </div>

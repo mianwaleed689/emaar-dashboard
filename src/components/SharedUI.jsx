@@ -1,15 +1,15 @@
 /* eslint-disable */
-/* ‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê
-   DXB ANALYTICS ‚‚Ç¨‚Äù SHARED UI COMPONENTS
+/* ‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê
+   DXB ANALYTICS ‚Äî SHARED UI COMPONENTS
    Extracted from EmaarDashboardV2.jsx
    Reusable components used across multiple tabs
-   ‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê‚‚Ä¢ê */
+   ‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê‚ïê */
 
 import React, { useState } from "react";
 import { T } from "../data";
 import { Icons } from "./Icons";
 
-/* ‚‚Äù‚Ç¨‚‚Äù‚Ç¨‚‚Äù‚Ç¨ LOADING SKELETON ‚‚Äù‚Ç¨‚‚Äù‚Ç¨‚‚Äù‚Ç¨ */
+/* ‚îÄ‚îÄ‚îÄ LOADING SKELETON ‚îÄ‚îÄ‚îÄ */
 export const LoadingSkeleton = ({ rows = 6, cols = 3 }) => (
   <div style={{ display: "grid", gridTemplateColumns: `repeat(${cols}, 1fr)`, gap: 12 }}>
     {Array.from({ length: rows }).map((_, i) => (
@@ -22,7 +22,7 @@ export const LoadingSkeleton = ({ rows = 6, cols = 3 }) => (
   </div>
 );
 
-/* ‚‚Äù‚Ç¨‚‚Äù‚Ç¨‚‚Äù‚Ç¨ KPI CARD ‚‚Äù‚Ç¨‚‚Äù‚Ç¨‚‚Äù‚Ç¨ */
+/* ‚îÄ‚îÄ‚îÄ KPI CARD ‚îÄ‚îÄ‚îÄ */
 export const KPI = ({ label, value, sub, icon, delay = 0, onClick }) => {
   const [hovered, setHovered] = useState(false);
   const isClickable = !!onClick;
@@ -36,19 +36,19 @@ export const KPI = ({ label, value, sub, icon, delay = 0, onClick }) => {
       style={{ cursor: isClickable ? "pointer" : "default", transition: "transform 0.2s, box-shadow 0.2s, border-color 0.2s", transform: hovered ? "translateY(-3px)" : "none", boxShadow: hovered ? `0 10px 30px rgba(212,168,67,0.2)` : undefined, borderColor: hovered ? T.gold : undefined, position: "relative" }}
     >
       <div style={{ position: "absolute", top: -30, right: -30, width: 80, height: 80, borderRadius: "50%", background: `radial-gradient(circle, ${T.goldGlow} 0%, transparent 70%)` }} />
-      {isClickable && <div style={{ position: "absolute", top: 10, right: 10, fontSize: 14, color: hovered ? T.gold : T.border, transition: "color 0.2s" }}>‚‚Ç¨∫</div>}
+      {isClickable && <div style={{ position: "absolute", top: 10, right: 10, fontSize: 14, color: hovered ? T.gold : T.border, transition: "color 0.2s" }}>‚Ä∫</div>}
       <div style={{ fontSize: 10, fontWeight: 600, color: T.textMuted, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 8 }}>{label}</div>
       <div style={{ fontFamily: "'Fraunces', serif", fontSize: 26, fontWeight: 700, color: T.gold, lineHeight: 1.1, marginBottom: 4 }}>{value}</div>
       <div style={{ fontSize: 12, fontWeight: 500, color: T.teal, display: "flex", alignItems: "center", gap: 4 }}>
         {sub?.includes("+") && <span style={{ color: T.green }}>{Icons.up}</span>}
         {sub}
       </div>
-      {isClickable && <div style={{ marginTop: 8, fontSize: 9, color: hovered ? T.gold : T.textMuted, fontWeight: 600, letterSpacing: 0.5, transition: "color 0.2s" }}>{hovered ? "View breakdown ‚Ü‚Äô" : "Click for details"}</div>}
+      {isClickable && <div style={{ marginTop: 8, fontSize: 9, color: hovered ? T.gold : T.textMuted, fontWeight: 600, letterSpacing: 0.5, transition: "color 0.2s" }}>{hovered ? "View breakdown ‚Üí" : "Click for details"}</div>}
     </div>
   );
 };
 
-/* ‚‚Äù‚Ç¨‚‚Äù‚Ç¨‚‚Äù‚Ç¨ FORECAST CARD (expandable) ‚‚Äù‚Ç¨‚‚Äù‚Ç¨‚‚Äù‚Ç¨ */
+/* ‚îÄ‚îÄ‚îÄ FORECAST CARD (expandable) ‚îÄ‚îÄ‚îÄ */
 export const ForecastCard = ({ firm, color, short, forecast, detail, bullets, sourceUrl }) => {
   const [expanded, setExpanded] = useState(false);
   return (
@@ -65,11 +65,11 @@ export const ForecastCard = ({ firm, color, short, forecast, detail, bullets, so
           <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 5 }}>
             {bullets.map((b, bi) => (
               <li key={bi} style={{ fontSize: 11, color: T.textSecondary, display: "flex", gap: 6, alignItems: "flex-start" }}>
-                <span style={{ color, fontWeight: 700, marginTop: 1 }}>‚‚Ç¨∫</span> {b}
+                <span style={{ color, fontWeight: 700, marginTop: 1 }}>‚Ä∫</span> {b}
               </li>
             ))}
           </ul>
-          <a href={sourceUrl} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{ display: "inline-block", marginTop: 10, fontSize: 10, color, fontWeight: 700, textDecoration: "none" }}>Full Report ‚Ü‚Äî</a>
+          <a href={sourceUrl} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{ display: "inline-block", marginTop: 10, fontSize: 10, color, fontWeight: 700, textDecoration: "none" }}>Full Report ‚Üó</a>
         </div>
       )}
       {!expanded && <div style={{ marginTop: 8, fontSize: 10, color: T.textMuted }}>Click to expand full analysis</div>}
@@ -77,7 +77,7 @@ export const ForecastCard = ({ firm, color, short, forecast, detail, bullets, so
   );
 };
 
-/* ‚‚Äù‚Ç¨‚‚Äù‚Ç¨‚‚Äù‚Ç¨ SECTION HEADER ‚‚Äù‚Ç¨‚‚Äù‚Ç¨‚‚Äù‚Ç¨ */
+/* ‚îÄ‚îÄ‚îÄ SECTION HEADER ‚îÄ‚îÄ‚îÄ */
 export const Section = ({ title, sub, children, delay = 0 }) => (
   <div className={`fade-up delay-${delay}`} style={{ marginTop: 36, marginBottom: 16 }}>
     <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 4 }}>
@@ -89,7 +89,7 @@ export const Section = ({ title, sub, children, delay = 0 }) => (
   </div>
 );
 
-/* ‚‚Äù‚Ç¨‚‚Äù‚Ç¨‚‚Äù‚Ç¨ CHART WRAPPER ‚‚Äù‚Ç¨‚‚Äù‚Ç¨‚‚Äù‚Ç¨ */
+/* ‚îÄ‚îÄ‚îÄ CHART WRAPPER ‚îÄ‚îÄ‚îÄ */
 export const Chart = ({ title, children, style: extraStyle }) => (
   <div className="chart-box" style={extraStyle}>
     {title && <h3 style={{ fontSize: 11, fontWeight: 600, color: T.goldLight, letterSpacing: 1, textTransform: "uppercase", marginBottom: 14 }}>{title}</h3>}
@@ -97,7 +97,7 @@ export const Chart = ({ title, children, style: extraStyle }) => (
   </div>
 );
 
-/* ‚‚Äù‚Ç¨‚‚Äù‚Ç¨‚‚Äù‚Ç¨ RECHARTS CUSTOM TOOLTIP ‚‚Äù‚Ç¨‚‚Äù‚Ç¨‚‚Äù‚Ç¨ */
+/* ‚îÄ‚îÄ‚îÄ RECHARTS CUSTOM TOOLTIP ‚îÄ‚îÄ‚îÄ */
 export const CustomTooltip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null;
   return (
@@ -112,15 +112,15 @@ export const CustomTooltip = ({ active, payload, label }) => {
   );
 };
 
-/* ‚‚Äù‚Ç¨‚‚Äù‚Ç¨‚‚Äù‚Ç¨ DATA BADGE ‚‚Ç¨‚Äù verified data stamp ‚‚Äù‚Ç¨‚‚Äù‚Ç¨‚‚Äù‚Ç¨ */
+/* ‚îÄ‚îÄ‚îÄ DATA BADGE ‚Äî verified data stamp ‚îÄ‚îÄ‚îÄ */
 export const DataBadge = ({ source, date, type = "dld" }) => {
   const cfg = {
-    dld:     { label: "DLD Verified",     color: "#10B981", icon: "‚ú‚Äú" },
-    reidin:  { label: "REIDIN Index",     color: "#3B82F6", icon: "‚ú‚Äú" },
-    emaar:   { label: "Emaar IR",         color: "#D4A843", icon: "‚ú‚Äú" },
-    live:    { label: "Live ¬∑ Firestore", color: "#10B981", icon: "‚‚Äîè" },
+    dld:     { label: "DLD Verified",     color: "#10B981", icon: "‚úì" },
+    reidin:  { label: "REIDIN Index",     color: "#3B82F6", icon: "‚úì" },
+    emaar:   { label: "Emaar IR",         color: "#D4A843", icon: "‚úì" },
+    live:    { label: "Live ¬∑ Firestore", color: "#10B981", icon: "‚óè" },
     ai:      { label: "AI Estimate",      color: "#8B5CF6", icon: "‚ú¶" },
-    manual:  { label: "Admin Verified",   color: "#F59E0B", icon: "‚ú‚Äú" },
+    manual:  { label: "Admin Verified",   color: "#F59E0B", icon: "‚úì" },
   };
   const c = cfg[type] || cfg.dld;
   return (
@@ -135,7 +135,7 @@ export const DataBadge = ({ source, date, type = "dld" }) => {
   );
 };
 
-/* ‚‚Äù‚Ç¨‚‚Äù‚Ç¨‚‚Äù‚Ç¨ TAB SOURCES FOOTER ‚‚Äù‚Ç¨‚‚Äù‚Ç¨‚‚Äù‚Ç¨ */
+/* ‚îÄ‚îÄ‚îÄ TAB SOURCES FOOTER ‚îÄ‚îÄ‚îÄ */
 export const TabSources = ({ sources }) => (
   <div style={{
     marginTop: 28, padding: "12px 16px",
@@ -153,7 +153,7 @@ export const TabSources = ({ sources }) => (
           }}
           onMouseEnter={e => { e.currentTarget.style.color = "#D4A843"; e.currentTarget.style.borderColor = "rgba(212,168,67,0.4)"; }}
           onMouseLeave={e => { e.currentTarget.style.color = "rgba(255,255,255,0.55)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)"; }}
-          >{s.label} ‚Ü‚Äî</a>
+          >{s.label} ‚Üó</a>
         ) : (
           <span key={i} style={{
             fontSize: 10, color: "rgba(255,255,255,0.45)", background: "rgba(255,255,255,0.04)",
@@ -165,7 +165,7 @@ export const TabSources = ({ sources }) => (
   </div>
 );
 
-/* ‚‚Äù‚Ç¨‚‚Äù‚Ç¨‚‚Äù‚Ç¨ EMPTY STATE ‚‚Äù‚Ç¨‚‚Äù‚Ç¨‚‚Äù‚Ç¨ */
+/* ‚îÄ‚îÄ‚îÄ EMPTY STATE ‚îÄ‚îÄ‚îÄ */
 export const EmptyState = ({ tab, icon, description, adminHint }) => (
   <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "80px 24px", textAlign: "center", minHeight: 400 }}>
     <div style={{ width: 72, height: 72, borderRadius: 20, background: "rgba(212,168,67,0.08)", border: "1px solid rgba(212,168,67,0.2)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 24, fontSize: 32 }}>{icon}</div>
@@ -181,7 +181,7 @@ export const EmptyState = ({ tab, icon, description, adminHint }) => (
   </div>
 );
 
-/* ‚‚Äù‚Ç¨‚‚Äù‚Ç¨‚‚Äù‚Ç¨ PRO GATE OVERLAY ‚‚Äù‚Ç¨‚‚Äù‚Ç¨‚‚Äù‚Ç¨ */
+/* ‚îÄ‚îÄ‚îÄ PRO GATE OVERLAY ‚îÄ‚îÄ‚îÄ */
 export const ProGate = ({ children, isPro, message = "Upgrade to Pro to unlock this data", onUpgrade, blur = true }) => {
   if (isPro) return children;
   return (
@@ -189,15 +189,15 @@ export const ProGate = ({ children, isPro, message = "Upgrade to Pro to unlock t
       <div style={{ filter: blur ? "blur(5px)" : "none", pointerEvents: "none", userSelect: "none", opacity: blur ? 0.45 : 1 }}>{children}</div>
       <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "rgba(4,9,15,0.75)", borderRadius: 16, backdropFilter: "blur(4px)", zIndex: 5 }}>
         <div style={{ background: T.surface, border: `1px solid ${T.gold}`, borderRadius: 16, padding: "28px 32px", textAlign: "center", maxWidth: 380, boxShadow: `0 20px 60px rgba(0,0,0,0.5), 0 0 30px ${T.gold}18` }}>
-          <div style={{ width: 48, height: 48, borderRadius: "50%", background: `linear-gradient(135deg, ${T.gold}22, ${T.gold}08)`, border: `1px solid ${T.gold}40`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, margin: "0 auto 12px" }}>ü‚Äù‚Äô</div>
+          <div style={{ width: 48, height: 48, borderRadius: "50%", background: `linear-gradient(135deg, ${T.gold}22, ${T.gold}08)`, border: `1px solid ${T.gold}40`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, margin: "0 auto 12px" }}>üîí</div>
           <div style={{ fontFamily: "'Fraunces', serif", fontSize: 17, fontWeight: 800, color: T.white, marginBottom: 6 }}>{message}</div>
           <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 16, lineHeight: 1.6 }}>Join 500+ investors using DXB Analytics Pro to track the Dubai real estate market</div>
           <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 18 }}>
             {["All 48+ active projects", "Full financials & yields", "ROI & mortgage calculator", "Currency converter", "Portfolio tracker"].map((f, i) => (
-              <div key={i} style={{ fontSize: 11, color: T.textSecondary, textAlign: "left", paddingLeft: 4 }}>‚ú‚Äú {f}</div>
+              <div key={i} style={{ fontSize: 11, color: T.textSecondary, textAlign: "left", paddingLeft: 4 }}>‚úì {f}</div>
             ))}
           </div>
-          <button type="button" onClick={onUpgrade} style={{ width: "100%", padding: "11px 0", background: `linear-gradient(135deg, ${T.gold}, #B8912F)`, color: T.bg, border: "none", borderRadius: 10, fontSize: 13, fontWeight: 800, cursor: "pointer", fontFamily: "'Outfit', sans-serif", letterSpacing: 0.3 }}>Unlock Pro ‚‚Ç¨‚Äù AED 99/mo ‚Ü‚Äô</button>
+          <button type="button" onClick={onUpgrade} style={{ width: "100%", padding: "11px 0", background: `linear-gradient(135deg, ${T.gold}, #B8912F)`, color: T.bg, border: "none", borderRadius: 10, fontSize: 13, fontWeight: 800, cursor: "pointer", fontFamily: "'Outfit', sans-serif", letterSpacing: 0.3 }}>Unlock Pro ‚Äî AED 99/mo ‚Üí</button>
           <div style={{ fontSize: 10, color: T.textMuted, marginTop: 8 }}>7-day money-back guarantee ¬∑ Cancel anytime</div>
         </div>
       </div>
@@ -205,7 +205,7 @@ export const ProGate = ({ children, isPro, message = "Upgrade to Pro to unlock t
   );
 };
 
-/* ‚‚Äù‚Ç¨‚‚Äù‚Ç¨‚‚Äù‚Ç¨ PRO GATE FULL PAGE ‚‚Äù‚Ç¨‚‚Äù‚Ç¨‚‚Äù‚Ç¨ */
+/* ‚îÄ‚îÄ‚îÄ PRO GATE FULL PAGE ‚îÄ‚îÄ‚îÄ */
 export const ProGateFullPage = ({ tabName, onUpgrade }) => {
   const tabBenefits = {
     "DXB Estimate": ["Automated property valuations", "AVM price estimates per unit", "Bayut live listings", "¬±15% accuracy model"],
@@ -225,7 +225,7 @@ export const ProGateFullPage = ({ tabName, onUpgrade }) => {
   return (
     <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "60vh", padding: "40px 20px" }}>
       <div style={{ background: T.surface, border: `1px solid ${T.gold}40`, borderRadius: 24, padding: "48px 40px", textAlign: "center", maxWidth: 480, width: "100%", boxShadow: `0 30px 80px rgba(0,0,0,0.4), 0 0 40px ${T.gold}10` }}>
-        <div style={{ width: 64, height: 64, borderRadius: "50%", background: `linear-gradient(135deg, ${T.gold}20, ${T.gold}05)`, border: `1px solid ${T.gold}40`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 28, margin: "0 auto 20px" }}>ü‚Äù‚Äô</div>
+        <div style={{ width: 64, height: 64, borderRadius: "50%", background: `linear-gradient(135deg, ${T.gold}20, ${T.gold}05)`, border: `1px solid ${T.gold}40`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 28, margin: "0 auto 20px" }}>üîí</div>
         <div style={{ fontFamily: "'Fraunces', serif", fontSize: 22, fontWeight: 800, color: T.white, marginBottom: 8 }}>{tabName}</div>
         <div style={{ fontSize: 13, color: T.textMuted, marginBottom: 28, lineHeight: 1.6 }}>This feature is available on the <span style={{ color: T.gold, fontWeight: 700 }}>Pro plan</span>. Upgrade to unlock full access.</div>
         <div style={{ background: T.surfaceAlt, borderRadius: 14, padding: "18px 20px", marginBottom: 28, textAlign: "left" }}>
@@ -239,24 +239,24 @@ export const ProGateFullPage = ({ tabName, onUpgrade }) => {
             </div>
           ))}
         </div>
-        <button type="button" onClick={onUpgrade} style={{ width: "100%", padding: "14px 0", background: `linear-gradient(135deg, ${T.gold}, #B8912F)`, color: T.bg, border: "none", borderRadius: 12, fontSize: 14, fontWeight: 800, cursor: "pointer", fontFamily: "'Outfit', sans-serif", letterSpacing: 0.3, marginBottom: 10 }}>Upgrade to Pro ‚‚Ç¨‚Äù AED 99/mo ‚Ü‚Äô</button>
+        <button type="button" onClick={onUpgrade} style={{ width: "100%", padding: "14px 0", background: `linear-gradient(135deg, ${T.gold}, #B8912F)`, color: T.bg, border: "none", borderRadius: 12, fontSize: 14, fontWeight: 800, cursor: "pointer", fontFamily: "'Outfit', sans-serif", letterSpacing: 0.3, marginBottom: 10 }}>Upgrade to Pro ‚Äî AED 99/mo ‚Üí</button>
         <div style={{ fontSize: 11, color: T.textMuted }}>7-day free trial ¬∑ Cancel anytime ¬∑ Money-back guarantee</div>
       </div>
     </div>
   );
 };
 
-/* ‚‚Äù‚Ç¨‚‚Äù‚Ç¨‚‚Äù‚Ç¨ UPGRADE MODAL ‚‚Äù‚Ç¨‚‚Äù‚Ç¨‚‚Äù‚Ç¨ */
+/* ‚îÄ‚îÄ‚îÄ UPGRADE MODAL ‚îÄ‚îÄ‚îÄ */
 export const UpgradeModal = ({ show, onClose }) => {
   if (!show) return null;
   const plans = [
-    { name: "Pro", price: "99", period: "month", features: ["All Dubai projects ‚‚Ç¨‚Äù full data", "AI market insights", "Portfolio ROI tracker", "DXB Estimate AVM", "Yield & STR/LTR analysis", "Mortgage calculator", "Price alerts", "PDF export"], popular: true, note: null, cta: "Upgrade to Pro ‚Ü‚Äô" },
-    { name: "Enterprise", price: "499", period: "month", features: ["Everything in Pro", "PDF report generation ‚è≥", "API data access ‚è≥", "Custom dashboards ‚è≥", "Multi-user team accounts ‚è≥", "Developer-level raw data", "Dedicated account manager", "White-label options ‚è≥"], popular: false, note: "‚è≥ = Launching Q3 2026", cta: "Contact Sales ‚Ü‚Äô" },
+    { name: "Pro", price: "99", period: "month", features: ["All Dubai projects ‚Äî full data", "AI market insights", "Portfolio ROI tracker", "DXB Estimate AVM", "Yield & STR/LTR analysis", "Mortgage calculator", "Price alerts", "PDF export"], popular: true, note: null, cta: "Upgrade to Pro ‚Üí" },
+    { name: "Enterprise", price: "499", period: "month", features: ["Everything in Pro", "PDF report generation ‚è≥", "API data access ‚è≥", "Custom dashboards ‚è≥", "Multi-user team accounts ‚è≥", "Developer-level raw data", "Dedicated account manager", "White-label options ‚è≥"], popular: false, note: "‚è≥ = Launching Q3 2026", cta: "Contact Sales ‚Üí" },
   ];
   return (
     <div style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.92)", zIndex: 3000, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(12px)", padding: 16 }} onClick={onClose}>
       <div className="upgrade-modal" style={{ background: T.surface, borderRadius: 24, border: `1px solid ${T.border}`, width: "95%", maxWidth: 720, padding: 36, position: "relative", boxShadow: "0 40px 100px rgba(0,0,0,0.6)" }} onClick={e => e.stopPropagation()}>
-        <button type="button" onClick={onClose} style={{ position: "absolute", top: 16, right: 16, background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center" }}>‚ú‚Ä¢</button>
+        <button type="button" onClick={onClose} style={{ position: "absolute", top: 16, right: 16, background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center" }}>‚úï</button>
         <div style={{ textAlign: "center", marginBottom: 28 }}>
           <div style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "4px 14px", borderRadius: 20, background: "rgba(212,168,67,0.1)", border: `1px solid ${T.gold}40`, marginBottom: 12 }}>
             <span style={{ width: 6, height: 6, borderRadius: "50%", background: T.green, animation: "pulse 2s infinite", display: "inline-block" }} />
@@ -266,7 +266,7 @@ export const UpgradeModal = ({ show, onClose }) => {
           <p style={{ color: T.textSecondary, fontSize: 13 }}>The most comprehensive Dubai real estate intelligence platform</p>
         </div>
         <div style={{ background: "rgba(16,185,129,0.08)", border: `1px solid ${T.green}30`, borderRadius: 12, padding: "12px 20px", marginBottom: 24, display: "flex", alignItems: "center", justifyContent: "center", gap: 16, flexWrap: "wrap" }}>
-          {[["ü‚Äúä", "AED 80.4B", "FY25 Sales tracked"], ["ü‚Äúà", "+40% YoY", "Revenue growth"], ["üè†", "48 Projects", "Full intelligence"], ["ü‚Äô∞", "AED 155B", "Backlog visibility"]].map(([icon, val, label], i) => (
+          {[["üìä", "AED 80.4B", "FY25 Sales tracked"], ["üìà", "+40% YoY", "Revenue growth"], ["üè†", "48 Projects", "Full intelligence"], ["üí∞", "AED 155B", "Backlog visibility"]].map(([icon, val, label], i) => (
             <div key={i} style={{ textAlign: "center" }}>
               <div style={{ fontSize: 13 }}>{icon} <span style={{ fontFamily: "'Fraunces', serif", fontWeight: 800, color: T.green }}>{val}</span></div>
               <div style={{ fontSize: 10, color: T.textMuted }}>{label}</div>
@@ -286,7 +286,7 @@ export const UpgradeModal = ({ show, onClose }) => {
               <div style={{ display: "flex", flexDirection: "column", gap: 7, marginBottom: 16 }}>
                 {plan.features.map((f, j) => (
                   <div key={j} style={{ display: "flex", alignItems: "flex-start", gap: 7, fontSize: 12, color: f.includes("‚è≥") ? T.textMuted : T.textSecondary }}>
-                    <span style={{ color: f.includes("‚è≥") ? T.textMuted : T.green, fontSize: 11, marginTop: 1, flexShrink: 0 }}>‚ú‚Äú</span>{f}
+                    <span style={{ color: f.includes("‚è≥") ? T.textMuted : T.green, fontSize: 11, marginTop: 1, flexShrink: 0 }}>‚úì</span>{f}
                   </div>
                 ))}
               </div>
@@ -297,7 +297,7 @@ export const UpgradeModal = ({ show, onClose }) => {
           ))}
         </div>
         <div style={{ textAlign: "center", display: "flex", justifyContent: "center", gap: 24, flexWrap: "wrap" }}>
-          {["ü‚Äù‚Äô Secure payment", "‚Ü© 7-day money-back", "‚ö° Instant access", "‚ùå Cancel anytime"].map((t, i) => (
+          {["üîí Secure payment", "‚Ü© 7-day money-back", "‚ö° Instant access", "‚ùå Cancel anytime"].map((t, i) => (
             <span key={i} style={{ fontSize: 11, color: T.textMuted }}>{t}</span>
           ))}
         </div>
@@ -306,7 +306,7 @@ export const UpgradeModal = ({ show, onClose }) => {
   );
 };
 
-/* ‚‚Äù‚Ç¨‚‚Äù‚Ç¨‚‚Äù‚Ç¨ PASSWORD STRENGTH METER ‚‚Äù‚Ç¨‚‚Äù‚Ç¨‚‚Äù‚Ç¨ */
+/* ‚îÄ‚îÄ‚îÄ PASSWORD STRENGTH METER ‚îÄ‚îÄ‚îÄ */
 export const PasswordStrength = ({ password }) => {
   const score = [/.{8,}/, /[0-9]/, /[A-Z]/, /[^A-Za-z0-9]/].filter(r => r.test(password)).length;
   const levels = [
@@ -330,7 +330,7 @@ export const PasswordStrength = ({ password }) => {
   );
 };
 
-/* ‚‚Äù‚Ç¨‚‚Äù‚Ç¨‚‚Äù‚Ç¨ FOCUS TRAP HOOK ‚‚Äù‚Ç¨‚‚Äù‚Ç¨‚‚Äù‚Ç¨ */
+/* ‚îÄ‚îÄ‚îÄ FOCUS TRAP HOOK ‚îÄ‚îÄ‚îÄ */
 export function useFocusTrap(active) {
   const ref = React.useRef(null);
   React.useEffect(() => {
@@ -351,7 +351,7 @@ export function useFocusTrap(active) {
   return ref;
 }
 
-/* ‚‚Äù‚Ç¨‚‚Äù‚Ç¨‚‚Äù‚Ç¨ TAB ERROR BOUNDARY ‚‚Äù‚Ç¨‚‚Äù‚Ç¨‚‚Äù‚Ç¨ */
+/* ‚îÄ‚îÄ‚îÄ TAB ERROR BOUNDARY ‚îÄ‚îÄ‚îÄ */
 export class TabErrorBoundary extends React.Component {
   constructor(props) { super(props); this.state = { hasError: false, error: null }; }
   static getDerivedStateFromError(e) { return { hasError: true, error: e }; }
@@ -366,7 +366,7 @@ export class TabErrorBoundary extends React.Component {
           style={{ padding: "7px 20px", background: "rgba(212,168,67,0.15)", border: "1px solid rgba(212,168,67,0.4)", borderRadius: 8, color: "#D4A843", fontSize: 12, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
           Try Again
         </button>
-        <div style={{ fontSize: 11, color: "#6B7280", marginTop: 10 }}>All other tabs remain accessible ‚‚Ç¨‚Äù use the sidebar to navigate</div>
+        <div style={{ fontSize: 11, color: "#6B7280", marginTop: 10 }}>All other tabs remain accessible ‚Äî use the sidebar to navigate</div>
       </div>
     );
     return this.props.children;
