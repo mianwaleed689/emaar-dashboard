@@ -2816,7 +2816,7 @@ export default function EmaarDashboardV2() {
 
   /* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ PROJECT MODAL STATE Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
   const [selectedProject, setSelectedProject] = useState(null);
-  const [projDetailTab, setProjDetailTab] = useState("Overview");
+  const [projDetailTab, setProjDetailTab] = useState(()=>{try{return sessionStorage.getItem("dxb_proj_tab")||("Overview");}catch(e){return "Overview";}});
   const [projCompare, setProjCompare] = useState([]);
   // Sync projCompare -> compareList so the comparison modal sees selections from Projects tab
   useEffect(() => { setCompareList(projCompare); }, [projCompare]);
@@ -2852,6 +2852,8 @@ export default function EmaarDashboardV2() {
   const globalRefresh = () => {
     setIsRefreshing(true);
     try { sessionStorage.setItem("dxb_active_tab", tab); } catch(e) {}
+  if(selectedProject) try{sessionStorage.setItem("dxb_selected_project",selectedProject.id||selectedProject.projectNumber||String.fromCharCode(34)+String.fromCharCode(34));}catch(e){}
+  if(typeof projDetailTab!=="undefined") try{sessionStorage.setItem("dxb_proj_tab",projDetailTab);}catch(e){}
     setTimeout(() => { window.location.reload(); }, 300);
   };
 
