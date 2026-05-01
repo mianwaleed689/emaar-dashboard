@@ -1474,7 +1474,7 @@ function ProjectsTab({
                 {/* Grid */}
                 {filtered.length > 0 && projView === "grid" && (
                   <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(340px,1fr))", gap:16, marginBottom:20 }}>
-                    {filtered.map((p,i) => <ProjectCard key={p.id||i} p={p} />)}
+                    {filtered.slice(0,projectPage*PROJECTS_PER_PAGE).map((p,i) => <ProjectCard key={p.id||i} p={p} />)}
                   </div>
                 )}
 
