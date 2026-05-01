@@ -15,7 +15,7 @@ import SEED_DATA from "../utils/seedData";
 function MortgageTab({ liveNeighbourhoods=[], liveMortgageRates, liveEiborRates, liveInvestScores, handleTabChange, mortPrice, setMortPrice, mortDown, setMortDown, mortRate, setMortRate, mortYears, setMortYears, mortType, setMortType, mortProfile, setMortProfile, mortView, setMortView, mortIncome, setMortIncome, invScSearch, setInvScSearch, invScSort, setInvScSort, invScFilter, setInvScFilter, invScView, setInvScView, invScSelected, setInvScSelected }) {
 
 
-            /* ══ BANK DATA — Research-based Apr 2026 ══
+            /* ══ BANK DATA ◆ Research-based Apr 2026 ══
                Sources: ricadimortgages.com, realestateclubdubai.com,
                capitalzone.ae, finnxstar.com
                EIBOR 3-month: 3.593% (Feb 2026, capitalzone.ae)

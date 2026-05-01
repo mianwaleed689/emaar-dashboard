@@ -27,7 +27,7 @@ function BankingTab({ orgId, userId, liveEiborRates,
 
 
             /* ══════════════════════════════════════════════════════════
-               BANKING INTELLIGENCE — Research Sources (Apr 2026)
+               BANKING INTELLIGENCE ◆ Research Sources (Apr 2026)
                
                EIBOR (UAE Central Bank — centralbank.ae/en/forex-eibor):
                  27 Feb 2026: 1M=3.635% | 3M=3.593% | 6M=3.676% | 1Y=3.674%

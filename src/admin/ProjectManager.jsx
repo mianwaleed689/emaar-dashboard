@@ -1,13 +1,13 @@
-/* �"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"�
+/* �"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""�
    DXB ANALYTICS  PROJECT MANAGER
    Matching dashboard design DNA: sidebar, KPI cards, sections
-   �"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"� */
+   �"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""� */
 import React, { useState, useEffect } from "react";
 import { auth, db } from "../firebase";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import { collection, getDocs, doc, getDoc, setDoc } from "firebase/firestore";
 
-/* ������ THEME (exact dashboard match) ������ */
+/* �� THEME (exact dashboard match) �� */
 const T = {
   bg: "#04090F", surface: "#0A1628", surfaceAlt: "#0E1D35", card: "#0D1B30",
   gold: "#D4A843", goldLight: "#E8C96A", goldDim: "#B8912F", goldGlow: "rgba(212,168,67,0.12)",
@@ -17,7 +17,7 @@ const T = {
   red: "#EF4444", green: "#10B981", blue: "#3B82F6", purple: "#8B5CF6",
 };
 
-/* ������ ICONS (matching dashboard SVG style) ������ */
+/* �� ICONS (matching dashboard SVG style) �� */
 const I = {
   search: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>,
   grid: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>,
@@ -33,7 +33,7 @@ const I = {
   bell: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>,
 };
 
-/* ������ CSS (exactly matching main dashboard design DNA) ������ */
+/* �� CSS (exactly matching main dashboard design DNA) �� */
 const css = `
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700;9..144,900&display=swap');
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -158,7 +158,7 @@ select option { background: ${T.surface}; color: ${T.textPrimary}; }
 }
 `;
 
-/* ������ SAFE FIRESTORE DATA ������ */
+/* �� SAFE FIRESTORE DATA �� */
 function plainify(obj) {
   if (obj === null || obj === undefined) return "";
   if (typeof obj === "string" || typeof obj === "number" || typeof obj === "boolean") return obj;
@@ -168,10 +168,10 @@ function plainify(obj) {
   return String(obj);
 }
 
-/* �"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"�
+/* �"""""""""""""""""""""""""""""""""""""""�
    MAIN COMPONENT
-   �"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"� */
-/* ������ REUSABLE COMPONENTS (outside component to prevent re-mount on state change) ������ */
+   �"""""""""""""""""""""""""""""""""""""""� */
+/* �� REUSABLE COMPONENTS (outside component to prevent re-mount on state change) �� */
 const inputStyle = {
   width: "100%", padding: "11px 14px", background: T.bg, border: `1px solid ${T.border}`,
   borderRadius: 10, color: T.textPrimary, fontSize: 13, fontFamily: "'Outfit',sans-serif",
@@ -254,7 +254,7 @@ export default function ProjectManager({ embedded = false }) {
   }, [hasChanges]);
   const [activeSection, setActiveSection] = useState("basic");
 
-  /* ������ AUTH ������ */
+  /* �� AUTH �� */
   useEffect(() => {
     if (embedded) { setLoading(false); return; }
     const unsub = onAuthStateChanged(auth, async (u) => {
@@ -271,7 +271,7 @@ export default function ProjectManager({ embedded = false }) {
     return () => unsub();
   }, [embedded]);
 
-  /* ������ FETCH PROJECTS ������ */
+  /* �� FETCH PROJECTS �� */
   useEffect(() => {
     if (!isAdmin) return;
     (async () => {
@@ -285,7 +285,7 @@ export default function ProjectManager({ embedded = false }) {
     })();
   }, [isAdmin]);
 
-  /* ������ PROJECT SELECTION ������ */
+  /* �� PROJECT SELECTION �� */
   function handleSelect(id) {
     if (hasChanges && !window.confirm("You have unsaved changes. Discard them?")) return;
     setSelectedId(id);
@@ -305,7 +305,7 @@ export default function ProjectManager({ embedded = false }) {
     });
   }
 
-  /* ������ FORM HELPERS ������ */
+  /* �� FORM HELPERS �� */
   function set(key, val) { setForm(prev => ({ ...prev, [key]: val })); setHasChanges(true); }
   function setUnit(i, key, val) {
     setForm(prev => { const u = [...prev.units]; u[i] = { ...u[i], [key]: val }; return { ...prev, units: u }; });
@@ -314,7 +314,7 @@ export default function ProjectManager({ embedded = false }) {
   function addUnit() { setForm(prev => ({ ...prev, units: [...prev.units, { type: "1BR", available: 0, total: 0 }] })); setHasChanges(true); }
   function removeUnit(i) { if (!window.confirm(`�a�️ REMOVE UNIT TYPE\n\nUnit: ${form.units[i]?.type || "Unit"} (${form.units[i]?.total || 0} total)\n\nThis will:\n⬢ Remove this unit type from the project\n⬢ Total and available counts will be lost\n⬢ Save the project to apply changes\n\nContinue?`)) return; setForm(prev => ({ ...prev, units: prev.units.filter((_, x) => x !== i) })); setHasChanges(true); }
 
-  /* ������ SAVE ������ */
+  /* �� SAVE �� */
   async function handleSave() {
     if (!form || !selectedId) return;
     setSaving(true);
@@ -331,7 +331,7 @@ export default function ProjectManager({ embedded = false }) {
 
   function notify(msg) { setToast(msg); setTimeout(() => setToast(""), 3000); }
 
-  /* ������ FILTERS ������ */
+  /* �� FILTERS �� */
   const communities = [...new Set(projects.map(p => p.community))].filter(Boolean).sort();
   const filtered = projects.filter(p => {
     const ms = !search || (p.name || "").toLowerCase().includes(search.toLowerCase()) || (p.community || "").toLowerCase().includes(search.toLowerCase());
@@ -339,14 +339,14 @@ export default function ProjectManager({ embedded = false }) {
     return ms && mc;
   });
 
-  /* ������ STATS ������ */
+  /* �� STATS �� */
   const totalUnits = projects.reduce((s, p) => s + (Array.isArray(p.units) ? p.units.reduce((a, u) => a + (Number(u.total) || 0), 0) : 0), 0);
   const availUnits = projects.reduce((s, p) => s + (Array.isArray(p.units) ? p.units.reduce((a, u) => a + (Number(u.available) || 0), 0) : 0), 0);
   const avgProgress = projects.length > 0 ? Math.round(projects.reduce((s, p) => s + (Number(p.constructionProgress) || 0), 0) / projects.length) : 0;
   const progress = form ? (Number(form.constructionProgress) || 0) : 0;
   const progressColor = progress >= 80 ? T.green : progress >= 40 ? T.gold : T.textMuted;
 
-  /* ������ EDITOR SECTIONS NAV ������ */
+  /* �� EDITOR SECTIONS NAV �� */
   const SECTIONS = [
     { id: "basic", label: "Basic Info", icon: I.building },
     { id: "pricing", label: "Pricing", icon: I.dollar },
@@ -355,7 +355,7 @@ export default function ProjectManager({ embedded = false }) {
     { id: "location", label: "Location", icon: I.mapPin },
   ];
 
-  /* ������ LOADING ������ */
+  /* �� LOADING �� */
   if (loading) return (
     <div style={{ minHeight: "100vh", background: T.bg, display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 16 }}>
       <style>{css}</style>
@@ -381,11 +381,11 @@ export default function ProjectManager({ embedded = false }) {
     </div>
   );
 
-  /* ������ RENDER (components defined at module level above) ������ */
+  /* �� RENDER (components defined at module level above) �� */
 
-  /* �"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"�
+  /* �"""""""""""""""""""""""""""""""""""""""�
      EMBEDDED MODE (inside AdminPanel tab)
-     �"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"� */
+     �"""""""""""""""""""""""""""""""""""""""� */
   if (embedded) {
     return (
       <div style={{ fontFamily: "'Outfit',sans-serif", color: T.textPrimary }}>
@@ -563,9 +563,9 @@ export default function ProjectManager({ embedded = false }) {
     );
   }
 
-  /* �"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"�
+  /* �"""""""""""""""""""""""""""""""""""""""�
      FULL PAGE RENDER (standalone /manage)
-     �"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"��"� */
+     �"""""""""""""""""""""""""""""""""""""""� */
   return (
     <div style={{ minHeight: "100vh", background: T.bg, fontFamily: "'Outfit',sans-serif", color: T.textPrimary }}>
       <style>{css}</style>
@@ -576,7 +576,7 @@ export default function ProjectManager({ embedded = false }) {
       {/* Mobile overlay */}
       <div className={`mobile-overlay ${sidebarOpen ? "open" : ""}`} onClick={() => setSidebarOpen(false)} />
 
-      {/* ������ LEFT SIDEBAR ������ */}
+      {/* �� LEFT SIDEBAR �� */}
       <aside className={`pm-sidebar ${sidebarOpen ? "open" : ""}`} style={{ position: "fixed", top: 0, left: 0, bottom: 0, width: 240, background: T.surface, borderRight: `1px solid ${T.border}`, display: "flex", flexDirection: "column", zIndex: 100, transition: "transform 0.3s ease" }}>
         {/* Logo */}
         <div style={{ padding: "24px 20px 20px", borderBottom: `1px solid ${T.border}` }}>
@@ -687,7 +687,7 @@ export default function ProjectManager({ embedded = false }) {
         </div>
       </aside>
 
-      {/* ������ MAIN CONTENT ������ */}
+      {/* �� MAIN CONTENT �� */}
       <main className="pm-main" style={{ marginLeft: 240, minHeight: "100vh" }}>
         {/* Top bar (matching dashboard) */}
         <header className="pm-topbar pm-header" style={{ position: "sticky", top: 0, zIndex: 20, height: 60, background: `${T.surface}ee`, backdropFilter: "blur(16px)", borderBottom: `1px solid ${T.border}`, padding: "0 28px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
@@ -731,7 +731,7 @@ export default function ProjectManager({ embedded = false }) {
 
         <div style={{ padding: "28px 28px 60px" }}>
           {!form ? (
-            /* ������ NO PROJECT SELECTED ������ */
+            /* �� NO PROJECT SELECTED �� */
             <>
               <Section title="Project Portfolio" sub={`${projects.length} Emaar projects � ${communities.length} communities � Select to edit`}>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
@@ -751,7 +751,7 @@ export default function ProjectManager({ embedded = false }) {
               </div>
             </>
           ) : (
-            /* ������ PROJECT EDITOR ������ */
+            /* �� PROJECT EDITOR �� */
             <div className="slide-right">
               {/* Project Header */}
               <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 24, paddingBottom: 20, borderBottom: `1px solid ${T.border}` }}>
@@ -787,7 +787,7 @@ export default function ProjectManager({ embedded = false }) {
                 ))}
               </div>
 
-              {/* ������ BASIC INFO ������ */}
+              {/* �� BASIC INFO �� */}
               {activeSection === "basic" && (
                 <Section title="Basic Information" sub="Project identity and classification">
                   <div className="chart-box" style={{ padding: 24 }}>
@@ -803,7 +803,7 @@ export default function ProjectManager({ embedded = false }) {
                 </Section>
               )}
 
-              {/* ������ PRICING ������ */}
+              {/* �� PRICING �� */}
               {activeSection === "pricing" && (
                 <Section title="Pricing & Handover" sub="Financial details and timeline">
                   <div className="chart-box" style={{ padding: 24 }}>
@@ -819,7 +819,7 @@ export default function ProjectManager({ embedded = false }) {
                 </Section>
               )}
 
-              {/* ������ UNITS ������ */}
+              {/* �� UNITS �� */}
               {activeSection === "units" && (
                 <Section title="Unit Inventory" sub="Manage unit types, availability, and totals" action={
                   <button type="button" onClick={addUnit} style={{
@@ -889,7 +889,7 @@ export default function ProjectManager({ embedded = false }) {
                 </Section>
               )}
 
-              {/* ������ CONTACT ������ */}
+              {/* �� CONTACT �� */}
               {activeSection === "contact" && (
                 <Section title="Contact & Media" sub="Inquiry channels and project assets">
                   <div className="chart-box" style={{ padding: 24 }}>
@@ -911,7 +911,7 @@ export default function ProjectManager({ embedded = false }) {
                 </Section>
               )}
 
-              {/* ������ LOCATION ������ */}
+              {/* �� LOCATION �� */}
               {activeSection === "location" && (
                 <Section title="Location Data" sub="Geographic coordinates and area info">
                   <div className="chart-box" style={{ padding: 24 }}>

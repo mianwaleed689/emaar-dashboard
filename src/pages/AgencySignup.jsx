@@ -182,7 +182,7 @@ export default function AgencySignup() {
         {/* Card */}
         <div style={{ background:T.surface, borderRadius:16, border:`1px solid ${T.border}`, overflow:"hidden", boxShadow:"0 32px 80px rgba(0,0,0,0.5)" }}>
 
-          {/* ���� STEP 1: Agency Details ���� */}
+          {/* �� STEP 1: Agency Details �� */}
           {step === 1 && (
             <div style={{ padding:"28px 28px 24px" }}>
               <div style={{ fontFamily:"'Fraunces',serif", fontSize:20, fontWeight:900, color:T.white, marginBottom:4 }}>Tell us about your {accountType === "developer" ? "company" : "agency"}</div>
@@ -196,7 +196,7 @@ export default function AgencySignup() {
                   borderRadius:8, fontSize:12, fontWeight:700, cursor:"pointer",
                   fontFamily:`'Outfit',sans-serif`,
                 }}>
-                  �x�� Real Estate Agency
+                  �x Real Estate Agency
                   <div style={{ fontSize:10, fontWeight:400, marginTop:3, opacity:0.85 }}>
                     Broker / agent / brokerage firm
                   </div>
@@ -242,7 +242,7 @@ export default function AgencySignup() {
             </div>
           )}
 
-          {/* ���� STEP 2: Manager Account ���� */}
+          {/* �� STEP 2: Manager Account �� */}
           {step === 2 && (
             <div style={{ padding:"28px 28px 24px" }}>
               <div style={{ fontFamily:"'Fraunces',serif", fontSize:20, fontWeight:900, color:T.white, marginBottom:4 }}>Create your manager account</div>
@@ -272,7 +272,7 @@ export default function AgencySignup() {
                 </span>
               </label>
 
-          {/* ���� STEP 3: Plan Selection ���� */}
+          {/* �� STEP 3: Plan Selection �� */}
           {step === 3 && (
             <div style={{ padding:"28px 28px 24px" }}>
               <div style={{ fontFamily:"'Fraunces',serif", fontSize:20, fontWeight:900, color:T.white, marginBottom:4 }}>Choose your plan</div>
@@ -305,7 +305,7 @@ export default function AgencySignup() {
             </div>
           )}
 
-          {/* ���� STEP 4: Success ���� */}
+          {/* �� STEP 4: Success �� */}
           {step === 4 && (
             <div style={{ padding:"48px 28px", textAlign:"center" }}>
               <div style={{ width:60, height:60, borderRadius:"50%", background:"rgba(16,185,129,0.12)", border:"2px solid rgba(16,185,129,0.3)", display:"flex", alignItems:"center", justifyContent:"center", margin:"0 auto 20px" }}>

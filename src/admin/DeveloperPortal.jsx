@@ -173,7 +173,7 @@ export default function DeveloperPortal() {
             <div style={{ display: "grid", gap: 10 }}>
               {myDevelopments.map(d => (
                 <div key={d.id} style={{ padding: 14, background: T.surface, border: "1px solid " + T.green + "40", borderRadius: 10, display: "flex", alignItems: "center", gap: 14 }}>
-                  <span style={{ fontSize: 18, color: T.green }}>â��S</span>
+                  <span style={{ fontSize: 18, color: T.green }}>→�S</span>
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: 14, color: T.white, fontWeight: 600 }}>{d.name}</div>
                     <div style={{ fontSize: 11, color: T.textMuted }}>{d.community} �� {d.saleStatus} �� RERA #{d.reraProjectNumber || "-"}</div>

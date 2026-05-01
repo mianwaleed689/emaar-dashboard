@@ -23,7 +23,7 @@ function MarketingTab({ liveNeighbourhoods=[],
 
 
             /* ══════════════════════════════════════════════════════════
-               MARKETING INTELLIGENCE — Research Sources (Apr 2026)
+               MARKETING INTELLIGENCE ◆ Research Sources (Apr 2026)
 
                CPL BENCHMARKS (theprimeads.com + Dubai-specific research):
                  Google Search Ads: AED 450–900 per lead (high intent)

@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════════════════════════════════
-// ALL DUBAI DEVELOPERS — DLD Verified Data
+// ALL DUBAI DEVELOPERS ◆ DLD Verified Data
 // Source: Dubai Land Department (DLD) Q1 2026 Transactions
 // Total: 23 developers | 14,022 transactions | 2,097 projects
 // Market: 38,322 residential unit sales | AED 85.48B total value

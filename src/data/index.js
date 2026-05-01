@@ -1,4 +1,4 @@
-/* ������ DXB ANALYTICS  MASTER DATA FILE ������ */
+/* �� DXB ANALYTICS  MASTER DATA FILE �� */
 /* Source: Emaar THE BEAST Excel + DLD + DXBinteract + Yahoo Finance */
 
 // S16: T theme lives in src/theme.js  single source of truth
@@ -8,9 +8,9 @@
 import { T } from "../theme";
 export { T } from "../theme";
 
-/* ������ 48 EMAAR PROJECTS (from Excel) ������ */
+/* �� 48 EMAAR PROJECTS (from Excel) �� */
 export const emaarProjects = [
-  // ���� STRUCTURE REFERENCE  3 projects ����������������������������������������������������
+  // �� STRUCTURE REFERENCE  3 projects ��
   // Add real projects via Admin � Data Manager
   // Fields: id, name, community, district, type, beds, status,
   //         handover, price, sizeFrom, sizeTo, ppsf, payment,
@@ -20,7 +20,7 @@ export const emaarProjects = [
   { id:3, name:"Golf Grand",         community:"Dubai Hills Estate", district:"DHE", type:"Apartments", beds:"1-3", status:"Under Construction", handover:"Q1 2027", price:1529388, sizeFrom:700, sizeTo:2100, ppsf:2185, payment:"10/80/10",  construction:96, branded:false, brand:"", tier:"Mid-Premium", emaarUrl:"https://www.propertyfinder.ae/en/new-projects/emaar-properties/golf-grand" },
 ];
 
-/* ������ ENHANCED FINANCIALS (from Excel PBI_Financials) ������ */
+/* �� ENHANCED FINANCIALS (from Excel PBI_Financials) �� */
 export const emaarFinancials = [
   { year:"2020", revenue:14.9, grossProfit:4.8, ebitda:6.2, netProfit:2.7, netProfitAttr:2.1, propertySales:14, backlog:28, recurringRev:5.3, intlSales:0.6, mallRev:3.2, hotelRev:2.1, mallOccupancy:93, dubaiMallFootfall:65, dividend:0.15, eps:0.24, unitsDelivered:59000, newLaunches:15, revenueUSD:4.1, netProfitUSD:0.6, gm:32.2, em:41.6, nm:14.1 },
   { year:"2021", revenue:27.9, grossProfit:11.6, ebitda:8.5, netProfit:6.6, netProfitAttr:5.3, propertySales:23.9, backlog:32, recurringRev:5.8, intlSales:0.8, mallRev:3.5, hotelRev:2.3, mallOccupancy:95, dubaiMallFootfall:80, dividend:0.25, eps:0.60, unitsDelivered:62000, newLaunches:20, revenueUSD:7.6, netProfitUSD:1.4, gm:41.6, em:30.5, nm:19.0 },
@@ -30,7 +30,7 @@ export const emaarFinancials = [
   { year:"2025", revenue:49.6, grossProfit:28.5, ebitda:25.6, netProfit:25.7, netProfitAttr:17.6, propertySales:80.4, backlog:155, recurringRev:10.5, intlSales:9.3, mallRev:6.3, hotelRev:4.2, mallOccupancy:98, dubaiMallFootfall:118, dividend:1.00, eps:2.00, unitsDelivered:125600, newLaunches:48, revenueUSD:13.5, netProfitUSD:4.8, gm:57.5, em:51.6, nm:35.5, landBank:618 },
 ];
 
-/* ������ COMMUNITIES (from Excel PBI_Communities) ������ */
+/* �� COMMUNITIES (from Excel PBI_Communities) �� */
 export const emaarCommunities = [
   { district:"DHE", name:"Dubai Hills Estate", acres:2700, avgPpsf:0, avgYield:0, projects:0, buyer:"Families, professionals", strengths:"Golf, schools, mall, parks" },
   { district:"DCH", name:"Dubai Creek Harbour", acres:2500, avgPpsf:0, avgYield:0, projects:0, buyer:"Investors, expats", strengths:"Dubai Square; Creek Tower; waterfront" },
@@ -45,7 +45,7 @@ export const emaarCommunities = [
   { district:"TH", name:"The Heights CW", acres:null, avgPpsf:0, avgYield:0, projects:0, buyer:"Mid-market families", strengths:"Townhouse community" },
 ];
 
-/* ������ ENHANCED YIELDS (from Excel PBI_RentalYields) ������ */
+/* �� ENHANCED YIELDS (from Excel PBI_RentalYields) �� */
 export const emaarYields = [
   { community:"Dubai Hills Estate", unit:"1BR Apt", rent:0, price:0, gross:0, net:0, demand:"Very High", tenant:"Professionals, couples", visa:"Yes (�0�2M)" },
   { community:"Dubai Hills Estate", unit:"2BR Apt", rent:0, price:0, gross:0, net:0, demand:"Very High", tenant:"Families, professionals", visa:"Yes (�0�2M)" },
@@ -66,10 +66,10 @@ export const emaarYields = [
   { community:"Grand Polo Club", unit:"3BR TH", rent:0, price:0, gross:0, net:0, demand:"High", tenant:"HNW families, expats", visa:"Yes (�0�2M)" },
 ];
 
-/* ������ PROJECT ROI DATA BY COMMUNITY (Research-backed: DLD, Bayut, REIDIN, Knight Frank, JLL, Engel & Völkers, Chestertons, BetterHomes Q4 2025) ������ */
+/* �� PROJECT ROI DATA BY COMMUNITY (Research-backed: DLD, Bayut, REIDIN, Knight Frank, JLL, Engel & Völkers, Chestertons, BetterHomes Q4 2025) �� */
 export const communityROI = {};
 
-/* ������ COMMUNITY MAP COORDINATES (Google Maps verified) ������ */
+/* �� COMMUNITY MAP COORDINATES (Google Maps verified) �� */
 export const communityCoords = [
   { district: "DHE", name: "Dubai Hills Estate", lat: 25.1267, lng: 55.2367, color: "#10B981", projects: 16, type: "Master Community" },
   { district: "DCH", name: "Dubai Creek Harbour", lat: 25.2048, lng: 55.3480, color: "#3B82F6", projects: 11, type: "Waterfront" },
@@ -89,10 +89,10 @@ export const dubaiLandmarks = [
   { name: "DXB Airport", lat: 25.2532, lng: 55.3657, icon: "�S�" },
   { name: "Al Maktoum Airport", lat: 24.8967, lng: 55.1614, icon: "�S�" },
   { name: "Dubai Marina", lat: 25.0800, lng: 55.1400, icon: "�a" },
-  { name: "Dubai Mall", lat: 25.1985, lng: 55.2796, icon: "�x��" },
+  { name: "Dubai Mall", lat: 25.1985, lng: 55.2796, icon: "�x" },
 ];
 
-/* ������ TOP 10 DEVELOPERS (from Excel PBI_Developers) ������ */
+/* �� TOP 10 DEVELOPERS (from Excel PBI_Developers) �� */
 export const topDevelopers = [
   { rank:1, name:"Emaar Properties", sales:65.8, salesUSD:17.9, units:13149, delivered:7318, underConst:51032, segment:"Full Spectrum", confidence:"VERIFIED", share:9.64, color:T.gold },
   { rank:2, name:"DAMAC Properties", sales:35.9, salesUSD:9.8, units:15393, delivered:2113, underConst:46554, segment:"Mid-Premium � Ultra-Lux", confidence:"VERIFIED", share:5.26, color:T.teal },
@@ -106,7 +106,7 @@ export const topDevelopers = [
   { rank:10, name:"Danube Properties", sales:7.0, salesUSD:1.9, units:4089, delivered:1757, underConst:22000, segment:"Affordable", confidence:"VERIFIED", share:1.03, color:T.textMuted },
 ];
 
-/* ������ RISK MATRIX (from Excel PBI_Risks) ������ */
+/* �� RISK MATRIX (from Excel PBI_Risks) �� */
 export const emaarRisks = [
   { factor:"Premium Pricing Risk", level:5, likelihood:5, impact:5, score:125, mitigation:"Off-plan payment plans (80/20); branded residences justify premium", assessment:"HIGH", color:T.red },
   { factor:"Market Cycle Correction", level:4, likelihood:5, impact:5, score:100, mitigation:"Diversified revenue; 35% recurring from malls/hotels", assessment:"ELEVATED", color:T.orange },
@@ -119,7 +119,7 @@ export const emaarRisks = [
   { factor:"Liquidity / Exit Risk", level:1, likelihood:1, impact:1, score:1, mitigation:"DFM-listed; AED 150B+ market cap; deep secondary market", assessment:"VERY LOW", color:T.green },
 ];
 
-/* ������ DUBAI MARKET 2025 (from Excel PBI_DubaiMarket) ������ */
+/* �� DUBAI MARKET 2025 (from Excel PBI_DubaiMarket) �� */
 export const dubaiMarket = [
   { metric:"Total Sales Value", val2024:"AED 522.4B", val2025:"AED 682.5B", yoy:"+30.7%", category:"Sales" },
   { metric:"Sales Transactions", val2024:"180,860", val2025:"214,912", yoy:"+18.8%", category:"Volume" },
@@ -137,7 +137,7 @@ export const dubaiSalesHistory = [
   { year:"2023", sales:410 }, { year:"2024", sales:522.4 }, { year:"2025", sales:682.5 },
 ];
 
-/* ������ ROI PHASES (from Excel PBI_ROIPhases) ������ */
+/* �� ROI PHASES (from Excel PBI_ROIPhases) �� */
 export const roiPhases = [
   { phase:"Pre-Launch", timeline:"At Booking", low:8, high:12, avg:10, risk:"Low" },
   { phase:"Construction", timeline:"2-3 Years", low:12, high:20, avg:16, risk:"Low-Medium" },
@@ -146,7 +146,7 @@ export const roiPhases = [
   { phase:"5-Year Hold", timeline:"2026-2031", low:30, high:50, avg:40, risk:"Medium" },
 ];
 
-/* ������ SEGMENTS ������ */
+/* �� SEGMENTS �� */
 export const emaarSegments = [
   { name:"UAE Property Dev", revenue:36.4, growth:"44%", color:T.gold },
   { name:"Malls & Retail", revenue:6.3, growth:"13%", color:T.teal },
@@ -154,7 +154,7 @@ export const emaarSegments = [
   { name:"International", revenue:2.6, growth:"124%", color:T.green },
 ];
 
-/* ������ RADAR DATA ������ */
+/* �� RADAR DATA �� */
 export const radarData = [
   { metric:"Revenue Growth", value:85 },
   { metric:"Profit Margin", value:72 },
@@ -164,7 +164,7 @@ export const radarData = [
   { metric:"Delivery Record", value:92 },
 ];
 
-/* ������ MEGA PROJECTS ������ */
+/* �� MEGA PROJECTS �� */
 export const megaProjects = [
   { name:"Dubai Square", community:"Dubai Creek Harbour", value:"AED 180B+", scale:"2.6M sqm retail/hospitality", type:"Retail + Mixed-Use", timeline:"Phased 2028+", feature:"World's first drive-through mall", status:"Under Construction", developer:"Emaar Properties", announced:"Dec 2025",
     desc:"Dubai Square is Emaar's AED 180B+ mega retail and mixed-use development in Dubai Creek Harbour, spanning 2.6 million square metres. Announced by Mohamed Alabbar on social media in November 2025 and officially unveiled December 2025, construction is already underway with a 3-year completion target. It will feature the world's first drive-through mall concept, AI-powered navigation, EV charging infrastructure, and a luxury retail district rivalling Dubai Mall.",
@@ -248,5 +248,5 @@ export const megaProjects = [
   },
 ];
 
-/* ������ COMMUNITY INTELLIGENCE (Location Profiles) ������ */
+/* �� COMMUNITY INTELLIGENCE (Location Profiles) �� */
 export const communityIntel = {};
