@@ -506,7 +506,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
         ]);
         // Default sample workflows
         setWorkflowTriggers([
-          { id: "wf_1", name: "Resolved ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ Add Tag", trigger: "status_change", triggerValue: "resolved", actions: [{ type: "add_tag", value: "resolved" }], enabled: true },
+          { id: "wf_1", name: "Resolved ÃƒÂ¢–’ Add Tag", trigger: "status_change", triggerValue: "resolved", actions: [{ type: "add_tag", value: "resolved" }], enabled: true },
           { id: "wf_2", name: "VIP Auto-Priority", trigger: "tier_is", triggerValue: "enterprise", actions: [{ type: "set_priority", value: "high" }, { type: "add_tag", value: "vip" }], enabled: true },
         ]);
         // Default sample CSAT
@@ -1576,7 +1576,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
     { id: "ticket_resolved", label: "Ticket Resolved", icon: "" },
     { id: "ticket_assigned", label: "Ticket Assigned", icon: "ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢" },
     { id: "sla_breach", label: "SLA Breached", icon: "ÃƒÂ¢Ã¢â‚¬â€œÃ¢â‚¬Ëœ" },
-    { id: "reply_sent", label: "Reply Sent", icon: "ÃƒÂ°Ã…Â¸Ã¢â‚¬â„¢Ã‚Â¼" },
+    { id: "reply_sent", label: "Reply Sent", icon: "ÃƒÂ°Ã…Â¸’Ã‚Â¼" },
     { id: "priority_changed", label: "Priority Changed", icon: "ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢" },
   ];
 
@@ -2436,7 +2436,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
     { id: "billing", label: "Billing & Payments", icon: "ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢" },
     { id: "technical", label: "Technical Issues", icon: "ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢" },
     { id: "features", label: "Features & Usage", icon: "ÃƒÂ¢Ã…â€œÃ‚Â¿" },
-    { id: "account", label: "Account & Security", icon: "ÃƒÂ°Ã…Â¸Ã¢â‚¬â€Ã¢â‚¬Â°" },
+    { id: "account", label: "Account & Security", icon: "ÃƒÂ°Ã…Â¸•Ã¢â‚¬Â°" },
   ];
 
   const qrCategories = [
@@ -2946,7 +2946,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
         <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "10px 16px", marginLeft: "auto" }}>
           <span style={{ fontSize: 9, color: T.textMuted }}>Channels:</span>
           <span style={{ fontSize: 10, padding: "3px 6px", borderRadius: 4, background: `${T.blue}20`, color: T.blue }}>ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‚Âº {tickets.filter(t => !t.channel || t.channel === "email").length}</span>
-          <span style={{ fontSize: 10, padding: "3px 6px", borderRadius: 4, background: `${T.green}20`, color: T.green }}>ÃƒÂ°Ã…Â¸Ã¢â‚¬â„¢Ã‚Â¼ {liveChats.filter(c => c.status === "active").length + tickets.filter(t => t.channel === "chat").length}</span>
+          <span style={{ fontSize: 10, padding: "3px 6px", borderRadius: 4, background: `${T.green}20`, color: T.green }}>ÃƒÂ°Ã…Â¸’Ã‚Â¼ {liveChats.filter(c => c.status === "active").length + tickets.filter(t => t.channel === "chat").length}</span>
           <span style={{ fontSize: 10, padding: "3px 6px", borderRadius: 4, background: "#25D36620", color: "#25D366" }}>ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‚Â± {whatsappConversations.filter(c => c.status === "active").length + tickets.filter(t => t.channel === "whatsapp").length}</span>
         </div>
       </div>
@@ -2958,11 +2958,11 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
             { id: "open", label: `Open (${tickets.filter(t => t.status === "open" || t.status === "in_progress").length})` },
             { id: "resolved", label: `Resolved (${tickets.filter(t => t.status === "resolved" || t.status === "closed").length})` },
             { id: "all", label: `All (${tickets.length})` },
-            { id: "livechat", label: `ÃƒÂ°Ã…Â¸Ã¢â‚¬â„¢Ã‚Â¼ Live Chat${liveChats.filter(c => c.status === "active").length > 0 ? ` (${liveChats.filter(c => c.status === "active").length})` : ""}` },
+            { id: "livechat", label: `ÃƒÂ°Ã…Â¸’Ã‚Â¼ Live Chat${liveChats.filter(c => c.status === "active").length > 0 ? ` (${liveChats.filter(c => c.status === "active").length})` : ""}` },
             { id: "whatsapp", label: `ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‚Â± WhatsApp${whatsappConversations.filter(c => c.status === "active").length > 0 ? ` (${whatsappConversations.filter(c => c.status === "active").length})` : ""}` },
             { id: "analytics", label: "ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‹â€  Analytics" },
             { id: "kb", label: "ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‚Â¬ KB & Tools" },
-            { id: "timetrack", label: `ÃƒÂ¢Ã¢â‚¬â€œÃ¢â‚¬â„¢ÃƒÂ¯Ã‚Â¸Ã‚Â Time${activeTimer ? " ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢" : ""}` },
+            { id: "timetrack", label: `ÃƒÂ¢Ã¢â‚¬â€œ’ÃƒÂ¯Ã‚Â¸Ã‚Â Time${activeTimer ? " ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢" : ""}` },
             { id: "auditlog", label: "ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã¢â‚¬Â¹ Audit" },
             { id: "settings", label: " Settings" },
           ].map(t => (
@@ -2987,7 +2987,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
             style={{ padding: "8px 10px", borderRadius: 8, border: `1px solid ${channelFilter !== "all" ? "#25D366" : T.border}`, background: T.surfaceAlt, color: channelFilter !== "all" ? "#25D366" : T.white, fontSize: 11, fontFamily: "'Outfit',sans-serif", cursor: "pointer" }}>
             <option value="all">All Channels</option>
             <option value="email">ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‚Âº Email</option>
-            <option value="chat">ÃƒÂ°Ã…Â¸Ã¢â‚¬â„¢Ã‚Â¼ Live Chat</option>
+            <option value="chat">ÃƒÂ°Ã…Â¸’Ã‚Â¼ Live Chat</option>
             <option value="whatsapp">ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‚Â± WhatsApp</option>
             <option value="phone">ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‚Â§ Phone</option>
           </select>
@@ -3039,7 +3039,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
           <button type="button" onClick={() => setShowSlaModal(true)}
             style={{ padding: "8px 10px", borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.textMuted, fontSize: 11, cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}
             title="SLA Settings">
-            ÃƒÂ¢Ã¢â‚¬â€œÃ¢â‚¬â„¢ÃƒÂ¯Ã‚Â¸Ã‚Â
+            ÃƒÂ¢Ã¢â‚¬â€œ’ÃƒÂ¯Ã‚Â¸Ã‚Â
           </button>
           <button type="button" onClick={() => setShowWorkflowModal(true)}
             style={{ padding: "8px 10px", borderRadius: 8, border: `1px solid ${workflowTriggers.filter(w => w.enabled).length > 0 ? T.purple : T.border}`, background: workflowTriggers.filter(w => w.enabled).length > 0 ? `${T.purple}15` : "transparent", color: workflowTriggers.filter(w => w.enabled).length > 0 ? T.purple : T.textMuted, fontSize: 11, cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}
@@ -3075,7 +3075,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                 <span style={{ fontSize: 32, fontWeight: 900, color: T.white, fontFamily: "'Fraunces',serif" }}>{analytics.total}</span>
                 {analytics.volumeChange !== 0 && (
                   <span style={{ fontSize: 12, fontWeight: 600, color: analytics.volumeChange > 0 ? T.red : T.green }}>
-                    {analytics.volumeChange > 0 ? "ÃƒÂ¢Ã¢â‚¬Â Ã‚Â" : "ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬Ëœ"} {Math.abs(analytics.volumeChange)}%
+                    {analytics.volumeChange > 0 ? "ÃƒÂ¢–Ã‚Â" : "ÃƒÂ¢–Ã¢â‚¬Ëœ"} {Math.abs(analytics.volumeChange)}%
                   </span>
                 )}
               </div>
@@ -3098,7 +3098,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                 </span>
                 {analytics.slaChange !== 0 && (
                   <span style={{ fontSize: 12, fontWeight: 600, color: analytics.slaChange > 0 ? T.green : T.red }}>
-                    {analytics.slaChange > 0 ? "ÃƒÂ¢Ã¢â‚¬Â Ã‚Â" : "ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬Ëœ"} {Math.abs(analytics.slaChange)}%
+                    {analytics.slaChange > 0 ? "ÃƒÂ¢–Ã‚Â" : "ÃƒÂ¢–Ã¢â‚¬Ëœ"} {Math.abs(analytics.slaChange)}%
                   </span>
                 )}
               </div>
@@ -3217,7 +3217,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
 
             {/* Resolution Time Buckets */}
             <div style={{ padding: 20, background: T.surface, borderRadius: 14, border: `1px solid ${T.border}` }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 16 }}>ÃƒÂ¢Ã¢â‚¬â€œÃ¢â‚¬â„¢ÃƒÂ¯Ã‚Â¸Ã‚Â Resolution Time</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 16 }}>ÃƒÂ¢Ã¢â‚¬â€œ’ÃƒÂ¯Ã‚Â¸Ã‚Â Resolution Time</div>
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 {analytics.resolutionBuckets.map((b, idx) => (
                   <div key={idx}>
@@ -3384,7 +3384,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                 </span>
                 {analytics.csatChange !== 0 && (
                   <span style={{ fontSize: 12, fontWeight: 600, color: analytics.csatChange > 0 ? T.green : T.red }}>
-                    {analytics.csatChange > 0 ? "ÃƒÂ¢Ã¢â‚¬Â Ã‚Â" : "ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬Ëœ"} {Math.abs(analytics.csatChange)}
+                    {analytics.csatChange > 0 ? "ÃƒÂ¢–Ã‚Â" : "ÃƒÂ¢–Ã¢â‚¬Ëœ"} {Math.abs(analytics.csatChange)}
                   </span>
                 )}
               </div>
@@ -3540,7 +3540,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
 
           {/* Recent Feedback */}
           <div style={{ padding: 20, background: T.surface, borderRadius: 14, border: `1px solid ${T.border}` }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 16 }}>ÃƒÂ°Ã…Â¸Ã¢â‚¬â„¢Ã‚Â¼ Recent Feedback</div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 16 }}>ÃƒÂ°Ã…Â¸’Ã‚Â¼ Recent Feedback</div>
             {analytics.recentFeedback.length === 0 ? (
               <div style={{ padding: 30, textAlign: "center", color: T.textMuted, fontSize: 12 }}>No feedback with comments yet</div>
             ) : (
@@ -3596,10 +3596,10 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
           {/* Chat Stats */}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 12 }}>
             {[
-              { label: "Active Chats", value: liveChats.filter(c => c.status === "active").length, color: T.green, icon: "ÃƒÂ°Ã…Â¸Ã¢â‚¬â„¢Ã‚Â¼" },
+              { label: "Active Chats", value: liveChats.filter(c => c.status === "active").length, color: T.green, icon: "ÃƒÂ°Ã…Â¸’Ã‚Â¼" },
               { label: "In Queue", value: chatQueue.length, color: chatQueue.length > 0 ? T.orange : T.textMuted, icon: "" },
               { label: "Handled Today", value: liveChats.filter(c => c.status === "ended").length, color: T.teal, icon: "ÃƒÂ¢Ã…â€œÃ¢â‚¬Â" },
-              { label: "Avg Wait", value: chatQueue.length > 0 ? `${Math.round(chatQueue.reduce((a, c) => a + (Date.now() - new Date(c.queuedAt).getTime()) / 1000, 0) / chatQueue.length / 60)}m` : "ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â", color: T.textSecondary, icon: "ÃƒÂ¢Ã¢â‚¬â€œÃ¢â‚¬â„¢ÃƒÂ¯Ã‚Â¸Ã‚Â" },
+              { label: "Avg Wait", value: chatQueue.length > 0 ? `${Math.round(chatQueue.reduce((a, c) => a + (Date.now() - new Date(c.queuedAt).getTime()) / 1000, 0) / chatQueue.length / 60)}m` : "ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â", color: T.textSecondary, icon: "ÃƒÂ¢Ã¢â‚¬â€œ’ÃƒÂ¯Ã‚Â¸Ã‚Â" },
               { label: "Avg Duration", value: liveChats.filter(c => c.duration).length > 0 ? `${Math.round(liveChats.filter(c => c.duration).reduce((a, c) => a + c.duration, 0) / liveChats.filter(c => c.duration).length / 60)}m` : "ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â", color: T.textSecondary, icon: "ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‹â€ " },
             ].map((stat, i) => (
               <div key={i} style={{ padding: 16, background: T.surface, borderRadius: 10, border: `1px solid ${T.border}`, textAlign: "center" }}>
@@ -3825,7 +3825,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                         setLiveChats(prev => prev.map(c => c.id === chat.id ? { ...c, messages: [...(c.messages || []), { from: "visitor", text: reply, at: new Date().toISOString() }] } : c));
                       }}
                         style={{ width: "100%", padding: "6px 12px", borderRadius: 5, border: `1px dashed ${T.border}`, background: "transparent", color: T.textMuted, fontSize: 10, cursor: "pointer" }}>
-                        ÃƒÂ°Ã…Â¸Ã¢â‚¬â„¢Ã‚Â¼ Simulate Visitor Reply (Demo)
+                        ÃƒÂ°Ã…Â¸’Ã‚Â¼ Simulate Visitor Reply (Demo)
                       </button>
                     </div>
                   </div>
@@ -3845,7 +3845,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                 
                 {liveChats.filter(c => c.status === "active").length === 0 ? (
                   <div style={{ padding: 30, textAlign: "center", color: T.textMuted }}>
-                    <div style={{ fontSize: 28, marginBottom: 8 }}>ÃƒÂ°Ã…Â¸Ã¢â‚¬â„¢Ã‚Â¼</div>
+                    <div style={{ fontSize: 28, marginBottom: 8 }}>ÃƒÂ°Ã…Â¸’Ã‚Â¼</div>
                     <div style={{ fontSize: 12 }}>No active chats</div>
                     <div style={{ fontSize: 11, color: T.textMuted, marginTop: 4 }}>Accept a visitor from the queue to start</div>
                   </div>
@@ -3883,7 +3883,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                           )}
                           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                             <span style={{ fontSize: 10, color: T.textMuted }}>{chat.messages?.length || 0} messages</span>
-                            <span style={{ fontSize: 10, color: T.green }}>Click to open ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢</span>
+                            <span style={{ fontSize: 10, color: T.green }}>Click to open ÃƒÂ¢–’</span>
                           </div>
                         </div>
                       );
@@ -3902,7 +3902,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                               <span style={{ fontSize: 12, fontWeight: 500, color: T.textSecondary }}>{chat.visitorName}</span>
                               <span style={{ fontSize: 10, color: T.textMuted }}>{chat.messages?.length || 0} msgs</span>
-                              {chat.convertedToTicket && <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: `${T.teal}20`, color: T.teal }}>ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ Ticket</span>}
+                              {chat.convertedToTicket && <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: `${T.teal}20`, color: T.teal }}>ÃƒÂ¢–’ Ticket</span>}
                             </div>
                             <span style={{ fontSize: 10, color: T.textMuted }}>{chat.duration ? `${Math.floor(chat.duration / 60)}m ${chat.duration % 60}s` : "ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â"}</span>
                           </div>
@@ -3917,7 +3917,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
 
           {/* Embed Code Section */}
           <div style={{ padding: 16, background: T.surface, borderRadius: 12, border: `1px solid ${T.border}` }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 12 }}>ÃƒÂ°Ã…Â¸Ã¢â‚¬â€Ã¢â€žÂ¢ Widget Embed Code</div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 12 }}>ÃƒÂ°Ã…Â¸•Ã¢â€žÂ¢ Widget Embed Code</div>
             <div style={{ padding: 12, background: T.bg, borderRadius: 8, fontFamily: "monospace", fontSize: 11, color: T.teal, lineHeight: 1.6, overflow: "auto" }}>
               {`<script src="https://chat.dxbanalytics.com/widget.js"></script>\n<script>\n  DXBChat.init({\n    apiKey: "your_api_key",\n    color: "${chatSettings.widgetColor}",\n    position: "${chatSettings.widgetPosition}",\n    welcomeMessage: "${chatSettings.welcomeMessage}"\n  });\n</script>`}
             </div>
@@ -3955,11 +3955,11 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
           {/* WhatsApp Stats */}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 12 }}>
             {[
-              { label: "Active", value: whatsappConversations.filter(c => c.status === "active").length, color: "#25D366", icon: "ÃƒÂ°Ã…Â¸Ã¢â‚¬â„¢Ã‚Â¼" },
+              { label: "Active", value: whatsappConversations.filter(c => c.status === "active").length, color: "#25D366", icon: "ÃƒÂ°Ã…Â¸’Ã‚Â¼" },
               { label: "Unread", value: whatsappConversations.filter(c => !c.responded && c.status === "active").length, color: T.orange, icon: "ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ¢â‚¬Â" },
               { label: "Today", value: whatsappConversations.filter(c => new Date(c.createdAt) > new Date(Date.now() - 86400000)).length, color: T.teal, icon: "ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‹â€ " },
               { label: "Converted", value: whatsappConversations.filter(c => c.convertedToTicket).length, color: T.purple, icon: "ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢" },
-              { label: "Avg Response", value: "~5m", color: T.textSecondary, icon: "ÃƒÂ¢Ã¢â‚¬â€œÃ¢â‚¬â„¢ÃƒÂ¯Ã‚Â¸Ã‚Â" },
+              { label: "Avg Response", value: "~5m", color: T.textSecondary, icon: "ÃƒÂ¢Ã¢â‚¬â€œ’ÃƒÂ¯Ã‚Â¸Ã‚Â" },
             ].map((stat, i) => (
               <div key={i} style={{ padding: 16, background: T.surface, borderRadius: 10, border: `1px solid ${T.border}`, textAlign: "center" }}>
                 <div style={{ fontSize: 20, marginBottom: 4 }}>{stat.icon}</div>
@@ -4018,7 +4018,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                           <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: `${T.gold}20`, color: T.gold, textTransform: "uppercase" }}>{conv.customerTier || "free"}</span>
                           {windowRemaining > 0 ? (
-                            <span style={{ fontSize: 9, color: windowRemaining < 4 ? T.orange : T.textMuted }}>ÃƒÂ¢Ã¢â‚¬â€œÃ¢â‚¬â„¢ÃƒÂ¯Ã‚Â¸Ã‚Â {Math.round(windowRemaining)}h window</span>
+                            <span style={{ fontSize: 9, color: windowRemaining < 4 ? T.orange : T.textMuted }}>ÃƒÂ¢Ã¢â‚¬â€œ’ÃƒÂ¯Ã‚Â¸Ã‚Â {Math.round(windowRemaining)}h window</span>
                           ) : (
                             <span style={{ fontSize: 9, color: T.red }}>ÃƒÂ¢Ã…Â¡Ã‚Â¡ÃƒÂ¯Ã‚Â¸Ã‚Â Window expired</span>
                           )}
@@ -4229,7 +4229,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
             ];
             
             const qrCategories = [
-              { id: "general", label: "General", icon: "ÃƒÂ°Ã…Â¸Ã¢â‚¬â„¢Ã‚Â¼" },
+              { id: "general", label: "General", icon: "ÃƒÂ°Ã…Â¸’Ã‚Â¼" },
               { id: "technical", label: "Technical", icon: "ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢" },
               { id: "billing", label: "Billing", icon: "ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢" },
             ];
@@ -4332,7 +4332,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                               <span style={{ fontSize: 13, fontWeight: 600, color: T.white }}>
                                 {cat.icon} {cat.label} <span style={{ fontSize: 11, color: T.textMuted, fontWeight: 400 }}>({cat.articles.length})</span>
                               </span>
-                              <span style={{ color: T.textMuted, fontSize: 12 }}>{expandedKbCategory === cat.id ? "ÃƒÂ¢Ã¢â‚¬â€Ã‚Â¼" : "ÃƒÂ¢Ã¢â‚¬â€œÃ‚Â¶"}</span>
+                              <span style={{ color: T.textMuted, fontSize: 12 }}>{expandedKbCategory === cat.id ? "ÃƒÂ¢•Ã‚Â¼" : "ÃƒÂ¢Ã¢â‚¬â€œÃ‚Â¶"}</span>
                             </button>
                             {expandedKbCategory === cat.id && (
                               <div style={{ padding: "0 16px 16px" }}>
@@ -4372,7 +4372,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                   
                   <div style={{ padding: 12, background: `${T.purple}10`, borderRadius: 8, marginBottom: 16 }}>
                     <div style={{ fontSize: 11, color: T.textSecondary }}>
-                      ÃƒÂ°Ã…Â¸Ã¢â‚¬Â Ã‚Â Use shortcuts like <code style={{ background: T.surface, padding: "2px 6px", borderRadius: 4 }}>/greet</code> in ticket replies to quickly insert templates. Variables: <code style={{ background: T.surface, padding: "2px 6px", borderRadius: 4 }}>{"{{name}}"}</code>, <code style={{ background: T.surface, padding: "2px 6px", borderRadius: 4 }}>{"{{ticket_id}}"}</code>
+                      ÃƒÂ°Ã…Â¸–Ã‚Â Use shortcuts like <code style={{ background: T.surface, padding: "2px 6px", borderRadius: 4 }}>/greet</code> in ticket replies to quickly insert templates. Variables: <code style={{ background: T.surface, padding: "2px 6px", borderRadius: 4 }}>{"{{name}}"}</code>, <code style={{ background: T.surface, padding: "2px 6px", borderRadius: 4 }}>{"{{ticket_id}}"}</code>
                     </div>
                   </div>
                   
@@ -4507,7 +4507,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
             </button>
             <div style={{ flex: 1 }} />
             <div style={{ fontSize: 11, color: T.textMuted }}>
-              ÃƒÂ°Ã…Â¸Ã¢â‚¬Â Ã‚Â Start timer from any ticket drawer, or add manual entries here
+              ÃƒÂ°Ã…Â¸–Ã‚Â Start timer from any ticket drawer, or add manual entries here
             </div>
           </div>
 
@@ -4568,7 +4568,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                 })}
                 {timeEntries.length === 0 && (
                   <div style={{ padding: 40, textAlign: "center", color: T.textMuted }}>
-                    <div style={{ fontSize: 24, marginBottom: 8 }}>ÃƒÂ¢Ã¢â‚¬â€œÃ¢â‚¬â„¢ÃƒÂ¯Ã‚Â¸Ã‚Â</div>
+                    <div style={{ fontSize: 24, marginBottom: 8 }}>ÃƒÂ¢Ã¢â‚¬â€œ’ÃƒÂ¯Ã‚Â¸Ã‚Â</div>
                     <div style={{ fontSize: 12 }}>No time entries yet</div>
                   </div>
                 )}
@@ -4658,15 +4658,15 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                     <div style={{ width: 32, height: 32, borderRadius: 8, background: `${getAuditActionColor(log.action)}20`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                       <span style={{ fontSize: 12 }}>
                         {log.action === "created" ? "ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢" :
-                         log.action === "status_change" ? "ÃƒÂ°Ã…Â¸Ã¢â‚¬â€Ã¢â‚¬Å¾" :
+                         log.action === "status_change" ? "ÃƒÂ°Ã…Â¸•Ã¢â‚¬Å¾" :
                          log.action === "assigned" ? "ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢" :
-                         log.action === "reply_sent" ? "ÃƒÂ°Ã…Â¸Ã¢â‚¬â„¢Ã‚Â¼" :
+                         log.action === "reply_sent" ? "ÃƒÂ°Ã…Â¸’Ã‚Â¼" :
                          log.action === "note_added" ? "ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã…Â½" :
                          log.action === "tag_added" ? "ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢" :
                          log.action === "tag_removed" ? "ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢" :
-                         log.action === "time_logged" ? "ÃƒÂ¢Ã¢â‚¬â€œÃ¢â‚¬â„¢ÃƒÂ¯Ã‚Â¸Ã‚Â" :
+                         log.action === "time_logged" ? "ÃƒÂ¢Ã¢â‚¬â€œ’ÃƒÂ¯Ã‚Â¸Ã‚Â" :
                          log.action === "escalated" ? "ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ‚Â¥" :
-                         log.action === "merged" ? "ÃƒÂ°Ã…Â¸Ã¢â‚¬â€Ã¢â€žÂ¢" : "ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã¢â‚¬Â¹"}
+                         log.action === "merged" ? "ÃƒÂ°Ã…Â¸•Ã¢â€žÂ¢" : "ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã¢â‚¬Â¹"}
                       </span>
                     </div>
                     
@@ -4686,7 +4686,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                       {log.details && (
                         <div style={{ fontSize: 10, color: T.textMuted, marginTop: 4 }}>
                           {log.action === "status_change" && log.details.from && log.details.to && (
-                            <span>{log.details.from} ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ {log.details.to}</span>
+                            <span>{log.details.from} ÃƒÂ¢–’ {log.details.to}</span>
                           )}
                           {log.action === "assigned" && log.details.to && (
                             <span>Assigned to: {log.details.to}</span>
@@ -4713,7 +4713,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                       if (t) { setTicketDrawer(t); setSupportSubTab("all"); }
                     }}
                       style={{ padding: "6px 10px", borderRadius: 6, border: `1px solid ${T.border}`, background: "transparent", color: T.textMuted, fontSize: 10, cursor: "pointer" }}>
-                      View ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢
+                      View ÃƒÂ¢–’
                     </button>
                   </div>
                 );
@@ -4739,7 +4739,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
             </button>
             <button type="button" onClick={exportTimeEntries}
               style={{ padding: "10px 16px", borderRadius: 8, border: `1px solid ${T.gold}`, background: "transparent", color: T.gold, fontSize: 12, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
-              ÃƒÂ¢Ã¢â‚¬â€œÃ¢â‚¬â„¢ÃƒÂ¯Ã‚Â¸Ã‚Â Export Time
+              ÃƒÂ¢Ã¢â‚¬â€œ’ÃƒÂ¯Ã‚Â¸Ã‚Â Export Time
             </button>
             <button type="button" onClick={exportAuditLogs}
               style={{ padding: "10px 16px", borderRadius: 8, border: `1px solid ${T.purple}`, background: "transparent", color: T.purple, fontSize: 12, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
@@ -4752,7 +4752,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
             <div style={{ background: T.surface, borderRadius: 12, border: `1px solid ${T.border}`, overflow: "hidden" }}>
               <div style={{ padding: 16, borderBottom: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <div>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: T.white }}>ÃƒÂ°Ã…Â¸Ã¢â‚¬â€Ã¢â€žÂ¢ Webhooks</div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: T.white }}>ÃƒÂ°Ã…Â¸•Ã¢â€žÂ¢ Webhooks</div>
                   <div style={{ fontSize: 10, color: T.textMuted, marginTop: 2 }}>Send events to external services</div>
                 </div>
                 <button type="button" onClick={() => { setEditingWebhook(null); setWebhookForm({ name: "", url: "", events: ["ticket_created"], enabled: true, secret: "" }); setShowWebhookModal(true); }}
@@ -4763,7 +4763,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
               <div style={{ maxHeight: 280, overflowY: "auto" }}>
                 {webhooks.length === 0 ? (
                   <div style={{ padding: 40, textAlign: "center", color: T.textMuted }}>
-                    <div style={{ fontSize: 24, marginBottom: 8 }}>ÃƒÂ°Ã…Â¸Ã¢â‚¬â€Ã¢â€žÂ¢</div>
+                    <div style={{ fontSize: 24, marginBottom: 8 }}>ÃƒÂ°Ã…Â¸•Ã¢â€žÂ¢</div>
                     <div style={{ fontSize: 12 }}>No webhooks configured</div>
                   </div>
                 ) : (
@@ -4790,7 +4790,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                         </button>
                         <button type="button" onClick={() => deleteWebhook(webhook.id)}
                           style={{ padding: "4px 8px", borderRadius: 4, border: `1px solid ${T.red}30`, background: "transparent", color: T.red, fontSize: 9, cursor: "pointer" }}>
-                          ÃƒÆ’Ã¢â‚¬â€
+                          ÃƒÆ’•
                         </button>
                       </div>
                     </div>
@@ -4803,7 +4803,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
             <div style={{ background: T.surface, borderRadius: 12, border: `1px solid ${T.border}`, overflow: "hidden" }}>
               <div style={{ padding: 16, borderBottom: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <div>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: T.white }}>ÃƒÂ°Ã…Â¸Ã¢â‚¬â€Ã¢â‚¬Â° Agent Permissions</div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: T.white }}>ÃƒÂ°Ã…Â¸•Ã¢â‚¬Â° Agent Permissions</div>
                   <div style={{ fontSize: 10, color: T.textMuted, marginTop: 2 }}>Role-based access control</div>
                 </div>
                 <button type="button" onClick={() => { setEditingPermission(null); setPermissionForm({ agentId: "", role: "agent" }); setShowPermissionsModal(true); }}
@@ -4814,7 +4814,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
               <div style={{ maxHeight: 280, overflowY: "auto" }}>
                 {agentPermissions.length === 0 ? (
                   <div style={{ padding: 40, textAlign: "center", color: T.textMuted }}>
-                    <div style={{ fontSize: 24, marginBottom: 8 }}>ÃƒÂ°Ã…Â¸Ã¢â‚¬â€Ã¢â‚¬Â°</div>
+                    <div style={{ fontSize: 24, marginBottom: 8 }}>ÃƒÂ°Ã…Â¸•Ã¢â‚¬Â°</div>
                     <div style={{ fontSize: 12 }}>No permissions configured</div>
                   </div>
                 ) : (
@@ -4838,7 +4838,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                         </button>
                         <button type="button" onClick={() => deletePermission(perm.id)}
                           style={{ padding: "4px 8px", borderRadius: 4, border: `1px solid ${T.red}30`, background: "transparent", color: T.red, fontSize: 9, cursor: "pointer" }}>
-                          ÃƒÆ’Ã¢â‚¬â€
+                          ÃƒÆ’•
                         </button>
                       </div>
                     );
@@ -4923,13 +4923,13 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                     <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4, flexWrap: "wrap" }}>
                       <span style={{ fontSize: 13, fontWeight: 600, color: T.white, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{ticket.subject}</span>
                       {sentiment.sentiment !== "neutral" && <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: `${sentiment.color}20`, color: sentiment.color, fontWeight: 600 }}>{sentiment.emoji}</span>}
-                      {ticket.channel && ticket.channel !== "email" && <span style={{ fontSize: 8, padding: "2px 6px", borderRadius: 4, background: ticket.channel === "chat" ? `${T.green}20` : ticket.channel === "whatsapp" ? "#25D36620" : `${T.purple}20`, color: ticket.channel === "chat" ? T.green : ticket.channel === "whatsapp" ? "#25D366" : T.purple, fontWeight: 600 }}>{ticket.channel === "chat" ? "ÃƒÂ°Ã…Â¸Ã¢â‚¬â„¢Ã‚Â¼ CHAT" : ticket.channel === "whatsapp" ? "ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‚Â± WA" : "ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‚Â§ CALL"}</span>}
+                      {ticket.channel && ticket.channel !== "email" && <span style={{ fontSize: 8, padding: "2px 6px", borderRadius: 4, background: ticket.channel === "chat" ? `${T.green}20` : ticket.channel === "whatsapp" ? "#25D36620" : `${T.purple}20`, color: ticket.channel === "chat" ? T.green : ticket.channel === "whatsapp" ? "#25D366" : T.purple, fontWeight: 600 }}>{ticket.channel === "chat" ? "ÃƒÂ°Ã…Â¸’Ã‚Â¼ CHAT" : ticket.channel === "whatsapp" ? "ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‚Â± WA" : "ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‚Â§ CALL"}</span>}
                       {slaInfo.status === "breached" && <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: `${T.red}20`, color: T.red, fontWeight: 600 }}>ÃƒÂ¢Ã¢â‚¬â€œÃ¢â‚¬Ëœ SLA {slaInfo.percent}%</span>}
                       {slaInfo.status === "warning" && <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: `${T.orange}20`, color: T.orange, fontWeight: 600 }}>ÃƒÂ¢Ã…Â¡Ã‚Â¡ÃƒÂ¯Ã‚Â¸Ã‚Â {slaInfo.percent}%</span>}
                       {ticket.autoAssignedBy && <span style={{ fontSize: 8, padding: "2px 6px", borderRadius: 4, background: `${T.green}20`, color: T.green, fontWeight: 600 }}>ÃƒÂ°Ã…Â¸Ã¢â‚¬ËœÃ¢â‚¬Âº Auto</span>}
                       {ticket.autoEscalated && <span style={{ fontSize: 8, padding: "2px 6px", borderRadius: 4, background: `${T.red}20`, color: T.red, fontWeight: 600 }}>ÃƒÂ¢Ã…Â¡Ã‚Â¡ Escalated</span>}
                       {ticket.mergedInto && <span style={{ fontSize: 8, padding: "2px 6px", borderRadius: 4, background: `${T.textMuted}20`, color: T.textMuted, fontWeight: 600 }}> MERGED</span>}
-                      {(ticket.linkedTickets || []).length > 0 && !ticket.mergedInto && <span style={{ fontSize: 8, padding: "2px 6px", borderRadius: 4, background: `${T.teal}20`, color: T.teal, fontWeight: 600 }}>ÃƒÂ°Ã…Â¸Ã¢â‚¬â€Ã¢â€žÂ¢ {ticket.linkedTickets.length}</span>}
+                      {(ticket.linkedTickets || []).length > 0 && !ticket.mergedInto && <span style={{ fontSize: 8, padding: "2px 6px", borderRadius: 4, background: `${T.teal}20`, color: T.teal, fontWeight: 600 }}>ÃƒÂ°Ã…Â¸•Ã¢â€žÂ¢ {ticket.linkedTickets.length}</span>}
                       {ticketTags.slice(0, 2).map(tagId => {
                         const tag = availableTags.find(t => t.id === tagId);
                         return tag ? <span key={tagId} style={{ fontSize: 8, padding: "2px 6px", borderRadius: 4, background: `${tag.color}20`, color: tag.color, fontWeight: 600 }}>{tag.label}</span> : null;
@@ -5013,7 +5013,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                     style={{ padding: "6px 10px", borderRadius: 6, border: `1px solid ${showAiPanel ? T.teal : T.border}`, background: showAiPanel ? `${T.teal}15` : "transparent", color: showAiPanel ? T.teal : T.textMuted, fontSize: 10, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}>
                     ÃƒÂ°Ã…Â¸Ã¢â‚¬ËœÃ¢â‚¬Âº AI
                   </button>
-                  <button type="button" onClick={() => setTicketDrawer(null)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 24, lineHeight: 1 }}>ÃƒÆ’Ã¢â‚¬â€</button>
+                  <button type="button" onClick={() => setTicketDrawer(null)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 24, lineHeight: 1 }}>ÃƒÆ’•</button>
                 </div>
               </div>
               
@@ -5047,7 +5047,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                   return tag ? (
                     <span key={tagId} style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 10, padding: "3px 8px", borderRadius: 4, background: `${tag.color}20`, color: tag.color, fontWeight: 600 }}>
                       {tag.label}
-                      <button type="button" onClick={() => removeTag(ticketDrawer.id, tagId)} style={{ background: "none", border: "none", color: tag.color, cursor: "pointer", fontSize: 12, lineHeight: 1, padding: 0 }}>ÃƒÆ’Ã¢â‚¬â€</button>
+                      <button type="button" onClick={() => removeTag(ticketDrawer.id, tagId)} style={{ background: "none", border: "none", color: tag.color, cursor: "pointer", fontSize: 12, lineHeight: 1, padding: 0 }}>ÃƒÆ’•</button>
                     </span>
                   ) : null;
                 })}
@@ -5066,7 +5066,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                 </button>
                 <button type="button" onClick={() => setShowLinkModal(true)}
                   style={{ padding: "5px 10px", borderRadius: 5, border: `1px solid ${T.border}`, background: "transparent", color: T.textMuted, fontSize: 10, fontWeight: 500, cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}>
-                  ÃƒÂ°Ã…Â¸Ã¢â‚¬â€Ã¢â€žÂ¢ Link Related
+                  ÃƒÂ°Ã…Â¸•Ã¢â€žÂ¢ Link Related
                 </button>
                 {ticketDrawer.mergedInto && (
                   <span style={{ fontSize: 10, color: T.textMuted, fontStyle: "italic" }}>
@@ -5079,7 +5079,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
               {(ticketDrawer.linkedTickets || []).length > 0 && (
                 <div style={{ marginTop: 12, padding: "10px 12px", background: `${T.teal}08`, borderRadius: 8, border: `1px solid ${T.teal}20` }}>
                   <div style={{ fontSize: 10, fontWeight: 600, color: T.teal, marginBottom: 8, display: "flex", alignItems: "center", gap: 4 }}>
-                    ÃƒÂ°Ã…Â¸Ã¢â‚¬â€Ã¢â€žÂ¢ Linked Tickets ({ticketDrawer.linkedTickets.length})
+                    ÃƒÂ°Ã…Â¸•Ã¢â€žÂ¢ Linked Tickets ({ticketDrawer.linkedTickets.length})
                   </div>
                   <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                     {ticketDrawer.linkedTickets.map((link, i) => (
@@ -5099,7 +5099,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                         {link.type !== "merged" && (
                           <button type="button" onClick={() => unlinkTicket(link.id)}
                             style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 12, padding: 2 }}>
-                            ÃƒÆ’Ã¢â‚¬â€
+                            ÃƒÆ’•
                           </button>
                         )}
                       </div>
@@ -5112,7 +5112,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
               <div style={{ marginTop: 12, padding: "10px 12px", background: `${T.gold}08`, borderRadius: 8, border: `1px solid ${T.gold}20` }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
                   <div style={{ fontSize: 10, fontWeight: 600, color: T.gold, display: "flex", alignItems: "center", gap: 4 }}>
-                    ÃƒÂ¢Ã¢â‚¬â€œÃ¢â‚¬â„¢ÃƒÂ¯Ã‚Â¸Ã‚Â Time Tracking
+                    ÃƒÂ¢Ã¢â‚¬â€œ’ÃƒÂ¯Ã‚Â¸Ã‚Â Time Tracking
                   </div>
                   <div style={{ fontSize: 11, fontWeight: 700, color: T.white }}>
                     Total: {getTicketTimeTotal(ticketDrawer.id)}m
@@ -5350,7 +5350,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                         </div>
                       </div>
                       <div style={{ fontSize: 10, padding: "3px 8px", borderRadius: 4, background: `${T.teal}20`, color: T.teal, fontWeight: 600 }}>
-                        ÃƒÂ°Ã…Â¸Ã¢â‚¬Â Ã‚Â {ticketSummary.aiRecommendation}
+                        ÃƒÂ°Ã…Â¸–Ã‚Â {ticketSummary.aiRecommendation}
                       </div>
                     </div>
                   </div>
@@ -5360,7 +5360,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                   </div>
                 ) : (
                   <div style={{ padding: 16, background: T.surface, borderRadius: 8, textAlign: "center" }}>
-                    <div style={{ fontSize: 11, color: T.teal }}>ÃƒÂ°Ã…Â¸Ã¢â‚¬â€Ã¢â‚¬Å¾ Analyzing ticket content...</div>
+                    <div style={{ fontSize: 11, color: T.teal }}>ÃƒÂ°Ã…Â¸•Ã¢â‚¬Å¾ Analyzing ticket content...</div>
                   </div>
                 )}
                 
@@ -5368,8 +5368,8 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                 <div style={{ marginTop: 12 }}>
                   <button type="button" onClick={() => { if (!showSimilarTickets) updateSimilarTickets(ticketDrawer); setShowSimilarTickets(!showSimilarTickets); }}
                     style={{ width: "100%", padding: "10px 14px", borderRadius: 8, border: `1px solid ${T.border}`, background: showSimilarTickets ? T.surface : "transparent", color: T.textSecondary, fontSize: 11, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                    <span>ÃƒÂ°Ã…Â¸Ã¢â‚¬â€Ã¢â€žÂ¢ Similar Resolved Tickets {similarTickets.length > 0 && `(${similarTickets.length})`}</span>
-                    <span style={{ fontSize: 10, color: T.textMuted }}>{showSimilarTickets ? "" : "ÃƒÂ¢Ã¢â‚¬â€Ã‚Â¼"}</span>
+                    <span>ÃƒÂ°Ã…Â¸•Ã¢â€žÂ¢ Similar Resolved Tickets {similarTickets.length > 0 && `(${similarTickets.length})`}</span>
+                    <span style={{ fontSize: 10, color: T.textMuted }}>{showSimilarTickets ? "" : "ÃƒÂ¢•Ã‚Â¼"}</span>
                   </button>
                   
                   {showSimilarTickets && (
@@ -5400,12 +5400,12 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                               </div>
                               {sim.solution && (
                                 <div style={{ padding: 8, background: `${T.green}08`, borderRadius: 6, borderLeft: `2px solid ${T.green}` }}>
-                                  <div style={{ fontSize: 9, color: T.textMuted, marginBottom: 4 }}>ÃƒÂ°Ã…Â¸Ã¢â‚¬Â Ã‚Â Resolution:</div>
+                                  <div style={{ fontSize: 9, color: T.textMuted, marginBottom: 4 }}>ÃƒÂ°Ã…Â¸–Ã‚Â Resolution:</div>
                                   <div style={{ fontSize: 11, color: T.textSecondary, lineHeight: 1.4 }}>{sim.solution}</div>
                                 </div>
                               )}
                               <div style={{ marginTop: 8, display: "flex", justifyContent: "flex-end" }}>
-                                <span style={{ fontSize: 9, color: T.teal }}>Click to view full ticket ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢</span>
+                                <span style={{ fontSize: 9, color: T.teal }}>Click to view full ticket ÃƒÂ¢–’</span>
                               </div>
                             </div>
                           ))}
@@ -5460,7 +5460,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
               {(ticketDrawer.internalNotes?.length > 0 || true) && (
                 <div style={{ padding: "16px 24px", background: `${T.orange}08`, borderTop: `1px dashed ${T.orange}30` }}>
                   <div style={{ fontSize: 10, fontWeight: 700, color: T.orange, textTransform: "uppercase", letterSpacing: 1, marginBottom: 12, display: "flex", alignItems: "center", gap: 6 }}>
-                    ÃƒÂ°Ã…Â¸Ã¢â‚¬â€Ã…Â½ Internal Notes <span style={{ fontWeight: 400, color: T.textMuted }}>(hidden from customer)</span>
+                    ÃƒÂ°Ã…Â¸•Ã…Â½ Internal Notes <span style={{ fontWeight: 400, color: T.textMuted }}>(hidden from customer)</span>
                   </div>
                   <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                     {(ticketDrawer.internalNotes || []).map((note, i) => (
@@ -5510,11 +5510,11 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                 <div style={{ display: "flex", gap: 8, marginBottom: 12, alignItems: "center" }}>
                   <button type="button" onClick={() => setReplyMode("reply")}
                     style={{ padding: "6px 14px", borderRadius: 6, border: `1px solid ${replyMode === "reply" ? T.gold : T.border}`, background: replyMode === "reply" ? T.goldGlow : "transparent", color: replyMode === "reply" ? T.gold : T.textMuted, fontSize: 11, fontWeight: 600, cursor: "pointer" }}>
-                    ÃƒÂ°Ã…Â¸Ã¢â‚¬â„¢Ã‚Â¼ Reply to Customer
+                    ÃƒÂ°Ã…Â¸’Ã‚Â¼ Reply to Customer
                   </button>
                   <button type="button" onClick={() => setReplyMode("note")}
                     style={{ padding: "6px 14px", borderRadius: 6, border: `1px solid ${replyMode === "note" ? T.orange : T.border}`, background: replyMode === "note" ? `${T.orange}15` : "transparent", color: replyMode === "note" ? T.orange : T.textMuted, fontSize: 11, fontWeight: 600, cursor: "pointer" }}>
-                    ÃƒÂ°Ã…Â¸Ã¢â‚¬â€Ã…Â½ Internal Note
+                    ÃƒÂ°Ã…Â¸•Ã…Â½ Internal Note
                   </button>
                   <div style={{ flex: 1 }} />
                   <button type="button" onClick={() => fileInputRef.current?.click()} disabled={uploading}
@@ -5533,7 +5533,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                         </button>
                         <button type="button" onClick={() => { if (suggestedReplies.length === 0) generateSmartReplies(ticketDrawer); }}
                           style={{ fontSize: 10, color: T.purple, background: "none", border: "none", cursor: "pointer", textDecoration: suggestedReplies.length > 0 ? "none" : "underline", display: "flex", alignItems: "center", gap: 4 }}>
-                          {repliesLoading ? " Generating..." : suggestedReplies.length > 0 ? `ÃƒÂ°Ã…Â¸Ã¢â‚¬Â Ã‚Â ${suggestedReplies.length} AI Suggestions` : "ÃƒÂ°Ã…Â¸Ã¢â‚¬Â Ã‚Â Generate Smart Replies"}
+                          {repliesLoading ? " Generating..." : suggestedReplies.length > 0 ? `ÃƒÂ°Ã…Â¸–Ã‚Â ${suggestedReplies.length} AI Suggestions` : "ÃƒÂ°Ã…Â¸–Ã‚Â Generate Smart Replies"}
                         </button>
                         {quickResponses.length > 0 && (
                           <span style={{ fontSize: 10, color: T.textMuted }}>
@@ -5546,7 +5546,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                       {suggestedReplies.length > 0 && (
                         <div style={{ marginBottom: 12, padding: 12, background: `${T.purple}08`, borderRadius: 10, border: `1px solid ${T.purple}20` }}>
                           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
-                            <span style={{ fontSize: 11, fontWeight: 600, color: T.purple }}>ÃƒÂ°Ã…Â¸Ã¢â‚¬Â Ã‚Â AI-Suggested Replies</span>
+                            <span style={{ fontSize: 11, fontWeight: 600, color: T.purple }}>ÃƒÂ°Ã…Â¸–Ã‚Â AI-Suggested Replies</span>
                             <button type="button" onClick={() => generateSmartReplies(ticketDrawer)} disabled={repliesLoading}
                               style={{ fontSize: 9, color: T.textMuted, background: "none", border: "none", cursor: "pointer" }}>
                                Regenerate
@@ -5574,7 +5574,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                                   {reply.preview}
                                 </div>
                                 <div style={{ marginTop: 6, display: "flex", justifyContent: "flex-end" }}>
-                                  <span style={{ fontSize: 9, color: T.purple }}>Click to use ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢</span>
+                                  <span style={{ fontSize: 9, color: T.purple }}>Click to use ÃƒÂ¢–’</span>
                                 </div>
                               </div>
                             ))}
@@ -5660,7 +5660,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                           {t.name}
                         </button>
                       ))}
-                      <span style={{ fontSize: 10, color: T.textMuted, marginLeft: 8 }}>ÃƒÂ°Ã…Â¸Ã¢â‚¬Â Ã‚Â Type @ to mention teammates</span>
+                      <span style={{ fontSize: 10, color: T.textMuted, marginLeft: 8 }}>ÃƒÂ°Ã…Â¸–Ã‚Â Type @ to mention teammates</span>
                     </div>
                     <div style={{ position: "relative" }}>
                       <div style={{ display: "flex", gap: 10 }}>
@@ -5735,7 +5735,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
           <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.gold}30`, padding: 24, width: "100%", maxWidth: 480, maxHeight: "80vh", overflow: "auto" }} onClick={e => e.stopPropagation()}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
               <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ Merge Ticket</h3>
-              <button type="button" onClick={() => setShowMergeModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>ÃƒÆ’Ã¢â‚¬â€</button>
+              <button type="button" onClick={() => setShowMergeModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>ÃƒÆ’•</button>
             </div>
             
             <div style={{ padding: 12, background: `${T.orange}15`, borderRadius: 8, marginBottom: 16 }}>
@@ -5788,8 +5788,8 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
         <div style={{ position: "fixed", inset: 0, zIndex: 9000, background: "rgba(4,9,15,0.9)", display: "flex", alignItems: "center", justifyContent: "center" }} onClick={() => setShowLinkModal(false)}>
           <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.gold}30`, padding: 24, width: "100%", maxWidth: 480, maxHeight: "80vh", overflow: "auto" }} onClick={e => e.stopPropagation()}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-              <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>ÃƒÂ°Ã…Â¸Ã¢â‚¬â€Ã¢â€žÂ¢ Link Related Ticket</h3>
-              <button type="button" onClick={() => setShowLinkModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>ÃƒÆ’Ã¢â‚¬â€</button>
+              <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>ÃƒÂ°Ã…Â¸•Ã¢â€žÂ¢ Link Related Ticket</h3>
+              <button type="button" onClick={() => setShowLinkModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>ÃƒÆ’•</button>
             </div>
             
             <div style={{ padding: 12, background: `${T.teal}15`, borderRadius: 8, marginBottom: 16 }}>
@@ -5823,7 +5823,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
               </button>
               <button type="button" onClick={linkTicket} disabled={!linkTargetId || linking}
                 style={{ flex: 1, padding: "12px 16px", borderRadius: 8, border: "none", background: !linkTargetId || linking ? T.border : T.teal, color: T.bg, fontSize: 13, fontWeight: 700, cursor: !linkTargetId || linking ? "not-allowed" : "pointer" }}>
-                {linking ? "Linking..." : "ÃƒÂ°Ã…Â¸Ã¢â‚¬â€Ã¢â€žÂ¢ Link Tickets"}
+                {linking ? "Linking..." : "ÃƒÂ°Ã…Â¸•Ã¢â€žÂ¢ Link Tickets"}
               </button>
             </div>
           </div>
@@ -5836,7 +5836,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
           <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.gold}30`, padding: 24, width: "100%", maxWidth: 560, maxHeight: "85vh", overflow: "auto" }} onClick={e => e.stopPropagation()}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
               <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}> Manage Custom Fields</h3>
-              <button type="button" onClick={() => setShowFieldsModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>ÃƒÆ’Ã¢â‚¬â€</button>
+              <button type="button" onClick={() => setShowFieldsModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>ÃƒÆ’•</button>
             </div>
             
             <div style={{ padding: 12, background: `${T.cyan}15`, borderRadius: 8, marginBottom: 20 }}>
@@ -5912,7 +5912,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                     <div key={field.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 14px", background: T.surfaceAlt, borderRadius: 8, border: `1px solid ${T.border}` }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                         <span style={{ fontSize: 18 }}>
-                          {field.type === "dropdown" ? "ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã¢â‚¬Â¹" : field.type === "date" ? "ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã¢â€šÂ¬" : field.type === "number" ? "ÃƒÂ°Ã…Â¸Ã¢â‚¬â€Ã¢â‚¬Å“" : field.type === "checkbox" ? "ÃƒÂ¢Ã…Â¡Ã‚Â ÃƒÂ¯Ã‚Â¸Ã‚Â" : "ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢"}
+                          {field.type === "dropdown" ? "ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã¢â‚¬Â¹" : field.type === "date" ? "ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã¢â€šÂ¬" : field.type === "number" ? "ÃƒÂ°Ã…Â¸•Ã¢â‚¬Å“" : field.type === "checkbox" ? "ÃƒÂ¢Ã…Â¡Ã‚Â ÃƒÂ¯Ã‚Â¸Ã‚Â" : "ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢"}
                         </span>
                         <div>
                           <div style={{ fontSize: 13, fontWeight: 600, color: T.white, display: "flex", alignItems: "center", gap: 6 }}>
@@ -5950,7 +5950,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
           <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.gold}30`, padding: 24, width: "100%", maxWidth: 600, maxHeight: "85vh", overflow: "auto" }} onClick={e => e.stopPropagation()}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
               <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>ÃƒÂ°Ã…Â¸Ã¢â‚¬ËœÃ¢â‚¬Âº Auto-Assign Rules</h3>
-              <button type="button" onClick={() => setShowAutoAssignModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>ÃƒÆ’Ã¢â‚¬â€</button>
+              <button type="button" onClick={() => setShowAutoAssignModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>ÃƒÆ’•</button>
             </div>
             
             <div style={{ padding: 12, background: `${T.green}15`, borderRadius: 8, marginBottom: 20 }}>
@@ -6041,7 +6041,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                             {!rule.enabled && <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: `${T.textMuted}20`, color: T.textMuted }}>DISABLED</span>}
                           </div>
                           <div style={{ fontSize: 10, color: T.textMuted }}>
-                            If <span style={{ color: T.cyan }}>{rule.condition}</span> = <span style={{ color: T.gold }}>{rule.conditionValue}</span> ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ assign to <span style={{ color: T.purple }}>{rule.assignToName}</span>
+                            If <span style={{ color: T.cyan }}>{rule.condition}</span> = <span style={{ color: T.gold }}>{rule.conditionValue}</span> ÃƒÂ¢–’ assign to <span style={{ color: T.purple }}>{rule.assignToName}</span>
                           </div>
                         </div>
                       </div>
@@ -6069,7 +6069,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
             <div style={{ marginTop: 20, padding: 16, background: `${T.gold}10`, borderRadius: 10, border: `1px solid ${T.gold}30` }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <div>
-                  <div style={{ fontSize: 12, fontWeight: 600, color: T.gold }}>ÃƒÂ°Ã…Â¸Ã¢â‚¬Â Ã‚Â Run Auto-Assign on Unassigned Tickets</div>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: T.gold }}>ÃƒÂ°Ã…Â¸–Ã‚Â Run Auto-Assign on Unassigned Tickets</div>
                   <div style={{ fontSize: 11, color: T.textMuted }}>{unassignedCount} unassigned tickets</div>
                 </div>
                 <button type="button" onClick={async () => {
@@ -6095,8 +6095,8 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
         <div style={{ position: "fixed", inset: 0, zIndex: 9000, background: "rgba(4,9,15,0.9)", display: "flex", alignItems: "center", justifyContent: "center" }} onClick={() => setShowSlaModal(false)}>
           <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.gold}30`, padding: 24, width: "100%", maxWidth: 500, maxHeight: "85vh", overflow: "auto" }} onClick={e => e.stopPropagation()}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-              <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>ÃƒÂ¢Ã¢â‚¬â€œÃ¢â‚¬â„¢ÃƒÂ¯Ã‚Â¸Ã‚Â SLA Settings</h3>
-              <button type="button" onClick={() => setShowSlaModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>ÃƒÆ’Ã¢â‚¬â€</button>
+              <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>ÃƒÂ¢Ã¢â‚¬â€œ’ÃƒÂ¯Ã‚Â¸Ã‚Â SLA Settings</h3>
+              <button type="button" onClick={() => setShowSlaModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>ÃƒÆ’•</button>
             </div>
             
             <div style={{ padding: 12, background: `${T.orange}15`, borderRadius: 8, marginBottom: 20 }}>
@@ -6196,12 +6196,12 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
           <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.gold}30`, padding: 24, width: "100%", maxWidth: 650, maxHeight: "90vh", overflow: "auto" }} onClick={e => e.stopPropagation()}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
               <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>ÃƒÂ¢Ã…Â¡Ã‚Â¡ Workflow Triggers</h3>
-              <button type="button" onClick={() => setShowWorkflowModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>ÃƒÆ’Ã¢â‚¬â€</button>
+              <button type="button" onClick={() => setShowWorkflowModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>ÃƒÆ’•</button>
             </div>
             
             <div style={{ padding: 12, background: `${T.purple}15`, borderRadius: 8, marginBottom: 20 }}>
               <div style={{ fontSize: 12, color: T.textSecondary, lineHeight: 1.5 }}>
-                Create automated workflows that trigger actions when certain conditions are met. Example: When status changes to "resolved" ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ add "resolved" tag.
+                Create automated workflows that trigger actions when certain conditions are met. Example: When status changes to "resolved" ÃƒÂ¢–’ add "resolved" tag.
               </div>
             </div>
             
@@ -6214,7 +6214,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
               {/* Workflow Name */}
               <div style={{ marginBottom: 12 }}>
                 <label style={{ fontSize: 10, color: T.textMuted, marginBottom: 4, display: "block" }}>Workflow Name</label>
-                <input value={newWorkflowForm.name} onChange={e => setNewWorkflowForm(prev => ({ ...prev, name: e.target.value }))} placeholder="e.g. Resolved ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ Add Tag..."
+                <input value={newWorkflowForm.name} onChange={e => setNewWorkflowForm(prev => ({ ...prev, name: e.target.value }))} placeholder="e.g. Resolved ÃƒÂ¢–’ Add Tag..."
                   style={{ width: "100%", padding: "10px 12px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.bg, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif", boxSizing: "border-box" }} />
               </div>
               
@@ -6291,7 +6291,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                       {newWorkflowForm.actions.length > 1 && (
                         <button type="button" onClick={() => removeWorkflowAction(idx)}
                           style={{ padding: "6px 10px", borderRadius: 4, border: `1px solid ${T.red}40`, background: `${T.red}10`, color: T.red, fontSize: 12, cursor: "pointer" }}>
-                          ÃƒÆ’Ã¢â‚¬â€
+                          ÃƒÆ’•
                         </button>
                       )}
                     </div>
@@ -6382,7 +6382,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
           <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.gold}30`, padding: 24, width: "100%", maxWidth: 420 }} onClick={e => e.stopPropagation()}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
               <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ Add CSAT Rating</h3>
-              <button type="button" onClick={() => setShowCsatModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>ÃƒÆ’Ã¢â‚¬â€</button>
+              <button type="button" onClick={() => setShowCsatModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>ÃƒÆ’•</button>
             </div>
             
             <div style={{ padding: 12, background: `${T.gold}10`, borderRadius: 8, marginBottom: 20 }}>
@@ -6463,7 +6463,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
               <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>
                 {editingArticle ? "ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ÃƒÂ¯Ã‚Â¸Ã‚Â Edit Article" : "ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‚Â¬ New Article"}
               </h3>
-              <button type="button" onClick={() => setShowKbModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>ÃƒÆ’Ã¢â‚¬â€</button>
+              <button type="button" onClick={() => setShowKbModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>ÃƒÆ’•</button>
             </div>
             
             <div style={{ marginBottom: 16 }}>
@@ -6558,12 +6558,12 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
               <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>
                 {editingQuickResponse ? "ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ÃƒÂ¯Ã‚Â¸Ã‚Â Edit Quick Response" : "ÃƒÂ¢Ã…Â¡Ã‚Â¡ New Quick Response"}
               </h3>
-              <button type="button" onClick={() => setShowQuickResponseModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>ÃƒÆ’Ã¢â‚¬â€</button>
+              <button type="button" onClick={() => setShowQuickResponseModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>ÃƒÆ’•</button>
             </div>
             
             <div style={{ padding: 12, background: `${T.purple}10`, borderRadius: 8, marginBottom: 16 }}>
               <div style={{ fontSize: 11, color: T.textSecondary }}>
-                ÃƒÂ°Ã…Â¸Ã¢â‚¬Â Ã‚Â Available variables: <code style={{ background: T.surface, padding: "2px 6px", borderRadius: 4 }}>{"{{name}}"}</code> <code style={{ background: T.surface, padding: "2px 6px", borderRadius: 4 }}>{"{{ticket_id}}"}</code> <code style={{ background: T.surface, padding: "2px 6px", borderRadius: 4 }}>{"{{agent_name}}"}</code> <code style={{ background: T.surface, padding: "2px 6px", borderRadius: 4 }}>{"{{category}}"}</code> <code style={{ background: T.surface, padding: "2px 6px", borderRadius: 4 }}>{"{{tier}}"}</code>
+                ÃƒÂ°Ã…Â¸–Ã‚Â Available variables: <code style={{ background: T.surface, padding: "2px 6px", borderRadius: 4 }}>{"{{name}}"}</code> <code style={{ background: T.surface, padding: "2px 6px", borderRadius: 4 }}>{"{{ticket_id}}"}</code> <code style={{ background: T.surface, padding: "2px 6px", borderRadius: 4 }}>{"{{agent_name}}"}</code> <code style={{ background: T.surface, padding: "2px 6px", borderRadius: 4 }}>{"{{category}}"}</code> <code style={{ background: T.surface, padding: "2px 6px", borderRadius: 4 }}>{"{{tier}}"}</code>
               </div>
             </div>
             
@@ -6586,7 +6586,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
               <label style={{ fontSize: 11, color: T.textMuted, marginBottom: 6, display: "block" }}>Category</label>
               <select value={quickResponseForm.category} onChange={e => setQuickResponseForm(prev => ({ ...prev, category: e.target.value }))}
                 style={{ width: "100%", padding: "12px 14px", borderRadius: 8, border: `1px solid ${T.border}`, background: T.bg, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif" }}>
-                <option value="general">ÃƒÂ°Ã…Â¸Ã¢â‚¬â„¢Ã‚Â¼ General</option>
+                <option value="general">ÃƒÂ°Ã…Â¸’Ã‚Â¼ General</option>
                 <option value="technical">ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ Technical</option>
                 <option value="billing">ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ Billing</option>
               </select>
@@ -6655,7 +6655,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
               <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>
                  Live Chat Settings
               </h3>
-              <button type="button" onClick={() => setShowChatSettings(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>ÃƒÆ’Ã¢â‚¬â€</button>
+              <button type="button" onClick={() => setShowChatSettings(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>ÃƒÆ’•</button>
             </div>
             
             <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
@@ -6745,7 +6745,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
               <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>
                 ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ Widget Preview
               </h3>
-              <button type="button" onClick={() => setShowWidgetPreview(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>ÃƒÆ’Ã¢â‚¬â€</button>
+              <button type="button" onClick={() => setShowWidgetPreview(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>ÃƒÆ’•</button>
             </div>
             
             <div style={{ background: "#f5f5f5", borderRadius: 12, padding: 20, display: "flex", justifyContent: chatSettings.widgetPosition === "right" ? "flex-end" : "flex-start" }}>
@@ -6754,7 +6754,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                 {/* Chat Header */}
                 <div style={{ background: chatSettings.widgetColor, borderRadius: "12px 12px 0 0", padding: 16, color: T.white }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                    <div style={{ width: 40, height: 40, borderRadius: "50%", background: "rgba(255,255,255,0.2)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>ÃƒÂ°Ã…Â¸Ã¢â‚¬â„¢Ã‚Â¼</div>
+                    <div style={{ width: 40, height: 40, borderRadius: "50%", background: "rgba(255,255,255,0.2)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>ÃƒÂ°Ã…Â¸’Ã‚Â¼</div>
                     <div>
                       <div style={{ fontWeight: 700, fontSize: 14 }}>DXB Analytics</div>
                       <div style={{ fontSize: 11, opacity: 0.9, display: "flex", alignItems: "center", gap: 4 }}>
@@ -6809,11 +6809,11 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                   <div style={{ fontSize: 11, color: T.textMuted }}>Pre-approved templates for out-of-window messaging</div>
                 </div>
               </div>
-              <button type="button" onClick={() => setShowWhatsappTemplates(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>ÃƒÆ’Ã¢â‚¬â€</button>
+              <button type="button" onClick={() => setShowWhatsappTemplates(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>ÃƒÆ’•</button>
             </div>
             
             <div style={{ padding: 12, background: `${T.teal}10`, borderRadius: 8, marginBottom: 16, display: "flex", alignItems: "flex-start", gap: 10 }}>
-              <span style={{ fontSize: 16 }}>ÃƒÂ°Ã…Â¸Ã¢â‚¬Â Ã‚Â</span>
+              <span style={{ fontSize: 16 }}>ÃƒÂ°Ã…Â¸–Ã‚Â</span>
               <div style={{ fontSize: 11, color: T.textSecondary, lineHeight: 1.5 }}>
                 These templates are pre-approved by Meta for WhatsApp Business API. Use <code style={{ background: T.surface, padding: "1px 4px", borderRadius: 3 }}>{"{{name}}"}</code> for customer's name.
                 {activeWhatsappId && " Click a template to send it to the current conversation."}
@@ -6847,7 +6847,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                     </div>
                     {activeConv && (
                       <div style={{ marginTop: 8, display: "flex", justifyContent: "flex-end" }}>
-                        <span style={{ fontSize: 10, color: "#25D366" }}>Click to send ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢</span>
+                        <span style={{ fontSize: 10, color: "#25D366" }}>Click to send ÃƒÂ¢–’</span>
                       </div>
                     )}
                   </div>
@@ -6873,8 +6873,8 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 10000 }}>
           <div style={{ width: 440, background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, overflow: "hidden" }}>
             <div style={{ padding: "16px 20px", borderBottom: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <div style={{ fontSize: 14, fontWeight: 700, color: T.white }}>ÃƒÂ¢Ã¢â‚¬â€œÃ¢â‚¬â„¢ÃƒÂ¯Ã‚Â¸Ã‚Â Add Manual Time Entry</div>
-              <button type="button" onClick={() => setShowTimeEntryModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>ÃƒÆ’Ã¢â‚¬â€</button>
+              <div style={{ fontSize: 14, fontWeight: 700, color: T.white }}>ÃƒÂ¢Ã¢â‚¬â€œ’ÃƒÂ¯Ã‚Â¸Ã‚Â Add Manual Time Entry</div>
+              <button type="button" onClick={() => setShowTimeEntryModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>ÃƒÆ’•</button>
             </div>
             
             <div style={{ padding: 20 }}>
@@ -6913,7 +6913,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                 <label style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }}>
                   <input type="checkbox" checked={timeEntryForm.billable} onChange={e => setTimeEntryForm(prev => ({ ...prev, billable: e.target.checked }))}
                     style={{ width: 18, height: 18, accentColor: T.green }} />
-                  <span style={{ fontSize: 12, color: T.textSecondary }}>ÃƒÂ°Ã…Â¸Ã‚ÂÃ¢â‚¬Â  Billable time</span>
+                  <span style={{ fontSize: 12, color: T.textSecondary }}>ÃƒÂ°Ã…Â¸Ã‚Â– Billable time</span>
                 </label>
               </div>
               
@@ -6937,8 +6937,8 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 10000 }}>
           <div style={{ width: 500, background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, overflow: "hidden" }}>
             <div style={{ padding: "16px 20px", borderBottom: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <div style={{ fontSize: 14, fontWeight: 700, color: T.white }}>ÃƒÂ°Ã…Â¸Ã¢â‚¬â€Ã¢â€žÂ¢ {editingWebhook ? "Edit Webhook" : "Add Webhook"}</div>
-              <button type="button" onClick={() => setShowWebhookModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>ÃƒÆ’Ã¢â‚¬â€</button>
+              <div style={{ fontSize: 14, fontWeight: 700, color: T.white }}>ÃƒÂ°Ã…Â¸•Ã¢â€žÂ¢ {editingWebhook ? "Edit Webhook" : "Add Webhook"}</div>
+              <button type="button" onClick={() => setShowWebhookModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>ÃƒÆ’•</button>
             </div>
             
             <div style={{ padding: 20 }}>
@@ -7007,7 +7007,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
           <div style={{ width: 460, background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, overflow: "hidden" }}>
             <div style={{ padding: "16px 20px", borderBottom: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <div style={{ fontSize: 14, fontWeight: 700, color: T.white }}>ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã¢â‚¬Ëœ Export Tickets</div>
-              <button type="button" onClick={() => setShowExportModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>ÃƒÆ’Ã¢â‚¬â€</button>
+              <button type="button" onClick={() => setShowExportModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>ÃƒÆ’•</button>
             </div>
             
             <div style={{ padding: 20 }}>
@@ -7052,7 +7052,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                 <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                   <label style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }}>
                     <input type="checkbox" checked={exportConfig.includeMessages} onChange={e => setExportConfig(prev => ({ ...prev, includeMessages: e.target.checked }))} style={{ width: 16, height: 16, accentColor: T.teal }} />
-                    <span style={{ fontSize: 12, color: T.textSecondary }}>ÃƒÂ°Ã…Â¸Ã¢â‚¬â„¢Ã‚Â¼ Messages</span>
+                    <span style={{ fontSize: 12, color: T.textSecondary }}>ÃƒÂ°Ã…Â¸’Ã‚Â¼ Messages</span>
                   </label>
                   <label style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }}>
                     <input type="checkbox" checked={exportConfig.includeNotes} onChange={e => setExportConfig(prev => ({ ...prev, includeNotes: e.target.checked }))} style={{ width: 16, height: 16, accentColor: T.orange }} />
@@ -7060,7 +7060,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                   </label>
                   <label style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }}>
                     <input type="checkbox" checked={exportConfig.includeTime} onChange={e => setExportConfig(prev => ({ ...prev, includeTime: e.target.checked }))} style={{ width: 16, height: 16, accentColor: T.gold }} />
-                    <span style={{ fontSize: 12, color: T.textSecondary }}>ÃƒÂ¢Ã¢â‚¬â€œÃ¢â‚¬â„¢ÃƒÂ¯Ã‚Â¸Ã‚Â Time Entries</span>
+                    <span style={{ fontSize: 12, color: T.textSecondary }}>ÃƒÂ¢Ã¢â‚¬â€œ’ÃƒÂ¯Ã‚Â¸Ã‚Â Time Entries</span>
                   </label>
                 </div>
               </div>
@@ -7085,8 +7085,8 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 10000 }}>
           <div style={{ width: 420, background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, overflow: "hidden" }}>
             <div style={{ padding: "16px 20px", borderBottom: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <div style={{ fontSize: 14, fontWeight: 700, color: T.white }}>ÃƒÂ°Ã…Â¸Ã¢â‚¬â€Ã¢â‚¬Â° {editingPermission ? "Edit Permission" : "Add Permission"}</div>
-              <button type="button" onClick={() => setShowPermissionsModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>ÃƒÆ’Ã¢â‚¬â€</button>
+              <div style={{ fontSize: 14, fontWeight: 700, color: T.white }}>ÃƒÂ°Ã…Â¸•Ã¢â‚¬Â° {editingPermission ? "Edit Permission" : "Add Permission"}</div>
+              <button type="button" onClick={() => setShowPermissionsModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>ÃƒÆ’•</button>
             </div>
             
             <div style={{ padding: 20 }}>
@@ -7167,7 +7167,7 @@ function NotificationsTab({ T, notify, adminUser, I, users, db }) {
   const [emailTargetTier, setEmailTargetTier] = React.useState("pro");
   const [scheduledNotifs, setScheduledNotifs] = React.useState([]);
 
-  const ICONS = ["ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ¢â‚¬Â", "ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‚Â£", "ÃƒÂ°Ã…Â¸Ã…Â½Ã‚Â¯", "ÃƒÂ¢Ã…Â¡Ã‚Â ÃƒÂ¯Ã‚Â¸Ã‚Â", "ÃƒÂ°Ã…Â¸Ã‚ÂÃ¢â‚¬Â ", "ÃƒÂ°Ã…Â¸Ã…â€™Ã…Â¸", "ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‹â€ ", "ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ¢â‚¬Â¡", "ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦", "ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã…Â ", "ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ¢â‚¬Ëœ", "ÃƒÂ°Ã…Â¸Ã…Â½Ã‚Â"];
+  const ICONS = ["ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ¢â‚¬Â", "ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‚Â£", "ÃƒÂ°Ã…Â¸Ã…Â½Ã‚Â¯", "ÃƒÂ¢Ã…Â¡Ã‚Â ÃƒÂ¯Ã‚Â¸Ã‚Â", "ÃƒÂ°Ã…Â¸Ã‚Â–", "ÃƒÂ°Ã…Â¸Ã…â€™Ã…Â¸", "ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‹â€ ", "ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ¢â‚¬Â¡", "ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦", "ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã…Â ", "ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ¢â‚¬Ëœ", "ÃƒÂ°Ã…Â¸Ã…Â½Ã‚Â"];
   const TYPES = [
     { id: "info",    label: "Info",    color: T.blue   || "#3B82F6" },
     { id: "success", label: "Success", color: T.green  || "#10B981" },
@@ -7367,7 +7367,7 @@ function NotificationsTab({ T, notify, adminUser, I, users, db }) {
       <div className="fade-up" style={{ display: "flex", alignItems: "center", gap: 0, borderRadius: 14, background: surf, border: `1px solid ${border}`, overflow: "hidden" }}>
         <button type="button" onClick={() => { fetchNotifications(); notify("Refreshed"); }}
           style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 48, minHeight: 60, background: "transparent", border: "none", borderRight: `1px solid ${border}`, cursor: "pointer", color: gold, fontSize: 18 }}>
-          ÃƒÂ¢Ã¢â‚¬Â Ã‚Â»
+          ÃƒÂ¢–Ã‚Â»
         </button>
         {[
           { label: "Sent Today",  value: stats.today,                 color: gold },
@@ -7446,7 +7446,7 @@ function NotificationsTab({ T, notify, adminUser, I, users, db }) {
                 </div>
               )}
               <div style={{ fontSize: 11, color: blue, marginTop: 10, fontWeight: 600 }}>
-                ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ {targetUsers.length} recipient{targetUsers.length !== 1 ? "s" : ""} selected
+                ÃƒÂ¢–’ {targetUsers.length} recipient{targetUsers.length !== 1 ? "s" : ""} selected
               </div>
             </div>
 
@@ -7528,7 +7528,7 @@ function NotificationsTab({ T, notify, adminUser, I, users, db }) {
             {/* Send Button */}
             <button type="button" onClick={sendNotification} disabled={notifSending || targetUsers.length === 0}
               style={{ padding: "16px 28px", background: notifSending ? surfAlt : `linear-gradient(135deg,${gold},${gold}cc)`, border: "none", borderRadius: 12, color: bg, fontSize: 14, fontWeight: 700, cursor: notifSending || targetUsers.length === 0 ? "not-allowed" : "pointer", opacity: targetUsers.length === 0 ? 0.5 : 1 }}>
-              {notifSending ? "Sending..." : scheduleEnabled ? `ÃƒÂ¢Ã‚ÂÃ‚Â° Schedule ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ ${targetUsers.length} user${targetUsers.length !== 1 ? "s" : ""}` : `Send Now ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ ${targetUsers.length} user${targetUsers.length !== 1 ? "s" : ""}`}
+              {notifSending ? "Sending..." : scheduleEnabled ? `ÃƒÂ¢Ã‚ÂÃ‚Â° Schedule ÃƒÂ¢–’ ${targetUsers.length} user${targetUsers.length !== 1 ? "s" : ""}` : `Send Now ÃƒÂ¢–’ ${targetUsers.length} user${targetUsers.length !== 1 ? "s" : ""}`}
             </button>
 
             {lastResult && (
@@ -7557,7 +7557,7 @@ function NotificationsTab({ T, notify, adminUser, I, users, db }) {
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: 14, fontWeight: 700, color: white, marginBottom: 4 }}>{notifForm.title || "Notification Title"}</div>
                     <div style={{ fontSize: 12, color: textSec, lineHeight: 1.5 }}>{notifForm.message || "Your notification message will appear here..."}</div>
-                    {notifForm.link && <div style={{ marginTop: 8, fontSize: 11, color: blue }}>ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ¢â‚¬â€ {notifForm.link}</div>}
+                    {notifForm.link && <div style={{ marginTop: 8, fontSize: 11, color: blue }}>ÃƒÂ°Ã…Â¸Ã¢â‚¬Â• {notifForm.link}</div>}
                     <div style={{ marginTop: 10, fontSize: 10, color: textMuted }}>Just now Ãƒâ€šÃ‚· {notifForm.type}</div>
                   </div>
                 </div>
@@ -7615,7 +7615,7 @@ function NotificationsTab({ T, notify, adminUser, I, users, db }) {
                 </div>
               )}
               <div style={{ fontSize: 11, color: blue, marginTop: 10, fontWeight: 600 }}>
-                ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ {getTargetUsers(emailTargetType, emailTargetTier).length} recipients
+                ÃƒÂ¢–’ {getTargetUsers(emailTargetType, emailTargetTier).length} recipients
               </div>
             </div>
 
@@ -7874,7 +7874,7 @@ function DigestTab({ users, db, notify, adminUser, T, I }) {
     greeting: "Hi {{name}},",
     intro: "Here's your weekly update on Dubai's real estate market.",
     sections: ["market_pulse", "top_yields", "handovers", "golden_visa", "cta"],
-    cta: "View Full Dashboard ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢",
+    cta: "View Full Dashboard ÃƒÂ¢–’",
     footer: "You're receiving this because you're a Pro subscriber."
   });
   const [previewMode, setPreviewMode] = useState(false);
@@ -7901,8 +7901,8 @@ function DigestTab({ users, db, notify, adminUser, T, I }) {
     handovers: { label: "Upcoming Handovers", desc: "Projects handing over in 6 months", icon: "ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢", color: T.teal },
     golden_visa: { label: "Golden Visa Projects", desc: "2M+ AED eligible properties", icon: "ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢", color: "#F59E0B" },
     new_launches: { label: "New Launches", desc: "Recently announced projects", icon: "ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ¢â‚¬Â¡", color: T.purple },
-    price_changes: { label: "Price Movements", desc: "Notable price changes this week", icon: "ÃƒÂ°Ã…Â¸Ã‚ÂÃ¢â‚¬Â ", color: T.blue },
-    cta: { label: "Call to Action", desc: "Link back to dashboard", icon: "ÃƒÂ°Ã…Â¸Ã¢â‚¬â€Ã¢â€žÂ¢", color: T.gold },
+    price_changes: { label: "Price Movements", desc: "Notable price changes this week", icon: "ÃƒÂ°Ã…Â¸Ã‚Â–", color: T.blue },
+    cta: { label: "Call to Action", desc: "Link back to dashboard", icon: "ÃƒÂ°Ã…Â¸•Ã¢â€žÂ¢", color: T.gold },
   };
 
   useEffect(() => {
@@ -8168,7 +8168,7 @@ function DigestTab({ users, db, notify, adminUser, T, I }) {
             <div style={{ display: "flex", gap: 10 }}>
               <button type="button" onClick={sendDigest} disabled={sending || segmentUsers.length === 0}
                 style={{ flex: 1, padding: "16px 28px", background: sending ? T.surfaceAlt : `linear-gradient(135deg,${T.gold},#B8912F)`, border: "none", borderRadius: 12, color: sending ? T.textMuted : T.bg, fontWeight: 800, fontSize: 16, cursor: sending || segmentUsers.length === 0 ? "not-allowed" : "pointer", fontFamily: "'Outfit',sans-serif", display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}>
-                {sending ? "Sending..." : `Send Digest ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ ${segmentUsers.length} users`}
+                {sending ? "Sending..." : `Send Digest ÃƒÂ¢–’ ${segmentUsers.length} users`}
               </button>
               <button type="button" onClick={sendReengagement} disabled={sending}
                 style={{ padding: "16px 20px", background: "rgba(59,130,246,.1)", border: "1px solid rgba(59,130,246,.3)", borderRadius: 12, color: T.blue, fontWeight: 700, fontSize: 13, cursor: sending ? "not-allowed" : "pointer", fontFamily: "'Outfit',sans-serif", whiteSpace: "nowrap" }}
@@ -9120,11 +9120,11 @@ const ProfileDrawerComponent = ({
                                   {(() => { try { return new Date(l.changedAt).toLocaleDateString("en-AE", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }); } catch { return "ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â"; } })()}
                                 </div>
                               </div>
-                              {/* from ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ to */}
+                              {/* from ÃƒÂ¢–’ to */}
                               {(l.from || l.to) && (
                                 <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>
                                   {l.from && <span style={{ color: T.red }}>{l.from}</span>}
-                                  {l.from && l.to && <span style={{ margin: "0 5px", color: T.textMuted }}>ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢</span>}
+                                  {l.from && l.to && <span style={{ margin: "0 5px", color: T.textMuted }}>ÃƒÂ¢–’</span>}
                                   {l.to && <span style={{ color: T.green }}>{l.to}</span>}
                                 </div>
                               )}
@@ -9711,7 +9711,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
   const ExtendConfirmModal = () => confirmExtend && (
     <Modal onClose={() => setConfirmExtend(null)} maxWidth={400}>
       <div style={{ textAlign: "center", padding: "8px 0 16px" }}>
-        <div style={{ fontSize: 40, marginBottom: 12 }}>ÃƒÂ¢Ã¢â‚¬â€œÃ¢â‚¬â„¢</div>
+        <div style={{ fontSize: 40, marginBottom: 12 }}>ÃƒÂ¢Ã¢â‚¬â€œ’</div>
         <div style={{ fontFamily: "'Fraunces',serif", fontSize: 20, fontWeight: 700, color: T.green, marginBottom: 8 }}>Extend Trial?</div>
         <div style={{ fontSize: 13, color: T.textSecondary, marginBottom: 6 }}>
           Add <strong style={{ color: T.white }}>{confirmExtend.days} days</strong> to <strong style={{ color: T.white }}>{confirmExtend.user.name || confirmExtend.user.email}</strong>'s trial
@@ -9772,7 +9772,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
     </Modal>
   );
 
-  /* FIX #14: Add User ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ Invite User (client SDK limitation explained) */
+  /* FIX #14: Add User ÃƒÂ¢–’ Invite User (client SDK limitation explained) */
   const NotifUserModal = () => notifUser && (
     <Modal onClose={() => setNotifUser(null)} maxWidth={440}>
       <ModalHeader title={`Notify ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â ${notifUser.name || notifUser.email}`} sub="Appears instantly in their notification bell" onClose={() => setNotifUser(null)} />
@@ -9917,7 +9917,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
             )}
           </div>
           <button type="button" onClick={exportFiltered} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, padding: "8px 14px", borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.textSecondary, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>{I.download} Export ({allFiltered.length})</button>
-          <button type="button" onClick={() => setShowBulkImport && setShowBulkImport(true)} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, padding: "8px 14px", borderRadius: 8, border: `1px solid ${T.teal}40`, background: `${T.teal}10`, color: T.teal, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>ÃƒÂ¢Ã¢â‚¬Â Ã‚Â Import CSV</button>
+          <button type="button" onClick={() => setShowBulkImport && setShowBulkImport(true)} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, padding: "8px 14px", borderRadius: 8, border: `1px solid ${T.teal}40`, background: `${T.teal}10`, color: T.teal, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>ÃƒÂ¢–Ã‚Â Import CSV</button>
           <button type="button" onClick={() => setShowAddUser(true)} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, padding: "8px 16px", borderRadius: 8, border: `1px solid ${T.gold}`, background: T.goldGlow, color: T.gold, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 700 }}>+ Add User <span style={{ fontSize: 10, opacity: 0.6 }}>[N]</span></button>
         </div>
       </div>
@@ -9931,7 +9931,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
           { label: "Free",         value: free,           color: T.textMuted, sub: "To convert",      border: T.border,         filter: "Free",     tip: "Free tier users" },
           { label: "At Risk",      value: atRiskCount,    color: T.red,       sub: `${AT_RISK_DAYS}d left`, border: `${T.red}25`, filter: "AtRisk", tip: `Trial ending in ${AT_RISK_DAYS} days` }, // FIX #1 + #6
           { label: "Active Today", value: activeToday,    color: T.teal,      sub: "Logged in today", border: `${T.teal}25`,    filter: null,       tip: "Logged in within 24h" },
-          { label: "Conversion",   value: convRate + "%", color: "#06B6D4",   sub: "Free ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ Paid",     border: "#06B6D425",      filter: null,       tip: "Free to paid conversion rate" },
+          { label: "Conversion",   value: convRate + "%", color: "#06B6D4",   sub: "Free ÃƒÂ¢–’ Paid",     border: "#06B6D425",      filter: null,       tip: "Free to paid conversion rate" },
         ].map(s => (
           <div key={s.label} className="kpi-card"
             onClick={() => { if (s.filter) { setTierFilter(s.filter); setPage(1); } }}
@@ -9965,7 +9965,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
                 <div style={{ fontSize: 10, color: T.textMuted, fontWeight: 600, marginTop: 2, position: "relative" }}>{s.label}</div>
                 {i > 0 && total > 0 && <div style={{ fontSize: 11, color: s.color, fontWeight: 700, marginTop: 2, position: "relative" }}>{s.pct}% of total</div>}
               </div>
-              {i < 2 && <div style={{ display: "flex", alignItems: "center", padding: "0 8px", color: T.textMuted, fontSize: 18 }}>ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢</div>}
+              {i < 2 && <div style={{ display: "flex", alignItems: "center", padding: "0 8px", color: T.textMuted, fontSize: 18 }}>ÃƒÂ¢–’</div>}
             </React.Fragment>
           ))}
         </div>
@@ -9991,7 +9991,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
             style={{ padding: "5px 12px", borderRadius: 20, border: `1px solid ${T.red}30`, background: "transparent", color: T.red, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}> Clear</button>
         )}
         <div style={{ marginLeft: "auto", fontSize: 10, color: T.textMuted, fontStyle: "italic" }}>
-          ÃƒÂ¢Ã¢â‚¬Â Ã‚ÂÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬Ëœ J/K Ãƒâ€šÃ‚· Enter=open Ãƒâ€šÃ‚· E=edit Ãƒâ€šÃ‚· N=new
+          ÃƒÂ¢–Ã‚ÂÃƒÂ¢–Ã¢â‚¬Ëœ J/K Ãƒâ€šÃ‚· Enter=open Ãƒâ€šÃ‚· E=edit Ãƒâ€šÃ‚· N=new
         </div>
       </div>
 
@@ -10254,7 +10254,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
 
               <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
                 <button type="button" title="View profile [Enter]" onClick={() => { setDrawerUser(u); setDrawerTab("details"); }}
-                  style={{ height: 28, padding: "0 8px", borderRadius: 7, border: `1px solid ${T.gold}40`, background: T.goldGlow, color: T.gold, cursor: "pointer", fontSize: 11, fontWeight: 700, fontFamily: "'Outfit',sans-serif", whiteSpace: "nowrap" }}>View ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢</button>
+                  style={{ height: 28, padding: "0 8px", borderRadius: 7, border: `1px solid ${T.gold}40`, background: T.goldGlow, color: T.gold, cursor: "pointer", fontSize: 11, fontWeight: 700, fontFamily: "'Outfit',sans-serif", whiteSpace: "nowrap" }}>View ÃƒÂ¢–’</button>
                 <button type="button" title="Edit user [E]" onClick={() => openEditUser(u)}
                   style={{ width: 28, height: 28, borderRadius: 7, border: `1px solid ${T.border}`, background: "transparent", color: T.textSecondary, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
                   <EditIcon />
@@ -10308,7 +10308,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
               </div>
               {/* FIX #22: all 9 actions available on mobile */}
               <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-                <button type="button" onClick={() => { setDrawerUser(u); setDrawerTab("details"); }} style={{ flex: 1, minWidth: 60, padding: "8px", borderRadius: 8, border: `1px solid ${T.gold}40`, background: T.goldGlow, color: T.gold, cursor: "pointer", fontSize: 11, fontWeight: 700, fontFamily: "'Outfit',sans-serif" }}>View ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢</button>
+                <button type="button" onClick={() => { setDrawerUser(u); setDrawerTab("details"); }} style={{ flex: 1, minWidth: 60, padding: "8px", borderRadius: 8, border: `1px solid ${T.gold}40`, background: T.goldGlow, color: T.gold, cursor: "pointer", fontSize: 11, fontWeight: 700, fontFamily: "'Outfit',sans-serif" }}>View ÃƒÂ¢–’</button>
                 <button type="button" onClick={() => openEditUser(u)} style={{ width: 36, height: 36, borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.textSecondary, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }} title="Edit"><EditIcon /></button>
                 <button type="button" onClick={() => setTagUser(u)} style={{ width: 36, height: 36, borderRadius: 8, border: "1px solid rgba(139,92,246,0.3)", background: "rgba(139,92,246,0.06)", color: "#8B5CF6", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14 }} title="Tags"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg></button>
                 <button type="button" onClick={() => setConfirmSuspend(u)} style={{ width: 36, height: 36, borderRadius: 8, border: "1px solid rgba(245,158,11,0.3)", background: "rgba(245,158,11,0.06)", color: "#F59E0B", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14 }} title={u.suspended ? "Unsuspend" : "Suspend"}>{u.suspended ? <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg> : <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>}</button>
@@ -10585,11 +10585,11 @@ function DataCalendar({ T, now }) {
   const [loading, setLoading] = useState(true);
 
   const calendarItems = [
-    { id: "emaar_q1_2026",  event: "Emaar Q1 2026 Results",  due: "2026-04-15", note: "emaar.com ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ Investor Relations",     icon: "[=]", priority: "high"     },
+    { id: "emaar_q1_2026",  event: "Emaar Q1 2026 Results",  due: "2026-04-15", note: "emaar.com ÃƒÂ¢–’ Investor Relations",     icon: "[=]", priority: "high"     },
     { id: "market_q1_2026", event: "Dubai Market Report Q1", due: "2026-04-30", note: "DLD Open Data + DXBinteract",         icon: "", priority: "medium"   },
-    { id: "emaar_q2_2026",  event: "Emaar Q2 2026 Results",  due: "2026-07-15", note: "emaar.com ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ Investor Relations",     icon: "[=]", priority: "high"     },
+    { id: "emaar_q2_2026",  event: "Emaar Q2 2026 Results",  due: "2026-07-15", note: "emaar.com ÃƒÂ¢–’ Investor Relations",     icon: "[=]", priority: "high"     },
     { id: "market_q2_2026", event: "Dubai Market Report Q2", due: "2026-07-30", note: "DLD Open Data + DXBinteract",         icon: "", priority: "medium"   },
-    { id: "emaar_q3_2026",  event: "Emaar Q3 2026 Results",  due: "2026-10-15", note: "emaar.com ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ Investor Relations",     icon: "[=]", priority: "high"     },
+    { id: "emaar_q3_2026",  event: "Emaar Q3 2026 Results",  due: "2026-10-15", note: "emaar.com ÃƒÂ¢–’ Investor Relations",     icon: "[=]", priority: "high"     },
     { id: "emaar_fy_2026",  event: "Emaar FY 2026 Results",  due: "2027-02-15", note: "Annual results ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â biggest of the year", icon: "", priority: "critical" },
   ];
 
@@ -10663,7 +10663,7 @@ function UpdateChecklist({ T }) {
     { id: "s1", icon: "", text: "Go to emaar.com/investor-relations",   sub: "Download the latest quarterly PDF" },
     { id: "s2", icon: "[n]", text: "Update data.js",                        sub: "Revenue, profit, EBITDA, sales, backlog" },
     { id: "s3", icon: "", text: "Update construction %",               sub: "For projects nearing handover date" },
-    { id: "s4", icon: "", text: "Run git commands",                     sub: "git add . ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ git commit -m msg ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ git push" },
+    { id: "s4", icon: "", text: "Run git commands",                     sub: "git add . ÃƒÂ¢–’ git commit -m msg ÃƒÂ¢–’ git push" },
     { id: "s5", icon: "", text: "Live in 3 minutes",                    sub: "Vercel deploys automatically on push" },
   ];
   const [checked, setChecked] = useState({});
@@ -10812,8 +10812,8 @@ function AuditLogTable({ auditLog, users, emaarProjects, fetchAuditLog, setTab, 
       const u = users.find(u => u.uid === l.uid);
       const userStr = u ? (u.name || u.email || l.uid || "") : (l.uid || "");
       const proj = emaarProjects.find(p => String(p.id) === String(l.projectId));
-      const detail = l.action === "tier_change" ? `${l.from} ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ ${l.to}`
-        : l.action === "bulk_tier_change" ? `${(l.uids||[]).length} users ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ ${l.newTier}`
+      const detail = l.action === "tier_change" ? `${l.from} ÃƒÂ¢–’ ${l.to}`
+        : l.action === "bulk_tier_change" ? `${(l.uids||[]).length} users ÃƒÂ¢–’ ${l.newTier}`
         : l.action?.includes("project") ? (proj?.name || l.projectId || "")
         : (l.tabId || l.communityKey || "");
       rows.push([time, action, by, ip, userStr, detail, l.from || "", l.to || l.newTier || ""]);
@@ -10925,14 +10925,14 @@ function AuditLogTable({ auditLog, users, emaarProjects, fetchAuditLog, setTab, 
             style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 14px", background: `${T.teal}12`, border: `1px solid ${T.teal}35`, borderRadius: 9, color: T.teal, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif", transition: "all 0.15s" }}
             onMouseEnter={e => { e.currentTarget.style.background = `${T.teal}22`; }}
             onMouseLeave={e => { e.currentTarget.style.background = `${T.teal}12`; }}>
-            ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬Ëœ CSV
+            ÃƒÂ¢–Ã¢â‚¬Ëœ CSV
           </button>
           {/* JSON export */}
           <button type="button" onClick={exportJSON}
             style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 14px", background: `${T.purple}12`, border: `1px solid ${T.purple}35`, borderRadius: 9, color: T.purple, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif", transition: "all 0.15s" }}
             onMouseEnter={e => { e.currentTarget.style.background = `${T.purple}22`; }}
             onMouseLeave={e => { e.currentTarget.style.background = `${T.purple}12`; }}>
-            ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬Ëœ JSON
+            ÃƒÂ¢–Ã¢â‚¬Ëœ JSON
           </button>
           {/* Refresh */}
           <button type="button" onClick={fetchAuditLog}
@@ -11138,12 +11138,12 @@ function AuditLogTable({ auditLog, users, emaarProjects, fetchAuditLog, setTab, 
                             <span style={{ fontSize: 11, fontWeight: 700, padding: "3px 9px", borderRadius: 6, background: `${tierColor[log.from]||"#94A3B8"}18`, color: tierColor[log.from]||"#94A3B8", border: `1px solid ${tierColor[log.from]||"#94A3B8"}35` }}>
                               {tierLabel[log.from]||log.from||"ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â"}
                             </span>
-                            <span style={{ fontSize: 12, color: T.textMuted, fontWeight: 700 }}>ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢</span>
+                            <span style={{ fontSize: 12, color: T.textMuted, fontWeight: 700 }}>ÃƒÂ¢–’</span>
                             <span style={{ fontSize: 11, fontWeight: 700, padding: "3px 9px", borderRadius: 6, background: `${tierColor[log.to]||"#94A3B8"}18`, color: tierColor[log.to]||"#94A3B8", border: `1px solid ${tierColor[log.to]||"#94A3B8"}35` }}>
                               {tierLabel[log.to]||log.to||"ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â"}
                             </span>
                             {isClickable && (
-                              <span style={{ fontSize: 10, color: T.gold, fontWeight: 600, marginLeft: 4 }}>View profile ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢</span>
+                              <span style={{ fontSize: 10, color: T.gold, fontWeight: 600, marginLeft: 4 }}>View profile ÃƒÂ¢–’</span>
                             )}
                           </div>
                         </div>
@@ -11192,7 +11192,7 @@ function AuditLogTable({ auditLog, users, emaarProjects, fetchAuditLog, setTab, 
                                   <div key={k} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, background: "rgba(255,255,255,0.04)", padding: "4px 10px", borderRadius: 7, border: `1px solid ${T.border}` }}>
                                     <span style={{ color: T.textMuted, fontWeight: 700, fontSize: 10, textTransform: "uppercase" }}>{k}:</span>
                                     <span style={{ color: "#F87171", textDecoration: "line-through", fontSize: 10 }}>{String(v.old||"ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â").slice(0,20)}</span>
-                                    <span style={{ color: T.textMuted, fontSize: 10 }}>ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢</span>
+                                    <span style={{ color: T.textMuted, fontSize: 10 }}>ÃƒÂ¢–’</span>
                                     <span style={{ color: "#4ADE80", fontSize: 10, fontWeight: 600 }}>{String(v.new||"ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â").slice(0,20)}</span>
                                   </div>
                                 ))}
@@ -11211,7 +11211,7 @@ function AuditLogTable({ auditLog, users, emaarProjects, fetchAuditLog, setTab, 
                           <div style={{ display: "flex", flexWrap: "wrap", gap: 5, marginTop: 5 }}>
                             {Object.entries(log.diff).slice(0,3).map(([k,v]) => (
                               <span key={k} style={{ fontSize: 10, background: "rgba(255,255,255,0.04)", padding: "3px 8px", borderRadius: 5, color: T.textMuted }}>
-                                {k}: <span style={{ color: "#F87171", textDecoration: "line-through" }}>{String(v.old||"ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â").slice(0,12)}</span> ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ <span style={{ color: "#4ADE80" }}>{String(v.new||"ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â").slice(0,12)}</span>
+                                {k}: <span style={{ color: "#F87171", textDecoration: "line-through" }}>{String(v.old||"ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â").slice(0,12)}</span> ÃƒÂ¢–’ <span style={{ color: "#4ADE80" }}>{String(v.new||"ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â").slice(0,12)}</span>
                               </span>
                             ))}
                           </div>
@@ -11291,7 +11291,7 @@ function FinancialsEditor({ db, T, notify, adminUser, Section }) {
   return (
     <Section title="Financials Editor" sub="Update Emaar financial data ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â changes go live on dashboard immediately">
       <div style={{ padding: "12px 16px", borderRadius: 10, background: "rgba(212,168,67,0.06)", border: `1px solid ${T.border}`, marginBottom: 20, fontSize: 12, color: T.textSecondary, lineHeight: 1.6 }}>
-        ÃƒÂ°Ã…Â¸Ã¢â‚¬â„¢Ã‚Â¡ Edit figures below when Emaar releases new quarterly or annual results. All values in AED Billions unless noted.
+        ÃƒÂ°Ã…Â¸’Ã‚Â¡ Edit figures below when Emaar releases new quarterly or annual results. All values in AED Billions unless noted.
       </div>
       <div style={{ overflowX: "auto" }}>
         <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 900 }}>
@@ -11321,7 +11321,7 @@ function FinancialsEditor({ db, T, notify, adminUser, Section }) {
       </div>
       <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 16, gap: 10 }}>
         <button type="button" onClick={resetFinancials}
-          style={{ padding: "10px 20px", borderRadius: 8, border: "1px solid rgba(239,68,68,0.3)", background: "rgba(239,68,68,0.06)", color: T.red, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>ÃƒÂ¢Ã¢â‚¬Â Ã‚Âº Reset to Defaults</button>
+          style={{ padding: "10px 20px", borderRadius: 8, border: "1px solid rgba(239,68,68,0.3)", background: "rgba(239,68,68,0.06)", color: T.red, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>ÃƒÂ¢–Ã‚Âº Reset to Defaults</button>
         <button type="button" onClick={saveFinancials} disabled={finSaving}
           style={{ padding: "10px 24px", borderRadius: 8, border: "none", background: `linear-gradient(135deg, ${T.gold}, ${T.goldLight})`, color: T.bg, fontSize: 13, fontWeight: 700, cursor: finSaving ? "wait" : "pointer", fontFamily: "'Outfit',sans-serif", opacity: finSaving ? 0.7 : 1 }}>
           {finSaving ? "Saving..." : "Save Financials to Firestore"}
@@ -11376,7 +11376,7 @@ function RiskEditor({ db, T, notify, adminUser, Section }) {
   return (
     <Section title="Risk Factor Editor" sub="Update the 9-factor risk matrix shown on the Risk tab">
       <div style={{ padding: "12px 16px", borderRadius: 10, background: "rgba(239,68,68,0.05)", border: "1px solid rgba(239,68,68,0.15)", marginBottom: 20, fontSize: 12, color: T.textSecondary, lineHeight: 1.6 }}>
-        ÃƒÂ°Ã…Â¸Ã¢â‚¬â„¢Ã‚Â¡ Score is out of 10 (10 = lowest risk). Trend: improving / stable / worsening. Changes save to Firestore and update the Risk tab live.
+        ÃƒÂ°Ã…Â¸’Ã‚Â¡ Score is out of 10 (10 = lowest risk). Trend: improving / stable / worsening. Changes save to Firestore and update the Risk tab live.
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
         {riskRows.map((row, i) => (
@@ -11392,9 +11392,9 @@ function RiskEditor({ db, T, notify, adminUser, Section }) {
               <label style={{ fontSize: 9, color: T.textMuted, display: "block", marginBottom: 2, textTransform: "uppercase" }}>Trend</label>
               <select value={row.trend} onChange={e => { const u = [...riskRows]; u[i] = { ...u[i], trend: e.target.value }; setRiskRows(u); }}
                 style={{ width: "100%", padding: "6px 8px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 6, color: row.trend === "improving" ? T.green : row.trend === "worsening" ? T.red : T.textSecondary, fontSize: 12, fontFamily: "'Outfit',sans-serif" }}>
-                <option value="improving">ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬Ëœ Improving</option>
-                <option value="stable">ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ Stable</option>
-                <option value="worsening">ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬Å“ Worsening</option>
+                <option value="improving">ÃƒÂ¢–Ã¢â‚¬Ëœ Improving</option>
+                <option value="stable">ÃƒÂ¢–’ Stable</option>
+                <option value="worsening">ÃƒÂ¢–Ã¢â‚¬Å“ Worsening</option>
               </select>
             </div>
             <div style={{ textAlign: "center" }}>
@@ -11412,7 +11412,7 @@ function RiskEditor({ db, T, notify, adminUser, Section }) {
       </div>
       <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 16, gap: 10 }}>
         <button type="button" onClick={resetRisk}
-          style={{ padding: "10px 20px", borderRadius: 8, border: "1px solid rgba(239,68,68,0.3)", background: "rgba(239,68,68,0.06)", color: T.red, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>ÃƒÂ¢Ã¢â‚¬Â Ã‚Âº Reset to Defaults</button>
+          style={{ padding: "10px 20px", borderRadius: 8, border: "1px solid rgba(239,68,68,0.3)", background: "rgba(239,68,68,0.06)", color: T.red, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>ÃƒÂ¢–Ã‚Âº Reset to Defaults</button>
         <button type="button" onClick={saveRisk} disabled={riskSaving}
           style={{ padding: "10px 24px", borderRadius: 8, border: "none", background: `linear-gradient(135deg, ${T.gold}, ${T.goldLight})`, color: T.bg, fontSize: 13, fontWeight: 700, cursor: riskSaving ? "wait" : "pointer", fontFamily: "'Outfit',sans-serif", opacity: riskSaving ? 0.7 : 1 }}>
           {riskSaving ? "Saving..." : "Save Risk Data to Firestore"}
@@ -11466,7 +11466,7 @@ function MarketEditor({ db, T, notify, adminUser, Section }) {
   return (
     <Section title="Market Data Editor" sub="Update market stats shown on the Market tab ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â saves to Firestore">
       <div style={{ padding: "12px 16px", borderRadius: 10, background: "rgba(59,130,246,0.05)", border: "1px solid rgba(59,130,246,0.15)", marginBottom: 20, fontSize: 12, color: T.textSecondary, lineHeight: 1.6 }}>
-        ÃƒÂ°Ã…Â¸Ã¢â‚¬â„¢Ã‚Â¡ Update these figures when new DLD, REIDIN, or Knight Frank reports are released.
+        ÃƒÂ°Ã…Â¸’Ã‚Â¡ Update these figures when new DLD, REIDIN, or Knight Frank reports are released.
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
         <div style={{ display: "grid", gridTemplateColumns: "1.5fr 1fr 1fr 1fr 1fr 1fr 40px", gap: 8, padding: "6px 10px" }}>
@@ -11486,7 +11486,7 @@ function MarketEditor({ db, T, notify, adminUser, Section }) {
                 style={{ width: "100%", padding: "7px 10px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 6, color: T.textPrimary, fontSize: 12, fontFamily: "'Outfit',sans-serif", outline: "none" }} />
             ))}
             <button type="button" onClick={() => setMktRows(prev => prev.filter((_, j) => j !== i))}
-              style={{ width: 32, height: 32, borderRadius: 6, border: "1px solid rgba(239,68,68,0.3)", background: "rgba(239,68,68,0.08)", color: T.red, cursor: "pointer", fontSize: 14, display: "flex", alignItems: "center", justifyContent: "center" }}>ÃƒÆ’Ã¢â‚¬â€</button>
+              style={{ width: 32, height: 32, borderRadius: 6, border: "1px solid rgba(239,68,68,0.3)", background: "rgba(239,68,68,0.08)", color: T.red, cursor: "pointer", fontSize: 14, display: "flex", alignItems: "center", justifyContent: "center" }}>ÃƒÆ’•</button>
           </div>
         ))}
       </div>
@@ -11495,7 +11495,7 @@ function MarketEditor({ db, T, notify, adminUser, Section }) {
           <button type="button" onClick={() => setMktRows(prev => [...prev, { metric: "", value: "", period: "", source: "", change: "", category: "" }])}
             style={{ padding: "9px 18px", borderRadius: 8, border: `1px solid ${T.teal}`, background: "rgba(0,191,165,0.08)", color: T.teal, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>+ Add Row</button>
           <button type="button" onClick={resetToDefaults}
-            style={{ padding: "9px 18px", borderRadius: 8, border: "1px solid rgba(239,68,68,0.3)", background: "rgba(239,68,68,0.06)", color: T.red, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>ÃƒÂ¢Ã¢â‚¬Â Ã‚Âº Reset to Defaults</button>
+            style={{ padding: "9px 18px", borderRadius: 8, border: "1px solid rgba(239,68,68,0.3)", background: "rgba(239,68,68,0.06)", color: T.red, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>ÃƒÂ¢–Ã‚Âº Reset to Defaults</button>
         </div>
         <button type="button" onClick={saveMarket} disabled={mktSaving}
           style={{ padding: "10px 24px", borderRadius: 8, border: "none", background: `linear-gradient(135deg, ${T.gold}, ${T.goldLight})`, color: T.bg, fontSize: 13, fontWeight: 700, cursor: mktSaving ? "wait" : "pointer", fontFamily: "'Outfit',sans-serif", opacity: mktSaving ? 0.7 : 1 }}>
@@ -11979,7 +11979,7 @@ function LaunchRadar({ db, T, notify }) {
                   {ALL_DEVELOPERS.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
                 </select>
                 <div style={{ fontSize: 10, color: T.green, marginTop: 4 }}>
-                  ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ Appears in dashboard when user selects <strong>{ALL_DEVELOPERS.find(d => d.id === modalForm.developerId)?.name}</strong>
+                  ÃƒÂ¢–’ Appears in dashboard when user selects <strong>{ALL_DEVELOPERS.find(d => d.id === modalForm.developerId)?.name}</strong>
                 </div>
               </div>
 
@@ -12181,7 +12181,7 @@ function LiveDataSync({ db, T, notify }) {
           { icon: "ÃƒÂ¢Ã…Â¡Ã‚Â¡", label: "Vercel API Route", sub: "api/sync-market-data.js", status: "deploy", note: "Enables live Bayut" },
         ].map((src, i) => {
           const statusColors = { live: T.green, available: T.teal, active: T.gold, pending: T.textMuted, deploy: "#8B5CF6" };
-          const statusLabels = { live: "ÃƒÂ¢Ã¢â‚¬â€Ã‚Â Live", available: "ÃƒÂ¢Ã¢â‚¬â€Ã‚Â Available", active: "ÃƒÂ¢Ã¢â‚¬â€Ã‚Â Active", pending: "ÃƒÂ¢Ã¢â‚¬â€Ã¢â‚¬Â¹ Pending", deploy: "Deploy" };
+          const statusLabels = { live: "ÃƒÂ¢•Ã‚Â Live", available: "ÃƒÂ¢•Ã‚Â Available", active: "ÃƒÂ¢•Ã‚Â Active", pending: "ÃƒÂ¢•Ã¢â‚¬Â¹ Pending", deploy: "Deploy" };
           return (
             <div key={i} style={{ padding: "14px 16px", background: T.surface, border: `1px solid ${T.border}`, borderRadius: 10 }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
@@ -12300,7 +12300,7 @@ function DeveloperManager({ db, T, notify, adminUser, Section }) {
   return (
     <Section title="Developer Manager" sub="Manage all developers on the platform ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â activate to show in dashboard">
       <div style={{ padding: "12px 16px", borderRadius: 10, background: "rgba(212,168,67,0.06)", border: `1px solid ${T.border}`, marginBottom: 20, fontSize: 12, color: T.textSecondary, lineHeight: 1.6 }}>
-        ÃƒÂ°Ã…Â¸Ã¢â‚¬â„¢Ã‚Â¡ Set a developer to <strong style={{ color: T.green }}>Active</strong> to show it in the dashboard developer selector. Projects with that developer's ID will automatically appear. The platform supports 228+ developers.
+        ÃƒÂ°Ã…Â¸’Ã‚Â¡ Set a developer to <strong style={{ color: T.green }}>Active</strong> to show it in the dashboard developer selector. Projects with that developer's ID will automatically appear. The platform supports 228+ developers.
       </div>
 
       {/* Active Developers */}
@@ -13034,7 +13034,7 @@ export default function AdminPanel() {
     try {
       await setDoc(doc(db, "organisations", orgId), { plan, updatedAt: new Date().toISOString() }, { merge: true });
       await logAudit(db, { action: "org_plan_changed", orgId, plan });
-      notify("Plan updated ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ " + plan);
+      notify("Plan updated ÃƒÂ¢–’ " + plan);
     } catch(e) { notify("Error: " + e.message); }
   };
 
@@ -13042,7 +13042,7 @@ export default function AdminPanel() {
     try {
       await setDoc(doc(db, "organisations", orgId), { status, updatedAt: new Date().toISOString() }, { merge: true });
       await logAudit(db, { action: "org_status_changed", orgId, status });
-      notify("Status updated ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ " + status);
+      notify("Status updated ÃƒÂ¢–’ " + status);
     } catch(e) { notify("Error: " + e.message); }
   };
 
@@ -13431,7 +13431,7 @@ export default function AdminPanel() {
     if (previous === 0 && current === 0) return { pct: 0, dir: "flat", label: "ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â" };
     if (previous === 0) return { pct: 100, dir: "up", label: `+${current} new` };
     const pct = Math.round(((current - previous) / previous) * 100);
-    return { pct: Math.abs(pct), dir: pct > 0 ? "up" : pct < 0 ? "down" : "flat", label: pct > 0 ? `ÃƒÂ¢Ã¢â‚¬Â Ã‚Â${Math.abs(pct)}%` : pct < 0 ? `ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬Ëœ${Math.abs(pct)}%` : "=" };
+    return { pct: Math.abs(pct), dir: pct > 0 ? "up" : pct < 0 ? "down" : "flat", label: pct > 0 ? `ÃƒÂ¢–Ã‚Â${Math.abs(pct)}%` : pct < 0 ? `ÃƒÂ¢–Ã¢â‚¬Ëœ${Math.abs(pct)}%` : "=" };
   };
   const usersTrend  = weekTrend(stats.thisWeek, usersLastWeekTotal);
   const mrrTrend    = weekTrend(paidLastWeek.thisWeek, paidLastWeek.lastWeek);
@@ -14353,7 +14353,7 @@ export default function AdminPanel() {
       }
       
       await logAudit(db, { action: "community_combined_update", communityKey }).catch(() => {});
-      notify("Community data saved ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ Live on dashboard");
+      notify("Community data saved ÃƒÂ¢–’ Live on dashboard");
       fetchLiveData();
     } catch (e) { notify("Error: " + e.message); }
     setDataSaving(false);
@@ -14787,7 +14787,7 @@ export default function AdminPanel() {
               <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.2, marginBottom: 4 }}>{title}</div>
               {subtitle && <div style={{ fontSize: 12, color: T.textSecondary }}>{subtitle}</div>}
             </div>
-            <button type="button" onClick={() => setKpiDrill(null)} style={{ background: "none", border: `1px solid ${T.border}`, borderRadius: 8, width: 28, height: 28, cursor: "pointer", color: T.textMuted, fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center" }}>ÃƒÆ’Ã¢â‚¬â€</button>
+            <button type="button" onClick={() => setKpiDrill(null)} style={{ background: "none", border: `1px solid ${T.border}`, borderRadius: 8, width: 28, height: 28, cursor: "pointer", color: T.textMuted, fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center" }}>ÃƒÆ’•</button>
           </div>
           {/* Metric items */}
           {items && items.map((item, i) => (
@@ -14954,7 +14954,7 @@ export default function AdminPanel() {
               ))}
               <button type="button" onClick={() => { setCohortDrilldown(null); setTab("users"); }}
                 style={{ width: "100%", marginTop: 16, padding: "10px", borderRadius: 8, border: `1px solid ${T.gold}`, background: T.goldGlow, color: T.gold, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
-                View All in Users Tab ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢
+                View All in Users Tab ÃƒÂ¢–’
               </button>
             </div>
           </div>
@@ -15154,8 +15154,8 @@ export default function AdminPanel() {
                     subtitle: `Monthly Recurring Revenue Ãƒâ€šÃ‚· ARR: AED ${arr.toLocaleString()}`,
                     items: [
                       { label: "Total MRR", value: `AED ${mrr.toLocaleString()}`, color: T.green },
-                      { label: "Enterprise (AED 499/mo)", value: `${stats.enterprise} users Ãƒâ€šÃ‚· AED ${(stats.enterprise * 499).toLocaleString()}`, note: "AED 499 ÃƒÆ’Ã¢â‚¬â€ users" },
-                      { label: "Pro (AED 99/mo)", value: `${stats.pro} users Ãƒâ€šÃ‚· AED ${(stats.pro * 99).toLocaleString()}`, note: "AED 99 ÃƒÆ’Ã¢â‚¬â€ users" },
+                      { label: "Enterprise (AED 499/mo)", value: `${stats.enterprise} users Ãƒâ€šÃ‚· AED ${(stats.enterprise * 499).toLocaleString()}`, note: "AED 499 ÃƒÆ’• users" },
+                      { label: "Pro (AED 99/mo)", value: `${stats.pro} users Ãƒâ€šÃ‚· AED ${(stats.pro * 99).toLocaleString()}`, note: "AED 99 ÃƒÆ’• users" },
                       { label: "Annual Run Rate (ARR)", value: `AED ${arr.toLocaleString()}`, color: T.green },
                       { label: "New MRR this month", value: `+AED ${newMRRThisMonth.toLocaleString()}`, color: T.green },
                       { label: "Churned MRR this month", value: `-AED ${churnedMRR.toLocaleString()}`, color: churnedMRR > 0 ? T.red : T.textMuted },
@@ -15169,7 +15169,7 @@ export default function AdminPanel() {
                     <div style={{ fontSize: 10, color: T.textMuted, marginTop: 6 }}>ARR: AED {arr.toLocaleString()}</div>
                     <div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 5 }}>
                       <span style={{ fontSize: 10, fontWeight: 700, color: mrrTrend.dir === "up" ? T.green : mrrTrend.dir === "down" ? T.red : T.textMuted }}>
-                        {mrrTrend.dir === "up" ? "ÃƒÂ¢Ã¢â‚¬Â Ã‚Â" : mrrTrend.dir === "down" ? "ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬Ëœ" : "ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â"} {mrrTrend.label}
+                        {mrrTrend.dir === "up" ? "ÃƒÂ¢–Ã‚Â" : mrrTrend.dir === "down" ? "ÃƒÂ¢–Ã¢â‚¬Ëœ" : "ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â"} {mrrTrend.label}
                       </span>
                       <span style={{ fontSize: 9, color: T.textMuted }}>vs last week</span>
                     </div>
@@ -15196,11 +15196,11 @@ export default function AdminPanel() {
                     <div style={{ fontSize: 10, color: T.textMuted, marginTop: 6 }}>+{stats.today} today</div>
                     <div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 5 }}>
                       <span style={{ fontSize: 10, fontWeight: 700, color: usersTrend.dir === "up" ? T.green : usersTrend.dir === "down" ? T.red : T.textMuted }}>
-                        {usersTrend.dir === "up" ? "ÃƒÂ¢Ã¢â‚¬Â Ã‚Â" : usersTrend.dir === "down" ? "ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬Ëœ" : "ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â"} {usersTrend.label}
+                        {usersTrend.dir === "up" ? "ÃƒÂ¢–Ã‚Â" : usersTrend.dir === "down" ? "ÃƒÂ¢–Ã¢â‚¬Ëœ" : "ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â"} {usersTrend.label}
                       </span>
                       <span style={{ fontSize: 9, color: T.textMuted }}>vs last week</span>
                     </div>
-                    <div style={{ fontSize: 9, color: T.gold, marginTop: 4, opacity: 0.7 }}>click to view ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢</div>
+                    <div style={{ fontSize: 9, color: T.gold, marginTop: 4, opacity: 0.7 }}>click to view ÃƒÂ¢–’</div>
                   </div>
 
                   {/* 3 ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Paid Users */}
@@ -15212,7 +15212,7 @@ export default function AdminPanel() {
                       { label: "Pro (AED 99/mo)", value: stats.pro, note: `AED ${(stats.pro * 99).toLocaleString()} MRR` },
                       { label: "Enterprise (AED 499/mo)", value: stats.enterprise, note: `AED ${(stats.enterprise * 499).toLocaleString()} MRR`, color: T.gold },
                       { label: "Conversion Rate", value: `${stats.total > 0 ? Math.round((stats.paid / stats.total) * 100) : 0}%`, note: "Paid ÃƒÆ’Ã‚· Total Users" },
-                      { label: "Trial ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ Paid Rate", value: `${trialConversion}%`, note: "Of all who ever trialled" },
+                      { label: "Trial ÃƒÂ¢–’ Paid Rate", value: `${trialConversion}%`, note: "Of all who ever trialled" },
                       { label: "ARPU (paying users)", value: `AED ${arpu}`, color: T.teal },
                     ],
                     actions: [
@@ -15228,7 +15228,7 @@ export default function AdminPanel() {
                       <span style={{ fontSize: 10, fontWeight: 700, color: T.teal }}>{stats.total > 0 ? Math.round((stats.paid / stats.total) * 100) : 0}%</span>
                       <span style={{ fontSize: 9, color: T.textMuted }}>conversion rate</span>
                     </div>
-                    <div style={{ fontSize: 9, color: T.teal, marginTop: 4, opacity: 0.7 }}>click to view ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢</div>
+                    <div style={{ fontSize: 9, color: T.teal, marginTop: 4, opacity: 0.7 }}>click to view ÃƒÂ¢–’</div>
                   </div>
 
                   {/* 4 ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Active Trials */}
@@ -15240,7 +15240,7 @@ export default function AdminPanel() {
                       { label: "At Risk (3 days left)", value: stats.atRisk, color: stats.atRisk > 0 ? T.red : T.textMuted, note: stats.atRisk > 0 ? "Need immediate attention" : "None at risk" },
                       { label: "Expiring in 7 days", value: users.filter(u => u.tier === "pro_trial" && u.trialEnd && trialDaysLeft(u) >= 0 && trialDaysLeft(u) <= 7).length, color: T.gold },
                       { label: "Expired (not converted)", value: stats.expired, color: stats.expired > 0 ? T.red : T.textMuted },
-                      { label: "Trial ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ Paid conversion", value: `${trialConversion}%`, note: `${stats.pro} converted of ${everTrialled} ever trialled` },
+                      { label: "Trial ÃƒÂ¢–’ Paid conversion", value: `${trialConversion}%`, note: `${stats.pro} converted of ${everTrialled} ever trialled` },
                       { label: "Avg days left (active)", value: (() => { const active = users.filter(u => u.tier === "pro_trial"); if (!active.length) return "ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â"; const avg = active.reduce((s, u) => s + Math.max(0, trialDaysLeft(u)), 0) / active.length; return `${Math.round(avg)} days`; })() },
                     ],
                     actions: [
@@ -15255,12 +15255,12 @@ export default function AdminPanel() {
                       {stats.atRisk > 0 ? `${stats.atRisk} at risk` : "No at-risk trials"}
                     </div>
                     <div style={{ fontSize: 10, color: T.textMuted, marginTop: 4 }}>{stats.expired} expired</div>
-                    <div style={{ fontSize: 9, color: T.gold, marginTop: 4, opacity: 0.7 }}>click to view ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢</div>
+                    <div style={{ fontSize: 9, color: T.gold, marginTop: 4, opacity: 0.7 }}>click to view ÃƒÂ¢–’</div>
                   </div>
 
                   {/* 5 ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Trial Conversion */}
                   <div className="kpi-card fade-up" style={{ animationDelay: "0.16s", cursor: "pointer" }} onClick={() => setKpiDrill({
-                    title: "Trial ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ Paid Conversion", color: "#3B82F6",
+                    title: "Trial ÃƒÂ¢–’ Paid Conversion", color: "#3B82F6",
                     subtitle: "How effectively trials convert to paying users",
                     items: [
                       { label: "Conversion Rate", value: `${trialConversion}%`, color: "#3B82F6" },
@@ -15274,7 +15274,7 @@ export default function AdminPanel() {
                     actions: [{ label: "View Expired Trials", color: "#3B82F6", fn: () => { setTab("users"); setTierFilter("Expired"); } }]
                   })}>
                     <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: "#3B82F6", opacity: 0.7, borderRadius: "16px 16px 0 0" }} />
-                    <div style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, letterSpacing: 1.2, textTransform: "uppercase", marginBottom: 8 }}>Trial ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ Paid</div>
+                    <div style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, letterSpacing: 1.2, textTransform: "uppercase", marginBottom: 8 }}>Trial ÃƒÂ¢–’ Paid</div>
                     <div style={{ fontFamily: "'Fraunces',serif", fontSize: 22, fontWeight: 900, color: "#3B82F6", lineHeight: 1 }}>{trialConversion}%</div>
                     <div style={{ fontSize: 10, color: T.textMuted, marginTop: 6 }}>{stats.pro} converted</div>
                     <div style={{ fontSize: 10, color: T.textMuted, marginTop: 4 }}>{stats.expired} expired</div>
@@ -15292,7 +15292,7 @@ export default function AdminPanel() {
                       { label: "ARPU (all users)", value: `AED ${arpuAll}`, note: "MRR ÃƒÆ’Ã‚· total users" },
                       { label: "Enterprise ARPU", value: "AED 499", note: "Per enterprise user/mo" },
                       { label: "Pro ARPU", value: "AED 99", note: "Per pro user/mo" },
-                      { label: "LTV estimate (12mo)", value: `AED ${(arpu * 12).toLocaleString()}`, note: "ARPU ÃƒÆ’Ã¢â‚¬â€ 12 months", color: "#8B5CF6" },
+                      { label: "LTV estimate (12mo)", value: `AED ${(arpu * 12).toLocaleString()}`, note: "ARPU ÃƒÆ’• 12 months", color: "#8B5CF6" },
                       { label: "To reach AED 10K MRR", value: (() => { if (arpu === 0) return "ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â"; const needed = Math.ceil((10000 - mrr) / arpu); return needed > 0 ? `${needed} more paid users` : "Already exceeded"; })(), note: "At current ARPU" },
                     ],
                   })}>
@@ -15322,7 +15322,7 @@ export default function AdminPanel() {
                     <div style={{ fontFamily: "'Fraunces',serif", fontSize: 22, fontWeight: 900, color: T.teal, lineHeight: 1 }}>{stats.activeToday}</div>
                     <div style={{ fontSize: 10, color: T.textMuted, marginTop: 6 }}>{stats.activeThisWeek} this week</div>
                     <div style={{ fontSize: 10, color: T.textMuted, marginTop: 4 }}>{stats.total > 0 ? Math.round((stats.activeToday / stats.total) * 100) : 0}% of all users</div>
-                    <div style={{ fontSize: 9, color: T.teal, marginTop: 4, opacity: 0.7 }}>click to view ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢</div>
+                    <div style={{ fontSize: 9, color: T.teal, marginTop: 4, opacity: 0.7 }}>click to view ÃƒÂ¢–’</div>
                   </div>
 
                 </div>
@@ -15351,7 +15351,7 @@ export default function AdminPanel() {
                         <span style={{ color: T.textMuted }}>Last week</span>
                       </div>
                       <div style={{ padding: "3px 10px", borderRadius: 6, background: signupTrend.dir === "up" ? "rgba(16,185,129,0.1)" : signupTrend.dir === "down" ? "rgba(239,68,68,0.1)" : T.surfaceAlt, fontSize: 11, fontWeight: 700, color: signupTrend.dir === "up" ? T.green : signupTrend.dir === "down" ? T.red : T.textMuted }}>
-                        {signupTrend.dir === "up" ? "ÃƒÂ¢Ã¢â‚¬Â Ã‚Â" : signupTrend.dir === "down" ? "ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬Ëœ" : ""} {signupThisWeek} vs {signupLastWeek} last week
+                        {signupTrend.dir === "up" ? "ÃƒÂ¢–Ã‚Â" : signupTrend.dir === "down" ? "ÃƒÂ¢–Ã¢â‚¬Ëœ" : ""} {signupThisWeek} vs {signupLastWeek} last week
                       </div>
                     </div>
                   </div>
@@ -15694,7 +15694,7 @@ export default function AdminPanel() {
                           <div>
                             <div style={{ fontSize: 12, color: T.white, fontWeight: 600 }}>{(() => { const u = users.find(x => x.uid === ev.uid || x.uid === ev.userId); return ev.userName || ev.userEmail || u?.name || u?.email || ev.uid?.slice(0,8) || "Unknown"; })()}</div>
                             <div style={{ fontSize: 10, color: T.textMuted, marginTop: 2 }}>
-                              <span style={{ color: T.red, fontWeight: 600 }}>{ev.from}</span> ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ <span style={{ color: T.textSecondary }}>{ev.to}</span>
+                              <span style={{ color: T.red, fontWeight: 600 }}>{ev.from}</span> ÃƒÂ¢–’ <span style={{ color: T.textSecondary }}>{ev.to}</span>
                             </div>
                           </div>
                           <span style={{ fontSize: 10, color: T.textMuted, flexShrink: 0 }}>{timeSince(ev.changedAt)}</span>
@@ -16408,8 +16408,8 @@ export default function AdminPanel() {
                         <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.2, marginBottom: 16 }}>MRR Movement ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â This Month</div>
                         {[
                           { label: "Starting MRR",  value: mrr - netMRR,       color: T.textSecondary },
-                          { label: "New MRR",        value: newMRRThisMonth,    color: T.green,  arrow: "ÃƒÂ¢Ã¢â‚¬Â Ã‚Â" },
-                          { label: "Churned MRR",    value: -churnedMRR,        color: T.red,    arrow: "ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬Ëœ" },
+                          { label: "New MRR",        value: newMRRThisMonth,    color: T.green,  arrow: "ÃƒÂ¢–Ã‚Â" },
+                          { label: "Churned MRR",    value: -churnedMRR,        color: T.red,    arrow: "ÃƒÂ¢–Ã¢â‚¬Ëœ" },
                           { label: "Net MRR",        value: mrr,                color: netMRR >= 0 ? T.green : T.red, bold: true },
                         ].map((row, i) => (
                           <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 0", borderBottom: i < 3 ? `1px solid ${T.border}` : "none" }}>
@@ -16456,8 +16456,8 @@ export default function AdminPanel() {
                           <span style={{ fontSize: 15, fontWeight: 800, color: T.green, fontFamily: "'Fraunces',serif" }}>AED {mrr.toLocaleString()}</span>
                         </div>
                         <div style={{ marginTop: 10, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                          <span style={{ fontSize: 11, color: T.textMuted, cursor: "pointer" }} onClick={() => { setTab("users"); setTierFilter("Pro"); }}>View Pro users ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢</span>
-                          <span style={{ fontSize: 11, color: T.textMuted, cursor: "pointer" }} onClick={() => { setTab("users"); setTierFilter("Enterprise"); }}>View Enterprise ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢</span>
+                          <span style={{ fontSize: 11, color: T.textMuted, cursor: "pointer" }} onClick={() => { setTab("users"); setTierFilter("Pro"); }}>View Pro users ÃƒÂ¢–’</span>
+                          <span style={{ fontSize: 11, color: T.textMuted, cursor: "pointer" }} onClick={() => { setTab("users"); setTierFilter("Enterprise"); }}>View Enterprise ÃƒÂ¢–’</span>
                         </div>
                       </div>
 
@@ -16567,7 +16567,7 @@ export default function AdminPanel() {
                       {/* Conversion Funnel */}
                       <div className="chart-box fade-up" style={{ padding: 20, animationDelay: "0.05s" }}>
                         <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 4 }}>Conversion Funnel</div>
-                        <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 16 }}>Signup ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ Trial ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ Paid</div>
+                        <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 16 }}>Signup ÃƒÂ¢–’ Trial ÃƒÂ¢–’ Paid</div>
                         {[
                           { label: "Total Signups",     value: stats.total,    color: T.textSecondary, filter: null },
                           { label: "Started Trial",     value: everTrialled,   color: T.gold,          filter: "Pro Trial" },
@@ -16602,11 +16602,11 @@ export default function AdminPanel() {
                             </div>
                           </div>
                           <div>
-                            <div style={{ fontSize: 9, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, fontWeight: 700 }}>Trial ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ Paid</div>
+                            <div style={{ fontSize: 9, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, fontWeight: 700 }}>Trial ÃƒÂ¢–’ Paid</div>
                             <div style={{ fontSize: 18, fontWeight: 800, color: trialConversion >= 25 ? T.green : T.gold, fontFamily: "'Fraunces',serif" }}>
                               {trialConversion}%
                             </div>
-                            <div style={{ fontSize: 9, color: T.textMuted }}>{trialConversion >= 25 ? "ÃƒÂ¢Ã¢â‚¬Â Ã‚Â Above" : "ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬Ëœ Below"} 25% SaaS avg</div>
+                            <div style={{ fontSize: 9, color: T.textMuted }}>{trialConversion >= 25 ? "ÃƒÂ¢–Ã‚Â Above" : "ÃƒÂ¢–Ã¢â‚¬Ëœ Below"} 25% SaaS avg</div>
                           </div>
                         </div>
                       </div>
@@ -16632,11 +16632,11 @@ export default function AdminPanel() {
                             a.download = `paying-customers-${new Date().toISOString().slice(0,10)}.csv`; a.click();
                             logAudit(db, { action: "csv_export", exportType: "paying_customers", exportedCount: payingUsers.length }).catch(() => {});
                           }} style={{ fontSize: 11, padding: "6px 14px", borderRadius: 8, border: `1px solid ${T.teal}`, background: "transparent", color: T.teal, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>
-                            ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬Ëœ CSV
+                            ÃƒÂ¢–Ã¢â‚¬Ëœ CSV
                           </button>
                           <button type="button" onClick={() => { setTab("users"); setTierFilter("Pro"); }}
                             style={{ fontSize: 11, padding: "6px 14px", borderRadius: 8, border: `1px solid ${T.gold}`, background: "transparent", color: T.gold, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>
-                            Manage Users ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢
+                            Manage Users ÃƒÂ¢–’
                           </button>
                         </div>
                       </div>
@@ -16892,8 +16892,8 @@ export default function AdminPanel() {
                                 This chart will show real money received via Paddle ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â including partial months, refunds, and actual AED amounts. Until Paddle is connected, use the MRR History chart above (Stage 1) which calculates revenue from user tiers.
                               </div>
                               <div style={{ marginTop: 20, display: "flex", justifyContent: "center", gap: 8, flexWrap: "wrap" }}>
-                                {["Connect Paddle Webhook", "ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢", "Firebase Cloud Function", "ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢", "payments collection", "ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢", "Chart fills automatically"].map((s, i) => (
-                                  <span key={i} style={{ fontSize: 11, color: s === "ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢" ? T.gold : T.textMuted, fontWeight: s === "ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢" ? 700 : 400 }}>{s}</span>
+                                {["Connect Paddle Webhook", "ÃƒÂ¢–’", "Firebase Cloud Function", "ÃƒÂ¢–’", "payments collection", "ÃƒÂ¢–’", "Chart fills automatically"].map((s, i) => (
+                                  <span key={i} style={{ fontSize: 11, color: s === "ÃƒÂ¢–’" ? T.gold : T.textMuted, fontWeight: s === "ÃƒÂ¢–’" ? 700 : 400 }}>{s}</span>
                                 ))}
                               </div>
                             </div>
@@ -16916,7 +16916,7 @@ export default function AdminPanel() {
                     {/* ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â SECTION 10 ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â NRR + WATERFALL + LTV:CAC (ChartMogul-level) ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â */}
                     {(() => {
                       // ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ NRR Calculation ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
-                      // NRR = (Starting MRR + Expansion - Contraction - Churn) / Starting MRR ÃƒÆ’Ã¢â‚¬â€ 100
+                      // NRR = (Starting MRR + Expansion - Contraction - Churn) / Starting MRR ÃƒÆ’• 100
                       const startMRR = mrr - netMRR;
                       const nrr = startMRR > 0 ? Math.round(((mrr) / startMRR) * 100) : 100;
                       const nrrColor = nrr >= 100 ? T.green : nrr >= 85 ? T.gold : T.red;
@@ -16989,7 +16989,7 @@ export default function AdminPanel() {
                                   { label: "Annual subscribers", done: (stats.annual || 0) > 0 },
                                 ].map((item, i) => (
                                   <div key={i} style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 2 }}>
-                                    <span style={{ fontSize: 10, color: item.done ? T.green : T.border }}>{item.done ? "ÃƒÂ¢Ã…â€œÃ¢â‚¬Å“" : "ÃƒÂ¢Ã¢â‚¬â€Ã¢â‚¬Â¹"}</span>
+                                    <span style={{ fontSize: 10, color: item.done ? T.green : T.border }}>{item.done ? "ÃƒÂ¢Ã…â€œÃ¢â‚¬Å“" : "ÃƒÂ¢•Ã¢â‚¬Â¹"}</span>
                                     <span style={{ color: item.done ? T.textSecondary : T.textMuted }}>{item.label}</span>
                                   </div>
                                 ))}
@@ -17333,7 +17333,7 @@ export default function AdminPanel() {
                             {/* Delete */}
                             <button type="button" onClick={()=>deleteOrg(org)}
                               style={{ padding:"6px 10px", borderRadius:7, border:`1px solid rgba(239,68,68,0.2)`, background:"rgba(239,68,68,0.06)", color:T.red, fontSize:10, cursor:"pointer" }}>
-                              ÃƒÂ°Ã…Â¸Ã¢â‚¬â€Ã¢â‚¬Ëœ
+                              ÃƒÂ°Ã…Â¸•Ã¢â‚¬Ëœ
                             </button>
                           </div>
                         </div>
@@ -17421,18 +17421,18 @@ export default function AdminPanel() {
   ÃƒÂ¢Ã¢â‚¬Â¢Ã¢â‚¬Ëœ  
   ÃƒÂ¢Ã¢â‚¬Â¢Ã¢â‚¬Ëœ  KEY FIXES from screenshot feedback:
   ÃƒÂ¢Ã¢â‚¬Â¢Ã¢â‚¬Ëœ  1. Total count was pulling ALL 36,100 historical DLD records
-  ÃƒÂ¢Ã¢â‚¬Â¢Ã¢â‚¬Ëœ     ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ Now filters to only real CRM leads (source !== "DLD Sheets")
-  ÃƒÂ¢Ã¢â‚¬Â¢Ã¢â‚¬Ëœ     ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ OR leads added manually / via proper sources
+  ÃƒÂ¢Ã¢â‚¬Â¢Ã¢â‚¬Ëœ     ÃƒÂ¢–’ Now filters to only real CRM leads (source !== "DLD Sheets")
+  ÃƒÂ¢Ã¢â‚¬Â¢Ã¢â‚¬Ëœ     ÃƒÂ¢–’ OR leads added manually / via proper sources
   ÃƒÂ¢Ã¢â‚¬Â¢Ã¢â‚¬Ëœ  2. Buttons were icon-only, crammed, confusing
-  ÃƒÂ¢Ã¢â‚¬Â¢Ã¢â‚¬Ëœ     ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ Each button: clear label + color + full width action
+  ÃƒÂ¢Ã¢â‚¬Â¢Ã¢â‚¬Ëœ     ÃƒÂ¢–’ Each button: clear label + color + full width action
   ÃƒÂ¢Ã¢â‚¬Â¢Ã¢â‚¬Ëœ  3. Overdue banner was always jarring
-  ÃƒÂ¢Ã¢â‚¬Â¢Ã¢â‚¬Ëœ     ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ Only shows when there are actual overdue leads, dismissible
+  ÃƒÂ¢Ã¢â‚¬Â¢Ã¢â‚¬Ëœ     ÃƒÂ¢–’ Only shows when there are actual overdue leads, dismissible
   ÃƒÂ¢Ã¢â‚¬Â¢Ã¢â‚¬Ëœ  4. Filter defaulting to "Overdue" 
-  ÃƒÂ¢Ã¢â‚¬Â¢Ã¢â‚¬Ëœ     ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ Default is "All" ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â user controls filters explicitly
+  ÃƒÂ¢Ã¢â‚¬Â¢Ã¢â‚¬Ëœ     ÃƒÂ¢–’ Default is "All" ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â user controls filters explicitly
   ÃƒÂ¢Ã¢â‚¬Â¢Ã¢â‚¬Ëœ  5. Lead names showing phone numbers
-  ÃƒÂ¢Ã¢â‚¬Â¢Ã¢â‚¬Ëœ     ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ Smart display: name > email > phone > "Unnamed"
+  ÃƒÂ¢Ã¢â‚¬Â¢Ã¢â‚¬Ëœ     ÃƒÂ¢–’ Smart display: name > email > phone > "Unnamed"
   ÃƒÂ¢Ã¢â‚¬Â¢Ã¢â‚¬Ëœ  6. Too much happening at once ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â no hierarchy
-  ÃƒÂ¢Ã¢â‚¬Â¢Ã¢â‚¬Ëœ     ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ Clean sections: Header ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ Stats ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ Pipeline ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ Table
+  ÃƒÂ¢Ã¢â‚¬Â¢Ã¢â‚¬Ëœ     ÃƒÂ¢–’ Clean sections: Header ÃƒÂ¢–’ Stats ÃƒÂ¢–’ Pipeline ÃƒÂ¢–’ Table
   ÃƒÂ¢Ã¢â‚¬Â¢Ã…Â¡ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
   */
 
@@ -17459,7 +17459,7 @@ export default function AdminPanel() {
     "Meta/Facebook":   { color:"#1877F2", icon:"ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‹Å“", short:"FB"   },
     "Instagram":       { color:"#E1306C", icon:"ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‚Â¸", short:"IG"   },
     "Google Ads":      { color:"#4285F4", icon:"ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ‚Â", short:"GG"   },
-    "WhatsApp":        { color:"#25D366", icon:"ÃƒÂ°Ã…Â¸Ã¢â‚¬â„¢Ã‚Â¬", short:"WA"   },
+    "WhatsApp":        { color:"#25D366", icon:"ÃƒÂ°Ã…Â¸’Ã‚Â¬", short:"WA"   },
     "Referral":        { color:"#8B5CF6", icon:"ÃƒÂ°Ã…Â¸Ã‚Â¤Ã‚Â", short:"REF"  },
     "Website":         { color:"#14B8A6", icon:"ÃƒÂ°Ã…Â¸Ã…â€™Ã‚Â", short:"WEB"  },
     "Manual":          { color:"#94A3B8", icon:"ÃƒÂ¢Ã…â€œÃ‚ÂÃƒÂ¯Ã‚Â¸Ã‚Â",  short:"MAN"  },
@@ -17668,7 +17668,7 @@ export default function AdminPanel() {
       const upd = { status: newStatus, updatedAt: new Date().toISOString() };
       if (newStatus === "Contacted" && !l?.respondedAt) upd.respondedAt = new Date().toISOString();
       if (newStatus === "Converted") upd.convertedAt = new Date().toISOString();
-      const actEntry = { type: "status_change", by: adminUser?.email || "admin", at: new Date().toISOString(), note: `Status ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ ${newStatus}` };
+      const actEntry = { type: "status_change", by: adminUser?.email || "admin", at: new Date().toISOString(), note: `Status ÃƒÂ¢–’ ${newStatus}` };
       upd.activity = [...(l?.activity || []), actEntry];
       await setDoc(doc(db, "leads", leadId), upd, { merge: true });
       await logAudit(db, { action: "lead_status_change", leadId, to: newStatus });
@@ -17771,7 +17771,7 @@ export default function AdminPanel() {
       await Promise.all(leadSelectedIds.map(id =>
         setDoc(doc(db,"leads",id), { status:newStatus, updatedAt: new Date().toISOString() }, { merge:true })
       ));
-      notify(`${leadSelectedIds.length} leads ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ ${newStatus}`);
+      notify(`${leadSelectedIds.length} leads ÃƒÂ¢–’ ${newStatus}`);
       setLeadSelectedIds([]); fetchLeads();
     } catch(e) { notify("Error: " + e.message); }
   };
@@ -17815,7 +17815,7 @@ export default function AdminPanel() {
       <div style={{ display:"flex", gap:8 }}>
         {/* View toggle ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â labeled */}
         <div style={{ display:"flex", background:T.surface, border:`1px solid ${T.border}`, borderRadius:8, overflow:"hidden" }}>
-          {[["table","ÃƒÂ¢Ã¢â‚¬Â°Ã‚Â¡ List"],["inbox","ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‚Â¥ Inbox"],["kanban","ÃƒÂ¢Ã…Â Ã…Â¾ Board"],["analytics","ÃƒÂ¢Ã¢â‚¬â€Ã‹â€  Stats"]].map(([m,label]) => (
+          {[["table","ÃƒÂ¢Ã¢â‚¬Â°Ã‚Â¡ List"],["inbox","ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‚Â¥ Inbox"],["kanban","ÃƒÂ¢Ã…Â Ã…Â¾ Board"],["analytics","ÃƒÂ¢•Ã‹â€  Stats"]].map(([m,label]) => (
             <button key={m} type="button"
               onClick={() => { setLeadsViewMode(m); setLeadAnalyticsView(m==="analytics"); }}
               style={{ padding:"7px 14px", fontSize:11, fontWeight:700, border:"none",
@@ -17837,7 +17837,7 @@ export default function AdminPanel() {
           style={{ padding:"7px 12px", fontSize:11, cursor:"pointer", fontFamily:"'Outfit',sans-serif",
             border:`1px solid ${T.border}`, background:"transparent",
             color:T.textMuted, borderRadius:8 }} title="Export to CSV">
-          ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬Å“ CSV
+          ÃƒÂ¢–Ã¢â‚¬Å“ CSV
         </button>
       </div>
     </div>
@@ -17856,7 +17856,7 @@ export default function AdminPanel() {
           style={{ padding:"5px 12px", fontSize:11, fontWeight:700, cursor:"pointer",
             fontFamily:"'Outfit',sans-serif", border:"1px solid rgba(239,68,68,0.4)",
             background:"transparent", color:"#EF4444", borderRadius:6, whiteSpace:"nowrap" }}>
-          View overdue ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢
+          View overdue ÃƒÂ¢–’
         </button>
       </div>
     )}
@@ -17992,7 +17992,7 @@ export default function AdminPanel() {
                 fontFamily:"'Outfit',sans-serif",
                 border:`1px solid ${ST[s].border}`,
                 background:ST[s].bg, color:ST[s].text, borderRadius:6 }}>
-              ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ {s}
+              ÃƒÂ¢–’ {s}
             </button>
           ))}
           <button type="button" onClick={() => setLeadSelectedIds([])}
@@ -18234,7 +18234,7 @@ export default function AdminPanel() {
                         border:"1px solid rgba(37,211,102,0.4)",
                         background:"rgba(37,211,102,0.1)", color:"#25D366",
                         borderRadius:7, whiteSpace:"nowrap", textDecoration:"none", display:"inline-flex", alignItems:"center", gap:3 }}>
-                      ÃƒÂ°Ã…Â¸Ã¢â‚¬â„¢Ã‚Â¬ WA
+                      ÃƒÂ°Ã…Â¸’Ã‚Â¬ WA
                     </a>
                   )}
 
@@ -18259,7 +18259,7 @@ export default function AdminPanel() {
                       border:"1px solid rgba(239,68,68,0.4)",
                       background:"rgba(239,68,68,0.08)", color:"#EF4444",
                       borderRadius:7, whiteSpace:"nowrap" }}>
-                    ÃƒÂ°Ã…Â¸Ã¢â‚¬â€Ã¢â‚¬Ëœ Del
+                    ÃƒÂ°Ã…Â¸•Ã¢â‚¬Ëœ Del
                   </button>
 
                 </div>
@@ -18281,7 +18281,7 @@ export default function AdminPanel() {
                   style={{ padding:"5px 12px", fontSize:11, cursor:"pointer",
                     fontFamily:"'Outfit',sans-serif", border:`1px solid ${T.border}`,
                     background:"transparent", color:T.textMuted, borderRadius:6 }}>
-                  ÃƒÂ¢Ã¢â‚¬Â Ã‚Â Prev
+                  ÃƒÂ¢–Ã‚Â Prev
                 </button>
               )}
               {[...Array(Math.min(5, totalPages))].map((_,i) => {
@@ -18303,7 +18303,7 @@ export default function AdminPanel() {
                   style={{ padding:"5px 12px", fontSize:11, cursor:"pointer",
                     fontFamily:"'Outfit',sans-serif", border:`1px solid ${T.border}`,
                     background:"transparent", color:T.textMuted, borderRadius:6 }}>
-                  Next ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢
+                  Next ÃƒÂ¢–’
                 </button>
               )}
             </div>
@@ -18409,7 +18409,7 @@ export default function AdminPanel() {
                   {todayLeads.length > 0 && <span style={{ fontSize:10, fontWeight:700, padding:"3px 10px", borderRadius:20, background:`${srcCfg.color}20`, color:srcCfg.color }}>+{todayLeads.length} today</span>}
                   <button type="button" onClick={()=>{setLeadsViewMode("table");setLeadSourceFilter(srcName);}}
                     style={{ fontSize:10, padding:"5px 12px", borderRadius:6, border:`1px solid ${srcCfg.color}40`, background:"transparent", color:srcCfg.color, cursor:"pointer" }}>
-                    View All ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢
+                    View All ÃƒÂ¢–’
                   </button>
                 </div>
               </div>
@@ -18443,7 +18443,7 @@ export default function AdminPanel() {
                         </button>
                       )}
                       <span style={{ fontSize:10, padding:"2px 7px", borderRadius:5, background:(ST[l.status||"New"]||ST.New).bg, color:(ST[l.status||"New"]||ST.New).text }}>{l.status||"New"}</span>
-                      {l.phone && <a href={`https://wa.me/${l.phone.replace(/[^0-9]/g,"")}`} target="_blank" rel="noopener noreferrer" onClick={e=>e.stopPropagation()} style={{ fontSize:12, color:"#25D366", textDecoration:"none" }}>ÃƒÂ°Ã…Â¸Ã¢â‚¬â„¢Ã‚Â¬</a>}
+                      {l.phone && <a href={`https://wa.me/${l.phone.replace(/[^0-9]/g,"")}`} target="_blank" rel="noopener noreferrer" onClick={e=>e.stopPropagation()} style={{ fontSize:12, color:"#25D366", textDecoration:"none" }}>ÃƒÂ°Ã…Â¸’Ã‚Â¬</a>}
                     </div>
                   </div>
                 );
@@ -18646,7 +18646,7 @@ export default function AdminPanel() {
                 style={{ padding:"8px 0", fontSize:11, fontWeight:700, cursor:"pointer",
                   fontFamily:"'Outfit',sans-serif", border:"1px solid rgba(239,68,68,0.4)",
                   background:"rgba(239,68,68,0.08)", color:"#EF4444", borderRadius:8, textAlign:"center" }}>
-                ÃƒÂ°Ã…Â¸Ã¢â‚¬â€Ã¢â‚¬Ëœ Delete
+                ÃƒÂ°Ã…Â¸•Ã¢â‚¬Ëœ Delete
               </button>
             </div>
           </div>
@@ -18816,7 +18816,7 @@ export default function AdminPanel() {
                   {leads.filter(l=>!l.assignedTo).length>0&&users.filter(u=>u.orgRole==="agent"||u.role==="agent").length>0&&(
                     <div style={{ marginTop:16, padding:"12px 14px", background:"rgba(139,92,246,0.06)", border:"1px solid rgba(139,92,246,0.2)", borderRadius:10 }}>
                       <div style={{ fontSize:11, fontWeight:700, color:"#8B5CF6", marginBottom:4 }}>ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ¢â‚¬Å¾ Round-Robin Auto-Assign</div>
-                      <div style={{ fontSize:11, color:T.textMuted, marginBottom:10 }}>{leads.filter(l=>!l.assignedTo).length} unassigned ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ {users.filter(u=>u.orgRole==="agent"||u.role==="agent").length} agents</div>
+                      <div style={{ fontSize:11, color:T.textMuted, marginBottom:10 }}>{leads.filter(l=>!l.assignedTo).length} unassigned ÃƒÂ¢–’ {users.filter(u=>u.orgRole==="agent"||u.role==="agent").length} agents</div>
                       <button type="button" onClick={()=>roundRobinAssign(leads.filter(l=>!l.assignedTo))}
                         style={{ padding:"6px 14px", borderRadius:7, border:"1px solid rgba(139,92,246,0.4)", background:"rgba(139,92,246,0.1)", color:"#8B5CF6", fontSize:11, fontWeight:700, cursor:"pointer" }}>
                         Run Round-Robin
@@ -18833,7 +18833,7 @@ export default function AdminPanel() {
                   <div style={{ width:28, height:28, borderRadius:"50%", background:T.surface,
                     border:`1px solid ${T.border}`, display:"flex", alignItems:"center",
                     justifyContent:"center", fontSize:11, flexShrink:0 }}>
-                    {a.type==="created"?"ÃƒÂ¯Ã‚Â¼Ã¢â‚¬Â¹":a.type==="status_change"?"ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢":a.type==="note"?"N":a.type==="email_sent"?"@":a.type==="followup_scheduled"?"ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã¢â‚¬Â¦":"Ãƒâ€šÃ‚·"}
+                    {a.type==="created"?"ÃƒÂ¯Ã‚Â¼Ã¢â‚¬Â¹":a.type==="status_change"?"ÃƒÂ¢–’":a.type==="note"?"N":a.type==="email_sent"?"@":a.type==="followup_scheduled"?"ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã¢â‚¬Â¦":"Ãƒâ€šÃ‚·"}
                   </div>
                   <div style={{ flex:1 }}>
                     <div style={{ fontSize:12, color:T.white, lineHeight:1.4 }}>{a.note || a.type}</div>
@@ -19713,7 +19713,7 @@ export default function AdminPanel() {
                     {item.delta !== undefined && (
                       <div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 6 }}>
                         <span style={{ fontSize: 10, color: item.delta > 0 ? T.green : item.delta < 0 ? T.red : T.textMuted }}>
-                          {item.delta > 0 ? "ÃƒÂ¢Ã¢â‚¬Â Ã‚Â" : item.delta < 0 ? "ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬Ëœ" : "ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â"} {Math.abs(item.delta)}
+                          {item.delta > 0 ? "ÃƒÂ¢–Ã‚Â" : item.delta < 0 ? "ÃƒÂ¢–Ã¢â‚¬Ëœ" : "ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â"} {Math.abs(item.delta)}
                         </span>
                         <span style={{ fontSize: 9, color: T.textMuted }}>vs prev</span>
                       </div>
@@ -21769,14 +21769,14 @@ export default function AdminPanel() {
                   )}
                 </Chart>
 
-                <Chart title="Tier Movement" sub="Upgrades ÃƒÂ¢Ã¢â‚¬Â Ã‚Â Ãƒâ€šÃ‚· Downgrades ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬Ëœ">
+                <Chart title="Tier Movement" sub="Upgrades ÃƒÂ¢–Ã‚Â Ãƒâ€šÃ‚· Downgrades ÃƒÂ¢–Ã¢â‚¬Ëœ">
                   <div style={{ padding: "10px 0" }}>
                     {[
-                      { label: "Free ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ Trial", value: tierMovement.freeToTrial, color: T.blue, icon: "ÃƒÂ¢Ã¢â‚¬Â Ã‚Â", good: true },
-                      { label: "Trial ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ Pro", value: tierMovement.trialToPro, color: T.green, icon: "ÃƒÂ¢Ã¢â‚¬Â Ã‚Â", good: true },
-                      { label: "Pro ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ Enterprise", value: tierMovement.proToEnt, color: T.purple, icon: "ÃƒÂ¢Ã¢â‚¬Â Ã‚Â", good: true },
-                      { label: "Trial ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ Free", value: tierMovement.trialToFree, color: T.red, icon: "ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬Ëœ", good: false },
-                      { label: "Pro ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ Free", value: tierMovement.proToFree, color: T.red, icon: "ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬Ëœ", good: false },
+                      { label: "Free ÃƒÂ¢–’ Trial", value: tierMovement.freeToTrial, color: T.blue, icon: "ÃƒÂ¢–Ã‚Â", good: true },
+                      { label: "Trial ÃƒÂ¢–’ Pro", value: tierMovement.trialToPro, color: T.green, icon: "ÃƒÂ¢–Ã‚Â", good: true },
+                      { label: "Pro ÃƒÂ¢–’ Enterprise", value: tierMovement.proToEnt, color: T.purple, icon: "ÃƒÂ¢–Ã‚Â", good: true },
+                      { label: "Trial ÃƒÂ¢–’ Free", value: tierMovement.trialToFree, color: T.red, icon: "ÃƒÂ¢–Ã¢â‚¬Ëœ", good: false },
+                      { label: "Pro ÃƒÂ¢–’ Free", value: tierMovement.proToFree, color: T.red, icon: "ÃƒÂ¢–Ã¢â‚¬Ëœ", good: false },
                     ].map((m, i) => (
                       <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "7px 0", borderBottom: i < 4 ? `1px solid ${T.border}` : "none" }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -22095,9 +22095,9 @@ export default function AdminPanel() {
                     {[
                       { label: "Show All", color: T.green, action: async () => { const u = {}; ALL_TABS.forEach(t => { u[t.id] = { ...getTabSetting(t.id), visible: true }; }); setTabSettings(u); await setDoc(doc(db, "platformSettings", "tabs"), u); notify("All visible"); } },
                       { label: "Hide All", color: T.red, action: async () => { const u = {}; ALL_TABS.forEach(t => { u[t.id] = { ...getTabSetting(t.id), visible: false }; }); setTabSettings(u); await setDoc(doc(db, "platformSettings", "tabs"), u); notify("All hidden"); } },
-                      { label: "All ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ Free", color: T.textSecondary, action: async () => { const u = {}; ALL_TABS.forEach(t => { u[t.id] = { ...getTabSetting(t.id), minTier: "free" }; }); setTabSettings(u); await setDoc(doc(db, "platformSettings", "tabs"), u); notify("All free"); } },
-                      { label: "All ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ Pro", color: T.gold, action: async () => { const u = {}; ALL_TABS.forEach(t => { if (t.id !== "Overview") u[t.id] = { ...getTabSetting(t.id), minTier: "pro" }; }); const f = { ...tabSettings, ...u }; setTabSettings(f); await setDoc(doc(db, "platformSettings", "tabs"), f); notify("Locked to Pro"); } },
-                      { label: "Analytics ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ Ent", color: T.purple, action: async () => { const analytics = ["Developer Health", "DLD Volumes", "Competitors", "Risk", "Market"]; const u = { ...tabSettings }; analytics.forEach(t => { u[t] = { ...getTabSetting(t), minTier: "enterprise" }; }); setTabSettings(u); await setDoc(doc(db, "platformSettings", "tabs"), u); notify("Analytics locked"); } },
+                      { label: "All ÃƒÂ¢–’ Free", color: T.textSecondary, action: async () => { const u = {}; ALL_TABS.forEach(t => { u[t.id] = { ...getTabSetting(t.id), minTier: "free" }; }); setTabSettings(u); await setDoc(doc(db, "platformSettings", "tabs"), u); notify("All free"); } },
+                      { label: "All ÃƒÂ¢–’ Pro", color: T.gold, action: async () => { const u = {}; ALL_TABS.forEach(t => { if (t.id !== "Overview") u[t.id] = { ...getTabSetting(t.id), minTier: "pro" }; }); const f = { ...tabSettings, ...u }; setTabSettings(f); await setDoc(doc(db, "platformSettings", "tabs"), f); notify("Locked to Pro"); } },
+                      { label: "Analytics ÃƒÂ¢–’ Ent", color: T.purple, action: async () => { const analytics = ["Developer Health", "DLD Volumes", "Competitors", "Risk", "Market"]; const u = { ...tabSettings }; analytics.forEach(t => { u[t] = { ...getTabSetting(t), minTier: "enterprise" }; }); setTabSettings(u); await setDoc(doc(db, "platformSettings", "tabs"), u); notify("Analytics locked"); } },
                       { label: "Clear Badges", color: T.orange, action: async () => { const u = {}; ALL_TABS.forEach(t => { u[t.id] = { ...getTabSetting(t.id), badge: "none" }; }); setTabSettings(u); await setDoc(doc(db, "platformSettings", "tabs"), u); notify("Badges cleared"); } },
                       { label: "Reset All", color: T.textMuted, action: async () => { const u = {}; ALL_TABS.forEach(t => { u[t.id] = { visible: true, minTier: "free", badge: "none", description: "" }; }); setTabSettings(u); await setDoc(doc(db, "platformSettings", "tabs"), u); notify("Reset complete"); } },
                     ].map(({ label, action, color }) => (
@@ -22234,7 +22234,7 @@ export default function AdminPanel() {
                 )}
 
                 <div style={{ fontSize: 11, color: T.textMuted, padding: "10px 16px", borderRadius: 10, background: T.surfaceAlt, border: `1px solid ${T.border}` }}>
-                  ÃƒÂ°Ã…Â¸Ã¢â‚¬Â Ã‚Â <strong>Tips:</strong> Tabs with <span style={{ color: T.blue }}>DATA</span> have editable tables. Badge labels show in sidebar. Changes sync instantly.
+                  ÃƒÂ°Ã…Â¸–Ã‚Â <strong>Tips:</strong> Tabs with <span style={{ color: T.blue }}>DATA</span> have editable tables. Badge labels show in sidebar. Changes sync instantly.
                 </div>
               </div>
             );
@@ -22337,7 +22337,7 @@ export default function AdminPanel() {
                 <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 8 }}>PREVIEW</div>
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                   <span style={{ fontSize: 13, color: T.textSecondary }}>Original: AED 1,000,000</span>
-                  <span style={{ color: bulkPriceChange >= 0 ? T.green : T.red }}>{"ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢"}</span>
+                  <span style={{ color: bulkPriceChange >= 0 ? T.green : T.red }}>{"ÃƒÂ¢–’"}</span>
                   <span style={{ fontSize: 13, fontWeight: 700, color: bulkPriceChange >= 0 ? T.green : T.red }}>
                     New: AED {bulkChangeType === "percent" ? (1000000 * (1 + bulkPriceChange / 100)).toLocaleString() : (1000000 + bulkPriceChange).toLocaleString()}
                   </span>
