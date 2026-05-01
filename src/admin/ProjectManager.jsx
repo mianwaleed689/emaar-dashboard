@@ -1,5 +1,5 @@
 /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-   DXB ANALYTICS â€” PROJECT MANAGER
+   DXB ANALYTICS — PROJECT MANAGER
    Matching dashboard design DNA: sidebar, KPI cards, sections
    â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 import React, { useState, useEffect } from "react";
@@ -442,7 +442,7 @@ export default function ProjectManager({ embedded = false }) {
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
                 <div>
                   <h2 style={{ fontSize: 16, fontWeight: 700, color: T.white }}>{form.name || "Untitled"}</h2>
-                  <p style={{ fontSize: 10, color: T.textMuted }}>{form.community} Â· <span style={{ color: form.status === "Under Construction" ? T.green : T.blue }}>{form.status}</span></p>
+                  <p style={{ fontSize: 10, color: T.textMuted }}>{form.community} · <span style={{ color: form.status === "Under Construction" ? T.green : T.blue }}>{form.status}</span></p>
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                   {hasChanges && <div style={{ display: "flex", alignItems: "center", gap: 4, padding: "4px 10px", borderRadius: 8, background: T.surfaceAlt, border: `1px solid ${T.gold}30` }}><div style={{ width: 5, height: 5, borderRadius: "50%", background: T.gold }} /><span style={{ fontSize: 10, fontWeight: 600, color: T.gold }}>Unsaved</span></div>}
@@ -466,7 +466,7 @@ export default function ProjectManager({ embedded = false }) {
                 </div>
               </div>
             ) : (
-              /* Edit form â€” reuse the section nav + form from main render */
+              /* Edit form — reuse the section nav + form from main render */
               <div>
                 <div style={{ display: "flex", gap: 4, marginBottom: 16, flexWrap: "wrap" }}>
                   {[{ id: "basic", label: "Basic Info" }, { id: "pricing", label: "Pricing" }, { id: "units", label: "Units" }, { id: "location", label: "Location" }, { id: "media", label: "Media" }, { id: "contact", label: "Contact" }].map(s => (
@@ -705,7 +705,7 @@ export default function ProjectManager({ embedded = false }) {
                 {form ? form.name || "Untitled" : "Project Manager"}
               </h1>
               <p style={{ fontSize: 10, color: T.textMuted, letterSpacing: 1 }}>
-                {form ? <>{form.community} Â· <span style={{ color: form.status === "Under Construction" ? T.green : T.blue }}>{form.status}</span></> : `${projects.length} projects Â· ${new Date().toLocaleDateString("en-AE", { day: "numeric", month: "short", year: "numeric" })}`}
+                {form ? <>{form.community} · <span style={{ color: form.status === "Under Construction" ? T.green : T.blue }}>{form.status}</span></> : `${projects.length} projects · ${new Date().toLocaleDateString("en-AE", { day: "numeric", month: "short", year: "numeric" })}`}
               </p>
             </div>
           </div>
@@ -733,10 +733,10 @@ export default function ProjectManager({ embedded = false }) {
           {!form ? (
             /* â”€â”€â”€ NO PROJECT SELECTED â”€â”€â”€ */
             <>
-              <Section title="Project Portfolio" sub={`${projects.length} Emaar projects Â· ${communities.length} communities Â· Select to edit`}>
+              <Section title="Project Portfolio" sub={`${projects.length} Emaar projects · ${communities.length} communities · Select to edit`}>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
-                  <KPI label="Total Projects" value={projects.length} sub={`${projects.filter(p => p.status === "Under Construction").length} building Â· ${projects.filter(p => p.status === "Off-Plan").length} off-plan`} delay={1} />
-                  <KPI label="Communities" value={communities.length} sub={communities.slice(0, 3).join(" Â· ") + (communities.length > 3 ? ` +${communities.length - 3}` : "")} delay={2} />
+                  <KPI label="Total Projects" value={projects.length} sub={`${projects.filter(p => p.status === "Under Construction").length} building · ${projects.filter(p => p.status === "Off-Plan").length} off-plan`} delay={1} />
+                  <KPI label="Communities" value={communities.length} sub={communities.slice(0, 3).join(" · ") + (communities.length > 3 ? ` +${communities.length - 3}` : "")} delay={2} />
                   <KPI label="Total Units" value={totalUnits.toLocaleString()} sub={`${availUnits.toLocaleString()} available`} color={T.teal} delay={3} />
                   <KPI label="Avg Construction" value={`${avgProgress}%`} sub="Weighted average progress" color={avgProgress >= 50 ? T.green : T.gold} delay={4} />
                 </div>
@@ -746,7 +746,7 @@ export default function ProjectManager({ embedded = false }) {
                 <div style={{ marginBottom: 16, color: T.gold, opacity: 0.6 }}><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg></div>
                 <h2 style={{ fontFamily: "'Fraunces',serif", fontSize: 24, fontWeight: 700, color: T.white, marginBottom: 8 }}>Select a Project</h2>
                 <p style={{ color: T.textSecondary, fontSize: 13, maxWidth: 420, margin: "0 auto", lineHeight: 1.6 }}>
-                  Click any project from the sidebar to edit its details â€” pricing, units, status, contact info, and location data.
+                  Click any project from the sidebar to edit its details — pricing, units, status, contact info, and location data.
                 </p>
               </div>
             </>
@@ -761,7 +761,7 @@ export default function ProjectManager({ embedded = false }) {
                 <div style={{ flex: 1 }}>
                   <h1 style={{ fontFamily: "'Fraunces',serif", fontSize: 26, fontWeight: 900, color: T.white, lineHeight: 1.1 }}>{form.name || "Untitled"}</h1>
                   <p style={{ color: T.textMuted, fontSize: 12, marginTop: 3 }}>
-                    {form.community} Â· <span style={{ color: T.textSecondary }}>{form.status}</span> Â· <span style={{ fontSize: 10 }}>ID: {selectedId}</span>
+                    {form.community} · <span style={{ color: T.textSecondary }}>{form.status}</span> · <span style={{ fontSize: 10 }}>ID: {selectedId}</span>
                   </p>
                   {/* Construction bar */}
                   <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 8 }}>
@@ -795,7 +795,7 @@ export default function ProjectManager({ embedded = false }) {
                       <Input label="Project Name" value={form.name} onChange={v => set("name", v)} />
                       <Input label="Community" value={form.community} onChange={v => set("community", v)} />
                       <Select label="Status" value={form.status} onChange={v => set("status", v)} options={["Off-Plan", "Under Construction", "Ready", "Sold Out", "Launching"]} />
-                      <Input label="Property Type" value={form.type} onChange={v => set("type", v)} placeholder="e.g. Apartments Â· 1-3 BR" />
+                      <Input label="Property Type" value={form.type} onChange={v => set("type", v)} placeholder="e.g. Apartments · 1-3 BR" />
                       <Select label="Segment" value={form.segment} onChange={v => set("segment", v)} options={["Affordable", "Mid-Market", "Mid-Premium", "Premium", "Ultra-Premium", "Luxury", "Luxury Branded", "Ultra-Lux Branded", "Ultra-Luxury"]} />
                       <Input label="Branded" value={form.branded} onChange={v => set("branded", v)} placeholder="Address, Vida, etc." />
                     </div>

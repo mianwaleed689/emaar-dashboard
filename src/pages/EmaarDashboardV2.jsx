@@ -1877,7 +1877,7 @@ const UpgradeModal = ({ show, onClose }) => {
         </div>
 
         <div style={{ textAlign: "center", display: "flex", justifyContent: "center", gap: 24, flexWrap: "wrap" }}>
-          {["\uD83D\uDD12 Secure payment", "Ã¢â€ Â© 7-day money-back", "Ã¢Å¡Â¡ Instant access", "Ã¢ÂÅ’ Cancel anytime"].map((t, i) => (
+          {["\uD83D\uDD12 Secure payment", "Ã¢â€ © 7-day money-back", "Ã¢Å¡Â¡ Instant access", "Ã¢ÂÅ’ Cancel anytime"].map((t, i) => (
             <span key={i} style={{ fontSize: 11, color: T.textMuted }}>{t}</span>
           ))}
         </div>
@@ -2985,7 +2985,7 @@ export default function EmaarDashboardV2() {
       /* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ DEVELOPER (per DLD Mashrooi — project sold by JV entity) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
       developer: "Emaar Properties",
       developerName: "Emaar Properties",
-      developerAr: "Ã˜Â¥Ã˜Â¹Ã™â€¦Ã˜Â§Ã˜Â± Ã˜Â§Ã™â€žÃ˜Â¹Ã™â€šÃ˜Â§Ã˜Â±Ã™Å Ã˜Â©",
+      developerAr: "Ã˜Â¥Ã˜Â¹Ã™â€¦Ã˜Â§Ã˜Â± Ã˜Â§Ã™â€žÃ˜Â¹Ã™â€šÃ˜Â§Ã˜Â±Ã™Å Ã˜©",
       developerEntity: "Dubai Hills Estate L.L.C",  /* âœ“ DLD Mashrooi — actual selling entity (Emaar + Meraas JV) */
       developerParent: "Emaar Properties PJSC",
       developerGroupEntity: "Emaar Development P.J.S.C.",  /* Parent RERA entity */

@@ -1,10 +1,10 @@
 /* eslint-disable */
 /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-   DXB ANALYTICS â€” WORLD-CLASS LANDING PAGE
+   DXB ANALYTICS — WORLD-CLASS LANDING PAGE
    Research: Linear, Superhuman, Stripe, Vercel, Notion, Bloomberg Terminal
-   Design: Bento Grid Â· Glassmorphism Â· Dark Luxury Â· Gold Accent
-   2026 Best Practices: Centered hero Â· Single CTA Â· Bento features Â·
-   Animated stats Â· Role selector Â· SVG icons Â· Micro-interactions
+   Design: Bento Grid · Glassmorphism · Dark Luxury · Gold Accent
+   2026 Best Practices: Centered hero · Single CTA · Bento features ·
+   Animated stats · Role selector · SVG icons · Micro-interactions
    â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 import React, { useState, useEffect, useRef } from "react";
 import { db } from "../firebase";
@@ -217,7 +217,7 @@ const ROLES = {
     wins: [
       "Full project financials, yields, and risk scores in one tap",
       "Send polished comparison reports to clients via WhatsApp instantly",
-      "Never be caught off guard â€” price/sqft, handover, yield always ready",
+      "Never be caught off guard — price/sqft, handover, yield always ready",
     ],
     metric: "2+ hours saved per client",
     color: "#D4A843",
@@ -228,8 +228,8 @@ const ROLES = {
     gain: "Verify any deal in 30 seconds with DLD-verified data.",
     wins: [
       "Compare 3 projects side-by-side with verified yield and risk data",
-      "See actual DLD transaction history â€” not marketing material",
-      "Calculate exact ROI: long-term hold, Airbnb, or flip â€” before committing",
+      "See actual DLD transaction history — not marketing material",
+      "Calculate exact ROI: long-term hold, Airbnb, or flip — before committing",
     ],
     metric: "Verify before you commit",
     color: "#14B8A6",
@@ -239,7 +239,7 @@ const ROLES = {
     pain: "Your team wastes hours every week on scattered, inconsistent data",
     gain: "Standardize your entire team on verified intelligence.",
     wins: [
-      "Every agent researches the same way â€” consistent, fast, professional",
+      "Every agent researches the same way — consistent, fast, professional",
       "Win more pitches with institutional-quality analysis",
       "Track market movements days before your competitors notice them",
     ],
@@ -249,13 +249,13 @@ const ROLES = {
 };
 
 const FAQS = [
-  ["Is there a free trial?", "Yes â€” every new account gets a 7-day Pro trial automatically. No credit card needed. Full access to all 23 tools and 208+ projects from day one."],
-  ["Which developers are covered?", "7 major developers are live: Emaar (208 projects), DAMAC, Sobha, Nakheel, Meraas, Binghatti, and Aldar â€” across 13 Dubai communities. Phase 2 adds 3 more developers in Q3 2026."],
-  ["How is the data verified?", "Every data point is sourced from official materials â€” developer annual reports, DLD transaction records, UAE Central Bank EIBOR rates â€” and each has its source displayed. We cross-reference with DXBinteract, ValuStrat, and Knight Frank."],
+  ["Is there a free trial?", "Yes — every new account gets a 7-day Pro trial automatically. No credit card needed. Full access to all 23 tools and 208+ projects from day one."],
+  ["Which developers are covered?", "7 major developers are live: Emaar (208 projects), DAMAC, Sobha, Nakheel, Meraas, Binghatti, and Aldar — across 13 Dubai communities. Phase 2 adds 3 more developers in Q3 2026."],
+  ["How is the data verified?", "Every data point is sourced from official materials — developer annual reports, DLD transaction records, UAE Central Bank EIBOR rates — and each has its source displayed. We cross-reference with DXBinteract, ValuStrat, and Knight Frank."],
   ["How often does data update?", "Financial data updates within 24 hours of official developer releases. Project prices and handover dates are manually verified monthly. EIBOR rates update daily."],
-  ["What makes this different from Bayut?", "Bayut has listings. DXB Analytics has intelligence. We provide 6 years of developer financials, 9-factor risk assessment, 3 ROI models, and live EIBOR mortgage calculations â€” none of which any listing portal offers."],
+  ["What makes this different from Bayut?", "Bayut has listings. DXB Analytics has intelligence. We provide 6 years of developer financials, 9-factor risk assessment, 3 ROI models, and live EIBOR mortgage calculations — none of which any listing portal offers."],
   ["Can I cancel anytime?", "Yes. No contracts, no cancellation fees. Cancel from your account settings and keep access until your billing period ends."],
-  ["Do you support Arabic?", "Yes â€” Arabic and 19 other languages including Urdu, Hindi, Chinese, Russian, and French. Switch instantly from the navigation bar."],
+  ["Do you support Arabic?", "Yes — Arabic and 19 other languages including Urdu, Hindi, Chinese, Russian, and French. Switch instantly from the navigation bar."],
 ];
 
 export default function LandingPage({ onLoginClick, onSignUpClick }) {
@@ -319,7 +319,7 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
           </div>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <span style={{ fontSize: 12, color: "#475569" }}>7-day free trial Â· No card needed</span>
+          <span style={{ fontSize: 12, color: "#475569" }}>7-day free trial · No card needed</span>
           <button onClick={onSignUpClick} className="cta" style={{ padding: "10px 28px", fontSize: 14 }}>
             Start Free Trial
           </button>
@@ -366,10 +366,10 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
           {/* Live badge */}
           <div className="au" style={{ animationDelay: "0s", display: "inline-flex", alignItems: "center", gap: 8, padding: "6px 18px", borderRadius: 24, background: "rgba(16,185,129,.07)", border: "1px solid rgba(16,185,129,.2)", marginBottom: 36 }}>
             <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#10B981", display: "inline-block", animation: "pulse 2s infinite" }}/>
-            <span style={{ fontSize: 10, fontWeight: 700, color: "#10B981", letterSpacing: 2 }}>LIVE â€” DUBAI REAL ESTATE INTELLIGENCE</span>
+            <span style={{ fontSize: 10, fontWeight: 700, color: "#10B981", letterSpacing: 2 }}>LIVE — DUBAI REAL ESTATE INTELLIGENCE</span>
           </div>
 
-          {/* Hero headline â€” Superhuman model: quantified outcome */}
+          {/* Hero headline — Superhuman model: quantified outcome */}
           <h1 className="au hero-h1" style={{ animationDelay: ".05s", fontFamily: "'Fraunces',serif", fontSize: 68, fontWeight: 900, lineHeight: 1.04, letterSpacing: "-2.5px", marginBottom: 26 }}>
             <span style={{ color: "#F1F5F9", display: "block" }}>Your next deal is already</span>
             <span className="gold-text" style={{ display: "block" }}>in the data.</span>
@@ -377,13 +377,13 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
 
           {/* Sub */}
           <p className="au" style={{ animationDelay: ".1s", fontSize: 19, color: "#94A3B8", lineHeight: 1.75, maxWidth: 620, margin: "0 auto 44px" }}>
-            Dubai's most complete real estate intelligence platform â€” used by agents, investors, and brokerages who refuse to guess. 208 projects, 7 developers, live DLD data.
+            Dubai's most complete real estate intelligence platform — used by agents, investors, and brokerages who refuse to guess. 208 projects, 7 developers, live DLD data.
           </p>
 
-          {/* Single primary CTA â€” Stripe/Linear model */}
+          {/* Single primary CTA — Stripe/Linear model */}
           <div className="au hero-btns" style={{ animationDelay: ".15s", display: "flex", gap: 14, justifyContent: "center", marginBottom: 20, flexWrap: "wrap" }}>
             <button onClick={onSignUpClick} className="cta" style={{ padding: "19px 52px", fontSize: 17, gap: 12 }}>
-              Start Free â€” No Card Needed
+              Start Free — No Card Needed
               <span style={{ display: "inline-flex" }}>{IC.arrow}</span>
             </button>
             <button onClick={onLoginClick} className="ghost" style={{ padding: "18px 32px", fontSize: 16 }}>
@@ -392,10 +392,10 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
           </div>
 
           <p className="au" style={{ animationDelay: ".2s", fontSize: 12, color: "#334155" }}>
-            7-day Pro trial Â· Cancel anytime Â· {stats.users}+ professionals already inside
+            7-day Pro trial · Cancel anytime · {stats.users}+ professionals already inside
           </p>
 
-          {/* Trust logos â€” immediately below CTA (proven best practice) */}
+          {/* Trust logos — immediately below CTA (proven best practice) */}
           <div className="au" style={{ animationDelay: ".25s", marginTop: 56, paddingTop: 44, borderTop: "1px solid rgba(212,168,67,.08)" }}>
             <p style={{ fontSize: 10, color: "#334155", letterSpacing: 2.5, textTransform: "uppercase", marginBottom: 20 }}>Data Verified By</p>
             <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap" }}>
@@ -457,8 +457,8 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
                 {/* Top bar */}
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingBottom: 10, borderBottom: "1px solid rgba(212,168,67,.05)" }}>
                   <div>
-                    <div style={{ fontSize: 11, fontWeight: 700, color: "#F1F5F9" }}>Overview Â· Emaar Properties</div>
-                    <div style={{ fontSize: 7.5, color: "#334155", marginTop: 1 }}>FY 2025 Â· Verified 29 Mar 2026 Â· Source: Emaar Annual Report + DLD</div>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: "#F1F5F9" }}>Overview · Emaar Properties</div>
+                    <div style={{ fontSize: 7.5, color: "#334155", marginTop: 1 }}>FY 2025 · Verified 29 Mar 2026 · Source: Emaar Annual Report + DLD</div>
                   </div>
                   <div style={{ display: "flex", gap: 8 }}>
                     <div style={{ fontSize: 7.5, padding: "3px 9px", borderRadius: 6, background: "rgba(16,185,129,.08)", border: "1px solid rgba(16,185,129,.18)", color: "#10B981", fontWeight: 700 }}>EMAAR.DU +2.1% AED 15.40</div>
@@ -577,7 +577,7 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
             <SectionTag text="Built For You"/>
             <H2>Stop guessing.<br/>Start knowing.</H2>
             <p style={{ fontSize: 16, color: "#64748B", marginTop: 16, maxWidth: 500, margin: "16px auto 28px" }}>
-              Different professionals, same problem â€” scattered, unverified data.
+              Different professionals, same problem — scattered, unverified data.
             </p>
             <div style={{ display: "flex", gap: 8, justifyContent: "center", flexWrap: "wrap" }}>
               {Object.entries(ROLES).map(([k,v]) => (
@@ -624,7 +624,7 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
 
           <div style={{ textAlign: "center", marginTop: 44 }}>
             <button onClick={onSignUpClick} className="cta" style={{ padding: "16px 44px", fontSize: 15 }}>
-              Start Free â€” No Card Needed
+              Start Free — No Card Needed
             </button>
           </div>
         </div>
@@ -641,13 +641,13 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
             </p>
           </div>
 
-          {/* Bento grid â€” Apple/Linear style */}
+          {/* Bento grid — Apple/Linear style */}
           <div className="bento-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 16 }}>
             {/* Large card spanning 2 cols */}
             <div className="bento" style={{ gridColumn: "span 2" }}>
-              <div style={{ fontSize: 10, fontWeight: 700, color: "#D4A843", letterSpacing: 2, textTransform: "uppercase", marginBottom: 16 }}>01 â€” Developer Financials</div>
+              <div style={{ fontSize: 10, fontWeight: 700, color: "#D4A843", letterSpacing: 2, textTransform: "uppercase", marginBottom: 16 }}>01 — Developer Financials</div>
               <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 24, fontWeight: 900, color: "#F1F5F9", marginBottom: 14, lineHeight: 1.2 }}>6 years of financial data, sourced directly from annual reports</h3>
-              <p style={{ fontSize: 13, color: "#64748B", lineHeight: 1.7, maxWidth: 480 }}>Revenue, net profit, EPS, revenue backlog, gross margin â€” cross-referenced with DXBinteract and DLD for Emaar, DAMAC, Sobha, Nakheel, Meraas, Binghatti, and Aldar.</p>
+              <p style={{ fontSize: 13, color: "#64748B", lineHeight: 1.7, maxWidth: 480 }}>Revenue, net profit, EPS, revenue backlog, gross margin — cross-referenced with DXBinteract and DLD for Emaar, DAMAC, Sobha, Nakheel, Meraas, Binghatti, and Aldar.</p>
               <div style={{ display: "flex", gap: 10, marginTop: 20, flexWrap: "wrap" }}>
                 {[["AED 80.4B","Emaar Sales 2025"],["AED 155B","Revenue Backlog"],["57.5%","Gross Margin"]].map(([v,l]) => (
                   <div key={l} style={{ padding: "8px 16px", background: "rgba(212,168,67,.06)", border: "1px solid rgba(212,168,67,.12)", borderRadius: 10 }}>
@@ -660,7 +660,7 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
 
             {/* Right tall card */}
             <div className="bento" style={{ background: "rgba(16,185,129,.04)", borderColor: "rgba(16,185,129,.15)" }}>
-              <div style={{ fontSize: 10, fontWeight: 700, color: "#10B981", letterSpacing: 2, textTransform: "uppercase", marginBottom: 16 }}>02 â€” Risk Assessment</div>
+              <div style={{ fontSize: 10, fontWeight: 700, color: "#10B981", letterSpacing: 2, textTransform: "uppercase", marginBottom: 16 }}>02 — Risk Assessment</div>
               <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 20, fontWeight: 900, color: "#F1F5F9", marginBottom: 14, lineHeight: 1.2 }}>9-Factor Risk Matrix</h3>
               <p style={{ fontSize: 12, color: "#64748B", lineHeight: 1.65 }}>Quantified score per project: market, regulatory, supply, liquidity, construction, handover, legal, developer health, demand.</p>
               <div style={{ marginTop: 20 }}>
@@ -678,7 +678,7 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
               </div>
             </div>
 
-            {/* Bottom row â€” 3 equal cards */}
+            {/* Bottom row — 3 equal cards */}
             {[
               { n: "03", title: "Project Intelligence", desc: "208+ projects with price/sqft, payment plan, construction %, and handover timeline.", accent: "#8B5CF6" },
               { n: "04", title: "Yield & ROI Calculator", desc: "Gross/net yields by community. Three ROI models: long-term, Airbnb, or flip.", accent: "#14B8A6" },
@@ -693,13 +693,13 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
 
             {/* Wide card */}
             <div className="bento" style={{ gridColumn: "span 2", background: "rgba(59,130,246,.03)", borderColor: "rgba(59,130,246,.15)" }}>
-              <div style={{ fontSize: 10, fontWeight: 700, color: "#3B82F6", letterSpacing: 2, textTransform: "uppercase", marginBottom: 14 }}>06 â€” 3-Project Comparison</div>
+              <div style={{ fontSize: 10, fontWeight: 700, color: "#3B82F6", letterSpacing: 2, textTransform: "uppercase", marginBottom: 14 }}>06 — 3-Project Comparison</div>
               <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 20, fontWeight: 900, color: "#F1F5F9", marginBottom: 14 }}>Side-by-side intelligence. Share via WhatsApp in one tap.</h3>
               <p style={{ fontSize: 13, color: "#64748B", lineHeight: 1.7, maxWidth: 480 }}>Compare any 3 projects on price, yield, risk score, handover, payment plan, and ROI. Built for agents who need to close on the spot.</p>
             </div>
 
             <div className="bento" style={{ background: "rgba(139,92,246,.04)", borderColor: "rgba(139,92,246,.15)" }}>
-              <div style={{ fontSize: 10, fontWeight: 700, color: "#8B5CF6", letterSpacing: 2, textTransform: "uppercase", marginBottom: 14 }}>07 â€” Golden Visa</div>
+              <div style={{ fontSize: 10, fontWeight: 700, color: "#8B5CF6", letterSpacing: 2, textTransform: "uppercase", marginBottom: 14 }}>07 — Golden Visa</div>
               <h3 style={{ fontSize: 16, fontWeight: 700, color: "#F1F5F9", marginBottom: 10 }}>Auto-flag AED 2M+ projects</h3>
               <p style={{ fontSize: 12, color: "#64748B", lineHeight: 1.65 }}>Instantly surface all projects eligible for UAE 10-year Golden Visa residency.</p>
             </div>
@@ -729,7 +729,7 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
             <button onClick={onSignUpClick} className="cta" style={{ padding: "14px 40px" }}>
               Unlock All 23 Tools
             </button>
-            <p style={{ fontSize: 11, color: "#334155", marginTop: 10 }}>Free: 5 tabs Â· Pro: everything Â· 7-day trial</p>
+            <p style={{ fontSize: 11, color: "#334155", marginTop: 10 }}>Free: 5 tabs · Pro: everything · 7-day trial</p>
           </div>
         </div>
       </section>
@@ -772,7 +772,7 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
                     <td style={{ padding: "12px 22px", fontSize: 13, color: "#64748B" }}>{f}</td>
                     {v.map((val,j) => (
                       <td key={j} style={{ padding: "12px 22px", textAlign: "center", fontSize: 13, background: j===2?"rgba(212,168,67,.02)":"transparent", borderLeft: "1px solid rgba(212,168,67,.05)", color: j===2?(val==="No"?"#334155":"#D4A843"):(val==="Yes"?"#10B981":val==="No"?"#1E293B":"#94A3B8"), fontWeight: j===2?600:400 }}>
-                        {val==="Yes"?<span style={{ color: j===2?"#D4A843":"#10B981", fontWeight: 700 }}>âœ“</span>:val==="No"?<span style={{ color: "#1E293B" }}>â€”</span>:val}
+                        {val==="Yes"?<span style={{ color: j===2?"#D4A843":"#10B981", fontWeight: 700 }}>âœ“</span>:val==="No"?<span style={{ color: "#1E293B" }}>—</span>:val}
                       </td>
                     ))}
                   </tr>
@@ -836,8 +836,8 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
                 <span className="gold-text" style={{ fontFamily: "'Fraunces',serif", fontSize: 56, fontWeight: 900, lineHeight: 1 }}>{proPrice}</span>
                 <span style={{ fontSize: 12, color: "#334155" }}>/month</span>
               </div>
-              {annual && <p style={{ fontSize: 11, color: "#10B981", marginBottom: 28 }}>Billed AED {proPrice*12}/year â€” save AED {(99-proPrice)*12}</p>}
-              {["All 208+ projects â€” full intelligence","Developer financials 6 years","Rental yields & 3 ROI models","Risk assessment (9 factors)","3-project comparison tool","Mortgage & flip calculators","Portfolio tracker + price alerts","WhatsApp share â€” any project","All 23 dashboard tools","Arabic + 19 languages","Priority support"].map((f,i) => (
+              {annual && <p style={{ fontSize: 11, color: "#10B981", marginBottom: 28 }}>Billed AED {proPrice*12}/year — save AED {(99-proPrice)*12}</p>}
+              {["All 208+ projects — full intelligence","Developer financials 6 years","Rental yields & 3 ROI models","Risk assessment (9 factors)","3-project comparison tool","Mortgage & flip calculators","Portfolio tracker + price alerts","WhatsApp share — any project","All 23 dashboard tools","Arabic + 19 languages","Priority support"].map((f,i) => (
                 <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "5px 0", fontSize: 13, color: "#94A3B8" }}>
                   <span style={{ flexShrink: 0 }}>{IC.check}</span>{f}
                 </div>
@@ -845,7 +845,7 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
               <button onClick={() => onSignUpClick && onSignUpClick("pro")} className="cta" style={{ width: "100%", marginTop: 28, padding: "15px 0", fontSize: 15, justifyContent: "center" }}>
                 Start 7-Day Free Trial
               </button>
-              <p style={{ fontSize: 10, color: "#334155", marginTop: 10, textAlign: "center" }}>No credit card Â· Cancel anytime</p>
+              <p style={{ fontSize: 10, color: "#334155", marginTop: 10, textAlign: "center" }}>No credit card · Cancel anytime</p>
             </div>
 
             {/* ENTERPRISE */}
@@ -871,8 +871,8 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
           {/* Trust badges */}
           <div style={{ display: "flex", gap: 16, justifyContent: "center", marginTop: 52, flexWrap: "wrap" }}>
             {[
-              [IC.lock,"Bank-grade Security","Firebase encrypted Â· SSL"],
-              [IC.db,"Verified Data","DLD Â· Developer IR Â· Knight Frank"],
+              [IC.lock,"Bank-grade Security","Firebase encrypted · SSL"],
+              [IC.db,"Verified Data","DLD · Developer IR · Knight Frank"],
               [IC.globe,"20 Languages","Arabic, Urdu, Chinese & more"],
               [IC.zap,"Real-time Data","Live EIBOR + DLD feeds"],
             ].map(([icon,label,sub],i) => (
@@ -897,9 +897,9 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
           </div>
           <div className="three-col" style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 20 }}>
             {[
-              { q:"My clients used to ask about yields and I had to go away and research. Now I pull up DXB Analytics in the meeting â€” gross yield, net yield, risk score, 5-year ROI on the spot. It completely changed how I close deals.", name:"Ahmed Al Rashidi",role:"Senior Consultant Â· Emaar Specialist",co:"JVC & Dubai Hills",init:"AA",c:"#D4A843",stat:"3 extra deals last quarter" },
-              { q:"As a UK-based investor making AED 3M decisions, I needed verified data. The EIBOR mortgage calculator alone saved me from a bad purchase â€” exact monthly payment vs rental income before committing.", name:"James Whitfield",role:"Property Investor",co:"London to Dubai Â· AED 4M portfolio",init:"JW",c:"#14B8A6",stat:"Avoided a costly mistake" },
-              { q:"I manage 12 agents. We standardized on DXB Analytics. The comparison tool is a game changer â€” agents send full project breakdowns via WhatsApp in one tap. Research time went from 3 hours to 20 minutes.", name:"Fatima Al Zaabi",role:"Brokerage Manager",co:"Team of 12 Â· Marina & Downtown",init:"FA",c:"#8B5CF6",stat:"80% faster research" },
+              { q:"My clients used to ask about yields and I had to go away and research. Now I pull up DXB Analytics in the meeting — gross yield, net yield, risk score, 5-year ROI on the spot. It completely changed how I close deals.", name:"Ahmed Al Rashidi",role:"Senior Consultant · Emaar Specialist",co:"JVC & Dubai Hills",init:"AA",c:"#D4A843",stat:"3 extra deals last quarter" },
+              { q:"As a UK-based investor making AED 3M decisions, I needed verified data. The EIBOR mortgage calculator alone saved me from a bad purchase — exact monthly payment vs rental income before committing.", name:"James Whitfield",role:"Property Investor",co:"London to Dubai · AED 4M portfolio",init:"JW",c:"#14B8A6",stat:"Avoided a costly mistake" },
+              { q:"I manage 12 agents. We standardized on DXB Analytics. The comparison tool is a game changer — agents send full project breakdowns via WhatsApp in one tap. Research time went from 3 hours to 20 minutes.", name:"Fatima Al Zaabi",role:"Brokerage Manager",co:"Team of 12 · Marina & Downtown",init:"FA",c:"#8B5CF6",stat:"80% faster research" },
             ].map((t,i) => (
               <div key={i} className="bento" style={{ display: "flex", flexDirection: "column", gap: 16 }}>
                 <div style={{ display: "flex", gap: 3 }}>{[...Array(5)].map((_,j) => <span key={j} style={{ display: "inline-flex" }}>{IC.star}</span>)}</div>
@@ -928,9 +928,9 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
           </div>
           <div className="three-col" style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 20 }}>
             {[
-              { phase:"Phase 1",status:"LIVE NOW",c:"#10B981",title:"Dubai â€” 7 Developers",desc:"208 Emaar + DAMAC, Sobha, Nakheel, Meraas, Binghatti, Aldar â€” full financials, yields, risk, ROI.",bg:"rgba(16,185,129,.04)" },
-              { phase:"Phase 2",status:"Q3 2026",c:"#D4A843",title:"Dubai â€” Top 10 Developers",desc:"Azizi, Tiger, Danube, Reportage + more â€” same intelligence depth, same verified quality.",bg:"rgba(212,168,67,.04)" },
-              { phase:"Phase 3",status:"2027",c:"#3B82F6",title:"Full GCC Coverage",desc:"All 228+ Dubai developers, Abu Dhabi, Saudi Arabia â€” every transaction, live DLD feeds.",bg:"rgba(59,130,246,.04)" },
+              { phase:"Phase 1",status:"LIVE NOW",c:"#10B981",title:"Dubai — 7 Developers",desc:"208 Emaar + DAMAC, Sobha, Nakheel, Meraas, Binghatti, Aldar — full financials, yields, risk, ROI.",bg:"rgba(16,185,129,.04)" },
+              { phase:"Phase 2",status:"Q3 2026",c:"#D4A843",title:"Dubai — Top 10 Developers",desc:"Azizi, Tiger, Danube, Reportage + more — same intelligence depth, same verified quality.",bg:"rgba(212,168,67,.04)" },
+              { phase:"Phase 3",status:"2027",c:"#3B82F6",title:"Full GCC Coverage",desc:"All 228+ Dubai developers, Abu Dhabi, Saudi Arabia — every transaction, live DLD feeds.",bg:"rgba(59,130,246,.04)" },
             ].map((item,i) => (
               <div key={i} style={{ background: item.bg, borderRadius: 18, padding: 30, border: "1px solid rgba(212,168,67,.07)" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 18 }}>
@@ -993,7 +993,7 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
             </a>
           </div>
           <p style={{ fontSize: 12, color: "#334155", marginTop: 22 }}>
-            Secured by Firebase Â· SSL Encrypted Â· GDPR Compliant
+            Secured by Firebase · SSL Encrypted · GDPR Compliant
           </p>
         </div>
       </section>
@@ -1014,7 +1014,7 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
           </div>
           <div style={{ borderTop: "1px solid rgba(212,168,67,.06)", paddingTop: 18, textAlign: "center" }}>
             <p style={{ fontSize: 11, color: "#334155", lineHeight: 1.7 }}>
-              Â© 2026 DXB Analytics Â· Dubai, UAE Â· For informational purposes only â€” not financial or investment advice<br/>
+              © 2026 DXB Analytics · Dubai, UAE · For informational purposes only — not financial or investment advice<br/>
               Data sourced from DLD, developer IR reports, Knight Frank, ValuStrat, UAE Central Bank
             </p>
           </div>

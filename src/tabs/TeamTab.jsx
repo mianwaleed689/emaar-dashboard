@@ -223,7 +223,7 @@ export default function TeamTab({ teamMembers=[], teamMembersLoading, myLeads=[]
         <div>
           <h1 style={{fontFamily:"'Fraunces',serif",fontSize:22,fontWeight:900,color:T.white,margin:0}}>Team Dashboard</h1>
           <p style={{fontSize:12,color:T.textMuted,margin:"4px 0 0"}}>
-            {agents.length} agents ÃÂ· {teamLeads} leads ÃÂ· {teamDeals} deals ÃÂ· Live
+            {agents.length} agents Ã· {teamLeads} leads Ã· {teamDeals} deals Ã· Live
           </p>
         </div>
         <button type="button" onClick={()=>setShowCreate(true)}
@@ -368,7 +368,7 @@ export default function TeamTab({ teamMembers=[], teamMembersLoading, myLeads=[]
                 <div key={l.id||i} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"11px 18px",borderBottom:i<teamOverdue.length-1?"1px solid "+T.border:""}}>
                   <div style={{flex:1,minWidth:0}}>
                     <div style={{fontSize:12,fontWeight:600,color:T.white,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{l.name||l.phone||"Unnamed"}</div>
-                    <div style={{fontSize:10,color:T.textMuted,marginTop:2}}>{agent?(agent.name||agent.email?.split("@")[0]):"Unassigned"}{l.source?" ÃÂ· "+l.source:""}</div>
+                    <div style={{fontSize:10,color:T.textMuted,marginTop:2}}>{agent?(agent.name||agent.email?.split("@")[0]):"Unassigned"}{l.source?" Ã· "+l.source:""}</div>
                   </div>
                   <div style={{display:"flex",alignItems:"center",gap:8,flexShrink:0}}>
                     <span style={{fontSize:10,fontWeight:700,padding:"3px 8px",borderRadius:5,background:"rgba(239,68,68,0.1)",color:"#EF4444"}}>{days}d ago</span>

@@ -75,7 +75,7 @@ export default function AgencySignup() {
     setError(""); return true;
   };
 
-  // Final submit â€” create account + org
+  // Final submit — create account + org
   const handleSubmit = async () => {
     setLoading(true);
     setError("");
@@ -125,7 +125,7 @@ export default function AgencySignup() {
       setCreatedOrg({ orgId, name: agencyForm.name.trim() });
       setStep(4);
     } catch(e) {
-      if (e.code === "auth/email-already-in-use") setError("This email is already registered â€” try logging in");
+      if (e.code === "auth/email-already-in-use") setError("This email is already registered — try logging in");
       else if (e.code === "auth/invalid-email") setError("Invalid email address");
       else setError("Something went wrong: " + e.message);
     }
@@ -186,7 +186,7 @@ export default function AgencySignup() {
           {step === 1 && (
             <div style={{ padding:"28px 28px 24px" }}>
               <div style={{ fontFamily:"'Fraunces',serif", fontSize:20, fontWeight:900, color:T.white, marginBottom:4 }}>Tell us about your {accountType === "developer" ? "company" : "agency"}</div>
-              <div style={{ fontSize:12, color:T.textMuted, marginBottom:18 }}>Your {accountType === "developer" ? "developer" : "agency"} profile â€” you can update this later</div>
+              <div style={{ fontSize:12, color:T.textMuted, marginBottom:18 }}>Your {accountType === "developer" ? "developer" : "agency"} profile — you can update this later</div>
               <div style={{ display:"flex", gap:10, marginBottom:18 }}>
                 <button type="button" onClick={()=>setAccountType("agency")} style={{
                   flex:1, padding:"14px 12px",
@@ -276,7 +276,7 @@ export default function AgencySignup() {
           {step === 3 && (
             <div style={{ padding:"28px 28px 24px" }}>
               <div style={{ fontFamily:"'Fraunces',serif", fontSize:20, fontWeight:900, color:T.white, marginBottom:4 }}>Choose your plan</div>
-              <div style={{ fontSize:12, color:T.textMuted, marginBottom:24 }}>Start with a 14-day free trial on Pro or Enterprise â€” no credit card required</div>
+              <div style={{ fontSize:12, color:T.textMuted, marginBottom:24 }}>Start with a 14-day free trial on Pro or Enterprise — no credit card required</div>
               <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
                 {PLANS.map(plan => (
                   <div key={plan.key} onClick={()=>setSelectedPlan(plan.key)}
@@ -362,7 +362,7 @@ export default function AgencySignup() {
         {step < 4 && (
           <div style={{ textAlign:"center", marginTop:20, fontSize:12, color:T.textMuted }}>
             Already have an account?{" "}
-            <a href="/dashboard" style={{ color:T.gold, textDecoration:"none", fontWeight:600 }}>Sign in â†’</a>
+            <a href="/dashboard" style={{ color:T.gold, textDecoration:"none", fontWeight:600 }}>Sign in →</a>
           </div>
         )}
       </div>
