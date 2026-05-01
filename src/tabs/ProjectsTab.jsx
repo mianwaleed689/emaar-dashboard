@@ -1600,7 +1600,7 @@ function ProjectsTab({
                   {key:"rental",label:"Rental & Yield"},
                   {key:"developer",label:"Developer & Compliance"},
                   {key:"community",label:"Community Intel"},
-                  {key:"report",label:"Full Report"},{key:"dldSales",label:"DLD Sales"},
+                  {key:"report",label:"Full Report"},{key:"dldSales",label:"DLD Sales"},{key:"dldSales",label:"DLD Sales"},
                 ].map(t => (
                   <button key={t.key} type="button" onClick={() => setProjDetailTab(t.key)}
                     style={{ padding:"12px 16px", background:"none", border:"none", borderBottom:projDetailTab===t.key?`2px solid ${T.gold}`:"2px solid transparent", color:projDetailTab===t.key?T.gold:T.textMuted, fontSize:11, fontWeight:projDetailTab===t.key?700:400, cursor:"pointer", fontFamily:"'Outfit',sans-serif", whiteSpace:"nowrap", letterSpacing:0.3 }}>
@@ -2265,6 +2265,7 @@ return(<div>
 {dldTx.map((tx,i)=>(<div key={i} style={{display:"grid",gridTemplateColumns:"1.5fr 1fr 1fr 1fr 1fr",padding:"10px 14px",borderBottom:i<dldTx.length-1?"1px solid rgba(255,255,255,0.04)":"none"}}><div style={{fontSize:11,color:T.textSecondary}}>{tx.date?tx.date.substring(0,10):""}</div><div style={{fontSize:11,fontWeight:700,color:T.gold}}>{tx.price?"AED "+(tx.price/1e6).toFixed(2)+"M":""}</div><div style={{fontSize:11,color:T.textSecondary}}>{tx.ppsf?"AED "+Math.round(tx.ppsf/10.764).toLocaleString():""}</div><div style={{fontSize:11,color:T.textSecondary}}>{tx.rooms||""}</div><div style={{fontSize:11,color:T.textSecondary}}>{tx.propertySubType||""}</div></div>))}</div>)}
 </div>);
 })()}
+{projDetailTab==="dldSales"&&<DLDSalesPanel selectedProject={selectedProject} T={T}/>}
 {projDetailTab === "report" && (
                   <div>
                     <div style={{ padding:"14px 20px", background:"rgba(139,92,246,0.05)", border:`1px solid ${T.border}`, borderRadius:10, marginBottom:16 }}>
@@ -2350,4 +2351,40 @@ return(<div>
   );
 }
 
+function DLDSalesPanel({selectedProject,T}){
+  const community=selectedProject.masterProject||selectedProject.community||"";
+  const [dldTx,setDldTx]=React.useState([]);
+  const [txLoading,setTxLoading]=React.useState(true);
+  React.useEffect(()=>{
+    setDldTx([]);setTxLoading(true);
+    if(!community){setTxLoading(false);return;}
+    import("firebase/firestore").then(({collection,query,where,orderBy,limit,getDocs,getFirestore})=>{
+      const fdb=getFirestore();
+      const txq=query(collection(fdb,"transactions"),where("masterProject","==",community),where("transGroup","==","Sales"),orderBy("date","desc"),limit(10));
+      getDocs(txq).then(snap=>{setDldTx(snap.docs.map(d=>d.data()));setTxLoading(false);}).catch(()=>setTxLoading(false));
+    });
+  },[community]);
+  return(<div>
+    <div style={{padding:"14px 20px",background:"rgba(212,168,67,0.05)",border:"1px solid rgba(212,168,67,0.15)",borderRadius:10,marginBottom:16}}>
+      <div style={{fontSize:11,color:T.gold,fontWeight:700}}>COMPARABLE SALES · DLD REGISTERED</div>
+      <div style={{fontSize:11,color:T.textMuted,marginTop:3}}>{community}</div>
+    </div>
+    {txLoading&&<div style={{padding:20,color:T.textMuted,fontSize:12}}>Loading DLD transactions...</div>}
+    {!txLoading&&dldTx.length===0&&<div style={{padding:20,color:T.textMuted,fontSize:12}}>No DLD transactions found for {community}</div>}
+    {!txLoading&&dldTx.length>0&&(<div style={{border:"1px solid "+T.border,borderRadius:10,overflow:"hidden"}}>
+      <div style={{display:"grid",gridTemplateColumns:"1.5fr 1fr 1fr 1fr 1fr",padding:"8px 14px",background:"rgba(255,255,255,0.03)",borderBottom:"1px solid "+T.border}}>
+        {["Date","Price","PPSF/sqft","Beds","Type"].map(h=><div key={h} style={{fontSize:10,fontWeight:700,color:T.textMuted,textTransform:"uppercase"}}>{h}</div>)}
+      </div>
+      {dldTx.map((tx,i)=>(
+        <div key={i} style={{display:"grid",gridTemplateColumns:"1.5fr 1fr 1fr 1fr 1fr",padding:"10px 14px",borderBottom:i<dldTx.length-1?"1px solid rgba(255,255,255,0.04)":"none"}}>
+          <div style={{fontSize:11,color:T.textSecondary}}>{tx.date?tx.date.substring(0,10):""}</div>
+          <div style={{fontSize:11,fontWeight:700,color:T.gold}}>{tx.price?"AED "+(tx.price/1e6).toFixed(2)+"M":""}</div>
+          <div style={{fontSize:11,color:T.textSecondary}}>{tx.ppsf?"AED "+Math.round(tx.ppsf/10.764).toLocaleString():""}</div>
+          <div style={{fontSize:11,color:T.textSecondary}}>{tx.rooms||""}</div>
+          <div style={{fontSize:11,color:T.textSecondary}}>{tx.propertySubType||""}</div>
+        </div>
+      ))}
+    </div>)}
+  </div>);
+}
 export default ProjectsTab;
