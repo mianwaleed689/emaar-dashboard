@@ -3602,12 +3602,12 @@ export default function EmaarDashboardV2() {
     }
 
     ;
-    unsubs.push(onSnapshot(doc(db, "watchlists", auth.currentUser?.uid), (snap) => {
-      if (snap.exists()) setWatchlist(snap.data().projects || []);
-    }));
-    unsubs.push(onSnapshot(doc(db, "priceAlerts", auth.currentUser?.uid), (snap) => {
-      if (snap.exists()) setMyAlerts(snap.data().alerts || []);
-    }));
+if(auth.currentUser?.uid){unsubs.push(onSnapshot(doc(db, "watchlists", auth.currentUser.uid), (snap) => {
+if (snap.exists()) setWatchlist(snap.data().projects || []);
+}))}
+if(auth.currentUser?.uid){unsubs.push(onSnapshot(doc(db, "priceAlerts", auth.currentUser.uid), (snap) => {
+if (snap.exists()) setMyAlerts(snap.data().alerts || []);
+}))}
     return () => unsubs.forEach(u => { try { u(); } catch {} });
   }, [isLoggedIn]); // eslint-disable-line react-hooks/exhaustive-deps
 
