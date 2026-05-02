@@ -3593,7 +3593,7 @@ export default function EmaarDashboardV2() {
     /* �ƒ¢�€�→š¬�ƒ¢�€�→š¬�ƒ¢�€�→š¬ PORTFOLIO (user-specific) �ƒ¢�€�→š¬�ƒ¢�€�→š¬�ƒ¢�€�→š¬ */
     if (auth.currentUser?.uid) {
       unsubs.push(onSnapshot(
-        query(collection(db, "portfolios"), where("userId", "==", auth.currentUser.uid)),
+        query(collection(db, "portfolios"), where("userId", "==", auth.currentUser?.uid)),
         snap => {
           const d = snap.docs.map(x => ({ id:x.id, ...x.data() }));
           setLivePortfolio(d);
@@ -3602,10 +3602,10 @@ export default function EmaarDashboardV2() {
     }
 
     ;
-    unsubs.push(onSnapshot(doc(db, "watchlists", auth.currentUser.uid), (snap) => {
+    unsubs.push(onSnapshot(doc(db, "watchlists", auth.currentUser?.uid), (snap) => {
       if (snap.exists()) setWatchlist(snap.data().projects || []);
     }));
-    unsubs.push(onSnapshot(doc(db, "priceAlerts", auth.currentUser.uid), (snap) => {
+    unsubs.push(onSnapshot(doc(db, "priceAlerts", auth.currentUser?.uid), (snap) => {
       if (snap.exists()) setMyAlerts(snap.data().alerts || []);
     }));
     return () => unsubs.forEach(u => { try { u(); } catch {} });
@@ -3915,7 +3915,7 @@ export default function EmaarDashboardV2() {
     const updated = isWatched ? watchlist.filter(p => p.id !== project.id) : [...watchlist, { id: project.id, name: project.name || project.project, community: project.community || project.area, priceMin: project.priceMin || project.price, grossYield: project.grossYield, addedAt: new Date().toISOString() }];
     setWatchlist(updated);
     if (auth.currentUser) {
-      await safeAsyncWithToast(() => setDoc(doc(db, "watchlists", auth.currentUser.uid), { projects: updated, updatedAt: new Date().toISOString() }), "watchlist-save", notify, "Couldn't save your watchlist �€” try again");
+      await safeAsyncWithToast(() => setDoc(doc(db, "watchlists", auth.currentUser?.uid), { projects: updated, updatedAt: new Date().toISOString() }), "watchlist-save", notify, "Couldn't save your watchlist �€” try again");
     }
     notify(isWatched ? `Removed ${project.name} from watchlist` : `⭐ ${project.name} added to watchlist`);
   };
@@ -3925,7 +3925,7 @@ export default function EmaarDashboardV2() {
   const saveAlerts = async (alerts) => {
     setMyAlerts(alerts);
     if (auth.currentUser) {
-      await safeAsyncWithToast(() => setDoc(doc(db, "priceAlerts", auth.currentUser.uid), { alerts, updatedAt: new Date().toISOString() }), "price-alerts-save", notify, "Couldn't save your price alerts �€” try again");
+      await safeAsyncWithToast(() => setDoc(doc(db, "priceAlerts", auth.currentUser?.uid), { alerts, updatedAt: new Date().toISOString() }), "price-alerts-save", notify, "Couldn't save your price alerts �€” try again");
     }
   };
 
@@ -3964,7 +3964,7 @@ export default function EmaarDashboardV2() {
   // NOTIFICATIONS �€” live listener so admin messages appear instantly
   useEffect(() => {
     if (!isLoggedIn || !auth.currentUser) return;
-    const uid = auth.currentUser.uid;
+    const uid = auth.currentUser?.uid;
     const unsub = onSnapshot(collection(db, "notifications"), (snap) => {
       const userNotifs = [];
       snap.forEach(d => {
@@ -4004,7 +4004,7 @@ export default function EmaarDashboardV2() {
   const savePortfolio = async (holdings) => {
     setMyPortfolio(holdings);
     if (auth.currentUser) {
-      try { await setDoc(doc(db, "portfolios", auth.currentUser.uid), { holdings, updatedAt: new Date().toISOString() }); } catch (e) { console.log("Portfolio save error:", e); }
+      try { await setDoc(doc(db, "portfolios", auth.currentUser?.uid), { holdings, updatedAt: new Date().toISOString() }); } catch (e) { console.log("Portfolio save error:", e); }
     }
   };
 
@@ -4183,10 +4183,10 @@ export default function EmaarDashboardV2() {
     if (auth.currentUser) {
       try {
         const actEntry = { tab: key, time: new Date().toISOString() };
-        getDoc(doc(db, "users", auth.currentUser.uid)).then(snap => {
+        getDoc(doc(db, "users", auth.currentUser?.uid)).then(snap => {
           const prev = snap.exists() ? (snap.data().recentActivity || []) : [];
           const updated = [actEntry, ...prev].slice(0, 15);
-          setDoc(doc(db, "users", auth.currentUser.uid), { recentActivity: updated }, { merge: true });
+          setDoc(doc(db, "users", auth.currentUser?.uid), { recentActivity: updated }, { merge: true });
         });
       } catch(e) {}
     }
@@ -5811,7 +5811,7 @@ activeProjects={extraProjects?.length > 0 ? extraProjects : []}
                 <div><label style={{ fontSize: 10, color: T.textMuted, fontWeight: 600, display: "block", marginBottom: 4 }}>DISPLAY NAME</label><input type="text" value={profileEdit.name} onChange={e => setProfileEdit({...profileEdit, name: e.target.value})} placeholder="Your name" style={{ width: "100%", padding: "10px 12px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit', sans-serif", outline: "none" }} /></div>
                 <div><label style={{ fontSize: 10, color: T.textMuted, fontWeight: 600, display: "block", marginBottom: 4 }}>EMAIL</label><input type="email" value={user} disabled style={{ width: "100%", padding: "10px 12px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, fontSize: 13, fontFamily: "'Outfit', sans-serif", outline: "none", opacity: 0.6 }} /></div>
               </div>
-              <button type="button" onClick={async () => { if (auth.currentUser && profileEdit.name.trim()) { try { await setDoc(doc(db, "users", auth.currentUser.uid), { name: profileEdit.name.trim() }, { merge: true }); setUserName(profileEdit.name.trim()); setToast("�ƒ¢�…�€œ→‚�¦ Profile updated!"); setTimeout(() => setToast(""), 3000); } catch(e) { setToast("�ƒ¢�‚�…�€™ Update failed"); setTimeout(() => setToast(""), 3000); } } }} style={{ marginTop: 10, padding: "8px 20px", background: T.gold, color: T.bg, border: "none", borderRadius: 8, fontWeight: 700, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>Save Changes</button>
+              <button type="button" onClick={async () => { if (auth.currentUser && profileEdit.name.trim()) { try { await setDoc(doc(db, "users", auth.currentUser?.uid), { name: profileEdit.name.trim() }, { merge: true }); setUserName(profileEdit.name.trim()); setToast("�ƒ¢�…�€œ→‚�¦ Profile updated!"); setTimeout(() => setToast(""), 3000); } catch(e) { setToast("�ƒ¢�‚�…�€™ Update failed"); setTimeout(() => setToast(""), 3000); } } }} style={{ marginTop: 10, padding: "8px 20px", background: T.gold, color: T.bg, border: "none", borderRadius: 8, fontWeight: 700, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>Save Changes</button>
             </div>
             <div style={{ marginBottom: 20, padding: 16, borderRadius: 12, background: T.surfaceAlt, border: `1px solid ${T.border}` }}>
               <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 12 }}>Subscription</div>
