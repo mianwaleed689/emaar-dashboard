@@ -653,7 +653,7 @@ function ProjectsTab({
               if (isDld) {
                 return (
                   <div style={{ width:52, height:52, borderRadius:"50%", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", border:`2px solid ${T.teal}`, background:"rgba(20,184,166,0.15)", flexShrink:0 }}>
-                    <span style={{ fontSize:16, color:T.teal, lineHeight:1 }}</span>
+                    <span style={{ fontSize:16, color:T.teal, lineHeight:1 }}>🏛</span>
                     <span style={{ fontSize:8, fontWeight:700, color:T.teal, marginTop:2 }}>DLD</span>
                   </div>
                 );
