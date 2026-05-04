@@ -367,6 +367,21 @@ export default function MyLeadsTab({ liveNeighbourhoods=[],
       });
       if(selectedLead?.id===leadId) setSelectedLead(l=>({...l,assignedTo:agent.uid||agent.id,assignedToName:agent.name}));
       setShowAssign(null);notify("Lead assigned to "+agent.name);
+// Send in-platform notification to agent
+try{
+  const {addDoc:aDoc,collection:col,getFirestore}=await import("firebase/firestore");
+  const fdb=getFirestore();
+  await aDoc(col(fdb,"notifications"),{
+    userId:agent.uid||agent.id,
+    type:"lead_assigned",
+    icon:"👤",
+    title:"New lead assigned to you",
+    body:"Lead: "+(selectedLead?.name||leadId),
+    read:false,
+    priority:"high",
+    createdAt:new Date().toISOString(),
+  });
+}catch(e){console.warn("Notif failed",e);}
     }catch(e){notify("Assign failed","error");}
   },[currentEmail,selectedLead,setSelectedLead,notify]);
 
