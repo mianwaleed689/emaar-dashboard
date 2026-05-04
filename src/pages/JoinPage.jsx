@@ -52,12 +52,12 @@ export default function JoinPage() {
         createdAt: new Date().toISOString(),
         createdBy: invite.managerId,
       });
-      await setDoc(doc(db, "organisations", invite.orgId, "members", uid), {
+      if(invite.orgId) await setDoc(doc(db, "organisations", invite.orgId, "members", uid), {
         uid, name: name.trim(), email: invite.email,
         orgRole: "agent", orgId: invite.orgId,
         managerId: invite.managerId, status: "active",
         createdAt: new Date().toISOString(),
-      }, { merge: true });
+      }, { merge: true });}
       await updateDoc(doc(db, "invites", token), {
         used: true, usedAt: new Date().toISOString(), agentUid: uid
       });
