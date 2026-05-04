@@ -3756,18 +3756,26 @@ if (snap.exists()) setMyAlerts(snap.data().alerts || []);
     let leadsQuery;
 
     if (isSuperAdmin) {
-      // SuperAdmin sees all leads across all orgs (admin analytics only  no privacy breach)
-      leadsQuery = query(collection(db, "leads"), orderBy("createdAt", "desc"), limit(1000));
-    } else if ((isOwner || isDirector || isManager) && orgId) {
-      // Owner, Director, Manager: see all leads in their org
-      leadsQuery = query(collection(db, "leads"), where("orgId", "==", orgId), orderBy("createdAt", "desc"), limit(500));
-    } else if (isAgent) {
-      // Agent: sees only their assigned leads
-      leadsQuery = query(collection(db, "leads"), where("assignedTo", "==", uid), orderBy("createdAt", "desc"), limit(200));
-    } else {
-      // Regular platform user  no CRM access
+      // SuperAdmin CANNOT see agency leads — privacy rule
       setMyLeadsLoading(false);
       return;
+    } else if (isOwner && orgId) {
+      // Owner sees ALL leads in their org
+      leadsQuery = query(collection(db, "leads"), where("orgId", "==", orgId), orderBy("createdAt", "desc"), limit(1000));
+    } else if (isDirector && orgId) {
+      // Director sees leads assigned to their managers/agents
+      leadsQuery = query(collection(db, "leads"), where("directorId", "==", uid), orderBy("createdAt", "desc"), limit(500));
+    } else if (isManager && orgId) {
+      // Manager sees ONLY their own team leads
+      leadsQuery = query(collection(db, "leads"), where("managerId", "==", uid), orderBy("createdAt", "desc"), limit(500));
+    } else if (isAgent) {
+      // Agent sees only assigned leads
+      leadsQuery = query(collection(db, "leads"), where("assignedTo", "==", uid), orderBy("createdAt", "desc"), limit(200));
+    } else {
+      // Regular platform user — no CRM access
+      setMyLeadsLoading(false);
+      return;
+    }
     }
 
     const unsub = onSnapshot(leadsQuery, (snap) => {
