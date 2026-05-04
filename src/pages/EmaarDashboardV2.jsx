@@ -3805,9 +3805,11 @@ if (snap.exists()) setMyAlerts(snap.data().alerts || []);
   useEffect(() => {
     const canSeeTeam = orgRole === "owner" || orgRole === "director" || orgRole === "manager" || userRole === "superAdmin" || userRole === "admin";
     if (!isLoggedIn || !firebaseUser || !canSeeTeam) return;
-const teamOrgId = orgId || "org_alpha_realty_mnk013kg";
+const teamOrgId = orgId || "";
     setTeamMembersLoading(true);
-    const q = query(collection(db, "users"), where("orgId", "==", teamOrgId));
+    const q = teamOrgId
+  ? query(collection(db,"users"),where("orgId","==",teamOrgId))
+  : query(collection(db,"users"),where("orgRole","==","agent"));
     const unsub = onSnapshot(q, snap => {
       const list = [];
       snap.forEach(d => list.push({ uid: d.id, ...d.data() }));
