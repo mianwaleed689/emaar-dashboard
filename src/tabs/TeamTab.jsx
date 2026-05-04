@@ -36,16 +36,54 @@ export default function TeamTab({ teamMembers=[], teamMembersLoading, myLeads=[]
 
   // �ƒ¢�‚�”�‚�€�ƒ¢�‚�”�‚�€ State �ƒ¢�‚�”�‚�€�ƒ¢�‚�”�‚�€�ƒ¢�‚�”�‚�€�ƒ¢�‚�”�‚�€�ƒ¢�‚�”�‚�€�ƒ¢�‚�”�‚�€�ƒ¢�‚�”�‚�€�ƒ¢�‚�”�‚�€�ƒ¢�‚�”�‚�€�ƒ¢�‚�”�‚�€�ƒ¢�‚�”�‚�€�ƒ¢�‚�”�‚�€�ƒ¢�‚�”�‚�€�ƒ¢�‚�”�‚�€�ƒ¢�‚�”�‚�€�ƒ¢�‚�”�‚�€�ƒ¢�‚�”�‚�€�ƒ¢�‚�”�‚�€�ƒ¢�‚�”�‚�€�ƒ¢�‚�”�‚�€�ƒ¢�‚�”�‚�€�ƒ¢�‚�”�‚�€�ƒ¢�‚�”�‚�€�ƒ¢�‚�”�‚�€�ƒ¢�‚�”�‚�€�ƒ¢�‚�”�‚�€�ƒ¢�‚�”�‚�€�ƒ¢�‚�”�‚�€�ƒ¢�‚�”�‚�€�ƒ¢�‚�”�‚�€�ƒ¢�‚�”�‚�€�ƒ¢�‚�”�‚�€�ƒ¢�‚�”�‚�€�ƒ¢�‚�”�‚�€�ƒ¢�‚�”�‚�€�ƒ¢�‚�”�‚�€�ƒ¢�‚�”�‚�€�ƒ¢�‚�”�‚�€�ƒ¢�‚�”�‚�€�ƒ¢�‚�”�‚�€�ƒ¢�‚�”�‚�€�ƒ¢�‚�”�‚�€�ƒ¢�‚�”�‚�€�ƒ¢�‚�”�‚�€�ƒ¢�‚�”�‚�€�ƒ¢�‚�”�‚�€�ƒ¢�‚�”�‚�€�ƒ¢�‚�”�‚�€�ƒ¢�‚�”�‚�€�ƒ¢�‚�”�‚�€
   const [showCreate,  setShowCreate]  = useState(false);
+  const [showInvite, setShowInvite] = useState(false);
   const [showDeact,   setShowDeact]   = useState(null);  // agent being deactivated
   const [toast,       setToast]       = useState(null);
   const [creating,    setCreating]    = useState(false);
   const [deacting,    setDeacting]    = useState(false);
   const [form, setForm] = useState({name:"",email:"",phone:"",password:"",nationality:""});
+  const [inviteMode, setInviteMode] = useState(false);
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteLink, setInviteLink] = useState("");
+  const [sendingInvite, setSendingInvite] = useState(false);
+  const [inviteMode, setInviteMode] = useState(false);
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteLink, setInviteLink] = useState("");
+  const [sendingInvite, setSendingInvite] = useState(false);
+  const [inviteMode, setInviteMode] = useState(false);
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteLink, setInviteLink] = useState("");
+  const [sendingInvite, setSendingInvite] = useState(false);
+  const [inviteMode, setInviteMode] = useState(false);
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteLink, setInviteLink] = useState("");
+  const [sendingInvite, setSendingInvite] = useState(false);
   const F = (k,v) => setForm(p=>({...p,[k]:v}));
 
   const notify = (msg, type="success") => {
     setToast({msg,type});
     setTimeout(()=>setToast(null),3500);
+  };
+
+  const generateInvite = async () => {
+    if (!inviteEmail.trim()) { notify("Please enter agent email", "error"); return; }
+    setSendingInvite(true);
+    try {
+      const token = "inv_" + Math.random().toString(36).substring(2) + Date.now().toString(36);
+      const expiresAt = new Date(Date.now() + 7*24*60*60*1000).toISOString();
+      const { setDoc, doc: fsDoc } = await import("firebase/firestore");
+      await setDoc(fsDoc(db, "invites", token), {
+        token, email: inviteEmail.trim(),
+        orgId: orgId || "", orgName: orgName || "Your Agency",
+        managerId: firebaseUser?.uid || "",
+        createdAt: new Date().toISOString(),
+        expiresAt, used: false,
+      });
+      const link = window.location.origin + "/join?token=" + token;
+      setInviteLink(link);
+      notify("Invite link generated!");
+    } catch(e) { notify("Failed: " + e.message, "error"); }
+    setSendingInvite(false);
   };
 
   // �ƒ¢�‚�”�‚�€�ƒ¢�‚�”�‚�€ Create agent account �ƒ¢�‚�”�‚�€�ƒ¢�‚�”�‚�€�ƒ¢�‚�”�‚�€�ƒ¢�‚�”�‚�€�ƒ¢�‚�”�‚�€�ƒ¢�‚�”�‚�€�ƒ¢�‚�”�‚�€�ƒ¢�‚�”�‚�€�ƒ¢�‚�”�‚�€�ƒ¢�‚�”�‚�€�ƒ¢�‚�”�‚�€�ƒ¢�‚�”�‚�€�ƒ¢�‚�”�‚�€�ƒ¢�‚�”�‚�€�ƒ¢�‚�”�‚�€�ƒ¢�‚�”�‚�€�ƒ¢�‚�”�‚�€�ƒ¢�‚�”�‚�€�ƒ¢�‚�”�‚�€�ƒ¢�‚�”�‚�€�ƒ¢�‚�”�‚�€�ƒ¢�‚�”�‚�€�ƒ¢�‚�”�‚�€�ƒ¢�‚�”�‚�€�ƒ¢�‚�”�‚�€�ƒ¢�‚�”�‚�€�ƒ¢�‚�”�‚�€�ƒ¢�‚�”�‚�€�ƒ¢�‚�”�‚�€�ƒ¢�‚�”�‚�€�ƒ¢�‚�”�‚�€�ƒ¢�‚�”�‚�€�ƒ¢�‚�”�‚�€�ƒ¢�‚�”�‚�€�ƒ¢�‚�”�‚�€
@@ -231,6 +269,10 @@ export default function TeamTab({ teamMembers=[], teamMembersLoading, myLeads=[]
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           Add Agent
         </button>
+        <button type="button" onClick={()=>{setShowInvite(true);setInviteLink("");setInviteEmail("");}}
+          style={{padding:"8px 16px",borderRadius:7,border:"1px solid "+T.teal,background:"rgba(0,191,165,0.08)",color:T.teal,fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"'Outfit',sans-serif"}}>
+          ✉ Invite via Link
+        </button>
       </div>
 
       {/* �ƒ¢�‚�•�‚�ƒ¢�‚�•�‚ KPI BAR �ƒ¢�‚�•�‚�ƒ¢�‚�•�‚�ƒ¢�‚�•�‚�ƒ¢�‚�•�‚�ƒ¢�‚�•�‚�ƒ¢�‚�•�‚�ƒ¢�‚�•�‚�ƒ¢�‚�•�‚�ƒ¢�‚�•�‚�ƒ¢�‚�•�‚�ƒ¢�‚�•�‚�ƒ¢�‚�•�‚�ƒ¢�‚�•�‚�ƒ¢�‚�•�‚�ƒ¢�‚�•�‚�ƒ¢�‚�•�‚�ƒ¢�‚�•�‚�ƒ¢�‚�•�‚�ƒ¢�‚�•�‚�ƒ¢�‚�•�‚�ƒ¢�‚�•�‚�ƒ¢�‚�•�‚�ƒ¢�‚�•�‚�ƒ¢�‚�•�‚�ƒ¢�‚�•�‚�ƒ¢�‚�•�‚�ƒ¢�‚�•�‚�ƒ¢�‚�•�‚�ƒ¢�‚�•�‚�ƒ¢�‚�•�‚�ƒ¢�‚�•�‚�ƒ¢�‚�•�‚�ƒ¢�‚�•�‚�ƒ¢�‚�•�‚�ƒ¢�‚�•�‚�ƒ¢�‚�•�‚�ƒ¢�‚�•�‚�ƒ¢�‚�•�‚�ƒ¢�‚�•�‚�ƒ¢�‚�•�‚�ƒ¢�‚�•�‚�ƒ¢�‚�•�‚�ƒ¢�‚�•�‚�ƒ¢�‚�•�‚�ƒ¢�‚�•�‚�ƒ¢�‚�•�‚ */}
@@ -384,6 +426,55 @@ export default function TeamTab({ teamMembers=[], teamMembersLoading, myLeads=[]
       </div>
 
       {/* �ƒ¢�‚�•�‚�ƒ¢�‚�•�‚ CREATE AGENT MODAL �ƒ¢�‚�•�‚�ƒ¢�‚�•�‚�ƒ¢�‚�•�‚�ƒ¢�‚�•�‚�ƒ¢�‚�•�‚�ƒ¢�‚�•�‚�ƒ¢�‚�•�‚�ƒ¢�‚�•�‚�ƒ¢�‚�•�‚�ƒ¢�‚�•�‚�ƒ¢�‚�•�‚�ƒ¢�‚�•�‚�ƒ¢�‚�•�‚�ƒ¢�‚�•�‚�ƒ¢�‚�•�‚�ƒ¢�‚�•�‚�ƒ¢�‚�•�‚�ƒ¢�‚�•�‚�ƒ¢�‚�•�‚�ƒ¢�‚�•�‚�ƒ¢�‚�•�‚�ƒ¢�‚�•�‚�ƒ¢�‚�•�‚�ƒ¢�‚�•�‚�ƒ¢�‚�•�‚�ƒ¢�‚�•�‚�ƒ¢�‚�•�‚�ƒ¢�‚�•�‚�ƒ¢�‚�•�‚�ƒ¢�‚�•�‚�ƒ¢�‚�•�‚�ƒ¢�‚�•�‚�ƒ¢�‚�•�‚�ƒ¢�‚�•�‚�ƒ¢�‚�•�‚�ƒ¢�‚�•�‚ */}
+      {showInvite&&(
+        <div style={{position:"fixed",inset:0,background:"rgba(4,9,15,0.85)",zIndex:3000,display:"flex",alignItems:"center",justifyContent:"center",padding:20}}>
+          <div style={{background:"#0A1628",borderRadius:16,padding:32,width:"100%",maxWidth:420,border:"1px solid rgba(255,255,255,0.06)"}}>
+            <div style={{fontFamily:"'Fraunces',serif",fontSize:16,fontWeight:900,color:"#FFFFFF",marginBottom:4}}>✉ Invite Agent</div>
+            <div style={{fontSize:12,color:"#64748B",marginBottom:20}}>Generate a secure invite link to send via WhatsApp or email</div>
+            {!inviteLink?(
+              <div style={{display:"flex",flexDirection:"column",gap:14}}>
+                <div>
+                  <div style={{fontSize:11,color:"#64748B",marginBottom:6}}>AGENT EMAIL *</div>
+                  <input value={inviteEmail} onChange={e=>setInviteEmail(e.target.value)}
+                    placeholder="agent@agency.ae"
+                    style={{width:"100%",padding:"11px 14px",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(212,168,67,0.15)",borderRadius:9,color:"#FFFFFF",fontSize:13,fontFamily:"'Outfit',sans-serif",outline:"none",boxSizing:"border-box"}} />
+                </div>
+                <div style={{display:"flex",gap:8}}>
+                  <button type="button" onClick={generateInvite} disabled={sendingInvite}
+                    style={{flex:1,padding:"11px",background:"linear-gradient(135deg,#D4A843,#B8922A)",border:"none",borderRadius:9,color:"#000",fontSize:13,fontWeight:700,cursor:sendingInvite?"not-allowed":"pointer"}}>
+                    {sendingInvite?"Generating...":"Generate Invite Link"}
+                  </button>
+                  <button type="button" onClick={()=>setShowInvite(false)}
+                    style={{padding:"11px 16px",background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.06)",borderRadius:9,color:"#94A3B8",fontSize:13,cursor:"pointer"}}>
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            ):(
+              <div style={{display:"flex",flexDirection:"column",gap:14}}>
+                <div style={{background:"rgba(16,185,129,0.08)",border:"1px solid rgba(16,185,129,0.2)",borderRadius:8,padding:"12px 14px"}}>
+                  <div style={{fontSize:11,color:"#10B981",fontWeight:700,marginBottom:6}}>✅ Invite Link Generated!</div>
+                  <div style={{fontSize:11,color:"#94A3B8",wordBreak:"break-all"}}>{inviteLink}</div>
+                </div>
+                <div style={{display:"flex",gap:8}}>
+                  <button type="button" onClick={()=>{navigator.clipboard.writeText(inviteLink);notify("Link copied!");}}
+                    style={{flex:1,padding:"11px",background:"linear-gradient(135deg,#D4A843,#B8922A)",border:"none",borderRadius:9,color:"#000",fontSize:13,fontWeight:700,cursor:"pointer"}}>
+                    📋 Copy Link
+                  </button>
+                  <button type="button" onClick={()=>window.open("https://wa.me/?text="+encodeURIComponent("You have been invited to join "+orgName+". Click here to create your account: "+inviteLink),"_blank")}
+                    style={{flex:1,padding:"11px",background:"rgba(37,211,102,0.12)",border:"1px solid rgba(37,211,102,0.3)",borderRadius:9,color:"#25D366",fontSize:13,fontWeight:700,cursor:"pointer"}}>
+                    📱 Send via WhatsApp
+                  </button>
+                </div>
+                <button type="button" onClick={()=>setShowInvite(false)}
+                  style={{padding:"10px",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.06)",borderRadius:9,color:"#94A3B8",fontSize:12,cursor:"pointer"}}>
+                  Close
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
       {showCreate&&(
         <div style={{position:"fixed",inset:0,background:"rgba(4,9,15,0.9)",zIndex:2000,display:"flex",alignItems:"center",justifyContent:"center",padding:20}} onClick={e=>{if(e.target===e.currentTarget)setShowCreate(false);}}>
           <div style={{background:"#0D1117",borderRadius:14,border:"1px solid rgba(212,168,67,0.3)",width:"100%",maxWidth:440,padding:24}} onClick={e=>e.stopPropagation()}>
