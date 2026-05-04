@@ -15,7 +15,6 @@ import ErrorBoundary from "./pages/ErrorBoundary";
 import UserGuard from "./pages/UserGuard";
 import NotFound from "./pages/NotFound";
 import JoinPage from "./pages/JoinPage";
-import JoinPage from "./pages/JoinPage";
 import { I18nProvider } from "./i18n";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "./lib/queryClient";
