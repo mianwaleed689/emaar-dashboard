@@ -46,18 +46,6 @@ export default function TeamTab({ teamMembers=[], teamMembersLoading, myLeads=[]
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteLink, setInviteLink] = useState("");
   const [sendingInvite, setSendingInvite] = useState(false);
-  const [inviteMode, setInviteMode] = useState(false);
-  const [inviteEmail, setInviteEmail] = useState("");
-  const [inviteLink, setInviteLink] = useState("");
-  const [sendingInvite, setSendingInvite] = useState(false);
-  const [inviteMode, setInviteMode] = useState(false);
-  const [inviteEmail, setInviteEmail] = useState("");
-  const [inviteLink, setInviteLink] = useState("");
-  const [sendingInvite, setSendingInvite] = useState(false);
-  const [inviteMode, setInviteMode] = useState(false);
-  const [inviteEmail, setInviteEmail] = useState("");
-  const [inviteLink, setInviteLink] = useState("");
-  const [sendingInvite, setSendingInvite] = useState(false);
   const F = (k,v) => setForm(p=>({...p,[k]:v}));
 
   const notify = (msg, type="success") => {
