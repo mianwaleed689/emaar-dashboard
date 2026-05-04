@@ -31,6 +31,11 @@ service cloud.firestore {
         getUserData().crmPlan == 'crm_enterprise' ||
         getUserData().orgRole == 'manager' ||
         getUserData().orgRole == 'agent' ||
+        getUserData().tier == 'pro' ||
+        getUserData().tier == 'enterprise' ||
+        getUserData().tier == 'pro_trial' ||
+        getUserData().role == 'manager' ||
+        getUserData().role == 'agent' ||
         isAdmin()
       );
     }
@@ -222,6 +227,13 @@ service cloud.firestore {
     match /devUnits/{doc}         { allow read: if isAuthed(); allow write: if isAdmin(); }
     match /marketMetrics/{doc}    { allow read: if isAuthed(); allow write: if isAdmin(); }
     match /transactions/{doc}     { allow read: if isAuthed(); allow write: if isAdmin(); }
+    match /invites/{token} {
+      allow read: if true; // Public so agents can open invite links
+      allow create: if isAuthed() && (isManager() || isAdmin());
+      allow update: if true; // Agent marks as used on join
+      allow delete: if isAdmin();
+    }
+
     match /legal_citations/{doc}  { allow read: if true;       allow write: if isAdmin(); }
 
     // ── ADMIN ONLY ───────────────────────────────────────────────
