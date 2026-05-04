@@ -3803,10 +3803,11 @@ if (snap.exists()) setMyAlerts(snap.data().alerts || []);
 
   /* �ƒ¢�€�→š¬�ƒ¢�€�→š¬�ƒ¢�€�→š¬ TEAM MEMBERS LISTENER (Session 7) �ƒ¢�€�→š¬�ƒ¢�€�→š¬�ƒ¢�€�→š¬ */
   useEffect(() => {
-    const canSeeTeam = orgRole === "owner" || orgRole === "director" || orgRole === "manager";
-    if (!isLoggedIn || !firebaseUser || !canSeeTeam || !orgId) return;
+    const canSeeTeam = orgRole === "owner" || orgRole === "director" || orgRole === "manager" || userRole === "superAdmin" || userRole === "admin";
+    if (!isLoggedIn || !firebaseUser || !canSeeTeam) return;
+const teamOrgId = orgId || "org_alpha_realty_mnk013kg";
     setTeamMembersLoading(true);
-    const q = query(collection(db, "users"), where("orgId", "==", orgId));
+    const q = query(collection(db, "users"), where("orgId", "==", teamOrgId));
     const unsub = onSnapshot(q, snap => {
       const list = [];
       snap.forEach(d => list.push({ uid: d.id, ...d.data() }));
