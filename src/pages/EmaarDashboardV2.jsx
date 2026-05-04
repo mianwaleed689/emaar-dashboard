@@ -3807,9 +3807,7 @@ if (snap.exists()) setMyAlerts(snap.data().alerts || []);
     if (!isLoggedIn || !firebaseUser || !canSeeTeam) return;
 const teamOrgId = orgId || "";
     setTeamMembersLoading(true);
-    const q = teamOrgId
-  ? query(collection(db,"users"),where("orgId","==",teamOrgId))
-  : query(collection(db,"users"),where("orgRole","==","agent"));
+    const q = teamOrgId ? query(collection(db,"users"),where("orgId","==",teamOrgId)) : query(collection(db,"users"),where("orgRole","in",["agent","manager"]));
     const unsub = onSnapshot(q, snap => {
       const list = [];
       snap.forEach(d => list.push({ uid: d.id, ...d.data() }));
