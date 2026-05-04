@@ -57,7 +57,8 @@ export default function JoinPage() {
         orgRole: "agent", orgId: invite.orgId,
         managerId: invite.managerId, status: "active",
         createdAt: new Date().toISOString(),
-      }, { merge: true });}
+      }, { merge: true });
+      }
       await updateDoc(doc(db, "invites", token), {
         used: true, usedAt: new Date().toISOString(), agentUid: uid
       });
