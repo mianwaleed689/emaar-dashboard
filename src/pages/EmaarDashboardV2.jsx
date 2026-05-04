@@ -3786,6 +3786,38 @@ if (snap.exists()) setMyAlerts(snap.data().alerts || []);
     return () => unsub();
   }, [isLoggedIn, firebaseUser, orgRole, userRole, orgId]);
 
+
+  /* LISTINGS LISTENER */
+  useEffect(() => {
+    if (!isLoggedIn || !firebaseUser) return;
+    const uid = firebaseUser.uid;
+    const isSuperAdmin = userRole === "superAdmin" || userRole === "admin";
+    const isOwnerOrManager = orgRole === "owner" || orgRole === "director" || orgRole === "manager";
+    import("firebase/firestore").then(({ collection, query, where, orderBy, onSnapshot, getFirestore }) => {
+      const fdb = getFirestore();
+      let q;
+      if (isSuperAdmin) {
+        // SuperAdmin sees no agency listings — privacy rule
+        setListings([]);
+        setListingsLoading(false);
+        return;
+      } else if (isOwnerOrManager && orgId) {
+        q = query(collection(fdb, "listings"), where("orgId", "==", orgId), orderBy("createdAt", "desc"));
+      } else {
+        q = query(collection(fdb, "listings"), where("agentId", "==", uid), orderBy("createdAt", "desc"));
+      }
+      setListingsLoading(true);
+      const unsub = onSnapshot(q, snap => {
+        const list = [];
+        snap.forEach(d => list.push({ id: d.id, ...d.data() }));
+        setListings(list);
+        setListingsLoading(false);
+      }, err => { console.warn("[Listings]", err); setListingsLoading(false); });
+      return () => unsub();
+    });
+  }, [isLoggedIn, firebaseUser, orgRole, userRole, orgId]);
+
+
   /* �ƒ¢�€�→š¬�ƒ¢�€�→š¬�ƒ¢�€�→š¬ DEALS PIPELINE LISTENER (Session 5) �ƒ¢�€�→š¬�ƒ¢�€�→š¬�ƒ¢�€�→š¬ */
   useEffect(() => {
     if (!isLoggedIn || !firebaseUser) return;
