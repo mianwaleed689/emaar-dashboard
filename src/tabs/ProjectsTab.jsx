@@ -462,7 +462,7 @@ function ProjectsTab({
               return "Apartment"; /* default — most DLD records are unit/flat = apartment */
             };
 
-            const filtered = rawProjects.filter(p => {
+            let filtered = rawProjects.filter(p => {
               // Global top-bar filters first
               if (!projMatchesGlobalFilter(p)) return false;
               // Type filter — but skip when 'All' is selected
@@ -483,6 +483,15 @@ function ProjectsTab({
                 if (effectiveStatus !== projStatus) return false;
               }
               /* NEW: Lifecycle Stage (100% DLD coverage) */
+  // Project name search
+  if(projSearch&&projSearch.trim()){
+    const sq=projSearch.toLowerCase().trim();
+    filtered=filtered.filter(p=>
+      (p.project||p.name||"").toLowerCase().includes(sq)||
+      (p.developer||"").toLowerCase().includes(sq)||
+      (p.community||p.areaName||"").toLowerCase().includes(sq)
+    );
+  }
               if (projLifecycle !== "All" && p.lifecycleStage !== projLifecycle) return false;
               /* NEW: Escrow Bank (94% DLD coverage) */
               if (projEscrowBank !== "All" && p.escrowBank !== projEscrowBank) return false;
