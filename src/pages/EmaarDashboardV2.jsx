@@ -3776,7 +3776,6 @@ if (snap.exists()) setMyAlerts(snap.data().alerts || []);
       setMyLeadsLoading(false);
       return;
     }
-    }
 
     const unsub = onSnapshot(leadsQuery, (snap) => {
       const list = [];
