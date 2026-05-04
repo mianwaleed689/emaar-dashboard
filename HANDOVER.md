@@ -161,3 +161,64 @@ pm2 status
 git status
 git log --oneline -5
 `
+---
+
+## Session 19 — May 4, 2026
+
+### Phase 1 — Privacy & Role Filters (COMPLETED)
+- SuperAdmin CANNOT see agency leads (privacy rule per platform model)
+- Owner sees all org leads
+- Director sees leads by directorId
+- Manager sees ONLY their own team leads (managerId == uid)
+- Agent sees only assigned leads
+- Firestore indexes created: leads/managerId+createdAt, leads/directorId+createdAt
+
+### Phase 2 — Lead Assignment (COMPLETED)
+- Assigning lead to agent now sets managerId + directorId automatically
+- assignedAt timestamp added on assignment
+
+### Phase 3 — Stale Lead Alerts (COMPLETED)
+- Script: scripts/stale-lead-alerts.js
+- Runs daily at 2:10 PM Dubai
+- Finds leads with no contact 7+ days
+- Sends in-platform notification to manager
+
+### Phase 4 — DXB Analytics as Agency (COMPLETED)
+- Created org_dxb_analytics in organisations collection
+- mianwaleed689@gmail.com set as Owner
+- Separate from superAdmin role
+- Can add own sales team via invite
+
+### Invite Agent System (COMPLETED)
+- Manager clicks Invite via Link in Team tab
+- Enters agent email → generates secure token
+- Copies link or sends via WhatsApp
+- Agent opens link → enters name + password → joins org
+- Manager never logs out
+- Route: /join?token=xxx
+- Firestore: invites collection
+
+### CRM Fixes (COMPLETED)
+- hasCRM() rule updated — pro/enterprise/pro_trial users have CRM access
+- Leads query fixed — manager sees own team only
+- Lead count increased to 1000 for superAdmin
+
+### Current Org Structure
+`
+org_dxb_analytics — DXB Analytics (enterprise)
+  Owner: mianwaleed689@gmail.com
+
+org_alpha_realty_mnk013kg — Alpha Realty (trial)
+  Manager: alpha.manager@test.com
+  Agent: mianmuhammadwaleed689@gmail.com
+
+org_beta_realty — Beta Realty (free)
+  Manager: beta.manager@test.com
+`
+
+### What Still Needs To Be Done
+1. Leaderboard — owner view with agent rankings
+2. Agent notification when lead assigned
+3. Listings tab — add listing flow
+4. CSV import for leads
+5. Fix remaining encoding issues
