@@ -11,9 +11,7 @@ async function run() {
   const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
   
   // Get all active leads not contacted in 7+ days
-  const snap = await db.collection('leads')
-    .where('status', 'not-in', ['Closed Deal', 'Closed Outside', 'Non Potential'])
-    .get();
+  const snap = await db.collection('leads').get();
   
   console.log('Total active leads:', snap.size);
   
