@@ -5963,9 +5963,9 @@ activeProjects={extraProjects?.length > 0 ? extraProjects : []}
             )}
             {notifications.length === 0 ? (
               <div style={{ padding: 40, textAlign: "center", color: T.textMuted }}>
-                <div style={{ fontSize: 32, marginBottom: 8 }}>Ÿ””</div>
+                <div style={{ fontSize: 32, marginBottom: 8 }}>🔔</div>
                 <div style={{ fontSize: 13, color: T.textSecondary, marginBottom: 4 }}>No notifications yet</div>
-                <div style={{ fontSize: 11 }}>Set alerts on project cards Ÿ”• to get notified of price changes.</div>
+                <div style={{ fontSize: 11 }}>Set alerts on project cards ★ to get notified of price changes.</div>
               </div>
             ) : notifications.map((n, i) => (
               <div key={n.id} onClick={() => markNotifRead(n.id)} style={{ padding: "14px 20px", borderBottom: `1px solid ${T.border}`, cursor: "pointer", background: n.read ? "transparent" : "rgba(212,168,67,0.04)", transition: "background 0.2s" }}
