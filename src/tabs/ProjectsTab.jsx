@@ -277,7 +277,6 @@ function ProjectsTab({
   const [projConstruction, setProjConstruction] = useState("All");
   /* Separate state for filter panel so it doesn't clobber grid/list view mode */
   const [filtersOpen, setFiltersOpen] = useState(false);
-  const [projSearch, setProjSearch] = useState("");
   const [projectPage, setProjectPage] = useState(1);
   const PROJECTS_PER_PAGE = 30;
 
