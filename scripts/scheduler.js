@@ -34,6 +34,8 @@ cron.schedule("0 10 * * *", ()=>runScript("Aggregate Price History","aggregate-p
 cron.schedule("35 10 * * 5", ()=>runScript("Aggregate Yields","aggregate-yields.js"), {timezone:"UTC"});
 // Friday 2:30 PM Dubai (10:30 AM UTC) - yield calculations
 cron.schedule("30 10 * * 5", ()=>runScript("Yield Calculator","fetch-rental-benchmarks.js"), {timezone:"UTC"});
+// Daily 2:10 PM Dubai (10:10 AM UTC) - stale lead alerts
+cron.schedule("10 10 * * *", ()=>runScript("Stale Lead Alerts","stale-lead-alerts.js"), {timezone:"UTC"});
 // Sunday 1:00 PM Dubai (9:00 AM UTC) - full detail refresh
 cron.schedule("0 9 * * 0", ()=>runScript("Full Detail Refresh","scrape-mashrooi-details.js"), {timezone:"UTC"});
 
