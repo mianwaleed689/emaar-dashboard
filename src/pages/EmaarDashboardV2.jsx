@@ -5969,7 +5969,7 @@ activeProjects={extraProjects?.length > 0 ? extraProjects : []}
                 <div style={{ fontSize: 11 }}>Set alerts on project cards ★ to get notified of price changes.</div>
               </div>
             ) : notifications.map((n, i) => (
-              <div key={n.id} onClick={() => { markNotifRead(n.id); setShowNotifications(false); if(n.type==="new_launch"||n.type==="completed"||n.type==="cancelled"||n.type==="progress") handleTabChange("Launch Calendar"); else if(n.type==="stale_leads"||n.type==="lead_assigned") handleTabChange("My Leads"); }} style={{ padding: "14px 20px", borderBottom: `1px solid ${T.border}`, cursor: "pointer", background: n.read ? "transparent" : "rgba(212,168,67,0.04)", transition: "background 0.2s" }}
+              <div key={n.id} onClick={() => { markNotifRead(n.id); setShowNotifications(false); if(n.type==="new_launch") handleTabChange("Projects"); else if(n.type==="completed"||n.type==="cancelled"||n.type==="progress") { handleTabChange("Projects"); if(n.projectName){ const proj=activeProjects.find(p=>(p.project||p.name)===n.projectName); if(proj)setSelectedProject(proj); } } else if(n.type==="stale_leads"||n.type==="lead_assigned") handleTabChange("My Leads"); }} style={{ padding: "14px 20px", borderBottom: `1px solid ${T.border}`, cursor: "pointer", background: n.read ? "transparent" : "rgba(212,168,67,0.04)", transition: "background 0.2s" }}
                 onMouseEnter={e => e.currentTarget.style.background = T.surfaceAlt}
                 onMouseLeave={e => e.currentTarget.style.background = n.read ? "transparent" : "rgba(212,168,67,0.04)"}>
                 <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
