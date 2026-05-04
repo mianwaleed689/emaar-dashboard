@@ -3757,7 +3757,7 @@ if (snap.exists()) setMyAlerts(snap.data().alerts || []);
 
     if (isSuperAdmin) {
       // SuperAdmin sees all leads across all orgs (admin analytics only  no privacy breach)
-      leadsQuery = query(collection(db, "leads"), orderBy("createdAt", "desc"), limit(500));
+      leadsQuery = query(collection(db, "leads"), orderBy("createdAt", "desc"), limit(1000));
     } else if ((isOwner || isDirector || isManager) && orgId) {
       // Owner, Director, Manager: see all leads in their org
       leadsQuery = query(collection(db, "leads"), where("orgId", "==", orgId), orderBy("createdAt", "desc"), limit(500));

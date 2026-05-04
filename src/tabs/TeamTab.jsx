@@ -6,7 +6,8 @@
 */
 
 import React, { useState } from "react";
-import { createUserWithEmailAndPassword } from "firebase/auth";
+import { createUserWithEmailAndPassword, getAuth } from "firebase/auth";
+import { initializeApp, getApps } from "firebase/app";
 import { doc, setDoc, updateDoc, collection, query, where, getDocs, arrayUnion } from "firebase/firestore";
 import { auth, db } from "../firebase";
 import PhoneInput from "../components/PhoneInput";
@@ -63,7 +64,10 @@ export default function TeamTab({ teamMembers=[], teamMembersLoading, myLeads=[]
       const managerPassword = null; // we don't have it �ƒ¢�‚�€�‚�” use Admin SDK in production
 
       // Create Firebase Auth account
-      const cred = await createUserWithEmailAndPassword(auth, form.email.trim(), form.password);
+      // Use secondary app to avoid signing out manager
+const secondaryApp = getApps().find(a=>a.name==="secondary")||initializeApp(auth.app.options,"secondary");
+const secondaryAuth = getAuth(secondaryApp);
+const cred = await createUserWithEmailAndPassword(secondaryAuth, form.email.trim(), form.password);
       const agentUid = cred.user.uid;
 
       // Create users doc
