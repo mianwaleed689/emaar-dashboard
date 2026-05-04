@@ -360,6 +360,9 @@ export default function MyLeadsTab({ liveNeighbourhoods=[],
       const entry={text:"Lead assigned to "+agent.name,type:"Note",by:currentEmail,at:new Date().toISOString()};
       await updateDoc(doc(db,"leads",leadId),{
         assignedTo:agent.uid||agent.id,assignedToName:agent.name,
+        managerId:agent.managerId||"",
+        directorId:agent.directorId||"",
+        assignedAt:new Date().toISOString(),
         updatedAt:new Date().toISOString(),notes_log:arrayUnion(entry),
       });
       if(selectedLead?.id===leadId) setSelectedLead(l=>({...l,assignedTo:agent.uid||agent.id,assignedToName:agent.name}));
