@@ -14,12 +14,14 @@ function ListingsTab({ liveNeighbourhoods=[],
   listingFilter, setListingFilter,
   listingSearch, setListingSearch,
   publishingId, setPublishingId,
-  firebaseUser, orgId, orgRole, userName,
+  firebaseUser, orgId, orgRole, userName, userRole,
 }) {
 
             const isAgent   = orgRole === "agent";
             const isManager = orgRole === "manager";
-            if (!isAgent && !isManager) return (
+            const isOwner = orgRole === "owner" || userRole === "superAdmin" || userRole === "admin";
+const isDirector = orgRole === "director";
+if (!isAgent && !isManager && !isOwner && !isDirector) return (
               <div style={{ display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", padding:"80px 20px", textAlign:"center" }}>
                 <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke={T.textMuted} strokeWidth="1.5" strokeLinecap="round" style={{ marginBottom:16 }}><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
                 <div style={{ fontSize:16, fontWeight:700, color:T.textPrimary, marginBottom:6 }}>Listings not available</div>

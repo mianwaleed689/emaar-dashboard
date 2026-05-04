@@ -5392,7 +5392,7 @@ activeProjects={extraProjects?.length > 0 ? extraProjects : []}
               listingFilter={listingFilter} setListingFilter={setListingFilter}
               listingSearch={listingSearch} setListingSearch={setListingSearch}
               publishingId={publishingId} setPublishingId={setPublishingId}
-              firebaseUser={firebaseUser} orgId={orgId} orgRole={orgRole} userName={userName}
+              firebaseUser={firebaseUser} orgId={orgId} orgRole={orgRole} userName={userName} userRole={userRole}
             />
           )}
 
