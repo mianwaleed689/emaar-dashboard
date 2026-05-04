@@ -1602,7 +1602,7 @@ function ProjectsTab({
                     {selectedProject.tier === 1 && <span style={{ fontSize:10, padding:"3px 8px", borderRadius:5, background:"rgba(16,185,129,0.12)", color:"#10B981", fontWeight:700 }}>Tier 1 Developer</span>}
                     {selectedProject.tier === 2 && <span style={{ fontSize:10, padding:"3px 8px", borderRadius:5, background:"rgba(245,158,11,0.12)", color:"#F59E0B", fontWeight:700 }}>Tier 2 Developer</span>}
                     {selectedProject.goldenVisa && selectedProject.priceMin >= GOLDEN_VISA_THRESHOLD && <span style={{ fontSize:10, padding:"3px 8px", borderRadius:5, background:"rgba(212,168,67,0.15)", color:T.gold, fontWeight:700 }}>â“‚ Golden Visa Eligible</span>}
-                    {selectedProject.branded && <span style={{ fontSize:10, padding:"3px 8px", borderRadius:5, background:"rgba(139,92,246,0.15)", color:"#A78BFA", fontWeight:700 }}>€”�€� {selectedProject.brandPartner || "Branded Residence"}</span>}
+                    {selectedProject.branded && <span style={{ fontSize:10, padding:"3px 8px", borderRadius:5, background:"rgba(139,92,246,0.15)", color:"#A78BFA", fontWeight:700 }}>€”— {selectedProject.brandPartner || "Branded Residence"}</span>}
                     {selectedProject.escrowBank && <span style={{ fontSize:10, padding:"3px 8px", borderRadius:5, background:"rgba(20,184,166,0.1)", color:T.teal, fontWeight:700 }}>Escrow Verified</span>}
                     {isValidReraNumber(selectedProject.reraNo || selectedProject.projectNumber) && <span style={{ fontSize:10, padding:"3px 8px", borderRadius:5, background:"rgba(20,184,166,0.08)", color:T.teal, fontWeight:700 }}>DLD #{selectedProject.reraNo || selectedProject.projectNumber}</span>}
                   </div>
@@ -2303,7 +2303,7 @@ function ProjectsTab({
                         `ðŸ‚“ Community: ${selectedProject.community}`,
                         `ðŸ  Type: ${selectedProject.type}`,
                         "",
-                        "ðŸ‚�™° PRICING",
+                        "ðŸ‚™° PRICING",
                         `   Starting: AED ${((selectedProject.priceMin||0)/1000000).toFixed(2)}M`,
                         `   PPSF: AED ${(selectedProject.ppsf||0).toLocaleString()}`,
                         units ? `\nðŸ‚“ UNIT BREAKDOWN\n${units}` : "",

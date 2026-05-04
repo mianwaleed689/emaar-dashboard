@@ -322,7 +322,7 @@ function OverviewTab({ liveNeighbourhoods=[],
                     <span style={{fontSize:10,fontWeight:700,color:"#64748B",width:16}}>{i+1}</span>
                     <div>
                       <div style={{fontSize:11,fontWeight:600,color:T.white}}>{n.community}</div>
-                      <div style={{fontSize:9,color:"#64748B"}}>{n.nearestMetro?n.nearestMetro.replace(" Metro","")+" Metro � ":""}{n.supplyRisk||""} Risk</div>
+                      <div style={{fontSize:9,color:"#64748B"}}>{n.nearestMetro?n.nearestMetro.replace(" Metro","")+" Metro  ":""}{n.supplyRisk||""} Risk</div>
                     </div>
                   </div>
                   <div style={{display:"flex",gap:8,alignItems:"center"}}>
@@ -355,7 +355,7 @@ function OverviewTab({ liveNeighbourhoods=[],
                     <span style={{fontSize:10,fontWeight:700,color:"#64748B",width:16}}>{i+1}</span>
                     <div>
                       <div style={{fontSize:11,fontWeight:600,color:T.white}}>{n.community}</div>
-                      <div style={{fontSize:9,color:"#64748B"}}>{n.nearestMetro?n.nearestMetro.replace(" Metro","")+" Metro � ":""}{n.supplyRisk||""} Risk</div>
+                      <div style={{fontSize:9,color:"#64748B"}}>{n.nearestMetro?n.nearestMetro.replace(" Metro","")+" Metro  ":""}{n.supplyRisk||""} Risk</div>
                     </div>
                   </div>
                   <div style={{display:"flex",gap:8,alignItems:"center"}}>
