@@ -4005,7 +4005,8 @@ const teamOrgId = orgId || "";
   useEffect(() => {
     if (!isLoggedIn || !auth.currentUser) return;
     const uid = auth.currentUser?.uid;
-    const unsub = onSnapshot(collection(db, "notifications"), (snap) => {
+    const nQuery = query(collection(db, "notifications"), where("userId", "in", [uid, "all"]), orderBy("createdAt", "desc"), limit(20));
+const unsub = onSnapshot(nQuery, (snap) => {
       const userNotifs = [];
       snap.forEach(d => {
         const data = d.data();
