@@ -32,7 +32,7 @@ async function main(){
     if(t.propertyUsage&&!t.propertyUsage.includes("Residential")) return;
     if(!t.ppsf||t.ppsf<=0) return;
     if(!t.date||t.date<"2022-01-01") return;
-    const ppsf=Math.round(t.ppsf); // already AED/sqft per handoff rules
+    const ppsf=Math.round(t.ppsf/10.764); // already AED/sqft per handoff rules
     used++;
 
     // Community level

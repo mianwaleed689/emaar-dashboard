@@ -1,0 +1,11 @@
+var fs=require("fs");
+var c=fs.readFileSync("scripts/calc-ppsf-from-transactions.js","utf8");
+var o="byComm[comm].push(Math.round(t.ppsf));";
+var n="byComm[comm].push(Math.round(t.ppsf/10.764));";
+var o2="byProjNum[pnum].push(ppsf);";
+var n2="byProjNum[pnum].push(Math.round(t.ppsf/10.764));";
+var o3="const ppsf=Math.round(t.ppsf);";
+c=c.replace(o,n);
+c=c.replace(o3,"const ppsf=Math.round(t.ppsf/10.764);");
+fs.writeFileSync("scripts/calc-ppsf-from-transactions.js",c,"utf8");
+console.log("Done - added /10.764 conversion");
