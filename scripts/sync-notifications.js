@@ -101,7 +101,7 @@ async function main() {
 
   // Write to Firestore notifications collection
   notifications.forEach(n => {
-    const ref = db.collection("notifications").doc();
+    const docId=[today,n.type,(n.projectName||"global")].join("_").replace(/[^a-zA-Z0-9_-]/g,"_").substring(0,100); const ref=db.collection("notifications").doc(docId);
     batch.set(ref, {
       ...n,
       userId: "all",
