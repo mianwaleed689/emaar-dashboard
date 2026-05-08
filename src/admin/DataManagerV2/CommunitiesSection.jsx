@@ -1073,7 +1073,6 @@ function CommEditModal({ initial, allItems, availableAreas, onClose, onSave, sav
     name: "", arabicName: "",
     displayCategory: "consumer-community",
     parentCommunity: "",
-    aliases: [],
     cadastralCode: "",
     area: "", type: "Master Community",
     visibility: "draft",
