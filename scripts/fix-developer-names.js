@@ -1,102 +1,75 @@
-const admin = require("firebase-admin");
-const sa = require("../serviceAccountKey.json");
-if (!admin.apps.length) admin.initializeApp({ credential: admin.credential.cert(sa) });
-const db = admin.firestore();
+const admin=require("firebase-admin");
+const sa=require("../serviceAccountKey.json");
+if(!admin.apps.length)admin.initializeApp({credential:admin.credential.cert(sa)});
+const db=admin.firestore();
 
-// Better developer name mapping from DLD numbers/codes to real names
-const DEV_FIX = {
-  "-":                    null,  // delete these
-  "1":                    null,
-  "2":                    null,
-  "3":                    null,
-  "Unknown Developer":    null,
-  "Business Bay Developer": "Damac Properties",
-  "Liwan":                "Dubai Properties",
-  "Dubai Land Residences":"Dubai Properties",
-  "Dubai Aviation City":  "Dubai Airports",
-  "Marsa Real Estate":    "Dubai Properties",
+const MAP={
+  "dubai creek harbour l.l.c":"Emaar Properties",
+  "emaar":"Emaar Properties",
+  "damac prime development l.l.c":"DAMAC Properties",
+  "damac mry investment l.l.c":"DAMAC Properties",
+  "ellington properties development l.l.c":"Ellington Properties",
+  "danube properties development l.l.c":"Danube Properties",
+  "sobha l.l.c":"Sobha Realty",
+  "aurora spv 2 l.l.c":"Aurora Real Estate",
+  "samana premium real estate development l.l.c":"Samana Developers",
+  "nshama properties owned by nshmi development one person company l.l.c":"Nshama",
+  "imtiaz south real estate development l.l.c":"Imtiaz",
+  "imtiaz luxury real estate development l.l.c":"Imtiaz",
+  "imtiaz ghd real estate development l.l.c":"Imtiaz",
+  "zazen property development l.l.c":"Zazen Homes",
+  "nas estates l.l.c":"Nas Estates",
+  "dubai south properties dwc llc":"Dubai South Properties",
+  "acube real estate development l l c":"Acube Real Estate",
+  "marquis home developer l.l.c":"Marquis Developers",
+  "prestige gardens real estate development l.l.c":"Prestige Properties",
+  "prestige sanctuary real estate development l.l.c":"Prestige Properties",
+  "rabdan gardens real estate developments l.l.c":"Rabdan",
+  "rabdan square developments l.l.c":"Rabdan",
+  "majid developments l.l.c":"Majid Al Futtaim",
+  "hre real estate development":"HRE Real Estate",
+  "continental investments lmd":"Continental Investments",
+  "roz real estate development":"Roz Real Estate",
+  "empire real estate developments":"Empire Real Estate",
+  "green properties development co.":"Green Properties",
+  "fakhruddin properties development l.l.c":"Fakhruddin Properties",
+  "saas properties l.l.c":"Saas Properties",
+  "park 1 l.l.c":"Park Group",
+  "myra real estate deveiopment l.l.c":"Myra Real Estate",
 };
 
-// Fix using masterProject/community to infer developer
-const MASTER_TO_DEV = {
-  "Downtown Dubai":       "Emaar Properties",
-  "Dubai Hills Estate":   "Emaar Properties",
-  "Emaar Beachfront":     "Emaar Properties",
-  "Arabian Ranches":      "Emaar Properties",
-  "Dubai Creek Harbour":  "Emaar Properties",
-  "Emaar South":          "Emaar Properties",
-  "Palm Jumeirah":        "Nakheel",
-  "Palm Deira":           "Nakheel",
-  "Jabal Ali Village":    "Nakheel",
-  "Al Furjan":            "Nakheel",
-  "Jumeirah Village Circle":"Nakheel",
-  "Jumeirah Village Triangle":"Nakheel",
-  "Discovery Gardens":    "Nakheel",
-  "Dubai Sports City":    "Dubai Sports City",
-  "Motor City":           "Union Properties",
-  "Business Bay":         "Damac Properties",
-  "DAMAC HILLS 2":        "Damac Properties",
-  "Dubailand":            "Dubai Properties",
-  "Meydan":               "Meydan Group",
-  "Dubai Silicon Oasis":  "Dubai Silicon Oasis Authority",
-};
-
-async function run() {
-  const snap = await db.collection("projects").get();
-  const docs = snap.docs;
-  let fixed = 0;
-  const BATCH_SIZE = 400;
-
-  for(let i=0;i<docs.length;i+=BATCH_SIZE) {
-    const batch = db.batch();
-    docs.slice(i,i+BATCH_SIZE).forEach(d=>{
-      const p = d.data();
-      const dev = p.developer||"";
-      
-      // Skip if already good
-      if(DEV_FIX[dev]===undefined && dev.length>3 && !/^\d+$/.test(dev)) return;
-      
-      let newDev = DEV_FIX[dev];
-      
-      // Try to infer from master project
-      if(newDev===null||newDev===undefined) {
-        const master = p.masterProject||"";
-        for(const [key,val] of Object.entries(MASTER_TO_DEV)) {
-          if(master.toLowerCase().includes(key.toLowerCase())) {
-            newDev = val;
-            break;
-          }
-        }
-      }
-      
-      // Try community
-      if(!newDev) {
-        const comm = p.community||"";
-        for(const [key,val] of Object.entries(MASTER_TO_DEV)) {
-          if(comm.toLowerCase().includes(key.toLowerCase())) {
-            newDev = val;
-            break;
-          }
-        }
-      }
-
-      // Last resort
-      if(!newDev) newDev = "Dubai Real Estate Developer";
-
-      batch.update(d.ref, { developer: newDev });
-      fixed++;
-    });
-    await batch.commit();
-    console.log(`Batch ${Math.floor(i/BATCH_SIZE)+1} done`);
+function canonicalName(raw){
+  if(!raw)return null;
+  var k=raw.toLowerCase().trim();
+  if(MAP[k])return MAP[k];
+  for(var pattern in MAP){
+    if(k.includes(pattern))return MAP[pattern];
   }
+  return null;
+}
 
-  console.log("Fixed developers:", fixed);
-  
-  // Show remaining bad names
-  const snap2 = await db.collection("projects").get();
-  const devs = new Set(snap2.docs.map(d=>d.data().developer||""));
-  const bad = [...devs].filter(d=>!d||d.length<=2||/^\d+$/.test(d));
-  console.log("Remaining bad:", bad);
+async function main(){
+  const snap=await db.collection("projects").get();
+  console.log("Total projects:",snap.size);
+  var fixed=0;
+  var batch=db.batch();
+  var batchCount=0;
+  var batches=[];
+  snap.docs.forEach(doc=>{
+    var p=doc.data();
+    var current=p.developerActual||p.developer||p.developerName||"";
+    var canonical=canonicalName(current);
+    if(canonical && canonical!==current){
+      batch.update(doc.ref,{developerActual:canonical});
+      batchCount++;
+      fixed++;
+      console.log("Fix: "+current+" -> "+canonical);
+      if(batchCount>=400){batches.push(batch);batch=db.batch();batchCount=0;}
+    }
+  });
+  if(batchCount>0)batches.push(batch);
+  for(var b of batches)await b.commit();
+  console.log("Fixed",fixed,"projects");
   process.exit(0);
 }
-run().catch(e=>{console.error(e);process.exit(1);});
+main().catch(e=>{console.error(e);process.exit(1);});

@@ -138,10 +138,15 @@ function detectChanges(existing, fresh) {
     }
   }
 
-  // Developer actual (if not already set)
-  if (fresh.developerName && !existing.developerActual) {
-    updates.developerActual = fresh.developerName;
-    changes.developerActual = `→ "${fresh.developerName}"`;
+  // Developer actual - apply canonical name mapping
+  const DEV_MAP={"dubai creek harbour l.l.c":"Emaar Properties","damac prime development l.l.c":"DAMAC Properties","damac mry investment l.l.c":"DAMAC Properties","ellington properties development l.l.c":"Ellington Properties","danube properties development l.l.c":"Danube Properties","sobha l.l.c":"Sobha Realty","aurora spv 2 l.l.c":"Aurora Real Estate","samana premium real estate development l.l.c":"Samana Developers","nshama properties owned by nshmi development one person company l.l.c":"Nshama","imtiaz south real estate development l.l.c":"Imtiaz","imtiaz luxury real estate development l.l.c":"Imtiaz","imtiaz ghd real estate development l.l.c":"Imtiaz","zazen property development l.l.c":"Zazen Homes","nas estates l.l.c":"Nas Estates","dubai south properties dwc llc":"Dubai South Properties","acube real estate development l l c":"Acube Real Estate","majid developments l.l.c":"Majid Al Futtaim","marquis home developer l.l.c":"Marquis Developers","prestige gardens real estate development l.l.c":"Prestige Properties","prestige sanctuary real estate development l.l.c":"Prestige Properties","rabdan gardens real estate developments l.l.c":"Rabdan","rabdan square developments l.l.c":"Rabdan","fakhruddin properties development l.l.c":"Fakhruddin Properties","park 1 l.l.c":"Park Group","myra real estate deveiopment l.l.c":"Myra Real Estate"};
+  function getCanonicalDev(raw){if(!raw)return raw;var k=raw.toLowerCase().trim();if(DEV_MAP[k])return DEV_MAP[k];for(var p in DEV_MAP){if(k.includes(p))return DEV_MAP[p];}return raw;}
+  if (fresh.developerName) {
+    const canonical=getCanonicalDev(fresh.developerName);
+    if(!existing.developerActual || existing.developerActual!==canonical){
+      updates.developerActual=canonical;
+      changes.developerActual=`→ "${canonical}"`;
+    }
   }
 
   // Coordinates (if not already set)
