@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { createUserWithEmailAndPassword } from "firebase/auth";
-import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
+import { doc, getDoc, setDoc, updateDoc, collection, query, where, getDocs } from "firebase/firestore";
 import { auth, db } from "../firebase";
 
 const T = {
@@ -61,6 +61,32 @@ export default function JoinPage() {
       await updateDoc(doc(db, "invites", token), {
         used: true, usedAt: new Date().toISOString(), agentUid: uid
       });
+      // Notify org owner(s) that agent has joined
+      try {
+        const ownerSnap = await getDocs(query(collection(db,"users"),where("orgId","==",invite.orgId),where("orgRole","==","owner")));
+        const today=new Date().toISOString().split("T")[0];
+        const notifBatch=[];
+        ownerSnap.forEach(ownerDoc=>{
+          const docId="agent_join_"+uid+"_"+ownerDoc.id;
+          notifBatch.push(setDoc(doc(db,"notifications",docId),{
+            type:"agent_joined",
+            icon:"👤",
+            title:name.trim()+" has joined "+invite.orgName,
+            body:"New agent account created. They can now receive and manage leads.",
+            userId:ownerDoc.id,
+            orgId:invite.orgId,
+            agentUid:uid,
+            agentName:name.trim(),
+            agentEmail:invite.email,
+            read:false,
+            createdAt:new Date().toISOString(),
+            date:today,
+            source:"agent-join",
+            priority:"normal",
+          }));
+        });
+        await Promise.all(notifBatch);
+      } catch(notifErr){ console.warn("Could not send join notification:",notifErr); }
       setDone(true);
       setTimeout(() => navigate("/dashboard"), 2000);
     } catch(e) {
