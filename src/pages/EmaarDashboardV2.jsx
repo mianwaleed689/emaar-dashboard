@@ -4637,7 +4637,7 @@ const unsub = onSnapshot(nQuery, (snap) => {
           {/* — MAP TAB — */}
           {tab === "Map" && (
             <CommunityMapTab
-activeProjects={extraProjects?.length > 0 ? extraProjects : []}
+activeProjects={[...(Array.isArray(liveProjects)?liveProjects:[]),...(Array.isArray(extraProjects)?extraProjects:[]),...(Array.isArray(developmentsData)?developmentsData:[])]}
               liveCommunityROI={liveCommunityROI}
               setTab={handleTabChange}
               liveNeighbourhoods={liveNeighbourhoods}
