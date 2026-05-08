@@ -2185,7 +2185,7 @@ function ProjectsTab({
                           {[
                             {label:"Gross Yield",    value:fmtY(cn.grossYield),     color:"#10B981"},
                             {label:"Net Yield",      value:fmtY(cn.netYield),       color:T.textSecondary},
-                            {label:"Avg PPSF",       value:fmtP(cn.avgPpsf),        color:T.gold},
+                            {label:"Avg PPSF",       value:fmtP(selectedProject.communityMedianPPSF||selectedProject.ppsf||cn.avgPpsf),        color:T.gold},
                             {label:"Service Charge", value:cn.serviceCharge?"AED "+cn.serviceCharge+"/sqft":"No data", color:T.textMuted},
                             {label:"Supply Risk",    value:cn.supplyRisk||"Unknown", color:cn.supplyRisk==="Low"?"#10B981":cn.supplyRisk==="High"?"#EF4444":"#F59E0B"},
                             {label:"Liquidity",      value:cn.liquidity||"Unknown",  color:cn.liquidity==="Very High"||cn.liquidity==="High"?"#10B981":"#F59E0B"},
