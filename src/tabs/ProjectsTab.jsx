@@ -467,7 +467,7 @@ function ProjectsTab({
               // Type filter — but skip when 'All' is selected
               if (projCategory && projCategory !== "All") { const dts = getDisplayTypesForCategory(projCategory); if (dts.length > 0 && !dts.includes(normalizeType(p))) return false; }
               if (projMode !== "All") { const its = getInternalTypes(projMode); if (its && its.length > 0) { const raw = String(p.type || p.propertyType || p.dldClass || "").toLowerCase(); const canon = normalizeType(p); if (!its.some(t => raw.includes(t.toLowerCase()) || t === canon)) return false; } else if (normalizeType(p) !== projMode) { return false; } }
-              if (projSearch && !JSON.stringify(p).toLowerCase().includes(projSearch.toLowerCase())) return false;
+              if (projSearch) { var q=projSearch.toLowerCase(); var h=[(p.project||p.name||""),(p.developerActual||p.developer||p.developerName||""),(p.community||p.area||""),(p.masterCommunity||""),(p.type||""),(p.masterProject||""),(String(p.reraNo||p.projectNumber||""))].join(" ").toLowerCase(); if(!h.includes(q)) return false; }
               if (projDev !== "All" && p.developer !== projDev && p.developerName !== projDev) return false;
               if (projCommunity !== "All" && p.community !== projCommunity) return false;
               /* SALE STATUS — fallback to lifecycleStage mapping for DLD records without status */
