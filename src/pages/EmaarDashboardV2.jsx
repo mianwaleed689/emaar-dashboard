@@ -43,6 +43,7 @@ import PortfolioTab from '../tabs/PortfolioTab';
 import InvestmentScoreTab from '../tabs/InvestmentScoreTab';
 import ComplianceTab from '../tabs/ComplianceTab';
 import TeamTab from '../tabs/TeamTab';
+import CRMApp from '../crm/CRMApp';
 import WelcomeScreen from '../components/WelcomeScreen';
 import HandoverTab from '../tabs/HandoverTab';
 import MarketTab from '../tabs/MarketTab';
@@ -2434,6 +2435,7 @@ export default function EmaarDashboardV2() {
   const [liveCommunityIntel, setLiveCommunityIntel] = useState({});
 
   /* — MY LEADS STATE (Session 4) — */
+  const [showCRM, setShowCRM] = useState(false);
   const [myLeads, setMyLeads] = useState([]);
   const [myLeadsLoading, setMyLeadsLoading] = useState(false);
 
@@ -6107,6 +6109,23 @@ activeProjects={[...(Array.isArray(liveProjects)?liveProjects:[]),...(Array.isAr
 
       {/* Upgrade Modal */}
       <UpgradeModal show={showUpgrade} onClose={() => setShowUpgrade(false)} />
+      {showCRM && (
+        <div style={{ position:"fixed", inset:0, zIndex:9000 }}>
+          <CRMApp
+            firebaseUser={firebaseUser}
+            orgId={orgId}
+            orgRole={orgRole}
+            userRole={userRole}
+            orgName={orgProfile?.name}
+            myLeads={myLeads}
+            myLeadsLoading={myLeadsLoading}
+            teamMembers={teamMembers}
+            deals={deals}
+            listings={listings}
+            onBack={() => setShowCRM(false)}
+          />
+        </div>
+      )}
     </div>
   );
 }
