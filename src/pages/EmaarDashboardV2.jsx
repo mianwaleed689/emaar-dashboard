@@ -4306,6 +4306,20 @@ const unsub = onSnapshot(nQuery, (snap) => {
                     )}
                 {(!isCollapsed || !!sidebarSearch) && (
                   <div style={{ paddingLeft: sidebarSearch ? 0 : 4 }}>
+                      {group.id === "crm" && !sidebarSearch && (
+                        <button type="button" onClick={() => setShowCRM(true)} style={{
+                          display:"flex", alignItems:"center", gap:6, width:"100%",
+                          padding:"7px 10px", marginBottom:6,
+                          background:"linear-gradient(135deg,rgba(212,168,67,0.12),rgba(0,191,165,0.08))",
+                          border:"1px solid rgba(212,168,67,0.25)", borderRadius:8,
+                          color:"#D4A843", fontSize:11, fontWeight:700, cursor:"pointer",
+                          fontFamily:"Outfit,sans-serif",
+                        }}>
+                          <span>⚡</span>
+                          <span>Open Full CRM</span>
+                          <span style={{marginLeft:"auto",fontSize:9,background:"rgba(212,168,67,0.2)",padding:"1px 5px",borderRadius:4}}>NEW</span>
+                        </button>
+                      )}
                     {filteredTabs.map(t => {
                       const s = tabSettings[t.key] || {};
                       const minTier = s.minTier || "free";
