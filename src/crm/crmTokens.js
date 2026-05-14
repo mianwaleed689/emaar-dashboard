@@ -105,3 +105,11 @@ export const timeAgo = d => {
   return fmtDate(d);
 };
 export const getStageCfg = key => LEAD_STAGES.find(s=>s.key===key)||{color:"#6B7280",bg:"rgba(107,114,128,0.12)"};
+
+export const ACTIVITY_TYPES = [
+  { key: "call",    label: "Log Call",         icon: "📞", color: "#3B82F6" },
+  { key: "meeting", label: "Schedule Meeting",  icon: "📅", color: "#8B5CF6" },
+  { key: "message", label: "Send Message",      icon: "💬", color: "#00BFA5" },
+  { key: "note",    label: "Add Note",          icon: "📝", color: "#F59E0B" },
+  { key: "email",   label: "Send Email",        icon: "📧", color: "#10B981" },
+];
