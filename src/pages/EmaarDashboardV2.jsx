@@ -4303,21 +4303,6 @@ const unsub = onSnapshot(nQuery, (snap) => {
                     )}
                     {isCollapsed ? SvgIcons.ChevronRight({ width: 11, height: 11, strokeWidth: 2 }) : SvgIcons.ChevronDown({ width: 11, height: 11, strokeWidth: 2 })}
                   </button>
-            {group.id === 'crm' && !sidebarSearch && (
-              <button type='button' onClick={() => setShowCRM(true)} style={{
-                display:'flex', alignItems:'center', gap:8, width:'100%',
-                padding:'8px 12px', margin:'4px 0',
-                background:'linear-gradient(135deg,rgba(212,168,67,0.15),rgba(0,191,165,0.1))',
-                border:'1px solid rgba(212,168,67,0.3)', borderRadius:8,
-                color:'#D4A843', fontSize:12, fontWeight:700, cursor:'pointer',
-                fontFamily:"'Outfit',sans-serif",
-              }}>
-                <span style={{fontSize:14}}>⚡</span>
-                Open CRM Dashboard
-                <span style={{marginLeft:'auto',fontSize:10,background:'rgba(212,168,67,0.2)',padding:'2px 6px',borderRadius:6}}>NEW</span>
-              </button>
-            )}
-                )}
                 {(!isCollapsed || !!sidebarSearch) && (
                   <div style={{ paddingLeft: sidebarSearch ? 0 : 4 }}>
                     {filteredTabs.map(t => {
