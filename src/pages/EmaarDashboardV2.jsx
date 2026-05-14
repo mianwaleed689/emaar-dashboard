@@ -4303,6 +4303,7 @@ const unsub = onSnapshot(nQuery, (snap) => {
                     )}
                     {isCollapsed ? SvgIcons.ChevronRight({ width: 11, height: 11, strokeWidth: 2 }) : SvgIcons.ChevronDown({ width: 11, height: 11, strokeWidth: 2 })}
                   </button>
+                    )}
                 {(!isCollapsed || !!sidebarSearch) && (
                   <div style={{ paddingLeft: sidebarSearch ? 0 : 4 }}>
                     {filteredTabs.map(t => {
