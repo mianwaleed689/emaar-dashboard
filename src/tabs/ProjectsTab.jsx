@@ -1489,7 +1489,7 @@ function ProjectsTab({
                 {/* Grid */}
                 {filtered.length > 0 && projView === "grid" && (
                   <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(340px,1fr))", gap:16, marginBottom:20 }}>
-                    {filtered.slice(0,projectPage*PROJECTS_PER_PAGE).map((p,i) => <ProjectCard key={p.id||i} p={p} />)}
+                    {filtered.slice(0,projectPage*PROJECTS_PER_PAGE).map((p,i) => <ProjectCard key={p.id||i} p={p} />)}{filtered.length>projectPage*PROJECTS_PER_PAGE&&<div style={{textAlign:"center",padding:"24px 0"}}><button type="button" onClick={()=>setProjectPage(v=>v+1)} style={{padding:"10px 32px",borderRadius:20,background:"rgba(212,168,67,0.12)",border:"1px solid rgba(212,168,67,0.4)",color:"#D4A843",fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"Outfit,sans-serif"}}>Load More ({filtered.length-projectPage*PROJECTS_PER_PAGE} remaining)</button></div>}
                   </div>
                 )}
 
