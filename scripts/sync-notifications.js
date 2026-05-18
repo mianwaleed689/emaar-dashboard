@@ -1,4 +1,4 @@
-/**
+﻿/**
  * sync-notifications.js
  * 
  * Reads latest sync_log and writes important changes
@@ -84,9 +84,11 @@ async function main() {
   const newSnap = await db.collection('projects').where('createdAt', '>=', todayStart).get();
   if (newSnap.size > 0) {
     const names = newSnap.docs.slice(0, 3).map(d => d.data().name || d.data().project || 'Unknown').join(', ');
+    const projectNumbers = newSnap.docs.map(d => d.data().projectNumber || d.data().dldProjectNumber).filter(Boolean);
     const more = newSnap.size > 3 ? ' and ' + (newSnap.size - 3) + ' more...' : '';
     notifications.push({
       type: 'new_launch',
+      projectNumbers: projectNumbers,
       icon: '🚀',
       title: newSnap.size + ' new project' + (newSnap.size > 1 ? 's' : '') + ' discovered today',
       body: names + more,
