@@ -1,4 +1,4 @@
-const admin=require("firebase-admin");
+﻿const admin=require("firebase-admin");
 const sa=require("../serviceAccountKey.json");
 if(!admin.apps.length)admin.initializeApp({credential:admin.credential.cert(sa)});
 const db=admin.firestore();
@@ -95,7 +95,7 @@ async function main(){
   let batch=db.batch();
   let bc=0;
 
-  projSnap.docs.forEach(doc=>{
+  for(const doc of projSnap.docs){
     const p=doc.data();
     const updates={};
 
@@ -132,13 +132,13 @@ async function main(){
       bc++;
       updated++;
       if(bc>=400){
-        batch.commit();
+        await batch.commit();
         batch=db.batch();
         bc=0;
         console.log("Committed batch, updated so far:",updated);
       }
     }
-  });
+  }
 
   if(bc>0)await batch.commit();
 

@@ -1,4 +1,4 @@
-const cron = require("node-cron");
+﻿const cron = require("node-cron");
 const { spawn } = require("child_process");
 const path = require("path");
 
@@ -21,6 +21,6 @@ cron.schedule("0 10 * * *", ()=>runScript("Aggregate Price History","aggregate-p
 cron.schedule("10 10 * * *",()=>runScript("Stale Lead Alerts","stale-lead-alerts.js"),{timezone:"UTC"});
 cron.schedule("30 10 * * 5",()=>runScript("Yield Calculator","fetch-rental-benchmarks.js"),{timezone:"UTC"});
 cron.schedule("35 10 * * 5",()=>runScript("Aggregate Yields","aggregate-yields.js"),{timezone:"UTC"});
-cron.schedule("0 9 * * 0",  ()=>runScript("Full Detail Refresh","scrape-mashrooi-details.js"),{timezone:"UTC"});
+cron.schedule("0 10 * * 0",  ()=>runScript("Full Detail Refresh","scrape-mashrooi-details.js"),{timezone:"UTC"});
 
 console.log("Ready - all jobs non-blocking. Auto-sync runs async in background.");
