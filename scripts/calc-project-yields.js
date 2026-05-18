@@ -3,54 +3,6 @@ const sa=require("../serviceAccountKey.json");
 if(!admin.apps.length)admin.initializeApp({credential:admin.credential.cert(sa)});
 const db=admin.firestore();
 
-function getBedKey(beds){
-  if(!beds||beds.length===0)return null;
-  const order=["Studio","1BR","2BR","3BR","4BR","5BR"];
-  const yieldKeys={"Studio":"studio","1BR":"1 B/R","2BR":"2 B/R","3BR":"3 B/R","4BR":"4 B/R","5BR":"5 B/R"};
-  for(const b of order){
-    if(beds.includes(b))return yieldKeys[b];
-  }
-  return yieldKeys[beds[0]]||null;
-}
-
-function getWeightedYield(yieldData,beds,unitBreakdown){
-  if(!yieldData||!yieldData.yields)return null;
-  const yieldKeys={"Studio":"studio","1BR":"1 B/R","2BR":"2 B/R","3BR":"3 B/R","4BR":"4 B/R","5BR":"5 B/R"};
-  
-  // If we have unit breakdown, do weighted average
-  if(unitBreakdown&&Object.keys(unitBreakdown).length>0){
-    let totalUnits=0,weightedRent=0,weightedPrice=0,hasPrice=false;
-    Object.entries(unitBreakdown).forEach(([bed,count])=>{
-      const yk=yieldKeys[bed];
-      if(!yk)return;
-      const yd=yieldData.yields[yk];
-      if(!yd||!yd.annualRent)return;
-      totalUnits+=count;
-      weightedRent+=yd.annualRent*count;
-      if(yd.avgPrice){weightedPrice+=yd.avgPrice*count;hasPrice=true;}
-    });
-    if(totalUnits>0){
-      return {
-        annualRent:Math.round(weightedRent/totalUnits),
-        avgPrice:hasPrice?Math.round(weightedPrice/totalUnits):null
-      };
-    }
-  }
-  
-  // Fallback: use most common bed type
-  if(beds&&beds.length>0){
-    const yk=yieldKeys[beds[0]];
-    if(yk&&yieldData.yields[yk]){
-      const yd=yieldData.yields[yk];
-      return {annualRent:yd.annualRent,avgPrice:yd.avgPrice};
-    }
-  }
-  
-  // Last resort: community average
-  if(yieldData.avgGrossYield)return {avgGrossYield:yieldData.avgGrossYield};
-  return null;
-}
-
 async function main(){
   console.log("Loading yieldData...");
   const ySnap=await db.collection("yieldData").get();
@@ -60,57 +12,95 @@ async function main(){
     const comm=(data.community||d.id).toLowerCase().replace(/_/g," ");
     yieldMap[comm]=data;
   });
-  console.log("Loaded",Object.keys(yieldMap).length,"communities with yield data");
+  console.log("Loaded",Object.keys(yieldMap).length,"communities");
 
-  console.log("Loading projects...");
   const pSnap=await db.collection("projects").get();
   console.log("Total projects:",pSnap.size);
 
-  let updated=0,noYield=0,noComm=0;
+  let updated=0,noData=0;
   let batch=db.batch(),bc=0;
 
   pSnap.docs.forEach(doc=>{
     const p=doc.data();
     const comm=(p.masterProject||p.community||"").toLowerCase().trim();
-    if(!comm){noComm++;return;}
+    if(!comm){noData++;return;}
 
-    // Find yield data for community
-    const yd=yieldMap[comm]||yieldMap[comm.replace(/\s+/g,"_")];
-    if(!yd){noYield++;return;}
+    const yd=yieldMap[comm];
+    if(!yd||!yd.yields){noData++;return;}
 
-    // Get rent and price from yield data
-    const yResult=getWeightedYield(yd,p.beds,p.unitBreakdown);
-    if(!yResult){noYield++;return;}
+    // Get bed types for this project
+    const beds=p.beds||[];
+    const ub=p.unitBreakdown||{};
+    const bedKeyMap={"Studio":"studio","1BR":"1 B/R","2BR":"2 B/R","3BR":"3 B/R","4BR":"4 B/R","5BR":"5 B/R","6BR":"5 B/R"};
 
-    // Calculate prices
-    const annualRent=yResult.annualRent;
-    
-    // Project sale price: prefer real transaction PPSF × size, then priceMin, then yieldData avgPrice
-    let salePrice=null;
-    if(p.ppsf>0&&p.sizeMin>0) salePrice=Math.round(p.ppsf*p.sizeMin);
-    else if(p.priceMin>0) salePrice=p.priceMin;
-    else if(yResult.avgPrice) salePrice=yResult.avgPrice;
+    // Calculate weighted average yield across bed types
+    let totalUnits=0,weightedGross=0,weightedRent=0,weightedPrice=0;
 
-    let grossYield=null,netYield=null,estimatedAnnualRent=null;
-
-    if(yResult.avgGrossYield){
-      // Use community avg if no per-bed data
-      grossYield=parseFloat(yResult.avgGrossYield.toFixed(1));
-      netYield=p.serviceCharge>0&&p.sizeMin>0&&salePrice>0
-        ?parseFloat((grossYield-(p.serviceCharge*p.sizeMin/salePrice*100)).toFixed(1))
-        :parseFloat((grossYield*0.8).toFixed(1));
-    } else if(annualRent&&salePrice){
-      grossYield=parseFloat((annualRent/salePrice*100).toFixed(1));
-      // Net yield = gross - service charge impact
-      const scImpact=p.serviceCharge>0&&p.sizeMin>0
-        ?(p.serviceCharge*p.sizeMin/salePrice*100)
-        :(grossYield*0.15); // estimate 15% of gross as service charges
-      netYield=parseFloat((grossYield-scImpact).toFixed(1));
-      estimatedAnnualRent=annualRent;
+    if(Object.keys(ub).length>0){
+      Object.entries(ub).forEach(([bed,count])=>{
+        const yk=bedKeyMap[bed];
+        if(!yk||!yd.yields[yk])return;
+        const y=yd.yields[yk];
+        if(!y.grossYield)return;
+        totalUnits+=count;
+        weightedGross+=y.grossYield*count;
+        if(y.annualRent) weightedRent+=y.annualRent*count;
+        if(y.avgPrice) weightedPrice+=y.avgPrice*count;
+      });
     }
 
-    if(!grossYield||grossYield<=0||grossYield>30){noYield++;return;}
-    if(netYield<0)netYield=parseFloat((grossYield*0.7).toFixed(1));
+    // Fallback to beds array if no unit breakdown
+    if(totalUnits===0&&beds.length>0){
+      beds.forEach(bed=>{
+        const yk=bedKeyMap[bed];
+        if(!yk||!yd.yields[yk])return;
+        const y=yd.yields[yk];
+        if(!y.grossYield)return;
+        totalUnits+=1;
+        weightedGross+=y.grossYield;
+        if(y.annualRent) weightedRent+=y.annualRent;
+        if(y.avgPrice) weightedPrice+=y.avgPrice;
+      });
+    }
+
+    let grossYield,netYield,estimatedAnnualRent;
+
+    if(totalUnits>0){
+      grossYield=parseFloat((weightedGross/totalUnits).toFixed(1));
+      const avgRent=weightedRent>0?Math.round(weightedRent/totalUnits):null;
+      const avgPrice=weightedPrice>0?Math.round(weightedPrice/totalUnits):null;
+
+      // Use actual project price if available
+      let salePrice=avgPrice;
+      if(p.ppsf>0&&p.sizeMin>0) salePrice=Math.round(p.ppsf*p.sizeMin);
+      else if(p.priceMin>0) salePrice=p.priceMin;
+
+      // Recalculate yield from actual price if we have it
+      if(avgRent&&salePrice){
+        const recalcYield=parseFloat((avgRent/salePrice*100).toFixed(1));
+        // Sanity check - yield must be between 2% and 15%
+        if(recalcYield>=2&&recalcYield<=10){
+          grossYield=recalcYield;
+          estimatedAnnualRent=avgRent;
+        }
+      }
+
+      // Net yield
+      const scImpact=p.serviceCharge>0&&p.sizeMin>0&&salePrice>0
+        ?parseFloat((p.serviceCharge*p.sizeMin/salePrice*100).toFixed(1))
+        :parseFloat((grossYield*0.12).toFixed(1));
+      netYield=parseFloat(Math.max(grossYield-scImpact,grossYield*0.7).toFixed(1));
+
+    } else {
+      // Use community average
+      grossYield=parseFloat((yd.avgGrossYield||0).toFixed(1));
+      netYield=parseFloat((grossYield*0.82).toFixed(1));
+    }
+
+    // Final sanity check - cap at community average if too high
+    if(!grossYield||grossYield<2){noData++;return;}
+    if(grossYield>10) grossYield=parseFloat((yd.avgGrossYield||7.0).toFixed(1));
+    if(netYield>grossYield||netYield<1) netYield=parseFloat((grossYield*0.82).toFixed(1));
 
     const updates={
       grossYield,
@@ -119,7 +109,6 @@ async function main(){
       yieldUpdatedAt:new Date().toISOString(),
     };
     if(estimatedAnnualRent) updates.estimatedAnnualRent=estimatedAnnualRent;
-    if(salePrice&&!p.priceMin) updates.priceMin=salePrice;
 
     batch.update(doc.ref,updates);
     bc++;updated++;
@@ -131,11 +120,7 @@ async function main(){
   });
 
   if(bc>0)await batch.commit();
-
-  console.log("\nDone!");
-  console.log("Updated with yields:",updated);
-  console.log("No community match:",noComm);
-  console.log("No yield data:",noYield);
+  console.log("\nDone! Updated:",updated,"No data:",noData);
   process.exit(0);
 }
 main().catch(e=>{console.error(e);process.exit(1);});
