@@ -45,15 +45,28 @@ function fieldStatus(val) {
 }
 
 // ─── Search links ─────────────────────────────────────────────────────────────
-function searchLinks(name, developer) {
-  const q = encodeURIComponent(name);
-  const dev = encodeURIComponent(developer || "");
+function searchLinks(p) {
+  const name = p.name || "";
+  const developer = p.developerActual || p.developer || "";
+  const community = p.masterCommunity || p.community || "";
+  const handover = p.handoverDate || p.completionDate || "";
+  const year = handover.match(/\d{4}/) ? handover.match(/\d{4}/)[0] : "";
+
+  // Build targeted queries
+  const pfQ = encodeURIComponent(`${name} ${developer}`);
+  const bayutQ = encodeURIComponent(name);
+  const propsearchQ = encodeURIComponent(name);
+  const googleQ = encodeURIComponent(`"${name}" ${developer} Dubai ${year} handover price payment plan`);
+  const propertyMonitorQ = encodeURIComponent(`${name} ${community}`);
+
   return {
-    pf: `https://www.propertyfinder.ae/en/search?q=${q}`,
-    bayut: `https://www.bayut.com/to-rent/property/dubai/?q=${q}`,
-    propsearch: `https://propsearch.ae/?search=${q}`,
-    dxboffplan: `https://dxboffplan.com/?s=${q}`,
-    google: `https://www.google.com/search?q=${q}+${dev}+Dubai+handover+price`,
+    pf: `https://www.propertyfinder.ae/en/search?q=${pfQ}&ob=nd&t=1`,
+    bayut: `https://www.bayut.com/to-buy/apartments-and-flats/dubai/?q=${bayutQ}`,
+    propsearch: `https://propsearch.ae/dubai?search=${propsearchQ}`,
+    dxboffplan: `https://dxboffplan.com/?s=${encodeURIComponent(name)}`,
+    google: `https://www.google.com/search?q=${googleQ}`,
+    propertyMonitor: `https://www.propertymonitor.ae/projects?search=${propertyMonitorQ}`,
+    dubailand: `https://dubailand.gov.ae/en/open-data/real-estate-data/#/`,
   };
 }
 
@@ -278,7 +291,7 @@ export default function DataQualityTab() {
               const isExpanded = expandedId === p.id;
               const isEditing = editingId === p.id;
               const isSaved = savedIds.has(p.id);
-              const links = searchLinks(p.name, p.developerActual || p.developer);
+              const links = searchLinks(p);
               const handover = p.handoverDate || p.completionDate || "";
               const handoverOk = handover && /^Q[1-4] 20\d{2}$/.test(handover);
 
@@ -485,23 +498,35 @@ export default function DataQualityTab() {
                         {/* Verify Links */}
                         <div style={styles.expandSection}>
                           <h4 style={styles.expandTitle}>🔍 Verify Against Sources</h4>
+                          <p style={{fontSize:11,color:"#475569",margin:"0 0 8px"}}>
+                            Links search by project name + developer — click to verify data on each portal
+                          </p>
                           <div style={styles.linkRow}>
                             <a href={links.pf} target="_blank" rel="noreferrer" style={styles.sourceLink("pf")}>
-                              PropertyFinder →
+                              🟢 PropertyFinder →
                             </a>
                             <a href={links.bayut} target="_blank" rel="noreferrer" style={styles.sourceLink("bayut")}>
-                              Bayut →
+                              🟡 Bayut →
                             </a>
                             <a href={links.propsearch} target="_blank" rel="noreferrer" style={styles.sourceLink("propsearch")}>
-                              Propsearch →
+                              🟣 Propsearch →
                             </a>
                             <a href={links.dxboffplan} target="_blank" rel="noreferrer" style={styles.sourceLink("dxboffplan")}>
-                              DXB Offplan →
+                              🟠 DXB Offplan →
+                            </a>
+                            <a href={links.propertyMonitor} target="_blank" rel="noreferrer" style={styles.sourceLink("propsearch")}>
+                              🔵 Property Monitor →
                             </a>
                             <a href={links.google} target="_blank" rel="noreferrer" style={styles.sourceLink("google")}>
-                              Google Search →
+                              ⚪ Google Search →
+                            </a>
+                            <a href={links.dubailand} target="_blank" rel="noreferrer" style={styles.sourceLink("google")}>
+                              🏛 DubaiLand DLD →
                             </a>
                           </div>
+                          <p style={{fontSize:10,color:"#334155",margin:"8px 0 0"}}>
+                            Tip: Google Search gives the most targeted results — searches for exact project name + developer + year
+                          </p>
                         </div>
 
                       </div>
