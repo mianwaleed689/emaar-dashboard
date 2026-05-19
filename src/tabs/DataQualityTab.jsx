@@ -53,19 +53,24 @@ function searchLinks(p) {
   const year = handover.match(/\d{4}/) ? handover.match(/\d{4}/)[0] : "";
 
   // Build targeted queries
-  const pfQ = encodeURIComponent(`${name} ${developer}`);
-  const bayutQ = encodeURIComponent(name);
-  const propsearchQ = encodeURIComponent(name);
+  const nameEnc = encodeURIComponent(name);
   const googleQ = encodeURIComponent(`"${name}" ${developer} Dubai ${year} handover price payment plan`);
-  const propertyMonitorQ = encodeURIComponent(`${name} ${community}`);
+  const bayutQ = encodeURIComponent(name);
 
   return {
-    pf: `https://www.propertyfinder.ae/en/search?q=${pfQ}&ob=nd&t=1`,
-    bayut: `https://www.bayut.com/to-buy/apartments-and-flats/dubai/?q=${bayutQ}`,
-    propsearch: `https://propsearch.ae/dubai?search=${propsearchQ}`,
-    dxboffplan: `https://dxboffplan.com/?s=${encodeURIComponent(name)}`,
+    // PropertyFinder new-projects search
+    pf: `https://www.propertyfinder.ae/en/new-projects/search?q=${nameEnc}`,
+    // Bayut new projects search
+    bayut: `https://www.bayut.com/new-projects/dubai/?q=${bayutQ}`,
+    // Propsearch correct URL format
+    propsearch: `https://propsearch.ae/search?q=${nameEnc}`,
+    // DXBOffplan works
+    dxboffplan: `https://dxboffplan.com/?s=${nameEnc}`,
+    // Property Monitor correct format
+    propertyMonitor: `https://www.propertymonitor.ae/en/projects#search=${nameEnc}`,
+    // Google — most reliable, quoted name
     google: `https://www.google.com/search?q=${googleQ}`,
-    propertyMonitor: `https://www.propertymonitor.ae/projects?search=${propertyMonitorQ}`,
+    // DubaiLand DLD open data
     dubailand: `https://dubailand.gov.ae/en/open-data/real-estate-data/#/`,
   };
 }
