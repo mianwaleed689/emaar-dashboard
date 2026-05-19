@@ -52,25 +52,21 @@ function searchLinks(p) {
   const handover = p.handoverDate || p.completionDate || "";
   const year = handover.match(/\d{4}/) ? handover.match(/\d{4}/)[0] : "";
 
-  // Build targeted queries
   const nameEnc = encodeURIComponent(name);
   const googleQ = encodeURIComponent(`"${name}" ${developer} Dubai ${year} handover price payment plan`);
-  const bayutQ = encodeURIComponent(name);
 
   return {
-    // PropertyFinder new-projects search
-    pf: `https://www.propertyfinder.ae/en/new-projects/search?q=${nameEnc}`,
-    // Bayut new projects search
-    bayut: `https://www.bayut.com/new-projects/dubai/?q=${bayutQ}`,
-    // Propsearch correct URL format
-    propsearch: `https://propsearch.ae/search?q=${nameEnc}`,
-    // DXBOffplan works
-    dxboffplan: `https://dxboffplan.com/?s=${nameEnc}`,
-    // Property Monitor correct format
-    propertyMonitor: `https://www.propertymonitor.ae/en/projects#search=${nameEnc}`,
-    // Google — most reliable, quoted name
+    // Google — most reliable, quoted exact name
     google: `https://www.google.com/search?q=${googleQ}`,
-    // DubaiLand DLD open data
+    // DXBOffplan — works
+    dxboffplan: `https://dxboffplan.com/?s=${nameEnc}`,
+    // Bayut new projects — user searches manually once landed
+    bayut: `https://www.bayut.com/new-projects/dubai/`,
+    // PropertyFinder new projects — user searches manually
+    pf: `https://www.propertyfinder.ae/en/new-projects`,
+    // Propsearch homepage — user searches manually
+    propsearch: `https://propsearch.ae`,
+    // DubaiLand DLD
     dubailand: `https://dubailand.gov.ae/en/open-data/real-estate-data/#/`,
   };
 }
@@ -503,34 +499,40 @@ export default function DataQualityTab() {
                         {/* Verify Links */}
                         <div style={styles.expandSection}>
                           <h4 style={styles.expandTitle}>🔍 Verify Against Sources</h4>
-                          <p style={{fontSize:11,color:"#475569",margin:"0 0 8px"}}>
-                            Links search by project name + developer — click to verify data on each portal
-                          </p>
+                          <div style={{
+                            background:"#0f172a", border:"1px solid #1e293b",
+                            borderRadius:6, padding:"8px 12px", marginBottom:10,
+                            display:"flex", alignItems:"center", gap:8
+                          }}>
+                            <span style={{color:"#475569",fontSize:11}}>Search term:</span>
+                            <code style={{color:"#818cf8",fontSize:12,letterSpacing:"0.02em"}}>{p.name}</code>
+                            <button
+                              onClick={e=>{e.stopPropagation();navigator.clipboard.writeText(p.name);}}
+                              style={{background:"#1e293b",border:"1px solid #334155",color:"#64748b",padding:"2px 8px",borderRadius:3,cursor:"pointer",fontSize:11,fontFamily:"inherit"}}
+                            >Copy</button>
+                          </div>
                           <div style={styles.linkRow}>
-                            <a href={links.pf} target="_blank" rel="noreferrer" style={styles.sourceLink("pf")}>
-                              🟢 PropertyFinder →
-                            </a>
-                            <a href={links.bayut} target="_blank" rel="noreferrer" style={styles.sourceLink("bayut")}>
-                              🟡 Bayut →
-                            </a>
-                            <a href={links.propsearch} target="_blank" rel="noreferrer" style={styles.sourceLink("propsearch")}>
-                              🟣 Propsearch →
+                            <a href={links.google} target="_blank" rel="noreferrer" style={styles.sourceLink("google")}>
+                              ⚪ Google Search →
                             </a>
                             <a href={links.dxboffplan} target="_blank" rel="noreferrer" style={styles.sourceLink("dxboffplan")}>
                               🟠 DXB Offplan →
                             </a>
-                            <a href={links.propertyMonitor} target="_blank" rel="noreferrer" style={styles.sourceLink("propsearch")}>
-                              🔵 Property Monitor →
+                            <a href={links.bayut} target="_blank" rel="noreferrer" style={styles.sourceLink("bayut")}>
+                              🟡 Bayut New Projects →
                             </a>
-                            <a href={links.google} target="_blank" rel="noreferrer" style={styles.sourceLink("google")}>
-                              ⚪ Google Search →
+                            <a href={links.pf} target="_blank" rel="noreferrer" style={styles.sourceLink("pf")}>
+                              🟢 PropertyFinder →
+                            </a>
+                            <a href={links.propsearch} target="_blank" rel="noreferrer" style={styles.sourceLink("propsearch")}>
+                              🟣 Propsearch →
                             </a>
                             <a href={links.dubailand} target="_blank" rel="noreferrer" style={styles.sourceLink("google")}>
                               🏛 DubaiLand DLD →
                             </a>
                           </div>
                           <p style={{fontSize:10,color:"#334155",margin:"8px 0 0"}}>
-                            Tip: Google Search gives the most targeted results — searches for exact project name + developer + year
+                            Copy the search term above → paste into the portal search box. Google Search is most reliable — searches exact project name + developer + year.
                           </p>
                         </div>
 
