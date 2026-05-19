@@ -2,7 +2,7 @@
 const sa=require('../serviceAccountKey.json');
 if(!admin.apps.length)admin.initializeApp({credential:admin.credential.cert(sa)});
 const db=admin.firestore();
-const C=[{"m": "Bottega Nove By Lalav", "h": "Q2 2026", "pp": "40/60", "b": ["2BR", "3BR"], "u": 54, "p": 0}, {"m": "Hearth Heights By Enawt Real Estate Development", "mc": "Jumeirah Village Circle"}, {"m": "Ayami Residence, By Ayat Development", "h": "Q4 2028", "pp": "50/50", "b": ["Studio", "1BR", "2BR"], "s": 380, "p": 475000, "u": 376}, {"m": "Zyra Hills", "h": "Q2 2028", "b": ["Studio", "1BR", "2BR", "3BR"], "s": 375, "p": 557000}, {"m": "Rr Grand", "h": "Q2 2027", "b": ["Studio", "1BR", "2BR"], "u": 72, "p": 0}, {"m": "Noore", "h": "Q2 2027", "b": ["1BR", "2BR", "3BR"], "s": 769, "p": 1300000}];
+const C=[{"m": "The Wilds Residences", "h": "Q2 2029", "pp": "65/35", "b": ["3BR", "4BR", "5BR", "6BR"], "s": 3562, "p": 5500000, "u": 1700}, {"m": "Park Residency", "h": "Q3 2029", "pp": "20/80", "b": ["Studio", "1BR", "2BR", "3BR"], "s": 400, "p": 538891}];
 async function main(){
   const snap=await db.collection('projects').get();
   const nm={};
@@ -24,8 +24,7 @@ async function main(){
     if(Object.keys(u).length>2){
       batch.update(doc.ref,u);bc++;updated++;
       console.log('OK',c.m,'|',Object.keys(u).filter(k=>k!='dataEnrichedAt'&&k!='dataSource').join(','));
-      if(bc>=400){await batch.commit();batch=db.batch();bc=0;}
-    } else console.log('SKIP (already has data):',c.m);
+    } else console.log('SKIP:',c.m);
   }
   if(bc>0)await batch.commit();
   console.log('Done! Updated:',updated,'Not found:',nf);
