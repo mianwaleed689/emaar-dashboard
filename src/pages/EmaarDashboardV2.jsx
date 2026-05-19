@@ -60,6 +60,7 @@ import FinancialsTab from '../tabs/FinancialsTab';
 import BankingTab from '../tabs/BankingTab';
 import PipelineTab from '../tabs/PipelineTab';
 import DevPortalTab from '../tabs/DevPortalTab';
+import DataQualityTab from '../tabs/DataQualityTab';
 
 /* — ACTIVE PROJECTS €” now Firestore-only — */
 /* Projects load from: Firestore 'projects' collection */
@@ -975,6 +976,7 @@ const TAB_GROUPS = [
       { key: "Agency",      icon: SvgIcons.Building2 },
       { key: "Compliance",  icon: SvgIcons.Shield },
       { key: "Dev Portal",  icon: SvgIcons.Layers },
+      { key: "Data Quality", icon: SvgIcons.Activity },
       { key: "Intelligence",icon: SvgIcons.Database },
     ]
   },
@@ -5420,6 +5422,9 @@ activeProjects={[...(Array.isArray(liveProjects)?liveProjects:[]),...(Array.isAr
               Unit Inventory · EOI Pipeline · Commission · Assets
           — */}
           {/* — DEV PORTAL TAB (extracted) — */}
+          {tab === "Data Quality" && (
+            <DataQualityTab />
+          )}
           {tab === "Dev Portal" && (
             <DevPortalTab
               devId={devId} devProjects={devProjects} selectedDevProject={selectedDevProject}
