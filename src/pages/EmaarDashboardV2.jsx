@@ -1,10 +1,10 @@
-﻿/* eslint-disable */ /* v1777452894635 */
-/* —
+/* eslint-disable */ /* v1777452894635 */
+/* â€”
    DXB ANALYTICS INTELLIGENCE PLATFORM
-   Clean Architecture €” Data-Driven, Firestore-Connected
+   Clean Architecture â‚¬â€ Data-Driven, Firestore-Connected
    All intelligence tabs: empty state, ready for data import
    CRM tabs: fully functional (Leads, Pipeline, Team, Agency etc)
-   — */
+   â€” */
 
 import React, { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
@@ -24,7 +24,7 @@ import LandingPage from "./LandingPage";
 import RoiCalculator from "../components/RoiCalculator";
 import { useUserFacingCommunities } from "../lib/communities";
 
-/* — EXTRACTED TAB COMPONENTS — */
+/* â€” EXTRACTED TAB COMPONENTS â€” */
 import CurrencyTab from '../tabs/CurrencyTab';
 import LaunchCalendarTab from '../tabs/LaunchCalendarTab';
 import CommunityMapTab from '../tabs/CommunityMapTab';
@@ -62,9 +62,9 @@ import PipelineTab from '../tabs/PipelineTab';
 import DevPortalTab from '../tabs/DevPortalTab';
 import DataQualityTab from '../tabs/DataQualityTab';
 
-/* — ACTIVE PROJECTS €” now Firestore-only — */
+/* â€” ACTIVE PROJECTS â‚¬â€ now Firestore-only â€” */
 /* Projects load from: Firestore 'projects' collection */
-/* Populated via: Admin → Data Manager → Import Projects */
+/* Populated via: Admin â†’ Data Manager â†’ Import Projects */
 
 const getLinkDomain = (url) => {
   if (!url) return "Listing";
@@ -74,7 +74,7 @@ const getLinkDomain = (url) => {
   return "Official Listing";
 };
 
-/* — HANDOVER COUNTDOWN — */
+/* â€” HANDOVER COUNTDOWN â€” */
 const getHandoverCountdown = (handover) => {
   if (!handover) return null;
   const match = handover.match(/Q([1-4])\s+(\d{4})/);
@@ -97,26 +97,26 @@ const getHandoverCountdown = (handover) => {
   return { label, color, urgent: diffDays <= 90, months: diffMonths, days: diffDays };
 };
 
-// — INVESTMENT SCORE (out of 10) —
+// â€” INVESTMENT SCORE (out of 10) â€”
 const getInvestmentScore = (p) => {
   let score = 0;
   const breakdown = [];
 
-  // 1. Yield (0€”3 pts)
+  // 1. Yield (0â‚¬â€3 pts)
   const gross = p.gross || p.yield || 0;
   if (gross >= 8)      { score += 3; breakdown.push({ label: "Yield", pts: 3, max: 3, note: gross + "% gross" }); }
   else if (gross >= 6) { score += 2; breakdown.push({ label: "Yield", pts: 2, max: 3, note: gross + "% gross" }); }
   else if (gross >= 4) { score += 1; breakdown.push({ label: "Yield", pts: 1, max: 3, note: gross + "% gross" }); }
   else                 { breakdown.push({ label: "Yield", pts: 0, max: 3, note: gross ? gross + "%" : "No data" }); }
 
-  // 2. Value (PPSF) (0€”2 pts)
+  // 2. Value (PPSF) (0â‚¬â€2 pts)
   const ppsf = p.ppsf || 0;
   if (ppsf > 0 && ppsf <= 1500)       { score += 2; breakdown.push({ label: "Value", pts: 2, max: 2, note: "AED " + ppsf + "/sqft" }); }
   else if (ppsf > 0 && ppsf <= 2200)  { score += 1; breakdown.push({ label: "Value", pts: 1, max: 2, note: "AED " + ppsf + "/sqft" }); }
   else if (ppsf > 0)                  { breakdown.push({ label: "Value", pts: 0, max: 2, note: "AED " + ppsf + "/sqft" }); }
   else                                { breakdown.push({ label: "Value", pts: 0, max: 2, note: "No PPSF" }); }
 
-  // 3. Handover timing (0€”2 pts) €” sweet spot is 12€”36 months
+  // 3. Handover timing (0â‚¬â€2 pts) â‚¬â€ sweet spot is 12â‚¬â€36 months
   const cd = getHandoverCountdown(p.handover);
   if (cd) {
     if (cd.passed)              { score += 1.5; breakdown.push({ label: "Handover", pts: 1.5, max: 2, note: "Ready now" }); }
@@ -128,7 +128,7 @@ const getInvestmentScore = (p) => {
     breakdown.push({ label: "Handover", pts: 0, max: 2, note: "No date" });
   }
 
-  // 4. Payment plan (0€”2 pts)
+  // 4. Payment plan (0â‚¬â€2 pts)
   const pp = (p.paymentPlan || p.payment || "").toLowerCase();
   if (pp.includes("80/20") || pp.includes("80:20"))       { score += 2;   breakdown.push({ label: "Payment", pts: 2,   max: 2, note: "80/20 plan" }); }
   else if (pp.includes("70/30") || pp.includes("60/40"))  { score += 1.5; breakdown.push({ label: "Payment", pts: 1.5, max: 2, note: pp }); }
@@ -136,7 +136,7 @@ const getInvestmentScore = (p) => {
   else if (pp.length > 0)                                 { score += 0.5; breakdown.push({ label: "Payment", pts: 0.5, max: 2, note: pp }); }
   else                                                    { breakdown.push({ label: "Payment", pts: 0, max: 2, note: "Unknown" }); }
 
-  // 5. Golden Visa eligible (0€”1 pt)
+  // 5. Golden Visa eligible (0â‚¬â€1 pt)
   if (p.price && p.price >= GOLDEN_VISA_THRESHOLD) {
     score += 1; breakdown.push({ label: "Golden Visa", pts: 1, max: 1, note: "Eligible" });
   } else {
@@ -149,7 +149,7 @@ const getInvestmentScore = (p) => {
   return { score: final, color, label, breakdown };
 };
 
-/* — ICONS (inline SVG) — */
+/* â€” ICONS (inline SVG) â€” */
 const Icons = {
   overview: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>,
   financials: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>,
@@ -174,7 +174,7 @@ const Icons = {
 };
 
 
-/* — GLOBAL FILTER CONFIG — */
+/* â€” GLOBAL FILTER CONFIG â€” */
 const PROPERTY_TYPES = [
   {
     group: "Residential",
@@ -200,30 +200,30 @@ const PROPERTY_TYPES = [
   {
     group: "Commercial",
     types: [
-      { value: "office",        label: "Office",          beds: ["< 500 sqft","500€”1K sqft","1K€”2.5K sqft","2.5K€”5K sqft","5K+ sqft","Full Floor","Full Building"] },
-      { value: "retail",        label: "Retail / Shop",   beds: ["< 500 sqft","500€”1K sqft","1K€”2.5K sqft","2.5K+ sqft"] },
-      { value: "showroom",      label: "Showroom",        beds: ["< 2K sqft","2K€”5K sqft","5K+ sqft"] },
-      { value: "warehouse",     label: "Warehouse",       beds: ["< 5K sqft","5K€”10K sqft","10K+ sqft"] },
+      { value: "office",        label: "Office",          beds: ["< 500 sqft","500â‚¬â€1K sqft","1Kâ‚¬â€2.5K sqft","2.5Kâ‚¬â€5K sqft","5K+ sqft","Full Floor","Full Building"] },
+      { value: "retail",        label: "Retail / Shop",   beds: ["< 500 sqft","500â‚¬â€1K sqft","1Kâ‚¬â€2.5K sqft","2.5K+ sqft"] },
+      { value: "showroom",      label: "Showroom",        beds: ["< 2K sqft","2Kâ‚¬â€5K sqft","5K+ sqft"] },
+      { value: "warehouse",     label: "Warehouse",       beds: ["< 5K sqft","5Kâ‚¬â€10K sqft","10K+ sqft"] },
       { value: "coworking",     label: "Co-working Space",beds: ["Hot Desk","Dedicated Desk","Private Office","Full Floor"] },
     ]
   },
   {
     group: "Industrial & Land",
     types: [
-      { value: "industrial",    label: "Industrial Unit",    beds: ["< 5K sqft","5K€”20K sqft","20K+ sqft"] },
-      { value: "land_res",      label: "Land €” Residential", beds: ["< 5K sqft","5K€”15K sqft","15K+ sqft"] },
-      { value: "land_comm",     label: "Land €” Commercial",  beds: ["< 10K sqft","10K€”50K sqft","50K+ sqft"] },
-      { value: "land_mixed",    label: "Mixed Use Plot",     beds: ["< 10K sqft","10K€”50K sqft","50K+ sqft"] },
+      { value: "industrial",    label: "Industrial Unit",    beds: ["< 5K sqft","5Kâ‚¬â€20K sqft","20K+ sqft"] },
+      { value: "land_res",      label: "Land â‚¬â€ Residential", beds: ["< 5K sqft","5Kâ‚¬â€15K sqft","15K+ sqft"] },
+      { value: "land_comm",     label: "Land â‚¬â€ Commercial",  beds: ["< 10K sqft","10Kâ‚¬â€50K sqft","50K+ sqft"] },
+      { value: "land_mixed",    label: "Mixed Use Plot",     beds: ["< 10K sqft","10Kâ‚¬â€50K sqft","50K+ sqft"] },
     ]
   },
 ];
 
 const STATUS_OPTIONS = [
   { value: "all",          label: "All Status" },
-  { value: "offplan",      label: "Off-Plan €” Under Construction" },
-  { value: "prelaunch",    label: "Off-Plan €” Pre-Launch / EOI" },
-  { value: "ready_new",    label: "Ready €” New (Primary)" },
-  { value: "secondary",    label: "Ready €” Secondary Market" },
+  { value: "offplan",      label: "Off-Plan â‚¬â€ Under Construction" },
+  { value: "prelaunch",    label: "Off-Plan â‚¬â€ Pre-Launch / EOI" },
+  { value: "ready_new",    label: "Ready â‚¬â€ New (Primary)" },
+  { value: "secondary",    label: "Ready â‚¬â€ Secondary Market" },
   { value: "handover_now", label: "Handover This Year" },
   { value: "handover_2026",label: "Handover 2026" },
   { value: "handover_2027",label: "Handover 2027+" },
@@ -232,24 +232,24 @@ const STATUS_OPTIONS = [
 const PRICE_PRESETS_APT = [
   { label: "Any Price", min: 0, max: 0 },
   { label: "< 500K", min: 0, max: 500000 },
-  { label: "500K€”1M", min: 500000, max: 1000000 },
-  { label: "1M€”2M", min: 1000000, max: 2000000 },
-  { label: "2M€”5M", min: 2000000, max: 5000000 },
-  { label: "5M€”10M", min: 5000000, max: 10000000 },
+  { label: "500Kâ‚¬â€1M", min: 500000, max: 1000000 },
+  { label: "1Mâ‚¬â€2M", min: 1000000, max: 2000000 },
+  { label: "2Mâ‚¬â€5M", min: 2000000, max: 5000000 },
+  { label: "5Mâ‚¬â€10M", min: 5000000, max: 10000000 },
   { label: "10M+", min: 10000000, max: 0 },
 ];
 
 const PRICE_PRESETS_VILLA = [
   { label: "Any Price", min: 0, max: 0 },
   { label: "< 2M", min: 0, max: 2000000 },
-  { label: "2M€”5M", min: 2000000, max: 5000000 },
-  { label: "5M€”10M", min: 5000000, max: 10000000 },
-  { label: "10M€”25M", min: 10000000, max: 25000000 },
-  { label: "25M€”50M", min: 25000000, max: 50000000 },
+  { label: "2Mâ‚¬â€5M", min: 2000000, max: 5000000 },
+  { label: "5Mâ‚¬â€10M", min: 5000000, max: 10000000 },
+  { label: "10Mâ‚¬â€25M", min: 10000000, max: 25000000 },
+  { label: "25Mâ‚¬â€50M", min: 25000000, max: 50000000 },
   { label: "50M+", min: 50000000, max: 0 },
 ];
 
-/* — SVG ICON HELPER — replaces lucide-react dependency — */
+/* â€” SVG ICON HELPER â€” replaces lucide-react dependency â€” */
 const SvgIcons = {
   LayoutDashboard: (p) => <svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={p.strokeWidth||1.5} strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>,
   Globe: (p) => <svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={p.strokeWidth||1.5} strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>,
@@ -289,7 +289,7 @@ const SvgIcons = {
   DollarSign: ({ width=16, height=16, strokeWidth=2, style={} } = {}) => SvgIcons.CreditCard({ width, height, strokeWidth, style }),
 };
 
-/* — GLOBAL CONTEXT FILTER COMPONENT — */
+/* â€” GLOBAL CONTEXT FILTER COMPONENT â€” */
 const GlobalContextFilter = ({
   gDeveloper, setGDeveloperAndReset,
   gCommunity, setGCommunity,
@@ -308,7 +308,7 @@ const GlobalContextFilter = ({
   const STATUS_OPTIONS_LIVE = _schema.statusOptions;
   const PRICE_PRESETS_LIVE = _schema.pricePresets;
 
-  // — cleanPhone: strips non-digits €” NEVER use regex inside JSX —
+  // â€” cleanPhone: strips non-digits â‚¬â€ NEVER use regex inside JSX â€”
   const cleanPhone = (p) => {
     if (!p) return "";
     let out = "";
@@ -319,7 +319,7 @@ const GlobalContextFilter = ({
     return out;
   };
 
-  // — csvEsc: CSV-safe quoting €” defined here, NOT inside JSX —
+  // â€” csvEsc: CSV-safe quoting â‚¬â€ defined here, NOT inside JSX â€”
   const csvEsc = (v) => {
     const s = v == null ? "" : String(v);
     let out = "";
@@ -362,7 +362,7 @@ const GlobalContextFilter = ({
     setGPriceMax(0);
   };
 
-  /* — PREMIUM DROPDOWN STYLE €” gradient glass surface, subtle shadows — */
+  /* â€” PREMIUM DROPDOWN STYLE â‚¬â€ gradient glass surface, subtle shadows â€” */
   const selStyle = {
     background: "linear-gradient(145deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%)",
     border: `1px solid rgba(255,255,255,0.08)`,
@@ -399,9 +399,9 @@ const GlobalContextFilter = ({
       borderBottom: `1px solid rgba(255,255,255,0.08)`,
       boxShadow: "0 4px 24px rgba(0,0,0,0.4)",
     }}>
-      {/* — PREMIUM FILTER BAR €” world-class SaaS aesthetic — */}
+      {/* â€” PREMIUM FILTER BAR â‚¬â€ world-class SaaS aesthetic â€” */}
       <div style={{ padding: "14px 24px" }}>
-        {/* ROW 1 €” Search + Filters + Live indicator */}
+        {/* ROW 1 â‚¬â€ Search + Filters + Live indicator */}
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           {/* Premium search */}
           <div style={{ position: "relative", flex: 1, maxWidth: 580 }}>
@@ -447,7 +447,7 @@ const GlobalContextFilter = ({
             />
           </div>
 
-          {/* Filters button €” premium pill style */}
+          {/* Filters button â‚¬â€ premium pill style */}
           <button
             type="button"
             onClick={() => setOpen(!open)}
@@ -497,7 +497,7 @@ const GlobalContextFilter = ({
             )}
           </button>
 
-          {/* Clear all €” subtle, only when needed */}
+          {/* Clear all â‚¬â€ subtle, only when needed */}
           {activeCount > 0 && (
             <button
               type="button"
@@ -530,7 +530,7 @@ const GlobalContextFilter = ({
             </button>
           )}
 
-          {/* Live indicator €” right aligned, premium */}
+          {/* Live indicator â‚¬â€ right aligned, premium */}
           <div style={{
             marginLeft: "auto",
             display: "flex",
@@ -556,7 +556,7 @@ const GlobalContextFilter = ({
           </div>
         </div>
 
-        {/* ROW 2 €” Active filter chips (premium pill design) */}
+        {/* ROW 2 â‚¬â€ Active filter chips (premium pill design) */}
         {activeCount > 0 && (() => {
           const chips = [];
           if (gDeveloper !== "all") {
@@ -575,7 +575,7 @@ const GlobalContextFilter = ({
           }
           if (gPriceMin > 0 || gPriceMax > 0) {
             const plabel = gPriceMin > 0 && gPriceMax > 0
-              ? `AED ${(gPriceMin/1000000).toFixed(1)}M€”${(gPriceMax/1000000).toFixed(1)}M`
+              ? `AED ${(gPriceMin/1000000).toFixed(1)}Mâ‚¬â€${(gPriceMax/1000000).toFixed(1)}M`
               : gPriceMin > 0
                 ? `From AED ${(gPriceMin/1000000).toFixed(1)}M`
                 : `Up to AED ${(gPriceMax/1000000).toFixed(1)}M`;
@@ -619,7 +619,7 @@ const GlobalContextFilter = ({
                     }}
                     onMouseEnter={e => { e.currentTarget.style.background = "rgba(212,168,67,0.3)"; }}
                     onMouseLeave={e => { e.currentTarget.style.background = "rgba(212,168,67,0.15)"; }}
-                  >—</button>
+                  >â€”</button>
                 </span>
               ))}
               {gPriceMin >= GOLDEN_VISA_THRESHOLD && (
@@ -634,14 +634,14 @@ const GlobalContextFilter = ({
                   fontFamily: "'Outfit', sans-serif",
                   boxShadow: "inset 0 1px 0 rgba(255,255,255,0.04), 0 1px 2px rgba(0,0,0,0.1)",
                 }}>
-                  ★ Golden Visa Eligible
+                  â˜… Golden Visa Eligible
                 </span>
               )}
             </div>
           );
         })()}
 
-        {/* ROW 3 €” Expandable filter panel (premium card with glass effect) */}
+        {/* ROW 3 â‚¬â€ Expandable filter panel (premium card with glass effect) */}
         {open && (
           <div style={{
             marginTop: 14,
@@ -655,7 +655,7 @@ const GlobalContextFilter = ({
             boxShadow: "inset 0 1px 0 rgba(255,255,255,0.04), 0 8px 24px rgba(0,0,0,0.2)",
             animation: "slideDown 0.25s cubic-bezier(0.4, 0, 0.2, 1)",
           }}>
-            {/* Developer €” searchable */}
+            {/* Developer â‚¬â€ searchable */}
             <div>
               <label style={{ fontSize: 11, color: T.textMuted, fontWeight: 600, marginBottom: 8, display: "block", fontFamily: "'Outfit', sans-serif" }}>Developer</label>
               <SearchableSelect
@@ -673,7 +673,7 @@ const GlobalContextFilter = ({
               />
             </div>
 
-            {/* Property Type €” native select OK for 20 options with optgroups */}
+            {/* Property Type â‚¬â€ native select OK for 20 options with optgroups */}
             <div>
               <label style={{ fontSize: 11, color: T.textMuted, fontWeight: 600, marginBottom: 8, display: "block", fontFamily: "'Outfit', sans-serif" }}>Property type</label>
               <select value={gPropertyType} onChange={e => setGPropertyTypeAndReset(e.target.value)} style={{ ...(gPropertyType !== "all" ? activeSelStyle : selStyle), width: "100%" }}>
@@ -688,7 +688,7 @@ const GlobalContextFilter = ({
               </select>
             </div>
 
-            {/* Community €” searchable (172 options) */}
+            {/* Community â‚¬â€ searchable (172 options) */}
             <div>
               <label style={{ fontSize: 11, color: T.textMuted, fontWeight: 600, marginBottom: 8, display: "block", fontFamily: "'Outfit', sans-serif" }}>Community</label>
               <SearchableSelect
@@ -748,20 +748,20 @@ const GlobalContextFilter = ({
 };
 
 
-/* —
-   DXB ANALYTICS €” RESEARCH-BASED SEED DATA
-   All figures sourced from official publications €” listed per dataset
+/* â€”
+   DXB ANALYTICS â‚¬â€ RESEARCH-BASED SEED DATA
+   All figures sourced from official publications â‚¬â€ listed per dataset
    Seed data displays until real Firestore data is imported from Admin
    isSeedData: true flag marks all seed entries for easy identification
-   — */
+   â€” */
 
 const SEED_DATA = {
 
-  /* — MARKET TAB —
+  /* â€” MARKET TAB â€”
      Sources: DLD Annual Report 2025, DXB Interact Jan 2026,
      Property Monitor DPI Dec 2025, REIDIN Residential Index Dec 2025
      URL: dubailand.gov.ae/en/open-data/research/annual-report-real-estate-sector-performance-2024
-  — */
+  â€” */
   market: [
     { metric: "Total Market Value",       value: "AED 682.6B",  change: "+21% YoY",  numericValue: 682.6, isSeedData: true, source: "DLD / DXB Interact Jan 2026" },
     { metric: "Total Transactions",       value: "215,060",     change: "+19% YoY",  numericValue: 215060, isSeedData: true, source: "DLD Annual Report 2025" },
@@ -777,7 +777,7 @@ const SEED_DATA = {
     { metric: "Nationalities",            value: "193+",        isSeedData: true, source: "DLD Investor Base Report 2025" },
     { metric: "Off-Plan Share",           numericValue: 63,     isSeedData: true },
     { metric: "Cash Share",               numericValue: 55,     isSeedData: true, source: "DLD Mortgage Report 2025" },
-    { metric: "Active Developers", value: "50+", change: "RERA registered · DLD approved", isSeedData: true, source: "RERA Registry 2026" },
+    { metric: "Active Developers", value: "50+", change: "RERA registered Â· DLD approved", isSeedData: true, source: "RERA Registry 2026" },
     { metric: "REIDIN Growth",      value: "+19.8%", change: "Residential Sales Price Index Dec 2025", isSeedData: true, source: "REIDIN Dec 2025" },
     { metric: "Price Growth YoY",   value: "+19.8%", change: "Dec 2025", isSeedData: true, source: "REIDIN 2025" },
     { metric: "Mortgage Share",           numericValue: 45,     isSeedData: true },
@@ -790,11 +790,11 @@ const SEED_DATA = {
     { year: "2025", value: 919,  type: "annual", isSeedData: true, source: "DLD / DXB Interact Jan 2026" },
   ],
 
-  /* — DLD VOLUMES TAB —
+  /* â€” DLD VOLUMES TAB â€”
      Sources: DXBAnalytics.com Community Volume Report Feb 2026,
      DLD Direct Database Query, Property Monitor 2025
      URL: dxbanalytics.com/blog/dubai-property-transaction-volume-2026
-  — */
+  â€” */
   dldVolumes: [
     { community: "Jumeirah Village Circle",   type: "Apartment", transactions: 18782, avgPpsf: 1180, volume: 9800000000,  change: 17,  isSeedData: true, source: "DXBAnalytics / DLD 2025" },
     { community: "Business Bay",              type: "Apartment", transactions: 12450, avgPpsf: 2050, volume: 14200000000, change: 8,   isSeedData: true, source: "DXBAnalytics / DLD 2025" },
@@ -813,13 +813,13 @@ const SEED_DATA = {
     { community: "Tilal Al Ghaf",             type: "Villa",     transactions: 3600,  avgPpsf: 1650, volume: 5800000000,  change: 52,  isSeedData: true, source: "DXBAnalytics / DLD 2025" },
   ],
 
-  /* — PRICE HISTORY TAB —
+  /* â€” PRICE HISTORY TAB â€”
      Sources: ValuStrat VPI Q4 2025, REIDIN Residential Index Dec 2025,
      Property Monitor DPI 2025, Knight Frank Dubai Residential Q1 2025
      URL: reidin.com | valustrat.com/vpi
-  — */
+  â€” */
   priceHistory: [
-    /* 5-year PPSF trend €” Dubai overall apartment average */
+    /* 5-year PPSF trend â‚¬â€ Dubai overall apartment average */
     { period: "2020", ppsf: 1050, offPlanPpsf: 980,  secondaryPpsf: 1100, type: "priceHistory", isSeedData: true, source: "ValuStrat VPI / REIDIN" },
     { period: "2021", ppsf: 1080, offPlanPpsf: 1020, secondaryPpsf: 1140, type: "priceHistory", isSeedData: true, source: "ValuStrat VPI / REIDIN" },
     { period: "2022", ppsf: 1250, offPlanPpsf: 1180, secondaryPpsf: 1310, type: "priceHistory", isSeedData: true, source: "ValuStrat VPI / REIDIN" },
@@ -835,12 +835,12 @@ const SEED_DATA = {
     { community: "Business Bay",         ppsf: 2050, change6m: 3.1,  change1y: 8.4,  change3y: 29.7, change5y: 58.9, type: "priceHistory", isSeedData: true, source: "REIDIN Dec 2025" },
   ],
 
-  /* — NEIGHBOURHOODS TAB —
+  /* â€” NEIGHBOURHOODS TAB â€”
      Sources: Bayut H1 2025 Sales Report, Knight Frank Dubai 2025,
      RERA Service Charge Index 2025, uaeexperthub.com Dubai Yields 2026,
      Alkira Dubai Investment Guide Feb 2026, RTA Metro Blue Line plans
      URL: bayut.com/mybayut/bayut-h1-2025-dubai-rental-market-report
-  — */
+  â€” */
   communities: [
     { community: "Jumeirah Village Circle", avgPpsf: 1180, grossYield: 7.8,  netYield: 6.2, serviceCharge: 14,  metroDistance: 1800, supplyRisk: "Medium", investmentScore: 82, tenantProfile: "Professionals", hasSchool: true,  hasMall: true,  hasBeach: false, hasHospital: false, pipeline2026: 8200,  type: "community", isSeedData: true, source: "Bayut H1 2025 / uaeexperthub.com Jan 2026" },
     { community: "Dubai Marina",            avgPpsf: 2280, grossYield: 6.5,  netYield: 5.0, serviceCharge: 22,  metroDistance: 400,  supplyRisk: "Low",    investmentScore: 78, tenantProfile: "Professionals", hasSchool: false, hasMall: true,  hasBeach: true,  hasHospital: false, pipeline2026: 2800,  type: "community", isSeedData: true, source: "Bayut H1 2025 / Knight Frank Q1 2025" },
@@ -848,50 +848,50 @@ const SEED_DATA = {
     { community: "Downtown Dubai",          avgPpsf: 3100, grossYield: 5.8,  netYield: 4.2, serviceCharge: 35,  metroDistance: 300,  supplyRisk: "Low",    investmentScore: 74, tenantProfile: "Luxury / HNWI", hasSchool: false, hasMall: true,  hasBeach: false, hasHospital: false, pipeline2026: 1800,  type: "community", isSeedData: true, source: "Knight Frank Dubai 2025 / REIDIN" },
     { community: "Dubai Hills Estate",      avgPpsf: 1850, grossYield: 6.2,  netYield: 5.0, serviceCharge: 16,  metroDistance: 3500, supplyRisk: "Medium", investmentScore: 85, tenantProfile: "Families",      hasSchool: true,  hasMall: true,  hasBeach: false, hasHospital: true,  pipeline2026: 6800,  type: "community", isSeedData: true, source: "Knight Frank / Bayut H1 2025" },
     { community: "Palm Jumeirah",           avgPpsf: 4800, grossYield: 5.2,  netYield: 3.8, serviceCharge: 28,  metroDistance: 2200, supplyRisk: "Low",    investmentScore: 76, tenantProfile: "Luxury / HNWI", hasSchool: false, hasMall: true,  hasBeach: true,  hasHospital: false, pipeline2026: 800,   type: "community", isSeedData: true, source: "Knight Frank Dubai 2025" },
-    { community: "Jumeirah Lake Towers",    avgPpsf: 1420, grossYield: 8.1,  netYield: 6.4, serviceCharge: 16,  metroDistance: 350,  supplyRisk: "Low",    investmentScore: 84, tenantProfile: "Professionals", hasSchool: false, hasMall: true,  hasBeach: false, hasHospital: false, pipeline2026: 1200,  type: "community", isSeedData: true, source: "Middle East Insider Apr 2026 €” ranked #1 yield+quality" },
+    { community: "Jumeirah Lake Towers",    avgPpsf: 1420, grossYield: 8.1,  netYield: 6.4, serviceCharge: 16,  metroDistance: 350,  supplyRisk: "Low",    investmentScore: 84, tenantProfile: "Professionals", hasSchool: false, hasMall: true,  hasBeach: false, hasHospital: false, pipeline2026: 1200,  type: "community", isSeedData: true, source: "Middle East Insider Apr 2026 â‚¬â€ ranked #1 yield+quality" },
     { community: "Arabian Ranches",         avgPpsf: 1380, grossYield: 5.5,  netYield: 4.4, serviceCharge: 8,   metroDistance: 8000, supplyRisk: "Low",    investmentScore: 79, tenantProfile: "Families",      hasSchool: true,  hasMall: false, hasBeach: false, hasHospital: false, pipeline2026: 1400,  type: "community", isSeedData: true, source: "uaeexperthub.com / Bayut 2025" },
-    { community: "International City",      avgPpsf: 580,  grossYield: 9.2,  netYield: 7.8, serviceCharge: 8,   metroDistance: 5500, supplyRisk: "Low",    investmentScore: 71, tenantProfile: "Mixed",         hasSchool: false, hasMall: true,  hasBeach: false, hasHospital: false, pipeline2026: 600,   type: "community", isSeedData: true, source: "Middle East Insider Apr 2026 €” 9.2% yield leader" },
+    { community: "International City",      avgPpsf: 580,  grossYield: 9.2,  netYield: 7.8, serviceCharge: 8,   metroDistance: 5500, supplyRisk: "Low",    investmentScore: 71, tenantProfile: "Mixed",         hasSchool: false, hasMall: true,  hasBeach: false, hasHospital: false, pipeline2026: 600,   type: "community", isSeedData: true, source: "Middle East Insider Apr 2026 â‚¬â€ 9.2% yield leader" },
     { community: "Dubai Creek Harbour",     avgPpsf: 1620, grossYield: 6.4,  netYield: 5.1, serviceCharge: 14,  metroDistance: 1200, supplyRisk: "Medium", investmentScore: 80, tenantProfile: "Mixed",         hasSchool: false, hasMall: true,  hasBeach: true,  hasHospital: false, pipeline2026: 9200,  type: "community", isSeedData: true, source: "Alkira Dubai Investment Guide Feb 2026" },
     { community: "Al Furjan",               avgPpsf: 1080, grossYield: 8.2,  netYield: 6.8, serviceCharge: 12,  metroDistance: 700,  supplyRisk: "Medium", investmentScore: 77, tenantProfile: "Families",      hasSchool: true,  hasMall: false, hasBeach: false, hasHospital: false, pipeline2026: 3200,  type: "community", isSeedData: true, source: "GuestReady Feb 2026 / Bayut H1 2025" },
-    { community: "Dubai South",             avgPpsf: 850,  grossYield: 8.8,  netYield: 7.2, serviceCharge: 10,  metroDistance: 4000, supplyRisk: "Medium", investmentScore: 73, tenantProfile: "Mixed",         hasSchool: true,  hasMall: false, hasBeach: false, hasHospital: false, pipeline2026: 14000, type: "community", isSeedData: true, source: "uaeexperthub.com Jan 2026 €” 7.5-9.5% yield range" },
+    { community: "Dubai South",             avgPpsf: 850,  grossYield: 8.8,  netYield: 7.2, serviceCharge: 10,  metroDistance: 4000, supplyRisk: "Medium", investmentScore: 73, tenantProfile: "Mixed",         hasSchool: true,  hasMall: false, hasBeach: false, hasHospital: false, pipeline2026: 14000, type: "community", isSeedData: true, source: "uaeexperthub.com Jan 2026 â‚¬â€ 7.5-9.5% yield range" },
     { community: "Mohammed Bin Rashid City",avgPpsf: 1950, grossYield: 6.1,  netYield: 4.9, serviceCharge: 16,  metroDistance: 2800, supplyRisk: "Medium", investmentScore: 81, tenantProfile: "Families",      hasSchool: true,  hasMall: true,  hasBeach: false, hasHospital: true,  pipeline2026: 8800,  type: "community", isSeedData: true, source: "Knight Frank / Sands of Wealth Jan 2026" },
     { community: "Sobha Hartland",          avgPpsf: 2100, grossYield: 6.0,  netYield: 4.8, serviceCharge: 18,  metroDistance: 2400, supplyRisk: "Low",    investmentScore: 82, tenantProfile: "Luxury / HNWI", hasSchool: true,  hasMall: false, hasBeach: false, hasHospital: false, pipeline2026: 2200,  type: "community", isSeedData: true, source: "Knight Frank Q1 2025 / REIDIN" },
-    { community: "Tilal Al Ghaf",           avgPpsf: 1650, grossYield: 6.8,  netYield: 5.5, serviceCharge: 12,  metroDistance: 5000, supplyRisk: "Low",    investmentScore: 80, tenantProfile: "Families",      hasSchool: true,  hasMall: false, hasBeach: false, hasHospital: false, pipeline2026: 1800,  type: "community", isSeedData: true, source: "DLD 2025 €” 52% YoY growth" },
-    { community: "Discovery Gardens",       avgPpsf: 680,  grossYield: 8.5,  netYield: 7.1, serviceCharge: 9,   metroDistance: 600,  supplyRisk: "Low",    investmentScore: 75, tenantProfile: "Professionals", hasSchool: false, hasMall: true,  hasBeach: false, hasHospital: false, pipeline2026: 400,   type: "community", isSeedData: true, source: "Middle East Insider Apr 2026 €” 8.5% yield" },
+    { community: "Tilal Al Ghaf",           avgPpsf: 1650, grossYield: 6.8,  netYield: 5.5, serviceCharge: 12,  metroDistance: 5000, supplyRisk: "Low",    investmentScore: 80, tenantProfile: "Families",      hasSchool: true,  hasMall: false, hasBeach: false, hasHospital: false, pipeline2026: 1800,  type: "community", isSeedData: true, source: "DLD 2025 â‚¬â€ 52% YoY growth" },
+    { community: "Discovery Gardens",       avgPpsf: 680,  grossYield: 8.5,  netYield: 7.1, serviceCharge: 9,   metroDistance: 600,  supplyRisk: "Low",    investmentScore: 75, tenantProfile: "Professionals", hasSchool: false, hasMall: true,  hasBeach: false, hasHospital: false, pipeline2026: 400,   type: "community", isSeedData: true, source: "Middle East Insider Apr 2026 â‚¬â€ 8.5% yield" },
     { community: "Dubai Silicon Oasis",     avgPpsf: 820,  grossYield: 7.5,  netYield: 6.0, serviceCharge: 12,  metroDistance: 4500, supplyRisk: "Low",    investmentScore: 74, tenantProfile: "Professionals", hasSchool: true,  hasMall: true,  hasBeach: false, hasHospital: false, pipeline2026: 2400,  type: "community", isSeedData: true, source: "uaeexperthub.com Jan 2026" },
     { community: "Arjan",                   avgPpsf: 1020, grossYield: 8.0,  netYield: 6.5, serviceCharge: 13,  metroDistance: 1500, supplyRisk: "Medium", investmentScore: 76, tenantProfile: "Professionals", hasSchool: false, hasMall: false, hasBeach: false, hasHospital: false, pipeline2026: 4200,  type: "community", isSeedData: true, source: "GuestReady Feb 2026 / Keyone Q1 2026" },
     { community: "DAMAC Hills 2",           avgPpsf: 780,  grossYield: 7.2,  netYield: 6.0, serviceCharge: 10,  metroDistance: 6000, supplyRisk: "High",   investmentScore: 69, tenantProfile: "Families",      hasSchool: true,  hasMall: true,  hasBeach: false, hasHospital: false, pipeline2026: 16000, type: "community", isSeedData: true, source: "uaeexperthub.com Jan 2026" },
     { community: "Emaar Beachfront",        avgPpsf: 2800, grossYield: 5.8,  netYield: 4.6, serviceCharge: 20,  metroDistance: 800,  supplyRisk: "Low",    investmentScore: 79, tenantProfile: "Luxury / HNWI", hasSchool: false, hasMall: false, hasBeach: true,  hasHospital: false, pipeline2026: 1600,  type: "community", isSeedData: true, source: "Bayut H1 2025 / Driven Properties 2025" },
   ],
 
-  /* — LAUNCH CALENDAR TAB —
+  /* â€” LAUNCH CALENDAR TAB â€”
      Sources: Developer official portals, Bayut Launch Radar 2026,
      Property Finder New Projects, Reelly.ai Launch Calendar
      URL: reelly.ai | bayut.com | propertyfinder.ae
-  — */
+  â€” */
   launches: [
-    { projectName: "Emaar Grand Polo Club & Resort €” Phase 2", developer: "Emaar", community: "Dubai Investment South", propertyType: "Villa", status: "EOI Open", launchDate: "2026-04-20", startingPrice: 5700000, totalUnits: 420, paymentPlan: "80/20", eoiAmount: 50000, eoiRefundable: true, launchPrice: 4800, currentPrice: 5200, notes: "Emaar's 60M sqft master plan. Polo fields, 7 clubhouses, equestrian estates. Strong appreciation history on Emaar launches.", type: "launch", isSeedData: true, source: "Alkira Dubai Investment Guide Feb 2026" },
-    { projectName: "Dubai Islands €” Island B Phase 1", developer: "Nakheel", community: "Dubai Islands", propertyType: "Apartment", status: "EOI Open", launchDate: "2026-04-28", startingPrice: 1200000, totalUnits: 680, paymentPlan: "60/40", eoiAmount: 30000, eoiRefundable: true, notes: "Island B offers more controlled planning vs Island A. 24% price growth in 2025. Beachfront value.", type: "launch", isSeedData: true, source: "Alkira Feb 2026 €” Dubai Islands 24% growth 2025" },
-    { projectName: "Sobha Hartland II €” The Waterfront", developer: "Sobha Realty", community: "Sobha Hartland", propertyType: "Apartment", status: "Upcoming", launchDate: "2026-05-15", startingPrice: 1800000, totalUnits: 520, paymentPlan: "70/30", eoiAmount: 40000, eoiRefundable: true, notes: "High-rise community with green living concept. Sobha known for quality finishes and delivery track record.", type: "launch", isSeedData: true, source: "Arthur Mackenzy Q3 2025 Report" },
-    { projectName: "The Oasis by Emaar €” Phase 11", developer: "Emaar", community: "The Oasis", propertyType: "Villa", status: "Launched", launchDate: "2026-03-10", startingPrice: 6150000, totalUnits: 280, paymentPlan: "80/20 post-handover", eoiAmount: 50000, eoiRefundable: true, launchPrice: 5800, currentPrice: 6300, notes: "10-to-1 scarcity vs Dubai Hills (2,700 units vs 30,000). Lagoon pools, wave pools. Handover Jun 2029.", type: "launch", isSeedData: true, source: "Alkira Feb 2026 €” 'Blue Lagoon' exclusivity" },
-    { projectName: "DAMAC Lagoons €” Santorini Phase 3", developer: "DAMAC Properties", community: "DAMAC Lagoons", propertyType: "Villa", status: "EOI Closed", launchDate: "2026-03-22", startingPrice: 2200000, totalUnits: 380, paymentPlan: "60/40", eoiAmount: 25000, eoiRefundable: true, notes: "Mediterranean-inspired villas. DAMAC sold out previous phases within hours.", type: "launch", isSeedData: true, source: "Property Finder Launch Radar 2026" },
-    { projectName: "Binghatti Skyrise €” Business Bay", developer: "Binghatti", community: "Business Bay", propertyType: "Apartment", status: "Upcoming", launchDate: "2026-05-08", startingPrice: 850000, totalUnits: 720, paymentPlan: "70/30", eoiAmount: 20000, eoiRefundable: true, notes: "Binghatti's signature bold architecture. Business Bay canal views. Target professional renters €” strong yield community.", type: "launch", isSeedData: true, source: "Bayut Launch Radar Apr 2026" },
-    { projectName: "Tilal Al Ghaf €” Serenity Mansions", developer: "Majid Al Futtaim", community: "Tilal Al Ghaf", propertyType: "Villa", status: "Sold Out", launchDate: "2026-02-18", startingPrice: 8500000, totalUnits: 85, paymentPlan: "50/50", eoiAmount: 100000, eoiRefundable: false, notes: "Ultra-luxury mansions sold out within 48 hours. DLD 2025 shows 52% YoY transaction growth in Tilal Al Ghaf.", type: "launch", isSeedData: true, source: "DLD 2025 / Bayut 2026" },
-    { projectName: "Ellington Ocean House €” Dubai Islands", developer: "Ellington Properties", community: "Dubai Islands", propertyType: "Apartment", status: "Upcoming", launchDate: "2026-06-01", startingPrice: 2400000, totalUnits: 180, paymentPlan: "70/30", eoiAmount: 50000, eoiRefundable: true, notes: "Design-forward beachfront living. Ellington known for curated interiors. Limited units.", type: "launch", isSeedData: true, source: "Reelly.ai Launch Calendar Apr 2026" },
+    { projectName: "Emaar Grand Polo Club & Resort â‚¬â€ Phase 2", developer: "Emaar", community: "Dubai Investment South", propertyType: "Villa", status: "EOI Open", launchDate: "2026-04-20", startingPrice: 5700000, totalUnits: 420, paymentPlan: "80/20", eoiAmount: 50000, eoiRefundable: true, launchPrice: 4800, currentPrice: 5200, notes: "Emaar's 60M sqft master plan. Polo fields, 7 clubhouses, equestrian estates. Strong appreciation history on Emaar launches.", type: "launch", isSeedData: true, source: "Alkira Dubai Investment Guide Feb 2026" },
+    { projectName: "Dubai Islands â‚¬â€ Island B Phase 1", developer: "Nakheel", community: "Dubai Islands", propertyType: "Apartment", status: "EOI Open", launchDate: "2026-04-28", startingPrice: 1200000, totalUnits: 680, paymentPlan: "60/40", eoiAmount: 30000, eoiRefundable: true, notes: "Island B offers more controlled planning vs Island A. 24% price growth in 2025. Beachfront value.", type: "launch", isSeedData: true, source: "Alkira Feb 2026 â‚¬â€ Dubai Islands 24% growth 2025" },
+    { projectName: "Sobha Hartland II â‚¬â€ The Waterfront", developer: "Sobha Realty", community: "Sobha Hartland", propertyType: "Apartment", status: "Upcoming", launchDate: "2026-05-15", startingPrice: 1800000, totalUnits: 520, paymentPlan: "70/30", eoiAmount: 40000, eoiRefundable: true, notes: "High-rise community with green living concept. Sobha known for quality finishes and delivery track record.", type: "launch", isSeedData: true, source: "Arthur Mackenzy Q3 2025 Report" },
+    { projectName: "The Oasis by Emaar â‚¬â€ Phase 11", developer: "Emaar", community: "The Oasis", propertyType: "Villa", status: "Launched", launchDate: "2026-03-10", startingPrice: 6150000, totalUnits: 280, paymentPlan: "80/20 post-handover", eoiAmount: 50000, eoiRefundable: true, launchPrice: 5800, currentPrice: 6300, notes: "10-to-1 scarcity vs Dubai Hills (2,700 units vs 30,000). Lagoon pools, wave pools. Handover Jun 2029.", type: "launch", isSeedData: true, source: "Alkira Feb 2026 â‚¬â€ 'Blue Lagoon' exclusivity" },
+    { projectName: "DAMAC Lagoons â‚¬â€ Santorini Phase 3", developer: "DAMAC Properties", community: "DAMAC Lagoons", propertyType: "Villa", status: "EOI Closed", launchDate: "2026-03-22", startingPrice: 2200000, totalUnits: 380, paymentPlan: "60/40", eoiAmount: 25000, eoiRefundable: true, notes: "Mediterranean-inspired villas. DAMAC sold out previous phases within hours.", type: "launch", isSeedData: true, source: "Property Finder Launch Radar 2026" },
+    { projectName: "Binghatti Skyrise â‚¬â€ Business Bay", developer: "Binghatti", community: "Business Bay", propertyType: "Apartment", status: "Upcoming", launchDate: "2026-05-08", startingPrice: 850000, totalUnits: 720, paymentPlan: "70/30", eoiAmount: 20000, eoiRefundable: true, notes: "Binghatti's signature bold architecture. Business Bay canal views. Target professional renters â‚¬â€ strong yield community.", type: "launch", isSeedData: true, source: "Bayut Launch Radar Apr 2026" },
+    { projectName: "Tilal Al Ghaf â‚¬â€ Serenity Mansions", developer: "Majid Al Futtaim", community: "Tilal Al Ghaf", propertyType: "Villa", status: "Sold Out", launchDate: "2026-02-18", startingPrice: 8500000, totalUnits: 85, paymentPlan: "50/50", eoiAmount: 100000, eoiRefundable: false, notes: "Ultra-luxury mansions sold out within 48 hours. DLD 2025 shows 52% YoY transaction growth in Tilal Al Ghaf.", type: "launch", isSeedData: true, source: "DLD 2025 / Bayut 2026" },
+    { projectName: "Ellington Ocean House â‚¬â€ Dubai Islands", developer: "Ellington Properties", community: "Dubai Islands", propertyType: "Apartment", status: "Upcoming", launchDate: "2026-06-01", startingPrice: 2400000, totalUnits: 180, paymentPlan: "70/30", eoiAmount: 50000, eoiRefundable: true, notes: "Design-forward beachfront living. Ellington known for curated interiors. Limited units.", type: "launch", isSeedData: true, source: "Reelly.ai Launch Calendar Apr 2026" },
   ],
 
-  /* — OVERVIEW TAB KPIs —
+  /* â€” OVERVIEW TAB KPIs â€”
      Sources: Same as Market tab
-  — */
+  â€” */
   overviewKpis: [
-    { metric: "Total Market Value",  value: "AED 682.6B",  change: "+21% YoY €” Full year 2025",   isSeedData: true, source: "DLD / DXB Interact Jan 2026" },
-    { metric: "Total Transactions",  value: "215,060",      change: "+19% YoY €” Sales only",        isSeedData: true, source: "DLD Annual Report 2025" },
-    { metric: "Off-Plan Share",      value: "63%",          change: "+3pp €” Off-plan dominated 2025", isSeedData: true, source: "DLD / Property Monitor 2025" },
+    { metric: "Total Market Value",  value: "AED 682.6B",  change: "+21% YoY â‚¬â€ Full year 2025",   isSeedData: true, source: "DLD / DXB Interact Jan 2026" },
+    { metric: "Total Transactions",  value: "215,060",      change: "+19% YoY â‚¬â€ Sales only",        isSeedData: true, source: "DLD Annual Report 2025" },
+    { metric: "Off-Plan Share",      value: "63%",          change: "+3pp â‚¬â€ Off-plan dominated 2025", isSeedData: true, source: "DLD / Property Monitor 2025" },
     { metric: "Units Launched",      value: "131,504",      change: "532 projects by Oct 2025",     isSeedData: true, source: "DLD Oct 2025" },
   ],
 };
 
-/* Seed data source reference €” shown in UI */
+/* Seed data source reference â‚¬â€ shown in UI */
 const SEED_SOURCE_URL = {
   DLD: "https://dubailand.gov.ae/en/open-data/research/",
   Bayut: "https://www.bayut.com/mybayut/bayut-h1-2025-dubai-rental-market-report/",
@@ -902,7 +902,7 @@ const SEED_SOURCE_URL = {
   DXBAnalytics: "https://www.dxbanalytics.com/blog/dubai-property-transaction-volume-2026",
 };
 
-/* — TAB GROUPS — 5 sections, 32 tabs in sequence — */
+/* â€” TAB GROUPS â€” 5 sections, 32 tabs in sequence â€” */
 const TAB_GROUPS = [
   {
     id: "market",
@@ -982,11 +982,11 @@ const TAB_GROUPS = [
   },
 ];
 
-/* — Flat TABS for backward compatibility — */
+/* â€” Flat TABS for backward compatibility â€” */
 const TABS = TAB_GROUPS.flatMap(g => g.tabs);
 
 
-/* — STYLES — */
+/* â€” STYLES â€” */
 const css = `
   @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700;9..144,900&display=swap');
 
@@ -999,7 +999,7 @@ const css = `
   ::-webkit-scrollbar-thumb { background: rgba(212,168,67,0.2); border-radius: 3px; }
   ::-webkit-scrollbar-thumb:hover { background: rgba(212,168,67,0.35); }
 
-  /* Native select dropdown dark theming €” prevents white-background flash on Windows/Linux */
+  /* Native select dropdown dark theming â‚¬â€ prevents white-background flash on Windows/Linux */
   select option,
   select optgroup {
     background-color: #161a22 !important;
@@ -1154,7 +1154,7 @@ const css = `
   }
   .mobile-overlay.open { opacity: 1; pointer-events: auto; }
 
-  /* — 768px: Tablet / small laptop — */
+  /* â€” 768px: Tablet / small laptop â€” */
   @media (max-width: 768px) {
     html { font-size: 13px; }
 
@@ -1188,16 +1188,16 @@ const css = `
     .filter-scroll::-webkit-scrollbar { display: none; }
     .filter-scroll button { flex-shrink: 0; }
 
-    /* Tables €” horizontal scroll with hint arrow */
+    /* Tables â‚¬â€ horizontal scroll with hint arrow */
     .table-scroll { overflow-x: auto !important; -webkit-overflow-scrolling: touch; }
-    .table-scroll::after { content: "swipe →"; position: absolute; right: 8px; top: 12px; color: ${T.gold}; font-size: 10px; opacity: 0.5; pointer-events: none; letter-spacing: 0.5px; }
+    .table-scroll::after { content: "swipe â†’"; position: absolute; right: 8px; top: 12px; color: ${T.gold}; font-size: 10px; opacity: 0.5; pointer-events: none; letter-spacing: 0.5px; }
     .table-scroll table { min-width: 560px; }
 
     /* Compare bar */
     .compare-bar { padding: 10px 14px !important; flex-direction: column !important; align-items: stretch !important; gap: 8px !important; }
     .compare-bar > div { justify-content: center; flex-wrap: wrap; }
 
-    /* Mortgage calculator 2-col → 1-col */
+    /* Mortgage calculator 2-col â†’ 1-col */
     .mortgage-grid { grid-template-columns: 1fr !important; }
 
     /* AI Insights full width cards */
@@ -1207,7 +1207,7 @@ const css = `
     .alerts-modal { max-width: 100% !important; max-height: 100dvh !important; border-radius: 20px 20px 0 0 !important; position: fixed !important; bottom: 0 !important; top: auto !important; margin: 0 !important; }
   }
 
-  /* — 480px: Mobile phones — */
+  /* â€” 480px: Mobile phones â€” */
   @media (max-width: 480px) {
     html { font-size: 12px; }
 
@@ -1243,18 +1243,18 @@ const css = `
     .tab-content-pad { padding-bottom: 80px !important; }
   }
 
-  /* — 360px: Very small phones — */
+  /* â€” 360px: Very small phones â€” */
   @media (max-width: 360px) {
     .kpi-grid { grid-template-columns: 1fr !important; }
     html { font-size: 11px; }
   }
 
-  /* — Touch improvements — */
+  /* â€” Touch improvements â€” */
   * { -webkit-tap-highlight-color: transparent; }
   button, a, [role="button"] { touch-action: manipulation; }
   input[type="range"] { height: 32px; }
 
-  /* — Mobile Bottom Nav Bar — */
+  /* â€” Mobile Bottom Nav Bar â€” */
   @media (max-width: 768px) {
     .mobile-bottom-nav {
       display: flex !important;
@@ -1271,7 +1271,7 @@ const css = `
   }
 `;
 
-/* — COMPONENTS — */
+/* â€” COMPONENTS â€” */
 
 /* Loading Skeleton for data fetch */
 const LoadingSkeleton = ({ rows = 6, cols = 3 }) => (
@@ -1299,14 +1299,14 @@ const KPI = ({ label, value, sub, icon, delay = 0, onClick }) => {
       style={{ cursor: isClickable ? "pointer" : "default", transition: "transform 0.2s, box-shadow 0.2s, border-color 0.2s", transform: hovered ? "translateY(-3px)" : "none", boxShadow: hovered ? `0 10px 30px rgba(212,168,67,0.2)` : undefined, borderColor: hovered ? T.gold : undefined, position: "relative" }}
     >
       <div style={{ position: "absolute", top: -30, right: -30, width: 80, height: 80, borderRadius: "50%", background: `radial-gradient(circle, ${T.goldGlow} 0%, transparent 70%)` }} />
-      {isClickable && <div style={{ position: "absolute", top: 10, right: 10, fontSize: 14, color: hovered ? T.gold : T.border, transition: "color 0.2s" }}>—</div>}
+      {isClickable && <div style={{ position: "absolute", top: 10, right: 10, fontSize: 14, color: hovered ? T.gold : T.border, transition: "color 0.2s" }}>â€”</div>}
       <div style={{ fontSize: 10, fontWeight: 600, color: T.textMuted, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 8 }}>{label}</div>
       <div style={{ fontFamily: "'Fraunces', serif", fontSize: 26, fontWeight: 700, color: T.gold, lineHeight: 1.1, marginBottom: 4 }}>{value}</div>
       <div style={{ fontSize: 12, fontWeight: 500, color: T.teal, display: "flex", alignItems: "center", gap: 4 }}>
         {sub?.includes("+") && <span style={{ color: T.green }}>{Icons.up}</span>}
         {sub}
       </div>
-      {isClickable && <div style={{ marginTop: 8, fontSize: 9, color: hovered ? T.gold : T.textMuted, fontWeight: 600, letterSpacing: 0.5, transition: "color 0.2s" }}>{hovered ? "View breakdown →" : "Click for details"}</div>}
+      {isClickable && <div style={{ marginTop: 8, fontSize: 9, color: hovered ? T.gold : T.textMuted, fontWeight: 600, letterSpacing: 0.5, transition: "color 0.2s" }}>{hovered ? "View breakdown â†’" : "Click for details"}</div>}
     </div>
   );
 };
@@ -1317,7 +1317,7 @@ const ForecastCard = ({ firm, color, short, forecast, detail, bullets, sourceUrl
     <div className="chart-box" style={{ borderTop: `3px solid ${color}`, cursor: "pointer", transition: "all 0.2s" }} onClick={() => setExpanded(e => !e)}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
         <h4 style={{ color, fontSize: 15, fontWeight: 700, marginBottom: 4, fontFamily: "'Fraunces', serif" }}>{firm}</h4>
-        <span style={{ fontSize: 16, color: T.textMuted, display: "inline-block", transform: expanded ? "rotate(180deg)" : "none", transition: "transform 0.2s" }}>—</span>
+        <span style={{ fontSize: 16, color: T.textMuted, display: "inline-block", transform: expanded ? "rotate(180deg)" : "none", transition: "transform 0.2s" }}>â€”</span>
       </div>
       <div style={{ fontSize: 10, fontWeight: 700, color: T.white, background: color + "20", padding: "3px 8px", borderRadius: 5, display: "inline-block", marginBottom: 8 }}>{forecast}</div>
       <p style={{ color: T.textSecondary, fontSize: 12, lineHeight: 1.6 }}>{short}</p>
@@ -1327,11 +1327,11 @@ const ForecastCard = ({ firm, color, short, forecast, detail, bullets, sourceUrl
           <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 5 }}>
             {bullets.map((b, bi) => (
               <li key={bi} style={{ fontSize: 11, color: T.textSecondary, display: "flex", gap: 6, alignItems: "flex-start" }}>
-                <span style={{ color, fontWeight: 700, marginTop: 1 }}>—</span> {b}
+                <span style={{ color, fontWeight: 700, marginTop: 1 }}>â€”</span> {b}
               </li>
             ))}
           </ul>
-          <a href={sourceUrl} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{ display: "inline-block", marginTop: 10, fontSize: 10, color, fontWeight: 700, textDecoration: "none" }}>Full Report —</a>
+          <a href={sourceUrl} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{ display: "inline-block", marginTop: 10, fontSize: 10, color, fontWeight: 700, textDecoration: "none" }}>Full Report â€”</a>
         </div>
       )}
       {!expanded && <div style={{ marginTop: 8, fontSize: 10, color: T.textMuted }}>Click to expand full analysis</div>}
@@ -1371,7 +1371,7 @@ const CustomTooltip = ({ active, payload, label }) => {
   );
 };
 
-/* — LOGIN SCREEN — */
+/* â€” LOGIN SCREEN â€” */
 const googleProvider = new GoogleAuthProvider();
 
 const PasswordStrength = ({ password }) => {
@@ -1512,7 +1512,7 @@ const LoginScreen = ({ onLogin, onBack, defaultMode = "login" }) => {
         await emailjs.send(import.meta.env.VITE_EMAILJS_SERVICE_ID, import.meta.env.VITE_EMAILJS_TEMPLATE_ID, {
           user_email: email, user_name: name.trim(),
           project_name: "DXB Analytics Platform",
-          change_type: "Welcome to DXB Analytics! €” Please verify your email",
+          change_type: "Welcome to DXB Analytics! â‚¬â€ Please verify your email",
           new_value: "Your 7-day Pro Trial is active. Check your inbox to verify your email address.",
           old_value: "New Account",
           updated_at: now.toLocaleDateString("en-AE"),
@@ -1530,7 +1530,7 @@ const LoginScreen = ({ onLogin, onBack, defaultMode = "login" }) => {
     setLoading(false);
   };
 
-  // — Verify Email Screen —
+  // â€” Verify Email Screen â€”
   if (screen === "verify") return (
     <div style={{ minHeight: "100vh", background: T.bg, display: "flex", alignItems: "center", justifyContent: "center" }}>
       <style>{css}</style>
@@ -1553,7 +1553,7 @@ const LoginScreen = ({ onLogin, onBack, defaultMode = "login" }) => {
             ))}
           </div>
           <button type="button" className="login-btn" onClick={() => { setScreen("form"); setMode("login"); setPass(""); setConfirmPass(""); }}>
-            Go to Sign In →
+            Go to Sign In â†’
           </button>
           <button type="button" onClick={async () => { try { if (auth.currentUser) { await sendEmailVerification(auth.currentUser); alert("Verification email resent! Check your inbox."); } } catch(e){} }} style={{ display: "block", margin: "12px auto 0", background: "none", border: "none", color: T.gold, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
             Resend verification email
@@ -1563,7 +1563,7 @@ const LoginScreen = ({ onLogin, onBack, defaultMode = "login" }) => {
     </div>
   );
 
-  // — Reset Sent Screen —
+  // â€” Reset Sent Screen â€”
   if (screen === "reset_sent") return (
     <div style={{ minHeight: "100vh", background: T.bg, display: "flex", alignItems: "center", justifyContent: "center" }}>
       <style>{css}</style>
@@ -1583,7 +1583,7 @@ const LoginScreen = ({ onLogin, onBack, defaultMode = "login" }) => {
     </div>
   );
 
-  // — Main Form —
+  // â€” Main Form â€”
   return (
     <div style={{ minHeight: "100vh", background: T.bg, display: "flex", alignItems: "center", justifyContent: "center", position: "relative", overflow: "hidden" }}>
       <style>{css}</style>
@@ -1591,7 +1591,7 @@ const LoginScreen = ({ onLogin, onBack, defaultMode = "login" }) => {
         <button type="button" onClick={onBack} style={{ position: "absolute", top: 24, left: 24, display: "flex", alignItems: "center", gap: 6, background: "none", border: `1px solid ${T.border}`, borderRadius: 8, padding: "8px 16px", color: T.textSecondary, fontSize: 13, fontFamily: "'Outfit', sans-serif", cursor: "pointer", zIndex: 10 }}
           onMouseEnter={e => { e.currentTarget.style.borderColor = T.gold; e.currentTarget.style.color = T.gold; }}
           onMouseLeave={e => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.color = T.textSecondary; }}>
-          ←  ←  Back to Home
+          â† Â â†  Back to Home
         </button>
       )}
       <div style={{ position: "absolute", inset: 0, opacity: 0.015, backgroundImage: `radial-gradient(${T.gold} 1px, transparent 1px)`, backgroundSize: "50px 50px" }} />
@@ -1618,7 +1618,7 @@ const LoginScreen = ({ onLogin, onBack, defaultMode = "login" }) => {
             {mode === "login" ? "Welcome back" : "Start your free trial"}
           </h2>
           <p style={{ color: T.textSecondary, fontSize: 13, marginBottom: 20 }}>
-            {mode === "login" ? "Sign in to access your dashboard" : "7 days full Pro access €” no credit card required"}
+            {mode === "login" ? "Sign in to access your dashboard" : "7 days full Pro access â‚¬â€ no credit card required"}
           </p>
 
           {/* Google Sign-In */}
@@ -1667,7 +1667,7 @@ const LoginScreen = ({ onLogin, onBack, defaultMode = "login" }) => {
             <div>
               <label style={{ fontSize: 11, fontWeight: 600, color: T.textSecondary, textTransform: "uppercase", letterSpacing: 1, display: "block", marginBottom: 6 }}>Password *</label>
               <div style={{ position: "relative" }}>
-                <input className="login-input" type={showPass ? "text" : "password"} placeholder={mode === "signup" ? "Min 8 chars + 1 number" : "—"} value={pass} onChange={e => setPass(e.target.value)} onKeyDown={e => e.key === "Enter" && mode === "login" && handleLogin()} style={{ paddingRight: 44 }} />
+                <input className="login-input" type={showPass ? "text" : "password"} placeholder={mode === "signup" ? "Min 8 chars + 1 number" : "â€”"} value={pass} onChange={e => setPass(e.target.value)} onKeyDown={e => e.key === "Enter" && mode === "login" && handleLogin()} style={{ paddingRight: 44 }} />
                 <button type="button" onClick={() => setShowPass(!showPass)} style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: T.textMuted, padding: 4 }}>
                   {showPass ? Icons.eyeOff : Icons.eye}
                 </button>
@@ -1684,8 +1684,8 @@ const LoginScreen = ({ onLogin, onBack, defaultMode = "login" }) => {
                     {showConfirm ? Icons.eyeOff : Icons.eye}
                   </button>
                 </div>
-                {confirmPass && confirmPass !== pass && <div style={{ fontSize: 10, color: T.red, marginTop: 4 }}>❌ …❌ €œ❌ €” Passwords do not match</div>}
-                {confirmPass && confirmPass === pass && <div style={{ fontSize: 10, color: T.green, marginTop: 4 }}>✅ “✅ €œ Passwords match</div>}
+                {confirmPass && confirmPass !== pass && <div style={{ fontSize: 10, color: T.red, marginTop: 4 }}>âŒ â€¦âŒ â‚¬Å“âŒ â‚¬â€ Passwords do not match</div>}
+                {confirmPass && confirmPass === pass && <div style={{ fontSize: 10, color: T.green, marginTop: 4 }}>âœ… â€œâœ… â‚¬Å“ Passwords match</div>}
               </div>
             )}
 
@@ -1714,14 +1714,14 @@ const LoginScreen = ({ onLogin, onBack, defaultMode = "login" }) => {
                   <span style={{ width: 16, height: 16, border: "2px solid rgba(4,9,15,0.3)", borderTopColor: T.bg, borderRadius: "50%", animation: "spin 0.6s linear infinite", display: "inline-block" }} />
                   {mode === "login" ? "Signing in..." : "Creating account..."}
                 </span>
-              ) : mode === "login" ? "Sign In" : "Start Free Trial →"}
+              ) : mode === "login" ? "Sign In" : "Start Free Trial â†’"}
             </button>
 
             {mode === "signup" && (
               <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 12px", background: "rgba(212,168,67,0.06)", borderRadius: 8, border: `1px solid ${T.border}` }}>
-                <span style={{ fontSize: 16 }}>⭐</span>
+                <span style={{ fontSize: 16 }}>â­</span>
                 <div style={{ fontSize: 11, color: T.textSecondary, lineHeight: 1.4 }}>
-                  <span style={{ color: T.gold, fontWeight: 600 }}>7-day Pro trial</span> €” Full access. No credit card. Cancel anytime.
+                  <span style={{ color: T.gold, fontWeight: 600 }}>7-day Pro trial</span> â‚¬â€ Full access. No credit card. Cancel anytime.
                 </div>
               </div>
             )}
@@ -1739,7 +1739,7 @@ const LoginScreen = ({ onLogin, onBack, defaultMode = "login" }) => {
         </div>
 
         <p style={{ textAlign: "center", color: T.textMuted, fontSize: 11, marginTop: 20 }}>
-          \uD83D\uDD12 Secured by Firebase · SSL Encrypted · GDPR Compliant
+          \uD83D\uDD12 Secured by Firebase Â· SSL Encrypted Â· GDPR Compliant
         </p>
       </div>
     </div>
@@ -1747,7 +1747,7 @@ const LoginScreen = ({ onLogin, onBack, defaultMode = "login" }) => {
 };
 
 
-/* — PRO GATE OVERLAY — */
+/* â€” PRO GATE OVERLAY â€” */
 const ProGate = ({ children, isPro, message = "Upgrade to Pro to unlock this data", onUpgrade, blur = true }) => {
   if (isPro) return children;
   return (
@@ -1762,23 +1762,23 @@ const ProGate = ({ children, isPro, message = "Upgrade to Pro to unlock this dat
           <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 16, lineHeight: 1.6 }}>Join 500+ investors using DXB Analytics Pro to track the Dubai real estate market</div>
           <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 18 }}>
             {["All 48+ active projects", "Full financials & yields", "ROI & mortgage calculator", "Currency converter", "Portfolio tracker"].map((f, i) => (
-              <div key={i} style={{ fontSize: 11, color: T.textSecondary, textAlign: "left", paddingLeft: 4 }}>→“€œ {f}</div>
+              <div key={i} style={{ fontSize: 11, color: T.textSecondary, textAlign: "left", paddingLeft: 4 }}>â†’â€œâ‚¬Å“ {f}</div>
             ))}
           </div>
           <button type="button" onClick={onUpgrade} style={{ width: "100%", padding: "11px 0", background: `linear-gradient(135deg, ${T.gold}, #B8912F)`, color: T.bg, border: "none", borderRadius: 10, fontSize: 13, fontWeight: 800, cursor: "pointer", fontFamily: "'Outfit', sans-serif", letterSpacing: 0.3 }}>
-            Unlock Pro €” AED 99/mo →
+            Unlock Pro â‚¬â€ AED 99/mo â†’
           </button>
-          <div style={{ fontSize: 10, color: T.textMuted, marginTop: 8 }}>7-day money-back guarantee · Cancel anytime</div>
+          <div style={{ fontSize: 10, color: T.textMuted, marginTop: 8 }}>7-day money-back guarantee Â· Cancel anytime</div>
         </div>
       </div>
     </div>
   );
 };
 
-/* — PRO GATE FULL PAGE — */
+/* â€” PRO GATE FULL PAGE â€” */
 const ProGateFullPage = ({ tabName, onUpgrade }) => {
   const tabBenefits = {
-    "DXB Estimate":     ["Automated property valuations", "AVM price estimates per unit", "Bayut live listings", "—15% accuracy model"],
+    "DXB Estimate":     ["Automated property valuations", "AVM price estimates per unit", "Bayut live listings", "â€”15% accuracy model"],
     "Portfolio":        ["Track your Dubai investments", "ROI calculations", "Portfolio performance chart", "Yield tracking"],
     "Yields":           ["Gross & net yield by community", "STR vs LTR comparison", "Top yielding Dubai areas", "Historical yield trends"],
     "Mortgage":         ["Live EIBOR rates", "UAE bank comparison", "Monthly payment calculator", "Affordability analysis"],
@@ -1810,27 +1810,27 @@ const ProGateFullPage = ({ tabName, onUpgrade }) => {
           ))}
         </div>
         <button type="button" onClick={onUpgrade} style={{ width: "100%", padding: "14px 0", background: `linear-gradient(135deg, ${T.gold}, #B8912F)`, color: T.bg, border: "none", borderRadius: 12, fontSize: 14, fontWeight: 800, cursor: "pointer", fontFamily: "'Outfit', sans-serif", letterSpacing: 0.3, marginBottom: 10 }}>
-          Upgrade to Pro €” AED 99/mo →
+          Upgrade to Pro â‚¬â€ AED 99/mo â†’
         </button>
-        <div style={{ fontSize: 11, color: T.textMuted }}>7-day free trial · Cancel anytime · Money-back guarantee</div>
+        <div style={{ fontSize: 11, color: T.textMuted }}>7-day free trial Â· Cancel anytime Â· Money-back guarantee</div>
       </div>
     </div>
   );
 };
 
-/* — UPGRADE MODAL — */
+/* â€” UPGRADE MODAL â€” */
 
 
 const UpgradeModal = ({ show, onClose }) => {
   if (!show) return null;
   const plans = [
-    { name: "Pro", price: "99", period: "month", features: ["All Dubai projects €” full data", "AI market insights", "Portfolio ROI tracker", "DXB Estimate AVM", "Yield & STR/LTR analysis", "Mortgage calculator", "Price alerts", "PDF export"], popular: true, note: null, cta: "Upgrade to Pro →" },
-    { name: "Enterprise", price: "499", period: "month", features: ["Everything in Pro", "PDF report generation —", "API data access —", "Custom dashboards —", "Multi-user team accounts —", "Developer-level raw data", "Dedicated account manager", "White-label options —"], popular: false, note: "— = Launching Q3 2026", cta: "Contact Sales →" },
+    { name: "Pro", price: "99", period: "month", features: ["All Dubai projects â‚¬â€ full data", "AI market insights", "Portfolio ROI tracker", "DXB Estimate AVM", "Yield & STR/LTR analysis", "Mortgage calculator", "Price alerts", "PDF export"], popular: true, note: null, cta: "Upgrade to Pro â†’" },
+    { name: "Enterprise", price: "499", period: "month", features: ["Everything in Pro", "PDF report generation â€”", "API data access â€”", "Custom dashboards â€”", "Multi-user team accounts â€”", "Developer-level raw data", "Dedicated account manager", "White-label options â€”"], popular: false, note: "â€” = Launching Q3 2026", cta: "Contact Sales â†’" },
   ];
   return (
     <div style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.92)", zIndex: 3000, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(12px)", padding: 16 }} onClick={onClose}>
       <div className="upgrade-modal" style={{ background: T.surface, borderRadius: 24, border: `1px solid ${T.border}`, width: "95%", maxWidth: 720, padding: 36, position: "relative", boxShadow: "0 40px 100px rgba(0,0,0,0.6)" }} onClick={e => e.stopPropagation()}>
-        <button type="button" onClick={onClose} style={{ position: "absolute", top: 16, right: 16, background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center" }}>—</button>
+        <button type="button" onClick={onClose} style={{ position: "absolute", top: 16, right: 16, background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center" }}>â€”</button>
 
         {/* Header */}
         <div style={{ textAlign: "center", marginBottom: 28 }}>
@@ -1856,7 +1856,7 @@ const UpgradeModal = ({ show, onClose }) => {
         <div className="plans-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 20 }}>
           {plans.map((plan, i) => (
             <div key={i} style={{ background: T.surfaceAlt, borderRadius: 16, padding: 24, border: plan.popular ? `2px solid ${T.gold}` : `1px solid ${T.border}`, position: "relative" }}>
-              {plan.popular && <div style={{ position: "absolute", top: -12, left: "50%", transform: "translateX(-50%)", padding: "4px 16px", borderRadius: 20, background: `linear-gradient(135deg, ${T.gold}, #B8912F)`, color: T.bg, fontSize: 10, fontWeight: 800, letterSpacing: 0.5, whiteSpace: "nowrap" }}>⭐ MOST POPULAR</div>}
+              {plan.popular && <div style={{ position: "absolute", top: -12, left: "50%", transform: "translateX(-50%)", padding: "4px 16px", borderRadius: 20, background: `linear-gradient(135deg, ${T.gold}, #B8912F)`, color: T.bg, fontSize: 10, fontWeight: 800, letterSpacing: 0.5, whiteSpace: "nowrap" }}>â­ MOST POPULAR</div>}
               <h3 style={{ fontSize: 18, fontWeight: 700, color: T.white, marginBottom: 4, marginTop: plan.popular ? 8 : 0 }}>{plan.name}</h3>
               <div style={{ display: "flex", alignItems: "baseline", gap: 3, marginBottom: 16 }}>
                 <span style={{ fontSize: 11, color: T.textMuted }}>AED</span>
@@ -1865,8 +1865,8 @@ const UpgradeModal = ({ show, onClose }) => {
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 7, marginBottom: 16 }}>
                 {plan.features.map((f, j) => (
-                  <div key={j} style={{ display: "flex", alignItems: "flex-start", gap: 7, fontSize: 12, color: f.includes("—") ? T.textMuted : T.textSecondary }}>
-                    <span style={{ color: f.includes("—") ? T.textMuted : T.green, fontSize: 11, marginTop: 1, flexShrink: 0 }}>→“€œ</span>{f}
+                  <div key={j} style={{ display: "flex", alignItems: "flex-start", gap: 7, fontSize: 12, color: f.includes("â€”") ? T.textMuted : T.textSecondary }}>
+                    <span style={{ color: f.includes("â€”") ? T.textMuted : T.green, fontSize: 11, marginTop: 1, flexShrink: 0 }}>â†’â€œâ‚¬Å“</span>{f}
                   </div>
                 ))}
               </div>
@@ -1880,7 +1880,7 @@ const UpgradeModal = ({ show, onClose }) => {
         </div>
 
         <div style={{ textAlign: "center", display: "flex", justifyContent: "center", gap: 24, flexWrap: "wrap" }}>
-          {["\uD83D\uDD12 Secure payment", "— 7-day money-back", "— Instant access", "”— Cancel anytime"].map((t, i) => (
+          {["\uD83D\uDD12 Secure payment", "â€” 7-day money-back", "â€” Instant access", "â€â€” Cancel anytime"].map((t, i) => (
             <span key={i} style={{ fontSize: 11, color: T.textMuted }}>{t}</span>
           ))}
         </div>
@@ -1910,25 +1910,25 @@ function useFocusTrap(active) {
 }
 
 
-/* — COMMUNITY MAP TAB €” moved to tabs/CommunityMapTab.jsx — */
+/* â€” COMMUNITY MAP TAB â‚¬â€ moved to tabs/CommunityMapTab.jsx â€” */
 
 
 
-// — Tab Data Sources Footer —
-/* — DATA BADGE €” verified data stamp — */
+// â€” Tab Data Sources Footer â€”
+/* â€” DATA BADGE â‚¬â€ verified data stamp â€” */
 
 const DataBadge = ({ source, date, type = "dld" }) => {
   const cfg = {
-    dld:     { label: "DLD Verified",     color: "#10B981", icon: "→“€œ" },
-    reidin:  { label: "REIDIN Index",     color: "#3B82F6", icon: "→“€œ" },
-    emaar:   { label: "Emaar IR",         color: "#D4A843", icon: "→“€œ" },
-    live:    { label: "Live · Firestore", color: "#10B981", icon: "—" },
-    ai:      { label: "AI Estimate",      color: "#8B5CF6", icon: "—" },
-    manual:  { label: "Admin Verified",   color: "#F59E0B", icon: "→“€œ" },
+    dld:     { label: "DLD Verified",     color: "#10B981", icon: "â†’â€œâ‚¬Å“" },
+    reidin:  { label: "REIDIN Index",     color: "#3B82F6", icon: "â†’â€œâ‚¬Å“" },
+    emaar:   { label: "Emaar IR",         color: "#D4A843", icon: "â†’â€œâ‚¬Å“" },
+    live:    { label: "Live Â· Firestore", color: "#10B981", icon: "â€”" },
+    ai:      { label: "AI Estimate",      color: "#8B5CF6", icon: "â€”" },
+    manual:  { label: "Admin Verified",   color: "#F59E0B", icon: "â†’â€œâ‚¬Å“" },
   };
   const c = cfg[type] || cfg.dld;
   return (
-    <span title={`Source: ${source || c.label}${date ? " · " + date : ""}`} style={{
+    <span title={`Source: ${source || c.label}${date ? " Â· " + date : ""}`} style={{
       display: "inline-flex", alignItems: "center", gap: 4,
       fontSize: 9, fontWeight: 700, color: c.color, letterSpacing: 0.5,
       background: c.color + "12", border: `1px solid ${c.color}30`,
@@ -1977,7 +1977,7 @@ const TabSources = ({ sources }) => (
           }}
           onMouseEnter={e => { e.currentTarget.style.color = "#D4A843"; e.currentTarget.style.borderColor = "rgba(212,168,67,0.4)"; }}
           onMouseLeave={e => { e.currentTarget.style.color = "rgba(255,255,255,0.55)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)"; }}
-          >{s.label} —</a>
+          >{s.label} â€”</a>
         ) : (
           <span key={i} style={{
             fontSize: 10,
@@ -1993,10 +1993,10 @@ const TabSources = ({ sources }) => (
   </div>
 );
 
-/* —
+/* â€”
    EMPTY STATE COMPONENT
    Shows for all intelligence tabs while awaiting data import
-   — */
+   â€” */
 const EmptyState = ({ tab, icon, description, adminHint }) => (
   <div style={{
     display: "flex", flexDirection: "column", alignItems: "center",
@@ -2060,130 +2060,130 @@ const EmptyState = ({ tab, icon, description, adminHint }) => (
   </div>
 );
 
-/* —
+/* â€”
    INTELLIGENCE TAB CONFIGS
    Each tab has its icon, description and admin hint
-   — */
+   â€” */
 const INTELLIGENCE_TABS = {
   "Overview": {
     icon: "\uD83D\uDCCA",
-    description: "Your Bloomberg-style command centre. Live market ticker, KPI cards, developer intelligence panel, and real-time DLD feed €” all connected to your data sources.",
-    adminHint: "Connect data sources from Admin → Data Manager → Market Data"
+    description: "Your Bloomberg-style command centre. Live market ticker, KPI cards, developer intelligence panel, and real-time DLD feed â‚¬â€ all connected to your data sources.",
+    adminHint: "Connect data sources from Admin â†’ Data Manager â†’ Market Data"
   },
   "Financials": {
     icon: "\uD83D\uDCB9",
-    description: "Developer financial intelligence €” revenue, net profit, EBITDA, backlog, EPS, DPS €” 6-year history charts. Auto-updated from developer IR reports.",
-    adminHint: "Add developer financials from Admin → Data Manager → Developers"
+    description: "Developer financial intelligence â‚¬â€ revenue, net profit, EBITDA, backlog, EPS, DPS â‚¬â€ 6-year history charts. Auto-updated from developer IR reports.",
+    adminHint: "Add developer financials from Admin â†’ Data Manager â†’ Developers"
   },
   "Projects": {
-    icon: "\uD83C\uDFD7️",
-    description: "Browse all projects across all property types €” Off-Plan, Residential, Commercial, Secondary Market, Hotel Apartments, Villas, Balcony View Units. Filter, compare, and score every property.",
-    adminHint: "Import projects from Admin → Data Manager → Projects"
+    icon: "\uD83C\uDFD7ï¸Â",
+    description: "Browse all projects across all property types â‚¬â€ Off-Plan, Residential, Commercial, Secondary Market, Hotel Apartments, Villas, Balcony View Units. Filter, compare, and score every property.",
+    adminHint: "Import projects from Admin â†’ Data Manager â†’ Projects"
   },
   "Handover": {
     icon: "\uD83D\uDCC5",
     description: "Construction timeline tracker. Monitor handover dates, construction progress, and delivery risk for all off-plan projects. Automated countdown alerts.",
-    adminHint: "Add project handover data from Admin → Data Manager → Projects"
+    adminHint: "Add project handover data from Admin â†’ Data Manager â†’ Projects"
   },
   "Launch Calendar": {
     icon: "\uD83D\uDE80",
     description: "Never miss a launch. Upcoming project launches by developer, EOI status, expected pricing, and past launch performance vs actual prices.",
-    adminHint: "Launch data auto-populates from Bayut API scanner €” check Admin → Data Health"
+    adminHint: "Launch data auto-populates from Bayut API scanner â‚¬â€ check Admin â†’ Data Health"
   },
   "Neighbourhoods": {
-    icon: "\uD83C\uDFD8️",
-    description: "Community intelligence €” average PPSF, yields, schools, hospitals, metro access, lifestyle ratings, supply risk, and demand strength for every Dubai community.",
-    adminHint: "Add community data from Admin → Data Manager → Communities"
+    icon: "\uD83C\uDFD8ï¸Â",
+    description: "Community intelligence â‚¬â€ average PPSF, yields, schools, hospitals, metro access, lifestyle ratings, supply risk, and demand strength for every Dubai community.",
+    adminHint: "Add community data from Admin â†’ Data Manager â†’ Communities"
   },
   "Service Charges": {
     icon: "\uD83D\uDCCB",
     description: "RERA registered service charge rates per community in AED/sqft/year. Historical trends, net yield impact calculator, and community comparisons.",
-    adminHint: "Add service charge data from Admin → Data Manager → Communities"
+    adminHint: "Add service charge data from Admin â†’ Data Manager â†’ Communities"
   },
   "STR vs LTR": {
     icon: "\uD83C\uDFE0",
     description: "Short-term Airbnb vs long-term tenancy comparison per community per unit type. Occupancy rates, daily rates, platform fees, management costs, and net income.",
-    adminHint: "STR data connects to Bayut API €” configure from Admin → Data Health"
+    adminHint: "STR data connects to Bayut API â‚¬â€ configure from Admin â†’ Data Health"
   },
   "Developer Health": {
     icon: "\uD83E\uDE7A",
-    description: "Developer health scores €” delivery track record, financial strength, project pipeline risk, RERA status, and complaint ratios. 9-factor radar chart.",
-    adminHint: "Add developer profiles from Admin → Data Manager → Developers"
+    description: "Developer health scores â‚¬â€ delivery track record, financial strength, project pipeline risk, RERA status, and complaint ratios. 9-factor radar chart.",
+    adminHint: "Add developer profiles from Admin â†’ Data Manager â†’ Developers"
   },
   "DLD Volumes": {
     icon: "\uD83D\uDCC8",
-    description: "Live DLD transaction data €” volume by community, developer, property type, nationality, cash vs mortgage. Monthly trends, price anomaly alerts.",
-    adminHint: "DLD data auto-syncs daily €” check Admin → Data Health → DLD Cron"
+    description: "Live DLD transaction data â‚¬â€ volume by community, developer, property type, nationality, cash vs mortgage. Monthly trends, price anomaly alerts.",
+    adminHint: "DLD data auto-syncs daily â‚¬â€ check Admin â†’ Data Health â†’ DLD Cron"
   },
   "DXB Estimate": {
     icon: "\uD83D\uDD0D",
     description: "The Zestimate for Dubai. Enter any unit details and get an estimated market value backed by actual DLD transaction comparables.",
-    adminHint: "AVM requires DLD data €” check Admin → Data Health → DLD Cron"
+    adminHint: "AVM requires DLD data â‚¬â€ check Admin â†’ Data Health â†’ DLD Cron"
   },
   "Portfolio": {
     icon: "\uD83D\uDCBC",
     description: "Personal investment portfolio tracker. Add your properties, track current market value, unrealised gains, rental income, IRR, and Golden Visa eligibility.",
-    adminHint: "Portfolio reads from live market data €” connect DLD and Bayut first"
+    adminHint: "Portfolio reads from live market data â‚¬â€ connect DLD and Bayut first"
   },
   "Competitors": {
-    icon: "—️",
-    description: "Developer vs developer intelligence €” sales volume, delivery record, PPSF comparison, market share, community presence, and branded residence count.",
-    adminHint: "Add developer data from Admin → Data Manager → Developers"
+    icon: "â€”ï¸Â",
+    description: "Developer vs developer intelligence â‚¬â€ sales volume, delivery record, PPSF comparison, market share, community presence, and branded residence count.",
+    adminHint: "Add developer data from Admin â†’ Data Manager â†’ Developers"
   },
   "Yields": {
     icon: "\uD83D\uDCCA",
     description: "Gross and net rental yields by community and unit type. 5-year historical trend, best yielding communities ranked, and yield vs appreciation tradeoff.",
-    adminHint: "Yield data auto-syncs weekly from Bayut API €” check Admin → Data Health"
+    adminHint: "Yield data auto-syncs weekly from Bayut API â‚¬â€ check Admin â†’ Data Health"
   },
   "Mortgage": {
     icon: "\uD83C\uDFE6",
     description: "Live EIBOR mortgage calculator. Monthly payment, total cost of acquisition (DLD 4%, agency 2%, trustee fees), amortisation schedule, and 5 bank rate comparison.",
-    adminHint: "EIBOR updates daily €” check Admin → EIBOR Rates"
+    adminHint: "EIBOR updates daily â‚¬â€ check Admin â†’ EIBOR Rates"
   },
   "Map": {
-    icon: "\uD83D\uDDFA️",
+    icon: "\uD83D\uDDFAï¸Â",
     description: "Interactive property map with yield heatmap, PPSF heatmap, transaction volume layer, project pins, and community boundaries. Distance rings from key landmarks.",
-    adminHint: "Map renders from project data €” import projects first"
+    adminHint: "Map renders from project data â‚¬â€ import projects first"
   },
   "Risk": {
-    icon: "âš ï¸",
+    icon: "Ã¢Å¡Â Ã¯Â¸Â",
     description: "9-factor investment risk scoring per community and project. Supply risk, demand strength, price trajectory, developer quality, regulatory environment.",
     adminHint: "Risk scores calculate automatically from project and market data"
   },
   "Market": {
     icon: "\uD83C\uDF0D",
-    description: "Dubai real estate macro view €” total market size, transaction count, off-plan vs secondary split, top developers, international buyer breakdown, and analyst forecasts.",
-    adminHint: "Market data updates from Admin → Market Intelligence → Update Stats"
+    description: "Dubai real estate macro view â‚¬â€ total market size, transaction count, off-plan vs secondary split, top developers, international buyer breakdown, and analyst forecasts.",
+    adminHint: "Market data updates from Admin â†’ Market Intelligence â†’ Update Stats"
   },
   "Currency": {
     icon: "\uD83D\uDCB1",
-    description: "Live AED exchange rates for international buyers €” GBP, USD, EUR, RUB, INR, CNY, and more. Property price converter and historical rate chart.",
+    description: "Live AED exchange rates for international buyers â‚¬â€ GBP, USD, EUR, RUB, INR, CNY, and more. Property price converter and historical rate chart.",
     adminHint: "Currency rates update automatically via ExchangeRate API"
   },
   "Golden Visa": {
     icon: "\uD83E\uDD47",
     description: "Golden Visa eligibility calculator. Enter property value to check AED 2M minimum, requirements, process steps, and timeline. Auto-checks portfolio eligibility.",
-    adminHint: "Golden Visa rules update from Admin → Data Manager → Regulations"
+    adminHint: "Golden Visa rules update from Admin â†’ Data Manager â†’ Regulations"
   },
   "Flip": {
     icon: "\uD83D\uDD04",
-    description: "Property flip ROI calculator €” purchase price, renovation cost, holding period, selling price. Returns net profit, ROI, annualised return, and optimal hold period.",
-    adminHint: "Flip calculator works with market data €” connect DLD and Bayut first"
+    description: "Property flip ROI calculator â‚¬â€ purchase price, renovation cost, holding period, selling price. Returns net profit, ROI, annualised return, and optimal hold period.",
+    adminHint: "Flip calculator works with market data â‚¬â€ connect DLD and Bayut first"
   },
   "Investment Score": {
-    icon: "⭐",
-    description: "AI investment scoring for any property €” yield potential, location quality, developer health, price vs market, liquidity, handover risk, supply risk. 0-100 score with breakdown.",
-    adminHint: "Investment Score requires project data €” import projects first"
+    icon: "â­",
+    description: "AI investment scoring for any property â‚¬â€ yield potential, location quality, developer health, price vs market, liquidity, handover risk, supply risk. 0-100 score with breakdown.",
+    adminHint: "Investment Score requires project data â‚¬â€ import projects first"
   },
   "Price History": {
     icon: "\uD83D\uDCC9",
     description: "5-year PPSF trend per community per unit type. Off-plan vs secondary price divergence, correction alerts, and momentum indicators.",
-    adminHint: "Price history syncs from DLD data €” check Admin → Data Health → DLD Cron"
+    adminHint: "Price history syncs from DLD data â‚¬â€ check Admin â†’ Data Health â†’ DLD Cron"
   },
 };
 
 
-/* — TAB ERROR BOUNDARY — */
+/* â€” TAB ERROR BOUNDARY â€” */
 class TabErrorBoundary extends React.Component {
   constructor(props) { super(props); this.state = { hasError:false, error:null }; }
   static getDerivedStateFromError(e) { return { hasError:true, error:e }; }
@@ -2191,14 +2191,14 @@ class TabErrorBoundary extends React.Component {
   render() {
     if (this.state.hasError) return (
       <div style={{ padding:"60px 24px", textAlign:"center" }}>
-        <div style={{ fontSize:28, marginBottom:12 }}>âš ï¸</div>
+        <div style={{ fontSize:28, marginBottom:12 }}>Ã¢Å¡Â Ã¯Â¸Â</div>
         <div style={{ fontFamily:"'Fraunces',serif", fontSize:16, fontWeight:700, color:"#EF4444", marginBottom:8 }}>Tab Error</div>
         <div style={{ fontSize:12, color:"#9CA3AF", marginBottom:16 }}>{this.state.error?.message || "Something went wrong in this tab"}</div>
         <button onClick={()=>this.setState({hasError:false,error:null})}
           style={{ padding:"7px 20px", background:"rgba(212,168,67,0.15)", border:"1px solid rgba(212,168,67,0.4)", borderRadius:8, color:"#D4A843", fontSize:12, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>
           Try Again
         </button>
-        <div style={{ fontSize:11, color:"#6B7280", marginTop:10 }}>All other tabs remain accessible €” use the sidebar to navigate</div>
+        <div style={{ fontSize:11, color:"#6B7280", marginTop:10 }}>All other tabs remain accessible â‚¬â€ use the sidebar to navigate</div>
       </div>
     );
     return this.props.children;
@@ -2236,7 +2236,7 @@ export default function EmaarDashboardV2() {
   const [showNotifications, setShowNotifications] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
 
-  // Price Alerts (old per-project alert modal €” kept for project cards)
+  // Price Alerts (old per-project alert modal â‚¬â€ kept for project cards)
   const [showSetAlert, setShowSetAlert] = React.useState(null);
   const [selectedNbhd, setSelectedNbhd] = React.useState(null);
   const [devSort, setDevSort] = React.useState("revenue");
@@ -2255,7 +2255,7 @@ export default function EmaarDashboardV2() {
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [onboardingStep, setOnboardingStep] = useState(0);
 
-  /* — Tab persistence: restore on load + back/forward — */
+  /* â€” Tab persistence: restore on load + back/forward â€” */
   useEffect(() => {
     try {
       const stored = localStorage.getItem('dxb_active_tab');
@@ -2312,9 +2312,9 @@ export default function EmaarDashboardV2() {
   const [sidebarSearch, setSidebarSearch] = useState("");
   const toggleGroup = (id) => setGroupCollapsed(prev => ({ ...prev, [id]: !prev[id] }));
 
-  /* — GLOBAL CONTEXT FILTER STATE — */
+  /* â€” GLOBAL CONTEXT FILTER STATE â€” */
   /* Phase 2.3: filters now live in the URL via useFilters().
-     The g* names below are compatibility shims €” they read from the URL
+     The g* names below are compatibility shims â‚¬â€ they read from the URL
      state and write back to it. All existing code using gDeveloper /
      setGDeveloper / setGDeveloperAndReset continues to work unchanged. */
   const { filters: _gf, setFilter: _gSetOne, setFilters: _gSetMany } = useFilters();
@@ -2335,21 +2335,21 @@ export default function EmaarDashboardV2() {
   const setGStatus      = (v) => _gSetOne("status", v);
   const setGPriceMin    = (v) => _gSetOne("priceMin", v);
   const setGPriceMax    = (v) => _gSetOne("priceMax", v);
-  /* Global search €” lives in URL too for cross-tab persistence */
+  /* Global search â‚¬â€ lives in URL too for cross-tab persistence */
   const gSearch         = _gf.search || "";
   const setGSearch      = (v) => _gSetOne("search", v);
   const [gFilterOpen, setGFilterOpen] = useState(false);
 
-  /* — MARKET TAB STATE — */
+  /* â€” MARKET TAB STATE â€” */
   const [expandedForecast, setExpandedForecast] = useState(null);
 
-  /* — DLD VOLUMES TAB STATE — */
+  /* â€” DLD VOLUMES TAB STATE â€” */
   const [dldFilter, setDldFilter] = useState({ community: "All", type: "All", txType: "All", developer: "All", nationality: "All" });
   const [dldSort, setDldSort] = useState("transactions");
   const [dldSearch, setDldSearch] = useState("");
   const [dldView, setDldView] = useState("table");
 
-  /* — PRICE HISTORY TAB STATE — */
+  /* â€” PRICE HISTORY TAB STATE â€” */
   const [phCommunity, setPhCommunity] = useState("All");
   const [phType, setPhType] = useState("Apartment");
   const [phBeds, setPhBeds] = useState("All");
@@ -2358,7 +2358,7 @@ export default function EmaarDashboardV2() {
   const [phCommunity2, setPhCommunity2] = useState("All");
 
 
-  /* — HANDOVER STATUS + RISK CONFIG €” top level (used by tab + overlay) — */
+  /* â€” HANDOVER STATUS + RISK CONFIG â‚¬â€ top level (used by tab + overlay) â€” */
   const statusCfg = {
     "On Track": { color: T.green,   bg: "rgba(16,185,129,0.12)",  label: "On Track"  },
     "Delayed":  { color: "#F97316", bg: "rgba(249,115,22,0.12)",  label: "Delayed"   },
@@ -2407,12 +2407,12 @@ export default function EmaarDashboardV2() {
   const [developmentsData, setDevelopmentsData] = useState([]);
   const [liveYields, setLiveYields] = useState([]);
   const [liveCommunityList, setLiveCommunityList] = useState([]);
-  // — Price Alerts —
+  // â€” Price Alerts â€”
   const [showAlerts, setShowAlerts] = useState(false);
   const [myAlerts, setMyAlerts] = useState([]);
   const [alertForm, setAlertForm] = useState({ community: "Dubai Hills Estate", metric: "grossYield", condition: "above", value: "8" });
   const [alertSaving, setAlertSaving] = useState(false);
-  // — AI Insights —
+  // â€” AI Insights â€”
   const [aiInsights, setAiInsights] = useState([]);
   const [insightsLoading, setInsightsLoading] = useState(false);
   const [liveDevHealth, setLiveDevHealth] = useState([]);
@@ -2436,19 +2436,19 @@ export default function EmaarDashboardV2() {
   const [communityIntel, setCommunityIntel] = useState({});
   const [liveCommunityIntel, setLiveCommunityIntel] = useState({});
 
-  /* — MY LEADS STATE (Session 4) — */
+  /* â€” MY LEADS STATE (Session 4) â€” */
   const [showCRM, setShowCRM] = useState(false);
   const [myLeads, setMyLeads] = useState([]);
   const [myLeadsLoading, setMyLeadsLoading] = useState(false);
 
-  /* — DEAL PIPELINE STATE (Session 5) — */
+  /* â€” DEAL PIPELINE STATE (Session 5) â€” */
   const [deals, setDeals] = useState([]);
 
-  /* — MANAGER DASHBOARD STATE (Session 7) — */
+  /* â€” MANAGER DASHBOARD STATE (Session 7) â€” */
   const [teamMembers, setTeamMembers] = useState([]);
   const [teamMembersLoading, setTeamMembersLoading] = useState(false);
 
-  /* — AGENCY HUB STATE (Session 8) — */
+  /* â€” AGENCY HUB STATE (Session 8) â€” */
   const [orgProfile, setOrgProfile] = useState(null);
   const [orgProfileForm, setOrgProfileForm] = useState({ name:"", reraNo:"", tradeLicense:"", phone:"", email:"", website:"", notes:"" });
   const [orgProfileSaving, setOrgProfileSaving] = useState(false);
@@ -2461,7 +2461,7 @@ export default function EmaarDashboardV2() {
   const [inviteLoading, setInviteLoading] = useState(false);
   const [inviteSent, setInviteSent] = useState(false);
 
-  /* — INTELLIGENCE STATE (Session 12) — */
+  /* â€” INTELLIGENCE STATE (Session 12) â€” */
   const [compCommunity, setCompCommunity] = useState("Dubai Hills Estate");
   const [compType, setCompType] = useState("Apartment");
   const [compBeds, setCompBeds] = useState("2BR");
@@ -2472,12 +2472,12 @@ export default function EmaarDashboardV2() {
   const [irrServiceCharge, setIrrServiceCharge] = useState("18");
   const [irrMgmtFee, setIrrMgmtFee] = useState("9");
 
-  /* — DLD LIVE INTELLIGENCE STATE (Session 15) — */
+  /* â€” DLD LIVE INTELLIGENCE STATE (Session 15) â€” */
   const [dldActiveCommunity, setDldActiveCommunity] = useState("Dubai Hills Estate");
   const [dldLastRefresh, setDldLastRefresh] = useState(new Date());
   const [dldRefreshTick, setDldRefreshTick] = useState(0);
 
-  /* — BULK IMPORT STATE (Session 16) — */
+  /* â€” BULK IMPORT STATE (Session 16) â€” */
   const [showBulkImport, setShowBulkImport] = useState(false);
   const [importStep, setImportStep]         = useState(1); // 1=upload, 2=map, 3=preview, 4=done
   const [importRawRows, setImportRawRows]   = useState([]);
@@ -2489,7 +2489,7 @@ export default function EmaarDashboardV2() {
   const [importDone, setImportDone]         = useState({ imported:0, dupes:0, errors:0 });
   const [importLoading, setImportLoading]   = useState(false);
 
-  /* — DLD AUTO-REFRESH (Session 15) — */
+  /* â€” DLD AUTO-REFRESH (Session 15) â€” */
   React.useEffect(() => {
     const interval = setInterval(() => {
       setDldLastRefresh(new Date());
@@ -2498,7 +2498,7 @@ export default function EmaarDashboardV2() {
     return () => clearInterval(interval);
   }, []);
 
-  /* — DEV PORTAL STATE (Session 10) — */
+  /* â€” DEV PORTAL STATE (Session 10) â€” */
   const [devUnits, setDevUnits] = useState([]);
   const [devUnitsLoading, setDevUnitsLoading] = useState(false);
   const [devEOIs, setDevEOIs] = useState([]);
@@ -2512,7 +2512,7 @@ export default function EmaarDashboardV2() {
   const [unitForm, setUnitForm] = useState({ unitNo:"", type:"Apartment", beds:"1", baths:"1", size:"", price:"", floor:"", view:"", status:"Available" });
   const [unitFormLoading, setUnitFormLoading] = useState(false);
 
-  /* — LISTINGS STATE (Session 9) — */
+  /* â€” LISTINGS STATE (Session 9) â€” */
   const [listings, setListings] = useState([]);
   const [listingsLoading, setListingsLoading] = useState(false);
   const [showNewListing, setShowNewListing] = useState(false);
@@ -2527,7 +2527,7 @@ export default function EmaarDashboardV2() {
   const [listingSearch, setListingSearch] = useState("");
   const [publishingId, setPublishingId] = useState(null);
 
-  /* — COMPLIANCE STATE (Session 6) — */
+  /* â€” COMPLIANCE STATE (Session 6) â€” */
   const [reraCard, setReraCard] = useState({ number:"", expiry:"", name:"" });
   const [reraCardLoading, setReraCardLoading] = useState(false);
   const [reraCardSaved, setReraCardSaved] = useState(false);
@@ -2565,13 +2565,13 @@ export default function EmaarDashboardV2() {
   const [gvNationality, setGvNationality] = useState("other");
   const [gvSelectedProj, setGvSelectedProj] = useState(null);
 
-  // Load projects from Firestore (runs for ALL users €” guests and logged-in)
+  // Load projects from Firestore (runs for ALL users â‚¬â€ guests and logged-in)
   const [projectsLoading, setProjectsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  /* — MY LEADS MISSING STATE (V11) — */
+  /* â€” MY LEADS MISSING STATE (V11) â€” */
 
-  /* — V12 NEW STATE — */
+  /* â€” V12 NEW STATE â€” */
   const [leadTagFilter, setLeadTagFilter] = useState("all");
   const [showTemplates, setShowTemplates] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState("");
@@ -2585,7 +2585,7 @@ export default function EmaarDashboardV2() {
   const [leadNatFilter, setLeadNatFilter] = useState("all");
 
 
-  /* — MY LEADS ADDITIONAL STATE — */
+  /* â€” MY LEADS ADDITIONAL STATE â€” */
   const [liveLeads, setLiveLeads] = useState([]);
   const [leadShowAdd, setLeadShowAdd] = useState(false);
   const [leadAddName, setLeadAddName] = useState("");
@@ -2613,7 +2613,7 @@ export default function EmaarDashboardV2() {
   const [taskDue, setTaskDue] = useState("");
 
 
-  /* — COMPETITORS TAB STATE — */
+  /* â€” COMPETITORS TAB STATE â€” */
   const [cptView, setCptView] = useState("matrix");
   const [cptDevA, setCptDevA] = useState("Emaar Properties");
   const [cptDevB, setCptDevB] = useState("DAMAC Properties");
@@ -2621,7 +2621,7 @@ export default function EmaarDashboardV2() {
   const [cptSearch, setCptSearch] = useState("");
 
 
-  /* — MARKETING INTELLIGENCE TAB STATE — */
+  /* â€” MARKETING INTELLIGENCE TAB STATE â€” */
   const [mktView, setMktView] = useState("channels");
   const [mktPropType, setMktPropType] = useState("all");
   const [mktBudget, setMktBudget] = useState(10000);
@@ -2635,7 +2635,7 @@ export default function EmaarDashboardV2() {
   const [mktAiLoading, setMktAiLoading] = useState(false);
 
 
-  /* — MORTGAGE LEAD CAPTURE STATE — */
+  /* â€” MORTGAGE LEAD CAPTURE STATE â€” */
   const [mortLeadName, setMortLeadName] = useState("");
   const [mortLeadPhone, setMortLeadPhone] = useState("");
   const [mortLeadEmail, setMortLeadEmail] = useState("");
@@ -2643,7 +2643,7 @@ export default function EmaarDashboardV2() {
   const [mortLeadSubmitting, setMortLeadSubmitting] = useState(false);
 
 
-  /* — BANKING INTELLIGENCE TAB STATE — */
+  /* â€” BANKING INTELLIGENCE TAB STATE â€” */
   const [bankView, setBankView] = useState("compare");
   const [bankType, setBankType] = useState("resident");
   const [bankFinType, setBankFinType] = useState("conventional");
@@ -2656,7 +2656,7 @@ export default function EmaarDashboardV2() {
   const [bankFixedYrs, setBankFixedYrs] = useState(3);
 
 
-  /* — DEVELOPER HEALTH TAB STATE — */
+  /* â€” DEVELOPER HEALTH TAB STATE â€” */
   const [dhView, setDhView] = useState("leaderboard");
   const [dhTier, setDhTier] = useState("All");
   const [dhSort, setDhSort] = useState("score");
@@ -2664,7 +2664,7 @@ export default function EmaarDashboardV2() {
   const [dhSearch, setDhSearch] = useState("");
 
 
-  /* — FINANCIALS TAB STATE — */
+  /* â€” FINANCIALS TAB STATE â€” */
   const [finDeveloper, setFinDeveloper] = useState("Emaar Properties");
   const [finView, setFinView] = useState("overview");
   const [finPeriod, setFinPeriod] = useState("annual");
@@ -2673,7 +2673,7 @@ export default function EmaarDashboardV2() {
   const [finCompareDev, setFinCompareDev] = useState("Aldar Properties");
 
 
-  /* — RISK TAB STATE — */
+  /* â€” RISK TAB STATE â€” */
   const [riskTabView, setRiskTabView] = useState("radar");
   const [riskCommunity2, setRiskCommunity2] = useState("Jumeirah Village Circle");
   const [riskType2, setRiskType2] = useState("Apartment");
@@ -2683,7 +2683,7 @@ export default function EmaarDashboardV2() {
   const [liveInvestScores, setLiveInvestScores] = useState([]);
   const [liveLaunches, setLiveLaunches] = useState([]);
 
-  /* — GOLDEN VISA TAB STATE — */
+  /* â€” GOLDEN VISA TAB STATE â€” */
   const [gvView, setGvView] = useState("checker");
   const [gvMortgage, setGvMortgage] = useState(false);
   const [gvMortgagePaid, setGvMortgagePaid] = useState(2000000);
@@ -2694,7 +2694,7 @@ export default function EmaarDashboardV2() {
 
   const [livePortfolio, setLivePortfolio] = useState([]);
 
-  /* — DXB ESTIMATE (AVM) STATE — */
+  /* â€” DXB ESTIMATE (AVM) STATE â€” */
   const [avmView, setAvmView] = useState("estimate");
   const [avmFloor, setAvmFloor] = useState("mid");
   const [avmView2, setAvmView2] = useState("pool");
@@ -2703,7 +2703,7 @@ export default function EmaarDashboardV2() {
   const [avmRenovated, setAvmRenovated] = useState(false);
   const [avmParking, setAvmParking] = useState(1);
 
-  /* — PORTFOLIO STATE — */
+  /* â€” PORTFOLIO STATE â€” */
   const [portView, setPortView] = useState("overview");
   const [portShowAdd, setPortShowAdd] = useState(false);
   const [portBuyPrice, setPortBuyPrice] = useState(1200000);
@@ -2717,7 +2717,7 @@ export default function EmaarDashboardV2() {
   const [portYear2, setPortYear2] = useState(2022);
 
 
-  /* — FLIP CALCULATOR ADDITIONAL STATE — */
+  /* â€” FLIP CALCULATOR ADDITIONAL STATE â€” */
   const [flpRenovCost, setFlpRenovCost] = useState(80000);
   const [flpAgentBuy, setFlpAgentBuy] = useState(2);
   const [flpAgentSell, setFlpAgentSell] = useState(2);
@@ -2728,7 +2728,7 @@ export default function EmaarDashboardV2() {
   const [flpScenario, setFlpScenario] = useState("base");
 
 
-  /* — INVESTMENT SCORE TAB STATE — */
+  /* â€” INVESTMENT SCORE TAB STATE â€” */
   const [invScView, setInvScView] = useState("community");
   const [invScSort, setInvScSort] = useState("total");
   const [invScFilter, setInvScFilter] = useState("All");
@@ -2736,7 +2736,7 @@ export default function EmaarDashboardV2() {
   const [invScSearch, setInvScSearch] = useState("");
 
 
-  /* — MORTGAGE TAB STATE — */
+  /* â€” MORTGAGE TAB STATE â€” */
   const [mortPrice, setMortPrice] = useState(1500000);
   const [mortDown, setMortDown] = useState(20);
   const [mortRate, setMortRate] = useState(4.25);
@@ -2747,7 +2747,7 @@ export default function EmaarDashboardV2() {
   const [mortIncome, setMortIncome] = useState(30000);
 
 
-  /* — STR vs LTR TAB STATE — */
+  /* â€” STR vs LTR TAB STATE â€” */
   const [strView, setStrView] = useState("comparison");
   const [strCommunity, setStrCommunity] = useState("All");
   const [strBeds, setStrBeds] = useState("1BR");
@@ -2759,7 +2759,7 @@ export default function EmaarDashboardV2() {
   const [strCalcLTR, setStrCalcLTR] = useState(90000);
 
 
-  /* — YIELDS TAB STATE — */
+  /* â€” YIELDS TAB STATE â€” */
   const [yldView, setYldView] = useState("table");
   const [yldType, setYldType] = useState("Apartment");
   const [yldSort, setYldSort] = useState("gross");
@@ -2774,14 +2774,14 @@ export default function EmaarDashboardV2() {
   const [liveYieldsData, setLiveYieldsData] = useState([]);
 
 
-  /* — LAUNCH CALENDAR STATE — */
+  /* â€” LAUNCH CALENDAR STATE â€” */
   const [lcSearch, setLcSearch] = useState("");
   const [lcDev, setLcDev] = useState("All");
   const [lcStatus, setLcStatus] = useState("All");
   const [lcType, setLcType] = useState("All");
   const [lcView, setLcView] = useState("newspaper");
 
-  /* — NEIGHBOURHOODS STATE — */
+  /* â€” NEIGHBOURHOODS STATE â€” */
   const [nbhSearch, setNbhSearch] = useState("");
   const [nbhTypeFilter, setNbhTypeFilter] = useState("All");
   const [nbhYieldFilter, setNbhYieldFilter] = useState("All");
@@ -2790,13 +2790,13 @@ export default function EmaarDashboardV2() {
   const [nbhView, setNbhView] = useState("grid");
   const [nbhCompare, setNbhCompare] = useState([]);
 
-  /* — CURRENCY STATE — */
+  /* â€” CURRENCY STATE â€” */
   const [selectedCcy, setSelectedCcy] = useState("USD");
   const [aedAmount, setAedAmount] = useState(100000);
   const [searchCcy, setSearchCcy] = useState("");
 
 
-  /* — PROJECTS TAB FILTER STATE — */
+  /* â€” PROJECTS TAB FILTER STATE â€” */
   const [projMode, setProjMode] = useState("Apartment");
   const [projView, setProjView] = useState("grid");
   const [projSearch, setProjSearch] = useState("");
@@ -2818,7 +2818,7 @@ export default function EmaarDashboardV2() {
   const [projFurnished, setProjFurnished] = useState(false);
 
 
-  /* — PROJECT MODAL STATE — */
+  /* â€” PROJECT MODAL STATE â€” */
   const [selectedProject, setSelectedProject] = useState(null);
   const [projDetailTab, setProjDetailTab] = useState(()=>{try{return sessionStorage.getItem("dxb_proj_tab")||("Overview");}catch(e){return "Overview";}});
   const [projCompare, setProjCompare] = useState([]);
@@ -2827,7 +2827,7 @@ export default function EmaarDashboardV2() {
   const [showCompare, setShowCompare] = useState(false);
 
 
-  /* — SERVICE CHARGES TAB STATE — */
+  /* â€” SERVICE CHARGES TAB STATE â€” */
   const [scView, setScView] = useState("table");
   const [scType, setScType] = useState("All");
   const [scSort, setScSort] = useState("rate");
@@ -2835,8 +2835,8 @@ export default function EmaarDashboardV2() {
   const [scCalcSize, setScCalcSize] = useState(1000);
   const [scCalcRate, setScCalcRate] = useState(15);
   const [scCalcRent, setScCalcRent] = useState(90000);
-  /* — HANDOVER TAB STATE — */
-  /* — HANDOVER DETAIL VIEW STATE — */
+  /* â€” HANDOVER TAB STATE â€” */
+  /* â€” HANDOVER DETAIL VIEW STATE â€” */
   const [hdvFilter, setHdvFilter] = useState("All");
   const [hdvDev, setHdvDev] = useState("All");
   const [hdvCommunity, setHdvCommunity] = useState("All");
@@ -2844,7 +2844,7 @@ export default function EmaarDashboardV2() {
   const [hdvView, setHdvView] = useState("cards");
   const [hdvSearch, setHdvSearch] = useState("");
   const [hdvSelected, setHdvSelected] = useState(null);
-  /* — HANDOVER TAB STATE — */
+  /* â€” HANDOVER TAB STATE â€” */
   const [hvFilter, setHvFilter] = useState("All");
   const [hvSort, setHvSort] = useState("handover");
   const [hvDev, setHvDev] = useState("All");
@@ -2865,7 +2865,7 @@ export default function EmaarDashboardV2() {
     const loadProjects = async () => {
       setProjectsLoading(true);
       try {
-        // Initial projectData load for first paint €” onSnapshot takes over immediately
+        // Initial projectData load for first paint â‚¬â€ onSnapshot takes over immediately
         const pdSnap = await getDocs(collection(db, "projectData"));
         const overrides = {};
         pdSnap.forEach(d => { overrides[d.id.replace("project_", "")] = d.data(); });
@@ -2881,7 +2881,7 @@ export default function EmaarDashboardV2() {
       } catch (e) { console.log("Firestore not available, using static data"); }
       setProjectsLoading(false);
     };
-    // — Live EMAAR stock price via Yahoo Finance (free, no key) —
+    // â€” Live EMAAR stock price via Yahoo Finance (free, no key) â€”
     const fetchEmaarStock = async () => {
       try {
         const res = await fetch("/api/proxy?service=stock&symbol=EMAAR.DU&range=1d&interval=1d");
@@ -2896,11 +2896,11 @@ export default function EmaarDashboardV2() {
     };
     fetchEmaarStock();
     const stockInterval = setInterval(fetchEmaarStock, 300000);
-    loadProjects(); // Load for everyone €” no isLoggedIn gate
+    loadProjects(); // Load for everyone â‚¬â€ no isLoggedIn gate
 
     // priceAlerts now live via user onSnapshot listener
 
-    // — AI Insights €” generated fresh if not in cache (cache read now via onSnapshot) —
+    // â€” AI Insights â‚¬â€ generated fresh if not in cache (cache read now via onSnapshot) â€”
     (async () => {
       try {
         const oneWeekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
@@ -2928,13 +2928,13 @@ export default function EmaarDashboardV2() {
       } catch(e) { setInsightsLoading(false); }
     })();
 
-    // — Load Paddle.js for billing —
+    // â€” Load Paddle.js for billing â€”
     if (!window.Paddle) {
       const script = document.createElement("script");
       script.src = "https://cdn.paddle.com/paddle/v2/paddle.js";
       script.onload = () => {
-        // — PASTE YOUR PADDLE CLIENT TOKEN BELOW —
-        // Get it from paddle.com → Developer → Authentication → Client-side token
+        // â€” PASTE YOUR PADDLE CLIENT TOKEN BELOW â€”
+        // Get it from paddle.com â†’ Developer â†’ Authentication â†’ Client-side token
         const PADDLE_CLIENT_TOKEN = "live_4393f28d4ec943ebe056835651f";
         if (!PADDLE_CLIENT_TOKEN.includes("PASTE")) {
           window.Paddle.Initialize({ token: PADDLE_CLIENT_TOKEN });
@@ -2971,26 +2971,26 @@ export default function EmaarDashboardV2() {
 
   const SEED_PROJECTS = [
     {
-      /* —
-         GOLF GRAND €” VERIFIED TEMPLATE PROJECT (v17)
+      /* â€”
+         GOLF GRAND â‚¬â€ VERIFIED TEMPLATE PROJECT (v17)
          Last verified: 20 April 2026
          Sources listed in `sources` field. Null = not verifiable from public data.
-         — */
+         â€” */
 
-      /* — IDENTITY — */
+      /* â€” IDENTITY â€” */
       id: "golf-grand-emaar-dubai-hills-estate",
       project: "Golf Grand",
-      projectAr: "— —",
+      projectAr: "â€” â€”",
       name: "Golf Grand",  /* UI also reads 'name' field */
       projectName: "Golf Grand",
       projectType: "Residential Tower",
       architecture: "L-shaped B+G+P+15+R",
 
-      /* — DEVELOPER (per DLD Mashrooi €” project sold by JV entity) — */
+      /* â€” DEVELOPER (per DLD Mashrooi â‚¬â€ project sold by JV entity) â€” */
       developer: "Emaar Properties",
       developerName: "Emaar Properties",
-      developerAr: "— —",
-      developerEntity: "Dubai Hills Estate L.L.C",  /* →“€œ DLD Mashrooi €” actual selling entity (Emaar + Meraas JV) */
+      developerAr: "â€” â€”",
+      developerEntity: "Dubai Hills Estate L.L.C",  /* â†’â€œâ‚¬Å“ DLD Mashrooi â‚¬â€ actual selling entity (Emaar + Meraas JV) */
       developerParent: "Emaar Properties PJSC",
       developerGroupEntity: "Emaar Development P.J.S.C.",  /* Parent RERA entity */
       developerReraOfficeNumber: "1211",
@@ -3033,7 +3033,7 @@ export default function EmaarDashboardV2() {
         "Arabian Ranches", "Emirates Living",
       ],
 
-      /* — COMMUNITY — */
+      /* â€” COMMUNITY â€” */
       community: "Dubai Hills Estate",
       area: "Dubai Hills Estate",  /* UI reads both */
       communitySlug: "dubai-hills-estate",
@@ -3047,43 +3047,43 @@ export default function EmaarDashboardV2() {
       emirate: "Dubai",
       country: "UAE",
 
-      /* — STATUS & TIMELINE (→“€œ VERIFIED from DLD Mashrooi) — */
+      /* â€” STATUS & TIMELINE (â†’â€œâ‚¬Å“ VERIFIED from DLD Mashrooi) â€” */
       type: "Apartment",
       propertyType: "Apartment",
       propertyCategory: "Residential",
       status: "Off-Plan",                    /* Still off-plan for sale (handover pending) */
       lifecycle: "near-completion",
       lifecycleStage: "under-construction",
-      lifecycleLabel: "Construction Complete · Handover Pending",
-      registeredDate: "2023-03-31",          /* →“€œ DLD Mashrooi */
+      lifecycleLabel: "Construction Complete Â· Handover Pending",
+      registeredDate: "2023-03-31",          /* â†’â€œâ‚¬Å“ DLD Mashrooi */
       launchDate: "2023-04",
-      constructionStart: "2023-08-01",       /* →“€œ DLD Mashrooi */
+      constructionStart: "2023-08-01",       /* â†’â€œâ‚¬Å“ DLD Mashrooi */
       handover: "Q1 2027",
-      handoverDate: "2027-03-31",            /* →“€œ DLD Mashrooi */
+      handoverDate: "2027-03-31",            /* â†’â€œâ‚¬Å“ DLD Mashrooi */
       handoverMonth: "March 2027",
       expectedHandover: "Q1 2027",
       contractedHandover: "31 March 2027",
       actualHandover: null,
-      constructionPct: 100,                  /* →“€œ DLD Mashrooi: "100% Completed / Finished" */
+      constructionPct: 100,                  /* â†’â€œâ‚¬Å“ DLD Mashrooi: "100% Completed / Finished" */
       constructionBand: "Completed",
-      constructionStage: "Finished €” awaiting handover",
+      constructionStage: "Finished â‚¬â€ awaiting handover",
 
-      /* — BUILDING SPECS (→“€œ VERIFIED from DLD Mashrooi) — */
-      totalUnits: 329,                     /* →“€œ DLD: 323 residential + 6 commercial */
-      totalResidentialUnits: 323,          /* →“€œ DLD */
-      totalCommercialUnits: 6,             /* →“€œ DLD */
+      /* â€” BUILDING SPECS (â†’â€œâ‚¬Å“ VERIFIED from DLD Mashrooi) â€” */
+      totalUnits: 329,                     /* â†’â€œâ‚¬Å“ DLD: 323 residential + 6 commercial */
+      totalResidentialUnits: 323,          /* â†’â€œâ‚¬Å“ DLD */
+      totalCommercialUnits: 6,             /* â†’â€œâ‚¬Å“ DLD */
       totalFloors: 15,
       towerCount: 1,
       totalBuildings: 1,
-      plotSizeSqM: 31421.99,               /* →“€œ DLD Mashrooi */
-      plotSize: "338,224",                 /* sqft conversion: 31,421.99 — 10.764 */
+      plotSizeSqM: 31421.99,               /* â†’â€œâ‚¬Å“ DLD Mashrooi */
+      plotSize: "338,224",                 /* sqft conversion: 31,421.99 â€” 10.764 */
       builtUpArea: null,                   /* Not published by DLD Mashrooi */
       totalVillas: 0,
       totalLands: 0,
-      dldProjectNumber: "2599",            /* →“€œ DLD Mashrooi */
+      dldProjectNumber: "2599",            /* â†’â€œâ‚¬Å“ DLD Mashrooi */
       parkingType: "Basement resident + visitor public",
 
-      /* — UNIT MIX (calculated PPSF from verified price/size midpoints) — */
+      /* â€” UNIT MIX (calculated PPSF from verified price/size midpoints) â€” */
       beds: ["1BR", "2BR", "3BR"],
       sizeMin: 680,
       sizeMax: 2011,
@@ -3095,7 +3095,7 @@ export default function EmaarDashboardV2() {
       unitBreakdown: [
         {
           type: "1BR",
-          count: 129,                    /* →“€œ DLD Mashrooi */
+          count: 129,                    /* â†’â€œâ‚¬Å“ DLD Mashrooi */
           sizeMin: 680, sizeMax: 891, sizeMid: 786,
           priceMin: 1360000, priceMax: 1800000, priceMid: 1580000,
           ppsf: 2010,                    /* Calculated: 1.58M / 786 sqft */
@@ -3104,7 +3104,7 @@ export default function EmaarDashboardV2() {
         },
         {
           type: "2BR",
-          count: 159,                    /* →“€œ DLD Mashrooi €” largest mix */
+          count: 159,                    /* â†’â€œâ‚¬Å“ DLD Mashrooi â‚¬â€ largest mix */
           sizeMin: 1065, sizeMax: 1665, sizeMid: 1365,
           priceMin: 2130000, priceMax: 3100000, priceMid: 2615000,
           ppsf: 1916,
@@ -3113,7 +3113,7 @@ export default function EmaarDashboardV2() {
         },
         {
           type: "3BR",
-          count: 35,                     /* →“€œ DLD Mashrooi */
+          count: 35,                     /* â†’â€œâ‚¬Å“ DLD Mashrooi */
           sizeMin: 1769, sizeMax: 2011, sizeMid: 1890,
           priceMin: 3400000, priceMax: 3800000, priceMid: 3600000,
           ppsf: 1905,
@@ -3122,7 +3122,7 @@ export default function EmaarDashboardV2() {
         },
         {
           type: "Commercial",
-          count: 6,                      /* →“€œ DLD Mashrooi */
+          count: 6,                      /* â†’â€œâ‚¬Å“ DLD Mashrooi */
           sizeMin: null, sizeMax: null,
           priceMin: null, priceMax: null,
           ppsf: null,
@@ -3131,18 +3131,18 @@ export default function EmaarDashboardV2() {
         },
       ],
 
-      /* — FINANCIALS — */
-      grossYield: 6.9,                    /* →“€œ Dubai Hills Estate apartment avg €” Driven Properties Q1 2025 */
-      netYield: 5.2,                      /* →“€œ Calculated: 6.9% gross — DHE apartment service charge AED 20/sqft + ~5% vacancy */
-      serviceCharge: 20,                  /* →“€œ Dubai Hills Estate apartment avg AED 20/sqft/yr (Luxury Property 2025) */
-      appreciationToHandover: null,       /* Cannot forecast €” market-dependent */
+      /* â€” FINANCIALS â€” */
+      grossYield: 6.9,                    /* â†’â€œâ‚¬Å“ Dubai Hills Estate apartment avg â‚¬â€ Driven Properties Q1 2025 */
+      netYield: 5.2,                      /* â†’â€œâ‚¬Å“ Calculated: 6.9% gross â€” DHE apartment service charge AED 20/sqft + ~5% vacancy */
+      serviceCharge: 20,                  /* â†’â€œâ‚¬Å“ Dubai Hills Estate apartment avg AED 20/sqft/yr (Luxury Property 2025) */
+      appreciationToHandover: null,       /* Cannot forecast â‚¬â€ market-dependent */
 
       paymentPlan: "90/10",
       paymentPlanDetails: "10% booking + 80% during construction + 10% on handover",
       postHandover: false,
       postHandoverPaymentPlan: null,
 
-      /* — VIEWS & INTERIOR — */
+      /* â€” VIEWS & INTERIOR â€” */
       view: [                             /* UI reads 'view' (singular) not 'views' */
         "Dubai Hills 18-Hole Championship Golf Course",
         "Landscaped Podium Deck",
@@ -3159,7 +3159,7 @@ export default function EmaarDashboardV2() {
       furnished: false,
       appliancesIncluded: "Kitchen appliances only",
 
-      /* — AMENITIES — */
+      /* â€” AMENITIES â€” */
       amenities: [
         "Infinity Swimming Pool",
         "Pool Deck",
@@ -3179,11 +3179,11 @@ export default function EmaarDashboardV2() {
         "Basement Resident Parking",
       ],
 
-      /* — LOCATION (verified from Emaar official + Bayut area guide + apilproperties) — */
+      /* â€” LOCATION (verified from Emaar official + Bayut area guide + apilproperties) â€” */
       coordinates: { lat: 25.1058, lng: 55.2486 },  /* DHE Golf Grand approx location */
       distMetro: 8,                       /* ~11 min drive to ONPASSIVE Metro (per Bayut) */
-      distDIFC: 15,                        /* Per Emaar €” 15 min = ~15km to Downtown/DIFC area */
-      distAirport: 24,                     /* DXB €” verified from Emaar/apilproperties */
+      distDIFC: 15,                        /* Per Emaar â‚¬â€ 15 min = ~15km to Downtown/DIFC area */
+      distAirport: 24,                     /* DXB â‚¬â€ verified from Emaar/apilproperties */
       distBeach: 14,                       /* ~20 min to Umm Suqeim / Kite Beach */
       distMall: 1,                         /* Dubai Hills Mall within community (~3 min drive) */
       distSchool: 1,                       /* GEMS schools within community (walking distance) */
@@ -3198,13 +3198,13 @@ export default function EmaarDashboardV2() {
       nearestSchools: "GEMS Wellington Academy, GEMS International, GEMS New Millennium (within walking distance)",
       nearestHospitals: "King's College Hospital London (within DHE)",
 
-      /* — LEGAL & COMPLIANCE — */
-      reraNo: "71494288692",              /* →“€œ VERIFIED from Property Finder listing */
+      /* â€” LEGAL & COMPLIANCE â€” */
+      reraNo: "71494288692",              /* â†’â€œâ‚¬Å“ VERIFIED from Property Finder listing */
       reraProjectPermitNumber: "71494288692",
       reraProjectNumber: "71494288692",
       projectNumber: "71494288692",
       reraRegistered: true,
-      escrowBank: "Verify via DLD Mashrooi",  /* Honest €” Emaar uses multiple banks; confirm per project on DLD app */
+      escrowBank: "Verify via DLD Mashrooi",  /* Honest â‚¬â€ Emaar uses multiple banks; confirm per project on DLD app */
       escrowAccount: null,
       escrowAccountNumber: null,
       escrowActive: true,                  /* All RERA-registered projects have escrow per Law No. 8 of 2007 */
@@ -3220,17 +3220,17 @@ export default function EmaarDashboardV2() {
       goldenVisaEligibleUnits: "2BR & 3BR qualify (above AED 2M threshold)",
       mortgageAvailable: true,
 
-      /* — MARKET POSITIONING — */
+      /* â€” MARKET POSITIONING â€” */
       marketSegment: "Premium",
       segment: "Premium",                 /* UI reads both */
       branded: false,
       brandPartner: null,
 
-      /* — INVESTMENT METRICS (no arbitrary scores) — */
-      commission: 2.0,                   /* Standard broker commission €” industry norm */
-      /* investmentScore / velocityScore / developerScore removed €” they were arbitrary opinions, not data */
+      /* â€” INVESTMENT METRICS (no arbitrary scores) â€” */
+      commission: 2.0,                   /* Standard broker commission â‚¬â€ industry norm */
+      /* investmentScore / velocityScore / developerScore removed â‚¬â€ they were arbitrary opinions, not data */
 
-      /* — META — */
+      /* â€” META â€” */
       featured: true,
       verified: true,
       dataQuality: "research-verified",
@@ -3267,17 +3267,17 @@ export default function EmaarDashboardV2() {
         return prev.filter(x => x.id !== p.id);
       }
       if (prev.length >= 3) {
-        notify("âš ï¸ Max 3 projects for comparison");
+        notify("Ã¢Å¡Â Ã¯Â¸Â Max 3 projects for comparison");
         return prev;
       }
-      notify("— Added " + p.name + " to comparison");
+      notify("â€” Added " + p.name + " to comparison");
       return [...prev, p];
     });
   };
 
   // Listen to Firebase auth state + fetch user profile
 
-  // — MASTER LIVE LISTENERS €” all Firestore real-time subscriptions —
+  // â€” MASTER LIVE LISTENERS â‚¬â€ all Firestore real-time subscriptions â€”
   useEffect(() => {
     const unsubs = [];
 
@@ -3308,7 +3308,7 @@ export default function EmaarDashboardV2() {
       });
     }));
 
-    // developments collection €” 2,798 DLD-sourced records (imported via admin)
+    // developments collection â‚¬â€ 2,798 DLD-sourced records (imported via admin)
     // These populate Projects tab alongside Verified/curated projects
     unsubs.push(onSnapshot(collection(db, "developments"), (snap) => {
       const devs = [];
@@ -3402,7 +3402,7 @@ export default function EmaarDashboardV2() {
       { key: "serviceCharges",     setter: setLiveServiceCharges },
       { key: "competitorData",     setter: setLiveCompetitors },
       { key: "mortgageRates",      setter: setLiveMortgageRates },
-      { key: "neighbourhoodScores", setter: setLiveNeighbourhoods },
+      // neighbourhoodScores - removed from tabKeys, loaded via direct collection listener below
 // neighbourhoodScores  load from collection (259 docs)
       { key: "riskFactors",        setter: setLiveRisk },
     ];
@@ -3455,10 +3455,10 @@ export default function EmaarDashboardV2() {
          not by each SPV. So we group by parentBrand field.
          
          Only parent brands with active:true OR totalProjects>0 appear in the
-         dropdown €” the rest (1,800 registered-only small developers) stay in
+         dropdown â‚¬â€ the rest (1,800 registered-only small developers) stay in
          Firestore for admin/directory use but don't clutter the filter. */
       const tierRank = { "tier-1": 1, "tier-2": 2, "tier-3": 3 };
-      const brandMap = new Map();  /* parentBrand → aggregated record */
+      const brandMap = new Map();  /* parentBrand â†’ aggregated record */
       
       snap.forEach(d => {
         const data = d.data();
@@ -3539,26 +3539,26 @@ export default function EmaarDashboardV2() {
     }));
 
     
-    /* — MARKET DATA — */
+    /* â€” MARKET DATA â€” */
     unsubs.push(onSnapshot(collection(db, "marketData"), snap => {
       const d = snap.docs.map(x => ({ id:x.id, ...x.data() }))
                          .filter(x => x.metric && x.value);
       if (d.length > 0) setLiveMarketData(d);
     }, () => {}));
 
-    /* — HANDOVER — */
+    /* â€” HANDOVER â€” */
     unsubs.push(onSnapshot(collection(db, "handover"), snap => {
       const d = snap.docs.map(x => ({ id:x.id, ...x.data() }));
       if (d.length > 0) setLiveHandover(d);
     }, () => {}));
 
-    /* — SERVICE CHARGES — */
+    /* â€” SERVICE CHARGES â€” */
     unsubs.push(onSnapshot(collection(db, "serviceCharges"), snap => {
       const d = snap.docs.map(x => ({ id:x.id, ...x.data() }));
       if (d.length > 0) setLiveServiceCharges(d);
     }, () => {}));
 
-    /* — DLD VOLUMES — */
+    /* â€” DLD VOLUMES â€” */
     unsubs.push(onSnapshot(collection(db, "dldVolumes"), snap => {
       const d = snap.docs.map(x => ({ id:x.id, ...x.data() }));
       if (d.length > 0) setLiveDLDVolumes(d);
@@ -3570,20 +3570,20 @@ export default function EmaarDashboardV2() {
       if (d.length > 0) setLivePriceHistory(d);
     }, () => {}));
 
-    /* — NEIGHBOURHOODS — */
+    /* â€” NEIGHBOURHOODS â€” */
     unsubs.push(onSnapshot(collection(db, "neighbourhoods"), snap => {
       const d = snap.docs.map(x => ({ id:x.id, ...x.data() }));
       if (d.length > 0) setLiveNeighbourhoods(d);
     }, () => {}));
 
-    /* — STR DATA — */
+    /* â€” STR DATA â€” */
     unsubs.push(onSnapshot(collection(db, "strData"), snap => {
       const d = snap.docs.map(x => ({ id:x.id, ...x.data() }));
       if (d.length > 0) setLiveSTRData(d);
     }, () => {}));
 
 
-    /* — MORTGAGE RATES — */
+    /* â€” MORTGAGE RATES â€” */
     unsubs.push(onSnapshot(collection(db, "mortgageRates"), snap => {
       const d = snap.docs.map(x => ({ id:x.id, ...x.data() }));
       if (d.length > 0) setLiveMortgageRates(d);
@@ -3594,7 +3594,7 @@ export default function EmaarDashboardV2() {
       if (snap.exists()) setLiveEiborRates(snap.data());
     }, () => {}));
 
-    /* — PORTFOLIO (user-specific) — */
+    /* â€” PORTFOLIO (user-specific) â€” */
     if (auth.currentUser?.uid) {
       unsubs.push(onSnapshot(
         query(collection(db, "portfolios"), where("userId", "==", auth.currentUser?.uid)),
@@ -3667,7 +3667,7 @@ if (snap.exists()) setMyAlerts(snap.data().alerts || []);
                     await emailjs.send(import.meta.env.VITE_EMAILJS_SERVICE_ID, import.meta.env.VITE_EMAILJS_TEMPLATE_ID, {
                       user_email: firebaseUser.email, user_name: data.name || firebaseUser.email.split("@")[0],
                       project_name: "DXB Analytics Platform",
-                      change_type: "— Your Pro Trial Has Expired",
+                      change_type: "â€” Your Pro Trial Has Expired",
                       new_value: "Your 7-day trial has ended. Upgrade now to keep full access to 48+ projects, yield data, ROI tools and more.",
                       old_value: "Pro Trial", updated_at: new Date().toLocaleDateString("en-AE"),
                     }, import.meta.env.VITE_EMAILJS_PUBLIC_KEY);
@@ -3682,8 +3682,8 @@ if (snap.exists()) setMyAlerts(snap.data().alerts || []);
                     await emailjs.send(import.meta.env.VITE_EMAILJS_SERVICE_ID, import.meta.env.VITE_EMAILJS_TEMPLATE_ID, {
                       user_email: firebaseUser.email, user_name: data.name || firebaseUser.email.split("@")[0],
                       project_name: "DXB Analytics Platform",
-                      change_type: `âš ï¸ Your Trial Expires in ${daysLeft} Day${daysLeft !== 1 ? "s" : ""}`,
-                      new_value: `Only ${daysLeft} day${daysLeft !== 1 ? "s" : ""} left on your Pro trial. Don't lose access €” upgrade now to keep all features.`,
+                      change_type: `Ã¢Å¡Â Ã¯Â¸Â Your Trial Expires in ${daysLeft} Day${daysLeft !== 1 ? "s" : ""}`,
+                      new_value: `Only ${daysLeft} day${daysLeft !== 1 ? "s" : ""} left on your Pro trial. Don't lose access â‚¬â€ upgrade now to keep all features.`,
                       old_value: "Pro Trial Active", updated_at: new Date().toLocaleDateString("en-AE"),
                     }, import.meta.env.VITE_EMAILJS_PUBLIC_KEY);
                     await setDoc(doc(db, "users", firebaseUser.uid), { emailSent_trial3d: true }, { merge: true });
@@ -3697,14 +3697,14 @@ if (snap.exists()) setMyAlerts(snap.data().alerts || []);
                       project_name: "DXB Analytics Platform",
                       change_type: "\uD83D\uDEA8 Last Day of Your Pro Trial!",
                       new_value: "Today is your last day. After midnight your account moves to Free and you lose access to 48 projects, community yields, ROI data and PDF reports.",
-                      old_value: "Pro Trial €” Final Day", updated_at: new Date().toLocaleDateString("en-AE"),
+                      old_value: "Pro Trial â‚¬â€ Final Day", updated_at: new Date().toLocaleDateString("en-AE"),
                     }, import.meta.env.VITE_EMAILJS_PUBLIC_KEY);
                     await setDoc(doc(db, "users", firebaseUser.uid), { emailSent_trial1d: true }, { merge: true });
                   } catch(e) {}
                 }
               }
             }
-            // Admin override €” by role field OR by owner email
+            // Admin override â‚¬â€ by role field OR by owner email
             if (data.role === "admin" || data.role === "superAdmin" || data.superAdmin === true) tier = "admin";
             setUserTier(tier);
             setUserRole(data.role || "user");
@@ -3724,7 +3724,7 @@ if (snap.exists()) setMyAlerts(snap.data().alerts || []);
             setDevId(data.devId || null);
             setIsSuspended(!!data.suspended);
           } else {
-            // Existing user without profile (e.g. your admin account) €” treat as admin/pro
+            // Existing user without profile (e.g. your admin account) â‚¬â€ treat as admin/pro
             setUserTier("admin");
             setUserName("");
           }
@@ -3743,7 +3743,7 @@ if (snap.exists()) setMyAlerts(snap.data().alerts || []);
     return () => unsubscribe();
   }, []);
 
-  /* — MY LEADS LISTENER (Session 4) — */
+  /* â€” MY LEADS LISTENER (Session 4) â€” */
   useEffect(() => {
     if (!isLoggedIn || !firebaseUser) return;
     setMyLeadsLoading(true);
@@ -3760,7 +3760,7 @@ if (snap.exists()) setMyAlerts(snap.data().alerts || []);
     let leadsQuery;
 
     if (isSuperAdmin) {
-      // SuperAdmin CANNOT see agency leads — privacy rule
+      // SuperAdmin CANNOT see agency leads â€” privacy rule
       setMyLeadsLoading(false);
       return;
     } else if (isOwner && orgId) {
@@ -3776,7 +3776,7 @@ if (snap.exists()) setMyAlerts(snap.data().alerts || []);
       // Agent sees only assigned leads
       leadsQuery = query(collection(db, "leads"), where("assignedTo", "==", uid), orderBy("createdAt", "desc"), limit(200));
     } else {
-      // Regular platform user — no CRM access
+      // Regular platform user â€” no CRM access
       setMyLeadsLoading(false);
       return;
     }
@@ -3801,7 +3801,7 @@ if (snap.exists()) setMyAlerts(snap.data().alerts || []);
       const fdb = getFirestore();
       let q;
       if (isSuperAdmin) {
-        // SuperAdmin sees no agency listings — privacy rule
+        // SuperAdmin sees no agency listings â€” privacy rule
         setListings([]);
         setListingsLoading(false);
         return;
@@ -3822,7 +3822,7 @@ if (snap.exists()) setMyAlerts(snap.data().alerts || []);
   }, [isLoggedIn, firebaseUser, orgRole, userRole, orgId]);
 
 
-  /* — DEALS PIPELINE LISTENER (Session 5) — */
+  /* â€” DEALS PIPELINE LISTENER (Session 5) â€” */
   useEffect(() => {
     if (!isLoggedIn || !firebaseUser) return;
     const isAgent   = orgRole === "agent";
@@ -3844,7 +3844,7 @@ if (snap.exists()) setMyAlerts(snap.data().alerts || []);
     return () => unsub();
   }, [isLoggedIn, firebaseUser, orgRole, orgId]);
 
-  /* — TEAM MEMBERS LISTENER (Session 7) — */
+  /* â€” TEAM MEMBERS LISTENER (Session 7) â€” */
   useEffect(() => {
     const canSeeTeam = orgRole === "owner" || orgRole === "director" || orgRole === "manager" || userRole === "superAdmin" || userRole === "admin";
     if (!isLoggedIn || !firebaseUser || !canSeeTeam) return;
@@ -3860,7 +3860,7 @@ const teamOrgId = orgId || "";
     return () => unsub();
   }, [isLoggedIn, firebaseUser, orgRole, orgId]);
 
-  /* — ORG PROFILE LISTENER (Session 8) — */
+  /* â€” ORG PROFILE LISTENER (Session 8) â€” */
   useEffect(() => {
     if (!isLoggedIn || !firebaseUser || orgRole !== "manager" || !orgId) return;
     const unsub = onSnapshot(doc(db, "organisations", orgId), snap => {
@@ -3883,7 +3883,7 @@ const teamOrgId = orgId || "";
     return () => unsub();
   }, [isLoggedIn, firebaseUser, orgRole, orgId]);
 
-  /* — LISTINGS LISTENER (Session 9) — */
+  /* â€” LISTINGS LISTENER (Session 9) â€” */
   useEffect(() => {
     if (!isLoggedIn || !firebaseUser) return;
     const isAgent   = orgRole === "agent";
@@ -3905,7 +3905,7 @@ const teamOrgId = orgId || "";
     return () => unsub();
   }, [isLoggedIn, firebaseUser, orgRole, orgId]);
 
-  /* — DEV PORTAL LISTENERS (Session 10) — */
+  /* â€” DEV PORTAL LISTENERS (Session 10) â€” */
   useEffect(() => {
     if (!isLoggedIn || !firebaseUser || userRole !== "developer" || !devId) return;
     // Dev projects from allDevelopers (already loaded)
@@ -3935,7 +3935,7 @@ const teamOrgId = orgId || "";
     return () => { unsubUnits(); unsubEOIs(); };
   }, [isLoggedIn, firebaseUser, userRole, devId, allDevelopers]);
 
-  /* — RERA CARD READER (Session 6) — */
+  /* â€” RERA CARD READER (Session 6) â€” */
   useEffect(() => {
     if (!isLoggedIn || !firebaseUser) return;
     const unsub = onSnapshot(doc(db, "users", firebaseUser.uid), snap => {
@@ -3959,9 +3959,9 @@ const teamOrgId = orgId || "";
     const updated = isWatched ? watchlist.filter(p => p.id !== project.id) : [...watchlist, { id: project.id, name: project.name || project.project, community: project.community || project.area, priceMin: project.priceMin || project.price, grossYield: project.grossYield, addedAt: new Date().toISOString() }];
     setWatchlist(updated);
     if (auth.currentUser) {
-      await safeAsyncWithToast(() => setDoc(doc(db, "watchlists", auth.currentUser?.uid), { projects: updated, updatedAt: new Date().toISOString() }), "watchlist-save", notify, "Couldn't save your watchlist €” try again");
+      await safeAsyncWithToast(() => setDoc(doc(db, "watchlists", auth.currentUser?.uid), { projects: updated, updatedAt: new Date().toISOString() }), "watchlist-save", notify, "Couldn't save your watchlist â‚¬â€ try again");
     }
-    notify(isWatched ? `Removed ${project.name} from watchlist` : `⭐ ${project.name} added to watchlist`);
+    notify(isWatched ? `Removed ${project.name} from watchlist` : `â­ ${project.name} added to watchlist`);
   };
 
   // Price alerts now live via user onSnapshot listener
@@ -3969,7 +3969,7 @@ const teamOrgId = orgId || "";
   const saveAlerts = async (alerts) => {
     setMyAlerts(alerts);
     if (auth.currentUser) {
-      await safeAsyncWithToast(() => setDoc(doc(db, "priceAlerts", auth.currentUser?.uid), { alerts, updatedAt: new Date().toISOString() }), "price-alerts-save", notify, "Couldn't save your price alerts €” try again");
+      await safeAsyncWithToast(() => setDoc(doc(db, "priceAlerts", auth.currentUser?.uid), { alerts, updatedAt: new Date().toISOString() }), "price-alerts-save", notify, "Couldn't save your price alerts â‚¬â€ try again");
     }
   };
 
@@ -4005,7 +4005,7 @@ const teamOrgId = orgId || "";
     }
   }, [myAlerts, activeProjects]);
 
-  // NOTIFICATIONS €” live listener so admin messages appear instantly
+  // NOTIFICATIONS â‚¬â€ live listener so admin messages appear instantly
   useEffect(() => {
     if (!isLoggedIn || !auth.currentUser) return;
     const uid = auth.currentUser?.uid;
@@ -4065,7 +4065,7 @@ const unsub = onSnapshot(nQuery, (snap) => {
     savePortfolio(updated);
     setShowAddPortfolio(null);
     setPortfolioForm({ units: 1, investedAmount: "", purchaseDate: "", unitType: "1BR", notes: "" });
-    notify("— Added to portfolio!");
+    notify("â€” Added to portfolio!");
   };
 
   const removeFromPortfolio = (pid, ut) => {
@@ -4188,12 +4188,12 @@ const unsub = onSnapshot(nQuery, (snap) => {
       if (newTier === "pro_trial") { const end = new Date(); end.setDate(end.getDate() + 7); data.trialEnd = end.toISOString(); }
       await setDoc(doc(db, "users", userId), data, { merge: true });
       setAdminUsers(prev => prev.map(u => u.id === userId ? { ...u, tier: newTier, status: newTier } : u));
-      notify(`— ${uName} → ${newTier}`);
+      notify(`â€” ${uName} â†’ ${newTier}`);
       // Send tier change confirmation email
       const tierMessages = {
         free: { subject: "Your DXB Analytics plan has changed to Free", body: "Your account has been updated to the Free plan. You have access to 5 featured projects and basic market data." },
         pro_trial: { subject: "Your 7-Day Pro Trial has been activated!", body: "Great news! Your Pro Trial has been activated. You now have full access to 48+ projects, community yields, ROI calculator, PDF reports and all Pro features for 7 days." },
-        pro: { subject: "Welcome to DXB Analytics Pro! ⭐", body: "Your account has been upgraded to the Pro Plan. You now have unlimited access to all 48+ projects, live yield data, ROI analysis, investment reports, and all Pro features." },
+        pro: { subject: "Welcome to DXB Analytics Pro! â­", body: "Your account has been upgraded to the Pro Plan. You now have unlimited access to all 48+ projects, live yield data, ROI analysis, investment reports, and all Pro features." },
         enterprise: { subject: "Welcome to DXB Analytics Enterprise! \uD83C\uDFE2", body: "Your account has been upgraded to Enterprise. You have access to all platform features including custom reports, priority support, and full data access." },
       };
       const msg = tierMessages[newTier] || { subject: `Your plan changed to ${newTier}`, body: `Your DXB Analytics plan has been updated to ${newTier}.` };
@@ -4210,7 +4210,7 @@ const unsub = onSnapshot(nQuery, (snap) => {
         } catch(e) {}
       }
     } catch (err) {
-      notify("”— Failed to update tier");
+      notify("â€â€” Failed to update tier");
     }
   };
 
@@ -4245,12 +4245,12 @@ const unsub = onSnapshot(nQuery, (snap) => {
       <a href="#main-content" style={{ position: "absolute", top: -40, left: 0, background: T.gold, color: T.bg, padding: "8px 16px", borderRadius: "0 0 8px 0", fontWeight: 700, fontSize: 13, zIndex: 99999, transition: "top 0.2s" }} onFocus={e => e.target.style.top = "0"} onBlur={e => e.target.style.top = "-40px"}>Skip to content</a>
 
       {/* Toast notification */}
-      {toast && <div className="fade-up" style={{ position: "fixed", bottom: 24, right: 24, padding: "12px 24px", borderRadius: 10, background: toast.includes("—") ? T.green : toast.includes("”—") ? T.red : T.gold, color: "#fff", fontWeight: 700, fontSize: 13, zIndex: 9999, boxShadow: "0 12px 40px rgba(0,0,0,0.4)", fontFamily: "'Outfit', sans-serif" }}>{toast}</div>}
+      {toast && <div className="fade-up" style={{ position: "fixed", bottom: 24, right: 24, padding: "12px 24px", borderRadius: 10, background: toast.includes("â€”") ? T.green : toast.includes("â€â€”") ? T.red : T.gold, color: "#fff", fontWeight: 700, fontSize: 13, zIndex: 9999, boxShadow: "0 12px 40px rgba(0,0,0,0.4)", fontFamily: "'Outfit', sans-serif" }}>{toast}</div>}
 
       {/* Mobile overlay */}
       <div className={`mobile-overlay ${sidebarOpen ? "open" : ""}`} onClick={() => setSidebarOpen(false)} />
 
-      {/* — SIDEBAR — */}
+      {/* â€” SIDEBAR â€” */}
       <aside className={`sidebar ${sidebarOpen ? "open" : ""}`} style={{
         position: "fixed", top: 0, left: 0, bottom: 0, width: 240,
         background: T.surface, borderRight: `1px solid ${T.border}`,
@@ -4317,7 +4317,7 @@ const unsub = onSnapshot(nQuery, (snap) => {
                           color:"#D4A843", fontSize:11, fontWeight:700, cursor:"pointer",
                           fontFamily:"Outfit,sans-serif",
                         }}>
-                          <span>⚡</span>
+                          <span>âš¡</span>
                           <span>Open Full CRM</span>
                           <span style={{marginLeft:"auto",fontSize:9,background:"rgba(212,168,67,0.2)",padding:"1px 5px",borderRadius:4}}>NEW</span>
                         </button>
@@ -4359,7 +4359,7 @@ const unsub = onSnapshot(nQuery, (snap) => {
                 style={{ background: "rgba(212,168,67,0.08)", border: `1px solid rgba(212,168,67,0.2)` }}>
                 {SvgIcons.Settings({ width: 15, height: 15, strokeWidth: 1.5, style: { color: T.gold, flexShrink: 0 } })}
                 <span>Admin Console</span>
-                <span style={{ marginLeft: "auto", fontSize: 9, color: T.textMuted }}>—</span>
+                <span style={{ marginLeft: "auto", fontSize: 9, color: T.textMuted }}>â€”</span>
               </button>
             </div>
           )}
@@ -4379,7 +4379,7 @@ const unsub = onSnapshot(nQuery, (snap) => {
               onClick={() => setShowUpgrade(true)}
               style={{ marginBottom: 8, padding: "7px 12px", borderRadius: 8, background: "rgba(59,130,246,0.07)", border: "1px solid rgba(59,130,246,0.15)", textAlign: "center", cursor: "pointer" }}>
               <div style={{ fontSize: 9.5, fontWeight: 700, color: "#60A5FA", letterSpacing: 0.5 }}>FREE PLAN</div>
-              <div style={{ fontSize: 10.5, color: T.textSecondary, marginTop: 1 }}>Upgrade to Pro →</div>
+              <div style={{ fontSize: 10.5, color: T.textSecondary, marginTop: 1 }}>Upgrade to Pro â†’</div>
             </div>
           )}
           <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "7px 10px", borderRadius: 10, background: T.surfaceAlt }}>
@@ -4404,21 +4404,21 @@ const unsub = onSnapshot(nQuery, (snap) => {
         </div>
       </aside>
 
-      {/* — FREE TIER BANNER — */}
+      {/* â€” FREE TIER BANNER â€” */}
       {userTier === "free" && (
         <div className="free-banner" style={{ position: "fixed", top: 60, left: 240, right: 0, zIndex: 60, background: `linear-gradient(90deg, ${T.gold}ee, #B8912Fee)`, padding: "8px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <span style={{ fontSize: 14 }}>\uD83D\uDD12</span>
-            <span style={{ fontSize: 12, fontWeight: 700, color: "#04090F" }}>You're on the Free plan €” 12 tabs locked</span>
+            <span style={{ fontSize: 12, fontWeight: 700, color: "#04090F" }}>You're on the Free plan â‚¬â€ 12 tabs locked</span>
             <span style={{ fontSize: 11, color: "rgba(4,9,15,0.7)" }}>Upgrade to Pro to unlock DXB Estimate, Yields, Mortgage, Portfolio & more</span>
           </div>
           <button type="button" onClick={() => setShowUpgrade(true)} style={{ padding: "5px 16px", background: "#04090F", color: T.gold, border: "none", borderRadius: 8, fontSize: 11, fontWeight: 800, cursor: "pointer", fontFamily: "'Outfit',sans-serif", whiteSpace: "nowrap" }}>
-            Upgrade Now →
+            Upgrade Now â†’
           </button>
         </div>
       )}
 
-      {/* — TOP BAR — */}
+      {/* â€” TOP BAR â€” */}
       <header className="top-bar" style={{
         position: "fixed", top: 0, right: 0, left: 240, height: 60,
         background: `${T.surface}ee`, backdropFilter: "blur(16px)",
@@ -4446,7 +4446,7 @@ const unsub = onSnapshot(nQuery, (snap) => {
         </div>
         <div className="header-badges" style={{ display: "flex", gap: 8, alignItems: "center" }}>
           <button type="button" onClick={() => setShowWatchlist(true)} style={{ background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 10, padding: "8px 12px", cursor: "pointer", color: watchlist.length > 0 ? T.gold : T.textSecondary, display: "flex", alignItems: "center", gap: 6, fontSize: 12, fontFamily: "'Outfit',sans-serif" }} title="My Watchlist">
-            ★ {watchlist.length > 0 && <span style={{ fontWeight: 700 }}>{watchlist.length}</span>}
+            â˜… {watchlist.length > 0 && <span style={{ fontWeight: 700 }}>{watchlist.length}</span>}
           </button>
           <button type="button" onClick={globalRefresh} disabled={isRefreshing} title="Refresh all data" style={{ background: isRefreshing ? T.surfaceAlt : "rgba(212,168,67,0.08)", border: "1px solid " + (isRefreshing ? T.border : "rgba(212,168,67,0.25)"), borderRadius: 10, padding: "8px 12px", cursor: isRefreshing ? "not-allowed" : "pointer", color: isRefreshing ? T.textMuted : T.gold, display: "flex", alignItems: "center", gap: 6, fontSize: 11, fontWeight: 600, fontFamily: "'Outfit',sans-serif" }}>
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" style={{ animation: isRefreshing ? "spin 1s linear infinite" : "none" }}><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
@@ -4460,7 +4460,7 @@ const unsub = onSnapshot(nQuery, (snap) => {
       </header>
 
 
-      {/* — MAIN CONTENT — */}
+      {/* â€” MAIN CONTENT â€” */}
       <main role="main" id="main-content" className="main-content" style={{ marginLeft: 240, paddingTop: userTier === "free" ? 210 : 180, minHeight: "100vh", overflowX: "hidden" }}>
         {/* Trial / Free tier banner */}
         {userTier === "pro_trial" && trialDaysLeft > 0 && (() => {
@@ -4468,19 +4468,19 @@ const unsub = onSnapshot(nQuery, (snap) => {
           const isWarning = trialDaysLeft <= 3;
           const bg = isUrgent ? "rgba(239,68,68,0.1)" : isWarning ? "rgba(245,158,11,0.1)" : "rgba(212,168,67,0.08)";
           const border = isUrgent ? "rgba(239,68,68,0.35)" : isWarning ? "rgba(245,158,11,0.35)" : T.border;
-          const icon = isUrgent ? "\uD83D\uDEA8" : isWarning ? "âš ï¸" : "⭐";
+          const icon = isUrgent ? "\uD83D\uDEA8" : isWarning ? "Ã¢Å¡Â Ã¯Â¸Â" : "â­";
           const label = isUrgent ? "Last day of your trial!" : isWarning ? `Trial ending soon` : "Pro Trial Active";
           const sub = isUrgent
             ? "Your trial expires today. Upgrade now to keep full access."
             : isWarning
-            ? `${trialDaysLeft} days left €” don't lose your access to 48+ projects and yield data.`
+            ? `${trialDaysLeft} days left â‚¬â€ don't lose your access to 48+ projects and yield data.`
             : `${trialDaysLeft} day${trialDaysLeft !== 1 ? "s" : ""} remaining. Full Pro access active.`;
           return (
             <div style={{ margin: "12px 24px 0", padding: "10px 16px", borderRadius: 10, background: bg, border: `1px solid ${border}`, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <span style={{ fontSize: 16 }}>{icon}</span>
                 <span style={{ fontSize: 13, color: isUrgent ? T.red : isWarning ? T.gold : T.white, fontWeight: 700 }}>{label}</span>
-                <span style={{ fontSize: 12, color: T.textSecondary }}>€” {sub}</span>
+                <span style={{ fontSize: 12, color: T.textSecondary }}>â‚¬â€ {sub}</span>
               </div>
               <button type="button" onClick={() => setShowUpgrade(true)} style={{ padding: "6px 16px", borderRadius: 6, background: isUrgent ? T.red : T.gold, color: isUrgent ? "#fff" : T.bg, border: "none", fontSize: 12, fontWeight: 700, fontFamily: "'Outfit', sans-serif", cursor: "pointer" }}>
                 {isUrgent ? "\uD83D\uDD25 Upgrade Now" : "Upgrade to Pro"}
@@ -4493,15 +4493,15 @@ const unsub = onSnapshot(nQuery, (snap) => {
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <span style={{ fontSize: 16 }}>\uD83D\uDD12</span>
               <span style={{ fontSize: 13, color: T.white, fontWeight: 600 }}>Free Plan</span>
-              <span style={{ fontSize: 12, color: T.textSecondary }}>€” You're seeing limited data. Upgrade to unlock all projects, yields & more.</span>
+              <span style={{ fontSize: 12, color: T.textSecondary }}>â‚¬â€ You're seeing limited data. Upgrade to unlock all projects, yields & more.</span>
             </div>
-            <button type="button" onClick={() => setShowUpgrade(true)} style={{ padding: "6px 16px", borderRadius: 6, background: T.gold, color: T.bg, border: "none", fontSize: 12, fontWeight: 700, fontFamily: "'Outfit', sans-serif", cursor: "pointer" }}>Upgrade to Pro €” AED 99/mo</button>
+            <button type="button" onClick={() => setShowUpgrade(true)} style={{ padding: "6px 16px", borderRadius: 6, background: T.gold, color: T.bg, border: "none", fontSize: 12, fontWeight: 700, fontFamily: "'Outfit', sans-serif", cursor: "pointer" }}>Upgrade to Pro â‚¬â€ AED 99/mo</button>
           </div>
         )}
         <div style={{ padding: `0 24px ${compareList.length > 0 && tab === "Projects" ? "120px" : "60px"}` }}>
           <TabErrorBoundary key={tab}>
 
-          {/* — OVERVIEW TAB — */}
+          {/* â€” OVERVIEW TAB â€” */}
           {/* OVERVIEW TAB (extracted) */}
           {tab === "Overview" && (
             <OverviewTab
@@ -4520,8 +4520,8 @@ const unsub = onSnapshot(nQuery, (snap) => {
             />
           )}
 
-          {/* — MARKET TAB — */}
-          {/* — MARKET TAB (extracted) — */}
+          {/* â€” MARKET TAB â€” */}
+          {/* â€” MARKET TAB (extracted) â€” */}
           {tab === "Market" && (
             <MarketTab
               liveMarketData={liveMarketData} allDevelopers={allDevelopers}
@@ -4530,8 +4530,8 @@ const unsub = onSnapshot(nQuery, (snap) => {
             />
           )}
 
-          {/* — DLD VOLUMES TAB — */}
-          {/* — DLD VOLUMES TAB (extracted) — */}
+          {/* â€” DLD VOLUMES TAB â€” */}
+          {/* â€” DLD VOLUMES TAB (extracted) â€” */}
           {tab === "DLD Volumes" && (
             <DLDVolumesTab
               dldFilter={dldFilter} setDldFilter={setDldFilter}
@@ -4551,8 +4551,8 @@ const unsub = onSnapshot(nQuery, (snap) => {
             />
           )}
 
-          {/* — PRICE HISTORY TAB — */}
-          {/* — PRICE HISTORY TAB (extracted) — */}
+          {/* â€” PRICE HISTORY TAB â€” */}
+          {/* â€” PRICE HISTORY TAB (extracted) â€” */}
           {tab === "Price History" && (
             <PriceHistoryTab
               phCommunity={phCommunity} setPhCommunity={setPhCommunity}
@@ -4568,8 +4568,8 @@ const unsub = onSnapshot(nQuery, (snap) => {
             />
           )}
 
-          {/* — NEIGHBOURHOODS TAB — */}
-          {/* — NEIGHBOURHOODS TAB (extracted) — */}
+          {/* â€” NEIGHBOURHOODS TAB â€” */}
+          {/* â€” NEIGHBOURHOODS TAB (extracted) â€” */}
           {tab === "Neighbourhoods" && (
             <NeighbourhoodsTab
               liveNeighbourhoods={liveNeighbourhoods}
@@ -4578,8 +4578,8 @@ const unsub = onSnapshot(nQuery, (snap) => {
             />
           )}
 
-          {/* — LAUNCH CALENDAR TAB — */}
-          {/* — LAUNCH CALENDAR TAB (extracted) — */}
+          {/* â€” LAUNCH CALENDAR TAB â€” */}
+          {/* â€” LAUNCH CALENDAR TAB (extracted) â€” */}
           {tab === "Launch Calendar" && (
             <LaunchCalendarTab
               liveNeighbourhoods={liveNeighbourhoods}
@@ -4606,8 +4606,8 @@ const unsub = onSnapshot(nQuery, (snap) => {
             />
           )}
 
-          {/* — CURRENCY TAB — */}
-          {/* — CURRENCY TAB (extracted) — */}
+          {/* â€” CURRENCY TAB â€” */}
+          {/* â€” CURRENCY TAB (extracted) â€” */}
           {tab === "Currency" && (
             <CurrencyTab
               selectedCcy={selectedCcy} setSelectedCcy={setSelectedCcy}
@@ -4616,7 +4616,7 @@ const unsub = onSnapshot(nQuery, (snap) => {
             />
           )}
 
-          {/* — PROJECTS TAB — */}
+          {/* â€” PROJECTS TAB â€” */}
           {/* PROJECTS TAB (extracted, includes detail modal) */}
           {tab === "Projects" && (
             <ProjectsTab
@@ -4652,7 +4652,7 @@ const unsub = onSnapshot(nQuery, (snap) => {
           )}
 
 
-          {/* — MAP TAB — */}
+          {/* â€” MAP TAB â€” */}
           {tab === "Map" && (
             <CommunityMapTab
 activeProjects={[...(Array.isArray(liveProjects)?liveProjects:[]),...(Array.isArray(extraProjects)?extraProjects:[]),...(Array.isArray(developmentsData)?developmentsData:[])]}
@@ -4668,13 +4668,13 @@ activeProjects={[...(Array.isArray(liveProjects)?liveProjects:[]),...(Array.isAr
 
 
 
-          {/* — HANDOVER DETAIL OVERLAY — */}
+          {/* â€” HANDOVER DETAIL OVERLAY â€” */}
           {hvSelected && (
             <div role="dialog" aria-modal="true" style={{ position:"fixed", inset:0, background:"rgba(4,9,15,0.97)", zIndex:2000, display:"flex", flexDirection:"column", backdropFilter:"blur(8px)" }}>
               {/* Header */}
               <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"16px 24px", borderBottom:`1px solid ${T.border}`, background:T.surface, flexShrink:0 }}>
                 <div>
-                  <div style={{ fontSize:11, fontWeight:700, color:T.textMuted, letterSpacing:0.8, textTransform:"uppercase", marginBottom:3 }}>{hvSelected.developer}{"·"}{hvSelected.community}</div>
+                  <div style={{ fontSize:11, fontWeight:700, color:T.textMuted, letterSpacing:0.8, textTransform:"uppercase", marginBottom:3 }}>{hvSelected.developer}{"Â·"}{hvSelected.community}</div>
                   <div style={{ fontFamily:"'Fraunces',serif", fontSize:22, fontWeight:800, color:T.white }}>{hvSelected.project}</div>
                 </div>
                 <div style={{ display:"flex", alignItems:"center", gap:10 }}>
@@ -4682,7 +4682,7 @@ activeProjects={[...(Array.isArray(liveProjects)?liveProjects:[]),...(Array.isAr
                     <div style={{ fontSize:11, color:T.textMuted }}>Construction Progress</div>
                     <div style={{ fontFamily:"'Fraunces',serif", fontSize:28, fontWeight:900, color:hvSelected.status==="On Track"?T.green:hvSelected.status==="Delayed"?"#F97316":T.red }}>{hvSelected.constructionPct}%</div>
                   </div>
-                  <button type="button" onClick={() => setHvSelected(null)} style={{ width:36, height:36, borderRadius:"50%", background:T.surfaceAlt, border:`1px solid ${T.border}`, color:T.white, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", fontSize:18, fontFamily:"'Outfit',sans-serif" }}>—</button>
+                  <button type="button" onClick={() => setHvSelected(null)} style={{ width:36, height:36, borderRadius:"50%", background:T.surfaceAlt, border:`1px solid ${T.border}`, color:T.white, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", fontSize:18, fontFamily:"'Outfit',sans-serif" }}>â€”</button>
                 </div>
               </div>
 
@@ -4696,7 +4696,7 @@ activeProjects={[...(Array.isArray(liveProjects)?liveProjects:[]),...(Array.isAr
                     { label:"Delay",              value:hvSelected.delayMonths>0?"+"+hvSelected.delayMonths+" months":"None", color:hvSelected.delayMonths>0?"#F97316":T.green },
                     { label:"Grace Period",       value:hvSelected.gracePeriodMonths+" months", color:T.white },
                     { label:"Escrow Funded",      value:hvSelected.escrowPct+"%", color:hvSelected.escrowPct>=70?T.green:hvSelected.escrowPct>=40?T.gold:"#F97316" },
-                    { label:"RERA Inspections",   value:hvSelected.inspectionsPassed+"→“€œ "+hvSelected.inspectionsFailed+"—", color:hvSelected.inspectionsFailed>0?"#F97316":T.green },
+                    { label:"RERA Inspections",   value:hvSelected.inspectionsPassed+"â†’â€œâ‚¬Å“ "+hvSelected.inspectionsFailed+"â€”", color:hvSelected.inspectionsFailed>0?"#F97316":T.green },
                     { label:"Developer On-Time",  value:hvSelected.developerOnTimeRate+"%", color:hvSelected.developerOnTimeRate>=85?T.green:hvSelected.developerOnTimeRate>=75?T.gold:T.red },
                     { label:"Total Units",        value:hvSelected.totalUnits.toLocaleString(), color:T.white },
                   ].map((k,i) => (
@@ -4710,7 +4710,7 @@ activeProjects={[...(Array.isArray(liveProjects)?liveProjects:[]),...(Array.isAr
                 {/* Milestone Gantt Timeline */}
                 <div className="chart-box" style={{ padding:20, marginBottom:20 }}>
                   <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:4 }}>Construction Milestone Timeline</div>
-                  <div style={{ fontSize:11, color:T.textMuted, marginBottom:20 }}>RERA-verified progress · Each milestone unlocks escrow disbursement</div>
+                  <div style={{ fontSize:11, color:T.textMuted, marginBottom:20 }}>RERA-verified progress Â· Each milestone unlocks escrow disbursement</div>
                   
                   {/* Timeline */}
                   <div style={{ position:"relative" }}>
@@ -4726,7 +4726,7 @@ activeProjects={[...(Array.isArray(liveProjects)?liveProjects:[]),...(Array.isAr
                           {/* Timeline line + dot */}
                           <div style={{ display:"flex", flexDirection:"column", alignItems:"center", flexShrink:0, width:20 }}>
                             <div style={{ width:14, height:14, borderRadius:"50%", background:dotColor, border:`2px solid ${dotColor}`, flexShrink:0, display:"flex", alignItems:"center", justifyContent:"center", zIndex:1 }}>
-                              {isPast && <span style={{ fontSize:8, color:"#000", fontWeight:700 }}>→“€œ</span>}
+                              {isPast && <span style={{ fontSize:8, color:"#000", fontWeight:700 }}>â†’â€œâ‚¬Å“</span>}
                               {isCurrent && <span style={{ width:4, height:4, borderRadius:"50%", background:T.gold, display:"block" }} />}
                             </div>
                             {!isLast && <div style={{ width:2, flex:1, minHeight:32, background:lineColor, marginTop:2 }} />}
@@ -4736,7 +4736,7 @@ activeProjects={[...(Array.isArray(liveProjects)?liveProjects:[]),...(Array.isAr
                             <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:4 }}>
                               <div>
                                 <div style={{ fontSize:13, fontWeight:700, color:isPast?T.white:isCurrent?T.gold:T.textMuted }}>{m.name}</div>
-                                {isCurrent && <div style={{ fontSize:10, color:T.gold, fontWeight:700 }}>— CURRENT STAGE</div>}
+                                {isCurrent && <div style={{ fontSize:10, color:T.gold, fontWeight:700 }}>â€” CURRENT STAGE</div>}
                               </div>
                               <div style={{ textAlign:"right" }}>
                                 <div style={{ fontSize:11, fontWeight:600, color:isPast?T.green:isCurrent?T.gold:T.textMuted }}>{new Date(m.date).toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"})}</div>
@@ -4746,7 +4746,7 @@ activeProjects={[...(Array.isArray(liveProjects)?liveProjects:[]),...(Array.isAr
                             {/* Escrow release indicator */}
                             {m.pct > 0 && (
                               <div style={{ display:"inline-flex", alignItems:"center", gap:4, padding:"2px 8px", borderRadius:6, background:isPast?"rgba(16,185,129,0.1)":"rgba(212,168,67,0.06)", border:`1px solid ${isPast?"rgba(16,185,129,0.3)":"rgba(212,168,67,0.15)"}` }}>
-                                <span style={{ fontSize:9, color:isPast?T.green:T.textMuted }}>Escrow release at {m.pct}% · {isPast?"→“€œ Released":"Pending"}</span>
+                                <span style={{ fontSize:9, color:isPast?T.green:T.textMuted }}>Escrow release at {m.pct}% Â· {isPast?"â†’â€œâ‚¬Å“ Released":"Pending"}</span>
                               </div>
                             )}
                           </div>
@@ -4764,11 +4764,11 @@ activeProjects={[...(Array.isArray(liveProjects)?liveProjects:[]),...(Array.isAr
                       { label:"RERA Number",     value:hvSelected.reraNo },
                       { label:"Escrow Bank",      value:hvSelected.escrowBank },
                       { label:"RERA Status",      value:hvSelected.reraStatus },
-                      { label:"Last Site Visit",  value:hvSelected.lastSiteVisit ? new Date(hvSelected.lastSiteVisit).toLocaleDateString("en-GB") : "€”" },
+                      { label:"Last Site Visit",  value:hvSelected.lastSiteVisit ? new Date(hvSelected.lastSiteVisit).toLocaleDateString("en-GB") : "â‚¬â€" },
                     ].map((r,i) => (
                       <div key={i} style={{ display:"flex", justifyContent:"space-between", padding:"6px 0", borderBottom:i<3?`1px solid ${T.border}`:"none" }}>
                         <span style={{ fontSize:11, color:T.textMuted }}>{r.label}</span>
-                        <span style={{ fontSize:11, fontWeight:600, color:T.white }}>{r.value||"€”"}</span>
+                        <span style={{ fontSize:11, fontWeight:600, color:T.white }}>{r.value||"â‚¬â€"}</span>
                       </div>
                     ))}
                   </div>
@@ -4789,10 +4789,10 @@ activeProjects={[...(Array.isArray(liveProjects)?liveProjects:[]),...(Array.isAr
 
                 {/* Actions */}
                 <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
-                  <button type="button" onClick={() => { setHvSelected(null); handleTabChange("Projects"); }} style={{ padding:"9px 18px", background:`linear-gradient(135deg,${T.gold},#B8922A)`, border:"none", borderRadius:8, color:"#000", fontSize:12, fontWeight:700, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>View Full Project →</button>
+                  <button type="button" onClick={() => { setHvSelected(null); handleTabChange("Projects"); }} style={{ padding:"9px 18px", background:`linear-gradient(135deg,${T.gold},#B8922A)`, border:"none", borderRadius:8, color:"#000", fontSize:12, fontWeight:700, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>View Full Project â†’</button>
                   <button type="button" onClick={() => { setHvSelected(null); handleTabChange("My Leads"); }} style={{ padding:"9px 18px", background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:8, color:T.textSecondary, fontSize:12, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>Add to Lead</button>
                   <button type="button" onClick={() => {
-                    const txt = `\uD83C\uDFD7️ HANDOVER UPDATE €” ${hvSelected.project}\n\n\uD83C\uDFE2 Developer: ${hvSelected.developer}\n\uD83D\uDCCD Community: ${hvSelected.community}\n\n\uD83D\uDCCA CONSTRUCTION STATUS\n   Progress: ${hvSelected.constructionPct}% complete\n   Status: ${hvSelected.status}\n   Current Stage: ${hvSelected.milestonesCurrent}\n   Next Milestone: ${hvSelected.milestonesNext}\n\n\uD83D\uDCC5 HANDOVER DATES\n   Contracted: ${new Date(hvSelected.contractedHandover).toLocaleDateString("en-GB",{month:"long",year:"numeric"})}\n   Expected: ${new Date(hvSelected.expectedHandover).toLocaleDateString("en-GB",{month:"long",year:"numeric"})}\n   Delay: ${hvSelected.delayMonths>0?"+"+hvSelected.delayMonths+" months":"None"}\n\n\uD83D\uDD10 REGULATORY\n   RERA: ${hvSelected.reraNo}\n   Escrow Bank: ${hvSelected.escrowBank}\n   Status: ${hvSelected.reraStatus}\n\nPowered by DXB Analytics Intelligence Platform\nemaar-dashboard.vercel.app`;
+                    const txt = `\uD83C\uDFD7ï¸Â HANDOVER UPDATE â‚¬â€ ${hvSelected.project}\n\n\uD83C\uDFE2 Developer: ${hvSelected.developer}\n\uD83D\uDCCD Community: ${hvSelected.community}\n\n\uD83D\uDCCA CONSTRUCTION STATUS\n   Progress: ${hvSelected.constructionPct}% complete\n   Status: ${hvSelected.status}\n   Current Stage: ${hvSelected.milestonesCurrent}\n   Next Milestone: ${hvSelected.milestonesNext}\n\n\uD83D\uDCC5 HANDOVER DATES\n   Contracted: ${new Date(hvSelected.contractedHandover).toLocaleDateString("en-GB",{month:"long",year:"numeric"})}\n   Expected: ${new Date(hvSelected.expectedHandover).toLocaleDateString("en-GB",{month:"long",year:"numeric"})}\n   Delay: ${hvSelected.delayMonths>0?"+"+hvSelected.delayMonths+" months":"None"}\n\n\uD83D\uDD10 REGULATORY\n   RERA: ${hvSelected.reraNo}\n   Escrow Bank: ${hvSelected.escrowBank}\n   Status: ${hvSelected.reraStatus}\n\nPowered by DXB Analytics Intelligence Platform\nemaar-dashboard.vercel.app`;
                     window.open(`https://wa.me/?text=${encodeURIComponent(txt)}`,"_blank");
                   }} style={{ padding:"9px 18px", background:"rgba(37,211,102,0.1)", border:"1px solid rgba(37,211,102,0.3)", borderRadius:8, color:"#25D366", fontSize:12, fontWeight:600, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>
                     Share Update
@@ -4802,8 +4802,8 @@ activeProjects={[...(Array.isArray(liveProjects)?liveProjects:[]),...(Array.isAr
             </div>
           )}
 
-          {/* — HANDOVER TAB — */}
-          {/* — HANDOVER TAB (extracted to tabs/HandoverTab.jsx) — */}
+          {/* â€” HANDOVER TAB â€” */}
+          {/* â€” HANDOVER TAB (extracted to tabs/HandoverTab.jsx) â€” */}
           {tab === "Handover" && (
             <HandoverTab
               liveNeighbourhoods={liveNeighbourhoods}
@@ -4821,13 +4821,13 @@ activeProjects={[...(Array.isArray(liveProjects)?liveProjects:[]),...(Array.isAr
             />
           )}
 
-          {/* — HANDOVER DETAIL OVERLAY — */}
+          {/* â€” HANDOVER DETAIL OVERLAY â€” */}
           {hdvSelected && (
             <div role="dialog" aria-modal="true" style={{ position:"fixed", inset:0, background:"rgba(4,9,15,0.97)", zIndex:2000, display:"flex", flexDirection:"column", backdropFilter:"blur(8px)" }}>
               {/* Overlay header */}
               <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"16px 24px", borderBottom:`1px solid ${T.border}`, background:T.surface, flexShrink:0 }}>
                 <div>
-                  <div style={{ fontSize:11, fontWeight:700, color:T.textMuted, letterSpacing:0.8, textTransform:"uppercase", marginBottom:3 }}>{hdvSelected.developer}{"·"}{hdvSelected.community}</div>
+                  <div style={{ fontSize:11, fontWeight:700, color:T.textMuted, letterSpacing:0.8, textTransform:"uppercase", marginBottom:3 }}>{hdvSelected.developer}{"Â·"}{hdvSelected.community}</div>
                   <div style={{ fontFamily:"'Fraunces',serif", fontSize:22, fontWeight:800, color:T.white }}>{hdvSelected.project}</div>
                 </div>
                 <div style={{ display:"flex", alignItems:"center", gap:12 }}>
@@ -4836,7 +4836,7 @@ activeProjects={[...(Array.isArray(liveProjects)?liveProjects:[]),...(Array.isAr
                     <div style={{ fontSize:11, color:T.textMuted }}>complete</div>
                   </div>
                   <button type="button" onClick={() => setHdvSelected(null)}
-                    style={{ width:36, height:36, borderRadius:"50%", background:T.surfaceAlt, border:`1px solid ${T.border}`, color:T.white, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", fontSize:18, fontFamily:"'Outfit',sans-serif" }}>—</button>
+                    style={{ width:36, height:36, borderRadius:"50%", background:T.surfaceAlt, border:`1px solid ${T.border}`, color:T.white, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", fontSize:18, fontFamily:"'Outfit',sans-serif" }}>â€”</button>
                 </div>
               </div>
               {/* Overlay content */}
@@ -4857,7 +4857,7 @@ activeProjects={[...(Array.isArray(liveProjects)?liveProjects:[]),...(Array.isAr
                 </div>
                 {/* Milestone Gantt */}
                 <div className="chart-box" style={{ padding:20, marginBottom:16 }}>
-                  <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:16 }}>Construction Milestones €” RERA Verified</div>
+                  <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:16 }}>Construction Milestones â‚¬â€ RERA Verified</div>
                   {(hdvSelected.milestones||[]).map((m,i) => {
                     const isNext = !m.done && (hdvSelected.milestones[i-1]?.done || i===0);
                     return (
@@ -4879,7 +4879,7 @@ activeProjects={[...(Array.isArray(liveProjects)?liveProjects:[]),...(Array.isAr
                         </div>
                         {/* Done badge */}
                         <span style={{ fontSize:10, padding:"2px 7px", borderRadius:6, background:m.done?"rgba(16,185,129,0.15)":isNext?"rgba(212,168,67,0.1)":"transparent", color:m.done?T.green:isNext?T.gold:T.textMuted, fontWeight:700, flexShrink:0, width:60, textAlign:"center" }}>
-                          {m.done?"→“€œ Done":isNext?"Next →":"Pending"}
+                          {m.done?"â†’â€œâ‚¬Å“ Done":isNext?"Next â†’":"Pending"}
                         </span>
                       </div>
                     );
@@ -4911,13 +4911,13 @@ activeProjects={[...(Array.isArray(liveProjects)?liveProjects:[]),...(Array.isAr
                 {/* Quick actions */}
                 <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
                   <button type="button" onClick={() => { setHdvSelected(null); handleTabChange("Projects"); }}
-                    style={{ padding:"9px 18px", background:`linear-gradient(135deg,${T.gold},#B8922A)`, border:"none", borderRadius:8, color:"#000", fontSize:12, fontWeight:700, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>View Project Details →</button>
+                    style={{ padding:"9px 18px", background:`linear-gradient(135deg,${T.gold},#B8922A)`, border:"none", borderRadius:8, color:"#000", fontSize:12, fontWeight:700, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>View Project Details â†’</button>
                   <button type="button" onClick={() => { setHdvSelected(null); handleTabChange("Risk"); }}
                     style={{ padding:"9px 18px", background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:8, color:T.textSecondary, fontSize:12, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>Risk Analysis</button>
                   <button type="button" onClick={() => { setHdvSelected(null); handleTabChange("My Leads"); }}
                     style={{ padding:"9px 18px", background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:8, color:T.textSecondary, fontSize:12, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>Add to Lead</button>
                   <button type="button" onClick={() => {
-                    const txt = `\uD83C\uDFD7️ DXB ANALYTICS €” HANDOVER UPDATE\n\n\uD83D\uDCCC ${hdvSelected.project}\n\uD83C\uDFE2 ${hdvSelected.developer} · ${hdvSelected.community}\n\n\uD83D\uDCCA STATUS: ${hdvSelected.status}\n\uD83D\uDD27 Construction: ${hdvSelected.constructionPct}% complete\n\uD83D\uDCC5 Expected Handover: ${new Date(hdvSelected.expectedDate).toLocaleDateString("en-GB",{day:"numeric",month:"long",year:"numeric"})}\nâš ï¸ Delay Risk: ${hdvSelected.delayRisk}\n\n\uD83D\uDD10 RERA: ${hdvSelected.reraNo}\n\uD83C\uDFE6 Escrow: ${hdvSelected.escrowBank}\n\uD83D\uDCCB Developer Record: ${hdvSelected.onTimeHistory}\n\n\nPowered by DXB Analytics\nemaar-dashboard.vercel.app`;
+                    const txt = `\uD83C\uDFD7ï¸Â DXB ANALYTICS â‚¬â€ HANDOVER UPDATE\n\n\uD83D\uDCCC ${hdvSelected.project}\n\uD83C\uDFE2 ${hdvSelected.developer} Â· ${hdvSelected.community}\n\n\uD83D\uDCCA STATUS: ${hdvSelected.status}\n\uD83D\uDD27 Construction: ${hdvSelected.constructionPct}% complete\n\uD83D\uDCC5 Expected Handover: ${new Date(hdvSelected.expectedDate).toLocaleDateString("en-GB",{day:"numeric",month:"long",year:"numeric"})}\nÃ¢Å¡Â Ã¯Â¸Â Delay Risk: ${hdvSelected.delayRisk}\n\n\uD83D\uDD10 RERA: ${hdvSelected.reraNo}\n\uD83C\uDFE6 Escrow: ${hdvSelected.escrowBank}\n\uD83D\uDCCB Developer Record: ${hdvSelected.onTimeHistory}\n\n\nPowered by DXB Analytics\nemaar-dashboard.vercel.app`;
                     window.open(`https://wa.me/?text=${encodeURIComponent(txt)}`,"_blank");
                   }} style={{ padding:"9px 18px", background:"rgba(37,211,102,0.1)", border:"1px solid rgba(37,211,102,0.3)", borderRadius:8, color:"#25D366", fontSize:12, fontWeight:600, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>
                     Share Handover Update
@@ -4929,8 +4929,8 @@ activeProjects={[...(Array.isArray(liveProjects)?liveProjects:[]),...(Array.isAr
 
 
 
-          {/* — SERVICE CHARGES TAB — */}
-          {/* — SERVICE CHARGES TAB (extracted) — */}
+          {/* â€” SERVICE CHARGES TAB â€” */}
+          {/* â€” SERVICE CHARGES TAB (extracted) â€” */}
           {tab === "Service Charges" && (
             <ServiceChargesTab
               liveServiceCharges={liveServiceCharges}
@@ -4949,8 +4949,8 @@ activeProjects={[...(Array.isArray(liveProjects)?liveProjects:[]),...(Array.isAr
           )}
 
 
-          {/* — YIELDS TAB — */}
-          {/* — YIELDS TAB (extracted) — */}
+          {/* â€” YIELDS TAB â€” */}
+          {/* â€” YIELDS TAB (extracted) â€” */}
           {tab === "Yields" && (
             <YieldsTab
               liveYieldsData={liveYieldsData}
@@ -4972,8 +4972,8 @@ activeProjects={[...(Array.isArray(liveProjects)?liveProjects:[]),...(Array.isAr
           )}
 
 
-          {/* — STR vs LTR TAB — */}
-          {/* — STR vs LTR TAB (extracted) — */}
+          {/* â€” STR vs LTR TAB â€” */}
+          {/* â€” STR vs LTR TAB (extracted) â€” */}
           {tab === "STR vs LTR" && (
             <STRvsLTRTab
               liveSTRData={liveSTRData}
@@ -4994,8 +4994,8 @@ activeProjects={[...(Array.isArray(liveProjects)?liveProjects:[]),...(Array.isAr
           )}
 
 
-          {/* — MORTGAGE TAB — */}
-          {/* — MORTGAGE TAB (extracted) — */}
+          {/* â€” MORTGAGE TAB â€” */}
+          {/* â€” MORTGAGE TAB (extracted) â€” */}
           {tab === "Mortgage" && (
             <MortgageTab
               liveMortgageRates={liveMortgageRates} liveEiborRates={liveEiborRates} liveInvestScores={liveInvestScores}
@@ -5018,8 +5018,8 @@ activeProjects={[...(Array.isArray(liveProjects)?liveProjects:[]),...(Array.isAr
           )}
 
 
-          {/* — INVESTMENT SCORE TAB — */}
-          {/* — INVESTMENT SCORE TAB (extracted) — */}
+          {/* â€” INVESTMENT SCORE TAB â€” */}
+          {/* â€” INVESTMENT SCORE TAB (extracted) â€” */}
           {tab === "Investment Score" && (
             <InvestmentScoreTab
               invScSearch={invScSearch} setInvScSearch={setInvScSearch}
@@ -5041,8 +5041,8 @@ activeProjects={[...(Array.isArray(liveProjects)?liveProjects:[]),...(Array.isAr
           )}
 
 
-          {/* — FLIP CALCULATOR TAB — */}
-          {/* — FLIP TAB (extracted) — */}
+          {/* â€” FLIP CALCULATOR TAB â€” */}
+          {/* â€” FLIP TAB (extracted) â€” */}
           {tab === "Flip" && (
             <FlipTab
               flipBuyPrice={flipBuyPrice}
@@ -5063,8 +5063,8 @@ activeProjects={[...(Array.isArray(liveProjects)?liveProjects:[]),...(Array.isAr
           )}
 
 
-          {/* — DXB ESTIMATE TAB — */}
-          {/* — DXB ESTIMATE TAB (extracted) — */}
+          {/* â€” DXB ESTIMATE TAB â€” */}
+          {/* â€” DXB ESTIMATE TAB (extracted) â€” */}
           {tab === "DXB Estimate" && (
             <DXBEstimateTab
               avmCommunity={avmCommunity}
@@ -5085,8 +5085,8 @@ activeProjects={[...(Array.isArray(liveProjects)?liveProjects:[]),...(Array.isAr
           )}
 
 
-          {/* — PORTFOLIO TAB — */}
-          {/* — PORTFOLIO TAB (extracted) — */}
+          {/* â€” PORTFOLIO TAB â€” */}
+          {/* â€” PORTFOLIO TAB (extracted) â€” */}
           {tab === "Portfolio" && (
             <PortfolioTab
               portView={portView} setPortView={setPortView}
@@ -5096,8 +5096,8 @@ activeProjects={[...(Array.isArray(liveProjects)?liveProjects:[]),...(Array.isAr
           )}
 
 
-          {/* — GOLDEN VISA TAB — */}
-          {/* — GOLDEN VISA TAB (extracted) — */}
+          {/* â€” GOLDEN VISA TAB â€” */}
+          {/* â€” GOLDEN VISA TAB (extracted) â€” */}
           {tab === "Golden Visa" && (
             <GoldenVisaTab
               gvView={gvView} setGvView={setGvView}
@@ -5115,8 +5115,8 @@ activeProjects={[...(Array.isArray(liveProjects)?liveProjects:[]),...(Array.isAr
           )}
 
 
-          {/* — RISK TAB — */}
-          {/* — RISK TAB (extracted) — */}
+          {/* â€” RISK TAB â€” */}
+          {/* â€” RISK TAB (extracted) â€” */}
           {tab === "Risk" && (
             <RiskTab
               liveNeighbourhoods={liveNeighbourhoods}
@@ -5130,7 +5130,7 @@ activeProjects={[...(Array.isArray(liveProjects)?liveProjects:[]),...(Array.isAr
           )}
 
 
-          {/* — FINANCIALS TAB — */}
+          {/* â€” FINANCIALS TAB â€” */}
           {/* FINANCIALS TAB (extracted) */}
           {tab === "Financials" && (
             <FinancialsTab
@@ -5146,7 +5146,7 @@ activeProjects={[...(Array.isArray(liveProjects)?liveProjects:[]),...(Array.isAr
           )}
 
 
-          {/* — DEVELOPER HEALTH TAB — */}
+          {/* â€” DEVELOPER HEALTH TAB â€” */}
           {/* DEVELOPER HEALTH TAB (extracted) */}
           {tab === "Developer Health" && (
             <DeveloperHealthTab
@@ -5170,7 +5170,7 @@ activeProjects={[...(Array.isArray(liveProjects)?liveProjects:[]),...(Array.isAr
           )}
 
 
-          {/* — BANKING INTELLIGENCE TAB — */}
+          {/* â€” BANKING INTELLIGENCE TAB â€” */}
           {/* BANKING TAB (extracted) */}
           {tab === "Banking" && (
             <BankingTab
@@ -5195,7 +5195,7 @@ activeProjects={[...(Array.isArray(liveProjects)?liveProjects:[]),...(Array.isAr
           )}
 
 
-          {/* — MARKETING INTELLIGENCE TAB — */}
+          {/* â€” MARKETING INTELLIGENCE TAB â€” */}
           {/* MARKETING TAB (extracted) */}
           {tab === "Marketing" && (
             <MarketingTab
@@ -5216,7 +5216,7 @@ activeProjects={[...(Array.isArray(liveProjects)?liveProjects:[]),...(Array.isAr
           )}
 
 
-          {/* — COMPETITORS TAB — */}
+          {/* â€” COMPETITORS TAB â€” */}
           {/* COMPETITORS TAB (extracted) */}
           {tab === "Competitors" && (
             <CompetitorsTab
@@ -5231,11 +5231,11 @@ activeProjects={[...(Array.isArray(liveProjects)?liveProjects:[]),...(Array.isAr
             />
           )}
 
-          {/* —
-              INTELLIGENCE TABS €” Awaiting Data Import
+          {/* â€”
+              INTELLIGENCE TABS â‚¬â€ Awaiting Data Import
               Each tab shows a beautiful empty state with instructions
-              Data connects via Firestore €” Admin → Data Manager
-          — */}
+              Data connects via Firestore â‚¬â€ Admin â†’ Data Manager
+          â€” */}
 
           {Object.entries(INTELLIGENCE_TABS).map(([tabKey, config]) => (
             tab === tabKey && tabKey !== "Overview" && tabKey !== "Market" && tabKey !== "DLD Volumes" && tabKey !== "Price History" && tabKey !== "Neighbourhoods" && tabKey !== "Launch Calendar" && tabKey !== "Currency" && tabKey !== "Projects" && tabKey !== "Map" && tabKey !== "Handover" && tabKey !== "Service Charges" && tabKey !== "Yields" && tabKey !== "STR vs LTR" && tabKey !== "Mortgage" && tabKey !== "Investment Score" && tabKey !== "Flip" && tabKey !== "DXB Estimate" && tabKey !== "Portfolio" && tabKey !== "Golden Visa" && tabKey !== "Risk" && tabKey !== "Financials" && tabKey !== "Developer Health" && tabKey !== "Banking" && tabKey !== "Marketing" && tabKey !== "Competitors" && (
@@ -5249,7 +5249,7 @@ activeProjects={[...(Array.isArray(liveProjects)?liveProjects:[]),...(Array.isAr
                   <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                     <span style={{ fontSize: 11, color: T.textSecondary }}>
                       <span style={{ color: T.gold, fontWeight: 600 }}>DXB Analytics</span>
-                      {" "}{"·"}{tabKey}
+                      {" "}{"Â·"}{tabKey}
                     </span>
                   </div>
                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -5274,9 +5274,9 @@ activeProjects={[...(Array.isArray(liveProjects)?liveProjects:[]),...(Array.isAr
             )
           ))}
 
-          {/* —
-              MY LEADS TAB €” Session 4 €” Agent CRM Inbox
-          — */}
+          {/* â€”
+              MY LEADS TAB â‚¬â€ Session 4 â‚¬â€ Agent CRM Inbox
+          â€” */}
           {/* MY LEADS TAB (extracted) */}
           {tab === "My Leads" && (
             <MyLeadsTab
@@ -5321,7 +5321,7 @@ activeProjects={[...(Array.isArray(liveProjects)?liveProjects:[]),...(Array.isAr
               firebaseUser={firebaseUser}
             />
           )}
-          {/* — PIPELINE TAB (extracted) — */}
+          {/* â€” PIPELINE TAB (extracted) â€” */}
           {tab === "Pipeline" && (
             <PipelineTab
               deals={deals} dealsLoading={dealsLoading}
@@ -5336,11 +5336,11 @@ activeProjects={[...(Array.isArray(liveProjects)?liveProjects:[]),...(Array.isAr
 
 
 
-          {/* —
-              COMPLIANCE TAB €” Session 6
+          {/* â€”
+              COMPLIANCE TAB â‚¬â€ Session 6
               RERA card tracker + WhatsApp templates
-          — */}
-          {/* — COMPLIANCE TAB (extracted) — */}
+          â€” */}
+          {/* â€” COMPLIANCE TAB (extracted) â€” */}
           {tab === "Compliance" && (
             <ComplianceTab
               reraCard={reraCard} setReraCard={setReraCard}
@@ -5354,12 +5354,12 @@ activeProjects={[...(Array.isArray(liveProjects)?liveProjects:[]),...(Array.isAr
 
 
 
-          {/* —
-              TEAM TAB €” Session 7 €” Agency Manager Dashboard
-              Agent leaderboard · Source ROI · Pipeline funnel
-              Overdue follow-ups · Team KPIs
-          — */}
-          {/* — TEAM TAB (extracted) — */}
+          {/* â€”
+              TEAM TAB â‚¬â€ Session 7 â‚¬â€ Agency Manager Dashboard
+              Agent leaderboard Â· Source ROI Â· Pipeline funnel
+              Overdue follow-ups Â· Team KPIs
+          â€” */}
+          {/* â€” TEAM TAB (extracted) â€” */}
           {tab === "Team" && (
             <TeamTab
               teamMembers={teamMembers} teamMembersLoading={teamMembersLoading}
@@ -5371,10 +5371,10 @@ activeProjects={[...(Array.isArray(liveProjects)?liveProjects:[]),...(Array.isAr
 
 
 
-          {/* —
-              AGENCY TAB €” Session 8 €” Agency Management Hub
-              Profile · Agent Roster · RERA Tracker · Commission
-          — */}
+          {/* â€”
+              AGENCY TAB â‚¬â€ Session 8 â‚¬â€ Agency Management Hub
+              Profile Â· Agent Roster Â· RERA Tracker Â· Commission
+          â€” */}
           {/* AGENCY TAB (extracted) */}
           {tab === "Agency" && (
             <AgencyTab
@@ -5396,10 +5396,10 @@ activeProjects={[...(Array.isArray(liveProjects)?liveProjects:[]),...(Array.isAr
 
 
 
-          {/* —
-              LISTINGS TAB €” Session 9
-              Create · Trakheesi · Portal Syndication · Track
-          — */}
+          {/* â€”
+              LISTINGS TAB â‚¬â€ Session 9
+              Create Â· Trakheesi Â· Portal Syndication Â· Track
+          â€” */}
           {/* LISTINGS TAB (extracted) */}
           {tab === "Listings" && (
             <ListingsTab
@@ -5417,11 +5417,11 @@ activeProjects={[...(Array.isArray(liveProjects)?liveProjects:[]),...(Array.isAr
 
 
 
-          {/* —
-              DEV PORTAL TAB €” Session 10
-              Unit Inventory · EOI Pipeline · Commission · Assets
-          — */}
-          {/* — DEV PORTAL TAB (extracted) — */}
+          {/* â€”
+              DEV PORTAL TAB â‚¬â€ Session 10
+              Unit Inventory Â· EOI Pipeline Â· Commission Â· Assets
+          â€” */}
+          {/* â€” DEV PORTAL TAB (extracted) â€” */}
           {tab === "Data Quality" && (
             <DataQualityTab />
           )}
@@ -5441,10 +5441,10 @@ activeProjects={[...(Array.isArray(liveProjects)?liveProjects:[]),...(Array.isAr
 
 
 
-          {/* —
-              INTELLIGENCE TAB €” Session 12
-              Comparable Sales · IRR Calculator · Supply Pipeline
-          — */}
+          {/* â€”
+              INTELLIGENCE TAB â‚¬â€ Session 12
+              Comparable Sales Â· IRR Calculator Â· Supply Pipeline
+          â€” */}
           {/* INTELLIGENCE TAB (extracted) */}
           {tab === "Intelligence" && (
             <IntelligenceTab
@@ -5465,13 +5465,13 @@ activeProjects={[...(Array.isArray(liveProjects)?liveProjects:[]),...(Array.isAr
 
 
 
-      {/* — COMPARE MODAL — */}
+      {/* â€” COMPARE MODAL â€” */}
       {showCompare && compareList.length >= 2 && (
         <div role="dialog" aria-modal="true" aria-label="Project comparison" style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.9)", zIndex: 3000, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(8px)" }} onClick={() => setShowCompare(false)}>
           <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.gold}`, width: "95%", maxWidth: 900, maxHeight: "90vh", overflowY: "auto", padding: 28 }} onClick={e => e.stopPropagation()}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-              <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: 22, color: T.gold, margin: 0 }}>—️ Project Comparison</h2>
-              <button type="button" onClick={() => setShowCompare(false)} style={{ background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16 }}>—</button>
+              <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: 22, color: T.gold, margin: 0 }}>â€”ï¸Â Project Comparison</h2>
+              <button type="button" onClick={() => setShowCompare(false)} style={{ background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16 }}>â€”</button>
             </div>
 
             <div className="table-scroll" style={{ overflowX: "auto" }}>
@@ -5500,10 +5500,10 @@ activeProjects={[...(Array.isArray(liveProjects)?liveProjects:[]),...(Array.isAr
                     { label: "Type", fn: p => p.type },
                     { label: "Payment Plan", fn: p => p.payment || p.paymentPlan || "" },
                     { label: "Tier", fn: p => p.tier },
-                    { label: "Branded", fn: p => p.branded ? `→“€œ ${p.brand}` : "No" },
-                    { label: "Total Units", fn: p => p.units ? getUnitEntries(p.units).reduce((a,[,u]) => a + u.total, 0) : "€”" },
-                    { label: "Available", fn: p => p.units ? getUnitEntries(p.units).reduce((a,[,u]) => a + (u.total - u.sold), 0) : "€”", highlight: true },
-                    { label: "% Sold", fn: p => { if (!p.units) return "€”"; const entries = getUnitEntries(p.units); const t = entries.reduce((a,[,u]) => a + u.total, 0); const s = entries.reduce((a,[,u]) => a + u.sold, 0); return t > 0 ? `${((s/t)*100).toFixed(0)}%` : "€”"; } },
+                    { label: "Branded", fn: p => p.branded ? `â†’â€œâ‚¬Å“ ${p.brand}` : "No" },
+                    { label: "Total Units", fn: p => p.units ? getUnitEntries(p.units).reduce((a,[,u]) => a + u.total, 0) : "â‚¬â€" },
+                    { label: "Available", fn: p => p.units ? getUnitEntries(p.units).reduce((a,[,u]) => a + (u.total - u.sold), 0) : "â‚¬â€", highlight: true },
+                    { label: "% Sold", fn: p => { if (!p.units) return "â‚¬â€"; const entries = getUnitEntries(p.units); const t = entries.reduce((a,[,u]) => a + u.total, 0); const s = entries.reduce((a,[,u]) => a + u.sold, 0); return t > 0 ? `${((s/t)*100).toFixed(0)}%` : "â‚¬â€"; } },
                   ].map((row, ri) => (
                     <tr key={ri} style={{ borderBottom: `1px solid ${T.border}`, background: row.highlight ? "rgba(212,168,67,0.04)" : "transparent" }}>
                       <td style={{ padding: "10px 16px", color: T.textMuted, fontSize: 11, fontWeight: 600, textTransform: "uppercase" }}>{row.label}</td>
@@ -5531,7 +5531,7 @@ activeProjects={[...(Array.isArray(liveProjects)?liveProjects:[]),...(Array.isAr
                 {compareList.map(p => p.emaarUrl ? (
                   <a key={p.id} href={p.emaarUrl} target="_blank" rel="noopener noreferrer"
                     style={{ flex: 1, padding: "8px 0", background: "rgba(212,168,67,0.08)", border: "1px solid rgba(212,168,67,0.35)", borderRadius: 10, color: T.gold, fontSize: 11, fontWeight: 700, textAlign: "center", textDecoration: "none" }}>
-                    {(p.name || p.project || "").split(" ").slice(0,2).join(" ")} — {getLinkDomain(p.emaarUrl)}
+                    {(p.name || p.project || "").split(" ").slice(0,2).join(" ")} â€” {getLinkDomain(p.emaarUrl)}
                   </a>
                 ) : <div key={p.id} style={{ flex: 1 }} />)}
               </div>
@@ -5547,10 +5547,10 @@ activeProjects={[...(Array.isArray(liveProjects)?liveProjects:[]),...(Array.isAr
       {/* ADD INVESTMENT MODAL */}
       {showAddPortfolio && <div style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.9)", zIndex: 3000, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(10px)" }} onClick={() => setShowAddPortfolio(null)}>
         <div style={{ background: T.surface, borderRadius: 20, border: `1px solid ${T.border}`, width: "95%", maxWidth: 520, maxHeight: "90vh", overflow: "auto", position: "relative" }} onClick={e => e.stopPropagation()}>
-          <button type="button" onClick={() => setShowAddPortfolio(null)} style={{ position: "absolute", top: 16, right: 16, background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center", zIndex: 5 }}>{"—"}</button>
+          <button type="button" onClick={() => setShowAddPortfolio(null)} style={{ position: "absolute", top: 16, right: 16, background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center", zIndex: 5 }}>{"â€”"}</button>
           <div style={{ padding: "24px 28px 16px", borderBottom: `1px solid ${T.border}` }}>
             <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: 20, fontWeight: 800, color: T.white }}>{typeof showAddPortfolio === "object" ? "Investment Details" : "Select Project"}</h2>
-            <p style={{ fontSize: 11, color: T.textMuted, marginTop: 4 }}>{typeof showAddPortfolio === "object" ? showAddPortfolio.name + " · " + showAddPortfolio.community : "Select a project from your portfolio"}</p>
+            <p style={{ fontSize: 11, color: T.textMuted, marginTop: 4 }}>{typeof showAddPortfolio === "object" ? showAddPortfolio.name + " Â· " + showAddPortfolio.community : "Select a project from your portfolio"}</p>
           </div>
           <div style={{ padding: "16px 28px 28px" }}>
             {showAddPortfolio === true ? <>
@@ -5561,14 +5561,14 @@ activeProjects={[...(Array.isArray(liveProjects)?liveProjects:[]),...(Array.isAr
                     <div>
                       <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                         <span style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{p.name}</span>
-                        {p.emaarUrl && <a href={p.emaarUrl} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{ fontSize: 9, color: T.gold, textDecoration: "none", padding: "1px 4px", border: "1px solid rgba(212,168,67,0.3)", borderRadius: 3, fontWeight: 700, flexShrink: 0 }}>—</a>}
+                        {p.emaarUrl && <a href={p.emaarUrl} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{ fontSize: 9, color: T.gold, textDecoration: "none", padding: "1px 4px", border: "1px solid rgba(212,168,67,0.3)", borderRadius: 3, fontWeight: 700, flexShrink: 0 }}>â€”</a>}
                       </div>
-                      <div style={{ fontSize: 10, color: T.textMuted }}>{p.community} · {p.type} · {p.beds}</div>
+                      <div style={{ fontSize: 10, color: T.textMuted }}>{p.community} Â· {p.type} Â· {p.beds}</div>
                     </div>
                     <div style={{ textAlign: "right" }}>
                       <div style={{ fontSize: 12, fontWeight: 700, color: T.gold }}>AED {p.price ? (p.price/1e6).toFixed(2) + "M" : "TBD"}</div>
                       <div style={{ fontSize: 9, color: T.textMuted }}>{p.handover}</div>
-                      {(() => { const cd = getHandoverCountdown(p.handover); return cd ? <div style={{ fontSize: 9, fontWeight: 700, color: cd.passed ? "#10B981" : cd.color, marginTop: 1 }}>{cd.passed ? "→“€œ Ready" : "— " + cd.label}</div> : null; })()}
+                      {(() => { const cd = getHandoverCountdown(p.handover); return cd ? <div style={{ fontSize: 9, fontWeight: 700, color: cd.passed ? "#10B981" : cd.color, marginTop: 1 }}>{cd.passed ? "â†’â€œâ‚¬Å“ Ready" : "â€” " + cd.label}</div> : null; })()}
                     </div>
                   </div>
                 ))}
@@ -5601,7 +5601,7 @@ activeProjects={[...(Array.isArray(liveProjects)?liveProjects:[]),...(Array.isAr
                 </div>
               </div>
               <div style={{ display: "flex", gap: 10 }}>
-                <button type="button" onClick={() => setShowAddPortfolio(true)} style={{ flex: 1, padding: "10px 0", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textSecondary, fontWeight: 600, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>{"— Back"}</button>
+                <button type="button" onClick={() => setShowAddPortfolio(true)} style={{ flex: 1, padding: "10px 0", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textSecondary, fontWeight: 600, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>{"â€” Back"}</button>
                 <button type="button" onClick={addToPortfolio} style={{ flex: 2, padding: "10px 0", background: `linear-gradient(135deg, ${T.gold}, #B8912F)`, color: T.bg, border: "none", borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>Add to Portfolio</button>
               </div>
             </>}
@@ -5613,11 +5613,11 @@ activeProjects={[...(Array.isArray(liveProjects)?liveProjects:[]),...(Array.isAr
       {showSetAlert && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.9)", zIndex: 3200, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(10px)" }} onClick={() => setShowSetAlert(null)}>
           <div style={{ background: T.surface, borderRadius: 20, border: `1px solid ${T.border}`, width: "min(440px,95vw)", padding: "28px 28px 24px", position: "relative" }} onClick={e => e.stopPropagation()}>
-            <button type="button" onClick={() => setShowSetAlert(null)} style={{ position: "absolute", top: 16, right: 16, background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center" }}>—</button>
+            <button type="button" onClick={() => setShowSetAlert(null)} style={{ position: "absolute", top: 16, right: 16, background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center" }}>â€”</button>
             <div style={{ marginBottom: 20 }}>
               <div style={{ fontSize: 10, color: T.gold, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 6 }}>Price Alert</div>
               <div style={{ fontFamily: "'Fraunces', serif", fontSize: 20, fontWeight: 800, color: T.white }}>{showSetAlert.name}</div>
-              <div style={{ fontSize: 12, color: T.textMuted, marginTop: 3 }}>{showSetAlert.community}{"·"}{showSetAlert.type}</div>
+              <div style={{ fontSize: 12, color: T.textMuted, marginTop: 3 }}>{showSetAlert.community}{"Â·"}{showSetAlert.type}</div>
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
               <div>
@@ -5638,7 +5638,7 @@ activeProjects={[...(Array.isArray(liveProjects)?liveProjects:[]),...(Array.isAr
                   <div style={{ fontSize: 10, color: T.gold, fontWeight: 700, marginBottom: 6 }}>EXISTING ALERTS</div>
                   {myAlerts.filter(a => a.projectId === showSetAlert.id).map(a => (
                     <div key={a.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 11, color: T.textMuted, marginBottom: 3 }}>
-                      <span>{a.type.replace(/_/g," ")} {a.type.includes("yield") || a.type.includes("construction") ? a.value + "%" : "AED " + (a.value/1e6).toFixed(2) + "M"} {a.triggered ? "→“€œ Triggered" : "— Watching"}</span>
+                      <span>{a.type.replace(/_/g," ")} {a.type.includes("yield") || a.type.includes("construction") ? a.value + "%" : "AED " + (a.value/1e6).toFixed(2) + "M"} {a.triggered ? "â†’â€œâ‚¬Å“ Triggered" : "â€” Watching"}</span>
                       <button type="button" onClick={() => removeAlert(a.id)} style={{ background: "none", border: "none", color: "rgba(239,68,68,0.6)", cursor: "pointer", fontSize: 12, padding: 0 }}>Remove</button>
                     </div>
                   ))}
@@ -5651,10 +5651,10 @@ activeProjects={[...(Array.isArray(liveProjects)?liveProjects:[]),...(Array.isAr
       )}
 
       {/* CHECKOUT PAYMENT MODAL */}
-      {/* — PRICE ALERTS MODAL — */}
+      {/* â€” PRICE ALERTS MODAL â€” */}
       {showAlerts && isLoggedIn && <div role="dialog" aria-modal="true" aria-label="Price Alerts" style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.93)", zIndex: 3200, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(12px)", padding: 16 }} onClick={() => setShowAlerts(false)}>
         <div className="alerts-modal" style={{ background: T.surface, borderRadius: 20, border: `1px solid ${T.border}`, width: "95%", maxWidth: 560, maxHeight: "88vh", overflow: "auto", position: "relative" }} onClick={e => e.stopPropagation()}>
-          <button type="button" onClick={() => setShowAlerts(false)} style={{ position: "absolute", top: 16, right: 16, background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center", zIndex: 5 }}>—</button>
+          <button type="button" onClick={() => setShowAlerts(false)} style={{ position: "absolute", top: 16, right: 16, background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center", zIndex: 5 }}>â€”</button>
           <div style={{ padding: "28px 28px 20px", borderBottom: `1px solid ${T.border}` }}>
             <div style={{ fontSize: 11, fontWeight: 700, color: T.gold, letterSpacing: 1, textTransform: "uppercase", marginBottom: 6 }}>\uD83D\uDD14 Price Alerts</div>
             <div style={{ fontFamily: "'Fraunces', serif", fontSize: 20, fontWeight: 800, color: T.white }}>Get notified when the market moves</div>
@@ -5698,15 +5698,15 @@ activeProjects={[...(Array.isArray(liveProjects)?liveProjects:[]),...(Array.isAr
                 const newAlert = { ...alertForm, id: Date.now(), createdAt: new Date().toISOString(), active: true };
                 const updated = [...myAlerts, newAlert];
                 setMyAlerts(updated);
-                await safeAsyncWithToast(() => setDoc(doc(db, "priceAlerts", user), { alerts: updated, updatedAt: new Date().toISOString() }), "price-alert-add", notify, "Couldn't save your new price alert €” try again");
+                await safeAsyncWithToast(() => setDoc(doc(db, "priceAlerts", user), { alerts: updated, updatedAt: new Date().toISOString() }), "price-alert-add", notify, "Couldn't save your new price alert â‚¬â€ try again");
                 setAlertSaving(false);
               }} style={{ width: "100%", padding: "10px 0", background: alertSaving ? T.surfaceAlt : `linear-gradient(135deg, ${T.gold}, #B8912F)`, color: alertSaving ? T.textMuted : T.bg, border: "none", borderRadius: 10, fontWeight: 700, fontSize: 13, cursor: alertSaving ? "default" : "pointer", fontFamily: "'Outfit',sans-serif", transition: "all 0.2s" }}>
-                {alertSaving ? "Saving→š¬…" : "+ Create Alert"}
+                {alertSaving ? "Savingâ†’Å¡Â¬â€¦" : "+ Create Alert"}
               </button>
             </div>
             {/* Existing alerts */}
             <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>Active Alerts ({myAlerts.filter(a => a.active).length})</div>
-            {myAlerts.length === 0 && <div style={{ textAlign: "center", padding: "24px 0", color: T.textMuted, fontSize: 13 }}>No alerts yet €” create your first one above</div>}
+            {myAlerts.length === 0 && <div style={{ textAlign: "center", padding: "24px 0", color: T.textMuted, fontSize: 13 }}>No alerts yet â‚¬â€ create your first one above</div>}
             {myAlerts.map((a, i) => (
               <div key={a.id || i} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", background: T.surfaceAlt, borderRadius: 10, border: `1px solid ${T.border}`, marginBottom: 8 }}>
                 <span style={{ fontSize: 18 }}>{a.condition === "above" ? "\uD83D\uDCC8" : "\uD83D\uDCC9"}</span>
@@ -5718,8 +5718,8 @@ activeProjects={[...(Array.isArray(liveProjects)?liveProjects:[]),...(Array.isAr
                 <button type="button" onClick={async () => {
                   const updated = myAlerts.filter((_, j) => j !== i);
                   setMyAlerts(updated);
-                  await safeAsyncWithToast(() => setDoc(doc(db, "priceAlerts", user), { alerts: updated, updatedAt: new Date().toISOString() }), "price-alert-delete", notify, "Couldn't remove the price alert €” try again");
-                }} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 16, padding: "4px 6px", borderRadius: 6, transition: "color 0.2s" }} onMouseEnter={e => e.currentTarget.style.color = "#EF4444"} onMouseLeave={e => e.currentTarget.style.color = T.textMuted}>—</button>
+                  await safeAsyncWithToast(() => setDoc(doc(db, "priceAlerts", user), { alerts: updated, updatedAt: new Date().toISOString() }), "price-alert-delete", notify, "Couldn't remove the price alert â‚¬â€ try again");
+                }} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 16, padding: "4px 6px", borderRadius: 6, transition: "color 0.2s" }} onMouseEnter={e => e.currentTarget.style.color = "#EF4444"} onMouseLeave={e => e.currentTarget.style.color = T.textMuted}>â€”</button>
               </div>
             ))}
             {myAlerts.length > 0 && <div style={{ fontSize: 11, color: T.textMuted, marginTop: 12, textAlign: "center" }}>Alerts checked daily. Email sent to {user}</div>}
@@ -5729,10 +5729,10 @@ activeProjects={[...(Array.isArray(liveProjects)?liveProjects:[]),...(Array.isAr
 
       {showCheckout && <div role="dialog" aria-modal="true" aria-label="Upgrade checkout" style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.95)", zIndex: 3100, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(12px)" }} onClick={() => { setShowCheckout(null); setCheckoutStep(1); }}>
         <div style={{ background: T.surface, borderRadius: 20, border: `1px solid ${T.border}`, width: "95%", maxWidth: 480, position: "relative", overflow: "hidden" }} onClick={e => e.stopPropagation()}>
-          <button type="button" onClick={() => { setShowCheckout(null); setCheckoutStep(1); }} style={{ position: "absolute", top: 16, right: 16, background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center", zIndex: 5 }}>{"—"}</button>
+          <button type="button" onClick={() => { setShowCheckout(null); setCheckoutStep(1); }} style={{ position: "absolute", top: 16, right: 16, background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center", zIndex: 5 }}>{"â€”"}</button>
           <div style={{ padding: "24px 28px 16px", borderBottom: `1px solid ${T.border}` }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, marginBottom: 16 }}>
-              {[1,2,3].map(s => <React.Fragment key={s}><div style={{ width: 28, height: 28, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, background: checkoutStep >= s ? T.gold : T.surfaceAlt, color: checkoutStep >= s ? T.bg : T.textMuted, border: `1px solid ${checkoutStep >= s ? T.gold : T.border}` }}>{checkoutStep > s ? "→“€œ" : s}</div>{s < 3 && <div style={{ width: 40, height: 2, background: checkoutStep > s ? T.gold : T.surfaceAlt, borderRadius: 1 }} />}</React.Fragment>)}
+              {[1,2,3].map(s => <React.Fragment key={s}><div style={{ width: 28, height: 28, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, background: checkoutStep >= s ? T.gold : T.surfaceAlt, color: checkoutStep >= s ? T.bg : T.textMuted, border: `1px solid ${checkoutStep >= s ? T.gold : T.border}` }}>{checkoutStep > s ? "â†’â€œâ‚¬Å“" : s}</div>{s < 3 && <div style={{ width: 40, height: 2, background: checkoutStep > s ? T.gold : T.surfaceAlt, borderRadius: 1 }} />}</React.Fragment>)}
             </div>
             <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: 20, fontWeight: 800, color: T.white, textAlign: "center" }}>{checkoutStep === 1 ? "Confirm Plan" : checkoutStep === 2 ? "Payment" : "Welcome to Pro!"}</h2>
           </div>
@@ -5741,18 +5741,18 @@ activeProjects={[...(Array.isArray(liveProjects)?liveProjects:[]),...(Array.isAr
               <div style={{ padding: 16, borderRadius: 12, background: T.surfaceAlt, border: `2px solid ${T.gold}`, marginBottom: 16 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}><span style={{ fontFamily: "'Fraunces', serif", fontSize: 18, fontWeight: 800, color: T.gold }}>{showCheckout.name} Plan</span><span style={{ fontSize: 10, padding: "3px 10px", borderRadius: 6, background: "rgba(212,168,67,0.12)", color: T.gold }}>SELECTED</span></div>
                 <div style={{ display: "flex", alignItems: "baseline", gap: 3, marginBottom: 12 }}><span style={{ fontSize: 10, color: T.textMuted }}>AED</span><span style={{ fontFamily: "'Fraunces', serif", fontSize: 32, fontWeight: 900, color: T.white }}>{showCheckout.price}</span><span style={{ fontSize: 12, color: T.textMuted }}>/month</span></div>
-                {showCheckout.features.slice(0,5).map((f,j) => <div key={j} style={{ display: "flex", alignItems: "center", gap: 6, padding: "3px 0", fontSize: 12, color: T.textSecondary }}><span style={{ color: T.green }}>{"→“€œ"}</span>{f}</div>)}
+                {showCheckout.features.slice(0,5).map((f,j) => <div key={j} style={{ display: "flex", alignItems: "center", gap: 6, padding: "3px 0", fontSize: 12, color: T.textSecondary }}><span style={{ color: T.green }}>{"â†’â€œâ‚¬Å“"}</span>{f}</div>)}
               </div>
-              <button type="button" onClick={() => setCheckoutStep(2)} style={{ width: "100%", padding: "12px 0", background: `linear-gradient(135deg, ${T.gold}, #B8912F)`, color: T.bg, border: "none", borderRadius: 10, fontWeight: 700, fontSize: 14, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>Continue to Payment →</button>
+              <button type="button" onClick={() => setCheckoutStep(2)} style={{ width: "100%", padding: "12px 0", background: `linear-gradient(135deg, ${T.gold}, #B8912F)`, color: T.bg, border: "none", borderRadius: 10, fontWeight: 700, fontSize: 14, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>Continue to Payment â†’</button>
             </>}
             {checkoutStep === 2 && <>
               <div style={{ marginBottom: 12 }}>
                 <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, marginBottom: 12 }}>CHOOSE PAYMENT METHOD</div>
 
                 {/* Stripe Payment Links */}
-                {/* — Paddle Card Payment — */}
+                {/* â€” Paddle Card Payment â€” */}
                 {(() => {
-                  // — PADDLE PRICE IDs —
+                  // â€” PADDLE PRICE IDs â€”
                   // 1. Sign up at paddle.com (free)
                   // 2. Create products: Pro (AED 99/mo), Enterprise (AED 499/mo)
                   // 3. Paste the price IDs below (format: pri_XXXXXXXX)
@@ -5791,7 +5791,7 @@ activeProjects={[...(Array.isArray(liveProjects)?liveProjects:[]),...(Array.isAr
                       <div style={{ fontSize: 24 }}>\uD83D\uDCB3</div>
                       <div style={{ flex: 1 }}>
                         <div style={{ fontSize: 13, fontWeight: 700, color: "#fff" }}>Credit / Debit Card</div>
-                        <div style={{ fontSize: 10, color: T.textMuted }}>Visa · Mastercard · Amex · Apple Pay · {paddleReady ? "Powered by Paddle" : "Powered by Paddle (setup pending)"}</div>
+                        <div style={{ fontSize: 10, color: T.textMuted }}>Visa Â· Mastercard Â· Amex Â· Apple Pay Â· {paddleReady ? "Powered by Paddle" : "Powered by Paddle (setup pending)"}</div>
                       </div>
                       <span style={{ fontSize: 9, padding: "3px 10px", borderRadius: 6, background: "rgba(34,197,94,0.12)", color: "#22C55E", fontWeight: 700, border: "1px solid rgba(34,197,94,0.2)" }}>RECOMMENDED</span>
                     </div>
@@ -5803,15 +5803,15 @@ activeProjects={[...(Array.isArray(liveProjects)?liveProjects:[]),...(Array.isAr
                   <div style={{ fontSize: 24 }}>\uD83D\uDCAC</div>
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: 13, fontWeight: 700, color: "#fff" }}>WhatsApp + Bank Transfer</div>
-                    <div style={{ fontSize: 10, color: T.textMuted }}>Manual €” activated within 5 minutes of payment</div>
+                    <div style={{ fontSize: 10, color: T.textMuted }}>Manual â‚¬â€ activated within 5 minutes of payment</div>
                   </div>
-                  <span style={{ color: "#25D366", fontSize: 16 }}>→</span>
+                  <span style={{ color: "#25D366", fontSize: 16 }}>â†’</span>
                 </div>
 
-                <div style={{ padding: "10px 14px", borderRadius: 8, background: "rgba(212,168,67,0.04)", border: "1px solid rgba(212,168,67,0.1)", fontSize: 11, color: T.textMuted, lineHeight: 1.5, marginBottom: 12 }}>\uD83D\uDD12 All payments secure · 7-day money-back guarantee</div>
+                <div style={{ padding: "10px 14px", borderRadius: 8, background: "rgba(212,168,67,0.04)", border: "1px solid rgba(212,168,67,0.1)", fontSize: 11, color: T.textMuted, lineHeight: 1.5, marginBottom: 12 }}>\uD83D\uDD12 All payments secure Â· 7-day money-back guarantee</div>
               </div>
               <div style={{ display: "flex", gap: 10 }}>
-                <button type="button" onClick={() => setCheckoutStep(1)} style={{ width: "100%", padding: "10px 0", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textSecondary, fontWeight: 600, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>— Back</button>
+                <button type="button" onClick={() => setCheckoutStep(1)} style={{ width: "100%", padding: "10px 0", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textSecondary, fontWeight: 600, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>â€” Back</button>
               </div>
             </>}
             {checkoutStep === 3 && <div style={{ textAlign: "center", padding: "20px 0" }}>
@@ -5829,14 +5829,14 @@ activeProjects={[...(Array.isArray(liveProjects)?liveProjects:[]),...(Array.isAr
         </div>
       </div>}
 
-      {/* — MOBILE BOTTOM NAV BAR — */}
+      {/* â€” MOBILE BOTTOM NAV BAR â€” */}
       <nav style={{ display: "none" }} className="mobile-bottom-nav" aria-label="Quick navigation">
         {[
-          { key: "Overview", icon: "—", label: "Overview" },
-          { key: "Projects", icon: "—", label: "Projects" },
-          { key: "Yields", icon: "—", label: "Yields" },
-          { key: "Portfolio", icon: "—", label: "Portfolio" },
-          { key: "Market", icon: "—", label: "Market" },
+          { key: "Overview", icon: "â€”", label: "Overview" },
+          { key: "Projects", icon: "â€”", label: "Projects" },
+          { key: "Yields", icon: "â€”", label: "Yields" },
+          { key: "Portfolio", icon: "â€”", label: "Portfolio" },
+          { key: "Market", icon: "â€”", label: "Market" },
         ].map(item => (
           <button key={item.key} type="button" onClick={() => { setTab(item.key); setSidebarOpen(false); }}
             style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 3, background: "none", border: "none", cursor: "pointer", padding: "6px 0", color: tab === item.key ? T.gold : T.textMuted, fontFamily: "'Outfit',sans-serif", transition: "color 0.2s" }}>
@@ -5847,7 +5847,7 @@ activeProjects={[...(Array.isArray(liveProjects)?liveProjects:[]),...(Array.isAr
         ))}
         <button type="button" onClick={() => setSidebarOpen(s => !s)}
           style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 3, background: "none", border: "none", cursor: "pointer", padding: "6px 0", color: T.textMuted, fontFamily: "'Outfit',sans-serif" }}>
-          <span style={{ fontSize: 18 }}>—</span>
+          <span style={{ fontSize: 18 }}>â€”</span>
           <span style={{ fontSize: 9, letterSpacing: 0.3 }}>More</span>
         </button>
       </nav>
@@ -5855,14 +5855,14 @@ activeProjects={[...(Array.isArray(liveProjects)?liveProjects:[]),...(Array.isAr
       {/* USER PROFILE MODAL */}
       {showProfile && <div role="dialog" aria-modal="true" aria-label="User profile" style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.9)", zIndex: 3000, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(10px)" }} onClick={() => setShowProfile(false)}>
         <div style={{ background: T.surface, borderRadius: 20, border: `1px solid ${T.border}`, width: "95%", maxWidth: 560, maxHeight: "90vh", overflow: "auto", position: "relative" }} onClick={e => e.stopPropagation()}>
-          <button type="button" onClick={() => setShowProfile(false)} style={{ position: "absolute", top: 16, right: 16, background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center", zIndex: 5 }}>—</button>
+          <button type="button" onClick={() => setShowProfile(false)} style={{ position: "absolute", top: 16, right: 16, background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center", zIndex: 5 }}>â€”</button>
           <div style={{ padding: "32px 28px 20px", background: `linear-gradient(135deg, rgba(212,168,67,0.08), rgba(14,29,53,0.6))`, borderBottom: `1px solid ${T.border}` }}>
             <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
               <div style={{ width: 56, height: 56, borderRadius: "50%", background: `linear-gradient(135deg, ${T.gold}, #B8912F)`, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: 22, color: T.bg, flexShrink: 0 }}>{user.charAt(0).toUpperCase()}</div>
               <div>
                 <div style={{ fontFamily: "'Fraunces', serif", fontSize: 20, fontWeight: 800, color: T.white }}>{userName || user.split("@")[0]}</div>
                 <div style={{ fontSize: 12, color: T.textSecondary, marginTop: 2 }}>{user}</div>
-                <div style={{ display: "inline-flex", alignItems: "center", gap: 4, marginTop: 6, padding: "3px 10px", borderRadius: 6, background: userTier === "admin" || userTier === "pro" || userTier === "enterprise" ? "rgba(16,185,129,0.12)" : userTier === "pro_trial" ? "rgba(212,168,67,0.12)" : "rgba(59,130,246,0.12)", fontSize: 10, fontWeight: 700, color: userTier === "admin" || userTier === "pro" || userTier === "enterprise" ? T.green : userTier === "pro_trial" ? T.gold : T.blue }}>{userTier === "admin" ? "— Admin" : userTier === "pro" ? "⭐ Pro Plan" : userTier === "pro_trial" ? `⭐ Pro Trial · ${trialDaysLeft}d left` : userTier === "enterprise" ? "\uD83C\uDFE2 Enterprise" : "Free Plan"}</div>
+                <div style={{ display: "inline-flex", alignItems: "center", gap: 4, marginTop: 6, padding: "3px 10px", borderRadius: 6, background: userTier === "admin" || userTier === "pro" || userTier === "enterprise" ? "rgba(16,185,129,0.12)" : userTier === "pro_trial" ? "rgba(212,168,67,0.12)" : "rgba(59,130,246,0.12)", fontSize: 10, fontWeight: 700, color: userTier === "admin" || userTier === "pro" || userTier === "enterprise" ? T.green : userTier === "pro_trial" ? T.gold : T.blue }}>{userTier === "admin" ? "â€” Admin" : userTier === "pro" ? "â­ Pro Plan" : userTier === "pro_trial" ? `â­ Pro Trial Â· ${trialDaysLeft}d left` : userTier === "enterprise" ? "\uD83C\uDFE2 Enterprise" : "Free Plan"}</div>
               </div>
             </div>
           </div>
@@ -5873,7 +5873,7 @@ activeProjects={[...(Array.isArray(liveProjects)?liveProjects:[]),...(Array.isAr
                 <div><label style={{ fontSize: 10, color: T.textMuted, fontWeight: 600, display: "block", marginBottom: 4 }}>DISPLAY NAME</label><input type="text" value={profileEdit.name} onChange={e => setProfileEdit({...profileEdit, name: e.target.value})} placeholder="Your name" style={{ width: "100%", padding: "10px 12px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit', sans-serif", outline: "none" }} /></div>
                 <div><label style={{ fontSize: 10, color: T.textMuted, fontWeight: 600, display: "block", marginBottom: 4 }}>EMAIL</label><input type="email" value={user} disabled style={{ width: "100%", padding: "10px 12px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, fontSize: 13, fontFamily: "'Outfit', sans-serif", outline: "none", opacity: 0.6 }} /></div>
               </div>
-              <button type="button" onClick={async () => { if (auth.currentUser && profileEdit.name.trim()) { try { await setDoc(doc(db, "users", auth.currentUser?.uid), { name: profileEdit.name.trim() }, { merge: true }); setUserName(profileEdit.name.trim()); setToast("— Profile updated!"); setTimeout(() => setToast(""), 3000); } catch(e) { setToast("”— Update failed"); setTimeout(() => setToast(""), 3000); } } }} style={{ marginTop: 10, padding: "8px 20px", background: T.gold, color: T.bg, border: "none", borderRadius: 8, fontWeight: 700, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>Save Changes</button>
+              <button type="button" onClick={async () => { if (auth.currentUser && profileEdit.name.trim()) { try { await setDoc(doc(db, "users", auth.currentUser?.uid), { name: profileEdit.name.trim() }, { merge: true }); setUserName(profileEdit.name.trim()); setToast("â€” Profile updated!"); setTimeout(() => setToast(""), 3000); } catch(e) { setToast("â€â€” Update failed"); setTimeout(() => setToast(""), 3000); } } }} style={{ marginTop: 10, padding: "8px 20px", background: T.gold, color: T.bg, border: "none", borderRadius: 8, fontWeight: 700, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>Save Changes</button>
             </div>
             <div style={{ marginBottom: 20, padding: 16, borderRadius: 12, background: T.surfaceAlt, border: `1px solid ${T.border}` }}>
               <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 12 }}>Subscription</div>
@@ -5882,7 +5882,7 @@ activeProjects={[...(Array.isArray(liveProjects)?liveProjects:[]),...(Array.isAr
                 <div><div style={{ fontSize: 10, color: T.textMuted }}>Status</div><div style={{ fontSize: 14, fontWeight: 700, color: userTier === "free" ? T.blue : T.green }}>{userTier === "free" ? "Limited" : "Active"}</div></div>
                 <div><div style={{ fontSize: 10, color: T.textMuted }}>Access</div><div style={{ fontSize: 14, fontWeight: 700, color: T.white }}>{userTier === "free" ? "5 projects" : "All 48"}</div></div>
               </div>
-              {(userTier === "free" || userTier === "pro_trial") && <button type="button" onClick={() => { setShowProfile(false); setShowUpgrade(true); }} style={{ marginTop: 12, width: "100%", padding: "10px 0", background: `linear-gradient(135deg, ${T.gold}, #B8912F)`, color: T.bg, border: "none", borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>{userTier === "pro_trial" ? "Subscribe Before Trial Ends" : "⭐ Upgrade to Pro €” AED 99/mo"}</button>}
+              {(userTier === "free" || userTier === "pro_trial") && <button type="button" onClick={() => { setShowProfile(false); setShowUpgrade(true); }} style={{ marginTop: 12, width: "100%", padding: "10px 0", background: `linear-gradient(135deg, ${T.gold}, #B8912F)`, color: T.bg, border: "none", borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>{userTier === "pro_trial" ? "Subscribe Before Trial Ends" : "â­ Upgrade to Pro â‚¬â€ AED 99/mo"}</button>}
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
               <button type="button" onClick={() => { setShowProfile(false); handleTabChange("Portfolio"); }} style={{ padding: "10px 0", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textSecondary, fontWeight: 600, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>\uD83D\uDCCA Portfolio</button>
@@ -5893,11 +5893,11 @@ activeProjects={[...(Array.isArray(liveProjects)?liveProjects:[]),...(Array.isAr
       </div>}
 
 
-      {/* — KPI DETAIL MODAL — */}
+      {/* â€” KPI DETAIL MODAL â€” */}
       {selectedKPI && (
         <div role="dialog" aria-modal="true" aria-label={`${selectedKPI?.label} details`} style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.92)", zIndex: 5000, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(10px)", padding: 16 }} onClick={() => setSelectedKPI(null)}>
           <div style={{ background: T.surface, borderRadius: 20, border: `1px solid ${selectedKPI.color || T.gold}`, width: "95%", maxWidth: 640, maxHeight: "88vh", overflowY: "auto", position: "relative", boxShadow: `0 24px 80px rgba(0,0,0,0.6), 0 0 40px ${selectedKPI.color || T.gold}22` }} onClick={e => e.stopPropagation()}>
-            <button type="button" onClick={() => setSelectedKPI(null)} style={{ position: "absolute", top: 16, right: 16, background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16, zIndex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>—</button>
+            <button type="button" onClick={() => setSelectedKPI(null)} style={{ position: "absolute", top: 16, right: 16, background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16, zIndex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>â€”</button>
             <div style={{ padding: 28 }}>
               <div style={{ marginBottom: 20 }}>
                 <div style={{ fontSize: 10, fontWeight: 600, color: T.textMuted, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 6 }}>{selectedKPI.label}</div>
@@ -5931,7 +5931,7 @@ activeProjects={[...(Array.isArray(liveProjects)?liveProjects:[]),...(Array.isAr
                           return (
                             <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
                               <div style={{ width: "100%", background: isLast ? (selectedKPI.color || T.gold) : T.border, borderRadius: "3px 3px 0 0", height: `${pct}%`, minHeight: 4, position: "relative" }}>
-                                {isLast && <div style={{ position: "absolute", top: -18, left: "50%", transform: "translateX(-50%)", fontSize: 9, color: selectedKPI.color || T.gold, fontWeight: 700, whiteSpace: "nowrap" }}>— Latest</div>}
+                                {isLast && <div style={{ position: "absolute", top: -18, left: "50%", transform: "translateX(-50%)", fontSize: 9, color: selectedKPI.color || T.gold, fontWeight: 700, whiteSpace: "nowrap" }}>â€” Latest</div>}
                               </div>
                               <div style={{ fontSize: 9, color: T.textMuted }}>{d.y}</div>
                             </div>
@@ -5948,7 +5948,7 @@ activeProjects={[...(Array.isArray(liveProjects)?liveProjects:[]),...(Array.isAr
                   <div style={{ fontSize: 11, color: T.textSecondary, marginTop: 2 }}>{selectedKPI.source}</div>
                 </div>
                 {selectedKPI.sourceUrl && selectedKPI.sourceUrl !== "#" && (
-                  <a href={selectedKPI.sourceUrl} target="_blank" rel="noopener noreferrer" style={{ padding: "8px 16px", background: selectedKPI.color || T.gold, color: T.bg, borderRadius: 8, fontSize: 11, fontWeight: 700, textDecoration: "none", fontFamily: "'Outfit', sans-serif" }}>View Source —</a>
+                  <a href={selectedKPI.sourceUrl} target="_blank" rel="noopener noreferrer" style={{ padding: "8px 16px", background: selectedKPI.color || T.gold, color: T.bg, borderRadius: 8, fontSize: 11, fontWeight: 700, textDecoration: "none", fontFamily: "'Outfit', sans-serif" }}>View Source â€”</a>
                 )}
               </div>
             </div>
@@ -5956,7 +5956,7 @@ activeProjects={[...(Array.isArray(liveProjects)?liveProjects:[]),...(Array.isAr
         </div>
       )}
 
-      {/* — NOTIFICATIONS PANEL — */}
+      {/* â€” NOTIFICATIONS PANEL â€” */}
       {showNotifications && (
         <div style={{ position: "fixed", top: 60, right: 16, width: 360, maxHeight: 480, background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, boxShadow: "0 20px 60px rgba(0,0,0,0.6)", zIndex: 4000, overflow: "hidden", display: "flex", flexDirection: "column" }}>
           <div style={{ padding: "16px 20px", borderBottom: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -5964,7 +5964,7 @@ activeProjects={[...(Array.isArray(liveProjects)?liveProjects:[]),...(Array.isAr
               <div style={{ fontFamily: "'Fraunces',serif", fontSize: 15, fontWeight: 700, color: T.white }}>Notifications</div>
               {unreadCount > 0 && <div style={{ fontSize: 11, color: T.gold }}>{unreadCount} unread</div>}
             </div>
-            <button type="button" onClick={() => setShowNotifications(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 18 }}>—</button>
+            <button type="button" onClick={() => setShowNotifications(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 18 }}>â€”</button>
           </div>
           <div style={{ overflowY: "auto", flex: 1 }}>
             {isPro && myAlerts.filter(a => !a.triggered).length > 0 && (
@@ -5975,9 +5975,9 @@ activeProjects={[...(Array.isArray(liveProjects)?liveProjects:[]),...(Array.isAr
                     <div key={a.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: a.triggered ? "rgba(16,185,129,0.08)" : T.surfaceAlt, borderRadius: 8, padding: "8px 10px", border: `1px solid ${a.triggered ? "rgba(16,185,129,0.2)" : T.border}` }}>
                       <div>
                         <div style={{ fontSize: 11, fontWeight: 600, color: a.triggered ? "#10B981" : T.white }}>{a.projectName}</div>
-                        <div style={{ fontSize: 10, color: T.textMuted }}>{a.type.replace(/_/g," ")} {a.type.includes("yield") || a.type.includes("construction") ? a.value + "%" : "AED " + (a.value/1e6).toFixed(2) + "M"} {a.triggered ? "→“€œ Triggered" : "— Watching"}</div>
+                        <div style={{ fontSize: 10, color: T.textMuted }}>{a.type.replace(/_/g," ")} {a.type.includes("yield") || a.type.includes("construction") ? a.value + "%" : "AED " + (a.value/1e6).toFixed(2) + "M"} {a.triggered ? "â†’â€œâ‚¬Å“ Triggered" : "â€” Watching"}</div>
                       </div>
-                      <button type="button" onClick={() => removeAlert(a.id)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 16, padding: "0 4px" }}>—</button>
+                      <button type="button" onClick={() => removeAlert(a.id)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 16, padding: "0 4px" }}>â€”</button>
                     </div>
                   ))}
                 </div>
@@ -5985,16 +5985,16 @@ activeProjects={[...(Array.isArray(liveProjects)?liveProjects:[]),...(Array.isAr
             )}
             {notifications.length === 0 ? (
               <div style={{ padding: 40, textAlign: "center", color: T.textMuted }}>
-                <div style={{ fontSize: 32, marginBottom: 8 }}>🔔</div>
+                <div style={{ fontSize: 32, marginBottom: 8 }}>ðŸ””</div>
                 <div style={{ fontSize: 13, color: T.textSecondary, marginBottom: 4 }}>No notifications yet</div>
-                <div style={{ fontSize: 11 }}>Set alerts on project cards ★ to get notified of price changes.</div>
+                <div style={{ fontSize: 11 }}>Set alerts on project cards â˜… to get notified of price changes.</div>
               </div>
             ) : notifications.map((n, i) => (
               <div key={n.id} onClick={() => { markNotifRead(n.id); setShowNotifications(false); if(n.type==="new_launch") { handleTabChange("Projects"); if(n.projectNumbers&&n.projectNumbers.length>0) setProjSearch(n.projectNumbers.join(" ")); } else if(n.type==="completed"||n.type==="cancelled"||n.type==="progress") { handleTabChange("Projects"); if(n.projectName){ const proj=activeProjects.find(p=>(p.name||p.project)===n.projectName); if(proj)setSelectedProject(proj); } } else if(n.type==="stale_leads"||n.type==="lead_assigned") handleTabChange("My Leads"); }} style={{ padding: "14px 20px", borderBottom: `1px solid ${T.border}`, cursor: "pointer", background: n.read ? "transparent" : "rgba(212,168,67,0.04)", transition: "background 0.2s" }}
                 onMouseEnter={e => e.currentTarget.style.background = T.surfaceAlt}
                 onMouseLeave={e => e.currentTarget.style.background = n.read ? "transparent" : "rgba(212,168,67,0.04)"}>
                 <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
-                  <span style={{ fontSize: 18, flexShrink: 0 }}>{n.icon || "—"}</span>
+                  <span style={{ fontSize: 18, flexShrink: 0 }}>{n.icon || "â€”"}</span>
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: 12, fontWeight: n.read ? 400 : 700, color: n.read ? T.textSecondary : T.white, marginBottom: 3 }}>{n.title || "Update"}</div>
                     <div style={{ fontSize: 11, color: T.textMuted, lineHeight: 1.5 }}>{n.message}</div>
@@ -6008,23 +6008,23 @@ activeProjects={[...(Array.isArray(liveProjects)?liveProjects:[]),...(Array.isAr
         </div>
       )}
 
-      {/* — WATCHLIST PANEL — */}
+      {/* â€” WATCHLIST PANEL â€” */}
       {showWatchlist && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.85)", zIndex: 3500, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(8px)" }} onClick={() => setShowWatchlist(false)}>
           <div style={{ background: T.surface, borderRadius: 20, border: `1px solid ${T.border}`, width: "min(640px,95vw)", maxHeight: "80vh", overflow: "hidden", display: "flex", flexDirection: "column" }} onClick={e => e.stopPropagation()}>
             <div style={{ padding: "20px 24px", borderBottom: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <div>
-                <div style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 700, color: T.gold }}>⭐ My Watchlist</div>
+                <div style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 700, color: T.gold }}>â­ My Watchlist</div>
                 <div style={{ fontSize: 12, color: T.textMuted, marginTop: 2 }}>{watchlist.length} project{watchlist.length !== 1 ? "s" : ""} saved</div>
               </div>
-              <button type="button" onClick={() => setShowWatchlist(false)} style={{ background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16 }}>×</button>
+              <button type="button" onClick={() => setShowWatchlist(false)} style={{ background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16 }}>Ã—</button>
             </div>
             <div style={{ overflowY: "auto", padding: 20, flex: 1 }}>
               {watchlist.length === 0 ? (
                 <div style={{ textAlign: "center", padding: "48px 20px", color: T.textMuted }}>
-                  <div style={{ fontSize: 40, marginBottom: 12 }}>★</div>
+                  <div style={{ fontSize: 40, marginBottom: 12 }}>â˜…</div>
                   <div style={{ fontSize: 14, color: T.textSecondary, marginBottom: 8 }}>No projects saved yet</div>
-                  <div style={{ fontSize: 12 }}>Click the ★ star on any project card to add it here.</div>
+                  <div style={{ fontSize: 12 }}>Click the â˜… star on any project card to add it here.</div>
                 </div>
               ) : (
                 <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
@@ -6044,10 +6044,10 @@ activeProjects={[...(Array.isArray(liveProjects)?liveProjects:[]),...(Array.isAr
                             <span style={{ fontSize: 11, color: T.textMuted }}>{w.community}</span>
                             {liveP?.emaarUrl && <a href={liveP.emaarUrl} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{ fontSize: 9, color: T.gold, textDecoration: "none", padding: "1px 5px", border: "1px solid rgba(212,168,67,0.35)", borderRadius: 4, fontWeight: 700 }}>{getLinkLabel(liveP?.emaarUrl)}</a>}
                           </div>
-                          {priceChanged && <div style={{ fontSize: 10, color: liveP.price > w.price ? T.red : T.green, marginTop: 4, fontWeight: 600 }}>{liveP.price > w.price ? "—" : "—"} Price changed since you saved this</div>}
+                          {priceChanged && <div style={{ fontSize: 10, color: liveP.price > w.price ? T.red : T.green, marginTop: 4, fontWeight: 600 }}>{liveP.price > w.price ? "â€”" : "â€”"} Price changed since you saved this</div>}
                         </div>
                         <div style={{ textAlign: "right" }}>
-                          <div style={{ fontSize: 13, fontWeight: 700, color: T.gold }}>AED {currentPrice ? (currentPrice / 1e6).toFixed(2) + "M" : "€”"}</div>
+                          <div style={{ fontSize: 13, fontWeight: 700, color: T.gold }}>AED {currentPrice ? (currentPrice / 1e6).toFixed(2) + "M" : "â‚¬â€"}</div>
                           <div style={{ fontSize: 10, color: T.textMuted, marginTop: 2 }}>Starting from</div>
                         </div>
                         <button type="button" onClick={e => { e.stopPropagation(); toggleWatchlist(w); }} style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 6, color: "#EF4444", padding: "4px 8px", cursor: "pointer", fontSize: 11, flexShrink: 0 }}>Remove</button>
@@ -6061,37 +6061,37 @@ activeProjects={[...(Array.isArray(liveProjects)?liveProjects:[]),...(Array.isAr
         </div>
       )}
 
-      {/* — ONBOARDING MODAL — */}
+      {/* â€” ONBOARDING MODAL â€” */}
       {showOnboarding && (() => {
         const steps = [
           {
-            icon: "\uD83C\uDFD9️",
+            icon: "\uD83C\uDFD9ï¸Â",
             title: `Welcome to DXB Analytics, ${userName || "Investor"}!`,
             body: "You now have access to Dubai's most comprehensive real estate intelligence platform. Let us show you around in 30 seconds.",
-            cta: "Let's Go →"
+            cta: "Let's Go â†’"
           },
           {
             icon: "\uD83D\uDD0D",
             title: "Browse All Projects",
             body: "Go to the Projects tab to explore every active development. Filter by community, tier, handover year, or price range. Click any card for full details, documents, and ROI analysis.",
-            cta: "Next →"
+            cta: "Next â†’"
           },
           {
-            icon: "⭐",
+            icon: "â­",
             title: "Build Your Watchlist",
-            body: "See the ★ star button on every project card? Click it to save projects you're interested in. Your watchlist syncs across devices.",
-            cta: "Next →"
+            body: "See the â˜… star button on every project card? Click it to save projects you're interested in. Your watchlist syncs across devices.",
+            cta: "Next â†’"
           },
           {
             icon: "\uD83D\uDCCA",
             title: "Yields, ROI & Mortgage",
             body: "Use the Yields tab for rental returns by community. The Mortgage tab calculates your monthly payment + all UAE transaction costs instantly.",
-            cta: "Next →"
+            cta: "Next â†’"
           },
           {
             icon: "\uD83D\uDE80",
             title: "You're All Set!",
-            body: userTier === "free" ? "You're on the Free plan. Upgrade to Pro for compare mode, full project details, PDF reports, and portfolio tracking €” from AED 99/month." : "You have full Pro access. Explore everything €” compare projects, track your portfolio, and download reports.",
+            body: userTier === "free" ? "You're on the Free plan. Upgrade to Pro for compare mode, full project details, PDF reports, and portfolio tracking â‚¬â€ from AED 99/month." : "You have full Pro access. Explore everything â‚¬â€ compare projects, track your portfolio, and download reports.",
             cta: userTier === "free" ? "Explore Free Features" : "Start Exploring"
           },
         ];
@@ -6110,7 +6110,7 @@ activeProjects={[...(Array.isArray(liveProjects)?liveProjects:[]),...(Array.isAr
               <p style={{ fontSize: 14, color: T.textSecondary, lineHeight: 1.7, marginBottom: 32 }}>{step.body}</p>
               <div style={{ display: "flex", gap: 10, justifyContent: "center" }}>
                 {onboardingStep > 0 && (
-                  <button type="button" onClick={() => setOnboardingStep(s => s - 1)} style={{ padding: "12px 20px", borderRadius: 10, border: `1px solid ${T.border}`, background: "transparent", color: T.textSecondary, fontSize: 13, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>— Back</button>
+                  <button type="button" onClick={() => setOnboardingStep(s => s - 1)} style={{ padding: "12px 20px", borderRadius: 10, border: `1px solid ${T.border}`, background: "transparent", color: T.textSecondary, fontSize: 13, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>â€” Back</button>
                 )}
                 <button type="button" onClick={() => { if (onboardingStep < steps.length - 1) { setOnboardingStep(s => s + 1); } else { completeOnboarding(); } }} style={{ padding: "12px 28px", borderRadius: 10, border: "none", background: `linear-gradient(135deg, ${T.gold}, ${T.goldDim})`, color: T.bg, fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
                   {step.cta}
