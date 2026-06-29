@@ -242,12 +242,12 @@ function GoldenVisaTabInner({ liveProjects = [], handleTabChange, globalFilters 
               <option value="yield">Highest Yield</option>
               <option value="name">A - Z</option>
             </select>
-            <span style={{ fontSize: 11, color: "#94A3B8", whiteSpace: "nowrap" }}>{filtered.length} projects</span>
+            <span style={{ fontSize: 11, color: "#94A3B8", whiteSpace: "nowrap" }}>{liveProjects.length === 0 ? "Loading..." : filtered.length + " projects"}</span>
           </div>
 
           {filtered.length === 0 ? (
             <div style={{ padding: 40, textAlign: "center", color: "#94A3B8", fontSize: 13 }}>
-              No projects found. Try adjusting your filters.
+              No projects found. Try adjusting your filters or click Refresh if projects have not loaded yet.
             </div>
           ) : (
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(280px,1fr))", gap: 12 }}>
