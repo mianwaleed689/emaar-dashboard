@@ -8,7 +8,7 @@ import { T } from "../data";
 const fmtP = n => n ? "AED "+Math.round(n).toLocaleString() : "--";
 const fmtY = n => n ? parseFloat(n).toFixed(1)+"%" : "--";
 
-export default function GoldenVisaTab({ liveNeighbourhoods=[], liveProjects=[], handleTabChange, globalFilters={} }) {
+function GoldenVisaTabInner({ liveNeighbourhoods=[], liveProjects=[], handleTabChange, globalFilters={} }) {
   const [search,  setSearch]  = useState("");
   const [sortBy,  setSortBy]  = useState("score");
   const [typeF,   setTypeF]   = useState("all");
@@ -176,4 +176,13 @@ export default function GoldenVisaTab({ liveNeighbourhoods=[], liveProjects=[], 
       </div>
     </div>
   );
+}
+export default function GoldenVisaTab(props) {
+  try {
+    const nb = props.liveNeighbourhoods;
+    const pr = props.liveProjects;
+    if (nb !== undefined && !Array.isArray(nb)) console.error("GV CRASH: liveNeighbourhoods is", typeof nb, nb);
+    if (pr !== undefined && !Array.isArray(pr)) console.error("GV CRASH: liveProjects is", typeof pr, pr);
+  } catch(e) {}
+  return <GoldenVisaTabInner {...props} liveNeighbourhoods={Array.isArray(props.liveNeighbourhoods)?props.liveNeighbourhoods:[]} liveProjects={Array.isArray(props.liveProjects)?props.liveProjects:[]} />;
 }
