@@ -8,7 +8,7 @@ import { T } from "../data";
 const fmtP = n => n ? "AED "+Math.round(n).toLocaleString() : "--";
 const fmtY = n => n ? parseFloat(n).toFixed(1)+"%" : "--";
 
-function GoldenVisaTabInner({ liveNeighbourhoods=[], liveProjects=[], handleTabChange, globalFilters={} }) {
+export default function GoldenVisaTab({ liveNeighbourhoods=[], liveProjects=[], handleTabChange, globalFilters={} }) {
   const [search,  setSearch]  = useState("");
   const [sortBy,  setSortBy]  = useState("score");
   const [typeF,   setTypeF]   = useState("all");
@@ -147,7 +147,7 @@ function GoldenVisaTabInner({ liveNeighbourhoods=[], liveProjects=[], handleTabC
           <div style={{display:"flex",justifyContent:"space-between",marginBottom:12}}>
             <div style={{fontSize:16,fontWeight:700,color:T.white,fontFamily:"'Fraunces',serif"}}>{selected.community}</div>
             <div style={{display:"flex",gap:8}}>
-              <button type="button" onClick={()=>handleTabChange&&handleTabChange("Neighbourhoods")} style={{padding:"7px 12px",borderRadius:8,border:"1px solid "+T.gold,background:"rgba(212,168,67,0.08)",color:T.gold,fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"'Outfit',sans-serif"}}>View Community</button>
+              <button type="button" onClick={()=>handleTabChange&&handleTabChange("Neighbourhoods")} style={{padding:"7px 12px",borderRadius:8,border:"1px solid "+T.gold,background:"rgba(212,168,67,0.08)",color:T.gold,fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"'Outfit',sans-serif"}}>View Community</button><button type="button" onClick={()=>handleTabChange&&handleTabChange("Projects")} style={{padding:"7px 12px",borderRadius:8,border:"1px solid #10B981",background:"rgba(16,185,129,0.08)",color:"#10B981",fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"'Outfit',sans-serif"}}>View Projects</button>
               <button type="button" onClick={()=>setSelected(null)} style={{background:"rgba(255,255,255,0.06)",border:"1px solid "+T.border,borderRadius:8,color:"#94A3B8",width:32,height:32,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16}}>x</button>
             </div>
           </div>
@@ -176,13 +176,4 @@ function GoldenVisaTabInner({ liveNeighbourhoods=[], liveProjects=[], handleTabC
       </div>
     </div>
   );
-}
-export default function GoldenVisaTab(props) {
-  try {
-    const nb = props.liveNeighbourhoods;
-    const pr = props.liveProjects;
-    if (nb !== undefined && !Array.isArray(nb)) console.error("GV CRASH: liveNeighbourhoods is", typeof nb, nb);
-    if (pr !== undefined && !Array.isArray(pr)) console.error("GV CRASH: liveProjects is", typeof pr, pr);
-  } catch(e) {}
-  return <GoldenVisaTabInner {...props} liveNeighbourhoods={Array.isArray(props.liveNeighbourhoods)?props.liveNeighbourhoods:[]} liveProjects={Array.isArray(props.liveProjects)?props.liveProjects:[]} />;
 }
