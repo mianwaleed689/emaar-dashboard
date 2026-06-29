@@ -453,10 +453,10 @@ export default function NeighbourhoodsTab({liveNeighbourhoods=[],handleTabChange
     return a;
   },[liveNeighbourhoods,search,sortBy,tierFilter,yieldFilter,metroFilter,beachFilter,sportsFilter,gvFilter]);
 
-  const verified = liveNeighbourhoods.filter(n=>n.tier==="verified");
+  const verified = (liveNeighbourhoods||[]).filter(n=>n.tier==="verified");
   const topYield = [...verified].sort((a,b)=>parseFloat(b.grossYield||0)-parseFloat(a.grossYield||0))[0];
   const topScore = [...verified].sort((a,b)=>(b.investmentScore||0)-(a.investmentScore||0))[0];
-  const topBeach = [...liveNeighbourhoods].filter(n=>n.distBeach).sort((a,b)=>parseFloat(a.distBeach)-parseFloat(b.distBeach))[0];
+  const topBeach = [...(liveNeighbourhoods||[])].filter(n=>n.distBeach).sort((a,b)=>parseFloat(a.distBeach)-parseFloat(b.distBeach))[0];
 
   const selStyle = {padding:"6px 10px",background:"rgba(255,255,255,0.04)",border:"1px solid "+T.border,borderRadius:7,color:"#CBD5E1",fontSize:11,outline:"none",fontFamily:"'Outfit',sans-serif"};
   const FilterBtn = ({active,onClick,label}) => (
@@ -473,7 +473,7 @@ export default function NeighbourhoodsTab({liveNeighbourhoods=[],handleTabChange
       <div style={{marginBottom:16}}>
         <h2 style={{margin:0,fontSize:20,fontWeight:900,color:T.white,fontFamily:"'Fraunces',serif"}}>Neighbourhoods</h2>
         <p style={{margin:"4px 0 0",fontSize:12,color:"#94A3B8"}}>
-          {liveNeighbourhoods.filter(n=>n.tier==="verified").length} verified  {liveNeighbourhoods.filter(n=>n.tier==="area-data").length} area data  {liveNeighbourhoods.filter(n=>n.tier==="dld-registry").length} DLD only  {liveNeighbourhoods.length} total
+          {(liveNeighbourhoods||[]).filter(n=>n.tier==="verified").length} verified  {(liveNeighbourhoods||[]).filter(n=>n.tier==="area-data").length} area data  {(liveNeighbourhoods||[]).filter(n=>n.tier==="dld-registry").length} DLD only  {(liveNeighbourhoods||[]).length} total
         </p>
       </div>
 

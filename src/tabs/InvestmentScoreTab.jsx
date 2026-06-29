@@ -20,7 +20,7 @@ export default function InvestmentScoreTab({ liveNeighbourhoods=[], handleTabCha
   const [selected, setSelected] = useState(null);
 
   const withScore = useMemo(() =>
-    liveNeighbourhoods.filter(n => n.investmentScore > 0)
+    (liveNeighbourhoods||[]).filter(n => n.investmentScore > 0)
   , [liveNeighbourhoods]);
 
   const filtered = useMemo(() => {

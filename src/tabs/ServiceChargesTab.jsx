@@ -15,7 +15,7 @@ export default function ServiceChargesTab({ liveNeighbourhoods=[], handleTabChan
   const [selected, setSelected] = useState(null);
 
   const withSC = useMemo(() =>
-    liveNeighbourhoods.filter(n => n.serviceCharge > 0)
+    (liveNeighbourhoods||[]).filter(n => n.serviceCharge > 0)
   , [liveNeighbourhoods]);
 
   const filtered = useMemo(() => {

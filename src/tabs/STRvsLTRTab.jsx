@@ -30,7 +30,7 @@ export default function STRvsLTRTab({ liveNeighbourhoods=[], handleTabChange, gl
   const [occupancy,setOccupancy]= useState(75);
 
   const withYield = useMemo(() =>
-    liveNeighbourhoods.filter(n => parseFloat(n.grossYield||0) > 0)
+    (liveNeighbourhoods||[]).filter(n => parseFloat(n.grossYield||0) > 0)
   , [liveNeighbourhoods]);
 
   const enriched = useMemo(() => {

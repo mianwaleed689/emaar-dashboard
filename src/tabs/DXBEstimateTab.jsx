@@ -18,7 +18,7 @@ export default function DXBEstimateTab({ liveNeighbourhoods=[], handleTabChange,
   const [search,    setSearch]    = useState("");
 
   const communities = useMemo(() =>
-    liveNeighbourhoods.filter(n=>n.avgPpsf>0).sort((a,b)=>(a.community||"").localeCompare(b.community||""))
+    (liveNeighbourhoods||[]).filter(n=>n.avgPpsf>0).sort((a,b)=>(a.community||"").localeCompare(b.community||""))
   ,[liveNeighbourhoods]);
 
   const filtered = useMemo(() =>

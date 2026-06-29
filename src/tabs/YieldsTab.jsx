@@ -24,7 +24,7 @@ export default function YieldsTab({ liveNeighbourhoods=[], handleTabChange, glob
 
   // Filter communities with yield data
   const withYield = useMemo(() => 
-    liveNeighbourhoods.filter(n => parseFloat(n.grossYield||0) > 0)
+    (liveNeighbourhoods||[]).filter(n => parseFloat(n.grossYield||0) > 0)
   , [liveNeighbourhoods]);
 
   const filtered = useMemo(() => {
