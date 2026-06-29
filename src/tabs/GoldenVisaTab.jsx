@@ -17,7 +17,7 @@ export default function GoldenVisaTab({ liveNeighbourhoods=[], liveProjects=[], 
   const GV_THRESHOLD = 2000000;
 
   const gvCommunities = useMemo(() =>
-    liveNeighbourhoods.filter(n => n.goldenVisa === true)
+    (liveNeighbourhoods||[]).filter(n => n.goldenVisa === true)
   , [liveNeighbourhoods]);
 
   const filtered = useMemo(() => {
