@@ -45,7 +45,7 @@ export default function GoldenVisaTab({ liveNeighbourhoods=[], liveProjects=[], 
       <div style={{marginBottom:16}}>
         <h2 style={{margin:0,fontSize:20,fontWeight:900,color:T.white,fontFamily:"'Fraunces',serif"}}>Golden Visa</h2>
         <p style={{margin:"4px 0 0",fontSize:12,color:"#94A3B8"}}>
-          {gvCommunities.length} eligible communities  AED 2M+ property investment qualifies for UAE 10-year residency
+          Communities where AED 2M+ units are typically available. Individual unit price must be AED 2M+ to qualify.
         </p>
       </div>
 
