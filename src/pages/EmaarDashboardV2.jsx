@@ -5109,7 +5109,7 @@ activeProjects={[...(Array.isArray(liveProjects)?liveProjects:[]),...(Array.isAr
               gvOffplan={gvOffplan} setGvOffplan={setGvOffplan}
               gvOffplanPaid={gvOffplanPaid} setGvOffplanPaid={setGvOffplanPaid}
               gvMortgagePaid={gvMortgagePaid}
-              liveProjects={[...(liveProjects||[]), ...(extraProjects||[])]} SEED_PROJECTS={[]}
+              liveProjects={liveProjects} SEED_PROJECTS={[]}
               handleTabChange={handleTabChange}
             />
           )}
