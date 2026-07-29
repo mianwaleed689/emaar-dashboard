@@ -85,7 +85,12 @@ service cloud.firestore {
 
     // ── ORGANISATIONS ─────────────────────────────────────────────
     match /organisations/{orgId} {
-      allow read: if isAuthed() && (isSuperAdmin() || userOrgId() == orgId);
+      /* isAdmin() is required here: the admin console lists every organisation
+         (AdminPanel.jsx queries the whole collection to populate the org picker).
+         Previously a duplicate blanket rule further down granted this to every
+         signed-in user; removing that duplicate would have silently emptied the
+         admin org list for any admin who is not a superAdmin. */
+      allow read: if isAuthed() && (isAdmin() || isSuperAdmin() || userOrgId() == orgId);
       allow create: if isAuthed();
       allow update: if isAuthed() && (isSuperAdmin() || (isManager() && userOrgId() == orgId));
       allow delete: if isSuperAdmin();
