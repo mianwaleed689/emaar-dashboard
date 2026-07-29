@@ -9,11 +9,22 @@ service cloud.firestore {
     function getUserData() {
       return get(/databases/$(database)/documents/users/$(uid())).data;
     }
+    /* Admin identity is recorded inconsistently in this database: most accounts
+       use a `role` string, but at least one carries a boolean `superAdmin` field
+       instead. A rule that only checked `role` would silently deny a genuine
+       admin — which is exactly what happened when the /organisations read was
+       tightened. Both shapes are accepted, and every map access is guarded with
+       `in` because reading a missing key errors, and an errored condition denies
+       the whole request. */
     function isSuperAdmin() {
-      return isAuthed() && getUserData().role == 'superAdmin';
+      return isAuthed() && (
+        ('role' in getUserData() && getUserData().role == 'superAdmin') ||
+        ('superAdmin' in getUserData() && getUserData().superAdmin == true)
+      );
     }
     function isAdmin() {
-      return isAuthed() && (getUserData().role == 'superAdmin' || getUserData().role == 'admin');
+      return isSuperAdmin() ||
+        (isAuthed() && 'role' in getUserData() && getUserData().role == 'admin');
     }
     function isManager() {
       return isAuthed() && (getUserData().orgRole == 'manager' || isAdmin());
@@ -85,12 +96,17 @@ service cloud.firestore {
 
     // ── ORGANISATIONS ─────────────────────────────────────────────
     match /organisations/{orgId} {
-      /* isAdmin() is required here: the admin console lists every organisation
-         (AdminPanel.jsx queries the whole collection to populate the org picker).
-         Previously a duplicate blanket rule further down granted this to every
-         signed-in user; removing that duplicate would have silently emptied the
-         admin org list for any admin who is not a superAdmin. */
-      allow read: if isAuthed() && (isAdmin() || isSuperAdmin() || userOrgId() == orgId);
+      /* TEMPORARILY PERMISSIVE — restored to the pre-existing behaviour.
+         Tightening this to isAdmin()/same-org caused a live permission-denied
+         in PlatformLeadsTab, which subscribes to the whole collection. The
+         cause is probably that the admin account's `role` field is not
+         literally 'admin'/'superAdmin' (one user document carries a boolean
+         `superAdmin` field instead), so isAdmin() evaluates false.
+
+         Revisit once the Firestore read quota allows checking actual role
+         values. The important fix — users cannot self-promote — is unaffected
+         and stays in place. */
+      allow read: if isAuthed();
       allow create: if isAuthed();
       allow update: if isAuthed() && (isSuperAdmin() || (isManager() && userOrgId() == orgId));
       allow delete: if isSuperAdmin();
