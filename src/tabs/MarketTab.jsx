@@ -273,7 +273,10 @@ function MarketTab({ liveNeighbourhoods=[], liveMarketData, allDevelopers, expan
         <KpiCard label="Total Market Value" value={getStat("Total Market Value")?.value} change={getStat("Total Market Value")?.change} note="Sales + mortgages + gifts" onClick={() => handleTabChange?.("DLD Volumes")} />
         <KpiCard label="Total Transactions" value={getStat("Total Transactions")?.value} change={getStat("Total Transactions")?.change} note="5th consecutive annual record" />
         <KpiCard label="Sales Transactions" value={MARKET_FACTS.residentialSales2025.value} change={MARKET_FACTS.residentialSales2025.change} note={MARKET_FACTS.residentialSales2025.note} />
-        <KpiCard label="Off-Plan Share" value={getStat("Off-Plan Share")?.value} change={getStat("Off-Plan Share")?.change} note="132K off-plan deals" />
+        {/* The 65% value comes from Firestore and is stale — verified 2025 share
+            is over 70% of transactions. Correcting it needs a Firestore write,
+            which is blocked while the read quota is exhausted. */}
+        <KpiCard label="Off-Plan Share" value={getStat("Off-Plan Share")?.value} change={getStat("Off-Plan Share")?.change} note="Stale · verified 2025 share is over 70%" />
         {/* AED 1,692 = DLD full-year 2025 citywide residential median across
             192,808 transactions. The previous AED 1,863 was cited to our own
             blog and sat ~10% above the DLD figure. */}
@@ -285,8 +288,11 @@ function MarketTab({ liveNeighbourhoods=[], liveMarketData, allDevelopers, expan
         <KpiCard label="Investor Base" value={getStat("Investor Base")?.value} change={getStat("Investor Base")?.change} note="129,600 new investors" />
         <KpiCard label="Women Investors" value={getStat("Women Investors")?.value} change={getStat("Women Investors")?.change} note="76,700 deals" />
         <KpiCard label="Price Growth" value={getStat("Price Growth")?.value} change="ValuStrat VPI Dec 2025" note="REIDIN: +12.88%" color={T?.green || "#68D391"} />
-        <KpiCard label="Active Developers" value={getStat("Active Developers")?.value} change={getStat("Active Developers")?.change} note="Up from 163 in 2024" />
-        <KpiCard label="Units Launched" value={getStat("Units Launched")?.value} change={getStat("Units Launched")?.change} note="By Oct 2025 · DLD" />
+        {/* Neither figure could be traced to a published source. The note no
+            longer credits DLD — the RERA registry lists 2,200+ licensed
+            developers, so "228, per DLD" was wrong on its face. */}
+        <KpiCard label="Active Developers" value={getStat("Active Developers")?.value} change={getStat("Active Developers")?.change} note="Unverified · no published source" />
+        <KpiCard label="Units Launched" value={getStat("Units Launched")?.value} change={getStat("Units Launched")?.change} note="Unverified · no published source" />
       </div>
 
       {/* ── Post-Covid Recovery Chart ──────────────────────────── */}
