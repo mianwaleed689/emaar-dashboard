@@ -59,7 +59,7 @@ const LoginScreen = ({ onLogin, onBack, defaultMode = "login" }) => {
             new_value: "Your 7-day Pro Trial is now active. Explore 48+ projects, yields, ROI data and more.",
             old_value: "New Account", updated_at: now.toLocaleDateString("en-AE"),
           }, import.meta.env.VITE_EMAILJS_PUBLIC_KEY);
-        } catch(e) {}
+        } catch (e) { console.error("swallowed@LoginScreen.jsx:62", e); }
       }
       onLogin(u.email);
     } catch (err) {
@@ -113,7 +113,7 @@ const LoginScreen = ({ onLogin, onBack, defaultMode = "login" }) => {
         tier: "pro_trial", createdAt: now.toISOString(), trialStart: now.toISOString(), trialEnd: trialEnd.toISOString(),
         role: "user", emailVerified: false, provider: "email",
       });
-      try { await sendEmailVerification(cred.user); } catch(e) {}
+      try { await sendEmailVerification(cred.user); } catch (e) { console.error("swallowed@LoginScreen.jsx:116", e); }
       try {
         const emailjs = await import("@emailjs/browser");
         await emailjs.send(import.meta.env.VITE_EMAILJS_SERVICE_ID, import.meta.env.VITE_EMAILJS_TEMPLATE_ID, {
@@ -122,7 +122,7 @@ const LoginScreen = ({ onLogin, onBack, defaultMode = "login" }) => {
           new_value: "Your 7-day Pro Trial is active. Check your inbox to verify your email address.",
           old_value: "New Account", updated_at: now.toLocaleDateString("en-AE"),
         }, import.meta.env.VITE_EMAILJS_PUBLIC_KEY);
-      } catch(e) {}
+      } catch (e) { console.error("swallowed@LoginScreen.jsx:125", e); }
       setScreen("verify");
     } catch (err) {
       const msgs = {
@@ -158,7 +158,7 @@ const LoginScreen = ({ onLogin, onBack, defaultMode = "login" }) => {
             ))}
           </div>
           <button type="button" className="login-btn" onClick={() => { setScreen("form"); setMode("login"); setPass(""); setConfirmPass(""); }}>Go to Sign In →</button>
-          <button type="button" onClick={async () => { try { if (auth.currentUser) { await sendEmailVerification(auth.currentUser); alert("Verification email resent! Check your inbox."); } } catch(e){} }} style={{ display: "block", margin: "12px auto 0", background: "none", border: "none", color: T.gold, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>Resend verification email</button>
+          <button type="button" onClick={async () => { try { if (auth.currentUser) { await sendEmailVerification(auth.currentUser); alert("Verification email resent! Check your inbox."); } } catch (e) { console.error("swallowed@LoginScreen.jsx:161", e); } }} style={{ display: "block", margin: "12px auto 0", background: "none", border: "none", color: T.gold, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>Resend verification email</button>
         </div>
       </div>
     </div>

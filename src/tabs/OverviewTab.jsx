@@ -169,7 +169,7 @@ function OverviewTab({ liveNeighbourhoods=[],
   const { data: firestoreOverviewKpis=[] } = useOverviewKpis();
   const { data: firestoreMarketKpis=[] } = useMarketKpis();
 
-  useEffect(() => { try { localStorage.setItem("dxb_role", role); } catch(e) {} }, [role]);
+  useEffect(() => { try { localStorage.setItem("dxb_role", role); } catch (e) { console.error("swallowed@OverviewTab.jsx:172", e); } }, [role]);
 
   const syncTime = lastDataSync ? lastDataSync.toLocaleTimeString("en-AE",{hour:"2-digit",minute:"2-digit"}) : null;
   const allKpis = useMemo(() => {

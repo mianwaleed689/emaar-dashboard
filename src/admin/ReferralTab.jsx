@@ -334,7 +334,7 @@ const MarketDataEditor = ({ db, T, notify }) => {
         const snap = await getDoc(doc(db, "marketData", "global"));
         const data = snap.exists() ? snap.data() : null;
         if (data) setForm(prev => ({ ...prev, ...Object.fromEntries(Object.entries(data).filter(([k]) => k in prev)) }));
-      } catch(e) {} finally { setLoading(false); }
+      } catch (e) { console.error("swallowed@ReferralTab.jsx:337", e); } finally { setLoading(false); }
     };
     load();
   }, [db]);

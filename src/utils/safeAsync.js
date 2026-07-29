@@ -2,7 +2,7 @@
    DXB ANALYTICS — SAFE ASYNC HELPERS
    src/utils/safeAsync.js
 
-   Purpose: replace silent empty catch(e){} blocks with helpers
+   Purpose: replace silent empty catch (e) { console.error("swallowed@safeAsync.js:5", e); } blocks with helpers
    that guarantee errors are logged and, when appropriate, shown
    to the user via a toast.
 

@@ -46,7 +46,7 @@ export default function FilterSchemaAdminTab({ T, I, notify }) {
     red: "#EF4444",
     blue: "#3B82F6",
   };
-  const toast = notify || ((msg) => { try { alert(msg); } catch {} });
+  const toast = notify || ((msg) => { try { alert(msg); } catch (e) { console.error("swallowed@FilterSchemaAdminTab.jsx:49", e); } });
 
   const [draft, setDraft] = useState({
     propertyTypes: PROPERTY_TYPES_DEFAULT,
@@ -94,7 +94,7 @@ export default function FilterSchemaAdminTab({ T, I, notify }) {
       console.warn("FilterSchemaAdminTab: subscription failed:", err?.message);
       setLoading(false);
     }
-    return () => { try { unsub && unsub(); } catch {} };
+    return () => { try { unsub && unsub(); } catch (e) { console.error("swallowed@FilterSchemaAdminTab.jsx:97", e); } };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

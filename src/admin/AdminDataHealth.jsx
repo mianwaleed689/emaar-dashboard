@@ -200,7 +200,7 @@ export default function AdminDataHealth({ db, T }) {
           kfReportDate:   data.kfReportDate   || "",
         });
       }
-    } catch {}
+    } catch (e) { console.error("swallowed@AdminDataHealth.jsx:203", e); }
   }, [db]);
 
   // ── Live alerts from Firestore ───────────────────────────────────────────
@@ -270,14 +270,14 @@ export default function AdminDataHealth({ db, T }) {
     setNewsArticles(updated);
     try {
       await updateDoc(doc(db, "tabData", "news"), { rows: updated });
-    } catch {}
+    } catch (e) { console.error("swallowed@AdminDataHealth.jsx:273", e); }
   };
 
   // ── Mark alert as read ────────────────────────────────────────────────────
   const markAlertRead = async (alertId) => {
     try {
       await updateDoc(doc(db, "adminAlerts", alertId), { read: true });
-    } catch {}
+    } catch (e) { console.error("swallowed@AdminDataHealth.jsx:280", e); }
   };
 
   // ── Styles ────────────────────────────────────────────────────────────────

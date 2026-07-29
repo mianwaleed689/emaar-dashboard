@@ -56,20 +56,32 @@ function FlipTab({ liveNeighbourhoods=[], flipBuyPrice, setFlipBuyPrice, flipSel
             const scPerYear    = buyPrice * 0.01; // ~1% service charge estimate
             const totalSC      = scPerYear * holdYears;
 
-            /* ── Rental income during hold ── */
-            const annualRental = inclRental ? buyPrice * (rentalYield / 100) : 0;
+            /* ── Rental income during hold ──
+               Rental yield is a GROSS figure. Treating it as income received
+               overstates the return: units sit empty between tenants and a
+               letting agent takes a cut. */
+            const RENTAL_VACANCY_RATE    = 0.05; // ~5% void allowance
+            const RENTAL_MANAGEMENT_RATE = 0.05; // ~5% letting/management fee
+            const grossAnnualRental = inclRental ? buyPrice * (rentalYield / 100) : 0;
+            const annualRental = grossAnnualRental * (1 - RENTAL_VACANCY_RATE - RENTAL_MANAGEMENT_RATE);
             const totalRental  = annualRental * holdYears;
 
             /* ── Renovation ── */
             const renovCost    = flpRenovCost;
 
-            /* ── Disposal costs ── */
-            const dldSell      = sellPrice * 0.04;
+            /* ── Disposal costs ──
+               SELLER_PAYS_EXIT_DLD: in Dubai the 4% DLD transfer fee is normally
+               borne by the BUYER. Set to false if the seller does not carry it —
+               it is a single switch, deliberately not buried in the maths. */
+            const SELLER_PAYS_EXIT_DLD = true;
+            const dldSell      = SELLER_PAYS_EXIT_DLD ? sellPrice * 0.04 : 0;
             const agentSell    = sellPrice * (flpAgentSell / 100);
             const totalDispose = dldSell + agentSell;
 
-            /* ── P&L ── */
-            const totalIn      = buyPrice + totalAcqCost + renovCost + totalSC + (flpMortgage ? mortInterest : 0);
+            /* ── P&L ──
+               totalDispose was previously computed but never subtracted, so every
+               flip appeared more profitable than it is by the full cost of selling. */
+            const totalIn      = buyPrice + totalAcqCost + renovCost + totalSC + totalDispose + (flpMortgage ? mortInterest : 0);
             const totalOut     = sellPrice + totalRental;
             const netProfit    = sellPrice + totalRental - totalIn;
             const totalInvested = flpMortgage ? equityIn + totalAcqCost + renovCost + totalSC + mortInterest : buyPrice + totalAcqCost + renovCost + totalSC;
@@ -324,7 +336,8 @@ function FlipTab({ liveNeighbourhoods=[], flipBuyPrice, setFlipBuyPrice, flipSel
                         <div style={{ fontSize:11, fontWeight:700, color:"#F97316", marginBottom:4 }}>⚠ DLD Cost Reality Check</div>
                         <div style={{ fontSize:11, color:T.textSecondary, lineHeight:1.7 }}>
                           DLD fees total <strong style={{ color:T.white }}>AED {Math.round(dldBuy+dldSell).toLocaleString()}</strong> (4% buy + 4% sell).
-                          Your property must appreciate <strong style={{ color:T.white }}>{(((dldBuy+dldSell+renovCost+agentBuy+agentSell)/buyPrice)*100).toFixed(1)}%</strong> just to break even before profit.
+                          Your property must appreciate <strong style={{ color:T.white }}>{Math.max(0,((totalIn - buyPrice - totalRental)/buyPrice)*100).toFixed(1)}%</strong> just to break even before profit.
+                          <span style={{ color:T.textMuted }}> Includes fees, renovation, service charges{flpMortgage?", mortgage interest":""}{inclRental?", net of rent received":""}.</span>
                           Zero capital gains tax is the Dubai advantage.
                         </div>
                       </div>

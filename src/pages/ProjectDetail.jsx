@@ -426,7 +426,7 @@ export default function ProjectDetail() {
       try {
         const snap = await getDoc(doc(db,"users",u.uid));
         if (snap.exists()) setUserTier(snap.data().tier||snap.data().role||"free");
-      } catch {}
+      } catch (e) { console.error("swallowed@ProjectDetail.jsx:429", e); }
     });
     return () => unsub();
   }, []);

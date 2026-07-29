@@ -128,9 +128,9 @@ export default function CommunityMapTab({
     if(!mapInstanceRef.current||!mapReady) return;
     const L = window.L;
     const map = mapInstanceRef.current;
-    markersRef.current.forEach(m=>{ try{map.removeLayer(m);}catch(e){} });
+    markersRef.current.forEach(m=>{ try{map.removeLayer(m);}catch (e) { console.error("swallowed@CommunityMapTab.jsx:131", e); } });
     markersRef.current=[];
-    if(clusterRef.current) { try{map.removeLayer(clusterRef.current);}catch(e){} clusterRef.current=null; }
+    if(clusterRef.current) { try{map.removeLayer(clusterRef.current);}catch (e) { console.error("swallowed@CommunityMapTab.jsx:133", e); } clusterRef.current=null; }
 
     if(mapLayer==="communities") {
       commWithCoords.forEach(n=>{

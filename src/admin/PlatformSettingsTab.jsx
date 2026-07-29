@@ -96,7 +96,7 @@ export default function PlatformSettingsTab({ T, db, notify, adminUser }) {
         setLoading(false);
       }
     );
-    return () => { try { unsub(); } catch {} };
+    return () => { try { unsub(); } catch (e) { console.error("swallowed@PlatformSettingsTab.jsx:99", e); } };
   }, [db, adminUser]);
 
   // Mark dirty whenever the user mutates local state

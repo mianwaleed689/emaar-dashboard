@@ -54,7 +54,7 @@
     "@vitejs/plugin-react": "4.3.1",
     "cross-env": "^7.0.3",
     "csv-parse": "^6.2.1",
-    "firebase-admin": "^13.7.0",
+    "firebase-admin": "^13.10.0",
     "gh-pages": "^6.3.0",
     "node-cron": "^4.2.1",
     "vite": "5.4.10",

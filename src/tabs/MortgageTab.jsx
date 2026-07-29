@@ -12,7 +12,7 @@ import { SvgIcons } from "../components/Icons";
 import { Section, Chart, CustomTooltip, KPI, ForecastCard, DataBadge, TabSources, LoadingSkeleton } from "../components/SharedUI";
 import SEED_DATA from "../utils/seedData";
 
-function MortgageTab({ liveNeighbourhoods=[], liveMortgageRates, liveEiborRates, liveInvestScores, handleTabChange, mortPrice, setMortPrice, mortDown, setMortDown, mortRate, setMortRate, mortYears, setMortYears, mortType, setMortType, mortProfile, setMortProfile, mortView, setMortView, mortIncome, setMortIncome, invScSearch, setInvScSearch, invScSort, setInvScSort, invScFilter, setInvScFilter, invScView, setInvScView, invScSelected, setInvScSelected }) {
+function MortgageTab({ liveNeighbourhoods=[], liveMortgageRates, liveEiborRates, liveInvestScores, handleTabChange, mortPrice, setMortPrice, mortDown, setMortDown, mortRate, setMortRate, mortYears, setMortYears, mortType, setMortType, mortProfile, setMortProfile, mortView, setMortView, mortIncome, setMortIncome, mortExistingDebts = 0, setMortExistingDebts = () => {}, invScSearch, setInvScSearch, invScSort, setInvScSort, invScFilter, setInvScFilter, invScView, setInvScView, invScSelected, setInvScSelected }) {
 
 
             /* ══ BANK DATA ◆ Research-based Apr 2026 ══
@@ -64,16 +64,30 @@ function MortgageTab({ liveNeighbourhoods=[], liveMortgageRates, liveEiborRates,
               : loanAmount / numPayments;
             const totalRepay    = monthlyPayment * numPayments;
             const totalInterest = totalRepay - loanAmount;
-            const maxAfford     = mortIncome * 0.50 * 12 / annualRate * (1 - Math.pow(1 + monthlyRate, -numPayments)); // DBR 50%
-            const dbr           = (monthlyPayment / mortIncome) * 100;
+            /* UAE Central Bank DBR counts ALL monthly debt obligations, not just
+               the new mortgage. Ignoring existing car loans / credit cards told
+               borrowers they could afford more than any bank would approve. */
+            const existingDebts = Number(mortExistingDebts) || 0;
+            const availableForMortgage = Math.max(0, mortIncome * 0.50 - existingDebts);
+            const maxAfford     = monthlyRate > 0
+              ? availableForMortgage * (1 - Math.pow(1 + monthlyRate, -numPayments)) / monthlyRate
+              : availableForMortgage * numPayments;
+            const dbr           = ((monthlyPayment + existingDebts) / mortIncome) * 100;
 
             /* ── Buying cost breakdown ── */
-            const dldFee        = mortPrice * 0.04;
-            const agencyFee     = mortPrice * 0.02;
-            const mortReg       = loanAmount * 0.0025;
+            /* UAE charges 5% VAT on brokerage and bank service fees. Government
+               charges (DLD, registration) are outside the scope of VAT. */
+            const VAT = 0.05;
+            const dldFee        = mortPrice * 0.04;          // DLD transfer fee
+            const dldAdminFee   = 580;                        // DLD admin charge
+            const agencyFee     = mortPrice * 0.02 * (1 + VAT); // 2% + VAT
+            const mortReg       = loanAmount * 0.0025 + 290;  // 0.25% + AED 290
+            const trusteeFee    = mortPrice > 500000 ? 4200 : 2100; // registration trustee + VAT
+            const titleDeedFee  = 250;
             const valuationFee  = 3000;
-            const processingFee = loanAmount * 0.01;
-            const totalBuyCosts = dldFee + agencyFee + mortReg + valuationFee + processingFee;
+            const processingFee = loanAmount * 0.01 * (1 + VAT); // 1% + VAT
+            const totalBuyCosts = dldFee + dldAdminFee + agencyFee + mortReg
+                                + trusteeFee + titleDeedFee + valuationFee + processingFee;
             const totalCashNeeded = downPayment + totalBuyCosts;
 
             /* ── Rate for selected type ── */
@@ -183,6 +197,7 @@ function MortgageTab({ liveNeighbourhoods=[], liveMortgageRates, liveEiborRates,
                           { label:"Interest Rate (%)",      val:mortRate,   min:2.5,      max:8,        step:0.05,   set:setMortRate,   fmt:v=>v.toFixed(2)+"%" },
                           { label:"Loan Tenure (Years)",    val:mortYears,  min:5,        max:25,       step:1,      set:setMortYears,  fmt:v=>v+"yrs" },
                           { label:"Monthly Income (AED)",   val:mortIncome, min:10000,    max:200000,   step:1000,   set:setMortIncome, fmt:v=>"AED "+v.toLocaleString() },
+                          { label:"Existing Monthly Debts (AED)", val:mortExistingDebts, min:0, max:100000, step:500, set:setMortExistingDebts, fmt:v=>"AED "+v.toLocaleString() },
                         ].map((f,i) => (
                           <div key={i} style={{ marginBottom:16 }}>
                             <div style={{ display:"flex", justifyContent:"space-between", marginBottom:4 }}>

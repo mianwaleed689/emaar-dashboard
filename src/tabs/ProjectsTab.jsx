@@ -248,7 +248,7 @@ function ProjectsTab({
   showMoreFilters = false, setShowMoreFilters = () => {},
 }) {
 
-  //    Community intelligence                                           
+  //  Community intelligence 
   const _commMap = React.useMemo(()=>{
     const m={};
     (liveNeighbourhoods||[]).forEach(n=>{ if(n.community) m[n.community.toLowerCase()]=n; });
@@ -257,7 +257,7 @@ function ProjectsTab({
   const getCommunityData = React.useCallback((p)=>
     _commMap[(p?.community||"").toLowerCase()]||null
   ,[_commMap]);
-  //                                                                      
+  // 
 
   const [devSearch,    setDevSearch]    = React.useState("");
   const [showDevDrop,  setShowDevDrop]  = React.useState(false);
@@ -415,9 +415,9 @@ function ProjectsTab({
       const match = all.find(p => p && String(p.id || "") === String(wantedId));
       if (match) {
         setSelectedProject(match);
-        try { window.history.replaceState({}, "", window.location.pathname); } catch {}
+        try { window.history.replaceState({}, "", window.location.pathname); } catch (e) { console.error("swallowed@ProjectsTab.jsx:418", e); }
       }
-    } catch {}
+    } catch (e) { console.error("swallowed@ProjectsTab.jsx:420", e); }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [_location, liveProjects, SEED_PROJECTS, extraProjects]);
 
@@ -2326,7 +2326,7 @@ function ProjectsTab({
                                 const el = document.activeElement;
                                 const original = el && el.textContent;
                                 if (el && el.textContent != null) { el.textContent = "→‚“ Copied!"; setTimeout(() => { if (el && original) el.textContent = original; }, 1500); }
-                              } catch {}
+                              } catch (e) { console.error("swallowed@ProjectsTab.jsx:2329", e); }
                             }} style={btnStyle("212,168,67")}>ðŸ‚— Copy Link</button>
                             <button type="button" onClick={() => { setSelectedProject(null); handleTabChange("Mortgage"); }} style={{ padding:"10px 18px", background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:8, color:T.textSecondary, fontSize:12, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>Mortgage Calculator</button>
                             <button type="button" onClick={() => { setSelectedProject(null); handleTabChange("My Leads"); }} style={{ padding:"10px 18px", background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:8, color:T.textSecondary, fontSize:12, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>Add to Leads</button>

@@ -29,7 +29,7 @@ export default function CancellationTab({ T, I, db, notify, users }) {
         setLoading(false);
       }
     );
-    return () => { try { unsub(); } catch {} };
+    return () => { try { unsub(); } catch (e) { console.error("swallowed@CancellationTab.jsx:32", e); } };
   }, [db]);
 
   const reasonMap = useMemo(() => ({

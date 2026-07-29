@@ -4,6 +4,7 @@
 import React from "react";
 import { T } from "../data";
 import { SvgIcons } from "../components/Icons";
+import { auth } from "../firebase";
 import { GOLDEN_VISA_THRESHOLD } from "../utils/constants";
 
 function MarketingTab({ liveNeighbourhoods=[],
@@ -283,9 +284,13 @@ function MarketingTab({ liveNeighbourhoods=[],
               setMktAiLoading(true);
               setMktAiResult("");
               try {
+                const idToken = await auth.currentUser?.getIdToken();
                 const res = await fetch("/api/proxy?service=claude", {
                   method:"POST",
-                  headers:{ "Content-Type":"application/json" },
+                  headers:{
+                    "Content-Type":"application/json",
+                    ...(idToken ? { Authorization: `Bearer ${idToken}` } : {}),
+                  },
                   body: JSON.stringify({
                     model:"claude-sonnet-4-20250514",
                     max_tokens:1000,

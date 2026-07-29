@@ -64,7 +64,7 @@ export function FilterSchemaProvider({ children }) {
     } catch (err) {
       console.warn("FilterSchema: subscription setup failed, using defaults:", err?.message);
     }
-    return () => { try { unsub && unsub(); } catch {} };
+    return () => { try { unsub && unsub(); } catch (e) { console.error("swallowed@FilterSchemaContext.jsx:67", e); } };
   }, []);
 
   // Derived, memoized helpers useful across tabs

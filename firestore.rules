@@ -41,14 +41,46 @@ service cloud.firestore {
     }
 
     // ── USERS ────────────────────────────────────────────────────
+    // Fields that decide privilege, billing tier or verification status.
+    // A user must never be able to set these on themselves — isAdmin() reads
+    // role from this very document, so a self-write would be self-promotion.
+    function privilegedUserFields() {
+      return [
+        'role', 'orgRole', 'orgId', 'tier', 'crmPlan',
+        'trialStart', 'trialEnd', 'subscriptionStatus',
+        'verified', 'verifiedLevel', 'verifiedAt', 'kycLevel', 'suspended'
+      ];
+    }
+
     match /users/{userId} {
       allow read: if isAuthed() && (
         uid() == userId ||
         isSuperAdmin() ||
         (isManager() && get(/databases/$(database)/documents/users/$(userId)).data.orgId == userOrgId())
       );
-      allow write: if isAuthed() && (uid() == userId || isSuperAdmin());
-      allow create: if isAuthed();
+
+      // Sign-up: own document only. Self-serve signup legitimately sets role and
+      // tier, so those are allowed but constrained to safe values.
+      allow create: if isAuthed() && uid() == userId
+        && (!('role' in request.resource.data) || request.resource.data.role in ['user', 'developer'])
+        && (!('tier' in request.resource.data) || request.resource.data.tier in ['free', 'pro_trial'])
+        && !request.resource.data.keys().hasAny([
+             'crmPlan', 'subscriptionStatus', 'verified', 'verifiedLevel', 'kycLevel', 'suspended'
+           ]);
+
+      // After sign-up the privileged fields are frozen for the owner.
+      // Admins may still manage users, but only a superAdmin can mint a superAdmin.
+      allow update: if isAuthed() && (
+        isSuperAdmin() ||
+        // Null-safe: a user document with no 'role' field must not make this
+        // clause error out (an errored condition denies the whole write).
+        (isAdmin() && (!('role' in request.resource.data)
+                       || request.resource.data.role != 'superAdmin')) ||
+        (uid() == userId &&
+          !request.resource.data.diff(resource.data).affectedKeys().hasAny(privilegedUserFields()))
+      );
+
+      allow delete: if isSuperAdmin();
     }
 
     // ── ORGANISATIONS ─────────────────────────────────────────────
@@ -196,7 +228,10 @@ service cloud.firestore {
     match /investScores/{doc}     { allow read: if isAuthed(); allow write: if isAdmin(); }
     match /mortgageRates/{doc}    { allow read: if isAuthed(); allow write: if isAdmin(); }
     match /notificationTemplates/{doc} { allow read: if isAuthed(); allow write: if isAdmin(); }
-    match /organisations/{doc}    { allow read: if isAuthed(); allow write: if isAdmin(); }
+    // NOTE: /organisations is deliberately NOT re-declared here. It has its own
+    // org-scoped block above. Firestore ORs all matching rules together, so a
+    // blanket "read: if isAuthed()" on this path would silently cancel that
+    // scoping and let every signed-in user read every organisation.
     match /payments/{doc}         { allow read: if isAuthed(); allow write: if isAdmin(); }
     match /platformLeads/{doc}    { allow read: if isAuthed(); allow write: if isAdmin(); }
     match /projectData/{doc}      { allow read: if isAuthed(); allow write: if isAdmin(); }
@@ -228,9 +263,13 @@ service cloud.firestore {
     match /marketMetrics/{doc}    { allow read: if isAuthed(); allow write: if isAdmin(); }
     match /transactions/{doc}     { allow read: if isAuthed(); allow write: if isAdmin(); }
     match /invites/{token} {
-      allow read: if true; // Public so agents can open invite links
+      // 'get' = fetch one invite by its token (needed to open an invite link).
+      // 'list' = enumerate the whole collection — that would hand anyone every
+      // pending invite token, so it stays admin-only.
+      allow get: if true;
+      allow list: if isAdmin();
       allow create: if isAuthed() && (isManager() || isAdmin());
-      allow update: if true; // Agent marks as used on join
+      allow update: if isAuthed(); // Agent marks as used on join — must be signed in
       allow delete: if isAdmin();
     }
 

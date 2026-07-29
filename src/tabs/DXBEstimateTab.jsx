@@ -32,9 +32,28 @@ export default function DXBEstimateTab({ liveNeighbourhoods=[], handleTabChange,
   const BEDS_MULTIPLIER   = {"Studio":0.9,"1":1.0,"2":1.05,"3":1.08,"4+":1.12};
   const TYPE_MULTIPLIER   = {Apartment:1.0, Villa:1.15, Townhouse:1.08, Penthouse:1.20};
 
+  /* A valuation band must widen as the evidence thins. A community priced off
+     3 transactions cannot carry the same +/-8% confidence as one priced off 200.
+     Roughly follows 1/sqrt(n): more comparables, tighter range. */
+  function confidenceFor(sampleSize) {
+    const n = Number(sampleSize) || 0;
+    if (n >= 200) return { band: 0.08, label: "High",     note: `${n} transactions` };
+    if (n >= 50)  return { band: 0.12, label: "Moderate", note: `${n} transactions` };
+    if (n >= 10)  return { band: 0.18, label: "Low",      note: `only ${n} transactions` };
+    if (n >= 1)   return { band: 0.25, label: "Very low", note: `only ${n} transaction${n===1?"":"s"}` };
+    return { band: 0.25, label: "Unknown", note: "transaction count unavailable" };
+  }
+
   function calculateEstimate() {
     if(!selectedComm || !area || parseFloat(area)<=0) return;
-    const basePpsf  = selectedComm.avgPpsf || 1500;
+    /* Previously fell back to a hardcoded 1500 AED/sqft when a community had no
+       price data, producing a confident-looking valuation from an invented
+       number. Refuse to estimate instead. */
+    const basePpsf  = selectedComm.avgPpsf;
+    if(!(basePpsf > 0)) {
+      setResult({ unavailable:true, community:selectedComm });
+      return;
+    }
     const sqft      = parseFloat(area);
     const adjPpsf   = basePpsf
       * (FLOOR_MULTIPLIER[floor]||1)
@@ -42,11 +61,12 @@ export default function DXBEstimateTab({ liveNeighbourhoods=[], handleTabChange,
       * (BEDS_MULTIPLIER[beds]||1)
       * (TYPE_MULTIPLIER[type]||1);
     const midVal    = Math.round(adjPpsf * sqft);
-    const lowVal    = Math.round(midVal * 0.92);
-    const highVal   = Math.round(midVal * 1.08);
+    const conf      = confidenceFor(selectedComm.totalTransactions ?? selectedComm.recentSampleSize);
+    const lowVal    = Math.round(midVal * (1 - conf.band));
+    const highVal   = Math.round(midVal * (1 + conf.band));
     const grossYield= parseFloat(selectedComm.grossYield||0);
     const annualRent= grossYield>0 ? Math.round(midVal * (grossYield/100)) : null;
-    setResult({ midVal, lowVal, highVal, adjPpsf:Math.round(adjPpsf), basePpsf, sqft, annualRent, grossYield, community:selectedComm });
+    setResult({ midVal, lowVal, highVal, adjPpsf:Math.round(adjPpsf), basePpsf, sqft, annualRent, grossYield, community:selectedComm, confidence:conf });
   }
 
   const selStyle = {padding:"8px 12px",background:"rgba(255,255,255,0.04)",border:"1px solid "+T.border,borderRadius:8,color:"#CBD5E1",fontSize:12,outline:"none",fontFamily:"'Outfit',sans-serif",width:"100%"};
@@ -137,12 +157,31 @@ export default function DXBEstimateTab({ liveNeighbourhoods=[], handleTabChange,
 
         <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid "+T.border,borderRadius:14,padding:"20px"}}>
           <div style={{fontSize:13,fontWeight:700,color:T.white,marginBottom:16}}>Valuation Result</div>
-          {result ? (
+          {result && result.unavailable ? (
+            <div style={{padding:"22px",textAlign:"center",background:"rgba(245,158,11,0.06)",border:"1px solid rgba(245,158,11,0.25)",borderRadius:12}}>
+              <div style={{fontSize:13,fontWeight:700,color:"#F59E0B",marginBottom:6}}>Cannot value this community</div>
+              <div style={{fontSize:11,color:"#94A3B8",lineHeight:1.7}}>
+                No verified price-per-sqft data exists for {result.community.community}.
+                Rather than show an estimate built on an assumed figure, we show nothing.
+              </div>
+            </div>
+          ) : result ? (
             <div>
               <div style={{textAlign:"center",marginBottom:16,padding:"20px",background:"rgba(212,168,67,0.06)",border:"1px solid rgba(212,168,67,0.2)",borderRadius:12}}>
                 <div style={{fontSize:11,color:"#94A3B8",marginBottom:6}}>ESTIMATED VALUE</div>
                 <div style={{fontSize:28,fontWeight:900,color:T.gold,fontFamily:"'Fraunces',serif"}}>{fmtP(result.midVal)}</div>
                 <div style={{fontSize:12,color:"#94A3B8",marginTop:4}}>Range: {fmtP(result.lowVal)}  {fmtP(result.highVal)}</div>
+                {result.confidence && (
+                  <div style={{marginTop:8,display:"inline-flex",alignItems:"center",gap:6,padding:"3px 10px",borderRadius:999,
+                    background:result.confidence.band<=0.08?"rgba(16,185,129,0.12)":result.confidence.band<=0.12?"rgba(132,204,22,0.12)":"rgba(245,158,11,0.12)",
+                    border:"1px solid "+(result.confidence.band<=0.08?"rgba(16,185,129,0.35)":result.confidence.band<=0.12?"rgba(132,204,22,0.35)":"rgba(245,158,11,0.35)")}}>
+                    <span style={{fontSize:9,fontWeight:700,letterSpacing:0.4,textTransform:"uppercase",
+                      color:result.confidence.band<=0.08?"#10B981":result.confidence.band<=0.12?"#84CC16":"#F59E0B"}}>
+                      {result.confidence.label} confidence
+                    </span>
+                    <span style={{fontSize:9,color:"#94A3B8"}}>{result.confidence.note}</span>
+                  </div>
+                )}
               </div>
               <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:12}}>
                 {[

@@ -198,7 +198,7 @@ export function I18nProvider({ children }) {
   const [lang, setLangRaw] = useState(() => {
     try { return localStorage.getItem("dxb_lang") || "en"; } catch { return "en"; }
   });
-  const setLang = (code) => { setLangRaw(code); try { localStorage.setItem("dxb_lang", code); } catch {} };
+  const setLang = (code) => { setLangRaw(code); try { localStorage.setItem("dxb_lang", code); } catch (e) { console.error("swallowed@i18n.jsx:201", e); } };
   const langInfo = LANGUAGES.find(l => l.code === lang) || LANGUAGES[0];
   const t = (section, key) => T[section]?.[lang]?.[key] || T[section]?.en?.[key] || key;
   const dir = langInfo.dir;

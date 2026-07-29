@@ -6,6 +6,7 @@
 import React, { useState, useMemo } from "react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from "recharts";
 import { T } from "../data";
+import SourceBadge from "../components/SourceBadge";
 
 const fmtY  = n => n ? parseFloat(n).toFixed(1)+"%" : "--";
 const fmtP  = n => n ? "AED "+Math.round(n).toLocaleString() : "--";
@@ -226,10 +227,19 @@ export default function YieldsTab({ liveNeighbourhoods=[], handleTabChange, glob
               <button type="button" onClick={()=>setSelected(null)} style={{background:"rgba(255,255,255,0.06)",border:"1px solid "+T.border,borderRadius:8,color:"#94A3B8",width:32,height:32,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16}}>x</button>
             </div>
           </div>
+          {/* Where these figures came from — estimates must not read as measured data. */}
+          <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10,flexWrap:"wrap"}}>
+            <SourceBadge row={selected}/>
+            {selected.netYield!=null&&(
+              <span style={{fontSize:9,color:"#64748B",fontFamily:"'Outfit',sans-serif"}}>
+                net = gross less service charge, 5% vacancy, 5% management
+              </span>
+            )}
+          </div>
           <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10,marginBottom:14}}>
             {[
               {label:"Gross Yield",    value:fmtY(selected.grossYield),    color:YIELD_COLOR(selected.grossYield)},
-              {label:"Net Yield",      value:fmtY(selected.netYield),      color:"#CBD5E1"},
+              {label:"Net Yield",      value:selected.netYield!=null?fmtY(selected.netYield):"—",      color:"#CBD5E1"},
               {label:"Avg PPSF",       value:fmtP(selected.avgPpsf),       color:T.gold},
               {label:"Service Charge", value:selected.serviceCharge?"AED "+selected.serviceCharge+"/sqft":"--", color:"#94A3B8"},
               {label:"DLD Txns",       value:selected.dldTransactions?selected.dldTransactions.toLocaleString():"--", color:"#94A3B8"},

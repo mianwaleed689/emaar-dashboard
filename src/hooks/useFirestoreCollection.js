@@ -52,7 +52,7 @@ export function useFirestoreCollection({ name, filter, sort, cacheKey = "default
         queryClient.setQueryData(queryKey, () => { throw err; });
       }
     );
-    return () => { try { unsub(); } catch {} };
+    return () => { try { unsub(); } catch (e) { console.error("swallowed@useFirestoreCollection.js:55", e); } };
     // queryKey members are stable; intentional
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [name, cacheKey]);

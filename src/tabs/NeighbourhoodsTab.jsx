@@ -9,6 +9,7 @@
 import React, { useState, useMemo } from "react";
 import { T } from "../data";
 import { scoreColor } from "../utils/scoring";
+import SourceBadge from "../components/SourceBadge";
 
 //  FORMATTERS 
 const fmtY  = n => n ? parseFloat(n).toFixed(1)+"%" : "";
@@ -198,9 +199,18 @@ const DetailDrawer = ({n,onClose,handleTabChange}) => {
           {/*  OVERVIEW TAB  */}
           {tab==="overview"&&(
             <div>
+              {/* Provenance: a researched estimate must not look like a DLD-derived figure. */}
+              <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10}}>
+                <SourceBadge row={n}/>
+                {n.serviceChargePct!=null&&(
+                  <span style={{fontSize:9,color:T.textMuted,fontFamily:"'Outfit',sans-serif"}}>
+                    service charge {n.serviceChargePct}% of value
+                  </span>
+                )}
+              </div>
               <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:14}}>
                 <Stat label="Gross Yield"  value={fmtY(n.grossYield)}  color={yColor}/>
-                <Stat label="Net Yield"    value={fmtY(n.netYield)}    color="#CBD5E1"/>
+                <Stat label="Net Yield"    value={n.netYield!=null?fmtY(n.netYield):"—"}    color="#CBD5E1"/>
                 <Stat label="Avg PPSF"     value={fmtP(n.avgPpsf)}     color={T.gold}/>
                 <Stat label="Supply Risk"  value={n.supplyRisk||""}   color={rColor}/>
               </div>

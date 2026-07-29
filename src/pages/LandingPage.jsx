@@ -276,7 +276,7 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
         }
       });
       return () => unsub();
-    } catch {}
+    } catch (e) { console.error("swallowed@LandingPage.jsx:279", e); }
   }, []);
 
   useEffect(() => {

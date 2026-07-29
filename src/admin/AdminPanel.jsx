@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import ReactDOM from "react-dom";
 import { auth, db, storage, firebaseConfig } from "../firebase";
+import { logAudit, checkAlerts, getAdminIP, setAuditWebhook, setAlertThreshold } from "../utils/audit";
 import FilterSchemaAdminTab from "./FilterSchemaAdminTab";
 import { initializeApp, deleteApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
@@ -36,17 +37,10 @@ import PlatformSettingsTab from "./PlatformSettingsTab";
    â€” */
 
 /* â€” RESEND EMAIL HELPER â€” */
-const RESEND_KEY = import.meta.env.VITE_RESEND_API_KEY;
-const sendResend = async (to, subject, bodyText) => {
-  const html = `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:24px">\n    <div style="border-bottom:2px solid #D4A843;padding-bottom:12px;margin-bottom:20px">\n      <h2 style="color:#D4A843;margin:0;font-size:18px">DXB Analytics</h2>\n      <p style="color:#64748B;margin:4px 0 0;font-size:11px">The Address Holding â€” Dubai, UAE</p>\n    </div>\n    <div style="color:#1E293B;font-size:14px;line-height:1.7;white-space:pre-wrap">${bodyText}</div>\n    <div style="border-top:1px solid #E2E8F0;margin-top:24px;padding-top:12px;color:#94A3B8;font-size:11px">\n      DXB Analytics â€” <a href="mailto:info@theaddressholding.ae" style="color:#D4A843">info@theaddressholding.ae</a>\n    </div>\n  </div>`;
-  const res = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: { "Authorization": `Bearer ${RESEND_KEY}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ from: "DXB Analytics <onboarding@resend.dev>", to, subject, html }),
-  });
-  if (!res.ok) throw new Error(await res.text());
-  return res.json();
-};
+/* Implementation lives in src/utils/sendEmail.js and calls api/send-email.js.
+   The Resend API key stays on the server: anything read from import.meta.env.VITE_*
+   is compiled into the public JS bundle and readable by anyone. */
+import { sendResend } from "../utils/sendEmail";
 
 /* â€” THEME (exact dashboard match) â€” */
 const T = {
@@ -8802,6 +8796,10 @@ const ProfileDrawerComponent = ({
   setSendEmailUser, setEmailSubject, setEmailBody,
   timeSince, lastActiveLabel, lastActiveColor, getUserLTV, AT_RISK_DAYS,
   inputStyle, confirmAndExtend, notify, openEditUser, auditLog,
+  // Both belong to the parent's scope. Without them the org-assign handlers
+  // threw ReferenceError, which the surrounding try/catch turned into a
+  // generic "Error:" toast after the write had already succeeded.
+  setDrawerUser = () => {}, fetchUsers = () => {},
 }) => {
   if (!drawerUser) return null;
     const u     = drawerUser;
@@ -9491,7 +9489,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
           updated_at:   new Date().toLocaleString("en-AE"),
         }, import.meta.env.VITE_EMAILJS_PUBLIC_KEY);
         sent++;
-      } catch(e) {}
+      } catch (e) { console.error("swallowed@AdminPanel.jsx:9491", e); }
     }
     setSendingTrialEmails(false);
     notify(sent > 0 ? `[v] Sent ${sent} trial expiry email${sent > 1 ? "s" : ""}` : " No at-risk trials to email");
@@ -9836,6 +9834,8 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
       <NotifUserModal />
       <ProfileDrawerComponent
         drawerUser={drawerUser}
+        setDrawerUser={setDrawerUser}
+        fetchUsers={fetchUsers}
         onClose={() => setDrawerUserWithCallback(null)}
         drawerTab={drawerTab}
         setDrawerTab={setDrawerTab}
@@ -10113,14 +10113,9 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
                 for (const user of bulkEmailTargets) {
                   try {
                     const bodyText = bulkEmailBody.replace(/\{name\}/g, user.name || "there");
-                    const html = `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:24px"><div style="border-bottom:2px solid #D4A843;padding-bottom:12px;margin-bottom:20px"><h2 style="color:#D4A843;margin:0">DXB Analytics</h2></div><div style="color:#1E293B;font-size:14px;line-height:1.7;white-space:pre-wrap">${bodyText}</div></div>`;
-                    await fetch("https://api.resend.com/emails", {
-                      method: "POST",
-                      headers: { "Authorization": "Bearer ${import.meta.env.VITE_RESEND_API_KEY}", "Content-Type": "application/json" },
-                      body: JSON.stringify({ from: "DXB Analytics <onboarding@resend.dev>", to: user.email, subject: bulkEmailSubject, html }),
-                    });
+                    await sendResend(user.email, bulkEmailSubject, bodyText);
                     sent++;
-                  } catch(e) {}
+                  } catch (e) { console.error("swallowed@AdminPanel.jsx:10117", e); }
                   setBulkEmailProgress(sent);
                 }
                 setBulkEmailSending(false);
@@ -10526,58 +10521,11 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
    - checkAlerts()  : suspicious-activity email trigger
    â€” */
 
-let _cachedIP = null;
-async function getAdminIP() {
-  if (_cachedIP) return _cachedIP;
-  try {
-    const r = await fetch("https://api.ipify.org?format=json");
-    const d = await r.json();
-    _cachedIP = d.ip;
-    return _cachedIP;
-  } catch { return "unknown"; }
-}
-
-let _webhookUrl = null;
-let _alertThreshold = 10; // tier changes in 5 min before alert fires
-function setAuditWebhook(url) { _webhookUrl = url; }
-function setAlertThreshold(n) { _alertThreshold = n; }
-
-async function logAudit(db, payload) {
-  try {
-    const ip = await getAdminIP();
-    const changedBy = auth.currentUser?.email || "admin";
-    const entry = { ...payload, changedBy, changedAt: new Date().toISOString(), ip };
-    const id = `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-    await setDoc(doc(db, "auditLog", id), entry);
-    // SIEM webhook push (fire-and-forget)
-    if (_webhookUrl) {
-      try { fetch(_webhookUrl, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(entry) }); } catch {}
-    }
-    return entry;
-  } catch (e) { console.error("logAudit:", e); }
-}
-
-async function checkAlerts(db) {
-  try {
-    const fiveMinAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
-    const snap = await getDocs(collection(db, "auditLog"));
-    const recent = [];
-    snap.forEach(d => {
-      const data = d.data();
-      if (data.changedAt >= fiveMinAgo && ["tier_change", "bulk_tier_change"].includes(data.action)) recent.push(data);
-    });
-    if (recent.length >= _alertThreshold) {
-      const adminEmail = auth.currentUser?.email;
-      if (adminEmail) {
-        emailjs.send(import.meta.env.VITE_EMAILJS_SERVICE_ID, import.meta.env.VITE_EMAILJS_TEMPLATE_ID, {
-          user_email: adminEmail,
-          user_name: "DXB Admin",
-          message: `â€” SUSPICIOUS ACTIVITY: ${recent.length} tier changes in the last 5 minutes by ${adminEmail}. Please review the Audit Log immediately.`,
-        }, import.meta.env.VITE_EMAILJS_PUBLIC_KEY);
-      }
-    }
-  } catch {}
-}
+/* Implementations moved to src/utils/audit.js and imported at the top of this
+   file. They were module-level declarations here, so UsersTab, DigestTab,
+   SupportTab and EiborRatesPanel called them without an import and threw
+   ReferenceError — swallowed by the surrounding try/catch, which is why those
+   admin actions appeared to do nothing. */
 
 /* â€” DATA CALENDAR (interactive, Firestore-persisted) â€” */
 function DataCalendar({ T, now }) {
@@ -10598,7 +10546,7 @@ function DataCalendar({ T, now }) {
       try {
         const snap = await getDoc(doc(db, "adminSettings", "calendarChecks"));
         if (snap.exists()) setChecked(snap.data() || {});
-      } catch {}
+      } catch (e) { console.error("swallowed@AdminPanel.jsx:10595", e); }
       setLoading(false);
     })();
   }, []);
@@ -10606,7 +10554,7 @@ function DataCalendar({ T, now }) {
   const toggle = async (id) => {
     const next = { ...checked, [id]: !checked[id] };
     setChecked(next);
-    try { await setDoc(doc(db, "adminSettings", "calendarChecks"), next, { merge: true }); } catch {}
+    try { await setDoc(doc(db, "adminSettings", "calendarChecks"), next, { merge: true }); } catch (e) { console.error("swallowed@AdminPanel.jsx:10603", e); }
   };
 
   return (
@@ -10674,7 +10622,7 @@ function UpdateChecklist({ T }) {
       try {
         const snap = await getDoc(doc(db, "adminSettings", "checklistState"));
         if (snap.exists()) setChecked(snap.data() || {});
-      } catch {}
+      } catch (e) { console.error("swallowed@AdminPanel.jsx:10671", e); }
       setLoading(false);
     })();
   }, []);
@@ -10682,13 +10630,13 @@ function UpdateChecklist({ T }) {
   const toggle = async (id) => {
     const next = { ...checked, [id]: !checked[id] };
     setChecked(next);
-    try { await setDoc(doc(db, "adminSettings", "checklistState"), next, { merge: true }); } catch {}
+    try { await setDoc(doc(db, "adminSettings", "checklistState"), next, { merge: true }); } catch (e) { console.error("swallowed@AdminPanel.jsx:10679", e); }
   };
 
   const reset = async () => {
     const cleared = {};
     setChecked(cleared);
-    try { await setDoc(doc(db, "adminSettings", "checklistState"), cleared); } catch {}
+    try { await setDoc(doc(db, "adminSettings", "checklistState"), cleared); } catch (e) { console.error("swallowed@AdminPanel.jsx:10685", e); }
   };
 
   const doneCount = steps.filter(s => checked[s.id]).length;
@@ -10762,7 +10710,7 @@ function AuditLogTable({ auditLog, users, emaarProjects, fetchAuditLog, setTab, 
 
   // Persist auditFilter to localStorage
   useEffect(() => {
-    try { localStorage.setItem("admin_auditFilter", auditFilter); } catch {}
+    try { localStorage.setItem("admin_auditFilter", auditFilter); } catch (e) { console.error("swallowed@AdminPanel.jsx:10759", e); }
   }, [auditFilter]);
 
   const actionMeta = {
@@ -12105,7 +12053,7 @@ function LiveDataSync({ db, T, notify }) {
             try {
               await setDoc(doc(db, "liveMarketData", comm.community.replace(/ /g, "_")), { ...comm, source: "Bayut.com (live)" }, { merge: true });
               synced.push(comm);
-            } catch {}
+            } catch (e) { console.error("swallowed@AdminPanel.jsx:12102", e); }
           }
           log(`Saved ${synced.length} live prices`, "success");
           setLiveCount(synced.length);
@@ -12128,7 +12076,7 @@ function LiveDataSync({ db, T, notify }) {
             syncedAt: new Date().toISOString(),
           }, { merge: true });
           bCount++;
-        } catch {}
+        } catch (e) { console.error("swallowed@AdminPanel.jsx:12125", e); }
       }
     }
     setBenchmarkCount(bCount);
@@ -12730,12 +12678,12 @@ export default function AdminPanel() {
   
   useEffect(() => {
     if (!isHydrated.current) return;
-    try { localStorage.setItem("admin_tab", tab); } catch {}
+    try { localStorage.setItem("admin_tab", tab); } catch (e) { console.error("swallowed@AdminPanel.jsx:12727", e); }
   }, [tab]);
 
   useEffect(() => {
     if (!isHydrated.current) return;
-    try { localStorage.setItem("admin_dataSubTab", dataSubTab); } catch {}
+    try { localStorage.setItem("admin_dataSubTab", dataSubTab); } catch (e) { console.error("swallowed@AdminPanel.jsx:12732", e); }
   }, [dataSubTab]);
 
   useEffect(() => {
@@ -12743,42 +12691,42 @@ export default function AdminPanel() {
     try { 
       if (editingCommunity) localStorage.setItem("admin_editingCommunity", editingCommunity);
       else localStorage.removeItem("admin_editingCommunity");
-    } catch {}
+    } catch (e) { console.error("swallowed@AdminPanel.jsx:12740", e); }
   }, [editingCommunity]);
 
   useEffect(() => {
     if (!isHydrated.current) return;
-    try { localStorage.setItem("admin_userSearch", userSearch); } catch {}
+    try { localStorage.setItem("admin_userSearch", userSearch); } catch (e) { console.error("swallowed@AdminPanel.jsx:12745", e); }
   }, [userSearch]);
 
   useEffect(() => {
     if (!isHydrated.current) return;
-    try { localStorage.setItem("admin_tierFilter", tierFilter); } catch {}
+    try { localStorage.setItem("admin_tierFilter", tierFilter); } catch (e) { console.error("swallowed@AdminPanel.jsx:12750", e); }
   }, [tierFilter]);
 
   useEffect(() => {
     if (!isHydrated.current) return;
-    try { localStorage.setItem("admin_dataSearch", dataSearch); } catch {}
+    try { localStorage.setItem("admin_dataSearch", dataSearch); } catch (e) { console.error("swallowed@AdminPanel.jsx:12755", e); }
   }, [dataSearch]);
 
   useEffect(() => {
     if (!isHydrated.current) return;
-    try { localStorage.setItem("admin_projectCommunityFilter", projectCommunityFilter); } catch {}
+    try { localStorage.setItem("admin_projectCommunityFilter", projectCommunityFilter); } catch (e) { console.error("swallowed@AdminPanel.jsx:12760", e); }
   }, [projectCommunityFilter]);
 
   useEffect(() => {
     if (!isHydrated.current) return;
-    try { localStorage.setItem("admin_projectStatusFilter", projectStatusFilter); } catch {}
+    try { localStorage.setItem("admin_projectStatusFilter", projectStatusFilter); } catch (e) { console.error("swallowed@AdminPanel.jsx:12765", e); }
   }, [projectStatusFilter]);
 
   useEffect(() => {
     if (!isHydrated.current) return;
-    try { localStorage.setItem("admin_verifyFilter", verifyFilter); } catch {}
+    try { localStorage.setItem("admin_verifyFilter", verifyFilter); } catch (e) { console.error("swallowed@AdminPanel.jsx:12770", e); }
   }, [verifyFilter]);
 
   useEffect(() => {
     if (!isHydrated.current) return;
-    try { localStorage.setItem("admin_leadFilter", leadFilter); } catch {}
+    try { localStorage.setItem("admin_leadFilter", leadFilter); } catch (e) { console.error("swallowed@AdminPanel.jsx:12775", e); }
   }, [leadFilter]);
 
   /* â€” ESCAPE KEY â€” */
@@ -12856,7 +12804,7 @@ export default function AdminPanel() {
         const intelMap = {};
         intelSnap.forEach(d => { intelMap[d.id] = plainify(d.data()); });
         setLiveCommunityIntel(intelMap);
-      } catch(e) {}
+      } catch (e) { console.error("swallowed@AdminPanel.jsx:12853", e); }
 
       // Fetch yield overrides
       const yieldSnap = await getDocs(collection(db, "yieldData"));
@@ -12939,7 +12887,7 @@ export default function AdminPanel() {
         setPriceHistory(histMap);
       }));
     } catch (e) { console.error("Real-time listener error:", e); }
-    return () => { unsubs.forEach(u => { try { u(); } catch {} }); };
+    return () => { unsubs.forEach(u => { try { u(); } catch (e) { console.error("swallowed@AdminPanel.jsx:12936", e); } }); };
   }, [isAdmin]);
 
   /* â€” FETCH KYC VERIFICATIONS â€” */
@@ -13068,7 +13016,7 @@ export default function AdminPanel() {
               return;
             }
           }
-        } catch(e) {}
+        } catch (e) { console.error("swallowed@AdminPanel.jsx:13065", e); }
       }
 
       // â€” Step 2: Load first 100 instantly so page is usable immediately â€”
@@ -13096,7 +13044,7 @@ export default function AdminPanel() {
               localStorage.setItem(cacheKey, str);
               localStorage.setItem(cacheTS, String(now));
             }
-          } catch(e) {}
+          } catch (e) { console.error("swallowed@AdminPanel.jsx:13093", e); }
           return;
         }
         try {
@@ -13167,7 +13115,7 @@ export default function AdminPanel() {
           if (ret.exists() && ret.data().days !== undefined) setAuditRetentionDays(ret.data().days);
           const keysDoc = await getDoc(doc(db, "adminSettings", "apiKeys"));
           if (keysDoc.exists()) setApiKeys(keysDoc.data().keys || []);
-        } catch {}
+        } catch (e) { console.error("swallowed@AdminPanel.jsx:13164", e); }
       } catch (e) {
         // index not ready â€” fall back to polling every 10s
         fetchAuditLog();
@@ -13315,8 +13263,8 @@ export default function AdminPanel() {
       unsubs.push(onSnapshot(doc(db, "platformSettings", "digestTemplate"), (snap) => {
         if (snap.exists()) window._digestTemplate = snap.data();
       }));
-    } catch (e) {}
-    return () => { unsubs.forEach(u => { try { u(); } catch {} }); };
+    } catch (e) { console.error("swallowed@AdminPanel.jsx:13312", e); }
+    return () => { unsubs.forEach(u => { try { u(); } catch (e) { console.error("swallowed@AdminPanel.jsx:13313", e); } }); };
   }, [isAdmin]);
 
   const approveVerification = async (v) => {
@@ -13693,14 +13641,14 @@ export default function AdminPanel() {
   const toggleColumn = (col) => {
     const updated = { ...visibleColumns, [col]: !visibleColumns[col] };
     setVisibleColumns(updated);
-    try { localStorage.setItem("admin_projectColumns", JSON.stringify(updated)); } catch {}
+    try { localStorage.setItem("admin_projectColumns", JSON.stringify(updated)); } catch (e) { console.error("swallowed@AdminPanel.jsx:13690", e); }
   };
   
   // Reset columns to default
   const resetColumns = () => {
     const defaults = { community: true, price: true, ppsf: true, status: true, source: true, quality: true, tier: false, handover: false, beds: false };
     setVisibleColumns(defaults);
-    try { localStorage.setItem("admin_projectColumns", JSON.stringify(defaults)); } catch {}
+    try { localStorage.setItem("admin_projectColumns", JSON.stringify(defaults)); } catch (e) { console.error("swallowed@AdminPanel.jsx:13697", e); }
     notify("Columns reset to default");
   };
   
@@ -14070,7 +14018,7 @@ export default function AdminPanel() {
           enriched.lat = parseFloat(data[0].lat);
           enriched.lng = parseFloat(data[0].lon);
         }
-      } catch(e) {}
+      } catch (e) { console.error("swallowed@AdminPanel.jsx:14067", e); }
     }
 
     // 2. Calculate distances if we have coordinates
@@ -14131,7 +14079,7 @@ export default function AdminPanel() {
         enriched.enrichedBy = "auto";
         await setDoc(doc(db, "projectData", String(projectId)), enriched, { merge: true });
         console.log(`Auto-enriched project ${projectId}:`, Object.keys(enriched));
-      } catch(e) {}
+      } catch (e) { console.error("swallowed@AdminPanel.jsx:14128", e); }
     }
   };
   // â€” END AUTO-ENRICHMENT â€”
@@ -14167,7 +14115,7 @@ export default function AdminPanel() {
           snapshot: { ...oldDoc }, // snapshot of BEFORE state for rollback
           fieldsChanged: Object.keys(diff).length
         });
-      } catch(e) {}
+      } catch (e) { console.error("swallowed@AdminPanel.jsx:14164", e); }
       notify("Project data saved");
       // Auto-enrich with free APIs (geocoding, distances, yield estimates)
       autoEnrichProject(projectId, { ...liveProjects[projectId], ...clean }).catch(() => {});
@@ -14197,7 +14145,7 @@ export default function AdminPanel() {
       clean.updatedAt = new Date().toISOString();
       clean.updatedBy = adminUser?.email || "admin";
       await setDoc(doc(db, "communityROI", communityKey), clean, { merge: true });
-      try { await logAudit(db, { action: "community_update", communityKey }); } catch(e) {}
+      try { await logAudit(db, { action: "community_update", communityKey }); } catch (e) { console.error("swallowed@AdminPanel.jsx:14194", e); }
       notify("Community ROI saved");
       setEditingCommunity(null);
       fetchLiveData();
@@ -14312,7 +14260,7 @@ export default function AdminPanel() {
       clean.updatedAt = new Date().toISOString();
       clean.updatedBy = adminUser?.email || "admin";
       await setDoc(doc(db, "communityIntel", communityKey), clean, { merge: true });
-      try { await logAudit(db, { action: "community_intel_update", communityKey }); } catch(e) {}
+      try { await logAudit(db, { action: "community_intel_update", communityKey }); } catch (e) { console.error("swallowed@AdminPanel.jsx:14309", e); }
       notify("Community Intel saved");
       setEditingCommunityIntel(null);
       fetchLiveData();
@@ -14389,7 +14337,7 @@ export default function AdminPanel() {
     if (!window.confirm(`DELETE USER: ${u?.name || u?.email}\n\nThis permanently removes them from the database and revokes all access.\n\nContinue?`)) return;
     try {
       await deleteDoc(doc(db, "users", uid));
-      try { await deleteDoc(doc(db, "watchlists", uid)); } catch(e) {}
+      try { await deleteDoc(doc(db, "watchlists", uid)); } catch (e) { console.error("swallowed@AdminPanel.jsx:14386", e); }
       await logAudit(db, { action: "user_deleted", uid, userName: u?.name || "", userEmail: u?.email || "", userTier: u?.tier || "free" });
       notify("User deleted");
       setExpandedUser(null);
@@ -14496,7 +14444,7 @@ export default function AdminPanel() {
       };
       notify(msgs[e.code] || "Error: " + e.message);
     } finally {
-      if (tempApp) { try { await deleteApp(tempApp); } catch(e) {} }
+      if (tempApp) { try { await deleteApp(tempApp); } catch (e) { console.error("swallowed@AdminPanel.jsx:14493", e); } }
     }
     setAddUserLoading(false);
   };
@@ -16096,7 +16044,7 @@ export default function AdminPanel() {
                                 await logAudit(db, { action: "retention_policy_updated", days: auditRetentionDays });
                                 setAuditRetentionSaved(true);
                                 setTimeout(() => setAuditRetentionSaved(false), 2000);
-                              } catch(e) {}
+                              } catch (e) { console.error("swallowed@AdminPanel.jsx:16093", e); }
                             }}
                               style={{ width: "100%", padding: "7px 0", borderRadius: 8, border: `1px solid ${auditRetentionSaved ? T.green : T.border}`, background: auditRetentionSaved ? `${T.green}15` : "transparent", color: auditRetentionSaved ? T.green : T.textSecondary, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
                               {auditRetentionSaved ? "â€” Saved" : "Save Policy"}
@@ -16117,7 +16065,7 @@ export default function AdminPanel() {
                                 await logAudit(db, { action: "webhook_updated", urlSet: !!auditWebhookUrl });
                                 setAuditWebhookSaved(true);
                                 setTimeout(() => setAuditWebhookSaved(false), 2000);
-                              } catch(e) {}
+                              } catch (e) { console.error("swallowed@AdminPanel.jsx:16114", e); }
                             }}
                               style={{ width: "100%", padding: "7px 0", borderRadius: 8, border: `1px solid ${auditWebhookSaved ? T.green : T.border}`, background: auditWebhookSaved ? `${T.green}15` : "transparent", color: auditWebhookSaved ? T.green : T.textSecondary, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
                               {auditWebhookSaved ? "â€” Webhook Active" : "Save Webhook"}
@@ -16141,7 +16089,7 @@ export default function AdminPanel() {
                                 await logAudit(db, { action: "alert_threshold_updated", threshold: auditAlertThr });
                                 setAuditAlertSaved(true);
                                 setTimeout(() => setAuditAlertSaved(false), 2000);
-                              } catch(e) {}
+                              } catch (e) { console.error("swallowed@AdminPanel.jsx:16138", e); }
                             }}
                               style={{ width: "100%", padding: "7px 0", borderRadius: 8, border: `1px solid ${auditAlertSaved ? T.green : T.border}`, background: auditAlertSaved ? `${T.green}15` : "transparent", color: auditAlertSaved ? T.green : T.textSecondary, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
                               {auditAlertSaved ? "â€” Threshold Set" : "Save Threshold"}
@@ -21970,7 +21918,7 @@ export default function AdminPanel() {
               const updated = { ...tabSettings, [tabKey]: { ...current, [field]: value, lastModified: new Date().toISOString(), modifiedBy: adminUser?.email || "admin" } };
               setTabSettings(updated);
               setTabSettingsSaving(true);
-              try { await setDoc(doc(db, "platformSettings", "tabs"), updated); } catch(e) {}
+              try { await setDoc(doc(db, "platformSettings", "tabs"), updated); } catch (e) { console.error("swallowed@AdminPanel.jsx:21967", e); }
               logAudit(db, { action: "tab_setting_change", tabKey, field, value }).catch(() => {});
               setTimeout(() => setTabSettingsSaving(false), 800);
             };
@@ -22241,7 +22189,7 @@ export default function AdminPanel() {
           })()}
 
 
-          {tab === "eibor" && <EiborRatesPanel db={db} T={T} I={I} notify={notify} />}
+          {tab === "eibor" && <EiborRatesPanel db={db} T={T} I={I} notify={notify} logAudit={logAudit} />}
           {tab === "data_health" && <AdminDataHealth db={db} />}
           {tab === "referral" && <ReferralTab db={db} T={T} notify={notify} users={users} adminUser={adminUser} />}
           {tab === "billing" && <BillingTab db={db} T={T} notify={notify} users={users} adminUser={adminUser} />}

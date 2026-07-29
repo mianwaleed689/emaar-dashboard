@@ -6,10 +6,11 @@
    CRM tabs: fully functional (Leads, Pipeline, Team, Agency etc)
    â€” */
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area, ComposedChart, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ReferenceLine, Legend } from "recharts";
 import { auth, db } from "../firebase";
+import { withComputedNetYield, computeNetYield } from "../utils/yield";
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail, sendEmailVerification, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import { collection, getDocs, doc, getDoc, setDoc, updateDoc, deleteDoc, onSnapshot, addDoc, query, where, orderBy, limit } from "firebase/firestore";
 import emailjs from "@emailjs/browser";
@@ -1444,7 +1445,7 @@ const LoginScreen = ({ onLogin, onBack, defaultMode = "login" }) => {
             old_value: "New Account",
             updated_at: now.toLocaleDateString("en-AE"),
           }, import.meta.env.VITE_EMAILJS_PUBLIC_KEY);
-        } catch(e) {}
+        } catch (e) { console.error("swallowed@EmaarDashboardV2.jsx:1448", e); }
       }
       onLogin(u.email);
     } catch (err) {
@@ -1507,7 +1508,7 @@ const LoginScreen = ({ onLogin, onBack, defaultMode = "login" }) => {
         trialEnd: trialEnd.toISOString(),
         role: "user", emailVerified: false, provider: "email",
       });
-      try { await sendEmailVerification(cred.user); } catch(e) {}
+      try { await sendEmailVerification(cred.user); } catch (e) { console.error("swallowed@EmaarDashboardV2.jsx:1511", e); }
       try {
         await emailjs.send(import.meta.env.VITE_EMAILJS_SERVICE_ID, import.meta.env.VITE_EMAILJS_TEMPLATE_ID, {
           user_email: email, user_name: name.trim(),
@@ -1517,7 +1518,7 @@ const LoginScreen = ({ onLogin, onBack, defaultMode = "login" }) => {
           old_value: "New Account",
           updated_at: now.toLocaleDateString("en-AE"),
         }, import.meta.env.VITE_EMAILJS_PUBLIC_KEY);
-      } catch(e) {}
+      } catch (e) { console.error("swallowed@EmaarDashboardV2.jsx:1521", e); }
       setScreen("verify");
     } catch (err) {
       const msgs = {
@@ -1555,7 +1556,7 @@ const LoginScreen = ({ onLogin, onBack, defaultMode = "login" }) => {
           <button type="button" className="login-btn" onClick={() => { setScreen("form"); setMode("login"); setPass(""); setConfirmPass(""); }}>
             Go to Sign In â†’
           </button>
-          <button type="button" onClick={async () => { try { if (auth.currentUser) { await sendEmailVerification(auth.currentUser); alert("Verification email resent! Check your inbox."); } } catch(e){} }} style={{ display: "block", margin: "12px auto 0", background: "none", border: "none", color: T.gold, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+          <button type="button" onClick={async () => { try { if (auth.currentUser) { await sendEmailVerification(auth.currentUser); alert("Verification email resent! Check your inbox."); } } catch (e) { console.error("swallowed@EmaarDashboardV2.jsx:1559", e); } }} style={{ display: "block", margin: "12px auto 0", background: "none", border: "none", color: T.gold, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
             Resend verification email
           </button>
         </div>
@@ -2260,7 +2261,7 @@ export default function EmaarDashboardV2() {
     try {
       const stored = localStorage.getItem('dxb_active_tab');
       if (stored && stored !== 'Overview') setTab(stored);
-    } catch(e) {}
+    } catch (e) { console.error("swallowed@EmaarDashboardV2.jsx:2264", e); }
     const handlePop = (e) => {
       if (e.state?.tab) setTab(e.state.tab);
     };
@@ -2405,6 +2406,20 @@ export default function EmaarDashboardV2() {
   const [liveProjects, setLiveProjects] = useState({});
   const [extraProjects, setExtraProjects] = useState([]);
   const [developmentsData, setDevelopmentsData] = useState([]);
+
+  /* liveProjects is a MAP of admin edits from the projectData collection, keyed
+     by project id. Every consumer guarded it with Array.isArray(...) ? ... : []
+     — and a map is never an array, so admin edits were loaded and then silently
+     discarded on every screen. Apply them as the overrides they were meant to be. */
+  const projectsWithOverrides = useMemo(() => {
+    const base = Array.isArray(extraProjects) ? extraProjects : [];
+    const ov = liveProjects && !Array.isArray(liveProjects) ? liveProjects : {};
+    if (!Object.keys(ov).length) return base;
+    return base.map(p => {
+      const patch = ov[String(p.id)] ?? ov[String(p.id).replace("project_", "")];
+      return patch ? { ...p, ...patch } : p;
+    });
+  }, [extraProjects, liveProjects]);
   const [liveYields, setLiveYields] = useState([]);
   const [liveCommunityList, setLiveCommunityList] = useState([]);
   // â€” Price Alerts â€”
@@ -2745,6 +2760,8 @@ export default function EmaarDashboardV2() {
   const [mortProfile, setMortProfile] = useState("expat");
   const [mortView, setMortView] = useState("calculator");
   const [mortIncome, setMortIncome] = useState(30000);
+  // UAE Central Bank DBR counts every monthly obligation, not just the mortgage.
+  const [mortExistingDebts, setMortExistingDebts] = useState(0);
 
 
   /* â€” STR vs LTR TAB STATE â€” */
@@ -2855,9 +2872,9 @@ export default function EmaarDashboardV2() {
 
   const globalRefresh = () => {
     setIsRefreshing(true);
-    try { sessionStorage.setItem("dxb_active_tab", tab); } catch(e) {}
-  if(selectedProject) try{sessionStorage.setItem("dxb_selected_project",selectedProject.id||selectedProject.projectNumber||String.fromCharCode(34)+String.fromCharCode(34));}catch(e){}
-  if(typeof projDetailTab!=="undefined") try{sessionStorage.setItem("dxb_proj_tab",projDetailTab);}catch(e){}
+    try { sessionStorage.setItem("dxb_active_tab", tab); } catch (e) { console.error("swallowed@EmaarDashboardV2.jsx:2875", e); }
+  if(selectedProject) try{sessionStorage.setItem("dxb_selected_project",selectedProject.id||selectedProject.projectNumber||String.fromCharCode(34)+String.fromCharCode(34));}catch (e) { console.error("swallowed@EmaarDashboardV2.jsx:2876", e); }
+  if(typeof projDetailTab!=="undefined") try{sessionStorage.setItem("dxb_proj_tab",projDetailTab);}catch (e) { console.error("swallowed@EmaarDashboardV2.jsx:2877", e); }
     setTimeout(() => { window.location.reload(); }, 300);
   };
 
@@ -2908,9 +2925,13 @@ export default function EmaarDashboardV2() {
         {
           // Generate fresh insights via Claude API
           setInsightsLoading(true);
+          const idToken = await auth.currentUser?.getIdToken();
           const res = await fetch("/api/proxy?service=claude", {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: {
+              "Content-Type": "application/json",
+              ...(idToken ? { Authorization: `Bearer ${idToken}` } : {}),
+            },
             body: JSON.stringify({
               model: "claude-sonnet-4-20250514",
               max_tokens: 1000,
@@ -2922,7 +2943,7 @@ export default function EmaarDashboardV2() {
           const parsed = JSON.parse(text.replace(/```json/g, "").replace(/```/g, "").trim());
           setAiInsights(parsed);
           // Cache for a week
-          try { await setDoc(doc(db, "aiInsights", "latest"), { insights: parsed, generatedAt: Date.now() }); } catch(e) {}
+          try { await setDoc(doc(db, "aiInsights", "latest"), { insights: parsed, generatedAt: Date.now() }); } catch (e) { console.error("swallowed@EmaarDashboardV2.jsx:2946", e); }
           setInsightsLoading(false);
         }
       } catch(e) { setInsightsLoading(false); }
@@ -3363,7 +3384,9 @@ export default function EmaarDashboardV2() {
         const s = c.salePrices || {};
         const vals = Object.values(y).filter(v => typeof v === "number" && v > 0);
         const avgGross = vals.length > 0 ? vals.reduce((a,b) => a+b, 0) / vals.length : 0;
-        const avgNet = avgGross > 0 ? avgGross * 0.78 : 0; // ~78% of gross is typical net in Dubai
+        // Was: avgGross * 0.78 — a flat multiple that ignored service charges.
+        // Now uses the shared formula so every surface agrees. null = not computable.
+        const avgNet = computeNetYield(avgGross, c.serviceCharge, c.medianPPSF ?? c.avgPpsf);
         const rentVals = Object.values(r).filter(v => typeof v === "number" && v > 0);
         const avgRent = rentVals.length > 0 ? Math.round(rentVals.reduce((a,b) => a+b, 0) / rentVals.length) : 0;
         const priceVals = Object.values(s).filter(v => typeof v === "number" && v > 0);
@@ -3373,7 +3396,8 @@ export default function EmaarDashboardV2() {
           community: c.community,
           type: "Apartment",
           grossYield: parseFloat(avgGross.toFixed(1)),
-          netYield: parseFloat(avgNet.toFixed(1)),
+          netYield: avgNet, // already rounded, or null when not computable
+
           avgRent: avgRent,
           avgPrice: avgPrice,
           ppsf: avgPrice > 0 ? Math.round(avgPrice / 900) : 0, // ~900 sqft avg
@@ -3414,7 +3438,10 @@ export default function EmaarDashboardV2() {
 
     // neighbourhoodScores  direct collection listener (259 docs)
     unsubs.push(onSnapshot(collection(db, "neighbourhoodScores"), (snap) => {
-      const rows = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      // netYield is recomputed here from serviceCharge + PPSF rather than trusted
+      // as stored. The stored value is a flat deduction that ignores service
+      // charges entirely — see src/utils/yield.js for the worked example.
+      const rows = snap.docs.map(d => withComputedNetYield({ id: d.id, ...d.data() }));
       if (rows.length > 0) setLiveNeighbourhoods(rows);
     }));
 
@@ -3612,7 +3639,7 @@ if (snap.exists()) setWatchlist(snap.data().projects || []);
 if(auth.currentUser?.uid){unsubs.push(onSnapshot(doc(db, "priceAlerts", auth.currentUser.uid), (snap) => {
 if (snap.exists()) setMyAlerts(snap.data().alerts || []);
 }))}
-    return () => unsubs.forEach(u => { try { u(); } catch {} });
+    return () => unsubs.forEach(u => { try { u(); } catch (e) { console.error("swallowed@EmaarDashboardV2.jsx:3642", e); } });
   }, [isLoggedIn]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
@@ -3646,7 +3673,7 @@ if (snap.exists()) setMyAlerts(snap.data().alerts || []);
               provider: firebaseUser.providerData?.[0]?.providerId || "email",
               loginHistory: newHistory,
             }, { merge: true });
-          } catch(e) {}
+          } catch (e) { console.error("swallowed@EmaarDashboardV2.jsx:3676", e); }
           const userDoc = await getDoc(doc(db, "users", firebaseUser.uid));
           if (userDoc.exists()) {
             const data = userDoc.data();
@@ -3672,7 +3699,7 @@ if (snap.exists()) setMyAlerts(snap.data().alerts || []);
                       old_value: "Pro Trial", updated_at: new Date().toLocaleDateString("en-AE"),
                     }, import.meta.env.VITE_EMAILJS_PUBLIC_KEY);
                     await setDoc(doc(db, "users", firebaseUser.uid), { emailSent_trialExpired: true }, { merge: true });
-                  } catch(e) {}
+                  } catch (e) { console.error("swallowed@EmaarDashboardV2.jsx:3702", e); }
                 }
               } else {
                 setTrialDaysLeft(daysLeft);
@@ -3687,7 +3714,7 @@ if (snap.exists()) setMyAlerts(snap.data().alerts || []);
                       old_value: "Pro Trial Active", updated_at: new Date().toLocaleDateString("en-AE"),
                     }, import.meta.env.VITE_EMAILJS_PUBLIC_KEY);
                     await setDoc(doc(db, "users", firebaseUser.uid), { emailSent_trial3d: true }, { merge: true });
-                  } catch(e) {}
+                  } catch (e) { console.error("swallowed@EmaarDashboardV2.jsx:3717", e); }
                 }
                 // Send 1-day urgent warning (once only)
                 if (daysLeft <= 1 && !data.emailSent_trial1d) {
@@ -3700,7 +3727,7 @@ if (snap.exists()) setMyAlerts(snap.data().alerts || []);
                       old_value: "Pro Trial â‚¬â€ Final Day", updated_at: new Date().toLocaleDateString("en-AE"),
                     }, import.meta.env.VITE_EMAILJS_PUBLIC_KEY);
                     await setDoc(doc(db, "users", firebaseUser.uid), { emailSent_trial1d: true }, { merge: true });
-                  } catch(e) {}
+                  } catch (e) { console.error("swallowed@EmaarDashboardV2.jsx:3730", e); }
                 }
               }
             }
@@ -3719,7 +3746,7 @@ if (snap.exists()) setMyAlerts(snap.data().alerts || []);
               try {
                 const mgrDoc = await getDoc(doc(db, "users", data.managerId));
                 if (mgrDoc.exists()) setManagerName(mgrDoc.data().name || "");
-              } catch(e) {}
+              } catch (e) { console.error("swallowed@EmaarDashboardV2.jsx:3749", e); }
             }
             setDevId(data.devId || null);
             setIsSuspended(!!data.suspended);
@@ -4028,7 +4055,7 @@ const unsub = onSnapshot(nQuery, (snap) => {
   const markNotifRead = async (id) => {
     setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
     setUnreadCount(prev => Math.max(0, prev - 1));
-    try { await setDoc(doc(db, "notifications", id), { read: true }, { merge: true }); } catch (e) {}
+    try { await setDoc(doc(db, "notifications", id), { read: true }, { merge: true }); } catch (e) { console.error("swallowed@EmaarDashboardV2.jsx:4058", e); }
   };
 
   // ONBOARDING - show for new users on first login
@@ -4207,7 +4234,7 @@ const unsub = onSnapshot(nQuery, (snap) => {
             old_value: u?.tier || "free",
             updated_at: now.toLocaleDateString("en-AE"),
           }, import.meta.env.VITE_EMAILJS_PUBLIC_KEY);
-        } catch(e) {}
+        } catch (e) { console.error("swallowed@EmaarDashboardV2.jsx:4237", e); }
       }
     } catch (err) {
       notify("â€â€” Failed to update tier");
@@ -4218,8 +4245,8 @@ const unsub = onSnapshot(nQuery, (snap) => {
     sessionStorage.removeItem("dxb_active_tab");
     setTab(key);
     setSidebarOpen(false);
-    try { localStorage.setItem('dxb_active_tab', key); } catch(e) {}
-    try { window.history.pushState({ tab: key }, '', '#' + key.replace(/ /g, '-').toLowerCase()); } catch(e) {}
+    try { localStorage.setItem('dxb_active_tab', key); } catch (e) { console.error("swallowed@EmaarDashboardV2.jsx:4248", e); }
+    try { window.history.pushState({ tab: key }, '', '#' + key.replace(/ /g, '-').toLowerCase()); } catch (e) { console.error("swallowed@EmaarDashboardV2.jsx:4249", e); }
     if (key === "Admin" && userTier === "admin") fetchAdminUsers();
     window.scrollTo({ top: 0, behavior: "smooth" });
     const mainEl = document.querySelector(".main-content");
@@ -4233,7 +4260,7 @@ const unsub = onSnapshot(nQuery, (snap) => {
           const updated = [actEntry, ...prev].slice(0, 15);
           setDoc(doc(db, "users", auth.currentUser?.uid), { recentActivity: updated }, { merge: true });
         });
-      } catch(e) {}
+      } catch (e) { console.error("swallowed@EmaarDashboardV2.jsx:4263", e); }
     }
   };
 
@@ -4620,7 +4647,7 @@ const unsub = onSnapshot(nQuery, (snap) => {
           {/* PROJECTS TAB (extracted, includes detail modal) */}
           {tab === "Projects" && (
             <ProjectsTab
-              SEED_PROJECTS={[]} liveProjects={liveProjects} extraProjects={extraProjects}
+              SEED_PROJECTS={[]} liveProjects={liveProjects} extraProjects={projectsWithOverrides}
               developments={developmentsData}
               projSearch={projSearch} setProjSearch={setProjSearch}
               projDev={projDev} setProjDev={setProjDev}
@@ -4655,7 +4682,7 @@ const unsub = onSnapshot(nQuery, (snap) => {
           {/* â€” MAP TAB â€” */}
           {tab === "Map" && (
             <CommunityMapTab
-activeProjects={[...(Array.isArray(liveProjects)?liveProjects:[]),...(Array.isArray(extraProjects)?extraProjects:[]),...(Array.isArray(developmentsData)?developmentsData:[])]}
+activeProjects={[...projectsWithOverrides,...(Array.isArray(developmentsData)?developmentsData:[])]}
               liveCommunityROI={liveCommunityROI}
               setTab={handleTabChange}
               liveNeighbourhoods={liveNeighbourhoods}
@@ -4808,7 +4835,7 @@ activeProjects={[...(Array.isArray(liveProjects)?liveProjects:[]),...(Array.isAr
             <HandoverTab
               liveNeighbourhoods={liveNeighbourhoods}
               liveHandover={liveHandover}
-              liveProjects={[...(Array.isArray(liveProjects)?liveProjects:[]),...(Array.isArray(extraProjects)?extraProjects:[])]}
+              liveProjects={projectsWithOverrides}
               globalFilters={_gf}
               allDevelopers={allDevelopers}
               handleTabChange={handleTabChange}
@@ -5008,6 +5035,7 @@ activeProjects={[...(Array.isArray(liveProjects)?liveProjects:[]),...(Array.isAr
               mortProfile={mortProfile} setMortProfile={setMortProfile}
               mortView={mortView} setMortView={setMortView}
               mortIncome={mortIncome} setMortIncome={setMortIncome}
+              mortExistingDebts={mortExistingDebts} setMortExistingDebts={setMortExistingDebts}
               invScSearch={invScSearch} setInvScSearch={setInvScSearch}
               liveNeighbourhoods={liveNeighbourhoods}
               invScSort={invScSort} setInvScSort={setInvScSort}
@@ -5774,7 +5802,7 @@ activeProjects={[...(Array.isArray(liveProjects)?liveProjects:[]),...(Array.isAr
                               upgradedAt: new Date().toISOString(),
                               upgradedPlan: showCheckout.name
                             });
-                          } catch(e) {}
+                          } catch (e) { console.error("swallowed@EmaarDashboardV2.jsx:5805", e); }
                           setCheckoutStep(3);
                         }
                       });
