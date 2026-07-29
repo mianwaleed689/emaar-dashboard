@@ -5,6 +5,7 @@ import React from "react";
 import { T } from "../data";
 import { SvgIcons } from "../components/Icons";
 import { auth } from "../firebase";
+import { CLAUDE_MODEL, CLAUDE_MAX_TOKENS, CLAUDE_OUTPUT_CONFIG, extractClaudeText } from "../utils/claude";
 import { GOLDEN_VISA_THRESHOLD } from "../utils/constants";
 
 function MarketingTab({ liveNeighbourhoods=[],
@@ -292,8 +293,9 @@ function MarketingTab({ liveNeighbourhoods=[],
                     ...(idToken ? { Authorization: `Bearer ${idToken}` } : {}),
                   },
                   body: JSON.stringify({
-                    model:"claude-sonnet-4-20250514",
-                    max_tokens:1000,
+                    model: CLAUDE_MODEL,
+                    max_tokens: CLAUDE_MAX_TOKENS,
+                    output_config: CLAUDE_OUTPUT_CONFIG,
                     messages:[{
                       role:"user",
                       content:`You are a Dubai real estate listing specialist. Write a professional, SEO-optimized property listing description for Bayut and Property Finder.\n\nProperty details:\n- Community: ${mktListingComm}\n- Type: ${mktListingType}\n- Bedrooms: ${mktListingBeds}BR\n- Price: AED ${(mktListingPrice/1000000).toFixed(2)}M\n- Key features: ${mktListingFeatures || "Modern finishes, built-in wardrobes, balcony"}\n\nWrite:\n1. HEADLINE (max 10 words, compelling)\n2. DESCRIPTION (150-200 words, include ROI angle, Golden Visa eligibility if AED 2M+, community highlights, payment terms)\n3. WHATSAPP MESSAGE (50 words max, casual, with call to action)\n4. KEY SEARCH TAGS (10 tags for portal SEO)\n\nFormat clearly with these 4 sections labeled. Be specific to Dubai market. Include yield % if relevant. No generic phrases.`
@@ -301,8 +303,8 @@ function MarketingTab({ liveNeighbourhoods=[],
                   })
                 });
                 const data = await res.json();
-                const text = data.content?.[0]?.text || "Error generating listing";
-                setMktAiResult(text);
+                const text = extractClaudeText(data);
+                setMktAiResult(text || ("Could not generate listing: " + (data?.error?.message || "empty response")));
               } catch(e) {
                 setMktAiResult("Error: " + e.message);
               }

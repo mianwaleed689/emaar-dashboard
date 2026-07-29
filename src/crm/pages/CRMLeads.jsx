@@ -3,6 +3,7 @@ import React, { useState, useMemo, useCallback } from "react";
 import { collection, addDoc } from "firebase/firestore";
 import { db } from "../../firebase";
 import { C, LEAD_STAGES, SOURCES, fmtAED, timeAgo, getStageCfg } from "../crmTokens";
+import { CLAUDE_MODEL, CLAUDE_MAX_TOKENS, CLAUDE_OUTPUT_CONFIG, extractClaudeText, parseClaudeJson } from "../../utils/claude";
 
 const SMART_TABS = [
   { key:"all",         label:"All",          filter:()=>true },
@@ -226,15 +227,16 @@ export default function CRMLeads({ myLeads, myLeadsLoading, teamMembers, firebas
         method:"POST",
         headers:{"Content-Type":"application/json"},
         body:JSON.stringify({
-          model:"claude-sonnet-4-20250514",
-          max_tokens:1000,
+          model: CLAUDE_MODEL,
+          max_tokens: CLAUDE_MAX_TOKENS,
+          output_config: CLAUDE_OUTPUT_CONFIG,
           system:"You are a CRM filter assistant. Given a natural language query and leads, return ONLY a JSON array of matching lead IDs. Nothing else. Example: [\"id1\",\"id2\"]",
           messages:[{role:"user",content:`Query: "${aiQuery}"\n\nLeads:\n${JSON.stringify((myLeads||[]).slice(0,200).map(l=>({id:l.id,name:l.name,status:l.status,budget:l.budget,source:l.source,community:l.community})))}`}]
         })
       });
       const data = await resp.json();
-      const text = data.content?.[0]?.text||"[]";
-      const ids = JSON.parse(text.replace(/```json|```/g,"").trim());
+      const ids = parseClaudeJson(extractClaudeText(data), []);
+      if (!Array.isArray(ids)) throw new Error("AI returned an unexpected shape");
       setAiFiltered((myLeads||[]).filter(l=>ids.includes(l.id)));
       notify(`AI found ${ids.length} matching leads`);
     } catch(e){notify("AI filter failed","error");setAiFiltered(null);}

@@ -11,6 +11,7 @@ import { Link } from "react-router-dom";
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area, ComposedChart, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ReferenceLine, Legend } from "recharts";
 import { auth, db } from "../firebase";
 import { withComputedNetYield, computeNetYield } from "../utils/yield";
+import { CLAUDE_MODEL, CLAUDE_MAX_TOKENS, CLAUDE_OUTPUT_CONFIG, extractClaudeText, parseClaudeJson } from "../utils/claude";
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail, sendEmailVerification, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import { collection, getDocs, doc, getDoc, setDoc, updateDoc, deleteDoc, onSnapshot, addDoc, query, where, orderBy, limit } from "firebase/firestore";
 import emailjs from "@emailjs/browser";
@@ -2933,14 +2934,21 @@ export default function EmaarDashboardV2() {
               ...(idToken ? { Authorization: `Bearer ${idToken}` } : {}),
             },
             body: JSON.stringify({
-              model: "claude-sonnet-4-20250514",
-              max_tokens: 1000,
+              model: CLAUDE_MODEL,
+              max_tokens: CLAUDE_MAX_TOKENS,
+              output_config: CLAUDE_OUTPUT_CONFIG,
               messages: [{ role: "user", content: `You are a Dubai real estate analyst. Generate exactly 5 sharp, data-driven market insights for Dubai property investors right now (${new Date().toLocaleDateString("en-AE", { month: "long", year: "numeric" })}). Use these verified DLD full-year 2025 facts: total transaction value AED 917B across 270,000+ transactions (+20% YoY) — of which real-estate investments were ~AED 680B across 258,600 deals; investor base 193,100 (+24%, incl. 129,600 new); women invested AED 154B across 76,700 deals; citywide residential median AED 1,692/sqft (DLD, 192,808 txns); capital values +19.8% YoY with villas +25.1% and apartments +14.2% (ValuStrat VPI Dec 2025); ~51,000 mortgage deals (+23%); DLD transfer fee 4%, paid by the buyer by market convention. Return ONLY a JSON array of 5 objects, no markdown, no preamble: [{"title":"...","insight":"...","tag":"Yield|Price|Risk|Macro|Opportunity","direction":"up|down|neutral"}]` }]
             })
           });
           const apiData = await res.json();
-          const text = apiData.content?.[0]?.text || "[]";
-          const parsed = JSON.parse(text.replace(/```json/g, "").replace(/```/g, "").trim());
+          // content[0] is not necessarily the text block — thinking-enabled
+          // models put a thinking block first, so this must search by type.
+          const parsed = parseClaudeJson(extractClaudeText(apiData), []);
+          if (!Array.isArray(parsed) || parsed.length === 0) {
+            console.error("AI Insights: no usable response", apiData?.error || apiData);
+            setInsightsLoading(false);
+            return;
+          }
           setAiInsights(parsed);
           // Cache for a week
           try { await setDoc(doc(db, "aiInsights", "latest"), { insights: parsed, generatedAt: Date.now() }); } catch (e) { console.error("swallowed@EmaarDashboardV2.jsx:2946", e); }
