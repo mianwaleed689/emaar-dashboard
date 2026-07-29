@@ -159,7 +159,7 @@ export const MARKET_FACTS = {
   },
   avgGrossYield2025: {
     value: "6.55%",
-    change: "Apts 7.03% · Villas 4.63%",
+    change: "Apts 7.2% · Villas 4.9%",
     note: "UNVERIFIED — REIDIN is paywalled, figure not independently confirmed",
     source: "REIDIN (unconfirmed)",
     asOf: "2025-12-31",
