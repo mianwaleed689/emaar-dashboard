@@ -64,7 +64,7 @@ add(`  "Website":"Morning 9-11am","TikTok":"Evening 7-10pm","Manual":"Anytime",`
 add(`};`);
 add(``);
 add(`const WA_TEMPLATES = [`);
-add(`  { label:"First Contact",   body:"Hello {name}, I came across your property enquiry. I am {agent} from The Address Holding. We have excellent options matching your requirements in Dubai. When would be a good time to connect?" },`);
+add(`  { label:"First Contact",   body:"Hello {name}, I came across your property enquiry. I am {agent} from DXB Analytics. We have excellent options matching your requirements in Dubai. When would be a good time to connect?" },`);
 add(`  { label:"Follow Up",       body:"Hello {name}, following up on your property search. We have new listings matching your budget. Would you like to schedule a viewing this week?" },`);
 add(`  { label:"Viewing Confirm", body:"Hello {name}, confirming your property viewing. Please let me know if you need to reschedule. Looking forward to meeting you!" },`);
 add(`  { label:"Offer Made",      body:"Hello {name}, great news! We have submitted your offer. I will update you as soon as we hear back." },`);

@@ -15888,7 +15888,7 @@ export default function AdminPanel() {
                             <button type="button"
                               onClick={e => {
                                 e.stopPropagation();
-                                sendResend(u.email, "We miss you â€” special offer inside", `Hi ${u.name || "there"},\n\nYour trial ended but we'd love to have you back.\n\nContact us at info@theaddressholding.ae for a special rate.\n\nBest regards,\nDXB Analytics Team`).then(() => notify(`Win-back email sent to ${u.name || u.email}`)).catch(() => notify("Email failed"));
+                                sendResend(u.email, "We miss you â€” special offer inside", `Hi ${u.name || "there"},\n\nYour trial ended but we'd love to have you back.\n\nReply to this email and we'll arrange a special rate.\n\nBest regards,\nDXB Analytics Team`).then(() => notify(`Win-back email sent to ${u.name || u.email}`)).catch(() => notify("Email failed"));
                               }}
                               style={{ fontSize: 10, fontWeight: 700, color: T.red, background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 6, padding: "4px 8px", cursor: "pointer", fontFamily: "'Outfit',sans-serif", flexShrink: 0 }}>
                               Win-back

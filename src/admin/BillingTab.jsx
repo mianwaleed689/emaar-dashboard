@@ -136,7 +136,7 @@ const BillingTab = ({ db, T, notify, users, adminUser }) => {
     td{padding:12px 10px;border-bottom:1px solid #E2E8F0;font-size:14px}.total{font-size:20px;font-weight:900;color:#D4A843}
     .footer{margin-top:40px;padding-top:20px;border-top:1px solid #E2E8F0;color:#94A3B8;font-size:11px;text-align:center}
     @media print{body{margin:0}}</style></head><body>
-    <div class="header"><div><div class="logo">DXB Analytics</div><div class="sub">The Address Holding · Dubai, UAE<br>info@theaddressholding.ae</div></div>
+    <div class="header"><div><div class="logo">DXB Analytics</div><div class="sub">Dubai Real Estate Intelligence · Dubai, UAE</div></div>
     <div style="text-align:right"><div class="inv-no">${inv.invoiceNo}</div><div class="sub">Date: ${inv.date}<br>Due: ${inv.dueDate}</div><div style="margin-top:8px"><span class="badge">${inv.status==="succeeded"?"PAID":"FAILED"}</span></div></div></div>
     <div><strong>Bill To:</strong><br>${inv.customer}<br><span style="color:#64748B;font-size:13px">Stripe ID: ${inv.stripeId}</span></div>
     <table><thead><tr><th>Description</th><th>Period</th><th>Amount (AED)</th></tr></thead><tbody>
@@ -145,7 +145,7 @@ const BillingTab = ({ db, T, notify, users, adminUser }) => {
     <div style="text-align:right;margin:20px 0"><div style="color:#64748B;font-size:13px">Subtotal: AED ${inv.amount}</div>
     <div style="color:#64748B;font-size:13px">VAT (0%): AED 0</div>
     <div class="total">Total: AED ${inv.amount}</div></div>
-    <div class="footer">DXB Analytics · Dubai Real Estate Intelligence · emaar-dashboard.vercel.app<br>For billing inquiries: info@theaddressholding.ae</div>
+    <div class="footer">DXB Analytics · Dubai Real Estate Intelligence · dxb-analytics.com</div>
     </body></html>`;
     const w = window.open("", "_blank");
     w.document.write(html);

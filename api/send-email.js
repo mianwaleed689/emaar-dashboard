@@ -50,11 +50,11 @@ function renderEmail(bodyText) {
   return `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:24px">
     <div style="border-bottom:2px solid #D4A843;padding-bottom:12px;margin-bottom:20px">
       <h2 style="color:#D4A843;margin:0;font-size:18px">DXB Analytics</h2>
-      <p style="color:#64748B;margin:4px 0 0;font-size:11px">The Address Holding — Dubai, UAE</p>
+      <p style="color:#64748B;margin:4px 0 0;font-size:11px">Dubai Real Estate Intelligence — Dubai, UAE</p>
     </div>
     <div style="color:#1E293B;font-size:14px;line-height:1.7;white-space:pre-wrap">${escapeHtml(bodyText)}</div>
     <div style="border-top:1px solid #E2E8F0;margin-top:24px;padding-top:12px;color:#94A3B8;font-size:11px">
-      DXB Analytics — <a href="mailto:info@theaddressholding.ae" style="color:#D4A843">info@theaddressholding.ae</a>
+      DXB Analytics — Dubai Real Estate Intelligence
     </div>
   </div>`;
 }
