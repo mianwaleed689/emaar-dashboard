@@ -7,6 +7,8 @@ import { SvgIcons } from "../components/Icons";
 import { db } from "../firebase";
 import { collection, addDoc } from "firebase/firestore";
 
+import { findBankRates, MORTGAGE_DATA_AS_OF } from "../data/mortgageMarket";
+
 function BankingTab({ orgId, userId, liveEiborRates,
   bankView, setBankView,
   bankSelected, setBankSelected,
@@ -70,9 +72,19 @@ function BankingTab({ orgId, userId, liveEiborRates,
               "6M":  { rate: 3.676, label: "6 Month",  trend: "stable" },
               "1Y":  { rate: 3.674, label: "1 Year",   trend: "stable" },
             };
-            const EIBOR_3M = parseFloat(liveEiborRates?.["3m"] ?? 3.593);
+            /* Fallback updated to the verified 10 July 2026 reading. The previous
+               3.593 was a February figure, so whenever Firestore was unavailable
+               the tab silently showed a five-month-old rate as current. */
+            const EIBOR_3M = parseFloat(liveEiborRates?.["3m"] ?? 3.74);
+            const eiborIsLive = !!liveEiborRates?.["3m"];
 
             /* ── Historical EIBOR for chart (3M rate) ── */
+            /* The final point is derived from the LIVE EIBOR rather than hardcoded.
+               Previously this series ended at "Feb 26: 3.593" and the chart
+               labelled that last entry as the current rate — so it displayed a
+               five-month-old figure as "now", while the live value sat in
+               EIBOR_3M a few lines above.
+               Historical points verified: Mar 2026 = 3.66% (month-end). */
             const EIBOR_HISTORY = [
               { period:"Jan 22", rate:0.51  },
               { period:"Jul 22", rate:2.80  },
@@ -83,6 +95,8 @@ function BankingTab({ orgId, userId, liveEiborRates,
               { period:"Jan 25", rate:4.30  },
               { period:"Jul 25", rate:3.90  },
               { period:"Feb 26", rate:3.593 },
+              { period:"Mar 26", rate:3.66  },
+              { period: eiborIsLive ? "Live" : "Latest", rate: EIBOR_3M },
             ];
 
             /* ── LTV rules (UAE Central Bank official) ── */
@@ -288,7 +302,21 @@ function BankingTab({ orgId, userId, liveEiborRates,
                 processingTime: "3-5 days pre-approval",
                 websiteUrl: "sc.com/ae",
               },
-            ];
+            ].map(b => {
+              /* Rates are overridden from src/data/mortgageMarket.js so this tab
+                 and the Mortgage tab cannot disagree. They previously did: this
+                 table said Mashreq 3.79% and Dubai Islamic 3.75%, while the
+                 Mortgage tab said 4.10% and 3.99% for the same lenders. Everything
+                 else on each bank (branding, features, contact details) is kept. */
+              const r = findBankRates(b.name);
+              return r ? {
+                ...b,
+                fixedRate1yr: r.fixed1y,
+                fixedRate3yr: r.fixed3y,
+                fixedRate5yr: r.fixed5y,
+                ratesVerified: r.verified !== false,
+              } : { ...b, ratesVerified: false };
+            });
 
             /* ── Calculator logic ── */
             const propVal     = bankPropValue;

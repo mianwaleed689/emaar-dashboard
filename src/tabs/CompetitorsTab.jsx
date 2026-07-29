@@ -312,6 +312,23 @@ function CompetitorsTab({
             return (
               <div style={{ animation:"fadeUp 0.4s ease-out forwards" }}>
 
+                {/* Provenance. COMP_DATA is a hardcoded table of 24 developers.
+                    Real per-developer transaction counts and values arrive daily
+                    from cron-dld-daily into the `developers` collection, but this
+                    tab does not read them. Labelled until it does. */}
+                <div style={{ display:"flex", alignItems:"center", gap:8, flexWrap:"wrap",
+                  padding:"9px 13px", marginBottom:12, borderRadius:9,
+                  background:"rgba(245,158,11,0.06)", border:"1px solid rgba(245,158,11,0.28)" }}>
+                  <span style={{ fontSize:9, fontWeight:700, letterSpacing:0.4, textTransform:"uppercase",
+                    color:"#F59E0B", background:"rgba(245,158,11,0.14)",
+                    border:"1px solid rgba(245,158,11,0.4)", borderRadius:999, padding:"2px 8px" }}>
+                    Estimate
+                  </span>
+                  <span style={{ fontSize:10, color:T.textSecondary, fontFamily:"'Outfit',sans-serif" }}>
+                    Comparison figures are researched estimates, not live DLD data — treat as indicative only.
+                  </span>
+                </div>
+
                 {/* ── HEADER ── */}
                 <div style={{ display:"flex", alignItems:"flex-start", justifyContent:"space-between", padding:"10px 0", marginBottom:16, borderBottom:`1px solid ${T.border}`, flexWrap:"wrap", gap:10 }}>
                   <div>

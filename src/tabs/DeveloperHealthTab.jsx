@@ -252,6 +252,26 @@ function DeveloperHealthTab({ liveNeighbourhoods=[],
             return (
               <div style={{ animation:"fadeUp 0.4s ease-out forwards" }}>
 
+                {/* Provenance. These scores are researched estimates, not computed
+                    from data. Of the 9 weighting factors, roughly 33 points are
+                    derivable from DLD transaction data; delivery record (20),
+                    reputation (9), RERA compliance (10) and buyer mix (5) have no
+                    data source at all. A composite that looks like a model output
+                    must not be presented as one. */}
+                <div style={{ display:"flex", alignItems:"center", gap:8, flexWrap:"wrap",
+                  padding:"9px 13px", marginBottom:12, borderRadius:9,
+                  background:"rgba(245,158,11,0.06)", border:"1px solid rgba(245,158,11,0.28)" }}>
+                  <span style={{ fontSize:9, fontWeight:700, letterSpacing:0.4, textTransform:"uppercase",
+                    color:"#F59E0B", background:"rgba(245,158,11,0.14)",
+                    border:"1px solid rgba(245,158,11,0.4)", borderRadius:999, padding:"2px 8px" }}>
+                    Estimate
+                  </span>
+                  <span style={{ fontSize:10, color:T.textSecondary, fontFamily:"'Outfit',sans-serif" }}>
+                    Scores are researched estimates, not computed from live data. Delivery record,
+                    reputation, RERA compliance and buyer mix have no data source — treat as indicative only.
+                  </span>
+                </div>
+
                 {/* Header */}
                 <div style={{ display:"flex", alignItems:"flex-start", justifyContent:"space-between", padding:"10px 0", marginBottom:16, borderBottom:`1px solid ${T.border}`, flexWrap:"wrap", gap:8 }}>
                   <div>

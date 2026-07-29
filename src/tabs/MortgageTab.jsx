@@ -11,6 +11,12 @@ import { T } from "../data";
 import { SvgIcons } from "../components/Icons";
 import { Section, Chart, CustomTooltip, KPI, ForecastCard, DataBadge, TabSources, LoadingSkeleton } from "../components/SharedUI";
 import SEED_DATA from "../utils/seedData";
+import {
+  BANKS as BANK_TABLE,
+  LTV_RULES,
+  BANK_RATES_SOURCE,
+  MORTGAGE_DATA_AS_OF,
+} from "../data/mortgageMarket";
 
 function MortgageTab({ liveNeighbourhoods=[], liveMortgageRates, liveEiborRates, liveInvestScores, handleTabChange, mortPrice, setMortPrice, mortDown, setMortDown, mortRate, setMortRate, mortYears, setMortYears, mortType, setMortType, mortProfile, setMortProfile, mortView, setMortView, mortIncome, setMortIncome, mortExistingDebts = 0, setMortExistingDebts = () => {}, invScSearch, setInvScSearch, invScSort, setInvScSort, invScFilter, setInvScFilter, invScView, setInvScView, invScSelected, setInvScSelected }) {
 
@@ -27,22 +33,22 @@ function MortgageTab({ liveNeighbourhoods=[], liveMortgageRates, liveEiborRates,
             const eiborIsLive = !!liveEiborRates?.["3m"];
             const eiborSource = eiborIsLive ? `Live - ${liveEiborRates?.asOf || "Firestore"}` : "Fallback (Feb 2026)";
 
-            const BANKS = [
-              { bank:"Emirates NBD",  logo:"\uD83C\uDFE6", fixed1y:3.99, fixed3y:4.25, fixed5y:4.49, variable:EIBOR_3M+1.50, maxLTV:80, minSalary:15000, maxLoan:20000000, processingFee:1.0, islamic:false, salaryTransfer:true,  highlight:true,  note:"Govt-owned. Best for large loans. Salary transfer gets -0.25%." },
-              { bank:"FAB",           logo:"\uD83C\uDFE6", fixed1y:3.99, fixed3y:4.19, fixed5y:4.44, variable:EIBOR_3M+1.45, maxLTV:80, minSalary:15000, maxLoan:15000000, processingFee:1.0, islamic:false, salaryTransfer:true,  highlight:false, note:"First Abu Dhabi Bank. Competitive 3yr fixed. Good for expats." },
-              { bank:"ADCB",          logo:"\uD83C\uDFE6", fixed1y:3.99, fixed3y:4.25, fixed5y:4.49, variable:EIBOR_3M+1.55, maxLTV:80, minSalary:15000, maxLoan:15000000, processingFee:1.0, islamic:false, salaryTransfer:true,  highlight:false, note:"ADCB Mortgage One offers offset facility. Good for high earners." },
-              { bank:"Mashreq",       logo:"\uD83C\uDFE6", fixed1y:4.10, fixed3y:4.35, fixed5y:4.59, variable:EIBOR_3M+1.65, maxLTV:80, minSalary:15000, maxLoan:12000000, processingFee:1.0, islamic:false, salaryTransfer:false, highlight:false, note:"No mandatory salary transfer. Flexible for self-employed." },
-              { bank:"Dubai Islamic", logo:"\uD83D\uDD4C", fixed1y:3.99, fixed3y:4.25, fixed5y:4.50, variable:EIBOR_3M+1.55, maxLTV:80, minSalary:15000, maxLoan:15000000, processingFee:1.0, islamic:true,  salaryTransfer:false, highlight:false, note:"Sharia-compliant Murabaha/Ijara. No interest (riba). Most popular Islamic option." },
-              { bank:"HSBC UAE",      logo:"\uD83C\uDFE6", fixed1y:4.09, fixed3y:4.34, fixed5y:4.59, variable:EIBOR_3M+1.60, maxLTV:80, minSalary:15000, maxLoan:15000000, processingFee:1.0, islamic:false, salaryTransfer:false, highlight:false, note:"Global bank. Good for international income documentation. Non-resident friendly." },
-            ];
+            /* Bank rates now come from src/data/mortgageMarket.js, which carries
+               its source and verification date. The variable rate is derived from
+               live EIBOR rather than baked in, so it tracks the market. maxLTV
+               follows the CBUAE cap for the selected profile and price band. */
+            const BANKS = BANK_TABLE.map(b => ({
+              ...b,
+              logo: b.islamic ? "\uD83D\uDD4C" : "\uD83C\uDFE6",
+              variable: EIBOR_3M + b.variableMargin,
+            }));
 
             /* ── LTV Rules (UAE Central Bank) ── */
-            const LTV_RULES = {
-              expat:       { under5m: 80, over5m: 65, nonResident: 60 },
-              uae_national:{ under5m: 85, over5m: 70, nonResident: 85 },
-              non_resident:{ under5m: 60, over5m: 50, nonResident: 50 },
-            };
-
+            /* LTV caps now live in src/data/mortgageMarket.js with their source
+               and verification date. The expat above-AED-5M cap here was 65,
+               which is the pre-2020 figure — CBUAE Board Resolution 31/2/2020
+               raised it to 70, so this tab was demanding a 35% deposit where the
+               regulation requires 30%. */
             const profileRule = LTV_RULES[mortProfile] || LTV_RULES.expat;
             const [commSearch, setCommSearch] = React.useState("");
   const [selComm, setSelComm] = React.useState(null);
@@ -321,6 +327,21 @@ function MortgageTab({ liveNeighbourhoods=[], liveMortgageRates, liveEiborRates,
                           {t.label}
                         </button>
                       ))}
+                    </div>
+
+                    {/* Provenance: indicative bank rates move often, so the
+                        verification date is shown rather than left implicit. */}
+                    <div style={{ display:"flex", alignItems:"center", gap:8, flexWrap:"wrap", marginBottom:12,
+                      padding:"8px 12px", background:"rgba(255,255,255,0.02)", border:`1px solid ${T.border}`, borderRadius:8 }}>
+                      <span style={{ fontSize:9, fontWeight:700, letterSpacing:0.4, textTransform:"uppercase",
+                        color:T.gold, background:"rgba(212,168,67,0.12)", border:"1px solid rgba(212,168,67,0.35)",
+                        borderRadius:999, padding:"2px 8px" }}>
+                        Indicative
+                      </span>
+                      <span style={{ fontSize:10, color:T.textSecondary, fontFamily:"'Outfit',sans-serif" }}>
+                        Rates verified {MORTGAGE_DATA_AS_OF} · EIBOR {eiborSource} · confirm with the lender before relying on a figure
+                      </span>
+                      <span style={{ fontSize:9, color:T.textMuted, width:"100%" }}>{BANK_RATES_SOURCE}</span>
                     </div>
 
                     {/* Bank cards */}
