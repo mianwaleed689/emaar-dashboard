@@ -70,10 +70,15 @@ function FlipTab({ liveNeighbourhoods=[], flipBuyPrice, setFlipBuyPrice, flipSel
             const renovCost    = flpRenovCost;
 
             /* ── Disposal costs ──
-               SELLER_PAYS_EXIT_DLD: in Dubai the 4% DLD transfer fee is normally
-               borne by the BUYER. Set to false if the seller does not carry it —
-               it is a single switch, deliberately not buried in the maths. */
-            const SELLER_PAYS_EXIT_DLD = true;
+               The 4% DLD transfer fee is legally split 2%/2% between buyer and
+               seller (Dubai Executive Council, 2013), but market convention in
+               2026 is that the BUYER pays the full 4% — the seller's share is
+               passed to the buyer in nearly every standard MOU. So on exit the
+               seller normally pays no DLD fee, only agency commission.
+
+               Set this to true if your seller absorbs their 2% (or the full 4%)
+               as a negotiating concession in a slow market. One line, on purpose. */
+            const SELLER_PAYS_EXIT_DLD = false;
             const dldSell      = SELLER_PAYS_EXIT_DLD ? sellPrice * 0.04 : 0;
             const agentSell    = sellPrice * (flpAgentSell / 100);
             const totalDispose = dldSell + agentSell;

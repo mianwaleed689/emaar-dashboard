@@ -14,6 +14,7 @@ import {
 } from "recharts";
 import { T } from "../data";
 import { useMarketKpis, useMarketChart } from "../hooks/useMarketMetrics";
+import { MARKET_FACTS } from "../data/marketFacts";
 
 // ── Year annotations ─────────────────────────────────────────────
 const YEAR_META = {
@@ -66,12 +67,16 @@ const AUDIENCE_INSIGHTS = {
       "Apartments: 83% of all deals · Studios and 1BR lead volume in JVC, Business Bay",
       "Buyer leads up 33% YoY — demand outpacing supply in established communities",
       "Top areas by volume: JVC, Business Bay, Wadi Al Safa 5, Dubai South, Dubai Marina",
-      "Off-plan 65% of market — payment plans are the #1 conversion tool",
+      "Off-plan over 70% of 2025 transactions (Khaleej Times) — payment plans are the #1 conversion tool",
     ],
     cta: "→ See Neighbourhoods tab for community intelligence · Projects for off-plan inventory",
   },
   Developer: {
     icon: "🏗️", color: "#FC8181",
+    /* UNVERIFIED: the 228/163 developer counts and the 131,504 units figure
+       could not be traced to any published source. Do not quote to a client
+       until sourced. Verified alternative for H2 2025 launches: Binghatti led
+       with 13,000+ units, then DAMAC 6,588 and Emaar 6,262. */
     headline: "228 developers active in 2025 — up 40% from 163 in 2024.",
     points: [
       "131,504 units launched by Oct 2025 — Q4 was strongest quarter ever",
@@ -86,7 +91,7 @@ const AUDIENCE_INSIGHTS = {
     icon: "🔑", color: "#68D391",
     headline: "Is now a good time to buy? Yes — but be selective about location.",
     points: [
-      "Avg PPSF AED 1,863 (2025) → AED 1,976 in Jan 2026 — prices still rising",
+      "Avg PPSF AED 1,692 (DLD FY2025 median) — capital values +19.8% YoY (ValuStrat VPI)",
       "AED 500K–3M: 72% of all deals — strong demand = strong resale liquidity",
       "Knight Frank forecasts +3% prime / +1% mainstream for 2026 — sustainable",
       "Mortgage activity up 22.5% YoY — banks competing for your business",
@@ -267,10 +272,15 @@ function MarketTab({ liveNeighbourhoods=[], liveMarketData, allDevelopers, expan
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(160px,1fr))", gap: 10, marginBottom: 8 }}>
         <KpiCard label="Total Market Value" value={getStat("Total Market Value")?.value} change={getStat("Total Market Value")?.change} note="Sales + mortgages + gifts" onClick={() => handleTabChange?.("DLD Volumes")} />
         <KpiCard label="Total Transactions" value={getStat("Total Transactions")?.value} change={getStat("Total Transactions")?.change} note="5th consecutive annual record" />
-        <KpiCard label="Residential Sales" value="214,912" change="+19% YoY" note="DLD / Emarat Al Youm Jan 2026" />
+        <KpiCard label="Sales Transactions" value={MARKET_FACTS.residentialSales2025.value} change={MARKET_FACTS.residentialSales2025.change} note={MARKET_FACTS.residentialSales2025.note} />
         <KpiCard label="Off-Plan Share" value={getStat("Off-Plan Share")?.value} change={getStat("Off-Plan Share")?.change} note="132K off-plan deals" />
-        <KpiCard label="Avg PPSF" value="AED 1,863" change="+6% YoY" note="Jan 2026: AED 1,976" color={T?.gold || "#D4A843"} />
-        <KpiCard label="Avg Gross Yield" value={getStat("Avg Gross Yield")?.value} change="Apts 7.03% · Villas 4.63%" note="REIDIN Dec 2025" color={T?.green || "#68D391"} />
+        {/* AED 1,692 = DLD full-year 2025 citywide residential median across
+            192,808 transactions. The previous AED 1,863 was cited to our own
+            blog and sat ~10% above the DLD figure. */}
+        <KpiCard label="Avg PPSF" value={MARKET_FACTS.avgPpsf2025.value} change={MARKET_FACTS.avgPpsf2025.change} note={MARKET_FACTS.avgPpsf2025.note} color={T?.gold || "#D4A843"} />
+        {/* Apartment/villa yields corrected to the sourced 2025 figures — the
+            previous 7.03% / 4.63% understated both. */}
+        <KpiCard label="Avg Gross Yield" value={getStat("Avg Gross Yield")?.value} change={`Apts ${MARKET_FACTS.yieldApartments2025.value} · Villas ${MARKET_FACTS.yieldVillas2025.value}`} note="REIDIN / DXB Interact 2025" color={T?.green || "#68D391"} />
         <KpiCard label="Mortgage Deals" value={getStat("Mortgage Transactions")?.value} change={getStat("Mortgage Transactions")?.change} note="AED 179.26B · Cash 87%" />
         <KpiCard label="Investor Base" value={getStat("Investor Base")?.value} change={getStat("Investor Base")?.change} note="129,600 new investors" />
         <KpiCard label="Women Investors" value={getStat("Women Investors")?.value} change={getStat("Women Investors")?.change} note="76,700 deals" />
@@ -531,14 +541,17 @@ function MarketTab({ liveNeighbourhoods=[], liveMarketData, allDevelopers, expan
             { name: "DLD Full Year 2025 — Dubai Media Office", desc: "270,000+ transactions · AED 917B · investor base 193,100", url: "https://mediaoffice.ae/en/news/2026/january/12-01/dubais-real-estate-market-records-new-historic-milestone", tag: "DLD Official" },
             { name: "DLD — AED 761B in 2024", desc: "226,000 transactions · AED 761B · +36% volume YoY", url: "https://dubailand.gov.ae/en/news-media/dubai-s-real-estate-sector-records-aed761-billion-in-transactions-in-2024", tag: "DLD Official" },
             { name: "Gulf News — Dubai closes 2025 at AED 682.5B", desc: "214,912 sales transactions · Q4 monthly records", url: "https://gulfnews.com/business/property/dubai-property-market-closes-2025-with-record-dh6825-billion-in-sales-1.500396068", tag: "Gulf News" },
-            { name: "ValuStrat VPI December 2025", desc: "AED 1,689/sqft citywide · +19.8% YoY · Villas +25.5%", url: "https://valustrat.com/products/vpi-dubai-residential-capital-values-december-2025", tag: "ValuStrat" },
+            /* ValuStrat publishes an INDEX in points, not AED/sqft. The previous
+               description attributed a per-sqft figure to them that they do not
+               publish. Corrected to their actual December 2025 readings. */
+            { name: "ValuStrat VPI December 2025", desc: "Index 240.4 pts · +19.8% YoY · Villas +25.1% · Apartments +14.2%", url: "https://valustrat.com/products/vpi-dubai-residential-capital-values-december-2025", tag: "ValuStrat" },
             { name: "REIDIN — UAE Residential Price Report", desc: "+12.88% YoY Dec 2025 · Villas +15.16% · Yield 6.55%", url: "https://reidin.com", tag: "REIDIN" },
             { name: "Knight Frank — Dubai Residential Q3 2025", desc: "+10% YoY values · 46% delivery rate · 2026: +3%/+1%", url: "https://www.knightfrank.ae/newsroom/article/2025/11/dubai-residential-market-review-q3-2025", tag: "Knight Frank" },
             { name: "BetterHomes — Dubai Residential FY2025", desc: "Off-plan 65% · 132,000 off-plan deals · AED 248B apts", url: "https://www.constructionweekonline.com/analysis/dubai-off-plan-sales-2025", tag: "BetterHomes" },
             { name: "Cavendish Maxwell — Q3 2025", desc: "~98K units 2026 · 366K through 2028 · off-plan 76%", url: "https://cavendishmaxwell.com/insights/market-reports/residential/dubai-residential-market-performance-q3-2025", tag: "Cavendish Maxwell" },
             { name: "BetterHomes — Dubai vs Global ROI Feb 2026", desc: "Dubai 7% yield vs London 2.4% vs New York 4.2%", url: "https://www.bhomes.com/en/blog/betterinformed/dubai-vs-other-global-real-estate-hubs-which-offers-better-roi", tag: "BetterHomes" },
             { name: "Arabian Business — Dubai outperforms London/NY", desc: "7% yield vs 2.4% London · 4.2% NY · price growth comparison", url: "https://www.arabianbusiness.com/industries/real-estate/dubai-real-estate-outperforms-london-and-new-york-with-superior-7-investment-yields-and-double-digit-price-increases", tag: "Arabian Business" },
-            { name: "DXB Analytics — Dubai Price Index 2026", desc: "FY2025: AED 1,863 avg PPSF · Jan 2026: AED 1,976", url: "https://www.dxbanalytics.com/blog/dubai-property-price-index-2026", tag: "DXB Analytics" },
+            { name: "Dubai Land Department — FY2025 transaction data", desc: "Median AED 1,692/sqft citywide residential · 192,808 transactions", url: "https://dxbinteract.com/dubai-real-estate-faqs/average-price-per-square-foot-dubai", tag: "DLD" },
             { name: "DLD 2021 Annual — Post-Covid Boom", desc: "84,196 transactions · AED 300B · +72% value YoY", url: "https://dubailand.gov.ae/en/news-media/dld-2021-achieved-exceptional-results-that-will-contribute-to-enabling-the-real-estate-sector-s-journey-towards-the-next-50-years/", tag: "DLD 2021" },
             { name: "UAE Moments — 2022 Record Year", desc: "122,658 transactions · AED 528B · first half-trillion year", url: "https://www.uaemoments.com/amp/dubais-real-estate-transactions-hit-a-record-high-in-2022-553424.html", tag: "DLD 2022" },
             { name: "The National — 2023 Record", desc: "166,400 transactions · AED 634B · +36% volume YoY", url: "https://www.thenationalnews.com/business/property/2024/02/07/dubais-real-estate-transactions-surge-17-to-record-16-million-in-2023/", tag: "DLD 2023" },

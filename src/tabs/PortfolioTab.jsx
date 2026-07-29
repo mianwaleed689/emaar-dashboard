@@ -46,7 +46,11 @@ function PortfolioTab({ liveNeighbourhoods=[], portView, setPortView, portShowAd
             const grossYieldPort = totalVal > 0 ? (totalRent/totalVal*100) : 0;
             const netYieldPort   = totalVal > 0 ? (netRent/totalVal*100) : 0;
 
-            /* ── IRR calculation (simplified) ── */
+            /* ── Annualised return (CAGR) ──
+               This is NOT an internal rate of return. A true IRR solves for the
+               discount rate that zeroes the NPV of dated cash flows; this treats
+               all rent as if received at once and ignores timing entirely. It is
+               labelled CAGR in the UI so the figure is not mistaken for IRR. */
             const avgHoldYears = portfolio.length > 0
               ? portfolio.reduce((s,p) => s + (2026 - p.buyYear), 0) / portfolio.length : 1;
             const totalReturn  = totalGain + (netRent * avgHoldYears);

@@ -5,6 +5,7 @@ import React, { useState, useMemo, useEffect } from "react";
 import { T } from "../data";
 import { SvgIcons } from "../components/Icons";
 import { useOverviewKpis, useMarketKpis } from "../hooks/useMarketMetrics";
+import { MARKET_FACTS } from "../data/marketFacts";
 
 // Role-aware content
 const ROLES = [
@@ -65,6 +66,9 @@ const ROLE_BRIEFING = {
   },
   Buyer: {
     color: "#68D391",
+    /* UNVERIFIED: no published source found for a Q1 2026 citywide all-residential
+       PPSF of AED 1,759. The nearest sourced figure is AED 2,030/sqft for Q1 2026
+       off-plan (ValuStrat). FY2025 median is AED 1,692 (DLD) — see marketFacts.js. */
     headline: "Q1 2026 avg PPSF: AED 1,759. Prices rising but still below London/NY.",
     signals: [
       { icon: "âœ…", text: "EIBOR 3.59% â€” best mortgage rates since 2021. Fixed 3-year from 3.85% (Capital Zone Apr 2026)." },
@@ -205,10 +209,10 @@ function OverviewTab({ liveNeighbourhoods=[],
           </div>
         </div>
         <div style={{ display:"flex", flexWrap:"wrap", gap:8 }}>
-          <Signal label="Q1 2026" value="AED 252B" color={T.gold} />
-          <Signal label="YoY Growth" value="+31%" color={T.green} />
-          <Signal label="Off-Plan" value="70-80%" color={T.gold} />
-          <Signal label="Avg PPSF" value="AED 1,759" color="#63B3ED" />
+          <Signal label="Q1 2026" value={MARKET_FACTS.q1_2026Value.value} color={T.gold} />
+          <Signal label="YoY Growth" value={MARKET_FACTS.q1_2026Value.change} color={T.green} />
+          <Signal label="Off-Plan" value={MARKET_FACTS.offPlanShare2025.value} color={T.gold} />
+          <Signal label="Avg PPSF" value={MARKET_FACTS.avgPpsf2025.value} color="#63B3ED" />
           <Signal label="EIBOR 3M" value={eiborDisplay} color="#9F7AEA" />
           <Signal label="Health" value="72/100 Growing" color={T.green} />
           <Signal label="Cycle" value="Month 57" color={T.gold} />
@@ -272,14 +276,17 @@ function OverviewTab({ liveNeighbourhoods=[],
         <div>
           <div style={{ fontSize:11, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.8, marginBottom:12 }}>Market Pulse â€” FY2025 Â· Q1 2026 Update</div>
           <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(155px,1fr))", gap:10 }}>
-            <QuickStat label="Total Market Value" value="AED 917B" change="+20% YoY Â· DLD 2025" note="Q1 2026: AED 252B (+31%)" color={T.gold} onClick={()=>handleTabChange?.("Market")} />
-            <QuickStat label="Total Transactions" value="270,000+" change="+20% YoY Â· DLD 2025" note="Q1 2026: 60,303 (+6%)" onClick={()=>handleTabChange?.("DLD Volumes")} />
-            <QuickStat label="Avg PPSF" value="AED 1,863" change="+6% YoY Â· FY2025" note="Q1 2026: AED 1,759 (+12.5%)" color="#63B3ED" onClick={()=>handleTabChange?.("Price History")} />
-            <QuickStat label="Avg Gross Yield" value="6.55%" change="Apts 7.03% Â· Villas 4.63%" note="REIDIN Dec 2025" color={T.green} onClick={()=>handleTabChange?.("Yields")} />
+            {/* Figures come from src/data/marketFacts.js so Overview and Market
+                cannot drift apart. Unverified entries are labelled as such
+                rather than presented as sourced fact. */}
+            <QuickStat label="Total Market Value" value={MARKET_FACTS.totalValue2025.value} change={`${MARKET_FACTS.totalValue2025.change} Â· DLD 2025`} note={`Q1 2026: ${MARKET_FACTS.q1_2026Value.value} (${MARKET_FACTS.q1_2026Value.change})`} color={T.gold} onClick={()=>handleTabChange?.("Market")} />
+            <QuickStat label="Total Transactions" value={MARKET_FACTS.totalTransactions2025.value} change={`${MARKET_FACTS.totalTransactions2025.change} Â· DLD 2025`} note={MARKET_FACTS.totalTransactions2025.note} onClick={()=>handleTabChange?.("DLD Volumes")} />
+            <QuickStat label="Avg PPSF" value={MARKET_FACTS.avgPpsf2025.value} change={`${MARKET_FACTS.avgPpsf2025.change} Â· FY2025`} note={MARKET_FACTS.avgPpsf2025.note} color="#63B3ED" onClick={()=>handleTabChange?.("Price History")} />
+            <QuickStat label="Avg Gross Yield" value={MARKET_FACTS.avgGrossYield2025.value} change={MARKET_FACTS.avgGrossYield2025.change} note="Unverified Â· REIDIN paywalled" color={T.green} onClick={()=>handleTabChange?.("Yields")} />
             <QuickStat label="EIBOR 3M" value={eiborDisplay} change="Falling Â· Fed easing" note="CBUAE Â· Mortgage: ~4-5%" color="#9F7AEA" onClick={()=>handleTabChange?.("Mortgage")} />
-            <QuickStat label="Off-Plan Share" value="65-80%" change="Q1 2026: 70-80%" note="FY2025: 65% Â· Growing" onClick={()=>handleTabChange?.("Projects")} />
-            <QuickStat label="Active Developers" value="228" change="+40% from 163 in 2024" note="RERA registered Â· DLD" onClick={()=>handleTabChange?.("Developer Health")} />
-            <QuickStat label="Units Launched" value="131,504" change="By Oct 2025 Â· DLD" note="~98K units forecast 2026" onClick={()=>handleTabChange?.("Launch Calendar")} />
+            <QuickStat label="Off-Plan Share" value={MARKET_FACTS.offPlanShare2025.value} change={MARKET_FACTS.offPlanShare2025.change} note={MARKET_FACTS.offPlanShare2025.note} onClick={()=>handleTabChange?.("Projects")} />
+            <QuickStat label="Active Developers" value={MARKET_FACTS.activeDevelopers2025.value} change={MARKET_FACTS.activeDevelopers2025.change} note="Unverified Â· no published source" onClick={()=>handleTabChange?.("Developer Health")} />
+            <QuickStat label="Units Launched" value={MARKET_FACTS.unitsLaunched2025.value} change={MARKET_FACTS.unitsLaunched2025.change} note="Unverified Â· no published source" onClick={()=>handleTabChange?.("Launch Calendar")} />
           </div>
         </div>
       </div>

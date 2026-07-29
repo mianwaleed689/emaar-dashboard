@@ -75,19 +75,27 @@ function MortgageTab({ liveNeighbourhoods=[], liveMortgageRates, liveEiborRates,
             const dbr           = ((monthlyPayment + existingDebts) / mortIncome) * 100;
 
             /* ── Buying cost breakdown ── */
-            /* UAE charges 5% VAT on brokerage and bank service fees. Government
-               charges (DLD, registration) are outside the scope of VAT. */
+            /* Dubai purchase costs, 2026 schedule.
+               The 4% DLD transfer fee is legally split 2%/2% between buyer and
+               seller (2013 Executive Council resolution), but by market
+               convention the buyer pays the full 4%. VAT at 5% applies to
+               brokerage and bank service fees; government charges do not. */
             const VAT = 0.05;
-            const dldFee        = mortPrice * 0.04;          // DLD transfer fee
-            const dldAdminFee   = 580;                        // DLD admin charge
-            const agencyFee     = mortPrice * 0.02 * (1 + VAT); // 2% + VAT
-            const mortReg       = loanAmount * 0.0025 + 290;  // 0.25% + AED 290
-            const trusteeFee    = mortPrice > 500000 ? 4200 : 2100; // registration trustee + VAT
+            const dldFee        = mortPrice * 0.04;             // DLD transfer fee
+            const dldAdminFee   = 580;                           // ready property (off-plan is AED 40)
+            const knowledgeFee  = 20;                            // knowledge + innovation
+            const agencyFee     = mortPrice * 0.02 * (1 + VAT);  // 2% + VAT
+            const mortReg       = loanAmount * 0.0025 + 290;     // 0.25% + AED 290
+            const trusteeFee    = mortPrice >= 500000
+              ? 4200 * (1 + VAT)                                 // AED 4,200 + VAT
+              : 4000 * (1 + VAT);                                // AED 4,000 + VAT
             const titleDeedFee  = 250;
+            const sitePlanFee   = 250;                           // property map / site plan
             const valuationFee  = 3000;
-            const processingFee = loanAmount * 0.01 * (1 + VAT); // 1% + VAT
-            const totalBuyCosts = dldFee + dldAdminFee + agencyFee + mortReg
-                                + trusteeFee + titleDeedFee + valuationFee + processingFee;
+            // Banks typically charge 1%, capped around AED 15,000.
+            const processingFee = Math.min(loanAmount * 0.01, 15000) * (1 + VAT);
+            const totalBuyCosts = dldFee + dldAdminFee + knowledgeFee + agencyFee + mortReg
+                                + trusteeFee + titleDeedFee + sitePlanFee + valuationFee + processingFee;
             const totalCashNeeded = downPayment + totalBuyCosts;
 
             /* ── Rate for selected type ── */

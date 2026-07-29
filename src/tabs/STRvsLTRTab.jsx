@@ -5,6 +5,7 @@
 import React, { useState, useMemo } from "react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { T } from "../data";
+import { serviceChargeDrag, YIELD_ASSUMPTIONS } from "../utils/yield";
 
 const fmtP = n => n ? "AED "+Math.round(n).toLocaleString() : "--";
 const fmtY = n => n ? parseFloat(n).toFixed(1)+"%" : "--";
@@ -33,17 +34,39 @@ export default function STRvsLTRTab({ liveNeighbourhoods=[], handleTabChange, gl
     (liveNeighbourhoods||[]).filter(n => parseFloat(n.grossYield||0) > 0)
   , [liveNeighbourhoods]);
 
+  /* Short-let operating costs are a share of REVENUE, not a flat deduction from
+     the yield percentage. The old model subtracted a fixed 2.5 percentage points
+     regardless of rent, which understated costs badly on high-yield stock.
+     Operators typically take 15-25%; service charge is handled separately via
+     the shared serviceChargeDrag so STR and LTR use one cost model. */
+  const STR_MANAGEMENT_RATE = 0.20;
+  const LTR_VACANCY_RATE    = YIELD_ASSUMPTIONS.vacancyRate;
+  const LTR_MANAGEMENT_RATE = YIELD_ASSUMPTIONS.managementRate;
+
   const enriched = useMemo(() => {
     return withYield.map(n => {
       const ltrYield  = parseFloat(n.grossYield||0);
       const premium   = STR_PREMIUM[n.community] || DEFAULT_STR_PREMIUM;
       const strGross  = Math.round(ltrYield * premium * 10) / 10;
-      const strNet    = Math.round((strGross - 2.5) * 10) / 10; // STR mgmt ~2.5%
-      const ltrNet    = parseFloat(n.netYield||0);
-      const propValue = (n.avgPpsf||1500) * propSize;
-      const ltrAnnual = Math.round(propValue * ltrYield / 100);
-      const strAnnual = Math.round(propValue * strGross / 100 * (occupancy/100));
-      const advantage = strAnnual - ltrAnnual;
+      const drag      = serviceChargeDrag(n.serviceCharge, n.avgPpsf) ?? 0;
+      const strNet    = Math.round((strGross * (1 - STR_MANAGEMENT_RATE) - drag) * 10) / 10;
+      const ltrNet    = n.netYield != null ? parseFloat(n.netYield) : null;
+
+      /* No invented price. A community without a verified PPSF cannot produce a
+         credible AED figure, so the comparison is reported as unavailable rather
+         than computed from an assumed AED 1,500/sqft. */
+      const ppsf      = parseFloat(n.avgPpsf) || 0;
+      const propValue = ppsf > 0 ? ppsf * propSize : null;
+
+      /* Both sides carry their own void and management costs. Previously STR was
+         discounted for occupancy while LTR was treated as fully let and free to
+         run, which flattered whichever side the reader was not checking. */
+      const ltrAnnual = propValue == null ? null
+        : Math.round(propValue * ltrYield / 100 * (1 - LTR_VACANCY_RATE - LTR_MANAGEMENT_RATE));
+      const strAnnual = propValue == null ? null
+        : Math.round(propValue * strGross / 100 * (occupancy/100) * (1 - STR_MANAGEMENT_RATE));
+      const advantage = (strAnnual == null || ltrAnnual == null) ? null : strAnnual - ltrAnnual;
+
       return { ...n, ltrYield, strGross, strNet, ltrNet, propValue, ltrAnnual, strAnnual, advantage, premium };
     });
   }, [withYield, propSize, occupancy]);
