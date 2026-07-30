@@ -30,6 +30,10 @@ const HANDLERS = {
   /* Pre-aggregates the developer brand list into a single document so the
      browser reads 1 doc instead of all 2,034 developer records per page load. */
   "developer-brands": () => require("./_cron/cron-developer-brands.js"),
+  /* Packs the 1,728-document projects collection into ~26 chunk documents so
+     the browser reads 27 documents per visit instead of 1,728. Data is
+     byte-for-byte identical — this only changes how it is fetched. */
+  "project-chunks": () => require("./_cron/cron-project-chunks.js"),
 };
 
 module.exports = async function handler(req, res) {

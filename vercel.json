@@ -12,7 +12,8 @@
     { "path": "/api/cron?job=scan-launches",  "schedule": "0 8 * * *" },
     { "path": "/api/cron?job=sync-market",    "schedule": "0 6 * * *" },
     { "path": "/api/cron?job=weekly-digest",  "schedule": "0 4 * * 1" },
-    { "path": "/api/cron?job=developer-brands", "schedule": "20 8 * * *" }
+    { "path": "/api/cron?job=developer-brands", "schedule": "20 8 * * *" },
+    { "path": "/api/cron?job=project-chunks",   "schedule": "35 8 * * *" }
   ],
   "headers": [
     {
