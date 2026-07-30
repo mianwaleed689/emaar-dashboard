@@ -13,6 +13,7 @@ import { auth, db } from "../firebase";
 import { withComputedNetYield, computeNetYield } from "../utils/yield";
 import { markSharedValues } from "../utils/provenance";
 import { annotateCommunities, userFacingCommunities } from "../utils/communities";
+import CommunityCoverageNote from "../components/CommunityCoverageNote";
 import { CLAUDE_MODEL, CLAUDE_MAX_TOKENS, CLAUDE_OUTPUT_CONFIG, extractClaudeText, parseClaudeJson } from "../utils/claude";
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail, sendEmailVerification, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import { collection, getDocs, doc, getDoc, setDoc, updateDoc, deleteDoc, onSnapshot, addDoc, query, where, orderBy, limit } from "firebase/firestore";
@@ -4787,11 +4788,22 @@ const unsub = onSnapshot(nQuery, (snap) => {
           {/* â€” NEIGHBOURHOODS TAB â€” */}
           {/* â€” NEIGHBOURHOODS TAB (extracted) â€” */}
           {tab === "Neighbourhoods" && (
-            <NeighbourhoodsTab
-              liveNeighbourhoods={liveNeighbourhoods}
-              handleTabChange={handleTabChange}
-              selectedNbhd={selectedNbhd} setSelectedNbhd={setSelectedNbhd}
-            />
+            <>
+              {/* States the coverage count and explains the 88 DLD
+                  administrative districts held out of it, so a missing Al Quoz
+                  reads as a deliberate decision rather than a gap. */}
+              <CommunityCoverageNote
+                rows={annotatedNeighbourhoods}
+                shown={liveNeighbourhoods.length}
+                T={T}
+                style={{ marginBottom: 14 }}
+              />
+              <NeighbourhoodsTab
+                liveNeighbourhoods={liveNeighbourhoods}
+                handleTabChange={handleTabChange}
+                selectedNbhd={selectedNbhd} setSelectedNbhd={setSelectedNbhd}
+              />
+            </>
           )}
 
           {/* â€” LAUNCH CALENDAR TAB â€” */}
