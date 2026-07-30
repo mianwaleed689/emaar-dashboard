@@ -4765,6 +4765,10 @@ const unsub = onSnapshot(nQuery, (snap) => {
               allDevelopers={allDevelopers}
               liveMarketData={liveMarketData}
               liveEiborRates={liveEiborRates}
+              /* Personal activity counters — live counts, each a route into the
+                 user's own work. */
+              myLeads={myLeads} deals={deals} listings={listings}
+              myPortfolio={myPortfolio} watchlist={watchlist}
               handleTabChange={handleTabChange}
             />
           )}

@@ -100,15 +100,18 @@ const ROLES = [
 
 /* ── SMALL PRESENTATIONAL PIECES ───────────────────────────────────────────── */
 
-function Card({ children, style }) {
+function Card({ children, style, onClick }) {
   return (
-    <div style={{
-      background: T.card || "rgba(255,255,255,0.03)",
-      border: `1px solid ${T.border || "rgba(255,255,255,0.08)"}`,
-      borderRadius: 12,
-      padding: "16px 18px",
-      ...style,
-    }}>{children}</div>
+    <div
+      onClick={onClick}
+      style={{
+        background: T.card || "rgba(255,255,255,0.03)",
+        border: `1px solid ${T.border || "rgba(255,255,255,0.08)"}`,
+        borderRadius: 12,
+        padding: "16px 18px",
+        ...style,
+      }}
+    >{children}</div>
   );
 }
 
@@ -160,6 +163,14 @@ export default function OverviewTab({
   allDevelopers = [],
   liveMarketData = null,
   liveEiborRates = null,
+  /* Personal activity. These are live counts, not market claims, and each one
+     is a route into the user's own work — they were dropped in the first pass
+     of this redesign by accident and restored here. */
+  myLeads = [],
+  deals = [],
+  listings = [],
+  myPortfolio = [],
+  watchlist = [],
   handleTabChange = () => {},
 }) {
   const [role, setRole] = useState("Investor");
@@ -181,6 +192,23 @@ export default function OverviewTab({
   );
 
   const topYields = useMemo(() => topByNetYield(liveNeighbourhoods, 6), [liveNeighbourhoods]);
+
+  const len = v => (Array.isArray(v) ? v.length : 0);
+  const activity = [
+    { label: "Active leads", count: len(myLeads),     tab: "My Leads",  color: "#63B3ED" },
+    { label: "Active deals", count: len(deals),       tab: "Pipeline",  color: T.gold || "#D4A843" },
+    { label: "My listings",  count: len(listings),    tab: "Listings",  color: "#68D391" },
+    { label: "Portfolio",    count: len(myPortfolio), tab: "Portfolio", color: "#FC8181" },
+    { label: "Watchlist",    count: len(watchlist),   tab: "Projects",  color: "#9F7AEA" },
+  ];
+  /* Only worth screen space once there is something in it — a row of zeroes
+     tells a new user nothing and pushes the real content down. */
+  const hasActivity = activity.some(a => a.count > 0);
+
+  /* Live 3-month EIBOR. Read from the feed rather than restated, because the
+     previous Overview printed "EIBOR 3.59%" as text and it was months old. */
+  const eibor3m = liveEiborRates?.["3m"] ?? liveEiborRates?.eibor3m ?? null;
+  const eiborAsOf = liveEiborRates?.asOf || null;
 
   const muted = T.textMuted || "#8A94A6";
   const text = T.textSecondary || "#C9D1D9";
@@ -225,6 +253,37 @@ export default function OverviewTab({
           </div>
         )}
       </div>
+
+      {/* ── YOUR ACTIVITY ────────────────────────────────────────────────
+          Personal before market: for a returning user their own pipeline is
+          the most relevant thing on the screen. Hidden entirely when empty. */}
+      {hasActivity && (
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+          {activity.map(a => (
+            <button
+              key={a.label}
+              type="button"
+              onClick={() => handleTabChange(a.tab)}
+              style={{
+                flex: "1 1 130px", minWidth: 120, cursor: "pointer", textAlign: "left",
+                padding: "12px 14px", borderRadius: 10,
+                border: `1px solid ${T.border || "rgba(255,255,255,0.08)"}`,
+                background: T.card || "rgba(255,255,255,0.03)",
+                fontFamily: "'Outfit',sans-serif",
+              }}
+              onMouseEnter={e => e.currentTarget.style.borderColor = a.color}
+              onMouseLeave={e => e.currentTarget.style.borderColor = T.border || "rgba(255,255,255,0.08)"}
+            >
+              <div style={{ fontSize: 22, fontWeight: 800, color: a.color, fontFamily: "Fraunces,serif", lineHeight: 1 }}>
+                {a.count}
+              </div>
+              <div style={{ fontSize: 10, color: muted, marginTop: 6, fontWeight: 600, letterSpacing: 0.4, textTransform: "uppercase" }}>
+                {a.label}
+              </div>
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* ── 1. COVERAGE ──────────────────────────────────────────────────── */}
       <div>
@@ -310,6 +369,31 @@ export default function OverviewTab({
           Market context
         </SectionTitle>
         <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 12 }}>
+          {/* Live EIBOR — the one market number here that updates daily, so it
+              leads. Rendered only when the feed has actually delivered a rate;
+              an absent value is better than a stale one presented as current. */}
+          {Number(eibor3m) > 0 && (
+            <Card
+              style={{ flex: "1 1 200px", minWidth: 190, cursor: "pointer" }}
+              onClick={() => handleTabChange("Mortgage")}
+            >
+              <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: 0.8, textTransform: "uppercase", color: muted, marginBottom: 7 }}>
+                EIBOR 3-month
+              </div>
+              <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
+                <span style={{ fontSize: 20, fontWeight: 800, color: "#9F7AEA", fontFamily: "Fraunces,serif" }}>
+                  {Number(eibor3m).toFixed(2)}%
+                </span>
+                <span style={{ fontSize: 10, color: "#68D391", fontWeight: 700 }}>live</span>
+              </div>
+              <div style={{ fontSize: 10, color: muted, marginTop: 6, lineHeight: 1.45 }}>
+                Base for variable mortgage pricing
+              </div>
+              <div style={{ fontSize: 9, color: muted, marginTop: 8 }}>
+                Central Bank of the UAE{eiborAsOf ? ` · as of ${eiborAsOf}` : ""}
+              </div>
+            </Card>
+          )}
           {contextFacts.map(({ key, label, fact }) => (
             <Card key={key} style={{ flex: "1 1 200px", minWidth: 190 }}>
               <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: 0.8, textTransform: "uppercase", color: muted, marginBottom: 7 }}>
