@@ -12,6 +12,7 @@ import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, R
 import { auth, db } from "../firebase";
 import { withComputedNetYield, computeNetYield } from "../utils/yield";
 import { markSharedValues } from "../utils/provenance";
+import { annotateCommunities, userFacingCommunities } from "../utils/communities";
 import { CLAUDE_MODEL, CLAUDE_MAX_TOKENS, CLAUDE_OUTPUT_CONFIG, extractClaudeText, parseClaudeJson } from "../utils/claude";
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail, sendEmailVerification, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import { collection, getDocs, doc, getDoc, setDoc, updateDoc, deleteDoc, onSnapshot, addDoc, query, where, orderBy, limit } from "firebase/firestore";
@@ -2413,6 +2414,33 @@ export default function EmaarDashboardV2() {
      by project id. Every consumer guarded it with Array.isArray(...) ? ... : []
      — and a map is never an array, so admin edits were loaded and then silently
      discarded on every screen. Apply them as the overrides they were meant to be. */
+  /* ── ONE COMMUNITY LIST FOR THE WHOLE PRODUCT ──────────────────────────────
+   *
+   * "How many communities do we cover?" used to have two answers depending on
+   * the tab: dropdowns said 193, the yields/scores/map tabs said 281. Both read
+   * real data — the dropdown applied a displayCategory filter and the others
+   * applied none.
+   *
+   * The 88-row difference is entirely DLD administrative and cadastral zones:
+   * 60 classified cadastral-district, 28 absent from `communities` altogether
+   * (Al Jadaf, Al Quoz, Al Hebiah…). They are real DLD records, but they cover
+   * every registered transaction in a zone — industrial, commercial and land —
+   * so Al Goze Fourth reads AED 386/sqft and Al Barsha Third 602. Listed beside
+   * Dubai Hills with no distinction they look like bargain communities, and a
+   * client who searched for one found nothing, because dropdowns excluded them.
+   *
+   * Every tab now receives the same investor-facing set. Nothing is deleted:
+   * `allNeighbourhoods` still holds all 281 with a `kind` and `kindLabel`
+   * stamped on each, so a research or education view can show the
+   * administrative zones deliberately and label them as such.
+   *
+   * NOTE: the two memos implementing this live further down, immediately after
+   * the `allNeighbourhoods` and `communityCategories` state declarations. They
+   * cannot sit here — a useMemo dependency array is evaluated the moment the
+   * line runs, so referencing state declared 40 lines later throws a
+   * temporal-dead-zone ReferenceError and the dashboard never renders.
+   * ──────────────────────────────────────────────────────────────────────── */
+
   const projectsWithOverrides = useMemo(() => {
     const base = Array.isArray(extraProjects) ? extraProjects : [];
     const ov = liveProjects && !Array.isArray(liveProjects) ? liveProjects : {};
@@ -2440,7 +2468,30 @@ export default function EmaarDashboardV2() {
   const [liveCompetitors, setLiveCompetitors] = useState([]);
   const [liveMortgageRates, setLiveMortgageRates] = useState([]);
   const [liveEiborRates, setLiveEiborRates] = useState({});
-  const [liveNeighbourhoods, setLiveNeighbourhoods] = useState([]);
+  /* Raw scored communities, all 281 including DLD administrative districts.
+     Tabs do NOT read this directly — see the `liveNeighbourhoods` memo below,
+     which is what every tab receives. */
+  const [allNeighbourhoods, setLiveNeighbourhoods] = useState([]);
+  /* displayCategory for every row in `communities`, including the cadastral
+     districts that liveCommunityList filters out. Needed to classify the scored
+     rows, so it is captured before that filter is applied. */
+  const [communityCategories, setCommunityCategories] = useState([]);
+
+  /* Classify all 281 scored communities against the `communities` collection,
+     stamping kind / kindLabel / isUserFacing on each. See the long note above
+     projectsWithOverrides for why this matters. */
+  const annotatedNeighbourhoods = useMemo(
+    () => annotateCommunities(allNeighbourhoods, communityCategories),
+    [allNeighbourhoods, communityCategories]
+  );
+
+  /* THE list every tab receives. Investor-facing only, so the community count
+     is identical in every dropdown, table, score and map layer. The full
+     annotated set remains in annotatedNeighbourhoods for research views. */
+  const liveNeighbourhoods = useMemo(
+    () => userFacingCommunities(annotatedNeighbourhoods),
+    [annotatedNeighbourhoods]
+  );
   const [liveMarketData, setLiveMarketData] = useState([]);
   const [liveRisk, setLiveRisk] = useState([]);
   const [liveBayutData, setLiveBayutData] = useState({});
@@ -3559,6 +3610,13 @@ export default function EmaarDashboardV2() {
       });
       list.sort((a, b) => a.name.localeCompare(b.name));
       setLiveCommunityList(list);
+      /* Capture the category of EVERY row, including the cadastral districts
+         excluded above, so the scored communities can be classified against the
+         same definition rather than a filtered subset. */
+      setCommunityCategories(snap.docs.map(d => {
+        const x = d.data();
+        return { id: d.id, name: x.name || x.community, displayCategory: x.displayCategory };
+      }));
     }));
 
     /* ── DEVELOPERS ───────────────────────────────────────────────────────────
