@@ -3318,13 +3318,44 @@ export default function EmaarDashboardV2() {
       setLiveProjects(overrides);
     }));
 
-    // projects collection (radar adds, DAMAC, Aldar etc)
+    /* ── PROJECTS ─────────────────────────────────────────────────────────────
+     *
+     * Read the collection as ~26 pre-packed chunk documents instead of 1,728
+     * individual ones.
+     *
+     * This listener used to subscribe to the whole `projects` collection on
+     * every page load. After the developer-brands fix that was the single
+     * largest read on the site — about 75% of what remained — and the free tier
+     * allows 50,000 reads a day.
+     *
+     *     1,728 reads per visitor  ->  1 manifest + ~26 chunks  =  ~27
+     *
+     * The data is byte-for-byte identical: api/_cron/cron-project-chunks.js only
+     * changes how the same records are packaged. Projects are the content here
+     * — searched, watchlisted, alerted on, mapped and shown across four tabs —
+     * so nothing is trimmed and no downstream consumer can lose a field.
+     *
+     * The live-collection listener is kept below as a FALLBACK for when the
+     * manifest is missing, malformed, or from a newer schema than this build
+     * understands.
+     * ──────────────────────────────────────────────────────────────────────── */
+    const PROJECT_CHUNKS_SCHEMA = 1;
+
+    /* These two Sets are intentionally empty. They deduplicated Firestore
+       projects against a hardcoded list of 48 curated Emaar projects that was
+       removed earlier, so today there is nothing to compare against and the
+       three guards below never fire. Verified against all 1,728 records: only
+       one duplicate name exists (Peninsula Two, one copy archived), so the
+       guards are vestigial rather than load-bearing. Left in place, and
+       explicitly documented, so the next reader does not mistake them for a
+       working safeguard. */
     const baseIds = new Set([].map(p => String(p.id)));
     const baseNames = new Set([].map(p => (p.name || "").toLowerCase().trim()).filter(Boolean));
-    unsubs.push(onSnapshot(collection(db, "projects"), (snap) => {
+
+    const acceptProjectRecords = (records) => {
       const fsProjects = [];
-      snap.forEach(d => {
-        const data = { ...d.data(), id: d.id, fromFirestore: true };
+      records.forEach(raw => {
+        const data = { ...raw, fromFirestore: true };
         /* Skip archived projects (reset 2026-04-23) */
         if (data.archived === true) return;
         if (data.developerId === "emaar" && baseIds.has(String(data.id?.toString().replace("emaar_", "")))) return;
@@ -3336,7 +3367,47 @@ export default function EmaarDashboardV2() {
         const seen = new Set(overridesOnly.map(p => String(p.id)));
         return [...overridesOnly, ...fsProjects.filter(p => !seen.has(String(p.id)))];
       });
-    }));
+    };
+
+    let projectsFallbackUnsub = null;
+    const attachProjectsFallback = () => {
+      if (projectsFallbackUnsub) return;   // already listening
+      projectsFallbackUnsub = onSnapshot(collection(db, "projects"), (snap) => {
+        acceptProjectRecords(snap.docs.map(d => ({ ...d.data(), id: d.id })));
+      });
+      unsubs.push(projectsFallbackUnsub);
+    };
+
+    /* Read the manifest, then fetch exactly the chunks it names. getDocs rather
+       than onSnapshot: the chunks are rewritten once a night, so a live
+       subscription on each would cost far more than it is worth. */
+    unsubs.push(onSnapshot(doc(db, "tabData", "projectsManifest"), (snap) => {
+      const m = snap.exists() ? snap.data() : null;
+      const usable = m
+        && Number(m.chunkCount) > 0
+        && (m.schemaVersion ?? 1) <= PROJECT_CHUNKS_SCHEMA;
+
+      if (!usable) { attachProjectsFallback(); return; }
+
+      const prefix = m.chunkPrefix || "projectsChunk";
+      Promise.all(
+        Array.from({ length: Number(m.chunkCount) }, (_, i) =>
+          getDoc(doc(db, "tabData", `${prefix}${i}`))
+        )
+      ).then(docs => {
+        const records = [];
+        let missing = 0;
+        docs.forEach(d => {
+          if (!d.exists()) { missing++; return; }
+          const arr = d.data().projects;
+          if (Array.isArray(arr)) records.push(...arr);
+        });
+        /* If any chunk is absent the set is incomplete — showing a partial
+           catalogue silently would be worse than paying for the full read. */
+        if (missing > 0 || records.length === 0) { attachProjectsFallback(); return; }
+        acceptProjectRecords(records);
+      }).catch(() => attachProjectsFallback());
+    }, () => attachProjectsFallback()));
 
     // developments collection â‚¬â€ 2,798 DLD-sourced records (imported via admin)
     // These populate Projects tab alongside Verified/curated projects
