@@ -88,58 +88,70 @@ const HEALTH_DESC = SUPPLY_PIPELINE_2026.forecast;
 
 // ── Audience content ──────────────────────────────────────────────
 const AUDIENCES = ["Investor", "Agent", "Developer", "Buyer"];
+/**
+ * Audience briefings, corrected 2026-07-30.
+ *
+ * These duplicated several figures that were fixed elsewhere on this tab, so the
+ * same wrong claim appeared twice on one page. Most seriously, "87% cash
+ * transactions — no systemic mortgage leverage risk in the market" survived here
+ * after the composition bars were corrected to 64% cash / 36% mortgage. It told
+ * an investor the opposite of what the data says.
+ *
+ * Two rules applied throughout:
+ *   1. Every claim carries the period it describes, so its age is visible.
+ *   2. Anything that could not be traced to a source is gone, not caveated.
+ *      The Developer headline previously read "228 developers active in 2025"
+ *      directly above a code comment saying the figure "could not be traced to
+ *      any published source. Do not quote to a client until sourced."
+ */
 const AUDIENCE_INSIGHTS = {
   Investor: {
     icon: "📈", color: "#D4A843",
-    headline: "Dubai yields 6.55% — nearly 3x London, 1.5x New York. Zero tax.",
+    headline: "Dubai gross yields run 6.5–7.1% — roughly double London, and the gap widens after tax.",
     points: [
-      "AED 1M invested in Dubai: ~AED 65,500/yr rental income — keep 100% (zero tax)",
-      "Same AED 1M in London: ~AED 24,000/yr — keep ~AED 18,000 after UK tax",
-      "Price growth +19.8% (ValuStrat 2025) — moderating to 5-8% in 2026 (C&W Core)",
-      "87% cash transactions — no systemic mortgage leverage risk in the market",
-      "193,100 active investors — largest DLD investor base in history",
+      "AED 1M in Dubai returns about AED 65,000–71,000 a year gross, with no income tax on rent (2026 ranges)",
+      "The same AED 1M in London returns about AED 30,000–40,000 gross; a 40% taxpayer nets nearer 2.7%",
+      "Ongoing cost in Dubai is service charges only — no annual property tax, unlike Singapore or New York",
+      "Cash funds 64% of activity and mortgages 36% (May 2026) — leverage is rising, not absent",
+      "193,100 active investors, including 129,600 new ones (DLD, FY2025)",
     ],
-    cta: "→ See Yields tab for community-level ROI · DXB Estimate for valuation",
+    cta: "→ Yields tab for community-level net returns · DXB Estimate for valuation",
   },
   Agent: {
     icon: "🏡", color: "#63B3ED",
-    headline: "270,000+ transactions in 2025 — 5th consecutive record year.",
+    headline: "Off-plan is 76% of transaction volume — that is where the deals are.",
     points: [
-      "72% of deals in AED 500K–3M range — anchor your pitch here (BetterHomes FY2025)",
-      "Apartments: 83% of all deals · Studios and 1BR lead volume in JVC, Business Bay",
-      "Buyer leads up 33% YoY — demand outpacing supply in established communities",
-      "Top areas by volume: JVC, Business Bay, Wadi Al Safa 5, Dubai South, Dubai Marina",
-      "Off-plan over 70% of 2025 transactions (Khaleej Times) — payment plans are the #1 conversion tool",
+      "Off-plan 76% of volume and 75% of value; secondary 24% and 25% (May 2026)",
+      "14,045 transactions worth AED 48.2B in May 2026, up 11.2% on the month",
+      "Apartments take 50% of sales value, villas 28% — villas average AED 5.1M against AED 1.5M (May 2026)",
+      "Average price per sqft AED 1,840 across all types (May 2026)",
+      "Heaviest 2026 delivery lands in JVC, Business Bay, Dubai South, Dubai Science Park and Dubai Hills",
     ],
-    cta: "→ See Neighbourhoods tab for community intelligence · Projects for off-plan inventory",
+    cta: "→ Neighbourhoods for community intelligence · Projects for off-plan inventory",
   },
   Developer: {
     icon: "🏗️", color: "#FC8181",
-    /* UNVERIFIED: the 228/163 developer counts and the 131,504 units figure
-       could not be traced to any published source. Do not quote to a client
-       until sourced. Verified alternative for H2 2025 launches: Binghatti led
-       with 13,000+ units, then DAMAC 6,588 and Emaar 6,262. */
-    headline: "228 developers active in 2025 — up 40% from 163 in 2024.",
+    headline: "131,234 units are expected in 2026 — absorption is the constraint, not demand.",
     points: [
-      "131,504 units launched by Oct 2025 — Q4 was strongest quarter ever",
-      "~98K units forecast for delivery in 2026 — absorption risk in JVC, Bus. Bay, Dubai South",
-      "Off-plan PPSF premium: AED 2,149 vs AED 1,663 for ready — 29% developer advantage",
-      "Delivery rate: only 46% on-time in 2025 — contractor capacity is the bottleneck",
-      "Golden Visa eligibility at AED 2M drives high-end demand — launch at this price point",
+      "131,234 units expected across 2026, 81% apartments and 19% villas",
+      "12,900 units completed in Q1 2026 — the highest quarterly delivery in three years",
+      "200,000–300,000 units planned to 2028, much of it landing across 2026 and 2027",
+      "Villa pricing is running well ahead of apartments on chronic undersupply — AED 5.1M average, +43% YoY (May 2026)",
+      "Golden Visa eligibility at AED 2M continues to anchor demand at that price point",
     ],
-    cta: "→ See Developer Health tab for competitive positioning",
+    cta: "→ Developer Health for competitive positioning · Risk for absorption by community",
   },
   Buyer: {
     icon: "🔑", color: "#68D391",
-    headline: "Is now a good time to buy? Yes — but be selective about location.",
+    headline: "Prices are still rising, but the pace is forecast to moderate in 2026.",
     points: [
-      "Avg PPSF AED 1,692 (DLD FY2025 median) — capital values +19.8% YoY (ValuStrat VPI)",
-      "AED 500K–3M: 72% of all deals — strong demand = strong resale liquidity",
-      "Knight Frank forecasts +3% prime / +1% mainstream for 2026 — sustainable",
-      "Mortgage activity up 22.5% YoY — banks competing for your business",
-      "Golden Visa: AED 2M+ property = 10-year renewable residency, no sponsor needed",
+      "Average price per sqft AED 1,840 (May 2026); AED 1,759 citywide in Q1 2026, +12.5% YoY",
+      "Consensus 2026 price growth is 5–8%, well below the +19.8% recorded in 2025 (ValuStrat VPI)",
+      "Mortgages fund 36% of activity and mortgage value rose 30.2% in a month — banks are competing",
+      "Apartments average AED 1.5M, villas AED 5.1M (May 2026) — the gap has widened sharply",
+      "Golden Visa: AED 2M+ in property gives 10-year renewable residency with no sponsor",
     ],
-    cta: "→ See DXB Estimate for property valuation · Mortgage tab for financing",
+    cta: "→ DXB Estimate for valuation · Mortgage tab for financing and affordability",
   },
 };
 
@@ -247,7 +259,11 @@ function MarketTab({ liveNeighbourhoods=[], liveMarketData, allDevelopers, expan
   const selectedYearMeta = selectedYear ? YEAR_META[selectedYear] : null;
 
   // Tax calculator
-  const annualRent = taxAmount * 0.0655;
+  /* 6.55% was the unverified REIDIN figure that marketFacts.js itself flags as
+     unconfirmed. Published 2026 gross yields for Dubai run 6.5–7.1%; the low end
+     is used here so the tax comparison understates rather than oversells. */
+  const DUBAI_GROSS_YIELD = GLOBAL_YIELD_COMPARISON.cities.find(c => c.city === "Dubai")?.grossLow ?? 6.5;
+  const annualRent = taxAmount * (DUBAI_GROSS_YIELD / 100);
   const dubaiNet = annualRent;
   const londonNet = annualRent * 0.75;
   const nyNet = annualRent * 0.70;
@@ -328,7 +344,9 @@ function MarketTab({ liveNeighbourhoods=[], liveMarketData, allDevelopers, expan
         {/* Apartment/villa yields corrected to the sourced 2025 figures — the
             previous 7.03% / 4.63% understated both. */}
         <KpiCard label="Avg Gross Yield" value={getStat("Avg Gross Yield")?.value} change={`Apts ${MARKET_FACTS.yieldApartments2025.value} · Villas ${MARKET_FACTS.yieldVillas2025.value}`} note="REIDIN / DXB Interact 2025" color={T?.green || "#68D391"} />
-        <KpiCard label="Mortgage Deals" value={getStat("Mortgage Transactions")?.value} change={getStat("Mortgage Transactions")?.change} note="AED 179.26B · Cash 87%" />
+        {/* Caption previously read "Cash 87%", the third place that figure
+            appeared on this page. Cash funds 64% of activity as of May 2026. */}
+        <KpiCard label="Mortgage Deals" value={getStat("Mortgage Transactions")?.value} change={getStat("Mortgage Transactions")?.change} note="AED 179.26B FY2025 · cash funds 64% of activity, May 2026" />
         <KpiCard label="Investor Base" value={getStat("Investor Base")?.value} change={getStat("Investor Base")?.change} note="129,600 new investors" />
         <KpiCard label="Women Investors" value={getStat("Women Investors")?.value} change={getStat("Women Investors")?.change} note="76,700 deals" />
         <KpiCard label="Price Growth" value={getStat("Price Growth")?.value} change="ValuStrat VPI Dec 2025" note="REIDIN: +12.88%" color={T?.green || "#68D391"} />
@@ -495,7 +513,7 @@ function MarketTab({ liveNeighbourhoods=[], liveMarketData, allDevelopers, expan
             AED {(taxAmount / 1000000).toFixed(1)}M
           </div>
           <div style={{ fontSize: 11, color: T?.textMuted || "#666" }}>
-            Expected gross rental income: <span style={{ color: T?.white || "#fff", fontWeight: 700 }}>AED {Math.round(annualRent).toLocaleString()}/yr</span> (at 6.55%)
+            Expected gross rental income: <span style={{ color: T?.white || "#fff", fontWeight: 700 }}>AED {Math.round(annualRent).toLocaleString()}/yr</span> (at {DUBAI_GROSS_YIELD}%, the low end of the published 2026 range)
           </div>
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(180px,1fr))", gap: 12, marginBottom: 16 }}>

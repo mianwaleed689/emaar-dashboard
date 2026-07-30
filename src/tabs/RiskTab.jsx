@@ -45,7 +45,8 @@ function RiskTab({ liveNeighbourhoods=[], riskTabView, setRiskTabView, riskCommu
                Sources: Fitch Ratings (15% correction forecast), Goldman Sachs
                (51% transaction drop Mar 2026), DFM index -21% post Feb 28
                mitchellscommercialrealty.com, 1tab.co, lionandland.com
-               87% cash transactions (Fitch) | RERA escrow protections
+               Cash 64% / mortgage 36% (May 2026 — the "87% cash" figure this
+               research block previously cited is out of date) | RERA escrow
                9 risk factors: Supply, Geopolitical, Developer, Liquidity,
                Vacancy, Currency, Regulatory, Construction, Market Cycle
             ════════════════════════════════════════════════════════ */
@@ -61,7 +62,11 @@ function RiskTab({ liveNeighbourhoods=[], riskTabView, setRiskTabView, riskCommu
                 desc:"Binghatti/Omniyat bonds >1000bps. 48-52% historical on-time delivery. Tier-1 (Emaar) vs Tier-3 risk gap wide.",
                 communityScores:{ "Jumeirah Village Circle":40, "Business Bay":30, "Dubai Marina":25, "Downtown Dubai":20, "Dubai Hills Estate":15, "Palm Jumeirah":20, "International City":55, "Dubai South":45 } },
               { key:"liquidity",    label:"Liquidity / Exit",    weight:12, icon:"\uD83D\uDCA7",
-                desc:"Transaction volume -51% Mar 2026 (Goldman Sachs). 87% cash market limits forced selling. Secondary villa -89% YoY.",
+                /* "87% cash market limits forced selling" corrected 2026-07-30:
+                   cash funded 64% of activity in May 2026, mortgages 36%. The
+                   cushion against forced selling is real but smaller than
+                   stated, and mortgage share is rising. */
+                desc:"Transaction volume -51% Mar 2026 (Goldman Sachs). Cash funds 64% of activity (May 2026), which limits but no longer largely removes forced-selling pressure. Secondary villa -89% YoY.",
                 communityScores:{ "Jumeirah Village Circle":35, "Business Bay":28, "Dubai Marina":22, "Downtown Dubai":20, "Dubai Hills Estate":30, "Palm Jumeirah":38, "International City":48, "Dubai South":65 } },
               { key:"vacancy",      label:"Vacancy / Rental",    weight:12, icon:"\uD83C\uDFE0",
                 desc:"JVC vacancy rising with supply. Prime areas 2-4% vacancy. Citi: population growth 1% vs 4% prior forecast.",

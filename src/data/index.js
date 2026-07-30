@@ -112,7 +112,15 @@ export const emaarRisks = [
   { factor:"Market Cycle Correction", level:4, likelihood:5, impact:5, score:100, mitigation:"Diversified revenue; 35% recurring from malls/hotels", assessment:"ELEVATED", color:T.orange },
   { factor:"Supply Competition", level:4, likelihood:5, impact:3, score:60, mitigation:"Brand premium 20-40%; 79K track record; master communities", assessment:"ELEVATED", color:T.orange },
   { factor:"Geographic Concentration", level:3, likelihood:3, impact:5, score:45, mitigation:"Expanding to Saudi, Egypt, India; +124% intl sales YoY", assessment:"MODERATE", color:T.gold },
-  { factor:"Interest Rate Sensitivity", level:2, likelihood:2, impact:2, score:8, mitigation:"87% cash buyers; no floating debt exposure", assessment:"LOW", color:T.teal },
+  /* CORRECTED 2026-07-30. This was rated LOW on the basis of "87% cash buyers",
+     a figure that is out of date: cash funded 64% of activity in May 2026 and
+     mortgages 36%, with mortgage value up 30.2% month on month. A market where
+     more than a third of purchases are financed is materially more rate-
+     sensitive than one where an eighth are, so the rating moves from LOW to
+     MODERATE. Level and likelihood are raised one step each; impact is
+     unchanged, since what a rate move does to a financed buyer has not altered
+     — only how many of them there are. */
+  { factor:"Interest Rate Sensitivity", level:3, likelihood:3, impact:2, score:18, mitigation:"Cash funds 64% of activity (May 2026); mortgage share 36% and rising", assessment:"MODERATE", color:T.gold },
   { factor:"Execution / Delivery", level:1, likelihood:1, impact:2, score:2, mitigation:"23-year record; 79,000+ units completed on schedule", assessment:"VERY LOW", color:T.green },
   { factor:"Regulatory Changes", level:1, likelihood:1, impact:2, score:2, mitigation:"DLD/RERA framework; transparent governance", assessment:"VERY LOW", color:T.green },
   { factor:"Currency (AED Peg)", level:1, likelihood:1, impact:2, score:2, mitigation:"USD peg since 1997; zero FX risk for USD investors", assessment:"VERY LOW", color:T.green },
@@ -127,8 +135,13 @@ export const dubaiMarket = [
   { metric:"All Transactions", val2024:"226,117", val2025:"275,442", yoy:"+21.8%", category:"Volume" },
   { metric:"Q4 Sales", val2024:"AED 147.8B", val2025:"AED 187.5B", yoy:"+26.9%", category:"Sales" },
   { metric:"Avg Price/sqft", val2024:"AED 1,484", val2025:"AED 1,755", yoy:"+18.3%", category:"Pricing" },
-  { metric:"Off-Plan Share", val2024:"55%", val2025:"62.6%", yoy:"Growing", category:"Structure" },
-  { metric:"Cash Buyers", val2024:"85%", val2025:"87%", yoy:"Dominant", category:"Structure" },
+  /* The 2024 and 2025 values are historical and stand. The trend labels were
+     not: "Dominant" beside 87% cash implied that was still the position, when
+     cash had fallen to 64% by May 2026 and mortgages risen to 36%. A reader
+     takes the trend word as the current state, so it now names the 2026
+     figure. */
+  { metric:"Off-Plan Share", val2024:"55%", val2025:"62.6%", yoy:"76% by May 2026", category:"Structure" },
+  { metric:"Cash Buyers", val2024:"85%", val2025:"87%", yoy:"Falling — 64% by May 2026", category:"Structure" },
   { metric:"New Investors H1", val2024:"48,600", val2025:"59,075", yoy:"+22%", category:"Demand" },
 ];
 

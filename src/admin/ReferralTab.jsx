@@ -320,9 +320,13 @@ const MarketDataEditor = ({ db, T, notify }) => {
     avgPricePsf:        "AED 1,689",
     avgPpsfNum:         "1689",
     yoyGrowthPct:       "+30.64%",
-    offPlanShare:       "62.6%",
+    /* Defaults refreshed 2026-07-30. These seed an editable admin form, so a
+       stale default becomes a stale published figure the moment someone saves
+       without checking. Off-plan was 62.6% and cash 87%; May 2026 figures are
+       76% off-plan by volume and 64% cash. */
+    offPlanShare:       "76%",
     avgPpsfYoy:         "19.8%",
-    cashBuyersPct:      "87%",
+    cashBuyersPct:      "64%",
     source:             "DLD Official + DXBinteract",
     lastVerifiedBy:     "",
   });
@@ -394,7 +398,7 @@ const MarketDataEditor = ({ db, T, notify }) => {
         <Field label="YoY Value Growth" field="yoyGrowthPct" placeholder="+30.64%" hint="Market value growth YoY" />
         <Field label="Off-Plan Share" field="offPlanShare" placeholder="62.6%" hint="% of transactions off-plan" />
         <Field label="Avg PPSF YoY" field="avgPpsfYoy" placeholder="19.8%" hint="Price per sqft YoY growth" />
-        <Field label="Cash Buyers %" field="cashBuyersPct" placeholder="87%" hint="% of buyers paying cash" />
+        <Field label="Cash Buyers %" field="cashBuyersPct" placeholder="64%" hint="% of buyers paying cash — 64% as of May 2026" />
         <Field label="Data Source" field="source" placeholder="DLD + DXBinteract + ValuStrat" hint="Attribution shown on dashboard" />
         <Field label="Verified By" field="lastVerifiedBy" placeholder="Your name" hint="Internal audit trail" />
       </div>
