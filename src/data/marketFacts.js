@@ -165,6 +165,60 @@ export const MARKET_FACTS = {
     asOf: "2025-12-31",
     verified: false,
   },
+  /* ── 2026 ────────────────────────────────────────────────────────────────
+     Everything above is FY2025 and carries a 2025-12-31 as-of date. Added
+     2026-07-30 so the Overview is not presenting a seven-month-old picture as
+     the current one. */
+
+  q1_2026Value: {
+    value: "AED 252B",
+    change: "+31% YoY",
+    note: "60,303 transactions, +6% volume — value growing faster than volume",
+    source: "Dubai Land Department, reported Q1 2026",
+    asOf: "2026-03-31",
+    verified: true,
+  },
+  q1_2026Ppsf: {
+    value: "AED 1,759",
+    change: "+12.5% YoY",
+    note: "Citywide average price per square foot, Q1 2026",
+    source: "Q1 2026 market reporting",
+    asOf: "2026-03-31",
+    verified: true,
+  },
+};
+
+/**
+ * H1 2026 is deliberately NOT stated as a single figure.
+ *
+ * Checked on 2026-07-30, three published sources give three different answers
+ * because each measures a different scope:
+ *
+ *   49,401 transactions / AED 182.9B   Provident Estate, residential
+ *   79,281 transactions / AED 221.4B   residential sales
+ *   86,005 transactions / AED 286.43B  Dubai Chronicle, all residential
+ *                                       (71,570 units + 7,301 buildings
+ *                                        + 7,134 land parcels)
+ *
+ * They are not contradictory so much as differently scoped — land parcels and
+ * whole buildings account for most of the spread. Picking one and printing it as
+ * "H1 2026" would be false precision, so the Overview shows the range with each
+ * scope named, and leans on Q1 2026 above, which is corroborated.
+ *
+ * The same applies to yield: Dubai Chronicle states plainly that 2026 yield
+ * figures "have not yet been finalized by the market bodies that publish them."
+ * The most recent confirmed citywide figure is 7.0% (apartments 5.7%). The
+ * platform therefore leads with its OWN computed median net yield, which is
+ * defensible because the calculation is shown, rather than quoting a market
+ * number nobody has published yet.
+ */
+export const H1_2026_RANGE = {
+  label: "H1 2026 transactions",
+  low: { value: "49,401", aed: "AED 182.9B", scope: "Residential", source: "Provident Estate" },
+  high: { value: "86,005", aed: "AED 286.43B", scope: "All residential incl. land and buildings", source: "Dubai Chronicle" },
+  note: "Published H1 2026 totals differ by scope — land parcels and whole buildings account for most of the spread.",
+  asOf: "2026-06-30",
+  provisional: true,
 };
 
 /** True when a fact is safe to present without a caveat. */

@@ -4755,17 +4755,16 @@ const unsub = onSnapshot(nQuery, (snap) => {
           {/* OVERVIEW TAB (extracted) */}
           {tab === "Overview" && (
             <OverviewTab
+              /* Investor-facing communities (the consistent 193) plus the full
+                 annotated set, so the Overview can state how many DLD
+                 administrative districts are held separately rather than
+                 leaving the difference unexplained. */
               liveNeighbourhoods={liveNeighbourhoods}
+              allNeighbourhoods={annotatedNeighbourhoods}
+              projects={projectsWithOverrides}
+              allDevelopers={allDevelopers}
               liveMarketData={liveMarketData}
-              liveDLDVolumes={liveDLDVolumes}
-              liveDevHealth={liveDevHealth} liveMortgageRates={liveMortgageRates}
-
-              liveYields={liveYields}
-              allDevelopers={allDevelopers} deals={deals} listings={listings}
-              myLeads={myLeads} myPortfolio={myPortfolio} watchlist={watchlist}
-
-              aiInsights={aiInsights} gDeveloper={gDeveloper} lastDataSync={lastDataSync}
-              globalFilters={_gf}
+              liveEiborRates={liveEiborRates}
               handleTabChange={handleTabChange}
             />
           )}
