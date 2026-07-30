@@ -221,6 +221,79 @@ export const H1_2026_RANGE = {
   provisional: true,
 };
 
+/**
+ * ── MARKET COMPOSITION, 2026 ────────────────────────────────────────────────
+ *
+ * Researched 2026-07-30. These replace figures on the Market tab that were both
+ * stale and, in one case, materially misleading:
+ *
+ *   Off-plan share ....... shown 65%, actual 76% of volume (May 2026). The
+ *                          component's own note already said "Stale · verified
+ *                          2025 share is over 70%" and displayed 65% anyway.
+ *   Cash transactions .... shown 87%, actual 64% (May 2026). This one mattered:
+ *                          the caption read "No systemic leverage risk", but
+ *                          mortgage-funded activity is 36%, not 13%. Understating
+ *                          leverage by that margin is the kind of error an
+ *                          investor could act on.
+ *
+ * Monthly composition moves. Each figure below states the month it describes, so
+ * a reader can see its age rather than assume it is current.
+ */
+export const MARKET_COMPOSITION_2026 = {
+  asOf: "2026-05-31",
+  period: "May 2026",
+  source: "Provident Estate monthly market report, compiled from DLD transaction records",
+  transactions: { value: "14,045", note: "AED 48.2B total sales value, +11.2% month on month" },
+  avgPpsf: { value: "AED 1,840", note: "All property types" },
+  split: [
+    { label: "Off-plan", pct: 76, colorKey: "gold", note: "76% of volume, 75% of value" },
+    { label: "Secondary / ready", pct: 24, colorKey: "blue", note: "24% of volume, 25% of value" },
+  ],
+  funding: [
+    { label: "Cash", pct: 64, colorKey: "green", note: "Down from the 87% previously shown here" },
+    { label: "Mortgage-backed", pct: 36, colorKey: "purple", note: "AED 14.4B across 4,077 deals, +30.2% MoM by value" },
+  ],
+  byValue: [
+    { label: "Apartments", pct: 50, colorKey: "gold", note: "AED 24.1B · average AED 1.5M, +18.4% YoY" },
+    { label: "Villas", pct: 28, colorKey: "blue", note: "AED 13.4B · average AED 5.1M, +43% YoY" },
+    { label: "Plots", pct: 14, colorKey: "orange", note: "" },
+    { label: "Commercial", pct: 8, colorKey: "purple", note: "AED 4B" },
+  ],
+};
+
+/**
+ * Supply pipeline. The previous figures (~98K for 2026, ~366K to 2028) came from
+ * Q3 2025 forecasts; these are the 2026 numbers.
+ */
+export const SUPPLY_PIPELINE_2026 = {
+  asOf: "2026-07-30",
+  source: "2026 market outlook reporting",
+  items: [
+    { label: "Units expected 2026", value: "131,234", note: "81% apartments, 19% villas", risk: "medium" },
+    { label: "Completed Q1 2026", value: "12,900", note: "Highest quarterly delivery in three years", risk: "low" },
+    { label: "Planned to 2028", value: "200K–300K", note: "Much of it landing across 2026–2027", risk: "high" },
+  ],
+  concentration: "Business Bay, Jumeirah Village Circle, Dubai South, Dubai Science Park and Dubai Hills Estate carry the largest share of 2026 deliveries.",
+  forecast: "Consensus price growth for 2026 sits between 5% and 8%, with villas forecast well above that on chronic undersupply. Residential rental growth is forecast to flatten as rates approach affordability ceilings.",
+};
+
+/**
+ * Global comparison. The point a Dubai investor is actually weighing is the
+ * NET return after tax, which is where the gap widens — so both are shown, and
+ * yields are given as the ranges the sources state rather than false precision.
+ */
+export const GLOBAL_YIELD_COMPARISON = {
+  asOf: "2026-07-30",
+  source: "2026 comparative market reporting",
+  cities: [
+    { city: "Dubai",     grossLow: 6.5, grossHigh: 7.1, netNote: "5–7% net. No income tax on rent; service charges only, roughly USD 4,000–9,500 a year.", highlight: true },
+    { city: "New York",  grossLow: 4.0, grossHigh: 5.0, netNote: "Property tax plus HOA runs roughly USD 23,000–49,000 a year." },
+    { city: "London",    grossLow: 3.0, grossHigh: 4.0, netNote: "A 40% taxpayer nets about 2.7% before maintenance and management." },
+    { city: "Singapore", grossLow: 2.0, grossHigh: 3.0, netNote: "Annual property tax of 10–20% of assessed value on non-owner-occupied homes." },
+  ],
+  caveat: "Gross yields are as published for 2026 and vary by district and property type. Dubai's advantage is larger after tax than before it, which is the comparison that matters to an investor holding for income.",
+};
+
 /** True when a fact is safe to present without a caveat. */
 export function isVerified(key) {
   return MARKET_FACTS[key]?.verified === true;

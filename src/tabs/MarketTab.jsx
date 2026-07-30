@@ -14,7 +14,12 @@ import {
 } from "recharts";
 import { T } from "../data";
 import { useMarketKpis, useMarketChart } from "../hooks/useMarketMetrics";
-import { MARKET_FACTS } from "../data/marketFacts";
+import {
+  MARKET_FACTS,
+  MARKET_COMPOSITION_2026,
+  SUPPLY_PIPELINE_2026,
+  GLOBAL_YIELD_COMPARISON,
+} from "../data/marketFacts";
 
 // ── Year annotations ─────────────────────────────────────────────
 const YEAR_META = {
@@ -28,21 +33,58 @@ const YEAR_META = {
 };
 
 // ── Global city comparison data ───────────────────────────────────
-const GLOBAL_COMPARE = [
-  { city: "Dubai", flag: "🇦🇪", yield: 6.55, ppsf: 438, taxRate: 0, priceGrowth: 19.8, color: T?.gold || "#D4A843" },
-  { city: "London", flag: "🇬🇧", yield: 2.4, ppsf: 1420, taxRate: 25, priceGrowth: 1.6, color: "#63B3ED" },
-  { city: "New York", flag: "🇺🇸", yield: 4.2, ppsf: 1850, taxRate: 30, priceGrowth: 8.1, color: "#FC8181" },
-  { city: "Singapore", flag: "🇸🇬", yield: 3.0, ppsf: 1600, taxRate: 35, priceGrowth: 4.2, color: "#68D391" },
-  { city: "Paris", flag: "🇫🇷", yield: 3.8, ppsf: 1100, taxRate: 30, priceGrowth: 2.1, color: "#9F7AEA" },
-];
+/**
+ * Global comparison, refreshed 2026-07-30 from GLOBAL_YIELD_COMPARISON.
+ *
+ * The previous table stated single-decimal yields (Dubai 6.55, London 2.4,
+ * Singapore 3.0) and per-city "taxRate" percentages that had no stated source.
+ * Published 2026 figures are ranges, not points, and the tax burden differs in
+ * KIND rather than by a single rate — London taxes rental income, Singapore
+ * levies an annual property tax on non-owner-occupied homes, New York charges
+ * property tax plus HOA. Flattening those into one percentage implied a
+ * precision that does not exist.
+ *
+ * Colours are kept here; everything factual now comes from marketFacts.js.
+ */
+const CITY_COLORS = {
+  Dubai: T?.gold || "#D4A843",
+  London: "#63B3ED",
+  "New York": "#FC8181",
+  Singapore: "#68D391",
+};
+
+const GLOBAL_COMPARE = GLOBAL_YIELD_COMPARISON.cities.map(c => ({
+  ...c,
+  color: CITY_COLORS[c.city] || "#9F7AEA",
+  yieldMid: (c.grossLow + c.grossHigh) / 2,
+}));
+
+/** Shared palette for the composition bars. */
+const BAR_COLORS = {
+  gold: T?.gold || "#D4A843",
+  blue: "#63B3ED",
+  green: T?.green || "#68D391",
+  purple: "#9F7AEA",
+  orange: "#F6AD55",
+};
 
 // ── Market health score calculator ───────────────────────────────
 // Based on: price cycle length, YoY growth, supply pipeline risk, analyst consensus
 // Scale: 0-100 · <30 distressed · 30-50 cooling · 50-70 stable · 70-85 growing · 85-100 peak
-const HEALTH_SCORE = 72; // Growing — month 56+ cycle, strong fundamentals, supply risk emerging
-const HEALTH_LABEL = "Growing";
+/* A "market health score" of 72/100 was hardcoded here with no formula behind
+   it — nothing computed it, nothing updated it, and the number carried the
+   authority of a measurement while being an opinion typed into a constant.
+   Alongside it sat "Month 56+ of longest growth cycle", written in April and
+   still counting the same 56 months in July.
+
+   Rather than invent a formula to justify the number, the panel now states the
+   two things that ARE sourced: the consensus 2026 price forecast and the supply
+   position driving it. If a composite score is wanted later it should be built
+   from stated inputs with the weights shown, the way the Developer Health
+   rebuild is specified — not asserted. */
+const HEALTH_LABEL = "2026 consensus";
 const HEALTH_COLOR = "#68D391";
-const HEALTH_DESC = "Month 56+ of longest growth cycle. Strong fundamentals with emerging supply risk in 2026. Analysts forecast 1-8% growth. Ideal entry window for long-term investors.";
+const HEALTH_DESC = SUPPLY_PIPELINE_2026.forecast;
 
 // ── Audience content ──────────────────────────────────────────────
 const AUDIENCES = ["Investor", "Agent", "Developer", "Buyer"];
@@ -221,15 +263,17 @@ function MarketTab({ liveNeighbourhoods=[], liveMarketData, allDevelopers, expan
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", padding: "10px 0", marginBottom: 20, borderBottom: "1px solid " + (T?.border || "#222"), flexWrap: "wrap", gap: 12 }}>
         <div>
           <div style={{ fontSize: 20, fontWeight: 800, color: T?.white || "#fff", fontFamily: "'Fraunces',serif" }}>Dubai Real Estate Market</div>
-          <div style={{ fontSize: 11, color: T?.textMuted || "#666", marginTop: 3 }}>Full year 2025 · DLD Official · REIDIN · ValuStrat · Knight Frank · BetterHomes FY2025</div>
+          <div style={{ fontSize: 11, color: T?.textMuted || "#666", marginTop: 3 }}>
+            Composition and supply as of {MARKET_COMPOSITION_2026.period} · annual totals FY2025 · every figure below carries its source and date
+          </div>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <div style={{ textAlign: "right" }}>
-            <div style={{ fontSize: 10, color: T?.textMuted || "#666", marginBottom: 3 }}>Market Health</div>
-            <div style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 800, color: HEALTH_COLOR }}>{HEALTH_SCORE}/100 — {HEALTH_LABEL}</div>
+            <div style={{ fontSize: 10, color: T?.textMuted || "#666", marginBottom: 3 }}>2026 price forecast</div>
+            <div style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 800, color: HEALTH_COLOR }}>5–8% — {HEALTH_LABEL}</div>
           </div>
           <div style={{ width: 48, height: 48, borderRadius: "50%", border: "3px solid " + HEALTH_COLOR, display: "flex", alignItems: "center", justifyContent: "center", background: HEALTH_COLOR + "15" }}>
-            <span style={{ fontSize: 18, fontWeight: 800, color: HEALTH_COLOR, fontFamily: "'Fraunces',serif" }}>{HEALTH_SCORE}</span>
+            <span style={{ fontSize: 13, fontWeight: 800, color: HEALTH_COLOR, fontFamily: "'Fraunces',serif" }}>5–8%</span>
           </div>
         </div>
       </div>
@@ -291,8 +335,13 @@ function MarketTab({ liveNeighbourhoods=[], liveMarketData, allDevelopers, expan
         {/* Neither figure could be traced to a published source. The note no
             longer credits DLD — the RERA registry lists 2,200+ licensed
             developers, so "228, per DLD" was wrong on its face. */}
-        <KpiCard label="Active Developers" value={getStat("Active Developers")?.value} change={getStat("Active Developers")?.change} note="Unverified · no published source" />
-        <KpiCard label="Units Launched" value={getStat("Units Launched")?.value} change={getStat("Units Launched")?.change} note="Unverified · no published source" />
+        {/* "Active Developers" (228) and "Units Launched" (131,504) were shown
+            with the caption "Unverified · no published source". A figure nobody
+            can source does not belong on a market page beside DLD totals — the
+            caveat does not repair it, it just moves the problem to the reader.
+            Replaced with the 2026 supply figures, which are sourced. */}
+        <KpiCard label="Units expected 2026" value={SUPPLY_PIPELINE_2026.items[0].value} change="81% apartments" note={SUPPLY_PIPELINE_2026.items[0].note} />
+        <KpiCard label="Completed Q1 2026" value={SUPPLY_PIPELINE_2026.items[1].value} change="Highest in 3 years" note={SUPPLY_PIPELINE_2026.items[1].note} />
       </div>
 
       {/* ── Post-Covid Recovery Chart ──────────────────────────── */}
@@ -387,7 +436,7 @@ function MarketTab({ liveNeighbourhoods=[], liveMarketData, allDevelopers, expan
         <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 600 }}>
           <thead>
             <tr>
-              {["City", "Gross Yield", "PPSF (USD)", "Tax on Rental Income", "Price Growth 2025", "Verdict"].map(h => (
+              {["City", "Gross Yield (2026)", "What the tax actually costs"].map(h => (
                 <th key={h} style={{ fontSize: 10, fontWeight: 700, color: T?.textMuted || "#666", textTransform: "uppercase", letterSpacing: 0.8, padding: "8px 12px", textAlign: "left", borderBottom: "1px solid " + (T?.border || "#222") }}>{h}</th>
               ))}
             </tr>
@@ -402,29 +451,27 @@ function MarketTab({ liveNeighbourhoods=[], liveMarketData, allDevelopers, expan
                 >
                   <td style={{ padding: "12px 12px", borderBottom: "1px solid " + (T?.border || "#222") + "80" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                      <span style={{ fontSize: 16 }}>{city.flag}</span>
                       <span style={{ fontSize: 13, fontWeight: isDubai ? 800 : 600, color: isDubai ? T?.gold || "#D4A843" : T?.white || "#fff", fontFamily: isDubai ? "'Fraunces',serif" : "inherit" }}>{city.city}</span>
                       {isDubai && <span style={{ fontSize: 9, padding: "2px 6px", background: "rgba(212,168,67,0.2)", color: T?.gold || "#D4A843", borderRadius: 6, fontWeight: 700 }}>WE ARE HERE</span>}
                     </div>
                   </td>
+                  {/* Published as a RANGE, shown as a range. The old table gave a
+                      single decimal per city, which implied a precision the
+                      sources do not claim. */}
                   <td style={{ padding: "12px 12px", borderBottom: "1px solid " + (T?.border || "#222") + "80" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                      <div style={{ height: 6, width: Math.round(city.yield * 12) + "px", borderRadius: 3, background: isDubai ? T?.gold || "#D4A843" : city.color, transition: "width 0.8s" }} />
-                      <span style={{ fontSize: 13, fontWeight: 700, color: isDubai ? T?.gold || "#D4A843" : T?.white || "#fff" }}>{city.yield}%</span>
+                      <div style={{ height: 6, width: Math.round(city.yieldMid * 12) + "px", borderRadius: 3, background: isDubai ? T?.gold || "#D4A843" : city.color, transition: "width 0.8s" }} />
+                      <span style={{ fontSize: 13, fontWeight: 700, color: isDubai ? T?.gold || "#D4A843" : T?.white || "#fff" }}>
+                        {city.grossLow}–{city.grossHigh}%
+                      </span>
                     </div>
                   </td>
+                  {/* The tax burden differs in KIND, not by a single rate — income
+                      tax in London, annual property tax in Singapore, property tax
+                      plus HOA in New York. Stated rather than flattened. */}
                   <td style={{ padding: "12px 12px", borderBottom: "1px solid " + (T?.border || "#222") + "80" }}>
-                    <span style={{ fontSize: 13, color: isDubai ? T?.green || "#68D391" : T?.textSecondary || "#aaa", fontWeight: isDubai ? 700 : 400 }}>${city.ppsf.toLocaleString()}</span>
-                  </td>
-                  <td style={{ padding: "12px 12px", borderBottom: "1px solid " + (T?.border || "#222") + "80" }}>
-                    <span style={{ fontSize: 13, fontWeight: 700, color: city.taxRate === 0 ? T?.green || "#68D391" : "#FC8181" }}>{city.taxRate === 0 ? "Zero ✓" : city.taxRate + "%"}</span>
-                  </td>
-                  <td style={{ padding: "12px 12px", borderBottom: "1px solid " + (T?.border || "#222") + "80" }}>
-                    <span style={{ fontSize: 13, fontWeight: 700, color: city.priceGrowth > 10 ? T?.gold || "#D4A843" : city.priceGrowth > 5 ? T?.green || "#68D391" : T?.textMuted || "#666" }}>+{city.priceGrowth}%</span>
-                  </td>
-                  <td style={{ padding: "12px 12px", borderBottom: "1px solid " + (T?.border || "#222") + "80" }}>
-                    <span style={{ fontSize: 11, color: isDubai ? T?.gold || "#D4A843" : T?.textMuted || "#666", fontWeight: isDubai ? 700 : 400 }}>
-                      {isDubai ? "Best yield + zero tax" : city.city === "London" ? "Stable, low yield" : city.city === "New York" ? "High tax, lower yield" : city.city === "Singapore" ? "60% ABSD for foreigners" : "Moderate, more stable"}
+                    <span style={{ fontSize: 11, lineHeight: 1.5, color: isDubai ? T?.green || "#68D391" : T?.textSecondary || "#aaa", fontWeight: isDubai ? 600 : 400 }}>
+                      {city.netNote}
                     </span>
                   </td>
                 </tr>
@@ -475,33 +522,44 @@ function MarketTab({ liveNeighbourhoods=[], liveMarketData, allDevelopers, expan
       {/* ── Market Composition + Who's Buying ─────────────────── */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 8 }}>
         <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid " + (T?.border || "#222"), borderRadius: 12, padding: "20px" }}>
-          <SH title="Market Composition" sub="DLD 2025 · BetterHomes FY2025" />
-          <StatBar label="Off-Plan Sales" value="65%" pct={65} color={T?.gold || "#D4A843"} note="Up from 40% in 2020 — payment plans drive adoption" />
-          <StatBar label="Secondary / Ready" value="35%" pct={35} color="#63B3ED" />
-          <StatBar label="Cash Transactions" value="87%" pct={87} color={T?.green || "#68D391"} note="No systemic leverage risk · Knight Frank Q1-Q3 2025" />
-          <StatBar label="Mortgage-Backed" value="13%" pct={13} color="#9F7AEA" note="Rising — 50,974 deals +22.5% YoY" />
+          {/* Off-plan and funding split. Previously hardcoded at 65% off-plan and
+              87% cash — the first was flagged stale in its own caption and shown
+              anyway, the second understated mortgage-funded activity by nearly
+              three times. Both now come from MARKET_COMPOSITION_2026, dated. */}
+          <SH title="Market Composition" sub={`${MARKET_COMPOSITION_2026.period} · ${MARKET_COMPOSITION_2026.source}`} />
+          {MARKET_COMPOSITION_2026.split.map(s => (
+            <StatBar key={s.label} label={s.label} value={`${s.pct}%`} pct={s.pct} color={BAR_COLORS[s.colorKey]} note={s.note} />
+          ))}
+          {MARKET_COMPOSITION_2026.funding.map(s => (
+            <StatBar key={s.label} label={s.label} value={`${s.pct}%`} pct={s.pct} color={BAR_COLORS[s.colorKey]} note={s.note} />
+          ))}
+          <div style={{ fontSize: 10, color: T?.textMuted || "#666", marginTop: 8 }}>
+            {MARKET_COMPOSITION_2026.transactions.value} transactions · {MARKET_COMPOSITION_2026.transactions.note}
+          </div>
         </div>
         <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid " + (T?.border || "#222"), borderRadius: 12, padding: "20px" }}>
-          <SH title="Who's Buying" sub="BetterHomes FY2025 · DLD 2025" />
-          <StatBar label="Apartments (83% of all deals)" value="83%" pct={83} color={T?.gold || "#D4A843"} note="Studios + 1BR lead volume · JVC, Business Bay, Dubai Marina" />
-          <StatBar label="Villas & Townhouses" value="8%" pct={8} color="#63B3ED" note="Dubai Hills, Tilal Al Ghaf, Arabian Ranches" />
-          <StatBar label="AED 500K–3M (72% of deals)" value="72%" pct={72} color={T?.green || "#68D391"} note="Sweet spot — highest liquidity and resale velocity" />
-          <StatBar label="AED 3M–10M" value="20%" pct={20} color="#F6AD55" />
-          <StatBar label="AED 10M+ ultra-luxury" value="8%" pct={8} color="#9F7AEA" note="Palm, DIFC, Emirates Hills — HNWI driven" />
-          <div style={{ fontSize: 10, color: T?.textMuted || "#666", marginTop: 8 }}>Residents: 56.6% · Top nationalities: Indians, UK, Russians, Europeans, GCC</div>
+          {/* Shown by share of VALUE, which is what the source measures. The old
+              version mixed "83% of all deals" (volume) with unsourced price-band
+              percentages, so the two halves of the panel were not comparable. */}
+          <SH title="Where the Money Goes" sub={`${MARKET_COMPOSITION_2026.period} · share of total sales value`} />
+          {MARKET_COMPOSITION_2026.byValue.map(s => (
+            <StatBar key={s.label} label={s.label} value={`${s.pct}%`} pct={s.pct} color={BAR_COLORS[s.colorKey]} note={s.note} />
+          ))}
+          <div style={{ fontSize: 10, color: T?.textMuted || "#666", marginTop: 8 }}>
+            Average price per sqft {MARKET_COMPOSITION_2026.avgPpsf.value} · {MARKET_COMPOSITION_2026.avgPpsf.note}
+          </div>
         </div>
       </div>
 
       {/* ── Supply Pipeline Risk ───────────────────────────────── */}
-      <SH title="Supply Pipeline — Know the Risk" sub="2026 delivery forecast · Knight Frank / BetterHomes / Cavendish Maxwell Q3 2025" />
+      {/* Pipeline figures refreshed 2026-07-30. The previous ones (~98K for 2026,
+          ~366K to 2028) were Q3 2025 forecasts carried forward unchanged. */}
+      <SH title="Supply Pipeline — Know the Risk" sub={`${SUPPLY_PIPELINE_2026.source} · as of ${SUPPLY_PIPELINE_2026.asOf}`} />
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(190px,1fr))", gap: 10, marginBottom: 24 }}>
         {[
-          { label: "Units Forecast 2026", value: "~98K", note: "BetterHomes FY2025", risk: "medium" },
-          { label: "Pipeline to 2028", value: "~366K", note: "Cavendish Maxwell Q3 2025", risk: "high" },
-          { label: "2025 Delivery Rate", value: "46%", note: "Only 46% on-time — contractor capacity crunch (Knight Frank)", risk: "low" },
-          { label: "High Supply Risk", value: "JVC · Bus.Bay · Dubai South", note: "Price pressure expected 2026–2027", risk: "high" },
-          { label: "Supply Constrained", value: "Palm · DIFC · Creek Harbour", note: "Limited new inventory — price support likely", risk: "low" },
-          { label: "Price Cycle Length", value: "56+ months", note: "Longest unbroken growth cycle in DLD history", risk: "medium" },
+          ...SUPPLY_PIPELINE_2026.items,
+          { label: "Heaviest 2026 delivery", value: "JVC · Business Bay · Dubai South", note: SUPPLY_PIPELINE_2026.concentration, risk: "high" },
+          { label: "2026 price forecast", value: "5–8%", note: SUPPLY_PIPELINE_2026.forecast, risk: "medium" },
         ].map((item, i) => (
           <div key={i} style={{
             background: "rgba(255,255,255,0.02)",
