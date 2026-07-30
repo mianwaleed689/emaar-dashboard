@@ -3483,7 +3483,30 @@ export default function EmaarDashboardV2() {
       setLiveCommunityList(list);
     }));
 
-    unsubs.push(onSnapshot(collection(db, "developers"), (snap) => {
+    /* ── DEVELOPERS ───────────────────────────────────────────────────────────
+     *
+     * Read the pre-aggregated brand list from ONE document instead of pulling
+     * the whole `developers` collection into the browser.
+     *
+     * This listener used to subscribe to all 2,034 developer records on every
+     * page load, purely to build the developer filter dropdown. At 2,034 reads
+     * per visit against the free tier's 50,000/day, roughly eleven page views
+     * emptied the daily quota and took the live site down until midnight
+     * Pacific. The aggregation is identical for every visitor, so it now runs
+     * once a night in api/_cron/cron-developer-brands.js.
+     *
+     * 2,034 reads per visitor -> 1.
+     *
+     * The full collection listener below is retained as a FALLBACK, used only if
+     * the summary document is missing, empty, or written by a newer schema than
+     * this build understands. That keeps the dropdown working even if the cron
+     * has never run.
+     * ──────────────────────────────────────────────────────────────────────── */
+    const DEVELOPER_BRANDS_SCHEMA = 1;
+    let devFallbackUnsub = null;
+    const attachDevelopersFallback = () => {
+      if (devFallbackUnsub) return;   // already listening
+      devFallbackUnsub = onSnapshot(collection(db, "developers"), (snap) => {
       /* Phase 2: GROUP BY PARENT BRAND.
          The DLD registry lists every SPV/subsidiary separately (e.g., 22 DAMAC
          entities). Users want to filter by the real company (DAMAC Properties),
@@ -3563,6 +3586,28 @@ export default function EmaarDashboardV2() {
         return (a.name || "").localeCompare(b.name || "");
       });
       setAllDevelopers(devs);
+      });
+      unsubs.push(devFallbackUnsub);
+    };
+
+    /* Summary document first — one read. Falls back to the full collection only
+       if the summary is unusable. */
+    unsubs.push(onSnapshot(doc(db, "tabData", "developerBrands"), (snap) => {
+      const data = snap.exists() ? snap.data() : null;
+      const usable = data
+        && Array.isArray(data.brands)
+        && data.brands.length > 0
+        && (data.schemaVersion ?? 1) <= DEVELOPER_BRANDS_SCHEMA;
+
+      if (usable) {
+        setAllDevelopers(data.brands);
+        return;
+      }
+      /* Missing, empty, or from a newer schema — use the live collection. */
+      attachDevelopersFallback();
+    }, () => {
+      /* Read failed (rules, network). Fall back rather than show no developers. */
+      attachDevelopersFallback();
     }));
 
     // aiInsights/latest

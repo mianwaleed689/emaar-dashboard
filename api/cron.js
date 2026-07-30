@@ -27,6 +27,9 @@ const HANDLERS = {
   "sync-market":  () => require("./_cron/cron-sync-market.js"),
   "scan-launches":() => require("./_cron/cron-scan-launches.js"),
   "weekly-digest":() => require("./_cron/weekly-digest.js"),
+  /* Pre-aggregates the developer brand list into a single document so the
+     browser reads 1 doc instead of all 2,034 developer records per page load. */
+  "developer-brands": () => require("./_cron/cron-developer-brands.js"),
 };
 
 module.exports = async function handler(req, res) {

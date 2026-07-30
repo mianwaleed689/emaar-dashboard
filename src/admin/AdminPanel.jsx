@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import ReactDOM from "react-dom";
 import { auth, db, storage, firebaseConfig } from "../firebase";
 import { logAudit, checkAlerts, getAdminIP, setAuditWebhook, setAlertThreshold } from "../utils/audit";
@@ -12757,7 +12757,30 @@ export default function AdminPanel() {
   }, []);
 
   /* â€” FETCH USERS â€” */
+  /* ── READ-AMPLIFICATION GUARDS ──────────────────────────────────────────────
+   *
+   * Each collection below already has a live onSnapshot listener attached
+   * further down this component. A listener hands back the WHOLE collection the
+   * moment it subscribes, and then pushes every later change on its own — so
+   * the manual getDocs re-fetches that follow each write were paying a second
+   * time for data the listener had already delivered.
+   *
+   * There are ~38 such call sites (fetchUsers ×20, fetchLiveData ×18), and
+   * fetchLiveData re-reads five entire collections per call. On the Firestore
+   * free tier — 50,000 reads/day — that is what emptied the quota within an
+   * hour of every reset.
+   *
+   * These refs let all those call sites stay exactly where they are while
+   * costing nothing whenever a listener is genuinely attached. If a listener
+   * fails to attach or is torn down, the flag goes false and the manual fetch
+   * resumes as the fallback, so nothing silently stops refreshing.
+   * ──────────────────────────────────────────────────────────────────────── */
+  const usersListenerActive = useRef(false);
+  const liveDataListenersActive = useRef(false);
+  const verificationsListenerActive = useRef(false);
+
   const fetchUsers = useCallback(async () => {
+    if (usersListenerActive.current) return;   // listener already holds this data
     try {
       const snap = await getDocs(collection(db, "users"));
       const list = [];
@@ -12777,14 +12800,18 @@ export default function AdminPanel() {
           snap.forEach(d => list.push({ uid: d.id, ...plainify(d.data()) }));
           setUsers(list);
         });
-      } catch(e) { fetchUsers(); }
+        usersListenerActive.current = true;
+      } catch(e) { usersListenerActive.current = false; fetchUsers(); }
     };
     setupListener();
-    return () => { if (unsub) unsub(); };
+    return () => { usersListenerActive.current = false; if (unsub) unsub(); };
   }, [isAdmin]);
 
   /* â€” FETCH LIVE DATA FROM FIRESTORE â€” */
   const fetchLiveData = useCallback(async () => {
+    // Listeners below cover all five collections read here — see the guard note
+    // above fetchUsers. Skipping this saves five full collection reads per call.
+    if (liveDataListenersActive.current) return;
     try {
       // Fetch project overrides
       const projSnap = await getDocs(collection(db, "projectData"));
@@ -12833,7 +12860,11 @@ export default function AdminPanel() {
     } catch (e) { console.error("Fetch live data:", e); }
   }, []);
 
-  useEffect(() => { if (isAdmin) fetchLiveData(); }, [isAdmin, fetchLiveData]);
+  // NOTE: no initial fetchLiveData() call here on purpose. The listener effect
+  // immediately below subscribes to the same five collections and delivers all
+  // of them on subscribe, so calling fetchLiveData() first read every one of
+  // them twice on each admin page load. If the listeners fail to attach, the
+  // catch block there falls back to fetchLiveData().
 
   // Real-time listeners for project and community data
   useEffect(() => {
@@ -12886,12 +12917,23 @@ export default function AdminPanel() {
         });
         setPriceHistory(histMap);
       }));
-    } catch (e) { console.error("Real-time listener error:", e); }
-    return () => { unsubs.forEach(u => { try { u(); } catch (e) { console.error("swallowed@AdminPanel.jsx:12936", e); } }); };
-  }, [isAdmin]);
+      liveDataListenersActive.current = true;
+    } catch (e) {
+      // Listeners did not attach — fall back to the one-shot fetch so the admin
+      // screens still populate, and leave the flag false so later writes refetch.
+      liveDataListenersActive.current = false;
+      console.error("Real-time listener error:", e);
+      fetchLiveData();
+    }
+    return () => {
+      liveDataListenersActive.current = false;
+      unsubs.forEach(u => { try { u(); } catch (e) { console.error("swallowed@AdminPanel.jsx:12936", e); } });
+    };
+  }, [isAdmin, fetchLiveData]);
 
   /* â€” FETCH KYC VERIFICATIONS â€” */
   const fetchVerifications = useCallback(async () => {
+    if (verificationsListenerActive.current) return;   // listener already has it
     try {
       const snap = await getDocs(collection(db, "verifications"));
       const list = [];
@@ -12901,7 +12943,8 @@ export default function AdminPanel() {
     } catch (e) { console.error("Fetch verifications:", e); }
   }, []);
 
-  useEffect(() => { if (isAdmin) fetchVerifications(); }, [isAdmin, fetchVerifications]);
+  // No initial fetchVerifications() here — the listener below delivers the same
+  // collection on subscribe, so fetching first read it twice per page load.
 
   // Real-time listener for verifications
   useEffect(() => {
@@ -12914,8 +12957,9 @@ export default function AdminPanel() {
         list.sort((a, b) => new Date(b.submittedAt || 0) - new Date(a.submittedAt || 0));
         setVerifications(list);
       });
-    } catch (e) { fetchVerifications(); }
-    return () => { if (unsub) unsub(); };
+      verificationsListenerActive.current = true;
+    } catch (e) { verificationsListenerActive.current = false; fetchVerifications(); }
+    return () => { verificationsListenerActive.current = false; if (unsub) unsub(); };
   }, [isAdmin, fetchVerifications]);
 
   /* â€” ORGANISATIONS LISTENER (Session 2) â€” */
