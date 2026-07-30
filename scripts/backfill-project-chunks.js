@@ -23,8 +23,10 @@
 const admin = require("firebase-admin");
 const {
   splitIntoChunks,
+  dehydrateSources,
   MANIFEST_DOC,
   CHUNK_DOC_PREFIX,
+  SOURCE_CATALOGUE_DOC,
   SCHEMA_VERSION,
 } = require("../api/_cron/cron-project-chunks.js");
 
@@ -41,17 +43,35 @@ async function run() {
   const snap = await db.collection("projects").get();
   console.log(`${snap.size} documents`);
 
-  const records = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  const rawRecords = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  const { records, catalogue } = dehydrateSources(rawRecords);
   const chunks = splitIntoChunks(records);
   const sizes = chunks.map(c => Buffer.byteLength(JSON.stringify({ projects: c }), "utf8"));
+  const catKB = Math.round(Buffer.byteLength(JSON.stringify({ sources: catalogue }), "utf8") / 1024);
   const totalKB = Math.round(sizes.reduce((a, b) => a + b, 0) / 1024);
 
   console.log("\n─── PLAN ────────────────────────────────────────────────────");
   console.log(`  projects read             ${records.length}`);
+  console.log(`  distinct sources          ${catalogue.length}  (catalogue ${catKB} KB)`);
   console.log(`  chunk documents           ${chunks.length}`);
   console.log(`  largest chunk             ${Math.round(Math.max(...sizes) / 1024)} KB   (limit 1024 KB)`);
-  console.log(`  total payload             ${totalKB} KB`);
-  console.log(`  reads per visitor         ${records.length} -> ${chunks.length + 1}`);
+  console.log(`  total payload             ${totalKB + catKB} KB`);
+  console.log(`  reads per visitor         ${records.length} -> ${chunks.length + 2}`);
+
+  /* Rehydration must be lossless or the transport optimisation is a data bug. */
+  const byRef = records.map(r => {
+    if (!Array.isArray(r._srcRefs)) return r;
+    const c = { ...r, sources: r._srcRefs.map(i => catalogue[i]) };
+    delete c._srcRefs;
+    return c;
+  });
+  const originalSources = JSON.stringify(rawRecords.map(r => ({ id: r.id, s: r.sources ?? null })));
+  const rebuiltSources = JSON.stringify(byRef.map(r => ({ id: r.id, s: r.sources ?? null })));
+  if (originalSources !== rebuiltSources) {
+    console.log("\n  REHYDRATION IS NOT LOSSLESS — refusing to write.");
+    process.exit(1);
+  }
+  console.log(`  rehydration               lossless (verified byte-identical)`);
 
   /* Integrity — never publish a set that loses or duplicates a project. */
   const packed = chunks.flat();
@@ -93,8 +113,16 @@ async function run() {
 
   const generatedAt = new Date().toISOString();
 
-  /* Chunks first, manifest last: a reader must never see a manifest pointing at
-     a chunk that has not been written yet. */
+  /* Catalogue and chunks first, manifest last: a reader must never see a
+     manifest pointing at a document that has not been written yet. */
+  await db.collection("tabData").doc(SOURCE_CATALOGUE_DOC).set({
+    schemaVersion: SCHEMA_VERSION,
+    sources: catalogue,
+    count: catalogue.length,
+    generatedAt,
+  });
+  console.log(`\nwrote tabData/${SOURCE_CATALOGUE_DOC} (${catalogue.length} distinct sources)`);
+
   const batch = db.batch();
   chunks.forEach((c, i) => {
     batch.set(db.collection("tabData").doc(`${CHUNK_DOC_PREFIX}${i}`), {
@@ -117,6 +145,8 @@ async function run() {
     schemaVersion: SCHEMA_VERSION,
     chunkCount: chunks.length,
     chunkPrefix: CHUNK_DOC_PREFIX,
+    sourceCatalogueDoc: SOURCE_CATALOGUE_DOC,
+    sourceCatalogueCount: catalogue.length,
     totalProjects: records.length,
     generatedAt,
     source: "Firestore projects collection, split by byte budget",
