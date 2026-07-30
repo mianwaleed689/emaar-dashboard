@@ -410,7 +410,13 @@ export default function CommunityMapTab({
               </div>
               {mapLayer==="projects" ? (
                 (activeProjects||[])
-                  .filter(p=>p.grossYield&&p.lat&&p.lng)
+                  /* Coordinates live in two shapes: 1,621 projects have flat
+                     lat/lng, 105 have only coordinates.lat/lng. Filtering on
+                     p.lat alone silently dropped those 105 from this list while
+                     the map itself (which checks both, lines 56 and 180) still
+                     plotted them — so a pin could be on the map but missing from
+                     the Top Yield list beside it. */
+                  .filter(p=>p.grossYield&&(p.lat||p.coordinates&&p.coordinates.lat)&&(p.lng||p.coordinates&&p.coordinates.lng))
                   .sort((a,b)=>parseFloat(b.grossYield)-parseFloat(a.grossYield))
                   .slice(0,15)
                   .map((p,i)=>(

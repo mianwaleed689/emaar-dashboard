@@ -11,6 +11,7 @@ import { Link } from "react-router-dom";
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area, ComposedChart, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ReferenceLine, Legend } from "recharts";
 import { auth, db } from "../firebase";
 import { withComputedNetYield, computeNetYield } from "../utils/yield";
+import { markSharedValues } from "../utils/provenance";
 import { CLAUDE_MODEL, CLAUDE_MAX_TOKENS, CLAUDE_OUTPUT_CONFIG, extractClaudeText, parseClaudeJson } from "../utils/claude";
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail, sendEmailVerification, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import { collection, getDocs, doc, getDoc, setDoc, updateDoc, deleteDoc, onSnapshot, addDoc, query, where, orderBy, limit } from "firebase/firestore";
@@ -3450,7 +3451,13 @@ export default function EmaarDashboardV2() {
       // as stored. The stored value is a flat deduction that ignores service
       // charges entirely — see src/utils/yield.js for the worked example.
       const rows = snap.docs.map(d => withComputedNetYield({ id: d.id, ...d.data() }));
-      if (rows.length > 0) setLiveNeighbourhoods(rows);
+      /* markSharedValues stamps how many other communities report an identical
+         price-and-yield pair. 135 of 281 rows (48%) share one — 12 Dubai Hills
+         sub-communities all read PPSF 2,461 / 6.90%. Those are area-level
+         estimates applied downward, yet 279 rows claim a DLD source and 93 also
+         carry verified:false. The stamp lets classifyProvenance label them
+         honestly as estimates instead of showing "DLD verified" on all of them. */
+      if (rows.length > 0) setLiveNeighbourhoods(markSharedValues(rows));
     }));
 
     // platformSettings/tabs (which tabs are on/off)

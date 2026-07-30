@@ -12,6 +12,13 @@ import { T } from "../data";
 import SmartEmptyState from "../components/SmartEmptyState";
 import SearchableSelect from "../components/SearchableSelect";
 import { SvgIcons } from "../components/Icons";
+/* Single source of truth for a project's lifecycle stage. The filter and the
+   card badge both derive from this, so they can no longer disagree. */
+import {
+  PROJECT_STAGE_OPTIONS,
+  matchesStageFilter,
+  projectStatusLabel,
+} from "../utils/projectStage";
 
 import { calcScore, scoreColor, scoreLabel } from "../utils/scoring";
 import { GOLDEN_VISA_THRESHOLD } from "../utils/constants";
@@ -348,15 +355,10 @@ function ProjectsTab({
       if (String(p.community || "").toLowerCase() !== gfCommunity) return false;
     }
 
-    // Status filter (e.g. "offplan", "ready") — fallback to lifecycleStage for DLD
+    // Status filter (e.g. "offplan", "ready"). Derived through projectStatusLabel
+    // so the filter and the card badge can never disagree — see utils/projectStage.js
     if (gfStatus) {
-      const effectiveStatus = p.status || (
-        p.lifecycleStage === "recently-delivered" || p.constructionPct >= 100 ? "Ready" :
-        p.lifecycleStage === "historical" ? "Ready" :
-        p.lifecycleStage === "under-construction" ? "Off-Plan" :
-        p.lifecycleStage === "announced" ? "Off-Plan" :
-        null
-      );
+      const effectiveStatus = p.status || projectStatusLabel(p);
       if (!effectiveStatus) return false;
       const ps = String(effectiveStatus).toLowerCase().replace(/[-\s]/g, "_");
       const gs = gfStatus.replace(/[-\s]/g, "_");
@@ -470,19 +472,18 @@ function ProjectsTab({
               if (projSearch) { var q=projSearch.toLowerCase(); var h=[(p.name||p.project||""),(p.developerActual||p.developer||p.developerName||""),(p.community||p.area||""),(p.masterCommunity||""),(p.type||""),(p.masterProject||""),(String(p.reraNo||p.projectNumber||""))].join(" ").toLowerCase(); if(!h.includes(q)) return false; }
               if (projDev !== "All" && p.developer !== projDev && p.developerName !== projDev) return false;
               if (projCommunity !== "All" && p.community !== projCommunity) return false;
-              /* SALE STATUS — fallback to lifecycleStage mapping for DLD records without status */
+              /* SALE STATUS — derived via the shared rule so filter and badge agree */
               if (projStatus !== "All") {
-                const effectiveStatus = p.status || (
-                  p.lifecycleStage === "recently-delivered" || p.constructionPct >= 100 ? "Ready" :
-                  p.lifecycleStage === "historical" ? "Ready" :
-                  p.lifecycleStage === "under-construction" ? "Off-Plan" :
-                  p.lifecycleStage === "announced" ? "Off-Plan" :
-                  null
-                );
+                const effectiveStatus = p.status || projectStatusLabel(p);
                 if (effectiveStatus !== projStatus) return false;
               }
-              /* NEW: Lifecycle Stage (100% DLD coverage) */
-                if (projLifecycle !== "All" && p.lifecycleStage !== projLifecycle) return false;
+              /* LIFECYCLE STAGE.
+                 Was `p.lifecycleStage !== projLifecycle`, a strict match on a field
+                 only 31 of 1,728 projects carry — so three of the four dropdown
+                 options returned nothing at all. matchesStageFilter derives the
+                 stage from the fields that do carry data, and still accepts the
+                 legacy values so a saved or bookmarked filter keeps working. */
+              if (!matchesStageFilter(p, projLifecycle)) return false;
               /* NEW: Escrow Bank (94% DLD coverage) */
               if (projEscrowBank !== "All" && p.escrowBank !== projEscrowBank) return false;
               /* NEW: Construction Progress (100% DLD coverage) */
@@ -1135,11 +1136,16 @@ function ProjectsTab({
                             fontSize: 13, fontWeight: projLifecycle !== "All" ? 600 : 500,
                             fontFamily: "'Outfit',sans-serif", cursor: "pointer",
                           }}>
+                            {/* Options come from utils/projectStage.js so every one is
+                                guaranteed to match real records. "Recently Delivered"
+                                and "Historical / Completed" used to be offered
+                                separately, but nothing in the data distinguishes a
+                                recent handover from an old one, and both matched zero
+                                records. They are now one "Completed / Ready" option. */}
                             <option value="All">All Stages</option>
-                            <option value="announced">Announced / Pre-Launch</option>
-                            <option value="under-construction">Under Construction</option>
-                            <option value="recently-delivered">Recently Delivered</option>
-                            <option value="historical">Historical / Completed</option>
+                            {PROJECT_STAGE_OPTIONS.map(o => (
+                              <option key={o.value} value={o.value}>{o.label}</option>
+                            ))}
                           </select>
                         </div>
                         <div>
@@ -1219,7 +1225,7 @@ function ProjectsTab({
                       : `Up to AED ${(globalFilters.priceMax/1000000).toFixed(1)}M`;
                     activeFilters.push({ key:"gPrice", label:lbl, global:true });
                   }
-                  if (projLifecycle !== "All") activeFilters.push({ key:"lfc", label:projLifecycle === "under-construction" ? "Under construction" : projLifecycle === "recently-delivered" ? "Recently delivered" : projLifecycle.charAt(0).toUpperCase()+projLifecycle.slice(1), clear:() => setProjLifecycle("All") });
+                  if (projLifecycle !== "All") activeFilters.push({ key:"lfc", label:(PROJECT_STAGE_OPTIONS.find(o => o.value === projLifecycle) || {}).label || projLifecycle, clear:() => setProjLifecycle("All") });
                   if (projConstruction !== "All") activeFilters.push({ key:"cst", label:projConstruction === "100" ? "Completed" : projConstruction + "%", clear:() => setProjConstruction("All") });
                   if (projEscrowBank !== "All") activeFilters.push({ key:"esc", label:projEscrowBank, clear:() => setProjEscrowBank("All") });
                   if (projHandover !== "All") activeFilters.push({ key:"hnd", label:`Handover ${projHandover}`, clear:() => setProjHandover("All") });
