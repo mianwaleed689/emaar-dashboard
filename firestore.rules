@@ -282,6 +282,12 @@ service cloud.firestore {
     match /marketData/{doc}       { allow read: if isAuthed(); allow write: if isAdmin(); }
     match /devUnits/{doc}         { allow read: if isAuthed(); allow write: if isAdmin(); }
     match /marketMetrics/{doc}    { allow read: if isAuthed(); allow write: if isAdmin(); }
+    /* Almanac source entries. Ordinary clients never read this collection — they
+       read the compiled tabData/almanac document, which is one read instead of
+       one per entry. Read access here is admin-only because the editor needs it
+       and nothing else does; keeping it closed also means an entry cannot be
+       seen before it has passed the source check at compile time. */
+    match /almanacEntries/{doc}   { allow read: if isAdmin(); allow write: if isAdmin(); }
     match /transactions/{doc}     { allow read: if isAuthed(); allow write: if isAdmin(); }
     match /invites/{token} {
       // 'get' = fetch one invite by its token (needed to open an invite link).

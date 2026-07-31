@@ -1,15 +1,13 @@
 import React, { useState, useMemo } from "react";
 import { T } from "../data";
 import {
-  ALMANAC,
   ALMANAC_AS_OF,
   MOMENT,
   MOMENT_COLOR,
   MOMENT_LABEL,
-  almanacCoverage,
-  allSources,
 } from "../data/marketAlmanac";
 import { SectionTitle, Card } from "./ui/DataDisplay";
+import useAlmanac from "../hooks/useAlmanac";
 
 /**
  * The Dubai property almanac — what happened, when, and what it did.
@@ -40,12 +38,29 @@ export default function MarketAlmanac({ style }) {
   const border = T?.border || "rgba(255,255,255,0.08)";
   const white = T?.white || "#fff";
 
-  const coverage = useMemo(() => almanacCoverage(), []);
-  const sources = useMemo(() => allSources(), []);
+  /* Curated seed merged with whatever the nightly compile has published. One
+     Firestore read regardless of how many entries the record grows to. */
+  const { entries: ALMANAC, loading } = useAlmanac();
+
+  const coverage = useMemo(() => {
+    const years = new Set(ALMANAC.map(e => String(e.id).slice(0, 4)));
+    return {
+      entries: ALMANAC.length,
+      years: years.size,
+      earliest: ALMANAC[0]?.label ?? null,
+      latest: ALMANAC[ALMANAC.length - 1]?.label ?? null,
+    };
+  }, [ALMANAC]);
+
+  const sources = useMemo(() => {
+    const set = new Set();
+    ALMANAC.forEach(e => (e.sources || []).forEach(s => set.add(s)));
+    return [...set].sort();
+  }, [ALMANAC]);
 
   const filtered = useMemo(
     () => (filter === "all" ? ALMANAC : ALMANAC.filter(e => e.moment === filter)),
-    [filter]
+    [filter, ALMANAC]
   );
 
   const FILTERS = [

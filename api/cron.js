@@ -34,6 +34,9 @@ const HANDLERS = {
      the browser reads 27 documents per visit instead of 1,728. Data is
      byte-for-byte identical — this only changes how it is fetched. */
   "project-chunks": () => require("./_cron/cron-project-chunks.js"),
+  /* Compiles almanacEntries into one document. Rejects any entry without a
+     named source rather than publishing it with a caveat. */
+  "almanac": () => require("./_cron/cron-almanac.js"),
 };
 
 module.exports = async function handler(req, res) {
