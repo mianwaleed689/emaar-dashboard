@@ -20,6 +20,7 @@ import {
   SUPPLY_PIPELINE_2026,
   GLOBAL_YIELD_COMPARISON,
 } from "../data/marketFacts";
+import MarketCycleHistory from "../components/MarketCycleHistory";
 
 // ── Year annotations ─────────────────────────────────────────────
 const YEAR_META = {
@@ -333,6 +334,12 @@ function MarketTab({ liveNeighbourhoods=[], liveMarketData, allDevelopers, expan
       </div>
 
       {/* ── 2025 Market Scorecard ──────────────────────────────── */}
+      {/* The full cycle sits ABOVE the current-year scorecard on purpose. A
+          reader who sees 2025's record year first and the 2008 crash second has
+          been given the sales pitch before the context. This ordering gives them
+          the shape of the market before the state of it. */}
+      <MarketCycleHistory style={{ marginBottom: 28 }} />
+
       <SH title="2025 Market Scorecard" sub="Full year · Dubai Land Department official data · January 2026" />
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(160px,1fr))", gap: 10, marginBottom: 8 }}>
         <KpiCard label="Total Market Value" value={getStat("Total Market Value")?.value} change={getStat("Total Market Value")?.change} note="Sales + mortgages + gifts" onClick={() => handleTabChange?.("DLD Volumes")} />
