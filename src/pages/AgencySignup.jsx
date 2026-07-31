@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { createUserWithEmailAndPassword, sendEmailVerification } from "firebase/auth";
 import { doc, setDoc, collection } from "firebase/firestore";
 import { auth, db } from "../firebase";
+import { PRICING, PRICING_NAMES, PRICING_LABELS, PLAN_FEATURES, SEATS, PUBLIC_PLANS } from "../config/pricing";
+import { TRIAL_DURATION_MS, TRIAL_DURATION_DAYS } from "../utils/constants";
 
 const T = {
   bg:          "#04090F",
@@ -28,11 +30,21 @@ const inp = {
   outline:"none", boxSizing:"border-box",
 };
 
-const PLANS = [
-  { key:"free",       label:"Free",       price:"AED 0/mo",   color:T.textMuted,  features:["1 manager", "3 agents", "100 leads/mo", "Basic CRM"] },
-  { key:"pro",        label:"Pro",        price:"AED 299/mo",  color:T.teal,       features:["1 manager", "20 agents", "Unlimited leads", "Full CRM + Pipeline", "Listings syndication"] },
-  { key:"enterprise", label:"Enterprise", price:"AED 799/mo",  color:"#8B5CF6",    features:["Unlimited managers", "Unlimited agents", "All features", "Priority support", "Custom branding"] },
-];
+/* Plans are built from src/config/pricing.js rather than restated here.
+   This file previously hardcoded "AED 299/mo" and "AED 799/mo" alongside its own
+   feature lists, which is exactly the duplication config/pricing.js was created
+   to end — a price change would have updated the rest of the app and quietly
+   left the signup page selling the old numbers. */
+const PLAN_COLORS = { pro: T.teal, enterprise: "#8B5CF6" };
+
+const PLANS = PUBLIC_PLANS.map(key => ({
+  key,
+  label: PRICING_NAMES[key],
+  price: PRICING_LABELS[key],
+  color: PLAN_COLORS[key] || T.gold,
+  features: PLAN_FEATURES[key] || [],
+  seats: SEATS[key],
+}));
 
 export default function AgencySignup() {
   const [step, setStep] = useState(1); // 1=agency details, 2=manager account, 3=plan, 4=success
@@ -59,7 +71,26 @@ export default function AgencySignup() {
 
   // Validate step 1
   const validateStep1 = () => {
-    if (!agencyForm.name.trim()) { setError("Agency name is required"); return false; }
+    const isAgency = accountType !== "developer";
+    const label = isAgency ? "Agency" : "Developer";
+
+    if (!agencyForm.name.trim()) { setError(`${label} name is required`); return false; }
+
+    /* Brokerage in Dubai is licensed: an agency has an ORN/RERA number and a
+       trade licence. Requiring at least one is the difference between a signup
+       form and a register of real businesses — and this is a paid B2B product
+       where you will want to know who is on it.
+
+       ONE of the two, not both: a newly-formed brokerage may have its trade
+       licence before its ORN comes through, and blocking those signups would
+       cost real customers. */
+    if (isAgency && !agencyForm.reraNo.trim() && !agencyForm.tradeLicense.trim()) {
+      setError("Enter your RERA/ORN number or your trade licence number — at least one is required");
+      return false;
+    }
+
+    if (!agencyForm.phone.trim()) { setError("A contact phone number is required"); return false; }
+
     setError(""); return true;
   };
 
@@ -96,8 +127,13 @@ export default function AgencySignup() {
         role:      accountType === "developer" ? "developer" : "user",
         orgRole:   "manager",
         orgId,
-        tier:      selectedPlan === "free" ? "free" : "pro_trial",
-        trialEnd:  selectedPlan !== "free" ? new Date(Date.now() + 14*24*60*60*1000).toISOString() : null,
+        /* Trial length comes from the shared constant. This route previously
+           granted 14 days while the individual signup granted 7 (TRIAL_DURATION_MS)
+           and every piece of copy on the site — including the welcome email —
+           said 7. Two signup paths were handing out different trials. */
+        tier:      "pro_trial",
+        trialEnd:  new Date(Date.now() + TRIAL_DURATION_MS).toISOString(),
+        trialStart: now,
         createdAt: now,
         signupSource: accountType === "developer" ? "developer_self_serve" : "agency_self_serve",
       });
@@ -114,6 +150,14 @@ export default function AgencySignup() {
         ownerEmail:   managerForm.email.trim(),
         ownerId:      uid,
         plan:         selectedPlan,
+        /* What the plan actually entitles them to, written at signup rather than
+           inferred later. Without this nothing knows what AED 500 buys, and seat
+           limits become a number in someone's head. Read from config/pricing.js
+           so the allowance and the price can never disagree. */
+        seatsIncluded: SEATS[selectedPlan] ?? 1,
+        seatsUsed:     1,          // the manager occupies the first seat
+        monthlyPrice:  PRICING[selectedPlan] ?? 0,
+        currency:      "AED",
         status:       "pending", // admin approves
         agentCount:   0,
         leadCount:    0,

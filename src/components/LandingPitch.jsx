@@ -165,6 +165,10 @@ export default function LandingPitch({ compact = false, onGetStarted, style }) {
           </div>
           <div style={{ flex: "1 1 180px", fontSize: 11, color: muted, lineHeight: 1.55 }}>
             Start on a free trial. No card required to look around.
+            {" "}
+            <a href="/agency/signup" style={{ color: gold, textDecoration: "none", borderBottom: `1px solid ${gold}44` }}>
+              Registering an agency?
+            </a>
           </div>
         </div>
       </div>
