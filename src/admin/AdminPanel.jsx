@@ -3,6 +3,11 @@ import ReactDOM from "react-dom";
 import { auth, db, storage, firebaseConfig } from "../firebase";
 import { logAudit, checkAlerts, getAdminIP, setAuditWebhook, setAlertThreshold } from "../utils/audit";
 import FilterSchemaAdminTab from "./FilterSchemaAdminTab";
+/* Prices come from one file. This panel used to hardcode AED 99 and AED 499 —
+   the prices before the repricing to AED 300 (individual agent) and AED 500
+   (agency) — so every revenue figure shown to the owner was computed at rates
+   the product no longer charges. */
+import { PRICING } from "../config/pricing";
 import { initializeApp, deleteApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import emailjs from "@emailjs/browser";
@@ -9339,8 +9344,8 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
   const BILLING_TIERS = [
     { value: "free",       label: "Free",       color: "#64748B", bg: "rgba(100,116,139,0.12)", price: "" },
     { value: "pro_trial",  label: "Pro Trial",  color: "#D4A843", bg: "rgba(212,168,67,0.12)",  price: "" },
-    { value: "pro",        label: "Pro",        color: "#10B981", bg: "rgba(16,185,129,0.12)",  price: "AED 99" },
-    { value: "enterprise", label: "Enterprise", color: "#06B6D4", bg: "rgba(6,182,212,0.12)",   price: "AED 499" },
+    { value: "pro",        label: "Pro",        color: "#10B981", bg: "rgba(16,185,129,0.12)",  price: `AED ${PRICING.pro}` },
+    { value: "enterprise", label: "Enterprise", color: "#06B6D4", bg: "rgba(6,182,212,0.12)",   price: `AED ${PRICING.enterprise}` },
   ];
   const JOB_ROLES = [
     // â€” Platform roles (Session 1 â€” multi-tenant foundation) â€”
@@ -9394,8 +9399,8 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
 
   /* FIX #23: User's own revenue, not global */
   const getUserLTV = (u) => {
-    if (u.tier === "enterprise") return "AED 499/mo";
-    if (u.tier === "pro")        return "AED 99/mo";
+    if (u.tier === "enterprise") return `AED ${PRICING.enterprise}/mo`;
+    if (u.tier === "pro")        return `AED ${PRICING.pro}/mo`;
     if (u.tier === "pro_trial")  return "Trial";
     return "Free";
   };
@@ -9414,7 +9419,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
   const free        = users.filter(u => !u.tier || u.tier === "free").length;
   const atRisk      = users.filter(u => { const d = trialDaysLeft(u); return d !== null && d <= AT_RISK_DAYS && d >= 0; }); // FIX #6
   const atRiskCount = atRisk.length;
-  const mrr         = users.filter(u => u.tier === "pro").length * 99 + users.filter(u => u.tier === "enterprise").length * 499;
+  const mrr         = users.filter(u => u.tier === "pro").length * PRICING.pro + users.filter(u => u.tier === "enterprise").length * PRICING.enterprise;
   const convRate    = total > 0 ? ((paid / total) * 100).toFixed(1) : "0.0";
   const suspended   = users.filter(u => u.suspended).length;
   const activeToday = users.filter(u => u.lastLoginAt && (now - new Date(u.lastLoginAt)) < 86400000).length;
@@ -9675,8 +9680,8 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
         <div style={{ fontSize: 13, color: T.textSecondary, marginBottom: 6 }}><strong style={{ color: T.white }}>{confirmDelete.name || confirmDelete.email}</strong></div>
         <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 20, padding: "10px 16px", background: "rgba(239,68,68,0.06)", borderRadius: 10, border: "1px solid rgba(239,68,68,0.15)", lineHeight: 1.6 }}>
           Permanently removes them from Firestore and revokes all access.
-          {confirmDelete.tier === "pro"        && <><br /><span style={{ color: T.red, fontWeight: 700 }}>â€” Active Pro subscription (AED 99/mo) will be cancelled.</span></>}
-          {confirmDelete.tier === "enterprise" && <><br /><span style={{ color: T.red, fontWeight: 700 }}>â€” Active Enterprise account (AED 499/mo) will be cancelled.</span></>}
+          {confirmDelete.tier === "pro"        && <><br /><span style={{ color: T.red, fontWeight: 700 }}>â€” Active Pro subscription (AED {PRICING.pro}/mo) will be cancelled.</span></>}
+          {confirmDelete.tier === "enterprise" && <><br /><span style={{ color: T.red, fontWeight: 700 }}>â€” Active Enterprise account (AED {PRICING.enterprise}/mo) will be cancelled.</span></>}
         </div>
         <div style={{ display: "flex", gap: 10 }}>
           <BtnGhost onClick={() => setConfirmDelete(null)} style={{ flex: 1 }}>Cancel</BtnGhost>
@@ -13393,7 +13398,7 @@ export default function AdminPanel() {
   stats.atRiskUsers = users.filter(u => { try { const d = trialDaysLeft(u); return d !== null && d <= 3 && d >= 0; } catch { return false; } });
 
   // â€” REVENUE â€” single calculation, used everywhere â€”
-  const mrr  = (stats.pro * 99) + (stats.enterprise * 499);
+  const mrr  = (stats.pro * PRICING.pro) + (stats.enterprise * PRICING.enterprise);
   const arr  = mrr * 12;
   const arpu = stats.paid > 0 ? Math.round(mrr / stats.paid) : 0;       // per paying user
   const arpuAll = stats.total > 0 ? Math.round(mrr / stats.total) : 0;  // per all users
@@ -13439,7 +13444,7 @@ export default function AdminPanel() {
     try { const d = new Date(l.changedAt); return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear(); } catch { return false; }
   });
   const churnedMRR = churnThisMonth.reduce((sum, l) => {
-    return sum + (l.from === "enterprise" ? 499 : 99);
+    return sum + (l.from === "enterprise" ? PRICING.enterprise : PRICING.pro);
   }, 0);
   const newMRRThisMonth = users.filter(u => {
     try {
@@ -13447,7 +13452,7 @@ export default function AdminPanel() {
       return (u.tier === "pro" || u.tier === "enterprise") &&
              d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
     } catch { return false; }
-  }).reduce((sum, u) => sum + (u.tier === "enterprise" ? 499 : 99), 0);
+  }).reduce((sum, u) => sum + (u.tier === "enterprise" ? PRICING.enterprise : PRICING.pro), 0);
   const netMRR = newMRRThisMonth - churnedMRR;
 
   // â€” PLATFORM HEALTH SCORE (0â€”100) â€”
@@ -13523,7 +13528,7 @@ export default function AdminPanel() {
   })();
 
   // â€” REVENUE PROJECTION â€” kept for Revenue tab, clearly labelled as estimate â€”
-  const projectedMRR = mrr + Math.round(stats.proTrial * 99 * (trialConversion / 100 || 0.3));
+  const projectedMRR = mrr + Math.round(stats.proTrial * PRICING.pro * (trialConversion / 100 || 0.3));
   const revenueProjection = [
     { month: "Now",   revenue: mrr },
     { month: "+1mo",  revenue: Math.round(mrr + projectedMRR * 0.3) },
@@ -15146,8 +15151,8 @@ export default function AdminPanel() {
                     subtitle: `Monthly Recurring Revenue â€” ARR: AED ${arr.toLocaleString()}`,
                     items: [
                       { label: "Total MRR", value: `AED ${mrr.toLocaleString()}`, color: T.green },
-                      { label: "Enterprise (AED 499/mo)", value: `${stats.enterprise} users â€” AED ${(stats.enterprise * 499).toLocaleString()}`, note: "AED 499 â€” users" },
-                      { label: "Pro (AED 99/mo)", value: `${stats.pro} users â€” AED ${(stats.pro * 99).toLocaleString()}`, note: "AED 99 â€” users" },
+                      { label: `Enterprise (AED ${PRICING.enterprise}/mo)`, value: `${stats.enterprise} users â€” AED ${(stats.enterprise * PRICING.enterprise).toLocaleString()}`, note: "AED 499 â€” users" },
+                      { label: `Pro (AED ${PRICING.pro}/mo)`, value: `${stats.pro} users â€” AED ${(stats.pro * PRICING.pro).toLocaleString()}`, note: "AED 99 â€” users" },
                       { label: "Annual Run Rate (ARR)", value: `AED ${arr.toLocaleString()}`, color: T.green },
                       { label: "New MRR this month", value: `+AED ${newMRRThisMonth.toLocaleString()}`, color: T.green },
                       { label: "Churned MRR this month", value: `-AED ${churnedMRR.toLocaleString()}`, color: churnedMRR > 0 ? T.red : T.textMuted },
@@ -15201,8 +15206,8 @@ export default function AdminPanel() {
                     subtitle: `${stats.paid} paying accounts â€” AED ${mrr.toLocaleString()} MRR`,
                     items: [
                       { label: "Total Paid", value: stats.paid, color: T.teal },
-                      { label: "Pro (AED 99/mo)", value: stats.pro, note: `AED ${(stats.pro * 99).toLocaleString()} MRR` },
-                      { label: "Enterprise (AED 499/mo)", value: stats.enterprise, note: `AED ${(stats.enterprise * 499).toLocaleString()} MRR`, color: T.gold },
+                      { label: `Pro (AED ${PRICING.pro}/mo)`, value: stats.pro, note: `AED ${(stats.pro * PRICING.pro).toLocaleString()} MRR` },
+                      { label: `Enterprise (AED ${PRICING.enterprise}/mo)`, value: stats.enterprise, note: `AED ${(stats.enterprise * PRICING.enterprise).toLocaleString()} MRR`, color: T.gold },
                       { label: "Conversion Rate", value: `${stats.total > 0 ? Math.round((stats.paid / stats.total) * 100) : 0}%`, note: "Paid â€” Total Users" },
                       { label: "Trial â€” Paid Rate", value: `${trialConversion}%`, note: "Of all who ever trialled" },
                       { label: "ARPU (paying users)", value: `AED ${arpu}`, color: T.teal },
@@ -15282,8 +15287,8 @@ export default function AdminPanel() {
                     items: [
                       { label: "ARPU (paying users)", value: `AED ${arpu}`, color: "#8B5CF6" },
                       { label: "ARPU (all users)", value: `AED ${arpuAll}`, note: "MRR â€” total users" },
-                      { label: "Enterprise ARPU", value: "AED 499", note: "Per enterprise user/mo" },
-                      { label: "Pro ARPU", value: "AED 99", note: "Per pro user/mo" },
+                      { label: "Enterprise ARPU", value: `AED ${PRICING.enterprise}`, note: "Per enterprise user/mo" },
+                      { label: "Pro ARPU", value: `AED ${PRICING.pro}`, note: "Per pro user/mo" },
                       { label: "LTV estimate (12mo)", value: `AED ${(arpu * 12).toLocaleString()}`, note: "ARPU â€” 12 months", color: "#8B5CF6" },
                       { label: "To reach AED 10K MRR", value: (() => { if (arpu === 0) return "â€”"; const needed = Math.ceil((10000 - mrr) / arpu); return needed > 0 ? `${needed} more paid users` : "Already exceeded"; })(), note: "At current ARPU" },
                     ],
@@ -15753,7 +15758,7 @@ export default function AdminPanel() {
                       else if (tierAtMonth === "enterprise") entCount++;
                     });
 
-                    const mrrVal = proCount * 99 + entCount * 499;
+                    const mrrVal = proCount * PRICING.pro + entCount * PRICING.enterprise;
                     const paidCount = proCount + entCount;
                     const arpuVal = paidCount > 0 ? Math.round(mrrVal / paidCount) : 0;
                     monthData.push({ label, mrr: mrrVal, arpu: arpuVal, paid: paidCount });
@@ -16282,8 +16287,8 @@ export default function AdminPanel() {
                 })();
 
                 // â€” LTV BY TIER â€”
-                const proLTV     = churnRate > 0 ? Math.round(99  / (churnRate / 100)) : 99  * 24;
-                const entLTV     = churnRate > 0 ? Math.round(499 / (churnRate / 100)) : 499 * 24;
+                const proLTV     = churnRate > 0 ? Math.round(PRICING.pro / (churnRate / 100)) : PRICING.pro * 24;
+                const entLTV     = churnRate > 0 ? Math.round(PRICING.enterprise / (churnRate / 100)) : PRICING.enterprise * 24;
                 const blendedLTV = stats.paid > 0 ? Math.round((stats.pro * proLTV + stats.enterprise * entLTV) / stats.paid) : 0;
 
                 // â€” MRR HISTORY (6 actual + 3 projected) â€”
@@ -16303,7 +16308,7 @@ export default function AdminPanel() {
                       if (tier === "pro") pro++;
                       else if (tier === "enterprise") ent++;
                     });
-                    months.push({ label: lbl, mrr: pro * 99 + ent * 499, pro: pro * 99, enterprise: ent * 499, actual: true });
+                    months.push({ label: lbl, mrr: pro * PRICING.pro + ent * PRICING.enterprise, pro: pro * PRICING.pro, enterprise: ent * PRICING.enterprise, actual: true });
                   }
                   const lastMRR    = months[months.length - 1]?.mrr || 0;
                   const prevMRR    = months[months.length - 2]?.mrr || 0;
@@ -16338,7 +16343,7 @@ export default function AdminPanel() {
                     const b = buckets.find(bk => d >= bk.min && d <= bk.max);
                     if (b) b.users.push({ ...u, daysLeft: d });
                   });
-                  return buckets.map(b => ({ ...b, count: b.users.length, value: b.users.length * 99 }));
+                  return buckets.map(b => ({ ...b, count: b.users.length, value: b.users.length * PRICING.pro }));
                 })();
                 const totalPipeline = pipeline.reduce((s, b) => s + b.value, 0);
 
@@ -16353,7 +16358,7 @@ export default function AdminPanel() {
                   label: `AED ${target >= 1000 ? (target / 1000).toFixed(0) + "K" : target}`,
                   reached: mrr >= target,
                   pct: Math.min(100, Math.round((mrr / target) * 100)),
-                  usersNeeded: mrr >= target ? 0 : Math.ceil((target - mrr) / (arpu || 99)),
+                  usersNeeded: mrr >= target ? 0 : Math.ceil((target - mrr) / (arpu || PRICING.pro)),
                 }));
                 const nextMilestone = milestones.find(m => !m.reached);
 
@@ -16421,8 +16426,8 @@ export default function AdminPanel() {
                       <div className="chart-box fade-up" style={{ padding: 20, animationDelay: "0.05s" }}>
                         <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.2, marginBottom: 16 }}>Revenue by Plan</div>
                         {[
-                          { label: "Pro",        count: stats.pro,        revenue: stats.pro * 99,        color: T.green, price: "AED 99/mo" },
-                          { label: "Enterprise", count: stats.enterprise,  revenue: stats.enterprise * 499, color: T.teal,  price: "AED 499/mo" },
+                          { label: "Pro",        count: stats.pro,        revenue: stats.pro * PRICING.pro,        color: T.green, price: `AED ${PRICING.pro}/mo` },
+                          { label: "Enterprise", count: stats.enterprise,  revenue: stats.enterprise * PRICING.enterprise, color: T.teal,  price: `AED ${PRICING.enterprise}/mo` },
                         ].map((row, i) => {
                           const pct = mrr > 0 ? Math.round((row.revenue / mrr) * 100) : 0;
                           return (
@@ -16617,7 +16622,7 @@ export default function AdminPanel() {
                             const rows = [["Name","Email","Plan","MRR (AED)","LTV Est. (AED)","Customer Since"]];
                             payingUsers.forEach(u => {
                               const isEnt = u.tier === "enterprise";
-                              rows.push([u.name || "", u.email || "", isEnt ? "Enterprise" : "Pro", isEnt ? 499 : 99, isEnt ? entLTV : proLTV, u.createdAt ? new Date(u.createdAt).toLocaleDateString("en-AE") : ""]);
+                              rows.push([u.name || "", u.email || "", isEnt ? "Enterprise" : "Pro", isEnt ? PRICING.enterprise : PRICING.pro, isEnt ? entLTV : proLTV, u.createdAt ? new Date(u.createdAt).toLocaleDateString("en-AE") : ""]);
                             });
                             const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(",")).join("\n");
                             const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
@@ -16647,7 +16652,7 @@ export default function AdminPanel() {
                           </div>
                           {payingUsers.map((u, i) => {
                             const isEnt    = u.tier === "enterprise";
-                            const mrrAmt   = isEnt ? 499 : 99;
+                            const mrrAmt   = isEnt ? PRICING.enterprise : PRICING.pro;
                             const ltvEst   = isEnt ? entLTV : proLTV;
                             const daysOld  = Math.floor((now - new Date(u.createdAt || 0)) / 86400000);
                             const color    = isEnt ? T.teal : T.green;
@@ -17015,7 +17020,7 @@ export default function AdminPanel() {
                               <div style={{ fontSize: 10, color: T.textMuted, lineHeight: 1.7 }}>
                                 <div>AED {Math.round(mrr / 24).toLocaleString()} per hour</div>
                                 <div style={{ marginTop: 4 }}>To hit AED 10K MRR:</div>
-                                <div style={{ color: T.gold }}>Need {Math.max(0, Math.ceil((10000 - mrr) / (arpu || 99)))} more users</div>
+                                <div style={{ color: T.gold }}>Need {Math.max(0, Math.ceil((10000 - mrr) / (arpu || PRICING.pro)))} more users</div>
                               </div>
                             </div>
                           </div>
@@ -19074,12 +19079,12 @@ export default function AdminPanel() {
                 const label = monthEnd.toLocaleString("en", { month: "short" });
                 const proCount = users.filter(u => { try { const d = new Date(u.createdAt); return d <= monthEnd && (u.tier === "pro" || (u.tier === "free" && u.trialEnd && new Date(u.trialEnd) > monthEnd)); } catch { return false; } }).length;
                 const entCount = users.filter(u => { try { return new Date(u.createdAt) <= monthEnd && u.tier === "enterprise"; } catch { return false; } }).length;
-                const proMRR = proCount * 99;
-                const entMRR = entCount * 499;
+                const proMRR = proCount * PRICING.pro;
+                const entMRR = entCount * PRICING.enterprise;
                 months.push({ label, mrr: proMRR + entMRR, pro: proMRR, enterprise: entMRR, proCount, entCount });
               }
               // Current
-              months.push({ label: "Now", mrr, pro: stats.pro * 99, enterprise: stats.enterprise * 499, proCount: stats.pro, entCount: stats.enterprise });
+              months.push({ label: "Now", mrr, pro: stats.pro * PRICING.pro, enterprise: stats.enterprise * PRICING.enterprise, proCount: stats.pro, entCount: stats.enterprise });
               return months;
             })();
 

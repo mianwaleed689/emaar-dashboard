@@ -16,7 +16,42 @@ const CLAIM = /"[^"]*?(?:AED\s?[\d,]+|\d+(?:\.\d+)?%|\b\d{1,3}(?:,\d{3})+\b)[^"]
 const PROVENANCE = /source|sourced|asOf|as of|verified|DLD|Land Department|ValuStrat|REIDIN|Knight Frank|Provident|Central Bank|CBUAE|Bayut|Property Monitor|Dubai Chronicle|CEIC|Deutsche Bank|Al Jazeera|n\s*=|sample|published|reported|comparative|per\s+\w+\s+20\d\d|20\d\d-\d\d-\d\d|\b(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\w*\s+20\d\d|FY20\d\d|Q[1-4]\s?20\d\d|\b20\d\d\b/i;
 
 /** Styling and geometry, not content. */
-const NOISE = /rgba?\(|#[0-9a-fA-F]{3,8}|\bpx\b|borderRadius|fontSize|fontWeight|gridTemplate|padding|margin|width|height|zIndex|opacity|translate|viewBox|strokeWidth|d="M|gradient|cubic-bezier|@media|keyframes|letterSpacing|lineHeight|boxShadow|flexBasis|minWidth|maxWidth/;
+const NOISE = /rgba?\(|#[0-9a-fA-F]{3,8}|\bpx\b|borderRadius|fontSize|fontWeight|gridTemplate|padding|margin|width|height|zIndex|opacity|translate|viewBox|strokeWidth|d="M|gradient|cubic-bezier|@media|keyframes|letterSpacing|lineHeight|boxShadow|\bflex\b|flexBasis|minWidth|maxWidth/;
+
+/**
+ * A BUCKET BOUNDARY, not an assertion about the market.
+ *
+ * "8%+ High Yield" on a filter button is the DEFINITION of a control — the
+ * number says where the bucket starts. "Yields average 6.8%" is a claim about
+ * the world and needs a source. Flagging the first kind produced five findings
+ * across Yields and Map that could only be "fixed" by rewording working UI, and
+ * an auditor that demands a citation for a dropdown option trains people to
+ * ignore it.
+ *
+ * ── WHY THE DISCRIMINATOR IS THE KEY, NOT THE STRING ────────────────────────
+ *
+ * The first attempt matched on the SHAPE of the text — a number, a percent, an
+ * optional range. Listing what it actually skipped killed it immediately:
+ *
+ *   MortgageTab   "3.635%"    <- a live EIBOR rate
+ *   PortfolioTab  "12-18%"    <- an asset-class return range
+ *   marketFacts   "over 70%"  <- a market claim
+ *
+ * Bare figures are exactly where the real claims live, and this project has
+ * already shipped stale mortgage rates once. A rule that hides them is worse
+ * than no rule.
+ *
+ * The honest signal is the KEY the string sits under. Compare:
+ *
+ *   { label:"EIBOR 1M", val:"3.635%", note:"Feb 2026" }   <- data in `val`
+ *   { k:"8+", label:"8%+ Yield" }                          <- number names a control
+ *   { label:"8%+ High Yield", value:high8+" communities" } <- data in `value`
+ *
+ * A `label:` names a control. A `val:`, `value:`, `rate:` or `irr:` holds the
+ * datum. So a figure is a threshold only when it is the value of `label:` —
+ * checked against the text immediately preceding the literal, not its shape.
+ */
+const LABEL_KEY = /\blabel\s*:\s*$/;
 
 /** The code admitting, in its own words, that a figure is not good. */
 const ADMISSION = /unverified|no published source|stale|not confirmed|could not be traced|do not quote|placeholder|dummy|fake\b|hardcoded/i;
@@ -47,8 +82,10 @@ function analyse(source) {
     if (t.startsWith("//") || t.startsWith("*") || /^\{?\/\*/.test(t)) return;
     if (NOISE.test(line)) return;
 
-    const found = line.match(CLAIM);
-    if (!found) return;
+    /* matchAll rather than match: the index is needed to see which key the
+       literal sits under. */
+    const found = [...line.matchAll(CLAIM)];
+    if (!found.length) return;
 
     const context = lines
       .slice(Math.max(0, i - CONTEXT_LINES), i + CONTEXT_LINES + 1)
@@ -56,9 +93,13 @@ function analyse(source) {
     const sourced = PROVENANCE.test(context);
     const admits = ADMISSION.test(context);
 
-    found.forEach(raw => {
-      const text = raw.slice(1, -1).trim();
+    found.forEach(m => {
+      const text = m[0].slice(1, -1).trim();
       if (text.length < MIN_CLAIM_LENGTH) return;
+      /* Value of a `label:` key — the figure names a control rather than
+         asserting anything. See LABEL_KEY above for why this is keyed on the
+         property and not on the shape of the text. */
+      if (LABEL_KEY.test(line.slice(0, m.index))) return;
       claims.push({
         line: i + 1,
         text: text.length > 74 ? text.slice(0, 74) + "…" : text,
@@ -78,4 +119,4 @@ function analyse(source) {
   };
 }
 
-module.exports = { analyse, CLAIM, PROVENANCE, NOISE, ADMISSION };
+module.exports = { analyse, CLAIM, PROVENANCE, NOISE, ADMISSION, LABEL_KEY };
