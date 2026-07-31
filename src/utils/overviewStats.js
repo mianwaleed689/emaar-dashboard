@@ -111,7 +111,25 @@ export function bestEvidenced(communities = [], limit = 6) {
  * How fresh is the platform? Reads the most recent timestamp we can find across
  * the live feeds, so "last updated" is observed rather than asserted.
  */
-export function computeFreshness({ communities = [], marketData = null, eibor = null } = {}) {
+export function computeFreshness({ communities = [] } = {}) {
+  /* ── WHY THIS ONLY LOOKS AT COMMUNITIES ──────────────────────────────────
+   *
+   * This previously took the newest timestamp across communities, marketData
+   * AND the EIBOR feed, and the Overview printed it under "DATA REFRESHED".
+   *
+   * EIBOR updates daily. Community prices and yields had not been touched since
+   * April and June. So the badge read "2026-07-29 · 1d ago" while every figure
+   * beneath it — 193 communities, the median yield, the median price — was two
+   * to four months old. An agent saw "refreshed yesterday" and quoted a stale
+   * yield with confidence.
+   *
+   * That is exactly the failure this platform exists to prevent, caused by
+   * dating a page with the freshest of several unrelated feeds.
+   *
+   * It now dates ONLY the community records, because those are what the
+   * coverage figures are computed from. EIBOR carries its own "live" marker in
+   * the market context row, where it belongs.
+   */
   const stamps = [];
   const push = v => {
     if (!v) return;
@@ -123,13 +141,22 @@ export function computeFreshness({ communities = [], marketData = null, eibor = 
   };
 
   communities.forEach(c => push(c.updatedAt || c.syncedAt || c.asOf));
-  push(marketData?.syncedAt || marketData?.updatedAt);
-  push(eibor?.asOf || eibor?.updatedAt || eibor?.syncedAt);
 
-  if (!stamps.length) return { latest: null, ageDays: null };
-  const latest = new Date(Math.max(...stamps.map(d => d.getTime())));
-  const ageDays = Math.floor((Date.now() - latest.getTime()) / 86400000);
-  return { latest, ageDays };
+  if (!stamps.length) return { latest: null, ageDays: null, oldest: null, spanDays: null };
+
+  const times = stamps.map(d => d.getTime());
+  const latest = new Date(Math.max(...times));
+  const oldest = new Date(Math.min(...times));
+
+  return {
+    latest,
+    oldest,
+    ageDays: Math.floor((Date.now() - latest.getTime()) / 86400000),
+    /* How far apart the newest and oldest records are. A wide span means the
+       set was built in batches rather than refreshed together, which is worth
+       a reader knowing. */
+    spanDays: Math.floor((latest.getTime() - oldest.getTime()) / 86400000),
+  };
 }
 
 /** Format a number as AED with sensible magnitude. */

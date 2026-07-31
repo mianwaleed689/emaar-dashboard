@@ -40,6 +40,7 @@ import React, { useState, useMemo } from "react";
 import { T } from "../data";
 import { MARKET_FACTS, H1_2026_RANGE } from "../data/marketFacts";
 import SourceBadge from "../components/SourceBadge";
+import { classifyProvenance, PROVENANCE } from "../utils/provenance";
 import { Card, SectionTitle, Kpi } from "../components/ui/DataDisplay";
 import {
   computeCoverage,
@@ -209,19 +210,43 @@ export default function OverviewTab({
             platform holds, or carries the source and date it came from.
           </p>
         </div>
-        {freshness.latest && (
-          <div style={{ fontSize: 10, color: muted, textAlign: "right" }}>
-            <div style={{ fontWeight: 700, letterSpacing: 0.6, textTransform: "uppercase" }}>Data refreshed</div>
-            <div style={{ color: text, marginTop: 3 }}>
-              {freshness.latest.toISOString().slice(0, 10)}
-              {typeof freshness.ageDays === "number" && (
-                <span style={{ color: freshness.ageDays > 30 ? "#F59E0B" : muted, marginLeft: 6 }}>
-                  ({freshness.ageDays === 0 ? "today" : `${freshness.ageDays}d ago`})
-                </span>
+        {/* Dates the COMMUNITY records specifically, because those are what the
+            coverage figures below are computed from. It previously showed the
+            newest timestamp across communities, market data and EIBOR — and
+            since EIBOR updates daily it read "1d ago" while the community prices
+            beneath it were months old. Saying which data is being dated is the
+            whole point; "Data refreshed" alone invited the wrong reading. */}
+        {freshness.latest && (() => {
+          const stale = typeof freshness.ageDays === "number" && freshness.ageDays > 30;
+          return (
+            <div style={{ fontSize: 10, color: muted, textAlign: "right", maxWidth: 230 }}>
+              <div style={{ fontWeight: 700, letterSpacing: 0.6, textTransform: "uppercase" }}>
+                Community data
+              </div>
+              <div style={{ color: stale ? "#F59E0B" : text, marginTop: 3, fontWeight: stale ? 700 : 400 }}>
+                {freshness.latest.toISOString().slice(0, 10)}
+                {typeof freshness.ageDays === "number" && (
+                  <span style={{ marginLeft: 6 }}>
+                    ({freshness.ageDays === 0 ? "today"
+                      : freshness.ageDays === 1 ? "1 day ago"
+                      : `${freshness.ageDays} days ago`})
+                  </span>
+                )}
+              </div>
+              {stale && (
+                <div style={{ color: "#F59E0B", marginTop: 4, lineHeight: 1.45 }}>
+                  Prices and yields below are from this date, not today.
+                  Confirm before quoting a client.
+                </div>
               )}
+              {/* EIBOR is live and dated separately in the market row — saying so
+                  here stops a reader assuming everything shares one date. */}
+              <div style={{ color: muted, marginTop: 4, opacity: 0.85 }}>
+                EIBOR updates daily and is dated separately below.
+              </div>
             </div>
-          </div>
-        )}
+          );
+        })()}
       </div>
 
       {/* ── YOUR ACTIVITY ────────────────────────────────────────────────
@@ -283,10 +308,14 @@ export default function OverviewTab({
             value={coverage.medianPPSF ? `${Number(coverage.medianPPSF).toLocaleString()}` : "—"}
             context={`AED per sqft, community medians. n=${coverage.ppsfSampleSize}`}
           />
+          {/* Caption read "Tracked across all developers", which a reader takes
+              as the whole catalogue. It is not: archived projects are filtered
+              out upstream, so this is 1,552 of 1,728. The number was right and
+              the sentence overclaimed. */}
           <Kpi
             label="Projects"
             value={coverage.projectCount.toLocaleString()}
-            context="Tracked across all developers"
+            context="Active projects. Archived ones are excluded, so this is fewer than the full catalogue."
           />
           <Kpi
             label="Developers"
@@ -417,9 +446,39 @@ export default function OverviewTab({
       {/* ── 4. RETURNS ───────────────────────────────────────────────────── */}
       {topYields.length > 0 && (
         <div>
+          {/* ── WHY THIS WARNS ────────────────────────────────────────────────
+              Measured 2026-07-31: FOUR of the top six are estimates, and two of
+              them share the same figure — Dubai Investment Park and DIP Second
+              both read 1,051/sqft, gross 9.0%, net 7.3%.
+
+              A small coloured dot was carrying that entire message. This is the
+              list an agent screenshots and sends to a client as "the highest
+              yields in Dubai", so the warning has to be as prominent as the
+              numbers it qualifies. */}
           <SectionTitle hint="net of service charges, vacancy and management">
             Where the returns are
           </SectionTitle>
+
+          {(() => {
+            const estimates = topYields.filter(c => classifyProvenance(c).level !== PROVENANCE.VERIFIED).length;
+            if (!estimates) return null;
+            return (
+              <div style={{
+                display: "flex", gap: 8, alignItems: "flex-start",
+                padding: "9px 12px", borderRadius: 8, marginBottom: 10,
+                background: "rgba(245,158,11,0.07)", border: "1px solid rgba(245,158,11,0.25)",
+              }}>
+                <span style={{ fontSize: 11, fontWeight: 700, color: "#F59E0B", flexShrink: 0 }}>
+                  {estimates} of {topYields.length}
+                </span>
+                <span style={{ fontSize: 10.5, color: text, lineHeight: 1.55 }}>
+                  of these are <strong>estimates</strong>, not measured from transactions — the highest
+                  yields in Dubai are often in areas with the thinnest transaction data. Check the badge
+                  on each row before quoting one to a client.
+                </span>
+              </div>
+            );
+          })()}
           <Card style={{ padding: 0, overflow: "hidden" }}>
             {topYields.map((c, i) => (
               <div
@@ -437,6 +496,27 @@ export default function OverviewTab({
                 <span style={{ fontSize: 12, color: T.white || "#fff", flex: 1, textTransform: "capitalize" }}>
                   {String(c.name || c.id || "").replace(/-/g, " ")}
                 </span>
+                {/* The word, not just the dot. And where a figure is shared with
+                    other communities, say how many — that is the difference
+                    between "an estimate" and "this exact number also appears
+                    somewhere else". */}
+                {classifyProvenance(c).level === PROVENANCE.VERIFIED ? (
+                  <span style={{ fontSize: 9, fontWeight: 700, color: "#10B981", letterSpacing: 0.3 }}>
+                    DLD
+                  </span>
+                ) : (
+                  <span
+                    title={Number(c.valueSharedWith) > 0
+                      ? `This figure also appears on ${c.valueSharedWith} other communit${Number(c.valueSharedWith) === 1 ? "y" : "ies"}`
+                      : "Estimated, not measured from transactions"}
+                    style={{
+                      fontSize: 9, fontWeight: 700, color: "#F59E0B", letterSpacing: 0.3,
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    EST{Number(c.valueSharedWith) > 0 ? ` ·${c.valueSharedWith}` : ""}
+                  </span>
+                )}
                 <SourceBadge row={c} compact />
                 <span style={{ fontSize: 10, color: muted, width: 92, textAlign: "right" }}>
                   {Number(c.medianPPSF ?? c.avgPpsf ?? c.ppsf) > 0
