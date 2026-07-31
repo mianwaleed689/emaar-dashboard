@@ -1,0 +1,87 @@
+# DXB Analytics — Nightly DLD sync and notifications
+#
+# ── WHY THIS EXISTS ──────────────────────────────────────────────────────────
+#
+# scripts/auto-sync.js and scripts/sync-notifications.js were written to run on
+# a schedule and never scheduled. The notifications collection has entries dated
+# 18 and 19 May 2026 and nothing since — because someone ran the script by hand
+# on those two days and never again. The product's alerting has been dead ever
+# since, which is the gap the owner noticed as a user of their own site.
+#
+# The two run in ORDER and in ONE job on purpose: sync-notifications reads
+# sync_logs/<today>, which auto-sync writes. Split across two workflows they
+# would race, and the notifier would usually find yesterday's log or none.
+#
+# ── COST ─────────────────────────────────────────────────────────────────────
+#
+# auto-sync reads the whole projects collection once — about 1,700 documents,
+# roughly 3.5% of the 50,000/day Firestore free-tier allowance. It writes only
+# where a value actually changed. This project has been taken down by read
+# exhaustion before, so that headroom is deliberate and worth preserving: do not
+# add per-project reads to this job.
+#
+# Runtime is dominated by the 800ms courtesy delay between DLD API calls, so the
+# timeout is generous rather than tight. A hung job costs nothing; a job killed
+# halfway leaves a partial sync.
+
+name: DLD Nightly Sync
+
+on:
+  schedule:
+    # 22:00 UTC = 02:00 Dubai (GST is UTC+4, no daylight saving).
+    # Deliberately overnight: the DLD API is quieter, and any burst of writes
+    # lands well away from the daytime Firestore quota that serves real users.
+    - cron: "0 22 * * *"
+  workflow_dispatch:   # Run by hand from the Actions tab — use this first.
+
+# Never let two syncs overlap. A long run must finish rather than be cut off by
+# the next night's trigger.
+concurrency:
+  group: dld-nightly-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install firebase-admin
+        run: npm install firebase-admin --no-save
+
+      # Both scripts resolve the key as "../serviceAccountKey.json" relative to
+      # scripts/, which is the repository root — NOT scripts/serviceAccountKey.json
+      # where the EIBOR workflow puts it. Copying that pattern verbatim would
+      # fail on require() before either script did anything.
+      - name: Write Firebase service account key
+        run: echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}' > serviceAccountKey.json
+
+      - name: Sync project data from DLD
+        id: sync
+        run: node scripts/auto-sync.js
+
+      # Runs even if the sync failed partway: a partial sync still writes a
+      # sync_log, and the changes it did capture are still worth notifying on.
+      # Silence is the failure mode this workflow exists to end.
+      - name: Write notifications from the sync log
+        if: always() && steps.sync.outcome != 'skipped'
+        run: node scripts/sync-notifications.js
+
+      # Records the outcome in Firestore so a failure is visible IN THE PRODUCT
+      # rather than only in a GitHub email nobody reads. Runs before the key is
+      # removed, and never fails the job itself.
+      - name: Record run in cronLogs
+        if: always()
+        run: node scripts/cron-heartbeat.js dld-nightly-sync ${{ job.status }} "auto-sync + notifications"
+
+      - name: Remove service account key
+        if: always()
+        run: rm -f serviceAccountKey.json

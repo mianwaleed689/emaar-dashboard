@@ -70,10 +70,26 @@ export default function TeamTab({ teamMembers=[], teamMembersLoading, myLeads=[]
       const org = orgSnap?.exists() ? orgSnap.data() : null;
 
       if (org && Number(org.seatsIncluded) > 0) {
-        const used = Number(org.seatsUsed) || 1;
+        /* Count the live member list first, and fall back to the stored counter
+           only when the list has not loaded.
+
+           The counter is a running total that has been wrong before: joining
+           incremented it, deactivating did not decrement, so it drifted upward
+           and could permanently lock an agency out of seats it had paid for.
+           That leak is fixed in deactivateAgent, but an organisation created
+           before the fix still carries the inflated number. Counting the actual
+           active members repairs those without a migration — and a counter can
+           only ever drift again, whereas the list is the thing itself.
+
+           Suspended agents do not hold a seat; that is what deactivation means. */
+        const activeMembers = (teamMembers || []).filter(m => m.status !== "suspended");
+        const used = activeMembers.length > 0
+          ? activeMembers.length
+          : (Number(org.seatsUsed) || 1);
+
         if (used >= Number(org.seatsIncluded)) {
           notify(
-            `All ${org.seatsIncluded} seats on your plan are in use. Remove an agent or upgrade to invite more.`,
+            `All ${org.seatsIncluded} seats on your plan are in use. Deactivate an agent to free a seat, or upgrade to invite more.`,
             "error"
           );
           setSendingInvite(false);
@@ -173,6 +189,39 @@ export default function TeamTab({ teamMembers=[], teamMembersLoading, myLeads=[]
         suspendedAt: now,
         suspendedBy: managerUid,
       });
+
+      /* 1b. RELEASE THE SEAT.
+         Joining incremented seatsUsed; deactivating did not decrement it. The
+         counter only ever went up, so an agency on ten seats that had onboarded
+         and removed three agents could invite seven more people and no more —
+         permanently, with three seats they had paid for and could never use.
+
+         Now that the ten-seat allowance is a committed number quoted on the
+         pricing page, a counter that leaks is a billing dispute rather than a
+         cosmetic bug.
+
+         increment(-1) rather than read-then-write for the same reason the join
+         path uses increment(+1): two managers deactivating at the same moment
+         would otherwise both read the same value and one release would vanish.
+
+         Floored at 1 below, on read, because the manager always occupies a seat
+         and a negative counter would hand out unlimited invites. */
+      if (orgId) {
+        try {
+          const { increment } = await import("firebase/firestore");
+          await updateDoc(doc(db,"organisations",orgId),{
+            seatsUsed:  increment(-1),
+            agentCount: increment(-1),
+            updatedAt:  now,
+          });
+        } catch(e) {
+          /* The agent is already suspended and their leads are being returned;
+             a failed counter must not leave the deactivation half-done. Logged
+             so the discrepancy is findable, and the invite check recomputes from
+             the live member list anyway. */
+          console.error("Seat counter not decremented for org "+orgId, e);
+        }
+      }
 
       // 2. Find all leads assigned to this agent
       const leadsSnap = await getDocs(
