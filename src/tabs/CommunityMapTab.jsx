@@ -12,6 +12,9 @@
 */
 
 import React from "react";
+import {
+  MAP_METRICS, quantileBreaks, colourFor, legendFor, isMeasured, coordsOf, coverage,
+} from "../utils/mapScale";
 import { T } from "../data";
 
 const YIELD_COLOR = y => {
@@ -31,6 +34,8 @@ export default function CommunityMapTab({
   const markersRef     = React.useRef([]);
   const clusterRef     = React.useRef(null);
   const [mapLayer,     setMapLayer]    = React.useState("communities");
+  const [metricKey,    setMetricKey]   = React.useState("netYield");
+  const activeMetric = MAP_METRICS.find(m => m.key === metricKey) || MAP_METRICS[0];
   const [filterYield,  setFilterYield] = React.useState("all");
   const [search,       setSearch]      = React.useState("");
   const [filterDev,    setFilterDev]   = React.useState("All");
@@ -133,30 +138,67 @@ export default function CommunityMapTab({
     if(clusterRef.current) { try{map.removeLayer(clusterRef.current);}catch (e) { console.error("swallowed@CommunityMapTab.jsx:133", e); } clusterRef.current=null; }
 
     if(mapLayer==="communities") {
+      /* ── METRIC-DRIVEN LAYER WITH PROVENANCE ENCODED ────────────────────────
+         Every Dubai property map plots price and draws every pin with identical
+         confidence. This one paints by the metric a user chooses and, more
+         importantly, distinguishes a MEASURED figure from an INHERITED one:
+
+           solid fill   the community's number traces to DLD transactions
+           hollow ring  an area-level estimate applied downward — 108 of 193
+                        communities, including twelve Dubai Hills sub-communities
+                        that all report the same price to the dirham
+
+         An agent can see at a glance which parts of the city they can quote hard
+         and which need a caveat. No competitor shows this, because none of them
+         tracks it. */
+      const breaks = quantileBreaks(commWithCoords, activeMetric);
+
       commWithCoords.forEach(n=>{
         const y = parseFloat(n.grossYield||0);
         if(filterYield==="8+" && y<8) return;
         if(filterYield==="6-8" && (y<6||y>=8)) return;
         if(filterYield==="<6" && y>=6) return;
-        const color = YIELD_COLOR(y);
-        const size = n.tier==="verified"?14:10;
-        const circle = L.circleMarker([n.lat,n.lng],{
-          radius:size, fillColor:color, color:"rgba(0,0,0,0.3)", weight:1, fillOpacity:0.85
+
+        const pt = coordsOf(n);
+        if(!pt) return;                       // never guess a location
+
+        const value    = activeMetric.get(n);
+        const colour   = colourFor(value, activeMetric, breaks);
+        const measured = isMeasured(n);
+
+        const circle = L.circleMarker([pt.lat,pt.lng],{
+          radius: measured ? 11 : 9,
+          fillColor: colour,
+          color: measured ? "rgba(0,0,0,0.35)" : colour,
+          weight: measured ? 1 : 2,
+          fillOpacity: measured ? 0.9 : 0.12,   // hollow = estimate
+          dashArray: measured ? null : "3,3",
         });
-        circle.bindPopup(`<div style="font-family:'Outfit',sans-serif;min-width:220px;padding:4px">
-          <div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:6px">${n.community}</div>
+
+        const provLine = measured
+          ? `<div style="font-size:10px;color:#10B981">Measured from DLD transactions</div>`
+          : `<div style="font-size:10px;color:#F59E0B">Estimate${Number(n.valueSharedWith)>0
+              ? ` — this figure is shared with ${n.valueSharedWith} other communit${Number(n.valueSharedWith)===1?"y":"ies"}`
+              : ""}</div>`;
+
+        circle.bindPopup(`<div style="font-family:'Outfit',sans-serif;min-width:230px;padding:4px">
+          <div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:2px">${n.name||n.community||n.id}</div>
+          <div style="font-size:10px;color:#64748B;margin-bottom:8px">${n.kindLabel||""}</div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px">
             <div style="background:rgba(16,185,129,0.08);border-radius:6px;padding:6px 8px">
-              <div style="font-size:9px;color:#64748B;margin-bottom:2px">GROSS YIELD</div>
-              <div style="font-size:15px;font-weight:700;color:#10B981">${n.grossYield||"—"}%</div>
+              <div style="font-size:9px;color:#64748B;margin-bottom:2px">NET YIELD</div>
+              <div style="font-size:15px;font-weight:700;color:#10B981">${n.netYield?n.netYield+"%":"—"}</div>
             </div>
             <div style="background:rgba(212,168,67,0.08);border-radius:6px;padding:6px 8px">
-              <div style="font-size:9px;color:#64748B;margin-bottom:2px">AVG PPSF</div>
-              <div style="font-size:15px;font-weight:700;color:#D4A843">AED ${n.avgPpsf?Math.round(n.avgPpsf).toLocaleString():"—"}</div>
+              <div style="font-size:9px;color:#64748B;margin-bottom:2px">PRICE / SQFT</div>
+              <div style="font-size:15px;font-weight:700;color:#D4A843">AED ${
+                (n.medianPPSF??n.avgPpsf??n.ppsf) ? Math.round(n.medianPPSF??n.avgPpsf??n.ppsf).toLocaleString() : "—"}</div>
             </div>
           </div>
-          ${n.score?`<div style="font-size:10px;color:#94A3B8">DXB Score: ${n.score}</div>`:""}
-        </div>`,{className:"dxb-popup",maxWidth:280});
+          <div style="font-size:10px;color:#94A3B8;margin-bottom:5px">Gross ${n.grossYield||"—"}% · service charge ${
+            n.serviceCharge?"AED "+n.serviceCharge+"/sqft":"not recorded"}</div>
+          ${provLine}
+        </div>`,{className:"dxb-popup",maxWidth:290});
         circle.on("click",()=>setSelected({type:"community",...n}));
         circle.addTo(map);
         markersRef.current.push(circle);
@@ -220,7 +262,9 @@ export default function CommunityMapTab({
         markersRef.current.push(circle);
       });
     }
-  },[mapReady, mapLayer, filterYield, commWithCoords, filteredProjects]);
+    /* activeMetric belongs here: without it, switching the metric leaves the
+       pins painted by the previous one and the legend disagrees with the map. */
+  },[mapReady, mapLayer, filterYield, commWithCoords, filteredProjects, activeMetric]);
 
   const Btn = ({active,onClick,children}) => (
     <button type="button" onClick={onClick} style={{
@@ -272,20 +316,59 @@ export default function CommunityMapTab({
           <Select value={filterStatus} onChange={setFilterStatus} options={["All","Off-Plan","Ready"]}/>
         </>)}
 
-        {/* Legend */}
-        <div style={{display:"flex",gap:10,alignItems:"center",marginLeft:"auto"}}>
-          {[{color:"#10B981",label:"8%+"},{color:"#D4A843",label:"6-8%"},{color:"#63B3ED",label:"5-6%"},{color:"#94A3B8",label:"<5%"}]
-            .map((l,i)=>(
-              <div key={i} style={{display:"flex",alignItems:"center",gap:4}}>
-                <div style={{width:10,height:10,borderRadius:"50%",background:l.color}}/>
-                <span style={{fontSize:10,color:T.textMuted}}>{l.label}</span>
+        {/* Metric selector — what the map is painted by. Every other Dubai map
+            plots price and only price. */}
+        {mapLayer==="communities"&&(
+          <div style={{display:"flex",gap:2,background:"rgba(255,255,255,0.03)",border:`1px solid ${T.border}`,borderRadius:8,padding:3}}>
+            {MAP_METRICS.map(m=>(
+              <Btn key={m.key} active={metricKey===m.key} onClick={()=>setMetricKey(m.key)}>{m.label}</Btn>
+            ))}
+          </div>
+        )}
+
+        <span style={{fontSize:10,color:T.textMuted,marginLeft:"auto"}}>
+          {mapLayer==="projects"?`${filteredProjects.length.toLocaleString()} projects`:`${commWithCoords.length} communities`}
+        </span>
+      </div>
+
+      {/* ── LEGEND ──────────────────────────────────────────────────────────
+          Quantile bands with the count in each, because a legend that shows
+          colours without distribution tells a reader what the colours mean but
+          not what the city looks like. Plus the provenance key, which is the
+          part no competitor has: solid pins are measured, hollow ones inherited. */}
+      {mapLayer==="communities"&&(()=>{
+        const breaks = quantileBreaks(commWithCoords, activeMetric);
+        const rows   = legendFor(commWithCoords, activeMetric, breaks);
+        const cov    = coverage(commWithCoords);
+        if(!rows.length) return null;
+        return (
+          <div style={{display:"flex",gap:14,alignItems:"center",flexWrap:"wrap",padding:"6px 2px 10px"}}>
+            <span style={{fontSize:10,fontWeight:700,color:T.textMuted,textTransform:"uppercase",letterSpacing:0.6}}>
+              {activeMetric.label}
+            </span>
+            {rows.map((r,i)=>(
+              <div key={i} title={`${r.count} communities`} style={{display:"flex",alignItems:"center",gap:5}}>
+                <div style={{width:11,height:11,borderRadius:3,background:r.colour}}/>
+                <span style={{fontSize:10,color:T.textSecondary}}>{r.label}</span>
+                <span style={{fontSize:9,color:T.textMuted}}>({r.count})</span>
               </div>
             ))}
-          <span style={{fontSize:10,color:T.textMuted,marginLeft:4}}>
-            {mapLayer==="projects"?`${filteredProjects.length.toLocaleString()} projects`:`${commWithCoords.length} communities`}
-          </span>
-        </div>
-      </div>
+            <span style={{width:1,height:16,background:T.border}}/>
+            <div style={{display:"flex",alignItems:"center",gap:5}}>
+              <div style={{width:11,height:11,borderRadius:"50%",background:"#94A3B8"}}/>
+              <span style={{fontSize:10,color:T.textSecondary}}>Measured ({cov.measured})</span>
+            </div>
+            <div style={{display:"flex",alignItems:"center",gap:5}}>
+              <div style={{width:11,height:11,borderRadius:"50%",border:"2px dashed #94A3B8"}}/>
+              <span style={{fontSize:10,color:T.textSecondary}}>Estimate ({cov.estimated})</span>
+            </div>
+            <span style={{fontSize:9.5,color:T.textMuted,flex:"1 1 240px",lineHeight:1.5}}>
+              {activeMetric.hint}. An estimate is an area-level figure applied to a
+              community rather than measured in it — quote it with a caveat.
+            </span>
+          </div>
+        );
+      })()}
 
       {/* Map + Sidebar */}
       <div style={{display:"flex",flex:1,gap:12,minHeight:0}}>
