@@ -21,6 +21,11 @@ import {
   GLOBAL_YIELD_COMPARISON,
 } from "../data/marketFacts";
 import MarketCycleHistory from "../components/MarketCycleHistory";
+import {
+  Kpi as UIKpi,
+  StatBar as UIStatBar,
+  SectionTitle as UISectionTitle,
+} from "../components/ui/DataDisplay";
 
 // ── Year annotations ─────────────────────────────────────────────
 const YEAR_META = {
@@ -188,43 +193,48 @@ const ChartTooltip = ({ active, payload, label, metric }) => {
 };
 
 // ── Stat bar ──────────────────────────────────────────────────────
+/* ── LOCAL PRIMITIVES, NOW BACKED BY THE SHARED DESIGN SYSTEM ────────────────
+ *
+ * These three used to be defined here with their own padding, type scale and
+ * border colours, while OverviewTab defined near-identical ones with different
+ * values. Moving between the two tabs felt like moving between two products.
+ *
+ * They are kept as thin wrappers rather than replaced at all 22 call sites: the
+ * props stay identical, so nothing downstream changes, but every one now renders
+ * through src/components/ui/DataDisplay.jsx. New work should import those
+ * directly; these exist so this file's existing call sites did not have to be
+ * rewritten in the same change that altered their appearance.
+ * ─────────────────────────────────────────────────────────────────────────── */
+
 const StatBar = ({ label, value, pct, color, note }) => (
-  <div style={{ marginBottom: 14 }}>
-    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 5 }}>
-      <span style={{ fontSize: 12, color: T?.textSecondary || "#aaa" }}>{label}</span>
-      <span style={{ fontSize: 12, fontWeight: 700, color: T?.white || "#fff" }}>{value}</span>
-    </div>
-    <div style={{ height: 5, borderRadius: 3, background: "rgba(255,255,255,0.06)" }}>
-      <div style={{ height: "100%", borderRadius: 3, width: pct + "%", background: color, transition: "width 1s ease" }} />
-    </div>
-    {note && <div style={{ fontSize: 10, color: T?.textMuted || "#666", marginTop: 3 }}>{note}</div>}
-  </div>
+  <UIStatBar label={label} value={value} pct={pct} color={color} note={note} />
 );
 
-// ── KPI card ──────────────────────────────────────────────────────
 const KpiCard = ({ label, value, change, note, color, onClick }) => (
-  <div onClick={onClick} style={{ background: "rgba(255,255,255,0.03)", border: "1px solid " + (T?.border || "#222"), borderRadius: 12, padding: "14px 16px", cursor: onClick ? "pointer" : "default", transition: "border-color 0.2s" }}
-    onMouseEnter={e => onClick && (e.currentTarget.style.borderColor = (T?.gold || "#D4A843") + "60")}
-    onMouseLeave={e => onClick && (e.currentTarget.style.borderColor = T?.border || "#222")}
-  >
-    <div style={{ fontSize: 10, fontWeight: 700, color: T?.textMuted || "#666", letterSpacing: 1, textTransform: "uppercase", marginBottom: 8 }}>{label}</div>
-    <div style={{ fontFamily: "'Fraunces',serif", fontSize: 20, fontWeight: 800, color: color || T?.white || "#fff", lineHeight: 1.1, marginBottom: 5 }}>{value || "—"}</div>
-    {change && <div style={{ fontSize: 11, color: T?.green || "#68D391", display: "flex", alignItems: "center", gap: 3 }}>
-      <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="18 15 12 9 6 15"/></svg>{change}
-    </div>}
-    {note && <div style={{ fontSize: 10, color: T?.textMuted || "#666", marginTop: 4, lineHeight: 1.5 }}>{note}</div>}
-  </div>
+  <UIKpi
+    label={label}
+    value={value}
+    accent={color}
+    onClick={onClick}
+    /* `change` and `note` are folded into the shared component's single
+       `context` slot, which is the field it requires precisely so a figure
+       cannot ship with nothing attached to it. */
+    context={
+      (change || note) ? (
+        <>
+          {change && (
+            <span style={{ color: T?.green || "#68D391", fontWeight: 700 }}>{change}</span>
+          )}
+          {change && note ? " · " : ""}
+          {note}
+        </>
+      ) : null
+    }
+  />
 );
 
-// ── Section heading ───────────────────────────────────────────────
 const SH = ({ title, sub, right }) => (
-  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 14, marginTop: 32 }}>
-    <div>
-      <div style={{ fontFamily: "'Fraunces',serif", fontSize: 16, fontWeight: 700, color: T?.white || "#fff" }}>{title}</div>
-      {sub && <div style={{ fontSize: 11, color: T?.textMuted || "#666", marginTop: 3 }}>{sub}</div>}
-    </div>
-    {right}
-  </div>
+  <UISectionTitle variant="heading" hint={sub} right={right}>{title}</UISectionTitle>
 );
 
 // ── Main component ────────────────────────────────────────────────

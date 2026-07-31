@@ -40,6 +40,7 @@ import React, { useState, useMemo } from "react";
 import { T } from "../data";
 import { MARKET_FACTS, H1_2026_RANGE } from "../data/marketFacts";
 import SourceBadge from "../components/SourceBadge";
+import { Card, SectionTitle, Kpi } from "../components/ui/DataDisplay";
 import {
   computeCoverage,
   topByNetYield,
@@ -100,60 +101,11 @@ const ROLES = [
 
 /* ── SMALL PRESENTATIONAL PIECES ───────────────────────────────────────────── */
 
-function Card({ children, style, onClick }) {
-  return (
-    <div
-      onClick={onClick}
-      style={{
-        background: T.card || "rgba(255,255,255,0.03)",
-        border: `1px solid ${T.border || "rgba(255,255,255,0.08)"}`,
-        borderRadius: 12,
-        padding: "16px 18px",
-        ...style,
-      }}
-    >{children}</div>
-  );
-}
-
-function SectionTitle({ children, hint }) {
-  return (
-    <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginBottom: 10, flexWrap: "wrap" }}>
-      <h3 style={{
-        margin: 0, fontSize: 12, fontWeight: 700, letterSpacing: 0.8,
-        textTransform: "uppercase", color: T.textSecondary || "#C9D1D9",
-        fontFamily: "'Outfit',sans-serif",
-      }}>{children}</h3>
-      {hint && (
-        <span style={{ fontSize: 10, color: T.textMuted || "#8A94A6" }}>{hint}</span>
-      )}
-    </div>
-  );
-}
-
-/**
- * A headline number. `context` is mandatory by convention — a figure with no
- * sample size, source or date is exactly what this redesign set out to remove.
- */
-function Kpi({ label, value, context, accent, large }) {
-  return (
-    <Card style={{ flex: "1 1 170px", minWidth: 160 }}>
-      <div style={{
-        fontSize: 9, fontWeight: 700, letterSpacing: 0.8, textTransform: "uppercase",
-        color: T.textMuted || "#8A94A6", marginBottom: 8, fontFamily: "'Outfit',sans-serif",
-      }}>{label}</div>
-      <div style={{
-        fontSize: large ? 30 : 24, fontWeight: 800, lineHeight: 1.05,
-        color: accent || (T.white || "#fff"), fontFamily: "Fraunces,serif",
-      }}>{value}</div>
-      {context && (
-        <div style={{ fontSize: 10, color: T.textMuted || "#8A94A6", marginTop: 7, lineHeight: 1.45 }}>
-          {context}
-        </div>
-      )}
-    </Card>
-  );
-}
-
+/* Card, SectionTitle and Kpi previously lived here with their own padding and
+   type scale, while MarketTab defined near-identical ones with different values.
+   Both now render through the shared design system, so the two tabs stop looking
+   like separate products. Kpi there requires a `context` — a sample size, source
+   or date — which is why every figure on this page carries one. */
 /* ── MAIN ──────────────────────────────────────────────────────────────────── */
 
 export default function OverviewTab({
