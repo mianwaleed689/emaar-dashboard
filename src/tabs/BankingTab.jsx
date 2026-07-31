@@ -7,7 +7,11 @@ import { SvgIcons } from "../components/Icons";
 import { db } from "../firebase";
 import { collection, addDoc } from "firebase/firestore";
 
-import { findBankRates, MORTGAGE_DATA_AS_OF } from "../data/mortgageMarket";
+import {
+  findBankRates, MORTGAGE_DATA_AS_OF,
+  LTV_RULES, LTV_SECOND_PROPERTY, BANK_RATE_SOURCES, BANK_RATES_AS_OF, MARKET_FLOOR_RATE,
+} from "../data/mortgageMarket";
+import SourceList from "../components/SourceList";
 
 function BankingTab({ orgId, userId, liveEiborRates,
   bankView, setBankView,
@@ -303,7 +307,18 @@ function BankingTab({ orgId, userId, liveEiborRates,
                 websiteUrl: "sc.com/ae",
               },
             ].map(b => {
-              /* Rates are overridden from src/data/mortgageMarket.js so this tab
+              /* ── ON THE "strengths" AND "bestFor" LINES ─────────────────────
+                 Those are OUR assessment, not published facts — "best variable
+                 margin", "lowest min salary AED 7,000", "best for high earners".
+                 They are reasonable readings of the rate table, and a reader has
+                 no way to tell them apart from the sourced figures beside them.
+
+                 The section caption now says so. Minimum salaries and overpayment
+                 terms in particular change without announcement and should be
+                 confirmed with the bank before a client acts on them — which is
+                 what the caption tells an agent to do.
+
+                 Rates are overridden from src/data/mortgageMarket.js so this tab
                  and the Mortgage tab cannot disagree. They previously did: this
                  table said Mashreq 3.79% and Dubai Islamic 3.75%, while the
                  Mortgage tab said 4.10% and 3.99% for the same lenders. Everything
@@ -791,11 +806,33 @@ function BankingTab({ orgId, userId, liveEiborRates,
                           <div key={i} style={{ fontSize:10, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.6 }}>{h}</div>
                         ))}
                       </div>
+                      {/* ── LTV CAPS, READ FROM THE REGULATION ──────────────────────
+                          This table was hardcoded and disagreed with LTV_RULES in
+                          src/data/mortgageMarket.js, which was corrected on
+                          2026-07-29 against CBUAE Board Resolution 31/2/2020.
+
+                          It told a UAE national they could borrow 75% above AED 5M
+                          when the cap is 70%, and a non-resident 65% on a first home
+                          when the cap is 60%. Wrong in the client's favour, which is
+                          the worse direction: an agent quotes a deposit, the bank
+                          comes back higher, and the deal and the trust go together.
+                          On a AED 5M purchase a 5-point error is AED 250,000.
+
+                          Now derived from LTV_RULES so the regulation lives in one
+                          place. The second-property cap is a separate CBUAE rule
+                          (LTV_SECOND_PROPERTY) that applies at any value. */}
                       {[
-                        { cat:"UAE National", r1:"85% LTV (15% DP)", r2:"75% LTV (25% DP)", r3:"65% LTV (35% DP)", r4:"50% LTV (50% DP)", color:T.gold },
-                        { cat:"Expat Resident", r1:"80% LTV (20% DP)", r2:"70% LTV (30% DP)", r3:"60% LTV (40% DP)", r4:"50% LTV (50% DP)", color:T.green },
-                        { cat:"Non-Resident",  r1:"65% LTV (35% DP)", r2:"60% LTV (40% DP)", r3:"50% LTV (50% DP)", r4:"50% LTV (50% DP)", color:T.teal },
-                      ].map((row,i)=>(
+                        { cat:"UAE National",   rules: LTV_RULES.uae_national, color:T.gold },
+                        { cat:"Expat Resident", rules: LTV_RULES.expat,        color:T.green },
+                        { cat:"Non-Resident",   rules: LTV_RULES.non_resident, color:T.teal },
+                      ].map(r => ({
+                        cat: r.cat,
+                        color: r.color,
+                        r1: `${r.rules.under5m}% LTV (${100 - r.rules.under5m}% DP)`,
+                        r2: `${r.rules.over5m}% LTV (${100 - r.rules.over5m}% DP)`,
+                        r3: `${LTV_SECOND_PROPERTY}% LTV (${100 - LTV_SECOND_PROPERTY}% DP)`,
+                        r4: `${Math.min(r.rules.over5m, LTV_SECOND_PROPERTY)}% LTV (${100 - Math.min(r.rules.over5m, LTV_SECOND_PROPERTY)}% DP)`,
+                      })).map((row,i)=>(
                         <div key={i} style={{ display:"grid", gridTemplateColumns:"1.5fr 1fr 1fr 1fr 1fr", padding:"11px 16px", borderBottom:i<2?`1px solid ${T.border}`:"none", alignItems:"center" }}>
                           <div style={{ fontSize:13, fontWeight:600, color:row.color }}>{row.cat}</div>
                           <div style={{ fontSize:12, color:T.white }}>{row.r1}</div>
@@ -992,12 +1029,31 @@ function BankingTab({ orgId, userId, liveEiborRates,
                   <div style={{ fontSize:10, color:T.textMuted, marginTop:6 }}>Links go directly to each bank's official mortgage application page. DXB Analytics is not a lender — we help you compare and connect.</div>
                 </div>
 
-                {/* ── SOURCE FOOTER ── */}
-                <div style={{ paddingTop:12, borderTop:`1px solid ${T.border}`, display:"flex", gap:8, flexWrap:"wrap", alignItems:"center" }}>
-                  <span style={{ fontSize:10, color:T.textMuted }}>Sources:</span>
-                  {["UAE Central Bank (centralbank.ae) (centralbank.ae)","CBUAE Rulebook — Mortgage Regulations","Emirates NBD IR","ADCB","FAB (bankfab.com)","Mashreq","HSBC UAE","DIB","RAKBank","Standard Chartered","realestateclubdubai.com Apr 2026"].map((s,i)=>(
-                    <span key={i} style={{ fontSize:10, color:T.textMuted, padding:"2px 8px", borderRadius:10, border:`1px solid ${T.border}`, background:T.surfaceAlt }}>{s}</span>
-                  ))}
+                {/* ── SOURCES ──────────────────────────────────────────────
+                    The previous footer listed source NAMES as grey pills —
+                    "UAE Central Bank (centralbank.ae)" repeated twice, and
+                    nothing clickable. A rate an agent cannot substantiate is a
+                    rate a client checks elsewhere.
+
+                    These open the actual comparison pages and the CBUAE
+                    rulebook, so an agent can forward the evidence rather than
+                    ask to be believed. */}
+                <SourceList
+                  sources={BANK_RATE_SOURCES}
+                  style={{ paddingTop:12, borderTop:`1px solid ${T.border}` }}
+                />
+                <div style={{ fontSize:10, color:T.textMuted, marginTop:8, lineHeight:1.55 }}>
+                  Advertised salary-transfer rates as of {BANK_RATES_AS_OF}. The market floor is
+                  {" "}{MARKET_FLOOR_RATE}%. What a client is actually offered depends on income,
+                  nationality, the property and the bank's own view of them — use these to start
+                  a conversation, not to close one.
+                  {" "}
+                  <strong style={{ color:T.textSecondary }}>
+                    Rates and LTV caps above are sourced. Phrases like "best for" and "lowest
+                    minimum salary" are our assessment of the same table, and minimum salaries
+                    and overpayment terms change without announcement — confirm those with the
+                    bank before a client acts on them.
+                  </strong>
                 </div>
 
               </div>

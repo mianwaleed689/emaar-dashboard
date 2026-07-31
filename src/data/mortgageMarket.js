@@ -79,21 +79,71 @@ export const DBR_CAP = 0.50;
  *
  * `variableMargin` is the spread added to 3-month EIBOR.
  */
-export const BANK_RATES_SOURCE = "Compiled from MortgageCompare.ae, Mortgease, GCC Mortgages and bank published rates";
+export const BANK_RATES_SOURCE = "Compiled from MortgageCompare.ae, Mortgease, Capital Zone and GCC Mortgages, July 2026";
+export const BANK_RATES_AS_OF = "2026-07-31";
 
+/**
+ * ── WHY THE FLOOR MATTERS MORE THAN THE AVERAGE ─────────────────────────────
+ *
+ * An agent quoting "from 3.85%" when the market floor is 3.75% has lost the
+ * conversation before it starts — the client checks, finds better, and stops
+ * trusting the rest of the advice.
+ *
+ * The previous table opened at 3.85% and did not include Sharjah Islamic Bank
+ * or Arab Bank at all, which are the two cheapest advertised salary-transfer
+ * rates in July 2026. Those omissions were not an opinion about relevance; they
+ * were simply out of date.
+ *
+ * Rates below are ADVERTISED salary-transfer rates. What a specific client is
+ * offered depends on income, nationality, property and the bank's own view of
+ * them — so these are the number an agent uses to start a conversation, not to
+ * finish one.
+ */
 export const BANKS = [
-  { bank: "ADCB",          fixed1y: 3.85, fixed3y: 4.15, fixed5y: 4.39, variableMargin: 1.55, maxLoan: 15000000, minSalary: 15000, processingFee: 1.0, islamic: false, salaryTransfer: true,  highlight: true,
-    note: "Most competitive headline rate for salaried expats as of mid-2026. Mortgage One offers an offset facility." },
-  { bank: "FAB",           fixed1y: 3.95, fixed3y: 4.19, fixed5y: 4.44, variableMargin: 1.45, maxLoan: 15000000, minSalary: 15000, processingFee: 1.0, islamic: false, salaryTransfer: true,  highlight: false,
-    note: "First Abu Dhabi Bank. Fixed tenures up to five years. Competitive conventional pricing." },
-  { bank: "Emirates NBD",  fixed1y: 3.99, fixed3y: 4.25, fixed5y: 4.49, variableMargin: 1.50, maxLoan: 25000000, minSalary: 15000, processingFee: 1.0, islamic: false, salaryTransfer: true,  highlight: false,
-    note: "Finances up to 80% for expats, loans to AED 25M, terms to 25 years. Salary transfer unlocks relationship pricing." },
-  { bank: "Dubai Islamic", fixed1y: 3.99, fixed3y: 4.25, fixed5y: 4.50, variableMargin: 1.55, maxLoan: 15000000, minSalary: 15000, processingFee: 1.0, islamic: true,  salaryTransfer: false, highlight: false,
+  { bank: "Sharjah Islamic Bank", fixed1y: 3.75, fixed3y: 4.05, fixed5y: 4.30, variableMargin: 1.45, maxLoan: 15000000, minSalary: 15000, processingFee: 1.0, islamic: true, salaryTransfer: true, highlight: true,
+    note: "Lowest advertised salary-transfer rate in the market as of July 2026. Sharia-compliant — a profit rate rather than interest." },
+  { bank: "Arab Bank",     fixed1y: 3.78, fixed3y: 4.08, fixed5y: 4.33, variableMargin: 1.45, maxLoan: 15000000, minSalary: 15000, processingFee: 1.0, islamic: false, salaryTransfer: true,  highlight: true,
+    note: "Second lowest advertised rate, July 2026." },
+  { bank: "ADCB",          fixed1y: 3.79, fixed3y: 4.15, fixed5y: 4.39, variableMargin: 1.39, maxLoan: 15000000, minSalary: 15000, processingFee: 1.0, islamic: false, salaryTransfer: true,  highlight: true,
+    note: "1-year fixed at 3.79%, reverting to EIBOR + 1.39%. Mortgage One offers an offset facility." },
+  { bank: "Emirates NBD",  fixed1y: 3.85, fixed3y: 4.25, fixed5y: 4.49, variableMargin: 1.49, maxLoan: 25000000, minSalary: 15000, processingFee: 1.0, islamic: false, salaryTransfer: true,  highlight: false,
+    note: "2-year fixed at 3.85%, reverting to EIBOR + 1.49%. Finances up to 80% for expats, loans to AED 25M, terms to 25 years." },
+  { bank: "Dubai Islamic", fixed1y: 3.95, fixed3y: 4.25, fixed5y: 4.50, variableMargin: 1.55, maxLoan: 15000000, minSalary: 15000, processingFee: 1.0, islamic: true,  salaryTransfer: false, highlight: false,
     note: "Sharia-compliant Murabaha / Ijara. Profit rate rather than interest." },
+  { bank: "FAB",           fixed1y: 3.99, fixed3y: 4.19, fixed5y: 4.49, variableMargin: 1.45, maxLoan: 15000000, minSalary: 15000, processingFee: 1.0, islamic: false, salaryTransfer: true,  highlight: false,
+    note: "First Abu Dhabi Bank. Promotional rates from 3.99%, longer fixed terms 4.19–4.49%." },
+  { bank: "Emirates Islamic", fixed1y: 3.99, fixed3y: 4.29, fixed5y: 4.52, variableMargin: 1.55, maxLoan: 15000000, minSalary: 15000, processingFee: 1.0, islamic: true, salaryTransfer: true, highlight: false,
+    note: "Sharia-compliant. Advertised from 3.99% on salary transfer, July 2026." },
   { bank: "HSBC UAE",      fixed1y: 4.09, fixed3y: 4.34, fixed5y: 4.59, variableMargin: 1.60, maxLoan: 15000000, minSalary: 15000, processingFee: 1.0, islamic: false, salaryTransfer: true,  highlight: false,
     note: "International banking relationships. Useful for overseas income documentation." },
   { bank: "Mashreq",       fixed1y: 4.10, fixed3y: 4.35, fixed5y: 4.59, variableMargin: 1.65, maxLoan: 12000000, minSalary: 15000, processingFee: 1.0, islamic: false, salaryTransfer: false, highlight: false,
-    note: "No mandatory salary transfer. More flexible for self-employed applicants." },
+    note: "Fixed offers from 4.10–4.49%. No mandatory salary transfer — more flexible for self-employed applicants." },
+];
+
+/** The number an agent should lead with, computed rather than typed. */
+export const MARKET_FLOOR_RATE = Math.min(...BANKS.map(b => b.fixed1y));
+
+/**
+ * Sources for the rate table, as links. An agent who can send a client the
+ * comparison site behind a quoted rate is in a different conversation from one
+ * who says "trust me".
+ */
+export const BANK_RATE_SOURCES = [
+  { title: "Best mortgage rates in the UAE: July 2026, bank by bank",
+    url: "https://mortgagecompare.ae/knowledge-hub/best-mortgage-rates-uae.html",
+    publisher: "MortgageCompare.ae", date: "July 2026" },
+  { title: "Home loan in Dubai — rates from 3.75%",
+    url: "https://mortgease.ae/home-loan-dubai/",
+    publisher: "Mortgease", date: "July 2026" },
+  { title: "The banks offering the lowest mortgage rates in the UAE",
+    url: "https://www.capitalzone.ae/revealed-the-banks-offering-the-lowest-mortgage-rates-in-the-uae-2026-updated-list/",
+    publisher: "Capital Zone", date: "2026" },
+  { title: "UAE mortgage rates 2026 — best home loan rates compared",
+    url: "https://gccmortgages.com/uae-mortgage-rates/",
+    publisher: "GCC Mortgages" },
+  { title: "CBUAE Resolution 31/2/2020 amending Circular 31/2013 on mortgage loans",
+    url: "https://rulebook.centralbank.ae/en/rulebook/central-bank-board-directors%E2%80%99-resolution-no-3122020-amending-circular-no-312013",
+    publisher: "Central Bank of the UAE" },
 ];
 
 /**
