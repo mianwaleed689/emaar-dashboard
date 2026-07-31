@@ -59,13 +59,17 @@ export const PRICING_DISPLAY = {
 /**
  * Seat allowances.
  *
- * ASSUMPTION, NOT A DECISION YOU HAVE CONFIRMED: the agency plan includes ten
- * agent seats. That is what makes AED 500 coherent next to AED 300 for one
- * person — an agency of three is already better off, and an agency of ten is
- * paying AED 50 a seat.
+ * CONFIRMED 2026-07-31: the agency plan includes ten agent seats. That is what
+ * makes AED 500 coherent next to AED 300 for one person — an agency of three is
+ * already better off, and an agency of ten is paying AED 50 a seat.
  *
- * If you want a different number, or per-seat billing above the allowance,
- * change it here — every screen reads from this file.
+ * This number is now a commitment rather than a placeholder: it is quoted on the
+ * pricing page and enforced at invite time, so changing it changes what existing
+ * agencies were sold. Change it here — every screen reads from this file — but
+ * treat a reduction as a contract change, not a config tweak.
+ *
+ * Still open: removing an agent does not yet free their seat. That has to be
+ * fixed before billing goes live, or a ten-seat agency hits the limit at nine.
  */
 export const SEATS = {
   free: 1,

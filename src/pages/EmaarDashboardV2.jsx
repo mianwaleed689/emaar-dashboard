@@ -66,6 +66,7 @@ import BankingTab from '../tabs/BankingTab';
 import PipelineTab from '../tabs/PipelineTab';
 import DevPortalTab from '../tabs/DevPortalTab';
 import DataQualityTab from '../tabs/DataQualityTab';
+import { groupsFor, resolveTab } from '../config/tabs';
 
 /* â€” ACTIVE PROJECTS â‚¬â€ now Firestore-only â€” */
 /* Projects load from: Firestore 'projects' collection */
@@ -907,88 +908,16 @@ const SEED_SOURCE_URL = {
   DXBAnalytics: "https://www.dxbanalytics.com/blog/dubai-property-transaction-volume-2026",
 };
 
-/* â€” TAB GROUPS â€” 5 sections, 32 tabs in sequence â€” */
-const TAB_GROUPS = [
-  {
-    id: "market",
-    label: "Market Intelligence",
-    icon: SvgIcons.TrendingUp,
-    tabs: [
-      { key: "Overview",        icon: SvgIcons.LayoutDashboard },
-      { key: "Market",          icon: SvgIcons.Globe },
-      { key: "DLD Volumes",     icon: SvgIcons.Database },
-      { key: "Price History",   icon: SvgIcons.TrendingUp },
-      { key: "Neighbourhoods",  icon: SvgIcons.MapPin },
-      { key: "Launch Calendar", icon: SvgIcons.Calendar },
-      { key: "Currency",        icon: SvgIcons.CreditCard },
-    ]
-  },
-  {
-    id: "property",
-    label: "Property Explorer",
-    icon: SvgIcons.Building2,
-    tabs: [
-      { key: "Projects",        icon: SvgIcons.Building2 },
-      { key: "Map",             icon: SvgIcons.Map },
-      { key: "Handover",        icon: SvgIcons.Clock },
-      { key: "Service Charges", icon: SvgIcons.Receipt },
-    ]
-  },
-  {
-    id: "investment",
-    label: "Investment Tools",
-    icon: SvgIcons.BarChart3,
-    tabs: [
-      { key: "Yields",           icon: SvgIcons.BarChart3 },
-      { key: "STR vs LTR",       icon: SvgIcons.ArrowLeftRight },
-      { key: "Mortgage",         icon: SvgIcons.Landmark },
-      { key: "Investment Score", icon: SvgIcons.Star },
-      { key: "Flip",             icon: SvgIcons.RefreshCw },
-      { key: "DXB Estimate",     icon: SvgIcons.Search },
-      { key: "Portfolio",        icon: SvgIcons.Briefcase },
-      { key: "Golden Visa",      icon: SvgIcons.Award },
-      { key: "Risk",             icon: SvgIcons.AlertTriangle },
-    ]
-  },
-  {
-    id: "developer",
-    label: "Developer Intelligence",
-    icon: SvgIcons.Activity,
-    tabs: [
-      { key: "Financials",       icon: SvgIcons.BarChart2 },
-      { key: "Developer Health", icon: SvgIcons.Activity },
-      { key: "Competitors",      icon: SvgIcons.Layers },
-      { key: "Banking",           icon: SvgIcons.CreditCard },
-    ]
-  },
-  {
-    id: "marketing",
-    label: "Marketing",
-    icon: SvgIcons.TrendingUp,
-    tabs: [
-      { key: "Marketing", icon: SvgIcons.Activity },
-    ]
-  },
-  {
-    id: "crm",
-    label: "Agency CRM",
-    icon: SvgIcons.Users,
-    tabs: [
-      { key: "My Leads",    icon: SvgIcons.Users },
-      { key: "Pipeline",    icon: SvgIcons.LayoutGrid },
-      { key: "Listings",    icon: SvgIcons.Building },
-      { key: "Team",        icon: SvgIcons.Users2 },
-      { key: "Agency",      icon: SvgIcons.Building2 },
-      { key: "Compliance",  icon: SvgIcons.Shield },
-      { key: "Dev Portal",  icon: SvgIcons.Layers },
-      { key: "Data Quality", icon: SvgIcons.Activity },
-      { key: "Intelligence",icon: SvgIcons.Database },
-    ]
-  },
-];
-
-/* â€” Flat TABS for backward compatibility â€” */
-const TABS = TAB_GROUPS.flatMap(g => g.tabs);
+/* â€” TAB GROUPS â€”
+   The structure now lives in src/config/tabs.js, organised by the job the
+   agent is doing rather than the feature category the tab was built in.
+   That file is JSX-free so the audit scripts can read it, which is why it
+   stores icon NAMES; this resolves them against the local icon set. â€” */
+const withIcons = (groups) => groups.map(g => ({
+  ...g,
+  icon: SvgIcons[g.iconName],
+  tabs: g.tabs.map(t => ({ ...t, icon: SvgIcons[t.iconName] })),
+}));
 
 
 /* â€” STYLES â€” */
@@ -2265,6 +2194,9 @@ export default function EmaarDashboardV2() {
     try {
       const stored = localStorage.getItem('dxb_active_tab');
       if (stored && stored !== 'Overview') setTab(stored);
+      /* Resolved again below once userTier is known — at this point it is
+         still the default "free", so an admin would be bounced off their own
+         held tab if we resolved here. */
     } catch (e) { console.error("swallowed@EmaarDashboardV2.jsx:2264", e); }
     const handlePop = (e) => {
       if (e.state?.tab) setTab(e.state.tab);
@@ -2287,6 +2219,14 @@ export default function EmaarDashboardV2() {
 
   // Tier access helper
   const isPro = userTier === "admin" || userTier === "pro" || userTier === "pro_trial" || userTier === "enterprise";
+  const isAdminViewer = userTier === "admin";
+
+  /* Navigation for THIS viewer. An admin sees the held-back tabs so work in
+     progress is checkable on the live site; a customer never sees them. */
+  const TAB_GROUPS = useMemo(
+    () => withIcons(groupsFor({ isAdmin: isAdminViewer })),
+    [isAdminViewer]
+  );
 
   // Upgrade overlay for locked content
   const UpgradeOverlay = ({ message, compact }) => (
@@ -2308,6 +2248,16 @@ export default function EmaarDashboardV2() {
     </div>
   );
   const [tab, setTab] = useState(() => { try { const urlTab = new URLSearchParams(window.location.search).get("tab"); return urlTab || sessionStorage.getItem("dxb_active_tab") || "Overview"; } catch(e) { return "Overview"; } });
+
+  /* The tab above can come from a ?tab= parameter, sessionStorage or
+     localStorage — none of which know whether that tab still ships. Once the
+     viewer's tier is known, send a customer sitting on a held-back tab back to
+     Overview. Deliberately runs on userTier rather than on mount: at mount the
+     tier is still the default "free" and an admin would be bounced off the
+     work they opened the site to check. */
+  useEffect(() => {
+    setTab(current => resolveTab(current, { isAdmin: userTier === "admin" }));
+  }, [userTier]);
   const [selectedKPI, setSelectedKPI] = useState(null);
   const [breadcrumb, setBreadcrumb] = useState([]); // [{label, action}]
   const [projectPage, setProjectPage] = useState(1);
@@ -4464,7 +4414,13 @@ const unsub = onSnapshot(nQuery, (snap) => {
     }
   };
 
-  const handleTabChange = (key) => {
+  const handleTabChange = (rawKey) => {
+    /* Safety net, not the primary mechanism. Held-back tabs are removed from
+       the sidebar and their in-app links are fixed at the call site; this
+       catches anything missed — an unknown key, or a link added later that
+       points at work not yet shipped — so it lands on Overview instead of a
+       blank screen. scripts/check-tab-links.js is what stops it happening. */
+    const key = resolveTab(rawKey, { isAdmin: userTier === "admin" });
     sessionStorage.removeItem("dxb_active_tab");
     setTab(key);
     setSidebarOpen(false);

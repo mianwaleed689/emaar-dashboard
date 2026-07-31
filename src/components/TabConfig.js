@@ -1,94 +1,26 @@
 /* ═══════════════════════════════════════════════════════════════════
    DXB ANALYTICS — TAB CONFIGURATION
-   Extracted from EmaarDashboardV2.jsx
-   TAB_GROUPS: sidebar navigation structure (6 groups, 32 tabs)
-   INTELLIGENCE_TABS: empty state descriptions per tab
-   TABS: flat array for backward compatibility
+
+   The navigation structure USED TO BE DUPLICATED HERE. This file held one
+   copy and EmaarDashboardV2.jsx held another inline; the app rendered the
+   inline one and this one was imported by nobody. They had already drifted
+   — this copy was missing the Data Quality tab, and its groups still said
+   "Investment Tools" long after that grouping was abandoned. A navigation
+   change made in the wrong file would have been silently invisible.
+
+   Both now come from src/config/tabs.js. Re-exported here so the existing
+   components/index.js barrel keeps working.
+
+   NOTE ON ICONS: the config stores icon NAMES rather than components, so it
+   stays JSX-free and readable by the CommonJS audit scripts. A consumer maps
+   the name through its own icon set — see withIcons() in EmaarDashboardV2.
+
+   INTELLIGENCE_TABS below is still duplicated inline in EmaarDashboardV2.jsx.
+   It is descriptive copy rather than structure, so drift is cosmetic, but it
+   is the same hazard and worth collapsing next time this file is touched.
    ═══════════════════════════════════════════════════════════════════ */
 
-import { SvgIcons } from './Icons';
-
-/* ─── TAB GROUPS — 6 sections, 32 tabs in sequence ─── */
-export const TAB_GROUPS = [
-  {
-    id: "market",
-    label: "Market Intelligence",
-    icon: SvgIcons.TrendingUp,
-    tabs: [
-      { key: "Overview",        icon: SvgIcons.LayoutDashboard },
-      { key: "Market",          icon: SvgIcons.Globe },
-      { key: "DLD Volumes",     icon: SvgIcons.Database },
-      { key: "Price History",   icon: SvgIcons.TrendingUp },
-      { key: "Neighbourhoods",  icon: SvgIcons.MapPin },
-      { key: "Launch Calendar", icon: SvgIcons.Calendar },
-      { key: "Currency",        icon: SvgIcons.CreditCard },
-    ]
-  },
-  {
-    id: "property",
-    label: "Property Explorer",
-    icon: SvgIcons.Building2,
-    tabs: [
-      { key: "Projects",        icon: SvgIcons.Building2 },
-      { key: "Map",             icon: SvgIcons.Map },
-      { key: "Handover",        icon: SvgIcons.Clock },
-      { key: "Service Charges", icon: SvgIcons.Receipt },
-    ]
-  },
-  {
-    id: "investment",
-    label: "Investment Tools",
-    icon: SvgIcons.BarChart3,
-    tabs: [
-      { key: "Yields",           icon: SvgIcons.BarChart3 },
-      { key: "STR vs LTR",       icon: SvgIcons.ArrowLeftRight },
-      { key: "Mortgage",         icon: SvgIcons.Landmark },
-      { key: "Investment Score", icon: SvgIcons.Star },
-      { key: "Flip",             icon: SvgIcons.RefreshCw },
-      { key: "DXB Estimate",     icon: SvgIcons.Search },
-      { key: "Portfolio",        icon: SvgIcons.Briefcase },
-      { key: "Golden Visa",      icon: SvgIcons.Award },
-      { key: "Risk",             icon: SvgIcons.AlertTriangle },
-    ]
-  },
-  {
-    id: "developer",
-    label: "Developer Intelligence",
-    icon: SvgIcons.Activity,
-    tabs: [
-      { key: "Financials",       icon: SvgIcons.BarChart2 },
-      { key: "Developer Health", icon: SvgIcons.Activity },
-      { key: "Competitors",      icon: SvgIcons.Layers },
-      { key: "Banking",          icon: SvgIcons.CreditCard },
-    ]
-  },
-  {
-    id: "marketing",
-    label: "Marketing",
-    icon: SvgIcons.TrendingUp,
-    tabs: [
-      { key: "Marketing", icon: SvgIcons.Activity },
-    ]
-  },
-  {
-    id: "crm",
-    label: "Agency CRM",
-    icon: SvgIcons.Users,
-    tabs: [
-      { key: "My Leads",    icon: SvgIcons.Users },
-      { key: "Pipeline",    icon: SvgIcons.LayoutGrid },
-      { key: "Listings",    icon: SvgIcons.Building },
-      { key: "Team",        icon: SvgIcons.Users2 },
-      { key: "Agency",      icon: SvgIcons.Building2 },
-      { key: "Compliance",  icon: SvgIcons.Shield },
-      { key: "Dev Portal",  icon: SvgIcons.Layers },
-      { key: "Intelligence",icon: SvgIcons.Database },
-    ]
-  },
-];
-
-/* ─── Flat TABS for backward compatibility ─── */
-export const TABS = TAB_GROUPS.flatMap(g => g.tabs);
+export { TAB_GROUPS, TABS, HELD_TABS, SHIPPED_TABS, groupsFor, resolveTab } from '../config/tabs';
 
 /* ─── INTELLIGENCE TAB CONFIGS — empty state descriptions ─── */
 export const INTELLIGENCE_TABS = {

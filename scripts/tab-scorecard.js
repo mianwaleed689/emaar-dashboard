@@ -76,7 +76,21 @@ const files = fs.readdirSync(TAB_DIR)
   .filter(f => !ONLY || f.toLowerCase().includes(ONLY.toLowerCase()))
   .map(f => path.join(TAB_DIR, f));
 
+/* Which of these files belong to tabs that are held back? A held tab is not
+   sold, so averaging it in understates where the shipped product actually is —
+   the five held tabs carry 67 of the 97 unsourced claims between them. Read
+   through the shared parser so this cannot drift from the sidebar. */
+const { readTabConfig } = require("./lib/tabConfig");
+const heldFiles = new Set();
+const unresolvedHeld = [];
+readTabConfig().heldTabs.forEach(t => {
+  const file = t.key.replace(/[^A-Za-z]/g, "") + "Tab.jsx";
+  if (fs.existsSync(path.join(TAB_DIR, file))) heldFiles.add(file);
+  else unresolvedHeld.push(t.key);
+});
+
 const results = files.map(scoreFile).sort((a, b) => a.score - b.score);
+results.forEach(r => { r.held = heldFiles.has(path.basename(r.file)); });
 
 const tick = ok => (ok ? "y" : "·");
 
@@ -90,19 +104,36 @@ results.forEach(r => {
   console.log(
     `  ${String(r.score).padStart(4)}%   ${tick(c.sourced)}   ${tick(c.honest)}   ${tick(c.provenance)}   ` +
     `${tick(c.consistent)}   ${tick(c.emptyState)}   ${tick(c.live)}    ` +
-    `${String(r.unsourced).padStart(6)}    ${String(r.admitted).padStart(6)}   ${name}`
+    `${String(r.unsourced).padStart(6)}    ${String(r.admitted).padStart(6)}   ${name}${r.held ? "   [held]" : ""}`
   );
 });
 
-const avg = Math.round(results.reduce((n, r) => n + r.score, 0) / (results.length || 1));
-const failing = results.filter(r => r.score < 70);
+const mean = rs => Math.round(rs.reduce((n, r) => n + r.score, 0) / (rs.length || 1));
+const sum = (rs, k) => rs.reduce((n, r) => n + r[k], 0);
+
+const shipped = results.filter(r => !r.held);
+const held = results.filter(r => r.held);
 
 console.log("  " + "─".repeat(76));
-console.log(`  tabs measured        ${results.length}`);
-console.log(`  average score        ${avg}%`);
-console.log(`  below 70%            ${failing.length}`);
-console.log(`  total unsourced      ${results.reduce((n, r) => n + r.unsourced, 0)}`);
-console.log(`  total self-admitted  ${results.reduce((n, r) => n + r.admitted, 0)}`);
+console.log(`  tabs measured        ${results.length}  (${shipped.length} shipped, ${held.length} held back)`);
+console.log("");
+console.log("  SHIPPED — what a paying agent can actually open");
+console.log(`    average score      ${mean(shipped)}%`);
+console.log(`    at the bar (75%+)  ${shipped.filter(r => r.score >= 75).length} of ${shipped.length}`);
+console.log(`    below 70%          ${shipped.filter(r => r.score < 70).length}`);
+console.log(`    unsourced claims   ${sum(shipped, "unsourced")}`);
+console.log(`    self-admitted bad  ${sum(shipped, "admitted")}`);
+if (held.length) {
+  console.log("");
+  console.log("  HELD BACK — not sold, not counted above");
+  console.log(`    average score      ${mean(held)}%`);
+  console.log(`    unsourced claims   ${sum(held, "unsourced")}`);
+}
+if (unresolvedHeld.length) {
+  console.log("");
+  console.log(`  WARNING: held tab(s) with no matching file — ${unresolvedHeld.join(", ")}`);
+  console.log("  The name mapping in this script has drifted from src/config/tabs.js.");
+}
 
 console.log(`
   src  every number has a source, date or sample size

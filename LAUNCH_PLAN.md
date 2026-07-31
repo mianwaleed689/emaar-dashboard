@@ -33,97 +33,148 @@ Measured by `node scripts/tab-scorecard.js`. **Ship bar: 75%+.**
 ### Where we are today
 
 ```
-average score        64%
-tabs at 75%+          9 of 35
-tabs below 70%       25
-unsourced claims     97
-self-admitted bad     0
+SHIPPED — what a paying agent can open
+  average score      66%
+  at the bar (75%+)  10 of 30
+  below 70%          20
+  unsourced claims   29
+  self-admitted bad   0
+
+HELD BACK — not sold
+  average score      47%
+  unsourced claims   68
 ```
+
+**68 of the 97 unsourced claims sit on the five held-back tabs** — 40 on
+Competitors and 27 on Marketing alone. Holding those five removes 70% of the
+product's unsourced numbers on day one, and leaves 29 to grind down across the
+tabs that actually ship.
+
+That is the whole argument for holding them, in one number.
 
 ---
 
 ## THE STRATEGIC CHOICE
 
-**Ship 18 tabs that meet the bar, not 34 that do not.**
+**Hold back what serves the wrong audience. Group the rest by the job the agent
+is doing.**
 
-34 tabs is not a feature. An agent uses eight. The rest is navigation cost, and
-every unfinished tab is a chance to be caught with a number you cannot defend —
-which is the one thing this product cannot afford.
+The first draft of this plan said "ship 18 tabs, hold 16". Re-running the
+scorecard killed that: **Golden Visa and Data Quality already score 75%** and
+were on the held list, while **Risk and Investment Score sit at 67% with working
+in-app buttons pointing at them** — holding them would have broken navigation to
+fix nothing.
 
-Tabs held back are not deleted. They return when they meet the bar.
+The draft had conflated two different problems:
+
+- **Quality** — tabs that publish numbers they cannot defend. The scorecard
+  measures this, and the answer is to fix them or hold them.
+- **Navigation cost** — 34 tabs is a lot to scroll past. This is a *grouping*
+  problem, and deleting good tabs does not solve it.
+
+So: hold back the five that are wrong-audience or far below the bar, and
+reorganise the remaining 29 by job so an agent's daily eight sit in the top two
+groups.
+
+Held is not deleted. A tab returns by removing one line, once it reaches the bar.
 
 ---
 
-## PHASE 0 — DECISIONS (blocks everything, ~1 hour of your time)
+## PHASE 0 — DECISIONS ✅ SETTLED 2026-07-31
 
-| # | Decision | Why it blocks |
+| # | Decision | Outcome |
 |---|---|---|
-| 0.1 | **The four developer tabs** — Dev Portal, Competitors, Developer Health, Financials. Repurpose for agents, or hold back? | 12% of the product serves an audience that does not pay. Financials is the worst-scoring tab because nobody maintains it. |
-| 0.2 | **Seat allowance** — AED 500 = how many agents? Assumed 10. | Billing and seat enforcement both depend on it. Confirm before taking money. |
-| 0.3 | **Firestore rules** — yes to deploying `almanacEntries` access. | Blocks the almanac editor. |
-| 0.4 | **v1 tab list** — confirm the 18 below. | Everything downstream. |
+| 0.1 | The four developer tabs | **Held back.** Competitors to be rebuilt later on `developerMetrics.js` as a "who actually delivers here" tool for agents. Dev Portal, Developer Health and Financials stay out. |
+| 0.2 | Seat allowance behind AED 500 | **10 agents.** AED 50 per seat against AED 300 individual — a real reason for an agency to sign up as a team. |
+| 0.3 | Firestore rules | **Deployed** 2026-07-31. Dry-run shown, rules compiled, `almanacEntries` live. |
+| 0.4 | v1 tab list | **29 shipped, 5 held** — see below. |
 
-### Proposed v1 — 18 tabs
+Deferred by you: the DLD API key, and scheduling the notifications fix.
 
-**Daily use (agent):** Overview · Neighbourhoods · Projects · Map · Yields ·
-Service Charges · Mortgage · Banking · DXB Estimate
+### v1 — 29 tabs, seven job-shaped groups
 
-**Research:** Market · DLD Volumes · Price History · Launch Calendar · Handover
+```
+Today                 Overview · My Leads · Pipeline · Listings
+Find a property       Projects · Map · Launch Calendar · Handover
+Advise a client       Neighbourhoods · Yields · Service Charges · DXB Estimate · Risk
+Model a deal          Investment Score · STR vs LTR · Flip · Portfolio · Golden Visa
+Finance the deal      Mortgage · Banking · Currency
+Research the market   Market · DLD Volumes · Price History
+Run the agency        Team · Agency · Compliance · Data Quality · Intelligence
+```
 
-**Agency:** My Leads · Pipeline · Listings · Team
+The old grouping put nine tabs under "Investment Tools" and filed Banking under
+"Developer Intelligence" — organised the way the product was built, not the way
+it is used. An agent does not think "I need an investment tool"; they think "my
+client asked whether the service charge kills the yield".
 
-**Held back:** Dev Portal, Competitors, Developer Health, Financials, Currency,
-Marketing, Compliance, Flip, STR vs LTR, Portfolio, Golden Visa, Risk,
-Investment Score, Intelligence, Data Quality, Agency.
+### Held back — 5 tabs, admin-visible only
 
-Several are close to the bar and will return quickly. Risk and Golden Visa are
-the likeliest first additions.
+| Tab | Score | Why |
+|---|---|---|
+| Financials | 25% | Developer IR reporting. No agent use case, and the lowest score in the product precisely because nobody maintains a tab for an absent audience. |
+| Competitors | 42% | 40 unsourced claims and ten invented sub-scores. Returns rebuilt for agents. |
+| Marketing | 42% | 27 unsourced claims; a content tool, not market intelligence. |
+| Developer Health | 67% | Publishes `score: 94, grade: "A+"` from delivery and reputation figures the product does not hold. |
+| Dev Portal | 58% | A submission portal for developers. Nothing to serve until developers are customers. |
+
+An admin still sees all five on the live site under "Not shipped", so work in
+progress stays checkable without being sold.
 
 ---
 
-## PHASE 1 — STRUCTURE (3–4 sessions)
+## PHASE 1 — STRUCTURE ✅ DONE 2026-07-31
 
-**1.1 Kill the invented composites.**
-`developerMetrics.js` is built and verified against all 1,728 projects. Wire it
-into Competitors and Developer Health, replacing `score:94, grade:"A+"` and
-`factors:{delivery:20, reputation:9}` with computed figures: project counts,
-communities, median PPSF, catalogue share — and four fields **listed as
-unavailable** rather than invented.
+**1.1 One source of truth for navigation.** `src/config/tabs.js`. There were
+two copies of the tab structure — one inline in `EmaarDashboardV2.jsx` that the
+app rendered, one in `components/TabConfig.js` that nothing imported — and they
+had already drifted; the unused copy was missing the Data Quality tab. Both now
+come from the config. It stores icon *names* rather than components so it stays
+JSX-free and the audit scripts can read it.
 
-**1.2 Reorganise the sidebar around agent jobs.**
-Six feature-shaped groups become four job-shaped ones:
+**1.2 Sidebar reorganised by job.** Seven groups, above. Held tabs are hidden
+from customers and visible to admins.
 
-```
-Today          Overview · My Leads · Pipeline · Listings
-Find           Projects · Map · Launch Calendar · Handover
-Advise         Neighbourhoods · Yields · Service Charges · DXB Estimate
-Finance        Mortgage · Banking
-Research       Market · DLD Volumes · Price History
-Agency         Team
-```
+**1.3 Held tabs made genuinely unreachable.** Removing a tab from the sidebar
+does not remove the buttons elsewhere that link to it. Five such links existed;
+a "Full Developer Profile" button on the **Projects** tab — a shipped,
+agent-facing tab — pointed straight at the invented A+ grade. Fixed at the call
+site, with `resolveTab()` as a runtime safety net for saved tabs and `?tab=`
+parameters.
 
-**1.3 Apply the canonical taxonomy to every filter.**
-`taxonomy.js` is built. Every filter reads it, so no two tabs can disagree about
-what a villa is. Options carry counts; combinations returning zero are disabled
-rather than showing a blank screen.
+**1.4 Two new checkers**, because this class of change fails silently:
+`check-nav.js` (invariants + prints the sidebar as customer and admin see it)
+and `check-tab-links.js` (no link may point at a held tab). Both verified by
+injecting the failures they exist to catch.
+
+*Still open from Phase 1:* wire `developerMetrics.js` into the Competitors
+rebuild. Moved after launch — the tab is held, so it no longer blocks.
 
 ---
 
 ## PHASE 2 — DATA (4–5 sessions)
 
-**2.1 Fix the geography.** `area` exists on 9% of projects — a filter on 9%
+The scorecard shows where the leverage actually is. Criteria are weighted
+sourced(3) honest(3) provenance(2) live(2) consistent(1) empty-state(1) = 12.
+
+**2.1 Provenance and empty states on the 67% tabs.** Eight tabs — Risk,
+Investment Score, Service Charges, DXB Estimate, STR vs LTR, Currency,
+Intelligence, Developer Health — score 67% with sourced + honest + live already
+green. Adding provenance (2) and an empty state (1) takes each to **92%**. This
+is the single highest-leverage change left, and the pattern already exists in
+`SourceBadge` / `SourceList`.
+
+**2.2 Source the 50% tabs.** Projects, Mortgage, Launch Calendar, My Leads,
+Portfolio, Flip all fail on `sourced` — worth 3 points each. 19 unsourced claims
+between them.
+
+**2.3 Fix the geography.** `area` exists on 9% of projects — a filter on 9%
 coverage is worse than none. Derive it from community. Resolve the 13 orphan
 communities where a project names a community with no record, so the join stops
 failing silently.
 
-**2.2 Grind the unsourced claims to zero on v1 tabs.** 97 remain overall;
-roughly 20 sit on v1 tabs. Each is either sourced, recomputed, or removed.
-
-**2.3 Every v1 tab shows provenance.** Only five do today. The pattern exists —
-`SourceBadge`, `SourceList`, the DLD/EST labels — it needs applying.
-
-**2.4 Render-check every v1 tab.** The Market outage proved a passing build is
-not evidence a tab works. Every v1 tab opened in a browser before launch.
+**2.4 Render-check every shipped tab.** The Market outage proved a passing build
+is not evidence a tab works. Every shipped tab opened in a browser before launch.
 
 ---
 
@@ -162,15 +213,15 @@ your data quality**: only 60 of 193 communities have measured prices; the other
 
 | Phase | Sessions | Gate |
 |---|---|---|
-| 0 — Decisions | your hour | — |
-| 1 — Structure | 3–4 | Phase 0 |
-| 2 — Data | 4–5 | Phase 1 |
+| 0 — Decisions | ✅ done | — |
+| 1 — Structure | ✅ done | — |
+| 2 — Data | 4–5 | — |
 | 4 — Operations | 1–2 | can run in parallel |
-| **LAUNCH** | | 18 tabs at 75%+, render-checked |
+| **LAUNCH** | | 29 shipped tabs at 75%+, render-checked |
 | 3 — Billing | 2–3 | after launch, per your decision |
 
-**~10–14 working sessions to launch.** Billing follows, because a payment page
-for an unfinished product sells nothing.
+**~6–8 working sessions to launch.** Billing follows, because a payment page for
+an unfinished product sells nothing.
 
 ---
 
@@ -195,7 +246,14 @@ that specific hole; a browser check closes the rest.
 ```bash
 node scripts/tab-scorecard.js        # the bar, per tab
 node scripts/audit-claims.js         # unsourced numbers
-node scripts/check-undefined-refs.js # what the build cannot see
+node scripts/check-undefined-refs.js # constants the build cannot see
+node scripts/check-nav.js            # the sidebar a customer actually gets
+node scripts/check-tab-links.js      # no link points at a tab that is held
 ```
 
 No claim of progress in this project should be made without one of these.
+
+Each checker was verified by injecting the failure it exists to catch. A green
+checker that has never been shown to go red is not evidence of anything — that
+is the whole lesson of the Market tab, where the build, the linter and the
+scorecard were all green while the tab was dead in production.

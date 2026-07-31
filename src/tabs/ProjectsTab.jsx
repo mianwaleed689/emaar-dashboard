@@ -2150,7 +2150,16 @@ function ProjectsTab({
                     )}
                   </div>
                 )}
-                    <button type="button" onClick={() => { setSelectedProject(null); handleTabChange("Developer Health"); }}$ style={{ padding:"10px 20px", background:"rgba(212,168,67,0.1)", border:`1px solid ${T.border}`, borderRadius:8, color:T.gold, fontSize:12, cursor:"pointer", fontFamily:"'Outfit',sans-serif", fontWeight:600, marginBottom:12 }}>Full Developer Profile →</button>
+                    {/* A "Full Developer Profile" button used to sit here, linking to the
+                        Developer Health tab. Removed with that tab: it led to a composite
+                        grade — score 94, "A+" — assembled from delivery, reputation and
+                        RERA figures this product does not hold. Sending an agent there
+                        mid-conversation with a client is exactly how a fabricated number
+                        reaches a buyer.
+
+                        It returns when the developer view is rebuilt on developerMetrics.js,
+                        which computes from the 1,728 projects actually held and reports the
+                        missing fields as unavailable instead of inventing them. */}
                     <LegalNote T={T} />
                   </div>
                   );
