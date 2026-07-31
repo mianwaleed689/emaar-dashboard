@@ -3,8 +3,25 @@
    Real service charge data from neighbourhoodScores */
 
 import React, { useState, useMemo } from "react";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, Cell } from "recharts";
 import { T } from "../data";
+import SourceList from "../components/SourceList";
+import { classifyProvenance } from "../utils/provenance";
+
+/* Mollak is the official RERA system every registered service charge is filed
+   through, which is why it is the source that matters here — an agent quoting a
+   service charge is quoting a regulated, filed figure, not a listing estimate.
+   Named without a link: the portal is behind an owner/management login, and a
+   link that opens a sign-in wall is worse than none. */
+const SERVICE_CHARGE_SOURCES = [
+  { title: "RERA Mollak — registered service charge filings",
+    publisher: "Dubai Land Department / RERA",
+    note: "the regulated rate per community" },
+  { title: "Dubai Land Department — open data and transaction reporting",
+    url: "https://dubailand.gov.ae/en/open-data/real-estate-data/",
+    publisher: "Dubai Land Department",
+    note: "price and yield figures shown alongside" },
+];
 
 const fmtP = n => n ? "AED "+Math.round(n).toLocaleString() : "--";
 const fmtY = n => n ? parseFloat(n).toFixed(1)+"%" : "--";
@@ -48,9 +65,26 @@ export default function ServiceChargesTab({ liveNeighbourhoods=[], handleTabChan
       <div style={{marginBottom:16}}>
         <h2 style={{margin:0,fontSize:20,fontWeight:900,color:T.white,fontFamily:"'Fraunces',serif"}}>Service Charges</h2>
         <p style={{margin:"4px 0 0",fontSize:12,color:"#94A3B8"}}>
-          {withSC.length} communities  Dubai average AED {avgRate}/sqft/yr  Source: RERA Mollak system
+          {withSC.length} of {(liveNeighbourhoods||[]).length} communities have a filed rate  ·  average AED {avgRate}/sqft/yr across those  ·  Source: RERA Mollak
         </p>
       </div>
+
+      {/* ── EMPTY STATE ────────────────────────────────────────────────────
+          Without this the page renders a complete-looking dashboard made of
+          zeroes: "Dubai Average AED 0/sqft", "0 areas below AED 12", an empty
+          table. An agent glancing at it reads "service charges are low here"
+          rather than "the data did not load". */}
+      {withSC.length === 0 && (
+        <div style={{padding:"14px 16px",marginBottom:16,borderRadius:12,background:"rgba(100,116,139,0.08)",border:"1px solid rgba(100,116,139,0.28)"}}>
+          <div style={{fontSize:12,fontWeight:700,color:T.white,marginBottom:5}}>No service charge data loaded</div>
+          <div style={{fontSize:11,color:"#94A3B8",lineHeight:1.7}}>
+            {(liveNeighbourhoods||[]).length === 0
+              ? "Community data has not reached the app at all. Reload the page; if it stays empty, community data is not loading and every figure on this tab would be missing rather than low."
+              : `${(liveNeighbourhoods||[]).length} communities loaded, but none carries a filed service charge. Service charges come from RERA Mollak filings, which are not held for every community.`}
+            {" "}Nothing below is a measured zero — treat the tab as unavailable, not as evidence of cheap communities.
+          </div>
+        </div>
+      )}
 
       <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12,marginBottom:16}}>
         {[
@@ -79,7 +113,11 @@ export default function ServiceChargesTab({ liveNeighbourhoods=[], handleTabChan
               <Tooltip contentStyle={{background:T.surface,border:"1px solid "+T.border,borderRadius:8,fontSize:11}} formatter={v=>["AED "+v+"/sqft/yr","Service Charge"]}/>
               <ReferenceLine y={avgRate} stroke="#D4A843" strokeDasharray="4 4" label={{value:"Avg",fill:"#D4A843",fontSize:9}}/>
               <Bar dataKey="rate" radius={[3,3,0,0]}>
-                {chartData.map((d,i)=>(<cell key={i} fill={d.fill}/>))}
+                {/* `Cell`, not `cell`. Lowercase made React treat this as an unknown
+                    DOM element, so every bar rendered in the default colour and the
+                    green/amber/red banding by rate — the entire point of the chart —
+                    silently did nothing. It was also never imported. */}
+                {chartData.map((d,i)=>(<Cell key={i} fill={d.fill}/>))}
               </Bar>
             </BarChart>
           </ResponsiveContainer>
@@ -115,7 +153,15 @@ export default function ServiceChargesTab({ liveNeighbourhoods=[], handleTabChan
             <div style={{fontSize:10,color:"#64748B"}}>{i+1}</div>
             <div>
               <div style={{fontSize:12,fontWeight:600,color:T.white}}>{n.community}</div>
-              <div style={{fontSize:10,color:"#64748B"}}>{n.tier==="verified"?"Verified":n.tier==="area-data"?"Area Data":"DLD"}</div>
+              {/* This line used to read the raw `tier` field and print its own
+                  labels — "Verified" for one value, "DLD" as the catch-all for
+                  everything else, including records with no provenance at all.
+                  The same community could therefore read "Verified" here and
+                  "Estimate" on Neighbourhoods. One classifier now, shared. */}
+              {(() => {
+                const p = classifyProvenance(n);
+                return <div style={{fontSize:10,color:p.color}}>{p.label}</div>;
+              })()}
             </div>
             <div style={{textAlign:"center"}}>
               <span style={{fontSize:12,fontWeight:700,color:(n.serviceCharge||0)<=12?"#10B981":(n.serviceCharge||0)<=20?"#D4A843":"#EF4444",fontFamily:"'Fraunces',serif"}}>AED {n.serviceCharge}</span>
@@ -130,10 +176,30 @@ export default function ServiceChargesTab({ liveNeighbourhoods=[], handleTabChan
 
       <div style={{marginTop:16,padding:"12px 16px",background:"rgba(255,255,255,0.02)",border:"1px solid "+T.border,borderRadius:10}}>
         <div style={{fontSize:11,fontWeight:600,color:T.white,marginBottom:8}}>How Service Charges Affect Your Net Yield</div>
+        {/* This used to assert "reducing net yield by approximately 1-1.5%" and
+            name Discovery Gardens at "AED 8-10/sqft" — both typed from memory,
+            neither computed, and the second one wrong the moment a filing
+            changed. The worked example below is arithmetic the reader can check,
+            and the cheapest community is read from the data rather than recalled. */}
         <div style={{fontSize:11,color:"#94A3B8",lineHeight:1.7}}>
-          Service charges directly reduce your net yield. A property with 7% gross yield and AED 15/sqft service charge on a 1,000 sqft unit costs AED 15,000/year  reducing net yield by approximately 1-1.5%. 
-          Lower service charge communities like Discovery Gardens (AED 8-10/sqft) maximize net returns for yield investors.
+          Service charges are paid by the owner and come straight off the rent, so they hit
+          net yield directly. Worked example on a 1,000 sqft unit at the Dubai average of
+          AED {avgRate}/sqft/yr: the owner pays <strong style={{color:T.white}}>AED {(avgRate*1000).toLocaleString()}</strong> a
+          year. Against a purchase price of AED 1,500,000 that is{" "}
+          <strong style={{color:T.white}}>{((avgRate*1000)/1500000*100).toFixed(2)} percentage points</strong> off
+          the gross yield before any vacancy or management cost.
+          {lowestSC && (
+            <> The lowest filed rate in the data is <strong style={{color:"#10B981"}}>{lowestSC.community} at
+            AED {lowestSC.serviceCharge}/sqft/yr</strong>{highestSC ? <>, against AED {highestSC.serviceCharge} in {highestSC.community}</> : null} —
+            on the same unit that is a difference of AED {(((highestSC?.serviceCharge||0)-(lowestSC.serviceCharge||0))*1000).toLocaleString()} a year.</>
+          )}
         </div>
+      </div>
+
+      {/* Sources — the filed rate is a regulated figure, and an agent should be
+          able to tell a client exactly where it comes from. */}
+      <div style={{marginTop:14,paddingTop:12,borderTop:"1px solid "+T.border}}>
+        <SourceList sources={SERVICE_CHARGE_SOURCES} />
       </div>
     </div>
   );

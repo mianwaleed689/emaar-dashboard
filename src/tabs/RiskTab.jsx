@@ -8,31 +8,78 @@ import React from "react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis } from "recharts";
 import { T } from "../data";
 import { SvgIcons } from "../components/Icons";
+import SourceList from "../components/SourceList";
+import { classifyProvenance, PROVENANCE } from "../utils/provenance";
+
+/* ── SOURCES ────────────────────────────────────────────────────────────────
+   These used to render as seven grey text chips a reader could not open, and
+   three of them — 1tab.co, mitchellscommercialrealty.com, lionandland.com —
+   were blog aggregators being cited for figures that originate with Fitch and
+   Goldman Sachs. Citing the aggregator instead of the primary source is how a
+   number survives past the point where the original was revised.
+
+   Now: primary publishers, linked where a public URL exists, and honestly
+   marked where one does not. An agent must be able to send a client the
+   source, which is the entire premise of this product.
+
+   Bank research notes are genuinely not public. They are named with no link
+   rather than dropped, because "Goldman Sachs, March 2026" tells a client
+   something real even when they cannot click it. */
+const RISK_TAB_SOURCES = [
+  { title: "Dubai Land Department — transaction and price open data",
+    url: "https://dubailand.gov.ae/en/open-data/real-estate-data/",
+    publisher: "Dubai Land Department" },
+  { title: "Fitch Ratings — research and sector outlooks",
+    url: "https://www.fitchratings.com/research",
+    publisher: "Fitch Ratings", date: "May 2025",
+    note: "10–15% mid-market correction view" },
+  { title: "CBRE Middle East — market insights",
+    url: "https://www.cbre.ae/insights",
+    publisher: "CBRE" },
+  { title: "Goldman Sachs — Q1 2026 transaction volume note",
+    publisher: "Goldman Sachs", date: "March 2026",
+    note: "51% volume decline" },
+  { title: "Citi — UAE population and growth revision",
+    publisher: "Citi", date: "2026" },
+];
 
 function RiskTab({ liveNeighbourhoods=[], riskTabView, setRiskTabView, riskCommunity2, setRiskCommunity2, riskHorizon, setRiskHorizon, globalFilters = {}, handleTabChange }) {
 
   /* Phase 2.4 Batch 6: when top bar sets a community, sync tab's selector */
   const gfCommunity = globalFilters?.community && globalFilters.community !== "all"
     ? globalFilters.community : null;
-  // Real community risk data from neighbourhoodScores
-  const communityRiskMap = React.useMemo(() => {
+
+  /* ── LIVE COMMUNITY DATA ──────────────────────────────────────────────────
+     This map was built and then never read. The tab took liveNeighbourhoods as
+     a prop, computed real yields and transaction counts from it, and then the
+     matrix below rendered a hardcoded `yldMap` instead — an undated literal
+     that said Downtown Dubai yields 5.5% whatever the measured figure was.
+
+     A tab that accepts live data and displays a constant is worse than one
+     that never claimed to: the plumbing makes it look current. Wired up now,
+     with provenance carried through so a measured yield and a missing one are
+     not shown the same way. */
+  const communityData = React.useMemo(() => {
     const map = {};
     (liveNeighbourhoods||[]).forEach(n => {
+      const yieldValue = parseFloat(n.grossYield);
       map[n.community] = {
-        supplyRisk:     n.supplyRisk || "Unknown",
-        investScore:    n.investmentScore || 0,
-        grossYield:     parseFloat(n.grossYield||0),
-        dldTransactions:n.dldTransactions || 0,
-        liquidity:      n.liquidity || "Unknown",
-        avgPpsf:        n.avgPpsf || 0,
-        goldenVisa:     n.goldenVisa || false,
+        grossYield:      Number.isFinite(yieldValue) && yieldValue > 0 ? yieldValue : null,
+        dldTransactions: n.dldTransactions || 0,
+        avgPpsf:         n.avgPpsf || 0,
+        supplyRisk:      n.supplyRisk || null,
+        /* Classified through the same function the Neighbourhoods tab uses, so
+           a community cannot read "DLD verified" on one tab and "Estimate" on
+           another. That inconsistency was already found once, between two
+           definitions of "verified" that disagreed 61 to 60. */
+        provenance:      classifyProvenance(n),
       };
     });
     return map;
   }, [liveNeighbourhoods]);
 
-  const getRealRisk = (community) => communityRiskMap[community] || null;
-  
+  const hasLiveData = Object.keys(communityData).length > 0;
+
   React.useEffect(() => {
     if (gfCommunity && riskCommunity2 !== gfCommunity) {
       setRiskCommunity2(gfCommunity);
@@ -222,6 +269,17 @@ function RiskTab({ liveNeighbourhoods=[], riskTabView, setRiskTabView, riskCommu
                       <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
                         <div style={{ padding:"24px", background:`linear-gradient(135deg,${riskGrade.color}14,${riskGrade.color}04)`, border:`1px solid ${riskGrade.color}40`, borderRadius:14, textAlign:"center" }}>
                           <div style={{ fontSize:11, color:T.textMuted, textTransform:"uppercase", letterSpacing:1, marginBottom:6 }}>Risk Score — {comm.split(" ").slice(0,2).join(" ")}</div>
+                          {/* The number is 52px tall and reads like a measurement. It is
+                              not one — it is a weighted analyst judgement. The badge sits
+                              on the figure itself rather than only in the note above,
+                              because a screenshot of this card travels without the note. */}
+                          <div style={{
+                            display:"inline-block", marginBottom:6, padding:"1px 8px", borderRadius:6,
+                            fontSize:9, fontWeight:700, letterSpacing:0.4, textTransform:"uppercase",
+                            color:"#F59E0B", background:"rgba(245,158,11,0.12)", border:"1px solid rgba(245,158,11,0.3)",
+                          }}>
+                            Analyst estimate — not measured
+                          </div>
                           <div style={{ fontFamily:"'Fraunces',serif", fontSize:52, fontWeight:900, color:riskGrade.color, lineHeight:1 }}>{adjScore}</div>
                           <div style={{ fontSize:14, fontWeight:700, color:riskGrade.color, marginTop:6 }}>{riskGrade.label}</div>
                           <div style={{ fontSize:12, color:T.textMuted, marginTop:4 }}>Investment Grade: <strong style={{ color:riskGrade.color }}>{riskGrade.grade}</strong>{"·"}{riskHorizon} horizon</div>
@@ -278,7 +336,31 @@ function RiskTab({ liveNeighbourhoods=[], riskTabView, setRiskTabView, riskCommu
                 {riskTabView === "matrix" && (
                   <>
                     <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:4 }}>Community Risk Matrix</div>
-                    <div style={{ fontSize:11, color:T.textMuted, marginBottom:16 }}>All communities ranked · Risk score vs rental yield · Click any row to explore</div>
+                    <div style={{ fontSize:11, color:T.textMuted, marginBottom:16 }}>
+                      8 scored communities ranked · Risk score is our judgement, gross yield is measured · Click any row to explore
+                    </div>
+
+                    {/* ── EMPTY STATE ──────────────────────────────────────────
+                        The risk scores are constants, so this table renders whether
+                        or not live data arrived — which means a Firestore outage
+                        looked identical to a working page, just with different
+                        yields. Now it says so. */}
+                    {!hasLiveData && (
+                      <div style={{
+                        padding:"11px 15px", marginBottom:12, borderRadius:10,
+                        background:"rgba(100,116,139,0.08)", border:"1px solid rgba(100,116,139,0.28)",
+                      }}>
+                        <div style={{ fontSize:11, fontWeight:700, color:T.textSecondary, marginBottom:4 }}>
+                          Rental yields unavailable
+                        </div>
+                        <div style={{ fontSize:10.5, color:T.textMuted, lineHeight:1.6 }}>
+                          Community data has not loaded, so the gross yield column is empty. The risk
+                          scores below still show — they are a stored assessment rather than live data —
+                          but do not read the missing yields as zero or as low. Reload, or check
+                          Neighbourhoods to confirm whether community data is reaching the app.
+                        </div>
+                      </div>
+                    )}
                     <div style={{ background:T.surface, border:`1px solid ${T.border}`, borderRadius:12, overflow:"hidden", marginBottom:16 }}>
                       <div style={{ display:"grid", gridTemplateColumns:"2fr 0.8fr 0.8fr 0.8fr 0.8fr 1fr 1.2fr", padding:"10px 16px", background:T.surfaceAlt, borderBottom:`1px solid ${T.border}` }}>
                         {["Community","Grade","Risk Score","Gross Yield","Supply Risk","Geo Risk","Verdict"].map((h,i)=>(
@@ -288,8 +370,14 @@ function RiskTab({ liveNeighbourhoods=[], riskTabView, setRiskTabView, riskCommu
                       {Object.entries(COMMUNITY_RISK).sort((a,b)=>a[1].score-b[1].score).map(([comm2,cr],i)=>{
                         const supplyScore = RISK_FACTORS.find(f=>f.key==="supply")?.communityScores[comm2]||30;
                         const geoScore   = RISK_FACTORS.find(f=>f.key==="geopolitical")?.communityScores[comm2]||40;
-                        const yldMap = { "Downtown Dubai":5.5,"Dubai Marina":6.8,"Business Bay":7.6,"Jumeirah Lake Towers":8.1,"Jumeirah Village Circle":7.8,"Dubai Hills Estate":6.2,"Palm Jumeirah":5.5,"International City":9.2,"Dubai South":7.2 };
-                        const yld = yldMap[comm2] || 6.5;
+                        /* Measured yield, or nothing. The literal map that used to
+                           sit here fell back to 6.5% for any community it did not
+                           list — a number with no basis at all, rendered in the same
+                           weight as the rest of the row. A blank cell is honest; an
+                           invented 6.5% is what gets quoted to a buyer. */
+                        const live = communityData[comm2];
+                        const yld  = live?.grossYield ?? null;
+                        const yldProv = live?.provenance || null;
                         return (
                           <div key={i} style={{ display:"grid", gridTemplateColumns:"2fr 0.8fr 0.8fr 0.8fr 0.8fr 1fr 1.2fr", padding:"12px 16px", borderBottom:i<Object.keys(COMMUNITY_RISK).length-1?`1px solid ${T.border}`:"none", alignItems:"center", cursor:"pointer" }}
                             onClick={()=>{ setRiskCommunity2(comm2); setRiskTabView("radar"); }}
@@ -301,7 +389,18 @@ function RiskTab({ liveNeighbourhoods=[], riskTabView, setRiskTabView, riskCommu
                             </div>
                             <div style={{ fontFamily:"'Fraunces',serif", fontSize:16, fontWeight:800, color:cr.color }}>{cr.grade}</div>
                             <div style={{ fontFamily:"'Fraunces',serif", fontSize:16, fontWeight:800, color:cr.color }}>{cr.score}</div>
-                            <div style={{ fontSize:12, fontWeight:700, color:T.teal }}>{yld}%</div>
+                            <div>
+                              {yld === null ? (
+                                <span style={{ fontSize:11, color:T.textMuted }} title="No measured rental yield recorded for this community">not recorded</span>
+                              ) : (
+                                <>
+                                  <span style={{ fontSize:12, fontWeight:700, color:T.teal }}>{yld.toFixed(1)}%</span>
+                                  {yldProv && (
+                                    <div style={{ fontSize:8.5, color:yldProv.color, marginTop:1 }}>{yldProv.label}</div>
+                                  )}
+                                </>
+                              )}
+                            </div>
                             <div style={{ fontSize:12, color:supplyScore>55?T.red:supplyScore>35?"#F97316":T.green }}>{supplyScore>55?"High":supplyScore>35?"Medium":"Low"}</div>
                             <div style={{ fontSize:12, color:geoScore>55?T.red:geoScore>35?"#F97316":T.green }}>{geoScore>45?"Elevated":"Moderate"}</div>
                             <span style={{ fontSize:10, padding:"3px 8px", borderRadius:8, background:cr.color+"20", color:cr.color, fontWeight:700 }}>{cr.label}</span>
@@ -353,12 +452,9 @@ function RiskTab({ liveNeighbourhoods=[], riskTabView, setRiskTabView, riskCommu
                   </div>
                 )}
 
-                {/* Sources */}
-                <div style={{ paddingTop:12, borderTop:`1px solid ${T.border}`, display:"flex", gap:8, flexWrap:"wrap" }}>
-                  <span style={{ fontSize:10, color:T.textMuted }}>Sources:</span>
-                  {["Fitch Ratings May 2025","Goldman Sachs Mar 2026","DLD Transaction Data","1tab.co Apr 2026","mitchellscommercialrealty.com","lionandland.com","CBRE UAE 2026"].map((s,i)=>(
-                    <span key={i} style={{ fontSize:10, color:T.textMuted, padding:"2px 8px", borderRadius:10, border:`1px solid ${T.border}`, background:T.surfaceAlt }}>{s}</span>
-                  ))}
+                {/* Sources — links a client can open, not grey chips */}
+                <div style={{ paddingTop:12, borderTop:`1px solid ${T.border}` }}>
+                  <SourceList sources={RISK_TAB_SOURCES} />
                 </div>
               </div>
             );
