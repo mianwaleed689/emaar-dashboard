@@ -65,8 +65,10 @@ function auditFile(file) {
       if (trimmed.includes("*/")) inBlockComment = false;
       return;
     }
-    if (trimmed.startsWith("/*") && !trimmed.includes("*/")) { inBlockComment = true; return; }
-    if (trimmed.startsWith("//") || trimmed.startsWith("*") || trimmed.startsWith("/*")) return;
+    /* JSX comments open with "{/*", not "/*" — missing that counted the prose
+       inside a comment as a live claim. */
+    if (/^\{?\/\*/.test(trimmed) && !trimmed.includes("*/")) { inBlockComment = true; return; }
+    if (trimmed.startsWith("//") || trimmed.startsWith("*") || /^\{?\/\*/.test(trimmed)) return;
     if (NOISE.test(line)) return;
 
     const claims = line.match(CLAIM);

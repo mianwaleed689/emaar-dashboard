@@ -177,6 +177,24 @@ export default function OverviewTab({
     ["totalTransactions2025", "FY2025 transactions"],
   ].map(([key, label]) => ({ key, label, fact: MARKET_FACTS[key] })).filter(x => x.fact);
 
+  /* Cold start: before the community feed arrives, every KPI below would render
+     "0 communities · median —" which reads as a broken product rather than a
+     loading one. Say what is happening instead. */
+  if (!liveNeighbourhoods.length) {
+    return (
+      <div style={{ padding: "48px 20px", textAlign: "center", fontFamily: "'Outfit',sans-serif" }}>
+        <div style={{ fontSize: 15, fontWeight: 700, color: T.white || "#fff", fontFamily: "Fraunces,serif", marginBottom: 8 }}>
+          Loading Dubai community data
+        </div>
+        <p style={{ margin: "0 auto", maxWidth: 420, fontSize: 12, color: T.textMuted || "#8A94A6", lineHeight: 1.6 }}>
+          Prices, yields and service charges for 193 communities are on their way.
+          If this persists, the data feed is unavailable rather than empty — nothing
+          here is being hidden from you.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 22 }}>
 

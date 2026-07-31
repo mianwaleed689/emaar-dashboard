@@ -141,7 +141,10 @@ const AUDIENCES = ["Investor", "Agent", "Developer", "Buyer"];
 const AUDIENCE_INSIGHTS = {
   Investor: {
     icon: "📈", color: "#D4A843",
-    headline: "Dubai gross yields run 6.5–7.1% — roughly double London, and the gap widens after tax.",
+    /* Range and comparison come from GLOBAL_YIELD_COMPARISON (2026 comparative
+       market reporting). Stated here too so the attribution travels with the
+       claim rather than living three files away. */
+    headline: "Dubai gross yields run 6.5–7.1% — roughly double London, and the gap widens after tax. (2026 comparative reporting)",
     points: [
       "AED 1M in Dubai returns about AED 65,000–71,000 a year gross, with no income tax on rent (2026 ranges)",
       "The same AED 1M in London returns about AED 30,000–40,000 gross; a 40% taxpayer nets nearer 2.7%",
@@ -678,7 +681,7 @@ function MarketTab({ liveNeighbourhoods=[], liveMarketData, allDevelopers, expan
         {[
           ...SUPPLY_PIPELINE_2026.items,
           { label: "Heaviest 2026 delivery", value: "JVC · Business Bay · Dubai South", note: SUPPLY_PIPELINE_2026.concentration, risk: "high" },
-          { label: "2026 price forecast", value: "5–8%", note: SUPPLY_PIPELINE_2026.forecast, risk: "medium" },
+          { label: "2026 price forecast", value: "5–8%", note: `${SUPPLY_PIPELINE_2026.forecast} Source: ${SUPPLY_PIPELINE_2026.source}, as of ${SUPPLY_PIPELINE_2026.asOf}.`, risk: "medium" },
         ].map((item, i) => (
           <div key={i} style={{
             background: "rgba(255,255,255,0.02)",
