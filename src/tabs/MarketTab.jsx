@@ -29,7 +29,12 @@ const YEAR_META = {
   "2023": { label: "Momentum Builds", sub: "Luxury surge · 166K deals · AED 634B · +20%", color: "#68D391" },
   "2024": { label: "Record 4th Year", sub: "226K deals · AED 761B · +36% volume", color: "#63B3ED" },
   "2025": { label: "All-Time Record", sub: "270K+ deals · AED 917B · 5th consecutive record", color: "#D4A843" },
-  "2026 YTD": { label: "Jan 2026 Only", sub: "16,919 deals · AED 1,976 avg PPSF · on pace", color: "rgba(212,168,67,0.4)" },
+  /* Keyed for both the old and new labels so the chart legend resolves whichever
+     the Firestore document currently carries. The 2026 point was January only —
+     16,919 deals against AED 917B full-year 2025 — plotted beside complete years,
+     which read as a market collapse. It now holds Q1 2026 and says so. */
+  "2026 YTD": { label: "Q1 2026", sub: "Part year · 60,303 deals · AED 252B · +31% YoY", color: "rgba(212,168,67,0.4)", partYear: true },
+  "Q1 2026": { label: "Q1 2026", sub: "Part year · 60,303 deals · AED 252B · +31% YoY", color: "rgba(212,168,67,0.4)", partYear: true },
 };
 
 // ── Global city comparison data ───────────────────────────────────
@@ -406,7 +411,12 @@ function MarketTab({ liveNeighbourhoods=[], liveMarketData, allDevelopers, expan
             </ComposedChart>
           </ResponsiveContainer>
           <div style={{ display: "flex", flexWrap: "wrap", gap: "6px 16px", marginTop: 10 }}>
-            {Object.entries(YEAR_META).filter(([y]) => y !== "2026 YTD").map(([year, meta]) => (
+            {/* Part-year points are plotted but kept out of the year legend, so a
+                quarter is never presented as comparable to a full year. Filtered
+                on a flag rather than a hardcoded key — the previous check tested
+                for the literal string "2026 YTD" and would have silently shown a
+                duplicate the moment that label changed. */}
+            {Object.entries(YEAR_META).filter(([, meta]) => !meta.partYear).map(([year, meta]) => (
               <div key={year} onClick={() => setSelectedYear(year === selectedYear ? null : year)} style={{ display: "flex", alignItems: "center", gap: 6, cursor: "pointer", opacity: selectedYear && year !== selectedYear ? 0.4 : 1, transition: "opacity 0.2s" }}>
                 <div style={{ width: 8, height: 8, borderRadius: 2, background: meta.color, flexShrink: 0 }} />
                 <span style={{ fontSize: 10, color: T?.textMuted || "#666" }}><span style={{ fontWeight: 700, color: T?.textSecondary || "#aaa" }}>{year}</span> {meta.label}</span>
