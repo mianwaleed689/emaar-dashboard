@@ -396,10 +396,22 @@ function MarketTab({ liveNeighbourhoods=[], liveMarketData, allDevelopers, expan
         <KpiCard label="Total Market Value" value={getStat("Total Market Value")?.value} change={getStat("Total Market Value")?.change} note="Sales + mortgages + gifts" onClick={() => handleTabChange?.("DLD Volumes")} />
         <KpiCard label="Total Transactions" value={getStat("Total Transactions")?.value} change={getStat("Total Transactions")?.change} note="5th consecutive annual record" />
         <KpiCard label="Sales Transactions" value={MARKET_FACTS.residentialSales2025.value} change={MARKET_FACTS.residentialSales2025.change} note={MARKET_FACTS.residentialSales2025.note} />
-        {/* The 65% value comes from Firestore and is stale — verified 2025 share
-            is over 70% of transactions. Correcting it needs a Firestore write,
-            which is blocked while the read quota is exhausted. */}
-        <KpiCard label="Off-Plan Share" value={getStat("Off-Plan Share")?.value} change={getStat("Off-Plan Share")?.change} note="Stale · verified 2025 share is over 70%" />
+        {/* FY2025 off-plan share is REMOVED rather than shown.
+            This card displayed 65% under the caption "Stale · verified 2025
+            share is over 70%" — a figure the code knew was wrong, published with
+            an apology attached. The apology does not repair it; it hands the
+            problem to the reader.
+
+            It is removed rather than corrected because the codebase holds three
+            different answers for the same year — 65% in the Firestore chart
+            series, 62.6% in the referral defaults, and "over 70%" in reporting —
+            and I could not establish which is right. Publishing any one of them
+            would be picking a number, not sourcing one.
+
+            The sourced figure a reader needs is already above in "Latest month":
+            off-plan was 76% of volume and 75% of value in May 2026, from DLD
+            records. Restore this card when FY2025 can be cited to a single
+            authority. */}
         {/* AED 1,692 = DLD full-year 2025 citywide residential median across
             192,808 transactions. The previous AED 1,863 was cited to our own
             blog and sat ~10% above the DLD figure. */}
