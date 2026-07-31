@@ -34,16 +34,26 @@ Measured by `node scripts/tab-scorecard.js`. **Ship bar: 75%+.**
 
 ```
 SHIPPED — what a paying agent can open
-  average score      66%
-  at the bar (75%+)  10 of 30
-  below 70%          20
-  unsourced claims   29
+  average score      83%     (was 72% this morning, same instrument)
+  at the bar (75%+)  29 of 29 (was 16 of 29)
+  below 70%           0
+  unsourced claims    0      (was 19)
   self-admitted bad   0
 
 HELD BACK — not sold
-  average score      47%
+  average score      52%
   unsourced claims   68
 ```
+
+**Every shipped tab meets the bar and carries zero unsourced claims.**
+
+Measured honestly: the instrument was corrected five times during the work — a
+re-export barrel was being counted as a tab, three tabs that read Firestore were
+scored as hardcoded, RGB colour triplets were being read as figures, filter
+labels as claims, and explicitly-declared stress-test assumptions as unsourced
+market claims. Each correction was verified by listing exactly what it moved.
+Those corrections plus scoping to shipped tabs account for 64% → 72% on the
+unchanged morning code. **The 72% → 83% is the work.**
 
 **68 of the 97 unsourced claims sit on the five held-back tabs** — 40 on
 Competitors and 27 on Marketing alone. Holding those five removes 70% of the
@@ -168,10 +178,38 @@ is the single highest-leverage change left, and the pattern already exists in
 Portfolio, Flip all fail on `sourced` — worth 3 points each. 19 unsourced claims
 between them.
 
-**2.3 Fix the geography.** `area` exists on 9% of projects — a filter on 9%
-coverage is worse than none. Derive it from community. Resolve the 13 orphan
-communities where a project names a community with no record, so the join stops
-failing silently.
+**2.3 The geography — investigated, and the plan was wrong.** ✅
+
+This said "`area` exists on 9% of projects — a filter on 9% coverage is worse
+than none. Derive it from community." Two of those three claims did not survive
+contact with the data.
+
+`area` **is not a filter.** It is a display field in the project detail panel,
+and it already falls back to `community`, which is populated on 100% of the 1,728
+projects. Nothing was broken for the user.
+
+And deriving it would have been the wrong fix. A join on community fills it to
+82%, and unambiguous prefix matching reaches 89% — but the values themselves are
+three vocabularies wearing one name:
+
+```
+official DLD cadastral    Al Thanayah Fourth · Wadi Al Safa 7 · Zaabeel First
+marketing regions         New Dubai · Bur Dubai · Deira · Dubailand
+plain community names     Dubai Marina · Downtown Dubai · Emaar Beachfront
+```
+
+94 distinct values across 241 records. Filling that to 89% would have made a
+meaningless field look authoritative across nine projects in ten — the same
+mistake as the investment score, arrived at from the opposite direction. A thin
+field invites doubt, which is correct here. A full one would not.
+
+**What was actually wrong:** `subCommunity` is populated on **zero** of 1,728
+projects and rendered an em-dash on every project detail in the product. It is
+now hidden unless it holds a value, and the area label says "Community" when
+that is what it is showing.
+
+The real geography work — mapping communities to Dubai's 9 official sectors — is
+a data project, not a display fix, and it needs the DLD API key to do properly.
 
 **2.4 Render-check every shipped tab.** The Market outage proved a passing build
 is not evidence a tab works. Every shipped tab opened in a browser before launch.
@@ -211,17 +249,30 @@ your data quality**: only 60 of 193 communities have measured prices; the other
 
 ## SEQUENCE
 
-| Phase | Sessions | Gate |
-|---|---|---|
-| 0 — Decisions | ✅ done | — |
-| 1 — Structure | ✅ done | — |
-| 2 — Data | 4–5 | — |
-| 4 — Operations | 1–2 | can run in parallel |
-| **LAUNCH** | | 29 shipped tabs at 75%+, render-checked |
-| 3 — Billing | 2–3 | after launch, per your decision |
+| Phase | Status |
+|---|---|
+| 0 — Decisions | ✅ done |
+| 1 — Structure | ✅ done |
+| 2.1 — Provenance and empty states | ✅ done — 9 tabs to 92% |
+| 2.2 — Sourcing | ✅ done — 0 unsourced on shipped tabs |
+| 4 — Operations | ✅ done — nightly sync scheduled, heartbeat, seat leak fixed |
+| 2.3 — Geography (`area` at 9%, 13 orphans) | remaining |
+| 2.4 — Browser pass with a real login | remaining — needs you |
+| **LAUNCH** | after 2.3 and 2.4 |
+| 3 — Billing | after launch, per your decision |
 
-**~6–8 working sessions to launch.** Billing follows, because a payment page for
-an unfinished product sells nothing.
+**~1–2 sessions to launch.** Billing follows, because a payment page for an
+unfinished product sells nothing.
+
+### What is actually left
+
+1. **The geography fix.** `area` exists on 9% of projects and 13 communities are
+   orphans. A filter on 9% coverage is worse than none.
+2. **A browser pass while logged in.** Every shipped tab now transforms cleanly
+   through Vite and the production build is green, but neither proves a tab
+   renders with real data behind a real login. That check is yours.
+3. **Run the DLD sync once by hand** from the GitHub Actions tab. It has not
+   called the DLD API since May and should be watched the first time.
 
 ---
 

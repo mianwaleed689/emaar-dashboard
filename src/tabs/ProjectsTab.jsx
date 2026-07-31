@@ -1710,14 +1710,34 @@ function ProjectsTab({
                           <div style={{ fontSize:10, color:T.textMuted, marginBottom:4 }}>Emirate</div>
                           <div style={{ fontSize:14, fontWeight:700, color:T.white }}>{selectedProject.emirate || "Dubai"}</div>
                         </div>
+                        {/* ── ON THESE TWO FIELDS ──────────────────────────────
+                            `area` is populated on 163 of 1,728 projects, and where
+                            it IS set it holds three different vocabularies at once:
+                            official DLD cadastral names ("Al Thanayah Fourth"),
+                            marketing regions ("New Dubai", "Bur Dubai") and plain
+                            community names ("Dubai Marina"). It could be filled to
+                            89% by joining on community — but propagating an
+                            incoherent vocabulary to nine projects in ten would make
+                            a meaningless field look authoritative, which is worse
+                            than leaving it thin. The community fallback below is
+                            the honest answer, and it is labelled as such.
+
+                            `subCommunity` is populated on ZERO of 1,728 projects.
+                            It rendered an em-dash on every project detail in the
+                            product — a field that has never once had a value.
+                            Shown only when it actually holds something. */}
                         <div>
-                          <div style={{ fontSize:10, color:T.textMuted, marginBottom:4 }}>Area</div>
+                          <div style={{ fontSize:10, color:T.textMuted, marginBottom:4 }}>
+                            {selectedProject.area ? "Area" : "Community"}
+                          </div>
                           <div style={{ fontSize:14, fontWeight:700, color:T.white }}>{selectedProject.area || selectedProject.community || "—"}</div>
                         </div>
-                        <div>
-                          <div style={{ fontSize:10, color:T.textMuted, marginBottom:4 }}>Sub-Community</div>
-                          <div style={{ fontSize:14, fontWeight:700, color:T.textSecondary }}>{selectedProject.subCommunity || "—"}</div>
-                        </div>
+                        {selectedProject.subCommunity && (
+                          <div>
+                            <div style={{ fontSize:10, color:T.textMuted, marginBottom:4 }}>Sub-Community</div>
+                            <div style={{ fontSize:14, fontWeight:700, color:T.textSecondary }}>{selectedProject.subCommunity}</div>
+                          </div>
+                        )}
                       </div>
                       {tags.length > 0 && (
                         <div>
