@@ -8,6 +8,8 @@ import {
 } from "../data/marketAlmanac";
 import { SectionTitle, Card } from "./ui/DataDisplay";
 import useAlmanac from "../hooks/useAlmanac";
+import SourceList from "./SourceList";
+import { normaliseSources } from "../utils/sources";
 
 /**
  * The Dubai property almanac — what happened, when, and what it did.
@@ -52,10 +54,18 @@ export default function MarketAlmanac({ style }) {
     };
   }, [ALMANAC]);
 
+  /* Deduped by URL where there is one, by title otherwise. A Set of raw source
+     objects would not dedupe at all — two identical citations from different
+     entries are different object references. */
   const sources = useMemo(() => {
-    const set = new Set();
-    ALMANAC.forEach(e => (e.sources || []).forEach(s => set.add(s)));
-    return [...set].sort();
+    const byKey = new Map();
+    ALMANAC.forEach(e =>
+      normaliseSources(e.sources).forEach(s => {
+        const key = s.url || s.title;
+        if (!byKey.has(key)) byKey.set(key, s);
+      })
+    );
+    return [...byKey.values()].sort((a, b) => a.title.localeCompare(b.title));
   }, [ALMANAC]);
 
   const filtered = useMemo(
@@ -126,11 +136,7 @@ export default function MarketAlmanac({ style }) {
           <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: 0.6, textTransform: "uppercase", color: muted, marginBottom: 8 }}>
             Every source cited in the almanac
           </div>
-          <ul style={{ margin: 0, paddingLeft: 18, display: "flex", flexDirection: "column", gap: 5 }}>
-            {sources.map(s => (
-              <li key={s} style={{ fontSize: 11, color: text, lineHeight: 1.55 }}>{s}</li>
-            ))}
-          </ul>
+          <SourceList sources={sources} compact />
         </Card>
       )}
 
@@ -217,16 +223,13 @@ export default function MarketAlmanac({ style }) {
                   )}
 
                   {/* Sources, shown rather than footnoted */}
-                  <div style={{ marginTop: 12, paddingTop: 10, borderTop: `1px solid ${border}` }}>
-                    <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: 0.6, textTransform: "uppercase", color: muted, marginBottom: 5 }}>
-                      Sources
-                    </div>
-                    <ul style={{ margin: 0, paddingLeft: 16 }}>
-                      {(entry.sources || []).map(s => (
-                        <li key={s} style={{ fontSize: 10, color: muted, lineHeight: 1.55 }}>{s}</li>
-                      ))}
-                    </ul>
-                  </div>
+                  {/* Citations as links a reader can open, not names they must
+                      take on trust. That is the difference between claiming the
+                      figure is checkable and making it so. */}
+                  <SourceList
+                    sources={entry.sources}
+                    style={{ marginTop: 12, paddingTop: 10, borderTop: `1px solid ${border}` }}
+                  />
                 </div>
               )}
             </div>

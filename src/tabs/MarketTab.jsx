@@ -22,6 +22,7 @@ import {
 } from "../data/marketFacts";
 import MarketCycleHistory from "../components/MarketCycleHistory";
 import MarketAlmanac from "../components/MarketAlmanac";
+import ChapterNav, { Chapter } from "../components/ChapterNav";
 import {
   Kpi as UIKpi,
   StatBar as UIStatBar,
@@ -70,6 +71,27 @@ const GLOBAL_COMPARE = GLOBAL_YIELD_COMPARISON.cities.map(c => ({
   color: CITY_COLORS[c.city] || "#9F7AEA",
   yieldMid: (c.grossLow + c.grossHigh) / 2,
 }));
+
+/**
+ * The page as an argument rather than a pile of sections.
+ *
+ * Previously this tab ran: 24-year history, almanac, this year's scorecard,
+ * global comparison, tax calculator, composition, supply, forecasts. Every
+ * section was sound and the sequence taught nothing, because no thread ran
+ * through it. A reader landing mid-page could not tell what they had missed.
+ *
+ * The order now answers five questions in the order someone actually asks them:
+ * what is happening, how did we get here, how does this compare, what is coming,
+ * and what does it mean for me. Each chapter states what a reader will learn,
+ * so clicking into one is a decision rather than a guess.
+ */
+const CHAPTERS = [
+  { id: "ch-now",     title: "Where the market is now",  learn: "This year's transactions, prices and what the market is made of." },
+  { id: "ch-history", title: "How it got here",          learn: "24 years, both crashes, and the moments that caused them." },
+  { id: "ch-compare", title: "How Dubai compares",       learn: "Yields against London, New York and Singapore — after tax." },
+  { id: "ch-next",    title: "What is coming",           learn: "Supply landing in 2026-28 and what analysts forecast." },
+  { id: "ch-you",     title: "What it means for you",    learn: "The same data read for an investor, agent, developer or buyer." },
+];
 
 /** Shared palette for the composition bars. */
 const BAR_COLORS = {
@@ -311,49 +333,17 @@ function MarketTab({ liveNeighbourhoods=[], liveMarketData, allDevelopers, expan
         </div>
       </div>
 
-      {/* ── Audience toggle ────────────────────────────────────── */}
-      <div style={{ marginBottom: 20 }}>
-        <div style={{ fontSize: 11, color: T?.textMuted || "#666", marginBottom: 8, fontWeight: 600 }}>I AM A...</div>
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-          {AUDIENCES.map(a => (
-            <button key={a} type="button" onClick={() => setAudience(a)} style={{
-              padding: "7px 18px", borderRadius: 20, fontSize: 12, fontWeight: 700, cursor: "pointer",
-              fontFamily: "'Outfit',sans-serif", transition: "all 0.2s",
-              background: audience === a ? (AUDIENCE_INSIGHTS[a].color + "20") : (T?.surfaceAlt || "#111"),
-              border: "1px solid " + (audience === a ? AUDIENCE_INSIGHTS[a].color : (T?.border || "#222")),
-              color: audience === a ? AUDIENCE_INSIGHTS[a].color : (T?.textSecondary || "#aaa"),
-            }}>{a}</button>
-          ))}
-        </div>
-      </div>
 
-      {/* ── Audience insight card ──────────────────────────────── */}
-      <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid " + insight.color + "30", borderLeft: "3px solid " + insight.color, borderRadius: 12, padding: "18px 20px", marginBottom: 28 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
-          <span style={{ fontSize: 20 }}>{insight.icon}</span>
-          <span style={{ fontSize: 13, fontWeight: 700, color: T?.white || "#fff", fontFamily: "'Fraunces',serif" }}>{insight.headline}</span>
-        </div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(260px,1fr))", gap: 8, marginBottom: 10 }}>
-          {insight.points.map((p, i) => (
-            <div key={i} style={{ fontSize: 11, color: T?.textSecondary || "#aaa", display: "flex", gap: 8 }}>
-              <span style={{ color: insight.color, flexShrink: 0, fontWeight: 700 }}>·</span>
-              <span>{p}</span>
-            </div>
-          ))}
-        </div>
-        <div style={{ fontSize: 11, color: insight.color, fontWeight: 600 }}>{insight.cta}</div>
-      </div>
+      <ChapterNav chapters={CHAPTERS} />
 
-      {/* ── 2025 Market Scorecard ──────────────────────────────── */}
-      {/* The full cycle sits ABOVE the current-year scorecard on purpose. A
-          reader who sees 2025's record year first and the 2008 crash second has
-          been given the sales pitch before the context. This ordering gives them
-          the shape of the market before the state of it. */}
-      <MarketCycleHistory style={{ marginBottom: 28 }} />
-
-      {/* The cycle above gives the shape; the almanac gives the moments. Cycle
-          first, because a reader needs the arc before the detail lands. */}
-      <MarketAlmanac style={{ marginBottom: 28 }} />
+      {/* ── 01 · WHERE THE MARKET IS NOW ─────────────────────────
+          Current state first. An earlier version opened with the 24-year
+          history, on the reasoning that context should precede the pitch. In
+          practice it asked a reader to absorb two decades before learning what
+          is true today — history lands better once there is a present to
+          explain. */}
+      <Chapter id="ch-now" index={1} title="Where the market is now"
+               learn="This year's transactions, prices, and what the market is made of.">
 
       <SH title="2025 Market Scorecard" sub="Full year · Dubai Land Department official data · January 2026" />
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(160px,1fr))", gap: 10, marginBottom: 8 }}>
@@ -481,6 +471,21 @@ function MarketTab({ liveNeighbourhoods=[], liveMarketData, allDevelopers, expan
       </div>
 
       {/* ── Global Comparison ─────────────────────────────────── */}
+      </Chapter>
+
+      {/* ── 02 · HOW IT GOT HERE ─────────────────────────────────
+          The cycle gives the arc; the almanac gives the moments inside it.
+          Cycle first, because the shape has to land before the detail can. */}
+      <Chapter id="ch-history" index={2} title="How it got here"
+               learn="24 years, both crashes, and the moments that caused them.">
+        <MarketCycleHistory style={{ marginBottom: 28 }} />
+        <MarketAlmanac style={{ marginBottom: 8 }} />
+      </Chapter>
+
+      {/* ── 03 · HOW DUBAI COMPARES ────────────────────────────── */}
+      <Chapter id="ch-compare" index={3} title="How Dubai compares"
+               learn="Yields against London, New York and Singapore — after tax, which is where the gap widens.">
+
       <SH title="Dubai vs The World" sub="Why global investors choose Dubai · Gross yield · PPSF · Tax · Price growth 2025 · Sources: BetterHomes, Arabian Business, Red Horizon 2025" />
       <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid " + (T?.border || "#222"), borderRadius: 12, padding: "20px", marginBottom: 24, overflowX: "auto" }}>
         <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 600 }}>
@@ -604,6 +609,12 @@ function MarketTab({ liveNeighbourhoods=[], liveMarketData, allDevelopers, expan
       {/* ── Supply Pipeline Risk ───────────────────────────────── */}
       {/* Pipeline figures refreshed 2026-07-30. The previous ones (~98K for 2026,
           ~366K to 2028) were Q3 2025 forecasts carried forward unchanged. */}
+      </Chapter>
+
+      {/* ── 04 · WHAT IS COMING ────────────────────────────────── */}
+      <Chapter id="ch-next" index={4} title="What is coming"
+               learn="Supply landing through 2026-28, and what analysts forecast for prices.">
+
       <SH title="Supply Pipeline — Know the Risk" sub={`${SUPPLY_PIPELINE_2026.source} · as of ${SUPPLY_PIPELINE_2026.asOf}`} />
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(190px,1fr))", gap: 10, marginBottom: 24 }}>
         {[
@@ -690,6 +701,51 @@ function MarketTab({ liveNeighbourhoods=[], liveMarketData, allDevelopers, expan
           All data sourced from official DLD reports, independent research firms (ValuStrat, REIDIN, Knight Frank, Cavendish Maxwell), and market aggregators. Every metric links to its primary source. Last updated: Session 7 · April 2026.
         </div>
       </div>
+
+
+      </Chapter>
+
+      {/* ── 05 · WHAT IT MEANS FOR YOU ───────────────────────────
+          The same data, read for the decision each audience is actually
+          making. This sat at the TOP of the page before, which asked a reader
+          to pick a role before they had seen anything to have a view about.
+          It belongs last: interpretation after evidence. */}
+      <Chapter id="ch-you" index={5} title="What it means for you"
+               learn="The same market read for an investor, agent, developer or buyer.">
+
+      {/* ── Audience toggle ────────────────────────────────────── */}
+      <div style={{ marginBottom: 20 }}>
+        <div style={{ fontSize: 11, color: T?.textMuted || "#666", marginBottom: 8, fontWeight: 600 }}>I AM A...</div>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          {AUDIENCES.map(a => (
+            <button key={a} type="button" onClick={() => setAudience(a)} style={{
+              padding: "7px 18px", borderRadius: 20, fontSize: 12, fontWeight: 700, cursor: "pointer",
+              fontFamily: "'Outfit',sans-serif", transition: "all 0.2s",
+              background: audience === a ? (AUDIENCE_INSIGHTS[a].color + "20") : (T?.surfaceAlt || "#111"),
+              border: "1px solid " + (audience === a ? AUDIENCE_INSIGHTS[a].color : (T?.border || "#222")),
+              color: audience === a ? AUDIENCE_INSIGHTS[a].color : (T?.textSecondary || "#aaa"),
+            }}>{a}</button>
+          ))}
+        </div>
+      </div>
+
+      {/* ── Audience insight card ──────────────────────────────── */}
+      <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid " + insight.color + "30", borderLeft: "3px solid " + insight.color, borderRadius: 12, padding: "18px 20px", marginBottom: 28 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
+          <span style={{ fontSize: 20 }}>{insight.icon}</span>
+          <span style={{ fontSize: 13, fontWeight: 700, color: T?.white || "#fff", fontFamily: "'Fraunces',serif" }}>{insight.headline}</span>
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(260px,1fr))", gap: 8, marginBottom: 10 }}>
+          {insight.points.map((p, i) => (
+            <div key={i} style={{ fontSize: 11, color: T?.textSecondary || "#aaa", display: "flex", gap: 8 }}>
+              <span style={{ color: insight.color, flexShrink: 0, fontWeight: 700 }}>·</span>
+              <span>{p}</span>
+            </div>
+          ))}
+        </div>
+        <div style={{ fontSize: 11, color: insight.color, fontWeight: 600 }}>{insight.cta}</div>
+      </div>
+      </Chapter>
 
     </div>
   );

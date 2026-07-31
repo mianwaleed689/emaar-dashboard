@@ -81,7 +81,14 @@ export const ALMANAC = [
       "Created the market. Everything that follows — two booms and two falls — traces back to the demand this unlocked.",
     lesson:
       "Dubai's property market is roughly one generation old. Long-run averages carry less weight here than in London or New York, because the run is short.",
-    sources: ["UAE freehold legislation, 2002"],
+    sources: [
+      { title: "Dubai real estate 2000 to 2030: market analysis and outlook",
+        url: "https://placeoverseas.com/market/about-dubai/dubai-real-estate-2000-to-2030-market-analysis-and-outlook",
+        publisher: "Place Overseas" },
+      { title: "UAE real estate history 2001-2025: boom, crash and recovery",
+        url: "https://zameentravelers.com/uae-real-estate-history-2001-2025-market-boom-crash-recovery/",
+        publisher: "Zameen Travelers" },
+    ],
   },
   {
     id: "2008-09",
@@ -100,8 +107,15 @@ export const ALMANAC = [
     lesson:
       "The steepest part of a rise is the least stable. The 2007–08 surge was driven largely by people who never intended to own the asset, and it was the first thing to vanish.",
     sources: [
-      "Deutsche Bank AG — home prices 64% below mid-2008 peak",
-      "Published market histories of the 2008–09 crisis",
+      { title: "Dubai 2008-09 property crash: causes, impact and investor lessons",
+        url: "https://terrafirma.ae/blog/dubai-property-market-history-inside-the-2008-09-real-estate-crisis",
+        publisher: "Terra Firma" },
+      { title: "Nakheel wrote off $21.4bn after the Dubai property crash",
+        url: "https://www.arabianbusiness.com/real-estate/nakheel-wrote-off-21-4bn-after-dubai-property-crash-420151",
+        publisher: "Arabian Business" },
+      { title: "Dubai 2008 crash recovery: the measures that rebuilt the market",
+        url: "https://www.mitchellscommercialrealty.com/post/dubai-2008-property-crash-recovery-measures",
+        publisher: "Mitchells Commercial Realty" },
     ],
   },
   {
@@ -116,8 +130,15 @@ export const ALMANAC = [
     lesson:
       "The crash had a second act more than a year after the first. Recovery from a credit event is rarely a single moment, and the developer you buy from matters as much as the community.",
     sources: [
-      "Al Jazeera, 25 November 2009 — Dubai World seeks debt moratorium",
-      "Bloomberg / Arabian Business — Nakheel H1 loss AED 13.4bn; wrote off USD 21.4bn after the crash",
+      { title: "Dubai World seeks debt moratorium",
+        url: "https://www.aljazeera.com/news/2009/11/25/dubai-world-seeks-debt-moratorium",
+        publisher: "Al Jazeera", date: "25 November 2009" },
+      { title: "Dubai markets fall on debt worries",
+        url: "https://www.aljazeera.com/news/2009/12/10/dubai-markets-fall-on-debt-worries",
+        publisher: "Al Jazeera", date: "10 December 2009" },
+      { title: "Nakheel brings an end to its debt restructuring saga",
+        url: "https://www.thenationalnews.com/business/property/dubai-developer-nakheel-brings-an-end-to-debt-restructuring-saga-with-dh4-4bn-payment-1.138115",
+        publisher: "The National" },
     ],
   },
   {
@@ -132,8 +153,12 @@ export const ALMANAC = [
     lesson:
       "When someone says this market is different now, this is a large part of what they mean. It is a real structural change, and it is also not a guarantee.",
     sources: [
-      "UAE Central Bank mortgage regulations, October 2013",
-      "CBUAE Circular 31/2013, later amended by Board Resolution 31/2/2020",
+      { title: "The new UAE mortgage regulations: lending to banks and financial institutions",
+        url: "https://www.tamimi.com/law-update-articles/the-new-uae-mortgage-regulations/",
+        publisher: "Al Tamimi & Company" },
+      { title: "CBUAE Resolution 31/2/2020 amending Circular 31/2013 on mortgage loans",
+        url: "https://rulebook.centralbank.ae/en/rulebook/central-bank-board-directors%E2%80%99-resolution-no-3122020-amending-circular-no-312013",
+        publisher: "Central Bank of the UAE rulebook" },
     ],
   },
   {
@@ -154,8 +179,15 @@ export const ALMANAC = [
     lesson:
       "Anticipated news is priced before it is announced. By the time an event is confirmed, the gain is often already in the number.",
     sources: [
-      "CEIC — Dubai transactions all-time high 77,641 units and AED 143,466.68mn in 2013",
-      "Published market histories — Expo 2020 bid won November 2013",
+      { title: "UAE real estate transactions: Dubai - historical series",
+        url: "https://www.ceicdata.com/en/united-arab-emirates/real-estate-transactions-dubai",
+        publisher: "CEIC Data" },
+      { title: "Dubai Expo 2020 win seen boosting trade, tourism and property",
+        url: "https://english.alarabiya.net/business/economy/2013/11/27/Dubai-Expo-2020-win-seen-boosting-trade-tourism-and-property",
+        publisher: "Al Arabiya", date: "27 November 2013" },
+      { title: "Dubai Expo 2020 win will spur property market - CBRE",
+        url: "https://gulfbusiness.com/dubai-expo-2020-win-will-spur-property-market-cbre/",
+        publisher: "Gulf Business" },
     ],
   },
   {
@@ -170,7 +202,14 @@ export const ALMANAC = [
       "Prices ended roughly a quarter to a third below their 2014 peak. There was no crash headline. The market simply drifted lower while supply kept arriving.",
     lesson:
       "This, not 2008, is the scenario most likely to catch a buyer out: a slow decline with no obvious moment to exit. Supply caused it then, and supply is the pressure point again in 2026.",
-    sources: ["Published market histories — mid-2014 peak to 2019 trough"],
+    sources: [
+      { title: "Dubai property market cycles - 20 years of data",
+        url: "https://realestateclubdubai.com/blog/market-analysis/dubai-real-estate-market-cycles-20-years-data-history-2027-2028-outlook",
+        publisher: "Real Estate Club Dubai" },
+      { title: "Understanding Dubai real estate: boom, bust, recovery",
+        url: "https://terrafirma.ae/blog/understanding-dubai-real-estate-boom-bust-recovery-current-market-insights",
+        publisher: "Terra Firma" },
+    ],
   },
   {
     id: "2020-03",
@@ -184,7 +223,14 @@ export const ALMANAC = [
       "A shallow dip rather than a collapse, and short-lived. The policy response converted a health crisis into a migration event.",
     lesson:
       "The mildest downturn in the record, and the one that set up the strongest rise. The response mattered more than the shock.",
-    sources: ["Dubai Land Department transaction data, FY2020"],
+    sources: [
+      { title: "2008 vs 2020 vs today: comparing Dubai recovery cycles",
+        url: "https://danubeproperties.com/dubai-property-recovery-2008-2020-today/",
+        publisher: "Danube Properties" },
+      { title: "Dubai real estate 2000-2024: growth, crisis, renewal",
+        url: "https://sms-realty.com/dubai-real-estate-2000-2024-growth-crisis-renewal/",
+        publisher: "SMS Realty" },
+    ],
   },
   {
     id: "2022-12",
@@ -206,9 +252,15 @@ export const ALMANAC = [
     lesson:
       "A record December is not the same as a sustainable one. This month is the clearest example in the record of momentum outrunning seasonality — worth remembering when a single strong month is presented as a trend.",
     sources: [
-      "DXB Interact — 9,073 deals, AED 25.39B, all-type median AED 1,378/sqft, December 2022",
-      "Property Monitor — residential prices +1.7% in December 2022",
-      "ValuStrat — residential capital values +12.7% YoY to December 2022",
+      { title: "DXB Interact - Dubai transaction data",
+        url: "https://www.dxbinteract.com/",
+        publisher: "DXB Interact", date: "December 2022" },
+      { title: "Property Monitor - Dubai house price index and monthly reports",
+        url: "https://propertymonitor.com/",
+        publisher: "Property Monitor", date: "December 2022" },
+      { title: "ValuStrat Price Index - Dubai residential capital values",
+        url: "https://valustrat.com/",
+        publisher: "ValuStrat", date: "December 2022" },
     ],
   },
   {
@@ -229,8 +281,15 @@ export const ALMANAC = [
     lesson:
       "Five consecutive records is remarkable, and is by definition the longest this market has ever run without a pause.",
     sources: [
-      "Dubai Land Department, FY2025",
-      "ValuStrat VPI, December 2025 — index 240.4 points",
+      { title: "Dubai Land Department - open data and transaction reporting",
+        url: "https://dubailand.gov.ae/en/open-data/real-estate-data/",
+        publisher: "Dubai Land Department", date: "FY2025" },
+      { title: "ValuStrat Price Index - Dubai",
+        url: "https://valustrat.com/",
+        publisher: "ValuStrat", date: "December 2025" },
+      { title: "Dubai real estate statistics - prices, transactions, yields",
+        url: "https://realestateclubdubai.com/dubai-real-estate-statistics",
+        publisher: "Real Estate Club Dubai" },
     ],
   },
   {
@@ -251,9 +310,15 @@ export const ALMANAC = [
     lesson:
       "Growth slowing from 20% to 5–8% is not a downturn. What to watch is whether supply outruns absorption in the communities carrying the heaviest delivery — the mechanism that produced 2014–2019.",
     sources: [
-      "Dubai Land Department, Q1 2026 reporting",
-      "Provident Estate monthly reports, compiled from DLD records",
-      "2026 supply and price outlooks",
+      { title: "Dubai real estate market H1 2026: prices, yields and off-plan trends",
+        url: "https://www.dubaichronicle.com/2026/07/05/dubai-real-estate-market-h1-2026-trends/",
+        publisher: "Dubai Chronicle", date: "5 July 2026" },
+      { title: "Dubai property market report - May 2026",
+        url: "https://providentestate.com/blog/dubai-property-market-report-may-2026/",
+        publisher: "Provident Estate", date: "May 2026" },
+      { title: "Dubai real estate market outlook 2026",
+        url: "https://valustrat.com/products/dubai-real-estate-market-outlook-2026",
+        publisher: "ValuStrat Research" },
     ],
   },
 ];

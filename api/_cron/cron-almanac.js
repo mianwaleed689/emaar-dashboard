@@ -74,11 +74,21 @@ function validateEntry(entry) {
     errors.push(`moment must be one of ${MOMENT_TYPES.join(", ")}`);
   }
 
-  const sources = Array.isArray(entry.sources)
-    ? entry.sources.map(s => String(s).trim()).filter(Boolean)
-    : [];
+  /* Accepts a plain string or a {title, url, publisher, date} object. Both
+     shapes are valid: entries predate the link upgrade, and some legitimate
+     sources — a paywalled report, a printed DLD release — have no public URL. */
+  const sources = Array.isArray(entry.sources) ? entry.sources : [];
   if (!sources.length) errors.push("at least one source is required");
-  sources.forEach(s => { if (s.length < 8) errors.push(`source "${s}" is too short`); });
+  sources.forEach(raw => {
+    const title = typeof raw === "string" ? raw : String(raw && (raw.title || raw.name) || "");
+    if (!title.trim()) errors.push("a source has no title");
+    else if (title.trim().length < 8) errors.push(`source "${title}" is too short`);
+
+    const url = (raw && typeof raw === "object") ? String(raw.url || "").trim() : "";
+    if (url && !/^https?:\/\//i.test(url)) {
+      errors.push(`source url "${url}" must start with http:// or https://`);
+    }
+  });
 
   return { ok: errors.length === 0, errors };
 }

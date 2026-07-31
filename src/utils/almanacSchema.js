@@ -65,16 +65,32 @@ export function validateEntry(entry) {
     errors.push(`Type must be one of: ${MOMENT_TYPES.join(", ")}`);
   }
 
-  /* THE RULE. */
-  const sources = Array.isArray(entry.sources)
-    ? entry.sources.map(s => String(s).trim()).filter(Boolean)
-    : [];
+  /* THE RULE. Accepts a plain string or a {title, url, publisher, date} object;
+     both shapes exist because entries predate the link upgrade and because some
+     legitimate sources genuinely have no public URL. */
+  const sources = Array.isArray(entry.sources) ? entry.sources : [];
   if (!sources.length) {
     errors.push("At least one source is required — an entry without a source cannot publish");
   }
-  sources.forEach(s => {
-    if (s.length < 8) errors.push(`Source "${s}" is too short to identify anything`);
+  sources.forEach(raw => {
+    const title = typeof raw === "string" ? raw : String(raw?.title || raw?.name || "");
+    if (!title.trim()) {
+      errors.push("A source has no title");
+    } else if (title.trim().length < 8) {
+      errors.push(`Source "${title}" is too short to identify anything`);
+    }
+    const url = typeof raw === "object" ? String(raw?.url || "").trim() : "";
+    if (url && !/^https?:\/\//i.test(url)) {
+      errors.push(`Source URL "${url}" must start with http:// or https://`);
+    }
   });
+
+  /* Not an error — a source with no link is legitimate — but worth surfacing,
+     because a reader who cannot open a citation is being asked to trust it. */
+  const linkable = sources.filter(s => typeof s === "object" && s?.url).length;
+  if (sources.length && !linkable) {
+    warnings.push("No source has a URL — readers cannot open any of these to check the claim.");
+  }
 
   /* Warnings do not block publication but are worth surfacing to the author. */
   const hasBody = ["whatHappened", "effect", "lesson"].some(k => String(entry[k] ?? "").trim());
