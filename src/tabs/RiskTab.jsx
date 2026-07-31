@@ -51,6 +51,29 @@ function RiskTab({ liveNeighbourhoods=[], riskTabView, setRiskTabView, riskCommu
                Vacancy, Currency, Regulatory, Construction, Market Cycle
             ════════════════════════════════════════════════════════ */
 
+            /* ── WHAT THESE SCORES ARE, AND WHAT THEY ARE NOT ──────────────────
+             *
+             * The nine factor DESCRIPTIONS below are sourced — Fitch on a 10-15%
+             * mid-market correction, Goldman Sachs on the 51% March volume drop,
+             * the 210,000-unit 2026 pipeline, JVC's 16,852 units. Those are real
+             * and worth an agent's time.
+             *
+             * The per-community NUMBERS are not measurements. "Jumeirah Village
+             * Circle: supply 72/100" was typed, not computed, and nothing in this
+             * platform measures supply risk on a hundred-point scale. Same for the
+             * grades and the composite score.
+             *
+             * They are kept rather than deleted because the weights ARE stated,
+             * which makes the reasoning inspectable — that is what separates this
+             * from the "Market Health 72/100" removed from the Market tab, where
+             * no inputs were given at all. But the page must say so, and now does.
+             *
+             * COVERAGE: eight communities have profiles. The platform covers 193.
+             * The selector previously offered communities this model has never
+             * scored, which is the dead-filter fault fixed on the Projects tab —
+             * an option that cannot return an answer. RISK_COVERED_COMMUNITIES
+             * below is the honest list.
+             */
             const RISK_FACTORS = [
               { key:"supply",       label:"Supply Oversupply",   weight:20, icon:"\uD83C\uDFD7",
                 desc:"210,000 units planned 2026. JVC alone: 16,852 units 2025-27. Mid-market most exposed.",
@@ -147,11 +170,32 @@ function RiskTab({ liveNeighbourhoods=[], riskTabView, setRiskTabView, riskCommu
                   </div>
                 </div>
 
+                {/* ── WHAT THIS MODEL IS ────────────────────────────────────
+                    An agent quoting "risk score 45, grade B+" to a client will be
+                    asked where it came from. They need to know the answer before
+                    they are asked, not after. */}
+                <div style={{
+                  padding:"11px 15px", marginBottom:12, borderRadius:10,
+                  background:"rgba(245,158,11,0.06)", border:"1px solid rgba(245,158,11,0.25)",
+                }}>
+                  <div style={{ fontSize:11, fontWeight:700, color:"#F59E0B", marginBottom:5 }}>
+                    An analyst assessment, not a measurement
+                  </div>
+                  <div style={{ fontSize:10.5, color:T.textSecondary, lineHeight:1.6 }}>
+                    The evidence behind each factor is sourced and cited below — Fitch, Goldman Sachs,
+                    the published supply pipeline. The per-community <strong>scores and grades are our
+                    judgement</strong>, weighted as shown, and nothing in this platform measures supply
+                    risk on a hundred-point scale. Use them to compare communities against each other,
+                    not as a figure to quote to a client.
+                    {" "}Profiles exist for <strong>8 communities</strong>; the platform covers 193.
+                  </div>
+                </div>
+
                 {/* Market alert */}
                 <div style={{ padding:"12px 16px", background:"rgba(239,68,68,0.06)", border:"1px solid rgba(239,68,68,0.2)", borderRadius:10, marginBottom:16 }}>
                   <div style={{ display:"flex", gap:10, flexWrap:"wrap" }}>
                     <span style={{ fontSize:11, fontWeight:700, color:T.red }}>⚠ Market Alert Apr 2026:</span>
-                    <span style={{ fontSize:11, color:T.textSecondary }}>DFM index -21% post Feb 28 · Transaction volumes -51% Mar (Goldman Sachs) · Physical prices -3% YoY (median AED 1,770/sqft, still +14% YoY) · Fitch: 10-15% correction probable in mid-market · 87% cash market = no systemic collapse risk · Prime areas resilient</span>
+                    <span style={{ fontSize:11, color:T.textSecondary }}>DFM index -21% post 28 Feb · Transaction volumes -51% in March (Goldman Sachs) · Fitch: 10-15% correction probable in mid-market · Cash funds 64% of activity and mortgages 36% (May 2026), so leverage cushions the market less than it did · Prime areas resilient</span>
                   </div>
                 </div>
 

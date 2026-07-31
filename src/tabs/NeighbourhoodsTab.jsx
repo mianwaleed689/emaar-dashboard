@@ -8,6 +8,7 @@
 
 import React, { useState, useMemo } from "react";
 import { T } from "../data";
+import { classifyProvenance, PROVENANCE } from "../utils/provenance";
 import { scoreColor } from "../utils/scoring";
 import SourceBadge from "../components/SourceBadge";
 
@@ -463,7 +464,21 @@ export default function NeighbourhoodsTab({liveNeighbourhoods=[],handleTabChange
     return a;
   },[liveNeighbourhoods,search,sortBy,tierFilter,yieldFilter,metroFilter,beachFilter,sportsFilter,gvFilter]);
 
-  const verified = (liveNeighbourhoods||[]).filter(n=>n.tier==="verified");
+  /* ── ONE DEFINITION OF "VERIFIED" ────────────────────────────────────────
+     This filtered on the raw `tier` field while the Overview and the Map use
+     classifyProvenance(). The two disagreed: 61 here against 60 there, because
+     classifyProvenance additionally demotes a record that carries `verified:
+     false` or reports a price identical to a neighbouring community.
+
+     One community's worth of difference, and entirely corrosive — a client who
+     notices two screens giving different counts of the same thing stops
+     trusting both. Same fault as three off-plan percentages in three files.
+
+     classifyProvenance is the stricter and better-reasoned of the two, so it
+     wins everywhere. */
+  const verified = (liveNeighbourhoods||[]).filter(
+    n => classifyProvenance(n).level === PROVENANCE.VERIFIED
+  );
   const topYield = [...verified].sort((a,b)=>parseFloat(b.grossYield||0)-parseFloat(a.grossYield||0))[0];
   const topScore = [...verified].sort((a,b)=>(b.investmentScore||0)-(a.investmentScore||0))[0];
   const topBeach = [...(liveNeighbourhoods||[])].filter(n=>n.distBeach).sort((a,b)=>parseFloat(a.distBeach)-parseFloat(b.distBeach))[0];
@@ -483,8 +498,7 @@ export default function NeighbourhoodsTab({liveNeighbourhoods=[],handleTabChange
       <div style={{marginBottom:16}}>
         <h2 style={{margin:0,fontSize:20,fontWeight:900,color:T.white,fontFamily:"'Fraunces',serif"}}>Neighbourhoods</h2>
         <p style={{margin:"4px 0 0",fontSize:12,color:"#94A3B8"}}>
-          {(liveNeighbourhoods||[]).filter(n=>n.tier==="verified").length} verified  {(liveNeighbourhoods||[]).filter(n=>n.tier==="area-data").length} area data  {(liveNeighbourhoods||[]).filter(n=>n.tier==="dld-registry").length} DLD only  {(liveNeighbourhoods||[]).length} total
-        </p>
+          {verified.length} DLD verified · {(liveNeighbourhoods||[]).length - verified.length} estimates · {(liveNeighbourhoods||[]).length} communities</p>
       </div>
 
       {/*  HIGHLIGHT CARDS  */}
