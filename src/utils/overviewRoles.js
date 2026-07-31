@@ -26,6 +26,8 @@
  * they land on theirs.
  */
 
+import { SEATS } from "../config/pricing";
+
 export const VIEW = {
   AGENT: "agent",
   AGENCY: "agency",
@@ -109,8 +111,24 @@ export function summariseTeam({ teamMembers = [], org = null } = {}) {
   const members = Array.isArray(teamMembers) ? teamMembers : [];
   const active = members.filter(m => String(m.status || "active").toLowerCase() === "active");
 
-  const seatsIncluded = Number(org?.seatsIncluded) || null;
-  const seatsUsed = Number(org?.seatsUsed) || members.length || null;
+  /* ── FALLING BACK TO THE PLAN ───────────────────────────────────────────
+   * seatsIncluded is written at signup, but every organisation created before
+   * that field existed carries neither it nor seatsUsed — and those are exactly
+   * the paying customers already on the platform.
+   *
+   * Without a fallback the agency panel shows "Seats in use: 1" with nothing to
+   * compare it against, which is the one number on that view worth showing.
+   * Deriving the allowance from the plan makes it work for existing orgs
+   * without a data migration, and a migration can follow at leisure.
+   *
+   * "trial" and "free" are legacy plan values that predate the current tiers;
+   * both are single-seat, which is what SEATS returns for anything unrecognised.
+   */
+  const seatsIncluded = Number(org?.seatsIncluded) || SEATS[org?.plan] || null;
+
+  /* Prefer the counted members over the stored counter: the counter can drift
+     if an increment fails, whereas the member list is the fact. */
+  const seatsUsed = members.length || Number(org?.seatsUsed) || null;
 
   return {
     memberCount: members.length,

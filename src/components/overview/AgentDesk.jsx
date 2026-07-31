@@ -162,9 +162,17 @@ export default function AgentDesk({
                 <div style={{ fontSize: 10, color: muted, marginTop: 4 }}>
                   {p.developerActual || p.developer} · {p.community}
                 </div>
-                {p.priceMin > 0 && (
+                {/* Cards without a price left a visible gap where the gold line
+                    sits on every other card, which reads as a rendering fault
+                    rather than missing data. Saying so keeps the cards the same
+                    height and tells an agent to ask the developer. */}
+                {p.priceMin > 0 ? (
                   <div style={{ fontSize: 11, color: T.gold || "#D4A843", marginTop: 6, fontWeight: 600 }}>
                     From AED {(p.priceMin / 1e6).toFixed(2)}M
+                  </div>
+                ) : (
+                  <div style={{ fontSize: 11, color: muted, marginTop: 6, fontStyle: "italic" }}>
+                    Price not published yet
                   </div>
                 )}
                 {(p.reraNo || p.projectNumber) && (

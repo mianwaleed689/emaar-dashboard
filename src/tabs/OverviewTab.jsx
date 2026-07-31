@@ -631,51 +631,49 @@ export default function OverviewTab({
         </div>
       )}
 
-      {/* ── 5. ROUTES ────────────────────────────────────────────────────── */}
+      {/* ── WHERE TO GO NEXT ──────────────────────────────────────────────
+          This was a SECOND role selector — Investor / Agent / Developer / Buyer
+          — sitting beneath the view switcher at the top of the page, which
+          offers My desk / My agency / Market research.
+
+          Two role pickers on one screen, using different words for overlapping
+          ideas, is the confusion this redesign set out to remove. A reader who
+          has already chosen "Market research" at the top should not then be
+          asked whether they are an investor or a buyer.
+
+          The destinations were the useful part, so they stay. The second role
+          question does not. This view is reached by people researching the
+          market, so it points at the screens that serve that. */}
       <div>
-        <SectionTitle hint="pick a role to see the most useful screens first">
+        <SectionTitle hint="the screens that go deeper than this summary">
           Where to go next
         </SectionTitle>
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 12 }}>
-          {ROLES.map(r => (
-            <button
-              key={r.key}
-              type="button"
-              onClick={() => setRole(r.key)}
-              style={{
-                padding: "7px 14px", borderRadius: 999, cursor: "pointer",
-                border: `1px solid ${role === r.key ? r.color : (T.border || "rgba(255,255,255,0.08)")}`,
-                background: role === r.key ? `${r.color}18` : "transparent",
-                color: role === r.key ? r.color : muted,
-                fontSize: 12, fontWeight: role === r.key ? 700 : 500,
-                fontFamily: "'Outfit',sans-serif",
-              }}
-            >{r.key}</button>
-          ))}
-          <span style={{ alignSelf: "center", fontSize: 10, color: muted, marginLeft: 4 }}>
-            {activeRole.desc}
-          </span>
-        </div>
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-          {activeRole.routes.map(r => (
+          {[
+            { label: "Highest net yields by community", tab: "Yields",         why: "Ranked, after service charges and voids" },
+            { label: "Compare communities side by side", tab: "Neighbourhoods", why: "Prices, yields and service charges" },
+            { label: "Supply landing near you",          tab: "Risk",           why: "Which areas carry the heaviest 2026 delivery" },
+            { label: "Model a purchase end to end",      tab: "DXB Estimate",   why: "Costs, financing and exit" },
+            { label: "The whole market, with its history", tab: "Market",       why: "24 years, both crashes, every source" },
+          ].map(r => (
             <button
               key={r.tab}
               type="button"
               onClick={() => handleTabChange(r.tab)}
               style={{
-                flex: "1 1 220px", minWidth: 200, textAlign: "left", cursor: "pointer",
+                flex: "1 1 210px", minWidth: 190, textAlign: "left", cursor: "pointer",
                 padding: "13px 15px", borderRadius: 10,
                 border: `1px solid ${T.border || "rgba(255,255,255,0.08)"}`,
                 background: T.card || "rgba(255,255,255,0.03)",
                 color: T.white || "#fff", fontSize: 12, fontWeight: 600,
                 fontFamily: "'Outfit',sans-serif",
               }}
-              onMouseEnter={e => e.currentTarget.style.borderColor = activeRole.color}
-              onMouseLeave={e => e.currentTarget.style.borderColor = T.border || "rgba(255,255,255,0.08)"}
+              onMouseEnter={e => (e.currentTarget.style.borderColor = T.gold || "#D4A843")}
+              onMouseLeave={e => (e.currentTarget.style.borderColor = T.border || "rgba(255,255,255,0.08)")}
             >
               {r.label}
-              <span style={{ display: "block", fontSize: 10, color: muted, marginTop: 4, fontWeight: 500 }}>
-                {r.tab}
+              <span style={{ display: "block", fontSize: 10, color: muted, marginTop: 4, fontWeight: 500, lineHeight: 1.45 }}>
+                {r.why}
               </span>
             </button>
           ))}

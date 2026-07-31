@@ -99,9 +99,26 @@ export default function AgencyDesk({
         </Card>
       </div>
 
-      {/* ── TEAM PIPELINE ─────────────────────────────────────────────── */}
+      {/* ── TEAM PIPELINE ───────────────────────────────────────────────
+          Three zeroes side by side read as a broken panel rather than an empty
+          one. The agent view already hides its counters until there is
+          something in them and says what to do instead; this now matches. */}
       <div>
         <SectionTitle hint="what your team is working right now">Pipeline</SectionTitle>
+        {(len(myLeads) + len(deals) + len(listings)) === 0 ? (
+          <Card>
+            <div style={{ fontSize: 12.5, color: text, lineHeight: 1.6 }}>
+              Nothing in the pipeline yet. Once your agents add leads, open deals or publish
+              listings, the totals appear here — and per-agent breakdowns on the Team tab.
+            </div>
+            <button type="button" onClick={() => handleTabChange("Team")}
+              style={{
+                marginTop: 11, padding: "6px 12px", borderRadius: 8, cursor: "pointer",
+                border: `1px solid ${gold}55`, background: "transparent",
+                color: gold, fontSize: 11, fontWeight: 600, fontFamily: "'Outfit',sans-serif",
+              }}>Invite an agent</button>
+          </Card>
+        ) : (
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
           {[
             { label: "Open leads", count: len(myLeads), tab: "My Leads", color: "#63B3ED" },
@@ -126,12 +143,15 @@ export default function AgencyDesk({
             </button>
           ))}
         </div>
+        )}
         {/* Honest about scope: these are the signed-in manager's records, not a
             roll-up across every agent. Implying otherwise would overstate what
             the number covers. */}
-        <div style={{ fontSize: 10, color: muted, marginTop: 8, lineHeight: 1.5 }}>
-          Counts reflect records visible to your account. Per-agent breakdowns are on the Team tab.
-        </div>
+        {(len(myLeads) + len(deals) + len(listings)) > 0 && (
+          <div style={{ fontSize: 10, color: muted, marginTop: 8, lineHeight: 1.5 }}>
+            Counts reflect records visible to your account. Per-agent breakdowns are on the Team tab.
+          </div>
+        )}
       </div>
 
       {/* ── THE TEAM ──────────────────────────────────────────────────── */}
