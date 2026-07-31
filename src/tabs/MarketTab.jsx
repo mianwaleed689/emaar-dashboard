@@ -94,6 +94,49 @@ const CHAPTERS = [
   { id: "ch-you",     title: "What it means for you",    learn: "The same data read for an investor, agent, developer or buyer." },
 ];
 
+/**
+ * Every source this tab draws on, as links.
+ *
+ * The footer previously asserted that "every metric links to its primary source"
+ * while linking to nothing. These are the actual publications behind the figures
+ * on this page — an agent forwarding one of these to a client is doing something
+ * no portal lets them do.
+ *
+ * NOTE: this constant went missing once already. The edit that added the
+ * SourceList to the footer used a text anchor of "/* Shared palette" while the
+ * file actually reads "/** Shared palette", so the insert silently no-opped —
+ * and the JSX shipped referencing a constant that did not exist, taking the
+ * whole Market tab down with "MARKET_TAB_SOURCES is not defined". Vite does not
+ * resolve identifiers at build time, so the build passed and the error only
+ * appeared on render.
+ */
+const MARKET_TAB_SOURCES = [
+  { title: "Dubai Land Department — open data and transaction reporting",
+    url: "https://dubailand.gov.ae/en/open-data/real-estate-data/",
+    publisher: "Dubai Land Department" },
+  { title: "Dubai property market report — monthly composition and funding split",
+    url: "https://providentestate.com/blog/dubai-property-market-report-may-2026/",
+    publisher: "Provident Estate", date: "May 2026" },
+  { title: "Dubai real estate market H1 2026: prices, yields and off-plan trends",
+    url: "https://www.dubaichronicle.com/2026/07/05/dubai-real-estate-market-h1-2026-trends/",
+    publisher: "Dubai Chronicle", date: "5 July 2026" },
+  { title: "Dubai real estate market outlook 2026",
+    url: "https://valustrat.com/products/dubai-real-estate-market-outlook-2026",
+    publisher: "ValuStrat Research" },
+  { title: "Will Dubai property prices rise or fall in 2026 — best, base and worst case",
+    url: "https://www.bhomes.com/en/blog/definitive-guides/will-property-prices-rise-or-fall-in-2026-best-case-base-case-and-worst-case-forecasts-dubai-market",
+    publisher: "Betterhomes" },
+  { title: "Dubai vs Singapore vs London — property investment comparison 2026",
+    url: "https://realestateclubdubai.com/blog/investment/dubai-vs-singapore-vs-london-which-city-offers-better-property-investment-returns-in-2026",
+    publisher: "Real Estate Club Dubai" },
+  { title: "Supply pipeline entering a critical phase: what 2026 means for investors",
+    url: "https://chainexrealestate.com/supply-pipeline-entering-critical-phase-what-2026-means-for-property-investors/",
+    publisher: "Chainex Real Estate" },
+  { title: "REIDIN — Dubai yield and index data",
+    url: "https://reidin.com/",
+    publisher: "REIDIN", paywalled: true },
+];
+
 /** Shared palette for the composition bars. */
 const BAR_COLORS = {
   gold: T?.gold || "#D4A843",
