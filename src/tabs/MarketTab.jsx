@@ -345,7 +345,53 @@ function MarketTab({ liveNeighbourhoods=[], liveMarketData, allDevelopers, expan
       <Chapter id="ch-now" index={1} title="Where the market is now"
                learn="This year's transactions, prices, and what the market is made of.">
 
-      <SH title="2025 Market Scorecard" sub="Full year · Dubai Land Department official data · January 2026" />
+      {/* THE MOST RECENT MONTH FIRST.
+          This chapter is titled "Where the market is now" and used to open with
+          the FY2025 scorecard — annual data published in January, read in July,
+          presented as the present. The full year is genuinely useful as a
+          baseline, but it is not "now", and leading with it was the single
+          biggest source of confusion on this page. Current month leads; the
+          annual figures follow, relabelled for what they are. */}
+      <SH
+        title={`Latest month — ${MARKET_COMPOSITION_2026.period}`}
+        sub={`The most recent complete month · ${MARKET_COMPOSITION_2026.source}`}
+      />
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(160px,1fr))", gap: 10, marginBottom: 20 }}>
+        <KpiCard
+          label="Transactions"
+          value={MARKET_COMPOSITION_2026.transactions.value}
+          note={MARKET_COMPOSITION_2026.transactions.note}
+          color={T?.gold || "#D4A843"}
+        />
+        <KpiCard
+          label="Price per sqft"
+          value={MARKET_COMPOSITION_2026.avgPpsf.value}
+          note={MARKET_COMPOSITION_2026.avgPpsf.note}
+        />
+        <KpiCard
+          label="Off-plan share"
+          value={`${MARKET_COMPOSITION_2026.split[0].pct}%`}
+          note={MARKET_COMPOSITION_2026.split[0].note}
+          color="#63B3ED"
+        />
+        <KpiCard
+          label="Cash funded"
+          value={`${MARKET_COMPOSITION_2026.funding[0].pct}%`}
+          note={`Mortgages fund the other ${MARKET_COMPOSITION_2026.funding[1].pct}%`}
+          color={T?.green || "#68D391"}
+        />
+        <KpiCard
+          label="Quarter to date"
+          value={MARKET_FACTS.q1_2026Value.value}
+          change={MARKET_FACTS.q1_2026Value.change}
+          note={MARKET_FACTS.q1_2026Value.note}
+        />
+      </div>
+
+      <SH
+        title="Last full year — 2025"
+        sub="Annual baseline, not current. Dubai Land Department official data, published January 2026."
+      />
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(160px,1fr))", gap: 10, marginBottom: 8 }}>
         <KpiCard label="Total Market Value" value={getStat("Total Market Value")?.value} change={getStat("Total Market Value")?.change} note="Sales + mortgages + gifts" onClick={() => handleTabChange?.("DLD Volumes")} />
         <KpiCard label="Total Transactions" value={getStat("Total Transactions")?.value} change={getStat("Total Transactions")?.change} note="5th consecutive annual record" />
@@ -637,7 +683,24 @@ function MarketTab({ liveNeighbourhoods=[], liveMarketData, allDevelopers, expan
       </div>
 
       {/* ── 2026 Analyst Forecasts ─────────────────────────────── */}
-      <SH title="2026 Analyst Forecasts" sub="Click to expand · Knight Frank · Cushman & Wakefield Core · Fitch Ratings" />
+      {/* These carry named analysts and direct quotes, which is good sourcing.
+          What they lack is a DATE, and with a forecast the vintage is the most
+          important thing about it — all three were published before or early in
+          the year they forecast, and the market has since moved. Rather than
+          invent per-firm dates I do not have, the caveat says so plainly and
+          points at where the consensus has landed. Add the publication date to
+          each card when it can be confirmed. */}
+      <SH
+        title="2026 Analyst Forecasts"
+        sub="Click to expand · Knight Frank · Cushman &amp; Wakefield Core · Fitch Ratings"
+      />
+      <p style={{ fontSize: 11, color: T?.textMuted || "#666", lineHeight: 1.6, margin: "-6px 0 14px", maxWidth: 760 }}>
+        These were published at or before the start of 2026 and are shown as issued.
+        They measure different things — Knight Frank splits prime from mainstream,
+        Cushman &amp; Wakefield Core gives a whole-market range — so they are not
+        directly comparable to each other. Reporting through mid-2026 has converged
+        on roughly 5–8% for the year, with villas well above that.
+      </p>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(270px,1fr))", gap: 12, marginBottom: 28 }}>
         {[
           { firm: "Knight Frank", color: "#D4A843", forecast: "+3% prime / +1% mainstream", detail: "Faisal Durrani (Head of Research, MENA): 'Following a multi-year upswing, gradual easing in price growth is a natural characteristic of a maturing cycle.' Continued HNWI demand. Supply risk monitored — 46% delivery rate in 2025. Source: Knight Frank Dubai Residential Market Review Q3 2025." },
