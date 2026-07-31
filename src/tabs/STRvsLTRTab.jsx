@@ -6,6 +6,27 @@ import React, { useState, useMemo } from "react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { T } from "../data";
 import { serviceChargeDrag, YIELD_ASSUMPTIONS } from "../utils/yield";
+import SourceList from "../components/SourceList";
+import { classifyProvenance } from "../utils/provenance";
+
+/* Short-let data has no DLD equivalent — the department records sales, not
+   nightly rates — so these are the operator and regulator sources that do
+   publish. Named without links where the underlying reports are not public
+   documents, which is more honest than pointing at a homepage and implying it
+   contains the figure. */
+const STR_SOURCES = [
+  { title: "Dubai Department of Economy and Tourism — holiday home regulation",
+    url: "https://www.visitdubai.com/en/department-of-economy-and-tourism",
+    publisher: "Dubai DET",
+    note: "licensing and the rules a short-let operator must meet" },
+  { title: "Dubai Land Department — sale prices and long-let yields",
+    url: "https://dubailand.gov.ae/en/open-data/real-estate-data/",
+    publisher: "Dubai Land Department",
+    note: "the measured long-let side of this comparison" },
+  { title: "GuestReady — Dubai short-let performance commentary",
+    publisher: "GuestReady", date: "2025",
+    note: "basis for the community premium multipliers" },
+];
 
 const fmtP = n => n ? "AED "+Math.round(n).toLocaleString() : "--";
 const fmtY = n => n ? parseFloat(n).toFixed(1)+"%" : "--";
@@ -67,7 +88,20 @@ export default function STRvsLTRTab({ liveNeighbourhoods=[], handleTabChange, gl
         : Math.round(propValue * strGross / 100 * (occupancy/100) * (1 - STR_MANAGEMENT_RATE));
       const advantage = (strAnnual == null || ltrAnnual == null) ? null : strAnnual - ltrAnnual;
 
-      return { ...n, ltrYield, strGross, strNet, ltrNet, propValue, ltrAnnual, strAnnual, advantage, premium };
+      /* THE PROVENANCE SPLIT ON THIS TAB.
+         The long-let side is measured — a DLD-derived yield on a recorded
+         price. The short-let side is that same yield multiplied by a premium
+         that was researched for 14 communities and defaulted to 1.4x for
+         everything else. Those are not the same kind of number, and a table
+         that prints them in identical type invites an agent to quote the
+         weaker one with the confidence of the stronger.
+
+         `premiumIsResearched` is what the UI uses to say which is which. */
+      const premiumIsResearched = Object.prototype.hasOwnProperty.call(STR_PREMIUM, n.community);
+      const ltrProvenance = classifyProvenance(n);
+
+      return { ...n, ltrYield, strGross, strNet, ltrNet, propValue, ltrAnnual, strAnnual, advantage, premium,
+               premiumIsResearched, ltrProvenance };
     });
   }, [withYield, propSize, occupancy]);
 
@@ -88,6 +122,10 @@ export default function STRvsLTRTab({ liveNeighbourhoods=[], handleTabChange, gl
   const avgLTR  = enriched.length ? (enriched.reduce((s,n)=>s+(n.ltrYield||0),0)/enriched.length).toFixed(1) : 0;
   const topSTR  = [...enriched].sort((a,b)=>(b.strGross||0)-(a.strGross||0))[0];
   const topAdv  = [...enriched].sort((a,b)=>(b.advantage||0)-(a.advantage||0))[0];
+  /* How much of this table rests on a researched premium rather than the flat
+     fallback. Shown in the header so the reader knows the shape of the evidence
+     before reading a single row. */
+  const researchedCount = enriched.filter(n=>n.premiumIsResearched).length;
 
   const chartData = filtered.slice(0,10).map(n=>({
     name: (n.community||"").length>10?(n.community||"").substring(0,10)+"...":n.community,
@@ -102,9 +140,43 @@ export default function STRvsLTRTab({ liveNeighbourhoods=[], handleTabChange, gl
       <div style={{marginBottom:16}}>
         <h2 style={{margin:0,fontSize:20,fontWeight:900,color:T.white,fontFamily:"'Fraunces',serif"}}>STR vs LTR</h2>
         <p style={{margin:"4px 0 0",fontSize:12,color:"#94A3B8"}}>
-          Short Term vs Long Term rental comparison  {enriched.length} communities  Sources: GuestReady 2025, DTCM, Bayut
+          Short Term vs Long Term rental comparison  ·  {enriched.length} communities
+          {researchedCount > 0 ? `  ·  ${researchedCount} with a researched short-let premium` : ""}
         </p>
       </div>
+
+      {/* ── THE TWO SIDES ARE NOT THE SAME KIND OF NUMBER ────────────────
+          An agent will read the STR column out loud. They need to know before
+          a client asks that it is a projection, not a recorded rent. */}
+      <div style={{padding:"11px 15px",marginBottom:14,borderRadius:10,background:"rgba(245,158,11,0.06)",border:"1px solid rgba(245,158,11,0.25)"}}>
+        <div style={{fontSize:11,fontWeight:700,color:"#F59E0B",marginBottom:5}}>
+          The long-let side is measured. The short-let side is a projection.
+        </div>
+        <div style={{fontSize:10.5,color:"#94A3B8",lineHeight:1.6}}>
+          LTR yields come from recorded DLD prices and rents. STR yields are that same figure
+          multiplied by a researched premium — available for {researchedCount} communities, with
+          the remaining {Math.max(0, enriched.length - researchedCount)} falling back to a flat{" "}
+          {DEFAULT_STR_PREMIUM}× assumption. Dubai publishes no per-community nightly-rate data, so
+          no one can measure this directly. Rows using the fallback are marked <em>est. premium</em>;
+          treat those as a starting point for a conversation, not a number to quote.
+        </div>
+      </div>
+
+      {/* ── EMPTY STATE ──────────────────────────────────────────────────
+          Every KPI below divides by enriched.length. With no data they read
+          "0%" and "--", which looks like a measured answer rather than a
+          missing one. */}
+      {enriched.length === 0 && (
+        <div style={{padding:"14px 16px",marginBottom:16,borderRadius:12,background:"rgba(100,116,139,0.08)",border:"1px solid rgba(100,116,139,0.28)"}}>
+          <div style={{fontSize:12,fontWeight:700,color:T.white,marginBottom:5}}>No communities with a recorded yield</div>
+          <div style={{fontSize:11,color:"#94A3B8",lineHeight:1.7}}>
+            {(liveNeighbourhoods||[]).length === 0
+              ? "Community data has not reached the app. Reload the page."
+              : `${(liveNeighbourhoods||[]).length} communities loaded but none carries a gross yield, and the short-let projection is built on top of that yield — without it there is nothing to project from.`}
+            {" "}The 0% figures below are missing data, not a measured zero.
+          </div>
+        </div>
+      )}
 
       {/* KPIs */}
       <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12,marginBottom:16}}>
@@ -204,7 +276,15 @@ export default function STRvsLTRTab({ liveNeighbourhoods=[], handleTabChange, gl
                 {n.hasMetro&&<span style={{fontSize:9,padding:"1px 5px",borderRadius:4,background:"rgba(16,185,129,0.1)",color:"#10B981",fontWeight:600}}>Metro</span>}
               </div>
             </div>
-            <div style={{textAlign:"center",fontSize:13,fontWeight:700,color:"#10B981",fontFamily:"'Fraunces',serif"}}>{fmtY(n.strGross)}</div>
+            <div style={{textAlign:"center"}}>
+              <span style={{fontSize:13,fontWeight:700,color:"#10B981",fontFamily:"'Fraunces',serif"}}>{fmtY(n.strGross)}</span>
+              {/* Which rows rest on the flat fallback rather than a researched
+                  premium — the difference between a projection worth discussing
+                  and one worth discounting. */}
+              {!n.premiumIsResearched && (
+                <div style={{fontSize:8,color:"#F59E0B"}} title={`No researched short-let premium for ${n.community}; flat ${DEFAULT_STR_PREMIUM}x assumption applied`}>est. premium</div>
+              )}
+            </div>
             <div style={{textAlign:"center",fontSize:12,fontWeight:600,color:"#84CC16"}}>{fmtY(n.ltrYield)}</div>
             <div style={{textAlign:"center",fontSize:11,color:"#94A3B8"}}>{fmtP(n.strAnnual)}</div>
             <div style={{textAlign:"center",fontSize:11,color:"#94A3B8"}}>{fmtP(n.ltrAnnual)}</div>
@@ -243,18 +323,25 @@ export default function STRvsLTRTab({ liveNeighbourhoods=[], handleTabChange, gl
               </div>
             ))}
           </div>
+          {/* This paragraph used to render the literal characters
+              `"+propSize+"sqft property at "+occupancy+"%...` — a string
+              concatenation pasted into JSX, where + is not an operator and the
+              quotes are just quotes. It compiled, and showed an agent raw
+              source code inside the panel they opened to explain the numbers. */}
           <div style={{padding:"10px 12px",background:"rgba(255,255,255,0.02)",border:"1px solid "+T.border,borderRadius:8,fontSize:10,color:"#64748B",lineHeight:1.6}}>
-            "+propSize+"sqft property at "+occupancy+"% occupancy. STR premium for "+selected.community+": "+((selected.premium-1)*100).toFixed(0)+"% above LTR rates.
-            Actual STR income varies by listing quality, seasonality, and management. Sources: GuestReady 2025, DTCM Dubai Tourism data.
+            {propSize.toLocaleString()} sqft at {occupancy}% occupancy. Short-let premium for{" "}
+            {selected.community}: <strong style={{color:"#94A3B8"}}>{((selected.premium-1)*100).toFixed(0)}% above the long-let rate</strong>
+            {selected.premiumIsResearched
+              ? " — researched for this community."
+              : ` — this community has no researched premium, so the flat ${DEFAULT_STR_PREMIUM}× fallback was used.`}
+            {" "}Actual short-let income varies with listing quality, seasonality and management, and
+            requires a DET holiday-home licence to earn legally.
           </div>
         </div>
       )}
 
-      <div style={{marginTop:16,paddingTop:12,borderTop:"1px solid "+T.border,display:"flex",gap:6,flexWrap:"wrap",alignItems:"center"}}>
-        <span style={{fontSize:10,color:"#64748B"}}>Sources:</span>
-        {["GuestReady STR Report 2025","DTCM Dubai Tourism","Airbnb Dubai Data","Bayut Rental Index 2025"].map((s,i)=>(
-          <span key={i} style={{fontSize:10,color:"#64748B",padding:"2px 8px",borderRadius:8,border:"1px solid rgba(255,255,255,0.06)"}}>{s}</span>
-        ))}
+      <div style={{marginTop:16,paddingTop:12,borderTop:"1px solid "+T.border}}>
+        <SourceList sources={STR_SOURCES} />
       </div>
     </div>
   );

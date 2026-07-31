@@ -10,6 +10,26 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { T } from "../data";
 import { SvgIcons } from "../components/Icons";
 import { GOLDEN_VISA_THRESHOLD } from "../utils/constants";
+import SourceList from "../components/SourceList";
+
+const CURRENCY_SOURCES = [
+  { title: "Central Bank of the UAE — the USD peg",
+    url: "https://www.centralbank.ae/",
+    publisher: "CBUAE",
+    note: "AED has been pegged at 3.6725 to the US dollar since 1997" },
+  { title: "open.er-api.com — live exchange rates",
+    url: "https://www.exchangerate-api.com/",
+    publisher: "ExchangeRate-API",
+    note: "the live rates on this page, refreshed every 5 minutes" },
+  { title: "Dubai Land Department — buyer nationality reporting",
+    url: "https://dubailand.gov.ae/en/open-data/real-estate-data/",
+    publisher: "Dubai Land Department" },
+];
+
+/* When the fallback rates below were captured. Without this an outage silently
+   serves rates of unknown age as though they were current — the failure mode
+   that made the stale mortgage rates on the Banking tab a problem. */
+const FALLBACK_AS_OF = "April 2026";
 
 /* ── Top currencies for Dubai international buyers (FALLBACK rates) ── */
 const TOP_CURRENCIES = [
@@ -27,7 +47,18 @@ const TOP_CURRENCIES = [
   { code: "JPY", name: "Japanese Yen",     flag: "🇯🇵", rate: 0.0245, change: -0.8,  buyers: "Japan" },
 ];
 
-/* ── 12-month historical data (seed) ── */
+/* ── 12-month historical data ── SEED, NOT MEASURED ────────────────────────
+   These series are hardcoded and the month labels below are a fixed May-to-Apr
+   window that does not advance with the calendar — so the chart shows the same
+   twelve months forever, regardless of today's date.
+
+   Kept because the SHAPE is the point of this tab: the USD row is genuinely
+   flat at 3.6725 because the AED is pegged, and seeing GBP move while USD does
+   not is the insight an agent needs when a British buyer asks about timing.
+
+   But it is illustrative, not a rate history a client should act on, and the
+   chart now says so on its face. It is replaced the day this pulls real
+   historical series from the rates API rather than a literal. */
 const RATE_HISTORY = {
   GBP: [4.51, 4.53, 4.58, 4.60, 4.62, 4.59, 4.55, 4.57, 4.61, 4.63, 4.64, 4.642],
   EUR: [3.97, 3.99, 4.01, 3.98, 3.96, 3.94, 3.92, 3.95, 3.97, 3.99, 3.98, 3.985],
@@ -103,7 +134,10 @@ function CurrencyTab({ selectedCcy, setSelectedCcy, aedAmount, setAedAmount, sea
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0", marginBottom: 20, borderBottom: `1px solid ${T.border}`, flexWrap: "wrap", gap: 8 }}>
         <div>
           <div style={{ fontFamily: "'Fraunces', serif", fontSize: 20, fontWeight: 800, color: T.white }}>Currency Intelligence</div>
-          <div style={{ fontSize: 11, color: T.textMuted, marginTop: 3 }}>AED exchange rates · Property price converter · International buyer tool</div>
+          <div style={{ fontSize: 11, color: T.textMuted, marginTop: 3 }}>
+            AED exchange rates · Property price converter · International buyer tool
+            {fetchStatus === 'live' && liveRates ? ` · ${Object.keys(liveRates).length} rates live` : ""}
+          </div>
         </div>
         <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
           {fetchStatus === 'live' && lastUpdated && (
@@ -119,7 +153,7 @@ function CurrencyTab({ selectedCcy, setSelectedCcy, aedAmount, setAedAmount, sea
           )}
           {fetchStatus === 'fallback' && (
             <span style={{ fontSize: 10, padding: "3px 10px", borderRadius: 20, background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.2)", color: "#F59E0B" }}>
-              Reference rates (live API unavailable)
+              Reference rates from {FALLBACK_AS_OF} — live API unavailable
             </span>
           )}
           <span style={{ fontSize: 10, padding: "3px 10px", borderRadius: 20, background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.2)", color: T.green, display: "flex", alignItems: "center", gap: 4 }}>
@@ -134,6 +168,24 @@ function CurrencyTab({ selectedCcy, setSelectedCcy, aedAmount, setAedAmount, sea
         {SvgIcons.Landmark({ width: 16, height: 16, style: { color: T.gold, flexShrink: 0 } })}
         <span style={{ fontSize: 12, color: T.textSecondary }}><span style={{ color: T.gold, fontWeight: 700 }}>AED is pegged to USD at 3.6725</span> — fixed since 1997 by UAE Central Bank. AED/USD rate never changes. All other pairs fluctuate vs USD.</span>
       </div>
+
+      {/* ── WHEN THE LIVE FEED IS DOWN ────────────────────────────────────
+          The badge in the header is easy to miss, and a converter is a tool
+          people use without reading the page around it. An agent quoting a
+          British buyer a total in pounds needs to know the rate is months old
+          BEFORE they send the message, not after. */}
+      {fetchStatus === 'fallback' && (
+        <div style={{ background: "rgba(245,158,11,0.06)", border: "1px solid rgba(245,158,11,0.3)", borderRadius: 10, padding: "12px 16px", marginBottom: 20 }}>
+          <div style={{ fontSize: 11.5, fontWeight: 700, color: "#F59E0B", marginBottom: 4 }}>
+            Live rates unavailable — showing reference rates from {FALLBACK_AS_OF}
+          </div>
+          <div style={{ fontSize: 10.5, color: T.textSecondary, lineHeight: 1.6 }}>
+            The converter still works, but every non-USD figure below is months out of date and
+            should not be sent to a client as a quote. USD is unaffected: the AED is pegged, so
+            3.6725 is correct whether the feed is up or not. Reload to retry the live feed.
+          </div>
+        </div>
+      )}
 
       {/* 2-column: Converter + Chart */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1.6fr", gap: 16, marginBottom: 20 }}>
@@ -177,7 +229,16 @@ function CurrencyTab({ selectedCcy, setSelectedCcy, aedAmount, setAedAmount, sea
         {/* 12-month chart */}
         <div className="chart-box" style={{ padding: 20 }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
-            <div style={{ fontFamily: "'Fraunces', serif", fontSize: 14, fontWeight: 700, color: T.white }}>AED/{selectedCcy} — 12 Month Trend</div>
+            <div>
+              <div style={{ fontFamily: "'Fraunces', serif", fontSize: 14, fontWeight: 700, color: T.white }}>AED/{selectedCcy} — 12 Month Shape</div>
+              {/* Says on its face what it is. The series is a stored literal on a
+                  fixed May-to-April window, so it does not advance with the
+                  calendar — useful for showing that USD is flat while GBP moves,
+                  useless as a rate a client should act on. */}
+              <div style={{ fontSize: 9, color: "#F59E0B", marginTop: 2 }}>
+                Illustrative series — shows how the peg behaves, not a live rate history
+              </div>
+            </div>
             <span style={{ fontSize: 10, color: T.textMuted }}>Apr 2025 – Apr 2026</span>
           </div>
           <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 16 }}>Exchange rate per 1 AED · UAE Central Bank data</div>
@@ -210,6 +271,28 @@ function CurrencyTab({ selectedCcy, setSelectedCcy, aedAmount, setAedAmount, sea
               <div key={i} style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 0.8, textTransform: "uppercase" }}>{h}</div>
             ))}
           </div>
+          {/* Searching for a currency this tab does not carry used to show an
+              empty grid, which reads as "no rate exists" rather than "we track
+              twelve currencies and that is not one of them". */}
+          {filteredCcys.length === 0 && (
+            <div style={{ padding: "26px 18px", textAlign: "center" }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: T.textSecondary, marginBottom: 5 }}>
+                No currency matches "{searchCcy}"
+              </div>
+              <div style={{ fontSize: 10.5, color: T.textMuted, lineHeight: 1.6, maxWidth: 430, margin: "0 auto" }}>
+                This tab carries the {TOP_CURRENCIES.length} currencies that cover most Dubai
+                international buyers. A currency missing here is one we do not track, not one
+                without a rate — and the AED is pegged to the dollar, so any USD-quoted figure
+                converts at a fixed 3.6725.
+              </div>
+              {searchCcy && (
+                <button type="button" onClick={() => setSearchCcy("")}
+                  style={{ marginTop: 12, padding: "6px 14px", borderRadius: 8, border: `1px solid ${T.border}`, background: "rgba(255,255,255,0.04)", color: T.textSecondary, fontSize: 11, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                  Clear search
+                </button>
+              )}
+            </div>
+          )}
           {filteredCcys.map((c, i) => (
             <div key={i} onClick={() => setSelectedCcy(c.code)}
               style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr 2fr", padding: "11px 16px", borderBottom: i < filteredCcys.length - 1 ? `1px solid ${T.border}` : "none", background: selectedCcy === c.code ? "rgba(212,168,67,0.06)" : i % 2 === 0 ? "transparent" : "rgba(255,255,255,0.01)", cursor: "pointer", transition: "background 0.15s" }}
@@ -226,11 +309,8 @@ function CurrencyTab({ selectedCcy, setSelectedCcy, aedAmount, setAedAmount, sea
       </div>
 
       {/* Sources */}
-      <div style={{ paddingTop: 12, borderTop: `1px solid ${T.border}`, display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
-        <span style={{ fontSize: 10, color: T.textMuted }}>Sources:</span>
-        {["UAE Central Bank", "ExchangeRate-API", "DLD Buyer Nationality Report 2025"].map((s, i) => (
-          <span key={i} style={{ fontSize: 10, color: T.textMuted, padding: "2px 8px", borderRadius: 10, border: `1px solid ${T.border}`, background: T.surfaceAlt }}>{s}</span>
-        ))}
+      <div style={{ paddingTop: 12, borderTop: `1px solid ${T.border}` }}>
+        <SourceList sources={CURRENCY_SOURCES} />
       </div>
     </div>
   );

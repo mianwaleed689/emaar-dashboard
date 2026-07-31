@@ -5,6 +5,22 @@ import React from "react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area, LineChart, Line, Cell } from "recharts";
 import { T } from "../data";
 import { SvgIcons } from "../components/Icons";
+import SourceList from "../components/SourceList";
+
+/* When the stored comps table below was last calibrated. A benchmark with no
+   date is indistinguishable from a current figure, which is the whole reason
+   this tab was misreading as a live transaction feed. */
+const REFERENCE_AS_OF = "compiled 2026";
+
+const INTELLIGENCE_SOURCES = [
+  { title: "Dubai Land Department — transaction and price open data",
+    url: "https://dubailand.gov.ae/en/open-data/real-estate-data/",
+    publisher: "Dubai Land Department",
+    note: "what the stored comps table was calibrated against" },
+  { title: "RERA service charge index (Mollak)",
+    publisher: "Dubai Land Department / RERA",
+    note: "the service charge input in the IRR calculator" },
+];
 
 function IntelligenceTab({ liveNeighbourhoods=[],
   compType, setCompType,
@@ -22,7 +38,16 @@ function IntelligenceTab({ liveNeighbourhoods=[],
 }) {
 
 
-            // ── AVM / Comps data (DLD-calibrated) ──────────────────────
+            /* ── AVM / COMPS REFERENCE TABLE ────────────────────────────
+               A STORED table, not a live query. Every figure here was
+               calibrated against DLD transactions when compiled and has been
+               fixed since; nothing below updates when the market moves.
+
+               The old comment read "DLD-calibrated", which a reader takes as
+               "from the DLD". On a panel headed "Comparable Sales" that is the
+               difference between a benchmark and evidence of a recent sale.
+               The banner in the header now says which it is, and points at DXB
+               Estimate for the version computed from current prices. */
             const AVM_DATA = {
               "Dubai Hills Estate":      { apt: { "Studio": { ppsf:1680, rent:55 }, "1BR": { ppsf:1820, rent:80 }, "2BR": { ppsf:2050, rent:125 }, "3BR": { ppsf:2300, rent:180 } }, villa: { "3BR": { ppsf:1450, rent:180 }, "4BR": { ppsf:1550, rent:240 }, "5BR": { ppsf:1700, rent:320 } } },
               "Dubai Creek Harbour":     { apt: { "Studio": { ppsf:1600, rent:52 }, "1BR": { ppsf:1750, rent:78 }, "2BR": { ppsf:1950, rent:118 }, "3BR": { ppsf:2200, rent:170 } }, villa: null },
@@ -67,26 +92,50 @@ function IntelligenceTab({ liveNeighbourhoods=[],
             const ppsf = unitData?.ppsf || 0;
             const annualRentK = unitData?.rent || 0;
 
-            // Generate comparable transactions (simulated from AVM + ±8% variance)
-            const comps = unitData ? Array.from({length:8}, (_,i) => {
-              const variance = 0.94 + (i * 0.018);
-              const sizeSqft = activeBed === "Studio" ? 420+i*15 : activeBed === "1BR" ? 650+i*20 : activeBed === "2BR" ? 1050+i*25 : activeBed === "3BR" ? 1550+i*30 : activeBed === "4BR" ? 2200+i*40 : 3000+i*50;
-              const salePrice = Math.round(ppsf * variance * sizeSqft);
-              const monthsAgo = i + 1;
-              const date = new Date(Date.now() - monthsAgo*30*24*60*60*1000);
-              return {
-                unit: `Unit ${String(1000 + i*107).slice(0,4)}`,
-                size: sizeSqft,
-                ppsf: Math.round(ppsf * variance),
-                price: salePrice,
-                date: date.toLocaleDateString("en-AE", {day:"2-digit",month:"short",year:"numeric"}),
-                type: compType,
-                beds: activeBed,
-              };
-            }) : [];
+            /* ── PRICE BANDS, NOT FABRICATED TRANSACTIONS ────────────────────
+               This block used to manufacture eight "comparable sales": invented
+               unit numbers ("Unit 1107"), invented sizes, and dates computed
+               backwards from Date.now() so they always looked like the last
+               eight months. Rendered in a table headed Unit / Size / AED per sqft
+               / Price / Date — indistinguishable from a DLD extract.
 
-            const avgPpsf = comps.length ? Math.round(comps.reduce((a,c) => a+c.ppsf, 0) / comps.length) : 0;
-            const avgPrice = comps.length ? Math.round(comps.reduce((a,c) => a+c.price, 0) / comps.length) : 0;
+               A ten-pixel footnote reading "Simulated comps based on community
+               AVM" sat underneath. That does not undo eight rows of what look
+               like recorded sales, and an agent could screenshot the table and
+               send it to a buyer as evidence of the market. No sale in it ever
+               happened.
+
+               The genuine question underneath — "what should a 2BR here cost?" —
+               is answered without inventing anything: take the benchmark price
+               per sqft and show it across a range of unit sizes. Every number
+               below is arithmetic on a stated benchmark, and nothing claims to
+               be a transaction. */
+            const SIZE_BANDS = {
+              "Studio": [400, 500, 600],
+              "1BR":    [650, 800, 950],
+              "2BR":    [1050, 1250, 1450],
+              "3BR":    [1550, 1850, 2150],
+              "4BR":    [2200, 2600, 3000],
+              "5BR":    [3000, 3600, 4200],
+            };
+            const bands = unitData
+              ? (SIZE_BANDS[activeBed] || SIZE_BANDS["2BR"]).map(size => ({
+                  size,
+                  ppsf,
+                  price: Math.round(ppsf * size),
+                }))
+              : [];
+            /* A benchmark is a point estimate; real stock varies by floor, view
+               and condition. The band is stated rather than implied so nobody
+               reads the midpoint as a valuation. */
+            const BAND_SPREAD = 0.08;
+
+            /* Averaging the old simulated rows produced a figure that looked like
+               a market average but was just the benchmark back again — the
+               variance was symmetrical around it by construction. The benchmark
+               and the mid band say the same thing without the laundering. */
+            const avgPpsf = ppsf;
+            const avgPrice = bands.length ? bands[Math.floor(bands.length/2)].price : 0;
 
             // ── IRR Calculator ─────────────────────────────────────────
             const price     = parseFloat(irrPrice)      || 2000000;
@@ -134,7 +183,31 @@ function IntelligenceTab({ liveNeighbourhoods=[],
               {/* ── Header ── */}
               <div style={{ marginBottom:20 }}>
                 <h1 style={{ fontFamily:"'Fraunces',serif", fontSize:22, fontWeight:900, color:T.white, margin:0 }}>Transaction Intelligence</h1>
-                <p style={{ fontSize:12, color:T.textMuted, margin:"4px 0 0" }}>Comparable sales · IRR calculator · Supply pipeline risk</p>
+                <p style={{ fontSize:12, color:T.textMuted, margin:"4px 0 0" }}>
+                  Comparable sales · IRR calculator · Supply pipeline risk · {communities.length} communities in the comps table
+                </p>
+              </div>
+
+              {/* ── WHAT THE COMPS TABLE IS ──────────────────────────────────
+                  AVM_DATA is a stored reference table, not a live query. It was
+                  commented "DLD-calibrated", which reads as "from the DLD" — and
+                  a comparables engine is exactly where an agent expects live
+                  transactions. The DXB Estimate tab does compute from live
+                  community prices; this one does not, and pointing at it is more
+                  useful than quietly implying both are the same thing. */}
+              <div style={{ padding:"11px 15px", marginBottom:16, borderRadius:10,
+                            background:"rgba(245,158,11,0.06)", border:"1px solid rgba(245,158,11,0.25)" }}>
+                <div style={{ fontSize:11, fontWeight:700, color:"#F59E0B", marginBottom:5 }}>
+                  Stored reference table — {REFERENCE_AS_OF}, not a live transaction feed
+                </div>
+                <div style={{ fontSize:10.5, color:T.textSecondary, lineHeight:1.6 }}>
+                  The comps below are benchmark prices and rents for {communities.length} communities,
+                  calibrated against DLD transactions when they were compiled and fixed since. They are
+                  a sanity check on a price, not evidence of a recent sale, and they do not move when the
+                  market does. For a valuation built on current community prices with a stated confidence
+                  band, use <strong style={{ color:T.gold }}>DXB Estimate</strong>. The IRR calculator
+                  below works off whatever figures you enter and is unaffected.
+                </div>
               </div>
 
               {/* ── Top row: Comps + IRR ── */}
@@ -188,26 +261,53 @@ function IntelligenceTab({ liveNeighbourhoods=[],
                           ))}
                         </div>
 
-                        {/* Comp transactions table */}
-                        <div style={{ fontSize:9, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.8, marginBottom:6, display:"grid", gridTemplateColumns:"minmax(80px,1fr) 60px 70px 80px 80px", gap:6 }}>
-                          <div>Unit</div><div>Size</div><div>AED/sqft</div><div>Price</div><div>Date</div>
+                        {/* Price band by unit size — modelled from the benchmark,
+                            with no fabricated units or dates. */}
+                        <div style={{ fontSize:9, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.8, marginBottom:6, display:"grid", gridTemplateColumns:"70px 80px 1fr", gap:8 }}>
+                          <div>Size</div><div>AED/sqft</div><div>Indicative price band</div>
                         </div>
-                        {comps.map((c,i)=>(
-                          <div key={i} style={{ display:"grid", gridTemplateColumns:"minmax(80px,1fr) 60px 70px 80px 80px", gap:6, padding:"7px 0", borderBottom:i<comps.length-1?`1px solid ${T.border}`:"none", alignItems:"center" }}>
-                            <div style={{ fontSize:11, color:T.textPrimary, fontWeight:600 }}>{c.unit}</div>
-                            <div style={{ fontSize:10, color:T.textMuted }}>{c.size.toLocaleString()}</div>
-                            <div style={{ fontSize:10, color:T.gold, fontWeight:600 }}>{c.ppsf.toLocaleString()}</div>
-                            <div style={{ fontSize:10, color:T.textPrimary }}>{(c.price/1e6).toFixed(2)}M</div>
-                            <div style={{ fontSize:10, color:T.textMuted }}>{c.date}</div>
+                        {bands.map((b,i)=>(
+                          <div key={i} style={{ display:"grid", gridTemplateColumns:"70px 80px 1fr", gap:8, padding:"8px 0", borderBottom:i<bands.length-1?`1px solid ${T.border}`:"none", alignItems:"center" }}>
+                            <div style={{ fontSize:11, color:T.textPrimary, fontWeight:600 }}>{b.size.toLocaleString()} sqft</div>
+                            <div style={{ fontSize:10, color:T.gold, fontWeight:600 }}>{b.ppsf.toLocaleString()}</div>
+                            <div style={{ fontSize:10, color:T.textPrimary }}>
+                              AED {(b.price*(1-BAND_SPREAD)/1e6).toFixed(2)}M – {(b.price*(1+BAND_SPREAD)/1e6).toFixed(2)}M
+                              <span style={{ color:T.textMuted }}> · mid {(b.price/1e6).toFixed(2)}M</span>
+                            </div>
                           </div>
                         ))}
-                        <div style={{ fontSize:10, color:T.textMuted, marginTop:10, padding:"8px 10px", background:"rgba(255,255,255,0.02)", borderRadius:6 }}>
-                          Source: DLD transaction records calibrated via DXBinteract & ValuStrat. Simulated comps based on community AVM.
+                        <div style={{ fontSize:10, color:T.textMuted, marginTop:10, padding:"8px 10px", background:"rgba(255,255,255,0.02)", borderRadius:6, lineHeight:1.6 }}>
+                          Benchmark AED {ppsf.toLocaleString()}/sqft for a {activeBed} {compType.toLowerCase()} in {compCommunity},
+                          {" "}{REFERENCE_AS_OF}, times the size shown, with a ±{Math.round(BAND_SPREAD*100)}% band for floor, view and condition.
+                          {" "}<strong style={{ color:T.textSecondary }}>These are modelled price bands, not records of sales.</strong>
+                          {" "}For comparables against a specific unit, pull the transaction history for the tower from the DLD.
                         </div>
                       </>
                     ) : (
-                      <div style={{ textAlign:"center", padding:"24px 0", color:T.textMuted, fontSize:12 }}>
-                        No {compType.toLowerCase()} data for {compCommunity}
+                      /* Was a bare line reading "No villa data for Business Bay",
+                         which leaves the reader unsure whether the community has
+                         no villas or the table has no entry. It says which, and
+                         names the communities that do carry the type — a dead end
+                         with no way forward is the same fault as a filter that
+                         returns nothing. */
+                      <div style={{ textAlign:"center", padding:"22px 16px" }}>
+                        <div style={{ fontSize:12, fontWeight:700, color:T.textSecondary, marginBottom:6 }}>
+                          No {compType.toLowerCase()} benchmark for {compCommunity}
+                        </div>
+                        <div style={{ fontSize:10.5, color:T.textMuted, lineHeight:1.65, maxWidth:420, margin:"0 auto" }}>
+                          The reference table holds {compType.toLowerCase()} prices for{" "}
+                          {communities.filter(c => compType === "Villa" ? AVM_DATA[c]?.villa : AVM_DATA[c]?.apt).length}{" "}
+                          of its {communities.length} communities. This is a gap in our table, not a
+                          statement that {compCommunity} has no {compType.toLowerCase()} stock.
+                        </div>
+                        <div style={{ fontSize:10, color:T.textMuted, marginTop:10 }}>
+                          With {compType.toLowerCase()} data:{" "}
+                          <span style={{ color:T.gold }}>
+                            {communities
+                              .filter(c => compType === "Villa" ? AVM_DATA[c]?.villa : AVM_DATA[c]?.apt)
+                              .slice(0, 4).join(" · ")}
+                          </span>
+                        </div>
                       </div>
                     )}
                   </div>
@@ -550,6 +650,10 @@ function IntelligenceTab({ liveNeighbourhoods=[],
                   </div>
                 );
               })()}
+
+              <div style={{ marginTop:16, paddingTop:12, borderTop:`1px solid ${T.border}` }}>
+                <SourceList sources={INTELLIGENCE_SOURCES} />
+              </div>
 
             </>);
 }
