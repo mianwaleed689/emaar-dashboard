@@ -71,8 +71,15 @@ function scoreFile(file) {
   };
 }
 
+/* src/tabs/index.js is a re-export barrel, not a tab. It cannot be sourced, has
+   no data and shows nothing, so it scored 50% forever and sat in the "below the
+   bar" count as work that could never be done. Counting it made the product look
+   one tab worse than it is and hid a real tab behind a false one. */
+const NOT_A_TAB = new Set(["index.js", "index.jsx"]);
+
 const files = fs.readdirSync(TAB_DIR)
   .filter(f => /\.jsx?$/.test(f))
+  .filter(f => !NOT_A_TAB.has(f))
   .filter(f => !ONLY || f.toLowerCase().includes(ONLY.toLowerCase()))
   .map(f => path.join(TAB_DIR, f));
 

@@ -14,6 +14,8 @@ import SEED_DATA from "../utils/seedData";
 import {
   BANKS as BANK_TABLE,
   LTV_RULES,
+  LTV_SECOND_PROPERTY,
+  DBR_CAP,
   BANK_RATES_SOURCE,
   MORTGAGE_DATA_AS_OF,
 } from "../data/mortgageMarket";
@@ -290,15 +292,38 @@ function MortgageTab({ liveNeighbourhoods=[], liveMortgageRates, liveEiborRates,
 
                     {/* LTV Rules info */}
                     <div className="chart-box" style={{ padding:18, marginBottom:16 }}>
-                      <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:12 }}>UAE Central Bank LTV Rules 2026</div>
+                      <div style={{ fontSize:13, fontWeight:700, color:T.white, marginBottom:4 }}>UAE Central Bank LTV Rules</div>
+                      {/* ── THIS TABLE USED TO CARRY ITS OWN COPY OF THE CAPS ──
+                          And that copy was wrong. mortgageMarket.js was corrected
+                          on 2026-07-29 — the expat cap above AED 5M is 70%, not
+                          the pre-2020 65% — but this hardcoded duplicate was never
+                          updated, so the tab kept telling an expat buying above
+                          AED 5M that they needed a 35% deposit instead of 30%.
+                          On a AED 6M property that is AED 300,000 of deposit that
+                          the regulation does not require, quoted to a client on
+                          the tab they opened to plan their financing.
+
+                          Now read from LTV_RULES, which was already imported at
+                          the top of this file and simply never used here. */}
+                      <div style={{ fontSize:10.5, color:T.textMuted, marginBottom:12, lineHeight:1.6 }}>
+                        Regulatory maximums under CBUAE Circular 31/2013 as amended by Board Resolution
+                        31/2/2020. Individual banks lend below these caps at their own discretion — the
+                        binding number is the one in the bank's offer letter, not this table.
+                      </div>
                       <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(220px,1fr))", gap:10 }}>
                         {[
-                          { profile:"Expat Resident",  under5m:"80% LTV (20% down)", over5m:"65% LTV (35% down)", color:T.gold   },
-                          { profile:"UAE National",     under5m:"85% LTV (15% down)", over5m:"70% LTV (30% down)", color:T.green  },
-                          { profile:"Non-Resident",     under5m:"60% LTV (40% down)", over5m:"50% LTV (50% down)", color:"#3B82F6"},
+                          { profile:LTV_RULES.expat.label,
+                            under5m:`${LTV_RULES.expat.under5m}% LTV (${100-LTV_RULES.expat.under5m}% down)`,
+                            over5m:`${LTV_RULES.expat.over5m}% LTV (${100-LTV_RULES.expat.over5m}% down)`, color:T.gold },
+                          { profile:LTV_RULES.uae_national.label,
+                            under5m:`${LTV_RULES.uae_national.under5m}% LTV (${100-LTV_RULES.uae_national.under5m}% down)`,
+                            over5m:`${LTV_RULES.uae_national.over5m}% LTV (${100-LTV_RULES.uae_national.over5m}% down)`, color:T.green },
+                          { profile:LTV_RULES.non_resident.label,
+                            under5m:`${LTV_RULES.non_resident.under5m}% LTV (${100-LTV_RULES.non_resident.under5m}% down)`,
+                            over5m:`${LTV_RULES.non_resident.over5m}% LTV (${100-LTV_RULES.non_resident.over5m}% down)`, color:"#3B82F6" },
+                          { profile:"Second property",   under5m:`${LTV_SECOND_PROPERTY}% LTV, any value`, over5m:"Regardless of price", color:"#8B5CF6" },
                           { profile:"Max Tenure",        under5m:"25 years",           over5m:"Age cap: 70 yrs",    color:T.teal   },
-                          { profile:"DBR Cap",           under5m:"50% of gross salary",over5m:"All loans combined", color:"#F97316"},
-                          { profile:"Min Salary",        under5m:"AED 10,000–15,000",  over5m:"Varies by bank",     color:T.textMuted },
+                          { profile:"DBR Cap",           under5m:`${Math.round(DBR_CAP*100)}% of gross salary`, over5m:"All loans combined", color:"#F97316"},
                         ].map((r,i) => (
                           <div key={i} style={{ padding:"12px 14px", background:T.surfaceAlt, borderRadius:10, border:`1px solid ${T.border}` }}>
                             <div style={{ fontSize:11, fontWeight:700, color:r.color, marginBottom:6 }}>{r.profile}</div>

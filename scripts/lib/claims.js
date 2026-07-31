@@ -53,6 +53,20 @@ const NOISE = /rgba?\(|#[0-9a-fA-F]{3,8}|\bpx\b|borderRadius|fontSize|fontWeight
  */
 const LABEL_KEY = /\blabel\s*:\s*$/;
 
+/**
+ * An RGB triplet passed around as a string, e.g. btnStyle("212,168,67").
+ *
+ * The claim regex reads "37,211,102" as a number with thousands separators —
+ * 37,211 followed by 102 — so WhatsApp green, link blue and the brand gold were
+ * all being reported as unsourced figures on the Projects tab. The NOISE filter
+ * misses them because the line contains no "rgba(": the colour is assembled
+ * inside a helper, somewhere else.
+ *
+ * Matched only when the ENTIRE string is two or three 0-255 numbers. No claim
+ * about the market has ever taken that shape.
+ */
+const RGB_TRIPLET = /^\s*(?:25[0-5]|2[0-4]\d|1\d\d|\d{1,2})\s*(?:,\s*(?:25[0-5]|2[0-4]\d|1\d\d|\d{1,2})\s*){1,2}$/;
+
 /** The code admitting, in its own words, that a figure is not good. */
 const ADMISSION = /unverified|no published source|stale|not confirmed|could not be traced|do not quote|placeholder|dummy|fake\b|hardcoded/i;
 
@@ -100,6 +114,8 @@ function analyse(source) {
          asserting anything. See LABEL_KEY above for why this is keyed on the
          property and not on the shape of the text. */
       if (LABEL_KEY.test(line.slice(0, m.index))) return;
+      /* A colour, not a figure. See RGB_TRIPLET above. */
+      if (RGB_TRIPLET.test(text)) return;
       claims.push({
         line: i + 1,
         text: text.length > 74 ? text.slice(0, 74) + "…" : text,
@@ -119,4 +135,4 @@ function analyse(source) {
   };
 }
 
-module.exports = { analyse, CLAIM, PROVENANCE, NOISE, ADMISSION, LABEL_KEY };
+module.exports = { analyse, CLAIM, PROVENANCE, NOISE, ADMISSION, LABEL_KEY, RGB_TRIPLET };
