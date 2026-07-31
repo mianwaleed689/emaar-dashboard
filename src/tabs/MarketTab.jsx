@@ -21,6 +21,7 @@ import {
   GLOBAL_YIELD_COMPARISON,
 } from "../data/marketFacts";
 import MarketCycleHistory from "../components/MarketCycleHistory";
+import MarketAlmanac from "../components/MarketAlmanac";
 import {
   Kpi as UIKpi,
   StatBar as UIStatBar,
@@ -349,6 +350,10 @@ function MarketTab({ liveNeighbourhoods=[], liveMarketData, allDevelopers, expan
           been given the sales pitch before the context. This ordering gives them
           the shape of the market before the state of it. */}
       <MarketCycleHistory style={{ marginBottom: 28 }} />
+
+      {/* The cycle above gives the shape; the almanac gives the moments. Cycle
+          first, because a reader needs the arc before the detail lands. */}
+      <MarketAlmanac style={{ marginBottom: 28 }} />
 
       <SH title="2025 Market Scorecard" sub="Full year · Dubai Land Department official data · January 2026" />
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(160px,1fr))", gap: 10, marginBottom: 8 }}>
