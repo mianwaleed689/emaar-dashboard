@@ -11,11 +11,24 @@ import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswor
 import { doc, getDoc, setDoc } from "firebase/firestore";
 import { T } from "../data";
 import { Icons } from "./Icons";
+import LandingPitch from "./LandingPitch";
 import { PasswordStrength } from "./SharedUI";
 import { buildGlobalCSS } from "../styles/global";
 import { TRIAL_DURATION_MS } from "../utils/constants";
 
-const css = buildGlobalCSS(T);
+const css = buildGlobalCSS(T) + `
+  /* Two-column sign-in: the pitch beside the form on a wide screen, stacked on a
+     narrow one. Written as real CSS rather than inline styles because a media
+     query cannot live in a style object. */
+  .login-shell { display: grid; grid-template-columns: 1fr; gap: 34px; align-items: center; }
+  .login-form-col { width: 100%; max-width: 440px; margin: 0 auto; }
+  .login-pitch { display: none; }
+  @media (min-width: 940px) {
+    .login-shell { grid-template-columns: minmax(0, 1.05fr) minmax(0, 430px); gap: 56px; align-items: center; }
+    .login-pitch { display: block; }
+    .login-form-col { margin: 0; }
+  }
+`;
 const googleProvider = new GoogleAuthProvider();
 
 const LoginScreen = ({ onLogin, onBack, defaultMode = "login" }) => {
@@ -198,7 +211,20 @@ const LoginScreen = ({ onLogin, onBack, defaultMode = "login" }) => {
       <div style={{ position: "absolute", inset: 0, opacity: 0.015, backgroundImage: `radial-gradient(${T.gold} 1px, transparent 1px)`, backgroundSize: "50px 50px" }} />
       <div style={{ position: "absolute", top: "20%", left: "10%", width: 400, height: 400, borderRadius: "50%", background: `radial-gradient(circle, rgba(212,168,67,0.04) 0%, transparent 70%)` }} />
 
-      <div className="fade-up" style={{ width: "100%", maxWidth: 440, padding: "0 20px", position: "relative", zIndex: 1 }}>
+      {/* Two columns on a wide screen: what this is on the left, the form on the
+          right. Stacks on anything under ~940px.
+
+          Before this, an unauthenticated visitor saw a product name, the words
+          "Dubai Real Estate Intelligence", and a signup form — nothing saying what
+          the platform does, who it is for, or what it costs. Someone who did not
+          already know had no reason to sign up and no way to find one. */}
+      <div className="fade-up login-shell" style={{ width: "100%", maxWidth: 1120, padding: "0 20px", position: "relative", zIndex: 1 }}>
+
+        <div className="login-pitch">
+          <LandingPitch />
+        </div>
+
+        <div className="login-form-col">
         {/* Logo */}
         <div style={{ textAlign: "center", marginBottom: 36 }}>
           <div style={{ display: "inline-flex", alignItems: "center", gap: 3, marginBottom: 8 }}>
@@ -342,6 +368,7 @@ const LoginScreen = ({ onLogin, onBack, defaultMode = "login" }) => {
         <p style={{ textAlign: "center", color: T.textMuted, fontSize: 11, marginTop: 20 }}>
           🔒 Secured by Firebase · SSL Encrypted · GDPR Compliant
         </p>
+        </div>
       </div>
     </div>
   );
