@@ -41,8 +41,21 @@ const TAB_DIR = "src/tabs";
 /* Signals that a tab meets a criterion. */
 const USES_PROVENANCE_UI = /SourceBadge|SourceList|classifyProvenance|isMeasured|valueSharedWith|provenance/;
 const USES_DESIGN_SYSTEM = /components\/ui\/DataDisplay|from "\.\.\/components\/ui/;
-const HAS_EMPTY_STATE = /SmartEmptyState|No data|not recorded|nothing to show|length === 0|length\s*===\s*0|!.*\.length/;
-const READS_LIVE_DATA = /props|live[A-Z]|useFirestore|useAlmanac|useMarket|\{\s*\w+\s*=\s*\[\]\s*\}/;
+/* An empty state is a branch that renders when there is nothing to show. The
+   original list only recognised a handful of literal phrases and the
+   `length === 0` shape, so it missed Compliance — whose empty state is keyed on
+   a status of "none" and opens "No RERA card recorded". Widened to the copy
+   these states actually use, rather than to any mention of absence. */
+const HAS_EMPTY_STATE = /SmartEmptyState|No data|not recorded|nothing to show|length === 0|length\s*===\s*0|!.*\.length|No \w+(?: \w+)? (?:recorded|available|loaded|saved|found|yet|matches?)|=== ?"none"/;
+/* Signals that a tab is fed by something asynchronous rather than a literal.
+   The original pattern required a `live` prefix or a single-prop destructure,
+   which missed three CRM tabs that plainly do read live data: Compliance takes
+   reraCard and reraCardLoading, Team takes teamMembers and writes to Firestore
+   directly. Marking those as hardcoded was simply wrong.
+
+   A `somethingLoading` prop is the honest tell — a loading flag only exists
+   because a fetch does — as is importing Firestore at all. */
+const READS_LIVE_DATA = /props|live[A-Z]|useFirestore|useAlmanac|useMarket|\w+Loading\b|from ["'](?:\.\.\/)?firebase|from ["']firebase\/|\{\s*\w+\s*=\s*\[\]\s*\}/;
 
 function scoreFile(file) {
   const src = fs.readFileSync(file, "utf8");

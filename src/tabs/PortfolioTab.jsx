@@ -56,6 +56,26 @@ function PortfolioTab({ liveNeighbourhoods=[], portView, setPortView, portShowAd
             const totalReturn  = totalGain + (netRent * avgHoldYears);
             const irr          = totalCost > 0 ? (Math.pow((totalCost + totalReturn)/totalCost, 1/Math.max(avgHoldYears,1)) - 1) * 100 : 0;
 
+            /* ── MARKET BENCHMARK, MEASURED ──────────────────────────────
+               Replaces a typed cross-asset comparison table. Quartiles rather
+               than a single average because a portfolio owner's real question
+               is "am I doing well or badly for Dubai", and an average hides
+               that a 6% yield is strong in Downtown and weak in JVC.
+
+               Returns null rather than 0 when there is nothing to measure —
+               a benchmark of 0% would read as a market returning nothing. */
+            const marketYields = (liveNeighbourhoods||[])
+              .map(n => parseFloat(n.grossYield))
+              .filter(v => Number.isFinite(v) && v > 0)
+              .sort((a,b) => a-b);
+            const marketYieldSample = marketYields.length;
+            const quantile = q => marketYields.length
+              ? marketYields[Math.min(marketYields.length-1, Math.floor(marketYields.length * q))]
+              : null;
+            const marketMedianYield         = quantile(0.50);
+            const marketTopQuartileYield    = quantile(0.75);
+            const marketBottomQuartileYield = quantile(0.25);
+
             const selSt = { background:T.surfaceAlt,border:`1px solid ${T.border}`,borderRadius:8,color:T.white,fontFamily:"'Outfit',sans-serif",fontSize:12,padding:"7px 28px 7px 10px",outline:"none",cursor:"pointer",appearance:"none",WebkitAppearance:"none",backgroundImage:`url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E")`,backgroundRepeat:"no-repeat",backgroundPosition:"right 8px center" };
 
             return (
@@ -228,16 +248,42 @@ function PortfolioTab({ liveNeighbourhoods=[], portView, setPortView, portShowAd
                       ))}
                     </div>
                     <div className="chart-box" style={{ padding:20 }}>
-                      <div style={{ fontFamily:"'Fraunces',serif",fontSize:14,fontWeight:700,color:T.white,marginBottom:16 }}>IRR Benchmark</div>
+                      <div style={{ fontFamily:"'Fraunces',serif",fontSize:14,fontWeight:700,color:T.white,marginBottom:4 }}>How this compares</div>
+                      {/* ── WHAT THIS PANEL USED TO BE ────────────────────────
+                          An "IRR Benchmark" listing the portfolio against seven
+                          asset classes — London property "4-7% (post-tax)", US
+                          REITs "8-12%", gold, DFM, and a "Dubai S&P equivanlent"
+                          at 12-18%. There is no Dubai S&P. Every range was typed,
+                          none carried a source or a date, and together they let an
+                          agent tell a client that Dubai property beats London and
+                          gold on numbers that came from nowhere.
+
+                          Cross-asset return data is real and buyable, but this
+                          product does not hold it, and inventing citations for
+                          those rows would be worse than dropping them.
+
+                          What IS held is the Dubai market itself: measured yields
+                          across the communities in the platform. Comparing an
+                          owner's portfolio against the market they are actually
+                          in is both defensible and more useful than a gold price
+                          nobody can check. */}
+                      <div style={{ fontSize:10,color:T.textMuted,marginBottom:14,lineHeight:1.6 }}>
+                        Against the Dubai market this platform measures{marketYieldSample ? `, from ${marketYieldSample} communities with a recorded yield` : ""}.
+                        Cross-asset comparisons — equities, gold, overseas property — are not shown
+                        because this product does not hold that data, and a number without a source is
+                        worth less than no number.
+                      </div>
                       {[
-                        {asset:"Your Dubai Portfolio",   irr:irr.toFixed(1)+"%",          color:T.gold,    bold:true  },
-                        {asset:"Dubai S&P equivanlent",  irr:"12-18%",                     color:T.textMuted,bold:false },
-                        {asset:"UAE Sukuk / Bonds",      irr:"5-7%",                       color:T.textMuted,bold:false },
-                        {asset:"London Property",        irr:"4-7% (post-tax)",            color:T.textMuted,bold:false },
-                        {asset:"US REITs",               irr:"8-12%",                      color:T.textMuted,bold:false },
-                        {asset:"Dubai Stock Market",     irr:"8-15% (DFM)",               color:T.textMuted,bold:false },
-                        {asset:"Gold (5yr avg)",         irr:"10-12% USD",                color:T.textMuted,bold:false },
-                        {asset:"Savings Account UAE",    irr:"2-3.5%",                    color:T.textMuted,bold:false },
+                        {asset:"Your portfolio (IRR)",        irr:irr.toFixed(1)+"%", color:T.gold, bold:true },
+                        {asset:"Dubai market — median gross yield",
+                         irr: marketMedianYield != null ? marketMedianYield.toFixed(1)+"%" : "not available",
+                         color:T.textMuted, bold:false },
+                        {asset:"Dubai market — top quartile yield",
+                         irr: marketTopQuartileYield != null ? marketTopQuartileYield.toFixed(1)+"%" : "not available",
+                         color:T.textMuted, bold:false },
+                        {asset:"Dubai market — weakest quartile",
+                         irr: marketBottomQuartileYield != null ? marketBottomQuartileYield.toFixed(1)+"%" : "not available",
+                         color:T.textMuted, bold:false },
                       ].map((r,i)=>(
                         <div key={i} style={{ display:"flex",justifyContent:"space-between",padding:"8px 0",borderBottom:i<7?`1px solid ${T.border}`:"none",background:r.bold?"rgba(212,168,67,0.04)":"transparent",marginLeft:r.bold?-10:0,paddingLeft:r.bold?10:0,borderRadius:r.bold?4:0 }}>
                           <span style={{ fontSize:12,color:r.bold?T.white:T.textMuted,fontWeight:r.bold?700:400 }}>{r.asset}</span>

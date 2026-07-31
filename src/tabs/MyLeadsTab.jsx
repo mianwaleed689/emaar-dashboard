@@ -52,7 +52,12 @@ const WA_TEMPLATES = [
   { label:"Follow Up",       body:"Hello {name}, following up on your property search. We have new listings matching your budget. Would you like to schedule a viewing this week?" },
   { label:"Viewing Confirm", body:"Hello {name}, confirming your property viewing. Please let me know if you need to reschedule. Looking forward to meeting you!" },
   { label:"Offer Made",      body:"Hello {name}, great news! We have submitted your offer. I will update you as soon as we hear back." },
-  { label:"Golden Visa",     body:"Hello {name}, based on your budget you qualify for UAE Golden Visa (AED 2M+ investment). This gives you 10-year residency. Shall I send details?" },
+  /* The threshold is read from GV_MIN rather than typed. This message goes to a
+     buyer over WhatsApp, so a stale figure here is not a display bug — it is an
+     agent telling a client they qualify for a visa when they do not. GV_MIN
+     already existed in this file, derived from the shared constant, and the
+     template ignored it. */
+  { label:"Golden Visa",     body:`Hello {name}, based on your budget you qualify for the UAE Golden Visa (AED ${(GV_MIN/1e6).toFixed(0)}M+ property investment), which carries 10-year renewable residency. Eligibility is confirmed by ICP, not by us — shall I walk you through the requirements?` },
   { label:"Market Update",   body:"Hello {name}, prices in your preferred area have moved. I have great options within your budget. Shall we connect?" },
   { label:"EOI Follow Up",   body:"Hello {name}, thank you for your Expression of Interest. We have reviewed your request and have excellent options. When can we connect?" },
 ];

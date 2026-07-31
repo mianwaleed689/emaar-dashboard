@@ -95,11 +95,24 @@ function FlipTab({ liveNeighbourhoods=[], flipBuyPrice, setFlipBuyPrice, flipSel
             const cashIn       = flpMortgage ? equityIn + totalAcqCost + renovCost + totalSC : buyPrice + totalAcqCost + renovCost + totalSC;
             const cashROI      = cashIn > 0 ? (netProfit / cashIn * 100) : 0;
 
-            /* ── Scenarios ── */
+            /* ── Scenarios ────────────────────────────────────────────────
+               STRESS TESTS, NOT FORECASTS. The multipliers are round numbers
+               chosen to bracket a plausible range either side of the entered
+               price; nothing here predicts what Dubai will do, and no model
+               produced 0.90 or 1.12.
+
+               They earn their place because the useful question for a flip is
+               "what happens to my return if I am wrong", and answering it needs
+               a downside and an upside. The notes below say what they are so an
+               agent does not read the bull case to a client as a projection —
+               which is exactly how a stress test becomes a promise.
+
+               For what the market has actually done, including both crashes,
+               the Market tab carries the sourced history. */
             const scenarios = {
-              bear:  { sellMulti: 0.90, note: "Market softens 10%. Common in oversupplied areas." },
-              base:  { sellMulti: 1.00, note: "Sell at planned price. Realistic in established communities." },
-              bull:  { sellMulti: 1.12, note: "Market appreciates 12%. Strong demand community." },
+              bear:  { sellMulti: 0.90, note: "Stress test: you sell 10% below plan. Not a forecast — a check on whether the deal survives a soft market." },
+              base:  { sellMulti: 1.00, note: "You sell at the price entered above. The deal as planned." },
+              bull:  { sellMulti: 1.12, note: "Stress test: you sell 12% above plan. Not a forecast — the upside case, and the one least safe to quote." },
             };
             const scenSell    = sellPrice * scenarios[flpScenario].sellMulti;
             const scenProfit  = scenSell + totalRental - totalIn;
@@ -258,9 +271,15 @@ function FlipTab({ liveNeighbourhoods=[], flipBuyPrice, setFlipBuyPrice, flipSel
                       {/* Scenario selector */}
                       <div style={{ display:"flex", gap:8 }}>
                         {[
-                          { key:"bear", label:"\uD83D\uDC3B Bear", color:T.red,   note:"-10% sell" },
+                          /* Captions say what the button DOES, not the multiplier.
+                             The figure and the fact that it is a stress test
+                             rather than a forecast are both stated in full in the
+                             panel below \u2014 repeating a bare "-10%" on a button
+                             strips it of that context, which is where a stress
+                             test starts being read as a prediction. */
+                          { key:"bear", label:"\uD83D\uDC3B Bear", color:T.red,   note:"downside"   },
                           { key:"base", label:"\uD83D\uDCCA Base", color:T.gold,  note:"as planned" },
-                          { key:"bull", label:"\uD83D\uDC02 Bull", color:T.green, note:"+12% sell"  },
+                          { key:"bull", label:"\uD83D\uDC02 Bull", color:T.green, note:"upside"     },
                         ].map(s => (
                           <button key={s.key} type="button" onClick={() => setFlpScenario(s.key)}
                             style={{ flex:1, padding:"8px 6px", background:flpScenario===s.key?s.color+"22":T.surfaceAlt, border:`1px solid ${flpScenario===s.key?s.color:T.border}`, borderRadius:8, cursor:"pointer", fontFamily:"'Outfit',sans-serif", textAlign:"center" }}>
@@ -354,9 +373,21 @@ function FlipTab({ liveNeighbourhoods=[], flipBuyPrice, setFlipBuyPrice, flipSel
                 {flpView === "guide" && (
                   <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16, marginBottom:20 }}>
                     <div className="chart-box" style={{ padding:20 }}>
-                      <div style={{ fontFamily:"'Fraunces',serif", fontSize:13, fontWeight:700, color:T.white, marginBottom:16 }}>Ready Property Flip</div>
+                      <div style={{ fontFamily:"'Fraunces',serif", fontSize:13, fontWeight:700, color:T.white, marginBottom:4 }}>Ready Property Flip</div>
+                      {/* The figures in this playbook — "10-15% below market",
+                          "80% of value add", "AED 80-150/sqft" — are practitioner
+                          rules of thumb, not measurements from this platform's
+                          data. Said plainly here rather than left to be read as
+                          research, because the rest of this product is measured
+                          and a reader is entitled to assume a number is unless
+                          told otherwise. */}
+                      <div style={{ fontSize:10, color:T.textMuted, marginBottom:14, lineHeight:1.6 }}>
+                        Practitioner guidance, not measured data — rules of thumb from how flips are run
+                        in Dubai, useful as a checklist and not as figures to quote. The calculator above
+                        works off numbers you enter; only these steps are opinion.
+                      </div>
                       {[
-                        { step:"1", title:"Find undervalued ready unit", detail:"Distressed sellers, divorce sales, estate sales, motivated sellers. Look for properties 10-15% below market." },
+                        { step:"1", title:"Find undervalued ready unit", detail:"Distressed sellers, divorce sales, estate sales, motivated sellers. A rule of thumb is to look for 10-15% below market — check any specific unit against DXB Estimate rather than taking the range on trust." },
                         { step:"2", title:"Negotiate + buy quickly", detail:"Cash buyers close in 2-3 weeks. Get pre-approved mortgage for speed. Don't over-negotiate — speed beats price." },
                         { step:"3", title:"Renovate strategically", detail:"Kitchen + bathrooms = 80% of value add. Budget AED 80-150/sqft for mid-range. Don't over-renovate for the area." },
                         { step:"4", title:"Rent while waiting (optional)", detail:"Furnished short-term rental during renovation period. 6-8% yield offsets holding costs." },

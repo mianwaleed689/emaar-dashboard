@@ -67,6 +67,25 @@ const LABEL_KEY = /\blabel\s*:\s*$/;
  */
 const RGB_TRIPLET = /^\s*(?:25[0-5]|2[0-4]\d|1\d\d|\d{1,2})\s*(?:,\s*(?:25[0-5]|2[0-4]\d|1\d\d|\d{1,2})\s*){1,2}$/;
 
+/**
+ * A figure the page explicitly declares is NOT a measurement.
+ *
+ * The `sourced` criterion asks whether a reader can tell where a number came
+ * from. "Sell 12% above plan — stress test, not a forecast" answers that
+ * completely: it came from nowhere, deliberately, and the page says so. A flip
+ * calculator needs a downside and an upside case, and demanding a citation for
+ * one would either delete a useful tool or invite a fake citation.
+ *
+ * Held to a handful of unambiguous phrases. Anyone can defeat this by typing
+ * "stress test" beside a fabricated market claim — but that is lying in prose,
+ * which no regex was ever going to catch, and is a different failure from a
+ * number quietly appearing with no account of itself.
+ *
+ * This does NOT excuse a number from being right. It records that the page has
+ * told the reader what kind of number it is.
+ */
+const DECLARED_ASSUMPTION = /not a forecast|stress test|rules? of thumb|practitioner guidance|not measured|illustrative/i;
+
 /** The code admitting, in its own words, that a figure is not good. */
 const ADMISSION = /unverified|no published source|stale|not confirmed|could not be traced|do not quote|placeholder|dummy|fake\b|hardcoded/i;
 
@@ -104,7 +123,7 @@ function analyse(source) {
     const context = lines
       .slice(Math.max(0, i - CONTEXT_LINES), i + CONTEXT_LINES + 1)
       .join(" ");
-    const sourced = PROVENANCE.test(context);
+    const sourced = PROVENANCE.test(context) || DECLARED_ASSUMPTION.test(context);
     const admits = ADMISSION.test(context);
 
     found.forEach(m => {
@@ -135,4 +154,4 @@ function analyse(source) {
   };
 }
 
-module.exports = { analyse, CLAIM, PROVENANCE, NOISE, ADMISSION, LABEL_KEY, RGB_TRIPLET };
+module.exports = { analyse, CLAIM, PROVENANCE, NOISE, ADMISSION, LABEL_KEY, RGB_TRIPLET, DECLARED_ASSUMPTION };

@@ -7,6 +7,21 @@
 import React from "react";
 import { T } from "../data";
 import { SvgIcons } from "../components/Icons";
+import SourceList from "../components/SourceList";
+
+/* Broker registration is a regulatory obligation, so the tab should point at
+   the regulator rather than paraphrase it. Dubai REST is the app agents
+   actually use to check their own standing — naming it is more useful than any
+   summary this tab could write. */
+const COMPLIANCE_SOURCES = [
+  { title: "Dubai Land Department — broker registration and RERA services",
+    url: "https://dubailand.gov.ae/en/eservices/",
+    publisher: "Dubai Land Department",
+    note: "where a broker card is renewed and its status confirmed" },
+  { title: "Dubai REST — official DLD app for brokers and owners",
+    publisher: "Dubai Land Department",
+    note: "check registration status directly; no public API exists for this tab to query" },
+];
 
 function ComplianceTab({ reraCard, setReraCard, reraCardLoading, setReraCardLoading, reraCardSaved, setReraCardSaved, waTemplate, setWaTemplate, firebaseUser, orgRole, userName }) {
 
@@ -70,6 +85,41 @@ function ComplianceTab({ reraCard, setReraCard, reraCardLoading, setReraCardLoad
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={T.gold} strokeWidth="1.8" strokeLinecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
                       <div style={{ fontSize:13, fontWeight:700, color:T.white }}>RERA Broker Card</div>
                     </div>
+
+                    {/* ── EMPTY STATE ────────────────────────────────────────
+                        With no card saved the panel showed two blank inputs and
+                        no status, which reads as "nothing to do here". This is
+                        the one tab where an empty state is itself the warning:
+                        an unregistered broker cannot legally market property in
+                        Dubai, and the tracker only helps if it is filled in. */}
+                    {reraStatus === "none" && !reraCardLoading && (
+                      <div style={{ margin:"16px 18px 0", padding:"13px 15px", background:"rgba(245,158,11,0.06)", border:"1px solid rgba(245,158,11,0.28)", borderRadius:10 }}>
+                        <div style={{ fontSize:12, fontWeight:700, color:"#F59E0B", marginBottom:4 }}>
+                          No RERA card recorded
+                        </div>
+                        <div style={{ fontSize:10.5, color:T.textSecondary, lineHeight:1.65 }}>
+                          Add your broker number and expiry below and this tab will warn you before it
+                          lapses. Practising without a valid RERA broker registration is a regulatory
+                          matter, not an administrative one — and an expiry that passes unnoticed is the
+                          most common way it happens.
+                        </div>
+                      </div>
+                    )}
+
+                    {/* ── WHAT THIS TRACKER IS ───────────────────────────────
+                        It stores what you type and counts down to the date you
+                        entered. It does NOT check the number against RERA, and
+                        cannot: there is no public verification endpoint. An agent
+                        who reads a green "Valid" badge as confirmation that their
+                        registration is in good standing has been misled by us,
+                        so the panel says plainly whose word it is on. */}
+                    {reraStatus !== "none" && (
+                      <div style={{ margin:"16px 18px 0", fontSize:10, color:T.textMuted, lineHeight:1.6 }}>
+                        Self-entered — this is your record of your own card, not a check against RERA.
+                        Nothing here verifies the number is registered or in good standing; confirm
+                        status with the Dubai Land Department or through the Dubai REST app.
+                      </div>
+                    )}
 
                     {/* Status banner */}
                     {reraStatus !== "none" && (
@@ -219,6 +269,10 @@ function ComplianceTab({ reraCard, setReraCard, reraCardLoading, setReraCardLoad
                     ))}
                   </div>
                 </div>
+              </div>
+
+              <div style={{ marginTop:16, paddingTop:12, borderTop:`1px solid ${T.border}` }}>
+                <SourceList sources={COMPLIANCE_SOURCES} />
               </div>
             </>);
 }

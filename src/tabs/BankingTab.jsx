@@ -119,7 +119,20 @@ function BankingTab({ orgId, userId, liveEiborRates,
               },
             };
 
-            /* ── 8 Banks with full data ── */
+            /* ── 8 BANKS, WITH PRODUCT DETAIL ────────────────────────────
+               Rates are overridden from src/data/mortgageMarket.js further down,
+               so this array is not a competing source for those. The PRODUCT
+               details, though — minimum salary, overpayment allowance, what each
+               bank is best for — live only here, and they carried no date at all.
+
+               A minimum salary an agent quotes to a buyer is exactly the kind of
+               figure that goes stale silently: the bank changes it, nobody
+               notices, and the client is told they qualify when they do not.
+               Every entry now carries the capture date, and the panel shows it.
+
+               A `bestFor` line is our editorial read, not the bank's marketing —
+               that is stated on screen so it is not mistaken for a quote. */
+            const BANK_DETAILS_AS_OF = BANK_RATES_AS_OF;
             const BANKS = [
               {
                 name: "Emirates NBD",
@@ -140,6 +153,7 @@ function BankingTab({ orgId, userId, liveEiborRates,
                 salaryTransferDiscount: 0.25,
                 islamicOption: true,
                 strengths: ["Largest UAE bank","Digital-first process","Broadest nationality acceptance","Expat + non-resident specialist"],
+                detailsAsOf: BANK_DETAILS_AS_OF,
                 bestFor: "All profiles — especially expats and non-residents",
                 processingTime: "2-5 days pre-approval, 4-6 weeks full",
                 websiteUrl: "emiratesnbd.com",
@@ -163,6 +177,7 @@ function BankingTab({ orgId, userId, liveEiborRates,
                 salaryTransferDiscount: 0.20,
                 islamicOption: true,
                 strengths: ["Balance transfer specialist","Quick approvals","Transparent fee structure","Competitive variable margin"],
+                detailsAsOf: BANK_DETAILS_AS_OF,
                 bestFor: "Balance transfer + high-salary expats",
                 processingTime: "3-5 days pre-approval",
                 websiteUrl: "adcb.com",
@@ -186,6 +201,7 @@ function BankingTab({ orgId, userId, liveEiborRates,
                 salaryTransferDiscount: 0.39,  // 1.89% non-salary vs 1.50% salary transfer
                 islamicOption: false,
                 strengths: ["Best variable margin (1.5% EIBOR+)","Large loan specialist","Green home financing","High-income expat focus"],
+                detailsAsOf: BANK_DETAILS_AS_OF,
                 bestFor: "High earners (AED 18K+) wanting low variable rate",
                 processingTime: "3-7 days pre-approval",
                 websiteUrl: "bankfab.com",
@@ -209,6 +225,7 @@ function BankingTab({ orgId, userId, liveEiborRates,
                 salaryTransferDiscount: 0.15,
                 islamicOption: false,
                 strengths: ["Most competitive fixed rates","First-Time Buyer programme","Flexible early settlement","Digital-first application"],
+                detailsAsOf: BANK_DETAILS_AS_OF,
                 bestFor: "First-time buyers and competitive rate seekers",
                 processingTime: "2-4 days pre-approval (fastest)",
                 websiteUrl: "mashreq.com",
@@ -232,6 +249,7 @@ function BankingTab({ orgId, userId, liveEiborRates,
                 salaryTransferDiscount: 0.25,
                 islamicOption: false,
                 strengths: ["International expat specialist","25% annual overpayment allowed","Global banking relationship","UK/EU/US buyer favourite"],
+                detailsAsOf: BANK_DETAILS_AS_OF,
                 bestFor: "High earners, international buyers, existing HSBC customers",
                 processingTime: "60 min pre-approval (approval in principle)",
                 websiteUrl: "hsbc.ae",
@@ -256,6 +274,7 @@ function BankingTab({ orgId, userId, liveEiborRates,
                 islamicOption: true,
                 islamicOnly: true,
                 strengths: ["Sharia-compliant Murabaha/Ijarah","Lowest min salary AED 7,000","Off-plan financing available","No riba (interest)"],
+                detailsAsOf: BANK_DETAILS_AS_OF,
                 bestFor: "Sharia-compliant buyers, lower-income earners, off-plan Islamic finance",
                 processingTime: "3-7 days pre-approval",
                 websiteUrl: "dib.ae",
@@ -279,6 +298,7 @@ function BankingTab({ orgId, userId, liveEiborRates,
                 salaryTransferDiscount: 0.25,
                 islamicOption: false,
                 strengths: ["Lower min salary AED 10K","Abu Dhabi/Dubai/RAK coverage","Simple digital process","Flexible 1-25yr terms"],
+                detailsAsOf: BANK_DETAILS_AS_OF,
                 bestFor: "Mid-income residents in Abu Dhabi, Dubai, RAK",
                 processingTime: "3-7 days pre-approval",
                 websiteUrl: "rakbank.ae",
@@ -302,6 +322,7 @@ function BankingTab({ orgId, userId, liveEiborRates,
                 salaryTransferDiscount: 0.20,
                 islamicOption: false,
                 strengths: ["Best 5yr fixed rate (4.10%)","Refinancing specialist","UK/India/Asia expat favourite","No early settlement after 3yrs"],
+                detailsAsOf: BANK_DETAILS_AS_OF,
                 bestFor: "Long-term fixed rate seekers, refinancing, UK/Indian expats",
                 processingTime: "3-5 days pre-approval",
                 websiteUrl: "sc.com/ae",
@@ -500,6 +521,26 @@ function BankingTab({ orgId, userId, liveEiborRates,
                           <div key={i} style={{ fontSize:10, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.6 }}>{h}</div>
                         ))}
                       </div>
+                      {/* ── EMPTY STATE ────────────────────────────────────
+                          The filters combine salary, Islamic-only and rate type,
+                          and some combinations match nothing. An empty table read
+                          as "no bank will lend to this client" when it meant
+                          "no bank in our eight matches every box at once" — a
+                          dangerous thing to conclude in front of a buyer. */}
+                      {filteredBanks.length === 0 && (
+                        <div style={{ padding:"28px 20px", textAlign:"center" }}>
+                          <div style={{ fontSize:13, fontWeight:700, color:T.textSecondary, marginBottom:6 }}>
+                            No bank matches every filter
+                          </div>
+                          <div style={{ fontSize:11, color:T.textMuted, lineHeight:1.7, maxWidth:460, margin:"0 auto" }}>
+                            This does not mean the client cannot borrow. It means none of the {BANKS.length} banks
+                            tracked here meets all the selected conditions at once — most often the salary
+                            threshold combined with Islamic-only. Relax one filter to see the near misses,
+                            and remember these are advertised terms as of {BANK_RATES_AS_OF}; a broker can
+                            often place a case a rate table cannot.
+                          </div>
+                        </div>
+                      )}
                       {filteredBanks.map((b,i)=>{
                         const isSelected = b.name === bankSelected;
                         const ltv = bankType==="nonResident" ? b.maxLTV_nonResident : b.maxLTV_resident;
