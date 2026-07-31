@@ -24,23 +24,15 @@
  */
 const fs = require("fs");
 const path = require("path");
+const { analyse } = require("./lib/claims");
 
 const DETAIL = process.argv.includes("--detail");
 const ONLY = (process.argv.find(a => a.startsWith("--file=")) || "").split("=")[1];
 
 const ROOTS = ["src/tabs", "src/components", "src/pages", "src/data"];
 
-/** A claim is a string literal containing a figure a reader would act on. */
-const CLAIM = /"[^"]*?(?:AED\s?[\d,]+|\d+(?:\.\d+)?%|\b\d{1,3}(?:,\d{3})+\b)[^"]*"/g;
-
-/** Words that indicate provenance sits nearby. */
-const PROVENANCE = /source|sourced|asOf|as of|verified|DLD|Land Department|ValuStrat|REIDIN|Knight Frank|Provident|Central Bank|CBUAE|Bayut|Property Monitor|n\s*=|sample|published|reported|per\s+\w+\s+20\d\d|20\d\d-\d\d-\d\d|\b(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\w*\s+20\d\d|FY20\d\d|Q[1-4]\s?20\d\d/i;
-
-/** Lines that are styling, not content. */
-const NOISE = /rgba?\(|#[0-9a-fA-F]{3,8}|px|borderRadius|fontSize|gridTemplate|padding|margin|width|height|zIndex|opacity|translate|viewBox|strokeWidth|d="M|linear-gradient|cubic-bezier|@media|keyframes/;
-
-/** Admissions that the code already knows a figure is bad. */
-const ADMISSION = /unverified|no published source|stale|not confirmed|could not be traced|do not quote|placeholder|dummy|fake|TODO|FIXME|hardcoded/i;
+/* Claim detection lives in scripts/lib/claims.js so this tool and the
+   scorecard cannot disagree about the same file. */
 
 function walk(dir, out = []) {
   if (!fs.existsSync(dir)) return out;
@@ -53,47 +45,14 @@ function walk(dir, out = []) {
 }
 
 function auditFile(file) {
-  const lines = fs.readFileSync(file, "utf8").split(/\r?\n/);
-  const findings = [];
-  let inBlockComment = false;
-
-  lines.forEach((line, i) => {
-    const trimmed = line.trim();
-
-    /* Track block comments so documentation about a fix is not itself flagged. */
-    if (inBlockComment) {
-      if (trimmed.includes("*/")) inBlockComment = false;
-      return;
-    }
-    /* JSX comments open with "{/*", not "/*" — missing that counted the prose
-       inside a comment as a live claim. */
-    if (/^\{?\/\*/.test(trimmed) && !trimmed.includes("*/")) { inBlockComment = true; return; }
-    if (trimmed.startsWith("//") || trimmed.startsWith("*") || /^\{?\/\*/.test(trimmed)) return;
-    if (NOISE.test(line)) return;
-
-    const claims = line.match(CLAIM);
-    if (!claims) return;
-
-    /* Provenance may sit on the same line or within three lines either side —
-       a caption, an asOf, a source prop. */
-    const context = lines.slice(Math.max(0, i - 3), i + 4).join(" ");
-    const hasProvenance = PROVENANCE.test(context);
-    const admits = ADMISSION.test(context);
-
-    claims.forEach(c => {
-      const claim = c.slice(1, -1).trim();
-      if (claim.length < 4) return;
-      findings.push({
-        line: i + 1,
-        claim: claim.length > 74 ? claim.slice(0, 74) + "…" : claim,
-        hasProvenance,
-        admits,
-        severity: admits ? "ADMITTED" : hasProvenance ? "ok" : "UNSOURCED",
-      });
-    });
-  });
-
-  return findings;
+  const { claims } = analyse(fs.readFileSync(file, "utf8"));
+  return claims.map(c => ({
+    line: c.line,
+    claim: c.text,
+    severity: c.severity,
+    admits: c.severity === "ADMITTED",
+    hasProvenance: c.severity === "ok",
+  }));
 }
 
 const files = ROOTS.flatMap(r => walk(r)).filter(f => !ONLY || f.includes(ONLY));

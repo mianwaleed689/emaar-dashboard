@@ -22,6 +22,7 @@ import {
 } from "../data/marketFacts";
 import MarketCycleHistory from "../components/MarketCycleHistory";
 import MarketAlmanac from "../components/MarketAlmanac";
+import SourceList from "../components/SourceList";
 import ChapterNav, { Chapter } from "../components/ChapterNav";
 import {
   Kpi as UIKpi,
@@ -775,9 +776,15 @@ function MarketTab({ liveNeighbourhoods=[], liveMarketData, allDevelopers, expan
             </a>
           ))}
         </div>
-        <div style={{ marginTop: 12, fontSize: 10, color: T?.textMuted || "#666", lineHeight: 1.6 }}>
-          All data sourced from official DLD reports, independent research firms (ValuStrat, REIDIN, Knight Frank, Cavendish Maxwell), and market aggregators. Every metric links to its primary source. Last updated: Session 7 · April 2026.
-        </div>
+        {/* This footer used to read "All data sourced from official DLD reports…
+            Every metric links to its primary source" — a claim the tab did not
+            honour, because nothing on it linked anywhere. Replaced with the
+            actual sources as links a reader can open. A promise of transparency
+            that cannot be clicked is worse than making no promise. */}
+        <SourceList
+          sources={MARKET_TAB_SOURCES}
+          style={{ marginTop: 14, paddingTop: 12, borderTop: `1px solid ${T?.border || "#222"}` }}
+        />
       </div>
 
 

@@ -30,15 +30,13 @@
  */
 const fs = require("fs");
 const path = require("path");
+const { analyse } = require("./lib/claims");
 
 const ONLY = (process.argv.find(a => a.startsWith("--tab=")) || "").split("=")[1];
 
 const TAB_DIR = "src/tabs";
 
-const CLAIM = /"[^"]*?(?:AED\s?[\d,]+|\d+(?:\.\d+)?%|\b\d{1,3}(?:,\d{3})+\b)[^"]*"/g;
-const PROVENANCE_TEXT = /source|asOf|as of|verified|DLD|Land Department|ValuStrat|REIDIN|Knight Frank|Provident|Central Bank|CBUAE|Property Monitor|n\s*=|sample|published|reported|20\d\d-\d\d-\d\d|FY20\d\d|Q[1-4]\s?20\d\d/i;
-const NOISE = /rgba?\(|#[0-9a-fA-F]{3,8}|px|borderRadius|fontSize|gridTemplate|padding|margin|width|height|zIndex|opacity|viewBox|strokeWidth|d="M|gradient|keyframes/;
-const ADMISSION = /unverified|no published source|stale|not confirmed|could not be traced|do not quote|placeholder|dummy|fake\b|hardcoded/i;
+/* Claim detection is shared with audit-claims.js — see scripts/lib/claims.js. */
 
 /* Signals that a tab meets a criterion. */
 const USES_PROVENANCE_UI = /SourceBadge|SourceList|classifyProvenance|isMeasured|valueSharedWith|provenance/;
@@ -48,35 +46,8 @@ const READS_LIVE_DATA = /props|live[A-Z]|useFirestore|useAlmanac|useMarket|\{\s*
 
 function scoreFile(file) {
   const src = fs.readFileSync(file, "utf8");
-  const lines = src.split(/\r?\n/);
-
-  let claims = 0, sourced = 0, admitted = 0;
-  let inBlock = false;
-
-  lines.forEach((line, i) => {
-    const t = line.trim();
-    if (inBlock) { if (t.includes("*/")) inBlock = false; return; }
-    /* JSX comments open with "{/*" — see audit-claims.js. */
-    if (/^\{?\/\*/.test(t) && !t.includes("*/")) { inBlock = true; return; }
-    if (t.startsWith("//") || t.startsWith("*") || /^\{?\/\*/.test(t)) return;
-    if (NOISE.test(line)) return;
-
-    const found = line.match(CLAIM);
-    if (!found) return;
-
-    const ctx = lines.slice(Math.max(0, i - 3), i + 4).join(" ");
-    const hasProv = PROVENANCE_TEXT.test(ctx);
-    const admits = ADMISSION.test(ctx);
-
-    found.forEach(c => {
-      if (c.length < 6) return;
-      claims++;
-      if (admits) admitted++;
-      else if (hasProv) sourced++;
-    });
-  });
-
-  const unsourced = claims - sourced - admitted;
+  const { counts } = analyse(src);
+  const { total: claims, sourced, unsourced, admitted } = counts;
 
   const checks = {
     sourced:    claims === 0 || unsourced === 0,
@@ -87,8 +58,8 @@ function scoreFile(file) {
     live:       READS_LIVE_DATA.test(src),
   };
 
-  /* Weighted: a tab that can mislead a client is worse than one that looks
-     inconsistent. Sourced and honest carry three times the weight. */
+  /* Weighted: a tab that can mislead a client in front of them is worse than
+     one that merely looks inconsistent. */
   const WEIGHTS = { sourced: 3, honest: 3, provenance: 2, consistent: 1, emptyState: 1, live: 2 };
   const max = Object.values(WEIGHTS).reduce((a, b) => a + b, 0);
   const got = Object.entries(checks).reduce((n, [k, ok]) => n + (ok ? WEIGHTS[k] : 0), 0);
@@ -96,7 +67,7 @@ function scoreFile(file) {
   return {
     file, claims, sourced, unsourced, admitted, checks,
     score: Math.round((got / max) * 100),
-    lines: lines.length,
+    lines: src.split(/\r?\n/).length,
   };
 }
 
