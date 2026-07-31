@@ -3,7 +3,7 @@
    1,265 projects with handover dates  construction tracking */
 
 import React, { useState, useMemo } from "react";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from "recharts";
 import { T } from "../data";
 
 const fmtP = n => n ? "AED "+Math.round(n).toLocaleString() : "--";
@@ -148,7 +148,7 @@ export default function HandoverTab({
                 <Tooltip contentStyle={{background:T.surface,border:"1px solid "+T.border,borderRadius:6,fontSize:10}} formatter={v=>[v+" projects","Handovers"]}/>
                 <Bar dataKey="count" radius={[2,2,0,0]}>
                   {chartData.map((d,i)=>(
-                    <cell key={i} fill={d.fill}/>
+                    <Cell key={i} fill={d.fill}/>
                   ))}
                 </Bar>
               </BarChart>

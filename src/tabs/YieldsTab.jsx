@@ -4,7 +4,7 @@
    Real verified yields from Bayut/Driven/Knight Frank Q1 2026 */
 
 import React, { useState, useMemo } from "react";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, Cell } from "recharts";
 import { T } from "../data";
 import SourceBadge from "../components/SourceBadge";
 
@@ -112,7 +112,7 @@ export default function YieldsTab({ liveNeighbourhoods=[], handleTabChange, glob
               <ReferenceLine y={parseFloat(avgGross)} stroke="#D4A843" strokeDasharray="4 4" label={{value:"Dubai Avg",fill:"#D4A843",fontSize:9}}/>
               <Bar dataKey="gross" name="Gross Yield" radius={[3,3,0,0]} fill="#10B981">
                 {chartData.map((d,i)=>(
-                  <cell key={i} fill={d.fill}/>
+                  <Cell key={i} fill={d.fill}/>
                 ))}
               </Bar>
               <Bar dataKey="net" name="Net Yield" radius={[3,3,0,0]} fill="#84CC16" opacity={0.6}/>

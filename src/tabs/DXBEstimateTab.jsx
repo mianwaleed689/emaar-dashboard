@@ -4,7 +4,30 @@
 
 import React, { useState, useMemo } from "react";
 import { T } from "../data";
+import SourceList from "../components/SourceList";
+import { classifyProvenance, PROVENANCE } from "../utils/provenance";
 
+const DXB_ESTIMATE_SOURCES = [
+  { title: "Dubai Land Department — transaction and price open data",
+    url: "https://dubailand.gov.ae/en/open-data/real-estate-data/",
+    publisher: "Dubai Land Department",
+    note: "the median price per sqft every estimate starts from" },
+];
+
+/* ── ON THE ADJUSTMENT MULTIPLIERS ──────────────────────────────────────────
+   These are judgement, not measurement. Nothing in this platform regresses sale
+   price against floor level or condition; the figures below are the conventional
+   rules of thumb a Dubai valuer would apply, and they move the answer by up to
+   35% between a low-floor unit needing work and a new penthouse.
+
+   They are kept rather than removed because an unadjusted median PPSF is a worse
+   answer for a specific unit, and because the multipliers are stated here and on
+   screen, which makes them arguable. That is the same standard applied to the
+   Risk tab's factor weights: a stated assumption an agent can push back on beats
+   a hidden one.
+
+   What must not happen is an agent reading the output as a valuation. The result
+   panel says so, in the panel, not only in a footnote. */
 const fmtP = n => n ? "AED "+Math.round(n).toLocaleString() : "--";
 
 export default function DXBEstimateTab({ liveNeighbourhoods=[], handleTabChange, globalFilters={} }) {
@@ -66,7 +89,14 @@ export default function DXBEstimateTab({ liveNeighbourhoods=[], handleTabChange,
     const highVal   = Math.round(midVal * (1 + conf.band));
     const grossYield= parseFloat(selectedComm.grossYield||0);
     const annualRent= grossYield>0 ? Math.round(midVal * (grossYield/100)) : null;
-    setResult({ midVal, lowVal, highVal, adjPpsf:Math.round(adjPpsf), basePpsf, sqft, annualRent, grossYield, community:selectedComm, confidence:conf });
+    /* The confidence badge reflects how MANY transactions sit behind the price.
+       It says nothing about whether that price was measured at all — an
+       area-level estimate carrying a large notional sample would read "High
+       confidence", which is exactly backwards. Only 60 of the 193 communities
+       in this platform have a measured price; the rest are estimated from their
+       wider area. A valuation tool has to say which one it just used. */
+    const provenance = classifyProvenance(selectedComm);
+    setResult({ midVal, lowVal, highVal, adjPpsf:Math.round(adjPpsf), basePpsf, sqft, annualRent, grossYield, community:selectedComm, confidence:conf, provenance });
   }
 
   const selStyle = {padding:"8px 12px",background:"rgba(255,255,255,0.04)",border:"1px solid "+T.border,borderRadius:8,color:"#CBD5E1",fontSize:12,outline:"none",fontFamily:"'Outfit',sans-serif",width:"100%"};
@@ -76,9 +106,26 @@ export default function DXBEstimateTab({ liveNeighbourhoods=[], handleTabChange,
       <div style={{marginBottom:16}}>
         <h2 style={{margin:0,fontSize:20,fontWeight:900,color:T.white,fontFamily:"'Fraunces',serif"}}>DXB Estimate</h2>
         <p style={{margin:"4px 0 0",fontSize:12,color:"#94A3B8"}}>
-          Automated property valuation  Powered by real DLD transaction data  {communities.length} communities
+          Automated property valuation  ·  DLD transaction prices, adjusted  ·  {communities.length} communities priced
         </p>
       </div>
+
+      {/* ── EMPTY STATE ────────────────────────────────────────────────────
+          Without this the community search simply returns nothing when data has
+          not loaded, which reads as "your community isn't covered" rather than
+          "the app has no price data at all". */}
+      {communities.length === 0 && (
+        <div style={{padding:"14px 16px",marginBottom:16,borderRadius:12,background:"rgba(245,158,11,0.06)",border:"1px solid rgba(245,158,11,0.25)"}}>
+          <div style={{fontSize:12,fontWeight:700,color:"#F59E0B",marginBottom:5}}>No priced communities available</div>
+          <div style={{fontSize:11,color:"#94A3B8",lineHeight:1.7}}>
+            {(liveNeighbourhoods||[]).length === 0
+              ? "Community data has not reached the app, so there is nothing to value against. Reload the page."
+              : `${(liveNeighbourhoods||[]).length} communities loaded but none carries a price per sqft, so no estimate can be produced.`}
+            {" "}The search box below will return nothing until price data loads — that is a data
+            problem, not a sign your community is uncovered.
+          </div>
+        </div>
+      )}
 
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16,marginBottom:16}}>
         <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid "+T.border,borderRadius:14,padding:"20px"}}>
@@ -198,8 +245,32 @@ export default function DXBEstimateTab({ liveNeighbourhoods=[], handleTabChange,
                   </div>
                 ))}
               </div>
+              {/* Where the base price came from — measured, or estimated from the
+                  wider area. This changes what the number is worth far more than
+                  the transaction count does. */}
+              {result.provenance && (
+                <div style={{
+                  padding:"9px 12px", marginBottom:8, borderRadius:8,
+                  background:result.provenance.color+"12",
+                  border:"1px solid "+result.provenance.color+"38",
+                }}>
+                  <div style={{fontSize:10,fontWeight:700,color:result.provenance.color,marginBottom:3,letterSpacing:0.3}}>
+                    Base price: {result.provenance.label}
+                  </div>
+                  <div style={{fontSize:10,color:"#94A3B8",lineHeight:1.6}}>
+                    {result.provenance.level === PROVENANCE.VERIFIED
+                      ? `The AED ${result.basePpsf.toLocaleString()}/sqft starting point is measured from recorded DLD transactions in ${result.community.community}.`
+                      : `The AED ${result.basePpsf.toLocaleString()}/sqft starting point is NOT measured in ${result.community.community} itself — it is carried from wider area data. Treat the range as indicative of the area, not of this community.`}
+                    {result.provenance.detail ? ` ${result.provenance.detail}` : ""}
+                  </div>
+                </div>
+              )}
               <div style={{padding:"10px 12px",background:"rgba(255,255,255,0.02)",border:"1px solid "+T.border,borderRadius:8,fontSize:10,color:"#64748B",lineHeight:1.6}}>
-                Estimate based on DLD median PPSF for {result.community.community}. Adjusted for floor level, condition, and property type. This is an indicative estimate only  not a formal valuation.
+                Adjusted for floor, condition, beds and type using standard valuer rules of thumb —
+                those adjustments are our judgement, not measured, and move the answer by up to 35%
+                across the range of inputs. <strong style={{color:"#94A3B8"}}>This is an indicative
+                estimate, not a formal valuation</strong>, and it is not accepted by a bank or the DLD
+                in place of one.
               </div>
               <button type="button" onClick={()=>handleTabChange&&handleTabChange("Neighbourhoods")}
                 style={{width:"100%",marginTop:10,padding:"10px",borderRadius:8,border:"1px solid "+T.border,background:"rgba(255,255,255,0.03)",color:"#94A3B8",fontSize:11,cursor:"pointer",fontFamily:"'Outfit',sans-serif"}}>
@@ -214,6 +285,10 @@ export default function DXBEstimateTab({ liveNeighbourhoods=[], handleTabChange,
             </div>
           )}
         </div>
+      </div>
+
+      <div style={{paddingTop:12,borderTop:"1px solid "+T.border}}>
+        <SourceList sources={DXB_ESTIMATE_SOURCES} />
       </div>
     </div>
   );
