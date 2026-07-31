@@ -239,11 +239,12 @@ export default function OverviewTab({
                   Confirm before quoting a client.
                 </div>
               )}
-              {/* EIBOR is live and dated separately in the market row — saying so
-                  here stops a reader assuming everything shares one date. */}
-              <div style={{ color: muted, marginTop: 4, opacity: 0.85 }}>
-                EIBOR updates daily and is dated separately below.
-              </div>
+              {/* The "EIBOR is dated separately" line lived here and made this
+                  four lines of amber in the corner, competing with the page
+                  title. EIBOR already carries its own "live" marker and its own
+                  as-of date on its card in the market row, so the point was
+                  being made twice — and the second time was the one adding
+                  clutter to the most prominent corner of the page. */}
             </div>
           );
         })()}
@@ -302,11 +303,14 @@ export default function OverviewTab({
             accent="#68D391"
             context={`After service charges, 5% vacancy and 5% management. Gross ${formatPct(coverage.medianGrossYield)}. n=${coverage.netYieldSampleSize}`}
           />
+          {/* "1,513" alone could be anything — it was the only KPI on the row
+              whose unit lived in the caption instead of the number. A figure an
+              agent reads aloud to a client needs its currency attached. */}
           <Kpi
             large
             label="Median price"
-            value={coverage.medianPPSF ? `${Number(coverage.medianPPSF).toLocaleString()}` : "—"}
-            context={`AED per sqft, community medians. n=${coverage.ppsfSampleSize}`}
+            value={coverage.medianPPSF ? `AED ${Number(coverage.medianPPSF).toLocaleString()}` : "—"}
+            context={`Per square foot, community medians. n=${coverage.ppsfSampleSize}`}
           />
           {/* Caption read "Tracked across all developers", which a reader takes
               as the whole catalogue. It is not: archived projects are filtered
@@ -332,7 +336,17 @@ export default function OverviewTab({
         </SectionTitle>
         <Card>
           <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap", marginBottom: 12 }}>
-            <div style={{ fontSize: 26, fontWeight: 800, color: "#10B981", fontFamily: "Fraunces,serif" }}>
+            {/* Colour follows the VALUE, not the metric.
+                This was hardcoded success-green, so 31% verified rendered in the
+                same green as 95% would. The eye reads green as "good" and moves
+                on, while the sentence beside it says only 60 of 193 communities
+                can be traced to transactions. A colour that contradicts its own
+                number is the visual version of the errors this page exists to
+                prevent. */}
+            <div style={{
+              fontSize: 26, fontWeight: 800, fontFamily: "Fraunces,serif",
+              color: verifiedPct >= 70 ? "#10B981" : verifiedPct >= 40 ? "#F6AD55" : "#F59E0B",
+            }}>
               {verifiedPct}%
             </div>
             <div style={{ fontSize: 12, color: text, lineHeight: 1.6, flex: "1 1 320px" }}>
