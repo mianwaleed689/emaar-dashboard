@@ -57,6 +57,30 @@ export default function TeamTab({ teamMembers=[], teamMembersLoading, myLeads=[]
     if (!inviteEmail.trim()) { notify("Please enter agent email", "error"); return; }
     setSendingInvite(true);
     try {
+      /* SEAT CHECK.
+         seatsIncluded and seatsUsed were written onto the organisation at signup
+         and then read by nothing, so an agency paying for ten seats could invite
+         fifty. A plan whose limit is never enforced is not a plan.
+
+         Checked at invite time rather than at join time on purpose: telling a
+         manager "you are out of seats" before they send the link is far better
+         than letting an agent click a dead invite. */
+      const { getDoc } = await import("firebase/firestore");
+      const orgSnap = orgId ? await getDoc(doc(db, "organisations", orgId)) : null;
+      const org = orgSnap?.exists() ? orgSnap.data() : null;
+
+      if (org && Number(org.seatsIncluded) > 0) {
+        const used = Number(org.seatsUsed) || 1;
+        if (used >= Number(org.seatsIncluded)) {
+          notify(
+            `All ${org.seatsIncluded} seats on your plan are in use. Remove an agent or upgrade to invite more.`,
+            "error"
+          );
+          setSendingInvite(false);
+          return;
+        }
+      }
+
       const token = "inv_" + Math.random().toString(36).substring(2) + Date.now().toString(36);
       const expiresAt = new Date(Date.now() + 7*24*60*60*1000).toISOString();
       const { setDoc, doc: fsDoc } = await import("firebase/firestore");

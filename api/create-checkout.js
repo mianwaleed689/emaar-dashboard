@@ -4,8 +4,10 @@
 // SETUP (one-time, takes 10 minutes):
 // 1. Go to https://stripe.com → create account → activate UAE payments
 // 2. Go to Stripe Dashboard → Products → Create 2 products:
-//    - "DXB Analytics Pro"        -> Price: AED 299/month  (recurring)
-//    - "DXB Analytics Enterprise" -> Price: AED 799/month (recurring)
+//    - "DXB Analytics Individual Agent" -> Price: AED 300/month  (recurring)
+//    - "DXB Analytics Agency"           -> Price: AED 500/month (recurring)
+//    NOTE: repriced 2026-07-31 from 299/799. src/config/pricing.js is the
+//    source of truth for what the app displays; these must match it.
 // 3. Copy the Price IDs (start with "price_...") into STRIPE_PRICES below
 // 4. In Vercel Dashboard → your project → Settings → Environment Variables → add:
 //    STRIPE_SECRET_KEY  = your Stripe live mode secret key (from Stripe Dashboard -> Developers -> API Keys)

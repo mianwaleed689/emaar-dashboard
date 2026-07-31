@@ -61,6 +61,27 @@ export default function JoinPage() {
       await updateDoc(doc(db, "invites", token), {
         used: true, usedAt: new Date().toISOString(), agentUid: uid
       });
+
+      /* Take the seat.
+         seatsUsed and agentCount were written at signup and then never moved, so
+         the seat check on the invite screen would have compared against a number
+         frozen at 1 forever. increment() rather than a read-then-write because
+         two agents accepting invites at the same moment would otherwise both
+         read the same value and one of the seats would go unrecorded. */
+      if (invite.orgId) {
+        try {
+          const { increment } = await import("firebase/firestore");
+          await updateDoc(doc(db, "organisations", invite.orgId), {
+            seatsUsed: increment(1),
+            agentCount: increment(1),
+            updatedAt: new Date().toISOString(),
+          });
+        } catch (e) {
+          /* The agent is already created and in the org; a failed counter must
+             not block them getting in. Logged so the discrepancy is findable. */
+          console.error("Seat counter not incremented for org " + invite.orgId, e);
+        }
+      }
       // Notify org owner(s) that agent has joined
       try {
         const ownerSnap = await getDocs(query(collection(db,"users"),where("orgId","==",invite.orgId),where("orgRole","==","owner")));
