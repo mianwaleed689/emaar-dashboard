@@ -42,6 +42,9 @@ import { MARKET_FACTS, H1_2026_RANGE } from "../data/marketFacts";
 import SourceBadge from "../components/SourceBadge";
 import { classifyProvenance, PROVENANCE } from "../utils/provenance";
 import { Card, SectionTitle, Kpi } from "../components/ui/DataDisplay";
+import AgentDesk from "../components/overview/AgentDesk";
+import AgencyDesk from "../components/overview/AgencyDesk";
+import { VIEW, VIEW_META, defaultViewFor, availableViews } from "../utils/overviewRoles";
 import {
   computeCoverage,
   topByNetYield,
@@ -124,8 +127,21 @@ export default function OverviewTab({
   listings = [],
   myPortfolio = [],
   watchlist = [],
+  /* Who is looking. The platform already knows - orgRole is set at signup or
+     when an invite is accepted - so the page defaults to their view rather than
+     asking a question that has a right answer. */
+  orgId = null,
+  orgRole = null,
+  orgName = "",
+  org = null,
+  userRole = null,
+  teamMembers = [],
   handleTabChange = () => {},
 }) {
+  /* Land on the view that matches who they are; let them switch. */
+  const [view, setView] = useState(() => defaultViewFor({ orgRole, userRole, orgId }));
+  const offered = useMemo(() => availableViews({ orgId }), [orgId]);
+
   const [role, setRole] = useState("Investor");
   const activeRole = ROLES.find(r => r.key === role) || ROLES[0];
 
@@ -249,6 +265,72 @@ export default function OverviewTab({
           );
         })()}
       </div>
+
+      {/* ── WHO IS LOOKING ────────────────────────────────────────────────
+          The selector sits HERE, at the top, and changes the page. It used to
+          sit at the bottom and change four links.
+
+          An agent between viewings and an agency owner checking whether the
+          subscription earns its keep are asking different questions, and the
+          previous page answered neither - it opened with "193 communities, 31%
+          verified", which is a fact about the product rather than about their
+          day.
+
+          It defaults to whoever they are: orgRole is already known from signup
+          or from accepting an invite, so nobody is asked a question the system
+          can answer. They can still switch. */}
+      {offered.length > 1 && (
+        <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+          {offered.map(v => {
+            const meta = VIEW_META[v];
+            const active = view === v;
+            return (
+              <button
+                key={v}
+                type="button"
+                onClick={() => setView(v)}
+                title={meta.answers}
+                style={{
+                  padding: "7px 15px", borderRadius: 999, cursor: "pointer",
+                  border: `1px solid ${active ? meta.color : (T.border || "rgba(255,255,255,0.08)")}`,
+                  background: active ? meta.color + "18" : "transparent",
+                  color: active ? meta.color : muted,
+                  fontSize: 12, fontWeight: active ? 700 : 500,
+                  fontFamily: "'Outfit',sans-serif",
+                }}
+              >
+                {meta.label}
+              </button>
+            );
+          })}
+          <span style={{ fontSize: 10.5, color: muted, marginLeft: 2 }}>
+            {VIEW_META[view]?.hint}
+          </span>
+        </div>
+      )}
+
+      {/* ── AGENT ─────────────────────────────────────────────────────── */}
+      {view === VIEW.AGENT && (
+        <AgentDesk
+          myLeads={myLeads} deals={deals} listings={listings}
+          myPortfolio={myPortfolio} watchlist={watchlist}
+          communities={liveNeighbourhoods} projects={projects}
+          handleTabChange={handleTabChange}
+        />
+      )}
+
+      {/* ── AGENCY ────────────────────────────────────────────────────── */}
+      {view === VIEW.AGENCY && (
+        <AgencyDesk
+          teamMembers={teamMembers} org={org} orgName={orgName}
+          myLeads={myLeads} deals={deals} listings={listings}
+          handleTabChange={handleTabChange}
+        />
+      )}
+
+      {/* ── RESEARCH — everything below renders only in this view ─────── */}
+      {view === VIEW.RESEARCH && (<>
+
 
       {/* ── YOUR ACTIVITY ────────────────────────────────────────────────
           Personal before market: for a returning user their own pipeline is
@@ -599,6 +681,8 @@ export default function OverviewTab({
           ))}
         </div>
       </div>
+      </>)}
+
     </div>
   );
 }

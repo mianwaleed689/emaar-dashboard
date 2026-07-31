@@ -4769,6 +4769,16 @@ const unsub = onSnapshot(nQuery, (snap) => {
                  user's own work. */
               myLeads={myLeads} deals={deals} listings={listings}
               myPortfolio={myPortfolio} watchlist={watchlist}
+              /* Who is looking. orgRole decides which view they land on, so an
+                 agent opens on their pipeline and a manager on their team,
+                 rather than both opening on platform coverage statistics. */
+              orgId={orgId} orgRole={orgRole} userRole={userRole}
+              /* orgProfile carries seatsIncluded / seatsUsed / plan, written at
+                 signup — that is what lets the agency view answer "am I paying
+                 for seats I am not using". `orgName` is not a variable in this
+                 file; the name lives on the profile. */
+              orgName={orgProfile?.name || ""} org={orgProfile}
+              teamMembers={teamMembers}
               handleTabChange={handleTabChange}
             />
           )}
