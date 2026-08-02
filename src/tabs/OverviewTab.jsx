@@ -42,6 +42,7 @@ import { MARKET_FACTS, H1_2026_RANGE } from "../data/marketFacts";
 import SourceBadge from "../components/SourceBadge";
 import { classifyProvenance, PROVENANCE } from "../utils/provenance";
 import { Card, SectionTitle, Kpi } from "../components/ui/DataDisplay";
+import MarketPulse from "../components/MarketPulse";
 import AgentDesk from "../components/overview/AgentDesk";
 import AgencyDesk from "../components/overview/AgencyDesk";
 import { VIEW, VIEW_META, defaultViewFor, availableViews } from "../utils/overviewRoles";
@@ -251,8 +252,14 @@ export default function OverviewTab({
               </div>
               {stale && (
                 <div style={{ color: "#F59E0B", marginTop: 4, lineHeight: 1.45 }}>
-                  Prices and yields below are from this date, not today.
-                  Confirm before quoting a client.
+                  {/* This used to read "Prices and yields below are from this
+                      date" — which became false the moment the market section
+                      went in above it, because those figures are computed from a
+                      far fresher Land Department export. Two dates on one screen
+                      with only one of them labelled is how a reader ends up
+                      distrusting both. It now says which data it means. */}
+                  Community prices and yields carry this date. The market figures
+                  above are separate and carry their own.
                 </div>
               )}
               {/* The "EIBOR is dated separately" line lived here and made this
@@ -265,6 +272,13 @@ export default function OverviewTab({
           );
         })()}
       </div>
+
+      {/* ── THE MARKET, BEFORE ANYTHING ELSE ──────────────────────────────
+          This tab opened with seats, team members and a plan price. An agent
+          between viewings, a manager and the owner all want the same first
+          answer — what is the market doing — and none of them wanted a seat
+          count. It renders for every view. */}
+      <MarketPulse handleTabChange={handleTabChange} />
 
       {/* ── WHO IS LOOKING ────────────────────────────────────────────────
           The selector sits HERE, at the top, and changes the page. It used to
