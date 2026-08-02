@@ -35,6 +35,33 @@ function MortgageTab({ liveNeighbourhoods=[], liveMortgageRates, liveEiborRates,
             const eiborIsLive = !!liveEiborRates?.["3m"];
             const eiborSource = eiborIsLive ? `Live - ${liveEiborRates?.asOf || "Firestore"}` : "Fallback (Feb 2026)";
 
+            /* How old is what we are showing, and did it come from the central
+               bank or from the cron's hardcoded fallback? Both were previously
+               invisible: the tab said "Live EIBOR" either way. */
+            const eiborPct = v => {
+              const n = parseFloat(v);
+              return Number.isFinite(n) ? `${n.toFixed(3)}%` : "—";
+            };
+            /* ── AGE THE RATE, NOT THE WRITE ────────────────────────────────
+               This measured `updatedAt`, which the cron stamps on every run —
+               including the runs where every source failed and it wrote a
+               hardcoded rate. The document was rewritten daily, so the age was
+               always 0 and this never once reported stale, while the number on
+               screen was five months old.
+
+               `usedFallback` is written by the cron and is the honest signal.
+               When it is set the rate is not live, whatever the write time. */
+            const eiborIsFallback = liveEiborRates?.usedFallback === true ||
+              String(liveEiborRates?.source || "").toLowerCase().includes("fallback");
+            /* asOf now describes the rate itself, so it is what to age. */
+            const eiborRateDate = liveEiborRates?.rateDate || liveEiborRates?.asOf || null;
+            const parsedRateDate = eiborRateDate ? new Date(eiborRateDate) : null;
+            const eiborAgeDays = parsedRateDate && !isNaN(parsedRateDate)
+              ? Math.floor((Date.now() - parsedRateDate.getTime()) / 86400000) : null;
+            const eiborStale = eiborIsFallback ||
+              (eiborAgeDays != null && eiborAgeDays > 7);
+            const eiborAsOf = eiborRateDate || (eiborIsLive ? "from Firestore" : "not refreshed");
+
             /* Bank rates now come from src/data/mortgageMarket.js, which carries
                its source and verification date. The variable rate is derived from
                live EIBOR rather than baked in, so it tracks the market. maxLTV
@@ -130,7 +157,19 @@ function MortgageTab({ liveNeighbourhoods=[], liveMortgageRates, liveEiborRates,
                 <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"10px 0", marginBottom:16, borderBottom:`1px solid ${T.border}`, flexWrap:"wrap", gap:8 }}>
                   <div>
                     <div style={{ fontFamily:"'Fraunces',serif", fontSize:20, fontWeight:800, color:T.white }}>Mortgage Intelligence</div>
-                    <div style={{ fontSize:11, color:T.textMuted, marginTop:3 }}>Live EIBOR · 6 bank comparison · LTV rules · Monthly payment · Total cost of buying</div>
+                    <div style={{ fontSize:11, color:T.textMuted, marginTop:3 }}>
+                      Interbank rate · 6 bank comparison · loan-to-value rules · monthly payment · total cost of buying
+                    </div>
+                    {/* Say plainly what the rate is and how old, instead of
+                        asserting "Live" regardless. */}
+                    <div style={{ fontSize:11, marginTop:6,
+                                  color: (eiborStale || eiborIsFallback) ? "#F59E0B" : T.green }}>
+                      {eiborIsFallback
+                        ? `Rates are the manually-set fallback, not a live feed${eiborAsOf ? ` (${eiborAsOf})` : ""} — confirm with the bank before quoting.`
+                        : eiborStale
+                          ? `Rates last refreshed ${eiborAgeDays} days ago (${eiborAsOf}) — confirm with the bank before quoting.`
+                          : `Rates from the UAE Central Bank${eiborAsOf ? `, ${eiborAsOf}` : ""}.`}
+                    </div>
                   </div>
                   <div style={{ display:"flex", gap:8 }}>
                     {["calculator","banks"].map(v => (
@@ -142,13 +181,24 @@ function MortgageTab({ liveNeighbourhoods=[], liveMortgageRates, liveEiborRates,
                   </div>
                 </div>
 
-                {/* EIBOR live strip */}
+                {/* ── EIBOR strip ────────────────────────────────────────
+                    THE BUG THIS FIXES: these six cards were hardcoded —
+                    "3.635% / Feb 2026" written into the JSX — while lines 32-34
+                    above read the LIVE rates from Firestore and used them in the
+                    calculator. So the calculator was right and the display was
+                    frozen, under a header reading "Live EIBOR". On 2026-08-02
+                    the cards were showing a February rate, 182 days old.
+
+                    They now read the same live values the calculator uses, and
+                    show the date Firestore actually carries. If the cron fell
+                    back to its hardcoded quarterly values, `source` says
+                    "Fallback" and that is shown rather than hidden. */}
                 <div style={{ display:"flex", gap:10, marginBottom:16, flexWrap:"wrap" }}>
                   {[
-                    { label:"EIBOR 1M",  val:"3.635%", note:"Feb 2026" },
-                    { label:"EIBOR 3M",  val:"3.593%", note:"benchmark" },
-                    { label:"EIBOR 6M",  val:"3.676%", note:"Feb 2026" },
-                    { label:"EIBOR 1Y",  val:"3.674%", note:"Feb 2026" },
+                    { label:"EIBOR 1M",  val: eiborPct(liveEiborRates?.["1m"]), note: eiborAsOf },
+                    { label:"EIBOR 3M",  val: eiborPct(EIBOR_3M),               note: eiborAsOf },
+                    { label:"EIBOR 6M",  val: eiborPct(EIBOR_6M),               note: eiborAsOf },
+                    { label:"EIBOR 1Y",  val: eiborPct(EIBOR_1Y),               note: eiborAsOf },
                     { label:"UAE CB Rate",val:"4.40%",  note:"central bank" },
                     { label:"DBR Cap",    val:"50%",    note:"of gross income" },
                   ].map((e,i) => (
