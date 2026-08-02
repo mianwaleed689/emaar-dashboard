@@ -201,13 +201,19 @@ export default function CommunityMapTab({
        it, and an agent could not tell Marina from Mirdif — which is the entire
        point of putting figures on a map rather than in a list.
 
-       This needs a LIGHT basemap with street names — but standard OpenStreetMap
-       tiles label places in the local language, so Dubai came back as الشارقة
-       and أبوظبي. CARTO Voyager is the same OpenStreetMap data rendered light
-       with English labels, which is what a Dubai agency desk actually reads. */
-    L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",{
-      attribution:"&copy; OpenStreetMap contributors &copy; CARTO",
-      maxZoom:19, subdomains:"abcd",
+       This needs a LIGHT basemap whose labels are in English AT EVERY ZOOM.
+       That last part is the trap. OpenStreetMap and CARTO Voyager both render
+       OSM's local-language name tags, so Dubai reads as English at city zoom —
+       SHARJAH, AJMAN — and flips to Arabic once you are down among the streets:
+       شارع حمدان, فرية حميرا الدائرية. Checking the city view and calling it
+       English is exactly the mistake that shipped here once already.
+
+       Esri's World Street Map is served with English labels at all zooms, which
+       is what a Dubai agency desk reads. Note the tile path is {z}/{y}/{x} —
+       Esri orders it differently from the OSM-style services. */
+    L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}",{
+      attribution:"&copy; Esri, HERE, Garmin, OpenStreetMap contributors",
+      maxZoom:19,
     }).addTo(map);
     mapInstanceRef.current = map;
     setMapReady(true);
@@ -392,11 +398,31 @@ export default function CommunityMapTab({
       filteredProjects.forEach(p=>{
         const lat=parseFloat(p.lat||p.coordinates&&p.coordinates.lat||0), lng=parseFloat(p.lng||p.coordinates&&p.coordinates.lng||0);
         const color = YIELD_COLOR(p.grossYield||0);
+        /* ── PROJECT PINS ────────────────────────────────────────────────
+           These were 12px coloured dots. On a street map full of buildings and
+           roads a 12px dot is not something you can pick out, read, or reliably
+           hit with a mouse — you cannot tell which project it is without
+           clicking, and clicking it is the hard part.
+
+           They now carry the project's name, matching the community layer, so
+           the map is readable before you click anything. */
+        const pname = (p.name || "Project").length > 26
+          ? (p.name || "Project").slice(0, 24) + "…" : (p.name || "Project");
         const icon = L.divIcon({
-          html:`<div style="width:12px;height:12px;border-radius:50%;background:${color};border:2px solid rgba(255,255,255,0.8);box-shadow:0 0 4px rgba(0,0,0,0.5)"></div>`,
-          className:"",iconSize:[12,12],iconAnchor:[6,6]
+          className: "",
+          html:`<div style="display:flex;align-items:center;gap:5px;` +
+               `background:#FFFFFF;border:1.5px solid ${color};border-radius:12px;` +
+               `padding:3px 8px 3px 5px;white-space:nowrap;` +
+               `box-shadow:0 1px 5px rgba(15,23,42,0.35);` +
+               `font-family:'Outfit',sans-serif;font-size:10.5px;font-weight:700;color:#0F172A">` +
+               `<span style="width:8px;height:8px;border-radius:50%;background:${color};flex:none"></span>` +
+               `${pname}</div>`,
+          iconSize: null, iconAnchor: [10, 10],
+        });        const marker = L.marker([lat,lng],{icon, riseOnHover:true});
+        marker.on("click", () => {
+          setSelected({type:"project", ...p});
+          map.setView([lat,lng], Math.max(map.getZoom(), 16), {animate:true});
         });
-        const marker = L.marker([lat,lng],{icon});
         const dev = p.developerActual||p.developer||"";
         const comm = p.community||"";
         const masterComm = p.masterCommunity&&p.masterCommunity!==comm?` — ${p.masterCommunity}`:"";
@@ -583,13 +609,18 @@ export default function CommunityMapTab({
               padding:"6px 12px",color:T.white,fontSize:11,fontFamily:"'Outfit',sans-serif",width:230,outline:"none"}}/>
         </div>
 
-        {mapLayer==="projects"&&(
-          <Group label="Narrow to">
+        {/* Both of these rendered as a bare "All" under a single "Narrow to"
+            heading, so neither said what it filtered. Two siblings inside a
+            && need a fragment. */}
+        {mapLayer==="projects"&&(<>
+          <Group label="Developer">
             <Select value={filterDev} onChange={setFilterDev}
               options={["All",...new Set((activeProjects||[]).map(p=>p.developerActual||p.developer||"").filter(Boolean).sort())].slice(0,100)}/>
+          </Group>
+          <Group label="Build stage">
             <Select value={filterStatus} onChange={setFilterStatus} options={["All","Off-Plan","Ready"]}/>
           </Group>
-        )}
+        </>)}
 
         <button type="button" onClick={()=>setShowHelp(v=>!v)}
           title="What this tab is for, what the pins mean, and where the numbers come from"
