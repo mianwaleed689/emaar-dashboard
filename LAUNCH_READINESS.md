@@ -382,3 +382,54 @@ somewhere. All three are missing today.
 I have not edited `vercel.json` — turning off a scheduled job is a call for the
 owner, and the logging now in place means the next run will say plainly what it
 did either way.
+
+---
+
+## B-18 — WHAT CAN AND CANNOT BE PULLED FROM DLD FOR FREE
+*Investigated 2026-08-03 against the live Land Department gateway.*
+
+The Land Department runs a JSON gateway that needs **no key and no account**:
+
+    POST https://gateway.dubailand.gov.ae/open-data/carea-lookup     -> 200
+    POST https://gateway.dubailand.gov.ae/open-data/projects-lookup  -> 200
+
+Both answered a plain `curl` with an empty body and returned real data — every
+Dubai area, every registered project. Those two can be pulled on a schedule for
+nothing.
+
+**Transactions cannot.** `transaction-lookup` and its siblings exist — they
+answer `420 INVALID_REQUEST` rather than 404 — but every payload shape was
+rejected, and their own page reports **"Invalid captcha"** when the form is
+submitted programmatically. Their script confirms why:
+
+    if (AppInfo.featureGate.captchaEnabled && verifyCache) {
+      var proxyUrl = '/umbraco/surface/CaptchaProxy/CallThenPost';
+      ...
+    }
+
+Transaction queries are routed through a reCAPTCHA proxy. The two lookups above
+are not, which is why they answer freely.
+
+### What this means
+
+| Data | Free daily pull? |
+|---|---|
+| Areas | **yes** |
+| Projects, launches | **yes** |
+| Transactions | **no — captcha** |
+| Rent contracts | **no — same gate** |
+
+### Recommendation
+
+Keep the manual export for transactions. It takes a few minutes, the file is
+authoritative, and the one on disk (`transactions_2026-07-30`, 537 MB, 878,578
+rows) was three days old when this was written — fresher than anything the app
+was displaying, which showed community figures from 29 June.
+
+Wire the two free lookups into the existing `dld-daily` cron so new projects and
+areas appear without anyone doing anything. That covers the "upcoming" half of
+the live-market picture at no cost.
+
+Solving the captcha automatically would need Cloudflare Browser Rendering, the
+same paid route as B-16 — one subscription would serve both if it is ever worth
+it.
