@@ -21,7 +21,12 @@
 const HANDLERS = {
 
   eibor:          () => require("./_cron/cron-eibor.js"),
-  "dld-daily":    () => require("./_cron/cron-dld-daily.js"),
+  /* cron-dld-daily.js authenticated against Dubai Pulse with DLD_API_KEY and
+     DLD_API_SECRET. Neither exists in this environment, so it threw and
+     returned 500 every day since it was written; Dubai Pulse has since migrated
+     and that OAuth flow is gone anyway. The replacement uses the Land
+     Department's free gateway, which needs no credentials. */
+  "dld-daily":    () => require("./_cron/cron-dld-lookups.js"),
   financials:     () => require("./_cron/cron-financials.js"),
   yields:         () => require("./_cron/cron-yields.js"),
   "sync-market":  () => require("./_cron/cron-sync-market.js"),

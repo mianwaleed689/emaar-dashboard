@@ -392,12 +392,27 @@ export default function OverviewTab({
               ? `Residential. ${coverage.administrativeCount} DLD administrative districts held separately.`
               : "Residential communities"}
           />
+          {/* ── THIS FIGURE IS AN ESTIMATE AND MUST SAY SO ──────────────────
+              It is the median across every community carrying a stored net
+              yield. Net yield is gross minus the service charge, and NO source
+              publishes a service charge per community — measuredCommunity.js
+              marks all 193 of them as estimates for exactly this reason.
+
+              So a platform-wide "median net yield 4.9%" is a median of guesses.
+              Presented as a headline next to counts that are real, it borrows
+              their credibility. The gross figure beside it has the same problem
+              in reverse: only 72 of 193 communities have a return measured
+              against tenancy contracts.
+
+              The number stays — it is the best available and agents do ask for
+              it — but it is labelled, and the count is written in words rather
+              than as "n=193", which TAB_CLARITY bans. */}
           <Kpi
             large
-            label="Median net yield"
+            label="Median net yield · estimate"
             value={formatPct(coverage.medianNetYield)}
-            accent="#68D391"
-            context={`After service charges, 5% vacancy and 5% management. Gross ${formatPct(coverage.medianGrossYield)}. n=${coverage.netYieldSampleSize}`}
+            accent="#94A3B8"
+            context={`Gross ${formatPct(coverage.medianGrossYield)} less service charges, 5% vacancy and 5% management. Across ${coverage.netYieldSampleSize} communities — an estimate everywhere, because no source publishes a service charge per community.`}
           />
           {/* "1,513" alone could be anything — it was the only KPI on the row
               whose unit lived in the caption instead of the number. A figure an
@@ -406,7 +421,7 @@ export default function OverviewTab({
             large
             label="Median price"
             value={coverage.medianPPSF ? `AED ${Number(coverage.medianPPSF).toLocaleString()}` : "—"}
-            context={`Per square foot, community medians. n=${coverage.ppsfSampleSize}`}
+            context={`Per square foot. The midpoint across ${coverage.ppsfSampleSize} communities.`}
           />
           {/* Caption read "Tracked across all developers", which a reader takes
               as the whole catalogue. It is not: archived projects are filtered
