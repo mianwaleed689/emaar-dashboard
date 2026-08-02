@@ -236,6 +236,30 @@ export default function CommunityMapTab({
          tracks it. */
       const breaks = quantileBreaks(commWithCoords, activeMetric);
 
+      /* Progressive disclosure, the pattern Rightmove and Zillow both use: a
+         count while you are looking at the whole city, individual prices once
+         you zoom into an area. Without this, 193 price labels overlap into an
+         unreadable heap — which is exactly what the coloured dots did. */
+      const commCluster = L.markerClusterGroup({
+        maxClusterRadius: 46,
+        showCoverageOnHover: false,
+        spiderfyOnMaxZoom: true,
+        iconCreateFunction: c => {
+          const n = c.getChildCount();
+          const d = n > 40 ? 46 : n > 15 ? 40 : 34;
+          return L.divIcon({
+            className: "",
+            iconSize: [d, d],
+            html: `<div style="width:${d}px;height:${d}px;border-radius:50%;` +
+                  `background:rgba(15,23,42,0.88);border:2px solid #FFFFFF;` +
+                  `box-shadow:0 2px 6px rgba(15,23,42,0.4);display:flex;` +
+                  `align-items:center;justify-content:center;` +
+                  `font-family:'Outfit',sans-serif;font-size:${n>99?11:13}px;` +
+                  `font-weight:800;color:#FFFFFF">${n}</div>`,
+          });
+        },
+      });
+
       commWithCoords.forEach(n=>{
         if(!commVisible(n)) return;
 
@@ -249,19 +273,37 @@ export default function CommunityMapTab({
            community's figures were actually counted from transactions. */
         const measured = isEvidenced(n._ppsfEv) || isEvidenced(n._yieldEv);
 
-        /* Pin styling is tuned for the light basemap. On the old dark tiles an
-           estimate was drawn at 0.12 fill, which on white is invisible — so a
-           dashed white ring is given a solid outline and a faint tint instead,
-           and every pin gets a white halo so it separates from streets and
-           parks underneath. */
-        const circle = L.circleMarker([pt.lat,pt.lng],{
-          radius: measured ? 10 : 8,
-          fillColor: colour,
-          color: measured ? "#FFFFFF" : colour,
-          weight: measured ? 2 : 2.5,
-          opacity: 1,
-          fillOpacity: measured ? 0.95 : 0.25,   // dashed ring = estimate
-          dashArray: measured ? null : "3,3",
+        /* ── PRICE LABELS, NOT COLOURED DOTS ─────────────────────────────────
+           This drew a plain coloured circle per community. 193 of them overlap
+           into a blob, and a colour means nothing until you go and decode it
+           against a legend — which is why the legend had to be a long row of
+           "AED 216 – AED 1,193  38 here" chunks across the top of the tab.
+
+           Every serious property map solved this the same way. Zillow put the
+           price directly on the pin; Redfin then tuned pin size and contrast so
+           prices can be scanned at a glance. The value is the label, so no
+           decoding step and no legend to read.
+
+           Colour is kept as a secondary cue for the band, and the border still
+           carries provenance: solid = counted, dashed = estimate. */
+        const label = value != null ? activeMetric.format(value) : "—";
+        const dark  = ["#2D4A22","#5A7D2A","#1E3A5F","#2E6F9E"].includes(colour);
+        const circle = L.marker([pt.lat,pt.lng],{
+          icon: L.divIcon({
+            className: "",
+            html:
+              `<div style="` +
+              `background:${colour};color:${dark?"#FFFFFF":"#0F172A"};` +
+              `font-family:'Outfit',sans-serif;font-size:11px;font-weight:700;` +
+              `padding:3px 7px;border-radius:11px;white-space:nowrap;` +
+              `border:${measured ? "1.5px solid rgba(255,255,255,0.95)" : "1.5px dashed #0F172A"};` +
+              `box-shadow:0 1px 4px rgba(15,23,42,0.35);` +
+              `opacity:${measured ? 1 : 0.82};">` +
+              `${label}</div>`,
+            iconSize: null,
+            iconAnchor: [22, 11],
+          }),
+          riseOnHover: true,
         });
 
         /* ── WHAT THE POPUP USED TO SAY ──────────────────────────────────────
@@ -315,9 +357,10 @@ export default function CommunityMapTab({
           ${footer}
         </div>`,{className:"dxb-popup",maxWidth:310});
         circle.on("click",()=>setSelected({type:"community",...n}));
-        circle.addTo(map);
-        markersRef.current.push(circle);
+        commCluster.addLayer(circle);
       });
+      map.addLayer(commCluster);
+      clusterRef.current = commCluster;
 
     } else if(mapLayer==="projects") {
       const cluster = L.markerClusterGroup({
@@ -526,36 +569,37 @@ export default function CommunityMapTab({
           colours without distribution tells a reader what the colours mean but
           not what the city looks like. Plus the provenance key, which is the
           part no competitor has: solid pins are measured, hollow ones inherited. */}
+      {/* ── KEY ─────────────────────────────────────────────────────────────
+          This was five colour swatches spelled out as "AED 216 – AED 1,193
+          38 here · AED 1,193 – AED 1,476 29 here · …" strung across the tab. It
+          existed because a coloured dot has to be decoded into a number.
+
+          The pins now carry the number itself, so the bands do not need
+          spelling out. What is left is the one thing the colour cannot say —
+          whether the figure was counted or estimated — and that is the part no
+          competing Dubai map shows at all. */}
       {mapLayer==="communities"&&(()=>{
-        const breaks = quantileBreaks(commWithCoords, activeMetric);
-        const rows   = legendFor(commWithCoords, activeMetric, breaks);
-        const cov    = coverage(commWithCoords);
-        if(!rows.length) return null;
+        const cov = coverage(commWithCoords);
         return (
-          <div style={{display:"flex",gap:14,alignItems:"center",flexWrap:"wrap",padding:"6px 2px 10px"}}>
-            <span style={{fontSize:10,fontWeight:700,color:T.textMuted,textTransform:"uppercase",letterSpacing:0.6}}>
-              {activeMetric.label}
-            </span>
-            {rows.map((r,i)=>(
-              <div key={i} title={`${r.count} communities`} style={{display:"flex",alignItems:"center",gap:5}}>
-                <div style={{width:11,height:11,borderRadius:3,background:r.colour}}/>
-                <span style={{fontSize:10,color:T.textSecondary}}>{r.label}</span>
-                <span style={{fontSize:9,color:T.textMuted}}>{r.count} here</span>
-              </div>
-            ))}
-            <span style={{width:1,height:16,background:T.border}}/>
-            <div style={{display:"flex",alignItems:"center",gap:5}}>
-              <div style={{width:11,height:11,borderRadius:"50%",background:"#94A3B8"}}/>
-              <span style={{fontSize:10,color:T.textSecondary}}>Solid pin = counted ({cov.measured})</span>
+          <div style={{display:"flex",gap:16,alignItems:"center",flexWrap:"wrap",padding:"4px 2px 10px"}}>
+            <div style={{display:"flex",alignItems:"center",gap:6}}>
+              <span style={{fontSize:10,fontWeight:700,color:"#0F172A",background:"#D4A843",
+                borderRadius:11,padding:"2px 7px",border:"1.5px solid rgba(255,255,255,0.95)"}}>AED 1,287</span>
+              <span style={{fontSize:10.5,color:T.textSecondary}}>counted from sales ({cov.measured})</span>
             </div>
-            <div style={{display:"flex",alignItems:"center",gap:5}}>
-              <div style={{width:11,height:11,borderRadius:"50%",border:"2px dashed #94A3B8"}}/>
-              <span style={{fontSize:10,color:T.textSecondary}}>Dashed ring = estimate ({cov.estimated})</span>
+            <div style={{display:"flex",alignItems:"center",gap:6}}>
+              <span style={{fontSize:10,fontWeight:700,color:"#0F172A",background:"#D4A843",opacity:.82,
+                borderRadius:11,padding:"2px 7px",border:"1.5px dashed #0F172A"}}>AED 1,287</span>
+              <span style={{fontSize:10.5,color:T.textSecondary}}>estimate — quote with a caveat ({cov.estimated})</span>
             </div>
-            <span style={{fontSize:9.5,color:T.textMuted,flex:"1 1 240px",lineHeight:1.5}}>
-              Each band shows a range and how many communities fall in it. {activeMetric.hint}.
-              An estimate is a figure applied to a community rather than measured in it —
-              quote those with a caveat.
+            <div style={{display:"flex",alignItems:"center",gap:6}}>
+              <span style={{width:22,height:22,borderRadius:"50%",background:"rgba(15,23,42,0.88)",
+                border:"2px solid #fff",display:"inline-flex",alignItems:"center",justifyContent:"center",
+                fontSize:10,fontWeight:800,color:"#fff"}}>12</span>
+              <span style={{fontSize:10.5,color:T.textSecondary}}>communities grouped — zoom in to split</span>
+            </div>
+            <span style={{fontSize:10,color:T.textMuted,marginLeft:"auto"}}>
+              Colour runs cheap to dear. {activeMetric.hint}.
             </span>
           </div>
         );
