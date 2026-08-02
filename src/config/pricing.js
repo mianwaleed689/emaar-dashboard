@@ -90,7 +90,12 @@ export const PLAN_FEATURES = {
   ],
   pro: [
     "One agent",
-    "All 34 research tabs",
+    /* 29, not 34. Five tabs — Competitors, Developer Health, Financials,
+       Dev Portal, Marketing — sit in the sidebar group labelled
+       "NOT SHIPPED (ADMIN ONLY)" and are not visible to customers. Verified
+       in the running app 2026-08-02. Selling 34 when 29 ship is the same
+       defect as advertising a tool that renders nothing. */
+    "All 29 research tabs",
     "24 years of market history with clickable sources",
     "Net yields after service charges, vacancy and management",
     "Lead and pipeline tracking",

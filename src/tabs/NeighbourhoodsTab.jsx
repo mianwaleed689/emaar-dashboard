@@ -9,8 +9,52 @@
 import React, { useState, useMemo } from "react";
 import { T } from "../data";
 import { classifyProvenance, PROVENANCE } from "../utils/provenance";
-import { scoreColor } from "../utils/scoring";
 import SourceBadge from "../components/SourceBadge";
+import TabIntro from "../components/TabIntro";
+import TabProvenance from "../components/TabProvenance";
+import { tabCopy } from "../data/tabCopy";
+import { applyMeasured, EV, isEvidenced, versusDubai, DUBAI_BENCHMARK,
+         THIN_EVIDENCE_BELOW } from "../utils/measuredCommunity";
+
+const _copy = tabCopy("Neighbourhoods");
+
+/**
+ * ── WHY THIS TAB OVERLAYS ITS OWN NUMBERS ───────────────────────────────────
+ *
+ * The stored community records carried figures that were assigned, not counted.
+ * Across the 193 communities there were only 15 distinct gross yields and 15
+ * distinct service charges; 43% of communities shared one of two numbers, and
+ * Dubai Harbour, Dubai Marina and Emaar Beachfront were all exactly 6.5%.
+ *
+ * Measured against Land Department records the stored price per square foot was
+ * out by a median of 15.8%. Dubai Investment Park First was stored at AED 268
+ * per square foot against a measured 1,193 — a figure no Dubai community has
+ * ever traded at.
+ *
+ * So where a real measurement exists it replaces the stored value, and the card
+ * says which it is showing. Where none exists the stored figure stays but is
+ * labelled an estimate. Nothing here is silently swapped.
+ */
+const EV_STYLE = {
+  [EV.MEASURED]: { color: "#10B981", label: "Measured" },
+  [EV.THIN]:     { color: "#F59E0B", label: "Thin evidence" },
+  [EV.ESTIMATE]: { color: "#94A3B8", label: "Estimate" },
+  [EV.NONE]:     { color: "#64748B", label: "Not recorded" },
+};
+
+/** A small mark saying how a figure was arrived at. */
+const EvBadge = ({ ev, n, title }) => {
+  const s = EV_STYLE[ev];
+  if (!s || ev === EV.NONE) return null;
+  return (
+    <span title={title}
+      style={{ fontSize: 8, fontWeight: 700, color: s.color, background: s.color + "16",
+               borderRadius: 4, padding: "1px 4px", letterSpacing: 0.3,
+               whiteSpace: "nowrap" }}>
+      {ev === EV.ESTIMATE ? "EST" : n ? n.toLocaleString() + " sales" : s.label}
+    </span>
+  );
+};
 
 //  FORMATTERS 
 const fmtY  = n => n ? parseFloat(n).toFixed(1)+"%" : "";
@@ -30,16 +74,36 @@ const Chip = ({icon,label,color,bg,size=10}) => (
   </span>
 );
 
-const ScoreBadge = ({score,size="sm"}) => {
-  if(!score) return <span style={{fontSize:11,color:"#94A3B8"}}>N/A</span>;
-  const color = scoreColor(score);
-  const dim = size==="lg"?48:34;
-  return (
-    <div style={{width:dim,height:dim,borderRadius:"50%",background:color+"18",border:"2px solid "+color,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
-      <span style={{fontSize:size==="lg"?14:11,fontWeight:800,color,fontFamily:"'Fraunces',serif"}}>{score}</span>
-    </div>
-  );
-};
+/**
+ * ── THE INVESTMENT SCORE IS GONE ────────────────────────────────────────────
+ *
+ * This tab used to show a 0–100 `investmentScore` in a circle on every card,
+ * sort by it by default, and crown a "Top Rated" community with it. It was
+ * removed on 2026-08-02 for three reasons.
+ *
+ * It was not a measurement. From AdminPanel.jsx, the whole derivation:
+ *
+ *     let score = 60;                          // base, chosen arbitrarily
+ *     if (gross > 7)     score += 15;          // why 15?
+ *     if (construction > 80) score += 10;
+ *     if (branded)       score += 5;
+ *     if (distDowntown < 10) score += 10;
+ *
+ * Every weight is an opinion. Presenting the total as a two-digit number next
+ * to genuinely measured figures borrowed their credibility.
+ *
+ * The codebase had already reached this conclusion twice and this tab missed
+ * both. EmaarDashboardV2.jsx:3288 reads "investmentScore / velocityScore /
+ * developerScore removed — they were arbitrary opinions, not data". And the
+ * header of utils/scoring.js records that investment scoring with Strong Buy /
+ * Buy / Hold / Caution labels was removed because unlicensed investment advice
+ * violates UAE RERA law. A ranked 0–100 buy-signal is the same thing wearing a
+ * different hat, and this product is sold to licensed Dubai agents.
+ *
+ * Nothing replaces it. Sorting now defaults to A–Z, and a community can be
+ * ordered by measured price, measured return, or how many sales are on record
+ * — all of which are facts an agent can defend.
+ */
 
 //  COMMUNITY CARD 
 const CommunityCard = ({n,selected,onSelect,onCompare,isCompared}) => {
@@ -47,7 +111,16 @@ const CommunityCard = ({n,selected,onSelect,onCompare,isCompared}) => {
   const isArea   = n.tier==="area-data";
   const riskColor= RISK_COLOR[n.supplyRisk||"Unknown"];
   const grossY   = parseFloat(n.grossYield||0);
-  const yColor   = grossY>=7?"#10B981":grossY>=6?"#84CC16":grossY>=5?T.gold:"#94A3B8";
+  /* Colour is a claim. A green "strong return" bar drawn from an assigned 6.5%
+     tells the agent the number is good when nobody ever measured it, so the
+     scale only applies to measured returns and everything else stays neutral. */
+  const yMeasured = isEvidenced(n._yieldEv);
+  const yColor   = !yMeasured ? "#64748B"
+    : grossY>=7?"#10B981":grossY>=6?"#84CC16":grossY>=5?T.gold:"#94A3B8";
+  /* Only compare a figure against Dubai when it was actually measured —
+     ranking an assigned number against real ones would dress it up as evidence. */
+  const vsPpsf  = isEvidenced(n._ppsfEv) ? versusDubai(parseFloat(n.avgPpsf), "ppsf") : null;
+  const vsYield = isEvidenced(n._yieldEv) ? versusDubai(grossY, "yield") : null;
 
   return (
     <div onClick={()=>onSelect(n)}
@@ -62,33 +135,70 @@ const CommunityCard = ({n,selected,onSelect,onCompare,isCompared}) => {
         <div style={{flex:1,minWidth:0,paddingRight:8}}>
           <div style={{fontSize:13,fontWeight:700,color:T.white,marginBottom:4,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{n.community}</div>
           <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>
-            {isDLD ? <Chip label="DLD" color="#64748B"/> : <Chip label=" Verified" color="#10B981"/>}
+            {/* This said "Verified" on every card, including cards whose every
+                figure was marked an estimate — Emaar Beachfront claimed
+                "Verified" above four EST badges. The chip now reports what is
+                actually true of this community's numbers. */}
+            {n._hasMeasured
+              ? <Chip label="Land Department figures" color="#10B981"/>
+              : <Chip label="Estimates only" color="#94A3B8"/>}
             {n.hasMetro&&<Chip icon="" label="Metro" color="#10B981"/>}
             {n.hasBeach&&<Chip icon="" label="Beach" color="#06B6D4"/>}
-            {n.goldenVisa&&<Chip icon="" label="GV" color={T.gold}/>}
+            {n.goldenVisa&&<Chip icon="" label="Golden Visa" color={T.gold}/>}
             {n.hasSports&&<Chip icon="" label="Sports" color="#8B5CF6"/>}
           </div>
         </div>
-        <ScoreBadge score={n.investmentScore}/>
       </div>
 
-      {/* Metrics */}
+      {/* Metrics — every figure carries how it was arrived at */}
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6,marginBottom:10}}>
         {(n.tier==="dld-registry" ? [
-          {label:"Median PPSF",  value:fmtP(n.avgPpsf),         color:T.gold},
-          {label:"Transactions", value:n.totalTransactions||"", color:"#94A3B8"},
+          {label:"Price per sq ft", value:fmtP(n.avgPpsf), color:T.gold,
+           ev:n._ppsfEv, n:n._ppsfN, title:"Middle sale price per square foot"},
+          {label:"Sales recorded", value:n.totalTransactions||"", color:"#94A3B8"},
         ] : [
-          {label:"Gross Yield",  value:fmtY(n.grossYield),       color:yColor},
-          {label:"Net Yield",    value:fmtY(n.netYield),         color:"#CBD5E1"},
-          {label:"Avg PPSF",     value:fmtP(n.avgPpsf),          color:T.gold},
-          {label:"Svc Charge",   value:fmtSC(n.serviceCharge),   color:"#94A3B8"},
+          {label:"Price per sq ft", value:fmtP(n.avgPpsf), color:T.gold,
+           ev:n._ppsfEv, n:n._ppsfN,
+           title:n._ppsfEv===EV.ESTIMATE
+             ? "Stored estimate — not measured from Land Department sales"
+             : "Middle sale price per square foot, "+n._ppsfYear},
+          {label:"Gross return", value:fmtY(n.grossYield), color:yColor,
+           ev:n._yieldEv, n:n._yieldSaleN,
+           title:n._yieldEv===EV.ESTIMATE
+             ? "Stored estimate — not measured against tenancy contracts"
+             : "A year's rent as a percentage of purchase price, before costs"},
+          {label:"Net return", value:fmtY(n.netYield), color:"#CBD5E1",
+           ev:n._netEv, title:"Estimate — derived from the service charge below, which is not measured"},
+          {label:"Service charge", value:fmtSC(n.serviceCharge), color:"#94A3B8",
+           ev:n._scEv, title:"Estimate — no per-community rate is published"},
         ]).map((m,i)=>(
           <div key={i} style={{background:"rgba(255,255,255,0.03)",borderRadius:7,padding:"7px 9px"}}>
-            <div style={{fontSize:9,fontWeight:700,color:"#64748B",textTransform:"uppercase",letterSpacing:0.7,marginBottom:2}}>{m.label}</div>
-            <div style={{fontSize:13,fontWeight:700,color:m.color,fontFamily:"'Fraunces',serif"}}>{m.value}</div>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:4,marginBottom:2}}>
+              <span style={{fontSize:9,fontWeight:700,color:"#64748B",textTransform:"uppercase",letterSpacing:0.7}}>{m.label}</span>
+              <EvBadge ev={m.ev} n={m.n} title={m.title}/>
+            </div>
+            <div style={{fontSize:13,fontWeight:700,color:m.color,fontFamily:"'Fraunces',serif"}}>
+              {m.value || <span style={{fontSize:10,color:"#64748B",fontWeight:500,fontFamily:"'Outfit',sans-serif"}}>Not recorded</span>}
+            </div>
           </div>
         ))}
       </div>
+
+      {/* Where this sits against the rest of Dubai */}
+      {(vsPpsf||vsYield)&&(
+        <div style={{display:"flex",gap:5,flexWrap:"wrap",marginBottom:10}}>
+          {vsPpsf&&<Chip label={"Price: "+vsPpsf.label} color="#94A3B8"/>}
+          {vsYield&&<Chip label={"Return: "+vsYield.label} color="#94A3B8"/>}
+        </div>
+      )}
+
+      {/* The market name and the Land Department's differ — say which was read */}
+      {n._m?.aliased&&(
+        <div style={{fontSize:9,color:"#64748B",marginBottom:8,lineHeight:1.4}}>
+          Land Department records this as <span style={{color:"#94A3B8"}}>{n._m.dldName}</span>
+          {n._m.level==="area"&&" — an area, so slightly wider than the name suggests"}
+        </div>
+      )}
 
       {/* Distances row */}
       {!isDLD&&(
@@ -102,10 +212,16 @@ const CommunityCard = ({n,selected,onSelect,onCompare,isCompared}) => {
 
       {/* Footer */}
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-        <div style={{display:"flex",alignItems:"center",gap:5}}>
-          <div style={{width:6,height:6,borderRadius:"50%",background:riskColor}}/>
-          <span style={{fontSize:10,color:riskColor,fontWeight:600}}>{n.supplyRisk||""} Risk</span>
-        </div>
+        {/* Rendered a bare "● Risk" with no level whenever supplyRisk was
+            missing, which told the agent nothing at all. Now it either says
+            which level, or says nothing. */}
+        {n.supplyRisk ? (
+          <div style={{display:"flex",alignItems:"center",gap:5}}
+            title="How much new supply is due in this community. More supply means more competition when reselling or re-letting.">
+            <div style={{width:6,height:6,borderRadius:"50%",background:riskColor}}/>
+            <span style={{fontSize:10,color:riskColor,fontWeight:600}}>{n.supplyRisk} supply risk</span>
+          </div>
+        ) : <span/>}
         <button type="button" onClick={e=>{e.stopPropagation();onCompare(n.community);}}
           style={{padding:"3px 9px",borderRadius:7,border:"1px solid "+(isCompared?T.gold:T.border),background:isCompared?"rgba(212,168,67,0.12)":"transparent",color:isCompared?T.gold:"#94A3B8",fontSize:10,fontWeight:600,cursor:"pointer",fontFamily:"'Outfit',sans-serif"}}>
           {isCompared?" Added":"Compare"}
@@ -153,7 +269,9 @@ const DetailDrawer = ({n,onClose,handleTabChange}) => {
 
   const DRAWER_TABS = [
     {k:"overview",  l:"Overview"},
-    {k:"investment",l:"Investment"},
+    /* Was "Investment". It holds returns, prices and costs — figures, not
+       advice — and this platform does not give investment advice. */
+    {k:"investment",l:"Returns & costs"},
     {k:"facilities",l:"Facilities"},
     {k:"landmarks", l:"Landmarks"},
     {k:"lifestyle", l:"Lifestyle"},
@@ -181,8 +299,7 @@ const DetailDrawer = ({n,onClose,handleTabChange}) => {
               </div>
             </div>
             <div style={{display:"flex",alignItems:"center",gap:10,flexShrink:0}}>
-              <ScoreBadge score={n.investmentScore} size="lg"/>
-              <button type="button" onClick={onClose} style={{background:"rgba(255,255,255,0.06)",border:"1px solid "+T.border,borderRadius:8,color:"#94A3B8",width:32,height:32,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",fontSize:18}}></button>
+              <button type="button" onClick={onClose} style={{background:"rgba(255,255,255,0.06)",border:"1px solid "+T.border,borderRadius:8,color:"#94A3B8",width:32,height:32,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",fontSize:18}} aria-label="Close community details" title="Close community details">✕</button>
             </div>
           </div>
           <div style={{display:"flex",gap:0,borderTop:"1px solid "+T.border+"40",marginTop:10}}>
@@ -217,7 +334,7 @@ const DetailDrawer = ({n,onClose,handleTabChange}) => {
               </div>
               {n.nearestMetro&&(
                 <div style={{padding:"11px 14px",background:"rgba(16,185,129,0.06)",border:"1px solid rgba(16,185,129,0.2)",borderRadius:10,marginBottom:12,display:"flex",alignItems:"center",gap:10}}>
-                  <span style={{fontSize:22}}></span>
+                  <span style={{fontSize:22}}>⭐</span>
                   <div>
                     <div style={{fontSize:12,fontWeight:600,color:T.white}}>{n.nearestMetro}</div>
                     <div style={{fontSize:11,color:"#94A3B8"}}>{fmtD(n.distMetro)} from community</div>
@@ -244,12 +361,16 @@ const DetailDrawer = ({n,onClose,handleTabChange}) => {
           {tab==="investment"&&(
             <div>
               <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:14}}>
-                <Stat label="Gross Yield"   value={fmtY(n.grossYield)}       color={yColor}    hint="Annual rental income / price"/>
-                <Stat label="Net Yield"     value={fmtY(n.netYield)}         color="#CBD5E1"   hint="After service charge"/>
-                <Stat label="Avg PPSF"      value={fmtP(n.avgPpsf)}          color={T.gold}    hint="Price per sq ft"/>
-                <Stat label="Service Charge" value={fmtSC(n.serviceCharge)}  color="#94A3B8"   hint="Annual maintenance"/>
-                {n.priceMin&&<Stat label="Starting Price" value={fmtP(n.priceMin)} color="#10B981" hint="Lowest listed"/>}
-                {n.priceMax&&<Stat label="Max Price"      value={fmtP(n.priceMax)} color="#EF4444" hint="Highest listed"/>}
+                {/* Labels match the card exactly. They used to read "Gross Yield",
+                    "Avg PPSF" and "Net Yield" here while the card said something
+                    else for the same figure, so the same number appeared to be
+                    two different things depending on where you looked. */}
+                <Stat label="Gross return"    value={fmtY(n.grossYield)}      color={yColor}  hint="A year's rent as a percentage of the purchase price, before costs"/>
+                <Stat label="Net return"      value={fmtY(n.netYield)}        color="#CBD5E1" hint="Estimate — gross return after the service charge is taken off"/>
+                <Stat label="Price per sq ft" value={fmtP(n.avgPpsf)}         color={T.gold}  hint="Sale price divided by floor area"/>
+                <Stat label="Service charge"  value={fmtSC(n.serviceCharge)}  color="#94A3B8" hint="Estimate — annual building maintenance, per square foot"/>
+                {n.priceMin&&<Stat label="Lowest price on record"  value={fmtP(n.priceMin)} color="#10B981" hint="The cheapest unit we hold a price for"/>}
+                {n.priceMax&&<Stat label="Highest price on record" value={fmtP(n.priceMax)} color="#EF4444" hint="The dearest unit we hold a price for"/>}
               </div>
               {n.goldenVisa&&(
                 <div style={{padding:"12px 14px",background:"rgba(212,168,67,0.08)",border:"1px solid rgba(212,168,67,0.3)",borderRadius:10,marginBottom:12}}>
@@ -257,27 +378,52 @@ const DetailDrawer = ({n,onClose,handleTabChange}) => {
                   <div style={{fontSize:11,color:"#94A3B8",lineHeight:1.6}}>Properties AED 2M+ qualify for 10-year UAE Golden Visa residency for investor and family.</div>
                 </div>
               )}
-              {/* Score breakdown */}
+              {/* ── WHAT THIS COMMUNITY'S FIGURES REST ON ──────────────────
+                  This panel was an "Investment Score Breakdown": six invented
+                  weights — Rental Yield /20, Metro Access /12, PPSF Premium /8,
+                  Waterfront /8, Amenities /9, Golden Visa /5.
+
+                  It never explained the score it claimed to break down. Those
+                  parts total 62 at most, while the badge above it went to 100,
+                  and the AdminPanel formula that actually produced the score
+                  used entirely different inputs. Two unrelated invented scales,
+                  presented as one number and its explanation.
+
+                  What an agent needs before quoting a figure is not a score. It
+                  is how many real transactions sit underneath it. */}
               <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid "+T.border,borderRadius:10,padding:"14px"}}>
-                <div style={{fontSize:11,fontWeight:700,color:T.white,marginBottom:10}}>Investment Score Breakdown</div>
+                <div style={{fontSize:11,fontWeight:700,color:T.white,marginBottom:10}}>What these figures rest on</div>
                 {[
-                  {label:"Rental Yield",  score:grossY>=9?20:grossY>=8?18:grossY>=7?15:grossY>=6?12:grossY>=5?8:5, max:20},
-                  {label:"Metro Access",  score:parseFloat(n.distMetro||99)<0.5?12:parseFloat(n.distMetro||99)<1?10:parseFloat(n.distMetro||99)<2?7:parseFloat(n.distMetro||99)<3?5:parseFloat(n.distMetro||99)<5?2:0, max:12},
-                  {label:"PPSF Premium",  score:(n.avgPpsf||0)>=4000?8:(n.avgPpsf||0)>=3000?7:(n.avgPpsf||0)>=2000?5:(n.avgPpsf||0)>=1500?3:(n.avgPpsf||0)>=1000?1:0, max:8},
-                  {label:"Waterfront",    score:n.hasBeach?8:0, max:8},
-                  {label:"Amenities",     score:(n.hasMall?3:0)+(n.hasSchool?2:0)+(n.hasMetro?3:0)+(n.hasSports?1:0), max:9},
-                  {label:"Golden Visa",   score:n.goldenVisa?5:0, max:5},
+                  {label:"Price per square foot",
+                   val:n._ppsfN ? n._ppsfN.toLocaleString()+" recorded sales"+
+                       (n._ppsfYear?" in "+n._ppsfYear+(String(n._ppsfYear)==="2026"?" so far":""):"") : null,
+                   note:n._ppsfN&&n._ppsfN<THIN_EVIDENCE_BELOW
+                        ? "Few sales — one unusual deal can move this. Check before quoting."
+                        : null},
+                  {label:"Gross return",
+                   val:n._yieldSaleN
+                       ? n._yieldSaleN.toLocaleString()+" sales against "+
+                         (n._yieldRentN||0).toLocaleString()+" tenancy contracts" : null},
+                  {label:"Net return and service charge",
+                   val:null,
+                   note:"Not measured. No per-community service charge rate is published, "+
+                        "so both are estimates. Ask the management company for the real rate."},
                 ].map((r,i)=>(
-                  <div key={i} style={{marginBottom:8}}>
-                    <div style={{display:"flex",justifyContent:"space-between",marginBottom:3}}>
-                      <span style={{fontSize:11,color:"#94A3B8"}}>{r.label}</span>
-                      <span style={{fontSize:11,fontWeight:700,color:T.gold}}>{r.score}/{r.max}</span>
+                  <div key={i} style={{marginBottom:10}}>
+                    <div style={{fontSize:11,color:"#94A3B8",marginBottom:2}}>{r.label}</div>
+                    <div style={{fontSize:11,fontWeight:700,color:r.val?"#10B981":"#64748B"}}>
+                      {r.val || "Not measured for this community"}
                     </div>
-                    <div style={{height:3,borderRadius:2,background:"rgba(255,255,255,0.05)"}}>
-                      <div style={{height:"100%",width:(r.max>0?r.score/r.max*100:0)+"%",background:T.gold,borderRadius:2,opacity:0.8}}/>
-                    </div>
+                    {r.note&&<div style={{fontSize:10,color:"#64748B",marginTop:2,lineHeight:1.5}}>{r.note}</div>}
                   </div>
                 ))}
+                {n._m?.aliased&&(
+                  <div style={{fontSize:10,color:"#64748B",marginTop:10,paddingTop:10,
+                    borderTop:"1px solid "+T.border,lineHeight:1.5}}>
+                    Read from the Land Department record named <span style={{color:"#94A3B8"}}>{n._m.dldName}</span>
+                    {n._m.level==="area"&&", which is an area and so covers slightly more ground than the community name suggests"}.
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -369,7 +515,7 @@ const ComparePanel = ({communities,data,onRemove}) => {
   const items = communities.map(c=>data.find(n=>n.community===c)).filter(Boolean);
   if(items.length<2) return null;
   const rows = [
-    {label:"Score",         key:"investmentScore",   fmt:v=>v||""},
+    {label:"Sales on record", key:"_ppsfN",           fmt:v=>v?v.toLocaleString():"not measured"},
     {label:"Gross Yield",   key:"grossYield",         fmt:fmtY},
     {label:"Net Yield",     key:"netYield",           fmt:fmtY},
     {label:"PPSF",          key:"avgPpsf",            fmt:fmtP},
@@ -392,7 +538,7 @@ const ComparePanel = ({communities,data,onRemove}) => {
           {items.map(n=>(
             <span key={n.community} style={{fontSize:10,padding:"3px 10px",borderRadius:20,background:"rgba(212,168,67,0.12)",color:T.gold,display:"flex",alignItems:"center",gap:5}}>
               {n.community}
-              <button type="button" onClick={()=>onRemove(n.community)} style={{background:"none",border:"none",color:"#94A3B8",cursor:"pointer",fontSize:14,padding:0}}></button>
+              <button type="button" onClick={()=>onRemove(n.community)} style={{background:"none",border:"none",color:"#94A3B8",cursor:"pointer",fontSize:14,padding:0}} aria-label="Remove from comparison" title="Remove from comparison">✕</button>
             </span>
           ))}
         </div>
@@ -428,8 +574,7 @@ const ComparePanel = ({communities,data,onRemove}) => {
 // 
 export default function NeighbourhoodsTab({liveNeighbourhoods=[],handleTabChange,selectedNbhd,setSelectedNbhd}) {
   const [search,      setSearch]      = useState("");
-  const [sortBy,      setSortBy]      = useState("score");
-  const [tierFilter,  setTierFilter]  = useState("all");
+  const [sortBy,      setSortBy]      = useState("name");
   const [yieldFilter, setYieldFilter] = useState("all");
   const [metroFilter, setMetroFilter] = useState(false);
   const [beachFilter, setBeachFilter] = useState(false);
@@ -437,15 +582,29 @@ export default function NeighbourhoodsTab({liveNeighbourhoods=[],handleTabChange
   const [gvFilter,    setGvFilter]    = useState(false);
   const [compare,     setCompare]     = useState([]);
   const [view,        setView]        = useState("grid");
+  const [evidenceFilter,setEvidenceFilter] = useState("all");
 
   const toggleCompare = c => setCompare(prev=>
     prev.includes(c)?prev.filter(x=>x!==c):prev.length<3?[...prev,c]:prev
   );
 
+  /* Fold the measured Land Department figures over the stored records once,
+     before anything filters or sorts — so a sort by price orders the real
+     numbers, not the assigned ones it used to. */
+  const enriched = useMemo(
+    ()=>(liveNeighbourhoods||[]).map(applyMeasured), [liveNeighbourhoods]);
+
+  const measuredCount = useMemo(()=>({
+    ppsf:  enriched.filter(n=>isEvidenced(n._ppsfEv)).length,
+    yield: enriched.filter(n=>isEvidenced(n._yieldEv)).length,
+    any:   enriched.filter(n=>n._hasMeasured).length,
+  }),[enriched]);
+
   const filtered = useMemo(()=>{
-    let a=[...liveNeighbourhoods];
+    let a=[...enriched];
     if(search.trim()) a=a.filter(n=>(n.community||"").toLowerCase().includes(search.toLowerCase()));
-    if(tierFilter!=="all") a=a.filter(n=>n.tier===tierFilter);
+    if(evidenceFilter==="measured") a=a.filter(n=>n._hasMeasured);
+    if(evidenceFilter==="estimate") a=a.filter(n=>!n._hasMeasured);
     if(yieldFilter==="7+") a=a.filter(n=>parseFloat(n.grossYield||0)>=7);
     if(yieldFilter==="6+") a=a.filter(n=>parseFloat(n.grossYield||0)>=6);
     if(yieldFilter==="5+") a=a.filter(n=>parseFloat(n.grossYield||0)>=5);
@@ -454,7 +613,7 @@ export default function NeighbourhoodsTab({liveNeighbourhoods=[],handleTabChange
     if(sportsFilter)a=a.filter(n=>n.hasSports);
     if(gvFilter)    a=a.filter(n=>n.goldenVisa);
     a.sort((x,y)=>{
-      if(sortBy==="score")    return (y.investmentScore||0)-(x.investmentScore||0);
+      if(sortBy==="sales")    return (y._ppsfN||0)-(x._ppsfN||0);
       if(sortBy==="yield")    return parseFloat(y.grossYield||0)-parseFloat(x.grossYield||0);
       if(sortBy==="ppsf")     return (y.avgPpsf||0)-(x.avgPpsf||0);
       if(sortBy==="name")     return (x.community||"").localeCompare(y.community||"");
@@ -462,7 +621,7 @@ export default function NeighbourhoodsTab({liveNeighbourhoods=[],handleTabChange
       return 0;
     });
     return a;
-  },[liveNeighbourhoods,search,sortBy,tierFilter,yieldFilter,metroFilter,beachFilter,sportsFilter,gvFilter]);
+  },[enriched,search,sortBy,yieldFilter,evidenceFilter,metroFilter,beachFilter,sportsFilter,gvFilter]);
 
   /* ── ONE DEFINITION OF "VERIFIED" ────────────────────────────────────────
      This filtered on the raw `tier` field while the Overview and the Map use
@@ -476,11 +635,20 @@ export default function NeighbourhoodsTab({liveNeighbourhoods=[],handleTabChange
 
      classifyProvenance is the stricter and better-reasoned of the two, so it
      wins everywhere. */
-  const verified = (liveNeighbourhoods||[]).filter(
+  const verified = enriched.filter(
     n => classifyProvenance(n).level === PROVENANCE.VERIFIED
   );
-  const topYield = [...verified].sort((a,b)=>parseFloat(b.grossYield||0)-parseFloat(a.grossYield||0))[0];
-  const topScore = [...verified].sort((a,b)=>(b.investmentScore||0)-(a.investmentScore||0))[0];
+  /* Rank only what was measured. Topping the list with an assigned 6.5% would
+     put a made-up number in the most prominent place on the screen. */
+  const topYield = [...verified]
+    .filter(n=>n._yieldEv===EV.MEASURED)
+    .sort((a,b)=>parseFloat(b.grossYield||0)-parseFloat(a.grossYield||0))[0];
+  /* Was "Top Rated" off the removed investment score. Most sales on record is
+     a fact: it tells an agent which community actually trades, which is what
+     determines how easily a client can exit. */
+  const topLiquid = [...verified]
+    .filter(n=>n._ppsfN)
+    .sort((a,b)=>(b._ppsfN||0)-(a._ppsfN||0))[0];
   const topBeach = [...(liveNeighbourhoods||[])].filter(n=>n.distBeach).sort((a,b)=>parseFloat(a.distBeach)-parseFloat(b.distBeach))[0];
 
   const selStyle = {padding:"6px 10px",background:"rgba(255,255,255,0.04)",border:"1px solid "+T.border,borderRadius:7,color:"#CBD5E1",fontSize:11,outline:"none",fontFamily:"'Outfit',sans-serif"};
@@ -494,19 +662,30 @@ export default function NeighbourhoodsTab({liveNeighbourhoods=[],handleTabChange
   return (
     <div style={{paddingBottom:60}}>
 
-      {/*  HEADER  */}
-      <div style={{marginBottom:16}}>
-        <h2 style={{margin:0,fontSize:20,fontWeight:900,color:T.white,fontFamily:"'Fraunces',serif"}}>Neighbourhoods</h2>
-        <p style={{margin:"4px 0 0",fontSize:12,color:"#94A3B8"}}>
-          {verified.length} DLD verified · {(liveNeighbourhoods||[]).length - verified.length} estimates · {(liveNeighbourhoods||[]).length} communities</p>
+      {_copy && <TabIntro title={_copy.title} what={_copy.what} detail={_copy.detail}
+        includes={_copy.includes} excludes={_copy.excludes} warning={_copy.warning}/>}
+
+      {/*  WHAT IS ACTUALLY MEASURED  */}
+      <div style={{marginBottom:14,padding:"10px 13px",background:"rgba(255,255,255,0.02)",
+        border:"1px solid "+T.border,borderRadius:10,display:"flex",gap:18,flexWrap:"wrap",alignItems:"center"}}>
+        {[
+          {v:measuredCount.ppsf,  of:enriched.length, l:"prices measured from Land Department sales", c:"#10B981"},
+          {v:measuredCount.yield, of:enriched.length, l:"returns measured against tenancy contracts", c:"#10B981"},
+          {v:enriched.length-measuredCount.any, of:enriched.length, l:"still on stored estimates", c:"#94A3B8"},
+        ].map((s,i)=>(
+          <div key={i} style={{fontSize:11,color:"#94A3B8"}}>
+            <span style={{fontSize:14,fontWeight:800,color:s.c,fontFamily:"'Fraunces',serif"}}>{s.v}</span>
+            <span style={{color:"#64748B"}}> of {s.of}</span> {s.l}
+          </div>
+        ))}
       </div>
 
       {/*  HIGHLIGHT CARDS  */}
       {verified.length>0&&(
         <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:12,marginBottom:16}}>
           {[
-            {label:"Highest Yield",  icon:"",comm:topYield, value:topYield?fmtY(topYield.grossYield):"",  color:"#10B981"},
-            {label:"Top Rated",      icon:"",comm:topScore, value:topScore?"Score "+topScore.investmentScore:"",color:T.gold},
+            {label:"Highest Measured Return", icon:"",comm:topYield, value:topYield?fmtY(topYield.grossYield):"", color:"#10B981"},
+            {label:"Most Sales On Record", icon:"",comm:topLiquid, value:topLiquid?topLiquid._ppsfN.toLocaleString()+" sales":"",color:T.gold},
             {label:"Nearest Beach",  icon:"",comm:topBeach, value:topBeach?fmtD(topBeach.distBeach):"",   color:"#06B6D4"},
           ].map((h,i)=>(
             <div key={i} onClick={()=>h.comm&&setSelectedNbhd(h.comm)}
@@ -529,25 +708,27 @@ export default function NeighbourhoodsTab({liveNeighbourhoods=[],handleTabChange
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" strokeWidth="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
           <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search community..."
             style={{flex:1,background:"none",border:"none",outline:"none",color:T.white,fontSize:12,fontFamily:"'Outfit',sans-serif"}}/>
-          {search&&<button type="button" onClick={()=>setSearch("")} style={{background:"none",border:"none",color:"#94A3B8",cursor:"pointer",fontSize:14}}></button>}
+          {search&&<button type="button" onClick={()=>setSearch("")} style={{background:"none",border:"none",color:"#94A3B8",cursor:"pointer",fontSize:14}} aria-label="Clear search" title="Clear search">✕</button>}
         </div>
-        <select value={tierFilter} onChange={e=>setTierFilter(e.target.value)} style={selStyle}>
-          <option value="all">All Areas</option>
-          <option value="verified"> Verified</option>
-          <option value="dld-registry">DLD Registry</option>
+        <select value={evidenceFilter} onChange={e=>setEvidenceFilter(e.target.value)} style={selStyle}
+          title="Show only communities whose figures were counted from Land Department records">
+          <option value="all">Measured and estimated ({enriched.length})</option>
+          <option value="measured">Measured only ({measuredCount.any})</option>
+          <option value="estimate">Estimates only ({enriched.length-measuredCount.any})</option>
         </select>
-        <select value={yieldFilter} onChange={e=>setYieldFilter(e.target.value)} style={selStyle}>
-          <option value="all">Any Yield</option>
-          <option value="7+">7%+ Yield</option>
-          <option value="6+">6%+ Yield</option>
-          <option value="5+">5%+ Yield</option>
+        <select value={yieldFilter} onChange={e=>setYieldFilter(e.target.value)} style={selStyle}
+          title="A year's rent as a percentage of purchase price. The Dubai middle is 5.7%.">
+          <option value="all">Any return</option>
+          <option value="7+">7% or more</option>
+          <option value="6+">6% or more</option>
+          <option value="5+">5% or more</option>
         </select>
         <select value={sortBy} onChange={e=>setSortBy(e.target.value)} style={selStyle}>
-          <option value="score">Best Score</option>
-          <option value="yield">Highest Yield</option>
-          <option value="ppsf">Highest PPSF</option>
-          <option value="airport">Near Airport</option>
-          <option value="name">Sort: A-Z</option>
+          <option value="name">Sort: A–Z</option>
+          <option value="sales">Sort: most sales on record</option>
+          <option value="yield">Sort: highest return</option>
+          <option value="ppsf">Sort: highest price per sq ft</option>
+          <option value="airport">Sort: nearest airport</option>
         </select>
         <div style={{display:"flex",gap:2,background:"rgba(255,255,255,0.03)",border:"1px solid "+T.border,borderRadius:7,padding:2}}>
           {[{k:"grid",icon:""},{k:"table",icon:""}].map(v=>(
@@ -565,15 +746,15 @@ export default function NeighbourhoodsTab({liveNeighbourhoods=[],handleTabChange
         <FilterBtn active={beachFilter}  onClick={()=>setBeachFilter(v=>!v)}  label="Beach"/>
         <FilterBtn active={sportsFilter} onClick={()=>setSportsFilter(v=>!v)} label="Sports"/>
         <FilterBtn active={gvFilter}     onClick={()=>setGvFilter(v=>!v)}     label="Golden Visa"/>
-        {(metroFilter||beachFilter||sportsFilter||gvFilter||tierFilter!=="all"||yieldFilter!=="all"||search)&&(
-          <button type="button" onClick={()=>{setMetroFilter(false);setBeachFilter(false);setSportsFilter(false);setGvFilter(false);setTierFilter("all");setYieldFilter("all");setSearch("");}}
+        {(metroFilter||beachFilter||sportsFilter||gvFilter||yieldFilter!=="all"||evidenceFilter!=="all"||search)&&(
+          <button type="button" onClick={()=>{setMetroFilter(false);setBeachFilter(false);setSportsFilter(false);setGvFilter(false);setYieldFilter("all");setEvidenceFilter("all");setSearch("");}}
             style={{fontSize:10,padding:"4px 10px",borderRadius:8,border:"1px solid rgba(239,68,68,0.3)",background:"rgba(239,68,68,0.08)",color:"#EF4444",cursor:"pointer",fontFamily:"'Outfit',sans-serif"}}>Clear all</button>
         )}
         <span style={{fontSize:11,color:"#94A3B8",marginLeft:"auto"}}>{filtered.length} communities</span>
       </div>
 
       {/*  COMPARE PANEL  */}
-      {compare.length>=2&&<ComparePanel communities={compare} data={liveNeighbourhoods} onRemove={c=>setCompare(p=>p.filter(x=>x!==c))}/>}
+      {compare.length>=2&&<ComparePanel communities={compare} data={enriched} onRemove={c=>setCompare(p=>p.filter(x=>x!==c))}/>}
       {compare.length===1&&(
         <div style={{padding:"9px 14px",background:"rgba(212,168,67,0.06)",border:"1px solid rgba(212,168,67,0.2)",borderRadius:10,marginBottom:12,fontSize:11,color:T.gold}}>
            {compare[0]} selected  Select one more community to compare
@@ -583,7 +764,7 @@ export default function NeighbourhoodsTab({liveNeighbourhoods=[],handleTabChange
       {/*  EMPTY STATE  */}
       {liveNeighbourhoods.length===0&&(
         <div style={{padding:"60px 20px",textAlign:"center"}}>
-          <div style={{fontSize:40,marginBottom:12}}></div>
+          <div style={{fontSize:40,marginBottom:12}}>⏳</div>
           <div style={{fontSize:16,fontWeight:700,color:T.white,marginBottom:6}}>Loading communities...</div>
         </div>
       )}
@@ -607,7 +788,7 @@ export default function NeighbourhoodsTab({liveNeighbourhoods=[],handleTabChange
         <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid "+T.border,borderRadius:14,overflow:"hidden"}}>
           <div style={{overflowX:"auto"}}>
             <div style={{display:"grid",gridTemplateColumns:"2fr 55px 75px 75px 85px 90px 80px 75px",minWidth:680,padding:"8px 14px",fontSize:9,fontWeight:700,color:"#64748B",textTransform:"uppercase",letterSpacing:0.8,borderBottom:"1px solid "+T.border}}>
-              {["Community","Score","Yield","PPSF","Metro","Mall","Beach","Risk"].map((h,i)=>(
+              {["Community","Sales","Return","Price/sqft","Metro","Mall","Beach","Supply risk"].map((h,i)=>(
                 <div key={i} style={{textAlign:i>0?"center":"left"}}>{h}</div>
               ))}
             </div>
@@ -619,10 +800,10 @@ export default function NeighbourhoodsTab({liveNeighbourhoods=[],handleTabChange
               >
                 <div>
                   <div style={{fontSize:12,fontWeight:600,color:T.white,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{n.community}</div>
-                  <div style={{fontSize:10,color:"#64748B"}}>{n.tier==="verified"?" Verified":"DLD Registry"}</div>
+                  <div style={{fontSize:10,color:"#64748B"}}>{n._hasMeasured?"Land Department figures":"Estimates only"}</div>
                 </div>
-                <div style={{textAlign:"center"}}><ScoreBadge score={n.investmentScore}/></div>
-                <div style={{fontSize:12,fontWeight:700,color:parseFloat(n.grossYield||0)>=7?"#10B981":parseFloat(n.grossYield||0)>=6?"#84CC16":T.gold,textAlign:"center"}}>{fmtY(n.grossYield)}</div>
+                <div style={{textAlign:"center",fontSize:10,color:"#64748B"}}>{n._ppsfN?n._ppsfN.toLocaleString():"est"}</div>
+                <div style={{fontSize:12,fontWeight:700,textAlign:"center",color:!(n._yieldEv==="measured"||n._yieldEv==="thin")?"#64748B":parseFloat(n.grossYield||0)>=7?"#10B981":parseFloat(n.grossYield||0)>=6?"#84CC16":T.gold}}>{fmtY(n.grossYield)}{!(n._yieldEv==="measured"||n._yieldEv==="thin")&&<span style={{fontSize:8,marginLeft:3,color:"#64748B"}}>EST</span>}</div>
                 <div style={{fontSize:12,color:T.gold,textAlign:"center"}}>{fmtP(n.avgPpsf)}</div>
                 <div style={{fontSize:11,color:"#94A3B8",textAlign:"center",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{n.nearestMetro?n.nearestMetro.replace(" Metro","").replace(" Station","").substring(0,15)+"":""}</div>
                 <div style={{fontSize:11,color:"#94A3B8",textAlign:"center",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{n.nearestMall?n.nearestMall.substring(0,15)+"":""}</div>
@@ -641,13 +822,62 @@ export default function NeighbourhoodsTab({liveNeighbourhoods=[],handleTabChange
         <DetailDrawer n={selectedNbhd} onClose={()=>setSelectedNbhd(null)} handleTabChange={handleTabChange}/>
       )}
 
-      {/*  SOURCES  */}
-      <div style={{marginTop:20,paddingTop:12,borderTop:"1px solid "+T.border,display:"flex",gap:6,flexWrap:"wrap",alignItems:"center"}}>
-        <span style={{fontSize:10,color:"#64748B"}}>Data sources:</span>
-        {["Dubai Land Department","Google Maps API","Bayut 2025","Knight Frank Q1 2025","Driven Properties","D&B Properties Q1 2026"].map((s,i)=>(
-          <span key={i} style={{fontSize:10,color:"#64748B",padding:"2px 8px",borderRadius:8,border:"1px solid rgba(255,255,255,0.06)"}}>{s}</span>
-        ))}
+      {/*  WHAT THE COLUMNS MEAN  */}
+      <div style={{marginTop:22,padding:"14px 16px",background:"rgba(255,255,255,0.02)",
+        border:"1px solid "+T.border,borderRadius:12}}>
+        <div style={{fontSize:11,fontWeight:700,color:T.white,marginBottom:10,
+          textTransform:"uppercase",letterSpacing:0.8}}>What the figures mean</div>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(230px,1fr))",gap:12}}>
+          {[
+            {t:"Price per sq ft",
+             d:"The sale price divided by the floor area. It is how Dubai compares one "+
+               "community against another, because it ignores unit size. Each card uses "+
+               "the most recent year on record and names it — 2026 is still running, so "+
+               "those counts cover part of a year, not all of it.",
+             b:"Dubai middle: AED "+DUBAI_BENCHMARK.ppsf.median.toLocaleString()+
+               ". Most communities fall between "+DUBAI_BENCHMARK.ppsf.p25.toLocaleString()+
+               " and "+DUBAI_BENCHMARK.ppsf.p75.toLocaleString()+"."},
+            {t:"Gross return",
+             d:"A full year's rent as a percentage of the purchase price, before any "+
+               "costs are taken off. Higher means the rent pays the price back faster.",
+             b:"Dubai middle: "+DUBAI_BENCHMARK.yield.median+"%. Most fall between "+
+               DUBAI_BENCHMARK.yield.p25+"% and "+DUBAI_BENCHMARK.yield.p75+"%."},
+            {t:"Net return",
+             d:"Gross return after the service charge is deducted. It is closer to what "+
+               "an owner actually keeps.",
+             b:"Always an estimate here — see the service charge note."},
+            {t:"Service charge",
+             d:"The annual building maintenance fee, per square foot, paid by the owner.",
+             b:"No per-community rate is published, so this is an estimate everywhere. "+
+               "Ask the developer or management company for the real figure."},
+          ].map((g,i)=>(
+            <div key={i}>
+              <div style={{fontSize:11,fontWeight:700,color:T.gold,marginBottom:3}}>{g.t}</div>
+              <div style={{fontSize:11,color:"#94A3B8",lineHeight:1.5,marginBottom:4}}>{g.d}</div>
+              <div style={{fontSize:10,color:"#64748B",lineHeight:1.5}}>{g.b}</div>
+            </div>
+          ))}
+        </div>
+
+        <div style={{marginTop:14,paddingTop:12,borderTop:"1px solid "+T.border}}>
+          <div style={{fontSize:11,fontWeight:700,color:T.white,marginBottom:8}}>The badge on each figure</div>
+          <div style={{display:"flex",gap:16,flexWrap:"wrap"}}>
+            {[
+              {ev:EV.MEASURED,n:412,x:"Counted from that many Land Department sales. Safe to quote."},
+              {ev:EV.THIN,    n:22, x:"Counted, but from under "+THIN_EVIDENCE_BELOW+
+                                      " sales — one unusual deal can still move it. Check before quoting."},
+              {ev:EV.ESTIMATE,      x:"Not measured. A stored figure. Do not quote it as a market fact."},
+            ].map((r,i)=>(
+              <div key={i} style={{display:"flex",gap:7,alignItems:"flex-start",flex:"1 1 240px"}}>
+                <span style={{marginTop:1}}><EvBadge ev={r.ev} n={r.n}/></span>
+                <span style={{fontSize:10,color:"#94A3B8",lineHeight:1.5}}>{r.x}</span>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
+
+      {_copy?.provenance && <TabProvenance {..._copy.provenance}/>}
 
     </div>
   );

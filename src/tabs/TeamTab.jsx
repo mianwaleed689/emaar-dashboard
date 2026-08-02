@@ -15,6 +15,9 @@ import { T } from "../data";
 import { cleanPhone } from "../utils";
 import { GOLDEN_VISA_THRESHOLD } from "../utils/constants";
 
+import TabIntro from "../components/TabIntro";
+import TabProvenance from "../components/TabProvenance";
+import { tabCopy } from "../data/tabCopy";
 const SOURCE_COLORS = {
   "Property Finder":"#00C08B","Bayut":"#FF6B35","Dubizzle":"#E8003D","Meta/Facebook":"#1877F2",
   "Instagram":"#E1306C","WhatsApp":"#25D366","Google Ads":"#4285F4","Referral":"#8B5CF6",
@@ -24,6 +27,8 @@ const SOURCE_COLORS = {
 const fmtB = v => { const n=parseFloat(v||0); if(!n) return "—"; return n>=1e6?"AED "+(n/1e6).toFixed(1)+"M":"AED "+n.toLocaleString(); };
 
 export default function TeamTab({ teamMembers=[], teamMembersLoading, myLeads=[], deals=[], orgRole, userRole, orgId, firebaseUser, orgName }) {
+  const _copy = tabCopy("Team");
+
 
   const canManage = orgRole==="owner"||orgRole==="director"||orgRole==="manager"||userRole==="superAdmin"||userRole==="admin";
   if (!canManage) return (
@@ -316,6 +321,8 @@ export default function TeamTab({ teamMembers=[], teamMembersLoading, myLeads=[]
 
   return (
     <div style={{paddingBottom:60}}>
+      {_copy && <TabIntro title={_copy.title} what={_copy.what} detail={_copy.detail} includes={_copy.includes} excludes={_copy.excludes} warning={_copy.warning} />}
+
 
       {/* — HEADER — */}
       <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:20,flexWrap:"wrap",gap:12}}>
@@ -606,6 +613,8 @@ export default function TeamTab({ teamMembers=[], teamMembersLoading, myLeads=[]
 
       {/* — TOAST — */}
       {toast&&<div style={{position:"fixed",bottom:24,right:24,padding:"11px 18px",background:toast.type==="error"?"rgba(239,68,68,0.15)":"rgba(16,185,129,0.15)",border:"1px solid "+(toast.type==="error"?"#EF4444":"#10B981"),borderRadius:9,color:toast.type==="error"?"#EF4444":"#10B981",fontSize:12,fontWeight:600,zIndex:9999,boxShadow:"0 8px 32px rgba(0,0,0,0.4)"}}>{toast.msg}</div>}
+
+      {_copy?.provenance && <TabProvenance {..._copy.provenance} />}
 
     </div>
   );

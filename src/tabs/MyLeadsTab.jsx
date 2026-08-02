@@ -130,7 +130,7 @@ const Section = ({icon,title,sub,color,open,onToggle,children}) => (
         <div style={{fontSize:12,fontWeight:700,color:T.white}}>{title}</div>
         {sub&&<div style={{fontSize:10,color:T.textMuted,marginTop:1}}>{sub}</div>}
       </div>
-      <div style={{color:T.textMuted,fontSize:12,transition:"transform 0.2s",transform:open?"rotate(90deg)":"none"}}></div>
+      <div style={{color:T.textMuted,fontSize:12,transition:"transform 0.2s",transform:open?"rotate(90deg)":"none"}}>▸</div>
     </div>
     {open&&<div style={{padding:"14px"}}>{children}</div>}
   </div>
@@ -428,7 +428,7 @@ try{
   //  Access guard 
   if(!canSee) return (
     <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",height:400,gap:12,textAlign:"center"}}>
-      <div style={{fontSize:36}}></div>
+      <div style={{fontSize:36}}>🔒</div>
       <div style={{fontSize:16,fontWeight:700,color:T.white}}>CRM Access Required</div>
       <div style={{fontSize:12,color:T.textMuted,maxWidth:300}}>Your account does not have CRM access. Contact your administrator.</div>
     </div>
@@ -468,7 +468,7 @@ try{
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={T.textMuted} strokeWidth="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
           <input id="crm-search" value={aiSearch} onChange={e=>setAiSearch(e.target.value)} placeholder="Search name, phone, agent, area..."
             style={{flex:1,background:"none",border:"none",outline:"none",color:T.white,fontSize:12,fontFamily:"'Outfit',sans-serif"}}/>
-          {aiSearch&&<button type="button" onClick={()=>setAiSearch("")} style={{background:"none",border:"none",color:T.textMuted,cursor:"pointer",fontSize:14}}></button>}
+          {aiSearch&&<button type="button" onClick={()=>setAiSearch("")} style={{background:"none",border:"none",color:T.textMuted,cursor:"pointer",fontSize:14}} aria-label="Clear search" title="Clear search">✕</button>}
         </div>
         <div style={{display:"flex",gap:2,background:"rgba(255,255,255,0.03)",border:"1px solid "+T.border,borderRadius:7,padding:2,marginLeft:"auto"}}>
           {[{k:"table",icon:""},{k:"kanban",icon:""},{k:"analytics",icon:""}].map(v=>(
@@ -556,7 +556,7 @@ try{
             </div>
             {allLeads.length===0&&(
               <div style={{padding:"80px 20px",textAlign:"center"}}>
-                <div style={{fontSize:40,marginBottom:12}}></div>
+                <div style={{fontSize:40,marginBottom:12}}>📊</div>
                 <div style={{fontSize:16,fontWeight:700,color:T.white,marginBottom:6}}>No leads yet</div>
                 <div style={{fontSize:12,color:T.textMuted,marginBottom:16}}>Add your first lead to start managing your pipeline</div>
                 <button type="button" onClick={()=>setShowAdd(true)} style={{padding:"10px 24px",borderRadius:8,border:"none",background:"linear-gradient(135deg,#D4A843,#B8902E)",color:"#0A0E1A",fontSize:13,fontWeight:700,cursor:"pointer"}}>+ Add First Lead</button>
@@ -603,7 +603,7 @@ try{
                       ?<span style={{fontSize:10,color:"#8B5CF6",fontWeight:600,background:"rgba(139,92,246,0.1)",padding:"2px 7px",borderRadius:8}}>{lead.assignedToName}</span>
                       :canManage
                         ?<button type="button" onClick={e=>{e.stopPropagation();setShowAssign(lead);}} style={{fontSize:10,color:T.textMuted,background:"rgba(255,255,255,0.05)",border:"1px dashed "+T.border,padding:"2px 7px",borderRadius:8,cursor:"pointer",fontFamily:"'Outfit',sans-serif"}}>+ Assign</button>
-                        :<span style={{fontSize:10,color:T.textMuted}}></span>
+                        :<span style={{fontSize:10,color:T.textMuted}}>—</span>
                     }
                   </div>
                   <div style={{display:"flex",alignItems:"center",justifyContent:"center"}}>
@@ -807,7 +807,7 @@ try{
                     <PBadge status={selectedLead.status||"New Lead"}/>
                   </div>
                 </div>
-                <button type="button" onClick={()=>setSelectedLead(null)} style={{background:"none",border:"none",color:T.textMuted,cursor:"pointer",fontSize:18}}></button>
+                <button type="button" onClick={()=>setSelectedLead(null)} style={{background:"none",border:"none",color:T.textMuted,cursor:"pointer",fontSize:18}} aria-label="Close lead details" title="Close lead details">✕</button>
               </div>
               <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
                 {selectedLead.phone&&<a href={"https://wa.me/"+clnPhone(selectedLead.phone)} target="_blank" rel="noopener noreferrer" style={{fontSize:10,padding:"4px 10px",borderRadius:7,background:"rgba(37,211,102,0.1)",border:"1px solid rgba(37,211,102,0.25)",color:"#25D366",textDecoration:"none",fontWeight:600}}>WhatsApp</a>}
@@ -952,7 +952,7 @@ try{
           <div style={{background:"#0D1117",borderRadius:14,border:"1px solid "+T.border,width:"100%",maxWidth:620,maxHeight:"92vh",overflowY:"auto"}} onClick={e=>e.stopPropagation()}>
             <div style={{padding:"15px 20px",borderBottom:"1px solid "+T.border,display:"flex",justifyContent:"space-between",alignItems:"center",position:"sticky",top:0,background:"#0D1117",zIndex:1}}>
               <div style={{fontFamily:"'Fraunces',serif",fontSize:15,fontWeight:900,color:T.white}}>Add New Lead</div>
-              <button type="button" onClick={()=>setShowAdd(false)} style={{background:"rgba(255,255,255,0.06)",border:"1px solid "+T.border,borderRadius:7,color:T.textMuted,width:28,height:28,cursor:"pointer",fontSize:16,display:"flex",alignItems:"center",justifyContent:"center"}}></button>
+              <button type="button" onClick={()=>setShowAdd(false)} style={{background:"rgba(255,255,255,0.06)",border:"1px solid "+T.border,borderRadius:7,color:T.textMuted,width:28,height:28,cursor:"pointer",fontSize:16,display:"flex",alignItems:"center",justifyContent:"center"}} aria-label="Close" title="Close">✕</button>
             </div>
             <div style={{padding:20}}>
               <div style={{marginBottom:10}}>
@@ -1015,7 +1015,7 @@ try{
                 <div style={{fontFamily:"'Fraunces',serif",fontSize:15,fontWeight:900,color:T.white}}>Assign Lead</div>
                 <div style={{fontSize:11,color:T.textMuted,marginTop:2}}>{showAssign.name||"Lead"}</div>
               </div>
-              <button type="button" onClick={()=>setShowAssign(null)} style={{background:"rgba(255,255,255,0.06)",border:"1px solid "+T.border,borderRadius:7,color:T.textMuted,width:28,height:28,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16}}></button>
+              <button type="button" onClick={()=>setShowAssign(null)} style={{background:"rgba(255,255,255,0.06)",border:"1px solid "+T.border,borderRadius:7,color:T.textMuted,width:28,height:28,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16}} aria-label="Close" title="Close">✕</button>
             </div>
             {agents.length===0&&<div style={{padding:"20px",textAlign:"center",color:T.textMuted,fontSize:12}}>No agents in your team yet. Create agents from the Team tab.</div>}
             <div style={{display:"flex",flexDirection:"column",gap:8}}>
@@ -1047,7 +1047,7 @@ try{
                 <div style={{fontFamily:"'Fraunces',serif",fontSize:15,fontWeight:900,color:T.white}}>WhatsApp Templates</div>
                 <div style={{fontSize:11,color:T.textMuted,marginTop:2}}>{filtered.filter(l=>l.phone).length} leads with phone</div>
               </div>
-              <button type="button" onClick={()=>setShowWA(false)} style={{background:"rgba(255,255,255,0.06)",border:"1px solid "+T.border,borderRadius:7,color:T.textMuted,width:28,height:28,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16}}></button>
+              <button type="button" onClick={()=>setShowWA(false)} style={{background:"rgba(255,255,255,0.06)",border:"1px solid "+T.border,borderRadius:7,color:T.textMuted,width:28,height:28,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16}} aria-label="Close" title="Close">✕</button>
             </div>
             <div style={{display:"flex",flexDirection:"column",gap:7}}>
               {WA_TEMPLATES.map((tmpl,i)=>(

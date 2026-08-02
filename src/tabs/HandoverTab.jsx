@@ -6,6 +6,9 @@ import React, { useState, useMemo } from "react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from "recharts";
 import { T } from "../data";
 
+import TabIntro from "../components/TabIntro";
+import TabProvenance from "../components/TabProvenance";
+import { tabCopy } from "../data/tabCopy";
 const fmtP = n => n ? "AED "+Math.round(n).toLocaleString() : "--";
 const fmtY = n => n ? parseFloat(n).toFixed(1)+"%" : "--";
 
@@ -26,6 +29,8 @@ export default function HandoverTab({
   liveProjects=[], liveHandover=[], liveNeighbourhoods=[],
   extraProjects=[], handleTabChange, globalFilters={},
 }) {
+  const _copy = tabCopy("Handover");
+
   const [search,   setSearch]   = useState("");
   const [sortBy,   setSortBy]   = useState("handover");
   const [yearF,    setYearF]    = useState("all");
@@ -108,6 +113,8 @@ export default function HandoverTab({
 
   return (
     <div style={{display:"flex",gap:16,height:"calc(100vh - 140px)",paddingBottom:20}}>
+      {_copy && <TabIntro title={_copy.title} what={_copy.what} detail={_copy.detail} includes={_copy.includes} excludes={_copy.excludes} warning={_copy.warning} />}
+
 
       {/* LEFT */}
       <div style={{flex:1,display:"flex",flexDirection:"column",minWidth:0}}>
@@ -361,6 +368,8 @@ export default function HandoverTab({
           </div>
         </div>
       )}
+      {_copy?.provenance && <TabProvenance {..._copy.provenance} />}
+
     </div>
   );
 }

@@ -1,366 +1,340 @@
 /* eslint-disable */
-/* Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
-   DXB ANALYTICS Ã¢â‚¬â€ PRICE HISTORY TAB
-   Extracted from EmaarDashboardV2.jsx
-   5-year PPSF trends, community momentum, off-plan vs secondary
-   Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â */
+/* ═══════════════════════════════════════════════════════════════════════════
+   DXB ANALYTICS — PRICE HISTORY
+   Rebuilt 2026-08-02 on Dubai Land Department transaction records.
 
-import React from "react";
-import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area, Legend } from "recharts";
+   ── WHY THIS WAS REBUILT ──────────────────────────────────────────────────
+
+   The previous version could not answer the three questions an agent asks in
+   the first ten seconds, and it was wrong on the numbers:
+
+     "Are these real communities?"
+        The filter offered 122 names in ONE flat list which was actually 85
+        master projects, 25 cadastral areas, 9 sub-communities and 3 unknowns.
+        SIX names — Business Bay, Palm Jumeirah, Palm Deira, Palm Jabal Ali,
+        Dubai Investment Park First and Second — were simultaneously an area
+        AND a master project, with no way to tell which you had selected.
+
+     "Where does this number come from?"
+        122 Firestore documents, not one carrying a source field, under a green
+        "DLD Verified" badge. The chart could also fall back to a hardcoded
+        growth curve — `commPPSF` — that invented five years of history for ten
+        communities, six of which matched the live dropdown exactly.
+
+     "How many sales is that?"
+        Never shown.
+
+   Measured against DLD records (see GAP_ANALYSIS.md): the median community was
+   15% out, 28 of 82 were off by more than 25%, and nine by more than 50%. Every
+   `DUBAI HILLS - …` sub-community showed the parent's AED 2,461 while DLD says
+   GOLF GROVE is 1,238 and MAPLE 3 is 1,570.
+
+   ── WHAT IT DOES NOW ──────────────────────────────────────────────────────
+
+   Reads src/data/communityHierarchy.json — 1,242 entities computed from
+   382,192 registered residential sales since 2019, separated into three
+   explicit levels so the question "is this an area or a community?" has an
+   answer on screen:
+
+       Area (DLD cadastral)   72     each carries its DLD area_id
+       Master community       95     each shows its parent area
+       Project                1,075  each shows its parent master community
+
+   Every point carries the number of sales behind it. Nothing is estimated,
+   nothing is simulated, and a year with fewer than 20 sales is not published.
+
+   ── METHOD ────────────────────────────────────────────────────────────────
+
+   Median AED per square foot of registered DLD SALE transactions, residential
+   built stock only. `procedure_area` is square metres and is converted at
+   10.7639 sqft/sqm — missing that makes every figure 10.8x too small while
+   still looking plausible.
+
+   Validated against published market data on 2026-08-02:
+       Palm Jumeirah  3,719 computed  vs 3,500-4,090 reported
+       JVC            1,482 computed  vs 1,460 reported
+       Dubai Marina   1,939 computed  vs 2,080 median transacted reported
+   Portal figures are ASKING prices, which run 5-8% above transacted, so a DLD
+   median sitting slightly below a portal average is the expected relationship.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+import React, { useState, useMemo } from "react";
+import {
+  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
+  ResponsiveContainer, Legend,
+} from "recharts";
 import { T } from "../data";
-import { SvgIcons } from "../components/Icons";
-import { Section, Chart, CustomTooltip, DataBadge, TabSources } from "../components/SharedUI";
-import SEED_DATA from "../utils/seedData";
-import { useFilterSchema } from "../contexts/FilterSchemaContext";
+import HIER from "../data/communityHierarchy.json";
 
-function PriceHistoryTab({ liveNeighbourhoods=[], phCommunity, setPhCommunity, phType, setPhType, phBeds, setPhBeds, phView, setPhView, phCompare, setPhCompare, phCommunity2, setPhCommunity2, liveMarketData, livePriceHistory, globalFilters = {}, handleTabChange }) {
+const LEVELS = [
+  { key: "area",    label: "Area",             hint: "DLD cadastral area — the official land division" },
+  { key: "master",  label: "Master community", hint: "A master development, e.g. Dubai Hills Estate" },
+  { key: "project", label: "Project",          hint: "A single project or sub-community within a master" },
+];
 
-  /* Phase 2.4 Batch 5: when the top bar picks a community, sync the tab's
-     own community selector to match. User can still override via the
-     tab's internal dropdown. */
-  const gfCommunity = globalFilters?.community && globalFilters.community !== "all"
-    ? globalFilters.community : null;
-  React.useEffect(() => {
-    if (gfCommunity && phCommunity !== gfCommunity) {
-      setPhCommunity(gfCommunity);
-    }
-  }, [gfCommunity]);
-  // eslint-disable-next-line
+const fmt = n => n == null ? "—" : n.toLocaleString();
 
+export default function PriceHistoryTab({ globalFilters = {} }) {
+  const [level, setLevel] = useState("master");
+  const [name, setName] = useState(null);
+  const [compare, setCompare] = useState(null);
+  const [search, setSearch] = useState("");
 
-            /* state moved to top level */
+  const all = HIER.entities || [];
+  const inLevel = useMemo(
+    () => all.filter(e => e.l === level).sort((a, b) => b.t - a.t),
+    [all, level]
+  );
 
-            /* Ã¢â€â‚¬Ã¢â€â‚¬ Data from Firestore priceHistory collection Ã¢â€â‚¬Ã¢â€â‚¬ */
-  const phFromFirestore = (livePriceHistory || []).filter(d => d.type === "annual" || d.type === "quarterly" || d.type === "monthly");
-            const phRaw = liveMarketData?.filter?.(d => d.type === "priceHistory") || [];
-  const phData = phFromFirestore.length > 0 ? phFromFirestore : phRaw.length > 0 ? phRaw : SEED_DATA.priceHistory;
-            const phIsSeed = phRaw.length === 0;
-            // Separate year trend data from community data
-            // Base chart data Ã¢â‚¬â€ year-level trend
-            const phYearData = phData
-              .filter(d => d.period && !d.community)
-              .sort((a,b) => parseInt(a.period) - parseInt(b.period))
-              .map(d => ({ ...d, period: String(d.period), ppsf: parseFloat(d.ppsf) || 0 }));
+  /* Default to the deepest-traded entity in the level so the tab is never
+     blank on arrival — an empty chart teaches the user nothing. */
+  const selected = useMemo(() => {
+    const pick = inLevel.find(e => e.n === name) || inLevel[0];
+    return pick || null;
+  }, [inLevel, name]);
+  const other = useMemo(
+    () => compare ? inLevel.find(e => e.n === compare) : null,
+    [inLevel, compare]
+  );
 
-            // Community-level data
-            const phCommunityData = phData.filter(d => d.community);
+  const visible = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return q ? inLevel.filter(e => e.n.toLowerCase().includes(q)) : inLevel;
+  }, [inLevel, search]);
 
-            // Build community-specific chart data for compare mode
-            // Uses SEED_DATA community ppsf to simulate year trends per community
-            const commPPSF = {
-              "Downtown Dubai":     { base:2200, growth:[0.08,0.10,0.12,0.15,0.13] },
-              "Dubai Hills Estate": { base:1400, growth:[0.10,0.14,0.18,0.22,0.20] },
-              "Dubai Marina":       { base:1600, growth:[0.06,0.08,0.09,0.10,0.08] },
-              "JVC":                { base:700,  growth:[0.12,0.15,0.18,0.20,0.17] },
-              "Palm Jumeirah":      { base:3200, growth:[0.08,0.10,0.12,0.15,0.14] },
-              "Business Bay":       { base:1400, growth:[0.07,0.09,0.10,0.12,0.08] },
-              "Jumeirah Lake Towers":{ base:1000, growth:[0.06,0.08,0.10,0.12,0.09] },
-              "Dubai Creek Harbour":{ base:1100, growth:[0.15,0.20,0.25,0.32,0.28] },
-              "Sobha Hartland":     { base:1500, growth:[0.10,0.14,0.18,0.22,0.24] },
-              "Arjan":              { base:650,  growth:[0.10,0.13,0.16,0.18,0.16] },
-            };
-            const YEARS = ["2021","2022","2023","2024","2025"];
-            const buildCommData = (commName) => {
-              const doc = phFromFirestore.find(d => d.community === commName);
-              if (doc && doc.yearData) {
-                return Object.entries(doc.yearData)
-                  .sort((a,b) => a[0].localeCompare(b[0]))
-                  .map(([yr, val]) => ({ period: yr, ppsf: val.ppsf || 0 }));
-              }
-              const cfg = commPPSF[commName];
-              if (!cfg) return phYearData;
-              let ppsf = cfg.base;
-              return YEARS.map((yr, i) => {
-                ppsf = Math.round(ppsf * (1 + cfg.growth[i]));
-                return { period: yr, ppsf };
-              });
-            };
+  const chart = useMemo(() => {
+    if (!selected) return [];
+    const years = [...new Set([
+      ...selected.s.map(x => x.year),
+      ...(other ? other.s.map(x => x.year) : []),
+    ])].sort();
+    return years.map(y => ({
+      year: y,
+      a: selected.s.find(x => x.year === y)?.ppsf ?? null,
+      aN: selected.s.find(x => x.year === y)?.n ?? null,
+      b: other?.s.find(x => x.year === y)?.ppsf ?? null,
+      bN: other?.s.find(x => x.year === y)?.n ?? null,
+    }));
+  }, [selected, other]);
 
-            // Final chart data Ã¢â‚¬â€ with ppsf2 if compare mode on
-            const phChartData = phCompare
-              ? (() => {
-                  const d1 = buildCommData(phCommunity === "All" ? "Downtown Dubai" : phCommunity);
-                  const d2 = buildCommData(phCommunity2 === "All" ? "Dubai Hills Estate" : phCommunity2);
-                  return YEARS.map((yr, i) => ({ period: yr, ppsf: d1[i]?.ppsf||0, ppsf2: d2[i]?.ppsf||0 }));
-                })()
-              : (phCommunity !== "All" ? buildCommData(phCommunity) : (phYearData.length > 0 ? phYearData : [{"period":"2020","ppsf":1050},{"period":"2021","ppsf":1080},{"period":"2022","ppsf":1250},{"period":"2023","ppsf":1380},{"period":"2024","ppsf":1600},{"period":"2025","ppsf":1863}]));
+  const card = { background: T.surface, border: `1px solid ${T.border}`, borderRadius: 14 };
+  const sel = {
+    background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8,
+    color: T.white, fontFamily: "'Outfit',sans-serif", fontSize: 13,
+    padding: "9px 12px", outline: "none", cursor: "pointer", minWidth: 220,
+  };
 
-            // Apply community filter for table
-            const phFiltered = phCompare
-              ? phCommunityData.filter(d => d.community === phCommunity || d.community === phCommunity2)
-              : phCommunity === "All" ? phCommunityData : phCommunityData.filter(d => d.community === phCommunity);
-            const communities = ["All", ...new Set(phFromFirestore.length > 0 ? phFromFirestore.map(d => d.community).filter(Boolean).sort() : phCommunityData.map(d => d.community).filter(Boolean))];
-            const bedOptions = ["All", "Studio", "1 BR", "2 BR", "3 BR", "4 BR", "5 BR+"];
-            // Phase 3.4: type options now from live schema (admin-editable)
-            const { allTypeLabels: _schemaTypes } = useFilterSchema();
-            const typeOptions = _schemaTypes && _schemaTypes.length > 0
-              ? _schemaTypes
-              : ["Apartment", "Villa", "Townhouse", "Office", "Hotel Apartment"];
+  const Tip = ({ active, payload, label }) => {
+    if (!active || !payload?.length) return null;
+    const d = payload[0].payload;
+    return (
+      <div style={{ ...card, padding: "10px 12px", fontSize: 12 }}>
+        <div style={{ color: T.white, fontWeight: 700, marginBottom: 6 }}>{label}</div>
+        {d.a != null && (
+          <div style={{ color: T.gold }}>
+            {selected.n}: AED {fmt(d.a)}/sqft
+            <span style={{ color: T.textMuted }}> · {fmt(d.aN)} sales</span>
+          </div>
+        )}
+        {d.b != null && other && (
+          <div style={{ color: T.teal }}>
+            {other.n}: AED {fmt(d.b)}/sqft
+            <span style={{ color: T.textMuted }}> · {fmt(d.bN)} sales</span>
+          </div>
+        )}
+      </div>
+    );
+  };
 
-            /* Ã¢â€â‚¬Ã¢â€â‚¬ Filter data Ã¢â€â‚¬Ã¢â€â‚¬ */
-            const filtered = phData.filter(d => {
-              if (phCommunity !== "All" && d.community !== phCommunity) return false;
-              if (phType !== "All" && d.type !== phType) return false;
-              if (phBeds !== "All" && d.beds !== phBeds) return false;
-              return true;
-            });
+  return (
+    <div style={{ padding: "0 4px" }}>
 
-            const selStyle = {
-              background: T.surfaceAlt, border: `1px solid ${T.border}`,
-              borderRadius: 8, color: T.white, fontFamily: "'Outfit',sans-serif",
-              fontSize: 12, padding: "7px 28px 7px 10px", outline: "none", cursor: "pointer",
-              appearance: "none", WebkitAppearance: "none",
-              backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E")`,
-              backgroundRepeat: "no-repeat", backgroundPosition: "right 8px center",
-            };
+      {/* ── What this tab is. An agent should not have to guess. ── */}
+      <div style={{ marginBottom: 18 }}>
+        <h2 style={{ fontSize: 22, fontWeight: 800, color: T.white, margin: 0 }}>Price History</h2>
+        <p style={{ fontSize: 13, color: T.textSecondary, marginTop: 6, lineHeight: 1.7, maxWidth: 760 }}>
+          Median price per square foot each year, calculated from{" "}
+          <strong style={{ color: T.white }}>registered Dubai Land Department sale
+          transactions</strong> — not asking prices. Choose what you are looking at first:
+          an <strong style={{ color: T.white }}>area</strong>, a{" "}
+          <strong style={{ color: T.white }}>master community</strong>, or a single{" "}
+          <strong style={{ color: T.white }}>project</strong>. Every figure shows how many
+          sales it is based on.
+        </p>
+      </div>
 
-            /* Ã¢â€â‚¬Ã¢â€â‚¬ Momentum badge Ã¢â€â‚¬Ã¢â€â‚¬ */
-            const MomentumBadge = ({ change }) => {
-              if (!change) return null;
-              const positive = change > 0;
-              return (
-                <span style={{ display: "inline-flex", alignItems: "center", gap: 3, padding: "2px 8px", borderRadius: 20, fontSize: 11, fontWeight: 700, background: positive ? "rgba(16,185,129,0.12)" : "rgba(239,68,68,0.12)", color: positive ? T.green : T.red }}>
-                  <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round"><polyline points={positive ? "18 15 12 9 6 15" : "6 9 12 15 18 15"}/></svg>
-                  {Math.abs(change).toFixed(1)}%
-                </span>
-              );
-            };
-
+      {/* ── Level: the question the old tab could not answer ── */}
+      <div style={{ ...card, padding: "14px 16px", marginBottom: 14 }}>
+        <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, letterSpacing: .6,
+                      textTransform: "uppercase", marginBottom: 9 }}>
+          1 · What are you looking at?
+        </div>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          {LEVELS.map(l => {
+            const on = level === l.key;
+            const n = all.filter(e => e.l === l.key).length;
             return (
-              <div style={{ animation: "fadeUp 0.4s ease-out forwards" }}>
-
-                {/* Tab header */}
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0", marginBottom: 20, borderBottom: `1px solid ${T.border}`, flexWrap: "wrap", gap: 8 }}>
-                  <div>
-                    <div style={{ fontSize: 20, fontWeight: 800, color: T.white, fontFamily: "'Fraunces',serif" }}>Price History</div>
-                    <div style={{ fontSize: 11, color: T.textMuted, marginTop: 3 }}>PPSF trends per community Ã‚Â· DLD registered transactions Ã‚Â· 5-year view</div>
-                  </div>
-                  <div style={{ display: "flex", gap: 8 }}>
-                    {/* View toggle */}
-                    <div style={{ display: "flex", background: T.surfaceAlt, borderRadius: 8, border: `1px solid ${T.border}`, overflow: "hidden" }}>
-                      {["chart", "table"].map(v => (
-                        <button key={v} type="button" onClick={() => setPhView(v)}
-                          style={{ padding: "6px 14px", background: phView === v ? "rgba(212,168,67,0.15)" : "transparent", color: phView === v ? T.gold : T.textMuted, border: "none", cursor: "pointer", fontSize: 11, fontWeight: 600, fontFamily: "'Outfit',sans-serif", textTransform: "capitalize" }}>
-                          {v}
-                        </button>
-                      ))}
-                    </div>
-                    {/* Compare toggle */}
-                    <button type="button" onClick={() => setPhCompare(c => !c)}
-                      style={{ padding: "6px 14px", background: phCompare ? "rgba(212,168,67,0.15)" : T.surfaceAlt, border: `1px solid ${phCompare ? "rgba(212,168,67,0.4)" : T.border}`, borderRadius: 8, color: phCompare ? T.gold : T.textMuted, cursor: "pointer", fontSize: 11, fontWeight: 600, fontFamily: "'Outfit',sans-serif" }}>
-                      Compare
-                    </button>
-                  </div>
-                </div>
-
-                {/* Ã¢â€â‚¬Ã¢â€â‚¬ Smart Filters Ã¢â€â‚¬Ã¢â€â‚¬ */}
-                <div style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 12, padding: "14px 16px", marginBottom: 20 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-                    <span style={{ fontSize: 11, fontWeight: 600, color: T.textMuted }}>Compare:</span>
-                    <select value={phCommunity} onChange={e => setPhCommunity(e.target.value)} style={selStyle}>
-                      {communities.map(c => <option key={c}>{c}</option>)}
-                    </select>
-                    {phCompare && (
-                      <>
-                        <span style={{ fontSize: 11, fontWeight: 600, color: T.teal }}>vs</span>
-                        <select value={phCommunity2} onChange={e => setPhCommunity2(e.target.value)} style={{ ...selStyle, borderColor: "rgba(20,184,166,0.4)", color: T.teal }}>
-                          {communities.map(c => <option key={c}>{c}</option>)}
-                        </select>
-                      </>
-                    )}
-                    <select value={phType} onChange={e => setPhType(e.target.value)} style={selStyle}>
-                      {typeOptions.map(t => <option key={t}>{t}</option>)}
-                    </select>
-                    <select value={phBeds} onChange={e => setPhBeds(e.target.value)} style={selStyle}>
-                      {bedOptions.map(b => <option key={b}>{b}</option>)}
-                    </select>
-                    <span style={{ marginLeft: "auto", fontSize: 10, color: T.textMuted, display: "flex", alignItems: "center", gap: 4 }}>
-                      <span style={{ width: 5, height: 5, borderRadius: "50%", background: T.green, display: "inline-block" }} />
-                      DLD Verified
-                    </span>
-                  </div>
-                </div>
-
-                {/* Ã¢â€â‚¬Ã¢â€â‚¬ No data state Ã¢â€â‚¬Ã¢â€â‚¬ */}
-                {phCommunityData.length === 0 && phChartData.length === 0 && (
-                  <div style={{ background: "rgba(212,168,67,0.05)", border: `1px solid rgba(212,168,67,0.15)`, borderRadius: 12, padding: "48px 24px", textAlign: "center", marginBottom: 20 }}>
-                    <div style={{ marginBottom: 14 }}>
-                      {SvgIcons.TrendingUp({ width: 40, height: 40, style: { color: T.textMuted, display: "inline-block" } })}
-                    </div>
-                    <div style={{ fontSize: 16, fontWeight: 700, color: T.white, marginBottom: 8 }}>Price history not yet imported</div>
-                    <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 4 }}>Historical PPSF data loads from DLD transaction records</div>
-                    <div style={{ fontSize: 11, color: T.textMuted, opacity: 0.7 }}>Check Admin Ã¢â€ â€™ Data Health Ã¢â€ â€™ DLD Cron to verify sync status</div>
-                  </div>
-                )}
-
-                {/* Ã¢â€â‚¬Ã¢â€â‚¬ Chart View Ã¢â€â‚¬Ã¢â€â‚¬ */}
-                {/* Compare result banner */}
-                {phCompare && phCommunity !== "All" && phCommunity2 !== "All" && (() => {
-                  const d1 = Object.entries(commPPSF||{}).find(([k]) => k===phCommunity);
-                  const d2 = Object.entries(commPPSF||{}).find(([k]) => k===phCommunity2);
-                  const ppsf1 = phChartData[phChartData.length-1]?.ppsf || 0;
-                  const ppsf2v = phChartData[phChartData.length-1]?.ppsf2 || 0;
-                  const winner = ppsf2v > ppsf1 ? phCommunity2 : phCommunity;
-                  return (
-                    <div style={{ background:"rgba(20,184,166,0.06)", border:`1px solid rgba(20,184,166,0.25)`, borderRadius:10, padding:"12px 16px", marginBottom:16, display:"flex", alignItems:"center", gap:16, flexWrap:"wrap" }}>
-                      <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-                        <div style={{ width:10, height:10, borderRadius:"50%", background:T.gold }} />
-                        <span style={{ fontSize:12, fontWeight:700, color:T.white }}>{phCommunity}</span>
-                        <span style={{ fontSize:13, fontWeight:800, color:T.gold }}>AED {ppsf1.toLocaleString()}/sqft</span>
-                      </div>
-                      <span style={{ fontSize:13, fontWeight:700, color:T.textMuted }}>vs</span>
-                      <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-                        <div style={{ width:10, height:10, borderRadius:"50%", background:T.teal }} />
-                        <span style={{ fontSize:12, fontWeight:700, color:T.white }}>{phCommunity2}</span>
-                        <span style={{ fontSize:13, fontWeight:800, color:T.teal }}>AED {ppsf2v.toLocaleString()}/sqft</span>
-                      </div>
-                      <div style={{ marginLeft:"auto", padding:"4px 12px", borderRadius:8, background:ppsf2v>ppsf1?"rgba(20,184,166,0.15)":"rgba(212,168,67,0.15)", border:`1px solid ${ppsf2v>ppsf1?T.teal:T.gold}` }}>
-                        <span style={{ fontSize:11, fontWeight:700, color:ppsf2v>ppsf1?T.teal:T.gold }}>{winner} is higher by AED {Math.abs(ppsf2v-ppsf1).toLocaleString()}/sqft</span>
-                      </div>
-                    </div>
-                  );
-                })()}
-                {phView === "chart" && (phChartData.length > 0 || phCommunityData.length > 0) && (
-                  <div style={{ display: "flex", flexDirection: "column", gap: 16, marginBottom: 20 }}>
-                    {/* Main price trend chart */}
-                    <div className="chart-box">
-                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-                        <div>
-                          <div style={{ fontSize: 13, fontWeight: 700, color: T.white }}>Price Per Sqft Ã¢â‚¬â€ Historical Trend</div>
-                          <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>AED/sqft Ã‚Â· DLD registered transactions</div>
-                        </div>
-                        <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-                          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                            <span style={{ width: 12, height: 3, background: T.gold, borderRadius: 2, display: "inline-block" }} />
-                            <span style={{ fontSize: 11, color: T.textMuted }}>{phCommunity === "All" ? "All Communities" : phCommunity}</span>
-                          </div>
-                          {phCompare && (
-                            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                              <span style={{ width: 12, height: 3, background: T.teal, borderRadius: 2, display: "inline-block" }} />
-                              <span style={{ fontSize: 11, color: T.textMuted }}>{phCommunity2 === "All" ? "Market Avg" : phCommunity2}</span>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                      <ResponsiveContainer width="100%" height={280}>
-                        <AreaChart data={phChartData.length > 0 ? phChartData : []}>
-                          <defs>
-                            <linearGradient id="priceGold" x1="0" y1="0" x2="0" y2="1">
-                              <stop offset="5%" stopColor={T.gold} stopOpacity={0.2}/>
-                              <stop offset="95%" stopColor={T.gold} stopOpacity={0}/>
-                            </linearGradient>
-                            {phCompare && (
-                              <linearGradient id="priceTeal" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="5%" stopColor={T.teal} stopOpacity={0.2}/>
-                                <stop offset="95%" stopColor={T.teal} stopOpacity={0}/>
-                              </linearGradient>
-                            )}
-                          </defs>
-                          <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
-                          <XAxis dataKey="period" tick={{ fill: T.textMuted, fontSize: 11 }} axisLine={false} tickLine={false} />
-                          <YAxis tick={{ fill: T.textMuted, fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={v => "AED " + v.toLocaleString()} />
-                          <Tooltip contentStyle={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 10 }} labelStyle={{ color: T.white }} itemStyle={{ color: T.gold }} formatter={v => ["AED " + (v||0).toLocaleString() + "/sqft"]} />
-                          <Area type="monotone" dataKey="ppsf" name="PPSF" stroke={T.gold} strokeWidth={2} fill="url(#priceGold)" dot={false} activeDot={{ r: 4, fill: T.gold }} />
-                          {phCompare && <Area type="monotone" dataKey="ppsf2" name="Compare" stroke={T.teal} strokeWidth={2} fill="url(#priceTeal)" dot={false} activeDot={{ r: 4, fill: T.teal }} />}
-                        </AreaChart>
-                      </ResponsiveContainer>
-                    </div>
-
-                    {/* Off-plan vs Secondary divergence */}
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-                      <div className="chart-box">
-                        <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 4 }}>Off-Plan vs Secondary</div>
-                        <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 16 }}>Price divergence Ã¢â‚¬â€ same community</div>
-                        <ResponsiveContainer width="100%" height={180}>
-                          <LineChart data={phChartData.slice(0, 12)}>
-                            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
-                            <XAxis dataKey="period" tick={{ fill: T.textMuted, fontSize: 10 }} axisLine={false} tickLine={false} />
-                            <YAxis tick={{ fill: T.textMuted, fontSize: 10 }} axisLine={false} tickLine={false} />
-                            <Tooltip contentStyle={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 10 }} labelStyle={{ color: T.white }} />
-                            <Line type="monotone" dataKey="offPlanPpsf" name="Off-Plan" stroke={T.gold} strokeWidth={2} dot={false} />
-                            <Line type="monotone" dataKey="secondaryPpsf" name="Secondary" stroke={T.teal} strokeWidth={2} dot={false} strokeDasharray="5 5" />
-                            <Legend iconType="line" wrapperStyle={{ fontSize: 11 }} />
-                          </LineChart>
-                        </ResponsiveContainer>
-                      </div>
-
-                      {/* Momentum indicators */}
-                      <div className="chart-box">
-                        <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 4 }}>Price Momentum</div>
-                        <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 16 }}>Community price change indicators</div>
-                        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                          {phCommunityData.slice(0, 6).map((d, i) => (
-                            <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                              <span style={{ fontSize: 12, color: T.textSecondary }}>{d.community || "Ã¢â‚¬â€"}</span>
-                              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                                <span style={{ fontSize: 12, color: T.white, fontWeight: 600 }}>AED {(d.ppsf || 0).toLocaleString()}</span>
-                                <MomentumBadge change={d.change6m ?? d.change1y ?? d.change ?? null} />
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Ã¢â€â‚¬Ã¢â€â‚¬ Table View Ã¢â€â‚¬Ã¢â€â‚¬ */}
-                {phView === "table" && phCommunityData.length > 0 && (
-                  <div style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 12, overflow: "hidden", marginBottom: 20 }}>
-                    <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr 1fr 1fr", padding: "10px 16px", background: T.surfaceAlt, borderBottom: `1px solid ${T.border}` }}>
-                      {["Community", "Type", "Beds", "Current PPSF", "1Y Change", "3Y Change", "5Y Change"].map((h, i) => (
-                        <div key={i} style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 0.8, textTransform: "uppercase" }}>{h}</div>
-                      ))}
-                    </div>
-                    {phCommunityData.slice(0, 50).map((row, i) => (
-                      <div key={i} style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr 1fr 1fr", padding: "10px 16px", borderBottom: i < phData.length - 1 ? `1px solid ${T.border}` : "none", background: i % 2 === 0 ? "transparent" : "rgba(255,255,255,0.01)" }}
-                        onMouseEnter={e => e.currentTarget.style.background = "rgba(212,168,67,0.04)"}
-                        onMouseLeave={e => e.currentTarget.style.background = i % 2 === 0 ? "transparent" : "rgba(255,255,255,0.01)"}>
-                        <div style={{ fontSize: 13, color: T.white, fontWeight: 500 }}>{row.community || "Ã¢â‚¬â€"}</div>
-                        <div style={{ fontSize: 12, color: T.textSecondary }}>{row.type || "Apt"}</div>
-                        <div style={{ fontSize: 12, color: T.textSecondary }}>{row.beds || "Ã¢â‚¬â€"}</div>
-                        <div style={{ fontSize: 13, color: T.gold, fontWeight: 600 }}>AED {(row.ppsf || 0).toLocaleString()}</div>
-                        <div><MomentumBadge change={row.change1y} /></div>
-                        <div><MomentumBadge change={row.change3y} /></div>
-                        <div><MomentumBadge change={row.change5y} /></div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {/* Correction alert banner Ã¢â‚¬â€ shows if any community has negative 6M momentum */}
-                {phData.some(d => d.change6m < -5) && (
-                  <div style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 10, padding: "12px 16px", marginBottom: 16, display: "flex", alignItems: "center", gap: 10 }}>
-                    {SvgIcons.AlertTriangle({ width: 16, height: 16, style: { color: T.red, flexShrink: 0 } })}
-                    <div style={{ fontSize: 12, color: T.textSecondary }}>
-                      <span style={{ color: T.red, fontWeight: 700 }}>Price correction detected</span> Ã¢â‚¬â€ Some communities showing &gt;5% decline over 6 months. Review before recommending to clients.
-                    </div>
-                  </div>
-                )}
-
-                {/* Quick nav */}
-                <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
-                  {[
-                    { label: "DLD Volumes Ã¢â€ â€™", tab: "DLD Volumes" },
-                    { label: "Yields Ã¢â€ â€™", tab: "Yields" },
-                    { label: "Neighbourhoods Ã¢â€ â€™", tab: "Neighbourhoods" },
-                  ].map((n,i) => (
-                    <button key={i} type="button" onClick={() => handleTabChange(n.tab)}
-                      style={{ padding: "6px 14px", background: "rgba(212,168,67,0.06)", border: `1px solid ${T.border}`, borderRadius: 8, color: T.gold, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
-                      {n.label}
-                    </button>
-                  ))}
-                </div>
-                {/* Sources */}
-                <div style={{ paddingTop: 12, borderTop: `1px solid ${T.border}`, display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
-                  <span style={{ fontSize: 10, color: T.textMuted }}>Sources:</span>
-                  {["Dubai Land Department", "REIDIN Price Index", "ValuStrat VPI", "DXBinteract"].map((s, i) => (
-                    <span key={i} style={{ fontSize: 10, color: T.textMuted, padding: "2px 8px", borderRadius: 10, border: `1px solid ${T.border}`, background: T.surfaceAlt }}>{s}</span>
-                  ))}
-                </div>
-
-              </div>
+              <button key={l.key} type="button" title={l.hint}
+                onClick={() => { setLevel(l.key); setName(null); setCompare(null); setSearch(""); }}
+                style={{
+                  padding: "9px 16px", borderRadius: 9, cursor: "pointer",
+                  fontFamily: "'Outfit',sans-serif", fontSize: 13, fontWeight: on ? 700 : 500,
+                  background: on ? "rgba(212,168,67,0.12)" : "transparent",
+                  border: `1px solid ${on ? T.gold : T.border}`,
+                  color: on ? T.gold : T.textSecondary,
+                }}>
+                {l.label} <span style={{ opacity: .6, fontWeight: 500 }}>({n})</span>
+              </button>
             );
-}
+          })}
+        </div>
+        <div style={{ fontSize: 11.5, color: T.textMuted, marginTop: 9 }}>
+          {LEVELS.find(l => l.key === level)?.hint}
+        </div>
+      </div>
 
-export default PriceHistoryTab;
+      {/* ── Which one ── */}
+      <div style={{ ...card, padding: "14px 16px", marginBottom: 16 }}>
+        <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, letterSpacing: .6,
+                      textTransform: "uppercase", marginBottom: 9 }}>
+          2 · Which one?
+        </div>
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+          <input
+            value={search} onChange={e => setSearch(e.target.value)}
+            placeholder={`Search ${inLevel.length} ${level === "master" ? "communities" : level + "s"}…`}
+            style={{ ...sel, cursor: "text", minWidth: 240 }}
+          />
+          <select value={selected?.n || ""} onChange={e => setName(e.target.value)} style={sel}>
+            {visible.slice(0, 400).map(e => (
+              <option key={e.n} value={e.n}>
+                {e.n} — AED {fmt(e.s[e.s.length - 1].ppsf)}/sqft ({fmt(e.t)} sales)
+              </option>
+            ))}
+          </select>
+          <span style={{ fontSize: 12, color: T.textMuted }}>compare with</span>
+          <select value={compare || ""} onChange={e => setCompare(e.target.value || null)} style={sel}>
+            <option value="">— none —</option>
+            {visible.slice(0, 400).filter(e => e.n !== selected?.n).map(e => (
+              <option key={e.n} value={e.n}>{e.n}</option>
+            ))}
+          </select>
+        </div>
+        {selected?.p && (
+          <div style={{ fontSize: 11.5, color: T.textMuted, marginTop: 10 }}>
+            {level === "master" ? "Sits inside area" : level === "project" ? "Part of" : "DLD area id"}
+            :{" "}
+            <span style={{ color: T.textSecondary, fontWeight: 600 }}>
+              {level === "area" ? (selected.id || "—") : selected.p}
+            </span>
+            {level === "project" && selected.pm && selected.pm !== selected.p && (
+              <span style={{ color: T.textMuted }}> · master: {selected.pm}</span>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* ── The answer ── */}
+      {selected && (
+        <>
+          <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 16 }}>
+            {[
+              { l: "Latest median", v: `AED ${fmt(selected.s[selected.s.length-1].ppsf)}`, s: "per sqft", c: T.gold },
+              { l: "Based on", v: fmt(selected.s[selected.s.length-1].n), s: `sales in ${selected.s[selected.s.length-1].year}`, c: T.white },
+              { l: `Since ${selected.cf}`, v: `${selected.c > 0 ? "+" : ""}${selected.c}%`, s: "change in median", c: selected.c >= 0 ? T.green : T.red },
+              { l: "Total recorded", v: fmt(selected.t), s: "sales since 2019", c: T.white },
+            ].map(x => (
+              <div key={x.l} style={{ ...card, padding: "14px 18px", flex: "1 1 190px" }}>
+                <div style={{ fontSize: 10.5, color: T.textMuted, textTransform: "uppercase",
+                              letterSpacing: .7, fontWeight: 700 }}>{x.l}</div>
+                <div style={{ fontSize: 24, fontWeight: 800, color: x.c, marginTop: 6, lineHeight: 1 }}>{x.v}</div>
+                <div style={{ fontSize: 11, color: T.textMuted, marginTop: 4 }}>{x.s}</div>
+              </div>
+            ))}
+          </div>
+
+          <div style={{ ...card, padding: "18px 20px", marginBottom: 14 }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 2 }}>
+              Median AED/sqft by year
+            </div>
+            <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 14 }}>
+              Registered DLD sale transactions · years with fewer than {HIER.minYearSample} sales are not shown
+            </div>
+            <div style={{ height: 300 }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={chart} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke={T.border} vertical={false} />
+                  <XAxis dataKey="year" stroke={T.textMuted} fontSize={12} tickLine={false} />
+                  <YAxis stroke={T.textMuted} fontSize={12} tickLine={false} axisLine={false}
+                         tickFormatter={v => v.toLocaleString()} width={62} />
+                  <Tooltip content={<Tip />} />
+                  {other && <Legend wrapperStyle={{ fontSize: 12 }} />}
+                  <Line type="monotone" dataKey="a" name={selected.n} stroke={T.gold}
+                        strokeWidth={2.5} dot={{ r: 3.5 }} connectNulls />
+                  {other && (
+                    <Line type="monotone" dataKey="b" name={other.n} stroke={T.teal}
+                          strokeWidth={2.5} dot={{ r: 3.5 }} connectNulls />
+                  )}
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          <div style={{ ...card, padding: "16px 18px", marginBottom: 14 }}>
+            <div style={{ fontSize: 12.5, fontWeight: 700, color: T.white, marginBottom: 10 }}>
+              Year by year — with the evidence
+            </div>
+            <div style={{ overflowX: "auto" }}>
+              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12.5 }}>
+                <thead>
+                  <tr style={{ color: T.textMuted, textAlign: "left" }}>
+                    <th style={{ padding: "8px 10px", fontWeight: 600 }}>Year</th>
+                    <th style={{ padding: "8px 10px", fontWeight: 600 }}>Median AED/sqft</th>
+                    <th style={{ padding: "8px 10px", fontWeight: 600 }}>Sales recorded</th>
+                    <th style={{ padding: "8px 10px", fontWeight: 600 }}>Year on year</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {selected.s.map((r, i) => {
+                    const prev = selected.s[i - 1];
+                    const yoy = prev ? 100 * (r.ppsf - prev.ppsf) / prev.ppsf : null;
+                    return (
+                      <tr key={r.year} style={{ borderTop: `1px solid ${T.border}` }}>
+                        <td style={{ padding: "9px 10px", color: T.white, fontWeight: 600 }}>{r.year}</td>
+                        <td style={{ padding: "9px 10px", color: T.gold, fontWeight: 700 }}>{fmt(r.ppsf)}</td>
+                        <td style={{ padding: "9px 10px", color: T.textSecondary }}>{fmt(r.n)}</td>
+                        <td style={{ padding: "9px 10px", color: yoy == null ? T.textMuted : yoy >= 0 ? T.green : T.red }}>
+                          {yoy == null ? "—" : `${yoy > 0 ? "+" : ""}${yoy.toFixed(1)}%`}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* ── Provenance. The old badge asserted "DLD Verified" with nothing
+             behind it; this states the method so a client can check it. ── */}
+      <div style={{ ...card, padding: "14px 18px", background: "rgba(212,168,67,0.03)" }}>
+        <div style={{ fontSize: 11, fontWeight: 700, color: T.gold, textTransform: "uppercase",
+                      letterSpacing: .7, marginBottom: 7 }}>
+          How this is calculated
+        </div>
+        <div style={{ fontSize: 12, color: T.textSecondary, lineHeight: 1.8 }}>
+          Median price per square foot of registered <strong style={{ color: T.white }}>{HIER.source}</strong>{" "}
+          sale transactions, residential property only, from 2019 onward.
+          Area is converted from square metres at 10.7639 sqft/sqm.
+          A year needs at least {HIER.minYearSample} sales to appear.
+          <br />
+          <span style={{ color: T.textMuted }}>
+            These are <strong>transacted</strong> prices, not asking prices — portal
+            listings typically sit 5–8% higher. {HIER.caveat} Generated {HIER.generated}.
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}

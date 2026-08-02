@@ -6,6 +6,9 @@ import React, { useState, useMemo } from "react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { T } from "../data";
 
+import TabIntro from "../components/TabIntro";
+import TabProvenance from "../components/TabProvenance";
+import { tabCopy } from "../data/tabCopy";
 const fmtP = n => n ? "AED "+Math.round(n).toLocaleString() : "--";
 const fmtY = n => n ? parseFloat(n).toFixed(1)+"%" : "--";
 const fmtD = n => n ? parseFloat(n).toFixed(1)+" km" : "--";
@@ -110,6 +113,8 @@ export default function LaunchCalendarTab({
   handleTabChange, globalFilters={},
   lcView, setLcView,
 }) {
+  const _copy = tabCopy("Launch Calendar");
+
   const [search,    setSearch]    = useState("");
   const [sortBy,    setSortBy]    = useState("handover");
   const [lifecycle, setLifecycle] = useState("all");
@@ -190,6 +195,8 @@ export default function LaunchCalendarTab({
   ];
 
   return (
+    <>
+      {_copy && <TabIntro title={_copy.title} what={_copy.what} detail={_copy.detail} includes={_copy.includes} excludes={_copy.excludes} warning={_copy.warning}/>}
     <div style={{display:"flex",gap:16,height:"calc(100vh - 140px)",paddingBottom:20}}>
 
       {/* LEFT PANEL */}
@@ -482,5 +489,7 @@ export default function LaunchCalendarTab({
         </div>
       )}
     </div>
+      {_copy?.provenance && <TabProvenance {..._copy.provenance}/>}
+    </>
   );
 }

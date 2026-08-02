@@ -5,6 +5,9 @@ import React from "react";
 import { T } from "../data";
 import { SvgIcons } from "../components/Icons";
 
+import TabIntro from "../components/TabIntro";
+import TabProvenance from "../components/TabProvenance";
+import { tabCopy } from "../data/tabCopy";
 function ListingsTab({ liveNeighbourhoods=[],
   listings, listingsLoading,
   listingForm, setListingForm,
@@ -16,6 +19,8 @@ function ListingsTab({ liveNeighbourhoods=[],
   publishingId, setPublishingId,
   firebaseUser, orgId, orgRole, userName, userRole,
 }) {
+  const _copy = tabCopy("Listings");
+
 
             const isAgent   = orgRole === "agent";
             const isManager = orgRole === "manager";
@@ -129,6 +134,9 @@ if (!isAgent && !isManager && !isOwner && !isDirector) return (
             const published   = listings.filter(l => (l.publishedTo||[]).length > 0).length;
 
             return (<>
+
+            {_copy && <TabIntro title={_copy.title} what={_copy.what} detail={_copy.detail} includes={_copy.includes} excludes={_copy.excludes} warning={_copy.warning}/>}
+
 
               {/* ── Header ── */}
               <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:20, flexWrap:"wrap", gap:12 }}>
@@ -508,6 +516,7 @@ if (!isAgent && !isManager && !isOwner && !isDirector) return (
                   </div>
                 </div>
               )}
+            {_copy?.provenance && <TabProvenance {..._copy.provenance}/>}
             </>);
 }
 

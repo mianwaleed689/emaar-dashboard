@@ -6,6 +6,9 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { T } from "../data";
 import SEED_DATA from "../utils/seedData";
 
+import TabIntro from "../components/TabIntro";
+import TabProvenance from "../components/TabProvenance";
+import { tabCopy } from "../data/tabCopy";
 const getLiquidity = (tx) => {
   if (tx >= 15000) return { label: "Ultra-High", color: "#68D391", desc: "Exit in days" };
   if (tx >= 5000)  return { label: "High",       color: "#D4A843", desc: "Exit in 1-2 weeks" };
@@ -57,6 +60,8 @@ const DLDTooltip = ({ active, payload, label }) => {
   if (!active || !payload || !payload.length) return null;
   return (
     <div style={{ background: "rgba(4,9,15,0.98)", border: "1px solid rgba(212,168,67,0.3)", borderRadius: 10, padding: "12px 16px", minWidth: 200 }}>
+      {_copy && <TabIntro title={_copy.title} what={_copy.what} detail={_copy.detail} includes={_copy.includes} excludes={_copy.excludes} warning={_copy.warning} />}
+
       <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 8 }}>{label}</div>
       {payload.map((p, i) => (
         <div key={i} style={{ display: "flex", justifyContent: "space-between", gap: 12, fontSize: 11, marginBottom: 3 }}>
@@ -64,6 +69,8 @@ const DLDTooltip = ({ active, payload, label }) => {
           <span style={{ color: T.white, fontWeight: 700 }}>{typeof p.value === "number" ? p.value.toLocaleString() : p.value}</span>
         </div>
       ))}
+      {_copy?.provenance && <TabProvenance {..._copy.provenance} />}
+
     </div>
   );
 };
@@ -75,6 +82,8 @@ const FilterPill = ({ label, active, color, onClick }) => (
 );
 
 function DLDVolumesTab({ liveNeighbourhoods=[], dldFilter, setDldFilter, dldSearch, setDldSearch, dldSort, setDldSort, dldView, setDldView, liveDLDVolumes, globalFilters, allDevelopers, handleTabChange }) {
+  const _copy = tabCopy("DLD Volumes");
+
   const [sortBy, setSortBy] = useState("transactions");
   const [filterSector, setFilterSector] = useState("All");
   const [filterType, setFilterType] = useState("All");
@@ -144,7 +153,21 @@ function DLDVolumesTab({ liveNeighbourhoods=[], dldFilter, setDldFilter, dldSear
       <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:20, paddingBottom:16, borderBottom:"1px solid "+T.border, flexWrap:"wrap", gap:12 }}>
         <div>
           <div style={{ fontFamily:"'Fraunces',serif", fontSize:20, fontWeight:800, color:T.white, marginBottom:4 }}>DLD Transaction Intelligence</div>
-          <div style={{ fontSize:11, color:T.textMuted }}>Full Year 2025 · Dubai Land Department Official · DXB Analytics · Cavendish Maxwell</div>
+          {/* THE CLAIM THIS FIXES: this read "Dubai Land Department Official",
+              which invites a reader to take the totals below as the Dubai market.
+              They are not. On 2026-08-02 the tab showed 166,029 transactions worth
+              AED 320B, while DLD publicly reported more than 270,000 transactions
+              worth AED 917 billion for the same year. The figures here cover the
+              communities this platform tracks — a subset — and the wording now
+              says so. */}
+          <div style={{ fontSize:11, color:T.textMuted }}>
+            Full year 2025 · transactions registered with the Dubai Land Department,
+            for the communities tracked here
+          </div>
+          <div style={{ fontSize:11, color:"#F59E0B", marginTop:4 }}>
+            This is a subset, not the Dubai total. The Land Department reported over
+            270,000 transactions worth AED 917 billion across all of Dubai in 2025.
+          </div>
         </div>
         {isSeed && <span style={{ fontSize:10, padding:"3px 10px", borderRadius:10, background:"rgba(212,168,67,0.1)", border:"1px solid rgba(212,168,67,0.2)", color:T.gold }}>Research data · DLD 2025</span>}
       </div>
@@ -152,7 +175,7 @@ function DLDVolumesTab({ liveNeighbourhoods=[], dldFilter, setDldFilter, dldSear
       {/* SUMMARY KPIs */}
       <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(170px,1fr))", gap:10, marginBottom:20 }}>
         {[
-          { label:"Total Transactions", value:totalTx.toLocaleString(), sub:"Tracked communities 2025", color:T.gold },
+          { label:"Total Transactions", value:totalTx.toLocaleString(), sub:"tracked communities, 2025", color:T.gold },
           { label:"Total Value",        value:"AED "+totalVal.toFixed(0)+"B", sub:"Combined value", color:"#63B3ED" },
           { label:"Top Community",      value:(topCommunity?.community||"JVC").split(" ").slice(0,2).join(" "), sub:(topCommunity?.transactions||0).toLocaleString()+" tx", color:T.green },
           { label:"Avg Off-Plan Share", value:avgOffPlan+"%", sub:"Across tracked communities", color:"#FC8181" },

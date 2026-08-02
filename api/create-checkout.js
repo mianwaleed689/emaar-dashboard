@@ -17,9 +17,16 @@
 const Stripe = require("stripe");
 
 // Stripe Price IDs read from environment variables (set in Vercel Dashboard)
+/* Keys accept both cases: the internal tier keys are lowercase `pro` and
+   `enterprise` (src/config/pricing.js), but older callers sent capitalised
+   names and a mismatch here 400s the request before Stripe is ever reached.
+   Prices are AED 300 and AED 500 — the comments below previously said 299 and
+   799, the pre-July figures. */
 const STRIPE_PRICES = {
-  Pro:        process.env.STRIPE_PRICE_ID_PRO,         // AED 299/month
-  Enterprise: process.env.STRIPE_PRICE_ID_ENTERPRISE,  // AED 799/month
+  pro:        process.env.STRIPE_PRICE_ID_PRO,         // AED 300/month — individual agent
+  Pro:        process.env.STRIPE_PRICE_ID_PRO,
+  enterprise: process.env.STRIPE_PRICE_ID_ENTERPRISE,  // AED 500/month — agency, 10 seats
+  Enterprise: process.env.STRIPE_PRICE_ID_ENTERPRISE,
 };
 
 module.exports = async function handler(req, res) {

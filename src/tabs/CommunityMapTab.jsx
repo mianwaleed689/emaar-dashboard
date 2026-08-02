@@ -13,10 +13,14 @@
 
 import React from "react";
 import {
-  MAP_METRICS, quantileBreaks, colourFor, legendFor, isMeasured, coordsOf, coverage,
+  MAP_METRICS, quantileBreaks, colourFor, legendFor, coordsOf, coverage,
 } from "../utils/mapScale";
+import { applyMeasured, isEvidenced } from "../utils/measuredCommunity";
 import { T } from "../data";
 
+import TabIntro from "../components/TabIntro";
+import TabProvenance from "../components/TabProvenance";
+import { tabCopy } from "../data/tabCopy";
 const YIELD_COLOR = y => {
   const n = parseFloat(y||0);
   if(n>=8) return "#10B981";
@@ -29,12 +33,18 @@ export default function CommunityMapTab({
   activeProjects=[], liveNeighbourhoods=[],
   globalFilters={}, allDevelopers=[], handleTabChange
 }) {
+  const _copy = tabCopy("Map");
+
   const mapRef         = React.useRef(null);
   const mapInstanceRef = React.useRef(null);
   const markersRef     = React.useRef([]);
   const clusterRef     = React.useRef(null);
   const [mapLayer,     setMapLayer]    = React.useState("communities");
-  const [metricKey,    setMetricKey]   = React.useState("netYield");
+  /* Defaulted to net yield — the one metric on the list that is never
+     measured, since it is derived from an unpublished service charge. The
+     map opened by colouring the whole of Dubai with an estimate. Price per
+     square foot is counted from Land Department sales. */
+  const [metricKey,    setMetricKey]   = React.useState("ppsf");
   const activeMetric = MAP_METRICS.find(m => m.key === metricKey) || MAP_METRICS[0];
   const [filterYield,  setFilterYield] = React.useState("all");
   const [search,       setSearch]      = React.useState("");
@@ -44,16 +54,24 @@ export default function CommunityMapTab({
   const [mapReady,     setMapReady]    = React.useState(false);
   const [leafletReady, setLeafletReady]= React.useState(false);
 
+  /* Fold in the measured Land Department figures before anything is plotted or
+     coloured. The Map and the Neighbourhoods list render the same communities,
+     so they have to render the same numbers — this tab read the raw stored
+     fields while Neighbourhoods reads measured ones, which would have put Dubai
+     Marina at 6.5% here and 5.1% there. */
+  const communities = React.useMemo(
+    ()=>(liveNeighbourhoods||[]).map(applyMeasured), [liveNeighbourhoods]);
+
   // Community lookup
   const nbhdMap = React.useMemo(()=>{
     const m={};
-    (liveNeighbourhoods||[]).forEach(n=>{ if(n.lat&&n.lng) m[(n.community||"").toLowerCase()]=n; });
+    communities.forEach(n=>{ if(n.lat&&n.lng) m[(n.community||"").toLowerCase()]=n; });
     return m;
-  },[liveNeighbourhoods]);
+  },[communities]);
 
   const commWithCoords = React.useMemo(()=>
-    (liveNeighbourhoods||[]).filter(n=>n.lat&&n.lng&&!isNaN(n.lat)&&!isNaN(n.lng))
-  ,[liveNeighbourhoods]);
+    communities.filter(n=>n.lat&&n.lng&&!isNaN(n.lat)&&!isNaN(n.lng))
+  ,[communities]);
 
   // Projects with real verified Dubai GPS only
   const projectsWithGPS = React.useMemo(()=>
@@ -143,10 +161,9 @@ export default function CommunityMapTab({
          confidence. This one paints by the metric a user chooses and, more
          importantly, distinguishes a MEASURED figure from an INHERITED one:
 
-           solid fill   the community's number traces to DLD transactions
-           hollow ring  an area-level estimate applied downward — 108 of 193
-                        communities, including twelve Dubai Hills sub-communities
-                        that all report the same price to the dirham
+           solid fill   the community's number was counted from Land Department
+                        records — 94 of 193
+           hollow ring  a stored estimate nobody measured — the other 99
 
          An agent can see at a glance which parts of the city they can quote hard
          and which need a caveat. No competitor shows this, because none of them
@@ -164,7 +181,10 @@ export default function CommunityMapTab({
 
         const value    = activeMetric.get(n);
         const colour   = colourFor(value, activeMetric, breaks);
-        const measured = isMeasured(n);
+        /* Was isMeasured(n), which returned true whenever a free-text `source`
+           field happened to contain "dld". Now it reflects whether this
+           community's figures were actually counted from transactions. */
+        const measured = isEvidenced(n._ppsfEv) || isEvidenced(n._yieldEv);
 
         const circle = L.circleMarker([pt.lat,pt.lng],{
           radius: measured ? 11 : 9,
@@ -266,8 +286,8 @@ export default function CommunityMapTab({
        pins painted by the previous one and the legend disagrees with the map. */
   },[mapReady, mapLayer, filterYield, commWithCoords, filteredProjects, activeMetric]);
 
-  const Btn = ({active,onClick,children}) => (
-    <button type="button" onClick={onClick} style={{
+  const Btn = ({active,onClick,children,title}) => (
+    <button type="button" onClick={onClick} title={title} style={{
       padding:"5px 12px",borderRadius:6,
       border:active?`1px solid ${T.gold}`:"1px solid transparent",
       background:active?"rgba(212,168,67,0.12)":"transparent",
@@ -288,6 +308,8 @@ export default function CommunityMapTab({
 
   return (
     <div style={{display:"flex",flexDirection:"column",height:"calc(100vh - 140px)",gap:0}}>
+      {_copy && <TabIntro title={_copy.title} what={_copy.what} detail={_copy.detail} includes={_copy.includes} excludes={_copy.excludes} warning={_copy.warning} />}
+
 
       {/* Toolbar */}
       <div style={{display:"flex",gap:8,alignItems:"center",padding:"8px 0",flexWrap:"wrap"}}>
@@ -321,7 +343,12 @@ export default function CommunityMapTab({
         {mapLayer==="communities"&&(
           <div style={{display:"flex",gap:2,background:"rgba(255,255,255,0.03)",border:`1px solid ${T.border}`,borderRadius:8,padding:3}}>
             {MAP_METRICS.map(m=>(
-              <Btn key={m.key} active={metricKey===m.key} onClick={()=>setMetricKey(m.key)}>{m.label}</Btn>
+              <Btn key={m.key} active={metricKey===m.key} onClick={()=>setMetricKey(m.key)}
+                title={m.evidenced
+                  ? m.hint+" — counted from Land Department records."
+                  : m.hint+" — ESTIMATE. No source publishes this per community."}>
+                {m.label}{m.evidenced===false&&<span style={{fontSize:8,marginLeft:4,opacity:0.75}}>EST</span>}
+              </Btn>
             ))}
           </div>
         )}
@@ -516,8 +543,17 @@ export default function CommunityMapTab({
                     </div>
                   ))
               ) : (
+                /* ── RANK ONLY WHAT WAS MEASURED ──────────────────────────
+                   This ranked every community by grossYield regardless of where
+                   the number came from, so the top of the most prominent list on
+                   the tab read "Dubai Investment Park 9.0%, Green Community 9.0%,
+                   International City 9.0%" — three identical figures, none of
+                   them measured. They are the old assigned values, and putting
+                   them at the top presented a guess as the best opportunity in
+                   Dubai. Estimates still appear on the map as hollow pins; they
+                   just no longer win a ranking they were never measured for. */
                 commWithCoords
-                  .filter(n=>n.grossYield)
+                  .filter(n=>n.grossYield && isEvidenced(n._yieldEv))
                   .sort((a,b)=>parseFloat(b.grossYield)-parseFloat(a.grossYield))
                   .slice(0,15)
                   .map((n,i)=>(
@@ -538,6 +574,8 @@ export default function CommunityMapTab({
           )}
         </div>
       </div>
+      {_copy?.provenance && <TabProvenance {..._copy.provenance} />}
+
     </div>
   );
 }

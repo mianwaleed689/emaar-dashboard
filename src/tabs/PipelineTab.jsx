@@ -8,7 +8,12 @@ import React from "react";
 import { T } from "../data";
 import { SvgIcons } from "../components/Icons";
 
+import TabIntro from "../components/TabIntro";
+import TabProvenance from "../components/TabProvenance";
+import { tabCopy } from "../data/tabCopy";
 function PipelineTab({ liveNeighbourhoods=[], orgName, deals, dealsLoading, dealForm, setDealForm, dealFormLoading, setDealFormLoading, showNewDeal, setShowNewDeal, selectedDeal, setSelectedDeal, pipelineType, setPipelineType, firebaseUser, orgId, orgRole, userName }) {
+  const _copy = tabCopy("Pipeline");
+
 
             const isAgent   = orgRole === "agent";
             const isManager = orgRole === "manager";
@@ -103,6 +108,9 @@ function PipelineTab({ liveNeighbourhoods=[], orgName, deals, dealsLoading, deal
             };
 
             return (<>
+
+            {_copy && <TabIntro title={_copy.title} what={_copy.what} detail={_copy.detail} includes={_copy.includes} excludes={_copy.excludes} warning={_copy.warning}/>}
+
 
               {/* ── Header ── */}
               <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:20, flexWrap:"wrap", gap:12 }}>
@@ -445,6 +453,7 @@ function PipelineTab({ liveNeighbourhoods=[], orgName, deals, dealsLoading, deal
                   </div>
                 </div>
               )}
+            {_copy?.provenance && <TabProvenance {..._copy.provenance}/>}
             </>);
 }
 

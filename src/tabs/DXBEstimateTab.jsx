@@ -7,6 +7,9 @@ import { T } from "../data";
 import SourceList from "../components/SourceList";
 import { classifyProvenance, PROVENANCE } from "../utils/provenance";
 
+import TabIntro from "../components/TabIntro";
+import TabProvenance from "../components/TabProvenance";
+import { tabCopy } from "../data/tabCopy";
 const DXB_ESTIMATE_SOURCES = [
   { title: "Dubai Land Department — transaction and price open data",
     url: "https://dubailand.gov.ae/en/open-data/real-estate-data/",
@@ -31,6 +34,8 @@ const DXB_ESTIMATE_SOURCES = [
 const fmtP = n => n ? "AED "+Math.round(n).toLocaleString() : "--";
 
 export default function DXBEstimateTab({ liveNeighbourhoods=[], handleTabChange, globalFilters={} }) {
+  const _copy = tabCopy("DXB Estimate");
+
   const [community, setCommunity] = useState("");
   const [area,      setArea]      = useState("");
   const [beds,      setBeds]      = useState("1");
@@ -103,6 +108,8 @@ export default function DXBEstimateTab({ liveNeighbourhoods=[], handleTabChange,
 
   return (
     <div style={{paddingBottom:60}}>
+      {_copy && <TabIntro title={_copy.title} what={_copy.what} detail={_copy.detail} includes={_copy.includes} excludes={_copy.excludes} warning={_copy.warning} />}
+
       <div style={{marginBottom:16}}>
         <h2 style={{margin:0,fontSize:20,fontWeight:900,color:T.white,fontFamily:"'Fraunces',serif"}}>DXB Estimate</h2>
         <p style={{margin:"4px 0 0",fontSize:12,color:"#94A3B8"}}>
@@ -290,6 +297,8 @@ export default function DXBEstimateTab({ liveNeighbourhoods=[], handleTabChange,
       <div style={{paddingTop:12,borderTop:"1px solid "+T.border}}>
         <SourceList sources={DXB_ESTIMATE_SOURCES} />
       </div>
+      {_copy?.provenance && <TabProvenance {..._copy.provenance} />}
+
     </div>
   );
 }

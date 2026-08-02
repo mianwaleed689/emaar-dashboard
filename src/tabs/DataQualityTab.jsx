@@ -2,8 +2,12 @@ import { useState, useEffect, useMemo } from "react";
 import { collection, getDocs, doc, updateDoc } from "firebase/firestore";
 import { db } from "../firebase";
 
+import TabIntro from "../components/TabIntro";
+import TabProvenance from "../components/TabProvenance";
+import { tabCopy } from "../data/tabCopy";
 // ─── Confidence scoring ───────────────────────────────────────────────────────
 function scoreProject(p) {
+
   const fields = {
     name:            { val: p.name && !p.name.match(/project \d{4}|building \d{4}/i), weight: 10, label: "Name" },
     developer:       { val: !!(p.developerActual || p.developer), weight: 10, label: "Developer" },
@@ -73,6 +77,8 @@ function searchLinks(p) {
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 export default function DataQualityTab() {
+  const _copy = tabCopy("Data Quality");
+
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("issues"); // all | issues | critical | verified | generic_payment
@@ -193,6 +199,8 @@ export default function DataQualityTab() {
 
   return (
     <div style={styles.container}>
+      {_copy && <TabIntro title={_copy.title} what={_copy.what} detail={_copy.detail} includes={_copy.includes} excludes={_copy.excludes} warning={_copy.warning} />}
+
       {/* Header */}
       <div style={styles.header}>
         <div>
@@ -563,6 +571,8 @@ export default function DataQualityTab() {
           <button onClick={() => setPage(totalPages - 1)} disabled={page === totalPages - 1} style={styles.pageBtn}>»</button>
         </div>
       )}
+      {_copy?.provenance && <TabProvenance {..._copy.provenance} />}
+
     </div>
   );
 }

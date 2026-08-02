@@ -23,6 +23,9 @@ import {
 import { calcScore, scoreColor, scoreLabel } from "../utils/scoring";
 import { GOLDEN_VISA_THRESHOLD } from "../utils/constants";
 import { useUserFacingCommunities } from "../lib/communities";
+import TabIntro from "../components/TabIntro";
+import TabProvenance from "../components/TabProvenance";
+import { tabCopy } from "../data/tabCopy";
 
 const MODES = [
   { key:"All", label:"All Types" },
@@ -46,12 +49,19 @@ const MODES = [
    This mirrors how Bayut, Property Finder, Rightmove, Zillow work.
    =============================================================== */
 
+/* The honest label for a project whose type nobody recorded.
+   Roughly 92% of the projects collection is in this state. It used to be
+   silently relabelled "Apartment"; now it is its own category so the count is
+   visible and the rows are still reachable. */
+export const UNKNOWN_TYPE = "Type not specified";
+
 const CATEGORY_TO_DISPLAY = {
   "All":          [],
   "Residential":  ["Apartment", "Villa", "Townhouse", "Hotel Apartment"],
   "Commercial":   ["Office", "Retail", "Warehouse"],
   "Industrial":   ["Industrial Unit", "Industrial Land"],
   "Land":         ["Residential Plot", "Commercial Plot", "Mixed-Use Plot"],
+  [UNKNOWN_TYPE]: [UNKNOWN_TYPE],
 };
 
 const DISPLAY_TO_INTERNAL = {
@@ -120,14 +130,14 @@ function isValidReraNumber(num) {
   return /^\d{3,6}$/.test(s);
 }
 
-/* â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚
+/* ──────────────────────────────────
    DXB ANALYTICS — DATA PLATFORM LAYER
-   â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—
+   ──────────────────────────────────
    Legal positioning: This is a DATA AGGREGATION platform, not advice.
    All data displayed is sourced from Dubai Land Department (DLD) records.
    No investment recommendations. No BUY/SELL verdicts.
    For advice, users must consult RERA-licensed consultants.
-   â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â— */
+   ────────────────────────────────── */
 
 /* Asset class — descriptive segmentation (like MLS tiers), not a score */
 function describeAssetClass(p) {
@@ -211,9 +221,9 @@ function reraCompliance(p) {
   return { verified:false };
 }
 
-/* â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚
+/* ──────────────────────────────────
    LEGAL DISCLAIMER — reusable component
-   â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â—â— */
+   ────────────────────────────────── */
 function LegalNote({ T, compact }) {
   return (
     <div style={{ padding:compact ? "8px 12px" : "12px 16px", background:"rgba(107,114,128,0.08)", borderRadius:8, border:`1px solid ${T.border}`, marginTop:12 }}>
@@ -425,6 +435,12 @@ function ProjectsTab({
 
   return (
     <>
+      {/* Plain-English explanation + coverage, before any control.
+          TAB_CLARITY.md check 1 — the clarity sweep on 2026-08-02 found this
+          tab dropped users straight into filters with nothing saying what they
+          were looking at. Copy lives in src/data/tabCopy.js. */}
+      <TabIntro {...tabCopy("Projects")} />
+
       {(() => {
 
             /* Phase 4: merge all data sources — SEED (18 Verified) + DLD developments (2,798 Registry) + extras.
@@ -449,10 +465,33 @@ function ProjectsTab({
             /* Normalize type field across data sources.
                DLD records often have dldClass="unit" or propertyType="Flat"
                Seed records have type="Apartment"/"Villa" etc.
-               Map everything to the 8 canonical types. */
+
+               ── THE BUG THIS FIXES ────────────────────────────────────────
+               This used to `return "Apartment"` when type, propertyType and
+               dldClass were ALL empty. Measured on the projects collection:
+
+                   type ............ populated on 3 of 40 sampled
+                   propertyType .... populated on 3 of 40 sampled
+                   dldClass ........ not present on any document
+
+               So roughly 92% of projects carry no type at all, and every one
+               of them was silently relabelled "Apartment" — which belongs to
+               the Residential category, which is why picking "Residential"
+               returned "1,552 of 1,552 projects" and filtered nothing.
+
+               Three lies followed from one default: the category filter did
+               nothing, "Apartment" returned ~1,400 projects that are not
+               known to be apartments, and every card asserted a type its
+               record did not have.
+
+               Unknown now stays unknown. Those projects are NOT hidden —
+               UNKNOWN_TYPE is its own visible, countable category, per
+               TAB_STANDARD.md check 6: missing data renders as unavailable,
+               never as an invented value and never by omitting the row. */
             const normalizeType = (p) => {
-              if (!p) return "Apartment";
+              if (!p) return UNKNOWN_TYPE;
               const t = String(p.type || p.propertyType || p.dldClass || "").toLowerCase();
+              if (!t.trim()) return UNKNOWN_TYPE;
               if (t.includes("villa")) return "Villa";
               if (t.includes("townhouse") || t.includes("town house")) return "Townhouse";
               if (t.includes("hotel")) return "Hotel Apartment";
@@ -460,8 +499,50 @@ function ProjectsTab({
               if (t.includes("retail") || t.includes("shop")) return "Retail";
               if (t.includes("warehouse") || t.includes("industrial")) return "Warehouse";
               if (t.includes("land") || t.includes("plot")) return "Land";
-              return "Apartment"; /* default — most DLD records are unit/flat = apartment */
+              if (t.includes("apartment") || t.includes("flat") || t.includes("unit") ||
+                  t.includes("studio") || t.includes("penthouse") || t.includes("duplex") ||
+                  t.includes("loft")) return "Apartment";
+              /* A value exists but matches no known type — say so rather than
+                 guessing. This surfaces dirty data instead of burying it. */
+              return UNKNOWN_TYPE;
             };
+
+            /* ONE accessor for the handover year, used by BOTH the dropdown
+               options and the filter predicate, so they cannot drift.
+               They had already drifted: the options read `handoverDate`, the
+               predicate did not — and `handoverDate` is the field that carries
+               the data (37 of 40 sampled, against handoverQuarter at 2 of 40).
+               A year offered from handoverDate therefore matched nothing when
+               a user selected it. TAB_STANDARD.md check 7: one vocabulary per
+               concept, filter and display derived from a single function. */
+            const handoverYearOf = (p) => {
+              const s = String(p?.handover || p?.expectedHandover || p?.handoverDate || "");
+              const m = s.match(/20\d{2}/);
+              return m ? m[0] : null;
+            };
+
+            /* Category counts, derived from the data rather than hardcoded.
+               TAB_STANDARD.md check 4: an option that matches zero records is
+               not offered, and every option carries its count so a filter that
+               would return nothing is obvious before it is clicked. */
+            const categoryCounts = {};
+            rawProjects.forEach(p => {
+              const t = normalizeType(p);
+              Object.entries(CATEGORY_TO_DISPLAY).forEach(([cat, types]) => {
+                if (cat === "All") return;
+                if (types.includes(t)) categoryCounts[cat] = (categoryCounts[cat] || 0) + 1;
+              });
+            });
+            const categoryOptions = [
+              { value: "All", label: `All Categories (${rawProjects.length.toLocaleString()})` },
+              ...Object.keys(CATEGORY_TO_DISPLAY)
+                .filter(c => c !== "All" && categoryCounts[c] > 0)
+                .map(c => ({
+                  value: c,
+                  label: `${c} (${categoryCounts[c].toLocaleString()})`,
+                  count: categoryCounts[c],
+                })),
+            ];
 
             const filtered = rawProjects.filter(p => {
               // Global top-bar filters first
@@ -497,7 +578,11 @@ function ProjectsTab({
                 if (projConstruction === "100" && pct < 100) return false;
               }
               if (projBeds !== "All") { const bedKey = projBeds.replace(" BR", "BR").replace("+", "").trim(); if (Array.isArray(p.beds) && p.beds.length > 0) { if (!p.beds.includes(projBeds) && !p.beds.includes(bedKey)) return false; } else if (p.bedConfig && typeof p.bedConfig === "object") { const c = p.bedConfig[bedKey] || p.bedConfig[projBeds]; if (!c || c === 0) return false; } else if (Array.isArray(p.unitBreakdown)) { const hit = p.unitBreakdown.find(u => String(u.type || "").replace(" ", "").toUpperCase() === bedKey.toUpperCase()); if (!hit || !hit.count) return false; } }
-              if (projHandover !== "All" && !String(p.handover || p.expectedHandover || "").includes(projHandover)) return false;
+              if (projHandover !== "All") {
+                const hy = handoverYearOf(p);
+                if (projHandover === "__unknown") { if (hy) return false; }
+                else if (hy !== projHandover) return false;
+              }
               if (projGrade !== "All" && p.officeGrade !== projGrade) return false;
               if (projIntelFilter === "tier1" && p.tier !== 1) return false;
               if (projIntelFilter === "gv" && !(p.goldenVisa && p.priceMin >= GOLDEN_VISA_THRESHOLD)) return false;
@@ -609,17 +694,22 @@ function ProjectsTab({
             ];
             /* Legacy string array — kept for backward compat where other code reads it */
             const escrowOptions = ["All", ...Object.keys(escrowCounts).sort((a, b) => escrowCounts[b] - escrowCounts[a])];
-            /* DYNAMIC HANDOVER YEARS — extract actual years from data, include 2030+ */
-            const handoverYearsFromData = new Set();
-            const currentYear = new Date().getFullYear();
+            /* HANDOVER YEARS — from the data, with counts.
+               The dropdown used to render `Array.from({length:20}, (_,i) => 2026+i)`
+               — twenty hardcoded years, 2026 to 2045, regardless of whether a
+               single project handed over in any of them. This derivation
+               already existed directly above it and was never consumed.
+               TAB_STANDARD.md check 4: no option that matches zero records. */
+            const handoverCounts = {};
             rawProjects.forEach(p => {
-              const handoverStr = String(p.handover || p.expectedHandover || p.handoverDate || "");
-              const yearMatch = handoverStr.match(/20\d{2}/);
-              if (yearMatch) handoverYearsFromData.add(yearMatch[0]);
+              const y = handoverYearOf(p);
+              if (y) handoverCounts[y] = (handoverCounts[y] || 0) + 1;
             });
-            /* Always include current year + next 4 years even if no data, plus any years from data */
-            for (let y = currentYear; y <= currentYear + 4; y++) handoverYearsFromData.add(String(y));
-            const handoverYearsSorted = [...handoverYearsFromData].sort();
+            const handoverYearOptions = Object.keys(handoverCounts)
+              .sort()
+              .map(y => ({ value: y, label: `${y} (${handoverCounts[y].toLocaleString()})`, count: handoverCounts[y] }));
+            const handoverUnknownCount = rawProjects.length -
+              Object.values(handoverCounts).reduce((a, b) => a + b, 0);
 
             const selSt = {
               background: "linear-gradient(145deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%)",
@@ -767,8 +857,13 @@ function ProjectsTab({
                               ? "AED " + p.communityMedianPPSF.toLocaleString()
                               : "—"}
                         </div>
+                        {/* The old label meant nothing to an agent. Land
+                            Department is spelled out and the count is worded.
+                            TAB_CLARITY.md check 7. */}
                         {!p.ppsf && p.communityMedianPPSF && p.communityTxCount && (
-                          <div style={{ fontSize:8, color:T.teal, marginTop:1 }}>DLD · n={p.communityTxCount}</div>
+                          <div style={{ fontSize:8, color:T.teal, marginTop:1 }}>
+                            Land Dept · {p.communityTxCount} sales
+                          </div>
                         )}
                       </div>
                       <div>
@@ -843,7 +938,7 @@ function ProjectsTab({
                       </div>
                     )}
                     <div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>
-                      {typeof p.distMetro === "number" && p.distMetro > 0 && <span style={{ fontSize:10, padding:"2px 7px", borderRadius:8, background:p.distMetro <= 0.8 ? "rgba(16,185,129,0.15)" : T.surfaceAlt, color:p.distMetro <= 0.8 ? T.green : T.textMuted }}>Metro {p.distMetro <= 0.8 ? "â‚¤800m" : p.distMetro + "km"}</span>}
+                      {typeof p.distMetro === "number" && p.distMetro > 0 && <span style={{ fontSize:10, padding:"2px 7px", borderRadius:8, background:p.distMetro <= 0.8 ? "rgba(16,185,129,0.15)" : T.surfaceAlt, color:p.distMetro <= 0.8 ? T.green : T.textMuted }}>Metro {p.distMetro <= 0.8 ? "≤800m" : p.distMetro + "km"}</span>}
                       {typeof p.distBeach === "number" && p.distBeach > 0 && p.distBeach <= 2 && <span style={{ fontSize:10, padding:"2px 7px", borderRadius:8, background:"rgba(20,184,166,0.12)", color:T.teal }}>Beach {p.distBeach < 1 ? (p.distBeach*1000).toFixed(0)+"m" : p.distBeach+"km"}</span>}
                       {typeof p.distDIFC === "number" && p.distDIFC > 0 && <span style={{ fontSize:10, padding:"2px 7px", borderRadius:8, background:T.surfaceAlt, color:T.textMuted }}>DIFC {p.distDIFC}km</span>}
                       {p.constructionPct > 0 && p.status !== "Ready" && <span style={{ fontSize:10, padding:"2px 7px", borderRadius:8, background:"rgba(139,92,246,0.12)", color:"#8B5CF6" }}>{p.constructionPct}% built</span>}
@@ -880,10 +975,10 @@ function ProjectsTab({
                   </div>
                 </div>
 
-                {/* â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚
+                {/* ──────────────────────────────────
                    NEW PRIMARY FILTER BAR — 3-Layer Architecture
                    Category → Type → Configuration → Price → More Filters
-                   â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚ */}
+                   ────────────────────────────────── */}
                 <div style={{
                   display:"flex",
                   flexWrap:"wrap",
@@ -915,11 +1010,11 @@ function ProjectsTab({
                         fontFamily:"'Outfit',sans-serif",
                         cursor:"pointer",
                       }}>
-                      <option value="All">All Categories</option>
-                      <option value="Residential">Residential</option>
-                      <option value="Commercial">Commercial</option>
-                      <option value="Industrial">Industrial</option>
-                      <option value="Land">Land</option>
+                      {/* Derived from the data with counts — a category that
+                          matches no project is never offered. */}
+                      {categoryOptions.map(o => (
+                        <option key={o.value} value={o.value}>{o.label}</option>
+                      ))}
                     </select>
                   </div>
 
@@ -1023,10 +1118,10 @@ function ProjectsTab({
                   </div>
                 </div>
 
-                {/* â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚
+                {/* ──────────────────────────────────
                    MORE FILTERS PANEL — slides down when button clicked
                    Two sections: Refine By (gold) + Project Details (teal)
-                   â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚ */}
+                   ────────────────────────────────── */}
                 {showMoreFilters && (
                   <div style={{
                     marginBottom: 14,
@@ -1160,9 +1255,15 @@ function ProjectsTab({
                             fontFamily: "'Outfit',sans-serif", cursor: "pointer",
                           }}>
                             <option value="All">Any Year</option>
-                            {Array.from({length: 20}, (_, i) => 2026 + i).map(y => (
-                              <option key={y} value={String(y)}>{y}</option>
+                            {/* Only years some project actually hands over in. */}
+                            {handoverYearOptions.map(o => (
+                              <option key={o.value} value={o.value}>{o.label}</option>
                             ))}
+                            {handoverUnknownCount > 0 && (
+                              <option value="__unknown">
+                                {`Not stated (${handoverUnknownCount.toLocaleString()})`}
+                              </option>
+                            )}
                           </select>
                         </div>
                         <div>
@@ -1204,10 +1305,10 @@ function ProjectsTab({
                     </div>
                   </div>
                 )}
-                {/* â‚â‚â‚ PROPERTY TYPE TABS — premium pill design â‚â‚â‚ */}
+                {/* ────────────────────────────────── PROPERTY TYPE TABS — premium pill design ────────────────────────────────── */}
 
 
-                {/* â‚â‚â‚ PROJECTS CONTROL BAR — clean unified design, no duplicate search â‚â‚â‚ */}
+                {/* ────────────────────────────────── PROJECTS CONTROL BAR — clean unified design, no duplicate search ────────────────────────────────── */}
                 {(() => {
                   const activeFilters = [];
                   /* GLOBAL FILTERS from top bar — shown as chips so user sees what's applied */
@@ -1228,7 +1329,7 @@ function ProjectsTab({
                   if (projLifecycle !== "All") activeFilters.push({ key:"lfc", label:(PROJECT_STAGE_OPTIONS.find(o => o.value === projLifecycle) || {}).label || projLifecycle, clear:() => setProjLifecycle("All") });
                   if (projConstruction !== "All") activeFilters.push({ key:"cst", label:projConstruction === "100" ? "Completed" : projConstruction + "%", clear:() => setProjConstruction("All") });
                   if (projEscrowBank !== "All") activeFilters.push({ key:"esc", label:projEscrowBank, clear:() => setProjEscrowBank("All") });
-                  if (projHandover !== "All") activeFilters.push({ key:"hnd", label:`Handover ${projHandover}`, clear:() => setProjHandover("All") });
+                  if (projHandover !== "All") activeFilters.push({ key:"hnd", label: projHandover === "__unknown" ? "Handover not stated" : `Handover ${projHandover}`, clear:() => setProjHandover("All") });
                   if (projGrade !== "All") activeFilters.push({ key:"grd", label:`Grade ${projGrade}`, clear:() => setProjGrade("All") });
                   if (projIntelFilter !== "all") activeFilters.push({ key:"int", label:projIntelFilter === "tier1" ? "Tier 1 only" : projIntelFilter === "gv" ? "Golden Visa" : projIntelFilter === "branded" ? "Branded residences" : projIntelFilter, clear:() => setProjIntelFilter("all") });
                   // NEW FILTER SYSTEM chips
@@ -1353,7 +1454,7 @@ function ProjectsTab({
                                   width: 18, height: 18, borderRadius: "50%",
                                   display: "flex", alignItems: "center", justifyContent: "center",
                                   padding: 0, fontSize: 14, lineHeight: 1,
-                                }}>’—</button>
+                                }}>✕</button>
                               </span>
                             )
                           ))}
@@ -1395,8 +1496,15 @@ function ProjectsTab({
                     return [
                       { label:"Total", value:filtered.length.toLocaleString(), sub:"projects", color:T.white },
                       { label:"Priced From", value:minPrice ? `AED ${(minPrice/1000000).toFixed(1)}M` : "—", sub:priced.length > 0 ? `${priced.length} priced` : "0 priced", color:T.gold },
-                      { label:"Avg Yield", value:withYield.length > 0 ? (withYield.reduce((a,p) => a+p.grossYield, 0)/withYield.length).toFixed(1) + "%" : "—", sub:`n=${withYield.length} disclosed`, color:T.green },
-                      { label:"Community PPSF", value:withBench.length > 0 ? "AED " + Math.round(withBench.reduce((a,p) => a+p.communityMedianPPSF, 0)/withBench.length).toLocaleString() : "—", sub:`DLD · n=${withBench.length}`, color:T.teal },
+                      /* "disclosed" was a false provenance claim. grossYield is
+                         populated on 100% of projects, but these are community
+                         averages assigned to every project in the community —
+                         281 communities carry only 28 distinct yield values,
+                         189 of them on six round numbers. Nobody disclosed
+                         them. TAB_STANDARD.md check 2: every number states its
+                         real source. */
+                      { label:"Avg Yield", value:withYield.length > 0 ? (withYield.reduce((a,p) => a+p.grossYield, 0)/withYield.length).toFixed(1) + "%" : "—", sub:`estimate · from ${withYield.length} projects`, color:T.green },
+                      { label:"Community PPSF", value:withBench.length > 0 ? "AED " + Math.round(withBench.reduce((a,p) => a+p.communityMedianPPSF, 0)/withBench.length).toLocaleString() : "—", sub:`Land Dept · ${withBench.length} projects`, color:T.teal },
                     ].map((kpi,i) => (
                       <div key={i} style={{ display:"flex", flexDirection:"column", padding:"4px 14px", borderRight:i < 3 ? `1px solid ${T.border}` : "none" }}>
                         <div style={{ display:"flex", alignItems:"baseline", gap:6 }}>
@@ -1416,7 +1524,7 @@ function ProjectsTab({
                     {projCompare.map((p,i) => (
                       <span key={i} style={{ fontSize:11, padding:"3px 10px", borderRadius:10, background:"rgba(212,168,67,0.1)", color:T.white, display:"flex", alignItems:"center", gap:6 }}>
                         {p.project?.substring(0,20)}
-                        <button type="button" onClick={() => setProjCompare(prev => prev.filter(c=>c.id!==p.id))} style={{ background:"none", border:"none", color:T.textMuted, cursor:"pointer", fontSize:12, padding:0 }}>’—</button>
+                        <button type="button" onClick={() => setProjCompare(prev => prev.filter(c=>c.id!==p.id))} style={{ background:"none", border:"none", color:T.textMuted, cursor:"pointer", fontSize:12, padding:0 }}>✕</button>
                       </span>
                     ))}
                     <div style={{ display:"flex", gap:8, marginLeft:"auto" }}>
@@ -1434,7 +1542,7 @@ function ProjectsTab({
                 {/* DATA TIER DISCLOSURE — honest two-tier data source labeling */}
                 <div style={{ display:"flex", alignItems:"center", gap:10, padding:"10px 14px", borderRadius:10, background:"rgba(20,184,166,0.04)", border:`1px solid ${T.border}`, marginBottom:14, flexWrap:"wrap" }}>
                   <div style={{ display:"flex", alignItems:"center", gap:6 }}>
-                    <span style={{ fontSize:12, color:T.teal, fontWeight:800 }}>→‚“</span>
+                    <span style={{ fontSize:12, color:T.teal, fontWeight:800 }}>→✓</span>
                     <span style={{ fontSize:11, color:T.textSecondary }}><strong style={{ color:T.teal }}>DLD-Verified:</strong> Auto-imported from Dubai Land Department registry. Government-backed core data.</span>
                   </div>
                   <div style={{ width:1, height:14, background:T.border, margin:"0 4px" }} />
@@ -1598,8 +1706,8 @@ function ProjectsTab({
                   <div style={{ display:"flex", gap:5, flexWrap:"wrap", marginTop:6 }}>
                     {selectedProject.tier === 1 && <span style={{ fontSize:10, padding:"3px 8px", borderRadius:5, background:"rgba(16,185,129,0.12)", color:"#10B981", fontWeight:700 }}>Tier 1 Developer</span>}
                     {selectedProject.tier === 2 && <span style={{ fontSize:10, padding:"3px 8px", borderRadius:5, background:"rgba(245,158,11,0.12)", color:"#F59E0B", fontWeight:700 }}>Tier 2 Developer</span>}
-                    {selectedProject.goldenVisa && selectedProject.priceMin >= GOLDEN_VISA_THRESHOLD && <span style={{ fontSize:10, padding:"3px 8px", borderRadius:5, background:"rgba(212,168,67,0.15)", color:T.gold, fontWeight:700 }}>â“‚ Golden Visa Eligible</span>}
-                    {selectedProject.branded && <span style={{ fontSize:10, padding:"3px 8px", borderRadius:5, background:"rgba(139,92,246,0.15)", color:"#A78BFA", fontWeight:700 }}>€”— {selectedProject.brandPartner || "Branded Residence"}</span>}
+                    {selectedProject.goldenVisa && selectedProject.priceMin >= GOLDEN_VISA_THRESHOLD && <span style={{ fontSize:10, padding:"3px 8px", borderRadius:5, background:"rgba(212,168,67,0.15)", color:T.gold, fontWeight:700 }}>⭐ Golden Visa Eligible</span>}
+                    {selectedProject.branded && <span style={{ fontSize:10, padding:"3px 8px", borderRadius:5, background:"rgba(139,92,246,0.15)", color:"#A78BFA", fontWeight:700 }}>👑— {selectedProject.brandPartner || "Branded Residence"}</span>}
                     {selectedProject.escrowBank && <span style={{ fontSize:10, padding:"3px 8px", borderRadius:5, background:"rgba(20,184,166,0.1)", color:T.teal, fontWeight:700 }}>Escrow Verified</span>}
                     {isValidReraNumber(selectedProject.reraNo || selectedProject.projectNumber) && <span style={{ fontSize:10, padding:"3px 8px", borderRadius:5, background:"rgba(20,184,166,0.08)", color:T.teal, fontWeight:700 }}>DLD #{selectedProject.reraNo || selectedProject.projectNumber}</span>}
                   </div>
@@ -1609,7 +1717,7 @@ function ProjectsTab({
                     <div style={{ fontSize:22, fontWeight:800, color:T.gold, fontFamily:"'Fraunces',serif" }}>{selectedProject.priceMin ? "AED " + (selectedProject.priceMin/1000000).toFixed(1) + "M" : "TBC"}</div>
                     <div style={{ fontSize:11, color:T.textMuted }}>starting price</div>
                   </div>
-                  <button type="button" onClick={() => setSelectedProject(null)} style={{ width:36, height:36, borderRadius:"50%", background:T.surfaceAlt, border:`1px solid ${T.border}`, color:T.white, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", fontSize:18, fontFamily:"'Outfit',sans-serif" }}>’—</button>
+                  <button type="button" onClick={() => setSelectedProject(null)} style={{ width:36, height:36, borderRadius:"50%", background:T.surfaceAlt, border:`1px solid ${T.border}`, color:T.white, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", fontSize:18, fontFamily:"'Outfit',sans-serif" }}>✕</button>
                 </div>
               </div>
               <div style={{ display:"flex", borderBottom:`1px solid ${T.border}`, background:T.surface, flexShrink:0, overflowX:"auto" }}>
@@ -1631,7 +1739,7 @@ function ProjectsTab({
                 ))}
               </div>
               <div style={{ flex:1, overflowY:"auto", padding:"24px" }}>
-                {/* â‚â‚â‚ SECTION 1 · PROJECT IDENTITY â‚â‚â‚ */}
+                {/* ────────────────────────────────── SECTION 1 · PROJECT IDENTITY ────────────────────────────────── */}
                 {projDetailTab === "identity" && (() => {
                   const seg = describeAssetClass(selectedProject);
                   const mkt = describeMarketStatus(selectedProject);
@@ -1698,7 +1806,7 @@ function ProjectsTab({
                   );
                 })()}
 
-                {/* â‚â‚â‚ SECTION 2 · LOCATION DATA â‚â‚â‚ */}
+                {/* ────────────────────────────────── SECTION 2 · LOCATION DATA ────────────────────────────────── */}
                 {projDetailTab === "location" && (() => {
                   const tags = locationTags(selectedProject);
                   return (
@@ -1847,7 +1955,7 @@ function ProjectsTab({
                   );
                 })()}
 
-                {/* â‚â‚â‚ SECTION 3 · SCALE & UNITS â‚â‚â‚ */}
+                {/* ────────────────────────────────── SECTION 3 · SCALE & UNITS ────────────────────────────────── */}
                 {projDetailTab === "scale" && (() => {
                   const mix = computeUnitMix(selectedProject);
                   return (
@@ -1913,7 +2021,7 @@ function ProjectsTab({
                   );
                 })()}
 
-                {/* â‚â‚â‚ SECTION 4 · PRODUCT & AMENITIES â‚â‚â‚ */}
+                {/* ────────────────────────────────── SECTION 4 · PRODUCT & AMENITIES ────────────────────────────────── */}
                 {projDetailTab === "product" && (
                   <div>
                     <div style={{ padding:"14px 20px", background:"rgba(20,184,166,0.05)", border:`1px solid ${T.border}`, borderRadius:10, marginBottom:16 }}>
@@ -1957,7 +2065,7 @@ function ProjectsTab({
                   </div>
                 )}
 
-                {/* â‚â‚â‚ SECTION 5 · PRICING DATA â‚â‚â‚ */}
+                {/* ────────────────────────────────── SECTION 5 · PRICING DATA ────────────────────────────────── */}
                 {projDetailTab === "pricing" && (() => {
                   const bench = communityBenchmarkPPSF(selectedProject);
                   return (
@@ -2027,7 +2135,7 @@ function ProjectsTab({
                   );
                 })()}
 
-                {/* â‚â‚â‚ SECTION 6 · RENTAL & YIELD DATA â‚â‚â‚ */}
+                {/* ────────────────────────────────── SECTION 6 · RENTAL & YIELD DATA ────────────────────────────────── */}
                 {projDetailTab === "rental" && (() => {
                   const str = strIndicator(selectedProject);
                   return (
@@ -2068,7 +2176,7 @@ function ProjectsTab({
                   );
                 })()}
 
-                {/* â‚â‚â‚ SECTION 7 · DEVELOPER & COMPLIANCE â‚â‚â‚ */}
+                {/* ────────────────────────────────── SECTION 7 · DEVELOPER & COMPLIANCE ────────────────────────────────── */}
                 {projDetailTab === "developer" && (() => {
                   const esc = escrowStatus(selectedProject);
                   const rera = reraCompliance(selectedProject);
@@ -2185,7 +2293,7 @@ function ProjectsTab({
                   );
                 })()}
 
-                {/* â‚â‚â‚ SECTION 8 · FULL REPORT & SHARE â‚â‚â‚ */}
+                {/* ────────────────────────────────── SECTION 8 · FULL REPORT & SHARE ────────────────────────────────── */}
                 
               {projDetailTab === "community" && (() => {
                 const cn = getCommunityData(selectedProject);
@@ -2322,27 +2430,27 @@ function ProjectsTab({
                       const origin = (typeof window !== "undefined" && window.location && window.location.origin) ? window.location.origin : "https://emaar-dashboard.vercel.app";
                       const projectUrl = `${origin}/project/${encodeURIComponent(selectedProject.id || "")}`;
                       const txt = [
-                        "ðŸ€ï¸ DXB ANALYTICS — PROPERTY DATA REPORT",
-                        "â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚",
-                        `ðŸ‚“€™ ${selectedProject.project || selectedProject.name}`,
-                        `ðŸ¢ Developer: ${selectedProject.developer}`,
-                        `ðŸ‚“ Community: ${selectedProject.community}`,
-                        `ðŸ  Type: ${selectedProject.type}`,
+                        "📊 DXB ANALYTICS — PROPERTY DATA REPORT",
+                        "──────────────────────────────────",
+                        `📋 ${selectedProject.project || selectedProject.name}`,
+                        `🏢 Developer: ${selectedProject.developer}`,
+                        `📍 Community: ${selectedProject.community}`,
+                        `🏠 Type: ${selectedProject.type}`,
                         "",
-                        "ðŸ‚™° PRICING",
+                        "💰 PRICING",
                         `   Starting: AED ${((selectedProject.priceMin||0)/1000000).toFixed(2)}M`,
                         `   PPSF: AED ${(selectedProject.ppsf||0).toLocaleString()}`,
-                        units ? `\nðŸ‚“ UNIT BREAKDOWN\n${units}` : "",
+                        units ? `\n📐 UNIT BREAKDOWN\n${units}` : "",
                         "",
-                        "ðŸ‚“Š RENTAL DATA",
+                        "📈 RENTAL DATA",
                         `   Gross Yield: ${selectedProject.grossYield||"—"}%`,
                         `   Payment Plan: ${selectedProject.paymentPlan||"TBC"}`,
                         `   Handover: ${selectedProject.handover||"TBC"}`,
                         "",
-                        `ðŸ‚ RERA: ${selectedProject.reraNo||selectedProject.projectNumber||"TBC"} | Escrow: ${selectedProject.escrowBank||"TBC"}`,
+                        `🏛 RERA: ${selectedProject.reraNo||selectedProject.projectNumber||"TBC"} | Escrow: ${selectedProject.escrowBank||"TBC"}`,
                         "",
-                        `ðŸ‚— Full report: ${projectUrl}`,
-                        "â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚â‚",
+                        `🔗 Full report: ${projectUrl}`,
+                        "──────────────────────────────────",
                         "Data Source: Dubai Land Department (DLD) public records",
                         "Informational only — not investment advice",
                         "For regulated advice contact a RERA-licensed consultant",
@@ -2353,16 +2461,16 @@ function ProjectsTab({
                         <div className="chart-box" style={{ padding:18, marginBottom:12 }}>
                           <div style={{ fontSize:11, fontWeight:700, color:T.textMuted, letterSpacing:0.8, textTransform:"uppercase", marginBottom:12 }}>Share This Data Report</div>
                           <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
-                            <button type="button" onClick={() => window.open(`https://wa.me/?text=${encodeURIComponent(txt)}`,"_blank")} style={btnStyle("37,211,102")}>ðŸ‚“± WhatsApp</button>
-                            <button type="button" onClick={() => window.open(`mailto:?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(txt)}`,"_blank")} style={btnStyle("59,130,246")}>→‚ï¸ Email</button>
+                            <button type="button" onClick={() => window.open(`https://wa.me/?text=${encodeURIComponent(txt)}`,"_blank")} style={btnStyle("37,211,102")}>📱 WhatsApp</button>
+                            <button type="button" onClick={() => window.open(`mailto:?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(txt)}`,"_blank")} style={btnStyle("59,130,246")}>→✉️ Email</button>
                             <button type="button" onClick={async () => {
                               try {
                                 await navigator.clipboard.writeText(projectUrl);
                                 const el = document.activeElement;
                                 const original = el && el.textContent;
-                                if (el && el.textContent != null) { el.textContent = "→‚“ Copied!"; setTimeout(() => { if (el && original) el.textContent = original; }, 1500); }
+                                if (el && el.textContent != null) { el.textContent = "✓ Copied!"; setTimeout(() => { if (el && original) el.textContent = original; }, 1500); }
                               } catch (e) { console.error("swallowed@ProjectsTab.jsx:2329", e); }
-                            }} style={btnStyle("212,168,67")}>ðŸ‚— Copy Link</button>
+                            }} style={btnStyle("212,168,67")}>🔗— Copy Link</button>
                             <button type="button" onClick={() => { setSelectedProject(null); handleTabChange("Mortgage"); }} style={{ padding:"10px 18px", background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:8, color:T.textSecondary, fontSize:12, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>Mortgage Calculator</button>
                             <button type="button" onClick={() => { setSelectedProject(null); handleTabChange("My Leads"); }} style={{ padding:"10px 18px", background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:8, color:T.textSecondary, fontSize:12, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>Add to Leads</button>
                           </div>
@@ -2376,6 +2484,8 @@ function ProjectsTab({
             </div>
           
       , document.body)}
+
+      <TabProvenance {...tabCopy("Projects").provenance} />
     </>
   );
 }

@@ -9,7 +9,12 @@ import React from "react";
 import { T } from "../data";
 import { SvgIcons } from "../components/Icons";
 
+import TabIntro from "../components/TabIntro";
+import TabProvenance from "../components/TabProvenance";
+import { tabCopy } from "../data/tabCopy";
 function FlipTab({ liveNeighbourhoods=[], flipBuyPrice, setFlipBuyPrice, flipSellPrice, setFlipSellPrice, flipHoldYears, setFlipHoldYears, flipIncludeRental, setFlipIncludeRental, flipRentalYield, setFlipRentalYield, flpRenovCost, setFlpRenovCost, flpAgentBuy, setFlpAgentBuy, flpAgentSell, setFlpAgentSell, flpMortgage, setFlpMortgage, flpMortgageRate, setFlpMortgageRate, flpLTV, setFlpLTV, flpView, setFlpView, flpScenario, setFlpScenario }) {
+  const _copy = tabCopy("Flip");
+
 
 
             /* ══ RESEARCH NOTES ══
@@ -129,6 +134,8 @@ function FlipTab({ liveNeighbourhoods=[], flipBuyPrice, setFlipBuyPrice, flipSel
 
             return (
               <div style={{ animation:"fadeUp 0.4s ease-out forwards" }}>
+      {_copy && <TabIntro title={_copy.title} what={_copy.what} detail={_copy.detail} includes={_copy.includes} excludes={_copy.excludes} warning={_copy.warning}/>}
+
 
                 {/* Header */}
                 <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"10px 0", marginBottom:16, borderBottom:`1px solid ${T.border}`, flexWrap:"wrap", gap:8 }}>
@@ -430,7 +437,8 @@ function FlipTab({ liveNeighbourhoods=[], flipBuyPrice, setFlipBuyPrice, flipSel
                     <span key={i} style={{ fontSize:10, color:T.textMuted, padding:"2px 8px", borderRadius:10, border:`1px solid ${T.border}`, background:T.surfaceAlt }}>{s}</span>
                   ))}
                 </div>
-              </div>
+              {_copy?.provenance && <TabProvenance {..._copy.provenance}/>}
+      </div>
             );
 }
 

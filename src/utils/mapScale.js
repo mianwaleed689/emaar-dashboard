@@ -8,10 +8,9 @@
  * identical confidence, because none of them tracks how solid the underlying
  * number is.
  *
- * This one does. 60 of 193 communities have figures traceable to DLD
- * transactions; the rest are estimates, and 135 of them share a price with at
- * least one neighbour because an area-level figure was applied downward. A map
- * that draws those two kinds of pin the same way is telling a comfortable lie.
+ * This one does. 94 of 193 communities have a price or a return counted from
+ * Land Department records; the other 99 carry stored estimates. A map that draws
+ * those two kinds of pin the same way is telling a comfortable lie.
  *
  * So provenance is a visual property here, not a footnote: measured communities
  * render solid, estimates render hollow. An agent can see, at a glance, which
@@ -38,6 +37,9 @@ export const MAP_METRICS = [
     /* High yield is good, so the scale runs cool-to-warm with warm as high. */
     palette: ["#1E3A5F", "#2E6F9E", "#4BA3C7", "#7FD1AE", "#68D391"],
     goodHigh: true,
+    /* Derived from the service charge, which no source publishes per community.
+       Never measured, whatever the price and gross yield underneath it. */
+    evidenced: false,
   },
   {
     key: "ppsf",
@@ -48,6 +50,7 @@ export const MAP_METRICS = [
     format: v => `AED ${Math.round(v).toLocaleString()}`,
     palette: ["#2D4A22", "#5A7D2A", "#B8A03A", "#D4A843", "#E8C468"],
     goodHigh: null,
+    evidenced: true,
   },
   {
     key: "grossYield",
@@ -58,6 +61,7 @@ export const MAP_METRICS = [
     format: v => `${v.toFixed(1)}%`,
     palette: ["#1E3A5F", "#2E6F9E", "#4BA3C7", "#7FD1AE", "#68D391"],
     goodHigh: true,
+    evidenced: true,
   },
   {
     key: "serviceCharge",
@@ -69,6 +73,8 @@ export const MAP_METRICS = [
     /* High service charge is bad, so the warm end is the expensive end. */
     palette: ["#68D391", "#7FD1AE", "#E8C468", "#F6AD55", "#FC8181"],
     goodHigh: false,
+    /* No per-community service charge rate is published anywhere. */
+    evidenced: false,
   },
 ];
 
@@ -136,12 +142,20 @@ export function legendFor(communities, metric, breaks) {
 /**
  * Is this community's figure a measurement or an inherited estimate?
  *
- * Drives the pin style. `valueSharedWith` is stamped by provenance.js: a
- * community reporting a price identical to a neighbour did not have that price
- * measured, it had it applied.
+ * This used to guess: it returned true whenever a free-text `source` field
+ * happened to contain the string "dld", which is a claim about a label rather
+ * than about the number. Since 2026-08-02 the answer is a fact —
+ * measuredCommunity.js stamps `_ppsfEv` and `_yieldEv` on every community from
+ * the counted Land Department datasets, and this reads those.
+ *
+ * The stored heuristics are kept as a fallback for any caller that has not run
+ * a record through applyMeasured() yet.
  */
 export function isMeasured(community) {
   if (!community) return false;
+  const ev = [community._ppsfEv, community._yieldEv];
+  if (ev.some(Boolean)) return ev.some(e => e === "measured" || e === "thin");
+
   if (community.verified === false) return false;
   if (Number(community.valueSharedWith) > 0) return false;
   const src = `${community.source || ""} ${community.scoreSource || ""}`.toLowerCase();

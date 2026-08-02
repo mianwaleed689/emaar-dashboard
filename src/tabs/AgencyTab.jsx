@@ -6,6 +6,9 @@ import { T } from "../data";
 import { SvgIcons } from "../components/Icons";
 import { cleanPhone } from "../utils/helpers";
 
+import TabIntro from "../components/TabIntro";
+import TabProvenance from "../components/TabProvenance";
+import { tabCopy } from "../data/tabCopy";
 function AgencyTab({
   orgId, orgRole, orgProfile,
   orgProfileForm, setOrgProfileForm,
@@ -21,6 +24,8 @@ function AgencyTab({
   commSplits, setCommSplits,
   commSaving, setCommSaving,
 }) {
+  const _copy = tabCopy("Agency");
+
 
             const isManager = orgRole === "manager";
             if (!isManager) return (
@@ -96,6 +101,9 @@ function AgencyTab({
             const planColors = { free:T.textMuted, pro:T.teal, enterprise:"#8B5CF6" };
 
             return (<>
+
+            {_copy && <TabIntro title={_copy.title} what={_copy.what} detail={_copy.detail} includes={_copy.includes} excludes={_copy.excludes} warning={_copy.warning}/>}
+
 
               {/* ── Header ── */}
               <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:20, flexWrap:"wrap", gap:12 }}>
@@ -346,6 +354,7 @@ function AgencyTab({
                   </div>
                 </div>
               )}
+            {_copy?.provenance && <TabProvenance {..._copy.provenance}/>}
             </>);
 }
 

@@ -5,6 +5,9 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { T } from "../data";
 
+import TabIntro from "../components/TabIntro";
+import TabProvenance from "../components/TabProvenance";
+import { tabCopy } from "../data/tabCopy";
 const fmtP = n => n >= 1000000 ? "AED " + (n/1000000).toFixed(2) + "M" : n ? "AED " + Math.round(n).toLocaleString() : "--";
 const fmtY = n => n ? parseFloat(n).toFixed(1) + "%" : "--";
 const GV_MIN = 2000000;
@@ -268,6 +271,11 @@ function GoldenVisaTabInner({ liveProjects = [], handleTabChange }) {
     <div style={{ paddingBottom: 60 }}>
       {selectedProject && <ProjectDetailPanel project={selectedProject} onClose={() => setSelectedProject(null)} onViewInProjects={() => handleTabChange && handleTabChange("Projects")} />}
 
+      {/* Plain-English explanation, coverage, and the source — this tab stated
+          none of the three. The clarity sweep on 2026-08-02 flagged it as one of
+          seven tabs showing figures with no source at all. */}
+      <TabIntro {...tabCopy("Golden Visa")} />
+
       <div style={{ marginBottom: 20 }}>
         <h2 style={{ margin: 0, fontSize: 22, fontWeight: 900, color: "#FFFFFF", fontFamily: "'Fraunces',serif" }}>UAE Golden Visa</h2>
         <p style={{ margin: "4px 0 0", fontSize: 12, color: "#94A3B8" }}>
@@ -384,6 +392,8 @@ function GoldenVisaTabInner({ liveProjects = [], handleTabChange }) {
           </div>
         </div>
       )}
+
+      <TabProvenance {...tabCopy("Golden Visa").provenance} />
     </div>
   );
 }
