@@ -56,6 +56,7 @@ export default function CommunityMapTab({
   const [selected,     setSelected]    = React.useState(null);
   const [mapReady,     setMapReady]    = React.useState(false);
   const [leafletReady, setLeafletReady]= React.useState(false);
+  const [showHelp,     setShowHelp]    = React.useState(false);
 
   /* Fold in the measured Land Department figures before anything is plotted or
      coloured. The Map and the Neighbourhoods list render the same communities,
@@ -491,9 +492,30 @@ export default function CommunityMapTab({
   );
 
   return (
-    <div style={{display:"flex",flexDirection:"column",gap:0,paddingBottom:24}}>
-      {_copy && <TabIntro title={_copy.title} what={_copy.what} detail={_copy.detail} includes={_copy.includes} excludes={_copy.excludes} warning={_copy.warning} />}
+    /* ── FULL-BLEED MAP ────────────────────────────────────────────────────
+       The tab used to stack a title, a ten-line intro, a warning banner, a
+       toolbar and a five-band legend above the map, then hand whatever height
+       was left to a 70/30 split. On a laptop the map got about 340 visible
+       pixels — a strip under a page of text, when the map IS the product.
 
+       Every property portal does the opposite: the map fills the frame and the
+       controls float on top of it. That is the layout here now. The explanation
+       has not been thrown away — it moved behind the "How to use this" button
+       in the bar, so it is one click away instead of in the way. */
+    <div style={{display:"flex",flexDirection:"column",height:"calc(100vh - 116px)",
+                 margin:"-8px 0 0",overflow:"hidden"}}>
+
+      {showHelp && _copy && (
+        <div style={{position:"relative",marginBottom:8}}>
+          <TabIntro title={_copy.title} what={_copy.what} detail={_copy.detail}
+            includes={_copy.includes} excludes={_copy.excludes} warning={_copy.warning}/>
+          {_copy.provenance && <TabProvenance {..._copy.provenance}/>}
+          <button type="button" onClick={()=>setShowHelp(false)} aria-label="Close" title="Close"
+            style={{position:"absolute",top:10,right:12,background:"rgba(255,255,255,0.06)",
+              border:`1px solid ${T.border}`,borderRadius:8,color:"#94A3B8",width:26,height:26,
+              cursor:"pointer",fontSize:13,lineHeight:1}}>✕</button>
+        </div>
+      )}
 
       {/* ── TOOLBAR ─────────────────────────────────────────────────────────
           Eleven buttons used to sit here in three identical-looking groups with
@@ -557,7 +579,15 @@ export default function CommunityMapTab({
           </Group>
         )}
 
-        <span style={{fontSize:11,color:T.textSecondary,marginLeft:"auto",paddingBottom:6}}>
+        <button type="button" onClick={()=>setShowHelp(v=>!v)}
+          title="What this tab is for, what the pins mean, and where the numbers come from"
+          style={{marginLeft:"auto",padding:"5px 11px",borderRadius:7,
+            border:`1px solid ${showHelp?T.gold:T.border}`,background:"transparent",
+            color:showHelp?T.gold:"#94A3B8",fontSize:11,cursor:"pointer",
+            fontFamily:"'Outfit',sans-serif",whiteSpace:"nowrap"}}>
+          {showHelp ? "Hide guide" : "How to use this"}
+        </button>
+        <span style={{fontSize:11,color:T.textSecondary,paddingBottom:6}}>
           {mapLayer==="projects"
             ? `${filteredProjects.length.toLocaleString()} of ${projectsWithGPS.length.toLocaleString()} projects shown`
             : `${shownCommunities} of ${commWithCoords.length} communities shown`}
@@ -569,48 +599,51 @@ export default function CommunityMapTab({
           colours without distribution tells a reader what the colours mean but
           not what the city looks like. Plus the provenance key, which is the
           part no competitor has: solid pins are measured, hollow ones inherited. */}
-      {/* ── KEY ─────────────────────────────────────────────────────────────
-          This was five colour swatches spelled out as "AED 216 – AED 1,193
-          38 here · AED 1,193 – AED 1,476 29 here · …" strung across the tab. It
-          existed because a coloured dot has to be decoded into a number.
-
-          The pins now carry the number itself, so the bands do not need
-          spelling out. What is left is the one thing the colour cannot say —
-          whether the figure was counted or estimated — and that is the part no
-          competing Dubai map shows at all. */}
-      {mapLayer==="communities"&&(()=>{
-        const cov = coverage(commWithCoords);
-        return (
-          <div style={{display:"flex",gap:16,alignItems:"center",flexWrap:"wrap",padding:"4px 2px 10px"}}>
-            <div style={{display:"flex",alignItems:"center",gap:6}}>
-              <span style={{fontSize:10,fontWeight:700,color:"#0F172A",background:"#D4A843",
-                borderRadius:11,padding:"2px 7px",border:"1.5px solid rgba(255,255,255,0.95)"}}>AED 1,287</span>
-              <span style={{fontSize:10.5,color:T.textSecondary}}>counted from sales ({cov.measured})</span>
-            </div>
-            <div style={{display:"flex",alignItems:"center",gap:6}}>
-              <span style={{fontSize:10,fontWeight:700,color:"#0F172A",background:"#D4A843",opacity:.82,
-                borderRadius:11,padding:"2px 7px",border:"1.5px dashed #0F172A"}}>AED 1,287</span>
-              <span style={{fontSize:10.5,color:T.textSecondary}}>estimate — quote with a caveat ({cov.estimated})</span>
-            </div>
-            <div style={{display:"flex",alignItems:"center",gap:6}}>
-              <span style={{width:22,height:22,borderRadius:"50%",background:"rgba(15,23,42,0.88)",
-                border:"2px solid #fff",display:"inline-flex",alignItems:"center",justifyContent:"center",
-                fontSize:10,fontWeight:800,color:"#fff"}}>12</span>
-              <span style={{fontSize:10.5,color:T.textSecondary}}>communities grouped — zoom in to split</span>
-            </div>
-            <span style={{fontSize:10,color:T.textMuted,marginLeft:"auto"}}>
-              Colour runs cheap to dear. {activeMetric.hint}.
-            </span>
-          </div>
-        );
-      })()}
-
       {/* Map + Sidebar */}
-      <div style={{display:"flex",gap:12,height:"clamp(420px, calc(100vh - 300px), 720px)"}}>
+      <div style={{display:"flex",gap:10,flex:1,minHeight:0}}>
 
         {/* Map — 70% */}
-        <div style={{flex:"0 0 70%",position:"relative",borderRadius:12,overflow:"hidden",border:`1px solid ${T.border}`}}>
+        <div style={{flex:1,minWidth:0,position:"relative",borderRadius:12,overflow:"hidden",border:`1px solid ${T.border}`}}>
           <div ref={mapRef} style={{width:"100%",height:"100%"}}/>
+      {/* ── KEY ─────────────────────────────────────────────────────────────
+              This was five colour swatches spelled out as "AED 216 – AED 1,193
+              38 here · AED 1,193 – AED 1,476 29 here · …" strung across the tab. It
+              existed because a coloured dot has to be decoded into a number.
+
+              The pins now carry the number itself, so the bands do not need
+              spelling out. What is left is the one thing the colour cannot say —
+              whether the figure was counted or estimated — and that is the part no
+              competing Dubai map shows at all. */}
+          {mapLayer==="communities"&&(()=>{
+            const cov = coverage(commWithCoords);
+            return (
+              <div style={{position:"absolute",left:12,bottom:12,zIndex:500,
+                display:"flex",gap:14,alignItems:"center",flexWrap:"wrap",maxWidth:"min(680px,72%)",
+                background:"rgba(15,23,42,0.92)",border:`1px solid ${T.border}`,borderRadius:10,
+                padding:"8px 12px",backdropFilter:"blur(6px)"}}>
+                <div style={{display:"flex",alignItems:"center",gap:6}}>
+                  <span style={{fontSize:10,fontWeight:700,color:"#0F172A",background:"#D4A843",
+                    borderRadius:11,padding:"2px 7px",border:"1.5px solid rgba(255,255,255,0.95)"}}>AED 1,287</span>
+                  <span style={{fontSize:10.5,color:T.textSecondary}}>counted from sales ({cov.measured})</span>
+                </div>
+                <div style={{display:"flex",alignItems:"center",gap:6}}>
+                  <span style={{fontSize:10,fontWeight:700,color:"#0F172A",background:"#D4A843",opacity:.82,
+                    borderRadius:11,padding:"2px 7px",border:"1.5px dashed #0F172A"}}>AED 1,287</span>
+                  <span style={{fontSize:10.5,color:T.textSecondary}}>estimate — quote with a caveat ({cov.estimated})</span>
+                </div>
+                <div style={{display:"flex",alignItems:"center",gap:6}}>
+                  <span style={{width:22,height:22,borderRadius:"50%",background:"rgba(15,23,42,0.88)",
+                    border:"2px solid #fff",display:"inline-flex",alignItems:"center",justifyContent:"center",
+                    fontSize:10,fontWeight:800,color:"#fff"}}>12</span>
+                  <span style={{fontSize:10.5,color:T.textSecondary}}>communities grouped — zoom in to split</span>
+                </div>
+                <span style={{fontSize:10,color:T.textMuted,marginLeft:"auto"}}>
+                  Colour runs cheap to dear. {activeMetric.hint}.
+                </span>
+              </div>
+            );
+          })()}
+
           {!leafletReady&&(
             <div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(15,23,42,0.9)"}}>
               <div style={{color:T.textMuted,fontSize:13,fontFamily:"'Outfit',sans-serif"}}>Loading map...</div>
@@ -791,7 +824,6 @@ export default function CommunityMapTab({
           )}
         </div>
       </div>
-      {_copy?.provenance && <TabProvenance {..._copy.provenance} />}
 
     </div>
   );
