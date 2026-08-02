@@ -4690,7 +4690,7 @@ const unsub = onSnapshot(nQuery, (snap) => {
 
 
       {/* —” MAIN CONTENT —” */}
-      <main role="main" id="main-content" className="main-content" style={{ marginLeft: 240, paddingTop: userTier === "free" ? 210 : 180, minHeight: "100vh", overflowX: "hidden" }}>
+      <main role="main" id="main-content" className="main-content" style={{ marginLeft: 240, paddingTop: userTier === "free" ? 130 : 100, minHeight: "100vh", overflowX: "hidden" }}>
         {/* Trial / Free tier banner */}
         {userTier === "pro_trial" && trialDaysLeft > 0 && (() => {
           const isUrgent = trialDaysLeft <= 1;

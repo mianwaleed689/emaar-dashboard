@@ -85,24 +85,15 @@ export const TAB_COPY = {
 
   "Map": {
     title: "Map",
-    what: "Answers one question: where in Dubai should your client be looking, " +
-          "for what they want to spend. Price is easy to compare in a list; " +
-          "location is not — this shows both at once.",
-    detail: "Use it in three steps. First pick what to colour the map by — start " +
-            "with price per square foot, which is counted from real sales. " +
-            "Second, narrow to the return band your client cares about. Third, " +
-            "click any pin to see that community's figures and whether they were " +
-            "measured or estimated. The list on the right ranks communities by " +
-            "measured return, so it is a shortlist you can defend. Dark green " +
-            "pins are the cheapest band, gold the dearest. On the Projects " +
-            "layer, a numbered circle groups nearby projects — zoom in and it " +
-            "splits into the individual ones.",
-    includes: "193 communities. A solid pin means that community's figure was " +
-              "counted from Land Department transactions — 94 of them. A dashed " +
-              "ring means it is an estimate — the other 99.",
-    excludes: "Communities with no coordinates on record cannot be plotted.",
-    warning: "A dashed ring is not a lesser version of a measured figure — nobody " +
-             "counted it. Click the pin before you quote anything from one.",
+    /* Was ten lines of prose. An agent scrolled straight past it to reach the
+       map, which is the opposite of explaining anything. Say the job in one
+       sentence; the controls carry their own labels and tooltips. */
+    what: "Where in Dubai your client should be looking, for what they want to spend.",
+    detail: "Colour the map by price or by return, click any pin for that " +
+            "community's figures, or type a name to fly straight to it.",
+    includes: "193 communities · solid pin = counted from Land Department sales " +
+              "(94) · dashed ring = estimate (99)",
+    warning: "A dashed ring was never measured. Click the pin before quoting it.",
     provenance: {
       kind: "market",
       sources: [{ name: "Dubai Land Department", detail: "sale transactions" },
@@ -110,8 +101,7 @@ export const TAB_COPY = {
       method: "The same community figures as the Neighbourhoods tab, plotted by " +
               "location. Price per square foot and gross return come from counted " +
               "records; net return and service charge remain estimates.",
-      caveat: "Not every community has a complete set of figures — a grey pin " +
-              "means no recorded data, not a zero.",
+      caveat: "Communities with no coordinates on record cannot be plotted.",
     },
   },
 

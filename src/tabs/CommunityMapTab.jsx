@@ -193,8 +193,20 @@ export default function CommunityMapTab({
     const map = L.map(mapRef.current,{
       center:[25.1,55.2], zoom:11, minZoom:8, maxZoom:18, zoomControl:true,
     });
-    L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",{
-      attribution:"CARTO", maxZoom:19, subdomains:"abcd"
+    /* ── WHY A LIGHT BASEMAP ────────────────────────────────────────────────
+       This was CARTO "dark_all", chosen to match the dashboard. On screen it is
+       almost black: no street names, no parks, no coastline you can read, no
+       landmarks. Dubai became a black rectangle with coloured dots floating on
+       it, and an agent could not tell Marina from Mirdif — which is the entire
+       point of putting figures on a map rather than in a list.
+
+       This needs a LIGHT basemap with street names — but standard OpenStreetMap
+       tiles label places in the local language, so Dubai came back as الشارقة
+       and أبوظبي. CARTO Voyager is the same OpenStreetMap data rendered light
+       with English labels, which is what a Dubai agency desk actually reads. */
+    L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",{
+      attribution:"&copy; OpenStreetMap contributors &copy; CARTO",
+      maxZoom:19, subdomains:"abcd",
     }).addTo(map);
     mapInstanceRef.current = map;
     setMapReady(true);
@@ -237,12 +249,18 @@ export default function CommunityMapTab({
            community's figures were actually counted from transactions. */
         const measured = isEvidenced(n._ppsfEv) || isEvidenced(n._yieldEv);
 
+        /* Pin styling is tuned for the light basemap. On the old dark tiles an
+           estimate was drawn at 0.12 fill, which on white is invisible — so a
+           dashed white ring is given a solid outline and a faint tint instead,
+           and every pin gets a white halo so it separates from streets and
+           parks underneath. */
         const circle = L.circleMarker([pt.lat,pt.lng],{
-          radius: measured ? 11 : 9,
+          radius: measured ? 10 : 8,
           fillColor: colour,
-          color: measured ? "rgba(0,0,0,0.35)" : colour,
-          weight: measured ? 1 : 2,
-          fillOpacity: measured ? 0.9 : 0.12,   // hollow = estimate
+          color: measured ? "#FFFFFF" : colour,
+          weight: measured ? 2 : 2.5,
+          opacity: 1,
+          fillOpacity: measured ? 0.95 : 0.25,   // dashed ring = estimate
           dashArray: measured ? null : "3,3",
         });
 
@@ -266,32 +284,32 @@ export default function CommunityMapTab({
         const yieldOk = isEvidenced(n._yieldEv);
 
         const footer = ppsfOk || yieldOk
-          ? `<div style="font-size:10px;color:#10B981;line-height:1.5">Counted from ${
+          ? `<div style="font-size:10px;color:#047857;line-height:1.5;font-weight:600">Counted from ${
               [ppsfOk ? `${(n._ppsfN||0).toLocaleString()} recorded sales` : null,
                yieldOk ? "registered tenancy contracts" : null].filter(Boolean).join(" and ")
             }.${(!ppsfOk || !yieldOk) ? " The other figures are estimates." : ""}</div>`
-          : `<div style="font-size:10px;color:#F59E0B;line-height:1.5">No figure here was measured — ` +
+          : `<div style="font-size:10px;color:#B45309;line-height:1.5;font-weight:600">No figure here was measured — ` +
             `all four are stored estimates. Do not quote them as market facts.</div>`;
 
         circle.bindPopup(`<div style="font-family:'Outfit',sans-serif;min-width:250px;padding:4px">
-          <div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:2px">${n.name||n.community||n.id}</div>
+          <div style="font-size:15px;font-weight:800;color:#0F172A;margin-bottom:2px">${n.name||n.community||n.id}</div>
           <div style="font-size:10px;color:#64748B;margin-bottom:8px">${n.kindLabel||"Community"}</div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px">
             <div style="background:rgba(212,168,67,0.08);border-radius:6px;padding:6px 8px">
               <div style="font-size:9px;color:#64748B;margin-bottom:2px">PRICE PER SQ FT ${tag(ppsfOk?"REAL":"EST",ppsfOk)}</div>
-              <div style="font-size:15px;font-weight:700;color:#D4A843">${
+              <div style="font-size:15px;font-weight:700;color:#92700F">${
                 ppsfVal ? "AED " + Math.round(ppsfVal).toLocaleString() : "—"}</div>
             </div>
             <div style="background:rgba(16,185,129,0.08);border-radius:6px;padding:6px 8px">
               <div style="font-size:9px;color:#64748B;margin-bottom:2px">GROSS RETURN ${tag(yieldOk?"REAL":"EST",yieldOk)}</div>
-              <div style="font-size:15px;font-weight:700;color:${yieldOk?"#10B981":"#94A3B8"}">${
+              <div style="font-size:15px;font-weight:700;color:${yieldOk?"#047857":"#64748B"}">${
                 n.grossYield ? Number(n.grossYield).toFixed(1) + "%" : "—"}</div>
             </div>
           </div>
-          <div style="font-size:10px;color:#94A3B8;margin-bottom:6px;line-height:1.6">
+          <div style="font-size:10px;color:#475569;margin-bottom:6px;line-height:1.6">
             Net return ${n.netYield ? Number(n.netYield).toFixed(1)+"%" : "—"} and service charge ${
             n.serviceCharge ? "AED "+n.serviceCharge+"/sqft" : "—"} are
-            <span style="color:#94A3B8;font-weight:600">estimates</span> — no source publishes a
+            <span style="color:#B45309;font-weight:700">estimates</span> — no source publishes a
             service charge per community.
           </div>
           ${footer}
@@ -327,13 +345,13 @@ export default function CommunityMapTab({
         const comm = p.community||"";
         const masterComm = p.masterCommunity&&p.masterCommunity!==comm?` — ${p.masterCommunity}`:"";
         marker.bindPopup(`<div style="font-family:'Outfit',sans-serif;min-width:230px;padding:4px">
-          <div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:2px">${p.name||"Project"}</div>
+          <div style="font-size:14px;font-weight:800;color:#0F172A;margin-bottom:2px">${p.name||"Project"}</div>
           <div style="font-size:10px;color:#94A3B8;margin-bottom:8px">${dev} · ${comm}${masterComm}</div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:6px">
             ${p.priceMin?`<div style="background:rgba(212,168,67,0.08);border-radius:4px;padding:4px 6px"><div style="font-size:9px;color:#64748B">FROM</div><div style="font-size:12px;color:#D4A843;font-weight:600">AED ${(p.priceMin/1e6).toFixed(1)}M</div></div>`:""}
-            ${p.grossYield?`<div style="background:rgba(16,185,129,0.08);border-radius:4px;padding:4px 6px"><div style="font-size:9px;color:#64748B">GROSS RETURN</div><div style="font-size:12px;color:#10B981;font-weight:600">${p.grossYield}%</div></div>`:""}
-            ${p.constructionPct!=null?`<div style="background:rgba(255,255,255,0.04);border-radius:4px;padding:4px 6px"><div style="font-size:9px;color:#64748B">BUILT</div><div style="font-size:12px;color:#fff;font-weight:600">${Math.round(p.constructionPct)}%</div></div>`:""}
-            ${p.totalFloors?`<div style="background:rgba(255,255,255,0.04);border-radius:4px;padding:4px 6px"><div style="font-size:9px;color:#64748B">FLOORS</div><div style="font-size:12px;color:#fff;font-weight:600">${p.totalFloors}</div></div>`:""}
+            ${p.grossYield?`<div style="background:rgba(16,185,129,0.08);border-radius:4px;padding:4px 6px"><div style="font-size:9px;color:#64748B">GROSS RETURN</div><div style="font-size:12px;color:#047857;font-weight:700">${p.grossYield}%</div></div>`:""}
+            ${p.constructionPct!=null?`<div style="background:rgba(15,23,42,0.05);border-radius:4px;padding:4px 6px"><div style="font-size:9px;color:#64748B">BUILT</div><div style="font-size:12px;color:#0F172A;font-weight:700">${Math.round(p.constructionPct)}%</div></div>`:""}
+            ${p.totalFloors?`<div style="background:rgba(15,23,42,0.05);border-radius:4px;padding:4px 6px"><div style="font-size:9px;color:#64748B">FLOORS</div><div style="font-size:12px;color:#0F172A;font-weight:700">${p.totalFloors}</div></div>`:""}
           </div>
           ${p.handoverQuarter?`<div style="font-size:10px;color:#63B3ED">Handover: ${p.handoverQuarter}</div>`:""}
           ${p.paymentPlan?`<div style="font-size:10px;color:#94A3B8">Payment: ${p.paymentPlan}</div>`:""}
@@ -374,8 +392,21 @@ export default function CommunityMapTab({
           if (Number.isFinite(la) && Number.isFinite(ln)) pts.push([la, ln]);
         });
       }
+      /* Fitting ALL 193 communities pulls the view out past Abu Dhabi, because
+         a handful sit far inland and the bounds stretch to reach them — the
+         urban core where 90% of the pins are ends up a smudge in one corner.
+
+         So: open on Dubai at a zoom that frames the city, and only fit the
+         bounds once the user has narrowed the set, where flying to the result
+         is exactly what they want. */
+      const narrowed = mapLayer === "projects"
+        ? (search.trim() || filterDev !== "All" || filterStatus !== "All")
+        : (search.trim() || filterYield !== "all");
+
       if (pts.length === 1) map.setView(pts[0], 14);
-      else if (pts.length > 1) map.fitBounds(L.latLngBounds(pts), { padding: [45, 45], maxZoom: 15 });
+      else if (narrowed && pts.length > 1)
+        map.fitBounds(L.latLngBounds(pts), { padding: [50, 50], maxZoom: 14 });
+      else map.setView([25.11, 55.20], 10);
     } catch (e) { console.error("[Map] could not fit to markers:", e); }
 
     /* activeMetric belongs here: without it, switching the metric leaves the
@@ -417,7 +448,7 @@ export default function CommunityMapTab({
   );
 
   return (
-    <div style={{display:"flex",flexDirection:"column",minHeight:"calc(100vh - 140px)",gap:0,paddingBottom:24}}>
+    <div style={{display:"flex",flexDirection:"column",gap:0,paddingBottom:24}}>
       {_copy && <TabIntro title={_copy.title} what={_copy.what} detail={_copy.detail} includes={_copy.includes} excludes={_copy.excludes} warning={_copy.warning} />}
 
 
@@ -531,7 +562,7 @@ export default function CommunityMapTab({
       })()}
 
       {/* Map + Sidebar */}
-      <div style={{display:"flex",flex:1,gap:12,minHeight:560}}>
+      <div style={{display:"flex",gap:12,height:"clamp(420px, calc(100vh - 300px), 720px)"}}>
 
         {/* Map — 70% */}
         <div style={{flex:"0 0 70%",position:"relative",borderRadius:12,overflow:"hidden",border:`1px solid ${T.border}`}}>
