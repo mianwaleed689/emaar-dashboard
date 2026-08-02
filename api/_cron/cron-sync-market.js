@@ -1,8 +1,24 @@
-// api/cron-sync-market.js
-// Vercel Cron Job — runs every 6 hours
-// Fetches live PPSF for all 49 communities → saves to Firestore liveMarketData
-// Dashboard reads liveMarketData on load — always shows fresh prices
-// Schedule: "0 */6 * * *" in vercel.json
+/**
+ * api/_cron/cron-sync-market.js — live price per square foot per community.
+ *
+ * Fetches asking prices from Bayut for 49 communities and writes them to
+ * Firestore `liveMarketData`, which the dashboard reads on load.
+ *
+ * WHAT THIS FILE USED TO HIDE. It contained no console statements at all — 184
+ * lines, zero output — so a run produced a 200 and nothing else. When a
+ * community's fetch failed it silently substituted that community's hardcoded
+ * `benchmark` and stamped it with the current `syncedAt`, which made a constant
+ * indistinguishable from a live price. All 49 could fall back and the run still
+ * looked identical to a perfect one, while the header above claimed the
+ * dashboard "always shows fresh prices".
+ *
+ * The counts were written to a `cronLogs` document, but nothing surfaced them,
+ * so in practice nobody could tell. It now logs what it did, and says so loudly
+ * when the live source gave it nothing. Same principle as the EIBOR cron: a job
+ * that cannot report is a job you cannot trust.
+ *
+ * Schedule: see vercel.json.
+ */
 
 const { initializeApp, getApps, cert } = require("firebase-admin/app");
 const { getFirestore } = require("firebase-admin/firestore");
@@ -20,7 +36,9 @@ function getDb() {
   return getFirestore();
 }
 
-const BAYUT_KEY = process.env.BAYUT_RAPIDAPI_KEY || process.env.BAYUT_RAPIDAPI_KEY;
+/* Was `BAYUT_RAPIDAPI_KEY || BAYUT_RAPIDAPI_KEY` — the same name twice, so the
+   intended fallback never applied. Both names exist in the project. */
+const BAYUT_KEY = process.env.BAYUT_RAPIDAPI_KEY || process.env.RAPIDAPI_KEY;
 const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 
 // 49 communities with Bayut location IDs
@@ -115,6 +133,14 @@ module.exports = async function handler(req, res) {
   const results = { updated: 0, benchmark: 0, errors: [] };
   const syncedAt = new Date().toISOString();
 
+  console.log(`[sync-market] started — ${COMMUNITIES.length} communities`);
+  if (!BAYUT_KEY) {
+    /* Worth its own line: without a key every community falls back, and the
+       run would otherwise look successful. */
+    console.error("[sync-market] no Bayut API key in the environment — every " +
+                  "community will fall back to its hardcoded benchmark");
+  }
+
   // Process communities in batches of 5 to respect rate limits
   const batchSize = 5;
   const marketData = {};
@@ -132,16 +158,24 @@ module.exports = async function handler(req, res) {
           sampleSize: live.sampleSize,
           benchmark: community.benchmark,
           source: "Bayut Live",
+          isLive: true,
+          checkedAt: syncedAt,
           syncedAt,
         };
         results.updated++;
       } else {
+        /* `syncedAt` here would say the price was checked just now, when in
+           fact nothing was fetched and this is a constant from the table at the
+           top of this file. `isLive` and `checkedAt` let a reader tell the
+           difference; `syncedAt` is kept for the existing dashboard fields. */
         marketData[community.district] = {
           community: community.name,
           district: community.district,
           ppsf: community.benchmark,
           benchmark: community.benchmark,
-          source: "Benchmark",
+          source: "Benchmark — not a live price",
+          isLive: false,
+          checkedAt: syncedAt,
           syncedAt,
         };
         results.benchmark++;
@@ -174,6 +208,17 @@ module.exports = async function handler(req, res) {
     benchmark: results.benchmark,
     syncedAt,
   });
+
+  if (results.updated === 0) {
+    console.error(`[sync-market] NOT ONE live price — all ${results.benchmark} ` +
+                  `communities fell back to hardcoded benchmarks. The dashboard ` +
+                  `is showing constants, not the market.`);
+  } else if (results.benchmark > results.updated) {
+    console.warn(`[sync-market] only ${results.updated} of ${COMMUNITIES.length} ` +
+                 `communities returned a live price; ${results.benchmark} fell back`);
+  } else {
+    console.log(`[sync-market] ${results.updated} live, ${results.benchmark} benchmark`);
+  }
 
   return res.status(200).json({
     success: true,
