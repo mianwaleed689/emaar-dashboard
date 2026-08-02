@@ -28,19 +28,24 @@ if (!getApps().length) {
 const db = getFirestore();
 
 /* ── Hardcoded fallback ──────────────────────────────────────────────────────
-   Captured by hand from the CBUAE site in March 2026. FALLBACK_DATE travels
-   with it so nothing downstream can present these numbers as today's — that
-   confusion is exactly what kept a March rate on the Mortgage tab until August.
-   If you refresh these figures, refresh the date in the same commit.
-   Source: https://www.centralbank.ae/en/forex-eibor/eibor-rates/ */
-const FALLBACK_DATE = "31 Mar 2026";
+   Refreshed 2026-08-02 from the CBUAE table, rates dated 31 July 2026. The
+   previous block was from March and was five months stale, which understated a
+   client's monthly payment on an AED 2M purchase by AED 285.
+
+   HOW TO REFRESH THESE. The endpoint returns 403 to anything that is not a real
+   browser — cookies do not help, the block is on the TLS fingerprint — so open
+   https://www.centralbank.ae/en/forex-eibor/eibor-rates/ in an ordinary browser
+   and read the top row of the table. Update FALLBACK_DATE in the same edit: the
+   date is what stops the Mortgage tab presenting these as today's rates.
+   See B-16 in LAUNCH_READINESS.md for why this is manual. */
+const FALLBACK_DATE = "31 Jul 2026";
 const FALLBACK = {
-  overnight:   3.3755,
-  oneWeek:     3.6728,
-  oneMonth:    3.6426,
-  threeMonth:  3.6387,
-  sixMonth:    3.5999,
-  twelveMonth: 3.8346,
+  overnight:   3.5286,
+  oneWeek:     3.7847,
+  oneMonth:    3.7818,
+  threeMonth:  3.9399,
+  sixMonth:    3.9520,
+  twelveMonth: 4.2560,
 };
 
 const HEADERS = {
