@@ -166,18 +166,49 @@ tier, with a receipt, and a downgrade that works.
 
 ---
 
-## B-15 — THREE INVENTED SCORING SYSTEMS, ONE SOLD AS "AI"
-*Raised 2026-08-02 during the Neighbourhoods rebuild. Needs an owner decision.*
+## B-15 — FIVE INVENTED SCORING SYSTEMS, TWO SOLD AS "AI"
+*Raised 2026-08-02 during the Neighbourhoods rebuild. Widened 2026-08-03 when
+the My Leads rebuild found two more. Needs an owner decision on the last one.*
 
-The app scores communities and projects on a 0–100 or 0–10 scale in three
-different places, using three different sets of weights that were chosen by
-hand and never reconciled with each other.
+The app scores communities, projects, leads and **the agency's own staff** on a
+0–100 or 0–10 scale in five different places, using five different sets of
+weights that were chosen by hand and never reconciled with each other.
 
 | Where | Weights | Status |
 |---|---|---|
 | `AdminPanel.jsx` `investmentScore` | base 60, +15 yield>7, +10 construction>80, +5 branded, +10 near Downtown | **removed from Neighbourhoods and the Map** |
 | `NeighbourhoodsTab` drawer breakdown | Yield /20, Metro /12, PPSF /8, Waterfront /8, Amenities /9, Golden Visa /5 | **removed** — its parts summed to 62 while the badge it "explained" went to 100 |
+| `MyLeadsTab.jsx` `aiScore()` — labelled **"AI LEAD SCORE"** on screen | phone+email 25, budget>5M 20, under a day old 20, "Immediate" 15, three notes 10, **nationality recorded 5** | **removed 2026-08-03** — replaced by a printed call-order rule |
+| `MyLeadsTab.jsx` agent leaderboard `combined` | (closed × 10) + (conversion × 2) + (pipeline in millions × 0.5), capped at 50M | **removed 2026-08-03** — ranked the agency's own people on invented weights |
 | `InvestmentScoreTab.jsx` + `getInvestmentScore()` | Yield 0–3, Value 0–2, Handover 0–2, … | **still shipping** |
+
+### The two found in My Leads (2026-08-03)
+
+`aiScore()` was the worse of the pair. It was named for a model that does not
+exist, rendered under the heading **"AI LEAD SCORE"**, and its 70-point line
+decided the "Hot" counter, the "Hot" view, a sort option and the leaderboard's
+hot column. Two specific faults made it actively misleading:
+
+- **It paid five points for a recorded nationality.** Two otherwise identical
+  leads scored 80 and 75 depending only on whether somebody had filled in an
+  ethnicity field. A Hot/Warm/Cold label must not move on that.
+- **It decayed on the calendar alone.** The same buyer, unchanged, fell from
+  60 to 40 — Hot to Warm — in eight days. An agent who watches a serious client
+  fade while nothing about that client has changed learns to ignore the label,
+  which is the opposite of what a priority signal is for.
+
+It is replaced by a rule printed on the tab, in the order a desk is actually
+worked: came in today and nobody called, then a promised follow-up that is due,
+then never contacted, then silent over a week. Every lead carries its reason in
+words on its own row. No number, so nothing to argue with.
+
+The leaderboard's `combined` handed an owner a ranking of their own staff built
+from five invented constants — nothing in the business decided a closed deal is
+worth five points of conversion rate. Ranking is now by deals closed, then by
+the share of their leads that closed, and the Score column is gone. The
+conversion colour also compared each agent against a hard-coded 10%/5% pair;
+1–3% is normal for Dubai portal leads, so it painted competent agents red. It
+now compares each agent against that agency's own average.
 
 ### What is already fixed
 
