@@ -74,8 +74,24 @@ module.exports = async function handler(req, res) {
         body: JSON.stringify(req.body),
       });
       const data = await response.json();
+
+      /* ── SAY WHY IT FAILED ────────────────────────────────────────────────
+         This passed the upstream status straight through and logged nothing.
+         A 400 from Anthropic therefore appeared in the Vercel log as a bare
+         "POST 400 /api/proxy" with no reason attached, and the calling code
+         swallows it and falls back to an empty result — so the feature just
+         quietly does nothing and nobody can find out why.
+
+         That is the same shape as the crons that reported success while
+         writing stale data. An upstream rejection now names itself. */
+      if (!response.ok) {
+        const detail = data?.error?.message || data?.error?.type || JSON.stringify(data).slice(0, 300);
+        console.error(`[proxy:claude] upstream ${response.status} — ${detail}`);
+      }
+
       return res.status(response.status).json(data);
     } catch (err) {
+      console.error('[proxy:claude] request failed —', err.message);
       return res.status(500).json({ error: 'Claude proxy error', message: err.message });
     }
   }
