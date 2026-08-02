@@ -189,6 +189,21 @@ service cloud.firestore {
       allow read: if isSuperAdmin();
     }
 
+    /* Watchlist and price alerts. Both are keyed by the user's own uid and both
+       were MISSING from these rules entirely, so Firestore denied every read and
+       every write. The app opens a live listener on each of them on sign-in, so
+       every session logged two permission-denied errors, and saving a watchlist
+       or an alert could not work at all. Same shape as portfolios above. */
+    match /watchlists/{userId} {
+      allow read, write: if isAuthed() && uid() == userId;
+      allow read: if isSuperAdmin();
+    }
+
+    match /priceAlerts/{userId} {
+      allow read, write: if isAuthed() && uid() == userId;
+      allow read: if isSuperAdmin();
+    }
+
     // ── MORTGAGE LEADS ───────────────────────────────────────────
     match /mortgageLeads/{leadId} {
       allow read: if isAuthed() && (
