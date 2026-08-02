@@ -29,7 +29,7 @@
 export const MAP_METRICS = [
   {
     key: "netYield",
-    label: "Net yield",
+    label: "Net return",
     unit: "%",
     hint: "After service charges, 5% vacancy and 5% management",
     get: c => num(c.netYield),
@@ -43,7 +43,7 @@ export const MAP_METRICS = [
   },
   {
     key: "ppsf",
-    label: "Price per sqft",
+    label: "Price per sq ft",
     unit: "AED",
     hint: "Community median, AED per square foot",
     get: c => num(c.medianPPSF ?? c.avgPpsf ?? c.ppsf),
@@ -54,7 +54,7 @@ export const MAP_METRICS = [
   },
   {
     key: "grossYield",
-    label: "Gross yield",
+    label: "Gross return",
     unit: "%",
     hint: "Before costs — shown for comparison with portal figures",
     get: c => num(c.grossYield),

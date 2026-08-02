@@ -21,6 +21,9 @@ import { T } from "../data";
 import TabIntro from "../components/TabIntro";
 import TabProvenance from "../components/TabProvenance";
 import { tabCopy } from "../data/tabCopy";
+/* Shared across mounts — see the comment in the loader effect. */
+const SCRIPT_LOADS = {};
+
 const YIELD_COLOR = y => {
   const n = parseFloat(y||0);
   if(n>=8) return "#10B981";
@@ -73,6 +76,22 @@ export default function CommunityMapTab({
     communities.filter(n=>n.lat&&n.lng&&!isNaN(n.lat)&&!isNaN(n.lng))
   ,[communities]);
 
+  /* One definition of "is this community currently on the map", shared by the
+     pin loop, the count in the toolbar and the list on the right. They used to
+     each decide separately, and the search box did not reach the map at all. */
+  const commVisible = React.useCallback(n=>{
+    const y = parseFloat(n.grossYield||0);
+    if(filterYield==="8+"  && y<8) return false;
+    if(filterYield==="6-8" && (y<6||y>=8)) return false;
+    if(filterYield==="<6"  && y>=6) return false;
+    if(search.trim() && !(n.community||"").toLowerCase().includes(search.trim().toLowerCase()))
+      return false;
+    return true;
+  },[filterYield,search]);
+
+  const shownCommunities = React.useMemo(
+    ()=>commWithCoords.filter(commVisible).length, [commWithCoords,commVisible]);
+
   // Projects with real verified Dubai GPS only
   const projectsWithGPS = React.useMemo(()=>
     (activeProjects||[]).filter(p=>{
@@ -112,12 +131,44 @@ export default function CommunityMapTab({
 
   // Load Leaflet + MarkerCluster
   React.useEffect(()=>{
-    const loadScript = (src, id) => new Promise(resolve => {
-      if(document.getElementById(id)||window[id]) { resolve(); return; }
-      const s = document.createElement("script");
-      s.src=src; s.id=id; s.onload=resolve;
-      document.head.appendChild(s);
-    });
+    /* ── WHY THIS IS NOT A ONE-LINER ────────────────────────────────────────
+       This used to resolve the moment a <script> TAG existed:
+
+           if (document.getElementById(id) || window[id]) { resolve(); return; }
+
+       A tag existing does not mean the script has run. React mounts this
+       component twice in development, so the first mount appended leaflet.js
+       and the second mount saw the tag, resolved instantly, and loaded
+       leaflet.markercluster.js into a page where Leaflet had not finished
+       executing. The plugin's first line reads L, so:
+
+           ReferenceError: L is not defined  (leaflet.markercluster.js:1:243)
+
+       The cluster plugin then never registered, and switching to the Projects
+       layer — which calls L.markerClusterGroup — tore the map down.
+
+       The cache is module-level on purpose: both mounts must await the SAME
+       promise, which a per-effect cache cannot do. */
+    const loadScript = (src, id, ready) => {
+      if (ready()) return Promise.resolve();
+      if (SCRIPT_LOADS[id]) return SCRIPT_LOADS[id];
+      SCRIPT_LOADS[id] = new Promise((resolve, reject) => {
+        const existing = document.getElementById(id);
+        if (existing) {
+          // tag is there but may still be parsing — wait for it properly
+          existing.addEventListener("load", () => resolve());
+          existing.addEventListener("error", reject);
+          if (ready()) resolve();
+          return;
+        }
+        const s = document.createElement("script");
+        s.src = src; s.id = id;
+        s.onload = () => resolve();
+        s.onerror = reject;
+        document.head.appendChild(s);
+      });
+      return SCRIPT_LOADS[id];
+    };
     const loadCSS = (href, id) => {
       if(document.getElementById(id)) return;
       const l = document.createElement("link");
@@ -127,9 +178,12 @@ export default function CommunityMapTab({
     loadCSS("https://unpkg.com/leaflet@1.9.4/dist/leaflet.css","leaflet-css");
     loadCSS("https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css","cluster-css");
     loadCSS("https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css","cluster-css2");
-    loadScript("https://unpkg.com/leaflet@1.9.4/dist/leaflet.js","leaflet-js")
-      .then(()=>loadScript("https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js","cluster-js"))
-      .then(()=>setLeafletReady(true));
+    loadScript("https://unpkg.com/leaflet@1.9.4/dist/leaflet.js",
+               "leaflet-js", () => !!window.L)
+      .then(()=>loadScript("https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js",
+               "cluster-js", () => !!(window.L && window.L.markerClusterGroup)))
+      .then(()=>setLeafletReady(true))
+      .catch(err=>console.error("[Map] Leaflet failed to load:", err));
   },[]);
 
   // Init map
@@ -171,10 +225,7 @@ export default function CommunityMapTab({
       const breaks = quantileBreaks(commWithCoords, activeMetric);
 
       commWithCoords.forEach(n=>{
-        const y = parseFloat(n.grossYield||0);
-        if(filterYield==="8+" && y<8) return;
-        if(filterYield==="6-8" && (y<6||y>=8)) return;
-        if(filterYield==="<6" && y>=6) return;
+        if(!commVisible(n)) return;
 
         const pt = coordsOf(n);
         if(!pt) return;                       // never guess a location
@@ -195,30 +246,56 @@ export default function CommunityMapTab({
           dashArray: measured ? null : "3,3",
         });
 
-        const provLine = measured
-          ? `<div style="font-size:10px;color:#10B981">Measured from DLD transactions</div>`
-          : `<div style="font-size:10px;color:#F59E0B">Estimate${Number(n.valueSharedWith)>0
-              ? ` — this figure is shared with ${n.valueSharedWith} other communit${Number(n.valueSharedWith)===1?"y":"ies"}`
-              : ""}</div>`;
+        /* ── WHAT THE POPUP USED TO SAY ──────────────────────────────────────
+           It led with NET YIELD in the largest, greenest text, and closed with
+           "Measured from DLD transactions". Net return is derived from the
+           service charge, which no source publishes per community — it is never
+           measured. So the most prominent number in the popup was the least
+           reliable one, under a line claiming the opposite.
 
-        circle.bindPopup(`<div style="font-family:'Outfit',sans-serif;min-width:230px;padding:4px">
+           It now leads with price per square foot, which IS counted, marks each
+           figure for what it is, and the footer describes only the figures it
+           is actually true of. */
+        const ppsfVal = n.medianPPSF ?? n.avgPpsf ?? n.ppsf;
+        const tag = (text, ok) =>
+          `<span style="font-size:8px;font-weight:700;padding:1px 4px;border-radius:3px;margin-left:5px;white-space:nowrap;` +
+          `background:${ok ? "rgba(16,185,129,0.16)" : "rgba(148,163,184,0.16)"};` +
+          `color:${ok ? "#10B981" : "#94A3B8"}">${text}</span>`;
+
+        const ppsfOk  = isEvidenced(n._ppsfEv);
+        const yieldOk = isEvidenced(n._yieldEv);
+
+        const footer = ppsfOk || yieldOk
+          ? `<div style="font-size:10px;color:#10B981;line-height:1.5">Counted from ${
+              [ppsfOk ? `${(n._ppsfN||0).toLocaleString()} recorded sales` : null,
+               yieldOk ? "registered tenancy contracts" : null].filter(Boolean).join(" and ")
+            }.${(!ppsfOk || !yieldOk) ? " The other figures are estimates." : ""}</div>`
+          : `<div style="font-size:10px;color:#F59E0B;line-height:1.5">No figure here was measured — ` +
+            `all four are stored estimates. Do not quote them as market facts.</div>`;
+
+        circle.bindPopup(`<div style="font-family:'Outfit',sans-serif;min-width:250px;padding:4px">
           <div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:2px">${n.name||n.community||n.id}</div>
-          <div style="font-size:10px;color:#64748B;margin-bottom:8px">${n.kindLabel||""}</div>
+          <div style="font-size:10px;color:#64748B;margin-bottom:8px">${n.kindLabel||"Community"}</div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px">
-            <div style="background:rgba(16,185,129,0.08);border-radius:6px;padding:6px 8px">
-              <div style="font-size:9px;color:#64748B;margin-bottom:2px">NET YIELD</div>
-              <div style="font-size:15px;font-weight:700;color:#10B981">${n.netYield?n.netYield+"%":"—"}</div>
-            </div>
             <div style="background:rgba(212,168,67,0.08);border-radius:6px;padding:6px 8px">
-              <div style="font-size:9px;color:#64748B;margin-bottom:2px">PRICE / SQFT</div>
-              <div style="font-size:15px;font-weight:700;color:#D4A843">AED ${
-                (n.medianPPSF??n.avgPpsf??n.ppsf) ? Math.round(n.medianPPSF??n.avgPpsf??n.ppsf).toLocaleString() : "—"}</div>
+              <div style="font-size:9px;color:#64748B;margin-bottom:2px">PRICE PER SQ FT ${tag(ppsfOk?"REAL":"EST",ppsfOk)}</div>
+              <div style="font-size:15px;font-weight:700;color:#D4A843">${
+                ppsfVal ? "AED " + Math.round(ppsfVal).toLocaleString() : "—"}</div>
+            </div>
+            <div style="background:rgba(16,185,129,0.08);border-radius:6px;padding:6px 8px">
+              <div style="font-size:9px;color:#64748B;margin-bottom:2px">GROSS RETURN ${tag(yieldOk?"REAL":"EST",yieldOk)}</div>
+              <div style="font-size:15px;font-weight:700;color:${yieldOk?"#10B981":"#94A3B8"}">${
+                n.grossYield ? Number(n.grossYield).toFixed(1) + "%" : "—"}</div>
             </div>
           </div>
-          <div style="font-size:10px;color:#94A3B8;margin-bottom:5px">Gross ${n.grossYield||"—"}% · service charge ${
-            n.serviceCharge?"AED "+n.serviceCharge+"/sqft":"not recorded"}</div>
-          ${provLine}
-        </div>`,{className:"dxb-popup",maxWidth:290});
+          <div style="font-size:10px;color:#94A3B8;margin-bottom:6px;line-height:1.6">
+            Net return ${n.netYield ? Number(n.netYield).toFixed(1)+"%" : "—"} and service charge ${
+            n.serviceCharge ? "AED "+n.serviceCharge+"/sqft" : "—"} are
+            <span style="color:#94A3B8;font-weight:600">estimates</span> — no source publishes a
+            service charge per community.
+          </div>
+          ${footer}
+        </div>`,{className:"dxb-popup",maxWidth:310});
         circle.on("click",()=>setSelected({type:"community",...n}));
         circle.addTo(map);
         markersRef.current.push(circle);
@@ -254,7 +331,7 @@ export default function CommunityMapTab({
           <div style="font-size:10px;color:#94A3B8;margin-bottom:8px">${dev} · ${comm}${masterComm}</div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:6px">
             ${p.priceMin?`<div style="background:rgba(212,168,67,0.08);border-radius:4px;padding:4px 6px"><div style="font-size:9px;color:#64748B">FROM</div><div style="font-size:12px;color:#D4A843;font-weight:600">AED ${(p.priceMin/1e6).toFixed(1)}M</div></div>`:""}
-            ${p.grossYield?`<div style="background:rgba(16,185,129,0.08);border-radius:4px;padding:4px 6px"><div style="font-size:9px;color:#64748B">YIELD</div><div style="font-size:12px;color:#10B981;font-weight:600">${p.grossYield}%</div></div>`:""}
+            ${p.grossYield?`<div style="background:rgba(16,185,129,0.08);border-radius:4px;padding:4px 6px"><div style="font-size:9px;color:#64748B">GROSS RETURN</div><div style="font-size:12px;color:#10B981;font-weight:600">${p.grossYield}%</div></div>`:""}
             ${p.constructionPct!=null?`<div style="background:rgba(255,255,255,0.04);border-radius:4px;padding:4px 6px"><div style="font-size:9px;color:#64748B">BUILT</div><div style="font-size:12px;color:#fff;font-weight:600">${Math.round(p.constructionPct)}%</div></div>`:""}
             ${p.totalFloors?`<div style="background:rgba(255,255,255,0.04);border-radius:4px;padding:4px 6px"><div style="font-size:9px;color:#64748B">FLOORS</div><div style="font-size:12px;color:#fff;font-weight:600">${p.totalFloors}</div></div>`:""}
           </div>
@@ -267,24 +344,57 @@ export default function CommunityMapTab({
       map.addLayer(cluster);
       clusterRef.current=cluster;
 
-    } else if(mapLayer==="heatmap") {
-      commWithCoords.forEach(n=>{
-        if(!n.avgPpsf) return;
-        const intensity=Math.min(n.avgPpsf/5000,1);
-        const color=`rgb(${Math.floor(255*intensity)},${Math.floor(100*(1-intensity))},50)`;
-        const circle=L.circleMarker([n.lat,n.lng],{radius:8+intensity*20,fillColor:color,color:"transparent",weight:0,fillOpacity:0.5});
-        circle.bindPopup(`<div style="font-family:'Outfit',sans-serif;padding:4px">
-          <div style="font-size:13px;font-weight:700;color:#fff">${n.community}</div>
-          <div style="font-size:12px;color:#D4A843;font-weight:600">AED ${Math.round(n.avgPpsf).toLocaleString()}/sqft</div>
-          ${n.dldTransactions?`<div style="font-size:10px;color:#94A3B8">${n.dldTransactions.toLocaleString()} DLD transactions</div>`:""}
-        </div>`,{className:"dxb-popup"});
-        circle.addTo(map);
-        markersRef.current.push(circle);
-      });
     }
+    /* REMOVED: a third "PPSF Heatmap" layer. It painted the same price data as
+       the Communities layer coloured by price per square foot, but with an
+       arbitrary rgb() ramp and NO LEGEND — a colour scale with no key, which a
+       reader cannot decode. The Colour by control does the same job with a
+       banded legend and a stated source. */
+    /* ── FRAME THE MAP ON THE DATA ───────────────────────────────────────
+       The map opened at a hardcoded center [25.1,55.2] zoom 11. That framed the
+       old short container; once the map was given its proper height the same
+       zoom showed Abu Dhabi, Al Ain and half of Oman, with all 193 Dubai pins
+       squeezed into one corner.
+
+       Fitting to the pins is correct at any container size, and it also follows
+       a filter — search for one community and the map goes to it instead of
+       leaving the user to find a single dot.
+
+       invalidateSize() first, because Leaflet caches the container dimensions
+       and this one changes when the tab mounts. */
+    try {
+      map.invalidateSize();
+      const pts = [];
+      if (mapLayer === "communities") {
+        commWithCoords.forEach(n => { if (commVisible(n)) { const c = coordsOf(n); if (c) pts.push([c.lat, c.lng]); } });
+      } else {
+        filteredProjects.forEach(pr => {
+          const la = parseFloat(pr.lat ?? pr.coordinates?.lat);
+          const ln = parseFloat(pr.lng ?? pr.coordinates?.lng);
+          if (Number.isFinite(la) && Number.isFinite(ln)) pts.push([la, ln]);
+        });
+      }
+      if (pts.length === 1) map.setView(pts[0], 14);
+      else if (pts.length > 1) map.fitBounds(L.latLngBounds(pts), { padding: [45, 45], maxZoom: 15 });
+    } catch (e) { console.error("[Map] could not fit to markers:", e); }
+
     /* activeMetric belongs here: without it, switching the metric leaves the
        pins painted by the previous one and the legend disagrees with the map. */
-  },[mapReady, mapLayer, filterYield, commWithCoords, filteredProjects, activeMetric]);
+  },[mapReady, mapLayer, commVisible, commWithCoords, filteredProjects, activeMetric]);
+
+  /* A labelled cluster of controls. The label is the question the group answers,
+     which is the whole difference between a row of buttons and a control an
+     agent can use without being taught. */
+  const Group = ({label,children}) => (
+    <div style={{display:"flex",flexDirection:"column",gap:4}}>
+      <span style={{fontSize:9,fontWeight:700,color:T.textMuted,letterSpacing:.7,
+                    textTransform:"uppercase"}}>{label}</span>
+      <div style={{display:"flex",gap:2,background:"rgba(255,255,255,0.03)",
+                   border:`1px solid ${T.border}`,borderRadius:8,padding:3}}>
+        {children}
+      </div>
+    </div>
+  );
 
   const Btn = ({active,onClick,children,title}) => (
     <button type="button" onClick={onClick} title={title} style={{
@@ -307,41 +417,29 @@ export default function CommunityMapTab({
   );
 
   return (
-    <div style={{display:"flex",flexDirection:"column",height:"calc(100vh - 140px)",gap:0}}>
+    <div style={{display:"flex",flexDirection:"column",minHeight:"calc(100vh - 140px)",gap:0,paddingBottom:24}}>
       {_copy && <TabIntro title={_copy.title} what={_copy.what} detail={_copy.detail} includes={_copy.includes} excludes={_copy.excludes} warning={_copy.warning} />}
 
 
-      {/* Toolbar */}
-      <div style={{display:"flex",gap:8,alignItems:"center",padding:"8px 0",flexWrap:"wrap"}}>
-        {/* Layer buttons */}
-        <div style={{display:"flex",gap:2,background:"rgba(255,255,255,0.03)",border:`1px solid ${T.border}`,borderRadius:8,padding:3}}>
-          {[{k:"communities",label:"Communities"},{k:"projects",label:"All Projects"},{k:"heatmap",label:"PPSF Heatmap"}]
-            .map(l=><Btn key={l.k} active={mapLayer===l.k} onClick={()=>setMapLayer(l.k)}>{l.label}</Btn>)}
-        </div>
+      {/* ── TOOLBAR ─────────────────────────────────────────────────────────
+          Eleven buttons used to sit here in three identical-looking groups with
+          no headings: a layer switch, a return filter and a colour metric, all
+          styled the same. Nothing said which was which, so the tab opened with
+          three unlabelled toolbars and no indication of what any of them did.
 
-        {/* Communities: yield filter */}
+          Each group now states its own question. */}
+      <div data-map-toolbar style={{display:"flex",gap:14,alignItems:"flex-end",padding:"10px 0 8px",flexWrap:"wrap"}}>
+
+        <Group label="Show me">
+          {[{k:"communities",label:"Communities",
+             hint:"All 193 communities, coloured by the figure you choose below."},
+            {k:"projects",label:`Projects (${projectsWithGPS.length})`,
+             hint:`Individual projects rather than whole communities. A numbered circle groups nearby projects — zoom in to split it.`}]
+            .map(l=><Btn key={l.k} active={mapLayer===l.k} onClick={()=>setMapLayer(l.k)} title={l.hint}>{l.label}</Btn>)}
+        </Group>
+
         {mapLayer==="communities"&&(
-          <div style={{display:"flex",gap:2,background:"rgba(255,255,255,0.03)",border:`1px solid ${T.border}`,borderRadius:8,padding:3}}>
-            {[{k:"all",label:"All Yields"},{k:"8+",label:"8%+ Yield"},{k:"6-8",label:"6-8% Yield"},{k:"<6",label:"Below 6%"}]
-              .map(f=><Btn key={f.k} active={filterYield===f.k} onClick={()=>setFilterYield(f.k)}>{f.label}</Btn>)}
-          </div>
-        )}
-
-        {/* Projects: search + developer + status filters */}
-        {mapLayer==="projects"&&(<>
-          <input type="text" placeholder="Search project, developer, community..."
-            value={search} onChange={e=>setSearch(e.target.value)}
-            style={{background:"rgba(255,255,255,0.05)",border:`1px solid ${T.border}`,borderRadius:8,
-              padding:"6px 12px",color:T.white,fontSize:11,fontFamily:"'Outfit',sans-serif",width:240,outline:"none"}}/>
-          <Select value={filterDev} onChange={setFilterDev}
-            options={["All",...new Set((activeProjects||[]).map(p=>p.developerActual||p.developer||"").filter(Boolean).sort())].slice(0,100)}/>
-          <Select value={filterStatus} onChange={setFilterStatus} options={["All","Off-Plan","Ready"]}/>
-        </>)}
-
-        {/* Metric selector — what the map is painted by. Every other Dubai map
-            plots price and only price. */}
-        {mapLayer==="communities"&&(
-          <div style={{display:"flex",gap:2,background:"rgba(255,255,255,0.03)",border:`1px solid ${T.border}`,borderRadius:8,padding:3}}>
+          <Group label="Colour by">
             {MAP_METRICS.map(m=>(
               <Btn key={m.key} active={metricKey===m.key} onClick={()=>setMetricKey(m.key)}
                 title={m.evidenced
@@ -350,11 +448,45 @@ export default function CommunityMapTab({
                 {m.label}{m.evidenced===false&&<span style={{fontSize:8,marginLeft:4,opacity:0.75}}>EST</span>}
               </Btn>
             ))}
-          </div>
+          </Group>
         )}
 
-        <span style={{fontSize:10,color:T.textMuted,marginLeft:"auto"}}>
-          {mapLayer==="projects"?`${filteredProjects.length.toLocaleString()} projects`:`${commWithCoords.length} communities`}
+        {mapLayer==="communities"&&(
+          <Group label="Only show">
+            {[{k:"all",  label:"Everything", hint:"No filter — all 193 communities."},
+              {k:"8+",   label:"8% or more", hint:"Communities whose gross return is 8% or higher."},
+              {k:"6-8",  label:"6% to 8%",   hint:"Communities whose gross return is between 6% and 8%."},
+              {k:"<6",   label:"Under 6%",   hint:"Communities whose gross return is below 6%."}]
+              .map(f=><Btn key={f.k} active={filterYield===f.k} onClick={()=>setFilterYield(f.k)} title={f.hint}>{f.label}</Btn>)}
+          </Group>
+        )}
+
+        {/* Find a community by name — 193 pins with no way to search was the
+            single most common thing to reach for and not find. */}
+        <div style={{display:"flex",flexDirection:"column",gap:4}}>
+          <label style={{fontSize:9,fontWeight:700,color:T.textMuted,letterSpacing:.7,textTransform:"uppercase"}}>
+            {mapLayer==="projects" ? "Find a project" : "Find a community"}
+          </label>
+          <input type="text"
+            placeholder={mapLayer==="projects" ? "Name, developer or community…" : "Type a community name…"}
+            value={search} onChange={e=>setSearch(e.target.value)}
+            title="Type to highlight matching pins and filter the list on the right."
+            style={{background:"rgba(255,255,255,0.05)",border:`1px solid ${search?T.gold:T.border}`,borderRadius:8,
+              padding:"6px 12px",color:T.white,fontSize:11,fontFamily:"'Outfit',sans-serif",width:230,outline:"none"}}/>
+        </div>
+
+        {mapLayer==="projects"&&(
+          <Group label="Narrow to">
+            <Select value={filterDev} onChange={setFilterDev}
+              options={["All",...new Set((activeProjects||[]).map(p=>p.developerActual||p.developer||"").filter(Boolean).sort())].slice(0,100)}/>
+            <Select value={filterStatus} onChange={setFilterStatus} options={["All","Off-Plan","Ready"]}/>
+          </Group>
+        )}
+
+        <span style={{fontSize:11,color:T.textSecondary,marginLeft:"auto",paddingBottom:6}}>
+          {mapLayer==="projects"
+            ? `${filteredProjects.length.toLocaleString()} of ${projectsWithGPS.length.toLocaleString()} projects shown`
+            : `${shownCommunities} of ${commWithCoords.length} communities shown`}
         </span>
       </div>
 
@@ -377,28 +509,29 @@ export default function CommunityMapTab({
               <div key={i} title={`${r.count} communities`} style={{display:"flex",alignItems:"center",gap:5}}>
                 <div style={{width:11,height:11,borderRadius:3,background:r.colour}}/>
                 <span style={{fontSize:10,color:T.textSecondary}}>{r.label}</span>
-                <span style={{fontSize:9,color:T.textMuted}}>({r.count})</span>
+                <span style={{fontSize:9,color:T.textMuted}}>{r.count} here</span>
               </div>
             ))}
             <span style={{width:1,height:16,background:T.border}}/>
             <div style={{display:"flex",alignItems:"center",gap:5}}>
               <div style={{width:11,height:11,borderRadius:"50%",background:"#94A3B8"}}/>
-              <span style={{fontSize:10,color:T.textSecondary}}>Measured ({cov.measured})</span>
+              <span style={{fontSize:10,color:T.textSecondary}}>Solid pin = counted ({cov.measured})</span>
             </div>
             <div style={{display:"flex",alignItems:"center",gap:5}}>
               <div style={{width:11,height:11,borderRadius:"50%",border:"2px dashed #94A3B8"}}/>
-              <span style={{fontSize:10,color:T.textSecondary}}>Estimate ({cov.estimated})</span>
+              <span style={{fontSize:10,color:T.textSecondary}}>Dashed ring = estimate ({cov.estimated})</span>
             </div>
             <span style={{fontSize:9.5,color:T.textMuted,flex:"1 1 240px",lineHeight:1.5}}>
-              {activeMetric.hint}. An estimate is an area-level figure applied to a
-              community rather than measured in it — quote it with a caveat.
+              Each band shows a range and how many communities fall in it. {activeMetric.hint}.
+              An estimate is a figure applied to a community rather than measured in it —
+              quote those with a caveat.
             </span>
           </div>
         );
       })()}
 
       {/* Map + Sidebar */}
-      <div style={{display:"flex",flex:1,gap:12,minHeight:0}}>
+      <div style={{display:"flex",flex:1,gap:12,minHeight:560}}>
 
         {/* Map — 70% */}
         <div style={{flex:"0 0 70%",position:"relative",borderRadius:12,overflow:"hidden",border:`1px solid ${T.border}`}}>
@@ -456,7 +589,7 @@ export default function CommunityMapTab({
                   <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:12}}>
                     {[
                       {label:"FROM",value:selected.priceMin?`AED ${(selected.priceMin/1e6).toFixed(1)}M`:null,color:T.gold},
-                      {label:"YIELD",value:selected.grossYield?`${selected.grossYield}%`:null,color:"#10B981"},
+                      {label:"GROSS RETURN",value:selected.grossYield?`${selected.grossYield}%`:null,color:"#10B981"},
                       {label:"PAYMENT",value:selected.paymentPlan,color:T.white},
                       {label:"BUILT",value:selected.constructionPct!=null?`${Math.round(selected.constructionPct)}%`:null,color:T.white},
                       {label:"PPSF",value:selected.pricePerSqft?`AED ${Math.round(selected.pricePerSqft).toLocaleString()}`:null,color:T.gold},
@@ -495,7 +628,7 @@ export default function CommunityMapTab({
                   <div style={{fontSize:18,fontWeight:700,color:T.white,fontFamily:"'Fraunces',serif",marginBottom:12}}>{selected.community}</div>
                   <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:12}}>
                     {[
-                      {label:"GROSS YIELD",value:selected.grossYield?`${selected.grossYield}%`:null,color:"#10B981"},
+                      {label:"GROSS RETURN",value:selected.grossYield?`${selected.grossYield}%`:null,color:"#10B981"},
                       {label:"AVG PPSF",value:selected.avgPpsf?`AED ${Math.round(selected.avgPpsf).toLocaleString()}`:null,color:T.gold},
                       {label:"DXB SCORE",value:selected.score,color:"#63B3ED"},
                       {label:"PROJECTS",value:selected.projectCount,color:T.white},
@@ -515,8 +648,17 @@ export default function CommunityMapTab({
           ) : (
             /* Default: top yield list */
             <>
-              <div style={{fontSize:10,fontWeight:700,color:T.textMuted,letterSpacing:0.8,textTransform:"uppercase"}}>
-                {mapLayer==="projects"?"Top Yield Projects":"Top Yield Communities"}
+              {/* A bare ranked list with no caption leaves the reader guessing
+                  what it is for and where the numbers came from. */}
+              <div style={{marginBottom:10}}>
+                <div style={{fontSize:10,fontWeight:700,color:T.textMuted,letterSpacing:0.8,textTransform:"uppercase"}}>
+                  {mapLayer==="projects"?"Highest return — projects":"Highest measured return"}
+                </div>
+                <div style={{fontSize:10,color:T.textMuted,marginTop:4,lineHeight:1.5}}>
+                  {mapLayer==="projects"
+                    ? "Projects with the highest recorded gross return. Click one to see it on the map."
+                    : "Ranked on returns counted from tenancy contracts — estimates are left out, so this is a shortlist you can defend. Click one to open it."}
+                </div>
               </div>
               {mapLayer==="projects" ? (
                 (activeProjects||[])

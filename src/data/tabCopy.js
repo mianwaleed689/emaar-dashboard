@@ -85,16 +85,24 @@ export const TAB_COPY = {
 
   "Map": {
     title: "Map",
-    what: "The same community figures shown geographically, so you can see how " +
-          "price and rental return change across Dubai rather than reading them " +
-          "in a list.",
-    detail: "Switch the colouring between price per square foot, gross return, " +
-            "net return and service charge. The first two are counted from Land " +
-            "Department records; the last two are marked EST because no source " +
-            "publishes a service charge rate per community.",
-    includes: "193 communities. A solid pin means the figure was counted from " +
-              "transactions; a hollow pin means it is an estimate.",
-    excludes: "Communities with no coordinates on record cannot be plotted at all",
+    what: "Answers one question: where in Dubai should your client be looking, " +
+          "for what they want to spend. Price is easy to compare in a list; " +
+          "location is not — this shows both at once.",
+    detail: "Use it in three steps. First pick what to colour the map by — start " +
+            "with price per square foot, which is counted from real sales. " +
+            "Second, narrow to the return band your client cares about. Third, " +
+            "click any pin to see that community's figures and whether they were " +
+            "measured or estimated. The list on the right ranks communities by " +
+            "measured return, so it is a shortlist you can defend. Dark green " +
+            "pins are the cheapest band, gold the dearest. On the Projects " +
+            "layer, a numbered circle groups nearby projects — zoom in and it " +
+            "splits into the individual ones.",
+    includes: "193 communities. A solid pin means that community's figure was " +
+              "counted from Land Department transactions — 94 of them. A dashed " +
+              "ring means it is an estimate — the other 99.",
+    excludes: "Communities with no coordinates on record cannot be plotted.",
+    warning: "A dashed ring is not a lesser version of a measured figure — nobody " +
+             "counted it. Click the pin before you quote anything from one.",
     provenance: {
       kind: "market",
       sources: [{ name: "Dubai Land Department", detail: "sale transactions" },
