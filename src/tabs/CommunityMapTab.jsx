@@ -241,6 +241,18 @@ export default function CommunityMapTab({
          count while you are looking at the whole city, individual prices once
          you zoom into an area. Without this, 193 price labels overlap into an
          unreadable heap — which is exactly what the coloured dots did. */
+      /* Clustering has to answer to the RESULT COUNT, not only to zoom.
+         Filtering to "8% or more" leaves 15 communities — and those 15 came back
+         as four numbered circles, so an agent who had just narrowed the map to
+         their shortlist could not read a single price on it. The whole point of
+         filtering is to see what survived.
+
+         So: cluster while the set is large enough to overlap into a mess, and
+         drop clustering once it is small enough to read. 30 is roughly where
+         labels stop colliding across Dubai at city zoom. */
+      const visibleCount = commWithCoords.filter(commVisible).length;
+      const clusterThem  = visibleCount > 30;
+
       const commCluster = L.markerClusterGroup({
         maxClusterRadius: 46,
         showCoverageOnHover: false,
@@ -358,10 +370,10 @@ export default function CommunityMapTab({
           ${footer}
         </div>`,{className:"dxb-popup",maxWidth:310});
         circle.on("click",()=>setSelected({type:"community",...n}));
-        commCluster.addLayer(circle);
+        if (clusterThem) commCluster.addLayer(circle);
+        else { circle.addTo(map); markersRef.current.push(circle); }
       });
-      map.addLayer(commCluster);
-      clusterRef.current = commCluster;
+      if (clusterThem) { map.addLayer(commCluster); clusterRef.current = commCluster; }
 
     } else if(mapLayer==="projects") {
       const cluster = L.markerClusterGroup({
@@ -393,7 +405,7 @@ export default function CommunityMapTab({
           <div style="font-size:10px;color:#94A3B8;margin-bottom:8px">${dev} · ${comm}${masterComm}</div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:6px">
             ${p.priceMin?`<div style="background:rgba(212,168,67,0.08);border-radius:4px;padding:4px 6px"><div style="font-size:9px;color:#64748B">FROM</div><div style="font-size:12px;color:#D4A843;font-weight:600">AED ${(p.priceMin/1e6).toFixed(1)}M</div></div>`:""}
-            ${p.grossYield?`<div style="background:rgba(16,185,129,0.08);border-radius:4px;padding:4px 6px"><div style="font-size:9px;color:#64748B">GROSS RETURN</div><div style="font-size:12px;color:#047857;font-weight:700">${p.grossYield}%</div></div>`:""}
+            ${p.grossYield?`<div style="background:rgba(16,185,129,0.08);border-radius:4px;padding:4px 6px"><div style="font-size:9px;color:#64748B">GROSS RETURN</div><div style="font-size:12px;color:#047857;font-weight:700">${Number(p.grossYield).toFixed(1)}%</div></div>`:""}
             ${p.constructionPct!=null?`<div style="background:rgba(15,23,42,0.05);border-radius:4px;padding:4px 6px"><div style="font-size:9px;color:#64748B">BUILT</div><div style="font-size:12px;color:#0F172A;font-weight:700">${Math.round(p.constructionPct)}%</div></div>`:""}
             ${p.totalFloors?`<div style="background:rgba(15,23,42,0.05);border-radius:4px;padding:4px 6px"><div style="font-size:9px;color:#64748B">FLOORS</div><div style="font-size:12px;color:#0F172A;font-weight:700">${p.totalFloors}</div></div>`:""}
           </div>
@@ -697,7 +709,7 @@ export default function CommunityMapTab({
                   <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:12}}>
                     {[
                       {label:"FROM",value:selected.priceMin?`AED ${(selected.priceMin/1e6).toFixed(1)}M`:null,color:T.gold},
-                      {label:"GROSS RETURN",value:selected.grossYield?`${selected.grossYield}%`:null,color:"#10B981"},
+                      {label:"GROSS RETURN",value:selected.grossYield?`${Number(selected.grossYield).toFixed(1)}%`:null,color:"#10B981"},
                       {label:"PAYMENT",value:selected.paymentPlan,color:T.white},
                       {label:"BUILT",value:selected.constructionPct!=null?`${Math.round(selected.constructionPct)}%`:null,color:T.white},
                       {label:"PPSF",value:selected.pricePerSqft?`AED ${Math.round(selected.pricePerSqft).toLocaleString()}`:null,color:T.gold},
@@ -736,8 +748,8 @@ export default function CommunityMapTab({
                   <div style={{fontSize:18,fontWeight:700,color:T.white,fontFamily:"'Fraunces',serif",marginBottom:12}}>{selected.community}</div>
                   <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:12}}>
                     {[
-                      {label:"GROSS RETURN",value:selected.grossYield?`${selected.grossYield}%`:null,color:"#10B981"},
-                      {label:"AVG PPSF",value:selected.avgPpsf?`AED ${Math.round(selected.avgPpsf).toLocaleString()}`:null,color:T.gold},
+                      {label:"GROSS RETURN",value:selected.grossYield?`${Number(selected.grossYield).toFixed(1)}%`:null,color:"#10B981"},
+                      {label:"PRICE PER SQ FT",value:selected.avgPpsf?`AED ${Math.round(selected.avgPpsf).toLocaleString()}`:null,color:T.gold},
                       {label:"DXB SCORE",value:selected.score,color:"#63B3ED"},
                       {label:"PROJECTS",value:selected.projectCount,color:T.white},
                     ].filter(x=>x.value).map((x,i)=>(
@@ -786,7 +798,7 @@ export default function CommunityMapTab({
                       onMouseLeave={e=>e.currentTarget.style.borderColor=T.border}>
                       <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
                         <div style={{fontSize:12,fontWeight:600,color:T.white,flex:1,marginRight:8,lineHeight:1.3}}>{p.name}</div>
-                        <div style={{fontSize:13,fontWeight:700,color:"#10B981",flexShrink:0}}>{p.grossYield}%</div>
+                        <div style={{fontSize:13,fontWeight:700,color:"#10B981",flexShrink:0}}>{Number(p.grossYield).toFixed(1)}%</div>
                       </div>
                       <div style={{fontSize:10,color:T.textMuted,marginTop:2}}>{p.developerActual||p.developer} · {p.community}</div>
                       {p.priceMin&&<div style={{fontSize:10,color:T.gold,marginTop:2}}>From AED {(p.priceMin/1e6).toFixed(1)}M</div>}
@@ -813,7 +825,7 @@ export default function CommunityMapTab({
                       onMouseLeave={e=>e.currentTarget.style.borderColor=T.border}>
                       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
                         <div style={{fontSize:12,fontWeight:600,color:T.white}}>{n.community}</div>
-                        <div style={{fontSize:13,fontWeight:700,color:"#10B981"}}>{n.grossYield}%</div>
+                        <div style={{fontSize:13,fontWeight:700,color:"#10B981"}}>{Number(n.grossYield).toFixed(1)}%</div>
                       </div>
                       {n.avgPpsf&&<div style={{fontSize:10,color:T.textMuted,marginTop:2}}>AED {Math.round(n.avgPpsf).toLocaleString()}/sqft</div>}
                       {n.score&&<div style={{fontSize:10,color:"#63B3ED",marginTop:1}}>Score {n.score}</div>}
